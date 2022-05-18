@@ -1127,23 +1127,23 @@ instructions! {
         CatchAll : [0x19] : "catch_all",
 
         // Relaxed SIMD proposal
-        I8x16RelaxedSwizzle : [0xfd, 0xa2]: "i8x16.relaxed_swizzle",
-        I32x4RelaxedTruncSatF32x4S : [0xfd, 0xa5]: "i32x4.relaxed_trunc_f32x4_s",
-        I32x4RelaxedTruncSatF32x4U : [0xfd, 0xa6]: "i32x4.relaxed_trunc_f32x4_u",
-        I32x4RelaxedTruncSatF64x2SZero : [0xfd, 0xc5]: "i32x4.relaxed_trunc_f64x2_s_zero",
-        I32x4RelaxedTruncSatF64x2UZero : [0xfd, 0xc6]: "i32x4.relaxed_trunc_f64x2_u_zero",
-        F32x4Fma : [0xfd, 0xaf]: "f32x4.fma",
-        F32x4Fms : [0xfd, 0xb0]: "f32x4.fms",
-        F64x4Fma : [0xfd, 0xcf]: "f64x2.fma",
-        F64x4Fms : [0xfd, 0xd0]: "f64x2.fms",
+        I8x16SwizzleRelaxed : [0xfd, 0xa2]: "i8x16.swizzle_relaxed",
+        I32x4TruncSatF32x4SRelaxed : [0xfd, 0xa5]: "i32x4.trunc_f32x4_s_relaxed",
+        I32x4TruncSatF32x4URelaxed : [0xfd, 0xa6]: "i32x4.trunc_f32x4_u_relaxed",
+        I32x4TruncSatF64x2SZeroRelaxed : [0xfd, 0xc5]: "i32x4.trunc_f64x2_s_zero_relaxed",
+        I32x4TruncSatF64x2UZeroRelaxed : [0xfd, 0xc6]: "i32x4.trunc_f64x2_u_zero_relaxed",
+        F32x4FmaRelaxed : [0xfd, 0xaf]: "f32x4.fma_relaxed",
+        F32x4FmsRelaxed : [0xfd, 0xb0]: "f32x4.fms_relaxed",
+        F64x4FmaRelaxed : [0xfd, 0xcf]: "f64x2.fma_relaxed",
+        F64x4FmsRelaxed : [0xfd, 0xd0]: "f64x2.fms_relaxed",
         I8x16LaneSelect : [0xfd, 0xb2]: "i8x16.laneselect",
         I16x8LaneSelect : [0xfd, 0xb3]: "i16x8.laneselect",
         I32x4LaneSelect : [0xfd, 0xd2]: "i32x4.laneselect",
         I64x2LaneSelect : [0xfd, 0xd3]: "i64x2.laneselect",
-        F32x4RelaxedMin : [0xfd, 0xb4]: "f32x4.relaxed_min",
-        F32x4RelaxedMax : [0xfd, 0xe2]: "f32x4.relaxed_max",
-        F64x2RelaxedMin : [0xfd, 0xd4]: "f64x2.relaxed_min",
-        F64x2RelaxedMax : [0xfd, 0xee]: "f64x2.relaxed_max",
+        F32x4MinRelaxed : [0xfd, 0xb4]: "f32x4.min_relaxed",
+        F32x4MaxRelaxed : [0xfd, 0xe2]: "f32x4.max_relaxed",
+        F64x2MinRelaxed : [0xfd, 0xd4]: "f64x2.min_relaxed",
+        F64x2MaxRelaxed : [0xfd, 0xee]: "f64x2.max_relaxed",
     }
 }
 
@@ -1287,8 +1287,8 @@ impl<'a> MemArg<'a> {
                     return Ok((None, c));
                 }
                 let num = &kw[1..];
-                let num = if let Some(stripped) = num.strip_prefix("0x") {
-                    f(c, stripped, 16)?
+                let num = if num.starts_with("0x") {
+                    f(c, &num[2..], 16)?
                 } else {
                     f(c, num, 10)?
                 };
@@ -1405,8 +1405,14 @@ pub struct CallIndirect<'a> {
 impl<'a> Parse<'a> for CallIndirect<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let prev_span = parser.prev_span();
-        let table: Option<ast::IndexOrRef<_>> = parser.parse()?;
+        let mut table: Option<ast::IndexOrRef<_>> = parser.parse()?;
         let ty = parser.parse::<ast::TypeUse<'a, ast::FunctionTypeNoNames<'a>>>()?;
+        // Turns out the official test suite at this time thinks table
+        // identifiers comes first but wabt's test suites asserts differently
+        // putting them second. Let's just handle both.
+        if table.is_none() {
+            table = parser.parse()?;
+        }
         Ok(CallIndirect {
             table: table.map(|i| i.0).unwrap_or(idx_zero(prev_span, kw::table)),
             ty: ty.into(),

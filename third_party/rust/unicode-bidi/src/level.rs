@@ -13,9 +13,9 @@
 //!
 //! <http://www.unicode.org/reports/tr9/#BD2>
 
-use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::convert::{From, Into};
+use alloc::string::{String, ToString};
 
 use super::char_data::BidiClass;
 
@@ -359,8 +359,8 @@ mod tests {
 
 #[cfg(all(feature = "serde", test))]
 mod serde_tests {
+    use serde_test::{Token, assert_tokens};
     use super::*;
-    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn test_statics() {

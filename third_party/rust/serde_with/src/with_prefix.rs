@@ -35,13 +35,11 @@ use serde::{
 /// structs, rather than repeating the fields of `Player` for each prefix.
 ///
 /// ```rust
-/// # #[allow(dead_code)]
 /// struct Match {
 ///     player1: Player,
 ///     player2: Player,
 /// }
 ///
-/// # #[allow(dead_code)]
 /// struct Player {
 ///     name: String,
 ///     votes: u64,
@@ -53,7 +51,12 @@ use serde::{
 /// An implementation of the Challonge API would use `with_prefix!` like this:
 ///
 /// ```rust
+/// extern crate serde_derive;
+/// extern crate serde_json;
+/// extern crate serde_with;
+///
 /// use serde_derive::{Deserialize, Serialize};
+/// use serde_json::json;
 /// use serde_with::with_prefix;
 ///
 /// #[derive(Serialize, Deserialize)]
@@ -255,9 +258,9 @@ where
         self,
         _name: &'static str,
         _variant_index: u32,
-        variant: &'static str,
+        _variant: &'static str,
     ) -> Result<Self::Ok, Self::Error> {
-        self.serialize_str(variant)
+        Err(ser::Error::custom("wrong type for with_prefix"))
     }
 
     fn serialize_newtype_struct<T>(
@@ -390,10 +393,8 @@ where
     where
         T: ?Sized + Serialize,
     {
-        let mut prefixed_key = String::with_capacity(self.prefix.len() + key.len());
-        prefixed_key.push_str(self.prefix);
-        prefixed_key.push_str(key);
-        self.delegate.serialize_entry(&prefixed_key, value)
+        self.delegate
+            .serialize_entry(&format!("{}{}", self.prefix, key), value)
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
@@ -468,7 +469,7 @@ where
 {
     type Value = V::Value;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         self.delegate.expecting(formatter)
     }
 
@@ -489,8 +490,6 @@ where
 {
     type Error = A::Error;
 
-    // Use `strip_prefix` with Rust 1.45
-    #[allow(clippy::manual_strip)]
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
     where
         K: DeserializeSeed<'de>,
@@ -526,7 +525,7 @@ where
 {
     type Value = V::Value;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         self.delegate.expecting(formatter)
     }
 
@@ -581,8 +580,6 @@ where
 {
     type Error = A::Error;
 
-    // Use `strip_prefix` with Rust 1.45
-    #[allow(clippy::manual_strip)]
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
     where
         K: DeserializeSeed<'de>,

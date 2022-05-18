@@ -205,7 +205,6 @@
     // Clippy bug: https://github.com/rust-lang/rust-clippy/issues/7421
     clippy::doc_markdown,
     clippy::module_name_repetitions,
-    clippy::return_self_not_must_use,
 )]
 
 mod aserror;

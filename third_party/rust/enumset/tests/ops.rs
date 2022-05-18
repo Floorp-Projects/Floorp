@@ -15,11 +15,6 @@ pub enum Enum1 {
 pub enum SmallEnum {
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
 }
-#[derive(Clone, Copy, Debug, EnumSetType, Eq, PartialEq)]
-#[enumset(no_super_impls)]
-pub enum SmallEnumExplicitDerive {
-    A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
-}
 #[derive(EnumSetType, Debug)]
 pub enum LargeEnum {
     _00,  _01,  _02,  _03,  _04,  _05,  _06,  _07,
@@ -89,9 +84,6 @@ macro_rules! test_variants {
     }
 }
 test_variants! { SmallEnum small_enum_all_empty
-    A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
-}
-test_variants! { SmallEnumExplicitDerive small_enum_explicit_derive_all_empty
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
 }
 test_variants! { LargeEnum large_enum_all_empty
@@ -199,21 +191,6 @@ macro_rules! test_enum {
                 set_5.insert(val);
             }
             assert_eq!(set, set_5);
-        }
-
-        #[test]
-        fn iter_ordering_test() {
-            let set_a = $e::A | $e::B | $e::E;
-            let vec_a: Vec<_> = set_a.iter().collect();
-            assert_eq!(vec_a, &[$e::A, $e::B, $e::E]);
-            let vec_a_rev: Vec<_> = set_a.iter().rev().collect();
-            assert_eq!(vec_a_rev, &[$e::E, $e::B, $e::A]);
-
-            let set_b = $e::B | $e::C | $e::D | $e::G;
-            let vec_b: Vec<_> = set_b.iter().collect();
-            assert_eq!(vec_b, &[$e::B, $e::C, $e::D, $e::G]);
-            let vec_b_rev: Vec<_> = set_b.iter().rev().collect();
-            assert_eq!(vec_b_rev, &[$e::G, $e::D, $e::C, $e::B]);
         }
 
         fn check_iter_size_hint(set: EnumSet<$e>) {
@@ -340,10 +317,10 @@ macro_rules! test_enum {
                     assert!(!$set.contains(&SET_TEST_E));
                 }}
             }
-
+            
             let mut hash_set = HashSet::new();
             test_set!(hash_set);
-
+            
             let mut tree_set = BTreeSet::new();
             test_set!(tree_set);
         }
@@ -376,7 +353,6 @@ macro_rules! tests {
 }
 
 tests!(small_enum, test_enum!(SmallEnum, 4));
-tests!(small_enum_explicit_derive, test_enum!(SmallEnumExplicitDerive, 4));
 tests!(large_enum, test_enum!(LargeEnum, 16));
 tests!(enum8, test_enum!(Enum8, 1));
 tests!(enum128, test_enum!(Enum128, 16));

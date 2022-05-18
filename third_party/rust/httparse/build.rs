@@ -39,10 +39,6 @@ fn enable_simd(/*version: Version*/) {
         println!("cargo:warning=building for no_std disables httparse SIMD");
         return;
     }
-    if env::var_os("CARGO_CFG_MIRI").is_some() {
-        println!("cargo:warning=building for Miri disables httparse SIMD");
-        return;
-    }
 
     let env_disable = "CARGO_CFG_HTTPARSE_DISABLE_SIMD";
     if var_is(env_disable, "1") {

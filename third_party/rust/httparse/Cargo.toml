@@ -11,40 +11,22 @@
 
 [package]
 name = "httparse"
-version = "1.7.1"
+version = "1.5.1"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 build = "build.rs"
 description = "A tiny, safe, speedy, zero-copy HTTP/1.x parser."
 documentation = "https://docs.rs/httparse"
 readme = "README.md"
-keywords = [
-    "http",
-    "parser",
-    "no_std",
-]
-categories = [
-    "network-programming",
-    "no-std",
-    "parser-implementations",
-    "web-programming",
-]
+keywords = ["http", "parser", "no_std"]
+categories = ["network-programming", "no-std", "parser-implementations", "web-programming"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/seanmonstar/httparse"
-
 [profile.bench]
 opt-level = 3
 lto = true
 codegen-units = 1
-
-[lib]
-bench = false
-
-[[bench]]
-name = "parse"
-harness = false
-
-[dev-dependencies.criterion]
-version = "0.3.5"
+[dev-dependencies.pico-sys]
+version = "0.0.1"
 
 [features]
 default = ["std"]

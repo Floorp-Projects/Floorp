@@ -1,4 +1,4 @@
-//! The `darling::Error` type, the multiple error `Accumulator`, and their internals.
+//! The `darling::Error` type and its internals.
 //!
 //! Error handling is one of the core values of `darling`; creating great errors is hard and
 //! never the reason that a proc-macro author started writing their crate. As a result, the
@@ -16,8 +16,6 @@ use syn::spanned::Spanned;
 use syn::{Lit, LitStr, Path};
 
 mod kind;
-
-use crate::util::path_to_string;
 
 use self::kind::{ErrorKind, ErrorUnknownField};
 
@@ -47,9 +45,9 @@ pub type Result<T> = ::std::result::Result<T, Error>;
 ///    This preserves all span information, suggestions, etc. Wrapping a `darling::Error` in
 ///    a custom error enum works as-expected and does not force any loss of fidelity.
 /// 2. Do not use early return (e.g. the `?` operator) for custom validations. Instead,
-///    create an [`error::Accumulator`](Accumulator) to collect errors as they are encountered.  Then use
-///    [`Accumulator::finish`] to return your validated result; it will give `Ok` if and only if
-///    no errors were encountered.  This can create very complex custom validation functions;
+///    create a local `Vec` to collect errors as they are encountered and then use
+///    `darling::Error::multiple` to create an error containing all those issues if the list
+///    is non-empty after validation. This can create very complex custom validation functions;
 ///    in those cases, split independent "validation chains" out into their own functions to
 ///    keep the main validator manageable.
 /// 3. Use `darling::Error::custom` to create additional errors as-needed, then call `with_span`
@@ -63,6 +61,15 @@ pub struct Error {
     locations: Vec<String>,
     /// The span to highlight in the emitted diagnostic.
     span: Option<Span>,
+}
+
+/// Transform a syn::Path to a readable String
+fn path_to_string(path: &syn::Path) -> String {
+    path.segments
+        .iter()
+        .map(|s| s.ident.to_string())
+        .collect::<Vec<String>>()
+        .join("::")
 }
 
 /// Error creation functions
@@ -194,8 +201,6 @@ impl Error {
 
     /// Bundle a set of multiple errors into a single `Error` instance.
     ///
-    /// Usually it will be more convenient to use an [`error::Accumulator`](Accumulator).
-    ///
     /// # Panics
     /// This function will panic if `errors.is_empty() == true`.
     pub fn multiple(mut errors: Vec<Error>) -> Self {
@@ -206,13 +211,6 @@ impl Error {
             0 => panic!("Can't deal with 0 errors"),
             _ => Error::new(ErrorKind::Multiple(errors)),
         }
-    }
-
-    /// Creates an error collector, for aggregating multiple errors
-    ///
-    /// See [`Accumulator`] for details.
-    pub fn accumulator() -> Accumulator {
-        Default::default()
     }
 }
 
@@ -500,177 +498,6 @@ impl Iterator for IntoIter {
     }
 }
 
-/// Accumulator for errors, for helping call [`Error::multiple`].
-///
-/// See the docs for [`darling::Error`](Error) for more discussion of error handling with darling.
-///
-/// # Panics
-///
-/// `Accumulator` panics on drop unless [`finish`](Self::finish), [`finish_with`](Self::finish_with),
-/// or [`into_inner`](Self::into_inner) has been called, **even if it contains no errors**.
-/// If you want to discard an `Accumulator` that you know to be empty, use `accumulator.finish().unwrap()`.
-///
-/// # Example
-///
-/// ```
-/// # extern crate darling_core as darling;
-/// # struct Thing;
-/// # struct Output;
-/// # impl Thing { fn validate(self) -> darling::Result<Output> { Ok(Output) } }
-/// fn validate_things(inputs: Vec<Thing>) -> darling::Result<Vec<Output>> {
-///     let mut errors = darling::Error::accumulator();
-///
-///     let outputs = inputs
-///         .into_iter()
-///         .filter_map(|thing| errors.handle_in(|| thing.validate()))
-///         .collect::<Vec<_>>();
-///
-///     errors.finish()?;
-///     Ok(outputs)
-/// }
-/// ```
-#[derive(Debug)]
-#[must_use = "Accumulator will panic on drop if not defused."]
-pub struct Accumulator(Option<Vec<Error>>);
-
-impl Accumulator {
-    /// Runs a closure, returning the successful value as `Some`, or collecting the error
-    ///
-    /// The closure's return type is `darling::Result`, so inside it one can use `?`.
-    pub fn handle_in<T, F: FnOnce() -> Result<T>>(&mut self, f: F) -> Option<T> {
-        self.handle(f())
-    }
-
-    /// Handles a possible error.
-    ///
-    /// Returns a successful value as `Some`, or collects the error and returns `None`.
-    pub fn handle<T>(&mut self, result: Result<T>) -> Option<T> {
-        match result {
-            Ok(y) => Some(y),
-            Err(e) => {
-                self.push(e);
-                None
-            }
-        }
-    }
-
-    /// Stop accumulating errors, producing `Ok` if there are no errors or producing
-    /// an error with all those encountered by the accumulator.
-    pub fn finish(self) -> Result<()> {
-        self.finish_with(())
-    }
-
-    /// Bundles the collected errors if there were any, or returns the success value
-    ///
-    /// Call this at the end of your input processing.
-    ///
-    /// If there were no errors recorded, returns `Ok(success)`.
-    /// Otherwise calls [`Error::multiple`] and returns the result as an `Err`.
-    pub fn finish_with<T>(self, success: T) -> Result<T> {
-        let errors = self.into_inner();
-        if errors.is_empty() {
-            Ok(success)
-        } else {
-            Err(Error::multiple(errors))
-        }
-    }
-
-    fn errors(&mut self) -> &mut Vec<Error> {
-        match &mut self.0 {
-            Some(errors) => errors,
-            None => panic!("darling internal error: Accumulator accessed after defuse"),
-        }
-    }
-
-    /// Returns the accumulated errors as a `Vec`.
-    ///
-    /// This function defuses the drop bomb.
-    #[must_use = "Accumulated errors should be handled or propagated to the caller"]
-    pub fn into_inner(mut self) -> Vec<Error> {
-        match std::mem::replace(&mut self.0, None) {
-            Some(errors) => errors,
-            None => panic!("darling internal error: Accumulator accessed after defuse"),
-        }
-    }
-
-    /// Add one error to the collection.
-    pub fn push(&mut self, error: Error) {
-        self.errors().push(error)
-    }
-
-    /// Finish the current accumulation, and if there are no errors create a new `Self` so processing may continue.
-    ///
-    /// This is shorthand for:
-    ///
-    /// ```rust,ignore
-    /// errors.finish()?;
-    /// errors = Error::accumulator();
-    /// ```
-    ///
-    /// # Drop Behavior
-    /// This function returns a new [`Accumulator`] in the success case.
-    /// This new accumulator is "armed" and will detonate if dropped without being finished.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # extern crate darling_core as darling;
-    /// # struct Thing;
-    /// # struct Output;
-    /// # impl Thing { fn validate(&self) -> darling::Result<Output> { Ok(Output) } }
-    /// fn validate(lorem_inputs: &[Thing], ipsum_inputs: &[Thing])
-    ///             -> darling::Result<(Vec<Output>, Vec<Output>)> {
-    ///     let mut errors = darling::Error::accumulator();
-    ///
-    ///     let lorems = lorem_inputs.iter().filter_map(|l| {
-    ///         errors.handle(l.validate())
-    ///     }).collect();
-    ///
-    ///     errors = errors.checkpoint()?;
-    ///
-    ///     let ipsums = ipsum_inputs.iter().filter_map(|l| {
-    ///         errors.handle(l.validate())
-    ///     }).collect();
-    ///
-    ///     errors.finish_with((lorems, ipsums))
-    /// }
-    /// # validate(&[], &[]).unwrap();
-    /// ```
-    pub fn checkpoint(self) -> Result<Accumulator> {
-        // The doc comment says on success we "return the Accumulator for future use".
-        // Actually, we have consumed it by feeding it to finish so we make a fresh one.
-        // This is OK since by definition of the success path, it was empty on entry.
-        self.finish()?;
-        Ok(Self::default())
-    }
-}
-
-impl Default for Accumulator {
-    fn default() -> Self {
-        Accumulator(Some(vec![]))
-    }
-}
-
-impl Extend<Error> for Accumulator {
-    fn extend<I>(&mut self, iter: I)
-    where
-        I: IntoIterator<Item = Error>,
-    {
-        self.errors().extend(iter)
-    }
-}
-
-impl Drop for Accumulator {
-    fn drop(&mut self) {
-        if let Some(errors) = &mut self.0 {
-            match errors.len() {
-                0 => panic!("darling::error::Accumulator dropped without being finished"),
-                error_count => panic!("darling::error::Accumulator dropped without being finished. {} errors were lost.", error_count)
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::Error;
@@ -733,55 +560,5 @@ mod tests {
         ]);
 
         assert_eq!(4, err.len());
-    }
-
-    #[test]
-    fn accum_ok() {
-        let errs = Error::accumulator();
-        assert_eq!("test", errs.finish_with("test").unwrap());
-    }
-
-    #[test]
-    fn accum_errr() {
-        let mut errs = Error::accumulator();
-        errs.push(Error::custom("foo!"));
-        errs.finish().unwrap_err();
-    }
-
-    #[test]
-    fn accum_into_inner() {
-        let mut errs = Error::accumulator();
-        errs.push(Error::custom("foo!"));
-        let errs: Vec<_> = errs.into_inner();
-        assert_eq!(errs.len(), 1);
-    }
-
-    #[test]
-    #[should_panic(expected = "Accumulator dropped")]
-    fn accum_drop_panic() {
-        let _errs = Error::accumulator();
-    }
-
-    #[test]
-    #[should_panic(expected = "2 errors")]
-    fn accum_drop_panic_with_error_count() {
-        let mut errors = Error::accumulator();
-        errors.push(Error::custom("first"));
-        errors.push(Error::custom("second"));
-    }
-
-    #[test]
-    fn accum_checkpoint_error() {
-        let mut errs = Error::accumulator();
-        errs.push(Error::custom("foo!"));
-        errs.checkpoint().unwrap_err();
-    }
-
-    #[test]
-    #[should_panic(expected = "Accumulator dropped")]
-    fn accum_checkpoint_drop_panic() {
-        let mut errs = Error::accumulator();
-        errs = errs.checkpoint().unwrap();
-        let _ = errs;
     }
 }

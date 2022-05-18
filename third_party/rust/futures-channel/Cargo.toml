@@ -13,27 +13,20 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures-channel"
-version = "0.3.21"
-description = """
-Channels for asynchronous communication using futures-rs.
-"""
+version = "0.3.19"
+description = "Channels for asynchronous communication using futures-rs.\n"
 homepage = "https://rust-lang.github.io/futures-rs"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/futures-rs"
-
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = [
-    "--cfg",
-    "docsrs",
-]
-
+rustdoc-args = ["--cfg", "docsrs"]
 [dependencies.futures-core]
-version = "0.3.21"
+version = "0.3.19"
 default-features = false
 
 [dependencies.futures-sink]
-version = "0.3.21"
+version = "0.3.19"
 optional = true
 default-features = false
 
@@ -44,8 +37,5 @@ alloc = ["futures-core/alloc"]
 cfg-target-has-atomic = []
 default = ["std"]
 sink = ["futures-sink"]
-std = [
-    "alloc",
-    "futures-core/std",
-]
+std = ["alloc", "futures-core/std"]
 unstable = []

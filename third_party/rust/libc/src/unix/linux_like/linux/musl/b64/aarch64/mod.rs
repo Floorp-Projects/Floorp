@@ -49,13 +49,6 @@ s! {
         __unused: [::c_uint; 2],
     }
 
-    pub struct user_regs_struct {
-        pub regs: [::c_ulonglong; 31],
-        pub sp: ::c_ulonglong,
-        pub pc: ::c_ulonglong,
-        pub pstate: ::c_ulonglong,
-    }
-
     pub struct ipc_perm {
         pub __ipc_perm_key: ::key_t,
         pub uid: ::uid_t,
@@ -556,6 +549,9 @@ pub const SYS_process_madvise: ::c_long = 440;
 pub const SYS_epoll_pwait2: ::c_long = 441;
 pub const SYS_mount_setattr: ::c_long = 442;
 
+pub const RLIMIT_NLIMITS: ::c_int = 15;
+pub const RLIM_NLIMITS: ::c_int = RLIMIT_NLIMITS;
+pub const TIOCINQ: ::c_int = ::FIONREAD;
 pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
 pub const CBAUD: ::tcflag_t = 0o0010017;
@@ -625,6 +621,9 @@ pub const B3000000: ::speed_t = 0o010015;
 pub const B3500000: ::speed_t = 0o010016;
 pub const B4000000: ::speed_t = 0o010017;
 
+pub const FIOCLEX: ::c_int = 0x5451;
+pub const FIONCLEX: ::c_int = 0x5450;
+pub const FIONBIO: ::c_int = 0x5421;
 pub const EDEADLK: ::c_int = 35;
 pub const EDEADLOCK: ::c_int = EDEADLK;
 
@@ -635,17 +634,43 @@ pub const VMIN: usize = 6;
 pub const IEXTEN: ::tcflag_t = 0x00008000;
 pub const TOSTOP: ::tcflag_t = 0x00000100;
 pub const FLUSHO: ::tcflag_t = 0x00001000;
+pub const TCGETS: ::c_int = 0x5401;
+pub const TCSETS: ::c_int = 0x5402;
+pub const TCSETSW: ::c_int = 0x5403;
+pub const TCSETSF: ::c_int = 0x5404;
+pub const TCGETA: ::c_int = 0x5405;
+pub const TCSETA: ::c_int = 0x5406;
+pub const TCSETAW: ::c_int = 0x5407;
+pub const TCSETAF: ::c_int = 0x5408;
+pub const TCSBRK: ::c_int = 0x5409;
+pub const TCXONC: ::c_int = 0x540A;
+pub const TCFLSH: ::c_int = 0x540B;
+pub const TIOCGSOFTCAR: ::c_int = 0x5419;
+pub const TIOCSSOFTCAR: ::c_int = 0x541A;
+pub const TIOCLINUX: ::c_int = 0x541C;
+pub const TIOCGSERIAL: ::c_int = 0x541E;
+pub const TIOCEXCL: ::c_int = 0x540C;
+pub const TIOCNXCL: ::c_int = 0x540D;
+pub const TIOCSCTTY: ::c_int = 0x540E;
+pub const TIOCGPGRP: ::c_int = 0x540F;
+pub const TIOCSPGRP: ::c_int = 0x5410;
+pub const TIOCOUTQ: ::c_int = 0x5411;
+pub const TIOCSTI: ::c_int = 0x5412;
+pub const TIOCGWINSZ: ::c_int = 0x5413;
+pub const TIOCSWINSZ: ::c_int = 0x5414;
+pub const FIONREAD: ::c_int = 0x541B;
+pub const TIOCCONS: ::c_int = 0x541D;
+
+pub const TIOCGRS485: ::c_int = 0x542E;
+pub const TIOCSRS485: ::c_int = 0x542F;
+
+extern "C" {
+    pub fn ioctl(fd: ::c_int, request: ::c_int, ...) -> ::c_int;
+}
 
 cfg_if! {
     if #[cfg(libc_align)] {
         mod align;
         pub use self::align::*;
-    }
-}
-
-cfg_if! {
-    if #[cfg(libc_int128)] {
-        mod int128;
-        pub use self::int128::*;
     }
 }

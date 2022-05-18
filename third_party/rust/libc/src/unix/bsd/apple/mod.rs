@@ -128,9 +128,6 @@ pub type CCStatus = i32;
 pub type CCCryptorStatus = i32;
 pub type CCRNGStatus = ::CCCryptorStatus;
 
-pub type copyfile_state_t = *mut ::c_void;
-pub type copyfile_flags_t = u32;
-
 deprecated_mach! {
     pub type mach_timebase_info_data_t = mach_timebase_info;
 }
@@ -215,18 +212,6 @@ impl ::Clone for sysdir_search_path_domain_mask_t {
 s! {
     pub struct ip_mreq {
         pub imr_multiaddr: in_addr,
-        pub imr_interface: in_addr,
-    }
-
-    pub struct ip_mreqn {
-        pub imr_multiaddr: in_addr,
-        pub imr_address: in_addr,
-        pub imr_ifindex: ::c_int,
-    }
-
-    pub struct ip_mreq_source {
-        pub imr_multiaddr: in_addr,
-        pub imr_sourceaddr: in_addr,
         pub imr_interface: in_addr,
     }
 
@@ -963,11 +948,6 @@ s! {
         pub ri_interval_max_phys_footprint: u64,
         pub ri_runnable_time: u64,
     }
-
-    pub struct image_offset {
-        pub uuid: ::uuid_t,
-        pub offset: u32,
-    }
 }
 
 s_no_extra_traits! {
@@ -1178,9 +1158,9 @@ s_no_extra_traits! {
         pub ifi_noproto: u64,
         pub ifi_recvtiming: u32,
         pub ifi_xmittiming: u32,
-        #[cfg(target_pointer_width = "32")]
+        #[cfg(any(target_arch = "arm", target_arch = "x86"))]
         pub ifi_lastchange: ::timeval,
-        #[cfg(not(target_pointer_width = "32"))]
+        #[cfg(not(any(target_arch = "arm", target_arch = "x86")))]
         pub ifi_lastchange: timeval32,
     }
 
@@ -1236,13 +1216,6 @@ s_no_extra_traits! {
         pub system_time: time_value_t,
         pub policy: ::policy_t,
         pub suspend_count: integer_t,
-    }
-
-    #[cfg_attr(libc_packedN, repr(packed(4)))]
-    pub struct log2phys {
-        pub l2p_flags: ::c_uint,
-        pub l2p_contigbytes: ::off_t,
-        pub l2p_devoffset: ::off_t,
     }
 }
 
@@ -2494,37 +2467,6 @@ cfg_if! {
                 suspend_count.hash(state);
             }
         }
-
-        impl PartialEq for log2phys {
-            fn eq(&self, other: &log2phys) -> bool {
-                self.l2p_flags == other.l2p_flags
-                    && self.l2p_contigbytes == other.l2p_contigbytes
-                    && self.l2p_devoffset == other.l2p_devoffset
-            }
-        }
-        impl Eq for log2phys {}
-        impl ::fmt::Debug for log2phys {
-            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
-                let l2p_flags = self.l2p_flags;
-                let l2p_contigbytes = self.l2p_contigbytes;
-                let l2p_devoffset = self.l2p_devoffset;
-                f.debug_struct("log2phys")
-                    .field("l2p_flags", &l2p_flags)
-                    .field("l2p_contigbytes", &l2p_contigbytes)
-                    .field("l2p_devoffset", &l2p_devoffset)
-                    .finish()
-            }
-        }
-        impl ::hash::Hash for log2phys {
-            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
-                let l2p_flags = self.l2p_flags;
-                let l2p_contigbytes = self.l2p_contigbytes;
-                let l2p_devoffset = self.l2p_devoffset;
-                l2p_flags.hash(state);
-                l2p_contigbytes.hash(state);
-                l2p_devoffset.hash(state);
-            }
-        }
     }
 }
 
@@ -3001,16 +2943,12 @@ pub const F_PREALLOCATE: ::c_int = 42;
 pub const F_RDADVISE: ::c_int = 44;
 pub const F_RDAHEAD: ::c_int = 45;
 pub const F_NOCACHE: ::c_int = 48;
-pub const F_LOG2PHYS: ::c_int = 49;
 pub const F_GETPATH: ::c_int = 50;
 pub const F_FULLFSYNC: ::c_int = 51;
 pub const F_FREEZE_FS: ::c_int = 53;
 pub const F_THAW_FS: ::c_int = 54;
 pub const F_GLOBAL_NOCACHE: ::c_int = 55;
 pub const F_NODIRECT: ::c_int = 62;
-pub const F_LOG2PHYS_EXT: ::c_int = 65;
-pub const F_BARRIERFSYNC: ::c_int = 85;
-pub const F_GETPATH_NOFIRMLINK: ::c_int = 102;
 
 pub const F_ALLOCATECONTIG: ::c_uint = 0x02;
 pub const F_ALLOCATEALL: ::c_uint = 0x04;
@@ -3538,7 +3476,6 @@ pub const IP_RECVIF: ::c_int = 20;
 pub const IP_BOUND_IF: ::c_int = 25;
 pub const IP_PKTINFO: ::c_int = 26;
 pub const IP_RECVTOS: ::c_int = 27;
-pub const IP_DONTFRAG: ::c_int = 28;
 pub const IPV6_JOIN_GROUP: ::c_int = 12;
 pub const IPV6_LEAVE_GROUP: ::c_int = 13;
 pub const IPV6_CHECKSUM: ::c_int = 26;
@@ -3547,11 +3484,6 @@ pub const IPV6_TCLASS: ::c_int = 36;
 pub const IPV6_PKTINFO: ::c_int = 46;
 pub const IPV6_HOPLIMIT: ::c_int = 47;
 pub const IPV6_RECVPKTINFO: ::c_int = 61;
-pub const IPV6_DONTFRAG: ::c_int = 62;
-pub const IP_ADD_SOURCE_MEMBERSHIP: ::c_int = 70;
-pub const IP_DROP_SOURCE_MEMBERSHIP: ::c_int = 71;
-pub const IP_BLOCK_SOURCE: ::c_int = 72;
-pub const IP_UNBLOCK_SOURCE: ::c_int = 73;
 
 pub const TCP_NOPUSH: ::c_int = 4;
 pub const TCP_NOOPT: ::c_int = 8;
@@ -4624,43 +4556,6 @@ pub const RUSAGE_INFO_V2: ::c_int = 2;
 pub const RUSAGE_INFO_V3: ::c_int = 3;
 pub const RUSAGE_INFO_V4: ::c_int = 4;
 
-// copyfile.h
-pub const COPYFILE_ACL: ::copyfile_flags_t = 1 << 0;
-pub const COPYFILE_STAT: ::copyfile_flags_t = 1 << 1;
-pub const COPYFILE_XATTR: ::copyfile_flags_t = 1 << 2;
-pub const COPYFILE_DATA: ::copyfile_flags_t = 1 << 3;
-pub const COPYFILE_SECURITY: ::copyfile_flags_t = COPYFILE_STAT | COPYFILE_ACL;
-pub const COPYFILE_METADATA: ::copyfile_flags_t = COPYFILE_SECURITY | COPYFILE_XATTR;
-pub const COPYFILE_RECURSIVE: ::copyfile_flags_t = 1 << 15;
-pub const COPYFILE_CHECK: ::copyfile_flags_t = 1 << 16;
-pub const COPYFILE_EXCL: ::copyfile_flags_t = 1 << 17;
-pub const COPYFILE_NOFOLLOW_SRC: ::copyfile_flags_t = 1 << 18;
-pub const COPYFILE_NOFOLLOW_DST: ::copyfile_flags_t = 1 << 19;
-pub const COPYFILE_MOVE: ::copyfile_flags_t = 1 << 20;
-pub const COPYFILE_UNLINK: ::copyfile_flags_t = 1 << 21;
-pub const COPYFILE_NOFOLLOW: ::copyfile_flags_t = COPYFILE_NOFOLLOW_SRC | COPYFILE_NOFOLLOW_DST;
-pub const COPYFILE_PACK: ::copyfile_flags_t = 1 << 22;
-pub const COPYFILE_UNPACK: ::copyfile_flags_t = 1 << 23;
-pub const COPYFILE_CLONE: ::copyfile_flags_t = 1 << 24;
-pub const COPYFILE_CLONE_FORCE: ::copyfile_flags_t = 1 << 25;
-pub const COPYFILE_RUN_IN_PLACE: ::copyfile_flags_t = 1 << 26;
-pub const COPYFILE_DATA_SPARSE: ::copyfile_flags_t = 1 << 27;
-pub const COPYFILE_PRESERVE_DST_TRACKED: ::copyfile_flags_t = 1 << 28;
-pub const COPYFILE_VERBOSE: ::copyfile_flags_t = 1 << 30;
-pub const COPYFILE_RECURSE_ERROR: ::c_int = 0;
-pub const COPYFILE_RECURSE_FILE: ::c_int = 1;
-pub const COPYFILE_RECURSE_DIR: ::c_int = 2;
-pub const COPYFILE_RECURSE_DIR_CLEANUP: ::c_int = 3;
-pub const COPYFILE_COPY_DATA: ::c_int = 4;
-pub const COPYFILE_COPY_XATTR: ::c_int = 5;
-pub const COPYFILE_START: ::c_int = 1;
-pub const COPYFILE_FINISH: ::c_int = 2;
-pub const COPYFILE_ERR: ::c_int = 3;
-pub const COPYFILE_PROGRESS: ::c_int = 4;
-pub const COPYFILE_CONTINUE: ::c_int = 0;
-pub const COPYFILE_SKIP: ::c_int = 1;
-pub const COPYFILE_QUIT: ::c_int = 2;
-
 cfg_if! {
     if #[cfg(libc_const_extern_fn)] {
         const fn __DARWIN_ALIGN32(p: usize) -> usize {
@@ -5006,23 +4901,6 @@ extern "C" {
     ) -> kern_return_t;
     pub fn __error() -> *mut ::c_int;
     pub fn backtrace(buf: *mut *mut ::c_void, sz: ::c_int) -> ::c_int;
-    pub fn backtrace_symbols(addrs: *const *mut ::c_void, sz: ::c_int) -> *mut *mut ::c_char;
-    pub fn backtrace_symbols_fd(addrs: *const *mut ::c_void, sz: ::c_int, fd: ::c_int);
-    pub fn backtrace_from_fp(
-        startfp: *mut ::c_void,
-        array: *mut *mut ::c_void,
-        size: ::c_int,
-    ) -> ::c_int;
-    pub fn backtrace_image_offsets(
-        array: *const *mut ::c_void,
-        image_offsets: *mut image_offset,
-        size: ::c_int,
-    );
-    pub fn backtrace_async(
-        array: *mut *mut ::c_void,
-        length: ::size_t,
-        task_id: *mut u32,
-    ) -> ::size_t;
     #[cfg_attr(
         all(target_os = "macos", not(target_arch = "aarch64")),
         link_name = "statfs$INODE64"
@@ -5317,19 +5195,6 @@ extern "C" {
         flags: u32,
     ) -> ::c_int;
 
-    pub fn copyfile(
-        from: *const ::c_char,
-        to: *const ::c_char,
-        state: copyfile_state_t,
-        flags: copyfile_flags_t,
-    ) -> ::c_int;
-    pub fn fcopyfile(
-        from: ::c_int,
-        to: ::c_int,
-        state: copyfile_state_t,
-        flags: copyfile_flags_t,
-    ) -> ::c_int;
-
     // Added in macOS 10.13
     // ISO/IEC 9899:2011 ("ISO C11") K.3.7.4.1
     pub fn memset_s(s: *mut ::c_void, smax: ::size_t, c: ::c_int, n: ::size_t) -> ::c_int;
@@ -5532,10 +5397,10 @@ extern "C" {
 }
 
 cfg_if! {
-    if #[cfg(target_pointer_width = "32")] {
+    if #[cfg(any(target_arch = "arm", target_arch = "x86"))] {
         mod b32;
         pub use self::b32::*;
-    } else if #[cfg(target_pointer_width = "64")] {
+    } else if #[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))] {
         mod b64;
         pub use self::b64::*;
     } else {

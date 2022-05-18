@@ -49,17 +49,4 @@ struct BadItemType {
 
 }
 
-#[derive(EnumSetType)]
-#[enumset(repr = "u16")]
-enum BadMemRepr {
-    Variant = 16,
-}
-
-#[derive(EnumSetType)]
-enum OkayEnumButCantUseFromRepr {
-    Variant,
-}
-
-fn main() {
-    EnumSet::<OkayEnumButCantUseFromRepr>::from_repr(1);
-}
+fn main() { }

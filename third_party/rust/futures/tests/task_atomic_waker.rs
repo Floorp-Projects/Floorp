@@ -6,7 +6,6 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::thread;
 
-#[cfg_attr(miri, ignore)] // Miri is too slow
 #[test]
 fn basic() {
     let atomic_waker = Arc::new(AtomicWaker::new());

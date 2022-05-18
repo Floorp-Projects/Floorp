@@ -133,6 +133,12 @@ s! {
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 
+pub const RLIMIT_RSS: ::c_int = 5;
+pub const RLIMIT_NOFILE: ::c_int = 7;
+pub const RLIMIT_AS: ::c_int = 9;
+pub const RLIMIT_NPROC: ::c_int = 6;
+pub const RLIMIT_MEMLOCK: ::c_int = 8;
+
 pub const SOCK_NONBLOCK: ::c_int = 2048;
 
 pub const SOCK_SEQPACKET: ::c_int = 5;

@@ -1,11 +1,11 @@
 error[E0367]: `Drop` impl requires `T: Unpin` but the struct it is implemented for does not
- --> tests/ui/pinned_drop/conditional-drop-impl.rs:9:9
+ --> $DIR/conditional-drop-impl.rs:9:9
   |
 9 | impl<T: Unpin> Drop for DropImpl<T> {
   |         ^^^^^
   |
 note: the implementor must specify the same requirement
- --> tests/ui/pinned_drop/conditional-drop-impl.rs:5:1
+ --> $DIR/conditional-drop-impl.rs:5:1
   |
 5 | / struct DropImpl<T> {
 6 | |     f: T,
@@ -13,7 +13,7 @@ note: the implementor must specify the same requirement
   | |_^
 
 error[E0367]: `Drop` impl requires `T: Unpin` but the struct it is implemented for does not
-  --> tests/ui/pinned_drop/conditional-drop-impl.rs:14:1
+  --> $DIR/conditional-drop-impl.rs:14:1
    |
 14 | / pin_project! {
 15 | |     //~^ ERROR E0367
@@ -25,7 +25,7 @@ error[E0367]: `Drop` impl requires `T: Unpin` but the struct it is implemented f
    | |_^
    |
 note: the implementor must specify the same requirement
-  --> tests/ui/pinned_drop/conditional-drop-impl.rs:14:1
+  --> $DIR/conditional-drop-impl.rs:14:1
    |
 14 | / pin_project! {
 15 | |     //~^ ERROR E0367
@@ -35,4 +35,4 @@ note: the implementor must specify the same requirement
 23 | |     }
 24 | | }
    | |_^
-   = note: this error originates in the macro `$crate::__pin_project_make_drop_impl` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `$crate::__pin_project_internal` (in Nightly builds, run with -Z macro-backtrace for more info)

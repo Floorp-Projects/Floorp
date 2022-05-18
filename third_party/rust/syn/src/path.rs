@@ -231,38 +231,7 @@ pub mod parsing {
             }
 
             if input.peek(Ident) && input.peek2(Token![=]) {
-                let ident: Ident = input.parse()?;
-                let eq_token: Token![=] = input.parse()?;
-
-                let ty = if input.peek(Lit) {
-                    let begin = input.fork();
-                    input.parse::<Lit>()?;
-                    Type::Verbatim(verbatim::between(begin, input))
-                } else if input.peek(token::Brace) {
-                    let begin = input.fork();
-
-                    #[cfg(feature = "full")]
-                    {
-                        input.parse::<ExprBlock>()?;
-                    }
-
-                    #[cfg(not(feature = "full"))]
-                    {
-                        let content;
-                        braced!(content in input);
-                        content.parse::<Expr>()?;
-                    }
-
-                    Type::Verbatim(verbatim::between(begin, input))
-                } else {
-                    input.parse()?
-                };
-
-                return Ok(GenericArgument::Binding(Binding {
-                    ident,
-                    eq_token,
-                    ty,
-                }));
+                return Ok(GenericArgument::Binding(input.parse()?));
             }
 
             #[cfg(feature = "full")]
@@ -684,7 +653,7 @@ pub mod parsing {
 }
 
 #[cfg(feature = "printing")]
-pub(crate) mod printing {
+mod printing {
     use super::*;
     use crate::print::TokensOrDefault;
     use proc_macro2::TokenStream;
@@ -835,37 +804,39 @@ pub(crate) mod printing {
         }
     }
 
-    pub(crate) fn print_path(tokens: &mut TokenStream, qself: &Option<QSelf>, path: &Path) {
-        let qself = match qself {
-            Some(qself) => qself,
-            None => {
-                path.to_tokens(tokens);
-                return;
-            }
-        };
-        qself.lt_token.to_tokens(tokens);
-        qself.ty.to_tokens(tokens);
-
-        let pos = cmp::min(qself.position, path.segments.len());
-        let mut segments = path.segments.pairs();
-        if pos > 0 {
-            TokensOrDefault(&qself.as_token).to_tokens(tokens);
-            path.leading_colon.to_tokens(tokens);
-            for (i, segment) in segments.by_ref().take(pos).enumerate() {
-                if i + 1 == pos {
-                    segment.value().to_tokens(tokens);
-                    qself.gt_token.to_tokens(tokens);
-                    segment.punct().to_tokens(tokens);
-                } else {
-                    segment.to_tokens(tokens);
+    impl private {
+        pub(crate) fn print_path(tokens: &mut TokenStream, qself: &Option<QSelf>, path: &Path) {
+            let qself = match qself {
+                Some(qself) => qself,
+                None => {
+                    path.to_tokens(tokens);
+                    return;
                 }
+            };
+            qself.lt_token.to_tokens(tokens);
+            qself.ty.to_tokens(tokens);
+
+            let pos = cmp::min(qself.position, path.segments.len());
+            let mut segments = path.segments.pairs();
+            if pos > 0 {
+                TokensOrDefault(&qself.as_token).to_tokens(tokens);
+                path.leading_colon.to_tokens(tokens);
+                for (i, segment) in segments.by_ref().take(pos).enumerate() {
+                    if i + 1 == pos {
+                        segment.value().to_tokens(tokens);
+                        qself.gt_token.to_tokens(tokens);
+                        segment.punct().to_tokens(tokens);
+                    } else {
+                        segment.to_tokens(tokens);
+                    }
+                }
+            } else {
+                qself.gt_token.to_tokens(tokens);
+                path.leading_colon.to_tokens(tokens);
             }
-        } else {
-            qself.gt_token.to_tokens(tokens);
-            path.leading_colon.to_tokens(tokens);
-        }
-        for segment in segments {
-            segment.to_tokens(tokens);
+            for segment in segments {
+                segment.to_tokens(tokens);
+            }
         }
     }
 }

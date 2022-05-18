@@ -121,14 +121,20 @@ impl<V: FromVariant, F: FromField> Data<V, F> {
     pub fn try_from(body: &syn::Data) -> Result<Self> {
         match *body {
             syn::Data::Enum(ref data) => {
-                let mut errors = Error::accumulator();
-                let items = data
-                    .variants
-                    .iter()
-                    .filter_map(|v| errors.handle(FromVariant::from_variant(v)))
-                    .collect();
+                let mut items = Vec::with_capacity(data.variants.len());
+                let mut errors = Vec::new();
+                for v_result in data.variants.iter().map(FromVariant::from_variant) {
+                    match v_result {
+                        Ok(val) => items.push(val),
+                        Err(err) => errors.push(err),
+                    }
+                }
 
-                errors.finish_with(Data::Enum(items))
+                if !errors.is_empty() {
+                    Err(Error::multiple(errors))
+                } else {
+                    Ok(Data::Enum(items))
+                }
             }
             syn::Data::Struct(ref data) => Ok(Data::Struct(Fields::try_from(&data.fields)?)),
             // This deliberately doesn't set a span on the error message, as the error is most useful if
@@ -258,37 +264,55 @@ impl<T> Fields<T> {
 
 impl<F: FromField> Fields<F> {
     pub fn try_from(fields: &syn::Fields) -> Result<Self> {
-        let mut errors = Error::accumulator();
-        let items = {
+        let (items, errors) = {
             match &fields {
-                syn::Fields::Named(fields) => fields
-                    .named
-                    .iter()
-                    .filter_map(|field| {
-                        errors.handle(FromField::from_field(field).map_err(|err| {
-                            // There should always be an ident here, since this is a collection
-                            // of named fields, but `syn` doesn't prevent someone from manually
-                            // constructing an invalid collection so a guard is still warranted.
-                            if let Some(ident) = &field.ident {
-                                err.at(ident)
-                            } else {
-                                err
-                            }
-                        }))
-                    })
-                    .collect(),
-                syn::Fields::Unnamed(fields) => fields
-                    .unnamed
-                    .iter()
-                    .filter_map(|field| errors.handle(FromField::from_field(field)))
-                    .collect(),
-                syn::Fields::Unit => vec![],
+                syn::Fields::Named(fields) => {
+                    let mut items = Vec::with_capacity(fields.named.len());
+                    let mut errors = Vec::new();
+
+                    for field in &fields.named {
+                        match FromField::from_field(field) {
+                            Ok(val) => items.push(val),
+                            Err(err) => errors.push({
+                                if let Some(ident) = &field.ident {
+                                    err.at(ident)
+                                } else {
+                                    err
+                                }
+                            }),
+                        }
+                    }
+
+                    (items, errors)
+                }
+                syn::Fields::Unnamed(fields) => {
+                    let mut items = Vec::with_capacity(fields.unnamed.len());
+                    let mut errors = Vec::new();
+
+                    for field in &fields.unnamed {
+                        match FromField::from_field(field) {
+                            Ok(val) => items.push(val),
+                            Err(err) => errors.push({
+                                if let Some(ident) = &field.ident {
+                                    err.at(ident)
+                                } else {
+                                    err
+                                }
+                            }),
+                        }
+                    }
+
+                    (items, errors)
+                }
+                syn::Fields::Unit => (vec![], vec![]),
             }
         };
 
-        errors.finish()?;
-
-        Ok(Self::new(fields.into(), items).with_span(fields.span()))
+        if !errors.is_empty() {
+            Err(Error::multiple(errors))
+        } else {
+            Ok(Self::new(fields.into(), items).with_span(fields.span()))
+        }
     }
 }
 

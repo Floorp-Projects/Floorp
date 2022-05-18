@@ -450,7 +450,6 @@ impl MathematicalOps for Decimal {
         if self.is_one() {
             return Some(Decimal::ZERO);
         }
-
         // This uses a very basic method for calculating log10. We know the following is true:
         //   log10(n) = ln(n) / ln(10)
         // From this we can perform some small optimizations:
@@ -458,23 +457,14 @@ impl MathematicalOps for Decimal {
         //  2. Multiplication is faster than division, so we can pre-calculate the constant 1/ln(10)
         // This allows us to then simplify log10(n) to:
         //   log10(n) = C * ln(n)
-
         // Before doing all of this however, we see if there are simple calculations to be made.
-        let scale = self.scale();
         let mut working = self.mantissa_array3();
-
-        // Check for scales less than 1 as an early exit
-        if scale > 0 && working[2] == 0 && working[1] == 0 && working[0] == 1 {
-            return Some(Decimal::from_parts(scale, 0, 0, true, 0));
-        }
-
-        // Loop for detecting bordering base 10 values
         let mut result = 0;
-        let mut base10 = true;
+        let mut invalid_early_exit = false;
         while !is_all_zero(&working) {
             let remainder = div_by_u32(&mut working, 10u32);
             if remainder != 0 {
-                base10 = false;
+                invalid_early_exit = true;
                 break;
             }
             result += 1;
@@ -482,8 +472,8 @@ impl MathematicalOps for Decimal {
                 break;
             }
         }
-        if base10 {
-            return Some((result - scale as i32).into());
+        if !invalid_early_exit {
+            return Some((result - self.scale()).into());
         }
 
         self.checked_ln().map(|result| LN10_INVERSE * result)

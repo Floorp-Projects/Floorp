@@ -168,7 +168,6 @@ fn skipping_and_zero_reads() {
     assert_eq!(reader.read_u8(4).unwrap(), 0b1011);
     // Reading zero bits should be a no-op
     assert_eq!(reader.read_u8(0).unwrap(), 0b0);
-    assert_eq!(reader.read_i8(0).unwrap(), 0b0);
     assert_eq!(reader.read_u8(4).unwrap(), 0b0101);
     reader.skip(3).unwrap(); // 0b111
     assert_eq!(reader.read_u16(10).unwrap(), 0b0101010101);

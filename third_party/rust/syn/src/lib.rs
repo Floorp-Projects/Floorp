@@ -250,7 +250,7 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/1.0.94")]
+#![doc(html_root_url = "https://docs.rs/syn/1.0.85")]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(non_camel_case_types)]
 // Ignored clippy lints.
@@ -285,8 +285,6 @@
     clippy::empty_enum,
     clippy::expl_impl_clone_on_copy,
     clippy::if_not_else,
-    // clippy bug: https://github.com/rust-lang/rust-clippy/issues/8285
-    clippy::iter_not_returning_iterator,
     clippy::match_same_arms,
     // clippy bug: https://github.com/rust-lang/rust-clippy/issues/6984
     clippy::match_wildcard_for_single_variants,
@@ -828,6 +826,9 @@ mod verbatim;
 
 #[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
 mod print;
+
+#[cfg(any(feature = "full", feature = "derive"))]
+use crate::__private::private;
 
 ////////////////////////////////////////////////////////////////////////////////
 

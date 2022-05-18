@@ -18,7 +18,7 @@ type Data = [usize; DATA_WORDS];
 /// This is a handy way of keeping an unsized `FnOnce()` within a sized structure.
 pub(crate) struct Deferred {
     call: unsafe fn(*mut u8),
-    data: MaybeUninit<Data>,
+    data: Data,
     _marker: PhantomData<*mut ()>, // !Send + !Sync
 }
 
@@ -46,7 +46,7 @@ impl Deferred {
 
                 Deferred {
                     call: call::<F>,
-                    data,
+                    data: data.assume_init(),
                     _marker: PhantomData,
                 }
             } else {
@@ -57,13 +57,14 @@ impl Deferred {
                 unsafe fn call<F: FnOnce()>(raw: *mut u8) {
                     // It's safe to cast `raw` from `*mut u8` to `*mut Box<F>`, because `raw` is
                     // originally derived from `*mut Box<F>`.
+                    #[allow(clippy::cast_ptr_alignment)]
                     let b: Box<F> = ptr::read(raw as *mut Box<F>);
                     (*b)();
                 }
 
                 Deferred {
                     call: call::<F>,
-                    data,
+                    data: data.assume_init(),
                     _marker: PhantomData,
                 }
             }
@@ -74,7 +75,7 @@ impl Deferred {
     #[inline]
     pub(crate) fn call(mut self) {
         let call = self.call;
-        unsafe { call(self.data.as_mut_ptr() as *mut u8) };
+        unsafe { call(&mut self.data as *mut Data as *mut u8) };
     }
 }
 

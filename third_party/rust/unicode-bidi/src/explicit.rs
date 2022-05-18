@@ -13,10 +13,7 @@
 
 use alloc::vec::Vec;
 
-use super::char_data::{
-    is_rtl,
-    BidiClass::{self, *},
-};
+use super::char_data::{BidiClass::{self, *}, is_rtl};
 use super::level::Level;
 
 /// Compute explicit embedding levels for one paragraph of text (X1-X8).
@@ -43,6 +40,7 @@ pub fn compute(
 
     for (i, c) in text.char_indices() {
         match original_classes[i] {
+
             // Rules X2-X5c
             RLE | LRE | RLO | LRO | RLI | LRI | FSI => {
                 let last_level = stack.last().level;
@@ -66,7 +64,8 @@ pub fn compute(
                 } else {
                     last_level.new_explicit_next_ltr()
                 };
-                if new_level.is_ok() && overflow_isolate_count == 0 && overflow_embedding_count == 0
+                if new_level.is_ok() && overflow_isolate_count == 0 &&
+                    overflow_embedding_count == 0
                 {
                     let new_level = new_level.unwrap();
                     stack.push(
@@ -101,11 +100,8 @@ pub fn compute(
                     loop {
                         // Pop everything up to and including the last Isolate status.
                         match stack.vec.pop() {
-                            None
-                            | Some(Status {
-                                status: OverrideStatus::Isolate,
-                                ..
-                            }) => break,
+                            None |
+                            Some(Status { status: OverrideStatus::Isolate, .. }) => break,
                             _ => continue,
                         }
                     }
@@ -180,9 +176,7 @@ struct DirectionalStatusStack {
 
 impl DirectionalStatusStack {
     fn new() -> Self {
-        DirectionalStatusStack {
-            vec: Vec::with_capacity(Level::max_explicit_depth() as usize + 2),
-        }
+        DirectionalStatusStack { vec: Vec::with_capacity(Level::max_explicit_depth() as usize + 2) }
     }
 
     fn push(&mut self, level: Level, status: OverrideStatus) {

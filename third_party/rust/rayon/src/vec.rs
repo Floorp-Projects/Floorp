@@ -132,16 +132,22 @@ impl<'data, T: Send> IndexedParallelIterator for Drain<'data, T> {
         self.range.len()
     }
 
-    fn with_producer<CB>(mut self, callback: CB) -> CB::Output
+    fn with_producer<CB>(self, callback: CB) -> CB::Output
     where
         CB: ProducerCallback<Self::Item>,
     {
         unsafe {
             // Make the vector forget about the drained items, and temporarily the tail too.
-            self.vec.set_len(self.range.start);
+            let start = self.range.start;
+            self.vec.set_len(start);
 
             // Create the producer as the exclusive "owner" of the slice.
-            let producer = DrainProducer::from_vec(&mut self.vec, self.range.len());
+            let producer = {
+                // Get a correct borrow lifetime, then extend it to the original length.
+                let mut slice = &mut self.vec[start..];
+                slice = slice::from_raw_parts_mut(slice.as_mut_ptr(), self.range.len());
+                DrainProducer::new(slice)
+            };
 
             // The producer will move or drop each item from the drained range.
             callback.callback(producer)
@@ -178,26 +184,12 @@ pub(crate) struct DrainProducer<'data, T: Send> {
     slice: &'data mut [T],
 }
 
-impl<T: Send> DrainProducer<'_, T> {
+impl<'data, T: 'data + Send> DrainProducer<'data, T> {
     /// Creates a draining producer, which *moves* items from the slice.
     ///
     /// Unsafe bacause `!Copy` data must not be read after the borrow is released.
-    pub(crate) unsafe fn new(slice: &mut [T]) -> DrainProducer<'_, T> {
+    pub(crate) unsafe fn new(slice: &'data mut [T]) -> Self {
         DrainProducer { slice }
-    }
-
-    /// Creates a draining producer, which *moves* items from the tail of the vector.
-    ///
-    /// Unsafe because we're moving from beyond `vec.len()`, so the caller must ensure
-    /// that data is initialized and not read after the borrow is released.
-    unsafe fn from_vec(vec: &mut Vec<T>, len: usize) -> DrainProducer<'_, T> {
-        let start = vec.len();
-        assert!(vec.capacity() - start >= len);
-
-        // The pointer is derived from `Vec` directly, not through a `Deref`,
-        // so it has provenance over the whole allocation.
-        let ptr = vec.as_mut_ptr().add(start);
-        DrainProducer::new(slice::from_raw_parts_mut(ptr, len))
     }
 }
 

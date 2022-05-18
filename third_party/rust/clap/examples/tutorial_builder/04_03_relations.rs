@@ -1,10 +1,8 @@
-// Note: this requires the `cargo` feature
-
-use clap::{arg, command, ArgGroup};
+use clap::{app_from_crate, arg, ArgGroup};
 
 fn main() {
     // Create application like normal
-    let matches = command!()
+    let matches = app_from_crate!()
         // Add the version arguments
         .arg(arg!(--"set-ver" <VER> "set version manually").required(false))
         .arg(arg!(--major         "auto inc major"))

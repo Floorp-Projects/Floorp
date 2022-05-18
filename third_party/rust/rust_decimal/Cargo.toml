@@ -12,15 +12,14 @@
 [package]
 edition = "2018"
 name = "rust_decimal"
-version = "1.23.1"
+version = "1.20.0"
 authors = ["Paul Mason <paul@form1.co.nz>"]
-build = "build.rs"
 exclude = ["tests/generated/*"]
-description = "Decimal number implementation written in pure Rust suitable for financial and fixed-precision calculations."
+description = "A Decimal Implementation written in pure Rust suitable for financial calculations."
 documentation = "https://docs.rs/rust_decimal/"
 readme = "./README.md"
-keywords = ["decimal", "financial", "fixed", "precision", "number"]
-categories = ["science", "mathematics", "data-structures"]
+keywords = ["decimal", "financial", "fixed", "precision"]
+categories = ["science", "data-structures"]
 license = "MIT"
 repository = "https://github.com/paupino/rust-decimal"
 [package.metadata.docs.rs]
@@ -37,11 +36,6 @@ default-features = false
 
 [dependencies.arrayvec]
 version = "0.7"
-default-features = false
-
-[dependencies.borsh]
-version = "0.9.3"
-optional = true
 default-features = false
 
 [dependencies.byteorder]
@@ -109,15 +103,15 @@ version = "1.0"
 features = ["derive"]
 default-features = false
 
+[dev-dependencies.serde_derive]
+version = "1.0"
+
 [dev-dependencies.serde_json]
 version = "1.0"
 
 [dev-dependencies.tokio]
 version = "1.0"
 features = ["rt-multi-thread", "test-util", "macros"]
-
-[dev-dependencies.version-sync]
-version = "0.9"
 
 [features]
 c-repr = []

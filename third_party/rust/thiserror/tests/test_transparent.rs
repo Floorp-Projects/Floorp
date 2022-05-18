@@ -1,3 +1,5 @@
+#![deny(clippy::all, clippy::pedantic)]
+
 use anyhow::anyhow;
 use std::error::Error as _;
 use std::io;

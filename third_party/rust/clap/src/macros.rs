@@ -4,7 +4,6 @@
     since = "3.0.0",
     note = "Deprecated in Issue #3087, maybe clap::Parser would fit your use case?"
 )]
-#[doc(hidden)]
 #[macro_export]
 macro_rules! load_yaml {
     ($yaml:expr) => {
@@ -16,7 +15,6 @@ macro_rules! load_yaml {
 /// Deprecated, replaced with [`ArgMatches::value_of_t`][crate::ArgMatches::value_of_t]
 #[macro_export]
 #[deprecated(since = "3.0.0", note = "Replaced with `ArgMatches::value_of_t`")]
-#[doc(hidden)]
 macro_rules! value_t {
     ($m:ident, $v:expr, $t:ty) => {
         $crate::value_t!($m.value_of($v), $t)
@@ -32,7 +30,6 @@ macro_rules! value_t {
     since = "3.0.0",
     note = "Replaced with `ArgMatches::value_of_t_or_exit`"
 )]
-#[doc(hidden)]
 macro_rules! value_t_or_exit {
     ($m:ident, $v:expr, $t:ty) => {
         value_t_or_exit!($m.value_of($v), $t)
@@ -45,7 +42,6 @@ macro_rules! value_t_or_exit {
 /// Deprecated, replaced with [`ArgMatches::values_of_t`][crate::ArgMatches::value_of_t]
 #[macro_export]
 #[deprecated(since = "3.0.0", note = "Replaced with `ArgMatches::values_of_t`")]
-#[doc(hidden)]
 macro_rules! values_t {
     ($m:ident, $v:expr, $t:ty) => {
         values_t!($m.values_of($v), $t)
@@ -61,7 +57,6 @@ macro_rules! values_t {
     since = "3.0.0",
     note = "Replaced with `ArgMatches::values_of_t_or_exit`"
 )]
-#[doc(hidden)]
 macro_rules! values_t_or_exit {
     ($m:ident, $v:expr, $t:ty) => {
         values_t_or_exit!($m.values_of($v), $t)
@@ -73,7 +68,6 @@ macro_rules! values_t_or_exit {
 
 /// Deprecated, replaced with [`ArgEnum`][crate::ArgEnum]
 #[deprecated(since = "3.0.0", note = "Replaced with `ArgEnum`")]
-#[doc(hidden)]
 #[macro_export]
 macro_rules! arg_enum {
     (@as_item $($i:item)*) => ($($i)*);
@@ -186,9 +180,9 @@ macro_rules! arg_enum {
 /// ```no_run
 /// # #[macro_use]
 /// # extern crate clap;
-/// # use clap::Command;
+/// # use clap::App;
 /// # fn main() {
-/// let m = Command::new("cmd")
+/// let m = App::new("app")
 ///             .version(crate_version!())
 ///             .get_matches();
 /// # }
@@ -201,7 +195,7 @@ macro_rules! crate_version {
     };
 }
 
-/// Allows you to pull the authors for the command from your Cargo.toml at
+/// Allows you to pull the authors for the app from your Cargo.toml at
 /// compile time in the form:
 /// `"author1 lastname <author1@example.com>:author2 lastname <author2@example.com>"`
 ///
@@ -215,9 +209,9 @@ macro_rules! crate_version {
 /// ```no_run
 /// # #[macro_use]
 /// # extern crate clap;
-/// # use clap::Command;
+/// # use clap::App;
 /// # fn main() {
-/// let m = Command::new("cmd")
+/// let m = App::new("app")
 ///             .author(crate_authors!("\n"))
 ///             .get_matches();
 /// # }
@@ -245,9 +239,9 @@ macro_rules! crate_authors {
 /// ```no_run
 /// # #[macro_use]
 /// # extern crate clap;
-/// # use clap::Command;
+/// # use clap::App;
 /// # fn main() {
-/// let m = Command::new("cmd")
+/// let m = App::new("app")
 ///             .about(crate_description!())
 ///             .get_matches();
 /// # }
@@ -267,9 +261,9 @@ macro_rules! crate_description {
 /// ```no_run
 /// # #[macro_use]
 /// # extern crate clap;
-/// # use clap::Command;
+/// # use clap::App;
 /// # fn main() {
-/// let m = Command::new(crate_name!())
+/// let m = App::new(crate_name!())
 ///             .get_matches();
 /// # }
 /// ```
@@ -281,12 +275,17 @@ macro_rules! crate_name {
     };
 }
 
-/// Allows you to build the `Command` instance from your Cargo.toml at compile time.
+/// Allows you to build the `App` instance from your Cargo.toml at compile time.
+///
+/// Equivalent to using the `crate_*!` macros with their respective fields.
+///
+/// Provided separator is for the [`crate_authors!`] macro,
+/// refer to the documentation therefor.
 ///
 /// **NOTE:** Changing the values in your `Cargo.toml` does not trigger a re-build automatically,
 /// and therefore won't change the generated output until you recompile.
 ///
-/// In some cases you can "trick" the compiler into triggering a rebuild when your
+/// **Pro Tip:** In some cases you can "trick" the compiler into triggering a rebuild when your
 /// `Cargo.toml` is changed by including this in your `src/main.rs` file
 /// `include_str!("../Cargo.toml");`
 ///
@@ -296,78 +295,41 @@ macro_rules! crate_name {
 /// # #[macro_use]
 /// # extern crate clap;
 /// # fn main() {
-/// let m = command!().get_matches();
+/// let m = app_from_crate!().get_matches();
 /// # }
 /// ```
 #[cfg(feature = "cargo")]
 #[macro_export]
-macro_rules! command {
-    () => {{
-        $crate::command!($crate::crate_name!())
-    }};
-    ($name:expr) => {{
-        let mut cmd = $crate::Command::new($name).version($crate::crate_version!());
-
-        let author = $crate::crate_authors!();
-        if !author.is_empty() {
-            cmd = cmd.author(author)
-        }
-
-        let about = $crate::crate_description!();
-        if !about.is_empty() {
-            cmd = cmd.about(about)
-        }
-
-        cmd
-    }};
-}
-
-/// Requires `cargo` feature flag to be enabled.
-#[cfg(not(feature = "cargo"))]
-#[macro_export]
-macro_rules! command {
-    () => {{
-        compile_error!("`cargo` feature flag is required");
-    }};
-    ($name:expr) => {{
-        compile_error!("`cargo` feature flag is required");
-    }};
-}
-
-/// Deprecated, replaced with [`clap::command!`][crate::command]
-#[cfg(feature = "cargo")]
-#[deprecated(since = "3.1.0", note = "Replaced with `clap::command!")]
-#[macro_export]
 macro_rules! app_from_crate {
     () => {{
-        let mut cmd = $crate::Command::new($crate::crate_name!()).version($crate::crate_version!());
+        let mut app = $crate::App::new($crate::crate_name!()).version($crate::crate_version!());
 
         let author = $crate::crate_authors!(", ");
         if !author.is_empty() {
-            cmd = cmd.author(author)
+            app = app.author(author)
         }
 
         let about = $crate::crate_description!();
         if !about.is_empty() {
-            cmd = cmd.about(about)
+            app = app.about(about)
         }
 
-        cmd
+        app
     }};
     ($sep:expr) => {{
-        let mut cmd = $crate::Command::new($crate::crate_name!()).version($crate::crate_version!());
+        let mut app = $crate::App::new($crate::crate_name!()).version($crate::crate_version!());
 
         let author = $crate::crate_authors!($sep);
         if !author.is_empty() {
-            cmd = cmd.author(author)
+            app = app.author(author)
         }
 
         let about = $crate::crate_description!();
         if !about.is_empty() {
-            cmd = cmd.about(about)
+            app = app.about(about)
         }
 
-        cmd
+        app
     }};
 }
 
@@ -416,12 +378,12 @@ macro_rules! arg_impl {
             @arg
             ({
                 debug_assert_eq!($arg.get_value_names(), None, "Flags should precede values");
-                debug_assert!(!$arg.is_multiple_occurrences_set(), "Flags should precede `...`");
+                debug_assert!(!$arg.is_set($crate::ArgSettings::MultipleOccurrences), "Flags should precede `...`");
 
                 let mut arg = $arg;
                 let long = $crate::arg_impl! { @string $long };
-                if arg.get_id().is_empty() {
-                    arg = arg.id(long);
+                if arg.get_name().is_empty() {
+                    arg = arg.name(long);
                 }
                 arg.long(long)
             })
@@ -438,12 +400,12 @@ macro_rules! arg_impl {
             @arg
             ({
                 debug_assert_eq!($arg.get_value_names(), None, "Flags should precede values");
-                debug_assert!(!$arg.is_multiple_occurrences_set(), "Flags should precede `...`");
+                debug_assert!(!$arg.is_set($crate::ArgSettings::MultipleOccurrences), "Flags should precede `...`");
 
                 let mut arg = $arg;
                 let long = $crate::arg_impl! { @string $long };
-                if arg.get_id().is_empty() {
-                    arg = arg.id(long);
+                if arg.get_name().is_empty() {
+                    arg = arg.name(long);
                 }
                 arg.long(long)
             })
@@ -461,7 +423,7 @@ macro_rules! arg_impl {
             ({
                 debug_assert_eq!($arg.get_long(), None, "Short flags should precede long flags");
                 debug_assert_eq!($arg.get_value_names(), None, "Flags should precede values");
-                debug_assert!(!$arg.is_multiple_occurrences_set(), "Flags should precede `...`");
+                debug_assert!(!$arg.is_set($crate::ArgSettings::MultipleOccurrences), "Flags should precede `...`");
 
                 $arg.short($crate::arg_impl! { @char $short })
             })
@@ -479,7 +441,7 @@ macro_rules! arg_impl {
             ({
                 debug_assert_eq!($arg.get_long(), None, "Short flags should precede long flags");
                 debug_assert_eq!($arg.get_value_names(), None, "Flags should precede values");
-                debug_assert!(!$arg.is_multiple_occurrences_set(), "Flags should precede `...`");
+                debug_assert!(!$arg.is_set($crate::ArgSettings::MultipleOccurrences), "Flags should precede `...`");
 
                 $arg.short($crate::arg_impl! { @char $short })
             })
@@ -495,7 +457,7 @@ macro_rules! arg_impl {
         $crate::arg_impl! {
             @arg
             ({
-                debug_assert!(!$arg.is_multiple_occurrences_set(), "Values should precede `...`");
+                debug_assert!(!$arg.is_set($crate::ArgSettings::MultipleOccurrences), "Values should precede `...`");
                 debug_assert_eq!($arg.get_value_names(), None, "Multiple values not yet supported");
 
                 let mut arg = $arg;
@@ -504,8 +466,8 @@ macro_rules! arg_impl {
                 arg = arg.takes_value(true);
 
                 let value_name = $crate::arg_impl! { @string $value_name };
-                if arg.get_id().is_empty() {
-                    arg = arg.id(value_name);
+                if arg.get_name().is_empty() {
+                    arg = arg.name(value_name);
                 }
                 arg.value_name(value_name)
             })
@@ -521,7 +483,7 @@ macro_rules! arg_impl {
         $crate::arg_impl! {
             @arg
             ({
-                debug_assert!(!$arg.is_multiple_occurrences_set(), "Values should precede `...`");
+                debug_assert!(!$arg.is_set($crate::ArgSettings::MultipleOccurrences), "Values should precede `...`");
                 debug_assert_eq!($arg.get_value_names(), None, "Multiple values not yet supported");
 
                 let mut arg = $arg;
@@ -534,8 +496,8 @@ macro_rules! arg_impl {
                 arg = arg.takes_value(true);
 
                 let value_name = $crate::arg_impl! { @string $value_name };
-                if arg.get_id().is_empty() {
-                    arg = arg.id(value_name);
+                if arg.get_name().is_empty() {
+                    arg = arg.name(value_name);
                 }
                 arg.value_name(value_name)
             })
@@ -633,14 +595,14 @@ macro_rules! arg_impl {
 ///
 /// ### Help String
 ///
-/// The help string is denoted between a pair of double quotes `""` and may contain any
+/// The help string is denoted between a pair of single quotes `''` and may contain any
 /// characters.
 ///
 /// # Examples
 ///
 /// ```rust
-/// # use clap::{Command, Arg, arg};
-/// Command::new("prog")
+/// # use clap::{App, Arg, arg};
+/// App::new("prog")
 ///     .args(&[
 ///         arg!(--config <FILE> "a required file for the configuration and no short"),
 ///         arg!(-d --debug ... "turns on debugging information and allows multiples"),
@@ -660,7 +622,7 @@ macro_rules! arg {
         let arg = $crate::arg_impl! {
             @arg ($crate::Arg::default()) $($tail)+
         };
-        debug_assert!(!arg.get_id().is_empty(), "Without a value or long flag, the `name:` prefix is required");
+        debug_assert!(!arg.get_name().is_empty(), "Without a value or long flag, the `name:` prefix is required");
         arg
     }};
 }
@@ -670,7 +632,6 @@ macro_rules! arg {
     since = "3.0.0",
     note = "Replaced with `clap::Parser` for a declarative API (Issue clap-rs/clap#2835)"
 )]
-#[doc(hidden)]
 #[macro_export]
 macro_rules! clap_app {
     (@app ($builder:expr)) => { $builder };
@@ -720,7 +681,7 @@ macro_rules! clap_app {
     (@app ($builder:expr) (@subcommand $name:ident => $($tail:tt)*) $($tt:tt)*) => {
         $crate::clap_app!{ @app
             ($builder.subcommand(
-                $crate::clap_app!{ @app ($crate::Command::new(stringify!($name))) $($tail)* }
+                $crate::clap_app!{ @app ($crate::App::new(stringify!($name))) $($tail)* }
             ))
             $($tt)*
         }
@@ -812,15 +773,15 @@ macro_rules! clap_app {
 
 // Build a subcommand outside of an app.
     (@subcommand $name:ident => $($tail:tt)*) => {
-        $crate::clap_app!{ @app ($crate::Command::new(stringify!($name))) $($tail)* }
+        $crate::clap_app!{ @app ($crate::App::new(stringify!($name))) $($tail)* }
     };
 // Start the magic
     (($name:expr) => $($tail:tt)*) => {{
-        $crate::clap_app!{ @app ($crate::Command::new($name)) $($tail)*}
+        $crate::clap_app!{ @app ($crate::App::new($name)) $($tail)*}
     }};
 
     ($name:ident => $($tail:tt)*) => {{
-        $crate::clap_app!{ @app ($crate::Command::new(stringify!($name))) $($tail)*}
+        $crate::clap_app!{ @app ($crate::App::new(stringify!($name))) $($tail)*}
     }};
 }
 

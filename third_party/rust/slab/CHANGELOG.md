@@ -1,13 +1,8 @@
-# 0.4.6 (April 2, 2022)
-
-* Add `Slab::vacant_key` (#114)
-* Fix stacked borrows violation in `Slab::get2_unchecked_mut` (#115)
-
 # 0.4.5 (October 13, 2021)
 
-* Add alternate debug output for listing items in the slab (#108)
-* Fix typo in debug output of IntoIter (#109)
-* Impl 'Clone' for 'Iter' (#110)
+ * Add alternate debug output for listing items in the slab (#108)
+ * Fix typo in debug output of IntoIter (#109)
+ * Impl 'Clone' for 'Iter' (#110)
 
 # 0.4.4 (August 06, 2021)
 

@@ -53,11 +53,7 @@ impl JobsEventCounter {
 }
 
 /// Number of bits used for the thread counters.
-#[cfg(target_pointer_width = "64")]
-const THREADS_BITS: usize = 16;
-
-#[cfg(target_pointer_width = "32")]
-const THREADS_BITS: usize = 8;
+const THREADS_BITS: usize = 10;
 
 /// Bits to shift to select the sleeping threads
 /// (used with `select_bits`).
@@ -72,7 +68,7 @@ const INACTIVE_SHIFT: usize = 1 * THREADS_BITS;
 const JEC_SHIFT: usize = 2 * THREADS_BITS;
 
 /// Max value for the thread counters.
-pub(crate) const THREADS_MAX: usize = (1 << THREADS_BITS) - 1;
+const THREADS_MAX: usize = (1 << THREADS_BITS) - 1;
 
 /// Constant that can be added to add one sleeping thread.
 const ONE_SLEEPING: usize = 1;

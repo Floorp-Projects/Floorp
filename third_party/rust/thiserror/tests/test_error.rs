@@ -1,3 +1,4 @@
+#![deny(clippy::all, clippy::pedantic)]
 #![allow(dead_code)]
 
 use std::fmt::{self, Display};

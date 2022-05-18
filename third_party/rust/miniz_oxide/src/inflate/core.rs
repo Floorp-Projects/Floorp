@@ -102,50 +102,15 @@ const LITLEN_TABLE: usize = 0;
 const DIST_TABLE: usize = 1;
 const HUFFLEN_TABLE: usize = 2;
 
-/// Flags to [`decompress()`] to control how inflation works.
-///
-/// These define bits for a bitmask argument.
 pub mod inflate_flags {
     /// Should we try to parse a zlib header?
-    ///
-    /// If unset, [`decompress()`] will expect an RFC1951 deflate stream.  If set, it will expect an
-    /// RFC1950 zlib wrapper around the deflate stream.
     pub const TINFL_FLAG_PARSE_ZLIB_HEADER: u32 = 1;
-
-    /// There will be more input that hasn't been given to the decompressor yet.
-    ///
-    /// This is useful when you want to decompress what you have so far,
-    /// even if you know there is probably more input that hasn't gotten here yet (_e.g._, over a
-    /// network connection).  When [`decompress()`][super::decompress] reaches the end of the input
-    /// without finding the end of the compressed stream, it will return
-    /// [`TINFLStatus::NeedsMoreInput`][super::TINFLStatus::NeedsMoreInput] if this is set,
-    /// indicating that you should get more data before calling again.  If not set, it will return
-    /// [`TINFLStatus::FailedCannotMakeProgress`][super::TINFLStatus::FailedCannotMakeProgress]
-    /// suggesting the stream is corrupt, since you claimed it was all there.
+    /// There is more input that hasn't been given to the decompressor yet.
     pub const TINFL_FLAG_HAS_MORE_INPUT: u32 = 2;
-
     /// The output buffer should not wrap around.
     pub const TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF: u32 = 4;
-
-    /// Calculate the adler32 checksum of the output data even if we're not inflating a zlib stream.
-    ///
-    /// If [`TINFL_FLAG_IGNORE_ADLER32`] is specified, it will override this.
-    ///
-    /// NOTE: Enabling/disabling this between calls to decompress will result in an incorect
-    /// checksum.
+    /// Should we calculate the adler32 checksum of the output data?
     pub const TINFL_FLAG_COMPUTE_ADLER32: u32 = 8;
-
-    /// Ignore adler32 checksum even if we are inflating a zlib stream.
-    ///
-    /// Overrides [`TINFL_FLAG_COMPUTE_ADLER32`] if both are enabled.
-    ///
-    /// NOTE: This flag does not exist in miniz as it does not support this and is a
-    /// custom addition for miniz_oxide.
-    ///
-    /// NOTE: Should not be changed from enabled to disabled after decompression has started,
-    /// this will result in checksum failure (outside the unlikely event where the checksum happens
-    /// to match anyway).
-    pub const TINFL_FLAG_IGNORE_ADLER32: u32 = 64;
 }
 
 use self::inflate_flags::*;
@@ -209,21 +174,10 @@ impl DecompressorOxide {
     }
 
     /// Returns the adler32 checksum of the currently decompressed data.
-    /// Note: Will return Some(1) if decompressing zlib but ignoring adler32.
     #[inline]
     pub fn adler32(&self) -> Option<u32> {
         if self.state != State::Start && !self.state.is_failure() && self.z_header0 != 0 {
             Some(self.check_adler32)
-        } else {
-            None
-        }
-    }
-
-    /// Returns the adler32 that was read from the zlib header if it exists.
-    #[inline]
-    pub fn adler32_header(&self) -> Option<u32> {
-        if self.state != State::Start && self.state != State::BadZlibHeader && self.z_header0 != 0 {
-            Some(self.z_adler32)
         } else {
             None
         }
@@ -1029,21 +983,19 @@ fn decompress_fast(
 }
 
 /// Main decompression function. Keeps decompressing data from `in_buf` until the `in_buf` is
-/// empty, `out` is full, the end of the deflate stream is hit, or there is an error in the
+/// empty, `out_cur` is full, the end of the deflate stream is hit, or there is an error in the
 /// deflate stream.
 ///
 /// # Arguments
 ///
-/// `r` is a [`DecompressorOxide`] struct with the state of this stream.
-///
 /// `in_buf` is a reference to the compressed data that is to be decompressed. The decompressor will
 /// start at the first byte of this buffer.
 ///
-/// `out` is a reference to the buffer that will store the decompressed data, and that
+/// `out_cur` is a mutable cursor into the buffer that will store the decompressed data, and that
 /// stores previously decompressed data if any.
-///
-/// * The offset given by `out_pos` indicates where in the output buffer slice writing should start.
-/// * If [`TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF`] is not set, the output buffer is used in a
+/// * The position of the output cursor indicates where in the output buffer slice writing should
+/// start.
+/// * If TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF is not set, the output buffer is used in a
 /// wrapping manner, and it's size is required to be a power of 2.
 /// * The decompression function normally needs access to 32KiB of the previously decompressed data
 ///(or to the beginning of the decompressed data if less than 32KiB has been decompressed.)
@@ -1053,15 +1005,16 @@ fn decompress_fast(
 /// and thus allows a smaller output buffer. The window size can be specified in the zlib
 /// header structure, however, the header data should not be relied on to be correct.
 ///
-/// `flags` indicates settings and status to the decompression function.
-/// * The [`TINFL_FLAG_HAS_MORE_INPUT`] has to be specified if more compressed data is to be provided
+/// `flags`
+/// Flags to indicate settings and status to the decompression function.
+/// * The `TINFL_FLAG_HAS_MORE_INPUT` has to be specified if more compressed data is to be provided
 /// in a subsequent call to this function.
-/// * See the the [`inflate_flags`] module for details on other flags.
+/// * See the the [`inflate_flags`](inflate_flags/index.html) module for details on other flags.
 ///
 /// # Returns
-///
-/// Returns a tuple containing the status of the compressor, the number of input bytes read, and the
-/// number of bytes output to `out`.
+/// returns a tuple containing the status of the compressor, the number of input bytes read, and the
+/// number of bytes output to `out_cur`.
+/// Updates the position of `out_cur` to point to the next free spot in the output buffer.
 ///
 /// This function shouldn't panic pending any bugs.
 pub fn decompress(
@@ -1663,12 +1616,7 @@ pub fn decompress(
 
     // If this is a zlib stream, and update the adler32 checksum with the decompressed bytes if
     // requested.
-    let need_adler = if (flags & TINFL_FLAG_IGNORE_ADLER32) == 0 {
-        flags & (TINFL_FLAG_PARSE_ZLIB_HEADER | TINFL_FLAG_COMPUTE_ADLER32) != 0
-    } else {
-        // If TINFL_FLAG_IGNORE_ADLER32 is enabled, ignore the checksum.
-        false
-    };
+    let need_adler = flags & (TINFL_FLAG_PARSE_ZLIB_HEADER | TINFL_FLAG_COMPUTE_ADLER32) != 0;
     if need_adler && status as i32 >= 0 {
         let out_buf_pos = out_buf.position();
         r.check_adler32 = update_adler32(r.check_adler32, &out_buf.get_ref()[out_pos..out_buf_pos]);

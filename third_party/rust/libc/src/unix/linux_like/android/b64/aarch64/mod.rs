@@ -48,13 +48,6 @@ s! {
         __unused4: ::c_uint,
         __unused5: ::c_uint,
     }
-
-    pub struct user_regs_struct {
-        pub regs: [u64; 31],
-        pub sp: u64,
-        pub pc: u64,
-        pub pstate: u64,
-    }
 }
 
 pub const O_DIRECT: ::c_int = 0x10000;
@@ -380,12 +373,5 @@ cfg_if! {
     if #[cfg(libc_align)] {
         mod align;
         pub use self::align::*;
-    }
-}
-
-cfg_if! {
-    if #[cfg(libc_int128)] {
-        mod int128;
-        pub use self::int128::*;
     }
 }

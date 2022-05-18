@@ -1,22 +1,20 @@
-// Note: this requires the `unstable-multicall` feature
-
 use std::process::exit;
 
-use clap::{Arg, Command};
+use clap::{App, AppSettings, Arg};
 
-fn applet_commands() -> [Command<'static>; 2] {
+fn applet_commands() -> [App<'static>; 2] {
     [
-        Command::new("true").about("does nothing successfully"),
-        Command::new("false").about("does nothing unsuccessfully"),
+        App::new("true").about("does nothing successfully"),
+        App::new("false").about("does nothing unsuccessfully"),
     ]
 }
 
 fn main() {
-    let cmd = Command::new(env!("CARGO_CRATE_NAME"))
-        .multicall(true)
+    let app = App::new(env!("CARGO_CRATE_NAME"))
+        .setting(AppSettings::Multicall)
         .subcommand(
-            Command::new("busybox")
-                .arg_required_else_help(true)
+            App::new("busybox")
+                .setting(AppSettings::ArgRequiredElseHelp)
                 .subcommand_value_name("APPLET")
                 .subcommand_help_heading("APPLETS")
                 .arg(
@@ -26,13 +24,13 @@ fn main() {
                         .exclusive(true)
                         .takes_value(true)
                         .default_missing_value("/usr/local/bin")
-                        .use_value_delimiter(false),
+                        .use_delimiter(false),
                 )
                 .subcommands(applet_commands()),
         )
         .subcommands(applet_commands());
 
-    let matches = cmd.get_matches();
+    let matches = app.get_matches();
     let mut subcommand = matches.subcommand();
     if let Some(("busybox", cmd)) = subcommand {
         if cmd.occurrences_of("install") > 0 {

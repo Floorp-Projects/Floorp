@@ -19,7 +19,7 @@ Works with `no_std`, simply disable the `std` Cargo feature.
 ## Usage
 
 ```rust
-let mut headers = [httparse::EMPTY_HEADER; 64];
+let mut headers = [httparse::EMPTY_HEADER; 16];
 let mut req = httparse::Request::new(&mut headers);
 
 let buf = b"GET /index.html HTTP/1.1\r\nHost";

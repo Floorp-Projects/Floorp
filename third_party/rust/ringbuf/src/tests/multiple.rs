@@ -10,9 +10,9 @@ fn for_each() {
     prod.push(20).unwrap();
 
     let mut sum_1 = 0;
-    for v in cons.iter() {
+    cons.for_each(|v| {
         sum_1 += *v;
-    }
+    });
 
     let first = cons.pop().expect("First element not available");
     let second = cons.pop().expect("Second element not available");
@@ -29,14 +29,14 @@ fn for_each_mut() {
     prod.push(10).unwrap();
     prod.push(20).unwrap();
 
-    for v in cons.iter_mut() {
+    cons.for_each_mut(|v| {
         *v *= 2;
-    }
+    });
 
     let mut sum_1 = 0;
-    for v in cons.iter_mut() {
+    cons.for_each_mut(|v| {
         sum_1 += *v;
-    }
+    });
 
     let first = cons.pop().expect("First element not available");
     let second = cons.pop().expect("Second element not available");

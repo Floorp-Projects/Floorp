@@ -26,7 +26,6 @@ fn works_1() {
     assert_eq!(None, iter.next());
 }
 
-#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn works_2() {
     let (a_tx, a_rx) = oneshot::channel::<i32>();
@@ -55,7 +54,6 @@ fn from_iterator() {
     assert_eq!(block_on(stream.collect::<Vec<_>>()), vec![1, 2, 3]);
 }
 
-#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn queue_never_unblocked() {
     let (_a_tx, a_rx) = oneshot::channel::<Box<dyn Any + Send>>();

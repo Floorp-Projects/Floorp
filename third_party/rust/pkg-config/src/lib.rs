@@ -98,7 +98,6 @@ pub struct Library {
     pub frameworks: Vec<String>,
     pub framework_paths: Vec<PathBuf>,
     pub include_paths: Vec<PathBuf>,
-    pub ld_args: Vec<Vec<String>>,
     pub defines: HashMap<String, Option<String>>,
     pub version: String,
     _priv: (),
@@ -558,7 +557,6 @@ impl Library {
             libs: Vec::new(),
             link_paths: Vec::new(),
             include_paths: Vec::new(),
-            ld_args: Vec::new(),
             frameworks: Vec::new(),
             framework_paths: Vec::new(),
             defines: HashMap::new(),
@@ -671,31 +669,6 @@ impl Library {
                 }
                 _ => (),
             }
-        }
-
-        let mut linker_options = words.iter().filter(|arg| arg.starts_with("-Wl,"));
-        while let Some(option) = linker_options.next() {
-            let mut pop = false;
-            let mut ld_option = vec![];
-            for subopt in option[4..].split(',') {
-                if pop {
-                    pop = false;
-                    continue;
-                }
-
-                if subopt == "-framework" {
-                    pop = true;
-                    continue;
-                }
-
-                ld_option.push(subopt);
-            }
-
-            let meta = format!("rustc-link-arg=-Wl,{}", ld_option.join(","));
-            config.print_metadata(&meta);
-
-            self.ld_args
-                .push(ld_option.into_iter().map(String::from).collect());
         }
     }
 

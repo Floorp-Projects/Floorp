@@ -65,12 +65,11 @@
 //! }
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/serde_yaml/0.8.24")]
+#![doc(html_root_url = "https://docs.rs/serde_yaml/0.8.23")]
 #![deny(missing_docs)]
 // Suppressed clippy_pedantic lints
 #![allow(
     // buggy
-    clippy::iter_not_returning_iterator, // https://github.com/rust-lang/rust-clippy/issues/8285
     clippy::question_mark, // https://github.com/rust-lang/rust-clippy/issues/7859
     // private Deserializer::next
     clippy::should_implement_trait,
@@ -90,7 +89,6 @@
     clippy::cast_precision_loss,
     clippy::doc_markdown,
     clippy::items_after_statements,
-    clippy::return_self_not_must_use,
     // noisy
     clippy::missing_errors_doc,
     clippy::must_use_candidate,

@@ -5,10 +5,8 @@
 //!
 //! [std::slice]: https://doc.rust-lang.org/stable/std/slice/
 
-mod chunks;
 mod mergesort;
 mod quicksort;
-mod rchunks;
 
 mod test;
 
@@ -20,10 +18,8 @@ use crate::split_producer::*;
 use std::cmp;
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
-use std::mem;
 
-pub use self::chunks::{Chunks, ChunksExact, ChunksExactMut, ChunksMut};
-pub use self::rchunks::{RChunks, RChunksExact, RChunksExactMut, RChunksMut};
+use super::math::div_round_up;
 
 /// Parallel extensions for slices.
 pub trait ParallelSlice<T: Sync> {
@@ -87,7 +83,10 @@ pub trait ParallelSlice<T: Sync> {
     /// ```
     fn par_chunks(&self, chunk_size: usize) -> Chunks<'_, T> {
         assert!(chunk_size != 0, "chunk_size must not be zero");
-        Chunks::new(chunk_size, self.as_parallel_slice())
+        Chunks {
+            chunk_size,
+            slice: self.as_parallel_slice(),
+        }
     }
 
     /// Returns a parallel iterator over `chunk_size` elements of
@@ -106,45 +105,15 @@ pub trait ParallelSlice<T: Sync> {
     /// ```
     fn par_chunks_exact(&self, chunk_size: usize) -> ChunksExact<'_, T> {
         assert!(chunk_size != 0, "chunk_size must not be zero");
-        ChunksExact::new(chunk_size, self.as_parallel_slice())
-    }
-
-    /// Returns a parallel iterator over at most `chunk_size` elements of `self` at a time,
-    /// starting at the end. The chunks do not overlap.
-    ///
-    /// If the number of elements in the iterator is not divisible by
-    /// `chunk_size`, the last chunk may be shorter than `chunk_size`.  All
-    /// other chunks will have that exact length.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    /// let chunks: Vec<_> = [1, 2, 3, 4, 5].par_rchunks(2).collect();
-    /// assert_eq!(chunks, vec![&[4, 5][..], &[2, 3], &[1]]);
-    /// ```
-    fn par_rchunks(&self, chunk_size: usize) -> RChunks<'_, T> {
-        assert!(chunk_size != 0, "chunk_size must not be zero");
-        RChunks::new(chunk_size, self.as_parallel_slice())
-    }
-
-    /// Returns a parallel iterator over `chunk_size` elements of `self` at a time,
-    /// starting at the end. The chunks do not overlap.
-    ///
-    /// If `chunk_size` does not divide the length of the slice, then the
-    /// last up to `chunk_size-1` elements will be omitted and can be
-    /// retrieved from the remainder function of the iterator.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    /// let chunks: Vec<_> = [1, 2, 3, 4, 5].par_rchunks_exact(2).collect();
-    /// assert_eq!(chunks, vec![&[4, 5][..], &[2, 3]]);
-    /// ```
-    fn par_rchunks_exact(&self, chunk_size: usize) -> RChunksExact<'_, T> {
-        assert!(chunk_size != 0, "chunk_size must not be zero");
-        RChunksExact::new(chunk_size, self.as_parallel_slice())
+        let slice = self.as_parallel_slice();
+        let rem = slice.len() % chunk_size;
+        let len = slice.len() - rem;
+        let (fst, snd) = slice.split_at(len);
+        ChunksExact {
+            chunk_size,
+            slice: fst,
+            rem: snd,
+        }
     }
 }
 
@@ -201,7 +170,10 @@ pub trait ParallelSliceMut<T: Send> {
     /// ```
     fn par_chunks_mut(&mut self, chunk_size: usize) -> ChunksMut<'_, T> {
         assert!(chunk_size != 0, "chunk_size must not be zero");
-        ChunksMut::new(chunk_size, self.as_parallel_slice_mut())
+        ChunksMut {
+            chunk_size,
+            slice: self.as_parallel_slice_mut(),
+        }
     }
 
     /// Returns a parallel iterator over `chunk_size` elements of
@@ -222,54 +194,20 @@ pub trait ParallelSliceMut<T: Send> {
     /// ```
     fn par_chunks_exact_mut(&mut self, chunk_size: usize) -> ChunksExactMut<'_, T> {
         assert!(chunk_size != 0, "chunk_size must not be zero");
-        ChunksExactMut::new(chunk_size, self.as_parallel_slice_mut())
-    }
-
-    /// Returns a parallel iterator over at most `chunk_size` elements of `self` at a time,
-    /// starting at the end. The chunks are mutable and do not overlap.
-    ///
-    /// If the number of elements in the iterator is not divisible by
-    /// `chunk_size`, the last chunk may be shorter than `chunk_size`.  All
-    /// other chunks will have that exact length.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    /// let mut array = [1, 2, 3, 4, 5];
-    /// array.par_rchunks_mut(2)
-    ///      .for_each(|slice| slice.reverse());
-    /// assert_eq!(array, [1, 3, 2, 5, 4]);
-    /// ```
-    fn par_rchunks_mut(&mut self, chunk_size: usize) -> RChunksMut<'_, T> {
-        assert!(chunk_size != 0, "chunk_size must not be zero");
-        RChunksMut::new(chunk_size, self.as_parallel_slice_mut())
-    }
-
-    /// Returns a parallel iterator over `chunk_size` elements of `self` at a time,
-    /// starting at the end. The chunks are mutable and do not overlap.
-    ///
-    /// If `chunk_size` does not divide the length of the slice, then the
-    /// last up to `chunk_size-1` elements will be omitted and can be
-    /// retrieved from the remainder function of the iterator.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    /// let mut array = [1, 2, 3, 4, 5];
-    /// array.par_rchunks_exact_mut(3)
-    ///      .for_each(|slice| slice.reverse());
-    /// assert_eq!(array, [1, 2, 5, 4, 3]);
-    /// ```
-    fn par_rchunks_exact_mut(&mut self, chunk_size: usize) -> RChunksExactMut<'_, T> {
-        assert!(chunk_size != 0, "chunk_size must not be zero");
-        RChunksExactMut::new(chunk_size, self.as_parallel_slice_mut())
+        let slice = self.as_parallel_slice_mut();
+        let rem = slice.len() % chunk_size;
+        let len = slice.len() - rem;
+        let (fst, snd) = slice.split_at_mut(len);
+        ChunksExactMut {
+            chunk_size,
+            slice: fst,
+            rem: snd,
+        }
     }
 
     /// Sorts the slice in parallel.
     ///
-    /// This sort is stable (i.e., does not reorder equal elements) and *O*(*n* \* log(*n*)) worst-case.
+    /// This sort is stable (i.e. does not reorder equal elements) and `O(n log n)` worst-case.
     ///
     /// When applicable, unstable sorting is preferred because it is generally faster than stable
     /// sorting and it doesn't allocate auxiliary memory.
@@ -309,25 +247,7 @@ pub trait ParallelSliceMut<T: Send> {
 
     /// Sorts the slice in parallel with a comparator function.
     ///
-    /// This sort is stable (i.e., does not reorder equal elements) and *O*(*n* \* log(*n*)) worst-case.
-    ///
-    /// The comparator function must define a total ordering for the elements in the slice. If
-    /// the ordering is not total, the order of the elements is unspecified. An order is a
-    /// total order if it is (for all `a`, `b` and `c`):
-    ///
-    /// * total and antisymmetric: exactly one of `a < b`, `a == b` or `a > b` is true, and
-    /// * transitive, `a < b` and `b < c` implies `a < c`. The same must hold for both `==` and `>`.
-    ///
-    /// For example, while [`f64`] doesn't implement [`Ord`] because `NaN != NaN`, we can use
-    /// `partial_cmp` as our sort function when we know the slice doesn't contain a `NaN`.
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    ///
-    /// let mut floats = [5f64, 4.0, 1.0, 3.0, 2.0];
-    /// floats.par_sort_by(|a, b| a.partial_cmp(b).unwrap());
-    /// assert_eq!(floats, [1.0, 2.0, 3.0, 4.0, 5.0]);
-    /// ```
+    /// This sort is stable (i.e. does not reorder equal elements) and `O(n log n)` worst-case.
     ///
     /// When applicable, unstable sorting is preferred because it is generally faster than stable
     /// sorting and it doesn't allocate auxiliary memory.
@@ -372,12 +292,7 @@ pub trait ParallelSliceMut<T: Send> {
 
     /// Sorts the slice in parallel with a key extraction function.
     ///
-    /// This sort is stable (i.e., does not reorder equal elements) and *O*(*m* \* *n* \* log(*n*))
-    /// worst-case, where the key function is *O*(*m*).
-    ///
-    /// For expensive key functions (e.g. functions that are not simple property accesses or
-    /// basic operations), [`par_sort_by_cached_key`](#method.par_sort_by_cached_key) is likely to
-    /// be significantly faster, as it does not recompute element keys.
+    /// This sort is stable (i.e. does not reorder equal elements) and `O(n log n)` worst-case.
     ///
     /// When applicable, unstable sorting is preferred because it is generally faster than stable
     /// sorting and it doesn't allocate auxiliary memory.
@@ -408,119 +323,27 @@ pub trait ParallelSliceMut<T: Send> {
     /// v.par_sort_by_key(|k| k.abs());
     /// assert_eq!(v, [1, 2, -3, 4, -5]);
     /// ```
-    fn par_sort_by_key<K, F>(&mut self, f: F)
+    fn par_sort_by_key<B, F>(&mut self, f: F)
     where
-        K: Ord,
-        F: Fn(&T) -> K + Sync,
+        B: Ord,
+        F: Fn(&T) -> B + Sync,
     {
         par_mergesort(self.as_parallel_slice_mut(), |a, b| f(a).lt(&f(b)));
     }
 
-    /// Sorts the slice in parallel with a key extraction function.
+    /// Sorts the slice in parallel, but may not preserve the order of equal elements.
     ///
-    /// During sorting, the key function is called at most once per element, by using
-    /// temporary storage to remember the results of key evaluation.
-    /// The key function is called in parallel, so the order of calls is completely unspecified.
-    ///
-    /// This sort is stable (i.e., does not reorder equal elements) and *O*(*m* \* *n* + *n* \* log(*n*))
-    /// worst-case, where the key function is *O*(*m*).
-    ///
-    /// For simple key functions (e.g., functions that are property accesses or
-    /// basic operations), [`par_sort_by_key`](#method.par_sort_by_key) is likely to be
-    /// faster.
+    /// This sort is unstable (i.e. may reorder equal elements), in-place (i.e. does not allocate),
+    /// and `O(n log n)` worst-case.
     ///
     /// # Current implementation
     ///
-    /// The current algorithm is based on [pattern-defeating quicksort][pdqsort] by Orson Peters,
-    /// which combines the fast average case of randomized quicksort with the fast worst case of
-    /// heapsort, while achieving linear time on slices with certain patterns. It uses some
-    /// randomization to avoid degenerate cases, but with a fixed seed to always provide
-    /// deterministic behavior.
+    /// The current algorithm is based on Orson Peters' [pattern-defeating quicksort][pdqsort],
+    /// which is a quicksort variant designed to be very fast on certain kinds of patterns,
+    /// sometimes achieving linear time. It is randomized but deterministic, and falls back to
+    /// heapsort on degenerate inputs.
     ///
-    /// In the worst case, the algorithm allocates temporary storage in a `Vec<(K, usize)>` the
-    /// length of the slice.
-    ///
-    /// All quicksorts work in two stages: partitioning into two halves followed by recursive
-    /// calls. The partitioning phase is sequential, but the two recursive calls are performed in
-    /// parallel. Finally, after sorting the cached keys, the item positions are updated sequentially.
-    ///
-    /// [pdqsort]: https://github.com/orlp/pdqsort
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    ///
-    /// let mut v = [-5i32, 4, 32, -3, 2];
-    ///
-    /// v.par_sort_by_cached_key(|k| k.to_string());
-    /// assert!(v == [-3, -5, 2, 32, 4]);
-    /// ```
-    fn par_sort_by_cached_key<K, F>(&mut self, f: F)
-    where
-        F: Fn(&T) -> K + Sync,
-        K: Ord + Send,
-    {
-        let slice = self.as_parallel_slice_mut();
-        let len = slice.len();
-        if len < 2 {
-            return;
-        }
-
-        // Helper macro for indexing our vector by the smallest possible type, to reduce allocation.
-        macro_rules! sort_by_key {
-            ($t:ty) => {{
-                let mut indices: Vec<_> = slice
-                    .par_iter_mut()
-                    .enumerate()
-                    .map(|(i, x)| (f(&*x), i as $t))
-                    .collect();
-                // The elements of `indices` are unique, as they are indexed, so any sort will be
-                // stable with respect to the original slice. We use `sort_unstable` here because
-                // it requires less memory allocation.
-                indices.par_sort_unstable();
-                for i in 0..len {
-                    let mut index = indices[i].1;
-                    while (index as usize) < i {
-                        index = indices[index as usize].1;
-                    }
-                    indices[i].1 = index;
-                    slice.swap(i, index as usize);
-                }
-            }};
-        }
-
-        let sz_u8 = mem::size_of::<(K, u8)>();
-        let sz_u16 = mem::size_of::<(K, u16)>();
-        let sz_u32 = mem::size_of::<(K, u32)>();
-        let sz_usize = mem::size_of::<(K, usize)>();
-
-        if sz_u8 < sz_u16 && len <= (std::u8::MAX as usize) {
-            return sort_by_key!(u8);
-        }
-        if sz_u16 < sz_u32 && len <= (std::u16::MAX as usize) {
-            return sort_by_key!(u16);
-        }
-        if sz_u32 < sz_usize && len <= (std::u32::MAX as usize) {
-            return sort_by_key!(u32);
-        }
-        sort_by_key!(usize)
-    }
-
-    /// Sorts the slice in parallel, but might not preserve the order of equal elements.
-    ///
-    /// This sort is unstable (i.e., may reorder equal elements), in-place
-    /// (i.e., does not allocate), and *O*(*n* \* log(*n*)) worst-case.
-    ///
-    /// # Current implementation
-    ///
-    /// The current algorithm is based on [pattern-defeating quicksort][pdqsort] by Orson Peters,
-    /// which combines the fast average case of randomized quicksort with the fast worst case of
-    /// heapsort, while achieving linear time on slices with certain patterns. It uses some
-    /// randomization to avoid degenerate cases, but with a fixed seed to always provide
-    /// deterministic behavior.
-    ///
-    /// It is typically faster than stable sorting, except in a few special cases, e.g., when the
+    /// It is generally faster than stable sorting, except in a few special cases, e.g. when the
     /// slice consists of several concatenated sorted sequences.
     ///
     /// All quicksorts work in two stages: partitioning into two halves followed by recursive
@@ -546,39 +369,20 @@ pub trait ParallelSliceMut<T: Send> {
         par_quicksort(self.as_parallel_slice_mut(), T::lt);
     }
 
-    /// Sorts the slice in parallel with a comparator function, but might not preserve the order of
+    /// Sorts the slice in parallel with a comparator function, but may not preserve the order of
     /// equal elements.
     ///
-    /// This sort is unstable (i.e., may reorder equal elements), in-place
-    /// (i.e., does not allocate), and *O*(*n* \* log(*n*)) worst-case.
-    ///
-    /// The comparator function must define a total ordering for the elements in the slice. If
-    /// the ordering is not total, the order of the elements is unspecified. An order is a
-    /// total order if it is (for all `a`, `b` and `c`):
-    ///
-    /// * total and antisymmetric: exactly one of `a < b`, `a == b` or `a > b` is true, and
-    /// * transitive, `a < b` and `b < c` implies `a < c`. The same must hold for both `==` and `>`.
-    ///
-    /// For example, while [`f64`] doesn't implement [`Ord`] because `NaN != NaN`, we can use
-    /// `partial_cmp` as our sort function when we know the slice doesn't contain a `NaN`.
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    ///
-    /// let mut floats = [5f64, 4.0, 1.0, 3.0, 2.0];
-    /// floats.par_sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
-    /// assert_eq!(floats, [1.0, 2.0, 3.0, 4.0, 5.0]);
-    /// ```
+    /// This sort is unstable (i.e. may reorder equal elements), in-place (i.e. does not allocate),
+    /// and `O(n log n)` worst-case.
     ///
     /// # Current implementation
     ///
-    /// The current algorithm is based on [pattern-defeating quicksort][pdqsort] by Orson Peters,
-    /// which combines the fast average case of randomized quicksort with the fast worst case of
-    /// heapsort, while achieving linear time on slices with certain patterns. It uses some
-    /// randomization to avoid degenerate cases, but with a fixed seed to always provide
-    /// deterministic behavior.
+    /// The current algorithm is based on Orson Peters' [pattern-defeating quicksort][pdqsort],
+    /// which is a quicksort variant designed to be very fast on certain kinds of patterns,
+    /// sometimes achieving linear time. It is randomized but deterministic, and falls back to
+    /// heapsort on degenerate inputs.
     ///
-    /// It is typically faster than stable sorting, except in a few special cases, e.g., when the
+    /// It is generally faster than stable sorting, except in a few special cases, e.g. when the
     /// slice consists of several concatenated sorted sequences.
     ///
     /// All quicksorts work in two stages: partitioning into two halves followed by recursive
@@ -609,24 +413,21 @@ pub trait ParallelSliceMut<T: Send> {
         });
     }
 
-    /// Sorts the slice in parallel with a key extraction function, but might not preserve the order
+    /// Sorts the slice in parallel with a key extraction function, but may not preserve the order
     /// of equal elements.
     ///
-    /// This sort is unstable (i.e., may reorder equal elements), in-place
-    /// (i.e., does not allocate), and *O*(m \* *n* \* log(*n*)) worst-case,
-    /// where the key function is *O*(*m*).
+    /// This sort is unstable (i.e. may reorder equal elements), in-place (i.e. does not allocate),
+    /// and `O(n log n)` worst-case.
     ///
     /// # Current implementation
     ///
-    /// The current algorithm is based on [pattern-defeating quicksort][pdqsort] by Orson Peters,
-    /// which combines the fast average case of randomized quicksort with the fast worst case of
-    /// heapsort, while achieving linear time on slices with certain patterns. It uses some
-    /// randomization to avoid degenerate cases, but with a fixed seed to always provide
-    /// deterministic behavior.
+    /// The current algorithm is based on Orson Peters' [pattern-defeating quicksort][pdqsort],
+    /// which is a quicksort variant designed to be very fast on certain kinds of patterns,
+    /// sometimes achieving linear time. It is randomized but deterministic, and falls back to
+    /// heapsort on degenerate inputs.
     ///
-    /// Due to its key calling strategy, `par_sort_unstable_by_key` is likely to be slower than
-    /// [`par_sort_by_cached_key`](#method.par_sort_by_cached_key) in cases where the key function
-    /// is expensive.
+    /// It is generally faster than stable sorting, except in a few special cases, e.g. when the
+    /// slice consists of several concatenated sorted sequences.
     ///
     /// All quicksorts work in two stages: partitioning into two halves followed by recursive
     /// calls. The partitioning phase is sequential, but the two recursive calls are performed in
@@ -644,10 +445,10 @@ pub trait ParallelSliceMut<T: Send> {
     /// v.par_sort_unstable_by_key(|k| k.abs());
     /// assert_eq!(v, [1, 2, -3, 4, -5]);
     /// ```
-    fn par_sort_unstable_by_key<K, F>(&mut self, f: F)
+    fn par_sort_unstable_by_key<B, F>(&mut self, f: F)
     where
-        K: Ord,
-        F: Fn(&T) -> K + Sync,
+        B: Ord,
+        F: Fn(&T) -> B + Sync,
     {
         par_quicksort(self.as_parallel_slice_mut(), |a, b| f(a).lt(&f(b)));
     }
@@ -740,6 +541,176 @@ impl<'data, T: 'data + Sync> Producer for IterProducer<'data, T> {
     fn split_at(self, index: usize) -> (Self, Self) {
         let (left, right) = self.slice.split_at(index);
         (IterProducer { slice: left }, IterProducer { slice: right })
+    }
+}
+
+/// Parallel iterator over immutable non-overlapping chunks of a slice
+#[derive(Debug)]
+pub struct Chunks<'data, T: Sync> {
+    chunk_size: usize,
+    slice: &'data [T],
+}
+
+impl<'data, T: Sync> Clone for Chunks<'data, T> {
+    fn clone(&self) -> Self {
+        Chunks { ..*self }
+    }
+}
+
+impl<'data, T: Sync + 'data> ParallelIterator for Chunks<'data, T> {
+    type Item = &'data [T];
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+    where
+        C: UnindexedConsumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn opt_len(&self) -> Option<usize> {
+        Some(self.len())
+    }
+}
+
+impl<'data, T: Sync + 'data> IndexedParallelIterator for Chunks<'data, T> {
+    fn drive<C>(self, consumer: C) -> C::Result
+    where
+        C: Consumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn len(&self) -> usize {
+        div_round_up(self.slice.len(), self.chunk_size)
+    }
+
+    fn with_producer<CB>(self, callback: CB) -> CB::Output
+    where
+        CB: ProducerCallback<Self::Item>,
+    {
+        callback.callback(ChunksProducer {
+            chunk_size: self.chunk_size,
+            slice: self.slice,
+        })
+    }
+}
+
+struct ChunksProducer<'data, T: Sync> {
+    chunk_size: usize,
+    slice: &'data [T],
+}
+
+impl<'data, T: 'data + Sync> Producer for ChunksProducer<'data, T> {
+    type Item = &'data [T];
+    type IntoIter = ::std::slice::Chunks<'data, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.slice.chunks(self.chunk_size)
+    }
+
+    fn split_at(self, index: usize) -> (Self, Self) {
+        let elem_index = cmp::min(index * self.chunk_size, self.slice.len());
+        let (left, right) = self.slice.split_at(elem_index);
+        (
+            ChunksProducer {
+                chunk_size: self.chunk_size,
+                slice: left,
+            },
+            ChunksProducer {
+                chunk_size: self.chunk_size,
+                slice: right,
+            },
+        )
+    }
+}
+
+/// Parallel iterator over immutable non-overlapping chunks of a slice
+#[derive(Debug)]
+pub struct ChunksExact<'data, T: Sync> {
+    chunk_size: usize,
+    slice: &'data [T],
+    rem: &'data [T],
+}
+
+impl<'data, T: Sync> ChunksExact<'data, T> {
+    /// Return the remainder of the original slice that is not going to be
+    /// returned by the iterator. The returned slice has at most `chunk_size-1`
+    /// elements.
+    pub fn remainder(&self) -> &'data [T] {
+        self.rem
+    }
+}
+
+impl<'data, T: Sync> Clone for ChunksExact<'data, T> {
+    fn clone(&self) -> Self {
+        ChunksExact { ..*self }
+    }
+}
+
+impl<'data, T: Sync + 'data> ParallelIterator for ChunksExact<'data, T> {
+    type Item = &'data [T];
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+    where
+        C: UnindexedConsumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn opt_len(&self) -> Option<usize> {
+        Some(self.len())
+    }
+}
+
+impl<'data, T: Sync + 'data> IndexedParallelIterator for ChunksExact<'data, T> {
+    fn drive<C>(self, consumer: C) -> C::Result
+    where
+        C: Consumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn len(&self) -> usize {
+        self.slice.len() / self.chunk_size
+    }
+
+    fn with_producer<CB>(self, callback: CB) -> CB::Output
+    where
+        CB: ProducerCallback<Self::Item>,
+    {
+        callback.callback(ChunksExactProducer {
+            chunk_size: self.chunk_size,
+            slice: self.slice,
+        })
+    }
+}
+
+struct ChunksExactProducer<'data, T: Sync> {
+    chunk_size: usize,
+    slice: &'data [T],
+}
+
+impl<'data, T: 'data + Sync> Producer for ChunksExactProducer<'data, T> {
+    type Item = &'data [T];
+    type IntoIter = ::std::slice::ChunksExact<'data, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.slice.chunks_exact(self.chunk_size)
+    }
+
+    fn split_at(self, index: usize) -> (Self, Self) {
+        let elem_index = index * self.chunk_size;
+        let (left, right) = self.slice.split_at(elem_index);
+        (
+            ChunksExactProducer {
+                chunk_size: self.chunk_size,
+                slice: left,
+            },
+            ChunksExactProducer {
+                chunk_size: self.chunk_size,
+                slice: right,
+            },
+        )
     }
 }
 
@@ -883,6 +854,187 @@ impl<'data, T: 'data + Send> Producer for IterMutProducer<'data, T> {
         (
             IterMutProducer { slice: left },
             IterMutProducer { slice: right },
+        )
+    }
+}
+
+/// Parallel iterator over mutable non-overlapping chunks of a slice
+#[derive(Debug)]
+pub struct ChunksMut<'data, T: Send> {
+    chunk_size: usize,
+    slice: &'data mut [T],
+}
+
+impl<'data, T: Send + 'data> ParallelIterator for ChunksMut<'data, T> {
+    type Item = &'data mut [T];
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+    where
+        C: UnindexedConsumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn opt_len(&self) -> Option<usize> {
+        Some(self.len())
+    }
+}
+
+impl<'data, T: Send + 'data> IndexedParallelIterator for ChunksMut<'data, T> {
+    fn drive<C>(self, consumer: C) -> C::Result
+    where
+        C: Consumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn len(&self) -> usize {
+        div_round_up(self.slice.len(), self.chunk_size)
+    }
+
+    fn with_producer<CB>(self, callback: CB) -> CB::Output
+    where
+        CB: ProducerCallback<Self::Item>,
+    {
+        callback.callback(ChunksMutProducer {
+            chunk_size: self.chunk_size,
+            slice: self.slice,
+        })
+    }
+}
+
+struct ChunksMutProducer<'data, T: Send> {
+    chunk_size: usize,
+    slice: &'data mut [T],
+}
+
+impl<'data, T: 'data + Send> Producer for ChunksMutProducer<'data, T> {
+    type Item = &'data mut [T];
+    type IntoIter = ::std::slice::ChunksMut<'data, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.slice.chunks_mut(self.chunk_size)
+    }
+
+    fn split_at(self, index: usize) -> (Self, Self) {
+        let elem_index = cmp::min(index * self.chunk_size, self.slice.len());
+        let (left, right) = self.slice.split_at_mut(elem_index);
+        (
+            ChunksMutProducer {
+                chunk_size: self.chunk_size,
+                slice: left,
+            },
+            ChunksMutProducer {
+                chunk_size: self.chunk_size,
+                slice: right,
+            },
+        )
+    }
+}
+
+/// Parallel iterator over mutable non-overlapping chunks of a slice
+#[derive(Debug)]
+pub struct ChunksExactMut<'data, T: Send> {
+    chunk_size: usize,
+    slice: &'data mut [T],
+    rem: &'data mut [T],
+}
+
+impl<'data, T: Send> ChunksExactMut<'data, T> {
+    /// Return the remainder of the original slice that is not going to be
+    /// returned by the iterator. The returned slice has at most `chunk_size-1`
+    /// elements.
+    ///
+    /// Note that this has to consume `self` to return the original lifetime of
+    /// the data, which prevents this from actually being used as a parallel
+    /// iterator since that also consumes. This method is provided for parity
+    /// with `std::iter::ChunksExactMut`, but consider calling `remainder()` or
+    /// `take_remainder()` as alternatives.
+    pub fn into_remainder(self) -> &'data mut [T] {
+        self.rem
+    }
+
+    /// Return the remainder of the original slice that is not going to be
+    /// returned by the iterator. The returned slice has at most `chunk_size-1`
+    /// elements.
+    ///
+    /// Consider `take_remainder()` if you need access to the data with its
+    /// original lifetime, rather than borrowing through `&mut self` here.
+    pub fn remainder(&mut self) -> &mut [T] {
+        self.rem
+    }
+
+    /// Return the remainder of the original slice that is not going to be
+    /// returned by the iterator. The returned slice has at most `chunk_size-1`
+    /// elements. Subsequent calls will return an empty slice.
+    pub fn take_remainder(&mut self) -> &'data mut [T] {
+        std::mem::replace(&mut self.rem, &mut [])
+    }
+}
+
+impl<'data, T: Send + 'data> ParallelIterator for ChunksExactMut<'data, T> {
+    type Item = &'data mut [T];
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+    where
+        C: UnindexedConsumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn opt_len(&self) -> Option<usize> {
+        Some(self.len())
+    }
+}
+
+impl<'data, T: Send + 'data> IndexedParallelIterator for ChunksExactMut<'data, T> {
+    fn drive<C>(self, consumer: C) -> C::Result
+    where
+        C: Consumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn len(&self) -> usize {
+        self.slice.len() / self.chunk_size
+    }
+
+    fn with_producer<CB>(self, callback: CB) -> CB::Output
+    where
+        CB: ProducerCallback<Self::Item>,
+    {
+        callback.callback(ChunksExactMutProducer {
+            chunk_size: self.chunk_size,
+            slice: self.slice,
+        })
+    }
+}
+
+struct ChunksExactMutProducer<'data, T: Send> {
+    chunk_size: usize,
+    slice: &'data mut [T],
+}
+
+impl<'data, T: 'data + Send> Producer for ChunksExactMutProducer<'data, T> {
+    type Item = &'data mut [T];
+    type IntoIter = ::std::slice::ChunksExactMut<'data, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.slice.chunks_exact_mut(self.chunk_size)
+    }
+
+    fn split_at(self, index: usize) -> (Self, Self) {
+        let elem_index = index * self.chunk_size;
+        let (left, right) = self.slice.split_at_mut(elem_index);
+        (
+            ChunksExactMutProducer {
+                chunk_size: self.chunk_size,
+                slice: left,
+            },
+            ChunksExactMutProducer {
+                chunk_size: self.chunk_size,
+                slice: right,
+            },
         )
     }
 }

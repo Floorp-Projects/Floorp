@@ -1,17 +1,16 @@
-use clap::{Arg, Command};
+use clap::{App, AppSettings, Arg};
 
 fn main() {
-    let matches = Command::new("pacman")
+    let matches = App::new("pacman")
         .about("package manager utility")
         .version("5.2.1")
-        .subcommand_required(true)
-        .arg_required_else_help(true)
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .author("Pacman Development Team")
         // Query subcommand
         //
         // Only a few of its arguments are implemented below.
         .subcommand(
-            Command::new("query")
+            App::new("query")
                 .short_flag('Q')
                 .long_flag("query")
                 .about("Query the package database.")
@@ -38,7 +37,7 @@ fn main() {
         //
         // Only a few of its arguments are implemented below.
         .subcommand(
-            Command::new("sync")
+            App::new("sync")
                 .short_flag('S')
                 .long_flag("sync")
                 .about("Synchronize packages.")

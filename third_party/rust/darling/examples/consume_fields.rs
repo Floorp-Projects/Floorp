@@ -117,7 +117,7 @@ impl ToTokens for MyInputReceiver {
         tokens.extend(quote! {
             impl #imp Speak for #ident #ty #wher {
                 fn speak(&self, writer: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                    write!(writer, #fmt_string, #(#field_list),*)
+                    write!(#fmt_string, #(#field_list),*)
                 }
             }
         });

@@ -90,7 +90,7 @@ impl From<Token![_]> for Ident {
 pub fn xid_ok(symbol: &str) -> bool {
     let mut chars = symbol.chars();
     let first = chars.next().unwrap();
-    if !(first == '_' || UnicodeXID::is_xid_start(first)) {
+    if !(UnicodeXID::is_xid_start(first) || first == '_') {
         return false;
     }
     for ch in chars {

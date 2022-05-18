@@ -736,21 +736,17 @@ pub trait TryStreamExt: TryStream {
     /// thread::spawn(move || {
     ///     tx2.unbounded_send(Ok(2)).unwrap();
     ///     tx2.unbounded_send(Err(3)).unwrap();
-    ///     tx2.unbounded_send(Ok(4)).unwrap();
     /// });
     /// thread::spawn(move || {
     ///     tx3.unbounded_send(Ok(rx1)).unwrap();
     ///     tx3.unbounded_send(Ok(rx2)).unwrap();
-    ///     tx3.unbounded_send(Err(5)).unwrap();
+    ///     tx3.unbounded_send(Err(4)).unwrap();
     /// });
     ///
     /// let mut stream = rx3.try_flatten();
     /// assert_eq!(stream.next().await, Some(Ok(1)));
     /// assert_eq!(stream.next().await, Some(Ok(2)));
     /// assert_eq!(stream.next().await, Some(Err(3)));
-    /// assert_eq!(stream.next().await, Some(Ok(4)));
-    /// assert_eq!(stream.next().await, Some(Err(5)));
-    /// assert_eq!(stream.next().await, None);
     /// # });
     /// ```
     fn try_flatten(self) -> TryFlatten<Self>
@@ -1005,7 +1001,6 @@ pub trait TryStreamExt: TryStream {
     /// Wraps a [`TryStream`] into a stream compatible with libraries using
     /// futures 0.1 `Stream`. Requires the `compat` feature to be enabled.
     /// ```
-    /// # if cfg!(miri) { return; } // Miri does not support epoll
     /// use futures::future::{FutureExt, TryFutureExt};
     /// # let (tx, rx) = futures::channel::oneshot::channel();
     ///

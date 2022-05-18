@@ -11,16 +11,13 @@
 
 [package]
 edition = "2018"
-rust-version = "1.45"
+rust-version = "1.36"
 name = "futures-task"
-version = "0.3.21"
-description = """
-Tools for working with tasks.
-"""
+version = "0.3.19"
+description = "Tools for working with tasks.\n"
 homepage = "https://rust-lang.github.io/futures-rs"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/futures-rs"
-
 [package.metadata.docs.rs]
 all-features = true
 
