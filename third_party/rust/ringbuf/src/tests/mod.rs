@@ -1,6 +1,5 @@
 mod access;
 mod drop;
-mod iter;
 #[cfg(feature = "std")]
 mod message;
 mod multiple;

@@ -1,4 +1,4 @@
-#![cfg(has_step_by_rev)]
+#![cfg(step_by)]
 use std::cmp::min;
 
 use super::plumbing::*;

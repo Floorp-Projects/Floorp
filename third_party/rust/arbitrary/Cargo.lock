@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "arbitrary"
-version = "1.1.0"
+version = "1.0.3"
 dependencies = [
  "derive_arbitrary",
 ]

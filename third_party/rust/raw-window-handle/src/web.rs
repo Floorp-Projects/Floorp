@@ -9,14 +9,12 @@
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WebHandle {
-    /// An ID value inserted into the [data attributes] of the canvas element as '`raw-handle`'.
+    /// An ID value inserted into the data attributes of the canvas element as '`raw-handle`'.
     ///
     /// When accessing from JS, the attribute will automatically be called `rawHandle`.
     ///
     /// Each canvas created by the windowing system should be assigned their own unique ID.
     /// 0 should be reserved for invalid / null IDs.
-    ///
-    /// [data attributes]: https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/data-*
     pub id: u32,
 }
 

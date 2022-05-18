@@ -426,7 +426,7 @@ fn syn_brackets(syn_expr: syn::Expr) -> syn::Expr {
 fn collect_exprs(file: syn::File) -> Vec<syn::Expr> {
     use syn::fold::Fold;
     use syn::punctuated::Punctuated;
-    use syn::{token, Expr, ExprTuple, Path};
+    use syn::{token, Expr, ExprTuple};
 
     struct CollectExprs(Vec<Expr>);
     impl Fold for CollectExprs {
@@ -441,11 +441,6 @@ fn collect_exprs(file: syn::File) -> Vec<syn::Expr> {
                 elems: Punctuated::new(),
                 paren_token: token::Paren::default(),
             })
-        }
-
-        fn fold_path(&mut self, path: Path) -> Path {
-            // Skip traversing into const generic path arguments
-            path
         }
     }
 

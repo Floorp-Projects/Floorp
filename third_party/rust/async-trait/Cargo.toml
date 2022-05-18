@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.39"
 name = "async-trait"
-version = "0.1.53"
+version = "0.1.52"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Type erasure for async trait methods"
 documentation = "https://docs.rs/async-trait"
@@ -21,13 +21,11 @@ readme = "README.md"
 keywords = ["async"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/async-trait"
-
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 
 [lib]
 proc-macro = true
-
 [dependencies.proc-macro2]
 version = "1.0"
 
@@ -35,12 +33,8 @@ version = "1.0"
 version = "1.0"
 
 [dependencies.syn]
-version = "1.0.84"
-features = [
-    "full",
-    "visit-mut",
-]
-
+version = "1.0.61"
+features = ["full", "visit-mut"]
 [dev-dependencies.futures]
 version = "0.3"
 

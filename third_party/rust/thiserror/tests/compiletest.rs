@@ -1,5 +1,6 @@
+#![deny(clippy::all, clippy::pedantic)]
+
 #[rustversion::attr(not(nightly), ignore)]
-#[cfg_attr(miri, ignore)]
 #[test]
 fn ui() {
     let t = trybuild::TestCases::new();

@@ -1,18 +1,16 @@
-// Note: this requires the `unstable-multicall` feature
-
-use clap::Command;
+use clap::{App, AppSettings};
 
 fn main() {
-    let cmd = Command::new(env!("CARGO_CRATE_NAME"))
-        .arg_required_else_help(true)
+    let app = App::new(env!("CARGO_CRATE_NAME"))
+        .setting(AppSettings::ArgRequiredElseHelp)
         .subcommand_value_name("APPLET")
         .subcommand_help_heading("APPLETS")
-        .subcommand(Command::new("hostname").about("show hostname part of FQDN"))
-        .subcommand(Command::new("dnsdomainname").about("show domain name part of FQDN"));
+        .subcommand(App::new("hostname").about("show hostname part of FQDN"))
+        .subcommand(App::new("dnsdomainname").about("show domain name part of FQDN"));
 
-    let cmd = cmd.multicall(true);
+    let app = app.setting(AppSettings::Multicall);
 
-    match cmd.get_matches().subcommand_name() {
+    match app.get_matches().subcommand_name() {
         Some("hostname") => println!("www"),
         Some("dnsdomainname") => println!("example.com"),
         _ => unreachable!("parser should ensure only valid subcommand names are used"),

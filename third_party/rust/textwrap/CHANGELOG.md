@@ -3,64 +3,6 @@
 This file lists the most important changes made in each release of
 `textwrap`.
 
-## Version 0.15.0 (2022-02-27)
-
-This is a major feature release with two main changes:
-
-* [#421](https://github.com/mgeisler/textwrap/pull/421): Use `f64`
-  instead of `usize` for fragment widths.
-
-  This fixes problems with overflows in the internal computations of
-  `wrap_optimal_fit` when fragments (words) or line lenghts had
-  extreme values, such as `usize::MAX`.
-
-* [#438](https://github.com/mgeisler/textwrap/pull/438): Simplify
-  `Options` by removing generic type parameters.
-
-  This change removes the new generic parameters introduced in version
-  0.14, as well as the original `WrapSplitter` parameter which has
-  been present since very early versions.
-
-  The result is a simplification of function and struct signatures
-  across the board. So what used to be
-
-  ```rust
-  let options: Options<
-      wrap_algorithms::FirstFit,
-      word_separators::AsciiSpace,
-      word_splitters::HyphenSplitter,
-  > = Options::new(80);
-  ```
-
-  if types are fully written out, is now simply
-
-  ```rust
-  let options: Options<'_> = Options::new(80);
-  ```
-
-  The anonymous lifetime represent the lifetime of the
-  `initial_indent` and `subsequent_indent` strings. The change is
-  nearly performance neutral (a 1-2% regression).
-
-Smaller improvements and changes:
-
-* [#404](https://github.com/mgeisler/textwrap/pull/404): Make
-  documentation for short last-line penalty more precise.
-* [#405](https://github.com/mgeisler/textwrap/pull/405): Cleanup and
-  simplify `Options` docstring.
-* [#411](https://github.com/mgeisler/textwrap/pull/411): Default to
-  `OptimalFit` in interactive example.
-* [#415](https://github.com/mgeisler/textwrap/pull/415): Add demo
-  program to help compute binary sizes.
-* [#423](https://github.com/mgeisler/textwrap/pull/423): Add fuzz
-  tests with fully arbitrary fragments.
-* [#424](https://github.com/mgeisler/textwrap/pull/424): Change
-  `wrap_optimal_fit` penalties to non-negative numbers.
-* [#430](https://github.com/mgeisler/textwrap/pull/430): Add
-  `debug-words` example.
-* [#432](https://github.com/mgeisler/textwrap/pull/432): Use precise
-  dependency versions in Cargo.toml.
-
 ## Version 0.14.2 (2021-06-27)
 
 The 0.14.1 release included more changes than intended and has been

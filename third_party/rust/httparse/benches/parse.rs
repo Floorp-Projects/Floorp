@@ -1,9 +1,9 @@
-extern crate criterion;
+#![feature(test)]
+
+extern crate pico_sys as pico;
 extern crate httparse;
 
-use std::time::Duration;
-
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+extern crate test;
 
 const REQ_SHORT: &'static [u8] = b"\
 GET / HTTP/1.0\r\n\
@@ -22,72 +22,101 @@ Keep-Alive: 115\r\n\
 Connection: keep-alive\r\n\
 Cookie: wp_ozh_wsa_visits=2; wp_ozh_wsa_visit_lasttime=xxxxxxxxxx; __utma=xxxxxxxxx.xxxxxxxxxx.xxxxxxxxxx.xxxxxxxxxx.xxxxxxxxxx.x; __utmz=xxxxxxxxx.xxxxxxxxxx.x.x.utmccn=(referral)|utmcsr=reader.livedoor.com|utmcct=/reader/|utmcmd=referral|padding=under256\r\n\r\n";
 
-fn req(c: &mut Criterion) {
+
+#[bench]
+fn bench_pico(b: &mut test::Bencher) {
+    use std::mem;
+
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    struct Header<'a>(&'a [u8], &'a [u8]);
+
+
+    #[repr(C)]
+    struct Headers<'a>(&'a mut [Header<'a>]);
+    let method = [0i8; 16];
+    let path = [0i8; 16];
+    let mut minor_version = 0;
+    let mut h = [Header(&[], &[]); 16];
+    let mut h_len = h.len();
+    let headers = Headers(&mut h);
+    let prev_buf_len = 0;
+
+    b.iter(|| {
+        let ret = unsafe {
+            pico::ffi::phr_parse_request(
+                REQ.as_ptr() as *const _,
+                REQ.len(),
+                &mut method.as_ptr(),
+                &mut 16,
+                &mut path.as_ptr(),
+                &mut 16,
+                &mut minor_version,
+                mem::transmute::<*mut Header, *mut pico::ffi::phr_header>(headers.0.as_mut_ptr()),
+                &mut h_len as *mut usize as *mut _,
+                prev_buf_len
+            )
+        };
+        assert_eq!(ret, REQ.len() as i32);
+    });
+    b.bytes = REQ.len() as u64;
+}
+
+#[bench]
+fn bench_httparse(b: &mut test::Bencher) {
     let mut headers = [httparse::Header{ name: "", value: &[] }; 16];
     let mut req = httparse::Request::new(&mut headers);
-
-    c.benchmark_group("req")
-        .throughput(Throughput::Bytes(REQ.len() as u64))
-        .bench_function("req", |b| b.iter(|| {
-            assert_eq!(black_box(req.parse(REQ).unwrap()), httparse::Status::Complete(REQ.len()));
-        }));
+    b.iter(|| {
+        assert_eq!(req.parse(REQ).unwrap(), httparse::Status::Complete(REQ.len()));
+    });
+    b.bytes = REQ.len() as u64;
 }
 
-fn req_short(c: &mut Criterion) {
+#[bench]
+fn bench_pico_short(b: &mut test::Bencher) {
+    use std::mem;
+
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    struct Header<'a>(&'a [u8], &'a [u8]);
+
+
+    #[repr(C)]
+    struct Headers<'a>(&'a mut [Header<'a>]);
+    let method = [0i8; 16];
+    let path = [0i8; 16];
+    let mut minor_version = 0;
+    let mut h = [Header(&[], &[]); 16];
+    let mut h_len = h.len();
+    let headers = Headers(&mut h);
+    let prev_buf_len = 0;
+
+    b.iter(|| {
+        let ret = unsafe {
+            pico::ffi::phr_parse_request(
+                REQ_SHORT.as_ptr() as *const _,
+                REQ_SHORT.len(),
+                &mut method.as_ptr(),
+                &mut 16,
+                &mut path.as_ptr(),
+                &mut 16,
+                &mut minor_version,
+                mem::transmute::<*mut Header, *mut pico::ffi::phr_header>(headers.0.as_mut_ptr()),
+                &mut h_len as *mut usize as *mut _,
+                prev_buf_len
+            )
+        };
+        assert_eq!(ret, REQ_SHORT.len() as i32);
+    });
+    b.bytes = REQ_SHORT.len() as u64;
+}
+
+#[bench]
+fn bench_httparse_short(b: &mut test::Bencher) {
     let mut headers = [httparse::Header{ name: "", value: &[] }; 16];
     let mut req = httparse::Request::new(&mut headers);
-
-    c.benchmark_group("req_short")
-        .throughput(Throughput::Bytes(REQ_SHORT.len() as u64))
-        .bench_function("req_short", |b| b.iter(|| {
-            assert_eq!(black_box(req.parse(REQ_SHORT).unwrap()), httparse::Status::Complete(REQ_SHORT.len()));
-        }));
+    b.iter(|| {
+        assert_eq!(req.parse(REQ_SHORT).unwrap(), httparse::Status::Complete(REQ_SHORT.len()));
+    });
+    b.bytes = REQ_SHORT.len() as u64;
 }
-
-const RESP_SHORT: &'static [u8] = b"\
-HTTP/1.0 200 OK\r\n\
-Date: Wed, 21 Oct 2015 07:28:00 GMT\r\n\
-Set-Cookie: session=60; user_id=1\r\n\r\n";
-
-// These particular headers don't all make semantic sense for a response, but they're syntactically valid.
-const RESP: &'static [u8] = b"\
-HTTP/1.1 200 OK\r\n\
-Date: Wed, 21 Oct 2015 07:28:00 GMT\r\n\
-Host: www.kittyhell.com\r\n\
-User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; ja-JP-mac; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 Pathtraq/0.9\r\n\
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n\
-Accept-Language: ja,en-us;q=0.7,en;q=0.3\r\n\
-Accept-Encoding: gzip,deflate\r\n\
-Accept-Charset: Shift_JIS,utf-8;q=0.7,*;q=0.7\r\n\
-Keep-Alive: 115\r\n\
-Connection: keep-alive\r\n\
-Cookie: wp_ozh_wsa_visits=2; wp_ozh_wsa_visit_lasttime=xxxxxxxxxx; __utma=xxxxxxxxx.xxxxxxxxxx.xxxxxxxxxx.xxxxxxxxxx.xxxxxxxxxx.x; __utmz=xxxxxxxxx.xxxxxxxxxx.x.x.utmccn=(referral)|utmcsr=reader.livedoor.com|utmcct=/reader/|utmcmd=referral|padding=under256\r\n\r\n";
-
-fn resp(c: &mut Criterion) {
-    let mut headers = [httparse::Header{ name: "", value: &[] }; 16];
-    let mut resp = httparse::Response::new(&mut headers);
-
-    c.benchmark_group("resp")
-        .throughput(Throughput::Bytes(RESP.len() as u64))
-        .bench_function("resp", |b| b.iter(|| {
-            assert_eq!(black_box(resp.parse(RESP).unwrap()), httparse::Status::Complete(RESP.len()));
-        }));
-}
-
-fn resp_short(c: &mut Criterion) {
-    let mut headers = [httparse::Header{ name: "", value: &[] }; 16];
-    let mut resp = httparse::Response::new(&mut headers);
-
-    c.benchmark_group("resp_short")
-        .throughput(Throughput::Bytes(RESP_SHORT.len() as u64))
-        .bench_function("resp_short", |b| b.iter(|| {
-            assert_eq!(black_box(resp.parse(RESP_SHORT).unwrap()), httparse::Status::Complete(RESP_SHORT.len()));
-        }));
-}
-
-criterion_group!{
-    name = benches;
-    config = Criterion::default().sample_size(100).measurement_time(Duration::from_secs(10));
-    targets = req, req_short, resp, resp_short
-}
-criterion_main!(benches);

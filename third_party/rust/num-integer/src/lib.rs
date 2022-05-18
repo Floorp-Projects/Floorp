@@ -187,12 +187,14 @@ pub trait Integer: Sized + Num + PartialOrd + Ord + Eq {
                 gcd: r.1,
                 x: s.1,
                 y: t.1,
+                _hidden: (),
             }
         } else {
             ExtendedGcd {
                 gcd: Self::zero() - r.1,
                 x: Self::zero() - s.1,
                 y: Self::zero() - t.1,
+                _hidden: (),
             }
         }
     }
@@ -354,6 +356,7 @@ pub struct ExtendedGcd<A> {
     pub gcd: A,
     pub x: A,
     pub y: A,
+    _hidden: (),
 }
 
 /// Simultaneous integer division and modulus
@@ -383,7 +386,7 @@ pub fn div_ceil<T: Integer>(x: T, y: T) -> T {
 }
 
 /// Calculates the Greatest Common Divisor (GCD) of the number and `other`. The
-/// result is always non-negative.
+/// result is always positive.
 #[inline(always)]
 pub fn gcd<T: Integer>(x: T, y: T) -> T {
     x.gcd(&y)
@@ -454,7 +457,7 @@ macro_rules! impl_integer_for_isize {
             }
 
             /// Calculates the Greatest Common Divisor (GCD) of the number and
-            /// `other`. The result is always non-negative.
+            /// `other`. The result is always positive.
             #[inline]
             fn gcd(&self, other: &Self) -> Self {
                 // Use Stein's algorithm
@@ -540,9 +543,6 @@ macro_rules! impl_integer_for_isize {
             /// Returns `true` if the number is a multiple of `other`.
             #[inline]
             fn is_multiple_of(&self, other: &Self) -> bool {
-                if other.is_zero() {
-                    return self.is_zero();
-                }
                 *self % *other == 0
             }
 
@@ -562,29 +562,6 @@ macro_rules! impl_integer_for_isize {
             #[inline]
             fn div_rem(&self, other: &Self) -> (Self, Self) {
                 (*self / *other, *self % *other)
-            }
-
-            /// Rounds up to nearest multiple of argument.
-            #[inline]
-            fn next_multiple_of(&self, other: &Self) -> Self {
-                // Avoid the overflow of `MIN % -1`
-                if *other == -1 {
-                    return *self;
-                }
-
-                let m = Integer::mod_floor(self, other);
-                *self + if m == 0 { 0 } else { other - m }
-            }
-
-            /// Rounds down to nearest multiple of argument.
-            #[inline]
-            fn prev_multiple_of(&self, other: &Self) -> Self {
-                // Avoid the overflow of `MIN % -1`
-                if *other == -1 {
-                    return *self;
-                }
-
-                *self - Integer::mod_floor(self, other)
             }
         }
 
@@ -632,9 +609,8 @@ macro_rules! impl_integer_for_isize {
             fn test_div_mod_floor() {
                 fn test_nd_dm(nd: ($T, $T), dm: ($T, $T)) {
                     let (n, d) = nd;
-                    let separate_div_mod_floor =
-                        (Integer::div_floor(&n, &d), Integer::mod_floor(&n, &d));
-                    let combined_div_mod_floor = Integer::div_mod_floor(&n, &d);
+                    let separate_div_mod_floor = (n.div_floor(&d), n.mod_floor(&d));
+                    let combined_div_mod_floor = n.div_mod_floor(&d);
 
                     assert_eq!(separate_div_mod_floor, dm);
                     assert_eq!(combined_div_mod_floor, dm);
@@ -808,16 +784,6 @@ macro_rules! impl_integer_for_isize {
                 assert_eq!((3 as $T).is_odd(), true);
                 assert_eq!((4 as $T).is_odd(), false);
             }
-
-            #[test]
-            fn test_multiple_of_one_limits() {
-                for x in &[<$T>::min_value(), <$T>::max_value()] {
-                    for one in &[1, -1] {
-                        assert_eq!(Integer::next_multiple_of(x, one), *x);
-                        assert_eq!(Integer::prev_multiple_of(x, one), *x);
-                    }
-                }
-            }
         }
     };
 }
@@ -918,9 +884,6 @@ macro_rules! impl_integer_for_usize {
             /// Returns `true` if the number is a multiple of `other`.
             #[inline]
             fn is_multiple_of(&self, other: &Self) -> bool {
-                if other.is_zero() {
-                    return self.is_zero();
-                }
                 *self % *other == 0
             }
 
@@ -950,16 +913,15 @@ macro_rules! impl_integer_for_usize {
 
             #[test]
             fn test_div_mod_floor() {
-                assert_eq!(<$T as Integer>::div_floor(&10, &3), 3 as $T);
-                assert_eq!(<$T as Integer>::mod_floor(&10, &3), 1 as $T);
-                assert_eq!(<$T as Integer>::div_mod_floor(&10, &3), (3 as $T, 1 as $T));
-                assert_eq!(<$T as Integer>::div_floor(&5, &5), 1 as $T);
-                assert_eq!(<$T as Integer>::mod_floor(&5, &5), 0 as $T);
-                assert_eq!(<$T as Integer>::div_mod_floor(&5, &5), (1 as $T, 0 as $T));
-                assert_eq!(<$T as Integer>::div_floor(&3, &7), 0 as $T);
-                assert_eq!(<$T as Integer>::div_floor(&3, &7), 0 as $T);
-                assert_eq!(<$T as Integer>::mod_floor(&3, &7), 3 as $T);
-                assert_eq!(<$T as Integer>::div_mod_floor(&3, &7), (0 as $T, 3 as $T));
+                assert_eq!((10 as $T).div_floor(&(3 as $T)), 3 as $T);
+                assert_eq!((10 as $T).mod_floor(&(3 as $T)), 1 as $T);
+                assert_eq!((10 as $T).div_mod_floor(&(3 as $T)), (3 as $T, 1 as $T));
+                assert_eq!((5 as $T).div_floor(&(5 as $T)), 1 as $T);
+                assert_eq!((5 as $T).mod_floor(&(5 as $T)), 0 as $T);
+                assert_eq!((5 as $T).div_mod_floor(&(5 as $T)), (1 as $T, 0 as $T));
+                assert_eq!((3 as $T).div_floor(&(7 as $T)), 0 as $T);
+                assert_eq!((3 as $T).mod_floor(&(7 as $T)), 3 as $T);
+                assert_eq!((3 as $T).div_mod_floor(&(7 as $T)), (0 as $T, 3 as $T));
             }
 
             #[test]
@@ -1017,14 +979,9 @@ macro_rules! impl_integer_for_usize {
 
             #[test]
             fn test_is_multiple_of() {
-                assert!((0 as $T).is_multiple_of(&(0 as $T)));
                 assert!((6 as $T).is_multiple_of(&(6 as $T)));
                 assert!((6 as $T).is_multiple_of(&(3 as $T)));
                 assert!((6 as $T).is_multiple_of(&(1 as $T)));
-
-                assert!(!(42 as $T).is_multiple_of(&(5 as $T)));
-                assert!(!(5 as $T).is_multiple_of(&(3 as $T)));
-                assert!(!(42 as $T).is_multiple_of(&(0 as $T)));
             }
 
             #[test]

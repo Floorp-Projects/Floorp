@@ -830,10 +830,8 @@ impl<T> Slab<T> {
     /// assert_eq!(slab[key2], 1);
     /// ```
     pub unsafe fn get2_unchecked_mut(&mut self, key1: usize, key2: usize) -> (&mut T, &mut T) {
-        debug_assert_ne!(key1, key2);
-        let ptr = self.entries.as_mut_ptr();
-        let ptr1 = ptr.add(key1);
-        let ptr2 = ptr.add(key2);
+        let ptr1 = self.entries.get_unchecked_mut(key1) as *mut Entry<T>;
+        let ptr2 = self.entries.get_unchecked_mut(key2) as *mut Entry<T>;
         match (&mut *ptr1, &mut *ptr2) {
             (&mut Entry::Occupied(ref mut val1), &mut Entry::Occupied(ref mut val2)) => {
                 (val1, val2)
@@ -917,30 +915,6 @@ impl<T> Slab<T> {
         self.insert_at(key, val);
 
         key
-    }
-
-    /// Returns the key of the next vacant entry.
-    ///
-    /// This function returns the key of the vacant entry which  will be used
-    /// for the next insertion. This is equivalent to
-    /// `slab.vacant_entry().key()`, but it doesn't require mutable access.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use slab::*;
-    /// let mut slab = Slab::new();
-    /// assert_eq!(slab.vacant_key(), 0);
-    ///
-    /// slab.insert(0);
-    /// assert_eq!(slab.vacant_key(), 1);
-    ///
-    /// slab.insert(1);
-    /// slab.remove(0);
-    /// assert_eq!(slab.vacant_key(), 0);
-    /// ```
-    pub fn vacant_key(&self) -> usize {
-        self.next
     }
 
     /// Return a handle to a vacant entry allowing for further manipulation.

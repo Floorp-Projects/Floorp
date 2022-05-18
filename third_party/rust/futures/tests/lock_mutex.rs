@@ -34,7 +34,6 @@ fn mutex_wakes_waiters() {
     assert!(waiter.poll_unpin(&mut panic_context()).is_ready());
 }
 
-#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn mutex_contested() {
     let (tx, mut rx) = mpsc::unbounded();

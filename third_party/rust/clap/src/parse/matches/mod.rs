@@ -1,9 +1,9 @@
 mod arg_matches;
 mod matched_arg;
-mod value_source;
 
-pub use arg_matches::{ArgMatches, Indices, OsValues, Values};
-pub use value_source::ValueSource;
+pub(crate) use self::{
+    arg_matches::SubCommand,
+    matched_arg::{MatchedArg, ValueType},
+};
 
-pub(crate) use arg_matches::SubCommand;
-pub(crate) use matched_arg::MatchedArg;
+pub use self::arg_matches::{ArgMatches, Indices, OsValues, Values};

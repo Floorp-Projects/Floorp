@@ -349,12 +349,6 @@ s! {
         pub instruction_pointer: ::__u64,
         pub args: [::__u64; 6],
     }
-
-    pub struct ptrace_peeksiginfo_args {
-        pub off: ::__u64,
-        pub flags: ::__u32,
-        pub nr: ::__s32,
-    }
 }
 
 s_no_extra_traits! {
@@ -812,8 +806,6 @@ pub const TFD_TIMER_CANCEL_ON_SET: ::c_int = 2;
 
 pub const USER_PROCESS: ::c_short = 7;
 
-pub const _POSIX_VDISABLE: ::cc_t = 0;
-
 // linux/falloc.h
 pub const FALLOC_FL_KEEP_SIZE: ::c_int = 0x01;
 pub const FALLOC_FL_PUNCH_HOLE: ::c_int = 0x02;
@@ -991,12 +983,6 @@ pub const F_LOCK: ::c_int = 1;
 pub const F_TEST: ::c_int = 3;
 pub const F_TLOCK: ::c_int = 2;
 pub const F_ULOCK: ::c_int = 0;
-
-pub const F_SEAL_FUTURE_WRITE: ::c_int = 0x0010;
-
-pub const IFF_LOWER_UP: ::c_int = 0x10000;
-pub const IFF_DORMANT: ::c_int = 0x20000;
-pub const IFF_ECHO: ::c_int = 0x40000;
 
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 1;
@@ -1269,6 +1255,33 @@ pub const TOSTOP: ::tcflag_t = 0x00000100;
 pub const FLUSHO: ::tcflag_t = 0x00001000;
 pub const EXTPROC: ::tcflag_t = 0o200000;
 
+pub const ADFS_SUPER_MAGIC: ::c_long = 0x0000adf5;
+pub const AFFS_SUPER_MAGIC: ::c_long = 0x0000adff;
+pub const CODA_SUPER_MAGIC: ::c_long = 0x73757245;
+pub const CRAMFS_MAGIC: ::c_long = 0x28cd3d45;
+pub const EFS_SUPER_MAGIC: ::c_long = 0x00414a53;
+pub const EXT2_SUPER_MAGIC: ::c_long = 0x0000ef53;
+pub const EXT3_SUPER_MAGIC: ::c_long = 0x0000ef53;
+pub const EXT4_SUPER_MAGIC: ::c_long = 0x0000ef53;
+pub const HPFS_SUPER_MAGIC: ::c_long = 0xf995e849;
+pub const HUGETLBFS_MAGIC: ::c_long = 0x958458f6;
+pub const ISOFS_SUPER_MAGIC: ::c_long = 0x00009660;
+pub const JFFS2_SUPER_MAGIC: ::c_long = 0x000072b6;
+pub const MINIX_SUPER_MAGIC: ::c_long = 0x0000137f;
+pub const MINIX_SUPER_MAGIC2: ::c_long = 0x0000138f;
+pub const MINIX2_SUPER_MAGIC: ::c_long = 0x00002468;
+pub const MINIX2_SUPER_MAGIC2: ::c_long = 0x00002478;
+pub const MSDOS_SUPER_MAGIC: ::c_long = 0x00004d44;
+pub const NCP_SUPER_MAGIC: ::c_long = 0x0000564c;
+pub const NFS_SUPER_MAGIC: ::c_long = 0x00006969;
+pub const OPENPROM_SUPER_MAGIC: ::c_long = 0x00009fa1;
+pub const PROC_SUPER_MAGIC: ::c_long = 0x00009fa0;
+pub const QNX4_SUPER_MAGIC: ::c_long = 0x0000002f;
+pub const REISERFS_SUPER_MAGIC: ::c_long = 0x52654973;
+pub const SMB_SUPER_MAGIC: ::c_long = 0x0000517b;
+pub const TMPFS_MAGIC: ::c_long = 0x01021994;
+pub const USBDEVICE_SUPER_MAGIC: ::c_long = 0x00009fa2;
+
 pub const MAP_HUGETLB: ::c_int = 0x040000;
 
 pub const PTRACE_TRACEME: ::c_int = 0;
@@ -1281,8 +1294,6 @@ pub const PTRACE_POKEUSER: ::c_int = 6;
 pub const PTRACE_CONT: ::c_int = 7;
 pub const PTRACE_KILL: ::c_int = 8;
 pub const PTRACE_SINGLESTEP: ::c_int = 9;
-pub const PTRACE_GETREGS: ::c_int = 12;
-pub const PTRACE_SETREGS: ::c_int = 13;
 pub const PTRACE_ATTACH: ::c_int = 16;
 pub const PTRACE_DETACH: ::c_int = 17;
 pub const PTRACE_SYSCALL: ::c_int = 24;
@@ -1528,11 +1539,6 @@ pub const B3000000: ::speed_t = 0o010015;
 pub const B3500000: ::speed_t = 0o010016;
 pub const B4000000: ::speed_t = 0o010017;
 pub const IBSHIFT: ::tcflag_t = 16;
-
-pub const BLKIOMIN: ::c_int = 0x1278;
-pub const BLKIOOPT: ::c_int = 0x1279;
-pub const BLKSSZGET: ::c_int = 0x1268;
-pub const BLKPBSZGET: ::c_int = 0x127B;
 
 pub const EAI_AGAIN: ::c_int = 2;
 pub const EAI_BADFLAGS: ::c_int = 3;
@@ -1794,7 +1800,6 @@ pub const NETLINK_GET_STRICT_CHK: ::c_int = 12;
 
 pub const GRND_NONBLOCK: ::c_uint = 0x0001;
 pub const GRND_RANDOM: ::c_uint = 0x0002;
-pub const GRND_INSECURE: ::c_uint = 0x0004;
 
 pub const SECCOMP_MODE_DISABLED: ::c_uint = 0;
 pub const SECCOMP_MODE_STRICT: ::c_uint = 1;
@@ -1871,20 +1876,6 @@ pub const O_TMPFILE: ::c_int = 0o20000000 | O_DIRECTORY;
 pub const MFD_CLOEXEC: ::c_uint = 0x0001;
 pub const MFD_ALLOW_SEALING: ::c_uint = 0x0002;
 pub const MFD_HUGETLB: ::c_uint = 0x0004;
-pub const MFD_HUGE_64KB: ::c_uint = 0x40000000;
-pub const MFD_HUGE_512KB: ::c_uint = 0x4c000000;
-pub const MFD_HUGE_1MB: ::c_uint = 0x50000000;
-pub const MFD_HUGE_2MB: ::c_uint = 0x54000000;
-pub const MFD_HUGE_8MB: ::c_uint = 0x5c000000;
-pub const MFD_HUGE_16MB: ::c_uint = 0x60000000;
-pub const MFD_HUGE_32MB: ::c_uint = 0x64000000;
-pub const MFD_HUGE_256MB: ::c_uint = 0x70000000;
-pub const MFD_HUGE_512MB: ::c_uint = 0x74000000;
-pub const MFD_HUGE_1GB: ::c_uint = 0x78000000;
-pub const MFD_HUGE_2GB: ::c_uint = 0x7c000000;
-pub const MFD_HUGE_16GB: ::c_uint = 0x88000000;
-pub const MFD_HUGE_MASK: ::c_uint = 63;
-pub const MFD_HUGE_SHIFT: ::c_uint = 26;
 
 // these are used in the p_type field of Elf32_Phdr and Elf64_Phdr, which has
 // the type Elf32Word and Elf64Word respectively. Luckily, both of those are u32
@@ -2468,16 +2459,6 @@ pub const SCHED_DEADLINE: ::c_int = 6;
 pub const SCHED_RESET_ON_FORK: ::c_int = 0x40000000;
 
 pub const CLONE_PIDFD: ::c_int = 0x1000;
-
-// linux/mempolicy.h
-pub const MPOL_DEFAULT: ::c_int = 0;
-pub const MPOL_PREFERRED: ::c_int = 1;
-pub const MPOL_BIND: ::c_int = 2;
-pub const MPOL_INTERLEAVE: ::c_int = 3;
-pub const MPOL_LOCAL: ::c_int = 4;
-pub const MPOL_F_NUMA_BALANCING: ::c_int = 1 << 13;
-pub const MPOL_F_RELATIVE_NODES: ::c_int = 1 << 14;
-pub const MPOL_F_STATIC_NODES: ::c_int = 1 << 15;
 
 // bits/seek_constants.h
 pub const SEEK_DATA: ::c_int = 3;

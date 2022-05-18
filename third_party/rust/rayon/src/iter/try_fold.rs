@@ -1,17 +1,15 @@
 use super::plumbing::*;
-use super::ParallelIterator;
-use super::Try;
+use super::*;
 
-use super::private::ControlFlow::{self, Break, Continue};
-
+use super::private::Try;
 use std::fmt::{self, Debug};
 use std::marker::PhantomData;
 
 impl<U, I, ID, F> TryFold<I, U, ID, F>
 where
     I: ParallelIterator,
-    F: Fn(U::Output, I::Item) -> U + Sync + Send,
-    ID: Fn() -> U::Output + Sync + Send,
+    F: Fn(U::Ok, I::Item) -> U + Sync + Send,
+    ID: Fn() -> U::Ok + Sync + Send,
     U: Try + Send,
 {
     pub(super) fn new(base: I, identity: ID, fold_op: F) -> Self {
@@ -47,8 +45,8 @@ impl<U, I: ParallelIterator + Debug, ID, F> Debug for TryFold<I, U, ID, F> {
 impl<U, I, ID, F> ParallelIterator for TryFold<I, U, ID, F>
 where
     I: ParallelIterator,
-    F: Fn(U::Output, I::Item) -> U + Sync + Send,
-    ID: Fn() -> U::Output + Sync + Send,
+    F: Fn(U::Ok, I::Item) -> U + Sync + Send,
+    ID: Fn() -> U::Ok + Sync + Send,
     U: Try + Send,
 {
     type Item = U;
@@ -77,8 +75,8 @@ struct TryFoldConsumer<'c, U, C, ID, F> {
 impl<'r, U, T, C, ID, F> Consumer<T> for TryFoldConsumer<'r, U, C, ID, F>
 where
     C: Consumer<U>,
-    F: Fn(U::Output, T) -> U + Sync,
-    ID: Fn() -> U::Output + Sync,
+    F: Fn(U::Ok, T) -> U + Sync,
+    ID: Fn() -> U::Ok + Sync,
     U: Try + Send,
 {
     type Folder = TryFoldFolder<'r, C::Folder, U, F>;
@@ -100,7 +98,7 @@ where
     fn into_folder(self) -> Self::Folder {
         TryFoldFolder {
             base: self.base.into_folder(),
-            control: Continue((self.identity)()),
+            result: Ok((self.identity)()),
             fold_op: self.fold_op,
         }
     }
@@ -113,8 +111,8 @@ where
 impl<'r, U, T, C, ID, F> UnindexedConsumer<T> for TryFoldConsumer<'r, U, C, ID, F>
 where
     C: UnindexedConsumer<U>,
-    F: Fn(U::Output, T) -> U + Sync,
-    ID: Fn() -> U::Output + Sync,
+    F: Fn(U::Ok, T) -> U + Sync,
+    ID: Fn() -> U::Ok + Sync,
     U: Try + Send,
 {
     fn split_off_left(&self) -> Self {
@@ -132,38 +130,35 @@ where
 struct TryFoldFolder<'r, C, U: Try, F> {
     base: C,
     fold_op: &'r F,
-    control: ControlFlow<U::Residual, U::Output>,
+    result: Result<U::Ok, U::Error>,
 }
 
 impl<'r, C, U, F, T> Folder<T> for TryFoldFolder<'r, C, U, F>
 where
     C: Folder<U>,
-    F: Fn(U::Output, T) -> U + Sync,
+    F: Fn(U::Ok, T) -> U + Sync,
     U: Try,
 {
     type Result = C::Result;
 
     fn consume(mut self, item: T) -> Self {
         let fold_op = self.fold_op;
-        if let Continue(acc) = self.control {
-            self.control = fold_op(acc, item).branch();
+        if let Ok(acc) = self.result {
+            self.result = fold_op(acc, item).into_result();
         }
         self
     }
 
     fn complete(self) -> C::Result {
-        let item = match self.control {
-            Continue(c) => U::from_output(c),
-            Break(r) => U::from_residual(r),
+        let item = match self.result {
+            Ok(ok) => U::from_ok(ok),
+            Err(error) => U::from_error(error),
         };
         self.base.consume(item).complete()
     }
 
     fn full(&self) -> bool {
-        match self.control {
-            Break(_) => true,
-            _ => self.base.full(),
-        }
+        self.result.is_err() || self.base.full()
     }
 }
 
@@ -172,11 +167,11 @@ where
 impl<U, I, F> TryFoldWith<I, U, F>
 where
     I: ParallelIterator,
-    F: Fn(U::Output, I::Item) -> U + Sync,
+    F: Fn(U::Ok, I::Item) -> U + Sync,
     U: Try + Send,
-    U::Output: Clone + Send,
+    U::Ok: Clone + Send,
 {
-    pub(super) fn new(base: I, item: U::Output, fold_op: F) -> Self {
+    pub(super) fn new(base: I, item: U::Ok, fold_op: F) -> Self {
         TryFoldWith {
             base,
             item,
@@ -194,13 +189,13 @@ where
 #[derive(Clone)]
 pub struct TryFoldWith<I, U: Try, F> {
     base: I,
-    item: U::Output,
+    item: U::Ok,
     fold_op: F,
 }
 
 impl<I: ParallelIterator + Debug, U: Try, F> Debug for TryFoldWith<I, U, F>
 where
-    U::Output: Debug,
+    U::Ok: Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("TryFoldWith")
@@ -213,9 +208,9 @@ where
 impl<U, I, F> ParallelIterator for TryFoldWith<I, U, F>
 where
     I: ParallelIterator,
-    F: Fn(U::Output, I::Item) -> U + Sync + Send,
+    F: Fn(U::Ok, I::Item) -> U + Sync + Send,
     U: Try + Send,
-    U::Output: Clone + Send,
+    U::Ok: Clone + Send,
 {
     type Item = U;
 
@@ -234,16 +229,16 @@ where
 
 struct TryFoldWithConsumer<'c, C, U: Try, F> {
     base: C,
-    item: U::Output,
+    item: U::Ok,
     fold_op: &'c F,
 }
 
 impl<'r, U, T, C, F> Consumer<T> for TryFoldWithConsumer<'r, C, U, F>
 where
     C: Consumer<U>,
-    F: Fn(U::Output, T) -> U + Sync,
+    F: Fn(U::Ok, T) -> U + Sync,
     U: Try + Send,
-    U::Output: Clone + Send,
+    U::Ok: Clone + Send,
 {
     type Folder = TryFoldFolder<'r, C::Folder, U, F>;
     type Reducer = C::Reducer;
@@ -268,7 +263,7 @@ where
     fn into_folder(self) -> Self::Folder {
         TryFoldFolder {
             base: self.base.into_folder(),
-            control: Continue(self.item),
+            result: Ok(self.item),
             fold_op: self.fold_op,
         }
     }
@@ -281,9 +276,9 @@ where
 impl<'r, U, T, C, F> UnindexedConsumer<T> for TryFoldWithConsumer<'r, C, U, F>
 where
     C: UnindexedConsumer<U>,
-    F: Fn(U::Output, T) -> U + Sync,
+    F: Fn(U::Ok, T) -> U + Sync,
     U: Try + Send,
-    U::Output: Clone + Send,
+    U::Ok: Clone + Send,
 {
     fn split_off_left(&self) -> Self {
         TryFoldWithConsumer {

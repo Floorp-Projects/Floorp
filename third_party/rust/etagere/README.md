@@ -34,7 +34,7 @@ atlas.deallocate(a.id);
 
 let c = atlas.allocate(size2(300, 200)).unwrap();
 
-assert_eq!(c.rectangle, atlas.get(c.id));
+assert_eq!(c.rectangle, atlas[c.id]);
 
 atlas.deallocate(c.id);
 atlas.deallocate(b.id);

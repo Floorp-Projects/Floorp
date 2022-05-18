@@ -1,4 +1,4 @@
-use clap::{CommandFactory, ErrorKind, Parser};
+use clap::{ErrorKind, IntoApp, Parser};
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -41,8 +41,8 @@ fn main() {
     // See if --set-ver was used to set the version manually
     let version = if let Some(ver) = cli.set_ver.as_deref() {
         if cli.major || cli.minor || cli.patch {
-            let mut cmd = Cli::command();
-            cmd.error(
+            let mut app = Cli::into_app();
+            app.error(
                 ErrorKind::ArgumentConflict,
                 "Can't do relative and absolute version change",
             )
@@ -57,10 +57,10 @@ fn main() {
             (false, true, false) => minor += 1,
             (false, false, true) => patch += 1,
             _ => {
-                let mut cmd = Cli::command();
-                cmd.error(
+                let mut app = Cli::into_app();
+                app.error(
                     ErrorKind::ArgumentConflict,
-                    "Can only modify one version field",
+                    "Cam only modify one version field",
                 )
                 .exit();
             }
@@ -80,8 +80,8 @@ fn main() {
             // 'or' is preferred to 'or_else' here since `Option::as_deref` is 'const'
             .or(cli.spec_in.as_deref())
             .unwrap_or_else(|| {
-                let mut cmd = Cli::command();
-                cmd.error(
+                let mut app = Cli::into_app();
+                app.error(
                     ErrorKind::MissingRequiredArgument,
                     "INPUT_FILE or --spec-in is required when using --config",
                 )

@@ -483,10 +483,10 @@ impl<'a> Lexer<'a> {
     }
 
     fn number(&self, src: &'a str) -> Option<Token<'a>> {
-        let (sign, num) = if let Some(stripped) = src.strip_prefix('+') {
-            (Some(SignToken::Plus), stripped)
-        } else if let Some(stripped) = src.strip_prefix('-') {
-            (Some(SignToken::Minus), stripped)
+        let (sign, num) = if src.starts_with('+') {
+            (Some(SignToken::Plus), &src[1..])
+        } else if src.starts_with('-') {
+            (Some(SignToken::Minus), &src[1..])
         } else {
             (None, src)
         };
@@ -507,8 +507,8 @@ impl<'a> Lexer<'a> {
                     negative,
                 },
             }))));
-        } else if let Some(stripped) = num.strip_prefix("nan:0x") {
-            let mut it = stripped.chars();
+        } else if num.starts_with("nan:0x") {
+            let mut it = num[6..].chars();
             let to_parse = skip_undescores(&mut it, false, char::is_ascii_hexdigit)?;
             if it.next().is_some() {
                 return None;
@@ -524,9 +524,9 @@ impl<'a> Lexer<'a> {
         }
 
         // Figure out if we're a hex number or not
-        let (mut it, hex, test_valid) = if let Some(stripped) = num.strip_prefix("0x") {
+        let (mut it, hex, test_valid) = if num.starts_with("0x") {
             (
-                stripped.chars(),
+                num[2..].chars(),
                 true,
                 char::is_ascii_hexdigit as fn(&char) -> bool,
             )

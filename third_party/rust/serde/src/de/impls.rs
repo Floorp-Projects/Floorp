@@ -4,7 +4,7 @@ use de::{
     Deserialize, Deserializer, EnumAccess, Error, SeqAccess, Unexpected, VariantAccess, Visitor,
 };
 
-#[cfg(any(feature = "std", feature = "alloc", not(no_core_duration)))]
+#[cfg(any(core_duration, feature = "std", feature = "alloc"))]
 use de::MapAccess;
 
 use seed::InPlaceSeed;
@@ -81,34 +81,8 @@ impl<'de> Deserialize<'de> for bool {
 ////////////////////////////////////////////////////////////////////////////////
 
 macro_rules! impl_deserialize_num {
-    ($primitive:ident, $nonzero:ident $(cfg($($cfg:tt)*))*, $deserialize:ident $($method:ident!($($val:ident : $visit:ident)*);)*) => {
-        impl_deserialize_num!($primitive, $deserialize $($method!($($val : $visit)*);)*);
-
-        #[cfg(all(not(no_num_nonzero), $($($cfg)*)*))]
-        impl<'de> Deserialize<'de> for num::$nonzero {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: Deserializer<'de>,
-            {
-                struct NonZeroVisitor;
-
-                impl<'de> Visitor<'de> for NonZeroVisitor {
-                    type Value = num::$nonzero;
-
-                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                        formatter.write_str(concat!("a nonzero ", stringify!($primitive)))
-                    }
-
-                    $($($method!(nonzero $primitive $val : $visit);)*)*
-                }
-
-                deserializer.$deserialize(NonZeroVisitor)
-            }
-        }
-    };
-
-    ($primitive:ident, $deserialize:ident $($method:ident!($($val:ident : $visit:ident)*);)*) => {
-        impl<'de> Deserialize<'de> for $primitive {
+    ($ty:ident, $deserialize:ident $($methods:tt)*) => {
+        impl<'de> Deserialize<'de> for $ty {
             #[inline]
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
@@ -117,13 +91,13 @@ macro_rules! impl_deserialize_num {
                 struct PrimitiveVisitor;
 
                 impl<'de> Visitor<'de> for PrimitiveVisitor {
-                    type Value = $primitive;
+                    type Value = $ty;
 
                     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                        formatter.write_str(stringify!($primitive))
+                        formatter.write_str(stringify!($ty))
                     }
 
-                    $($($method!($val : $visit);)*)*
+                    $($methods)*
                 }
 
                 deserializer.$deserialize(PrimitiveVisitor)
@@ -142,149 +116,85 @@ macro_rules! num_self {
             Ok(v)
         }
     };
-
-    (nonzero $primitive:ident $ty:ident : $visit:ident) => {
-        fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-        where
-            E: Error,
-        {
-            if let Some(nonzero) = Self::Value::new(v) {
-                Ok(nonzero)
-            } else {
-                Err(Error::invalid_value(Unexpected::Unsigned(0), &self))
-            }
-        }
-    };
 }
 
 macro_rules! num_as_self {
-    ($ty:ident : $visit:ident) => {
-        #[inline]
-        fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-        where
-            E: Error,
-        {
-            Ok(v as Self::Value)
-        }
-    };
-
-    (nonzero $primitive:ident $ty:ident : $visit:ident) => {
-        fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-        where
-            E: Error,
-        {
-            if let Some(nonzero) = Self::Value::new(v as $primitive) {
-                Ok(nonzero)
-            } else {
-                Err(Error::invalid_value(Unexpected::Unsigned(0), &self))
+    ($($ty:ident : $visit:ident)*) => {
+        $(
+            #[inline]
+            fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(v as Self::Value)
             }
-        }
+        )*
     };
 }
 
 macro_rules! int_to_int {
-    ($ty:ident : $visit:ident) => {
-        #[inline]
-        fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-        where
-            E: Error,
-        {
-            if Self::Value::min_value() as i64 <= v as i64
-                && v as i64 <= Self::Value::max_value() as i64
+    ($($ty:ident : $visit:ident)*) => {
+        $(
+            #[inline]
+            fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
+            where
+                E: Error,
             {
-                Ok(v as Self::Value)
-            } else {
-                Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
-            }
-        }
-    };
-
-    (nonzero $primitive:ident $ty:ident : $visit:ident) => {
-        fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-        where
-            E: Error,
-        {
-            if $primitive::min_value() as i64 <= v as i64
-                && v as i64 <= $primitive::max_value() as i64
-            {
-                if let Some(nonzero) = Self::Value::new(v as $primitive) {
-                    return Ok(nonzero);
+                if Self::Value::min_value() as i64 <= v as i64 && v as i64 <= Self::Value::max_value() as i64 {
+                    Ok(v as Self::Value)
+                } else {
+                    Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
                 }
             }
-            Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
-        }
+        )*
     };
 }
 
 macro_rules! int_to_uint {
-    ($ty:ident : $visit:ident) => {
-        #[inline]
-        fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-        where
-            E: Error,
-        {
-            if 0 <= v && v as u64 <= Self::Value::max_value() as u64 {
-                Ok(v as Self::Value)
-            } else {
-                Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
-            }
-        }
-    };
-
-    (nonzero $primitive:ident $ty:ident : $visit:ident) => {
-        fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-        where
-            E: Error,
-        {
-            if 0 < v && v as u64 <= $primitive::max_value() as u64 {
-                if let Some(nonzero) = Self::Value::new(v as $primitive) {
-                    return Ok(nonzero);
+    ($($ty:ident : $visit:ident)*) => {
+        $(
+            #[inline]
+            fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                if 0 <= v && v as u64 <= Self::Value::max_value() as u64 {
+                    Ok(v as Self::Value)
+                } else {
+                    Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
                 }
             }
-            Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
-        }
+        )*
     };
 }
 
 macro_rules! uint_to_self {
-    ($ty:ident : $visit:ident) => {
-        #[inline]
-        fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-        where
-            E: Error,
-        {
-            if v as u64 <= Self::Value::max_value() as u64 {
-                Ok(v as Self::Value)
-            } else {
-                Err(Error::invalid_value(Unexpected::Unsigned(v as u64), &self))
-            }
-        }
-    };
-
-    (nonzero $primitive:ident $ty:ident : $visit:ident) => {
-        fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-        where
-            E: Error,
-        {
-            if v as u64 <= $primitive::max_value() as u64 {
-                if let Some(nonzero) = Self::Value::new(v as $primitive) {
-                    return Ok(nonzero);
+    ($($ty:ident : $visit:ident)*) => {
+        $(
+            #[inline]
+            fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                if v as u64 <= Self::Value::max_value() as u64 {
+                    Ok(v as Self::Value)
+                } else {
+                    Err(Error::invalid_value(Unexpected::Unsigned(v as u64), &self))
                 }
             }
-            Err(Error::invalid_value(Unexpected::Unsigned(v as u64), &self))
-        }
+        )*
     };
 }
 
 impl_deserialize_num! {
-    i8, NonZeroI8 cfg(not(no_num_nonzero_signed)), deserialize_i8
+    i8, deserialize_i8
     num_self!(i8:visit_i8);
     int_to_int!(i16:visit_i16 i32:visit_i32 i64:visit_i64);
     uint_to_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 impl_deserialize_num! {
-    i16, NonZeroI16 cfg(not(no_num_nonzero_signed)), deserialize_i16
+    i16, deserialize_i16
     num_self!(i16:visit_i16);
     num_as_self!(i8:visit_i8);
     int_to_int!(i32:visit_i32 i64:visit_i64);
@@ -292,7 +202,7 @@ impl_deserialize_num! {
 }
 
 impl_deserialize_num! {
-    i32, NonZeroI32 cfg(not(no_num_nonzero_signed)), deserialize_i32
+    i32, deserialize_i32
     num_self!(i32:visit_i32);
     num_as_self!(i8:visit_i8 i16:visit_i16);
     int_to_int!(i64:visit_i64);
@@ -300,28 +210,28 @@ impl_deserialize_num! {
 }
 
 impl_deserialize_num! {
-    i64, NonZeroI64 cfg(not(no_num_nonzero_signed)), deserialize_i64
+    i64, deserialize_i64
     num_self!(i64:visit_i64);
     num_as_self!(i8:visit_i8 i16:visit_i16 i32:visit_i32);
     uint_to_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 impl_deserialize_num! {
-    isize, NonZeroIsize cfg(not(no_num_nonzero_signed)), deserialize_i64
+    isize, deserialize_i64
     num_as_self!(i8:visit_i8 i16:visit_i16);
     int_to_int!(i32:visit_i32 i64:visit_i64);
     uint_to_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 impl_deserialize_num! {
-    u8, NonZeroU8, deserialize_u8
+    u8, deserialize_u8
     num_self!(u8:visit_u8);
     int_to_uint!(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
     uint_to_self!(u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 impl_deserialize_num! {
-    u16, NonZeroU16, deserialize_u16
+    u16, deserialize_u16
     num_self!(u16:visit_u16);
     num_as_self!(u8:visit_u8);
     int_to_uint!(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
@@ -329,7 +239,7 @@ impl_deserialize_num! {
 }
 
 impl_deserialize_num! {
-    u32, NonZeroU32, deserialize_u32
+    u32, deserialize_u32
     num_self!(u32:visit_u32);
     num_as_self!(u8:visit_u8 u16:visit_u16);
     int_to_uint!(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
@@ -337,14 +247,14 @@ impl_deserialize_num! {
 }
 
 impl_deserialize_num! {
-    u64, NonZeroU64, deserialize_u64
+    u64, deserialize_u64
     num_self!(u64:visit_u64);
     num_as_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32);
     int_to_uint!(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
 }
 
 impl_deserialize_num! {
-    usize, NonZeroUsize, deserialize_u64
+    usize, deserialize_u64
     num_as_self!(u8:visit_u8 u16:visit_u16);
     int_to_uint!(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
     uint_to_self!(u32:visit_u32 u64:visit_u64);
@@ -367,62 +277,42 @@ impl_deserialize_num! {
 }
 
 serde_if_integer128! {
-    macro_rules! num_128 {
-        ($ty:ident : $visit:ident) => {
-            fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                if v as i128 >= Self::Value::min_value() as i128
-                    && v as u128 <= Self::Value::max_value() as u128
-                {
-                    Ok(v as Self::Value)
-                } else {
-                    Err(Error::invalid_value(
-                        Unexpected::Other(stringify!($ty)),
-                        &self,
-                    ))
-                }
-            }
-        };
-
-        (nonzero $primitive:ident $ty:ident : $visit:ident) => {
-            fn $visit<E>(self, v: $ty) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                if v as i128 >= $primitive::min_value() as i128
-                    && v as u128 <= $primitive::max_value() as u128
-                {
-                    if let Some(nonzero) = Self::Value::new(v as $primitive) {
-                        Ok(nonzero)
-                    } else {
-                        Err(Error::invalid_value(Unexpected::Unsigned(0), &self))
-                    }
-                } else {
-                    Err(Error::invalid_value(
-                        Unexpected::Other(stringify!($ty)),
-                        &self,
-                    ))
-                }
-            }
-        };
-    }
-
     impl_deserialize_num! {
-        i128, NonZeroI128 cfg(not(no_num_nonzero_signed)), deserialize_i128
+        i128, deserialize_i128
         num_self!(i128:visit_i128);
         num_as_self!(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
         num_as_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
-        num_128!(u128:visit_u128);
+
+        #[inline]
+        fn visit_u128<E>(self, v: u128) -> Result<Self::Value, E>
+        where
+            E: Error,
+        {
+            if v <= i128::max_value() as u128 {
+                Ok(v as i128)
+            } else {
+                Err(Error::invalid_value(Unexpected::Other("u128"), &self))
+            }
+        }
     }
 
     impl_deserialize_num! {
-        u128, NonZeroU128, deserialize_u128
+        u128, deserialize_u128
         num_self!(u128:visit_u128);
         num_as_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
         int_to_uint!(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
-        num_128!(i128:visit_i128);
+
+        #[inline]
+        fn visit_i128<E>(self, v: i128) -> Result<Self::Value, E>
+        where
+            E: Error,
+        {
+            if 0 <= v {
+                Ok(v as u128)
+            } else {
+                Err(Error::invalid_value(Unexpected::Other("i128"), &self))
+            }
+        }
     }
 }
 
@@ -747,10 +637,10 @@ macro_rules! forwarded_impl {
     }
 }
 
-#[cfg(all(feature = "std", not(no_de_boxed_c_str)))]
+#[cfg(all(feature = "std", de_boxed_c_str))]
 forwarded_impl!((), Box<CStr>, CString::into_boxed_c_str);
 
-#[cfg(not(no_core_reverse))]
+#[cfg(core_reverse)]
 forwarded_impl!((T), Reverse<T>, Reverse);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1714,7 +1604,7 @@ impl<'de> Deserialize<'de> for PathBuf {
     }
 }
 
-#[cfg(all(feature = "std", not(no_de_boxed_path)))]
+#[cfg(all(feature = "std", de_boxed_path))]
 forwarded_impl!((), Box<Path>, PathBuf::into_boxed_path);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1795,7 +1685,11 @@ forwarded_impl!((T), Box<[T]>, Vec::into_boxed_slice);
 #[cfg(any(feature = "std", feature = "alloc"))]
 forwarded_impl!((), Box<str>, String::into_boxed_str);
 
-#[cfg(all(no_de_rc_dst, feature = "rc", any(feature = "std", feature = "alloc")))]
+#[cfg(all(
+    not(de_rc_dst),
+    feature = "rc",
+    any(feature = "std", feature = "alloc")
+))]
 forwarded_impl! {
     /// This impl requires the [`"rc"`] Cargo feature of Serde.
     ///
@@ -1807,7 +1701,11 @@ forwarded_impl! {
     (T), Arc<T>, Arc::new
 }
 
-#[cfg(all(no_de_rc_dst, feature = "rc", any(feature = "std", feature = "alloc")))]
+#[cfg(all(
+    not(de_rc_dst),
+    feature = "rc",
+    any(feature = "std", feature = "alloc")
+))]
 forwarded_impl! {
     /// This impl requires the [`"rc"`] Cargo feature of Serde.
     ///
@@ -1874,11 +1772,7 @@ where
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(all(
-    not(no_de_rc_dst),
-    feature = "rc",
-    any(feature = "std", feature = "alloc")
-))]
+#[cfg(all(de_rc_dst, feature = "rc", any(feature = "std", feature = "alloc")))]
 macro_rules! box_forwarded_impl {
     (
         $(#[doc = $doc:tt])*
@@ -1899,11 +1793,7 @@ macro_rules! box_forwarded_impl {
     };
 }
 
-#[cfg(all(
-    not(no_de_rc_dst),
-    feature = "rc",
-    any(feature = "std", feature = "alloc")
-))]
+#[cfg(all(de_rc_dst, feature = "rc", any(feature = "std", feature = "alloc")))]
 box_forwarded_impl! {
     /// This impl requires the [`"rc"`] Cargo feature of Serde.
     ///
@@ -1915,11 +1805,7 @@ box_forwarded_impl! {
     Rc
 }
 
-#[cfg(all(
-    not(no_de_rc_dst),
-    feature = "rc",
-    any(feature = "std", feature = "alloc")
-))]
+#[cfg(all(de_rc_dst, feature = "rc", any(feature = "std", feature = "alloc")))]
 box_forwarded_impl! {
     /// This impl requires the [`"rc"`] Cargo feature of Serde.
     ///
@@ -1963,7 +1849,7 @@ forwarded_impl!((T), RwLock<T>, RwLock::new);
 //         secs: u64,
 //         nanos: u32,
 //     }
-#[cfg(any(feature = "std", not(no_core_duration)))]
+#[cfg(any(core_duration, feature = "std"))]
 impl<'de> Deserialize<'de> for Duration {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -2241,11 +2127,11 @@ impl<'de> Deserialize<'de> for SystemTime {
 
         const FIELDS: &'static [&'static str] = &["secs_since_epoch", "nanos_since_epoch"];
         let duration = try!(deserializer.deserialize_struct("SystemTime", FIELDS, DurationVisitor));
-        #[cfg(not(no_systemtime_checked_add))]
+        #[cfg(systemtime_checked_add)]
         let ret = UNIX_EPOCH
             .checked_add(duration)
             .ok_or_else(|| D::Error::custom("overflow deserializing SystemTime"));
-        #[cfg(no_systemtime_checked_add)]
+        #[cfg(not(systemtime_checked_add))]
         let ret = Ok(UNIX_EPOCH + duration);
         ret
     }
@@ -2281,7 +2167,7 @@ where
     }
 }
 
-#[cfg(not(no_range_inclusive))]
+#[cfg(range_inclusive)]
 impl<'de, Idx> Deserialize<'de> for RangeInclusive<Idx>
 where
     Idx: Deserialize<'de>,
@@ -2433,7 +2319,7 @@ mod range {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(any(not(no_ops_bound), all(feature = "std", not(no_collections_bound))))]
+#[cfg(any(ops_bound, collections_bound))]
 impl<'de, T> Deserialize<'de> for Bound<T>
 where
     T: Deserialize<'de>,
@@ -2536,6 +2422,58 @@ where
         const VARIANTS: &'static [&'static str] = &["Unbounded", "Included", "Excluded"];
 
         deserializer.deserialize_enum("Bound", VARIANTS, BoundVisitor(PhantomData))
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+macro_rules! nonzero_integers {
+    ( $( $T: ident, )+ ) => {
+        $(
+            #[cfg(num_nonzero)]
+            impl<'de> Deserialize<'de> for num::$T {
+                fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+                where
+                    D: Deserializer<'de>,
+                {
+                    let value = try!(Deserialize::deserialize(deserializer));
+                    match <num::$T>::new(value) {
+                        Some(nonzero) => Ok(nonzero),
+                        None => Err(Error::custom("expected a non-zero value")),
+                    }
+                }
+            }
+        )+
+    };
+}
+
+nonzero_integers! {
+    NonZeroU8,
+    NonZeroU16,
+    NonZeroU32,
+    NonZeroU64,
+    NonZeroUsize,
+}
+
+#[cfg(num_nonzero_signed)]
+nonzero_integers! {
+    NonZeroI8,
+    NonZeroI16,
+    NonZeroI32,
+    NonZeroI64,
+    NonZeroIsize,
+}
+
+// Currently 128-bit integers do not work on Emscripten targets so we need an
+// additional `#[cfg]`
+serde_if_integer128! {
+    nonzero_integers! {
+        NonZeroU128,
+    }
+
+    #[cfg(num_nonzero_signed)]
+    nonzero_integers! {
+        NonZeroI128,
     }
 }
 
@@ -2661,7 +2599,7 @@ where
     }
 }
 
-#[cfg(all(feature = "std", not(no_std_atomic)))]
+#[cfg(all(feature = "std", std_atomic))]
 macro_rules! atomic_impl {
     ($($ty:ident)*) => {
         $(
@@ -2677,14 +2615,14 @@ macro_rules! atomic_impl {
     };
 }
 
-#[cfg(all(feature = "std", not(no_std_atomic)))]
+#[cfg(all(feature = "std", std_atomic))]
 atomic_impl! {
     AtomicBool
     AtomicI8 AtomicI16 AtomicI32 AtomicIsize
     AtomicU8 AtomicU16 AtomicU32 AtomicUsize
 }
 
-#[cfg(all(feature = "std", not(no_std_atomic64)))]
+#[cfg(all(feature = "std", std_atomic64))]
 atomic_impl! {
     AtomicI64 AtomicU64
 }

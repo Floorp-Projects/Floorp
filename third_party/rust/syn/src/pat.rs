@@ -14,7 +14,6 @@ ast_enum_of_structs! {
     ///
     /// [syntax tree enum]: Expr#syntax-tree-enums
     #[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
-    #[cfg_attr(not(syn_no_non_exhaustive), non_exhaustive)]
     pub enum Pat {
         /// A box pattern: `box v`.
         Box(PatBox),
@@ -73,17 +72,18 @@ ast_enum_of_structs! {
         /// A pattern that matches any value: `_`.
         Wild(PatWild),
 
-        // Not public API.
+        // The following is the only supported idiom for exhaustive matching of
+        // this enum.
         //
-        // For testing exhaustiveness in downstream code, use the following idiom:
-        //
-        //     match pat {
-        //         Pat::Box(pat) => {...}
-        //         Pat::Ident(pat) => {...}
+        //     match expr {
+        //         Pat::Box(e) => {...}
+        //         Pat::Ident(e) => {...}
         //         ...
-        //         Pat::Wild(pat) => {...}
+        //         Pat::Wild(e) => {...}
         //
-        //         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]
+        //         #[cfg(test)]
+        //         Pat::__TestExhaustive(_) => unimplemented!(),
+        //         #[cfg(not(test))]
         //         _ => { /* some sane fallback */ }
         //     }
         //
@@ -91,9 +91,12 @@ ast_enum_of_structs! {
         // a variant. You will be notified by a test failure when a variant is
         // added, so that you can add code to handle it, but your library will
         // continue to compile and work for downstream users in the interim.
-        #[cfg(syn_no_non_exhaustive)]
+        //
+        // Once `deny(reachable)` is available in rustc, Pat will be
+        // reimplemented as a non_exhaustive enum.
+        // https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237
         #[doc(hidden)]
-        __NonExhaustive,
+        __TestExhaustive(crate::private),
     }
 }
 
@@ -651,7 +654,7 @@ pub mod parsing {
     fn pat_lit_expr(input: ParseStream) -> Result<Option<Box<Expr>>> {
         if input.is_empty()
             || input.peek(Token![|])
-            || input.peek(Token![=])
+            || input.peek(Token![=>])
             || input.peek(Token![:]) && !input.peek(Token![::])
             || input.peek(Token![,])
             || input.peek(Token![;])
@@ -824,7 +827,7 @@ mod printing {
     impl ToTokens for PatPath {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(self.attrs.outer());
-            path::printing::print_path(tokens, &self.qself, &self.path);
+            private::print_path(tokens, &self.qself, &self.path);
         }
     }
 
@@ -878,7 +881,10 @@ mod printing {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(self.attrs.outer());
             self.lo.to_tokens(tokens);
-            self.limits.to_tokens(tokens);
+            match &self.limits {
+                RangeLimits::HalfOpen(t) => t.to_tokens(tokens),
+                RangeLimits::Closed(t) => t.to_tokens(tokens),
+            }
             self.hi.to_tokens(tokens);
         }
     }

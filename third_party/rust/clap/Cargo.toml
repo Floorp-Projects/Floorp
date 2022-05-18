@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "clap"
-version = "3.1.8"
+version = "3.0.10"
 include = ["build.rs", "src/**/*", "Cargo.toml", "LICENSE*", "README.md", "benches/**/*", "examples/**/*"]
 description = "A simple to use, efficient, and full-featured Command Line Argument Parser"
 documentation = "https://docs.rs/clap/"
@@ -64,7 +64,7 @@ replace = "<!-- next-url -->\n[Unreleased]: https://github.com/clap-rs/clap/comp
 search = "<!-- next-url -->"
 
 [[package.metadata.release.pre-release-replacements]]
-exactly = 13
+exactly = 9
 file = "README.md"
 prerelease = true
 replace = "github.com/clap-rs/clap/blob/{{tag_name}}/"
@@ -118,7 +118,7 @@ name = "git-derive"
 required-features = ["derive"]
 
 [[example]]
-name = "typed-derive"
+name = "keyvalue-derive"
 required-features = ["derive"]
 
 [[example]]
@@ -139,6 +139,7 @@ required-features = ["cargo"]
 [[example]]
 name = "02_apps"
 path = "examples/tutorial_builder/02_apps.rs"
+required-features = ["cargo"]
 
 [[example]]
 name = "02_crate"
@@ -189,11 +190,6 @@ required-features = ["cargo"]
 name = "04_01_enum"
 path = "examples/tutorial_builder/04_01_enum.rs"
 required-features = ["cargo", "derive"]
-
-[[example]]
-name = "04_02_parse"
-path = "examples/tutorial_builder/04_02_parse.rs"
-required-features = ["cargo"]
 
 [[example]]
 name = "04_02_validate"
@@ -262,11 +258,6 @@ path = "examples/tutorial_derive/03_04_subcommands.rs"
 required-features = ["derive"]
 
 [[example]]
-name = "03_04_subcommands_alt_derive"
-path = "examples/tutorial_derive/03_04_subcommands_alt.rs"
-required-features = ["derive"]
-
-[[example]]
 name = "03_05_default_values_derive"
 path = "examples/tutorial_derive/03_05_default_values.rs"
 required-features = ["derive"]
@@ -274,11 +265,6 @@ required-features = ["derive"]
 [[example]]
 name = "04_01_enum_derive"
 path = "examples/tutorial_derive/04_01_enum.rs"
-required-features = ["derive"]
-
-[[example]]
-name = "04_02_parse_derive"
-path = "examples/tutorial_derive/04_02_parse.rs"
 required-features = ["derive"]
 
 [[example]]
@@ -305,26 +291,6 @@ required-features = ["derive"]
 [[example]]
 name = "custom-bool"
 path = "examples/derive_ref/custom-bool.rs"
-required-features = ["derive"]
-
-[[example]]
-name = "interop_augment_args"
-path = "examples/derive_ref/augment_args.rs"
-required-features = ["derive"]
-
-[[example]]
-name = "interop_augment_subcommands"
-path = "examples/derive_ref/augment_subcommands.rs"
-required-features = ["derive"]
-
-[[example]]
-name = "interop_hand_subcommand"
-path = "examples/derive_ref/hand_subcommand.rs"
-required-features = ["derive"]
-
-[[example]]
-name = "interop_flatten_hand_args"
-path = "examples/derive_ref/flatten_hand_args.rs"
 required-features = ["derive"]
 
 [[bench]]
@@ -368,7 +334,7 @@ optional = true
 version = "1.2"
 
 [dependencies.clap_derive]
-version = "3.1.7"
+version = "3.0.0"
 optional = true
 
 [dependencies.indexmap]
@@ -398,7 +364,7 @@ version = "0.1.12"
 optional = true
 
 [dependencies.textwrap]
-version = "0.15.0"
+version = "0.14.0"
 features = []
 default-features = false
 
@@ -411,9 +377,6 @@ version = "0.4.1"
 optional = true
 [dev-dependencies.criterion]
 version = "0.3.2"
-
-[dev-dependencies.humantime]
-version = "2"
 
 [dev-dependencies.lazy_static]
 version = "1"
@@ -428,7 +391,7 @@ version = "1"
 version = "1.0.18"
 
 [dev-dependencies.trycmd]
-version = "0.13"
+version = "0.9"
 features = ["color-auto", "diff", "examples"]
 default-features = false
 
@@ -446,6 +409,5 @@ unstable-doc = ["derive", "cargo", "wrap_help", "yaml", "env", "unicode", "regex
 unstable-grouped = []
 unstable-multicall = []
 unstable-replace = []
-unstable-v4 = []
 wrap_help = ["terminal_size", "textwrap/terminal_size"]
 yaml = ["yaml-rust"]

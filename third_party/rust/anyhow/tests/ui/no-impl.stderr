@@ -22,7 +22,7 @@ note: the following traits must be implemented
    --> $RUST/core/src/convert/mod.rs
     |
     | / pub trait Into<T>: Sized {
-    | |     /// Converts this type into the (usually inferred) input type.
+    | |     /// Performs the conversion.
     | |     #[must_use]
     | |     #[stable(feature = "rust1", since = "1.0.0")]
     | |     fn into(self) -> T;

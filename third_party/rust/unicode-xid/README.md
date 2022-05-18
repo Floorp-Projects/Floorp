@@ -3,7 +3,7 @@
 Determine if a `char` is a valid identifier for a parser and/or lexer according to
 [Unicode Standard Annex #31](http://www.unicode.org/reports/tr31/) rules.
 
-[![Build Status](https://img.shields.io/github/workflow/status/unicode-rs/unicode-xid/CI/master)](https://github.com/unicode-rs/unicode-xid/actions?query=branch%3Amaster)
+[![Build Status](https://travis-ci.org/unicode-rs/unicode-xid.svg)](https://travis-ci.org/unicode-rs/unicode-xid)
 
 [Documentation](https://unicode-rs.github.io/unicode-xid/unicode_xid/index.html)
 

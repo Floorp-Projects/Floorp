@@ -209,21 +209,15 @@ pub enum CompressionStrategy {
 /// A list of deflate flush types.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum TDEFLFlush {
-    /// Normal operation.
-    ///
-    /// Compress as much as there is space for, and then return waiting for more input.
+    /// Compress as much as there is space for, and then return
+    /// waiting for more input.
     None = 0,
-
-    /// Try to flush all the current data and output an empty raw block.
+    /// Try to flush the current data and output an empty raw block.
     Sync = 2,
-
-    /// Same as [`Sync`][Self::Sync], but reset the dictionary so that the following data does not
-    /// depend on previous data.
+    /// Same as sync, but reset the dictionary so that the following data does not depend
+    /// on previous data.
     Full = 3,
-
-    /// Try to flush everything and end the deflate stream.
-    ///
-    /// On success this will yield a [`TDEFLStatus::Done`] return status.
+    /// Try to flush everything and end the stream.
     Finish = 4,
 }
 
@@ -251,27 +245,13 @@ impl TDEFLFlush {
     }
 }
 
-/// Return status of compression.
+/// Return status codes.
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum TDEFLStatus {
-    /// Usage error.
-    ///
-    /// This indicates that either the [`CompressorOxide`] experienced a previous error, or the
-    /// stream has already been [`TDEFLFlush::Finish`]'d.
     BadParam = -2,
-
-    /// Error putting data into output buffer.
-    ///
-    /// This usually indicates a too-small buffer.
     PutBufFailed = -1,
-
-    /// Compression succeeded normally.
     Okay = 0,
-
-    /// Compression succeeded and the deflate stream was ended.
-    ///
-    /// This is the result of calling compression with [`TDEFLFlush::Finish`].
     Done = 1,
 }
 
@@ -435,13 +415,13 @@ impl CompressorOxide {
     }
 
     /// Get the adler32 checksum of the currently encoded data.
-    pub const fn adler32(&self) -> u32 {
+    pub fn adler32(&self) -> u32 {
         self.params.adler32
     }
 
     /// Get the return status of the previous [`compress`](fn.compress.html)
     /// call with this compressor.
-    pub const fn prev_return_status(&self) -> TDEFLStatus {
+    pub fn prev_return_status(&self) -> TDEFLStatus {
         self.params.prev_return_status
     }
 
@@ -449,7 +429,7 @@ impl CompressorOxide {
     ///
     /// # Notes
     /// This function may be deprecated or changed in the future to use more rust-style flags.
-    pub const fn flags(&self) -> i32 {
+    pub fn flags(&self) -> i32 {
         self.params.flags as i32
     }
 
@@ -1799,7 +1779,7 @@ fn compress_normal(d: &mut CompressorOxide, callback: &mut CallbackOxide) -> boo
             let mut ins_pos = lookahead_pos + lookahead_size as usize - 2;
             // Start the hash value from the first two bytes
             let mut hash = update_hash(
-                u16::from(dictb.dict[(ins_pos & LZ_DICT_SIZE_MASK) as usize]),
+                u32::from(dictb.dict[(ins_pos & LZ_DICT_SIZE_MASK) as usize]),
                 dictb.dict[((ins_pos + 1) & LZ_DICT_SIZE_MASK) as usize],
             );
 
@@ -2032,7 +2012,7 @@ fn compress_fast(d: &mut CompressorOxide, callback: &mut CallbackOxide) -> bool 
                     // Trigram was tested, so we can start with "+ 3" displacement.
                     let mut p = cur_pos + 3;
                     let mut q = probe_pos + 3;
-                    cur_match_len = (|| {
+                    cur_match_len = 'find_match: loop {
                         for _ in 0..32 {
                             let p_data: u64 = d.dict.read_unaligned_u64(p);
                             let q_data: u64 = d.dict.read_unaligned_u64(q);
@@ -2042,16 +2022,16 @@ fn compress_fast(d: &mut CompressorOxide, callback: &mut CallbackOxide) -> bool 
                                 q += 8;
                             } else {
                                 let trailing = xor_data.trailing_zeros();
-                                return p as u32 - cur_pos as u32 + (trailing >> 3);
+                                break 'find_match p as u32 - cur_pos as u32 + (trailing >> 3);
                             }
                         }
 
-                        if cur_match_dist == 0 {
+                        break 'find_match if cur_match_dist == 0 {
                             0
                         } else {
                             MAX_MATCH_LEN as u32
-                        }
-                    })();
+                        };
+                    };
 
                     if cur_match_len < MIN_MATCH_LEN.into()
                         || (cur_match_len == MIN_MATCH_LEN.into() && cur_match_dist >= 8 * 1024)
@@ -2192,7 +2172,7 @@ fn flush_output_buffer(c: &mut CallbackOxide, p: &mut ParamsOxide) -> (TDEFLStat
 ///
 /// The value of `flush` determines if the compressor should attempt to flush all output
 /// and alternatively try to finish the stream.
-/// Should be [`TDEFLFlush::Finish`] on the final call.
+/// Should be `TDeflflush::Finish` on the final call.
 ///
 /// # Returns
 /// Returns a tuple containing the current status of the compressor, the current position
@@ -2377,7 +2357,8 @@ mod test {
         MZ_DEFAULT_WINDOW_BITS,
     };
     use crate::inflate::decompress_to_vec;
-    use alloc::vec;
+    use std::prelude::v1::*;
+    use std::vec;
 
     #[test]
     fn u16_to_slice() {
@@ -2417,34 +2398,6 @@ mod test {
 
         assert_eq!(status, TDEFLStatus::Done);
         assert_eq!(in_consumed, slice.len());
-
-        let decoded = decompress_to_vec(&encoded[..]).unwrap();
-        assert_eq!(&decoded[..], &slice[..]);
-    }
-
-    #[test]
-    /// Check fast compress mode
-    fn compress_fast() {
-        let slice = [
-            1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 1, 2, 6, 1, 2, 3, 1, 2, 3, 2, 3, 1, 2, 3,
-        ];
-        let mut encoded = vec![];
-        let flags = create_comp_flags_from_zip_params(1, 0, 0);
-        let mut d = CompressorOxide::new(flags);
-        let (status, in_consumed) =
-            compress_to_output(&mut d, &slice, TDEFLFlush::Finish, |out: &[u8]| {
-                encoded.extend_from_slice(out);
-                true
-            });
-
-        assert_eq!(status, TDEFLStatus::Done);
-        assert_eq!(in_consumed, slice.len());
-
-        // Needs to be altered if algorithm improves.
-        assert_eq!(
-            &encoded[..],
-            [99, 100, 98, 102, 1, 98, 48, 98, 3, 147, 204, 76, 204, 140, 76, 204, 0]
-        );
 
         let decoded = decompress_to_vec(&encoded[..]).unwrap();
         assert_eq!(&decoded[..], &slice[..]);

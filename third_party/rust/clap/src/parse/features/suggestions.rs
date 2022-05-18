@@ -2,7 +2,7 @@
 use std::cmp::Ordering;
 
 // Internal
-use crate::build::Command;
+use crate::build::App;
 
 /// Produces multiple strings from a given list of possible values which are similar
 /// to the passed in value `v` within a certain confidence by least confidence.
@@ -33,14 +33,13 @@ where
 }
 
 /// Returns a suffix that can be empty, or is the standard 'did you mean' phrase
-pub(crate) fn did_you_mean_flag<'a, 'help, I, T>(
+pub(crate) fn did_you_mean_flag<I, T>(
     arg: &str,
     remaining_args: &[&str],
     longs: I,
-    subcommands: impl IntoIterator<Item = &'a mut Command<'help>>,
+    subcommands: &mut [App],
 ) -> Option<(String, Option<String>)>
 where
-    'help: 'a,
     T: AsRef<str>,
     I: IntoIterator<Item = T>,
 {
@@ -49,11 +48,11 @@ where
     match did_you_mean(arg, longs).pop() {
         Some(candidate) => Some((candidate, None)),
         None => subcommands
-            .into_iter()
+            .iter_mut()
             .filter_map(|subcommand| {
                 subcommand._build();
 
-                let longs = subcommand.get_keymap().keys().filter_map(|a| {
+                let longs = subcommand.args.keys().filter_map(|a| {
                     if let KeyType::Long(v) = a {
                         Some(v.to_string_lossy().into_owned())
                     } else {

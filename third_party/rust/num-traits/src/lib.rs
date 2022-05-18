@@ -40,7 +40,6 @@ pub use int::PrimInt;
 pub use ops::checked::{
     CheckedAdd, CheckedDiv, CheckedMul, CheckedNeg, CheckedRem, CheckedShl, CheckedShr, CheckedSub,
 };
-pub use ops::euclid::{CheckedEuclid, Euclid};
 pub use ops::inv::Inv;
 pub use ops::mul_add::{MulAdd, MulAddAssign};
 pub use ops::saturating::{Saturating, SaturatingAdd, SaturatingMul, SaturatingSub};
@@ -96,7 +95,7 @@ pub trait Num: PartialEq + Zero + One + NumOps {
     fn from_str_radix(str: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr>;
 }
 
-/// Generic trait for types implementing basic numeric operations
+/// The trait for types implementing basic numeric operations
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait NumOps<Rhs = Self, Output = Self>:
@@ -124,16 +123,14 @@ impl<T, Rhs, Output> NumOps<Rhs, Output> for T where
 pub trait NumRef: Num + for<'r> NumOps<&'r Self> {}
 impl<T> NumRef for T where T: Num + for<'r> NumOps<&'r T> {}
 
-/// The trait for `Num` references which implement numeric operations, taking the
+/// The trait for references which implement numeric operations, taking the
 /// second operand either by value or by reference.
 ///
-/// This is automatically implemented for all types which implement the operators. It covers
-/// every type implementing the operations though, regardless of it being a reference or
-/// related to `Num`.
+/// This is automatically implemented for types which implement the operators.
 pub trait RefNum<Base>: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
 impl<T, Base> RefNum<Base> for T where T: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
 
-/// Generic trait for types implementing numeric assignment operators (like `+=`).
+/// The trait for types implementing numeric assignment operators (like `+=`).
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait NumAssignOps<Rhs = Self>:
@@ -178,7 +175,11 @@ int_trait_impl!(Num for u128 i128);
 
 impl<T: Num> Num for Wrapping<T>
 where
-    Wrapping<T>: NumOps,
+    Wrapping<T>: Add<Output = Wrapping<T>>
+        + Sub<Output = Wrapping<T>>
+        + Mul<Output = Wrapping<T>>
+        + Div<Output = Wrapping<T>>
+        + Rem<Output = Wrapping<T>>,
 {
     type FromStrRadixErr = T::FromStrRadixErr;
     fn from_str_radix(str: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr> {
@@ -209,14 +210,6 @@ impl fmt::Display for ParseFloatError {
     }
 }
 
-fn str_to_ascii_lower_eq_str(a: &str, b: &str) -> bool {
-    a.len() == b.len()
-        && a.bytes().zip(b.bytes()).all(|(a, b)| {
-            let a_to_ascii_lower = a | (((b'A' <= a && a <= b'Z') as u8) << 5);
-            a_to_ascii_lower == b
-        })
-}
-
 // FIXME: The standard library from_str_radix on floats was deprecated, so we're stuck
 // with this implementation ourselves until we want to make a breaking change.
 // (would have to drop it from `Num` though)
@@ -231,26 +224,12 @@ macro_rules! float_trait_impl {
                 use self::FloatErrorKind::*;
                 use self::ParseFloatError as PFE;
 
-                // Special case radix 10 to use more accurate standard library implementation
-                if radix == 10 {
-                    return src.parse().map_err(|_| PFE {
-                        kind: if src.is_empty() { Empty } else { Invalid },
-                    });
-                }
-
                 // Special values
-                if str_to_ascii_lower_eq_str(src, "inf")
-                    || str_to_ascii_lower_eq_str(src, "infinity")
-                {
-                    return Ok(core::$t::INFINITY);
-                } else if str_to_ascii_lower_eq_str(src, "-inf")
-                    || str_to_ascii_lower_eq_str(src, "-infinity")
-                {
-                    return Ok(core::$t::NEG_INFINITY);
-                } else if str_to_ascii_lower_eq_str(src, "nan") {
-                    return Ok(core::$t::NAN);
-                } else if str_to_ascii_lower_eq_str(src, "-nan") {
-                    return Ok(-core::$t::NAN);
+                match src {
+                    "inf"   => return Ok(core::$t::INFINITY),
+                    "-inf"  => return Ok(core::$t::NEG_INFINITY),
+                    "NaN"   => return Ok(core::$t::NAN),
+                    _       => {},
                 }
 
                 fn slice_shift_char(src: &str) -> Option<(char, &str)> {
@@ -530,28 +509,6 @@ fn from_str_radix_multi_byte_fail() {
 }
 
 #[test]
-fn from_str_radix_ignore_case() {
-    assert_eq!(
-        f32::from_str_radix("InF", 16).unwrap(),
-        ::core::f32::INFINITY
-    );
-    assert_eq!(
-        f32::from_str_radix("InfinitY", 16).unwrap(),
-        ::core::f32::INFINITY
-    );
-    assert_eq!(
-        f32::from_str_radix("-InF", 8).unwrap(),
-        ::core::f32::NEG_INFINITY
-    );
-    assert_eq!(
-        f32::from_str_radix("-InfinitY", 8).unwrap(),
-        ::core::f32::NEG_INFINITY
-    );
-    assert!(f32::from_str_radix("nAn", 4).unwrap().is_nan());
-    assert!(f32::from_str_radix("-nAn", 4).unwrap().is_nan());
-}
-
-#[test]
 fn wrapping_is_num() {
     fn require_num<T: Num>(_: &T) {}
     require_num(&Wrapping(42_u32));
@@ -625,16 +582,5 @@ fn check_numassign_ops() {
     assert_eq!(compute(1, 2), 1)
 }
 
-#[cfg(has_int_assignop_ref)]
-#[test]
-fn check_numassignref_ops() {
-    fn compute<T: NumAssignRef + Copy>(mut x: T, y: &T) -> T {
-        x *= y;
-        x /= y;
-        x %= y;
-        x += y;
-        x -= y;
-        x
-    }
-    assert_eq!(compute(1, &2), 1)
-}
+// TODO test `NumAssignRef`, but even the standard numeric types don't
+// implement this yet. (see rust pr41336)

@@ -62,7 +62,7 @@ macro_rules! cfg_if {
     };
 }
 
-#[allow(unused_macros, unused_macro_rules)]
+#[allow(unused_macros)]
 macro_rules! s {
     ($($(#[$attr:meta])* pub $t:ident $i:ident { $($field:tt)* })*) => ($(
         s!(it: $(#[$attr])* pub $t $i { $($field)* });

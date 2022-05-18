@@ -23,12 +23,6 @@ pub struct CrcReader<R> {
     crc: Crc,
 }
 
-impl Default for Crc {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Crc {
     /// Create a new CRC.
     pub fn new() -> Crc {
