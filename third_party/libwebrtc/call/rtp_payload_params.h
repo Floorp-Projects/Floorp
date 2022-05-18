@@ -42,6 +42,14 @@ class RtpPayloadParams final {
                                    const CodecSpecificInfo* codec_specific_info,
                                    int64_t shared_frame_id);
 
+  // Returns structure that aligns with simulated generic info for VP9.
+  // The templates allow to produce valid dependency descriptor for any vp9
+  // stream with up to 4 temporal layers. The set of the templates is not tuned
+  // for any paricular structure thus dependency descriptor would use more bytes
+  // on the wire than with tuned templates.
+  static FrameDependencyStructure MinimalisticVp9Structure(
+      const CodecSpecificInfoVP9& vp9);
+
   uint32_t ssrc() const;
 
   RtpPayloadState state() const;

@@ -107,6 +107,7 @@ VideoSendStream::Config CreateVideoSendStreamConfig(
                                      kTransportsSequenceExtensionId);
   config.rtp.extensions.emplace_back(RtpDependencyDescriptorExtension::kUri,
                                      kDependencyDescriptorExtensionId);
+  config.rtp.extmap_allow_mixed = true;
   return config;
 }
 
@@ -759,6 +760,62 @@ TEST(RtpVideoSenderTest, SupportsDependencyDescriptorForVp9) {
       GenericFrameInfo::Builder().S(1).Dtis("-S").Build();
   codec_specific.generic_frame_info->encoder_buffers = {{0, true, false},
                                                         {1, false, true}};
+  EXPECT_EQ(test.router()->OnEncodedImage(encoded_image, &codec_specific).error,
+            EncodedImageCallback::Result::OK);
+
+  test.AdvanceTime(TimeDelta::Millis(33));
+  ASSERT_THAT(sent_packets, SizeIs(2));
+  EXPECT_TRUE(sent_packets[0].HasExtension<RtpDependencyDescriptorExtension>());
+  EXPECT_TRUE(sent_packets[1].HasExtension<RtpDependencyDescriptorExtension>());
+}
+
+TEST(RtpVideoSenderTest,
+     SupportsDependencyDescriptorForVp9NotProvidedByEncoder) {
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-Vp9DependencyDescriptor/Enabled/");
+  RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
+  test.router()->SetActive(true);
+
+  RtpHeaderExtensionMap extensions;
+  extensions.Register<RtpDependencyDescriptorExtension>(
+      kDependencyDescriptorExtensionId);
+  std::vector<RtpPacket> sent_packets;
+  ON_CALL(test.transport(), SendRtp)
+      .WillByDefault([&](const uint8_t* packet, size_t length,
+                         const PacketOptions& options) {
+        sent_packets.emplace_back(&extensions);
+        EXPECT_TRUE(sent_packets.back().Parse(packet, length));
+        return true;
+      });
+
+  const uint8_t kPayload[1] = {'a'};
+  EncodedImage encoded_image;
+  encoded_image.SetTimestamp(1);
+  encoded_image.capture_time_ms_ = 2;
+  encoded_image._frameType = VideoFrameType::kVideoFrameKey;
+  encoded_image._encodedWidth = 320;
+  encoded_image._encodedHeight = 180;
+  encoded_image.SetEncodedData(
+      EncodedImageBuffer::Create(kPayload, sizeof(kPayload)));
+
+  CodecSpecificInfo codec_specific;
+  codec_specific.codecType = VideoCodecType::kVideoCodecVP9;
+  codec_specific.codecSpecific.VP9.num_spatial_layers = 1;
+  codec_specific.codecSpecific.VP9.temporal_idx = kNoTemporalIdx;
+  codec_specific.codecSpecific.VP9.first_frame_in_picture = true;
+  codec_specific.end_of_picture = true;
+  codec_specific.codecSpecific.VP9.inter_pic_predicted = false;
+
+  // Send two tiny images, each mapping to single RTP packet.
+  EXPECT_EQ(test.router()->OnEncodedImage(encoded_image, &codec_specific).error,
+            EncodedImageCallback::Result::OK);
+
+  // Send in 2nd picture.
+  encoded_image._frameType = VideoFrameType::kVideoFrameDelta;
+  encoded_image.SetTimestamp(3000);
+  codec_specific.codecSpecific.VP9.inter_pic_predicted = true;
+  codec_specific.codecSpecific.VP9.num_ref_pics = 1;
+  codec_specific.codecSpecific.VP9.p_diff[0] = 1;
   EXPECT_EQ(test.router()->OnEncodedImage(encoded_image, &codec_specific).error,
             EncodedImageCallback::Result::OK);
 
