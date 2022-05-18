@@ -17,6 +17,19 @@ import org.mozilla.fenix.nimbus.Messaging
 import org.mozilla.fenix.nimbus.StyleData
 
 /**
+ * This ID must match the name given in the `nimbus.fml.yaml` file, which
+ * itself generates the classname for [org.mozilla.fenix.nimbus.Messaging].
+ *
+ * If that ever changes, it should also change here.
+ *
+ * This constant is the id for the messaging feature (the Nimbus feature). We declare it here
+ * so as to afford the best chance of it being changed if a rename operation is needed.
+ *
+ * It is used in the Studies view, to filter out any experiments which only use a messaging surface.
+ */
+const val MESSAGING_FEATURE_ID = "messaging"
+
+/**
  * Provides messages from [messagingFeature] and combine with the metadata store on [metadataStorage].
  */
 class NimbusMessagingStorage(

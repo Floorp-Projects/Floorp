@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.ListAdapter
 import com.google.android.material.button.MaterialButton
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.fenix.R
+import org.mozilla.fenix.gleanplumb.MESSAGING_FEATURE_ID
 import org.mozilla.fenix.settings.studies.CustomViewHolder.SectionViewHolder
 import org.mozilla.fenix.settings.studies.CustomViewHolder.StudyViewHolder
 
@@ -150,7 +151,7 @@ class StudiesAdapter(
         val itemsWithSections = ArrayList<Any>()
         val activeStudies = ArrayList<EnrolledExperiment>()
 
-        activeStudies.addAll(studies)
+        activeStudies.addAll(filterStudies(studies))
 
         if (activeStudies.isNotEmpty()) {
             itemsWithSections.add(Section(R.string.studies_active, true))
@@ -159,6 +160,14 @@ class StudiesAdapter(
 
         return itemsWithSections
     }
+
+    /**
+     * Filter out studies which only affect the messaging feature.
+     */
+    private fun filterStudies(studies: List<EnrolledExperiment>) =
+        studies.filterNot {
+            it.featureIds.size == 1 && it.featureIds.contains(MESSAGING_FEATURE_ID)
+        }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal data class Section(@StringRes val title: Int, val visibleDivider: Boolean = true)
