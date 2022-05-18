@@ -927,6 +927,9 @@ void DefaultVideoQualityAnalyzer::ReportResults(
                         frame_counters.dropped,
                     "count",
                     /*important=*/false, ImproveDirection::kSmallerIsBetter);
+  test::PrintResult("rendered_frames", "", test_case_name,
+                    frame_counters.rendered, "count", /*important=*/false,
+                    ImproveDirection::kBiggerIsBetter);
   ReportResult("max_skipped", test_case_name, stats.skipped_between_rendered,
                "count", ImproveDirection::kSmallerIsBetter);
   ReportResult("target_encode_bitrate", test_case_name,
