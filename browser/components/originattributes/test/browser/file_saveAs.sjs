@@ -8,7 +8,7 @@ const VIDEO_PATH = `${URI_PATH}file_thirdPartyChild.video.ogv`;
 const IMAGE_PATH = `${URI_PATH}file_favicon.png`;
 const FRAME_PATH = `${SECOND_ORIGIN}${URI_PATH}file_saveAs.sjs?image=1`;
 
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 function handleRequest(aRequest, aResponse) {
   var params = new URLSearchParams(aRequest.queryString);
