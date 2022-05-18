@@ -919,7 +919,7 @@ TEST_P(PeerConnectionRtpTest,
   auto callee = CreatePeerConnection();
 
   rtc::scoped_refptr<webrtc::MockSetSessionDescriptionObserver> observer =
-      new rtc::RefCountedObject<webrtc::MockSetSessionDescriptionObserver>();
+      rtc::make_ref_counted<webrtc::MockSetSessionDescriptionObserver>();
 
   auto offer = caller->CreateOfferAndSetAsLocal();
   callee->pc()->SetRemoteDescription(observer, offer.release());

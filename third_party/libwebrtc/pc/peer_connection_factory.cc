@@ -84,8 +84,7 @@ rtc::scoped_refptr<PeerConnectionFactory> PeerConnectionFactory::Create(
   if (!context) {
     return nullptr;
   }
-  return new rtc::RefCountedObject<PeerConnectionFactory>(context,
-                                                          &dependencies);
+  return rtc::make_ref_counted<PeerConnectionFactory>(context, &dependencies);
 }
 
 PeerConnectionFactory::PeerConnectionFactory(

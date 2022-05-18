@@ -88,21 +88,20 @@ JsepTransport::JsepTransport(
       unencrypted_rtp_transport_(std::move(unencrypted_rtp_transport)),
       sdes_transport_(std::move(sdes_transport)),
       dtls_srtp_transport_(std::move(dtls_srtp_transport)),
-      rtp_dtls_transport_(
-          rtp_dtls_transport ? new rtc::RefCountedObject<webrtc::DtlsTransport>(
-                                   std::move(rtp_dtls_transport))
-                             : nullptr),
-      rtcp_dtls_transport_(
-          rtcp_dtls_transport
-              ? new rtc::RefCountedObject<webrtc::DtlsTransport>(
-                    std::move(rtcp_dtls_transport))
-              : nullptr),
+      rtp_dtls_transport_(rtp_dtls_transport
+                              ? rtc::make_ref_counted<webrtc::DtlsTransport>(
+                                    std::move(rtp_dtls_transport))
+                              : nullptr),
+      rtcp_dtls_transport_(rtcp_dtls_transport
+                               ? rtc::make_ref_counted<webrtc::DtlsTransport>(
+                                     std::move(rtcp_dtls_transport))
+                               : nullptr),
       sctp_data_channel_transport_(
           sctp_transport ? std::make_unique<webrtc::SctpDataChannelTransport>(
                                sctp_transport.get())
                          : nullptr),
       sctp_transport_(sctp_transport
-                          ? new rtc::RefCountedObject<webrtc::SctpTransport>(
+                          ? rtc::make_ref_counted<webrtc::SctpTransport>(
                                 std::move(sctp_transport))
                           : nullptr) {
   RTC_DCHECK(ice_transport_);

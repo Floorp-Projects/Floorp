@@ -48,7 +48,7 @@ DtlsTransport::DtlsTransport(
     : owner_thread_(rtc::Thread::Current()),
       info_(DtlsTransportState::kNew),
       internal_dtls_transport_(std::move(internal)),
-      ice_transport_(new rtc::RefCountedObject<IceTransportWithPointer>(
+      ice_transport_(rtc::make_ref_counted<IceTransportWithPointer>(
           internal_dtls_transport_->ice_transport())) {
   RTC_DCHECK(internal_dtls_transport_.get());
   internal_dtls_transport_->SubscribeDtlsState(

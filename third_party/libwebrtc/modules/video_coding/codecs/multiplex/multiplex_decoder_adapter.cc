@@ -248,9 +248,8 @@ void MultiplexDecoderAdapter::MergeAlphaImages(
         [yuv_buffer, alpha_buffer] {});
   }
   if (supports_augmenting_data_) {
-    merged_buffer = rtc::scoped_refptr<webrtc::AugmentedVideoFrameBuffer>(
-        new rtc::RefCountedObject<AugmentedVideoFrameBuffer>(
-            merged_buffer, std::move(augmenting_data), augmenting_data_length));
+    merged_buffer = rtc::make_ref_counted<AugmentedVideoFrameBuffer>(
+        merged_buffer, std::move(augmenting_data), augmenting_data_length);
   }
 
   VideoFrame merged_image = VideoFrame::Builder()

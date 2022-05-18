@@ -112,8 +112,8 @@ class SctpTransportTest : public ::testing::Test {
   void CreateTransport() {
     auto cricket_sctp_transport =
         absl::WrapUnique(new FakeCricketSctpTransport());
-    transport_ = new rtc::RefCountedObject<SctpTransport>(
-        std::move(cricket_sctp_transport));
+    transport_ =
+        rtc::make_ref_counted<SctpTransport>(std::move(cricket_sctp_transport));
   }
 
   void AddDtlsTransport() {
@@ -121,7 +121,7 @@ class SctpTransportTest : public ::testing::Test {
         std::make_unique<FakeDtlsTransport>(
             "audio", cricket::ICE_CANDIDATE_COMPONENT_RTP);
     dtls_transport_ =
-        new rtc::RefCountedObject<DtlsTransport>(std::move(cricket_transport));
+        rtc::make_ref_counted<DtlsTransport>(std::move(cricket_transport));
     transport_->SetDtlsTransport(dtls_transport_);
   }
 
@@ -147,7 +147,7 @@ TEST(SctpTransportSimpleTest, CreateClearDelete) {
   std::unique_ptr<cricket::SctpTransportInternal> fake_cricket_sctp_transport =
       absl::WrapUnique(new FakeCricketSctpTransport());
   rtc::scoped_refptr<SctpTransport> sctp_transport =
-      new rtc::RefCountedObject<SctpTransport>(
+      rtc::make_ref_counted<SctpTransport>(
           std::move(fake_cricket_sctp_transport));
   ASSERT_TRUE(sctp_transport->internal());
   ASSERT_EQ(SctpTransportState::kNew, sctp_transport->Information().state());

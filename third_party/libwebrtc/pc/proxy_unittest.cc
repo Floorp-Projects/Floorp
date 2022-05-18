@@ -43,7 +43,7 @@ class FakeInterface : public rtc::RefCountInterface {
 class Fake : public FakeInterface {
  public:
   static rtc::scoped_refptr<Fake> Create() {
-    return new rtc::RefCountedObject<Fake>();
+    return rtc::make_ref_counted<Fake>();
   }
   // Used to verify destructor is called on the correct thread.
   MOCK_METHOD(void, Destroy, ());
