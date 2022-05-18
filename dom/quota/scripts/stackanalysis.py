@@ -120,6 +120,7 @@ def checkAverageFrameTimeDeltas(rows, max_delta):
 def collectTopmostFrames(rows):
     prev_cid = "unset"
     prev_sid = "unset"
+    prev_tid = "unset"
     prev_ctx = "unset"
     prev_sev = "ERROR"
     session_complete = False
@@ -127,22 +128,29 @@ def collectTopmostFrames(rows):
     for row in rows:
         cid = row["client_id"]
         sid = row["session_id"]
+        tid = row["seq"] >> 32  # thread_id
         ctx = row["context"]
-        seq = row["seq"]
+        seq = row["seq"] & 0x00000000FFFFFFFF  # seq
         sev = row["severity"]
 
         # If we have a new session, ensure it is complete from start,
         # otherwise we will ignore it entirely.
-        if cid != prev_cid or sid != prev_sid:
+        if cid != prev_cid or sid != prev_sid or tid != prev_tid:
             if seq == 1:
                 session_complete = True
             else:
                 session_complete = False
         row["session_complete"] = session_complete
         if session_complete:
-            # If we change client, session or context, we can be sure to have
+            # If we change client, session, thread or context, we can be sure to have
             # a new topmost frame.
-            if seq == 1 or cid != prev_cid or sid != prev_sid or ctx != prev_ctx:
+            if (
+                seq == 1
+                or cid != prev_cid
+                or sid != prev_sid
+                or tid != prev_tid
+                or ctx != prev_ctx
+            ):
                 addTopmostFrame(row)
                 after_severity_downgrade = False
             # We do not expect a non-error to be ever upgraded to an error
@@ -159,6 +167,7 @@ def collectTopmostFrames(rows):
 
         prev_cid = cid
         prev_sid = sid
+        prev_tid = tid
         prev_ctx = ctx
         prev_sev = sev
 
