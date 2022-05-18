@@ -30,7 +30,7 @@ fuzzy(0-180,0-3) == grid-abspos-items-002.html grid-abspos-items-002-ref.html # 
 == grid-abspos-items-013.html grid-abspos-items-013-ref.html
 == grid-abspos-items-014.html grid-abspos-items-014-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-abspos-items-015.html grid-abspos-items-015-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-abspos-items-016.html grid-abspos-items-015-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails == grid-abspos-items-016.html grid-abspos-items-015-ref.html # Bug 1392106, 1769072
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
 fuzzy(0-1,0-200) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html

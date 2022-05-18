@@ -14,6 +14,7 @@
 #include "LayoutLogging.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/SVGUtils.h"
+#include "mozilla/WritingModes.h"
 #include "nsBlockFrame.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsFlexContainerFrame.h"
@@ -1179,6 +1180,33 @@ static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
   return true;
 }
 
+static bool AxisPolarityFlipped(LogicalAxis aThisAxis, WritingMode aThisWm,
+                                WritingMode aOtherWm) {
+  if (MOZ_LIKELY(aThisWm == aOtherWm)) {
+    // Dedicated short circuit for the common case.
+    return false;
+  }
+  LogicalAxis otherAxis = aThisWm.IsOrthogonalTo(aOtherWm)
+                              ? GetOrthogonalAxis(aThisAxis)
+                              : aThisAxis;
+  NS_ASSERTION(
+      aThisWm.PhysicalAxis(aThisAxis) == aOtherWm.PhysicalAxis(otherAxis),
+      "Physical axes must match!");
+  Side thisStartSide =
+      aThisWm.PhysicalSide(MakeLogicalSide(aThisAxis, eLogicalEdgeStart));
+  Side otherStartSide =
+      aOtherWm.PhysicalSide(MakeLogicalSide(otherAxis, eLogicalEdgeStart));
+  return thisStartSide != otherStartSide;
+}
+
+static bool InlinePolarityFlipped(WritingMode aThisWm, WritingMode aOtherWm) {
+  return AxisPolarityFlipped(eLogicalAxisInline, aThisWm, aOtherWm);
+}
+
+static bool BlockPolarityFlipped(WritingMode aThisWm, WritingMode aOtherWm) {
+  return AxisPolarityFlipped(eLogicalAxisBlock, aThisWm, aOtherWm);
+}
+
 // Calculate the position of the hypothetical box that the element would have
 // if it were in the flow.
 // The values returned are relative to the padding edge of the absolute
@@ -1393,17 +1421,30 @@ void ReflowInput::CalculateHypotheticalPosition(
   aHypotheticalPos.mIStart += logCBOffs.I(wm);
   aHypotheticalPos.mBStart += logCBOffs.B(wm);
 
+  // If block direction doesn't match (whether orthogonal or antiparallel),
+  // we'll have to convert aHypotheticalPos to be in terms of cbwm.
+  // This upcoming conversion must be taken into account for border offsets.
+  const bool hypotheticalPosWillUseCbwm =
+      cbwm.GetBlockDir() != wm.GetBlockDir();
   // The specified offsets are relative to the absolute containing block's
   // padding edge and our current values are relative to the border edge, so
   // translate.
   const LogicalMargin border = aCBReflowInput->ComputedLogicalBorder(wm);
-  aHypotheticalPos.mIStart -= border.IStart(wm);
-  aHypotheticalPos.mBStart -= border.BStart(wm);
+  if (hypotheticalPosWillUseCbwm && InlinePolarityFlipped(wm, cbwm)) {
+    aHypotheticalPos.mIStart += border.IEnd(wm);
+  } else {
+    aHypotheticalPos.mIStart -= border.IStart(wm);
+  }
 
+  if (hypotheticalPosWillUseCbwm && BlockPolarityFlipped(wm, cbwm)) {
+    aHypotheticalPos.mBStart += border.BEnd(wm);
+  } else {
+    aHypotheticalPos.mBStart -= border.BStart(wm);
+  }
   // At this point, we have computed aHypotheticalPos using the writing mode
   // of the placeholder's containing block.
 
-  if (cbwm.GetBlockDir() != wm.GetBlockDir()) {
+  if (hypotheticalPosWillUseCbwm) {
     // If the block direction we used in calculating aHypotheticalPos does not
     // match the absolute containing block's, we need to convert here so that
     // aHypotheticalPos is usable in relation to the absolute containing block.
