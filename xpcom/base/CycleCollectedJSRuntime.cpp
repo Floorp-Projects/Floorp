@@ -995,10 +995,13 @@ bool CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer,
 
   // Mark these roots as gray so the CC can walk them later.
 
-  JSHolderMap::WhichHolders which = JSHolderMap::HoldersRequiredForGrayMarking;
-  if (JS::AtomsZoneIsCollecting(self->Runtime())) {
-    // Any holder may point into the atoms zone.
-    which = JSHolderMap::AllHolders;
+  JSHolderMap::WhichHolders which = JSHolderMap::AllHolders;
+
+  // Only trace holders in collecting zones when marking, except if we are
+  // collecting the atoms zone since any holder may point into that zone.
+  if (aTracer->isMarkingTracer() &&
+      !JS::AtomsZoneIsCollecting(self->Runtime())) {
+    which = JSHolderMap::HoldersRequiredForGrayMarking;
   }
 
   return self->TraceNativeGrayRoots(aTracer, which, budget);
