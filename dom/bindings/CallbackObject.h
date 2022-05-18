@@ -88,7 +88,7 @@ class CallbackObject : public nsISupports {
                           JS::Handle<JSObject*> aCallbackGlobal,
                           nsIGlobalObject* aIncumbentGlobal) {
     if (aCx && JS::IsAsyncStackCaptureEnabledForRealm(aCx)) {
-      JS::RootedObject stack(aCx);
+      JS::Rooted<JSObject*> stack(aCx);
       if (!JS::CaptureCurrentStack(aCx, &stack)) {
         JS_ClearPendingException(aCx);
       }

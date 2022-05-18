@@ -62,7 +62,7 @@ class UnderlyingSourceAlgorithms final : public UnderlyingSourceAlgorithmsBase {
       UnderlyingSourceAlgorithms, UnderlyingSourceAlgorithmsBase)
 
   UnderlyingSourceAlgorithms(nsIGlobalObject* aGlobal,
-                             JS::HandleObject aUnderlyingSource,
+                             JS::Handle<JSObject*> aUnderlyingSource,
                              UnderlyingSource& aUnderlyingSourceDict)
       : mGlobal(aGlobal), mUnderlyingSource(aUnderlyingSource) {
     // Step 6. (implicit Step 2.)
