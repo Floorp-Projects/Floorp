@@ -378,7 +378,9 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   // Default CSP permissions for now.  These will be overrided if necessary
   // based on the script CSP headers during load in ScriptLoader.
   info.mEvalAllowed = true;
-  info.mReportCSPViolations = false;
+  info.mReportEvalCSPViolations = false;
+  info.mWasmEvalAllowed = true;
+  info.mReportWasmEvalCSPViolations = false;
   info.mSecureContext = aData.isSecureContext()
                             ? WorkerLoadInfo::eSecureContext
                             : WorkerLoadInfo::eInsecureContext;
