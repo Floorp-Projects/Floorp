@@ -514,7 +514,7 @@ CreateWindowsCoreAudioAudioDeviceModuleFromInputAndOutput(
     std::unique_ptr<AudioOutput> audio_output,
     TaskQueueFactory* task_queue_factory) {
   RTC_DLOG(INFO) << __FUNCTION__;
-  return new rtc::RefCountedObject<WindowsAudioDeviceModule>(
+  return rtc::make_ref_counted<WindowsAudioDeviceModule>(
       std::move(audio_input), std::move(audio_output), task_queue_factory);
 }
 

@@ -92,27 +92,26 @@ rtc::scoped_refptr<AudioDeviceModuleForTest> AudioDeviceModule::CreateForTest(
   }
 
   // Create the generic reference counted (platform independent) implementation.
-  rtc::scoped_refptr<AudioDeviceModuleImpl> audioDevice(
-      new rtc::RefCountedObject<AudioDeviceModuleImpl>(audio_layer,
-                                                       task_queue_factory));
+  auto audio_device = rtc::make_ref_counted<AudioDeviceModuleImpl>(
+      audio_layer, task_queue_factory);
 
   // Ensure that the current platform is supported.
-  if (audioDevice->CheckPlatform() == -1) {
+  if (audio_device->CheckPlatform() == -1) {
     return nullptr;
   }
 
   // Create the platform-dependent implementation.
-  if (audioDevice->CreatePlatformSpecificObjects() == -1) {
+  if (audio_device->CreatePlatformSpecificObjects() == -1) {
     return nullptr;
   }
 
   // Ensure that the generic audio buffer can communicate with the platform
   // specific parts.
-  if (audioDevice->AttachAudioBuffer() == -1) {
+  if (audio_device->AttachAudioBuffer() == -1) {
     return nullptr;
   }
 
-  return audioDevice;
+  return audio_device;
 }
 
 AudioDeviceModuleImpl::AudioDeviceModuleImpl(

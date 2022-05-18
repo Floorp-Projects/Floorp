@@ -465,10 +465,9 @@ RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
   }
 
   // The PeerConnection constructor consumes some, but not all, dependencies.
-  rtc::scoped_refptr<PeerConnection> pc(
-      new rtc::RefCountedObject<PeerConnection>(
-          context, options, is_unified_plan, std::move(event_log),
-          std::move(call), dependencies, dtls_enabled));
+  auto pc = rtc::make_ref_counted<PeerConnection>(
+      context, options, is_unified_plan, std::move(event_log), std::move(call),
+      dependencies, dtls_enabled);
   RTCError init_error = pc->Initialize(configuration, std::move(dependencies));
   if (!init_error.ok()) {
     RTC_LOG(LS_ERROR) << "PeerConnection initialization failed";

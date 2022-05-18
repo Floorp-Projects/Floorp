@@ -135,9 +135,8 @@ rtc::scoped_refptr<SctpDataChannel> SctpDataChannel::Create(
     const InternalDataChannelInit& config,
     rtc::Thread* signaling_thread,
     rtc::Thread* network_thread) {
-  rtc::scoped_refptr<SctpDataChannel> channel(
-      new rtc::RefCountedObject<SctpDataChannel>(
-          config, provider, label, signaling_thread, network_thread));
+  auto channel = rtc::make_ref_counted<SctpDataChannel>(
+      config, provider, label, signaling_thread, network_thread);
   if (!channel->Init()) {
     return nullptr;
   }

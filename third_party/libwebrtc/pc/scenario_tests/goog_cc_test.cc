@@ -73,8 +73,8 @@ TEST(GoogCcPeerScenarioTest, MAYBE_NoBweChangeFromVideoUnmute) {
   ASSERT_EQ(num_video_streams, 1);  // Exactly 1 video stream.
 
   auto get_bwe = [&] {
-    rtc::scoped_refptr<webrtc::MockRTCStatsCollectorCallback> callback(
-        new rtc::RefCountedObject<webrtc::MockRTCStatsCollectorCallback>());
+    auto callback =
+        rtc::make_ref_counted<webrtc::MockRTCStatsCollectorCallback>();
     caller->pc()->GetStats(callback);
     s.net()->time_controller()->Wait([&] { return callback->called(); });
     auto stats =

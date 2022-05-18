@@ -303,8 +303,7 @@ TEST_F(NetEqImplTest, InsertPacket) {
   fake_packet.sequence_number = kFirstSequenceNumber;
   fake_packet.timestamp = kFirstTimestamp;
 
-  rtc::scoped_refptr<MockAudioDecoderFactory> mock_decoder_factory(
-      new rtc::RefCountedObject<MockAudioDecoderFactory>);
+  auto mock_decoder_factory = rtc::make_ref_counted<MockAudioDecoderFactory>();
   EXPECT_CALL(*mock_decoder_factory, MakeAudioDecoderMock(_, _, _))
       .WillOnce(Invoke([&](const SdpAudioFormat& format,
                            absl::optional<AudioCodecPairId> codec_pair_id,
@@ -487,8 +486,8 @@ TEST_F(NetEqImplTest, VerifyTimestampPropagation) {
     int16_t next_value_;
   } decoder_;
 
-  rtc::scoped_refptr<AudioDecoderFactory> decoder_factory =
-      new rtc::RefCountedObject<test::AudioDecoderProxyFactory>(&decoder_);
+  auto decoder_factory =
+      rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&decoder_);
 
   UseNoMocks();
   CreateInstance(decoder_factory);
@@ -555,7 +554,7 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
   MockAudioDecoder mock_decoder;
 
   CreateInstance(
-      new rtc::RefCountedObject<test::AudioDecoderProxyFactory>(&mock_decoder));
+      rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&mock_decoder));
 
   const uint8_t kPayloadType = 17;   // Just an arbitrary number.
   const int kSampleRateHz = 8000;
@@ -927,7 +926,7 @@ TEST_F(NetEqImplTest, CodecInternalCng) {
   // Create a mock decoder object.
   MockAudioDecoder mock_decoder;
   CreateInstance(
-      new rtc::RefCountedObject<test::AudioDecoderProxyFactory>(&mock_decoder));
+      rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&mock_decoder));
 
   const uint8_t kPayloadType = 17;   // Just an arbitrary number.
   const int kSampleRateKhz = 48;
@@ -1066,7 +1065,7 @@ TEST_F(NetEqImplTest, UnsupportedDecoder) {
   ::testing::NiceMock<MockAudioDecoder> decoder;
 
   CreateInstance(
-      new rtc::RefCountedObject<test::AudioDecoderProxyFactory>(&decoder));
+      rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&decoder));
   static const size_t kNetEqMaxFrameSize = 5760;  // 120 ms @ 48 kHz.
   static const size_t kChannels = 2;
 
@@ -1193,7 +1192,7 @@ TEST_F(NetEqImplTest, DecodedPayloadTooShort) {
   MockAudioDecoder mock_decoder;
 
   CreateInstance(
-      new rtc::RefCountedObject<test::AudioDecoderProxyFactory>(&mock_decoder));
+      rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&mock_decoder));
 
   const uint8_t kPayloadType = 17;   // Just an arbitrary number.
   const int kSampleRateHz = 8000;
@@ -1252,7 +1251,7 @@ TEST_F(NetEqImplTest, DecodingError) {
   MockAudioDecoder mock_decoder;
 
   CreateInstance(
-      new rtc::RefCountedObject<test::AudioDecoderProxyFactory>(&mock_decoder));
+      rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&mock_decoder));
 
   const uint8_t kPayloadType = 17;   // Just an arbitrary number.
   const int kSampleRateHz = 8000;
@@ -1364,7 +1363,7 @@ TEST_F(NetEqImplTest, DecodingErrorDuringInternalCng) {
   // Create a mock decoder object.
   MockAudioDecoder mock_decoder;
   CreateInstance(
-      new rtc::RefCountedObject<test::AudioDecoderProxyFactory>(&mock_decoder));
+      rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&mock_decoder));
 
   const uint8_t kPayloadType = 17;   // Just an arbitrary number.
   const int kSampleRateHz = 8000;
@@ -1658,14 +1657,13 @@ class NetEqImplTest120ms : public NetEqImplTest {
 
   void Register120msCodec(AudioDecoder::SpeechType speech_type) {
     const uint32_t sampling_freq = kSamplingFreq_;
-    decoder_factory_ =
-        new rtc::RefCountedObject<test::FunctionAudioDecoderFactory>(
-            [sampling_freq, speech_type]() {
-              std::unique_ptr<AudioDecoder> decoder =
-                  std::make_unique<Decoder120ms>(sampling_freq, speech_type);
-              RTC_CHECK_EQ(2, decoder->Channels());
-              return decoder;
-            });
+    decoder_factory_ = rtc::make_ref_counted<test::FunctionAudioDecoderFactory>(
+        [sampling_freq, speech_type]() {
+          std::unique_ptr<AudioDecoder> decoder =
+              std::make_unique<Decoder120ms>(sampling_freq, speech_type);
+          RTC_CHECK_EQ(2, decoder->Channels());
+          return decoder;
+        });
   }
 
   rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_;

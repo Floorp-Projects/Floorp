@@ -95,9 +95,7 @@ rtc::scoped_refptr<VideoTrack> VideoTrack::Create(
     const std::string& id,
     VideoTrackSourceInterface* source,
     rtc::Thread* worker_thread) {
-  rtc::RefCountedObject<VideoTrack>* track =
-      new rtc::RefCountedObject<VideoTrack>(id, source, worker_thread);
-  return track;
+  return rtc::make_ref_counted<VideoTrack>(id, source, worker_thread);
 }
 
 }  // namespace webrtc

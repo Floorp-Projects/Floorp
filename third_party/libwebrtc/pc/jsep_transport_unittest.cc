@@ -48,8 +48,7 @@ rtc::scoped_refptr<webrtc::IceTransportInterface> CreateIceTransport(
     return nullptr;
   }
 
-  return new rtc::RefCountedObject<FakeIceTransportWrapper>(
-      std::move(internal));
+  return rtc::make_ref_counted<FakeIceTransportWrapper>(std::move(internal));
 }
 
 class JsepTransport2Test : public ::testing::Test, public sigslot::has_slots<> {

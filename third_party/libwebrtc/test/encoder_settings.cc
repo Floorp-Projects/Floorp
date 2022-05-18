@@ -120,7 +120,7 @@ void FillEncoderConfiguration(VideoCodecType codec_type,
   configuration->codec_type = codec_type;
   configuration->number_of_streams = num_streams;
   configuration->video_stream_factory =
-      new rtc::RefCountedObject<DefaultVideoStreamFactory>();
+      rtc::make_ref_counted<DefaultVideoStreamFactory>();
   configuration->max_bitrate_bps = 0;
   configuration->simulcast_layers = std::vector<VideoStream>(num_streams);
   for (size_t i = 0; i < num_streams; ++i) {

@@ -42,7 +42,7 @@ AudioRtpReceiver::AudioRtpReceiver(
     bool is_unified_plan)
     : worker_thread_(worker_thread),
       id_(receiver_id),
-      source_(new rtc::RefCountedObject<RemoteAudioSource>(
+      source_(rtc::make_ref_counted<RemoteAudioSource>(
           worker_thread,
           is_unified_plan
               ? RemoteAudioSource::OnAudioChannelGoneAction::kSurvive
@@ -55,7 +55,7 @@ AudioRtpReceiver::AudioRtpReceiver(
       delay_(JitterBufferDelayProxy::Create(
           rtc::Thread::Current(),
           worker_thread_,
-          new rtc::RefCountedObject<JitterBufferDelay>(worker_thread))) {
+          rtc::make_ref_counted<JitterBufferDelay>(worker_thread))) {
   RTC_DCHECK(worker_thread_);
   RTC_DCHECK(track_->GetSource()->remote());
   track_->RegisterObserver(this);
