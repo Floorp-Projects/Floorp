@@ -246,7 +246,7 @@ add_task(async function test_remote_images_logo() {
     content: {
       ...message.content,
       logo: {
-        imageId: imageInfo.imageId,
+        imageId: imageInfo.recordId,
       },
     },
   };
