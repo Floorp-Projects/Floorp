@@ -130,6 +130,23 @@ class RTCPReceiver final {
   void NotifyTmmbrUpdated();
 
  private:
+  // A lightweight inlined set of local SSRCs.
+  class RegisteredSsrcs {
+   public:
+    static constexpr size_t kMaxSsrcs = 3;
+    // Initializes the set of registered local SSRCS by extracting them from the
+    // provided `config`.
+    explicit RegisteredSsrcs(const RtpRtcpInterface::Configuration& config);
+
+    // Indicates if `ssrc` is in the set of registered local SSRCs.
+    bool contains(uint32_t ssrc) const {
+      return absl::c_linear_search(ssrcs_, ssrc);
+    }
+
+   private:
+    absl::InlinedVector<uint32_t, kMaxSsrcs> ssrcs_;
+  };
+
   struct PacketInformation;
   struct TmmbrInformation;
   struct RrtrInformation;
@@ -235,7 +252,8 @@ class RTCPReceiver final {
   const bool receiver_only_;
   ModuleRtpRtcp* const rtp_rtcp_;
   const uint32_t main_ssrc_;
-  const std::set<uint32_t> registered_ssrcs_;
+  // The set of registered local SSRCs.
+  const RegisteredSsrcs registered_ssrcs_;
 
   RtcpBandwidthObserver* const rtcp_bandwidth_observer_;
   RtcpEventObserver* const rtcp_event_observer_;
