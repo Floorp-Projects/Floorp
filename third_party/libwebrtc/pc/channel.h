@@ -59,7 +59,6 @@
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/socket.h"
-#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
@@ -306,9 +305,6 @@ class BaseChannel : public ChannelInterface,
   // Return description of media channel to facilitate logging
   std::string ToString() const;
 
-  void SetNegotiatedHeaderExtensions_w(const RtpHeaderExtensions& extensions)
-      RTC_RUN_ON(worker_thread());
-
   // ChannelInterface overrides
   RtpHeaderExtensions GetNegotiatedRtpHeaderExtensions() const override;
 
@@ -316,6 +312,8 @@ class BaseChannel : public ChannelInterface,
   bool ConnectToRtpTransport() RTC_RUN_ON(network_thread());
   void DisconnectFromRtpTransport() RTC_RUN_ON(network_thread());
   void SignalSentPacket_n(const rtc::SentPacket& sent_packet);
+  void SetContent_s(const MediaContentDescription* content,
+                    webrtc::SdpType type) RTC_RUN_ON(signaling_thread());
 
   rtc::Thread* const worker_thread_;
   rtc::Thread* const network_thread_;
@@ -382,13 +380,11 @@ class BaseChannel : public ChannelInterface,
   // This object is not owned by the channel so it must outlive it.
   rtc::UniqueRandomIdGenerator* const ssrc_generator_;
 
-  // |negotiated_header_extensions_| is read on the signaling thread, but
-  // written on the worker thread while being sync-invoked from the signal
-  // thread in SdpOfferAnswerHandler::PushdownMediaDescription(). Hence the lock
-  // isn't strictly needed, but it's anyway placed here for future safeness.
-  mutable webrtc::Mutex negotiated_header_extensions_lock_;
+  // |negotiated_header_extensions_| is read and written to on the signaling
+  // thread from the SdpOfferAnswerHandler class (e.g.
+  // PushdownMediaDescription().
   RtpHeaderExtensions negotiated_header_extensions_
-      RTC_GUARDED_BY(negotiated_header_extensions_lock_);
+      RTC_GUARDED_BY(signaling_thread());
 };
 
 // VoiceChannel is a specialization that adds support for early media, DTMF,

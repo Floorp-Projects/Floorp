@@ -39,7 +39,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 
@@ -704,7 +703,7 @@ WebRtcVideoChannel::WebRtcVideoChannel(
     webrtc::VideoDecoderFactory* decoder_factory,
     webrtc::VideoBitrateAllocatorFactory* bitrate_allocator_factory)
     : VideoMediaChannel(config),
-      worker_thread_(rtc::Thread::Current()),
+      worker_thread_(call->worker_thread()),
       call_(call),
       unsignalled_ssrc_handler_(&default_unsignalled_ssrc_handler_),
       video_config_(config.video),
@@ -2066,7 +2065,7 @@ WebRtcVideoChannel::WebRtcVideoSendStream::WebRtcVideoSendStream(
     // TODO(deadbeef): Don't duplicate information between send_params,
     // rtp_extensions, options, etc.
     const VideoSendParameters& send_params)
-    : worker_thread_(rtc::Thread::Current()),
+    : worker_thread_(call->worker_thread()),
       ssrcs_(sp.ssrcs),
       ssrc_groups_(sp.ssrc_groups),
       call_(call),
