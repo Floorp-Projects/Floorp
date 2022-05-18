@@ -1324,8 +1324,12 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
     SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
   }
 
-  result = AddWin32kLockdownPolicy(mPolicy, false);
-  SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
+  // Win32k lockdown might not work on earlier versions
+  // Bug 1719212, 1769992
+  if (IsWin10FallCreatorsUpdateOrLater()) {
+    result = AddWin32kLockdownPolicy(mPolicy, false);
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
+  }
 
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                 sandbox::MITIGATION_DLL_SEARCH_ORDER
