@@ -9,8 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Wrapper type for a WindowContext or BrowsingContext instance which may be
 // discarded, and thus unavailable in the current process. This type is used to
@@ -129,7 +128,6 @@ class MaybeDiscarded {
   RefPtr<T> mPtr;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MaybeDiscarded_h

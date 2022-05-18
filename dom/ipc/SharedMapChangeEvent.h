@@ -12,9 +12,7 @@
 #include "mozilla/dom/Event.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
-namespace ipc {
+namespace mozilla::dom::ipc {
 
 class SharedMapChangeEvent final : public Event {
  public:
@@ -43,8 +41,6 @@ class SharedMapChangeEvent final : public Event {
   nsTArray<nsString> mChangedKeys;
 };
 
-}  // namespace ipc
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::ipc
 
 #endif  // dom_ipc_SharedMapChangeEvent_h
