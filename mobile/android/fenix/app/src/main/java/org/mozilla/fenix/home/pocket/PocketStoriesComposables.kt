@@ -77,6 +77,14 @@ private const val POCKET_STORIES_UTM_VALUE = "pocket-newtab-android"
 private const val POCKET_FEATURE_UTM_KEY_VALUE = "utm_source=ff_android"
 
 /**
+ * The Pocket section may appear first on the homescreen and be fully constructed
+ * to then be pushed downwards when other elements appear.
+ * This can lead to overcounting impressions with multiple such events being possible
+ * without the user actually having time to see the stories or scrolling to see the Pocket section.
+ */
+private const val MINIMUM_TIME_TO_SETTLE_MS = 1000
+
+/**
  * Placeholder [PocketStory] allowing to combine other items in the same list that shows stories.
  * It uses empty values for it's properties ensuring that no conflict is possible since real stories have
  * mandatory values.
@@ -264,12 +272,16 @@ private fun Modifier.onShown(
     @FloatRange(from = 0.0, to = 1.0) threshold: Float,
     onVisible: () -> Unit,
 ): Modifier {
+    val initialTime = System.currentTimeMillis()
+
     return composed {
         val context = LocalContext.current
         var wasEventReported by remember { mutableStateOf(false) }
 
         onGloballyPositioned { coordinates ->
-            if (!wasEventReported && coordinates.isVisible(context, threshold)) {
+            if (!wasEventReported && coordinates.isVisible(context, threshold) &&
+                System.currentTimeMillis() - initialTime > MINIMUM_TIME_TO_SETTLE_MS
+            ) {
                 wasEventReported = true
                 onVisible()
             }
