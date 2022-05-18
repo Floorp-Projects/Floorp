@@ -1,8 +1,7 @@
 # Audio Device Module (ADM)
 
 <?% config.freshness.owner = 'henrika' %?>
-<?% config.freshness.reviewed =
-'2021-04-12' %?>
+<?% config.freshness.reviewed = '2021-04-12' %?>
 
 ## Overview
 

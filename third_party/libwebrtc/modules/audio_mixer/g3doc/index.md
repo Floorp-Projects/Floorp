@@ -1,5 +1,5 @@
-<?% config.freshness.owner = 'alessiob' %?> <?% config.freshness.reviewed =
-'2021-04-21' %?>
+<?% config.freshness.owner = 'alessiob' %?>
+<?% config.freshness.reviewed = '2021-04-21' %?>
 
 # The WebRTC Audio Mixer Module
 
