@@ -23,8 +23,8 @@ using namespace mozilla::dom;
 namespace {
 
 static nsCString FormatStackString(JSContext* cx, JSPrincipals* aPrincipals,
-                                   JS::HandleObject aStack) {
-  JS::RootedString formattedStack(cx);
+                                   JS::Handle<JSObject*> aStack) {
+  JS::Rooted<JSString*> formattedStack(cx);
   if (!JS::BuildStackString(cx, aPrincipals, aStack, &formattedStack)) {
     return nsCString();
   }
@@ -66,8 +66,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsScriptErrorWithStack)
 NS_INTERFACE_MAP_END
 
 nsScriptErrorWithStack::nsScriptErrorWithStack(
-    JS::Handle<mozilla::Maybe<JS::Value>> aException, JS::HandleObject aStack,
-    JS::HandleObject aStackGlobal)
+    JS::Handle<mozilla::Maybe<JS::Value>> aException,
+    JS::Handle<JSObject*> aStack, JS::Handle<JSObject*> aStackGlobal)
     : mStack(aStack), mStackGlobal(aStackGlobal) {
   MOZ_ASSERT(NS_IsMainThread(), "You can't use this class on workers.");
 
@@ -100,19 +100,20 @@ nsScriptErrorWithStack::GetHasException(bool* aHasException) {
 }
 
 NS_IMETHODIMP
-nsScriptErrorWithStack::GetException(JS::MutableHandleValue aException) {
+nsScriptErrorWithStack::GetException(JS::MutableHandle<JS::Value> aException) {
   aException.set(mException);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptErrorWithStack::GetStack(JS::MutableHandleValue aStack) {
+nsScriptErrorWithStack::GetStack(JS::MutableHandle<JS::Value> aStack) {
   aStack.setObjectOrNull(mStack);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptErrorWithStack::GetStackGlobal(JS::MutableHandleValue aStackGlobal) {
+nsScriptErrorWithStack::GetStackGlobal(
+    JS::MutableHandle<JS::Value> aStackGlobal) {
   aStackGlobal.setObjectOrNull(mStackGlobal);
   return NS_OK;
 }
@@ -139,7 +140,7 @@ nsScriptErrorWithStack::ToString(nsACString& /*UTF8*/ aResult) {
       JS::GetRealmPrincipals(js::GetNonCCWObjectRealm(mStackGlobal));
 
   JSContext* cx = jsapi.cx();
-  JS::RootedObject stack(cx, mStack);
+  JS::Rooted<JSObject*> stack(cx, mStack);
   nsCString stackString = FormatStackString(cx, principals, stack);
   nsCString combined = message + "\n"_ns + stackString;
   aResult.Assign(combined);
@@ -159,7 +160,7 @@ static bool IsObjectGlobalDying(JSObject* aObj) {
 
 already_AddRefed<nsScriptErrorBase> CreateScriptError(
     nsGlobalWindowInner* win, JS::Handle<mozilla::Maybe<JS::Value>> aException,
-    JS::HandleObject aStack, JS::HandleObject aStackGlobal) {
+    JS::Handle<JSObject*> aStack, JS::Handle<JSObject*> aStackGlobal) {
   bool createWithStack = true;
   if (aException.isNothing() && !aStack) {
     // Neither stack nor exception, do not need nsScriptErrorWithStack.

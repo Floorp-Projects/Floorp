@@ -2780,7 +2780,7 @@ bool MayResolveGlobal(const JSAtomState& aNames, jsid aId,
   return JS_MayResolveStandardClass(aNames, aId, aMaybeObj);
 }
 
-bool EnumerateGlobal(JSContext* aCx, JS::HandleObject aObj,
+bool EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
                      JS::MutableHandleVector<jsid> aProperties,
                      bool aEnumerableOnly) {
   MOZ_ASSERT(JS_IsGlobalObject(aObj),
@@ -3532,13 +3532,13 @@ bool GetSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
 
 static inline JSObject* NewObservableArrayProxyObject(
     JSContext* aCx, const ObservableArrayProxyHandler* aHandler, void* aOwner) {
-  JS::RootedObject target(aCx, JS::NewArrayObject(aCx, 0));
+  JS::Rooted<JSObject*> target(aCx, JS::NewArrayObject(aCx, 0));
   if (NS_WARN_IF(!target)) {
     return nullptr;
   }
 
-  JS::RootedValue targetValue(aCx, JS::ObjectValue(*target));
-  JS::RootedObject proxy(
+  JS::Rooted<JS::Value> targetValue(aCx, JS::ObjectValue(*target));
+  JS::Rooted<JSObject*> proxy(
       aCx, js::NewProxyObject(aCx, aHandler, targetValue, nullptr));
   if (!proxy) {
     return nullptr;
