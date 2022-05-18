@@ -52,6 +52,11 @@
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s موزلّا ولوں تیار تھیا ہے۔</string>
 
+    <!-- Private Browsing -->
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">
+        %1$s نجی ٹیب نال تہاݙٖے ڳولݨ تے براؤزنگ دی تاریخ کوں صاف کریندے جہڑے ویلے تساں انہاں کوں بند کریندے ہو یا ایپ کوں چھوڑ ݙیندے ہو۔ جڈاں جو ایہ تہاکوں ویب سائٹاں یا انٹرنیٹ سروس فراہم کرݨ آلیاں کیتے گمنام کائنی بݨیندا، تساں ایندے نال جو کجھ وی آن لائن کریندے ہو، اوں کوں ایہ ڈیوائس ورتݨ آلے کہیں وی ٻئے کنوں نجی رکھݨ سوکھا بݨیندے۔</string>
     <string name="private_browsing_common_myths">
         نجی براؤزنگ بارے عام فرضی قصے
     </string>
@@ -258,6 +263,9 @@
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_description_2">آپݨے مکھ پنے تے ٹیباں نال آپݨیاں تازہ ترین ڳولاں تے ولدا ون٘جو۔</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">جتھوں تساں چھوڑیا ہائی تہاݙا ذاتی تھیا فائرفوکس مُکھ پناں ہݨ اُتھوں شروع کرݨ سوکھا بݨیندا ہے۔ آپݨے حالیہ ٹیب، کتاب نشانیاں تے ڳولݨ نتیجے لبھو۔</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">نویں %1$s ٹیب کھولو</string>
@@ -323,6 +331,8 @@
     <string name="errorpage_httpsonly_title">محفوظ سائٹ دستیاب کائنی</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">غالباً، ویب سائٹ سادگی نال ایچ ٹی ٹی پی ایس کوں سہارا کائنی ݙیندی۔</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">تاہم، ایہ وی ممکن ہے جو کوئی حملہ آور ملوث ہووے۔ جے تساں ویب سائٹ کوں جاری رکھدے ہو، تاں تہاکوں کوئی حساس معلومات درج کائنی کرݨی چاہیدی ہے۔ جے تساں جاری رکھدے ہو، تاں سائٹ کیتے HTTPS-صرف موڈ کوں عارضی طور تے  بند کر ݙتا ویسی۔</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">رسائیت</string>
     <!-- Preference to override the Firefox Account server -->
@@ -948,6 +958,8 @@
     <string name="collections_header">مجموعے</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">مجموعہ مینیو</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">او شئیں جمع کرو جہڑیاں تہاݙے کیتے اہم ہن۔ \n بعد وچ فوری رسائی کیتے ایں طرحاں دیاں ڳولاں، سائٹاں تے ٹیباں کوں گروپ وچ کٹھا کرو۔</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">ٹیباں چݨو</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1096,6 +1108,8 @@
     <string name="full_screen_notification">پوری سکرین موڈ وچ داخل تھیندا پئے</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">یوآرایل نقل تھی ڳیا</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">ایہ نمونے دی عبارت ہے۔ ایہ ایہ ݙکھیندی ہے جو ترتیباں وچ سائز گھٹیسوں یا ودھیسوں تاں عبارت کین٘ویں نظرسی۔</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">ویب سائٹ تے موجود عبارت کوں وݙا یا چھوٹا کرو</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -1168,16 +1182,28 @@
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">فائرفوکس پریوو ہݨ فائرفوکس نائٹلی ہے</string>
+    <!-- text for firefox preview moving tip description -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">
+          فائرفوکس نائٹلی ہر رات اپ ڈیٹ تھیندی ہے تے نویاں تجرباتی  خصوصیات رکھدی ہے۔ 
+        ول وی ایہ گھٹ مستحکم تھی سڳدی ہے۔  مزید مستحکم تجربے کیتے ساݙا بیٹا براؤزر ڈاؤن لوڈ کرو۔</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">انڈرائیڈ بیٹا کیتے فائرفوکس گھنو</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">فائرفوکس نائٹلی ٹُر ڳئی ہے</string>
+    <!-- text for firefox preview moving tip description -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">
+        ایہ ایپ ہݨ حفاظتی اپ ڈیٹاں وصول کائناں کریسی۔ ایہ ایپ ورتݨ بند کرو تے نویں نائٹلی گھنو۔ 
+        \n\n آپݨی کتاب نشانیاں، لاگ ان تے تاریخ دا ٻئی ایپ تے تبادلہ کرݨ کیتے فائرفوکس کھاتہ بݨاؤ۔</string>
     <!-- text for firefox preview moving tip button  -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">نویں نائٹلی تے سوئچ کرو</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">فائرفوکس نائٹلی ٹُر ڳئی ہے</string>
+    <!-- text for firefox preview moving tip description -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">
+        ایہ ایپ ہݨ حفاظتی اپ ڈیٹاں وصول کائناں کریسی۔ ایہ ایپ ورتݨ بند کرو تے نویں نائٹلی گھنو۔ 
+        \n\n آپݨی کتاب نشانیاں، لاگ ان تے تاریخ دا ٻئی ایپ تے تبادلہ کرݨ کیتے فائرفوکس کھاتہ بݨاؤ۔</string>
     <!-- text for firefox preview moving tip button  -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">نویں نائٹلی گھنو</string>
 
@@ -1668,6 +1694,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">اصلوں نویں %s وچ ست بسم اللہ</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">تہاکوں مزید آن لائن کم وچ مدد ݙیوݨ کیتے بہتر کارکردگی تے خصوصیات نال مکمل طور تے دوبارہ ڈیزائن کیتا ڳیا براؤز تہاݙی تانگھ وچ ہے۔ \n\n سوہݨا، اوں ویلے تائیں انتظار کرو جے تائیں اساں تہاݙے نال %s کوں اپ ڈیٹ کروں</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s اپ ڈیٹ کریندا پئے۔۔۔</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
