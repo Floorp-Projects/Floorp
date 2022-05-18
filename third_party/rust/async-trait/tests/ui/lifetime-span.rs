@@ -10,12 +10,12 @@ pub trait Trait<'r> {
 
 #[async_trait]
 impl Trait for A {
-    async fn method(&self) { }
+    async fn method(&self) {}
 }
 
 #[async_trait]
 impl<'r> Trait<'r> for B {
-    async fn method(&self) { }
+    async fn method(&self) {}
 }
 
 #[async_trait]
@@ -25,12 +25,12 @@ pub trait Trait2 {
 
 #[async_trait]
 impl Trait2 for A {
-    async fn method(&self) { }
+    async fn method(&self) {}
 }
 
 #[async_trait]
 impl<'r> Trait2<'r> for B {
-    async fn method(&'r self) { }
+    async fn method(&'r self) {}
 }
 
 fn main() {}

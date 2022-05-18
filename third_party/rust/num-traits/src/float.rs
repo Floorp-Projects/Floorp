@@ -783,6 +783,17 @@ impl FloatCore for f32 {
 
     #[inline]
     #[cfg(not(feature = "std"))]
+    fn is_sign_negative(self) -> bool {
+        const SIGN_MASK: u32 = 0x80000000;
+
+        // Safety: this identical to the implementation of f32::to_bits(),
+        // which is only available starting at Rust 1.20
+        let bits: u32 = unsafe { mem::transmute(self) };
+        bits & SIGN_MASK != 0
+    }
+
+    #[inline]
+    #[cfg(not(feature = "std"))]
     fn to_degrees(self) -> Self {
         // Use a constant for better precision.
         const PIS_IN_180: f32 = 57.2957795130823208767981548141051703_f32;
@@ -817,6 +828,23 @@ impl FloatCore for f32 {
         Self::powi(self, n: i32) -> Self;
         Self::to_degrees(self) -> Self;
         Self::to_radians(self) -> Self;
+    }
+
+    #[cfg(all(not(feature = "std"), feature = "libm"))]
+    forward! {
+        libm::floorf as floor(self) -> Self;
+        libm::ceilf as ceil(self) -> Self;
+        libm::roundf as round(self) -> Self;
+        libm::truncf as trunc(self) -> Self;
+        libm::fabsf as abs(self) -> Self;
+        libm::fminf as min(self, other: Self) -> Self;
+        libm::fmaxf as max(self, other: Self) -> Self;
+    }
+
+    #[cfg(all(not(feature = "std"), feature = "libm"))]
+    #[inline]
+    fn fract(self) -> Self {
+        self - libm::truncf(self)
     }
 }
 
@@ -857,6 +885,17 @@ impl FloatCore for f64 {
 
     #[inline]
     #[cfg(not(feature = "std"))]
+    fn is_sign_negative(self) -> bool {
+        const SIGN_MASK: u64 = 0x8000000000000000;
+
+        // Safety: this identical to the implementation of f64::to_bits(),
+        // which is only available starting at Rust 1.20
+        let bits: u64 = unsafe { mem::transmute(self) };
+        bits & SIGN_MASK != 0
+    }
+
+    #[inline]
+    #[cfg(not(feature = "std"))]
     fn to_degrees(self) -> Self {
         // The division here is correctly rounded with respect to the true
         // value of 180/π. (This differs from f32, where a constant must be
@@ -892,6 +931,23 @@ impl FloatCore for f64 {
         Self::powi(self, n: i32) -> Self;
         Self::to_degrees(self) -> Self;
         Self::to_radians(self) -> Self;
+    }
+
+    #[cfg(all(not(feature = "std"), feature = "libm"))]
+    forward! {
+        libm::floor as floor(self) -> Self;
+        libm::ceil as ceil(self) -> Self;
+        libm::round as round(self) -> Self;
+        libm::trunc as trunc(self) -> Self;
+        libm::fabs as abs(self) -> Self;
+        libm::fmin as min(self, other: Self) -> Self;
+        libm::fmax as max(self, other: Self) -> Self;
+    }
+
+    #[cfg(all(not(feature = "std"), feature = "libm"))]
+    #[inline]
+    fn fract(self) -> Self {
+        self - libm::trunc(self)
     }
 }
 
@@ -1806,6 +1862,35 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     /// assert!(abs_difference < 1e-10);
     /// ```
     fn integer_decode(self) -> (u64, i16, i8);
+
+    /// Returns a number composed of the magnitude of `self` and the sign of
+    /// `sign`.
+    ///
+    /// Equal to `self` if the sign of `self` and `sign` are the same, otherwise
+    /// equal to `-self`. If `self` is a `NAN`, then a `NAN` with the sign of
+    /// `sign` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::Float;
+    ///
+    /// let f = 3.5_f32;
+    ///
+    /// assert_eq!(f.copysign(0.42), 3.5_f32);
+    /// assert_eq!(f.copysign(-0.42), -3.5_f32);
+    /// assert_eq!((-f).copysign(0.42), 3.5_f32);
+    /// assert_eq!((-f).copysign(-0.42), -3.5_f32);
+    ///
+    /// assert!(f32::nan().copysign(1.0).is_nan());
+    /// ```
+    fn copysign(self, sign: Self) -> Self {
+        if self.is_sign_negative() == sign.is_sign_negative() {
+            self
+        } else {
+            self.neg()
+        }
+    }
 }
 
 #[cfg(feature = "std")]
@@ -1883,6 +1968,12 @@ macro_rules! float_impl_std {
                 Self::acosh(self) -> Self;
                 Self::atanh(self) -> Self;
             }
+
+            #[cfg(has_copysign)]
+            #[inline]
+            fn copysign(self, sign: Self) -> Self {
+                Self::copysign(self, sign)
+            }
         }
     };
 }
@@ -1908,7 +1999,7 @@ macro_rules! float_impl_libm {
 
         #[inline]
         fn fract(self) -> Self {
-            self - FloatCore::trunc(self)
+            self - Float::trunc(self)
         }
 
         #[inline]
@@ -1929,8 +2020,6 @@ macro_rules! float_impl_libm {
             FloatCore::powi(self, n: i32) -> Self;
             FloatCore::to_degrees(self) -> Self;
             FloatCore::to_radians(self) -> Self;
-            FloatCore::max(self, other: Self) -> Self;
-            FloatCore::min(self, other: Self) -> Self;
         }
     };
 }
@@ -1981,129 +2070,42 @@ impl Float for f32 {
     fn abs_sub(self, other: Self) -> Self {
         libm::fdimf(self, other)
     }
-    #[inline]
-    fn floor(self) -> Self {
-        libm::floorf(self)
-    }
-    #[inline]
-    fn ceil(self) -> Self {
-        libm::ceilf(self)
-    }
-    #[inline]
-    fn round(self) -> Self {
-        libm::roundf(self)
-    }
-    #[inline]
-    fn trunc(self) -> Self {
-        libm::truncf(self)
-    }
-    #[inline]
-    fn abs(self) -> Self {
-        libm::fabsf(self)
-    }
-    #[inline]
-    fn mul_add(self, a: Self, b: Self) -> Self {
-        libm::fmaf(self, a, b)
-    }
-    #[inline]
-    fn powf(self, n: Self) -> Self {
-        libm::powf(self, n)
-    }
-    #[inline]
-    fn sqrt(self) -> Self {
-        libm::sqrtf(self)
-    }
-    #[inline]
-    fn exp(self) -> Self {
-        libm::expf(self)
-    }
-    #[inline]
-    fn exp2(self) -> Self {
-        libm::exp2f(self)
-    }
-    #[inline]
-    fn ln(self) -> Self {
-        libm::logf(self)
-    }
-    #[inline]
-    fn log2(self) -> Self {
-        libm::log2f(self)
-    }
-    #[inline]
-    fn log10(self) -> Self {
-        libm::log10f(self)
-    }
-    #[inline]
-    fn cbrt(self) -> Self {
-        libm::cbrtf(self)
-    }
-    #[inline]
-    fn hypot(self, other: Self) -> Self {
-        libm::hypotf(self, other)
-    }
-    #[inline]
-    fn sin(self) -> Self {
-        libm::sinf(self)
-    }
-    #[inline]
-    fn cos(self) -> Self {
-        libm::cosf(self)
-    }
-    #[inline]
-    fn tan(self) -> Self {
-        libm::tanf(self)
-    }
-    #[inline]
-    fn asin(self) -> Self {
-        libm::asinf(self)
-    }
-    #[inline]
-    fn acos(self) -> Self {
-        libm::acosf(self)
-    }
-    #[inline]
-    fn atan(self) -> Self {
-        libm::atanf(self)
-    }
-    #[inline]
-    fn atan2(self, other: Self) -> Self {
-        libm::atan2f(self, other)
-    }
-    #[inline]
-    fn sin_cos(self) -> (Self, Self) {
-        libm::sincosf(self)
-    }
-    #[inline]
-    fn exp_m1(self) -> Self {
-        libm::expm1f(self)
-    }
-    #[inline]
-    fn ln_1p(self) -> Self {
-        libm::log1pf(self)
-    }
-    #[inline]
-    fn sinh(self) -> Self {
-        libm::sinhf(self)
-    }
-    #[inline]
-    fn cosh(self) -> Self {
-        libm::coshf(self)
-    }
-    #[inline]
-    fn tanh(self) -> Self {
-        libm::tanhf(self)
-    }
-    #[inline]
-    fn asinh(self) -> Self {
-        libm::asinhf(self)
-    }
-    #[inline]
-    fn acosh(self) -> Self {
-        libm::acoshf(self)
-    }
-    #[inline]
-    fn atanh(self) -> Self {
-        libm::atanhf(self)
+
+    forward! {
+        libm::floorf as floor(self) -> Self;
+        libm::ceilf as ceil(self) -> Self;
+        libm::roundf as round(self) -> Self;
+        libm::truncf as trunc(self) -> Self;
+        libm::fabsf as abs(self) -> Self;
+        libm::fmaf as mul_add(self, a: Self, b: Self) -> Self;
+        libm::powf as powf(self, n: Self) -> Self;
+        libm::sqrtf as sqrt(self) -> Self;
+        libm::expf as exp(self) -> Self;
+        libm::exp2f as exp2(self) -> Self;
+        libm::logf as ln(self) -> Self;
+        libm::log2f as log2(self) -> Self;
+        libm::log10f as log10(self) -> Self;
+        libm::cbrtf as cbrt(self) -> Self;
+        libm::hypotf as hypot(self, other: Self) -> Self;
+        libm::sinf as sin(self) -> Self;
+        libm::cosf as cos(self) -> Self;
+        libm::tanf as tan(self) -> Self;
+        libm::asinf as asin(self) -> Self;
+        libm::acosf as acos(self) -> Self;
+        libm::atanf as atan(self) -> Self;
+        libm::atan2f as atan2(self, other: Self) -> Self;
+        libm::sincosf as sin_cos(self) -> (Self, Self);
+        libm::expm1f as exp_m1(self) -> Self;
+        libm::log1pf as ln_1p(self) -> Self;
+        libm::sinhf as sinh(self) -> Self;
+        libm::coshf as cosh(self) -> Self;
+        libm::tanhf as tanh(self) -> Self;
+        libm::asinhf as asinh(self) -> Self;
+        libm::acoshf as acosh(self) -> Self;
+        libm::atanhf as atanh(self) -> Self;
+        libm::fmaxf as max(self, other: Self) -> Self;
+        libm::fminf as min(self, other: Self) -> Self;
+        libm::copysignf as copysign(self, other: Self) -> Self;
     }
 }
 
@@ -2116,129 +2118,42 @@ impl Float for f64 {
     fn abs_sub(self, other: Self) -> Self {
         libm::fdim(self, other)
     }
-    #[inline]
-    fn floor(self) -> Self {
-        libm::floor(self)
-    }
-    #[inline]
-    fn ceil(self) -> Self {
-        libm::ceil(self)
-    }
-    #[inline]
-    fn round(self) -> Self {
-        libm::round(self)
-    }
-    #[inline]
-    fn trunc(self) -> Self {
-        libm::trunc(self)
-    }
-    #[inline]
-    fn abs(self) -> Self {
-        libm::fabs(self)
-    }
-    #[inline]
-    fn mul_add(self, a: Self, b: Self) -> Self {
-        libm::fma(self, a, b)
-    }
-    #[inline]
-    fn powf(self, n: Self) -> Self {
-        libm::pow(self, n)
-    }
-    #[inline]
-    fn sqrt(self) -> Self {
-        libm::sqrt(self)
-    }
-    #[inline]
-    fn exp(self) -> Self {
-        libm::exp(self)
-    }
-    #[inline]
-    fn exp2(self) -> Self {
-        libm::exp2(self)
-    }
-    #[inline]
-    fn ln(self) -> Self {
-        libm::log(self)
-    }
-    #[inline]
-    fn log2(self) -> Self {
-        libm::log2(self)
-    }
-    #[inline]
-    fn log10(self) -> Self {
-        libm::log10(self)
-    }
-    #[inline]
-    fn cbrt(self) -> Self {
-        libm::cbrt(self)
-    }
-    #[inline]
-    fn hypot(self, other: Self) -> Self {
-        libm::hypot(self, other)
-    }
-    #[inline]
-    fn sin(self) -> Self {
-        libm::sin(self)
-    }
-    #[inline]
-    fn cos(self) -> Self {
-        libm::cos(self)
-    }
-    #[inline]
-    fn tan(self) -> Self {
-        libm::tan(self)
-    }
-    #[inline]
-    fn asin(self) -> Self {
-        libm::asin(self)
-    }
-    #[inline]
-    fn acos(self) -> Self {
-        libm::acos(self)
-    }
-    #[inline]
-    fn atan(self) -> Self {
-        libm::atan(self)
-    }
-    #[inline]
-    fn atan2(self, other: Self) -> Self {
-        libm::atan2(self, other)
-    }
-    #[inline]
-    fn sin_cos(self) -> (Self, Self) {
-        libm::sincos(self)
-    }
-    #[inline]
-    fn exp_m1(self) -> Self {
-        libm::expm1(self)
-    }
-    #[inline]
-    fn ln_1p(self) -> Self {
-        libm::log1p(self)
-    }
-    #[inline]
-    fn sinh(self) -> Self {
-        libm::sinh(self)
-    }
-    #[inline]
-    fn cosh(self) -> Self {
-        libm::cosh(self)
-    }
-    #[inline]
-    fn tanh(self) -> Self {
-        libm::tanh(self)
-    }
-    #[inline]
-    fn asinh(self) -> Self {
-        libm::asinh(self)
-    }
-    #[inline]
-    fn acosh(self) -> Self {
-        libm::acosh(self)
-    }
-    #[inline]
-    fn atanh(self) -> Self {
-        libm::atanh(self)
+
+    forward! {
+        libm::floor as floor(self) -> Self;
+        libm::ceil as ceil(self) -> Self;
+        libm::round as round(self) -> Self;
+        libm::trunc as trunc(self) -> Self;
+        libm::fabs as abs(self) -> Self;
+        libm::fma as mul_add(self, a: Self, b: Self) -> Self;
+        libm::pow as powf(self, n: Self) -> Self;
+        libm::sqrt as sqrt(self) -> Self;
+        libm::exp as exp(self) -> Self;
+        libm::exp2 as exp2(self) -> Self;
+        libm::log as ln(self) -> Self;
+        libm::log2 as log2(self) -> Self;
+        libm::log10 as log10(self) -> Self;
+        libm::cbrt as cbrt(self) -> Self;
+        libm::hypot as hypot(self, other: Self) -> Self;
+        libm::sin as sin(self) -> Self;
+        libm::cos as cos(self) -> Self;
+        libm::tan as tan(self) -> Self;
+        libm::asin as asin(self) -> Self;
+        libm::acos as acos(self) -> Self;
+        libm::atan as atan(self) -> Self;
+        libm::atan2 as atan2(self, other: Self) -> Self;
+        libm::sincos as sin_cos(self) -> (Self, Self);
+        libm::expm1 as exp_m1(self) -> Self;
+        libm::log1p as ln_1p(self) -> Self;
+        libm::sinh as sinh(self) -> Self;
+        libm::cosh as cosh(self) -> Self;
+        libm::tanh as tanh(self) -> Self;
+        libm::asinh as asinh(self) -> Self;
+        libm::acosh as acosh(self) -> Self;
+        libm::atanh as atanh(self) -> Self;
+        libm::fmax as max(self, other: Self) -> Self;
+        libm::fmin as min(self, other: Self) -> Self;
+        libm::copysign as copysign(self, sign: Self) -> Self;
     }
 }
 
@@ -2386,5 +2301,51 @@ mod tests {
 
         check::<f32>(1e-6);
         check::<f64>(1e-12);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    fn copysign() {
+        use float::Float;
+        test_copysign_generic(2.0_f32, -2.0_f32, f32::nan());
+        test_copysign_generic(2.0_f64, -2.0_f64, f64::nan());
+        test_copysignf(2.0_f32, -2.0_f32, f32::nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    fn test_copysignf(p: f32, n: f32, nan: f32) {
+        use core::ops::Neg;
+        use float::Float;
+
+        assert!(p.is_sign_positive());
+        assert!(n.is_sign_negative());
+        assert!(nan.is_nan());
+
+        assert_eq!(p, Float::copysign(p, p));
+        assert_eq!(p.neg(), Float::copysign(p, n));
+
+        assert_eq!(n, Float::copysign(n, n));
+        assert_eq!(n.neg(), Float::copysign(n, p));
+
+        // FIXME: is_sign... only works on NaN starting in Rust 1.20
+        // assert!(Float::copysign(nan, p).is_sign_positive());
+        // assert!(Float::copysign(nan, n).is_sign_negative());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    fn test_copysign_generic<F: ::float::Float + ::core::fmt::Debug>(p: F, n: F, nan: F) {
+        assert!(p.is_sign_positive());
+        assert!(n.is_sign_negative());
+        assert!(nan.is_nan());
+
+        assert_eq!(p, p.copysign(p));
+        assert_eq!(p.neg(), p.copysign(n));
+
+        assert_eq!(n, n.copysign(n));
+        assert_eq!(n.neg(), n.copysign(p));
+
+        // FIXME: is_sign... only works on NaN starting in Rust 1.20
+        // assert!(nan.copysign(p).is_sign_positive());
+        // assert!(nan.copysign(n).is_sign_negative());
     }
 }

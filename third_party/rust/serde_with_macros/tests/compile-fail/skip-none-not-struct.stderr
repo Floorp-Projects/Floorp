@@ -1,5 +1,0 @@
-error: The attribute can only be applied to struct or enum definitions.
- --> $DIR/skip-none-not-struct.rs:5:1
-  |
-5 | #[skip_serializing_none]
-  | ^^^^^^^^^^^^^^^^^^^^^^^^

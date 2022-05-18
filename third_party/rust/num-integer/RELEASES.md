@@ -1,3 +1,17 @@
+# Release 0.1.45 (2022-04-29)
+
+- [`Integer::next_multiple_of` and `prev_multiple_of` no longer overflow -1][45].
+- [`Integer::is_multiple_of` now handles a 0 argument without panicking][47]
+  for primitive integers.
+- [`ExtendedGcd` no longer has any private fields][46], making it possible for
+  external implementations to customize `Integer::extended_gcd`.
+
+**Contributors**: @ciphergoth, @cuviper, @tspiteri, @WizardOfMenlo
+
+[45]: https://github.com/rust-num/num-integer/pull/45
+[46]: https://github.com/rust-num/num-integer/pull/46
+[47]: https://github.com/rust-num/num-integer/pull/47
+
 # Release 0.1.44 (2020-10-29)
 
 - [The "i128" feature now bypasses compiler probing][35]. The build script

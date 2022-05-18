@@ -1,9 +1,3 @@
-#![warn(rust_2018_idioms)]
-
-use std::env;
-
-include!("no_atomic.rs");
-
 // The rustc-cfg listed below are considered public API, but it is *unstable*
 // and outside of the normal semver guarantees:
 //
@@ -13,10 +7,15 @@ include!("no_atomic.rs");
 //      need to enable it manually when building for custom targets or using
 //      non-cargo build systems that don't run the build script.
 //
-// With the exceptions mentioned above, the rustc-cfg strings below are
-// *not* public API. Please let us know by opening a GitHub issue if your build
-// environment requires some way to enable these cfgs other than by executing
-// our build script.
+// With the exceptions mentioned above, the rustc-cfg emitted by the build
+// script are *not* public API.
+
+#![warn(rust_2018_idioms)]
+
+use std::env;
+
+include!("no_atomic.rs");
+
 fn main() {
     let target = match env::var("TARGET") {
         Ok(target) => target,
@@ -30,12 +29,29 @@ fn main() {
         }
     };
 
+    let cfg = match autocfg::AutoCfg::new() {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            println!(
+                "cargo:warning={}: unable to determine rustc version: {}",
+                env!("CARGO_PKG_NAME"),
+                e
+            );
+            return;
+        }
+    };
+
     // Note that this is `no_*`, not `has_*`. This allows treating
     // `cfg(target_has_atomic = "ptr")` as true when the build script doesn't
     // run. This is needed for compatibility with non-cargo build systems that
     // don't run the build script.
     if NO_ATOMIC_CAS.contains(&&*target) {
         println!("cargo:rustc-cfg=crossbeam_no_atomic_cas");
+    }
+
+    if cfg.probe_rustc_version(1, 61) {
+        // TODO: invert cfg once Rust 1.61 became stable.
+        println!("cargo:rustc-cfg=crossbeam_const_fn_trait_bound");
     }
 
     println!("cargo:rerun-if-changed=no_atomic.rs");

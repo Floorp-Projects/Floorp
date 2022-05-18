@@ -110,7 +110,7 @@ fn get_name_section(wasm: &[u8]) -> anyhow::Result<NameSectionReader<'_>> {
 
 #[test]
 fn custom_section_order() -> anyhow::Result<()> {
-    let wasm = wat::parse_str(
+    let bytes = wat::parse_str(
         r#"
             (module
               (@custom "A" "aaa")
@@ -139,7 +139,7 @@ fn custom_section_order() -> anyhow::Result<()> {
         };
     }
     let wasm = Parser::new(0)
-        .parse_all(&wasm)
+        .parse_all(&bytes)
         .collect::<Result<Vec<_>>>()?;
     assert_matches!(wasm[0], Payload::Version { .. });
     assert_matches!(wasm[1], Payload::CustomSection { name: "K", .. });
@@ -158,6 +158,11 @@ fn custom_section_order() -> anyhow::Result<()> {
     assert_matches!(wasm[14], Payload::CustomSection { name: "G", .. });
     assert_matches!(wasm[15], Payload::CustomSection { name: "A", .. });
     assert_matches!(wasm[16], Payload::CustomSection { name: "D", .. });
-    assert_matches!(wasm[17], Payload::End);
+
+    match &wasm[17] {
+        Payload::End(x) if *x == bytes.len() => {}
+        p => panic!("`{:?}` doesn't match expected length of {}", p, bytes.len()),
+    }
+
     Ok(())
 }

@@ -10,6 +10,7 @@
 
 use crate::{Arbitrary, Error, Result};
 use std::marker::PhantomData;
+use std::ops::ControlFlow;
 use std::{mem, ops};
 
 /// A source of unstructured data.
@@ -382,6 +383,41 @@ impl<'a> Unstructured<'a> {
         Ok(&choices[idx])
     }
 
+    /// Generate a boolean according to the given ratio.
+    ///
+    /// # Panics
+    ///
+    /// Panics when the numerator and denominator do not meet these constraints:
+    ///
+    /// * `0 < numerator <= denominator`
+    ///
+    /// # Example
+    ///
+    /// Generate a boolean that is `true` five sevenths of the time:
+    ///
+    /// ```
+    /// # fn foo() -> arbitrary::Result<()> {
+    /// use arbitrary::Unstructured;
+    ///
+    /// # let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+    /// let mut u = Unstructured::new(&my_data);
+    ///
+    /// if u.ratio(5, 7)? {
+    ///     // Take this branch 5/7 of the time.
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn ratio<T>(&mut self, numerator: T, denominator: T) -> Result<bool>
+    where
+        T: Int,
+    {
+        assert!(T::ZERO < numerator);
+        assert!(numerator <= denominator);
+        let x = self.int_in_range(T::ONE..=denominator)?;
+        Ok(x <= numerator)
+    }
+
     /// Fill a `buffer` with bytes from the underlying raw data.
     ///
     /// This should only be called within an `Arbitrary` implementation. This is
@@ -522,6 +558,100 @@ impl<'a> Unstructured<'a> {
             u: Some(self),
             _marker: PhantomData,
         })
+    }
+
+    /// Call the given function an arbitrary number of times.
+    ///
+    /// The function is given this `Unstructured` so that it can continue to
+    /// generate arbitrary data and structures.
+    ///
+    /// You may optionaly specify minimum and maximum bounds on the number of
+    /// times the function is called.
+    ///
+    /// You may break out of the loop early by returning
+    /// `Ok(std::ops::ControlFlow::Break)`. To continue the loop, return
+    /// `Ok(std::ops::ControlFlow::Continue)`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `min > max`.
+    ///
+    /// # Example
+    ///
+    /// Call a closure that generates an arbitrary type inside a context an
+    /// arbitrary number of times:
+    ///
+    /// ```
+    /// use arbitrary::{Result, Unstructured};
+    /// use std::ops::ControlFlow;
+    ///
+    /// enum Type {
+    ///     /// A boolean type.
+    ///     Bool,
+    ///
+    ///     /// An integer type.
+    ///     Int,
+    ///
+    ///     /// A list of the `i`th type in this type's context.
+    ///     List(usize),
+    /// }
+    ///
+    /// fn arbitrary_types_context(u: &mut Unstructured) -> Result<Vec<Type>> {
+    ///     let mut context = vec![];
+    ///
+    ///     u.arbitrary_loop(Some(10), Some(20), |u| {
+    ///         let num_choices = if context.is_empty() {
+    ///             2
+    ///         } else {
+    ///             3
+    ///         };
+    ///         let ty = match u.int_in_range::<u8>(1..=num_choices)? {
+    ///             1 => Type::Bool,
+    ///             2 => Type::Int,
+    ///             3 => Type::List(u.int_in_range(0..=context.len() - 1)?),
+    ///             _ => unreachable!(),
+    ///         };
+    ///         context.push(ty);
+    ///         Ok(ControlFlow::Continue(()))
+    ///     })?;
+    ///
+    ///     // The number of loop iterations are constrained by the min/max
+    ///     // bounds that we provided.
+    ///     assert!(context.len() >= 10);
+    ///     assert!(context.len() <= 20);
+    ///
+    ///     Ok(context)
+    /// }
+    /// ```
+    pub fn arbitrary_loop(
+        &mut self,
+        min: Option<u32>,
+        max: Option<u32>,
+        mut f: impl FnMut(&mut Self) -> Result<ControlFlow<(), ()>>,
+    ) -> Result<()> {
+        let min = min.unwrap_or(0);
+        let max = max.unwrap_or(u32::MAX);
+        assert!(min <= max);
+
+        for _ in 0..min {
+            match f(self)? {
+                ControlFlow::Continue(_) => continue,
+                ControlFlow::Break(_) => return Ok(()),
+            }
+        }
+
+        for _ in 0..(max - min) {
+            let keep_going = self.arbitrary().unwrap_or(false);
+            if !keep_going {
+                break;
+            }
+            match f(self)? {
+                ControlFlow::Continue(_) => continue,
+                ControlFlow::Break(_) => break,
+            }
+        }
+
+        Ok(())
     }
 }
 

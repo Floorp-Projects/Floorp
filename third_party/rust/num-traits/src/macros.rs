@@ -23,7 +23,14 @@ macro_rules! forward {
             fn $method( $( $arg : $ty ),* ) -> $ret {
                 <Self as $base>::$method( $( $arg ),* )
             }
-        )*}
+        )*};
+    ($( $imp:path as $method:ident ( self $( , $arg:ident : $ty:ty )* ) -> $ret:ty ; )*)
+        => {$(
+            #[inline]
+            fn $method(self $( , $arg : $ty )* ) -> $ret {
+                $imp(self $( , $arg )* )
+            }
+        )*};
 }
 
 macro_rules! constant {

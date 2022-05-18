@@ -810,9 +810,10 @@ impl<'a, T, P> Clone for PrivateIter<'a, T, P> {
     }
 }
 
-impl<'a, T: 'a, I: 'a> IterTrait<'a, T> for I
+impl<'a, T, I> IterTrait<'a, T> for I
 where
-    I: DoubleEndedIterator<Item = &'a T> + ExactSizeIterator<Item = &'a T> + Clone,
+    T: 'a,
+    I: DoubleEndedIterator<Item = &'a T> + ExactSizeIterator<Item = &'a T> + Clone + 'a,
 {
     fn clone_box(&self) -> Box<dyn IterTrait<'a, T, Item = &'a T> + 'a> {
         Box::new(self.clone())
@@ -894,8 +895,10 @@ impl<'a, T, P> ExactSizeIterator for PrivateIterMut<'a, T, P> {
     }
 }
 
-impl<'a, T: 'a, I: 'a> IterMutTrait<'a, T> for I where
-    I: DoubleEndedIterator<Item = &'a mut T> + ExactSizeIterator<Item = &'a mut T>
+impl<'a, T, I> IterMutTrait<'a, T> for I
+where
+    T: 'a,
+    I: DoubleEndedIterator<Item = &'a mut T> + ExactSizeIterator<Item = &'a mut T> + 'a,
 {
 }
 

@@ -17,8 +17,9 @@ pub const LZ_HASH_SHIFT: i32 = (LZ_HASH_BITS + 2) / 3;
 /// Size of the chained hash tables.
 pub const LZ_HASH_SIZE: usize = 1 << LZ_HASH_BITS;
 
-pub fn update_hash(current_hash: u32, byte: u8) -> u32 {
-    ((current_hash << LZ_HASH_SHIFT) ^ u32::from(byte)) & (LZ_HASH_SIZE as u32 - 1)
+#[inline]
+pub fn update_hash(current_hash: u16, byte: u8) -> u16 {
+    ((current_hash << LZ_HASH_SHIFT) ^ u16::from(byte)) & (LZ_HASH_SIZE as u16 - 1)
 }
 
 pub struct HashBuffers {

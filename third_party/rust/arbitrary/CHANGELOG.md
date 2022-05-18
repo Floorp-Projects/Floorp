@@ -28,6 +28,20 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 1.1.0
+
+Released 2022-02-09.
+
+### Added
+
+* Added the `Unstructured::ratio` method to generate a boolean that is `true` at
+  the given rate.
+
+* Added the `Unstructured::arbitrary_loop` method to call a function an
+  arbitrary number of times.
+
+--------------------------------------------------------------------------------
+
 ## 1.0.3
 
 Released 2021-11-20.

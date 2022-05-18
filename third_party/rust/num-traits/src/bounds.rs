@@ -8,10 +8,36 @@ use core::{u16, u32, u64, u8, usize};
 /// Numbers which have upper and lower bounds
 pub trait Bounded {
     // FIXME (#5527): These should be associated constants
-    /// returns the smallest finite number this type can represent
+    /// Returns the smallest finite number this type can represent
     fn min_value() -> Self;
-    /// returns the largest finite number this type can represent
+    /// Returns the largest finite number this type can represent
     fn max_value() -> Self;
+}
+
+/// Numbers which have lower bounds
+pub trait LowerBounded {
+    /// Returns the smallest finite number this type can represent
+    fn min_value() -> Self;
+}
+
+// FIXME: With a major version bump, this should be a supertrait instead
+impl<T: Bounded> LowerBounded for T {
+    fn min_value() -> T {
+        Bounded::min_value()
+    }
+}
+
+/// Numbers which have upper bounds
+pub trait UpperBounded {
+    /// Returns the largest finite number this type can represent
+    fn max_value() -> Self;
+}
+
+// FIXME: With a major version bump, this should be a supertrait instead
+impl<T: Bounded> UpperBounded for T {
+    fn max_value() -> T {
+        Bounded::max_value()
+    }
 }
 
 macro_rules! bounded_impl {

@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "cstr"
-version = "0.2.9"
+version = "0.2.10"
 authors = ["Xidorn Quan <me@upsuper.org>"]
 description = "Macro for building static CStr reference"
 readme = "README.md"

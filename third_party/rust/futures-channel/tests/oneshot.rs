@@ -35,6 +35,11 @@ fn cancel_notifies() {
 
 #[test]
 fn cancel_lots() {
+    #[cfg(miri)]
+    const N: usize = 100;
+    #[cfg(not(miri))]
+    const N: usize = 20000;
+
     let (tx, rx) = mpsc::channel::<(Sender<_>, mpsc::Sender<_>)>();
     let t = thread::spawn(move || {
         for (mut tx, tx2) in rx {
@@ -43,7 +48,7 @@ fn cancel_lots() {
         }
     });
 
-    for _ in 0..20000 {
+    for _ in 0..N {
         let (otx, orx) = oneshot::channel::<u32>();
         let (tx2, rx2) = mpsc::channel();
         tx.send((otx, tx2)).unwrap();
@@ -101,6 +106,11 @@ fn is_canceled() {
 
 #[test]
 fn cancel_sends() {
+    #[cfg(miri)]
+    const N: usize = 100;
+    #[cfg(not(miri))]
+    const N: usize = 20000;
+
     let (tx, rx) = mpsc::channel::<Sender<_>>();
     let t = thread::spawn(move || {
         for otx in rx {
@@ -108,7 +118,7 @@ fn cancel_sends() {
         }
     });
 
-    for _ in 0..20000 {
+    for _ in 0..N {
         let (otx, mut orx) = oneshot::channel::<u32>();
         tx.send(otx).unwrap();
 

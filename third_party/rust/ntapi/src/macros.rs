@@ -25,6 +25,7 @@ macro_rules! EXTERN {
     };
 }
 #[macro_export]
+#[doc(hidden)]
 macro_rules! FIELD_OFFSET {
     ($_type:ty, $field:ident$(.$cfields:ident)*) => {
         unsafe {
@@ -33,6 +34,7 @@ macro_rules! FIELD_OFFSET {
                 r: &'static T,
                 i: usize,
             }
+            #[allow(unaligned_references)]
             Transmuter {
                 r: &(&Transmuter {
                     p: $crate::_core::ptr::null::<$_type>()

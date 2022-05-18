@@ -22,7 +22,7 @@ s! {
         pub filter: ::c_short,
         pub flags: ::c_ushort,
         pub fflags: ::c_uint,
-        pub data: ::intptr_t,
+        pub data: i64,
         pub udata: *mut ::c_void,
         pub ext: [u64; 4],
     }

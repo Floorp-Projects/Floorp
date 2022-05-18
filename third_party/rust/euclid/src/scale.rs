@@ -19,6 +19,8 @@ use core::ops::{Add, Div, Mul, Sub};
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// A scaling factor between two different units of measurement.
 ///
@@ -294,6 +296,12 @@ impl<T: NumCast, Src, Dst> Scale<T, Src, Dst> {
         NumCast::from(self.0).map(Scale::new)
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, Src, Dst> Zeroable for Scale<T, Src, Dst> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, Src: 'static, Dst: 'static> Pod for Scale<T, Src, Dst> {}
 
 // scale0 * scale1
 // (A,B) * (B,C) = (A,C)
