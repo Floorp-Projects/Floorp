@@ -12,6 +12,7 @@ CHECK(ExplicitImplicitChecker, "implicit-constructor")
 CHECK(ExplicitOperatorBoolChecker, "explicit-operator-bool")
 CHECK(JSHandleRootedTypedefChecker, "js-handle-rooted-typedef")
 CHECK(KungFuDeathGripChecker, "kungfu-death-grip")
+CHECK(KnownLiveChecker, "known-live")
 #ifdef TARGET_IS_WINDOWS
 CHECK(LoadLibraryUsageChecker, "load-library-usage")
 CHECK(FopenUsageChecker, "fopen-usage")
