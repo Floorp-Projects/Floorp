@@ -21,6 +21,9 @@ const protocol = require("devtools/shared/protocol");
 const {
   workerDescriptorSpec,
 } = require("devtools/shared/specs/descriptors/worker");
+const {
+  createWorkerSessionContext,
+} = require("devtools/server/actors/watcher/session-context");
 
 loader.lazyRequireGetter(
   this,
@@ -133,7 +136,9 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
           this.conn,
           this._dbg,
           this.actorID,
-          {}
+          {
+            sessionContext: createWorkerSessionContext(),
+          }
         );
 
         this._threadActor = workerTargetForm.threadActor;
