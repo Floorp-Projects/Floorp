@@ -33,7 +33,7 @@ class SocketAddressPair;
 // interface can create as many addresses as you want.  All of the sockets
 // created by this network will be able to communicate with one another, unless
 // they are bound to addresses from incompatible families.
-class VirtualSocketServer : public SocketServer, public sigslot::has_slots<> {
+class VirtualSocketServer : public SocketServer {
  public:
   VirtualSocketServer();
   // This constructor needs to be used if the test uses a fake clock and
@@ -258,11 +258,6 @@ class VirtualSocketServer : public SocketServer, public sigslot::has_slots<> {
                                             double x2,
                                             uint32_t samples);
   static double Evaluate(const Function* f, double x);
-
-  // Null out our message queue if it goes away. Necessary in the case where
-  // our lifetime is greater than that of the thread we are using, since we
-  // try to send Close messages for all connected sockets when we shutdown.
-  void OnMessageQueueDestroyed() { msg_queue_ = nullptr; }
 
   // Determine if two sockets should be able to communicate.
   // We don't (currently) specify an address family for sockets; instead,

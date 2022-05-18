@@ -428,14 +428,15 @@ NATSocketServer::Translator::Translator(NATSocketServer* server,
   // Create a new private network, and a NATServer running on the private
   // network that bridges to the external network. Also tell the private
   // network to use the same message queue as us.
-  VirtualSocketServer* internal_server = new VirtualSocketServer();
-  internal_server->SetMessageQueue(server_->queue());
-  internal_factory_.reset(internal_server);
-  nat_server_.reset(new NATServer(type, internal_server, int_ip, int_ip,
-                                  ext_factory, ext_ip));
+  internal_server_ = std::make_unique<VirtualSocketServer>();
+  internal_server_->SetMessageQueue(server_->queue());
+  nat_server_ = std::make_unique<NATServer>(
+      type, internal_server_.get(), int_ip, int_ip, ext_factory, ext_ip);
 }
 
-NATSocketServer::Translator::~Translator() = default;
+NATSocketServer::Translator::~Translator() {
+  internal_server_->SetMessageQueue(nullptr);
+}
 
 NATSocketServer::Translator* NATSocketServer::Translator::GetTranslator(
     const SocketAddress& ext_ip) {
