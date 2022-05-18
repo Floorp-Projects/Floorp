@@ -51,6 +51,12 @@ const uint8_t kPayloadType = 100;
 const int kWidth = 320;
 const int kHeight = 100;
 
+// RTP header extension ids.
+enum : int {
+  kAbsoluteSendTimeExtensionId = 1,
+  kTransportSequenceNumberExtensionId,
+};
+
 class RtcpRttStatsTestImpl : public RtcpRttStats {
  public:
   RtcpRttStatsTestImpl() : rtt_ms_(0) {}
@@ -68,7 +74,8 @@ class SendTransport : public Transport {
         time_controller_(nullptr),
         delay_ms_(0),
         rtp_packets_sent_(0),
-        rtcp_packets_sent_(0) {}
+        rtcp_packets_sent_(0),
+        last_packet_(&header_extensions_) {}
 
   void SetRtpRtcpModule(ModuleRtpRtcpImpl2* receiver) { receiver_ = receiver; }
   void SimulateNetworkDelay(int64_t delay_ms, TimeController* time_controller) {
@@ -78,11 +85,8 @@ class SendTransport : public Transport {
   bool SendRtp(const uint8_t* data,
                size_t len,
                const PacketOptions& options) override {
-    RTPHeader header;
-    std::unique_ptr<RtpHeaderParser> parser(RtpHeaderParser::CreateForTest());
-    EXPECT_TRUE(parser->Parse(static_cast<const uint8_t*>(data), len, &header));
+    EXPECT_TRUE(last_packet_.Parse(data, len));
     ++rtp_packets_sent_;
-    last_rtp_header_ = header;
     return true;
   }
   bool SendRtcp(const uint8_t* data, size_t len) override {
@@ -106,8 +110,9 @@ class SendTransport : public Transport {
   int64_t delay_ms_;
   int rtp_packets_sent_;
   size_t rtcp_packets_sent_;
-  RTPHeader last_rtp_header_;
   std::vector<uint16_t> last_nack_list_;
+  RtpHeaderExtensionMap header_extensions_;
+  RtpPacketReceived last_packet_;
 };
 
 struct TestConfig {
@@ -187,15 +192,19 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
     return counter_map_[impl_->SSRC()];
   }
   int RtpSent() { return transport_.rtp_packets_sent_; }
-  uint16_t LastRtpSequenceNumber() {
-    return transport_.last_rtp_header_.sequenceNumber;
-  }
+  uint16_t LastRtpSequenceNumber() { return last_packet().SequenceNumber(); }
   std::vector<uint16_t> LastNackListSent() {
     return transport_.last_nack_list_;
   }
   void SetRtcpReportIntervalAndReset(int rtcp_report_interval_ms) {
     rtcp_report_interval_ms_ = rtcp_report_interval_ms;
     CreateModuleImpl();
+  }
+  const RtpPacketReceived& last_packet() { return transport_.last_packet_; }
+  void RegisterHeaderExtension(absl::string_view uri, int id) {
+    impl_->RegisterRtpHeaderExtension(uri, id);
+    transport_.header_extensions_.RegisterByUri(id, uri);
+    transport_.last_packet_.IdentifyExtensions(transport_.header_extensions_);
   }
 
  private:
@@ -863,8 +872,8 @@ TEST_P(RtpRtcpImpl2Test, PaddingTimestampMatchesMedia) {
 
   EXPECT_TRUE(
       SendFrame(&sender_, sender_video_.get(), kBaseLayerTid, kTimestamp));
-  EXPECT_EQ(sender_.transport_.last_rtp_header_.timestamp, kTimestamp);
-  uint16_t media_seq = sender_.transport_.last_rtp_header_.sequenceNumber;
+  EXPECT_EQ(sender_.last_packet().Timestamp(), kTimestamp);
+  uint16_t media_seq = sender_.last_packet().SequenceNumber();
 
   // Generate and send padding.
   auto padding = sender_.impl_->GeneratePadding(kPaddingSize);
@@ -874,8 +883,36 @@ TEST_P(RtpRtcpImpl2Test, PaddingTimestampMatchesMedia) {
   }
 
   // Verify we sent a new packet, but with the same timestamp.
-  EXPECT_NE(sender_.transport_.last_rtp_header_.sequenceNumber, media_seq);
-  EXPECT_EQ(sender_.transport_.last_rtp_header_.timestamp, kTimestamp);
+  EXPECT_NE(sender_.last_packet().SequenceNumber(), media_seq);
+  EXPECT_EQ(sender_.last_packet().Timestamp(), kTimestamp);
+}
+
+TEST_P(RtpRtcpImpl2Test, AssignsTransportSequenceNumber) {
+  sender_.RegisterHeaderExtension(TransportSequenceNumber::kUri,
+                                  kTransportSequenceNumberExtensionId);
+
+  EXPECT_TRUE(
+      SendFrame(&sender_, sender_video_.get(), kBaseLayerTid, /*timestamp=*/0));
+  uint16_t first_transport_seq = 0;
+  EXPECT_TRUE(sender_.last_packet().GetExtension<TransportSequenceNumber>(
+      &first_transport_seq));
+
+  EXPECT_TRUE(
+      SendFrame(&sender_, sender_video_.get(), kBaseLayerTid, /*timestamp=*/0));
+  uint16_t second_transport_seq = 0;
+  EXPECT_TRUE(sender_.last_packet().GetExtension<TransportSequenceNumber>(
+      &second_transport_seq));
+
+  EXPECT_EQ(first_transport_seq + 1, second_transport_seq);
+}
+
+TEST_P(RtpRtcpImpl2Test, AssignsAbsoluteSendTime) {
+  sender_.RegisterHeaderExtension(AbsoluteSendTime::kUri,
+                                  kAbsoluteSendTimeExtensionId);
+
+  EXPECT_TRUE(
+      SendFrame(&sender_, sender_video_.get(), kBaseLayerTid, /*timestamp=*/0));
+  EXPECT_NE(sender_.last_packet().GetExtension<AbsoluteSendTime>(), 0u);
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
