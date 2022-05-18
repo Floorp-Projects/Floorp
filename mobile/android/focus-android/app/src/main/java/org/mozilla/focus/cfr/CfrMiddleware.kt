@@ -33,7 +33,6 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
         action: BrowserAction
     ) {
         onboardingConfig = onboardingFeature.value(context = appContext)
-        onboardingFeature.recordExposure()
         next(action)
 
         if (action is TabListAction.AddTabAction &&
@@ -42,11 +41,13 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
         ) {
             components.settings.numberOfTabsOpened++
             if (components.settings.numberOfTabsOpened == ERASE_CFR_LIMIT) {
+                onboardingFeature.recordExposure()
                 components.appStore.dispatch(AppAction.ShowEraseTabsCfrChange(true))
             }
         }
 
         if (shouldShowCfrForTrackingProtection(action = action, browserState = context.state)) {
+            onboardingFeature.recordExposure()
             components.appStore.dispatch(AppAction.ShowTrackingProtectionCfrChange(true))
         }
     }

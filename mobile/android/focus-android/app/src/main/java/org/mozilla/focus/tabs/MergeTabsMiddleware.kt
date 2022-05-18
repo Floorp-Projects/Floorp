@@ -36,7 +36,6 @@ class MergeTabsMiddleware(
             next(action)
             return
         }
-        multiTabsFeature.recordExposure()
 
         if (context.state.privateTabs.isEmpty()) {
             // If we do not have any tabs yet then we can let the reducer create one.
@@ -52,6 +51,7 @@ class MergeTabsMiddleware(
             return
         }
 
+        multiTabsFeature.recordExposure()
         val mergedTab = mergeTabs(currentTab, newTab)
 
         // First we add the merged tab. The engine middleware will take care of linking the existing
