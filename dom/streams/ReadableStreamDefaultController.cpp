@@ -12,6 +12,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Promise-inl.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
@@ -502,8 +503,7 @@ void SetUpReadableStreamDefaultController(
   }
 
   // Step 10.
-  RefPtr<Promise> startPromise =
-      Promise::Create(aStream->GetParentObject(), aRv);
+  RefPtr<Promise> startPromise = Promise::Create(GetIncumbentGlobal(), aRv);
   if (aRv.Failed()) {
     return;
   }

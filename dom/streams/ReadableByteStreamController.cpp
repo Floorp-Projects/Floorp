@@ -19,6 +19,7 @@
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Promise-inl.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadableByteStreamController.h"
 #include "mozilla/dom/ReadableByteStreamControllerBinding.h"
 #include "mozilla/dom/ReadIntoRequest.h"
