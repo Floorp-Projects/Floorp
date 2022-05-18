@@ -430,6 +430,12 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.updateSessionPriority].
+     */
+    override fun updateSessionPriority(priority: SessionPriority) {
+        geckoSession.setPriorityHint(priority.id)
+    }
+    /**
      * Purges the history for the session (back and forward history).
      */
     override fun purgeHistory() {

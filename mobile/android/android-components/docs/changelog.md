@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **browser-state**:
+  * 🌟️ Add support for tab prioritization via `SessionPrioritizationMiddleware` for more information see [#12190](https://github.com/mozilla-mobile/android-components/issues/12190).
+
 * **service-pocket**
   * 🌟️ Add support for rotating and pacing Pocket sponsored stories. [#12184](https://github.com/mozilla-mobile/android-components/issues/12184)
   * See component's [README](https://github.com/mozilla-mobile/android-components/blob/main/components/service/pocket/README.md) to get more info.

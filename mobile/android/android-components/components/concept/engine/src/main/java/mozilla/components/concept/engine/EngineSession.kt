@@ -570,6 +570,23 @@ abstract class EngineSession(
     }
 
     /**
+     * Represents a session priority, which signals to the engine that it should give
+     * a different prioritization to a given session.
+     */
+    @Suppress("MagicNumber")
+    enum class SessionPriority(val id: Int) {
+        /**
+         * Signals to the engine that this session has a default priority.
+         */
+        DEFAULT(0),
+        /**
+         * Signals to the engine that this session is important, and the Engine should keep
+         * the session alive for as long as possible.
+         */
+        HIGH(1)
+    }
+
+    /**
      * Loads the given URL.
      *
      * @param url the url to load.
@@ -694,6 +711,13 @@ abstract class EngineSession(
      * @param active whether this session should be marked as active or inactive.
      */
     open fun markActiveForWebExtensions(active: Boolean) = Unit
+
+    /**
+     * Updates the priority for this session.
+     *
+     * @param priority the new priority for this session.
+     */
+    open fun updateSessionPriority(priority: SessionPriority) = Unit
 
     /**
      * Purges the history for the session (back and forward history).
