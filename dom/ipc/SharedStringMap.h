@@ -12,9 +12,7 @@
 #include "mozilla/dom/ipc/StringTable.h"
 #include "nsTHashMap.h"
 
-namespace mozilla {
-namespace dom {
-namespace ipc {
+namespace mozilla::dom::ipc {
 
 class SharedStringMapBuilder;
 
@@ -217,8 +215,6 @@ class MOZ_RAII SharedStringMapBuilder {
   nsTHashMap<nsCStringHashKey, Entry> mEntries;
 };
 
-}  // namespace ipc
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::ipc
 
 #endif  // dom_ipc_SharedStringMap_h

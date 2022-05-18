@@ -10,8 +10,7 @@
 #include "CoalescedInputData.h"
 #include "mozilla/MouseEvents.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CoalescedWheelData final : public CoalescedInputData<WidgetWheelEvent> {
  public:
@@ -24,7 +23,6 @@ class CoalescedWheelData final : public CoalescedInputData<WidgetWheelEvent> {
                    const uint64_t& aInputBlockId);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CoalescedWheelData_h
