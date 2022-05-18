@@ -72,17 +72,8 @@ class nsPrintObject {
   nsPrintObject* mParent;  // This is a non-owning pointer.
   bool mHasBeenPrinted;
   bool mInvisible;  // Indicates PO is set to not visible by CSS
-
-  // The scale factor that sheets should be scaled by. This is either the
-  // explicit scale chosen by the user or else the shrink-to-fit scale factor
-  // if the user selects shrink-to-fit. Only set on the top-level nsPrintObject
-  // since this is only used by nsPageFrame (via nsPresContext::GetPageScale()).
-  float mZoomRatio = 1.0;
-
-  // If the user selects the shrink-to-fit option, the shrink-to-fit scale
-  // factor is calculated and stored here. Only set on the top-level
-  // nsPrintObject.
-  float mShrinkRatio = 1.0;
+  float mShrinkRatio;
+  float mZoomRatio;
 
  private:
   nsPrintObject& operator=(const nsPrintObject& aOther) = delete;
