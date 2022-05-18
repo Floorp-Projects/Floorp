@@ -12032,6 +12032,12 @@
   value: false
   mirror: always
 
+# wasm-unsafe-eval source keyword
+- name: security.csp.wasm-unsafe-eval.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # No way to enable on Android, Bug 1552602
 - name: security.webauth.u2f
   type: bool

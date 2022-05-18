@@ -36,6 +36,7 @@ nsresult CheckInternal(nsIContentSecurityPolicy* aCSP,
   // The value is set at any "return", but better to have a default value here.
   *aAllowed = false;
 
+  // This is the non-CSP check for gating eval() use in the SystemPrincipal
 #if !defined(ANDROID)
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   if (!nsContentSecurityUtils::IsEvalAllowed(
