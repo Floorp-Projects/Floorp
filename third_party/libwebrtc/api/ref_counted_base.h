@@ -31,6 +31,10 @@ class RefCountedBase {
   }
 
  protected:
+  // Provided for internal webrtc subclasses for corner cases where it's
+  // necessary to know whether or not a reference is exclusively held.
+  bool HasOneRef() const { return ref_count_.HasOneRef(); }
+
   virtual ~RefCountedBase() = default;
 
  private:
@@ -76,6 +80,10 @@ class RefCountedNonVirtual {
   }
 
  protected:
+  // Provided for internal webrtc subclasses for corner cases where it's
+  // necessary to know whether or not a reference is exclusively held.
+  bool HasOneRef() const { return ref_count_.HasOneRef(); }
+
   ~RefCountedNonVirtual() = default;
 
  private:
