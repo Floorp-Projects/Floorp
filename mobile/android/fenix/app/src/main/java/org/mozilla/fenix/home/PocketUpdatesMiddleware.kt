@@ -15,7 +15,9 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import mozilla.components.service.pocket.PocketStoriesService
+import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
@@ -65,14 +67,10 @@ class PocketUpdatesMiddleware(
         // Post process actions
         when (action) {
             is AppAction.PocketStoriesShown -> {
-                persistStories(
+                persistStoriesImpressions(
                     coroutineScope = coroutineScope,
                     pocketStoriesService = pocketStoriesService,
                     updatedStories = action.storiesShown
-                        .filterIsInstance<PocketRecommendedStory>()
-                        .map {
-                            it.copy(timesShown = it.timesShown.inc())
-                        }
                 )
             }
             is AppAction.SelectPocketStoriesCategory,
@@ -98,14 +96,22 @@ class PocketUpdatesMiddleware(
  * @param updatedStories the list of stories to persist.
  */
 @VisibleForTesting
-internal fun persistStories(
+internal fun persistStoriesImpressions(
     coroutineScope: CoroutineScope,
     pocketStoriesService: PocketStoriesService,
-    updatedStories: List<PocketRecommendedStory>
+    updatedStories: List<PocketStory>
 ) {
     coroutineScope.launch {
         pocketStoriesService.updateStoriesTimesShown(
-            updatedStories
+            updatedStories.filterIsInstance<PocketRecommendedStory>()
+                .map {
+                    it.copy(timesShown = it.timesShown.inc())
+                }
+        )
+
+        pocketStoriesService.recordStoriesImpressions(
+            updatedStories.filterIsInstance<PocketSponsoredStory>()
+                .map { it.id }
         )
     }
 }

@@ -6,6 +6,8 @@ package org.mozilla.fenix.components.appstate
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
+import mozilla.components.service.pocket.ext.recordNewImpression
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.filterOutTab
 import org.mozilla.fenix.ext.getFilteredStories
@@ -171,7 +173,20 @@ internal object AppStoreReducer {
                 }
             }
 
-            state.copy(pocketStoriesCategories = updatedCategories)
+            var updatedSponsoredStories = state.pocketSponsoredStories
+            action.storiesShown.filterIsInstance<PocketSponsoredStory>().forEach { shownStory ->
+                updatedSponsoredStories = updatedSponsoredStories.map { story ->
+                    when (story.id == shownStory.id) {
+                        true -> story.recordNewImpression()
+                        false -> story
+                    }
+                }
+            }
+
+            state.copy(
+                pocketStoriesCategories = updatedCategories,
+                pocketSponsoredStories = updatedSponsoredStories
+            )
         }
         is AppAction.AddPendingDeletionSet ->
             state.copy(pendingDeletionHistoryItems = state.pendingDeletionHistoryItems + action.historyItems)

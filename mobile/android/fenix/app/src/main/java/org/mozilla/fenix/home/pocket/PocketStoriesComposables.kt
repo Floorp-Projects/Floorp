@@ -6,7 +6,10 @@
 
 package org.mozilla.fenix.home.pocket
 
+import android.content.Context
+import android.graphics.Rect
 import android.net.Uri
+import androidx.annotation.FloatRange
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,9 +26,19 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toAndroidRect
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryCaps
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryShim
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ClickableSubstringLink
@@ -54,6 +68,8 @@ import org.mozilla.fenix.compose.TabSubtitleWithInterdot
 import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 private const val URI_PARAM_UTM_KEY = "utm_source"
@@ -189,6 +205,7 @@ fun PocketSponsoredStory(
 fun PocketStories(
     @PreviewParameter(PocketStoryProvider::class) stories: List<PocketStory>,
     contentPadding: Dp,
+    onStoryShown: (PocketStory) -> Unit,
     onStoryClicked: (PocketStory, Pair<Int, Int>) -> Unit,
     onDiscoverMoreClicked: (String) -> Unit
 ) {
@@ -221,14 +238,76 @@ fun PocketStories(
                             onStoryClicked(it.copy(url = uri), rowIndex to columnIndex)
                         }
                     } else if (story is PocketSponsoredStory) {
-                        PocketSponsoredStory(story) {
-                            onStoryClicked(story, rowIndex to columnIndex)
+                        Box(
+                            modifier = Modifier.onShown(0.5f) {
+                                onStoryShown(story)
+                            }
+                        ) {
+                            PocketSponsoredStory(story) {
+                                onStoryClicked(story, rowIndex to columnIndex)
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
+
+/**
+ * Add a callback for when this Composable is "shown" on the screen.
+ * This checks whether the composable has at least [threshold] ratio of it's total area drawn inside
+ * the screen bounds.
+ * Does not account for other Views / Windows covering it.
+ */
+private fun Modifier.onShown(
+    @FloatRange(from = 0.0, to = 1.0) threshold: Float,
+    onVisible: () -> Unit,
+): Modifier {
+    return composed {
+        val context = LocalContext.current
+        var wasEventReported by remember { mutableStateOf(false) }
+
+        onGloballyPositioned { coordinates ->
+            if (!wasEventReported && coordinates.isVisible(context, threshold)) {
+                wasEventReported = true
+                onVisible()
+            }
+        }
+    }
+}
+
+/**
+ * Return whether this has at least [threshold] ratio of it's total area drawn inside
+ * the screen bounds.
+ */
+private fun LayoutCoordinates.isVisible(
+    context: Context,
+    @FloatRange(from = 0.0, to = 1.0) threshold: Float,
+): Boolean {
+    if (!isAttached) return false
+
+    val screenBounds = Rect(
+        /* left = */0,
+        /* top = */0,
+        /* right = */context.resources.displayMetrics.widthPixels,
+        /* bottom = */context.resources.displayMetrics.heightPixels
+    )
+
+    return boundsInWindow().toAndroidRect().getIntersectPercentage(screenBounds) >= threshold
+}
+
+/**
+ * Returns the ratio of how much this intersects with [other].
+ */
+@FloatRange(from = 0.0, to = 1.0)
+private fun Rect.getIntersectPercentage(other: Rect): Float {
+    val composableArea = height() * width()
+    val heightOverlap = max(0, min(bottom, other.bottom) - max(top, other.top))
+    val widthOverlap = max(0, min(right, other.right) - max(left, other.left))
+    val intersectionArea = heightOverlap * widthOverlap
+
+    return (intersectionArea.toFloat() / composableArea)
 }
 
 /**
@@ -327,6 +406,7 @@ private fun PocketStoriesComposablesPreview() {
                 PocketStories(
                     stories = getFakePocketStories(8),
                     contentPadding = 0.dp,
+                    onStoryShown = {},
                     onStoryClicked = { _, _ -> },
                     onDiscoverMoreClicked = {}
                 )
@@ -371,11 +451,18 @@ internal fun getFakePocketStories(limit: Int = 1): List<PocketStory> {
                 )
                 false -> add(
                     PocketSponsoredStory(
+                        id = index,
                         title = "This is a ${"very ".repeat(index)} long title",
                         url = "https://sponsored-story$index.com",
                         imageUrl = "",
                         sponsor = "Mozilla",
-                        shim = PocketSponsoredStoryShim("", "")
+                        shim = PocketSponsoredStoryShim("", ""),
+                        priority = index,
+                        caps = PocketSponsoredStoryCaps(
+                            flightCount = index,
+                            flightPeriod = index * 2,
+                            lifetimeCount = index * 3,
+                        )
                     )
                 )
             }

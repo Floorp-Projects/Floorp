@@ -12,6 +12,13 @@ import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
  */
 interface PocketStoriesInteractor {
     /**
+     * Callback for when a certain story is shown to the user.
+     *
+     * @param storyShown The story shown to the user.
+     */
+    fun onStoryShown(storyShown: PocketStory)
+
+    /**
      * Callback for then new stories are shown to the user.
      *
      * @param storiesShown The new list of [PocketRecommendedStory]es shown to the user.

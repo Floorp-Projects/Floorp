@@ -16,6 +16,7 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryCaps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -364,7 +365,16 @@ class AppStoreTest {
 
     @Test
     fun `Test updating the list of Pocket sponsored stories`() = runTest {
-        val story1 = PocketSponsoredStory("title", "url", "imageUrl", "sponsor", mockk())
+        val story1 = PocketSponsoredStory(
+            id = 3,
+            title = "title",
+            url = "url",
+            imageUrl = "imageUrl",
+            sponsor = "sponsor",
+            shim = mockk(),
+            priority = 33,
+            caps = mockk(),
+        )
         val story2 = story1.copy(imageUrl = "imageUrl2")
 
         appStore = AppStore(AppState())
@@ -373,9 +383,44 @@ class AppStoreTest {
             .join()
         assertTrue(appStore.state.pocketSponsoredStories.containsAll(listOf(story1, story2)))
 
-        val updatedStories = listOf(story2.copy("title3"))
+        val updatedStories = listOf(story2.copy(title = "title3"))
         appStore.dispatch(AppAction.PocketSponsoredStoriesChange(updatedStories)).join()
         assertTrue(updatedStories.containsAll(appStore.state.pocketSponsoredStories))
+    }
+
+    @Test
+    fun `Test updating sponsored Pocket stories after being shown to the user`() = runTest {
+        val story1 = PocketSponsoredStory(
+            id = 3,
+            title = "title",
+            url = "url",
+            imageUrl = "imageUrl",
+            sponsor = "sponsor",
+            shim = mockk(),
+            priority = 33,
+            caps = PocketSponsoredStoryCaps(
+                currentImpressions = listOf(1, 2),
+                lifetimeCount = 11,
+                flightCount = 2,
+                flightPeriod = 11
+            ),
+        )
+        val story2 = story1.copy(id = 22)
+        val story3 = story1.copy(id = 33)
+        val story4 = story1.copy(id = 44)
+        appStore = AppStore(
+            AppState(
+                pocketSponsoredStories = listOf(story1, story2, story3, story4)
+            )
+        )
+
+        appStore.dispatch(AppAction.PocketStoriesShown(listOf(story1, story3))).join()
+
+        assertEquals(4, appStore.state.pocketSponsoredStories.size)
+        assertEquals(3, appStore.state.pocketSponsoredStories[0].caps.currentImpressions.size)
+        assertEquals(2, appStore.state.pocketSponsoredStories[1].caps.currentImpressions.size)
+        assertEquals(3, appStore.state.pocketSponsoredStories[2].caps.currentImpressions.size)
+        assertEquals(2, appStore.state.pocketSponsoredStories[3].caps.currentImpressions.size)
     }
 
     @Test

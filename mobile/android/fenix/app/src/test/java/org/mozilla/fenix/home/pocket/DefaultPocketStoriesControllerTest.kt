@@ -145,6 +145,17 @@ class DefaultPocketStoriesControllerTest {
     }
 
     @Test
+    fun `WHEN a new story is shown THEN update the State`() {
+        val store = spyk(AppStore())
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        val storyShown: PocketStory = mockk()
+
+        controller.handleStoryShown(storyShown)
+
+        verify { store.dispatch(AppAction.PocketStoriesShown(listOf(storyShown))) }
+    }
+
+    @Test
     fun `WHEN new stories are shown THEN update the State and record telemetry`() {
         val store = spyk(AppStore())
         val controller = DefaultPocketStoriesController(mockk(), store, mockk())
@@ -190,11 +201,14 @@ class DefaultPocketStoriesControllerTest {
     @Test
     fun `WHEN a sponsored story is clicked THEN open that story's url using HomeActivity and don't record telemetry`() {
         val story = PocketSponsoredStory(
+            id = 7,
             title = "",
             url = "testLink",
             imageUrl = "",
             sponsor = "",
-            shim = mockk()
+            shim = mockk(),
+            priority = 3,
+            caps = mockk(),
         )
         val homeActivity: HomeActivity = mockk(relaxed = true)
         val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))

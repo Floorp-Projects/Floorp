@@ -21,6 +21,11 @@ import org.mozilla.fenix.components.appstate.AppAction
  */
 interface PocketStoriesController {
     /**
+     * Callback to decide what should happen as an effect of a specific story being shown.
+     */
+    fun handleStoryShown(storyShown: PocketStory)
+
+    /**
      * Callback to decide what should happen as an effect of a new list of stories being shown.
      *
      * @param storiesShown the new list of [PocketStory]es shown to the user.
@@ -69,6 +74,10 @@ internal class DefaultPocketStoriesController(
     private val appStore: AppStore,
     private val navController: NavController,
 ) : PocketStoriesController {
+    override fun handleStoryShown(storyShown: PocketStory) {
+        appStore.dispatch(AppAction.PocketStoriesShown(listOf(storyShown)))
+    }
+
     override fun handleStoriesShown(storiesShown: List<PocketStory>) {
         appStore.dispatch(AppAction.PocketStoriesShown(storiesShown))
         Pocket.homeRecsShown.record(NoExtras())

@@ -54,17 +54,21 @@ class PocketUpdatesMiddlewareTest {
     }
 
     @Test
-    fun `WHEN persistStories is called THEN update PocketStoriesService`() = runTestOnMain {
-        val stories: List<PocketRecommendedStory> = mockk()
+    fun `WHEN needing to persist impressions is called THEN update PocketStoriesService`() = runTestOnMain {
+        val story = PocketRecommendedStory(
+            "title", "url1", "imageUrl", "publisher", "category", 0, timesShown = 3
+        )
+        val stories = listOf(story)
+        val expectedStoryUpdate = story.copy(timesShown = story.timesShown.inc())
         val pocketService: PocketStoriesService = mockk(relaxed = true)
 
-        persistStories(
+        persistStoriesImpressions(
             coroutineScope = this,
             pocketStoriesService = pocketService,
             updatedStories = stories
         )
 
-        coVerify { pocketService.updateStoriesTimesShown(stories) }
+        coVerify { pocketService.updateStoriesTimesShown(listOf(expectedStoryUpdate)) }
     }
 
     @Test

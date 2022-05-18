@@ -77,6 +77,7 @@ class PocketStoriesViewHolder(
             PocketStories(
                 stories ?: emptyList(),
                 horizontalPadding,
+                interactor::onStoryShown,
                 interactor::onStoryClicked,
                 interactor::onDiscoverMoreClicked
             )
@@ -103,6 +104,7 @@ fun PocketStoriesViewHolderPreview() {
             PocketStories(
                 stories = getFakePocketStories(8),
                 contentPadding = 0.dp,
+                onStoryShown = {},
                 onStoryClicked = { _, _ -> },
                 onDiscoverMoreClicked = {}
             )
