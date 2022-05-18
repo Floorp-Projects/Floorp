@@ -9,9 +9,13 @@ import android.os.Build
 import android.text.Editable
 import android.util.Patterns
 import android.webkit.URLUtil
+import androidx.compose.runtime.Composable
 import androidx.core.net.toUri
+import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
+import org.mozilla.fenix.components.components
+import org.mozilla.fenix.compose.inComposePreview
 import java.net.IDN
 import java.util.Locale
 
@@ -69,6 +73,25 @@ fun String.toShortUrl(publicSuffixList: PublicSuffixList): String {
         .lowercase(Locale.getDefault())
         .stripPrefixes()
         .toUnicode()
+}
+
+/**
+ * Shortens URLs to be more user friendly, by applying [String.toShortUrl]
+ * and making sure it's equal or below the [MAX_URI_LENGTH].
+ */
+@Composable
+fun String.toShortUrl(): String {
+    // Truncate to MAX_URI_LENGTH to prevent the UI from locking up for
+    // extremely large URLs such as data URIs or bookmarklets. The same
+    // is done in the toolbar and awesomebar:
+    // https://github.com/mozilla-mobile/fenix/issues/1824
+    // https://github.com/mozilla-mobile/android-components/issues/6985
+    return if (inComposePreview) {
+        this.take(MAX_URI_LENGTH)
+    } else {
+        this.toShortUrl(components.publicSuffixList)
+            .take(MAX_URI_LENGTH)
+    }
 }
 
 // impl via FFTV https://searchfox.org/mozilla-mobile/source/firefox-echo-show/app/src/main/java/org/mozilla/focus/utils/FormattedDomain.java#129

@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,9 +43,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.Tab
 import org.mozilla.fenix.R.drawable
 import org.mozilla.fenix.R.string
-import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.compose.list.FaviconListItem
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -116,7 +113,7 @@ fun CollectionItem(
         ) {
             FaviconListItem(
                 label = tab.title,
-                description = shortenUrl(tab.url),
+                description = tab.url.toShortUrl(),
                 onClick = onClick,
                 url = tab.url,
                 iconPainter = painterResource(drawable.ic_close),
@@ -194,23 +191,6 @@ private fun Modifier.clipTop() = this.then(
     }
 )
 
-/**
- * Get a friendlier short url for [url].
- *
- * @param url Full url to be shortened.
- *
- * @see toShortUrl
- */
-@Composable
-private fun shortenUrl(url: String): String {
-    return if (inComposePreview) {
-        url
-    } else {
-        url.toShortUrl(LocalContext.current.components.publicSuffixList)
-    }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
