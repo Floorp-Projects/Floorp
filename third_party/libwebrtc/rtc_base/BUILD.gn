@@ -198,7 +198,10 @@ rtc_source_set("refcount") {
     "ref_counted_object.h",
     "ref_counter.h",
   ]
-  deps = [ ":macromagic" ]
+  deps = [
+    ":macromagic",
+    "../api:scoped_refptr",
+  ]
 }
 
 rtc_library("criticalsection") {
