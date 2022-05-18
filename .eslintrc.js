@@ -106,7 +106,6 @@ module.exports = {
         "no-throw-literal": "warn",
         "no-useless-concat": "warn",
         "consistent-return": "warn",
-        "mozilla/use-cc-etc": "warn",
         "mozilla/use-services": "warn",
         "mozilla/use-includes-instead-of-indexOf": "warn",
         "mozilla/no-compare-against-boolean-literals": "warn",

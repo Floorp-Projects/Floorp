@@ -31,7 +31,7 @@ function handleRequest(request, response) {
       bos.writeByteArray(bodyBytes);
     },
     1000,
-    Components.interfaces.nsITimer.TYPE_ONE_SHOT
+    Ci.nsITimer.TYPE_ONE_SHOT
   );
 
   response.timer2 = new Timer(
@@ -39,6 +39,6 @@ function handleRequest(request, response) {
       response.finish();
     },
     2000,
-    Components.interfaces.nsITimer.TYPE_ONE_SHOT
+    Ci.nsITimer.TYPE_ONE_SHOT
   );
 }

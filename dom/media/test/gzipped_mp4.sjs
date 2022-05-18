@@ -3,12 +3,12 @@ function getGzippedFileBytes() {
   getObjectState("SERVER_ROOT", function(serverRoot) {
     file = serverRoot.getFile("tests/dom/media/test/short.mp4.gz");
   });
-  var fileInputStream = Components.classes[
+  var fileInputStream = Cc[
     "@mozilla.org/network/file-input-stream;1"
-  ].createInstance(Components.interfaces.nsIFileInputStream);
-  var binaryInputStream = Components.classes[
-    "@mozilla.org/binaryinputstream;1"
-  ].createInstance(Components.interfaces.nsIBinaryInputStream);
+  ].createInstance(Ci.nsIFileInputStream);
+  var binaryInputStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
   fileInputStream.init(file, -1, -1, 0);
   binaryInputStream.setInputStream(fileInputStream);
   return binaryInputStream.readBytes(binaryInputStream.available());
