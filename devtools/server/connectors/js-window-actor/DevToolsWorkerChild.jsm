@@ -337,6 +337,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       workerThreadServerForwardingPrefix,
       {
         sessionData,
+        sessionContext: sessionData.sessionContext,
       }
     );
 
