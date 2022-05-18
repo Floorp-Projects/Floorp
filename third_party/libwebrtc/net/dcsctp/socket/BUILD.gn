@@ -16,6 +16,7 @@ rtc_source_set("context") {
     "../public:socket",
     "../public:types",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("heartbeat_handler") {
@@ -25,11 +26,21 @@ rtc_library("heartbeat_handler") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../packet:bounded_io",
+    "../packet:chunk",
+    "../packet:parameter",
+    "../packet:sctp_packet",
+    "../public:socket",
     "../public:types",
+    "../timer",
   ]
   sources = [
     "heartbeat_handler.cc",
     "heartbeat_handler.h",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
 
@@ -40,12 +51,24 @@ rtc_library("stream_reset_handler") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:internal_types",
+    "../common:str_join",
+    "../packet:chunk",
+    "../packet:parameter",
+    "../packet:sctp_packet",
+    "../packet:tlv_trait",
+    "../public:socket",
     "../public:types",
+    "../rx:data_tracker",
+    "../rx:reassembly_queue",
+    "../timer",
+    "../tx:retransmission_queue",
   ]
   sources = [
     "stream_reset_handler.cc",
     "stream_reset_handler.h",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("transmission_control_block") {
@@ -58,12 +81,13 @@ rtc_library("transmission_control_block") {
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../common:sequence_numbers",
+    "../packet:chunk",
     "../packet:sctp_packet",
     "../public:socket",
     "../public:types",
     "../rx:data_tracker",
     "../rx:reassembly_queue",
-    "../timer:timer",
+    "../timer",
     "../tx:retransmission_error_counter",
     "../tx:retransmission_queue",
     "../tx:retransmission_timeout",
@@ -74,19 +98,43 @@ rtc_library("transmission_control_block") {
     "transmission_control_block.cc",
     "transmission_control_block.h",
   ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("dcsctp_socket") {
   deps = [
     ":context",
+    ":heartbeat_handler",
+    ":stream_reset_handler",
     ":transmission_control_block",
     "../../../api:array_view",
+    "../../../api:refcountedbase",
+    "../../../api:scoped_refptr",
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:internal_types",
+    "../packet:bounded_io",
+    "../packet:chunk",
     "../packet:chunk_validators",
+    "../packet:data",
+    "../packet:error_cause",
+    "../packet:parameter",
+    "../packet:sctp_packet",
+    "../packet:tlv_trait",
+    "../public:socket",
     "../public:types",
+    "../rx:data_tracker",
+    "../rx:reassembly_queue",
+    "../timer",
     "../tx:fcfs_send_queue",
+    "../tx:retransmission_error_counter",
+    "../tx:retransmission_queue",
+    "../tx:retransmission_timeout",
+    "../tx:send_queue",
   ]
   sources = [
     "callback_deferrer.h",
@@ -94,6 +142,10 @@ rtc_library("dcsctp_socket") {
     "dcsctp_socket.h",
     "state_cookie.cc",
     "state_cookie.h",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
 

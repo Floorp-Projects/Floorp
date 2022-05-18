@@ -14,16 +14,28 @@ rtc_library("data_tracker") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:sequence_numbers",
+    "../packet:chunk",
+    "../packet:data",
+    "../timer",
   ]
   sources = [
     "data_tracker.cc",
     "data_tracker.h",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_source_set("reassembly_streams") {
-  deps = [ "../packet:chunk" ]
+  deps = [
+    "../../../api:array_view",
+    "../common:sequence_numbers",
+    "../packet:chunk",
+    "../packet:data",
+    "../public:types",
+  ]
   sources = [ "reassembly_streams.h" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("traditional_reassembly_streams") {
@@ -33,25 +45,43 @@ rtc_library("traditional_reassembly_streams") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:sequence_numbers",
+    "../packet:chunk",
+    "../packet:data",
+    "../public:types",
   ]
   sources = [
     "traditional_reassembly_streams.cc",
     "traditional_reassembly_streams.h",
   ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("reassembly_queue") {
   deps = [
+    ":reassembly_streams",
     ":traditional_reassembly_streams",
     "../../../api:array_view",
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:internal_types",
+    "../common:sequence_numbers",
+    "../common:str_join",
+    "../packet:chunk",
+    "../packet:data",
+    "../packet:parameter",
+    "../public:types",
   ]
   sources = [
     "reassembly_queue.cc",
     "reassembly_queue.h",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 if (rtc_include_tests) {

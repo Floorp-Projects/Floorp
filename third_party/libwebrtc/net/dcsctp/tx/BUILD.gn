@@ -10,11 +10,14 @@ import("../../../webrtc.gni")
 
 rtc_source_set("send_queue") {
   deps = [
+    "../../../api:array_view",
     "../common:internal_types",
     "../packet:chunk",
+    "../packet:data",
     "../public:types",
   ]
   sources = [ "send_queue.h" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("fcfs_send_queue") {
@@ -23,10 +26,20 @@ rtc_library("fcfs_send_queue") {
     "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:pair_hash",
+    "../packet:data",
+    "../public:socket",
+    "../public:types",
   ]
   sources = [
     "fcfs_send_queue.cc",
     "fcfs_send_queue.h",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
 
@@ -34,17 +47,20 @@ rtc_library("retransmission_error_counter") {
   deps = [
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../public:types",
   ]
   sources = [
     "retransmission_error_counter.cc",
     "retransmission_error_counter.h",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("retransmission_timeout") {
   deps = [
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../public:types",
   ]
   sources = [
     "retransmission_timeout.cc",
@@ -54,14 +70,27 @@ rtc_library("retransmission_timeout") {
 
 rtc_library("retransmission_queue") {
   deps = [
+    ":retransmission_timeout",
     ":send_queue",
     "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:math",
+    "../common:pair_hash",
+    "../common:sequence_numbers",
+    "../common:str_join",
+    "../packet:chunk",
+    "../packet:data",
+    "../public:types",
+    "../timer",
   ]
   sources = [
     "retransmission_queue.cc",
     "retransmission_queue.h",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
 
