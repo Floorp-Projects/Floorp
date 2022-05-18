@@ -123,7 +123,7 @@ void TransformStreamDefaultController::Enqueue(JSContext* aCx,
     TransformStreamErrorWritableAndUnblockWrite(aCx, stream, error, aRv);
 
     // Step 5.2: Throw stream.[[readable]].[[storedError]].
-    JS::RootedValue storedError(aCx, stream->Readable()->StoredError());
+    JS::Rooted<JS::Value> storedError(aCx, stream->Readable()->StoredError());
     aRv.MightThrowJSException();
     aRv.ThrowJSException(aCx, storedError);
     return;
@@ -210,8 +210,8 @@ void SetUpTransformStreamDefaultController(
 
 // https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
 void SetUpTransformStreamDefaultControllerFromTransformer(
-    JSContext* aCx, TransformStream& aStream, JS::HandleObject aTransformer,
-    Transformer& aTransformerDict) {
+    JSContext* aCx, TransformStream& aStream,
+    JS::Handle<JSObject*> aTransformer, Transformer& aTransformerDict) {
   // Step 1. Let controller be a new TransformStreamDefaultController.
   auto controller =
       MakeRefPtr<TransformStreamDefaultController>(aStream.GetParentObject());
