@@ -545,45 +545,6 @@ TEST_P(RtpSenderTest, PaddingAlwaysAllowedOnAudio) {
   EXPECT_EQ(kMinPaddingSize, GenerateAndSendPadding(kMinPaddingSize - 5));
 }
 
-TEST_P(RtpSenderTestWithoutPacer, SendsPacketsWithTransportSequenceNumber) {
-  RtpRtcpInterface::Configuration config;
-  config.clock = clock_;
-  config.outgoing_transport = &transport_;
-  config.local_media_ssrc = kSsrc;
-  config.transport_feedback_callback = &feedback_observer_;
-  config.event_log = &mock_rtc_event_log_;
-  config.send_packet_observer = &send_packet_observer_;
-  config.retransmission_rate_limiter = &retransmission_rate_limiter_;
-  rtp_sender_context_ =
-      std::make_unique<RtpSenderContext>(config, &time_controller_);
-
-  EXPECT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
-      TransportSequenceNumber::kUri, kTransportSequenceNumberExtensionId));
-
-  EXPECT_CALL(send_packet_observer_,
-              OnSendPacket(kTransportSequenceNumber, _, _))
-      .Times(1);
-
-  EXPECT_CALL(feedback_observer_,
-              OnAddPacket(AllOf(
-                  Field(&RtpPacketSendInfo::ssrc, rtp_sender()->SSRC()),
-                  Field(&RtpPacketSendInfo::transport_sequence_number,
-                        kTransportSequenceNumber),
-                  Field(&RtpPacketSendInfo::rtp_sequence_number,
-                        rtp_sender()->SequenceNumber()),
-                  Field(&RtpPacketSendInfo::pacing_info, PacedPacketInfo()))))
-      .Times(1);
-
-  SendGenericPacket();
-
-  const auto& packet = transport_.last_sent_packet();
-  uint16_t transport_seq_no;
-  ASSERT_TRUE(packet.GetExtension<TransportSequenceNumber>(&transport_seq_no));
-  EXPECT_EQ(kTransportSequenceNumber, transport_seq_no);
-  EXPECT_EQ(transport_.last_options_.packet_id, transport_seq_no);
-  EXPECT_TRUE(transport_.last_options_.included_in_allocation);
-}
-
 TEST_P(RtpSenderTestWithoutPacer, PacketOptionsNoRetransmission) {
   RtpRtcpInterface::Configuration config;
   config.clock = clock_;
