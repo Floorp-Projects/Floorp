@@ -301,6 +301,7 @@ if (rtc_include_tests) {
       "error_cause/unresolvable_address_cause_test.cc",
       "error_cause/user_initiated_abort_cause_test.cc",
       "parameter/add_incoming_streams_request_parameter_test.cc",
+      "parameter/add_outgoing_streams_request_parameter_test.cc",
       "parameter/forward_tsn_supported_parameter_test.cc",
       "parameter/incoming_ssn_reset_request_parameter_test.cc",
       "parameter/outgoing_ssn_reset_request_parameter_test.cc",
