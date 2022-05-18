@@ -96,11 +96,9 @@ module.exports = {
       files: "*.sjs",
       rules: {
         complexity: "warn",
-        "no-undef": "warn",
         "no-empty": "warn",
         "no-shadow": "warn",
         "no-redeclare": "warn",
-        "no-unused-vars": "warn",
         "no-fallthrough": "warn",
         "no-control-regex": "warn",
         "no-throw-literal": "warn",

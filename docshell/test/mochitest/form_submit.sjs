@@ -19,7 +19,7 @@ function log(str) {
 
 async function handleRequest(request, response) {
   if (request.method !== "POST") {
-    message = "bad";
+    throw new Error("Expected a post request");
   } else {
     log("Reading request");
     let available = 0;
