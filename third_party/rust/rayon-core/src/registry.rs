@@ -214,9 +214,7 @@ impl Registry {
     where
         S: ThreadSpawn,
     {
-        // Soft-limit the number of threads that we can actually support.
-        let n_threads = Ord::min(builder.get_num_threads(), crate::max_num_threads());
-
+        let n_threads = builder.get_num_threads();
         let breadth_first = builder.get_breadth_first();
 
         let (workers, stealers): (Vec<_>, Vec<_>) = (0..n_threads)
@@ -251,7 +249,7 @@ impl Registry {
             let thread = ThreadBuilder {
                 name: builder.get_thread_name(index),
                 stack_size: builder.get_stack_size(),
-                registry: Arc::clone(&registry),
+                registry: registry.clone(),
                 worker,
                 index,
             };
@@ -263,18 +261,17 @@ impl Registry {
         // Returning normally now, without termination.
         mem::forget(t1000);
 
-        Ok(registry)
+        Ok(registry.clone())
     }
 
     pub(super) fn current() -> Arc<Registry> {
         unsafe {
             let worker_thread = WorkerThread::current();
-            let registry = if worker_thread.is_null() {
-                global_registry()
+            if worker_thread.is_null() {
+                global_registry().clone()
             } else {
-                &(*worker_thread).registry
-            };
-            Arc::clone(registry)
+                (*worker_thread).registry.clone()
+            }
         }
     }
 
@@ -805,10 +802,9 @@ unsafe fn main_loop(worker: Worker<JobRef>, registry: Arc<Registry>, index: usiz
         fifo: JobFifo::new(),
         index,
         rng: XorShift64Star::new(),
-        registry,
+        registry: registry.clone(),
     };
     WorkerThread::set_current(worker_thread);
-    let registry = &*worker_thread.registry;
 
     // let registry know we are ready to do work
     registry.thread_infos[index].primed.set();
@@ -820,6 +816,7 @@ unsafe fn main_loop(worker: Worker<JobRef>, registry: Arc<Registry>, index: usiz
 
     // Inform a user callback that we started a thread.
     if let Some(ref handler) = registry.start_handler {
+        let registry = registry.clone();
         match unwind::halt_unwinding(|| handler(index)) {
             Ok(()) => {}
             Err(err) => {
@@ -848,6 +845,7 @@ unsafe fn main_loop(worker: Worker<JobRef>, registry: Arc<Registry>, index: usiz
 
     // Inform a user callback that we exited a thread.
     if let Some(ref handler) = registry.exit_handler {
+        let registry = registry.clone();
         match unwind::halt_unwinding(|| handler(index)) {
             Ok(()) => {}
             Err(err) => {

@@ -1,6 +1,5 @@
 #![allow(
     clippy::blocks_in_if_conditions,
-    clippy::cast_lossless,
     clippy::cast_possible_truncation,
     clippy::manual_map,
     clippy::map_unwrap_or,
@@ -8,8 +7,7 @@
     clippy::option_if_let_else,
     clippy::range_plus_one,
     clippy::single_match_else,
-    clippy::too_many_lines,
-    clippy::wrong_self_convention
+    clippy::too_many_lines
 )]
 
 extern crate proc_macro;

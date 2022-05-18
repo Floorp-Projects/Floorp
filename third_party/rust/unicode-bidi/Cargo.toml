@@ -12,36 +12,19 @@
 [package]
 edition = "2018"
 name = "unicode-bidi"
-version = "0.3.8"
+version = "0.3.7"
 authors = ["The Servo Project Developers"]
-exclude = [
-    "benches/**",
-    "data/**",
-    "examples/**",
-    "tests/**",
-    "tools/**",
-]
+exclude = ["benches/**", "data/**", "examples/**", "tests/**", "tools/**"]
 description = "Implementation of the Unicode Bidirectional Algorithm"
 documentation = "https://docs.rs/unicode-bidi/"
 readme = "README.md"
-keywords = [
-    "rtl",
-    "unicode",
-    "text",
-    "layout",
-    "bidi",
-]
-categories = [
-    "no-std",
-    "encoding",
-    "text-processing",
-]
-license = "MIT OR Apache-2.0"
+keywords = ["rtl", "unicode", "text", "layout", "bidi"]
+categories = ["no-std", "encoding", "text-processing"]
+license = "MIT / Apache-2.0"
 repository = "https://github.com/servo/unicode-bidi"
 
 [lib]
 name = "unicode_bidi"
-
 [dependencies.flame]
 version = "0.2"
 optional = true
@@ -55,24 +38,18 @@ version = ">=0.8, <2.0"
 features = ["derive"]
 optional = true
 default-features = false
-
 [dev-dependencies.serde_test]
 version = ">=0.8, <2.0"
 
 [features]
 bench_it = []
-default = [
-    "std",
-    "hardcoded-data",
-]
-flame_it = [
-    "flame",
-    "flamer",
-]
-hardcoded-data = []
+default = ["std"]
+flame_it = ["flame", "flamer"]
 std = []
 unstable = []
 with_serde = ["serde"]
-
 [badges.appveyor]
+repository = "servo/unicode-bidi"
+
+[badges.travis-ci]
 repository = "servo/unicode-bidi"

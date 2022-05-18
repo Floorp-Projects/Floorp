@@ -1,50 +1,32 @@
-// Note: this requires the `cargo` feature
-
 use std::path::PathBuf;
 
-use clap::{arg, Command};
-
-fn cli() -> Command<'static> {
-    Command::new("git")
-        .about("A fictional versioning CLI")
-        .subcommand_required(true)
-        .arg_required_else_help(true)
-        .allow_external_subcommands(true)
-        .allow_invalid_utf8_for_external_subcommands(true)
-        .subcommand(
-            Command::new("clone")
-                .about("Clones repos")
-                .arg(arg!(<REMOTE> "The remote to clone"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("push")
-                .about("pushes things")
-                .arg(arg!(<REMOTE> "The remote to target"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("add")
-                .about("adds things")
-                .arg_required_else_help(true)
-                .arg(arg!(<PATH> ... "Stuff to add").allow_invalid_utf8(true)),
-        )
-        .subcommand(
-            Command::new("stash")
-                .args_conflicts_with_subcommands(true)
-                .args(push_args())
-                .subcommand(Command::new("push").args(push_args()))
-                .subcommand(Command::new("pop").arg(arg!([STASH])))
-                .subcommand(Command::new("apply").arg(arg!([STASH]))),
-        )
-}
-
-fn push_args() -> Vec<clap::Arg<'static>> {
-    vec![arg!(-m --message <MESSAGE>).required(false)]
-}
+use clap::{arg, App, AppSettings};
 
 fn main() {
-    let matches = cli().get_matches();
+    let matches = App::new("git")
+        .about("A fictional versioning CLI")
+        .setting(AppSettings::SubcommandRequiredElseHelp)
+        .setting(AppSettings::AllowExternalSubcommands)
+        .setting(AppSettings::AllowInvalidUtf8ForExternalSubcommands)
+        .subcommand(
+            App::new("clone")
+                .about("Clones repos")
+                .arg(arg!(<REMOTE> "The remote to clone"))
+                .setting(AppSettings::ArgRequiredElseHelp),
+        )
+        .subcommand(
+            App::new("push")
+                .about("pushes things")
+                .arg(arg!(<REMOTE> "The remote to target"))
+                .setting(AppSettings::ArgRequiredElseHelp),
+        )
+        .subcommand(
+            App::new("add")
+                .about("adds things")
+                .setting(AppSettings::ArgRequiredElseHelp)
+                .arg(arg!(<PATH> ... "Stuff to add").allow_invalid_utf8(true)),
+        )
+        .get_matches();
 
     match matches.subcommand() {
         Some(("clone", sub_matches)) => {
@@ -66,26 +48,6 @@ fn main() {
                 .map(PathBuf::from)
                 .collect::<Vec<_>>();
             println!("Adding {:?}", paths);
-        }
-        Some(("stash", sub_matches)) => {
-            let stash_command = sub_matches.subcommand().unwrap_or(("push", sub_matches));
-            match stash_command {
-                ("apply", sub_matches) => {
-                    let stash = sub_matches.value_of("STASH");
-                    println!("Applying {:?}", stash);
-                }
-                ("pop", sub_matches) => {
-                    let stash = sub_matches.value_of("STASH");
-                    println!("Popping {:?}", stash);
-                }
-                ("push", sub_matches) => {
-                    let message = sub_matches.value_of("message");
-                    println!("Pushing {:?}", message);
-                }
-                (name, _) => {
-                    unreachable!("Unsupported subcommand `{}`", name)
-                }
-            }
         }
         Some((ext, sub_matches)) => {
             let args = sub_matches

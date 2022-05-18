@@ -1,5 +1,3 @@
-#![cfg(not(miri))] // https://github.com/rust-lang/miri/issues/1038
-
 use futures::channel::oneshot;
 use futures::executor::ThreadPool;
 use futures::future::{self, ok, Future, FutureExt, TryFutureExt};

@@ -16,6 +16,6 @@ fn main() {
 
 #[test]
 fn verify_app() {
-    use clap::CommandFactory;
-    Cli::command().debug_assert()
+    use clap::IntoApp;
+    Cli::into_app().debug_assert()
 }

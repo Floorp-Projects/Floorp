@@ -1,18 +1,18 @@
 //! This module contains traits that are usable with the `#[derive(...)].`
 //! macros in [`clap_derive`].
 
-use crate::{ArgMatches, Command, Error, PossibleValue};
+use crate::{App, ArgMatches, Error, PossibleValue};
 
 use std::ffi::OsString;
 
 /// Parse command-line arguments into `Self`.
 ///
 /// The primary one-stop-shop trait used to create an instance of a `clap`
-/// [`Command`], conduct the parsing, and turn the resulting [`ArgMatches`] back
+/// [`App`], conduct the parsing, and turn the resulting [`ArgMatches`] back
 /// into concrete instance of the user struct.
 ///
 /// This trait is primarily a convenience on top of [`FromArgMatches`] +
-/// [`CommandFactory`] which uses those two underlying traits to build the two
+/// [`IntoApp`] which uses those two underlying traits to build the two
 /// fundamental functions `parse` which uses the `std::env::args_os` iterator,
 /// and `parse_from` which allows the consumer to supply the iterator (along
 /// with fallible options for each).
@@ -20,7 +20,7 @@ use std::ffi::OsString;
 /// See also [`Subcommand`] and [`Args`].
 ///
 /// See the
-/// [derive reference](https://github.com/clap-rs/clap/blob/v3.1.8/examples/derive_ref/README.md)
+/// [derive reference](https://github.com/clap-rs/clap/blob/v3.0.10/examples/derive_ref/README.md)
 /// for attributes and best practices.
 ///
 /// **NOTE:** Deriving requires the `derive` feature flag
@@ -46,11 +46,11 @@ use std::ffi::OsString;
 /// }
 /// ```
 ///
-/// The equivalent [`Command`] struct + `From` implementation:
+/// The equivalent [`App`] struct + `From` implementation:
 ///
 /// ```rust
-/// # use clap::{Command, Arg, ArgMatches};
-/// Command::new("demo")
+/// # use clap::{App, Arg, ArgMatches};
+/// App::new("demo")
 ///     .about("My super CLI")
 ///     .arg(Arg::new("verbose")
 ///         .long("verbose")
@@ -76,10 +76,10 @@ use std::ffi::OsString;
 /// }
 /// ```
 ///
-pub trait Parser: FromArgMatches + CommandFactory + Sized {
+pub trait Parser: FromArgMatches + IntoApp + Sized {
     /// Parse from `std::env::args_os()`, exit on error
     fn parse() -> Self {
-        let matches = <Self as CommandFactory>::command().get_matches();
+        let matches = <Self as IntoApp>::into_app().get_matches();
         let res =
             <Self as FromArgMatches>::from_arg_matches(&matches).map_err(format_error::<Self>);
         match res {
@@ -94,7 +94,7 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
 
     /// Parse from `std::env::args_os()`, return Err on error.
     fn try_parse() -> Result<Self, Error> {
-        let matches = <Self as CommandFactory>::command().try_get_matches()?;
+        let matches = <Self as IntoApp>::into_app().try_get_matches()?;
         <Self as FromArgMatches>::from_arg_matches(&matches).map_err(format_error::<Self>)
     }
 
@@ -104,7 +104,7 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
         I: IntoIterator<Item = T>,
         T: Into<OsString> + Clone,
     {
-        let matches = <Self as CommandFactory>::command().get_matches_from(itr);
+        let matches = <Self as IntoApp>::into_app().get_matches_from(itr);
         let res =
             <Self as FromArgMatches>::from_arg_matches(&matches).map_err(format_error::<Self>);
         match res {
@@ -123,7 +123,7 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
         I: IntoIterator<Item = T>,
         T: Into<OsString> + Clone,
     {
-        let matches = <Self as CommandFactory>::command().try_get_matches_from(itr)?;
+        let matches = <Self as IntoApp>::into_app().try_get_matches_from(itr)?;
         <Self as FromArgMatches>::from_arg_matches(&matches).map_err(format_error::<Self>)
     }
 
@@ -133,7 +133,7 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
         I: IntoIterator<Item = T>,
         T: Into<OsString> + Clone,
     {
-        let matches = <Self as CommandFactory>::command_for_update().get_matches_from(itr);
+        let matches = <Self as IntoApp>::into_app_for_update().get_matches_from(itr);
         let res = <Self as FromArgMatches>::update_from_arg_matches(self, &matches)
             .map_err(format_error::<Self>);
         if let Err(e) = res {
@@ -149,20 +149,19 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
         I: IntoIterator<Item = T>,
         T: Into<OsString> + Clone,
     {
-        let matches = <Self as CommandFactory>::command_for_update().try_get_matches_from(itr)?;
+        let matches = <Self as IntoApp>::into_app_for_update().try_get_matches_from(itr)?;
         <Self as FromArgMatches>::update_from_arg_matches(self, &matches)
             .map_err(format_error::<Self>)
     }
 
-    /// Deprecated, `StructOpt::clap` replaced with [`IntoCommand::command`] (derive as part of
+    /// Deprecated, `StructOpt::clap` replaced with [`IntoApp::into_app`] (derive as part of
     /// [`Parser`])
     #[deprecated(
         since = "3.0.0",
-        note = "`StructOpt::clap` is replaced with `IntoCommand::command` (derived as part of `Parser`)"
+        note = "`StructOpt::clap` is replaced with `IntoApp::into_app` (derived as part of `Parser`)"
     )]
-    #[doc(hidden)]
-    fn clap<'help>() -> Command<'help> {
-        <Self as CommandFactory>::command()
+    fn clap<'help>() -> App<'help> {
+        <Self as IntoApp>::into_app()
     }
 
     /// Deprecated, `StructOpt::from_clap` replaced with [`FromArgMatches::from_arg_matches`] (derive as part of
@@ -171,7 +170,6 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
         since = "3.0.0",
         note = "`StructOpt::from_clap` is replaced with `FromArgMatches::from_arg_matches` (derived as part of `Parser`)"
     )]
-    #[doc(hidden)]
     fn from_clap(matches: &ArgMatches) -> Self {
         <Self as FromArgMatches>::from_arg_matches(matches).unwrap()
     }
@@ -181,7 +179,6 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
         since = "3.0.0",
         note = "`StructOpt::from_args` is replaced with `Parser::parse` (note the change in derives)"
     )]
-    #[doc(hidden)]
     fn from_args() -> Self {
         Self::parse()
     }
@@ -191,7 +188,6 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
         since = "3.0.0",
         note = "`StructOpt::from_args_safe` is replaced with `Parser::try_parse` (note the change in derives)"
     )]
-    #[doc(hidden)]
     fn from_args_safe() -> Result<Self, Error> {
         Self::try_parse()
     }
@@ -201,7 +197,6 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
         since = "3.0.0",
         note = "`StructOpt::from_iter` is replaced with `Parser::parse_from` (note the change in derives)"
     )]
-    #[doc(hidden)]
     fn from_iter<I, T>(itr: I) -> Self
     where
         I: IntoIterator<Item = T>,
@@ -216,7 +211,6 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
         since = "3.0.0",
         note = "`StructOpt::from_iter_safe` is replaced with `Parser::try_parse_from` (note the change in derives)"
     )]
-    #[doc(hidden)]
     fn from_iter_safe<I, T>(itr: I) -> Result<Self, Error>
     where
         I: IntoIterator<Item = T>,
@@ -226,33 +220,18 @@ pub trait Parser: FromArgMatches + CommandFactory + Sized {
     }
 }
 
-/// Create an [`Command`] relevant for a user-defined container.
+/// Create an [`App`] relevant for a user-defined container.
 ///
 /// Derived as part of [`Parser`].
-pub trait CommandFactory: Sized {
-    /// Build an [`Command`] that can instantiate `Self`.
+pub trait IntoApp: Sized {
+    /// Build an [`App`] that can instantiate `Self`.
     ///
     /// See [`FromArgMatches::from_arg_matches`] for instantiating `Self`.
-    fn command<'help>() -> Command<'help> {
-        #[allow(deprecated)]
-        Self::into_app()
-    }
-    /// Deprecated, replaced with `CommandFactory::command`
-    #[deprecated(since = "3.1.0", note = "Replaced with `CommandFactory::command")]
-    fn into_app<'help>() -> Command<'help>;
-    /// Build an [`Command`] that can update `self`.
+    fn into_app<'help>() -> App<'help>;
+    /// Build an [`App`] that can update `self`.
     ///
     /// See [`FromArgMatches::update_from_arg_matches`] for updating `self`.
-    fn command_for_update<'help>() -> Command<'help> {
-        #[allow(deprecated)]
-        Self::into_app_for_update()
-    }
-    /// Deprecated, replaced with `CommandFactory::command_for_update`
-    #[deprecated(
-        since = "3.1.0",
-        note = "Replaced with `CommandFactory::command_for_update"
-    )]
-    fn into_app_for_update<'help>() -> Command<'help>;
+    fn into_app_for_update<'help>() -> App<'help>;
 }
 
 /// Converts an instance of [`ArgMatches`] to a user-defined container.
@@ -306,7 +285,7 @@ pub trait FromArgMatches: Sized {
 /// - `Variant(ChildArgs)`: No attribute is used with enum variants that impl `Args`.
 ///
 /// See the
-/// [derive reference](https://github.com/clap-rs/clap/blob/v3.1.8/examples/derive_ref/README.md)
+/// [derive reference](https://github.com/clap-rs/clap/blob/v3.0.10/examples/derive_ref/README.md)
 /// for attributes and best practices.
 ///
 /// **NOTE:** Deriving requires the `derive` feature flag
@@ -328,16 +307,16 @@ pub trait FromArgMatches: Sized {
 /// }
 /// ```
 pub trait Args: FromArgMatches + Sized {
-    /// Append to [`Command`] so it can instantiate `Self`.
+    /// Append to [`App`] so it can instantiate `Self`.
     ///
-    /// See also [`CommandFactory`].
-    fn augment_args(cmd: Command<'_>) -> Command<'_>;
-    /// Append to [`Command`] so it can update `self`.
+    /// See also [`IntoApp`].
+    fn augment_args(app: App<'_>) -> App<'_>;
+    /// Append to [`App`] so it can update `self`.
     ///
     /// This is used to implement `#[clap(flatten)]`
     ///
-    /// See also [`CommandFactory`].
-    fn augment_args_for_update(cmd: Command<'_>) -> Command<'_>;
+    /// See also [`IntoApp`].
+    fn augment_args_for_update(app: App<'_>) -> App<'_>;
 }
 
 /// Parse a sub-command into a user-defined enum.
@@ -350,7 +329,7 @@ pub trait Args: FromArgMatches + Sized {
 ///   `Subcommand`.
 ///
 /// See the
-/// [derive reference](https://github.com/clap-rs/clap/blob/v3.1.8/examples/derive_ref/README.md)
+/// [derive reference](https://github.com/clap-rs/clap/blob/v3.0.10/examples/derive_ref/README.md)
 /// for attributes and best practices.
 ///
 /// **NOTE:** Deriving requires the `derive` feature flag
@@ -372,16 +351,16 @@ pub trait Args: FromArgMatches + Sized {
 /// }
 /// ```
 pub trait Subcommand: FromArgMatches + Sized {
-    /// Append to [`Command`] so it can instantiate `Self`.
+    /// Append to [`App`] so it can instantiate `Self`.
     ///
-    /// See also [`CommandFactory`].
-    fn augment_subcommands(cmd: Command<'_>) -> Command<'_>;
-    /// Append to [`Command`] so it can update `self`.
+    /// See also [`IntoApp`].
+    fn augment_subcommands(app: App<'_>) -> App<'_>;
+    /// Append to [`App`] so it can update `self`.
     ///
     /// This is used to implement `#[clap(flatten)]`
     ///
-    /// See also [`CommandFactory`].
-    fn augment_subcommands_for_update(cmd: Command<'_>) -> Command<'_>;
+    /// See also [`IntoApp`].
+    fn augment_subcommands_for_update(app: App<'_>) -> App<'_>;
     /// Test whether `Self` can parse a specific subcommand
     fn has_subcommand(name: &str) -> bool;
 }
@@ -394,7 +373,7 @@ pub trait Subcommand: FromArgMatches + Sized {
 /// - Allowing using the `#[clap(default_value_t)]` attribute without implementing `Display`.
 ///
 /// See the
-/// [derive reference](https://github.com/clap-rs/clap/blob/v3.1.8/examples/derive_ref/README.md)
+/// [derive reference](https://github.com/clap-rs/clap/blob/v3.0.10/examples/derive_ref/README.md)
 /// for attributes and best practices.
 ///
 /// **NOTE:** Deriving requires the `derive` feature flag
@@ -466,13 +445,12 @@ impl<T: Parser> Parser for Box<T> {
     }
 }
 
-#[allow(deprecated)]
-impl<T: CommandFactory> CommandFactory for Box<T> {
-    fn into_app<'help>() -> Command<'help> {
-        <T as CommandFactory>::into_app()
+impl<T: IntoApp> IntoApp for Box<T> {
+    fn into_app<'help>() -> App<'help> {
+        <T as IntoApp>::into_app()
     }
-    fn into_app_for_update<'help>() -> Command<'help> {
-        <T as CommandFactory>::into_app_for_update()
+    fn into_app_for_update<'help>() -> App<'help> {
+        <T as IntoApp>::into_app_for_update()
     }
 }
 
@@ -486,27 +464,27 @@ impl<T: FromArgMatches> FromArgMatches for Box<T> {
 }
 
 impl<T: Args> Args for Box<T> {
-    fn augment_args(cmd: Command<'_>) -> Command<'_> {
-        <T as Args>::augment_args(cmd)
+    fn augment_args(app: App<'_>) -> App<'_> {
+        <T as Args>::augment_args(app)
     }
-    fn augment_args_for_update(cmd: Command<'_>) -> Command<'_> {
-        <T as Args>::augment_args_for_update(cmd)
+    fn augment_args_for_update(app: App<'_>) -> App<'_> {
+        <T as Args>::augment_args_for_update(app)
     }
 }
 
 impl<T: Subcommand> Subcommand for Box<T> {
-    fn augment_subcommands(cmd: Command<'_>) -> Command<'_> {
-        <T as Subcommand>::augment_subcommands(cmd)
+    fn augment_subcommands(app: App<'_>) -> App<'_> {
+        <T as Subcommand>::augment_subcommands(app)
     }
-    fn augment_subcommands_for_update(cmd: Command<'_>) -> Command<'_> {
-        <T as Subcommand>::augment_subcommands_for_update(cmd)
+    fn augment_subcommands_for_update(app: App<'_>) -> App<'_> {
+        <T as Subcommand>::augment_subcommands_for_update(app)
     }
     fn has_subcommand(name: &str) -> bool {
         <T as Subcommand>::has_subcommand(name)
     }
 }
 
-fn format_error<I: CommandFactory>(err: crate::Error) -> crate::Error {
-    let mut cmd = I::command();
-    err.format(&mut cmd)
+fn format_error<I: IntoApp>(err: crate::Error) -> crate::Error {
+    let mut app = I::into_app();
+    err.format(&mut app)
 }

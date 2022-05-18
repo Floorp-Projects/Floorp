@@ -4,7 +4,7 @@ use crate::data_model::CDataModel;
 use crate::parse_error::ParseError;
 use crate::targets::{
     default_binary_format, Architecture, ArmArchitecture, BinaryFormat, Environment,
-    OperatingSystem, Riscv32Architecture, Vendor,
+    OperatingSystem, Vendor,
 };
 #[cfg(not(feature = "std"))]
 use alloc::borrow::ToOwned;
@@ -191,10 +191,6 @@ impl Triple {
 
 impl fmt::Display for Triple {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(res) = self.special_case_display(f) {
-            return res;
-        }
-
         let implied_binary_format = default_binary_format(&self);
 
         write!(f, "{}", self.architecture)?;
@@ -217,7 +213,8 @@ impl fmt::Display for Triple {
                         || self.architecture == Architecture::Arm(ArmArchitecture::Thumbv7m)
                         || self.architecture == Architecture::Arm(ArmArchitecture::Thumbv8mBase)
                         || self.architecture == Architecture::Arm(ArmArchitecture::Thumbv8mMain)
-                        || self.architecture == Architecture::Msp430)))
+                        || self.architecture == Architecture::Msp430
+                        || self.architecture == Architecture::X86_64)))
         {
             // As a special case, omit the vendor for Android, Fuchsia, Wasi, and sometimes
             // None_, depending on the hardware architecture. This logic is entirely
@@ -227,18 +224,8 @@ impl fmt::Display for Triple {
         } else {
             write!(f, "-{}-{}", self.vendor, self.operating_system)?;
         }
-
-        match (&self.vendor, self.operating_system, self.environment) {
-            (Vendor::Nintendo, OperatingSystem::Horizon, Environment::Newlib)
-            | (Vendor::Espressif, OperatingSystem::Espidf, Environment::Newlib) => {
-                // The triple representations of these platforms don't have an environment field.
-            }
-            (_, _, Environment::Unknown) => {
-                // Don't print out the environment if it is unknown.
-            }
-            _ => {
-                write!(f, "-{}", self.environment)?;
-            }
+        if self.environment != Environment::Unknown {
+            write!(f, "-{}", self.environment)?;
         }
 
         if self.binary_format != implied_binary_format {
@@ -252,10 +239,6 @@ impl FromStr for Triple {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Some(triple) = Triple::special_case_from_str(s) {
-            return Ok(triple);
-        }
-
         let mut parts = s.split('-');
         let mut result = Self::unknown();
         let mut current_part;
@@ -292,14 +275,11 @@ impl FromStr for Triple {
         }
 
         let mut has_environment = false;
-
-        if !has_environment {
-            if let Some(s) = current_part {
-                if let Ok(environment) = Environment::from_str(s) {
-                    has_environment = true;
-                    result.environment = environment;
-                    current_part = parts.next();
-                }
+        if let Some(s) = current_part {
+            if let Ok(environment) = Environment::from_str(s) {
+                has_environment = true;
+                result.environment = environment;
+                current_part = parts.next();
             }
         }
 
@@ -335,53 +315,6 @@ impl FromStr for Triple {
         } else {
             Ok(result)
         }
-    }
-}
-
-impl Triple {
-    /// Handle special cases in the `Display` implementation.
-    fn special_case_display(&self, f: &mut fmt::Formatter) -> Option<fmt::Result> {
-        let res = match self {
-            Triple {
-                architecture: Architecture::Arm(ArmArchitecture::Armv6k),
-                vendor: Vendor::Nintendo,
-                operating_system: OperatingSystem::Horizon,
-                ..
-            } => write!(f, "{}-{}-3ds", self.architecture, self.vendor),
-            Triple {
-                architecture: Architecture::Riscv32(Riscv32Architecture::Riscv32imc),
-                vendor: Vendor::Espressif,
-                operating_system: OperatingSystem::Espidf,
-                ..
-            } => write!(f, "{}-esp-{}", self.architecture, self.operating_system),
-            _ => return None,
-        };
-        Some(res)
-    }
-
-    /// Handle special cases in the `FromStr` implementation.
-    fn special_case_from_str(s: &str) -> Option<Self> {
-        let mut triple = Triple::unknown();
-
-        match s {
-            "armv6k-nintendo-3ds" => {
-                triple.architecture = Architecture::Arm(ArmArchitecture::Armv6k);
-                triple.vendor = Vendor::Nintendo;
-                triple.operating_system = OperatingSystem::Horizon;
-                triple.environment = Environment::Newlib;
-                triple.binary_format = default_binary_format(&triple);
-            }
-            "riscv32imc-esp-espidf" => {
-                triple.architecture = Architecture::Riscv32(Riscv32Architecture::Riscv32imc);
-                triple.vendor = Vendor::Espressif;
-                triple.operating_system = OperatingSystem::Espidf;
-                triple.environment = Environment::Newlib;
-                triple.binary_format = default_binary_format(&triple);
-            }
-            _ => return None,
-        }
-
-        Some(triple)
     }
 }
 

@@ -1,5 +1,3 @@
-#![allow(clippy::ref_option_ref)]
-
 use serde_bytes::{ByteBuf, Bytes};
 use serde_derive::{Deserialize, Serialize};
 use serde_test::{assert_tokens, Token};

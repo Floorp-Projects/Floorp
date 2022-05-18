@@ -189,12 +189,11 @@ impl AtlasAllocator {
         adjust_size(self.alignment.height, &mut size.height);
 
         let (width, height) = convert_coordinates(self.flip_xy, size.width, size.height);
+        let height = shelf_height(height);
 
         if width > self.shelf_width as i32 || height > self.size.height {
             return None;
         }
-
-        let height = shelf_height(height, self.size.height);
 
         let mut width = width as u16;
         let mut height = height as u16;
@@ -579,37 +578,6 @@ impl AtlasAllocator {
         index as u32
     }
 
-    /// Returns the allocation info associated to the allocation ID.
-    ///
-    /// The id must correspond to an existing allocation in the atlas.
-    pub fn get(&self, id: AllocId) -> Rectangle {
-        let index = id.index()as usize;
-        let item = &self.items[index];
-
-        assert!(item.allocated);
-        assert_eq!(item.generation, id.generation(), "Invalid AllocId");
-
-        let shelf = &self.shelves[item.shelf.index()];
-
-        let mut rectangle = Rectangle {
-            min: point2(
-                item.x as i32,
-                shelf.y as i32,
-            ),
-            max: point2(
-                (item.x + item.width) as i32,
-                (shelf.y + shelf.height) as i32,
-            ),
-        };
-
-        if self.flip_xy {
-            std::mem::swap(&mut rectangle.min.x, &mut rectangle.min.y);
-            std::mem::swap(&mut rectangle.max.x, &mut rectangle.max.y);
-        }
-
-        rectangle
-    }
-
     /// Dump a visual representation of the atlas in SVG format.
     pub fn dump_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
         use svg_fmt::*;
@@ -710,7 +678,7 @@ fn convert_coordinates(flip_xy: bool, x: i32, y: i32) -> (i32, i32) {
     }
 }
 
-fn shelf_height(size: i32, atlas_height: i32) -> i32 {
+fn shelf_height(mut size: i32) -> i32 {
     let alignment = match size {
         0 ..= 31 => 8,
         32 ..= 127 => 16,
@@ -718,16 +686,12 @@ fn shelf_height(size: i32, atlas_height: i32) -> i32 {
         _ => 64,
     };
 
-    let mut adjusted_size = size;
     let rem = size % alignment;
     if rem > 0 {
-        adjusted_size = size + alignment - rem;
-        if adjusted_size > atlas_height {
-            adjusted_size = size;
-        }
+        size += alignment - rem;
     }
 
-    adjusted_size
+    size
 }
 
 /// Iterator over the allocations of an atlas.
@@ -1083,38 +1047,4 @@ fn fuzz_04() {
     let mut atlas = AtlasAllocator::new(size2(1000, 1000));
 
     assert!(atlas.allocate(size2(2560, 2147483647)).is_none());
-}
-
-#[test]
-fn issue_17_1() {
-    let mut atlas = AtlasAllocator::new(size2(1024, 1024));
-
-    let a = atlas.allocate(size2(100, 300)).unwrap();
-    let b = atlas.allocate(size2(500, 200)).unwrap();
-
-    assert_eq!(a.rectangle, atlas.get(a.id));
-    assert_eq!(b.rectangle, atlas.get(b.id));
-
-    atlas.deallocate(a.id);
-
-    let c = atlas.allocate(size2(300, 200)).unwrap();
-
-    assert_eq!(b.rectangle, atlas.get(b.id));
-    assert_eq!(c.rectangle, atlas.get(c.id));
-
-    atlas.deallocate(c.id);
-    atlas.deallocate(b.id);
-}
-
-#[test]
-fn issue_17_2() {
-    let mut atlas = AtlasAllocator::new(size2(1000, 1000));
-
-    assert!(atlas.allocate(size2(100, 1001)).is_none());
-    assert!(atlas.allocate(size2(1001, 1000)).is_none());
-    let a = atlas.allocate(size2(1000, 1000)).unwrap();
-
-    assert_eq!(a.rectangle, atlas.get(a.id));
-
-    atlas.deallocate(a.id);
 }

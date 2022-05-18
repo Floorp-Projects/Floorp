@@ -34,7 +34,6 @@ pub trait SpawnExt: Spawn {
     /// today. Feel free to use this method in the meantime.
     ///
     /// ```
-    /// # if cfg!(miri) { return; } // https://github.com/rust-lang/miri/issues/1038
     /// use futures::executor::ThreadPool;
     /// use futures::task::SpawnExt;
     ///
@@ -59,7 +58,6 @@ pub trait SpawnExt: Spawn {
     /// resolves to the output of the spawned future.
     ///
     /// ```
-    /// # if cfg!(miri) { return; } // https://github.com/rust-lang/miri/issues/1038
     /// use futures::executor::{block_on, ThreadPool};
     /// use futures::future;
     /// use futures::task::SpawnExt;
@@ -138,7 +136,6 @@ pub trait LocalSpawnExt: LocalSpawn {
     /// resolves to the output of the spawned future.
     ///
     /// ```
-    /// # if cfg!(miri) { return; } // https://github.com/rust-lang/miri/issues/1038
     /// use futures::executor::LocalPool;
     /// use futures::task::LocalSpawnExt;
     ///

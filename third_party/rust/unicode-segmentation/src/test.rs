@@ -14,39 +14,30 @@ use std::prelude::v1::*;
 
 #[test]
 fn test_graphemes() {
-    use crate::testdata::{TEST_DIFF, TEST_SAME};
+    use crate::testdata::{TEST_SAME, TEST_DIFF};
 
-    pub const EXTRA_DIFF: &'static [(
-        &'static str,
-        &'static [&'static str],
-        &'static [&'static str],
-    )] = &[
+    pub const EXTRA_DIFF: &'static [(&'static str,
+                                     &'static [&'static str],
+                                     &'static [&'static str])] = &[
         // Official test suite doesn't include two Prepend chars between two other chars.
-        (
-            "\u{20}\u{600}\u{600}\u{20}",
-            &["\u{20}", "\u{600}\u{600}\u{20}"],
-            &["\u{20}", "\u{600}", "\u{600}", "\u{20}"],
-        ),
+        ("\u{20}\u{600}\u{600}\u{20}",
+         &["\u{20}", "\u{600}\u{600}\u{20}"],
+         &["\u{20}", "\u{600}", "\u{600}", "\u{20}"]),
+
         // Test for Prepend followed by two Any chars
-        (
-            "\u{600}\u{20}\u{20}",
-            &["\u{600}\u{20}", "\u{20}"],
-            &["\u{600}", "\u{20}", "\u{20}"],
-        ),
+        ("\u{600}\u{20}\u{20}",
+         &["\u{600}\u{20}", "\u{20}"],
+         &["\u{600}", "\u{20}", "\u{20}"]),
     ];
 
     pub const EXTRA_SAME: &'static [(&'static str, &'static [&'static str])] = &[
         // family emoji (more than two emoji joined by ZWJ)
-        (
-            "\u{1f468}\u{200d}\u{1f467}\u{200d}\u{1f466}",
-            &["\u{1f468}\u{200d}\u{1f467}\u{200d}\u{1f466}"],
-        ),
+        ("\u{1f468}\u{200d}\u{1f467}\u{200d}\u{1f466}",
+         &["\u{1f468}\u{200d}\u{1f467}\u{200d}\u{1f466}"]),
         // cartwheel emoji followed by two fitzpatrick skin tone modifiers
         // (test case from issue #19)
-        (
-            "\u{1F938}\u{1F3FE}\u{1F3FE}",
-            &["\u{1F938}\u{1F3FE}\u{1F3FE}"],
-        ),
+        ("\u{1F938}\u{1F3FE}\u{1F3FE}",
+         &["\u{1F938}\u{1F3FE}\u{1F3FE}"]),
     ];
 
     for &(s, g) in TEST_SAME.iter().chain(EXTRA_SAME) {
@@ -55,12 +46,8 @@ fn test_graphemes() {
         assert!(UnicodeSegmentation::graphemes(s, false).eq(g.iter().cloned()));
 
         // test reverse iterator
-        assert!(UnicodeSegmentation::graphemes(s, true)
-            .rev()
-            .eq(g.iter().rev().cloned()));
-        assert!(UnicodeSegmentation::graphemes(s, false)
-            .rev()
-            .eq(g.iter().rev().cloned()));
+        assert!(UnicodeSegmentation::graphemes(s, true).rev().eq(g.iter().rev().cloned()));
+        assert!(UnicodeSegmentation::graphemes(s, false).rev().eq(g.iter().rev().cloned()));
     }
 
     for &(s, gt, gf) in TEST_DIFF.iter().chain(EXTRA_DIFF) {
@@ -69,12 +56,8 @@ fn test_graphemes() {
         assert!(UnicodeSegmentation::graphemes(s, false).eq(gf.iter().cloned()));
 
         // test reverse iterator
-        assert!(UnicodeSegmentation::graphemes(s, true)
-            .rev()
-            .eq(gt.iter().rev().cloned()));
-        assert!(UnicodeSegmentation::graphemes(s, false)
-            .rev()
-            .eq(gf.iter().rev().cloned()));
+        assert!(UnicodeSegmentation::graphemes(s, true).rev().eq(gt.iter().rev().cloned()));
+        assert!(UnicodeSegmentation::graphemes(s, false).rev().eq(gf.iter().rev().cloned()));
     }
 
     // test the indices iterators
@@ -82,9 +65,7 @@ fn test_graphemes() {
     let gr_inds = UnicodeSegmentation::grapheme_indices(s, true).collect::<Vec<(usize, &str)>>();
     let b: &[_] = &[(0, "a̐"), (3, "é"), (6, "ö̲"), (11, "\r\n")];
     assert_eq!(gr_inds, b);
-    let gr_inds = UnicodeSegmentation::grapheme_indices(s, true)
-        .rev()
-        .collect::<Vec<(usize, &str)>>();
+    let gr_inds = UnicodeSegmentation::grapheme_indices(s, true).rev().collect::<Vec<(usize, &str)>>();
     let b: &[_] = &[(11, "\r\n"), (6, "ö̲"), (3, "é"), (0, "a̐")];
     assert_eq!(gr_inds, b);
     let mut gr_inds_iter = UnicodeSegmentation::grapheme_indices(s, true);
@@ -100,9 +81,7 @@ fn test_graphemes() {
 
     // make sure the reverse iterator does the right thing with "\n" at beginning of string
     let s = "\n\r\n\r";
-    let gr = UnicodeSegmentation::graphemes(s, true)
-        .rev()
-        .collect::<Vec<&str>>();
+    let gr = UnicodeSegmentation::graphemes(s, true).rev().collect::<Vec<&str>>();
     let b: &[_] = &["\r", "\r\n", "\n"];
     assert_eq!(gr, b);
 }
@@ -114,20 +93,11 @@ fn test_words() {
     // Unicode's official tests don't really test longer chains of flag emoji
     // TODO This could be improved with more tests like flag emoji with interspersed Extend chars and ZWJ
     const EXTRA_TESTS: &'static [(&'static str, &'static [&'static str])] = &[
-        (
-            "🇦🇫🇦🇽🇦🇱🇩🇿🇦🇸🇦🇩🇦🇴",
-            &["🇦🇫", "🇦🇽", "🇦🇱", "🇩🇿", "🇦🇸", "🇦🇩", "🇦🇴"],
-        ),
+        ("🇦🇫🇦🇽🇦🇱🇩🇿🇦🇸🇦🇩🇦🇴", &["🇦🇫", "🇦🇽", "🇦🇱", "🇩🇿", "🇦🇸", "🇦🇩", "🇦🇴"]),
         ("🇦🇫🇦🇽🇦🇱🇩🇿🇦🇸🇦🇩🇦", &["🇦🇫", "🇦🇽", "🇦🇱", "🇩🇿", "🇦🇸", "🇦🇩", "🇦"]),
-        (
-            "🇦a🇫🇦🇽a🇦🇱🇩🇿🇦🇸🇦🇩🇦",
-            &["🇦", "a", "🇫🇦", "🇽", "a", "🇦🇱", "🇩🇿", "🇦🇸", "🇦🇩", "🇦"],
-        ),
-        (
-            "\u{1f468}\u{200d}\u{1f468}\u{200d}\u{1f466}",
-            &["\u{1f468}\u{200d}\u{1f468}\u{200d}\u{1f466}"],
-        ),
-        ("😌👎🏼", &["😌", "👎🏼"]),
+        ("🇦a🇫🇦🇽a🇦🇱🇩🇿🇦🇸🇦🇩🇦", &["🇦", "a", "🇫🇦", "🇽", "a", "🇦🇱", "🇩🇿", "🇦🇸", "🇦🇩", "🇦"]),
+        ("\u{1f468}\u{200d}\u{1f468}\u{200d}\u{1f466}",  &["\u{1f468}\u{200d}\u{1f468}\u{200d}\u{1f466}"]),
+        ("😌👎🏼",  &["😌", "👎🏼"]),
         // perhaps wrong, spaces should not be included?
         ("hello world", &["hello", " ", "world"]),
         ("🇨🇦🇨🇭🇿🇲🇿 hi", &["🇨🇦", "🇨🇭", "🇿🇲", "🇿", " ", "hi"]),
@@ -138,53 +108,39 @@ fn test_words() {
                 // collect into vector for better diagnostics in failure case
                 let testing = $test.collect::<Vec<_>>();
                 let expected = $exp.collect::<Vec<_>>();
-                assert_eq!(
-                    testing, expected,
-                    "{} test for testcase ({:?}, {:?}) failed.",
-                    $name, s, w
-                )
-            };
+                assert_eq!(testing, expected, "{} test for testcase ({:?}, {:?}) failed.", $name, s, w)
+            }
         }
         // test forward iterator
-        assert_!(
-            s.split_word_bounds(),
-            w.iter().cloned(),
-            "Forward word boundaries"
-        );
+        assert_!(s.split_word_bounds(),
+                w.iter().cloned(),
+                "Forward word boundaries");
 
         // test reverse iterator
-        assert_!(
-            s.split_word_bounds().rev(),
-            w.iter().rev().cloned(),
-            "Reverse word boundaries"
-        );
+        assert_!(s.split_word_bounds().rev(),
+                w.iter().rev().cloned(),
+                "Reverse word boundaries");
 
         // generate offsets from word string lengths
         let mut indices = vec![0];
-        for i in w.iter().cloned().map(|s| s.len()).scan(0, |t, n| {
-            *t += n;
-            Some(*t)
-        }) {
+        for i in w.iter().cloned().map(|s| s.len()).scan(0, |t, n| { *t += n; Some(*t) }) {
             indices.push(i);
         }
         indices.pop();
         let indices = indices;
 
         // test forward indices iterator
-        assert_!(
-            s.split_word_bound_indices().map(|(l, _)| l),
-            indices.iter().cloned(),
-            "Forward word indices"
-        );
+        assert_!(s.split_word_bound_indices().map(|(l,_)| l),
+                 indices.iter().cloned(),
+                 "Forward word indices");
 
         // test backward indices iterator
-        assert_!(
-            s.split_word_bound_indices().rev().map(|(l, _)| l),
-            indices.iter().rev().cloned(),
-            "Reverse word indices"
-        );
+        assert_!(s.split_word_bound_indices().rev().map(|(l,_)| l),
+                 indices.iter().rev().cloned(),
+                 "Reverse word indices");
     }
 }
+
 
 #[test]
 fn test_sentences() {
@@ -196,19 +152,13 @@ fn test_sentences() {
                 // collect into vector for better diagnostics in failure case
                 let testing = $test.collect::<Vec<_>>();
                 let expected = $exp.collect::<Vec<_>>();
-                assert_eq!(
-                    testing, expected,
-                    "{} test for testcase ({:?}, {:?}) failed.",
-                    $name, s, w
-                )
-            };
+                assert_eq!(testing, expected, "{} test for testcase ({:?}, {:?}) failed.", $name, s, w)
+            }
         }
 
-        assert_!(
-            s.split_sentence_bounds(),
-            w.iter().cloned(),
-            "Forward sentence boundaries"
-        );
+        assert_!(s.split_sentence_bounds(),
+                w.iter().cloned(),
+                "Forward sentence boundaries");
     }
 }
 

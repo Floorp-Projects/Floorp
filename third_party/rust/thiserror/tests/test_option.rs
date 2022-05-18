@@ -1,4 +1,5 @@
 #![cfg_attr(thiserror_nightly_testing, feature(backtrace))]
+#![deny(clippy::all, clippy::pedantic)]
 
 #[cfg(thiserror_nightly_testing)]
 pub mod structs {

@@ -3,7 +3,7 @@
 //!
 //!
 //! ## Design
-//! Darling takes considerable design inspiration from [`serde`](https://serde.rs). A data structure that can be
+//! Darling takes considerable design inspiration from [`serde`]. A data structure that can be
 //! read from any attribute implements `FromMeta` (or has an implementation automatically
 //! generated using `derive`). Any crate can provide `FromMeta` implementations, even one not
 //! specifically geared towards proc-macro authors.

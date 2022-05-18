@@ -3,7 +3,7 @@
 
 use std::env;
 
-#[rustversion::attr(not(nightly), ignore)]
+#[rustversion::attr(before(2021-05-15), ignore)] // Note: This date is commit-date and the day before the toolchain date.
 #[test]
 fn ui() {
     if env::var_os("CI").is_none() {
@@ -11,5 +11,5 @@ fn ui() {
     }
 
     let t = trybuild::TestCases::new();
-    t.compile_fail("tests/ui/**/*.rs");
+    t.compile_fail("tests/ui/*/*.rs");
 }

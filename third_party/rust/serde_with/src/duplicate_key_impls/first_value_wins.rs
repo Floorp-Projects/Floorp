@@ -3,7 +3,6 @@ use std::{
     hash::{BuildHasher, Hash},
 };
 
-#[deprecated = "This is serde's default behavior."]
 pub trait DuplicateInsertsFirstWinsSet<T> {
     fn new(size_hint: Option<usize>) -> Self;
 
@@ -18,7 +17,6 @@ pub trait DuplicateInsertsFirstWinsMap<K, V> {
     fn insert(&mut self, key: K, value: V);
 }
 
-#[allow(deprecated)]
 impl<T, S> DuplicateInsertsFirstWinsSet<T> for HashSet<T, S>
 where
     T: Eq + Hash,
@@ -34,12 +32,11 @@ where
 
     #[inline]
     fn insert(&mut self, value: T) {
-        // Hashset already fulfils the contract and always keeps the first value
+        // Hashset already fullfils the contract and always keeps the first value
         self.insert(value);
     }
 }
 
-#[allow(deprecated)]
 impl<T> DuplicateInsertsFirstWinsSet<T> for BTreeSet<T>
 where
     T: Ord,
@@ -51,7 +48,7 @@ where
 
     #[inline]
     fn insert(&mut self, value: T) {
-        // BTreeSet already fulfils the contract and always keeps the first value
+        // BTreeSet already fullfils the contract and always keeps the first value
         self.insert(value);
     }
 }

@@ -6,13 +6,10 @@
 /// the most prevalent by most recent RFC declaration or explicit succession of other media types.
 ///
 /// NOTE: when adding or modifying entries, please include a citation in the commit message.
-/// If a media type for an extension changed by official IETF RFC, please keep the old entry but add
-/// the new one before it in the slice literal, e.g.:
+/// If a media type for an extension changed, please keep the old entry but add the new one before
+/// it in the slice literal, e.g.:
 ///
-/// ```ignore
-/// - ("md", &["text/x-markdown"]),
-/// + ("md", &["text/markdown", "text/x-markdown"]),
-/// ```
+///
 ///
 /// Sourced from:
 /// https://github.com/samuelneff/MimeTypeMap/blob/master/src/MimeTypes/MimeTypeMap.cs
@@ -102,7 +99,6 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("atx", &["application/vnd.antix.game-component"]),
     ("au", &["audio/basic"]),
     ("avi", &["video/x-msvideo"]),
-    ("avif", &["image/avif"]),
     ("aw", &["application/applixware"]),
     ("axa", &["audio/annodex"]),
     ("axs", &["application/olescript"]),
@@ -175,7 +171,7 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("cfs", &["application/x-cfs-compressed"]),
     ("cgm", &["image/cgm"]),
     ("chat", &["application/x-chat"]),
-    ("chm", &["application/vnd.ms-htmlhelp"]),
+    ("chm", &["application/octet-stream"]),
     ("chrt", &["application/vnd.kde.kchart"]),
     ("cif", &["chemical/x-cif"]),
     (
@@ -354,7 +350,6 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("fcs", &["application/vnd.isac.fcs"]),
     ("fdf", &["application/vnd.fdf"]),
     ("fe_launch", &["application/vnd.denovo.fcselayout-link"]),
-    ("feature", &["text/x-gherkin"]),
     ("fg5", &["application/vnd.fujitsu.oasysgp"]),
     ("fgd", &["application/x-director"]),
     ("fh", &["image/x-freehand"]),
@@ -401,7 +396,6 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("gca", &["application/x-gca-compressed"]),
     ("gdl", &["model/vnd.gdl"]),
     ("gdoc", &["application/vnd.google-apps.document"]),
-    ("gemini", &["text/gemini"]),
     ("generictest", &["application/xml"]),
     ("geo", &["application/vnd.dynageo"]),
     ("geojson", &["application/geo+json"]),
@@ -413,7 +407,6 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("gim", &["application/vnd.groove-identity-message"]),
     ("glb", &["model/gltf-binary"]),
     ("gltf", &["model/gltf+json"]),
-    ("gmi", &["text/gemini"]),
     ("gml", &["application/gml+xml"]),
     ("gmx", &["application/vnd.gmx"]),
     ("gnumeric", &["application/x-gnumeric"]),
@@ -437,7 +430,7 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("gv", &["text/vnd.graphviz"]),
     ("gxf", &["application/gxf"]),
     ("gxt", &["application/vnd.geonext"]),
-    ("gz", &["application/gzip"]),
+    ("gz", &["application/x-gzip"]),
     ("h", &["text/plain"]),
     ("h261", &["video/h261"]),
     ("h263", &["video/h263"]),
@@ -703,7 +696,7 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("mods", &["application/mods+xml"]),
     ("mov", &["video/quicktime"]),
     ("movie", &["video/x-sgi-movie"]),
-    ("mp2", &["audio/mpeg", "video/mpeg"]),
+    ("mp2", &["video/mpeg"]),
     ("mp21", &["application/mp21"]),
     ("mp2a", &["audio/mpeg"]),
     ("mp2v", &["video/mpeg"]),
@@ -773,10 +766,8 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("nns", &["application/vnd.noblenet-sealer"]),
     ("nnw", &["application/vnd.noblenet-web"]),
     ("npx", &["image/vnd.net-fpx"]),
-    ("nq", &["application/n-quads"]),
     ("nsc", &["video/x-ms-asf"]),
     ("nsf", &["application/vnd.lotus-notes"]),
-    ("nt", &["application/n-triples"]),
     ("ntf", &["application/vnd.nitf"]),
     ("nws", &["message/rfc822"]),
     ("nzb", &["application/x-nzb"]),
@@ -1217,14 +1208,13 @@ pub static MIME_TYPES: &[(&str, &[&str])] = &[
     ("tpt", &["application/vnd.trid.tpt"]),
     ("tr", &["application/x-troff"]),
     ("tra", &["application/vnd.trueapp"]),
-    ("trig", &["application/trig"]),
     ("trm", &["application/x-msterminal"]),
     ("trx", &["application/xml"]),
     ("ts", &["video/vnd.dlna.mpeg-tts"]),
     ("tsd", &["application/timestamped-data"]),
     ("tsv", &["text/tab-separated-values"]),
     ("ttc", &["font/collection"]),
-    ("ttf", &["font/ttf", "application/x-font-ttf", "application/font-sfnt"]),
+    ("ttf", &["application/font-sfnt"]),
     ("ttl", &["text/turtle"]),
     ("tts", &["video/vnd.dlna.mpeg-tts"]),
     ("twd", &["application/vnd.simtech-mindmapper"]),

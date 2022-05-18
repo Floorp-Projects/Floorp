@@ -9,12 +9,12 @@
 
 //! 3.3.4 - 3.3.6. Resolve implicit levels and types.
 
-use alloc::vec::Vec;
 use core::cmp::max;
+use alloc::vec::Vec;
 
 use super::char_data::BidiClass::{self, *};
+use super::prepare::{IsolatingRunSequence, LevelRun, not_removed_by_x9, removed_by_x9};
 use super::level::Level;
-use super::prepare::{not_removed_by_x9, removed_by_x9, IsolatingRunSequence, LevelRun};
 
 /// 3.3.4 Resolving Weak Types
 ///
@@ -37,11 +37,9 @@ pub fn resolve_weak(sequence: &IsolatingRunSequence, processing_classes: &mut [B
     fn id(x: LevelRun) -> LevelRun {
         x
     }
-    let mut indices = sequence
-        .runs
-        .iter()
-        .cloned()
-        .flat_map(id as fn(LevelRun) -> LevelRun);
+    let mut indices = sequence.runs.iter().cloned().flat_map(
+        id as fn(LevelRun) -> LevelRun,
+    );
 
     while let Some(i) = indices.next() {
         match processing_classes[i] {
@@ -183,15 +181,8 @@ pub fn resolve_neutral(
             // <http://www.unicode.org/reports/tr9/#N2>
             let new_class = match (prev_class, next_class) {
                 (L, L) => L,
-                (R, R)
-                | (R, AN)
-                | (R, EN)
-                | (AN, R)
-                | (AN, AN)
-                | (AN, EN)
-                | (EN, R)
-                | (EN, AN)
-                | (EN, EN) => R,
+                (R, R) | (R, AN) | (R, EN) | (AN, R) | (AN, AN) | (AN, EN) | (EN, R) |
+                (EN, AN) | (EN, EN) => R,
                 (_, _) => e,
             };
             for j in &ni_run {

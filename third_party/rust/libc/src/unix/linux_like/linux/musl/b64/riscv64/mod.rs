@@ -465,25 +465,6 @@ pub const SYS_pkey_mprotect: ::c_long = 288;
 pub const SYS_pkey_alloc: ::c_long = 289;
 pub const SYS_pkey_free: ::c_long = 290;
 pub const SYS_statx: ::c_long = 291;
-pub const SYS_pidfd_send_signal: ::c_long = 424;
-pub const SYS_io_uring_setup: ::c_long = 425;
-pub const SYS_io_uring_enter: ::c_long = 426;
-pub const SYS_io_uring_register: ::c_long = 427;
-pub const SYS_open_tree: ::c_long = 428;
-pub const SYS_move_mount: ::c_long = 429;
-pub const SYS_fsopen: ::c_long = 430;
-pub const SYS_fsconfig: ::c_long = 431;
-pub const SYS_fsmount: ::c_long = 432;
-pub const SYS_fspick: ::c_long = 433;
-pub const SYS_pidfd_open: ::c_long = 434;
-pub const SYS_clone3: ::c_long = 435;
-pub const SYS_close_range: ::c_long = 436;
-pub const SYS_openat2: ::c_long = 437;
-pub const SYS_pidfd_getfd: ::c_long = 438;
-pub const SYS_faccessat2: ::c_long = 439;
-pub const SYS_process_madvise: ::c_long = 440;
-pub const SYS_epoll_pwait2: ::c_long = 441;
-pub const SYS_mount_setattr: ::c_long = 442;
 
 pub const O_APPEND: ::c_int = 1024;
 pub const O_DIRECT: ::c_int = 0x4000;
@@ -498,6 +479,9 @@ pub const O_SYNC: ::c_int = 1052672;
 pub const O_RSYNC: ::c_int = 1052672;
 pub const O_DSYNC: ::c_int = 4096;
 pub const O_ASYNC: ::c_int = 0x2000;
+
+pub const TIOCGRS485: ::c_int = 0x542E;
+pub const TIOCSRS485: ::c_int = 0x542F;
 
 pub const SIGSTKSZ: ::size_t = 8192;
 pub const MINSIGSTKSZ: ::size_t = 2048;
@@ -546,7 +530,6 @@ pub const ENOPROTOOPT: ::c_int = 92;
 pub const EPROTONOSUPPORT: ::c_int = 93;
 pub const ESOCKTNOSUPPORT: ::c_int = 94;
 pub const EOPNOTSUPP: ::c_int = 95;
-pub const ENOTSUP: ::c_int = EOPNOTSUPP;
 pub const EPFNOSUPPORT: ::c_int = 96;
 pub const EAFNOSUPPORT: ::c_int = 97;
 pub const EADDRINUSE: ::c_int = 98;
@@ -568,11 +551,6 @@ pub const EHOSTUNREACH: ::c_int = 113;
 pub const EALREADY: ::c_int = 114;
 pub const EINPROGRESS: ::c_int = 115;
 pub const ESTALE: ::c_int = 116;
-pub const EUCLEAN: ::c_int = 117;
-pub const ENOTNAM: ::c_int = 118;
-pub const ENAVAIL: ::c_int = 119;
-pub const EISNAM: ::c_int = 120;
-pub const EREMOTEIO: ::c_int = 121;
 pub const EDQUOT: ::c_int = 122;
 pub const ENOMEDIUM: ::c_int = 123;
 pub const EMEDIUMTYPE: ::c_int = 124;
@@ -643,6 +621,8 @@ pub const MAP_STACK: ::c_int = 0x020000;
 pub const MAP_HUGETLB: ::c_int = 0x040000;
 pub const MAP_SYNC: ::c_int = 0x080000;
 
+pub const RLIMIT_NLIMITS: ::c_int = 15;
+pub const TIOCINQ: ::c_int = ::FIONREAD;
 pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
 pub const CBAUD: ::tcflag_t = 0o0010017;
@@ -712,6 +692,9 @@ pub const B3000000: ::speed_t = 0o010015;
 pub const B3500000: ::speed_t = 0o010016;
 pub const B4000000: ::speed_t = 0o010017;
 
+pub const FIOCLEX: ::c_int = 0x5451;
+pub const FIONCLEX: ::c_int = 0x5450;
+pub const FIONBIO: ::c_int = 0x5421;
 pub const EDEADLK: ::c_int = 35;
 pub const EDEADLOCK: ::c_int = EDEADLK;
 pub const EXTPROC: ::tcflag_t = 0x00010000;
@@ -721,21 +704,33 @@ pub const VMIN: usize = 6;
 pub const IEXTEN: ::tcflag_t = 0x00008000;
 pub const TOSTOP: ::tcflag_t = 0x00000100;
 pub const FLUSHO: ::tcflag_t = 0x00001000;
+pub const TCGETS: ::c_int = 0x5401;
+pub const TCSETS: ::c_int = 0x5402;
+pub const TCSETSW: ::c_int = 0x5403;
+pub const TCSETSF: ::c_int = 0x5404;
+pub const TCGETA: ::c_int = 0x5405;
+pub const TCSETA: ::c_int = 0x5406;
+pub const TCSETAW: ::c_int = 0x5407;
+pub const TCSETAF: ::c_int = 0x5408;
+pub const TCSBRK: ::c_int = 0x5409;
+pub const TCXONC: ::c_int = 0x540A;
+pub const TCFLSH: ::c_int = 0x540B;
+pub const TIOCGSOFTCAR: ::c_int = 0x5419;
+pub const TIOCSSOFTCAR: ::c_int = 0x541A;
+pub const TIOCLINUX: ::c_int = 0x541C;
+pub const TIOCGSERIAL: ::c_int = 0x541E;
+pub const TIOCEXCL: ::c_int = 0x540C;
+pub const TIOCNXCL: ::c_int = 0x540D;
+pub const TIOCSCTTY: ::c_int = 0x540E;
+pub const TIOCGPGRP: ::c_int = 0x540F;
+pub const TIOCSPGRP: ::c_int = 0x5410;
+pub const TIOCOUTQ: ::c_int = 0x5411;
+pub const TIOCSTI: ::c_int = 0x5412;
+pub const TIOCGWINSZ: ::c_int = 0x5413;
+pub const TIOCSWINSZ: ::c_int = 0x5414;
+pub const FIONREAD: ::c_int = 0x541B;
+pub const TIOCCONS: ::c_int = 0x541D;
 
-pub const NGREG: usize = 32;
-pub const REG_PC: usize = 0;
-pub const REG_RA: usize = 1;
-pub const REG_SP: usize = 2;
-pub const REG_TP: usize = 4;
-pub const REG_S0: usize = 8;
-pub const REG_S1: usize = 9;
-pub const REG_A0: usize = 10;
-pub const REG_S2: usize = 18;
-pub const REG_NARGS: usize = 8;
-
-cfg_if! {
-    if #[cfg(libc_align)] {
-        mod align;
-        pub use self::align::*;
-    }
+extern "C" {
+    pub fn ioctl(fd: ::c_int, request: ::c_int, ...) -> ::c_int;
 }

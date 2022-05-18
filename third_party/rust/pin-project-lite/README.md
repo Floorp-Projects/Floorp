@@ -25,9 +25,8 @@ pin-project-lite = "0.2"
 struct.
 
 ```rust
-use std::pin::Pin;
-
 use pin_project_lite::pin_project;
+use std::pin::Pin;
 
 pin_project! {
     struct Struct<T, U> {
@@ -50,9 +49,8 @@ To use [`pin_project!`] on enums, you need to name the projection type
 returned from the method.
 
 ```rust
-use std::pin::Pin;
-
 use pin_project_lite::pin_project;
+use std::pin::Pin;
 
 pin_project! {
     #[project = EnumProj]

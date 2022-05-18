@@ -3,8 +3,8 @@ extern crate bencher;
 extern crate unicode_segmentation;
 
 use bencher::Bencher;
-use std::fs;
 use unicode_segmentation::UnicodeSegmentation;
+use std::fs;
 
 fn word_bounds(bench: &mut Bencher, path: &str) {
     let text = fs::read_to_string(path).unwrap();

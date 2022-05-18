@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "etagere"
-version = "0.2.7"
+version = "0.2.6"
 authors = ["Nicolas Silva <nical@fastmail.com>"]
 exclude = [".backup*"]
 description = "Dynamic 2D texture atlas allocation using the shelf packing algorithm."

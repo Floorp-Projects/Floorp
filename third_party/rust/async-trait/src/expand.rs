@@ -4,14 +4,19 @@ use crate::receiver::{has_self_in_block, has_self_in_sig, mut_pat, ReplaceSelf};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, quote_spanned, ToTokens};
 use std::collections::BTreeSet as Set;
-use std::mem;
 use syn::punctuated::Punctuated;
 use syn::visit_mut::{self, VisitMut};
 use syn::{
-    parse_quote, parse_quote_spanned, Attribute, Block, FnArg, GenericParam, Generics, Ident,
-    ImplItem, Lifetime, LifetimeDef, Pat, PatIdent, Receiver, ReturnType, Signature, Stmt, Token,
-    TraitItem, Type, TypeParamBound, TypePath, WhereClause,
+    parse_quote, Attribute, Block, FnArg, GenericParam, Generics, Ident, ImplItem, Lifetime, Pat,
+    PatIdent, Receiver, ReturnType, Signature, Stmt, Token, TraitItem, Type, TypeParamBound,
+    TypePath, WhereClause,
 };
+
+macro_rules! parse_quote_spanned {
+    ($span:expr=> $($t:tt)*) => {
+        syn::parse2(quote_spanned!($span=> $($t)*)).unwrap()
+    };
+}
 
 impl ToTokens for Item {
     fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -35,18 +40,17 @@ enum Context<'a> {
 }
 
 impl Context<'_> {
-    fn lifetimes<'a>(&'a self, used: &'a [Lifetime]) -> impl Iterator<Item = &'a LifetimeDef> {
+    fn lifetimes<'a>(&'a self, used: &'a [Lifetime]) -> impl Iterator<Item = &'a GenericParam> {
         let generics = match self {
             Context::Trait { generics, .. } => generics,
             Context::Impl { impl_generics, .. } => impl_generics,
         };
-        generics.params.iter().filter_map(move |param| {
+        generics.params.iter().filter(move |param| {
             if let GenericParam::Lifetime(param) = param {
-                if used.contains(&param.lifetime) {
-                    return Some(param);
-                }
+                used.contains(&param.lifetime)
+            } else {
+                false
             }
-            None
         })
     }
 }
@@ -180,40 +184,29 @@ fn transform_sig(
         }
     }
 
-    for param in &mut sig.generics.params {
+    for param in sig
+        .generics
+        .params
+        .iter()
+        .chain(context.lifetimes(&lifetimes.explicit))
+    {
         match param {
             GenericParam::Type(param) => {
-                let param_name = &param.ident;
-                let span = match param.colon_token.take() {
-                    Some(colon_token) => colon_token.span,
-                    None => param_name.span(),
-                };
-                let bounds = mem::replace(&mut param.bounds, Punctuated::new());
+                let param = &param.ident;
+                let span = param.span();
                 where_clause_or_default(&mut sig.generics.where_clause)
                     .predicates
-                    .push(parse_quote_spanned!(span=> #param_name: 'async_trait + #bounds));
+                    .push(parse_quote_spanned!(span=> #param: 'async_trait));
             }
             GenericParam::Lifetime(param) => {
-                let param_name = &param.lifetime;
-                let span = match param.colon_token.take() {
-                    Some(colon_token) => colon_token.span,
-                    None => param_name.span(),
-                };
-                let bounds = mem::replace(&mut param.bounds, Punctuated::new());
+                let param = &param.lifetime;
+                let span = param.span();
                 where_clause_or_default(&mut sig.generics.where_clause)
                     .predicates
-                    .push(parse_quote_spanned!(span=> #param: 'async_trait + #bounds));
+                    .push(parse_quote_spanned!(span=> #param: 'async_trait));
             }
             GenericParam::Const(_) => {}
         }
-    }
-
-    for param in context.lifetimes(&lifetimes.explicit) {
-        let param = &param.lifetime;
-        let span = param.span();
-        where_clause_or_default(&mut sig.generics.where_clause)
-            .predicates
-            .push(parse_quote_spanned!(span=> #param: 'async_trait));
     }
 
     if sig.generics.lt_token.is_none() {

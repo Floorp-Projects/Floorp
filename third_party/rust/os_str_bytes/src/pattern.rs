@@ -42,8 +42,10 @@ pub trait Pattern: private::Sealed {
 }
 
 impl Pattern for char {
+    #[doc(hidden)]
     type __Encoded = EncodedChar;
 
+    #[doc(hidden)]
     fn __encode(self) -> Self::__Encoded {
         let mut encoded = EncodedChar {
             buffer: [0; 4],
@@ -55,16 +57,20 @@ impl Pattern for char {
 }
 
 impl Pattern for &str {
+    #[doc(hidden)]
     type __Encoded = Self;
 
+    #[doc(hidden)]
     fn __encode(self) -> Self::__Encoded {
         self
     }
 }
 
 impl<'a> Pattern for &'a String {
+    #[doc(hidden)]
     type __Encoded = <&'a str as Pattern>::__Encoded;
 
+    #[doc(hidden)]
     fn __encode(self) -> Self::__Encoded {
         (**self).__encode()
     }

@@ -665,31 +665,4 @@ fn pinned_drop() {
             }
         }
     }
-
-    trait Service<Request> {
-        type Error;
-    }
-
-    pin_project! {
-        struct Struct3<'a, T, Request>
-        where
-            T: Service<Request>,
-            T::Error: std::error::Error,
-        {
-            was_dropped: &'a mut bool,
-            #[pin]
-            field: T,
-            req: Request,
-        }
-
-        impl<T, Request> PinnedDrop for Struct3<'_, T, Request>
-        where
-            T: Service<Request>,
-            T::Error: std::error::Error,
-        {
-            fn drop(mut this: Pin<&mut Self>) {
-                **this.as_mut().project().was_dropped = true;
-            }
-        }
-    }
 }

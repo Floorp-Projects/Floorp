@@ -59,7 +59,7 @@ impl<'a> FieldsGen<'a> {
         quote!(
             for __item in __items {
                 if let ::syn::NestedMeta::Meta(ref __inner) = *__item {
-                    let __name = ::darling::util::path_to_string(__inner.path());
+                    let __name = __inner.path().segments.iter().map(|s| s.ident.to_string()).collect::<Vec<String>>().join("::");
                     match __name.as_str() {
                         #(#arms)*
                         __other => { #handle_unknown }

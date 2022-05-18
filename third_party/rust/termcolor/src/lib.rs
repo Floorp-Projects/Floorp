@@ -82,7 +82,7 @@ In many scenarios when using color, one often wants to enable colors
 automatically when writing to a terminal and disable colors automatically when
 writing to anything else. The typical way to achieve this in Unix environments
 is via libc's
-[`isatty`](https://man7.org/linux/man-pages/man3/isatty.3.html)
+[`isatty`](http://man7.org/linux/man-pages/man3/isatty.3.html)
 function.
 Unfortunately, this notoriously does not work well in Windows environments. To
 work around that, the currently recommended solution is to use the
@@ -1447,20 +1447,6 @@ impl<W: io::Write> Ansi<W> {
                 Color::__Nonexhaustive => unreachable!(),
             }
         }
-    }
-}
-
-impl WriteColor for io::Sink {
-    fn supports_color(&self) -> bool {
-        false
-    }
-
-    fn set_color(&mut self, _: &ColorSpec) -> io::Result<()> {
-        Ok(())
-    }
-
-    fn reset(&mut self) -> io::Result<()> {
-        Ok(())
     }
 }
 

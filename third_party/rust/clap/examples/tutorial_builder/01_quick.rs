@@ -1,10 +1,8 @@
-// Note: this requires the `cargo` feature
-
-use clap::{arg, command, Command};
+use clap::{app_from_crate, arg, App};
 use std::path::Path;
 
 fn main() {
-    let matches = command!()
+    let matches = app_from_crate!()
         .arg(arg!([name] "Optional name to operate on"))
         .arg(
             arg!(
@@ -19,7 +17,7 @@ fn main() {
             -d --debug ... "Turn debugging information on"
         ))
         .subcommand(
-            Command::new("test")
+            App::new("test")
                 .about("does testing things")
                 .arg(arg!(-l --list "lists test values")),
         )
@@ -45,7 +43,7 @@ fn main() {
     }
 
     // You can check for the existence of subcommands, and if found use their
-    // matches just as you would the top level cmd
+    // matches just as you would the top level app
     if let Some(matches) = matches.subcommand_matches("test") {
         // "$ myapp test" was run
         if matches.is_present("list") {

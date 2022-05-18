@@ -1,13 +1,3 @@
-## [1.3.2] - 2022-05-18
-
-### Added
-- Added support for illumos and derivatives
-
-## [1.3.1] - 2022-02-03
-
-### Added
-- Added missing `clang_getToken` function
-
 ## [1.3.0] - 2021-10-31
 
 ### Added

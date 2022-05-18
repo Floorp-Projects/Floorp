@@ -16,19 +16,16 @@ drawn on a [HTML5 canvas using WebAssembly][wasm-demo].
 To use the textwrap crate, add this to your `Cargo.toml` file:
 ```toml
 [dependencies]
-textwrap = "0.15"
+textwrap = "0.14"
 ```
 
 By default, this enables word wrapping with support for Unicode
 strings. Extra features can be enabled with Cargo features—and the
 Unicode support can be disabled if needed. This allows you slim down
 the library and so you will only pay for the features you actually
-use.
-
-Please see the [_Cargo Features_ in the crate
+use. Please see the [_Cargo Features_ in the crate
 documentation](https://docs.rs/textwrap/#cargo-features) for a full
-list of the available features as well as their impact on the size of
-your binary.
+list of the available features.
 
 ## Documentation
 
@@ -36,20 +33,21 @@ your binary.
 
 ## Getting Started
 
-Word wrapping is easy using the `wrap` and `fill` functions:
+Word wrapping is easy using the `fill` function:
 
 ```rust
-#[cfg(feature = "smawk")] {
-let text = "textwrap: an efficient and powerful library for wrapping text.";
-assert_eq!(
-    textwrap::wrap(text, 28),
-    vec![
-        "textwrap: an efficient",
-        "and powerful library for",
-        "wrapping text.",
-    ]
-);
+fn main() {
+    let text = "textwrap: an efficient and powerful library for wrapping text.";
+    println!("{}", textwrap::fill(text, 28));
 }
+```
+
+The output is wrapped within 28 columns:
+
+```
+textwrap: an efficient
+and powerful library for
+wrapping text.
 ```
 
 Sharp-eyed readers will notice that the first line is 22 columns wide.
@@ -59,24 +57,14 @@ for it in the first line?
 The explanation is that textwrap does not just wrap text one line at a
 time. Instead, it uses an optimal-fit algorithm which looks ahead and
 chooses line breaks which minimize the gaps left at ends of lines.
-This is controlled with the `smawk` Cargo feature, which is why the
-example is wrapped in the `cfg`-block.
 
 Without look-ahead, the first line would be longer and the text would
 look like this:
 
-```rust
-#[cfg(not(feature = "smawk"))] {
-let text = "textwrap: an efficient and powerful library for wrapping text.";
-assert_eq!(
-    textwrap::wrap(text, 28),
-    vec![
-        "textwrap: an efficient and",
-        "powerful library for",
-        "wrapping text.",
-    ]
-);
-}
+```
+textwrap: an efficient and
+powerful library for
+wrapping text.
 ```
 
 The second line is now shorter and the text is more ragged. The kind
@@ -90,23 +78,22 @@ Your program must load the hyphenation pattern and configure
 `Options::word_splitter` to use it:
 
 ```rust
-#[cfg(feature = "hyphenation")] {
 use hyphenation::{Language, Load, Standard};
-use textwrap::{fill, Options, WordSplitter};
+use textwrap::Options;
 
-let dictionary = Standard::from_embedded(Language::EnglishUS).unwrap();
-let options = textwrap::Options::new(28).word_splitter(WordSplitter::Hyphenation(dictionary));
-let text = "textwrap: an efficient and powerful library for wrapping text.";
-
-assert_eq!(
-    textwrap::wrap(text, &options),
-    vec![
-        "textwrap: an efficient and",
-        "powerful library for wrap-",
-        "ping text."
-    ]
-);
+fn main() {
+    let hyphenator = Standard::from_embedded(Language::EnglishUS).unwrap();
+    let options = Options::new(28).word_splitter(hyphenator);
+    let text = "textwrap: an efficient and powerful library for wrapping text.";
+    println!("{}", fill(text, &options);
 }
+```
+
+The output now looks like this:
+```
+textwrap: an efficient and
+powerful library for wrap-
+ping text.
 ```
 
 The US-English hyphenation patterns are embedded when you enable the

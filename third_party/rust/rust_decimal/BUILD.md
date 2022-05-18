@@ -12,6 +12,8 @@ Developing Rust Decimal
 
 ## Setup
 
+**Minimum Rust Version:** `1.46.0`
+
 Rust Decimal leverages [cargo make](https://github.com/sagiegurari/cargo-make) to ensure a consistent build/test/release
 approach. This also handles installing any additional dependencies in order to execute various commands, making getting set 
 up and going relatively straight forward and easy.

@@ -12,22 +12,12 @@
 [package]
 edition = "2018"
 name = "arbitrary"
-version = "1.1.0"
-authors = [
-    "The Rust-Fuzz Project Developers",
-    "Nick Fitzgerald <fitzgen@gmail.com>",
-    "Manish Goregaokar <manishsmail@gmail.com>",
-    "Simonas Kazlauskas <arbitrary@kazlauskas.me>",
-    "Brian L. Troutwine <brian@troutwine.us>",
-    "Corey Farwell <coreyf@rwell.org>",
-]
+version = "1.0.3"
+authors = ["The Rust-Fuzz Project Developers", "Nick Fitzgerald <fitzgen@gmail.com>", "Manish Goregaokar <manishsmail@gmail.com>", "Simonas Kazlauskas <arbitrary@kazlauskas.me>", "Brian L. Troutwine <brian@troutwine.us>", "Corey Farwell <coreyf@rwell.org>"]
 description = "The trait for generating structured data from unstructured data"
 documentation = "https://docs.rs/arbitrary/"
 readme = "README.md"
-keywords = [
-    "arbitrary",
-    "testing",
-]
+keywords = ["arbitrary", "testing"]
 categories = ["development-tools::testing"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-fuzz/arbitrary/"
@@ -40,7 +30,6 @@ required-features = ["derive"]
 name = "derive"
 path = "./tests/derive.rs"
 required-features = ["derive"]
-
 [dependencies.derive_arbitrary]
 version = "1.0.0"
 optional = true

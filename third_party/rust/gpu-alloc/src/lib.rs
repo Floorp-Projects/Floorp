@@ -6,7 +6,7 @@
 //!
 //! # Usage
 //!
-//! Start with fetching `DeviceProperties` from `gpu-alloc-<backend>` crate for the backend of choice.\
+//! Start with fetching `DeviceProperties` from `gfx-alloc-<backend>` crate for the backend of choice.\
 //! Then create `GpuAllocator` instance and use it for all device memory allocations.\
 //! `GpuAllocator` will take care for all necessary bookkeeping like memory object count limit,
 //! heap budget and memory mapping.
@@ -15,7 +15,7 @@
 //!
 //! Backend supporting crates should not depend on this crate.\
 //! Instead they should depend on `gpu-alloc-types` which is much more stable,
-//! allowing to upgrade `gpu-alloc` version without `gpu-alloc-<backend>` upgrade.
+//! allowing to upgrade `gpu-alloc` version without `gfx-alloc-<backend>` upgrade.
 //!
 
 #![cfg_attr(not(feature = "std"), no_std)]

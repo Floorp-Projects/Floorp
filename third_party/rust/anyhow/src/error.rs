@@ -26,7 +26,6 @@ impl Error {
     #[cfg(feature = "std")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     #[cold]
-    #[must_use]
     pub fn new<E>(error: E) -> Self
     where
         E: StdError + Send + Sync + 'static,
@@ -73,7 +72,6 @@ impl Error {
     /// }
     /// ```
     #[cold]
-    #[must_use]
     pub fn msg<M>(message: M) -> Self
     where
         M: Display + Debug + Send + Sync + 'static,
@@ -295,7 +293,6 @@ impl Error {
     /// }
     /// ```
     #[cold]
-    #[must_use]
     pub fn context<C>(self, context: C) -> Self
     where
         C: Display + Send + Sync + 'static,

@@ -10,7 +10,6 @@ pub type nlink_t = u64;
 pub type blksize_t = i64;
 pub type suseconds_t = i64;
 pub type __u64 = ::c_ulong;
-pub type __s64 = ::c_long;
 
 s! {
     pub struct sigaction {
@@ -191,6 +190,12 @@ s! {
         pub ss_flags: ::c_int,
         pub ss_size: ::size_t
     }
+
+    pub struct ip_mreqn {
+        pub imr_multiaddr: ::in_addr,
+        pub imr_address: ::in_addr,
+        pub imr_ifindex: ::c_int,
+    }
 }
 
 pub const POSIX_FADV_DONTNEED: ::c_int = 4;
@@ -201,6 +206,15 @@ pub const RTLD_GLOBAL: ::c_int = 0x100;
 pub const RTLD_NOLOAD: ::c_int = 0x4;
 pub const VEOF: usize = 4;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
+
+pub const TIOCGSOFTCAR: ::c_ulong = 0x5419;
+pub const TIOCSSOFTCAR: ::c_ulong = 0x541A;
+
+pub const RLIMIT_RSS: ::__rlimit_resource_t = 5;
+pub const RLIMIT_AS: ::__rlimit_resource_t = 9;
+pub const RLIMIT_MEMLOCK: ::__rlimit_resource_t = 8;
+pub const RLIMIT_NOFILE: ::__rlimit_resource_t = 7;
+pub const RLIMIT_NPROC: ::__rlimit_resource_t = 6;
 
 pub const O_APPEND: ::c_int = 1024;
 pub const O_CREAT: ::c_int = 64;
@@ -367,6 +381,18 @@ pub const TCSANOW: ::c_int = 0;
 pub const TCSADRAIN: ::c_int = 1;
 pub const TCSAFLUSH: ::c_int = 2;
 
+pub const TIOCLINUX: ::c_ulong = 0x541C;
+pub const TIOCGSERIAL: ::c_ulong = 0x541E;
+pub const TIOCEXCL: ::c_ulong = 0x540C;
+pub const TIOCNXCL: ::c_ulong = 0x540D;
+pub const TIOCSCTTY: ::c_ulong = 0x540E;
+pub const TIOCSTI: ::c_ulong = 0x5412;
+pub const TIOCCONS: ::c_ulong = 0x541D;
+pub const TIOCSBRK: ::c_ulong = 0x5427;
+pub const TIOCCBRK: ::c_ulong = 0x5428;
+pub const TIOCGRS485: ::c_int = 0x542E;
+pub const TIOCSRS485: ::c_int = 0x542F;
+
 pub const SFD_CLOEXEC: ::c_int = 0x080000;
 
 pub const NCCS: usize = 32;
@@ -469,6 +495,10 @@ pub const ENAVAIL: ::c_int = 119;
 pub const EISNAM: ::c_int = 120;
 pub const EREMOTEIO: ::c_int = 121;
 
+pub const FIOCLEX: ::c_ulong = 0x20006601;
+pub const FIONCLEX: ::c_ulong = 0x20006602;
+pub const FIONBIO: ::c_ulong = 0x8004667e;
+
 pub const MCL_CURRENT: ::c_int = 0x2000;
 pub const MCL_FUTURE: ::c_int = 0x4000;
 
@@ -566,6 +596,24 @@ pub const IEXTEN: ::tcflag_t = 0x400;
 pub const TOSTOP: ::tcflag_t = 0x400000;
 pub const FLUSHO: ::tcflag_t = 0x800000;
 pub const EXTPROC: ::tcflag_t = 0x10000000;
+pub const TCGETS: ::c_ulong = 0x403c7413;
+pub const TCSETS: ::c_ulong = 0x803c7414;
+pub const TCSETSW: ::c_ulong = 0x803c7415;
+pub const TCSETSF: ::c_ulong = 0x803c7416;
+pub const TCGETA: ::c_ulong = 0x40147417;
+pub const TCSETA: ::c_ulong = 0x80147418;
+pub const TCSETAW: ::c_ulong = 0x80147419;
+pub const TCSETAF: ::c_ulong = 0x8014741c;
+pub const TCSBRK: ::c_ulong = 0x2000741d;
+pub const TCXONC: ::c_ulong = 0x2000741e;
+pub const TCFLSH: ::c_ulong = 0x2000741f;
+pub const TIOCINQ: ::c_ulong = 0x4004667f;
+pub const TIOCGPGRP: ::c_ulong = 0x40047477;
+pub const TIOCSPGRP: ::c_ulong = 0x80047476;
+pub const TIOCOUTQ: ::c_ulong = 0x40047473;
+pub const TIOCGWINSZ: ::c_ulong = 0x40087468;
+pub const TIOCSWINSZ: ::c_ulong = 0x80087467;
+pub const FIONREAD: ::c_ulong = 0x4004667f;
 
 // Syscall table
 pub const SYS_restart_syscall: ::c_long = 0;
@@ -928,7 +976,6 @@ pub const SYS_preadv2: ::c_long = 380;
 pub const SYS_pwritev2: ::c_long = 381;
 pub const SYS_kexec_file_load: ::c_long = 382;
 pub const SYS_statx: ::c_long = 383;
-pub const SYS_rseq: ::c_long = 387;
 pub const SYS_pidfd_send_signal: ::c_long = 424;
 pub const SYS_io_uring_setup: ::c_long = 425;
 pub const SYS_io_uring_enter: ::c_long = 426;

@@ -64,7 +64,7 @@ pub enum FlushCompress {
     /// All of the input data so far will be available to the decompressor (as
     /// with `Flush::Sync`. This completes the current deflate block and follows
     /// it with an empty fixed codes block that is 10 bites long, and it assures
-    /// that enough bytes are output in order for the decompressor to finish the
+    /// that enough bytes are output in order for the decompessor to finish the
     /// block before the empty fixed code block.
     Partial = ffi::MZ_PARTIAL_FLUSH as isize,
 
@@ -283,7 +283,7 @@ impl Compress {
         let stream = &mut *self.inner.inner.stream_wrapper;
         stream.msg = std::ptr::null_mut();
         let rc = unsafe {
-            assert!(dictionary.len() < ffi::uInt::MAX as usize);
+            assert!(dictionary.len() < ffi::uInt::max_value() as usize);
             ffi::deflateSetDictionary(stream, dictionary.as_ptr(), dictionary.len() as ffi::uInt)
         };
 
@@ -367,7 +367,7 @@ impl Compress {
                 self.compress(input, out, flush)
             };
             output.set_len((self.total_out() - before) as usize + len);
-            ret
+            return ret;
         }
     }
 }
@@ -411,7 +411,7 @@ impl Decompress {
 
     /// Creates a new object ready for decompressing data that it's given.
     ///
-    /// The Decompress object produced by this constructor expects gzip headers
+    /// The Deompress object produced by this constructor expects gzip headers
     /// for the compressed data.
     ///
     /// # Panics
@@ -508,7 +508,7 @@ impl Decompress {
                 self.decompress(input, out, flush)
             };
             output.set_len((self.total_out() - before) as usize + len);
-            ret
+            return ret;
         }
     }
 
@@ -518,7 +518,7 @@ impl Decompress {
         let stream = &mut *self.inner.inner.stream_wrapper;
         stream.msg = std::ptr::null_mut();
         let rc = unsafe {
-            assert!(dictionary.len() < ffi::uInt::MAX as usize);
+            assert!(dictionary.len() < ffi::uInt::max_value() as usize);
             ffi::inflateSetDictionary(stream, dictionary.as_ptr(), dictionary.len() as ffi::uInt)
         };
 
