@@ -61,6 +61,12 @@ struct DcSctpOptions {
   // this before sending it.
   size_t max_send_buffer_size = 2 * 1024 * 1024;
 
+  // Max allowed RTT value. When the RTT is measured and it's found to be larger
+  // than this value, it will be discarded and not used for e.g. any RTO
+  // calculation. The default value is an extreme maximum but can be adapted
+  // to better match the environment.
+  DurationMs rtt_max = DurationMs(8'000);
+
   // Initial RTO value.
   DurationMs rto_initial = DurationMs(500);
 
