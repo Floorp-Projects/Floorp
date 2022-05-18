@@ -136,9 +136,6 @@ class QualityAnalyzingVideoDecoderFactory : public VideoDecoderFactory {
   std::vector<SdpVideoFormat> GetSupportedFormats() const override;
   std::unique_ptr<VideoDecoder> CreateVideoDecoder(
       const SdpVideoFormat& format) override;
-  std::unique_ptr<VideoDecoder> LegacyCreateVideoDecoder(
-      const SdpVideoFormat& format,
-      const std::string& receive_stream_id) override;
 
  private:
   const std::string peer_name_;

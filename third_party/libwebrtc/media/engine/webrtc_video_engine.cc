@@ -3020,7 +3020,6 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::RecreateWebRtcVideoStream() {
   webrtc::VideoReceiveStream::Config config = config_.Copy();
   config.rtp.protected_by_flexfec = (flexfec_stream_ != nullptr);
   config.rtp.packet_sink_ = flexfec_stream_;
-  config.stream_id = stream_params_.id;
   stream_ = call_->CreateVideoReceiveStream(std::move(config));
   if (base_minimum_playout_delay_ms) {
     stream_->SetBaseMinimumPlayoutDelayMs(

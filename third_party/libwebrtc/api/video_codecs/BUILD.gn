@@ -25,7 +25,6 @@ rtc_library("video_codecs_api") {
     "video_codec.h",
     "video_decoder.cc",
     "video_decoder.h",
-    "video_decoder_factory.cc",
     "video_decoder_factory.h",
     "video_encoder.cc",
     "video_encoder.h",
