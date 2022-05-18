@@ -7,16 +7,16 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '720eb67ae3752c1520d7fc9e6954cd195bfe8609',
+  'chromium_revision': 'e6f2129c2e035304b0453a530aa345f9d26b178e',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@c2322397355424caada934ba415f6e64c6673067',
+    'https://chromium.googlesource.com/chromium/src/base@29514e89f983c02eaaebe6be1f61c24eaa3c133e',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@8cc66170453ac1ee0d82bf6c89e07ce1287c23ce',
+    'https://chromium.googlesource.com/chromium/src/build@2d95b4abc3a94fc8b991b5d363dcdef3af483bec',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@5da6005cc90f06df9cf4fbaad30374c9a41a7ba9',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -25,13 +25,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@b8a2db9627b5f967695a1c6ed3ecad55a81c5bc2',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@61a54baae25b968c991f07d97321eb962ba9120c',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@206bdd6798acba06f0c22efc49586b485e80f253',
+    'https://chromium.googlesource.com/chromium/src/testing@d384301a1d66393ba02594c4b5a652bf3e8a0f33',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@2c60ded257ebc5c66f0e4b709a3d53848670962b',
+    'https://chromium.googlesource.com/chromium/src/third_party@40011882ff34c6f8e41225df3d1165e02d47eb0d',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -122,7 +122,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@3bea2815bfea6e641d50aad15bde2c494ef8f34b',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@bbfed50cf91d86dc24b07f292741f2b20d7d0697',
+    'https://chromium.googlesource.com/catapult.git@ed0183e21a8642343f61c8302ee21550246e5b65',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -208,7 +208,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@52fefceb29bb88140996879a9a8970d7ea6dce83',
+    'https://android.googlesource.com/platform/external/perfetto.git@21d255cb2580c7d9b2a9a554b35a7faed6b2605a',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@61edec1efbea1c02d71857e2aff9426d9cd2df4e',
   'src/third_party/libyuv':
@@ -265,7 +265,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@24c68e0d2034d7c3ab1a1001fca0a52336add117',
+    'https://chromium.googlesource.com/chromium/src/tools@0e154484a2691e5dc7cd1b550cb0d02643f41225',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
@@ -2073,7 +2073,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/org_jetbrains_kotlin_kotlin_stdlib',
-              'version': 'version:2@1.4.30.cr0',
+              'version': 'version:2@1.4.32.cr0',
           },
       ],
       'condition': 'checkout_android',
@@ -2084,7 +2084,29 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/org_jetbrains_kotlin_kotlin_stdlib_common',
-              'version': 'version:2@1.4.30.cr0',
+              'version': 'version:2@1.4.32.cr0',
+          },
+      ],
+      'condition': 'checkout_android',
+      'dep_type': 'cipd',
+  },
+
+  'src/third_party/android_deps/libs/org_jetbrains_kotlinx_kotlinx_coroutines_android': {
+      'packages': [
+          {
+              'package': 'chromium/third_party/android_deps/libs/org_jetbrains_kotlinx_kotlinx_coroutines_android',
+              'version': 'version:2@1.4.3.cr0',
+          },
+      ],
+      'condition': 'checkout_android',
+      'dep_type': 'cipd',
+  },
+
+  'src/third_party/android_deps/libs/org_jetbrains_kotlinx_kotlinx_coroutines_core_jvm': {
+      'packages': [
+          {
+              'package': 'chromium/third_party/android_deps/libs/org_jetbrains_kotlinx_kotlinx_coroutines_core_jvm',
+              'version': 'version:2@1.4.3.cr0',
           },
       ],
       'condition': 'checkout_android',
