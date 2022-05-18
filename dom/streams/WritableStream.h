@@ -160,7 +160,7 @@ class WritableStream : public nsISupports, public nsWrapperCache {
  private:
   bool mBackpressure = false;
   RefPtr<Promise> mCloseRequest;
-  MOZ_KNOWN_LIVE RefPtr<WritableStreamDefaultController> mController;
+  RefPtr<WritableStreamDefaultController> mController;
   RefPtr<Promise> mInFlightWriteRequest;
   RefPtr<Promise> mInFlightCloseRequest;
 
