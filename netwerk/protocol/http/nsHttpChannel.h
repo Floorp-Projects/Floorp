@@ -832,6 +832,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   bool mDidReval{false};
 
   RefPtr<nsIEarlyHintObserver> mEarlyHintObserver;
+  Maybe<nsCString> mOpenerCallingScriptLocation;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpChannel, NS_HTTPCHANNEL_IID)

@@ -1234,7 +1234,7 @@ nsresult nsSocketTransport::InitiateSocket() {
           "Browser services should be disabled or redirected to a local "
           "server.\n",
           mHost.get(), ipaddr.get());
-      MOZ_CRASH("Attempting to connect to non-local address!");
+      return NS_ERROR_NON_LOCAL_CONNECTION_REFUSED;
     }
   }
 
