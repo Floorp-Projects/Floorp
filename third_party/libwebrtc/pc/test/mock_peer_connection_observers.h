@@ -351,6 +351,11 @@ class FakeSetRemoteDescriptionObserver
 
 class MockDataChannelObserver : public webrtc::DataChannelObserver {
  public:
+  struct Message {
+    std::string data;
+    bool binary;
+  };
+
   explicit MockDataChannelObserver(webrtc::DataChannelInterface* channel)
       : channel_(channel) {
     channel_->RegisterObserver(this);
@@ -363,20 +368,29 @@ class MockDataChannelObserver : public webrtc::DataChannelObserver {
   void OnStateChange() override { state_ = channel_->state(); }
   void OnMessage(const DataBuffer& buffer) override {
     messages_.push_back(
-        std::string(buffer.data.data<char>(), buffer.data.size()));
+        {std::string(buffer.data.data<char>(), buffer.data.size()),
+         buffer.binary});
   }
 
   bool IsOpen() const { return state_ == DataChannelInterface::kOpen; }
-  std::vector<std::string> messages() const { return messages_; }
+  std::vector<Message> messages() const { return messages_; }
   std::string last_message() const {
-    return messages_.empty() ? std::string() : messages_.back();
+    if (messages_.empty())
+      return {};
+
+    return messages_.back().data;
+  }
+  bool last_message_is_binary() const {
+    if (messages_.empty())
+      return false;
+    return messages_.back().binary;
   }
   size_t received_message_count() const { return messages_.size(); }
 
  private:
   rtc::scoped_refptr<webrtc::DataChannelInterface> channel_;
   DataChannelInterface::DataState state_;
-  std::vector<std::string> messages_;
+  std::vector<Message> messages_;
 };
 
 class MockStatsObserver : public webrtc::StatsObserver {

@@ -36,7 +36,7 @@ class FakeDataChannelProvider
       return false;
     }
 
-    if (transport_error_ || payload.size() == 0) {
+    if (transport_error_) {
       *result = cricket::SDR_ERROR;
       return false;
     }
