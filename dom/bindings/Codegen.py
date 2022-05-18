@@ -4420,7 +4420,7 @@ def InitUnforgeablePropertiesOnHolder(
             CGGeneric(
                 fill(
                     """
-            JS::RootedId toPrimitive(aCx,
+            JS::Rooted<JS::PropertyKey> toPrimitive(aCx,
               JS::GetWellKnownSymbolKey(aCx, JS::SymbolCode::toPrimitive));
             if (!JS_DefinePropertyById(aCx, ${holderName}, toPrimitive,
                                        JS::UndefinedHandleValue,
@@ -22237,8 +22237,8 @@ class CGObservableArrayProxyHandler_OnDeleteItem(
     def __init__(self, descriptor, attr):
         args = [
             Argument("JSContext*", "aCx"),
-            Argument("JS::HandleObject", "aProxy"),
-            Argument("JS::HandleValue", "aValue"),
+            Argument("JS::Handle<JSObject*>", "aProxy"),
+            Argument("JS::Handle<JS::Value>", "aValue"),
             Argument("uint32_t", "aIndex"),
         ]
         CGObservableArrayProxyHandler_callback.__init__(
@@ -22270,10 +22270,10 @@ class CGObservableArrayProxyHandler_SetIndexedValue(
     def __init__(self, descriptor, attr):
         args = [
             Argument("JSContext*", "aCx"),
-            Argument("JS::HandleObject", "aProxy"),
-            Argument("JS::HandleObject", "aBackingList"),
+            Argument("JS::Handle<JSObject*>", "aProxy"),
+            Argument("JS::Handle<JSObject*>", "aBackingList"),
             Argument("uint32_t", "aIndex"),
-            Argument("JS::HandleValue", "aValue"),
+            Argument("JS::Handle<JS::Value>", "aValue"),
             Argument("JS::ObjectOpResult&", "aResult"),
         ]
         CGObservableArrayProxyHandler_callback.__init__(
@@ -22303,7 +22303,7 @@ class CGObservableArrayProxyHandler_SetIndexedValue(
         return dedent(
             """
             if (aIndex < oldLen) {
-              JS::RootedValue value(aCx);
+              JS::Rooted<JS::Value> value(aCx);
               if (!JS_GetElement(aCx, aBackingList, aIndex, &value)) {
                 return false;
               }

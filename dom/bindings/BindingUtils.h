@@ -1341,7 +1341,7 @@ inline bool FindEnumStringIndex(BindingCallContext& cx, JS::Handle<JS::Value> v,
                                 const EnumEntry* values, const char* type,
                                 const char* sourceDescription, int* index) {
   // JS_StringEqualsAscii is slow as molasses, so don't use it here.
-  JS::RootedString str(cx, JS::ToString(cx, v));
+  JS::Rooted<JSString*> str(cx, JS::ToString(cx, v));
   if (!str) {
     return false;
   }
@@ -1909,7 +1909,7 @@ inline bool ConvertIdToString(JSContext* cx, JS::Handle<JS::PropertyKey> id,
     isSymbol = true;
     return true;
   } else {
-    JS::RootedValue nameVal(cx, js::IdToValue(id));
+    JS::Rooted<JS::Value> nameVal(cx, js::IdToValue(id));
     if (!ConvertJSValueToString(cx, nameVal, eStringify, eStringify, result)) {
       return false;
     }
