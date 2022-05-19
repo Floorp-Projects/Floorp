@@ -50,6 +50,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Nimbus variable `autoFillAdaptiveHistoryEnabled`.
   ["autoFill.adaptiveHistory.enabled", false],
 
+  // Minimum char length to enable adaptive history autofill.
+  ["autoFill.adaptiveHistory.minCharsThreshold", 0],
+
   // Threshold for use count of input history that we handle as adaptive history
   // autofill. If the use count is this value or more, it will be a candidate.
   // Set the threshold to not be candidate the input history passed
