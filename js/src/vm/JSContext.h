@@ -818,6 +818,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
    */
   inline bool runningWithTrustedPrincipals();
 
+  // Checks if the page's Content-Security-Policy (CSP) allows
+  // runtime code generation "unsafe-eval".
+  bool isRuntimeCodeGenEnabled(js::HandleString code);
+
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
