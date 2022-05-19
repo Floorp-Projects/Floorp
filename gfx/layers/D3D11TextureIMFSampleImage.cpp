@@ -10,6 +10,7 @@
 
 #include "D3D11TextureIMFSampleImage.h"
 #include "WMF.h"
+#include "mozilla/gfx/SourceSurfaceRawData.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "mozilla/layers/TextureForwarder.h"
 
@@ -70,8 +71,29 @@ D3D11TextureIMFSampleImage::GetAsSourceSurface() {
     return nullptr;
   }
 
-  return gfx::Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(src,
-                                                                   mArrayIndex);
+  RefPtr<gfx::SourceSurface> sourceSurface =
+      gfx::Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(src,
+                                                                mArrayIndex);
+
+  // There is a case that mSize and size of mTexture are different. In this
+  // case, size of sourceSurface is different from mSize.
+  if (sourceSurface && sourceSurface->GetSize() != mSize) {
+    MOZ_RELEASE_ASSERT(sourceSurface->GetType() == SurfaceType::DATA_ALIGNED);
+    RefPtr<gfx::SourceSurfaceAlignedRawData> rawData =
+        static_cast<gfx::SourceSurfaceAlignedRawData*>(sourceSurface.get());
+    auto data = rawData->GetData();
+    auto stride = rawData->Stride();
+    auto size = rawData->GetSize();
+    auto format = rawData->GetFormat();
+    sourceSurface = gfx::Factory::CreateWrappingDataSourceSurface(
+        data, stride, Min(size, mSize), format,
+        [](void* aClosure) {
+          RefPtr<SourceSurfaceAlignedRawData> surface =
+              dont_AddRef(static_cast<SourceSurfaceAlignedRawData*>(aClosure));
+        },
+        rawData.forget().take());
+  }
+  return sourceSurface.forget();
 }
 
 ID3D11Texture2D* D3D11TextureIMFSampleImage::GetTexture() const {
