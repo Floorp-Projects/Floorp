@@ -12,6 +12,12 @@ See the above repository for updates as well as full license text. */
    --uc-fx-button-color: #5300ee;
    --uc-fx-button-sec-color: #ffdfbf85;
  }
+
+ @media  (prefers-color-scheme: light) {
+  #PanelUI-button{
+  color: white !important;
+  }
+ }
  
  #PanelUI-button{ -moz-box-ordinal-group: 0; margin-inline: 2px var(--uc-window-drag-space-pre,24px) !important; }
  :root[tabsintitlebar] #nav-bar{ border-left-width: 0px; padding-left: 0px !important; }
@@ -50,4 +56,9 @@ See the above repository for updates as well as full license text. */
  #toolbar-menubar,
  #toolbar-menubar[autohide="true"] + #TabsToolbar{
    padding-left: 94px !important;
+ }
+
+
+ #appMenu-popup{
+   margin-left: 0px !important;
  }

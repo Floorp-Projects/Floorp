@@ -1224,10 +1224,6 @@
         */
     }
 
-    /* Fallback background */
-    menupopup:not(.cui-widget-panel.cui-widget-panelview, [placespopup="true"]) {
-      background-color: var(--lwt-accent-color, var(--in-content-page-background)) !important;
-    }
   }
   /* Default theme color preservation */
   :root[lwtheme-mozlightdark] menupopup:not(#BMB_bookmarksPopup, [placespopup="true"]),
@@ -6833,11 +6829,6 @@
   
   #pageActionButton{
     display: none !important;
-  }
-  
-  #import-button {
-    margin-right: 10px !important;
-    margin-top: -0.4em !important;
   }
   
   #PanelUI-menu-button
