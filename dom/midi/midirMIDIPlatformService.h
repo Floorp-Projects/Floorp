@@ -26,7 +26,6 @@ class midirMIDIPlatformService : public MIDIPlatformService {
  public:
   midirMIDIPlatformService();
   virtual void Init() override;
-  virtual void Refresh() override;
   virtual void Open(MIDIPortParent* aPort) override;
   virtual void Stop() override;
   virtual void ScheduleSend(const nsAString& aPort) override;
@@ -38,8 +37,6 @@ class midirMIDIPlatformService : public MIDIPlatformService {
   virtual ~midirMIDIPlatformService();
 
   static void AddPort(const nsString* aId, const nsString* aName, bool aInput);
-  static void RemovePort(const nsString* aId, const nsString* aName,
-                         bool aInput);
   static void CheckAndReceive(const nsString* aId, const uint8_t* aData,
                               size_t aLength, const GeckoTimeStamp* aTimeStamp,
                               uint64_t aMicros);

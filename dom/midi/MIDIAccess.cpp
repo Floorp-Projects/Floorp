@@ -205,11 +205,6 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
 // request removal from MIDIAccess's maps.
 void MIDIAccess::Notify(const MIDIPortList& aEvent) {
   LOG("MIDIAcess::Notify");
-  if (!GetOwner()) {
-    // Do nothing if we've already been disconnected from the document.
-    return;
-  }
-
   for (const auto& port : aEvent.ports()) {
     // Something went very wrong. Warn and return.
     ErrorResult rv;
@@ -242,7 +237,6 @@ void MIDIAccess::DisconnectFromOwner() {
   IgnoreKeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
 
   DOMEventTargetHelper::DisconnectFromOwner();
-  MIDIAccessManager::Get()->SendRefresh();
 }
 
 }  // namespace mozilla::dom

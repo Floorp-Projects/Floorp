@@ -13,7 +13,6 @@ async protocol PMIDIManager
 {
   manager PBackground;
 parent:
-  async Refresh();
   async Shutdown();
 child:
   /*
