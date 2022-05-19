@@ -75,13 +75,14 @@ var NotificationDB = {
   },
 
   filterNonAppNotifications(notifications) {
+    let result = Object.create(null);
     for (let origin in notifications) {
+      result[origin] = Object.create(null);
       let persistentNotificationCount = 0;
       for (let id in notifications[origin]) {
         if (notifications[origin][id].serviceWorkerRegistrationScope) {
           persistentNotificationCount++;
-        } else {
-          delete notifications[origin][id];
+          result[origin][id] = notifications[origin][id];
         }
       }
       if (persistentNotificationCount == 0) {
@@ -90,11 +91,11 @@ var NotificationDB = {
             "Origin " + origin + " is not linked to an app manifest, deleting."
           );
         }
-        delete notifications[origin];
+        delete result[origin];
       }
     }
 
-    return notifications;
+    return result;
   },
 
   // Attempt to read notification file, if it's not there we will create it.
