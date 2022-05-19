@@ -370,12 +370,16 @@ function matchRequest(channel, filters) {
   // NetworkEventContentWatcher and NetworkEventStackTraces pass a target actor instead, from the content processes
   // Because of EFT, we can't use session context as we have to know what exact windows the target actor covers.
   if (filters.targetActor) {
-    const { window } = filters.targetActor;
-    if (!window) {
-      throw new Error("Target actor is missing a window attribute");
+    // Bug 1769982 the target actor might be destroying and accessing windows will throw.
+    // Ignore all further request when this happens.
+    let windows;
+    try {
+      windows = filters.targetActor.windows;
+    } catch (e) {
+      return false;
     }
     const win = NetworkHelper.getWindowForRequest(channel);
-    return filters.targetActor.windows.includes(win);
+    return windows.includes(win);
   }
 
   // This is fallback code for the legacy WebConsole.startListeners codepath,
