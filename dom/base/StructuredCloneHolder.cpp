@@ -46,12 +46,18 @@
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
+#include "mozilla/dom/ReadableStream.h"
+#include "mozilla/dom/ReadableStreamBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredCloneBlob.h"
 #include "mozilla/dom/StructuredCloneHolderBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/TransformStream.h"
+#include "mozilla/dom/TransformStreamBinding.h"
 #include "mozilla/dom/WebIDLSerializable.h"
+#include "mozilla/dom/WritableStream.h"
+#include "mozilla/dom/WritableStreamBinding.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/fallible.h"
@@ -1115,7 +1121,26 @@ bool StructuredCloneHolder::CustomWriteHandler(
   return WriteFullySerializableObjects(aCx, aWriter, aObj);
 }
 
-bool StructuredCloneHolder::CustomReadTransferHandler(
+already_AddRefed<MessagePort> StructuredCloneHolder::ReceiveMessagePort(
+    uint64_t aIndex) {
+  if (NS_WARN_IF(aIndex >= mPortIdentifiers.Length())) {
+    return nullptr;
+  }
+  UniqueMessagePortId portId(mPortIdentifiers[aIndex]);
+
+  ErrorResult rv;
+  RefPtr<MessagePort> port = MessagePort::Create(mGlobal, portId, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
+    return nullptr;
+  }
+
+  return port.forget();
+}
+
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY bool
+StructuredCloneHolder::CustomReadTransferHandler(
     JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
     void* aContent, uint64_t aExtraData,
     JS::MutableHandleObject aReturnObject) {
@@ -1127,16 +1152,10 @@ bool StructuredCloneHolder::CustomReadTransferHandler(
       return false;
     }
 #endif
-    MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
-    UniqueMessagePortId portIdentifier(mPortIdentifiers[aExtraData]);
-
-    ErrorResult rv;
-    RefPtr<MessagePort> port = MessagePort::Create(mGlobal, portIdentifier, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
+    RefPtr<MessagePort> port = ReceiveMessagePort(aExtraData);
+    if (!port) {
       return false;
     }
-
     mTransferredPorts.AppendElement(port);
 
     JS::Rooted<JS::Value> value(aCx);
@@ -1186,10 +1205,56 @@ bool StructuredCloneHolder::CustomReadTransferHandler(
     return true;
   }
 
+  if (aTag == SCTAG_DOM_READABLESTREAM) {
+#ifdef FUZZING
+    if (aExtraData >= mPortIdentifiers.Length()) {
+      return false;
+    }
+#endif
+    RefPtr<MessagePort> port = ReceiveMessagePort(aExtraData);
+    if (!port) {
+      return false;
+    }
+    nsCOMPtr<nsIGlobalObject> global = mGlobal;
+    return ReadableStream::ReceiveTransfer(aCx, global, *port, aReturnObject);
+  }
+
+  if (aTag == SCTAG_DOM_WRITABLESTREAM) {
+#ifdef FUZZING
+    if (aExtraData >= mPortIdentifiers.Length()) {
+      return false;
+    }
+#endif
+    RefPtr<MessagePort> port = ReceiveMessagePort(aExtraData);
+    if (!port) {
+      return false;
+    }
+    nsCOMPtr<nsIGlobalObject> global = mGlobal;
+    return WritableStream::ReceiveTransfer(aCx, global, *port, aReturnObject);
+  }
+
+  if (aTag == SCTAG_DOM_TRANSFORMSTREAM) {
+#ifdef FUZZING
+    if (aExtraData + 1 >= mPortIdentifiers.Length()) {
+      return false;
+    }
+#endif
+    RefPtr<MessagePort> port1 = ReceiveMessagePort(aExtraData);
+    RefPtr<MessagePort> port2 = ReceiveMessagePort(aExtraData + 1);
+    if (!port1 || !port2) {
+      return false;
+    }
+    nsCOMPtr<nsIGlobalObject> global = mGlobal;
+    return TransformStream::ReceiveTransfer(aCx, global, *port1, *port2,
+                                            aReturnObject);
+  }
+
   return false;
 }
 
-bool StructuredCloneHolder::CustomWriteTransferHandler(
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY bool
+StructuredCloneHolder::CustomWriteTransferHandler(
     JSContext* aCx, JS::Handle<JSObject*> aObj, uint32_t* aTag,
     JS::TransferableOwnership* aOwnership, void** aContent,
     uint64_t* aExtraData) {
@@ -1263,6 +1328,68 @@ bool StructuredCloneHolder::CustomWriteTransferHandler(
         return true;
       }
     }
+
+    {
+      RefPtr<ReadableStream> stream;
+      rv = UNWRAP_OBJECT(ReadableStream, &obj, stream);
+      if (NS_SUCCEEDED(rv)) {
+        MOZ_ASSERT(stream);
+
+        *aTag = SCTAG_DOM_READABLESTREAM;
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
+        *aContent = nullptr;
+
+        UniqueMessagePortId id;
+        if (!stream->Transfer(aCx, id)) {
+          return false;
+        }
+        *aExtraData = mPortIdentifiers.Length();
+        mPortIdentifiers.AppendElement(id.release());
+        return true;
+      }
+    }
+
+    {
+      RefPtr<WritableStream> stream;
+      rv = UNWRAP_OBJECT(WritableStream, &obj, stream);
+      if (NS_SUCCEEDED(rv)) {
+        MOZ_ASSERT(stream);
+
+        *aTag = SCTAG_DOM_WRITABLESTREAM;
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
+        *aContent = nullptr;
+
+        UniqueMessagePortId id;
+        if (!stream->Transfer(aCx, id)) {
+          return false;
+        }
+        *aExtraData = mPortIdentifiers.Length();
+        mPortIdentifiers.AppendElement(id.release());
+        return true;
+      }
+    }
+
+    {
+      RefPtr<TransformStream> stream;
+      rv = UNWRAP_OBJECT(TransformStream, &obj, stream);
+      if (NS_SUCCEEDED(rv)) {
+        MOZ_ASSERT(stream);
+
+        *aTag = SCTAG_DOM_TRANSFORMSTREAM;
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
+        *aContent = nullptr;
+
+        UniqueMessagePortId id1;
+        UniqueMessagePortId id2;
+        if (!stream->Transfer(aCx, id1, id2)) {
+          return false;
+        }
+        *aExtraData = mPortIdentifiers.Length();
+        mPortIdentifiers.AppendElement(id1.release());
+        mPortIdentifiers.AppendElement(id2.release());
+        return true;
+      }
+    }
   }
 
   return false;
@@ -1299,6 +1426,31 @@ void StructuredCloneHolder::CustomFreeTransferHandler(
     MOZ_ASSERT(aContent);
     ImageBitmapCloneData* data = static_cast<ImageBitmapCloneData*>(aContent);
     delete data;
+    return;
+  }
+
+  if (aTag == SCTAG_DOM_READABLESTREAM || aTag == SCTAG_DOM_WRITABLESTREAM) {
+    MOZ_ASSERT(!aContent);
+#ifdef FUZZING
+    if (aExtraData >= mPortIdentifiers.Length()) {
+      return;
+    }
+#endif
+    MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
+    MessagePort::ForceClose(mPortIdentifiers[aExtraData]);
+    return;
+  }
+
+  if (aTag == SCTAG_DOM_TRANSFORMSTREAM) {
+    MOZ_ASSERT(!aContent);
+#ifdef FUZZING
+    if (aExtraData + 1 >= mPortIdentifiers.Length()) {
+      return;
+    }
+#endif
+    MOZ_ASSERT(aExtraData + 1 < mPortIdentifiers.Length());
+    MessagePort::ForceClose(mPortIdentifiers[aExtraData]);
+    MessagePort::ForceClose(mPortIdentifiers[aExtraData + 1]);
     return;
   }
 }
@@ -1339,6 +1491,40 @@ bool StructuredCloneHolder::CustomCanTransferHandler(
 
       SameProcessScopeRequired(aSameProcessScopeRequired);
       return CloneScope() == StructuredCloneScope::SameProcess;
+    }
+  }
+
+  {
+    ReadableStream* stream = nullptr;
+    nsresult rv = UNWRAP_OBJECT(ReadableStream, &obj, stream);
+    if (NS_SUCCEEDED(rv)) {
+      // https://streams.spec.whatwg.org/#ref-for-transfer-steps
+      // Step 1: If ! IsReadableStreamLocked(value) is true, throw a
+      // "DataCloneError" DOMException.
+      return !IsReadableStreamLocked(stream);
+    }
+  }
+
+  {
+    WritableStream* stream = nullptr;
+    nsresult rv = UNWRAP_OBJECT(WritableStream, &obj, stream);
+    if (NS_SUCCEEDED(rv)) {
+      // https://streams.spec.whatwg.org/#ref-for-transfer-steps①
+      // Step 1: If ! IsWritableStreamLocked(value) is true, throw a
+      // "DataCloneError" DOMException.
+      return !IsWritableStreamLocked(stream);
+    }
+  }
+
+  {
+    TransformStream* stream = nullptr;
+    nsresult rv = UNWRAP_OBJECT(TransformStream, &obj, stream);
+    if (NS_SUCCEEDED(rv)) {
+      // https://streams.spec.whatwg.org/#ref-for-transfer-steps②
+      // Step 3 + 4: If ! Is{Readable,Writable}StreamLocked(value) is true,
+      // throw a "DataCloneError" DOMException.
+      return !IsReadableStreamLocked(stream->Readable()) &&
+             !IsWritableStreamLocked(stream->Writable());
     }
   }
 
