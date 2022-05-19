@@ -21,7 +21,6 @@ class MIDIManagerParent final : public PMIDIManagerParent {
  public:
   NS_INLINE_DECL_REFCOUNTING(MIDIManagerParent);
   MIDIManagerParent() = default;
-  mozilla::ipc::IPCResult RecvRefresh();
   mozilla::ipc::IPCResult RecvShutdown();
   void Teardown();
   void ActorDestroy(ActorDestroyReason aWhy) override;
