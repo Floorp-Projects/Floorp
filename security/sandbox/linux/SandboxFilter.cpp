@@ -1785,6 +1785,7 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
   explicit RDDSandboxPolicy(SandboxBrokerClient* aBroker) {
     mBroker = aBroker;
     mMayCreateShmem = true;
+    mBrokeredConnect = true;
   }
 
 #ifndef ANDROID
@@ -1820,11 +1821,11 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
   Maybe<ResultExpr> EvaluateSocketCall(int aCall,
                                        bool aHasArgs) const override {
     switch (aCall) {
-      // Mesa can call getpwuid_r to get the home dir, which can try
-      // to connect to nscd (or maybe servers like NIS or LDAP); this
-      // can't be safely allowed, but we can quietly deny it.
-      case SYS_SOCKET:
-        return Some(Error(EACCES));
+      // These are for X11.
+      case SYS_GETSOCKNAME:
+      case SYS_GETPEERNAME:
+      case SYS_SHUTDOWN:
+        return Some(Allow());
 
       default:
         return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
