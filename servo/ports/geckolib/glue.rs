@@ -2959,7 +2959,7 @@ pub extern "C" fn Servo_ContainerRule_GetConditionText(
     result: &mut nsACString,
 ) {
     read_locked_arc(rule, |rule: &ContainerRule| {
-        rule.query_condition().to_css(&mut CssWriter::new(result)).unwrap();
+        rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
     })
 }
 
@@ -5848,7 +5848,6 @@ fn create_context_for_animation<'a>(
         quirks_mode: per_doc_data.stylist.quirks_mode(),
         for_smil_animation,
         for_non_inherited_property: None,
-        container_info: None,
         rule_cache_conditions: RefCell::new(rule_cache_conditions),
     }
 }
