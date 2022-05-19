@@ -999,24 +999,22 @@ void CustomElementRegistry::Define(
     disableShadow = disabledFeatures.Contains(
         static_cast<nsStaticAtom*>(nsGkAtoms::shadow));
 
-    if (StaticPrefs::dom_webcomponents_formAssociatedCustomElement_enabled()) {
-      // 14.11. Let formAssociatedValue be Get(constructor, "formAssociated").
-      //        Rethrow any exceptions.
-      JS::Rooted<JS::Value> formAssociatedValue(aCx);
-      if (!JS_GetProperty(aCx, constructor, "formAssociated",
-                          &formAssociatedValue)) {
-        aRv.NoteJSContextException(aCx);
-        return;
-      }
+    // 14.11. Let formAssociatedValue be Get(constructor, "formAssociated").
+    //        Rethrow any exceptions.
+    JS::Rooted<JS::Value> formAssociatedValue(aCx);
+    if (!JS_GetProperty(aCx, constructor, "formAssociated",
+                        &formAssociatedValue)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
 
-      // 14.12. Set formAssociated to the result of converting
-      //        formAssociatedValue to a boolean. Rethrow any exceptions from
-      //        the conversion.
-      if (!ValueToPrimitive<bool, eDefault>(
-              aCx, formAssociatedValue, "formAssociated", &formAssociated)) {
-        aRv.NoteJSContextException(aCx);
-        return;
-      }
+    // 14.12. Set formAssociated to the result of converting
+    //        formAssociatedValue to a boolean. Rethrow any exceptions from
+    //        the conversion.
+    if (!ValueToPrimitive<bool, eDefault>(aCx, formAssociatedValue,
+                                          "formAssociated", &formAssociated)) {
+      aRv.NoteJSContextException(aCx);
+      return;
     }
   }  // Unset mIsCustomDefinitionRunning
 
