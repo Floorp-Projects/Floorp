@@ -1329,65 +1329,67 @@ StructuredCloneHolder::CustomWriteTransferHandler(
       }
     }
 
-    {
-      RefPtr<ReadableStream> stream;
-      rv = UNWRAP_OBJECT(ReadableStream, &obj, stream);
-      if (NS_SUCCEEDED(rv)) {
-        MOZ_ASSERT(stream);
+    if (StaticPrefs::dom_streams_transferable_enabled()) {
+      {
+        RefPtr<ReadableStream> stream;
+        rv = UNWRAP_OBJECT(ReadableStream, &obj, stream);
+        if (NS_SUCCEEDED(rv)) {
+          MOZ_ASSERT(stream);
 
-        *aTag = SCTAG_DOM_READABLESTREAM;
-        *aOwnership = JS::SCTAG_TMO_CUSTOM;
-        *aContent = nullptr;
+          *aTag = SCTAG_DOM_READABLESTREAM;
+          *aOwnership = JS::SCTAG_TMO_CUSTOM;
+          *aContent = nullptr;
 
-        UniqueMessagePortId id;
-        if (!stream->Transfer(aCx, id)) {
-          return false;
+          UniqueMessagePortId id;
+          if (!stream->Transfer(aCx, id)) {
+            return false;
+          }
+          *aExtraData = mPortIdentifiers.Length();
+          mPortIdentifiers.AppendElement(id.release());
+          return true;
         }
-        *aExtraData = mPortIdentifiers.Length();
-        mPortIdentifiers.AppendElement(id.release());
-        return true;
       }
-    }
 
-    {
-      RefPtr<WritableStream> stream;
-      rv = UNWRAP_OBJECT(WritableStream, &obj, stream);
-      if (NS_SUCCEEDED(rv)) {
-        MOZ_ASSERT(stream);
+      {
+        RefPtr<WritableStream> stream;
+        rv = UNWRAP_OBJECT(WritableStream, &obj, stream);
+        if (NS_SUCCEEDED(rv)) {
+          MOZ_ASSERT(stream);
 
-        *aTag = SCTAG_DOM_WRITABLESTREAM;
-        *aOwnership = JS::SCTAG_TMO_CUSTOM;
-        *aContent = nullptr;
+          *aTag = SCTAG_DOM_WRITABLESTREAM;
+          *aOwnership = JS::SCTAG_TMO_CUSTOM;
+          *aContent = nullptr;
 
-        UniqueMessagePortId id;
-        if (!stream->Transfer(aCx, id)) {
-          return false;
+          UniqueMessagePortId id;
+          if (!stream->Transfer(aCx, id)) {
+            return false;
+          }
+          *aExtraData = mPortIdentifiers.Length();
+          mPortIdentifiers.AppendElement(id.release());
+          return true;
         }
-        *aExtraData = mPortIdentifiers.Length();
-        mPortIdentifiers.AppendElement(id.release());
-        return true;
       }
-    }
 
-    {
-      RefPtr<TransformStream> stream;
-      rv = UNWRAP_OBJECT(TransformStream, &obj, stream);
-      if (NS_SUCCEEDED(rv)) {
-        MOZ_ASSERT(stream);
+      {
+        RefPtr<TransformStream> stream;
+        rv = UNWRAP_OBJECT(TransformStream, &obj, stream);
+        if (NS_SUCCEEDED(rv)) {
+          MOZ_ASSERT(stream);
 
-        *aTag = SCTAG_DOM_TRANSFORMSTREAM;
-        *aOwnership = JS::SCTAG_TMO_CUSTOM;
-        *aContent = nullptr;
+          *aTag = SCTAG_DOM_TRANSFORMSTREAM;
+          *aOwnership = JS::SCTAG_TMO_CUSTOM;
+          *aContent = nullptr;
 
-        UniqueMessagePortId id1;
-        UniqueMessagePortId id2;
-        if (!stream->Transfer(aCx, id1, id2)) {
-          return false;
+          UniqueMessagePortId id1;
+          UniqueMessagePortId id2;
+          if (!stream->Transfer(aCx, id1, id2)) {
+            return false;
+          }
+          *aExtraData = mPortIdentifiers.Length();
+          mPortIdentifiers.AppendElement(id1.release());
+          mPortIdentifiers.AppendElement(id2.release());
+          return true;
         }
-        *aExtraData = mPortIdentifiers.Length();
-        mPortIdentifiers.AppendElement(id1.release());
-        mPortIdentifiers.AppendElement(id2.release());
-        return true;
       }
     }
   }
