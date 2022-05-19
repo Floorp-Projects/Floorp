@@ -7097,3 +7097,11 @@
     treechildren::-moz-tree-image(title, container, open) {
     list-style-image: url("chrome://browser/skin/photon/photon-folder-open.svg") !important;
   }
+  
+/*fix photon dark theme bug*/
+
+#TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon:-moz-lwtheme,
+.tab-background[selected]:-moz-lwtheme {
+  outline: none !important;
+  outline-offset: -1px !important;
+}
