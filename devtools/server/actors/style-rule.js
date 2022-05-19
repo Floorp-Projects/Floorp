@@ -287,16 +287,12 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   },
 
   getDocument: function(sheet) {
-    if (sheet.ownerNode) {
-      return sheet.ownerNode.nodeType == sheet.ownerNode.DOCUMENT_NODE
-        ? sheet.ownerNode
-        : sheet.ownerNode.ownerDocument;
-    } else if (sheet.parentStyleSheet) {
-      return this.getDocument(sheet.parentStyleSheet);
+    if (!sheet.associatedDocument) {
+      throw new Error(
+        "Failed trying to get the document of an invalid stylesheet"
+      );
     }
-    throw new Error(
-      "Failed trying to get the document of an invalid stylesheet"
-    );
+    return sheet.associatedDocument;
   },
 
   toString: function() {
