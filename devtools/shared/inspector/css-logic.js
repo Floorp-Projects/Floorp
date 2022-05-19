@@ -130,8 +130,14 @@ exports.isAgentStylesheet = function(sheet) {
  * @param {CSSStyleSheet} sheet the DOM object for the style sheet.
  */
 exports.shortSource = function(sheet) {
-  // Use a string like "inline" if there is no source href
-  if (!sheet || !sheet.href) {
+  if (!sheet) {
+    return exports.l10n("rule.sourceInline");
+  }
+
+  if (!sheet.href) {
+    if (sheet.constructed) {
+      return "constructed";
+    }
     return exports.l10n("rule.sourceInline");
   }
 
