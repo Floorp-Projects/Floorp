@@ -54,6 +54,9 @@ class MIDIPlatformService {
   // Platform specific init function.
   virtual void Init() = 0;
 
+  // Forces the implementation to refresh the port list.
+  virtual void Refresh() = 0;
+
   // Platform specific MIDI port opening function.
   virtual void Open(MIDIPortParent* aPort) = 0;
 
