@@ -296,6 +296,9 @@ class DcSctpSocketInterface {
   // The options it was created with.
   virtual const DcSctpOptions& options() const = 0;
 
+  // Update the options max_message_size.
+  virtual void SetMaxMessageSize(size_t max_message_size) = 0;
+
   // Sends the message `message` using the provided send options.
   // Sending a message is an asynchrous operation, and the `OnError` callback
   // may be invoked to indicate any errors in sending the message.

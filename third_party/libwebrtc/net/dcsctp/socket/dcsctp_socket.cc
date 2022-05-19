@@ -424,6 +424,10 @@ SocketState DcSctpSocket::state() const {
   }
 }
 
+void DcSctpSocket::SetMaxMessageSize(size_t max_message_size) {
+  options_.max_message_size = max_message_size;
+}
+
 void DcSctpSocket::MaybeSendShutdownOnPacketReceived(const SctpPacket& packet) {
   if (state_ == State::kShutdownSent) {
     bool has_data_chunk =
