@@ -1188,6 +1188,17 @@ bool JSContext::isThrowingDebuggeeWouldRun() {
              JSEXN_DEBUGGEEWOULDRUN;
 }
 
+bool JSContext::isRuntimeCodeGenEnabled(HandleString code) {
+  // Make sure that the CSP callback is installed and that it permits runtime
+  // code generation.
+  if (JSCSPEvalChecker allows =
+          runtime()->securityCallbacks->contentSecurityPolicyAllows) {
+    return allows(this, code);
+  }
+
+  return true;
+}
+
 size_t JSContext::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   /*
