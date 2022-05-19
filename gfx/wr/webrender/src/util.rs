@@ -4,7 +4,7 @@
 
 use api::BorderRadius;
 use api::units::*;
-use euclid::{Point2D, Rect, Box2D, Size2D, Vector2D};
+use euclid::{Point2D, Rect, Box2D, Size2D, Vector2D, point2, point3};
 use euclid::{default, Transform2D, Transform3D, Scale};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use plane_split::{Clipper, Polygon};
@@ -1154,6 +1154,24 @@ impl<Src, Dst> FastTransform<Src, Dst> {
                 Some(Point2D::from_untyped(new_point.to_untyped()))
             }
             FastTransform::Transform { ref transform, .. } => transform.transform_point2d(point),
+        }
+    }
+
+    #[inline(always)]
+    pub fn project_point2d(&self, point: Point2D<f32, Src>) -> Option<Point2D<f32, Dst>> {
+        match* self {
+            FastTransform::Offset(..) => self.transform_point2d(point),
+            FastTransform::Transform{ref transform, ..} => {
+                // Find a value for z that will transform to 0.
+
+                // The transformed value of z is computed as:
+                // z' = point.x * self.m13 + point.y * self.m23 + z * self.m33 + self.m43
+
+                // Solving for z when z' = 0 gives us:
+                let z = -(point.x * transform.m13 + point.y * transform.m23 + transform.m43) / transform.m33;
+
+                transform.transform_point3d(point3(point.x, point.y, z)).map(| p3 | point2(p3.x, p3.y))
+            }
         }
     }
 
