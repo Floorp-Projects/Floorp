@@ -15,6 +15,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/async_invoker_inl.h"
 #include "rtc_base/constructor_magic.h"
@@ -86,10 +87,10 @@ namespace rtc {
 //   destruction. This can be done by starting each chain of invocations on the
 //   same thread on which it will be destroyed, or by using some other
 //   synchronization method.
-class AsyncInvoker : public MessageHandlerAutoCleanup {
+class DEPRECATED_AsyncInvoker : public MessageHandlerAutoCleanup {
  public:
-  AsyncInvoker();
-  ~AsyncInvoker() override;
+  DEPRECATED_AsyncInvoker();
+  ~DEPRECATED_AsyncInvoker() override;
 
   // Call |functor| asynchronously on |thread|, with no callback upon
   // completion. Returns immediately.
@@ -165,8 +166,11 @@ class AsyncInvoker : public MessageHandlerAutoCleanup {
 
   friend class AsyncClosure;
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(AsyncInvoker);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DEPRECATED_AsyncInvoker);
 };
+
+using AsyncInvoker ABSL_DEPRECATED("bugs.webrtc.org/12339") =
+    DEPRECATED_AsyncInvoker;
 
 }  // namespace rtc
 
