@@ -7,16 +7,16 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '6609fdef0279975aff97d29101dd543b91f291dd',
+  'chromium_revision': '5c9a5eaec87fbe7cf57a73a4357b919df0e74222',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@d690e3ba854fbacde331f4af7095d07e7498f374',
+    'https://chromium.googlesource.com/chromium/src/base@817e12aeeb68881c3b41b7a4a989785b04328b70',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@b0572595a7d71f41f7890311fcb06beb9326b9fb',
+    'https://chromium.googlesource.com/chromium/src/build@85859d61bc2e781d4ef6fe62ba3bef89f4c8214e',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@e72cd4587a1b833ecf559e4524b69a359cc87697',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -25,13 +25,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@96809857f90ef283dd0b1b93afbf60af64d75ccb',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@d4d2dca0ff2d63e2ab3334cc0252e0a354a0c475',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@ed4015b71d162cedcbb5237875ed62b3cd581383',
+    'https://chromium.googlesource.com/chromium/src/testing@b2d92b26bfa25dcb074fc99fd3b32eff725dc35f',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@ee2863e680fee0ebde95c0c666d58c439214ec5f',
+    'https://chromium.googlesource.com/chromium/src/third_party@80511ece1487471d940805dd0fa675a7b964346b',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -122,7 +122,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@3bea2815bfea6e641d50aad15bde2c494ef8f34b',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@785c56fc0ffa12b96475d37c5bd44e432e6f9c59',
+    'https://chromium.googlesource.com/catapult.git@7318bc06728f464275b8605e5c0da3f45b56710c',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -131,7 +131,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@5998f8451548244de8cde7fab387a550e7c4497d',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@029279376e6c57e8725ddcabe6fb5d8a9be0a7b5',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@6b022d1efb1559ab795a1c91014a2a6fb7efba88',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@280d5fd0df8b4284ad040bd29deb3241bd6dfc4a',
   'src/third_party/findbugs': {
@@ -258,14 +258,14 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/third_party/usrsctp/usrsctplib':
-    'https://chromium.googlesource.com/external/github.com/sctplab/usrsctp@70d42ae95a1de83bd317c8cc9503f894671d1392',
+    'https://chromium.googlesource.com/external/github.com/sctplab/usrsctp@0bd8b8110bc1a388649e504de1e673114e91013f',
   # Dependency used by libjpeg-turbo.
   'src/third_party/yasm/binaries': {
     'url': 'https://chromium.googlesource.com/chromium/deps/yasm/binaries.git@52f9b3f4b0aa06da24ef8b123058bb61ee468881',
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@ed183c4ed1a5dd2bfd4eaea280c5d12bbd9ed52f',
+    'https://chromium.googlesource.com/chromium/src/tools@5770a078eadf817bac71e8243fd17716b2a7d55b',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
@@ -366,7 +366,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'FNuFgvRBcpyQW5WOaiPBvxLfoUoh4aBd5S2QkEohikoC',
+          'version': 'F-KyxlnPsilCF8hZJ4eXLycPHgTbV09Ch5FXUOHjzWMC',
       },
     ],
     'condition': 'checkout_android',
