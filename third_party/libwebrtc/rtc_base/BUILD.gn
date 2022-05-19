@@ -245,6 +245,7 @@ rtc_library("platform_thread") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
 
@@ -561,7 +562,10 @@ if (is_win) {
       "../api/task_queue",
       "synchronization:mutex",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 }
 
@@ -1417,6 +1421,7 @@ if (rtc_include_tests) {
       absl_deps = [
         "//third_party/abseil-cpp/absl/base:core_headers",
         "//third_party/abseil-cpp/absl/memory",
+        "//third_party/abseil-cpp/absl/types:optional",
       ]
     }
 

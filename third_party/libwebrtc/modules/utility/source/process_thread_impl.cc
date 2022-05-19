@@ -48,7 +48,6 @@ ProcessThreadImpl::ProcessThreadImpl(const char* thread_name)
 
 ProcessThreadImpl::~ProcessThreadImpl() {
   RTC_DCHECK(thread_checker_.IsCurrent());
-  RTC_DCHECK(!thread_.get());
   RTC_DCHECK(!stop_);
 
   while (!delayed_tasks_.empty()) {
@@ -72,8 +71,8 @@ void ProcessThreadImpl::Delete() {
 // Doesn't need locking, because the contending thread isn't running.
 void ProcessThreadImpl::Start() RTC_NO_THREAD_SAFETY_ANALYSIS {
   RTC_DCHECK(thread_checker_.IsCurrent());
-  RTC_DCHECK(!thread_.get());
-  if (thread_.get())
+  RTC_DCHECK(thread_.empty());
+  if (!thread_.empty())
     return;
 
   RTC_DCHECK(!stop_);
@@ -81,14 +80,18 @@ void ProcessThreadImpl::Start() RTC_NO_THREAD_SAFETY_ANALYSIS {
   for (ModuleCallback& m : modules_)
     m.module->ProcessThreadAttached(this);
 
-  thread_.reset(
-      new rtc::PlatformThread(&ProcessThreadImpl::Run, this, thread_name_));
-  thread_->Start();
+  thread_ = rtc::PlatformThread::SpawnJoinable(
+      [this] {
+        CurrentTaskQueueSetter set_current(this);
+        while (Process()) {
+        }
+      },
+      thread_name_);
 }
 
 void ProcessThreadImpl::Stop() {
   RTC_DCHECK(thread_checker_.IsCurrent());
-  if (!thread_.get())
+  if (thread_.empty())
     return;
 
   {
@@ -98,9 +101,7 @@ void ProcessThreadImpl::Stop() {
   }
 
   wake_up_.Set();
-
-  thread_->Stop();
-  thread_.reset();
+  thread_.Finalize();
 
   StopNoLocks();
 }
@@ -108,7 +109,7 @@ void ProcessThreadImpl::Stop() {
 // No locking needed, since this is called after the contending thread is
 // stopped.
 void ProcessThreadImpl::StopNoLocks() RTC_NO_THREAD_SAFETY_ANALYSIS {
-  RTC_DCHECK(!thread_);
+  RTC_DCHECK(thread_.empty());
   stop_ = false;
 
   for (ModuleCallback& m : modules_)
@@ -199,7 +200,7 @@ void ProcessThreadImpl::RegisterModule(Module* module,
   // Now that we know the module isn't in the list, we'll call out to notify
   // the module that it's attached to the worker thread.  We don't hold
   // the lock while we make this call.
-  if (thread_.get())
+  if (!thread_.empty())
     module->ProcessThreadAttached(this);
 
   {
@@ -225,14 +226,6 @@ void ProcessThreadImpl::DeRegisterModule(Module* module) {
 
   // Notify the module that it's been detached.
   module->ProcessThreadAttached(nullptr);
-}
-
-// static
-void ProcessThreadImpl::Run(void* obj) {
-  ProcessThreadImpl* impl = static_cast<ProcessThreadImpl*>(obj);
-  CurrentTaskQueueSetter set_current(impl);
-  while (impl->Process()) {
-  }
 }
 
 bool ProcessThreadImpl::Process() {

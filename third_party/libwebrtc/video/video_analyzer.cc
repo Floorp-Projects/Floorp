@@ -137,10 +137,12 @@ VideoAnalyzer::VideoAnalyzer(test::LayerFilteringTransport* transport,
   }
 
   for (uint32_t i = 0; i < num_cores; ++i) {
-    rtc::PlatformThread* thread =
-        new rtc::PlatformThread(&FrameComparisonThread, this, "Analyzer");
-    thread->Start();
-    comparison_thread_pool_.push_back(thread);
+    comparison_thread_pool_.push_back(rtc::PlatformThread::SpawnJoinable(
+        [this] {
+          while (CompareFrames()) {
+          }
+        },
+        "Analyzer"));
   }
 
   if (!rtp_dump_name.empty()) {
@@ -155,10 +157,8 @@ VideoAnalyzer::~VideoAnalyzer() {
     MutexLock lock(&comparison_lock_);
     quit_ = true;
   }
-  for (rtc::PlatformThread* thread : comparison_thread_pool_) {
-    thread->Stop();
-    delete thread;
-  }
+  // Joins all threads.
+  comparison_thread_pool_.clear();
 }
 
 void VideoAnalyzer::SetReceiver(PacketReceiver* receiver) {
@@ -531,12 +531,6 @@ void VideoAnalyzer::PollStats() {
   }
 
   memory_usage_.AddSample(rtc::GetProcessResidentSizeBytes());
-}
-
-void VideoAnalyzer::FrameComparisonThread(void* obj) {
-  VideoAnalyzer* analyzer = static_cast<VideoAnalyzer*>(obj);
-  while (analyzer->CompareFrames()) {
-  }
 }
 
 bool VideoAnalyzer::CompareFrames() {

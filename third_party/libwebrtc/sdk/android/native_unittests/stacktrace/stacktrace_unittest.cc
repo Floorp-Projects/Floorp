@@ -153,28 +153,24 @@ class SleepDeadlock : public DeadlockInterface {
   }
 };
 
-// This is the function that is exectued by the thread that will deadlock and
-// have its stacktrace captured.
-void ThreadFunction(void* void_params) {
-  ThreadParams* params = static_cast<ThreadParams*>(void_params);
-  params->tid = gettid();
-
-  params->deadlock_region_start_address = GetCurrentRelativeExecutionAddress();
-  params->deadlock_start_event.Set();
-  params->deadlock_impl->Deadlock();
-  params->deadlock_region_end_address = GetCurrentRelativeExecutionAddress();
-
-  params->deadlock_done_event.Set();
-}
-
 void TestStacktrace(std::unique_ptr<DeadlockInterface> deadlock_impl) {
   // Set params that will be sent to other thread.
   ThreadParams params;
   params.deadlock_impl = deadlock_impl.get();
 
   // Spawn thread.
-  rtc::PlatformThread thread(&ThreadFunction, &params, "StacktraceTest");
-  thread.Start();
+  auto thread = rtc::PlatformThread::SpawnJoinable(
+      [&params] {
+        params.tid = gettid();
+        params.deadlock_region_start_address =
+            GetCurrentRelativeExecutionAddress();
+        params.deadlock_start_event.Set();
+        params.deadlock_impl->Deadlock();
+        params.deadlock_region_end_address =
+            GetCurrentRelativeExecutionAddress();
+        params.deadlock_done_event.Set();
+      },
+      "StacktraceTest");
 
   // Wait until the thread has entered the deadlock region, and take a very
   // brief nap to give it time to reach the actual deadlock.
@@ -198,8 +194,6 @@ void TestStacktrace(std::unique_ptr<DeadlockInterface> deadlock_impl) {
       << rtc::ToHex(params.deadlock_region_start_address) << ", "
       << rtc::ToHex(params.deadlock_region_end_address)
       << "] not contained in: " << StackTraceToString(stack_trace);
-
-  thread.Stop();
 }
 
 class LookoutLogSink final : public rtc::LogSink {
@@ -259,13 +253,9 @@ TEST(Stacktrace, TestRtcEventDeadlockDetection) {
 
   // Start a thread that waits for an event.
   rtc::Event ev;
-  rtc::PlatformThread thread(
-      [](void* arg) {
-        auto* ev = static_cast<rtc::Event*>(arg);
-        ev->Wait(rtc::Event::kForever);
-      },
-      &ev, "TestRtcEventDeadlockDetection");
-  thread.Start();
+  auto thread = rtc::PlatformThread::SpawnJoinable(
+      [&ev] { ev.Wait(rtc::Event::kForever); },
+      "TestRtcEventDeadlockDetection");
 
   // The message should appear after 3 sec. We'll wait up to 10 sec in an
   // attempt to not be flaky.
@@ -273,7 +263,7 @@ TEST(Stacktrace, TestRtcEventDeadlockDetection) {
 
   // Unblock the thread and shut it down.
   ev.Set();
-  thread.Stop();
+  thread.Finalize();
   rtc::LogMessage::RemoveLogToStream(&sink);
 }
 

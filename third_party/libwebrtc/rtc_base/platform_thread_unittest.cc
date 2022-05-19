@@ -10,69 +10,73 @@
 
 #include "rtc_base/platform_thread.h"
 
+#include "absl/types/optional.h"
 #include "rtc_base/event.h"
 #include "system_wrappers/include/sleep.h"
 #include "test/gmock.h"
 
 namespace rtc {
-namespace {
 
-void NullRunFunction(void* obj) {}
-
-// Function that sets a boolean.
-void SetFlagRunFunction(void* obj) {
-  bool* obj_as_bool = static_cast<bool*>(obj);
-  *obj_as_bool = true;
+TEST(PlatformThreadTest, DefaultConstructedIsEmpty) {
+  PlatformThread thread;
+  EXPECT_EQ(thread.GetHandle(), absl::nullopt);
+  EXPECT_TRUE(thread.empty());
 }
 
-void StdFunctionRunFunction(void* obj) {
-  std::function<void()>* fun = static_cast<std::function<void()>*>(obj);
-  (*fun)();
+TEST(PlatformThreadTest, StartFinalize) {
+  PlatformThread thread = PlatformThread::SpawnJoinable([] {}, "1");
+  EXPECT_NE(thread.GetHandle(), absl::nullopt);
+  EXPECT_FALSE(thread.empty());
+  thread.Finalize();
+  EXPECT_TRUE(thread.empty());
+  thread = PlatformThread::SpawnDetached([] {}, "2");
+  EXPECT_FALSE(thread.empty());
+  thread.Finalize();
+  EXPECT_TRUE(thread.empty());
 }
 
-}  // namespace
-
-TEST(PlatformThreadTest, StartStop) {
-  PlatformThread thread(&NullRunFunction, nullptr, "PlatformThreadTest");
-  EXPECT_TRUE(thread.name() == "PlatformThreadTest");
-  EXPECT_TRUE(thread.GetThreadRef() == 0);
-  thread.Start();
-  EXPECT_TRUE(thread.GetThreadRef() != 0);
-  thread.Stop();
-  EXPECT_TRUE(thread.GetThreadRef() == 0);
+TEST(PlatformThreadTest, MovesEmpty) {
+  PlatformThread thread1;
+  PlatformThread thread2 = std::move(thread1);
+  EXPECT_TRUE(thread1.empty());
+  EXPECT_TRUE(thread2.empty());
 }
 
-TEST(PlatformThreadTest, StartStop2) {
-  PlatformThread thread1(&NullRunFunction, nullptr, "PlatformThreadTest1");
-  PlatformThread thread2(&NullRunFunction, nullptr, "PlatformThreadTest2");
-  EXPECT_TRUE(thread1.GetThreadRef() == thread2.GetThreadRef());
-  thread1.Start();
-  thread2.Start();
-  EXPECT_TRUE(thread1.GetThreadRef() != thread2.GetThreadRef());
-  thread2.Stop();
-  thread1.Stop();
+TEST(PlatformThreadTest, MovesHandles) {
+  PlatformThread thread1 = PlatformThread::SpawnJoinable([] {}, "1");
+  PlatformThread thread2 = std::move(thread1);
+  EXPECT_TRUE(thread1.empty());
+  EXPECT_FALSE(thread2.empty());
+  thread1 = PlatformThread::SpawnDetached([] {}, "2");
+  thread2 = std::move(thread1);
+  EXPECT_TRUE(thread1.empty());
+  EXPECT_FALSE(thread2.empty());
+}
+
+TEST(PlatformThreadTest,
+     TwoThreadHandlesAreDifferentWhenStartedAndEqualWhenJoined) {
+  PlatformThread thread1 = PlatformThread();
+  PlatformThread thread2 = PlatformThread();
+  EXPECT_EQ(thread1.GetHandle(), thread2.GetHandle());
+  thread1 = PlatformThread::SpawnJoinable([] {}, "1");
+  thread2 = PlatformThread::SpawnJoinable([] {}, "2");
+  EXPECT_NE(thread1.GetHandle(), thread2.GetHandle());
+  thread1.Finalize();
+  EXPECT_NE(thread1.GetHandle(), thread2.GetHandle());
+  thread2.Finalize();
+  EXPECT_EQ(thread1.GetHandle(), thread2.GetHandle());
 }
 
 TEST(PlatformThreadTest, RunFunctionIsCalled) {
   bool flag = false;
-  PlatformThread thread(&SetFlagRunFunction, &flag, "RunFunctionIsCalled");
-  thread.Start();
-
-  // At this point, the flag may be either true or false.
-  thread.Stop();
-
-  // We expect the thread to have run at least once.
+  PlatformThread::SpawnJoinable([&] { flag = true; }, "T");
   EXPECT_TRUE(flag);
 }
 
 TEST(PlatformThreadTest, JoinsThread) {
   // This test flakes if there are problems with the join implementation.
-  EXPECT_TRUE(ThreadAttributes().joinable);
   rtc::Event event;
-  std::function<void()> thread_function = [&] { event.Set(); };
-  PlatformThread thread(&StdFunctionRunFunction, &thread_function, "T");
-  thread.Start();
-  thread.Stop();
+  PlatformThread::SpawnJoinable([&] { event.Set(); }, "T");
   EXPECT_TRUE(event.Wait(/*give_up_after_ms=*/0));
 }
 
@@ -83,18 +87,14 @@ TEST(PlatformThreadTest, StopsBeforeDetachedThreadExits) {
   rtc::Event thread_started;
   rtc::Event thread_continue;
   rtc::Event thread_exiting;
-  std::function<void()> thread_function = [&] {
-    thread_started.Set();
-    thread_continue.Wait(Event::kForever);
-    flag = true;
-    thread_exiting.Set();
-  };
-  {
-    PlatformThread thread(&StdFunctionRunFunction, &thread_function, "T",
-                          ThreadAttributes().SetDetached());
-    thread.Start();
-    thread.Stop();
-  }
+  PlatformThread::SpawnDetached(
+      [&] {
+        thread_started.Set();
+        thread_continue.Wait(Event::kForever);
+        flag = true;
+        thread_exiting.Set();
+      },
+      "T");
   thread_started.Wait(Event::kForever);
   EXPECT_FALSE(flag);
   thread_continue.Set();
