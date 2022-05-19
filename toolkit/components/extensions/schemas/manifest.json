@@ -494,25 +494,14 @@
         ]
       },
       {
-        "id": "PermissionPrivileged",
-        "choices": [
-          {
-            "type": "string",
-            "enum": [
-              "mozillaAddons"
-            ]
-          }
-        ]
-      },
-      {
         "id": "PermissionNoPrompt",
         "choices": [
-          { "$ref": "OptionalPermissionNoPrompt" },
-          { "$ref": "PermissionPrivileged" },
+          { "$ref": "OptionalPermission" },
           {
             "type": "string",
             "enum": [
               "alarms",
+              "mozillaAddons",
               "storage",
               "unlimitedStorage"
             ]
