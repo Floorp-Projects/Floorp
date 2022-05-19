@@ -178,5 +178,8 @@ random-if(!winWidget&&!cocoaWidget) != wingdings-1.html wingdings-1-notref.html
 
 == illformed-lang-tags-1.html illformed-lang-tags-1.html?ref
 
+# Test for legacy name of Hiragino Sans, expected to work on macOS only
+skip-if(!cocoaWidget) != hiragino-kaku-1.html hiragino-kaku-1-notref.html
+
 # Reset default prefs.
 defaults
