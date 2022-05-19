@@ -353,17 +353,16 @@ void DefaultVideoQualityAnalyzer::OnFramePreDecode(
   stream_frame_counters_.at(key).received++;
   // Determine the time of the last received packet of this video frame.
   RTC_DCHECK(!input_image.PacketInfos().empty());
-  int64_t last_receive_time =
+  Timestamp last_receive_time =
       std::max_element(input_image.PacketInfos().cbegin(),
                        input_image.PacketInfos().cend(),
                        [](const RtpPacketInfo& a, const RtpPacketInfo& b) {
-                         return a.receive_time_ms() < b.receive_time_ms();
+                         return a.receive_time() < b.receive_time();
                        })
-          ->receive_time_ms();
-  it->second.OnFramePreDecode(
-      peer_index,
-      /*received_time=*/Timestamp::Millis(last_receive_time),
-      /*decode_start_time=*/Now());
+          ->receive_time();
+  it->second.OnFramePreDecode(peer_index,
+                              /*received_time=*/last_receive_time,
+                              /*decode_start_time=*/Now());
 }
 
 void DefaultVideoQualityAnalyzer::OnFrameDecoded(

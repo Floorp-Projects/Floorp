@@ -300,7 +300,7 @@ void ChannelReceive::OnReceivedPayloadData(
     // updating RtpSource information.
     if (source_tracker_) {
       RtpPacketInfos::vector_type packet_vector = {
-          RtpPacketInfo(rtpHeader, clock_->TimeInMilliseconds())};
+          RtpPacketInfo(rtpHeader, clock_->CurrentTime())};
       source_tracker_->OnFrameDelivered(RtpPacketInfos(packet_vector));
     }
 

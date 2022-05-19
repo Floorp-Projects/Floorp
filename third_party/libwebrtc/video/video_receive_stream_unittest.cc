@@ -336,16 +336,16 @@ TEST_F(VideoReceiveStreamTestWithFakeDecoder, RenderedFrameUpdatesGetSources) {
     info.set_csrcs({kCsrc});
     info.set_rtp_timestamp(kRtpTimestamp);
 
-    info.set_receive_time_ms(clock_->TimeInMilliseconds() - 5000);
+    info.set_receive_time(clock_->CurrentTime() - TimeDelta::Millis(5000));
     infos.push_back(info);
 
-    info.set_receive_time_ms(clock_->TimeInMilliseconds() - 3000);
+    info.set_receive_time(clock_->CurrentTime() - TimeDelta::Millis(3000));
     infos.push_back(info);
 
-    info.set_receive_time_ms(clock_->TimeInMilliseconds() - 2000);
+    info.set_receive_time(clock_->CurrentTime() - TimeDelta::Millis(2000));
     infos.push_back(info);
 
-    info.set_receive_time_ms(clock_->TimeInMilliseconds() - 4000);
+    info.set_receive_time(clock_->CurrentTime() - TimeDelta::Millis(4000));
     infos.push_back(info);
 
     packet_infos = RtpPacketInfos(std::move(infos));

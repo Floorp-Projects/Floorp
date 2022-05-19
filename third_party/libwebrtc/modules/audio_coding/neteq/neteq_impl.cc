@@ -565,19 +565,19 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
     return kInvalidPointer;
   }
 
-  int64_t receive_time_ms = clock_->TimeInMilliseconds();
+  Timestamp receive_time = clock_->CurrentTime();
   stats_->ReceivedPacket();
 
   PacketList packet_list;
   // Insert packet in a packet list.
-  packet_list.push_back([&rtp_header, &payload, &receive_time_ms] {
+  packet_list.push_back([&rtp_header, &payload, &receive_time] {
     // Convert to Packet.
     Packet packet;
     packet.payload_type = rtp_header.payloadType;
     packet.sequence_number = rtp_header.sequenceNumber;
     packet.timestamp = rtp_header.timestamp;
     packet.payload.SetData(payload.data(), payload.size());
-    packet.packet_info = RtpPacketInfo(rtp_header, receive_time_ms);
+    packet.packet_info = RtpPacketInfo(rtp_header, receive_time);
     // Waiting time will be set upon inserting the packet in the buffer.
     RTC_DCHECK(!packet.waiting_time);
     return packet;

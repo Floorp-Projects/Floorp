@@ -90,6 +90,7 @@ rtc_library("rtp_packet_info") {
     ":scoped_refptr",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/system:rtc_export",
+    "units:timestamp",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

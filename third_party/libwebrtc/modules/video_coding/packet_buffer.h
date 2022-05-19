@@ -18,6 +18,7 @@
 
 #include "absl/base/attributes.h"
 #include "api/rtp_packet_info.h"
+#include "api/units/timestamp.h"
 #include "api/video/encoded_image.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
@@ -34,7 +35,7 @@ class PacketBuffer {
     Packet() = default;
     Packet(const RtpPacketReceived& rtp_packet,
            const RTPVideoHeader& video_header,
-           int64_t receive_time_ms);
+           Timestamp receive_time);
     Packet(const Packet&) = delete;
     Packet(Packet&&) = delete;
     Packet& operator=(const Packet&) = delete;
