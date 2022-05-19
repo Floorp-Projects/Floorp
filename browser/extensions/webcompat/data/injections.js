@@ -622,6 +622,20 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug11769762",
+    platform: "all",
+    domain: "tiktok.com",
+    bug: "1769762",
+    contentScripts: {
+      matches: ["https://www.tiktok.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1769762-tiktok.com-plugins-shim.js",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
