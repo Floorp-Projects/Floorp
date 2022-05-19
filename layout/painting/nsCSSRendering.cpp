@@ -2973,8 +2973,11 @@ nsBackgroundLayerState nsCSSRendering::PrepareImageLayer(
   if (aFlags & nsCSSRendering::PAINTBG_HIGH_QUALITY_SCALING) {
     irFlags |= nsImageRenderer::FLAG_HIGH_QUALITY_SCALING;
   }
+  // Only do partial bg image drawing in content documents: non-content
+  // documents are viewed as UI of the browser and a partial draw of a bg image
+  // might look weird in that context.
   if (StaticPrefs::layout_display_partial_background_images() &&
-      !aPresContext->IsChrome()) {
+      XRE_IsContentProcess() && !aPresContext->IsChrome()) {
     irFlags |= nsImageRenderer::FLAG_DRAW_PARTIAL_FRAMES;
   }
 
