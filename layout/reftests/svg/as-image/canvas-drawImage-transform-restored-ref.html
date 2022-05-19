@@ -5,7 +5,7 @@
         var canvas = document.getElementById("canvas");
         var ctx = canvas.getContext("2d");
 
-        ctx.mozCurrentTransform = [2, 0, 0, 2, 0, 0];
+        ctx.setTransform(2, 0, 0, 2, 0, 0);
 
         ctx.fillStyle = "blue";
         ctx.fillRect(20, 20, 50, 50);
