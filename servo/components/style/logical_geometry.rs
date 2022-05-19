@@ -168,11 +168,6 @@ impl WritingMode {
         flags
     }
 
-    /// Returns the `horizontal-tb` value.
-    pub fn horizontal_tb() -> Self {
-        Self::from_bits_truncate(0)
-    }
-
     #[inline]
     pub fn is_vertical(&self) -> bool {
         self.intersects(WritingMode::VERTICAL)
