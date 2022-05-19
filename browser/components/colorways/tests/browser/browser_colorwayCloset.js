@@ -24,6 +24,13 @@ add_task(async function about_colorwaycloset_smoke_test() {
         document.getElementsByTagName("colorway-selector"),
         "Found colorway selector element"
       );
+
+      ok(document.getElementById("colorway-name"), "colorway name exists");
+
+      ok(
+        document.getElementById("colorway-description"),
+        "colorway description exists"
+      );
     }
   );
 });

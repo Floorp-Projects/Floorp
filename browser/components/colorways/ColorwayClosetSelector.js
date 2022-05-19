@@ -14,6 +14,7 @@ class ColorwaySelector extends HTMLFieldSetElement {
       BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
     });
     this.colorways;
+    this.activeTheme;
     this.selectedTheme;
     window.addEventListener("unload", () => {
       this.AddonManager.removeAddonListener(this);
@@ -28,21 +29,23 @@ class ColorwaySelector extends HTMLFieldSetElement {
     this.colorways = themes.filter(theme =>
       this.BuiltInThemes.isMonochromaticTheme(theme.id)
     );
-    this.selectedTheme = themes.find(theme => theme.isActive);
+    this.activeTheme = themes.find(theme => theme.isActive);
     return this.colorways;
   };
 
   onEnabled(addon) {
     if (addon.type == "theme") {
-      this.selectedTheme = addon;
+      this.activeTheme = addon;
       this.refresh();
     }
   }
 
   refresh() {
     for (let input of this.children) {
-      if (input.value == this.selectedTheme.id) {
+      if (input.value == this.activeTheme.id) {
         input.classList.add("active");
+        this.updateName(this.selectedTheme.name);
+        this.updateDescription(input.value);
       } else {
         input.classList.remove("active");
       }
@@ -55,11 +58,26 @@ class ColorwaySelector extends HTMLFieldSetElement {
       input.name = "colorway";
       input.value = theme.id;
       input.style.setProperty("--colorway-icon", `url(${theme.iconURL})`);
+      input.onclick = () => {
+        this.selectedTheme = theme;
+        this.updateName(theme.name);
+        this.updateDescription(theme.id);
+      };
       this.appendChild(input);
       if (theme.isActive) {
         input.classList.add("active");
       }
     }
+  }
+
+  updateDescription(text) {
+    text = text.replace("@mozilla.org", "-description");
+    document.querySelector("#colorway-description").innerText = text;
+    // TODO: localize strings with Fluent
+  }
+  updateName(text) {
+    // TODO: localize strings with Fluent
+    document.querySelector("#colorway-name").innerText = text;
   }
 
   connectedCallback() {
