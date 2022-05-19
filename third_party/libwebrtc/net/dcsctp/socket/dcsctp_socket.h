@@ -92,6 +92,7 @@ class DcSctpSocket : public DcSctpSocketInterface {
       rtc::ArrayView<const StreamID> outgoing_streams) override;
   SocketState state() const override;
   const DcSctpOptions& options() const override { return options_; }
+  void SetMaxMessageSize(size_t max_message_size) override;
 
   // Returns this socket's verification tag, or zero if not yet connected.
   VerificationTag verification_tag() const {
@@ -244,7 +245,7 @@ class DcSctpSocket : public DcSctpSocketInterface {
 
   const std::string log_prefix_;
   const std::unique_ptr<PacketObserver> packet_observer_;
-  const DcSctpOptions options_;
+  DcSctpOptions options_;
 
   // Enqueues callbacks and dispatches them just before returning to the caller.
   CallbackDeferrer callbacks_;

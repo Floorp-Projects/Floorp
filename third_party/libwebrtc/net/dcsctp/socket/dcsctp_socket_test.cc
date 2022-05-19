@@ -1085,5 +1085,10 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
                             .Build());
 }
 
+TEST_F(DcSctpSocketTest, SetMaxMessageSize) {
+  sock_a_.SetMaxMessageSize(42u);
+  EXPECT_EQ(sock_a_.options().max_message_size, 42u);
+}
+
 }  // namespace
 }  // namespace dcsctp
