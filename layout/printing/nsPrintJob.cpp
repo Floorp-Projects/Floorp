@@ -731,7 +731,7 @@ void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
 //-- Section: Reflow Methods
 //-----------------------------------------------------------------
 
-nsresult nsPrintJob::ReconstructAndReflow(bool doSetPixelScale) {
+nsresult nsPrintJob::ReconstructAndReflow() {
   if (NS_WARN_IF(!mPrt)) {
     return NS_ERROR_FAILURE;
   }
@@ -767,7 +767,7 @@ nsresult nsPrintJob::ReconstructAndReflow(bool doSetPixelScale) {
                "print object "
                "has been marked as \"print the document\"");
 
-    UpdateZoomRatio(po, doSetPixelScale);
+    UpdateZoomRatio(po);
 
     po->mPresContext->SetPageScale(po->mZoomRatio);
 
@@ -866,7 +866,7 @@ nsresult nsPrintJob::SetupToPrintContent() {
   // If some new content got loaded since the initial reflow rebuild
   // everything.
   if (mDidLoadDataForPrinting) {
-    nsresult rv = ReconstructAndReflow(DoSetPixelScale());
+    nsresult rv = ReconstructAndReflow();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -886,7 +886,7 @@ nsresult nsPrintJob::SetupToPrintContent() {
     printData->mShrinkRatio = printData->mPrintObject->mShrinkRatio;
 
     if (printData->mShrinkRatio < 0.998f) {
-      nsresult rv = ReconstructAndReflow(true);
+      nsresult rv = ReconstructAndReflow();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1011,8 +1011,7 @@ nsresult nsPrintJob::SetupToPrintContent() {
 //-------------------------------------------------------
 // Recursively reflow each sub-doc and then calc
 // all the frame locations of the sub-docs
-nsresult nsPrintJob::ReflowDocList(const UniquePtr<nsPrintObject>& aPO,
-                                   bool aSetPixelScale) {
+nsresult nsPrintJob::ReflowDocList(const UniquePtr<nsPrintObject>& aPO) {
   NS_ENSURE_ARG_POINTER(aPO);
 
   // Check to see if the subdocument's element has been hidden by the parent
@@ -1027,13 +1026,13 @@ nsresult nsPrintJob::ReflowDocList(const UniquePtr<nsPrintObject>& aPO,
     }
   }
 
-  UpdateZoomRatio(aPO.get(), aSetPixelScale);
+  UpdateZoomRatio(aPO.get());
 
   // Reflow the PO
   MOZ_TRY(ReflowPrintObject(aPO));
 
   for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-    MOZ_TRY(ReflowDocList(kid, aSetPixelScale));
+    MOZ_TRY(ReflowDocList(kid));
   }
   return NS_OK;
 }
@@ -1070,7 +1069,7 @@ nsresult nsPrintJob::InitPrintDocConstruction(bool aHandleError) {
     webProgress->AddProgressListener(static_cast<nsIWebProgressListener*>(this),
                                      nsIWebProgress::NOTIFY_STATE_REQUEST);
 
-    MOZ_TRY(ReflowDocList(printData->mPrintObject, DoSetPixelScale()));
+    MOZ_TRY(ReflowDocList(printData->mPrintObject));
 
     FirePrintPreviewUpdateEvent();
   }
@@ -1186,18 +1185,21 @@ nsPrintJob::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
 
 //-------------------------------------------------------
 
-void nsPrintJob::UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale) {
-  // Here is where we set the shrinkage value into the DC
-  // and this is what actually makes it shrink
-  if (aSetPixelScale && aPO->mFrameType != eIFrame) {
-    // Round down
-    aPO->mZoomRatio = mPrt->mPrintSettings->GetPrintSelectionOnly()
-                          ? aPO->mShrinkRatio - 0.005f
-                          : mPrt->mShrinkRatio - 0.005f;
-  } else if (!mPrt->mShrinkToFit) {
-    double scaling;
-    mPrt->mPrintSettings->GetScaling(&scaling);
-    aPO->mZoomRatio = float(scaling);
+void nsPrintJob::UpdateZoomRatio(nsPrintObject* aPO) {
+  if (!aPO->mParent) {
+    if (mPrt->mShrinkToFit) {
+      aPO->mZoomRatio = mPrt->mShrinkRatio;
+      // If we're actually going to scale (the factor is less than 1), we
+      // reduce the scale factor slightly to avoid the possibility of floating
+      // point rounding error causing slight clipping of the longest lines.
+      if (aPO->mZoomRatio != 1.0f) {
+        aPO->mZoomRatio -= 0.005f;
+      }
+    } else {
+      double scaling;
+      mPrt->mPrintSettings->GetScaling(&scaling);
+      aPO->mZoomRatio = float(scaling);
+    }
   }
 }
 
@@ -1250,23 +1252,6 @@ nsresult nsPrintJob::UpdateSelectionAndShrinkPrintObject(
     }
   }
   return NS_OK;
-}
-
-bool nsPrintJob::DoSetPixelScale() {
-  // This is an Optimization
-  // If we are in PP then we already know all the shrinkage information
-  // so just transfer it to the PrintData and we will skip the extra shrinkage
-  // reflow
-  //
-  // doSetPixelScale tells Reflow whether to set the shrinkage value into the DC
-  // The first time we do not want to do this, the second time through we do
-  bool doSetPixelScale = false;
-  bool ppIsShrinkToFit = mPrtPreview && mPrtPreview->mShrinkToFit;
-  if (ppIsShrinkToFit) {
-    mPrt->mShrinkRatio = mPrtPreview->mShrinkRatio;
-    doSetPixelScale = true;
-  }
-  return doSetPixelScale;
 }
 
 nsView* nsPrintJob::GetParentViewForRoot() {
