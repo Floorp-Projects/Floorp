@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "net/dcsctp/public/timeout.h"
 
 namespace dcsctp {
@@ -73,15 +74,20 @@ class FakeTimeoutManager {
     return timer;
   }
 
-  std::vector<TimeoutID> RunTimers() {
+  // NOTE: This can't return a vector, as calling EvaluateHasExpired requires
+  // calling socket->HandleTimeout directly afterwards, as the owning Timer
+  // still believes it's running, and it needs to be updated to set
+  // Timer::is_running_ to false before you operate on the Timer or Timeout
+  // again.
+  absl::optional<TimeoutID> GetNextExpiredTimeout() {
     TimeMs now = get_time_();
     std::vector<TimeoutID> expired_timers;
     for (auto& timer : timers_) {
       if (timer->EvaluateHasExpired(now)) {
-        expired_timers.push_back(timer->timeout_id());
+        return timer->timeout_id();
       }
     }
-    return expired_timers;
+    return absl::nullopt;
   }
 
  private:
