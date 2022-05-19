@@ -100,8 +100,6 @@ class UrlInputFragment :
 
         private val ANIMATION_DURATION = 200
 
-        private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
-
         @JvmStatic
         fun createWithoutSession(): UrlInputFragment {
             val arguments = Bundle()
@@ -135,6 +133,7 @@ class UrlInputFragment :
     private val customDomainsProvider = CustomDomainsProvider()
     private var _binding: FragmentUrlinputBinding? = null
     private val binding get() = _binding!!
+    private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
 
     @Volatile
     private var isAnimating: Boolean = false
