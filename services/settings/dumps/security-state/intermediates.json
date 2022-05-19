@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1652801130545,
+      "derHash": "+C+LUJZ8ClLp2Bt5qQ/+uOUVt4FKXl3i8msPavb+dTE=",
+      "subject": "CN=AlpiroSSL ECC EV CA,O=Alpiro s.r.o.,C=CZ",
+      "subjectDN": "MEMxCzAJBgNVBAYTAkNaMRYwFAYDVQQKEw1BbHBpcm8gcy5yLm8uMRwwGgYDVQQDExNBbHBpcm9TU0wgRUNDIEVWIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bf09308f3a01e9ddf3ae677edf6cd8e3a11e9e3c0c419fe2bfaa997e33c16acf",
+        "size": 1293,
+        "filename": "GnXFLd5ceheMJdGnZvJlKLtfXp4UjCGVFGe713NdmTc=.pem",
+        "location": "security-state-staging/intermediates/d7c0e80f-aa6c-44df-b808-6229806536ea.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "GnXFLd5ceheMJdGnZvJlKLtfXp4UjCGVFGe713NdmTc=",
+      "crlite_enrolled": false,
+      "id": "82d0865f-c1b7-488f-b20d-26edea9b53e9",
+      "last_modified": 1652846250748
+    },
+    {
+      "schema": 1652723070188,
+      "derHash": "2n5XePYvh2Vbj9JKieZR5XMp3JwHZacRWM5WRDykTpU=",
+      "subject": "CN=DigiCert Extended Validation CA-3 G3,OU=www.digicert.com,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MHAxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjEZMBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTEtMCsGA1UEAxMkRGlnaUNlcnQgRXh0ZW5kZWQgVmFsaWRhdGlvbiBDQS0zIEcz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6844a48cc10ea1a880af9e0aea02a3fc4be2786b3ce299bd1644cd2fc49c1f64",
+        "size": 1187,
+        "filename": "epA52XxQ9Mrum63GbS8dL1dkTIzeOueiCw6jHr7t_u8=.pem",
+        "location": "security-state-staging/intermediates/5d0c77a4-ad61-4b2d-9500-0ed1ce697602.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "epA52XxQ9Mrum63GbS8dL1dkTIzeOueiCw6jHr7t/u8=",
+      "crlite_enrolled": false,
+      "id": "9bd31525-cabf-4b0e-acc5-1952d08e7761",
+      "last_modified": 1652759882916
+    },
+    {
       "schema": 1652389030686,
       "derHash": "ayP62JAYDDN7hkFV2uDem62e8L2njREvLL3D0CrReVY=",
       "subject": "CN=NetLock Üzleti (Class B) Tanúsítványkiadó,OU=Tanúsítványkiadók (Certification Services),O=NetLock Kft.,L=Budapest,C=HU",
@@ -6247,24 +6283,6 @@
       "last_modified": 1645579197062
     },
     {
-      "schema": 1645578813195,
-      "derHash": "+C+LUJZ8ClLp2Bt5qQ/+uOUVt4FKXl3i8msPavb+dTE=",
-      "subject": "CN=AlpiroSSL ECC EV CA,O=Alpiro s.r.o.,C=CZ",
-      "subjectDN": "MEMxCzAJBgNVBAYTAkNaMRYwFAYDVQQKEw1BbHBpcm8gcy5yLm8uMRwwGgYDVQQDExNBbHBpcm9TU0wgRUNDIEVWIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "bf09308f3a01e9ddf3ae677edf6cd8e3a11e9e3c0c419fe2bfaa997e33c16acf",
-        "size": 1293,
-        "filename": "GnXFLd5ceheMJdGnZvJlKLtfXp4UjCGVFGe713NdmTc=.pem",
-        "location": "security-state-staging/intermediates/d7c0e80f-aa6c-44df-b808-6229806536ea.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "GnXFLd5ceheMJdGnZvJlKLtfXp4UjCGVFGe713NdmTc=",
-      "crlite_enrolled": true,
-      "id": "82d0865f-c1b7-488f-b20d-26edea9b53e9",
-      "last_modified": 1645579197048
-    },
-    {
       "schema": 1645578793279,
       "derHash": "iExR1kO+ESbnLzsbcji6V+AmjB1sSiKs3WJJwXWKU7Y=",
       "subject": "CN=International Hellenic University CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
@@ -9719,24 +9737,6 @@
       "crlite_enrolled": true,
       "id": "0bc47da0-e7f9-4d90-abc8-4a6d3f0c15c7",
       "last_modified": 1643540241408
-    },
-    {
-      "schema": 1643539739222,
-      "derHash": "2n5XePYvh2Vbj9JKieZR5XMp3JwHZacRWM5WRDykTpU=",
-      "subject": "CN=DigiCert Extended Validation CA-3 G3,OU=www.digicert.com,O=DigiCert\\, Inc.,C=US",
-      "subjectDN": "MHAxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjEZMBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTEtMCsGA1UEAxMkRGlnaUNlcnQgRXh0ZW5kZWQgVmFsaWRhdGlvbiBDQS0zIEcz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6844a48cc10ea1a880af9e0aea02a3fc4be2786b3ce299bd1644cd2fc49c1f64",
-        "size": 1187,
-        "filename": "epA52XxQ9Mrum63GbS8dL1dkTIzeOueiCw6jHr7t_u8=.pem",
-        "location": "security-state-staging/intermediates/5d0c77a4-ad61-4b2d-9500-0ed1ce697602.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "epA52XxQ9Mrum63GbS8dL1dkTIzeOueiCw6jHr7t/u8=",
-      "crlite_enrolled": true,
-      "id": "9bd31525-cabf-4b0e-acc5-1952d08e7761",
-      "last_modified": 1643540241387
     },
     {
       "schema": 1643539727648,
