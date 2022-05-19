@@ -190,6 +190,10 @@ function isDeadOrRemote(obj) {
   return Cu.isDeadWrapper(obj) || Cu.isRemoteProxy(obj);
 }
 
+function isInBFCache(window) {
+  return !!window?.windowGlobalChild?.windowContext?.isInBFCache;
+}
+
 /**
  * A sentinel class to indicate that an array of values should be
  * treated as an array when used as a promise resolution value, but as a
@@ -463,6 +467,7 @@ class InnerWindowReference {
     if (
       !this.needWindowIDCheck ||
       (!isDeadOrRemote(this.contentWindow) &&
+        !isInBFCache(this.contentWindow) &&
         getInnerWindowID(this.contentWindow) === this.innerWindowID)
     ) {
       return this.contentWindow;

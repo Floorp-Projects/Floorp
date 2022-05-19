@@ -840,6 +840,13 @@ class ChildAPIManager {
     let listener = map.ids.get(data.listenerId);
 
     if (listener) {
+      if (!this.context.active) {
+        Services.console.logStringMessage(
+          `Ignored listener for inactive context at childId=${data.childId} path=${data.path} listenerId=${data.listenerId}\n`
+        );
+        return;
+      }
+
       let args = data.args.deserialize(this.context.cloneScope);
       let fire = () => this.context.applySafeWithoutClone(listener, args);
       return Promise.resolve(
