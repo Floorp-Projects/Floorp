@@ -12,26 +12,26 @@ fuzzy-if(gtkWidget,0-255,0-2) fuzzy-if(winWidget||Android,0-4,0-8704) == 1083848
 == 1088025-1.html 1088025-1-ref.html
 == 1089388-1.html 1089388-1-ref.html
 == 1089388-2.html 1089388-2-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1090159-1.html 1090159-1-ref.html # Bug 1392106
+== 1090159-1.html 1090159-1-ref.html
 == 1090168-1.html 1090168-1-ref.html
 != 1090168-1.html 1090168-1-notref.html
 == 1090168-2.html 1090168-2-ref.html
 fuzzy-if(azureSkia,0-255,0-2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1091058-1.html 1091058-1-ref.html # Bug 1392106
+== 1091058-1.html 1091058-1-ref.html
 random-if(useDrawSnapshot) == 1094434-1.html 1094434-1-ref.html
 == 1094434-2.html 1094434-2-ref.html
 == 1094914-1a.html 1094914-1-ref.html
 == 1094914-1b.html 1094914-1-ref.html
 == 1096224-1a.html 1096224-1-ref.html
 == 1096224-1b.html 1096224-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1102175-1a.html 1102175-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1102175-1b.html 1102175-1-ref.html # Bug 1392106
+== 1102175-1a.html 1102175-1-ref.html
+== 1102175-1b.html 1102175-1-ref.html
 == 1103613-1.html 1103613-1-ref.html
 == 1105268-1-min-max-dimensions.html 1105268-1-min-max-dimensions-ref.html
 == 1105268-2-min-max-dimensions.html 1105268-2-min-max-dimensions-ref.html
 == 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container-ref.html
 == 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
-fuzzy-if(Android,0-128,0-94) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html # Bug 1392106
+fuzzy-if(Android,0-128,0-94) == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html
 fuzzy(0-116,0-94) fuzzy-if(winWidget,0-135,0-124) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
 == 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap-ref.html
 == 1117227-1-text-overflow.html 1117227-1-text-overflow-ref.html
@@ -105,7 +105,7 @@ fuzzy-if(gtkWidget,0-1,0-15) == ua-style-sheet-input-number-1.html ua-style-shee
 == 1127488-align-end-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
 == 1127488-align-left-vertical-lr-ltr.html 1127488-align-top-left-ref.html
 == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1130907-intrinsic-sizing-1.html 1130907-intrinsic-sizing-1-ref.html # bug 1392106
+== 1130907-intrinsic-sizing-1.html 1130907-intrinsic-sizing-1-ref.html
 == 1130907-intrinsic-sizing-2.html 1130907-intrinsic-sizing-2-ref.html
 == 1131013-vertical-bidi.html 1131013-vertical-bidi-ref.html
 == 1133945-1-vertical-align.html 1133945-1-vertical-align-ref.html
@@ -141,12 +141,12 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1156021-text-indent-percent.html 1156021-text-indent-percent-ref.html
 == 1157752-upright-bidi.html 1157752-upright-bidi-ref.html
 == 1157758-1-vertical-arabic.html 1157758-1-vertical-arabic-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html # Bug 1392106
+== 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html
 == 1163238-orthogonal-auto-margins.html 1163238-orthogonal-auto-margins-ref.html
 == 1174450-intrinsic-sizing.html 1174450-intrinsic-sizing-ref.html
 skip-if(winWidget&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html # bug 1442637
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1188061-1-nsChangeHint_ClearAncestorIntrinsics.html 1188061-1-nsChangeHint_ClearAncestorIntrinsics-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1188061-2-nsChangeHint_UpdateComputedBSize.html 1188061-2-nsChangeHint_UpdateComputedBSize-ref.html # Bug 1392106
+== 1188061-1-nsChangeHint_ClearAncestorIntrinsics.html 1188061-1-nsChangeHint_ClearAncestorIntrinsics-ref.html
+== 1188061-2-nsChangeHint_UpdateComputedBSize.html 1188061-2-nsChangeHint_UpdateComputedBSize-ref.html
 
 # tests involving sideways-lr mode
 random-if(gtkWidget) == 1193519-sideways-lr-1.html 1193519-sideways-lr-1-ref.html

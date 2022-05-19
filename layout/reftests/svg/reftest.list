@@ -174,19 +174,19 @@ fuzzy-if(d2d&&layersGPUAccelerated,0-3,0-1200) == dynamic-rect-02.svg dynamic-re
 == dynamic-stroke-opacity-01.svg pass.svg
 == dynamic-stroke-width-01.svg pass.svg
 == dynamic-switch-01.svg pass.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-01.svg dynamic-text-01-ref.svg # bug 1392106
+== dynamic-text-01.svg dynamic-text-01-ref.svg
 fuzzy-if(d2d&&layersGPUAccelerated,0-3,0-12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
 fuzzy-if(d2d&&layersGPUAccelerated,0-2,0-10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 776038 for Win7 # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-05.svg pass.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-06.svg pass.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-07.svg dynamic-text-07-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-08.svg dynamic-text-08-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-attr-01.svg dynamic-text-attr-01-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-textPath-02.svg dynamic-textPath-02-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-textPath-03.svg dynamic-textPath-03-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-textPath-04.html pass.svg # bug 1392106
+== dynamic-text-04.svg dynamic-text-04-ref.svg
+== dynamic-text-05.svg pass.svg
+== dynamic-text-06.svg pass.svg
+== dynamic-text-07.svg dynamic-text-07-ref.svg
+== dynamic-text-08.svg dynamic-text-08-ref.svg
+== dynamic-text-attr-01.svg dynamic-text-attr-01-ref.svg
+== dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
+== dynamic-textPath-02.svg dynamic-textPath-02-ref.svg
+== dynamic-textPath-03.svg dynamic-textPath-03-ref.svg
+== dynamic-textPath-04.html pass.svg
 == dynamic-use-01.svg pass.svg
 == dynamic-use-02.svg pass.svg
 == dynamic-use-03.svg pass.svg
@@ -353,7 +353,7 @@ fuzzy(0-1,0-10000) == opacity-and-transform-01.svg opacity-and-transform-01-ref.
 
 fuzzy-if(Android,0-8,0-200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 
-fuzzy(0-7,0-214) == outline.html outline-ref.html # Bug 1392106, Bug 1503525
+fuzzy(0-7,0-214) == outline.html outline-ref.html # Bug 1503525
 
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
@@ -474,30 +474,30 @@ fuzzy(0-1,0-2600) == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.x
 fuzzy(0-39,0-269) == symbol-01.svg symbol-01-ref.svg
 
 == text-font-size-01.svg pass.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 1392106
+== text-font-weight-01.svg text-font-weight-01-ref.svg
 == text-gradient-01.svg text-gradient-01-ref.svg
 random-if(winWidget) fuzzy-if(Android,0-10,0-2) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
 fuzzy(0-1,0-5500) == text-gradient-03.svg pass.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-gradient-04.svg text-gradient-04-ref.svg # Bug 1392106
+== text-gradient-04.svg text-gradient-04-ref.svg
 == text-in-link-01.svg text-in-link-01-ref.svg
 == text-in-link-02.svg text-in-link-02-ref.svg
 == text-in-link-03.svg text-in-link-03-ref.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
 != text-language-00.xhtml text-language-00-ref.xhtml
 random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-01.svg text-layout-01-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-02.svg text-layout-02-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-03.svg text-layout-03-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-04.svg text-layout-04-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-05.svg text-layout-05-ref.svg # Bug 1392106
-fuzzy-if(cocoaWidget&&layersGPUAccelerated,0-1,0-3) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-06.svg text-layout-06-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-07.svg text-layout-07-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-08.svg text-layout-08-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-09.svg pass.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-10.svg pass.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-scale-01.svg text-scale-01-ref.svg # Bug 1392106
-fuzzy(0-2,0-1000) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-scale-02.svg text-scale-02-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-scale-03.svg text-scale-03-ref.svg # Bug 1392106
+== text-layout-01.svg text-layout-01-ref.svg
+== text-layout-02.svg text-layout-02-ref.svg
+== text-layout-03.svg text-layout-03-ref.svg
+== text-layout-04.svg text-layout-04-ref.svg
+== text-layout-05.svg text-layout-05-ref.svg
+fuzzy-if(cocoaWidget&&layersGPUAccelerated,0-1,0-3) == text-layout-06.svg text-layout-06-ref.svg
+== text-layout-07.svg text-layout-07-ref.svg
+== text-layout-08.svg text-layout-08-ref.svg
+== text-layout-09.svg pass.svg
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-3,0-4) == text-layout-10.svg pass.svg # Bug 1392106
+== text-scale-01.svg text-scale-01-ref.svg
+fuzzy(0-2,0-1000) == text-scale-02.svg text-scale-02-ref.svg
+== text-scale-03.svg text-scale-03-ref.svg
 
 == text-style-01a.svg text-style-01-ref.svg
 == text-style-01b.svg text-style-01-ref.svg
@@ -515,7 +515,7 @@ fuzzy(0-1,0-610) == textPath-03.svg pass.svg
 == textPath-04.svg pass.svg
 == textPath-05.html pass.svg
 == textPath-06.svg pass.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textPath-line-01.svg textPath-line-01-ref.svg # bug 1392106
+== textPath-line-01.svg textPath-line-01-ref.svg
 == textPath-path-attribute-01.svg textPath-path-attribute-01-ref.svg
 == textPath-side-attribute-01.svg pass.svg
 
@@ -534,16 +534,16 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textPath-line-01.svg tex
 == tspan-dxdy-04.svg tspan-dxdy-ref.svg
 == tspan-dxdy-05.svg tspan-dxdy-ref.svg
 == tspan-dxdy-06.svg tspan-dxdy-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-01.svg tspan-rotate-ref.svg # bug 1392106
-fuzzy(0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02.svg # Bug 1392106
-fuzzy(0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02-ref.svg # Bug 1392106
-fuzzy(0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-03.svg tspan-rotate-ref.svg # Bug 1392106
-fuzzy(0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04.svg # Bug 1392106
-fuzzy(0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04-ref.svg # Bug 1392106
-fuzzy(0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-05.svg tspan-rotate-ref.svg # Bug 1392106
-fuzzy(0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspan-rotate-ref.svg # Bug 1392106
-fuzzy(0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-07.svg tspan-rotate-07-ref.svg # Bug 1392106
+== tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg
+== tspan-rotate-01.svg tspan-rotate-ref.svg
+fuzzy(0-1,0-550) == tspan-rotate-02.svg tspan-rotate-02.svg
+fuzzy(0-1,0-550) == tspan-rotate-02.svg tspan-rotate-02-ref.svg
+fuzzy(0-1,0-550) == tspan-rotate-03.svg tspan-rotate-ref.svg
+fuzzy(0-1,0-550) == tspan-rotate-04.svg tspan-rotate-04.svg
+fuzzy(0-1,0-550) == tspan-rotate-04.svg tspan-rotate-04-ref.svg
+fuzzy(0-1,0-550) == tspan-rotate-05.svg tspan-rotate-ref.svg
+fuzzy(0-1,0-550) == tspan-rotate-06.svg tspan-rotate-ref.svg
+fuzzy(0-1,0-550) == tspan-rotate-07.svg tspan-rotate-07-ref.svg
 == tspan-rotate-textPath-01.svg tspan-rotate-textPath-01-ref.svg
 fuzzy(0-1,0-100) == tspan-xy-01.svg tspan-xy-ref.svg
 == tspan-xy-02.svg tspan-xy-ref.svg
@@ -607,16 +607,16 @@ defaults skip-if(ThreadSanitizer)
 == overflow-visible-image.html overflow-visible-image-ref.html
 
 # Shadow DOM id tracking.
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-2.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-3.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-4.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-5.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-6.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-7.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-8.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-9.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-10.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-1.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-2.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-3.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-4.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-5.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-6.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-7.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-8.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-9.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-10.html fragid-shadow-ref.html # bug 1560367 for GV+WR, bug 1717061 for Win 7
 
 == mask-resource.html mask-resource-ref.html
 fails-if(Android) != mask-resource.html about:blank # The image the test uses is not on Android

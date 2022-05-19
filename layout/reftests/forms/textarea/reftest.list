@@ -12,7 +12,7 @@ skip-if(Android) != rtl.html no-resize.html # bug 834724
 fuzzy(0-1,0-1) == rtl.html rtl-dynamic-attr.html
 fuzzy(0-1,0-1) == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-4168) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html # Bug 1392106
+fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-4168) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
 == various-cols.html various-cols-ref.html
 == appearance-background-change.html appearance-background-change-ref.html
 != padding-text-overflow.html padding-text-overflow-notref.html
