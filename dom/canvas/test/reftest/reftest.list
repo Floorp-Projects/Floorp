@@ -236,10 +236,6 @@ pref(canvas.focusring.enabled,true) fuzzy(0-1,0-2) skip-if(cocoaWidget||winWidge
 
 fuzzy-if(azureSkia,0-16,0-2) fuzzy-if(Android,0-3,0-40) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-1) == 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds-ref.html
 
-# Bug 1305963
-== mozCurrentTransform.html mozCurrentTransform-ref.html
-== mozCurrentTransformInverse.html mozCurrentTransform-ref.html
-
 # Bug 1366027
 == clipped-dash-stroke-rect.html clipped-dash-stroke-rect-ref.html
 
