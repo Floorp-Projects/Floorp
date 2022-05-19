@@ -2,7 +2,7 @@
   {
     "namespace": "manifest",
     "types": [{
-      "$extend": "PermissionPrivileged",
+      "$extend": "PermissionNoPrompt",
       "choices": [{
         "type": "string",
         "enum": [
