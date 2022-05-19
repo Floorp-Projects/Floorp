@@ -48,6 +48,7 @@ fieldset {
   border: none;
   display: flex;
   flex-direction: row;
+  padding: 0;
 }
 
 input[type="radio"] {
@@ -93,4 +94,22 @@ input[type="radio"]:checked,
 input[type="radio"]:enabled:checked:hover,
 input[type="radio"]:enabled:checked:hover:active {
   background-color: unset;
+}
+
+#colorway-customization-panel {
+  padding-inline: 24px;
+}
+
+#colorway-details {
+  margin-top: 50px;
+}
+
+#colorway-name {
+  font-size: 2em;
+  margin-block: 0 37px;
+}
+
+#colorway-description {
+  font-size: 1.1em;
+  margin-block: 0 24px;
 }
