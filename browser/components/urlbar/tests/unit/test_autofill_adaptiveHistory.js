@@ -161,25 +161,6 @@ const TEST_DATA = [
     inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
     userInput: "e",
     expected: {
-      autofilled: "example.com/test",
-      completed: "http://example.com/test",
-      results: [
-        context =>
-          makeVisitResult(context, {
-            uri: "http://example.com/test",
-            title: "example.com/test",
-            heuristic: true,
-          }),
-      ],
-    },
-  },
-  {
-    description: "User input is longer than the input history",
-    pref: true,
-    visitHistory: ["http://example.com/test"],
-    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
-    userInput: "example",
-    expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
       results: [
@@ -193,6 +174,69 @@ const TEST_DATA = [
           makeVisitResult(context, {
             uri: "http://example.com/test",
             title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "User input is longer than the input history",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "example",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "User input starts with input history and includes path of the url",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "example.com/te",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "User input starts with input history and but another url",
+    pref: true,
+    visitHistory: ["http://example.com/test", "http://example.org/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "example.o",
+    expected: {
+      autofilled: "example.org/",
+      completed: "http://example.org/",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.org/",
+            title: "example.org",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.org/test",
+            title: "test visit for http://example.org/test",
           }),
       ],
     },
@@ -544,23 +588,20 @@ const TEST_DATA = [
     description:
       "Those that match with fixed URL take precedence over those that match prefixed URL",
     pref: true,
-    visitHistory: [
-      "http://hostname.example.com/test",
-      "http://example.com/test",
-    ],
+    visitHistory: ["http://http.example.com/test", "http://example.com/test"],
     inputHistory: [
-      { uri: "http://hostname.example.com/test", input: "host" },
+      { uri: "http://http.example.com/test", input: "http" },
       { uri: "http://example.com/test", input: "http://example.com/test" },
     ],
-    userInput: "h",
+    userInput: "http",
     expected: {
-      autofilled: "hostname.example.com/test",
-      completed: "http://hostname.example.com/test",
+      autofilled: "http.example.com/test",
+      completed: "http://http.example.com/test",
       results: [
         context =>
           makeVisitResult(context, {
-            uri: "http://hostname.example.com/test",
-            title: "hostname.example.com/test",
+            uri: "http://http.example.com/test",
+            title: "http.example.com/test",
             heuristic: true,
           }),
         context =>
