@@ -54,13 +54,9 @@ constexpr bool kIsArm = false;
 #endif
 
 absl::optional<LibvpxVp8Decoder::DeblockParams> DefaultDeblockParams() {
-  if (kIsArm) {
-    // For ARM, this is only called when deblocking is explicitly enabled, and
-    // the default strength is set by the ctor.
-    return LibvpxVp8Decoder::DeblockParams();
-  }
-  // For non-arm, don't use the explicit deblocking settings by default.
-  return absl::nullopt;
+  return LibvpxVp8Decoder::DeblockParams(/*max_level=*/8,
+                                         /*degrade_qp=*/60,
+                                         /*min_qp=*/30);
 }
 
 absl::optional<LibvpxVp8Decoder::DeblockParams>
