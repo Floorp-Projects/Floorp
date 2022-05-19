@@ -870,6 +870,12 @@ class StyleSheetsManager extends EventEmitter {
         e
       );
     }
+
+    this._styleSheetMap.clear();
+    this._styleSheetMap = null;
+    this._targetActor = null;
+    this._styleSheetCreationData = null;
+    this._mqlList = null;
   }
 }
 
