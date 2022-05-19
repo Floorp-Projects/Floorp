@@ -2499,12 +2499,7 @@ RTCError SdpOfferAnswerHandler::UpdateSessionState(
 
   // Update internal objects according to the session description's media
   // descriptions.
-  RTCError error = PushdownMediaDescription(type, source, bundle_groups_by_mid);
-  if (!error.ok()) {
-    return error;
-  }
-
-  return RTCError::OK();
+  return PushdownMediaDescription(type, source, bundle_groups_by_mid);
 }
 
 bool SdpOfferAnswerHandler::ShouldFireNegotiationNeededEvent(
@@ -4191,7 +4186,11 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
   }
 
   // Push down the new SDP media section for each audio/video transceiver.
-  for (const auto& transceiver : transceivers()->ListInternal()) {
+  auto rtp_transceivers = transceivers()->ListInternal();
+  std::vector<
+      std::pair<cricket::ChannelInterface*, const MediaContentDescription*>>
+      channels;
+  for (const auto& transceiver : rtp_transceivers) {
     const ContentInfo* content_info =
         FindMediaSectionForTransceiver(transceiver, sdesc);
     cricket::ChannelInterface* channel = transceiver->channel();
@@ -4203,12 +4202,28 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
     if (!content_desc) {
       continue;
     }
-    std::string error;
-    bool success = (source == cricket::CS_LOCAL)
-                       ? channel->SetLocalContent(content_desc, type, &error)
-                       : channel->SetRemoteContent(content_desc, type, &error);
-    if (!success) {
-      LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, error);
+
+    transceiver->OnNegotiationUpdate(type, content_desc);
+    channels.push_back(std::make_pair(channel, content_desc));
+  }
+
+  if (!channels.empty()) {
+    RTCError error =
+        pc_->worker_thread()->Invoke<RTCError>(RTC_FROM_HERE, [&]() {
+          std::string error;
+          for (const auto& entry : channels) {
+            bool success =
+                (source == cricket::CS_LOCAL)
+                    ? entry.first->SetLocalContent(entry.second, type, &error)
+                    : entry.first->SetRemoteContent(entry.second, type, &error);
+            if (!success) {
+              LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, error);
+            }
+          }
+          return RTCError::OK();
+        });
+    if (!error.ok()) {
+      return error;
     }
   }
 

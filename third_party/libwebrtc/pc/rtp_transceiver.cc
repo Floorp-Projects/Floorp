@@ -509,10 +509,9 @@ RtpTransceiver::HeaderExtensionsToOffer() const {
 
 std::vector<RtpHeaderExtensionCapability>
 RtpTransceiver::HeaderExtensionsNegotiated() const {
-  if (!channel_)
-    return {};
+  RTC_DCHECK_RUN_ON(thread_);
   std::vector<RtpHeaderExtensionCapability> result;
-  for (const auto& ext : channel_->GetNegotiatedRtpHeaderExtensions()) {
+  for (const auto& ext : negotiated_header_extensions_) {
     result.emplace_back(ext.uri, ext.id, RtpTransceiverDirection::kSendRecv);
   }
   return result;
@@ -560,6 +559,15 @@ RTCError RtpTransceiver::SetOfferedRtpHeaderExtensions(
   }
 
   return RTCError::OK();
+}
+
+void RtpTransceiver::OnNegotiationUpdate(
+    SdpType sdp_type,
+    const cricket::MediaContentDescription* content) {
+  RTC_DCHECK_RUN_ON(thread_);
+  RTC_DCHECK(content);
+  if (sdp_type == SdpType::kAnswer)
+    negotiated_header_extensions_ = content->rtp_header_extensions();
 }
 
 void RtpTransceiver::SetPeerConnectionClosed() {

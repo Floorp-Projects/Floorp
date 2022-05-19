@@ -287,9 +287,6 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
   EXPECT_CALL(mock_channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
   EXPECT_CALL(mock_channel, media_channel()).WillRepeatedly(Return(nullptr));
-  cricket::RtpHeaderExtensions extensions;
-  EXPECT_CALL(mock_channel, GetNegotiatedRtpHeaderExtensions)
-      .WillOnce(Return(extensions));
   transceiver_.SetChannel(&mock_channel);
   EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(), ElementsAre());
 }
@@ -306,10 +303,13 @@ TEST_F(RtpTransceiverTestForHeaderExtensions, ReturnsNegotiatedHdrExts) {
   EXPECT_CALL(mock_channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
   EXPECT_CALL(mock_channel, media_channel()).WillRepeatedly(Return(nullptr));
+
   cricket::RtpHeaderExtensions extensions = {webrtc::RtpExtension("uri1", 1),
                                              webrtc::RtpExtension("uri2", 2)};
-  EXPECT_CALL(mock_channel, GetNegotiatedRtpHeaderExtensions)
-      .WillOnce(Return(extensions));
+  cricket::AudioContentDescription description;
+  description.set_rtp_header_extensions(extensions);
+  transceiver_.OnNegotiationUpdate(SdpType::kAnswer, &description);
+
   transceiver_.SetChannel(&mock_channel);
   EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(),
               ElementsAre(RtpHeaderExtensionCapability(
@@ -320,34 +320,27 @@ TEST_F(RtpTransceiverTestForHeaderExtensions, ReturnsNegotiatedHdrExts) {
 
 TEST_F(RtpTransceiverTestForHeaderExtensions,
        ReturnsNegotiatedHdrExtsSecondTime) {
-  EXPECT_CALL(*receiver_.get(), SetMediaChannel(_));
   EXPECT_CALL(*receiver_.get(), StopAndEndTrack());
-  EXPECT_CALL(*sender_.get(), SetMediaChannel(_));
   EXPECT_CALL(*sender_.get(), SetTransceiverAsStopped());
   EXPECT_CALL(*sender_.get(), Stop());
 
-  cricket::MockChannelInterface mock_channel;
-  EXPECT_CALL(mock_channel, SetFirstPacketReceivedCallback(_));
-  EXPECT_CALL(mock_channel, media_type())
-      .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
-  EXPECT_CALL(mock_channel, media_channel()).WillRepeatedly(Return(nullptr));
-
   cricket::RtpHeaderExtensions extensions = {webrtc::RtpExtension("uri1", 1),
                                              webrtc::RtpExtension("uri2", 2)};
+  cricket::AudioContentDescription description;
+  description.set_rtp_header_extensions(extensions);
+  transceiver_.OnNegotiationUpdate(SdpType::kAnswer, &description);
 
-  EXPECT_CALL(mock_channel, GetNegotiatedRtpHeaderExtensions)
-      .WillOnce(Return(extensions));
-  transceiver_.SetChannel(&mock_channel);
-  transceiver_.HeaderExtensionsNegotiated();
-  testing::Mock::VerifyAndClearExpectations(&mock_channel);
-  EXPECT_CALL(mock_channel, media_type())
-      .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
-  EXPECT_CALL(mock_channel, media_channel()).WillRepeatedly(Return(nullptr));
+  EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(),
+              ElementsAre(RtpHeaderExtensionCapability(
+                              "uri1", 1, RtpTransceiverDirection::kSendRecv),
+                          RtpHeaderExtensionCapability(
+                              "uri2", 2, RtpTransceiverDirection::kSendRecv)));
 
   extensions = {webrtc::RtpExtension("uri3", 4),
                 webrtc::RtpExtension("uri5", 6)};
-  EXPECT_CALL(mock_channel, GetNegotiatedRtpHeaderExtensions)
-      .WillOnce(Return(extensions));
+  description.set_rtp_header_extensions(extensions);
+  transceiver_.OnNegotiationUpdate(SdpType::kAnswer, &description);
+
   EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(),
               ElementsAre(RtpHeaderExtensionCapability(
                               "uri3", 4, RtpTransceiverDirection::kSendRecv),
