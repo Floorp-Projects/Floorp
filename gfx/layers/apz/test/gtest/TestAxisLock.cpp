@@ -362,3 +362,58 @@ TEST_F(APZCAxisLockTester, BreakStickyAxisLock) {
   BreakStickyAxisLockTest(ScrollDirections(ScrollDirection::eHorizontal,
                                            ScrollDirection::eVertical));
 }
+
+TEST_F(APZCAxisLockTester, TestDominantAxisScrolling) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
+  SCOPED_GFX_PREF_FLOAT("apz.axis_lock.lock_angle", M_PI / 4.0f);
+  SCOPED_GFX_PREF_FLOAT("apz.axis_lock.breakout_angle", M_PI / 4.0f);
+
+  int panY;
+  int panX;
+
+  SetupBasicTest();
+
+  apzc = ApzcOf(root);
+
+  ParentLayerPoint lastOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+
+  // In dominant axis mode, test pan gesture events with varying gesture
+  // angles and ensure that we only pan on one axis.
+  for (panX = 0, panY = 50; panY >= 0; panY -= 10, panX += 10) {
+    // Gesture that should be locked onto one axis
+    QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+    PanGesture(PanGestureInput::PANGESTURE_START, manager,
+               ScreenIntPoint(50, 50), ScreenIntPoint(panX, panY), mcc->Time());
+    mcc->AdvanceByMillis(5);
+    apzc->AdvanceAnimations(mcc->GetSampleTime());
+
+    QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+    PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 50),
+               ScreenPoint(panX, panY), mcc->Time());
+    mcc->AdvanceByMillis(5);
+    apzc->AdvanceAnimations(mcc->GetSampleTime());
+
+    QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+    PanGesture(PanGestureInput::PANGESTURE_END, manager, ScreenIntPoint(50, 50),
+               ScreenPoint(0, 0), mcc->Time());
+    apzc->AdvanceAnimationsUntilEnd();
+
+    ParentLayerPoint scrollOffset = apzc->GetCurrentAsyncScrollOffset(
+        AsyncPanZoomController::eForHitTesting);
+
+    if (panX > panY) {
+      // If we're closer to the X axis ensure that we moved on the horizontal
+      // axis and there was no movement on the vertical axis.
+      EXPECT_GT(scrollOffset.x, lastOffset.x);
+      EXPECT_EQ(scrollOffset.y, lastOffset.y);
+    } else {
+      // If we're closer to the Y axis ensure that we moved on the vertical
+      // axis and there was no movement on the horizontal axis.
+      EXPECT_GT(scrollOffset.y, lastOffset.y);
+      EXPECT_EQ(scrollOffset.x, lastOffset.x);
+    }
+
+    lastOffset = scrollOffset;
+  }
+}
