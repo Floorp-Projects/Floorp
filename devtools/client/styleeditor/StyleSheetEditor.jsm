@@ -198,13 +198,15 @@ StyleSheetEditor.prototype = {
     }
 
     if (!this.styleSheet.href) {
+      // TODO(bug 176993): Probably a different index + string for
+      // constructable stylesheets, they can't be meaningfully edited right now
+      // because we don't have their original text.
       const index = this.styleSheetFriendlyIndex + 1 || 0;
       return getString("inlineStyleSheet", index);
     }
 
     if (!this._friendlyName) {
-      const sheetURI = this.styleSheet.href;
-      this._friendlyName = shortSource({ href: sheetURI });
+      this._friendlyName = shortSource(this.styleSheet);
       try {
         this._friendlyName = decodeURI(this._friendlyName);
       } catch (ex) {

@@ -649,7 +649,9 @@ class StyleSheetsManager extends EventEmitter {
 
     if (ownerNode.nodeType == ownerNode.DOCUMENT_NODE) {
       return ownerNode.location.href;
-    } else if (ownerNode.ownerDocument?.location) {
+    }
+
+    if (ownerNode.ownerDocument?.location) {
       return ownerNode.ownerDocument.location.href;
     }
 
