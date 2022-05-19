@@ -150,13 +150,9 @@ nsresult runTestSuite(const PolicyTest* aPolicies, uint32_t aPolicyCount,
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   bool navigateTo = false;
-  bool wasmUnsafeEval = false;
   if (prefs) {
     prefs->GetBoolPref("security.csp.enableNavigateTo", &navigateTo);
     prefs->SetBoolPref("security.csp.enableNavigateTo", true);
-    prefs->GetBoolPref("security.csp.wasm-unsafe-eval.enabled",
-                       &wasmUnsafeEval);
-    prefs->SetBoolPref("security.csp.wasm-unsafe-eval.enabled", true);
   }
 
   for (uint32_t i = 0; i < aPolicyCount; i++) {
@@ -167,7 +163,6 @@ nsresult runTestSuite(const PolicyTest* aPolicies, uint32_t aPolicyCount,
 
   if (prefs) {
     prefs->SetBoolPref("security.csp.enableNavigateTo", navigateTo);
-    prefs->SetBoolPref("security.csp.wasm-unsafe-eval.enabled", wasmUnsafeEval);
   }
 
   return NS_OK;
@@ -250,8 +245,6 @@ TEST(CSPParser, Keywords)
       "script-src 'unsafe-inline' 'unsafe-eval'" },
     { "script-src 'none'",
       "script-src 'none'" },
-    { "script-src 'wasm-unsafe-eval'",
-      "script-src 'wasm-unsafe-eval'" },
     { "img-src 'none'; script-src 'unsafe-eval' 'unsafe-inline'; default-src 'self'",
       "img-src 'none'; script-src 'unsafe-eval' 'unsafe-inline'; default-src 'self'" },
       // clang-format on
