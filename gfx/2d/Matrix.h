@@ -200,6 +200,10 @@ class BaseMatrix {
     return BaseMatrix<T>(aScaleX, 0.0f, 0.0f, aScaleY, 0.0f, 0.0f);
   }
 
+  static BaseMatrix<T> Scaling(const BaseMatrixScales<T>& scale) {
+    return Scaling(scale.xScale, scale.yScale);
+  }
+
   /**
    * Similar to PreTranslate, but applies a scale instead of a translation.
    */
@@ -210,6 +214,10 @@ class BaseMatrix {
     _22 *= aY;
 
     return *this;
+  }
+
+  BaseMatrix<T>& PreScale(const BaseMatrixScales<T>& scale) {
+    return PreScale(scale.xScale, scale.yScale);
   }
 
   /**
