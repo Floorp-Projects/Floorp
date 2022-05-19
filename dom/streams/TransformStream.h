@@ -19,11 +19,16 @@ namespace mozilla::dom {
 
 class WritableStream;
 class ReadableStream;
+class UniqueMessagePortId;
+class MessagePort;
 
 class TransformStream final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TransformStream)
+
+  TransformStream(nsIGlobalObject* aGlobal, ReadableStream* aReadable,
+                  WritableStream* aWritable);
 
   // Internal slot accessors
   bool Backpressure() const { return mBackpressure; }
@@ -41,6 +46,16 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
   }
   MOZ_KNOWN_LIVE ReadableStream* Readable() { return mReadable; }
   MOZ_KNOWN_LIVE WritableStream* Writable() { return mWritable; }
+
+  // [Transferable]
+  // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-steps
+  MOZ_CAN_RUN_SCRIPT bool Transfer(JSContext* aCx,
+                                   UniqueMessagePortId& aPortId1,
+                                   UniqueMessagePortId& aPortId2);
+  // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-receiving-steps
+  static MOZ_CAN_RUN_SCRIPT bool ReceiveTransfer(
+      JSContext* aCx, nsIGlobalObject* aGlobal, MessagePort& aPort1,
+      MessagePort& aPort2, JS::MutableHandle<JSObject*> aReturnObject);
 
  protected:
   ~TransformStream();
