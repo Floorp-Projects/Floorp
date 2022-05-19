@@ -25,6 +25,8 @@ class Promise;
 class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
 class UnderlyingSinkAlgorithmsBase;
+class UniqueMessagePortId;
+class MessagePort;
 
 class WritableStream : public nsISupports, public nsWrapperCache {
  public:
@@ -41,7 +43,6 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   enum class WriterState { Writable, Closed, Erroring, Errored };
 
   // Slot Getter/Setters:
- public:
   bool Backpressure() const { return mBackpressure; }
   void SetBackpressure(bool aBackpressure) { mBackpressure = aBackpressure; }
 
@@ -133,7 +134,15 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   // WritableStreamUpdateBackpressure
   void UpdateBackpressure(bool aBackpressure, ErrorResult& aRv);
 
- public:
+  // [Transferable]
+  // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-steps
+  MOZ_CAN_RUN_SCRIPT bool Transfer(JSContext* aCx,
+                                   UniqueMessagePortId& aPortId);
+  // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-receiving-steps
+  static MOZ_CAN_RUN_SCRIPT bool ReceiveTransfer(
+      JSContext* aCx, nsIGlobalObject* aGlobal, MessagePort& aPort,
+      JS::MutableHandle<JSObject*> aReturnObject);
+
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   JSObject* WrapObject(JSContext* aCx,

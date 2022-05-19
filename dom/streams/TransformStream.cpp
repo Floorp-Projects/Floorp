@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Promise-inl.h"
-#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/WritableStream.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/RootedDictionary.h"
@@ -42,6 +41,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStream)
 NS_INTERFACE_MAP_END
 
 TransformStream::TransformStream(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
+  mozilla::HoldJSObjects(this);
+}
+
+TransformStream::TransformStream(nsIGlobalObject* aGlobal,
+                                 ReadableStream* aReadable,
+                                 WritableStream* aWritable)
+    : mGlobal(aGlobal), mReadable(aReadable), mWritable(aWritable) {
   mozilla::HoldJSObjects(this);
 }
 
