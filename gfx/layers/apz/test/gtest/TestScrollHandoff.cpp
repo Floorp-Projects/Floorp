@@ -195,6 +195,7 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
         PanOptions::KeepFingerDown | PanOptions::ExactCoordinates);
 
     childApzc->AssertAxisLocked(ScrollDirection::eVertical);
+    childApzc->AssertStateIsPanningLockedY();
   }
 };
 

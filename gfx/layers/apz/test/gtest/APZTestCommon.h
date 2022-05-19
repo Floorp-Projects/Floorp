@@ -337,20 +337,43 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
     EXPECT_EQ(SMOOTHMSD_SCROLL, mState);
   }
 
-  void AssertNotAxisLocked() const {
+  void AssertStateIsPanningLockedY() {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    EXPECT_EQ(PANNING_LOCKED_Y, mState);
+  }
+
+  void AssertStateIsPanningLockedX() {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    EXPECT_EQ(PANNING_LOCKED_X, mState);
+  }
+
+  void AssertStateIsPanning() {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     EXPECT_EQ(PANNING, mState);
   }
 
-  void AssertAxisLocked(ScrollDirection aDirection) const {
+  void AssertStateIsPanMomentum() {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
+    EXPECT_EQ(PAN_MOMENTUM, mState);
+  }
+
+  void AssertNotAxisLocked() const {
+    EXPECT_FALSE(mY.IsAxisLocked());
+    EXPECT_FALSE(mX.IsAxisLocked());
+  }
+
+  void AssertAxisLocked(ScrollDirection aDirection) const {
     switch (aDirection) {
       case ScrollDirection::eHorizontal:
-        EXPECT_EQ(PANNING_LOCKED_X, mState);
+        EXPECT_TRUE(mY.IsAxisLocked());
+        EXPECT_FALSE(mX.IsAxisLocked());
         break;
       case ScrollDirection::eVertical:
-        EXPECT_EQ(PANNING_LOCKED_Y, mState);
+        EXPECT_TRUE(mX.IsAxisLocked());
+        EXPECT_FALSE(mY.IsAxisLocked());
         break;
+      default:
+        FAIL() << "input direction must be either vertical or horizontal";
     }
   }
 
