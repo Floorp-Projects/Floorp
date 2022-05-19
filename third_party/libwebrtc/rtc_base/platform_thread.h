@@ -11,14 +11,11 @@
 #ifndef RTC_BASE_PLATFORM_THREAD_H_
 #define RTC_BASE_PLATFORM_THREAD_H_
 
-#ifndef WEBRTC_WIN
-#include <pthread.h>
-#endif
+#include <functional>
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "api/sequence_checker.h"
-#include "rtc_base/constructor_magic.h"
+#include "absl/types/optional.h"
 #include "rtc_base/platform_thread_types.h"
 
 #include "rtc_base/deprecated/recursive_critical_section.h"
@@ -28,94 +25,94 @@ namespace rtc {
 // Bug 1691641
 class PlatformUIThread;
 
-// Callback function that the spawned thread will enter once spawned.
-typedef void (*ThreadRunFunction)(void*);
-
-enum ThreadPriority {
-#ifdef WEBRTC_WIN
-  kLowPriority = THREAD_PRIORITY_BELOW_NORMAL,
-  kNormalPriority = THREAD_PRIORITY_NORMAL,
-  kHighPriority = THREAD_PRIORITY_ABOVE_NORMAL,
-  kHighestPriority = THREAD_PRIORITY_HIGHEST,
-  kRealtimePriority = THREAD_PRIORITY_TIME_CRITICAL
-#else
-  kLowPriority = 1,
-  kNormalPriority = 2,
-  kHighPriority = 3,
-  kHighestPriority = 4,
-  kRealtimePriority = 5
-#endif
+enum class ThreadPriority {
+  kLow = 1,
+  kNormal,
+  kHigh,
+  kRealtime,
 };
 
 struct ThreadAttributes {
-  ThreadPriority priority = kNormalPriority;
-  bool joinable = true;
-
+  ThreadPriority priority = ThreadPriority::kNormal;
   ThreadAttributes& SetPriority(ThreadPriority priority_param) {
     priority = priority_param;
     return *this;
   }
-  ThreadAttributes& SetDetached() {
-    joinable = false;
-    return *this;
-  }
 };
 
-// Represents a simple worker thread.  The implementation must be assumed
-// to be single threaded, meaning that all methods of the class, must be
-// called from the same thread, including instantiation.
-class PlatformThread {
+// Represents a simple worker thread.
+class PlatformThread final {
  public:
-  PlatformThread(ThreadRunFunction func,
-                 void* obj,
-                 absl::string_view thread_name,
-                 ThreadAttributes attributes = ThreadAttributes());
+  // Handle is the base platform thread handle.
+#if defined(WEBRTC_WIN)
+  using Handle = HANDLE;
+#else
+  using Handle = pthread_t;
+#endif  // defined(WEBRTC_WIN)
+  // This ctor creates the PlatformThread with an unset handle (returning true
+  // in empty()) and is provided for convenience.
+  // TODO(bugs.webrtc.org/12727) Look into if default and move support can be
+  // removed.
+  PlatformThread() = default;
+
+  // Moves |rhs| into this, storing an empty state in |rhs|.
+  // TODO(bugs.webrtc.org/12727) Look into if default and move support can be
+  // removed.
+  PlatformThread(PlatformThread&& rhs);
+
+  // Moves |rhs| into this, storing an empty state in |rhs|.
+  // TODO(bugs.webrtc.org/12727) Look into if default and move support can be
+  // removed.
+  PlatformThread& operator=(PlatformThread&& rhs);
+
+  // For a PlatformThread that's been spawned joinable, the destructor suspends
+  // the calling thread until the created thread exits unless the thread has
+  // already exited.
   virtual ~PlatformThread();
 
-  const std::string& name() const { return name_; }
+  // Finalizes any allocated resources.
+  // For a PlatformThread that's been spawned joinable, Finalize() suspends
+  // the calling thread until the created thread exits unless the thread has
+  // already exited.
+  // empty() returns true after completion.
+  void Finalize();
 
-  // Spawns a thread and tries to set thread priority according to the priority
-  // from when CreateThread was called.
-  // Start can only be called after the constructor or after a call to Stop().
-  virtual void Start();
+  // Returns true if default constructed, moved from, or Finalize()ed.
+  bool empty() const { return !handle_.has_value(); }
 
-  bool IsRunning() const;
+  // Creates a started joinable thread which will be joined when the returned
+  // PlatformThread destructs or Finalize() is called.
+  static PlatformThread SpawnJoinable(
+      std::function<void()> thread_function,
+      absl::string_view name,
+      ThreadAttributes attributes = ThreadAttributes());
 
-  // Returns an identifier for the worker thread that can be used to do
-  // thread checks.
-  PlatformThreadRef GetThreadRef() const;
+  // Creates a started detached thread. The caller has to use external
+  // synchronization as nothing is provided by the PlatformThread construct.
+  static PlatformThread SpawnDetached(
+      std::function<void()> thread_function,
+      absl::string_view name,
+      ThreadAttributes attributes = ThreadAttributes());
 
-  // Stop() prepares the PlatformThread for destruction or another call to
-  // Start(). For a PlatformThread that's been created with
-  // ThreadAttributes::joinable true (the default), Stop() suspends the calling
-  // thread until the created thread exits unless the thread has already exited.
-  // Stop() can only be called after calling Start().
-  virtual void Stop();
+  // Returns the base platform thread handle of this thread.
+  absl::optional<Handle> GetHandle() const;
 
- protected:
 #if defined(WEBRTC_WIN)
-  // Exposed to derived classes to allow for special cases specific to Windows.
+  // Queue a Windows APC function that runs when the thread is alertable.
   bool QueueAPC(PAPCFUNC apc_function, ULONG_PTR data);
 #endif
 
  private:
-  ThreadRunFunction const run_function_ = nullptr;
-  const ThreadAttributes attributes_;
-  void* const obj_;
-  // TODO(pbos): Make sure call sites use string literals and update to a const
-  // char* instead of a std::string.
-  const std::string name_;
-  webrtc::SequenceChecker thread_checker_;
-#if defined(WEBRTC_WIN)
-  HANDLE thread_ = nullptr;
-  DWORD thread_id_ = 0;
-  RecursiveCriticalSection cs_;
-#else
-  pthread_t thread_ = 0;
-#endif  // defined(WEBRTC_WIN)
+  PlatformThread(Handle handle, bool joinable);
+  static PlatformThread SpawnThread(std::function<void()> thread_function,
+                                    absl::string_view name,
+                                    ThreadAttributes attributes,
+                                    bool joinable);
+
+  absl::optional<Handle> handle_;
+  bool joinable_ = false;
   // Bug 1691641
   friend PlatformUIThread;
-  RTC_DISALLOW_COPY_AND_ASSIGN(PlatformThread);
 };
 
 }  // namespace rtc

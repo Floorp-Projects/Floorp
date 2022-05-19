@@ -142,12 +142,9 @@ void DefaultVideoQualityAnalyzer::Start(
     int max_threads_count) {
   test_label_ = std::move(test_case_name);
   for (int i = 0; i < max_threads_count; i++) {
-    auto thread = std::make_unique<rtc::PlatformThread>(
-        &DefaultVideoQualityAnalyzer::ProcessComparisonsThread, this,
-        ("DefaultVideoQualityAnalyzerWorker-" + std::to_string(i)).data(),
-        rtc::ThreadAttributes().SetPriority(rtc::kNormalPriority));
-    thread->Start();
-    thread_pool_.push_back(std::move(thread));
+    thread_pool_.push_back(rtc::PlatformThread::SpawnJoinable(
+        [this] { ProcessComparisons(); },
+        "DefaultVideoQualityAnalyzerWorker-" + std::to_string(i)));
   }
   {
     MutexLock lock(&lock_);
@@ -547,10 +544,6 @@ void DefaultVideoQualityAnalyzer::Stop() {
   }
   StopMeasuringCpuProcessTime();
   comparison_available_event_.Set();
-  for (auto& thread : thread_pool_) {
-    thread->Stop();
-  }
-  // PlatformThread have to be deleted on the same thread, where it was created
   thread_pool_.clear();
 
   // Perform final Metrics update. On this place analyzer is stopped and no one
@@ -675,10 +668,6 @@ void DefaultVideoQualityAnalyzer::AddComparison(
   }
   comparison_available_event_.Set();
   StopExcludingCpuThreadTime();
-}
-
-void DefaultVideoQualityAnalyzer::ProcessComparisonsThread(void* obj) {
-  static_cast<DefaultVideoQualityAnalyzer*>(obj)->ProcessComparisons();
 }
 
 void DefaultVideoQualityAnalyzer::ProcessComparisons() {

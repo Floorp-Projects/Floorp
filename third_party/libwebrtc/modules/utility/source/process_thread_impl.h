@@ -45,7 +45,6 @@ class ProcessThreadImpl : public ProcessThread {
   void DeRegisterModule(Module* module) override;
 
  protected:
-  static void Run(void* obj);
   bool Process();
 
  private:
@@ -97,8 +96,7 @@ class ProcessThreadImpl : public ProcessThread {
 
   SequenceChecker thread_checker_;
   rtc::Event wake_up_;
-  // TODO(pbos): Remove unique_ptr and stop recreating the thread.
-  std::unique_ptr<rtc::PlatformThread> thread_;
+  rtc::PlatformThread thread_;
 
   ModuleList modules_ RTC_GUARDED_BY(mutex_);
   // Set to true when calling Process, to allow reentrant calls to WakeUp.

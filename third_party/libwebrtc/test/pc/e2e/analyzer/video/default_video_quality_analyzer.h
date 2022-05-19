@@ -560,7 +560,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   std::deque<FrameComparison> comparisons_ RTC_GUARDED_BY(comparison_lock_);
   AnalyzerStats analyzer_stats_ RTC_GUARDED_BY(comparison_lock_);
 
-  std::vector<std::unique_ptr<rtc::PlatformThread>> thread_pool_;
+  std::vector<rtc::PlatformThread> thread_pool_;
   rtc::Event comparison_available_event_;
 
   Mutex cpu_measurement_lock_;

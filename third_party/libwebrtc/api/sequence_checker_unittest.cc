@@ -40,21 +40,14 @@ class CompileTimeTestForGuardedBy {
 };
 
 void RunOnDifferentThread(rtc::FunctionView<void()> run) {
-  struct Object {
-    static void Run(void* obj) {
-      auto* me = static_cast<Object*>(obj);
-      me->run();
-      me->thread_has_run_event.Set();
-    }
-
-    rtc::FunctionView<void()> run;
-    rtc::Event thread_has_run_event;
-  } object{run};
-
-  rtc::PlatformThread thread(&Object::Run, &object, "thread");
-  thread.Start();
-  EXPECT_TRUE(object.thread_has_run_event.Wait(1000));
-  thread.Stop();
+  rtc::Event thread_has_run_event;
+  rtc::PlatformThread::SpawnJoinable(
+      [&] {
+        run();
+        thread_has_run_event.Set();
+      },
+      "thread");
+  EXPECT_TRUE(thread_has_run_event.Wait(1000));
 }
 
 }  // namespace
