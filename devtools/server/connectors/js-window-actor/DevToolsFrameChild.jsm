@@ -286,8 +286,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
     // Pass initialization data to the target actor
     for (const type in sessionData) {
-      // `sessionData` will also contain `browserId` and `watcherTraits`,
-      // as well as entries with empty arrays, which shouldn't be processed.
+      // `sessionData` will also contain `browserId` as well as entries with empty arrays,
+      // which shouldn't be processed.
       const entries = sessionData[type];
       if (!Array.isArray(entries) || entries.length == 0) {
         continue;
