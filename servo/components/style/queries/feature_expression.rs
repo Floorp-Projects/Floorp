@@ -6,7 +6,7 @@
 //! `(width >= 400px)`.
 
 use super::feature::{Evaluator, QueryFeatureDescription};
-use super::feature::{KeywordDiscriminant, FeatureFlags};
+use super::feature::{KeywordDiscriminant, ParsingRequirements};
 use crate::parser::{Parse, ParserContext};
 use crate::str::{starts_with_ignore_ascii_case, string_as_ascii_lowercase};
 use crate::values::computed::{self, Ratio, ToComputedValue};
@@ -337,7 +337,10 @@ impl QueryFeatureExpression {
         W: fmt::Write,
     {
         let feature = self.feature();
-        if feature.flags.contains(FeatureFlags::WEBKIT_PREFIX) {
+        if feature
+            .requirements
+            .contains(ParsingRequirements::WEBKIT_PREFIX)
+        {
             dest.write_str("-webkit-")?;
         }
 
@@ -356,11 +359,6 @@ impl QueryFeatureExpression {
 
     fn feature(&self) -> &'static QueryFeatureDescription {
         &self.feature_type.features()[self.feature_index]
-    }
-
-    /// Returns the feature flags for our feature.
-    pub fn feature_flags(&self) -> FeatureFlags {
-        self.feature().flags
     }
 
     /// Parse a feature expression of the form:
@@ -384,18 +382,18 @@ impl QueryFeatureExpression {
         input: &mut Parser<'i, 't>,
         feature_type: FeatureType,
     ) -> Result<(usize, Option<LegacyRange>), ParseError<'i>> {
-        let mut flags = FeatureFlags::empty();
+        let mut requirements = ParsingRequirements::empty();
         let location = input.current_source_location();
         let ident = input.expect_ident()?;
 
         if context.in_ua_or_chrome_sheet() {
-            flags.insert(FeatureFlags::CHROME_AND_UA_ONLY);
+            requirements.insert(ParsingRequirements::CHROME_AND_UA_ONLY);
         }
 
         let mut feature_name = &**ident;
         if starts_with_ignore_ascii_case(feature_name, "-webkit-") {
             feature_name = &feature_name[8..];
-            flags.insert(FeatureFlags::WEBKIT_PREFIX);
+            requirements.insert(ParsingRequirements::WEBKIT_PREFIX);
         }
 
         let range = if starts_with_ignore_ascii_case(feature_name, "min-") {
@@ -419,7 +417,7 @@ impl QueryFeatureExpression {
         };
 
         if disabled_by_pref(&feature.name, context) ||
-            !flags.contains(feature.flags.parsing_requirements()) ||
+            !requirements.contains(feature.requirements) ||
             (range.is_some() && !feature.allows_ranges())
         {
             return Err(location.new_custom_error(
