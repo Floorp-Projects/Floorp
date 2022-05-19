@@ -9,6 +9,7 @@ const { switchToTabHavingURI } = window.docShell.chromeEventHandler.ownerGlobal;
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const SYNC_TABS_PREF = "services.sync.engine.tabs";
 
 const tabsSetupFlowManager = new (class {
   constructor() {
@@ -26,6 +27,17 @@ const tabsSetupFlowManager = new (class {
       this.sync,
       "UIState",
       "resource://services-sync/UIState.jsm"
+    );
+
+    // this.syncTabsPrefEnabled will track the value of the tabs pref
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "syncTabsPrefEnabled",
+      SYNC_TABS_PREF,
+      false,
+      () => {
+        this.maybeUpdateUI();
+      }
     );
 
     this.registerSetupState({
@@ -47,9 +59,7 @@ const tabsSetupFlowManager = new (class {
       uiStateIndex: 2,
       name: "disabled-tab-sync",
       exitConditions: () => {
-        // Bug 1763139 - Implement the actual logic to advance to next step
-        // This will basically be a check for the pref to enable tab-syncing
-        return false;
+        return this.syncTabsPrefEnabled;
       },
     });
     this.registerSetupState({
@@ -62,7 +72,7 @@ const tabsSetupFlowManager = new (class {
     });
     this.registerSetupState({
       uiStateIndex: 4,
-      name: "show-synced-tabs-agreement",
+      name: "show-synced-tabs-loading",
       exitConditions: () => {
         // Bug 1763139 - Implement the actual logic to advance to next step
         return false;
@@ -165,15 +175,14 @@ const tabsSetupFlowManager = new (class {
     switchToTabHavingURI(url, true);
   }
   syncOpenTabs(containerElem) {
-    // Bug 1763139 - Implement the actual logic to advance to next step
-    this.elem.updateSetupState(
-      this.setupState.get("synced-tabs-not-ready").uiStateIndex
-    );
+    // Flip the pref on.
+    // The observer should trigger re-evaluating state and advance to next step
+    this.Services.prefs.setBoolPref(SYNC_TABS_PREF, true);
   }
   confirmSetupComplete(containerElem) {
     // Bug 1763139 - Implement the actual logic to advance to next step
     this.elem.updateSetupState(
-      this.setupState.get("show-synced-tabs-agreement").uiStateIndex
+      this.setupState.get("show-synced-tabs-loading").uiStateIndex
     );
   }
 })();
