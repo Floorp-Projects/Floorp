@@ -52,4 +52,4 @@ fuzzy(0-1,0-220) fuzzy-if(winWidget&&!layersGPUAccelerated,0-116,0-1320) == bloc
 == transformed-1.html transformed-1-ref.html
 fuzzy-if(Android,0-8,0-9) fuzzy-if(gtkWidget,10-17,12-32) fuzzy-if(cocoaWidget,7-8,18-42) skip-if(!asyncPan) fails-if(useDrawSnapshot) == transformed-2.html transformed-2-ref.html # Bug 1604644
 skip-if(!asyncPan) fuzzy-if(Android,0-14,0-11) fuzzy-if(gtkWidget,19-30,12-32) fuzzy-if(cocoaWidget,13-16,20-44) fails-if(useDrawSnapshot) == nested-sticky-1.html nested-sticky-1-ref.html # Bug 1604644
-skip-if(!asyncPan) fuzzy-if(Android,0-14,0-11) fuzzy-if(gtkWidget,19-30,12-32) fuzzy-if(cocoaWidget,13-16,20-44) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-4,0-104) fails-if(useDrawSnapshot) == nested-sticky-2.html nested-sticky-2-ref.html # Bug 1604644
+skip-if(!asyncPan) fuzzy-if(Android,0-14,0-11) fuzzy-if(gtkWidget,19-30,12-32) fuzzy-if(cocoaWidget,13-16,20-44) fails-if(useDrawSnapshot) == nested-sticky-2.html nested-sticky-2-ref.html # Bug 1604644

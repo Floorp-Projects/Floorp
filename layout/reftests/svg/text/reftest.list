@@ -1,7 +1,7 @@
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(winWidget,47-127,221-254) == simple.svg simple-ref.html # Bug 1392106
+fuzzy-if(winWidget,47-127,221-254) == simple.svg simple-ref.html
 == simple-2.svg simple.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(winWidget,47-127,221-254) == simple-underline.svg simple-underline-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-scaled.svg simple-underline-scaled-ref.svg # Bug 1392106
+fuzzy-if(winWidget,47-127,221-254) == simple-underline.svg simple-underline-ref.html
+== simple-underline-scaled.svg simple-underline-scaled-ref.svg
 fuzzy-if(winWidget,47-166,255-318) fuzzy-if(OSX,0-1,0-1) == simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
 fuzzy-if(winWidget,47-139,181-204) == simple-anchor-end-rtl.svg simple-anchor-end-rtl-ref.html
 fuzzy-if(winWidget,47-137,181-250) == simple-anchor-end.svg simple-anchor-end-ref.html
@@ -13,7 +13,7 @@ fuzzy-if(winWidget,47-138,260-319) == simple-bidi.svg simple-bidi-ref.html
 
 == simple-dx.svg simple.svg
 == simple-dx-2.svg simple-dx-2-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-dx-anchor-end-bidi.svg simple-dx-anchor-end-bidi-ref.svg # Bug 1392106
+== simple-dx-anchor-end-bidi.svg simple-dx-anchor-end-bidi-ref.svg
 == simple-dx-anchor-end-rtl.svg simple-dx-anchor-end-rtl-ref.svg
 == simple-dx-anchor-end.svg simple-dx-anchor-end-ref.svg
 == simple-dx-anchor-middle-bidi.svg simple-dx-anchor-middle-bidi-ref.svg
@@ -30,7 +30,7 @@ fuzzy-if(winWidget,47-129,221-254) fuzzy-if(OSX,23-65,195-196) == simple-fill-co
 == simple-fill-none.svg simple.svg
 == simple-pointer-events.svg simple.svg
 
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(winWidget,47-127,221-254) == simple-multiple-dx.svg simple-multiple-dx-ref.html # Bug 1392106
+fuzzy-if(winWidget,47-127,221-254) == simple-multiple-dx.svg simple-multiple-dx-ref.html
 == simple-multiple-dx-2.svg simple-multiple-dx.svg
 == simple-multiple-dx-anchor-end-bidi.svg simple-multiple-dx-anchor-end-bidi-ref.svg
 == simple-multiple-dx-anchor-middle-bidi.svg simple-multiple-dx-anchor-middle-bidi-ref.svg
@@ -110,19 +110,19 @@ fails-if(geckoview) == multiple-chunks-multiple-dx-different-anchor-bidi.svg mul
 == simple-multiline-pc.svg simple-multiline-pc-ref.svg
 == simple-multiline-anchor-end.svg simple-multiline-anchor-end-ref.svg
 
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-15) == textpath.svg textpath-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-a.svg textpath-a-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-middle.svg textpath-anchor-middle-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-end.svg textpath-anchor-end-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-cluster.svg textpath-cluster-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-invalid-parent.svg textpath-invalid-parent-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline.svg textpath-multiline-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline-2.svg textpath-multiline-2-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after.svg textpath-after-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiple.svg ../pass.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-reset-position.svg textpath-reset-position-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-inherit-position.svg textpath-inherit-position-ref.svg # Bug 1392106
+fuzzy(0-1,0-15) == textpath.svg textpath-ref.svg
+== textpath-a.svg textpath-a-ref.svg
+== textpath-anchor-middle.svg textpath-anchor-middle-ref.svg
+== textpath-anchor-end.svg textpath-anchor-end-ref.svg
+== textpath-cluster.svg textpath-cluster-ref.svg
+== textpath-invalid-parent.svg textpath-invalid-parent-ref.svg
+== textpath-multiline.svg textpath-multiline-ref.svg
+== textpath-multiline-2.svg textpath-multiline-2-ref.svg
+== textpath-after.svg textpath-after-ref.svg
+== textpath-multiple.svg ../pass.svg
+== textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg
+== textpath-reset-position.svg textpath-reset-position-ref.svg
+== textpath-inherit-position.svg textpath-inherit-position-ref.svg
 
 == textLength.svg textLength-ref.svg
 fuzzy(0-1,0-200) == textLength-2.svg textLength-2-ref.svg
@@ -145,16 +145,16 @@ fuzzy(0-4,0-100) == textLength-3.svg textLength-3-ref.svg
 == ignore-position.svg ignore-position-ref.svg
 == ignore-margin.svg ignore-prop-ref.svg
 == ignore-padding.svg ignore-prop-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == ignore-vertical-align.svg ignore-vertical-align-ref.svg # Bug 1392106
+== ignore-vertical-align.svg ignore-vertical-align-ref.svg
 == ignore-overflow-scroll.svg ignore-prop-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == ignore-text-align.svg ignore-prop-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == ignore-text-align-2.svg ignore-text-align-2-ref.svg # Bug 1392106
+== ignore-text-align.svg ignore-prop-ref.svg
+== ignore-text-align-2.svg ignore-text-align-2-ref.svg
 
 # pseudo-elements
 == pseudo-first-line.svg pseudo-first-line-ref.svg
 == pseudo-first-line-2.svg pseudo-first-line-2-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == pseudo-first-letter.svg pseudo-first-letter-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == pseudo-first-letter-2.svg pseudo-first-letter-2-ref.svg # Bug 1392106
+== pseudo-first-letter.svg pseudo-first-letter-ref.svg
+== pseudo-first-letter-2.svg pseudo-first-letter-2-ref.svg
 == ignore-before-after.svg ignore-prop-ref.svg
 
 # invalid child nodes
@@ -175,35 +175,35 @@ fuzzy(0-1,0-200) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-re
 == dynamic-text-shadow.svg text-shadow-ref.svg
 
 # text and masks
-fuzzy-if(winWidget,0-50,0-224) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mask-applied.svg mask-applied-ref.svg # Bug 1392106
+fuzzy-if(winWidget,0-50,0-224) == mask-applied.svg mask-applied-ref.svg
 fuzzy-if(winWidget,0-105,0-112) == mask-content.svg mask-content-ref.svg
 fuzzy-if(winWidget,0-53,0-112) == mask-content-2.svg mask-content-2-ref.svg
 
 # text and clipPaths
 == clipPath-applied.svg clipPath-applied-ref.svg
-fuzzy-if(winWidget,0-105,0-56) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipPath-content.svg clipPath-content-ref.svg # Bug 1392106
-fuzzy-if(winWidget,0-53,0-112) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipPath-content-2.svg clipPath-content-2-ref.svg # Bug 1392106
+fuzzy-if(winWidget,0-105,0-56) == clipPath-content.svg clipPath-content-ref.svg
+fuzzy-if(winWidget,0-53,0-112) == clipPath-content-2.svg clipPath-content-2-ref.svg
 
 # text and patterns
-fuzzy(0-74,0-385) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(geckoview,0-49,0-1793) == pattern-content.svg pattern-content-ref.svg # Bug 1392106
+fuzzy(0-74,0-385) fuzzy-if(geckoview,0-49,0-1793) == pattern-content.svg pattern-content-ref.svg
 
 # text and filters
-fuzzy-if(winWidget,0-126,0-336) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == filter-applied.svg filter-applied-ref.svg # Bug 1392106
+fuzzy-if(winWidget,0-126,0-336) == filter-applied.svg filter-applied-ref.svg
 
 # vertical text
-fuzzy(0-1,0-80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg # Bug 1392106
-fuzzy(0-1,0-80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-x.svg textpath-vertical-x-ref.svg # Bug 1392106
+fuzzy(0-1,0-80) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg
+fuzzy(0-1,0-80) == textpath-vertical-x.svg textpath-vertical-x-ref.svg
 
 # selection
 needs-focus == deselectAll.svg deselectAll-ref.svg
 fuzzy(0-1,0-250) needs-focus == selectSubString.svg selectSubString-ref.svg
 fuzzy(0-1,0-600) needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
 fuzzy(0-1,0-250) needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(!geckoview,0-1,0-237) needs-focus fuzzy-if(winWidget,55-148,200-254) == simple-selection.svg simple-selection-ref.html # Bug 1392106
+fuzzy-if(!geckoview,0-1,0-237) needs-focus fuzzy-if(winWidget,55-148,200-254) == simple-selection.svg simple-selection-ref.html
 fuzzy(0-1,0-100) needs-focus fuzzy-if(winWidget,55-148,200-318) == simple-bidi-selection.svg simple-bidi-selection-ref.html
 fuzzy(0-1,0-50) needs-focus fuzzy-if(winWidget,55-148,200-254) fuzzy-if(OSX,1-65,19-196) == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
-fuzzy(0-1,0-150) needs-focus fuzzy-if(winWidget,125-148,221-254) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-selection.svg simple-underline-selection-ref.html # Bug 1392106
-fuzzy(0-1,0-300) needs-focus fuzzy-if(winWidget,134-152,432-501) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == multiple-text-selection.svg multiple-text-selection-ref.html # Bug 1392106
+fuzzy(0-1,0-150) needs-focus fuzzy-if(winWidget,125-148,221-254) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),55-56,200-200) == simple-underline-selection.svg simple-underline-selection-ref.html # Bug 1392106
+fuzzy(0-1,0-300) needs-focus fuzzy-if(winWidget,134-152,432-501) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),55-56,382-382) == multiple-text-selection.svg multiple-text-selection-ref.html # Bug 1392106
 needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
 fuzzy(0-1,0-200) needs-focus == textpath-selection.svg textpath-selection-ref.svg
 

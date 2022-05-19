@@ -82,17 +82,17 @@ skip-if(winWidget) == annotations.html annotations-ref.html # bug 1447257
 != kerning-sanity-check-nokern.html kerning-sanity-check-default.html
 
 # OpenType features should work across inter-word spaces
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == font-features-across-space-1.html font-features-across-space-1-ref.html # bug 1392106
+== font-features-across-space-1.html font-features-across-space-1-ref.html
 == spacelookups.html spacelookups-ref.html
 # tests whether word cache is in use by testing for ignored space kerns
 == spacelookups-wordcache.html spacelookups-wordcache-ref.html
 # requires Japanese font with feature support, WinXP lacks one
-random-if(!winWidget&&!cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fwid-spaces.html fwid-spaces-ref.html # Bug 1392106
+random-if(!winWidget&&!cocoaWidget) == fwid-spaces.html fwid-spaces-ref.html
 # Arial/Times New Roman on Win7+/OSX 10.6+ have kerning pairs that include spaces
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != kerning-spaces-arial-nokern.html kerning-spaces-arial-default.html # Bug 1392106
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == kerning-spaces-arial-kern.html kerning-spaces-arial-default.html # Bug 1392106
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != kerning-spaces-tnr-nokern.html kerning-spaces-tnr-default.html # Bug 1392106
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == kerning-spaces-tnr-kern.html kerning-spaces-tnr-default.html # Bug 1392106
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) != kerning-spaces-arial-nokern.html kerning-spaces-arial-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) == kerning-spaces-arial-kern.html kerning-spaces-arial-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) != kerning-spaces-tnr-nokern.html kerning-spaces-tnr-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) == kerning-spaces-tnr-kern.html kerning-spaces-tnr-default.html
 
 # font-variant-caps fallback
 # -- sanity check - none of these should look like the default rendering
@@ -120,4 +120,4 @@ random-if(cocoaWidget) == subsuper-nofallback.html subsuper-nofallback-ref2.html
 == subsuper-fallback-size.html subsuper-fallback-size-ref.html
 
 # GPOS spacing adjustments in vertical mode -- subsetted opentype/cff test font fails to load on Win7
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(winWidget&&!swgl&&!/^Windows\x20NT\x206\.1/.test(http.oscpu),0-1,0-70) fuzzy-if(winWidget&&swgl&&!/^Windows\x20NT\x206\.1/.test(http.oscpu),0-1,0-372) == 1376231-vertical-gpos-adjustments.html 1376231-vertical-gpos-adjustments-ref.html
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255-255,3200-3200) fuzzy-if(winWidget&&!swgl&&!/^Windows\x20NT\x206\.1/.test(http.oscpu),0-1,0-70) == 1376231-vertical-gpos-adjustments.html 1376231-vertical-gpos-adjustments-ref.html

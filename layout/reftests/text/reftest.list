@@ -32,7 +32,7 @@ fails-if(cocoaWidget) == lineheight-metrics-1.html lineheight-metrics-1-ref.html
 == lineheight-metrics-2a.html lineheight-metrics-2-ref.html
 == lineheight-metrics-2b.html lineheight-metrics-2-ref.html
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == long-1.html long-ref.html # Bug 1392106
+== long-1.html long-ref.html
 fuzzy-if(Android,0-255,0-325) == pre-line-1.html pre-line-1-ref.html
 == pre-line-2.html pre-line-2-ref.html
 == pre-line-3.html pre-line-3-ref.html
@@ -68,11 +68,11 @@ fuzzy-if(Android,0-231,0-653) == subpixel-lineheight-1a.html subpixel-lineheight
 == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
 == synthetic-bold-zero-width-01.html synthetic-bold-zero-width-01-ref.html
 # Tests for text-align-last
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-start.html text-align-last-start-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-end.html text-align-last-end-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-center.html text-align-last-center-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-justify.html text-align-last-justify-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-justify-rtl.html text-align-last-justify-rtl-ref.html # Bug 1392106
+== text-align-last-start.html text-align-last-start-ref.html
+== text-align-last-end.html text-align-last-end-ref.html
+== text-align-last-center.html text-align-last-center-ref.html
+== text-align-last-justify.html text-align-last-justify-ref.html
+== text-align-last-justify-rtl.html text-align-last-justify-rtl-ref.html
 #
 # Default values:
 # text-align defaults to start. text-align-last defaults to auto, which is
@@ -154,7 +154,7 @@ random-if(cocoaWidget) random-if(gtkWidget) == zwnj-01.xhtml zwnj-01-ref.xhtml #
 != zwnj-01.html zwnj-01-notref.html
 == initial-zwj-1.html initial-zwj-1-ref.html
 == cgj-01.html cgj-01-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 444656.html 444656-ref.html # Bug 1392106
+== 444656.html 444656-ref.html
 fuzzy-if(geckoview,0-4,0-1) == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 fuzzy(0-1,0-600) == 475092-sub.html 475092-ref.html
@@ -342,8 +342,8 @@ pref(gfx.font_rendering.graphite.enabled,true) == glyph-decomposition-graphite.h
 == hyphenation-control-2.html hyphenation-control-2-ref.html
 == hyphenation-control-3.html hyphenation-control-3-ref.html
 == hyphenation-control-4.html hyphenation-control-4-ref.html
-fuzzy-if(Android,0-64,0-18) fuzzy-if(winWidget,0-56,0-6) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == hyphenation-control-5.html hyphenation-control-5-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == hyphenation-control-6.html hyphenation-control-6-ref.html # Bug 1392106
+fuzzy-if(Android,0-64,0-18) fuzzy-if(winWidget,0-56,0-6) == hyphenation-control-5.html hyphenation-control-5-ref.html
+== hyphenation-control-6.html hyphenation-control-6-ref.html
 == hyphenation-control-7.html hyphenation-control-7-ref.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
@@ -369,7 +369,7 @@ pref(layout.css.moz-control-character-visibility.enabled,true) pref(layout.css.c
 
 # handling of highly negative letter-spacing and intrinsic width
 == negative-letter-spacing-1.html negative-letter-spacing-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == segment-break-transformation-1.html segment-break-transformation-1-ref.html # Bug 1392106
+== segment-break-transformation-1.html segment-break-transformation-1-ref.html
 
 # color glyphs, opacity, and RTL runs - bug 1318539
 == color-opacity-rtl-1.html color-opacity-rtl-1-ref.html
