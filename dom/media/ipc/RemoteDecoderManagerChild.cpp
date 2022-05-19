@@ -151,11 +151,19 @@ void RemoteDecoderManagerChild::Shutdown() {
             sRemoteDecoderManagerChildForRDDProcess->Close();
           }
           sRemoteDecoderManagerChildForRDDProcess = nullptr;
+          {
+            StaticMutexAutoLock lock(sLaunchRDDMutex);
+            sLaunchRDDPromise = nullptr;
+          }
           if (sRemoteDecoderManagerChildForUtilityProcess &&
               sRemoteDecoderManagerChildForUtilityProcess->CanSend()) {
             sRemoteDecoderManagerChildForUtilityProcess->Close();
           }
           sRemoteDecoderManagerChildForUtilityProcess = nullptr;
+          {
+            StaticMutexAutoLock lock(sLaunchUtilityMutex);
+            sLaunchUtilityPromise = nullptr;
+          }
           if (sRemoteDecoderManagerChildForGPUProcess &&
               sRemoteDecoderManagerChildForGPUProcess->CanSend()) {
             sRemoteDecoderManagerChildForGPUProcess->Close();
