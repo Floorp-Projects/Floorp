@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "thiserror"
-version = "1.0.30"
+version = "1.0.31"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "derive(Error)"
 documentation = "https://docs.rs/thiserror"
@@ -21,10 +21,13 @@ readme = "README.md"
 categories = ["rust-patterns"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/thiserror"
+
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
+
 [dependencies.thiserror-impl]
-version = "=1.0.30"
+version = "=1.0.31"
+
 [dev-dependencies.anyhow]
 version = "1.0"
 

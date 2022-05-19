@@ -10,20 +10,21 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
+edition = "2018"
+rust-version = "1.36"
 name = "itoa"
-version = "0.4.8"
+version = "1.0.2"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
-exclude = ["performance.png"]
-description = "Fast functions for printing integer primitives to an io::Write"
+exclude = [
+    "performance.png",
+    "chart/**",
+]
+description = "Fast integer primitive to string conversion"
 documentation = "https://docs.rs/itoa"
 readme = "README.md"
 categories = ["value-formatting"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/itoa"
+
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
-
-[features]
-default = ["std"]
-i128 = []
-std = []

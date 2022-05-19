@@ -3,7 +3,7 @@ memchr
 This library provides heavily optimized routines for string search primitives.
 
 [![Build status](https://github.com/BurntSushi/memchr/workflows/ci/badge.svg)](https://github.com/BurntSushi/memchr/actions)
-[![](https://meritbadge.herokuapp.com/memchr)](https://crates.io/crates/memchr)
+[![Crates.io](https://img.shields.io/crates/v/memchr.svg)](https://crates.io/crates/memchr)
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org/).
 

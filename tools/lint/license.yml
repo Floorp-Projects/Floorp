@@ -77,6 +77,7 @@ license:
         - .jsx
         - .m
         - .mm
+        - .mjs
         - .properties
         - .py
         - .rs

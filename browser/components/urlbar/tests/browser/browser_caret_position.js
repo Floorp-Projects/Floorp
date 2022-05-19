@@ -66,9 +66,17 @@ add_task(async function setURI() {
       firstURL: "https://example.com/test",
       secondURL: "https://example.org/test",
       initialSelectionStart: 1,
-      initialSelectionEnd: 20,
+      initialSelectionEnd: 10,
       expectedSelectionStart: 1,
-      expectedSelectionEnd: 20,
+      expectedSelectionEnd: 10,
+    },
+    {
+      firstURL: "https://example.com/test",
+      secondURL: "https://example.org/test",
+      initialSelectionStart: "https://example.".length,
+      initialSelectionEnd: "https://example.c".length,
+      expectedSelectionStart: "https://example.c".length,
+      expectedSelectionEnd: "https://example.c".length,
     },
     {
       firstURL: "https://example.com/test",
@@ -134,6 +142,46 @@ add_task(async function setURI() {
       expectedSelectionStart: "https://example.com/test".length,
       expectedSelectionEnd: "https://example.com/test".length,
     },
+    {
+      firstURL: "https://example.com/test",
+      secondURL: "about:blank",
+      initialSelectionStart: 0,
+      initialSelectionEnd: 0,
+      expectedSelectionStart: 0,
+      expectedSelectionEnd: 0,
+    },
+    {
+      firstURL: "https://example.com/test",
+      secondURL: "about:blank",
+      initialSelectionStart: 0,
+      initialSelectionEnd: "https://example.com/test".length,
+      expectedSelectionStart: 0,
+      expectedSelectionEnd: 0,
+    },
+    {
+      firstURL: "https://example.com/test",
+      secondURL: "about:blank",
+      initialSelectionStart: 3,
+      initialSelectionEnd: 4,
+      expectedSelectionStart: 0,
+      expectedSelectionEnd: 0,
+    },
+    {
+      firstURL: "https://example.com/test",
+      secondURL: "about:blank",
+      initialSelectionStart: "https://example.com/test".length,
+      initialSelectionEnd: "https://example.com/test".length,
+      expectedSelectionStart: 0,
+      expectedSelectionEnd: 0,
+    },
+    {
+      firstURL: "about:blank",
+      secondURL: "https://example.com/test",
+      initialSelectionStart: 0,
+      initialSelectionEnd: 0,
+      expectedSelectionStart: 0,
+      expectedSelectionEnd: 0,
+    },
   ];
 
   for (const data of testData) {
@@ -141,57 +189,62 @@ add_task(async function setURI() {
       `Test for ${data.firstURL} -> ${data.secondURL} with initial selection: ${data.initialSelectionStart}, ${data.initialSelectionEnd}`
     );
 
+    info("Check the caret position after setting second URL");
     gURLBar.setURI(makeURI(data.firstURL));
-
     gURLBar.selectionStart = data.initialSelectionStart;
     gURLBar.selectionEnd = data.initialSelectionEnd;
 
+    gURLBar.focus();
     gURLBar.setURI(makeURI(data.secondURL));
-
     Assert.equal(gURLBar.selectionStart, data.expectedSelectionStart);
     Assert.equal(gURLBar.selectionEnd, data.expectedSelectionEnd);
+
+    info("Check the caret position while the input is not focused");
+    gURLBar.setURI(makeURI(data.firstURL));
+    gURLBar.selectionStart = data.initialSelectionStart;
+    gURLBar.selectionEnd = data.initialSelectionEnd;
+
+    gURLBar.blur();
+    gURLBar.setURI(makeURI(data.secondURL));
+    Assert.equal(gURLBar.selectionStart, 0);
+    Assert.equal(gURLBar.selectionEnd, 0);
   }
 });
 
 // Tests that up and down keys move the caret on certain platforms, and that
 // opening the popup doesn't change the caret position.
 add_task(async function navigation() {
-  // Use new window to avoid timeout failure for autocomplete popup happens on Linux TV.
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window: win,
+    window,
     value: "This is a generic sentence",
   });
-  await UrlbarTestUtils.promisePopupClose(win);
+  await UrlbarTestUtils.promisePopupClose(window);
 
   const INITIAL_SELECTION_START = 3;
   const INITIAL_SELECTION_END = 10;
-  win.gURLBar.selectionStart = INITIAL_SELECTION_START;
-  win.gURLBar.selectionEnd = INITIAL_SELECTION_END;
+  gURLBar.selectionStart = INITIAL_SELECTION_START;
+  gURLBar.selectionEnd = INITIAL_SELECTION_END;
 
   if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
     await checkCaretMoves(
       "KEY_ArrowDown",
-      win.gURLBar.value.length,
+      gURLBar.value.length,
       "Caret should have moved to the end",
-      win
+      window
     );
-    await checkPopupOpens("KEY_ArrowDown", win);
+    await checkPopupOpens("KEY_ArrowDown", window);
 
     await checkCaretMoves(
       "KEY_ArrowUp",
       0,
       "Caret should have moved to the start",
-      win
+      window
     );
-    await checkPopupOpens("KEY_ArrowUp", win);
+    await checkPopupOpens("KEY_ArrowUp", window);
   } else {
-    await checkPopupOpens("KEY_ArrowDown", win);
-    await checkPopupOpens("KEY_ArrowUp", win);
+    await checkPopupOpens("KEY_ArrowDown", window);
+    await checkPopupOpens("KEY_ArrowUp", window);
   }
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 async function checkCaretMoves(key, pos, msg, win) {

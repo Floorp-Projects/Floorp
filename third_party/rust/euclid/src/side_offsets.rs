@@ -18,9 +18,11 @@ use core::cmp::{Eq, PartialEq};
 use core::fmt;
 use core::hash::Hash;
 use core::marker::PhantomData;
-use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Neg};
+use core::ops::{Add, AddAssign, Sub, SubAssign, Div, DivAssign, Mul, MulAssign, Neg};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// A group of 2D side offsets, which correspond to top/right/bottom/left for borders, padding,
 /// and margins in CSS, optionally tagged with a unit.
@@ -56,6 +58,12 @@ where
         })
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for SideOffsets2D<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for SideOffsets2D<T, U> {}
 
 impl<T: Copy, U> Copy for SideOffsets2D<T, U> {}
 
@@ -238,6 +246,61 @@ where
             self.bottom + other.bottom,
             self.left + other.left,
         )
+    }
+}
+
+impl<T, U> AddAssign<Self> for SideOffsets2D<T, U>
+where
+    T: AddAssign<T>,
+{
+    fn add_assign(&mut self, other: Self) {
+        self.top += other.top;
+        self.right += other.right;
+        self.bottom += other.bottom;
+        self.left += other.left;
+    }
+}
+
+impl<T, U> Sub for SideOffsets2D<T, U>
+where
+    T: Sub<T, Output = T>,
+{
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        SideOffsets2D::new(
+            self.top - other.top,
+            self.right - other.right,
+            self.bottom - other.bottom,
+            self.left - other.left,
+        )
+    }
+}
+
+impl<T, U> SubAssign<Self> for SideOffsets2D<T, U>
+where
+    T: SubAssign<T>,
+{
+    fn sub_assign(&mut self, other: Self) {
+        self.top -= other.top;
+        self.right -= other.right;
+        self.bottom -= other.bottom;
+        self.left -= other.left;
+    }
+}
+
+impl<T, U> Neg for SideOffsets2D<T, U>
+where
+    T: Neg<Output = T>
+{
+    type Output = Self;
+    fn neg(self) -> Self {
+        SideOffsets2D {
+            top: -self.top,
+            right: -self.right,
+            bottom: -self.bottom,
+            left: -self.left,
+            _unit: PhantomData,
+        }
     }
 }
 

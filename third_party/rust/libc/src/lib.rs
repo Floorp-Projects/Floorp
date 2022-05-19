@@ -25,8 +25,8 @@
 #![cfg_attr(not(feature = "rustc-dep-of-std"), no_std)]
 #![cfg_attr(feature = "rustc-dep-of-std", no_core)]
 #![cfg_attr(
-    any(feature = "rustc-dep-of-std", target_os = "redox"),
-    feature(static_nobundle, native_link_modifiers, native_link_modifiers_bundle)
+    feature = "rustc-dep-of-std",
+    feature(native_link_modifiers, native_link_modifiers_bundle)
 )]
 #![cfg_attr(libc_const_extern_fn, feature(const_extern_fn))]
 

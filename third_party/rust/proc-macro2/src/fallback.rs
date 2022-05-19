@@ -4,7 +4,7 @@ use crate::{Delimiter, Spacing, TokenTree};
 use std::cell::RefCell;
 #[cfg(span_locations)]
 use std::cmp;
-use std::fmt::{self, Debug, Display};
+use std::fmt::{self, Debug, Display, Write};
 use std::iter::FromIterator;
 use std::mem;
 use std::ops::RangeBounds;
@@ -666,18 +666,11 @@ impl Ident {
 }
 
 pub(crate) fn is_ident_start(c: char) -> bool {
-    ('a' <= c && c <= 'z')
-        || ('A' <= c && c <= 'Z')
-        || c == '_'
-        || (c > '\x7f' && UnicodeXID::is_xid_start(c))
+    c == '_' || UnicodeXID::is_xid_start(c)
 }
 
 pub(crate) fn is_ident_continue(c: char) -> bool {
-    ('a' <= c && c <= 'z')
-        || ('A' <= c && c <= 'Z')
-        || c == '_'
-        || ('0' <= c && c <= '9')
-        || (c > '\x7f' && UnicodeXID::is_xid_continue(c))
+    UnicodeXID::is_xid_continue(c)
 }
 
 fn validate_ident(string: &str) {
@@ -883,7 +876,9 @@ impl Literal {
                 b'"' => escaped.push_str("\\\""),
                 b'\\' => escaped.push_str("\\\\"),
                 b'\x20'..=b'\x7E' => escaped.push(*b as char),
-                _ => escaped.push_str(&format!("\\x{:02X}", b)),
+                _ => {
+                    let _ = write!(escaped, "\\x{:02X}", b);
+                }
             }
         }
         escaped.push('"');

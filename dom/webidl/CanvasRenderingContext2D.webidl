@@ -44,9 +44,13 @@ interface CanvasRenderingContext2D {
   readonly attribute HTMLCanvasElement? canvas;
 
   // Mozilla-specific stuff
-  [Throws]
+  [Deprecated="MozCurrentTransform",
+   Pref="dom.mozCurrentTransform.enabled",
+   Throws]
   attribute object mozCurrentTransform; // [ m11, m12, m21, m22, dx, dy ], i.e. row major
-  [Throws]
+  [Deprecated="MozCurrentTransformInverse",
+   Pref="dom.mozCurrentTransform.enabled",
+   Throws]
   attribute object mozCurrentTransformInverse;
 
   [SetterThrows]

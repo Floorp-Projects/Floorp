@@ -159,11 +159,6 @@ impl Error {
 }
 
 impl error::Error for Error {
-    // TODO: deprecated, remove in next major version.
-    fn description(&self) -> &str {
-        self.0.description()
-    }
-
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         self.0.source()
     }
@@ -196,24 +191,6 @@ impl de::Error for Error {
 }
 
 impl ErrorImpl {
-    #[allow(deprecated)]
-    fn description(&self) -> &str {
-        match self {
-            ErrorImpl::Message(msg, _) => msg,
-            ErrorImpl::Emit(_) => "emit error",
-            ErrorImpl::Scan(_) => "scan error",
-            ErrorImpl::Io(err) => error::Error::description(err),
-            ErrorImpl::Utf8(err) => error::Error::description(err),
-            ErrorImpl::FromUtf8(err) => error::Error::description(err),
-            ErrorImpl::EndOfStream => "EOF while parsing a value",
-            ErrorImpl::MoreThanOneDocument => {
-                "deserializing from YAML containing more than one document is not supported"
-            }
-            ErrorImpl::RecursionLimitExceeded => "recursion limit exceeded",
-            ErrorImpl::Shared(err) => err.description(),
-        }
-    }
-
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             ErrorImpl::Scan(err) => Some(err),

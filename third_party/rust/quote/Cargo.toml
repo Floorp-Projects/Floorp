@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "quote"
-version = "1.0.14"
+version = "1.0.18"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 autobenches = false
 description = "Quasi-quoting macro quote!(...)"
@@ -23,11 +23,14 @@ keywords = ["syn"]
 categories = ["development-tools::procedural-macro-helpers"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/quote"
+
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
+
 [dependencies.proc-macro2]
 version = "1.0.36"
 default-features = false
+
 [dev-dependencies.rustversion]
 version = "1.0"
 

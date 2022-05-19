@@ -377,22 +377,39 @@ class UrlbarInput {
     const previousSelectionStart = this.selectionStart;
     const previousSelectionEnd = this.selectionEnd;
 
-    let isDifferentValidValue = valid && value != this.untrimmedValue;
     this.value = value;
     this.valueIsTyped = !valid;
     this.removeAttribute("usertyping");
-    if (isDifferentValidValue) {
-      // If the caret is at the end of the input or its position is beyond the
-      // end of the new value, keep it at the end. Otherwise keep its current
-      // position.
-      const isCaretPositionEnd =
-        previousUntrimmedValue.length === previousSelectionEnd ||
-        value.length <= previousSelectionEnd;
-      if (isCaretPositionEnd) {
-        this.selectionStart = this.selectionEnd = value.length;
-      } else {
+
+    if (!this.focused) {
+      // When setURI is called while the input is not focused, reset the caret.
+      this.selectionStart = this.selectionEnd = 0;
+    } else if (value != previousUntrimmedValue) {
+      if (
+        previousSelectionStart != previousSelectionEnd &&
+        value.substring(previousSelectionStart, previousSelectionEnd) ===
+          previousUntrimmedValue.substring(
+            previousSelectionStart,
+            previousSelectionEnd
+          )
+      ) {
+        // If the same text is in the same place as the previously selected text,
+        // the selection is kept.
         this.selectionStart = previousSelectionStart;
         this.selectionEnd = previousSelectionEnd;
+      } else if (
+        previousSelectionEnd &&
+        (previousUntrimmedValue.length === previousSelectionEnd ||
+          value.length <= previousSelectionEnd)
+      ) {
+        // If the previous end caret is not 0 and the caret is at the end of the
+        // input or its position is beyond the end of the new value, keep the
+        // position at the end.
+        this.selectionStart = this.selectionEnd = value.length;
+      } else {
+        // Otherwise clear selection and set the caret position to the previous
+        // caret end position.
+        this.selectionStart = this.selectionEnd = previousSelectionEnd;
       }
     }
 

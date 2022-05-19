@@ -62,13 +62,12 @@ impl Test {
     }
 
     pub fn shim(&self, name: &str) -> &Test {
-        link_or_copy(
-            &self.gcc,
-            self.td
-                .path()
-                .join(&format!("{}{}", name, env::consts::EXE_SUFFIX)),
-        )
-        .unwrap();
+        let name = if name.ends_with(env::consts::EXE_SUFFIX) {
+            name.to_string()
+        } else {
+            format!("{}{}", name, env::consts::EXE_SUFFIX)
+        };
+        link_or_copy(&self.gcc, self.td.path().join(name)).unwrap();
         self
     }
 

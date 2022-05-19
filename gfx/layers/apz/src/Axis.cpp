@@ -284,7 +284,7 @@ ParentLayerCoord Axis::PanDistance(ParentLayerCoord aPos) const {
   return fabs(aPos - mStartPos);
 }
 
-void Axis::EndTouch(TimeStamp aTimestamp) {
+void Axis::EndTouch(TimeStamp aTimestamp, ClearAxisLock aClearAxisLock) {
   // mVelocityQueue is controller-thread only
   APZThreadUtils::AssertOnControllerThread();
 
@@ -301,7 +301,9 @@ void Axis::EndTouch(TimeStamp aTimestamp) {
   } else {
     DoSetVelocity(0);
   }
-  mAxisLocked = false;
+  if (aClearAxisLock == ClearAxisLock::Yes) {
+    mAxisLocked = false;
+  }
   AXIS_LOG("%p|%s ending touch, computed velocity %f\n",
            mAsyncPanZoomController, Name(), DoGetVelocity());
 }
@@ -314,6 +316,7 @@ void Axis::CancelGesture() {
            mAsyncPanZoomController, Name());
   DoSetVelocity(0.0f);
   mVelocityTracker->Clear();
+  SetAxisLocked(false);
 }
 
 bool Axis::CanScroll() const {

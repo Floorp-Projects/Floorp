@@ -1,3 +1,31 @@
+# Release 0.2.15 (2022-05-02)
+
+- [The new `Euclid` trait calculates Euclidean division][195], where the
+  remainder is always positive or zero.
+- [The new `LowerBounded` and `UpperBounded` traits][210] separately describe
+  types with lower and upper bounds. These traits are automatically implemented
+  for all fully-`Bounded` types.
+- [The new `Float::copysign` method copies the sign of the argument][207] to
+  to the magnitude of `self`.
+- [The new `PrimInt::leading_ones` and `trailing_ones` methods][205] are the
+  complement of the existing methods that count zero bits.
+- [The new `PrimInt::reverse_bits` method reverses the order of all bits][202]
+  of a primitive integer.
+- [Improved `Num::from_str_radix` for floats][201], also [ignoring case][214].
+- [`Float` and `FloatCore` use more from `libm`][196] when that is enabled.
+
+**Contributors**: @alion02, @clarfonthey, @cuviper, @ElectronicRU,
+@ibraheemdev, @SparrowLii, @sshilovsky, @tspiteri, @XAMPPRocky, @Xiretza
+
+[195]: https://github.com/rust-num/num-traits/pull/195
+[196]: https://github.com/rust-num/num-traits/pull/196
+[201]: https://github.com/rust-num/num-traits/pull/201
+[202]: https://github.com/rust-num/num-traits/pull/202
+[205]: https://github.com/rust-num/num-traits/pull/205
+[207]: https://github.com/rust-num/num-traits/pull/207
+[210]: https://github.com/rust-num/num-traits/pull/210
+[214]: https://github.com/rust-num/num-traits/pull/214
+
 # Release 0.2.14 (2020-10-29)
 
 - Clarify the license specification as "MIT OR Apache-2.0".
