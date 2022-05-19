@@ -6,7 +6,6 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Ci } = require("chrome");
-const Services = require("Services");
 const { fetch } = require("devtools/shared/DevToolsUtils");
 const InspectorUtils = require("InspectorUtils");
 const {
@@ -32,13 +31,6 @@ loader.lazyRequireGetter(
   "devtools/server/actors/style-sheet",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "TargetActorRegistry",
-  "devtools/server/actors/targets/target-actor-registry.jsm",
-  true
-);
-const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
 const TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
 const TRANSITION_DURATION_MS = 500;
@@ -882,28 +874,8 @@ class StyleSheetsManager extends EventEmitter {
 }
 
 function hasStyleSheetWatcherSupportForTarget(targetActor) {
-  // Check if the watcher actor supports stylesheet resources.
-  // This is a temporary solution until we have a reliable way of propagating sessionData
-  // to all targets (so we'll be able to store this information via addDataEntry).
-  // This will be done in Bug 1700092.
-  const { sharedData } = Services.cpmm;
-  const sessionDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
-  if (!sessionDataByWatcherActor) {
-    return false;
-  }
-
-  const watcherSessionData = Array.from(
-    sessionDataByWatcherActor.values()
-  ).find(sessionData => {
-    const actors = TargetActorRegistry.getTargetActors(
-      sessionData.sessionContext,
-      sessionData.connectionPrefix
-    );
-    return actors.includes(targetActor);
-  });
-
   return (
-    watcherSessionData?.watcherTraits?.resources?.[TYPES.STYLESHEET] || false
+    targetActor.sessionContext.supportedResources?.[TYPES.STYLESHEET] || false
   );
 }
 

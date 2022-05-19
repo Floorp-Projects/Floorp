@@ -13,7 +13,7 @@
 // These objects are all instantiated by the Descriptor actors
 // and passed as a constructor argument to the Watcher actor.
 //
-// These objects have only two attributes used by all the Session contexts:
+// These objects have attributes used by all the Session contexts:
 // - type: String
 //   Describes which type of context we are debugging.
 //   See SESSION_TYPES for all possible values.
@@ -21,6 +21,16 @@
 // - isServerTargetSwitchingEnabled: Boolean
 //   If true, targets should all be spawned by the server codebase.
 //   Especially the first, top level target.
+// - supportedTargets: Boolean
+//   An object keyed by target type, whose value indicates if we have watcher support
+//   for the target.
+// - supportedResources: Boolean
+//   An object keyed by resource type, whose value indicates if we have watcher support
+//   for the resource.
+
+const Services = require("Services");
+const Targets = require("devtools/server/actors/targets/index");
+const Resources = require("devtools/server/actors/resources/index");
 
 const SESSION_TYPES = {
   ALL: "all",
@@ -40,11 +50,14 @@ const SESSION_TYPES = {
  * - all components/targets: HTML documents, processes, workers, add-ons,...
  */
 function createBrowserSessionContext() {
+  const type = SESSION_TYPES.ALL;
   return {
-    type: SESSION_TYPES.ALL,
+    type,
     // For now, the top level target (ParentProcessTargetActor) is created via ProcessDescriptor.getTarget
     // and is never replaced by any other, nor is it created by the WatcherActor.
     isServerTargetSwitchingEnabled: false,
+    supportedTargets: getWatcherSupportedTargets(type),
+    supportedResources: getWatcherSupportedResources(type),
   };
 }
 
@@ -58,8 +71,9 @@ function createBrowserSessionContext() {
  *        See jsdoc in this file header for more info.
  */
 function createBrowserElementSessionContext(browserElement, config) {
+  const type = SESSION_TYPES.BROWSER_ELEMENT;
   return {
-    type: SESSION_TYPES.BROWSER_ELEMENT,
+    type,
     browserId: browserElement.browserId,
     // Nowaday, it should always be enabled except for WebExtension special
     // codepath and some tests.
@@ -67,6 +81,8 @@ function createBrowserElementSessionContext(browserElement, config) {
     // Should we instantiate targets for popups opened in distinct tabs/windows?
     // Driven by devtools.popups.debug=true preference.
     isPopupDebuggingEnabled: config.isPopupDebuggingEnabled,
+    supportedTargets: getWatcherSupportedTargets(type),
+    supportedResources: getWatcherSupportedResources(type),
   };
 }
 
@@ -93,14 +109,17 @@ function createWebExtensionSessionContext(
   { addonId, browsingContextID, innerWindowId },
   config
 ) {
+  const type = SESSION_TYPES.WEBEXTENSION;
   return {
-    type: SESSION_TYPES.WEBEXTENSION,
+    type,
     addonId: addonId,
     addonBrowsingContextID: browsingContextID,
     addonInnerWindowId: innerWindowId,
     // For now, there is only one target (WebExtensionTargetActor), it is never replaced,
     // and is only created via WebExtensionDescriptor.getTarget (and never by the watcher actor).
     isServerTargetSwitchingEnabled: config.isServerTargetSwitchingEnabled,
+    supportedTargets: getWatcherSupportedTargets(type),
+    supportedResources: getWatcherSupportedResources(type),
   };
 }
 
@@ -109,8 +128,11 @@ function createWebExtensionSessionContext(
  * Or when debugging XpcShell via about:debugging, where we instantiate only one content process target.
  */
 function createContentProcessSessionContext() {
+  const type = SESSION_TYPES.CONTENT_PROCESS;
   return {
-    type: SESSION_TYPES.CONTENT_PROCESS,
+    type,
+    supportedTargets: getWatcherSupportedTargets(type),
+    supportedResources: getWatcherSupportedResources(type),
   };
 }
 
@@ -119,8 +141,81 @@ function createContentProcessSessionContext() {
  * This is only used from about:debugging.
  */
 function createWorkerSessionContext() {
+  const type = SESSION_TYPES.WORKER;
   return {
-    type: SESSION_TYPES.WORKER,
+    type,
+    supportedTargets: getWatcherSupportedTargets(type),
+    supportedResources: getWatcherSupportedResources(type),
+  };
+}
+
+/**
+ * Get the supported targets by the watcher given a session context type.
+ *
+ * @param {String} type
+ * @returns {Object}
+ */
+function getWatcherSupportedTargets(type) {
+  // We're completely bypassing the watcher for the non-multiprocess Browser Toolbox.
+  if (
+    type == SESSION_TYPES.ALL &&
+    !Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
+  ) {
+    return {};
+  }
+
+  return {
+    [Targets.TYPES.FRAME]: true,
+    [Targets.TYPES.PROCESS]: true,
+    [Targets.TYPES.WORKER]:
+      type == SESSION_TYPES.BROWSER_ELEMENT ||
+      type == SESSION_TYPES.WEBEXTENSION,
+  };
+}
+
+/**
+ * Get the supported resources by the watcher given a session context type.
+ *
+ * @param {String} type
+ * @returns {Object}
+ */
+function getWatcherSupportedResources(type) {
+  // We're completely bypassing the watcher for the non-multiprocess Browser Toolbox.
+  if (
+    type == SESSION_TYPES.ALL &&
+    !Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
+  ) {
+    return {};
+  }
+
+  // All resources types are supported for tab debugging and web extensions.
+  // Some watcher classes are still disabled for the Multiprocess Browser Toolbox (type=SESSION_TYPES.ALL).
+  // And they may also be disabled for workers once we start supporting them by the watcher.
+  // So set the traits to false for all the resources that we don't support yet
+  // and keep using the legacy listeners.
+  const isTabOrWebExtensionToolbox =
+    type == SESSION_TYPES.BROWSER_ELEMENT || type == SESSION_TYPES.WEBEXTENSION;
+
+  return {
+    [Resources.TYPES.CONSOLE_MESSAGE]: true,
+    [Resources.TYPES.CSS_CHANGE]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.CSS_MESSAGE]: true,
+    [Resources.TYPES.DOCUMENT_EVENT]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.CACHE_STORAGE]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.COOKIE]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.ERROR_MESSAGE]: true,
+    [Resources.TYPES.INDEXED_DB]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.LOCAL_STORAGE]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.SESSION_STORAGE]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.PLATFORM_MESSAGE]: true,
+    [Resources.TYPES.NETWORK_EVENT]: true,
+    [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: true,
+    [Resources.TYPES.REFLOW]: true,
+    [Resources.TYPES.STYLESHEET]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.SOURCE]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.THREAD_STATE]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.SERVER_SENT_EVENT]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.WEBSOCKET]: isTabOrWebExtensionToolbox,
   };
 }
 
