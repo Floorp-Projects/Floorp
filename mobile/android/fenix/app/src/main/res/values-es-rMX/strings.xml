@@ -113,7 +113,7 @@
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
-    <string name="recent_tabs_header">Saltar hacia atrás</string>
+    <string name="recent_tabs_header">Regresar hacía atrás</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Mostrar todo</string>
 
@@ -420,7 +420,7 @@
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
-    <string name="customize_toggle_jump_back_in">Saltar hacia atrás</string>
+    <string name="customize_toggle_jump_back_in">Regresar hacía atrás</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Marcadores recientes</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is

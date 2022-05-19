@@ -1618,6 +1618,8 @@
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">ਸਿਰਨਾਵਾਂ ਜੋੜੋ</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">ਸਿਰਨਾਵੇਂ ਨੂੰ ਸੋਧੋ</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">ਸਿਰਨਾਵਿਆਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- The header for the full name of an address -->
@@ -1646,6 +1648,17 @@
     <string name="addresses_cancel_button">ਰੱਦ ਕਰੋ</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">ਸਿਰਨਾਵੇਂ ਨੂੰ ਹਟਾਓ</string>
+
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">ਕੀ ਤੁਸੀਂ ਇਹ ਸਿਰਨਾਵੇਂ ਨੂੰ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">ਹਟਾਓ</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">ਰੱਦ ਕਰੋ</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">ਸਿਰਨਾਵਾਂ ਸੰਭਾਲੋ</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">ਸਿਰਨਾਵਾਂ ਹਟਾਓ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ਖੋਜ ਇੰਜਣ ਜੋੜੋ</string>
