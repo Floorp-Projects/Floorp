@@ -14,6 +14,7 @@ import six
 import subprocess
 import sys
 import errno
+from pathlib import Path
 
 from mach.mixin.process import ProcessExecutionMixin
 from mozboot.mozconfig import MozconfigFindException
@@ -198,16 +199,7 @@ class MozbuildObject(ProcessExecutionMixin):
                 topsrcdir, topobjdir, mozconfig = load_mozinfo(mozinfo_path)
 
         if not topsrcdir:
-            topsrcdir = os.path.normcase(
-                os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), "..", "..", "..")
-                )
-            )
-            if sys.platform.startswith("win"):
-                # A bunch of tests depend on the drive letter being capitalized on
-                # Windows. Since the sys.path entries are normcase'd, the __file__
-                # path has a lowercase drive letter. Work around it with capitalize().
-                topsrcdir = topsrcdir.capitalize()
+            topsrcdir = str(Path(__file__).parent.parent.parent.parent.resolve())
 
         topsrcdir = mozpath.normsep(topsrcdir)
         if topobjdir:
