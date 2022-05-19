@@ -134,7 +134,9 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
   void AdvanceTime(DurationMs duration_ms) { now_ = now_ + duration_ms; }
   void SetTime(TimeMs now) { now_ = now; }
 
-  std::vector<TimeoutID> RunTimers() { return timeout_manager_.RunTimers(); }
+  absl::optional<TimeoutID> GetNextExpiredTimeout() {
+    return timeout_manager_.GetNextExpiredTimeout();
+  }
 
  private:
   TimeMs now_ = TimeMs(0);

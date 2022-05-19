@@ -208,13 +208,19 @@ class DcSctpSocketTest : public testing::Test {
     } while (delivered_packet);
   }
 
+  void RunTimers(MockDcSctpSocketCallbacks& cb, DcSctpSocket& socket) {
+    for (;;) {
+      absl::optional<TimeoutID> timeout_id = cb.GetNextExpiredTimeout();
+      if (!timeout_id.has_value()) {
+        break;
+      }
+      socket.HandleTimeout(*timeout_id);
+    }
+  }
+
   void RunTimers() {
-    for (const auto timeout_id : cb_a_.RunTimers()) {
-      sock_a_.HandleTimeout(timeout_id);
-    }
-    for (const auto timeout_id : cb_z_.RunTimers()) {
-      sock_z_.HandleTimeout(timeout_id);
-    }
+    RunTimers(cb_a_, sock_a_);
+    RunTimers(cb_z_, sock_z_);
   }
 
   const DcSctpOptions options_;
@@ -1025,9 +1031,7 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
 
   // The receiver might have moved into delayed ack mode.
   cb_z2.AdvanceTime(options.rto_initial);
-  for (const auto timeout_id : cb_z2.RunTimers()) {
-    sock_z2.HandleTimeout(timeout_id);
-  }
+  RunTimers(cb_z2, sock_z2);
 
   EXPECT_THAT(
       cb_z2.ConsumeSentPacket(),
@@ -1066,9 +1070,7 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
 
   // The receiver might have moved into delayed ack mode.
   cb_z2.AdvanceTime(options.rto_initial);
-  for (const auto timeout_id : cb_z2.RunTimers()) {
-    sock_z2.HandleTimeout(timeout_id);
-  }
+  RunTimers(cb_z2, sock_z2);
 
   EXPECT_THAT(
       cb_z2.ConsumeSentPacket(),

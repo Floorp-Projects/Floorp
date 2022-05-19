@@ -32,8 +32,13 @@ class TimerTest : public testing::Test {
   void AdvanceTimeAndRunTimers(DurationMs duration) {
     now_ = now_ + duration;
 
-    for (TimeoutID timeout_id : timeout_manager_.RunTimers()) {
-      manager_.HandleTimeout(timeout_id);
+    for (;;) {
+      absl::optional<TimeoutID> timeout_id =
+          timeout_manager_.GetNextExpiredTimeout();
+      if (!timeout_id.has_value()) {
+        break;
+      }
+      manager_.HandleTimeout(*timeout_id);
     }
   }
 

@@ -45,6 +45,17 @@ class HeartbeatHandlerTest : public testing::Test {
         timer_manager_([this]() { return callbacks_.CreateTimeout(); }),
         handler_("log: ", options_, &context_, &timer_manager_) {}
 
+  void AdvanceTime(DurationMs duration) {
+    callbacks_.AdvanceTime(duration);
+    for (;;) {
+      absl::optional<TimeoutID> timeout_id = callbacks_.GetNextExpiredTimeout();
+      if (!timeout_id.has_value()) {
+        break;
+      }
+      timer_manager_.HandleTimeout(*timeout_id);
+    }
+  }
+
   const DcSctpOptions options_;
   NiceMock<MockDcSctpSocketCallbacks> callbacks_;
   NiceMock<MockContext> context_;
@@ -75,10 +86,7 @@ TEST_F(HeartbeatHandlerTest, RepliesToHeartbeatRequests) {
 }
 
 TEST_F(HeartbeatHandlerTest, SendsHeartbeatRequestsOnIdleChannel) {
-  callbacks_.AdvanceTime(options_.heartbeat_interval);
-  for (TimeoutID id : callbacks_.RunTimers()) {
-    timer_manager_.HandleTimeout(id);
-  }
+  AdvanceTime(options_.heartbeat_interval);
 
   // Grab the request, and make a response.
   std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
@@ -101,22 +109,15 @@ TEST_F(HeartbeatHandlerTest, SendsHeartbeatRequestsOnIdleChannel) {
 }
 
 TEST_F(HeartbeatHandlerTest, IncreasesErrorIfNotAckedInTime) {
-  callbacks_.AdvanceTime(options_.heartbeat_interval);
-
   DurationMs rto(105);
   EXPECT_CALL(context_, current_rto).WillOnce(Return(rto));
-  for (TimeoutID id : callbacks_.RunTimers()) {
-    timer_manager_.HandleTimeout(id);
-  }
+  AdvanceTime(options_.heartbeat_interval);
 
   // Validate that a request was sent.
   EXPECT_THAT(callbacks_.ConsumeSentPacket(), Not(IsEmpty()));
 
   EXPECT_CALL(context_, IncrementTxErrorCounter).Times(1);
-  callbacks_.AdvanceTime(rto);
-  for (TimeoutID id : callbacks_.RunTimers()) {
-    timer_manager_.HandleTimeout(id);
-  }
+  AdvanceTime(rto);
 }
 
 }  // namespace

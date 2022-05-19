@@ -119,8 +119,12 @@ class StreamResetHandlerTest : public testing::Test {
 
   void AdvanceTime(DurationMs duration) {
     callbacks_.AdvanceTime(kRto);
-    for (TimeoutID timeout_id : callbacks_.RunTimers()) {
-      timer_manager_.HandleTimeout(timeout_id);
+    for (;;) {
+      absl::optional<TimeoutID> timeout_id = callbacks_.GetNextExpiredTimeout();
+      if (!timeout_id.has_value()) {
+        break;
+      }
+      timer_manager_.HandleTimeout(*timeout_id);
     }
   }
 
