@@ -126,7 +126,7 @@ function tablesCallbackWithSub(tables) {
     "test-block-simple;a:1",
     "test-malware-simple;a:1",
     "test-phish-simple;a:2:s:3",
-    "test-unwanted-simple;a:1"
+    "test-unwanted-simple;a:1",
   ];
   for (let chunk of expectedChunks) {
     Assert.ok(parts.includes(chunk));
