@@ -90,9 +90,7 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mPrincipalHashValue(0),
       mFromWindow(false),
       mEvalAllowed(false),
-      mReportEvalCSPViolations(false),
-      mWasmEvalAllowed(false),
-      mReportWasmEvalCSPViolations(false),
+      mReportCSPViolations(false),
       mXHRParamsAllowed(false),
       mPrincipalIsSystem(false),
       mPrincipalIsAddonOrExpandedAddon(false),
@@ -120,8 +118,7 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
   mCSP = aCsp;
 
   if (mCSP) {
-    mCSP->GetAllowsEval(&mReportEvalCSPViolations, &mEvalAllowed);
-    mCSP->GetAllowsWasmEval(&mReportWasmEvalCSPViolations, &mWasmEvalAllowed);
+    mCSP->GetAllowsEval(&mReportCSPViolations, &mEvalAllowed);
     mCSPInfo = MakeUnique<CSPInfo>();
     nsresult rv = CSPToCSPInfo(aCsp, mCSPInfo.get());
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -129,9 +126,7 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
     }
   } else {
     mEvalAllowed = true;
-    mReportEvalCSPViolations = false;
-    mWasmEvalAllowed = true;
-    mReportWasmEvalCSPViolations = false;
+    mReportCSPViolations = false;
   }
 
   mLoadGroup = aLoadGroup;

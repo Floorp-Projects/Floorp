@@ -964,6 +964,9 @@ class GlobalObject : public NativeObject {
   static JSObject* getOrCreateThrowTypeError(JSContext* cx,
                                              Handle<GlobalObject*> global);
 
+  static bool isRuntimeCodeGenEnabled(JSContext* cx, HandleString code,
+                                      Handle<GlobalObject*> global);
+
   static bool getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,
                               MutableHandleObject eval);
 

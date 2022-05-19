@@ -42,16 +42,16 @@ static const char kBackgroundPageHTMLEnd[] =
 </html>";
 
 #define BASE_CSP_PREF_V2 "extensions.webextensions.base-content-security-policy"
-#define DEFAULT_BASE_CSP_V2                                            \
-  "script-src 'self' https://* http://localhost:* http://127.0.0.1:* " \
-  "moz-extension: blob: filesystem: 'unsafe-eval' 'wasm-unsafe-eval' " \
-  "'unsafe-inline'; object-src 'self' moz-extension: blob: filesystem:;"
+#define DEFAULT_BASE_CSP_V2                                       \
+  "script-src 'self' https://* moz-extension: blob: filesystem: " \
+  "'unsafe-eval' 'unsafe-inline'; "                               \
+  "object-src 'self' https://* moz-extension: blob: filesystem:;"
 
 #define BASE_CSP_PREF_V3 \
   "extensions.webextensions.base-content-security-policy.v3"
-#define DEFAULT_BASE_CSP_V3                                  \
-  "script-src 'self' 'wasm-unsafe-eval' http://localhost:* " \
-  "http://127.0.0.1:*; object-src 'self';"
+#define DEFAULT_BASE_CSP_V3                \
+  "script-src 'self'; object-src 'self'; " \
+  "style-src 'self'; worker-src 'self';"
 
 static const char kRestrictedDomainPref[] =
     "extensions.webextensions.restrictedDomains";
@@ -196,11 +196,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
   InitializeBaseCSP();
 
   if (mExtensionPageCSP.IsVoid()) {
-    if (mManifestVersion < 3) {
-      EPS().GetDefaultCSP(mExtensionPageCSP);
-    } else {
-      EPS().GetDefaultCSPV3(mExtensionPageCSP);
-    }
+    EPS().GetDefaultCSP(mExtensionPageCSP);
   }
 
   mWebAccessibleResources.SetCapacity(aInit.mWebAccessibleResources.Length());
@@ -258,7 +254,6 @@ void WebExtensionPolicy::InitializeBaseCSP() {
     }
     return;
   }
-
   // Version 3 or higher.
   nsresult rv = Preferences::GetString(BASE_CSP_PREF_V3, mBaseCSP);
   if (NS_FAILED(rv)) {

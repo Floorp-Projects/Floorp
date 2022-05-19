@@ -448,20 +448,17 @@ bool InterruptCallback(JSContext* aCx) {
 }
 
 class LogViolationDetailsRunnable final : public WorkerMainThreadRunnable {
-  uint16_t mViolationType;
   nsString mFileName;
   uint32_t mLineNum;
   uint32_t mColumnNum;
   nsString mScriptSample;
 
  public:
-  LogViolationDetailsRunnable(WorkerPrivate* aWorker, uint16_t aViolationType,
-                              const nsString& aFileName, uint32_t aLineNum,
-                              uint32_t aColumnNum,
+  LogViolationDetailsRunnable(WorkerPrivate* aWorker, const nsString& aFileName,
+                              uint32_t aLineNum, uint32_t aColumnNum,
                               const nsAString& aScriptSample)
       : WorkerMainThreadRunnable(aWorker,
                                  "RuntimeService :: LogViolationDetails"_ns),
-        mViolationType(aViolationType),
         mFileName(aFileName),
         mLineNum(aLineNum),
         mColumnNum(aColumnNum),
@@ -475,36 +472,22 @@ class LogViolationDetailsRunnable final : public WorkerMainThreadRunnable {
   ~LogViolationDetailsRunnable() = default;
 };
 
-bool ContentSecurityPolicyAllows(JSContext* aCx, JS::RuntimeCode aKind,
-                                 JS::Handle<JSString*> aCode) {
+bool ContentSecurityPolicyAllows(JSContext* aCx, JS::Handle<JSString*> aCode) {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   worker->AssertIsOnWorkerThread();
 
-  bool evalOK;
-  bool reportViolation;
-  uint16_t violationType;
   nsAutoJSString scriptSample;
-  if (aKind == JS::RuntimeCode::JS) {
-    if (NS_WARN_IF(!scriptSample.init(aCx, aCode))) {
-      JS_ClearPendingException(aCx);
-      return false;
-    }
-
-    if (!nsContentSecurityUtils::IsEvalAllowed(
-            aCx, worker->UsesSystemPrincipal(), scriptSample)) {
-      return false;
-    }
-
-    evalOK = worker->IsEvalAllowed();
-    reportViolation = worker->GetReportEvalCSPViolations();
-    violationType = nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL;
-  } else {
-    evalOK = worker->IsWasmEvalAllowed();
-    reportViolation = worker->GetReportWasmEvalCSPViolations();
-    violationType = nsIContentSecurityPolicy::VIOLATION_TYPE_WASM_EVAL;
+  if (NS_WARN_IF(!scriptSample.init(aCx, aCode))) {
+    JS_ClearPendingException(aCx);
+    return false;
   }
 
-  if (reportViolation) {
+  if (!nsContentSecurityUtils::IsEvalAllowed(aCx, worker->UsesSystemPrincipal(),
+                                             scriptSample)) {
+    return false;
+  }
+
+  if (worker->GetReportCSPViolations()) {
     nsString fileName;
     uint32_t lineNum = 0;
     uint32_t columnNum = 0;
@@ -518,8 +501,8 @@ bool ContentSecurityPolicyAllows(JSContext* aCx, JS::RuntimeCode aKind,
     }
 
     RefPtr<LogViolationDetailsRunnable> runnable =
-        new LogViolationDetailsRunnable(worker, violationType, fileName,
-                                        lineNum, columnNum, scriptSample);
+        new LogViolationDetailsRunnable(worker, fileName, lineNum, columnNum,
+                                        scriptSample);
 
     ErrorResult rv;
     runnable->Dispatch(Killing, rv);
@@ -528,7 +511,7 @@ bool ContentSecurityPolicyAllows(JSContext* aCx, JS::RuntimeCode aKind,
     }
   }
 
-  return evalOK;
+  return worker->IsEvalAllowed();
 }
 
 void CTypesActivityCallback(JSContext* aCx, JS::CTypesActivityType aType) {
@@ -1966,11 +1949,13 @@ bool LogViolationDetailsRunnable::MainThreadRun() {
 
   nsIContentSecurityPolicy* csp = mWorkerPrivate->GetCSP();
   if (csp) {
-    csp->LogViolationDetails(mViolationType,
-                             nullptr,  // triggering element
-                             mWorkerPrivate->CSPEventListener(), mFileName,
-                             mScriptSample, mLineNum, mColumnNum, u""_ns,
-                             u""_ns);
+    if (mWorkerPrivate->GetReportCSPViolations()) {
+      csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
+                               nullptr,  // triggering element
+                               mWorkerPrivate->CSPEventListener(), mFileName,
+                               mScriptSample, mLineNum, mColumnNum, u""_ns,
+                               u""_ns);
+    }
   }
 
   return true;

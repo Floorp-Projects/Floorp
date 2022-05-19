@@ -75,7 +75,7 @@ add_task(async function test_policy_csp() {
       policyData: {
         manifestVersion: 3,
       },
-      expectedPolicy: aps.defaultCSPV3,
+      expectedPolicy: aps.defaultCSP,
     },
     {
       name: "manifest 3 version set, custom extensionPage policy",
@@ -143,7 +143,7 @@ add_task(async function test_extension_csp() {
     {
       name: "manifest_v2 allows https protocol",
       manifest: {
-        manifest_version: 2,
+        manifest_version: 3,
         content_security_policy: {
           extension_pages: `script-src 'self' https://*; object-src 'self'`,
         },
@@ -153,19 +153,9 @@ add_task(async function test_extension_csp() {
     {
       name: "manifest_v2 allows unsafe-eval",
       manifest: {
-        manifest_version: 2,
+        manifest_version: 3,
         content_security_policy: {
           extension_pages: `script-src 'self' 'unsafe-eval'; object-src 'self'`,
-        },
-      },
-      expectedPolicy: aps.defaultCSP,
-    },
-    {
-      name: "manifest_v2 allows wasm-unsafe-eval",
-      manifest: {
-        manifest_version: 2,
-        content_security_policy: {
-          extension_pages: `script-src 'self' 'wasm-unsafe-eval'; object-src 'self'`,
         },
       },
       expectedPolicy: aps.defaultCSP,
@@ -178,7 +168,7 @@ add_task(async function test_extension_csp() {
           extension_pages: `script-src 'none'`,
         },
       },
-      expectedPolicy: aps.defaultCSPV3,
+      expectedPolicy: aps.defaultCSP,
     },
     {
       name: "manifest_v3 forbidden protocol results in default csp used",
@@ -188,7 +178,7 @@ add_task(async function test_extension_csp() {
           extension_pages: `script-src 'self' https://*; object-src 'self'`,
         },
       },
-      expectedPolicy: aps.defaultCSPV3,
+      expectedPolicy: aps.defaultCSP,
     },
     {
       name: "manifest_v3 forbidden eval results in default csp used",
@@ -198,7 +188,7 @@ add_task(async function test_extension_csp() {
           extension_pages: `script-src 'self' 'unsafe-eval'; object-src 'self'`,
         },
       },
-      expectedPolicy: aps.defaultCSPV3,
+      expectedPolicy: aps.defaultCSP,
     },
     {
       name: "manifest_v3 allows localhost",
@@ -221,16 +211,6 @@ add_task(async function test_extension_csp() {
       expectedPolicy: `script-src 'self' https://127.0.0.1; object-src 'self'`,
     },
     {
-      name: "manifest_v3 allows wasm-unsafe-eval",
-      manifest: {
-        manifest_version: 3,
-        content_security_policy: {
-          extension_pages: `script-src 'self' 'wasm-unsafe-eval'; object-src 'self'`,
-        },
-      },
-      expectedPolicy: `script-src 'self' 'wasm-unsafe-eval'; object-src 'self'`,
-    },
-    {
       name: "manifest_v2 csp",
       manifest: {
         manifest_version: 2,
@@ -250,7 +230,7 @@ add_task(async function test_extension_csp() {
       manifest: {
         manifest_version: 3,
       },
-      expectedPolicy: aps.defaultCSPV3,
+      expectedPolicy: aps.defaultCSP,
     },
     {
       name: "manifest_v3 syntax used",
