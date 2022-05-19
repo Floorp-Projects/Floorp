@@ -76,11 +76,9 @@
 
 #if defined(MOZ_WIDGET_GTK)
 #  include "mozilla/widget/GtkCompositorWidget.h"
-#  include "mozilla/WidgetUtilsGtk.h"
 #  if defined(MOZ_WAYLAND)
 #    include <gdk/gdkwayland.h>
 #    include <wayland-egl.h>
-#    define MOZ_GTK_WAYLAND 1
 #  endif
 #endif
 
@@ -94,31 +92,27 @@ namespace gl {
 using namespace mozilla::widget;
 
 #if defined(MOZ_WAYLAND)
-class WaylandGLSurface {
+class SavedGLSurface {
  public:
-  WaylandGLSurface(struct wl_surface* aWaylandSurface,
-                   struct wl_egl_window* aEGLWindow);
-  ~WaylandGLSurface();
+  SavedGLSurface(struct wl_surface* aWaylandSurface,
+                 struct wl_egl_window* aEGLWindow);
+  explicit SavedGLSurface(struct gbm_surface* aGbmSurface);
+  ~SavedGLSurface();
 
  private:
-  struct wl_surface* mWaylandSurface;
-  struct wl_egl_window* mEGLWindow;
+  struct wl_surface* mWaylandSurface = nullptr;
+  struct gbm_surface* mGbmSurface = nullptr;
+  struct wl_egl_window* mEGLWindow = nullptr;
 };
 
-static nsTHashMap<nsPtrHashKey<void>, WaylandGLSurface*> sWaylandGLSurface;
+static nsTHashMap<nsPtrHashKey<void>, SavedGLSurface*> sSavedGLSurfaces;
 
-void DeleteWaylandGLSurface(EGLSurface surface) {
-#  ifdef MOZ_GTK_WAYLAND
-  // We're running on Wayland which means our EGLSurface may
-  // have attached Wayland backend data which must be released.
-  if (GdkIsWaylandDisplay()) {
-    auto entry = sWaylandGLSurface.Lookup(surface);
-    if (entry) {
-      delete entry.Data();
-      entry.Remove();
-    }
+void DeleteSavedGLSurface(EGLSurface surface) {
+  auto entry = sSavedGLSurfaces.Lookup(surface);
+  if (entry) {
+    delete entry.Data();
+    entry.Remove();
   }
-#  endif
 }
 #endif
 
@@ -161,7 +155,7 @@ static void DestroySurface(EglDisplay& egl, const EGLSurface oldSurface) {
     egl.fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     egl.fDestroySurface(oldSurface);
 #if defined(MOZ_WAYLAND)
-    DeleteWaylandGLSurface(oldSurface);
+    DeleteSavedGLSurface(oldSurface);
 #endif
   }
 }
@@ -808,41 +802,66 @@ TRY_AGAIN_POWER_OF_TWO:
 }
 
 #if defined(MOZ_WAYLAND)
-WaylandGLSurface::WaylandGLSurface(struct wl_surface* aWaylandSurface,
-                                   struct wl_egl_window* aEGLWindow)
+SavedGLSurface::SavedGLSurface(struct wl_surface* aWaylandSurface,
+                               struct wl_egl_window* aEGLWindow)
     : mWaylandSurface(aWaylandSurface), mEGLWindow(aEGLWindow) {}
 
-WaylandGLSurface::~WaylandGLSurface() {
-  wl_egl_window_destroy(mEGLWindow);
-  wl_surface_destroy(mWaylandSurface);
+SavedGLSurface::SavedGLSurface(struct gbm_surface* aGbmSurface)
+    : mGbmSurface(aGbmSurface) {}
+
+SavedGLSurface::~SavedGLSurface() {
+  if (mEGLWindow) {
+    wl_egl_window_destroy(mEGLWindow);
+  }
+  if (mWaylandSurface) {
+    wl_surface_destroy(mWaylandSurface);
+  }
+  if (mGbmSurface) {
+    nsGbmLib::DestroySurface(mGbmSurface);
+  }
 }
 #endif
 
 // static
+#ifdef MOZ_WAYLAND
 EGLSurface GLContextEGL::CreateWaylandBufferSurface(
     EglDisplay& egl, EGLConfig config, mozilla::gfx::IntSize& pbsize) {
   wl_egl_window* eglwindow = nullptr;
 
-#ifdef MOZ_GTK_WAYLAND
   struct wl_compositor* compositor =
       gdk_wayland_display_get_wl_compositor(gdk_display_get_default());
   struct wl_surface* wlsurface = wl_compositor_create_surface(compositor);
   eglwindow = wl_egl_window_create(wlsurface, pbsize.width, pbsize.height);
-#endif
   if (!eglwindow) return nullptr;
 
   const auto surface = egl.fCreateWindowSurface(
       config, reinterpret_cast<EGLNativeWindowType>(eglwindow), 0);
   if (surface) {
-#ifdef MOZ_GTK_WAYLAND
-    MOZ_ASSERT(!sWaylandGLSurface.Contains(surface));
-    sWaylandGLSurface.LookupOrInsert(
-        surface, new WaylandGLSurface(wlsurface, eglwindow));
-#endif
+    MOZ_ASSERT(!sSavedGLSurfaces.Contains(surface));
+    sSavedGLSurfaces.LookupOrInsert(surface,
+                                    new SavedGLSurface(wlsurface, eglwindow));
   }
-
   return surface;
 }
+
+EGLSurface GLContextEGL::CreateGBMBufferSurface(EglDisplay& egl,
+                                                EGLConfig config,
+                                                mozilla::gfx::IntSize& pbsize) {
+  struct gbm_surface* gbmSurface = nsGbmLib::CreateSurface(
+      GetDMABufDevice()->GetGbmDevice(), pbsize.width, pbsize.height,
+      GBM_FORMAT_ARGB8888, GBM_BO_USE_RENDERING);
+  if (!gbmSurface) {
+    return nullptr;
+  }
+  const auto surface = egl.fCreateWindowSurface(
+      config, reinterpret_cast<EGLNativeWindowType>(gbmSurface), 0);
+  if (surface) {
+    MOZ_ASSERT(!sSavedGLSurfaces.Contains(surface));
+    sSavedGLSurfaces.LookupOrInsert(surface, new SavedGLSurface(gbmSurface));
+  }
+  return surface;
+}
+#endif
 
 static const EGLint kEGLConfigAttribsRGB16[] = {
     LOCAL_EGL_SURFACE_TYPE, LOCAL_EGL_WINDOW_BIT,
@@ -1013,10 +1032,11 @@ EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) const {
 
 static void FillContextAttribs(bool es3, bool useGles, nsTArray<EGLint>* out) {
   out->AppendElement(LOCAL_EGL_SURFACE_TYPE);
-#ifdef MOZ_GTK_WAYLAND
-  if (GdkIsWaylandDisplay()) {
+#ifdef MOZ_WAYLAND
+  if (GdkIsWaylandDisplay() || !gdk_display_get_default()) {
     // Wayland on desktop does not support PBuffer or FBO.
     // We create a dummy wl_egl_window instead.
+    // LOCAL_EGL_WINDOW_BIT is also needed for GBM backend.
     out->AppendElement(LOCAL_EGL_WINDOW_BIT);
   } else
 #endif
@@ -1136,8 +1156,10 @@ RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContextImpl(
 
   mozilla::gfx::IntSize pbSize(size);
   EGLSurface surface = nullptr;
-#ifdef MOZ_GTK_WAYLAND
-  if (GdkIsWaylandDisplay()) {
+#ifdef MOZ_WAYLAND
+  if (!gdk_display_get_default()) {
+    surface = GLContextEGL::CreateGBMBufferSurface(*egl, config, pbSize);
+  } else if (GdkIsWaylandDisplay()) {
     surface = GLContextEGL::CreateWaylandBufferSurface(*egl, config, pbSize);
   } else
 #endif
@@ -1159,7 +1181,7 @@ RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContextImpl(
     NS_WARNING("Failed to create GLContext from PBuffer");
     egl->fDestroySurface(surface);
 #if defined(MOZ_WAYLAND)
-    DeleteWaylandGLSurface(surface);
+    DeleteSavedGLSurface(surface);
 #endif
     return nullptr;
   }
