@@ -72,12 +72,15 @@ already_AddRefed<MIDIMessageEvent> MIDIMessageEvent::Constructor(
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
   // Set data for event. Timestamp will always be set to Now() (default for
   // event) using this constructor.
-  const auto& a = aEventInitDict.mData.Value();
-  a.ComputeState();
-  e->mData = Uint8Array::Create(aGlobal.Context(), owner, a.Length(), a.Data());
-  if (NS_WARN_IF(!e->mData)) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
+  if (aEventInitDict.mData.WasPassed()) {
+    const auto& a = aEventInitDict.mData.Value();
+    a.ComputeState();
+    e->mData =
+        Uint8Array::Create(aGlobal.Context(), owner, a.Length(), a.Data());
+    if (NS_WARN_IF(!e->mData)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
   }
 
   e->SetTrusted(trusted);
