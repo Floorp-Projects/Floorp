@@ -705,12 +705,11 @@ class nsWindow final : public nsBaseWidget {
   // we need to reuse last GdkWindowMoveToRect params to avoid
   // popup movement.
   struct WaylandPopupMoveToRectParams {
-    LayoutDeviceIntRect mAnchorRect = {0, 0, 0, 0};
-    GdkGravity mAnchorRectType = GDK_GRAVITY_NORTH_WEST;
-    GdkGravity mPopupAnchorType = GDK_GRAVITY_NORTH_WEST;
-    GdkAnchorHints mHints = GDK_ANCHOR_SLIDE;
-    GdkPoint mOffset = {0, 0};
-    bool mAnchorSet = false;
+    LayoutDeviceIntRect mAnchorRect;
+    GdkGravity mAnchorRectType;
+    GdkGravity mPopupAnchorType;
+    GdkAnchorHints mHints;
+    GdkPoint mOffset;
   };
 
   WaylandPopupMoveToRectParams mPopupMoveToRectParams;
