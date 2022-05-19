@@ -2,20 +2,20 @@
 != 345563-sub.xhtml 345563-sup.xhtml
 == 347348-1.xhtml 347348-1-ref.xhtml
 == 347496-1.xhtml 347496-1-ref.xhtml
-pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-1.xml 355548-1-ref.xml # Bug 1392106
-pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-2.xml 355548-2-ref.xml # Bug 1392106
-pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) pref(mathml.deprecated_style_attributes.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
-pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-4.xml 355548-4-ref.xml # Bug 1392106
-pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-5.xml 355548-5-ref.xml # Bug 1392106
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) == 355548-1.xml 355548-1-ref.xml
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) == 355548-2.xml 355548-2-ref.xml
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) pref(mathml.deprecated_style_attributes.disabled,false) pref(mathml.mathsize_names.disabled,false) == 355548-3.xml 355548-3-ref.xml
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) == 355548-4.xml 355548-4-ref.xml
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) == 355548-5.xml 355548-5-ref.xml
 == 370692-1.xhtml 370692-1-ref.xhtml
 == 373533-1.xhtml about:blank
 == 373533-2.xhtml about:blank
 == 373533-3.xhtml about:blank
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 393760-1.xml 393760-1-ref.xml # Bug 1392106
+== 393760-1.xml 393760-1-ref.xml
 fuzzy(0-2,0-529) == 393760-2.xml 393760-2-ref.xml
 == 414123.xhtml 414123-ref.xhtml
 == dir-1.html dir-1-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-2.html dir-2-ref.html # Bug 1392106
+pref(mathml.deprecated_alignment_attributes.disabled,false) == dir-2.html dir-2-ref.html
 pref(mathml.mfrac_bevelled_attribute.disabled,false) random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
 pref(mathml.deprecated_menclose_notation_radical.disabled,false) == dir-4.html dir-4-ref.html
 == dir-5.html dir-5-ref.html
@@ -98,7 +98,7 @@ pref(mathml.stixgeneral_operator_stretching.disabled,false) == semantics-1.xhtml
 == semantics-4.html semantics-4-ref.html
 == mstyle-1.xhtml mstyle-1-ref.xhtml
 == mstyle-2.xhtml mstyle-2-ref.xhtml
-fuzzy-if(OSX,0-16,0-8) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mstyle-3.xhtml mstyle-3-ref.xhtml # Bug 1392106
+fuzzy-if(OSX,0-16,0-8) == mstyle-3.xhtml mstyle-3-ref.xhtml
 fuzzy-if(OSX,0-1,0-4) == mstyle-4.xhtml mstyle-4-ref.xhtml
 == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
@@ -121,7 +121,7 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 pref(mathml.scriptsizemultiplier_attribute.disabled,false) == scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == munderover-align-accent-false.html munderover-align-accent-false-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == munderover-align-accent-true.html munderover-align-accent-true-ref.html # Bug 1392106
+pref(mathml.deprecated_alignment_attributes.disabled,false) == munderover-align-accent-true.html munderover-align-accent-true-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
@@ -156,10 +156,10 @@ pref(mathml.mathspace_names.disabled,false) == positive-namedspace.html positive
 == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html
 == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
 == maction-dynamic-2.html maction-dynamic-2-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace.html mo-lspace-rspace-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-3.html mo-lspace-rspace-3-ref.html # Bug 1392106
-pref(mathml.mfrac_bevelled_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html # Bug 1392106
+== mo-lspace-rspace.html mo-lspace-rspace-ref.html
+== mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html
+== mo-lspace-rspace-3.html mo-lspace-rspace-3-ref.html
+pref(mathml.mfrac_bevelled_attribute.disabled,false) == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
 random-if(gtkWidget) == mo-glyph-size.html mo-glyph-size-ref.html # bug 1309426
@@ -254,9 +254,9 @@ fuzzy-if(d2d,0-7,0-1) == menclose-6-updiagonalstrike.html menclose-6-ref.html
 == menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget) fuzzy-if(gtkWidget,255-255,776226-776226) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482 (Windows), bug 1599640 (Linux)
-fails-if(Android&&emulator) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679, Bug 1392106
-fails-if(Android&&emulator) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
-fails-if(Android&&emulator) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android&&emulator) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android&&emulator) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android&&emulator) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
 == mathvariant-1d.html mathvariant-1d-ref.html
 fails-if(Android&&emulator) fails-if(OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
 pref(mathml.deprecated_style_attributes.disabled,false) == mathvariant-3.html mathvariant-3-ref.html
@@ -316,7 +316,7 @@ pref(mathml.mfrac_bevelled_attribute.disabled,false) == mfrac-A-1.html mfrac-A-1
 pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-2.html mfrac-A-2-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-3.html mfrac-A-3-ref.html
 == mfrac-A-4.html mfrac-A-4-ref.html
-pref(mathml.mfrac_linethickness_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfrac-A-5.html mfrac-A-5-ref.html # bug 1309426
+pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-A-5.html mfrac-A-5-ref.html # bug 1309426
 pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-6.html mfrac-A-6-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-7.html mfrac-A-7-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html

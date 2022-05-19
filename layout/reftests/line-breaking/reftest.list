@@ -2,19 +2,19 @@
 == chemical-1.html chemical-1-ref.html
 == conservative-range-1.html conservative-range-1-ref.html
 == conservative-range-2.html conservative-range-2-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == currency-1.html currency-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == currency-2.html currency-2-ref.html # Bug 1392106
+== currency-1.html currency-1-ref.html
+== currency-2.html currency-2-ref.html
 == datetime-1.html datetime-1-ref.html
 pref(gfx.font_rendering.fallback.async,false) == emoji-1.html emoji-1-ref.html
 pref(gfx.font_rendering.fallback.async,false) == emoji-2.html emoji-2-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == hyphens-1.html hyphens-1-ref.html # Bug 1392106
+== hyphens-1.html hyphens-1-ref.html
 == hyphens-2.html hyphens-2-ref.html
 # The following three tests may fail if rendering with Core Text (see bug 389074)
 # due to subpixel glyph positioning differences between the reference cases with <br>
 # and the automatically-wrapped lines in the test file
-random-if(cocoaWidget) == ja-1.html ja-1-ref.html
-random-if(cocoaWidget) == ja-2.html ja-2-ref.html
-random-if(cocoaWidget) == ja-3.html ja-3-ref.html
+== ja-1.html ja-1-ref.html
+== ja-2.html ja-2-ref.html
+== ja-3.html ja-3-ref.html
 == khmer-1.html khmer-1-ref.html
 == leaders-1.html leaders-1-ref.html
 == markup-src-1.html markup-src-1-ref.html

@@ -29,8 +29,8 @@ fuzzy(0-180,0-3) == grid-abspos-items-002.html grid-abspos-items-002-ref.html # 
 == grid-abspos-items-012.html grid-abspos-items-012-ref.html
 == grid-abspos-items-013.html grid-abspos-items-013-ref.html
 == grid-abspos-items-014.html grid-abspos-items-014-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-abspos-items-015.html grid-abspos-items-015-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails == grid-abspos-items-016.html grid-abspos-items-015-ref.html # Bug 1392106, 1769072
+== grid-abspos-items-015.html grid-abspos-items-015-ref.html
+fails == grid-abspos-items-016.html grid-abspos-items-015-ref.html
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
 fuzzy(0-1,0-200) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
@@ -38,10 +38,10 @@ fuzzy(0-1,0-200) == grid-order-placement-definite-001.html grid-order-placement-
 == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
 fuzzy(0-64,0-1) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html # win10: bug 1507154
 == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html # Bug 1392106
+== rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
+== rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html
+== vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001-ref.html
+== vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
 == grid-relpos-items-001.html grid-relpos-items-001-ref.html
 == grid-item-sizing-percent-001.html grid-item-sizing-percent-001-ref.html
 fails == grid-item-sizing-percent-002.html grid-item-sizing-percent-002-ref.html # bug 1434397
@@ -51,25 +51,25 @@ fails == grid-item-sizing-percent-002.html grid-item-sizing-percent-002-ref.html
 == grid-item-dir-001.html grid-item-dir-001-ref.html
 fuzzy-if(winWidget,0-70,0-130) fuzzy-if(cocoaWidget,0-85,0-180) == grid-col-max-sizing-max-content-001.html grid-col-max-sizing-max-content-001-ref.html
 fuzzy-if(winWidget,0-70,0-130) fuzzy-if(cocoaWidget,0-85,0-180) == grid-col-max-sizing-max-content-002.html grid-col-max-sizing-max-content-002-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-max-content-sizing-002.html grid-min-max-content-sizing-002-ref.html # Bug 1392106
-fuzzy-if(winWidget,0-1,0-36) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-definite-001.html grid-auto-min-sizing-definite-001-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-intrinsic-001.html grid-auto-min-sizing-intrinsic-001-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-intrinsic-002.html grid-auto-min-sizing-intrinsic-002-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-intrinsic-003.html grid-auto-min-sizing-intrinsic-003-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-intrinsic-004.html grid-auto-min-sizing-intrinsic-004-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-transferred-size-001.html grid-auto-min-sizing-transferred-size-001-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-transferred-size-002.html grid-auto-min-sizing-transferred-size-002-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-transferred-size-003.html grid-auto-min-sizing-transferred-size-003-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-transferred-size-004.html grid-auto-min-sizing-transferred-size-004-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-min-content-min-size-001.html grid-auto-min-sizing-min-content-min-size-001-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-min-content-min-size-002.html grid-auto-min-sizing-min-content-min-size-002-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-min-content-min-size-003.html grid-auto-min-sizing-min-content-min-size-003-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-auto-min-sizing-min-content-min-size-004.html grid-auto-min-sizing-min-content-min-size-004-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-sizing-transferred-size-001.html grid-min-content-min-sizing-transferred-size-001-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-sizing-transferred-size-002.html grid-min-content-min-sizing-transferred-size-002-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-sizing-transferred-size-003.html grid-min-content-min-sizing-transferred-size-003-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-sizing-transferred-size-004.html grid-min-content-min-sizing-transferred-size-004-ref.html # Bug 1392106
+== grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
+== grid-min-max-content-sizing-002.html grid-min-max-content-sizing-002-ref.html
+fuzzy-if(winWidget,0-1,0-36) == grid-auto-min-sizing-definite-001.html grid-auto-min-sizing-definite-001-ref.html
+== grid-auto-min-sizing-intrinsic-001.html grid-auto-min-sizing-intrinsic-001-ref.html
+== grid-auto-min-sizing-intrinsic-002.html grid-auto-min-sizing-intrinsic-002-ref.html
+== grid-auto-min-sizing-intrinsic-003.html grid-auto-min-sizing-intrinsic-003-ref.html
+== grid-auto-min-sizing-intrinsic-004.html grid-auto-min-sizing-intrinsic-004-ref.html
+== grid-auto-min-sizing-transferred-size-001.html grid-auto-min-sizing-transferred-size-001-ref.html
+== grid-auto-min-sizing-transferred-size-002.html grid-auto-min-sizing-transferred-size-002-ref.html
+== grid-auto-min-sizing-transferred-size-003.html grid-auto-min-sizing-transferred-size-003-ref.html
+== grid-auto-min-sizing-transferred-size-004.html grid-auto-min-sizing-transferred-size-004-ref.html
+== grid-auto-min-sizing-min-content-min-size-001.html grid-auto-min-sizing-min-content-min-size-001-ref.html
+== grid-auto-min-sizing-min-content-min-size-002.html grid-auto-min-sizing-min-content-min-size-002-ref.html
+== grid-auto-min-sizing-min-content-min-size-003.html grid-auto-min-sizing-min-content-min-size-003-ref.html
+== grid-auto-min-sizing-min-content-min-size-004.html grid-auto-min-sizing-min-content-min-size-004-ref.html
+== grid-min-content-min-sizing-transferred-size-001.html grid-min-content-min-sizing-transferred-size-001-ref.html
+== grid-min-content-min-sizing-transferred-size-002.html grid-min-content-min-sizing-transferred-size-002-ref.html
+== grid-min-content-min-sizing-transferred-size-003.html grid-min-content-min-sizing-transferred-size-003-ref.html
+== grid-min-content-min-sizing-transferred-size-004.html grid-min-content-min-sizing-transferred-size-004-ref.html
 == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html
 == grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
 fuzzy-if(winWidget,0-1,0-75) == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
@@ -93,7 +93,7 @@ fuzzy-if(winWidget,0-1,0-10) == grid-max-sizing-flex-003.html grid-max-sizing-fl
 == grid-item-align-003.html grid-item-align-003-ref.html
 == grid-item-justify-001.html grid-item-justify-001-ref.html
 == grid-item-justify-002.html grid-item-justify-002-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-item-stretch-001.html grid-item-stretch-001-ref.html # Bug 1392106
+== grid-item-stretch-001.html grid-item-stretch-001-ref.html
 == grid-item-intrinsic-ratio-stretch-001.html grid-item-intrinsic-ratio-stretch-001-ref.html
 == grid-item-intrinsic-ratio-stretch-002.html grid-item-intrinsic-ratio-stretch-002-ref.html
 == grid-item-intrinsic-ratio-stretch-003.html grid-item-intrinsic-ratio-stretch-003-ref.html
@@ -109,7 +109,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-item-stretch-001.ht
 == grid-item-intrinsic-size-normal-001.html grid-item-intrinsic-size-normal-001-ref.html
 == grid-item-intrinsic-size-normal-002.html grid-item-intrinsic-size-normal-002-ref.html
 == grid-item-auto-min-size-clamp-001.html grid-item-auto-min-size-clamp-001-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-item-auto-min-size-clamp-002.html grid-item-auto-min-size-clamp-002-ref.html # Bug 1392106
+== grid-item-auto-min-size-clamp-002.html grid-item-auto-min-size-clamp-002-ref.html
 == grid-item-auto-min-size-clamp-003.html grid-item-auto-min-size-clamp-003-ref.html
 # == grid-item-auto-min-size-clamp-004.html grid-item-auto-min-size-clamp-004-ref.html # bug 1421976
 == grid-item-auto-min-size-clamp-005.html grid-item-auto-min-size-clamp-005-ref.html
