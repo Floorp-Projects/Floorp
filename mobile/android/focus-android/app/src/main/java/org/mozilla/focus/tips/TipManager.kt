@@ -131,31 +131,35 @@ class Tip(
 
 // Yes, this a large class with a lot of functions. But it's very simple and still easy to read.
 @Suppress("TooManyFunctions")
-object TipManager {
+class TipManager(
+    private val context: Context
+) {
 
     private val listOfTips = mutableListOf<Tip>()
     private var listInitialized = false
 
-    private const val FRESH_LOOK_TIP = "fresh_look_tip"
-    private const val SHORTCUTS_TIP = "shortcuts_tip"
-    private const val ALLOW_LIST_TIP = "allow_list_tip"
-    private const val ETP_TIP = "etp_tip"
-    private const val REQUEST_DESKTOP_TIP = "request_desktop_tip"
-
-    private fun populateListOfTips(context: Context) {
-        addFreshLookTip(context)
-        addShortcutsTip(context)
-        addTrackingProtectionTip(context)
-        addAllowlistTip(context)
-        addRequestDesktopTip(context)
+    companion object {
+        private const val FRESH_LOOK_TIP = "fresh_look_tip"
+        private const val SHORTCUTS_TIP = "shortcuts_tip"
+        private const val ALLOW_LIST_TIP = "allow_list_tip"
+        private const val ETP_TIP = "etp_tip"
+        private const val REQUEST_DESKTOP_TIP = "request_desktop_tip"
     }
 
-    fun getAvailableTips(context: Context): List<Tip>? {
+    private fun populateListOfTips() {
+        addFreshLookTip()
+        addShortcutsTip()
+        addTrackingProtectionTip()
+        addAllowlistTip()
+        addRequestDesktopTip()
+    }
+
+    fun getAvailableTips(): List<Tip>? {
         if (!context.settings.shouldDisplayHomescreenTips()) return null
 
         if (!listInitialized) {
             listOfTips.clear()
-            populateListOfTips(context)
+            populateListOfTips()
             listInitialized = true
         }
 
@@ -164,27 +168,27 @@ object TipManager {
         return listOfTips
     }
 
-    private fun addFreshLookTip(context: Context) {
+    private fun addFreshLookTip() {
         val tip = Tip.createFreshLookTip(context, FRESH_LOOK_TIP)
         listOfTips.add(tip)
     }
 
-    private fun addShortcutsTip(context: Context) {
+    private fun addShortcutsTip() {
         val tip = Tip.createShortcutsTip(context, SHORTCUTS_TIP)
         listOfTips.add(tip)
     }
 
-    private fun addAllowlistTip(context: Context) {
+    private fun addAllowlistTip() {
         val tip = Tip.createAllowlistTip(context, ALLOW_LIST_TIP)
         listOfTips.add(tip)
     }
 
-    private fun addTrackingProtectionTip(context: Context) {
+    private fun addTrackingProtectionTip() {
         val tip = Tip.createTrackingProtectionTip(context, ETP_TIP)
         listOfTips.add(tip)
     }
 
-    private fun addRequestDesktopTip(context: Context) {
+    private fun addRequestDesktopTip() {
         val tip = Tip.createRequestDesktopTip(context, REQUEST_DESKTOP_TIP)
         listOfTips.add(tip)
     }

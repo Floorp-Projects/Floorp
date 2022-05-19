@@ -39,6 +39,7 @@ import org.mozilla.focus.GleanMetrics.BrowserSearch
 import org.mozilla.focus.GleanMetrics.SearchBar
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentUrlinputBinding
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.defaultSearchEngineName
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
@@ -52,7 +53,6 @@ import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.topsites.TopSitesOverlay
@@ -230,7 +230,7 @@ class UrlInputFragment :
 
     private fun updateTipsLabel() {
         val context = context ?: return
-        val tips = TipManager.getAvailableTips(context)
+        val tips = context.components.tipManager.getAvailableTips()
         binding.homeTips.tipsAdapter.submitList(tips)
         updateTipsPosition()
     }
