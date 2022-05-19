@@ -600,11 +600,14 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
       }
     }
   } else if (!strcmp(aTopic, "xpcom-shutdown-threads")) {
+    mShutdown = true;
     // If a confirmation is still in progress we record the event.
     // Since there should be no more confirmations after this, the shutdown
     // reason would not really be recorded in telemetry.
-    MutexSingleWriterAutoLock lock(mLock);
-    mConfirmation.RecordEvent("shutdown", lock);
+    {
+      MutexSingleWriterAutoLock lock(mLock);
+      mConfirmation.RecordEvent("shutdown", lock);
+    }
 
     if (sTRRBackgroundThread) {
       nsCOMPtr<nsIThread> thread;
@@ -618,7 +621,7 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void TRRService::RebuildSuffixList(nsTArray<nsCString>&& aSuffixList) {
-  if (!StaticPrefs::network_trr_split_horizon_mitigations()) {
+  if (!StaticPrefs::network_trr_split_horizon_mitigations() || mShutdown) {
     return;
   }
 

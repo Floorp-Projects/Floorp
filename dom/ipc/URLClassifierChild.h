@@ -14,8 +14,7 @@
 #include "nsIURIClassifier.h"
 #include "nsIUrlClassifierFeature.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class URLClassifierChild : public PURLClassifierChild {
  public:
@@ -86,7 +85,6 @@ class URLClassifierLocalChild : public PURLClassifierLocalChild {
   nsTArray<RefPtr<nsIUrlClassifierFeature>> mFeatures;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_URLClassifierChild_h

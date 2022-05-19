@@ -22,6 +22,7 @@ metrics_yamls = [
     "toolkit/components/glean/metrics.yaml",
     "toolkit/components/glean/tests/test_metrics.yaml",
     "toolkit/components/processtools/metrics.yaml",
+    "toolkit/components/search/metrics.yaml",
     "toolkit/components/telemetry/metrics.yaml",
     "toolkit/mozapps/update/metrics.yaml",
     "toolkit/xre/metrics.yaml",

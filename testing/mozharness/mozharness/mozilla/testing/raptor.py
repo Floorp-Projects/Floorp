@@ -1115,10 +1115,10 @@ class Raptor(
                 btime_cache,
                 FFMPEG_LOCAL_CACHE["linux"],
             )
-        elif "windows" in platform:
+        elif "win" in platform:
             path_to_ffmpeg = os.path.join(
                 btime_cache,
-                FFMPEG_LOCAL_CACHE["windows"],
+                FFMPEG_LOCAL_CACHE["win"],
                 "bin",
             )
 

@@ -17,6 +17,13 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         inputs=["ffi"],
     )
 
+    GeneratedFile(
+        "keys.inc",
+        inputs=["test.pub", "prod.pub"],
+        script="gen-keys.py",
+        entry_point="generate",
+    )
+
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 
 EXPORTS.mozilla += [

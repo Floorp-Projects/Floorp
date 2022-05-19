@@ -83,7 +83,8 @@ def geckodriver(configuration):
 
     yield _geckodriver
 
-    driver.stop()
+    if driver is not None:
+        driver.stop()
 
 
 class Browser:

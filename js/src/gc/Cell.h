@@ -157,12 +157,7 @@ struct Cell {
   MOZ_ALWAYS_INLINE bool isMarkedGray() const;
   MOZ_ALWAYS_INLINE bool isMarked(gc::MarkColor color) const;
   MOZ_ALWAYS_INLINE bool isMarkedAtLeast(gc::MarkColor color) const;
-
-  MOZ_ALWAYS_INLINE CellColor color() const {
-    return isMarkedBlack()  ? CellColor::Black
-           : isMarkedGray() ? CellColor::Gray
-                            : CellColor::White;
-  }
+  MOZ_ALWAYS_INLINE CellColor color() const;
 
   inline JSRuntime* runtimeFromMainThread() const;
 
@@ -246,13 +241,7 @@ class TenuredCell : public Cell {
   MOZ_ALWAYS_INLINE bool isMarkedAny() const;
   MOZ_ALWAYS_INLINE bool isMarkedBlack() const;
   MOZ_ALWAYS_INLINE bool isMarkedGray() const;
-
-  // Same as Cell::color, but skips nursery checks.
-  MOZ_ALWAYS_INLINE CellColor color() const {
-    return isMarkedBlack()  ? CellColor::Black
-           : isMarkedGray() ? CellColor::Gray
-                            : CellColor::White;
-  }
+  MOZ_ALWAYS_INLINE CellColor color() const;
 
   // The return value indicates if the cell went from unmarked to marked.
   MOZ_ALWAYS_INLINE bool markIfUnmarked(
@@ -300,6 +289,8 @@ class TenuredCell : public Cell {
   // Default implementation for kinds that don't require fixup.
   void fixupAfterMovingGC() {}
 
+  static inline CellColor getColor(MarkBitmap* bitmap, const TenuredCell* cell);
+
 #ifdef DEBUG
   inline bool isAligned() const;
 #endif
@@ -333,6 +324,10 @@ MOZ_ALWAYS_INLINE bool Cell::isMarked(gc::MarkColor color) const {
 
 MOZ_ALWAYS_INLINE bool Cell::isMarkedAtLeast(gc::MarkColor color) const {
   return color == MarkColor::Gray ? isMarkedAny() : isMarkedBlack();
+}
+
+MOZ_ALWAYS_INLINE CellColor Cell::color() const {
+  return isTenured() ? asTenured().color() : CellColor::Black;
 }
 
 inline JSRuntime* Cell::runtimeFromMainThread() const {
@@ -405,19 +400,38 @@ inline JS::TraceKind Cell::getTraceKind() const {
   return JS::shadow::Zone::from(zone)->needsIncrementalBarrier();
 }
 
-bool TenuredCell::isMarkedAny() const {
+MOZ_ALWAYS_INLINE bool TenuredCell::isMarkedAny() const {
   MOZ_ASSERT(arena()->allocated());
   return chunk()->markBits.isMarkedAny(this);
 }
 
-bool TenuredCell::isMarkedBlack() const {
+MOZ_ALWAYS_INLINE bool TenuredCell::isMarkedBlack() const {
   MOZ_ASSERT(arena()->allocated());
   return chunk()->markBits.isMarkedBlack(this);
 }
 
-bool TenuredCell::isMarkedGray() const {
+MOZ_ALWAYS_INLINE bool TenuredCell::isMarkedGray() const {
   MOZ_ASSERT(arena()->allocated());
   return chunk()->markBits.isMarkedGray(this);
+}
+
+MOZ_ALWAYS_INLINE CellColor TenuredCell::color() const {
+  return getColor(&chunk()->markBits, this);
+}
+
+/* static */
+inline CellColor TenuredCell::getColor(MarkBitmap* bitmap,
+                                       const TenuredCell* cell) {
+  if (bitmap->isMarkedBlack(cell)) {
+    return CellColor::Black;
+  }
+
+  if (bitmap->isMarkedGray(cell)) {
+    return CellColor::Gray;
+  }
+
+  MOZ_ASSERT(!bitmap->isMarkedAny(cell));
+  return CellColor::White;
 }
 
 bool TenuredCell::markIfUnmarked(MarkColor color /* = Black */) const {

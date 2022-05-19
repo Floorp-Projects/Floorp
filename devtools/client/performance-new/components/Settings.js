@@ -170,6 +170,46 @@ const threadColumns = [
   ],
 ];
 
+/** @type {Array<ThreadColumn[]>} */
+const jvmThreadColumns = [
+  [
+    {
+      name: "Gecko",
+      id: "gecko",
+      l10nId: "perftools-thread-jvm-gecko",
+    },
+    {
+      name: "Nimbus",
+      id: "nimbus",
+      l10nId: "perftools-thread-jvm-nimbus",
+    },
+  ],
+  [
+    {
+      name: "DefaultDispatcher",
+      id: "default-dispatcher",
+      l10nId: "perftools-thread-jvm-default-dispatcher",
+    },
+    {
+      name: "Glean",
+      id: "glean",
+      l10nId: "perftools-thread-jvm-glean",
+    },
+  ],
+  [
+    {
+      name: "arch_disk_io",
+      id: "arch-disk-io",
+      l10nId: "perftools-thread-jvm-arch-disk-io",
+    },
+    {
+      name: "pool-",
+      id: "pool",
+      l10nId: "perftools-thread-jvm-pool",
+    },
+  ],
+];
+
 /**
  * This component manages the settings for recording a performance profile.
  * @extends {React.PureComponent<Props, State>}
@@ -311,6 +351,7 @@ class Settings extends PureComponent {
             this._renderThreadsColumns(threadDisplay, index)
           )
         ),
+        this._renderJvmThreads(),
         div(
           {
             className: "perf-settings-checkbox-label perf-settings-all-threads",
@@ -359,6 +400,25 @@ class Settings extends PureComponent {
         )
       )
     );
+  }
+
+  _renderJvmThreads() {
+    if (!this.props.supportedFeatures.includes("java")) {
+      return null;
+    }
+
+    return [
+      h2(
+        null,
+        Localized({ id: "perftools-heading-threads-jvm" }, "JVM Threads")
+      ),
+      div(
+        { className: "perf-settings-thread-columns" },
+        jvmThreadColumns.map((threadDisplay, index) =>
+          this._renderThreadsColumns(threadDisplay, index)
+        )
+      ),
+    ];
   }
 
   /**

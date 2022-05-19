@@ -75,7 +75,8 @@ this.addEventListener("message", async function(event) {
       const workerTargetActor = new WorkerTargetActor(
         connection,
         global,
-        packet.workerDebuggerData
+        packet.workerDebuggerData,
+        packet.options.sessionContext
       );
       // Make the worker manage itself so it is put in a Pool and assigned an actorID.
       workerTargetActor.manage(workerTargetActor);
@@ -104,7 +105,7 @@ this.addEventListener("message", async function(event) {
       );
 
       // We might receive data to watch.
-      if (packet.options?.sessionData) {
+      if (packet.options.sessionData) {
         const promises = [];
         for (const [type, entries] of Object.entries(
           packet.options.sessionData

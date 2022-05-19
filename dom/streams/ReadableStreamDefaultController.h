@@ -133,7 +133,8 @@ MOZ_CAN_RUN_SCRIPT void SetUpReadableStreamDefaultController(
 
 MOZ_CAN_RUN_SCRIPT void
 SetupReadableStreamDefaultControllerFromUnderlyingSource(
-    JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
+    JSContext* aCx, ReadableStream* aStream,
+    JS::Handle<JSObject*> aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 

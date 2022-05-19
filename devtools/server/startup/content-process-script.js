@@ -185,7 +185,7 @@ class ContentProcessStartup {
    * @param String parentConnectionPrefix
    *        The prefix of the DevToolsServerConnection of the Watcher Actor.
    *        This is used to compute a unique ID for the target actor.
-   * @param Object initialData
+   * @param Object sessionData
    *        All data managed by the Watcher Actor and WatcherRegistry.jsm, containing
    *        target types, resources types to be listened as well as breakpoints and any
    *        other data meant to be shared across processes and threads.
@@ -196,7 +196,7 @@ class ContentProcessStartup {
   createTargetActor(
     watcherActorID,
     parentConnectionPrefix,
-    initialData,
+    sessionData,
     ignoreAlreadyCreated = false
   ) {
     if (this._connections.get(watcherActorID)) {
@@ -224,6 +224,7 @@ class ContentProcessStartup {
         watcherActorID,
         parentConnectionPrefix,
         prefix,
+        sessionContext: sessionData.sessionContext,
       },
     });
     this._connections.set(watcherActorID, {
@@ -232,8 +233,8 @@ class ContentProcessStartup {
     });
 
     // Pass initialization data to the target actor
-    for (const type in initialData) {
-      actor.addSessionDataEntry(type, initialData[type]);
+    for (const type in sessionData) {
+      actor.addSessionDataEntry(type, sessionData[type]);
     }
   }
 

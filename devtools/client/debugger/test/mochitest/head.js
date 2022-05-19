@@ -115,6 +115,7 @@ async function installAndStartContentScriptExtension() {
 
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
+      name: "Test content script extension",
       content_scripts: [
         {
           js: ["content_script.js"],

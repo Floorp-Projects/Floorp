@@ -284,6 +284,9 @@ SearchService.prototype = {
     } else {
       this._initObservers.reject(this._initRV);
     }
+
+    this._recordTelemetryData();
+
     Services.obs.notifyObservers(
       null,
       SearchUtils.TOPIC_SEARCH_SERVICE,
@@ -2327,6 +2330,12 @@ SearchService.prototype = {
       newName
     );
 
+    // Only do this if we're initialized though - this function can get called
+    // during initalization.
+    if (this._initialized) {
+      this._recordTelemetryData();
+    }
+
     SearchUtils.notifyAction(
       this[currentEngine],
       SearchUtils.MODIFIED_TYPE[privateMode ? "DEFAULT_PRIVATE" : "DEFAULT"]
@@ -2395,10 +2404,12 @@ SearchService.prototype = {
         this.defaultPrivateEngine,
         SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
       );
+      // Also update the telemetry data.
+      this._recordTelemetryData();
     }
   },
 
-  async _getEngineInfo(engine) {
+  _getEngineInfo(engine) {
     if (!engine) {
       // The defaultEngine getter will throw if there's no engine at all,
       // which shouldn't happen unless an add-on or a test deleted all of them.
@@ -2471,8 +2482,8 @@ SearchService.prototype = {
     return [engine.telemetryId, engineData];
   },
 
-  async getDefaultEngineInfo() {
-    let [telemetryId, defaultSearchEngineData] = await this._getEngineInfo(
+  getDefaultEngineInfo() {
+    let [telemetryId, defaultSearchEngineData] = this._getEngineInfo(
       this.defaultEngine
     );
     const result = {
@@ -2484,12 +2495,56 @@ SearchService.prototype = {
       let [
         privateTelemetryId,
         defaultPrivateSearchEngineData,
-      ] = await this._getEngineInfo(this.defaultPrivateEngine);
+      ] = this._getEngineInfo(this.defaultPrivateEngine);
       result.defaultPrivateSearchEngine = privateTelemetryId;
       result.defaultPrivateSearchEngineData = defaultPrivateSearchEngineData;
     }
 
     return result;
+  },
+
+  /**
+   * Records the user's current default engine (normal and private) data to
+   * telemetry.
+   */
+  _recordTelemetryData() {
+    let info = this.getDefaultEngineInfo();
+
+    Glean.searchEngineDefault.engineId.set(info.defaultSearchEngine);
+    Glean.searchEngineDefault.displayName.set(
+      info.defaultSearchEngineData.name
+    );
+    Glean.searchEngineDefault.loadPath.set(
+      info.defaultSearchEngineData.loadPath
+    );
+    Glean.searchEngineDefault.submissionUrl.set(
+      info.defaultSearchEngineData.submissionURL
+    );
+    Glean.searchEngineDefault.verified.set(info.defaultSearchEngineData.origin);
+
+    Glean.searchEnginePrivate.engineId.set(
+      info.defaultPrivateSearchEngine ?? ""
+    );
+
+    if (info.defaultPrivateSearchEngineData) {
+      Glean.searchEnginePrivate.displayName.set(
+        info.defaultPrivateSearchEngineData.name
+      );
+      Glean.searchEnginePrivate.loadPath.set(
+        info.defaultPrivateSearchEngineData.loadPath
+      );
+      Glean.searchEnginePrivate.submissionUrl.set(
+        info.defaultPrivateSearchEngineData.submissionURL
+      );
+      Glean.searchEnginePrivate.verified.set(
+        info.defaultPrivateSearchEngineData.origin
+      );
+    } else {
+      Glean.searchEnginePrivate.displayName.set("");
+      Glean.searchEnginePrivate.loadPath.set("");
+      Glean.searchEnginePrivate.submissionUrl.set("");
+      Glean.searchEnginePrivate.verified.set("");
+    }
   },
 
   /**

@@ -105,15 +105,30 @@ try {
         const {
           WindowGlobalTargetActor,
         } = require("devtools/server/actors/targets/window-global");
+        const {
+          createBrowserElementSessionContext,
+        } = require("devtools/server/actors/watcher/session-context");
+
         const { docShell } = chromeGlobal;
         // For a script loaded via loadFrameScript, the global is the content
         // message manager.
         // All WindowGlobalTarget actors created via the framescript are top-level
         // targets. Non top-level WindowGlobalTarget actors are all created by the
         // DevToolsFrameChild actor.
+        //
+        // createBrowserElementSessionContext only reads browserId attribute
+        const fakeBrowserElement = {
+          browserId: docShell.browsingContext.browserId,
+        };
         actor = new WindowGlobalTargetActor(conn, {
           docShell,
           isTopLevelTarget: true,
+          // This is only used when server target switching is off and we create
+          // the target from TabDescriptor. So all config attributes are false.
+          sessionContext: createBrowserElementSessionContext(
+            fakeBrowserElement,
+            {}
+          ),
         });
       }
       actor.manage(actor);

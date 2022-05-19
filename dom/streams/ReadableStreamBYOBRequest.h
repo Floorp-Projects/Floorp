@@ -54,7 +54,7 @@ class ReadableStreamBYOBRequest final : public nsISupports,
   void SetController(ReadableByteStreamController* aController);
 
   JSObject* View() { return mView; }
-  void SetView(JS::HandleObject aView) { mView = aView; }
+  void SetView(JS::Handle<JSObject*> aView) { mView = aView; }
 
  private:
   // Internal Slots

@@ -1754,7 +1754,7 @@ pref("browser.newtabpage.activity-stream.logowordmark.alwaysVisible", true);
 // - "key" - Search param named "key" with any or no value
 // - "key=" - Search param named "key" with no value
 // - "key=value" - Search param named "key" with value "value"
-pref("browser.newtabpage.activity-stream.hideTopSitesWithSearchParam", "");
+pref("browser.newtabpage.activity-stream.hideTopSitesWithSearchParam", "mfadid=adm");
 
 // Used to display triplet cards on newtab
 pref("trailhead.firstrun.newtab.triplets", "");

@@ -19,9 +19,7 @@
  * read-only shared memory or memory mapped files.
  */
 
-namespace mozilla {
-namespace dom {
-namespace ipc {
+namespace mozilla::dom::ipc {
 
 /**
  * Contains the character offset and character length of an entry in a string
@@ -113,8 +111,6 @@ class StringTableBuilder {
   uint32_t mSize = 0;
 };
 
-}  // namespace ipc
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::ipc
 
 #endif

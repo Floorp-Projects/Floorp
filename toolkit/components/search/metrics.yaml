@@ -1,0 +1,266 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+search.engine.default:
+  engine_id:
+    type: string
+    description: |
+      The telemetry id of the search engine.
+      For application provided engines, this is either supplied by the
+      configuration or from the first part of the associated WebExtension Id.
+      For other engines, this is `other-<extensionName>`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1089670
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1138503
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755549
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'
+
+  display_name:
+    type: string
+    description: |
+      The display name of the user's default engine.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1164159
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1164159#c60
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'
+
+  load_path:
+    type: string
+    description: |
+      A path relating to where the search engine was installed/loaded from.
+      For example:
+        `[other]addEngineWithDetails:<extension id>` for a WebExtension based
+        engine.
+        `[https]developer.mozilla.org/mdn-web-docs.xml` for an OpenSearch based
+        engine.
+      Note: this metric is truncated at 100 characters.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1164159
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1164159#c60
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'
+
+  submission_url:
+    type: url
+    description: |
+      The submission URL of the default engine. This is only reported in the
+      cases where:
+        The engine is an application provided engine.
+        The engine has the same name as an application provided engine.
+        The engine matches one of a specific list of well known search engines.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1164159
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1164159#c60
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'
+
+  verified:
+    type: string
+    description: |
+      The verified status of the search engine.
+      For application provided engines, this will always be `default`.
+      For other engines this will either be `verified` or `unverified` depending
+      on if the loadPathHash is valid.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1259139
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1259139#c6
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'
+
+search.engine.private:
+  engine_id:
+    type: string
+    description: |
+      The telemetry id of the search engine.
+      For application provided engines, this is either supplied by the
+      configuration or from the first part of the associated WebExtension Id.
+      For other engines, this is `other-<extensionName>`.
+      If this string is an empty string (`""`), this means that one or both of
+      the preferences `browser.search.separatePrivateDefault` and
+      `browser.search.separatePrivateDefault.ui.enabled` are set to false.
+      It is possible that the user selects the same private engine as for the
+      default engine, and hence both versions of these fields will be filled in.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016#c8
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'
+
+  display_name:
+    type: string
+    description: |
+      The display name of the user's default engine.
+      If this string is an empty string (`""`), this means that one or both of
+      the preferences `browser.search.separatePrivateDefault` and
+      `browser.search.separatePrivateDefault.ui.enabled` are set to false.
+      It is possible that the user selects the same private engine as for the
+      default engine, and hence both versions of these fields will be filled in.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016#c8
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'
+
+  load_path:
+    type: string
+    description: |
+      A path relating to where the search engine was installed/loaded from.
+      For example:
+        `[other]addEngineWithDetails:<extension id>` for a WebExtension based
+        engine.
+        `[https]developer.mozilla.org/mdn-web-docs.xml` for an OpenSearch based
+        engine.
+      Note: this metric is truncated at 100 characters.
+      If this string is an empty string (`""`), this means that one or both of
+      the preferences `browser.search.separatePrivateDefault` and
+      `browser.search.separatePrivateDefault.ui.enabled` are set to false.
+      It is possible that the user selects the same private engine as for the
+      default engine, and hence both versions of these fields will be filled in.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016#c8
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'
+
+  submission_url:
+    type: url
+    description: |
+      The submission URL of the default engine. This is only reported in the
+      cases where:
+        The engine is an application provided engine.
+        The engine has the same name as an application provided engine.
+        The engine matches one of a specific list of well known search engines.
+      If this string is an empty string (`""`), this means that one or both of
+      the preferences `browser.search.separatePrivateDefault` and
+      `browser.search.separatePrivateDefault.ui.enabled` are set to false.
+      It is possible that the user selects the same private engine as for the
+      default engine, and hence both versions of these fields will be filled in.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016#c8
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'
+
+  verified:
+    type: string
+    description: |
+      The verified status of the search engine.
+      For application provided engines, this will always be `default`.
+      For other engines this will either be `verified` or `unverified` depending
+      on if the loadPathHash is valid.
+      If this string is an empty string (`""`), this means that one or both of
+      the preferences `browser.search.separatePrivateDefault` and
+      `browser.search.separatePrivateDefault.ui.enabled` are set to false.
+      It is possible that the user selects the same private engine as for the
+      default engine, and hence both versions of these fields will be filled in.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1563016#c8
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766999
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    lifetime: application
+    send_in_pings:
+      - 'metrics'

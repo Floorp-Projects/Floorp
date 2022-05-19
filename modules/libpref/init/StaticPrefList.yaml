@@ -2834,7 +2834,7 @@
 # Whether origin trials are enabled.
 - name: dom.origin-trials.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether we use the test key to verify tokens.
@@ -3631,7 +3631,7 @@
 
 - name: dom.streams.transform_streams.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: dom.streams.pipeTo.enabled
