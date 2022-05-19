@@ -1214,7 +1214,7 @@ void RtpVideoStreamReceiver::UpdatePacketReceiveTimestamps(
        << " with payload type: " << static_cast<int>(packet.PayloadType())
        << ", timestamp: " << packet.Timestamp()
        << ", sequence number: " << packet.SequenceNumber()
-       << ", arrival time: " << packet.arrival_time_ms();
+       << ", arrival time: " << ToString(packet.arrival_time());
     int32_t time_offset;
     if (packet.GetExtension<TransmissionOffset>(&time_offset)) {
       ss << ", toffset: " << time_offset;
