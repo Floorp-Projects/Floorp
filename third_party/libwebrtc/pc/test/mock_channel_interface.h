@@ -58,10 +58,6 @@ class MockChannelInterface : public cricket::ChannelInterface {
               SetRtpTransport,
               (webrtc::RtpTransportInternal*),
               (override));
-  MOCK_METHOD(RtpHeaderExtensions,
-              GetNegotiatedRtpHeaderExtensions,
-              (),
-              (const));
 };
 
 }  // namespace cricket

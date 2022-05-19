@@ -288,13 +288,6 @@ class BaseChannel : public ChannelInterface,
   // From MessageHandler
   void OnMessage(rtc::Message* pmsg) override;
 
-  // Helper function template for invoking methods on the worker thread.
-  template <class T>
-  T InvokeOnWorker(const rtc::Location& posted_from,
-                   rtc::FunctionView<T()> functor) {
-    return worker_thread_->Invoke<T>(posted_from, functor);
-  }
-
   // Add |payload_type| to |demuxer_criteria_| if payload type demuxing is
   // enabled.
   void MaybeAddHandledPayloadType(int payload_type) RTC_RUN_ON(worker_thread());
@@ -309,15 +302,10 @@ class BaseChannel : public ChannelInterface,
   // Return description of media channel to facilitate logging
   std::string ToString() const;
 
-  // ChannelInterface overrides
-  RtpHeaderExtensions GetNegotiatedRtpHeaderExtensions() const override;
-
  private:
   bool ConnectToRtpTransport() RTC_RUN_ON(network_thread());
   void DisconnectFromRtpTransport() RTC_RUN_ON(network_thread());
   void SignalSentPacket_n(const rtc::SentPacket& sent_packet);
-  void SetContent_s(const MediaContentDescription* content,
-                    webrtc::SdpType type) RTC_RUN_ON(signaling_thread());
 
   rtc::Thread* const worker_thread_;
   rtc::Thread* const network_thread_;
@@ -348,6 +336,24 @@ class BaseChannel : public ChannelInterface,
   bool was_ever_writable_n_ RTC_GUARDED_BY(network_thread()) = false;
   bool was_ever_writable_ RTC_GUARDED_BY(worker_thread()) = false;
   const bool srtp_required_ = true;
+
+  // TODO(tommi): This field shouldn't be necessary. It's a copy of
+  // PeerConnection::GetCryptoOptions(), which is const state. It's also only
+  // used to filter header extensions when calling
+  // `rtp_transport_->UpdateRtpHeaderExtensionMap()` when the local/remote
+  // content description is updated. Since the transport is actually owned
+  // by the transport controller that also gets updated whenever the content
+  // description changes, it seems we have two paths into the transports, along
+  // with several thread hops via various classes (such as the Channel classes)
+  // that only serve as additional layers and store duplicate state. The Jsep*
+  // family of classes already apply session description updates on the network
+  // thread every time it changes.
+  // For the Channel classes, we should be able to get rid of:
+  // * crypto_options (and fewer construction parameters)_
+  // * UpdateRtpHeaderExtensionMap
+  // * GetFilteredRtpHeaderExtensions
+  // * Blocking thread hop to the network thread for every call to set
+  //   local/remote content is updated.
   const webrtc::CryptoOptions crypto_options_;
 
   // MediaChannel related members that should be accessed from the worker
@@ -382,12 +388,6 @@ class BaseChannel : public ChannelInterface,
   // like in Simulcast.
   // This object is not owned by the channel so it must outlive it.
   rtc::UniqueRandomIdGenerator* const ssrc_generator_;
-
-  // |negotiated_header_extensions_| is read and written to on the signaling
-  // thread from the SdpOfferAnswerHandler class (e.g.
-  // PushdownMediaDescription().
-  RtpHeaderExtensions negotiated_header_extensions_
-      RTC_GUARDED_BY(signaling_thread());
 };
 
 // VoiceChannel is a specialization that adds support for early media, DTMF,
