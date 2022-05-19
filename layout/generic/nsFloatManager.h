@@ -29,7 +29,8 @@ class PresShell;
 enum class nsFlowAreaRectFlags : uint32_t {
   NoFlags = 0,
   HasFloats = 1 << 0,
-  MayWiden = 1 << 1
+  MayWiden = 1 << 1,
+  ISizeIsActuallyNegative = 1 << 2,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsFlowAreaRectFlags)
 
@@ -58,6 +59,9 @@ struct nsFlowAreaRect {
   }
   bool MayWiden() const {
     return (bool)(mAreaFlags & nsFlowAreaRectFlags::MayWiden);
+  }
+  bool ISizeIsActuallyNegative() const {
+    return (bool)(mAreaFlags & nsFlowAreaRectFlags::ISizeIsActuallyNegative);
   }
 };
 
