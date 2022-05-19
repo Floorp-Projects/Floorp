@@ -27,7 +27,7 @@ async function test() {
   let childMessagePromise = new Promise(resolve => {
     window.addEventListener("message", event => {
       let data = JSON.parse(event.data);
-      if ("type" in data && data.type == "gotclick") {
+      if ("type" in data && data.type == "got-mouse-down") {
         clickCoordsInChild = data.coords;
         resolve();
       }
