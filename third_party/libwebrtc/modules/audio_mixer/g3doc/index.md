@@ -24,10 +24,9 @@ muted state) and it is identified by an SSRC[^1].
 is used to retrieve the next 10 ms chunk of audio to be mixed.
 
 [^1]: A synchronization source (SSRC) is the source of a stream of RTP packets,
-
-identified by a 32-bit numeric SSRC identifier carried in the RTP header so as
-not to be dependent upon the network address (see
-[RFC 3550](https://tools.ietf.org/html/rfc3550#section-3)).
+    identified by a 32-bit numeric SSRC identifier carried in the RTP header
+    so as not to be dependent upon the network address (see
+    [RFC 3550](https://tools.ietf.org/html/rfc3550#section-3)).
 
 ## AudioMixer
 
