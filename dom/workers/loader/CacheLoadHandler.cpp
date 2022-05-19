@@ -568,7 +568,6 @@ void CacheLoadHandler::DataReceived() {
       // Set Eval and ContentSecurityPolicy
       mWorkerPrivate->SetCSP(parent->GetCSP());
       mWorkerPrivate->SetEvalAllowed(parent->IsEvalAllowed());
-      mWorkerPrivate->SetWasmEvalAllowed(parent->IsWasmEvalAllowed());
     }
   }
 }

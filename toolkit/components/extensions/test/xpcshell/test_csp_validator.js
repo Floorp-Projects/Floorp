@@ -43,25 +43,6 @@ add_task(async function test_csp_validator_flags() {
   );
 
   checkPolicy(
-    "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'",
-    0,
-    "\u2018script-src\u2019 directive contains a forbidden 'wasm-unsafe-eval' keyword",
-    "wasm disallowed"
-  );
-  checkPolicy(
-    "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'",
-    flags.CSP_ALLOW_WASM,
-    null,
-    "wasm allowed"
-  );
-  checkPolicy(
-    "default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'",
-    flags.CSP_ALLOW_EVAL,
-    null,
-    "wasm and eval allowed"
-  );
-
-  checkPolicy(
     "default-src 'self'; script-src 'self' https://example.com",
     0,
     "\u2018script-src\u2019 directive contains a forbidden https: protocol source",

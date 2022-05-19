@@ -880,12 +880,11 @@ bool nsCSPKeywordSrc::allows(enum CSPKeyword aKeyword,
   }
   // either the keyword allows the load or the policy contains 'strict-dynamic',
   // in which case we have to make sure the script is not parser created before
-  // allowing the load and also eval & wasm-eval should be blocked even if
-  // 'strict-dynamic' is present. Should be allowed only if 'unsafe-eval' is
-  // present.
+  // allowing the load and also eval should be blocked even if 'strict-dynamic'
+  // is present. Should be allowed only if 'unsafe-eval' is present.
   return ((mKeyword == aKeyword) ||
           ((mKeyword == CSP_STRICT_DYNAMIC) && !aParserCreated &&
-           aKeyword != CSP_UNSAFE_EVAL && aKeyword != CSP_WASM_UNSAFE_EVAL));
+           aKeyword != CSP_UNSAFE_EVAL));
 }
 
 bool nsCSPKeywordSrc::visit(nsCSPSrcVisitor* aVisitor) const {
