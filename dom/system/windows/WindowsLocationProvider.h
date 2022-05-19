@@ -43,6 +43,7 @@ class WindowsLocationProvider final : public nsIGeolocationProvider {
 
   RefPtr<ILocation> mLocation;
   RefPtr<MLSFallback> mMLSProvider;
+  bool mWatching = false;
 };
 
 }  // namespace dom
