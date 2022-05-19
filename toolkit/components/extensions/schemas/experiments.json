@@ -17,8 +17,7 @@
           "experiment_apis": {
             "type": "object",
             "additionalProperties": {"$ref": "experiments.ExperimentAPI"},
-            "optional": true,
-            "privileged": true
+            "optional": true
           }
         }
       }
