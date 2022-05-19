@@ -420,6 +420,13 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     if (NS_SUCCEEDED(rv)) {
       contentTempDir->GetNativePath(mTmpDirName);
     }
+  } else if (aProcessType == GeckoProcessType_RDD) {
+    // The RDD process makes limited use of EGL.  If Mesa's shader
+    // cache is enabled and the directory isn't explicitly set, then
+    // it will try to getpwuid() the user which can cause problems
+    // with sandboxing.  Because we shouldn't need shader caching in
+    // this process, we just disable the cache to prevent that.
+    mLaunchOptions->env_map["MESA_GLSL_CACHE_DISABLE"] = "true";
   }
 #endif
 #if defined(MOZ_ENABLE_FORKSERVER)
