@@ -746,6 +746,71 @@ const TEST_DATA = [
     },
   },
   {
+    description: "minCharsThreshold pref equals to the user input length",
+    pref: true,
+    minCharsThreshold: 3,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "minCharsThreshold pref is smaller than the user input length",
+    pref: true,
+    minCharsThreshold: 2,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "minCharsThreshold pref is larger than the user input length",
+    pref: true,
+    minCharsThreshold: 4,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            title: "example.com",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
     description: "Turn the pref off",
     pref: false,
     visitHistory: ["http://example.com/test"],
@@ -775,6 +840,7 @@ add_task(async function inputTest() {
   for (const {
     description,
     pref,
+    minCharsThreshold,
     useCountThreshold,
     source,
     visitHistory,
@@ -786,6 +852,13 @@ add_task(async function inputTest() {
     info(description);
 
     UrlbarPrefs.set("autoFill.adaptiveHistory.enabled", pref);
+
+    if (!isNaN(minCharsThreshold)) {
+      UrlbarPrefs.set(
+        "autoFill.adaptiveHistory.minCharsThreshold",
+        minCharsThreshold
+      );
+    }
 
     if (!isNaN(useCountThreshold)) {
       UrlbarPrefs.set(
@@ -825,6 +898,7 @@ add_task(async function inputTest() {
 
     await cleanupPlaces();
     UrlbarPrefs.clear("autoFill.adaptiveHistory.enabled");
+    UrlbarPrefs.clear("autoFill.adaptiveHistory.minCharsThreshold");
     UrlbarPrefs.clear("autoFill.adaptiveHistory.useCountThreshold");
   }
 });
