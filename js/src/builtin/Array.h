@@ -131,6 +131,8 @@ extern JSObject* ArgumentsSliceDense(JSContext* cx, HandleObject obj,
                                      int32_t begin, int32_t end,
                                      HandleObject result);
 
+extern bool intrinsic_newList(JSContext* cx, unsigned argc, js::Value* vp);
+
 /*
  * Append the given (non-hole) value to the end of an array.  The array must be
  * a newborn array -- that is, one which has not been exposed to script for
