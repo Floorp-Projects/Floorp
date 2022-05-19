@@ -20,6 +20,8 @@
     <string name="mozac_feature_prompt_dont_save">ਨਾ ਸੰਭਾਲੋ</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">ਕਦੇ ਨਾ ਸੰਭਾਲੋ</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">ਹੁਣੇ ਨਹੀਂ</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">ਸੰਭਾਲੋ</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -104,6 +106,12 @@
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">ਸੁਝਾਏ ਗਏ ਕਰੈਡਿਟ ਕਾਰਡ ਨੂੰ ਫੈਲਾਓ</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">ਸੁਝਾਏ ਗਏ ਕਰੈਡਿਟ ਕਾਰਡ ਨੂੰ ਸਮੇਟੋ</string>
-    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">ਕਰੈਡਿਟ ਕਾਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">ਇਹ ਕਾਰਡ ਨੂੰ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸੰਭਾਲਣਾ ਹੈ?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">ਕਾਰਡ ਦੀ ਮਿਆਦ ਪੁੱਗਣ ਦੀ ਤਾਰੀਖ ਨੂੰ ਅੱਪਡੇਟ ਕਰਨਾ ਹੈ?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">ਕਾਰਡ ਨੰਬਰ ਨੂੰ ਇੰਕ੍ਰਿਪਟ ਕੀਤਾ ਜਾਵੇਗਾ। ਸੁਰੱਖਿਆ ਕੋਡ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾਵੇਗਾ।</string>
 </resources>
