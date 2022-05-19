@@ -27,16 +27,7 @@
 // code are installed via the std_functions JSFunctionSpec[] in
 // SelfHosting.cpp.
 
-/********** List / Record specification types **********/
-
-// A "List" is an internal type used in the ECMAScript spec to define a simple
-// ordered list of values. It is never exposed to user script, but we use a
-// simple Object (with null prototype) as a convenient implementation.
-//
-// NOTE: This does not track a `length` field.
-function new_List() {
-    return std_Object_create(null);
-}
+/********** Specification types **********/
 
 
 // A "Record" is an internal type used in the ECMAScript spec to define a struct
