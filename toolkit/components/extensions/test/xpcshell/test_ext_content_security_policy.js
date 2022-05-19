@@ -17,10 +17,12 @@ server.registerPathHandler("/worker.js", (request, response) => {
 });
 
 const baseCSP = [];
+// Keep in sync with extensions.webextensions.base-content-security-policy
 baseCSP[2] = {
   "object-src": ["blob:", "filesystem:", "moz-extension:", "'self'"],
   "script-src": [
     "'unsafe-eval'",
+    "'wasm-unsafe-eval'",
     "'unsafe-inline'",
     "blob:",
     "filesystem:",
@@ -31,10 +33,21 @@ baseCSP[2] = {
     "'self'",
   ],
 };
+// Keep in sync with extensions.webextensions.base-content-security-policy.v3
 baseCSP[3] = {
   "object-src": ["'self'"],
-  "script-src": ["http://localhost:*", "http://127.0.0.1:*", "'self'"],
-  "worker-src": ["http://localhost:*", "http://127.0.0.1:*", "'self'"],
+  "script-src": [
+    "http://localhost:*",
+    "http://127.0.0.1:*",
+    "'self'",
+    "'wasm-unsafe-eval'",
+  ],
+  "worker-src": [
+    "http://localhost:*",
+    "http://127.0.0.1:*",
+    "'self'",
+    "'wasm-unsafe-eval'",
+  ],
 };
 
 /**
@@ -53,6 +66,10 @@ async function testPolicy(manifest_version = 2, customCSP = null) {
     "object-src": ["'self'"],
     "script-src": ["'self'"],
   };
+
+  if (manifest_version < 3) {
+    addonCSP["script-src"].push("'wasm-unsafe-eval'");
+  }
 
   let content_security_policy = null;
 
@@ -258,5 +275,11 @@ add_task(async function testCSP() {
     "object-src": "'none'",
     "script-src": `'self'`,
     "worker-src": `'self'`,
+  });
+
+  await testPolicy(3, {
+    "object-src": "'none'",
+    "script-src": `'self' 'wasm-unsafe-eval'`,
+    "worker-src": `'self' 'wasm-unsafe-eval'`,
   });
 });
