@@ -252,10 +252,10 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
     }
 
-    override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
+    override fun onCreateView(parent: View?, name: String, context: Context, attrs: AttributeSet): View? {
         return if (name == EngineView::class.java.name) {
             components.engine.createView(context, attrs).asView()
-        } else super.onCreateView(name, context, attrs)
+        } else super.onCreateView(parent, name, context, attrs)
     }
 
     override fun onBackPressed() {
