@@ -1474,9 +1474,7 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
       if (!rtp_packet.Parse(packet, length))
         return DROP_PACKET;
       RTC_DCHECK(stream_);
-      VideoSendStream::Stats stats;
-      SendTask(RTC_FROM_HERE, task_queue_,
-               [&]() { stats = stream_->GetStats(); });
+      VideoSendStream::Stats stats = stream_->GetStats();
       if (!stats.substreams.empty()) {
         EXPECT_EQ(1u, stats.substreams.size());
         int total_bitrate_bps =
@@ -2424,16 +2422,14 @@ class VideoCodecConfigObserver : public test::SendTest,
                                  public test::FakeEncoder {
  public:
   VideoCodecConfigObserver(VideoCodecType video_codec_type,
-                           const char* codec_name,
-                           TaskQueueBase* task_queue)
+                           const char* codec_name)
       : SendTest(VideoSendStreamTest::kDefaultTimeoutMs),
         FakeEncoder(Clock::GetRealTimeClock()),
         video_codec_type_(video_codec_type),
         codec_name_(codec_name),
         num_initializations_(0),
         stream_(nullptr),
-        encoder_factory_(this),
-        task_queue_(task_queue) {
+        encoder_factory_(this) {
     InitCodecSpecifics();
   }
 
@@ -2481,9 +2477,7 @@ class VideoCodecConfigObserver : public test::SendTest,
     // Change encoder settings to actually trigger reconfiguration.
     encoder_settings_.frameDroppingOn = !encoder_settings_.frameDroppingOn;
     encoder_config_.encoder_specific_settings = GetEncoderSpecificSettings();
-    SendTask(RTC_FROM_HERE, task_queue_, [&]() {
-      stream_->ReconfigureVideoEncoder(std::move(encoder_config_));
-    });
+    stream_->ReconfigureVideoEncoder(std::move(encoder_config_));
     ASSERT_TRUE(
         init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeoutMs));
     EXPECT_EQ(2u, num_initializations_)
@@ -2505,7 +2499,6 @@ class VideoCodecConfigObserver : public test::SendTest,
   VideoSendStream* stream_;
   test::VideoEncoderProxyFactory encoder_factory_;
   VideoEncoderConfig encoder_config_;
-  TaskQueueBase* task_queue_;
 };
 
 template <>
@@ -2611,14 +2604,12 @@ VideoCodecConfigObserver<VideoCodecVP9>::GetEncoderSpecificSettings() const {
 }
 
 TEST_F(VideoSendStreamTest, EncoderSetupPropagatesVp8Config) {
-  VideoCodecConfigObserver<VideoCodecVP8> test(kVideoCodecVP8, "VP8",
-                                               task_queue());
+  VideoCodecConfigObserver<VideoCodecVP8> test(kVideoCodecVP8, "VP8");
   RunBaseTest(&test);
 }
 
 TEST_F(VideoSendStreamTest, EncoderSetupPropagatesVp9Config) {
-  VideoCodecConfigObserver<VideoCodecVP9> test(kVideoCodecVP9, "VP9",
-                                               task_queue());
+  VideoCodecConfigObserver<VideoCodecVP9> test(kVideoCodecVP9, "VP9");
   RunBaseTest(&test);
 }
 
@@ -2630,8 +2621,7 @@ TEST_F(VideoSendStreamTest, EncoderSetupPropagatesVp9Config) {
 #define MAYBE_EncoderSetupPropagatesH264Config EncoderSetupPropagatesH264Config
 #endif
 TEST_F(VideoSendStreamTest, MAYBE_EncoderSetupPropagatesH264Config) {
-  VideoCodecConfigObserver<VideoCodecH264> test(kVideoCodecH264, "H264",
-                                                task_queue());
+  VideoCodecConfigObserver<VideoCodecH264> test(kVideoCodecH264, "H264");
   RunBaseTest(&test);
 }
 
@@ -2914,9 +2904,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
       // Encoder rate is capped by EncoderConfig max_bitrate_bps.
       WaitForSetRates(kMaxBitrateKbps);
       encoder_config_.max_bitrate_bps = kLowerMaxBitrateKbps * 1000;
-      SendTask(RTC_FROM_HERE, task_queue_, [&]() {
-        send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
-      });
+      send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
       ASSERT_TRUE(create_rate_allocator_event_.Wait(
           VideoSendStreamTest::kDefaultTimeoutMs));
       EXPECT_EQ(2, num_rate_allocator_creations_)
@@ -2926,9 +2914,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
       EXPECT_EQ(1, num_encoder_initializations_);
 
       encoder_config_.max_bitrate_bps = kIncreasedMaxBitrateKbps * 1000;
-      SendTask(RTC_FROM_HERE, task_queue_, [&]() {
-        send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
-      });
+      send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
       ASSERT_TRUE(create_rate_allocator_event_.Wait(
           VideoSendStreamTest::kDefaultTimeoutMs));
       EXPECT_EQ(3, num_rate_allocator_creations_)
@@ -2969,12 +2955,11 @@ TEST_F(VideoSendStreamTest, ReportsSentResolution) {
   class ScreencastTargetBitrateTest : public test::SendTest,
                                       public test::FakeEncoder {
    public:
-    explicit ScreencastTargetBitrateTest(TaskQueueBase* task_queue)
+    ScreencastTargetBitrateTest()
         : SendTest(kDefaultTimeoutMs),
           test::FakeEncoder(Clock::GetRealTimeClock()),
           send_stream_(nullptr),
-          encoder_factory_(this),
-          task_queue_(task_queue) {}
+          encoder_factory_(this) {}
 
    private:
     int32_t Encode(const VideoFrame& input_image,
@@ -3022,9 +3007,7 @@ TEST_F(VideoSendStreamTest, ReportsSentResolution) {
     void PerformTest() override {
       EXPECT_TRUE(Wait())
           << "Timed out while waiting for the encoder to send one frame.";
-      VideoSendStream::Stats stats;
-      SendTask(RTC_FROM_HERE, task_queue_,
-               [&]() { stats = send_stream_->GetStats(); });
+      VideoSendStream::Stats stats = send_stream_->GetStats();
 
       for (size_t i = 0; i < kNumStreams; ++i) {
         ASSERT_TRUE(stats.substreams.find(kVideoSendSsrcs[i]) !=
@@ -3046,8 +3029,7 @@ TEST_F(VideoSendStreamTest, ReportsSentResolution) {
 
     VideoSendStream* send_stream_;
     test::VideoEncoderProxyFactory encoder_factory_;
-    TaskQueueBase* const task_queue_;
-  } test(task_queue());
+  } test;
 
   RunBaseTest(&test);
 }
@@ -3818,15 +3800,14 @@ class ContentSwitchTest : public test::SendTest {
   };
   static const uint32_t kMinPacketsToSend = 50;
 
-  explicit ContentSwitchTest(T* stream_reset_fun, TaskQueueBase* task_queue)
+  explicit ContentSwitchTest(T* stream_reset_fun)
       : SendTest(test::CallTest::kDefaultTimeoutMs),
         call_(nullptr),
         state_(StreamState::kBeforeSwitch),
         send_stream_(nullptr),
         send_stream_config_(nullptr),
         packets_sent_(0),
-        stream_resetter_(stream_reset_fun),
-        task_queue_(task_queue) {
+        stream_resetter_(stream_reset_fun) {
     RTC_DCHECK(stream_resetter_);
   }
 
@@ -3860,10 +3841,8 @@ class ContentSwitchTest : public test::SendTest {
     float pacing_factor =
         internal_send_peer.GetPacingFactorOverride().value_or(0.0f);
     float expected_pacing_factor = 1.1;  // Strict pacing factor.
-    VideoSendStream::Stats stats;
-    SendTask(RTC_FROM_HERE, task_queue_,
-             [&stats, stream = send_stream_]() { stats = stream->GetStats(); });
-    if (stats.content_type == webrtc::VideoContentType::SCREENSHARE) {
+    if (send_stream_->GetStats().content_type ==
+        webrtc::VideoContentType::SCREENSHARE) {
       expected_pacing_factor = 1.0f;  // Currently used pacing factor in ALR.
     }
 
@@ -3931,7 +3910,6 @@ class ContentSwitchTest : public test::SendTest {
   VideoEncoderConfig encoder_config_;
   uint32_t packets_sent_ RTC_GUARDED_BY(mutex_);
   T* stream_resetter_;
-  TaskQueueBase* task_queue_;
 };
 
 TEST_F(VideoSendStreamTest, SwitchesToScreenshareAndBack) {
@@ -3951,7 +3929,7 @@ TEST_F(VideoSendStreamTest, SwitchesToScreenshareAndBack) {
                Start();
              });
   };
-  ContentSwitchTest<decltype(reset_fun)> test(&reset_fun, task_queue());
+  ContentSwitchTest<decltype(reset_fun)> test(&reset_fun);
   RunBaseTest(&test);
 }
 
