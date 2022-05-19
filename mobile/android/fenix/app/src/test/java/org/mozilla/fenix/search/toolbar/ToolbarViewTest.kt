@@ -158,10 +158,8 @@ class ToolbarViewTest {
         context,
         Settings(context),
         interactor,
-        historyStorage = null,
         isPrivate = isPrivate,
         view = toolbar,
-        engine = engine,
         fromHomeFragment = false
     )
 }

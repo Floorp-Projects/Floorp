@@ -10,11 +10,7 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
-import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.storage.HistoryStorage
-import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -64,10 +60,8 @@ class ToolbarView(
     private val context: Context,
     private val settings: Settings,
     private val interactor: ToolbarInteractor,
-    private val historyStorage: HistoryStorage?,
     private val isPrivate: Boolean,
     val view: BrowserToolbar,
-    engine: Engine,
     fromHomeFragment: Boolean
 ) {
 
@@ -121,18 +115,6 @@ class ToolbarView(
                     interactor.onTextChanged(text)
                 }
             })
-        }
-
-        val engineForSpeculativeConnects = if (!isPrivate) engine else null
-
-        if (settings.shouldAutocompleteInAwesomebar) {
-            ToolbarAutocompleteFeature(
-                view,
-                engineForSpeculativeConnects
-            ).apply {
-                addDomainProvider(ShippedDomainsProvider().also { it.initialize(view.context) })
-                historyStorage?.also(::addHistoryStorageProvider)
-            }
         }
     }
 
