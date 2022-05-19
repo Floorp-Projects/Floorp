@@ -27,6 +27,10 @@ class OriginAttributes;
 class SystemPrincipal;
 }  // namespace mozilla
 
+namespace JS {
+  enum class RuntimeCode;
+} // namespace JS
+
 /////////////////////////////
 // nsScriptSecurityManager //
 /////////////////////////////
@@ -90,7 +94,8 @@ class nsScriptSecurityManager final : public nsIScriptSecurityManager {
 
   // Decides, based on CSP, whether or not eval() and stuff can be executed.
   static bool ContentSecurityPolicyPermitsJSAction(JSContext* cx,
-                                                   JS::HandleString aCode);
+                                                   JS::RuntimeCode kind,
+                                                   JS::Handle<JSString*> aCode);
 
   static bool JSPrincipalsSubsume(JSPrincipals* first, JSPrincipals* second);
 
