@@ -12,6 +12,7 @@
 #define NET_DCSCTP_PUBLIC_TYPES_H_
 
 #include <cstdint>
+#include <limits>
 
 #include "net/dcsctp/public/strong_alias.h"
 
@@ -84,6 +85,10 @@ class TimeMs : public StrongAlias<class TimeMsTag, int64_t> {
   constexpr TimeMs& operator-=(DurationMs d) {
     value_ -= *d;
     return *this;
+  }
+
+  static constexpr TimeMs InfiniteFuture() {
+    return TimeMs(std::numeric_limits<int64_t>::max());
   }
 };
 
