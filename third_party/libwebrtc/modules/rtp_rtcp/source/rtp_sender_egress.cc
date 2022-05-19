@@ -412,6 +412,7 @@ void RtpSenderEgress::AddPacketToTransportFeedback(
     packet_info.ssrc = ssrc_;
     packet_info.transport_sequence_number = packet_id;
     packet_info.rtp_sequence_number = packet.SequenceNumber();
+    packet_info.rtp_timestamp = packet.Timestamp();
     packet_info.length = packet_size;
     packet_info.pacing_info = pacing_info;
     packet_info.packet_type = packet.packet_type();
