@@ -218,10 +218,15 @@ WindowsLocationProvider::Startup() {
 
 NS_IMETHODIMP
 WindowsLocationProvider::Watch(nsIGeolocationUpdate* aCallback) {
-  LOG("WindowsLocationProvider::Watch(%p, %p)\n", this, mLocation.get());
+  LOG("WindowsLocationProvider::Watch(%p, %p, %d)\n", this, mLocation.get(),
+      mWatching);
   if (mLocation) {
+    if (mWatching) {
+      return NS_OK;
+    }
     RefPtr<LocationEvent> event = new LocationEvent(aCallback, this);
     if (SUCCEEDED(mLocation->RegisterForReport(event, IID_ILatLongReport, 0))) {
+      mWatching = true;
       return NS_OK;
     }
   }
@@ -237,12 +242,14 @@ NS_IMETHODIMP
 WindowsLocationProvider::Shutdown() {
   LOG("WindowsLocationProvider::Shutdown(%p, %p)\n", this, mLocation.get());
   if (mLocation) {
-    mLocation->UnregisterForReport(IID_ILatLongReport);
+    if (mWatching) {
+      mLocation->UnregisterForReport(IID_ILatLongReport);
+    }
     mLocation = nullptr;
+    mWatching = false;
   }
 
   CancelMLSProvider();
-
   return NS_OK;
 }
 
