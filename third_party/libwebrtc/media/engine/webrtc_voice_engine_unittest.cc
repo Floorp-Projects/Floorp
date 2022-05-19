@@ -3203,6 +3203,7 @@ TEST_P(WebRtcVoiceEngineTestFake, TestSetDscpOptions) {
   channel->SetInterface(&network_interface);
   // Default value when DSCP is disabled should be DSCP_DEFAULT.
   EXPECT_EQ(rtc::DSCP_DEFAULT, network_interface.dscp());
+  channel->SetInterface(nullptr);
 
   config.enable_dscp = true;
   channel.reset(static_cast<cricket::WebRtcVoiceMediaChannel*>(
@@ -3229,6 +3230,7 @@ TEST_P(WebRtcVoiceEngineTestFake, TestSetDscpOptions) {
   const uint8_t kData[10] = {0};
   EXPECT_TRUE(channel->SendRtcp(kData, sizeof(kData)));
   EXPECT_EQ(rtc::DSCP_CS1, network_interface.options().dscp);
+  channel->SetInterface(nullptr);
 
   // Verify that setting the option to false resets the
   // DiffServCodePoint.
