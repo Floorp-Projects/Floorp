@@ -88,14 +88,15 @@ class TLVTrait {
     }
     BoundedByteReader<kTlvHeaderSize> tlv_header(data);
 
-    const int type = (Config::kTypeSizeInBytes == 1) ? tlv_header.Load8<0>()
-                                                     : tlv_header.Load16<0>();
+    const int type = (Config::kTypeSizeInBytes == 1)
+                         ? tlv_header.template Load8<0>()
+                         : tlv_header.template Load16<0>();
 
     if (type != Config::kType) {
       tlv_trait_impl::ReportInvalidType(type, Config::kType);
       return absl::nullopt;
     }
-    const uint16_t length = tlv_header.Load16<2>();
+    const uint16_t length = tlv_header.template Load16<2>();
     if (Config::kVariableLengthAlignment == 0) {
       // Don't expect any variable length data at all.
       if (length != Config::kHeaderSize || data.size() != Config::kHeaderSize) {
@@ -138,11 +139,11 @@ class TLVTrait {
     BoundedByteWriter<kTlvHeaderSize> tlv_header(
         rtc::ArrayView<uint8_t>(out.data() + offset, kTlvHeaderSize));
     if (Config::kTypeSizeInBytes == 1) {
-      tlv_header.Store8<0>(static_cast<uint8_t>(Config::kType));
+      tlv_header.template Store8<0>(static_cast<uint8_t>(Config::kType));
     } else {
-      tlv_header.Store16<0>(Config::kType);
+      tlv_header.template Store16<0>(Config::kType);
     }
-    tlv_header.Store16<2>(size);
+    tlv_header.template Store16<2>(size);
 
     return BoundedByteWriter<Config::kHeaderSize>(
         rtc::ArrayView<uint8_t>(out.data() + offset, size));
