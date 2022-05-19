@@ -237,7 +237,6 @@ android.applicationVariants.all { variant ->
 
     def isDebug = variant.buildType.resValues['IS_DEBUG']?.value ?: false
     def useReleaseVersioning = variant.buildType.buildConfigFields['USE_RELEASE_VERSIONING']?.value ?: false
-    def versionName = variant.buildType.name == 'nightly' ? Config.nightlyVersionName() : Config.releaseVersionName(project)
 
     println("----------------------------------------------")
     println("Variant name:      " + variant.name)
@@ -251,6 +250,7 @@ android.applicationVariants.all { variant ->
         // same version code. Therefore we need to have different version codes for our ARM and x86
         // builds.
 
+        def versionName = variant.buildType.name == 'nightly' ? Config.nightlyVersionName() : Config.releaseVersionName(project)
         println("versionName override: $versionName")
 
         variant.outputs.each { output ->
@@ -266,6 +266,12 @@ android.applicationVariants.all { variant ->
 
             output.versionNameOverride = versionName
             output.versionCodeOverride = versionCodeOverride
+        }
+    } else if (gradle.hasProperty("localProperties.branchBuild.fenix.version")) {
+        def versionName = gradle.getProperty("localProperties.branchBuild.fenix.version")
+        println("versionName override: $versionName")
+        variant.outputs.each { output ->
+            output.versionNameOverride = versionName
         }
     }
 
@@ -794,14 +800,32 @@ if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcd
     apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
 }
 
+def acSrcDir = null
 if (gradle.hasProperty('localProperties.autoPublish.android-components.dir')) {
-    ext.acSrcDir = gradle."localProperties.autoPublish.android-components.dir"
-    apply from: "../${acSrcDir}/substitute-local-ac.gradle"
+  acSrcDir = gradle.getProperty('localProperties.autoPublish.android-components.dir')
+} else if (gradle.hasProperty('localProperties.branchBuild.android-components.dir')) {
+  acSrcDir = gradle.getProperty('localProperties.branchBuild.android-components.dir')
+}
+if (acSrcDir) {
+    if (acSrcDir.startsWith("/")) {
+        apply from: "${acSrcDir}/substitute-local-ac.gradle"
+    } else {
+        apply from: "../${acSrcDir}/substitute-local-ac.gradle"
+    }
 }
 
+def appServicesSrcDir = null
 if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
-    ext.appServicesSrcDir = gradle."localProperties.autoPublish.application-services.dir"
-    apply from: "../${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+  appServicesSrcDir = gradle.getProperty('localProperties.autoPublish.application-services.dir')
+} else if (gradle.hasProperty('localProperties.branchBuild.application-services.dir')) {
+  appServicesSrcDir = gradle.getProperty('localProperties.branchBuild.application-services.dir')
+}
+if (appServicesSrcDir) {
+    if (appServicesSrcDir.startsWith("/")) {
+        apply from: "${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+    } else {
+        apply from: "../${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+    }
 }
 
 if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
