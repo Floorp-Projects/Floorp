@@ -41,7 +41,9 @@ if (rtc_include_tests) {
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",
       "../../../test:test_support",
+      "../public:socket",
     ]
     sources = [ "timer_test.cc" ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 }

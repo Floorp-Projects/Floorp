@@ -33,7 +33,10 @@ rtc_library("tlv_trait") {
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings:strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
   sources = [
     "tlv_trait.cc",
     "tlv_trait.h",
@@ -103,7 +106,11 @@ rtc_library("parameter") {
     "parameter/supported_extensions_parameter.cc",
     "parameter/supported_extensions_parameter.h",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("error_cause") {
@@ -151,7 +158,11 @@ rtc_library("error_cause") {
     "error_cause/user_initiated_abort_cause.cc",
     "error_cause/user_initiated_abort_cause.h",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("chunk") {
@@ -208,7 +219,11 @@ rtc_library("chunk") {
     "chunk/shutdown_complete_chunk.cc",
     "chunk/shutdown_complete_chunk.h",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("chunk_validators") {
@@ -265,6 +280,10 @@ if (rtc_include_tests) {
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",
       "../../../test:test_support",
+      "../common:internal_types",
+      "../common:math",
+      "../public:types",
+      "../testing:testing_macros",
     ]
     sources = [
       "bounded_byte_reader_test.cc",
@@ -314,5 +333,6 @@ if (rtc_include_tests) {
       "sctp_packet_test.cc",
       "tlv_trait_test.cc",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 }
