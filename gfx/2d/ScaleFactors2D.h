@@ -163,6 +163,11 @@ struct BaseScaleFactors2D {
       const ScaleFactor<Other, Dst>& aA, const BaseScaleFactors2D& aB) {
     return BaseScaleFactors2D<Other, Src, T>(aA) / aB;
   }
+
+  static BaseScaleFactors2D<Src, Dst, T> FromUnknownScale(
+      const BaseScaleFactors2D<UnknownUnits, UnknownUnits, T>& scale) {
+    return BaseScaleFactors2D<Src, Dst, T>(scale.xScale, scale.yScale);
+  }
 };
 
 template <class Src, class Dst>
