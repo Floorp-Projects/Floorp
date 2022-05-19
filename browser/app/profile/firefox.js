@@ -360,6 +360,10 @@ pref("browser.urlbar.autoFill", true);
 // Whether enabling adaptive history autofill.
 pref("browser.urlbar.autoFill.adaptiveHistory.enabled", false);
 
+// Minimum char length of the user's search string to enable adaptive history
+// autofill.
+pref("browser.urlbar.autoFill.adaptiveHistory.minCharsThreshold", 0);
+
 // Whether to warm up network connections for autofill or search results.
 pref("browser.urlbar.speculativeConnect.enabled", true);
 
