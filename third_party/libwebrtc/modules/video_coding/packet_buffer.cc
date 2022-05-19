@@ -36,7 +36,7 @@ namespace video_coding {
 
 PacketBuffer::Packet::Packet(const RtpPacketReceived& rtp_packet,
                              const RTPVideoHeader& video_header,
-                             int64_t receive_time_ms)
+                             Timestamp receive_time)
     : marker_bit(rtp_packet.Marker()),
       payload_type(rtp_packet.PayloadType()),
       seq_num(rtp_packet.SequenceNumber()),
@@ -48,7 +48,7 @@ PacketBuffer::Packet::Packet(const RtpPacketReceived& rtp_packet,
                   rtp_packet.Timestamp(),
                   /*audio_level=*/absl::nullopt,
                   rtp_packet.GetExtension<AbsoluteCaptureTimeExtension>(),
-                  receive_time_ms) {}
+                  receive_time) {}
 
 PacketBuffer::PacketBuffer(size_t start_buffer_size, size_t max_buffer_size)
     : max_size_(max_buffer_size),

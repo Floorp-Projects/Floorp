@@ -63,13 +63,13 @@ VideoFrame NextFrame(test::FrameGeneratorInterface* frame_generator,
 EncodedImage FakeEncode(const VideoFrame& frame) {
   EncodedImage image;
   std::vector<RtpPacketInfo> packet_infos;
-  packet_infos.push_back(
-      RtpPacketInfo(/*ssrc=*/1,
-                    /*csrcs=*/{},
-                    /*rtp_timestamp=*/frame.timestamp(),
-                    /*audio_level=*/absl::nullopt,
-                    /*absolute_capture_time=*/absl::nullopt,
-                    /*receive_time_ms=*/frame.timestamp_us() + 10));
+  packet_infos.push_back(RtpPacketInfo(
+      /*ssrc=*/1,
+      /*csrcs=*/{},
+      /*rtp_timestamp=*/frame.timestamp(),
+      /*audio_level=*/absl::nullopt,
+      /*absolute_capture_time=*/absl::nullopt,
+      /*receive_time=*/Timestamp::Micros(frame.timestamp_us() + 10000)));
   image.SetPacketInfos(RtpPacketInfos(packet_infos));
   return image;
 }

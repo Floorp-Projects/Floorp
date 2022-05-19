@@ -497,7 +497,7 @@ TEST_F(NetEqImplTest, VerifyTimestampPropagation) {
 
   // Insert one packet.
   clock_.AdvanceTimeMilliseconds(123456);
-  int64_t expected_receive_time_ms = clock_.TimeInMilliseconds();
+  Timestamp expected_receive_time = clock_.CurrentTime();
   EXPECT_EQ(NetEq::kOK, neteq_->InsertPacket(rtp_header, payload));
 
   // Pull audio once.
@@ -518,7 +518,7 @@ TEST_F(NetEqImplTest, VerifyTimestampPropagation) {
     EXPECT_THAT(packet_info.csrcs(), ElementsAre(43, 65, 17));
     EXPECT_EQ(packet_info.rtp_timestamp(), rtp_header.timestamp);
     EXPECT_FALSE(packet_info.audio_level().has_value());
-    EXPECT_EQ(packet_info.receive_time_ms(), expected_receive_time_ms);
+    EXPECT_EQ(packet_info.receive_time(), expected_receive_time);
   }
 
   // Start with a simple check that the fake decoder is behaving as expected.
@@ -590,7 +590,7 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
 
   // Insert one packet.
   clock_.AdvanceTimeMilliseconds(123456);
-  int64_t expected_receive_time_ms = clock_.TimeInMilliseconds();
+  Timestamp expected_receive_time = clock_.CurrentTime();
   EXPECT_EQ(NetEq::kOK, neteq_->InsertPacket(rtp_header, payload));
 
   // Pull audio once.
@@ -610,7 +610,7 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
     EXPECT_THAT(packet_info.csrcs(), IsEmpty());
     EXPECT_EQ(packet_info.rtp_timestamp(), rtp_header.timestamp);
     EXPECT_EQ(packet_info.audio_level(), rtp_header.extension.audioLevel);
-    EXPECT_EQ(packet_info.receive_time_ms(), expected_receive_time_ms);
+    EXPECT_EQ(packet_info.receive_time(), expected_receive_time);
   }
 
   // Insert two more packets. The first one is out of order, and is already too
@@ -626,7 +626,7 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
   rtp_header.extension.audioLevel = 2;
   payload[0] = 2;
   clock_.AdvanceTimeMilliseconds(2000);
-  expected_receive_time_ms = clock_.TimeInMilliseconds();
+  expected_receive_time = clock_.CurrentTime();
   EXPECT_EQ(NetEq::kOK, neteq_->InsertPacket(rtp_header, payload));
 
   // Expect only the second packet to be decoded (the one with "2" as the first
@@ -656,7 +656,7 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
     EXPECT_THAT(packet_info.csrcs(), IsEmpty());
     EXPECT_EQ(packet_info.rtp_timestamp(), rtp_header.timestamp);
     EXPECT_EQ(packet_info.audio_level(), rtp_header.extension.audioLevel);
-    EXPECT_EQ(packet_info.receive_time_ms(), expected_receive_time_ms);
+    EXPECT_EQ(packet_info.receive_time(), expected_receive_time);
   }
 
   EXPECT_CALL(mock_decoder, Die());

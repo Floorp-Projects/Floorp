@@ -276,6 +276,7 @@ rtc_library("video_coding_legacy") {
     "../../api:rtp_headers",
     "../../api:rtp_packet_info",
     "../../api:sequence_checker",
+    "../../api/units:timestamp",
     "../../api/video:encoded_image",
     "../../api/video:video_frame",
     "../../api/video:video_frame_type",
