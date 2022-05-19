@@ -27,17 +27,19 @@
 #include "rtc_base/gunit.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/virtual_socket_server.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 
 namespace {
 
-class DataChannelIntegrationTest
-    : public PeerConnectionIntegrationBaseTest,
-      public ::testing::WithParamInterface<SdpSemantics> {
+class DataChannelIntegrationTest : public PeerConnectionIntegrationBaseTest,
+                                   public ::testing::WithParamInterface<
+                                       std::tuple<SdpSemantics, std::string>> {
  protected:
   DataChannelIntegrationTest()
-      : PeerConnectionIntegrationBaseTest(GetParam()) {}
+      : PeerConnectionIntegrationBaseTest(std::get<0>(GetParam()),
+                                          std::get<1>(GetParam())) {}
 };
 
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(DataChannelIntegrationTest);
@@ -657,15 +659,19 @@ TEST_P(DataChannelIntegrationTest, QueuedPacketsGetDeliveredInUnReliableMode) {
   EXPECT_EQ(2u, callee()->data_observer()->received_message_count());
 }
 
-INSTANTIATE_TEST_SUITE_P(DataChannelIntegrationTest,
-                         DataChannelIntegrationTest,
-                         Values(SdpSemantics::kPlanB,
-                                SdpSemantics::kUnifiedPlan));
+INSTANTIATE_TEST_SUITE_P(
+    DataChannelIntegrationTest,
+    DataChannelIntegrationTest,
+    Combine(Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan),
+            Values("WebRTC-DataChannel-Dcsctp/Enabled/",
+                   "WebRTC-DataChannel-Dcsctp/Disabled/")));
 
-INSTANTIATE_TEST_SUITE_P(DataChannelIntegrationTest,
-                         DataChannelIntegrationTestWithFakeClock,
-                         Values(SdpSemantics::kPlanB,
-                                SdpSemantics::kUnifiedPlan));
+INSTANTIATE_TEST_SUITE_P(
+    DataChannelIntegrationTest,
+    DataChannelIntegrationTestWithFakeClock,
+    Combine(Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan),
+            Values("WebRTC-DataChannel-Dcsctp/Enabled/",
+                   "WebRTC-DataChannel-Dcsctp/Disabled/")));
 
 TEST_F(DataChannelIntegrationTestUnifiedPlan,
        EndToEndCallWithBundledSctpDataChannel) {
