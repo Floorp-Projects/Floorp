@@ -23,7 +23,7 @@ object Versions {
     const val detekt = "1.19.0"
 
     const val sentry_legacy = "1.7.21"
-    const val sentry_latest = "5.6.1"
+    const val sentry_latest = "5.7.3"
     const val okhttp = "3.13.1"
     const val zxing = "3.3.0"
     const val jna = "5.8.0"
