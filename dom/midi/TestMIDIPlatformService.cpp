@@ -114,6 +114,8 @@ void TestMIDIPlatformService::Init() {
   NS_DispatchToCurrentThread(r);
 }
 
+void TestMIDIPlatformService::Refresh() { AddPortInfo(mStateTestInputPort); }
+
 void TestMIDIPlatformService::Open(MIDIPortParent* aPort) {
   MOZ_ASSERT(aPort);
   MIDIPortConnectionState s = MIDIPortConnectionState::Open;
