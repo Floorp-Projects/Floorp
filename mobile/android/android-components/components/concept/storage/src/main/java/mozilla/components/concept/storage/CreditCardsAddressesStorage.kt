@@ -254,19 +254,24 @@ data class CreditCardEntry(
             ellipsesEnd
 
     /**
-     * Credit card expiry date formatted according to the locale.
+     * Credit card expiry date formatted according to the locale. Returns an empty string if either
+     * the expiration month or expiration year is not set.
      */
     val expiryDate: String
         get() {
-            val dateFormat = SimpleDateFormat(DATE_PATTERN, Locale.getDefault())
+            return if (expiryMonth.isEmpty() || expiryYear.isEmpty()) {
+                ""
+            } else {
+                val dateFormat = SimpleDateFormat(DATE_PATTERN, Locale.getDefault())
 
-            val calendar = Calendar.getInstance()
-            calendar.set(Calendar.DAY_OF_MONTH, 1)
-            // Subtract 1 from the expiry month since Calendar.Month is based on a 0-indexed.
-            calendar.set(Calendar.MONTH, expiryMonth.toInt() - 1)
-            calendar.set(Calendar.YEAR, expiryYear.toInt())
+                val calendar = Calendar.getInstance()
+                calendar.set(Calendar.DAY_OF_MONTH, 1)
+                // Subtract 1 from the expiry month since Calendar.Month is based on a 0-indexed.
+                calendar.set(Calendar.MONTH, expiryMonth.toInt() - 1)
+                calendar.set(Calendar.YEAR, expiryYear.toInt())
 
-            return dateFormat.format(calendar.time)
+                dateFormat.format(calendar.time)
+            }
         }
 
     companion object {

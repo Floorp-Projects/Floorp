@@ -37,4 +37,36 @@ class CreditCardEntryTest {
     fun `WHEN expiryDdate getter is called THEN the expected expiry date string is returned`() {
         assertEquals("0${creditCard.expiryMonth}/${creditCard.expiryYear}", creditCard.expiryDate)
     }
+
+    @Test
+    fun `GIVEN empty expiration date strings WHEN a credit card needs to display its full expiration date THEN the an empty string is returned`() {
+        val creditCardWithoutYear = CreditCardEntry(
+            guid = "1",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "5",
+            expiryYear = "",
+            cardType = "amex"
+        )
+        val creditCardWithoutMonth = CreditCardEntry(
+            guid = "1",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "",
+            expiryYear = "2030",
+            cardType = "amex"
+        )
+        val creditCardWithoutFullDate = CreditCardEntry(
+            guid = "1",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "",
+            expiryYear = "",
+            cardType = "amex"
+        )
+
+        assertEquals("", creditCardWithoutYear.expiryDate)
+        assertEquals("", creditCardWithoutMonth.expiryDate)
+        assertEquals("", creditCardWithoutFullDate.expiryDate)
+    }
 }
