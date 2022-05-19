@@ -370,7 +370,10 @@ void RampUpTester::TriggerTestDone() {
   if (!send_stream_)
     return;
 
-  VideoSendStream::Stats send_stats = send_stream_->GetStats();
+  VideoSendStream::Stats send_stats;
+  SendTask(RTC_FROM_HERE, task_queue_,
+           [&] { send_stats = send_stream_->GetStats(); });
+
   send_stream_ = nullptr;  // To avoid dereferencing a bad pointer.
 
   size_t total_packets_sent = 0;

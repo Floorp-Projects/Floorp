@@ -169,7 +169,7 @@ void VideoSendStream::UpdateActiveSimulcastLayers(
 
 void VideoSendStream::Start() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  RTC_LOG(LS_INFO) << "VideoSendStream::Start";
+  RTC_DLOG(LS_INFO) << "VideoSendStream::Start";
   VideoSendStreamImpl* send_stream = send_stream_.get();
   worker_queue_->PostTask([this, send_stream] {
     send_stream->Start();
@@ -184,7 +184,7 @@ void VideoSendStream::Start() {
 
 void VideoSendStream::Stop() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  RTC_LOG(LS_INFO) << "VideoSendStream::Stop";
+  RTC_DLOG(LS_INFO) << "VideoSendStream::Stop";
   VideoSendStreamImpl* send_stream = send_stream_.get();
   worker_queue_->PostTask([send_stream] { send_stream->Stop(); });
 }
@@ -209,10 +209,8 @@ void VideoSendStream::SetSource(
 }
 
 void VideoSendStream::ReconfigureVideoEncoder(VideoEncoderConfig config) {
-  // TODO(perkj): Some test cases in VideoSendStreamTest call
-  // ReconfigureVideoEncoder from the network thread.
-  // RTC_DCHECK_RUN_ON(&thread_checker_);
-  RTC_DCHECK(content_type_ == config.content_type);
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_EQ(content_type_, config.content_type);
   video_stream_encoder_->ConfigureEncoder(
       std::move(config),
       config_.rtp.max_packet_size - CalculateMaxHeaderSize(config_.rtp));

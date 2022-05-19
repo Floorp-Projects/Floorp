@@ -182,7 +182,11 @@ TEST(ScenarioTest,
   s.RunFor(TimeDelta::Seconds(10));
   // Make sure retransmissions have happened.
   int retransmit_packets = 0;
-  for (const auto& substream : video->send()->GetStats().substreams) {
+
+  VideoSendStream::Stats stats;
+  alice->SendTask([&]() { stats = video->send()->GetStats(); });
+
+  for (const auto& substream : stats.substreams) {
     retransmit_packets += substream.second.rtp_stats.retransmitted.packets;
   }
   EXPECT_GT(retransmit_packets, 0);
