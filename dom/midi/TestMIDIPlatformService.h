@@ -26,7 +26,6 @@ class TestMIDIPlatformService : public MIDIPlatformService {
  public:
   TestMIDIPlatformService();
   virtual void Init() override;
-  virtual void Refresh() override;
   virtual void Open(MIDIPortParent* aPort) override;
   virtual void Stop() override;
   virtual void ScheduleSend(const nsAString& aPort) override;
