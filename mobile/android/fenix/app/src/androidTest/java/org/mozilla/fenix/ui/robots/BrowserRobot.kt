@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.SystemClock
+import android.util.Log
 import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
@@ -571,12 +572,21 @@ class BrowserRobot {
     }
 
     fun fillAndSubmitLoginCredentials(userName: String, password: String) {
-        userNameTextBox.setText(userName)
-        passwordTextBox.setText(password)
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            try {
+                mDevice.waitForIdle(waitingTime)
+                userNameTextBox.setText(userName)
+                passwordTextBox.setText(password)
+                submitLoginButton.click()
 
-        submitLoginButton.click()
+                mDevice.waitForObjects(mDevice.findObject(UiSelector().resourceId("$packageName:id/save_confirm")))
 
-        mDevice.waitForObjects(mDevice.findObject(UiSelector().resourceId("$packageName:id/save_confirm")))
+                break
+            } catch (e: UiObjectNotFoundException) {
+                Log.e("BROWSER_ROBOT", "Failed to find locator: ${e.localizedMessage}")
+            }
+        }
     }
 
     fun clearUserNameLoginCredential() {
