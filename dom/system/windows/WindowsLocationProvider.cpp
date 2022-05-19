@@ -10,12 +10,17 @@
 #include "prtime.h"
 #include "MLSFallback.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Logging.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
 
 namespace mozilla {
 namespace dom {
+
+LazyLogModule gWindowsLocationProviderLog("WindowsLocationProvider");
+#define LOG(...) \
+  MOZ_LOG(gWindowsLocationProviderLog, LogLevel::Debug, (__VA_ARGS__))
 
 NS_IMPL_ISUPPORTS(WindowsLocationProvider::MLSUpdate, nsIGeolocationUpdate);
 
@@ -179,12 +184,22 @@ LocationEvent::OnLocationChanged(REFIID aReportType, ILocationReport* aReport) {
 
 NS_IMPL_ISUPPORTS(WindowsLocationProvider, nsIGeolocationProvider)
 
-WindowsLocationProvider::WindowsLocationProvider() {}
+WindowsLocationProvider::WindowsLocationProvider() {
+  LOG("WindowsLocationProvider::WindowsLocationProvider(%p)\n", this);
+}
 
-WindowsLocationProvider::~WindowsLocationProvider() {}
+WindowsLocationProvider::~WindowsLocationProvider() {
+  LOG("WindowsLocationProvider::~WindowsLocationProvider(%p, %p)\n", this,
+      mLocation.get());
+}
 
 NS_IMETHODIMP
 WindowsLocationProvider::Startup() {
+  LOG("WindowsLocationProvider::Startup(%p, %p)\n", this, mLocation.get());
+  if (mLocation) {
+    return NS_OK;
+  }
+
   RefPtr<ILocation> location;
   if (FAILED(::CoCreateInstance(CLSID_Location, nullptr, CLSCTX_INPROC_SERVER,
                                 IID_ILocation, getter_AddRefs(location)))) {
@@ -204,6 +219,7 @@ WindowsLocationProvider::Startup() {
 
 NS_IMETHODIMP
 WindowsLocationProvider::Watch(nsIGeolocationUpdate* aCallback) {
+  LOG("WindowsLocationProvider::Watch(%p, %p)\n", this, mLocation.get());
   if (mLocation) {
     RefPtr<LocationEvent> event = new LocationEvent(aCallback, this);
     if (SUCCEEDED(mLocation->RegisterForReport(event, IID_ILatLongReport, 0))) {
@@ -212,6 +228,7 @@ WindowsLocationProvider::Watch(nsIGeolocationUpdate* aCallback) {
   }
 
   // Cannot use Location API.  We will use MLS instead.
+  LOG(" > MLS fallback\n");
   mLocation = nullptr;
 
   return CreateAndWatchMLSProvider(aCallback);
@@ -219,6 +236,7 @@ WindowsLocationProvider::Watch(nsIGeolocationUpdate* aCallback) {
 
 NS_IMETHODIMP
 WindowsLocationProvider::Shutdown() {
+  LOG("WindowsLocationProvider::Shutdown(%p, %p)\n", this, mLocation.get());
   if (mLocation) {
     mLocation->UnregisterForReport(IID_ILatLongReport);
     mLocation = nullptr;
@@ -267,6 +285,8 @@ void WindowsLocationProvider::CancelMLSProvider() {
   mMLSProvider->Shutdown();
   mMLSProvider = nullptr;
 }
+
+#undef LOG
 
 }  // namespace dom
 }  // namespace mozilla
