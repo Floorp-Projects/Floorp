@@ -351,5 +351,40 @@ TEST_F(TimerTest, TimersHaveMaximumBackoffDuration) {
   AdvanceTimeAndRunTimers(Timer::kMaxTimerDuration);
 }
 
+TEST_F(TimerTest, TimerCanBeStartedFromWithinExpirationHandler) {
+  std::unique_ptr<Timer> t1 = manager_.CreateTimer(
+      "t1", on_expired_.AsStdFunction(),
+      TimerOptions(DurationMs(1000), TimerBackoffAlgorithm::kFixed));
+
+  t1->Start();
+
+  // Start a timer, but don't return any new duration in callback.
+  EXPECT_CALL(on_expired_, Call).WillOnce([&]() {
+    EXPECT_TRUE(t1->is_running());
+    t1->set_duration(DurationMs(5000));
+    t1->Start();
+    return absl::nullopt;
+  });
+  AdvanceTimeAndRunTimers(DurationMs(1000));
+
+  EXPECT_CALL(on_expired_, Call).Times(0);
+  AdvanceTimeAndRunTimers(DurationMs(4999));
+
+  // Start a timer, and return any new duration in callback.
+  EXPECT_CALL(on_expired_, Call).WillOnce([&]() {
+    EXPECT_TRUE(t1->is_running());
+    t1->set_duration(DurationMs(5000));
+    t1->Start();
+    return absl::make_optional(DurationMs(8000));
+  });
+  AdvanceTimeAndRunTimers(DurationMs(1));
+
+  EXPECT_CALL(on_expired_, Call).Times(0);
+  AdvanceTimeAndRunTimers(DurationMs(7999));
+
+  EXPECT_CALL(on_expired_, Call).Times(1);
+  AdvanceTimeAndRunTimers(DurationMs(1));
+}
+
 }  // namespace
 }  // namespace dcsctp

@@ -20,6 +20,7 @@
 
 #include "absl/types/optional.h"
 #include "net/dcsctp/public/timeout.h"
+#include "rtc_base/checks.h"
 
 namespace dcsctp {
 
@@ -33,14 +34,18 @@ class FakeTimeout : public Timeout {
   ~FakeTimeout() override { on_delete_(this); }
 
   void Start(DurationMs duration_ms, TimeoutID timeout_id) override {
+    RTC_DCHECK(expiry_ == TimeMs::InfiniteFuture());
     timeout_id_ = timeout_id;
     expiry_ = get_time_() + duration_ms;
   }
-  void Stop() override { expiry_ = InfiniteFuture(); }
+  void Stop() override {
+    RTC_DCHECK(expiry_ != TimeMs::InfiniteFuture());
+    expiry_ = TimeMs::InfiniteFuture();
+  }
 
   bool EvaluateHasExpired(TimeMs now) {
     if (now >= expiry_) {
-      expiry_ = InfiniteFuture();
+      expiry_ = TimeMs::InfiniteFuture();
       return true;
     }
     return false;
@@ -49,15 +54,11 @@ class FakeTimeout : public Timeout {
   TimeoutID timeout_id() const { return timeout_id_; }
 
  private:
-  static constexpr TimeMs InfiniteFuture() {
-    return TimeMs(std::numeric_limits<TimeMs::UnderlyingType>::max());
-  }
-
   const std::function<TimeMs()> get_time_;
   const std::function<void(FakeTimeout*)> on_delete_;
 
   TimeoutID timeout_id_ = TimeoutID(0);
-  TimeMs expiry_ = InfiniteFuture();
+  TimeMs expiry_ = TimeMs::InfiniteFuture();
 };
 
 class FakeTimeoutManager {

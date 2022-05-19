@@ -93,22 +93,31 @@ void Timer::Stop() {
 void Timer::Trigger(TimerGeneration generation) {
   if (is_running_ && generation == generation_) {
     ++expiration_count_;
-    if (options_.max_restarts >= 0 &&
-        expiration_count_ > options_.max_restarts) {
-      is_running_ = false;
-    }
-
-    absl::optional<DurationMs> new_duration = on_expired_();
-    if (new_duration.has_value()) {
-      duration_ = new_duration.value();
-    }
-
-    if (is_running_) {
-      // Restart it with new duration.
+    is_running_ = false;
+    if (options_.max_restarts < 0 ||
+        expiration_count_ <= options_.max_restarts) {
+      // The timer should still be running after this triggers. Start a new
+      // timer. Note that it might be very quickly restarted again, if the
+      // `on_expired_` callback returns a new duration.
+      is_running_ = true;
       DurationMs duration = GetBackoffDuration(options_.backoff_algorithm,
                                                duration_, expiration_count_);
       generation_ = TimerGeneration(*generation_ + 1);
       timeout_->Start(duration, MakeTimeoutId(id_, generation_));
+    }
+
+    absl::optional<DurationMs> new_duration = on_expired_();
+    if (new_duration.has_value() && new_duration != duration_) {
+      duration_ = new_duration.value();
+      if (is_running_) {
+        // Restart it with new duration.
+        timeout_->Stop();
+
+        DurationMs duration = GetBackoffDuration(options_.backoff_algorithm,
+                                                 duration_, expiration_count_);
+        generation_ = TimerGeneration(*generation_ + 1);
+        timeout_->Start(duration, MakeTimeoutId(id_, generation_));
+      }
     }
   }
 }
