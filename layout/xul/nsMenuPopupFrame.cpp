@@ -520,6 +520,47 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   }
 }
 
+void nsMenuPopupFrame::ConstrainSizeForWayland(nsSize& aSize) const {
+#ifdef MOZ_WAYLAND
+  if (!IS_WAYLAND_DISPLAY()) {
+    return;
+  }
+
+  // If the size is not a whole number in CSS pixels we need round it up to
+  // avoid reflow of the tooltips/popups and putting the text on two lines
+  // (usually happens with 200% scale factor and font scale factor <> 1) because
+  // GTK throws away the decimals.
+  int32_t appPerCSS = AppUnitsPerCSSPixel();
+  if (aSize.width % appPerCSS > 0) {
+    aSize.width += appPerCSS;
+  }
+  if (aSize.height % appPerCSS > 0) {
+    aSize.height += appPerCSS;
+  }
+
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return;
+  }
+
+  // Shrink the popup down if it's larger than popup size received from Wayland
+  // compositor. We don't know screen size on Wayland so this is the only info
+  // we have there.
+  const nsSize waylandSize = LayoutDeviceIntRect::ToAppUnits(
+      widget->GetMoveToRectPopupSize(), PresContext()->AppUnitsPerDevPixel());
+  if (waylandSize.width > 0 && aSize.width > waylandSize.width) {
+    LOG_WAYLAND("Wayland constraint width [%p]:  %d to %d", widget, aSize.width,
+                waylandSize.width);
+    aSize.width = waylandSize.width;
+  }
+  if (waylandSize.height > 0 && aSize.height > waylandSize.height) {
+    LOG_WAYLAND("Wayland constraint height [%p]:  %d to %d", widget,
+                aSize.height, waylandSize.height);
+    aSize.height = waylandSize.height;
+  }
+#endif
+}
+
 void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
                                    nsIFrame* aParentMenu, bool aSizedToPopup) {
   if (IsNativeMenu()) {
@@ -581,42 +622,9 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
 
   prefSize = XULBoundsCheck(minSize, prefSize, maxSize);
 
-#ifdef MOZ_WAYLAND
-  if (IS_WAYLAND_DISPLAY()) {
-    // If prefSize it is not a whole number in CSS pixels we need round it up to
-    // avoid reflow of the tooltips/popups and putting the text on two lines
-    // (usually happens with 200% scale factor and font scale factor <> 1)
-    // because GTK thrown away the decimals.
-    int32_t appPerCSS = AppUnitsPerCSSPixel();
-    if (prefSize.width % appPerCSS > 0) {
-      prefSize.width += appPerCSS;
-    }
-    if (prefSize.height % appPerCSS > 0) {
-      prefSize.height += appPerCSS;
-    }
+  ConstrainSizeForWayland(prefSize);
 
-    if (nsIWidget* widget = GetWidget()) {
-      // Shrink the popup down if it's larger than popup size received from
-      // Wayland compositor. We don't know screen size on Wayland so this is the
-      // only info we have there.
-      nsSize waylandSize =
-          LayoutDeviceIntRect::ToAppUnits(widget->GetMoveToRectPopupSize(),
-                                          PresContext()->AppUnitsPerDevPixel());
-      if (waylandSize.width > 0 && prefSize.width > waylandSize.width) {
-        LOG_WAYLAND("Wayland constraint width [%p]:  %d to %d", widget,
-                    prefSize.width, waylandSize.width);
-        prefSize.width = waylandSize.width;
-      }
-      if (waylandSize.height > 0 && prefSize.height > waylandSize.height) {
-        LOG_WAYLAND("Wayland constraint height [%p]:  %d to %d", widget,
-                    prefSize.height, waylandSize.height);
-        prefSize.height = waylandSize.height;
-      }
-    }
-  }
-#endif
-
-  bool sizeChanged = (mPrefSize != prefSize);
+  const bool sizeChanged = mPrefSize != prefSize;
   // if the size changed then set the bounds to be the preferred size, and make
   // sure we re-position the popup too (as that can shrink or resize us again).
   if (sizeChanged) {
@@ -1415,7 +1423,9 @@ nsRect nsMenuPopupFrame::ComputeAnchorRect(nsPresContext* aRootPresContext,
 
 nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
                                             bool aIsMove, bool aSizedToPopup) {
-  if (!mShouldAutoPosition) return NS_OK;
+  if (!mShouldAutoPosition) {
+    return NS_OK;
+  }
 
   // If this is due to a move, return early if the popup hasn't been laid out
   // yet. On Windows, this can happen when using a drag popup before it opens.
@@ -1477,16 +1487,21 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   // adjusted to fit on the screen or within the content area. If the anchor
   // is sized to the popup, use the anchor's width instead of the preferred
   // width. The preferred size should already be set by the parent frame.
-  NS_ASSERTION(mPrefSize.width >= 0 || mPrefSize.height >= 0,
-               "preferred size of popup not set");
-  mRect.width = aSizedToPopup ? parentWidth : mPrefSize.width;
-  mRect.height = mPrefSize.height;
-
-  // If we're anchoring to a rect, and the rect is smaller than the preferred
-  // size of the popup, change its width accordingly.
-  if (mAnchorType == MenuPopupAnchorType_Rect &&
-      parentWidth < mPrefSize.width) {
-    mRect.width = mPrefSize.width;
+  {
+    NS_ASSERTION(mPrefSize.width >= 0 || mPrefSize.height >= 0,
+                 "preferred size of popup not set");
+    nsSize newSize = mPrefSize;
+    if (aSizedToPopup) {
+      newSize.width = parentWidth;
+      // If we're anchoring to a rect, and the rect is smaller than the
+      // preferred size of the popup, change its width accordingly.
+      if (mAnchorType == MenuPopupAnchorType_Rect) {
+        newSize.width = std::max(parentWidth, mPrefSize.width);
+      }
+      // Pref size is already constrained by LayoutPopup().
+      ConstrainSizeForWayland(newSize);
+    }
+    mRect.SizeTo(newSize);
   }
 
   // the screen position in app units where the popup should appear
@@ -2253,10 +2268,8 @@ void nsMenuPopupFrame::LockMenuUntilClosed(bool aLock) {
   }
 }
 
-nsIWidget* nsMenuPopupFrame::GetWidget() {
-  if (!mView) return nullptr;
-
-  return mView->GetWidget();
+nsIWidget* nsMenuPopupFrame::GetWidget() const {
+  return mView ? mView->GetWidget() : nullptr;
 }
 
 // helpers /////////////////////////////////////////////////////////////
