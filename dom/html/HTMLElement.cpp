@@ -268,11 +268,7 @@ void HTMLElement::UpdateFormOwner(bool aBindToTree, Element* aFormIdElement) {
 
 bool HTMLElement::IsFormAssociatedElement() const {
   CustomElementData* data = GetCustomElementData();
-  bool isFormAssociatedCustomElement = data && data->IsFormAssociated();
-  MOZ_ASSERT_IF(
-      isFormAssociatedCustomElement,
-      StaticPrefs::dom_webcomponents_formAssociatedCustomElement_enabled());
-  return isFormAssociatedCustomElement;
+  return data && data->IsFormAssociated();
 }
 
 void HTMLElement::FieldSetDisabledChanged(bool aNotify) {

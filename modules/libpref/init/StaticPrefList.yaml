@@ -4108,12 +4108,6 @@
   value: false
   mirror: always
 
-# Is support for form-associated custom element enabled?
-- name: dom.webcomponents.formAssociatedCustomElement.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for the Web GPU API enabled?
 - name: dom.webgpu.enabled
   type: RelaxedAtomicBool
