@@ -1026,16 +1026,25 @@ void StatsCollector::ExtractBweInfo() {
 
   // Fill in target encoder bitrate, actual encoder bitrate, rtx bitrate, etc.
   // TODO(holmer): Also fill this in for audio.
-  for (const auto& transceiver : pc_->GetTransceiversInternal()) {
+  auto transceivers = pc_->GetTransceiversInternal();
+  std::vector<cricket::VideoChannel*> video_channels;
+  for (const auto& transceiver : transceivers) {
     if (transceiver->media_type() != cricket::MEDIA_TYPE_VIDEO) {
       continue;
     }
     auto* video_channel =
         static_cast<cricket::VideoChannel*>(transceiver->internal()->channel());
-    if (!video_channel) {
-      continue;
+    if (video_channel) {
+      video_channels.push_back(video_channel);
     }
-    video_channel->FillBitrateInfo(&bwe_info);
+  }
+
+  if (!video_channels.empty()) {
+    pc_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&] {
+      for (const auto& channel : video_channels) {
+        channel->FillBitrateInfo(&bwe_info);
+      }
+    });
   }
 
   StatsReport::Id report_id(StatsReport::NewBandwidthEstimationId());
