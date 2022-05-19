@@ -78,6 +78,22 @@ pub trait PrimInt:
     /// ```
     fn count_zeros(self) -> u32;
 
+    /// Returns the number of leading ones in the binary representation
+    /// of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::PrimInt;
+    ///
+    /// let n = 0xF00Du16;
+    ///
+    /// assert_eq!(n.leading_ones(), 4);
+    /// ```
+    fn leading_ones(self) -> u32 {
+        (!self).leading_zeros()
+    }
+
     /// Returns the number of leading zeros in the binary representation
     /// of `self`.
     ///
@@ -91,6 +107,22 @@ pub trait PrimInt:
     /// assert_eq!(n.leading_zeros(), 10);
     /// ```
     fn leading_zeros(self) -> u32;
+
+    /// Returns the number of trailing ones in the binary representation
+    /// of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::PrimInt;
+    ///
+    /// let n = 0xBEEFu16;
+    ///
+    /// assert_eq!(n.trailing_ones(), 4);
+    /// ```
+    fn trailing_ones(self) -> u32 {
+        (!self).trailing_zeros()
+    }
 
     /// Returns the number of trailing zeros in the binary representation
     /// of `self`.
@@ -218,6 +250,26 @@ pub trait PrimInt:
     /// ```
     fn swap_bytes(self) -> Self;
 
+    /// Reverses the order of bits in the integer.
+    ///
+    /// The least significant bit becomes the most significant bit, second least-significant bit
+    /// becomes second most-significant bit, etc.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::PrimInt;
+    ///
+    /// let n = 0x12345678u32;
+    /// let m = 0x1e6a2c48u32;
+    ///
+    /// assert_eq!(n.reverse_bits(), m);
+    /// assert_eq!(0u32.reverse_bits(), 0);
+    /// ```
+    fn reverse_bits(self) -> Self {
+        reverse_bits_fallback(self)
+    }
+
     /// Convert an integer from big endian to the target's endianness.
     ///
     /// On big endian this is a no-op. On little endian the bytes are swapped.
@@ -306,6 +358,39 @@ pub trait PrimInt:
     fn pow(self, exp: u32) -> Self;
 }
 
+fn one_per_byte<P: PrimInt>() -> P {
+    // i8, u8: return 0x01
+    // i16, u16: return 0x0101 = (0x01 << 8) | 0x01
+    // i32, u32: return 0x01010101 = (0x0101 << 16) | 0x0101
+    // ...
+    let mut ret = P::one();
+    let mut shift = 8;
+    let mut b = ret.count_zeros() >> 3;
+    while b != 0 {
+        ret = (ret << shift) | ret;
+        shift <<= 1;
+        b >>= 1;
+    }
+    ret
+}
+
+fn reverse_bits_fallback<P: PrimInt>(i: P) -> P {
+    let rep_01: P = one_per_byte();
+    let rep_03 = (rep_01 << 1) | rep_01;
+    let rep_05 = (rep_01 << 2) | rep_01;
+    let rep_0f = (rep_03 << 2) | rep_03;
+    let rep_33 = (rep_03 << 4) | rep_03;
+    let rep_55 = (rep_05 << 4) | rep_05;
+
+    // code above only used to determine rep_0f, rep_33, rep_55;
+    // optimizer should be able to do it in compile time
+    let mut ret = i.swap_bytes();
+    ret = ((ret & rep_0f) << 4) | ((ret >> 4) & rep_0f);
+    ret = ((ret & rep_33) << 2) | ((ret >> 2) & rep_33);
+    ret = ((ret & rep_55) << 1) | ((ret >> 1) & rep_55);
+    ret
+}
+
 macro_rules! prim_int_impl {
     ($T:ty, $S:ty, $U:ty) => {
         impl PrimInt for $T {
@@ -319,9 +404,21 @@ macro_rules! prim_int_impl {
                 <$T>::count_zeros(self)
             }
 
+            #[cfg(has_leading_trailing_ones)]
+            #[inline]
+            fn leading_ones(self) -> u32 {
+                <$T>::leading_ones(self)
+            }
+
             #[inline]
             fn leading_zeros(self) -> u32 {
                 <$T>::leading_zeros(self)
+            }
+
+            #[cfg(has_leading_trailing_ones)]
+            #[inline]
+            fn trailing_ones(self) -> u32 {
+                <$T>::trailing_ones(self)
             }
 
             #[inline]
@@ -362,6 +459,12 @@ macro_rules! prim_int_impl {
             #[inline]
             fn swap_bytes(self) -> Self {
                 <$T>::swap_bytes(self)
+            }
+
+            #[cfg(has_reverse_bits)]
+            #[inline]
+            fn reverse_bits(self) -> Self {
+                <$T>::reverse_bits(self)
             }
 
             #[inline]
@@ -407,3 +510,59 @@ prim_int_impl!(i64, i64, u64);
 #[cfg(has_i128)]
 prim_int_impl!(i128, i128, u128);
 prim_int_impl!(isize, isize, usize);
+
+#[cfg(test)]
+mod tests {
+    use int::PrimInt;
+
+    #[test]
+    pub fn reverse_bits() {
+        use core::{i16, i32, i64, i8};
+
+        assert_eq!(
+            PrimInt::reverse_bits(0x0123_4567_89ab_cdefu64),
+            0xf7b3_d591_e6a2_c480
+        );
+
+        assert_eq!(PrimInt::reverse_bits(0i8), 0);
+        assert_eq!(PrimInt::reverse_bits(-1i8), -1);
+        assert_eq!(PrimInt::reverse_bits(1i8), i8::MIN);
+        assert_eq!(PrimInt::reverse_bits(i8::MIN), 1);
+        assert_eq!(PrimInt::reverse_bits(-2i8), i8::MAX);
+        assert_eq!(PrimInt::reverse_bits(i8::MAX), -2);
+
+        assert_eq!(PrimInt::reverse_bits(0i16), 0);
+        assert_eq!(PrimInt::reverse_bits(-1i16), -1);
+        assert_eq!(PrimInt::reverse_bits(1i16), i16::MIN);
+        assert_eq!(PrimInt::reverse_bits(i16::MIN), 1);
+        assert_eq!(PrimInt::reverse_bits(-2i16), i16::MAX);
+        assert_eq!(PrimInt::reverse_bits(i16::MAX), -2);
+
+        assert_eq!(PrimInt::reverse_bits(0i32), 0);
+        assert_eq!(PrimInt::reverse_bits(-1i32), -1);
+        assert_eq!(PrimInt::reverse_bits(1i32), i32::MIN);
+        assert_eq!(PrimInt::reverse_bits(i32::MIN), 1);
+        assert_eq!(PrimInt::reverse_bits(-2i32), i32::MAX);
+        assert_eq!(PrimInt::reverse_bits(i32::MAX), -2);
+
+        assert_eq!(PrimInt::reverse_bits(0i64), 0);
+        assert_eq!(PrimInt::reverse_bits(-1i64), -1);
+        assert_eq!(PrimInt::reverse_bits(1i64), i64::MIN);
+        assert_eq!(PrimInt::reverse_bits(i64::MIN), 1);
+        assert_eq!(PrimInt::reverse_bits(-2i64), i64::MAX);
+        assert_eq!(PrimInt::reverse_bits(i64::MAX), -2);
+    }
+
+    #[test]
+    #[cfg(has_i128)]
+    pub fn reverse_bits_i128() {
+        use core::i128;
+
+        assert_eq!(PrimInt::reverse_bits(0i128), 0);
+        assert_eq!(PrimInt::reverse_bits(-1i128), -1);
+        assert_eq!(PrimInt::reverse_bits(1i128), i128::MIN);
+        assert_eq!(PrimInt::reverse_bits(i128::MIN), 1);
+        assert_eq!(PrimInt::reverse_bits(-2i128), i128::MAX);
+        assert_eq!(PrimInt::reverse_bits(i128::MAX), -2);
+    }
+}

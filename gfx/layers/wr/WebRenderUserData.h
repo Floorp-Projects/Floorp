@@ -269,7 +269,7 @@ class WebRenderFallbackData : public WebRenderUserData {
   DisplayItemClip mClip;
   nsRect mBounds;
   nsRect mBuildingRect;
-  gfx::Size mScale;
+  gfx::MatrixScales mScale;
   float mOpacity;
 
  protected:
@@ -376,7 +376,7 @@ class WebRenderMaskData : public WebRenderUserData {
   LayerIntRect mItemRect;
   nsPoint mMaskOffset;
   nsStyleImageLayers mMaskStyle;
-  gfx::Size mScale;
+  gfx::MatrixScales mScale;
   bool mShouldHandleOpacity;
 };
 

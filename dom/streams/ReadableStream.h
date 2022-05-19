@@ -134,7 +134,7 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
 
   // Internal Slots:
  private:
-  MOZ_KNOWN_LIVE RefPtr<ReadableStreamController> mController;
+  RefPtr<ReadableStreamController> mController;
   bool mDisturbed = false;
   RefPtr<ReadableStreamGenericReader> mReader;
   ReaderState mState = ReaderState::Readable;

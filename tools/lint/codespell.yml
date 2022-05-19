@@ -69,6 +69,7 @@ codespell:
         - js
         - jsm
         - jxs
+        - mjs
         - xml
         - html
         - xhtml

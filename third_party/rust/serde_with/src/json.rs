@@ -1,17 +1,17 @@
 //! De/Serialization of JSON
 //!
-//! This modules is only available if using the `json` feature of the crate.
+//! This modules is only available when using the `json` feature of the crate.
+
+use crate::{de::DeserializeAs, ser::SerializeAs};
+use serde::{de::DeserializeOwned, Deserializer, Serialize, Serializer};
 
 /// Serialize value as string containing JSON
+///
+/// The same functionality is also available as [`serde_with::json::JsonString`][crate::json::JsonString] compatible with the `serde_as`-annotation.
 ///
 /// # Examples
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
 /// #
 /// #[derive(Deserialize, Serialize)]
@@ -32,13 +32,11 @@
 /// };
 /// assert_eq!(r#"{"other_struct":"{\"value\":10}"}"#, serde_json::to_string(&x).unwrap());
 /// ```
-///
 pub mod nested {
     use serde::{
         de::{DeserializeOwned, Deserializer, Error, Visitor},
         ser::{self, Serialize, Serializer},
     };
-    use serde_json;
     use std::{fmt, marker::PhantomData};
 
     /// Deserialize value from a string which is valid JSON
@@ -56,7 +54,7 @@ pub mod nested {
         {
             type Value = S;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(formatter, "valid json object")
             }
 
@@ -84,5 +82,63 @@ pub mod nested {
     {
         let s = serde_json::to_string(value).map_err(ser::Error::custom)?;
         serializer.serialize_str(&*s)
+    }
+}
+
+/// Serialize value as string containing JSON
+///
+/// The same functionality is also available as [`serde_with::json::nested`][crate::json::nested] compatible with serde's with-annotation.
+///
+/// # Examples
+///
+/// ```
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde_with::{serde_as, json::JsonString};
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize, Serialize)]
+/// struct A {
+///     #[serde_as(as = "JsonString")]
+///     other_struct: B,
+/// }
+/// #[derive(Deserialize, Serialize)]
+/// struct B {
+///     value: usize,
+/// }
+///
+/// let v: A = serde_json::from_str(r#"{"other_struct":"{\"value\":5}"}"#).unwrap();
+/// assert_eq!(5, v.other_struct.value);
+///
+/// let x = A {
+///     other_struct: B { value: 10 },
+/// };
+/// assert_eq!(r#"{"other_struct":"{\"value\":10}"}"#, serde_json::to_string(&x).unwrap());
+/// # }
+/// ```
+#[derive(Copy, Clone, Debug, Default)]
+pub struct JsonString;
+
+impl<T> SerializeAs<T> for JsonString
+where
+    T: Serialize,
+{
+    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        crate::json::nested::serialize(source, serializer)
+    }
+}
+
+impl<'de, T> DeserializeAs<'de, T> for JsonString
+where
+    T: DeserializeOwned,
+{
+    fn deserialize_as<D>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        crate::json::nested::deserialize(deserializer)
     }
 }

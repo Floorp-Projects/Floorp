@@ -26,6 +26,14 @@ declare_TCFType!(CFRunLoop, CFRunLoopRef);
 impl_TCFType!(CFRunLoop, CFRunLoopRef, CFRunLoopGetTypeID);
 impl_CFTypeDescription!(CFRunLoop);
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum CFRunLoopRunResult {
+    Finished = 1,
+    Stopped = 2,
+    TimedOut = 3,
+    HandledSource = 4,
+}
+
 impl CFRunLoop {
     pub fn get_current() -> CFRunLoop {
         unsafe {
@@ -44,6 +52,24 @@ impl CFRunLoop {
     pub fn run_current() {
         unsafe {
             CFRunLoopRun();
+        }
+    }
+
+    pub fn run_in_mode(
+        mode: CFStringRef,
+        duration: std::time::Duration,
+        return_after_source_handled: bool,
+    ) -> CFRunLoopRunResult {
+        let seconds = duration.as_secs_f64();
+        let return_after_source_handled = if return_after_source_handled { 1 } else { 0 };
+
+        unsafe {
+            match CFRunLoopRunInMode(mode, seconds, return_after_source_handled) {
+                2 => CFRunLoopRunResult::Stopped,
+                3 => CFRunLoopRunResult::TimedOut,
+                4 => CFRunLoopRunResult::HandledSource,
+                _ => CFRunLoopRunResult::Finished,
+            }
         }
     }
 

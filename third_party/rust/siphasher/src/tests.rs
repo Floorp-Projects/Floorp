@@ -241,28 +241,6 @@ fn test_siphash_2_4() {
     }
 }
 #[test]
-#[cfg(target_arch = "arm")]
-fn test_hash_usize() {
-    let val = 0xdeadbeef_deadbeef_u64;
-    assert_ne!(hash(&(val as u64)), hash(&(val as usize)));
-    assert_eq!(hash(&(val as u32)), hash(&(val as usize)));
-}
-#[test]
-#[cfg(target_arch = "x86_64")]
-fn test_hash_usize() {
-    let val = 0xdead_beef_dead_beef_u64;
-    assert_eq!(hash(&(val as u64)), hash(&(val as usize)));
-    assert_ne!(hash(&(val as u32)), hash(&(val as usize)));
-}
-#[test]
-#[cfg(target_arch = "x86")]
-fn test_hash_usize() {
-    let val = 0xdeadbeef_deadbeef_u64;
-    assert_ne!(hash(&(val as u64)), hash(&(val as usize)));
-    assert_eq!(hash(&(val as u32)), hash(&(val as usize)));
-}
-
-#[test]
 fn test_hash_idempotent() {
     let val64 = 0xdead_beef_dead_beef_u64;
     assert_eq!(hash(&val64), hash(&val64));

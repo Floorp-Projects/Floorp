@@ -18,6 +18,7 @@ SOURCES += [
     "TestHeapClass.cpp",
     "TestInheritTypeAnnotationsFromTemplateArgs.cpp",
     "TestJSHandleRootedTypedef.cpp",
+    "TestKnownLive.cpp",
     "TestKungFuDeathGrip.cpp",
     "TestMultipleAnnotations.cpp",
     "TestMustOverride.cpp",

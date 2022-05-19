@@ -180,7 +180,11 @@ fn check_field_attrs(fields: &[Field]) -> Result<()> {
         }
     }
     if let Some(from_field) = from_field {
-        if fields.len() > 1 + has_backtrace as usize {
+        let max_expected_fields = match backtrace_field {
+            Some(backtrace_field) => 1 + !same_member(from_field, backtrace_field) as usize,
+            None => 1 + has_backtrace as usize,
+        };
+        if fields.len() > max_expected_fields {
             return Err(Error::new_spanned(
                 from_field.attrs.from,
                 "deriving From requires no fields other than source and backtrace",

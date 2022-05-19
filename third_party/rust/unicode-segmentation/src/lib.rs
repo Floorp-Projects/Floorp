@@ -46,13 +46,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! unicode-segmentation = "1.7.1"
+//! unicode-segmentation = "1.9.0"
 //! ```
 
 #![deny(missing_docs, unsafe_code)]
-#![doc(html_logo_url = "https://unicode-rs.github.io/unicode-rs_sm.png",
-       html_favicon_url = "https://unicode-rs.github.io/unicode-rs_sm.png")]
-
+#![doc(
+    html_logo_url = "https://unicode-rs.github.io/unicode-rs_sm.png",
+    html_favicon_url = "https://unicode-rs.github.io/unicode-rs_sm.png"
+)]
 #![no_std]
 
 #[cfg(test)]
@@ -63,16 +64,17 @@ extern crate std;
 #[macro_use]
 extern crate quickcheck;
 
-pub use grapheme::{Graphemes, GraphemeIndices};
 pub use grapheme::{GraphemeCursor, GraphemeIncomplete};
+pub use grapheme::{GraphemeIndices, Graphemes};
+pub use sentence::{USentenceBoundIndices, USentenceBounds, UnicodeSentences};
 pub use tables::UNICODE_VERSION;
-pub use word::{UWordBounds, UWordBoundIndices, UnicodeWords, UnicodeWordIndices};
-pub use sentence::{USentenceBounds, USentenceBoundIndices, UnicodeSentences};
+pub use word::{UWordBoundIndices, UWordBounds, UnicodeWordIndices, UnicodeWords};
 
 mod grapheme;
+#[rustfmt::skip]
 mod tables;
-mod word;
 mod sentence;
+mod word;
 
 #[cfg(test)]
 mod test;

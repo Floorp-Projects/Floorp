@@ -124,7 +124,7 @@ macro_rules! load_int_le {
         debug_assert!($i + mem::size_of::<$int_ty>() <= $buf.len());
         let mut data = 0 as $int_ty;
         ptr::copy_nonoverlapping(
-            $buf.get_unchecked($i),
+            $buf.as_ptr().add($i),
             &mut data as *mut _ as *mut u8,
             mem::size_of::<$int_ty>(),
         );
@@ -647,8 +647,8 @@ impl Hash128 {
         let h1 = self.h1.to_le();
         let h2 = self.h2.to_le();
         unsafe {
-            ptr::copy_nonoverlapping(&h1 as *const _ as *const u8, bytes.get_unchecked_mut(0), 8);
-            ptr::copy_nonoverlapping(&h2 as *const _ as *const u8, bytes.get_unchecked_mut(8), 8);
+            ptr::copy_nonoverlapping(&h1 as *const _ as *const u8, bytes.as_mut_ptr(), 8);
+            ptr::copy_nonoverlapping(&h2 as *const _ as *const u8, bytes.as_mut_ptr().add(8), 8);
         }
         bytes
     }

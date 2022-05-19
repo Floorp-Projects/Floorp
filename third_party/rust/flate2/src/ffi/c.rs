@@ -109,7 +109,7 @@ extern "C" fn zalloc(_ptr: *mut c_void, items: AllocSize, item_size: AllocSize) 
 
 extern "C" fn zfree(_ptr: *mut c_void, address: *mut c_void) {
     unsafe {
-        // Move our address being free'd back one pointer, read the size we
+        // Move our address being freed back one pointer, read the size we
         // stored in `zalloc`, and then free it using the standard Rust
         // allocator.
         let ptr = (address as *mut usize).offset(-1);

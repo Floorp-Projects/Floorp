@@ -7,29 +7,37 @@
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="gen.next()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590870">Mozilla Bug 590870</a>
 <p id="display"></p>
 <iframe id=iframe></iframe>
 <pre id="test">
 <script class="testbody" type="application/javascript">
 
-SimpleTest.waitForExplicitFinish();
-window.addEventListener("message", function(e) { gen.next(e.data) });
+add_task(async function start() {
+  var noxul = "https://sub1.test1.example.com:443";
+  var yesxul = "https://example.org:443"
 
-var gen = runTest();
+  await SpecialPowers.pushPermissions([
+    { type: "allowXULXBL", allow: false, context: noxul },
+    { type: "allowXULXBL", allow: true, context: yesxul }
+  ]);
 
-function* runTest() {
+  var path = "/tests/dom/base/test/file_bug590870.html";
   var iframe = $('iframe');
-  iframe.src = "http://noxul.example.com/tests/dom/base/test/file_bug590870.html";
-  is((yield), true, "shouldn't be able to create XUL elements");
 
-  iframe.src = "file_bug590870.html";
-  is((yield), false, "should be able to create XUL elements");
+  iframe.src = noxul + path;
+  await new Promise(resolve => window.addEventListener("message", event => {
+    is(event.data, true, "shouldn't be able to create XUL elements");
+    resolve();
+  }, { once: true } ));
 
-  SimpleTest.finish();
-}
-
+  iframe.src = yesxul + path;
+  await new Promise(resolve => window.addEventListener("message", event => {
+    is(event.data, false, "should be able to create XUL elements");
+    resolve();
+  }, { once: true } ));
+});
 </script>
 </pre>
 </body>

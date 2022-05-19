@@ -101,3 +101,5 @@ extern "C" {
     #[link_name = "lwip_recvmsg"]
     pub fn recvmsg(s: ::c_int, msg: *mut ::msghdr, flags: ::c_int) -> ::ssize_t;
 }
+
+pub use crate::unix::newlib::generic::{sigset_t, stat};

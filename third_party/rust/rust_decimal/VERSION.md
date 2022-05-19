@@ -1,5 +1,37 @@
 # Version History
 
+## 1.23.1
+
+Fixes issue with `no_std` compatability introduced in `1.23.0` ([#501](https://github.com/paupino/rust-decimal/pull/501)).
+
+## 1.23.0
+
+* Add `BorschSchema` support for the `borsh` feature ([#498](https://github.com/paupino/rust-decimal/pull/498)).
+* Implement `TryFrom` for Decimal primitive types ([#493](https://github.com/paupino/rust-decimal/pull/493)).
+* Fix `to_i64` to support `i64::MIN` ([#496](https://github.com/paupino/rust-decimal/pull/496)).
+* Implement `Inv` from `num_traits` ([#495](https://github.com/paupino/rust-decimal/pull/495)).
+* Some minor housekeeping tasks ([#487](https://github.com/paupino/rust-decimal/pull/487), [#490](https://github.com/paupino/rust-decimal/pull/490)).
+
+Thank you [@turion](https://github.com/turion), [@arthurprs](https://github.com/arthurprs) and [@jnitard](https://github.com/jnitard) for your help with this release.
+
+
+## 1.22.0
+
+* Add support for `borsh` serialization/deserialization ([#478](https://github.com/paupino/rust-decimal/pull/478)).
+* Fixes an issue with `serde-with-str` where it wasn't behaving the same as `serde-str` when using `bincode` ([#484](https://github.com/paupino/rust-decimal/pull/484)).
+* Added `must_use` to `is_sign_negative` and `unpack` ([#482](https://github.com/paupino/rust-decimal/pull/482)).
+* Minor documentation fixes.
+
+Thank you [@jkbpvsc](https://github.com/jkbpvsc) for your help in this release.
+
+## 1.21.0
+
+* Saturating op variants have been added: `saturating_add`, `saturating_sub` and `saturating_mul` ([#464](https://github.com/paupino/rust-decimal/pull/464))
+* Fixes issue with `log10` values `0 < x < 1` ([#469](https://github.com/paupino/rust-decimal/pull/469))
+* Various documentation fixes/cleanup.
+
+Thank you [@c410-f3r](https://github.com/c410-f3r) for your work in this release!
+
 ## 1.20.0
 
 * Additional fuzz testing for deserialize ([#452](https://github.com/paupino/rust-decimal/pull/452))

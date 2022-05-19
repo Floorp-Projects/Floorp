@@ -50,9 +50,7 @@ arrived with our analysis. To accomplish this we write our runs into qmexecution
 lasteventtime is the highest value of event_timeabs we found in our data.
 
 analyze_qm_failures instead needs the rows to be ordered by
-client_id
-    session_id
-        seq
+client_id, session_id, thread_id, submit_timeabs, seq
 Thus we sort the rows accordingly before writing them.
 """
 
@@ -125,8 +123,12 @@ if run["numrows"] > 0:
     lasteventtime = telemetry.getLastEventTimeAbs(rows)
     run["lasteventtime"] = lasteventtime
     rows.sort(
-        key=lambda row: "{}.{}.{:06d}".format(
-            row["client_id"], row["session_id"], int(row["seq"])
+        key=lambda row: "{}.{}.{}.{}.{:06d}".format(
+            row["client_id"],
+            row["session_id"],
+            row["seq"] >> 32,  # thread_id
+            row["submit_timeabs"],
+            row["seq"] & 0x00000000FFFFFFFF,  # seq,
         ),
         reverse=False,
     )

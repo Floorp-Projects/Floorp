@@ -125,19 +125,27 @@ pub(crate) fn fmt_scientific_notation(
 #[inline]
 pub(crate) fn parse_str_radix_10(str: &str) -> Result<Decimal, crate::Error> {
     let bytes = str.as_bytes();
-    // handle the sign
-
     if bytes.len() < BYTES_TO_OVERFLOW_U64 {
-        parse_str_radix_10_dispatch::<false>(bytes)
+        parse_str_radix_10_dispatch::<false, true>(bytes)
     } else {
-        parse_str_radix_10_dispatch::<true>(bytes)
+        parse_str_radix_10_dispatch::<true, true>(bytes)
     }
 }
 
 #[inline]
-fn parse_str_radix_10_dispatch<const BIG: bool>(bytes: &[u8]) -> Result<Decimal, crate::Error> {
+pub(crate) fn parse_str_radix_10_exact(str: &str) -> Result<Decimal, crate::Error> {
+    let bytes = str.as_bytes();
+    if bytes.len() < BYTES_TO_OVERFLOW_U64 {
+        parse_str_radix_10_dispatch::<false, false>(bytes)
+    } else {
+        parse_str_radix_10_dispatch::<true, false>(bytes)
+    }
+}
+
+#[inline]
+fn parse_str_radix_10_dispatch<const BIG: bool, const ROUND: bool>(bytes: &[u8]) -> Result<Decimal, crate::Error> {
     match bytes {
-        [b, rest @ ..] => byte_dispatch_u64::<false, false, false, BIG, true>(rest, 0, 0, *b),
+        [b, rest @ ..] => byte_dispatch_u64::<false, false, false, BIG, true, ROUND>(rest, 0, 0, *b),
         [] => tail_error("Invalid decimal: empty"),
     }
 }
@@ -152,50 +160,71 @@ pub fn overflow_128(val: u128) -> bool {
     val >= OVERFLOW_U96
 }
 
+/// Dispatch the next byte:
+///
+/// * POINT - a decimal point has been seen
+/// * NEG - we've encountered a `-` and the number is negative
+/// * HAS - a digit has been encountered (when HAS is false it's invalid)
+/// * BIG - a number that uses 96 bits instead of only 64 bits
+/// * FIRST - true if it is the first byte in the string
 #[inline]
-fn dispatch_next<const POINT: bool, const NEG: bool, const HAS: bool, const BIG: bool>(
+fn dispatch_next<const POINT: bool, const NEG: bool, const HAS: bool, const BIG: bool, const ROUND: bool>(
     bytes: &[u8],
     data64: u64,
     scale: u8,
 ) -> Result<Decimal, crate::Error> {
     if let Some((next, bytes)) = bytes.split_first() {
-        byte_dispatch_u64::<POINT, NEG, HAS, BIG, false>(bytes, data64, scale, *next)
+        byte_dispatch_u64::<POINT, NEG, HAS, BIG, false, ROUND>(bytes, data64, scale, *next)
     } else {
         handle_data::<NEG, HAS>(data64 as u128, scale)
     }
 }
 
 #[inline(never)]
-fn non_digit_dispatch_u64<const POINT: bool, const NEG: bool, const HAS: bool, const BIG: bool, const FIRST: bool>(
+fn non_digit_dispatch_u64<
+    const POINT: bool,
+    const NEG: bool,
+    const HAS: bool,
+    const BIG: bool,
+    const FIRST: bool,
+    const ROUND: bool,
+>(
     bytes: &[u8],
     data64: u64,
     scale: u8,
     b: u8,
 ) -> Result<Decimal, crate::Error> {
     match b {
-        b'-' if FIRST && !HAS => dispatch_next::<false, true, false, BIG>(bytes, data64, scale),
-        b'+' if FIRST && !HAS => dispatch_next::<false, false, false, BIG>(bytes, data64, scale),
-        b'_' if HAS => handle_separator::<POINT, NEG, BIG>(bytes, data64, scale),
+        b'-' if FIRST && !HAS => dispatch_next::<false, true, false, BIG, ROUND>(bytes, data64, scale),
+        b'+' if FIRST && !HAS => dispatch_next::<false, false, false, BIG, ROUND>(bytes, data64, scale),
+        b'_' if HAS => handle_separator::<POINT, NEG, BIG, ROUND>(bytes, data64, scale),
         b => tail_invalid_digit(b),
     }
 }
 
 #[inline]
-fn byte_dispatch_u64<const POINT: bool, const NEG: bool, const HAS: bool, const BIG: bool, const FIRST: bool>(
+fn byte_dispatch_u64<
+    const POINT: bool,
+    const NEG: bool,
+    const HAS: bool,
+    const BIG: bool,
+    const FIRST: bool,
+    const ROUND: bool,
+>(
     bytes: &[u8],
     data64: u64,
     scale: u8,
     b: u8,
 ) -> Result<Decimal, crate::Error> {
     match b {
-        b'0'..=b'9' => handle_digit_64::<POINT, NEG, BIG>(bytes, data64, scale, b - b'0'),
-        b'.' if !POINT => handle_point::<NEG, HAS, BIG>(bytes, data64, scale),
-        b => non_digit_dispatch_u64::<POINT, NEG, HAS, BIG, FIRST>(bytes, data64, scale, b),
+        b'0'..=b'9' => handle_digit_64::<POINT, NEG, BIG, ROUND>(bytes, data64, scale, b - b'0'),
+        b'.' if !POINT => handle_point::<NEG, HAS, BIG, ROUND>(bytes, data64, scale),
+        b => non_digit_dispatch_u64::<POINT, NEG, HAS, BIG, FIRST, ROUND>(bytes, data64, scale, b),
     }
 }
 
 #[inline(never)]
-fn handle_digit_64<const POINT: bool, const NEG: bool, const BIG: bool>(
+fn handle_digit_64<const POINT: bool, const NEG: bool, const BIG: bool, const ROUND: bool>(
     bytes: &[u8],
     data64: u64,
     scale: u8,
@@ -208,11 +237,15 @@ fn handle_digit_64<const POINT: bool, const NEG: bool, const BIG: bool>(
     if let Some((next, bytes)) = bytes.split_first() {
         let next = *next;
         if POINT && BIG && scale >= 28 {
-            maybe_round(data64 as u128, next, scale, POINT, NEG)
+            if ROUND {
+                maybe_round(data64 as u128, next, scale, POINT, NEG)
+            } else {
+                Err(crate::Error::Underflow)
+            }
         } else if BIG && overflow_64(data64) {
-            handle_full_128::<POINT, NEG>(data64 as u128, bytes, scale, next)
+            handle_full_128::<POINT, NEG, ROUND>(data64 as u128, bytes, scale, next)
         } else {
-            byte_dispatch_u64::<POINT, NEG, true, BIG, false>(bytes, data64, scale, next)
+            byte_dispatch_u64::<POINT, NEG, true, BIG, false, ROUND>(bytes, data64, scale, next)
         }
     } else {
         let data: u128 = data64 as u128;
@@ -222,21 +255,21 @@ fn handle_digit_64<const POINT: bool, const NEG: bool, const BIG: bool>(
 }
 
 #[inline(never)]
-fn handle_point<const NEG: bool, const HAS: bool, const BIG: bool>(
+fn handle_point<const NEG: bool, const HAS: bool, const BIG: bool, const ROUND: bool>(
     bytes: &[u8],
     data64: u64,
     scale: u8,
 ) -> Result<Decimal, crate::Error> {
-    dispatch_next::<true, NEG, HAS, BIG>(bytes, data64, scale)
+    dispatch_next::<true, NEG, HAS, BIG, ROUND>(bytes, data64, scale)
 }
 
 #[inline(never)]
-fn handle_separator<const POINT: bool, const NEG: bool, const BIG: bool>(
+fn handle_separator<const POINT: bool, const NEG: bool, const BIG: bool, const ROUND: bool>(
     bytes: &[u8],
     data64: u64,
     scale: u8,
 ) -> Result<Decimal, crate::Error> {
-    dispatch_next::<POINT, NEG, true, BIG>(bytes, data64, scale)
+    dispatch_next::<POINT, NEG, true, BIG, ROUND>(bytes, data64, scale)
 }
 
 #[inline(never)]
@@ -251,7 +284,7 @@ fn tail_invalid_digit(digit: u8) -> Result<Decimal, crate::Error> {
 
 #[inline(never)]
 #[cold]
-fn handle_full_128<const POINT: bool, const NEG: bool>(
+fn handle_full_128<const POINT: bool, const NEG: bool, const ROUND: bool>(
     mut data: u128,
     bytes: &[u8],
     scale: u8,
@@ -269,8 +302,12 @@ fn handle_full_128<const POINT: bool, const NEG: bool>(
                     return tail_error("Invalid decimal: overflow from too many digits");
                 }
 
-                if digit >= 5 {
-                    data += 1;
+                if ROUND {
+                    if digit >= 5 {
+                        data += 1;
+                    }
+                } else {
+                    return Err(Error::Underflow);
                 }
                 handle_data::<NEG, true>(data, scale)
             } else {
@@ -279,9 +316,13 @@ fn handle_full_128<const POINT: bool, const NEG: bool>(
                 if let Some((next, bytes)) = bytes.split_first() {
                     let next = *next;
                     if POINT && scale >= 28 {
-                        maybe_round(data, next, scale, POINT, NEG)
+                        if ROUND {
+                            maybe_round(data, next, scale, POINT, NEG)
+                        } else {
+                            Err(crate::Error::Underflow)
+                        }
                     } else {
-                        handle_full_128::<POINT, NEG>(data, bytes, scale, next)
+                        handle_full_128::<POINT, NEG, ROUND>(data, bytes, scale, next)
                     }
                 } else {
                     handle_data::<NEG, true>(data, scale)
@@ -291,14 +332,14 @@ fn handle_full_128<const POINT: bool, const NEG: bool>(
         b'.' if !POINT => {
             // This call won't tail?
             if let Some((next, bytes)) = bytes.split_first() {
-                handle_full_128::<true, NEG>(data, bytes, scale, *next)
+                handle_full_128::<true, NEG, ROUND>(data, bytes, scale, *next)
             } else {
                 handle_data::<NEG, true>(data, scale)
             }
         }
         b'_' => {
             if let Some((next, bytes)) = bytes.split_first() {
-                handle_full_128::<POINT, NEG>(data, bytes, scale, *next)
+                handle_full_128::<POINT, NEG, ROUND>(data, bytes, scale, *next)
             } else {
                 handle_data::<NEG, true>(data, scale)
             }
@@ -675,6 +716,46 @@ mod test {
                 .unwrap()
                 .unpack(),
             Decimal::from_i128_with_scale(10_000_000_000_000_000_000_000_000_000, 13).unpack() // was Decimal::from_i128_with_scale(1_000_000_000_000_000_000_000_000_000, 12)
+        );
+    }
+
+    #[test]
+    fn from_str_no_rounding_0() {
+        assert_eq!(
+            parse_str_radix_10_exact("1.234").unwrap().unpack(),
+            Decimal::new(1234, 3).unpack()
+        );
+    }
+
+    #[test]
+    fn from_str_no_rounding_1() {
+        assert_eq!(
+            parse_str_radix_10_exact("11111_11111_11111.11111_11111_11111"),
+            Err(Error::Underflow)
+        );
+    }
+
+    #[test]
+    fn from_str_no_rounding_2() {
+        assert_eq!(
+            parse_str_radix_10_exact("11111_11111_11111.11111_11111_11115"),
+            Err(Error::Underflow)
+        );
+    }
+
+    #[test]
+    fn from_str_no_rounding_3() {
+        assert_eq!(
+            parse_str_radix_10_exact("11111_11111_11111.11111_11111_11195"),
+            Err(Error::Underflow)
+        );
+    }
+
+    #[test]
+    fn from_str_no_rounding_4() {
+        assert_eq!(
+            parse_str_radix_10_exact("99999_99999_99999.99999_99999_99995"),
+            Err(Error::Underflow)
         );
     }
 

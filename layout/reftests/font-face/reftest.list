@@ -180,7 +180,7 @@ HTTP(..) == bug-1481905-cancel-load.html bug-1481905-cancel-load-ref.html
 
 # font-display, with the timeouts extended so that slow (debug) builds have a better chance to keep up
 pref(gfx.downloadable_fonts.fallback_delay,10000) pref(gfx.downloadable_fonts.fallback_delay_short,1000) HTTP(..) == font-display-1.html font-display-1-ref.html # normal font load (~500ms), bug 1392106
-fuzzy-if(OSX==1010,0-3,0-5) HTTP(..) == font-display-2.html font-display-2-ref.html # font load takes 4500ms
+HTTP(..) == font-display-2.html font-display-2-ref.html # font load takes 4500ms
 
 # Testing hack for Meiryo
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == meiryo-en.html meiryo-ja.html # Bug 1392106

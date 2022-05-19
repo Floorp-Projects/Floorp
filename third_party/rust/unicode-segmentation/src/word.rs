@@ -33,11 +33,15 @@ impl<'a> Iterator for UnicodeWords<'a> {
     type Item = &'a str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'a str> { self.inner.next() }
+    fn next(&mut self) -> Option<&'a str> {
+        self.inner.next()
+    }
 }
 impl<'a> DoubleEndedIterator for UnicodeWords<'a> {
     #[inline]
-    fn next_back(&mut self) -> Option<&'a str> { self.inner.next_back() }
+    fn next_back(&mut self) -> Option<&'a str> {
+        self.inner.next_back()
+    }
 }
 
 /// An iterator over the substrings of a string which, after splitting the string on
@@ -61,11 +65,15 @@ impl<'a> Iterator for UnicodeWordIndices<'a> {
     type Item = (usize, &'a str);
 
     #[inline]
-    fn next(&mut self) -> Option<(usize, &'a str)> { self.inner.next() }
+    fn next(&mut self) -> Option<(usize, &'a str)> {
+        self.inner.next()
+    }
 }
 impl<'a> DoubleEndedIterator for UnicodeWordIndices<'a> {
     #[inline]
-    fn next_back(&mut self) -> Option<(usize, &'a str)> { self.inner.next_back() }
+    fn next_back(&mut self) -> Option<(usize, &'a str)> {
+        self.inner.next_back()
+    }
 }
 
 /// External iterator for a string's
@@ -119,7 +127,9 @@ impl<'a> Iterator for UWordBoundIndices<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<(usize, &'a str)> {
-        self.iter.next().map(|s| (s.as_ptr() as usize - self.start_offset, s))
+        self.iter
+            .next()
+            .map(|s| (s.as_ptr() as usize - self.start_offset, s))
     }
 
     #[inline]
@@ -131,12 +141,14 @@ impl<'a> Iterator for UWordBoundIndices<'a> {
 impl<'a> DoubleEndedIterator for UWordBoundIndices<'a> {
     #[inline]
     fn next_back(&mut self) -> Option<(usize, &'a str)> {
-        self.iter.next_back().map(|s| (s.as_ptr() as usize - self.start_offset, s))
+        self.iter
+            .next_back()
+            .map(|s| (s.as_ptr() as usize - self.start_offset, s))
     }
 }
 
 // state machine for word boundary rules
-#[derive(Clone,Copy,PartialEq,Eq,Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum UWordBoundsState {
     Start,
     Letter,
@@ -152,7 +164,7 @@ enum UWordBoundsState {
 }
 
 // subtypes for FormatExtend state in UWordBoundsState
-#[derive(Clone,Copy,PartialEq,Eq,Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum FormatExtendType {
     AcceptAny,
     AcceptNone,
@@ -162,7 +174,7 @@ enum FormatExtendType {
     RequireNumeric,
 }
 
-#[derive(Clone,Copy,PartialEq,Eq,Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum RegionalState {
     Half,
     Full,
@@ -185,8 +197,8 @@ impl<'a> Iterator for UWordBounds<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<&'a str> {
-        use self::UWordBoundsState::*;
         use self::FormatExtendType::*;
+        use self::UWordBoundsState::*;
         use crate::tables::word as wd;
         if self.string.len() == 0 {
             return None;
@@ -210,7 +222,7 @@ impl<'a> Iterator for UWordBounds<'a> {
             // if there's a category cached, grab it
             cat = match self.cat {
                 None => wd::word_category(ch).2,
-                _ => self.cat.take().unwrap()
+                _ => self.cat.take().unwrap(),
             };
             take_cat = true;
 
@@ -226,7 +238,7 @@ impl<'a> Iterator for UWordBounds<'a> {
                 match cat {
                     wd::WC_Extend | wd::WC_Format | wd::WC_ZWJ => {
                         skipped_format_extend = true;
-                        continue
+                        continue;
                     }
                     _ => {}
                 }
@@ -254,30 +266,32 @@ impl<'a> Iterator for UWordBounds<'a> {
             state = match state {
                 Start if cat == wd::WC_CR => {
                     idx += match self.get_next_cat(idx) {
-                        Some(ncat) if ncat == wd::WC_LF => 1,       // rule WB3
-                        _ => 0
+                        Some(ncat) if ncat == wd::WC_LF => 1, // rule WB3
+                        _ => 0,
                     };
-                    break;                                          // rule WB3a
-                },
+                    break; // rule WB3a
+                }
                 Start => match cat {
-                    wd::WC_ALetter => Letter,           // rule WB5, WB6, WB9, WB13a
-                    wd::WC_Hebrew_Letter => HLetter,    // rule WB5, WB6, WB7a, WB7b, WB9, WB13a
-                    wd::WC_Numeric => Numeric,          // rule WB8, WB10, WB12, WB13a
-                    wd::WC_Katakana => Katakana,        // rule WB13, WB13a
-                    wd::WC_ExtendNumLet => ExtendNumLet,    // rule WB13a, WB13b
-                    wd::WC_Regional_Indicator => Regional(RegionalState::Half),  // rule WB13c
-                    wd::WC_LF | wd::WC_Newline => break,    // rule WB3a
-                    wd::WC_ZWJ => Zwj,                      // rule WB3c
-                    wd::WC_WSegSpace => WSegSpace,          // rule WB3d
+                    wd::WC_ALetter => Letter,            // rule WB5, WB6, WB9, WB13a
+                    wd::WC_Hebrew_Letter => HLetter,     // rule WB5, WB6, WB7a, WB7b, WB9, WB13a
+                    wd::WC_Numeric => Numeric,           // rule WB8, WB10, WB12, WB13a
+                    wd::WC_Katakana => Katakana,         // rule WB13, WB13a
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13a, WB13b
+                    wd::WC_Regional_Indicator => Regional(RegionalState::Half), // rule WB13c
+                    wd::WC_LF | wd::WC_Newline => break, // rule WB3a
+                    wd::WC_ZWJ => Zwj,                   // rule WB3c
+                    wd::WC_WSegSpace => WSegSpace,       // rule WB3d
                     _ => {
-                        if let Some(ncat) = self.get_next_cat(idx) {                // rule WB4
-                            if ncat == wd::WC_Format || ncat == wd::WC_Extend || ncat == wd::WC_ZWJ {
+                        if let Some(ncat) = self.get_next_cat(idx) {
+                            // rule WB4
+                            if ncat == wd::WC_Format || ncat == wd::WC_Extend || ncat == wd::WC_ZWJ
+                            {
                                 state = FormatExtend(AcceptNone);
                                 self.cat = Some(ncat);
                                 continue;
                             }
                         }
-                        break;                                                      // rule WB999
+                        break; // rule WB999
                     }
                 },
                 WSegSpace => match cat {
@@ -293,57 +307,57 @@ impl<'a> Iterator for UWordBounds<'a> {
                     break;
                 }
                 Letter | HLetter => match cat {
-                    wd::WC_ALetter => Letter,                   // rule WB5
-                    wd::WC_Hebrew_Letter => HLetter,            // rule WB5
-                    wd::WC_Numeric => Numeric,                  // rule WB9
-                    wd::WC_ExtendNumLet => ExtendNumLet,        // rule WB13a
+                    wd::WC_ALetter => Letter,            // rule WB5
+                    wd::WC_Hebrew_Letter => HLetter,     // rule WB5
+                    wd::WC_Numeric => Numeric,           // rule WB9
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13a
                     wd::WC_Double_Quote if state == HLetter => {
                         savecat = cat;
                         saveidx = idx;
-                        FormatExtend(RequireHLetter)                        // rule WB7b
-                    },
+                        FormatExtend(RequireHLetter) // rule WB7b
+                    }
                     wd::WC_Single_Quote if state == HLetter => {
-                        FormatExtend(AcceptQLetter)                         // rule WB7a
-                    },
+                        FormatExtend(AcceptQLetter) // rule WB7a
+                    }
                     wd::WC_MidLetter | wd::WC_MidNumLet | wd::WC_Single_Quote => {
                         savecat = cat;
                         saveidx = idx;
-                        FormatExtend(RequireLetter)                         // rule WB6
-                    },
+                        FormatExtend(RequireLetter) // rule WB6
+                    }
                     _ => {
                         take_curr = false;
                         break;
                     }
                 },
                 Numeric => match cat {
-                    wd::WC_Numeric => Numeric,                  // rule WB8
-                    wd::WC_ALetter => Letter,                   // rule WB10
-                    wd::WC_Hebrew_Letter => HLetter,            // rule WB10
-                    wd::WC_ExtendNumLet => ExtendNumLet,        // rule WB13a
+                    wd::WC_Numeric => Numeric,           // rule WB8
+                    wd::WC_ALetter => Letter,            // rule WB10
+                    wd::WC_Hebrew_Letter => HLetter,     // rule WB10
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13a
                     wd::WC_MidNum | wd::WC_MidNumLet | wd::WC_Single_Quote => {
                         savecat = cat;
                         saveidx = idx;
-                        FormatExtend(RequireNumeric)            // rule WB12
-                    },
+                        FormatExtend(RequireNumeric) // rule WB12
+                    }
                     _ => {
                         take_curr = false;
                         break;
                     }
                 },
                 Katakana => match cat {
-                    wd::WC_Katakana => Katakana,                // rule WB13
-                    wd::WC_ExtendNumLet => ExtendNumLet,        // rule WB13a
+                    wd::WC_Katakana => Katakana,         // rule WB13
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13a
                     _ => {
                         take_curr = false;
                         break;
                     }
                 },
                 ExtendNumLet => match cat {
-                    wd::WC_ExtendNumLet => ExtendNumLet,        // rule WB13a
-                    wd::WC_ALetter => Letter,                   // rule WB13b
-                    wd::WC_Hebrew_Letter => HLetter,            // rule WB13b
-                    wd::WC_Numeric => Numeric,                  // rule WB13b
-                    wd::WC_Katakana => Katakana,                // rule WB13b
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13a
+                    wd::WC_ALetter => Letter,            // rule WB13b
+                    wd::WC_Hebrew_Letter => HLetter,     // rule WB13b
+                    wd::WC_Numeric => Numeric,           // rule WB13b
+                    wd::WC_Katakana => Katakana,         // rule WB13b
                     _ => {
                         take_curr = false;
                         break;
@@ -357,30 +371,33 @@ impl<'a> Iterator for UWordBounds<'a> {
                     break;
                 }
                 Regional(RegionalState::Half) => match cat {
-                    wd::WC_Regional_Indicator => Regional(RegionalState::Full),      // rule WB13c
+                    wd::WC_Regional_Indicator => Regional(RegionalState::Full), // rule WB13c
                     _ => {
                         take_curr = false;
                         break;
                     }
                 },
-                Regional(_) => unreachable!("RegionalState::Unknown should not occur on forward iteration"),
+                Regional(_) => {
+                    unreachable!("RegionalState::Unknown should not occur on forward iteration")
+                }
                 Emoji => {
                     // We already handle WB3c above. If you've reached this point, the emoji sequence is over.
                     take_curr = false;
                     break;
-                },
-                FormatExtend(t) => match t {    // handle FormatExtends depending on what type
-                    RequireNumeric if cat == wd::WC_Numeric => Numeric,     // rule WB11
-                    RequireLetter | AcceptQLetter if cat == wd::WC_ALetter => Letter,   // rule WB7
+                }
+                FormatExtend(t) => match t {
+                    // handle FormatExtends depending on what type
+                    RequireNumeric if cat == wd::WC_Numeric => Numeric, // rule WB11
+                    RequireLetter | AcceptQLetter if cat == wd::WC_ALetter => Letter, // rule WB7
                     RequireLetter | AcceptQLetter if cat == wd::WC_Hebrew_Letter => HLetter, // WB7a
-                    RequireHLetter if cat == wd::WC_Hebrew_Letter => HLetter,   // rule WB7b
+                    RequireHLetter if cat == wd::WC_Hebrew_Letter => HLetter, // rule WB7b
                     AcceptNone | AcceptQLetter => {
-                        take_curr = false;  // emit all the Format|Extend characters
+                        take_curr = false; // emit all the Format|Extend characters
                         take_cat = false;
                         break;
-                    },
-                    _ => break      // rewind (in if statement below)
-                }
+                    }
+                    _ => break, // rewind (in if statement below)
+                },
             }
         }
 
@@ -411,8 +428,8 @@ impl<'a> Iterator for UWordBounds<'a> {
 impl<'a> DoubleEndedIterator for UWordBounds<'a> {
     #[inline]
     fn next_back(&mut self) -> Option<&'a str> {
-        use self::UWordBoundsState::*;
         use self::FormatExtendType::*;
+        use self::UWordBoundsState::*;
         use crate::tables::word as wd;
         if self.string.len() == 0 {
             return None;
@@ -437,7 +454,7 @@ impl<'a> DoubleEndedIterator for UWordBounds<'a> {
             // if there's a category cached, grab it
             cat = match self.catb {
                 None => wd::word_category(ch).2,
-                _ => self.catb.take().unwrap()
+                _ => self.catb.take().unwrap(),
             };
             take_cat = true;
 
@@ -447,13 +464,12 @@ impl<'a> DoubleEndedIterator for UWordBounds<'a> {
             //     Hebrew Letter immediately before it.
             // (2) Format and Extend char handling takes some gymnastics.
 
-            if cat == wd::WC_Extend
-                || cat == wd::WC_Format
-                || (cat == wd::WC_ZWJ && state != Zwj) { // WB3c has more priority so we should not
-                                                         // fold in that case
+            if cat == wd::WC_Extend || cat == wd::WC_Format || (cat == wd::WC_ZWJ && state != Zwj) {
+                // WB3c has more priority so we should not
+                // fold in that case
                 if match state {
                     FormatExtend(_) | Start => false,
-                    _ => true
+                    _ => true,
                 } {
                     saveidx = previdx;
                     savestate = state;
@@ -475,98 +491,96 @@ impl<'a> DoubleEndedIterator for UWordBounds<'a> {
             state = match state {
                 Start | FormatExtend(AcceptAny) => match cat {
                     _ if is_emoji(ch) => Zwj,
-                    wd::WC_ALetter => Letter,           // rule WB5, WB7, WB10, WB13b
-                    wd::WC_Hebrew_Letter => HLetter,    // rule WB5, WB7, WB7c, WB10, WB13b
-                    wd::WC_Numeric => Numeric,          // rule WB8, WB9, WB11, WB13b
-                    wd::WC_Katakana => Katakana,                    // rule WB13, WB13b
-                    wd::WC_ExtendNumLet => ExtendNumLet,                    // rule WB13a
+                    wd::WC_ALetter => Letter, // rule WB5, WB7, WB10, WB13b
+                    wd::WC_Hebrew_Letter => HLetter, // rule WB5, WB7, WB7c, WB10, WB13b
+                    wd::WC_Numeric => Numeric, // rule WB8, WB9, WB11, WB13b
+                    wd::WC_Katakana => Katakana, // rule WB13, WB13b
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13a
                     wd::WC_Regional_Indicator => Regional(RegionalState::Unknown), // rule WB13c
                     // rule WB4:
                     wd::WC_Extend | wd::WC_Format | wd::WC_ZWJ => FormatExtend(AcceptAny),
                     wd::WC_Single_Quote => {
                         saveidx = idx;
-                        FormatExtend(AcceptQLetter)                         // rule WB7a
-                    },
+                        FormatExtend(AcceptQLetter) // rule WB7a
+                    }
                     wd::WC_WSegSpace => WSegSpace,
                     wd::WC_CR | wd::WC_LF | wd::WC_Newline => {
                         if state == Start {
                             if cat == wd::WC_LF {
                                 idx -= match self.get_prev_cat(idx) {
-                                    Some(pcat) if pcat == wd::WC_CR => 1,   // rule WB3
-                                    _ => 0
+                                    Some(pcat) if pcat == wd::WC_CR => 1, // rule WB3
+                                    _ => 0,
                                 };
                             }
                         } else {
                             take_curr = false;
                         }
-                        break;                                              // rule WB3a
-                    },
-                    _ => break                              // rule WB999
-                },
-                Zwj => match cat {                          // rule WB3c
-                    wd::WC_ZWJ => {
-                        FormatExtend(AcceptAny)
+                        break; // rule WB3a
                     }
+                    _ => break, // rule WB999
+                },
+                Zwj => match cat {
+                    // rule WB3c
+                    wd::WC_ZWJ => FormatExtend(AcceptAny),
                     _ => {
                         take_curr = false;
                         break;
                     }
                 },
-                WSegSpace => match cat {                          // rule WB3d
-                    wd::WC_WSegSpace if !skipped_format_extend => {
-                        WSegSpace
-                    }
+                WSegSpace => match cat {
+                    // rule WB3d
+                    wd::WC_WSegSpace if !skipped_format_extend => WSegSpace,
                     _ => {
                         take_curr = false;
                         break;
                     }
                 },
                 Letter | HLetter => match cat {
-                    wd::WC_ALetter => Letter,               // rule WB5
-                    wd::WC_Hebrew_Letter => HLetter,        // rule WB5
-                    wd::WC_Numeric => Numeric,              // rule WB10
-                    wd::WC_ExtendNumLet => ExtendNumLet,    // rule WB13b
+                    wd::WC_ALetter => Letter,            // rule WB5
+                    wd::WC_Hebrew_Letter => HLetter,     // rule WB5
+                    wd::WC_Numeric => Numeric,           // rule WB10
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13b
                     wd::WC_Double_Quote if state == HLetter => {
                         saveidx = previdx;
-                        FormatExtend(RequireHLetter)         // rule WB7c
-                    },
+                        FormatExtend(RequireHLetter) // rule WB7c
+                    }
                     wd::WC_MidLetter | wd::WC_MidNumLet | wd::WC_Single_Quote => {
                         saveidx = previdx;
-                        FormatExtend(RequireLetter)          // rule WB7
-                    },
+                        FormatExtend(RequireLetter) // rule WB7
+                    }
                     _ => {
                         take_curr = false;
                         break;
                     }
                 },
                 Numeric => match cat {
-                    wd::WC_Numeric => Numeric,              // rule WB8
-                    wd::WC_ALetter => Letter,               // rule WB9
-                    wd::WC_Hebrew_Letter => HLetter,        // rule WB9
-                    wd::WC_ExtendNumLet => ExtendNumLet,    // rule WB13b
+                    wd::WC_Numeric => Numeric,           // rule WB8
+                    wd::WC_ALetter => Letter,            // rule WB9
+                    wd::WC_Hebrew_Letter => HLetter,     // rule WB9
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13b
                     wd::WC_MidNum | wd::WC_MidNumLet | wd::WC_Single_Quote => {
                         saveidx = previdx;
-                        FormatExtend(RequireNumeric)         // rule WB11
-                    },
+                        FormatExtend(RequireNumeric) // rule WB11
+                    }
                     _ => {
                         take_curr = false;
                         break;
                     }
                 },
                 Katakana => match cat {
-                    wd::WC_Katakana => Katakana,            // rule WB13
-                    wd::WC_ExtendNumLet => ExtendNumLet,    // rule WB13b
+                    wd::WC_Katakana => Katakana,         // rule WB13
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13b
                     _ => {
                         take_curr = false;
                         break;
                     }
                 },
                 ExtendNumLet => match cat {
-                    wd::WC_ExtendNumLet => ExtendNumLet,    // rule WB13a
-                    wd::WC_ALetter => Letter,               // rule WB13a
-                    wd::WC_Hebrew_Letter => HLetter,        // rule WB13a
-                    wd::WC_Numeric => Numeric,              // rule WB13a
-                    wd::WC_Katakana => Katakana,            // rule WB13a
+                    wd::WC_ExtendNumLet => ExtendNumLet, // rule WB13a
+                    wd::WC_ALetter => Letter,            // rule WB13a
+                    wd::WC_Hebrew_Letter => HLetter,     // rule WB13a
+                    wd::WC_Numeric => Numeric,           // rule WB13a
+                    wd::WC_Katakana => Katakana,         // rule WB13a
                     _ => {
                         take_curr = false;
                         break;
@@ -577,11 +591,14 @@ impl<'a> DoubleEndedIterator for UWordBounds<'a> {
                     wd::WC_Regional_Indicator => {
                         if regional_state == RegionalState::Unknown {
                             let count = self.string[..previdx]
-                                            .chars().rev()
-                                            .map(|c| wd::word_category(c).2)
-                                            .filter(|&c| ! (c == wd::WC_ZWJ || c == wd::WC_Extend || c == wd::WC_Format))
-                                            .take_while(|&c| c == wd::WC_Regional_Indicator)
-                                            .count();
+                                .chars()
+                                .rev()
+                                .map(|c| wd::word_category(c).2)
+                                .filter(|&c| {
+                                    !(c == wd::WC_ZWJ || c == wd::WC_Extend || c == wd::WC_Format)
+                                })
+                                .take_while(|&c| c == wd::WC_Regional_Indicator)
+                                .count();
                             regional_state = if count % 2 == 0 {
                                 RegionalState::Full
                             } else {
@@ -601,28 +618,33 @@ impl<'a> DoubleEndedIterator for UWordBounds<'a> {
                     }
                 },
                 Emoji => {
-                    if is_emoji(ch) {           // rule WB3c
+                    if is_emoji(ch) {
+                        // rule WB3c
                         Zwj
                     } else {
                         take_curr = false;
                         break;
                     }
-                },
-                FormatExtend(t) => match t {
-                    RequireNumeric if cat == wd::WC_Numeric => Numeric,          // rule WB12
-                    RequireLetter if cat == wd::WC_ALetter => Letter,            // rule WB6
-                    RequireLetter if cat == wd::WC_Hebrew_Letter => HLetter,     // rule WB6
-                    AcceptQLetter if cat == wd::WC_Hebrew_Letter => HLetter,     // rule WB7a
-                    RequireHLetter if cat == wd::WC_Hebrew_Letter => HLetter,    // rule WB7b
-                    _ => break  // backtrack will happens
                 }
+                FormatExtend(t) => match t {
+                    RequireNumeric if cat == wd::WC_Numeric => Numeric, // rule WB12
+                    RequireLetter if cat == wd::WC_ALetter => Letter,   // rule WB6
+                    RequireLetter if cat == wd::WC_Hebrew_Letter => HLetter, // rule WB6
+                    AcceptQLetter if cat == wd::WC_Hebrew_Letter => HLetter, // rule WB7a
+                    RequireHLetter if cat == wd::WC_Hebrew_Letter => HLetter, // rule WB7b
+                    _ => break,                                         // backtrack will happens
+                },
             }
         }
 
         if let FormatExtend(t) = state {
             // if we required something but didn't find it, backtrack
-            if t == RequireLetter || t == RequireHLetter ||
-                t == RequireNumeric || t == AcceptNone || t == AcceptQLetter {
+            if t == RequireLetter
+                || t == RequireHLetter
+                || t == RequireNumeric
+                || t == AcceptNone
+                || t == AcceptQLetter
+            {
                 previdx = saveidx;
                 take_cat = false;
                 take_curr = false;
@@ -689,12 +711,19 @@ impl<'a> UWordBounds<'a> {
 
 #[inline]
 pub fn new_word_bounds<'b>(s: &'b str) -> UWordBounds<'b> {
-    UWordBounds { string: s, cat: None, catb: None }
+    UWordBounds {
+        string: s,
+        cat: None,
+        catb: None,
+    }
 }
 
 #[inline]
 pub fn new_word_bound_indices<'b>(s: &'b str) -> UWordBoundIndices<'b> {
-    UWordBoundIndices { start_offset: s.as_ptr() as usize, iter: new_word_bounds(s) }
+    UWordBoundIndices {
+        start_offset: s.as_ptr() as usize,
+        iter: new_word_bounds(s),
+    }
 }
 
 #[inline]
@@ -708,12 +737,18 @@ fn has_alphanumeric(s: &&str) -> bool {
 pub fn new_unicode_words<'b>(s: &'b str) -> UnicodeWords<'b> {
     use super::UnicodeSegmentation;
 
-    UnicodeWords { inner: s.split_word_bounds().filter(has_alphanumeric) }
+    UnicodeWords {
+        inner: s.split_word_bounds().filter(has_alphanumeric),
+    }
 }
 
 #[inline]
 pub fn new_unicode_word_indices<'b>(s: &'b str) -> UnicodeWordIndices<'b> {
     use super::UnicodeSegmentation;
 
-    UnicodeWordIndices { inner: s.split_word_bound_indices().filter(|(_, c)| has_alphanumeric(c)) }
+    UnicodeWordIndices {
+        inner: s
+            .split_word_bound_indices()
+            .filter(|(_, c)| has_alphanumeric(c)),
+    }
 }
