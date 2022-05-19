@@ -73,7 +73,7 @@ static bool DoGrayscale(IDWriteFontFace* aDWFace, Float ppem) {
     }
     gaspRange* ranges = (gaspRange*)(tableData + 4);
     for (int i = 0; i < numRanges; i++) {
-      if (readShort((char*)&ranges[i].maxPPEM) > ppem) {
+      if (readShort((char*)&ranges[i].maxPPEM) >= ppem) {
         if (!(readShort((char*)&ranges[i].behavior) & GASP_DOGRAY)) {
           aDWFace->ReleaseFontTable(tableContext);
           return false;
