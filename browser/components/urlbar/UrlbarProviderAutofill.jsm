@@ -581,7 +581,7 @@ class ProviderAutofill extends UrlbarProvider {
       queryType: QUERYTYPE.AUTOFILL_ADAPTIVE,
       searchString: queryContext.searchString.toLowerCase(),
       useCountThreshold: UrlbarPrefs.get(
-        "autoFill.adaptiveHistory.useCountThreshold"
+        "autoFillAdaptiveHistoryUseCountThreshold"
       ),
     };
 
@@ -754,7 +754,7 @@ class ProviderAutofill extends UrlbarProvider {
     // We try to autofill with adaptive history first.
     if (
       UrlbarPrefs.get("autoFillAdaptiveHistoryEnabled") &&
-      UrlbarPrefs.get("autoFill.adaptiveHistory.minCharsThreshold") <=
+      UrlbarPrefs.get("autoFillAdaptiveHistoryMinCharsThreshold") <=
         queryContext.searchString.length
     ) {
       const [query, params] = this._getAdaptiveHistoryQuery(queryContext);
