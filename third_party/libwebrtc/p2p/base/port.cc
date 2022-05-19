@@ -137,6 +137,7 @@ Port::Port(rtc::Thread* thread,
       tiebreaker_(0),
       shared_socket_(true),
       weak_factory_(this) {
+  RTC_DCHECK(factory_ != NULL);
   Construct();
 }
 
