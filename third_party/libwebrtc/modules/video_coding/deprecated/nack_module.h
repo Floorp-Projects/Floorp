@@ -125,7 +125,7 @@ class DEPRECATED_NackModule : public Module {
   const absl::optional<BackoffSettings> backoff_settings_;
 };
 
-using NackModule = ABSL_DEPRECATED("") DEPRECATED_NackModule;
+using NackModule ABSL_DEPRECATED("") = DEPRECATED_NackModule;
 
 }  // namespace webrtc
 
