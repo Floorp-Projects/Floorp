@@ -49,6 +49,7 @@ import androidx.annotation.UiThread;
 import androidx.core.view.ViewCompat;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.ref.WeakReference;
 import java.util.Objects;
 import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.EventDispatcher;
@@ -65,6 +66,8 @@ public class GeckoView extends FrameLayout {
 
   private Integer mLastCoverColor;
   protected @Nullable GeckoSession mSession;
+  WeakReference<Autofill.Session> mAutofillSession = new WeakReference<>(null);
+
   // Whether this GeckoView instance has a session that is no longer valid, e.g. because the session
   // associated to this GeckoView was attached to a different GeckoView instance.
   private boolean mIsSessionPoisoned = false;
@@ -852,13 +855,20 @@ public class GeckoView extends FrameLayout {
     }
 
     final Autofill.Session autofillSession = mSession.getAutofillSession();
+
+    // Let's store the session here in case we need to autofill it later
+    mAutofillSession = new WeakReference<>(autofillSession);
     autofillSession.fillViewStructure(this, structure, flags);
   }
 
   @Override
   @TargetApi(26)
   public void autofill(@NonNull final SparseArray<AutofillValue> values) {
-    if (mSession == null) {
+    // Note: we can't use mSession.getAutofillSession() because the app might have swapped
+    // the session under us between the onProvideAutofillVirtualStructure and this call
+    // so mSession could refer to a different session or we might not have a session at all.
+    final Autofill.Session session = mAutofillSession.get();
+    if (session == null) {
       return;
     }
     final SparseArray<CharSequence> strValues = new SparseArray<>(values.size());
@@ -869,7 +879,7 @@ public class GeckoView extends FrameLayout {
         strValues.put(values.keyAt(i), value.getTextValue());
       }
     }
-    mSession.autofill(strValues);
+    session.autofill(strValues);
   }
 
   @Override

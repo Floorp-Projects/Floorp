@@ -374,6 +374,7 @@ package org.mozilla.geckoview {
   }
 
   public static final class Autofill.Session {
+    method @UiThread public void autofill(@NonNull SparseArray<CharSequence>);
     method @NonNull @UiThread public Autofill.NodeData dataFor(@NonNull Autofill.Node);
     method @UiThread public void fillViewStructure(@NonNull View, @NonNull ViewStructure, int);
     method @UiThread public void fillViewStructure(@NonNull Autofill.Node, @NonNull View, @NonNull ViewStructure, int);
@@ -886,7 +887,7 @@ package org.mozilla.geckoview {
     ctor public GeckoSession();
     ctor public GeckoSession(@Nullable GeckoSessionSettings);
     method @NonNull @UiThread public GeckoDisplay acquireDisplay();
-    method @UiThread public void autofill(@NonNull SparseArray<CharSequence>);
+    method @Deprecated @DeprecationSchedule(id="autofill-node",version=104) @UiThread public void autofill(@NonNull SparseArray<CharSequence>);
     method @UiThread public void close();
     method @AnyThread public void exitFullScreen();
     method @NonNull @UiThread public SessionAccessibility getAccessibility();
