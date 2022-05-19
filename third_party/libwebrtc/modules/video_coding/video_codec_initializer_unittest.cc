@@ -426,4 +426,39 @@ TEST_F(VideoCodecInitializerTest, Vp9DeactivateLayers) {
   EXPECT_FALSE(codec_out_.spatialLayers[2].active);
 }
 
+TEST_F(VideoCodecInitializerTest, Av1SingleSpatialLayerBitratesAreConsistent) {
+  VideoEncoderConfig config;
+  config.codec_type = VideoCodecType::kVideoCodecAV1;
+  std::vector<VideoStream> streams = {DefaultStream()};
+  streams[0].scalability_mode = "L1T2";
+
+  VideoCodec codec;
+  EXPECT_TRUE(VideoCodecInitializer::SetupCodec(config, streams, &codec));
+
+  EXPECT_GE(codec.spatialLayers[0].targetBitrate,
+            codec.spatialLayers[0].minBitrate);
+  EXPECT_LE(codec.spatialLayers[0].targetBitrate,
+            codec.spatialLayers[0].maxBitrate);
+}
+
+TEST_F(VideoCodecInitializerTest, Av1TwoSpatialLayersBitratesAreConsistent) {
+  VideoEncoderConfig config;
+  config.codec_type = VideoCodecType::kVideoCodecAV1;
+  std::vector<VideoStream> streams = {DefaultStream()};
+  streams[0].scalability_mode = "L2T2";
+
+  VideoCodec codec;
+  EXPECT_TRUE(VideoCodecInitializer::SetupCodec(config, streams, &codec));
+
+  EXPECT_GE(codec.spatialLayers[0].targetBitrate,
+            codec.spatialLayers[0].minBitrate);
+  EXPECT_LE(codec.spatialLayers[0].targetBitrate,
+            codec.spatialLayers[0].maxBitrate);
+
+  EXPECT_GE(codec.spatialLayers[1].targetBitrate,
+            codec.spatialLayers[1].minBitrate);
+  EXPECT_LE(codec.spatialLayers[1].targetBitrate,
+            codec.spatialLayers[1].maxBitrate);
+}
+
 }  // namespace webrtc
