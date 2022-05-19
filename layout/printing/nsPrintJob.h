@@ -244,12 +244,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   // member-data.
   RefPtr<nsPrintData> mPrt;
 
-  // The nsPrintData for our last print preview (replaced every time the
-  // user changes settings in the print preview window).
-  // Note: Our new print preview nsPrintData is stored in mPtr until we move it
-  // to mPrtPreview once we've finish creating the print preview.
-  RefPtr<nsPrintData> mPrtPreview;
-
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
 
   // Only set if this nsPrintJob was created for a real print.
