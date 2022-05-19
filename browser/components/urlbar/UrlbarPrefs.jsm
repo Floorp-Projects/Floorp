@@ -50,13 +50,15 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Nimbus variable `autoFillAdaptiveHistoryEnabled`.
   ["autoFill.adaptiveHistory.enabled", false],
 
-  // Minimum char length to enable adaptive history autofill.
+  // Minimum char length of the user's search string to enable adaptive history
+  // autofill. This pref is a fallback for the Nimbus variable
+  // `autoFillAdaptiveHistoryMinCharsThreshold`.
   ["autoFill.adaptiveHistory.minCharsThreshold", 0],
 
   // Threshold for use count of input history that we handle as adaptive history
   // autofill. If the use count is this value or more, it will be a candidate.
-  // Set the threshold to not be candidate the input history passed
-  // approximately 30 days since user input it as the default.
+  // Set the threshold to not be candidate the input history passed approximately
+  // 30 days since user input it as the default.
   ["autoFill.adaptiveHistory.useCountThreshold", [0.47, "float"]],
 
   // If true, the domains of the user's installed search engines will be
@@ -1209,6 +1211,9 @@ class Preferences {
 
     // Some prefs may influence others.
     switch (pref) {
+      case "autoFill.adaptiveHistory.useCountThreshold":
+        this._map.delete("autoFillAdaptiveHistoryUseCountThreshold");
+        return;
       case "showSearchSuggestionsFirst":
         this.set(
           "resultGroups",
@@ -1343,6 +1348,12 @@ class Preferences {
         return this.shouldHandOffToSearchModePrefs.some(
           prefName => !this.get(prefName)
         );
+      case "autoFillAdaptiveHistoryUseCountThreshold":
+        const nimbusValue = this._nimbus
+          .autoFillAdaptiveHistoryUseCountThreshold;
+        return nimbusValue === undefined
+          ? this.get("autoFill.adaptiveHistory.useCountThreshold")
+          : parseFloat(nimbusValue);
     }
     return this._readPref(pref);
   }
