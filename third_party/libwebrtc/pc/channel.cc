@@ -471,13 +471,6 @@ bool BaseChannel::SendPacket(bool rtcp,
 void BaseChannel::OnRtpPacket(const webrtc::RtpPacketReceived& parsed_packet) {
   RTC_DCHECK_RUN_ON(network_thread());
 
-  // Take packet time from the |parsed_packet|.
-  // RtpPacketReceived.arrival_time_ms = (timestamp_us + 500) / 1000;
-  int64_t packet_time_us = -1;
-  if (parsed_packet.arrival_time_ms() > 0) {
-    packet_time_us = parsed_packet.arrival_time_ms() * 1000;
-  }
-
   if (on_first_packet_received_) {
     on_first_packet_received_();
     on_first_packet_received_ = nullptr;
@@ -501,7 +494,10 @@ void BaseChannel::OnRtpPacket(const webrtc::RtpPacketReceived& parsed_packet) {
     return;
   }
 
-  media_channel_->OnPacketReceived(parsed_packet.Buffer(), packet_time_us);
+  webrtc::Timestamp packet_time = parsed_packet.arrival_time();
+  media_channel_->OnPacketReceived(
+      parsed_packet.Buffer(),
+      packet_time.IsMinusInfinity() ? -1 : packet_time.us());
 }
 
 void BaseChannel::UpdateRtpHeaderExtensionMap(

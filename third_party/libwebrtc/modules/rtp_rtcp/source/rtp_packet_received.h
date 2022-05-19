@@ -14,10 +14,12 @@
 
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "api/array_view.h"
 #include "api/ref_counted_base.h"
 #include "api/rtp_headers.h"
 #include "api/scoped_refptr.h"
+#include "api/units/timestamp.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 
 namespace webrtc {
@@ -27,7 +29,9 @@ namespace webrtc {
 class RtpPacketReceived : public RtpPacket {
  public:
   RtpPacketReceived();
-  explicit RtpPacketReceived(const ExtensionManager* extensions);
+  explicit RtpPacketReceived(
+      const ExtensionManager* extensions,
+      webrtc::Timestamp arrival_time = webrtc::Timestamp::MinusInfinity());
   RtpPacketReceived(const RtpPacketReceived& packet);
   RtpPacketReceived(RtpPacketReceived&& packet);
 
@@ -42,8 +46,17 @@ class RtpPacketReceived : public RtpPacket {
 
   // Time in local time base as close as it can to packet arrived on the
   // network.
-  int64_t arrival_time_ms() const { return arrival_time_ms_; }
-  void set_arrival_time_ms(int64_t time) { arrival_time_ms_ = time; }
+  webrtc::Timestamp arrival_time() const { return arrival_time_; }
+  void set_arrival_time(webrtc::Timestamp time) { arrival_time_ = time; }
+
+  ABSL_DEPRECATED("Use arrival_time() instead")
+  int64_t arrival_time_ms() const {
+    return arrival_time_.IsMinusInfinity() ? -1 : arrival_time_.ms();
+  }
+  ABSL_DEPRECATED("Use set_arrival_time() instead")
+  void set_arrival_time_ms(int64_t time) {
+    arrival_time_ = webrtc::Timestamp::Millis(time);
+  }
 
   // Flag if packet was recovered via RTX or FEC.
   bool recovered() const { return recovered_; }
@@ -64,7 +77,7 @@ class RtpPacketReceived : public RtpPacket {
   }
 
  private:
-  int64_t arrival_time_ms_ = 0;
+  webrtc::Timestamp arrival_time_ = Timestamp::MinusInfinity();
   int payload_type_frequency_ = 0;
   bool recovered_ = false;
   rtc::scoped_refptr<rtc::RefCountedBase> additional_data_;

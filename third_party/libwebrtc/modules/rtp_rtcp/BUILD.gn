@@ -111,6 +111,7 @@ rtc_library("rtp_rtcp_format") {
     "../../api/transport:network_control",
     "../../api/transport/rtp:dependency_descriptor",
     "../../api/units:time_delta",
+    "../../api/units:timestamp",
     "../../api/video:video_frame",
     "../../api/video:video_layers_allocation",
     "../../api/video:video_rtp_headers",
