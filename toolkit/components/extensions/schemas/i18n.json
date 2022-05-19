@@ -18,7 +18,8 @@
             "items": {
               "type": "string"
             },
-            "optional": true
+            "optional": true,
+            "privileged": true
           }
         }
       }
