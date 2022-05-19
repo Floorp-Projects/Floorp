@@ -330,6 +330,11 @@ ARCHIVE_FILES = {
             "base": "third_party/python/distro",
             "pattern": "distro.py",
         },
+        {
+            "source": buildconfig.topsrcdir,
+            "base": "third_party/python/packaging",
+            "pattern": "**",
+        },
     ],
     "reftest": [
         {"source": buildconfig.topobjdir, "base": "_tests", "pattern": "reftest/**"},
