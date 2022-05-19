@@ -96,8 +96,6 @@ add_task(async function() {
   });
 
   is(removeBtn.disabled, false, "Should enable the removeSelected button");
-  // Move the focus from the search box to the list
-  sitesList.focus();
   EventUtils.synthesizeKey("VK_DELETE");
   is(sitesList.selectedIndex, 0, "Should select next item");
   assertSitesListed(doc, hosts.slice(4));
