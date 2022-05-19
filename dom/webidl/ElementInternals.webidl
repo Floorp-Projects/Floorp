@@ -7,7 +7,7 @@
  * https://html.spec.whatwg.org/#elementinternals
  */
 
-[Pref="dom.webcomponents.elementInternals.enabled", Exposed=Window]
+[Exposed=Window]
 interface ElementInternals {
   // Shadow root access
   readonly attribute ShadowRoot? shadowRoot;

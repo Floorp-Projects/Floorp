@@ -70,7 +70,7 @@ interface HTMLElement : Element {
   //readonly attribute boolean? commandChecked;
 
   // https://html.spec.whatwg.org/multipage/custom-elements.html#dom-attachinternals
-  [Pref="dom.webcomponents.elementInternals.enabled", Throws]
+  [Throws]
   ElementInternals attachInternals();
 };
 
