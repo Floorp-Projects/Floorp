@@ -202,10 +202,12 @@ static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
       continue;
     }
 
-    if (target.mSnapPositionX) {
+    if (target.mSnapPositionX &&
+        aSnapInfo.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) {
       aCalcSnapPoints.AddVerticalEdge(*target.mSnapPositionX);
     }
-    if (target.mSnapPositionY) {
+    if (target.mSnapPositionY &&
+        aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None) {
       aCalcSnapPoints.AddHorizontalEdge(*target.mSnapPositionY);
     }
   }

@@ -30,19 +30,34 @@ function setupMocks({ fxaDevices = null, state = UIState.STATUS_SIGNED_IN }) {
   return sandbox;
 }
 
-function testSetupState(browser, expected) {
+async function waitForVisibleStep(browser, expected) {
   const { document } = browser.contentWindow;
-  for (let [selector, shouldBeVisible] of Object.entries(
-    expected.expectedVisible
-  )) {
-    const elem = document.querySelector(selector);
-    if (shouldBeVisible) {
+
+  const deck = document.querySelector(".sync-setup-container");
+  const nextStepElem = deck.querySelector(expected.expectedVisible);
+  const stepElems = deck.querySelectorAll(".setup-step");
+
+  await BrowserTestUtils.waitForMutationCondition(
+    deck,
+    {
+      attributeFilter: ["selected-view"],
+    },
+    () => {
+      return BrowserTestUtils.is_visible(nextStepElem);
+    }
+  );
+
+  for (let elem of stepElems) {
+    if (elem == nextStepElem) {
       ok(
         BrowserTestUtils.is_visible(elem),
-        `Expected ${selector} to be visible`
+        `Expected ${elem.id || elem.className} to be visible`
       );
     } else {
-      ok(BrowserTestUtils.is_hidden(elem), `Expected ${selector} to be hidden`);
+      ok(
+        BrowserTestUtils.is_hidden(elem),
+        `Expected ${elem.id || elem.className} to be hidden`
+      );
     }
   }
 }
@@ -58,6 +73,11 @@ add_setup(async function() {
   );
   registerCleanupFunction(async function() {
     BrowserTestUtils.removeTab(tab);
+    Services.prefs.clearUserPref("services.sync.engine.tabs");
+  });
+  // set tab sync false so we don't skip setup states
+  await SpecialPowers.pushPrefEnv({
+    set: [["services.sync.engine.tabs", false]],
   });
 });
 
@@ -66,13 +86,8 @@ add_task(async function test_unconfigured_initial_state() {
   const sandbox = setupMocks({ state: UIState.STATUS_NOT_CONFIGURED });
 
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-  testSetupState(browser, {
-    expectedVisible: {
-      "#tabpickup-steps-view0": true,
-      "#tabpickup-steps-view1": false,
-      "#tabpickup-steps-view2": false,
-      "#tabpickup-steps-view3": false,
-    },
+  await waitForVisibleStep(browser, {
+    expectedVisible: "#tabpickup-steps-view0",
   });
 
   sandbox.restore();
@@ -91,16 +106,11 @@ add_task(async function test_signed_in() {
       },
     ],
   });
-
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-  testSetupState(browser, {
-    expectedVisible: {
-      "#tabpickup-steps-view0": false,
-      "#tabpickup-steps-view1": true,
-      "#tabpickup-steps-view2": false,
-      "#tabpickup-steps-view3": false,
-    },
+  await waitForVisibleStep(browser, {
+    expectedVisible: "#tabpickup-steps-view1",
   });
+
   is(fxAccounts.device.recentDeviceList?.length, 1, "Just 1 device connected");
 
   sandbox.restore();
@@ -126,14 +136,10 @@ add_task(async function test_2nd_desktop_connected() {
   });
 
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-  testSetupState(browser, {
-    expectedVisible: {
-      "#tabpickup-steps-view0": false,
-      "#tabpickup-steps-view1": true,
-      "#tabpickup-steps-view2": false,
-      "#tabpickup-steps-view3": false,
-    },
+  await waitForVisibleStep(browser, {
+    expectedVisible: "#tabpickup-steps-view1",
   });
+
   is(fxAccounts.device.recentDeviceList?.length, 2, "2 devices connected");
   ok(
     fxAccounts.device.recentDeviceList?.every(
@@ -163,16 +169,17 @@ add_task(async function test_mobile_connected() {
       },
     ],
   });
+  // ensure tab sync is false so we don't skip onto next step
+  ok(
+    !Services.prefs.getBoolPref("services.sync.engine.tabs", false),
+    "services.sync.engine.tabs is initially false"
+  );
 
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-  testSetupState(browser, {
-    expectedVisible: {
-      "#tabpickup-steps-view0": false,
-      "#tabpickup-steps-view1": false,
-      "#tabpickup-steps-view2": true,
-      "#tabpickup-steps-view3": false,
-    },
+  await waitForVisibleStep(browser, {
+    expectedVisible: "#tabpickup-steps-view2",
   });
+
   is(fxAccounts.device.recentDeviceList?.length, 2, "2 devices connected");
   ok(
     fxAccounts.device.recentDeviceList?.some(
@@ -182,4 +189,59 @@ add_task(async function test_mobile_connected() {
   );
 
   sandbox.restore();
+});
+
+add_task(async function test_tab_sync_enabled() {
+  const browser = gBrowser.selectedBrowser;
+  const sandbox = setupMocks({
+    state: UIState.STATUS_SIGNED_IN,
+    fxaDevices: [
+      {
+        id: 1,
+        name: "This Device",
+        isCurrentDevice: true,
+        type: "desktop",
+      },
+      {
+        id: 2,
+        name: "Other Device",
+        type: "mobile",
+      },
+    ],
+  });
+  Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+  // test initial state, with the pref not enabled
+  await waitForVisibleStep(browser, {
+    expectedVisible: "#tabpickup-steps-view2",
+  });
+
+  // test with the pref toggled on
+  await SpecialPowers.pushPrefEnv({
+    set: [["services.sync.engine.tabs", true]],
+  });
+  await waitForVisibleStep(browser, {
+    expectedVisible: "#tabpickup-steps-view3",
+  });
+
+  // reset and test clicking the action button
+  await SpecialPowers.popPrefEnv();
+  await waitForVisibleStep(browser, {
+    expectedVisible: "#tabpickup-steps-view2",
+  });
+
+  const actionButton = browser.contentWindow.document.querySelector(
+    "#tabpickup-steps-view2 button.primary"
+  );
+  actionButton.click();
+  await waitForVisibleStep(browser, {
+    expectedVisible: "#tabpickup-steps-view3",
+  });
+  ok(
+    Services.prefs.getBoolPref("services.sync.engine.tabs", false),
+    "tab sync pref should be enabled after button click"
+  );
+
+  sandbox.restore();
+  Services.prefs.clearUserPref("services.sync.engine.tabs");
 });

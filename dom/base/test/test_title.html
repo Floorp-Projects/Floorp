@@ -22,8 +22,6 @@
   <iframe id="xhtml4" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'/>"></iframe>
   <iframe id="xhtml5" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'><head/></html>"></iframe>
   <iframe id="xhtml6" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'><head><style/></head></html>"></iframe>
-  <iframe id="xul1" src="file_title.xhtml"></iframe>
-  <iframe id="xul2" src="file_title.xhtml"></iframe>
   <iframe id="svg1" src="data:text/xml,<svg xmlns='http://www.w3.org/2000/svg'><title id='t'>Test</title></svg>"></iframe>
   <iframe id="svg2" src="data:text/xml,<svg xmlns='http://www.w3.org/2000/svg'><title id='t'>Test</title></svg>"></iframe>
 </div>
@@ -44,7 +42,6 @@ function runTests() {
   testStatic("xhtml1", "Test", "XHTML <title> in body");
   testStatic("xhtml2", "Test", "XHTML <title> as root element");
   testStatic("xhtml3", "Test", "XHTML <title> containing an element");
-  testStatic("xul1", "Test", "XUL <window> title attribute");
   testStatic("svg1", "Test", "SVG <title>");
 
   SimpleTest.finish();

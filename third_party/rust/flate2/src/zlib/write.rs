@@ -1,11 +1,6 @@
 use std::io;
 use std::io::prelude::*;
 
-#[cfg(feature = "tokio")]
-use futures::Poll;
-#[cfg(feature = "tokio")]
-use tokio_io::{AsyncRead, AsyncWrite};
-
 use crate::zio;
 use crate::{Compress, Decompress};
 
@@ -139,7 +134,7 @@ impl<W: Write> ZlibEncoder<W> {
         Ok(self.inner.take_inner())
     }
 
-    /// Returns the number of bytes that have been written to this compresor.
+    /// Returns the number of bytes that have been written to this compressor.
     ///
     /// Note that not all bytes written to this object may be accounted for,
     /// there may still be some active buffering.
@@ -166,22 +161,11 @@ impl<W: Write> Write for ZlibEncoder<W> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<W: AsyncWrite> AsyncWrite for ZlibEncoder<W> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.try_finish()?;
-        self.get_mut().shutdown()
-    }
-}
-
 impl<W: Read + Write> Read for ZlibEncoder<W> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.get_mut().read(buf)
     }
 }
-
-#[cfg(feature = "tokio")]
-impl<W: AsyncRead + AsyncWrite> AsyncRead for ZlibEncoder<W> {}
 
 /// A ZLIB decoder, or decompressor.
 ///
@@ -330,19 +314,8 @@ impl<W: Write> Write for ZlibDecoder<W> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<W: AsyncWrite> AsyncWrite for ZlibDecoder<W> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.inner.finish()?;
-        self.inner.get_mut().shutdown()
-    }
-}
-
 impl<W: Read + Write> Read for ZlibDecoder<W> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.inner.get_mut().read(buf)
     }
 }
-
-#[cfg(feature = "tokio")]
-impl<W: AsyncRead + AsyncWrite> AsyncRead for ZlibDecoder<W> {}

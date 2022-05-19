@@ -3,11 +3,6 @@ use std::io;
 use std::io::prelude::*;
 use std::mem;
 
-#[cfg(feature = "tokio")]
-use futures::Poll;
-#[cfg(feature = "tokio")]
-use tokio_io::{AsyncRead, AsyncWrite};
-
 use super::{GzBuilder, GzHeader};
 use super::{FCOMMENT, FEXTRA, FHCRC, FNAME};
 use crate::crc::{Crc, CrcReader};
@@ -20,7 +15,7 @@ fn copy(into: &mut [u8], from: &[u8], pos: &mut usize) -> usize {
         *slot = *val;
     }
     *pos += min;
-    return min;
+    min
 }
 
 pub(crate) fn corrupt() -> io::Error {
@@ -126,15 +121,7 @@ pub(crate) fn read_gz_header<R: Read>(r: &mut R) -> io::Result<GzHeader> {
         let mut reader = Buffer::new(&mut part, r);
         read_gz_header_part(&mut reader)
     };
-
-    match result {
-        Ok(()) => {
-            return Ok(part.take_header());
-        }
-        Err(err) => {
-            return Err(err);
-        }
-    };
+    result.map(|()| part.take_header())
 }
 
 /// A gzip streaming encoder
@@ -179,7 +166,7 @@ pub fn gz_encoder<R: BufRead>(header: Vec<u8>, r: R, lvl: Compression) -> GzEnco
     let crc = CrcReader::new(r);
     GzEncoder {
         inner: deflate::bufread::DeflateEncoder::new(crc, lvl),
-        header: header,
+        header,
         pos: 0,
         eof: false,
     }
@@ -363,7 +350,7 @@ impl GzHeaderPartial {
     }
 
     pub fn take_header(self) -> GzHeader {
-        return self.header;
+        self.header
     }
 }
 
@@ -443,7 +430,7 @@ where
         self.part.buf.truncate(0);
         self.buf_cur = 0;
         self.buf_max = 0;
-        return Ok(rlen);
+        Ok(rlen)
     }
 }
 
@@ -523,7 +510,7 @@ impl<R: BufRead> Read for GzDecoder<R> {
                         let mut reader = Buffer::new(&mut part, reader.get_mut().get_mut());
                         read_gz_header_part(&mut reader)
                     };
-                    let state = match result {
+                    match result {
                         Ok(()) => {
                             *header = Some(part.take_header());
                             GzState::Body
@@ -533,8 +520,7 @@ impl<R: BufRead> Read for GzDecoder<R> {
                             return Err(err);
                         }
                         Err(err) => return Err(err),
-                    };
-                    state
+                    }
                 }
                 GzState::Body => {
                     if into.is_empty() {
@@ -619,9 +605,6 @@ impl<R: BufRead> Read for GzDecoder<R> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<R: AsyncRead + BufRead> AsyncRead for GzDecoder<R> {}
-
 impl<R: BufRead + Write> Write for GzDecoder<R> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.get_mut().write(buf)
@@ -629,13 +612,6 @@ impl<R: BufRead + Write> Write for GzDecoder<R> {
 
     fn flush(&mut self) -> io::Result<()> {
         self.get_mut().flush()
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncWrite + BufRead> AsyncWrite for GzDecoder<R> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.get_mut().shutdown()
     }
 }
 
@@ -719,26 +695,6 @@ impl<R> MultiGzDecoder<R> {
 impl<R: BufRead> Read for MultiGzDecoder<R> {
     fn read(&mut self, into: &mut [u8]) -> io::Result<usize> {
         self.0.read(into)
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncRead + BufRead> AsyncRead for MultiGzDecoder<R> {}
-
-impl<R: BufRead + Write> Write for MultiGzDecoder<R> {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.get_mut().write(buf)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        self.get_mut().flush()
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncWrite + BufRead> AsyncWrite for MultiGzDecoder<R> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.get_mut().shutdown()
     }
 }
 
@@ -870,7 +826,7 @@ pub mod tests {
         }
         r.set_position(pos2);
 
-        // Fourth read : now succesful for 7 bytes
+        // Fourth read : now successful for 7 bytes
         let mut reader3 = Buffer::new(&mut part, &mut r);
         match reader3.read_and_forget(&mut out) {
             Ok(7) => {
@@ -882,7 +838,7 @@ pub mod tests {
             }
         }
 
-        // Fifth read : succesful for one more byte
+        // Fifth read : successful for one more byte
         out.resize(1, 0);
         match reader3.read_and_forget(&mut out) {
             Ok(1) => {

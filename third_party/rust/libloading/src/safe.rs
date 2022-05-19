@@ -1,9 +1,9 @@
 use super::Error;
-#[cfg(docsrs)]
+#[cfg(libloading_docs)]
 use super::os::unix as imp; // the implementation used here doesn't matter particularly much...
-#[cfg(all(not(docsrs), unix))]
+#[cfg(all(not(libloading_docs), unix))]
 use super::os::unix as imp;
-#[cfg(all(not(docsrs), windows))]
+#[cfg(all(not(libloading_docs), windows))]
 use super::os::windows as imp;
 use std::ffi::OsStr;
 use std::fmt;
@@ -11,7 +11,7 @@ use std::marker;
 use std::ops;
 
 /// A loaded dynamic library.
-#[cfg_attr(docsrs, doc(cfg(any(unix, windows))))]
+#[cfg_attr(libloading_docs, doc(cfg(any(unix, windows))))]
 pub struct Library(imp::Library);
 
 impl Library {
@@ -193,7 +193,7 @@ unsafe impl Sync for Library {}
 /// itself, without taking care to “extract” the function or variable manually most of the time.
 ///
 /// [`Library::get`]: Library::get
-#[cfg_attr(docsrs, doc(cfg(any(unix, windows))))]
+#[cfg_attr(libloading_docs, doc(cfg(any(unix, windows))))]
 pub struct Symbol<'lib, T: 'lib> {
     inner: imp::Symbol<T>,
     pd: marker::PhantomData<&'lib T>,

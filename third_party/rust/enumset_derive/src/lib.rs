@@ -1,17 +1,17 @@
-#![recursion_limit="256"]
+#![recursion_limit = "256"]
 
 extern crate proc_macro;
 
 use darling::*;
 use proc_macro::TokenStream;
-use proc_macro2::{TokenStream as SynTokenStream, Literal, Span};
-use std::collections::HashSet;
-use syn::{*, Result, Error};
-use syn::spanned::Spanned;
+use proc_macro2::{Literal, Span, TokenStream as SynTokenStream};
 use quote::*;
+use std::{collections::HashSet, fmt::Display};
+use syn::spanned::Spanned;
+use syn::{Error, Result, *};
 
 /// Helper function for emitting compile errors.
-fn error<T>(span: Span, message: &str) -> Result<T> {
+fn error<T>(span: Span, message: impl Display) -> Result<T> {
     Err(Error::new(span, message))
 }
 
@@ -20,6 +20,9 @@ fn error<T>(span: Span, message: &str) -> Result<T> {
 #[darling(attributes(enumset), default)]
 struct EnumsetAttrs {
     no_ops: bool,
+    no_super_impls: bool,
+    #[darling(default)]
+    repr: Option<String>,
     serialize_as_list: bool,
     serialize_deny_unknown: bool,
     #[darling(default)]
@@ -43,6 +46,8 @@ struct EnumSetInfo {
     name: Ident,
     /// The crate name to use.
     crate_name: Option<Ident>,
+    /// The numeric type to represent the `EnumSet` as in memory.
+    explicit_mem_repr: Option<Ident>,
     /// The numeric type to serialize the enum as.
     explicit_serde_repr: Option<Ident>,
     /// Whether the underlying repr of the enum supports negative values.
@@ -63,6 +68,8 @@ struct EnumSetInfo {
 
     /// Avoid generating operator overloads on the enum type.
     no_ops: bool,
+    /// Avoid generating implementations for `Clone`, `Copy`, `Eq`, and `PartialEq`.
+    no_super_impls: bool,
     /// Serialize the enum as a list.
     serialize_as_list: bool,
     /// Disallow unknown bits while deserializing the enum.
@@ -73,7 +80,10 @@ impl EnumSetInfo {
         EnumSetInfo {
             name: input.ident.clone(),
             crate_name: attrs.crate_name.map(|x| Ident::new(&x, Span::call_site())),
-            explicit_serde_repr: attrs.serialize_repr.map(|x| Ident::new(&x, Span::call_site())),
+            explicit_mem_repr: attrs.repr.map(|x| Ident::new(&x, Span::call_site())),
+            explicit_serde_repr: attrs
+                .serialize_repr
+                .map(|x| Ident::new(&x, Span::call_site())),
             has_signed_repr: false,
             has_large_repr: false,
             variants: Vec::new(),
@@ -82,8 +92,9 @@ impl EnumSetInfo {
             used_variant_names: HashSet::new(),
             used_discriminants: HashSet::new(),
             no_ops: attrs.no_ops,
+            no_super_impls: attrs.no_super_impls,
             serialize_as_list: attrs.serialize_as_list,
-            serialize_deny_unknown: attrs.serialize_deny_unknown
+            serialize_deny_unknown: attrs.serialize_deny_unknown,
         }
     }
 
@@ -106,7 +117,7 @@ impl EnumSetInfo {
                 self.has_large_repr = true;
                 Ok(())
             }
-            _ => error(attr_span, "Unsupported repr.")
+            _ => error(attr_span, "Unsupported repr."),
         }
     }
     /// Adds a variant to the enumset.
@@ -162,10 +173,8 @@ impl EnumSetInfo {
             if discriminant > self.max_discrim {
                 self.max_discrim = discriminant;
             }
-            self.variants.push(EnumSetValue {
-                name: variant.ident.clone(),
-                variant_repr: discriminant,
-            });
+            self.variants
+                .push(EnumSetValue { name: variant.ident.clone(), variant_repr: discriminant });
             self.used_variant_names.insert(variant.ident.to_string());
             self.used_discriminants.insert(discriminant);
 
@@ -176,29 +185,44 @@ impl EnumSetInfo {
     }
     /// Validate the enumset type.
     fn validate(&self) -> Result<()> {
-        // Check if all bits of the bitset can fit in the serialization representation.
-        if let Some(explicit_serde_repr) = &self.explicit_serde_repr {
-            let is_overflowed = match explicit_serde_repr.to_string().as_str() {
-                "u8" => self.max_discrim >= 8,
-                "u16" => self.max_discrim >= 16,
-                "u32" => self.max_discrim >= 32,
-                "u64" => self.max_discrim >= 64,
-                "u128" => self.max_discrim >= 128,
+        fn do_check(ty: &str, max_discrim: u32, what: &str) -> Result<()> {
+            let is_overflowed = match ty {
+                "u8" => max_discrim >= 8,
+                "u16" => max_discrim >= 16,
+                "u32" => max_discrim >= 32,
+                "u64" => max_discrim >= 64,
+                "u128" => max_discrim >= 128,
                 _ => error(
                     Span::call_site(),
-                    "Only `u8`, `u16`, `u32`, `u64` and `u128` are supported for serde_repr."
+                    format!(
+                        "Only `u8`, `u16`, `u32`, `u64` and `u128` are supported for {}.",
+                        what
+                    ),
                 )?,
             };
             if is_overflowed {
-                error(Span::call_site(), "serialize_repr cannot be smaller than bitset.")?;
+                error(Span::call_site(), format!("{} cannot be smaller than bitset.", what))?;
             }
+            Ok(())
+        }
+
+        // Check if all bits of the bitset can fit in the serialization representation.
+        if let Some(explicit_serde_repr) = &self.explicit_serde_repr {
+            do_check(&explicit_serde_repr.to_string(), self.max_discrim, "serialize_repr")?;
+        }
+
+        // Check if all bits of the bitset can fit in the memory representation, if one was given.
+        if let Some(explicit_mem_repr) = &self.explicit_mem_repr {
+            do_check(&explicit_mem_repr.to_string(), self.max_discrim, "repr")?;
         }
         Ok(())
     }
 
     /// Computes the underlying type used to store the enumset.
     fn enumset_repr(&self) -> SynTokenStream {
-        if self.max_discrim <= 7 {
+        if let Some(explicit_mem_repr) = &self.explicit_mem_repr {
+            explicit_mem_repr.to_token_stream()
+        } else if self.max_discrim <= 7 {
             quote! { u8 }
         } else if self.max_discrim <= 15 {
             quote! { u16 }
@@ -236,9 +260,29 @@ impl EnumSetInfo {
 /// Generates the actual `EnumSetType` impl.
 fn enum_set_type_impl(info: EnumSetInfo) -> SynTokenStream {
     let name = &info.name;
+
     let enumset = match &info.crate_name {
         Some(crate_name) => quote!(::#crate_name),
-        None => quote!(::enumset),
+        None => {
+            #[cfg(feature = "proc-macro-crate")]
+            {
+                use proc_macro_crate::FoundCrate;
+
+                let crate_name = proc_macro_crate::crate_name("enumset");
+                match crate_name {
+                    Ok(FoundCrate::Name(name)) => {
+                        let ident = Ident::new(&name, Span::call_site());
+                        quote!(::#ident)
+                    }
+                    _ => quote!(::enumset),
+                }
+            }
+
+            #[cfg(not(feature = "proc-macro-crate"))]
+            {
+                quote!(::enumset)
+            }
+        }
     };
     let typed_enumset = quote!(#enumset::EnumSet<#name>);
     let core = quote!(#enumset::__internal::core_export);
@@ -287,7 +331,6 @@ fn enum_set_type_impl(info: EnumSetInfo) -> SynTokenStream {
             }
         }
     };
-
 
     #[cfg(feature = "serde")]
     let serde = quote!(#enumset::__internal::serde);
@@ -344,7 +387,7 @@ fn enum_set_type_impl(info: EnumSetInfo) -> SynTokenStream {
                 }
             }
         } else {
-            quote! { }
+            quote! {}
         };
         quote! {
             fn serialize<S: #serde::Serializer>(
@@ -365,7 +408,7 @@ fn enum_set_type_impl(info: EnumSetInfo) -> SynTokenStream {
     };
 
     #[cfg(not(feature = "serde"))]
-    let serde_ops = quote! { };
+    let serde_ops = quote! {};
 
     let is_uninhabited = info.variants.is_empty();
     let is_zst = info.variants.len() == 1;
@@ -393,9 +436,13 @@ fn enum_set_type_impl(info: EnumSetInfo) -> SynTokenStream {
         let variant_value: Vec<_> = info.variants.iter().map(|x| x.variant_repr).collect();
 
         let const_field: Vec<_> = ["IS_U8", "IS_U16", "IS_U32", "IS_U64", "IS_U128"]
-            .iter().map(|x| Ident::new(x, Span::call_site())).collect();
+            .iter()
+            .map(|x| Ident::new(x, Span::call_site()))
+            .collect();
         let int_type: Vec<_> = ["u8", "u16", "u32", "u64", "u128"]
-            .iter().map(|x| Ident::new(x, Span::call_site())).collect();
+            .iter()
+            .map(|x| Ident::new(x, Span::call_site()))
+            .collect();
 
         quote! {
             fn enum_into_u32(self) -> u32 {
@@ -438,6 +485,36 @@ fn enum_set_type_impl(info: EnumSetInfo) -> SynTokenStream {
         quote! { 1 << self as #repr }
     };
 
+    let super_impls = if info.no_super_impls {
+        quote! {}
+    } else {
+        quote! {
+            impl #core::cmp::PartialEq for #name {
+                fn eq(&self, other: &Self) -> bool {
+                    #eq_impl
+                }
+            }
+            impl #core::cmp::Eq for #name { }
+            #[allow(clippy::expl_impl_clone_on_copy)]
+            impl #core::clone::Clone for #name {
+                fn clone(&self) -> Self {
+                    *self
+                }
+            }
+            impl #core::marker::Copy for #name { }
+        }
+    };
+
+    let impl_with_repr = if info.explicit_mem_repr.is_some() {
+        quote! {
+            unsafe impl #enumset::EnumSetTypeWithRepr for #name {
+                type Repr = #repr;
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     quote! {
         unsafe impl #enumset::__internal::EnumSetTypePrivate for #name {
             type Repr = #repr;
@@ -448,18 +525,8 @@ fn enum_set_type_impl(info: EnumSetInfo) -> SynTokenStream {
 
         unsafe impl #enumset::EnumSetType for #name { }
 
-        impl #core::cmp::PartialEq for #name {
-            fn eq(&self, other: &Self) -> bool {
-                #eq_impl
-            }
-        }
-        impl #core::cmp::Eq for #name { }
-        impl #core::clone::Clone for #name {
-            fn clone(&self) -> Self {
-                *self
-            }
-        }
-        impl #core::marker::Copy for #name { }
+        #impl_with_repr
+        #super_impls
 
         impl #name {
             /// Creates a new enumset with only this variant.
@@ -487,7 +554,6 @@ fn enum_set_type_impl(info: EnumSetInfo) -> SynTokenStream {
     }
 }
 
-/// A wrapper that parses the input enum.
 #[proc_macro_derive(EnumSetType, attributes(enumset))]
 pub fn derive_enum_set_type(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input);

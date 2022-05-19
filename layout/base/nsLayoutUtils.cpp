@@ -6507,9 +6507,9 @@ CSSIntSize nsLayoutUtils::ComputeSizeForDrawingWithFallback(
   return imageSize;
 }
 
-/* static */ LayerIntRect SnapRectForImage(const gfx::Matrix& aTransform,
-                                           const gfx::Size& aScaleFactors,
-                                           const LayoutDeviceRect& aRect) {
+/* static */ LayerIntRect SnapRectForImage(
+    const gfx::Matrix& aTransform, const gfx::MatrixScales& aScaleFactors,
+    const LayoutDeviceRect& aRect) {
   // Attempt to snap pixels, the same as ComputeSnappedImageDrawingParameters.
   // Any changes to the algorithm here will need to be reflected there.
   bool snapped = false;
@@ -6543,10 +6543,8 @@ CSSIntSize nsLayoutUtils::ComputeSizeForDrawingWithFallback(
   if (!snapped) {
     // If we couldn't snap directly with the transform, we need to go best
     // effort in layer pixels.
-    snapRect = RoundedToInt(LayerRect(aRect.X() * aScaleFactors.width,
-                                      aRect.Y() * aScaleFactors.height,
-                                      aRect.Width() * aScaleFactors.width,
-                                      aRect.Height() * aScaleFactors.height));
+    snapRect = RoundedToInt(
+        aRect * LayoutDeviceToLayerScale2D::FromUnknownScale(aScaleFactors));
   }
 
   // An empty size is unacceptable so we ensure our suggested size is at least
@@ -6569,14 +6567,14 @@ IntSize nsLayoutUtils::ComputeImageContainerDrawingParameters(
   MOZ_ASSERT(aImage);
   MOZ_ASSERT(aForFrame);
 
-  gfx::Size scaleFactors = aSc.GetInheritedScale();
+  MatrixScales scaleFactors = aSc.GetInheritedScale();
   SamplingFilter samplingFilter =
       nsLayoutUtils::GetSamplingFilterForFrame(aForFrame);
 
   // Compute our SVG context parameters, if any. Don't replace the viewport
   // size if it was already set, prefer what the caller gave.
   SVGImageContext::MaybeStoreContextPaint(aSVGContext, aForFrame, aImage);
-  if ((scaleFactors.width != 1.0 || scaleFactors.height != 1.0) &&
+  if ((scaleFactors.xScale != 1.0 || scaleFactors.yScale != 1.0) &&
       aImage->GetType() == imgIContainer::TYPE_VECTOR &&
       (!aSVGContext || !aSVGContext->GetViewportSize())) {
     gfxSize gfxDestSize(aDestRect.Width(), aDestRect.Height());

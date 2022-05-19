@@ -23,6 +23,7 @@ pub enum Architecture {
     Bpfel,
     Hexagon,
     X86_32(X86_32Architecture),
+    M68k,
     Mips32(Mips32Architecture),
     Mips64(Mips64Architecture),
     Msp430,
@@ -39,6 +40,7 @@ pub enum Architecture {
     Wasm32,
     Wasm64,
     X86_64,
+    XTensa,
 }
 
 #[cfg_attr(feature = "rust_1_40", non_exhaustive)]
@@ -395,8 +397,11 @@ pub enum Vendor {
     Unknown,
     Amd,
     Apple,
+    Espressif,
     Experimental,
     Fortanix,
+    Kmc,
+    Nintendo,
     Nvidia,
     Pc,
     Rumprun,
@@ -428,10 +433,12 @@ pub enum OperatingSystem {
     Darwin,
     Dragonfly,
     Emscripten,
+    Espidf,
     Freebsd,
     Fuchsia,
     Haiku,
     Hermit,
+    Horizon,
     Illumos,
     Ios,
     L4re,
@@ -444,6 +451,7 @@ pub enum OperatingSystem {
     Psp,
     Redox,
     Solaris,
+    SolidAsp3,
     Tvos,
     Uefi,
     VxWorks,
@@ -479,9 +487,11 @@ pub enum Environment {
     Musleabihf,
     Muslabi64,
     Msvc,
+    Newlib,
     Kernel,
     Uclibc,
     Uclibceabi,
+    Uclibceabihf,
     Sgx,
     Sim,
     Softfloat,
@@ -528,8 +538,10 @@ impl Architecture {
             | Riscv64(_)
             | Wasm32
             | Wasm64
-            | X86_64 => Ok(Endianness::Little),
+            | X86_64
+            | XTensa => Ok(Endianness::Little),
             Bpfeb
+            | M68k
             | Mips32(Mips32Architecture::Mips)
             | Mips64(Mips64Architecture::Mips64)
             | Mips32(Mips32Architecture::Mipsisa32r6)
@@ -559,8 +571,10 @@ impl Architecture {
             | Riscv32(_)
             | Sparc
             | Wasm32
+            | M68k
             | Mips32(_)
-            | Powerpc => Ok(PointerWidth::U32),
+            | Powerpc
+            | XTensa => Ok(PointerWidth::U32),
             AmdGcn
             | Bpfeb
             | Bpfel
@@ -743,6 +757,7 @@ impl fmt::Display for Architecture {
             Bpfel => f.write_str("bpfel"),
             Hexagon => f.write_str("hexagon"),
             X86_32(x86_32) => x86_32.fmt(f),
+            M68k => f.write_str("m68k"),
             Mips32(mips32) => mips32.fmt(f),
             Mips64(mips64) => mips64.fmt(f),
             Msp430 => f.write_str("msp430"),
@@ -759,6 +774,7 @@ impl fmt::Display for Architecture {
             Wasm32 => f.write_str("wasm32"),
             Wasm64 => f.write_str("wasm64"),
             X86_64 => f.write_str("x86_64"),
+            XTensa => f.write_str("xtensa"),
         }
     }
 }
@@ -923,6 +939,7 @@ impl FromStr for Architecture {
             "bpfeb" => Bpfeb,
             "bpfel" => Bpfel,
             "hexagon" => Hexagon,
+            "m68k" => M68k,
             "msp430" => Msp430,
             "nvptx64" => Nvptx64,
             "powerpc" => Powerpc,
@@ -935,6 +952,7 @@ impl FromStr for Architecture {
             "wasm32" => Wasm32,
             "wasm64" => Wasm64,
             "x86_64" => X86_64,
+            "xtensa" => XTensa,
             _ => {
                 if let Ok(arm) = ArmArchitecture::from_str(s) {
                     Arm(arm)
@@ -966,8 +984,11 @@ impl fmt::Display for Vendor {
             Unknown => "unknown",
             Amd => "amd",
             Apple => "apple",
+            Espressif => "espressif",
             Experimental => "experimental",
             Fortanix => "fortanix",
+            Kmc => "kmc",
+            Nintendo => "nintendo",
             Nvidia => "nvidia",
             Pc => "pc",
             Rumprun => "rumprun",
@@ -990,8 +1011,11 @@ impl FromStr for Vendor {
             "unknown" => Unknown,
             "amd" => Amd,
             "apple" => Apple,
+            "espressif" => Espressif,
             "experimental" => Experimental,
             "fortanix" => Fortanix,
+            "kmc" => Kmc,
+            "nintendo" => Nintendo,
             "nvidia" => Nvidia,
             "pc" => Pc,
             "rumprun" => Rumprun,
@@ -1055,10 +1079,12 @@ impl fmt::Display for OperatingSystem {
             Darwin => "darwin",
             Dragonfly => "dragonfly",
             Emscripten => "emscripten",
+            Espidf => "espidf",
             Freebsd => "freebsd",
             Fuchsia => "fuchsia",
             Haiku => "haiku",
             Hermit => "hermit",
+            Horizon => "horizon",
             Illumos => "illumos",
             Ios => "ios",
             L4re => "l4re",
@@ -1077,6 +1103,7 @@ impl fmt::Display for OperatingSystem {
             Psp => "psp",
             Redox => "redox",
             Solaris => "solaris",
+            SolidAsp3 => "solid_asp3",
             Tvos => "tvos",
             Uefi => "uefi",
             VxWorks => "vxworks",
@@ -1137,6 +1164,7 @@ impl FromStr for OperatingSystem {
             "fuchsia" => Fuchsia,
             "haiku" => Haiku,
             "hermit" => Hermit,
+            "horizon" => Horizon,
             "illumos" => Illumos,
             "ios" => Ios,
             "l4re" => L4re,
@@ -1148,11 +1176,13 @@ impl FromStr for OperatingSystem {
             "psp" => Psp,
             "redox" => Redox,
             "solaris" => Solaris,
+            "solid_asp3" => SolidAsp3,
             "tvos" => Tvos,
             "uefi" => Uefi,
             "vxworks" => VxWorks,
             "wasi" => Wasi,
             "windows" => Windows,
+            "espidf" => Espidf,
             _ => return Err(()),
         })
     }
@@ -1184,9 +1214,11 @@ impl fmt::Display for Environment {
             Musleabihf => "musleabihf",
             Muslabi64 => "muslabi64",
             Msvc => "msvc",
+            Newlib => "newlib",
             Kernel => "kernel",
             Uclibc => "uclibc",
             Uclibceabi => "uclibceabi",
+            Uclibceabihf => "uclibceabihf",
             Sgx => "sgx",
             Sim => "sim",
             Softfloat => "softfloat",
@@ -1224,9 +1256,11 @@ impl FromStr for Environment {
             "musleabihf" => Musleabihf,
             "muslabi64" => Muslabi64,
             "msvc" => Msvc,
+            "newlib" => Newlib,
             "kernel" => Kernel,
             "uclibc" => Uclibc,
             "uclibceabi" => Uclibceabi,
+            "uclibceabihf" => Uclibceabihf,
             "sgx" => Sgx,
             "sim" => Sim,
             "softfloat" => Softfloat,
@@ -1288,6 +1322,7 @@ mod tests {
             "aarch64_be-unknown-linux-gnu",
             "aarch64_be-unknown-linux-gnu_ilp32",
             "aarch64-fuchsia",
+            "aarch64-kmc-solid_asp3",
             "aarch64-linux-android",
             "aarch64-pc-windows-msvc",
             "aarch64-unknown-cloudabi",
@@ -1301,6 +1336,7 @@ mod tests {
             "aarch64-unknown-none-softfloat",
             "aarch64-unknown-openbsd",
             "aarch64-unknown-redox",
+            "aarch64-unknown-uefi",
             "aarch64-uwp-windows-msvc",
             "aarch64-wrs-vxworks",
             "amdgcn-amd-amdhsa",
@@ -1320,6 +1356,9 @@ mod tests {
             "armv5te-unknown-linux-uclibceabi",
             "armv6-unknown-freebsd",
             "armv6-unknown-netbsd-eabihf",
+            "armv6k-nintendo-3ds",
+            "armv7a-kmc-solid_asp3-eabi",
+            "armv7a-kmc-solid_asp3-eabihf",
             "armv7a-none-eabi",
             "armv7a-none-eabihf",
             "armv7-apple-ios",
@@ -1333,6 +1372,7 @@ mod tests {
             "armv7-unknown-linux-gnueabihf",
             "armv7-unknown-linux-musleabi",
             "armv7-unknown-linux-musleabihf",
+            "armv7-unknown-linux-uclibceabihf",
             "armv7-unknown-netbsd-eabihf",
             "armv7-wrs-vxworks-eabihf",
             "armv7a-none-eabi",
@@ -1366,6 +1406,7 @@ mod tests {
             "i686-uwp-windows-gnu",
             "i686-uwp-windows-msvc",
             "i686-wrs-vxworks",
+            "m68k-unknown-linux-gnu",
             "mips-unknown-linux-gnu",
             "mips-unknown-linux-musl",
             "mips-unknown-linux-uclibc",
@@ -1399,6 +1440,7 @@ mod tests {
             "powerpc-unknown-linux-gnu",
             "powerpc-unknown-linux-gnuspe",
             "powerpc-unknown-linux-musl",
+            "powerpc-unknown-freebsd",
             "powerpc-unknown-netbsd",
             "powerpc-unknown-openbsd",
             "powerpc-wrs-vxworks",
@@ -1469,6 +1511,7 @@ mod tests {
             "x86_64-unknown-hermit",
             "x86_64-unknown-hermit-kernel", // Changed to x86_64-unknown-none-hermitkernel in 1.53.0
             "x86_64-unknown-illumos",
+            "x86_64-unknown-none",
             "x86_64-unknown-l4re-uclibc",
             "x86_64-unknown-linux-gnu",
             "x86_64-unknown-linux-gnux32",
@@ -1482,6 +1525,8 @@ mod tests {
             "x86_64-uwp-windows-gnu",
             "x86_64-uwp-windows-msvc",
             "x86_64-wrs-vxworks",
+            "xtensa-esp32-espidf",
+            "riscv32imc-esp-espidf",
         ];
 
         for target in targets.iter() {

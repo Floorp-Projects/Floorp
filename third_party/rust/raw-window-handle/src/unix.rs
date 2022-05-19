@@ -18,6 +18,8 @@ pub struct XlibHandle {
     pub window: c_ulong,
     /// A pointer to an Xlib `Display`.
     pub display: *mut c_void,
+    /// An Xlib visual ID, or 0 if unknown.
+    pub visual_id: c_ulong,
 }
 
 /// Raw window handle for Xcb.
@@ -35,6 +37,8 @@ pub struct XcbHandle {
     pub window: u32, // Based on xproto.h
     /// A pointer to an X server `xcb_connection_t`.
     pub connection: *mut c_void,
+    /// An X11 `xcb_visualid_t`, or 0 if unknown.
+    pub visual_id: u32,
 }
 
 /// Raw window handle for Wayland.
@@ -59,6 +63,7 @@ impl XlibHandle {
         Self {
             window: 0,
             display: ptr::null_mut(),
+            visual_id: 0,
         }
     }
 }
@@ -68,6 +73,7 @@ impl XcbHandle {
         Self {
             window: 0,
             connection: ptr::null_mut(),
+            visual_id: 0,
         }
     }
 }

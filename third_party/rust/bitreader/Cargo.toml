@@ -11,7 +11,7 @@
 
 [package]
 name = "bitreader"
-version = "0.3.5"
+version = "0.3.6"
 authors = ["Ilkka Rauta <ilkka.rauta@gmail.com>"]
 description = "BitReader helps reading individual bits from a slice of bytes.\n\nYou can read \"unusual\" numbers of bits from the byte slice, for example 13 bits\nat once. The reader internally keeps track of position within the buffer.\n"
 homepage = "https://github.com/irauta/bitreader"

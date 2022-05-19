@@ -11,7 +11,7 @@ Add this to your `Cargo.toml`:
 futures-task = "0.3"
 ```
 
-The current `futures-task` requires Rust 1.36 or later.
+The current `futures-task` requires Rust 1.45 or later.
 
 ## License
 

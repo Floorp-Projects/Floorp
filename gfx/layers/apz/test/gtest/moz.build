@@ -8,6 +8,7 @@ UNIFIED_SOURCES += [
     "APZTestAccess.cpp",
     "APZTestCommon.cpp",
     "MockHitTester.cpp",
+    "TestAxisLock.cpp",
     "TestBasic.cpp",
     "TestEventRegions.cpp",
     "TestEventResult.cpp",

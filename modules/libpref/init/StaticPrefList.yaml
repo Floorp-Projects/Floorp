@@ -341,7 +341,11 @@
 
 - name: apz.axis_lock.breakout_angle
   type: AtomicFloat
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  value: float(M_PI / 4.0)    # 45 degrees
+#else
   value: float(M_PI / 8.0)    # 22.5 degrees
+#endif
   mirror: always
   include: <cmath>
 
@@ -358,7 +362,11 @@
 
 - name: apz.axis_lock.lock_angle
   type: AtomicFloat
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  value: float(M_PI / 4.0)    # 45 degrees
+#else
   value: float(M_PI / 6.0)    # 30 degrees
+#endif
   mirror: always
   include: <cmath>
 
@@ -1817,6 +1825,12 @@
 #---------------------------------------------------------------------------
 # Prefs starting with "dom."
 #---------------------------------------------------------------------------
+
+# Whether CanvasRenderingContext2D.mozCurrentTransform is enabled.
+- name: dom.mozCurrentTransform.enabled
+  type: bool
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  mirror: always
 
 # Allow cut/copy
 - name: dom.allow_cut_copy

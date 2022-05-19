@@ -118,7 +118,8 @@ dependencies = [
     "test-db",
     "test-rocket-traits",
     "test-serde",
-    "test-macros"
+    "test-macros",
+    "test-borsh"
 ]
 
 [tasks.test-db]
@@ -240,3 +241,8 @@ args = ["test", "--workspace", "--tests", "--features=serde-with-float", "serde"
 [tasks.test-serde-with-str]
 command = "cargo"
 args = ["test", "--workspace", "--tests", "--features=serde-with-str", "serde", "--", "--skip", "generated"]
+
+[tasks.test-borsh]
+command = "cargo"
+args = ["test", "--workspace", "--features=borsh"]
+

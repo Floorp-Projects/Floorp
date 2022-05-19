@@ -6,7 +6,7 @@
         var canvas = document.getElementById("canvas");
         var ctx = canvas.getContext("2d");
 
-        ctx.mozCurrentTransform = [2, 0, 0, 2, 0, 0];
+        ctx.setTransform(2, 0, 0, 2, 0, 0);
 
         // SVG image that draws nothing
         ctx.drawImage(document.getElementById("image"), 0, 0);

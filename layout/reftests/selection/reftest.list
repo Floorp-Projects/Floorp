@@ -34,7 +34,7 @@ fuzzy(0-1,0-1200) == addrange-2.html addrange-ref.html
 == splitText-normalize.html splitText-normalize-ref.html
 == modify-range.html modify-range-ref.html
 == dom-mutations.html dom-mutations-ref.html
-fuzzy-if(OSX==1010,0-9,0-1) fuzzy-if(!OSX,0-1,0-2138) == trailing-space-1.html trailing-space-1-ref.html
+fuzzy-if(!OSX,0-1,0-2138) == trailing-space-1.html trailing-space-1-ref.html
 != invalidation-1-ref.html invalidation-2-ref.html
 == invalidation-1a.html invalidation-1-ref.html
 == invalidation-1b.html invalidation-1-ref.html

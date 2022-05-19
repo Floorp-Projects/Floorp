@@ -82,16 +82,6 @@ toolbar .toolbarbutton-1 {
   margin: 0 0 var(--tabs-navbar-shadow-size);
 }
 
-#TabsToolbar #firefox-view-button {
-  border-inline-end: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-  padding-inline-end: 4px;
-  margin-inline-end: 2px;
-}
-
-:root[privatebrowsingmode=temporary] #firefox-view-button {
-  display: none;
-}
-
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
   appearance: none;

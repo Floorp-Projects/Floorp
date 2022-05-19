@@ -885,7 +885,7 @@ class AsyncPanZoomController {
   /**
    * Register the end of a touch or pan gesture at the given time.
    */
-  void EndTouch(TimeStamp aTimestamp);
+  void EndTouch(TimeStamp aTimestamp, Axis::ClearAxisLock aClearAxisLock);
 
   /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
@@ -939,7 +939,7 @@ class AsyncPanZoomController {
 
   enum AxisLockMode {
     FREE,     /* No locking at all */
-    STANDARD, /* Default axis locking mode that remains locked until pan ends*/
+    STANDARD, /* Default axis locking mode that remains locked until pan ends */
     STICKY,   /* Allow lock to be broken, with hysteresis */
   };
 
@@ -1049,9 +1049,6 @@ class AsyncPanZoomController {
   // Groups state variables that are specific to a platform.
   // Initialized on first use.
   UniquePtr<PlatformSpecificStateBase> mPlatformSpecificState;
-
-  AxisX mX;
-  AxisY mY;
 
   // This flag is set to true when we are in a axis-locked pan as a result of
   // the touch-action CSS property.
@@ -1353,6 +1350,9 @@ class AsyncPanZoomController {
   // This is in theory protected by |mRecursiveMutex|; that is, it should be
   // held whenever this is updated. In practice though... see bug 897017.
   PanZoomState mState;
+
+  AxisX mX;
+  AxisY mY;
 
   static bool IsPanningState(PanZoomState aState);
 

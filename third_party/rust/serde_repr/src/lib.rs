@@ -46,8 +46,6 @@ use syn::parse_macro_input;
 
 use crate::parse::Input;
 
-use std::iter;
-
 #[proc_macro_derive(Serialize_repr)]
 pub fn derive_serialize(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as Input);
@@ -101,10 +99,7 @@ pub fn derive_deserialize(input: TokenStream) -> TokenStream {
     let error_format = match input.variants.len() {
         1 => "invalid value: {}, expected {}".to_owned(),
         2 => "invalid value: {}, expected {} or {}".to_owned(),
-        n => {
-            "invalid value: {}, expected one of: {}".to_owned()
-                + &iter::repeat(", {}").take(n - 1).collect::<String>()
-        }
+        n => "invalid value: {}, expected one of: {}".to_owned() + &", {}".repeat(n - 1),
     };
 
     let other_arm = match input.default_variant {

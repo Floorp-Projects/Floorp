@@ -96,10 +96,15 @@ class Axis {
   void StartTouch(ParentLayerCoord aPos, TimeStamp aTimestamp);
 
   /**
+   * Helper enum class for specifying if EndTouch() should clear the axis lock.
+   */
+  enum class ClearAxisLock { Yes, No };
+
+  /**
    * Notify this Axis that a touch has ended gracefully. This may perform
    * recalculations of the axis velocity.
    */
-  void EndTouch(TimeStamp aTimestamp);
+  void EndTouch(TimeStamp aTimestamp, ClearAxisLock aClearAxisLock);
 
   /**
    * Notify this Axis that the gesture has ended forcefully. Useful for stopping

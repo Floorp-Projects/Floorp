@@ -3,6 +3,7 @@ use futures::future::{self, BoxFuture, FutureExt};
 use std::sync::mpsc;
 use std::thread;
 
+#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn lots() {
     #[cfg(not(futures_sanitizer))]
