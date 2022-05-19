@@ -23,7 +23,10 @@ rtc_library("data_tracker") {
     "data_tracker.cc",
     "data_tracker.h",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_source_set("reassembly_streams") {
@@ -81,7 +84,10 @@ rtc_library("reassembly_queue") {
     "reassembly_queue.cc",
     "reassembly_queue.h",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 if (rtc_include_tests) {
@@ -91,14 +97,21 @@ if (rtc_include_tests) {
     deps = [
       ":data_tracker",
       ":reassembly_queue",
+      ":reassembly_streams",
       ":traditional_reassembly_streams",
       "../../../api:array_view",
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",
       "../../../test:test_support",
+      "../common:sequence_numbers",
+      "../packet:chunk",
+      "../packet:data",
+      "../public:types",
       "../testing:data_generator",
+      "../timer",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
     sources = [
       "data_tracker_test.cc",
       "reassembly_queue_test.cc",

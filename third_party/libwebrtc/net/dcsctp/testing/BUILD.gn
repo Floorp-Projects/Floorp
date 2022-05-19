@@ -20,9 +20,16 @@ rtc_library("data_generator") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:internal_types",
+    "../packet:data",
+    "../public:types",
   ]
   sources = [
     "data_generator.cc",
     "data_generator.h",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
 }

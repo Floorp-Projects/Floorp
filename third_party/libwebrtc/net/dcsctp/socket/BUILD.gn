@@ -68,7 +68,10 @@ rtc_library("stream_reset_handler") {
     "stream_reset_handler.cc",
     "stream_reset_handler.h",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("transmission_control_block") {
@@ -153,7 +156,19 @@ if (rtc_include_tests) {
   rtc_source_set("mock_callbacks") {
     testonly = true
     sources = [ "mock_dcsctp_socket_callbacks.h" ]
-    deps = [ "../public:socket" ]
+    deps = [
+      "../../../api:array_view",
+      "../../../rtc_base:logging",
+      "../../../rtc_base:rtc_base_approved",
+      "../../../test:test_support",
+      "../public:socket",
+      "../public:types",
+      "../timer",
+    ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 
   rtc_source_set("mock_context") {
@@ -162,10 +177,15 @@ if (rtc_include_tests) {
     deps = [
       ":context",
       ":mock_callbacks",
+      "../../../test:test_support",
       "../common:internal_types",
       "../packet:sctp_packet",
       "../public:socket",
       "../public:types",
+    ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
     ]
   }
 
@@ -175,12 +195,34 @@ if (rtc_include_tests) {
     deps = [
       ":dcsctp_socket",
       ":heartbeat_handler",
+      ":mock_callbacks",
+      ":mock_context",
       ":stream_reset_handler",
       "../../../api:array_view",
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",
       "../../../test:test_support",
+      "../common:internal_types",
+      "../packet:chunk",
+      "../packet:error_cause",
+      "../packet:parameter",
+      "../packet:sctp_packet",
+      "../packet:tlv_trait",
+      "../public:socket",
+      "../public:types",
+      "../rx:data_tracker",
+      "../rx:reassembly_queue",
+      "../testing:data_generator",
+      "../testing:testing_macros",
+      "../timer",
+      "../tx:mock_send_queue",
+      "../tx:retransmission_queue",
+    ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/memory",
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
     ]
     sources = [
       "dcsctp_socket_test.cc",
