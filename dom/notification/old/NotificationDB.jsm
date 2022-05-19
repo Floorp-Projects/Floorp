@@ -40,8 +40,8 @@ var NotificationDB = {
       return;
     }
 
-    this.notifications = {};
-    this.byTag = {};
+    this.notifications = Object.create(null);
+    this.byTag = Object.create(null);
     this.loaded = false;
 
     this.tasks = []; // read/write operation queue
@@ -111,7 +111,7 @@ var NotificationDB = {
         // populate the list of notifications by tag
         if (this.notifications) {
           for (var origin in this.notifications) {
-            this.byTag[origin] = {};
+            this.byTag[origin] = Object.create(null);
             for (var id in this.notifications[origin]) {
               var curNotification = this.notifications[origin][id];
               if (curNotification.tag) {
@@ -344,8 +344,8 @@ var NotificationDB = {
     var origin = data.origin;
     var notification = data.notification;
     if (!this.notifications[origin]) {
-      this.notifications[origin] = {};
-      this.byTag[origin] = {};
+      this.notifications[origin] = Object.create(null);
+      this.byTag[origin] = Object.create(null);
     }
 
     // We might have existing notification with this tag,
