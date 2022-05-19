@@ -9,14 +9,14 @@ features: [Temporal]
 ---*/
 
 const cal = {
-  id: 'foo',
+  id: "foo",
   toString() { return "this is a string"; },
 };
 
 const dt = new Temporal.PlainDateTime(1995, 12, 7, 3, 24, 30, 0, 0, 0, cal);
 
 const anotherCal = {
-  id: 'bar',
+  id: "bar",
   toString() { return "this is another string"; },
 };
 

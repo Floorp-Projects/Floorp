@@ -25,5 +25,5 @@ class nsMessageLoop : public nsIMessageLoop {
     }                                                \
   }
 
-extern nsresult nsMessageLoopConstructor(nsISupports* aOuter, const nsIID& aIID,
+extern nsresult nsMessageLoopConstructor(const nsIID& aIID,
                                          void** aInstancePtr);

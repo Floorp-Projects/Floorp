@@ -200,6 +200,8 @@ struct NotLostData final {
              UnderlyingValue(WebGLExtensionID::Max)>
       extensions;
 
+  RefPtr<layers::CanvasRenderer> mCanvasRenderer;
+
   explicit NotLostData(ClientWebGLContext& context);
   ~NotLostData();
 };

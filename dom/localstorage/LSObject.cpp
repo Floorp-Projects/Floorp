@@ -23,7 +23,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ClientInfo.h"
@@ -71,38 +70,6 @@ namespace mozilla::dom {
 namespace {
 
 class RequestHelper;
-
-StaticMutex gRequestHelperMutex;
-nsISerialEventTarget* gSyncLoopEventTarget = nullptr;
-/**
- * Tracks whether a sync message has been received to the main thread but not
- * yet processed.  Used by RequestHelper logic to abort effectively synchronous
- * calls if a sync IPC message is received which could result in deadlock.
- * This is a boolean because, by definition, the parent can only send one sync
- * message to the child at a time.
- */
-bool gPendingSyncMessage = false;
-
-/*
- * Wrapper for the pushed event queue.  The wrapper automatically dispatches
- * runnables to the main thread when pushed event queue is no longer active.
- * This exists because the event loop spinning can be aborted.
- */
-class NestedEventTargetWrapper final : public nsISerialEventTarget {
-  nsCOMPtr<nsISerialEventTarget> mNestedEventTarget;
-  bool mDisconnected;
-
- public:
-  explicit NestedEventTargetWrapper(nsISerialEventTarget* aNestedEventTarget)
-      : mNestedEventTarget(aNestedEventTarget), mDisconnected(false) {}
-
- private:
-  ~NestedEventTargetWrapper() = default;
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  NS_DECL_NSIEVENTTARGET_FULL
-};
 
 /**
  * Main-thread helper that implements the blocking logic required by
@@ -172,10 +139,6 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
   // processing any of the events dispatched at the mOwningEventTarget (which
   // would result in re-entrancy and violate LocalStorage semantics).
   nsCOMPtr<nsISerialEventTarget> mNestedEventTarget;
-  // The wrapper for the pushed event queue.  The wrapper automatically
-  // dispatches runnables to the main thread when pushed event queue is no
-  // longer active.  This exists because the event loop spinning can be aborted.
-  nsCOMPtr<nsISerialEventTarget> mNestedEventTargetWrapper;
   // The IPC actor handling the request with standard IPC allocation rules.
   // Our reference is nulled in OnResponse which corresponds to the actor's
   // __destroy__ method.
@@ -186,7 +149,6 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
   State mState;
   // Control flag for the nested event loop; once set to false, the loop ends.
   bool mWaiting;
-  bool mCancelled;
 
  public:
   RequestHelper(LSObject* aObject, const LSRequestParams& aParams)
@@ -197,8 +159,7 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
         mParams(aParams),
         mResultCode(NS_OK),
         mState(State::Initial),
-        mWaiting(true),
-        mCancelled(false) {}
+        mWaiting(true) {}
 
   bool IsOnOwningThread() const {
     MOZ_ASSERT(mOwningEventTarget);
@@ -503,31 +464,6 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   object.forget(aObject);
   return NS_OK;
 }  // namespace dom
-
-// static
-void LSObject::OnSyncMessageReceived() {
-  nsCOMPtr<nsISerialEventTarget> target;
-
-  {
-    StaticMutexAutoLock lock(gRequestHelperMutex);
-    target = gSyncLoopEventTarget;
-    gPendingSyncMessage = true;
-  }
-
-  if (target) {
-    RefPtr<Runnable> runnable =
-        NS_NewRunnableFunction("LSObject::CheckFlagRunnable", []() {});
-
-    MOZ_ALWAYS_SUCCEEDS(
-        target->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
-  }
-}
-
-// static
-void LSObject::OnSyncMessageHandled() {
-  StaticMutexAutoLock lock(gRequestHelperMutex);
-  gPendingSyncMessage = false;
-}
 
 LSRequestChild* LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
                                        const LSRequestParams& aParams,
@@ -1134,77 +1070,6 @@ void LSObject::LastRelease() {
   DropDatabase();
 }
 
-NS_IMPL_ISUPPORTS(NestedEventTargetWrapper, nsIEventTarget,
-                  nsISerialEventTarget);
-
-NS_IMETHODIMP_(bool)
-NestedEventTargetWrapper::IsOnCurrentThreadInfallible() {
-  MOZ_CRASH(
-      "IsOnCurrentThreadInfallible should never be called on "
-      "NestedEventTargetWrapper");
-}
-
-NS_IMETHODIMP
-NestedEventTargetWrapper::IsOnCurrentThread(bool* aResult) {
-  MOZ_CRASH(
-      "IsOnCurrentThread should never be called on "
-      "NestedEventTargetWrapper");
-}
-
-NS_IMETHODIMP
-NestedEventTargetWrapper::Dispatch(already_AddRefed<nsIRunnable> aEvent,
-                                   uint32_t aFlags) {
-  MOZ_ASSERT(mNestedEventTarget);
-
-  if (mDisconnected) {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(std::move(aEvent), aFlags));
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIRunnable> event(aEvent);
-
-  nsresult rv = mNestedEventTarget->Dispatch(event, aFlags);
-  if (rv == NS_ERROR_UNEXPECTED) {
-    mDisconnected = true;
-
-    // Dispatch leaked the event object on the NS_ERROR_UNEXPECTED failure, so
-    // we explicitly release this object once for that.
-    event.get()->Release();
-
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(event.forget(), aFlags));
-  } else if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-NestedEventTargetWrapper::DispatchFromScript(nsIRunnable* aEvent,
-                                             uint32_t aFlags) {
-  MOZ_CRASH(
-      "DispatchFromScript should never be called on "
-      "NestedEventTargetWrapper");
-}
-
-NS_IMETHODIMP
-NestedEventTargetWrapper::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
-                                          uint32_t aDelayMs) {
-  MOZ_CRASH(
-      "DelayedDispatch should never be called on "
-      "NestedEventTargetWrapper");
-}
-
-NS_IMETHODIMP
-NestedEventTargetWrapper::RegisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NestedEventTargetWrapper::UnregisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
@@ -1229,9 +1094,6 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
     mNestedEventTarget = localExecution.GetEventTarget();
     MOZ_ASSERT(mNestedEventTarget);
 
-    mNestedEventTargetWrapper =
-        new NestedEventTargetWrapper(mNestedEventTarget);
-
     nsCOMPtr<nsIEventTarget> domFileThread =
         XRE_IsParentProcess() ? RemoteLazyInputStreamThread::GetOrCreate()
                               : RemoteLazyInputStreamThread::Get();
@@ -1242,22 +1104,6 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
     nsresult rv;
 
     {
-      {
-        StaticMutexAutoLock lock(gRequestHelperMutex);
-
-        if (StaticPrefs::dom_storage_abort_on_sync_parent_to_child_messages() &&
-            NS_WARN_IF(gPendingSyncMessage)) {
-          return NS_ERROR_FAILURE;
-        }
-
-        gSyncLoopEventTarget = mNestedEventTargetWrapper;
-      }
-
-      auto autoClearSyncLoopEventTarget = mozilla::MakeScopeExit([&] {
-        StaticMutexAutoLock lock(gRequestHelperMutex);
-        gSyncLoopEventTarget = nullptr;
-      });
-
       rv = domFileThread->Dispatch(this, NS_DISPATCH_NORMAL);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -1265,82 +1111,55 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
 
       nsCOMPtr<nsITimer> timer = NS_NewTimer();
 
-      MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(mNestedEventTarget));
+      MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(domFileThread));
 
       MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
           [](nsITimer* aTimer, void* aClosure) {
+            // The request is taking too much time. At this point we don't care
+            // about the result anymore so we can cancel the request.
+
+            // However, we don't abort the event loop spinning before the
+            // request is actually finished because that would cause races
+            // between the current thread and DOM File thread. Instead, we send
+            // the cancel message to the parent and wait for the request to
+            // finish like in the normal case when the request is successfully
+            // finished on time. OnResponse is called as the final step in both
+            // cases.
+
             auto helper = static_cast<RequestHelper*>(aClosure);
 
-            helper->mCancelled = true;
+            LSRequestChild* actor = helper->mActor;
+
+            // Start() could fail or OnResponse was already called, so we need
+            // to check if actor is not null. The actor can also be in the
+            // final (finishing) state, in that case we are not allowed to send
+            // the cancel message and it wouldn't make any sense because the
+            // request is about to be destroyed anyway.
+            if (actor && !actor->Finishing()) {
+              actor->SendCancel();
+            }
           },
           this, FAILSAFE_CANCEL_SYNC_OP_MS, nsITimer::TYPE_ONE_SHOT,
           "RequestHelper::StartAndReturnResponse::SpinEventLoopTimer"));
 
       MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
           "RequestHelper::StartAndReturnResponse"_ns,
-          [&]() {
-            if (mCancelled) {
-              return true;
-            }
-
-            if (!mWaiting) {
-              return true;
-            }
-
-            {
-              StaticMutexAutoLock lock(gRequestHelperMutex);
-              if (StaticPrefs::
-                      dom_storage_abort_on_sync_parent_to_child_messages() &&
-                  NS_WARN_IF(gPendingSyncMessage)) {
-                return true;
-              }
-            }
-
-            return false;
-          },
-          thread));
+          [&]() { return !mWaiting; }, thread));
 
       MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
     }
 
-    // If mWaiting is still set to true, it means that the event loop spinning
-    // was aborted and we need to cancel the request in the parent since we
-    // don't care about the result anymore.
-    // We can check mWaiting here because it's only ever touched on the main
-    // thread.
-    if (NS_WARN_IF(mWaiting)) {
-      // Don't touch mResponse, mResultCode or mState here! The
-      // RemoteLazyInputStream Thread may be accessing them at the same moment.
+    // We can touch all member variables (including mResponse, mResultCode or
+    // mState) here because the request must have been finished.
+    MOZ_ASSERT(mState == State::Complete);
 
-      RefPtr<RequestHelper> self = this;
+    // Additionally, mWaiting is only ever touched on the owning thread.
+    MOZ_ASSERT(!mWaiting);
 
-      RefPtr<Runnable> runnable =
-          NS_NewRunnableFunction("RequestHelper::SendCancelRunnable", [self]() {
-            LSRequestChild* actor = self->mActor;
-
-            // Start() could fail or it hasn't had a chance to run yet, so we
-            // need to check if actor is not null.
-            // The actor can also be in the final (finishing) state, in that
-            // case we are not allowed to send the cancel message and it
-            // wouldn't make sense because the request is about to be destroyed
-            // anyway.
-            if (actor && !actor->Finishing()) {
-              actor->SendCancel();
-            }
-          });
-
-      rv = domFileThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      return NS_ERROR_FAILURE;
-    }
-
-    // localExecution will be destructed when we leave this scope. If the event
-    // loop spinning was aborted and other threads dispatched new runnables to
-    // the nested event queue, they will be moved to the main event queue here
-    // and later asynchronusly processed.  So nothing will be lost.
+    // localExecution will be destructed when we leave this scope. We need to
+    // clear the nested event target before that happens, so we will know if
+    // something still tries to incorrectly dispatch runnables to it.
+    mNestedEventTarget = nullptr;
   }
 
   if (NS_WARN_IF(NS_FAILED(mResultCode))) {
@@ -1358,7 +1177,7 @@ nsresult RequestHelper::Start() {
   mState = State::ResponsePending;
 
   LSRequestChild* actor =
-      mObject->StartRequest(mNestedEventTargetWrapper, mParams, this);
+      mObject->StartRequest(mNestedEventTarget, mParams, this);
   if (NS_WARN_IF(!actor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1409,7 +1228,7 @@ RequestHelper::Run() {
       Finish();
     } else {
       MOZ_ALWAYS_SUCCEEDS(
-          mNestedEventTargetWrapper->Dispatch(this, NS_DISPATCH_NORMAL));
+          mNestedEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
     }
   }
 
@@ -1425,9 +1244,7 @@ void RequestHelper::OnResponse(const LSRequestResponse& aResponse) {
   mResponse = aResponse;
 
   mState = State::Finishing;
-
-  MOZ_ALWAYS_SUCCEEDS(
-      mNestedEventTargetWrapper->Dispatch(this, NS_DISPATCH_NORMAL));
+  MOZ_ALWAYS_SUCCEEDS(mNestedEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 }  // namespace mozilla::dom

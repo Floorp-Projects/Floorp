@@ -76,7 +76,7 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   void SetState(const WriterState& aState) { mState = aState; }
 
   JS::Value StoredError() const { return mStoredError; }
-  void SetStoredError(JS::HandleValue aStoredError) {
+  void SetStoredError(JS::Handle<JS::Value> aStoredError) {
     mStoredError = aStoredError;
   }
 

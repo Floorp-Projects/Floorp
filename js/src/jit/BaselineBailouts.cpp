@@ -198,7 +198,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   bool envChainSlotCanBeOptimized();
 #endif
 
-  bool hasLiveStackValueAtDepth(uint32_t stackSlotIndex);
   bool isPrologueBailout();
   jsbytecode* getResumePC();
   void* getStubReturnAddress();
@@ -873,25 +872,18 @@ bool BaselineStackBuilder::buildExpressionStack() {
           exprStackSlots());
   for (uint32_t i = 0; i < exprStackSlots(); i++) {
     Value v;
-    if (propagatingIonExceptionForDebugMode()) {
-      // If we are in the middle of propagating an exception from Ion by
-      // bailing to baseline due to debug mode, we might not have all
-      // the stack if we are at the newest frame.
-      //
-      // For instance, if calling |f()| pushed an Ion frame which threw,
-      // the snapshot expects the return value to be pushed, but it's
-      // possible nothing was pushed before we threw. We can't drop
-      // iterators, however, so read them out. They will be closed by
-      // HandleExceptionBaseline.
-      MOZ_ASSERT(cx_->realm()->isDebuggee() || forcedReturn());
-      if (iter_.moreFrames() || hasLiveStackValueAtDepth(i)) {
-        v = iter_.read();
-      } else {
-        iter_.skip();
-        v = MagicValue(JS_OPTIMIZED_OUT);
-      }
-    } else {
-      v = iter_.read();
+    // If we are in the middle of propagating an exception from Ion by
+    // bailing to baseline due to debug mode, we might not have all
+    // the stack if we are at the newest frame.
+    //
+    // For instance, if calling |f()| pushed an Ion frame which threw,
+    // the snapshot expects the return value to be pushed, but it's
+    // possible nothing was pushed before we threw.
+    //
+    // We therefore use a fallible read here.
+    if (!iter_.tryRead(&v)) {
+      MOZ_ASSERT(propagatingIonExceptionForDebugMode() && !iter_.moreFrames());
+      v = MagicValue(JS_OPTIMIZED_OUT);
     }
     if (!writeValue(v, "StackValue")) {
       return false;
@@ -1455,33 +1447,6 @@ jsbytecode* BaselineStackBuilder::getResumePC() {
   }
 
   return slowerPc;
-}
-
-bool BaselineStackBuilder::hasLiveStackValueAtDepth(uint32_t stackSlotIndex) {
-  // Return true iff stackSlotIndex is a stack value that's part of an active
-  // iterator loop instead of a normal expression stack slot.
-
-  MOZ_ASSERT(stackSlotIndex < exprStackSlots());
-
-  for (TryNoteIterAllNoGC tni(script_, pc_); !tni.done(); ++tni) {
-    const TryNote& tn = **tni;
-
-    switch (tn.kind()) {
-      case TryNoteKind::ForIn:
-      case TryNoteKind::ForOf:
-      case TryNoteKind::Destructuring:
-        MOZ_ASSERT(tn.stackDepth <= exprStackSlots());
-        if (stackSlotIndex < tn.stackDepth) {
-          return true;
-        }
-        break;
-
-      default:
-        break;
-    }
-  }
-
-  return false;
 }
 
 bool BaselineStackBuilder::isPrologueBailout() {

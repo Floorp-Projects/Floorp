@@ -719,7 +719,7 @@ mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
 
   if ((aState & states::REQUIRED) != 0) {
     nsAutoString requiredString;
-    if (LocalizeString("stateRequired", requiredString)) {
+    if (LocalizeString(u"stateRequired"_ns, requiredString)) {
       if (!hint.IsEmpty()) {
         // If the hint is non-empty, concatenate with a comma for a brief pause.
         hint.AppendLiteral(", ");
@@ -899,7 +899,7 @@ void SessionAccessibility::PopulateNodeInfo(
 
   if ((state & states::REQUIRED) != 0) {
     nsAutoString requiredString;
-    if (LocalizeString("stateRequired", requiredString)) {
+    if (LocalizeString(u"stateRequired"_ns, requiredString)) {
       if (!hint.IsEmpty()) {
         // If the hint is non-empty, concatenate with a comma for a brief pause.
         hint.AppendLiteral(", ");

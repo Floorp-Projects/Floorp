@@ -12,10 +12,6 @@ include protocol PDocAccessible;
 #endif
 include protocol PFilePicker;
 include protocol PRemotePrintJob;
-include protocol PChildToParentStream;
-include protocol PParentToChildStream;
-include protocol PFileDescriptorSet;
-include protocol PRemoteLazyInputStream;
 include protocol PPaymentRequest;
 include protocol PSessionStore;
 include protocol PWindowGlobal;

@@ -150,8 +150,6 @@ errors["NS_ERROR_ILLEGAL_VALUE"] = 0x80070057
 errors["NS_ERROR_INVALID_ARG"] = errors["NS_ERROR_ILLEGAL_VALUE"]
 errors["NS_ERROR_INVALID_POINTER"] = errors["NS_ERROR_INVALID_ARG"]
 errors["NS_ERROR_NULL_POINTER"] = errors["NS_ERROR_INVALID_ARG"]
-# Returned when a class doesn't allow aggregation
-errors["NS_ERROR_NO_AGGREGATION"] = 0x80040110
 # Returned when an operation can't complete due to an unavailable resource
 errors["NS_ERROR_NOT_AVAILABLE"] = 0x80040111
 # Returned when a class is not registered
@@ -342,6 +340,9 @@ with modules["NETWORK"]:
     errors["NS_ERROR_HTTPS_ONLY"] = FAILURE(86)
     # A WebSocket connection is failed.
     errors["NS_ERROR_WEBSOCKET_CONNECTION_REFUSED"] = FAILURE(87)
+    # A connection to a non local address is refused because
+    # xpc::AreNonLocalConnectionsDisabled() returns true.
+    errors["NS_ERROR_NON_LOCAL_CONNECTION_REFUSED"] = FAILURE(88)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??
@@ -1372,3 +1373,27 @@ use super::nsresult;
 
     for error, val in errors.items():
         output.write("pub const {}: nsresult = nsresult(0x{:X});\n".format(error, val))
+
+
+def gen_jinja(output, input_filename):
+    # This is used to generate Java code for error lists, and can be expanded to
+    # other required contexts in the future if desired.
+    from jinja2 import Environment, FileSystemLoader, StrictUndefined
+    import os
+
+    # FileSystemLoader requires the path to the directory containing templates,
+    # not the file name of the template itself.
+    (path, leaf) = os.path.split(input_filename)
+    env = Environment(
+        loader=FileSystemLoader(path, encoding="utf-8"),
+        undefined=StrictUndefined,
+    )
+    tpl = env.get_template(leaf)
+
+    context = {
+        "MODULE_BASE_OFFSET": MODULE_BASE_OFFSET,
+        "modules": ((mod, val.num) for mod, val in modules.items()),
+        "errors": errors.items(),
+    }
+
+    tpl.stream(context).dump(output, encoding="utf-8")

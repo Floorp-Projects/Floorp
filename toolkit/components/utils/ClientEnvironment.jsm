@@ -121,8 +121,8 @@ class ClientEnvironmentBase {
 
   static get searchEngine() {
     return (async () => {
-      const defaultEngineInfo = await Services.search.getDefaultEngineInfo();
-      return defaultEngineInfo.defaultSearchEngine;
+      const defaultEngineInfo = await Services.search.getDefault();
+      return defaultEngineInfo.telemetryId;
     })();
   }
 

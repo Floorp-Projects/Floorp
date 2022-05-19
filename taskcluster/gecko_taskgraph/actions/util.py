@@ -120,7 +120,7 @@ def get_pushes_from_params_input(parameters, input):
     )
 
 
-def get_pushes(project, end_id, depth):
+def get_pushes(project, end_id, depth, full_response=False):
     pushes = []
     while True:
         start_id = max(end_id - depth, 0)
@@ -138,7 +138,8 @@ def get_pushes(project, end_id, depth):
             break
 
     pushes = sorted(pushes)[-depth:]
-    return pushes
+    push_dict = {push: r.json()["pushes"][push] for push in pushes}
+    return push_dict if full_response else pushes
 
 
 def get_decision_task_id(project, push_id):

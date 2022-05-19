@@ -8,71 +8,58 @@
 #include "nsASCIIMask.h"
 #include "mozilla/CheckedInt.h"
 
-/**
- * nsTString::Find
- *
- * aOffset specifies starting index
- * aCount specifies number of string compares (iterations)
- */
+namespace mozilla::detail {
+
 template <typename T>
-int32_t nsTString<T>::Find(const nsTString<char>& aString, bool aIgnoreCase,
-                           int32_t aOffset, int32_t aCount) const {
+int32_t nsTStringRepr<T>::Find(const nsTStringRepr<char>& aString,
+                               bool aIgnoreCase, int32_t aOffset,
+                               int32_t aCount) const {
   // this method changes the meaning of aOffset and aCount:
   Find_ComputeSearchRange(this->mLength, aString.Length(), aOffset, aCount);
 
-  int32_t result = FindSubstring(this->mData + aOffset, aCount, aString.get(),
-                                 aString.Length(), aIgnoreCase);
+  int32_t result =
+      FindSubstring(this->mData + aOffset, aCount, aString.BeginReading(),
+                    aString.Length(), aIgnoreCase);
   if (result != kNotFound) result += aOffset;
   return result;
 }
 
 template <typename T>
-int32_t nsTString<T>::Find(const char* aString, bool aIgnoreCase,
-                           int32_t aOffset, int32_t aCount) const {
+int32_t nsTStringRepr<T>::Find(const char* aString, bool aIgnoreCase,
+                               int32_t aOffset, int32_t aCount) const {
   return Find(nsTDependentString<char>(aString), aIgnoreCase, aOffset, aCount);
 }
 
-/**
- * nsTString::RFind
- *
- * aOffset specifies starting index
- * aCount specifies number of string compares (iterations)
- */
 template <typename T>
-int32_t nsTString<T>::RFind(const nsTString<char>& aString, bool aIgnoreCase,
-                            int32_t aOffset, int32_t aCount) const {
+int32_t nsTStringRepr<T>::RFind(const nsTStringRepr<char>& aString,
+                                bool aIgnoreCase, int32_t aOffset,
+                                int32_t aCount) const {
   // this method changes the meaning of aOffset and aCount:
   RFind_ComputeSearchRange(this->mLength, aString.Length(), aOffset, aCount);
 
-  int32_t result = RFindSubstring(this->mData + aOffset, aCount, aString.get(),
-                                  aString.Length(), aIgnoreCase);
+  int32_t result =
+      RFindSubstring(this->mData + aOffset, aCount, aString.BeginReading(),
+                     aString.Length(), aIgnoreCase);
   if (result != kNotFound) result += aOffset;
   return result;
 }
 
 template <typename T>
-int32_t nsTString<T>::RFind(const char* aString, bool aIgnoreCase,
-                            int32_t aOffset, int32_t aCount) const {
+int32_t nsTStringRepr<T>::RFind(const char* aString, bool aIgnoreCase,
+                                int32_t aOffset, int32_t aCount) const {
   return RFind(nsTDependentString<char>(aString), aIgnoreCase, aOffset, aCount);
 }
 
-/**
- * nsTString::RFindChar
- */
 template <typename T>
-int32_t nsTString<T>::RFindChar(char16_t aChar, int32_t aOffset,
-                                int32_t aCount) const {
+int32_t nsTStringRepr<T>::RFindChar(char16_t aChar, int32_t aOffset,
+                                    int32_t aCount) const {
   return nsBufferRoutines<T>::rfind_char(this->mData, this->mLength, aOffset,
                                          aChar, aCount);
 }
 
-/**
- * nsTString::FindCharInSet
- */
-
 template <typename T>
-int32_t nsTString<T>::FindCharInSet(const char_type* aSet,
-                                    int32_t aOffset) const {
+int32_t nsTStringRepr<T>::FindCharInSet(const char_type* aSet,
+                                        int32_t aOffset) const {
   if (aOffset < 0)
     aOffset = 0;
   else if (aOffset >= int32_t(this->mLength))
@@ -89,8 +76,8 @@ int32_t nsTString<T>::FindCharInSet(const char_type* aSet,
  */
 
 template <typename T>
-int32_t nsTString<T>::RFindCharInSet(const char_type* aSet,
-                                     int32_t aOffset) const {
+int32_t nsTStringRepr<T>::RFindCharInSet(const char_type* aSet,
+                                         int32_t aOffset) const {
   // We want to pass a "data length" to ::RFindCharInSet
   if (aOffset < 0 || aOffset > int32_t(this->mLength))
     aOffset = this->mLength;
@@ -100,12 +87,13 @@ int32_t nsTString<T>::RFindCharInSet(const char_type* aSet,
   return ::RFindCharInSet(this->mData, aOffset, aSet);
 }
 
+}  // namespace mozilla::detail
+
 /**
  * nsTString::Mid
  */
-
 template <typename T>
-typename nsTString<T>::size_type nsTString<T>::Mid(
+typename nsTSubstring<T>::size_type nsTSubstring<T>::Mid(
     self_type& aResult, index_type aStartPos, size_type aLengthToCopy) const {
   if (aStartPos == 0 && aLengthToCopy >= this->mLength)
     aResult = *this;
@@ -130,49 +118,18 @@ bool nsTString<T>::SetCharAt(char16_t aChar, index_type aIndex) {
 }
 
 /**
- * nsTString::StripChars,StripChar,StripWhitespace
+ * nsTSubstring::StripWhitespace
  */
 
 template <typename T>
-template <typename Q, typename EnableIfChar16>
-void nsTString<T>::StripChars(const incompatible_char_type* aSet) {
-  if (!StripChars(aSet, mozilla::fallible)) {
-    this->AllocFailed(this->mLength);
-  }
-}
-
-template void nsTString<char16_t>::StripChars(const incompatible_char_type*);
-
-template <typename T>
-template <typename Q, typename EnableIfChar16>
-bool nsTString<T>::StripChars(const incompatible_char_type* aSet,
-                              const fallible_t&) {
-  if (!this->EnsureMutable()) {
-    return false;
-  }
-
-  this->mLength =
-      nsBufferRoutines<T>::strip_chars(this->mData, this->mLength, aSet);
-  return true;
-}
-
-template bool nsTString<char16_t>::StripChars(const incompatible_char_type*,
-                                              const fallible_t&);
-
-template <typename T>
-void nsTString<T>::StripChars(const char_type* aSet) {
-  nsTSubstring<T>::StripChars(aSet);
-}
-
-template <typename T>
-void nsTString<T>::StripWhitespace() {
+void nsTSubstring<T>::StripWhitespace() {
   if (!StripWhitespace(mozilla::fallible)) {
     this->AllocFailed(this->mLength);
   }
 }
 
 template <typename T>
-bool nsTString<T>::StripWhitespace(const fallible_t&) {
+bool nsTSubstring<T>::StripWhitespace(const fallible_t&) {
   if (!this->EnsureMutable()) {
     return false;
   }
@@ -182,11 +139,11 @@ bool nsTString<T>::StripWhitespace(const fallible_t&) {
 }
 
 /**
- * nsTString::ReplaceChar,ReplaceSubstring
+ * nsTSubstring::ReplaceChar,ReplaceSubstring
  */
 
 template <typename T>
-void nsTString<T>::ReplaceChar(char_type aOldChar, char_type aNewChar) {
+void nsTSubstring<T>::ReplaceChar(char_type aOldChar, char_type aNewChar) {
   if (!this->EnsureMutable())  // XXX do this lazily?
     this->AllocFailed(this->mLength);
 
@@ -196,7 +153,7 @@ void nsTString<T>::ReplaceChar(char_type aOldChar, char_type aNewChar) {
 }
 
 template <typename T>
-void nsTString<T>::ReplaceChar(const char_type* aSet, char_type aNewChar) {
+void nsTSubstring<T>::ReplaceChar(const char_type* aSet, char_type aNewChar) {
   if (!this->EnsureMutable())  // XXX do this lazily?
     this->AllocFailed(this->mLength);
 
@@ -213,28 +170,28 @@ void nsTString<T>::ReplaceChar(const char_type* aSet, char_type aNewChar) {
   }
 }
 
-template void nsTString<char16_t>::ReplaceChar(const char*, char16_t);
+template void nsTSubstring<char16_t>::ReplaceChar(const char*, char16_t);
 
 void ReleaseData(void* aData, nsAString::DataFlags aFlags);
 
 template <typename T>
-void nsTString<T>::ReplaceSubstring(const char_type* aTarget,
-                                    const char_type* aNewValue) {
+void nsTSubstring<T>::ReplaceSubstring(const char_type* aTarget,
+                                       const char_type* aNewValue) {
   ReplaceSubstring(nsTDependentString<T>(aTarget),
                    nsTDependentString<T>(aNewValue));
 }
 
 template <typename T>
-bool nsTString<T>::ReplaceSubstring(const char_type* aTarget,
-                                    const char_type* aNewValue,
-                                    const fallible_t& aFallible) {
+bool nsTSubstring<T>::ReplaceSubstring(const char_type* aTarget,
+                                       const char_type* aNewValue,
+                                       const fallible_t& aFallible) {
   return ReplaceSubstring(nsTDependentString<T>(aTarget),
                           nsTDependentString<T>(aNewValue), aFallible);
 }
 
 template <typename T>
-void nsTString<T>::ReplaceSubstring(const self_type& aTarget,
-                                    const self_type& aNewValue) {
+void nsTSubstring<T>::ReplaceSubstring(const self_type& aTarget,
+                                       const self_type& aNewValue) {
   if (!ReplaceSubstring(aTarget, aNewValue, mozilla::fallible)) {
     // Note that this may wildly underestimate the allocation that failed, as
     // we could have been replacing multiple copies of aTarget.
@@ -243,9 +200,15 @@ void nsTString<T>::ReplaceSubstring(const self_type& aTarget,
 }
 
 template <typename T>
-bool nsTString<T>::ReplaceSubstring(const self_type& aTarget,
-                                    const self_type& aNewValue,
-                                    const fallible_t&) {
+bool nsTSubstring<T>::ReplaceSubstring(const self_type& aTarget,
+                                       const self_type& aNewValue,
+                                       const fallible_t&) {
+  struct Segment {
+    uint32_t mBegin, mLength;
+    Segment(uint32_t aBegin, uint32_t aLength)
+        : mBegin(aBegin), mLength(aLength) {}
+  };
+
   if (aTarget.Length() == 0) return true;
 
   // Remember all of the non-matching parts.
@@ -340,12 +303,12 @@ bool nsTString<T>::ReplaceSubstring(const self_type& aTarget,
 }
 
 /**
- * nsTString::Trim
+ * nsTSubstring::Trim
  */
 
 template <typename T>
-void nsTString<T>::Trim(const char* aSet, bool aTrimLeading, bool aTrimTrailing,
-                        bool aIgnoreQuotes) {
+void nsTSubstring<T>::Trim(const char* aSet, bool aTrimLeading,
+                           bool aTrimTrailing, bool aIgnoreQuotes) {
   // the old implementation worried about aSet being null :-/
   if (!aSet) return;
 
@@ -397,11 +360,12 @@ void nsTString<T>::Trim(const char* aSet, bool aTrimLeading, bool aTrimTrailing,
 }
 
 /**
- * nsTString::CompressWhitespace.
+ * nsTSubstring::CompressWhitespace.
  */
 
 template <typename T>
-void nsTString<T>::CompressWhitespace(bool aTrimLeading, bool aTrimTrailing) {
+void nsTSubstring<T>::CompressWhitespace(bool aTrimLeading,
+                                         bool aTrimTrailing) {
   // Quick exit
   if (this->mLength == 0) {
     return;

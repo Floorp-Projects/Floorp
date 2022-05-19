@@ -17,7 +17,7 @@ class nsAboutRedirector : public nsIAboutModule {
 
   nsAboutRedirector() {}
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
  protected:
   virtual ~nsAboutRedirector() {}

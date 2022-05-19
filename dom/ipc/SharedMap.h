@@ -20,8 +20,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ContentParent;
 
@@ -354,7 +353,6 @@ class WritableSharedMap final : public SharedMap {
 };
 
 }  // namespace ipc
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // dom_ipc_SharedMap_h

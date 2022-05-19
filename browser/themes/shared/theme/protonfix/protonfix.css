@@ -1156,11 +1156,6 @@
   }
   
   
-  .toolbarbutton-1#forward-button .toolbarbutton-icon,
-  #context-forward .menu-iconic-icon
-  {
-    transform: scaleX(-1) !important;
-  }
   
   #star-button[starred],
   #tracking-protection-icon-box[active]
@@ -1366,6 +1361,3 @@
     }
   }
 
-  #forward-button {
-    list-style-image: url("chrome://browser/skin/back.svg") !important;
-  }

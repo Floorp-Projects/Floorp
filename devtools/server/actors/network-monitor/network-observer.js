@@ -12,7 +12,7 @@
 // Enable logging all platform events this module listen to
 const DEBUG_PLATFORM_EVENTS = false;
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 
@@ -54,11 +54,6 @@ loader.lazyRequireGetter(
   "NetworkResponseListener",
   "devtools/server/actors/network-monitor/network-response-listener",
   true
-);
-loader.lazyGetter(
-  this,
-  "WebExtensionPolicy",
-  () => Cu.getGlobalForObject(Cu).WebExtensionPolicy
 );
 
 function logPlatformEvent(eventName, channel, message = "") {

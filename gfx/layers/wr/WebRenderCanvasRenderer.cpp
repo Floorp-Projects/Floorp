@@ -11,7 +11,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "SharedSurfaceGL.h"
 #include "WebRenderBridgeChild.h"
-#include "RenderRootStateManager.h"
 
 namespace mozilla {
 namespace layers {

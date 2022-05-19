@@ -14,8 +14,8 @@ add_task(async function() {
     url,
   });
 
-  let file = OS.Path.join(
-    OS.Constants.Path.profileDir,
+  let file = PathUtils.join(
+    PathUtils.profileDir,
     "bookmarks.exported.997030.html"
   );
   await IOUtils.remove(file, { ignoreAbsent: true });

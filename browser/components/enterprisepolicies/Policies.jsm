@@ -146,6 +146,100 @@ var Policies = {
     },
   },
 
+  AppUpdatePin: {
+    validate(param) {
+      // This is the version when pinning was introduced. Attempting to set a
+      // pin before this will not work, because Balrog's pinning table will
+      // never have the necessary entry.
+      const earliestPinMajorVersion = 102;
+      const earliestPinMinorVersion = 0;
+
+      let pinParts = param.split(".");
+
+      if (pinParts.length < 2) {
+        log.error("AppUpdatePin has too few dots.");
+        return false;
+      }
+      if (pinParts.length > 3) {
+        log.error("AppUpdatePin has too many dots.");
+        return false;
+      }
+
+      const trailingPinPart = pinParts.pop();
+      if (trailingPinPart != "") {
+        log.error("AppUpdatePin does not end with a trailing dot.");
+        return false;
+      }
+
+      const pinMajorVersionStr = pinParts.shift();
+      if (!pinMajorVersionStr.length) {
+        log.error("AppUpdatePin's major version is empty.");
+        return false;
+      }
+      if (!/^\d+$/.test(pinMajorVersionStr)) {
+        log.error(
+          "AppUpdatePin's major version contains a non-numeric character."
+        );
+        return false;
+      }
+      if (/^0/.test(pinMajorVersionStr)) {
+        log.error("AppUpdatePin's major version contains a leading 0.");
+        return false;
+      }
+      const pinMajorVersionInt = parseInt(pinMajorVersionStr, 10);
+      if (isNaN(pinMajorVersionInt)) {
+        log.error(
+          "AppUpdatePin's major version could not be parsed to an integer."
+        );
+        return false;
+      }
+      if (pinMajorVersionInt < earliestPinMajorVersion) {
+        log.error(
+          `AppUpdatePin must not be earlier than '${earliestPinMajorVersion}.${earliestPinMinorVersion}.'.`
+        );
+        return false;
+      }
+
+      if (pinParts.length) {
+        const pinMinorVersionStr = pinParts.shift();
+        if (!pinMinorVersionStr.length) {
+          log.error("AppUpdatePin's minor version is empty.");
+          return false;
+        }
+        if (!/^\d+$/.test(pinMinorVersionStr)) {
+          log.error(
+            "AppUpdatePin's minor version contains a non-numeric character."
+          );
+          return false;
+        }
+        if (/^0\d/.test(pinMinorVersionStr)) {
+          log.error("AppUpdatePin's minor version contains a leading 0.");
+          return false;
+        }
+        const pinMinorVersionInt = parseInt(pinMinorVersionStr, 10);
+        if (isNaN(pinMinorVersionInt)) {
+          log.error(
+            "AppUpdatePin's minor version could not be parsed to an integer."
+          );
+          return false;
+        }
+        if (
+          pinMajorVersionInt == earliestPinMajorVersion &&
+          pinMinorVersionInt < earliestPinMinorVersion
+        ) {
+          log.error(
+            `AppUpdatePin must not be earlier than '${earliestPinMajorVersion}.${earliestPinMinorVersion}.'.`
+          );
+          return false;
+        }
+      }
+
+      return true;
+    },
+    // No additional implementation needed here. UpdateService.jsm will check
+    // for this policy directly when determining the update URL.
+  },
+
   AppUpdateURL: {
     // No implementation needed here. UpdateService.jsm will check for this
     // policy directly when determining the update URL.
@@ -1600,6 +1694,7 @@ var Policies = {
         "widget.",
       ];
       const allowedSecurityPrefs = [
+        "security.block_fileuri_script_with_wrong_mime",
         "security.default_personal_cert",
         "security.insecure_connection_text.enabled",
         "security.insecure_connection_text.pbmode.enabled",
@@ -2568,7 +2663,7 @@ let ChromeURLBlockPolicy = {
   contractID: "@mozilla-org/policy-engine-content-policy-service;1",
   classID: Components.ID("{ba7b9118-cabc-4845-8b26-4215d2a59ed7}"),
   QueryInterface: ChromeUtils.generateQI(["nsIContentPolicy"]),
-  createInstance(outer, iid) {
+  createInstance(iid) {
     return this.QueryInterface(iid);
   },
 };

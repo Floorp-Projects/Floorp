@@ -10,7 +10,7 @@
 
 #if CLANG_VERSION_FULL >= 1300
 // Starting with clang-13 Expr::isRValue has been renamed to Expr::isPRValue
-#define isRValue  isPRValue
+#define isRValue isPRValue
 #endif
 
 namespace clang {
@@ -58,6 +58,17 @@ AST_POLYMORPHIC_MATCHER(isFirstParty,
                         AST_POLYMORPHIC_SUPPORTED_TYPES(Decl, Stmt)) {
   return !inThirdPartyPath(&Node, &Finder->getASTContext()) &&
          !ASTIsInSystemHeader(Finder->getASTContext(), Node);
+}
+
+AST_MATCHER(DeclaratorDecl, isNotSpiderMonkey) {
+  // Detect SpiderMonkey path. Not as strict as isFirstParty, but this is
+  // expected to disappear soon by getting a common style guide between DOM and
+  // SpiderMonkey.
+  std::string Path = Node.getBeginLoc().printToString(
+      Finder->getASTContext().getSourceManager());
+  return Path.find("js") == std::string::npos &&
+         Path.find("xpc") == std::string::npos &&
+         Path.find("XPC") == std::string::npos;
 }
 
 /// This matcher will match temporary expressions.
@@ -429,6 +440,43 @@ AST_MATCHER(MemberExpr, hasKnownLiveAnnotation) {
   ValueDecl *Member = Node.getMemberDecl();
   FieldDecl *Field = dyn_cast<FieldDecl>(Member);
   return Field && hasCustomAttribute<moz_known_live>(Field);
+}
+
+#define GENERATE_JSTYPEDEF_PAIR(templateName)                                  \
+  {templateName "Function", templateName "<JSFunction*>"},                     \
+      {templateName "Id", templateName "<JS::PropertyKey>"},                   \
+      {templateName "Object", templateName "<JSObject*>"},                     \
+      {templateName "Script", templateName "<JSScript*>"},                     \
+      {templateName "String", templateName "<JSString*>"},                     \
+      {templateName "Symbol", templateName "<JS::Symbol*>"},                   \
+      {templateName "BigInt", templateName "<JS::BigInt*>"},                   \
+      {templateName "Value", templateName "<JS::Value>"},                      \
+      {templateName "ValueVector",                                             \
+       templateName "<JS::StackGCVector<JS::Value>>"},                         \
+      {templateName "ObjectVector",                                            \
+       templateName "<JS::StackGCVector<JSObject*>>"},                         \
+  {                                                                            \
+    templateName "IdVector",                                                   \
+        templateName "<JS::StackGCVector<JS::PropertyKey>>"                    \
+  }
+
+static const char *const JSHandleRootedTypedefMap[][2] = {
+    GENERATE_JSTYPEDEF_PAIR("JS::Handle"),
+    GENERATE_JSTYPEDEF_PAIR("JS::MutableHandle"),
+    GENERATE_JSTYPEDEF_PAIR("JS::Rooted"),
+    // Technically there is no PersistentRootedValueVector, and that's okay
+    GENERATE_JSTYPEDEF_PAIR("JS::PersistentRooted"),
+};
+
+AST_MATCHER(DeclaratorDecl, isUsingJSHandleRootedTypedef) {
+  QualType Type = Node.getType();
+  std::string TypeName = Type.getAsString();
+  for (auto &pair : JSHandleRootedTypedefMap) {
+    if (!TypeName.compare(pair[0])) {
+      return true;
+    }
+  }
+  return false;
 }
 
 } // namespace ast_matchers

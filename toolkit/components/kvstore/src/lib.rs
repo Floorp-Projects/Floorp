@@ -26,7 +26,7 @@ use atomic_refcell::AtomicRefCell;
 use error::KeyValueError;
 use libc::c_void;
 use moz_task::{create_background_task_queue, DispatchOptions, TaskRunnable};
-use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_NO_AGGREGATION, NS_OK};
+use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
 use nsstring::{nsACString, nsCString};
 use owned_value::{owned_to_variant, variant_to_owned};
 use rkv::backend::{SafeModeDatabase, SafeModeEnvironment};
@@ -44,8 +44,7 @@ use xpcom::{
     getter_addrefs,
     interfaces::{
         nsIKeyValueDatabaseCallback, nsIKeyValueEnumeratorCallback, nsIKeyValuePair,
-        nsIKeyValueVariantCallback, nsIKeyValueVoidCallback, nsISerialEventTarget, nsISupports,
-        nsIVariant,
+        nsIKeyValueVariantCallback, nsIKeyValueVoidCallback, nsISerialEventTarget, nsIVariant,
     },
     nsIID, xpcom, xpcom_method, RefPtr,
 };
@@ -56,15 +55,10 @@ type KeyValuePairResult = Result<(String, OwnedValue), KeyValueError>;
 
 #[no_mangle]
 pub unsafe extern "C" fn nsKeyValueServiceConstructor(
-    outer: *const nsISupports,
     iid: &nsIID,
     result: *mut *mut c_void,
 ) -> nsresult {
     *result = ptr::null_mut();
-
-    if !outer.is_null() {
-        return NS_ERROR_NO_AGGREGATION;
-    }
 
     let service = KeyValueService::new();
     service.QueryInterface(iid, result)

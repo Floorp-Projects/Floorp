@@ -150,7 +150,7 @@ def vendor_puppeteer(command_context, repository, commitish, install):
         )
 
     if install:
-        env = {"PUPPETEER_SKIP_DOWNLOAD": "1"}
+        env = {"HUSKY": "0", "PUPPETEER_SKIP_DOWNLOAD": "1"}
         npm(
             "install",
             cwd=os.path.join(command_context.topsrcdir, puppeteer_dir),
@@ -684,7 +684,7 @@ def puppeteer_test(
 
 def install_puppeteer(command_context, product, ci):
     setup()
-    env = {}
+    env = {"HUSKY": "0"}
     from mozversioncontrol import get_repository_object
 
     repo = get_repository_object(command_context.topsrcdir)

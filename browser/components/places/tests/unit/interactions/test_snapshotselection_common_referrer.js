@@ -62,18 +62,18 @@ add_task(async function test_common_referrer() {
   await Snapshots.add({ url: TEST_PRODUCT_B_URL });
   await Snapshots.add({ url: TEST_PRODUCT_C_URL });
 
-  selector.setUrl(TEST_SEARCH_URL);
+  selector.updateDetailsAndRebuild({ url: TEST_SEARCH_URL });
   snapshots = await snapshotPromise;
   await assertSnapshotList(snapshots, []);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_PRODUCT_A_URL);
+  selector.updateDetailsAndRebuild({ url: TEST_PRODUCT_A_URL });
   snapshots = await snapshotPromise;
 
   await assertSnapshotList(snapshots, [{ url: TEST_PRODUCT_B_URL }]);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_PRODUCT_B_URL);
+  selector.updateDetailsAndRebuild({ url: TEST_PRODUCT_B_URL });
   snapshots = await snapshotPromise;
 
   await assertSnapshotList(snapshots, [{ url: TEST_PRODUCT_A_URL }]);
@@ -84,14 +84,14 @@ add_task(async function test_test_common_referrer_with_scoring() {
   Services.prefs.setIntPref("browser.places.snapshots.threshold", 0.5);
 
   let snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_PRODUCT_C_URL);
+  selector.updateDetailsAndRebuild({ url: TEST_PRODUCT_C_URL });
   let snapshots = await snapshotPromise;
 
   // Should still be empty -- no common referrer
   await assertSnapshotList(snapshots, []);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_PRODUCT_A_URL);
+  selector.updateDetailsAndRebuild({ url: TEST_PRODUCT_A_URL });
   snapshots = await snapshotPromise;
 
   await assertSnapshotList(snapshots, [{ url: TEST_PRODUCT_B_URL }]);

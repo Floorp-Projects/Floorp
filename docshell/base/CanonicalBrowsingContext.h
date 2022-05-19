@@ -134,8 +134,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   UniquePtr<LoadingSessionHistoryInfo> ReplaceLoadingSessionHistoryEntryForLoad(
       LoadingSessionHistoryInfo* aInfo, nsIChannel* aNewChannel);
 
-  already_AddRefed<Promise> Print(nsIPrintSettings* aPrintSettings,
-                                  ErrorResult& aRv);
+  using PrintPromise = MozPromise</* unused */ bool, nsresult, false>;
+  RefPtr<PrintPromise> Print(nsIPrintSettings*);
+  already_AddRefed<Promise> PrintJS(nsIPrintSettings*, ErrorResult&);
 
   // Call the given callback on all top-level descendant BrowsingContexts.
   // Return Callstate::Stop from the callback to stop calling
@@ -478,7 +479,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   bool ShouldAddEntryForRefresh(const SessionHistoryEntry* aEntry) {
     return ShouldAddEntryForRefresh(aEntry->Info().GetURI(),
-                                    aEntry->Info().GetPostData());
+                                    aEntry->Info().HasPostData());
   }
   bool ShouldAddEntryForRefresh(nsIURI* aNewURI, bool aHasPostData) {
     nsCOMPtr<nsIURI> currentURI = GetCurrentURI();

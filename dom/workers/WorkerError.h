@@ -65,8 +65,8 @@ class WorkerErrorReport : public WorkerErrorBase, public SerializedStackHolder {
 
   static void LogErrorToConsole(const mozilla::dom::ErrorData& aReport,
                                 uint64_t aInnerWindowId,
-                                JS::HandleObject aStack = nullptr,
-                                JS::HandleObject aStackGlobal = nullptr);
+                                JS::Handle<JSObject*> aStack = nullptr,
+                                JS::Handle<JSObject*> aStackGlobal = nullptr);
 
   static void CreateAndDispatchGenericErrorRunnableToParent(
       WorkerPrivate* aWorkerPrivate);

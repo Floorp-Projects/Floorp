@@ -1382,6 +1382,7 @@ nsresult CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
 void nsNSSComponent::setValidationOptions(
     bool isInitialSetting, const mozilla::MutexAutoLock& proofOfLock) {
   // We access prefs so this must be done on the main thread.
+  mMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(NS_IsMainThread());
   if (NS_WARN_IF(!NS_IsMainThread())) {
     return;

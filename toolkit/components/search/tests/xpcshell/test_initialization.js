@@ -21,6 +21,11 @@ const CONFIG = [
   },
 ];
 
+add_setup(() => {
+  do_get_profile();
+  Services.fog.initializeFOG();
+});
+
 add_task(async function test_initialization_delayed_addon_manager() {
   let stub = await SearchTestUtils.useTestEngines("data", null, CONFIG);
   // Wait until the search service gets its configuration before starting
@@ -41,4 +46,14 @@ add_task(async function test_initialization_delayed_addon_manager() {
     "Test search engine",
     "Test engine shouldn't be the default anymore"
   );
+
+  await assertGleanDefaultEngine({
+    normal: {
+      engineId: "engine",
+      displayName: "Test search engine",
+      loadPath: "[other]addEngineWithDetails:engine@search.mozilla.org",
+      submissionUrl: "https://www.google.com/search?q=",
+      verified: "default",
+    },
+  });
 });

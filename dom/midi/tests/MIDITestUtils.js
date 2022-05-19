@@ -70,27 +70,26 @@ var MIDITestUtils = {
       is(expected[i], actual[i], "Packet value " + expected[i] + " matches.");
     }
   },
-  stableId: info => {
+  stableId: async info => {
     // This computes the stable ID of a MIDI port according to the logic we
     // use in the Web MIDI implementation. See MIDIPortChild::GenerateStableId()
     // and nsContentUtils::AnonymizeId().
-    const Cc = SpecialPowers.Cc;
-    const Ci = SpecialPowers.Ci;
     const id = info.name + info.manufacturer + info.version;
     const encoder = new TextEncoder();
     const data = encoder.encode(id);
-    let key = self.origin;
-
-    var digest;
-    let keyObject = Cc["@mozilla.org/security/keyobjectfactory;1"]
-      .getService(Ci.nsIKeyObjectFactory)
-      .keyFromString(Ci.nsIKeyObject.HMAC, key);
-    let cryptoHMAC = Cc["@mozilla.org/security/hmac;1"].createInstance(
-      Ci.nsICryptoHMAC
+    const keyBytes = encoder.encode(self.origin);
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyBytes,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
     );
-
-    cryptoHMAC.init(Ci.nsICryptoHMAC.SHA256, keyObject);
-    cryptoHMAC.update(data, data.length);
-    return cryptoHMAC.finish(true);
+    const result = new Uint8Array(await crypto.subtle.sign("HMAC", key, data));
+    let resultString = "";
+    for (let i = 0; i < result.length; i++) {
+      resultString += String.fromCharCode(result[i]);
+    }
+    return btoa(resultString);
   },
 };

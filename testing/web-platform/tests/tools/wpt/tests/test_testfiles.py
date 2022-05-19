@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import os.path
 from unittest.mock import patch
 

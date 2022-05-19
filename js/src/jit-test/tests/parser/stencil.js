@@ -1,18 +1,19 @@
 const optionsFull = {
   fileName: "compileToStencil-DATA.js",
   lineNumber: 1,
-  forceFullParse: true,
+  eagerDelazificationStrategy: "ParseEverythingEagerly",
 };
 
 const optionsLazy = {
   fileName: "compileToStencil-DATA.js",
   lineNumber: 1,
+  eagerDelazificationStrategy: "OnDemandOnly",
 };
 
 const optionsLazyCache = {
   fileName: "compileToStencil-DATA.js",
   lineNumber: 1,
-  fillRuntimeCache: true,
+  eagerDelazificationStrategy: "ConcurrentDepthFirst",
 };
 
 function testMainThread(script_str) {
@@ -29,20 +30,21 @@ function testMainThreadDelazifyAll(script_str) {
     return;
   }
   const eval_f = eval;
-  const stencil = compileAndDelazifyAllToStencil(script_str, optionsLazy);
+  const stencil = compileToStencil(script_str, optionsLazy);
   const result = evalStencil(stencil, optionsLazy);
   assertEq(result, eval_f(script_str));
 }
 
 function testMainThreadCacheAll(script_str) {
-  if (isLcovEnabled()) {
+  if (isLcovEnabled() || helperThreadCount() === 0) {
     // Code-coverage implies forceFullParse = true, and as such it cannot be
     // used while testing to incrementally delazify.
+    // Similarly, concurrent delazification requires off-threads processing.
     return;
   }
   const eval_f = eval;
-  const stencil = compileAndDelazifyAllToStencil(script_str, optionsLazyCache);
-  const result = evalStencil(stencil, optionsLazy);
+  const stencil = compileToStencil(script_str, optionsLazyCache);
+  const result = evalStencil(stencil, optionsLazyCache);
   assertEq(result, eval_f(script_str));
 }
 

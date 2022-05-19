@@ -318,7 +318,7 @@ GMPInstallManager.prototype = {
     // will be done instead of the older cert pinning method.
     let checkContentSignature = GMPPrefs.getBool(
       GMPPrefs.KEY_CHECK_CONTENT_SIGNATURE,
-      false
+      true
     );
 
     let allowNonBuiltIn = true;
@@ -534,6 +534,8 @@ GMPInstallManager.prototype = {
       }, this);
 
       if (!addonsToInstall.length) {
+        let now = Math.round(Date.now() / 1000);
+        GMPPrefs.setInt(GMPPrefs.KEY_UPDATE_LAST_EMPTY_CHECK, now);
         log.info("No new addons to install, returning");
         return { status: "nothing-new-to-install" };
       }
@@ -727,6 +729,8 @@ GMPDownloader.prototype = {
   start() {
     let log = getScopedLogger("GMPDownloader");
     let gmpAddon = this._gmpAddon;
+    let now = Math.round(Date.now() / 1000);
+    GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_INSTALL_START, now, gmpAddon.id);
 
     if (!gmpAddon.isValid) {
       log.info("gmpAddon is not valid, will not continue");
@@ -743,6 +747,8 @@ GMPDownloader.prototype = {
     };
     return ProductAddonChecker.downloadAddon(gmpAddon, downloadOptions).then(
       zipPath => {
+        let now = Math.round(Date.now() / 1000);
+        GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_DOWNLOAD, now, gmpAddon.id);
         log.info(
           `install to directory path: ${gmpAddon.id}/${gmpAddon.version}`
         );
@@ -751,25 +757,50 @@ GMPDownloader.prototype = {
           gmpAddon.version,
         ]);
         let installPromise = gmpInstaller.install();
-        return installPromise.then(extractedPaths => {
-          // Success, set the prefs
-          let now = Math.round(Date.now() / 1000);
-          GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, now, gmpAddon.id);
-          // Remember our ABI, so that if the profile is migrated to another
-          // platform or from 32 -> 64 bit, we notice and don't try to load the
-          // unexecutable plugin library.
-          let abi = GMPUtils._expectedABI(gmpAddon);
-          log.info("Setting ABI to '" + abi + "' for " + gmpAddon.id);
-          GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_ABI, abi, gmpAddon.id);
-          // Setting the version pref signals installation completion to consumers,
-          // if you need to set other prefs etc. do it before this.
-          GMPPrefs.setString(
-            GMPPrefs.KEY_PLUGIN_VERSION,
-            gmpAddon.version,
-            gmpAddon.id
-          );
-          return extractedPaths;
-        });
+        return installPromise.then(
+          extractedPaths => {
+            // Success, set the prefs
+            let now = Math.round(Date.now() / 1000);
+            GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, now, gmpAddon.id);
+            // Remember our ABI, so that if the profile is migrated to another
+            // platform or from 32 -> 64 bit, we notice and don't try to load the
+            // unexecutable plugin library.
+            let abi = GMPUtils._expectedABI(gmpAddon);
+            log.info("Setting ABI to '" + abi + "' for " + gmpAddon.id);
+            GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_ABI, abi, gmpAddon.id);
+            // Setting the version pref signals installation completion to consumers,
+            // if you need to set other prefs etc. do it before this.
+            GMPPrefs.setString(
+              GMPPrefs.KEY_PLUGIN_VERSION,
+              gmpAddon.version,
+              gmpAddon.id
+            );
+            return extractedPaths;
+          },
+          reason => {
+            let now = Math.round(Date.now() / 1000);
+            GMPPrefs.setInt(
+              GMPPrefs.KEY_PLUGIN_LAST_INSTALL_FAILED,
+              now,
+              gmpAddon.id
+            );
+            throw reason;
+          }
+        );
+      },
+      reason => {
+        GMPPrefs.setString(
+          GMPPrefs.KEY_PLUGIN_LAST_DOWNLOAD_FAIL_REASON,
+          reason,
+          gmpAddon.id
+        );
+        let now = Math.round(Date.now() / 1000);
+        GMPPrefs.setInt(
+          GMPPrefs.KEY_PLUGIN_LAST_DOWNLOAD_FAILED,
+          now,
+          gmpAddon.id
+        );
+        throw reason;
       }
     );
   },

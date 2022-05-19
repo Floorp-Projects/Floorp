@@ -273,8 +273,6 @@ bool ReadableStream::constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
 //
 // Not implemented.
 
-enum class ReadableStreamReaderMode { Byob };
-
 /**
  * https://streams.spec.whatwg.org/#rs-get-reader
  * ReadableStreamReader getReader(optional ReadableStreamGetReaderOptions
@@ -303,7 +301,7 @@ enum class ReadableStreamReaderMode { Byob };
     return false;
   }
 
-  Maybe<ReadableStreamReaderMode> mode;
+  Maybe<JS::ReadableStreamReaderMode> mode;
   // Step 4: ...
   //
   // - Optimized for one dictionary member.
@@ -339,7 +337,7 @@ enum class ReadableStreamReaderMode { Byob };
         return false;
       }
 
-      mode = Some(ReadableStreamReaderMode::Byob);
+      mode = Some(JS::ReadableStreamReaderMode::Byob);
     }
   }
 
@@ -351,7 +349,7 @@ enum class ReadableStreamReaderMode { Byob };
                                                ForAuthorCodeBool::Yes);
   } else {
     // Step 2: Assert: options["mode"] is "byob".
-    MOZ_ASSERT(mode.value() == ReadableStreamReaderMode::Byob);
+    MOZ_ASSERT(mode.value() == JS::ReadableStreamReaderMode::Byob);
 
     // Step 3: Return ? AcquireReadableStreamBYOBReader(this).
     reader = CreateReadableStreamBYOBReader(cx, unwrappedStream,

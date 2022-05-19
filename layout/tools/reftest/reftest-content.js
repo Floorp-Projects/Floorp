@@ -201,7 +201,7 @@ function doPrintMode(contentRootElement) {
 function setupPrintMode() {
     var PSSVC =
         Cc[PRINTSETTINGS_CONTRACTID].getService(Ci.nsIPrintSettingsService);
-    var ps = PSSVC.newPrintSettings;
+    var ps = PSSVC.createNewPrintSettings();
     ps.paperWidth = 5;
     ps.paperHeight = 3;
 

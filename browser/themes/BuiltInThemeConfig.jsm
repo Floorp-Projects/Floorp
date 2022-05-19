@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["BuiltInThemeConfig"];
+const EXPORTED_SYMBOLS = ["_applyColorwayConfig", "BuiltInThemeConfig"];
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -26,7 +26,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
  * @param {string} [collection]
  *  The collection id that the theme is a part of. Optional.
  */
-const _BuiltInThemeConfig = new Map([
+const BuiltInThemeConfig = new Map([
   [
     "firefox-compact-light@mozilla.org",
     {
@@ -246,23 +246,64 @@ const colorwayClosetEnabled = Services.prefs.getBoolPref(
   "browser.theme.colorway-closet"
 );
 
-const ColorwayCollections = new Map([
-  [
-    "life-in-color",
-    {
-    },
-  ],
-  [
-    "true-colors",
-    {
-    },
-  ],
-]);
+const ColorwayCollections = [
+  {
+    id: "life-in-color",
+    expiry:
+      colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
+        ? "2022-08-03"
+        : "2022-02-08",
+    l10nId: "colorway-collection-life-in-color",
+  },
+  {
+    id: "true-colors",
+    expiry:
+      colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
+        ? "2022-04-20"
+        : "2022-05-03",
+    l10nId: "colorway-collection-life-in-color",
+  },
+];
 
-const BuiltInThemeConfig = new Map();
-for (let [key, config] of _BuiltInThemeConfig.entries()) {
-  if (config.collection) {
-    config.expiry = ColorwayCollections.get(config.collection).expiry;
+function _applyColorwayConfig(collections) {
+  const collectionsSorted = collections
+    .map(({ expiry, ...rest }) => ({
+      expiry: new Date(expiry),
+      ...rest,
+    }))
+    .sort((a, b) => a.expiry - b.expiry);
+  const collectionsMap = collectionsSorted.reduce((map, c) => {
+    map.set(c.id, c);
+    return map;
+  }, new Map());
+  for (let [key, value] of BuiltInThemeConfig.entries()) {
+    if (value.collection) {
+      const collectionConfig = collectionsMap.get(value.collection);
+      BuiltInThemeConfig.set(key, {
+        ...value,
+        ...collectionConfig,
+      });
+    }
   }
-  BuiltInThemeConfig.set(key, config);
+  BuiltInThemeConfig.findActiveColorwayCollection = now => {
+    let collection = null;
+    let start = 0;
+    let end = collectionsSorted.length - 1;
+    while (start <= end) {
+      const mid = Math.floor((start + end) / 2);
+      const c = collectionsSorted[mid];
+      const diff = c.expiry - now;
+      if (diff < 0) {
+        // collection expired, look for newer one
+        start = mid + 1;
+      } else {
+        // collection not expired, check for older one
+        collection = c;
+        end = mid - 1;
+      }
+    }
+    return collection;
+  };
 }
+
+_applyColorwayConfig(ColorwayCollections);

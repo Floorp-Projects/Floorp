@@ -140,7 +140,6 @@ function makeMockBreakpoint(source = makeMockSource(), line = 1, column) {
   return {
     id: "breakpoint",
     location,
-    astLocation: null,
     generatedLocation: location,
     disabled: false,
     text: "text",

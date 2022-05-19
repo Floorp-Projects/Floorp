@@ -340,12 +340,8 @@ class ChromeActions {
   }
 
   download(data, sendResponse) {
-    var self = this;
     var originalUrl = data.originalUrl;
     var blobUrl = data.blobUrl || originalUrl;
-    // The data may not be downloaded so we need just retry getting the pdf with
-    // the original url.
-    var originalUri = NetUtil.newURI(originalUrl);
     var filename = data.filename;
     if (
       typeof filename !== "string" ||
@@ -353,111 +349,11 @@ class ChromeActions {
     ) {
       filename = "document.pdf";
     }
-    var blobUri = NetUtil.newURI(blobUrl);
 
-    // If the download was triggered from the ctrl/cmd+s or "Save Page As"
-    // or the download button, launch the "Save As" dialog.
-    const saveOnDownload = getBoolPref(
-      "browser.download.improvements_to_download_panel",
-      false
-    );
-
-    if (
-      data.sourceEventType == "save" ||
-      (saveOnDownload && data.sourceEventType == "download")
-    ) {
-      let actor = getActor(this.domWindow);
-      actor.sendAsyncMessage("PDFJS:Parent:saveURL", {
-        blobUrl,
-        filename,
-      });
-      return;
-    }
-
-    // The download is from the fallback bar or the download button, so trigger
-    // the open dialog to make it easier for users to save in the downloads
-    // folder or launch a different PDF viewer.
-    var extHelperAppSvc = Cc[
-      "@mozilla.org/uriloader/external-helper-app-service;1"
-    ].getService(Ci.nsIExternalHelperAppService);
-
-    var docIsPrivate = this.isInPrivateBrowsing();
-    var netChannel = NetUtil.newChannel({
-      uri: blobUri,
-      loadUsingSystemPrincipal: true,
-    });
-    if (
-      "nsIPrivateBrowsingChannel" in Ci &&
-      netChannel instanceof Ci.nsIPrivateBrowsingChannel
-    ) {
-      netChannel.setPrivate(docIsPrivate);
-    }
-    NetUtil.asyncFetch(netChannel, function(aInputStream, aResult) {
-      if (!Components.isSuccessCode(aResult)) {
-        if (sendResponse) {
-          sendResponse(true);
-        }
-        return;
-      }
-      // Create a nsIInputStreamChannel so we can set the url on the channel
-      // so the filename will be correct.
-      var channel = Cc[
-        "@mozilla.org/network/input-stream-channel;1"
-      ].createInstance(Ci.nsIInputStreamChannel);
-      channel.QueryInterface(Ci.nsIChannel);
-      try {
-        // contentDisposition/contentDispositionFilename is readonly before FF18
-        channel.contentDisposition = Ci.nsIChannel.DISPOSITION_ATTACHMENT;
-        if (self.contentDispositionFilename && !data.isAttachment) {
-          channel.contentDispositionFilename = self.contentDispositionFilename;
-        } else {
-          channel.contentDispositionFilename = filename;
-        }
-      } catch (e) {}
-      channel.setURI(originalUri);
-      channel.loadInfo = netChannel.loadInfo;
-      channel.contentStream = aInputStream;
-      if (
-        "nsIPrivateBrowsingChannel" in Ci &&
-        channel instanceof Ci.nsIPrivateBrowsingChannel
-      ) {
-        channel.setPrivate(docIsPrivate);
-      }
-
-      var listener = {
-        extListener: null,
-        onStartRequest(aRequest) {
-          var loadContext = self.domWindow.docShell.QueryInterface(
-            Ci.nsILoadContext
-          );
-          this.extListener = extHelperAppSvc.doContent(
-            data.isAttachment ? "application/octet-stream" : PDF_CONTENT_TYPE,
-            aRequest,
-            loadContext,
-            false
-          );
-          this.extListener.onStartRequest(aRequest);
-        },
-        onStopRequest(aRequest, aStatusCode) {
-          if (this.extListener) {
-            this.extListener.onStopRequest(aRequest, aStatusCode);
-          }
-          // Notify the content code we're done downloading.
-          if (sendResponse) {
-            sendResponse(false);
-          }
-        },
-        onDataAvailable(aRequest, aDataInputStream, aOffset, aCount) {
-          this.extListener.onDataAvailable(
-            aRequest,
-            aDataInputStream,
-            aOffset,
-            aCount
-          );
-        },
-      };
-
-      channel.asyncOpen(listener);
+    let actor = getActor(this.domWindow);
+    actor.sendAsyncMessage("PDFJS:Parent:saveURL", {
+      blobUrl,
+      filename,
     });
   }
 

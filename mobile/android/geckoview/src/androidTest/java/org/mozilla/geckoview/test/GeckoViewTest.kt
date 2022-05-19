@@ -132,7 +132,7 @@ class GeckoViewTest : BaseSessionTest() {
 
             // A tab with priority hint does not get de-prioritized even when
             // the surface is destroyed
-            otherSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
+            mainSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
 
             // This will destroy mainSession's surface and create a surface for otherSession
             it.view.setSession(otherSession)
@@ -146,7 +146,7 @@ class GeckoViewTest : BaseSessionTest() {
             waitUntilContentProcessPriority(high = listOf(mainSession), low = listOf())
 
             // Cleanup
-            otherSession.setPriorityHint(GeckoSession.PRIORITY_DEFAULT)
+            mainSession.setPriorityHint(GeckoSession.PRIORITY_DEFAULT)
         }
     }
 
@@ -159,14 +159,14 @@ class GeckoViewTest : BaseSessionTest() {
         val otherSession = setupPriorityTest()
 
         // Setting priorityHint to PRIORITY_HIGH raises priority
-        otherSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
+        mainSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
 
         waitUntilContentProcessPriority(
             high = listOf(mainSession, otherSession), low = listOf()
         )
 
         // Setting the priorityHint to default should lower priority
-        otherSession.setPriorityHint(GeckoSession.PRIORITY_DEFAULT)
+        mainSession.setPriorityHint(GeckoSession.PRIORITY_DEFAULT)
 
         waitUntilContentProcessPriority(
             high = listOf(mainSession), low = listOf(otherSession)
@@ -199,8 +199,8 @@ class GeckoViewTest : BaseSessionTest() {
             waitUntilContentProcessPriority(
                 high = listOf(mainSession), low = listOf(otherSession))
 
-            // Setting priorityHint to PRIORITY_HIGH raises priority
-            otherSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
+            // Setting the session to active should also raise priority
+            otherSession.setActive(true)
             waitUntilContentProcessPriority(
                 high = listOf(mainSession, otherSession), low = listOf())
         }

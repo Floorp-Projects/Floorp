@@ -72,6 +72,8 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   nsTArray<WeakPtr<CanvasContext>> mTargetContexts;
 
  public:
+  const auto& GetDevice() const { return mParent; };
+
   void EndComputePass(ffi::WGPUComputePass& aPass, ErrorResult& aRv);
   void EndRenderPass(ffi::WGPURenderPass& aPass, ErrorResult& aRv);
 

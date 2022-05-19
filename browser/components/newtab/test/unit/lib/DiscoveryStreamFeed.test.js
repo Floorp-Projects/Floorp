@@ -2786,6 +2786,8 @@ describe("DiscoveryStreamFeed", () => {
               spocsPersonalized: true,
             },
             "discoverystream.personalization.enabled": true,
+            "feeds.section.topstories": true,
+            "feeds.system.topstories": true,
           },
         },
         DiscoveryStream: {
@@ -2829,6 +2831,8 @@ describe("DiscoveryStreamFeed", () => {
               spocsPersonalized: true,
             },
             "discoverystream.personalization.enabled": true,
+            "feeds.section.topstories": true,
+            "feeds.system.topstories": true,
           },
         },
       });
@@ -2869,6 +2873,8 @@ describe("DiscoveryStreamFeed", () => {
               spocsPersonalized: true,
             },
             "discoverystream.personalization.enabled": true,
+            "feeds.section.topstories": true,
+            "feeds.system.topstories": true,
           },
         },
       });
@@ -2909,6 +2915,8 @@ describe("DiscoveryStreamFeed", () => {
               spocsPersonalized: true,
             },
             "discoverystream.personalization.enabled": true,
+            "feeds.section.topstories": true,
+            "feeds.system.topstories": true,
           },
         },
       });

@@ -25,7 +25,6 @@
 #include "mozilla/dom/FetchEventOpParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/RemoteLazyInputStreamUtils.h"
 #include "mozilla/RemoteLazyInputStreamStorage.h"
 
 namespace mozilla {
@@ -58,7 +57,7 @@ nsresult MaybeDeserializeAndWrapForMainThread(
   }
 
   auto storage = storageOrErr.unwrap();
-  storage->AddStream(deserialized, uuid, aBodyStreamSize, 0);
+  storage->AddStream(deserialized, uuid);
   return NS_OK;
 }
 
@@ -155,17 +154,13 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
   IPCInternalRequest& copyRequest = copyArgs.common().internalRequest();
 
   if (aBodyStream) {
-    PBackgroundParent* bgParent = aManager->Manager();
-    MOZ_ASSERT(bgParent);
-
     copyRequest.body() = Some(ParentToChildStream());
 
-    RemoteLazyStream ipdlStream;
-    MOZ_ALWAYS_SUCCEEDS(RemoteLazyInputStreamUtils::SerializeInputStream(
-        aBodyStream, copyRequest.bodySize(), ipdlStream, bgParent));
+    RefPtr<RemoteLazyInputStream> stream =
+        RemoteLazyInputStream::WrapStream(aBodyStream);
+    MOZ_DIAGNOSTIC_ASSERT(stream);
 
-    copyRequest.body().ref().get_ParentToChildStream().actorParent() =
-        ipdlStream;
+    copyRequest.body().ref().get_ParentToChildStream().stream() = stream;
   }
 
   Unused << aManager->SendPFetchEventOpProxyConstructor(actor, copyArgs);

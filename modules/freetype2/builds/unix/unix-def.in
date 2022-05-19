@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 1996-2021 by
+# Copyright (C) 1996-2022 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -68,12 +68,14 @@ version_info := @version_info@
 
 # Variables needed for `freetype-config' and `freetype.pc'.
 #
-PKG_CONFIG         := @PKG_CONFIG@
-REQUIRES_PRIVATE   := @REQUIRES_PRIVATE@
-LIBS_PRIVATE       := @LIBS_PRIVATE@
-LIBSSTATIC_CONFIG  := @LIBSSTATIC_CONFIG@
-build_libtool_libs := @build_libtool_libs@
-ft_version         := @ft_version@
+PKG_CONFIG                 := @PKG_CONFIG@
+PKGCONFIG_REQUIRES         := @PKGCONFIG_REQUIRES@
+PKGCONFIG_REQUIRES_PRIVATE := @PKGCONFIG_REQUIRES_PRIVATE@
+PKGCONFIG_LIBS             := @PKGCONFIG_LIBS@
+PKGCONFIG_LIBS_PRIVATE     := @PKGCONFIG_LIBS_PRIVATE@
+LIBSSTATIC_CONFIG          := @LIBSSTATIC_CONFIG@
+build_libtool_libs         := @build_libtool_libs@
+ft_version                 := @ft_version@
 
 # The directory where all library files are placed.
 #
@@ -137,15 +139,17 @@ prefix_x      := $(subst $(space),\\$(space),$(prefix))
 
 $(OBJ_BUILD)/freetype2.pc: $(TOP_DIR)/builds/unix/freetype2.in
 	rm -f $@ $@.tmp
-	sed -e 's|%REQUIRES_PRIVATE%|$(REQUIRES_PRIVATE)|'     \
-	    -e 's|%LIBS_PRIVATE%|$(LIBS_PRIVATE)|'             \
-	    -e 's|%build_libtool_libs%|$(build_libtool_libs)|' \
-	    -e 's|%exec_prefix%|$(exec_prefix_x)|'             \
-	    -e 's|%ft_version%|$(ft_version)|'                 \
-	    -e 's|%includedir%|$(includedir_x)|'               \
-	    -e 's|%libdir%|$(libdir_x)|'                       \
-	    -e 's|%prefix%|$(prefix_x)|'                       \
-	    $<                                                 \
+	sed -e 's|%PKGCONFIG_REQUIRES%|$(PKGCONFIG_REQUIRES)|'                 \
+	    -e 's|%PKGCONFIG_REQUIRES_PRIVATE%|$(PKGCONFIG_REQUIRES_PRIVATE)|' \
+	    -e 's|%PKGCONFIG_LIBS%|$(PKGCONFIG_LIBS)|'                         \
+	    -e 's|%PKGCONFIG_LIBS_PRIVATE%|$(PKGCONFIG_LIBS_PRIVATE)|'         \
+	    -e 's|%build_libtool_libs%|$(build_libtool_libs)|'                 \
+	    -e 's|%exec_prefix%|$(exec_prefix_x)|'                             \
+	    -e 's|%ft_version%|$(ft_version)|'                                 \
+	    -e 's|%includedir%|$(includedir_x)|'                               \
+	    -e 's|%libdir%|$(libdir_x)|'                                       \
+	    -e 's|%prefix%|$(prefix_x)|'                                       \
+	    $<                                                                 \
 	    > $@.tmp
 	chmod a-w $@.tmp
 	mv $@.tmp $@

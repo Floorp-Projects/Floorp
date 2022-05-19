@@ -146,15 +146,17 @@ async function assertTopicNotObserved(topic, task) {
 
 /**
  * Asserts that a date looks reasonably valid, i.e. created no earlier than
- * 24 hours prior to the current date.
+ * threshold days prior to the current date.
  *
  * @param {Date} date
  *   The date to check.
+ * @param {number} threshold
+ *   Maximum number of days the date should be in the past.
  */
-function assertRecentDate(date) {
+function assertRecentDate(date, threshold = 1) {
   Assert.greater(
     date.getTime(),
-    Date.now() - 1000 * 60 * 60 * 24,
+    Date.now() - 1000 * 60 * 60 * 24 * threshold,
     "Should have a reasonable value for the date"
   );
 }
@@ -194,13 +196,13 @@ function assertSnapshot(actual, expected) {
     expected.documentType ?? Interactions.DOCUMENT_TYPE.GENERIC,
     "Should have the expected document type"
   );
-  assertRecentDate(actual.createdAt);
-  assertRecentDate(actual.lastInteractionAt);
+  assertRecentDate(actual.createdAt, expected.daysThreshold);
+  assertRecentDate(actual.lastInteractionAt, expected.daysThreshold);
   if (actual.firstInteractionAt || !actual.userPersisted) {
     // If a snapshot is manually created before its corresponding interaction is
     // created, we assign a temporary value of 0 for first_interaction_at. In
     // all other cases, we want to ensure a reasonable date value is being used.
-    assertRecentDate(actual.firstInteractionAt);
+    assertRecentDate(actual.firstInteractionAt, expected.daysThreshold);
   }
   if (expected.lastUpdated) {
     Assert.greaterOrEqual(
@@ -374,6 +376,22 @@ async function assertOverlappingSnapshots(expected, context) {
  */
 async function assertCommonReferrerSnapshots(expected, context) {
   let recommendations = await Snapshots.recommendationSources.CommonReferrer(
+    context
+  );
+
+  await assertSnapshotList(recommendations, expected);
+}
+
+/**
+ * Queries time of day snapshots from the database and asserts their expected values.
+ *
+ * @param {Snapshot[]} expected
+ *   The expected snapshots.
+ * @param {SelectionContext} context
+ *   @see SnapshotSelector.#context.
+ */
+async function assertTimeOfDaySnapshots(expected, context) {
+  let recommendations = await Snapshots.recommendationSources.TimeOfDay(
     context
   );
 

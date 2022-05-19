@@ -2020,9 +2020,11 @@ class UtilitySandboxPolicy : public SandboxPolicyCommon {
   ResultExpr PrctlPolicy() const override {
     Arg<int> op(0);
     return Switch(op)
-        .CASES((PR_SET_NAME,      // Thread creation
-                PR_SET_DUMPABLE,  // Crash reporting
-                PR_SET_PTRACER),  // Debug-mode crash handling
+        .CASES((PR_SET_NAME,        // Thread creation
+                PR_SET_DUMPABLE,    // Crash reporting
+                PR_SET_PTRACER,     // Debug-mode crash handling
+                PR_GET_PDEATHSIG),  // PGO profiling, cf
+                                    // https://reviews.llvm.org/D29954
                Allow())
         .Default(InvalidSyscall());
   }

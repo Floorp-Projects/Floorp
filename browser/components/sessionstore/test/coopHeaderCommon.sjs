@@ -1,5 +1,5 @@
 function handleRequest(request, response) {
-  Components.utils.importGlobalProperties(["URLSearchParams"]);
+  Cu.importGlobalProperties(["URLSearchParams"]);
   let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
   let query = new URLSearchParams(request.queryString);
 
@@ -15,9 +15,9 @@ function handleRequest(request, response) {
   });
 
   // Set up the file streams to read in the file as UTF-8
-  let fstream = Components.classes[
-    "@mozilla.org/network/file-input-stream;1"
-  ].createInstance(Components.interfaces.nsIFileInputStream);
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
 
   fstream.init(file, -1, 0, 0);
 

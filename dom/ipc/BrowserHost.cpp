@@ -228,6 +228,18 @@ BrowserHost::GetOsPid(int32_t* aOsPid) {
   return NS_OK;
 }
 
+/* readonly attribute BrowsingContext browsingContext; */
+NS_IMETHODIMP
+BrowserHost::GetBrowsingContext(BrowsingContext** aBc) {
+  if (!mRoot) {
+    *aBc = nullptr;
+    return NS_OK;
+  }
+  RefPtr<BrowsingContext> bc = mRoot->GetBrowsingContext();
+  bc.forget(aBc);
+  return NS_OK;
+}
+
 /* readonly attribute boolean hasPresented; */
 NS_IMETHODIMP
 BrowserHost::GetHasPresented(bool* aHasPresented) {

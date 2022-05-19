@@ -1204,6 +1204,10 @@ BrowserGlue.prototype = {
       this._matchCBCategory
     );
     Services.prefs.removeObserver(
+      "privacy.query_stripping.enabled",
+      this._matchCBCategory
+    );
+    Services.prefs.removeObserver(
       ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY,
       this._updateCBCategory
     );
@@ -1717,6 +1721,10 @@ BrowserGlue.prototype = {
     );
     Services.prefs.addObserver(
       "privacy.partition.network_state.ocsp_cache",
+      this._matchCBCategory
+    );
+    Services.prefs.addObserver(
+      "privacy.query_stripping.enabled",
       this._matchCBCategory
     );
     Services.prefs.addObserver(
@@ -4176,20 +4184,9 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 127) {
-      // Bug 1767440 - Clean up rollout search param prefs.
-
-      let prefsToClear = {
-        "browser.search.param.google_channel_us": "tus7",
-        "browser.search.param.google_channel_row": "trow7",
-        "browser.search.param.bing_ptag": "MOZZ0000000031",
-      };
-      Object.entries(prefsToClear).forEach(([key, value]) => {
-        if (Services.prefs.getStringPref(key, null) == value) {
-          Services.prefs.clearUserPref(key);
-        }
-      });
-    }
+    // Bug 1769071: The UI Version 127 was used for a clean up code that is not
+    // necessary anymore. Please do not use 127 because this number is probably
+    // set in Nightly and Beta channel.
 
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
@@ -4689,6 +4686,7 @@ var ContentBlockingCategoriesPrefs = {
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation": null,
         "privacy.partition.network_state.ocsp_cache": null,
+        "privacy.query_stripping.enabled": null,
       },
       standard: {
         "network.cookie.cookieBehavior": null,
@@ -4702,6 +4700,7 @@ var ContentBlockingCategoriesPrefs = {
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation": null,
         "privacy.partition.network_state.ocsp_cache": null,
+        "privacy.query_stripping.enabled": null,
       },
     };
     let type = "strict";
@@ -4799,6 +4798,12 @@ var ContentBlockingCategoriesPrefs = {
           this.CATEGORY_PREFS[type][
             "privacy.partition.network_state.ocsp_cache"
           ] = false;
+          break;
+        case "qps":
+          this.CATEGORY_PREFS[type]["privacy.query_stripping.enabled"] = true;
+          break;
+        case "-qps":
+          this.CATEGORY_PREFS[type]["privacy.query_stripping.enabled"] = false;
           break;
         case "cookieBehavior0":
           this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] =

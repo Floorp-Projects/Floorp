@@ -163,7 +163,7 @@ function Intl() {
   this.init();
 }
 
-this.Intl.prototype = {
+Intl.prototype = {
   init() {
     Services.prefs.addObserver("intl.accept_languages", this);
   },

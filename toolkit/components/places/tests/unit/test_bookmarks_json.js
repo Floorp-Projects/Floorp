@@ -150,7 +150,7 @@ add_task(async function test_import_bookmarks_disallowed_url() {
 });
 
 add_task(async function test_import_bookmarks() {
-  let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks.json");
+  let bookmarksFile = PathUtils.join(do_get_cwd().path, "bookmarks.json");
 
   await BookmarkJSONUtils.importFromFile(bookmarksFile, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -158,8 +158,8 @@ add_task(async function test_import_bookmarks() {
 });
 
 add_task(async function test_export_bookmarks() {
-  bookmarksExportedFile = OS.Path.join(
-    OS.Constants.Path.profileDir,
+  bookmarksExportedFile = PathUtils.join(
+    PathUtils.profileDir,
     "bookmarks.exported.json"
   );
   await BookmarkJSONUtils.exportToFile(bookmarksExportedFile);

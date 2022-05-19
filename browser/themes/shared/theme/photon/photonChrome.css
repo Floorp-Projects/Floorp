@@ -5188,10 +5188,6 @@
       }
 
 
-      #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-      #forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-        transform: scaleX(-1) !important;
-      }
     }
   }
 }
@@ -6855,11 +6851,6 @@
   }
   
   
-  .toolbarbutton-1#forward-button .toolbarbutton-icon,
-  #context-forward .menu-iconic-icon
-  {
-    transform: scaleX(-1) !important;
-  }
   
   #star-button[starred],
   #tracking-protection-icon-box[active]
@@ -7064,10 +7055,6 @@
     }
   }
 
-  #forward-button {
-    list-style-image: url("chrome://browser/skin/back.svg") !important;
-  }
-  
   menupopup > menuitem,
   menupopup > menu {
     padding-block: 0.15em !important;
@@ -7097,3 +7084,11 @@
     treechildren::-moz-tree-image(title, container, open) {
     list-style-image: url("chrome://browser/skin/photon/photon-folder-open.svg") !important;
   }
+  
+/*fix photon dark theme bug*/
+
+#TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon:-moz-lwtheme,
+.tab-background[selected]:-moz-lwtheme {
+  outline: none !important;
+  outline-offset: -1px !important;
+}

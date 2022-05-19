@@ -64,6 +64,12 @@ dialog:not([subdialog]) .editAddressForm {
   margin-inline: 0;
 }
 
+#given-name-container:focus-within,
+#additional-name-container:focus-within,
+#family-name-container:focus-within {
+  z-index: 1;
+}
+
 /* The name fields are placed adjacent to each other.
    Remove the border-radius on adjacent fields. */
 #given-name:dir(ltr),

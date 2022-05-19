@@ -120,9 +120,9 @@ void SandboxTestingChild::Destroy() {
   sInstance = nullptr;
 }
 
-bool SandboxTestingChild::RecvShutDown() {
+ipc::IPCResult SandboxTestingChild::RecvShutDown() {
   Close();
-  return true;
+  return IPC_OK();
 }
 
 void SandboxTestingChild::ReportNoTests() {

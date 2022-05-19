@@ -16,7 +16,7 @@ where
     where
         S: Serializer,
     {
-        let mut tup = serializer.serialize_tuple(N::to_usize())?;
+        let mut tup = serializer.serialize_tuple(N::USIZE)?;
         for el in self {
             tup.serialize_element(el)?;
         }
@@ -46,7 +46,7 @@ where
         A: SeqAccess<'de>,
     {
         let mut result = GenericArray::default();
-        for i in 0..N::to_usize() {
+        for i in 0..N::USIZE {
             result[i] = seq
                 .next_element()?
                 .ok_or_else(|| de::Error::invalid_length(i, &self))?;
@@ -68,7 +68,7 @@ where
             _t: PhantomData,
             _n: PhantomData,
         };
-        deserializer.deserialize_tuple(N::to_usize(), visitor)
+        deserializer.deserialize_tuple(N::USIZE, visitor)
     }
 }
 
@@ -91,7 +91,7 @@ mod tests {
         array[0] = 1;
         array[1] = 2;
         let serialized = bincode::serialize(&array).unwrap();
-        let deserialized = bincode::deserialize::<GenericArray<u8, typenum::U2>>(&array);
+        let deserialized = bincode::deserialize::<GenericArray<u8, typenum::U2>>(&serialized);
         assert!(deserialized.is_ok());
         let array = deserialized.unwrap();
         assert_eq!(array[0], 1);

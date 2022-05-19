@@ -46,6 +46,14 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // textbox.  If false, autofill will be disabled.
   ["autoFill", true],
 
+  // Whether enabling adaptive history autofill. This pref is a fallback for the
+  // Nimbus variable `autoFillAdaptiveHistoryEnabled`.
+  ["autoFill.adaptiveHistory.enabled", false],
+
+  // Threshold for use count of input history that we handle as adaptive history
+  // autofill. If the use count is this value or more, it will be a candidate.
+  ["autoFill.adaptiveHistory.useCountThreshold", [0.1, "float"]],
+
   // If true, the domains of the user's installed search engines will be
   // autofilled even if the user hasn't actually visited them.
   ["autoFill.searchEngines", false],

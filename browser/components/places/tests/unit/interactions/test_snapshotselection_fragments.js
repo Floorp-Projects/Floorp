@@ -30,24 +30,24 @@ add_task(async function test_snapshot_selection_fragments() {
 
   // Only the stripped url should be retrieved as a snapshot
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_URL2);
+  selector.updateDetailsAndRebuild({ url: TEST_URL2 });
   snapshots = await snapshotPromise;
   await assertSnapshotList(snapshots, [{ url: TEST_URL1 }]);
 
   // The full url with fragments as the context should not return any snapshot
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_FRAGMENT_URL1);
+  selector.updateDetailsAndRebuild({ url: TEST_FRAGMENT_URL1 });
   snapshots = await snapshotPromise;
   await assertSnapshotList(snapshots, []);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_FRAGMENT_URL2);
+  selector.updateDetailsAndRebuild({ url: TEST_FRAGMENT_URL2 });
   snapshots = await snapshotPromise;
   await assertSnapshotList(snapshots, [{ url: TEST_URL1 }]);
 
   // The url without fragments should also not return any snapshot
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_URL1);
+  selector.updateDetailsAndRebuild({ url: TEST_URL1 });
   snapshots = await snapshotPromise;
   await assertSnapshotList(snapshots, []);
 

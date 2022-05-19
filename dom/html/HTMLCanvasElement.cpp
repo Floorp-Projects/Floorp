@@ -1102,7 +1102,7 @@ void HTMLCanvasElement::SetWriteOnly(
   }
 }
 
-bool HTMLCanvasElement::CallerCanRead(JSContext* aCx) {
+bool HTMLCanvasElement::CallerCanRead(JSContext* aCx) const {
   if (!mWriteOnly) {
     return true;
   }

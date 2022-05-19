@@ -80,10 +80,7 @@ class Factory final : public nsIFactory {
 
   Factory() : mFirstComponentCreated(false) {}
 
-  NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID,
-                            void** aResult) override;
-
-  NS_IMETHOD LockFactory(bool aLock) override { return NS_OK; }
+  NS_IMETHOD CreateInstance(const nsIID& aIID, void** aResult) override;
 
   bool mFirstComponentCreated;
 };
@@ -131,8 +128,7 @@ NS_INTERFACE_MAP_BEGIN(Component2)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-Factory::CreateInstance(nsISupports* aDelegate, const nsIID& aIID,
-                        void** aResult) {
+Factory::CreateInstance(const nsIID& aIID, void** aResult) {
   // Make sure that the second thread beat the main thread to the getService
   // call.
   MOZ_RELEASE_ASSERT(!NS_IsMainThread(), "Wrong thread!");
@@ -146,7 +142,6 @@ Factory::CreateInstance(nsISupports* aDelegate, const nsIID& aIID,
     mon.Wait(PR_MillisecondsToInterval(3000));
   }
 
-  NS_ENSURE_FALSE(aDelegate, NS_ERROR_NO_AGGREGATION);
   NS_ENSURE_ARG_POINTER(aResult);
 
   nsCOMPtr<nsISupports> instance;

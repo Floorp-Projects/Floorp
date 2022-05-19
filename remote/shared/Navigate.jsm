@@ -235,6 +235,20 @@ class ProgressListener {
     });
   }
 
+  onLocationChange(progress, request, location, flag) {
+    // If only hash has changed the navigation is done.
+    if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_HASHCHANGE) {
+      this.#targetURI = location;
+
+      const messagePrefix = `[${this.browsingContext.id}] ${this.constructor.name}`;
+      logger.trace(
+        truncate`${messagePrefix} location=hashChange: ${this.targetURI?.spec}`
+      );
+
+      this.stop();
+    }
+  }
+
   /**
    * Start observing web progress changes.
    *
@@ -258,11 +272,11 @@ class ProgressListener {
 
     const promise = new Promise(resolve => (this.#resolve = resolve));
 
-    // Enable all state notifications to get informed about an upcoming load
+    // Enable all location change and state notifications to get informed about an upcoming load
     // as early as possible.
     this.#webProgress.addProgressListener(
       this,
-      Ci.nsIWebProgress.NOTIFY_STATE_ALL
+      Ci.nsIWebProgress.NOTIFY_LOCATION | Ci.nsIWebProgress.NOTIFY_STATE_ALL
     );
 
     webProgressListeners.add(this);
@@ -293,7 +307,7 @@ class ProgressListener {
 
     this.#webProgress.removeProgressListener(
       this,
-      Ci.nsIWebProgress.NOTIFY_STATE_ALL
+      Ci.nsIWebProgress.NOTIFY_LOCATION | Ci.nsIWebProgress.NOTIFY_STATE_ALL
     );
     webProgressListeners.delete(this);
 

@@ -47,6 +47,10 @@ export function getSourceFromId(state, id) {
   return source;
 }
 
+export function getLocationSource(state, location) {
+  return getSource(state, location.sourceId);
+}
+
 export function getSourceByActorId(state, actorId) {
   if (!hasSourceActor(state, actorId)) {
     return null;

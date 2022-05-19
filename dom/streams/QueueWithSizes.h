@@ -20,7 +20,7 @@ namespace mozilla::dom {
 // ReadableStreamDefaultController.cpp for an example.
 
 struct ValueWithSize : LinkedListElement<ValueWithSize> {
-  ValueWithSize(JS::HandleValue aValue, double aSize)
+  ValueWithSize(JS::Handle<JS::Value> aValue, double aSize)
       : mValue(aValue), mSize(aSize){};
 
   JS::Heap<JS::Value> mValue;
@@ -79,7 +79,7 @@ inline void EnqueueValueWithSize(QueueContainingClass aContainer,
 // https://streams.spec.whatwg.org/#dequeue-value
 template <class QueueContainingClass>
 inline void DequeueValue(QueueContainingClass aContainer,
-                         JS::MutableHandleValue aResultValue) {
+                         JS::MutableHandle<JS::Value> aResultValue) {
   // Step 1. Implicit via template instantiation.
   // Step 2.
   MOZ_ASSERT(!aContainer->Queue().isEmpty());

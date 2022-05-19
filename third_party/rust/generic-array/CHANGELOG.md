@@ -1,5 +1,47 @@
-* **`0.12.4`**
-    * Fix unsoundness in the `arr!` macro.
+* **`0.14.5`**
+    * Fix unsoundness behavior in `GenericArrayIter::clone` ([#120](https://github.com/fizyk20/generic-array/pull/120))
+
+* **`0.14.4`**
+    * Update `typenum` to `1.12.0`
+    * Make `Drop` a no-op when the inner type does not require `Drop` (using `core::mem::needs_drop`)
+
+* **`0.14.3`**
+    * Improve behavior of `GenericArray::from_exact_iter` to assume `ExactIterator`s can lie.
+    * Fix alignment of zero-length `GenericArray`s
+    * Implement `From<&[T; N]> for &GenericArray<T, N>` and its mutable variant
+
+* **`0.14.2`**
+    * Lower MSRV to `1.36.0` without `From<[T; N]>` implementations.
+
+* **`0.14.1`**
+    * Fix element conversions in `arr!` macro.
+
+* **`0.14.0`**
+    * Replace `Into` implementations with the more general `From`.
+        * Requires minumum Rust version of 1.41.0
+    * Fix unsoundness in `arr!` macro.
+    * Fix meta variable misuse
+    * Fix Undefined Behavior across the crate by switching to `MaybeUninit`
+    * Improve some documentation and doctests
+    * Add `AsRef<[T; N]>` and `AsMut<[T; N]>` impls to `GenericArray<T, N>`
+    * Add `Split` impl for `&GenericArray` and `&mut GenericArray`
+
+* **`0.13.2`**
+    * Add feature `more_lengths`, which adds more `From`/`Into` implementations for arrays of various lengths.
+
+* **`0.13.1`**
+    * Mark `GenericArray` as `#[repr(transparent)]`
+    * Implement `Into<[T; N]>` for `GenericArray<T, N>` up to N=32
+
+* **`0.13.0`**
+    * Allow `arr!` to be imported with use syntax.
+        * Requires minumum Rust version of 1.30.1
+
+* **`0.12.2`**
+    * Implement `FusedIterator` for `GenericArrayIter`
+
+* **`0.12.1`**
+    * Use internal iteration where possible and provide more efficient internal iteration methods.
 
 * **`0.12.0`**
     * Allow trailing commas in `arr!` macro.

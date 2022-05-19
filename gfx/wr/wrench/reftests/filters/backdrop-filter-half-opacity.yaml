@@ -1,0 +1,13 @@
+root:
+  items:
+    - type: rect
+      bounds: [20, 20, 100, 100]
+      color: [0, 128, 0, 1]
+    - type: stacking-context
+      bounds: [20, 20, 0, 0]
+      filters: [opacity(0.5)]
+      wraps-backdrop-filter: true
+      items:
+        - type: backdrop-filter
+          bounds: [0, 0, 100, 100]
+          filters: [invert(1)]

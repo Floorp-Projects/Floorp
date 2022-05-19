@@ -589,24 +589,8 @@ static bool BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock,
 
       testOrNot = notIns;
       hasOddNumberOfNots = !hasOddNumberOfNots;
-    } else if (iter->isUnbox()) {
-      // The MUnbox must only be used by |testOrNot|.
-      auto* unbox = iter->toUnbox();
-      if (testOrNot->getOperand(0) != unbox) {
-        return false;
-      }
-      if (!unbox->hasOneUse()) {
-        return false;
-      }
-
-      // The MUnbox should be the first instruction in the block.
-      if (unbox != *testBlock->begin()) {
-        return false;
-      }
-
-      testOrNot = unbox;
     } else {
-      // Fail if there are any other instructions than MNot and MUnbox.
+      // Fail if there are any other instructions than MNot.
       return false;
     }
   }
@@ -616,7 +600,7 @@ static bool BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock,
     return false;
   }
 
-  MOZ_ASSERT(testOrNot->isTest() || testOrNot->isNot() || testOrNot->isUnbox());
+  MOZ_ASSERT(testOrNot->isTest() || testOrNot->isNot());
 
   MDefinition* testInput = testOrNot->getOperand(0);
   if (!testInput->isPhi()) {
@@ -675,12 +659,6 @@ static bool IsTestInputMaybeToBool(MTest* test, MDefinition* value) {
       continue;
     }
 
-    // Ignore any unbox instructions.
-    if (input->isUnbox()) {
-      input = input->toUnbox()->input();
-      continue;
-    }
-
     return false;
   }
 }
@@ -710,8 +688,6 @@ static bool IsTestInputMaybeToBool(MTest* test, MDefinition* value) {
 [[nodiscard]] static bool UpdateTestSuccessors(
     TempAllocator& alloc, MBasicBlock* block, MDefinition* value,
     MBasicBlock* ifTrue, MBasicBlock* ifFalse, MBasicBlock* existingPred) {
-  MOZ_ASSERT(existingPred->lastIns()->isTest());
-
   MInstruction* ins = block->lastIns();
   if (ins->isTest()) {
     MTest* test = ins->toTest();
@@ -741,19 +717,6 @@ static bool IsTestInputMaybeToBool(MTest* test, MDefinition* value) {
   MOZ_ASSERT(ins->isGoto());
   ins->toGoto()->target()->removePredecessor(block);
   block->discardLastIns();
-
-  // Re-insert unbox instructions when the original test block used any. The
-  // unbox instruction is guaranteed to be the first instruction, cf.
-  // BlockIsSingleTest. If the input isn't boxed, there's no need to unbox it.
-  if (existingPred->begin()->isUnbox() && value->type() == MIRType::Value) {
-    auto* existingUnbox = existingPred->begin()->toUnbox();
-    auto* unbox =
-        MUnbox::New(alloc, value, existingUnbox->type(), existingUnbox->mode());
-    unbox->setBailoutKind(existingUnbox->bailoutKind());
-    block->add(unbox);
-
-    value = unbox;
-  }
 
   MTest* test = MTest::New(alloc, value, ifTrue, ifFalse);
   block->end(test);
@@ -1255,7 +1218,11 @@ static bool MaybeFoldTestBlock(MIRGraph& graph, MBasicBlock* initialBlock) {
     if (lastIns->isGoto() && !newTestBlock) {
       newTestBlock = pred;
       newTestInput = operand;
-    } else if (!lastIns->isTest()) {
+    } else if (lastIns->isTest()) {
+      if (!IsTestInputMaybeToBool(lastIns->toTest(), operand)) {
+        return true;
+      }
+    } else {
       return true;
     }
 

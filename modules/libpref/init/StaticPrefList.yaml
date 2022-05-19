@@ -1818,12 +1818,6 @@
 # Prefs starting with "dom."
 #---------------------------------------------------------------------------
 
-# Whether window.mozPaintCount is exposed to the web.
-- name: dom.mozPaintCount.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Allow cut/copy
 - name: dom.allow_cut_copy
   type: bool
@@ -2840,7 +2834,7 @@
 # Whether origin trials are enabled.
 - name: dom.origin-trials.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether we use the test key to verify tokens.
@@ -3175,7 +3169,10 @@
 #   0: On-demand only. Delazification will be triggered only on the main thread
 #      before the execution of the function.
 #
-#   1: Depth-first. Delazify all functions off-thread in the order of appearance
+#   1: Compare on-demand delazification (= 0) with concurrent depth-first
+#      delazification (= 2).
+#
+#   2: Depth-first. Delazify all functions off-thread in the order of appearance
 #      in the source.
 #
 # 255: Parse everything eagerly, from the first parse. All functions are parsed
@@ -3531,35 +3528,6 @@
   value: false
   mirror: always
 
-# Should we abort LocalStorage requests when a sync message from parent is
-# detected?
-#
-# LocalStorage is a synchronous API involving sync IPC from the child to the
-# parent. Accessibility interfaces currently also involve different forms of
-# synchronous parent-to-child communication. (See bug 1516136 comment 11 and
-# comment 15.) Although LocalStorage NextGen no longer needs to consult the
-# main thread, thereby eliminating the possibility of deadlock, the browser is
-# very complex and so we have retained a fail-safe mechanism that will cause
-# blocking LocalStorage operations to abort on synchronous IPC from the parent
-# to the child.
-#
-# We are disabling this fail-safe mechanism because it is fundamentally visible
-# to content when activated. When we abort the synchronous LocalStorage
-# operation we throw an error which has the potential to break web content.
-# This is not a hypothetical. In bug 1574569 content broke due to accessibility
-# path aborting the LS call, but the LS call didn't need to abort because it
-# was not at risk of deadlock.
-#
-# But we are retaining the preference in the event that regressions occur
-# anywhere in the code-base that could cause a cascade that would result in
-# deadlock. (There have been logic bugs in components that resulted in
-# PBackground synchronously blocking in a way that could result in deadlock.)
-# This allows us to re-enable the fail-safe with only a pref flip.
-- name: dom.storage.abort_on_sync_parent_to_child_messages
-  type: bool
-  value: false
-  mirror: always
-
 # LocalStorage data limit as determined by summing up the lengths of all string
 # keys and values. This is consistent with the legacy implementation and other
 # browser engines. This value should really only ever change in unit testing
@@ -3663,7 +3631,7 @@
 
 - name: dom.streams.transform_streams.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: dom.streams.pipeTo.enabled
@@ -5097,6 +5065,23 @@
   type: int32_t
   value: 6000
   mirror: always
+
+#ifdef MOZ_ENABLE_DBUS
+# Whether to use Geoclue location provider (if available on the system).
+- name: geo.provider.use_geoclue
+  type: bool
+  value: true
+  mirror: always
+
+# Whether to always provide high location accuracy, even if site
+# doesn't actually request this level of accuracy.
+# Almost no site correctly requests high accuracy so force it by default
+# for compatibility with other geolocation providers.
+- name: geo.provider.geoclue.always_high_accuracy
+  type: bool
+  value: true
+  mirror: always
+#endif
 
 #---------------------------------------------------------------------------
 # Prefs starting with "gfx."
@@ -6781,22 +6766,6 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-# Streams API. This only applies to JS Streams
-- name: javascript.options.streams
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Writable Streams API.  (The pref above must also be set to expose this.)
-#
-# Writable streams are still EXTRAORDINARILY BETA and it is well-known that
-# things are likely pretty broken if you poke much at all, so if you flip this
-# preference, don't report bugs against it just yet.
-- name: javascript.options.writable_streams
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: javascript.options.main_thread_stack_quota_cap
   type: uint32_t
 #if defined(MOZ_ASAN)
@@ -8258,21 +8227,6 @@
   value: true
   mirror: always
 
-# Whether the computed value of line-height: normal returns the `normal`
-# keyword rather than a pixel value based on the first available font.
-#
-# Only enabled on Nightly and early beta, at least for now.
-#
-# It'd be nice to make numbers compute also to themselves, but it looks like
-# everybody agrees on turning them into pixels, see the discussion starting
-# from [1].
-#
-# [1]: https://github.com/w3c/csswg-drafts/issues/3749#issuecomment-477287453
-- name: layout.css.line-height.normal-as-resolved-value.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is 'content:none' supported on (non-pseudo) elements?
 - name: layout.css.element-content-none.enabled
   type: RelaxedAtomicBool
@@ -8948,9 +8902,21 @@
 # using the IPC actor within the Utility process rather than the RDD process.
 # When it is set to true, then the utility process will take precedence over RDD
 # to perform audio decoding.
+# TODO: Android: Bug 1767930
+# TODO: OpenBSD: Bug 1769033
 - name: media.utility-process.enabled
   type: RelaxedAtomicBool
+#if defined(XP_WIN)
+  value: true
+#elif defined(XP_MACOSX)
+  value: true
+#elif defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#elif defined(XP_OPENBSD)
   value: false
+#else
+  value: false
+#endif
   mirror: always
 
 #ifdef MOZ_FFMPEG
@@ -11796,9 +11762,17 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# The global switch to control the URL query sting stripping which strips query
-# parameters from loading URIs to prevent bounce (redirect) tracking.
+# Enables / disables the URL query string stripping in normal browsing mode
+# which strips query parameters from loading URIs to prevent bounce (redirect)
+# tracking.
 - name: privacy.query_stripping.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Same as the pref above, but controls query stripping for private browsing
+# mode.
+- name: privacy.query_stripping.enabled.pbmode
   type: RelaxedAtomicBool
   value: false
   mirror: always
@@ -11941,7 +11915,6 @@
   value: true
   mirror: always
 
-
 # The level to which we sandbox the content process. firefox.js sets the
 # default to different values on a per-OS basis, and has documentation
 # on what the defaults are and what the numbers mean.
@@ -12071,6 +12044,13 @@
   value: true
   mirror: always
 
+# Block the execution of scripts using a wrong type as defined by the file extension
+# (OS) mapping when loaded via the file:// protocol.
+- name: security.block_fileuri_script_with_wrong_mime
+  type: bool
+  value: true
+  mirror: always
+
 # Cancel outgoing requests from SystemPrincipal
 - name: security.cancel_non_local_loads_triggered_by_systemprincipal
   type: bool
@@ -12190,11 +12170,7 @@
 
 - name: security.intermediate_preloading_healer.enabled
   type: RelaxedAtomicBool
-#if defined(EARLY_BETA_OR_EARLIER) && !defined(MOZ_WIDGET_ANDROID)
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 - name: security.intermediate_preloading_healer.timer_interval_ms

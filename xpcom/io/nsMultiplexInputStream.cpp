@@ -35,9 +35,6 @@ using namespace mozilla;
 using namespace mozilla::ipc;
 
 using mozilla::DeprecatedAbs;
-using mozilla::Maybe;
-using mozilla::Nothing;
-using mozilla::Some;
 
 class nsMultiplexInputStream final : public nsIMultiplexInputStream,
                                      public nsISeekableStream,
@@ -123,11 +120,9 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
     bool mDone;
   };
 
-  template <typename M>
-  void SerializeInternal(InputStreamParams& aParams,
-                         FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart, uint32_t aMaxSize,
-                         uint32_t* aSizeUsed, M* aManager);
+  void SerializedComplexityInternal(uint32_t aMaxSize, uint32_t* aSizeUsed,
+                                    uint32_t* aPipes, uint32_t* aTransferables,
+                                    bool* aSerializeAsPipe);
 
   static nsresult ReadSegCb(nsIInputStream* aIn, void* aClosure,
                             const char* aFromRawSegment, uint32_t aToOffset,
@@ -820,7 +815,8 @@ nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
       return mStatus;
     }
 
-    if (mAsyncWaitCallback && aCallback) {
+    if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
+                   mAsyncWaitCallback != aCallback)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -909,9 +905,15 @@ nsMultiplexInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     if (NS_SUCCEEDED(mStatus)) {
       uint64_t avail = 0;
       nsresult rv = aStream->Available(&avail);
-      if (rv == NS_BASE_STREAM_CLOSED || avail == 0) {
-        // This stream is closed or empty, let's move to the following one.
-        ++mCurrentStream;
+      if (rv == NS_BASE_STREAM_CLOSED || (NS_SUCCEEDED(rv) && avail == 0)) {
+        // This stream is closed or empty, let's move to the following one,
+        // otherwise we need to re-wait on the current stream, as it currently
+        // has no data available.
+        // Unlike streams not implementing nsIAsyncInputStream, async streams
+        // cannot use `Available() == 0` to indicate EOF.
+        if (NS_FAILED(rv)) {
+          ++mCurrentStream;
+        }
         MutexAutoUnlock unlock(mLock);
         return AsyncWaitInternal();
       }
@@ -942,40 +944,105 @@ void nsMultiplexInputStream::AsyncWaitCompleted() {
   callback->OnInputStreamReady(this);
 }
 
-nsresult nsMultiplexInputStreamConstructor(nsISupports* aOuter, REFNSIID aIID,
-                                           void** aResult) {
+nsresult nsMultiplexInputStreamConstructor(REFNSIID aIID, void** aResult) {
   *aResult = nullptr;
-
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
 
   RefPtr<nsMultiplexInputStream> inst = new nsMultiplexInputStream();
 
   return inst->QueryInterface(aIID, aResult);
 }
 
-void nsMultiplexInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-void nsMultiplexInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-template <typename M>
-void nsMultiplexInputStream::SerializeInternal(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
+void nsMultiplexInputStream::SerializedComplexity(uint32_t aMaxSize,
+                                                  uint32_t* aSizeUsed,
+                                                  uint32_t* aPipes,
+                                                  uint32_t* aTransferables) {
   MutexAutoLock lock(mLock);
+  bool serializeAsPipe = false;
+  SerializedComplexityInternal(aMaxSize, aSizeUsed, aPipes, aTransferables,
+                               &serializeAsPipe);
+}
+
+void nsMultiplexInputStream::SerializedComplexityInternal(
+    uint32_t aMaxSize, uint32_t* aSizeUsed, uint32_t* aPipes,
+    uint32_t* aTransferables, bool* aSerializeAsPipe) {
+  mLock.AssertCurrentThreadOwns();
+  CheckedUint32 totalSizeUsed = 0;
+  CheckedUint32 totalPipes = 0;
+  CheckedUint32 totalTransferables = 0;
+  CheckedUint32 maxSize = aMaxSize;
+
+  uint32_t streamCount = mStreams.Length();
+
+  for (uint32_t index = 0; index < streamCount; index++) {
+    uint32_t sizeUsed = 0;
+    uint32_t pipes = 0;
+    uint32_t transferables = 0;
+    InputStreamHelper::SerializedComplexity(mStreams[index].mOriginalStream,
+                                            maxSize.value(), &sizeUsed, &pipes,
+                                            &transferables);
+
+    MOZ_ASSERT(maxSize.value() >= sizeUsed);
+
+    maxSize -= sizeUsed;
+    MOZ_DIAGNOSTIC_ASSERT(maxSize.isValid());
+    totalSizeUsed += sizeUsed;
+    MOZ_DIAGNOSTIC_ASSERT(totalSizeUsed.isValid());
+    totalPipes += pipes;
+    MOZ_DIAGNOSTIC_ASSERT(totalPipes.isValid());
+    totalTransferables += transferables;
+    MOZ_DIAGNOSTIC_ASSERT(totalTransferables.isValid());
+  }
+
+  // If the combination of all streams when serialized independently is
+  // sufficiently complex, we may choose to serialize it as a pipe to limit the
+  // complexity of the payload.
+  if (totalTransferables.value() == 0) {
+    // If there are no transferables within our serialization, and it would
+    // contain at least one pipe, serialize the entire payload as a pipe for
+    // simplicity.
+    *aSerializeAsPipe = totalSizeUsed.value() > 0 && totalPipes.value() > 0;
+  } else {
+    // Otherwise, we may want to still serialize in segments to take advantage
+    // of the efficiency of serializing transferables. We'll only serialize as a
+    // pipe if the total attachment count exceeds kMaxAttachmentThreshold.
+    static constexpr uint32_t kMaxAttachmentThreshold = 8;
+    CheckedUint32 totalAttachments = totalPipes + totalTransferables;
+    *aSerializeAsPipe = !totalAttachments.isValid() ||
+                        totalAttachments.value() > kMaxAttachmentThreshold;
+  }
+
+  if (*aSerializeAsPipe) {
+    NS_WARNING(
+        nsPrintfCString("Choosing to serialize multiplex stream as a pipe "
+                        "(would be %u bytes, %u pipes, %u transferables)",
+                        totalSizeUsed.value(), totalPipes.value(),
+                        totalTransferables.value())
+            .get());
+    *aSizeUsed = 0;
+    *aPipes = 1;
+    *aTransferables = 0;
+  } else {
+    *aSizeUsed = totalSizeUsed.value();
+    *aPipes = totalPipes.value();
+    *aTransferables = totalTransferables.value();
+  }
+}
+
+void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
+                                       uint32_t aMaxSize, uint32_t* aSizeUsed) {
+  MutexAutoLock lock(mLock);
+
+  // Check if we should serialize this stream as a pipe to reduce complexity.
+  uint32_t dummySizeUsed = 0, dummyPipes = 0, dummyTransferables = 0;
+  bool serializeAsPipe = false;
+  SerializedComplexityInternal(aMaxSize, &dummySizeUsed, &dummyPipes,
+                               &dummyTransferables, &serializeAsPipe);
+  if (serializeAsPipe) {
+    *aSizeUsed = 0;
+    MutexAutoUnlock unlock(mLock);
+    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams);
+    return;
+  }
 
   MultiplexInputStreamParams params;
 
@@ -989,10 +1056,9 @@ void nsMultiplexInputStream::SerializeInternal(
     streams.SetCapacity(streamCount);
     for (uint32_t index = 0; index < streamCount; index++) {
       uint32_t sizeUsed = 0;
-      InputStreamHelper::SerializeInputStream(
-          mStreams[index].mOriginalStream, *streams.AppendElement(),
-          aFileDescriptors, aDelayedStart, maxSize.value(), &sizeUsed,
-          aManager);
+      InputStreamHelper::SerializeInputStream(mStreams[index].mOriginalStream,
+                                              *streams.AppendElement(),
+                                              maxSize.value(), &sizeUsed);
 
       MOZ_ASSERT(maxSize.value() >= sizeUsed);
 
@@ -1014,9 +1080,7 @@ void nsMultiplexInputStream::SerializeInternal(
   *aSizeUsed = totalSizeUsed.value();
 }
 
-bool nsMultiplexInputStream::Deserialize(
-    const InputStreamParams& aParams,
-    const FileDescriptorArray& aFileDescriptors) {
+bool nsMultiplexInputStream::Deserialize(const InputStreamParams& aParams) {
   if (aParams.type() != InputStreamParams::TMultiplexInputStreamParams) {
     NS_ERROR("Received unknown parameters from the other process!");
     return false;
@@ -1029,8 +1093,8 @@ bool nsMultiplexInputStream::Deserialize(
 
   uint32_t streamCount = streams.Length();
   for (uint32_t index = 0; index < streamCount; index++) {
-    nsCOMPtr<nsIInputStream> stream = InputStreamHelper::DeserializeInputStream(
-        streams[index], aFileDescriptors);
+    nsCOMPtr<nsIInputStream> stream =
+        InputStreamHelper::DeserializeInputStream(streams[index]);
     if (!stream) {
       NS_WARNING("Deserialize failed!");
       return false;
@@ -1185,11 +1249,9 @@ nsMultiplexInputStream::Length(int64_t* aLength) {
 }
 
 class nsMultiplexInputStream::AsyncWaitLengthHelper final
-    : public nsIInputStreamLengthCallback
-
-{
+    : public nsIInputStreamLengthCallback {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   AsyncWaitLengthHelper()
       : mStreamNotified(false), mLength(0), mNegativeSize(false) {}

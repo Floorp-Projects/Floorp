@@ -420,14 +420,15 @@ FxAccountsClient.prototype = {
 
     let bundle = CommonUtils.hexToBytes(resp.bundle);
     let mac = bundle.slice(-32);
-
-    let hasher = CryptoUtils.makeHMACHasher(
-      Ci.nsICryptoHMAC.SHA256,
-      CryptoUtils.makeHMACKey(respHMACKey)
+    let key = CommonUtils.byteStringToArrayBuffer(respHMACKey);
+    // CryptoUtils.hmac takes ArrayBuffers as inputs for the key and data and
+    // returns an ArrayBuffer.
+    let bundleMAC = await CryptoUtils.hmac(
+      "SHA-256",
+      key,
+      CommonUtils.byteStringToArrayBuffer(bundle.slice(0, -32))
     );
-
-    let bundleMAC = CryptoUtils.digestBytes(bundle.slice(0, -32), hasher);
-    if (mac !== bundleMAC) {
+    if (mac !== CommonUtils.arrayBufferToByteString(bundleMAC)) {
       throw new Error("error unbundling encryption keys");
     }
 

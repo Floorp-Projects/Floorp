@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cr, Cu, components: Components } = require("chrome");
+const { Cc, Ci, Cr, components: Components } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 
@@ -20,11 +20,6 @@ loader.lazyRequireGetter(
   true
 );
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
-loader.lazyGetter(
-  this,
-  "WebExtensionPolicy",
-  () => Cu.getGlobalForObject(Cu).WebExtensionPolicy
-);
 
 // Network logging
 

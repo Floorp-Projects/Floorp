@@ -68,8 +68,6 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     return 0;
   }
 
-  int frame_in_cnt = 0;
-  int frame_out_cnt = 0;
   uint8_t *buffer = nullptr;
   size_t buffer_size = 0;
   size_t frame_size = 0;
@@ -77,11 +75,9 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
                          nullptr)) {
     const aom_codec_err_t err =
         aom_codec_decode(&codec, buffer, frame_size, nullptr);
-    ++frame_in_cnt;
     aom_codec_iter_t iter = nullptr;
     aom_image_t *img = nullptr;
     while ((img = aom_codec_get_frame(&codec, &iter)) != nullptr) {
-      ++frame_out_cnt;
     }
   }
   aom_codec_destroy(&codec);

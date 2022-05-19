@@ -67,8 +67,8 @@ class OutgoingMsg {
   struct sctp_sendv_spa& GetInfo() {
     return *mInfo;
   };
-  size_t GetLength() { return mLength; };
-  size_t GetLeft() { return mLength - mPos; };
+  size_t GetLength() const { return mLength; };
+  size_t GetLeft() const { return mLength - mPos; };
   const uint8_t* GetData() { return (const uint8_t*)(mData + mPos); };
 
  protected:
@@ -206,8 +206,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   // must(?) be public so my c->c++ trampoline can call it
   // May be called with (STS thread) or without the lock
   int ReceiveCallback(struct socket* sock, void* data, size_t datalen,
-                      struct sctp_rcvinfo rcv,
-                      int flags);
+                      struct sctp_rcvinfo rcv, int flags);
 
   // Find out state
   enum { CONNECTING = 0U, OPEN = 1U, CLOSING = 2U, CLOSED = 3U };
@@ -493,27 +492,27 @@ class DataChannel {
   // Send a binary blob
   void SendBinaryBlob(dom::Blob& aBlob, ErrorResult& aRv);
 
-  uint16_t GetType() { return mPrPolicy; }
+  uint16_t GetType() const { return mPrPolicy; }
 
   dom::Nullable<uint16_t> GetMaxPacketLifeTime() const;
 
   dom::Nullable<uint16_t> GetMaxRetransmits() const;
 
-  bool GetNegotiated() { return mNegotiated; }
+  bool GetNegotiated() const { return mNegotiated; }
 
-  bool GetOrdered() { return mOrdered; }
+  bool GetOrdered() const { return mOrdered; }
 
   void IncrementBufferedAmount(uint32_t aSize, ErrorResult& aRv);
   void DecrementBufferedAmount(uint32_t aSize);
 
   // Amount of data buffered to send
-  uint32_t GetBufferedAmount() {
+  uint32_t GetBufferedAmount() const {
     MOZ_ASSERT(NS_IsMainThread());
     return mBufferedAmount;
   }
 
   // Trigger amount for generating BufferedAmountLow events
-  uint32_t GetBufferedAmountLowThreshold();
+  uint32_t GetBufferedAmountLowThreshold() const;
   void SetBufferedAmountLowThreshold(uint32_t aThreshold);
 
   void AnnounceOpen();
@@ -533,7 +532,7 @@ class DataChannel {
   void GetProtocol(nsAString& aProtocol) {
     CopyUTF8toUTF16(mProtocol, aProtocol);
   }
-  uint16_t GetStream() { return mStream; }
+  uint16_t GetStream() const { return mStream; }
 
   void SendOrQueue(DataChannelOnMessageAvailable* aMessage);
 

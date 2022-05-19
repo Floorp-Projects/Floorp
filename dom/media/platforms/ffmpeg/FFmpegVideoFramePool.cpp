@@ -113,8 +113,9 @@ VideoFramePool<LIBAV_VER>::GetFreeVideoFrameSurface() {
 
 RefPtr<VideoFrameSurface<LIBAV_VER>>
 VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
-    VADRMPRIMESurfaceDescriptor& aVaDesc, AVCodecContext* aAVCodecContext,
-    AVFrame* aAVFrame, FFmpegLibWrapper* aLib) {
+    VADRMPRIMESurfaceDescriptor& aVaDesc, int aWidth, int aHeight,
+    AVCodecContext* aAVCodecContext, AVFrame* aAVFrame,
+    FFmpegLibWrapper* aLib) {
   if (aVaDesc.fourcc != VA_FOURCC_NV12 && aVaDesc.fourcc != VA_FOURCC_YV12 &&
       aVaDesc.fourcc != VA_FOURCC_P010) {
     FFMPEG_LOG("Unsupported VA-API surface format %d", aVaDesc.fourcc);
@@ -126,7 +127,7 @@ VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
       GetFreeVideoFrameSurface();
   if (!videoSurface) {
     RefPtr<DMABufSurfaceYUV> surface =
-        DMABufSurfaceYUV::CreateYUVSurface(aVaDesc);
+        DMABufSurfaceYUV::CreateYUVSurface(aVaDesc, aWidth, aHeight);
     if (!surface) {
       return nullptr;
     }
@@ -144,7 +145,7 @@ VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
     mDMABufSurfaces.AppendElement(std::move(surf));
   } else {
     RefPtr<DMABufSurfaceYUV> surface = videoSurface->GetDMABufSurface();
-    if (!surface->UpdateYUVData(aVaDesc)) {
+    if (!surface->UpdateYUVData(aVaDesc, aWidth, aHeight)) {
       return nullptr;
     }
     FFMPEG_LOG("Reusing VA-API DMABufSurface UID = %d", surface->GetUID());

@@ -445,13 +445,7 @@
     {
       list-style-image: url(chrome://browser/skin/stop-1x.svg) !important;
     }
-    
-    .toolbarbutton-1#forward-button .toolbarbutton-icon,
-    #context-forward .menu-iconic-icon
-    {
-      transform: scaleX(-1) !important;
-    }
-    
+
     #home-button
     {
       list-style-image: url(chrome://browser/skin/home-1x.svg) !important;

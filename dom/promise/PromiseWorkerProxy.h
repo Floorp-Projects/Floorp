@@ -130,7 +130,7 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
   typedef bool (*WriteCallbackOp)(JSContext* aCx,
                                   JSStructuredCloneWriter* aWorker,
                                   PromiseWorkerProxy* aProxy,
-                                  JS::HandleObject aObj);
+                                  JS::Handle<JSObject*> aObj);
 
   bool OnWritingThread() const override;
 

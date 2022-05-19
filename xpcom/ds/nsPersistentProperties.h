@@ -47,7 +47,7 @@ class nsPropertyElement final : public nsIPropertyElement {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTYELEMENT
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
  private:
   ~nsPropertyElement() = default;

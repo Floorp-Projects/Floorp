@@ -15,8 +15,7 @@ class nsDebugImpl : public nsIDebug2 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDEBUG2
 
-  static nsresult Create(nsISupports* aOuter, const nsIID& aIID,
-                         void** aInstancePtr);
+  static nsresult Create(const nsIID& aIID, void** aInstancePtr);
 
   /*
    * If we are in multiprocess mode, return the process name.

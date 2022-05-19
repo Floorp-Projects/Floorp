@@ -52,7 +52,7 @@ ffi::WGPUColor ConvertColor(const dom::GPUColorDict& aColor) {
 }
 
 ffi::WGPURenderPass* BeginRenderPass(
-    RawId aEncoderId, const dom::GPURenderPassDescriptor& aDesc) {
+    CommandEncoder* const aParent, const dom::GPURenderPassDescriptor& aDesc) {
   ffi::WGPURenderPassDescriptor desc = {};
 
   ffi::WGPURenderPassDepthStencilAttachment dsDesc = {};
@@ -82,6 +82,12 @@ ffi::WGPURenderPass* BeginRenderPass(
     dsDesc.stencil.store_op = ConvertStoreOp(dsa.mStencilStoreOp);
 
     desc.depth_stencil_attachment = &dsDesc;
+  }
+
+  if (aDesc.mColorAttachments.Length() > WGPUMAX_COLOR_TARGETS) {
+    aParent->GetDevice()->GenerateError(nsLiteralCString(
+        "Too many color attachments in GPURenderPassDescriptor"));
+    return nullptr;
   }
 
   std::array<ffi::WGPURenderPassColorAttachment, WGPUMAX_COLOR_TARGETS>
@@ -124,12 +130,17 @@ ffi::WGPURenderPass* BeginRenderPass(
     }
   }
 
-  return ffi::wgpu_command_encoder_begin_render_pass(aEncoderId, &desc);
+  return ffi::wgpu_command_encoder_begin_render_pass(aParent->mId, &desc);
 }
 
 RenderPassEncoder::RenderPassEncoder(CommandEncoder* const aParent,
                                      const dom::GPURenderPassDescriptor& aDesc)
-    : ChildOf(aParent), mPass(BeginRenderPass(aParent->mId, aDesc)) {
+    : ChildOf(aParent), mPass(BeginRenderPass(aParent, aDesc)) {
+  if (!mPass) {
+    mValid = false;
+    return;
+  }
+
   for (const auto& at : aDesc.mColorAttachments) {
     mUsedTextureViews.AppendElement(at.mView);
   }

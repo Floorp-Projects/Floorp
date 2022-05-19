@@ -12,7 +12,7 @@ async function createfiles() {
     let setTime = TEST_CURRENT_TIME;
     setTime -= LAST_MODIFICATION_DAY[i] * MS_PER_DAY;
     let fileName = "places.sqlite" + (i > 0 ? "-" + i : "") + ".corrupt";
-    let filePath = OS.Path.join(OS.Constants.Path.profileDir, fileName);
+    let filePath = PathUtils.join(PathUtils.profileDir, fileName);
     await IOUtils.writeUTF8(filePath, "test-file-delete-me", {
       tmpPath: filePath + ".tmp",
     });
@@ -26,7 +26,7 @@ add_task(async function removefiles() {
   await PlacesDBUtils.runTasks([PlacesDBUtils.removeOldCorruptDBs]);
   for (let i = 0; i < TEMP_FILES_TO_CREATE; i++) {
     let fileName = "places.sqlite" + (i > 0 ? "-" + i : "") + ".corrupt";
-    let filePath = OS.Path.join(OS.Constants.Path.profileDir, fileName);
+    let filePath = PathUtils.join(PathUtils.profileDir, fileName);
     if (LAST_MODIFICATION_DAY[i] >= RETAIN_DAYS) {
       Assert.ok(
         !(await IOUtils.exists(filePath)),

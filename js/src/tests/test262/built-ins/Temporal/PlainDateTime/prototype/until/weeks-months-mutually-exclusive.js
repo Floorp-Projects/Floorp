@@ -15,13 +15,13 @@ const laterDateTime = dt.add({ days: 42, hours: 3 });
 TemporalHelpers.assertDuration(
   dt.until(laterDateTime, { largestUnit: "weeks" }),
   0, 0, 6, 0, 3, 0, 0, 0, 0, 0,
-  "weeks and months mutually exclusive (1)"
+  "weeks and months mutually exclusive (prefer weeks)"
 );
 
 TemporalHelpers.assertDuration(
   dt.until(laterDateTime, { largestUnit: "months" }),
   0, 1, 0, 12, 3, 0, 0, 0, 0, 0,
-  "weeks and months mutually exclusive (2)"
+  "weeks and months mutually exclusive (prefer months)"
 );
 
 reportCompare(0, 0);

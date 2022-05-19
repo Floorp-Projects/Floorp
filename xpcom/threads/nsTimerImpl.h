@@ -216,8 +216,7 @@ class nsTimer final : public nsITimer {
   // current thread should be used as the timer's target.
   static RefPtr<nsTimer> WithEventTarget(nsIEventTarget* aTarget);
 
-  static nsresult XPCOMConstructor(nsISupports* aOuter, REFNSIID aIID,
-                                   void** aResult);
+  static nsresult XPCOMConstructor(REFNSIID aIID, void** aResult);
 
  private:
   // nsTimerImpl holds a strong ref to us. When our refcount goes to 1, we will

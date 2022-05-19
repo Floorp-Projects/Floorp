@@ -10,8 +10,7 @@
 #include "mozilla/dom/PColorPickerParent.h"
 #include "nsIColorPicker.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ColorPickerParent : public PColorPickerParent {
  public:
@@ -48,7 +47,6 @@ class ColorPickerParent : public PColorPickerParent {
   nsString mInitialColor;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ColorPickerParent_h

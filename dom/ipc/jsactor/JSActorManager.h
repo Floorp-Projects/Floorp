@@ -72,9 +72,9 @@ class JSActorManager : public nsISupports {
    * `aMaybeActor` may be `nullptr`, which should construct the default empty
    * actor.
    */
-  virtual already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
-                                                const nsACString& aName,
-                                                ErrorResult& aRv) = 0;
+  virtual already_AddRefed<JSActor> InitJSActor(
+      JS::Handle<JSObject*> aMaybeActor, const nsACString& aName,
+      ErrorResult& aRv) = 0;
 
   /**
    * Return this native actor. This should be the same object which is

@@ -197,10 +197,12 @@ bool nsVideoFrame::ReflowFinished() {
     return Some(f->GetSize());
   };
 
+  AutoTArray<nsCOMPtr<nsIRunnable>, 2> events;
+
   if (auto size = GetSize(mCaptionDiv)) {
     if (*size != mCaptionTrackedSize) {
       mCaptionTrackedSize = *size;
-      nsContentUtils::AddScriptRunner(
+      events.AppendElement(
           new DispatchResizeEvent(mCaptionDiv, u"resizecaption"_ns));
     }
   }
@@ -208,9 +210,12 @@ bool nsVideoFrame::ReflowFinished() {
   if (auto size = GetSize(controls)) {
     if (*size != mControlsTrackedSize) {
       mControlsTrackedSize = *size;
-      nsContentUtils::AddScriptRunner(
+      events.AppendElement(
           new DispatchResizeEvent(controls, u"resizevideocontrols"_ns));
     }
+  }
+  for (auto& event : events) {
+    nsContentUtils::AddScriptRunner(event.forget());
   }
   return false;
 }

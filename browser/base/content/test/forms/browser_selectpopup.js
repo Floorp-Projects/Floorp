@@ -814,12 +814,14 @@ async function performLargePopupTests(win) {
     await openSelectPopup(selectPopup, "key", "select", win);
 
     let rect = selectPopup.getBoundingClientRect();
+    let marginBottom = parseFloat(getComputedStyle(selectPopup).marginBottom);
+    let marginTop = parseFloat(getComputedStyle(selectPopup).marginTop);
     ok(
-      rect.top >= browserRect.top,
+      rect.top - marginTop >= browserRect.top,
       "Popup top position in within browser area"
     );
     ok(
-      rect.bottom <= browserRect.bottom,
+      rect.bottom + marginBottom <= browserRect.bottom,
       "Popup bottom position in within browser area"
     );
 
@@ -846,7 +848,7 @@ async function performLargePopupTests(win) {
       // fuzz-factor of 1.
       SimpleTest.isfuzzy(
         selectPopup.children[selectedOption].getBoundingClientRect().bottom,
-        selectPopup.getBoundingClientRect().bottom - bpBottom,
+        selectPopup.getBoundingClientRect().bottom - bpBottom + marginBottom,
         1,
         "Popup scroll at correct position " + bpBottom
       );

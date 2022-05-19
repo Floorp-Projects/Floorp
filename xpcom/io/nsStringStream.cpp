@@ -129,22 +129,20 @@ class nsStringInputStream final : public nsIStringInputStream,
  private:
   ~nsStringInputStream() = default;
 
-  template <typename M>
-  void SerializeInternal(InputStreamParams& aParams, bool aDelayedStart,
-                         uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager);
+  size_t Length() const REQUIRES(mMon) {
+    return mSource ? mSource->Data().Length() : 0;
+  }
 
-  size_t Length() const { return mSource ? mSource->Data().Length() : 0; }
+  size_t LengthRemaining() const REQUIRES(mMon) { return Length() - mOffset; }
 
-  size_t LengthRemaining() const { return Length() - mOffset; }
+  void Clear() REQUIRES(mMon) { mSource = nullptr; }
 
-  void Clear() { mSource = nullptr; }
+  bool Closed() REQUIRES(mMon) { return !mSource; }
 
-  bool Closed() { return !mSource; }
+  RefPtr<StreamBufferSource> mSource GUARDED_BY(mMon);
+  size_t mOffset GUARDED_BY(mMon) = 0;
 
-  RefPtr<StreamBufferSource> mSource;
-  size_t mOffset = 0;
-
-  mozilla::ReentrantMonitor mMon MOZ_UNANNOTATED{"nsStringInputStream"};
+  mutable mozilla::ReentrantMonitor mMon{"nsStringInputStream"};
 };
 
 nsresult nsStringInputStream::Init(nsCString&& aString) {
@@ -450,25 +448,21 @@ nsStringInputStream::Tell(int64_t* aOutWhere) {
 // nsIIPCSerializableInputStream implementation
 /////////
 
-void nsStringInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& /* aFDs */,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
-  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
+void nsStringInputStream::SerializedComplexity(uint32_t aMaxSize,
+                                               uint32_t* aSizeUsed,
+                                               uint32_t* aPipes,
+                                               uint32_t* aTransferables) {
+  ReentrantMonitorAutoEnter lock(mMon);
+
+  if (Length() >= aMaxSize) {
+    *aPipes = 1;
+  } else {
+    *aSizeUsed = Length();
+  }
 }
 
-void nsStringInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& /* aFDs */,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
-  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
-}
-
-template <typename M>
-void nsStringInputStream::SerializeInternal(InputStreamParams& aParams,
-                                            bool aDelayedStart,
-                                            uint32_t aMaxSize,
-                                            uint32_t* aSizeUsed, M* aManager) {
+void nsStringInputStream::Serialize(InputStreamParams& aParams,
+                                    uint32_t aMaxSize, uint32_t* aSizeUsed) {
   ReentrantMonitorAutoEnter lock(mMon);
 
   MOZ_DIAGNOSTIC_ASSERT(!Closed(), "cannot send a closed stream!");
@@ -485,8 +479,7 @@ void nsStringInputStream::SerializeInternal(InputStreamParams& aParams,
       mSource = source;
     }
 
-    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams, aDelayedStart,
-                                                  aManager);
+    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams);
     return;
   }
 
@@ -497,8 +490,7 @@ void nsStringInputStream::SerializeInternal(InputStreamParams& aParams,
   aParams = params;
 }
 
-bool nsStringInputStream::Deserialize(const InputStreamParams& aParams,
-                                      const FileDescriptorArray& /* aFDs */) {
+bool nsStringInputStream::Deserialize(const InputStreamParams& aParams) {
   if (aParams.type() != InputStreamParams::TStringInputStreamParams) {
     NS_ERROR("Received unknown parameters from the other process!");
     return false;
@@ -529,6 +521,8 @@ nsStringInputStream::Clone(nsIInputStream** aCloneOut) {
   ReentrantMonitorAutoEnter lock(mMon);
 
   RefPtr<nsStringInputStream> ref = new nsStringInputStream();
+  // Nothing else can access this yet, but suppress static analysis warnings
+  ReentrantMonitorAutoEnter reflock(ref->mMon);
   if (mSource && !mSource->Owning()) {
     auto data = mSource->Data();
     nsresult rv = ref->SetData(data.Elements(), data.Length());
@@ -639,13 +633,8 @@ nsresult NS_NewCStringInputStream(nsIInputStream** aStreamResult,
 }
 
 // factory method for constructing a nsStringInputStream object
-nsresult nsStringInputStreamConstructor(nsISupports* aOuter, REFNSIID aIID,
-                                        void** aResult) {
+nsresult nsStringInputStreamConstructor(REFNSIID aIID, void** aResult) {
   *aResult = nullptr;
-
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
 
   RefPtr<nsStringInputStream> inst = new nsStringInputStream();
   return inst->QueryInterface(aIID, aResult);

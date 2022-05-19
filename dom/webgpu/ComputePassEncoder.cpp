@@ -60,17 +60,18 @@ void ComputePassEncoder::SetPipeline(const ComputePipeline& aPipeline) {
   }
 }
 
-void ComputePassEncoder::Dispatch(uint32_t x, uint32_t y, uint32_t z) {
+void ComputePassEncoder::DispatchWorkgroups(uint32_t x, uint32_t y,
+                                            uint32_t z) {
   if (mValid) {
-    ffi::wgpu_compute_pass_dispatch(mPass, x, y, z);
+    ffi::wgpu_compute_pass_dispatch_workgroups(mPass, x, y, z);
   }
 }
 
-void ComputePassEncoder::DispatchIndirect(const Buffer& aIndirectBuffer,
-                                          uint64_t aIndirectOffset) {
+void ComputePassEncoder::DispatchWorkgroupsIndirect(
+    const Buffer& aIndirectBuffer, uint64_t aIndirectOffset) {
   if (mValid) {
-    ffi::wgpu_compute_pass_dispatch_indirect(mPass, aIndirectBuffer.mId,
-                                             aIndirectOffset);
+    ffi::wgpu_compute_pass_dispatch_workgroups_indirect(
+        mPass, aIndirectBuffer.mId, aIndirectOffset);
   }
 }
 

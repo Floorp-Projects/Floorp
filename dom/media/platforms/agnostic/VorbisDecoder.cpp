@@ -63,9 +63,12 @@ RefPtr<MediaDataDecoder::InitPromise> VorbisDataDecoder::Init() {
 
   AutoTArray<unsigned char*, 4> headers;
   AutoTArray<size_t, 4> headerLens;
-  if (!XiphExtradataToHeaders(headers, headerLens,
-                              mInfo.mCodecSpecificConfig->Elements(),
-                              mInfo.mCodecSpecificConfig->Length())) {
+  MOZ_ASSERT(mInfo.mCodecSpecificConfig.is<VorbisCodecSpecificData>(),
+             "Vorbis decoder should get vorbis codec specific data");
+  RefPtr<MediaByteBuffer> vorbisHeaderBlob =
+      GetAudioCodecSpecificBlob(mInfo.mCodecSpecificConfig);
+  if (!XiphExtradataToHeaders(headers, headerLens, vorbisHeaderBlob->Elements(),
+                              vorbisHeaderBlob->Length())) {
     LOG(LogLevel::Warning, ("VorbisDecoder: could not get vorbis header"));
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,

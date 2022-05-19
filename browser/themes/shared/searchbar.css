@@ -165,10 +165,19 @@
 
 @media (-moz-platform: windows-win10) {
   #PopupSearchAutoComplete {
-    /* A border is necessary because the shadow is bottom-right */
-    border-color: var(--menu-border-color);
-    border-radius: var(--arrowpanel-border-radius);
-    -moz-window-shadow: cliprounded;
+    appearance: none;
+    border: none;
+    background-color: transparent;
+
+    margin: -4px;
+    --panel-border-color: var(--menu-border-color);
+    --panel-border-radius: var(--arrowpanel-border-radius);
+  }
+  /* TODO(emilio): We should consider adding shadows to all panels on Windows,
+     probably */
+  #PopupSearchAutoComplete::part(content) {
+    margin: 4px;
+    box-shadow: var(--windows-panel-box-shadow);
   }
 }
 

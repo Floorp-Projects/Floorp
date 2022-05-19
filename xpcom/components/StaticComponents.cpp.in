@@ -199,18 +199,9 @@ private:
 
 NS_IMPL_ISUPPORTS(StaticModuleFactory, nsIFactory)
 
-NS_IMETHODIMP StaticModuleFactory::CreateInstance(nsISupports* aOuter,
-                                                  const nsIID& aIID,
+NS_IMETHODIMP StaticModuleFactory::CreateInstance(const nsIID& aIID,
                                                   void** aResult) {
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
   return CreateInstanceImpl(mID, aIID, aResult);
-}
-
-NS_IMETHODIMP StaticModuleFactory::LockFactory(bool aLock) {
-  MOZ_CRASH("LockFactory is no longer a thing");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 }  // anonymous namespace

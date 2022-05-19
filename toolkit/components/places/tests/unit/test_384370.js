@@ -27,15 +27,15 @@ var bookmarkData = [
 */
 add_task(async function() {
   // Remove eventual bookmarks.exported.json.
-  let jsonFile = OS.Path.join(
-    OS.Constants.Path.profileDir,
+  let jsonFile = PathUtils.join(
+    PathUtils.profileDir,
     "bookmarks.exported.json"
   );
   await IOUtils.remove(jsonFile, { ignoreAbsent: true });
 
   // Test importing a pre-Places canonical bookmarks file.
   // Note: we do not empty the db before this import to catch bugs like 380999
-  let htmlFile = OS.Path.join(do_get_cwd().path, "bookmarks.preplaces.html");
+  let htmlFile = PathUtils.join(do_get_cwd().path, "bookmarks.preplaces.html");
   await BookmarkHTMLUtils.importFromFile(htmlFile, { replace: true });
 
   // Populate the database.

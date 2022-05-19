@@ -13,8 +13,7 @@
 #include "nsTArray.h"
 #include "nsTHashMap.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class ContentParent;
 
 class ContentProcessManager final {
@@ -86,7 +85,6 @@ class ContentProcessManager final {
   MOZ_COUNTED_DEFAULT_CTOR(ContentProcessManager);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ContentProcessManager_h

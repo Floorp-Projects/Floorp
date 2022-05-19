@@ -98,11 +98,8 @@
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/Endpoint.h"
-#include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
-#include "mozilla/ipc/PChildToParentStreamChild.h"
-#include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/layers/APZChild.h"
@@ -250,9 +247,6 @@
 
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaControllerBinding.h"
-#include "mozilla/ipc/IPCStreamAlloc.h"
-#include "mozilla/ipc/IPCStreamDestination.h"
-#include "mozilla/ipc/IPCStreamSource.h"
 
 #ifdef MOZ_WEBSPEECH
 #  include "mozilla/dom/PSpeechSynthesisChild.h"
@@ -1884,36 +1878,6 @@ void ContentChild::GetAvailableDictionaries(
   aDictionaries = mAvailableDictionaries.Clone();
 }
 
-PFileDescriptorSetChild* ContentChild::SendPFileDescriptorSetConstructor(
-    const FileDescriptor& aFD) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (IsShuttingDown()) {
-    return nullptr;
-  }
-
-  return PContentChild::SendPFileDescriptorSetConstructor(aFD);
-}
-
-PFileDescriptorSetChild* ContentChild::AllocPFileDescriptorSetChild(
-    const FileDescriptor& aFD) {
-  return new FileDescriptorSetChild(aFD);
-}
-
-bool ContentChild::DeallocPFileDescriptorSetChild(
-    PFileDescriptorSetChild* aActor) {
-  delete static_cast<FileDescriptorSetChild*>(aActor);
-  return true;
-}
-
-already_AddRefed<PRemoteLazyInputStreamChild>
-ContentChild::AllocPRemoteLazyInputStreamChild(const nsID& aID,
-                                               const uint64_t& aSize) {
-  RefPtr<RemoteLazyInputStreamChild> actor =
-      new RemoteLazyInputStreamChild(aID, aSize);
-  return actor.forget();
-}
-
 mozilla::PRemoteSpellcheckEngineChild*
 ContentChild::AllocPRemoteSpellcheckEngineChild() {
   MOZ_CRASH(
@@ -2026,37 +1990,6 @@ PRemotePrintJobChild* ContentChild::AllocPRemotePrintJobChild() {
 #else
   return nullptr;
 #endif
-}
-
-PChildToParentStreamChild* ContentChild::SendPChildToParentStreamConstructor(
-    PChildToParentStreamChild* aActor) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (IsShuttingDown()) {
-    return nullptr;
-  }
-
-  return PContentChild::SendPChildToParentStreamConstructor(aActor);
-}
-
-PChildToParentStreamChild* ContentChild::AllocPChildToParentStreamChild() {
-  MOZ_CRASH("PChildToParentStreamChild actors should be manually constructed!");
-}
-
-bool ContentChild::DeallocPChildToParentStreamChild(
-    PChildToParentStreamChild* aActor) {
-  delete aActor;
-  return true;
-}
-
-PParentToChildStreamChild* ContentChild::AllocPParentToChildStreamChild() {
-  return mozilla::ipc::AllocPParentToChildStreamChild();
-}
-
-bool ContentChild::DeallocPParentToChildStreamChild(
-    PParentToChildStreamChild* aActor) {
-  delete aActor;
-  return true;
 }
 
 media::PMediaChild* ContentChild::AllocPMediaChild() {
@@ -3220,34 +3153,12 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
         for (uint32_t j = 0; j < items.Length(); ++j) {
           const IPCDataTransferItem& item = items[j];
           RefPtr<nsVariantCC> variant = new nsVariantCC();
-          if (item.data().type() == IPCDataTransferData::TnsString) {
-            const nsString& data = item.data().get_nsString();
-            variant->SetAsAString(data);
-          } else if (item.data().type() == IPCDataTransferData::TShmem) {
-            if (nsContentUtils::IsFlavorImage(item.flavor())) {
-              // An image! Get the imgIContainer for it and set it in the
-              // variant.
-              nsCOMPtr<imgIContainer> imageContainer;
-              nsresult rv = nsContentUtils::DataTransferItemToImage(
-                  item, getter_AddRefs(imageContainer));
-              if (NS_FAILED(rv)) {
-                continue;
-              }
-              variant->SetAsISupports(imageContainer);
-            } else {
-              Shmem data = item.data().get_Shmem();
-              variant->SetAsACString(
-                  nsDependentCSubstring(data.get<char>(), data.Size<char>()));
-            }
-
-            Unused << DeallocShmem(item.data().get_Shmem());
-          } else if (item.data().type() == IPCDataTransferData::TIPCBlob) {
-            RefPtr<BlobImpl> blobImpl =
-                IPCBlobUtils::Deserialize(item.data().get_IPCBlob());
-            variant->SetAsISupports(blobImpl);
-          } else {
+          nsresult rv =
+              nsContentUtils::IPCTransferableItemToVariant(item, variant, this);
+          if (NS_FAILED(rv)) {
             continue;
           }
+
           // We should hide this data from content if we have a file, and we
           // aren't a file.
           bool hidden =
@@ -3743,19 +3654,13 @@ mozilla::ipc::IPCResult ContentChild::RecvOnContentBlockingDecision(
   return IPC_OK();
 }
 
-void ContentChild::OnChannelReceivedMessage(const Message& aMsg) {
-  if (aMsg.is_sync() && !aMsg.is_reply()) {
-    LSObject::OnSyncMessageReceived();
-  }
-
 #ifdef NIGHTLY_BUILD
+void ContentChild::OnChannelReceivedMessage(const Message& aMsg) {
   if (nsContentUtils::IsMessageInputEvent(aMsg)) {
     mPendingInputEvents++;
   }
-#endif
 }
 
-#ifdef NIGHTLY_BUILD
 PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg) {
   if (nsContentUtils::IsMessageInputEvent(aMsg)) {
     DebugOnly<uint32_t> prevEvts = mPendingInputEvents--;
@@ -3764,21 +3669,12 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg) {
 
   return PContentChild::OnMessageReceived(aMsg);
 }
-#endif
 
 PContentChild::Result ContentChild::OnMessageReceived(
     const Message& aMsg, UniquePtr<Message>& aReply) {
-  Result result = PContentChild::OnMessageReceived(aMsg, aReply);
-
-  if (aMsg.is_sync()) {
-    // OnMessageReceived shouldn't be called for sync replies.
-    MOZ_ASSERT(!aMsg.is_reply());
-
-    LSObject::OnSyncMessageHandled();
-  }
-
-  return result;
+  return PContentChild::OnMessageReceived(aMsg, aReply);
 }
+#endif
 
 mozilla::ipc::IPCResult ContentChild::RecvCreateBrowsingContext(
     uint64_t aGroupId, BrowsingContext::IPCInitializer&& aInit) {

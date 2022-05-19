@@ -470,28 +470,14 @@ class CGNativePropertyHooks(CGThing):
 
     def __init__(self, descriptor, properties):
         CGThing.__init__(self)
+        assert descriptor.wantsXrays
         self.descriptor = descriptor
         self.properties = properties
 
     def declare(self):
-        if not self.descriptor.wantsXrays:
-            return ""
-        return dedent(
-            """
-            // We declare this as an array so that retrieving a pointer to this
-            // binding's property hooks only requires compile/link-time resolvable
-            // address arithmetic.  Declaring it as a pointer instead would require
-            // doing a run-time load to fetch a pointer to this binding's property
-            // hooks.  And then structures which embedded a pointer to this structure
-            // would require a run-time load for proper initialization, which would
-            // then induce static constructors.  Lots of static constructors.
-            extern const NativePropertyHooks sNativePropertyHooks[];
-            """
-        )
+        return ""
 
     def define(self):
-        if not self.descriptor.wantsXrays:
-            return ""
         deleteNamedProperty = "nullptr"
         if (
             self.descriptor.concrete
@@ -526,12 +512,6 @@ class CGNativePropertyHooks(CGThing):
             prototypeID += self.descriptor.name
         else:
             prototypeID += "_ID_Count"
-        parentProtoName = self.descriptor.parentPrototypeName
-        parentHooks = (
-            toBindingNamespace(parentProtoName) + "::sNativePropertyHooks"
-            if parentProtoName
-            else "nullptr"
-        )
 
         if self.descriptor.wantsXrayExpandoClass:
             expandoClass = "&sXrayExpandoObjectClass"
@@ -541,16 +521,15 @@ class CGNativePropertyHooks(CGThing):
         return fill(
             """
             bool sNativePropertiesInited = false;
-            const NativePropertyHooks sNativePropertyHooks[] = { {
+            const NativePropertyHooks sNativePropertyHooks = {
               ${resolveOwnProperty},
               ${enumerateOwnProperties},
               ${deleteNamedProperty},
               { ${regular}, ${chrome}, &sNativePropertiesInited },
               ${prototypeID},
               ${constructorID},
-              ${parentHooks},
               ${expandoClass}
-            } };
+            };
             """,
             resolveOwnProperty=resolveOwnProperty,
             enumerateOwnProperties=enumerateOwnProperties,
@@ -559,7 +538,6 @@ class CGNativePropertyHooks(CGThing):
             chrome=chrome,
             prototypeID=prototypeID,
             constructorID=constructorID,
-            parentHooks=parentHooks,
             expandoClass=expandoClass,
         )
 
@@ -568,7 +546,7 @@ def NativePropertyHooks(descriptor):
     return (
         "&sEmptyNativePropertyHooks"
         if not descriptor.wantsXrays
-        else "sNativePropertyHooks"
+        else "&sNativePropertyHooks"
     )
 
 
@@ -4420,7 +4398,7 @@ def InitUnforgeablePropertiesOnHolder(
             CGGeneric(
                 fill(
                     """
-            JS::RootedId toPrimitive(aCx,
+            JS::Rooted<JS::PropertyKey> toPrimitive(aCx,
               JS::GetWellKnownSymbolKey(aCx, JS::SymbolCode::toPrimitive));
             if (!JS_DefinePropertyById(aCx, ${holderName}, toPrimitive,
                                        JS::UndefinedHandleValue,
@@ -16376,6 +16354,49 @@ class CGDescriptor(CGThing):
                 CGCollectJSONAttributesMethod(descriptor, defaultToJSONMethod)
             )
 
+        # Declare our DOMProxyHandler.
+        if descriptor.concrete and descriptor.proxy:
+            cgThings.append(
+                CGGeneric(
+                    fill(
+                        """
+                        static_assert(std::is_base_of_v<nsISupports, ${nativeType}>,
+                                      "We don't support non-nsISupports native classes for "
+                                      "proxy-based bindings yet");
+
+                        """,
+                        nativeType=descriptor.nativeType,
+                    )
+                )
+            )
+            if not descriptor.wrapperCache:
+                raise TypeError(
+                    "We need a wrappercache to support expandos for proxy-based "
+                    "bindings (" + descriptor.name + ")"
+                )
+            handlerThing = CGDOMJSProxyHandler(descriptor)
+            cgThings.append(CGDOMJSProxyHandlerDeclarer(handlerThing))
+            cgThings.append(CGProxyIsProxy(descriptor))
+            cgThings.append(CGProxyUnwrap(descriptor))
+
+        # Set up our Xray callbacks as needed.  This needs to come
+        # after we have our DOMProxyHandler defined.
+        if descriptor.wantsXrays:
+            if descriptor.concrete and descriptor.proxy:
+                if descriptor.needsXrayNamedDeleterHook():
+                    cgThings.append(CGDeleteNamedProperty(descriptor))
+            elif descriptor.needsXrayResolveHooks():
+                cgThings.append(CGResolveOwnPropertyViaResolve(descriptor))
+                cgThings.append(
+                    CGEnumerateOwnPropertiesViaGetOwnPropertyNames(descriptor)
+                )
+            if descriptor.wantsXrayExpandoClass:
+                cgThings.append(CGXrayExpandoJSClass(descriptor))
+
+            # Now that we have our ResolveOwnProperty/EnumerateOwnProperties stuff
+            # done, set up our NativePropertyHooks.
+            cgThings.append(CGNativePropertyHooks(descriptor, properties))
+
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGClassConstructor(descriptor, descriptor.interface.ctor()))
             cgThings.append(CGInterfaceObjectJSClass(descriptor, properties))
@@ -16418,28 +16439,6 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGDeserializer(descriptor))
 
             if descriptor.proxy:
-                cgThings.append(
-                    CGGeneric(
-                        fill(
-                            """
-                    static_assert(std::is_base_of_v<nsISupports, ${nativeType}>,
-                                      "We don't support non-nsISupports native classes for "
-                                      "proxy-based bindings yet");
-
-                    """,
-                            nativeType=descriptor.nativeType,
-                        )
-                    )
-                )
-                if not descriptor.wrapperCache:
-                    raise TypeError(
-                        "We need a wrappercache to support expandos for proxy-based "
-                        "bindings (" + descriptor.name + ")"
-                    )
-                handlerThing = CGDOMJSProxyHandler(descriptor)
-                cgThings.append(CGDOMJSProxyHandlerDeclarer(handlerThing))
-                cgThings.append(CGProxyIsProxy(descriptor))
-                cgThings.append(CGProxyUnwrap(descriptor))
                 cgThings.append(CGDOMJSProxyHandlerDefiner(handlerThing))
                 cgThings.append(CGDOMProxyJSClass(descriptor))
             else:
@@ -16457,24 +16456,6 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGWrapMethod(descriptor))
             else:
                 cgThings.append(CGWrapNonWrapperCacheMethod(descriptor, properties))
-
-        # Set up our Xray callbacks as needed.  This needs to come
-        # after we have our DOMProxyHandler defined.
-        if descriptor.wantsXrays:
-            if descriptor.concrete and descriptor.proxy:
-                if descriptor.needsXrayNamedDeleterHook():
-                    cgThings.append(CGDeleteNamedProperty(descriptor))
-            elif descriptor.needsXrayResolveHooks():
-                cgThings.append(CGResolveOwnPropertyViaResolve(descriptor))
-                cgThings.append(
-                    CGEnumerateOwnPropertiesViaGetOwnPropertyNames(descriptor)
-                )
-            if descriptor.wantsXrayExpandoClass:
-                cgThings.append(CGXrayExpandoJSClass(descriptor))
-
-        # Now that we have our ResolveOwnProperty/EnumerateOwnProperties stuff
-        # done, set up our NativePropertyHooks.
-        cgThings.append(CGNativePropertyHooks(descriptor, properties))
 
         # If we're not wrappercached, we don't know how to clear our
         # cached values, since we can't get at the JSObject.
@@ -22237,8 +22218,8 @@ class CGObservableArrayProxyHandler_OnDeleteItem(
     def __init__(self, descriptor, attr):
         args = [
             Argument("JSContext*", "aCx"),
-            Argument("JS::HandleObject", "aProxy"),
-            Argument("JS::HandleValue", "aValue"),
+            Argument("JS::Handle<JSObject*>", "aProxy"),
+            Argument("JS::Handle<JS::Value>", "aValue"),
             Argument("uint32_t", "aIndex"),
         ]
         CGObservableArrayProxyHandler_callback.__init__(
@@ -22270,10 +22251,10 @@ class CGObservableArrayProxyHandler_SetIndexedValue(
     def __init__(self, descriptor, attr):
         args = [
             Argument("JSContext*", "aCx"),
-            Argument("JS::HandleObject", "aProxy"),
-            Argument("JS::HandleObject", "aBackingList"),
+            Argument("JS::Handle<JSObject*>", "aProxy"),
+            Argument("JS::Handle<JSObject*>", "aBackingList"),
             Argument("uint32_t", "aIndex"),
-            Argument("JS::HandleValue", "aValue"),
+            Argument("JS::Handle<JS::Value>", "aValue"),
             Argument("JS::ObjectOpResult&", "aResult"),
         ]
         CGObservableArrayProxyHandler_callback.__init__(
@@ -22303,7 +22284,7 @@ class CGObservableArrayProxyHandler_SetIndexedValue(
         return dedent(
             """
             if (aIndex < oldLen) {
-              JS::RootedValue value(aCx);
+              JS::Rooted<JS::Value> value(aCx);
               if (!JS_GetElement(aCx, aBackingList, aIndex, &value)) {
                 return false;
               }

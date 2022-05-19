@@ -40,6 +40,7 @@ import org.junit.runner.RunWith
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ShouldContinue
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 
 const val DISPLAY_WIDTH = 480
@@ -1238,8 +1239,6 @@ class AccessibilityTest : BaseSessionTest() {
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1715480
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "fission.bfcacheInParent" to false))
-        // disable test on debug for frequently failing #Bug 1505353
-        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         fun countAutoFillNodes(cond: (AccessibilityNodeInfo) -> Boolean =
                                        { it.className == "android.widget.EditText" },
                                id: Int = View.NO_ID): Int {
@@ -1250,9 +1249,27 @@ class AccessibilityTest : BaseSessionTest() {
                 } else 0)
         }
 
+        // XXX: Reliably waiting for iframes to load could be flaky, so we wait
+        // for our autofill nodes to be the right number.
+        fun waitForAutoFillNodes() {
+            val checkAutoFillNodes = object : EventDelegate, ShouldContinue {
+                var haveAllAutoFills = countAutoFillNodes() == 18
+
+                override fun shouldContinue(): Boolean = !haveAllAutoFills
+
+                override fun onWinContentChanged(event: AccessibilityEvent) {
+                    haveAllAutoFills = countAutoFillNodes() == 18
+                }
+            }
+            if (checkAutoFillNodes.shouldContinue()) {
+                sessionRule.waitUntilCalled(checkAutoFillNodes)
+            }
+        }
+
         // Wait for the accessibility nodes to populate.
         mainSession.loadTestPath(FORMS_HTML_PATH)
         waitForInitialFocus()
+        waitForAutoFillNodes()
 
         assertThat("Initial auto-fill count should match",
                    countAutoFillNodes(), equalTo(18))
@@ -1268,6 +1285,7 @@ class AccessibilityTest : BaseSessionTest() {
         // Now wait for the nodes to reappear.
         mainSession.goBack()
         waitForInitialFocus()
+        waitForAutoFillNodes()
         assertThat("Should have auto-fill fields again",
                    countAutoFillNodes(), equalTo(18))
         assertThat("Should not have focused field",

@@ -5151,7 +5151,8 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
 
       nsCOMPtr<nsIURI> strippedURI;
       if (!isRedirectURIInAllowList &&
-          URLQueryStringStripper::Strip(mRedirectURI, strippedURI)) {
+          URLQueryStringStripper::Strip(mRedirectURI, mPrivateBrowsing,
+                                        strippedURI)) {
         mUnstrippedRedirectURI = mRedirectURI;
         mRedirectURI = strippedURI;
 
@@ -5755,7 +5756,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
       "security flags in loadInfo but doContentSecurityCheck() not called");
 
   LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
-  LogCallingScriptLocation(this);
+  mOpenerCallingScriptLocation = CallingScriptLocationString();
+  LogCallingScriptLocation(this, mOpenerCallingScriptLocation);
   NS_CompareLoadInfoAndLoadContext(this);
 
 #ifdef DEBUG
@@ -5771,7 +5773,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     return NS_FAILED(mStatus) ? mStatus : NS_ERROR_FAILURE;
   }
 
-  if (MaybeWaitForUploadStreamLength(listener, nullptr)) {
+  if (MaybeWaitForUploadStreamNormalization(listener, nullptr)) {
     return NS_OK;
   }
 
@@ -6776,6 +6778,17 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     nsresult status;
     request->GetStatus(&status);
     mStatus = status;
+  }
+
+  if (mStatus == NS_ERROR_NON_LOCAL_CONNECTION_REFUSED) {
+    MOZ_CRASH_UNSAFE(nsPrintfCString("Attempting to connect to non-local "
+                                     "address! opener is [%s], uri is "
+                                     "[%s]",
+                                     mOpenerCallingScriptLocation
+                                         ? mOpenerCallingScriptLocation->get()
+                                         : "unknown",
+                                     mURI->GetSpecOrDefault().get())
+                         .get());
   }
 
   LOG(("nsHttpChannel::OnStartRequest [this=%p request=%p status=%" PRIx32

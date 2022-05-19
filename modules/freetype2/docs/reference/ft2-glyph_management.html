@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.11.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Glyph Management - FreeType-2.11.1 API Reference</title>
+        <title>Glyph Management - FreeType-2.12.1 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.11.1 API Reference
+            FreeType-2.12.1 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.11.1 API Reference
+    FreeType-2.12.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -452,6 +452,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ft_svgglyph" class="md-nav__link">
+    FT_SvgGlyph
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_svgglyphrec" class="md-nav__link">
+    FT_SvgGlyphRec
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ft_new_glyph" class="md-nav__link">
     FT_New_Glyph
   </a>
@@ -682,6 +696,18 @@
   
   
     <li class="md-nav__item">
+      <a href="ft2-svg_fonts.html" class="md-nav__link">
+        OpenType SVG Fonts
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ft2-font_formats.html" class="md-nav__link">
         Font Formats
       </a>
@@ -786,6 +812,18 @@
     <li class="md-nav__item">
       <a href="ft2-pcf_driver.html" class="md-nav__link">
         The PCF driver
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-ot_svg_driver.html" class="md-nav__link">
+        The SVG driver
       </a>
     </li>
   
@@ -1268,6 +1306,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ft_svgglyph" class="md-nav__link">
+    FT_SvgGlyph
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_svgglyphrec" class="md-nav__link">
+    FT_SvgGlyphRec
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ft_new_glyph" class="md-nav__link">
     FT_New_Glyph
   </a>
@@ -1388,7 +1440,7 @@
 <div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_BitmapGlyphRec_*  <b>FT_BitmapGlyph</b>;
 </code></pre></div>
 
-<p>A handle to an object used to model a bitmap glyph image. This is a sub-class of <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code>, and a pointer to <code><a href="ft2-glyph_management.html#ft_bitmapglyphrec">FT_BitmapGlyphRec</a></code>.</p>
+<p>A handle to an object used to model a bitmap glyph image. This is a &lsquo;sub-class&rsquo; of <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code>, and a pointer to <code><a href="ft2-glyph_management.html#ft_bitmapglyphrec">FT_BitmapGlyphRec</a></code>.</p>
 <hr>
 
 <h2 id="ft_bitmapglyphrec">FT_BitmapGlyphRec<a class="headerlink" href="#ft_bitmapglyphrec" title="Permanent link">&para;</a></h2>
@@ -1407,7 +1459,7 @@
 <h4>fields</h4>
 <table class="fields">
 <tr><td class="val" id="root">root</td><td class="desc">
-<p>The root <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code> fields.</p>
+<p>The root fields of <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code>.</p>
 </td></tr>
 <tr><td class="val" id="left">left</td><td class="desc">
 <p>The left-side bearing, i.e., the horizontal distance from the current pen position to the left border of the glyph bitmap.</p>
@@ -1431,7 +1483,7 @@
 <div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_OutlineGlyphRec_*  <b>FT_OutlineGlyph</b>;
 </code></pre></div>
 
-<p>A handle to an object used to model an outline glyph image. This is a sub-class of <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code>, and a pointer to <code><a href="ft2-glyph_management.html#ft_outlineglyphrec">FT_OutlineGlyphRec</a></code>.</p>
+<p>A handle to an object used to model an outline glyph image. This is a &lsquo;sub-class&rsquo; of <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code>, and a pointer to <code><a href="ft2-glyph_management.html#ft_outlineglyphrec">FT_OutlineGlyphRec</a></code>.</p>
 <hr>
 
 <h2 id="ft_outlineglyphrec">FT_OutlineGlyphRec<a class="headerlink" href="#ft_outlineglyphrec" title="Permanent link">&para;</a></h2>
@@ -1460,6 +1512,80 @@
 <p>You can typecast an <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code> to <code><a href="ft2-glyph_management.html#ft_outlineglyph">FT_OutlineGlyph</a></code> if you have <code>glyph-&gt;format == FT_GLYPH_FORMAT_OUTLINE</code>. This lets you access the outline's content easily.</p>
 <p>As the outline is extracted from a glyph slot, its coordinates are expressed normally in 26.6 pixels, unless the flag <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_SCALE</a></code> was used in <code><a href="ft2-base_interface.html#ft_load_glyph">FT_Load_Glyph</a></code> or <code><a href="ft2-base_interface.html#ft_load_char">FT_Load_Char</a></code>.</p>
 <p>The outline's tables are always owned by the object and are destroyed with it.</p>
+<hr>
+
+<h2 id="ft_svgglyph">FT_SvgGlyph<a class="headerlink" href="#ft_svgglyph" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
+<div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_SvgGlyphRec_*  <b>FT_SvgGlyph</b>;
+</code></pre></div>
+
+<p>A handle to an object used to model an SVG glyph. This is a &lsquo;sub-class&rsquo; of <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code>, and a pointer to <code><a href="ft2-glyph_management.html#ft_svgglyphrec">FT_SvgGlyphRec</a></code>.</p>
+<h4>since</h4>
+
+<p>2.12</p>
+<hr>
+
+<h2 id="ft_svgglyphrec">FT_SvgGlyphRec<a class="headerlink" href="#ft_svgglyphrec" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
+<div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_SvgGlyphRec_
+  {
+    <a href="ft2-glyph_management.html#ft_glyphrec">FT_GlyphRec</a>  root;
+
+    <a href="ft2-basic_types.html#ft_byte">FT_Byte</a>*  svg_document;
+    <a href="ft2-basic_types.html#ft_ulong">FT_ULong</a>  svg_document_length;
+
+    <a href="ft2-basic_types.html#ft_uint">FT_UInt</a>  glyph_index;
+
+    <a href="ft2-base_interface.html#ft_size_metrics">FT_Size_Metrics</a>  metrics;
+    <a href="ft2-basic_types.html#ft_ushort">FT_UShort</a>        units_per_EM;
+
+    <a href="ft2-basic_types.html#ft_ushort">FT_UShort</a>  start_glyph_id;
+    <a href="ft2-basic_types.html#ft_ushort">FT_UShort</a>  end_glyph_id;
+
+    <a href="ft2-basic_types.html#ft_matrix">FT_Matrix</a>  transform;
+    <a href="ft2-basic_types.html#ft_vector">FT_Vector</a>  delta;
+
+  } <b>FT_SvgGlyphRec</b>;
+</code></pre></div>
+
+<p>A structure used for OT-SVG glyphs. This is a &lsquo;sub-class&rsquo; of <code><a href="ft2-glyph_management.html#ft_glyphrec">FT_GlyphRec</a></code>.</p>
+<h4>fields</h4>
+<table class="fields">
+<tr><td class="val" id="root">root</td><td class="desc">
+<p>The root <code><a href="ft2-glyph_management.html#ft_glyphrec">FT_GlyphRec</a></code> fields.</p>
+</td></tr>
+<tr><td class="val" id="svg_document">svg_document</td><td class="desc">
+<p>A pointer to the SVG document.</p>
+</td></tr>
+<tr><td class="val" id="svg_document_length">svg_document_length</td><td class="desc">
+<p>The length of <code>svg_document</code>.</p>
+</td></tr>
+<tr><td class="val" id="glyph_index">glyph_index</td><td class="desc">
+<p>The index of the glyph to be rendered.</p>
+</td></tr>
+<tr><td class="val" id="metrics">metrics</td><td class="desc">
+<p>A metrics object storing the size information.</p>
+</td></tr>
+<tr><td class="val" id="units_per_em">units_per_EM</td><td class="desc">
+<p>The size of the EM square.</p>
+</td></tr>
+<tr><td class="val" id="start_glyph_id">start_glyph_id</td><td class="desc">
+<p>The first glyph ID in the glyph range covered by this document.</p>
+</td></tr>
+<tr><td class="val" id="end_glyph_id">end_glyph_id</td><td class="desc">
+<p>The last glyph ID in the glyph range covered by this document.</p>
+</td></tr>
+<tr><td class="val" id="transform">transform</td><td class="desc">
+<p>A 2x2 transformation matrix to apply to the glyph while rendering it.</p>
+</td></tr>
+<tr><td class="val" id="delta">delta</td><td class="desc">
+<p>Translation to apply to the glyph while rendering.</p>
+</td></tr>
+</table>
+
+<h4>note</h4>
+
+<p>The Glyph Management API requires <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code> or its &lsquo;sub-class&rsquo; to have all the information needed to completely define the glyph's rendering. Outline-based glyphs can directly apply transformations to the outline but this is not possible for an SVG document that hasn't been parsed. Therefore, the transformation is stored along with the document. In the absence of a &lsquo;ViewBox&rsquo; or &lsquo;Width&rsquo;/'Height' attribute, the size of the ViewPort should be assumed to be &lsquo;units_per_EM&rsquo;.</p>
 <hr>
 
 <h2 id="ft_new_glyph">FT_New_Glyph<a class="headerlink" href="#ft_new_glyph" title="Permanent link">&para;</a></h2>
@@ -1714,7 +1840,7 @@
 
 <p>This function does nothing if the glyph format isn't scalable.</p>
 <p>The glyph image is translated with the <code>origin</code> vector before rendering.</p>
-<p>The first parameter is a pointer to an <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code> handle, that will be <em>replaced</em> by this function (with newly allocated data). Typically, you would use (omitting error handling):
+<p>The first parameter is a pointer to an <code><a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a></code> handle that will be <em>replaced</em> by this function (with newly allocated data). Typically, you would do something like the following (omitting error handling).
 <div class="highlight"><pre><span></span><code>  FT_Glyph        glyph;
   FT_BitmapGlyph  glyph_bitmap;
 
@@ -1729,7 +1855,7 @@
   if ( glyph-&gt;format != FT_GLYPH_FORMAT_BITMAP )
   {
     error = FT_Glyph_To_Bitmap( &amp;glyph, FT_RENDER_MODE_NORMAL,
-                                  0, 1 );
+                                0, 1 );
     if ( error ) // `glyph&#39; unchanged
       ...
   }
@@ -1743,7 +1869,7 @@
   // discard glyph image (bitmap or not)
   FT_Done_Glyph( glyph );
 </code></pre></div></p>
-<p>Here is another example, again without error handling:
+<p>Here is another example, again without error handling.
 <div class="highlight"><pre><span></span><code>  FT_Glyph  glyphs[MAX_GLYPHS]
 
 
@@ -1849,7 +1975,7 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2021 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with

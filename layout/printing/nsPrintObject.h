@@ -22,8 +22,7 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-// nsPrintObject Document Type
-enum PrintObjectType { eDoc = 0, eFrame = 1, eIFrame = 2, eFrameSet = 3 };
+enum PrintObjectType { eDoc = 0, eIFrame = 1 };
 
 //---------------------------------------------------
 //-- nsPrintObject Class

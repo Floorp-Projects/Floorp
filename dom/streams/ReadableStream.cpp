@@ -164,15 +164,15 @@ already_AddRefed<ReadableStream> ReadableStream::Constructor(
     const Optional<JS::Handle<JSObject*>>& aUnderlyingSource,
     const QueuingStrategy& aStrategy, ErrorResult& aRv) {
   // Step 1.
-  JS::RootedObject underlyingSourceObj(
+  JS::Rooted<JSObject*> underlyingSourceObj(
       aGlobal.Context(),
       aUnderlyingSource.WasPassed() ? aUnderlyingSource.Value() : nullptr);
 
   // Step 2.
   RootedDictionary<UnderlyingSource> underlyingSourceDict(aGlobal.Context());
   if (underlyingSourceObj) {
-    JS::RootedValue objValue(aGlobal.Context(),
-                             JS::ObjectValue(*underlyingSourceObj));
+    JS::Rooted<JS::Value> objValue(aGlobal.Context(),
+                                   JS::ObjectValue(*underlyingSourceObj));
     dom::BindingCallContext callCx(aGlobal.Context(),
                                    "ReadableStream.constructor");
     aRv.MightThrowJSException();
@@ -372,7 +372,7 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
     if (aRv.Failed()) {
       return nullptr;
     }
-    JS::RootedValue storedError(aCx, aStream->StoredError());
+    JS::Rooted<JS::Value> storedError(aCx, aStream->StoredError());
     promise->MaybeReject(storedError);
     return promise.forget();
   }
@@ -426,7 +426,7 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
   // callback executes.
   Result<RefPtr<Promise>, nsresult> returnResult =
       sourceCancelPromise->ThenWithCycleCollectedArgs(
-          [](JSContext*, JS::HandleValue, ErrorResult&,
+          [](JSContext*, JS::Handle<JS::Value>, ErrorResult&,
              RefPtr<Promise> newPromise) {
             newPromise->MaybeResolveWithUndefined();
             return newPromise.forget();
@@ -678,27 +678,27 @@ ReadableStreamDefaultTeeSourceAlgorithms::CancelCallback(
   if (mTeeState->Canceled(OtherTeeBranch(mBranch))) {
     // Step 3.1
 
-    JS::RootedObject compositeReason(aCx, JS::NewArrayObject(aCx, 2));
+    JS::Rooted<JSObject*> compositeReason(aCx, JS::NewArrayObject(aCx, 2));
     if (!compositeReason) {
       aRv.StealExceptionFromJSContext(aCx);
       return nullptr;
     }
 
-    JS::RootedValue reason1(aCx, mTeeState->Reason1());
+    JS::Rooted<JS::Value> reason1(aCx, mTeeState->Reason1());
     if (!JS_SetElement(aCx, compositeReason, 0, reason1)) {
       aRv.StealExceptionFromJSContext(aCx);
       return nullptr;
     }
 
-    JS::RootedValue reason2(aCx, mTeeState->Reason2());
+    JS::Rooted<JS::Value> reason2(aCx, mTeeState->Reason2());
     if (!JS_SetElement(aCx, compositeReason, 1, reason2)) {
       aRv.StealExceptionFromJSContext(aCx);
       return nullptr;
     }
 
     // Step 3.2
-    JS::RootedValue compositeReasonValue(aCx,
-                                         JS::ObjectValue(*compositeReason));
+    JS::Rooted<JS::Value> compositeReasonValue(
+        aCx, JS::ObjectValue(*compositeReason));
     RefPtr<ReadableStream> stream(mTeeState->GetStream());
     RefPtr<Promise> cancelResult =
         ReadableStreamCancel(aCx, stream, compositeReasonValue, aRv);

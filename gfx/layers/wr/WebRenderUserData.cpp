@@ -27,7 +27,7 @@ namespace layers {
 
 void WebRenderBackgroundData::AddWebRenderCommands(
     wr::DisplayListBuilder& aBuilder) {
-  aBuilder.PushRect(mBounds, mBounds, true, true, mColor);
+  aBuilder.PushRect(mBounds, mBounds, true, true, false, mColor);
 }
 
 /* static */
@@ -434,6 +434,20 @@ WebRenderCanvasRendererAsync* WebRenderCanvasData::GetCanvasRenderer() {
 WebRenderCanvasRendererAsync* WebRenderCanvasData::CreateCanvasRenderer() {
   mCanvasRenderer = new WebRenderCanvasRendererAsync(mManager);
   return mCanvasRenderer.get();
+}
+
+bool WebRenderCanvasData::SetCanvasRenderer(CanvasRenderer* aCanvasRenderer) {
+  if (!aCanvasRenderer || !aCanvasRenderer->AsWebRenderCanvasRendererAsync()) {
+    return false;
+  }
+
+  auto* renderer = aCanvasRenderer->AsWebRenderCanvasRendererAsync();
+  if (mManager != renderer->GetRenderRootStateManager()) {
+    return false;
+  }
+
+  mCanvasRenderer = renderer;
+  return true;
 }
 
 void WebRenderCanvasData::SetImageContainer(ImageContainer* aImageContainer) {

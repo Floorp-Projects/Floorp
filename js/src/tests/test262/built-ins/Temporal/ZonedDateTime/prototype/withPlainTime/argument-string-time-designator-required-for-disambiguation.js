@@ -33,7 +33,7 @@ ambiguousStrings.forEach((string) => {
   assert.throws(
     RangeError,
     () => instance.withPlainTime(arg),
-    'space is not accepted as a substitute for T prefix'
+    "space is not accepted as a substitute for T prefix"
   );
 });
 

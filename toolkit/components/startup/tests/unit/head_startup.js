@@ -24,10 +24,7 @@ function createAppInfo(ID, name, version, platformVersion = "1.0") {
   });
 
   let XULAppInfoFactory = {
-    createInstance(outer, iid) {
-      if (outer != null) {
-        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-      }
+    createInstance(iid) {
       return gAppInfo.QueryInterface(iid);
     },
   };

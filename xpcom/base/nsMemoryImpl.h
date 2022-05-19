@@ -25,8 +25,7 @@ class nsMemoryImpl : public nsIMemory {
 
   NS_DECL_NSIMEMORY
 
-  static nsresult Create(nsISupports* aOuter, const nsIID& aIID,
-                         void** aResult);
+  static nsresult Create(const nsIID& aIID, void** aResult);
 
   nsresult FlushMemory(const char16_t* aReason, bool aImmediate);
   void RunFlushers(const char16_t* aReason);

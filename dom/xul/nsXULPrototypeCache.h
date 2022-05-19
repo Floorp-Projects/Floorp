@@ -130,8 +130,7 @@ class nsXULPrototypeCache : public nsIObserver {
                                    nsISupports* aData);
 
  protected:
-  friend nsresult NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID,
-                                          void** aResult);
+  friend nsresult NS_NewXULPrototypeCache(REFNSIID aIID, void** aResult);
 
   nsXULPrototypeCache();
   virtual ~nsXULPrototypeCache() = default;

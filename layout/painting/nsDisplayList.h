@@ -1490,17 +1490,6 @@ class nsDisplayListBuilder {
   }
   bool ContainsBlendMode() const { return mContainsBlendMode; }
 
-  /**
-   * mContainsBackdropFilter is true if we proccessed a display item that
-   * has a backdrop filter set. We track this so we can insert a
-   * nsDisplayBackdropRootContainer in the stacking context of the nearest
-   * ancestor that forms a backdrop root.
-   */
-  void SetContainsBackdropFilter(bool aContainsBackdropFilter) {
-    mContainsBackdropFilter = aContainsBackdropFilter;
-  }
-  bool ContainsBackdropFilter() const { return mContainsBackdropFilter; }
-
   DisplayListClipState& ClipState() { return mClipState; }
   const ActiveScrolledRoot* CurrentActiveScrolledRoot() {
     return mCurrentActiveScrolledRoot;
@@ -1918,7 +1907,6 @@ class nsDisplayListBuilder {
   bool mPartialBuildFailed;
   bool mIsInActiveDocShell;
   bool mBuildAsyncZoomContainer;
-  bool mContainsBackdropFilter;
   bool mIsRelativeToLayoutViewport;
   bool mUseOverlayScrollbars;
   bool mAlwaysLayerizeScrollbars;
@@ -3977,7 +3965,9 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
   nsDisplaySolidColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       const nsRect& aBounds, nscolor aColor,
                       bool aCanBeReused = true)
-      : nsDisplaySolidColorBase(aBuilder, aFrame, aColor), mBounds(aBounds) {
+      : nsDisplaySolidColorBase(aBuilder, aFrame, aColor),
+        mBounds(aBounds),
+        mIsCheckerboardBackground(false) {
     NS_ASSERTION(NS_GET_A(aColor) > 0,
                  "Don't create invisible nsDisplaySolidColors!");
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
@@ -3993,6 +3983,7 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   void WriteDebugInfo(std::stringstream& aStream) override;
+  void SetIsCheckerboardBackground() { mIsCheckerboardBackground = true; }
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
@@ -4010,6 +4001,7 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
 
  private:
   nsRect mBounds;
+  bool mIsCheckerboardBackground;
   Maybe<int32_t> mOverrideZIndex;
 };
 
@@ -5042,7 +5034,8 @@ class nsDisplayOpacity : public nsDisplayWrapList {
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    nsDisplayList* aList,
                    const ActiveScrolledRoot* aActiveScrolledRoot,
-                   bool aForEventsOnly, bool aNeedsActiveLayer);
+                   bool aForEventsOnly, bool aNeedsActiveLayer,
+                   bool aWrapsBackdropFilter);
 
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                    const nsDisplayOpacity& aOther)
@@ -5050,7 +5043,8 @@ class nsDisplayOpacity : public nsDisplayWrapList {
         mOpacity(aOther.mOpacity),
         mForEventsOnly(aOther.mForEventsOnly),
         mNeedsActiveLayer(aOther.mNeedsActiveLayer),
-        mChildOpacityState(ChildOpacityState::Unknown) {
+        mChildOpacityState(ChildOpacityState::Unknown),
+        mWrapsBackdropFilter(aOther.mWrapsBackdropFilter) {
     MOZ_COUNT_CTOR(nsDisplayOpacity);
     // We should not try to merge flattened opacities.
     MOZ_ASSERT(aOther.mChildOpacityState != ChildOpacityState::Applied);
@@ -5159,6 +5153,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 #else
   ChildOpacityState mChildOpacityState;
 #endif
+  bool mWrapsBackdropFilter;
 };
 
 class nsDisplayBlendMode : public nsDisplayWrapList {
@@ -5871,11 +5866,13 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
  public:
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                              nsDisplayList* aList,
-                             const ActiveScrolledRoot* aActiveScrolledRoot);
+                             const ActiveScrolledRoot* aActiveScrolledRoot,
+                             bool aWrapsBackdropFilter);
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
                              const nsDisplayMasksAndClipPaths& aOther)
       : nsDisplayEffectsBase(aBuilder, aOther),
-        mDestRects(aOther.mDestRects.Clone()) {
+        mDestRects(aOther.mDestRects.Clone()),
+        mWrapsBackdropFilter(aOther.mWrapsBackdropFilter) {
     MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
   }
 
@@ -5940,41 +5937,16 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
   NS_DISPLAY_ALLOW_CLONING()
 
   nsTArray<nsRect> mDestRects;
-};
-
-class nsDisplayBackdropRootContainer : public nsDisplayWrapList {
- public:
-  nsDisplayBackdropRootContainer(nsDisplayListBuilder* aBuilder,
-                                 nsIFrame* aFrame, nsDisplayList* aList,
-                                 const ActiveScrolledRoot* aActiveScrolledRoot)
-      : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot, true) {
-    MOZ_COUNT_CTOR(nsDisplayBackdropRootContainer);
-  }
-
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayBackdropRootContainer)
-
-  NS_DISPLAY_DECL_NAME("BackdropRootContainer", TYPE_BACKDROP_ROOT_CONTAINER)
-
-  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
-
-  bool CreateWebRenderCommands(
-      wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
-      const StackingContextHelper& aSc,
-      layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder) override;
-
-  bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
-    return !aBuilder->IsPaintingForWebRender();
-  }
-
-  bool CreatesStackingContextHelper() override { return true; }
+  bool mWrapsBackdropFilter;
 };
 
 class nsDisplayBackdropFilters : public nsDisplayWrapList {
  public:
   nsDisplayBackdropFilters(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                           nsDisplayList* aList, const nsRect& aBackdropRect)
+                           nsDisplayList* aList, const nsRect& aBackdropRect,
+                           nsIFrame* aStyleFrame)
       : nsDisplayWrapList(aBuilder, aFrame, aList),
+        mStyle(aFrame == aStyleFrame ? nullptr : aStyleFrame->Style()),
         mBackdropRect(aBackdropRect) {
     MOZ_COUNT_CTOR(nsDisplayBackdropFilters);
   }
@@ -5990,16 +5962,16 @@ class nsDisplayBackdropFilters : public nsDisplayWrapList {
       nsDisplayListBuilder* aDisplayListBuilder) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  static bool CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame);
-
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return !aBuilder->IsPaintingForWebRender();
   }
 
   bool CreatesStackingContextHelper() override { return true; }
 
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
+
  private:
+  RefPtr<ComputedStyle> mStyle;
   nsRect mBackdropRect;
 };
 
@@ -6013,12 +5985,15 @@ class nsDisplayBackdropFilters : public nsDisplayWrapList {
 class nsDisplayFilters : public nsDisplayEffectsBase {
  public:
   nsDisplayFilters(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                   nsDisplayList* aList);
+                   nsDisplayList* aList, nsIFrame* aStyleFrame,
+                   bool aWrapsBackdropFilter);
 
   nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                    const nsDisplayFilters& aOther)
       : nsDisplayEffectsBase(aBuilder, aOther),
-        mEffectsBounds(aOther.mEffectsBounds) {
+        mStyle(aOther.mStyle),
+        mEffectsBounds(aOther.mEffectsBounds),
+        mWrapsBackdropFilter(aOther.mWrapsBackdropFilter) {
     MOZ_COUNT_CTOR(nsDisplayFilters);
   }
 
@@ -6082,9 +6057,11 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
  private:
   NS_DISPLAY_ALLOW_CLONING()
 
+  RefPtr<ComputedStyle> mStyle;
   // relative to mFrame
   nsRect mEffectsBounds;
   nsRect mVisibleRect;
+  bool mWrapsBackdropFilter;
 };
 
 /* A display item that applies a transformation to all of its descendant

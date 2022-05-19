@@ -27,20 +27,25 @@ namespace mozilla {
 LazyLogModule sOriginTrialsLog("OriginTrials");
 #define LOG(...) MOZ_LOG(sOriginTrialsLog, LogLevel::Debug, (__VA_ARGS__))
 
-// This is the EcdsaP256 public key from this key pair:
+// prod.pub is the EcdsaP256 public key from the production key managed in
+// Google Cloud. See:
+//
+//   https://github.com/emilio/origin-trial-token/blob/main/tools/README.md#get-the-public-key
+//
+// for how to get the public key.
+//
+// See also:
+//
+//   https://github.com/emilio/origin-trial-token/blob/main/tools/README.md#sign-a-token-using-gcloud
+//
+// for how to sign using this key.
+//
+// test.pub is the EcdsaP256 public key from this key pair:
 //
 //  * https://github.com/emilio/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pkcs8
 //  * https://github.com/emilio/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pub
 //
-// See that repo for tools for key and token generation and signing.
-static const unsigned char kTestKey[65] = {
-    0x4,  0x4a, 0xae, 0x76, 0x64, 0x24, 0xa0, 0x55, 0xc4, 0x66, 0xe,
-    0x43, 0x32, 0x4c, 0x1d, 0x85, 0x8,  0x63, 0x6a, 0x93, 0xd4, 0x1d,
-    0xf,  0xfc, 0xb4, 0x2c, 0x77, 0x3d, 0xe6, 0x87, 0xdc, 0xeb, 0x46,
-    0xcd, 0xcf, 0x88, 0xd0, 0xe3, 0x39, 0x8f, 0xe5, 0x17, 0xb8, 0xc8,
-    0xd7, 0xd3, 0xdc, 0x32, 0x7c, 0x4f, 0x8,  0x8b, 0x61, 0x19, 0xdd,
-    0xc0, 0x2,  0x5f, 0x11, 0x20, 0x6b, 0x44, 0xcf, 0x2a, 0x64,
-};
+#include "keys.inc"
 
 constexpr auto kEcAlgorithm =
     NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_NAMED_CURVE_P256);
@@ -51,13 +56,13 @@ bool VerifySignature(const uint8_t* aSignature, uintptr_t aSignatureLen,
   MOZ_RELEASE_ASSERT(aSignatureLen == 64);
   LOG("VerifySignature()\n");
 
-  if (!StaticPrefs::dom_origin_trials_test_key_enabled()) {
-    // TODO(emilio): Implement.
-    return false;
-  }
+  const unsigned char* key = StaticPrefs::dom_origin_trials_test_key_enabled()
+                                 ? kTestKey
+                                 : kProdKey;
 
-  const SECItem rawKey{siBuffer, const_cast<unsigned char*>(kTestKey),
-                       sizeof(kTestKey)};
+  static_assert(sizeof(kTestKey) == sizeof(kProdKey));
+  const SECItem rawKey{siBuffer, const_cast<unsigned char*>(key),
+                       sizeof(kProdKey)};
   MOZ_RELEASE_ASSERT(rawKey.data[0] == EC_POINT_FORM_UNCOMPRESSED);
   UniqueSECKEYPublicKey pubKey = dom::CreateECPublicKey(&rawKey, kEcAlgorithm);
   if (NS_WARN_IF(!pubKey)) {

@@ -83,5 +83,6 @@
       "description": "URL for image used on the right side of the promo box, smaller, usually a logo. Default off.",
       "format": "uri"
     }
-  }
+  },
+  "additionalProperties": true
 }

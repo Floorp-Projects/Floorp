@@ -5580,19 +5580,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         retsems = "in"
         if md.decl.type.isAsync() and md.returns:
             retsems = "resolver"
-        failif = StmtIf(
-            ExprNot(
-                self.thisCall(
-                    md.recvMethod(),
-                    md.makeCxxArgs(
-                        paramsems="move",
-                        retsems=retsems,
-                        retcallsems="out",
-                        implicit=implicit,
-                    ),
-                )
-            )
+        okdecl = StmtDecl(
+            Decl(Type("mozilla::ipc::IPCResult"), "__ok"),
+            init=self.thisCall(
+                md.recvMethod(),
+                md.makeCxxArgs(
+                    paramsems="move",
+                    retsems=retsems,
+                    retcallsems="out",
+                    implicit=implicit,
+                ),
+            ),
         )
+        failif = StmtIf(ExprNot(ExprVar("__ok")))
         failif.addifstmts(
             [
                 _protocolErrorBreakpoint("Handler returned error code!"),
@@ -5602,7 +5602,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtReturn(_Result.ProcessingError),
             ]
         )
-        return [failif]
+        return [okdecl, failif]
 
     def makeDtorMethodDecl(self, md):
         decl = self.makeSendMethodDecl(md)

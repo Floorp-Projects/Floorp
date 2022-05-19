@@ -17,6 +17,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate serde_yaml;
+extern crate tempfile;
 extern crate url;
 extern crate uuid;
 extern crate webdriver;
@@ -267,6 +268,20 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
 
     let binary = args.value_of("binary").map(PathBuf::from);
 
+    let profile_root = args.value_of("profile_root").map(PathBuf::from);
+
+    // Try to create a temporary directory on startup to check that the directory exists and is writable
+    {
+        let tmp_dir = if let Some(ref tmp_root) = profile_root {
+            tempfile::tempdir_in(tmp_root)
+        } else {
+            tempfile::tempdir()
+        };
+        if tmp_dir.is_err() {
+            usage!("Unable to write to temporary directory; consider --profile-root with a writeable directory")
+        }
+    }
+
     let marionette_host = args.value_of("marionette_host").unwrap();
     let marionette_port = match args.value_of("marionette_port") {
         Some(s) => match u16::from_str(s) {
@@ -305,6 +320,7 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
 
     let settings = MarionetteSettings {
         binary,
+        profile_root,
         connect_existing: args.is_present("connect_existing"),
         host: marionette_host.into(),
         port: marionette_port,
@@ -472,6 +488,13 @@ fn make_app<'a>() -> App<'a> {
                 .short('V')
                 .long("version")
                 .help("Prints version and copying information"),
+        )
+        .arg(
+            Arg::new("profile_root")
+                .long("profile-root")
+                .takes_value(true)
+                .value_name("PROFILE_ROOT")
+                .help("Directory in which to create profiles. Defaults to the system temporary directory."),
         )
         .arg(
             Arg::new("android_storage")

@@ -96,8 +96,8 @@ class TCPSocket final : public DOMEventTargetHelper,
   nsISocketTransport* GetTransport() const { return mTransport.get(); }
 
   void GetHost(nsAString& aHost);
-  uint32_t Port();
-  bool Ssl();
+  uint32_t Port() const;
+  bool Ssl() const;
   uint64_t BufferedAmount() const { return mBufferedAmount; }
   void Suspend();
   void Resume(ErrorResult& aRv);
@@ -107,7 +107,7 @@ class TCPSocket final : public DOMEventTargetHelper,
   bool Send(const ArrayBuffer& aData, uint32_t aByteOffset,
             const Optional<uint32_t>& aByteLength, ErrorResult& aRv);
   TCPReadyState ReadyState();
-  TCPSocketBinaryType BinaryType();
+  TCPSocketBinaryType BinaryType() const;
   void UpgradeToSecure(ErrorResult& aRv);
 
   static already_AddRefed<TCPSocket> Constructor(const GlobalObject& aGlobal,

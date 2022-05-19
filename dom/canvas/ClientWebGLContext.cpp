@@ -454,6 +454,13 @@ bool ClientWebGLContext::UpdateWebRenderCanvasData(
     return true;
   }
 
+  if (!IsContextLost() && !renderer && mNotLost->mCanvasRenderer &&
+      aCanvasData->SetCanvasRenderer(mNotLost->mCanvasRenderer)) {
+    mNotLost->mCanvasRenderer->SetDirty();
+    mResetLayer = false;
+    return true;
+  }
+
   renderer = aCanvasData->CreateCanvasRenderer();
   if (!InitializeCanvasRenderer(aBuilder, renderer)) {
     // Clear CanvasRenderer of WebRenderCanvasData
@@ -461,8 +468,11 @@ bool ClientWebGLContext::UpdateWebRenderCanvasData(
     return false;
   }
 
+  mNotLost->mCanvasRenderer = renderer;
+
   MOZ_ASSERT(renderer);
   mResetLayer = false;
+
   return true;
 }
 

@@ -154,7 +154,8 @@ HTMLEditor::InitializeInsertingElement HTMLEditor::DoNothingForNewElement =
     [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; };
 
 HTMLEditor::HTMLEditor()
-    : mCRInParagraphCreatesParagraph(false),
+    : EditorBase(EditorBase::EditorType::HTML),
+      mCRInParagraphCreatesParagraph(false),
       mIsObjectResizingEnabled(
           StaticPrefs::editor_resizing_enabled_by_default()),
       mIsResizing(false),
@@ -196,9 +197,7 @@ HTMLEditor::HTMLEditor()
       mDefaultParagraphSeparator(
           StaticPrefs::editor_use_div_for_default_newlines()
               ? ParagraphSeparator::div
-              : ParagraphSeparator::br) {
-  mIsHTMLEditorClass = true;
-}
+              : ParagraphSeparator::br) {}
 
 HTMLEditor::~HTMLEditor() {
   // Collect the data of `beforeinput` event only when it's enabled because
@@ -6044,7 +6043,7 @@ nsresult HTMLEditor::SetReturnInParagraphCreatesNewParagraph(
   return NS_OK;
 }
 
-bool HTMLEditor::GetReturnInParagraphCreatesNewParagraph() {
+bool HTMLEditor::GetReturnInParagraphCreatesNewParagraph() const {
   return mCRInParagraphCreatesParagraph;
 }
 

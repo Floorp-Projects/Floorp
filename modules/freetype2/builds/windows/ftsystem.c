@@ -4,7 +4,7 @@
  *
  *   Windows-specific FreeType low-level system interface (body).
  *
- * Copyright (C) 2021 by
+ * Copyright (C) 2021-2022 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -196,19 +196,77 @@
   }
 
 
-#ifdef _WIN32_WCE
+  /* non-desktop Universal Windows Platform */
+#if defined( WINAPI_FAMILY ) && WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP
+
+#define PACK_DWORD64( hi, lo )  ( ( (DWORD64)(hi) << 32 ) | (DWORD)(lo) )
+
+#define CreateFileMapping( a, b, c, d, e, f )                          \
+          CreateFileMappingFromApp( a, b, c, PACK_DWORD64( d, e ), f )
+#define MapViewOfFile( a, b, c, d, e )                                 \
+          MapViewOfFileFromApp( a, b, PACK_DWORD64( c, d ), e )
 
   FT_LOCAL_DEF( HANDLE )
-  CreateFileA( LPCSTR                lpFileName,
-               DWORD                 dwDesiredAccess,
-               DWORD                 dwShareMode,
-               LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-               DWORD                 dwCreationDisposition,
-               DWORD                 dwFlagsAndAttributes,
-               HANDLE                hTemplateFile )
+  CreateFileA( LPCSTR                 lpFileName,
+               DWORD                  dwDesiredAccess,
+               DWORD                  dwShareMode,
+               LPSECURITY_ATTRIBUTES  lpSecurityAttributes,
+               DWORD                  dwCreationDisposition,
+               DWORD                  dwFlagsAndAttributes,
+               HANDLE                 hTemplateFile )
   {
-    int            len;
-    LPWSTR         lpFileNameW;
+    int     len;
+    LPWSTR  lpFileNameW;
+
+    CREATEFILE2_EXTENDED_PARAMETERS  createExParams = {
+      sizeof ( CREATEFILE2_EXTENDED_PARAMETERS ),
+      dwFlagsAndAttributes & 0x0000FFFF,
+      dwFlagsAndAttributes & 0xFFF00000,
+      dwFlagsAndAttributes & 0x000F0000,
+      lpSecurityAttributes,
+      hTemplateFile };
+
+
+    /* allocate memory space for converted path name */
+    len = MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
+                               lpFileName, -1, NULL, 0 );
+
+    lpFileNameW = (LPWSTR)_alloca( len * sizeof ( WCHAR ) );
+
+    if ( !len || !lpFileNameW )
+    {
+      FT_ERROR(( "FT_Stream_Open: cannot convert file name to LPWSTR\n" ));
+      return INVALID_HANDLE_VALUE;
+    }
+
+    /* now it is safe to do the translation */
+    MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
+                         lpFileName, -1, lpFileNameW, len );
+
+    /* open the file */
+    return CreateFile2( lpFileNameW, dwDesiredAccess, dwShareMode,
+                        dwCreationDisposition, &createExParams );
+  }
+
+#endif
+
+
+#if defined( _WIN32_WCE )
+
+  /* malloc.h provides implementation of alloca()/_alloca() */
+  #include <malloc.h>
+
+  FT_LOCAL_DEF( HANDLE )
+  CreateFileA( LPCSTR                 lpFileName,
+               DWORD                  dwDesiredAccess,
+               DWORD                  dwShareMode,
+               LPSECURITY_ATTRIBUTES  lpSecurityAttributes,
+               DWORD                  dwCreationDisposition,
+               DWORD                  dwFlagsAndAttributes,
+               HANDLE                 hTemplateFile )
+  {
+    int     len;
+    LPWSTR  lpFileNameW;
 
 
     /* allocate memory space for converted path name */
@@ -233,10 +291,15 @@
                         dwFlagsAndAttributes, hTemplateFile );
   }
 
+#endif
+
+
+#if defined( _WIN32_WCE ) || defined ( _WIN32_WINDOWS ) || \
+    !defined( _WIN32_WINNT ) || _WIN32_WINNT <= 0x0400
 
   FT_LOCAL_DEF( BOOL )
-  GetFileSizeEx( HANDLE         hFile,
-                 PLARGE_INTEGER lpFileSize )
+  GetFileSizeEx( HANDLE          hFile,
+                 PLARGE_INTEGER  lpFileSize )
   {
     lpFileSize->u.LowPart = GetFileSize( hFile,
                                          (DWORD *)&lpFileSize->u.HighPart );
@@ -248,7 +311,7 @@
       return TRUE;
   }
 
-#endif /* _WIN32_WCE */
+#endif
 
 
   /* documentation is in ftobjs.h */

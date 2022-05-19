@@ -326,7 +326,7 @@ add_task(async function test_main_crash_event_file() {
   Assert.equal(
     found.payload.metadata.ThisShouldNot,
     undefined,
-    "Non-whitelisted fields should be filtered out"
+    "Non-allowlisted fields should be filtered out"
   );
 
   count = await m.aggregateEventsFiles();
@@ -749,17 +749,17 @@ add_task(async function test_child_process_crash_ping() {
     Assert.equal(
       found.payload.metadata.ThisShouldNot,
       undefined,
-      "Non-whitelisted fields should be filtered out"
+      "Non-allowlisted fields should be filtered out"
     );
     Assert.equal(
       found.payload.metadata.RemoteType,
       remoteType,
-      "RemoteType should be whitelisted for content crashes"
+      "RemoteType should be allowlisted for content crashes"
     );
     Assert.equal(
       found.payload.metadata.ipc_channel_error,
       "ShutDownKill",
-      "ipc_channel_error should be whitelisted for content crashes"
+      "ipc_channel_error should be allowlisted for content crashes"
     );
   }
 

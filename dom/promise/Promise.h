@@ -69,7 +69,8 @@ class Promise : public SupportsWeakPtr {
           eDontPropagateUserInteraction);
 
   // Reports a rejected Promise by sending an error report.
-  static void ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise);
+  static void ReportRejectedPromise(JSContext* aCx,
+                                    JS::Handle<JSObject*> aPromise);
 
   typedef void (Promise::*MaybeFunc)(JSContext* aCx,
                                      JS::Handle<JS::Value> aValue);
@@ -283,7 +284,7 @@ class Promise : public SupportsWeakPtr {
 
   Result<RefPtr<Promise>, nsresult> ThenWithoutCycleCollection(
       const std::function<already_AddRefed<Promise>(
-          JSContext*, JS::HandleValue, ErrorResult& aRv)>& aCallback);
+          JSContext*, JS::Handle<JS::Value>, ErrorResult& aRv)>& aCallback);
 
   // Similar to ThenCatchWithCycleCollectedArgs but doesn't care with return
   // values of the callbacks and does not return a new promise.

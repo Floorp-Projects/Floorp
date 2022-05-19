@@ -400,7 +400,7 @@ class ModuleEntry(object):
 
         if self.legacy_constructor:
             res += (
-                "      return /* legacy */ %s(nullptr, aIID, aResult);\n"
+                "      return /* legacy */ %s(aIID, aResult);\n"
                 % self.legacy_constructor
             )
             return res

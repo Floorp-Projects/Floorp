@@ -3693,41 +3693,6 @@ class MOZ_RAII AutoContainsBlendModeCapturer {
   }
 };
 
-// This is an equivalent to the AutoContainsBlendModeCapturer helper class
-// above but for backdrop filters.
-class MOZ_RAII AutoContainsBackdropFilterCapturer {
-  nsDisplayListBuilder& mBuilder;
-  bool mSavedContainsBackdropFilter;
-
- public:
-  explicit AutoContainsBackdropFilterCapturer(nsDisplayListBuilder& aBuilder)
-      : mBuilder(aBuilder),
-        mSavedContainsBackdropFilter(aBuilder.ContainsBackdropFilter()) {
-    mBuilder.SetContainsBackdropFilter(false);
-  }
-
-  bool CaptureContainsBackdropFilter() {
-    // "Capture" the flag by extracting and clearing the ContainsBackdropFilter
-    // flag on the builder.
-    bool capturedBackdropFilter = mBuilder.ContainsBackdropFilter();
-    mBuilder.SetContainsBackdropFilter(false);
-    return capturedBackdropFilter;
-  }
-
-  ~AutoContainsBackdropFilterCapturer() {
-    // If CaptureContainsBackdropFilter() was called, the descendant filter was
-    // "captured" and so uncapturedContainsBackdropFilter will be false. If
-    // CaptureContainsBackdropFilter() wasn't called, then no capture occurred,
-    // and uncapturedContainsBackdropFilter may be true if there was a
-    // descendant filter. In that case, we set the flag on the DL builder so
-    // that we restore state to what it would have been without this RAII class
-    // on the stack.
-    bool uncapturedContainsBackdropFilter = mBuilder.ContainsBackdropFilter();
-    mBuilder.SetContainsBackdropFilter(mSavedContainsBackdropFilter ||
-                                       uncapturedContainsBackdropFilter);
-  }
-};
-
 // Finds the max z-index of the items in aList that meet the following
 // conditions
 //   1) have z-index auto or z-index >= 0.
@@ -3947,7 +3912,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   nsDisplayListCollection set(aBuilder);
   AutoContainsBlendModeCapturer blendCapture(*aBuilder);
-  AutoContainsBackdropFilterCapturer backdropFilterCapture(*aBuilder);
 
   bool willBuildAsyncZoomContainer =
       mWillBuildScrollableLayer && aBuilder->ShouldBuildAsyncZoomContainer() &&
@@ -4172,6 +4136,38 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     set.PositionedDescendants()->AppendToTop(topLayerWrapList);
   }
 
+  nsDisplayList rootResultList(aBuilder);
+  bool serializedList = false;
+  auto SerializeList = [&] {
+    if (!serializedList) {
+      serializedList = true;
+      set.SerializeWithCorrectZOrder(&rootResultList, mOuter->GetContent());
+    }
+  };
+  if (mIsRoot) {
+    if (nsIFrame* rootStyleFrame = GetFrameForStyle()) {
+      bool usingBackdropFilter =
+          rootStyleFrame->StyleEffects()->HasBackdropFilters() &&
+          rootStyleFrame->IsVisibleForPainting();
+
+      if (rootStyleFrame->StyleEffects()->HasFilters()) {
+        SerializeList();
+        rootResultList.AppendNewToTop<nsDisplayFilters>(
+            aBuilder, mOuter, &rootResultList, rootStyleFrame,
+            usingBackdropFilter);
+      }
+
+      if (usingBackdropFilter) {
+        SerializeList();
+        DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+        nsRect backdropRect = mOuter->GetRectRelativeToSelf() +
+                              aBuilder->ToReferenceFrame(mOuter);
+        rootResultList.AppendNewToTop<nsDisplayBackdropFilters>(
+            aBuilder, mOuter, &rootResultList, backdropRect, rootStyleFrame);
+      }
+    }
+  }
+
   if (willBuildAsyncZoomContainer) {
     MOZ_ASSERT(mIsRoot);
 
@@ -4181,9 +4177,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // it. The children have the layout viewport clip applied to them (above).
     // Effectively we are double clipping to the viewport, at potentially
     // different async scales.
-
-    nsDisplayList resultList(aBuilder);
-    set.SerializeWithCorrectZOrder(&resultList, mOuter->GetContent());
+    SerializeList();
 
     if (blendCapture.CaptureContainsBlendMode()) {
       // The async zoom contents contain a mix-blend mode, so let's wrap all
@@ -4193,9 +4187,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       // WebRender.
       nsDisplayItem* blendContainer =
           nsDisplayBlendContainer::CreateForMixBlendMode(
-              aBuilder, mOuter, &resultList,
+              aBuilder, mOuter, &rootResultList,
               aBuilder->CurrentActiveScrolledRoot());
-      resultList.AppendToTop(blendContainer);
+      rootResultList.AppendToTop(blendContainer);
 
       // Blend containers can be created or omitted during partial updates
       // depending on the dirty rect. So we basically can't do partial updates
@@ -4211,39 +4205,19 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       }
     }
 
-    if (backdropFilterCapture.CaptureContainsBackdropFilter()) {
-      // The async zoom contents contain a backdrop-filter, so let's wrap all
-      // those contents into a backdrop root container, and then wrap the
-      // backdrop container in the async zoom container. Otherwise the
-      // backdrop-root container ends up outside the zoom container which
-      // results in blend failure for WebRender.
-      resultList.AppendNewToTop<nsDisplayBackdropRootContainer>(
-          aBuilder, mOuter, &resultList, aBuilder->CurrentActiveScrolledRoot());
-
-      // Backdrop root containers can be created or omitted during partial
-      // updates depending on the dirty rect. So we basically can't do partial
-      // updates if there's a backdrop root container involved. There is
-      // equivalent code to this in the BuildDisplayListForStackingContext
-      // function as well, with a more detailed comment explaining things
-      // better.
-      if (aBuilder->IsRetainingDisplayList()) {
-        if (aBuilder->IsPartialUpdate()) {
-          aBuilder->SetPartialBuildFailed(true);
-        } else {
-          aBuilder->SetDisablePartialUpdates(true);
-        }
-      }
-    }
-
     mozilla::layers::FrameMetrics::ViewID viewID =
         nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
 
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     clipState.ClipContentDescendants(clipRect, haveRadii ? radii : nullptr);
 
-    set.Content()->AppendNewToTop<nsDisplayAsyncZoom>(
-        aBuilder, mOuter, &resultList, aBuilder->CurrentActiveScrolledRoot(),
-        viewID);
+    rootResultList.AppendNewToTop<nsDisplayAsyncZoom>(
+        aBuilder, mOuter, &rootResultList,
+        aBuilder->CurrentActiveScrolledRoot(), viewID);
+  }
+
+  if (serializedList) {
+    set.Content()->AppendToTop(&rootResultList);
   }
 
   nsDisplayListCollection scrolledContent(aBuilder);

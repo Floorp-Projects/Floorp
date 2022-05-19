@@ -16,8 +16,8 @@
 #include "nsRefPtrHashtable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsILoadInfo.h"  // nsSecurityFlags
-#include "nsINode.h"      // nsIURI
+#include "nsILoadInfo.h"    // nsSecurityFlags
+#include "nsINode.h"        // nsIURI
 #include "nsThreadUtils.h"  // GetMainThreadSerialEventTarget
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
@@ -273,6 +273,11 @@ class ModuleLoaderBase : public nsISupports {
   void SetAcquiringImportMaps(bool acquiring) {
     mAcquiringImportMaps = acquiring;
   }
+
+  // Returns true if the module for given URL is already fetched.
+  bool IsModuleFetched(nsIURI* aURL) const;
+
+  nsresult GetFetchedModuleURLs(nsTArray<nsCString>& aURLs);
 
   // Internal methods.
 

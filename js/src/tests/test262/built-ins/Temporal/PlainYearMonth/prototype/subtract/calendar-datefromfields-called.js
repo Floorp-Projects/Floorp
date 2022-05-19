@@ -91,11 +91,17 @@ const month2 = Temporal.PlainYearMonth.from({ year: 2022, month: 2, calendar });
 const lessThanOneMonth = new Temporal.Duration(0, 0, 0, 35);
 const oneMonth = new Temporal.Duration(0, 0, 0, 36);
 
+// Reference ISO dates in the custom calendar:
+// M01 = 01-01
+// M02 = 02-06
+// M03 = 03-14
+
 calendar.dateFromFieldsCalls = [];
 TemporalHelpers.assertPlainYearMonth(
   month2.subtract(lessThanOneMonth),
   2022, 2, "M02",
-  "subtracting positive less than one month's worth of days yields the same month"
+  "subtracting positive less than one month's worth of days yields the same month",
+  /* era = */ undefined, /* eraYear = */ undefined, /* referenceISODay = */ 6
 );
 assert.sameValue(calendar.dateFromFieldsCalls.length, 1, "dateFromFields was called");
 assert.deepEqual(
@@ -109,7 +115,8 @@ calendar.dateFromFieldsCalls = [];
 TemporalHelpers.assertPlainYearMonth(
   month2.subtract(oneMonth),
   2022, 1, "M01",
-  "subtracting positive one month's worth of days yields the previous month"
+  "subtracting positive one month's worth of days yields the previous month",
+  /* era = */ undefined, /* eraYear = */ undefined, /* referenceISODay = */ 1
 );
 assert.sameValue(calendar.dateFromFieldsCalls.length, 1, "dateFromFields was called");
 assert.deepEqual(
@@ -123,7 +130,8 @@ calendar.dateFromFieldsCalls = [];
 TemporalHelpers.assertPlainYearMonth(
   month2.subtract(lessThanOneMonth.negated()),
   2022, 2, "M02",
-  "subtracting negative less than one month's worth of days yields the same month"
+  "subtracting negative less than one month's worth of days yields the same month",
+  /* era = */ undefined, /* eraYear = */ undefined, /* referenceISODay = */ 6
 );
 assert.sameValue(calendar.dateFromFieldsCalls.length, 1, "dateFromFields was called");
 assert.deepEqual(
@@ -137,7 +145,8 @@ calendar.dateFromFieldsCalls = [];
 TemporalHelpers.assertPlainYearMonth(
   month2.subtract(oneMonth.negated()),
   2022, 3, "M03",
-  "subtracting negative one month's worth of days yields the following month"
+  "subtracting negative one month's worth of days yields the following month",
+  /* era = */ undefined, /* eraYear = */ undefined, /* referenceISODay = */ 14
 );
 assert.sameValue(calendar.dateFromFieldsCalls.length, 1, "dateFromFields was called");
 assert.deepEqual(

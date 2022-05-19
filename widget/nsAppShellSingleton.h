@@ -51,9 +51,7 @@ static nsresult nsAppShellInit() {
 
 static void nsAppShellShutdown() { NS_RELEASE(sAppShell); }
 
-nsresult nsAppShellConstructor(nsISupports* outer, const nsIID& iid,
-                               void** result) {
-  NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
+nsresult nsAppShellConstructor(const nsIID& iid, void** result) {
   NS_ENSURE_TRUE(sAppShell, NS_ERROR_NOT_INITIALIZED);
 
   return sAppShell->QueryInterface(iid, result);

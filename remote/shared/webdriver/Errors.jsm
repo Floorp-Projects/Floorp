@@ -107,6 +107,9 @@ this.error = {
    *     false otherwise.
    */
   isWebDriverError(obj) {
+    // Don't use "instanceof" to compare error objects because of possible
+    // problems when the other instance was created in a different global and
+    // as such won't have the same prototype object.
     return error.isError(obj) && "name" in obj && ERRORS.has(obj.name);
   },
 

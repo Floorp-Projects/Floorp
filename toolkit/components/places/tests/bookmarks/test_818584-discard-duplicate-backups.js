@@ -12,7 +12,7 @@ add_task(async function() {
   let dateObj = new Date();
   dateObj.setDate(dateObj.getDate() - 1);
   let oldBackupName = PlacesBackups.getFilenameForDate(dateObj);
-  let oldBackup = OS.Path.join(backupFolder, oldBackupName);
+  let oldBackup = PathUtils.join(backupFolder, oldBackupName);
   let { count: count, hash: hash } = await BookmarkJSONUtils.exportToFile(
     oldBackup
   );
@@ -22,7 +22,7 @@ add_task(async function() {
     /\.json/,
     "_" + count + "_" + hash + ".json"
   );
-  await IOUtils.move(oldBackup, OS.Path.join(backupFolder, oldBackupName));
+  await IOUtils.move(oldBackup, PathUtils.join(backupFolder, oldBackupName));
 
   // Create a backup.
   // This should just rename the existing backup, so in the end there should be
@@ -33,7 +33,7 @@ add_task(async function() {
   let backupFiles = await PlacesBackups.getBackupFiles();
   Assert.equal(backupFiles.length, 1);
 
-  let matches = OS.Path.basename(backupFiles[0]).match(
+  let matches = PathUtils.filename(backupFiles[0]).match(
     PlacesBackups.filenamesRegex
   );
   Assert.equal(matches[1], PlacesBackups.toISODateString(new Date()));
@@ -52,8 +52,10 @@ add_task(async function() {
   await PlacesBackups.create(undefined, true);
   Assert.equal(backupFiles.length, 1);
   let recentBackup = await PlacesBackups.getMostRecentBackup();
-  Assert.notEqual(recentBackup, OS.Path.join(backupFolder, oldBackupName));
-  matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
+  Assert.notEqual(recentBackup, PathUtils.join(backupFolder, oldBackupName));
+  matches = PathUtils.filename(recentBackup).match(
+    PlacesBackups.filenamesRegex
+  );
   Assert.equal(matches[1], PlacesBackups.toISODateString(new Date()));
   Assert.equal(matches[2], count + 1);
   Assert.notEqual(matches[3], hash);

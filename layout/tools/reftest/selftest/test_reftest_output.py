@@ -76,7 +76,7 @@ def test_output_crash(runtests):
     status, lines = runtests(
         "reftest-crash.list", environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"]
     )
-    assert status == 1
+    assert status == 245
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
     assert tbpl_status == TBPL_FAILURE
@@ -97,7 +97,7 @@ def test_output_asan(runtests):
     status, lines = runtests(
         "reftest-crash.list", environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"]
     )
-    assert status == 0
+    assert status == 245
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
     assert tbpl_status == TBPL_FAILURE

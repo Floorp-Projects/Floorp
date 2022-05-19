@@ -616,7 +616,8 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
       Telemetry::LABELS_QUERY_STRIPPING_COUNT::Navigation);
 
   nsCOMPtr<nsIURI> strippedURI;
-  if (URLQueryStringStripper::Strip(URI(), strippedURI)) {
+  if (URLQueryStringStripper::Strip(URI(), aContext->UsePrivateBrowsing(),
+                                    strippedURI)) {
     mUnstrippedURI = URI();
     SetURI(strippedURI);
 
@@ -634,7 +635,8 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
   // string could be different.
   if (mUnstrippedURI) {
     nsCOMPtr<nsIURI> uri;
-    URLQueryStringStripper::Strip(mUnstrippedURI, uri);
+    URLQueryStringStripper::Strip(mUnstrippedURI,
+                                  aContext->UsePrivateBrowsing(), uri);
     bool equals = false;
     Unused << URI()->Equals(uri, &equals);
     MOZ_ASSERT(equals);

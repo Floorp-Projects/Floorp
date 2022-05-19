@@ -43,7 +43,6 @@ loader.lazyRequireGetter(
   [
     "allAnonymousContentTreeWalkerFilter",
     "findGridParentContainerForNode",
-    "isDocumentReady",
     "isNodeDead",
     "noAnonymousContentTreeWalkerFilter",
     "nodeDocument",
@@ -291,7 +290,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   watchRootNode() {
-    if (this.rootNode && isDocumentReady(this.rootDoc)) {
+    if (this.rootNode) {
       this.emit("root-available", this.rootNode);
     }
   },

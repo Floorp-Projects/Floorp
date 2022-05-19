@@ -7,6 +7,7 @@
 #define nsPrintJob_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
@@ -52,6 +53,7 @@ class nsPrintJob final : public nsIWebProgressListener,
   using Document = mozilla::dom::Document;
   using PrintPreviewResolver =
       std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>;
+  using RemotePrintJobChild = mozilla::layout::RemotePrintJobChild;
 
  public:
   nsPrintJob();
@@ -97,6 +99,7 @@ class nsPrintJob final : public nsIWebProgressListener,
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   Print(Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
+        RemotePrintJobChild* aRemotePrintJob,
         nsIWebProgressListener* aWebProgressListener);
 
   /**
@@ -126,7 +129,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   // due to pages having been skipped in a page range or combined into a single
   // sheet via pages-per-sheet.)
   int32_t GetPrintPreviewNumSheets() const;
-  already_AddRefed<nsIPrintSettings> GetCurrentPrintSettings();
 
   // The setters here also update the DocViewer
   void SetIsPrinting(bool aIsPrinting);
@@ -147,7 +149,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   void FirePrintingErrorEvent(nsresult aPrintError);
 
   bool CheckBeforeDestroy() const;
-  mozilla::PresShell* GetPrintPreviewPresShell();
   nsresult Cancel();
   void Destroy();
   void DestroyPrintingData();
@@ -160,7 +161,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   MOZ_CAN_RUN_SCRIPT nsresult DocumentReadyForPrinting();
   MOZ_CAN_RUN_SCRIPT nsresult SetupToPrintContent();
   nsresult EnablePOsForPrinting();
-  nsPrintObject* FindSmallestSTF();
 
   bool PrintDocContent(const mozilla::UniquePtr<nsPrintObject>& aPO,
                        nsresult& aStatus);
@@ -253,6 +253,9 @@ class nsPrintJob final : public nsIWebProgressListener,
   RefPtr<nsPrintData> mPrtPreview;
 
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
+
+  // Only set if this nsPrintJob was created for a real print.
+  RefPtr<RemotePrintJobChild> mRemotePrintJob;
 
   // If the code that initiates a print preview passes a PrintPreviewResolver
   // (a std::function) to be notified of the final sheet/page counts (once

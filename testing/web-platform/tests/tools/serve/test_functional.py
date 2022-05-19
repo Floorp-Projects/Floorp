@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 try:
     from importlib import reload
 except ImportError:

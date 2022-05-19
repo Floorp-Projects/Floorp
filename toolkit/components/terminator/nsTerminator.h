@@ -35,9 +35,6 @@ class nsTerminator final : public nsIObserver {
   int mCurrentStep;
 };
 
-// This is called by XPCOMInit when the shutdown is completed.
-void XPCOMShutdownNotified();
-
 }  // namespace mozilla
 
 #define NS_TOOLKIT_TERMINATOR_CID                    \

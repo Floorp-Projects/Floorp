@@ -1,0 +1,789 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+// Test for adaptive history autofill.
+
+testEngine_setup();
+
+const TEST_DATA = [
+  {
+    description: "Basic behavior for adaptive history autofill",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "URL that has www",
+    pref: true,
+    visitHistory: ["http://www.example.com/test"],
+    inputHistory: [{ uri: "http://www.example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://www.example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://www.example.com/test",
+            title: "www.example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Case differences for input are ignored",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "EXA" }],
+    userInput: "eXA",
+    expected: {
+      autofilled: "eXAmple.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Multiple input history count",
+    pref: true,
+    visitHistory: ["http://example.com/few", "http://example.com/many"],
+    inputHistory: [
+      { uri: "http://example.com/many", input: "exa" },
+      { uri: "http://example.com/few", input: "exa" },
+      { uri: "http://example.com/many", input: "examp" },
+    ],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/many",
+      completed: "http://example.com/many",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/many",
+            title: "example.com/many",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/few",
+            title: "test visit for http://example.com/few",
+          }),
+      ],
+    },
+  },
+  {
+    description: "Multiple input history count with same input",
+    pref: true,
+    visitHistory: ["http://example.com/few", "http://example.com/many"],
+    inputHistory: [
+      { uri: "http://example.com/many", input: "exa" },
+      { uri: "http://example.com/few", input: "exa" },
+      { uri: "http://example.com/many", input: "exa" },
+    ],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/many",
+      completed: "http://example.com/many",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/many",
+            title: "example.com/many",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/few",
+            title: "test visit for http://example.com/few",
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "Multiple input history count with same input but different frecency",
+    pref: true,
+    visitHistory: [
+      "http://example.com/few",
+      "http://example.com/many",
+      "http://example.com/many",
+    ],
+    inputHistory: [
+      { uri: "http://example.com/many", input: "exa" },
+      { uri: "http://example.com/few", input: "exa" },
+    ],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/many",
+      completed: "http://example.com/many",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/many",
+            title: "example.com/many",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/few",
+            title: "test visit for http://example.com/few",
+          }),
+      ],
+    },
+  },
+  {
+    description: "User input is shorter than the input history",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "e",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "User input is longer than the input history",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "example",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            title: "example.com",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "User input does not start with input history",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "notmatch" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            title: "example.com",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "User input does not start with input history, but it includes as part of URL",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "test",
+    expected: {
+      results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "User input does not start with visited URL",
+    pref: true,
+    visitHistory: ["http://mozilla.com/test"],
+    inputHistory: [{ uri: "http://mozilla.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://mozilla.com/test",
+            title: "test visit for http://mozilla.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "Visited page is bookmarked",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    bookmarks: [{ uri: "http://example.com/test", title: "test" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Visit history and no bookamrk with HISTORY source",
+    pref: true,
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Visit history and no bookamrk with BOOKMARK source",
+    pref: true,
+    source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Bookmarked visit history with HISTORY source",
+    pref: true,
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    visitHistory: ["http://example.com/test", "http://example.com/bookmarked"],
+    bookmarks: [{ uri: "http://example.com/bookmarked", title: "test" }],
+    inputHistory: [
+      {
+        uri: "http://example.com/test",
+        input: "exa",
+      },
+      {
+        uri: "http://example.com/bookmarked",
+        input: "exa",
+      },
+    ],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/bookmarked",
+      completed: "http://example.com/bookmarked",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/bookmarked",
+            title: "example.com/bookmarked",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "Bookmarked visit history with BOOKMARK source",
+    pref: true,
+    source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    visitHistory: ["http://example.com/test", "http://example.com/bookmarked"],
+    bookmarks: [{ uri: "http://example.com/bookmarked", title: "test" }],
+    inputHistory: [
+      {
+        uri: "http://example.com/test",
+        input: "exa",
+      },
+      {
+        uri: "http://example.com/bookmarked",
+        input: "exa",
+      },
+    ],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/bookmarked",
+      completed: "http://example.com/bookmarked",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/bookmarked",
+            title: "example.com/bookmarked",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "No visit history with HISTORY source",
+    pref: true,
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "No visit history with BOOKMARK source",
+    pref: true,
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    bookmarks: [{ uri: "http://example.com/bookmarked", title: "test" }],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Match with path expression",
+    pref: true,
+    visitHistory: [
+      "http://example.com/testMany",
+      "http://example.com/testMany",
+      "http://example.com/test",
+    ],
+    inputHistory: [{ uri: "http://example.com/test", input: "example.com/te" }],
+    userInput: "example.com/te",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/testMany",
+            title: "test visit for http://example.com/testMany",
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "Prefixed URL for input history and the same string for user input",
+    pref: true,
+    visitHistory: [
+      "http://example.com/testMany",
+      "http://example.com/testMany",
+      "http://example.com/test",
+    ],
+    inputHistory: [
+      { uri: "http://example.com/test", input: "http://example.com/test" },
+    ],
+    userInput: "http://example.com/test",
+    expected: {
+      autofilled: "http://example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/testMany",
+            title: "test visit for http://example.com/testMany",
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "Prefixed URL for input history and URL expression for user input",
+    pref: true,
+    visitHistory: [
+      "http://example.com/testMany",
+      "http://example.com/testMany",
+      "http://example.com/test",
+    ],
+    inputHistory: [
+      { uri: "http://example.com/test", input: "http://example.com/te" },
+    ],
+    userInput: "http://example.com/te",
+    expected: {
+      autofilled: "http://example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/testMany",
+            title: "test visit for http://example.com/testMany",
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "Prefixed URL for input history and path expression for user input",
+    pref: true,
+    visitHistory: [
+      "http://example.com/testMany",
+      "http://example.com/testMany",
+      "http://example.com/test",
+    ],
+    inputHistory: [
+      { uri: "http://example.com/test", input: "http://example.com/te" },
+    ],
+    userInput: "example.com/te",
+    expected: {
+      autofilled: "example.com/testMany",
+      completed: "http://example.com/testMany",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/testMany",
+            title: "example.com/testMany",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "Those that match with fixed URL take precedence over those that match prefixed URL",
+    pref: true,
+    visitHistory: [
+      "http://hostname.example.com/test",
+      "http://example.com/test",
+    ],
+    inputHistory: [
+      { uri: "http://hostname.example.com/test", input: "host" },
+      { uri: "http://example.com/test", input: "http://example.com/test" },
+    ],
+    userInput: "h",
+    expected: {
+      autofilled: "hostname.example.com/test",
+      completed: "http://hostname.example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://hostname.example.com/test",
+            title: "hostname.example.com/test",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "Input history is totally different string from the URL",
+    pref: true,
+    visitHistory: [
+      "http://example.com/testMany",
+      "http://example.com/testMany",
+      "http://example.com/test",
+    ],
+    inputHistory: [
+      { uri: "http://example.com/test", input: "totally-different-string" },
+    ],
+    userInput: "totally",
+    expected: {
+      results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "Input history is totally different string from the URL and there is a visit history whose URL starts with the input",
+    pref: true,
+    visitHistory: ["http://example.com/test", "http://totally.example.com"],
+    inputHistory: [
+      { uri: "http://example.com/test", input: "totally-different-string" },
+    ],
+    userInput: "totally",
+    expected: {
+      autofilled: "totally.example.com/",
+      completed: "http://totally.example.com/",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://totally.example.com/",
+            title: "totally.example.com",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "Use count threshold is as same as use count of input history",
+    pref: true,
+    useCountThreshold: 1 * 0.9 + 1,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [
+      { uri: "http://example.com/test", input: "exa" },
+      { uri: "http://example.com/test", input: "exa" },
+    ],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Use count threshold is less than use count of input history",
+    pref: true,
+    useCountThreshold: 3,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [
+      { uri: "http://example.com/test", input: "exa" },
+      { uri: "http://example.com/test", input: "exa" },
+      { uri: "http://example.com/test", input: "exa" },
+      { uri: "http://example.com/test", input: "exa" },
+    ],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Use count threshold is more than use count of input history",
+    pref: true,
+    useCountThreshold: 10,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [
+      { uri: "http://example.com/test", input: "exa" },
+      { uri: "http://example.com/test", input: "exa" },
+      { uri: "http://example.com/test", input: "exa" },
+      { uri: "http://example.com/test", input: "exa" },
+      { uri: "http://example.com/test", input: "exa" },
+    ],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            title: "example.com",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "Turn the pref off",
+    pref: false,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            title: "example.com",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+];
+
+add_task(async function() {
+  for (const {
+    description,
+    pref,
+    useCountThreshold,
+    source,
+    visitHistory,
+    inputHistory,
+    bookmarks,
+    userInput,
+    expected,
+  } of TEST_DATA) {
+    info(description);
+
+    UrlbarPrefs.set("autoFill.adaptiveHistory.enabled", pref);
+
+    if (!isNaN(useCountThreshold)) {
+      UrlbarPrefs.set(
+        "autoFill.adaptiveHistory.useCountThreshold",
+        useCountThreshold
+      );
+    }
+
+    if (visitHistory && visitHistory.length) {
+      await PlacesTestUtils.addVisits(visitHistory);
+    }
+    for (const { uri, input } of inputHistory) {
+      await UrlbarUtils.addToInputHistory(uri, input);
+    }
+    for (const bookmark of bookmarks || []) {
+      await PlacesTestUtils.addBookmarkWithDetails(bookmark);
+    }
+
+    const sources = source
+      ? [source]
+      : [
+          UrlbarUtils.RESULT_SOURCE.HISTORY,
+          UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+        ];
+
+    const context = createContext(userInput, {
+      sources,
+      isPrivate: false,
+    });
+
+    await check_results({
+      context,
+      autofilled: expected.autofilled,
+      completed: expected.completed,
+      matches: expected.results.map(f => f(context)),
+    });
+
+    await cleanupPlaces();
+    UrlbarPrefs.clear("autoFill.adaptiveHistory.enabled");
+    UrlbarPrefs.clear("autoFill.adaptiveHistory.useCountThreshold");
+  }
+});

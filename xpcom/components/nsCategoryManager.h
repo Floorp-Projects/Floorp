@@ -116,7 +116,7 @@ class nsCategoryManager final : public nsICategoryManager,
     return AddCategoryEntry(aCategory, aKey, aValue, aReplace, oldValue);
   }
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
   void InitMemoryReporter();
 
   static nsCategoryManager* GetSingleton();

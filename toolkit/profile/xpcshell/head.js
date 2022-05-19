@@ -39,11 +39,7 @@ const ShellService = {
     let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
     let factory = {
-      createInstance(outer, iid) {
-        if (outer != null) {
-          throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-        }
-
+      createInstance(iid) {
         return ShellService.QueryInterface(iid);
       },
     };

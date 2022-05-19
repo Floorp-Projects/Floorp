@@ -371,7 +371,6 @@ void IID2NativeInterfaceMap::Trace(JSTracer* trc) {
 
 void XPCNativeInterface::DebugDump(int16_t depth) {
 #ifdef DEBUG
-  depth--;
   XPC_LOG_ALWAYS(("XPCNativeInterface @ %p", this));
   XPC_LOG_INDENT();
   XPC_LOG_ALWAYS(("name is %s", GetNameString()));

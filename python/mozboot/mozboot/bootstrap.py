@@ -54,7 +54,7 @@ Firefox for Android frontends, or the GeckoView Java API. They are unsuitable
 for those working on C++ code. For more information see:
 https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html.
 
-Please choose the version of Firefox you want to build:
+Please choose the version of Firefox you want to build (see note above):
 %s
 Your choice:
 """.strip()
@@ -569,7 +569,7 @@ def update_git_tools(git: Optional[Path], root_state_dir: Path):
     git = to_optional_str(git)
 
     # Perform a download of cinnabar.
-    download_args = [git, "cinnabar", "download"]
+    download_args = [sys.executable, str(cinnabar_dir / "download.py")]
 
     try:
         subprocess.check_call(download_args, cwd=str(cinnabar_dir))

@@ -499,6 +499,7 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
       MOZ_ASSERT(
           XRE_IsParentProcess(),
           "Recreating browing contexts only supported in the parent process");
+      aContext->Canonical()->SynchronizeLayoutHistoryState();
       aContext->Canonical()->ReplacedBy(context->Canonical(),
                                         aRemotenessOptions);
     }
@@ -3449,6 +3450,7 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
   ErrorResult rv;
   sourceWindow->Print(
       aPrintSettings,
+      /* aRemotePrintJob = */ nullptr,
       /* aListener = */ nullptr, docShellToCloneInto,
       nsGlobalWindowOuter::IsPreview::Yes,
       nsGlobalWindowOuter::IsForWindowDotPrint::No,

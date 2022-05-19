@@ -1513,10 +1513,8 @@ class nsAsyncBridgeRequest final : public nsPACManCallback {
     mCondVar.Notify();
   }
 
-  PUSH_IGNORE_THREAD_SAFETY
-  void Lock() { mMutex.Lock(); }
-  void Unlock() { mMutex.Unlock(); }
-  POP_THREAD_SAFETY
+  void Lock() CAPABILITY_ACQUIRE(mMutex) { mMutex.Lock(); }
+  void Unlock() CAPABILITY_RELEASE(mMutex) { mMutex.Unlock(); }
   void Wait() { mCondVar.Wait(TimeDuration::FromSeconds(3)); }
 
  private:
@@ -1524,13 +1522,13 @@ class nsAsyncBridgeRequest final : public nsPACManCallback {
 
   friend class nsProtocolProxyService;
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   CondVar mCondVar;
 
-  nsresult mStatus{NS_OK};
-  nsCString mPACString;
-  nsCString mPACURL;
-  bool mCompleted{false};
+  nsresult mStatus GUARDED_BY(mMutex){NS_OK};
+  nsCString mPACString GUARDED_BY(mMutex);
+  nsCString mPACURL GUARDED_BY(mMutex);
+  bool mCompleted GUARDED_BY(mMutex){false};
 };
 NS_IMPL_ISUPPORTS0(nsAsyncBridgeRequest)
 

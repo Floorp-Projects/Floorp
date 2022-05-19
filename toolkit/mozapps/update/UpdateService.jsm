@@ -2433,10 +2433,7 @@ Update.prototype = {
 
 const UpdateServiceFactory = {
   _instance: null,
-  createInstance(outer, iid) {
-    if (outer != null) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance(iid) {
     return this._instance == null
       ? (this._instance = new UpdateService())
       : this._instance;
@@ -4587,11 +4584,20 @@ Checker.prototype = {
     this._forced = force;
 
     let url = Services.appinfo.updateURL;
+    let updatePin;
 
     if (Services.policies) {
       let policies = Services.policies.getActivePolicies();
-      if (policies && "AppUpdateURL" in policies) {
-        url = policies.AppUpdateURL.toString();
+      if (policies) {
+        if ("AppUpdateURL" in policies) {
+          url = policies.AppUpdateURL.toString();
+        }
+        if ("AppUpdatePin" in policies) {
+          updatePin = policies.AppUpdatePin;
+
+          // Scalar ID: update.version_pin
+          AUSTLMY.pingPinPolicy(updatePin);
+        }
       }
     }
 
@@ -4608,6 +4614,13 @@ Checker.prototype = {
 
     if (this._getCanMigrate()) {
       url += (url.includes("?") ? "&" : "?") + "mig64=1";
+    }
+
+    if (updatePin) {
+      url +=
+        (url.includes("?") ? "&" : "?") +
+        "pin=" +
+        encodeURIComponent(updatePin);
     }
 
     LOG("Checker:getUpdateURL - update URL: " + url);

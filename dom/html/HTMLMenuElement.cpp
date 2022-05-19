@@ -62,7 +62,7 @@ void HTMLMenuElement::SendShowEvent() {
                             nullptr, &status);
 }
 
-already_AddRefed<nsIMenuBuilder> HTMLMenuElement::CreateBuilder() {
+already_AddRefed<nsIMenuBuilder> HTMLMenuElement::CreateBuilder() const {
   if (mType != MENU_TYPE_CONTEXT) {
     return nullptr;
   }

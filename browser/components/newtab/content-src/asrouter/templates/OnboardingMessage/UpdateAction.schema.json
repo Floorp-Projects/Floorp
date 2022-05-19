@@ -41,12 +41,12 @@
               }
             }
           },
-          "additionalProperties": false,
+          "additionalProperties": true,
           "description": "Optional action to take in addition to showing the notification",
           "required": ["id", "data"]
         }
       },
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": ["action"]
     },
     "targeting": {

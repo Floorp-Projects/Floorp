@@ -40,42 +40,6 @@ add_task(async function test_setTimeout() {
   });
 });
 
-add_task(async function test_setTimeoutWithTarget() {
-  let target = Services.mainThreadEventTarget;
-  let timeout1 = imported.setTimeoutWithTarget(
-    () => do_throw("Should not be called"),
-    100,
-    target
-  );
-  Assert.equal(typeof timeout1, "number", "setTimeout returns a number");
-  Assert.greater(timeout1, 0, "setTimeout returns a positive number");
-
-  imported.clearTimeout(timeout1);
-
-  await new Promise(resolve => {
-    let timeout2 = imported.setTimeoutWithTarget(
-      (param1, param2) => {
-        Assert.ok(true, "Should be called");
-        Assert.equal(param1, 5, "first parameter is correct");
-        Assert.equal(param2, "test", "second parameter is correct");
-        resolve();
-      },
-      100,
-      target,
-      5,
-      "test"
-    );
-
-    Assert.equal(typeof timeout2, "number", "setTimeout returns a number");
-    Assert.greater(timeout2, 0, "setTimeout returns a positive number");
-    Assert.notEqual(
-      timeout1,
-      timeout2,
-      "Calling setTimeout again returns a different value"
-    );
-  });
-});
-
 add_task(async function test_setInterval() {
   let interval1 = imported.setInterval(
     () => do_throw("Should not be called!"),
@@ -102,41 +66,6 @@ add_task(async function test_setInterval() {
         calls++;
       },
       100,
-      15,
-      "hola"
-    );
-  });
-});
-
-add_task(async function test_setIntervalWithTarget() {
-  let target = Services.mainThreadEventTarget;
-  let interval1 = imported.setIntervalWithTarget(
-    () => do_throw("Should not be called!"),
-    100,
-    target
-  );
-  Assert.equal(typeof interval1, "number", "setInterval returns a number");
-  Assert.greater(interval1, 0, "setTimeout returns a positive number");
-
-  imported.clearInterval(interval1);
-
-  const EXPECTED_CALLS = 5;
-  let calls = 0;
-
-  await new Promise(resolve => {
-    let interval2 = imported.setIntervalWithTarget(
-      (param1, param2) => {
-        Assert.ok(true, "Should be called");
-        Assert.equal(param1, 15, "first parameter is correct");
-        Assert.equal(param2, "hola", "second parameter is correct");
-        if (calls >= EXPECTED_CALLS) {
-          imported.clearInterval(interval2);
-          resolve();
-        }
-        calls++;
-      },
-      100,
-      target,
       15,
       "hola"
     );

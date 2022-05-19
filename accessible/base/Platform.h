@@ -141,9 +141,7 @@ void ProxyBatch(RemoteAccessible* aDocument, const uint64_t aBatchType,
                 const nsTArray<RemoteAccessible*>& aAccessibles,
                 const nsTArray<BatchData>& aData);
 
-bool LocalizeString(
-    const char* aToken, nsAString& aLocalized,
-    const nsTArray<nsString>& aFormatString = nsTArray<nsString>());
+bool LocalizeString(const nsAString& aToken, nsAString& aLocalized);
 #endif
 
 #ifdef MOZ_WIDGET_COCOA

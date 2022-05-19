@@ -550,11 +550,7 @@ nsPersistentProperties::GetKeys(nsTArray<nsCString>& aKeys) {
 // PropertyElement
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsPropertyElement::Create(nsISupports* aOuter, REFNSIID aIID,
-                                   void** aResult) {
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
+nsresult nsPropertyElement::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsPropertyElement> propElem = new nsPropertyElement();
   return propElem->QueryInterface(aIID, aResult);
 }

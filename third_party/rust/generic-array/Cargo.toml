@@ -12,7 +12,7 @@
 
 [package]
 name = "generic-array"
-version = "0.12.4"
+version = "0.14.5"
 authors = ["Bartłomiej Kamiński <fizyk20@gmail.com>", "Aaron Trent <novacrazy@gmail.com>"]
 description = "Generic types implementing functionality of arrays"
 documentation = "http://fizyk20.github.io/generic-array/generic_array/"
@@ -30,11 +30,16 @@ optional = true
 default-features = false
 
 [dependencies.typenum]
-version = "1.10"
+version = "1.12"
 [dev-dependencies.bincode]
 version = "1.0"
 
 [dev-dependencies.serde_json]
 version = "1.0"
+[build-dependencies.version_check]
+version = "0.9"
+
+[features]
+more_lengths = []
 [badges.travis-ci]
 repository = "fizyk20/generic-array"

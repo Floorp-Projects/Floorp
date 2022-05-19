@@ -2754,22 +2754,25 @@ void CanvasRenderingContext2D::FillRect(double aX, double aY, double aW,
       // just punt to relying on the default Clamp mode.
       gfx::Rect patternBounds(style->mSurface->GetRect());
       patternBounds = style->mTransform.TransformBounds(patternBounds);
-      gfx::Rect bounds(aX, aY, aW, aH);
-      // We always need to execute painting for non-over operators, even if
-      // we end up with w/h = 0.
-      bounds = bounds.Intersect(patternBounds);
       if (style->mTransform.HasNonAxisAlignedTransform()) {
         // If there is an rotation (90 or 270 degrees), the X axis of the
         // pattern projects onto the Y axis of the geometry, and vice versa.
         std::swap(limitx, limity);
       }
+      // We always need to execute painting for non-over operators, even if
+      // we end up with w/h = 0. The default Rect::Intersect can cause both
+      // dimensions to become empty if either dimension individually fails
+      // to overlap, which is unsuitable. Instead, we need to independently
+      // limit the supplied rectangle on each dimension as required.
       if (limitx) {
-        aX = bounds.x;
-        aW = bounds.width;
+        double x2 = aX + aW;
+        aX = std::max(aX, double(patternBounds.x));
+        aW = std::max(std::min(x2, double(patternBounds.XMost())) - aX, 0.0);
       }
       if (limity) {
-        aY = bounds.y;
-        aH = bounds.height;
+        double y2 = aY + aH;
+        aY = std::max(aY, double(patternBounds.y));
+        aH = std::max(std::min(y2, double(patternBounds.YMost())) - aY, 0.0);
       }
     }
   }

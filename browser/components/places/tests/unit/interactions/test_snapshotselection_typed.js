@@ -48,7 +48,7 @@ add_task(async () => {
   let selector = new SnapshotSelector({ count: 5 });
 
   let snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_URL4);
+  selector.updateDetailsAndRebuild({ url: TEST_URL4 });
   let snapshots = await snapshotPromise;
 
   // Finds any snapshot.
@@ -59,14 +59,14 @@ add_task(async () => {
   ]);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setType(PageDataSchema.DATA_TYPE.PRODUCT);
+  selector.updateDetailsAndRebuild({ type: PageDataSchema.DATA_TYPE.PRODUCT });
   snapshots = await snapshotPromise;
 
   // Only finds the product snapshot.
   await assertSnapshotList(snapshots, [{ url: TEST_URL1 }]);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setType(undefined);
+  selector.updateDetailsAndRebuild({ type: null });
   snapshots = await snapshotPromise;
 
   // Back to any.

@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import os
 import pickle
 
@@ -100,7 +102,7 @@ class SavedState(BaseState):
             with open(cls.filename, "rb") as f:
                 try:
                     rv = pickle.load(f)
-                    logger.debug("Loading data %r" % (rv._data,))
+                    logger.debug(f"Loading data {rv._data!r}")
                     rv._logger = logger
                     rv._index = 0
                     return rv

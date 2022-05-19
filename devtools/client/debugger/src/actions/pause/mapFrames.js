@@ -5,7 +5,7 @@
 import {
   getFrames,
   getBlackBoxRanges,
-  getSource,
+  getLocationSource,
   getSelectedFrame,
 } from "../../selectors";
 
@@ -23,7 +23,7 @@ function getSelectedFrameId(state, thread, frames) {
     selectedFrame &&
     !isFrameBlackBoxed(
       selectedFrame,
-      getSource(state, selectedFrame.location.sourceId),
+      getLocationSource(state, selectedFrame.location),
       blackboxedRanges
     )
   ) {
@@ -31,7 +31,7 @@ function getSelectedFrameId(state, thread, frames) {
   }
 
   selectedFrame = frames.find(frame => {
-    const frameSource = getSource(state, frame.location.sourceId);
+    const frameSource = getLocationSource(state, frame.location);
     return !isFrameBlackBoxed(frame, frameSource, blackboxedRanges);
   });
   return selectedFrame?.id;
@@ -62,9 +62,9 @@ function isWasmOriginalSourceFrame(frame, getState) {
   if (isGeneratedId(frame.location.sourceId)) {
     return false;
   }
-  const generatedSource = getSource(
+  const generatedSource = getLocationSource(
     getState(),
-    frame.generatedLocation.sourceId
+    frame.generatedLocation
   );
 
   return Boolean(generatedSource?.isWasm);

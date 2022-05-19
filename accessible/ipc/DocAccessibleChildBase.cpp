@@ -51,7 +51,16 @@ void DocAccessibleChildBase::SerializeTree(nsTArray<LocalAccessible*>& aTree,
       // XXX: We need to do this because this requires a state check.
       genericTypes |= eNumericValue;
     }
-    if (acc->ActionCount()) {
+    if (acc->IsTextLeaf() || acc->IsImage()) {
+      // Ideally, we'd set eActionable for any Accessible with an ancedstor
+      // action. However, that requires an ancestor walk which is too expensive
+      // here. eActionable is only used by ATK. For now, we only expose ancestor
+      // actions on text leaf and image Accessibles. This means that we don't
+      // support "click ancestor" for ATK.
+      if (acc->ActionCount()) {
+        genericTypes |= eActionable;
+      }
+    } else if (acc->HasPrimaryAction()) {
       genericTypes |= eActionable;
     }
 

@@ -5,7 +5,6 @@
 var EXPORTED_SYMBOLS = ["BookmarkJSONUtils"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
@@ -123,7 +122,7 @@ var BookmarkJSONUtils = Object.freeze({
       if (aFilePath.endsWith("jsonlz4")) {
         await importer.importFromCompressedFile(aFilePath);
       } else {
-        await importer.importFromURL(OS.Path.toFileURI(aFilePath));
+        await importer.importFromURL(PathUtils.toFileURI(aFilePath));
       }
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
     } catch (ex) {
@@ -179,7 +178,7 @@ var BookmarkJSONUtils = Object.freeze({
     // be cleaned up by the caller.
     await IOUtils.writeUTF8(aFilePath, jsonString, {
       compress: aOptions.compress,
-      tmpPath: OS.Path.join(aFilePath + ".tmp"),
+      tmpPath: PathUtils.join(aFilePath + ".tmp"),
     });
     return { count, hash };
   },

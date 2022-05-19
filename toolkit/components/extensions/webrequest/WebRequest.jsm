@@ -379,10 +379,7 @@ var ChannelEventSink = {
   },
 
   // nsIFactory implementation
-  createInstance(outer, iid) {
-    if (outer) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance(iid) {
     return this.QueryInterface(iid);
   },
 };

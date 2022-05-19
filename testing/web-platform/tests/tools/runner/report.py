@@ -1,4 +1,5 @@
 # flake8: noqa
+# mypy: ignore-errors
 
 import argparse
 import json

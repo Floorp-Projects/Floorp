@@ -9,8 +9,7 @@
 
 #include "nsRect.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * An EffectsInfo contains information for a remote browser about the graphical
@@ -67,7 +66,6 @@ class EffectsInfo {
         mTransformToAncestorScale(aTransformToAncestorScale) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_EffectsInfo_h

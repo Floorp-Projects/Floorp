@@ -13,7 +13,6 @@
 #include "mozilla/layout/printing/DrawEventRecorder.h"
 
 class nsIFile;
-class nsIPrintSession;
 class nsIUUIDGenerator;
 
 namespace mozilla {
@@ -24,6 +23,10 @@ class RemotePrintJobChild;
 
 class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec {
  public:
+  using RemotePrintJobChild = mozilla::layout::RemotePrintJobChild;
+
+  explicit nsDeviceContextSpecProxy(RemotePrintJobChild* aRemotePrintJob);
+
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPrintSettings,
@@ -52,15 +55,12 @@ class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec {
 
   NS_IMETHOD EndPage() final;
 
-  nsDeviceContextSpecProxy();
-
  private:
   ~nsDeviceContextSpecProxy();
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  nsCOMPtr<nsIPrintSession> mPrintSession;
   nsCOMPtr<nsIDeviceContextSpec> mRealDeviceContextSpec;
-  RefPtr<mozilla::layout::RemotePrintJobChild> mRemotePrintJob;
+  RefPtr<RemotePrintJobChild> mRemotePrintJob;
   RefPtr<mozilla::layout::DrawEventRecorderPRFileDesc> mRecorder;
 };
 

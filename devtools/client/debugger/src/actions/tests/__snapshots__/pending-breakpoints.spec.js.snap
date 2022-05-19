@@ -32,16 +32,6 @@ Object {
 
 exports[`when adding breakpoints a corresponding pending breakpoint should be added 1`] = `
 Object {
-  "astLocation": Object {
-    "index": 0,
-    "name": undefined,
-    "offset": Object {
-      "column": 1,
-      "line": 5,
-      "sourceId": "foo.js",
-      "sourceUrl": "http://localhost:8000/examples/foo.js",
-    },
-  },
   "disabled": false,
   "generatedLocation": Object {
     "column": 1,
@@ -59,16 +49,6 @@ Object {
 
 exports[`when adding breakpoints adding and deleting breakpoints add a corresponding pendingBreakpoint for each addition 1`] = `
 Object {
-  "astLocation": Object {
-    "index": 0,
-    "name": undefined,
-    "offset": Object {
-      "column": 0,
-      "line": 5,
-      "sourceId": "foo",
-      "sourceUrl": "http://localhost:8000/examples/foo",
-    },
-  },
   "disabled": false,
   "generatedLocation": Object {
     "column": 0,
@@ -86,16 +66,6 @@ Object {
 
 exports[`when adding breakpoints adding and deleting breakpoints add a corresponding pendingBreakpoint for each addition 2`] = `
 Object {
-  "astLocation": Object {
-    "index": 0,
-    "name": undefined,
-    "offset": Object {
-      "column": 0,
-      "line": 5,
-      "sourceId": "foo2",
-      "sourceUrl": "http://localhost:8000/examples/foo2",
-    },
-  },
   "disabled": false,
   "generatedLocation": Object {
     "column": 0,

@@ -853,10 +853,7 @@ nsIncrementalDownload::OnRedirectVerifyCallback(nsresult result) {
   return NS_OK;
 }
 
-extern nsresult net_NewIncrementalDownload(nsISupports* outer, const nsIID& iid,
-                                           void** result) {
-  if (outer) return NS_ERROR_NO_AGGREGATION;
-
+extern nsresult net_NewIncrementalDownload(const nsIID& iid, void** result) {
   RefPtr<nsIncrementalDownload> d = new nsIncrementalDownload();
   return d->QueryInterface(iid, result);
 }

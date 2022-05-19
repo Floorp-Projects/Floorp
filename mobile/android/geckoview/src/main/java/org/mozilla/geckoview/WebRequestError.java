@@ -18,6 +18,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.util.XPCOMError;
 
 /**
  * WebRequestError is simply a container for error codes and categories used by {@link
@@ -245,8 +246,10 @@ public class WebRequestError extends Exception {
       final int geckoErrorModule,
       final int geckoErrorClass,
       final byte[] certificateBytes) {
-    final int code = convertGeckoError(geckoError, geckoErrorModule, geckoErrorClass);
-    final int category = getErrorCategory(geckoErrorModule, code);
+    // XXX: the geckoErrorModule argument is redundant
+    assert geckoErrorModule == XPCOMError.getErrorModule(geckoError);
+    final int code = convertGeckoError(geckoError, geckoErrorClass);
+    final int category = getErrorCategory(XPCOMError.getErrorModule(geckoError), code);
     X509Certificate certificate = null;
     if (certificateBytes != null) {
       try {
@@ -266,8 +269,7 @@ public class WebRequestError extends Exception {
   @WrapForJNI
   /* package */ static @ErrorCategory int getErrorCategory(
       final long errorModule, final @Error int error) {
-    // Match flags with XPCOM ErrorList.h.
-    if (errorModule == 21) {
+    if (errorModule == XPCOMError.NS_ERROR_MODULE_SECURITY) {
       return ERROR_CATEGORY_SECURITY;
     }
     return error & 0xF;
@@ -275,87 +277,86 @@ public class WebRequestError extends Exception {
 
   @WrapForJNI
   /* package */ static @Error int convertGeckoError(
-      final long geckoError, final int geckoErrorModule, final int geckoErrorClass) {
-    // Match flags with XPCOM ErrorList.h.
+      final long geckoError, final int geckoErrorClass) {
     // safebrowsing
-    if (geckoError == 0x805D001FL) {
+    if (geckoError == XPCOMError.NS_ERROR_PHISHING_URI) {
       return ERROR_SAFEBROWSING_PHISHING_URI;
     }
-    if (geckoError == 0x805D001EL) {
+    if (geckoError == XPCOMError.NS_ERROR_MALWARE_URI) {
       return ERROR_SAFEBROWSING_MALWARE_URI;
     }
-    if (geckoError == 0x805D0023L) {
+    if (geckoError == XPCOMError.NS_ERROR_UNWANTED_URI) {
       return ERROR_SAFEBROWSING_UNWANTED_URI;
     }
-    if (geckoError == 0x805D0026L) {
+    if (geckoError == XPCOMError.NS_ERROR_HARMFUL_URI) {
       return ERROR_SAFEBROWSING_HARMFUL_URI;
     }
     // content
-    if (geckoError == 0x805E0010L) {
+    if (geckoError == XPCOMError.NS_ERROR_CONTENT_CRASHED) {
       return ERROR_CONTENT_CRASHED;
     }
-    if (geckoError == 0x804B001BL) {
+    if (geckoError == XPCOMError.NS_ERROR_INVALID_CONTENT_ENCODING) {
       return ERROR_INVALID_CONTENT_ENCODING;
     }
-    if (geckoError == 0x804B004AL) {
+    if (geckoError == XPCOMError.NS_ERROR_UNSAFE_CONTENT_TYPE) {
       return ERROR_UNSAFE_CONTENT_TYPE;
     }
-    if (geckoError == 0x804B001DL) {
+    if (geckoError == XPCOMError.NS_ERROR_CORRUPTED_CONTENT) {
       return ERROR_CORRUPTED_CONTENT;
     }
     // network
-    if (geckoError == 0x804B0014L) {
+    if (geckoError == XPCOMError.NS_ERROR_NET_RESET) {
       return ERROR_NET_RESET;
     }
-    if (geckoError == 0x804B0047L) {
+    if (geckoError == XPCOMError.NS_ERROR_NET_RESET) {
       return ERROR_NET_INTERRUPT;
     }
-    if (geckoError == 0x804B000EL) {
+    if (geckoError == XPCOMError.NS_ERROR_NET_TIMEOUT) {
       return ERROR_NET_TIMEOUT;
     }
-    if (geckoError == 0x804B000DL) {
+    if (geckoError == XPCOMError.NS_ERROR_CONNECTION_REFUSED) {
       return ERROR_CONNECTION_REFUSED;
     }
-    if (geckoError == 0x804B0033L) {
+    if (geckoError == XPCOMError.NS_ERROR_UNKNOWN_SOCKET_TYPE) {
       return ERROR_UNKNOWN_SOCKET_TYPE;
     }
-    if (geckoError == 0x804B001FL) {
+    if (geckoError == XPCOMError.NS_ERROR_REDIRECT_LOOP) {
       return ERROR_REDIRECT_LOOP;
     }
-    if (geckoError == 0x804B0056L) {
+    if (geckoError == XPCOMError.NS_ERROR_HTTPS_ONLY) {
       return ERROR_HTTPS_ONLY;
     }
-    if (geckoError == 0x804B0010L) {
+    if (geckoError == XPCOMError.NS_ERROR_OFFLINE) {
       return ERROR_OFFLINE;
     }
-    if (geckoError == 0x804B0013L) {
+    if (geckoError == XPCOMError.NS_ERROR_PORT_ACCESS_NOT_ALLOWED) {
       return ERROR_PORT_BLOCKED;
     }
     // uri
-    if (geckoError == 0x804B0012L) {
+    if (geckoError == XPCOMError.NS_ERROR_UNKNOWN_PROTOCOL) {
       return ERROR_UNKNOWN_PROTOCOL;
     }
-    if (geckoError == 0x804B001EL) {
+    if (geckoError == XPCOMError.NS_ERROR_UNKNOWN_HOST) {
       return ERROR_UNKNOWN_HOST;
     }
-    if (geckoError == 0x804B000AL) {
+    if (geckoError == XPCOMError.NS_ERROR_MALFORMED_URI) {
       return ERROR_MALFORMED_URI;
     }
-    if (geckoError == 0x80520012L) {
+    if (geckoError == XPCOMError.NS_ERROR_FILE_NOT_FOUND) {
       return ERROR_FILE_NOT_FOUND;
     }
-    if (geckoError == 0x80520015L) {
+    if (geckoError == XPCOMError.NS_ERROR_FILE_ACCESS_DENIED) {
       return ERROR_FILE_ACCESS_DENIED;
     }
     // proxy
-    if (geckoError == 0x804B002AL) {
+    if (geckoError == XPCOMError.NS_ERROR_UNKNOWN_PROXY_HOST) {
       return ERROR_UNKNOWN_PROXY_HOST;
     }
-    if (geckoError == 0x804B0048L) {
+    if (geckoError == XPCOMError.NS_ERROR_PROXY_CONNECTION_REFUSED) {
       return ERROR_PROXY_CONNECTION_REFUSED;
     }
 
-    if (geckoErrorModule == 21) {
+    if (XPCOMError.getErrorModule(geckoError) == XPCOMError.NS_ERROR_MODULE_SECURITY) {
       if (geckoErrorClass == 1) {
         return ERROR_SECURITY_SSL;
       }

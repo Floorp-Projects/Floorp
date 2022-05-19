@@ -56,7 +56,7 @@ class Predictor final : public nsINetworkPredictor,
 
   nsresult Init();
   void Shutdown();
-  static nsresult Create(nsISupports* outer, const nsIID& iid, void** result);
+  static nsresult Create(const nsIID& iid, void** result);
 
   // Used to update whether a particular URI was cacheable or not.
   // sourceURI and targetURI are the same as the arguments to Learn

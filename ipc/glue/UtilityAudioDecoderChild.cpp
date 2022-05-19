@@ -6,13 +6,12 @@
 
 #include "UtilityAudioDecoderChild.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/dom/ContentParent.h"
 
 namespace mozilla::ipc {
 
 static StaticRefPtr<UtilityAudioDecoderChild> sAudioDecoderChild;
-
-static bool sShutdown = false;
 
 UtilityAudioDecoderChild::UtilityAudioDecoderChild() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -20,7 +19,6 @@ UtilityAudioDecoderChild::UtilityAudioDecoderChild() {
 
 void UtilityAudioDecoderChild::ActorDestroy(ActorDestroyReason aReason) {
   MOZ_ASSERT(NS_IsMainThread());
-  sShutdown = true;
   sAudioDecoderChild = nullptr;
 }
 
@@ -33,7 +31,8 @@ void UtilityAudioDecoderChild::Bind(
 /* static */
 RefPtr<UtilityAudioDecoderChild> UtilityAudioDecoderChild::GetSingleton() {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!sAudioDecoderChild && !sShutdown) {
+  bool shutdown = AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown);
+  if (!sAudioDecoderChild && !shutdown) {
     sAudioDecoderChild = new UtilityAudioDecoderChild();
   }
   return sAudioDecoderChild;

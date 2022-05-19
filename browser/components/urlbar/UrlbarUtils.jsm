@@ -133,7 +133,7 @@ var UrlbarUtils = {
    * histogram.
    */
   SELECTED_RESULT_TYPES: {
-    autofill: 0,
+    autofill: 0, // This is currently unused.
     bookmark: 1,
     history: 2,
     keyword: 3,
@@ -151,6 +151,9 @@ var UrlbarUtils = {
     dynamic: 15,
     tabtosearch: 16,
     quicksuggest: 17,
+    autofill_adaptive: 18,
+    autofill_origin: 19,
+    autofill_url: 20,
     // n_values = 32, so you'll need to create a new histogram if you need more.
   },
 
@@ -1118,12 +1121,17 @@ var UrlbarUtils = {
    * @returns {boolean} true: can autofill
    */
   canAutofillURL(url, candidate, checkFragmentOnly = false) {
-    if (
-      !checkFragmentOnly &&
-      (url.length <= candidate.length ||
-        !url.toLocaleLowerCase().startsWith(candidate.toLocaleLowerCase()))
-    ) {
-      return false;
+    if (!checkFragmentOnly) {
+      if (
+        url.length <= candidate.length ||
+        !url.toLocaleLowerCase().startsWith(candidate.toLocaleLowerCase())
+      ) {
+        return false;
+      }
+
+      if (!candidate.includes("/")) {
+        return true;
+      }
     }
 
     if (!UrlbarTokenizer.REGEXP_PREFIX.test(url)) {
@@ -1179,7 +1187,7 @@ var UrlbarUtils = {
         return result.payload.suggestion ? "searchsuggestion" : "searchengine";
       case UrlbarUtils.RESULT_TYPE.URL:
         if (result.autofill) {
-          return "autofill";
+          return `autofill_${result.autofill.type}`;
         }
         if (
           result.source == UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL &&

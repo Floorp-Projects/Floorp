@@ -5,7 +5,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onpopupshown="popupshown(event.target)" onpopuphidden="nextTest()">
 
-<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <label value="Popup Test"/>
 
@@ -22,46 +22,59 @@
 <![CDATA[
 
 let menupopup;
+function margins(popup) {
+  let ret = {};
+  let cs = getComputedStyle(popup);
+  for (let side of ["top", "right", "bottom", "left"]) {
+    ret[side] = parseFloat(cs.getPropertyValue("margin-" + side));
+  }
+  return ret;
+}
 
 let tests = [
   {
     test: () => menupopup.openPopupAtScreenRect("after_start", 150, 250, 30, 40),
     verify: popup => {
       let rect = popup.getOuterScreenRect();
-      is(rect.left, 150, "popup at screen position x");
-      is(rect.top, 290, "popup at screen position y");
+      let margin = margins(popup);
+      is(rect.left - margin.left, 150, "popup at screen position x");
+      is(rect.top - margin.top, 290, "popup at screen position y");
     }
   },
   {
     test: () => menupopup.openPopupAtScreenRect("after_start", 150, 350, 30, 9000),
     verify: popup => {
       let rect = popup.getOuterScreenRect();
-      is(rect.left, 150, "flipped popup at screen position x");
-      is(rect.bottom, 350, "flipped popup at screen position y");
+      let margin = margins(popup);
+      is(rect.left - margin.left, 150, "flipped popup at screen position x");
+      is(rect.bottom + margin.bottom, 350, "flipped popup at screen position y");
     }
   },
   {
     test: () => menupopup.openPopupAtScreenRect("end_before", 150, 250, 30, 40),
     verify: popup => {
       let rect = popup.getOuterScreenRect();
-      is(rect.left, 180, "popup at end_before screen position x");
-      is(rect.top, 250, "popup at end_before screen position y");
+      let margin = margins(popup);
+      is(rect.left - margin.left, 180, "popup at end_before screen position x");
+      is(rect.top - margin.top, 250, "popup at end_before screen position y");
     }
   },
   {
     test: () => $("panel").openPopupAtScreenRect("after_start", 150, 250, 30, 40),
     verify: popup => {
       let rect = popup.getOuterScreenRect();
-      is(rect.left, 150, "panel at screen position x");
-      is(rect.top, 290, "panel at screen position y");
+      let margin = margins(popup);
+      is(rect.left - margin.left, 150, "panel at screen position x");
+      is(rect.top - margin.top, 290, "panel at screen position y");
     }
   },
   {
     test: () => $("panel").openPopupAtScreenRect("before_start", 150, 250, 30, 40),
     verify: popup => {
       let rect = popup.getOuterScreenRect();
-      is(rect.left, 150, "panel at before_start screen position x");
-      is(rect.bottom, 250, "panel at before_start screen position y");
+      let margin = margins(popup);
+      is(rect.left - margin.left, 150, "panel at before_start screen position x");
+      is(rect.bottom + margin.bottom, 250, "panel at before_start screen position y");
     }
   },
 ];

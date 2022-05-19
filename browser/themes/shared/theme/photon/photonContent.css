@@ -2002,10 +2002,6 @@
         margin-inline-end: 2px;
       }
 
-      #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-      #forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-        transform: scaleX(-1) !important;
-      }
     }
     /*= Context Menu ===========================================================*/
     @supports -moz-bool-pref("userChrome.icon.context_menu") {

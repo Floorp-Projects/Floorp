@@ -4,8 +4,28 @@ extern crate generic_array;
 use std::cell::Cell;
 use std::ops::Drop;
 
-use generic_array::GenericArray;
 use generic_array::typenum::consts::U5;
+use generic_array::GenericArray;
+
+#[test]
+fn test_from_iterator() {
+    struct BadExact(usize);
+
+    impl Iterator for BadExact {
+        type Item = usize;
+        fn next(&mut self) -> Option<usize> {
+            if self.0 == 1 {
+                return None;
+            }
+            self.0 -= 1;
+            Some(self.0)
+        }
+    }
+    impl ExactSizeIterator for BadExact {
+        fn len(&self) -> usize { self.0 }
+    }
+    assert!(GenericArray::<usize, U5>::from_exact_iter(BadExact(5)).is_none());
+}
 
 #[test]
 fn test_into_iter_as_slice() {
@@ -93,21 +113,36 @@ fn test_into_iter_flat_map() {
 }
 
 #[test]
+fn test_into_iter_fold() {
+    assert_eq!(
+        arr![i32; 1, 2, 3, 4].into_iter().fold(0, |sum, x| sum + x),
+        10
+    );
+
+    let mut iter = arr![i32; 0, 1, 2, 3, 4, 5].into_iter();
+
+    iter.next();
+    iter.next_back();
+
+    assert_eq!(iter.clone().fold(0, |sum, x| sum + x), 10);
+
+    assert_eq!(iter.rfold(0, |sum, x| sum + x), 10);
+}
+
+#[test]
 fn test_into_iter_drops() {
     struct R<'a> {
-       i: &'a Cell<usize>,
+        i: &'a Cell<usize>,
     }
 
     impl<'a> Drop for R<'a> {
-       fn drop(&mut self) {
+        fn drop(&mut self) {
             self.i.set(self.i.get() + 1);
         }
     }
 
     fn r(i: &Cell<usize>) -> R {
-        R {
-            i: i
-        }
+        R { i: i }
     }
 
     fn v(i: &Cell<usize>) -> GenericArray<R, U5> {

@@ -6,7 +6,7 @@
 
 add_task(async function() {
   await test_database_replacement(
-    OS.Path.join("..", "migration", "favicons_v41.sqlite"),
+    ["migration", "favicons_v41.sqlite"],
     "favicons.sqlite",
     false,
     PlacesUtils.history.DATABASE_STATUS_CREATE
