@@ -1,50 +1,57 @@
 <html>
 <head>
   <script type="text/javascript">
-
-function assert(cond, msg) { if (!cond) { throw msg; } }
-
-function isSameTM(m1, m2) {
-    // XXX this is probably the ugliest possible way to write this function,
-    // but it's intended to be lowest-common-denominator
-    if (!(m1.length === 6 && m1.length === m2.length)) {
-        return false;
-    }
-    for (var i = 0; i < m1.length; ++i) {
-        if (m1[i] !== m2[i]) {
-            return false;
-        }
-    }
-    return true;
+function assert(cond, msg) {
+  if (!cond) {
+    throw msg;
+  }
 }
+
+assert.equal = function(m1, m2, msg) {
+  assert(
+    m1.is2D &&
+      m2.is2D &&
+      m1.a === m2.a &&
+      m1.b === m2.b &&
+      m1.c === m2.c &&
+      m1.d === m2.d &&
+      m1.e === m2.e &&
+      m1.f === m2.f,
+    msg
+  );
+};
 
 window.onload = function() {
-    var IM = [ 1, 0, 0, 1, 0, 0 ];
+  try {
+    var ctx = document.getElementById("c1").getContext("2d");
 
-    try {
-        var ctx = document.getElementById("c1").getContext("2d");
+    var singular = new DOMMatrix([0, 0, 0, 0, 0, 0]);
+    ctx.setTransform(singular);
+    assert.equal(
+      ctx.getTransform(),
+      singular,
+      "Expected setting transform to a singular matrix to work"
+    );
+    var inv = ctx.getTransform().invertSelf();
+    assert(
+      isNaN(inv.a) && isNaN(inv.b) && isNaN(inv.c) && isNaN(inv.d),
+      "Expected to get back matrix of NaN's from inverse transform"
+    );
 
-        var singular = [ 0, 0, 0, 0, 0, 0 ];
-        ctx.mozCurrentTransform = singular;
-        assert(isSameTM(singular, ctx.mozCurrentTransform),
-               "Expected setting CTM to a singular matrix to work");
-        var inv = ctx.mozCurrentTransformInverse;
-        assert(!isSameTM(inv, inv),
-               "Expected to get back matrix of NaN's from currentTransformInverse");
-        ctx.mozCurrentTransform = IM;
-
-        var m = [ 1, 2, 3, 4, 5, 6 ];
-        ctx.mozCurrentTransform = m;
-        ctx.mozCurrentTransformInverse = singular;
-        assert(isSameTM(m, ctx.mozCurrentTransform),
-                        "Setting currentTransformInverse to a singular matrix is a no-op");
-        ctx.mozCurrentTransform = IM;
-    } catch (e) {
-        document.body.innerHTML = "FAIL: "+ e.toString();
-        return;
-    }
-    document.body.innerHTML = "Pass";
-}
+    var m = new DOMMatrix([1, 2, 3, 4, 5, 6]);
+    ctx.setTransform(m);
+    ctx.setTransform(singular.invertSelf());
+    assert.equal(
+      ctx.getTransform(),
+      m,
+      "Setting transform to an inverse singular matrix is a no-op"
+    );
+  } catch (e) {
+    document.body.innerHTML = "FAIL: " + e.toString();
+    return;
+  }
+  document.body.innerHTML = "Pass";
+};
   </script>
 </head>
 <body>

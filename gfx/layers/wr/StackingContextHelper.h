@@ -44,7 +44,7 @@ class MOZ_RAII StackingContextHelper {
   ~StackingContextHelper();
 
   // Export the inherited scale
-  gfx::Size GetInheritedScale() const { return mScale; }
+  gfx::MatrixScales GetInheritedScale() const { return mScale; }
 
   const gfx::Matrix& GetInheritedTransform() const {
     return mInheritedTransform;
@@ -64,7 +64,7 @@ class MOZ_RAII StackingContextHelper {
 
  private:
   wr::DisplayListBuilder* mBuilder;
-  gfx::Size mScale;
+  gfx::MatrixScales mScale;
   gfx::Matrix mInheritedTransform;
   LayoutDevicePoint mOrigin;
 

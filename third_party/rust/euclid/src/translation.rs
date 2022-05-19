@@ -18,6 +18,8 @@ use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// A 2d transformation from a space to another that can only express translations.
 ///
@@ -251,6 +253,12 @@ impl<T: Copy, Src, Dst> Translation2D<T, Src, Dst> {
         Translation2D::new(-self.x, -self.y)
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, Src, Dst> Zeroable for Translation2D<T, Src, Dst> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, Src: 'static, Dst: 'static> Pod for Translation2D<T, Src, Dst> {}
 
 impl<T: Add, Src, Dst1, Dst2> Add<Translation2D<T, Dst1, Dst2>> for Translation2D<T, Src, Dst1> {
     type Output = Translation2D<T::Output, Src, Dst2>;
@@ -571,6 +579,12 @@ impl<T: Copy, Src, Dst> Translation3D<T, Src, Dst> {
         Translation3D::new(-self.x, -self.y, -self.z)
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, Src, Dst> Zeroable for Translation3D<T, Src, Dst> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, Src: 'static, Dst: 'static> Pod for Translation3D<T, Src, Dst> {}
 
 impl<T: Add, Src, Dst1, Dst2> Add<Translation3D<T, Dst1, Dst2>> for Translation3D<T, Src, Dst1> {
     type Output = Translation3D<T::Output, Src, Dst2>;

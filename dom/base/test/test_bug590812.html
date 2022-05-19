@@ -6,29 +6,41 @@
   <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runTest()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590812">Mozilla Bug 590812</a>
 <p id="display"></p>
-<iframe src="http://noxul.example.com/tests/dom/base/test/file_bug590812.xml"></iframe>
-<iframe src="file_bug590812.xml"></iframe>
+<iframe id=iframe></iframe>
 <iframe src="file_bug590812-ref.xhtml"></iframe>
 <pre id="test">
 <script class="testbody" type="application/javascript">
 
-SimpleTest.waitForExplicitFinish();
+add_task(async function start() {
+  var noxul = "https://sub1.test1.example.com:443";
+  var yesxul = "https://example.org:443"
 
-async function runTest() {
+  await SpecialPowers.pushPermissions([
+    { type: "allowXULXBL", allow: false, context: noxul },
+    { type: "allowXULXBL", allow: true, context: yesxul }
+  ]);
+
+  var path = "/tests/dom/base/test/file_bug590812.xml";
+  var iframe = $('iframe');
+  iframe.src = noxul + path;
+  await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
   let sNoXUL = await snapshotWindow(window.frames[0], false);
-  let sWithXUL = await snapshotWindow(window.frames[1], false);
-  let sRef = await snapshotWindow(window.frames[2], false);
+
+  iframe.src = yesxul + path;
+  await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+  let sWithXUL = await snapshotWindow(window.frames[0], false);
+
+  let sRef = await snapshotWindow(window.frames[1], false);
+
   let res;
   ok(compareSnapshots(sNoXUL, sRef, true)[0],
      "noxul domain same as ref");
   ok(compareSnapshots(sWithXUL, sRef, true)[0],
      "xul supporting domain same as ref");
-
-  SimpleTest.finish();
-}
+});
 
 </script>
 </pre>

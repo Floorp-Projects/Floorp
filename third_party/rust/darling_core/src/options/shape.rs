@@ -162,24 +162,18 @@ impl DataShape {
 
 impl FromMeta for DataShape {
     fn from_list(items: &[NestedMeta]) -> Result<Self> {
-        let mut errors = Vec::new();
+        let mut errors = Error::accumulator();
         let mut new = DataShape::default();
 
         for item in items {
             if let NestedMeta::Meta(Meta::Path(ref path)) = *item {
-                if let Err(e) = new.set_word(&path.segments.first().unwrap().ident.to_string()) {
-                    errors.push(e.with_span(&path));
-                }
+                errors.handle(new.set_word(&path.segments.first().unwrap().ident.to_string()));
             } else {
                 errors.push(Error::unsupported_format("non-word").with_span(item));
             }
         }
 
-        if !errors.is_empty() {
-            Err(Error::multiple(errors))
-        } else {
-            Ok(new)
-        }
+        errors.finish_with(new)
     }
 }
 

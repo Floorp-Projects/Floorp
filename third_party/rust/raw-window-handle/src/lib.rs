@@ -1,4 +1,5 @@
 #![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 //! Interoperability library for Rust Windowing applications.
 //!
@@ -23,6 +24,7 @@ extern crate alloc;
 
 mod android;
 mod appkit;
+mod haiku;
 mod redox;
 mod uikit;
 mod unix;
@@ -31,6 +33,7 @@ mod windows;
 
 pub use android::AndroidNdkHandle;
 pub use appkit::AppKitHandle;
+pub use haiku::HaikuHandle;
 pub use redox::OrbitalHandle;
 pub use uikit::UiKitHandle;
 pub use unix::{WaylandHandle, XcbHandle, XlibHandle};
@@ -61,12 +64,14 @@ unsafe impl<'a, T: HasRawWindowHandle + ?Sized> HasRawWindowHandle for &'a T {
     }
 }
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 unsafe impl<T: HasRawWindowHandle + ?Sized> HasRawWindowHandle for alloc::rc::Rc<T> {
     fn raw_window_handle(&self) -> RawWindowHandle {
         (**self).raw_window_handle()
     }
 }
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 unsafe impl<T: HasRawWindowHandle + ?Sized> HasRawWindowHandle for alloc::sync::Arc<T> {
     fn raw_window_handle(&self) -> RawWindowHandle {
         (**self).raw_window_handle()
@@ -150,4 +155,9 @@ pub enum RawWindowHandle {
     /// ## Availability Hints
     /// This variant is used on Android targets.
     AndroidNdk(AndroidNdkHandle),
+    /// A raw window handle for Haiku.
+    ///
+    /// ## Availability Hints
+    /// This variant is used on HaikuOS.
+    Haiku(HaikuHandle),
 }

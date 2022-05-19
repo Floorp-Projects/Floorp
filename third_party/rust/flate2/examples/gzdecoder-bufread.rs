@@ -1,8 +1,7 @@
 extern crate flate2;
 
-use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
-use flate2::Compression;
+use flate2::{bufread, Compression};
 use std::io;
 use std::io::prelude::*;
 
@@ -17,7 +16,7 @@ fn main() {
 // Uncompresses a Gz Encoded vector of bytes and returns a string or error
 // Here &[u8] implements BufRead
 fn decode_reader(bytes: Vec<u8>) -> io::Result<String> {
-    let mut gz = GzDecoder::new(&bytes[..]);
+    let mut gz = bufread::GzDecoder::new(&bytes[..]);
     let mut s = String::new();
     gz.read_to_string(&mut s)?;
     Ok(s)

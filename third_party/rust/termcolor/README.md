@@ -9,7 +9,7 @@ applications.
 [![Build status](https://github.com/BurntSushi/termcolor/workflows/ci/badge.svg)](https://github.com/BurntSushi/termcolor/actions)
 [![](https://img.shields.io/crates/v/termcolor.svg)](https://crates.io/crates/termcolor)
 
-Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
+Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org/).
 
 ### Documentation
 
@@ -85,7 +85,7 @@ fn write_green() -> io::Result<()> {
 ### Automatic color selection
 
 When building a writer with termcolor, the caller must provide a
-[`ColorChoice`](https://docs.rs/termcolor/1.0.5/termcolor/enum.ColorChoice.html)
+[`ColorChoice`](https://docs.rs/termcolor/1.*/termcolor/enum.ColorChoice.html)
 selection. When the color choice is `Auto`, termcolor will attempt to determine
 whether colors should be enabled by inspecting the environment. Currently,
 termcolor will inspect the `TERM` and `NO_COLOR` environment variables:

@@ -1360,7 +1360,7 @@ bool nsDisplayRemote::CreateWebRenderCommands(
     visibleRect -= destRect.TopLeft();
 
     // Generate an effects update notifying the browser it is visible
-    gfx::Size scale = aSc.GetInheritedScale();
+    MatrixScales scale = aSc.GetInheritedScale();
 
     ParentLayerToScreenScale2D transformToAncestorScale =
         ParentLayerToParentLayerScale(
@@ -1370,9 +1370,8 @@ bool nsDisplayRemote::CreateWebRenderCommands(
             mFrame);
 
     aDisplayListBuilder->AddEffectUpdate(
-        remoteBrowser,
-        EffectsInfo::VisibleWithinRect(visibleRect, {scale.width, scale.height},
-                                       transformToAncestorScale));
+        remoteBrowser, EffectsInfo::VisibleWithinRect(
+                           visibleRect, scale, transformToAncestorScale));
 
     // Create a WebRenderRemoteData to notify the RemoteBrowser when it is no
     // longer visible

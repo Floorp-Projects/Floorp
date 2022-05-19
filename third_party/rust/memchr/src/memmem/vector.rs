@@ -96,3 +96,36 @@ mod x86avx {
         }
     }
 }
+
+#[cfg(target_arch = "wasm32")]
+mod wasm_simd128 {
+    use super::Vector;
+    use core::arch::wasm32::*;
+
+    impl Vector for v128 {
+        #[inline(always)]
+        unsafe fn splat(byte: u8) -> v128 {
+            u8x16_splat(byte)
+        }
+
+        #[inline(always)]
+        unsafe fn load_unaligned(data: *const u8) -> v128 {
+            v128_load(data.cast())
+        }
+
+        #[inline(always)]
+        unsafe fn movemask(self) -> u32 {
+            u8x16_bitmask(self).into()
+        }
+
+        #[inline(always)]
+        unsafe fn cmpeq(self, vector2: Self) -> v128 {
+            u8x16_eq(self, vector2)
+        }
+
+        #[inline(always)]
+        unsafe fn and(self, vector2: Self) -> v128 {
+            v128_and(self, vector2)
+        }
+    }
+}

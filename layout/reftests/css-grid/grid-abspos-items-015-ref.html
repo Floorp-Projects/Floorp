@@ -34,19 +34,16 @@ separator { clear:both; display:block; height:6px; }
   z-index:1;
 }
 
-abs1,abs2,abs3,abs4 {
+abs1,abs3,abs4 {
   grid-area: 2 / 2 / 3 / 3;
   position: absolute;
 }
-abs1 { height:97px; top:-12px; left:-30px; background:lime; }
-abs2 { right:-18px; left:3px; background:pink; }
+abs1 { width:20px; height:97px; top:-12px; left:-30px; background:lime; }
 abs3 { top: -20px; left:-35px; right:-18px; background:cyan; }
-abs4 { top:-6px; bottom:-53px; background:silver; }
+abs4 { width:20px; top:-6px; bottom:-53px; background:silver; }
 abs1::before { content:"1";}
-abs2::before { content:"2";}
 abs3::before { content:"3";}
 abs4::before { content:"4";}
-
 
 .hl { writing-mode: horizontal-tb; direction:ltr; }
 .hr { writing-mode: horizontal-tb; direction:rtl; }
@@ -60,24 +57,16 @@ abs4::before { content:"4";}
 .vr abs3, .vrl abs3 { left:-39px; right:-32px; }
 .vrl abs3 { top:-25px; }
 
-.hl abs2, .hr abs2 { top:-25px; }
-.hl abs2 { left:-43px; }
-.hr abs2 { left:-32px; right:-29px; }
-.vl abs2, .vr abs2, .vrl abs2, .vlr abs2 { left:-38px; right:-41px; }
-.vr abs2, .vrl abs2 { left:-55px; right:-24px; }
-.vrl abs2 { top:-16px; }
-
-.hr abs1 { left: 91px; }
+.hr abs1 { left: 61px; }
 .vl abs1, .vr abs1, .vrl abs1, .vlr abs1 { top:-6px; left:-25px; }
-.vr abs1, .vrl abs1 { left:68px; }
+.vr abs1, .vrl abs1 { left:38px; }
 .vrl abs1 { top:-17px; }
 
 .hl abs4 { left:51px; }
-.hr abs4 { left:10px; }
+.hr abs4 { left:-20px; }
 .vl abs4, .vr abs4, .vrl abs4, .vlr abs4 { top:0px; bottom:-41px; left:-25px; }
-.vr abs4, .vrl abs4 { left:68px; }
+.vr abs4, .vrl abs4 { left:38px; }
 .vrl abs4 { top:-11px; bottom:-30px; }
-
 
 </style>
 </head>

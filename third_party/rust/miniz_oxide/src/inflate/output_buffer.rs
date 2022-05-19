@@ -44,7 +44,7 @@ impl<'a> OutputBuffer<'a> {
     }
 
     #[inline]
-    pub fn bytes_left(&self) -> usize {
+    pub const fn bytes_left(&self) -> usize {
         self.slice.len() - self.position
     }
 

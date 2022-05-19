@@ -20,6 +20,8 @@ use crate::vector::{vec2, Vector2D};
 use num_traits::{NumCast, Float};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 use core::borrow::Borrow;
 use core::cmp::PartialOrd;
@@ -98,6 +100,12 @@ impl<T: fmt::Debug, U> fmt::Debug for Box2D<T, U> {
             .finish()
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for Box2D<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for Box2D<T, U> {}
 
 impl<T, U> Box2D<T, U> {
     /// Constructor.

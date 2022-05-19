@@ -34,16 +34,17 @@ separator { clear:both; display:block; height:6px; }
   writing-mode: vertical-lr; direction:rtl;
 }
 
-abs1,abs2,abs3,abs4 {
+abs1,abs3,abs4 {
   grid-area: 2 / 2 / 3 / 3;
   position: absolute;
+  display: block; /* Avoid bug 1769072 */
 }
-abs1 { top:17px; bottom:2px; background:lime; }
-abs2 { right:13px; left:3px; background:pink; }
+
+/* Specify width or provide enough constraint to avoid bug 1769102 */
+abs1 { width:20px; top:17px; bottom:2px; background:lime; }
 abs3 { right:5px; left:11px; top:9px; background:cyan; }
-abs4 { top:23px; bottom:1px; background:silver; }
+abs4 { width:20px; top:23px; bottom:1px; background:silver; }
 abs1::before { content:"1";}
-abs2::before { content:"2";}
 abs3::before { content:"3";}
 abs4::before { content:"4";}
 

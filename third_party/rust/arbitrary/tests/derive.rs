@@ -164,7 +164,7 @@ fn one_lifetime() {
     assert_eq!("abc", lifetime.alpha);
 
     let (lower, upper) = <OneLifetime as Arbitrary>::size_hint(0);
-    assert_eq!(lower, 8);
+    assert_eq!(lower, std::mem::size_of::<usize>());
     assert_eq!(upper, None);
 }
 
@@ -183,6 +183,6 @@ fn two_lifetimes() {
     assert_eq!("def", lifetime.beta);
 
     let (lower, upper) = <TwoLifetimes as Arbitrary>::size_hint(0);
-    assert_eq!(lower, 16);
+    assert_eq!(lower, std::mem::size_of::<usize>() * 2);
     assert_eq!(upper, None);
 }

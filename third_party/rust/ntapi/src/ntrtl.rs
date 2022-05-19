@@ -2196,7 +2196,7 @@ EXTERN!{extern "system" {
         MakeReadOnly: BOOLEAN,
     );
 }}
-#[inline] #[cfg(all(feature = "nightly", not(target_arch = "aarch64")))]
+#[inline] #[cfg(all(feature = "beta", not(target_arch = "aarch64")))]
 pub unsafe fn RtlProcessHeap() -> PVOID {
     use crate::ntpsapi::NtCurrentPeb;
     (*NtCurrentPeb()).ProcessHeap
@@ -2944,13 +2944,13 @@ EXTERN!{extern "system" {
 }}
 #[inline]
 pub unsafe fn RtlCheckBit(BitMapHeader: &RTL_BITMAP, BitPosition: ULONG) -> u8 {
-    #[cfg(all(target_arch = "x86_64", feature = "nightly"))] {
+    #[cfg(all(target_arch = "x86_64", feature = "beta"))] {
         use crate::winapi_local::um::winnt::_bittest64;
         _bittest64(BitMapHeader.Buffer as *const i64, BitPosition as i64)
     }
     #[cfg(any(
         target_arch = "x86",
-        all(target_arch = "x86_64", not(feature = "nightly")),
+        all(target_arch = "x86_64", not(feature = "beta")),
         target_arch = "aarch64",
     ))] {
         (*BitMapHeader.Buffer.offset(BitPosition as isize / 32) >> (BitPosition % 32) & 1) as u8

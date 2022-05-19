@@ -7,7 +7,7 @@ pub struct State {
 
 impl State {
     pub fn new(state: u32) -> Option<Self> {
-        if is_aarch64_feature_detected!("crc") {
+        if std::arch::is_aarch64_feature_detected!("crc") {
             // SAFETY: The conditions above ensure that all
             //         required instructions are supported by the CPU.
             Some(Self { state })
