@@ -207,6 +207,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             display_variant={component.properties.display_variant}
             data={component.data}
             feed={component.feed}
+            widgets={component.widgets}
             border={component.properties.border}
             type={component.type}
             dispatch={this.props.dispatch}
