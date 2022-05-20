@@ -78,28 +78,13 @@ private val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN =
 private val EXPECTED_NUMBER_OF_INFLATION =
     14..15 // The messaging framework is not deterministic and could add a +1 to the count
 
-private val failureMsgStrictMode = getErrorMessage(
-    shortName = "StrictMode suppression",
-    implications = "suppressing a StrictMode violation can introduce performance regressions?"
-)
-
-private val failureMsgRunBlocking = getErrorMessage(
-    shortName = "runBlockingIncrement",
-    implications = "using runBlocking may block the main thread and have other negative performance implications?"
-)
-
+private val failureMsgStrictMode = getErrorMessage("StrictMode suppression")
+private val failureMsgRunBlocking = getErrorMessage("runBlockingIncrement")
 private val failureMsgRecyclerViewConstraintLayoutChildren = getErrorMessage(
-    shortName = "ConstraintLayout being a common direct descendant of a RecyclerView",
-    implications = "ConstraintLayouts are slow to inflate and are primarily used to flatten deep " +
-        "view hierarchies so can be under-performant as a common RecyclerView child?"
-) + "Please note that we're not sure if this is a useful metric to assert: with your feedback, " +
-    "we'll find out over time if it is or is not."
-
-private val failureMsgNumberOfInflation = getErrorMessage(
-    shortName = "Number of inflation on start up doesn't match expected count",
-    implications = "The number of inflation can negatively impact start up time. Having more inflations" +
-        "will most likely mean we're adding extra work on the UI thread."
+    "ConstraintLayout being a common direct descendant of a RecyclerView"
 )
+private val failureMsgNumberOfInflation = getErrorMessage("start up inflation")
+
 /**
  * A performance test that attempts to minimize start up performance regressions using heuristics
  * rather than benchmarking. These heuristics measure occurrences of known performance anti-patterns
@@ -163,14 +148,11 @@ private fun countRecyclerViewConstraintLayoutChildren(view: View, parent: View?)
     }
 }
 
-private fun getErrorMessage(shortName: String, implications: String) = """$shortName count does not match expected count.
+private fun getErrorMessage(shortName: String) = """$shortName count does not match expected count.
 
-    If this PR removed a $shortName call, great! Please decrease the count.
-
-    Did this PR add or call code that increases the $shortName count?
-    Did you know that $implications
-    Please do your best to implement a solution without adding $shortName calls.
-    Please consult the perf team if you have questions or believe that having this call
-    is the optimal solution.
+    This heuristic-based performance test is expected measure the number of occurrences of known
+    performance anti-patterns and fail when that count changes. Please read the class documentation
+    for more details about this test and an explanation of what the failed heuristic is expected to
+    measure. Please consult the performance team if you have questions.
 
 """
