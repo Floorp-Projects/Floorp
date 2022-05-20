@@ -198,6 +198,10 @@ bool ImageWrapper::StartDecodingWithResult(uint32_t aFlags,
   return mInnerImage->StartDecodingWithResult(aFlags, aWhichFrame);
 }
 
+bool ImageWrapper::HasDecodedPixels() {
+  return InnerImage()->HasDecodedPixels();
+}
+
 imgIContainer::DecodeResult ImageWrapper::RequestDecodeWithResult(
     uint32_t aFlags, uint32_t aWhichFrame) {
   return mInnerImage->RequestDecodeWithResult(aFlags, aWhichFrame);
