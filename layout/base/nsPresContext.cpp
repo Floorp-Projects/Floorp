@@ -927,13 +927,10 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
     if (overriden != PrefersColorSchemeOverride::None) {
       return overriden;
     }
-    for (auto* cur = browsingContext; cur; cur = cur->GetParent()) {
-      auto embedder = cur->GetEmbedderColorScheme();
-      if (embedder != PrefersColorSchemeOverride::None) {
-        return embedder;
-      }
-    }
-    return PrefersColorSchemeOverride::None;
+    // We only use the top embedder color-scheme for now, see
+    // https://github.com/w3c/csswg-drafts/issues/7213 for a more general
+    // proposal.
+    return top->GetEmbedderColorScheme();
   }());
 
   if (doc == mDocument) {
