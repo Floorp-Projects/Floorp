@@ -35,19 +35,6 @@ NS_IMETHODIMP
 nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
                                nsIPrintSettings* aPrintSettings,
                                bool aIsPrintPreview) {
-  nsresult rv;
-  mRealDeviceContextSpec =
-      do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  mRealDeviceContextSpec->Init(nullptr, aPrintSettings, aIsPrintPreview);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    mRealDeviceContextSpec = nullptr;
-    return rv;
-  }
-
   mPrintSettings = aPrintSettings;
 
   if (aIsPrintPreview) {
@@ -63,8 +50,6 @@ nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
 }
 
 already_AddRefed<PrintTarget> nsDeviceContextSpecProxy::MakePrintTarget() {
-  MOZ_ASSERT(mRealDeviceContextSpec);
-
   double width, height;
   mPrintSettings->GetEffectiveSheetSize(&width, &height);
   if (width <= 0 || height <= 0) {
@@ -107,24 +92,6 @@ nsDeviceContextSpecProxy::GetDrawEventRecorder(
   RefPtr<mozilla::gfx::DrawEventRecorder> result = mRecorder;
   result.forget(aDrawEventRecorder);
   return NS_OK;
-}
-
-float nsDeviceContextSpecProxy::GetDPI() {
-  MOZ_ASSERT(mRealDeviceContextSpec);
-
-  return mRealDeviceContextSpec->GetDPI();
-}
-
-float nsDeviceContextSpecProxy::GetPrintingScale() {
-  MOZ_ASSERT(mRealDeviceContextSpec);
-
-  return mRealDeviceContextSpec->GetPrintingScale();
-}
-
-gfxPoint nsDeviceContextSpecProxy::GetPrintingTranslate() {
-  MOZ_ASSERT(mRealDeviceContextSpec);
-
-  return mRealDeviceContextSpec->GetPrintingTranslate();
 }
 
 NS_IMETHODIMP
