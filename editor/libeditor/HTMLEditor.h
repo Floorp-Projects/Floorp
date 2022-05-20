@@ -2891,8 +2891,8 @@ class HTMLEditor final : public EditorBase,
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
-  Element* GetInclusiveAncestorByTagNameInternal(const nsStaticAtom& aTagName,
-                                                 nsIContent& aContent) const;
+  Element* GetInclusiveAncestorByTagNameInternal(
+      const nsStaticAtom& aTagName, const nsIContent& aContent) const;
 
   /**
    * GetSelectedElement() returns a "selected" element node.  "selected" means:
@@ -2928,21 +2928,18 @@ class HTMLEditor final : public EditorBase,
   /**
    * GetFirstTableRowElement() returns the first <tr> element in the most
    * nearest ancestor of aTableOrElementInTable or itself.
+   * When aTableOrElementInTable is neither <table> nor in a <table> element,
+   * returns NS_ERROR_FAILURE. However, if <table> does not have <tr> element,
+   * returns nullptr.
    *
    * @param aTableOrElementInTable      <table> element or another element.
    *                                    If this is a <table> element, returns
    *                                    first <tr> element in it.  Otherwise,
    *                                    returns first <tr> element in nearest
    *                                    ancestor <table> element.
-   * @param aRv                         Returns an error code.  When
-   *                                    aTableOrElementInTable is neither
-   *                                    <table> nor in a <table> element,
-   *                                    returns NS_ERROR_FAILURE.
-   *                                    However, if <table> does not have
-   *                                    <tr> element, returns NS_OK.
    */
-  Element* GetFirstTableRowElement(Element& aTableOrElementInTable,
-                                   ErrorResult& aRv) const;
+  Result<RefPtr<Element>, nsresult> GetFirstTableRowElement(
+      const Element& aTableOrElementInTable) const;
 
   /**
    * GetNextTableRowElement() returns next <tr> element of aTableRowElement.
