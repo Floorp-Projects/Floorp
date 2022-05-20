@@ -292,7 +292,15 @@ interface nsIPrintSettings : nsISupports
   [infallible] attribute short outputFormat;
 
   attribute AString printerName;          /* for kOutputDestinationPrinter */
-  attribute AString toFileName;           /* for kOutputDestinationFile */
+
+  /**
+   * If outputDestination==kOutputDestinationFile, this is set to the path
+   * of the file that the print output should be saved to, but only in the
+   * parent process (we don't want to leak system paths to potentially
+   * compromised content processes).
+   */
+  attribute AString toFileName;
+
   attribute nsIOutputStream outputStream; /* for kOutputDestinationPrinter */
 
   [infallible] attribute long printPageDelay; /* in milliseconds */
