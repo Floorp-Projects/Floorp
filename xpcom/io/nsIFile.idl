@@ -69,8 +69,9 @@ interface nsIFile : nsISupports
      *
      *   @param node
      *       A string which is intended to be a child node of the nsIFile.
-     *       For the |appendNative| method, the node must be in the native
-     *       filesystem charset.
+     *       For security reasons, this cannot contain .. and cannot start with
+     *       a directory separator. For the |appendNative| method, the node must
+     *       be in the native filesystem charset.
      */
     void append(in AString node);
     [noscript] void appendNative(in ACString node);
@@ -463,7 +464,7 @@ interface nsIFile : nsISupports
      *
      *   @param relativeFilePath
      *       relativeFilePath is a native relative path. For security reasons,
-     *       this cannot contain .. or cannot start with a directory separator.
+     *       this cannot contain .. and cannot start with a directory separator.
      *       For the |appendRelativeNativePath| method, the relativeFilePath
      *       must be in the native filesystem charset.
      */
