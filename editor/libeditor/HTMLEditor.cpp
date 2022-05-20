@@ -3911,63 +3911,97 @@ already_AddRefed<Element> HTMLEditor::ReplaceContainerWithTransactionInternal(
   return newContainer.forget();
 }
 
-nsresult HTMLEditor::RemoveContainerWithTransaction(Element& aElement) {
+Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveContainerWithTransaction(
+    Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  EditorDOMPoint pointToInsertChildren(&aElement);
-  if (NS_WARN_IF(!pointToInsertChildren.IsSet())) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(aElement)) ||
+      NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(aElement))) {
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Notify our internal selection state listener.
   AutoRemoveContainerSelNotify selNotify(RangeUpdaterRef(),
-                                         pointToInsertChildren);
+                                         EditorRawDOMPoint(&aElement));
 
-  // Move all children from aNode to its parent.
-  EditorDOMPoint pointToPutCaret;
-  while (aElement.HasChildren()) {
-    nsCOMPtr<nsIContent> child = aElement.GetLastChild();
-    if (NS_WARN_IF(!child)) {
-      return NS_ERROR_FAILURE;
+  AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfChildren;
+  HTMLEditor::CollectChildren(
+      aElement, arrayOfChildren, 0u, CollectListChildren::No,
+      CollectTableChildren::No,
+      // Move non-editable children too because its container, aElement, is
+      // editable so that all children must be removable node.
+      CollectNonEditableNodes::Yes);
+  const OwningNonNull<nsINode> parentNode = *aElement.GetParentNode();
+  nsCOMPtr<nsIContent> previousChild = aElement.GetPreviousSibling();
+  // For making all MoveNodeTransactions have a referenc node in the current
+  // parent, move nodes from last one to preceding ones.
+  for (const OwningNonNull<nsIContent>& child : Reversed(arrayOfChildren)) {
+    MoveNodeResult moveChildResult = MoveNodeWithTransaction(
+        MOZ_KnownLive(child),  // due to bug 1622253.
+        previousChild ? EditorDOMPoint::After(previousChild)
+                      : EditorDOMPoint(parentNode, 0u));
+    if (moveChildResult.isErr()) {
+      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
+      return Err(moveChildResult.unwrapErr());
     }
-    nsresult rv = DeleteNodeWithTransaction(*child);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-      return rv;
+    // If the reference node was moved to different container, try to recover
+    // the original position.
+    if (previousChild &&
+        MOZ_UNLIKELY(previousChild->GetParentNode() != parentNode)) {
+      if (MOZ_UNLIKELY(child->GetParentNode() != parentNode)) {
+        NS_WARNING(
+            "Neither the reference (previous) sibling nor the moved child was "
+            "in the expected parent node");
+        moveChildResult.IgnoreCaretPointSuggestion();
+        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      }
+      previousChild = child->GetPreviousSibling();
     }
-
-    // Insert the last child before the previous last child.  So, we need to
-    // use offset here because previous child might have been moved to
-    // container.
-    CreateContentResult insertChildContentResult = InsertNodeWithTransaction(
-        *child, EditorDOMPoint(pointToInsertChildren.GetContainer(),
-                               pointToInsertChildren.Offset()));
-    if (insertChildContentResult.isErr()) {
-      NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-      return insertChildContentResult.unwrapErr();
-    }
-    insertChildContentResult.MoveCaretPointTo(
-        pointToPutCaret, *this,
-        {SuggestCaret::OnlyIfHasSuggestion,
-         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    // We'll need to put caret at next sibling of aElement if nobody moves
+    // content nodes under the parent node except us.
+    moveChildResult.IgnoreCaretPointSuggestion();
   }
 
-  if (pointToPutCaret.IsSet()) {
-    nsresult rv = CollapseSelectionTo(pointToPutCaret);
-    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      NS_WARNING(
-          "EditorBase::CollapseSelectionTo() caused destring the editor");
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::CollapseSelectionTo() failed, but ignored");
+  if (aElement.GetParentNode() && aElement.GetParentNode() != parentNode) {
+    NS_WARNING(
+        "The removing element has already been moved to another element");
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
+
+  auto GetNextSiblingOf =
+      [](const nsTArray<OwningNonNull<nsIContent>>& aArrayOfMovedContent,
+         const nsINode& aExpectedParentNode) -> nsIContent* {
+    for (const OwningNonNull<nsIContent>& movedChild :
+         Reversed(aArrayOfMovedContent)) {
+      if (movedChild != &aExpectedParentNode) {
+        continue;  // Ignore moved node which was moved to different place
+      }
+      return movedChild->GetNextSibling();
+    }
+    // XXX If all nodes were moved by web apps, we cannot suggest "collect"
+    //     position without computing the index of aElement.  However, I
+    //     don't think that it's necessary for the web apps in the wild.
+    return nullptr;
+  };
+
+  nsCOMPtr<nsIContent> nextSibling =
+      aElement.GetParentNode() ? aElement.GetNextSibling()
+                               : GetNextSiblingOf(arrayOfChildren, *parentNode);
 
   nsresult rv = DeleteNodeWithTransaction(aElement);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::DeleteNodeWithTransaction() failed");
-  return rv;
+  if (MOZ_UNLIKELY(Destroyed())) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::DeleteNodeTransaction() failed");
+    return Err(rv);
+  }
+
+  if (nextSibling && nextSibling->GetParentNode() != parentNode) {
+    nextSibling = GetNextSiblingOf(arrayOfChildren, *parentNode);
+  }
+  return nextSibling ? EditorDOMPoint(nextSibling)
+                     : EditorDOMPoint::AtEndOf(*parentNode);
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentAppended(
@@ -4397,23 +4431,23 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
     }
   }
 
-  // XXX Is this intentional selection change?
-  if (pointToPutCaret.IsSet()) {
-    nsresult rv = CollapseSelectionTo(pointToPutCaret);
-    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      NS_WARNING(
-          "EditorBase::CollapseSelectionTo() caused destroying the editor");
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::CollapseSelectionTo() failed, but ignored");
-  }
-
   // Now remove container
-  nsresult rv = RemoveContainerWithTransaction(aElement);
+  Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
+      RemoveContainerWithTransaction(aElement);
+  if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
+    return unwrapBlockElementResult.inspectErr();
+  }
+  if (AllowsTransactionsToChangeSelection() &&
+      unwrapBlockElementResult.inspect().IsSet()) {
+    pointToPutCaret = unwrapBlockElementResult.unwrap();
+  }
+  if (!pointToPutCaret.IsSet()) {
+    return NS_OK;
+  }
+  nsresult rv = CollapseSelectionTo(pointToPutCaret);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RemoveContainerWithTransaction() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
