@@ -2935,17 +2935,11 @@ class nsIFrame : public nsQueryFrame {
    */
   virtual void UnionChildOverflow(mozilla::OverflowAreas& aOverflowAreas);
 
-  // Represents zero or more physical axes.
-  enum class PhysicalAxes : uint8_t {
-    None = 0x0,
-    Horizontal = 0x1,
-    Vertical = 0x2,
-    Both = Horizontal | Vertical,
-  };
+  // Returns the applicable overflow-clip-margin values.
+  using PhysicalAxes = mozilla::PhysicalAxes;
 
-  /**
-   * Returns true if this frame should apply overflow clipping.
-   */
+  nsSize OverflowClipMargin(PhysicalAxes aClipAxes) const;
+  // Returns the axes on which this frame should apply overflow clipping.
   PhysicalAxes ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const;
 
   /**
@@ -5555,7 +5549,6 @@ class nsIFrame : public nsQueryFrame {
 #endif
 };
 
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsIFrame::PhysicalAxes)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsIFrame::ReflowChildFlags)
 
 //----------------------------------------------------------------------

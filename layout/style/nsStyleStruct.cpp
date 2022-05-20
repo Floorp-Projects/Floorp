@@ -299,12 +299,15 @@ static StyleRect<T> StyleRectWithAllSides(const T& aSide) {
 nsStyleMargin::nsStyleMargin(const Document& aDocument)
     : mMargin(StyleRectWithAllSides(
           LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Zero()))),
-      mScrollMargin(StyleRectWithAllSides(StyleLength{0.})) {
+      mScrollMargin(StyleRectWithAllSides(StyleLength{0.})),
+      mOverflowClipMargin(StyleLength::Zero()) {
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
 
 nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
-    : mMargin(aSrc.mMargin), mScrollMargin(aSrc.mScrollMargin) {
+    : mMargin(aSrc.mMargin),
+      mScrollMargin(aSrc.mScrollMargin),
+      mOverflowClipMargin(aSrc.mOverflowClipMargin) {
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
 
@@ -322,6 +325,10 @@ nsChangeHint nsStyleMargin::CalcDifference(
   if (mScrollMargin != aNewData.mScrollMargin) {
     // FIXME: Bug 1530253 Support re-snapping when scroll-margin changes.
     hint |= nsChangeHint_NeutralChange;
+  }
+
+  if (mOverflowClipMargin != aNewData.mOverflowClipMargin) {
+    hint |= nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
   }
 
   return hint;
