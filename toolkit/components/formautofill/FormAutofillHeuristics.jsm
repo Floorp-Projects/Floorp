@@ -1383,22 +1383,14 @@ XPCOMUtils.defineLazyGetter(FormAutofillHeuristics, "ADDRESS_FIELDNAMES", () =>
   )
 );
 
-XPCOMUtils.defineLazyGetter(FormAutofillHeuristics, "_prefEnabled", () => {
-  return Services.prefs.getBoolPref(PREF_HEURISTICS_ENABLED);
-});
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillHeuristics,
+  "_prefEnabled",
+  PREF_HEURISTICS_ENABLED
+);
 
-Services.prefs.addObserver(PREF_HEURISTICS_ENABLED, () => {
-  FormAutofillHeuristics._prefEnabled = Services.prefs.getBoolPref(
-    PREF_HEURISTICS_ENABLED
-  );
-});
-
-XPCOMUtils.defineLazyGetter(FormAutofillHeuristics, "_sectionEnabled", () => {
-  return Services.prefs.getBoolPref(PREF_SECTION_ENABLED);
-});
-
-Services.prefs.addObserver(PREF_SECTION_ENABLED, () => {
-  FormAutofillHeuristics._sectionEnabled = Services.prefs.getBoolPref(
-    PREF_SECTION_ENABLED
-  );
-});
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillHeuristics,
+  "_sectionEnabled",
+  PREF_SECTION_ENABLED
+);
