@@ -1107,8 +1107,6 @@ class InactivePropertyHelper {
   }
 }
 
-exports.inactivePropertyHelper = new InactivePropertyHelper();
-
 /**
  * Returns all CSS property names except given properties.
  *
@@ -1141,3 +1139,10 @@ function allCssPropertiesExcept(propertiesToIgnore) {
 function computedStyle(node, window = node.ownerGlobal) {
   return window.getComputedStyle(node);
 }
+
+const inactivePropertyHelper = new InactivePropertyHelper();
+
+// The only public method from this module is `isPropertyUsed`.
+exports.isPropertyUsed = inactivePropertyHelper.isPropertyUsed.bind(
+  inactivePropertyHelper
+);

@@ -12,9 +12,7 @@ SimpleTest.waitForExplicitFinish();
 (async function() {
   const { require } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
   const Services = require("Services");
-  const { inactivePropertyHelper } = require("devtools/server/actors/utils/inactive-property-helper");
-  let { isPropertyUsed } = inactivePropertyHelper;
-  isPropertyUsed = isPropertyUsed.bind(inactivePropertyHelper);
+  const { isPropertyUsed } = require("devtools/server/actors/utils/inactive-property-helper");
 
   const INACTIVE_CSS_PREF = "devtools.inspector.inactive.css.enabled";
   Services.prefs.setBoolPref(INACTIVE_CSS_PREF, true);
