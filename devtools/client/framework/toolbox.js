@@ -2522,8 +2522,10 @@ Toolbox.prototype = {
    *
    * @param {string} id
    *        The id of the tool to load.
+   * @param {Object} options
+   *        Object that will be passed to the panel `open` method.
    */
-  loadTool: function(id) {
+  loadTool: function(id, options) {
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
     if (iframe) {
       const panel = this._toolPanels.get(id);
@@ -2597,7 +2599,7 @@ Toolbox.prototype = {
           // The panel can implement an 'open' method for asynchronous
           // initialization sequence.
           if (typeof panel.open == "function") {
-            built = panel.open();
+            built = panel.open(options);
           } else {
             built = new Promise(resolve => {
               resolve(panel);
@@ -2734,8 +2736,10 @@ Toolbox.prototype = {
    *        The id of the tool to switch to
    * @param {string} reason
    *        Reason the tool was opened
+   * @param {Object} options
+   *        Object that will be passed to the panel
    */
-  selectTool: function(id, reason = "unknown") {
+  selectTool: function(id, reason = "unknown", options) {
     this.emit("panel-changed");
 
     if (this.currentToolId == id) {
@@ -2786,7 +2790,7 @@ Toolbox.prototype = {
       Services.prefs.setCharPref(this._prefs.LAST_TOOL, id);
     }
 
-    return this.loadTool(id).then(panel => {
+    return this.loadTool(id, options).then(panel => {
       // focus the tool's frame to start receiving key events
       this.focusTool(id);
 

@@ -179,9 +179,34 @@ class StyleEditorUI extends EventEmitter {
 
   /**
    * Initiates the style editor ui creation, and start to track TargetCommand updates.
+   *
+   * @params {Object} options
+   * @params {Object} options.stylesheetToSelect
+   * @params {StyleSheetResource} options.stylesheetToSelect.stylesheet
+   * @params {Integer} options.stylesheetToSelect.line
+   * @params {Integer} options.stylesheetToSelect.column
    */
-  async initialize() {
+  async initialize(options = {}) {
     this.createUI();
+
+    if (options.stylesheetToSelect) {
+      const { stylesheet, line, column } = options.stylesheetToSelect;
+      // If a stylesheet resource and its location was passed (e.g. user clicked on a stylesheet
+      // location in the rule view), we can directly add it to the list and select it
+      // before watching for resources, for improved performance.
+      if (stylesheet.resourceId) {
+        try {
+          await this.#handleStyleSheetResource(stylesheet);
+          await this.selectStyleSheet(
+            stylesheet,
+            line - 1,
+            column ? column - 1 : 0
+          );
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
 
     await this.#toolbox.resourceCommand.watchResources(
       [this.#toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],

@@ -12,8 +12,9 @@
  * Firefox View Source is the fallback.
  *
  * @param {Toolbox} toolbox
- * @param {string} sourceURL
- * @param {number} sourceLine
+ * @param {string|Object} stylesheetFrontOrGeneratedURL
+ * @param {number} generatedLine
+ * @param {number} generatedColumn
  *
  * @return {Promise<boolean>}
  */
@@ -23,48 +24,61 @@ exports.viewSourceInStyleEditor = async function(
   generatedLine,
   generatedColumn
 ) {
-  const panel = await toolbox.loadTool("styleeditor");
-
-  let stylesheetFront;
-  if (typeof stylesheetFrontOrGeneratedURL === "string") {
-    stylesheetFront = panel.getStylesheetFrontForGeneratedURL(
-      stylesheetFrontOrGeneratedURL
-    );
-  } else {
-    stylesheetFront = stylesheetFrontOrGeneratedURL;
-  }
-
-  const originalLocation = stylesheetFront
-    ? await getOriginalLocation(
-        toolbox,
-        stylesheetFront.resourceId,
-        generatedLine,
-        generatedColumn
-      )
-    : null;
+  const originalPanelId = toolbox.currentToolId;
 
   try {
+    const panel = await toolbox.selectTool("styleeditor", "view-source", {
+      // This will be only used in case the styleeditor wasn't loaded yet, to make the
+      // initialization faster in case we already have a stylesheet resource. We still
+      // need the rest of this function to handle subsequent calls and sourcemapped stylesheets.
+      stylesheetToSelect: {
+        stylesheet: stylesheetFrontOrGeneratedURL,
+        line: generatedLine,
+        column: generatedColumn,
+      },
+    });
+
+    let stylesheetFront;
+    if (typeof stylesheetFrontOrGeneratedURL === "string") {
+      stylesheetFront = panel.getStylesheetFrontForGeneratedURL(
+        stylesheetFrontOrGeneratedURL
+      );
+    } else {
+      stylesheetFront = stylesheetFrontOrGeneratedURL;
+    }
+
+    const originalLocation = stylesheetFront
+      ? await getOriginalLocation(
+          toolbox,
+          stylesheetFront.resourceId,
+          generatedLine,
+          generatedColumn
+        )
+      : null;
+
     if (originalLocation) {
       await panel.selectOriginalSheet(
         originalLocation.sourceId,
         originalLocation.line,
         originalLocation.column
       );
-      await toolbox.selectTool("styleeditor");
       return true;
-    } else if (stylesheetFront) {
+    }
+
+    if (stylesheetFront) {
       await panel.selectStyleSheet(
         stylesheetFront,
         generatedLine,
         generatedColumn
       );
-      await toolbox.selectTool("styleeditor");
       return true;
     }
   } catch (e) {
     console.error("Failed to view source in style editor", e);
   }
 
+  // If we weren't able to select the stylesheet in the style editor, display it in a
+  // view-source tab
   exports.viewSource(
     toolbox,
     typeof stylesheetFrontOrGeneratedURL === "string"
@@ -73,6 +87,10 @@ exports.viewSourceInStyleEditor = async function(
           stylesheetFrontOrGeneratedURL.nodeHref,
     generatedLine
   );
+
+  // As we might have moved to the styleeditor, switch back to the original panel
+  await toolbox.selectTool(originalPanelId);
+
   return false;
 };
 
