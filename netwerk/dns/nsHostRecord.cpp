@@ -301,6 +301,8 @@ void AddrHostRecord::ResolveComplete() {
 
   if (mResolverType == DNSResolverType::TRR) {
     if (mTRRSuccess) {
+      MOZ_DIAGNOSTIC_ASSERT(mTRRSkippedReason ==
+                            mozilla::net::TRRSkippedReason::TRR_OK);
       uint32_t millis = static_cast<uint32_t>(mTrrDuration.ToMilliseconds());
       Telemetry::Accumulate(Telemetry::DNS_TRR_LOOKUP_TIME3,
                             TRRService::ProviderKey(), millis);

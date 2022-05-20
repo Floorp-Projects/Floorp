@@ -669,8 +669,6 @@ void TRR::SaveAdditionalRecords(
     // This is quite hacky, and should be fixed.
     hostRecord->mResolving++;
     hostRecord->mEffectiveTRRMode = mRec->mEffectiveTRRMode;
-    RefPtr<AddrHostRecord> addrRec = do_QueryObject(hostRecord);
-    addrRec->mTrrStart = TimeStamp::Now();
     LOG(("Completing lookup for additional: %s",
          nsCString(recordEntry.GetKey()).get()));
     (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB,
@@ -710,9 +708,6 @@ void TRR::StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord) {
   // This is quite hacky, and should be fixed.
   hostRecord->mResolving++;
   hostRecord->mEffectiveTRRMode = mRec->mEffectiveTRRMode;
-  RefPtr<AddrHostRecord> addrRec = do_QueryObject(hostRecord);
-  addrRec->mTrrStart = TimeStamp::Now();
-
   (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB, mOriginSuffix,
                                       TRRSkippedReason::TRR_OK, this);
 }
