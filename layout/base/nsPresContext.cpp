@@ -91,6 +91,9 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "MobileViewportManager.h"
 #include "mozilla/dom/ImageTracker.h"
+#ifdef ACCESSIBILITY
+#  include "mozilla/a11y/DocAccessible.h"
+#endif
 
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
@@ -491,6 +494,15 @@ void nsPresContext::AppUnitsPerDevPixelChanged() {
       MediaFeatureChangePropagation::JustThisDocument);
 
   mCurAppUnitsPerDevPixel = mDeviceContext->AppUnitsPerDevPixel();
+
+#ifdef ACCESSIBILITY
+  if (mCurAppUnitsPerDevPixel != oldAppUnitsPerDevPixel) {
+    if (nsAccessibilityService* accService = GetAccService()) {
+      accService->NotifyOfDevPixelRatioChange(mPresShell,
+                                              mCurAppUnitsPerDevPixel);
+    }
+  }
+#endif
 
   // Recompute the size for vh units since it's changed by the dynamic toolbar
   // max height which is stored in screen coord.

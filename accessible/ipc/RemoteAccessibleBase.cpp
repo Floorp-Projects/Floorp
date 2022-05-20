@@ -396,28 +396,11 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
     Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
     if (maybeBounds) {
       nsRect bounds = *maybeBounds;
-#if !defined(ANDROID)
-      dom::CanonicalBrowsingContext* cbc =
-          static_cast<dom::BrowserParent*>(mDoc->Manager())
-              ->GetBrowsingContext()
-              ->Top();
-      dom::BrowserParent* bp = cbc->GetBrowserParent();
-      nsPresContext* presContext =
-          bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
-      float fullZoom = cbc->GetFullZoom();
-#else
-      // In Android the FullZoom is always 1.0 since we use APZ/resolution zoom.
-      float fullZoom = 1.0;
-#endif
+      const DocAccessibleParent* topDoc = IsDoc() ? AsDoc() : nullptr;
 
       if (aOffset.isSome()) {
         // The rect we've passed in is in app units, so no conversion needed.
         nsRect internalRect = *aOffset;
-        // XXX: Right now this is exclusively used for
-        // text bounds, which already have their zoom level
-        // applied. Remove it, because we'll multiply it back
-        // in later on.
-        internalRect.ScaleRoundOut(1 / fullZoom);
         bounds.SetRectX(bounds.x + internalRect.x, internalRect.width);
         bounds.SetRectY(bounds.y + internalRect.y, internalRect.height);
       }
@@ -450,6 +433,8 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
                 nsGkAtoms::resolution);
             MOZ_ASSERT(res, "No cached document resolution found.");
             bounds.ScaleRoundOut(res.valueOr(1.0f));
+
+            topDoc = remoteAcc->AsDoc();
           }
 
           // Apply scroll offset, if applicable. Only the contents of an
@@ -468,23 +453,30 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
         acc = acc->Parent();
       }
 
+      MOZ_ASSERT(topDoc);
+      if (topDoc) {
+        // We use the top documents app-unites-per-dev-pixel even though
+        // theoretically nested docs can have different values. Practically,
+        // that isn't likely since we only offer zoom controls for the top
+        // document and all subdocuments inherit from it.
+        auto appUnitsPerDevPixel = topDoc->mCachedFields->GetAttribute<int32_t>(
+            nsGkAtoms::_moz_device_pixel_ratio);
+        MOZ_ASSERT(appUnitsPerDevPixel);
+        if (appUnitsPerDevPixel) {
+          // Convert our existing `bounds` rect from app units to dev pixels
+          devPxBounds = LayoutDeviceIntRect::FromAppUnitsToNearest(
+              bounds, *appUnitsPerDevPixel);
+        }
+      }
+
 #if !defined(ANDROID)
-      // This block is not thread safe because it queries a LocalAccessible,
-      // the BrowsingContext, PresContext, etc. It is also not needed in
-      // Android since the only local accessible is the outer doc browser that
-      // has an offset of 0 and a FullZoom value of 1.0.
+      // This block is not thread safe because it queries a LocalAccessible.
+      // It is also not needed in Android since the only local accessible is
+      // the outer doc browser that has an offset of 0.
       if (LocalAccessible* localAcc = const_cast<Accessible*>(acc)->AsLocal()) {
         // LocalAccessible::Bounds returns screen-relative bounds in
         // dev pixels.
         LayoutDeviceIntRect localBounds = localAcc->Bounds();
-
-        // Convert our existing `bounds` rect from app units to dev pixels
-        devPxBounds = LayoutDeviceIntRect::FromAppUnitsToNearest(
-            bounds, presContext->AppUnitsPerDevPixel());
-
-        // We factor in our zoom level before offsetting by
-        // `localBounds`, which has already taken zoom into account.
-        devPxBounds.ScaleRoundOut(fullZoom);
 
         // The root document will always have an APZ resolution of 1,
         // so we don't factor in its scale here. We also don't scale
