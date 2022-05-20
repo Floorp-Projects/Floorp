@@ -34,6 +34,9 @@ static const char* sLibs[] = {
   "libavcodec.55.dylib",
   "libavcodec.54.dylib",
   "libavcodec.53.dylib",
+#elif defined(XP_OPENBSD)
+  "libavcodec.so", // OpenBSD hardly controls the major/minor library version
+                   // of ffmpeg and update it regulary on ABI/API changes
 #else
   "libavcodec.so.59",
   "libavcodec.so.58",
