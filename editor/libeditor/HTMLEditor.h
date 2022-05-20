@@ -4637,9 +4637,6 @@ class HTMLEditor final : public EditorBase,
                             // RefreshEditingUI,
                             // RemoveEmptyInclusiveAncestorInlineElements,
                             // mComposerUpdater, mHasBeforeINputBeenCancelded
-  friend class MoveNodeTransaction;   // AllowsTransactionsToChangeSelection,
-                                      // CollapseSelectionTo, MarkElementDirty,
-                                      // RangeUpdaterRef
   friend class JoinNodesTransaction;  // DidJoinNodesTransaction, DoJoinNodes,
                                       // DoSplitNode, RangeUpdaterRef
   friend class
@@ -4648,6 +4645,9 @@ class HTMLEditor final : public EditorBase,
   friend class
       ListItemElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
                                       // CollectNonEditableNodes
+  friend class MoveNodeTransaction;  // AllowsTransactionsToChangeSelection,
+                                     // CollapseSelectionTo, MarkElementDirty,
+                                     // RangeUpdaterRef
   friend class
       ParagraphStateAtSelection;  // CollectChildren,
                                   // CollectEditTargetNodesInExtendedSelectionRanges,
