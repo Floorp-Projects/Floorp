@@ -1276,7 +1276,7 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   }
 
   // Find enclosing table cell from selection (cell may be selected element)
-  Element* cellElement =
+  const RefPtr<Element> cellElement =
       GetInclusiveAncestorByTagNameAtSelection(*nsGkAtoms::td);
   if (!cellElement) {
     NS_WARNING(
@@ -1343,13 +1343,14 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
                          "CanHandleAndMaybeDispatchBeforeInputEvent(), failed");
     return EditActionHandled(rv);
   }
-  rv = InsertTableRowsWithTransaction(1, InsertPosition::eAfterSelectedCell);
+  rv = InsertTableRowsWithTransaction(*cellElement, 1,
+                                      InsertPosition::eAfterSelectedCell);
   if (NS_WARN_IF(Destroyed())) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
     NS_WARNING(
-        "HTMLEditor::InsertTableRowsWithTransaction(1, "
+        "HTMLEditor::InsertTableRowsWithTransaction(*cellElement, 1, "
         "InsertPosition::eAfterSelectedCell) failed");
     return EditActionHandled(rv);
   }
