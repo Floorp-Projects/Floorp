@@ -120,6 +120,10 @@ BrowserHost::SetRenderLayers(bool aRenderLayers) {
     return NS_OK;
   }
 
+  bool priorityHint;
+  GetPriorityHint(&priorityHint);
+  ProcessPriorityManager::BrowserPriorityChanged(
+      GetBrowsingContext()->Canonical(), priorityHint || aRenderLayers);
   mRoot->SetRenderLayers(aRenderLayers);
   return NS_OK;
 }
@@ -127,7 +131,11 @@ BrowserHost::SetRenderLayers(bool aRenderLayers) {
 /* readonly attribute boolean hasLayers; */
 NS_IMETHODIMP
 BrowserHost::GetHasLayers(bool* aHasLayers) {
-  *aHasLayers = mRoot && mRoot->GetHasLayers();
+  if (!mRoot) {
+    *aHasLayers = false;
+    return NS_OK;
+  }
+  *aHasLayers = mRoot->GetHasLayers();
   return NS_OK;
 }
 
@@ -137,19 +145,27 @@ BrowserHost::SetPriorityHint(bool aPriorityHint) {
   if (!mRoot) {
     return NS_OK;
   }
+  bool renderLayers;
+  GetRenderLayers(&renderLayers);
+  ProcessPriorityManager::BrowserPriorityChanged(
+      GetBrowsingContext()->Canonical(), aPriorityHint || renderLayers);
   mRoot->SetPriorityHint(aPriorityHint);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 BrowserHost::GetPriorityHint(bool* aPriorityHint) {
-  *aPriorityHint = mRoot && mRoot->GetPriorityHint();
+  if (!mRoot) {
+    *aPriorityHint = false;
+    return NS_OK;
+  }
+  *aPriorityHint = mRoot->GetPriorityHint();
   return NS_OK;
 }
 
 /* void resolutionChanged (); */
 NS_IMETHODIMP
-BrowserHost::NotifyResolutionChanged() {
+BrowserHost::NotifyResolutionChanged(void) {
   if (!mRoot) {
     return NS_OK;
   }
@@ -161,13 +177,13 @@ BrowserHost::NotifyResolutionChanged() {
 
 /* void deprioritize (); */
 NS_IMETHODIMP
-BrowserHost::Deprioritize() {
+BrowserHost::Deprioritize(void) {
   if (!mRoot) {
     return NS_OK;
   }
-  auto* bc = GetBrowsingContext()->Canonical();
-  ProcessPriorityManager::BrowserPriorityChanged(bc,
-                                                 /* aPriority = */ false);
+  ProcessPriorityManager::BrowserPriorityChanged(
+      GetBrowsingContext()->Canonical(),
+      /* aPriority = */ false);
   return NS_OK;
 }
 
