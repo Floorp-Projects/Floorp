@@ -27,7 +27,6 @@ class nsDeviceContextSpecAndroid final : public nsIDeviceContextSpec {
   NS_IMETHOD EndPage() override { return NS_OK; }
 
  private:
-  nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIFile> mTempFile;
 };
 #endif  // nsDeviceContextAndroid_h__
