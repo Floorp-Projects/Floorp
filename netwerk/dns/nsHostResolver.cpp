@@ -1091,20 +1091,9 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
 
   // Make sure we reset the reason each time we attempt to do a new lookup
   // so we don't wrongly report the reason for the previous one.
-  rec->mTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
-  rec->mFirstTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
-  rec->mTrrAttempts = 0;
+  rec->Reset();
 
   ComputeEffectiveTRRMode(rec);
-
-  if (rec->IsAddrRecord()) {
-    RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
-    MOZ_ASSERT(addrRec);
-
-    addrRec->StoreNativeUsed(false);
-    addrRec->mResolverType = DNSResolverType::Native;
-    addrRec->mNativeSuccess = false;
-  }
 
   if (!rec->mTrrServer.IsEmpty()) {
     LOG(("NameLookup: %s use trr:%s", rec->host.get(), rec->mTrrServer.get()));
@@ -1443,7 +1432,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
         addrRec->RecordReason(TRRSkippedReason::TRR_FAILED);
       }
     } else {
-      addrRec->mTRRSuccess++;
+      addrRec->mTRRSuccess = true;
       addrRec->RecordReason(TRRSkippedReason::TRR_OK);
     }
 
@@ -1473,8 +1462,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
     }
   }
 
-  // This should always be cleared when a request is completed.
-  addrRec->StoreNative(false);
+  addrRec->OnCompleteLookup();
 
   // update record fields.  We might have a addrRec->addr_info already if a
   // previous lookup result expired and we're reresolving it or we get
