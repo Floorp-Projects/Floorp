@@ -398,8 +398,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // and `overflow-behavior` properties.
   nsIFrame* GetFrameForStyle() const;
 
-  // This is the for the old unspecced scroll snap implementation.
-  ScrollSnapInfo ComputeOldScrollSnapInfo() const;
   // This is the for the scroll snap v1 implementation.
   ScrollSnapInfo ComputeScrollSnapInfo(
       const Maybe<nsPoint>& aDestination) const;
