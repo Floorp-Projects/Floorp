@@ -14,6 +14,10 @@
 #  include "WMFDecoderModule.h"
 #endif
 
+#if defined(XP_OPENBSD) && defined(MOZ_SANDBOX)
+#  include "mozilla/SandboxSettings.h"
+#endif
+
 namespace mozilla::ipc {
 
 UtilityProcessImpl::UtilityProcessImpl(ProcessId aParentPid)
@@ -45,6 +49,9 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
 
   // Go for it
   mozilla::SandboxTarget::Instance()->StartSandbox();
+#elif defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+  StartOpenBSDSandbox(GeckoProcessType_Utility,
+                      (SandboxingKind)*sandboxingKind);
 #endif
 
   Maybe<const char*> parentBuildID =

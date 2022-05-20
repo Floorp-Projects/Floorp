@@ -11,6 +11,7 @@
 
 #ifdef __OpenBSD__
 #  include "nsXULAppAPI.h"
+#  include "mozilla/ipc/UtilityProcessSandboxing.h"
 #endif
 
 namespace mozilla {
@@ -37,7 +38,8 @@ int ClampFlashSandboxLevel(const int aLevel);
 #endif
 
 #if defined(__OpenBSD__)
-bool StartOpenBSDSandbox(GeckoProcessType type);
+bool StartOpenBSDSandbox(GeckoProcessType type,
+                         ipc::SandboxingKind kind = ipc::SandboxingKind::COUNT);
 #endif
 
 }  // namespace mozilla
