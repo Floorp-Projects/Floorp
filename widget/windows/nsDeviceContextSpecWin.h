@@ -67,7 +67,6 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
   nsString mDeviceName;
   LPDEVMODEW mDevMode = nullptr;
 
-  nsCOMPtr<nsIPrintSettings> mPrintSettings;
   int16_t mOutputFormat = nsIPrintSettings::kOutputFormatNative;
 
   // A temporary file to create an "anonymous" print target. See bug 1664253,

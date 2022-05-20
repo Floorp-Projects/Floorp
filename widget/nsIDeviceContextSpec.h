@@ -87,6 +87,9 @@ class nsIDeviceContextSpec : public nsISupports {
   NS_IMETHOD AbortDocument() { return EndDocument(); }
   NS_IMETHOD BeginPage() = 0;
   NS_IMETHOD EndPage() = 0;
+
+ protected:
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContextSpec, NS_IDEVICE_CONTEXT_SPEC_IID)

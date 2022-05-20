@@ -58,7 +58,6 @@ class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec {
  private:
   ~nsDeviceContextSpecProxy();
 
-  nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIDeviceContextSpec> mRealDeviceContextSpec;
   RefPtr<RemotePrintJobChild> mRemotePrintJob;
   RefPtr<mozilla::layout::DrawEventRecorderPRFileDesc> mRecorder;
