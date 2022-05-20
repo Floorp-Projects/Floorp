@@ -1929,8 +1929,10 @@ class HTMLEditor final : public EditorBase,
    * moves all its children to the parent of aElement.
    *
    * @param aElement            The element to be removed.
+   * @return                    A suggestion point to put caret.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RemoveContainerWithTransaction(Element& aElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  RemoveContainerWithTransaction(Element& aElement);
 
   /**
    * InsertContainerWithTransaction() creates new element whose name is

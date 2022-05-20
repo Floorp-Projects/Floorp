@@ -3539,14 +3539,19 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       CollectChildren(*content, arrayOfContents, i + 1,
                       CollectListChildren::Yes, CollectTableChildren::Yes,
                       CollectNonEditableNodes::Yes);
-      nsresult rv =
+      const Result<EditorDOMPoint, nsresult> unwrapDivElementResult =
           RemoveContainerWithTransaction(MOZ_KnownLive(*content->AsElement()));
-      if (NS_WARN_IF(Destroyed())) {
-        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_FAILED(rv)) {
+      if (MOZ_UNLIKELY(unwrapDivElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-        return EditActionResult(rv);
+        return EditActionResult(unwrapDivElementResult.inspectErr());
+      }
+      const EditorDOMPoint& pointToPutCaret = unwrapDivElementResult.inspect();
+      if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
+        nsresult rv = CollapseSelectionTo(pointToPutCaret);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+          return EditActionResult(rv);
+        }
       }
       // Extend the loop length to handle all children collected here.
       countOfCollectedContents = arrayOfContents.Length();
@@ -10069,12 +10074,19 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
         return rv;
       }
 
-      rv = RemoveContainerWithTransaction(centerElement);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_FAILED(rv)) {
+      const Result<EditorDOMPoint, nsresult> unwrapCenterElementResult =
+          RemoveContainerWithTransaction(centerElement);
+      if (MOZ_UNLIKELY(unwrapCenterElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
+        return unwrapCenterElementResult.inspectErr();
+      }
+      const EditorDOMPoint& pointToPutCaret =
+          unwrapCenterElementResult.inspect();
+      if (!AllowsTransactionsToChangeSelection() && !pointToPutCaret.IsSet()) {
+        continue;
+      }
+      if (NS_FAILED(rv = CollapseSelectionTo(pointToPutCaret))) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
         return rv;
       }
       continue;
@@ -10369,12 +10381,19 @@ nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
     return NS_OK;
   }
 
-  nsresult rv = RemoveContainerWithTransaction(aElement);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  const Result<EditorDOMPoint, nsresult> unwrapDivElementResult =
+      RemoveContainerWithTransaction(aElement);
+  if (MOZ_UNLIKELY(unwrapDivElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
+    return unwrapDivElementResult.inspectErr();
   }
+  const EditorDOMPoint& pointToPutCaret = unwrapDivElementResult.inspect();
+  if (!AllowsTransactionsToChangeSelection() || !pointToPutCaret.IsSet()) {
+    return NS_OK;
+  }
+  nsresult rv = CollapseSelectionTo(pointToPutCaret);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RemoveContainerWithTransaction() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
