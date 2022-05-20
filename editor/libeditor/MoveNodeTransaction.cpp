@@ -44,8 +44,13 @@ already_AddRefed<MoveNodeTransaction> MoveNodeTransaction::MaybeCreate(
   //       processing the nodes.  Therefore, treating the case as error breaks
   //       a lot.
   if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(aContentToMove)) ||
+      // The destination should be editable, but it may be in an orphan node or
+      // sub-tree to reduce number of DOM mutation events.  In such case, we're
+      // okay to move a node into the non-editable content because we can assume
+      // that the caller will insert it into an editable element.
       NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(
-          *aPointToInsert.GetContainer()))) {
+                     *aPointToInsert.GetContainer()) &&
+                 aPointToInsert.GetContainer()->IsInComposedDoc())) {
     return nullptr;
   }
   RefPtr<MoveNodeTransaction> transaction =

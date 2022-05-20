@@ -1885,7 +1885,7 @@ class HTMLEditor final : public EditorBase,
    *                            with new element.
    * @param aTagName            The name of new element node.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   ReplaceContainerAndCloneAttributesWithTransaction(Element& aOldContainer,
                                                     nsAtom& aTagName) {
     return ReplaceContainerWithTransactionInternal(
@@ -1904,9 +1904,10 @@ class HTMLEditor final : public EditorBase,
    * @param aAttribute          Attribute name to be set to the new element.
    * @param aAttributeValue     Attribute value to be set to aAttribute.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> ReplaceContainerWithTransaction(
-      Element& aOldContainer, nsAtom& aTagName, nsAtom& aAttribute,
-      const nsAString& aAttributeValue) {
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  ReplaceContainerWithTransaction(Element& aOldContainer, nsAtom& aTagName,
+                                  nsAtom& aAttribute,
+                                  const nsAString& aAttributeValue) {
     return ReplaceContainerWithTransactionInternal(
         aOldContainer, aTagName, aAttribute, aAttributeValue, false);
   }
@@ -1920,8 +1921,8 @@ class HTMLEditor final : public EditorBase,
    *                            with new element.
    * @param aTagName            The name of new element node.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> ReplaceContainerWithTransaction(
-      Element& aOldContainer, nsAtom& aTagName) {
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  ReplaceContainerWithTransaction(Element& aOldContainer, nsAtom& aTagName) {
     return ReplaceContainerWithTransactionInternal(
         aOldContainer, aTagName, *nsGkAtoms::_empty, u""_ns, false);
   }
@@ -3347,7 +3348,7 @@ class HTMLEditor final : public EditorBase,
    * @param aCloneAllAttributes If true, all attributes of aOldContainer will
    *                            be copied to the new element.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   ReplaceContainerWithTransactionInternal(Element& aElement, nsAtom& aTagName,
                                           nsAtom& aAttribute,
                                           const nsAString& aAttributeValue,
