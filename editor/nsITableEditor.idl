@@ -268,6 +268,7 @@ interface nsITableEditor : nsISupports
    *                                number than actual, the value is used
    *                                as this.
    */
+  [can_run_script]
   void getTableSize(in Element aTableOrElementInTable,
                     out long aRowCount, out long aColCount);
 
@@ -289,6 +290,7 @@ interface nsITableEditor : nsISupports
    *                            is not in any <table> element, throwing an
    *                            exception.
    */
+  [can_run_script]
   Element getCellAt(in Element aTableElement,
                     in long aRowIndex, in long aColumnIndex);
 
@@ -337,6 +339,7 @@ interface nsITableEditor : nsISupports
    *                            Otherwise, e.g., aCellElement just contains
    *                            selection range, returns false.
    */
+  [can_run_script]
   void getCellDataAt(in Element aTableElement,
                      in long aRowIndex, in long aColumnIndex,
                      out Element aCellElement,
@@ -363,6 +366,7 @@ interface nsITableEditor : nsISupports
    *                                element if <table> has one or more cells
    *                                but <tr> element is not in the source.
    */
+  [can_run_script]
   Element getFirstRow(in Element aTableElement);
 
   /** Preferred direction to search for neighboring cell
@@ -393,6 +397,7 @@ interface nsITableEditor : nsISupports
    *       and getNextSelectedCell().  I.e., getNextSelectedCell() will
    *       return second selected cell element.
    */
+  [can_run_script]
   Element getSelectedOrParentTableElement(out AString aTagName,
                                           out long aCount);
 
@@ -450,5 +455,6 @@ interface nsITableEditor : nsISupports
    * If second or later ranges do not select only a table cell element, this
    * ignores the ranges.
    */
+  [can_run_script]
   Array<Element> getSelectedCells();
 };
