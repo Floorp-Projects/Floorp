@@ -177,7 +177,8 @@ async function testMessages() {
     0,
     0,
     Ci.nsIScriptError.warningFlag,
-    "Test",
+    // platform-specific category to test case for Bug 1770160
+    "chrome javascript",
     gBrowser.selectedBrowser.innerWindowID
   );
   Services.console.logMessage(scriptErrorMessage);
