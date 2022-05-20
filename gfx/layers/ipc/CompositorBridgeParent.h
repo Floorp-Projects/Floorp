@@ -611,6 +611,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
    */
   Maybe<CollectedFramesParams> WrapCollectedFrames(CollectedFrames&& aFrames);
 
+  static void ResetStable();
+
   void MaybeDeclareStable();
 
  protected:
@@ -673,6 +675,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   // Callback should take (LayerTreeState* aState, const LayersId& aLayersId)
   template <typename Lambda>
   static inline void ForEachWebRenderBridgeParent(const Lambda& aCallback);
+
+  static bool sStable;
+  static uint32_t sFramesComposited;
 
   RefPtr<Compositor> mCompositor;
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
