@@ -6887,14 +6887,6 @@ var gCSSProperties = {
     other_values: ["auto", "scroll", "hidden", "clip"],
     invalid_values: [],
   },
-  "overflow-clip-margin": {
-    domProp: "overflowClipMargin",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["0px"],
-    other_values: ["1px", "2em", "calc(10px + 1vh)"],
-    invalid_values: ["-10px"],
-  },
   padding: {
     domProp: "padding",
     inherited: false,

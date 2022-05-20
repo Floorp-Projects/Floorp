@@ -2139,46 +2139,35 @@ void nsBlockFrame::ComputeOverflowAreas(OverflowAreas& aOverflowAreas,
                                         const nsStyleDisplay* aDisplay) const {
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
-  auto overflowClipAxes = ShouldApplyOverflowClipping(aDisplay);
-  auto overflowClipMargin = OverflowClipMargin(overflowClipAxes);
-  if (overflowClipAxes == PhysicalAxes::Both &&
-      overflowClipMargin == nsSize()) {
-    return;
-  }
-
-  // We rely here on our caller having called SetOverflowAreasToDesiredBounds().
-  nsRect frameBounds = aOverflowAreas.ScrollableOverflow();
-
-  for (const auto& line : Lines()) {
-    if (aDisplay->IsContainLayout()) {
-      // If we have layout containment, we should only consider our child's
-      // ink overflow, leaving the scrollable regions of the parent
-      // unaffected.
-      // Note: scrollable overflow is a subset of ink overflow,
-      // so this has the same affect as unioning the child's visual and
-      // scrollable overflow with its parent's ink overflow.
-      nsRect childVisualRect = line.InkOverflowRect();
-      OverflowAreas childVisualArea = OverflowAreas(childVisualRect, nsRect());
-      aOverflowAreas.UnionWith(childVisualArea);
-    } else {
-      aOverflowAreas.UnionWith(line.GetOverflowAreas());
+  if (ShouldApplyOverflowClipping(aDisplay) != PhysicalAxes::Both) {
+    for (const auto& line : Lines()) {
+      if (aDisplay->IsContainLayout()) {
+        // If we have layout containment, we should only consider our child's
+        // ink overflow, leaving the scrollable regions of the parent
+        // unaffected.
+        // Note: scrollable overflow is a subset of ink overflow,
+        // so this has the same affect as unioning the child's visual and
+        // scrollable overflow with its parent's ink overflow.
+        nsRect childVisualRect = line.InkOverflowRect();
+        OverflowAreas childVisualArea =
+            OverflowAreas(childVisualRect, nsRect());
+        aOverflowAreas.UnionWith(childVisualArea);
+      } else {
+        aOverflowAreas.UnionWith(line.GetOverflowAreas());
+      }
     }
-  }
 
-  // Factor an outside ::marker in; normally the ::marker will be factored
-  // into the line-box's overflow areas. However, if the line is a block
-  // line then it won't; if there are no lines, it won't. So just
-  // factor it in anyway (it can't hurt if it was already done).
-  // XXXldb Can we just fix GetOverflowArea instead?
-  if (nsIFrame* outsideMarker = GetOutsideMarker()) {
-    aOverflowAreas.UnionAllWith(outsideMarker->GetRect());
-  }
+    // Factor an outside ::marker in; normally the ::marker will be factored
+    // into the line-box's overflow areas. However, if the line is a block
+    // line then it won't; if there are no lines, it won't. So just
+    // factor it in anyway (it can't hurt if it was already done).
+    // XXXldb Can we just fix GetOverflowArea instead?
+    if (nsIFrame* outsideMarker = GetOutsideMarker()) {
+      aOverflowAreas.UnionAllWith(outsideMarker->GetRect());
+    }
 
-  ConsiderBlockEndEdgeOfChildren(aOverflowAreas, aBEndEdgeOfChildren, aDisplay);
-
-  if (overflowClipAxes != PhysicalAxes::None) {
-    aOverflowAreas.ApplyClipping(frameBounds, overflowClipAxes,
-                                 overflowClipMargin);
+    ConsiderBlockEndEdgeOfChildren(aOverflowAreas, aBEndEdgeOfChildren,
+                                   aDisplay);
   }
 
 #ifdef NOISY_OVERFLOW_AREAS

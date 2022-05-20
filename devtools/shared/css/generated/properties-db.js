@@ -3114,7 +3114,6 @@ exports.CSS_PROPERTIES = {
       "margin-right",
       "margin-bottom",
       "margin-left",
-      "overflow-clip-margin",
       "scroll-margin-top",
       "scroll-margin-right",
       "scroll-margin-bottom",
@@ -9062,20 +9061,6 @@ exports.CSS_PROPERTIES = {
       "scroll",
       "unset",
       "visible"
-    ]
-  },
-  "overflow-clip-margin": {
-    "isInherited": false,
-    "subproperties": [
-      "overflow-clip-margin"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "revert",
-      "revert-layer",
-      "unset"
     ]
   },
   "overflow-inline": {
