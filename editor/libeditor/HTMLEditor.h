@@ -4645,6 +4645,8 @@ class HTMLEditor final : public EditorBase,
   friend class
       ListItemElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
                                       // CollectNonEditableNodes
+  friend class MoveNodeResult;       // AllowsTransactionsToChangeSelection,
+                                     // CollapseSelectionTo
   friend class MoveNodeTransaction;  // AllowsTransactionsToChangeSelection,
                                      // CollapseSelectionTo, MarkElementDirty,
                                      // RangeUpdaterRef
