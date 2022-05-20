@@ -385,6 +385,10 @@ enum class EditSubAction : int32_t {
   // eDeleteNode indicates to remove a node from the DOM tree.
   eDeleteNode,
 
+  // eMoveNode indicates to move a node connected in the DOM tree to different
+  // place.
+  eMoveNode,
+
   // eSplitNode indicates to split a node to 2 nodes.
   eSplitNode,
 
