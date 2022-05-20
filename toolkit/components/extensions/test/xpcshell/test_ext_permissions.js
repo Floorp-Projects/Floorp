@@ -651,6 +651,7 @@ add_task(function test_permissions_have_localization_strings() {
   let noPromptNames = Schemas.getPermissionNames([
     "PermissionNoPrompt",
     "OptionalPermissionNoPrompt",
+    "PermissionPrivileged",
   ]);
   Assert.deepEqual(
     GRANTED_WITHOUT_USER_PROMPT,
