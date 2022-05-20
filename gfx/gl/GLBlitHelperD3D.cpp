@@ -14,7 +14,6 @@
 #include "ScopedGLHelpers.h"
 
 #include "mozilla/layers/D3D11ShareHandleImage.h"
-#include "mozilla/layers/D3D11TextureIMFSampleImage.h"
 #include "mozilla/layers/D3D11YCbCrImage.h"
 #include "mozilla/layers/TextureD3D11.h"
 
@@ -224,6 +223,7 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
   if (!d3d) return false;
 
   const auto& handle = desc.handle();
+  const auto& gpuProcessTextureId = desc.gpuProcessTextureId();
   const auto& arrayIndex = desc.arrayIndex();
   const auto& format = desc.format();
   const auto& clipSize = desc.size();
@@ -240,7 +240,19 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
     return false;
   }
 
-  const auto tex = OpenSharedTexture(d3d, handle);
+  RefPtr<ID3D11Texture2D> tex;
+  if (gpuProcessTextureId.isSome()) {
+    auto* textureMap = layers::GpuProcessD3D11TextureMap::Get();
+    if (textureMap) {
+      Maybe<HANDLE> handle =
+          textureMap->GetSharedHandleOfCopiedTexture(gpuProcessTextureId.ref());
+      if (handle.isSome()) {
+        tex = OpenSharedTexture(d3d, (WindowsHandle)handle.ref());
+      }
+    }
+  } else {
+    tex = OpenSharedTexture(d3d, handle);
+  }
   if (!tex) {
     MOZ_GL_ASSERT(mGL, false);  // Get a nullptr from OpenSharedResource.
     return false;

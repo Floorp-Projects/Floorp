@@ -626,6 +626,7 @@ already_AddRefed<IDirectXVideoDecoder> D3D9DXVA2Manager::CreateDecoder(
 
 class D3D11DXVA2Manager : public DXVA2Manager {
  public:
+  D3D11DXVA2Manager();
   virtual ~D3D11DXVA2Manager();
 
   HRESULT Init(layers::KnowsCompositor* aKnowsCompositor,
@@ -659,6 +660,14 @@ class D3D11DXVA2Manager : public DXVA2Manager {
 
   void BeforeShutdownVideoMFTDecoder() override;
 
+  bool SupportsZeroCopyNV12Texture() override {
+    if (mIMFSampleUsageInfo->SupportsZeroCopyNV12Texture() &&
+        (mDevice != DeviceManagerDx::Get()->GetCompositorDevice())) {
+      mIMFSampleUsageInfo->DisableZeroCopyNV12Texture();
+    }
+    return mIMFSampleUsageInfo->SupportsZeroCopyNV12Texture();
+  }
+
  private:
   HRESULT CreateOutputSample(RefPtr<IMFSample>& aSample,
                              ID3D11Texture2D* aTexture);
@@ -686,6 +695,7 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   gfx::YUVColorSpace mYUVColorSpace;
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
   std::list<ThreadSafeWeakPtr<layers::IMFSampleWrapper>> mIMFSampleWrappers;
+  RefPtr<layers::IMFSampleUsageInfo> mIMFSampleUsageInfo;
 };
 
 bool D3D11DXVA2Manager::SupportsConfig(const VideoInfo& aInfo,
@@ -827,6 +837,9 @@ bool D3D11DXVA2Manager::SupportsConfig(const VideoInfo& aInfo,
 
   return CanCreateDecoder(desc);
 }
+
+D3D11DXVA2Manager::D3D11DXVA2Manager()
+    : mIMFSampleUsageInfo(new layers::IMFSampleUsageInfo) {}
 
 D3D11DXVA2Manager::~D3D11DXVA2Manager() {}
 
@@ -997,6 +1010,11 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     }
   }
 
+  if (!IsD3D11() || !XRE_IsGPUProcess() ||
+      (mDevice != DeviceManagerDx::Get()->GetCompositorDevice())) {
+    mIMFSampleUsageInfo->DisableZeroCopyNV12Texture();
+  }
+
   return S_OK;
 }
 
@@ -1153,7 +1171,7 @@ HRESULT D3D11DXVA2Manager::WrapTextureWithImage(IMFSample* aVideoSample,
   RefPtr<D3D11TextureIMFSampleImage> image = new D3D11TextureIMFSampleImage(
       aVideoSample, texture, arrayIndex, gfx::IntSize(mWidth, mHeight), aRegion,
       mYUVColorSpace, mColorRange);
-  image->AllocateTextureClient(mKnowsCompositor);
+  image->AllocateTextureClient(mKnowsCompositor, mIMFSampleUsageInfo);
 
   RefPtr<IMFSampleWrapper> wrapper = image->GetIMFSampleWrapper();
   ThreadSafeWeakPtr<IMFSampleWrapper> weak(wrapper);
