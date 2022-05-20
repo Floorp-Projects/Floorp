@@ -48,10 +48,10 @@ D3D11TextureIMFSampleImage::D3D11TextureIMFSampleImage(
 }
 
 void D3D11TextureIMFSampleImage::AllocateTextureClient(
-    KnowsCompositor* aKnowsCompositor) {
+    KnowsCompositor* aKnowsCompositor, RefPtr<IMFSampleUsageInfo> aUsageInfo) {
   mTextureClient = D3D11TextureData::CreateTextureClient(
       mTexture, mArrayIndex, mSize, gfx::SurfaceFormat::NV12, mYUVColorSpace,
-      mColorRange, aKnowsCompositor);
+      mColorRange, aKnowsCompositor, aUsageInfo);
   MOZ_ASSERT(mTextureClient);
 }
 

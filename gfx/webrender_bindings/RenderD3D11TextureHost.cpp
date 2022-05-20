@@ -17,13 +17,13 @@
 namespace mozilla {
 namespace wr {
 
-RenderDXGITextureHost::RenderDXGITextureHost(WindowsHandle aHandle,
-                                             uint32_t aArrayIndex,
-                                             gfx::SurfaceFormat aFormat,
-                                             gfx::YUVColorSpace aYUVColorSpace,
-                                             gfx::ColorRange aColorRange,
-                                             gfx::IntSize aSize)
+RenderDXGITextureHost::RenderDXGITextureHost(
+    WindowsHandle aHandle, Maybe<uint64_t>& aGpuProcessTextureId,
+    uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
+    gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange,
+    gfx::IntSize aSize)
     : mHandle(aHandle),
+      mGpuProcessTextureId(aGpuProcessTextureId),
       mArrayIndex(aArrayIndex),
       mSurface(0),
       mStream(0),
@@ -38,7 +38,8 @@ RenderDXGITextureHost::RenderDXGITextureHost(WindowsHandle aHandle,
               mFormat != gfx::SurfaceFormat::P010 &&
               mFormat != gfx::SurfaceFormat::P016) ||
              (mSize.width % 2 == 0 && mSize.height % 2 == 0));
-  MOZ_ASSERT(aHandle);
+  MOZ_ASSERT((aHandle && aGpuProcessTextureId.isNothing()) ||
+             (!aHandle && aGpuProcessTextureId.isSome()));
 }
 
 RenderDXGITextureHost::~RenderDXGITextureHost() {
@@ -157,6 +158,18 @@ void RenderDXGITextureHost::UnmapPlanes() {
 bool RenderDXGITextureHost::EnsureD3D11Texture2DWithGL() {
   if (mTexture) {
     return true;
+  }
+
+  if (mGpuProcessTextureId.isSome()) {
+    auto* textureMap = layers::GpuProcessD3D11TextureMap::Get();
+    if (textureMap) {
+      RefPtr<ID3D11Texture2D> texture;
+      mTexture = textureMap->GetTexture(mGpuProcessTextureId.ref());
+      if (mTexture) {
+        return true;
+      }
+    }
+    return false;
   }
 
   const auto& gle = gl::GLContextEGL::Cast(mGL);

@@ -19,8 +19,9 @@ namespace wr {
 
 class RenderDXGITextureHost final : public RenderTextureHostSWGL {
  public:
-  RenderDXGITextureHost(WindowsHandle aHandle, uint32_t aArrayIndex,
-                        gfx::SurfaceFormat aFormat,
+  RenderDXGITextureHost(WindowsHandle aHandle,
+                        Maybe<uint64_t>& aGpuProcessTextureId,
+                        uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
                         gfx::YUVColorSpace aYUVColorSpace,
                         gfx::ColorRange aColorRange, gfx::IntSize aSize);
 
@@ -90,6 +91,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   RefPtr<gl::GLContext> mGL;
 
   WindowsHandle mHandle;
+  Maybe<uint64_t> mGpuProcessTextureId;
   RefPtr<ID3D11Texture2D> mTexture;
   uint32_t mArrayIndex = 0;
   RefPtr<IDXGIKeyedMutex> mKeyedMutex;
