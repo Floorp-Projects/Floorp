@@ -9076,12 +9076,12 @@
     value: true
     mirror: always
 
--   name: media.wmf.no-copy-nv12-textures
+-   name: media.wmf.zero-copy-nv12-textures
     type: bool
     value: true
     mirror: once
 # Enable hardware decoded video no copy even when it is blocked.
--   name: media.wmf.no-copy-nv12-textures-force-enabled
+-   name: media.wmf.zero-copy-nv12-textures-force-enabled
     type: bool
     value: false
     mirror: once

@@ -2698,16 +2698,16 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetUseWebRenderDCompVideoOverlayWin(true);
   }
 
-  bool useHwVideoNoCopy = false;
-  if (StaticPrefs::media_wmf_no_copy_nv12_textures_AtStartup()) {
+  bool useHwVideoZeroCopy = false;
+  if (StaticPrefs::media_wmf_zero_copy_nv12_textures_AtStartup()) {
     // XXX relax limitation to Windows 8.1
     if (IsWin10OrLater() && hasHardware) {
-      useHwVideoNoCopy = true;
+      useHwVideoZeroCopy = true;
     }
 
-    if (useHwVideoNoCopy &&
+    if (useHwVideoZeroCopy &&
         !StaticPrefs::
-            media_wmf_no_copy_nv12_textures_force_enabled_AtStartup()) {
+            media_wmf_zero_copy_nv12_textures_force_enabled_AtStartup()) {
       nsCString failureId;
       int32_t status;
       const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -2719,24 +2719,24 @@ void gfxPlatform::InitWebRenderConfig() {
         feature.DisableByDefault(FeatureStatus::BlockedNoGfxInfo,
                                  "gfxInfo is broken",
                                  "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
-        useHwVideoNoCopy = false;
+        useHwVideoZeroCopy = false;
       } else {
         if (status != nsIGfxInfo::FEATURE_ALLOW_ALWAYS) {
           FeatureState& feature =
               gfxConfig::GetFeature(Feature::HW_DECODED_VIDEO_NO_COPY);
           feature.DisableByDefault(FeatureStatus::Blocked,
                                    "Blocklisted by gfxInfo", failureId);
-          useHwVideoNoCopy = false;
+          useHwVideoZeroCopy = false;
         }
       }
     }
   }
 
-  if (useHwVideoNoCopy) {
+  if (useHwVideoZeroCopy) {
     FeatureState& feature =
         gfxConfig::GetFeature(Feature::HW_DECODED_VIDEO_NO_COPY);
     feature.EnableByDefault();
-    gfxVars::SetHwDecodedVideoNoCopy(true);
+    gfxVars::SetHwDecodedVideoZeroCopy(true);
   }
 
   if (Preferences::GetBool("gfx.webrender.flip-sequential", false)) {
