@@ -315,6 +315,10 @@ nsresult HTMLEditor::SetRowSpan(Element* aCell, int32_t aRowSpan) {
 
 NS_IMETHODIMP HTMLEditor::InsertTableCell(int32_t aNumberOfCellsToInsert,
                                           bool aInsertAfterSelectedCell) {
+  if (aNumberOfCellsToInsert <= 0) {
+    return NS_OK;  // Just do nothing.
+  }
+
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertTableCellElement);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
@@ -324,110 +328,150 @@ NS_IMETHODIMP HTMLEditor::InsertTableCell(int32_t aNumberOfCellsToInsert,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = InsertTableCellsWithTransaction(
-      aNumberOfCellsToInsert, aInsertAfterSelectedCell
-                                  ? InsertPosition::eAfterSelectedCell
-                                  : InsertPosition::eBeforeSelectedCell);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::InsertTableCellsWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
-}
-
-nsresult HTMLEditor::InsertTableCellsWithTransaction(
-    int32_t aNumberOfCellsToInsert, InsertPosition aInsertPosition) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  RefPtr<Element> table;
-  RefPtr<Element> curCell;
-  nsCOMPtr<nsINode> cellParent;
-  int32_t cellOffset, startRowIndex, startColIndex;
-  nsresult rv = GetCellContext(getter_AddRefs(table), getter_AddRefs(curCell),
-                               getter_AddRefs(cellParent), &cellOffset,
-                               &startRowIndex, &startColIndex);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  Result<RefPtr<Element>, nsresult> cellOrRowOrTableElementOrError =
+      GetSelectedOrParentTableElement();
+  if (cellOrRowOrTableElementOrError.isErr()) {
+    NS_WARNING("HTMLEditor::GetSelectedOrParentTableElement() failed");
+    return EditorBase::ToGenericNSResult(
+        cellOrRowOrTableElementOrError.unwrapErr());
   }
-  if (!table || !curCell) {
-    NS_WARNING(
-        "HTMLEditor::GetCellContext() didn't return <table> and/or cell");
-    // Don't fail if no cell found.
+
+  if (!cellOrRowOrTableElementOrError.inspect()) {
     return NS_OK;
   }
 
-  // Get more data for current cell in row we are inserting at since we need
-  // colspan value.
-  const auto cellDataAtSelection = CellData::AtIndexInTableElement(
-      *this, *table, startRowIndex, startColIndex);
-  if (NS_WARN_IF(cellDataAtSelection.FailedOrNotFound())) {
+  if (!HTMLEditUtils::GetClosestAncestorTableElement(
+          *cellOrRowOrTableElementOrError.inspect())) {
+    NS_WARNING("There was no ancestor <table> element for the found cell");
     return NS_ERROR_FAILURE;
   }
-  MOZ_ASSERT(curCell == cellDataAtSelection.mElement);
 
-  int32_t newCellIndex;
-  switch (aInsertPosition) {
-    case InsertPosition::eBeforeSelectedCell:
-      newCellIndex = cellDataAtSelection.mCurrent.mColumn;
-      break;
-    case InsertPosition::eAfterSelectedCell:
-      MOZ_ASSERT(!cellDataAtSelection.IsSpannedFromOtherRowOrColumn());
-      newCellIndex = cellDataAtSelection.NextColumnIndex();
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid InsertPosition");
+  EditorDOMPoint pointToInsert(cellOrRowOrTableElementOrError.inspect());
+  if (!pointToInsert.IsSet()) {
+    NS_WARNING("Found an orphan cell element");
+    return NS_ERROR_FAILURE;
+  }
+  if (aInsertAfterSelectedCell && !pointToInsert.IsEndOfContainer()) {
+    DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
+    NS_WARNING_ASSERTION(
+        advanced,
+        "Failed to set insertion point after current cell, but ignored");
+  }
+  const CreateElementResult insertCellElementResult =
+      InsertTableCellsWithTransaction(pointToInsert, aNumberOfCellsToInsert);
+  if (insertCellElementResult.isErr()) {
+    NS_WARNING("HTMLEditor::InsertTableCellsWithTransaction() failed");
+    return EditorBase::ToGenericNSResult(insertCellElementResult.inspectErr());
+  }
+  // We don't need to modify selection here.
+  insertCellElementResult.IgnoreCaretPointSuggestion();
+  return NS_OK;
+}
+
+CreateElementResult HTMLEditor::InsertTableCellsWithTransaction(
+    const EditorDOMPoint& aPointToInsert, int32_t aNumberOfCellsToInsert) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+  MOZ_ASSERT(aNumberOfCellsToInsert > 0);
+
+  if (!HTMLEditUtils::IsTableRow(aPointToInsert.GetContainer())) {
+    NS_WARNING("Tried to insert cell elements to non-<tr> element");
+    return CreateElementResult(NS_ERROR_FAILURE);
   }
 
   AutoPlaceholderBatch treateAsOneTransaction(
       *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
   // Prevent auto insertion of BR in new cell until we're done
+  // XXX Why? I think that we should insert <br> element for every cell
+  //     **before** inserting new cell into the <tr> element.
   IgnoredErrorResult error;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext, error);
   if (NS_WARN_IF(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return error.StealNSResult();
+    return CreateElementResult(error.StealNSResult());
   }
   NS_WARNING_ASSERTION(
       !error.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
   error.SuppressException();
 
-  // We control selection resetting after the insert.
-  AutoSelectionSetterAfterTableEdit setCaret(
-      *this, table, cellDataAtSelection.mCurrent.mRow, newCellIndex,
-      ePreviousColumn, false);
-  // TODO: Remove AutoTransactionsConserveSelection here.  It's not necessary
-  //       in normal cases.  However, it may be required for nested edit
-  //       actions which may be caused by legacy mutation event listeners or
-  //       chrome script.
-  AutoTransactionsConserveSelection dontChangeSelection(*this);
+  // Put caret into the cell before the first inserting cell, or the first
+  // table cell in the row.
+  RefPtr<Element> cellToPutCaret;
+  for (nsIContent* maybeCellToPutCaret =
+           aPointToInsert.GetPreviousSiblingOfChild();
+       maybeCellToPutCaret;
+       maybeCellToPutCaret = maybeCellToPutCaret->GetPreviousSibling()) {
+    if (HTMLEditUtils::IsTableCell(maybeCellToPutCaret)) {
+      cellToPutCaret = maybeCellToPutCaret->AsElement();
+      break;
+    }
+  }
 
-  EditorDOMPoint pointToInsert(cellParent, cellOffset);
-  if (NS_WARN_IF(!pointToInsert.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-  if (aInsertPosition == InsertPosition::eAfterSelectedCell) {
-    DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
-    NS_WARNING_ASSERTION(advanced,
-                         "Failed to move insertion point after the cell");
-  }
-  for ([[maybe_unused]] const auto i :
-       IntegerRange<uint32_t>(aNumberOfCellsToInsert)) {
-    RefPtr<Element> newCell = CreateElementWithDefaults(*nsGkAtoms::td);
-    if (MOZ_UNLIKELY(!newCell)) {
-      NS_WARNING("HTMLEditor::CreateElementWithDefaults(nsGkAtoms::td) failed");
-      return NS_ERROR_FAILURE;
+  RefPtr<Element> firstCellElement, lastCellElement;
+  nsresult rv = [&]() MOZ_CAN_RUN_SCRIPT {
+    // TODO: Remove AutoTransactionsConserveSelection here.  It's not necessary
+    //       in normal cases.  However, it may be required for nested edit
+    //       actions which may be caused by legacy mutation event listeners or
+    //       chrome script.
+    AutoTransactionsConserveSelection dontChangeSelection(*this);
+
+    // Block legacy mutation events for making this job simpler.
+    nsAutoScriptBlockerSuppressNodeRemoved blockToRunScript;
+
+    // If there is a child to put a cell, we need to put all cell elements
+    // before it.  Therefore, creating `EditorDOMPoint` with the child element
+    // is safe.  Otherwise, we need to try to append cell elements in the row.
+    // Therefore, using `EditorDOMPoint::AtEndOf()` is safe.  Note that it's
+    // not safe to creat it once because the offset and child relation in the
+    // point becomes invalid after inserting a cell element.
+    nsIContent* referenceContent = aPointToInsert.GetChild();
+    for ([[maybe_unused]] const auto i :
+         IntegerRange<uint32_t>(aNumberOfCellsToInsert)) {
+      RefPtr<Element> newCell = CreateElementWithDefaults(*nsGkAtoms::td);
+      if (!newCell) {
+        NS_WARNING(
+            "HTMLEditor::CreateElementWithDefaults(nsGkAtoms::td) failed");
+        return NS_ERROR_FAILURE;
+      }
+      CreateElementResult insertNewCellResult = InsertNodeWithTransaction(
+          *newCell,
+          referenceContent
+              ? EditorDOMPoint(referenceContent)
+              : EditorDOMPoint::AtEndOf(*aPointToInsert.ContainerAsElement()));
+      if (insertNewCellResult.isErr()) {
+        NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+        return insertNewCellResult.unwrapErr();
+      }
+      lastCellElement = insertNewCellResult.UnwrapNewNode();
+      if (!firstCellElement) {
+        firstCellElement = lastCellElement;
+      }
+      // Because of dontChangeSelection, we've never allowed to transactions
+      // to update selection here.
+      insertNewCellResult.IgnoreCaretPointSuggestion();
+      if (!cellToPutCaret) {
+        cellToPutCaret = std::move(newCell);  // This is first cell in the row.
+      }
     }
-    AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
-    CreateElementResult insertNewCellResult =
-        InsertNodeWithTransaction<Element>(*newCell, pointToInsert);
-    if (insertNewCellResult.isErr()) {
-      NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-      return insertNewCellResult.unwrapErr();
-    }
-    // Because of dontChangeSelection, we've never allowed to transactions to
-    // update selection here.
-    insertNewCellResult.IgnoreCaretPointSuggestion();
+
+    // TODO: Stop touching selection here.
+    MOZ_ASSERT(cellToPutCaret);
+    MOZ_ASSERT(cellToPutCaret->GetParent());
+    CollapseSelectionToDeepestNonTableFirstChild(cellToPutCaret);
+    return NS_OK;
+  }();
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED ||
+                   NS_WARN_IF(Destroyed()))) {
+    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  return NS_OK;
+  if (NS_FAILED(rv)) {
+    return CreateElementResult(rv);
+  }
+  MOZ_ASSERT(firstCellElement);
+  MOZ_ASSERT(lastCellElement);
+  return CreateElementResult(std::move(firstCellElement),
+                             EditorDOMPoint(lastCellElement, 0u));
 }
 
 NS_IMETHODIMP HTMLEditor::GetFirstRow(Element* aTableOrElementInTable,
@@ -549,32 +593,12 @@ Element* HTMLEditor::GetNextTableRowElement(Element& aTableRowElement,
   return nullptr;
 }
 
-nsresult HTMLEditor::GetLastCellInRow(nsINode* aRowNode, nsINode** aCellNode) {
-  if (NS_WARN_IF(!aCellNode)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  *aCellNode = nullptr;
-
-  if (NS_WARN_IF(!aRowNode)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCOMPtr<nsINode> rowChild = aRowNode->GetLastChild();
-  while (rowChild && !HTMLEditUtils::IsTableCell(rowChild)) {
-    // Skip over textnodes
-    rowChild = rowChild->GetPreviousSibling();
-  }
-  if (rowChild) {
-    rowChild.forget(aCellNode);
-    return NS_OK;
-  }
-  // If here, cell was not found
-  return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-}
-
 NS_IMETHODIMP HTMLEditor::InsertTableColumn(int32_t aNumberOfColumnsToInsert,
                                             bool aInsertAfterSelectedCell) {
+  if (aNumberOfColumnsToInsert <= 0) {
+    return NS_OK;  // XXX Traditional behavior
+  }
+
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertTableColumn);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
@@ -597,6 +621,7 @@ NS_IMETHODIMP HTMLEditor::InsertTableColumn(int32_t aNumberOfColumnsToInsert,
 nsresult HTMLEditor::InsertTableColumnsWithTransaction(
     int32_t aNumberOfColumnsToInsert, InsertPosition aInsertPosition) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aNumberOfColumnsToInsert >= 0);
 
   RefPtr<Element> table;
   RefPtr<Element> curCell;
@@ -719,25 +744,19 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
         continue;
       }
 
-      // Simply set selection to the current cell. So, we can let
-      // InsertTableCellsWithTransaction() do the work.  Insert a new cell
-      // before current one.
-      CollapseSelectionToStartOf(*cellData.mElement, error);
-      if (MOZ_UNLIKELY(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-        NS_WARNING(
-            "EditorBase::CollapseSelectionToStartOf() caused destroying the "
-            "editor");
-        return NS_ERROR_EDITOR_DESTROYED;
+      EditorDOMPoint pointToInsert(cellData.mElement);
+      if (MOZ_UNLIKELY(NS_WARN_IF(!pointToInsert.IsSet()))) {
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
       }
-      NS_WARNING_ASSERTION(
-          !error.Failed(),
-          "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
-      error.SuppressException();
-      rv = InsertTableCellsWithTransaction(aNumberOfColumnsToInsert,
-                                           InsertPosition::eBeforeSelectedCell);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::InsertTableCellsWithTransaction() "
-                           "failed, but might be ignored");
+      CreateElementResult insertCellElementResult =
+          InsertTableCellsWithTransaction(pointToInsert,
+                                          aNumberOfColumnsToInsert);
+      if (insertCellElementResult.isErr()) {
+        NS_WARNING("HTMLEditor::InsertTableCellsWithTransaction() failed");
+        return insertCellElementResult.inspectErr();
+      }
+      // We don't need to update selection here.
+      insertCellElementResult.IgnoreCaretPointSuggestion();
       continue;
     }
 
@@ -771,41 +790,20 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
       }
     }
 
-    nsCOMPtr<nsINode> lastCellNode;
-    rv = GetLastCellInRow(rowElement, getter_AddRefs(lastCellNode));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::GetLastCellInRow() failed");
-      return rv;
+    EditorDOMPoint atEndOfRow = EditorDOMPoint::AtEndOf(*rowElement);
+    if (MOZ_UNLIKELY(NS_WARN_IF(!atEndOfRow.IsSet()))) {
+      return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
-    if (!lastCellNode) {
-      NS_WARNING("HTMLEditor::GetLastCellInRow() didn't return cell");
-      return NS_ERROR_FAILURE;
+    const CreateElementResult insertCellElementResult =
+        InsertTableCellsWithTransaction(atEndOfRow, aNumberOfColumnsToInsert);
+    if (insertCellElementResult.isErr()) {
+      NS_WARNING("HTMLEditor::InsertTableCellsWithTransaction() failed");
+      return insertCellElementResult.inspectErr();
     }
-
-    // Simply add same number of cells to each row.  Although tempted to check
-    // cell indexes for current cell, the effects of colspan > 1 in some cells
-    // makes this futile.  We must use NormalizeTableInternal() first to assure
-    // that there are cells in each cellmap location.
-    CollapseSelectionToStartOf(*lastCellNode, error);
-    if (MOZ_UNLIKELY(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-      NS_WARNING(
-          "EditorBase::CollapseSelectionToStartOf() caused destroying the "
-          "editor");
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(
-        !error.Failed(),
-        "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
-    error.SuppressException();
-    rv = InsertTableCellsWithTransaction(aNumberOfColumnsToInsert,
-                                         InsertPosition::eAfterSelectedCell);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::InsertTableCellsWithTransaction() "
-                         "failed, but might be ignored");
+    // We don't need to update selection here.
+    insertCellElementResult.IgnoreCaretPointSuggestion();
   }
-  // XXX This is perhaps the result of the last call of
-  //     InsertTableCellsWithTransaction().
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP HTMLEditor::InsertTableRow(int32_t aNumberOfRowsToInsert,
