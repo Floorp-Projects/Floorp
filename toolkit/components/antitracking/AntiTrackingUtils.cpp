@@ -727,18 +727,24 @@ bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
     return thirdParty;
   }
 
-  if (!doc->GetChannel()) {
+  return IsThirdPartyDocument(doc);
+}
+
+/* static */
+bool AntiTrackingUtils::IsThirdPartyDocument(Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+  if (!aDocument->GetChannel()) {
     // If we can't get the channel from the document, i.e. initial about:blank
     // page, we use the browsingContext of the document to check if it's in the
     // third-party context. If the browsing context is still not available, we
     // will treat the window as third-party.
-    RefPtr<BrowsingContext> bc = doc->GetBrowsingContext();
+    RefPtr<BrowsingContext> bc = aDocument->GetBrowsingContext();
     return bc ? IsThirdPartyContext(bc) : true;
   }
 
   // We only care whether the channel is 3rd-party with respect to
   // the top-level.
-  nsCOMPtr<nsILoadInfo> loadInfo = doc->GetChannel()->LoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = aDocument->GetChannel()->LoadInfo();
   return loadInfo->GetIsThirdPartyContextToTopWindow();
 }
 
