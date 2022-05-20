@@ -2190,32 +2190,45 @@ main(int argc, char **argv)
     if (status == PR_SUCCESS) {
         addr.inet.port = PR_htons(portno);
     } else {
-        /* Lookup host */
-        PRAddrInfo *addrInfo;
-        void *enumPtr = NULL;
+        PRBool gotLoopbackIP = PR_FALSE;
+        if ((!strcmp(host, "localhost") || !strcmp(host, "localhost.localdomain"))
+            /* only check for preference if both types are allowed */
+            && allowIPv4 && allowIPv6) {
+            /* make a decision which IP to prefer */
+            status = PR_GetPrefLoopbackAddrInfo(&addr, portno);
+            if (status != PR_FAILURE) {
+                gotLoopbackIP = PR_TRUE;
+            }
+        }
 
-        addrInfo = PR_GetAddrInfoByName(host, PR_AF_UNSPEC,
-                                        PR_AI_ADDRCONFIG | PR_AI_NOCANONNAME);
-        if (!addrInfo) {
-            fprintf(stderr, "HOSTNAME=%s\n", host);
-            SECU_PrintError(progName, "error looking up host");
-            error = 1;
-            goto done;
-        }
-        for (;;) {
-            enumPtr = PR_EnumerateAddrInfo(enumPtr, addrInfo, portno, &addr);
-            if (enumPtr == NULL)
-                break;
-            if (addr.raw.family == PR_AF_INET && allowIPv4)
-                break;
-            if (addr.raw.family == PR_AF_INET6 && allowIPv6)
-                break;
-        }
-        PR_FreeAddrInfo(addrInfo);
-        if (enumPtr == NULL) {
-            SECU_PrintError(progName, "error looking up host address");
-            error = 1;
-            goto done;
+        if (!gotLoopbackIP) {
+            /* Lookup host */
+            PRAddrInfo *addrInfo;
+            void *enumPtr = NULL;
+
+            addrInfo = PR_GetAddrInfoByName(host, PR_AF_UNSPEC,
+                                            PR_AI_ADDRCONFIG | PR_AI_NOCANONNAME);
+            if (!addrInfo) {
+                fprintf(stderr, "HOSTNAME=%s\n", host);
+                SECU_PrintError(progName, "error looking up host");
+                error = 1;
+                goto done;
+            }
+            for (;;) {
+                enumPtr = PR_EnumerateAddrInfo(enumPtr, addrInfo, portno, &addr);
+                if (enumPtr == NULL)
+                    break;
+                if (addr.raw.family == PR_AF_INET && allowIPv4)
+                    break;
+                if (addr.raw.family == PR_AF_INET6 && allowIPv6)
+                    break;
+            }
+            PR_FreeAddrInfo(addrInfo);
+            if (enumPtr == NULL) {
+                SECU_PrintError(progName, "error looking up host address");
+                error = 1;
+                goto done;
+            }
         }
     }
 

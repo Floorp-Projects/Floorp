@@ -1247,3 +1247,9 @@ PK11_FindObjectForCert;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.79 { 	# NSS 3.79 release
+;+    global:
+SECMOD_LockedModuleHasRemovableSlots;
+;+    local:
+;+       *;
+;+};

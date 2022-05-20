@@ -32,8 +32,8 @@ SECMOD_DestroyListLock(SECMODListLock *lock)
 }
 
 /*
- * Lock the List for Read: NOTE: this assumes the reading isn't so common
- * the writing will be starved.
+ * Lock the list for reading.
+ * Note: this uses a non-reentrant lock. Writers are given preference.
  */
 void
 SECMOD_GetReadLock(SECMODListLock *modLock)

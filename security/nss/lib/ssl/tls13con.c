@@ -5817,7 +5817,14 @@ tls13_UnprotectRecord(sslSocket *ss,
                 SSL_GETPID(), ss->fd, spec, spec->epoch, spec->phase,
                 cText->seqNum, cText->buf->len));
 
-    /* Verify that the content type is right.
+    /* Verify that the outer content type is right.
+     *
+     * For the inner content type as well as lower TLS versions this is checked
+     * in ssl3con.c/ssl3_HandleNonApllicationData().
+     *
+     * For DTLS 1.3 this is checked in ssl3gthr.c/dtls_GatherData(). DTLS drops
+     * invalid records silently [RFC6347, Section 4.1.2.7].
+     *
      * Also allow the DTLS short header in TLS 1.3. */
     if (!(cText->hdr[0] == ssl_ct_application_data ||
           (IS_DTLS(ss) &&
