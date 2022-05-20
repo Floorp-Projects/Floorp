@@ -456,7 +456,7 @@ class MOZ_STACK_CLASS AutoRemoveContainerSelNotify final {
  public:
   AutoRemoveContainerSelNotify() = delete;
   AutoRemoveContainerSelNotify(RangeUpdater& aRangeUpdater,
-                               const EditorDOMPoint& aAtRemovingElement)
+                               const EditorRawDOMPoint& aAtRemovingElement)
       : mRangeUpdater(aRangeUpdater),
         mRemovingElement(*aAtRemovingElement.GetChild()->AsElement()),
         mParentNode(*aAtRemovingElement.GetContainer()),
