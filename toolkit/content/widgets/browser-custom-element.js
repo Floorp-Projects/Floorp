@@ -829,10 +829,9 @@
       if (!this.isRemoteBrowser) {
         return;
       }
-      let { remoteTab } = this.frameLoader;
-      if (remoteTab) {
-        remoteTab.priorityHint = false;
-        remoteTab.deprioritize();
+      let { frameLoader } = this;
+      if (frameLoader.remoteTab) {
+        frameLoader.remoteTab.deprioritize();
       }
     }
 
