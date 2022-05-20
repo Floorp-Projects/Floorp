@@ -1,4 +1,4 @@
-//|jit-test| --delazification-mode=concurrent-df; skip-if: helperThreadCount() === 0 || ('gczeal' in this && (gczeal(0), false))
+//|jit-test| --delazification-mode=concurrent-df; skip-if: isLcovEnabled() || helperThreadCount() === 0 || ('gczeal' in this && (gczeal(0), false))
 //
 // Note, we have to execute gczeal in the skip-if condition, before the current
 // script gets parsed and scheduled for delazification, as changing gc settings
