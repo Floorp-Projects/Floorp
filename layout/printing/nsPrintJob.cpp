@@ -212,43 +212,6 @@ static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
   }
 }
 
-/**
- * On platforms that support it, sets the printer name stored in the
- * nsIPrintSettings to the last-used printer if a printer name is not already
- * set.
- * XXXjwatt: Why is this necessary? Can't the code that reads the printer
- * name later "just" use the last-used printer if a name isn't specified? Then
- * we wouldn't have this inconsistency between platforms and processes.
- */
-static nsresult EnsureSettingsHasPrinterNameSet(
-    nsIPrintSettings* aPrintSettings) {
-#if defined(XP_MACOSX) || defined(ANDROID)
-  // Mac doesn't support retrieving a printer list.
-  return NS_OK;
-#else
-  NS_ENSURE_ARG_POINTER(aPrintSettings);
-
-  // See if aPrintSettings already has a printer
-  nsString printerName;
-  nsresult rv = aPrintSettings->GetPrinterName(printerName);
-  if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
-    return NS_OK;
-  }
-
-  // aPrintSettings doesn't have a printer set.
-  // Try to fetch the name of the last-used printer.
-  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
-      do_GetService(sPrintSettingsServiceContractID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = printSettingsService->GetLastUsedPrinterName(printerName);
-  if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
-    rv = aPrintSettings->SetPrinterName(printerName);
-  }
-  return rv;
-#endif
-}
-
 static nsresult GetDefaultPrintSettings(nsIPrintSettings** aSettings) {
   *aSettings = nullptr;
 
@@ -475,8 +438,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   if (!printData->mPrintObject->mDocument ||
       !printData->mPrintObject->mDocument->GetRootElement())
     return NS_ERROR_GFX_PRINTER_STARTDOC;
-
-  MOZ_TRY(EnsureSettingsHasPrinterNameSet(printData->mPrintSettings));
 
   printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
 
