@@ -105,7 +105,12 @@ class ErrorMessageWatcher extends nsIConsoleListenerWatcher {
       return true;
     }
 
-    // For non-process targets, we filter-out platform-specific errors.
+    // Don't restrict any categories in the Browser Toolbox/Browser Console
+    if (targetActor.sessionContext.type == "all") {
+      return true;
+    }
+
+    // For non-process targets in other toolboxes, we filter-out platform-specific errors.
     return !PLATFORM_SPECIFIC_CATEGORIES.includes(category);
   }
 
