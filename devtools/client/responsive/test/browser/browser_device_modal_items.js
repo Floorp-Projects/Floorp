@@ -8,6 +8,11 @@
 const TEST_URL = "data:text/html;charset=utf-8,";
 const { parseUserAgent } = require("devtools/client/responsive/utils/ua");
 
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/device.properties",
+  true
+);
 addRDMTask(
   TEST_URL,
   async function({ ui }) {
@@ -17,8 +22,32 @@ addRDMTask(
     await openDeviceModal(ui);
 
     const { devices } = store.getState();
+
+    ok(devices.types.length, "We have some device types");
+
     for (const type of devices.types) {
       const list = devices[type];
+
+      const header = document.querySelector(
+        `.device-type-${type} .device-header`
+      );
+
+      if (type == "custom") {
+        // we don't have custom devices, so there shouldn't be a header for it.
+        is(list.length, 0, `We don't have any custom devices`);
+        ok(!header, `There's no header for "custom"`);
+        continue;
+      }
+
+      ok(list.length, `We have ${type} devices`);
+      ok(header, `There's a header for ${type} devices`);
+
+      is(
+        header?.textContent,
+        L10N.getStr(`device.${type}`),
+        `Got expected text for ${type} header`
+      );
+
       for (const item of list) {
         info(`Check the element for ${item.name} on the modal`);
 
