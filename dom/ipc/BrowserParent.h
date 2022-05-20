@@ -132,6 +132,8 @@ class BrowserParent final : public PBrowserParent,
 
   CanonicalBrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
 
+  void RecomputeProcessPriority();
+
   already_AddRefed<nsILoadContext> GetLoadContext();
 
   Element* GetOwnerElement() const { return mFrameElement; }
