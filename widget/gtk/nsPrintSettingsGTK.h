@@ -33,6 +33,10 @@ class nsPrintSettingsGTK : public nsPrintSettings {
   nsPrintSettingsGTK();
   explicit nsPrintSettingsGTK(const PrintSettingsInitializer& aSettings);
 
+  static nsPrintSettingsGTK* From(nsIPrintSettings* aPrintSettings) {
+    return static_cast<nsPrintSettingsGTK*>(aPrintSettings);
+  }
+
   // We're overriding these methods because we want to read/write with GTK
   // objects, not local variables. This allows a simpler settings implementation
   // between Gecko and GTK.

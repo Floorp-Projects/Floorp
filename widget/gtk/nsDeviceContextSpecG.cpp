@@ -17,6 +17,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
+#include "nsQueryObject.h"
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 
@@ -226,13 +227,14 @@ static GUniquePtr<GtkPaperSize> GetStandardGtkPaperSize(
 NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget* aWidget,
                                            nsIPrintSettings* aPS,
                                            bool aIsPrintPreview) {
-  mPrintSettings = do_QueryInterface(aPS);
-  if (!mPrintSettings) {
+  RefPtr<nsPrintSettingsGTK> settings = do_QueryObject(aPS);
+  if (!settings) {
     return NS_ERROR_NO_INTERFACE;
   }
+  mPrintSettings = aPS;
 
-  mGtkPrintSettings = mPrintSettings->GetGtkPrintSettings();
-  mGtkPageSetup = mPrintSettings->GetGtkPageSetup();
+  mGtkPrintSettings = settings->GetGtkPrintSettings();
+  mGtkPageSetup = settings->GetGtkPageSetup();
 
   GtkPaperSize* geckoPaperSize = gtk_page_setup_get_paper_size(mGtkPageSetup);
   GUniquePtr<GtkPaperSize> gtkPaperSize =
@@ -281,7 +283,7 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter* aPrinter,
     NS_ConvertUTF16toUTF8 requestedName(printerName);
     const char* currentName = gtk_printer_get_name(aPrinter);
     if (requestedName.Equals(currentName)) {
-      spec->mPrintSettings->SetGtkPrinter(aPrinter);
+      nsPrintSettingsGTK::From(spec->mPrintSettings)->SetGtkPrinter(aPrinter);
 
       // Bug 1145916 - attempting to kick off a print job for this printer
       // during this tick of the event loop will result in the printer backend
@@ -300,9 +302,9 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter* aPrinter,
 }
 
 void nsDeviceContextSpecGTK::StartPrintJob() {
-  GtkPrintJob* job =
-      gtk_print_job_new(mTitle.get(), mPrintSettings->GetGtkPrinter(),
-                        mGtkPrintSettings, mGtkPageSetup);
+  GtkPrintJob* job = gtk_print_job_new(
+      mTitle.get(), nsPrintSettingsGTK::From(mPrintSettings)->GetGtkPrinter(),
+      mGtkPrintSettings, mGtkPageSetup);
 
   if (!gtk_print_job_set_source_file(job, mSpoolName.get(), nullptr)) return;
 
@@ -346,7 +348,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
       // content process side. In that case, we need to enumerate the printers
       // on the content side, and find a printer with a matching name.
 
-      if (mPrintSettings->GetGtkPrinter()) {
+      if (nsPrintSettingsGTK::From(mPrintSettings)->GetGtkPrinter()) {
         // We have a printer, so we can print right away.
         StartPrintJob();
       } else {
