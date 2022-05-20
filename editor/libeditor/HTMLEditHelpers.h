@@ -259,6 +259,50 @@ class MOZ_STACK_CLASS MoveNodeResult final {
           mNextInsertionPoint);
     }
   }
+  explicit MoveNodeResult(const EditorDOMPoint& aNextInsertionPoint,
+                          const EditorDOMPoint& aPointToPutCaret)
+      : mNextInsertionPoint(aNextInsertionPoint),
+        mCaretPoint(aPointToPutCaret),
+        mRv(mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(mNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
+    }
+  }
+  explicit MoveNodeResult(EditorDOMPoint&& aNextInsertionPoint,
+                          const EditorDOMPoint& aPointToPutCaret)
+      : mNextInsertionPoint(std::move(aNextInsertionPoint)),
+        mCaretPoint(aPointToPutCaret),
+        mRv(mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(mNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
+    }
+  }
+  explicit MoveNodeResult(const EditorDOMPoint& aNextInsertionPoint,
+                          EditorDOMPoint&& aPointToPutCaret)
+      : mNextInsertionPoint(aNextInsertionPoint),
+        mCaretPoint(std::move(aPointToPutCaret)),
+        mRv(mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(mNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
+    }
+  }
+  explicit MoveNodeResult(EditorDOMPoint&& aNextInsertionPoint,
+                          EditorDOMPoint&& aPointToPutCaret)
+      : mNextInsertionPoint(std::move(aNextInsertionPoint)),
+        mCaretPoint(std::move(aPointToPutCaret)),
+        mRv(mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(mNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
+    }
+  }
 
   EditorDOMPoint mNextInsertionPoint;
   // Recommended caret point after moving a node.
@@ -273,6 +317,16 @@ class MOZ_STACK_CLASS MoveNodeResult final {
   friend MoveNodeResult MoveNodeHandled(
       const EditorDOMPoint& aNextInsertionPoint);
   friend MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint);
+  friend MoveNodeResult MoveNodeHandled(
+      const EditorDOMPoint& aNextInsertionPoint,
+      const EditorDOMPoint& aPointToPutCaret);
+  friend MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint,
+                                        const EditorDOMPoint& aPointToPutCaret);
+  friend MoveNodeResult MoveNodeHandled(
+      const EditorDOMPoint& aNextInsertionPoint,
+      EditorDOMPoint&& aPointToPutCaret);
+  friend MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint,
+                                        EditorDOMPoint&& aPointToPutCaret);
 };
 
 /*****************************************************************************
@@ -299,6 +353,27 @@ inline MoveNodeResult MoveNodeHandled(
 
 inline MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint) {
   return MoveNodeResult(std::move(aNextInsertionPoint), true);
+}
+
+inline MoveNodeResult MoveNodeHandled(const EditorDOMPoint& aNextInsertionPoint,
+                                      const EditorDOMPoint& aPointToPutCaret) {
+  return MoveNodeResult(aNextInsertionPoint, aPointToPutCaret);
+}
+
+inline MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint,
+                                      const EditorDOMPoint& aPointToPutCaret) {
+  return MoveNodeResult(std::move(aNextInsertionPoint), aPointToPutCaret);
+}
+
+inline MoveNodeResult MoveNodeHandled(const EditorDOMPoint& aNextInsertionPoint,
+                                      EditorDOMPoint&& aPointToPutCaret) {
+  return MoveNodeResult(aNextInsertionPoint, std::move(aPointToPutCaret));
+}
+
+inline MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint,
+                                      EditorDOMPoint&& aPointToPutCaret) {
+  return MoveNodeResult(std::move(aNextInsertionPoint),
+                        std::move(aPointToPutCaret));
 }
 
 /*****************************************************************************
