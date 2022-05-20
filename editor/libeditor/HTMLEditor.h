@@ -2098,8 +2098,9 @@ class HTMLEditor final : public EditorBase,
                             ErrorResult& aError);
 
   /**
-   * MoveOneHardLineContents() moves the content in a hard line which contains
-   * aPointInHardLine to aPointToInsert or end of aPointToInsert's container.
+   * MoveOneHardLineContentsWithTransaction() moves the content in a hard line
+   * which contains aPointInHardLine to aPointToInsert or end of
+   * aPointToInsert's container.
    *
    * @param aPointInHardLine            A point in a hard line.  All nodes in
    *                                    same hard line will be moved.
@@ -2116,7 +2117,8 @@ class HTMLEditor final : public EditorBase,
    *                                    container while we're moving nodes.
    */
   enum class MoveToEndOfContainer { Yes, No };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveOneHardLineContents(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
+  MoveOneHardLineContentsWithTransaction(
       const EditorDOMPoint& aPointInHardLine,
       const EditorDOMPoint& aPointToInsert,
       MoveToEndOfContainer aMoveToEndOfContainer = MoveToEndOfContainer::No);
@@ -4670,7 +4672,7 @@ class HTMLEditor final : public EditorBase,
                                    // DeleteTextAndTextNodesWithTransaction,
                                    // JoinNearestEditableNodesWithTransaction,
                                    // MoveChildrenWithTransaction,
-                                   // MoveOneHardLineContents,
+                                   // MoveOneHardLineContentsWithTransaction,
                                    // MoveToEndOfCOntainer,
                                    // SplitAncestorStyledInlineElementsAt,
                                    // TreatEmptyTextNodes

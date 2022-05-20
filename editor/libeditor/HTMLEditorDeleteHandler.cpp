@@ -4673,8 +4673,9 @@ Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
 
   // If there is only a padding `<br>` element in a empty block, it's selected
   // by `SelectBRElementIfCollapsedInEmptyBlock()`.  However, it won't be
-  // moved.  Although it'll be deleted, `MoveOneHardLineContents()` returns
-  // "ignored".  Therefore, we should return `false` in this case.
+  // moved.  Although it'll be deleted,
+  // `MoveOneHardLineContentsWithTransaction()` returns "ignored".  Therefore,
+  // we should return `false` in this case.
   if (nsIContent* childContent = oneLineRange->GetChildAtStartOffset()) {
     if (childContent->IsHTMLElement(nsGkAtoms::br) &&
         childContent->GetParent()) {
@@ -4735,7 +4736,7 @@ Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
   return startPoint.GetNextSiblingOfChild() != endPoint.GetChild();
 }
 
-MoveNodeResult HTMLEditor::MoveOneHardLineContents(
+MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
     const EditorDOMPoint& aPointInHardLine,
     const EditorDOMPoint& aPointToInsert,
     MoveToEndOfContainer
@@ -4764,89 +4765,54 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
     return MoveNodeIgnored(std::move(pointToInsert));
   }
 
-  uint32_t offset = pointToInsert.Offset();
-  MoveNodeResult moveContentsInLineResult;
+  MoveNodeResult moveContentsInLineResult = MoveNodeIgnored(pointToInsert);
   for (auto& content : arrayOfContents) {
-    if (aMoveToEndOfContainer == MoveToEndOfContainer::Yes) {
-      // For backward compatibility, we should move contents to end of the
-      // container if this is called with MoveToEndOfContainer::Yes.
-      offset = pointToInsert.GetContainer()->Length();
+    // For backward compatibility, we should move contents to end of the
+    // container if this is called with MoveToEndOfContainer::Yes.
+    // And also if pointToInsert has been made invalid with removing preceding
+    // children, we should move the content to the end of the container.
+    if (aMoveToEndOfContainer == MoveToEndOfContainer::Yes ||
+        (MayHaveMutationEventListeners() &&
+         MOZ_UNLIKELY(!moveContentsInLineResult.NextInsertionPointRef()
+                           .IsSetAndValid()))) {
+      pointToInsert.SetToEndOf(pointToInsert.GetContainer());
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(
+          moveContentsInLineResult.NextInsertionPointRef().IsSet());
+      pointToInsert = moveContentsInLineResult.NextInsertionPointRef();
     }
-    // get the node to act on
+    // If the content is a block element, move all children of it to the
+    // new container, and then, remove the (probably) empty block element.
     if (HTMLEditUtils::IsBlockElement(content)) {
-      // For block nodes, move their contents only, then delete block.
       moveContentsInLineResult |= MoveChildrenWithTransaction(
-          MOZ_KnownLive(*content->AsElement()),
-          EditorDOMPoint(pointToInsert.GetContainer(), offset));
+          MOZ_KnownLive(*content->AsElement()), pointToInsert);
       if (moveContentsInLineResult.isErr()) {
         NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
         return moveContentsInLineResult;
       }
-      nsresult rv = moveContentsInLineResult.SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfHasSuggestion,
-                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                  SuggestCaret::AndIgnoreTrivialError});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
-        return MoveNodeResult(rv);
-      }
-      NS_WARNING_ASSERTION(
-          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-          "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
-      offset = moveContentsInLineResult.NextInsertionPointRef().Offset();
+      moveContentsInLineResult.MarkAsHandled();
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
       DebugOnly<nsresult> rvIgnored =
           DeleteNodeWithTransaction(MOZ_KnownLive(*content));
       if (NS_WARN_IF(Destroyed())) {
+        moveContentsInLineResult.IgnoreCaretPointSuggestion();
         return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "HTMLEditor::DeleteNodeWithTransaction() failed, but ignored");
-      moveContentsInLineResult.MarkAsHandled();
-      if (MayHaveMutationEventListeners()) {
-        // Mutation event listener may make `offset` value invalid with
-        // removing some previous children while we call
-        // `DeleteNodeWithTransaction()` so that we should adjust it here.
-        offset = std::min(offset, pointToInsert.GetContainer()->Length());
-      }
       continue;
     }
-    // XXX Different from the above block, we ignore error of moving nodes.
     // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
     // keep it alive.
-    MoveNodeResult moveNodeResult = MoveNodeOrChildrenWithTransaction(
-        MOZ_KnownLive(content),
-        EditorDOMPoint(pointToInsert.GetContainer(), offset));
-    if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
-      moveContentsInLineResult.IgnoreCaretPointSuggestion();
-      return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
+    moveContentsInLineResult |= MoveNodeOrChildrenWithTransaction(
+        MOZ_KnownLive(content), pointToInsert);
+    if (moveContentsInLineResult.isErr()) {
+      NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
+      return moveContentsInLineResult;
     }
-    if (moveNodeResult.isErr()) {
-      NS_WARNING(
-          "HTMLEditor::MoveNodeOrChildrenWithTransaction() failed, but "
-          "ignored");
-      continue;
-    }
-    nsresult rv = moveNodeResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
-      return MoveNodeResult(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_ERROR_EDITOR_NO_EDITABLE_RANGE,
-        "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
-    offset = moveNodeResult.NextInsertionPointRef().Offset();
-    moveContentsInLineResult |= moveNodeResult;
   }
-
-  NS_WARNING_ASSERTION(
-      moveContentsInLineResult.isOk(),
-      "Last HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
   return moveContentsInLineResult;
 }
 
