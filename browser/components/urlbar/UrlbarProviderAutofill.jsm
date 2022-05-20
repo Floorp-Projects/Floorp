@@ -588,6 +588,7 @@ class ProviderAutofill extends UrlbarProvider {
     const query = `
       SELECT
         :queryType AS query_type,
+        i.input AS input,
         h.url AS url,
         fixup_url(h.url) AS fixed_url,
         fixup_url(h.url) COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF' AS fixed_url_match
@@ -616,6 +617,7 @@ class ProviderAutofill extends UrlbarProvider {
   _processRow(row, queryContext) {
     let queryType = row.getResultByName("query_type");
     let autofilledValue, finalCompleteValue, autofilledType;
+    let adaptiveHistoryInput;
     switch (queryType) {
       case QUERYTYPE.AUTOFILL_ORIGIN:
         autofilledValue = row.getResultByName("host_fixed");
@@ -656,6 +658,7 @@ class ProviderAutofill extends UrlbarProvider {
       case QUERYTYPE.AUTOFILL_ADAPTIVE:
         autofilledValue = row.getResultByName("fixed_url");
         finalCompleteValue = row.getResultByName("url");
+        adaptiveHistoryInput = row.getResultByName("input");
         autofilledType = "adaptive";
         break;
     }
@@ -678,6 +681,7 @@ class ProviderAutofill extends UrlbarProvider {
       queryContext.searchString +
       autofilledValue.substring(this._searchString.length);
     result.autofill = {
+      adaptiveHistoryInput,
       value: autofilledValue,
       selectionStart: queryContext.searchString.length,
       selectionEnd: autofilledValue.length,
