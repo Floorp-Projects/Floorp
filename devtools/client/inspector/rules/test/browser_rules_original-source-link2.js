@@ -31,7 +31,18 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
   await testClickingLink(toolbox, view);
-  await checkDisplayedStylesheet(toolbox);
+  const selectedEditor = await waitForOriginalStyleSheetEditorSelection(
+    toolbox
+  );
+  const href = selectedEditor.styleSheet.href;
+  ok(
+    href.endsWith("doc_sourcemaps.scss"),
+    "selected stylesheet is correct one"
+  );
+  await selectedEditor.getSourceEditor();
+
+  const { line } = selectedEditor.sourceEditor.getCursor();
+  is(line, 3, "cursor is at correct line number in original source");
 
   info("Clearing the " + PREF + " pref");
   Services.prefs.clearUserPref(PREF);
@@ -48,7 +59,7 @@ async function testClickingLink(toolbox, view) {
   await onStyleEditorReady;
 }
 
-function checkDisplayedStylesheet(toolbox) {
+function waitForOriginalStyleSheetEditorSelection(toolbox) {
   const panel = toolbox.getCurrentPanel();
   return new Promise((resolve, reject) => {
     const maybeContinue = editor => {
@@ -56,29 +67,15 @@ function checkDisplayedStylesheet(toolbox) {
       // selecting the desired sheet.
       if (editor.styleSheet.href.endsWith("scss")) {
         info("Original source editor selected");
-        editor
-          .getSourceEditor()
-          .then(editorSelected)
-          .then(resolve, reject);
+        off();
+        resolve(editor);
       }
     };
+    const off = panel.UI.on("editor-selected", maybeContinue);
     if (panel.UI.selectedEditor) {
       maybeContinue(panel.UI.selectedEditor);
-    } else {
-      panel.UI.on("editor-selected", maybeContinue);
     }
   });
-}
-
-function editorSelected(editor) {
-  const href = editor.styleSheet.href;
-  ok(
-    href.endsWith("doc_sourcemaps.scss"),
-    "selected stylesheet is correct one"
-  );
-
-  const { line } = editor.sourceEditor.getCursor();
-  is(line, 3, "cursor is at correct line number in original source");
 }
 
 function verifyLinkText(text, view) {
