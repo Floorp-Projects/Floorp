@@ -171,39 +171,6 @@ class SharedPreferencesTest {
     }
 
     @Test
-    fun `getter returns string from shared preferences`() {
-        val holder = MockPreferencesHolder()
-        `when`(sharedPrefs.getString(eq("string"), anyString())).thenReturn("foo")
-
-        assertEquals("foo", holder.string)
-        verify(sharedPrefs).getString("string", "")
-    }
-
-    @Test
-    fun `setter applies string to shared preferences`() {
-        val holder = MockPreferencesHolder(defaultString = "foo")
-        holder.string = "bar"
-
-        verify(editor).putString("string", "bar")
-        verify(editor).apply()
-    }
-
-    @Test
-    fun `getter uses default string value`() {
-        val holderDefault = MockPreferencesHolder()
-        // Call the getter for the test
-        holderDefault.string
-
-        verify(sharedPrefs).getString("string", "")
-
-        val holderOther = MockPreferencesHolder(defaultString = "hello")
-        // Call the getter for the test
-        holderOther.string
-
-        verify(sharedPrefs).getString("string", "hello")
-    }
-
-    @Test
     fun `getter returns string set from shared preferences`() {
         val holder = MockPreferencesHolder()
         `when`(sharedPrefs.getStringSet(eq("string_set"), any())).thenReturn(setOf("foo"))

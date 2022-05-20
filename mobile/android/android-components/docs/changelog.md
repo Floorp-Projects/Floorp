@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **support-ktx**
+  * 🌟️ Add support for optionally persisting the default value when `stringPreference` is used to read a string from SharedPreferences. [issue #12207](https://github.com/mozilla-mobile/android-components/issues/12207).
+
 * **service-pocket**
   * 🌟️ Add support for Pocket sponsored stories.
   * See component's [README](https://github.com/mozilla-mobile/android-components/blob/main/components/service/pocket/README.md) to get more info.
