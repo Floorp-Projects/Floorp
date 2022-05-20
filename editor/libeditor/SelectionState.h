@@ -272,7 +272,6 @@ class MOZ_STACK_CLASS RangeUpdater final {
     NS_WARNING_ASSERTION(mLocked, "Not locked");
     mLocked = false;
   }
-  void WillMoveNode() { mLocked = true; }
   void DidMoveNode(const nsINode& aOldParent, uint32_t aOldOffset,
                    const nsINode& aNewParent, uint32_t aNewOffset);
 
@@ -505,15 +504,15 @@ class MOZ_STACK_CLASS AutoInsertContainerSelNotify final {
 
 /**
  * Another helper class for SelectionState.  Stack based class for doing
- * Will/DidMoveNode()
+ * DidMoveNode()
  */
 
 class MOZ_STACK_CLASS AutoMoveNodeSelNotify final {
  public:
   AutoMoveNodeSelNotify() = delete;
   AutoMoveNodeSelNotify(RangeUpdater& aRangeUpdater,
-                        const EditorDOMPoint& aOldPoint,
-                        const EditorDOMPoint& aNewPoint)
+                        const EditorRawDOMPoint& aOldPoint,
+                        const EditorRawDOMPoint& aNewPoint)
       : mRangeUpdater(aRangeUpdater),
         mOldParent(*aOldPoint.GetContainer()),
         mNewParent(*aNewPoint.GetContainer()),
@@ -521,27 +520,18 @@ class MOZ_STACK_CLASS AutoMoveNodeSelNotify final {
         mNewOffset(aNewPoint.Offset()) {
     MOZ_ASSERT(aOldPoint.IsSet());
     MOZ_ASSERT(aNewPoint.IsSet());
-    mRangeUpdater.WillMoveNode();
   }
 
   ~AutoMoveNodeSelNotify() {
     mRangeUpdater.DidMoveNode(mOldParent, mOldOffset, mNewParent, mNewOffset);
   }
 
-  template <typename EditorDOMPointType>
-  EditorDOMPointType ComputeInsertionPoint() const {
-    if (&mOldParent == &mNewParent && mOldOffset < mNewOffset) {
-      return EditorDOMPointType(&mNewParent, mNewOffset - 1);
-    }
-    return EditorDOMPointType(&mNewParent, mNewOffset);
-  }
-
  private:
   RangeUpdater& mRangeUpdater;
   nsINode& mOldParent;
   nsINode& mNewParent;
-  uint32_t mOldOffset;
-  uint32_t mNewOffset;
+  const uint32_t mOldOffset;
+  const uint32_t mNewOffset;
 };
 
 }  // namespace mozilla
