@@ -460,10 +460,11 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         moveNodeResult.isOk(),
         "HTMLEditor::MoveChildrenWithTransaction() failed, but ignored");
     if (moveNodeResult.isOk()) {
-      // When MoveNodeResult starts to store caret point, here does not do
-      // nothing.
+      // We don't need to update selection here because of dontChangeMySelection
+      // above.
       moveNodeResult.IgnoreCaretPointSuggestion();
       ret |= moveNodeResult;
+
 #ifdef DEBUG
       MOZ_ASSERT(!rightBlockHasContent.isErr());
       if (rightBlockHasContent.inspect()) {
