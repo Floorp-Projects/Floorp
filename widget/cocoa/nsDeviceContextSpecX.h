@@ -44,7 +44,6 @@ class nsDeviceContextSpecX : public nsIDeviceContextSpec {
 #ifdef MOZ_ENABLE_SKIA_PDF
   // file "print" output generated if printing via PDF
   nsCOMPtr<nsIFile> mTempFile;
-  bool mPrintViaSkPDF = false;
 #endif
 };
 
