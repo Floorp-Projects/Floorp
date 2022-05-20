@@ -59,25 +59,19 @@ class nsIDeviceContextSpec : public nsISupports {
   }
 
   /**
-   * Override to return something other than the default.
-   *
    * @return DPI for printing.
    */
-  virtual float GetDPI() { return mozilla::StaticPrefs::print_default_dpi(); }
+  float GetDPI() { return mozilla::StaticPrefs::print_default_dpi(); }
 
   /**
-   * Override to return something other than the default.
-   *
    * @return the printing scale to be applied to the context for printing.
    */
-  virtual float GetPrintingScale();
+  float GetPrintingScale();
 
   /**
-   * Override to return something other than the default.
-   *
    * @return the point to translate the context to for printing.
    */
-  virtual gfxPoint GetPrintingTranslate();
+  gfxPoint GetPrintingTranslate();
 
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
