@@ -23,6 +23,7 @@
 #include "vm/ShapeZone.h"
 #include "vm/Watchtower.h"
 
+#include "gc/Zone-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
