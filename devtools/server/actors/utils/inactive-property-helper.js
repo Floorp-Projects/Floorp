@@ -47,6 +47,32 @@ const VISITED_INVALID_PROPERTIES = allCssPropertiesExcept([
   "text-emphasis-color",
 ]);
 
+// Set of node names which are always treated as replaced elements:
+const REPLACED_ELEMENTS_NAMES = new Set([
+  "audio",
+  "br",
+  "button",
+  "canvas",
+  "embed",
+  "hr",
+  "iframe",
+  // Inputs are generally replaced elements. E.g. checkboxes and radios are replaced
+  // unless they have `appearance: none`. However unconditionally treating them
+  // as replaced is enough for our purpose here, and avoids extra complexity that
+  // will likely not be necessary in most cases.
+  "input",
+  "math",
+  "object",
+  "picture",
+  // Select is a replaced element if it has `size<=1` or no size specified, but
+  // unconditionally treating it as replaced is enough for our purpose here, and
+  // avoids extra complexity that will likely not be necessary in most cases.
+  "select",
+  "svg",
+  "textarea",
+  "video",
+]);
+
 class InactivePropertyHelper {
   /**
    * A list of rules for when CSS properties have no effect.
@@ -837,39 +863,12 @@ class InactivePropertyHelper {
    * elements.
    */
   get replaced() {
-    // The <applet> element was removed in Gecko 56 so we can ignore them.
-    // These are always treated as replaced elements:
-    if (
-      this.nodeNameOneOf([
-        "audio",
-        "br",
-        "button",
-        "canvas",
-        "embed",
-        "hr",
-        "iframe",
-        // Inputs are generally replaced elements. E.g. checkboxes and radios are replaced
-        // unless they have `appearance: none`. However unconditionally treating them
-        // as replaced is enough for our purpose here, and avoids extra complexity that
-        // will likely not be necessary in most cases.
-        "input",
-        "math",
-        "object",
-        "picture",
-        // Select is a replaced element if it has `size<=1` or no size specified, but
-        // unconditionally treating it as replaced is enough for our purpose here, and
-        // avoids extra complexity that will likely not be necessary in most cases.
-        "select",
-        "svg",
-        "textarea",
-        "video",
-      ])
-    ) {
+    if (REPLACED_ELEMENTS_NAMES.has(this.localName)) {
       return true;
     }
 
     // img tags are replaced elements only when the image has finished loading.
-    if (this.nodeName === "img" && this.node.complete) {
+    if (this.localName === "img" && this.node.complete) {
       return true;
     }
 
@@ -877,12 +876,12 @@ class InactivePropertyHelper {
   }
 
   /**
-   * Return the current node's nodeName.
+   * Return the current node's localName.
    *
    * @returns {String}
    */
-  get nodeName() {
-    return this.node.nodeName ? this.node.nodeName.toLowerCase() : null;
+  get localName() {
+    return this.node.localName;
   }
 
   /**
@@ -897,17 +896,6 @@ class InactivePropertyHelper {
    */
   get isSvg() {
     return this.node.namespaceURI === "http://www.w3.org/2000/svg";
-  }
-
-  /**
-   * Check if the current node's nodeName matches a value inside the value array.
-   *
-   * @param {Array} values
-   *        Array of values to compare against.
-   * @returns {Boolean}
-   */
-  nodeNameOneOf(values) {
-    return values.includes(this.nodeName);
   }
 
   /**
