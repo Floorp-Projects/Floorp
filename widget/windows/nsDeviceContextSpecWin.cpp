@@ -334,38 +334,6 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
   return nullptr;
 }
 
-float nsDeviceContextSpecWin::GetPrintingScale() {
-  MOZ_ASSERT(mPrintSettings);
-  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF
-#ifdef MOZ_ENABLE_SKIA_PDF
-      || mPrintViaSkPDF
-#endif
-  ) {
-    return nsIDeviceContextSpec::GetPrintingScale();
-  }
-
-  // The print settings will have the resolution stored from the real device.
-  //
-  // FIXME: Shouldn't we use this in GetDPI then instead of hard-coding 144.0?
-  int32_t resolution;
-  mPrintSettings->GetResolution(&resolution);
-  return float(resolution) / GetDPI();
-}
-
-gfxPoint nsDeviceContextSpecWin::GetPrintingTranslate() {
-  // The underlying surface on windows is the size of the printable region. When
-  // the region is smaller than the actual paper size the (0, 0) coordinate
-  // refers top-left of that unwritable region. To instead have (0, 0) become
-  // the top-left of the actual paper, translate it's coordinate system by the
-  // unprintable region's width.
-  double marginTop, marginLeft;
-  mPrintSettings->GetUnwriteableMarginTop(&marginTop);
-  mPrintSettings->GetUnwriteableMarginLeft(&marginLeft);
-  int32_t resolution;
-  mPrintSettings->GetResolution(&resolution);
-  return gfxPoint(-marginLeft * resolution, -marginTop * resolution);
-}
-
 //----------------------------------------------------------------------------------
 void nsDeviceContextSpecWin::SetDeviceName(const nsAString& aDeviceName) {
   mDeviceName = aDeviceName;
