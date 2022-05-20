@@ -23,11 +23,11 @@
      %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
     <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">თქვენს მონაცემებთან წვდომა, %1$d სხვა მისამართზე</string>
     <!-- Description for tabs add-on permission. -->
-    <string name="mozac_feature_addons_permissions_tabs_description">ბრაუზერის ჩანართებზე წვდომა</string>
+    <string name="mozac_feature_addons_permissions_tabs_description">ბრაუზერის ჩანართებთან წვდომა</string>
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">განუსაზღვრელი მოცულობის მონაცემების შენახვა დისკზე</string>
     <!-- Description for navigation permission. -->
-    <string name="mozac_feature_addons_permissions_web_navigation_description">გვერდების მონახულებისას, ბრაუზერის მოქმედებებზე წვდომა</string>
+    <string name="mozac_feature_addons_permissions_web_navigation_description">გვერდების მონახულებისას, ბრაუზერის მოქმედებებთან წვდომა</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">სანიშნების ნახვა და შეცვლა</string>
     <!-- Description for browser_setting permission. -->
@@ -45,9 +45,9 @@
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">ტექსტის წაკითხვა ყველა გახსნილი ჩანართიდან</string>
     <!-- Description for geolocation permission. -->
-    <string name="mozac_feature_addons_permissions_geolocation_description">მდებარეობის მონაცემებზე წვდომა</string>
+    <string name="mozac_feature_addons_permissions_geolocation_description">მდებარეობის მონაცემებთან წვდომა</string>
     <!-- Description for history permission. -->
-    <string name="mozac_feature_addons_permissions_history_description">მონახულებული გვერდების ისტორიაზე წვდომა</string>
+    <string name="mozac_feature_addons_permissions_history_description">მონახულებული გვერდების ისტორიასთან წვდომა</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">გაფართოების მოხმარების შესახებ მონაცემების შეგროვება და თემების მართვა</string>
     <!-- Description for native_messaging permission. -->
@@ -63,7 +63,7 @@
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">ბრაუზერის ჩანართების დამალვა და გამოჩენა</string>
     <!-- Description for top_sites permission. -->
-    <string name="mozac_feature_addons_permissions_top_sites_description">მონახულებული გვერდების ისტორიაზე წვდომა</string>
+    <string name="mozac_feature_addons_permissions_top_sites_description">მონახულებული გვერდების ისტორიასთან წვდომა</string>
     <!-- Description for devtools permission. -->
     <string name="mozac_feature_addons_permissions_devtools_description">შემმუშავებლის ხელსაწყოების გამოყენება, გახსნილ ჩანართებზე თქვენს მონაცემებთან წვდომისთვის</string>
     <!-- The version on of add-on. -->
