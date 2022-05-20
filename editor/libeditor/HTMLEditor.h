@@ -780,8 +780,10 @@ class HTMLEditor final : public EditorBase,
    * automatically.
    *
    * @param aElement            Block element to be removed.
+   * @return                    If succeeded, returns a suggesting point to put
+   *                            caret.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   RemoveBlockContainerWithTransaction(Element& aElement);
 
   Element* GetEditorRoot() const final;

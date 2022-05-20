@@ -4336,7 +4336,8 @@ nsresult HTMLEditor::SetSelectionAtDocumentStart() {
  * Remove aNode, reparenting any children into the parent of aNode.  In
  * addition, insert any br's needed to preserve identity of removed block.
  */
-nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
+Result<EditorDOMPoint, nsresult>
+HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Two possibilities: the container could be empty of editable content.  If
@@ -4367,7 +4368,7 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
         if (insertBRElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-          return insertBRElementResult.unwrapErr();
+          return Err(insertBRElementResult.unwrapErr());
         }
         insertBRElementResult.MoveCaretPointTo(
             pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
@@ -4393,7 +4394,7 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
             if (insertBRElementResult.isErr()) {
               NS_WARNING(
                   "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-              return insertBRElementResult.unwrapErr();
+              return Err(insertBRElementResult.unwrapErr());
             }
             insertBRElementResult.MoveCaretPointTo(
                 pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
@@ -4421,7 +4422,7 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
           if (insertBRElementResult.isErr()) {
             NS_WARNING(
                 "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-            return insertBRElementResult.unwrapErr();
+            return Err(insertBRElementResult.unwrapErr());
           }
           insertBRElementResult.MoveCaretPointTo(
               pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
@@ -4436,19 +4437,13 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
       RemoveContainerWithTransaction(aElement);
   if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
     NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-    return unwrapBlockElementResult.inspectErr();
+    return unwrapBlockElementResult;
   }
   if (AllowsTransactionsToChangeSelection() &&
       unwrapBlockElementResult.inspect().IsSet()) {
     pointToPutCaret = unwrapBlockElementResult.unwrap();
   }
-  if (!pointToPutCaret.IsSet()) {
-    return NS_OK;
-  }
-  nsresult rv = CollapseSelectionTo(pointToPutCaret);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return rv;
+  return pointToPutCaret;  // May be unset
 }
 
 SplitNodeResult HTMLEditor::SplitNodeWithTransaction(

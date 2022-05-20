@@ -3335,15 +3335,22 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
           NS_WARNING("HTMLEditor::ChangeListElementType() failed");
           return EditActionResult(convertListTypeResult.unwrapErr());
         }
-        rv = RemoveBlockContainerWithTransaction(
-            MOZ_KnownLive(*convertListTypeResult.GetNewNode()));
-        if (NS_WARN_IF(Destroyed())) {
-          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (NS_FAILED(rv)) {
+        const Result<EditorDOMPoint, nsresult> unwrapNewListElementResult =
+            RemoveBlockContainerWithTransaction(
+                MOZ_KnownLive(*convertListTypeResult.GetNewNode()));
+        if (MOZ_UNLIKELY(unwrapNewListElementResult.isErr())) {
           NS_WARNING(
               "HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-          return EditActionResult(rv);
+          return EditActionResult(unwrapNewListElementResult.inspectErr());
+        }
+        const EditorDOMPoint& pointToPutCaret =
+            unwrapNewListElementResult.inspect();
+        if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
+          nsresult rv = CollapseSelectionTo(pointToPutCaret);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+            return EditActionResult(rv);
+          }
         }
         prevListItem = nullptr;
         continue;
@@ -4979,14 +4986,22 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
         lastContentToBeOutdented = nullptr;
         indentedParentIndentedWith = BlockIndentedWith::HTML;
       }
-      nsresult rv = RemoveBlockContainerWithTransaction(
-          MOZ_KnownLive(*content->AsElement()));
-      if (NS_WARN_IF(Destroyed())) {
-        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_FAILED(rv)) {
+      const Result<EditorDOMPoint, nsresult> unwrapBlockquoteElementResult =
+          RemoveBlockContainerWithTransaction(
+              MOZ_KnownLive(*content->AsElement()));
+      if (MOZ_UNLIKELY(unwrapBlockquoteElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-        return SplitRangeOffFromNodeResult(rv);
+        return SplitRangeOffFromNodeResult(
+            unwrapBlockquoteElementResult.inspectErr());
+      }
+      const EditorDOMPoint& pointToPutCaret =
+          unwrapBlockquoteElementResult.inspect();
+      if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
+        nsresult rv = CollapseSelectionTo(pointToPutCaret);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+          return SplitRangeOffFromNodeResult(rv);
+        }
       }
       continue;
     }
@@ -5157,19 +5172,27 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
     //     we create invalid tree.  E.g., `<ul>` may have `<dd>` as its
     //     list item element.
     if (HTMLEditUtils::IsAnyListElement(atContent.GetContainer())) {
-      // Move node out of list
-      if (HTMLEditUtils::IsAnyListElement(content)) {
-        // Just unwrap this sublist
-        nsresult rv = RemoveBlockContainerWithTransaction(
-            MOZ_KnownLive(*content->AsElement()));
-        if (NS_WARN_IF(Destroyed())) {
-          return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (NS_FAILED(rv)) {
-          NS_WARNING(
-              "HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-          return SplitRangeOffFromNodeResult(rv);
-        }
+      if (!HTMLEditUtils::IsAnyListElement(content)) {
+        continue;
+      }
+      // Just unwrap this sublist
+      const Result<EditorDOMPoint, nsresult> unwrapSubListElementResult =
+          RemoveBlockContainerWithTransaction(
+              MOZ_KnownLive(*content->AsElement()));
+      if (MOZ_UNLIKELY(unwrapSubListElementResult.isErr())) {
+        NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
+        return SplitRangeOffFromNodeResult(
+            unwrapSubListElementResult.inspectErr());
+      }
+      const EditorDOMPoint& pointToPutCaret =
+          unwrapSubListElementResult.inspect();
+      if (!AllowsTransactionsToChangeSelection() || !pointToPutCaret.IsSet()) {
+        continue;
+      }
+      nsresult rv = CollapseSelectionTo(pointToPutCaret);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return SplitRangeOffFromNodeResult(rv);
       }
       continue;
     }
@@ -5236,13 +5259,21 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
         }
       }
       // Delete the now-empty list
-      nsresult rv = RemoveBlockContainerWithTransaction(
-          MOZ_KnownLive(*content->AsElement()));
-      if (NS_WARN_IF(Destroyed())) {
-        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_FAILED(rv)) {
+      const Result<EditorDOMPoint, nsresult> unwrapListElementResult =
+          RemoveBlockContainerWithTransaction(
+              MOZ_KnownLive(*content->AsElement()));
+      if (MOZ_UNLIKELY(unwrapListElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
+        return SplitRangeOffFromNodeResult(
+            unwrapListElementResult.inspectErr());
+      }
+      const EditorDOMPoint& pointToPutCaret = unwrapListElementResult.inspect();
+      if (!AllowsTransactionsToChangeSelection() || !pointToPutCaret.IsSet()) {
+        continue;
+      }
+      nsresult rv = CollapseSelectionTo(pointToPutCaret);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
         return SplitRangeOffFromNodeResult(rv);
       }
       continue;
@@ -5293,13 +5324,18 @@ HTMLEditor::SplitRangeOffFromBlockAndRemoveMiddleContainer(
   NS_WARNING_ASSERTION(
       splitResult.isOk(),
       "HTMLEditor::SplitRangeOffFromBlock() failed, but might be ignored");
-  nsresult rv = RemoveBlockContainerWithTransaction(aBlockElement);
-  if (NS_WARN_IF(Destroyed())) {
-    return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (NS_FAILED(rv)) {
+  const Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
+      RemoveBlockContainerWithTransaction(aBlockElement);
+  if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
     NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-    return SplitRangeOffFromNodeResult(rv);
+    return SplitRangeOffFromNodeResult(unwrapBlockElementResult.inspectErr());
+  }
+  const EditorDOMPoint& pointToPutCaret = unwrapBlockElementResult.inspect();
+  if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    if (NS_FAILED(rv)) {
+      return SplitRangeOffFromNodeResult(rv);
+    }
   }
   return SplitRangeOffFromNodeResult(splitResult.GetLeftContent(), nullptr,
                                      splitResult.GetRightContent());
@@ -5384,14 +5420,20 @@ SplitRangeOffFromNodeResult HTMLEditor::OutdentPartOfBlock(
       "HTMLEditor::SplitRangeOffFromBlock() failed, but might be ignored");
 
   if (aBlockIndentedWith == BlockIndentedWith::HTML) {
-    nsresult rv = RemoveBlockContainerWithTransaction(
-        MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()));
-    if (NS_WARN_IF(Destroyed())) {
-      return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (NS_FAILED(rv)) {
+    Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
+        RemoveBlockContainerWithTransaction(
+            MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()));
+    if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
       NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-      return SplitRangeOffFromNodeResult(rv);
+      return SplitRangeOffFromNodeResult(unwrapBlockElementResult.inspectErr());
+    }
+    const EditorDOMPoint& pointToPutCaret = unwrapBlockElementResult.inspect();
+    if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
+      nsresult rv = CollapseSelectionTo(pointToPutCaret);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return SplitRangeOffFromNodeResult(rv);
+      }
     }
     return SplitRangeOffFromNodeResult(splitResult.GetLeftContent(), nullptr,
                                        splitResult.GetRightContent());
@@ -8309,13 +8351,20 @@ nsresult HTMLEditor::RemoveBlockContainerElements(
         continue;
       }
       // Remove current block
-      nsresult rv = RemoveBlockContainerWithTransaction(
-          MOZ_KnownLive(*content->AsElement()));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_FAILED(rv)) {
+      const Result<EditorDOMPoint, nsresult> unwrapFormatBlockResult =
+          RemoveBlockContainerWithTransaction(
+              MOZ_KnownLive(*content->AsElement()));
+      if (MOZ_UNLIKELY(unwrapFormatBlockResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
+        return unwrapFormatBlockResult.inspectErr();
+      }
+      const EditorDOMPoint& pointToPutCaret = unwrapFormatBlockResult.inspect();
+      if (!AllowsTransactionsToChangeSelection() || !pointToPutCaret.IsSet()) {
+        continue;
+      }
+      nsresult rv = CollapseSelectionTo(pointToPutCaret);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
         return rv;
       }
       continue;
@@ -9762,23 +9811,17 @@ nsresult HTMLEditor::LiftUpListItemElement(
                          "Failed to advance offset to right list node");
   }
 
-  const MoveNodeResult moveListItemElementResult =
+  EditorDOMPoint pointToPutCaret;
+  MoveNodeResult moveListItemElementResult =
       MoveNodeWithTransaction(aListItemElement, pointToInsertListItem);
   if (moveListItemElementResult.isErr()) {
     NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
     return moveListItemElementResult.unwrapErr();
   }
-  nsresult rv = moveListItemElementResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
-    return rv;
-  }
-  NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+  moveListItemElementResult.MoveCaretPointTo(
+      pointToPutCaret, *this,
+      {SuggestCaret::OnlyIfHasSuggestion,
+       SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
 
   // Unwrap list item contents if they are no longer in a list
   // XXX If the parent list element is a child of another list element
@@ -9790,22 +9833,43 @@ nsresult HTMLEditor::LiftUpListItemElement(
   //     current parent is <dl>, there is same issue.
   if (!HTMLEditUtils::IsAnyListElement(pointToInsertListItem.GetContainer()) &&
       HTMLEditUtils::IsListItem(&aListItemElement)) {
-    nsresult rv = RemoveBlockContainerWithTransaction(aListItemElement);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    Result<EditorDOMPoint, nsresult> unwrapOrphanListItemElementResult =
+        RemoveBlockContainerWithTransaction(aListItemElement);
+    if (MOZ_UNLIKELY(unwrapOrphanListItemElementResult.isErr())) {
+      NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
+      return unwrapOrphanListItemElementResult.unwrapErr();
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        unwrapOrphanListItemElementResult.inspect().IsSet()) {
+      pointToPutCaret = unwrapOrphanListItemElementResult.unwrap();
+    }
+    if (!pointToPutCaret.IsSet()) {
+      return NS_OK;
+    }
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "EditorBase::CollapseSelectionTo() failed");
+    return rv;
+  }
+
+  if (pointToPutCaret.IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      return rv;
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-    return rv;
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
   }
+
   if (aLiftUpFromAllParentListElements == LiftUpFromAllParentListElements::No) {
     return NS_OK;
   }
   // XXX If aListItemElement is moved to unexpected element by mutation event
   //     listener, shouldn't we stop calling this?
-  rv = LiftUpListItemElement(aListItemElement,
-                             LiftUpFromAllParentListElements::Yes);
+  nsresult rv = LiftUpListItemElement(aListItemElement,
+                                      LiftUpFromAllParentListElements::Yes);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::LiftUpListItemElement("
                        "LiftUpFromAllParentListElements::Yes) failed");
@@ -9868,13 +9932,19 @@ nsresult HTMLEditor::DestroyListStructureRecursively(Element& aListElement) {
   }
 
   // Delete the now-empty list
-  nsresult rv = RemoveBlockContainerWithTransaction(aListElement);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  const Result<EditorDOMPoint, nsresult> unwrapListElementResult =
+      RemoveBlockContainerWithTransaction(aListElement);
+  if (MOZ_UNLIKELY(unwrapListElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
+    return unwrapListElementResult.inspectErr();
   }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::RemoveBlockContainerWithTransaction() failed");
+  const EditorDOMPoint& pointToPutCaret = unwrapListElementResult.inspect();
+  if (!AllowsTransactionsToChangeSelection() || !pointToPutCaret.IsSet()) {
+    return NS_OK;
+  }
+  nsresult rv = CollapseSelectionTo(pointToPutCaret);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
