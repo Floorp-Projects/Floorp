@@ -1317,8 +1317,15 @@ class AccessibilityTest : BaseSessionTest() {
 
         val rootNode = createNodeInfo(View.NO_ID)
         assertThat("Document has 3 children", rootNode.childCount, equalTo(3))
+        var rootBounds = Rect()
+        rootNode.getBoundsInScreen(rootBounds)
+        assertThat("Root node bounds are not empty", rootBounds.isEmpty, equalTo(false))
 
+        var labelBounds = Rect()
         val labelNode = createNodeInfo(rootNode.getChildId(0))
+        labelNode.getBoundsInScreen(labelBounds)
+
+        assertThat("Label bounds are in parent", rootBounds.contains(labelBounds), equalTo(true))
         assertThat("First node is a label", labelNode.className.toString(), equalTo("android.view.View"))
         assertThat("Label has text", labelNode.text.toString(), equalTo("Name:"))
 
@@ -1398,6 +1405,9 @@ class AccessibilityTest : BaseSessionTest() {
 
         val rootNode = createNodeInfo(View.NO_ID)
         assertThat("Document has 2 children", rootNode.childCount, equalTo(2))
+        var rootBounds = Rect()
+        rootNode.getBoundsInScreen(rootBounds)
+        assertThat("Root bounds are not empty", rootBounds.isEmpty, equalTo(false))
 
         val labelNode = createNodeInfo(rootNode.getChildId(0))
         assertThat("First node has text", labelNode.text.toString(), equalTo("Some stuff "))
@@ -1405,15 +1415,25 @@ class AccessibilityTest : BaseSessionTest() {
         val iframeNode = createNodeInfo(rootNode.getChildId(1))
         assertThat("iframe has vieIdwResourceName of 'iframe'", iframeNode.viewIdResourceName, equalTo("iframe"))
         assertThat("iframe has 1 child", iframeNode.childCount, equalTo(1))
+        var iframeBounds = Rect()
+        iframeNode.getBoundsInScreen(iframeBounds)
+        assertThat("iframe bounds in root bounds", rootBounds.contains(iframeBounds), equalTo(true))
 
         val innerDocNode = createNodeInfo(iframeNode.getChildId(0))
         assertThat("Inner doc has one child", innerDocNode.childCount, equalTo(1))
+        var innerDocBounds = Rect()
+        innerDocNode.getBoundsInScreen(innerDocBounds)
+        assertThat("iframe bounds match inner doc bounds", iframeBounds.contains(innerDocBounds), equalTo(true))
 
         val section = createNodeInfo(innerDocNode.getChildId(0))
         assertThat("section has one child", innerDocNode.childCount, equalTo(1))
 
         val node = createNodeInfo(section.getChildId(0))
         assertThat("Text node has text", node.text as String, equalTo("Hello, world!"))
+        var nodeBounds = Rect()
+        node.getBoundsInScreen(nodeBounds)
+        assertThat("inner node in inner doc bounds", innerDocBounds.contains(nodeBounds), equalTo(true))
+
     }
 
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
