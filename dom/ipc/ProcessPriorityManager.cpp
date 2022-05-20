@@ -513,7 +513,7 @@ static nsCString BCToString(dom::CanonicalBrowsingContext* aBC) {
   nsCOMPtr<nsIURI> uri = aBC->GetCurrentURI();
   return nsPrintfCString("id=%" PRIu64 " uri=%s active=%d pactive=%d",
                          aBC->Id(),
-                         uri ? uri->GetSpecOrDefault().get() : nullptr,
+                         uri ? uri->GetSpecOrDefault().get() : "(no uri)",
                          aBC->IsActive(), aBC->IsPriorityActive());
 }
 
