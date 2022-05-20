@@ -509,9 +509,19 @@ void ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
   }
 }
 
+static nsCString BCToString(dom::CanonicalBrowsingContext* aBC) {
+  nsCOMPtr<nsIURI> uri = aBC->GetCurrentURI();
+  return nsPrintfCString("id=%" PRIu64 " uri=%s active=%d pactive=%d",
+                         aBC->Id(),
+                         uri ? uri->GetSpecOrDefault().get() : nullptr,
+                         aBC->IsActive(), aBC->IsPriorityActive());
+}
+
 void ProcessPriorityManagerImpl::BrowserPriorityChanged(
     dom::CanonicalBrowsingContext* aBC, bool aPriority) {
   MOZ_ASSERT(aBC->IsTop());
+
+  LOG("BrowserPriorityChanged(%s, %d)\n", BCToString(aBC).get(), aPriority);
 
   bool alreadyActive = aBC->IsPriorityActive();
   if (alreadyActive == aPriority) {
@@ -525,6 +535,8 @@ void ProcessPriorityManagerImpl::BrowserPriorityChanged(
 
   aBC->PreOrderWalk([&](BrowsingContext* aContext) {
     CanonicalBrowsingContext* canonical = aContext->Canonical();
+    LOG("PreOrderWalk for %p: %p -> %p, %p\n", aBC, canonical,
+        canonical->GetContentParent(), canonical->GetBrowserParent());
     if (ContentParent* cp = canonical->GetContentParent()) {
       if (RefPtr pppm = GetParticularProcessPriorityManager(cp)) {
         if (auto* bp = canonical->GetBrowserParent()) {
@@ -537,6 +549,8 @@ void ProcessPriorityManagerImpl::BrowserPriorityChanged(
 
 void ProcessPriorityManagerImpl::BrowserPriorityChanged(
     BrowserParent* aBrowserParent, bool aPriority) {
+  LOG("BrowserPriorityChanged(bp=%p, %d)\n", aBrowserParent, aPriority);
+
   if (RefPtr pppm =
           GetParticularProcessPriorityManager(aBrowserParent->Manager())) {
     Telemetry::ScalarAdd(
@@ -766,12 +780,13 @@ void ParticularProcessPriorityManager::SetPriorityNow(
     return;
   }
 
+  LOGP("Changing priority from %s to %s (cp=%p).",
+       ProcessPriorityToString(mPriority), ProcessPriorityToString(aPriority),
+       mContentParent);
+
   if (!mContentParent || mPriority == aPriority) {
     return;
   }
-
-  LOGP("Changing priority from %s to %s.", ProcessPriorityToString(mPriority),
-       ProcessPriorityToString(aPriority));
 
   PROFILER_MARKER(
       "Subprocess Priority", OTHER,
