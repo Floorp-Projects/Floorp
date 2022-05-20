@@ -147,8 +147,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetNumCopies(&data->numCopies());
   aSettings->GetNumPagesPerSheet(&data->numPagesPerSheet());
 
-  aSettings->GetPrinterName(data->printerName());
-
   data->outputDestination() = aSettings->GetOutputDestination();
 
   data->outputFormat() = aSettings->GetOutputFormat();
@@ -228,7 +226,6 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
 
   settings->SetOutputDestination(
       nsIPrintSettings::OutputDestinationType(data.outputDestination()));
-  settings->SetPrinterName(data.printerName());
   // Output stream intentionally unset, child processes shouldn't care about it.
 
   settings->SetOutputFormat(data.outputFormat());
