@@ -1332,8 +1332,6 @@ void ContentChild::InitXPCOM(
     return;
   }
 
-  LSObject::Initialize();
-
   ClientManager::Startup();
 
   // RemoteWorkerService will be initialized in RecvRemoteType, to avoid to
