@@ -386,7 +386,7 @@ impl HitTester {
                 point_in_layer = scroll_node
                     .world_content_transform
                     .inverse()
-                    .and_then(|inverted| inverted.transform_point2d(test.point));
+                    .and_then(|inverted| inverted.project_point2d(test.point));
                 current_spatial_node_index = item.spatial_node_index;
             }
 
@@ -414,7 +414,7 @@ impl HitTester {
                     .world_content_transform;
                 let transformed_point = match transform
                     .inverse()
-                    .and_then(|inverted| inverted.transform_point2d(test.point))
+                    .and_then(|inverted| inverted.project_point2d(test.point))
                 {
                     Some(point) => point,
                     // XXX This `return true` is a bit sketchy, but matches

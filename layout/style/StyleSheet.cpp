@@ -317,9 +317,15 @@ void StyleSheet::ApplicableStateChanged(bool aApplicable) {
     Notify(*sheet.mDocumentOrShadowRoot);
   }
 
+  if (sheet.mConstructorDocument) {
+    Notify(*sheet.mConstructorDocument);
+  }
+
   for (DocumentOrShadowRoot* adopter : sheet.mAdopters) {
     MOZ_ASSERT(adopter, "adopters should never be null");
-    Notify(*adopter);
+    if (adopter != sheet.mConstructorDocument) {
+      Notify(*adopter);
+    }
   }
 }
 

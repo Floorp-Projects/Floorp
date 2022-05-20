@@ -375,6 +375,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       href: this.href,
       nodeHref: docHref,
       disabled: this.rawSheet.disabled,
+      constructed: this.rawSheet.constructed,
       title: this.rawSheet.title,
       system: CssLogic.isAgentStylesheet(this.rawSheet),
       styleSheetIndex: this.styleSheetIndex,

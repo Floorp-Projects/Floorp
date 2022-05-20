@@ -36,8 +36,6 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS,
                   bool aIsPrintPreview) override;
 
-  float GetDPI() final;
-
   float GetPrintingScale() final;
   gfxPoint GetPrintingTranslate() final;
 

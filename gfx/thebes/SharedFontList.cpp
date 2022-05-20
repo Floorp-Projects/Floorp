@@ -908,9 +908,8 @@ void FontList::SetFamilyNames(nsTArray<Family::InitData>& aFamilies) {
   // that has the same name as a system-installed one); in this case we keep
   // the bundled one as it will always be exposed.
   if (count > 1) {
-    const nsCString* prevKey = &aFamilies[0].mKey;
     for (size_t i = 1; i < count; ++i) {
-      if (aFamilies[i].mKey.Equals(*prevKey)) {
+      if (aFamilies[i].mKey.Equals(aFamilies[i - 1].mKey)) {
         // Decide whether to discard the current entry or the preceding one
         size_t discard =
             aFamilies[i].mBundled && !aFamilies[i - 1].mBundled ? i - 1 : i;
