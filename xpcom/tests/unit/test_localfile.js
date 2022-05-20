@@ -183,27 +183,3 @@ add_task(
     file.remove(true);
   }
 );
-
-add_task(function test_file_append_parent() {
-  const SEPARATOR = AppConstants.platform === "win" ? "\\" : "/";
-
-  const file = do_get_profile();
-
-  Assert.throws(
-    () => file.append(".."),
-    /NS_ERROR_FILE_UNRECOGNIZED_PATH/,
-    `nsLocalFile::Append("..") throws`
-  );
-
-  Assert.throws(
-    () => file.appendRelativePath(".."),
-    /NS_ERROR_FILE_UNRECOGNIZED_PATH/,
-    `nsLocalFile::AppendRelativePath("..") throws`
-  );
-
-  Assert.throws(
-    () => file.appendRelativePath(`foo${SEPARATOR}..${SEPARATOR}baz`),
-    /NS_ERROR_FILE_UNRECOGNIZED_PATH/,
-    `nsLocalFile::AppendRelativePath(path) fails when path contains ".."`
-  );
-});
