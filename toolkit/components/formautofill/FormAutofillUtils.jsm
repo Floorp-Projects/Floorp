@@ -1236,37 +1236,38 @@ const LabelUtils = {
   },
 
   generateLabelMap(doc) {
-    this._mappedLabels = new Map();
-    this._unmappedLabelControls = [];
-    this._labelStrings = new WeakMap();
+    let mappedLabels = new Map();
+    let unmappedLabels = [];
 
     for (let label of doc.querySelectorAll("label")) {
       let id = label.htmlFor;
-      let control;
       if (!id) {
-        control = label.control;
+        let control = label.control;
         if (!control) {
           continue;
         }
         id = control.id;
       }
       if (id) {
-        let labels = this._mappedLabels.get(id);
+        let labels = mappedLabels.get(id);
         if (labels) {
           labels.push(label);
         } else {
-          this._mappedLabels.set(id, [label]);
+          mappedLabels.set(id, [label]);
         }
       } else {
-        // control must be non-empty here
-        this._unmappedLabelControls.push(control);
+        unmappedLabels.push(label);
       }
     }
+
+    this._mappedLabels = mappedLabels;
+    this._unmappedLabels = unmappedLabels;
+    this._labelStrings = new WeakMap();
   },
 
   clearLabelMap() {
     this._mappedLabels = null;
-    this._unmappedLabelControls = null;
+    this._unmappedLabels = null;
     this._labelStrings = null;
   },
 
@@ -1277,7 +1278,7 @@ const LabelUtils = {
 
     let id = element.id;
     if (!id) {
-      return this._unmappedLabelControls.filter(control => control == element);
+      return this._unmappedLabels.filter(label => label.control == element);
     }
     return this._mappedLabels.get(id) || [];
   },
