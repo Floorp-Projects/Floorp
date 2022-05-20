@@ -256,6 +256,19 @@ already_AddRefed<nsIEventTarget> imgRequestProxy::GetEventTarget() const {
   return target.forget();
 }
 
+bool imgRequestProxy::HasDecodedPixels() {
+  if (IsValidating()) {
+    return false;
+  }
+
+  RefPtr<Image> image = GetImage();
+  if (image) {
+    return image->HasDecodedPixels();
+  }
+
+  return false;
+}
+
 nsresult imgRequestProxy::DispatchWithTargetIfAvailable(
     already_AddRefed<nsIRunnable> aEvent) {
   LOG_FUNC(gImgLog, "imgRequestProxy::DispatchWithTargetIfAvailable");
