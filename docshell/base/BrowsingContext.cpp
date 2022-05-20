@@ -21,6 +21,7 @@
 #endif
 #include "mozilla/AppShutdown.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
@@ -2641,25 +2642,29 @@ void BrowsingContext::DidSet(FieldIndex<IDX_ExplicitActive>,
   if (IsTop()) {
     Group()->UpdateToplevelsSuspendedIfNeeded();
 
+    if (XRE_IsParentProcess()) {
+      auto* bc = Canonical();
+      if (BrowserParent* bp = bc->GetBrowserParent()) {
+        bp->RecomputeProcessPriority();
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
-    if (XRE_IsParentProcess() && a11y::Compatibility::IsDolphin()) {
-      // update active accessible documents on windows
-      if (BrowserParent* bp = Canonical()->GetBrowserParent()) {
-        if (a11y::DocAccessibleParent* tabDoc =
-                bp->GetTopLevelDocAccessible()) {
-          HWND window = tabDoc->GetEmulatedWindowHandle();
-          MOZ_ASSERT(window);
-          if (window) {
-            if (isActive) {
-              a11y::nsWinUtils::ShowNativeWindow(window);
-            } else {
-              a11y::nsWinUtils::HideNativeWindow(window);
+        if (a11y::Compatibility::IsDolphin()) {
+          // update active accessible documents on windows
+          if (a11y::DocAccessibleParent* tabDoc =
+                  bp->GetTopLevelDocAccessible()) {
+            HWND window = tabDoc->GetEmulatedWindowHandle();
+            MOZ_ASSERT(window);
+            if (window) {
+              if (isActive) {
+                a11y::nsWinUtils::ShowNativeWindow(window);
+              } else {
+                a11y::nsWinUtils::HideNativeWindow(window);
+              }
             }
           }
         }
+#endif
       }
     }
-#endif
   }
 
   PreOrderWalk([&](BrowsingContext* aContext) {
