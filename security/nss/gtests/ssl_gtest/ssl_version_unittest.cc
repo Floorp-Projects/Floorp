@@ -70,10 +70,8 @@ TEST_F(TlsConnectTest, TestDowngradeDetectionToTls11) {
 // Attempt to negotiate the bogus DTLS 1.1 version.
 TEST_F(DtlsConnectTest, TestDtlsVersion11) {
   MakeTlsFilter<TlsClientHelloVersionSetter>(client_, ((~0x0101) & 0xffff));
-  ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
-  // It's kind of surprising that SSL_ERROR_NO_CYPHER_OVERLAP is
-  // what is returned here, but this is deliberate in ssl3_HandleAlert().
-  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  ConnectExpectAlert(server_, kTlsAlertProtocolVersion);
+  client_->CheckErrorCode(SSL_ERROR_PROTOCOL_VERSION_ALERT);
   server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
 }
 
@@ -417,6 +415,33 @@ TEST_F(TlsConnectTest, TlsSupportedVersionsEncoding) {
   EXPECT_EQ(SSL_LIBRARY_VERSION_TLS_1_1, static_cast<int>(version));
   ASSERT_TRUE(capture->extension().Read(7, 2, &version));
   EXPECT_EQ(SSL_LIBRARY_VERSION_TLS_1_0, static_cast<int>(version));
+}
+
+/* Test that on reception of unsupported ClientHello.legacy_version the TLS 1.3
+ * server sends the correct alert.
+ *
+ * If the "supported_versions" extension is absent and the server only supports
+ * versions greater than ClientHello.legacy_version, the server MUST abort the
+ * handshake with a "protocol_version" alert [RFC8446, Appendix D.2]. */
+TEST_P(TlsConnectGenericPre13, ClientHelloUnsupportedTlsVersion) {
+  StartConnect();
+
+  if (variant_ == ssl_variant_stream) {
+    server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
+                             SSL_LIBRARY_VERSION_TLS_1_3);
+  } else {
+    server_->SetVersionRange(SSL_LIBRARY_VERSION_DTLS_1_3,
+                             SSL_LIBRARY_VERSION_DTLS_1_3);
+  }
+
+  // Try to handshake
+  client_->Handshake();
+  // Expect protocol version alert
+  server_->ExpectSendAlert(kTlsAlertProtocolVersion);
+  server_->Handshake();
+  // Digest alert at peer
+  client_->ExpectReceiveAlert(kTlsAlertProtocolVersion);
+  client_->ReadBytes();
 }
 
 INSTANTIATE_TEST_SUITE_P(

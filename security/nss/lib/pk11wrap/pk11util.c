@@ -1002,6 +1002,8 @@ SECMOD_CanDeleteInternalModule(void)
  * C_GetSlotList(flag, &data, &count) so that the array doesn't accidently
  * grow on the caller. It is permissible for the slots to increase between
  * successive calls with NULL to get the size.
+ *
+ * Caller must not hold a module list read lock.
  */
 SECStatus
 SECMOD_UpdateSlotList(SECMODModule *mod)
@@ -1344,14 +1346,27 @@ loser:
 PRBool
 SECMOD_HasRemovableSlots(SECMODModule *mod)
 {
-    int i;
     PRBool ret = PR_FALSE;
-
     if (!moduleLock) {
         PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
         return ret;
     }
     SECMOD_GetReadLock(moduleLock);
+    ret = SECMOD_LockedModuleHasRemovableSlots(mod);
+    SECMOD_ReleaseReadLock(moduleLock);
+    return ret;
+}
+
+PRBool
+SECMOD_LockedModuleHasRemovableSlots(SECMODModule *mod)
+{
+    int i;
+    PRBool ret;
+    if (mod->slotCount == 0) {
+        return PR_TRUE;
+    }
+
+    ret = PR_FALSE;
     for (i = 0; i < mod->slotCount; i++) {
         PK11SlotInfo *slot = mod->slots[i];
         /* perm modules are not inserted or removed */
@@ -1361,10 +1376,6 @@ SECMOD_HasRemovableSlots(SECMODModule *mod)
         ret = PR_TRUE;
         break;
     }
-    if (mod->slotCount == 0) {
-        ret = PR_TRUE;
-    }
-    SECMOD_ReleaseReadLock(moduleLock);
     return ret;
 }
 

@@ -1,0 +1,5 @@
+
+1 Added function:
+
+  'function PRStatus PR_GetPrefLoopbackAddrInfo(PRNetAddr*, PRUint16)'    {PR_GetPrefLoopbackAddrInfo}
+

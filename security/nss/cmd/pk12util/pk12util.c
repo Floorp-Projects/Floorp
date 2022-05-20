@@ -665,6 +665,17 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
         goto loser;
     }
 
+    /* we are passing UTF8, drop the NULL in the normal password value.
+     * UCS2 conversion will add it back if necessary. This only affects
+     * password > Blocksize of the Hash function and pkcs5v2 pbe (if password
+     * <=Blocksize then the password is zero padded anyway, so an extra NULL
+     * at the end has not effect). This is allows us to work with openssl and
+     * gnutls. Older versions of NSS already fail to decrypt long passwords
+     * in this case, so we aren't breaking anyone with this code */
+    if ((pwitem->len > 0) && (!pwitem->data[pwitem->len - 1])) {
+        pwitem->len--;
+    }
+
     p12cxt = p12u_InitContext(PR_FALSE, outfile);
     if (!p12cxt) {
         SECU_PrintError(progName, "Initialization failed: %s", outfile);

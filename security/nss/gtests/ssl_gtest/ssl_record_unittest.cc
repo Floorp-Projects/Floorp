@@ -310,22 +310,16 @@ auto kTrueFalse = ::testing::ValuesIn(kTrueFalseArr);
 INSTANTIATE_TEST_SUITE_P(TlsPadding, TlsPaddingTest,
                          ::testing::Combine(kContentSizes, kTrueFalse));
 
-/* This filter modifies any application data record, changes its inner content
- * type to the specified one (default handshake) and optionally add padding,
- * to create records/fragments invalid in TLS 1.3.
- *
- * Implementations MUST NOT send Handshake and Alert records that have a
- * zero-length TLSInnerPlaintext.content; if such a message is received,
- * the receiving implementation MUST terminate the connection with an
- * "unexpected_message" alert [RFC8446, Section 5.4].
- *
- * !!! TLS 1.3 ONLY !!! */
-class ZeroLengthInnerPlaintextCreatorFilter : public TlsRecordFilter {
+/* Filter to modify record header and content */
+class Tls13RecordModifier : public TlsRecordFilter {
  public:
-  ZeroLengthInnerPlaintextCreatorFilter(
-      const std::shared_ptr<TlsAgent>& a,
-      SSLContentType contentType = ssl_ct_handshake, size_t padding = 0)
-      : TlsRecordFilter(a), contentType_(contentType), padding_(padding) {}
+  Tls13RecordModifier(const std::shared_ptr<TlsAgent>& a,
+                      uint8_t contentType = ssl_ct_handshake, size_t size = 0,
+                      size_t padding = 0)
+      : TlsRecordFilter(a),
+        contentType_(contentType),
+        size_(size),
+        padding_(padding) {}
 
  protected:
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
@@ -350,7 +344,7 @@ class ZeroLengthInnerPlaintextCreatorFilter : public TlsRecordFilter {
 
     DataBuffer ciphertext;
     bool ok = Protect(spec(protection_epoch), out_header, contentType_,
-                      DataBuffer(0), &ciphertext, &out_header, padding_);
+                      DataBuffer(size_), &ciphertext, &out_header, padding_);
     EXPECT_TRUE(ok);
     if (!ok) {
       return KEEP;
@@ -361,7 +355,8 @@ class ZeroLengthInnerPlaintextCreatorFilter : public TlsRecordFilter {
   }
 
  private:
-  SSLContentType contentType_;
+  uint8_t contentType_;
+  size_t size_;
   size_t padding_;
 };
 
@@ -389,13 +384,18 @@ class ZeroLengthInnerPlaintextSetupTls13
 };
 
 /* Test correct rejection of TLS 1.3 encrypted handshake/alert records with
- * zero-length inner plaintext content length with and without padding. */
+ * zero-length inner plaintext content length with and without padding.
+ *
+ * Implementations MUST NOT send Handshake and Alert records that have a
+ * zero-length TLSInnerPlaintext.content; if such a message is received,
+ * the receiving implementation MUST terminate the connection with an
+ * "unexpected_message" alert [RFC8446, Section 5.4]. */
 TEST_P(ZeroLengthInnerPlaintextSetupTls13, ZeroLengthInnerPlaintextRun) {
   EnsureTlsSetup();
 
   // Filter modifies record to be zero-length
-  auto filter = MakeTlsFilter<ZeroLengthInnerPlaintextCreatorFilter>(
-      client_, contentType_, padding_);
+  auto filter =
+      MakeTlsFilter<Tls13RecordModifier>(client_, contentType_, 0, padding_);
   filter->EnableDecryption();
   filter->Disable();
 
@@ -602,5 +602,203 @@ INSTANTIATE_TEST_SUITE_P(
       }
       return variant + "ZeroLength" + contentType + "Test";
     });
+
+/* Test correct handling of records with invalid content types.
+ *
+ * TLS:
+ * If a TLS implementation receives an unexpected record type, it MUST
+ * terminate the connection with an "unexpected_message" alert
+ * [RFC8446, Section 5].
+ *
+ * DTLS:
+ * In general, invalid records SHOULD be silently discarded...
+ * [RFC6347, Section 4.1.2.7]. */
+class UndefinedContentTypeSetup : public TlsConnectGeneric {
+ public:
+  UndefinedContentTypeSetup() : TlsConnectGeneric() { StartConnect(); };
+
+  void createUndefinedContentTypeRecord(DataBuffer& buffer, unsigned epoch = 0,
+                                        unsigned seqn = 0) {
+    // dummy data
+    uint8_t data[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
+
+    size_t idx = 0;
+    // Set undefined content type
+    idx = buffer.Write(idx, 0xFF, 1);
+    // The record version is not checked during record layer handling
+    idx = buffer.Write(idx, 0xDEAD, 2);
+    // DTLS (version always < TLS 1.3)
+    if (variant_ == ssl_variant_datagram) {
+      // Set epoch (Should be 0 before/during handshake)
+      idx = buffer.Write(idx, epoch, 2);
+      // Set 6B sequence number (0 if send as first message)
+      idx = buffer.Write(idx, 0U, 2);
+      idx = buffer.Write(idx, seqn, 4);
+    }
+    // Set fragment length
+    idx = buffer.Write(idx, 5U, 2);
+    // Add data to record
+    (void)buffer.Write(idx, data, 5);
+  }
+
+  void checkUndefinedContentTypeHandling(std::shared_ptr<TlsAgent> sender,
+                                         std::shared_ptr<TlsAgent> receiver) {
+    if (variant_ == ssl_variant_stream) {
+      // Handle record and expect alert to be sent
+      receiver->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+      receiver->ReadBytes();
+      /* Digest and assert that the correct alert was received at peer
+       *
+       * The 1.3 server expects all messages other than the ClientHello to be
+       * encrypted and responds with an unexpected message alert to alerts. */
+      if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3 && sender == server_) {
+        sender->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+      } else {
+        sender->ExpectReceiveAlert(kTlsAlertUnexpectedMessage);
+      }
+      sender->ReadBytes();
+    } else {  // DTLS drops invalid records silently
+      size_t received = receiver->received_bytes();
+      receiver->ReadBytes();
+      // Ensure no bytes were received/record was dropped
+      ASSERT_EQ(received, receiver->received_bytes());
+    }
+  }
+
+ protected:
+  DataBuffer buffer_;
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    UndefinedContentTypePreHandshakeStream, UndefinedContentTypeSetup,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsVAll));
+
+INSTANTIATE_TEST_SUITE_P(
+    UndefinedContentTypePreHandshakeDatagram, UndefinedContentTypeSetup,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
+                       TlsConnectTestBase::kTlsV11Plus));
+
+TEST_P(UndefinedContentTypeSetup,
+       ServerReceiveUndefinedContentTypePreClientHello) {
+  createUndefinedContentTypeRecord(buffer_);
+
+  // Send undefined content type record
+  client_->SendDirect(buffer_);
+
+  checkUndefinedContentTypeHandling(client_, server_);
+}
+
+TEST_P(UndefinedContentTypeSetup,
+       ServerReceiveUndefinedContentTypePostClientHello) {
+  // Set epoch to 0 (handshake), and sequence number to 1 since hello is sent
+  createUndefinedContentTypeRecord(buffer_, 0, 1);
+
+  // Send ClientHello
+  client_->Handshake();
+  // Send undefined content type record
+  client_->SendDirect(buffer_);
+
+  checkUndefinedContentTypeHandling(client_, server_);
+}
+
+TEST_P(UndefinedContentTypeSetup,
+       ClientReceiveUndefinedContentTypePreClientHello) {
+  createUndefinedContentTypeRecord(buffer_);
+
+  // Send undefined content type record
+  server_->SendDirect(buffer_);
+
+  checkUndefinedContentTypeHandling(server_, client_);
+}
+
+TEST_P(UndefinedContentTypeSetup,
+       ClientReceiveUndefinedContentTypePostClientHello) {
+  // Set epoch to 0 (handshake), and sequence number to 1 since hello is sent
+  createUndefinedContentTypeRecord(buffer_, 0, 1);
+
+  // Send ClientHello
+  client_->Handshake();
+  // Send undefined content type record
+  server_->SendDirect(buffer_);
+
+  checkUndefinedContentTypeHandling(server_, client_);
+}
+
+class RecordOuterContentTypeSetter : public TlsRecordFilter {
+ public:
+  RecordOuterContentTypeSetter(const std::shared_ptr<TlsAgent>& a,
+                               uint8_t contentType = ssl_ct_handshake)
+      : TlsRecordFilter(a), contentType_(contentType) {}
+
+ protected:
+  PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
+                                    const DataBuffer& record, size_t* offset,
+                                    DataBuffer* output) override {
+    TlsRecordHeader hdr(header.variant(), header.version(), contentType_,
+                        header.sequence_number());
+
+    *offset = hdr.Write(output, *offset, record);
+    return CHANGE;
+  }
+
+ private:
+  uint8_t contentType_;
+};
+
+/* Test correct handling of invalid inner and outer record content type.
+ * This is only possible for TLS 1.3, since only for this version decryption
+ * and encryption of manipulated records is supported by the test suite. */
+TEST_P(TlsConnectTls13, UndefinedOuterContentType13) {
+  EnsureTlsSetup();
+  Connect();
+
+  // Manipulate record: set invalid content type 0xff
+  MakeTlsFilter<RecordOuterContentTypeSetter>(client_, 0xff);
+  client_->SendData(50);
+
+  if (variant_ == ssl_variant_stream) {
+    // Handle invalid record
+    server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+    server_->ReadBytes();
+    // Handle alert at peer
+    client_->ExpectReceiveAlert(kTlsAlertUnexpectedMessage);
+    client_->ReadBytes();
+  } else {
+    // Make sure DTLS drops invalid record silently
+    size_t received = server_->received_bytes();
+    server_->ReadBytes();
+    ASSERT_EQ(received, server_->received_bytes());
+  }
+}
+
+TEST_P(TlsConnectTls13, UndefinedInnerContentType13) {
+  EnsureTlsSetup();
+
+  // Manipulate record: set invalid content type 0xff and length to 50.
+  auto filter = MakeTlsFilter<Tls13RecordModifier>(client_, 0xff, 50, 0);
+  filter->EnableDecryption();
+  filter->Disable();
+
+  Connect();
+
+  filter->Enable();
+  // Send manipulate record with invalid content type
+  client_->SendData(50);
+
+  if (variant_ == ssl_variant_stream) {
+    // Handle invalid record
+    server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+    server_->ReadBytes();
+    // Handle alert at peer
+    client_->ExpectReceiveAlert(kTlsAlertUnexpectedMessage);
+    client_->ReadBytes();
+  } else {
+    // Make sure DTLS drops invalid record silently
+    size_t received = server_->received_bytes();
+    server_->ReadBytes();
+    ASSERT_EQ(received, server_->received_bytes());
+  }
+}
 
 }  // namespace nss_test

@@ -1711,19 +1711,30 @@ do_accepts(
 PRFileDesc *
 getBoundListenSocket(unsigned short port)
 {
-    PRFileDesc *listen_sock;
+    PRFileDesc *listen_sock = NULL;
     int listenQueueDepth = 5 + (2 * maxThreads);
     PRStatus prStatus;
     PRNetAddr addr;
     PRSocketOptionData opt;
 
-    addr.inet.family = PR_AF_INET;
-    addr.inet.ip = PR_INADDR_ANY;
-    addr.inet.port = PR_htons(port);
+    // We want to listen on the IP family that tstclnt will use.
+    // tstclnt uses PR_GetPrefLoopbackAddrInfo to decide, if it's
+    // asked to connect to localhost.
 
-    listen_sock = PR_NewTCPSocket();
+    prStatus = PR_GetPrefLoopbackAddrInfo(&addr, port);
+    if (prStatus == PR_FAILURE) {
+        addr.inet.family = PR_AF_INET;
+        addr.inet.ip = PR_INADDR_ANY;
+        addr.inet.port = PR_htons(port);
+    }
+
+    if (addr.inet.family == PR_AF_INET6) {
+        listen_sock = PR_OpenTCPSocket(PR_AF_INET6);
+    } else if (addr.inet.family == PR_AF_INET) {
+        listen_sock = PR_NewTCPSocket();
+    }
     if (listen_sock == NULL) {
-        errExit("PR_NewTCPSocket");
+        errExit("Couldn't create socket");
     }
 
     opt.option = PR_SockOpt_Nonblocking;
