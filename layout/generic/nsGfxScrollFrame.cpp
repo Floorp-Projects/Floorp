@@ -7828,8 +7828,7 @@ nsMargin ScrollFrameHelper::GetScrollPadding() const {
                                    GetScrollPortRect().Size());
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
-    const Maybe<nsPoint>& aDestination) const {
+layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
   ScrollSnapInfo result;
 
   nsIFrame* scrollSnapFrame = GetFrameForStyle();
@@ -7857,10 +7856,9 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
   return result;
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo(
-    const Maybe<nsPoint>& aDestination) const {
+layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo() const {
   // TODO(botond): Should we cache it?
-  return ComputeScrollSnapInfo(aDestination);
+  return ComputeScrollSnapInfo();
 }
 
 bool ScrollFrameHelper::GetSnapPointForDestination(ScrollUnit aUnit,
@@ -7868,8 +7866,8 @@ bool ScrollFrameHelper::GetSnapPointForDestination(ScrollUnit aUnit,
                                                    const nsPoint& aStartPos,
                                                    nsPoint& aDestination) {
   Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
-      GetScrollSnapInfo(Some(aDestination)), aUnit, aSnapFlags,
-      GetLayoutScrollRange(), aStartPos, aDestination);
+      GetScrollSnapInfo(), aUnit, aSnapFlags, GetLayoutScrollRange(), aStartPos,
+      aDestination);
   if (snapPoint) {
     aDestination = snapPoint.ref();
     return true;
