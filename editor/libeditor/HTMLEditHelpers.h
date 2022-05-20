@@ -136,6 +136,39 @@ class MOZ_STACK_CLASS MoveNodeResult final {
 
   void MarkAsHandled() { mHandled = true; }
 
+  /**
+   * Suggest caret position to aHTMLEditor.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
+      const HTMLEditor& aHTMLEditor, const SuggestCaretOptions& aOptions) const;
+
+  /**
+   * IgnoreCaretPointSuggestion() should be called if the method does not want
+   * to use caret position recommended by this instance.
+   */
+  void IgnoreCaretPointSuggestion() const { mHandledCaretPoint = true; }
+
+  bool HasCaretPointSuggestion() const { return mCaretPoint.IsSet(); }
+  constexpr EditorDOMPoint&& UnwrapCaretPoint() {
+    mHandledCaretPoint = true;
+    return std::move(mCaretPoint);
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const SuggestCaretOptions& aOptions) {
+    MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+    MOZ_ASSERT(
+        !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
+    if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+        !mCaretPoint.IsSet()) {
+      return false;
+    }
+    aPointToPutCaret = UnwrapCaretPoint();
+    return true;
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const HTMLEditor& aHTMLEditor,
+                        const SuggestCaretOptions& aOptions);
+
   MoveNodeResult() : mRv(NS_ERROR_NOT_INITIALIZED), mHandled(false) {}
 
   explicit MoveNodeResult(nsresult aRv) : mRv(aRv), mHandled(false) {
@@ -148,10 +181,19 @@ class MOZ_STACK_CLASS MoveNodeResult final {
   MoveNodeResult& operator=(MoveNodeResult&& aOther) = default;
 
   MoveNodeResult& operator|=(const MoveNodeResult& aOther) {
+    // aOther is merged with this instance so that its caret suggestion
+    // shouldn't be handled anymore.
+    aOther.mHandledCaretPoint = true;
+    // Should be handled again even if it's already handled
+    mHandledCaretPoint = false;
+
     mHandled |= aOther.mHandled;
     // When both result are same, keep the result but use newer point.
     if (mRv == aOther.mRv) {
       mNextInsertionPoint = aOther.mNextInsertionPoint;
+      if (aOther.mCaretPoint.IsSet()) {
+        mCaretPoint = aOther.mCaretPoint;
+      }
       return *this;
     }
     // If one of the result is NS_ERROR_EDITOR_DESTROYED, use it since it's
@@ -159,6 +201,7 @@ class MOZ_STACK_CLASS MoveNodeResult final {
     if (EditorDestroyed() || aOther.EditorDestroyed()) {
       mRv = NS_ERROR_EDITOR_DESTROYED;
       mNextInsertionPoint.Clear();
+      mCaretPoint.Clear();
       return *this;
     }
     // If the other one has not been set explicit nsresult, keep current
@@ -170,19 +213,31 @@ class MOZ_STACK_CLASS MoveNodeResult final {
     if (NotInitialized()) {
       mRv = aOther.mRv;
       mNextInsertionPoint = aOther.mNextInsertionPoint;
+      mCaretPoint = aOther.mCaretPoint;
       return *this;
     }
     // If one of the results is error, use NS_ERROR_FAILURE.
     if (isErr() || aOther.isErr()) {
       mRv = NS_ERROR_FAILURE;
       mNextInsertionPoint.Clear();
+      mCaretPoint.Clear();
       return *this;
     }
     // Otherwise, use generic success code, NS_OK, and use newer point.
     mRv = NS_OK;
     mNextInsertionPoint = aOther.mNextInsertionPoint;
+    if (aOther.mCaretPoint.IsSet()) {
+      mCaretPoint = aOther.mCaretPoint;
+    }
     return *this;
   }
+
+#ifdef DEBUG
+  ~MoveNodeResult() {
+    MOZ_ASSERT_IF(isOk() && Handled(),
+                  !mCaretPoint.IsSet() || mHandledCaretPoint);
+  }
+#endif
 
  private:
   explicit MoveNodeResult(const EditorDOMPoint& aNextInsertionPoint,
@@ -206,8 +261,11 @@ class MOZ_STACK_CLASS MoveNodeResult final {
   }
 
   EditorDOMPoint mNextInsertionPoint;
+  // Recommended caret point after moving a node.
+  EditorDOMPoint mCaretPoint;
   nsresult mRv;
   bool mHandled;
+  bool mutable mHandledCaretPoint = false;
 
   friend MoveNodeResult MoveNodeIgnored(
       const EditorDOMPoint& aNextInsertionPoint);

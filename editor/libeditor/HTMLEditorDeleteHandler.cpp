@@ -4788,6 +4788,7 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
       DebugOnly<nsresult> rvIgnored =
           DeleteNodeWithTransaction(MOZ_KnownLive(*content));
       if (NS_WARN_IF(Destroyed())) {
+        moveContentsInLineResult.IgnoreCaretPointSuggestion();
         return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
@@ -4809,15 +4810,17 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
         MOZ_KnownLive(content),
         EditorDOMPoint(pointToInsert.GetContainer(), offset));
     if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
+      moveContentsInLineResult.IgnoreCaretPointSuggestion();
       return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    NS_WARNING_ASSERTION(
-        moveNodeResult.isOk(),
-        "HTMLEditor::MoveNodeOrChildrenWithTransaction() failed, but ignored");
-    if (moveNodeResult.isOk()) {
-      offset = moveNodeResult.NextInsertionPointRef().Offset();
-      moveContentsInLineResult |= moveNodeResult;
+    if (moveNodeResult.isErr()) {
+      NS_WARNING(
+          "HTMLEditor::MoveNodeOrChildrenWithTransaction() failed, but "
+          "ignored");
+      continue;
     }
+    offset = moveNodeResult.NextInsertionPointRef().Offset();
+    moveContentsInLineResult |= moveNodeResult;
   }
 
   NS_WARNING_ASSERTION(
@@ -4878,10 +4881,12 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
 
   nsresult rv = DeleteNodeWithTransaction(aContent);
   if (NS_WARN_IF(Destroyed())) {
+    moveNodeResult.IgnoreCaretPointSuggestion();
     return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+    moveNodeResult.IgnoreCaretPointSuggestion();
     return MoveNodeResult(rv);
   }
   if (MayHaveMutationEventListeners()) {
