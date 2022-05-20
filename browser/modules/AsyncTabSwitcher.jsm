@@ -281,7 +281,6 @@ class AsyncTabSwitcher {
 
       if (remoteTab) {
         browser.renderLayers = true;
-        remoteTab.priorityHint = true;
       } else {
         this.onLayersReady(browser);
       }
@@ -290,9 +289,7 @@ class AsyncTabSwitcher {
       // Setting the docShell to be inactive will also cause it
       // to stop rendering layers.
       browser.docShellIsActive = false;
-      if (remoteTab) {
-        remoteTab.priorityHint = false;
-      } else {
+      if (!remoteTab) {
         this.onLayersCleared(browser);
       }
     } else if (state == this.STATE_LOADED) {
