@@ -802,6 +802,133 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
   return ParentAccessGrantPromise::CreateAndResolve(rv, __func__);
 }
 
+// static
+Maybe<bool> ContentBlocking::CheckCookiesPermittedDecidesStorageAccessAPI(
+    nsICookieJarSettings* aCookieJarSettings,
+    nsIPrincipal* aRequestingPrincipal) {
+  MOZ_ASSERT(aCookieJarSettings);
+  MOZ_ASSERT(aRequestingPrincipal);
+  uint32_t cookiePermission = CheckCookiePermissionForPrincipal(
+      aCookieJarSettings, aRequestingPrincipal);
+  if (cookiePermission == nsICookiePermission::ACCESS_ALLOW ||
+      cookiePermission == nsICookiePermission::ACCESS_SESSION) {
+    return Some(true);
+  } else if (cookiePermission == nsICookiePermission::ACCESS_DENY) {
+    return Some(false);
+  }
+
+  if (ContentBlockingAllowList::Check(aCookieJarSettings)) {
+    return Some(true);
+  }
+  return Nothing();
+}
+
+// static
+Maybe<bool> ContentBlocking::CheckBrowserSettingsDecidesStorageAccessAPI(
+    nsICookieJarSettings* aCookieJarSettings, bool aThirdParty) {
+  MOZ_ASSERT(aCookieJarSettings);
+  if (aCookieJarSettings->GetBlockingAllContexts() ||
+      (aCookieJarSettings->GetBlockingAllThirdPartyContexts() && aThirdParty)) {
+    return Some(false);
+  }
+  if (!aCookieJarSettings->GetRejectThirdPartyContexts()) {
+    return Some(true);
+  }
+  return Nothing();
+}
+
+// static
+Maybe<bool> ContentBlocking::CheckCallingContextDecidesStorageAccessAPI(
+    Document* aDocument, bool aRequestingStorageAccess) {
+  MOZ_ASSERT(aDocument);
+  // Window doesn't have user activation and we are asking for access -> reject.
+  if (aRequestingStorageAccess) {
+    if (!aDocument->HasValidTransientUserGestureActivation()) {
+      // Report an error to the console for this case
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
+          aDocument, nsContentUtils::eDOM_PROPERTIES,
+          "RequestStorageAccessUserGesture");
+      return Some(false);
+    }
+  }
+
+  if (aDocument->IsTopLevelContentDocument()) {
+    return Some(true);
+  }
+
+  RefPtr<BrowsingContext> bc = aDocument->GetBrowsingContext();
+  if (!bc) {
+    return Some(false);
+  }
+
+  // We check if the document is a first-party document here by testing if the
+  // top-level window is same-origin. In non-Fission mode, we can directly get
+  // the top-level window through the top browsing context since it should be
+  // in-process. And test their principals.
+  //
+  // In fission, if the sub frame's origin differs from the main frame's
+  // origin, they will be in different processes. We use IsInProcess()
+  // check here to deterimine whether they have the same origin. In
+  // non-fission mode, it is always in-process so we need to compare their
+  // principals.
+  if (bc->Top()->IsInProcess()) {
+    nsCOMPtr<nsPIDOMWindowOuter> topOuter = bc->Top()->GetDOMWindow();
+    if (!topOuter) {
+      return Some(false);
+    }
+    nsCOMPtr<Document> topLevelDoc = topOuter->GetExtantDoc();
+    if (!topLevelDoc) {
+      return Some(false);
+    }
+
+    if (topLevelDoc->NodePrincipal()->Equals(aDocument->NodePrincipal())) {
+      return Some(true);
+    }
+  }
+
+  // If the document has a null origin, reject.
+  if (aDocument->NodePrincipal()->GetIsNullPrincipal()) {
+    // Report an error to the console for this case
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    nsLiteralCString("requestStorageAccess"),
+                                    aDocument, nsContentUtils::eDOM_PROPERTIES,
+                                    "RequestStorageAccessNullPrincipal");
+    return Some(false);
+  }
+
+  if (aRequestingStorageAccess) {
+    if (aDocument->StorageAccessSandboxed()) {
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
+          aDocument, nsContentUtils::eDOM_PROPERTIES,
+          "RequestStorageAccessSandboxed");
+      return Some(false);
+    }
+  }
+  return Nothing();
+}
+
+// static
+Maybe<bool> ContentBlocking::CheckExistingPermissionDecidesStorageAccessAPI(
+    dom::Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+  nsPIDOMWindowInner* inner = aDocument->GetInnerWindow();
+  if (!inner) {
+    return Some(false);
+  }
+  nsGlobalWindowOuter* outer =
+      nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
+  if (!outer) {
+    return Some(false);
+  }
+  bool explicitPermissionGranted = outer->IsStorageAccessPermissionGranted();
+  if (explicitPermissionGranted) {
+    return Some(true);
+  }
+  return Nothing();
+}
+
 // There are two methods to handle permission update:
 // 1. UpdateAllowAccessOnCurrentProcess
 // 2. UpdateAllowAccessOnParentProcess
