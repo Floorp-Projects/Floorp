@@ -36,9 +36,6 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS,
                   bool aIsPrintPreview) override;
 
-  float GetPrintingScale() final;
-  gfxPoint GetPrintingTranslate() final;
-
   void GetDriverName(nsAString& aDriverName) const {
     aDriverName = mDriverName;
   }
