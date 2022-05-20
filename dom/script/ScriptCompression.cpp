@@ -7,6 +7,7 @@
 #include "zlib.h"
 #include "ScriptLoadRequest.h"
 #include "ScriptLoader.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Vector.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Preferences.h"
@@ -80,6 +81,9 @@ bool ScriptBytecodeCompress(Vector<uint8_t>& aBytecodeBuf,
                             size_t aBytecodeOffset,
                             Vector<uint8_t>& aCompressedBytecodeBufOut) {
   // TODO probably need to move this to a helper thread
+
+  AUTO_PROFILER_MARKER_TEXT("ScriptBytecodeCompress", JS, {}, ""_ns);
+
   ScriptBytecodeDataLayout uncompressedLayout(aBytecodeBuf, aBytecodeOffset);
   ScriptBytecodeCompressedDataLayout compressedLayout(
       aCompressedBytecodeBufOut, uncompressedLayout.preludeLength());
@@ -124,6 +128,8 @@ bool ScriptBytecodeCompress(Vector<uint8_t>& aBytecodeBuf,
 bool ScriptBytecodeDecompress(Vector<uint8_t>& aCompressedBytecodeBuf,
                               size_t aBytecodeOffset,
                               Vector<uint8_t>& aBytecodeBufOut) {
+  AUTO_PROFILER_MARKER_TEXT("ScriptBytecodeDecompress", JS, {}, ""_ns);
+
   ScriptBytecodeDataLayout uncompressedLayout(aBytecodeBufOut, aBytecodeOffset);
   ScriptBytecodeCompressedDataLayout compressedLayout(
       aCompressedBytecodeBuf, uncompressedLayout.preludeLength());
