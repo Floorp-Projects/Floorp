@@ -29,7 +29,6 @@ use crate::selector_parser::{PerPseudoElementMap, PseudoElement, SelectorImpl, S
 use crate::shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards};
 use crate::stylesheet_set::{DataValidity, DocumentStylesheetSet, SheetRebuildKind};
 use crate::stylesheet_set::{DocumentStylesheetFlusher, SheetCollectionFlusher};
-use crate::stylesheets::container_rule::ContainerCondition;
 use crate::stylesheets::keyframes_rule::KeyframesAnimation;
 use crate::stylesheets::layer_rule::{LayerName, LayerOrder};
 use crate::stylesheets::viewport_rule::{self, MaybeNew, ViewportRule};
@@ -2134,17 +2133,15 @@ impl ContainerConditionId {
 
 
 #[derive(Clone, Debug, MallocSizeOf)]
-struct ContainerConditionReference {
+struct ContainerCondition {
     parent: ContainerConditionId,
-    #[ignore_malloc_size_of = "Arc"]
-    condition: Option<Arc<ContainerCondition>>,
+    // TODO: condition: Option<Arc<ContainerCondition>> (or so).
 }
 
-impl ContainerConditionReference {
+impl ContainerCondition {
     const fn none() -> Self {
         Self {
             parent: ContainerConditionId::none(),
-            condition: None,
         }
     }
 }
@@ -2221,7 +2218,7 @@ pub struct CascadeData {
     layers: SmallVec<[CascadeLayer; 1]>,
 
     /// The list of container conditions, indexed by their id.
-    container_conditions: SmallVec<[ContainerConditionReference; 1]>,
+    container_conditions: SmallVec<[ContainerCondition; 1]>,
 
     /// Effective media query results cached from the last rebuild.
     effective_media_query_results: EffectiveMediaQueryResults,
@@ -2265,7 +2262,7 @@ impl CascadeData {
             animations: Default::default(),
             layer_id: Default::default(),
             layers: smallvec::smallvec![CascadeLayer::root()],
-            container_conditions: smallvec::smallvec![ContainerConditionReference::none()],
+            container_conditions: smallvec::smallvec![ContainerCondition::none()],
             extra_data: ExtraStyleData::default(),
             effective_media_query_results: EffectiveMediaQueryResults::new(),
             rules_source_order: 0,
@@ -2378,23 +2375,6 @@ impl CascadeData {
     #[inline]
     fn layer_order_for(&self, id: LayerId) -> LayerOrder {
         self.layers[id.0 as usize].order
-    }
-
-    pub(crate) fn container_condition_matches<E>(&self, mut id: ContainerConditionId, stylist: &Stylist, element: E) -> bool
-    where
-        E: TElement,
-    {
-        loop {
-            let condition_ref = &self.container_conditions[id.0 as usize];
-            let condition = match condition_ref.condition {
-                None => return true,
-                Some(ref c) => c,
-            };
-            if !condition.matches(stylist.device(), element) {
-                return false;
-            }
-            id = condition_ref.parent;
-        }
     }
 
     fn did_finish_rebuild(&mut self) {
@@ -2809,11 +2789,10 @@ impl CascadeData {
                     }
                 },
                 CssRule::Container(ref lock) => {
-                    let container_rule = lock.read_with(guard);
+                    let _container_rule = lock.read_with(guard);
                     let id = ContainerConditionId(self.container_conditions.len() as u16);
-                    self.container_conditions.push(ContainerConditionReference {
+                    self.container_conditions.push(ContainerCondition {
                         parent: containing_rule_state.container_condition_id,
-                        condition: Some(container_rule.condition.clone()),
                     });
                     containing_rule_state.container_condition_id = id;
                 },
@@ -2998,7 +2977,7 @@ impl CascadeData {
         self.layers.clear();
         self.layers.push(CascadeLayer::root());
         self.container_conditions.clear();
-        self.container_conditions.push(ContainerConditionReference::none());
+        self.container_conditions.push(ContainerCondition::none());
         self.extra_data.clear();
         self.rules_source_order = 0;
         self.num_selectors = 0;
