@@ -13,6 +13,7 @@
 #include "HTMLEditUtils.h"
 #include "InsertNodeTransaction.h"
 #include "JoinNodesTransaction.h"
+#include "MoveNodeTransaction.h"
 #include "ReplaceTextTransaction.h"
 #include "SplitNodeTransaction.h"
 #include "TypeInState.h"
@@ -5127,46 +5128,72 @@ nsresult HTMLEditor::MoveNodeWithTransaction(
     return NS_OK;
   }
 
-  // Notify our internal selection state listener
-  AutoMoveNodeSelNotify selNotify(RangeUpdaterRef(), oldPoint, aPointToInsert);
-
-  nsresult rv = DeleteNodeWithTransaction(aContent);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-    return rv;
-  }
-
-  // Mutation event listener could break insertion point. Let's check it.
-  auto pointToInsert = selNotify.ComputeInsertionPoint<EditorDOMPoint>();
-  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+  RefPtr<MoveNodeTransaction> moveNodeTransaction =
+      MoveNodeTransaction::MaybeCreate(*this, aContent, aPointToInsert);
+  if (MOZ_UNLIKELY(!moveNodeTransaction)) {
+    NS_WARNING("MoveNodeTransaction::MaybeCreate() failed");
     return NS_ERROR_FAILURE;
   }
-  // If some children have removed from the container, let's append to the
-  // container.
-  // XXX Perhaps, if mutation event listener inserts or removes some children
-  //     but the child node referring with aPointToInsert is still available,
-  //     we should insert aContent before it.  However, we should keep
-  //     traditional behavior for now.
-  if (NS_WARN_IF(!pointToInsert.IsSetAndValid())) {
-    pointToInsert.SetToEndOf(pointToInsert.GetContainer());
-  }
-  CreateContentResult insertContentNodeResult =
-      InsertNodeWithTransaction(aContent, pointToInsert);
-  if (insertContentNodeResult.isErr()) {
-    NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-    return insertContentNodeResult.unwrapErr();
-  }
-  rv = insertContentNodeResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateContentResult::SuggestCaretPointTo() failed");
-    return rv;
+
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eMoveNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
   }
   NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "CreateContentResult::SuggestCaretPointTo() failed, but ignored");
+      !ignoredError.Failed(),
+      "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
+  TopLevelEditSubActionDataRef().WillDeleteContent(*this, aContent);
+
+  nsresult rv = DoTransactionInternal(moveNodeTransaction);
+  if (NS_SUCCEEDED(rv)) {
+    if (AllowsTransactionsToChangeSelection()) {
+      const auto pointToPutCaret =
+          moveNodeTransaction->SuggestPointToPutCaret<EditorRawDOMPoint>();
+      if (pointToPutCaret.IsSet()) {
+        nsresult rv = CollapseSelectionTo(pointToPutCaret);
+        if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+          NS_WARNING(
+              "EditorBase::CollapseSelectionTo() caused destroying the editor");
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "EditorBase::CollapseSelectionTo() failed, but ignored");
+      }
+    }
+
+    if (mTextServicesDocument) {
+      const OwningNonNull<TextServicesDocument> textServicesDocument =
+          *mTextServicesDocument;
+      textServicesDocument->DidDeleteContent(aContent);
+    }
+  }
+
+  if (!mActionListeners.IsEmpty()) {
+    for (auto& listener : mActionListeners.Clone()) {
+      DebugOnly<nsresult> rvIgnored = listener->DidDeleteNode(&aContent, rv);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "nsIEditActionListener::DidDeleteNode() failed, but ignored");
+    }
+  }
+
+  if (MOZ_UNLIKELY(Destroyed())) {
+    NS_WARNING(
+        "MoveNodeTransaction::DoTransaction() caused destroying the editor");
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("MoveNodeTransaction::DoTransaction() failed");
+    return rv;
+  }
+
+  TopLevelEditSubActionDataRef().DidInsertContent(*this, aContent);
+
   return NS_OK;
 }
 
