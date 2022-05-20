@@ -309,11 +309,7 @@ class gfxContext final {
    ** Line Properties
    **/
 
-  // Set the dash pattern, applying devPxScale to convert passed-in lengths
-  // to device pixels (used by the SVGUtils::SetupStrokeGeometry caller,
-  // which has the desired dash pattern in CSS px).
-  void SetDash(const Float* dashes, int ndash, Float offset, Float devPxScale);
-
+  void SetDash(const Float* dashes, int ndash, Float offset);
   // Return true if dashing is set, false if it's not enabled or the
   // context is in an error state.  |offset| can be nullptr to mean
   // "don't care".

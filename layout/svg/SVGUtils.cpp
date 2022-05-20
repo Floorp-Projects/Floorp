@@ -1524,16 +1524,12 @@ void SVGUtils::SetupStrokeGeometry(nsIFrame* aFrame, gfxContext* aContext,
     return;
   }
 
-  // SVGContentUtils::GetStrokeOptions gets the stroke options in CSS px;
-  // convert to device pixels for gfxContext.
-  float devPxPerCSSPx = aFrame->PresContext()->CSSToDevPixelScale().scale;
-
-  aContext->SetLineWidth(strokeOptions.mLineWidth * devPxPerCSSPx);
+  aContext->SetLineWidth(strokeOptions.mLineWidth);
   aContext->SetLineCap(strokeOptions.mLineCap);
   aContext->SetMiterLimit(strokeOptions.mMiterLimit);
   aContext->SetLineJoin(strokeOptions.mLineJoin);
   aContext->SetDash(strokeOptions.mDashPattern, strokeOptions.mDashLength,
-                    strokeOptions.mDashOffset, devPxPerCSSPx);
+                    strokeOptions.mDashOffset);
 }
 
 uint16_t SVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame) {
@@ -1651,7 +1647,10 @@ nsRect SVGUtils::ToCanvasBounds(const gfxRect& aUserspaceRect,
 }
 
 gfxMatrix SVGUtils::GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame) {
-  float devPxPerCSSPx = aNonSVGFrame->PresContext()->CSSToDevPixelScale().scale;
+  int32_t appUnitsPerDevPixel =
+      aNonSVGFrame->PresContext()->AppUnitsPerDevPixel();
+  float devPxPerCSSPx =
+      1 / nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPixel);
 
   return gfxMatrix(devPxPerCSSPx, 0.0, 0.0, devPxPerCSSPx, 0.0, 0.0);
 }
