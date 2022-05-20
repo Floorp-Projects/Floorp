@@ -2699,24 +2699,18 @@ static void ApplyOverflowClipping(
   bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
                               : disp->mOverflowClipBoxBlock) ==
              StyleOverflowClipBox::ContentBox;
-
-  nsMargin boxMargin = -aFrame->GetUsedPadding();
+  nsMargin bp = aFrame->GetUsedPadding();
   if (!cbH) {
-    boxMargin.left = boxMargin.right = nscoord(0);
+    bp.left = bp.right = nscoord(0);
   }
   if (!cbV) {
-    boxMargin.top = boxMargin.bottom = nscoord(0);
+    bp.top = bp.bottom = nscoord(0);
   }
 
-  auto clipMargin = aFrame->OverflowClipMargin(aClipAxes);
-
-  boxMargin -= aFrame->GetUsedBorder();
-  boxMargin += nsMargin(clipMargin.height, clipMargin.width, clipMargin.height,
-                        clipMargin.width);
-  boxMargin.ApplySkipSides(aFrame->GetSkipSides());
-
+  bp += aFrame->GetUsedBorder();
+  bp.ApplySkipSides(aFrame->GetSkipSides());
   nsRect rect(nsPoint(0, 0), aFrame->GetSize());
-  rect.Inflate(boxMargin);
+  rect.Deflate(bp);
   if (MOZ_UNLIKELY(!(aClipAxes & nsIFrame::PhysicalAxes::Horizontal))) {
     // NOTE(mats) We shouldn't be clipping at all in this dimension really,
     // but clipping in just one axis isn't supported by our GFX APIs so we
@@ -2732,28 +2726,9 @@ static void ApplyOverflowClipping(
     rect.height = o.height;
   }
   clipRect = rect + aBuilder->ToReferenceFrame(aFrame);
-  haveRadii = aFrame->GetBoxBorderRadii(radii, boxMargin);
+  haveRadii = aFrame->GetBoxBorderRadii(radii, -bp);
   aClipState.ClipContainingBlockDescendantsExtra(clipRect,
                                                  haveRadii ? radii : nullptr);
-}
-
-nsSize nsIFrame::OverflowClipMargin(PhysicalAxes aClipAxes) const {
-  nsSize result;
-  if (aClipAxes == PhysicalAxes::None) {
-    return result;
-  }
-  const auto& margin = StyleMargin()->mOverflowClipMargin;
-  if (margin.IsZero()) {
-    return result;
-  }
-  nscoord marginAu = margin.ToAppUnits();
-  if (aClipAxes & PhysicalAxes::Horizontal) {
-    result.width = marginAu;
-  }
-  if (aClipAxes & PhysicalAxes::Vertical) {
-    result.height = marginAu;
-  }
-  return result;
 }
 
 #ifdef DEBUG
@@ -9573,16 +9548,11 @@ static nsRect ComputeOutlineInnerRect(
   }
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   LayoutFrameType fType = aFrame->Type();
-  if (fType == LayoutFrameType::Scroll ||
+  auto overflowClipAxes = aFrame->ShouldApplyOverflowClipping(disp);
+  if (overflowClipAxes == nsIFrame::PhysicalAxes::Both ||
+      fType == LayoutFrameType::Scroll ||
       fType == LayoutFrameType::ListControl ||
       fType == LayoutFrameType::SVGOuterSVG) {
-    return u;
-  }
-
-  auto overflowClipAxes = aFrame->ShouldApplyOverflowClipping(disp);
-  auto overflowClipMargin = aFrame->OverflowClipMargin(overflowClipAxes);
-  if (overflowClipAxes == nsIFrame::PhysicalAxes::Both &&
-      overflowClipMargin == nsSize()) {
     return u;
   }
 
@@ -9649,10 +9619,15 @@ static nsRect ComputeOutlineInnerRect(
     }
   }
 
-  if (overflowClipAxes != nsIFrame::PhysicalAxes::None) {
-    OverflowAreas::ApplyOverflowClippingOnRect(u, bounds, overflowClipAxes,
-                                               overflowClipMargin);
+  if (overflowClipAxes & nsIFrame::PhysicalAxes::Vertical) {
+    u.y = bounds.y;
+    u.height = bounds.height;
   }
+  if (overflowClipAxes & nsIFrame::PhysicalAxes::Horizontal) {
+    u.x = bounds.x;
+    u.width = bounds.width;
+  }
+
   return u;
 }
 
@@ -9836,6 +9811,27 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
                  "Computed overflow area must contain frame bounds");
   }
 
+  // If we clip our children, clear accumulated overflow area in the affected
+  // dimension(s). The children are actually clipped to the padding-box, but
+  // since the overflow area should include the entire border-box, just set it
+  // to the border-box size here.
+  if (overflowClipAxes != PhysicalAxes::None) {
+    nsRect& ink = aOverflowAreas.InkOverflow();
+    nsRect& scrollable = aOverflowAreas.ScrollableOverflow();
+    if (overflowClipAxes & PhysicalAxes::Vertical) {
+      ink.y = bounds.y;
+      scrollable.y = bounds.y;
+      ink.height = bounds.height;
+      scrollable.height = bounds.height;
+    }
+    if (overflowClipAxes & PhysicalAxes::Horizontal) {
+      ink.x = bounds.x;
+      scrollable.x = bounds.x;
+      ink.width = bounds.width;
+      scrollable.width = bounds.width;
+    }
+  }
+
   // Overflow area must always include the frame's top-left and bottom-right,
   // even if the frame rect is empty (so we can scroll to those positions).
   // Pending a real fix for bug 426879, don't do this for inline frames
@@ -9848,15 +9844,6 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
       nsRect& o = aOverflowAreas.Overflow(otype);
       o = o.UnionEdges(bounds);
     }
-  }
-
-  // If we clip our children, clear accumulated overflow area in the affected
-  // dimension(s). The children are actually clipped to the padding-box, but
-  // since the overflow area should include the entire border-box, just set it
-  // to the border-box size here.
-  if (overflowClipAxes != PhysicalAxes::None) {
-    aOverflowAreas.ApplyClipping(bounds, overflowClipAxes,
-                                 OverflowClipMargin(overflowClipAxes));
   }
 
   // Note that StyleOverflow::Clip doesn't clip the frame

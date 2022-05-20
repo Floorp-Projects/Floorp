@@ -11,26 +11,6 @@
 
 namespace mozilla {
 
-/* static */
-void OverflowAreas::ApplyOverflowClippingOnRect(nsRect& aOverflowRect,
-                                                const nsRect& aBounds,
-                                                PhysicalAxes aClipAxes,
-                                                const nsSize& aOverflowMargin) {
-  auto inflatedBounds = aBounds;
-  inflatedBounds.Inflate(aOverflowMargin);
-
-  auto clip = aOverflowRect;
-  if (aClipAxes & PhysicalAxes::Vertical) {
-    clip.y = inflatedBounds.y;
-    clip.height = inflatedBounds.height;
-  }
-  if (aClipAxes & PhysicalAxes::Horizontal) {
-    clip.x = inflatedBounds.x;
-    clip.width = inflatedBounds.width;
-  }
-  aOverflowRect = aOverflowRect.Intersect(clip);
-}
-
 void OverflowAreas::UnionWith(const OverflowAreas& aOther) {
   InkOverflow().UnionRect(InkOverflow(), aOther.InkOverflow());
   ScrollableOverflow().UnionRect(ScrollableOverflow(),
