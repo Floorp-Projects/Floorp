@@ -228,34 +228,6 @@ LSObject::~LSObject() {
 }
 
 // static
-void LSObject::Initialize() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIEventTarget> domFileThread =
-      RemoteLazyInputStreamThread::GetOrCreate();
-  if (NS_WARN_IF(!domFileThread)) {
-    return;
-  }
-
-  RefPtr<Runnable> runnable =
-      NS_NewRunnableFunction("LSObject::Initialize", []() {
-        AssertIsOnDOMFileThread();
-
-        mozilla::ipc::PBackgroundChild* backgroundActor =
-            mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
-
-        if (NS_WARN_IF(!backgroundActor)) {
-          return;
-        }
-      });
-
-  if (NS_WARN_IF(
-          NS_FAILED(domFileThread->Dispatch(runnable, NS_DISPATCH_NORMAL)))) {
-    return;
-  }
-}
-
-// static
 nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
                                    Storage** aStorage) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -471,9 +443,7 @@ LSRequestChild* LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
   AssertIsOnDOMFileThread();
 
   mozilla::ipc::PBackgroundChild* backgroundActor =
-      XRE_IsParentProcess()
-          ? mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread()
-          : mozilla::ipc::BackgroundChild::GetForCurrentThread();
+      mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return nullptr;
   }
@@ -1095,8 +1065,7 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
     MOZ_ASSERT(mNestedEventTarget);
 
     nsCOMPtr<nsIEventTarget> domFileThread =
-        XRE_IsParentProcess() ? RemoteLazyInputStreamThread::GetOrCreate()
-                              : RemoteLazyInputStreamThread::Get();
+        RemoteLazyInputStreamThread::GetOrCreate();
     if (NS_WARN_IF(!domFileThread)) {
       return NS_ERROR_FAILURE;
     }
