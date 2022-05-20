@@ -1813,8 +1813,16 @@ ssl3_HandleSupportedPointFormatsXtn(const sslSocket *ss,
         }
     }
 
-    /* Poor client doesn't support uncompressed points. */
+    /* Poor client doesn't support uncompressed points.
+     *
+     * If the client sends the extension and the extension does not contain the
+     * uncompressed point format, and the client has used the Supported Groups
+     * extension to indicate support for any of the curves defined in this
+     * specification, then the server MUST abort the handshake and return an
+     * illegal_parameter alert. [RFC8422, Section 5.1.2] */
+    ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
     PORT_SetError(SSL_ERROR_RX_MALFORMED_HANDSHAKE);
+
     return SECFailure;
 }
 

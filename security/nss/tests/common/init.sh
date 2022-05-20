@@ -83,6 +83,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         GTESTDIR=${HOSTDIR}/gtests
 
         PWFILE=${HOSTDIR}/tests.pw
+        LONGPWFILE=${HOSTDIR}/tests.longpw
         EMPTY_FILE=${HOSTDIR}/tests_empty
         NOISE_FILE=${HOSTDIR}/tests_noise
         CORELIST_FILE=${HOSTDIR}/clist
@@ -92,6 +93,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         FIPSP12PWFILE=${HOSTDIR}/tests.fipsp12pw
 
         echo nss > ${PWFILE}
+        echo "nss123456789012345678901234567890123456789012345678901234567890_" > ${LONGPWFILE}
         echo > ${EMPTY_FILE}
         echo "fIps140" > ${FIPSPWFILE}
         echo "fips104" > ${FIPSBADPWFILE}
@@ -661,6 +663,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     fi
 
     R_PWFILE=../tests.pw
+    R_LONGPWFILE=../tests.longpw
     R_EMPTY_FILE=../tests_empty
     R_NOISE_FILE=../tests_noise
 

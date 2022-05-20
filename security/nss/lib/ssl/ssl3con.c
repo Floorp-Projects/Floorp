@@ -8991,9 +8991,15 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
                                    PR_MIN(ss->clientHelloVersion,
                                           SSL_LIBRARY_VERSION_TLS_1_2),
                                    PR_TRUE);
+        /* Send protocol version alert if the ClientHello.legacy_version is not
+         * supported by the server.
+         *
+         * If the "supported_versions" extension is absent and the server only
+         * supports versions greater than ClientHello.legacy_version, the
+         * server MUST abort the handshake with a "protocol_version" alert
+         * [RFC8446, Appendix D.2]. */
         if (rv != SECSuccess) {
-            desc = (ss->clientHelloVersion > SSL_LIBRARY_VERSION_3_0) ? protocol_version
-                                                                      : handshake_failure;
+            desc = protocol_version;
             errCode = SSL_ERROR_UNSUPPORTED_VERSION;
             goto alert_loser;
         }
@@ -13191,10 +13197,25 @@ ssl3_HandleNonApplicationData(sslSocket *ss, SSLContentType rType,
             }
         /* Fall through. */
         default:
+            /* If a TLS implementation receives an unexpected record type,
+             * it MUST terminate the connection with an "unexpected_message"
+             * alert [RFC8446, Section 5].
+             *
+             * For TLS 1.3 the outer content type is checked before in
+             * tls13con.c/tls13_UnprotectRecord(),
+             * For DTLS 1.3 the outer content type is checked before in
+             * ssl3gthr.c/dtls_GatherData.
+             * The inner content types will be checked here.
+             *
+             * In DTLS generally invalid records SHOULD be silently discarded,
+             * no alert is sent [RFC6347, Section 4.1.2.7].
+             */
+            if (!IS_DTLS(ss)) {
+                SSL3_SendAlert(ss, alert_fatal, unexpected_message);
+            }
+            PORT_SetError(SSL_ERROR_RX_UNKNOWN_RECORD_TYPE);
             SSL_DBG(("%d: SSL3[%d]: bogus content type=%d",
                      SSL_GETPID(), ss->fd, rType));
-            PORT_SetError(SSL_ERROR_RX_UNKNOWN_RECORD_TYPE);
-            ssl3_DecodeError(ss);
             rv = SECFailure;
             break;
     }
