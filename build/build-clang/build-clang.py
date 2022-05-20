@@ -196,7 +196,7 @@ def build_one_stage(
     build_type,
     assertions,
     libcxx_include_dir,
-    build_wasm,
+    targets,
     is_final_stage=False,
     profile=None,
 ):
@@ -211,9 +211,7 @@ def build_one_stage(
         return path.replace("\\", "/")
 
     def cmake_base_args(cc, cxx, asm, ld, ar, ranlib, libtool, inst_dir):
-        machine_targets = "X86;ARM;AArch64" if is_final_stage else "X86"
-        if build_wasm and is_final_stage:
-            machine_targets += ";WebAssembly"
+        machine_targets = targets if is_final_stage and targets else "X86"
 
         cmake_args = [
             "-GNinja",
@@ -574,11 +572,7 @@ def main():
                 "We only know how to do Release, Debug, RelWithDebInfo or "
                 "MinSizeRel builds"
             )
-    build_wasm = False
-    if "build_wasm" in config:
-        build_wasm = config["build_wasm"]
-        if build_wasm not in (True, False):
-            raise ValueError("Only boolean values are accepted for build_wasm.")
+    targets = config.get("targets")
     build_clang_tidy = False
     if "build_clang_tidy" in config:
         build_clang_tidy = config["build_clang_tidy"]
@@ -766,7 +760,7 @@ def main():
             build_type,
             assertions,
             libcxx_include_dir,
-            build_wasm,
+            targets,
             is_final_stage=(stages == 1),
         )
 
@@ -793,7 +787,7 @@ def main():
             build_type,
             assertions,
             libcxx_include_dir,
-            build_wasm,
+            targets,
             is_final_stage=(stages == 2),
             profile="gen" if pgo else None,
         )
@@ -821,7 +815,7 @@ def main():
             build_type,
             assertions,
             libcxx_include_dir,
-            build_wasm,
+            targets,
             (stages == 3),
         )
         if pgo:
@@ -865,7 +859,7 @@ def main():
             build_type,
             assertions,
             libcxx_include_dir,
-            build_wasm,
+            targets,
             (stages == 4),
             profile=profile,
         )

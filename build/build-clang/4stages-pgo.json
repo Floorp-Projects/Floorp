@@ -1,4 +1,5 @@
 {
     "stages": "4",
+    "targets": "X86;ARM;AArch64;WebAssembly",
     "pgo": true
 }
