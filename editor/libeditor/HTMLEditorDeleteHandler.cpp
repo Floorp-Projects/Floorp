@@ -4849,21 +4849,28 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
   if (HTMLEditUtils::CanNodeContain(*aPointToInsert.GetContainer(), aContent)) {
     // If it can, move it there.
     EditorDOMPoint pointToInsert(aPointToInsert);
-    {
-      AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
-      nsresult rv = MoveNodeWithTransaction(aContent, pointToInsert);
-      if (NS_WARN_IF(Destroyed())) {
-        return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-        return MoveNodeResult(rv);
-      }
+    MoveNodeResult moveNodeResult =
+        MoveNodeWithTransaction(aContent, pointToInsert);
+    if (moveNodeResult.isErr()) {
+      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
+      return MoveNodeResult(moveNodeResult.unwrapErr());
     }
-    // Advance DOM point with offset for keeping backward compatibility.
-    // XXX Where should we insert next content if a mutation event listener
-    //     break the relation of offset and moved node?
-    return MoveNodeHandled(pointToInsert.NextPoint());
+    nsresult rv = moveNodeResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
+      return MoveNodeResult(rv);
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+    // XXX This is odd to override the handled state here, but stopping this
+    //     hits an NS_ASSERTION in WhiteSpaceVisibilityKeeper::
+    //     MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement.
+    moveNodeResult.MarkAsHandled();
+    return moveNodeResult;
   }
 
   // If it can't, move its children (if any), and then delete it.

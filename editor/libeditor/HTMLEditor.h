@@ -1977,25 +1977,26 @@ class HTMLEditor final : public EditorBase,
   }
 
   /**
-   * MoveNodeWithTransaction() moves aContent to aPointToInsert.
+   * MoveNodeWithTransaction() moves aContentToMove to aPointToInsert.
    *
-   * @param aContent        The node to be moved.
+   * @param aContentToMove  The node to be moved.
+   * @param aPointToInsert  The point where aContentToMove will be inserted.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult MoveNodeWithTransaction(
-      nsIContent& aContent, const EditorDOMPoint& aPointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveNodeWithTransaction(
+      nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert);
 
   /**
-   * MoveNodeToEndWithTransaction() moves aContent to end of aNewContainer.
+   * MoveNodeToEndWithTransaction() moves aContentToMove to end of
+   * aNewContainer.
    *
-   * @param aContent        The node to be moved.
-   * @param aNewContainer   The new container which will contain aContent as
-   *                        its last child.
+   * @param aContentToMove  The node to be moved.
+   * @param aNewContainer   The new container which will contain aContentToMove
+   *                        as its last child.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  MoveNodeToEndWithTransaction(nsIContent& aContent, nsINode& aNewContainer) {
-    EditorDOMPoint pointToInsert;
-    pointToInsert.SetToEndOf(&aNewContainer);
-    return MoveNodeWithTransaction(aContent, pointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveNodeToEndWithTransaction(
+      nsIContent& aContentToMove, nsINode& aNewContainer) {
+    return MoveNodeWithTransaction(aContentToMove,
+                                   EditorDOMPoint::AtEndOf(aNewContainer));
   }
 
   /**
