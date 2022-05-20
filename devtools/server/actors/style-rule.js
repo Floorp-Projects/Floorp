@@ -44,7 +44,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "inactivePropertyHelper",
+  "isPropertyUsed",
   "devtools/server/actors/utils/inactive-property-helper",
   true
 );
@@ -450,12 +450,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
           supportsOptions
         );
         // TODO: convert from Object to Boolean. See Bug 1574471
-        decl.isUsed = inactivePropertyHelper.isPropertyUsed(
-          el,
-          style,
-          this.rawRule,
-          decl.name
-        );
+        decl.isUsed = isPropertyUsed(el, style, this.rawRule, decl.name);
         // Check property name. All valid CSS properties support "initial" as a value.
         decl.isNameValid = InspectorUtils.supports(
           `${decl.name}:initial`,
@@ -1099,12 +1094,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
     for (const decl of this._declarations) {
       // TODO: convert from Object to Boolean. See Bug 1574471
-      const isUsed = inactivePropertyHelper.isPropertyUsed(
-        el,
-        style,
-        this.rawRule,
-        decl.name
-      );
+      const isUsed = isPropertyUsed(el, style, this.rawRule, decl.name);
 
       if (decl.isUsed.used !== isUsed.used) {
         decl.isUsed = isUsed;
