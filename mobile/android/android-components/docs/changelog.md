@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **service-firefox-accounts**
+  * 🆕 SyncStore to abstract account and Sync details.
+
 * **browser-state**:
   * 🌟️ Add support for tab prioritization via `SessionPrioritizationMiddleware` for more information see [#12190](https://github.com/mozilla-mobile/android-components/issues/12190).
 

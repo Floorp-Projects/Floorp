@@ -41,6 +41,7 @@ dependencies {
     implementation project(':support-sync-telemetry')
     implementation project(':support-ktx')
     implementation project(':lib-dataprotect')
+    implementation project(':lib-state')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
@@ -48,6 +49,7 @@ dependencies {
     implementation Dependencies.androidx_work_runtime
 
     testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.androidx_work_testing

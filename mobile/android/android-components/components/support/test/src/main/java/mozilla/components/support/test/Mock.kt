@@ -23,6 +23,12 @@ inline fun <reified T : Any> mock(noinline setup: (T.() -> Unit)? = null): T = M
     .apply { setup?.invoke(this) }
 
 /**
+ * Equivalent to [mock] but allows inline setup of suspending functions.
+ */
+suspend inline fun <reified T : Any> coMock(noinline setup: (suspend T.() -> Unit)? = null): T = Mockito.mock(T::class.java)!!
+    .apply { setup?.invoke(this) }
+
+/**
  * Enables stubbing methods. Use it when you want the mock to return particular value when particular method is called.
  *
  * Alias for [Mockito.when ].
