@@ -1927,19 +1927,7 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
   return haveRadius;
 }
 
-/* static */
-void nsIFrame::InsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
-  for (const auto side : mozilla::AllPhysicalSides()) {
-    nscoord offset = aOffsets.Side(side);
-    uint32_t hc1 = SideToHalfCorner(side, false, false);
-    uint32_t hc2 = SideToHalfCorner(side, true, false);
-    aRadii[hc1] = std::max(0, aRadii[hc1] - offset);
-    aRadii[hc2] = std::max(0, aRadii[hc2] - offset);
-  }
-}
-
-/* static */
-void nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
+void nsIFrame::AdjustBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
   auto AdjustOffset = [](const uint32_t aRadius, const nscoord aOffset) {
     // Implement the cubic formula to adjust offset when aOffset > 0 and
     // aRadius / aOffset < 1.
@@ -2020,27 +2008,27 @@ bool nsIFrame::GetBorderRadii(nscoord aRadii[8]) const {
 }
 
 bool nsIFrame::GetMarginBoxBorderRadii(nscoord aRadii[8]) const {
-  return GetBoxBorderRadii(aRadii, GetUsedMargin(), true);
+  return GetBoxBorderRadii(aRadii, GetUsedMargin());
 }
 
 bool nsIFrame::GetPaddingBoxBorderRadii(nscoord aRadii[8]) const {
-  return GetBoxBorderRadii(aRadii, GetUsedBorder(), false);
+  return GetBoxBorderRadii(aRadii, -GetUsedBorder());
 }
 
 bool nsIFrame::GetContentBoxBorderRadii(nscoord aRadii[8]) const {
-  return GetBoxBorderRadii(aRadii, GetUsedBorderAndPadding(), false);
+  return GetBoxBorderRadii(aRadii, -GetUsedBorderAndPadding());
 }
 
-bool nsIFrame::GetBoxBorderRadii(nscoord aRadii[8], nsMargin aOffset,
-                                 bool aIsOutset) const {
-  if (!GetBorderRadii(aRadii)) return false;
-  if (aIsOutset) {
-    OutsetBorderRadii(aRadii, aOffset);
-  } else {
-    InsetBorderRadii(aRadii, aOffset);
+bool nsIFrame::GetBoxBorderRadii(nscoord aRadii[8],
+                                 const nsMargin& aOffsets) const {
+  if (!GetBorderRadii(aRadii)) {
+    return false;
   }
+  AdjustBorderRadii(aRadii, aOffsets);
   for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
-    if (aRadii[corner]) return true;
+    if (aRadii[corner]) {
+      return true;
+    }
   }
   return false;
 }
@@ -2738,7 +2726,7 @@ static void ApplyOverflowClipping(
     rect.height = o.height;
   }
   clipRect = rect + aBuilder->ToReferenceFrame(aFrame);
-  haveRadii = aFrame->GetBoxBorderRadii(radii, bp, false);
+  haveRadii = aFrame->GetBoxBorderRadii(radii, -bp);
   aClipState.ClipContainingBlockDescendantsExtra(clipRect,
                                                  haveRadii ? radii : nullptr);
 }
