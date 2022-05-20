@@ -604,23 +604,19 @@ static const char* descriptionOverwriteExtensions[] = {
 static StaticRefPtr<nsExternalHelperAppService> sExtHelperAppSvcSingleton;
 
 /**
- * On Mac child processes, return an nsOSHelperAppServiceChild for remoting
- * OS calls to the parent process. On all other platforms use
+ * In child processes, return an nsOSHelperAppServiceChild for remoting
+ * OS calls to the parent process.  In the parent process itself, use
  * nsOSHelperAppService.
  */
 /* static */
 already_AddRefed<nsExternalHelperAppService>
 nsExternalHelperAppService::GetSingleton() {
   if (!sExtHelperAppSvcSingleton) {
-#if defined(XP_MACOSX) || defined(XP_WIN)
     if (XRE_IsParentProcess()) {
       sExtHelperAppSvcSingleton = new nsOSHelperAppService();
     } else {
       sExtHelperAppSvcSingleton = new nsOSHelperAppServiceChild();
     }
-#else
-    sExtHelperAppSvcSingleton = new nsOSHelperAppService();
-#endif  // defined(XP_MACOSX) || defined(XP_WIN)
     ClearOnShutdown(&sExtHelperAppSvcSingleton);
   }
 

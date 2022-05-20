@@ -334,15 +334,6 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
   return nullptr;
 }
 
-float nsDeviceContextSpecWin::GetDPI() {
-  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF || mPrintViaSkPDF) {
-    return nsIDeviceContextSpec::GetDPI();
-  }
-  // To match the previous printing code we need to return 144 when printing to
-  // a Windows surface.
-  return 144.0f;
-}
-
 float nsDeviceContextSpecWin::GetPrintingScale() {
   MOZ_ASSERT(mPrintSettings);
   if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF || mPrintViaSkPDF) {

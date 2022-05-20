@@ -321,7 +321,6 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocol(
     *aHandlerExists = false;
     return IPC_OK();
   }
-#if defined(XP_MACOSX) || defined(XP_WIN)
   // Check the datastore and fallback to an OS check.
   // ExternalProcotolHandlerExists() does the fallback.
   nsresult rv;
@@ -337,10 +336,6 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocol(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     *aHandlerExists = false;
   }
-#else
-  MOZ_RELEASE_ASSERT(false, "No implementation on this platform.");
-  *aHandlerExists = false;
-#endif
   return IPC_OK();
 }
 

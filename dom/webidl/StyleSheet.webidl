@@ -46,4 +46,8 @@ interface StyleSheet {
   // string.
   [ChromeOnly, Pure]
   readonly attribute DOMString sourceURL;
+  [ChromeOnly, Pure]
+  readonly attribute Document? associatedDocument;
+  [ChromeOnly, Pure, BinaryName="isConstructed"]
+  readonly attribute boolean constructed;
 };

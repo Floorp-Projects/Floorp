@@ -69,6 +69,7 @@ class StyleSheetWatcher {
       resourceId,
       resourceType: STYLESHEET,
       disabled: styleSheet.disabled,
+      constructed: styleSheet.constructed,
       fileName,
       href: styleSheet.href,
       isNew: isCreatedByDevTools,

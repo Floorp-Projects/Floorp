@@ -30,6 +30,14 @@ class EmptyLines extends Component {
     });
   }
 
+  shouldComponentUpdate(nextProps) {
+    const { breakableLines, selectedSource } = this.props;
+    return (
+      breakableLines != nextProps.breakableLines ||
+      selectedSource.id != nextProps.selectedSource.id
+    );
+  }
+
   disableEmptyLines() {
     const { breakableLines, selectedSource, editor } = this.props;
 
