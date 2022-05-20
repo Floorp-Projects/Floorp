@@ -449,8 +449,6 @@ void APZCTreeManager::UpdateHitTestingTree(
     ForEachNode<ReverseIterator>(
         aRoot,
         [&](ScrollNode aLayerMetrics) {
-          mApzcTreeLog << aLayerMetrics.Name() << '\t';
-
           if (auto asyncZoomContainerId =
                   aLayerMetrics.GetAsyncZoomContainerId()) {
             if (asyncZoomContainerNestingDepth > 0) {
@@ -523,8 +521,6 @@ void APZCTreeManager::UpdateHitTestingTree(
           if (apzc && node->IsPrimaryHolder()) {
             state.mScrollTargets[apzc->GetGuid()] = node;
           }
-
-          mApzcTreeLog << '\n';
 
           // Accumulate the CSS transform between layers that have an APZC.
           // In the terminology of the big comment above
@@ -955,17 +951,10 @@ bool APZCTreeManager::AdvanceAnimationsInternal(
   return activeAnimations;
 }
 
-void APZCTreeManager::PrintAPZCInfo(const ScrollNode& aLayer,
-                                    const AsyncPanZoomController* apzc) {
-  const FrameMetrics& metrics = aLayer.Metrics();
-  std::stringstream guidStr;
-  guidStr << apzc->GetGuid();
-  mApzcTreeLog << "APZC " << guidStr.str()
-               << "\tcb=" << metrics.GetCompositionBounds()
-               << "\tsr=" << metrics.GetScrollableRect()
-               << (metrics.IsScrollInfoLayer() ? "\tscrollinfo" : "")
-               << (apzc->HasScrollgrab() ? "\tscrollgrab" : "") << "\t"
-               << aLayer.Metadata().GetContentDescription().get();
+void APZCTreeManager::PrintLayerInfo(const ScrollNode& aLayer) {
+  if (aLayer.Dump(mApzcTreeLog) > 0) {
+    mApzcTreeLog << "\n";
+  }
 }
 
 // mTreeLock is held, and checked with static analysis
@@ -1135,6 +1124,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
                            aLayer.GetStickyScrollRangeOuter(),
                            aLayer.GetStickyScrollRangeInner(),
                            aLayer.GetStickyPositionAnimationId());
+    PrintLayerInfo(aLayer);
     return node;
   }
 
@@ -1154,7 +1144,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
       ApzcMapData{static_cast<AsyncPanZoomController*>(nullptr), Nothing()}));
   if (!insertResult.second) {
     apzc = insertResult.first->second.apzc;
-    PrintAPZCInfo(aLayer, apzc);
+    PrintLayerInfo(aLayer);
   }
   APZCTM_LOG("Found APZC %p for layer %p with identifiers %" PRIx64 " %" PRId64
              "\n",
@@ -1245,7 +1235,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     SetHitTestData(node, aLayer, aState.mOverrideFlags.top());
     apzc->SetAncestorTransform(aAncestorTransform);
 
-    PrintAPZCInfo(aLayer, apzc);
+    PrintLayerInfo(aLayer);
 
     // Bind the APZC instance into the tree of APZCs
     AttachNodeToTree(node, aParent, aNextSibling);
