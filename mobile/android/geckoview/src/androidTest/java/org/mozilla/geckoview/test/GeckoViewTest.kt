@@ -1,9 +1,21 @@
 package org.mozilla.geckoview.test
 
+import android.graphics.Matrix
+import android.os.Build
+import android.os.Bundle
+import android.os.LocaleList
+import android.text.InputType
+import android.util.Pair
+import android.util.SparseArray
+import android.view.View
+import android.view.ViewStructure
+import android.view.autofill.AutofillId
+import android.view.autofill.AutofillValue
 import androidx.test.filters.LargeTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.core.view.ViewCompat
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.filters.SdkSuppress
 
 import org.hamcrest.Matchers.equalTo
 import org.junit.*
@@ -227,5 +239,205 @@ class GeckoViewTest : BaseSessionTest() {
         waitUntilContentProcessPriority(
             high = listOf(mainSession), low = listOf(otherSession)
         )
+    }
+
+    private fun visit(node: MockViewStructure, callback: (MockViewStructure) -> Unit) {
+        callback(node)
+
+        for (child in node.children) {
+            if (child != null) {
+                visit(child, callback)
+            }
+        }
+    }
+
+    @Test
+    @NullDelegate(Autofill.Delegate::class)
+    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
+    fun autofillWithNoSession() {
+        mainSession.loadTestPath(FORMS_XORIGIN_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val autofills = mapOf(
+            "#user1" to "username@example.com",
+            "#user2" to "username@example.com",
+            "#pass1" to "test-password",
+            "#pass2" to "test-password")
+
+        // Set up promises to monitor the values changing.
+        val promises = autofills.map { entry ->
+            // Repeat each test with both the top document and the iframe document.
+            mainSession.evaluatePromiseJS("""
+                window.getDataForAllFrames('${entry.key}', '${entry.value}')
+                """)
+        }
+
+        activityRule.scenario.onActivity {
+            val root = MockViewStructure(View.NO_ID)
+            it.view.onProvideAutofillVirtualStructure(root, 0)
+
+            val data = SparseArray<AutofillValue>()
+            visit(root) { node ->
+                if (node.hints?.indexOf(View.AUTOFILL_HINT_USERNAME) != -1) {
+                    data.set(node.id, AutofillValue.forText("username@example.com"))
+                } else if (node.hints?.indexOf(View.AUTOFILL_HINT_PASSWORD) != -1) {
+                    data.set(node.id, AutofillValue.forText("test-password"))
+                }
+            }
+
+            // Releasing the session will set mSession in GeckoView to null
+            // this test verifies that we can still autofill correctly even in released state
+            val session = it.view.releaseSession()!!
+            it.view.autofill(data)
+
+            // Put back the session and verifies that the autofill went through anyway
+            it.view.setSession(session)
+
+            // Wait on the promises and check for correct values.
+            for (values in promises.map { p -> p.value.asJsonArray() }) {
+                for (i in 0 until values.length()) {
+                    val (key, actual, expected, eventInterface) = values.get(i).asJSList<String>()
+
+                    assertThat("Auto-filled value must match ($key)", actual, equalTo(expected))
+                    assertThat(
+                        "input event should be dispatched with InputEvent interface",
+                        eventInterface,
+                        equalTo("InputEvent")
+                    )
+                }
+            }
+        }
+    }
+
+    class MockViewStructure(var id: Int, var parent: MockViewStructure? = null) : ViewStructure() {
+        private var enabled: Boolean = false
+        private var inputType = 0
+        var children = Array<MockViewStructure?>(0, { null })
+        var childIndex = 0
+        var hints : Array<out String>? = null
+
+        override fun setId(p0: Int, p1: String?, p2: String?, p3: String?) {
+            id = p0
+        }
+
+        override fun setEnabled(p0: Boolean) {
+            enabled = p0
+        }
+
+        override fun setChildCount(p0: Int) {
+            children = Array(p0, { null })
+        }
+
+        override fun getChildCount(): Int {
+            return children.size
+        }
+
+        override fun newChild(p0: Int): ViewStructure {
+            val child = MockViewStructure(p0, this)
+            children[childIndex++] = child
+            return child
+        }
+
+        override fun asyncNewChild(p0: Int): ViewStructure {
+            return newChild(p0)
+        }
+
+        override fun setInputType(p0: Int) {
+            inputType = p0
+        }
+
+        fun getInputType() : Int {
+            return inputType
+        }
+
+        override fun setAutofillHints(p0: Array<out String>?) {
+            hints = p0
+        }
+
+        override fun addChildCount(p0: Int): Int {
+            TODO()
+        }
+
+        override fun setDimens(p0: Int, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int) {}
+        override fun setTransformation(p0: Matrix?) {}
+        override fun setElevation(p0: Float) {}
+        override fun setAlpha(p0: Float) {}
+        override fun setVisibility(p0: Int) {}
+        override fun setClickable(p0: Boolean) {}
+        override fun setLongClickable(p0: Boolean) {}
+        override fun setContextClickable(p0: Boolean) {}
+        override fun setFocusable(p0: Boolean) {}
+        override fun setFocused(p0: Boolean) {}
+        override fun setAccessibilityFocused(p0: Boolean) {}
+        override fun setCheckable(p0: Boolean) {}
+        override fun setChecked(p0: Boolean) {}
+        override fun setSelected(p0: Boolean) {}
+        override fun setActivated(p0: Boolean) {}
+        override fun setOpaque(p0: Boolean) {}
+        override fun setClassName(p0: String?) {}
+        override fun setContentDescription(p0: CharSequence?) {}
+        override fun setText(p0: CharSequence?) {}
+        override fun setText(p0: CharSequence?, p1: Int, p2: Int) {}
+        override fun setTextStyle(p0: Float, p1: Int, p2: Int, p3: Int) {}
+        override fun setTextLines(p0: IntArray?, p1: IntArray?) {}
+        override fun setHint(p0: CharSequence?) {}
+        override fun getText(): CharSequence {
+            return ""
+        }
+        override fun getTextSelectionStart(): Int {
+            return 0
+        }
+        override fun getTextSelectionEnd(): Int {
+            return 0
+        }
+        override fun getHint(): CharSequence {
+            return ""
+        }
+        override fun getExtras(): Bundle {
+            return Bundle()
+        }
+        override fun hasExtras(): Boolean {
+            return false
+        }
+
+        override fun getAutofillId(): AutofillId? {
+            return null
+        }
+        override fun setAutofillId(p0: AutofillId) {}
+        override fun setAutofillId(p0: AutofillId, p1: Int) {}
+        override fun setAutofillType(p0: Int) {}
+        override fun setAutofillValue(p0: AutofillValue?) {}
+        override fun setAutofillOptions(p0: Array<out CharSequence>?) {}
+        override fun setDataIsSensitive(p0: Boolean) {}
+        override fun asyncCommit() {}
+        override fun setWebDomain(p0: String?) {}
+        override fun setLocaleList(p0: LocaleList?) {}
+
+        override fun newHtmlInfoBuilder(p0: String): HtmlInfo.Builder {
+            return MockHtmlInfoBuilder()
+        }
+        override fun setHtmlInfo(p0: HtmlInfo) {
+        }
+    }
+
+    class MockHtmlInfoBuilder : ViewStructure.HtmlInfo.Builder() {
+        override fun addAttribute(p0: String, p1: String): ViewStructure.HtmlInfo.Builder {
+            return this
+        }
+
+        override fun build(): ViewStructure.HtmlInfo {
+            return MockHtmlInfo()
+        }
+    }
+
+    class MockHtmlInfo : ViewStructure.HtmlInfo() {
+        override fun getTag(): String {
+            TODO("Not yet implemented")
+        }
+
+        override fun getAttributes(): MutableList<Pair<String, String>>? {
+            TODO("Not yet implemented")
+        }
+
     }
 }

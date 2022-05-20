@@ -28,6 +28,8 @@ exclude: true
   [`onSessionStart`][102.16].
 - Added [`PromptInstanceDelegate.onPromptUpdate`][102.17] to allow GeckoView to update current prompts.
   ([bug 1758800]({{bugzilla}}1758800))
+- Deprecated [`GeckoSession.autofill`][102.18], use [`Autofill.Session.autofill`][102.19] instead.
+  ([bug 1770010]({{bugzilla}}1770010))
 
 [102.1]: {{javadoc_uri}}/GeckoSession.PromptDelegate.DateTimePrompt.html#stepValue
 [102.2]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date#step
@@ -46,6 +48,8 @@ exclude: true
 [102.15]: {{javadoc_uri}}/Autofill.Delegate.html#onSessionCommit(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.Autofill.Node,org.mozilla.geckoview.Autofill.NodeData)
 [102.16]: {{javadoc_uri}}/Autofill.Delegate.html#onSessionStart(org.mozilla.geckoview.GeckoSession)
 [102.17]: {{javadoc_uri}}/GeckoSession.PromptDelegate.PromptInstanceDelegate.html#onPromptUpdate(org.mozilla.geckoview.GeckoSession.PromptDelegate.BasePrompt)
+[102.18]: {{javadoc_uri}}/GeckoSession.html#autofill(android.util.SparseArray)
+[102.19]: {{javadoc_uri}}/Autofill.Session.html#autofill(android.util.SparseArray)
 
 ## v101
 - Added [`GeckoDisplay.surfaceChanged`][101.1] function taking new type [`GeckoDisplay.SurfaceInfo`][101.2].
@@ -1200,4 +1204,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 1d08fc97ff3a0f8c0fc6c90b1ec1829da437ad90
+[api-version]: dc9516b62971d881de4059eae2ea1b88a1ebb3d1

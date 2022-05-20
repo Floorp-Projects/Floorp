@@ -15,7 +15,6 @@ module.exports = function({ resource, watcherFront, targetFront }) {
     // instantiate front for session storage
     resource = types.getType("sessionStorage").read(resource, targetFront);
     resource.resourceType = SESSION_STORAGE;
-    resource.resourceId = SESSION_STORAGE;
     resource.resourceKey = "sessionStorage";
   }
 

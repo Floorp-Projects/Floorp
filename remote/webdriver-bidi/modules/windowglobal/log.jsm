@@ -48,38 +48,6 @@ class LogModule extends Module {
   }
 
   /**
-   * Private methods
-   */
-
-  _applySessionData(params) {
-    // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
-    // class.
-    const { category, added = [], removed = [] } = params;
-    if (category === "event") {
-      for (const event of added) {
-        this._subscribeEvent(event);
-      }
-      for (const event of removed) {
-        this._unsubscribeEvent(event);
-      }
-    }
-  }
-
-  _subscribeEvent(event) {
-    if (event === "log.entryAdded") {
-      this.#consoleAPIListener.startListening();
-      this.#consoleMessageListener.startListening();
-    }
-  }
-
-  _unsubscribeEvent(event) {
-    if (event === "log.entryAdded") {
-      this.#consoleAPIListener.stopListening();
-      this.#consoleMessageListener.stopListening();
-    }
-  }
-
-  /**
    * Map the internal stacktrace representation to a WebDriver BiDi
    * compatible one.
    *
@@ -111,6 +79,22 @@ class LogModule extends Module {
     return { callFrames };
   }
 
+  #getLogEntryLevelFromConsoleMethod(method) {
+    switch (method) {
+      case "assert":
+      case "error":
+        return "error";
+      case "debug":
+      case "trace":
+        return "debug";
+      case "warn":
+      case "warning":
+        return "warning";
+      default:
+        return "info";
+    }
+  }
+
   #onConsoleAPIMessage = (eventName, data = {}) => {
     const {
       // `arguments` cannot be used as variable name in functions
@@ -125,7 +109,7 @@ class LogModule extends Module {
     //   https://w3c.github.io/webdriver-bidi/#event-log-entryAdded
 
     // 1. Translate the console message method to a log.LogEntry level
-    const logEntrylevel = this._getLogEntryLevelFromConsoleMethod(method);
+    const logEntrylevel = this.#getLogEntryLevelFromConsoleMethod(method);
 
     // 2. Use the message's timeStamp or fallback on the current time value.
     const timestamp = timeStamp || Date.now();
@@ -195,19 +179,35 @@ class LogModule extends Module {
     this.emitProtocolEvent("log.entryAdded", entry);
   };
 
-  _getLogEntryLevelFromConsoleMethod(method) {
-    switch (method) {
-      case "assert":
-      case "error":
-        return "error";
-      case "debug":
-      case "trace":
-        return "debug";
-      case "warn":
-      case "warning":
-        return "warning";
-      default:
-        return "info";
+  /**
+   * Internal commands
+   */
+
+  _applySessionData(params) {
+    // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
+    // class.
+    const { category, added = [], removed = [] } = params;
+    if (category === "event") {
+      for (const event of added) {
+        this._subscribeEvent(event);
+      }
+      for (const event of removed) {
+        this._unsubscribeEvent(event);
+      }
+    }
+  }
+
+  _subscribeEvent(event) {
+    if (event === "log.entryAdded") {
+      this.#consoleAPIListener.startListening();
+      this.#consoleMessageListener.startListening();
+    }
+  }
+
+  _unsubscribeEvent(event) {
+    if (event === "log.entryAdded") {
+      this.#consoleAPIListener.stopListening();
+      this.#consoleMessageListener.stopListening();
     }
   }
 }
