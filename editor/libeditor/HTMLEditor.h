@@ -2945,14 +2945,13 @@ class HTMLEditor final : public EditorBase,
    * GetNextTableRowElement() returns next <tr> element of aTableRowElement.
    * This won't cross <table> element boundary but may cross table section
    * elements like <tbody>.
+   * Note that if given element is <tr> but there is no next <tr> element, this
+   * returns nullptr but does not return error.
    *
    * @param aTableRowElement    A <tr> element.
-   * @param aRv                 Returns error.  If given element is <tr> but
-   *                            there is no next <tr> element, this returns
-   *                            nullptr but does not return error.
    */
-  Element* GetNextTableRowElement(Element& aTableRowElement,
-                                  ErrorResult& aRv) const;
+  Result<RefPtr<Element>, nsresult> GetNextTableRowElement(
+      const Element& aTableRowElement) const;
 
   struct CellData;
 
