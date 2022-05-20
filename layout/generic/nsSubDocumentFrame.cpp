@@ -813,11 +813,6 @@ nsresult nsSubDocumentFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 void nsSubDocumentFrame::MaybeUpdateEmbedderColorScheme() {
-  if (!mContent->IsXULElement()) {
-    // We only do this for XUL <browser>s.
-    return;
-  }
-
   nsFrameLoader* fl = mFrameLoader.get();
   if (!fl) {
     return;
