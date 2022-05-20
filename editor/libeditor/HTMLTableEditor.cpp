@@ -2909,18 +2909,21 @@ NS_IMETHODIMP HTMLEditor::SwitchTableCellHeaderType(Element* aSourceCell,
 
   // This creates new node, moves children, copies attributes (true)
   //   and manages the selection!
-  RefPtr<Element> newCell = ReplaceContainerAndCloneAttributesWithTransaction(
-      *aSourceCell, MOZ_KnownLive(*newCellName));
-  if (!newCell) {
+  CreateElementResult newCellElementOrError =
+      ReplaceContainerAndCloneAttributesWithTransaction(
+          *aSourceCell, MOZ_KnownLive(*newCellName));
+  if (newCellElementOrError.isErr()) {
     NS_WARNING(
         "EditorBase::ReplaceContainerAndCloneAttributesWithTransaction() "
         "failed");
-    return NS_ERROR_FAILURE;
+    return newCellElementOrError.unwrapErr();
   }
+  // restoreSelectionLater will change selection
+  newCellElementOrError.IgnoreCaretPointSuggestion();
 
   // Return the new cell
   if (aNewCell) {
-    newCell.forget(aNewCell);
+    newCellElementOrError.UnwrapNewNode().forget(aNewCell);
   }
 
   return NS_OK;
