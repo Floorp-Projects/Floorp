@@ -72,11 +72,6 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
   // A temporary file to create an "anonymous" print target. See bug 1664253,
   // this should ideally not be needed.
   nsCOMPtr<nsIFile> mTempFile;
-
-  // This variable is independant of nsIPrintSettings::kOutputFormatPDF.
-  // It controls both whether normal printing is done via PDF using Skia and
-  // whether print-to-PDF uses Skia.
-  bool mPrintViaSkPDF = false;
 };
 
 //-------------------------------------------------------------------------
