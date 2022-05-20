@@ -108,8 +108,6 @@ add_task(async function() {
 
   const userGesture =
     "document.requestStorageAccess() may only be requested from inside a short running user-generated event handler";
-  const nested =
-    "document.requestStorageAccess() may not be called in a nested iframe.";
   const nullPrincipal =
     "document.requestStorageAccess() may not be called on a document with an opaque origin, such as a sandboxed iframe without allow-same-origin in its sandbox attribute.";
   const sandboxed =
@@ -117,9 +115,6 @@ add_task(async function() {
 
   await runRequestStorageAccess({ withUserActivation: false });
   await checkErrorMessage(userGesture);
-
-  await runRequestStorageAccess({ withUserActivation: true, nested: true });
-  await checkErrorMessage(nested);
 
   await runRequestStorageAccess({
     withUserActivation: true,
