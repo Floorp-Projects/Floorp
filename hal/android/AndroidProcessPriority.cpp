@@ -10,8 +10,6 @@
 #include "mozilla/java/GeckoProcessTypeWrappers.h"
 #include "mozilla/java/ServiceAllocatorWrappers.h"
 
-using namespace mozilla::hal;
-
 /**
  * Bucket the Gecko HAL process priority level into one of the three Android
  * priority levels.
