@@ -377,34 +377,19 @@ static Maybe<nsRect> ComputeTheIntersection(
       // 3.2 If container has overflow clipping or a css clip-path property,
       // update intersectionRect by applying container's clip.
       //
+      // TODO: Apply clip-path.
+      //
       // 3.3 is handled, looks like, by this same clipping, given the root
       // scroll-frame cannot escape the viewport, probably?
+      //
       intersectionRect = EdgeInclusiveIntersection(
           intersectionRectRelativeToContainer, subFrameRect);
       if (!intersectionRect) {
         return Nothing();
       }
       target = containerFrame;
-    } else {
-      const auto& disp = *containerFrame->StyleDisplay();
-      auto clipAxes = containerFrame->ShouldApplyOverflowClipping(&disp);
-      // 3.2 TODO: Apply clip-path.
-      if (clipAxes != PhysicalAxes::None) {
-        // 3.1 Map intersectionRect to the coordinate space of container.
-        nsRect intersectionRectRelativeToContainer =
-            nsLayoutUtils::TransformFrameRectToAncestor(
-                target, intersectionRect.value(), containerFrame);
-        OverflowAreas::ApplyOverflowClippingOnRect(
-            intersectionRectRelativeToContainer,
-            containerFrame->GetRectRelativeToSelf(), clipAxes,
-            containerFrame->OverflowClipMargin(clipAxes));
-        if (intersectionRectRelativeToContainer.IsEmpty()) {
-          return Nothing();
-        }
-        intersectionRect = Some(intersectionRectRelativeToContainer);
-        target = containerFrame;
-      }
     }
+
     containerFrame =
         nsLayoutUtils::GetCrossDocParentFrameInProcess(containerFrame);
   }
