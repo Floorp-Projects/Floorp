@@ -1338,7 +1338,7 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertTableRowElement);
   rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (NS_FAILED(rv)) {
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
                          "CanHandleAndMaybeDispatchBeforeInputEvent(), failed");
     return EditActionHandled(rv);

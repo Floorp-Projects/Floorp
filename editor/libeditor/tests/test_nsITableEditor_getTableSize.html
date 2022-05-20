@@ -63,7 +63,6 @@ SimpleTest.waitForFocus(function() {
 
   for (const kTest of kTests) {
     editor.innerHTML = kTest;
-    editor.scrollTop; // compute layout now.
     let element = document.getElementById("test");
     getTableEditor().getTableSize(element, rowCount, columnCount);
     is(rowCount.value.toString(10), element.getAttribute("data-rows"),
