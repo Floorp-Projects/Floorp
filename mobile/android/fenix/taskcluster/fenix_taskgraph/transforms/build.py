@@ -55,6 +55,7 @@ def add_shippable_secrets(config, tasks):
                         ("mls", ".mls_token"),
                         ("nimbus_url", ".nimbus"),
                         ("wallpaper_url", ".wallpaper_url"),
+                        ("pocket_consumer_key", ".pocket_consumer_key"),
                     )
                 ]
             )

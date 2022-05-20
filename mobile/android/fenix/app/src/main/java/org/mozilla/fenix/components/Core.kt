@@ -365,8 +365,10 @@ class Core(
         PocketStoriesConfig(
             client,
             Frequency(4, TimeUnit.HOURS),
-            // These need to be updated. See https://mozilla-hub.atlassian.net/browse/FNXV2-20329.
-            Profile(UUID.randomUUID(), "fenix")
+            Profile(
+                profileId = UUID.fromString(context.settings().pocketSponsoredStoriesProfileId),
+                appId = BuildConfig.POCKET_CONSUMER_KEY
+            )
         )
     }
     val pocketStoriesService by lazyMonitored { PocketStoriesService(context, pocketStoriesConfig) }

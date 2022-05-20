@@ -389,6 +389,21 @@ android.applicationVariants.all { variant ->
         buildConfigField 'String', 'WALLPAPER_URL', '""'
         println("--")
     }
+
+// -------------------------------------------------------------------------------------------------
+// BuildConfig: Set the Pocket consumer key from a local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("Pocket consumer key: ")
+
+    try {
+        def token = new File("${rootDir}/.pocket_consumer_key").text.trim()
+        buildConfigField 'String', 'POCKET_CONSUMER_KEY', '"' + token + '"'
+        println "(Added from .pocket_consumer_key file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'POCKET_CONSUMER_KEY', '""'
+        println("--")
+    }
 }
 
 // Generate Kotlin code for the Fenix Glean metrics.

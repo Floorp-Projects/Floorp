@@ -53,6 +53,7 @@ import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_AUDIBLE
 import org.mozilla.fenix.wallpapers.WallpaperManager
 import java.security.InvalidParameterException
+import java.util.UUID
 
 private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
 
@@ -1272,6 +1273,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_pocket_homescreen_recommendations),
         featureFlag = FeatureFlags.isPocketRecommendationsFeatureEnabled(appContext),
         default = { homescreenSections[HomeScreenSection.POCKET] == true },
+    )
+
+    /**
+     * Get the profile id to use in the sponsored stories communications with the Pocket endpoint.
+     */
+    val pocketSponsoredStoriesProfileId by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories_profile),
+        default = UUID.randomUUID().toString(),
+        persistDefaultIfNotExists = true
     )
 
     /**

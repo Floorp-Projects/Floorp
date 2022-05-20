@@ -85,6 +85,7 @@ gen-external-apklibs
 .mls_token
 .nimbus
 .wallpaper_url
+.pocket_consumer_key
 
 # Python Byte-compiled / optimized / DLL files
 __pycache__/
