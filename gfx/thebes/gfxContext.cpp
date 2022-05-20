@@ -411,17 +411,16 @@ AntialiasMode gfxContext::CurrentAntialiasMode() const {
   return CurrentState().aaMode;
 }
 
-void gfxContext::SetDash(const Float* dashes, int ndash, Float offset,
-                         Float devPxScale) {
+void gfxContext::SetDash(const Float* dashes, int ndash, Float offset) {
   CURRENTSTATE_CHANGED()
   AzureState& state = CurrentState();
 
   state.dashPattern.SetLength(ndash);
   for (int i = 0; i < ndash; i++) {
-    state.dashPattern[i] = dashes[i] * devPxScale;
+    state.dashPattern[i] = dashes[i];
   }
   state.strokeOptions.mDashLength = ndash;
-  state.strokeOptions.mDashOffset = offset * devPxScale;
+  state.strokeOptions.mDashOffset = offset;
   state.strokeOptions.mDashPattern =
       ndash ? state.dashPattern.Elements() : nullptr;
 }
