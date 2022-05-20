@@ -63,6 +63,27 @@ class MoveNodeTransaction final : public EditTransactionBase {
     return EditorDOMPointType::After(mContentToMove);
   }
 
+  /**
+   * Suggest next insertion point if the caller wants to move another content
+   * node around the insertion point.
+   */
+  template <typename EditorDOMPointType>
+  EditorDOMPointType SuggestNextInsertionPoint() const {
+    if (MOZ_UNLIKELY(!mContainer)) {
+      return EditorDOMPointType();
+    }
+    if (!mReference) {
+      return EditorDOMPointType::AtEndOf(mContainer);
+    }
+    if (MOZ_UNLIKELY(mReference->GetParentNode() != mContainer)) {
+      if (MOZ_LIKELY(mContentToMove->GetParentNode() == mContainer)) {
+        return EditorDOMPointType(mContentToMove).NextPoint();
+      }
+      return EditorDOMPointType::AtEndOf(mContainer);
+    }
+    return EditorDOMPointType(mReference);
+  }
+
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const MoveNodeTransaction& aTransaction);
 

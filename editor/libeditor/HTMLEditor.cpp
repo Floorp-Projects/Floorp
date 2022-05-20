@@ -5114,67 +5114,52 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
   return NS_OK;
 }
 
-nsresult HTMLEditor::MoveNodeWithTransaction(
-    nsIContent& aContent, const EditorDOMPoint& aPointToInsert) {
+MoveNodeResult HTMLEditor::MoveNodeWithTransaction(
+    nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
-  EditorDOMPoint oldPoint(&aContent);
+  EditorDOMPoint oldPoint(&aContentToMove);
   if (NS_WARN_IF(!oldPoint.IsSet())) {
-    return NS_ERROR_FAILURE;
+    return MoveNodeResult(NS_ERROR_FAILURE);
   }
 
   // Don't do anything if it's already in right place.
   if (aPointToInsert == oldPoint) {
-    return NS_OK;
+    return MoveNodeIgnored(aPointToInsert.NextPoint());
   }
 
   RefPtr<MoveNodeTransaction> moveNodeTransaction =
-      MoveNodeTransaction::MaybeCreate(*this, aContent, aPointToInsert);
+      MoveNodeTransaction::MaybeCreate(*this, aContentToMove, aPointToInsert);
   if (MOZ_UNLIKELY(!moveNodeTransaction)) {
     NS_WARNING("MoveNodeTransaction::MaybeCreate() failed");
-    return NS_ERROR_FAILURE;
+    return MoveNodeResult(NS_ERROR_FAILURE);
   }
 
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eMoveNode, nsIEditor::eNext, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return ignoredError.StealNSResult();
+    return MoveNodeResult(ignoredError.StealNSResult());
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
       "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  TopLevelEditSubActionDataRef().WillDeleteContent(*this, aContent);
+  TopLevelEditSubActionDataRef().WillDeleteContent(*this, aContentToMove);
 
   nsresult rv = DoTransactionInternal(moveNodeTransaction);
   if (NS_SUCCEEDED(rv)) {
-    if (AllowsTransactionsToChangeSelection()) {
-      const auto pointToPutCaret =
-          moveNodeTransaction->SuggestPointToPutCaret<EditorRawDOMPoint>();
-      if (pointToPutCaret.IsSet()) {
-        nsresult rv = CollapseSelectionTo(pointToPutCaret);
-        if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-          NS_WARNING(
-              "EditorBase::CollapseSelectionTo() caused destroying the editor");
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "EditorBase::CollapseSelectionTo() failed, but ignored");
-      }
-    }
-
     if (mTextServicesDocument) {
       const OwningNonNull<TextServicesDocument> textServicesDocument =
           *mTextServicesDocument;
-      textServicesDocument->DidDeleteContent(aContent);
+      textServicesDocument->DidDeleteContent(aContentToMove);
     }
   }
 
   if (!mActionListeners.IsEmpty()) {
     for (auto& listener : mActionListeners.Clone()) {
-      DebugOnly<nsresult> rvIgnored = listener->DidDeleteNode(&aContent, rv);
+      DebugOnly<nsresult> rvIgnored =
+          listener->DidDeleteNode(&aContentToMove, rv);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidDeleteNode() failed, but ignored");
@@ -5184,17 +5169,19 @@ nsresult HTMLEditor::MoveNodeWithTransaction(
   if (MOZ_UNLIKELY(Destroyed())) {
     NS_WARNING(
         "MoveNodeTransaction::DoTransaction() caused destroying the editor");
-    return NS_ERROR_EDITOR_DESTROYED;
+    return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
 
   if (NS_FAILED(rv)) {
     NS_WARNING("MoveNodeTransaction::DoTransaction() failed");
-    return rv;
+    return MoveNodeResult(rv);
   }
 
-  TopLevelEditSubActionDataRef().DidInsertContent(*this, aContent);
+  TopLevelEditSubActionDataRef().DidInsertContent(*this, aContentToMove);
 
-  return NS_OK;
+  return MoveNodeHandled(
+      moveNodeTransaction->SuggestNextInsertionPoint<EditorDOMPoint>(),
+      moveNodeTransaction->SuggestPointToPutCaret<EditorDOMPoint>());
 }
 
 Result<RefPtr<Element>, nsresult> HTMLEditor::DeleteSelectionAndCreateElement(
