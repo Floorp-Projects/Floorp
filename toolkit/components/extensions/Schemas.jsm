@@ -1372,6 +1372,7 @@ class Type extends Entry {
       "deprecated",
       "preprocess",
       "postprocess",
+      "privileged",
       "allowedContexts",
       "min_manifest_version",
       "max_manifest_version",
@@ -3764,6 +3765,7 @@ this.Schemas = {
       "OptionalPermission",
       "PermissionNoPrompt",
       "OptionalPermissionNoPrompt",
+      "PermissionPrivileged",
     ]
   ) {
     const ns = this.getNamespace("manifest");
