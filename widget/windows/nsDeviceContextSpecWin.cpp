@@ -336,7 +336,11 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
 
 float nsDeviceContextSpecWin::GetPrintingScale() {
   MOZ_ASSERT(mPrintSettings);
-  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF || mPrintViaSkPDF) {
+  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF
+#ifdef MOZ_ENABLE_SKIA_PDF
+      || mPrintViaSkPDF
+#endif
+  ) {
     return nsIDeviceContextSpec::GetPrintingScale();
   }
 
