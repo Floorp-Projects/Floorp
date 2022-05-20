@@ -24,6 +24,7 @@ const {
   getFormatStr,
   getStr,
 } = require("devtools/client/responsive/utils/l10n");
+const { getDeviceString } = require("devtools/client/shared/devices");
 const Types = require("devtools/client/responsive/types");
 
 class DeviceModal extends PureComponent {
@@ -210,7 +211,7 @@ class DeviceModal extends PureComponent {
               className: `device-type device-type-${type}`,
               key: type,
             },
-            dom.header({ className: "device-header" }, type),
+            dom.header({ className: "device-header" }, getDeviceString(type)),
             DeviceList({
               devices: sortedDevices,
               isDeviceFormShown: this.state.deviceFormType,
