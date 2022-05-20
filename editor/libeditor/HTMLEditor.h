@@ -3081,6 +3081,9 @@ class HTMLEditor final : public EditorBase,
     [[nodiscard]] bool IsSpannedFromOtherRow() const {
       return mElement && mCurrent.mRow != mFirst.mRow;
     }
+    [[nodiscard]] bool IsNextColumnSpannedFromOtherColumn() const {
+      return mElement && mCurrent.mColumn + 1 < NextColumnIndex();
+    }
 
     /**
      * NextColumnIndex() and NextRowIndex() return column/row index of
@@ -3241,6 +3244,13 @@ class HTMLEditor final : public EditorBase,
    */
   Result<RefPtr<Element>, nsresult> GetSelectedOrParentTableElement(
       bool* aIsCellSelected = nullptr) const;
+
+  /**
+   * GetFirstSelectedCellElementInTable() returns <td> or <th> element at
+   * first selection (using GetSelectedOrParentTableElement).  If found cell
+   * element is not in <table> or <tr> element, this returns nullptr.
+   */
+  Result<RefPtr<Element>, nsresult> GetFirstSelectedCellElementInTable() const;
 
   /**
    * PasteInternal() pasts text with replacing selected content.
@@ -3599,19 +3609,13 @@ class HTMLEditor final : public EditorBase,
                                   int32_t aNumberOfCellsToInsert);
 
   /**
-   * InsertTableColumnsWithTransaction() inserts columns before or after
-   * a cell element containing first selection range.  I.e., if the cell
-   * spans columns and aInsertPosition is eAfterSelectedCell, new columns
-   * will be inserted after the right-most row which contains the cell.
-   * If first selection range is not in table cell element, this does nothing
-   * but does not return error.
+   * InsertTableColumnsWithTransaction() inserts cell elements to every rows
+   * at same column index as the cell specified by aPointToInsert.
    *
    * @param aNumberOfColumnsToInsert    Number of columns to insert.
-   * @param aInsertPosition             Before or after the target cell which
-   *                                    contains first selection range.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertTableColumnsWithTransaction(
-      int32_t aNumberOfColumnsToInsert, InsertPosition aInsertPosition);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertTableColumnsWithTransaction(
+      const EditorDOMPoint& aPointToInsert, int32_t aNumberOfColumnsToInsert);
 
   /**
    * InsertTableRowsWithTransaction() inserts <tr> elements before or after
