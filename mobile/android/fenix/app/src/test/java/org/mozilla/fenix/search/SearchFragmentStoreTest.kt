@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -23,7 +24,6 @@ import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -226,8 +226,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    @Ignore("Flaky, needs investigation: https://github.com/mozilla-mobile/fenix/issues/25170")
-    fun `Updating SearchFragmentState from SearchState`() = runTest {
+    fun `Updating SearchFragmentState from SearchState`() {
         val store = SearchFragmentStore(
             emptyDefaultState(
                 searchEngineSource = SearchEngineSource.None,
@@ -270,7 +269,9 @@ class SearchFragmentStoreTest {
                     userSelectedSearchEngineName = null
                 )
             )
-        ).join()
+        )
+
+        store.waitUntilIdle()
 
         assertNotNull(store.state.defaultEngine)
         assertEquals("Engine B", store.state.defaultEngine!!.name)
@@ -284,8 +285,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    @Ignore("Flaky, needs investigation: https://github.com/mozilla-mobile/fenix/issues/25170")
-    fun `Updating SearchFragmentState from SearchState - shortcuts disabled`() = runTest {
+    fun `Updating SearchFragmentState from SearchState - shortcuts disabled`() {
         val store = SearchFragmentStore(
             emptyDefaultState(
                 searchEngineSource = SearchEngineSource.None,
@@ -328,7 +328,9 @@ class SearchFragmentStoreTest {
                     userSelectedSearchEngineName = null
                 )
             )
-        ).join()
+        )
+
+        store.waitUntilIdle()
 
         assertNotNull(store.state.defaultEngine)
         assertEquals("Engine B", store.state.defaultEngine!!.name)
