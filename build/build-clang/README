@@ -38,6 +38,7 @@ build-clang.py accepts a JSON config format with the following fields:
 * ld: Path to the linker.
 * patches: Optional list of patches to apply.
 * build_type: The type of build to make.  Supported types: Release, Debug, RelWithDebInfo or MinSizeRel.
+* targets: The targets supported by the final stage LLVM/clang.
 * build_clang_tidy: Whether to build clang-tidy with the Mozilla checks imported.  The default is false.
 * osx_cross_compile: Whether to invoke CMake for OS X cross compile builds.
 * assertions: Whether to enable LLVM assertions.  The default is false.
