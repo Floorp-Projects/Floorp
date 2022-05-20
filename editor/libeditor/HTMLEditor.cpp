@@ -2351,17 +2351,15 @@ nsresult HTMLEditor::GetHTMLBackgroundColorState(bool* aMixed,
   *aMixed = false;
   aOutColor.Truncate();
 
-  ErrorResult error;
-  RefPtr<Element> cellOrRowOrTableElement =
-      GetSelectedOrParentTableElement(error);
-  if (error.Failed()) {
-    NS_WARNING(
-        "HTMLEditor::GetSelectedOrParentTableElement() returned nullptr");
-    return error.StealNSResult();
+  Result<RefPtr<Element>, nsresult> cellOrRowOrTableElementOrError =
+      GetSelectedOrParentTableElement();
+  if (cellOrRowOrTableElementOrError.isErr()) {
+    NS_WARNING("HTMLEditor::GetSelectedOrParentTableElement() returned error");
+    return cellOrRowOrTableElementOrError.unwrapErr();
   }
 
-  for (RefPtr<Element> element = std::move(cellOrRowOrTableElement); element;
-       element = element->GetParentElement()) {
+  for (RefPtr<Element> element = cellOrRowOrTableElementOrError.unwrap();
+       element; element = element->GetParentElement()) {
     // We are in a cell or selected table
     element->GetAttr(kNameSpaceID_None, nsGkAtoms::bgcolor, aOutColor);
 
@@ -3296,19 +3294,18 @@ nsresult HTMLEditor::SetHTMLBackgroundColorWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Find a selected or enclosing table element to set background on
-  ErrorResult error;
   bool isCellSelected = false;
-  RefPtr<Element> cellOrRowOrTableElement =
-      GetSelectedOrParentTableElement(error, &isCellSelected);
-  if (error.Failed()) {
+  Result<RefPtr<Element>, nsresult> cellOrRowOrTableElementOrError =
+      GetSelectedOrParentTableElement(&isCellSelected);
+  if (cellOrRowOrTableElementOrError.isErr()) {
     NS_WARNING("HTMLEditor::GetSelectedOrParentTableElement() failed");
-    return error.StealNSResult();
+    return cellOrRowOrTableElementOrError.unwrapErr();
   }
 
   bool setColor = !aColor.IsEmpty();
-  RefPtr<Element> rootElementOfBackgroundColor;
-  if (cellOrRowOrTableElement) {
-    rootElementOfBackgroundColor = std::move(cellOrRowOrTableElement);
+  RefPtr<Element> rootElementOfBackgroundColor =
+      cellOrRowOrTableElementOrError.unwrap();
+  if (rootElementOfBackgroundColor) {
     // Needs to set or remove background color of each selected cell elements.
     // Therefore, just the cell contains selection range, we don't need to
     // do this.  Note that users can select each cell, but with Selection API,

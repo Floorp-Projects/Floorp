@@ -3860,30 +3860,28 @@ nsresult HTMLEditor::GetCellContext(Element** aTable, Element** aCell,
   //    or get the enclosing by a cell
   if (!cell) {
     // Find a selected or enclosing table element
-    ErrorResult error;
-    RefPtr<Element> cellOrRowOrTableElement =
-        GetSelectedOrParentTableElement(error);
-    if (error.Failed()) {
+    Result<RefPtr<Element>, nsresult> cellOrRowOrTableElementOrError =
+        GetSelectedOrParentTableElement();
+    if (cellOrRowOrTableElementOrError.isErr()) {
       NS_WARNING("HTMLEditor::GetSelectedOrParentTableElement() failed");
-      return error.StealNSResult();
+      return cellOrRowOrTableElementOrError.unwrapErr();
     }
-    if (!cellOrRowOrTableElement) {
+    if (!cellOrRowOrTableElementOrError.inspect()) {
       return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
     }
-    if (cellOrRowOrTableElement->IsHTMLElement(nsGkAtoms::table)) {
+    if (HTMLEditUtils::IsTable(cellOrRowOrTableElementOrError.inspect())) {
       // We have a selected table, not a cell
       if (aTable) {
-        cellOrRowOrTableElement.forget(aTable);
+        cellOrRowOrTableElementOrError.unwrap().forget(aTable);
       }
       return NS_OK;
     }
-    if (!cellOrRowOrTableElement->IsAnyOfHTMLElements(nsGkAtoms::td,
-                                                      nsGkAtoms::th)) {
+    if (!HTMLEditUtils::IsTableCell(cellOrRowOrTableElementOrError.inspect())) {
       return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
     }
 
     // We found a cell
-    cell = std::move(cellOrRowOrTableElement);
+    cell = cellOrRowOrTableElementOrError.unwrap();
   }
   if (aCell) {
     // we don't want to cell.forget() here, because we use it below.
@@ -4106,16 +4104,18 @@ NS_IMETHODIMP HTMLEditor::GetSelectedOrParentTableElement(
   }
 
   bool isCellSelected = false;
-  ErrorResult aRv;
-  RefPtr<Element> cellOrRowOrTableElement =
-      GetSelectedOrParentTableElement(aRv, &isCellSelected);
-  if (aRv.Failed()) {
+  Result<RefPtr<Element>, nsresult> cellOrRowOrTableElementOrError =
+      GetSelectedOrParentTableElement(&isCellSelected);
+  if (cellOrRowOrTableElementOrError.isErr()) {
     NS_WARNING("HTMLEditor::GetSelectedOrParentTableElement() failed");
-    return EditorBase::ToGenericNSResult(aRv.StealNSResult());
+    return EditorBase::ToGenericNSResult(
+        cellOrRowOrTableElementOrError.unwrapErr());
   }
-  if (!cellOrRowOrTableElement) {
+  if (!cellOrRowOrTableElementOrError.inspect()) {
     return NS_OK;
   }
+  RefPtr<Element> cellOrRowOrTableElement =
+      cellOrRowOrTableElementOrError.unwrap();
 
   if (isCellSelected) {
     aTagName.AssignLiteral("td");
@@ -4124,22 +4124,21 @@ NS_IMETHODIMP HTMLEditor::GetSelectedOrParentTableElement(
     return NS_OK;
   }
 
-  if (cellOrRowOrTableElement->IsAnyOfHTMLElements(nsGkAtoms::td,
-                                                   nsGkAtoms::th)) {
+  if (HTMLEditUtils::IsTableCell(cellOrRowOrTableElement)) {
     aTagName.AssignLiteral("td");
     // Keep *aSelectedCount as 0.
     cellOrRowOrTableElement.forget(aCellOrRowOrTableElement);
     return NS_OK;
   }
 
-  if (cellOrRowOrTableElement->IsHTMLElement(nsGkAtoms::table)) {
+  if (HTMLEditUtils::IsTable(cellOrRowOrTableElement)) {
     aTagName.AssignLiteral("table");
     *aSelectedCount = 1;
     cellOrRowOrTableElement.forget(aCellOrRowOrTableElement);
     return NS_OK;
   }
 
-  if (cellOrRowOrTableElement->IsHTMLElement(nsGkAtoms::tr)) {
+  if (HTMLEditUtils::IsTableRow(cellOrRowOrTableElement)) {
     aTagName.AssignLiteral("tr");
     *aSelectedCount = 1;
     cellOrRowOrTableElement.forget(aCellOrRowOrTableElement);
@@ -4150,19 +4149,16 @@ NS_IMETHODIMP HTMLEditor::GetSelectedOrParentTableElement(
   return NS_ERROR_UNEXPECTED;
 }
 
-already_AddRefed<Element> HTMLEditor::GetSelectedOrParentTableElement(
-    ErrorResult& aRv, bool* aIsCellSelected /* = nullptr */) const {
+Result<RefPtr<Element>, nsresult> HTMLEditor::GetSelectedOrParentTableElement(
+    bool* aIsCellSelected /* = nullptr */) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
-
-  MOZ_ASSERT(!aRv.Failed());
 
   if (aIsCellSelected) {
     *aIsCellSelected = false;
   }
 
   if (NS_WARN_IF(!SelectionRef().RangeCount())) {
-    aRv.Throw(NS_ERROR_FAILURE);  // XXX Shouldn't throw an exception?
-    return nullptr;
+    return Err(NS_ERROR_FAILURE);  // XXX Shouldn't throw an exception?
   }
 
   // Try to get the first selected cell, first.
@@ -4172,13 +4168,12 @@ already_AddRefed<Element> HTMLEditor::GetSelectedOrParentTableElement(
     if (aIsCellSelected) {
       *aIsCellSelected = true;
     }
-    return cellElement.forget();
+    return cellElement;
   }
 
   const RangeBoundary& anchorRef = SelectionRef().AnchorRef();
   if (NS_WARN_IF(!anchorRef.IsSet())) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // If anchor selects a <td>, <table> or <tr>, return it.
@@ -4194,17 +4189,17 @@ already_AddRefed<Element> HTMLEditor::GetSelectedOrParentTableElement(
         if (aIsCellSelected) {
           *aIsCellSelected = true;
         }
-        return do_AddRef(selectedContent->AsElement());
+        return RefPtr<Element>(selectedContent->AsElement());
       }
       if (selectedContent->IsAnyOfHTMLElements(nsGkAtoms::table,
                                                nsGkAtoms::tr)) {
-        return do_AddRef(selectedContent->AsElement());
+        return RefPtr<Element>(selectedContent->AsElement());
       }
     }
   }
 
   if (NS_WARN_IF(!anchorRef.Container()->IsContent())) {
-    return nullptr;
+    return RefPtr<Element>();
   }
 
   // Then, look for a cell element (either <td> or <th>) which contains
@@ -4212,11 +4207,11 @@ already_AddRefed<Element> HTMLEditor::GetSelectedOrParentTableElement(
   cellElement = GetInclusiveAncestorByTagNameInternal(
       *nsGkAtoms::td, *anchorRef.Container()->AsContent());
   if (!cellElement) {
-    return nullptr;  // Not in table.
+    return RefPtr<Element>();  // Not in table.
   }
   // Don't set *aIsCellSelected to true in this case because it does NOT
   // select a cell, just in a cell.
-  return cellElement.forget();
+  return cellElement;
 }
 
 NS_IMETHODIMP HTMLEditor::GetSelectedCellsType(Element* aElement,
