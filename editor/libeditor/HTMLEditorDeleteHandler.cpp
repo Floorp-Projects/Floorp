@@ -4761,11 +4761,11 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
     return MoveNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
   if (arrayOfContents.IsEmpty()) {
-    return MoveNodeIgnored(pointToInsert);
+    return MoveNodeIgnored(std::move(pointToInsert));
   }
 
   uint32_t offset = pointToInsert.Offset();
-  MoveNodeResult result;
+  MoveNodeResult moveContentsInLineResult;
   for (auto& content : arrayOfContents) {
     if (aMoveToEndOfContainer == MoveToEndOfContainer::Yes) {
       // For backward compatibility, we should move contents to end of the
@@ -4775,14 +4775,14 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
     // get the node to act on
     if (HTMLEditUtils::IsBlockElement(content)) {
       // For block nodes, move their contents only, then delete block.
-      result |= MoveChildrenWithTransaction(
+      moveContentsInLineResult |= MoveChildrenWithTransaction(
           MOZ_KnownLive(*content->AsElement()),
           EditorDOMPoint(pointToInsert.GetContainer(), offset));
-      if (result.Failed()) {
+      if (moveContentsInLineResult.isErr()) {
         NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
-        return result;
+        return moveContentsInLineResult;
       }
-      offset = result.NextInsertionPointRef().Offset();
+      offset = moveContentsInLineResult.NextInsertionPointRef().Offset();
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
       DebugOnly<nsresult> rvIgnored =
@@ -4793,7 +4793,7 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "HTMLEditor::DeleteNodeWithTransaction() failed, but ignored");
-      result.MarkAsHandled();
+      moveContentsInLineResult.MarkAsHandled();
       if (MayHaveMutationEventListeners()) {
         // Mutation event listener may make `offset` value invalid with
         // removing some previous children while we call
@@ -4812,18 +4812,18 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
       return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(
-        moveNodeResult.Succeeded(),
+        moveNodeResult.isOk(),
         "HTMLEditor::MoveNodeOrChildrenWithTransaction() failed, but ignored");
-    if (moveNodeResult.Succeeded()) {
+    if (moveNodeResult.isOk()) {
       offset = moveNodeResult.NextInsertionPointRef().Offset();
-      result |= moveNodeResult;
+      moveContentsInLineResult |= moveNodeResult;
     }
   }
 
   NS_WARNING_ASSERTION(
-      result.Succeeded(),
+      moveContentsInLineResult.isOk(),
       "Last HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
-  return result;
+  return moveContentsInLineResult;
 }
 
 Result<bool, nsresult> HTMLEditor::CanMoveNodeOrChildren(
@@ -4845,32 +4845,35 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
   // Check if this node can go into the destination node
   if (HTMLEditUtils::CanNodeContain(*aPointToInsert.GetContainer(), aContent)) {
     // If it can, move it there.
-    uint32_t offsetAtInserting = aPointToInsert.Offset();
-    nsresult rv = MoveNodeWithTransaction(aContent, aPointToInsert);
-    if (NS_WARN_IF(Destroyed())) {
-      return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-      return MoveNodeResult(rv);
+    EditorDOMPoint pointToInsert(aPointToInsert);
+    {
+      AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
+      nsresult rv = MoveNodeWithTransaction(aContent, pointToInsert);
+      if (NS_WARN_IF(Destroyed())) {
+        return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_FAILED(rv)) {
+        NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
+        return MoveNodeResult(rv);
+      }
     }
     // Advance DOM point with offset for keeping backward compatibility.
     // XXX Where should we insert next content if a mutation event listener
     //     break the relation of offset and moved node?
-    return MoveNodeHandled(aPointToInsert.GetContainer(), ++offsetAtInserting);
+    return MoveNodeHandled(pointToInsert.NextPoint());
   }
 
   // If it can't, move its children (if any), and then delete it.
-  MoveNodeResult result;
+  MoveNodeResult moveNodeResult;
   if (aContent.IsElement()) {
-    result = MoveChildrenWithTransaction(MOZ_KnownLive(*aContent.AsElement()),
-                                         aPointToInsert);
-    if (result.Failed()) {
+    moveNodeResult = MoveChildrenWithTransaction(
+        MOZ_KnownLive(*aContent.AsElement()), aPointToInsert);
+    if (moveNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
-      return result;
+      return moveNodeResult;
     }
   } else {
-    result = MoveNodeHandled(aPointToInsert);
+    moveNodeResult = MoveNodeHandled(aPointToInsert);
   }
 
   nsresult rv = DeleteNodeWithTransaction(aContent);
@@ -4885,12 +4888,12 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
     // Mutation event listener may make `offset` value invalid with
     // removing some previous children while we call
     // `DeleteNodeWithTransaction()` so that we should adjust it here.
-    if (!result.NextInsertionPointRef().IsSetAndValid()) {
-      result = MoveNodeHandled(
+    if (!moveNodeResult.NextInsertionPointRef().IsSetAndValid()) {
+      moveNodeResult = MoveNodeHandled(
           EditorDOMPoint::AtEndOf(*aPointToInsert.GetContainer()));
     }
   }
-  return result;
+  return moveNodeResult;
 }
 
 Result<bool, nsresult> HTMLEditor::CanMoveChildren(
@@ -4917,16 +4920,17 @@ MoveNodeResult HTMLEditor::MoveChildrenWithTransaction(
     return MoveNodeResult(NS_ERROR_INVALID_ARG);
   }
 
-  MoveNodeResult result = MoveNodeIgnored(aPointToInsert);
+  MoveNodeResult moveChildrenResult = MoveNodeIgnored(aPointToInsert);
   while (aElement.GetFirstChild()) {
-    result |= MoveNodeOrChildrenWithTransaction(
-        MOZ_KnownLive(*aElement.GetFirstChild()), result.NextInsertionPoint());
-    if (result.Failed()) {
+    moveChildrenResult |= MoveNodeOrChildrenWithTransaction(
+        MOZ_KnownLive(*aElement.GetFirstChild()),
+        moveChildrenResult.NextInsertionPoint());
+    if (moveChildrenResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
-      return result;
+      return moveChildrenResult;
     }
   }
-  return result;
+  return moveChildrenResult;
 }
 
 void HTMLEditor::MoveAllChildren(nsINode& aContainer,
