@@ -15,13 +15,12 @@ add_task(async function() {
   const elementStyle = view._elementStyle;
 
   const inline = STYLE_INSPECTOR_L10N.getStr("rule.sourceInline");
-  const constructed = STYLE_INSPECTOR_L10N.getStr("rule.sourceConstructed");
 
   is(elementStyle.rules.length, 4, "Should have 4 rules.");
   is(elementStyle.rules[0].title, inline, "check rule 0 title");
   is(
     elementStyle.rules[1].title,
-    constructed,
+    "constructed",
     "check constracted sheet rule title"
   );
   is(elementStyle.rules[2].title, inline + ":9", "check rule 2 title");
