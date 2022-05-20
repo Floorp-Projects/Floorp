@@ -95,12 +95,15 @@ class GeckoViewTest : BaseSessionTest() {
         val lowPids = low.map { sessionRule.getSessionPid(it) }.toSet()
 
         UiThreadUtils.waitForCondition({
-            getContentProcessesPriority(highPids).count { it > 100 } == 0
-                    && getContentProcessesPriority(lowPids).count { it < 300 } == 0
+            val shouldBeHighPri = getContentProcessesOomScore(highPids)
+            val shouldBeLowPri = getContentProcessesOomScore(lowPids)
+            // Note that higher oom score means less priority
+            shouldBeHighPri.count { it > 100 } == 0
+                    && shouldBeLowPri.count { it < 300 } == 0
         }, env.defaultTimeoutMillis)
     }
 
-    fun getContentProcessesPriority(pids: Collection<Int>) : List<Int> {
+    fun getContentProcessesOomScore(pids: Collection<Int>) : List<Int> {
         return pids.map { pid ->
             File("/proc/$pid/oom_score").readText(Charsets.UTF_8).trim().toInt()
         }
@@ -164,29 +167,6 @@ class GeckoViewTest : BaseSessionTest() {
 
     @Test
     @NullDelegate(Autofill.Delegate::class)
-    fun extensionCurrentTabRaisesPriority() {
-        // Bug 1767346
-        assumeThat(false, equalTo(true))
-
-        val otherSession = setupPriorityTest()
-
-        // Setting priorityHint to PRIORITY_HIGH raises priority
-        mainSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
-
-        waitUntilContentProcessPriority(
-            high = listOf(mainSession, otherSession), low = listOf()
-        )
-
-        // Setting the priorityHint to default should lower priority
-        mainSession.setPriorityHint(GeckoSession.PRIORITY_DEFAULT)
-
-        waitUntilContentProcessPriority(
-            high = listOf(mainSession), low = listOf(otherSession)
-        )
-    }
-
-    @Test
-    @NullDelegate(Autofill.Delegate::class)
     fun processPriorityTest() {
         // Doesn't seem to work on Fission
         assumeThat(env.isFission || env.isIsolatedProcess, equalTo(false))
@@ -221,9 +201,6 @@ class GeckoViewTest : BaseSessionTest() {
     @Test
     @NullDelegate(Autofill.Delegate::class)
     fun setPriorityHint() {
-        // Bug 1767346
-        assumeThat(false, equalTo(true))
-
         val otherSession = setupPriorityTest()
 
         // Setting priorityHint to PRIORITY_HIGH raises priority
