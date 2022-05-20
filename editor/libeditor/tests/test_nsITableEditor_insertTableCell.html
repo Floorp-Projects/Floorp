@@ -122,6 +122,84 @@ SimpleTest.waitForFocus(() => {
        'No "input" event should be fired when nsITableEditor.insertTableCell(1, true) causes exception due to no selection range');
   }
 
+  (function testInsertZeroCellsBefore() {
+    selection.removeAllRanges();
+    editor.innerHTML =
+      "<table>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+      "</table>";
+    editor.focus();
+    beforeInputEvents = [];
+    inputEvents = [];
+    selection.setBaseAndExtent(
+      document.getElementById("select").firstChild,
+      0,
+      document.getElementById("select").firstChild,
+      0
+    );
+    getTableEditor().insertTableCell(0, false);
+    is(
+      editor.innerHTML,
+      "<table><tbody>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+      "</tbody></table>",
+      "testInsertZeroCellsBefore: nsITableEditor.insertTableCell(0, false) should do nothing without throwing exception"
+    );
+    is(
+      beforeInputEvents.length,
+      0,
+      'testInsertZeroCellsBefore: No "beforeinput" event should be fired'
+    );
+    is(
+      inputEvents.length,
+      0,
+      'testInsertZeroCellsBefore: No "input" event should be fired'
+    );
+  })();
+
+  (function testInsertZeroCellsAfter() {
+    selection.removeAllRanges();
+    editor.innerHTML =
+      "<table>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+      "</table>";
+    editor.focus();
+    beforeInputEvents = [];
+    inputEvents = [];
+    selection.setBaseAndExtent(
+      document.getElementById("select").firstChild,
+      0,
+      document.getElementById("select").firstChild,
+      0
+    );
+    getTableEditor().insertTableCell(0, true);
+    is(
+      editor.innerHTML,
+      "<table><tbody>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+      "</tbody></table>",
+      "testInsertZeroCellsAfter: nsITableEditor.insertTableCell(0, true) should do nothing without throwing exception"
+    );
+    is(
+      beforeInputEvents.length,
+      0,
+      'testInsertZeroCellsAfter: No "beforeinput" event should be fired'
+    );
+    is(
+      inputEvents.length,
+      0,
+      'testInsertZeroCellsAfter: No "input" event should be fired'
+    );
+  })();
+
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
                        "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
@@ -171,6 +249,100 @@ SimpleTest.waitForFocus(() => {
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when selection collapsed in a cell in middle row (after)');
   checkInputEvent(inputEvents[0], "when selection collapsed in a cell in middle row (after)");
+
+  (function testInsertBeforeCellFollowingTextNode() {
+    selection.removeAllRanges();
+    editor.innerHTML =
+      "<table>" +
+        "<tr><td>cell1-1</td> <td>cell1-2</td> <td>cell1-3</td></tr>" +
+        '<tr><td>cell2-1</td> <td id="select">cell2-2</td> <td>cell2-3</tr>' +
+        "<tr><td>cell3-1</td> <td>cell3-2</td> <td>cell3-3</td></tr>" +
+      "</table>";
+    editor.focus();
+    beforeInputEvents = [];
+    inputEvents = [];
+    selection.setBaseAndExtent(
+      document.getElementById("select").firstChild,
+      0,
+      document.getElementById("select").firstChild,
+      0
+    );
+    getTableEditor().insertTableCell(1, false);
+    is(
+      editor.innerHTML,
+      "<table><tbody>" +
+        "<tr><td>cell1-1</td> <td>cell1-2</td> <td>cell1-3</td></tr>" +
+        '<tr><td>cell2-1</td> <td valign="top"><br></td><td id="select">cell2-2</td> <td>cell2-3</td></tr>' +
+        "<tr><td>cell3-1</td> <td>cell3-2</td> <td>cell3-3</td></tr>" +
+      "</tbody></table>",
+      "testInsertBeforeCellFollowingTextNode: nsITableEditor.insertTableCell(1, false) should insert a cell before the cell containing selection"
+    );
+    is(
+      beforeInputEvents.length,
+      1,
+      'testInsertBeforeCellFollowingTextNode: Only one "beforeinput" event should be fired'
+    );
+    checkInputEvent(
+      beforeInputEvents[0],
+      "when selection collapsed in a cell following a text node (testInsertBeforeCellFollowingTextNode)"
+    );
+    is(
+      inputEvents.length,
+      1,
+      'testInsertBeforeCellFollowingTextNode: Only one "input" event should be fired'
+    );
+    checkInputEvent(
+      inputEvents[0],
+      "when selection collapsed in a cell following a text node (testInsertBeforeCellFollowingTextNode)"
+    );
+  })();
+
+  (function testInsertAfterCellFollowedByTextNode() {
+    selection.removeAllRanges();
+    editor.innerHTML =
+      "<table>" +
+        "<tr><td>cell1-1</td> <td>cell1-2</td> <td>cell1-3</td></tr>" +
+        '<tr><td>cell2-1</td> <td id="select">cell2-2</td> <td>cell2-3</tr>' +
+        "<tr><td>cell3-1</td> <td>cell3-2</td> <td>cell3-3</td></tr>" +
+      "</table>";
+    editor.focus();
+    beforeInputEvents = [];
+    inputEvents = [];
+    selection.setBaseAndExtent(
+      document.getElementById("select").firstChild,
+      0,
+      document.getElementById("select").firstChild,
+      0
+    );
+    getTableEditor().insertTableCell(1, true);
+    is(
+      editor.innerHTML,
+      "<table><tbody>" +
+        "<tr><td>cell1-1</td> <td>cell1-2</td> <td>cell1-3</td></tr>" +
+        '<tr><td>cell2-1</td> <td id="select">cell2-2</td><td valign="top"><br></td> <td>cell2-3</td></tr>' +
+        "<tr><td>cell3-1</td> <td>cell3-2</td> <td>cell3-3</td></tr>" +
+      "</tbody></table>",
+      "testInsertAfterCellFollowedByTextNode: nsITableEditor.insertTableCell(1, true) should insert a cell after the cell containing selection"
+    );
+    is(
+      beforeInputEvents.length,
+      1,
+      'testInsertAfterCellFollowedByTextNode: Only one "beforeinput" event should be fired'
+    );
+    checkInputEvent(
+      beforeInputEvents[0],
+      "when selection collapsed in a cell followed by a text node (testInsertAfterCellFollowedByTextNode)"
+    );
+    is(
+      inputEvents.length,
+      1,
+      'testInsertAfterCellFollowedByTextNode: Only one "input" event should be fired'
+    );
+    checkInputEvent(
+      inputEvents[0],
+      "when selection collapsed in a cell followed by a text node (testInsertAfterCellFollowedByTextNode)"
+    );
+  })();
 
   // with rowspan.
 
