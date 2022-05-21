@@ -115,8 +115,13 @@ updatebot:
   # Bugzilla email address for a maintainer of the library, used for needinfos
   maintainer-bz: tom@mozilla.com
 
-  # Optional: A query string for ./mach try fuzzy. If omitted ./mach try auto will be used
+  # Optional: A query string for ./mach try fuzzy. If it and fuzzy-paths are omitted then
+  # ./mach try auto will be used
   fuzzy-query: media
+
+  # Optional: An array of test paths for ./mach try fuzzy. If it and fuzzy-query are omitted then
+  # ./mach try auto will be used
+  fuzzy-paths: ['media']
 
   # The tasks that Updatebot can run. Only one of each task is currently permitted
   # optional
@@ -407,6 +412,7 @@ def _schema_1():
                 Required("maintainer-phab"): All(str, Length(min=1)),
                 Required("maintainer-bz"): All(str, Length(min=1)),
                 "fuzzy-query": All(str, Length(min=1)),
+                "fuzzy-paths": All([str], Length(min=1)),
                 "tasks": All(
                     UpdatebotTasks(),
                     [

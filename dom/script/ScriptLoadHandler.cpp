@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <utility>
+#include "ScriptCompression.h"
 #include "ScriptLoader.h"
 #include "ScriptTrace.h"
 #include "js/Transcoding.h"
@@ -18,6 +19,7 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/Logging.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Utf8.h"
@@ -38,6 +40,7 @@
 #include "nsMimeTypes.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "zlib.h"
 
 namespace mozilla::dom {
 
@@ -119,6 +122,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
   nsCOMPtr<nsIRequest> channelRequest;
   aLoader->GetRequest(getter_AddRefs(channelRequest));
 
+  auto firstTime = !mPreloadStartNotified;
   if (!mPreloadStartNotified) {
     mPreloadStartNotified = true;
     mRequest->GetScriptLoadContext()->NotifyStart(channelRequest);
@@ -134,6 +138,10 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
   if (mRequest->IsUnknownDataType()) {
     rv = EnsureKnownDataType(aLoader);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (mRequest->IsBytecode() && firstTime) {
+    PerfStats::RecordMeasurementStart(PerfStats::Metric::JSBC_IO_Read);
   }
 
   if (mRequest->IsTextSource()) {
@@ -339,6 +347,7 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   nsCOMPtr<nsIRequest> channelRequest;
   aLoader->GetRequest(getter_AddRefs(channelRequest));
 
+  auto firstMessage = !mPreloadStartNotified;
   if (!mPreloadStartNotified) {
     mPreloadStartNotified = true;
     mRequest->GetScriptLoadContext()->NotifyStart(channelRequest);
@@ -352,6 +361,12 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     if (mRequest->IsUnknownDataType()) {
       rv = EnsureKnownDataType(aLoader);
       NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (mRequest->IsBytecode() && !firstMessage) {
+      // if firstMessage, then entire stream is in aData, and PerfStats would
+      // measure 0 time
+      PerfStats::RecordMeasurementEnd(PerfStats::Metric::JSBC_IO_Read);
     }
 
     if (mRequest->IsTextSource()) {
@@ -400,6 +415,16 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       }
 
       mRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
+
+      Vector<uint8_t> compressedBytecode;
+      // mRequest has the compressed bytecode, but will be filled with the
+      // uncompressed bytecode
+      compressedBytecode.swap(mRequest->mScriptBytecode);
+      if (!JS::loader::ScriptBytecodeDecompress(compressedBytecode,
+                                                mRequest->mBytecodeOffset,
+                                                mRequest->mScriptBytecode)) {
+        return NS_ERROR_UNEXPECTED;
+      }
     }
   }
 

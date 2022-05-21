@@ -105,7 +105,9 @@ class PerftestResultsHandler(object):
             "chrome-m",
             "chromium",
         ):
+            # Bug 1770225: Make this more dynamic, this will fail us again in the future
             extra_options.remove("webrender")
+            extra_options.remove("fission")
 
         return extra_options
 
