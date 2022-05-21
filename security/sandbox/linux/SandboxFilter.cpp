@@ -1611,6 +1611,10 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_get_mempolicy:
         return Allow();
 
+      // Required by libnuma for FFmpeg
+      case __NR_set_mempolicy:
+        return Error(ENOSYS);
+
       case __NR_kcmp:
         return KcmpPolicyForMesa();
 
@@ -2072,15 +2076,18 @@ class UtilityAudioDecoderSandboxPolicy final : public UtilitySandboxPolicy {
   ResultExpr EvaluateSyscall(int sysno) const override {
     switch (sysno) {
       // Required by FFmpeg
-      case __NR_get_mempolicy: {
+      case __NR_get_mempolicy:
         return Allow();
-      }
 
       // Required by libnuma for FFmpeg
       case __NR_sched_getaffinity: {
         Arg<pid_t> pid(0);
         return If(pid == 0, Allow()).Else(Trap(SchedTrap, nullptr));
       }
+
+      // Required by libnuma for FFmpeg
+      case __NR_set_mempolicy:
+        return Error(ENOSYS);
 
       // Pass through the common policy.
       default:
