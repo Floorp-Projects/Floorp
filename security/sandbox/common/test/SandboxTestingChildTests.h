@@ -761,6 +761,12 @@ void RunTestsUtilityAudioDecoder(SandboxTestingChild* child) {
                       MPOL_F_NODE | MPOL_F_ADDR);
     return rv;
   });
+  // set_mempolicy is not allowed in Generic Utility but is on AudioDecoder
+  child->ErrnoValueTest("set_mempolicy"_ns, ENOSYS, [&] {
+    // <numaif.h> not installed by default, let's call directly the syscall
+    long rv = syscall(SYS_set_mempolicy, 0, NULL, 0);
+    return rv;
+  });
 #  elif XP_MACOSX  // XP_LINUX
   RunMacTestLaunchProcess(child);
   RunMacTestWindowServer(child);

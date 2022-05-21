@@ -87,8 +87,9 @@ bool nsImageRenderer::PrepareImage() {
     MOZ_DIAGNOSTIC_ASSERT(isImageRequest);
 
     // Make sure the image is actually decoding.
-    bool frameComplete =
-        request->StartDecodingWithResult(imgIContainer::FLAG_ASYNC_NOTIFY);
+    bool frameComplete = request->StartDecodingWithResult(
+        imgIContainer::FLAG_ASYNC_NOTIFY |
+        imgIContainer::FLAG_AVOID_REDECODE_FOR_SIZE);
 
     // Boost the loading priority since we know we want to draw the image.
     if (mFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) {

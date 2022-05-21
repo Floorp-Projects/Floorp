@@ -418,12 +418,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return urlObject.toString();
   }
 
-  parseSpocPositions(csvPositions) {
-    let spocPositions;
+  parseGridPositions(csvPositions) {
+    let gridPositions;
 
     // Only accept parseable non-negative integers
     try {
-      spocPositions = csvPositions.map(index => {
+      gridPositions = csvPositions.map(index => {
         let parsedInt = parseInt(index, 10);
 
         if (!isNaN(parsedInt) && parsedInt >= 0) {
@@ -435,10 +435,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     } catch (e) {
       // Catch spoc positions that are not numbers or negative, and do nothing.
       // We have hard coded backup positions.
-      spocPositions = undefined;
+      gridPositions = undefined;
     }
 
-    return spocPositions;
+    return gridPositions;
   }
 
   async loadLayout(sendUpdate, isStartup) {
@@ -480,9 +480,15 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       layoutResp = getHardcodedLayout({
         items,
         sponsoredCollectionsEnabled,
-        spocPositions: this.parseSpocPositions(
+        spocPositions: this.parseGridPositions(
           pocketConfig.spocPositions?.split(`,`)
         ),
+        widgetPositions: this.parseGridPositions(
+          pocketConfig.widgetPositions?.split(`,`)
+        ),
+        widgetData: [
+          ...(this.locale.startsWith("en-") ? [{ type: "TopicsWidget" }] : []),
+        ],
         compactLayout: pocketConfig.compactLayout,
         hybridLayout: pocketConfig.hybridLayout,
         hideCardBackground: pocketConfig.hideCardBackground,
@@ -1906,6 +1912,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 getHardcodedLayout = ({
   items = 21,
   spocPositions = [1, 5, 7, 11, 18, 20],
+  widgetPositions = [],
+  widgetData = [],
   sponsoredCollectionsEnabled = false,
   compactLayout = false,
   hybridLayout = false,
@@ -2015,6 +2023,12 @@ getHardcodedLayout = ({
             essentialReadsHeader,
             editorsPicksHeader,
             readTime: readTime || compactLayout,
+          },
+          widgets: {
+            positions: widgetPositions.map(position => {
+              return { index: position };
+            }),
+            data: widgetData,
           },
           loadMore,
           lastCardMessageEnabled,
