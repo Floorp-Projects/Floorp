@@ -9994,12 +9994,14 @@ var ConfirmationHint = {
 
 let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface")
 
-const ProtonfixUI = `@import url(chrome://browser/skin/protonfix/protonfix.css);`
-const PhotonUI = `@import url(chrome://browser/skin/photon/photonChrome.css);
-                  @import url(chrome://browser/skin/photon/photonContent.css);`
-const MaterialUI = `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`
-const fluentUI = `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`
-const gnomeUI = `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`
+let ThemeCSS = {
+ProtonfixUI : `@import url(chrome://browser/skin/protonfix/protonfix.css);`,
+PhotonUI : `@import url(chrome://browser/skin/photon/photonChrome.css);
+            @import url(chrome://browser/skin/photon/photonContent.css);`,
+MaterialUI : `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`,
+fluentUI : `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`,
+gnomeUI :`@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
+}
 
 switch(floorpinterfacenum){
 
@@ -10011,38 +10013,40 @@ switch(floorpinterfacenum){
 //ProtonUIFix
   case 2 : 
    var Tag = document.createElement('style');
-     Tag.innerText = ProtonfixUI;
+     Tag.innerText = ThemeCSS.ProtonfixUI;
      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
      Services.prefs.setIntPref("browser.uidensity", 1);
     break;
    
   case 3:
    var Tag = document.createElement('style');
-   Tag.innerText = PhotonUI;
+   Tag.innerText = ThemeCSS.PhotonUI;
    document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
    Services.prefs.setIntPref("browser.uidensity", 0);
    break;
 
   case 4:
     var Tag = document.createElement('style');
-    Tag.innerText = MaterialUI;
+    Tag.innerText = ThemeCSS.MaterialUI;
     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
     break;
 
   case 5:
+    if (AppConstants.platform == "win"){
     var Tag = document.createElement('style');
-    Tag.innerText = fluentUI;
+    Tag.innerText = ThemeCSS.fluentUI;
     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+     }
     break;
 
   case 6:
      if (AppConstants.platform == "linux"){
      var Tag = document.createElement('style');
-     Tag.innerText = gnomeUI;
+     Tag.innerText = ThemeCSS.gnomeUI;
      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
      }
     break;
-  
+
 }
 
 
@@ -10115,24 +10119,7 @@ if (Services.prefs.getBoolPref("floorp.material.effect.enable",false)){
   var Tag = document.createElement('style');
       
       Tag.innerText = `
-
-        #main-window
-        {
-          background-color: transparent !important;
-          appearance: -moz-win-glass !important;
-        }
-        #main-window #navigator-toolbox
-        {
-          background-color: transparent !important;
-        }
-        #main-window .titlebar-buttonbox
-        {
-          opacity: 0.1 !important;
-        }
-        #main-window .titlebar-min
-        {
-          border-bottom-left-radius: 9px !important;
-        }
+       @import url(chrome://browser/skin/optioncss/micaforeveryone.css)
       `
 
   document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);  
@@ -10144,152 +10131,7 @@ if(Services.prefs.getBoolPref("floorp.Tree-type.verticaltab.optimization",false)
 var Tag = document.createElement('style');
       
 Tag.innerText = `
-
-  /* Sidebar min and max width removal */
-  #sidebar {
-    max-width: none !important;
-    min-width: 0px !important;
-    }
-    /* Hide splitter, when using Tree Style Tab. */
-    #sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] + #sidebar-splitter {
-    display: none !important;
-    }
-    /* Hide sidebar header, when using Tree Style Tab. */
-    #sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] #sidebar-header {
-    visibility: collapse;
-    }
-    
-    /* Shrink sidebar until hovered, when using Tree Style Tab. */
-    :root {
-    --thin-tab-width: 30px;
-    --wide-tab-width: 200px;
-    }
-    #sidebar-box:not([sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]) {
-    min-width: var(--wide-tab-width) !important;
-    max-width: none !important;
-    }
-    #sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] {
-    position: relative !important;
-    transition: all 100ms !important;
-    min-width: 3.65em !important;
-    max-width: 3.65em !important;
-    }
-    #sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]:hover {
-    transition: all 200ms !important;
-    transition-delay: 0.2s !important;
-    min-width: 20em !important;
-    max-width: 20em !important;
-    margin-right: calc((20em - 3.65em) * -1) !important;
-    z-index: 1;
-    }
-    /*Allow vertical tabs to be used on the right side as well.*/
-    #sidebar-box[positionend="true"][sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]:hover {
-    margin-right: 0 !important;
-    }
-    /*Countermeasure for issue where page width changes when vertical tabs are moved to the right.*/
-    #sidebar-box[positionend="true"][sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] ~ vbox {
-    transition: all 100ms !important;
-    }
-    #sidebar-box[positionend="true"][sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]:hover ~ vbox {
-    transition: all 200ms !important;
-    transition-delay: 0.2s !important;
-    margin-right: calc(-20em + 3.65em) !important;
-    }
-    
-    /* Hide border on tab bar, force its state to 'scroll', adjust margin-left for width of scrollbar. */
-    #tabbar { border: 0; overflow-y: scroll !important; margin-left: -18px !important; scrollbar-width: auto; }
-    
-    /* Hide .twisty and adjust margins so favicons have 7px on left. */
-    tab-item .twisty {
-    visibility: hidden;
-    margin-left: -12px;
-    }
-    
-    /* Push tab labels slightly to the right so they're completely hidden in collapsed state. */
-    tab-item .label {
-    margin-left: 7px;
-    }
-    
-    /* Hide close buttons on tabs. */
-    tab-item .closebox {
-    visibility: collapse;
-    }
-    
-    tab-item:hover .closebox {
-    visibility: initial;
-    }
-    
-    /* Hide sound playing/muted button. */
-    .sound-button::before {
-    display: none !important;
-    }
-    
-    /* Center the new tab sign in collapsed state. */
-    .newtab-button{
-    padding-left: 0.48em !important;
-    }
-    
-    /* ################################################ */
-    /* ##### COLOR THEME ############################## */
-    /* ################################################ */
-    
-    :root {
-    background-color: #383838;
-    }
-    #tabbar {
-    border-right: 1px solid #1d1d1d;
-    box-shadow: none !important;
-    }
-    tab-item {
-    box-shadow: none !important;
-    }
-    tab-item:hover {
-    filter: opacity(80%) drop-shadow(0px 0px 0px #3498DB);
-    }
-    
-    /* Adjust style for tab that has sound playing. */
-    tab-item.sound-playing .favicon::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    border-radius: 50%;
-    background: #FFFFFF;
-    animation: pulse 2s ease-out 0s infinite;
-    z-index: -1;
-    opacity: 0;
-    }
-    
-    /* Adjust style for tab that is muted. */
-    tab-item.muted {
-    opacity: 0.5;
-    }
-    
-    /* Better alignment of Favicons when collapsed */
-    tab-item[data-level][data-level="0"] tab-item-substance {
-    margin-left: 2% !important;
-    }
-    tab-item[data-level][data-level="1"] tab-item-substance {
-    margin-left: 4% !important;
-    }
-    tab-item[data-level][data-level="2"] tab-item-substance {
-    margin-left: 6% !important;
-    }
-    tab-item[data-level][data-level="3"] tab-item-substance {
-    margin-left: 8% !important;
-    }
-    tab-item[data-level][data-level="4"] tab-item-substance {
-    margin-left: 10% !important;
-    }
-    tab-item[data-level][data-level="5"] tab-item-substance {
-    margin-left: 12% !important;
-    }
-    tab-item[data-level][data-level="6"] tab-item-substance {
-    margin-left: 14% !important;
-    }
-    tab-item[data-level][data-level="7"] tab-item-substance {
-    margin-left: 16% !important;
-    }
+       @import url(chrome://browser/skin/optioncss/treestyletab.css)
       `
 
   document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
@@ -10301,135 +10143,37 @@ if (Services.prefs.getBoolPref("floorp.optimized.msbutton.ope", false)){
   var Tag = document.createElement('style');
       
       Tag.innerText = `
-
-      #forward-button, 
-      #back-button{
-        display: none;
-      }
+      @import url(chrome://browser/skin/browser/optioncss/msbutton.css)
       `
 
   document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);  
 }
 
 
-//bookmarkbar
+//bookmarkbar auto hide
 
 if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {
   var Tag = document.createElement('style');
     
     Tag.innerText = `
-    #PersonalToolbar {
-      position: relative !important;
-      transition: all 100ms !important;
-      min-height: 0em !important;
-      max-height: 0em !important;
-   }
-    #navigator-toolbox:hover > #PersonalToolbar {
-      transition: all 200ms !important;
-      transition-delay: 0.2s !important;
-      min-height: 3em !important;
-      max-height: 3em !important;
-      margin-height: calc((6em - 3.65em) * -1) !important;
-      z-index: 1;
-   }
+    @import url(chrome://browser/skin/browser/optioncss/bookmarkbar_autohide.css)
     `
 
 document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
 }
 
-//Bootmark の位置を一番下に
 
+//Bootmark の位置を一番下に(fake statusbar)
 
 if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
   var Tag = document.createElement('style');
     
     Tag.innerText = `  
-
-    /* Source file https://github.com/MrOtherGuy/firefox-csshacks/tree/master/chrome/fake_statusbar_w_bookmarksbar.css made available under Mozilla Public License v. 2.0
-    See the above repository for updates as well as full license text. */
-    
-    /* Creates a statusbar at the bottom of the window by using bookmarks toolbar */
-    
-    /* Since it's really the bookmarks toolbar you should move bookmarks away from bookmarks toolbar - for example to menubar. You can do that with Customize Firefox mode */
-    
-    /* If you want to show the page-loading status in the statusbar then put a single flexible space as the leftmost item in the bookmarks toolbar */
-    /* By default this flex-space will take 50% window width to show the loading status bar */
-    
-    /* Toolbar buttons/items will be aligned to the right edge of the loading bar. If you wish to align them to the right edge, then add another flex-space after the first one */
-    
-    :root:not([inFullscreen]) > body{ --uc-browser-base-padding: calc(2 * var(--toolbarbutton-inner-padding) + 16px) }
-    
-    #PersonalToolbar{
-      position: fixed;
-      display: flex;
-      bottom: 0;
-      width: 100vw;
-    }
-    
-    :root:not([inFullscreen]) #browser-bottombox{
-      margin-bottom: calc(5px + var(--uc-browser-base-padding)) !important;
-    }
-    
-    #PersonalToolbar > toolbarbutton{ padding: 0 var(--toolbarbutton-outer-padding) !important; } 
-    
-    #PersonalToolbar > toolbarbutton > .toolbarbutton-icon,
-    #PersonalToolbar > toolbarbutton > .toolbarbutton-badge-stack{
-      width: var(--uc-browser-base-padding,0px) !important;
-      height: var(--uc-browser-base-padding,0px) !important;
-      padding: var(--toolbarbutton-inner-padding) !important;
-    }
-    
-    #personal-toolbar-empty + toolbarspring,
-    #PersonalToolbar > :first-child + toolbarspring{
-      background-position: left 4px;
-      background-repeat: no-repeat;
-      background-image: -moz-element(#statuspanel);
-      max-width: 50vw !important; /* Modify this to let the status bar grow larger than 50% of window width */
-      min-width: 60ch;
-      flex-grow: 10;
-    }
-    
-    #personal-toolbar-empty{ visibility: hidden; }
-    
-    #PersonalToolbar > toolbarspring{
-      flex-grow: 1;
-      max-width: none !important;
-      min-height: var(--uc-browser-base-padding) !important; 
-    }
-    
-    /* Using -moz-element() causes some problems after Firefox has been running several hours such as long tab switch times. For this reason the background image is removed on hover and focused states which appears to clear the state. */
-    #PersonalToolbar > toolbarspring:first-of-type:hover{ background-image: none }
-    
-    #statuspanel-inner > #statuspanel-label{
-      height:3em;
-      min-width: 1000px;
-      background-color: transparent !important;
-      border: none !important;
-      font-size: inherit;
-      color: inherit !important;
-      margin-right: 0px !important;
-    }
-    /* If you use a theme where urlbar is partially transparent you should edit this color to something that closely matches the perceived color of urlbar. Or perhaps use background-image - linear-gradient() can work well here. But keep the color or image opaque or otherwise you'll face an issue where urlbar text bleeds through */
-    #statuspanel-inner{ background-color: var(--toolbar-accent-color) }
-    /*#statuspanel-inner{ background-color: var(--toolbar-non-lwt-bgcolor) }*/
-    
-    #statuspanel{ color: lightpink; z-index: -1; visibility: visible !important; opacity: 1 !important; }
-    #statuspanel[inactive] > #statuspanel-inner > #statuspanel-label{ visibility: hidden }
-    #statuspanel[inactive] > #statuspanel-inner::before{ content: "Done"; color: var(--toolbar-field-color, black) !important }
-    #statuspanel[type="status"] { color: skyblue }
-    
-    #statuspanel-inner > #statuspanel-label[value^="https"]{ color: var(--toolbar-field-color, black) !important; }
-    
-    
-  
+    @import url(chrome://browser/skin/browser/optioncss/move_bookmarkbar.css)
     `
 
 document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
 }
-
-
-
-
 
 
 //ページ内部検索
@@ -10439,77 +10183,7 @@ if (Services.prefs.getBoolPref("floorp.search.top.mode", false)) {
   var Tag = document.createElement('style');
     
     Tag.innerText = `  
-    /* Source file https://github.com/MrOtherGuy/firefox-csshacks/tree/master/chrome/floating_findbar_on_top.css made available under Mozilla Public License v. 2.0
-    See the above repository for updates as well as full license text. */
-    
-    /* Note that privacy.resistFingerprinting.letterboxing prevents this from working properly */
-    
-    findbar{
-        -moz-box-ordinal-group: 0;
-        margin-bottom: -33px;
-        position: relative;
-        border-top: none !important;
-        padding: 0 !important;
-        transition: transform 82ms linear, opacity 82ms linear 32ms !important;
-        background: none !important;
-        pointer-events: none;
-        z-index: 1;
-      }
-      
-      .findbar-container > .findbar-find-fast{
-        padding: var(--toolbarbutton-inner-padding) 1px;
-        margin: 0 !important;
-      }
-      
-      findbar[hidden]{ transform: translateY(-30px);}
-      
-      findbar > .findbar-container,
-      findbar > .close-icon{
-        border: 1px solid var(--chrome-content-separator-color);
-        border-width: 0 0 1px 0px;
-        background: var(--uc-light-bkgnd-color,var(--toolbar-bgcolor)) !important;
-        pointer-events: auto;
-      }
-      findbar > .findbar-container{
-        -moz-box-direction: reverse;
-        border-left-width: 1px;
-        border-bottom-left-radius: 4px;
-      }
-      
-      .findbar-find-status{
-        display: -moz-box;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        -moz-box-flex: 1;
-      }
-      
-      .findbar-closebutton{
-        margin: 0 !important;
-        border-radius: 0 !important;
-        padding: 5px !important;
-      }
-      .findbar-closebutton > image{ padding: 3px }
-      .findbar-closebutton:hover > image{
-        background: var(--toolbarbutton-hover-background) !important;
-        border-radius: 4px
-      }
-      findbar > .findbar-container > hbox{ margin: 0 5px }
-      
-      findbar::before{
-        content:"";
-        display: -moz-box;
-        -moz-box-flex: 100;
-      }
-      
-      /*
-      Move findbar so it isn't over the scrollbar
-      Delete if you want findbar to begin from right window edge
-      */
-      findbar{
-        margin-right: 16px;
-        border-right: 1px solid var(--chrome-content-separator-color);
-      }
-
+    @import url(chrome://browser/skin/browser/optioncss/move_page_inside_searchbar.css)
      ` 
 
      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
@@ -10521,225 +10195,7 @@ if (Services.prefs.getBoolPref("floorp.legacy.menu.mode", false)) {
   var Tag = document.createElement('style');
     
     Tag.innerText = `
-    /* Source file https://github.com/MrOtherGuy/firefox-csshacks/tree/master/chrome/classic_grid_main_menu_popup.css made available under Mozilla Public License v. 2.0
-See the above repository for updates as well as full license text. */
-
-/* Makes the main menu popup apper in grid-like format that somewhat resembles the menu from Australis styling */
-
-/* Basic styling */
-#appMenu-protonMainView{ max-width: initial !important; }
-
-#appMenu-protonMainView > .panel-subview-body{
-  display: flex; 
-  flex-direction: row; 
-  max-width: 290px;
-  height: 466px !important;
-  /* Raise this if you see scrollbar in the popup. Popup height depends on font-size */
-  max-height: none !important;
-  flex-wrap: wrap;
-  padding-bottom: 0px !important;
-  align-content: end;
-}
-
-#appMenu-protonMainView > .panel-subview-body > toolbarseparator{
-  min-width: 250px;
-  flex-grow:1;
-  margin-inline: 0 !important;
-}
-#appMenu-protonMainView > .panel-subview-body > toolbaritem{ flex-grow: 1 }
-:where(#appMenu-protonMainView) > .panel-subview-body > toolbarbutton{
-  width: 70px;
-  height: 76px;
-  flex-grow:1;
-}
-#appMenu-protonMainView > .panel-subview-body > toolbarbutton > .toolbarbutton-icon{ -moz-box-flex: 1 }
-#appMenu-protonMainView > .panel-subview-body > toolbarbutton{ -moz-box-orient: vertical }
-
-:where(#appMenu-protonMainView) > .panel-subview-body > toolbarbutton.subviewbutton{
-  padding-inline: 4px !important;
-  margin-inline: 8px !important;
-  fill: currentColor;
-}
-
-/* Unique styling for Edit and Zoom controls */
-
-#appMenu-zoom-controls2,
-#appMenu-zoom-controls2 + toolbarseparator{
-  order: -1;
-  height: initial !important;
-  margin: initial !important;
-  flex-grow: 1;
-}
-#appMenu-zoom-controls2 + toolbarseparator{ margin-block: 0 4px !important; }
-#appMenu-zoom-controls2{ padding-block: 2px !important; }
-#appMenu-zoom-controls2 > :not(:last-child){
-  -moz-box-flex: 1 !important;
-  -moz-box-pack: center !important;
-  border-radius: 0 !important;
-}
-#appMenu-zoomReset-button2{
-  border-inline: 1px solid var(--panel-separator-color) !important;
-}
-/* Reorder separators & "special" items */
-
-#appMenu-fxa-separator{
-  margin-block: 0 -1px !important;
-}
-#appMenu-proton-addon-banners,
-#appMenu-fxa-separator,
-#appMenu-fxa-status2{ order: 2; }
-
-#appMenu-extensions-themes-button + toolbarseparator{
-  order: 3;
-  margin-block: 0 -1px !important;
-}
-
-/* Set minimum width for "full-row" items */
-#appMenu-fxa-status2,
-#appMenu-fxa-separator{
-  min-width: 280px; 
-}
-
-/* Full-row items should have contents laid out horizontally */
-#appMenu-proton-update-banner,
-#appMenu-fxa-status2,
-#appMenu-fxa-label2{ -moz-box-orient: horizontal !important; }
-
-#appMenu-proton-addon-banners > .addon-banner-item{
-  margin: 0px !important;
-}
-
-/* "Main" items styling */
-#appMenu-proton-update-banner,
-#appMenu-fxa-status2,
-#appMenu-more-button2.subviewbutton,
-#appMenu-quit-button2.subviewbutton,
-#appMenu-help-button2.subviewbutton{
-  order: 3;
-  margin: initial !important;
-  height: unset !important;
-  padding-inline: 0 !important;
-  width: initial;
-}
-
-#appMenu-proton-update-banner,
-#appMenu-quit-button2.subviewbutton{ order: 4 }
-
-
-#appMenu-more-button2{ min-width: 170px }
-#appMenu-more-button2 > .toolbarbutton-icon{ -moz-box-flex: 0 !important; }
-/* Color styling for items */
-
-#appMenu-protonMainView > .panel-subview-body toolbarbutton:not([disabled]):hover{
-  box-shadow: inset 0 0 3px 0px var(--button-bgcolor);
-}
-
-#appMenu-proton-update-banner{ border-inline-end: 1px solid var(--panel-separator-color) !important; }
-#appMenu-help-button2{ border-inline: 1px solid var(--panel-separator-color) }
-
-/* Hide some additional items */
-#appMenu-fxa-text,
-#appMenu-help-button2 + toolbarseparator,
-#appMenu-new-private-window-button2 + toolbarseparator,
-#appMenu-zoom-controls2 > #appMenu-fullscreen-button > label,
-#appMenu-zoom-controls2 > label,
-#appMenu-zoom-controls2 > spacer,
-#appMenu-edit-controls2 > label,
-#appMenu-edit-controls2 > spacer,
-#appMenu-protonMainView > .panel-subview-body > toolbarbutton::after{ display: none !important; }
-
-/* Sync styling */
-
-#appMenu-fxa-label2{
-  margin: 0 !important;
-  padding: 0 !important;
-  font-size: 1em !important;
-}
-#appMenu-fxa-status2{
-  display: grid !important;
-  padding-block: 0 !important;
-}
-#appMenu-fxa-status2 > *{ grid-area: 1/1 }
-#appMenu-fxa-status2 > toolbarbutton::before,
-#appMenu-protonMainView > .panel-subview-body > toolbarbutton > image{
-  fill: currentColor;
-  -moz-context-properties: fill;
-}
-
-#appMenu-fxa-status2 > toolbarbutton::before{
-  display: -moz-box;
-  content: "";
-  width: 16px;
-  height: 16px;
-  margin-inline: 8px;
-  background-image: var(--avatar-image-url)
-}
-
-#appMenu-more-button2 > .toolbarbutton-icon{ margin-inline: 8px !important; }
-#appMenu-proton-update-banner > .toolbarbutton-text,
-#appMenu-help-button2 > .toolbarbutton-text,
-#appMenu-quit-button2 > .toolbarbutton-text{
-  display: none !important;
-}
-#appMenu-proton-update-banner,
-#appMenu-fxa-label2,
-#appMenu-more-button2,
-#appMenu-help-button2,
-#appMenu-quit-button2{
-  background-color: var(--button-bgcolor) !important;
-  border-radius: 0 !important;
-  -moz-box-orient: horizontal !important;
-  -moz-box-pack: center !important;
-  padding-block: 12px !important;
-  opacity: 0.8;
-}
-#appMenu-proton-update-banner:hover,
-#appMenu-fxa-label2:hover,
-#appMenu-more-button2:hover,
-#appMenu-help-button2:hover{
-  opacity: 1;
-}
-#appMenu-proton-update-banner{ background-color: rgb(120,180,120) !important; }
-#appMenu-quit-button2:hover{ background-color: rgb(220,100,100) !important; }
-
-/* Reserve fixed space for addon banners */
-#appMenu-proton-addon-banners{
-  min-width: 200px;
-  height: 36px !important;
-  overflow: auto;
-}
-#appMenu-proton-addon-banners > .addon-banner-item{
-  padding-block: 2px !important;
-  border-radius: 0 !important;
-}
-
-#appMenu-multiView .subviewbutton::before, #appMenu-proton-update-banner::before {
-  display: -moz-inline-box;
-  margin-inline-end: var(--arrowpanel-menuicon-padding);
-  width: 16px;
-  height: 0px !important;
-}
-
-#appMenu-proton-addon-banners > .addon-banner-item::after{
-  margin-top: 6px !important;
-}
-/* Missing icons */
-#appMenu-proton-update-banner{ list-style-image: url("chrome://global/skin/icons/reload.svg"); }
-#appMenu-new-tab-button2{ list-style-image: url("chrome://browser/skin/new-tab.svg") }
-#appMenu-new-window-button2{ list-style-image: url("chrome://browser/skin/window.svg") }
-#appMenu-new-private-window-button2{ list-style-image: url("chrome://browser/skin/privateBrowsing.svg") }
-#appMenu-bookmarks-button{ list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg") }
-#appMenu-history-button{ list-style-image: url("chrome://browser/skin/history.svg") }
-#appMenu-downloads-button{ list-style-image: url("chrome://browser/skin/downloads/downloads.svg") }
-#appMenu-passwords-button{ list-style-image: url("chrome://browser/skin/login.svg") }
-#appMenu-extensions-themes-button{ list-style-image: url("chrome://mozapps/skin/extensions/extension.svg") }
-#appMenu-print-button2{ list-style-image: url("chrome://global/skin/icons/print.svg") }
-#appMenu-save-file-button2{ list-style-image: url("chrome://browser/skin/save.svg") }
-#appMenu-find-button2{ list-style-image: url("chrome://global/skin/icons/search-glass.svg") }
-#appMenu-settings-button{ list-style-image: url("chrome://global/skin/icons/settings.svg") }
-#appMenu-more-button2{ list-style-image: url("chrome://global/skin/icons/developer.svg") }
-#appMenu-help-button2{ list-style-image: url("chrome://global/skin/icons/info.svg") }
-#appMenu-quit-button2{ list-style-image: url("chrome://devtools/skin/images/search-clear.svg") }
+    @import url(chrome://browser/skin/browser/optioncss/legacy_firefox_menu_mode.css)
     `
 
 document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);

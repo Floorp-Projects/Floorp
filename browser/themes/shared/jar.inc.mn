@@ -7,6 +7,15 @@
 # be specified once. As a result, the source file paths are relative
 # to the location of the actual manifest.
 
+# optionCss
+
+  skin/classic/browser/optioncss/micaforeveryone.css                        (../shared/theme/optioncss/micaforeveryone.css)
+  skin/classic/browser/optioncss/move_bookmarkbar.css                       (../shared/theme/optioncss/move_bookmarkbar.css)
+  skin/classic/browser/optioncss/move_page_inside_searchbar.css             (../shared/theme/optioncss/move_page_inside_searchbar.css)
+  skin/classic/browser/optioncss/msbutton.css                               (../shared/theme/optioncss/msbutton.css)
+  skin/classic/browser/optioncss/treestyletab.css                           (../shared/theme/optioncss/treestyletab.css)
+  skin/classic/browser/optioncss/bookmarkbar_autohide.css                   (../shared/theme/optioncss/bookmarkbar_autohide.css)
+  skin/classic/browser/optioncss/legacy_firefox_menu_mode.css               (../shared/theme/optioncss/legacy_firefox_menu_mode.css)
 
 # CustomCss
 
@@ -15,7 +24,7 @@
   skin/classic/browser/customcss/tabs_on_bottom.css                         (../shared/theme/customcss/tabs_on_bottom.css)
   skin/classic/browser/customcss/classic_firefox_menu_button.css            (../shared/theme/customcss/classic_firefox_menu_button.css)
 
-# webkit
+# webkit (Unprovided)
 
  skin/classic/browser/webkitUI/webkitUI.css                                    (../shared/theme/webkitUI/webkitUI.css)
  skin/classic/browser/webkitUI/user-not-tracked-dark.svg                       (../shared/theme/webkitUI/user-not-tracked-dark.svg)
@@ -562,5 +571,4 @@
   skin/classic/browser/places/tree-icons.css                   (../shared/places/tree-icons.css)
   skin/classic/browser/privatebrowsing/aboutPrivateBrowsing.css (../shared/privatebrowsing/aboutPrivateBrowsing.css)
   skin/classic/browser/privatebrowsing/favicon.svg             (../shared/privatebrowsing/favicon.svg)
-
   skin/classic/browser/syncedtabs/sidebar.css                  (../shared/syncedtabs/sidebar.css)

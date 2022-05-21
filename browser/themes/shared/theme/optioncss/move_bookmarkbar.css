@@ -1,0 +1,77 @@
+ /* Source file https://github.com/MrOtherGuy/firefox-csshacks/tree/master/chrome/fake_statusbar_w_bookmarksbar.css made available under Mozilla Public License v. 2.0
+    See the above repository for updates as well as full license text. */
+    
+    /* Creates a statusbar at the bottom of the window by using bookmarks toolbar */
+    
+    /* Since it's really the bookmarks toolbar you should move bookmarks away from bookmarks toolbar - for example to menubar. You can do that with Customize Firefox mode */
+    
+    /* If you want to show the page-loading status in the statusbar then put a single flexible space as the leftmost item in the bookmarks toolbar */
+    /* By default this flex-space will take 50% window width to show the loading status bar */
+    
+    /* Toolbar buttons/items will be aligned to the right edge of the loading bar. If you wish to align them to the right edge, then add another flex-space after the first one */
+    
+    :root:not([inFullscreen]) > body{ --uc-browser-base-padding: calc(2 * var(--toolbarbutton-inner-padding) + 16px) }
+    
+    #PersonalToolbar{
+      position: fixed;
+      display: flex;
+      bottom: 0;
+      width: 100vw;
+    }
+    
+    :root:not([inFullscreen]) #browser-bottombox{
+      margin-bottom: calc(5px + var(--uc-browser-base-padding)) !important;
+    }
+    
+    #PersonalToolbar > toolbarbutton{ padding: 0 var(--toolbarbutton-outer-padding) !important; } 
+    
+    #PersonalToolbar > toolbarbutton > .toolbarbutton-icon,
+    #PersonalToolbar > toolbarbutton > .toolbarbutton-badge-stack{
+      width: var(--uc-browser-base-padding,0px) !important;
+      height: var(--uc-browser-base-padding,0px) !important;
+      padding: var(--toolbarbutton-inner-padding) !important;
+    }
+    
+    #personal-toolbar-empty + toolbarspring,
+    #PersonalToolbar > :first-child + toolbarspring{
+      background-position: left 4px;
+      background-repeat: no-repeat;
+      background-image: -moz-element(#statuspanel);
+      max-width: 50vw !important; /* Modify this to let the status bar grow larger than 50% of window width */
+      min-width: 60ch;
+      flex-grow: 10;
+    }
+    
+    #personal-toolbar-empty{ visibility: hidden; }
+    
+    #PersonalToolbar > toolbarspring{
+      flex-grow: 1;
+      max-width: none !important;
+      min-height: var(--uc-browser-base-padding) !important; 
+    }
+    
+    /* Using -moz-element() causes some problems after Firefox has been running several hours such as long tab switch times. For this reason the background image is removed on hover and focused states which appears to clear the state. */
+    #PersonalToolbar > toolbarspring:first-of-type:hover{ background-image: none }
+    
+    #statuspanel-inner > #statuspanel-label{
+      height:3em;
+      min-width: 1000px;
+      background-color: transparent !important;
+      border: none !important;
+      font-size: inherit;
+      color: inherit !important;
+      margin-right: 0px !important;
+    }
+    /* If you use a theme where urlbar is partially transparent you should edit this color to something that closely matches the perceived color of urlbar. Or perhaps use background-image - linear-gradient() can work well here. But keep the color or image opaque or otherwise you'll face an issue where urlbar text bleeds through */
+    #statuspanel-inner{ background-color: var(--toolbar-accent-color) }
+    /*#statuspanel-inner{ background-color: var(--toolbar-non-lwt-bgcolor) }*/
+    
+    #statuspanel{ color: lightpink; z-index: -1; visibility: visible !important; opacity: 1 !important; }
+    #statuspanel[inactive] > #statuspanel-inner > #statuspanel-label{ visibility: hidden }
+    #statuspanel[inactive] > #statuspanel-inner::before{ content: "Done"; color: var(--toolbar-field-color, black) !important }
+    #statuspanel[type="status"] { color: skyblue }
+    
+    #statuspanel-inner > #statuspanel-label[value^="https"]{ color: var(--toolbar-field-color, black) !important; }
+    
+    
+  
