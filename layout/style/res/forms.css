@@ -309,7 +309,7 @@ option {
   float: none !important;
   position: static !important;
   /* This makes sure that it is a containing block for positioned descendants. */
-  will-change: filter !important;
+  will-change: -moz-fixed-pos-containing-block !important;
 
   min-block-size: 1em;
   padding-block: 2px;
