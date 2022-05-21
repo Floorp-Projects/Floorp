@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<template xmlns="http://www.w3.org/1999/xhtml">
+  <template doctype="true">
+    <![CDATA[
+      <!DOCTYPE bindings [
+      <!ENTITY % exampleDTD SYSTEM "chrome://global/locale/example.dtd">
+      %exampleDTD;
+      ]>
+    ]]>
+  </template>
+  <template name="alpha">
+    <div class="main">
+      <p>Hello World</p>
+    </div>
+  </template>
+  <template name="beta">
+    <div class="body">
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+    </div>
+  </template>
+  <template name="charlie">
+    <div class="footer">
+      <p>Goodbye</p>
+    </div>
+  </template>
+</template>
