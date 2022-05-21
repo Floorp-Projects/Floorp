@@ -35,7 +35,6 @@ class RemotePrintJobParent final : public PRemotePrintJobParent {
   void ActorDestroy(ActorDestroyReason aWhy) final;
 
   mozilla::ipc::IPCResult RecvInitializePrint(const nsString& aDocumentTitle,
-                                              const nsString& aPrintToFile,
                                               const int32_t& aStartPage,
                                               const int32_t& aEndPage) final;
 
@@ -70,7 +69,6 @@ class RemotePrintJobParent final : public PRemotePrintJobParent {
   ~RemotePrintJobParent() final;
 
   nsresult InitializePrintDevice(const nsString& aDocumentTitle,
-                                 const nsString& aPrintToFile,
                                  const int32_t& aStartPage,
                                  const int32_t& aEndPage);
 

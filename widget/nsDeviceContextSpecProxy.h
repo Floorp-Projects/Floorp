@@ -37,12 +37,6 @@ class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec {
   NS_IMETHOD GetDrawEventRecorder(
       mozilla::gfx::DrawEventRecorder** aDrawEventRecorder) final;
 
-  float GetDPI() final;
-
-  float GetPrintingScale() final;
-
-  gfxPoint GetPrintingTranslate() final;
-
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
                            int32_t aStartPage, int32_t aEndPage) final;
@@ -58,8 +52,6 @@ class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec {
  private:
   ~nsDeviceContextSpecProxy();
 
-  nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  nsCOMPtr<nsIDeviceContextSpec> mRealDeviceContextSpec;
   RefPtr<RemotePrintJobChild> mRemotePrintJob;
   RefPtr<mozilla::layout::DrawEventRecorderPRFileDesc> mRecorder;
 };

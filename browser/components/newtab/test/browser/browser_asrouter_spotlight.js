@@ -37,10 +37,14 @@ function showAndWaitForDialog(dialogOptions, callback) {
   return promise;
 }
 
-add_task(async function test_show_spotlight() {
-  let message = (await PanelTestProvider.getMessages()).find(
-    m => m.id === "SPOTLIGHT_MESSAGE_93"
+function getMessage(id) {
+  return PanelTestProvider.getMessages().then(msgs =>
+    msgs.find(m => m.id === id)
   );
+}
+
+add_task(async function test_show_spotlight() {
+  let message = await getMessage("SPOTLIGHT_MESSAGE_93");
 
   Assert.ok(message?.id, "Should find the Spotlight message");
 
@@ -55,9 +59,7 @@ add_task(async function test_show_spotlight() {
 });
 
 add_task(async function test_telemetry() {
-  let message = (await PanelTestProvider.getMessages()).find(
-    m => m.id === "SPOTLIGHT_MESSAGE_93"
-  );
+  let message = await getMessage("SPOTLIGHT_MESSAGE_93");
 
   let dispatchStub = sinon.stub();
   let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
@@ -99,9 +101,7 @@ add_task(async function test_telemetry() {
 });
 
 add_task(async function test_telemetry_blocking() {
-  let message = (await PanelTestProvider.getMessages()).find(
-    m => m.id === "SPOTLIGHT_MESSAGE_93"
-  );
+  const message = await getMessage("SPOTLIGHT_MESSAGE_93");
   message.content.metrics = "block";
 
   let dispatchStub = sinon.stub();
@@ -115,9 +115,7 @@ add_task(async function test_telemetry_blocking() {
 });
 
 add_task(async function test_primaryButton() {
-  let message = (await PanelTestProvider.getMessages()).find(
-    m => m.id === "SPOTLIGHT_MESSAGE_93"
-  );
+  const message = await getMessage("SPOTLIGHT_MESSAGE_93");
 
   let dispatchStub = sinon.stub();
   let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
@@ -148,9 +146,7 @@ add_task(async function test_primaryButton() {
 });
 
 add_task(async function test_secondaryButton() {
-  let message = (await PanelTestProvider.getMessages()).find(
-    m => m.id === "SPOTLIGHT_MESSAGE_93"
-  );
+  const message = await getMessage("SPOTLIGHT_MESSAGE_93");
 
   let dispatchStub = sinon.stub();
   let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
@@ -181,24 +177,9 @@ add_task(async function test_secondaryButton() {
 });
 
 add_task(async function test_remoteL10n_content() {
-  let message = (await PanelTestProvider.getMessages()).find(
-    m => m.id === "SPOTLIGHT_MESSAGE_93"
-  );
-
   // Modify the message to mix translated and un-translated content
-  message = {
-    ...message,
-    content: {
-      ...message.content,
-      body: {
-        ...message.content.body,
-        secondary: {
-          ...message.content.body.secondary,
-          label: "Changed Label",
-        },
-      },
-    },
-  };
+  const message = await getMessage("SPOTLIGHT_MESSAGE_93");
+  message.content.body.secondary.label = "Changed Label";
 
   let dispatchStub = sinon.stub();
   let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
@@ -237,19 +218,8 @@ add_task(async function test_remote_images_logo() {
 
   registerCleanupFunction(cleanup);
 
-  let message = await PanelTestProvider.getMessages().then(msgs =>
-    msgs.find(m => m.id === "SPOTLIGHT_MESSAGE_93")
-  );
-
-  message = {
-    ...message,
-    content: {
-      ...message.content,
-      logo: {
-        imageId: imageInfo.recordId,
-      },
-    },
-  };
+  const message = await getMessage("SPOTLIGHT_MESSAGE_93");
+  message.content.logo = { imageId: imageInfo.recordId };
 
   const dispatchStub = sinon.stub();
   const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
@@ -268,10 +238,36 @@ add_task(async function test_remote_images_logo() {
   });
 });
 
-add_task(async function test_contentExpanded() {
-  let message = (await PanelTestProvider.getMessages()).find(
-    m => m.id === "TCP_SPOTLIGHT_MESSAGE_95"
+add_task(async function test_remoteImages_fail() {
+  const imageInfo = RemoteImagesTestUtils.images.AboutRobots;
+  registerCleanupFunction(
+    await RemoteImagesTestUtils.serveRemoteImages(imageInfo)
   );
+
+  const message = await getMessage("SPOTLIGHT_MESSAGE_93");
+  message.content.logo = { imageId: "bogus" };
+
+  const dispatchStub = sinon.stub();
+  const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+
+  await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
+    await win.document.mozSubdialogReady;
+
+    const logo = win.document.querySelector(".logo");
+
+    Assert.ok(!logo.src.startsWith("blob:"), "RemoteImages did not patch URL");
+    Assert.equal(
+      logo.style.visibility,
+      "hidden",
+      "Spotlight hid image with missing URL"
+    );
+
+    win.document.getElementById("secondary").click();
+  });
+});
+
+add_task(async function test_contentExpanded() {
+  let message = await getMessage("TCP_SPOTLIGHT_MESSAGE_95");
 
   let dispatchStub = sinon.stub();
   let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;

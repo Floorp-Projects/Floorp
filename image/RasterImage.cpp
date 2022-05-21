@@ -1694,9 +1694,11 @@ void RasterImage::NotifyDecodeComplete(
     // If we were a metadata decode and a full decode was requested, do it.
     if (LoadWantFullDecode()) {
       StoreWantFullDecode(false);
-      RequestDecodeForSizeInternal(
-          mSize, DECODE_FLAGS_DEFAULT | FLAG_HIGH_QUALITY_SCALING,
-          FRAME_CURRENT);
+      RequestDecodeForSizeInternal(mSize,
+                                   DECODE_FLAGS_DEFAULT |
+                                       FLAG_HIGH_QUALITY_SCALING |
+                                       FLAG_AVOID_REDECODE_FOR_SIZE,
+                                   FRAME_CURRENT);
     }
   }
 }

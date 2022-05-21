@@ -59,25 +59,19 @@ class nsIDeviceContextSpec : public nsISupports {
   }
 
   /**
-   * Override to return something other than the default.
-   *
    * @return DPI for printing.
    */
-  virtual float GetDPI() { return mozilla::StaticPrefs::print_default_dpi(); }
+  float GetDPI() { return mozilla::StaticPrefs::print_default_dpi(); }
 
   /**
-   * Override to return something other than the default.
-   *
    * @return the printing scale to be applied to the context for printing.
    */
-  virtual float GetPrintingScale() { return 72.0f / GetDPI(); }
+  float GetPrintingScale();
 
   /**
-   * Override to return something other than the default.
-   *
    * @return the point to translate the context to for printing.
    */
-  virtual gfxPoint GetPrintingTranslate() { return gfxPoint(0, 0); }
+  gfxPoint GetPrintingTranslate();
 
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
@@ -87,6 +81,16 @@ class nsIDeviceContextSpec : public nsISupports {
   NS_IMETHOD AbortDocument() { return EndDocument(); }
   NS_IMETHOD BeginPage() = 0;
   NS_IMETHOD EndPage() = 0;
+
+ protected:
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
+
+#ifdef MOZ_ENABLE_SKIA_PDF
+  // This variable is independant of nsIPrintSettings::kOutputFormatPDF (i.e.
+  // save-to-PDF). If set to true, then even when we print to a printer we
+  // output and send it PDF.
+  bool mPrintViaSkPDF = false;
+#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContextSpec, NS_IDEVICE_CONTEXT_SPEC_IID)

@@ -2137,7 +2137,7 @@ void nsCSSRendering::GetImageLayerClip(
     aClipState->mBGClipArea.Deflate(border);
 
     if (haveRoundedCorners) {
-      nsIFrame::InsetBorderRadii(aClipState->mRadii, border);
+      nsIFrame::AdjustBorderRadii(aClipState->mRadii, -border);
     }
   }
 
