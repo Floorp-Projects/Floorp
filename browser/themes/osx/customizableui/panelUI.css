@@ -21,7 +21,8 @@
 #identity-popup,
 #permission-popup,
 #protections-popup,
-#appMenu-notification-popup {
+#appMenu-notification-popup,
+#editBookmarkPanel {
   margin-top: -1px; /* Overrides value from panelUI-shared.css */
 }
 
