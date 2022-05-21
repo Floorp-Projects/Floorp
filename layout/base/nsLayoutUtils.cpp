@@ -8893,6 +8893,9 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   metadata.SetPrefersReducedMotion(
       Gecko_MediaFeatures_PrefersReducedMotion(document));
 
+  metadata.SetIsPaginatedPresentation(presContext->Type() !=
+                                      nsPresContext::eContext_Galley);
+
   return metadata;
 }
 
