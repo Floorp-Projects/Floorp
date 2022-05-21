@@ -1074,13 +1074,13 @@ dependencies = [
 
 [[package]]
 name = "cssparser"
-version = "0.29.2"
+version = "0.29.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "031d29b6d1ea84f63436e45fb6f3c1a3d62dc1650018c53fa7165e108d35d88f"
+checksum = "f93d03419cb5950ccfd3daf3ff1c7a36ace64609a1a8746d493df1ca0afde0fa"
 dependencies = [
  "cssparser-macros",
  "dtoa-short",
- "itoa 0.4.999",
+ "itoa 1.0.2",
  "matches",
  "phf",
  "proc-macro2",
