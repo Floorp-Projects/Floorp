@@ -260,6 +260,10 @@ class nsPrintJob final : public nsIWebProgressListener,
   // callback is stored here.
   PrintPreviewResolver mPrintPreviewCallback;
 
+  // The scale factor that would need to be applied to all pages to make the
+  // widest page fit without overflowing/clipping.
+  float mShrinkToFitFactor = 1.0f;
+
   float mScreenDPI = 115.0f;
 
   bool mCreatedForPrintPreview = false;

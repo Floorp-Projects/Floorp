@@ -64,7 +64,6 @@ class nsPrintData {
   bool mIsAborted;          // tells us the document is being aborted
   bool mPreparingForPrint;  // see comments above
   int32_t mNumPrintablePages;
-  float mShrinkRatio;
 
  private:
   nsPrintData() = delete;
