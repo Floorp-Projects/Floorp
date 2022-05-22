@@ -2105,15 +2105,16 @@ Matrix4x4Flagged nsLayoutUtils::GetTransformToAncestor(
   return ctm;
 }
 
-gfxSize nsLayoutUtils::GetTransformToAncestorScale(const nsIFrame* aFrame) {
+MatrixScalesDouble nsLayoutUtils::GetTransformToAncestorScale(
+    const nsIFrame* aFrame) {
   Matrix4x4Flagged transform = GetTransformToAncestor(
       RelativeTo{aFrame},
       RelativeTo{nsLayoutUtils::GetDisplayRootFrame(aFrame)});
   Matrix transform2D;
   if (transform.CanDraw2D(&transform2D)) {
-    return ThebesMatrix(transform2D).ScaleFactors().ToSize();
+    return ThebesMatrix(transform2D).ScaleFactors();
   }
-  return gfxSize(1, 1);
+  return MatrixScalesDouble();
 }
 
 static Matrix4x4Flagged GetTransformToAncestorExcludingAnimated(
@@ -2776,8 +2777,9 @@ nsresult nsLayoutUtils::GetFramesForArea(RelativeTo aRelativeTo,
 mozilla::ParentLayerToScreenScale2D
 nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
     const nsIFrame* aFrame) {
-  ParentLayerToScreenScale2D transformToAncestorScale(
-      nsLayoutUtils::GetTransformToAncestorScale(aFrame));
+  MatrixScalesDouble scale = nsLayoutUtils::GetTransformToAncestorScale(aFrame);
+  ParentLayerToScreenScale2D transformToAncestorScale =
+      ViewAs<ParentLayerToScreenScale2D>(scale.ConvertTo<float>());
 
   if (BrowserChild* browserChild = BrowserChild::GetFrom(aFrame->PresShell())) {
     transformToAncestorScale =
