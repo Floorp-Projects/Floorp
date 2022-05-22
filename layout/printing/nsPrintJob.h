@@ -266,6 +266,8 @@ class nsPrintJob final : public nsIWebProgressListener,
 
   float mScreenDPI = 115.0f;
 
+  int32_t mNumPrintablePages = 0;
+
   bool mCreatedForPrintPreview = false;
   bool mIsCreatingPrintPreview = false;
   bool mIsDoingPrinting = false;
