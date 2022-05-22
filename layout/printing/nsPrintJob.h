@@ -162,6 +162,9 @@ class nsPrintJob final : public nsIWebProgressListener,
   MOZ_CAN_RUN_SCRIPT nsresult SetupToPrintContent();
   nsresult EnablePOsForPrinting();
 
+  void BuildNestedPrintObjects(
+      const mozilla::UniquePtr<nsPrintObject>& aParentPO);
+
   bool PrintDocContent(const mozilla::UniquePtr<nsPrintObject>& aPO,
                        nsresult& aStatus);
   nsresult DoPrint(const mozilla::UniquePtr<nsPrintObject>& aPO);
@@ -230,6 +233,8 @@ class nsPrintJob final : public nsIWebProgressListener,
   void FirePrintPreviewUpdateEvent();
 
   void PageDone(nsresult aResult);
+
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
 
   // The docViewer that owns us, and its docShell.
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
