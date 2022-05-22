@@ -29,8 +29,7 @@ nsPrintData::nsPrintData(ePrintDataType aType)
       mOnStartSent(false),
       mIsAborted(false),
       mPreparingForPrint(false),
-      mNumPrintablePages(0),
-      mShrinkRatio(1.0) {}
+      mNumPrintablePages(0) {}
 
 nsPrintData::~nsPrintData() {
   // Only Send an OnEndPrinting if we have started printing
