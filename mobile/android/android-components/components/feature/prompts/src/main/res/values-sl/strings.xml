@@ -107,4 +107,10 @@
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Strni predlagane kreditne kartice</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Upravljanje kreditnih kartic</string>
-    </resources>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Želite varno shraniti to kartico?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Posodobi datum poteka veljavnosti kartice?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Številka kartice bo šifrirana. Varnostna koda ne bo shranjena.</string>
+</resources>

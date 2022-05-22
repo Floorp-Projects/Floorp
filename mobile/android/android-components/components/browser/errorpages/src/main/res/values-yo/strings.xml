@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Gbìyànjú lẹ́ẹ̀kan sí i</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">A kò lè parí ìbéèrè rẹ</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Àfikún ìfitónilétí nípa ìsòro tàbí àsìṣe yìí kò sí lọ́wọ́ lọ́wọ́ báyìí</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Ìsomọ́ra Onífọ̀kànbalẹ̀ Kùnà</string>
+
+    </resources>
