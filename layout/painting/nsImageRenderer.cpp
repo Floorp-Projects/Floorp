@@ -608,14 +608,7 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
         extendMode = ExtendMode::CLAMP;
       }
 
-      uint32_t containerFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
-      if (mFlags & (nsImageRenderer::FLAG_PAINTING_TO_WINDOW |
-                    nsImageRenderer::FLAG_HIGH_QUALITY_SCALING)) {
-        containerFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
-      }
-      if (mFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
-        containerFlags |= imgIContainer::FLAG_SYNC_DECODE;
-      }
+      uint32_t containerFlags = ConvertImageRendererToDrawFlags(mFlags);
       if (extendMode == ExtendMode::CLAMP &&
           StaticPrefs::image_svg_blob_image() &&
           mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
