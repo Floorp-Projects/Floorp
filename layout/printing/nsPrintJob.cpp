@@ -434,7 +434,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
       !printData->mPrintObject->mDocument->GetRootElement())
     return NS_ERROR_GFX_PRINTER_STARTDOC;
 
-  mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
+  mPrintSettings->GetShrinkToFit(&mShrinkToFit);
 
   bool printingViaParent =
       XRE_IsContentProcess() && StaticPrefs::print_print_via_parent();
@@ -831,7 +831,7 @@ nsresult nsPrintJob::SetupToPrintContent() {
 
   // Here is where we figure out if extra reflow for shrinking the content
   // is required.
-  if (printData->mShrinkToFit) {
+  if (mShrinkToFit) {
     printData->mShrinkRatio = printData->mPrintObject->mShrinkRatio;
 
     if (printData->mShrinkRatio < 0.998f) {
@@ -1136,7 +1136,7 @@ nsPrintJob::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
 
 void nsPrintJob::UpdateZoomRatio(nsPrintObject* aPO) {
   if (!aPO->mParent) {
-    if (mPrt->mShrinkToFit) {
+    if (mShrinkToFit) {
       aPO->mZoomRatio = mPrt->mShrinkRatio;
       // If we're actually going to scale (the factor is less than 1), we
       // reduce the scale factor slightly to avoid the possibility of floating
@@ -1183,7 +1183,7 @@ nsresult nsPrintJob::UpdateSelectionAndShrinkPrintObject(
   // Then we walk the frame tree and look for the "xmost" frame
   // this is the frame where the right-hand side of the frame extends
   // the furthest
-  if (mPrt->mShrinkToFit && aDocumentIsTopLevel) {
+  if (mShrinkToFit && aDocumentIsTopLevel) {
     nsPageSequenceFrame* pageSeqFrame = aPO->mPresShell->GetPageSequenceFrame();
     NS_ENSURE_STATE(pageSeqFrame);
     aPO->mShrinkRatio = pageSeqFrame->GetSTFPercent();
