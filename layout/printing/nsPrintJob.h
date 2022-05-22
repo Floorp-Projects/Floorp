@@ -266,6 +266,7 @@ class nsPrintJob final : public nsIWebProgressListener,
   bool mIsCreatingPrintPreview = false;
   bool mIsDoingPrinting = false;
   bool mDidLoadDataForPrinting = false;
+  bool mShrinkToFit = false;
   bool mDoingInitialReflow = false;
   bool mIsDestroying = false;
   bool mDisallowSelectionPrint = false;

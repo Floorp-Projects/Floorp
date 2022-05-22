@@ -63,7 +63,6 @@ class nsPrintData {
   bool mOnStartSent;
   bool mIsAborted;          // tells us the document is being aborted
   bool mPreparingForPrint;  // see comments above
-  bool mShrinkToFit;
   int32_t mNumPrintablePages;
   float mShrinkRatio;
 
