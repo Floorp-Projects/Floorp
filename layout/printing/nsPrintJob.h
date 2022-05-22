@@ -15,6 +15,7 @@
 #include "nsHashKeys.h"
 #include "nsIFrame.h"  // For WeakFrame
 #include "nsSize.h"
+#include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsWeakReference.h"
 
@@ -253,6 +254,11 @@ class nsPrintJob final : public nsIWebProgressListener,
 
   // Only set if this nsPrintJob was created for a real print.
   RefPtr<RemotePrintJobChild> mRemotePrintJob;
+
+  // Array of non-owning pointers to all the nsPrintObjects owned by this
+  // nsPrintJob. This includes mPrintObject, as well as all of its mKids (and
+  // their mKids, etc.)
+  nsTArray<nsPrintObject*> mPrintDocList;
 
   // If the code that initiates a print preview passes a PrintPreviewResolver
   // (a std::function) to be notified of the final sheet/page counts (once

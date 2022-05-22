@@ -14,7 +14,6 @@
 #include "nsDeviceContext.h"
 #include "nsIPrintSettings.h"
 #include "nsISupportsImpl.h"
-#include "nsTArray.h"
 #include "nsCOMArray.h"
 
 class nsPrintObject;
@@ -47,11 +46,6 @@ class nsPrintData {
   // Otherwise, if there is a selection, it is set to the root nsPrintObject.
   // Otherwise, it is unset.
   nsPrintObject* mSelectionRoot = nullptr;
-
-  // Array of non-owning pointers to all the nsPrintObjects owned by this
-  // nsPrintData. This includes this->mPrintObject, as well as all of its
-  // mKids (and their mKids, etc.)
-  nsTArray<nsPrintObject*> mPrintDocList;
 
   bool mOnStartSent;
   bool mIsAborted;  // tells us the document is being aborted
