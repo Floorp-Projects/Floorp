@@ -38,8 +38,6 @@ class nsPrintData {
   ePrintDataType mType;  // the type of data this is (Printing or Print Preview)
   RefPtr<nsDeviceContext> mPrintDC;
 
-  mozilla::UniquePtr<nsPrintObject> mPrintObject;
-
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
 
   bool mOnStartSent;
