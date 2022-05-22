@@ -20,13 +20,6 @@
 class nsPrintObject;
 class nsIWebProgressListener;
 
-//------------------------------------------------------------------------
-// nsPrintData Class
-//
-// mPreparingForPrint - indicates that we have started Printing but
-//   have not gone to the timer to start printing the pages. It gets turned
-//   off right before we go to the timer.
-//------------------------------------------------------------------------
 class nsPrintData {
  public:
   typedef enum { eIsPrinting, eIsPrintPreview } ePrintDataType;
@@ -61,8 +54,7 @@ class nsPrintData {
   nsTArray<nsPrintObject*> mPrintDocList;
 
   bool mOnStartSent;
-  bool mIsAborted;          // tells us the document is being aborted
-  bool mPreparingForPrint;  // see comments above
+  bool mIsAborted;  // tells us the document is being aborted
 
  private:
   nsPrintData() = delete;
