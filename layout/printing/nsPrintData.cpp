@@ -29,7 +29,6 @@ nsPrintData::nsPrintData(ePrintDataType aType)
       mOnStartSent(false),
       mIsAborted(false),
       mPreparingForPrint(false),
-      mShrinkToFit(false),
       mNumPrintablePages(0),
       mShrinkRatio(1.0) {}
 
