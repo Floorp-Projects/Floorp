@@ -153,3 +153,7 @@ See the above repository for updates as well as full license text. */
   #titlebar{
     height: 0px !important;
   }
+
+  .private-browsing-indicator{
+    display: none !important;
+  }
