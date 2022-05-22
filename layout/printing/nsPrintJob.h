@@ -268,6 +268,11 @@ class nsPrintJob final : public nsIWebProgressListener,
 
   int32_t mNumPrintablePages = 0;
 
+  // If true, indicates that we have started Printing but have not gone to the
+  // timer to start printing the pages. It gets turned off right before we go
+  // to the timer.
+  bool mPreparingForPrint = false;
+
   bool mCreatedForPrintPreview = false;
   bool mIsCreatingPrintPreview = false;
   bool mIsDoingPrinting = false;

@@ -230,9 +230,7 @@ nsPrintJob::~nsPrintJob() {
   DisconnectPagePrintTimer();
 }
 
-bool nsPrintJob::CheckBeforeDestroy() const {
-  return mPrt && mPrt->mPreparingForPrint;
-}
+bool nsPrintJob::CheckBeforeDestroy() const { return mPreparingForPrint; }
 
 //-------------------------------------------------------
 void nsPrintJob::Destroy() {
@@ -1667,7 +1665,7 @@ nsresult nsPrintJob::DoPrint(const UniquePtr<nsPrintObject>& aPO) {
     MOZ_ASSERT(seqFrame, "no page sequence frame");
 
     // We are done preparing for printing, so we can turn this off
-    printData->mPreparingForPrint = false;
+    mPreparingForPrint = false;
 
 #ifdef EXTENDED_DEBUG_PRINTING
     nsIFrame* rootFrame = poPresShell->GetRootFrame();
@@ -1865,8 +1863,8 @@ void nsPrintJob::PageDone(nsresult aResult) {
 //---------------------------------------------------------------------
 void nsPrintJob::SetIsPrinting(bool aIsPrinting) {
   mIsDoingPrinting = aIsPrinting;
-  if (mPrt && aIsPrinting) {
-    mPrt->mPreparingForPrint = true;
+  if (aIsPrinting) {
+    mPreparingForPrint = true;
   }
 }
 
