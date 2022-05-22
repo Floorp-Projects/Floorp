@@ -67,8 +67,6 @@ class nsPrintData {
   int32_t mNumPrintablePages;
   float mShrinkRatio;
 
-  nsCOMPtr<nsIPrintSettings> mPrintSettings;
-
  private:
   nsPrintData() = delete;
   nsPrintData& operator=(const nsPrintData& aOther) = delete;
