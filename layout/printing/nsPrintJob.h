@@ -255,6 +255,9 @@ class nsPrintJob final : public nsIWebProgressListener,
   // Only set if this nsPrintJob was created for a real print.
   RefPtr<RemotePrintJobChild> mRemotePrintJob;
 
+  // The root print object.
+  mozilla::UniquePtr<nsPrintObject> mPrintObject;
+
   // If there is a focused iframe, mSelectionRoot is set to its nsPrintObject.
   // Otherwise, if there is a selection, it is set to the root nsPrintObject.
   // Otherwise, it is unset.
