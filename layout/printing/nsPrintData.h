@@ -42,11 +42,6 @@ class nsPrintData {
 
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
 
-  // If there is a focused iframe, mSelectionRoot is set to its nsPrintObject.
-  // Otherwise, if there is a selection, it is set to the root nsPrintObject.
-  // Otherwise, it is unset.
-  nsPrintObject* mSelectionRoot = nullptr;
-
   bool mOnStartSent;
   bool mIsAborted;  // tells us the document is being aborted
 

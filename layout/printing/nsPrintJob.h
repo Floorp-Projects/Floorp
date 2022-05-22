@@ -255,6 +255,11 @@ class nsPrintJob final : public nsIWebProgressListener,
   // Only set if this nsPrintJob was created for a real print.
   RefPtr<RemotePrintJobChild> mRemotePrintJob;
 
+  // If there is a focused iframe, mSelectionRoot is set to its nsPrintObject.
+  // Otherwise, if there is a selection, it is set to the root nsPrintObject.
+  // Otherwise, it is unset.
+  nsPrintObject* mSelectionRoot = nullptr;
+
   // Array of non-owning pointers to all the nsPrintObjects owned by this
   // nsPrintJob. This includes mPrintObject, as well as all of its mKids (and
   // their mKids, etc.)

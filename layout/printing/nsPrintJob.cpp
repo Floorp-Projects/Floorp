@@ -152,7 +152,7 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
  * Build a tree of nsPrintObjects under aPO. It also appends a (depth first)
  * flat list of all the nsPrintObjects created to mPrintDocList. If
  * one of the nsPrintObject's document is the focused document, then the print
- * object is set as mPrt->mSelectionRoot.
+ * object is set as mSelectionRoot.
  * @param aParentPO The parent nsPrintObject to populate, must not be null.
  */
 void nsPrintJob::BuildNestedPrintObjects(
@@ -163,13 +163,13 @@ void nsPrintJob::BuildNestedPrintObjects(
   // that had focus then always set as the selection root.
   if (aParentPO->mFrameType == eIFrame &&
       aParentPO->mDocument->GetProperty(nsGkAtoms::printisfocuseddoc)) {
-    mPrt->mSelectionRoot = aParentPO.get();
-  } else if (!mPrt->mSelectionRoot && aParentPO->HasSelection()) {
+    mSelectionRoot = aParentPO.get();
+  } else if (!mSelectionRoot && aParentPO->HasSelection()) {
     // If there is no focused iframe but there is a selection in one or more
     // frames then we want to set the root nsPrintObject as the focus root so
     // that later EnablePrintingSelectionOnly can search for and enable all
     // nsPrintObjects containing selections.
-    mPrt->mSelectionRoot = mPrt->mPrintObject.get();
+    mSelectionRoot = mPrt->mPrintObject.get();
   }
 
   for (auto& bc : aParentPO->mDocShell->GetBrowsingContext()->Children()) {
@@ -1940,16 +1940,16 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
 
   // This means we are either printing a selected iframe or
   // we are printing the current selection.
-  NS_ENSURE_STATE(!mDisallowSelectionPrint && printData->mSelectionRoot);
+  NS_ENSURE_STATE(!mDisallowSelectionPrint && mSelectionRoot);
 
   // If mSelectionRoot is a selected iframe without a selection, then just
   // enable normally from that point.
-  if (printData->mSelectionRoot->mFrameType == eIFrame &&
-      !printData->mSelectionRoot->HasSelection()) {
-    printData->mSelectionRoot->EnablePrinting(true);
+  if (mSelectionRoot->mFrameType == eIFrame &&
+      !mSelectionRoot->HasSelection()) {
+    mSelectionRoot->EnablePrinting(true);
   } else {
     // Otherwise, only enable nsPrintObjects that have a selection.
-    printData->mSelectionRoot->EnablePrintingSelectionOnly();
+    mSelectionRoot->EnablePrintingSelectionOnly();
   }
   return NS_OK;
 }
@@ -1999,8 +1999,7 @@ nsresult nsPrintJob::FinishPrintPreview() {
   }
 
   if (mPrintPreviewCallback) {
-    const bool hasSelection =
-        !mDisallowSelectionPrint && printData->mSelectionRoot;
+    const bool hasSelection = !mDisallowSelectionPrint && mSelectionRoot;
     // Determine if there is a specified page size, and if we should set the
     // paper orientation to match it.
     const Maybe<bool> maybeLandscape =
