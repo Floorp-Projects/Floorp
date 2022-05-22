@@ -832,9 +832,9 @@ nsresult nsPrintJob::SetupToPrintContent() {
   // Here is where we figure out if extra reflow for shrinking the content
   // is required.
   if (mShrinkToFit) {
-    printData->mShrinkRatio = printData->mPrintObject->mShrinkRatio;
+    mShrinkToFitFactor = printData->mPrintObject->mShrinkRatio;
 
-    if (printData->mShrinkRatio < 0.998f) {
+    if (mShrinkToFitFactor < 0.998f) {
       nsresult rv = ReconstructAndReflow();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -853,8 +853,7 @@ nsresult nsPrintJob::SetupToPrintContent() {
           ("*******************************************************************"
            "*******\n"));
       PR_PL(("STF Ratio is: %8.5f Effective Ratio: %8.5f Diff: %8.5f\n",
-             printData->mShrinkRatio, calcRatio,
-             printData->mShrinkRatio - calcRatio));
+             mShrinkToFitFactor, calcRatio, mShrinkToFitFactor - calcRatio));
       PR_PL(
           ("*******************************************************************"
            "*******\n"));
@@ -1137,7 +1136,7 @@ nsPrintJob::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
 void nsPrintJob::UpdateZoomRatio(nsPrintObject* aPO) {
   if (!aPO->mParent) {
     if (mShrinkToFit) {
-      aPO->mZoomRatio = mPrt->mShrinkRatio;
+      aPO->mZoomRatio = mShrinkToFitFactor;
       // If we're actually going to scale (the factor is less than 1), we
       // reduce the scale factor slightly to avoid the possibility of floating
       // point rounding error causing slight clipping of the longest lines.
