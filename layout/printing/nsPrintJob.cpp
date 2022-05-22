@@ -239,7 +239,7 @@ void nsPrintJob::Destroy() {
   }
   mIsDestroying = true;
 
-  mPrt = nullptr;
+  DestroyPrintingData();
 
   mDocViewerPrint = nullptr;
 }
@@ -358,7 +358,7 @@ nsresult nsPrintJob::CommonPrint(bool aIsPrintPreview,
     if (rv != NS_ERROR_ABORT && rv != NS_ERROR_OUT_OF_MEMORY) {
       FirePrintingErrorEvent(rv);
     }
-    mPrt = nullptr;
+    DestroyPrintingData();
   }
 
   return rv;
