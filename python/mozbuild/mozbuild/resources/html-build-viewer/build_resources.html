@@ -2,16 +2,71 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Build System Resource Usage</title>
 
     <meta charset='utf-8'>
     <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="https://firefoxux.github.io/design-tokens/photon-colors/photon-colors.css" charset="utf-8">
     <style>
 
 svg {
   overflow: visible;
+}
+body {
+  background-color: var(--grey-20);
+  font-family: sans-serif;
+  padding: 30px 80px;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  font-size: 2.3rem;
+  margin: 40px 0 20px;
+}
+
+.dashboard-card {
+  padding: 32px 80px;
+	background-color: var(--white-100);
+	border-radius: 8px;
+  margin: 60px 0;
+}
+
+h2 {
+  color: var(--grey-80);
+  margin-bottom: 30px;
+}
+
+.chart {
+  padding-top: 20px;
+}
+
+.grid-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+	display: grid;
+  grid-template-columns: max-content max-content max-content;
+  gap: 15px 4px;
+}
+
+.grid-list ul li {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  place-items: baseline;
+}
+
+.grid-list ul li .label {
+  color: var(--grey-50);
+  padding-right: 40px;
+}
+
+.grid-list ul li .value {
+  justify-self: end;
+  font-size: 1.3em;
 }
 
 .axis path,
@@ -28,7 +83,7 @@ svg {
 }
 
 .area {
-  fill: steelblue;
+  fill: var(--blue-50);
 }
 
 .graphs {
@@ -36,22 +91,49 @@ svg {
 }
 
 .timeline {
-  fill: steelblue;
-  stroke: gray;
-  stroke-width: 3;
+  fill: var(--blue-40);
+  stroke: var(--blue-70);
+  stroke-width: 1;
 }
 
 .short {
-  fill: gray;
-  stroke: gray;
-  stroke-width: 3;
+  fill: var(--grey-50);
+  stroke: var(--blue-70);
+  stroke-width: 1;
 }
 
 #tooltip {
   z-index: 10;
   position: fixed;
-  background: #efefef;
+  background: var(--white-100);
+  padding: 20px;
+  border-radius: 5px;
+  border: 1px solid var(--grey-20);
 }
+
+.align-self-start {
+  align-self: start;
+}
+
+/* utility-classes from Firefox Photon style guide "https://design.firefox.com/photon/"" */
+
+.shadow-10 {
+  box-shadow: 0 1px 4px	var(--grey-90-a10);
+}
+
+.shadow-20 {
+  box-shadow: 0 2px 8px	var(--grey-90-a10);
+}
+
+.shadow-30 {
+  box-shadow: 0 4px 16px	var(--grey-90-a10);
+}
+
+.shadow-custom {
+  box-shadow: 0 8px 12px 1px rgba(29,17,51,.04),0 3px 16px 2px rgba(9,32,77,.12),0 5px 10px -3px rgba(29,17,51,.12);
+}
+
+
     </style>
   </head>
   <body>
@@ -214,6 +296,15 @@ function format_percent(d, i) {
   return d + "%";
 }
 
+const updateChartsOnResizeWindow = () => addEventListener('resize', updateResourcesGraph);
+updateChartsOnResizeWindow();
+
+// layout spacing to set charts widths
+const marginBodyX = 8;
+const paddingBodyX = 80;
+const marginCardsX = 0;
+const paddingCardsX = 80;
+
 function updateResourcesGraph() {
   renderResources("cpu_graph", currentResources, 400, "cpu_times_fields", "cpu_times_percents", 100, format_percent, [
     ["nice", "#0d9fff"],
@@ -222,34 +313,34 @@ function updateResourcesGraph() {
     ["steal", "#000000"],
     ["guest", "#000000"],
     ["guest_nice", "#000000"],
-    ["system", "#f69a5c"],
+    ["system", "var(--purple-80)"],
     ["iowait", "#ff0d25"],
-    ["user", "#5cb9f6"],
-    ["idle", "#e1e1e1"],
+    ["user", "var(--magenta-50)"],
+    ["idle", "var(--grey-20)"],
   ]);
   // On macos, there doesn't seem to be a combination of values that sums up to
   // the total, so just use the percentage. Only macos has a "wired" value.
   if ('wired' in currentResources.resources[0].virt) {
     renderResources("mem_graph", currentResources, 200, "virt_fields", "virt", 100, format_percent, [
-      ["percent", "#5cb9f6"],
+      ["percent", "var(--blue-50"],
     ]);
   } else {
     renderResources("mem_graph", currentResources, 200, "virt_fields", "virt", currentResources.resources[0].virt['total'], d3.format("s"), [
-      ["used", "#5cb9f6"],
+      ["used", "var(--blue-50"],
       ["buffers", "#f65c5c"],
-      ["cached", "#f69a5c"],
-      ["free", "#e1e1e1"],
+      ["cached", "var(--orange-50)"],
+      ["free", "var(--grey-20)"],
     ]);
   }
   renderTimeline("tiers", currentResources);
-  document.getElementById("wall_time").innerHTML = Math.round(currentResources.duration * 100) / 100;
-  document.getElementById("start_date").innerHTML = currentResources.startDate.toISOString();
-  document.getElementById("end_date").innerHTML = currentResources.endDate.toISOString();
-  document.getElementById("cpu_percent").innerHTML = Math.round(currentResources.cpuPercent * 100) / 100;
-  document.getElementById("write_bytes").innerHTML = currentResources.ioTotal["write_bytes"];
-  document.getElementById("read_bytes").innerHTML = currentResources.ioTotal["read_bytes"];
-  document.getElementById("write_time").innerHTML = currentResources.ioTotal["write_time"];
-  document.getElementById("read_time").innerHTML = currentResources.ioTotal["read_time"];
+  document.getElementById("wall_time").textContent = Math.round(currentResources.duration * 100) / 100;
+  document.getElementById("start_date").textContent = currentResources.startDate.toLocaleString();
+  document.getElementById("end_date").textContent = currentResources.endDate.toLocaleString();
+  document.getElementById("cpu_percent").textContent = Math.round(currentResources.cpuPercent * 100) / 100;
+  document.getElementById("write_bytes").textContent = currentResources.ioTotal["write_bytes"];
+  document.getElementById("read_bytes").textContent = currentResources.ioTotal["read_bytes"];
+  document.getElementById("write_time").textContent = currentResources.ioTotal["write_time"];
+  document.getElementById("read_time").textContent = currentResources.ioTotal["read_time"];
 }
 
 function renderKey(key) {
@@ -267,16 +358,16 @@ function renderKey(key) {
 function renderResources(id, resources, height, fields_attr, data_attr, max_value, tick_format, layers) {
   document.getElementById(id).innerHTML = "";
 
-  var margin = {top: 20, right: 20, bottom: 20, left: 50};
-  var width = window.innerWidth - 50 - margin.left - margin.right;
-  var height = height - margin.top - margin.bottom;
+  const margin = {top: 20, right: 20, bottom: 20, left: 50};
+  const width = window.innerWidth - 2 * (marginBodyX + paddingBodyX + marginCardsX + paddingCardsX) - margin.left;
+  var heightChart = height - margin.top - margin.bottom;
 
   var x = d3.scale.linear()
     .range([0, width])
     .domain(d3.extent(resources.resources, function (d) { return d.start; }))
     ;
   var y = d3.scale.linear()
-    .range([height, 0])
+    .range([heightChart, 0])
     .domain([0, max_value])
     ;
 
@@ -339,8 +430,8 @@ function renderResources(id, resources, height, fields_attr, data_attr, max_valu
     ;
 
   var svg = d3.select("#" + id).append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("width", width)
+    .attr("height", heightChart + margin.top + margin.bottom)
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
     ;
@@ -372,14 +463,14 @@ function renderResources(id, resources, height, fields_attr, data_attr, max_valu
 
   svg.append("g")
     .attr("class", "x axis")
-    .attr("transform", "translate(0," + height + ")")
+    .attr("transform", "translate(0," + heightChart + ")")
     .call(xAxis)
     ;
 
   svg.append("g")
     .attr("class", "x grid")
-    .attr("transform", "translate(0," + height + ")")
-    .call(xAxis.tickSize(-height, 0, 0).tickFormat(""))
+    .attr("transform", "translate(0," + heightChart + ")")
+    .call(xAxis.tickSize(-heightChart, 0, 0).tickFormat(""))
     ;
 
   svg.append("g")
@@ -397,8 +488,7 @@ function renderTimeline(id, resources) {
   document.getElementById(id).innerHTML = "";
 
   var margin = {top: 20, right: 20, bottom: 20, left: 50};
-  var width = window.innerWidth - 50 - margin.left - margin.right;
-  var height = 400 - margin.top - margin.bottom;
+  const width = window.innerWidth - 2 * (marginBodyX + paddingBodyX + marginCardsX + paddingCardsX) - margin.left;
 
   var x = d3.scale.linear()
     .range([0, width])
@@ -409,10 +499,9 @@ function renderTimeline(id, resources) {
   // different items. We use the same x scale as the resource graph so times
   // line up properly.
   svg = d3.select("#" + id).append("svg")
-    .attr("width", width + margin.left + margin.right)
+    .attr("width", width)
     .attr("height", 100)
     .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
     ;
 
   var y = d3.scale.linear().range([10, 0]).domain([0, 1]);
@@ -522,33 +611,84 @@ document.addEventListener("dragover", function(event) {
 }, false);
 
     </script>
-    <h3>Build Resource Usage Report</h3>
+    <h1>Build Resource Usage Report</h1>
 
-    <div id="tooltip" style="display: none;">
-      <table border="0">
-        <tr><td>Tier</td><td id="tt_tier"></td></tr>
-        <tr><td>Duration</td><td id="tt_duration"></td></tr>
-        <tr><td>CPU %</td><td id="tt_cpu_percent"></td></tr>
-      </table>
+    <div id="tooltip" class="shadow-30" style="display: none;">
+      <div class="grid-list"><ul>
+        <li>
+          <div class="label">Tier</div>
+          <div class="value" id="tt_tier"></div>
+        </li>
+        <li>
+          <div class="label">Duration</div>
+          <div class="value" id="tt_duration"></div>
+        </li>
+        <li>
+          <div class="label">CPU %</div>
+          <div class="value" id="tt_cpu_percent"></div>
+        </li>
+      </ul></div>
     </div>
 
     <select id="list" style="display: none"></select>
-    <h4>CPU</h4>
-    <div id="cpu_graph"></div>
-    <h4>Memory</h4>
-    <div id="mem_graph"></div>
-    <div id="tiers"></div>
-    <div id="summary" style="padding-top: 20px">
-      <table border="0">
-        <tr><td>Wall Time (s)</td><td id="wall_time"></td></tr>
-        <tr><td>Start Date</td><td id="start_date"></td></tr>
-        <tr><td>End Date</td><td id="end_date"></td></tr>
-        <tr><td>CPU %</td><td id="cpu_percent"></td></tr>
-        <tr><td>Write Bytes</td><td id="write_bytes"></td></tr>
-        <tr><td>Read Bytes</td><td id="read_bytes"></td></tr>
-        <tr><td>Write Time</td><td id="write_time"></td></tr>
-        <tr><td>Read Time</td><td id="read_time"></td></tr>
-      </table>
+    <div class="dashboard-card shadow-10">
+      <h2>CPU</h2>
+      <div id="cpu_graph" class="chart"></div>
+    </div>
+    <div class="dashboard-card shadow-10">
+      <h2>Memory</h2>
+      <div id="mem_graph" class="chart"></div>
+    </div>
+    <div class="dashboard-card shadow-10">
+      <h2>Tiers</h2>
+      <div id="tiers"></div>
+    </div>
+    <div class="dashboard-card shadow-10 align-self-start">
+      <h2>Summary</h2>
+      <div id="summary" class="grid-list" style="padding-top: 20px">
+        <ul>
+          <li>
+            <div class="label">Wall Time (s)</div>
+            <div class="value" id="wall_time"></div>
+            <div class="unit">s</div>
+          </li>
+          <li>
+            <div class="label">Start Date</div>
+            <div class="value" id="start_date"></div>
+            <div class="unit"></div>
+          </li>
+          <li>
+            <div class="label">End Date</div>
+            <div class="value" id="end_date"></div>
+            <div class="unit"></div>
+          </li>
+          <li>
+            <div class="label">CPU %</div>
+            <div class="value" id="cpu_percent"></div>
+            <div class="unit">%</div>
+          </li>
+          <li>
+            <div class="label">Write Bytes</div>
+            <div class="value" id="write_bytes"></div>
+            <div class="unit">B</div>
+          </li>
+          <li>
+            <div class="label">Read Bytes</div>
+            <div class="value" id="read_bytes"></div>
+            <div class="unit">B</div>
+          </li>
+          <li>
+            <div class="label">Write Time</div>
+            <div class="value" id="write_time"></div>
+            <div class="unit"></div>
+          </li>
+          <li>
+            <div class="label">Read Time</div>
+            <div class="value" id="read_time"></div>
+            <div class="unit"></div>
+          </li>
+        </ul>
+      </div>
     </div>
   </body>
 </html>
