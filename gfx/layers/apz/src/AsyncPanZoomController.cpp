@@ -5191,6 +5191,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         aScrollMetadata.ForceMousewheelAutodir());
     mScrollMetadata.SetForceMousewheelAutodirHonourRoot(
         aScrollMetadata.ForceMousewheelAutodirHonourRoot());
+    mScrollMetadata.SetIsPaginatedPresentation(
+        aScrollMetadata.IsPaginatedPresentation());
     mScrollMetadata.SetDisregardedDirection(
         aScrollMetadata.GetDisregardedDirection());
     mScrollMetadata.SetOverscrollBehavior(

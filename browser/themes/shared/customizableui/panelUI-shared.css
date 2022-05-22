@@ -146,7 +146,8 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 #identity-popup,
 #permission-popup,
 #protections-popup,
-#appMenu-notification-popup {
+#appMenu-notification-popup,
+#editBookmarkPanel {
   margin-top: -4px;
 }
 
