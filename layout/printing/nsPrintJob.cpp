@@ -134,7 +134,7 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
                                        FILE* aFD = nullptr);
 
 #  define DUMP_DOC_LIST(_title) \
-    DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
+    DumpPrintObjectsListStart((_title), mPrintDocList);
 #  define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject.get());
 #  define DUMP_DOC_TREELAYOUT \
     DumpPrintObjectsTreeLayout(mPrt->mPrintObject, mPrt->mPrintDC);
@@ -150,7 +150,7 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
 
 /**
  * Build a tree of nsPrintObjects under aPO. It also appends a (depth first)
- * flat list of all the nsPrintObjects created to mPrt->mPrintDocList. If
+ * flat list of all the nsPrintObjects created to mPrintDocList. If
  * one of the nsPrintObject's document is the focused document, then the print
  * object is set as mPrt->mSelectionRoot.
  * @param aParentPO The parent nsPrintObject to populate, must not be null.
@@ -201,7 +201,7 @@ void nsPrintJob::BuildNestedPrintObjects(
       MOZ_ASSERT_UNREACHABLE("Init failed?");
     }
 
-    mPrt->mPrintDocList.AppendElement(childPO.get());
+    mPrintDocList.AppendElement(childPO.get());
     BuildNestedPrintObjects(childPO);
     aParentPO->mKids.AppendElement(std::move(childPO));
   }
@@ -412,7 +412,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
                                                    mIsCreatingPrintPreview);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    printData->mPrintDocList.AppendElement(printData->mPrintObject.get());
+    mPrintDocList.AppendElement(printData->mPrintObject.get());
 
     printData->mPrintObject->mFrameType = eDoc;
 
@@ -699,10 +699,7 @@ nsresult nsPrintJob::ReconstructAndReflow() {
   // while we're using it & its members!  So we capture it in an owning local
   // reference & use that instead of using mPrt directly.
   RefPtr<nsPrintData> printData = mPrt;
-  for (uint32_t i = 0; i < printData->mPrintDocList.Length(); ++i) {
-    nsPrintObject* po = printData->mPrintDocList.ElementAt(i);
-    NS_ASSERTION(po, "nsPrintObject can't be null!");
-
+  for (nsPrintObject* po : mPrintDocList) {
     if (!po->PrintingIsEnabled() || po->mInvisible) {
       continue;
     }
@@ -741,7 +738,7 @@ nsresult nsPrintJob::ReconstructAndReflow() {
     // For all views except the first one, setup the root view.
     // ??? Can there be multiple po for the top-level-document?
     bool documentIsTopLevel = true;
-    if (i != 0) {
+    if (po->mParent) {
       nsSize adjSize;
       bool doReturn;
       nsresult rv = SetRootView(po, doReturn, documentIsTopLevel, adjSize);
@@ -1445,11 +1442,8 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
 // Figure out how many documents and how many total pages we are printing
 void nsPrintJob::CalcNumPrintablePages(int32_t& aNumPages) {
   aNumPages = 0;
-  // Count the number of printable documents
-  // and printable pages
-  for (uint32_t i = 0; i < mPrt->mPrintDocList.Length(); i++) {
-    nsPrintObject* po = mPrt->mPrintDocList.ElementAt(i);
-    NS_ASSERTION(po, "nsPrintObject can't be null!");
+  // Count the number of printable documents and printable pages
+  for (nsPrintObject* po : mPrintDocList) {
     // Note: The po->mPresContext null-check below is necessary, because it's
     // possible po->mPresContext might never have been set.  (e.g., if
     // PrintingIsEnabled() returns false, ReflowPrintObject bails before setting
