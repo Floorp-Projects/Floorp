@@ -24,11 +24,7 @@ extern mozilla::LazyLogModule gPrintingLog;
 //-- nsPrintData Class Impl
 //---------------------------------------------------
 nsPrintData::nsPrintData(ePrintDataType aType)
-    : mType(aType),
-      mPrintDocList(0),
-      mOnStartSent(false),
-      mIsAborted(false),
-      mPreparingForPrint(false) {}
+    : mType(aType), mPrintDocList(0), mOnStartSent(false), mIsAborted(false) {}
 
 nsPrintData::~nsPrintData() {
   // Only Send an OnEndPrinting if we have started printing
