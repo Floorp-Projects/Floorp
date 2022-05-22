@@ -12,16 +12,24 @@
 [package]
 edition = "2018"
 name = "cssparser"
-version = "0.29.2"
+version = "0.29.6"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
-exclude = ["src/css-parsing-tests/**", "src/big-data-url.css"]
+exclude = [
+    "src/css-parsing-tests/**",
+    "src/big-data-url.css",
+]
 description = "Rust implementation of CSS Syntax Level 3"
 documentation = "https://docs.rs/cssparser/"
 readme = "README.md"
-keywords = ["css", "syntax", "parser"]
+keywords = [
+    "css",
+    "syntax",
+    "parser",
+]
 license = "MPL-2.0"
 repository = "https://github.com/servo/rust-cssparser"
+
 [dependencies.cssparser-macros]
 version = "0.6"
 
@@ -29,13 +37,13 @@ version = "0.6"
 version = "0.3"
 
 [dependencies.itoa]
-version = "0.4"
+version = "1.0"
 
 [dependencies.matches]
 version = "0.1"
 
 [dependencies.phf]
-version = "0.8"
+version = ">=0.8,<=0.10"
 features = ["macros"]
 
 [dependencies.serde]
@@ -44,6 +52,7 @@ optional = true
 
 [dependencies.smallvec]
 version = "1.0"
+
 [dev-dependencies.difference]
 version = "2.0"
 
@@ -52,6 +61,7 @@ version = "0.8"
 
 [dev-dependencies.serde_json]
 version = "1.0"
+
 [build-dependencies.proc-macro2]
 version = "1"
 
@@ -60,7 +70,11 @@ version = "1"
 
 [build-dependencies.syn]
 version = "1"
-features = ["extra-traits", "fold", "full"]
+features = [
+    "extra-traits",
+    "fold",
+    "full",
+]
 
 [features]
 bench = []
