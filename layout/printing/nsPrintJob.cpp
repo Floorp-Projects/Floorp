@@ -876,9 +876,9 @@ nsresult nsPrintJob::SetupToPrintContent() {
   PR_PL(("-------------------------------------------------------\n"));
   PR_PL(("\n"));
 
-  CalcNumPrintablePages(printData->mNumPrintablePages);
+  CalcNumPrintablePages(mNumPrintablePages);
 
-  PR_PL(("--- Printing %d pages\n", printData->mNumPrintablePages));
+  PR_PL(("--- Printing %d pages\n", mNumPrintablePages));
   DUMP_DOC_TREELAYOUT;
 
   // Print listener setup...
@@ -905,14 +905,13 @@ nsresult nsPrintJob::SetupToPrintContent() {
                         docURLStr);
 
   int32_t startPage = 1;
-  int32_t endPage = printData->mNumPrintablePages;
+  int32_t endPage = mNumPrintablePages;
 
   nsTArray<int32_t> ranges;
   mPrintSettings->GetPageRanges(ranges);
   for (size_t i = 0; i < ranges.Length(); i += 2) {
     startPage = std::max(1, std::min(startPage, ranges[i]));
-    endPage = std::min(printData->mNumPrintablePages,
-                       std::max(endPage, ranges[i + 1]));
+    endPage = std::min(mNumPrintablePages, std::max(endPage, ranges[i + 1]));
   }
 
   nsresult rv = NS_OK;
