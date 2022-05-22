@@ -1639,6 +1639,8 @@
     <string name="addresses_state">Zvezna država</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Poštna številka</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Država ali regija</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Telefon</string>
     <!-- The header for the email of an address -->

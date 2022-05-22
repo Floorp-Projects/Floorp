@@ -1622,6 +1622,8 @@
     <string name="addresses_state">Zwězkowy kraj</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Postowa licba</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Kraj abo region</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Telefonowy numer</string>
     <!-- The header for the email of an address -->

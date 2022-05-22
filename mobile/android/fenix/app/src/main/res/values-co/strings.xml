@@ -366,7 +366,7 @@
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Contu Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
-    <string name="preferences_account_sync_error">Ricunnittetevi per cuntinuà a sincrunizazione</string>
+    <string name="preferences_account_sync_error">Ricunnittitevi per cuntinuà a sincrunizazione</string>
     <!-- Preference for language -->
     <string name="preferences_language">Lingua</string>
     <!-- Preference for data choices -->
@@ -851,7 +851,7 @@
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Mudificà u cartulare</string>
     <!-- Bookmark sign in button message -->
-    <string name="bookmark_sign_in_button">Cunnittetevi per fighjà l’indette sincrunizate</string>
+    <string name="bookmark_sign_in_button">Cunnittitevi per vede l’indette sincrunizate</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -1042,7 +1042,7 @@
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Cunnette un altru apparechju</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">Per mandà un’unghjetta, cunnittetevi à u vostru contu Firefox nant’à omancu un altru apparechju.</string>
+    <string name="sync_connect_device_dialog">Per mandà un’unghjetta, cunnittitevi à u vostru contu Firefox nant’à omancu un altru apparechju.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Ahju capitu</string>
     <!-- Share error message -->
@@ -1282,7 +1282,7 @@
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Prontu à numerizà</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">Cunnittetevi cù u vostru apparechju-fotò</string>
+    <string name="sign_in_with_camera">Cunnittitevi cù u vostru apparechju-fotò</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Impiegà piuttostu un messaghju elettronicu</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
@@ -1634,6 +1634,8 @@
 
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Codice pustale</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Paese o regione</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Telefonu</string>
     <!-- The header for the email of an address -->
@@ -1795,7 +1797,7 @@
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
-    <string name="synced_tabs_connect_another_device">Cunnittete un altru apparechju.</string>
+    <string name="synced_tabs_connect_another_device">Cunnittite un altru apparechju.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ci vole à autenticassi torna.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->

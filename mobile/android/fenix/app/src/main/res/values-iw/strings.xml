@@ -91,7 +91,7 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">סגירה</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message">לשוניות שלא צפית בהם במשך שבועיים עוברות לכאן.</string>
+    <string name="tab_tray_inactive_onboarding_message">לשוניות בהן לא צפית במשך שבועיים מועברות לכאן.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">כיבוי בהגדרות</string>
 
@@ -99,7 +99,7 @@
     <string name="tab_tray_inactive_auto_close_title">לסגור באופן אוטומטי לאחר חודש אחד?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
-    <string name="tab_tray_inactive_auto_close_body_2">‏%1$s יכול לסגור לשוניות שלא נצפו במהלך החודש האחרון.</string>
+    <string name="tab_tray_inactive_auto_close_body_2">‏%1$s יכול לסגור לשוניות שלא צפית בהן במהלך החודש האחרון.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">סגירה</string>
 
@@ -144,6 +144,9 @@
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">הסרה</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">הצגת כל מחקרי העבר</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -427,11 +430,25 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">תמונות רקע</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
     <string name="customize_toggle_contile">קיצורי דרך ממומנים</string>
 
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">פריט תמונת רקע: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">תמונת הרקע עודכנה!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">הצגה</string>
+
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">החלפת הרקע על־ידי נגיעה בלוגו דף הבית של Firefox</string>
+
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">הלוגו של Firefox - החלפת תמונת הרקע, כפתור</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -641,7 +658,7 @@
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">העברת לשוניות ישנות ללא פעילות</string>
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">לשוניות שלא צפית בהם במשך שבועיים עוברות למקטע הלא פעיל.</string>
+    <string name="preferences_inactive_tabs_title">לשוניות בהן לא צפית במשך שבועיים מועברות לאגף הלא פעילים.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -1604,6 +1621,8 @@
     <string name="addresses_city">עיר</string>
     <!-- The header for the state of an address -->
     <string name="addresses_state">מדינה</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">ארץ או איזור</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">טלפון</string>
     <!-- The header for the email of an address -->
@@ -1831,7 +1850,7 @@
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">לסגור באופן אוטומטי לאחר חודש אחד?</string>
 
     <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
-    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">‏Firefox יכול לסגור לשוניות שלא נצפו במהלך החודש האחרון.</string>
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">‏Firefox יכול לסגור לשוניות שלא צפית בהן במהלך החודש האחרון.</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">הפעלת סגירה אוטומטית</string>
 

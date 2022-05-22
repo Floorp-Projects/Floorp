@@ -1615,6 +1615,8 @@
     <string name="addresses_state">Аймақ</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Пошталық индексі</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Ел немесе аймақ</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Телефон</string>
     <!-- The header for the email of an address -->

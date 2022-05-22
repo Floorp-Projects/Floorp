@@ -1622,6 +1622,8 @@
     <string name="addresses_state">Estado</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Código postal</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">País o región</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Teléfono</string>
     <!-- The header for the email of an address -->

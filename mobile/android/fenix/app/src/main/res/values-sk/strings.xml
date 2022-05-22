@@ -1625,6 +1625,8 @@
     <string name="addresses_state">Štát</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">PSČ</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Krajina alebo oblasť</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Telefón</string>
     <!-- The header for the email of an address -->

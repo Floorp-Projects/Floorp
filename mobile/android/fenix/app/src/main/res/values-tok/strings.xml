@@ -74,4 +74,7 @@
     <string name="browser_menu_add_ons">ilo pi kepeken sin</string>
 
 
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+
     </resources>

@@ -1639,6 +1639,8 @@
     <string name="addresses_state">Краіна</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Індэкс</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Краіна ці рэгіён</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Тэлефон</string>
     <!-- The header for the email of an address -->

@@ -1651,6 +1651,8 @@
     <string name="addresses_state">州別</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">郵遞區號</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">國家或地區</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">電話</string>
     <!-- The header for the email of an address -->

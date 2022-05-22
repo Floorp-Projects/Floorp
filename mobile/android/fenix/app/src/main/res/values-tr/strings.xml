@@ -1621,6 +1621,8 @@
     <string name="addresses_state">Eyalet</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Posta kodu</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Ülke veya bölge</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Telefon</string>
     <!-- The header for the email of an address -->
