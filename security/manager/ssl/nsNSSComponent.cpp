@@ -857,7 +857,7 @@ nsNSSComponent::HasActiveSmartCards(bool* result) {
   SECMODModuleList* list = SECMOD_GetDefaultModuleList();
   while (list) {
     SECMODModule* module = list->module;
-    if (SECMOD_LockedModuleHasRemovableSlots(module)) {
+    if (SECMOD_HasRemovableSlots(module)) {
       *result = true;
       return NS_OK;
     }
@@ -921,7 +921,7 @@ nsresult nsNSSComponent::CheckForSmartCardChanges() {
     AutoSECMODListReadLock secmodLock;
     SECMODModuleList* list = SECMOD_GetDefaultModuleList();
     while (list) {
-      if (SECMOD_LockedModuleHasRemovableSlots(list->module)) {
+      if (SECMOD_HasRemovableSlots(list->module)) {
         UniqueSECMODModule module(SECMOD_ReferenceModule(list->module));
         if (!modulesWithRemovableSlots.append(std::move(module))) {
           return NS_ERROR_OUT_OF_MEMORY;
