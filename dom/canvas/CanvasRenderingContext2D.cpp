@@ -4267,17 +4267,14 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
   // Use lazy (re)initialization for the fontGroup since it's rather expensive.
 
   RefPtr<PresShell> presShell = GetPresShell();
-  nsPresContext* pc = presShell ? presShell->GetPresContext() : nullptr;
-  gfxTextPerfMetrics* tp = nullptr;
-  if (pc) {
-    tp = pc->GetTextPerfMetrics();
-  }
+  nsPresContext* presContext =
+      presShell ? presShell->GetPresContext() : nullptr;
 
   // If we have a cached fontGroup, check that it is valid for the current
   // prescontext; if not, we need to discard and re-create it.
   RefPtr<gfxFontGroup>& fontGroup = CurrentState().fontGroup;
   if (fontGroup) {
-    if (fontGroup->GetTextPerfMetrics() != tp) {
+    if (fontGroup->GetPresContext() != presContext) {
       fontGroup = nullptr;
     }
   }
@@ -4305,7 +4302,8 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
       const auto* sans =
           Servo_FontFamily_Generic(StyleGenericFontFamily::SansSerif);
       fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
-          pc, sans->families, &style, language, explicitLanguage, tp, nullptr,
+          presContext, sans->families, &style, language, explicitLanguage,
+          presContext ? presContext->GetTextPerfMetrics() : nullptr, nullptr,
           devToCssSize);
       if (fontGroup) {
         CurrentState().font = kDefaultFontStyle;
