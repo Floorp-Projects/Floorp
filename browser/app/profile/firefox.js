@@ -35,11 +35,15 @@ pref("floorp.Tree-type.verticaltab.optimization", false); //ツリー型タブ�
 pref("floorp.bookmarks.bar.focus.mode", false);//フォーカスした際にブックマークバーを展開
 pref("floorp.material.effect.enable", false);//マテリアルモードの実装
 
-pref("ui.systemUsesDarkTheme", 1);// デフォルトのシステムテーマ使用可能のテーマデザイン
 pref("floorp.browser.user.interface", 3);// Floorp 10 系以降のインターフェーステーマ設定
 pref("floorp.browser.tabbar.settings", 1);// タブの設定
 
 pref("floorp.enable.auto.restart", false);
+
+
+#if defined(XP_LINUX)
+pref("update.id.floorp", "", locked);
+#endif
 
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -1423,28 +1427,7 @@ pref("dom.ipc.shims.enabledWarnings", false);
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  // This pref is introduced as part of bug 742434, the naming is inspired from
-  // its Windows/Mac counterpart, but on Linux it's an integer which means:
-  // 0 -> "no sandbox"
-  // 1 -> "content sandbox using seccomp-bpf when available" + ipc restrictions
-  // 2 -> "seccomp-bpf + write file broker"
-  // 3 -> "seccomp-bpf + read/write file brokering"
-  // 4 -> all of the above + network/socket restrictions + chroot
-  //
-  // The purpose of this setting is to allow Linux users or distros to disable
-  // the sandbox while we fix their problems, or to allow running Firefox with
-  // exotic configurations we can't reasonably support out of the box.
-  //
-  pref("security.sandbox.content.level", 4);
-  // Introduced as part of bug 1608558.  Linux is currently the only platform
-  // that uses a sandbox level for the socket process.  There are currently
-  // only 2 levels:
-  // 0 -> "no sandbox"
-  // 1 -> "sandboxed, allows socket operations and reading necessary certs"
-  pref("security.sandbox.socket.process.level", 1);
-  pref("security.sandbox.content.write_path_whitelist", "");
-  pref("security.sandbox.content.read_path_whitelist", "");
-  pref("security.sandbox.content.syscall_whitelist", "");
+
 #endif
 
 #if defined(XP_OPENBSD) && defined(MOZ_SANDBOX)
