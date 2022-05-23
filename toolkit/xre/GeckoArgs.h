@@ -129,10 +129,16 @@ static CommandLineArg<bool> sSafeMode{"-safeMode", "safemode"};
 static CommandLineArg<bool> sIsForBrowser{"-isForBrowser", "isforbrowser"};
 static CommandLineArg<bool> sNotForBrowser{"-notForBrowser", "notforbrowser"};
 
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
+#if defined(XP_WIN)
+#  if defined(MOZ_SANDBOX)
+static CommandLineArg<bool> sWin32kLockedDown{"-win32kLockedDown",
+                                              "win32klockeddown"};
+#  endif  // defined(MOZ_SANDBOX)
+#  if defined(ACCESSIBILITY)
 static CommandLineArg<uint64_t> sA11yResourceId{"-a11yResourceId",
                                                 "a11yresourceid"};
-#endif  // defined(XP_WIN) && defined(ACCESSIBILITY)
+#  endif  // defined(ACCESSIBILITY)
+#endif    // defined(XP_WIN) && defined(ACCESSIBILITY)
 
 #if defined(__GNUC__)
 #  pragma GCC diagnostic pop
