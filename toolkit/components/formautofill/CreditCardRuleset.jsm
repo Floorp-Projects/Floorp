@@ -31,7 +31,16 @@ ChromeUtils.defineModuleGetter(
   "fathom",
   "resource://gre/modules/third_party/fathom/fathom.jsm"
 );
-const { element: clickedElement, out, rule, ruleset, score, type } = fathom;
+const {
+  element: clickedElement,
+  exceptions: { NoWindowError },
+  out,
+  rule,
+  ruleset,
+  score,
+  type,
+  utils: { isVisible },
+} = fathom;
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -48,6 +57,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NETWORK_NAMES: "resource://gre/modules/CreditCard.jsm",
   LabelUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
+
+/**
+ * RegExp copied from HeuristicsRegExp with the following modification:
+ * 1. Remove rulesets that are not supported by fathom
+ * 2. Remove rules that worsen the accuracy
+ */
+let FathomHeuristicsRegExp;
 
 /**
  * Callthrough abstraction to allow .getAutocompleteInfo() to be mocked out
@@ -73,259 +89,6 @@ function queriedOrClickedElements(selector) {
  * START OF CODE PASTED FROM TRAINING REPOSITORY
  */
 
-var FathomHeuristicsRegExp = {
-  RULES: {
-    "cc-name": undefined,
-    "cc-number": undefined,
-    "cc-exp-month": undefined,
-    "cc-exp-year": undefined,
-    "cc-exp": undefined,
-    "cc-type": undefined,
-  },
-
-  RULE_SETS: [
-    {
-      /* eslint-disable */
-      // Let us keep our consistent wrapping.
-      "cc-name":
-        // Firefox-specific rules
-        "account.*holder.*name" +
-        // de-DE
-        "|^(kredit)?(karten|konto)inhaber" +
-        "|^(name).*karte" +
-        // fr-FR
-        "|nom.*(titulaire|détenteur)" +
-        "|(titulaire|détenteur).*(carte)" +
-        // Rules from Bitwarden
-        "|cc-?name" +
-        "|card-?name" +
-        "|cardholder-?name" +
-        "|(^nom$)" +
-        // Rules are from Chromium source codes
-        "|card.?(?:holder|owner)|name.*(\\b)?on(\\b)?.*card" +
-        "|(?:card|cc).?name|cc.?full.?name" +
-        "|(?:card|cc).?owner" +
-        "|nombre.*tarjeta" + // es
-        "|nom.*carte" + // fr-FR
-        "|nome.*cart" + // it-IT
-        "|名前" + // ja-JP
-        "|Имя.*карты" + // ru
-        "|信用卡开户名|开户名|持卡人姓名" + // zh-CN
-        "|持卡人姓名", // zh-TW
-
-      "cc-number":
-        // Firefox-specific rules
-        // de-DE
-        "(cc|kk)nr" +
-        "|(kredit)?(karten)(nummer|nr)" +
-        // fr-FR
-        "|(numero|número|numéro).*(carte)" +
-        // Rules from Bitwarden
-        "|cc-?number" +
-        "|cc-?num" +
-        "|card-?number" +
-        "|card-?num" +
-        "|cc-?no" +
-        "|card-?no" +
-        "|numero-?carte" +
-        "|num-?carte" +
-        "|cb-?num" +
-        // Rules are from Chromium source codes
-        "|(add)?(?:card|cc|acct).?(?:number|#|no|num)" +
-        "|カード番号" + // ja-JP
-        "|Номер.*карты" + // ru
-        "|信用卡号|信用卡号码" + // zh-CN
-        "|信用卡卡號" + // zh-TW
-        "|카드", // ko-KR
-
-      "cc-exp":
-        // Firefox-specific rules
-        "mm\\s*(\/|\\|-)\\s*(yy|jj|aa)" +
-        "|(month|mois)\\s*(\/|\\|-|et)\\s*(year|année)" +
-        // de-DE
-        // fr-FR
-        // Rules from Bitwarden
-        "|(^cc-?exp$)" +
-        "|(^card-?exp$)" +
-        "|(^cc-?expiration$)" +
-        "|(^card-?expiration$)" +
-        "|(^cc-?ex$)" +
-        "|(^card-?ex$)" +
-        "|(^card-?expire$)" +
-        "|(^card-?expiry$)" +
-        "|(^validite$)" +
-        "|(^expiration$)" +
-        "|(^expiry$)" +
-        "|mm-?yy" +
-        "|mm-?yyyy" +
-        "|yy-?mm" +
-        "|yyyy-?mm" +
-        "|expiration-?date" +
-        "|payment-?card-?expiration" +
-        "|(^payment-?cc-?date$)" +
-        // Rules are from Chromium source codes
-        "|expir|exp.*date|^expfield$" +
-        "|ablaufdatum|gueltig|gültig" + // de-DE
-        "|fecha" + // es
-        "|date.*exp" + // fr-FR
-        "|scadenza" + // it-IT
-        "|有効期限" + // ja-JP
-        "|validade" + // pt-BR, pt-PT
-        "|Срок действия карты", // ru
-
-      "cc-exp-month":
-        // Firefox-specific rules
-        "(cc|kk)month" + // de-DE
-        // Rules from Bitwarden
-        "|(^exp-?month$)" +
-        "|(^cc-?exp-?month$)" +
-        "|(^cc-?month$)" +
-        "|(^card-?month$)" +
-        "|(^cc-?mo$)" +
-        "|(^card-?mo$)" +
-        "|(^exp-?mo$)" +
-        "|(^card-?exp-?mo$)" +
-        "|(^cc-?exp-?mo$)" +
-        "|(^card-?expiration-?month$)" +
-        "|(^expiration-?month$)" +
-        "|(^cc-?mm$)" +
-        "|(^cc-?m$)" +
-        "|(^card-?mm$)" +
-        "|(^card-?m$)" +
-        "|(^card-?exp-?mm$)" +
-        "|(^cc-?exp-?mm$)" +
-        "|(^exp-?mm$)" +
-        "|(^exp-?m$)" +
-        "|(^expire-?month$)" +
-        "|(^expire-?mo$)" +
-        "|(^expiry-?month$)" +
-        "|(^expiry-?mo$)" +
-        "|(^card-?expire-?month$)" +
-        "|(^card-?expire-?mo$)" +
-        "|(^card-?expiry-?month$)" +
-        "|(^card-?expiry-?mo$)" +
-        "|(^mois-?validite$)" +
-        "|(^mois-?expiration$)" +
-        "|(^m-?validite$)" +
-        "|(^m-?expiration$)" +
-        "|(^expiry-?date-?field-?month$)" +
-        "|(^expiration-?date-?month$)" +
-        "|(^expiration-?date-?mm$)" +
-        "|(^exp-?mon$)" +
-        "|(^validity-?mo$)" +
-        "|(^exp-?date-?mo$)" +
-        "|(^cb-?date-?mois$)" +
-        "|(^date-?m$)" +
-        // Rules are from Chromium source codes
-        "|exp.*mo|ccmonth|cardmonth|addmonth" +
-        "|monat" + // de-DE
-        // "|fecha" + // es
-        // "|date.*exp" + // fr-FR
-        // "|scadenza" + // it-IT
-        // "|有効期限" + // ja-JP
-        // "|validade" + // pt-BR, pt-PT
-        // "|Срок действия карты" + // ru
-        "|月", // zh-CN
-
-      "cc-exp-year":
-        // Firefox-specific rules
-        "(cc|kk)year" + // de-DE
-        // Rules from Bitwarden
-        "|(^exp-?year$)" +
-        "|(^cc-?exp-?year$)" +
-        "|(^cc-?year$)" +
-        "|(^card-?year$)" +
-        "|(^cc-?yr$)" +
-        "|(^card-?yr$)" +
-        "|(^exp-?yr$)" +
-        "|(^card-?exp-?yr$)" +
-        "|(^cc-?exp-?yr$)" +
-        "|(^card-?expiration-?year$)" +
-        "|(^expiration-?year$)" +
-        "|(^cc-?yy$)" +
-        "|(^cc-?y$)" +
-        "|(^card-?yy$)" +
-        "|(^card-?y$)" +
-        "|(^card-?exp-?yy$)" +
-        "|(^cc-?exp-?yy$)" +
-        "|(^exp-?yy$)" +
-        "|(^exp-?y$)" +
-        "|(^cc-?yyyy$)" +
-        "|(^card-?yyyy$)" +
-        "|(^card-?exp-?yyyy$)" +
-        "|(^cc-?exp-?yyyy$)" +
-        "|(^expire-?year$)" +
-        "|(^expire-?yr$)" +
-        "|(^expiry-?year$)" +
-        "|(^expiry-?yr$)" +
-        "|(^card-?expire-?year$)" +
-        "|(^card-?expire-?yr$)" +
-        "|(^card-?expiry-?year$)" +
-        "|(^card-?expiry-?yr$)" +
-        "|(^an-?validite$)" +
-        "|(^an-?expiration$)" +
-        "|(^annee-?validite$)" +
-        "|(^annee-?expiration$)" +
-        "|(^expiry-?date-?field-?year$)" +
-        "|(^expiration-?date-?year$)" +
-        "|(^cb-?date-?ann$)" +
-        "|(^expiration-?date-?yy$)" +
-        "|(^expiration-?date-?yyyy$)" +
-        "|(^validity-?year$)" +
-        "|(^exp-?date-?year$)" +
-        "|(^date-?y$)" +
-        // Rules are from Chromium source codes
-        "|(add)?year" +
-        "|jahr" + // de-DE
-        // "|fecha" + // es
-        // "|scadenza" + // it-IT
-        // "|有効期限" + // ja-JP
-        // "|validade" + // pt-BR, pt-PT
-        // "|Срок действия карты" + // ru
-        "|年|有效期", // zh-CN
-
-      "cc-type":
-        // Firefox-specific rules
-        "type" +
-        // de-DE
-        "|Kartenmarke" +
-        // Rules from Bitwarden
-        "|(^cc-?type$)" +
-        "|(^card-?type$)" +
-        "|(^card-?brand$)" +
-        "|(^cc-?brand$)" +
-        "|(^cb-?type$)",
-        // Rules are from Chromium source codes
-    },
-  ],
-
-  _getRule(name) {
-    let rules = [];
-    this.RULE_SETS.forEach(set => {
-      if (set[name]) {
-        rules.push(`(${set[name]})`.normalize("NFKC"));
-      }
-    });
-
-    const value = new RegExp(rules.join("|"), "iu");
-    Object.defineProperty(this.RULES, name, { get: undefined });
-    Object.defineProperty(this.RULES, name, { value });
-    return value;
-  },
-
-  init() {
-    Object.keys(this.RULES).forEach(field =>
-      Object.defineProperty(this.RULES, field, {
-        get() {
-          return FathomHeuristicsRegExp._getRule(field);
-        },
-      })
-    );
-  },
-};
-
-FathomHeuristicsRegExp.init();
-
 const MMRegExp = /^mm$|\(mm\)/i;
 const YYorYYYYRegExp = /^(yy|yyyy)$|\(yy\)|\(yyyy\)/i;
 const monthRegExp = /month/i;
@@ -337,7 +100,7 @@ const CREDIT_CARD_NETWORK_REGEXP = new RegExp(
     .concat(Object.keys(NETWORK_NAMES))
     .join("|"),
   "gui"
-  );
+);
 const TwoDigitYearRegExp = /(?:exp.*date[^y\\n\\r]*|mm\\s*[-/]?\\s*)yy(?:[^y]|$)/i;
 const FourDigitYearRegExp = /(?:exp.*date[^y\\n\\r]*|mm\\s*[-/]?\\s*)yyyy(?:[^y]|$)/i;
 const dwfrmRegExp = /^dwfrm/i;
@@ -405,15 +168,15 @@ function idOrNameMatchRegExp(element, regExp) {
   return false;
 }
 
-function getElementLabels(element) {
-  return {
-    *[Symbol.iterator]() {
-      const labels = LabelUtils.findLabelElements(element);
-      for (let label of labels) {
-        yield* LabelUtils.extractLabelStrings(label);
-      }
-    },
-  };
+function* getElementLabels(element) {
+  // LabelMap has to be cleared to ensure the result is not
+  // affected by the previous call.
+  LabelUtils.clearLabelMap();
+
+  const labels = LabelUtils.findLabelElements(element);
+  for (let label of labels) {
+    yield* LabelUtils.extractLabelStrings(label);
+  }
 }
 
 function labelsMatchRegExp(element, regExp) {
@@ -423,43 +186,6 @@ function labelsMatchRegExp(element, regExp) {
       return true;
     }
   }
-
-  const parentElement = element.parentElement;
-  // Bug 1634819: element.parentElement is null if element.parentNode is a ShadowRoot
-  if (!parentElement) {
-    return false;
-  }
-  // Check if the input is in a <td>, and, if so, check the textContent of the containing <tr>
-  if (parentElement.tagName === "TD" && parentElement.parentElement) {
-    // TODO: How bad is the assumption that the <tr> won't be the parent of the <td>?
-    return regExp.test(parentElement.parentElement.textContent);
-  }
-
-  // Check if the input is in a <dd>, and, if so, check the textContent of the preceding <dt>
-  if (
-    parentElement.tagName === "DD" &&
-    // previousElementSibling can be null
-    parentElement.previousElementSibling
-  ) {
-    return regExp.test(parentElement.previousElementSibling.textContent);
-  }
-  return false;
-}
-
-function closestLabelMatchesRegExp(element, regExp) {
-  const previousElementSibling = element.previousElementSibling;
-  if (
-    previousElementSibling !== null &&
-    previousElementSibling.tagName === "LABEL"
-  ) {
-    return regExp.test(previousElementSibling.textContent);
-  }
-
-  const nextElementSibling = element.nextElementSibling;
-  if (nextElementSibling !== null && nextElementSibling.tagName === "LABEL") {
-    return regExp.test(nextElementSibling.textContent);
-  }
-
   return false;
 }
 
@@ -682,7 +408,21 @@ function inputTypeNotNumbery(fnode) {
   if (inputType) {
     return !["text", "tel", "number"].includes(inputType);
   }
-  return false;
+  return true;
+}
+
+function isNotVisible(fnode) {
+  try {
+    return !isVisible(fnode);
+  } catch (error) {
+    if (error instanceof NoWindowError) {
+      // This case should happen only during xpcshell tests that don't even
+      // care about the info emitted from Fathom. Nevertheless, this is the
+      // most likely truthful return value.
+      return false;
+    }
+    throw error;
+  }
 }
 
 function idOrNameMatchFirstAndLast(fnode) {
@@ -733,9 +473,10 @@ function makeRuleset(coeffs, biases) {
             FathomHeuristicsRegExp.RULES["cc-number"]
           ),
         labelsMatchNumberRegExp: fnode =>
-          labelsMatchRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-number"]),
-        closestLabelMatchesNumberRegExp: fnode =>
-          closestLabelMatchesRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-number"]),
+          labelsMatchRegExp(
+            fnode.element,
+            FathomHeuristicsRegExp.RULES["cc-number"]
+          ),
         placeholderMatchesNumberRegExp: fnode =>
           placeholderMatchesRegExp(
             fnode.element,
@@ -757,6 +498,7 @@ function makeRuleset(coeffs, biases) {
           idOrNameMatchRegExp(fnode.element, subscriptionRegExp),
         idOrNameMatchDwfrmAndBml,
         hasTemplatedValue,
+        isNotVisible,
         inputTypeNotNumbery,
       }),
       rule(type("cc-number"), out("cc-number")),
@@ -767,11 +509,15 @@ function makeRuleset(coeffs, biases) {
       rule(type("typicalCandidates"), type("cc-name")),
       ...simpleScoringRules("cc-name", {
         idOrNameMatchNameRegExp: fnode =>
-          idOrNameMatchRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-name"]),
+          idOrNameMatchRegExp(
+            fnode.element,
+            FathomHeuristicsRegExp.RULES["cc-name"]
+          ),
         labelsMatchNameRegExp: fnode =>
-          labelsMatchRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-name"]),
-        closestLabelMatchesNameRegExp: fnode =>
-          closestLabelMatchesRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-name"]),
+          labelsMatchRegExp(
+            fnode.element,
+            FathomHeuristicsRegExp.RULES["cc-name"]
+          ),
         placeholderMatchesNameRegExp: fnode =>
           placeholderMatchesRegExp(
             fnode.element,
@@ -802,6 +548,7 @@ function makeRuleset(coeffs, biases) {
         idOrNameMatchFirstAndLast,
         idOrNameMatchDwfrmAndBml,
         hasTemplatedValue,
+        isNotVisible,
       }),
       rule(type("cc-name"), out("cc-name")),
 
@@ -816,11 +563,15 @@ function makeRuleset(coeffs, biases) {
       ),
       ...simpleScoringRules("cc-type", {
         idOrNameMatchTypeRegExp: fnode =>
-          idOrNameMatchRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-type"]),
+          idOrNameMatchRegExp(
+            fnode.element,
+            FathomHeuristicsRegExp.RULES["cc-type"]
+          ),
         labelsMatchTypeRegExp: fnode =>
-          labelsMatchRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-type"]),
-        closestLabelMatchesTypeRegExp: fnode =>
-          closestLabelMatchesRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-type"]),
+          labelsMatchRegExp(
+            fnode.element,
+            FathomHeuristicsRegExp.RULES["cc-type"]
+          ),
         idOrNameMatchVisaCheckout: fnode =>
           idOrNameMatchRegExp(fnode.element, VisaCheckoutRegExp),
         ariaLabelMatchesVisaCheckout: fnode =>
@@ -840,9 +591,10 @@ function makeRuleset(coeffs, biases) {
       rule(type("typicalCandidates"), type("cc-exp")),
       ...simpleScoringRules("cc-exp", {
         labelsMatchExpRegExp: fnode =>
-          labelsMatchRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-exp"]),
-        closestLabelMatchesExpRegExp: fnode =>
-          closestLabelMatchesRegExp(fnode.element, FathomHeuristicsRegExp.RULES["cc-exp"]),
+          labelsMatchRegExp(
+            fnode.element,
+            FathomHeuristicsRegExp.RULES["cc-exp"]
+          ),
         placeholderMatchesExpRegExp: fnode =>
           placeholderMatchesRegExp(
             fnode.element,
@@ -894,11 +646,6 @@ function makeRuleset(coeffs, biases) {
           ),
         labelsMatchExpMonthRegExp: fnode =>
           labelsMatchRegExp(
-            fnode.element,
-            FathomHeuristicsRegExp.RULES["cc-exp-month"]
-          ),
-        closestLabelMatchesExpMonthRegExp: fnode =>
-          closestLabelMatchesRegExp(
             fnode.element,
             FathomHeuristicsRegExp.RULES["cc-exp-month"]
           ),
@@ -978,11 +725,6 @@ function makeRuleset(coeffs, biases) {
             fnode.element,
             FathomHeuristicsRegExp.RULES["cc-exp-year"]
           ),
-        closestLabelMatchesExpYearRegExp: fnode =>
-          closestLabelMatchesRegExp(
-            fnode.element,
-            FathomHeuristicsRegExp.RULES["cc-exp-year"]
-          ),
         placeholderMatchesExpYearRegExp: fnode =>
           placeholderMatchesRegExp(
             fnode.element,
@@ -1048,136 +790,134 @@ function makeRuleset(coeffs, biases) {
 
 const coefficients = {
   "cc-number": [
-    ["idOrNameMatchNumberRegExp", 7.679469585418701],
-    ["labelsMatchNumberRegExp", 5.122580051422119],
-    ["closestLabelMatchesNumberRegExp", 2.1256935596466064],
-    ["placeholderMatchesNumberRegExp", 9.471800804138184],
-    ["ariaLabelMatchesNumberRegExp", 6.067715644836426],
-    ["idOrNameMatchGift", -22.946273803710938],
-    ["labelsMatchGift", -7.852959632873535],
-    ["placeholderMatchesGift", -2.355496406555176],
-    ["ariaLabelMatchesGift", -2.940307855606079],
-    ["idOrNameMatchSubscription", 0.11255314946174622],
-    ["idOrNameMatchDwfrmAndBml", -0.0006645023822784424],
-    ["hasTemplatedValue", -0.11370040476322174],
-    ["inputTypeNotNumbery", -3.750155210494995]
+    ["idOrNameMatchNumberRegExp", 6.3039140701293945],
+    ["labelsMatchNumberRegExp", 2.8916432857513428],
+    ["placeholderMatchesNumberRegExp", 5.505742073059082],
+    ["ariaLabelMatchesNumberRegExp", 4.561432361602783],
+    ["idOrNameMatchGift", -3.803224563598633],
+    ["labelsMatchGift", -4.524861812591553],
+    ["placeholderMatchesGift", -1.8712525367736816],
+    ["ariaLabelMatchesGift", -3.674055576324463],
+    ["idOrNameMatchSubscription", -0.7810876369476318],
+    ["idOrNameMatchDwfrmAndBml", -1.095906138420105],
+    ["hasTemplatedValue", -6.368256568908691],
+    ["isNotVisible", -3.0330028533935547],
+    ["inputTypeNotNumbery", -2.300889253616333],
   ],
   "cc-name": [
-    ["idOrNameMatchNameRegExp", 7.496212959289551],
-    ["labelsMatchNameRegExp", 6.081472873687744],
-    ["closestLabelMatchesNameRegExp", 2.600574254989624],
-    ["placeholderMatchesNameRegExp", 5.750874042510986],
-    ["ariaLabelMatchesNameRegExp", 5.162227153778076],
-    ["idOrNameMatchFirst", -6.742659091949463],
-    ["labelsMatchFirst", -0.5234538912773132],
-    ["placeholderMatchesFirst", -3.4615235328674316],
-    ["ariaLabelMatchesFirst", -1.3145145177841187],
-    ["idOrNameMatchLast", -12.561869621276855],
-    ["labelsMatchLast", -0.27417105436325073],
-    ["placeholderMatchesLast", -1.434966802597046],
-    ["ariaLabelMatchesLast", -2.9319725036621094],
-    ["idOrNameMatchFirstAndLast", 24.123435974121094],
-    ["idOrNameMatchSubscription", 0.08349418640136719],
-    ["idOrNameMatchDwfrmAndBml", 0.01882520318031311],
-    ["hasTemplatedValue", 0.182317852973938]
+    ["idOrNameMatchNameRegExp", 7.953818321228027],
+    ["labelsMatchNameRegExp", 11.784907341003418],
+    ["placeholderMatchesNameRegExp", 9.202799797058105],
+    ["ariaLabelMatchesNameRegExp", 9.627416610717773],
+    ["idOrNameMatchFirst", -6.200107574462891],
+    ["labelsMatchFirst", -14.77401065826416],
+    ["placeholderMatchesFirst", -10.258772850036621],
+    ["ariaLabelMatchesFirst", -2.1574606895446777],
+    ["idOrNameMatchLast", -5.508854389190674],
+    ["labelsMatchLast", -14.563374519348145],
+    ["placeholderMatchesLast", -8.281961441040039],
+    ["ariaLabelMatchesLast", -7.915995121002197],
+    ["idOrNameMatchFirstAndLast", 17.586633682250977],
+    ["idOrNameMatchSubscription", -1.3862149715423584],
+    ["idOrNameMatchDwfrmAndBml", -1.154863953590393],
+    ["hasTemplatedValue", -1.3476886749267578],
+    ["isNotVisible", -20.619457244873047],
   ],
   "cc-type": [
-    ["idOrNameMatchTypeRegExp", 2.0581533908843994],
-    ["labelsMatchTypeRegExp", 1.0784518718719482],
-    ["closestLabelMatchesTypeRegExp", 0.6995877623558044],
-    ["idOrNameMatchVisaCheckout", -3.320356845855713],
-    ["ariaLabelMatchesVisaCheckout", -3.4196767807006836],
-    ["isSelectWithCreditCardOptions", 10.337477684020996],
-    ["isRadioWithCreditCardText", 4.530318737030029],
-    ["idOrNameMatchSubscription", -3.7206356525421143],
-    ["idOrNameMatchDwfrmAndBml", -0.08782318234443665],
-    ["hasTemplatedValue", 0.1772511601448059]
+    ["idOrNameMatchTypeRegExp", 2.815537691116333],
+    ["labelsMatchTypeRegExp", -2.6969387531280518],
+    ["idOrNameMatchVisaCheckout", -4.888851165771484],
+    ["ariaLabelMatchesVisaCheckout", -5.0021514892578125],
+    ["isSelectWithCreditCardOptions", 7.633410453796387],
+    ["isRadioWithCreditCardText", 9.72647762298584],
+    ["idOrNameMatchSubscription", -2.540968179702759],
+    ["idOrNameMatchDwfrmAndBml", -2.4342823028564453],
+    ["hasTemplatedValue", -2.134981155395508],
   ],
   "cc-exp": [
-    ["labelsMatchExpRegExp", 7.588159561157227],
-    ["closestLabelMatchesExpRegExp", 1.41484534740448],
-    ["placeholderMatchesExpRegExp", 8.759064674377441],
-    ["labelsMatchExpWith2Or4DigitYear", -3.876218795776367],
-    ["placeholderMatchesExpWith2Or4DigitYear", 2.8364884853363037],
-    ["labelsMatchMMYY", 8.836017608642578],
-    ["placeholderMatchesMMYY", -0.5231751799583435],
-    ["maxLengthIs7", 1.3565447330474854],
-    ["idOrNameMatchSubscription", 0.1779913753271103],
-    ["idOrNameMatchDwfrmAndBml", 0.21037884056568146],
-    ["hasTemplatedValue", 0.14900512993335724],
-    ["isExpirationMonthLikely", -3.223409652709961],
-    ["isExpirationYearLikely", -2.536919593811035],
-    ["idOrNameMatchMonth", -3.6893014907836914],
-    ["idOrNameMatchYear", -3.108184337615967],
-    ["idOrNameMatchExpMonthRegExp", -2.264357089996338],
-    ["idOrNameMatchExpYearRegExp", -2.7957723140716553],
-    ["idOrNameMatchValidation", -2.29402756690979]
+    ["labelsMatchExpRegExp", 7.235990524291992],
+    ["placeholderMatchesExpRegExp", 3.7828152179718018],
+    ["labelsMatchExpWith2Or4DigitYear", 3.28702449798584],
+    ["placeholderMatchesExpWith2Or4DigitYear", 0.9417413473129272],
+    ["labelsMatchMMYY", 8.527382850646973],
+    ["placeholderMatchesMMYY", 6.976727485656738],
+    ["maxLengthIs7", -1.6640985012054443],
+    ["idOrNameMatchSubscription", -1.7390238046646118],
+    ["idOrNameMatchDwfrmAndBml", -1.8697377443313599],
+    ["hasTemplatedValue", -2.2890148162841797],
+    // eslint-disable-next-line no-loss-of-precision
+    ["isExpirationMonthLikely", -2.7287368774414062],
+    ["isExpirationYearLikely", -2.1379034519195557],
+    ["idOrNameMatchMonth", -2.9298980236053467],
+    ["idOrNameMatchYear", -2.423668622970581],
+    ["idOrNameMatchExpMonthRegExp", -2.224165916442871],
+    ["idOrNameMatchExpYearRegExp", -2.4124796390533447],
+    ["idOrNameMatchValidation", -6.64445686340332],
   ],
   "cc-exp-month": [
-    ["idOrNameMatchExpMonthRegExp", 0.2787344455718994],
-    ["labelsMatchExpMonthRegExp", 1.298413634300232],
-    ["closestLabelMatchesExpMonthRegExp", -11.206244468688965],
-    ["placeholderMatchesExpMonthRegExp", 1.2605619430541992],
-    ["ariaLabelMatchesExpMonthRegExp", 1.1330018043518066],
-    ["idOrNameMatchMonth", 6.1464314460754395],
-    ["labelsMatchMonth", 0.7051732540130615],
-    ["placeholderMatchesMonth", 0.7463492751121521],
-    ["ariaLabelMatchesMonth", 1.8244760036468506],
-    ["nextFieldIdOrNameMatchExpYearRegExp", 0.06347066164016724],
-    ["nextFieldLabelsMatchExpYearRegExp", -0.1692247837781906],
-    ["nextFieldPlaceholderMatchExpYearRegExp", 1.0434566736221313],
-    ["nextFieldAriaLabelMatchExpYearRegExp", 1.751156210899353],
-    ["nextFieldIdOrNameMatchYear", -0.532447338104248],
-    ["nextFieldLabelsMatchYear", 1.3248541355133057],
-    ["nextFieldPlaceholderMatchesYear", 0.604235827922821],
-    ["nextFieldAriaLabelMatchesYear", 1.5364223718643188],
-    ["nextFieldMatchesExpYearAutocomplete", 6.285938262939453],
-    ["isExpirationMonthLikely", 13.117807388305664],
-    ["nextFieldIsExpirationYearLikely", 7.182341575622559],
-    ["maxLengthIs2", 4.477289199829102],
-    ["placeholderMatchesMM", 14.403288841247559],
-    ["roleIsMenu", 5.770959854125977],
-    ["idOrNameMatchSubscription", -0.043085768818855286],
-    ["idOrNameMatchDwfrmAndBml", 0.02823038399219513],
-    ["hasTemplatedValue", 0.07234494388103485]
+    ["idOrNameMatchExpMonthRegExp", 3.1759495735168457],
+    ["labelsMatchExpMonthRegExp", 0.6333072781562805],
+    ["placeholderMatchesExpMonthRegExp", -1.0211261510849],
+    ["ariaLabelMatchesExpMonthRegExp", -0.12013287842273712],
+    ["idOrNameMatchMonth", 0.8069844245910645],
+    ["labelsMatchMonth", 2.8041117191314697],
+    ["placeholderMatchesMonth", -0.7963107228279114],
+    ["ariaLabelMatchesMonth", -0.18894313275814056],
+    ["nextFieldIdOrNameMatchExpYearRegExp", 1.3703272342681885],
+    ["nextFieldLabelsMatchExpYearRegExp", 0.4734393060207367],
+    ["nextFieldPlaceholderMatchExpYearRegExp", -0.9648597240447998],
+    ["nextFieldAriaLabelMatchExpYearRegExp", 2.3334436416625977],
+    ["nextFieldIdOrNameMatchYear", 0.7225953936576843],
+    ["nextFieldLabelsMatchYear", 0.47795572876930237],
+    ["nextFieldPlaceholderMatchesYear", -1.032015085220337],
+    ["nextFieldAriaLabelMatchesYear", 2.5017199516296387],
+    ["nextFieldMatchesExpYearAutocomplete", 1.4952502250671387],
+    ["isExpirationMonthLikely", 5.659104347229004],
+    ["nextFieldIsExpirationYearLikely", 2.5078020095825195],
+    ["maxLengthIs2", -0.5410940051078796],
+    ["placeholderMatchesMM", 7.3071208000183105],
+    ["roleIsMenu", 5.595693111419678],
+    ["idOrNameMatchSubscription", -5.626739978790283],
+    ["idOrNameMatchDwfrmAndBml", -7.236949920654297],
+    ["hasTemplatedValue", -6.055515289306641],
   ],
   "cc-exp-year": [
-    ["idOrNameMatchExpYearRegExp", 5.426016807556152],
-    ["labelsMatchExpYearRegExp", 1.3240209817886353],
-    ["closestLabelMatchesExpYearRegExp", -8.702284812927246],
-    ["placeholderMatchesExpYearRegExp", 0.9059725999832153],
-    ["ariaLabelMatchesExpYearRegExp", 0.5550334453582764],
-    ["idOrNameMatchYear", 5.362994194030762],
-    ["labelsMatchYear", 2.7185044288635254],
-    ["placeholderMatchesYear", 0.7883157134056091],
-    ["ariaLabelMatchesYear", 0.311492383480072],
-    ["previousFieldIdOrNameMatchExpMonthRegExp", 1.8155208826065063],
-    ["previousFieldLabelsMatchExpMonthRegExp", -0.46133187413215637],
-    ["previousFieldPlaceholderMatchExpMonthRegExp", 1.0374903678894043],
-    ["previousFieldAriaLabelMatchExpMonthRegExp", -0.5901495814323425],
-    ["previousFieldIdOrNameMatchMonth", -5.960310935974121],
-    ["previousFieldLabelsMatchMonth", 0.6495584845542908],
-    ["previousFieldPlaceholderMatchesMonth", 0.7198042273521423],
-    ["previousFieldAriaLabelMatchesMonth", 3.4590985774993896],
-    ["previousFieldMatchesExpMonthAutocomplete", 2.986003875732422],
-    ["isExpirationYearLikely", 4.021566390991211],
-    ["previousFieldIsExpirationMonthLikely", 9.298635482788086],
-    ["placeholderMatchesYYOrYYYY", 10.457176208496094],
-    ["roleIsMenu", 1.1051956415176392],
-    ["idOrNameMatchSubscription", 0.000688597559928894],
-    ["idOrNameMatchDwfrmAndBml", 0.15687309205532074],
-    ["hasTemplatedValue", -0.19141331315040588]
+    ["idOrNameMatchExpYearRegExp", 2.456799268722534],
+    ["labelsMatchExpYearRegExp", 0.9488120675086975],
+    ["placeholderMatchesExpYearRegExp", -0.6318328380584717],
+    ["ariaLabelMatchesExpYearRegExp", -0.16433487832546234],
+    ["idOrNameMatchYear", 2.0227997303009033],
+    ["labelsMatchYear", 0.7777050733566284],
+    ["placeholderMatchesYear", -0.6191908121109009],
+    ["ariaLabelMatchesYear", -0.5337049961090088],
+    ["previousFieldIdOrNameMatchExpMonthRegExp", 0.2529127597808838],
+    ["previousFieldLabelsMatchExpMonthRegExp", 0.5853790044784546],
+    ["previousFieldPlaceholderMatchExpMonthRegExp", -0.710956871509552],
+    ["previousFieldAriaLabelMatchExpMonthRegExp", 2.2874839305877686],
+    ["previousFieldIdOrNameMatchMonth", -1.99709153175354],
+    ["previousFieldLabelsMatchMonth", 1.114603042602539],
+    ["previousFieldPlaceholderMatchesMonth", -0.4987318515777588],
+    ["previousFieldAriaLabelMatchesMonth", 2.1683783531188965],
+    ["previousFieldMatchesExpMonthAutocomplete", 1.2016327381134033],
+    ["isExpirationYearLikely", 5.7863616943359375],
+    ["previousFieldIsExpirationMonthLikely", 6.4013848304748535],
+    ["placeholderMatchesYYOrYYYY", 8.81661605834961],
+    ["roleIsMenu", 3.7794034481048584],
+    ["idOrNameMatchSubscription", -4.7467498779296875],
+    ["idOrNameMatchDwfrmAndBml", -5.523425102233887],
+    ["hasTemplatedValue", -6.14529275894165],
   ],
 };
 
 const biases = [
-  ["cc-number", -4.948795795440674],
-  ["cc-name", -5.3578081130981445],
-  ["cc-type", -5.979659557342529],
-  ["cc-exp", -5.849575996398926],
-  ["cc-exp-month", -8.844199180603027],
-  ["cc-exp-year", -6.499860763549805],
+  ["cc-number", -4.422344207763672],
+  ["cc-name", -5.876968860626221],
+  ["cc-type", -5.410860061645508],
+  ["cc-exp", -5.439330577850342],
+  ["cc-exp-month", -5.99984073638916],
+  ["cc-exp-year", -6.0192646980285645],
 ];
+
 /**
  * END OF CODE PASTED FROM TRAINING REPOSITORY
  */
@@ -1199,14 +939,263 @@ var creditCardRulesets = {
 
   get types() {
     return [
-      // Only use Fathom to detect cc-number fields for now.
+      "cc-name",
       "cc-number",
-      //"cc-name",
-      //"cc-exp-month",
-      //"cc-exp-year",
-      //"cc-exp",
-      //"cc-type",
+      "cc-exp-month",
+      "cc-exp-year",
+      "cc-exp",
+      "cc-type",
     ];
   },
 };
-this.creditCardRulesets.init();
+creditCardRulesets.init();
+
+FathomHeuristicsRegExp = {
+  RULES: {
+    "cc-name": undefined,
+    "cc-number": undefined,
+    "cc-exp-month": undefined,
+    "cc-exp-year": undefined,
+    "cc-exp": undefined,
+    "cc-type": undefined,
+  },
+
+  RULE_SETS: [
+    //=========================================================================
+    // Firefox-specific rules
+    // TODO: Bug 1755256, consider adding `titulaire` and `kartenmarke`.
+    {
+      "cc-name": "account.*holder.*name",
+      "cc-number": "(cc|kk)nr", // de-DE
+      "cc-exp-month": "(cc|kk)month", // de-DE
+      "cc-exp-year": "(cc|kk)year", // de-DE
+      "cc-type": "type",
+    },
+
+    //=========================================================================
+    // These are the rules used by Bitwarden [0], converted into RegExp form.
+    // [0] https://github.com/bitwarden/browser/blob/c2b8802201fac5e292d55d5caf3f1f78088d823c/src/services/autofill.service.ts#L436
+    {
+      /* eslint-disable */
+      // Let us keep our consistent wrapping.
+      "cc-name":
+        "cc-?name" +
+        "|card-?name" +
+        "|cardholder-?name" +
+        "|(^nom$)",
+      /* eslint-enable */
+
+      "cc-number":
+        "cc-?number" +
+        "|cc-?num" +
+        "|card-?number" +
+        "|card-?num" +
+        "|cc-?no" +
+        "|card-?no" +
+        "|numero-?carte" +
+        "|num-?carte" +
+        "|cb-?num",
+
+      "cc-exp":
+        "(^cc-?exp$)" +
+        "|(^card-?exp$)" +
+        "|(^cc-?expiration$)" +
+        "|(^card-?expiration$)" +
+        "|(^cc-?ex$)" +
+        "|(^card-?ex$)" +
+        "|(^card-?expire$)" +
+        "|(^card-?expiry$)" +
+        "|(^validite$)" +
+        "|(^expiration$)" +
+        "|(^expiry$)" +
+        "|mm-?yy" +
+        "|mm-?yyyy" +
+        "|yy-?mm" +
+        "|yyyy-?mm" +
+        "|expiration-?date" +
+        "|payment-?card-?expiration" +
+        "|(^payment-?cc-?date$)",
+
+      "cc-exp-month":
+        "(^exp-?month$)" +
+        "|(^cc-?exp-?month$)" +
+        "|(^cc-?month$)" +
+        "|(^card-?month$)" +
+        "|(^cc-?mo$)" +
+        "|(^card-?mo$)" +
+        "|(^exp-?mo$)" +
+        "|(^card-?exp-?mo$)" +
+        "|(^cc-?exp-?mo$)" +
+        "|(^card-?expiration-?month$)" +
+        "|(^expiration-?month$)" +
+        "|(^cc-?mm$)" +
+        "|(^cc-?m$)" +
+        "|(^card-?mm$)" +
+        "|(^card-?m$)" +
+        "|(^card-?exp-?mm$)" +
+        "|(^cc-?exp-?mm$)" +
+        "|(^exp-?mm$)" +
+        "|(^exp-?m$)" +
+        "|(^expire-?month$)" +
+        "|(^expire-?mo$)" +
+        "|(^expiry-?month$)" +
+        "|(^expiry-?mo$)" +
+        "|(^card-?expire-?month$)" +
+        "|(^card-?expire-?mo$)" +
+        "|(^card-?expiry-?month$)" +
+        "|(^card-?expiry-?mo$)" +
+        "|(^mois-?validite$)" +
+        "|(^mois-?expiration$)" +
+        "|(^m-?validite$)" +
+        "|(^m-?expiration$)" +
+        "|(^expiry-?date-?field-?month$)" +
+        "|(^expiration-?date-?month$)" +
+        "|(^expiration-?date-?mm$)" +
+        "|(^exp-?mon$)" +
+        "|(^validity-?mo$)" +
+        "|(^exp-?date-?mo$)" +
+        "|(^cb-?date-?mois$)" +
+        "|(^date-?m$)",
+
+      "cc-exp-year":
+        "(^exp-?year$)" +
+        "|(^cc-?exp-?year$)" +
+        "|(^cc-?year$)" +
+        "|(^card-?year$)" +
+        "|(^cc-?yr$)" +
+        "|(^card-?yr$)" +
+        "|(^exp-?yr$)" +
+        "|(^card-?exp-?yr$)" +
+        "|(^cc-?exp-?yr$)" +
+        "|(^card-?expiration-?year$)" +
+        "|(^expiration-?year$)" +
+        "|(^cc-?yy$)" +
+        "|(^cc-?y$)" +
+        "|(^card-?yy$)" +
+        "|(^card-?y$)" +
+        "|(^card-?exp-?yy$)" +
+        "|(^cc-?exp-?yy$)" +
+        "|(^exp-?yy$)" +
+        "|(^exp-?y$)" +
+        "|(^cc-?yyyy$)" +
+        "|(^card-?yyyy$)" +
+        "|(^card-?exp-?yyyy$)" +
+        "|(^cc-?exp-?yyyy$)" +
+        "|(^expire-?year$)" +
+        "|(^expire-?yr$)" +
+        "|(^expiry-?year$)" +
+        "|(^expiry-?yr$)" +
+        "|(^card-?expire-?year$)" +
+        "|(^card-?expire-?yr$)" +
+        "|(^card-?expiry-?year$)" +
+        "|(^card-?expiry-?yr$)" +
+        "|(^an-?validite$)" +
+        "|(^an-?expiration$)" +
+        "|(^annee-?validite$)" +
+        "|(^annee-?expiration$)" +
+        "|(^expiry-?date-?field-?year$)" +
+        "|(^expiration-?date-?year$)" +
+        "|(^cb-?date-?ann$)" +
+        "|(^expiration-?date-?yy$)" +
+        "|(^expiration-?date-?yyyy$)" +
+        "|(^validity-?year$)" +
+        "|(^exp-?date-?year$)" +
+        "|(^date-?y$)",
+
+      "cc-type":
+        "(^cc-?type$)" +
+        "|(^card-?type$)" +
+        "|(^card-?brand$)" +
+        "|(^cc-?brand$)" +
+        "|(^cb-?type$)",
+    },
+
+    //=========================================================================
+    // These rules are from Chromium source codes [1]. Most of them
+    // converted to JS format have the same meaning with the original ones except
+    // the first line of "address-level1".
+    // [1] https://source.chromium.org/chromium/chromium/src/+/master:components/autofill/core/common/autofill_regex_constants.cc
+    {
+      // ==== Credit Card Fields ====
+      "cc-name":
+        "card.?(?:holder|owner)|name.*(\\b)?on(\\b)?.*card" +
+        "|(?:card|cc).?name|cc.?full.?name" +
+        "|(?:card|cc).?owner" +
+        "|nombre.*tarjeta" + // es
+        "|nom.*carte" + // fr-FR
+        "|nome.*cart" + // it-IT
+        "|名前" + // ja-JP
+        "|Имя.*карты" + // ru
+        "|信用卡开户名|开户名|持卡人姓名" + // zh-CN
+        "|持卡人姓名", // zh-TW
+
+      "cc-number":
+        "(add)?(?:card|cc|acct).?(?:number|#|no|num)" +
+        "|(?<!telefon|haus|person|fødsels|zimmer)nummer" + // de-DE, sv-SE, no
+        "|カード番号" + // ja-JP
+        "|Номер.*карты" + // ru
+        "|信用卡号|信用卡号码" + // zh-CN
+        "|信用卡卡號" + // zh-TW
+        "|카드" + // ko-KR
+        // es/pt/fr
+        "|(numero|número|numéro)(?!.*(document|fono|phone|réservation))",
+
+      "cc-exp-month":
+        "exp.*mo|ccmonth|cardmonth|addmonth" +
+        "|monat" + // de-DE
+        // "|fecha" + // es
+        // "|date.*exp" + // fr-FR
+        // "|scadenza" + // it-IT
+        // "|有効期限" + // ja-JP
+        // "|validade" + // pt-BR, pt-PT
+        // "|Срок действия карты" + // ru
+        "|月", // zh-CN
+
+      "cc-exp-year":
+        "(add)?year" +
+        "|jahr" + // de-DE
+        // "|fecha" + // es
+        // "|scadenza" + // it-IT
+        // "|有効期限" + // ja-JP
+        // "|validade" + // pt-BR, pt-PT
+        // "|Срок действия карты" + // ru
+        "|年|有效期", // zh-CN
+
+      "cc-exp":
+        "expir|exp.*date|^expfield$" +
+        "|ablaufdatum|gueltig|gültig" + // de-DE
+        "|fecha" + // es
+        "|date.*exp" + // fr-FR
+        "|scadenza" + // it-IT
+        "|有効期限" + // ja-JP
+        "|validade" + // pt-BR, pt-PT
+        "|Срок действия карты", // ru
+    },
+  ],
+
+  _getRule(name) {
+    let rules = [];
+    this.RULE_SETS.forEach(set => {
+      if (set[name]) {
+        rules.push(`(${set[name]})`.normalize("NFKC"));
+      }
+    });
+
+    const value = new RegExp(rules.join("|"), "iu");
+    Object.defineProperty(this.RULES, name, { get: undefined });
+    Object.defineProperty(this.RULES, name, { value });
+    return value;
+  },
+
+  init() {
+    Object.keys(this.RULES).forEach(field =>
+      Object.defineProperty(this.RULES, field, {
+        get() {
+          return FathomHeuristicsRegExp._getRule(field);
+        },
+      })
+    );
+  },
+};
+
+FathomHeuristicsRegExp.init();
