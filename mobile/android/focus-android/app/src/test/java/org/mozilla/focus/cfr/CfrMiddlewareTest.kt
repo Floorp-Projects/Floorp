@@ -5,10 +5,13 @@ package org.mozilla.focus.cfr
 
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
@@ -69,7 +72,17 @@ class CfrMiddlewareTest {
                     issuer = "Test"
                 )
             )
+            val trackerBlockedAction = TrackingProtectionAction.TrackerBlockedAction(
+                tabId = "1",
+                tracker = Tracker(
+                    url = "test.org",
+                    trackingCategories = listOf(EngineSession.TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING),
+                    cookiePolicies = listOf(EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE)
+                )
+            )
+
             browserStore.dispatch(updateSecurityInfoAction).joinBlocking()
+            browserStore.dispatch(trackerBlockedAction).joinBlocking()
             appStore.waitUntilIdle()
 
             assertTrue(appStore.state.showTrackingProtectionCfr)

@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.lib.state.Middleware
@@ -26,6 +27,7 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
     private val onboardingFeature = FocusNimbus.features.onboarding
     private lateinit var onboardingConfig: Onboarding
     private val components = appContext.components
+    private var isCurrentTabSecure = false
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
@@ -33,6 +35,11 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
         action: BrowserAction
     ) {
         onboardingConfig = onboardingFeature.value(context = appContext)
+
+        if (action is ContentAction.UpdateSecurityInfoAction) {
+            isCurrentTabSecure = action.securityInfo.secure
+        }
+
         next(action)
 
         if (action is TabListAction.AddTabAction &&
@@ -58,10 +65,8 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
         )?.content?.url?.toUri()?.truncatedHost()?.substringBefore(".") == ("mozilla")
     }
 
-    private fun isActionSecure(action: BrowserAction) = (
-        action is ContentAction.UpdateSecurityInfoAction &&
-            action.securityInfo.secure
-        )
+    private fun isActionSecure(action: BrowserAction) =
+        action is TrackingProtectionAction.TrackerBlockedAction && isCurrentTabSecure
 
     private fun shouldShowCfrForTrackingProtection(
         action: BrowserAction,
