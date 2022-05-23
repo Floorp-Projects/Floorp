@@ -256,6 +256,57 @@ add_task(async function testAbout({ client }) {
   );
 });
 
+add_task(async function testSameDocumentNavigation({ client }) {
+  const { Page } = client;
+  const { frameId, loaderId } = await Page.navigate({
+    url: PAGE_URL,
+  });
+  ok(!!loaderId, "Page.navigate returns loaderId");
+
+  await Page.enable();
+  const navigatedWithinDocument = Page.navigatedWithinDocument();
+
+  info("Check that Page.navigate can navigate to an anchor");
+  const sameDocumentURL = `${PAGE_URL}#hash`;
+  const {
+    frameId: sameDocumentFrameId,
+    loaderId: sameDocumentLoaderId,
+  } = await Page.navigate({ url: sameDocumentURL });
+  ok(
+    !sameDocumentLoaderId,
+    "Page.navigate does not return a loaderId for same document navigation"
+  );
+  is(
+    sameDocumentFrameId,
+    frameId,
+    "Page.navigate returned the expected frame id"
+  );
+
+  const { frameId: navigatedFrameId, url } = await navigatedWithinDocument;
+  is(
+    frameId,
+    navigatedFrameId,
+    "navigatedWithinDocument returns the expected frameId"
+  );
+  is(url, sameDocumentURL, "navigatedWithinDocument returns the expected url");
+  is(
+    gBrowser.selectedBrowser.currentURI.spec,
+    sameDocumentURL,
+    "Expected URL loaded"
+  );
+
+  info("Check that navigating to the same hash URL does not timeout");
+  const {
+    frameId: sameHashFrameId,
+    loaderId: sameHashLoaderId,
+  } = await Page.navigate({ url: sameDocumentURL });
+  ok(
+    !sameHashLoaderId,
+    "Page.navigate does not return a loaderId for same document navigation"
+  );
+  is(sameHashFrameId, frameId, "Page.navigate returned the expected frame id");
+});
+
 async function getTopFrame(client) {
   const frames = await getFlattenedFrameTree(client);
   return Array.from(frames.values())[0];
