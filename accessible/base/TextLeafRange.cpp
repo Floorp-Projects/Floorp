@@ -1131,6 +1131,12 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
 }
 
 LayoutDeviceIntRect TextLeafPoint::CharBounds() {
+  if (mAcc && !mAcc->IsText()) {
+    // If we're dealing with an empty embedded object, return the
+    // accessible's non-text bounds.
+    return mAcc->Bounds();
+  }
+
   if (!mAcc || !mAcc->IsRemote() || !mAcc->AsRemote() ||
       !mAcc->AsRemote()->mCachedFields) {
     return LayoutDeviceIntRect();
