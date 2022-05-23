@@ -54,9 +54,6 @@ add_task(async function setup() {
   await AddonTestUtils.overrideBuiltIns({ system: [] });
   AddonTestUtils.addonStartup.remove(true);
   await AddonTestUtils.promiseStartupManager();
-  // Override ExtensionXPCShellUtils.jsm's overriding of the pref as the
-  // search service needs it.
-  Services.prefs.clearUserPref("services.settings.default_bucket");
 
   // Setup a webserver to serve Addons, etc.
   gHttpServer = new HttpServer();

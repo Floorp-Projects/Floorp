@@ -2530,7 +2530,11 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   Register temp1 = regs.takeAny();
   Register temp2 = regs.takeAny();
   Register temp3 = regs.takeAny();
-  Register temp4 = regs.takeAny();
+  Register maybeTemp4 = InvalidReg;
+  if (!regs.empty()) {
+    // There are not enough registers on x86.
+    maybeTemp4 = regs.takeAny();
+  }
   Register maybeTemp5 = InvalidReg;
   if (!regs.empty()) {
     // There are not enough registers on x86.
@@ -2654,9 +2658,6 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
 
   size_t pairsVectorStartOffset =
       RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
-  Address firstMatchPairStartAddress(
-      masm.getStackPointer(),
-      pairsVectorStartOffset + offsetof(MatchPair, start));
 
   // Incremented by one below for each match pair.
   Register matchIndex = temp2;
@@ -2672,22 +2673,66 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   BaseIndex matchPairLimit(masm.getStackPointer(), matchIndex, TimesEight,
                            pairsVectorStartOffset + offsetof(MatchPair, limit));
 
+  Label* depStrFailure = &oolEntry;
+  Label restoreRegExpAndLastIndex;
+
+  Register temp4;
+  if (maybeTemp4 == InvalidReg) {
+    depStrFailure = &restoreRegExpAndLastIndex;
+
+    // We don't have enough registers for a fourth temporary. Reuse |regexp|
+    // as a temporary. We restore its value at |restoreRegExpAndLastIndex|.
+    masm.push(regexp);
+    temp4 = regexp;
+
+    // Adjust offsets for the push.
+    MOZ_ASSERT(pairCountAddress.base == masm.getStackPointer());
+    MOZ_ASSERT(matchPairStart.base == masm.getStackPointer());
+    MOZ_ASSERT(matchPairLimit.base == masm.getStackPointer());
+    pairCountAddress.offset += sizeof(void*);
+    matchPairStart.offset += sizeof(void*);
+    matchPairLimit.offset += sizeof(void*);
+  } else {
+    temp4 = maybeTemp4;
+  }
+
   Register temp5;
   if (maybeTemp5 == InvalidReg) {
-    // We don't have enough registers for a fifth temporary. Reuse
-    // |lastIndex| as a temporary. We don't need to restore its value,
-    // because |lastIndex| is no longer used after a successful match.
-    // (Neither here nor in the OOL path, cf. js::RegExpMatcherRaw.)
+    depStrFailure = &restoreRegExpAndLastIndex;
+
+    // We don't have enough registers for a fifth temporary. Reuse |lastIndex|
+    // as a temporary. We restore its value at |restoreRegExpAndLastIndex|.
+    masm.push(lastIndex);
     temp5 = lastIndex;
+
+    // Adjust offsets for the push.
+    MOZ_ASSERT(pairCountAddress.base == masm.getStackPointer());
+    MOZ_ASSERT(matchPairStart.base == masm.getStackPointer());
+    MOZ_ASSERT(matchPairLimit.base == masm.getStackPointer());
+    pairCountAddress.offset += sizeof(void*);
+    matchPairStart.offset += sizeof(void*);
+    matchPairLimit.offset += sizeof(void*);
   } else {
     temp5 = maybeTemp5;
   }
 
+  auto maybeRestoreRegExpAndLastIndex = [&]() {
+    // NOTE: pairCountAddress, matchPairStart, and matchPairLimit offsets
+    // aren't restored, because we don't read them after the loop.
+
+    if (maybeTemp5 == InvalidReg) {
+      masm.pop(lastIndex);
+    }
+    if (maybeTemp4 == InvalidReg) {
+      masm.pop(regexp);
+    }
+  };
+
   // Loop to construct the match strings. There are two different loops,
   // depending on whether the input is a Two-Byte or a Latin-1 string.
   CreateDependentString depStrs[]{
-      {CharEncoding::TwoByte, temp3, temp4, temp5, &oolEntry},
-      {CharEncoding::Latin1, temp3, temp4, temp5, &oolEntry},
+      {CharEncoding::TwoByte, temp3, temp4, temp5, depStrFailure},
+      {CharEncoding::Latin1, temp3, temp4, temp5, depStrFailure},
   };
 
   {
@@ -2735,6 +2780,8 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
     masm.bind(&done);
   }
 
+  maybeRestoreRegExpAndLastIndex();
+
   // Fill in the rest of the output object.
   masm.store32(
       matchIndex,
@@ -2743,6 +2790,10 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   masm.store32(
       matchIndex,
       Address(object, elementsOffset + ObjectElements::offsetOfLength()));
+
+  Address firstMatchPairStartAddress(
+      masm.getStackPointer(),
+      pairsVectorStartOffset + offsetof(MatchPair, start));
 
   masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
 
@@ -2769,6 +2820,10 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   masm.bind(&matchResultFallback);
   CreateMatchResultFallback(masm, object, temp2, temp3, templateObj, &oolEntry);
   masm.jump(&matchResultJoin);
+
+  // Fall-through to the ool entry after restoring the registers.
+  masm.bind(&restoreRegExpAndLastIndex);
+  maybeRestoreRegExpAndLastIndex();
 
   // Use an undefined value to signal to the caller that the OOL stub needs to
   // be called.
@@ -16945,14 +17000,13 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
     }
   }
 
-  bool profilingEnabled = isProfilerInstrumentationEnabled();
   WasmInstanceObject* instObj = lir->mir()->instanceObject();
 
   Register scratch = ToRegister(lir->temp());
 
   uint32_t callOffset;
   GenerateDirectCallFromJit(masm, funcExport, instObj->instance(), stackArgs,
-                            profilingEnabled, scratch, &callOffset);
+                            scratch, &callOffset);
 
   // Add the instance object to the constant pool, so it is transferred to
   // the owning IonScript and so that it gets traced as long as the IonScript

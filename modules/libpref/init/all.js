@@ -77,22 +77,14 @@ pref("security.pki.mitm_detected", false);
 #else
   pref("security.remote_settings.intermediates.enabled", false);
 #endif
-pref("security.remote_settings.intermediates.bucket", "security-state");
-pref("security.remote_settings.intermediates.collection", "intermediates");
-pref("security.remote_settings.intermediates.checked", 0);
 pref("security.remote_settings.intermediates.downloads_per_poll", 5000);
 pref("security.remote_settings.intermediates.parallel_downloads", 8);
-pref("security.remote_settings.intermediates.signer", "onecrl.content-signature.mozilla.org");
 
 #if defined(EARLY_BETA_OR_EARLIER) && !defined(MOZ_WIDGET_ANDROID)
   pref("security.remote_settings.crlite_filters.enabled", true);
 #else
   pref("security.remote_settings.crlite_filters.enabled", false);
 #endif
-pref("security.remote_settings.crlite_filters.bucket", "security-state");
-pref("security.remote_settings.crlite_filters.collection", "cert-revocations");
-pref("security.remote_settings.crlite_filters.checked", 0);
-pref("security.remote_settings.crlite_filters.signer", "onecrl.content-signature.mozilla.org");
 
 pref("security.osreauthenticator.blank_password", false);
 pref("security.osreauthenticator.password_last_changed_lo", 0);
@@ -2063,19 +2055,11 @@ pref("security.insecure_field_warning.ignore_local_ip_address", true);
 
 // Remote settings preferences
 pref("services.settings.poll_interval", 86400); // 24H
-pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
-pref("services.settings.default_bucket", "main");
 
 // The percentage of clients who will report uptake telemetry as
 // events instead of just a histogram. This only applies on Release;
 // other channels always report events.
 pref("services.common.uptake.sampleRate", 1);   // 1%
-
-// Security state OneCRL.
-pref("services.settings.security.onecrl.bucket", "security-state");
-pref("services.settings.security.onecrl.collection", "onecrl");
-pref("services.settings.security.onecrl.signer", "onecrl.content-signature.mozilla.org");
-pref("services.settings.security.onecrl.checked", 0);
 
 pref("extensions.abuseReport.enabled", true);
 // Allow AMO to handoff reports to the Firefox integrated dialog.
@@ -2095,19 +2079,6 @@ pref("extensions.blocklist.level", 2);
 pref("extensions.eventPages.enabled", false);
 // Whether "manifest_version: 3" extensions should be allowed to install successfully.
 pref("extensions.manifestV3.enabled", false);
-
-// Blocklist via settings server (Kinto)
-pref("services.blocklist.bucket", "blocklists");
-pref("services.blocklist.addons.collection", "addons");
-pref("services.blocklist.addons.checked", 0);
-pref("services.blocklist.addons.signer", "remote-settings.content-signature.mozilla.org");
-pref("services.blocklist.addons-mlbf.checked", 0);
-pref("services.blocklist.plugins.collection", "plugins");
-pref("services.blocklist.plugins.checked", 0);
-pref("services.blocklist.plugins.signer", "remote-settings.content-signature.mozilla.org");
-pref("services.blocklist.gfx.collection", "gfx");
-pref("services.blocklist.gfx.checked", 0);
-pref("services.blocklist.gfx.signer", "remote-settings.content-signature.mozilla.org");
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.

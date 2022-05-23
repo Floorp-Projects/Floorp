@@ -383,6 +383,17 @@ Remote Settings Dev Tools
 
 The Remote Settings Dev Tools extension provides some tooling to inspect synchronization statuses, to change the remote server or to switch to *preview* mode in order to sign-off pending changes. `More information on the dedicated repository <https://github.com/mozilla/remote-settings-devtools>`_.
 
+Preview Mode
+------------
+
+Enable the preview mode in order to preview changes to be reviewed on the server. This can be achieved using the *Remote Settings Dev Tools*, or programmatically with:
+
+.. code-block:: javascript
+
+    RemoteSettings.enablePreviewMode(true);
+
+In order to pull preview data **on startup**, or in order to persist it across restarts, set ``services.settings.preview_enabled`` to ``true`` in the profile preferences (ie. ``user.js``).
+For release and ESR, for security reasons, you would have to run the application with the ``MOZ_REMOTE_SETTINGS_DEVTOOLS=1`` environment variable for the preference to be taken into account. Note that toggling the preference won't have any effect until restart.
 
 Trigger a synchronization manually
 ----------------------------------

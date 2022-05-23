@@ -30,13 +30,6 @@ const TELEMETRY_COMPONENT = "remotesettings";
 
 XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gLoadDump",
-  "services.settings.load_dump",
-  true
-);
-
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
  * @param {Object} target the object to wrap.
@@ -237,18 +230,19 @@ class RemoteSettingsClient extends EventEmitter {
   constructor(
     collectionName,
     {
-      bucketName,
-      bucketNamePref,
+      bucketName = AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET,
       signerName,
       filterFunc,
       localFields = [],
       lastCheckTimePref,
-    }
+    } = {}
   ) {
     super(["sync"]); // emitted events
 
     this.collectionName = collectionName;
-    this.bucketName = bucketName;
+    // Client is constructed with the raw bucket name (eg. "main", "security-state", "blocklist")
+    // The `bucketName` will contain the `-preview` suffix if the preview mode is enabled.
+    this.bucketName = Utils.actualBucketName(bucketName);
     this.signerName = signerName;
     this.filterFunc = filterFunc;
     this.localFields = localFields;
@@ -259,22 +253,6 @@ class RemoteSettingsClient extends EventEmitter {
     // This attribute allows signature verification to be disabled, when running tests
     // or when pulling data from a dev server.
     this.verifySignature = AppConstants.REMOTE_SETTINGS_VERIFY_SIGNATURE;
-
-    if (!bucketName) {
-      // TODO bug 1702759: Remove bucketNamePref.
-      // The bucket preference value can be changed (eg. `main` to `main-preview`) in order
-      // to preview the changes to be approved in a real client.
-      this.bucketNamePref = bucketNamePref;
-      XPCOMUtils.defineLazyPreferenceGetter(
-        this,
-        "bucketName",
-        this.bucketNamePref,
-        null,
-        () => {
-          this.db.identifier = this.identifier;
-        }
-      );
-    }
 
     XPCOMUtils.defineLazyGetter(
       this,
@@ -287,6 +265,17 @@ class RemoteSettingsClient extends EventEmitter {
       "attachments",
       () => new AttachmentDownloader(this)
     );
+  }
+
+  /**
+   * Internal method to refresh the client bucket name after the preview mode
+   * was toggled.
+   *
+   * See `RemoteSettings.enabledPreviewMode()`.
+   */
+  refreshBucketName() {
+    this.bucketName = Utils.actualBucketName(this.bucketName);
+    this.db.identifier = this.identifier;
   }
 
   get identifier() {
@@ -363,7 +352,7 @@ class RemoteSettingsClient extends EventEmitter {
         if (!this._importingPromise) {
           // Prevent parallel loading when .get() is called multiple times.
           this._importingPromise = (async () => {
-            const importedFromDump = gLoadDump
+            const importedFromDump = Utils.LOAD_DUMPS
               ? await this._importJSONDump()
               : -1;
             if (importedFromDump < 0) {
@@ -525,8 +514,7 @@ class RemoteSettingsClient extends EventEmitter {
    *                                    This will be compared to the local timestamp, and will be used for
    *                                    cache busting if local data is out of date.
    * @param {Object} options            additional advanced options.
-   * @param {bool}   options.loadDump   load initial dump from disk on first sync (default: true, unless
-   *                                    `services.settings.load_dump` says otherwise).
+   * @param {bool}   options.loadDump   load initial dump from disk on first sync (default: true if server is prod)
    * @param {bool}   options.sendEvents send `"sync"` events (default: `true`)
    * @param {string} options.trigger    label to identify what triggered this sync (eg. ``"timer"``, default: `"manual"`)
    * @return {Promise}                  which rejects on sync or process failure.
@@ -534,7 +522,7 @@ class RemoteSettingsClient extends EventEmitter {
   async maybeSync(expectedTimestamp, options = {}) {
     // Should the clients try to load JSON dump? (mainly disabled in tests)
     const {
-      loadDump = gLoadDump,
+      loadDump = Utils.LOAD_DUMPS,
       trigger = "manual",
       sendEvents = true,
     } = options;
