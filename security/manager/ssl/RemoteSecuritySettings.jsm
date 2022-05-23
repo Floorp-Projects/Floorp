@@ -15,37 +15,29 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { X509 } = ChromeUtils.import("resource://gre/modules/psm/X509.jsm");
 
+const SECURITY_STATE_SIGNER = "onecrl.content-signature.mozilla.org";
+
 const INTERMEDIATES_BUCKET_PREF =
   "security.remote_settings.intermediates.bucket";
 const INTERMEDIATES_CHECKED_SECONDS_PREF =
   "security.remote_settings.intermediates.checked";
-const INTERMEDIATES_COLLECTION_PREF =
-  "security.remote_settings.intermediates.collection";
 const INTERMEDIATES_DL_PER_POLL_PREF =
   "security.remote_settings.intermediates.downloads_per_poll";
 const INTERMEDIATES_DL_PARALLEL_REQUESTS =
   "security.remote_settings.intermediates.parallel_downloads";
 const INTERMEDIATES_ENABLED_PREF =
   "security.remote_settings.intermediates.enabled";
-const INTERMEDIATES_SIGNER_PREF =
-  "security.remote_settings.intermediates.signer";
 const LOGLEVEL_PREF = "browser.policies.loglevel";
 
 const ONECRL_BUCKET_PREF = "services.settings.security.onecrl.bucket";
-const ONECRL_COLLECTION_PREF = "services.settings.security.onecrl.collection";
-const ONECRL_SIGNER_PREF = "services.settings.security.onecrl.signer";
 const ONECRL_CHECKED_PREF = "services.settings.security.onecrl.checked";
 
 const CRLITE_FILTERS_BUCKET_PREF =
   "security.remote_settings.crlite_filters.bucket";
 const CRLITE_FILTERS_CHECKED_SECONDS_PREF =
   "security.remote_settings.crlite_filters.checked";
-const CRLITE_FILTERS_COLLECTION_PREF =
-  "security.remote_settings.crlite_filters.collection";
 const CRLITE_FILTERS_ENABLED_PREF =
   "security.remote_settings.crlite_filters.enabled";
-const CRLITE_FILTERS_SIGNER_PREF =
-  "security.remote_settings.crlite_filters.signer";
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -244,14 +236,11 @@ var RemoteSecuritySettings = {
    * @returns {Object} intantiated clients for security remote settings.
    */
   init() {
-    const OneCRLBlocklistClient = RemoteSettings(
-      Services.prefs.getCharPref(ONECRL_COLLECTION_PREF),
-      {
-        bucketNamePref: ONECRL_BUCKET_PREF,
-        lastCheckTimePref: ONECRL_CHECKED_PREF,
-        signerName: Services.prefs.getCharPref(ONECRL_SIGNER_PREF),
-      }
-    );
+    const OneCRLBlocklistClient = RemoteSettings("onecrl", {
+      bucketNamePref: ONECRL_BUCKET_PREF,
+      lastCheckTimePref: ONECRL_CHECKED_PREF,
+      signerName: SECURITY_STATE_SIGNER,
+    });
     OneCRLBlocklistClient.on("sync", updateCertBlocklist);
 
     let IntermediatePreloadsClient = new IntermediatePreloads();
@@ -271,15 +260,12 @@ var RemoteSecuritySettings = {
 
 class IntermediatePreloads {
   constructor() {
-    this.client = RemoteSettings(
-      Services.prefs.getCharPref(INTERMEDIATES_COLLECTION_PREF),
-      {
-        bucketNamePref: INTERMEDIATES_BUCKET_PREF,
-        lastCheckTimePref: INTERMEDIATES_CHECKED_SECONDS_PREF,
-        signerName: Services.prefs.getCharPref(INTERMEDIATES_SIGNER_PREF),
-        localFields: ["cert_import_complete"],
-      }
-    );
+    this.client = RemoteSettings("intermediates", {
+      bucketNamePref: INTERMEDIATES_BUCKET_PREF,
+      lastCheckTimePref: INTERMEDIATES_CHECKED_SECONDS_PREF,
+      signerName: SECURITY_STATE_SIGNER,
+      localFields: ["cert_import_complete"],
+    });
 
     this.client.on("sync", this.onSync.bind(this));
     Services.obs.addObserver(
@@ -507,15 +493,12 @@ function compareFilters(filterA, filterB) {
 
 class CRLiteFilters {
   constructor() {
-    this.client = RemoteSettings(
-      Services.prefs.getCharPref(CRLITE_FILTERS_COLLECTION_PREF),
-      {
-        bucketNamePref: CRLITE_FILTERS_BUCKET_PREF,
-        lastCheckTimePref: CRLITE_FILTERS_CHECKED_SECONDS_PREF,
-        signerName: Services.prefs.getCharPref(CRLITE_FILTERS_SIGNER_PREF),
-        localFields: ["loaded_into_cert_storage"],
-      }
-    );
+    this.client = RemoteSettings("cert-revocations", {
+      bucketNamePref: CRLITE_FILTERS_BUCKET_PREF,
+      lastCheckTimePref: CRLITE_FILTERS_CHECKED_SECONDS_PREF,
+      signerName: SECURITY_STATE_SIGNER,
+      localFields: ["loaded_into_cert_storage"],
+    });
 
     Services.obs.addObserver(
       this.onObservePollEnd.bind(this),
