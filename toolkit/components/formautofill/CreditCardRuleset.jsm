@@ -1199,12 +1199,13 @@ var creditCardRulesets = {
 
   get types() {
     return [
-      "cc-name",
+      // Only use Fathom to detect cc-number fields for now.
       "cc-number",
-      "cc-exp-month",
-      "cc-exp-year",
-      "cc-exp",
-      "cc-type",
+      //"cc-name",
+      //"cc-exp-month",
+      //"cc-exp-year",
+      //"cc-exp",
+      //"cc-type",
     ];
   },
 };
