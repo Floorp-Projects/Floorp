@@ -418,6 +418,13 @@ this.AppConstants = Object.freeze({
     false,
 #endif
 
+  REMOTE_SETTINGS_SERVER_URL:
+#ifdef MOZ_THUNDERBIRD
+    "https://thunderbird-settings.thunderbird.net/v1",
+#else
+    "https://firefox.settings.services.mozilla.com/v1",
+#endif
+
   REMOTE_SETTINGS_VERIFY_SIGNATURE:
 #ifdef MOZ_THUNDERBIRD
     false,

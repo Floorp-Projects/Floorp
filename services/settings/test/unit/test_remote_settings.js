@@ -266,16 +266,6 @@ add_task(
 );
 add_task(clear_state);
 
-add_task(async function test_get_does_not_load_dump_when_pref_is_false() {
-  Services.prefs.setBoolPref("services.settings.load_dump", false);
-
-  const data = await clientWithDump.get();
-
-  equal(data.map(r => r.id).join(", "), "pt-BR, xx"); // No dump, 2 pulled from test server.
-  Services.prefs.clearUserPref("services.settings.load_dump");
-});
-add_task(clear_state);
-
 add_task(async function test_get_loads_dump_only_once_if_called_in_parallel() {
   const backup = clientWithDump._importJSONDump;
   let callCount = 0;
