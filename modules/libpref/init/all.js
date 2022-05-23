@@ -78,7 +78,6 @@ pref("security.pki.mitm_detected", false);
   pref("security.remote_settings.intermediates.enabled", false);
 #endif
 pref("security.remote_settings.intermediates.bucket", "security-state");
-pref("security.remote_settings.intermediates.checked", 0);
 pref("security.remote_settings.intermediates.downloads_per_poll", 5000);
 pref("security.remote_settings.intermediates.parallel_downloads", 8);
 
@@ -88,7 +87,6 @@ pref("security.remote_settings.intermediates.parallel_downloads", 8);
   pref("security.remote_settings.crlite_filters.enabled", false);
 #endif
 pref("security.remote_settings.crlite_filters.bucket", "security-state");
-pref("security.remote_settings.crlite_filters.checked", 0);
 
 pref("security.osreauthenticator.blank_password", false);
 pref("security.osreauthenticator.password_last_changed_lo", 0);
@@ -2069,7 +2067,6 @@ pref("services.common.uptake.sampleRate", 1);   // 1%
 
 // Security state OneCRL.
 pref("services.settings.security.onecrl.bucket", "security-state");
-pref("services.settings.security.onecrl.checked", 0);
 
 pref("extensions.abuseReport.enabled", true);
 // Allow AMO to handoff reports to the Firefox integrated dialog.
@@ -2092,10 +2089,6 @@ pref("extensions.manifestV3.enabled", false);
 
 // Blocklist via Remote Settings
 pref("services.blocklist.bucket", "blocklists");
-pref("services.blocklist.addons.checked", 0);
-pref("services.blocklist.addons-mlbf.checked", 0);
-pref("services.blocklist.plugins.checked", 0);
-pref("services.blocklist.gfx.checked", 0);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
