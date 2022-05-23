@@ -3020,57 +3020,121 @@ var gMainPane = {
     let token = {};
     this._downloadDisplayToken = token;
 
-    var folderListPref = Preferences.get("browser.download.folderList");
     var downloadFolder = document.getElementById("downloadFolder");
-    var currentDirPref = Preferences.get("browser.download.dir");
 
-    // Used in defining the correct path to the folder icon.
-    var fph = Services.io
-      .getProtocolHandler("file")
-      .QueryInterface(Ci.nsIFileProtocolHandler);
-    var iconUrlSpec;
-
-    let folderIndex = folderListPref.value;
+    let folderIndex = Preferences.get("browser.download.folderList").value;
     // For legacy users using cloudstorage pref with folderIndex as 3 (See bug 1751093),
-    // compute folderIndex using value in currentDirPref
+    // compute folderIndex using the current directory pref
     if (folderIndex == 3) {
+      let currentDirPref = Preferences.get("browser.download.dir");
       folderIndex = currentDirPref.value
         ? await this._folderToIndex(currentDirPref.value)
         : 1;
     }
 
     // Display a 'pretty' label or the path in the UI.
-    let folderValue;
-    if (folderIndex == 2) {
-      // Force the left-to-right direction when displaying a custom path.
-      folderValue = currentDirPref.value
-        ? `\u2066${currentDirPref.value.path}\u2069`
-        : "";
-      iconUrlSpec = fph.getURLSpecFromDir(currentDirPref.value);
-    } else if (folderIndex == 1) {
-      // 'Downloads'
-      [folderValue] = await document.l10n.formatValues([
-        { id: "downloads-folder-name" },
-      ]);
-      iconUrlSpec = fph.getURLSpecFromDir(await this._indexToFolder(1));
-    } else {
-      // 'Desktop'
-      [folderValue] = await document.l10n.formatValues([
-        { id: "desktop-folder-name" },
-      ]);
-      iconUrlSpec = fph.getURLSpecFromDir(
-        await this._getDownloadsFolder("Desktop")
-      );
-    }
+    let {
+      folderDisplayName,
+      file,
+    } = await this._getSystemDownloadFolderDetails(folderIndex);
+    // Figure out an icon url:
+    let fph = Services.io
+      .getProtocolHandler("file")
+      .QueryInterface(Ci.nsIFileProtocolHandler);
+    let iconUrlSpec = fph.getURLSpecFromDir(file);
+
     // Ensure that the last entry to this function always wins
     // (see comment at the start of this method):
     if (this._downloadDisplayToken != token) {
       return;
     }
     // note: downloadFolder.value is not read elsewhere in the code, its only purpose is to display to the user
-    downloadFolder.value = folderValue;
+    downloadFolder.value = folderDisplayName;
     downloadFolder.style.backgroundImage =
       "url(moz-icon://" + iconUrlSpec + "?size=16)";
+  },
+
+  async _getSystemDownloadFolderDetails(folderIndex) {
+    let downloadsDir = await this._getDownloadsFolder("Downloads");
+    let desktopDir = await this._getDownloadsFolder("Desktop");
+    let currentDirPref = Preferences.get("browser.download.dir");
+
+    let file;
+    let firefoxLocalizedName;
+    if (folderIndex == 2 && currentDirPref.value) {
+      file = currentDirPref.value;
+      if (file.equals(downloadsDir)) {
+        folderIndex = 1;
+      } else if (file.equals(desktopDir)) {
+        folderIndex = 0;
+      }
+    }
+    switch (folderIndex) {
+      case 2: // custom path, handled above.
+        break;
+
+      case 1: {
+        // downloads
+        file = downloadsDir;
+        firefoxLocalizedName = await document.l10n.formatValues([
+          { id: "downloads-folder-name" },
+        ]);
+        break;
+      }
+
+      case 0:
+      // fall through
+      default: {
+        file = desktopDir;
+        firefoxLocalizedName = await document.l10n.formatValues([
+          { id: "desktop-folder-name" },
+        ]);
+      }
+    }
+    if (firefoxLocalizedName) {
+      let folderDisplayName, leafName;
+      // Either/both of these can throw, so check for failures in both cases
+      // so we don't just break display of the download pref:
+      try {
+        folderDisplayName = file.displayName;
+      } catch (ex) {
+        /* ignored */
+      }
+      try {
+        leafName = file.leafName;
+      } catch (ex) {
+        /* ignored */
+      }
+
+      // If we found a localized name that's different from the leaf name,
+      // use that:
+      if (folderDisplayName && folderDisplayName != leafName) {
+        return { file, folderDisplayName };
+      }
+
+      // Otherwise, check if we've got a localized name ourselves.
+      if (firefoxLocalizedName) {
+        // You can't move the system download or desktop dir on macOS,
+        // so if those are in use just display them. On other platforms
+        // only do so if the folder matches the localized name.
+        if (
+          AppConstants.platform == "mac" ||
+          leafName == firefoxLocalizedName
+        ) {
+          return { file, folderDisplayName: firefoxLocalizedName };
+        }
+      }
+    }
+    // If we get here, attempts to use a "pretty" name failed. Just display
+    // the full path:
+    if (file) {
+      // Force the left-to-right direction when displaying a custom path.
+      return { file, folderDisplayName: `\u2066${file.path}\u2069` };
+    }
+    // Don't even have a file - fall back to desktop directory for the
+    // use of the icon, and an empty label:
+    file = desktopDir;
+    return { file, folderDisplayName: "" };
   },
 
   /**
