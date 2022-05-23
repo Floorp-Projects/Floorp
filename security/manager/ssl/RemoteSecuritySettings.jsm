@@ -19,8 +19,6 @@ const SECURITY_STATE_SIGNER = "onecrl.content-signature.mozilla.org";
 
 const INTERMEDIATES_BUCKET_PREF =
   "security.remote_settings.intermediates.bucket";
-const INTERMEDIATES_CHECKED_SECONDS_PREF =
-  "security.remote_settings.intermediates.checked";
 const INTERMEDIATES_DL_PER_POLL_PREF =
   "security.remote_settings.intermediates.downloads_per_poll";
 const INTERMEDIATES_DL_PARALLEL_REQUESTS =
@@ -30,12 +28,9 @@ const INTERMEDIATES_ENABLED_PREF =
 const LOGLEVEL_PREF = "browser.policies.loglevel";
 
 const ONECRL_BUCKET_PREF = "services.settings.security.onecrl.bucket";
-const ONECRL_CHECKED_PREF = "services.settings.security.onecrl.checked";
 
 const CRLITE_FILTERS_BUCKET_PREF =
   "security.remote_settings.crlite_filters.bucket";
-const CRLITE_FILTERS_CHECKED_SECONDS_PREF =
-  "security.remote_settings.crlite_filters.checked";
 const CRLITE_FILTERS_ENABLED_PREF =
   "security.remote_settings.crlite_filters.enabled";
 
@@ -238,7 +233,6 @@ var RemoteSecuritySettings = {
   init() {
     const OneCRLBlocklistClient = RemoteSettings("onecrl", {
       bucketNamePref: ONECRL_BUCKET_PREF,
-      lastCheckTimePref: ONECRL_CHECKED_PREF,
       signerName: SECURITY_STATE_SIGNER,
     });
     OneCRLBlocklistClient.on("sync", updateCertBlocklist);
@@ -262,7 +256,6 @@ class IntermediatePreloads {
   constructor() {
     this.client = RemoteSettings("intermediates", {
       bucketNamePref: INTERMEDIATES_BUCKET_PREF,
-      lastCheckTimePref: INTERMEDIATES_CHECKED_SECONDS_PREF,
       signerName: SECURITY_STATE_SIGNER,
       localFields: ["cert_import_complete"],
     });
@@ -495,7 +488,6 @@ class CRLiteFilters {
   constructor() {
     this.client = RemoteSettings("cert-revocations", {
       bucketNamePref: CRLITE_FILTERS_BUCKET_PREF,
-      lastCheckTimePref: CRLITE_FILTERS_CHECKED_SECONDS_PREF,
       signerName: SECURITY_STATE_SIGNER,
       localFields: ["loaded_into_cert_storage"],
     });
