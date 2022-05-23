@@ -32,7 +32,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 const PREF_SETTINGS_DEFAULT_BUCKET = "services.settings.default_bucket";
 const PREF_SETTINGS_BRANCH = "services.settings.";
-const PREF_SETTINGS_DEFAULT_SIGNER = "default_signer";
 const PREF_SETTINGS_SERVER_BACKOFF = "server.backoff";
 const PREF_SETTINGS_LAST_UPDATE = "last_update_seconds";
 const PREF_SETTINGS_LAST_ETAG = "last_etag";
