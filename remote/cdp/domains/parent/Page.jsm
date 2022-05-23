@@ -103,9 +103,24 @@ class Page extends Domain {
       throw new UnsupportedError("frameId not supported");
     }
 
+    const hitsNetwork = ["https", "http"].includes(validURL.scheme);
+    let networkLessLoaderId;
+    if (!hitsNetwork) {
+      // This navigation will not hit the network, use a randomly generated id.
+      const uuid = Services.uuid.generateUUID().toString();
+      networkLessLoaderId = uuid.substring(1, uuid.length - 1);
+
+      // Update the content process map of loader ids.
+      await this.executeInChild("_updateLoaderId", {
+        frameId: this.session.browsingContext.id,
+        loaderId: networkLessLoaderId,
+      });
+    }
+
     const requestDone = new Promise(resolve => {
-      if (!["https", "http"].includes(validURL.scheme)) {
-        resolve({});
+      if (!hitsNetwork) {
+        // This navigation will not hit the network, use a randomly generated id.
+        resolve({ navigationRequestId: networkLessLoaderId });
         return;
       }
       let navigationRequestId, redirectedRequestId;
