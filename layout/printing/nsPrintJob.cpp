@@ -456,7 +456,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_SILENT_PRINT, 1);
   }
 
-  MOZ_TRY(devspec->Init(nullptr, mPrintSettings, mIsCreatingPrintPreview));
+  MOZ_TRY(devspec->Init(mPrintSettings, mIsCreatingPrintPreview));
 
   printData->mPrintDC = new nsDeviceContext();
   MOZ_TRY(printData->mPrintDC->InitForPrinting(devspec));

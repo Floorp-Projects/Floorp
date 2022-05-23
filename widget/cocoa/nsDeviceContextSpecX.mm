@@ -65,8 +65,7 @@ nsDeviceContextSpecX::~nsDeviceContextSpecX() {
 
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecX, nsIDeviceContextSpec)
 
-NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* aPS,
-                                         bool aIsPrintPreview) {
+NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, bool aIsPrintPreview) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   RefPtr<nsPrintSettingsX> settings(do_QueryObject(aPS));

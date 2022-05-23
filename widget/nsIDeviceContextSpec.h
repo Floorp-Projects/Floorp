@@ -40,8 +40,7 @@ class nsIDeviceContextSpec : public nsISupports {
    * @param aIsPrintPreview True if creating Spec for PrintPreview
    * @return NS_OK or a suitable error code.
    */
-  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPrintSettings,
-                  bool aIsPrintPreview) = 0;
+  NS_IMETHOD Init(nsIPrintSettings* aPrintSettings, bool aIsPrintPreview) = 0;
 
   virtual already_AddRefed<PrintTarget> MakePrintTarget() = 0;
 
