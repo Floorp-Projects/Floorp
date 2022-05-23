@@ -5740,12 +5740,6 @@ HttpBaseChannel::HasCrossOriginOpenerPolicyMismatch(bool* aIsMismatch) {
 }
 
 void HttpBaseChannel::MaybeFlushConsoleReports() {
-  // Flush if we have a known window ID.
-  if (mLoadInfo->GetInnerWindowID() > 0) {
-    FlushReportsToConsole(mLoadInfo->GetInnerWindowID());
-    return;
-  }
-
   // If this channel is part of a loadGroup, we can flush the console reports
   // immediately.
   nsCOMPtr<nsILoadGroup> loadGroup;
