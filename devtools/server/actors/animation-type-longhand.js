@@ -410,7 +410,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "font-size",
       "outline-offset",
       "outline-width",
-      "overflow-clip-box",
+      "overflow-clip-margin",
     ]),
   ],
 ];
