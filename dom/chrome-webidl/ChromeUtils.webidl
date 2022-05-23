@@ -61,13 +61,12 @@ dictionary InteractionData {
   unsigned long scrollingDistanceInPixels = 0;
 };
 
+/**
+ * Confidence value of credit card fields. This is used by the native
+ * Fathom Credit Card model to return the score to JS.
+ */
 dictionary FormAutofillConfidences {
   double ccNumber = 0;
-  double ccName = 0;
-  double ccType = 0;
-  double ccExp = 0;
-  double ccExpMonth = 0;
-  double ccExpYear = 0;
 };
 
 /**
