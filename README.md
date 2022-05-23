@@ -37,7 +37,7 @@
     <br />
     <a href="https://floorp.ablaze.one">official site</a>
     ・
-    <a href="https://github.com/Floorp-Projects/Floorp-dev">Floorp Browser source code</a>
+    <a href="https://github.com/Floorp-Projects/Floorp">Floorp Browser source code</a>
     ・
     <a href="https://blog.ablaze.one">Blog & release notes</a>
     ・
