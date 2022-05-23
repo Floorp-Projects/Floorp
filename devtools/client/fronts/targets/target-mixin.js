@@ -496,15 +496,13 @@ function TargetMixin(parentClass) {
         return;
       }
 
-      // We still need to attach workers.
       // The current class we have is actually the WorkerDescriptorFront,
       // which will morph into a target by fetching the underlying target's form.
       // Ideally, worker targets would be spawn by the server, and we would no longer
       // have the hybrid descriptor/target class which brings lots of complexity and confusion.
-      // By doing so, the "attach" would be done on the server side and would simply be
-      // part of the target actor instantiation.
-      if (this.attach) {
-        await this.attach();
+      // To be removed in bug 1651522.
+      if (this.morphWorkerDescriptorIntoWorkerTarget) {
+        await this.morphWorkerDescriptorIntoWorkerTarget();
       }
 
       const isBrowserToolbox =
