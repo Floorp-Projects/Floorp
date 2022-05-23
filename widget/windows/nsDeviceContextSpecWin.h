@@ -33,8 +33,7 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
   NS_IMETHOD BeginPage() override { return NS_OK; }
   NS_IMETHOD EndPage() override { return NS_OK; }
 
-  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS,
-                  bool aIsPrintPreview) override;
+  NS_IMETHOD Init(nsIPrintSettings* aPS, bool aIsPrintPreview) override;
 
   void GetDriverName(nsAString& aDriverName) const {
     aDriverName = mDriverName;

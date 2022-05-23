@@ -29,8 +29,7 @@ class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec {
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPrintSettings,
-                  bool aIsPrintPreview) final;
+  NS_IMETHOD Init(nsIPrintSettings* aPrintSettings, bool aIsPrintPreview) final;
 
   already_AddRefed<PrintTarget> MakePrintTarget() final;
 

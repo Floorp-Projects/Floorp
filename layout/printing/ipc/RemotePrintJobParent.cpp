@@ -67,7 +67,7 @@ nsresult RemotePrintJobParent::InitializePrintDevice(
     return rv;
   }
 
-  rv = deviceContextSpec->Init(nullptr, mPrintSettings, false);
+  rv = deviceContextSpec->Init(mPrintSettings, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
