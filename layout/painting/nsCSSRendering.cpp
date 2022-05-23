@@ -2628,7 +2628,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(
   result &= state.mImageRenderer.PrepareResult();
 
   if (!state.mFillArea.IsEmpty()) {
-    return state.mImageRenderer.BuildWebRenderDisplayItemsForLayer(
+    result &= state.mImageRenderer.BuildWebRenderDisplayItemsForLayer(
         &aParams.presCtx, aBuilder, aResources, aSc, aManager, aItem,
         state.mDestArea, state.mFillArea,
         state.mAnchor + paintBorderArea.TopLeft(),
