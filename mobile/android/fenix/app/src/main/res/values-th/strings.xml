@@ -1617,6 +1617,8 @@
     <string name="addresses_state">รัฐ</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">รหัสไปรษณีย์</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">ประเทศหรือภูมิภาค</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">โทรศัพท์</string>
     <!-- The header for the email of an address -->

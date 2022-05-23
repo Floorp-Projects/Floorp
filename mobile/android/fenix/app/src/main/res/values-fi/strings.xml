@@ -1637,6 +1637,8 @@
     <string name="addresses_state">Osavaltio</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Postinro</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Maa tai alue</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Puhelin</string>
     <!-- The header for the email of an address -->

@@ -1641,6 +1641,8 @@
     <string name="addresses_state">Νομός</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Ταχ. κώδικας</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Χώρα ή περιοχή</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Τηλέφωνο</string>
     <!-- The header for the email of an address -->

@@ -1673,6 +1673,8 @@
     <string name="addresses_state">Stato</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Zip</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Pais o region</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Telephono</string>
     <!-- The header for the email of an address -->

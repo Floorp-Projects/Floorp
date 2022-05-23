@@ -41,9 +41,9 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">حالیہ بُک مارکس</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">حالیہ محفوظ  شدہ بک مارک </string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">حالیہ محفوظ  شدہ بک مارک </string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">تمام دکھائیں</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">تمام دکھائیں</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">تمام محفوظ کردہ بک مارکس دکھائیں۔</string>
@@ -61,9 +61,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">نہیں شکریہ</string>
 
-    <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">آپ ایپس میں لنکس کو خود بخود کھولنے کے لئے Firefox کو سیٹ کرسکتے ہیں۔</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">سیٹنگز پر جائیں</string>
     <!-- Text for the negative action button -->
@@ -144,8 +141,6 @@
     <string name="browser_menu_add_to_homescreen">ہوم اسکرین میں جوڑے</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">تنصیب کریں</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">سینک ہو چکے ٹیبز</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">دوباره سینک کریں</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -209,7 +204,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s آپ کے ذریعہ پتہ بار میں ٹائپ کی گئی سبھی چیزوں کو آپ کے طے شدہ تلاش انجن کے ساتھ شیئر کرے گا</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">مزید سیکھیں</string>
+    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">مزید سیکھیں</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s تلاش کریں</string>
@@ -217,17 +212,11 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">ایڈریس بار سے براہ راست تلاش کریں</string>
 
-    <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefox میں نیا کیا  ہے</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">صاف، منظم ٹیبز</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">حالیہ تلاشیں۔</string>
 
-    <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">ایک نیا Firefox ٹیب کھولیں</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">تلاش کریں</string>
     <!-- Text preview for larger sized widgets -->
@@ -487,15 +476,15 @@
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">ڈاؤن لوڈز</string>
     <!-- Option in library to open Bookmarks page -->
-    <string name="library_bookmarks">نشانیاں</string>
+    <string name="library_bookmarks">بک مارکس</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
-    <string name="library_desktop_bookmarks_root">ڈیسک ٹاپ نشانیاں</string>
+    <string name="library_desktop_bookmarks_root">ڈیسک ٹاپ بک مارکس</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
-    <string name="library_desktop_bookmarks_menu">نشانیاں مینیو</string>
+    <string name="library_desktop_bookmarks_menu">بک مارکس مینیو</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
-    <string name="library_desktop_bookmarks_toolbar">نشانیاں ٹول بار</string>
+    <string name="library_desktop_bookmarks_toolbar">بک مارکس ٹول بار</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
-    <string name="library_desktop_bookmarks_unfiled">دیگر نشانیاں</string>
+    <string name="library_desktop_bookmarks_unfiled">دیگر بک مارکس</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">سابقات</string>
     <!-- Option in Library to open a new tab -->
@@ -948,7 +937,7 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">بکمارک محفوظ کر دیا گیا!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">سر فہرست سائٹوں میں شامل!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">سر فہرست سائٹوں میں شامل!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">نجی ٹیب بند ہوگئیں</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1038,29 +1027,29 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Firefox Preview اب Firefox Nightly ہو گیا ہے</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview اب Firefox Nightly ہو گیا ہے</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Android Beta کے لئے Firefox حاصل کریں</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Android Beta کے لئے Firefox حاصل کریں</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly منتقل ہوگیا</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly منتقل ہوگیا</string>
 
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">نیا Nightly میں سوئچ کریں</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">نیا Nightly میں سوئچ کریں</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly منتقل ہوگیا</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly منتقل ہوگیا</string>
 
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">نیا Nightly حاصل کریں</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">نیا Nightly حاصل کریں</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">%s میں خوش آمدید!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">آلات کے درمیان Firefox کو سنک کریں</string>
+    <string name="onboarding_account_sign_in_header_1">آلات کے درمیان Firefox کو سنک کریں</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">سائن اپ کریں</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1346,7 +1335,6 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">لاگ ان مینو کو ترتیب دیں</string>
 
-    <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">کریڈٹ کارڈز</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1449,15 +1437,15 @@
     <string name="search_delete_search_engine_success_message">حذف شدہ %s</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">بالکل نئی %s میں خوش آمدید</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">بالکل نئی %s میں خوش آمدید</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">%s تازہ کارى کر رہا ہے…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s تازہ کارى کر رہا ہے…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">%s شروع کریں</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s شروع کریں</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">منتقلی مکمل ہو گی</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">منتقلی مکمل ہو گی</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">پاس ورڈ</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">پاس ورڈ</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">اس کی اجازت دینے کے لئے:</string>
@@ -1486,7 +1474,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">کیا آپ واقعی اس بُکمارک کو حذف کرنا چاہتے ہیں؟</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">بہترین سائٹ میں شامل کریں</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">بہترین سائٹ میں شامل کریں</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">توثیق کردہ برائے: %1$s</string>
@@ -1538,7 +1526,7 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">براہ کرم ٹیب sync کو فعال کریں۔</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">آپ کے دوسرے آلات پر Firefox میں کوئی ٹیب نہیں کھلے ہوئِے ہیں۔</string>
+    <string name="synced_tabs_no_tabs">آپ کے دوسرے آلات پر Firefox میں کوئی ٹیب نہیں کھلے ہوئِے ہیں۔</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">دیگر آلات سے ٹیبیں کی فہرست دیکھیں۔</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1549,15 +1537,15 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">اعلٰی سائٹ کی حد پوری ہو گئی </string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">اعلٰی سائٹ کی حد پوری ہو گئی </string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ٹھیک ہے سمجھ گیا</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">نام</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">بہترین سائٹس کے نام </string>
-	<!-- Button caption to confirm the renaming of the top site. -->
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">بہترین سائٹس کے نام </string>
+    <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ٹھیک ہے</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">منسوخ کریں</string>
@@ -1574,25 +1562,6 @@
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">ایک ماہ کے بعد خودکار بند کریں ؟</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Firefox کو بہتر بنانے میں مدد کریں۔</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">آپ نے غیر فعال ٹیبز کو غیر فعال کیوں کیا؟</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">مجھے سمجھ نہیں آتی کہ یہ کیسے کام کرتا ہے۔</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">میں خود پرانے ٹیبز کو صاف کرنا پسند کرتا ہوں۔</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">دو ہفتے کا وقت بہت طویل ہے۔</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">دو ہفتے کا وقت بہت کم ہے۔</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">ارسال کریں</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">بند کریں</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ہٹائیں</string>
@@ -1617,4 +1586,5 @@
     <string name="pocket_stories_feature_caption">%s کے خاندان کا حصہ</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">مزید سیکھیں</string>
-</resources>
+
+    </resources>

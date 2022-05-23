@@ -68,8 +68,6 @@
     <string name="cfr_neg_button_text">No, gràcies</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Podeu fer que el Firefox obri automàticament els enllaços en aplicacions.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Podeu fer que el %1$s obri automàticament els enllaços en aplicacions.</string>
     <!-- Text for the positive action button -->
@@ -99,8 +97,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Voleu tancar-les automàticament al cap d’un mes?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">El Firefox pot tancar les pestanyes que no hàgiu vist durant el darrer mes.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">El %1$s pot tancar les pestanyes que no hàgiu vist durant el darrer mes.</string>
@@ -255,14 +251,10 @@
     <string name="search_settings_menu_item">Paràmetres de cerca</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Novetats del Firefox</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">Què hi ha de nou a %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Ara és més fàcil continuar des d’on ho havíeu deixat.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Pàgina d’inici del Firefox personalitzada</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Pàgina d’inici del %1$s personalitzada</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -281,8 +273,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Amb la pàgina d’inici del Firefox personalitzada, ara és més fàcil continuar des d’on ho havíeu deixat. Hi trobareu les pestanyes, les adreces d’interès i els resultats de cerca recents.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Obre una pestanya nova del Firefox</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Obre en una pestanya nova en %1$s</string>
     <!-- Text preview for smaller sized widgets -->
@@ -334,7 +324,7 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Mode només HTTPS</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preferences_https_only_summary">Intenta connectar-se automàticament als llocs mitjançant el protocol d\'encriptació HTTPS per a augmentar la seguretat.</string>
+    <string name="preferences_https_only_summary">Intenta connectar-se als llocs mitjançant el protocol de xifratge HTTPS automàticament per millorar la seguretat.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on">Activat</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
@@ -455,12 +445,8 @@
     <string name="wallpaper_updated_snackbar_action">Mostra</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Toqueu el logotip per a canviar el fons de pantalla</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Canvieu el fons de pantalla tocant el logotip de la pàgina d’inici del Firefox</string>
 
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Recorre i actualitza la imatge sense sortir de la pàgina d\'Inici.</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description">Logotip del Firefox: canvieu el fons de pantalla, botó</string>
@@ -682,8 +668,6 @@
     <string name="studies_remove">Elimina</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Actius</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">El Firefox pot instal·lar i executar estudis de tant en tant.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">El %1$s pot instal·lar i executar estudis de tant en tant.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -769,8 +753,6 @@
     <string name="tab_tray_header_title_1">Altres pestanyes</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Escriviu el terme de la cerca</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Escriviu els termes de la cerca</string>
     <!-- Text for the button to clear all history -->
@@ -1237,8 +1219,6 @@
     <string name="onboarding_firefox_account_sync_is_on">La sincronització està activada</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Privadesa sempre activa</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">El Firefox bloca automàticament les empreses que, en secret, us fan el seguiment mentre navegueu.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">El %1$s bloca automàticament les empreses que, en secret, us fan el seguiment mentre navegueu.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1465,7 +1445,7 @@
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Emplena automàticament en el %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill_description">Emplena i desa noms d’usuari i contrasenyes en els llocs webs mentre utilitzeu el %1$s.</string>
+    <string name="preferences_passwords_autofill_description">Emplena i desa noms d’usuari i contrasenyes en els llocs web mentre utilitzeu el %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Emplena automàticament en altres aplicacions</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
@@ -1623,7 +1603,7 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Gestiona les adreces</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">Nom complet</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Nom complet</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Adreça postal</string>
     <!-- The header for the city of an address -->
@@ -1854,25 +1834,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Tancament automàtic activat</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Ajuda a millorar el Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Per què heu desactivat les pestanyes inactives?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">No entenc com funciona</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">M’agrada esborrar les pestanyes antigues jo mateix</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">El termini de dues setmanes és massa llarg</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">El termini de dues setmanes és massa curt</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Envia</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Tanca</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Feu que els enllaços dels llocs web, del correu electrònic i dels missatges s’obrin automàticament en el Firefox.</string>
