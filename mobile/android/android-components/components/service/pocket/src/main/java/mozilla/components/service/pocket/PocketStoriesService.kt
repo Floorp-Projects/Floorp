@@ -45,17 +45,6 @@ class PocketStoriesService(
             appId = pocketStoriesConfig.profile.appId
         )
     }
-    internal val getDeleteProfileUseCase = when (pocketStoriesConfig.profile) {
-        null -> {
-            logger.debug("Missing profile for sponsored stories")
-            null
-        }
-        else -> spocsUseCases?.DeleteProfile(
-            context = context,
-            profileId = pocketStoriesConfig.profile.profileId,
-            appId = pocketStoriesConfig.profile.appId
-        )
-    }
 
     /**
      * Entry point to start fetching Pocket stories in the background.
