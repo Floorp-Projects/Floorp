@@ -98,6 +98,10 @@
      getting centered. That prevents tab opening animation from looking off at
      the start, see bug 1759221. */
   -moz-box-pack: start;
+  overflow: clip;
+  /* Needed to avoid clipping the tab-background shadow, which has a 4px blur
+   * (we only have 2px padding in the inline direction) */
+  overflow-clip-margin: 2px;
   min-height: var(--tab-min-height);
 }
 
