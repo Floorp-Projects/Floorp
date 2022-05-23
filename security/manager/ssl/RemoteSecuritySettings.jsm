@@ -15,10 +15,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { X509 } = ChromeUtils.import("resource://gre/modules/psm/X509.jsm");
 
+const SECURITY_STATE_BUCKET = "security-state";
 const SECURITY_STATE_SIGNER = "onecrl.content-signature.mozilla.org";
 
-const INTERMEDIATES_BUCKET_PREF =
-  "security.remote_settings.intermediates.bucket";
 const INTERMEDIATES_DL_PER_POLL_PREF =
   "security.remote_settings.intermediates.downloads_per_poll";
 const INTERMEDIATES_DL_PARALLEL_REQUESTS =
@@ -27,10 +26,6 @@ const INTERMEDIATES_ENABLED_PREF =
   "security.remote_settings.intermediates.enabled";
 const LOGLEVEL_PREF = "browser.policies.loglevel";
 
-const ONECRL_BUCKET_PREF = "services.settings.security.onecrl.bucket";
-
-const CRLITE_FILTERS_BUCKET_PREF =
-  "security.remote_settings.crlite_filters.bucket";
 const CRLITE_FILTERS_ENABLED_PREF =
   "security.remote_settings.crlite_filters.enabled";
 
@@ -232,7 +227,7 @@ var RemoteSecuritySettings = {
    */
   init() {
     const OneCRLBlocklistClient = RemoteSettings("onecrl", {
-      bucketNamePref: ONECRL_BUCKET_PREF,
+      bucketName: SECURITY_STATE_BUCKET,
       signerName: SECURITY_STATE_SIGNER,
     });
     OneCRLBlocklistClient.on("sync", updateCertBlocklist);
@@ -255,7 +250,7 @@ var RemoteSecuritySettings = {
 class IntermediatePreloads {
   constructor() {
     this.client = RemoteSettings("intermediates", {
-      bucketNamePref: INTERMEDIATES_BUCKET_PREF,
+      bucketName: SECURITY_STATE_BUCKET,
       signerName: SECURITY_STATE_SIGNER,
       localFields: ["cert_import_complete"],
     });
@@ -487,7 +482,7 @@ function compareFilters(filterA, filterB) {
 class CRLiteFilters {
   constructor() {
     this.client = RemoteSettings("cert-revocations", {
-      bucketNamePref: CRLITE_FILTERS_BUCKET_PREF,
+      bucketName: SECURITY_STATE_BUCKET,
       signerName: SECURITY_STATE_SIGNER,
       localFields: ["loaded_into_cert_storage"],
     });

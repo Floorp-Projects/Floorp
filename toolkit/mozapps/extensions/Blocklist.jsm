@@ -153,8 +153,7 @@ const DEFAULT_SEVERITY = 3;
 const DEFAULT_LEVEL = 2;
 const MAX_BLOCK_LEVEL = 3;
 
-// Remote Settings blocklist constants
-const PREF_BLOCKLIST_BUCKET = "services.blocklist.bucket";
+const BLOCKLIST_BUCKET = "blocklists";
 
 const BlocklistTelemetry = {
   init() {
@@ -503,7 +502,7 @@ const GfxBlocklistRS = {
     }
     this._initialized = true;
     this._client = RemoteSettings("gfx", {
-      bucketNamePref: PREF_BLOCKLIST_BUCKET,
+      bucketName: BLOCKLIST_BUCKET,
       filterFunc: targetAppFilter,
     });
     this.checkForEntries = this.checkForEntries.bind(this);
@@ -730,7 +729,7 @@ const ExtensionBlocklistRS = {
     }
     this._initialized = true;
     this._client = RemoteSettings("addons", {
-      bucketNamePref: PREF_BLOCKLIST_BUCKET,
+      bucketName: BLOCKLIST_BUCKET,
       filterFunc: this._filterItem,
     });
     this._onUpdate = this._onUpdate.bind(this);
@@ -1090,7 +1089,7 @@ const ExtensionBlocklistMLBF = {
     }
     this._initialized = true;
     this._client = RemoteSettings("addons-bloomfilters", {
-      bucketName: "blocklists",
+      bucketName: BLOCKLIST_BUCKET,
     });
     this._onUpdate = this._onUpdate.bind(this);
     this._client.on("sync", this._onUpdate);

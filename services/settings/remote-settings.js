@@ -18,6 +18,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
@@ -30,7 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
-const PREF_SETTINGS_DEFAULT_BUCKET = "services.settings.default_bucket";
 const PREF_SETTINGS_BRANCH = "services.settings.";
 const PREF_SETTINGS_SERVER_BACKOFF = "server.backoff";
 const PREF_SETTINGS_LAST_UPDATE = "last_update_seconds";
@@ -99,7 +99,6 @@ function remoteSettingsFunction() {
 
   // If not explicitly specified, use the default signer.
   const defaultOptions = {
-    bucketNamePref: PREF_SETTINGS_DEFAULT_BUCKET,
     signerName: DEFAULT_SIGNER,
     filterFunc: jexlFilterFunc,
   };
@@ -145,7 +144,8 @@ function remoteSettingsFunction() {
     // So if we have a local database or if we ship a JSON dump, then it means that
     // this client is known but it was not registered yet (eg. calling module not "imported" yet).
     if (
-      bucketName == Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_BUCKET)
+      bucketName ==
+      Utils.actualBucketName(AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET)
     ) {
       const c = new RemoteSettingsClient(collectionName, defaultOptions);
       const [dbExists, localDump] = await Promise.all([
@@ -156,7 +156,7 @@ function remoteSettingsFunction() {
         return c;
       }
     }
-    // Else, we cannot return a client insttance because we are not able to synchronize data in specific buckets.
+    // Else, we cannot return a client instance because we are not able to synchronize data in specific buckets.
     // Mainly because we cannot guess which `signerName` has to be used for example.
     // And we don't want to synchronize data for collections in the main bucket that are
     // completely unknown (ie. no database and no JSON dump).
@@ -433,6 +433,22 @@ function remoteSettingsFunction() {
   };
 
   /**
+   * Enables or disables preview mode.
+   *
+   * When enabled, all existing and future clients will pull data from
+   * the `*-preview` buckets. This allows developers and QA to test their
+   * changes before publishing them for all clients.
+   */
+  remoteSettings.enablePreviewMode = enabled => {
+    // Set the flag for future clients.
+    Utils.enablePreviewMode(enabled);
+    // Enable it on existing clients.
+    for (const client of _clients.values()) {
+      client.refreshBucketName();
+    }
+  };
+
+  /**
    * Returns an object with polling status information and the list of
    * known remote settings collections.
    */
@@ -471,8 +487,11 @@ function remoteSettingsFunction() {
       serverTimestamp,
       localTimestamp: gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, null),
       lastCheck: gPrefs.getIntPref(PREF_SETTINGS_LAST_UPDATE, 0),
-      mainBucket: Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_BUCKET),
+      mainBucket: Utils.actualBucketName(
+        AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET
+      ),
       defaultSigner: DEFAULT_SIGNER,
+      previewMode: Utils.PREVIEW_MODE,
       collections: collections.filter(c => !!c),
       history: {
         [TELEMETRY_SOURCE_SYNC]: await gSyncHistory.list(),

@@ -237,18 +237,19 @@ class RemoteSettingsClient extends EventEmitter {
   constructor(
     collectionName,
     {
-      bucketName,
-      bucketNamePref,
+      bucketName = AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET,
       signerName,
       filterFunc,
       localFields = [],
       lastCheckTimePref,
-    }
+    } = {}
   ) {
     super(["sync"]); // emitted events
 
     this.collectionName = collectionName;
-    this.bucketName = bucketName;
+    // Client is constructed with the raw bucket name (eg. "main", "security-state", "blocklist")
+    // The `bucketName` will contain the `-preview` suffix if the preview mode is enabled.
+    this.bucketName = Utils.actualBucketName(bucketName);
     this.signerName = signerName;
     this.filterFunc = filterFunc;
     this.localFields = localFields;
@@ -259,22 +260,6 @@ class RemoteSettingsClient extends EventEmitter {
     // This attribute allows signature verification to be disabled, when running tests
     // or when pulling data from a dev server.
     this.verifySignature = AppConstants.REMOTE_SETTINGS_VERIFY_SIGNATURE;
-
-    if (!bucketName) {
-      // TODO bug 1702759: Remove bucketNamePref.
-      // The bucket preference value can be changed (eg. `main` to `main-preview`) in order
-      // to preview the changes to be approved in a real client.
-      this.bucketNamePref = bucketNamePref;
-      XPCOMUtils.defineLazyPreferenceGetter(
-        this,
-        "bucketName",
-        this.bucketNamePref,
-        null,
-        () => {
-          this.db.identifier = this.identifier;
-        }
-      );
-    }
 
     XPCOMUtils.defineLazyGetter(
       this,
@@ -287,6 +272,17 @@ class RemoteSettingsClient extends EventEmitter {
       "attachments",
       () => new AttachmentDownloader(this)
     );
+  }
+
+  /**
+   * Internal method to refresh the client bucket name after the preview mode
+   * was toggled.
+   *
+   * See `RemoteSettings.enabledPreviewMode()`.
+   */
+  refreshBucketName() {
+    this.bucketName = Utils.actualBucketName(this.bucketName);
+    this.db.identifier = this.identifier;
   }
 
   get identifier() {
