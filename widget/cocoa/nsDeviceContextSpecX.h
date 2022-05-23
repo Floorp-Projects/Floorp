@@ -20,8 +20,7 @@ class nsDeviceContextSpecX : public nsIDeviceContextSpec {
 
   nsDeviceContextSpecX();
 
-  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS,
-                  bool aIsPrintPreview) override;
+  NS_IMETHOD Init(nsIPrintSettings* aPS, bool aIsPrintPreview) override;
   already_AddRefed<PrintTarget> MakePrintTarget() final;
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,

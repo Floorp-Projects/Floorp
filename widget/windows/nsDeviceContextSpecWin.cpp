@@ -103,8 +103,7 @@ static bool GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
 }
 
 //----------------------------------------------------------------------------------
-NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
-                                           nsIPrintSettings* aPrintSettings,
+NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIPrintSettings* aPrintSettings,
                                            bool aIsPrintPreview) {
   mPrintSettings = aPrintSettings;
 
