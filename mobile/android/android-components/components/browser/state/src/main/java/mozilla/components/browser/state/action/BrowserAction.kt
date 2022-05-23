@@ -597,6 +597,15 @@ sealed class ContentAction : BrowserAction() {
         ContentAction()
 
     /**
+     * Replaces a prompt request from [ContentState] with [promptRequest] based on the [previousPromptUid].
+     */
+    data class ReplacePromptRequestAction(
+        val sessionId: String,
+        val previousPromptUid: String,
+        val promptRequest: PromptRequest
+    ) : ContentAction()
+
+    /**
      * Adds a [FindResultState] to the [ContentState] with the given [sessionId].
      */
     data class AddFindResultAction(val sessionId: String, val findResult: FindResultState) :

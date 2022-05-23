@@ -266,6 +266,12 @@ internal class EngineObserver(
         )
     }
 
+    override fun onPromptUpdate(previousPromptRequestUid: String, promptRequest: PromptRequest) {
+        store.dispatch(
+            ContentAction.ReplacePromptRequestAction(tabId, previousPromptRequestUid, promptRequest)
+        )
+    }
+
     override fun onRepostPromptCancelled() {
         store.dispatch(ContentAction.UpdateRefreshCanceledStateAction(tabId, true))
     }

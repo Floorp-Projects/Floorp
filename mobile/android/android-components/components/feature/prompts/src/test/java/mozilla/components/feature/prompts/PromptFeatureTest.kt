@@ -2255,6 +2255,38 @@ class PromptFeatureTest {
         verify(dialogFragment).dismissAllowingStateLoss()
     }
 
+    @Test
+    fun `WHEN promptRequest is updated THEN the replaced active prompt will be dismissed`() {
+        val feature = spy(
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                shareDelegate = mock()
+            ) { }
+        )
+        feature.start()
+
+        val previousPrompt = SingleChoice(
+            choices = arrayOf(),
+            onConfirm = {},
+            onDismiss = {}
+        )
+        val updatedPrompt = SingleChoice(
+            choices = arrayOf(),
+            onConfirm = {},
+            onDismiss = {}
+        )
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, previousPrompt)).joinBlocking()
+
+        val fragment = mock<ChoiceDialogFragment>()
+        whenever(fragment.shouldDismissOnLoad).thenReturn(true)
+        feature.activePrompt = WeakReference(fragment)
+
+        store.dispatch(ContentAction.ReplacePromptRequestAction(tabId, previousPrompt.uid, updatedPrompt)).joinBlocking()
+        verify(fragment).dismiss()
+    }
+
     private fun mockFragmentManager(): FragmentManager {
         val fragmentManager: FragmentManager = mock()
         val transaction: FragmentTransaction = mock()

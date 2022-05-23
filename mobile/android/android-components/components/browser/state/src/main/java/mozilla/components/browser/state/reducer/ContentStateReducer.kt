@@ -113,6 +113,15 @@ internal object ContentStateReducer {
             is ContentAction.ConsumePromptRequestAction -> updateContentState(state, action.sessionId) {
                 it.copy(promptRequests = it.promptRequests - action.promptRequest)
             }
+            is ContentAction.ReplacePromptRequestAction -> updateContentState(
+                state,
+                action.sessionId
+            ) { contentState ->
+                val updated = contentState.promptRequests
+                    .filter { it.uid != action.previousPromptUid }
+                    .plus(action.promptRequest)
+                contentState.copy(promptRequests = updated)
+            }
             is ContentAction.AddFindResultAction -> updateContentState(state, action.sessionId) {
                 it.copy(findResults = it.findResults + action.findResult)
             }

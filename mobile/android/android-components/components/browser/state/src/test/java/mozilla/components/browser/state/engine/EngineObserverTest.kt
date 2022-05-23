@@ -865,6 +865,23 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverHandlesOnPromptUpdate() {
+        val promptRequest: PromptRequest = mock()
+        val store: BrowserStore = mock()
+        val observer = EngineObserver("tab-id", store)
+        val previousPromptUID = "prompt-uid"
+
+        observer.onPromptUpdate(previousPromptUID, promptRequest)
+        verify(store).dispatch(
+            ContentAction.ReplacePromptRequestAction(
+                "tab-id",
+                previousPromptUID,
+                promptRequest
+            )
+        )
+    }
+
+    @Test
     fun engineObserverHandlesWindowRequest() {
         val windowRequest: WindowRequest = mock()
         val store: BrowserStore = mock()

@@ -851,6 +851,23 @@ class PromptFeature private constructor(
         dialog.feature = this
 
         if (canShowThisPrompt(promptRequest)) {
+            // If the ChoiceDialogFragment's choices data were updated,
+            // we need to dismiss the previous dialog
+            activePrompt?.get()?.let { promptDialog ->
+                // ChoiceDialogFragment could update their choices data,
+                // and we need to dismiss the previous UI dialog,
+                // without consuming the engine callbacks, and allow to create a new dialog with the
+                // updated data.
+                if (promptDialog is ChoiceDialogFragment &&
+                    !session.content.promptRequests.any { it.uid == promptDialog.promptRequestUID }
+                ) {
+                    // We want to avoid consuming the engine callbacks and allow a new dialog
+                    // to be created with the updated data.
+                    promptDialog.feature = null
+                    promptDialog.dismiss()
+                }
+            }
+
             dialog.show(fragmentManager, FRAGMENT_TAG)
             activePrompt = WeakReference(dialog)
 

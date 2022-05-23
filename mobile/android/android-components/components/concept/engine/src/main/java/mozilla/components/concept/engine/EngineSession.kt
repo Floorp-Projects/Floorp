@@ -88,6 +88,11 @@ abstract class EngineSession(
         fun onPromptDismissed(promptRequest: PromptRequest) = Unit
 
         /**
+         * The engine has requested a prompt update.
+         */
+        fun onPromptUpdate(previousPromptRequestUid: String, promptRequest: PromptRequest) = Unit
+
+        /**
          * User cancelled a repost prompt. Page will not be reloaded.
          */
         fun onRepostPromptCancelled() = Unit

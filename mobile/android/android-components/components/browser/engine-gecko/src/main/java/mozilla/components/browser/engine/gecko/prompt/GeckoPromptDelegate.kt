@@ -8,6 +8,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.browser.engine.gecko.ext.convertToChoices
 import mozilla.components.browser.engine.gecko.ext.toAddress
 import mozilla.components.browser.engine.gecko.ext.toAutocompleteAddress
 import mozilla.components.browser.engine.gecko.ext.toAutocompleteCreditCard
@@ -256,6 +257,11 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             )
             else -> throw InvalidParameterException("${geckoPrompt.type} is not a valid Gecko @Choice.ChoiceType")
         }
+
+        geckoPrompt.delegate = ChoicePromptUpdateDelegate(
+            geckoEngineSession,
+            promptRequest
+        )
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(promptRequest)
@@ -671,28 +677,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             )
         }
         return geckoResult
-    }
-
-    private fun GeckoChoice.toChoice(): Choice {
-        val choiceChildren = items?.map { it.toChoice() }?.toTypedArray()
-        // On the GeckoView docs states that label is a @NonNull, but on run-time
-        // we are getting null values
-        @Suppress("USELESS_ELVIS")
-        return Choice(id, !disabled, label ?: "", selected, separator, choiceChildren)
-    }
-
-    /**
-     * Convert an array of [GeckoChoice] to Choice array.
-     * @return array of Choice
-     */
-    private fun convertToChoices(
-        geckoChoices: Array<out GeckoChoice>
-    ): Array<Choice> {
-
-        return geckoChoices.map { geckoChoice ->
-            val choice = geckoChoice.toChoice()
-            choice
-        }.toTypedArray()
     }
 
     @Suppress("LongParameterList")
