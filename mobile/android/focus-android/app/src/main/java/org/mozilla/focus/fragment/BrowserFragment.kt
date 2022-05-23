@@ -22,6 +22,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.lifecycle.Lifecycle
 import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -403,6 +404,13 @@ class BrowserFragment :
                 disableDynamicBehavior(binding.engineView)
                 showAsFixed(requireContext(), binding.engineView)
             }
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(enabled: Boolean) {
+        pictureInPictureFeature?.onPictureInPictureModeChanged(enabled)
+        if (lifecycle.currentState == Lifecycle.State.CREATED) {
+            onBackPressed()
         }
     }
 
