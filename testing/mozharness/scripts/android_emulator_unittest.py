@@ -123,18 +123,6 @@ class AndroidEmulatorTest(
                 },
             ],
             [
-                ["--web-content-isolation-strategy"],
-                {
-                    "action": "store",
-                    "type": "int",
-                    "dest": "web_content_isolation_strategy",
-                    "default": 1,
-                    "help": "Strategy used to determine whether or not a particular site should"
-                    "load into a webIsolated content process, see "
-                    "fission.webContentIsolationStrategy.",
-                },
-            ],
-            [
                 ["--repeat"],
                 {
                     "action": "store",
@@ -200,7 +188,6 @@ class AndroidEmulatorTest(
         self.use_gles3 = True
         self.disable_e10s = c.get("disable_e10s")
         self.disable_fission = c.get("disable_fission")
-        self.web_content_isolation_strategy = c.get("web_content_isolation_strategy")
         self.extra_prefs = c.get("extra_prefs")
 
     def query_abs_dirs(self):
@@ -328,9 +315,6 @@ class AndroidEmulatorTest(
         if c["disable_fission"] and category not in ["gtest", "cppunittest"]:
             cmd.append("--disable-fission")
 
-        cmd.append(
-            "--web-content-isolation-strategy=%s" % c["web_content_isolation_strategy"]
-        )
         cmd.extend(["--setpref={}".format(p) for p in self.extra_prefs])
 
         if not (self.verify_enabled or self.per_test_coverage):
