@@ -45,19 +45,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-// Overriding the server URL is normally disabled on Beta and Release channels,
-// except under some conditions.
-XPCOMUtils.defineLazyGetter(this, "allowServerURLOverride", () => {
-  if (!AppConstants.RELEASE_OR_BETA) {
-    // Always allow to override the server URL on Nightly/DevEdition.
-    return true;
-  }
-
-  if (AppConstants.MOZ_APP_NAME === "thunderbird") {
-    // Always allow to override the server URL for Thunderbird.
-    return true;
-  }
-
+XPCOMUtils.defineLazyGetter(this, "isRunningTests", () => {
   const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
@@ -66,6 +54,24 @@ XPCOMUtils.defineLazyGetter(this, "allowServerURLOverride", () => {
     // usually true when running tests.
     return true;
   }
+  return false;
+});
+
+// Overriding the server URL is normally disabled on Beta and Release channels,
+// except under some conditions.
+XPCOMUtils.defineLazyGetter(this, "allowServerURLOverride", () => {
+  if (!AppConstants.RELEASE_OR_BETA) {
+    // Always allow to override the server URL on Nightly/DevEdition.
+    return true;
+  }
+
+  if (isRunningTests) {
+    return true;
+  }
+
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
 
   if (env.get("MOZ_REMOTE_SETTINGS_DEVTOOLS") === "1") {
     // Allow to override the server URL when using remote settings devtools.
@@ -78,7 +84,8 @@ XPCOMUtils.defineLazyGetter(this, "allowServerURLOverride", () => {
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gServerURL",
-  "services.settings.server"
+  "services.settings.server",
+  AppConstants.REMOTE_SETTINGS_SERVER_URL
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -96,7 +103,7 @@ var Utils = {
   get SERVER_URL() {
     return allowServerURLOverride
       ? gServerURL
-      : "https://firefox.settings.services.mozilla.com/v1";
+      : AppConstants.REMOTE_SETTINGS_SERVER_URL;
   },
 
   CHANGES_PATH: "/buckets/monitor/collections/changes/changeset",
@@ -105,6 +112,14 @@ var Utils = {
    * Logger instance.
    */
   log,
+
+  get LOAD_DUMPS() {
+    // Load dumps only if pulling data from the production server, or in tests.
+    return (
+      this.SERVER_URL == AppConstants.REMOTE_SETTINGS_SERVER_URL ||
+      isRunningTests
+    );
+  },
 
   get PREVIEW_MODE() {
     // We want to offer the ability to set preview mode via a preference
