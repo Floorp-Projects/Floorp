@@ -292,3 +292,26 @@ addAccessibleTask(
     iframe: isCacheEnabled,
   }
 );
+
+/**
+ * Test text with embedded chars
+ */
+addAccessibleTask(
+  `<p id='p1' style='font-family: monospace;'>hello <a href="google.com">world</a></p>
+   <p id='p2' style='font-family: monospace;'>hello<br><a href="google.com">world</a></p>
+   <div id='d3'><p></p>hello world</div>
+   <div id='d4'>hello world<p></p></div>
+   <div id='d5'>oh<p></p>hello world</div>`,
+  async function(browser, accDoc) {
+    info("Testing embedded chars");
+    await testTextNode(accDoc, browser, "p1");
+    await testTextNode(accDoc, browser, "p2");
+    await testTextNode(accDoc, browser, "d3");
+    await testTextNode(accDoc, browser, "d4");
+    await testTextNode(accDoc, browser, "d5");
+  },
+  {
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);
