@@ -45,7 +45,7 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
     initialize(conn, dbg) {
       protocol.Actor.prototype.initialize.call(this, conn);
       this._dbg = dbg;
-      this._attached = false;
+
       this._threadActor = null;
       this._transport = null;
 
@@ -53,6 +53,9 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
         onClose: this._onWorkerClose.bind(this),
         onError: this._onWorkerError.bind(this),
       };
+
+      this._dbg.addListener(this._dbgListener);
+      this._attached = true;
     },
 
     form() {
@@ -62,7 +65,11 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
         threadActor: this._threadActor,
         id: this._dbg.id,
         url: this._dbg.url,
-        traits: {},
+        traits: {
+          // @backward-compat { version 102 } WorkerDescriptor no longer implement attach method
+          //                  We can remove the trait once 102 is the release channel.
+          doNotAttach: true,
+        },
         type: this._dbg.type,
       };
       if (this._dbg.type === Ci.nsIWorkerDebugger.TYPE_SERVICE) {
@@ -83,22 +90,6 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
         }
       }
       return form;
-    },
-
-    attach() {
-      if (this._dbg.isClosed) {
-        return { error: "closed" };
-      }
-
-      if (!this._attached) {
-        this._dbg.addListener(this._dbgListener);
-        this._attached = true;
-      }
-
-      return {
-        type: "attached",
-        url: this._dbg.url,
-      };
     },
 
     detach() {
