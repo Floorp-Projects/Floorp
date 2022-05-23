@@ -190,6 +190,13 @@ class PictureInPictureLauncherChild extends JSWindowActorChild {
       return;
     }
 
+    if (!PictureInPictureChild.videoWrapper) {
+      PictureInPictureChild.videoWrapper = applyWrapper(
+        PictureInPictureChild,
+        video
+      );
+    }
+
     // All other requests to toggle PiP should open a new PiP
     // window
     const videoRef = ContentDOMReference.get(video);
@@ -1580,7 +1587,7 @@ class PictureInPictureChild extends JSWindowActorChild {
   }
 
   static videoIsMuted(video) {
-    return video.muted;
+    return this.videoWrapper.isMuted(video);
   }
 
   handleEvent(event) {
@@ -2562,6 +2569,24 @@ class PictureInPictureChildVideoWrapper {
         video.volume = volume;
       },
       validateRetVal: retVal => retVal == null,
+    });
+  }
+
+  /**
+   * OVERRIDABLE - calls the isMuted() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to get the mute
+   * state a video.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @param {Boolean} shouldMute
+   *  Boolean value true to mute the video, or false to unmute the video
+   */
+  isMuted(video) {
+    return this.#callWrapperMethod({
+      name: "isMuted",
+      args: [video],
+      fallback: () => video.muted,
+      validateRetVal: retVal => this.#isBoolean(retVal),
     });
   }
 
