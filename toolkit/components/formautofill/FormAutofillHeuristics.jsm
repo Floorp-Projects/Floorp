@@ -881,10 +881,7 @@ this.FormAutofillHeuristics = {
 
     // The heuristic below should be covered by fathom rules, so we can skip doing
     // it.
-    if (
-      FormAutofillUtils.isFathomCreditCardsEnabled() &&
-      creditCardRulesets.types.includes(detail.fieldName)
-    ) {
+    if (FormAutofillUtils.isFathomCreditCardsEnabled()) {
       fieldScanner.parsingIndex++;
       return true;
     }
@@ -1154,10 +1151,10 @@ this.FormAutofillHeuristics = {
       let fathomFields = fields.filter(r =>
         creditCardRulesets.types.includes(r)
       );
-      let matchedFieldName = scanner.getFathomField(element, fathomFields);
+      let fathomField = scanner.getFathomField(element, fathomFields);
       // At this point, use fathom's recommendation if it has one
-      if (matchedFieldName) {
-        return infoRecordWithFieldName(matchedFieldName);
+      if (fathomField) {
+        return infoRecordWithFieldName(fathomField);
       }
 
       // TODO: Do we want to run old heuristics for fields that fathom isn't confident?
