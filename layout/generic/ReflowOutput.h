@@ -89,6 +89,13 @@ struct OverflowAreas {
                                 aOverflowMargin);
   }
 
+  // Gets the overflow clipping rect for a given element given a rect to clip,
+  // the frame bounds, a set of axes, and the overflow margin.
+  static nsRect GetOverflowClipRect(const nsRect& aRectToClip,
+                                    const nsRect& aBounds,
+                                    PhysicalAxes aClipAxes,
+                                    const nsSize& aOverflowMargin);
+
   // Applies the overflow clipping to a given overflow rect, given the frame
   // bounds, and the physical axes on which to apply the overflow clip.
   static void ApplyOverflowClippingOnRect(nsRect& aOverflowRect,

@@ -686,21 +686,6 @@ var AddonTestUtils = {
       extensionsMLBF: BlocklistPrivate.ExtensionBlocklistMLBF,
     };
 
-    // Since we load the specified test data, we shouldn't let the
-    // packaged JSON dumps to interfere.
-    const pref = "services.settings.load_dump";
-    const backup = Services.prefs.getBoolPref(pref, null);
-    Services.prefs.setBoolPref(pref, false);
-    if (this.testScope) {
-      this.testScope.registerCleanupFunction(() => {
-        if (backup === null) {
-          Services.prefs.clearUserPref(pref);
-        } else {
-          Services.prefs.setBoolPref(pref, backup);
-        }
-      });
-    }
-
     for (const [dataProp, blocklistObj] of Object.entries(blocklistMapping)) {
       let newData = data[dataProp];
       if (!newData) {
