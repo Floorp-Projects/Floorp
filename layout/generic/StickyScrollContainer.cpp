@@ -345,7 +345,16 @@ void StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame,
 void StickyScrollContainer::PositionContinuations(nsIFrame* aFrame) {
   NS_ASSERTION(nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame),
                "Should be starting from the first continuation");
-  nsPoint translation = ComputePosition(aFrame) - aFrame->GetNormalPosition();
+  bool hadProperty;
+  nsPoint translation =
+      ComputePosition(aFrame) - aFrame->GetNormalPosition(&hadProperty);
+  if (NS_WARN_IF(!hadProperty)) {
+    // If the frame was never relatively positioned, don't move its position
+    // dynamically. There are a variety of frames for which `position` doesn't
+    // really apply like frames inside svg which would get here and be sticky
+    // only in one direction.
+    return;
+  }
 
   // Move all continuation frames by the same amount.
   for (nsIFrame* cont = aFrame; cont;
