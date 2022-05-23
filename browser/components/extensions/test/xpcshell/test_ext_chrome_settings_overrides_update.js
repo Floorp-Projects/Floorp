@@ -22,9 +22,6 @@ AddonTestUtils.createAppInfo(
   "1",
   "42"
 );
-// Override ExtensionXPCShellUtils.jsm's overriding of the pref as the
-// search service needs it.
-Services.prefs.clearUserPref("services.settings.default_bucket");
 
 // Similar to TestUtils.topicObserved, but returns a deferred promise that
 // can be resolved

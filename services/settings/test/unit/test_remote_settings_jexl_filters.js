@@ -132,12 +132,12 @@ add_task(async function test_support_of_preferences_filters() {
     {
       willMatch: true,
       filter_expression:
-        '"services.settings.default_bucket"|preferenceExists == true',
+        '"services.settings.poll_interval"|preferenceExists == true',
     },
     {
       willMatch: true,
       filter_expression:
-        '"services.settings.default_bucket"|preferenceIsUserSet == false',
+        '"services.settings.poll_interval"|preferenceIsUserSet == false',
     },
     {
       willMatch: true,

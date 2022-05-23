@@ -203,7 +203,8 @@ class Registers {
       (1 << Registers::x28) |  // PseudoStackPointer.
       (1 << Registers::ip0) |  // First scratch register.
       (1 << Registers::ip1) |  // Second scratch register.
-      (1 << Registers::tls) | (1 << Registers::lr) | (1 << Registers::sp);
+      (1 << Registers::tls) | (1 << Registers::lr) | (1 << Registers::sp) |
+      (1 << Registers::fp);
 
   static const SetType WrapperMask = VolatileMask;
 

@@ -44,6 +44,11 @@ add_task(async function testContentBlockingMessage() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
+  // Bug 1763367 - Filter out message like:
+  //  Cookie “name=value” has been rejected as third-party.
+  // that appear in a random order.
+  await setFilterState(hud, { text: "-has been rejected" });
+
   info(
     "Log a tracking protection message to check a single message isn't grouped"
   );
