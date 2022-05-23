@@ -12109,6 +12109,13 @@
   value: true
   mirror: always
 
+# Cancel outgoing requests from privileged about pages:
+# but only with scheme http(s) and contentpolicytype script
+- name: security.disallow_privilegedabout_remote_script_loads
+  type: bool
+  value: true
+  mirror: always
+
 # Disable preloaded static key pins by default.
 - name: security.cert_pinning.enforcement_level
   type: RelaxedAtomicUint32

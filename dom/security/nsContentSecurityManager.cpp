@@ -1152,6 +1152,64 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
 }
 
 /*
+ * Disallow about pages in the privilegedaboutcontext (e.g., password manager,
+ * newtab etc.) to load remote scripts. Regardless of whether this is coming
+ * from the contentprincipal or the systemprincipal.
+ */
+/* static */
+nsresult nsContentSecurityManager::CheckAllowLoadInPrivilegedAboutContext(
+    nsIChannel* aChannel) {
+  // bail out if check is disabled
+  if (StaticPrefs::security_disallow_privilegedabout_remote_script_loads()) {
+    return NS_OK;
+  }
+
+  nsAutoCString remoteType;
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsIParentChannel> parentChannel;
+    NS_QueryNotificationCallbacks(aChannel, parentChannel);
+    if (parentChannel) {
+      parentChannel->GetRemoteType(remoteType);
+    }
+  } else {
+    remoteType.Assign(
+        mozilla::dom::ContentChild::GetSingleton()->GetRemoteType());
+  }
+
+  // only perform check for privileged about process
+  if (!remoteType.Equals(PRIVILEGEDABOUT_REMOTE_TYPE)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  ExtContentPolicyType contentPolicyType =
+      loadInfo->GetExternalContentPolicyType();
+  // only check for script loads
+  if (contentPolicyType != ExtContentPolicy::TYPE_SCRIPT) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> finalURI;
+  NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalURI));
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(finalURI);
+
+  bool isLocal;
+  NS_URIChainHasFlags(innerURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
+                      &isLocal);
+  // We allow URLs that are URI_IS_LOCAL (but that includes `data`
+  // and `blob` which are also undesirable.
+  if ((isLocal) && (!innerURI->SchemeIs("data")) &&
+      (!innerURI->SchemeIs("blob"))) {
+    return NS_OK;
+  }
+  MOZ_ASSERT(
+      false,
+      "Disallowing privileged about process to load scripts on HTTP(S).");
+  aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
+  return NS_ERROR_CONTENT_BLOCKED;
+}
+
+/*
  * Every protocol handler must set one of the five security flags
  * defined in nsIProtocolHandler - if not - deny the load.
  */
@@ -1269,6 +1327,9 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CheckAllowFileProtocolScriptLoad(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CheckAllowLoadInPrivilegedAboutContext(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CheckChannelHasProtocolSecurityFlag(aChannel);
