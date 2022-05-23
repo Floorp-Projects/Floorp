@@ -1141,6 +1141,9 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 
       case __NR_ioctl: {
         Arg<unsigned long> request(1);
+#ifdef MOZ_ASAN
+        Arg<int> fd(0);
+#endif // MOZ_ASAN
         // Make isatty() return false, because none of the terminal
         // ioctls will be allowed; libraries sometimes call this for
         // various reasons (e.g., to decide whether to emit ANSI/VT
@@ -1150,6 +1153,10 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         // This is required by ffmpeg
         return If(AnyOf(request == TCGETS, request == TIOCGWINSZ),
                   Error(ENOTTY))
+#ifdef MOZ_ASAN
+            // ASAN's error reporter wants to know if stderr is a tty.
+            .ElseIf(fd == STDERR_FILENO, Error(ENOTTY))
+#endif // MOZ_ASAN
             .Else(SandboxPolicyBase::EvaluateSyscall(sysno));
       }
 
@@ -1160,12 +1167,6 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         return SandboxPolicyBase::EvaluateSyscall(sysno);
 
 #ifdef MOZ_ASAN
-        // ASAN's error reporter wants to know if stderr is a tty.
-      case __NR_ioctl: {
-        Arg<int> fd(0);
-        return If(fd == STDERR_FILENO, Error(ENOTTY)).Else(InvalidSyscall());
-      }
-
         // ...and before compiler-rt r209773, it will call readlink on
         // /proc/self/exe and use the cached value only if that fails:
       case __NR_readlink:
@@ -1176,7 +1177,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         // (See also bug 1081242 comment #7.)
       CASES_FOR_stat:
         return Error(ENOENT);
-#endif
+#endif // MOZ_ASAN
 
       default:
         return SandboxPolicyBase::EvaluateSyscall(sysno);
