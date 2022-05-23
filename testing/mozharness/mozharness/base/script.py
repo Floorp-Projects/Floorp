@@ -1543,7 +1543,7 @@ class ScriptMixin(PlatformMixin):
                 return -1
             self.info("Running command: %s in %s" % (command, cwd))
         else:
-            self.info("Running command: %s" % command)
+            self.info("Running command: %s" % (command,))
         if isinstance(command, list) or isinstance(command, tuple):
             self.info("Copy/paste: %s" % subprocess.list2cmdline(command))
         shell = True
@@ -1662,7 +1662,7 @@ class ScriptMixin(PlatformMixin):
             if _fail:
                 self.return_code = fatal_exit_code
                 self.fatal(
-                    "Halting on failure while running %s" % command,
+                    "Halting on failure while running %s" % (command,),
                     exit_code=fatal_exit_code,
                 )
         if return_type == "num_errors":
