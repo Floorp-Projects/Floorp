@@ -405,3 +405,5 @@ endif # ! WINNT
 ifeq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
 export BUILD_VERBOSE_LOG = 1
 endif
+
+MOZILLA_OFFICIAL=1
