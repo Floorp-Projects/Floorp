@@ -346,7 +346,7 @@ this.DateTimeBoxWidget = class {
     field.textContent = aPlaceHolder;
     field.placeholder = aPlaceHolder;
     field.setAttribute("aria-valuetext", "");
-    field.tabIndex = this.mInputElement.tabIndex;
+    field.tabIndex = this.editFieldTabIndex();
 
     field.setAttribute("readonly", this.mInputElement.readOnly);
     field.setAttribute("disabled", this.mInputElement.disabled);
@@ -447,6 +447,13 @@ this.DateTimeBoxWidget = class {
     this.mIsPickerOpen = aIsOpen;
   }
 
+  editFieldTabIndex() {
+    if (this.mInputElement.disabled) {
+      return -1;
+    }
+    return this.mInputElement.tabIndex;
+  }
+
   updateEditAttributes() {
     this.log("updateEditAttributes");
 
@@ -465,8 +472,8 @@ this.DateTimeBoxWidget = class {
       child.disabled = this.mInputElement.disabled;
       child.readOnly = this.mInputElement.readOnly;
 
-      // tabIndex works on all elements
-      child.tabIndex = this.mInputElement.tabIndex;
+      // tabIndex as a property works on all relevant elements.
+      child.tabIndex = this.editFieldTabIndex();
     }
 
     this.mResetButton.disabled =
