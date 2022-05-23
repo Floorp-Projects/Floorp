@@ -24,11 +24,12 @@ add_task(function() {
       audioElement.onerror = function() {
       let err = this.error;
       let message = err.message;
+
       info(`Got Audio Error -> ${message}`);
-      ok(message.includes("404"), "Same-Origin Error Message may contain status data");
+      ok(message.includes("404"), "Same-Origin Error Message should contain status data");
       resolve();
     };
-  audioElement.src = "/media/test.mp3";
+  audioElement.src = "http://mochi.test:8888/media/test.mp3";
   });
 });
 
@@ -41,7 +42,39 @@ add_task(function() {
       let message = err.message;
 
       info(`Got Audio Error -> ${message}`);
-      is(message,CONST_GENERIC_ERROR_MESSAGE, "Cross-Origin Error Message is only Generic");
+      is(message, CONST_GENERIC_ERROR_MESSAGE, "Cross-Origin Same-Site Error Message should be generic");
+      resolve();
+    };
+  audioElement.src = "http://mochi.test:9999/media/test.mp3";
+  });
+});
+
+add_task(function() {
+  return new Promise((resolve) => {
+      let audioElement = document.getElementById("audio");
+
+      audioElement.onerror = function() {
+      let err = this.error;
+      let message = err.message;
+
+      info(`Got Audio Error -> ${message}`);
+      is(message, CONST_GENERIC_ERROR_MESSAGE, "Cross-Origin Same-Site Error Message should be generic");
+      resolve();
+    };
+  audioElement.src = "http://sub.mochi.test:8888/media/test.mp3";
+  });
+});
+
+add_task(function() {
+  return new Promise((resolve) => {
+      let audioElement = document.getElementById("audio");
+
+      audioElement.onerror = function() {
+      let err = this.error;
+      let message = err.message;
+
+      info(`Got Audio Error -> ${message}`);
+      is(message, CONST_GENERIC_ERROR_MESSAGE, "Cross-Origin Error Message should be generic");
       resolve();
     };
   audioElement.src = "https://example.com/media/test.mp3";
