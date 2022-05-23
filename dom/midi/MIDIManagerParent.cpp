@@ -17,6 +17,11 @@ void MIDIManagerParent::Teardown() {
   }
 }
 
+mozilla::ipc::IPCResult MIDIManagerParent::RecvRefresh() {
+  MIDIPlatformService::Get()->Refresh();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult MIDIManagerParent::RecvShutdown() {
   Teardown();
   Unused << Send__delete__(this);

@@ -11,6 +11,7 @@
 #include "mozilla/dom/MIDIPortParent.h"
 #include "mozilla/dom/MIDIPlatformRunnables.h"
 #include "mozilla/dom/MIDIUtils.h"
+#include "mozilla/dom/midi/midir_impl_ffi_generated.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
 #include "nsIThread.h"
@@ -78,6 +79,14 @@ void midirMIDIPlatformService::AddPort(const nsString* aId,
   MIDIPlatformService::Get()->AddPortInfo(port);
 }
 
+// static
+void midirMIDIPlatformService::RemovePort(const nsString* aId,
+                                          const nsString* aName, bool aInput) {
+  MIDIPortType type = aInput ? MIDIPortType::Input : MIDIPortType::Output;
+  MIDIPortInfo port(*aId, *aName, u""_ns, u""_ns, static_cast<uint32_t>(type));
+  MIDIPlatformService::Get()->RemovePortInfo(port);
+}
+
 void midirMIDIPlatformService::Init() {
   if (mImplementation) {
     return;
@@ -115,6 +124,10 @@ void midirMIDIPlatformService::CheckAndReceive(const nsString* aId,
   if (gBackgroundThread) {
     gBackgroundThread->Dispatch(r, NS_DISPATCH_NORMAL);
   }
+}
+
+void midirMIDIPlatformService::Refresh() {
+  midir_impl_refresh(mImplementation, AddPort, RemovePort);
 }
 
 void midirMIDIPlatformService::Open(MIDIPortParent* aPort) {
