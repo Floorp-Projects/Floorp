@@ -29,7 +29,7 @@
     <!-- Description for navigation permission. -->
     <string name="mozac_feature_addons_permissions_web_navigation_description">گشت کاری کے دوران برائزر کی سرگرمی کی رسائی</string>
     <!-- Description for bookmarks permission. -->
-    <string name="mozac_feature_addons_permissions_bookmarks_description">نشانیاں پڑھیں اور ترمیم کریں</string>
+    <string name="mozac_feature_addons_permissions_bookmarks_description">بک مارک پڑھیں اور ترمیم کریں</string>
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">رازداری سیٹکگیں پڑھیں اور ترمیم کریں</string>
     <!-- Description for browser_data permission. -->

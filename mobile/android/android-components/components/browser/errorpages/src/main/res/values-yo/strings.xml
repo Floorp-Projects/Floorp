@@ -14,4 +14,232 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Ìsomọ́ra Onífọ̀kànbalẹ̀ Kùnà</string>
 
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>ojú-ìwé tí ò ń gbìyànjú àti wò, kò ṣe é fi hàn báyìí nítorí pé ìjẹ́-òtítọ́ data tí a gbà ni a kò lè fi ìdí rẹ̀ múlẹ̀. </li>
+        <li> Jọ̀wọ́ kàn sí ẹni tí ó ni ìkànnì náà láti fi ìsòro yìí tó wọn létí.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Ìsomọ́ra onífọkànbalẹ̀ kùnà</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Ìsòro yìí lè jẹ́ ìfisáfà ṣiṣẹ́ tàbí kí ẹlòmíràn fẹ́ gbáwọ̀ sáfà wọ̀.</li>
+        <li>Bí o bá ti ṣe àṣeyege àti wọlé sórí sáfà yìí tẹ́lẹ̀ rí, àsìṣe náà lè jẹ́ èyí tí kò ní pẹ́, ó sì le gbìyànjú sí i bó bá yá .</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Ìjìnlẹ̀…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Ẹnìkan le máa gbìyànjú àti gbáwọ̀ ìkànnì náà wọ̀, má tẹ̀síwájú.</label>
+        <br><br>
+        <label>Ìkànnì ṣe ìfidánilójú ìdánimọ̀ wọn pẹ̀lú ẹ̀rí. %1$s má gbẹ́kẹ̀lé  <b>%2$s</b> nítorí pé kìí ṣe ẹni mímọ̀ ni ó fi ìwé-ẹ̀rí rẹ̀ lóde, ìfọ́wọ́sí-ara-ẹni ni ìwé-ẹ̀rí náà jẹ́, tàbí ìkànnì náà kò fi ojúlówó ìwé-ẹ̀rí abàárín ránṣẹ́.</label>
+    ]]></string>
+
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Padà Sẹ́yìn (Ìmọ̀ràn tó dára)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Gba Ewu náà kí o sì tẹ̀síwájú</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Akùdé bá ìsomọ́ra náà</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>ìtàkùn ìgbáyé so mọ́ra dáadáa, ṣùgbọ́n àkùdé bá ìsomọ́ra náà nígbà tí à ń fi ìfitónilétí ránṣẹ́. Jọ̀wọ́ gbìyànjú sí i.</p>
+      <ul>
+        <li> Ìkànnì náà lè má siṣẹ́ fún ìgbà díẹ̀ tàbí kí ọwọ́ kún un. Gbìyànjú rẹ̀ sí i ní àìpẹ́.</li>
+        <li>Bí o kò bá lè jẹ́ kí ojú-ìwé rẹ siṣẹ́, yẹ ohun tí data rẹ fi ń siṣẹ́ wò tàbí ìsomọ́ Wi-Fi rẹ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Àkókò ìsomọ́ ti kọjá</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Ìkànnì tí ó bèèrè kò dáhùn sí ìsomọ́ ti o béèrè àti pé ìtàkùn àgbáyé ti dúró iṣẹ́, ó ń dúró fún èsì.</p>
+      <ul>
+        <li>Ǹjẹ́ ó ṣe é ṣe kí sáfà máa dojúkọ ìpè púpọ̀ tàbí kí ó má ṣiṣẹ́ fún ìgbà díẹ̀? Gbìyànjú bí ó bá yá.</li>
+        <li>Ǹjẹ́ o ní ìṣòro àti sàwárí àwọn ìkànnì mìíràn? Yẹ ohun tí o fi ṣe àsomọ́ wò.</li>
+        <li>Ǹjẹ́ ìdáabòbò ohun èlò rẹ tàbí nẹ́tíwòkì jẹ́ láti ọwọ́ ojúlówó tàbí asojú? àsìsẹ ààtò lè nípa lórí wíwá nǹkna lórí ìkànnì.</li>
+        <li>O sì ní ìsòro síbẹ̀? Kàn sí alákòóso nẹ́tiwọkì rẹ tàbí àpèse íntánẹ́ẹ̀tì rẹ fún ìrànlọ́wọ́.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Kùnà láti somọ́ra</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Ìkànnì náà lè má sí ní àrọ́wọ́tó fún ìgbà díẹ̀ tàbí kí ọwọ́ kún un. Gbìyànjú sí i láìpẹ́.</li>
+        <li>Bí o kò bá lè jẹ́ kí ojú-ìwé siṣẹ́, yẹ ohun èlò data rẹ wò tàbí àsomọ́ Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Èsì tí a kò retí láti ọ̀dọ̀ sáfà</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Ìkànnì ń fèsì sí nẹ́tíwọ̀kì lọ́nà ti a kò retí àti pé ìtàkùn àgbáyé kò le tẹ̀síwájú.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Ojú-ìwé náà kò ṣe atọ̀nà dáadáa</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>ìtàkùn àgbáyé dáwọ́ àtimú àwọn ohun tí a bèèrè dúró. Ìkànnì náà ń ṣe àtúntọ́sọ́nà lọ́nà tí kò lè parí láéláé.</p>
+      <ul>
+        <li>Ǹjẹ́ o ti ṣo ọ́ di aláìlágbára tàbí dínà àwọn adásiṣẹ́ tí ìkànnì yìí nílò?</li>
+        <li>Bí gbígba àwọn adásiṣẹ́ ìkànnì yìí kò bá yanjú ìsòro yìí, a jẹ́ pé ó ṣe é ṣe kí ó jẹ́ ìsòro ìfisáfàṣiṣẹ́ ni, kìí sì ṣe ohun èlò rẹ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Ipò àìsí lórí íntánẹ́ẹ̀tì </string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Ìtàkùn-àgbáyé ń ṣiṣẹ́ lóríipò àìsí lórí íntánẹ́ẹ̀tì, nítorí náà, kò lè so mọ́ ohun tí a bèèrè fún.</p>
+      <ul>
+        <li>Ǹjẹ́ ohun èlò náà wà ní sísomọ́ nẹ́tíwọ̀kì tó ń ṣiṣẹ́?</li>
+        <li>Tẹ  “Gbìyànjú sí i” láti bọ́ sí ipo íntánẹ́ẹ̀tì, kí o si ojú-ìwé náà siṣẹ́ lẹ́ẹ̀kan sí.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Ojú yìí kò ṣiṣẹ́ nítorí ààbò</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Àdírẹ́sì tí o bèèrè fún nílò ojú kan pàtó (e.g., <q>mozilla.org:80</q> fún ojú 80 lórí mozilla.org) ni a máa ń sábà lò fún àwọn ìdí <em>yàtọ̀</em> sí ìwá nǹkan kíri orí ìkànnì. Ìtàkùn-àgbáyé ti gbégi lé ìbéérè náà fún ààbò rẹ.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Ìsomọ́ra di àtúntò </string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Akùdé bá òpónà nẹ́tíwọ̀kì nígbà tí ìdúnàándúrà ìsomọ́ra ń lọ lọ́wọ́. Jọ̀wọ́ gbìyànjú sí i.</p>
+      <ul>
+        <li>Ìkànnì náà lè má siṣẹ́ fún ìgbà díẹ̀ tàbí kí ọwọ́ kún un. Gbìyànjú lẹ́yìn ìgbà díẹ̀.</li>
+        <li>Bí o kò bá lè jẹ́ kí ojú ìwé kankan siṣẹ́, yẹ ohun èlò data rẹ wò tàbí ìsomọ́ Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Ẹ̀yà fáìlì tó léwu</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Jọ̀wọ́ kàn sí àwọn tí ó ni ìkànnì láti fi ìsòro yìí tó wọn létí.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Àṣìṣe ìbàjẹ́ àkóónú </string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Ojú-ìwé tí ò ń gbìyànjú àti wò kò ṣe é fihàn nítorí pé a rí àṣìṣe kan nínú data fífiránṣẹ́.</p>
+      <ul>
+        <li>Jọ̀wọ́ kan sí àwọn tí ó ni ìkànnì láti fi ìsòro yìí tó wọn létí.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Àkóónú ti bàjẹ́</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Ojú-ìwé tí ò ń gbíyànjú àti wò kò ṣe é fi hàn nítorí pé, a rí àṣìṣe kan nínú ìfidátà ránsẹ́.</p>
+      <ul>
+        <li>Jọ̀wọ́ kàn sí àwọn tó ni ìkànnì láti fi ìsòro yìí tó wọn létí.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Àṣìṣe ìṣàrokò àkóónú </string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Ojú-iwé tí ò ń gbìyànjú àti wò kò ṣe é fi hàn nítorí tí ó le ìsọdikékeré alápiṣeégbà tàbí aláìfọwọ́sí.</p>
+      <ul>
+        <li>Jọ̀wọ́ kàn sí àwọn tí wọ́n ni ìkànnì láti fi ìsòro yìí tó wọn létí.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">A kò rí àdírẹ́sì </string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Ìtàkùn-àgbáyé kò rí agbàlejò sáfà fún àdírẹ́sì.</p>
+      <ul>
+        <li>yẹ àdírẹ́sì náà wò fún àṣìtẹ̀ gẹ́gẹ́ bí i 
+          <strong>ww</strong>.example.com dípò
+          <strong>www</strong>.example.com.</li>
+        <li>Bí o kò bá lè mú kí ojú ìwé kankan ṣiṣẹ́, yẹ ohun èlò data rẹ wò tàbí ìsomọ́ Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Kò sí ìsomọ́ íntánẹ́ẹ̀tì </string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Yẹ àsomọ́ nẹ́tiwọ̀kì rẹ wò tàbí gbìyànjú àti mú ojú-ìwé ṣiṣẹ́ lẹ́yìn ìgbà díẹ̀ </string>
+
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Tún mú un ṣiṣẹ́</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Àdírẹ́sì aláìṣeégbà </string>
+
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Àdírẹ́sì tí o pèsè kò sí ní ìlànà tí a dámọ̀. Jọ̀wọ́ yẹ àmì ìfi-ọ̀gangan-hàn wò fún àṣìṣe, kì ò sì gbìyànjú lẹ́ẹ̀kan sí i.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Àdírẹ́sì náà kò ṣe é gbà</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Àdírẹ́sì ìkànnì ni a sábà máa ń kọ bí i <strong>http://www.example.com/</strong></li>
+        <li>Rí i dájú pé àkámọ́ asùnsọ́wọ́-wájú ni ò ń lò (b.a. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Ìlànà tí a kò mọ̀ </string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Àdírẹ́sì náà sọ ìlànà kan (e.g., <q>wxyz://</q>) ìtàkùn-àgbáyé kò dá a mọ̀, nítorí náà àtàkùn-àgbáyé kò lè so ó mọ́ ìkànnì.</p>
+      <ul>
+        <li>Ǹjẹ́ ò gbìyànjú àti ní àǹfààní sí ìbánisọ̀rọ̀-alárànbarà tàbí àwọn iṣẹ́ mìíràn tí kìí ṣe alátẹ̀jíṣẹ́? Wo ìkànnì náà fún àwọn ìbéérè tí ó tún kù.</li>
+        <li>Àwọn ìlànà mìíràn a máa alàgàta amẹ́rọṣiṣẹ́  kí ìtàkùn-àgbáyé tó lè dá wọn mọ̀.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">A kò rí fáìlì </string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Ǹjẹ́ a lè ti pa orúkọ nǹkan náà dà, yọ  ọ́ kúrò tàbí mú un lọ síbòmíràn?</li>
+        <li>Ǹjẹ́ àṣìṣe wa lè wà níbi sípẹ́lì, ìlo-lẹ́tà-ńlá, tàbí àṣìtẹ̀ níbi àdírẹ́sì bí?</li>
+        <li>Ǹjẹ́ o ní ìyọ́nda tótó fún ohun tí ò ń bèèrè?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Ìdènà wà sí àṣe sí fáìlì náà </string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Ó ṣe é ṣe kí wọ́n ti yọ ọ́, gbé e tàbí àṣẹ sí fáìlì lè máa dènà àti wọlé.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Asojú sáfà kọ asomọ́ra</string>
+
     </resources>
