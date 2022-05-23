@@ -87,7 +87,6 @@ this.addEventListener("message", async function(event) {
           postMessage(JSON.stringify({ type: "worker-thread-attached" }));
         }
       );
-      workerTargetActor.attach();
 
       // Step 5: Send a response packet to the parent to notify
       // it that a connection has been established.
