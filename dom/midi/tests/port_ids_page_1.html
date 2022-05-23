@@ -7,11 +7,11 @@
 <body>
 <script>
     async function get_first_input_id() {
-    let access = await navigator.requestMIDIAccess({ sysex: false });
-    const inputs = access.inputs.values();
-    const input = inputs.next();
-    return input.value.id;
-}
+      let access = await navigator.requestMIDIAccess({ sysex: false });
+      const inputs = access.inputs.values();
+      const input = inputs.next();
+      return input.value.id;
+  }
 </script>
 </body>
 </html>
