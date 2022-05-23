@@ -125,7 +125,7 @@ AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs) {
 #else
   MOZ_ASSERT(!regs.has(BaselineStackReg));
 #endif
-  regs.take(BaselineFrameReg);
+  regs.takeUnchecked(BaselineFrameReg);
   regs.take(ICStubReg);
 
   switch (numInputs) {

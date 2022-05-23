@@ -6543,9 +6543,7 @@ void LIRGenerator::visitIonToWasmCall(MIonToWasmCall* ins) {
 
   // Also prevent register allocation from using wasm's FramePointer, in
   // non-profiling mode.
-  LDefinition fp = gen->isProfilerInstrumentationEnabled()
-                       ? LDefinition::BogusTemp()
-                       : tempFixed(FramePointer);
+  LDefinition fp = LDefinition::BogusTemp();
 
   // Note that since this is a LIR call instruction, regalloc will prevent
   // the use*AtStart below from reusing any of the temporaries.

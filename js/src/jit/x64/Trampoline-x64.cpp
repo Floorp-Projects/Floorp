@@ -219,8 +219,8 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   {
     // Handle Interpreter -> Baseline OSR.
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    MOZ_ASSERT(!regs.has(rbp));
     regs.takeUnchecked(OsrFrameReg);
-    regs.take(rbp);
     regs.take(reg_code);
 
     // Ensure that |scratch| does not end up being JSReturnOperand.
