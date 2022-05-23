@@ -20,10 +20,40 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: version 2.14.290
+  release: commit 38c82357b247199b11fb573d0a3d4201347a47fc
+  revision: 38c82357b247199b11fb573d0a3d4201347a47fc
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
   # Multiple licenses can be specified (as a YAML list)
   # A "LICENSE" file must exist containing the full license text
   license: Apache-2.0
+
+vendoring:
+  url: https://github.com/mozilla/pdf.js
+  source-hosting: github
+  skip-vendoring-steps: ['fetch', 'update-moz-build']
+
+  keep:
+    - chrome.manifest
+    - components.conf
+    - jar.mn
+    - update.sh
+    - test
+
+  update-actions:
+    - action: run-script
+      script: 'update.sh'
+      cwd: '{yaml_dir}'
+
+updatebot:
+    maintainer-phab: tjr
+    maintainer-bz: tom@mozilla.com
+    fuzzy-query: "'debug | 'opt"
+    fuzzy-paths:
+      - toolkit/components/pdfjs/test
+      - browser/base/content/test/static
+    tasks:
+      - type: vendoring
+        enabled: true
+        frequency: every
