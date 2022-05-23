@@ -179,11 +179,6 @@ async function testStorageAccessBlockedGrouping(groupLabel) {
 
   await clearOutput(hud);
 
-  // Bug 1763367 - Filter out message like:
-  //  Cookie “name=value” has been rejected as third-party.
-  // that appear in a random order.
-  await setFilterState(hud, { text: "-has been rejected" });
-
   const getWarningMessage = url => groupLabel.replace("<URL>", url);
 
   const onStorageAccessBlockedMessage = waitForMessage(
