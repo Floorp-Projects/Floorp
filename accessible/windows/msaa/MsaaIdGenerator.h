@@ -39,12 +39,6 @@ class sdnAccessible;
  */
 class MsaaIdGenerator {
  public:
-  ~MsaaIdGenerator() {
-    if (mReleaseIDTimer) {
-      mReleaseIDTimer->Cancel();
-    }
-  }
-
   uint32_t GetID();
   void ReleaseID(NotNull<MsaaAccessible*> aMsaaAcc);
   void ReleaseID(NotNull<sdnAccessible*> aSdnAcc);
@@ -60,6 +54,7 @@ class MsaaIdGenerator {
  private:
   bool ReleaseID(uint32_t aID);
   uint32_t ResolveContentProcessID();
+  void ReleasePendingIDs();
 
  private:
   UniquePtr<IDSet> mIDSet;
