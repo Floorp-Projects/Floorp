@@ -7083,3 +7083,15 @@
   outline: none !important;
   outline-offset: -1px !important;
 }
+
+#tools-menu {
+  --menuitem-image: url("chrome://global/skin/icons/developer.svg");
+}
+
+#view-menu{
+  --menuitem-image: url("chrome://browser/skin/window.svg");
+}
+
+#file-menu {
+  --menuitem-image: url("chrome://global/skin/icons/edit-copy.svg");
+}
