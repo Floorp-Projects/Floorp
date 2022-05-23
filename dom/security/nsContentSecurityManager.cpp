@@ -996,7 +996,14 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
 nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
     nsIChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-
+  nsCOMPtr<nsIPrincipal> inspectedPrincipal = loadInfo->GetLoadingPrincipal();
+  if (!inspectedPrincipal) {
+    return NS_OK;
+  }
+  // Check if we are actually dealing with a privileged request
+  if (!inspectedPrincipal->IsSystemPrincipal()) {
+    return NS_OK;
+  }
   // loads with the allow flag are waived through
   // until refactored (e.g., Shavar, OCSP)
   if (loadInfo->GetAllowDeprecatedSystemRequests()) {
@@ -1004,23 +1011,8 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
   }
   ExtContentPolicyType contentPolicyType =
       loadInfo->GetExternalContentPolicyType();
-
   // For now, let's not inspect top-level document loads
   if (contentPolicyType == ExtContentPolicy::TYPE_DOCUMENT) {
-    return NS_OK;
-  }
-
-  // We mostly care about the triggeringPrincipal,
-  // unless this is a TYPE_DOCUMENT request, which has none.
-  nsCOMPtr<nsIPrincipal> inspectedPrincipal;
-  if (contentPolicyType != ExtContentPolicy::TYPE_DOCUMENT) {
-    inspectedPrincipal = loadInfo->GetLoadingPrincipal();
-  } else {
-    inspectedPrincipal = loadInfo->TriggeringPrincipal();
-  }
-
-  // Check if we are actually dealing with a SystemPrincipal request
-  if (!inspectedPrincipal || !inspectedPrincipal->IsSystemPrincipal()) {
     return NS_OK;
   }
 
@@ -1046,12 +1038,7 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
   }
   // For about: and extension-based URIs, which don't get
   // URI_IS_UI_RESOURCE, first remove layers of view-source:, if present.
-  while (finalURI && finalURI->SchemeIs("view-source")) {
-    nsCOMPtr<nsINestedURI> nested = do_QueryInterface(finalURI);
-    if (nested) {
-      nested->GetInnerURI(getter_AddRefs(finalURI));
-    }
-  }
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(finalURI);
 
   nsAutoCString remoteType;
   if (XRE_IsParentProcess()) {
@@ -1065,43 +1052,52 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
         mozilla::dom::ContentChild::GetSingleton()->GetRemoteType());
   }
 
-  // This is our escape hatch, if things break in release.
-  // We expect to remove the pref in bug 1638770
-  bool cancelNonLocalSystemPrincipal = StaticPrefs::
-      security_cancel_non_local_loads_triggered_by_systemprincipal();
-
   // GetInnerURI can return null for malformed nested URIs like moz-icon:trash
-  if (!finalURI) {
-    MeasureUnexpectedPrivilegedLoads(loadInfo, finalURI, remoteType);
-    if (cancelNonLocalSystemPrincipal) {
+  if (!innerURI) {
+    MeasureUnexpectedPrivilegedLoads(loadInfo, innerURI, remoteType);
+    if (StaticPrefs::security_disallow_privileged_no_finaluri_loads()) {
       aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
       return NS_ERROR_CONTENT_BLOCKED;
     }
+    return NS_OK;
   }
   // loads of userContent.css during startup and tests that show up as file:
-  if (finalURI->SchemeIs("file")) {
+  if (innerURI->SchemeIs("file")) {
     if ((contentPolicyType == ExtContentPolicy::TYPE_STYLESHEET) ||
         (contentPolicyType == ExtContentPolicy::TYPE_OTHER)) {
       return NS_OK;
     }
   }
-  // (1)loads from within omni.ja and system add-ons use jar:
+  // (1) loads from within omni.ja and system add-ons use jar:
   // this is safe to allow, because we do not support remote jar.
   // (2) about: resources are always allowed: they are part of the build.
   // (3) extensions are signed or the user has made bad decisions.
-  if (finalURI->SchemeIs("jar") || finalURI->SchemeIs("about") ||
-      finalURI->SchemeIs("moz-extension")) {
+  if (innerURI->SchemeIs("jar") || innerURI->SchemeIs("about") ||
+      innerURI->SchemeIs("moz-extension")) {
     return NS_OK;
   }
+
+  nsAutoCString requestedURL;
+  innerURI->GetAsciiSpec(requestedURL);
+  MOZ_LOG(sCSMLog, LogLevel::Warning,
+          ("SystemPrincipal should not load remote resources. URL: %s, type %d",
+           requestedURL.get(), int(contentPolicyType)));
+
+  // The load types that we want to disallow, will extend over time and
+  // prioritized by risk. The most risky/dangerous are load-types are documents,
+  // subdocuments, scripts and styles in that order. The most dangerous URL
+  // schemes to cover are HTTP, HTTPS, data, blob in that order. Meta bug
+  // 1725112 will track upcoming restrictions
+
   // Telemetry for unexpected privileged loads.
   // pref check & data sanitization happens in the called function
-  MeasureUnexpectedPrivilegedLoads(loadInfo, finalURI, remoteType);
+  MeasureUnexpectedPrivilegedLoads(loadInfo, innerURI, remoteType);
 
   // Relaxing restrictions for our test suites:
-  // (1) AreNonLocalConnectionsDisabled() disables network, so http://mochitest
-  // is actually local and allowed. (2) The marionette test framework uses
-  // injections and data URLs to execute scripts, checking for the environment
-  // variable breaks the attack but not the tests.
+  // (1) AreNonLocalConnectionsDisabled() disables network, so
+  // http://mochitest is actually local and allowed. (2) The marionette test
+  // framework uses injections and data URLs to execute scripts, checking for
+  // the environment variable breaks the attack but not the tests.
   if (xpc::AreNonLocalConnectionsDisabled() ||
       mozilla::EnvHasValue("MOZ_MARIONETTE")) {
     bool disallowSystemPrincipalRemoteDocuments = Preferences::GetBool(
@@ -1116,61 +1112,41 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
     return NS_OK;
   }
 
-  nsAutoCString requestedURL;
-  finalURI->GetAsciiSpec(requestedURL);
-  MOZ_LOG(sCSMLog, LogLevel::Warning,
-          ("SystemPrincipal should not load remote resources. URL: %s, type %d",
-           requestedURL.get(), int(contentPolicyType)));
-
-  // The load types that we want to disallow, will extend over time and
-  // prioritized by risk. The most risky/dangerous are load-types are documents,
-  // subdocuments, scripts and styles in that order. The most dangerous URL
-  // schemes to cover are HTTP, HTTPS, data, blob in that order. Meta bug
-  // 1725112 will track upcoming restrictions
   if (contentPolicyType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
     if (StaticPrefs::security_disallow_privileged_https_subdocuments_loads() &&
-        (finalURI->SchemeIs("http") || finalURI->SchemeIs("https"))) {
-#ifdef DEBUG
-      MOZ_CRASH("Disallowing SystemPrincipal load of subdocuments on HTTP(S).");
-#endif
+        (innerURI->SchemeIs("http") || innerURI->SchemeIs("https"))) {
+      MOZ_ASSERT(
+          false,
+          "Disallowing SystemPrincipal load of subdocuments on HTTP(S).");
       aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
       return NS_ERROR_CONTENT_BLOCKED;
     }
     if ((StaticPrefs::security_disallow_privileged_data_subdocuments_loads()) &&
-        (finalURI->SchemeIs("data"))) {
-#ifdef DEBUG
-      MOZ_CRASH(
+        (innerURI->SchemeIs("data"))) {
+      MOZ_ASSERT(
+          false,
           "Disallowing SystemPrincipal load of subdocuments on data URL.");
-#endif
       aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
       return NS_ERROR_CONTENT_BLOCKED;
     }
   }
   if (contentPolicyType == ExtContentPolicy::TYPE_SCRIPT) {
     if ((StaticPrefs::security_disallow_privileged_https_script_loads()) &&
-        (finalURI->SchemeIs("http") || finalURI->SchemeIs("https"))) {
-#ifdef DEBUG
-      MOZ_CRASH("Disallowing SystemPrincipal load of scripts on HTTP(S).");
-#endif
+        (innerURI->SchemeIs("http") || innerURI->SchemeIs("https"))) {
+      MOZ_ASSERT(false,
+                 "Disallowing SystemPrincipal load of scripts on HTTP(S).");
       aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
       return NS_ERROR_CONTENT_BLOCKED;
     }
   }
   if (contentPolicyType == ExtContentPolicy::TYPE_STYLESHEET) {
     if (StaticPrefs::security_disallow_privileged_https_stylesheet_loads() &&
-        (finalURI->SchemeIs("http") || finalURI->SchemeIs("https"))) {
-#ifdef DEBUG
-      MOZ_CRASH("Disallowing SystemPrincipal load of stylesheets on HTTP(S).");
-#endif
+        (innerURI->SchemeIs("http") || innerURI->SchemeIs("https"))) {
+      MOZ_ASSERT(false,
+                 "Disallowing SystemPrincipal load of stylesheets on HTTP(S).");
       aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
       return NS_ERROR_CONTENT_BLOCKED;
     }
-  }
-
-  if (cancelNonLocalSystemPrincipal) {
-    MOZ_ASSERT(false, "SystemPrincipal must not load remote documents.");
-    aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
-    return NS_ERROR_CONTENT_BLOCKED;
   }
   return NS_OK;
 }
