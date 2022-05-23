@@ -6,13 +6,12 @@ body {
   display: flex;
   align-items: stretch;
   padding-block: 40px 80px;
-  font: message-box;
-  font-size: 1.5em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
 }
 
 h1 {
-  font-weight: 500;
-  font-size: 1.5em;
+  font-size: 24px;
+  font-weight: 700;
 }
 
 body > nav {
@@ -78,7 +77,6 @@ body > main > aside {
 
 .page-section-header > .section-description {
   grid-area: desc;
-  color: var(--in-content-deemphasized-text)
 }
 
 .setup-step > h2 {
@@ -103,7 +101,7 @@ body > main > aside {
 
 .closed-tab-li {
   display: grid;
-  grid-template-columns: min-content repeat(8, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   column-gap: 16px;
   padding: 8px;
   cursor: pointer;
@@ -121,7 +119,6 @@ body > main > aside {
 .closed-tab-li-title {
   grid-column: span 5;
   padding-inline-start: 2px;
-  font-weight: 500;
 }
 
 .closed-tab-li-url {
@@ -133,23 +130,14 @@ body > main > aside {
   text-align: end;
 }
 
-.closed-tab-li-url, .closed-tab-li-time {
-  color: var(--in-content-deemphasized-text);
-  font-weight: 400;
-}
-
-.closed-tab-li-title, .closed-tab-li-url {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
 .icon {
   background-position: center center;
   background-repeat: no-repeat;
   display: inline-block;
   -moz-context-properties: fill;
   fill: currentColor;
+  height: 16px;
+  width: 16px;
   margin-top: 10px;
 }
 
@@ -163,14 +151,4 @@ body > main > aside {
 
 .icon.history {
   background-image: url('chrome://browser/skin/history.svg');
-}
-
-.favicon {
-  background-size: cover;
-  margin: 2px;
-}
-
-.favicon, .icon {
-  width: 16px;
-  height: 16px;
 }
