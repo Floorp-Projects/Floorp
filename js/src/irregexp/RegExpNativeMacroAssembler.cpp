@@ -56,13 +56,16 @@ SMRegExpMacroAssembler::SMRegExpMacroAssembler(JSContext* cx,
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
 
-  temp0_ = regs.takeAny();
-  temp1_ = regs.takeAny();
-  temp2_ = regs.takeAny();
   input_end_pointer_ = regs.takeAny();
   current_character_ = regs.takeAny();
   current_position_ = regs.takeAny();
   backtrack_stack_pointer_ = regs.takeAny();
+  temp0_ = regs.takeAny();
+  temp1_ = regs.takeAny();
+  if (!regs.empty()) {
+    // Not enough registers on x86.
+    temp2_ = regs.takeAny();
+  }
   savedRegisters_ = js::jit::SavedNonVolatileRegisters(regs);
 
   masm_.jump(&entry_label_);  // We'll generate the entry code later
@@ -298,7 +301,9 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
     LiveGeneralRegisterSet volatileRegs(GeneralRegisterSet::Volatile());
     volatileRegs.addUnchecked(current_position_);
     volatileRegs.takeUnchecked(temp1_);
-    volatileRegs.takeUnchecked(temp2_);
+    if (temp2_ != js::jit::InvalidReg) {
+      volatileRegs.takeUnchecked(temp2_);
+    }
     volatileRegs.takeUnchecked(current_character_);
     masm_.PushRegsInMask(volatileRegs);
 
@@ -360,6 +365,14 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
   // Compute end of match string
   masm_.addPtr(current_position_, temp0_);
 
+  Register nextCaptureChar = temp1_;
+  Register nextMatchChar = temp2_;
+
+  if (temp2_ == js::jit::InvalidReg) {
+    masm_.push(backtrack_stack_pointer_);
+    nextMatchChar = backtrack_stack_pointer_;
+  }
+
   js::jit::Label success;
   js::jit::Label fail;
   js::jit::Label loop;
@@ -367,46 +380,48 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
 
   // Load next character from each string.
   if (mode_ == LATIN1) {
-    masm_.load8ZeroExtend(Address(current_character_, 0), temp1_);
-    masm_.load8ZeroExtend(Address(current_position_, 0), temp2_);
+    masm_.load8ZeroExtend(Address(current_character_, 0), nextCaptureChar);
+    masm_.load8ZeroExtend(Address(current_position_, 0), nextMatchChar);
   } else {
-    masm_.load16ZeroExtend(Address(current_character_, 0), temp1_);
-    masm_.load16ZeroExtend(Address(current_position_, 0), temp2_);
+    masm_.load16ZeroExtend(Address(current_character_, 0), nextCaptureChar);
+    masm_.load16ZeroExtend(Address(current_position_, 0), nextMatchChar);
   }
 
   if (ignore_case) {
     MOZ_ASSERT(mode_ == LATIN1);
     // Try exact match.
     js::jit::Label loop_increment;
-    masm_.branch32(Assembler::Equal, temp1_, temp2_, &loop_increment);
+    masm_.branch32(Assembler::Equal, nextCaptureChar, nextMatchChar,
+                   &loop_increment);
 
     // Mismatch. Try case-insensitive match.
     // Force the capture character to lower case (by setting bit 0x20)
     // then check to see if it is a letter.
     js::jit::Label convert_match;
-    masm_.or32(Imm32(0x20), temp1_);
+    masm_.or32(Imm32(0x20), nextCaptureChar);
 
     // Check if it is in [a,z].
-    masm_.computeEffectiveAddress(Address(temp1_, -'a'), temp2_);
-    masm_.branch32(Assembler::BelowOrEqual, temp2_, Imm32('z' - 'a'),
+    masm_.computeEffectiveAddress(Address(nextCaptureChar, -'a'),
+                                  nextMatchChar);
+    masm_.branch32(Assembler::BelowOrEqual, nextMatchChar, Imm32('z' - 'a'),
                    &convert_match);
     // Check for values in range [224,254].
     // Exclude 247 (U+00F7 DIVISION SIGN).
-    masm_.sub32(Imm32(224 - 'a'), temp2_);
-    masm_.branch32(Assembler::Above, temp2_, Imm32(254 - 224), &fail);
-    masm_.branch32(Assembler::Equal, temp2_, Imm32(247 - 224), &fail);
+    masm_.sub32(Imm32(224 - 'a'), nextMatchChar);
+    masm_.branch32(Assembler::Above, nextMatchChar, Imm32(254 - 224), &fail);
+    masm_.branch32(Assembler::Equal, nextMatchChar, Imm32(247 - 224), &fail);
 
     // Capture character is lower case. Convert match character
     // to lower case and compare.
     masm_.bind(&convert_match);
-    masm_.load8ZeroExtend(Address(current_position_, 0), temp2_);
-    masm_.or32(Imm32(0x20), temp2_);
-    masm_.branch32(Assembler::NotEqual, temp1_, temp2_, &fail);
+    masm_.load8ZeroExtend(Address(current_position_, 0), nextMatchChar);
+    masm_.or32(Imm32(0x20), nextMatchChar);
+    masm_.branch32(Assembler::NotEqual, nextCaptureChar, nextMatchChar, &fail);
 
     masm_.bind(&loop_increment);
   } else {
     // Fail if characters do not match.
-    masm_.branch32(Assembler::NotEqual, temp1_, temp2_, &fail);
+    masm_.branch32(Assembler::NotEqual, nextCaptureChar, nextMatchChar, &fail);
   }
 
   // Increment pointers into match and capture strings.
@@ -419,11 +434,19 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
 
   // If we fail, restore current_position_ and branch.
   masm_.bind(&fail);
+  if (temp2_ == js::jit::InvalidReg) {
+    // Restore backtrack_stack_pointer_ when it was used as a temp register.
+    masm_.pop(backtrack_stack_pointer_);
+  }
   masm_.pop(current_position_);
   JumpOrBacktrack(on_no_match);
 
   masm_.bind(&success);
 
+  if (temp2_ == js::jit::InvalidReg) {
+    // Restore backtrack_stack_pointer_ when it was used as a temp register.
+    masm_.pop(backtrack_stack_pointer_);
+  }
   // Drop saved value of current_position_
   masm_.addToStackPtr(Imm32(sizeof(uintptr_t)));
 
@@ -948,15 +971,19 @@ void SMRegExpMacroAssembler::initFrameAndRegs() {
                 matchesReg);
 
   // Initialize output registers
-  masm_.loadPtr(Address(matchesReg, MatchPairs::offsetOfPairs()), temp2_);
-  masm_.storePtr(temp2_, matches());
-  masm_.load32(Address(matchesReg, MatchPairs::offsetOfPairCount()), temp2_);
-  masm_.store32(temp2_, numMatches());
+  // Use |backtrack_stack_pointer_| as an additional temp register. This is safe
+  // because we haven't yet written any data to |backtrack_stack_pointer_|.
+  Register extraTemp = backtrack_stack_pointer_;
+
+  masm_.loadPtr(Address(matchesReg, MatchPairs::offsetOfPairs()), extraTemp);
+  masm_.storePtr(extraTemp, matches());
+  masm_.load32(Address(matchesReg, MatchPairs::offsetOfPairCount()), extraTemp);
+  masm_.store32(extraTemp, numMatches());
 
 #ifdef DEBUG
   // Bounds-check numMatches.
   js::jit::Label enoughRegisters;
-  masm_.branchPtr(Assembler::GreaterThanOrEqual, temp2_,
+  masm_.branchPtr(Assembler::GreaterThanOrEqual, extraTemp,
                   ImmWord(num_capture_registers_ / 2), &enoughRegisters);
   masm_.assumeUnreachable("Not enough output pairs for RegExp");
   masm_.bind(&enoughRegisters);
@@ -998,7 +1025,7 @@ void SMRegExpMacroAssembler::initFrameAndRegs() {
 
   // Initialize captured registers with inputStart - 1
   MOZ_ASSERT(num_capture_registers_ > 0);
-  Register inputStartMinusOneReg = temp2_;
+  Register inputStartMinusOneReg = temp0_;
   masm_.loadPtr(inputStart(), inputStartMinusOneReg);
   masm_.subPtr(Imm32(char_size()), inputStartMinusOneReg);
   if (num_capture_registers_ > 8) {
@@ -1047,7 +1074,11 @@ void SMRegExpMacroAssembler::successHandler() {
   Register matchesReg = temp1_;
   masm_.loadPtr(matches(), matchesReg);
 
-  Register inputStartReg = temp2_;
+  // Use |backtrack_stack_pointer_| as an additional temp register. This is safe
+  // because we don't read from |backtrack_stack_pointer_| after this point.
+  Register extraTemp = backtrack_stack_pointer_;
+
+  Register inputStartReg = extraTemp;
   masm_.loadPtr(inputStart(), inputStartReg);
 
   for (int i = 0; i < num_capture_registers_; i++) {
