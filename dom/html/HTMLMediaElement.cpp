@@ -2357,14 +2357,14 @@ void HTMLMediaElement::NoSupportedMediaSourceError(
     ShutdownDecoder();
   }
 
-  bool isThirdPartyLoad = false;
+  bool isSameOriginLoad = false;
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
   if (mSrcAttrTriggeringPrincipal && mLoadingSrc) {
-    rv = mSrcAttrTriggeringPrincipal->IsThirdPartyURI(mLoadingSrc,
-                                                      &isThirdPartyLoad);
+    rv = mSrcAttrTriggeringPrincipal->IsSameOrigin(mLoadingSrc,
+                                                   &isSameOriginLoad);
   }
 
-  if (NS_SUCCEEDED(rv) && isThirdPartyLoad) {
+  if (NS_SUCCEEDED(rv) && !isSameOriginLoad) {
     // aErrorDetails can include sensitive details like MimeType or HTTP Status
     // Code. In case we're loading a 3rd party resource we should not leak this
     // and pass a Generic Error Message
