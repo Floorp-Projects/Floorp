@@ -304,6 +304,13 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
 }
 
 gfxPlatformFontList::~gfxPlatformFontList() {
+  // Ensure there isn't still an InitFontList thread running, as we can't
+  // destroy the gfxPlatformFontList out from under it.
+  if (sInitFontListThread && !IsInitFontListThread()) {
+    PR_JoinThread(sInitFontListThread);
+    sInitFontListThread = nullptr;
+  }
+
   mSharedCmaps.Clear();
   ClearLangGroupPrefFontsLocked();
 
