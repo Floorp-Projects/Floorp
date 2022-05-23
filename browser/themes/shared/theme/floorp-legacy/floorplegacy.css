@@ -2634,3 +2634,9 @@ list-style-image: url("chrome://browser/skin/folder.png") !important;
 treechildren::-moz-tree-image(title, container, open) {
 list-style-image: url("chrome://browser/skin/folder.png") !important;
 }
+
+.toolbarbutton-1#forward-button .toolbarbutton-icon,
+#context-forward .menu-iconic-icon
+{
+	transform: scaleX(-1) !important;
+}
