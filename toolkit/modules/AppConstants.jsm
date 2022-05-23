@@ -425,13 +425,20 @@ this.AppConstants = Object.freeze({
     true,
 #endif
 
+  REMOTE_SETTINGS_DEFAULT_BUCKET:
+#ifdef MOZ_THUNDERBIRD
+    "thunderbird",
+#else
+    "main",
+#endif
+
   MOZ_GLEAN_ANDROID:
 #ifdef MOZ_GLEAN_ANDROID
     true,
 #else
     false,
 #endif
-  
+
   MOZ_JXL:
 #ifdef MOZ_JXL
     true,
