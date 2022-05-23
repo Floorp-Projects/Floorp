@@ -1463,6 +1463,11 @@ bool WindowsProcessLauncher::DoSetup() {
          ++it) {
       mResults.mSandboxBroker->AllowReadFile(it->c_str());
     }
+
+    if (mResults.mSandboxBroker->IsWin32kLockedDown()) {
+      mCmdLine->AppendLooseValue(
+          UTF8ToWide(geckoargs::sWin32kLockedDown.Name()));
+    }
   }
 #  endif  // defined(MOZ_SANDBOX)
 

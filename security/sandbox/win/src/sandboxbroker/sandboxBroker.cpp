@@ -1622,6 +1622,10 @@ void SandboxBroker::AddHandleToShare(HANDLE aHandle) {
   mPolicy->AddHandleToShare(aHandle);
 }
 
+bool SandboxBroker::IsWin32kLockedDown() {
+  return mPolicy->GetProcessMitigations() & sandbox::MITIGATION_WIN32K_DISABLE;
+}
+
 void SandboxBroker::ApplyLoggingPolicy() {
   MOZ_ASSERT(mPolicy);
 
