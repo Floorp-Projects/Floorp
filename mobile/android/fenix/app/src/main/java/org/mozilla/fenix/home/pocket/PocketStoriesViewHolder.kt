@@ -25,7 +25,6 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import org.mozilla.fenix.R
-import org.mozilla.fenix.R.string
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.SectionHeader
@@ -91,7 +90,7 @@ fun PocketStoriesViewHolderPreview() {
     FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Column {
             SectionHeader(
-                text = stringResource(string.pocket_stories_header_1),
+                text = stringResource(R.string.pocket_stories_header_1),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
