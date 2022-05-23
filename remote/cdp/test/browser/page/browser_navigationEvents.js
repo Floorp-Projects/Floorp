@@ -37,7 +37,6 @@ add_task(async function pageWithoutFrame({ client }) {
     recordPromise("frameNavigated", Page.frameNavigated());
     recordPromise("domContentEventFired", Page.domContentEventFired());
     recordPromise("loadEventFired", Page.loadEventFired());
-    recordPromise("navigatedWithinDocument", Page.navigatedWithinDocument());
     recordPromise("frameStoppedLoading", Page.frameStoppedLoading());
   }
 
@@ -125,7 +124,6 @@ async function assertNavigationEvents({ url, frameId }) {
     "frameNavigated",
     "domContentEventFired",
     "loadEventFired",
-    "navigatedWithinDocument",
     "frameStoppedLoading",
   ];
   Assert.deepEqual(
@@ -154,18 +152,6 @@ async function assertNavigationEvents({ url, frameId }) {
     "frameNavigated name isn't implemented yet"
   );
   is(frameNavigated.frame.url, url, "frameNavigated url is the right one");
-
-  const navigatedWithinDocument = resolutions.get("navigatedWithinDocument");
-  is(
-    navigatedWithinDocument.frameId,
-    frameId,
-    "navigatedWithinDocument frameId is the same one"
-  );
-  is(
-    navigatedWithinDocument.url,
-    url,
-    "navigatedWithinDocument url is the same one"
-  );
 
   const frameStoppedLoading = resolutions.get("frameStoppedLoading");
   is(

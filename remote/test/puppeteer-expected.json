@@ -636,10 +636,10 @@
     "PASS"
   ],
   "Frame specs Frame Management should detach child frames on navigation (frame.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Frame specs Frame Management should support framesets (frame.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Frame specs Frame Management should report frame from-inside shadow DOM (frame.spec.ts)": [
     "PASS"
@@ -1110,13 +1110,13 @@
     "FAIL"
   ],
   "navigation Page.waitForNavigation should work (navigation.spec.ts)": [
-    "PASS", "FAIL"
+    "PASS"
   ],
   "navigation Page.waitForNavigation should work with both domcontentloaded and load (navigation.spec.ts)": [
     "PASS"
   ],
   "navigation Page.waitForNavigation should work with clicking on anchor links (navigation.spec.ts)": [
-    "TIMEOUT", "FAIL"
+    "PASS"
   ],
   "navigation Page.waitForNavigation should work with history.pushState() (navigation.spec.ts)": [
     "FAIL", "TIMEOUT"
