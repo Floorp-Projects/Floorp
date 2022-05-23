@@ -86,6 +86,15 @@ fission:
     component: "Testing::General"
     suffix: "fis"
 
+fission-no-isolate:
+    description: "{description} with fission and webContentIsolationStrategy=0"
+    component: "Core::DOM: Content Processes"
+    suffix: "fis-0"
+    merge:
+        mozharness:
+            extra-options:
+                - "--web-content-isolation-strategy=0"
+
 no-fission:
     description: "{description} without fission enabled"
     component: "Testing::General"
