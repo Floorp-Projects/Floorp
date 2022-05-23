@@ -36,6 +36,7 @@ class WorkerDescriptorFront extends DescriptorMixin(
     this.type = json.type;
     this.scope = json.scope;
     this.fetch = json.fetch;
+    this.traits = json.traits;
   }
 
   get name() {
@@ -63,7 +64,9 @@ class WorkerDescriptorFront extends DescriptorMixin(
     return this.type === Ci.nsIWorkerDebugger.TYPE_SERVICE;
   }
 
-  async attach() {
+  // For now, WorkerDescriptor is morphed into a WorkerTarget when calling this method.
+  // Ideally, we would split this into two distinct classes.
+  async morphWorkerDescriptorIntoWorkerTarget() {
     // temporary, will be moved once we have a target actor
     return this.getTarget();
   }
@@ -78,7 +81,11 @@ class WorkerDescriptorFront extends DescriptorMixin(
         return this;
       }
 
-      const response = await super.attach();
+      // @backward-compat { version 102 } WorkerDescriptor no longer implement attach method
+      //                  We can stop calling attach once 102 is the release channel.
+      if (!this.traits.doNotAttach) {
+        await super.attach();
+      }
 
       if (this.isServiceWorker) {
         this.registration = await this._getRegistrationIfActive();
@@ -86,8 +93,6 @@ class WorkerDescriptorFront extends DescriptorMixin(
           await this.registration.preventShutdown();
         }
       }
-
-      this._url = response.url;
 
       if (this.isDestroyedOrBeingDestroyed()) {
         return this;
