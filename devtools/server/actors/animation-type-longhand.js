@@ -404,5 +404,13 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
   ],
   ["shadow", new Set(["box-shadow", "text-shadow"])],
   ["paintServer", new Set(["fill", "stroke"])],
-  ["length", new Set(["font-size", "outline-offset", "outline-width", "overflow-clip-box"])],
+  [
+    "length",
+    new Set([
+      "font-size",
+      "outline-offset",
+      "outline-width",
+      "overflow-clip-box",
+    ]),
+  ],
 ];
