@@ -212,6 +212,11 @@ class StyleEditorUI extends EventEmitter {
       [this.#toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.#onResourceAvailable }
     );
+    await this.#commands.targetCommand.watchTargets({
+      types: [this.#commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.#onTargetAvailable,
+      onDestroyed: this.#onTargetDestroyed,
+    });
 
     this.#startLoadingStyleSheets();
     await this.#toolbox.resourceCommand.watchResources(
@@ -599,6 +604,11 @@ class StyleEditorUI extends EventEmitter {
       this.#seenSheets.set(resource, promise);
     }
     return this.#seenSheets.get(resource);
+  }
+
+  #removeStyleSheet(resource, editor) {
+    this.#seenSheets.delete(resource);
+    this.#removeStyleSheetEditor(editor);
   }
 
   #getInlineStyleSheetsCount() {
@@ -1455,6 +1465,22 @@ class StyleEditorUI extends EventEmitter {
     }
   }
 
+  // onAvailable is a mandatory argument for watchTargets,
+  // but we don't do anything when a new target gets created.
+  #onTargetAvailable = ({ targetFront }) => {};
+
+  #onTargetDestroyed = ({ targetFront }) => {
+    // Iterate over a copy of the list in order to prevent skipping
+    // over some items when removing items of this list
+    const editorsCopy = [...this.editors];
+    for (const editor of editorsCopy) {
+      const { styleSheet } = editor;
+      if (styleSheet.targetFront == targetFront) {
+        this.#removeStyleSheet(styleSheet, editor);
+      }
+    }
+  };
+
   #onResourceAvailable = async resources => {
     const promises = [];
     for (const resource of resources) {
@@ -1640,6 +1666,11 @@ class StyleEditorUI extends EventEmitter {
         onUpdated: this.#onResourceUpdated,
       }
     );
+    this.#commands.targetCommand.unwatchTargets({
+      types: [this.#commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.#onTargetAvailable,
+      onDestroyed: this.#onTargetDestroyed,
+    });
 
     if (this.#uiAbortController) {
       this.#uiAbortController.abort();
