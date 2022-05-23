@@ -12075,12 +12075,6 @@
   value: true
   mirror: always
 
-# Cancel outgoing requests from SystemPrincipal
-- name: security.cancel_non_local_loads_triggered_by_systemprincipal
-  type: bool
-  value: false
-  mirror: always
-
 # Cancel outgoing requests from SystemPrincipal:
 # but only with scheme http(s) and contentpolicytype subdocument
 - name: security.disallow_privileged_https_subdocuments_loads
@@ -12088,7 +12082,6 @@
   value: true
   mirror: always
 
-# Cancel outgoing requests from SystemPrincipal:
 # but only with scheme data and contentpolicytype subdocument
 - name: security.disallow_privileged_data_subdocuments_loads
   type: bool
@@ -12105,6 +12098,13 @@
 # Cancel outgoing requests from SystemPrincipal:
 # but only with scheme http(s) and contentpolicytype script
 - name: security.disallow_privileged_https_script_loads
+  type: bool
+  value: true
+  mirror: always
+
+# Cancel outgoing requests from SystemPrincipal:
+# where there is no finalURI.
+- name: security.disallow_privileged_no_finaluri_loads
   type: bool
   value: true
   mirror: always
