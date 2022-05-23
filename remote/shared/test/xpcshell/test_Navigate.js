@@ -95,7 +95,7 @@ class MockWebProgress {
     return new Promise(executeSoon);
   }
 
-  sendLocationChangeHashChange() {
+  sendLocationChangeSameDocument() {
     this.documentRequest = null;
     this.browsingContext.currentURI = TARGET_URI_WITH_HASH;
 
@@ -103,7 +103,7 @@ class MockWebProgress {
       this,
       this.documentRequest,
       TARGET_URI_WITH_HASH,
-      Ci.nsIWebProgressListener.LOCATION_CHANGE_HASHCHANGE
+      Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT
     );
 
     return new Promise(executeSoon);
@@ -621,31 +621,33 @@ add_test(async function test_ProgressListener_waitForExplicitStart() {
   run_next_test();
 });
 
-add_test(async function test_ProgressListener_resolveWhenHashChange() {
-  const browsingContext = new MockTopContext();
-  const webProgress = browsingContext.webProgress;
+add_test(
+  async function test_ProgressListener_resolveWhenNavigatingInsideDocument() {
+    const browsingContext = new MockTopContext();
+    const webProgress = browsingContext.webProgress;
 
-  const progressListener = new ProgressListener(webProgress);
-  const navigated = progressListener.start();
+    const progressListener = new ProgressListener(webProgress);
+    const navigated = progressListener.start();
 
-  ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved");
+    ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved");
 
-  // Send hash change location change notification to complete the navigation
-  await webProgress.sendLocationChangeHashChange();
+    // Send same document location change notification to complete the navigation
+    await webProgress.sendLocationChangeSameDocument();
 
-  ok(await hasPromiseResolved(navigated), "Listener has resolved");
+    ok(await hasPromiseResolved(navigated), "Listener has resolved");
 
-  const { currentURI, targetURI } = progressListener;
-  equal(
-    currentURI.spec,
-    TARGET_URI_WITH_HASH.spec,
-    "Expected current URI has been set"
-  );
-  equal(
-    targetURI.spec,
-    TARGET_URI_WITH_HASH.spec,
-    "Expected target URI has been set"
-  );
+    const { currentURI, targetURI } = progressListener;
+    equal(
+      currentURI.spec,
+      TARGET_URI_WITH_HASH.spec,
+      "Expected current URI has been set"
+    );
+    equal(
+      targetURI.spec,
+      TARGET_URI_WITH_HASH.spec,
+      "Expected target URI has been set"
+    );
 
-  run_next_test();
-});
+    run_next_test();
+  }
+);
