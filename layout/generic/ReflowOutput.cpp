@@ -12,14 +12,13 @@
 namespace mozilla {
 
 /* static */
-void OverflowAreas::ApplyOverflowClippingOnRect(nsRect& aOverflowRect,
-                                                const nsRect& aBounds,
-                                                PhysicalAxes aClipAxes,
-                                                const nsSize& aOverflowMargin) {
+nsRect OverflowAreas::GetOverflowClipRect(const nsRect& aRectToClip,
+                                          const nsRect& aBounds,
+                                          PhysicalAxes aClipAxes,
+                                          const nsSize& aOverflowMargin) {
   auto inflatedBounds = aBounds;
   inflatedBounds.Inflate(aOverflowMargin);
-
-  auto clip = aOverflowRect;
+  auto clip = aRectToClip;
   if (aClipAxes & PhysicalAxes::Vertical) {
     clip.y = inflatedBounds.y;
     clip.height = inflatedBounds.height;
@@ -28,7 +27,16 @@ void OverflowAreas::ApplyOverflowClippingOnRect(nsRect& aOverflowRect,
     clip.x = inflatedBounds.x;
     clip.width = inflatedBounds.width;
   }
-  aOverflowRect = aOverflowRect.Intersect(clip);
+  return clip;
+}
+
+/* static */
+void OverflowAreas::ApplyOverflowClippingOnRect(nsRect& aOverflowRect,
+                                                const nsRect& aBounds,
+                                                PhysicalAxes aClipAxes,
+                                                const nsSize& aOverflowMargin) {
+  aOverflowRect = aOverflowRect.Intersect(
+      GetOverflowClipRect(aOverflowRect, aBounds, aClipAxes, aOverflowMargin));
 }
 
 void OverflowAreas::UnionWith(const OverflowAreas& aOther) {

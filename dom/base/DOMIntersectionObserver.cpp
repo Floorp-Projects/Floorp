@@ -391,17 +391,18 @@ static Maybe<nsRect> ComputeTheIntersection(
       // 3.2 TODO: Apply clip-path.
       if (clipAxes != PhysicalAxes::None) {
         // 3.1 Map intersectionRect to the coordinate space of container.
-        nsRect intersectionRectRelativeToContainer =
+        const nsRect intersectionRectRelativeToContainer =
             nsLayoutUtils::TransformFrameRectToAncestor(
                 target, intersectionRect.value(), containerFrame);
-        OverflowAreas::ApplyOverflowClippingOnRect(
+        const nsRect clipRect = OverflowAreas::GetOverflowClipRect(
             intersectionRectRelativeToContainer,
             containerFrame->GetRectRelativeToSelf(), clipAxes,
             containerFrame->OverflowClipMargin(clipAxes));
-        if (intersectionRectRelativeToContainer.IsEmpty()) {
+        intersectionRect = EdgeInclusiveIntersection(
+            intersectionRectRelativeToContainer, clipRect);
+        if (!intersectionRect) {
           return Nothing();
         }
-        intersectionRect = Some(intersectionRectRelativeToContainer);
         target = containerFrame;
       }
     }
