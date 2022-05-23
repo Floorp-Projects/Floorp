@@ -63,8 +63,8 @@ Until [support for the DEV environment](https://github.com/mozilla-extensions/re
   Services.prefs.setCharPref("security.content.signature.root_hash" "3C:01:44:6A:BE:90:36:CE:A9:A0:9A:CA:A3:A5:20:AC:62:8F:20:A7:AE:32:CE:86:1C:B2:EF:B7:0F:A0:C7:45");
   // Prevent packaged dumps to interfere.
   Services.prefs.setBoolPref("services.settings.load_dump", false);
-  // The changes are not approved yet, point the client to «preview»
-  Services.prefs.setCharPref("services.settings.default_bucket", "main-preview");
+  // Pull data from the preview bucket.
+  RemoteSettings.enablePreviewMode(true);
 ```
 
 **3. Set ASRouter CFR pref to use Remote Settings provider and enable asrouter devtools.**

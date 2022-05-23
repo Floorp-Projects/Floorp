@@ -81,6 +81,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "services.settings.server"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gPreviewEnabled",
+  "services.settings.preview_enabled",
+  false
+);
+
 function _isUndefined(value) {
   return typeof value === "undefined";
 }
@@ -98,6 +105,49 @@ var Utils = {
    * Logger instance.
    */
   log,
+
+  get PREVIEW_MODE() {
+    // We want to offer the ability to set preview mode via a preference
+    // for consumers who want to pull from the preview bucket on startup.
+    if (_isUndefined(this._previewModeEnabled) && allowServerURLOverride) {
+      return gPreviewEnabled;
+    }
+    return !!this._previewModeEnabled;
+  },
+
+  /**
+   * Internal method to enable pulling data from preview buckets.
+   * @param enabled
+   */
+  enablePreviewMode(enabled) {
+    const bool2str = v =>
+      // eslint-disable-next-line no-nested-ternary
+      _isUndefined(v) ? "unset" : v ? "enabled" : "disabled";
+    this.log.debug(
+      `Preview mode: ${bool2str(this._previewModeEnabled)} -> ${bool2str(
+        enabled
+      )}`
+    );
+    this._previewModeEnabled = enabled;
+  },
+
+  /**
+   * Returns the actual bucket name to be used. When preview mode is enabled,
+   * this adds the *preview* suffix.
+   *
+   * See also `SharedUtils.loadJSONDump()` which strips the preview suffix to identify
+   * the packaged JSON file.
+   *
+   * @param bucketName the client bucket
+   * @returns the final client bucket depending whether preview mode is enabled.
+   */
+  actualBucketName(bucketName) {
+    let actual = bucketName.replace("-preview", "");
+    if (this.PREVIEW_MODE) {
+      actual += "-preview";
+    }
+    return actual;
+  },
 
   /**
    * Check if network is down.

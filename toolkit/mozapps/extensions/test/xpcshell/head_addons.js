@@ -1200,7 +1200,7 @@ async function mockGfxBlocklistItems(items) {
     "resource://gre/modules/Blocklist.jsm"
   );
   const client = RemoteSettings("gfx", {
-    bucketNamePref: "services.blocklist.bucket",
+    bucketName: "blocklists",
   });
   const records = items.map(item => {
     if (item.id && item.last_modified) {
