@@ -78,6 +78,9 @@ const SLOW_DRAGGING_SPEED = 0.1;
 const DEFAULT_DRAGGING_SPEED = 1;
 const FAST_DRAGGING_SPEED = 10;
 
+// Deadzone in pixels where dragging should not update the value.
+const DRAGGING_DEADZONE_DISTANCE = 5;
+
 const DRAGGABLE_VALUE_CLASSNAME = "ruleview-propertyvalue-draggable";
 const IS_DRAGGING_CLASSNAME = "ruleview-propertyvalue-dragging";
 
@@ -175,6 +178,11 @@ TextPropertyEditor.prototype = {
    */
   get rule() {
     return this.prop.rule;
+  },
+
+  // Exposed for tests.
+  get _DRAGGING_DEADZONE_DISTANCE() {
+    return DRAGGING_DEADZONE_DISTANCE;
   },
 
   /**
@@ -1398,6 +1406,7 @@ TextPropertyEditor.prototype = {
     const dimensionObj = this._parseDimension(this.prop.value);
     const { value, unit } = dimensionObj.groups;
     this._draggingValueCache = {
+      isInDeadzone: true,
       previousScreenX: event.screenX,
       value: parseFloat(value),
       unit,
@@ -1419,6 +1428,25 @@ TextPropertyEditor.prototype = {
       return;
     }
 
+    const { isInDeadzone, previousScreenX } = this._draggingValueCache;
+    let deltaX = event.screenX - previousScreenX;
+
+    // If `isInDeadzone` is still true, the user has not previously left the deadzone.
+    if (isInDeadzone) {
+      // If the mouse is still in the deadzone, bail out immediately.
+      if (Math.abs(deltaX) < DRAGGING_DEADZONE_DISTANCE) {
+        return;
+      }
+
+      // Otherwise, remove the DRAGGING_DEADZONE_DISTANCE from the current deltaX, so that
+      // the value does not update too abruptly.
+      deltaX =
+        Math.sign(deltaX) * (Math.abs(deltaX) - DRAGGING_DEADZONE_DISTANCE);
+
+      // Update the state to remember the user is out of the deadzone.
+      this._draggingValueCache.isInDeadzone = false;
+    }
+
     let draggingSpeed = DEFAULT_DRAGGING_SPEED;
     if (event.shiftKey) {
       draggingSpeed = FAST_DRAGGING_SPEED;
@@ -1426,8 +1454,7 @@ TextPropertyEditor.prototype = {
       draggingSpeed = SLOW_DRAGGING_SPEED;
     }
 
-    const { previousScreenX } = this._draggingValueCache;
-    const delta = (event.screenX - previousScreenX) * draggingSpeed;
+    const delta = deltaX * draggingSpeed;
     this._draggingValueCache.previousScreenX = event.screenX;
     this._draggingValueCache.value += delta;
 
