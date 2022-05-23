@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.navigation
 
+import android.os.Build
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.autocomplete.AutocompleteAddFragment
@@ -155,12 +156,16 @@ class MainActivityNavigation(
      * Lock app.
      */
     fun lock() {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             throw IllegalStateException("Trying to lock unsupported device")
         }
 
         val fragmentManager = activity.supportFragmentManager
         if (fragmentManager.findFragmentByTag(BiometricAuthenticationDialogFragment.FRAGMENT_TAG) != null) {
+            return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && activity.isInPictureInPictureMode) {
             return
         }
 
