@@ -248,7 +248,6 @@ toolbarseparator + .panel-subview-body,
 
 #PlacesToolbar menupopup[placespopup=true]::part(arrowscrollbox) {
   padding: var(--panel-subview-body-padding);
-  border: 0;
   background: var(--arrowpanel-background) !important;
   color: var(--arrowpanel-color) !important;
 }
