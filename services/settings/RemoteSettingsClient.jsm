@@ -30,13 +30,6 @@ const TELEMETRY_COMPONENT = "remotesettings";
 
 XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gLoadDump",
-  "services.settings.load_dump",
-  true
-);
-
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
  * @param {Object} target the object to wrap.
@@ -359,7 +352,7 @@ class RemoteSettingsClient extends EventEmitter {
         if (!this._importingPromise) {
           // Prevent parallel loading when .get() is called multiple times.
           this._importingPromise = (async () => {
-            const importedFromDump = gLoadDump
+            const importedFromDump = Utils.LOAD_DUMPS
               ? await this._importJSONDump()
               : -1;
             if (importedFromDump < 0) {
@@ -521,8 +514,7 @@ class RemoteSettingsClient extends EventEmitter {
    *                                    This will be compared to the local timestamp, and will be used for
    *                                    cache busting if local data is out of date.
    * @param {Object} options            additional advanced options.
-   * @param {bool}   options.loadDump   load initial dump from disk on first sync (default: true, unless
-   *                                    `services.settings.load_dump` says otherwise).
+   * @param {bool}   options.loadDump   load initial dump from disk on first sync (default: true if server is prod)
    * @param {bool}   options.sendEvents send `"sync"` events (default: `true`)
    * @param {string} options.trigger    label to identify what triggered this sync (eg. ``"timer"``, default: `"manual"`)
    * @return {Promise}                  which rejects on sync or process failure.
@@ -530,7 +522,7 @@ class RemoteSettingsClient extends EventEmitter {
   async maybeSync(expectedTimestamp, options = {}) {
     // Should the clients try to load JSON dump? (mainly disabled in tests)
     const {
-      loadDump = gLoadDump,
+      loadDump = Utils.LOAD_DUMPS,
       trigger = "manual",
       sendEvents = true,
     } = options;

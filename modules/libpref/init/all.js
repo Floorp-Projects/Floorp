@@ -2055,7 +2055,6 @@ pref("security.insecure_field_warning.ignore_local_ip_address", true);
 
 // Remote settings preferences
 pref("services.settings.poll_interval", 86400); // 24H
-pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
 
 // The percentage of clients who will report uptake telemetry as
 // events instead of just a histogram. This only applies on Release;
