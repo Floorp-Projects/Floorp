@@ -157,6 +157,9 @@
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">ویب مواد</string>
 
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">ایپس تبدیل کرنا</string>
+
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">عمومی</string>
 

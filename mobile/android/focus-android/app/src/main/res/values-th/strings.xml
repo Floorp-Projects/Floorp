@@ -496,8 +496,28 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_title">ยินดีต้อนรับสู่ %1$s!</string>
 
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">การเรียกดูแบบส่วนตัวที่เหนือไปอีกขั้นตามที่คุณต้องการ</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">ปกปิดตัวตนของคุณไม่ให้คนอื่นเห็น</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s เป็นเบราว์เซอร์ที่เน้นเรื่องความเป็นส่วนตัวซึ่งมาพร้อมการป้องกันการติดตามและคุกกี้ที่แข็งแกร่งในตัว</string>
+
     <!-- Onboarding: History Title -->
     <string name="onboarding_history_title">ท่องเว็บเหมือนมันไม่เคยเกิดขึ้น</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">เพียงแตะครั้งเดียวก็สามารถลบประวัติการเรียกดูและคุกกี้ของคุณ รวมทั้งหยุดไม่ให้โฆษณาตามรอยคุณในทุกที่</string>
+    <string name="onboarding_history_description2">เพียงแตะครั้งเดียวก็สามารถลบประวัติการเรียกดูและคุกกี้ รวมทั้งหยุดไม่ให้โฆษณาตามรอยคุณในทุกที่</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">ปรับแต่งความเป็นส่วนตัวให้เข้ากับทุกสถานการณ์</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">คุณสามารถปรับการตั้งค่าความเป็นส่วนตัวให้สูงขึ้นหรือต่ำลงได้เมื่อคุณจำเป็นต้องเปลี่ยนรูปแบบการเรียกดู</string>
 
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">เริ่มการเรียกดู</string>
@@ -851,6 +871,10 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">โหมด HTTPS-Only</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">พยายามเชื่อมต่อกับไซต์ต่าง ๆ โดยใช้ HTTPS ์โดยอัตโนมัติเพื่อเพิ่มความปลอดภัย การเชื่อมต่อ HTTPS จะให้การเชื่อมต่อที่ปลอดภัยและการเข้ารหัสไปยังเว็บไซต์ที่คุณเยี่ยมชม</string>
+    <string name="preference_https_only_summary3">พยายามเชื่อมต่อกับไซต์ต่าง ๆ โดยใช้โปรโตคอลการเข้ารหัส HTTPS โดยอัตโนมัติเพื่อเพิ่มความปลอดภัย</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">ข้อยกเว้น</string>
     <!-- Description for the exceptions preference screen-->
@@ -940,17 +964,28 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title">ไซต์ที่คุณร้องขอไม่รองรับ HTTPS</string>
 
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">ตามค่าเริ่มต้น %1$s จะพยายามเชื่อมต่อโดยใช้ HTTPS เพื่อเพิ่มความปลอดภัย เมื่อต้องการเปลี่ยนการตั้งค่านี้หรือเรียนรู้เพิ่มเติม ให้ไปที่ การตั้งค่า &gt; ความเป็นส่วนตัวและความปลอดภัย &gt; ความปลอดภัย</string>
+
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ปิดแท็บ</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">ดูเหมือนว่าไซต์นี้พยายามจะตามรอยคุณ คลิกที่โล่สำหรับการตั้งค่าไซต์และสถิติการปิดกั้นตัวติดตาม</string>
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">ปิดป๊อปอัป</string>
 
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">คุณได้รับการคุ้มครอง!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">การตั้งค่าเริ่มต้นเหล่านี้ให้การปกป้องที่แข็งแกร่ง แต่คุณสามารถปรับแต่งการตั้งค่าให้ตรงกับความต้องการของคุณได้อย่างง่ายดาย</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">ปิด</string>
 
-    </resources>
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">กำจัดข้อมูลส่วนตัว ประวัติการเรียกดู และอื่น ๆ จากวาระนี้โดยแตะที่ปุ่มถังขยะ ลองดูสิ!</string>
+
+</resources>

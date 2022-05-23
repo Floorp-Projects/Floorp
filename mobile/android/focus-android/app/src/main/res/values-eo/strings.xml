@@ -499,6 +499,9 @@
     <!-- Onboarding: Incognito Title -->
     <string name="onboarding_incognito_title">Tie, kie renkontiĝas anonimeco kaj nevideblo</string>
 
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Komenci retumi</string>
+
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Plibonigi vian privatecon</string>
     <!-- First run tour (Default browser): Text. -->
@@ -607,20 +610,101 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">Peti version por komputiloj</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Skribotabla retejo</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">Retadreso kopiita</string>
 
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">Iloj por programistoj</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Malfermi ligilojn per programoj</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Spertula</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Permesoj por retejo</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Aŭtomata ludado</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Por permesi ion:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Iru al Agordoj de Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tuŝetu <b>Permesoj</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Iri al agordoj</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Aktivigu <b>%1$s</b>]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Filmilo</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikrofono</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Loko</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Sciigoj</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Enhavo protektita de DRM</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Demandi antaŭ ol permesi</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Blokita</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Permesita</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Blokita de Android</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Permesi sonon kaj videon</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Bloki nur sonon</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Rekomenditaj</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Bloki sonon kaj videon</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Studoj</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox povas de tempo al tempo instali kaj fari studojn.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Pli da informo</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Tiu ĉi programo finiĝos por apliki ŝanĝojn</string>
 
     <!-- Title of the remove studies button -->
     <string name="studies_remove">Forigi</string>
 
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktiva</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Kompleta</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Fora senerarigo per USB aŭ sendrata reto</string>
