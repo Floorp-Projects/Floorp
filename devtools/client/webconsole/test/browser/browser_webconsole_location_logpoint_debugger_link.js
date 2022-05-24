@@ -48,7 +48,7 @@ add_task(async function() {
   await invokeInTab("add");
 
   info("Wait for two messages");
-  await waitFor(() => findMessages(hud, "").length === 2);
+  await waitFor(() => findAllMessages(hud).length === 2);
 
   await testOpenInDebugger(
     hud,
@@ -129,7 +129,7 @@ add_task(async function() {
   await invokeInTab("add");
 
   info("Wait for the first message");
-  await waitFor(() => findMessages(hud, "").length === 1);
+  await waitFor(() => findAllMessages(hud).length === 1);
   await testOpenInDebugger(
     hud,
     toolbox,
@@ -147,7 +147,7 @@ add_task(async function() {
   await invokeInTab("subtract");
 
   info("Wait for the second message");
-  await waitFor(() => findMessages(hud, "").length === 2);
+  await waitFor(() => findAllMessages(hud).length === 2);
   await testOpenInDebugger(
     hud,
     toolbox,
