@@ -19,7 +19,7 @@ namespace jit {
 
 // r13 = stack-pointer
 // r11 = frame-pointer
-static constexpr Register BaselineFrameReg = r11;
+static constexpr Register BaselineFrameReg = FramePointer;
 static constexpr Register BaselineStackReg = sp;
 
 // ValueOperands R0, R1, and R2.

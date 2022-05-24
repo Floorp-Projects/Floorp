@@ -110,6 +110,7 @@ class MOZ_RAII FallbackICCodeCompiler final {
 
 AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs) {
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  MOZ_ASSERT(!regs.has(BaselineFrameReg));
 #if defined(JS_CODEGEN_ARM)
   MOZ_ASSERT(!regs.has(BaselineStackReg));
   MOZ_ASSERT(!regs.has(ICTailCallReg));
@@ -125,7 +126,6 @@ AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs) {
 #else
   MOZ_ASSERT(!regs.has(BaselineStackReg));
 #endif
-  regs.takeUnchecked(BaselineFrameReg);
   regs.take(ICStubReg);
 
   switch (numInputs) {
