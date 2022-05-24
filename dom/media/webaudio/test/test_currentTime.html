@@ -14,10 +14,11 @@ SimpleTest.requestFlakyTimeout("This test needs to wait a while for the AudioCon
 addLoadEvent(function() {
   var ac = new AudioContext();
   is(ac.currentTime, 0, "AudioContext.currentTime should be 0 initially");
-  setTimeout(function() {
+  ac.onstatechange = function () {
+    ok(ac.state == "running", "AudioContext.currentTime should eventually start");
     ok(ac.currentTime > 0, "AudioContext.currentTime should have increased by now");
     SimpleTest.finish();
-  }, 1000);
+  }
 });
 
 </script>
