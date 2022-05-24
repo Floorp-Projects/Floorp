@@ -27,6 +27,7 @@ void AudioSinkWrapper::Shutdown() {
   AssertOwnerThread();
   MOZ_ASSERT(!mIsStarted, "Must be called after playback stopped.");
   mCreator = nullptr;
+  mEndedPromiseHolder.ResolveIfExists(true, __func__);
 }
 
 RefPtr<MediaSink::EndedPromise> AudioSinkWrapper::OnEnded(TrackType aType) {
@@ -188,21 +189,32 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
     return NS_OK;
   }
 
+  nsresult rv = StartAudioSink(aStartTime);
+
+  return rv;
+}
+
+nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime) {
+  MOZ_RELEASE_ASSERT(!mAudioSink);
+
+  RefPtr<MediaSink::EndedPromise> promise =
+      mEndedPromiseHolder.Ensure(__func__);
+
   mAudioSink.reset(mCreator->Create(aStartTime));
-  Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> rv =
-      mAudioSink->Start(mParams);
-  if (rv.isErr()) {
-    mEndedPromise =
-        MediaSink::EndedPromise::CreateAndReject(rv.unwrapErr(), __func__);
+  nsresult rv = mAudioSink->Start(mParams, mEndedPromiseHolder);
+  if (NS_FAILED(rv)) {
+    mEndedPromise = MediaSink::EndedPromise::CreateAndReject(rv, __func__);
   } else {
-    mEndedPromise = rv.unwrap();
+    mEndedPromise = promise;
   }
 
+  mAudioSinkEndedPromise.DisconnectIfExists();
   mEndedPromise
       ->Then(mOwnerThread.get(), __func__, this,
              &AudioSinkWrapper::OnAudioEnded, &AudioSinkWrapper::OnAudioEnded)
       ->Track(mAudioSinkEndedPromise);
-  return rv.isErr() ? rv.unwrapErr() : NS_OK;
+
+  return rv;
 }
 
 bool AudioSinkWrapper::IsAudioSourceEnded(const MediaInfo& aInfo) const {
@@ -221,7 +233,9 @@ void AudioSinkWrapper::Stop() {
 
   if (mAudioSink) {
     mAudioSinkEndedPromise.DisconnectIfExists();
-    mAudioSink->Shutdown();
+    DebugOnly<Maybe<MozPromiseHolder<EndedPromise>>> rv =
+        mAudioSink->Shutdown();
+    MOZ_ASSERT(rv.inspect().isNothing());
     mAudioSink = nullptr;
     mEndedPromise = nullptr;
   }
