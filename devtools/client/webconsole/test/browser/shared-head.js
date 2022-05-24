@@ -348,3 +348,46 @@ function findMessagesByType(hud, text, typeSelector) {
   );
   return elements;
 }
+
+/**
+ * Type-specific wrappers for findMessageByType and findMessagesByType.
+ *
+ * @param object hud
+ *        The web console.
+ * @param string text
+ *        A substring that can be found in the message.
+ * @param string extraSelector [optional]
+ *        An extra part of selector for the message, in addition to
+ *        type-specific selector.
+ * @return {Node|Array} See findMessageByType or findMessagesByType.
+ */
+function findEvaluationResultMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".result" + extraSelector);
+}
+function findEvaluationResultMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".result" + extraSelector);
+}
+function findErrorMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".error" + extraSelector);
+}
+function findErrorMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".error" + extraSelector);
+}
+function findWarningMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".warn" + extraSelector);
+}
+function findWarningMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".warn" + extraSelector);
+}
+function findConsoleAPIMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".console-api" + extraSelector);
+}
+function findConsoleAPIMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".console-api" + extraSelector);
+}
+function findNetworkMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".network" + extraSelector);
+}
+function findNetworkMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".network" + extraSelector);
+}
