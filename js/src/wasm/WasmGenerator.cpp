@@ -572,26 +572,56 @@ void ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex,
   }
 }
 
-template <class Vec, class Op>
-static bool AppendForEach(Vec* dstVec, const Vec& srcVec, Op op) {
+// Append every element from `srcVec` where `filterOp(srcElem) == true`.
+// Applies `mutateOp(dstElem)` to every element that is appended.
+template <class Vec, class FilterOp, class MutateOp>
+static bool AppendForEach(Vec* dstVec, const Vec& srcVec, FilterOp filterOp,
+                          MutateOp mutateOp) {
+  // Eagerly grow the vector to the whole src vector. Any filtered elements
+  // will be trimmed later.
   if (!dstVec->growByUninitialized(srcVec.length())) {
     return false;
   }
 
   using T = typename Vec::ElementType;
 
-  const T* src = srcVec.begin();
-
   T* dstBegin = dstVec->begin();
   T* dstEnd = dstVec->end();
-  T* dstStart = dstEnd - srcVec.length();
 
-  for (T* dst = dstStart; dst != dstEnd; dst++, src++) {
+  // We appended srcVec.length() elements at the beginning, so we append
+  // elements starting at the first uninitialized element.
+  T* dst = dstEnd - srcVec.length();
+
+  for (const T* src = srcVec.begin(); src != srcVec.end(); src++) {
+    if (!filterOp(src)) {
+      continue;
+    }
     new (dst) T(*src);
-    op(dst - dstBegin, dst);
+    mutateOp(dst - dstBegin, dst);
+    dst++;
+  }
+
+  // Trim off the filtered out elements that were eagerly added at the
+  // beginning
+  size_t newSize = dst - dstBegin;
+  if (newSize != dstVec->length()) {
+    dstVec->shrinkTo(newSize);
+    dstVec->shrinkStorageToFit();
   }
 
   return true;
+}
+
+template <typename T>
+bool FilterNothing(const T* element) {
+  return true;
+}
+
+// The same as the above `AppendForEach`, without performing any filtering.
+template <class Vec, class MutateOp>
+static bool AppendForEach(Vec* dstVec, const Vec& srcVec, MutateOp mutateOp) {
+  using T = typename Vec::ElementType;
+  return AppendForEach(dstVec, srcVec, &FilterNothing<T>, mutateOp);
 }
 
 bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
@@ -678,10 +708,16 @@ bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
     }
   }
 
+  auto tryNoteFilter = [](const WasmTryNote* tn) {
+    // Filter out all try notes that were never given a try body. This may
+    // happen due to dead code elimination.
+    return tn->hasTryBody();
+  };
   auto tryNoteOp = [=](uint32_t, WasmTryNote* tn) {
     tn->offsetBy(offsetInModule);
   };
-  if (!AppendForEach(&metadataTier_->tryNotes, code.tryNotes, tryNoteOp)) {
+  if (!AppendForEach(&metadataTier_->tryNotes, code.tryNotes, tryNoteFilter,
+                     tryNoteOp)) {
     return false;
   }
 
@@ -985,9 +1021,9 @@ bool ModuleGenerator::finishMetadataTier() {
   // so that the innermost catch handler is chosen.
   last = 0;
   for (const WasmTryNote& tryNote : metadataTier_->tryNotes) {
-    MOZ_ASSERT(tryNote.end >= last);
-    MOZ_ASSERT(tryNote.end > tryNote.begin);
-    last = tryNote.end;
+    MOZ_ASSERT(tryNote.tryBodyEnd() >= last);
+    MOZ_ASSERT(tryNote.tryBodyEnd() > tryNote.tryBodyBegin());
+    last = tryNote.tryBodyBegin();
   }
 #endif
 

@@ -3753,7 +3753,8 @@ void MacroAssembler::wasmTrap(wasm::Trap trap,
 }
 
 [[nodiscard]] bool MacroAssembler::wasmStartTry(size_t* tryNoteIndex) {
-  wasm::WasmTryNote tryNote = wasm::WasmTryNote(currentOffset(), 0, 0);
+  wasm::WasmTryNote tryNote = wasm::WasmTryNote();
+  tryNote.setTryBodyBegin(currentOffset());
   return append(tryNote, tryNoteIndex);
 }
 
