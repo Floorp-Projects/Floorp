@@ -481,37 +481,41 @@ function waitForNodeMutation(node, observeConfig = {}) {
  *
  * @param {Object} hud
  *        The webconsole
- * @param {Object} toolbox
- *        The toolbox
- * @param {String} text
- *        The text to search for. This should be contained in the
- *        message. The searching is done with @see findMessage.
- * @param {boolean} expectUrl
- *        Whether the URL in the opened source should match the link, or whether
- *        it is expected to be null.
- * @param {boolean} expectLine
- *        It indicates if there is the need to check the line.
- * @param {boolean} expectColumn
- *        It indicates if there is the need to check the column.
- * @param {String} logPointExpr
- *        The logpoint expression
+ * @param {Object} options
+ *        - text: {String} The text to search for. This should be contained in
+ *                         the message. The searching is done with
+ *                         @see findMessageByType.
+ *        - typeSelector: {string} A part of selector for the message, to
+ *                                 specify the message type.
+ *        - expectUrl: {boolean} Whether the URL in the opened source should
+ *                               match the link, or whether it is expected to
+ *                               be null.
+ *        - expectLine: {boolean} It indicates if there is the need to check
+ *                                the line.
+ *        - expectColumn: {boolean} It indicates if there is the need to check
+ *                                the column.
+ *        - logPointExpr: {String} The logpoint expression
  */
 async function testOpenInDebugger(
   hud,
-  toolbox,
-  text,
-  expectUrl = true,
-  expectLine = true,
-  expectColumn = true,
-  logPointExpr = undefined
+  {
+    text,
+    typeSelector,
+    expectUrl = true,
+    expectLine = true,
+    expectColumn = true,
+    logPointExpr = undefined,
+  }
 ) {
   info(`Finding message for open-in-debugger test; text is "${text}"`);
-  const messageNode = await waitFor(() => findMessage(hud, text));
+  const messageNode = await waitFor(() =>
+    findMessageByType(hud, text, typeSelector)
+  );
   const locationNode = messageNode.querySelector(".message-location");
   ok(locationNode, "The message does have a location link");
   await checkClickOnNode(
     hud,
-    toolbox,
+    hud.toolbox,
     locationNode,
     expectUrl,
     expectLine,
