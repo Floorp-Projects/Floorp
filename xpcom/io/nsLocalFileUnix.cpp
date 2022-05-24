@@ -666,6 +666,11 @@ nsLocalFile::SetNativeLeafName(const nsACString& aLeafName) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLocalFile::GetDisplayName(nsAString& aLeafName) {
+  return GetLeafName(aLeafName);
+}
+
 nsCString nsLocalFile::NativePath() { return mPath; }
 
 nsresult nsIFile::GetNativePath(nsACString& aResult) {

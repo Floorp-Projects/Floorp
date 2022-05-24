@@ -8018,7 +8018,7 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     size_t tryNoteIndex = callBase->tryNoteIndex();
     wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
     wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];
-    tryNote.begin = masm.currentOffset();
+    tryNote.setTryBodyBegin(masm.currentOffset());
   }
 
   MOZ_ASSERT((sizeof(wasm::Frame) + masm.framePushed()) % WasmStackAlignment ==
@@ -8142,8 +8142,7 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     size_t tryNoteIndex = callBase->tryNoteIndex();
     wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
     wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];
-    tryNote.end = masm.currentOffset();
-    MOZ_ASSERT(tryNote.end > tryNote.begin);
+    tryNote.setTryBodyEnd(masm.currentOffset());
 
     // This instruction or the adjunct safepoint must be the last instruction
     // in the block. No other instructions may be inserted.
@@ -8179,8 +8178,7 @@ void CodeGenerator::visitWasmCallLandingPrePad(LWasmCallLandingPrePad* lir) {
   // Set the entry point for the call try note to be the beginning of this
   // block. The above assertions (and assertions in visitWasmCall) guarantee
   // that we are not skipping over instructions that should be executed.
-  tryNote.entryPoint = block->label()->offset();
-  tryNote.framePushed = masm.framePushed();
+  tryNote.setLandingPad(block->label()->offset(), masm.framePushed());
 }
 
 void CodeGenerator::visitWasmCallIndirectAdjunctSafepoint(
