@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/bind_front.h"
 #include "absl/types/optional.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/sequence_checker.h"
@@ -647,7 +648,12 @@ Call::Call(Clock* clock,
       configured_max_padding_bitrate_bps_(0),
       estimated_send_bitrate_kbps_counter_(clock_, nullptr, true),
       pacer_bitrate_kbps_counter_(clock_, nullptr, true),
-      receive_side_cc_(clock_, transport_send->packet_router()),
+      receive_side_cc_(clock,
+                       absl::bind_front(&PacketRouter::SendCombinedRtcpPacket,
+                                        transport_send->packet_router()),
+                       absl::bind_front(&PacketRouter::SendRemb,
+                                        transport_send->packet_router()),
+                       /*network_state_estimator=*/nullptr),
       receive_time_calculator_(ReceiveTimeCalculator::CreateFromFieldTrial()),
       video_send_delay_stats_(new SendDelayStats(clock_)),
       start_ms_(clock_->TimeInMilliseconds()),

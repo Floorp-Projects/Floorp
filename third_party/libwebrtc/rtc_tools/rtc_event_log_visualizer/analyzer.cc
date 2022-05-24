@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/functional/bind_front.h"
 #include "absl/strings/string_view.h"
 #include "api/function_view.h"
 #include "api/network_state_predictor.h"
@@ -1367,13 +1368,11 @@ void EventLogAnalyzer::CreateSendSideBweSimulationGraph(Plot* plot) {
 
 void EventLogAnalyzer::CreateReceiveSideBweSimulationGraph(Plot* plot) {
   using RtpPacketType = LoggedRtpPacketIncoming;
-  class RembInterceptingPacketRouter : public PacketRouter {
+  class RembInterceptor {
    public:
-    void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs,
-                                 uint32_t bitrate_bps) override {
+    void SendRemb(uint32_t bitrate_bps, std::vector<uint32_t> ssrcs) {
       last_bitrate_bps_ = bitrate_bps;
       bitrate_updated_ = true;
-      PacketRouter::OnReceiveBitrateChanged(ssrcs, bitrate_bps);
     }
     uint32_t last_bitrate_bps() const { return last_bitrate_bps_; }
     bool GetAndResetBitrateUpdated() {
@@ -1400,10 +1399,10 @@ void EventLogAnalyzer::CreateReceiveSideBweSimulationGraph(Plot* plot) {
   }
 
   SimulatedClock clock(0);
-  RembInterceptingPacketRouter packet_router;
-  // TODO(terelius): The PacketRouter is used as the RemoteBitrateObserver.
-  // Is this intentional?
-  ReceiveSideCongestionController rscc(&clock, &packet_router);
+  RembInterceptor remb_interceptor;
+  ReceiveSideCongestionController rscc(
+      &clock, [](auto...) {},
+      absl::bind_front(&RembInterceptor::SendRemb, &remb_interceptor), nullptr);
   // TODO(holmer): Log the call config and use that here instead.
   // static const uint32_t kDefaultStartBitrateBps = 300000;
   // rscc.SetBweBitrates(0, kDefaultStartBitrateBps, -1);
@@ -1428,9 +1427,9 @@ void EventLogAnalyzer::CreateReceiveSideBweSimulationGraph(Plot* plot) {
       float x = config_.GetCallTimeSec(clock.TimeInMicroseconds());
       acked_time_series.points.emplace_back(x, y);
     }
-    if (packet_router.GetAndResetBitrateUpdated() ||
+    if (remb_interceptor.GetAndResetBitrateUpdated() ||
         clock.TimeInMicroseconds() - last_update_us >= 1e6) {
-      uint32_t y = packet_router.last_bitrate_bps() / 1000;
+      uint32_t y = remb_interceptor.last_bitrate_bps() / 1000;
       float x = config_.GetCallTimeSec(clock.TimeInMicroseconds());
       time_series.points.emplace_back(x, y);
       last_update_us = clock.TimeInMicroseconds();
