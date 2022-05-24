@@ -1174,6 +1174,12 @@
   value: true
   mirror: always
 
+# See bug 1738574
+- name: browser.download.start_downloads_in_tmp_dir
+  type: bool
+  value: false
+  mirror: always
+
 # See bug 1747343
 - name: browser.download.always_ask_before_handling_new_types
   type: bool
