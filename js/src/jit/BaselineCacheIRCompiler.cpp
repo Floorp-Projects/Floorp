@@ -633,7 +633,7 @@ bool BaselineCacheIRCompiler::emitFrameIsConstructingResult() {
   Register outputScratch = output.valueReg().scratchReg();
 
   // Load the CalleeToken.
-  Address tokenAddr(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
+  Address tokenAddr(FramePointer, BaselineFrame::offsetOfCalleeToken());
   masm.loadPtr(tokenAddr, outputScratch);
 
   // The low bit indicates whether this call is constructing, just clear the
@@ -1751,14 +1751,14 @@ bool BaselineCacheIRCompiler::emitProxySetByValue(ObjOperandId objId,
   // We need a scratch register but we don't have any registers available on
   // x86, so temporarily store |obj| in the frame's scratch slot.
   int scratchOffset = BaselineFrame::reverseOffsetOfScratchValue();
-  masm.storePtr(obj, Address(BaselineFrameReg, scratchOffset));
+  masm.storePtr(obj, Address(FramePointer, scratchOffset));
 
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, obj);
 
   // Restore |obj|. Because we entered a stub frame we first have to load
   // the original frame pointer.
-  masm.loadPtr(Address(BaselineFrameReg, 0), obj);
+  masm.loadPtr(Address(FramePointer, 0), obj);
   masm.loadPtr(Address(obj, scratchOffset), obj);
 
   masm.Push(Imm32(strict));
@@ -1813,14 +1813,14 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
   // We need a scratch register but we don't have any registers available on
   // x86, so temporarily store |obj| in the frame's scratch slot.
   int scratchOffset = BaselineFrame::reverseOffsetOfScratchValue();
-  masm.storePtr(obj, Address(BaselineFrameReg, scratchOffset));
+  masm.storePtr(obj, Address(FramePointer, scratchOffset));
 
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, obj);
 
   // Restore |obj|. Because we entered a stub frame we first have to load
   // the original frame pointer.
-  masm.loadPtr(Address(BaselineFrameReg, 0), obj);
+  masm.loadPtr(Address(FramePointer, 0), obj);
   masm.loadPtr(Address(obj, scratchOffset), obj);
 
   masm.Push(Imm32(strict));
@@ -2407,7 +2407,7 @@ void BaselineCacheIRCompiler::pushArrayArguments(Register argcReg,
 
   // Push newTarget, if necessary
   if (isConstructing) {
-    masm.pushValue(Address(BaselineFrameReg, STUB_FRAME_SIZE));
+    masm.pushValue(Address(FramePointer, STUB_FRAME_SIZE));
   }
 
   // Push arguments: set up endReg to point to &array[argc]
@@ -2426,15 +2426,13 @@ void BaselineCacheIRCompiler::pushArrayArguments(Register argcReg,
   masm.bind(&copyDone);
 
   // Push |this|.
-  masm.pushValue(
-      Address(BaselineFrameReg,
-              STUB_FRAME_SIZE + (1 + isConstructing) * sizeof(Value)));
+  masm.pushValue(Address(
+      FramePointer, STUB_FRAME_SIZE + (1 + isConstructing) * sizeof(Value)));
 
   // Push |callee| if needed.
   if (!isJitCall) {
-    masm.pushValue(
-        Address(BaselineFrameReg,
-                STUB_FRAME_SIZE + (2 + isConstructing) * sizeof(Value)));
+    masm.pushValue(Address(
+        FramePointer, STUB_FRAME_SIZE + (2 + isConstructing) * sizeof(Value)));
   }
 }
 
@@ -2542,7 +2540,7 @@ void BaselineCacheIRCompiler::pushFunApplyArgsObj(Register argcReg,
   masm.bind(&done);
 
   // Push arg0 as |this| for call
-  masm.pushValue(Address(BaselineFrameReg, STUB_FRAME_SIZE + sizeof(Value)));
+  masm.pushValue(Address(FramePointer, STUB_FRAME_SIZE + sizeof(Value)));
 
   // Push |callee| if needed.
   if (!isJitCall) {
