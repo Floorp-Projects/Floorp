@@ -10,7 +10,7 @@ function parseQuery(request, key) {
     if (p.indexOf(key + "=") == 0) {
       return p.substring(key.length + 1);
     }
-    if (!p.includes("=") && key == "") {
+    if (p.indexOf("=") < 0 && key == "") {
       return p;
     }
   }
@@ -22,7 +22,9 @@ function handleRequest(request, response) {
     // Get the filename to send back.
     var filename = parseQuery(request, "file");
 
-    var file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+    var file = Cc["@mozilla.org/file/directory_service;1"]
+      .getService(Ci.nsIProperties)
+      .get("CurWorkD", Ci.nsIFile);
     var fis = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
       Ci.nsIFileInputStream
     );
@@ -43,8 +45,8 @@ function handleRequest(request, response) {
     if (request.hasHeader("Range")) {
       var range = request.getHeader("Range");
       var parts = range.replace(/bytes=/, "").split("-");
-      partialstart = parts[0];
-      partialend = parts[1];
+      var partialstart = parts[0];
+      var partialend = parts[1];
       if (!partialend.length) {
         partialend = file.fileSize - 1;
       }
@@ -58,9 +60,9 @@ function handleRequest(request, response) {
     bis.setInputStream(fis);
 
     var sendContentType = parseQuery(request, "nomime");
-    if (!sendContentType) {
+    if (sendContentType == false) {
       var contentType = parseQuery(request, "type");
-      if (!contentType) {
+      if (contentType == false) {
         // This should not happen.
         dump("No type specified without having 'nomime' in parameters.");
         return;

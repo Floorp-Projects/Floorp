@@ -8,7 +8,7 @@ function parseQuery(request, key) {
     if (p.indexOf(key + "=") == 0) {
       return p.substring(key.length + 1);
     }
-    if (!p.includes("=") && key == "") {
+    if (p.indexOf("=") < 0 && key == "") {
       return p;
     }
   }
@@ -31,7 +31,9 @@ var types = {
 function handleRequest(request, response) {
   var resource = parseQuery(request, "");
 
-  var file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+  var file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("CurWorkD", Ci.nsIFile);
   var fis = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
     Ci.nsIFileInputStream
   );

@@ -46,7 +46,7 @@ function handleRequest(req, resp) {
     req
       .getHeader("Cookie")
       .split(";")
-      .includes("red")
+      .indexOf("red") >= 0
   ) {
     resp.write(
       '<html style="background: #f00;">' + setCookieScript + "</html>"
@@ -60,7 +60,7 @@ function handleRequest(req, resp) {
     req
       .getHeader("Cookie")
       .split(";")
-      .includes("green")
+      .indexOf("green") >= 0
   ) {
     resp.write(
       '<html style="background: #0f0;">' + setCookieScript + "</html>"

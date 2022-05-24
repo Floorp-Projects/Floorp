@@ -8,7 +8,7 @@ function parseQuery(request, key) {
     if (p.indexOf(key + "=") == 0) {
       return p.substring(key.length + 1);
     }
-    if (!p.includes("=") && key == "") {
+    if (p.indexOf("=") < 0 && key == "") {
       return p;
     }
   }

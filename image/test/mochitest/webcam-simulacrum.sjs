@@ -8,7 +8,9 @@ var timer = Cc["@mozilla.org/timer;1"];
 var partTimer = timer.createInstance(Ci.nsITimer);
 
 function getFileAsInputStream(aFilename) {
-  var file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+  var file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("CurWorkD", Ci.nsIFile);
 
   file.append("tests");
   file.append("image");
