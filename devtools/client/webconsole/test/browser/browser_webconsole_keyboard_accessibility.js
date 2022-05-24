@@ -63,7 +63,7 @@ add_task(async function() {
     clearShortcut = WCUL10n.getStr("webconsole.clear.key");
   }
   synthesizeKeyShortcut(clearShortcut);
-  await waitFor(() => findMessages(hud, "").length == 0);
+  await waitFor(() => findAllMessages(hud).length == 0);
   ok(isInputFocused(hud), "console was cleared and input is focused");
 
   if (Services.appinfo.OS === "Darwin") {
@@ -77,7 +77,7 @@ add_task(async function() {
     info("Send Cmd-K to clear console");
     synthesizeKeyShortcut(WCUL10n.getStr("webconsole.clear.alternativeKeyOSX"));
 
-    await waitFor(() => findMessages(hud, "").length == 0);
+    await waitFor(() => findAllMessages(hud).length == 0);
     ok(
       isInputFocused(hud),
       "console was cleared as expected with alternative shortcut"
