@@ -26,7 +26,7 @@ function handleRequest(request, response) {
     setState(list, hashes);
 
     let lists = getState("lists");
-    if (lists.indexOf(list) == -1) {
+    if (!lists.includes(list)) {
       lists += list + "\n";
       setState("lists", lists);
     }
