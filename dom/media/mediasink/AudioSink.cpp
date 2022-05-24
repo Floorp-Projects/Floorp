@@ -78,7 +78,17 @@ AudioSink::AudioSink(AbstractThread* aThread,
   }
 }
 
-AudioSink::~AudioSink() = default;
+AudioSink::~AudioSink() {
+  // Generally instances of AudioSink should be properly Shutdown manually.
+  // The only way deleting an AudioSink without shutdown an happen is if the
+  // dispatch back to the MDSM thread after initializing it asynchronously
+  // fails. When that's the case, the stream has been initialized but not
+  // started. Manually shutdown the AudioStream in this case.
+  if (mAudioStream) {
+    mAudioStream->Shutdown();
+  }
+}
+
 
 nsresult AudioSink::InitializeAudioStream(
     const PlaybackParams& aParams,
