@@ -47,8 +47,8 @@ vendoring:
       cwd: '{yaml_dir}'
 
 updatebot:
-    maintainer-phab: tjr
-    maintainer-bz: tom@mozilla.com
+    maintainer-phab: calixte
+    maintainer-bz: cdenizet@mozilla.com
     fuzzy-query: "'debug | 'opt"
     fuzzy-paths:
       - toolkit/components/pdfjs/test
@@ -56,4 +56,4 @@ updatebot:
     tasks:
       - type: vendoring
         enabled: true
-        frequency: every
+        frequency: "1 week, 3 commits"
