@@ -175,11 +175,6 @@ async function testUseInConsole(
   await waitForEagerEvaluationResult(hud, expectedTextResult);
   ok(true, "The eager evaluation display the expected result");
 
-  await executeAndWaitForMessage(
-    hud,
-    variableName,
-    expectedTextResult,
-    ".result"
-  );
+  await executeAndWaitForResultMessage(hud, variableName, expectedTextResult);
   ok(true, "the expected variable was created with the expected value.");
 }

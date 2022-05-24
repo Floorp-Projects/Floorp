@@ -28,7 +28,7 @@ add_task(async function() {
   info("Executing a bunch of non-sense JS expression");
   for (const expression of testExpressions) {
     // Wait until we get the result of the command.
-    await executeAndWaitForMessage(hud, expression, "", ".result");
+    await executeAndWaitForResultMessage(hud, expression, "");
     ok(true, `JS expression executed successfully: ${expression} `);
   }
 

@@ -18,12 +18,9 @@ add_task(async function() {
   await addTab(TEST_URI);
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
-  const executeAndWaitForResultMessage = (input, expectedOutput) =>
-    executeAndWaitForMessage(hud, input, expectedOutput, ".result");
-
   info("Evaluate a top-level await expression");
   const simpleAwait = `await new Promise(r => setTimeout(() => r(["await1"]), 500))`;
-  await executeAndWaitForResultMessage(simpleAwait, `Array [ "await1" ]`);
+  await executeAndWaitForResultMessage(hud, simpleAwait, `Array [ "await1" ]`);
 
   // Check that the resulting promise of the async iife is not displayed.
   const messages = hud.ui.outputNode.querySelectorAll(".message .message-body");

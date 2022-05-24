@@ -16,6 +16,6 @@ add_task(async function() {
 
   const expression = `x = 10`;
   setInputValue(hud, expression);
-  await executeAndWaitForMessage(hud, undefined, "", ".result");
+  await executeAndWaitForResultMessage(hud, undefined, "");
   is(getInputValue(hud), expression, "input line is not cleared after submit");
 });

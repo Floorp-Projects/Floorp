@@ -16,23 +16,23 @@ add_task(async function() {
   await pushPref("devtools.debugger.features.map-await-expression", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const executeAndWaitForErrorMessage = (input, expectedOutput) =>
-    executeAndWaitForMessage(hud, input, expectedOutput, ".error");
-
   info("Check that awaiting for a rejecting promise displays an error");
   let res = await executeAndWaitForErrorMessage(
+    hud,
     `await new Promise((resolve,reject) => setTimeout(() => reject("await-rej"), 250))`,
     "Uncaught (in promise) await-rej"
   );
   ok(res.node, "awaiting for a rejecting promise displays an error message");
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await Promise.reject("await-rej-2")`,
     `Uncaught (in promise) await-rej-2`
   );
   ok(res.node, "awaiting for Promise.reject displays an error");
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await Promise.reject("")`,
     `Uncaught (in promise) <empty string>`
   );
@@ -42,6 +42,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await Promise.reject(null)`,
     `Uncaught (in promise) null`
   );
@@ -51,6 +52,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await Promise.reject(undefined)`,
     `Uncaught (in promise) undefined`
   );
@@ -60,6 +62,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await Promise.reject(false)`,
     `Uncaught (in promise) false`
   );
@@ -69,6 +72,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await Promise.reject(0)`,
     `Uncaught (in promise) 0`
   );
@@ -78,6 +82,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await Promise.reject({foo: "bar"})`,
     `Uncaught (in promise) Object { foo: "bar" }`
   );
@@ -87,6 +92,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await Promise.reject(new Error("foo"))`,
     `Uncaught (in promise) Error: foo`
   );
@@ -96,6 +102,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `var err = new Error("foo");
      err.name = "CustomError";
      await Promise.reject(err);
@@ -108,6 +115,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await new Promise(() => a.b.c)`,
     `ReferenceError: a is not defined`
   );
@@ -117,6 +125,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await new Promise(res => setTimeout(() => res(d.e.f), 250))`,
     `ReferenceError: d is not defined`
   );
@@ -126,6 +135,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await new Promise(res => { throw "instant throw"; })`,
     `Uncaught (in promise) instant throw`
   );
@@ -135,6 +145,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await new Promise(res => { throw new Error("instant error throw"); })`,
     `Error: instant error throw`
   );
@@ -144,6 +155,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await new Promise(res => { setTimeout(() => { throw "throw in timeout"; }, 250) })`,
     `Uncaught throw in timeout`
   );
@@ -153,6 +165,7 @@ add_task(async function() {
   );
 
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await new Promise(res => {
       setTimeout(() => { throw new Error("throw error in timeout"); }, 250)
     })`,
@@ -191,6 +204,7 @@ add_task(async function() {
 
   info("Check that malformed await expressions displays a meaningful error");
   res = await executeAndWaitForErrorMessage(
+    hud,
     `await new Promise())`,
     `SyntaxError: unexpected token: ')'`
   );

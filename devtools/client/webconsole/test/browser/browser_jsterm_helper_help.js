@@ -25,7 +25,7 @@ add_task(async function() {
   execute(hud, "?");
   // Wait for a simple message to be displayed so we know the different help commands
   // were processed.
-  await executeAndWaitForMessage(hud, "smoke", "", ".result");
+  await executeAndWaitForResultMessage(hud, "smoke", "");
 
   const messages = hud.ui.outputNode.querySelectorAll(".message");
   is(messages.length, 5, "There is the expected number of messages");

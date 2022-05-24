@@ -48,11 +48,10 @@ add_task(async function() {
     "The non-top class isn't applied"
   );
 
-  const topLevelDocumentMessage = await executeAndWaitForMessage(
+  const topLevelDocumentMessage = await executeAndWaitForResultMessage(
     hud,
     "document.location",
-    "example.com",
-    ".result"
+    "example.com"
   );
 
   setInputValue(hud, "document.location.host");
@@ -107,11 +106,10 @@ add_task(async function() {
   await waitForEagerEvaluationResult(hud, `"example.org"`);
   ok(true, "The instant evaluation result is updated in the iframe context");
 
-  const iframe1DocumentMessage = await executeAndWaitForMessage(
+  const iframe1DocumentMessage = await executeAndWaitForResultMessage(
     hud,
     "document.location",
-    "example.org",
-    ".result"
+    "example.org"
   );
   setInputValue(hud, "document.location.host");
 
@@ -148,11 +146,10 @@ add_task(async function() {
   await waitForEagerEvaluationResult(hud, `"example.net"`);
   ok(true, "The instant evaluation result is updated in the iframe context");
 
-  const iframe2DocumentMessage = await executeAndWaitForMessage(
+  const iframe2DocumentMessage = await executeAndWaitForResultMessage(
     hud,
     "document.location",
-    "example.net",
-    ".result"
+    "example.net"
   );
   setInputValue(hud, "document.location.host");
 
@@ -252,11 +249,10 @@ async function testStoreAsGlobalVariable(
 
   is(getInputValue(hud), variableName, "Input was set");
 
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     `${variableName}`,
-    expectedTextResult,
-    ".result"
+    expectedTextResult
   );
   ok(true, "Correct variable assigned into console.");
 }
