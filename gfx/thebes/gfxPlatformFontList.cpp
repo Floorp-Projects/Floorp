@@ -304,12 +304,11 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
 }
 
 gfxPlatformFontList::~gfxPlatformFontList() {
-  // Ensure there isn't still an InitFontList thread running, as we can't
-  // destroy the gfxPlatformFontList out from under it.
-  if (sInitFontListThread && !IsInitFontListThread()) {
-    PR_JoinThread(sInitFontListThread);
-    sInitFontListThread = nullptr;
-  }
+  // We take the lock here because it's possible the InitFontList thread is
+  // still running, in which case we need to wait for it to finish; this will
+  // block until the lock becomes available, ensuring we don't destroy things
+  // the initialization thread is using.
+  AutoLock lock(mLock);
 
   mSharedCmaps.Clear();
   ClearLangGroupPrefFontsLocked();

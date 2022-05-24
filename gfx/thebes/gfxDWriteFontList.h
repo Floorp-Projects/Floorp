@@ -368,6 +368,7 @@ class DWriteFontFallbackRenderer final : public IDWriteTextRenderer {
 class gfxDWriteFontList final : public gfxPlatformFontList {
  public:
   gfxDWriteFontList();
+  virtual ~gfxDWriteFontList() { AutoLock lock(mLock); }
 
   static gfxDWriteFontList* PlatformFontList() {
     return static_cast<gfxDWriteFontList*>(

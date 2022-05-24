@@ -1001,6 +1001,8 @@ gfxMacPlatformFontList::gfxMacPlatformFontList()
 }
 
 gfxMacPlatformFontList::~gfxMacPlatformFontList() {
+  AutoLock lock(mLock);
+
   if (XRE_IsParentProcess()) {
     ::CFNotificationCenterRemoveObserver(::CFNotificationCenterGetLocalCenter(), this,
                                          kCTFontManagerRegisteredFontsChangedNotification, 0);
