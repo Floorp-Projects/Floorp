@@ -25,12 +25,24 @@ add_task(async function() {
     "expected source url"
   );
 
-  await testOpenInDebugger(hud, toolbox, "FOO", false);
-  await testOpenInDebugger(hud, toolbox, "BAR", false);
+  await testOpenInDebugger(hud, {
+    text: "FOO",
+    typeSelector: ".console-api",
+    expectUrl: false,
+  });
+  await testOpenInDebugger(hud, {
+    text: "BAR",
+    typeSelector: ".error",
+    expectUrl: false,
+  });
 
   // Test that links in the API work when the eval source has a sourceURL property
   // which is not considered to be a valid URL.
-  await testOpenInDebugger(hud, toolbox, "BAZ", false);
+  await testOpenInDebugger(hud, {
+    text: "BAZ",
+    typeSelector: ".console-api",
+    expectUrl: false,
+  });
 
   // Test that stacks in console.trace() calls work.
   messageNode = await waitFor(() => findConsoleAPIMessage(hud, "TRACE"));

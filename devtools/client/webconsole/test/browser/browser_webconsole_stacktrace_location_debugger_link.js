@@ -20,11 +20,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
-  await testOpenInDebugger(hud, toolbox, "console.trace()");
-  await testOpenInDebugger(hud, toolbox, "myErrorObject");
+  await testOpenFrameInDebugger(hud, toolbox, "console.trace()");
+  await testOpenFrameInDebugger(hud, toolbox, "myErrorObject");
 });
 
-async function testOpenInDebugger(hud, toolbox, text) {
+async function testOpenFrameInDebugger(hud, toolbox, text) {
   info(`Testing message with text "${text}"`);
   const messageNode = await waitFor(() => findConsoleAPIMessage(hud, text));
   const framesNode = await waitFor(() => messageNode.querySelector(".frames"));
@@ -37,14 +37,14 @@ async function testOpenInDebugger(hud, toolbox, text) {
   );
 
   for (const frameNode of frameNodes) {
-    await checkClickOnNode(hud, toolbox, frameNode);
+    await checkMousedownOnNode(hud, toolbox, frameNode);
 
     info("Selecting the console again");
     await toolbox.selectTool("webconsole");
   }
 }
 
-async function checkClickOnNode(hud, toolbox, frameNode) {
+async function checkMousedownOnNode(hud, toolbox, frameNode) {
   info("checking click on node location");
   const onSourceInDebuggerOpened = once(hud, "source-in-debugger-opened");
   EventUtils.sendMouseEvent(

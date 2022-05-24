@@ -39,7 +39,13 @@ add_task(async function() {
     return url.includes("nosuchfile");
   });
 
-  await testOpenInDebugger(hud, toolbox, "here", true, false, false);
+  await testOpenInDebugger(hud, {
+    text: "here",
+    typeSelector: ".console-api",
+    expectUrl: true,
+    expectLine: false,
+    expectColumn: false,
+  });
 
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");
