@@ -35,22 +35,16 @@ add_task(async function() {
     )
   `);
 
-  await hasMessage(dbg, "sleep");
+  await hasMessageByType(dbg, "sleep", ".command");
 
   wrapper.dispatchEvaluateExpression(`await sleep(200, "DONE")`);
-  await hasMessage(dbg, "DONE!!!");
+  await hasMessageByType(dbg, "DONE!!!", ".result");
 });
 
-function findMessages(win, query) {
-  return Array.prototype.filter.call(
-    win.document.querySelectorAll(".message"),
-    e => e.innerText.includes(query)
-  );
-}
-
-async function hasMessage(dbg, msg) {
+async function hasMessageByType(dbg, msg, typeSelector) {
   const webConsole = await dbg.toolbox.getPanel("webconsole");
+  const hud = webConsole.hud;
   return waitFor(
-    async () => findMessages(webConsole._frameWindow, msg).length > 0
+    async () => findMessagesByType(hud, msg, typeSelector).length > 0
   );
 }
