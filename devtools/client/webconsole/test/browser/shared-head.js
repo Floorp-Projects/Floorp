@@ -42,6 +42,29 @@ async function findMessageVirtualized({ hud, text, selector, messageId }) {
 }
 
 /**
+ * Find the last message with given message type in the output, scrolling
+ * through the output from top to bottom in order to make sure the messages are
+ * actually rendered.
+ *
+ * @param object hud
+ *        The web console.
+ * @param string text
+ *        A substring that can be found in the message.
+ * @param string typeSelector
+ *        A part of selector for the message, to specify the message type.
+ * @return {Node} the node corresponding the found message
+ */
+async function findMessageVirtualizedByType({ hud, text, typeSelector }) {
+  const elements = await findMessagesVirtualizedByType({
+    hud,
+    text,
+    typeSelector,
+    expectedCount: 1,
+  });
+  return elements.at(-1);
+}
+
+/**
  * Find all messages in the output, scrolling through the output from top
  * to bottom in order to make sure the messages are actually rendered.
  *
@@ -67,6 +90,45 @@ let gInFindMessagesVirtualized = false;
 // And this lets us get a little more information in the error - it just holds
 // the stack of the prior call.
 let gFindMessagesVirtualizedStack = null;
+
+/**
+ * Find multiple messages in the output, scrolling through the output from top
+ * to bottom in order to make sure the messages are actually rendered.
+ *
+ * @param object options
+ * @param object options.hud
+ *        The web console.
+ * @param options.text [optional]
+ *        A substring that can be found in the message.
+ * @param options.typeSelector
+ *        A part of selector for the message, to specify the message type.
+ * @param options.expectedCount [optional]
+ *        The number of messages to get. This lets us stop scrolling early if
+ *        we find that number of messages.
+ * @return {Array} all of the message nodes in the console output matching the
+ *        provided filters. If expectedCount is greater than 1, or equal to -1,
+ *        some of these may be stale from having been scrolled out of view.
+ */
+async function findMessagesVirtualizedByType({
+  hud,
+  text,
+  typeSelector,
+  expectedCount,
+}) {
+  if (!typeSelector) {
+    throw new Error("typeSelector parameter is required");
+  }
+  if (!typeSelector.startsWith(".")) {
+    throw new Error("typeSelector should start with a dot e.g. `.result`");
+  }
+
+  return findMessagesVirtualized({
+    hud,
+    text,
+    selector: ".message" + typeSelector,
+    expectedCount,
+  });
+}
 
 /**
  * Find multiple messages in the output, scrolling through the output from top
