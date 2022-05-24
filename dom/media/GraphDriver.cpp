@@ -671,13 +671,11 @@ void AudioCallbackDriver::Init() {
   CubebUtils::AudioDeviceID outputId = mOutputDeviceID;
   CubebUtils::AudioDeviceID inputId = mInputDeviceID;
 
-  // XXX Only pass input input if we have an input listener.  Always
-  // set up output because it's easier, and it will just get silence.
-  if (cubeb_stream_init(cubebContext, &stream, "AudioCallbackDriver", inputId,
-                        inputWanted ? &input : nullptr,
-                        forcedOutputDeviceId ? forcedOutputDeviceId : outputId,
-                        &output, latencyFrames, DataCallback_s, StateCallback_s,
-                        this) == CUBEB_OK) {
+  if (CubebUtils::CubebStreamInit(
+          cubebContext, &stream, "AudioCallbackDriver", inputId,
+          inputWanted ? &input : nullptr,
+          forcedOutputDeviceId ? forcedOutputDeviceId : outputId, &output,
+          latencyFrames, DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
     mAudioStream.own(stream);
     DebugOnly<int> rv =
         cubeb_stream_set_volume(mAudioStream, CubebUtils::GetVolumeScale());
