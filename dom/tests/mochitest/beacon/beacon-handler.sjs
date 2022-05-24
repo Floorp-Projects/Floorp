@@ -71,6 +71,7 @@ function handleRequest(request, response) {
         response.setHeader("Access-Control-Allow-Methods", "POST, GET", false);
         response.setHeader("Access-Control-Allow-Origin", originHeader, false);
         response.setHeader("Access-Control-Allow-Credentials", "true", false);
+      // fallthrough
       case "getLastBeacon":
         var state = getOurState();
         if (state === "unblocked") {
