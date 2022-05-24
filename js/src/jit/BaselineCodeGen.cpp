@@ -358,8 +358,7 @@ static Register LoadBytecodePC(MacroAssembler& masm, Register scratch) {
     return InterpreterPCReg;
   }
 
-  Address pcAddr(BaselineFrameReg,
-                 BaselineFrame::reverseOffsetOfInterpreterPC());
+  Address pcAddr(FramePointer, BaselineFrame::reverseOffsetOfInterpreterPC());
   masm.loadPtr(pcAddr, scratch);
   return scratch;
 }
@@ -517,9 +516,9 @@ bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
 
   Register objReg = R2.scratchReg();
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  MOZ_ASSERT(!regs.has(FramePointer));
   regs.take(R0);
   regs.take(objReg);
-  regs.takeUnchecked(BaselineFrameReg);
   Register scratch = regs.takeAny();
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
   // On ARM, save the link register before calling.  It contains the return
@@ -678,7 +677,7 @@ void BaselineInterpreterCodeGen::computeFrameSize(Register dest) {
   // dest = FramePointer + BaselineFrame::FramePointerOffset - StackPointer.
   MOZ_ASSERT(!inCall_, "must not be called in the middle of a VM call");
   masm.computeEffectiveAddress(
-      Address(BaselineFrameReg, BaselineFrame::FramePointerOffset), dest);
+      Address(FramePointer, BaselineFrame::FramePointerOffset), dest);
   masm.subStackPtrFrom(dest);
 }
 
@@ -712,7 +711,7 @@ void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
     uint32_t argSize, Register scratch1, Register scratch2) {
   // scratch1 = FramePointer + BaselineFrame::FramePointerOffset - StackPointer.
   masm.computeEffectiveAddress(
-      Address(BaselineFrameReg, BaselineFrame::FramePointerOffset), scratch1);
+      Address(FramePointer, BaselineFrame::FramePointerOffset), scratch1);
   masm.subStackPtrFrom(scratch1);
 
 #ifdef DEBUG
@@ -803,7 +802,7 @@ bool BaselineCodeGen<Handler>::emitStackCheck() {
   }
 
   prepareVMCall();
-  masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R1.scratchReg());
   pushArg(R1.scratchReg());
 
   const CallVMPhase phase = CallVMPhase::BeforePushingLocals;
@@ -821,7 +820,7 @@ bool BaselineCodeGen<Handler>::emitStackCheck() {
 static void EmitCallFrameIsDebuggeeCheck(MacroAssembler& masm) {
   using Fn = void (*)(BaselineFrame * frame);
   masm.setupUnalignedABICall(R0.scratchReg());
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
   masm.callWithABI<Fn, FrameIsDebuggeeCheck>();
 }
@@ -1128,7 +1127,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emitDebugPrologue() {
   auto ifDebuggee = [this]() {
     // Load pointer to BaselineFrame in R0.
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
 
     prepareVMCall();
     pushArg(R0.scratchReg());
@@ -1278,7 +1277,7 @@ bool BaselineCodeGen<Handler>::initEnvironmentChain() {
       // Call into the VM to create the proper environment objects.
       prepareVMCall();
 
-      masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+      masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
       pushArg(R0.scratchReg());
 
       const CallVMPhase phase = CallVMPhase::BeforePushingLocals;
@@ -1365,7 +1364,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
                   &noTrialInlining);
     prepareVMCall();
 
-    masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    masm.PushBaselineFramePtr(FramePointer, R0.scratchReg());
 
     using Fn = bool (*)(JSContext*, BaselineFrame*);
     if (!callVMNonOp<Fn, DoTrialInlining>()) {
@@ -1419,7 +1418,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
-    masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    masm.PushBaselineFramePtr(FramePointer, R0.scratchReg());
 
     using Fn = bool (*)(JSContext*, BaselineFrame*, uint32_t, jsbytecode*,
                         IonOsrTempData**);
@@ -1452,7 +1451,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 #ifdef DEBUG
     // Get a scratch register that's not osrDataReg or OsrFrameReg.
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.takeUnchecked(BaselineFrameReg);
+    MOZ_ASSERT(!regs.has(FramePointer));
     regs.take(osrDataReg);
     regs.take(OsrFrameReg);
 
@@ -1490,7 +1489,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   } else {
     prepareVMCall();
 
-    masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    masm.PushBaselineFramePtr(FramePointer, R0.scratchReg());
 
     using Fn = bool (*)(JSContext*, BaselineFrame*);
     if (!callVMNonOp<Fn, IonCompileScriptForBaselineAtEntry>()) {
@@ -1528,7 +1527,7 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
   {
     prepareVMCall();
 
-    masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    masm.PushBaselineFramePtr(FramePointer, R0.scratchReg());
 
     using Fn = bool (*)(JSContext*, BaselineFrame*, uint8_t**);
     if (!callVM<Fn, BaselineCompileFromBaselineInterpreter>()) {
@@ -2328,7 +2327,7 @@ bool BaselineCodeGen<Handler>::emit_FunctionThis() {
     masm.branchTestObject(Assembler::Equal, R0, &skipCall);
 
     prepareVMCall();
-    masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+    masm.loadBaselineFramePtr(FramePointer, R1.scratchReg());
 
     pushArg(R1.scratchReg());
 
@@ -3689,7 +3688,7 @@ bool BaselineCompilerCodeGen::emit_SetAliasedVar() {
 template <>
 bool BaselineInterpreterCodeGen::emit_SetAliasedVar() {
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(BaselineFrameReg);
+  MOZ_ASSERT(!regs.has(FramePointer));
   regs.take(R2);
   if (HasInterpreterPCReg()) {
     regs.take(InterpreterPCReg);
@@ -4040,7 +4039,7 @@ static BaseValueIndex ComputeAddressOfLocal(MacroAssembler& masm,
   // Locals are stored in memory at a negative offset from the frame pointer. We
   // negate the index first to effectively subtract it.
   masm.negPtr(indexScratch);
-  return BaseValueIndex(BaselineFrameReg, indexScratch,
+  return BaseValueIndex(FramePointer, indexScratch,
                         BaselineFrame::reverseOffsetOfLocal(0));
 }
 
@@ -4183,8 +4182,7 @@ bool BaselineInterpreterCodeGen::emitFormalArgAccess(JSOp op) {
   }
   masm.bind(&isUnaliased);
   {
-    BaseValueIndex addr(BaselineFrameReg, argReg,
-                        BaselineFrame::offsetOfArg(0));
+    BaseValueIndex addr(FramePointer, argReg, BaselineFrame::offsetOfArg(0));
     if (op == JSOp::GetArg) {
       masm.loadValue(addr, R0);
       frame.push(R0);
@@ -4252,15 +4250,14 @@ bool BaselineCodeGen<Handler>::emit_NewTarget() {
   {
     Register argvLen = R0.scratchReg();
     Register nformals = R1.scratchReg();
-    Address actualArgs(BaselineFrameReg,
-                       BaselineFrame::offsetOfNumActualArgs());
+    Address actualArgs(FramePointer, BaselineFrame::offsetOfNumActualArgs());
     masm.loadPtr(actualArgs, argvLen);
 
     // If argvLen < nformals, set argvlen := nformals.
     loadNumFormalArguments(nformals);
     masm.cmp32Move32(Assembler::Below, argvLen, nformals, nformals, argvLen);
 
-    BaseValueIndex newTarget(BaselineFrameReg, argvLen,
+    BaseValueIndex newTarget(FramePointer, argvLen,
                              BaselineFrame::offsetOfArg(0));
     masm.loadValue(newTarget, R0);
     masm.jump(&done);
@@ -4587,8 +4584,7 @@ void BaselineCodeGen<Handler>::emitInterpJumpToResumeEntry(Register script,
   masm.computeEffectiveAddress(BaseIndex(script, resumeIndex, TimesOne,
                                          ImmutableScriptData::offsetOfCode()),
                                script);
-  Address pcAddr(BaselineFrameReg,
-                 BaselineFrame::reverseOffsetOfInterpreterPC());
+  Address pcAddr(FramePointer, BaselineFrame::reverseOffsetOfInterpreterPC());
   masm.storePtr(script, pcAddr);
   emitJumpToInterpretOpLabel();
 }
@@ -4670,7 +4666,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_PushLexicalEnv() {
   // Call a stub to push the block on the block chain.
   prepareVMCall();
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
 
   pushScriptGCThingArg(ScriptGCThingType::Scope, R1.scratchReg(),
                        R2.scratchReg());
@@ -4683,7 +4679,7 @@ bool BaselineCodeGen<Handler>::emit_PushLexicalEnv() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_PushClassBodyEnv() {
   prepareVMCall();
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
 
   pushScriptGCThingArg(ScriptGCThingType::Scope, R1.scratchReg(),
                        R2.scratchReg());
@@ -4700,7 +4696,7 @@ bool BaselineCodeGen<Handler>::emit_PopLexicalEnv() {
   Register scratch1 = R0.scratchReg();
 
   auto ifDebuggee = [this, scratch1]() {
-    masm.loadBaselineFramePtr(BaselineFrameReg, scratch1);
+    masm.loadBaselineFramePtr(FramePointer, scratch1);
 
     prepareVMCall();
     pushBytecodePCArg();
@@ -4727,7 +4723,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_FreshenLexicalEnv() {
   frame.syncStack(0);
 
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
 
   auto ifDebuggee = [this]() {
     prepareVMCall();
@@ -4751,7 +4747,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_RecreateLexicalEnv() {
   frame.syncStack(0);
 
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
 
   auto ifDebuggee = [this]() {
     prepareVMCall();
@@ -4775,7 +4771,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_DebugLeaveLexicalEnv() {
   auto ifDebuggee = [this]() {
     prepareVMCall();
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
 
@@ -4788,7 +4784,7 @@ bool BaselineCodeGen<Handler>::emit_DebugLeaveLexicalEnv() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_PushVarEnv() {
   prepareVMCall();
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   pushScriptGCThingArg(ScriptGCThingType::Scope, R1.scratchReg(),
                        R2.scratchReg());
   pushArg(R0.scratchReg());
@@ -4808,7 +4804,7 @@ bool BaselineCodeGen<Handler>::emit_EnterWith() {
   pushScriptGCThingArg(ScriptGCThingType::Scope, R1.scratchReg(),
                        R2.scratchReg());
   pushArg(R0);
-  masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R1.scratchReg());
   pushArg(R1.scratchReg());
 
   using Fn =
@@ -4821,7 +4817,7 @@ bool BaselineCodeGen<Handler>::emit_LeaveWith() {
   // Call a stub to pop the with object from the environment chain.
   prepareVMCall();
 
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   pushArg(R0.scratchReg());
 
   using Fn = bool (*)(JSContext*, BaselineFrame*);
@@ -4846,7 +4842,7 @@ bool BaselineCodeGen<Handler>::emit_Debugger() {
   prepareVMCall();
 
   frame.assertSyncedStack();
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   pushArg(R0.scratchReg());
 
   using Fn = bool (*)(JSContext*, BaselineFrame*);
@@ -4866,7 +4862,7 @@ bool BaselineCodeGen<Handler>::emitDebugEpilogue() {
 
     // Load BaselineFrame pointer in R0.
     frame.syncStack(0);
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
 
     prepareVMCall();
     pushBytecodePCArg();
@@ -5280,7 +5276,7 @@ bool BaselineCodeGen<Handler>::emit_EndIter() {
   frame.popRegsAndSync(1);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(BaselineFrameReg);
+  MOZ_ASSERT(!regs.has(FramePointer));
   if (HasInterpreterPCReg()) {
     regs.take(InterpreterPCReg);
   }
@@ -5496,7 +5492,7 @@ bool BaselineCodeGen<Handler>::emit_Arguments() {
 
   prepareVMCall();
 
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   pushArg(R0.scratchReg());
 
   using Fn = bool (*)(JSContext*, BaselineFrame*, MutableHandleValue);
@@ -5525,7 +5521,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Generator() {
   frame.assertStackDepth(0);
 
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
 
   prepareVMCall();
   pushArg(R0.scratchReg());
@@ -5591,7 +5587,7 @@ bool BaselineCodeGen<Handler>::emitSuspend(JSOp op) {
     masm.call(&postBarrierSlot_);
     masm.bind(&skipBarrier);
   } else {
-    masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+    masm.loadBaselineFramePtr(FramePointer, R1.scratchReg());
     computeFrameSize(R0.scratchReg());
 
     prepareVMCall();
@@ -5677,7 +5673,7 @@ bool BaselineCodeGen<Handler>::emit_AfterYield() {
 
   auto ifDebuggee = [this]() {
     frame.assertSyncedStack();
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
     prepareVMCall();
     pushArg(R0.scratchReg());
 
@@ -5737,8 +5733,7 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
   masm.loadJitScript(script, scratch);
   masm.computeEffectiveAddress(Address(scratch, JitScript::offsetOfICScript()),
                                scratch);
-  Address icScriptAddr(BaselineFrameReg,
-                       BaselineFrame::reverseOffsetOfICScript());
+  Address icScriptAddr(FramePointer, BaselineFrame::reverseOffsetOfICScript());
   masm.storePtr(scratch, icScriptAddr);
 
   Label noBaselineScript;
@@ -5758,8 +5753,8 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
   masm.bind(&noBaselineScript);
 
   // Initialize interpreter frame fields.
-  Address flagsAddr(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
-  Address scriptAddr(BaselineFrameReg,
+  Address flagsAddr(FramePointer, BaselineFrame::reverseOffsetOfFlags());
+  Address scriptAddr(FramePointer,
                      BaselineFrame::reverseOffsetOfInterpreterScript());
   masm.or32(Imm32(BaselineFrame::RUNNING_IN_INTERPRETER), flagsAddr);
   masm.storePtr(script, scriptAddr);
@@ -5775,7 +5770,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   masm.assertStackAlignment(sizeof(Value), 0);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(BaselineFrameReg);
+  MOZ_ASSERT(!regs.has(FramePointer));
   if (HasInterpreterPCReg()) {
     regs.take(InterpreterPCReg);
   }
@@ -5864,7 +5859,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
 
   // Update BaselineFrame frameSize field and create the frame descriptor.
   masm.computeEffectiveAddress(
-      Address(BaselineFrameReg, BaselineFrame::FramePointerOffset), scratch2);
+      Address(FramePointer, BaselineFrame::FramePointerOffset), scratch2);
   masm.subStackPtrFrom(scratch2);
 #ifdef DEBUG
   masm.store32(scratch2, frame.addressOfDebugFrameSize());
@@ -5920,8 +5915,8 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   }
 
   // Construct BaselineFrame.
-  masm.push(BaselineFrameReg);
-  masm.moveStackPtrTo(BaselineFrameReg);
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
   masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
   masm.assertStackAlignment(sizeof(Value), 0);
 
@@ -6015,19 +6010,19 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   masm.bind(&returnTarget);
 
   // When we call into a function which may end up in Warp/Ion,
-  // we need to account for the possibility that BaselineFrameReg
+  // we need to account for the possibility that FramePointer
   // is clobbered. So we recompute it based on the frame descriptor.
 
-  // Load the frame descriptor into R2.
-  masm.loadPtr(Address(masm.getStackPointer(), 0), BaselineFrameReg);
+  // Load the frame descriptor into FramePointer.
+  masm.loadPtr(Address(masm.getStackPointer(), 0), FramePointer);
   // Compute Frame Size.
-  masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), BaselineFrameReg);
-  // Add to stack pointer.
-  masm.addStackPtrTo(BaselineFrameReg);
+  masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), FramePointer);
+  // Add stack pointer.
+  masm.addStackPtrTo(FramePointer);
 
   // This magic constant corresponds to the callee token and
   // actualArgc pushed before the frame descriptor was pushed.
-  masm.addPtr(Imm32(2 * sizeof(void*)), BaselineFrameReg);
+  masm.addPtr(Imm32(2 * sizeof(void*)), FramePointer);
   masm.bind(&afterFrameRestore);
 
   // Restore Stack pointer
@@ -6075,7 +6070,7 @@ bool BaselineCodeGen<Handler>::emit_CheckResumeKind() {
   masm.unboxObject(R0, R0.scratchReg());
   pushArg(R0.scratchReg());  // genObj
 
-  masm.loadBaselineFramePtr(BaselineFrameReg, R2.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R2.scratchReg());
   pushArg(R2.scratchReg());  // frame
 
   using Fn = bool (*)(JSContext*, BaselineFrame*,
@@ -6354,8 +6349,8 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
 #endif
   emitProfilerEnterFrame();
 
-  masm.push(BaselineFrameReg);
-  masm.moveStackPtrTo(BaselineFrameReg);
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
   masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
 
   // Initialize BaselineFrame. Also handles env chain pre-initialization (in
@@ -6432,8 +6427,8 @@ bool BaselineCodeGen<Handler>::emitEpilogue() {
   }
 #endif
 
-  masm.moveToStackPtr(BaselineFrameReg);
-  masm.pop(BaselineFrameReg);
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
 
   emitProfilerExitFrame();
 
@@ -6709,7 +6704,7 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 
   using Fn1 = void (*)(BaselineFrame * frame);
   masm.setupUnalignedABICall(R0.scratchReg());
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
   masm.callWithABI<Fn1, HandleCodeCoverageAtPrologue>();
 
@@ -6725,7 +6720,7 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 
   using Fn2 = void (*)(BaselineFrame * frame, jsbytecode * pc);
   masm.setupUnalignedABICall(R0.scratchReg());
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
   Register pcReg = LoadBytecodePC(masm, R2.scratchReg());
   masm.passABIArg(pcReg);
@@ -6826,7 +6821,7 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
   AutoCreatedBy acb(masm, "JitRuntime::generateDebugTrapHandler");
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(BaselineFrameReg);
+  MOZ_ASSERT(!regs.has(FramePointer));
   regs.takeUnchecked(ICStubReg);
   if (HasInterpreterPCReg()) {
     regs.takeUnchecked(InterpreterPCReg);
@@ -6844,7 +6839,7 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
     // the script has any breakpoints or is in step mode before calling into
     // C++.
     Label hasDebugScript;
-    Address scriptAddr(BaselineFrameReg,
+    Address scriptAddr(FramePointer,
                        BaselineFrame::reverseOffsetOfInterpreterScript());
     masm.loadPtr(scriptAddr, scratch1);
     masm.branchTest32(Assembler::NonZero,
@@ -6856,7 +6851,7 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
 
     if (HasInterpreterPCReg()) {
       // Update frame's bytecode pc because the debugger depends on it.
-      Address pcAddr(BaselineFrameReg,
+      Address pcAddr(FramePointer,
                      BaselineFrame::reverseOffsetOfInterpreterPC());
       masm.storePtr(InterpreterPCReg, pcAddr);
     }
@@ -6866,7 +6861,7 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
   masm.loadAbiReturnAddress(scratch1);
 
   // Load BaselineFrame pointer in scratch2.
-  masm.loadBaselineFramePtr(BaselineFrameReg, scratch2);
+  masm.loadBaselineFramePtr(FramePointer, scratch2);
 
   // Enter a stub frame and call the HandleDebugTrap VM function. Ensure
   // the stub frame has a nullptr ICStub pointer, since this pointer is marked
@@ -6886,8 +6881,7 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
 
   if (kind == DebugTrapHandlerKind::Interpreter) {
     // We have to reload the bytecode pc register.
-    Address pcAddr(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfInterpreterPC());
+    Address pcAddr(FramePointer, BaselineFrame::reverseOffsetOfInterpreterPC());
     masm.loadPtr(pcAddr, InterpreterPCRegAtDispatch);
   }
   masm.abiret();

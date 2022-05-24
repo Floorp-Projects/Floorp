@@ -148,7 +148,8 @@ AudioStream::AudioStream(DataSource& aSource, uint32_t aInRate,
       mSandboxed(CubebUtils::SandboxEnabled()),
       mPlaybackComplete(false),
       mPlaybackRate(1.0f),
-      mPreservesPitch(true) {}
+      mPreservesPitch(true),
+      mCallbacksStarted(false) {}
 
 AudioStream::~AudioStream() {
   LOG("deleted, state %d", mState.load());
@@ -233,6 +234,7 @@ nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo)
 
   LOG("%s channels: %d, rate: %d", __FUNCTION__, mOutChannels,
       mAudioClock.GetInputRate());
+
   mSinkInfo = aSinkInfo;
 
   cubeb_stream_params params;
@@ -269,10 +271,10 @@ nsresult AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
   if (mSinkInfo && mSinkInfo->DeviceID()) {
     deviceID = mSinkInfo->DeviceID();
   }
-  if (CubebUtils::CubebStreamInit(
-        aContext, &stream, "AudioStream", nullptr, nullptr,
-        deviceID, &aParams, latency_frames, DataCallback_S,
-        StateCallback_S, this) == CUBEB_OK) {
+  if (CubebUtils::CubebStreamInit(aContext, &stream, "AudioStream", nullptr,
+                                  nullptr, deviceID, &aParams, latency_frames,
+                                  DataCallback_S, StateCallback_S,
+                                  this) == CUBEB_OK) {
     mCubebStream.reset(stream);
     CubebUtils::ReportCubebBackendUsed();
   } else {
@@ -320,19 +322,18 @@ void AudioStream::SetStreamName(const nsAString& aStreamName) {
   }
 }
 
-Result<already_AddRefed<MediaSink::EndedPromise>, nsresult>
-AudioStream::Start() {
+nsresult AudioStream::Start(
+    MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise) {
   TRACE("AudioStream::Start");
   MOZ_ASSERT(mState == INITIALIZED);
   mState = STARTED;
-
   RefPtr<MediaSink::EndedPromise> promise;
   {
     MonitorAutoLock mon(mMonitor);
     // As cubeb might call audio stream's state callback very soon after we
     // start cubeb, we have to create the promise beforehand in order to handle
     // the case where we immediately get `drained`.
-    promise = mEndedPromise.Ensure(__func__);
+    mEndedPromise = std::move(aEndedPromise);
     mPlaybackComplete = false;
 
     if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
@@ -344,9 +345,9 @@ AudioStream::Start() {
                            : mState == DRAINED ? "DRAINED"
                                                : "ERRORED");
   if (mState == STARTED || mState == DRAINED) {
-    return promise.forget();
+    return NS_OK;
   }
-  return Err(NS_ERROR_FAILURE);
+  return NS_ERROR_FAILURE;
 }
 
 void AudioStream::Pause() {
@@ -391,7 +392,8 @@ void AudioStream::Resume() {
   }
 }
 
-void AudioStream::Shutdown() {
+Maybe<MozPromiseHolder<MediaSink::EndedPromise>> AudioStream::Shutdown(
+    ShutdownCause aCause) {
   TRACE("AudioStream::Shutdown");
   LOG("Shutdown, state %d", mState.load());
 
@@ -414,7 +416,15 @@ void AudioStream::Shutdown() {
   }
 
   mState = SHUTDOWN;
-  mEndedPromise.ResolveIfExists(true, __func__);
+  // When shutting down, if this AudioStream is shutting down because the
+  // HTMLMediaElement is now muted, hand back the ended promise, so that it can
+  // properly be resolved if the end of the media is reached while muted (i.e.
+  // without having an AudioStream)
+  if (aCause != ShutdownCause::Muting) {
+    mEndedPromise.ResolveIfExists(true, __func__);
+    return Nothing();
+  }
+  return Some(std::move(mEndedPromise));
 }
 
 int64_t AudioStream::GetPosition() {
@@ -587,6 +597,9 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
     CubebUtils::GetAudioThreadRegistry()->Register(mAudioThreadId);
   }
   WebCore::DenormalDisabler disabler;
+  if (!mCallbacksStarted) {
+    mCallbacksStarted = true;
+  }
 
   TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
   TRACE("AudioStream::DataCallback");

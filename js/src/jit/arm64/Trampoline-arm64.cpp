@@ -83,7 +83,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.SetStackPointer64(PseudoStackPointer64);
 
   // Save the stack pointer at this point for Baseline OSR.
-  masm.moveStackPtrTo(BaselineFrameReg);
+  masm.moveStackPtrTo(FramePointer);
   // Remember stack depth without padding and arguments.
   masm.moveStackPtrTo(r19);
 
@@ -204,14 +204,14 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
       temps.Exclude(ScratchReg2_64);
 
       masm.Adr(ScratchReg2_64, &osrReturnPoint);
-      masm.push(ScratchReg2, BaselineFrameReg);
+      masm.push(ScratchReg2, FramePointer);
 
       // Reserve frame.
       masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
 
-      masm.touchFrameValues(reg_osrNStack, ScratchReg2, BaselineFrameReg);
+      masm.touchFrameValues(reg_osrNStack, ScratchReg2, FramePointer);
     }
-    masm.moveStackPtrTo(BaselineFrameReg);
+    masm.moveStackPtrTo(FramePointer);
 
     // Reserve space for locals and stack values.
     masm.Lsl(w19, ARMRegister(reg_osrNStack, 32),
@@ -228,23 +228,23 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.loadJSContext(r19);
     masm.enterFakeExitFrame(r19, r19, ExitFrameType::Bare);
 
-    masm.push(BaselineFrameReg, reg_code);
+    masm.push(FramePointer, reg_code);
 
     // Initialize the frame, including filling in the slots.
     using Fn = bool (*)(BaselineFrame * frame, InterpreterFrame * interpFrame,
                         uint32_t numStackValues);
     masm.setupUnalignedABICall(r19);
-    masm.passABIArg(BaselineFrameReg);  // BaselineFrame.
-    masm.passABIArg(reg_osrFrame);      // InterpreterFrame.
+    masm.passABIArg(FramePointer);  // BaselineFrame.
+    masm.passABIArg(reg_osrFrame);  // InterpreterFrame.
     masm.passABIArg(reg_osrNStack);
     masm.callWithABI<Fn, jit::InitBaselineFrameForOsr>(
         MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-    masm.pop(r19, BaselineFrameReg);
+    masm.pop(r19, FramePointer);
     MOZ_ASSERT(r19 != ReturnReg);
 
     masm.addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));
-    masm.addPtr(Imm32(BaselineFrame::Size()), BaselineFrameReg);
+    masm.addPtr(Imm32(BaselineFrame::Size()), FramePointer);
 
     Label error;
     masm.branchIfFalseBool(ReturnReg, &error);
@@ -254,7 +254,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     // OOM: load error value, discard return address and previous frame
     // pointer, and return.
     masm.bind(&error);
-    masm.Add(masm.GetStackPointer64(), BaselineFrameReg64,
+    masm.Add(masm.GetStackPointer64(), FramePointer64,
              Operand(2 * sizeof(uintptr_t)));
     masm.syncStackPtr();
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);

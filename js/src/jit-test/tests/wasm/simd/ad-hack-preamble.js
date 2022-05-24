@@ -45,59 +45,8 @@ function setUnaligned(arr, width, loc, vals) {
     }
 }
 
-function assertSame(got, expected) {
-    assertEq(got.length, expected.length);
-    for ( let i=0; i < got.length; i++ ) {
-        let g = got[i];
-        let e = expected[i];
-        if (typeof g != typeof e) {
-            if (typeof g == "bigint")
-                e = BigInt(e);
-            else if (typeof e == "bigint")
-                g = BigInt(g);
-        }
-        assertEq(g, e);
-    }
-}
-
-function iota(len) {
-    let xs = [];
-    for ( let i=0 ; i < len ; i++ )
-        xs.push(i);
-    return xs;
-}
-
-function cross(xs) {
-    let results = [];
-    for ( let x of xs )
-        for ( let y of xs )
-            results.push([x,y]);
-    return results;
-}
-
 function equal(a, b) {
     return a === b || isNaN(a) && isNaN(b);
-}
-
-// Remove a value v from an array xs, comparing equal for NaN.
-function remove(v, xs) {
-    let result = [];
-    for ( let w of xs ) {
-        if (equal(v, w))
-            continue;
-        result.push(w);
-    }
-    return result;
-}
-
-function permute(xs) {
-    if (xs.length == 1)
-        return [xs];
-    let results = [];
-    for (let v of xs)
-        for (let tail of permute(remove(v, xs)))
-            results.push([v, ...tail]);
-    return results;
 }
 
 function upd(xs, at, val) {
