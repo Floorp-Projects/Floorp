@@ -1608,6 +1608,8 @@
     <string name="addresses_state">Bang</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Zip</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Quốc gia hoặc khu vực</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Điện thoại</string>
     <!-- The header for the email of an address -->

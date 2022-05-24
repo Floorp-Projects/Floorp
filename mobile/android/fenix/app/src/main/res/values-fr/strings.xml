@@ -1653,6 +1653,8 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="addresses_state">État</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Code postal</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Pays ou région</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Téléphone</string>
     <!-- The header for the email of an address -->
