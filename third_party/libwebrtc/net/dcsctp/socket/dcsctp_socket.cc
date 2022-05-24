@@ -279,10 +279,16 @@ void DcSctpSocket::Shutdown() {
     // "Upon receipt of the SHUTDOWN primitive from its upper layer, the
     // endpoint enters the SHUTDOWN-PENDING state and remains there until all
     // outstanding data has been acknowledged by its peer."
-    SetState(State::kShutdownPending, "Shutdown called");
-    t1_init_->Stop();
-    t1_cookie_->Stop();
-    MaybeSendShutdownOrAck();
+
+    // TODO(webrtc:12739): Remove this check, as it just hides the problem that
+    // the socket can transition from ShutdownSent to ShutdownPending, or
+    // ShutdownAckSent to ShutdownPending which is illegal.
+    if (state_ != State::kShutdownSent && state_ != State::kShutdownAckSent) {
+      SetState(State::kShutdownPending, "Shutdown called");
+      t1_init_->Stop();
+      t1_cookie_->Stop();
+      MaybeSendShutdownOrAck();
+    }
   } else {
     // Connection closed before even starting to connect, or during the initial
     // connection phase. There is no outstanding data, so the socket can just
@@ -1368,6 +1374,10 @@ void DcSctpSocket::HandleShutdown(
     // state restarting its T2-shutdown timer."
     SendShutdownAck();
     SetState(State::kShutdownAckSent, "SHUTDOWN received");
+  } else if (state_ == State::kShutdownAckSent) {
+    // TODO(webrtc:12739): This condition should be removed and handled by the
+    // next (state_ != State::kShutdownReceived).
+    return;
   } else if (state_ != State::kShutdownReceived) {
     RTC_DLOG(LS_VERBOSE) << log_prefix()
                          << "Received SHUTDOWN - shutting down the socket";
