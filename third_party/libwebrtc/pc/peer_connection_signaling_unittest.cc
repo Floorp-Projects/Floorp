@@ -11,6 +11,7 @@
 // This file contains tests that check the PeerConnection's signaling state
 // machine, as well as tests that check basic, media-agnostic aspects of SDP.
 
+#include <algorithm>
 #include <memory>
 #include <tuple>
 
@@ -953,6 +954,81 @@ TEST_P(PeerConnectionSignalingTest, ReceiveFlexFec) {
   EXPECT_EQ(codecs[1].name, "flexfec-03");
 
   EXPECT_TRUE(caller->SetLocalDescription(std::move(answer)));
+}
+
+TEST_P(PeerConnectionSignalingTest, ReceiveFlexFecReoffer) {
+  auto caller = CreatePeerConnection();
+
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 8403615332048243445 2 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=group:BUNDLE 0\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 102 35\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp:9 IN IP4 0.0.0.0\r\n"
+      "a=ice-ufrag:IZeV\r\n"
+      "a=ice-pwd:uaZhQD4rYM/Tta2qWBT1Bbt4\r\n"
+      "a=ice-options:trickle\r\n"
+      "a=fingerprint:sha-256 "
+      "D8:6C:3D:FA:23:E2:2C:63:11:2D:D0:86:BE:C4:D0:65:F9:42:F7:1C:06:04:27:E6:"
+      "1C:2C:74:01:8D:50:67:23\r\n"
+      "a=setup:actpass\r\n"
+      "a=mid:0\r\n"
+      "a=sendrecv\r\n"
+      "a=msid:stream track\r\n"
+      "a=rtcp-mux\r\n"
+      "a=rtcp-rsize\r\n"
+      "a=rtpmap:102 VP8/90000\r\n"
+      "a=rtcp-fb:102 goog-remb\r\n"
+      "a=rtcp-fb:102 transport-cc\r\n"
+      "a=rtcp-fb:102 ccm fir\r\n"
+      "a=rtcp-fb:102 nack\r\n"
+      "a=rtcp-fb:102 nack pli\r\n"
+      "a=rtpmap:35 flexfec-03/90000\r\n"
+      "a=fmtp:35 repair-window=10000000\r\n"
+      "a=ssrc-group:FEC-FR 1224551896 1953032773\r\n"
+      "a=ssrc:1224551896 cname:/exJcmhSLpyu9FgV\r\n"
+      "a=ssrc:1953032773 cname:/exJcmhSLpyu9FgV\r\n";
+  std::unique_ptr<webrtc::SessionDescriptionInterface> remote_description =
+      webrtc::CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
+
+  EXPECT_TRUE(caller->SetRemoteDescription(std::move(remote_description)));
+
+  auto answer = caller->CreateAnswer();
+  ASSERT_EQ(answer->description()->contents().size(), 1u);
+  ASSERT_NE(
+      answer->description()->contents()[0].media_description()->as_video(),
+      nullptr);
+  auto codecs = answer->description()
+                    ->contents()[0]
+                    .media_description()
+                    ->as_video()
+                    ->codecs();
+  ASSERT_EQ(codecs.size(), 2u);
+  EXPECT_EQ(codecs[1].name, "flexfec-03");
+  EXPECT_EQ(codecs[1].id, 35);
+
+  EXPECT_TRUE(caller->SetLocalDescription(std::move(answer)));
+
+  // This generates a collision for AV1 which needs to be remapped.
+  auto offer = caller->CreateOffer(RTCOfferAnswerOptions());
+  auto offer_codecs = offer->description()
+                          ->contents()[0]
+                          .media_description()
+                          ->as_video()
+                          ->codecs();
+  auto flexfec_it = std::find_if(
+      offer_codecs.begin(), offer_codecs.end(),
+      [](const cricket::Codec& codec) { return codec.name == "flexfec-03"; });
+  ASSERT_EQ(flexfec_it->id, 35);
+  auto av1_it = std::find_if(
+      offer_codecs.begin(), offer_codecs.end(),
+      [](const cricket::Codec& codec) { return codec.name == "AV1X"; });
+  if (av1_it != offer_codecs.end()) {
+    ASSERT_NE(av1_it->id, 35);
+  }
 }
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionSignalingTest,
