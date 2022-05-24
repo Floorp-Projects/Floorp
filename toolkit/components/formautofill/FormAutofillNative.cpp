@@ -348,11 +348,14 @@ constexpr AutofillParams kCoefficents{
 // clang-format off
 
 constexpr float kCCNumberBias = -4.948795795440674;
+// Comment out code that are not used right now
+/*
 constexpr float kCCNameBias = -5.3578081130981445;
 constexpr float kCCTypeBias = -5.979659557342529;
 constexpr float kCCExpBias = -5.849575996398926;
 constexpr float kCCExpMonthBias = -8.844199180603027;
 constexpr float kCCExpYearBias = -6.499860763549805;
+*/
 
 struct Rule {
   RegexKey key;
@@ -1171,27 +1174,16 @@ void FormAutofillImpl::GetFormAutofillConfidences(
     auto& params = paramSet[i];
     const auto& element = aElements[i];
 
-    Element* nextFillableField = NextField(aElements, i);
-    Element* prevFillableField = PrevField(aElements, i);
-
     const nsTArray<nsCString>* labelStrings = GetLabelStrings(
         element, elementsToLabelStrings, elementsIdToLabelStrings);
-    const nsTArray<nsCString>* nextLabelStrings = GetLabelStrings(
-        nextFillableField, elementsToLabelStrings, elementsIdToLabelStrings);
-    const nsTArray<nsCString>* prevLabelStrings = GetLabelStrings(
-        prevFillableField, elementsToLabelStrings, elementsIdToLabelStrings);
 
     bool idOrNameMatchDwfrmAndBml =
         IdOrNameMatchRegExp(element, RegexKey::DWFRM) &&
         IdOrNameMatchRegExp(element, RegexKey::BML);
-    bool idOrNameMatchFirstAndLast =
-        IdOrNameMatchRegExp(element, RegexKey::FIRST) &&
-        IdOrNameMatchRegExp(element, RegexKey::LAST);
     bool hasTemplatedValue = HasTemplatedValue(element);
     bool inputTypeNotNumbery = InputTypeNotNumbery(element);
     bool idOrNameMatchSubscription =
         IdOrNameMatchRegExp(element, RegexKey::SUBSCRIPTION);
-    bool roleIsMenu = RoleIsMenu(element);
 
 #define RULE_IMPL2(rule, type) params.m##type##Params[type##Params::rule]
 #define RULE_IMPL(rule, type) RULE_IMPL2(rule, type)
@@ -1221,6 +1213,22 @@ void FormAutofillImpl::GetFormAutofillConfidences(
     RULE(hasTemplatedValue) = hasTemplatedValue;
     RULE(inputTypeNotNumbery) = inputTypeNotNumbery;
 #undef RULE_TYPE
+
+    // We only use Fathom to detect credit card number field for now.
+    // Comment out code below instead of removing them to make it clear that
+    // the current design is to support multiple rules.
+/*
+    Element* nextFillableField = NextField(aElements, i);
+    Element* prevFillableField = PrevField(aElements, i);
+
+    const nsTArray<nsCString>* nextLabelStrings = GetLabelStrings(
+        nextFillableField, elementsToLabelStrings, elementsIdToLabelStrings);
+    const nsTArray<nsCString>* prevLabelStrings = GetLabelStrings(
+        prevFillableField, elementsToLabelStrings, elementsIdToLabelStrings);
+    bool idOrNameMatchFirstAndLast =
+        IdOrNameMatchRegExp(element, RegexKey::FIRST) &&
+        IdOrNameMatchRegExp(element, RegexKey::LAST);
+    bool roleIsMenu = RoleIsMenu(element);
 
     // cc-name
 #define RULE_TYPE CCName
@@ -1425,12 +1433,11 @@ void FormAutofillImpl::GetFormAutofillConfidences(
     RULE(idOrNameMatchDwfrmAndBml) = idOrNameMatchDwfrmAndBml;
     RULE(hasTemplatedValue) = hasTemplatedValue;
 #undef RULE_TYPE
+*/
+
 #undef RULE_IMPL2
 #undef RULE_IMPL
 #undef RULE
-
-    // Calculating the final score of each rule
-    FormAutofillConfidences score;
 
 #define CALCULATE_SCORE(type, score)                                        \
   for (auto i : MakeEnumeratedRange(type##Params::Count)) {                 \
@@ -1438,12 +1445,16 @@ void FormAutofillImpl::GetFormAutofillConfidences(
   }                                                                         \
   (score) = Sigmoid(score + k##type##Bias);
 
+    // Calculating the final score of each rule
+    FormAutofillConfidences score;
     CALCULATE_SCORE(CCNumber, score.mCcNumber)
-    CALCULATE_SCORE(CCName, score.mCcName)
-    CALCULATE_SCORE(CCType, score.mCcType)
-    CALCULATE_SCORE(CCExp, score.mCcExp)
-    CALCULATE_SCORE(CCExpMonth, score.mCcExpMonth)
-    CALCULATE_SCORE(CCExpYear, score.mCcExpYear)
+
+    // Comment out code that are not used right now
+    // CALCULATE_SCORE(CCName, score.mCcName)
+    // CALCULATE_SCORE(CCType, score.mCcType)
+    // CALCULATE_SCORE(CCExp, score.mCcExp)
+    // CALCULATE_SCORE(CCExpMonth, score.mCcExpMonth)
+    // CALCULATE_SCORE(CCExpYear, score.mCcExpYear)
 
 #undef CALCULATE_SCORE
 
