@@ -83,6 +83,10 @@ class AudioSink : private AudioStream::DataSource {
     return mAudioStream && mAudioStream->CallbackStarted();
   }
 
+  void UpdateStartTime(const media::TimeUnit& aStartTime) {
+    mStartTime = aStartTime;
+  }
+
  private:
   // Allocate and initialize mAudioStream. Returns NS_OK on success.
   nsresult InitializeAudioStream(const PlaybackParams& aParams);
@@ -112,7 +116,7 @@ class AudioSink : private AudioStream::DataSource {
   // The presentation time of the first audio frame that was played.
   // We can add this to the audio stream position to determine
   // the current audio time.
-  const media::TimeUnit mStartTime;
+  media::TimeUnit mStartTime;
 
   // Keep the last good position returned from the audio stream. Used to ensure
   // position returned by GetPosition() is mono-increasing in spite of audio
