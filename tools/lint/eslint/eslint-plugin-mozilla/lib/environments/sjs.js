@@ -23,6 +23,7 @@ module.exports = {
     getObjectState: false,
     setObjectState: false,
     registerPathHandler: false,
+    Services: false,
     // importScripts is also available.
     importScripts: false,
   },
