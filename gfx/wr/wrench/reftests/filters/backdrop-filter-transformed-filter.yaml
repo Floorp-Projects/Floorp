@@ -1,0 +1,17 @@
+---
+root:
+  items:
+    - type: rect
+      color: red
+      bounds: 0 0 200 200
+    - image: checkerboard(2,14,14,14,14)
+      bounds: 0 0 200 200
+    - type: stacking-context
+      transform: rotate(45)
+      transform-origin: 100 100
+      filters: identity
+      wraps-backdrop-filter: true
+      items:
+        - type: backdrop-filter
+          bounds: 50 50 100 100
+          filters: invert(1)

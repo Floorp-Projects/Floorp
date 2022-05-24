@@ -224,6 +224,7 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
             }
             Some(PictureCompositeMode::Blit(_)) |
             Some(PictureCompositeMode::TileCache { .. }) |
+            Some(PictureCompositeMode::IntermediateSurface) |
             None => {
                 PictureCompositeKey::Identity
             }
