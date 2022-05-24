@@ -34,6 +34,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
@@ -49,6 +50,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
@@ -64,6 +66,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
@@ -79,6 +82,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
@@ -94,6 +98,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: true,
       },
       sourceContent: {
         contentType: "text/html",
@@ -109,6 +114,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
@@ -124,6 +130,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
@@ -139,6 +146,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
@@ -159,6 +167,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
@@ -180,6 +189,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
@@ -333,6 +343,7 @@ add_task(async function testParentProcessPrivilegedSources() {
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
+        isInlineSource: false,
       },
       sourceContent: {
         contentType: "text/javascript",
