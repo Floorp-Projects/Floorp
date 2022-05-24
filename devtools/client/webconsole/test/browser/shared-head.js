@@ -305,3 +305,46 @@ async function findMessagesVirtualized({
     gFindMessagesVirtualizedStack = null;
   }
 }
+
+/**
+ * Find the last message with given message type in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @param string text
+ *        A substring that can be found in the message.
+ * @param string typeSelector
+ *        A part of selector for the message, to specify the message type.
+ * @return {Node} the node corresponding the found message, otherwise undefined
+ */
+function findMessageByType(hud, text, typeSelector) {
+  const elements = findMessagesByType(hud, text, typeSelector);
+  return elements.at(-1);
+}
+
+/**
+ * Find multiple messages with given message type in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @param string text
+ *        A substring that can be found in the message.
+ * @param string typeSelector
+ *        A part of selector for the message, to specify the message type.
+ * @return {Array} The nodes corresponding the found messages
+ */
+function findMessagesByType(hud, text, typeSelector) {
+  if (!typeSelector) {
+    throw new Error("typeSelector parameter is required");
+  }
+  if (!typeSelector.startsWith(".")) {
+    throw new Error("typeSelector should start with a dot e.g. `.result`");
+  }
+
+  const selector = ".message" + typeSelector;
+  const messages = hud.ui.outputNode.querySelectorAll(selector);
+  const elements = Array.from(messages).filter(el =>
+    el.textContent.includes(text)
+  );
+  return elements;
+}
