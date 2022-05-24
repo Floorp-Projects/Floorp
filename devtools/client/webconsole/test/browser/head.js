@@ -1650,7 +1650,7 @@ async function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
 async function checkMessageStack(hud, text, expectedFrameLines) {
   info(`Checking message stack for "${text}"`);
   const msgNode = await waitFor(
-    () => findMessage(hud, text),
+    () => findErrorMessage(hud, text),
     `Couln't find message including "${text}"`
   );
   ok(!msgNode.classList.contains("open"), `Error logged not expanded`);
