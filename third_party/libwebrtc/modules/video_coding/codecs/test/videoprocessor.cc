@@ -650,6 +650,8 @@ const webrtc::EncodedImage* VideoProcessor::BuildAndStoreSuperframe(
 
   EncodedImage copied_image = encoded_image;
   copied_image.SetEncodedData(buffer);
+  if (base_image.size())
+    copied_image._frameType = base_image._frameType;
 
   // Replace previous EncodedImage for this spatial layer.
   merged_encoded_frames_.at(spatial_idx) = std::move(copied_image);
