@@ -579,9 +579,28 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
         return false;
       }
 #endif
+
+      if (msg->attached_handles_.Length() >
+          IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE) {
+        MOZ_DIAGNOSTIC_ASSERT(false, "Too many file descriptors!");
+        CHROMIUM_LOG(FATAL) << "Too many file descriptors!";
+        // This should not be reached.
+        return false;
+      }
+
+      msg->header()->num_handles = msg->attached_handles_.Length();
+#if defined(OS_MACOSX)
+      if (!msg->attached_handles_.IsEmpty()) {
+        msg->set_fd_cookie(++last_pending_fd_id_);
+      }
+#endif
+
       Pickle::BufferList::IterImpl iter(msg->Buffers());
       MOZ_DIAGNOSTIC_ASSERT(!iter.Done(), "empty message");
       partial_write_.emplace(PartialWrite{iter, msg->attached_handles_});
+
+      AddIPCProfilerMarker(*msg, other_pid_, MessageDirection::eSending,
+                           MessagePhase::TransferStart);
     }
 
     if (partial_write_->iter_.Done()) {
@@ -590,41 +609,16 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       return false;
     }
 
-    if (partial_write_->iter_.Data() == msg->Buffers().Start()) {
-      AddIPCProfilerMarker(*msg, other_pid_, MessageDirection::eSending,
-                           MessagePhase::TransferStart);
-
-      if (!msg->attached_handles_.IsEmpty()) {
-        // This is the first chunk of a message which has descriptors to send
-        if (msg->attached_handles_.Length() >
-            IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE) {
-          MOZ_DIAGNOSTIC_ASSERT(false, "Too many file descriptors!");
-          CHROMIUM_LOG(FATAL) << "Too many file descriptors!";
-          // This should not be reached.
-          return false;
-        }
-
-        msg->header()->num_handles = msg->attached_handles_.Length();
-#if defined(OS_MACOSX)
-        msg->set_fd_cookie(++last_pending_fd_id_);
-#endif
-      }
-    }
-
-    struct iovec iov[kMaxIOVecSize];
-    size_t iov_count = 0;
-    size_t amt_to_write = 0;
-
     // How much of this message have we written so far?
     Pickle::BufferList::IterImpl iter = partial_write_->iter_;
     auto handles = partial_write_->handles_;
 
+    // Serialize attached file descriptors into the cmsg header. Only up to
+    // kControlBufferMaxFds can be serialized at once, so messages with more
+    // attachments must be sent over multiple `sendmsg` calls.
+    const size_t num_fds = std::min(handles.Length(), kControlBufferMaxFds);
     size_t max_amt_to_write = iter.TotalBytesAvailable(msg->Buffers());
-    if (!handles.IsEmpty()) {
-      // We can only send at most kControlBufferMaxFds files per sendmsg call.
-      const size_t num_fds = std::min(handles.Length(), kControlBufferMaxFds);
-
-      // Populate the cmsg header for this call
+    if (num_fds > 0) {
       msgh.msg_control = cmsgBuf;
       msgh.msg_controllen = CMSG_LEN(sizeof(int) * num_fds);
       struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msgh);
@@ -635,17 +629,14 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
         reinterpret_cast<int*>(CMSG_DATA(cmsg))[i] = handles[i].get();
       }
 
-      // Update partial_write_ to record which handles were written.
-      auto remaining = handles.From(num_fds);
-      partial_write_->handles_ = remaining;
-
       // Avoid writing one byte per remaining handle in excess of
       // kControlBufferMaxFds.  Each handle written will consume a minimum of 4
       // bytes in the message (to store it's index), so we can depend on there
       // being enough data to send every handle.
-      MOZ_ASSERT(max_amt_to_write > remaining.Length(),
+      size_t remaining = handles.Length() - num_fds;
+      MOZ_ASSERT(max_amt_to_write > remaining,
                  "must be at least one byte in the message for each handle");
-      max_amt_to_write -= remaining.Length();
+      max_amt_to_write -= remaining;
     }
 
     // Store remaining segments to write into iovec.
@@ -653,6 +644,9 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     // Don't add more than kMaxIOVecSize iovecs so that we avoid
     // OS-dependent limits.  Also, stop adding iovecs if we've already
     // prepared to write at least the full buffer size.
+    struct iovec iov[kMaxIOVecSize];
+    size_t iov_count = 0;
+    size_t amt_to_write = 0;
     while (!iter.Done() && iov_count < kMaxIOVecSize &&
            PipeBufHasSpaceAfter(amt_to_write) &&
            amt_to_write < max_amt_to_write) {
@@ -667,6 +661,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       iter.Advance(msg->Buffers(), size);
     }
     MOZ_ASSERT(amt_to_write <= max_amt_to_write);
+    MOZ_ASSERT(amt_to_write > 0);
 
     const bool intentional_short_write = !iter.Done();
     msgh.msg_iov = iov;
@@ -715,13 +710,14 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 
     if (intentional_short_write ||
         static_cast<size_t>(bytes_written) != amt_to_write) {
-      // If write() fails with EAGAIN then bytes_written will be -1.
+      // If write() fails with EAGAIN or EMSGSIZE then bytes_written will be -1.
       if (bytes_written > 0) {
         MOZ_DIAGNOSTIC_ASSERT(intentional_short_write ||
                               static_cast<size_t>(bytes_written) <
                                   amt_to_write);
         partial_write_->iter_.AdvanceAcrossSegments(msg->Buffers(),
                                                     bytes_written);
+        partial_write_->handles_ = handles.From(num_fds);
         // We should not hit the end of the buffer.
         MOZ_DIAGNOSTIC_ASSERT(!partial_write_->iter_.Done());
       }
@@ -734,6 +730,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
           MessageLoopForIO::WATCH_WRITE, &write_watcher_, this);
       return true;
     } else {
+      MOZ_ASSERT(partial_write_->handles_.Length() == num_fds,
+                 "not all handles were sent");
       partial_write_.reset();
 
 #if defined(OS_MACOSX)
