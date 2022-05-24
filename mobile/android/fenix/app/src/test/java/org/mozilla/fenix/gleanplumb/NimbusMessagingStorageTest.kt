@@ -237,9 +237,9 @@ class NimbusMessagingStorageTest {
     fun `GIVEN a malformed action WHEN calling sanitizeAction THEN return null`() {
         val actionsMap = mapOf("action-1" to "action-1-url")
 
-        val notFoundAction = storage.sanitizeAction("messageId", "no-found-action", actionsMap)
-        val emptyAction = storage.sanitizeAction("messageId", "", actionsMap)
-        val blankAction = storage.sanitizeAction("messageId", " ", actionsMap)
+        val notFoundAction = storage.sanitizeAction("messageId", "no-found-action", actionsMap, false)
+        val emptyAction = storage.sanitizeAction("messageId", "", actionsMap, false)
+        val blankAction = storage.sanitizeAction("messageId", " ", actionsMap, false)
 
         assertNull(notFoundAction)
         assertNull(emptyAction)
@@ -253,7 +253,7 @@ class NimbusMessagingStorageTest {
 
         storage.malFormedMap["malformed-action"] = "messageId"
 
-        val action = storage.sanitizeAction("messageId", "malformed-action", actionsMap)
+        val action = storage.sanitizeAction("messageId", "malformed-action", actionsMap, false)
 
         assertNull(action)
         assertFalse(malformedWasReported)
@@ -263,7 +263,7 @@ class NimbusMessagingStorageTest {
     fun `GIVEN a non-previously stored malformed action WHEN calling sanitizeAction THEN return null and report malFormed`() {
         val actionsMap = mapOf("action-1" to "action-1-url")
 
-        val action = storage.sanitizeAction("messageId", "malformed-action", actionsMap)
+        val action = storage.sanitizeAction("messageId", "malformed-action", actionsMap, false)
 
         assertNull(action)
         assertTrue(storage.malFormedMap.containsKey("malformed-action"))
@@ -282,9 +282,19 @@ class NimbusMessagingStorageTest {
     fun `GIVEN a valid action WHEN calling sanitizeAction THEN return the action`() {
         val actionsMap = mapOf("action-1" to "action-1-url")
 
-        val validAction = storage.sanitizeAction("messageId", "action-1", actionsMap)
+        val validAction = storage.sanitizeAction("messageId", "action-1", actionsMap, false)
 
         assertEquals("action-1-url", validAction)
+    }
+
+    @Test
+    fun `GIVEN a valid action for control message WHEN calling sanitizeAction THEN return a empty action`() {
+        val actionsMap = mapOf("action-1" to "action-1-url")
+
+        val validAction = storage.sanitizeAction("messageId", "", actionsMap, true)
+
+        assertEquals("CONTROL_ACTION", validAction)
+        assertFalse(malformedWasReported)
     }
 
     @Test
