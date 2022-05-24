@@ -623,8 +623,9 @@ Download.prototype = {
         );
       } else if (
         Services.prefs.getBoolPref("browser.helperApps.deleteTempFileOnExit") &&
-        !Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel"
+        Services.prefs.getBoolPref(
+          "browser.download.start_downloads_in_tmp_dir",
+          false
         )
       ) {
         gExternalAppLauncher.deleteTemporaryFileOnExit(
