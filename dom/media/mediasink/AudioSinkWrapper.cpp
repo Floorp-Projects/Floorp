@@ -176,8 +176,12 @@ void AudioSinkWrapper::OnMuted(bool aMuted) {
       }
       Maybe<MozPromiseHolder<MediaSink::EndedPromise>> rv =
           mAudioSink->Shutdown(ShutdownCause::Muting);
-      MOZ_ASSERT(rv.isSome());
-      mEndedPromiseHolder = std::move(rv.ref());
+      // There will generally be a promise here, except if the stream has
+      // errored out, or if it has just finished. In both cases, the promise has
+      // been handled appropriately, there is nothing to do.
+      if (rv.isSome()) {
+        mEndedPromiseHolder = std::move(rv.ref());
+      }
       mAudioSink = nullptr;
     }
   } else {
