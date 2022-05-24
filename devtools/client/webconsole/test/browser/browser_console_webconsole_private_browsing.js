@@ -56,8 +56,12 @@ async function testBrowserConsole(publicTab) {
   let hud = await openConsole(privateTab);
   ok(hud, "web console opened");
 
-  const onLogMessage = waitForMessage(hud, PRIVATE_MESSAGE);
-  const onErrorMessage = waitForMessage(hud, PRIVATE_EXCEPTION, ".error");
+  const onLogMessage = waitForMessageByType(
+    hud,
+    PRIVATE_MESSAGE,
+    ".console-api"
+  );
+  const onErrorMessage = waitForMessageByType(hud, PRIVATE_EXCEPTION, ".error");
   logPrivateMessages(privateBrowser.selectedBrowser);
 
   await onLogMessage;
@@ -103,9 +107,10 @@ async function testBrowserConsole(publicTab) {
   hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   // Add a non-private message to the console.
-  const onBrowserConsoleNonPrivateMessage = waitForMessage(
+  const onBrowserConsoleNonPrivateMessage = waitForMessageByType(
     hud,
-    NON_PRIVATE_MESSAGE
+    NON_PRIVATE_MESSAGE,
+    ".console-api"
   );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [NON_PRIVATE_MESSAGE], function(
     msg
@@ -121,11 +126,12 @@ async function testBrowserConsole(publicTab) {
   // console would have displayed any cached messages by now.
   assertNoPrivateMessages(hud);
 
-  const onBrowserConsolePrivateLogMessage = waitForMessage(
+  const onBrowserConsolePrivateLogMessage = waitForMessageByType(
     hud,
-    PRIVATE_MESSAGE
+    PRIVATE_MESSAGE,
+    ".console-api"
   );
-  const onBrowserConsolePrivateErrorMessage = waitForMessage(
+  const onBrowserConsolePrivateErrorMessage = waitForMessageByType(
     hud,
     PRIVATE_EXCEPTION,
     ".error"

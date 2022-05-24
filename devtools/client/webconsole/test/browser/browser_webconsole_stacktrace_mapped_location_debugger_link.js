@@ -24,7 +24,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Print a stacktrace");
-  const onLoggedStacktrace = waitForMessage(hud, "console.trace");
+  const onLoggedStacktrace = waitForMessageByType(
+    hud,
+    "console.trace",
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.logTrace();
   });

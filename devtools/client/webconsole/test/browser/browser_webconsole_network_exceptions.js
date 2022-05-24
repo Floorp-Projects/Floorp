@@ -21,7 +21,7 @@ add_task(async function() {
     expectUncaughtException();
   }
 
-  const onMessage = waitForMessage(hud, "bug618078exception");
+  const onMessage = waitForMessageByType(hud, "bug618078exception", ".error");
   await navigateTo(TEST_URI2);
   const { node } = await onMessage;
   ok(true, "Network exception logged as expected.");

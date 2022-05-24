@@ -66,7 +66,7 @@ add_task(async function() {
   info(
     "Test that Ctrl/Cmd + Click on a link in an array doesn't open the sidebar"
   );
-  const onMessage = waitForMessage(hud, "Visit");
+  const onMessage = waitForMessageByType(hud, "Visit", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [firstURL], url => {
     content.wrappedJSObject.console.log([`Visit ${url}`]);
   });
@@ -92,7 +92,7 @@ add_task(async function() {
   await onTabLoaded;
 
   info("Log a message and wait for it to appear so we know the UI was updated");
-  const onSmokeMessage = waitForMessage(hud, "smoke");
+  const onSmokeMessage = waitForMessageByType(hud, "smoke", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log("smoke");
   });

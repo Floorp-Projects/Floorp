@@ -12,7 +12,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const targetURL = "http://example.org";
-  const onErrorMessage = waitForMessage(hud, "may not load data");
+  const onErrorMessage = waitForMessageByType(
+    hud,
+    "may not load data",
+    ".error"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [targetURL], url => {
     XPCNativeWrapper.unwrap(content).testTrack(url);
   });

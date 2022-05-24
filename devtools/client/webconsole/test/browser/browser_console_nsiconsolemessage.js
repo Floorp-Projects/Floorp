@@ -29,7 +29,7 @@ add_task(async function() {
   // Log a "foobarz" message so that we can be certain the previous message is
   // not displayed.
   let text = "foobarz";
-  const onFooBarzMessage = waitForMessage(hud, text);
+  const onFooBarzMessage = waitForMessageByType(hud, text, ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [text], function(msg) {
     content.console.log(msg);
   });

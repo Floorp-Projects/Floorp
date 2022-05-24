@@ -18,29 +18,16 @@ add_task(async function() {
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.wrappedJSObject.console.log("msg");
   });
-  await waitForMessage("msg", hud);
+  await waitForMessageByType(hud, "msg", ".console-api");
 
   info("Send a console.clear() from the content page");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.wrappedJSObject.console.clear();
   });
-  await waitForMessage("Console was cleared", hud);
+  await waitForMessageByType(hud, "Console was cleared", ".console-api");
 
   info(
     "Check that the messages logged after the first clear are still displayed"
   );
   ok(hud.ui.outputNode.textContent.includes("msg"), "msg is in the output");
 });
-
-function waitForMessage(message, webconsole) {
-  return waitForMessages({
-    webconsole,
-    messages: [
-      {
-        text: message,
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG,
-      },
-    ],
-  });
-}

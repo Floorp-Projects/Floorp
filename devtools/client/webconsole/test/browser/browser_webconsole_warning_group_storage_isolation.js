@@ -45,7 +45,7 @@ add_task(async function testStorageIsolationMessage() {
   info("Test storage isolation message");
   const url1 = `${PARTITIONED_URL}?1&${now}`;
   const message = getWarningMessage(url1);
-  const onStorageIsolationWarningMessage = waitForMessage(
+  const onStorageIsolationWarningMessage = waitForMessageByType(
     hud,
     message,
     ".warn"
@@ -58,7 +58,7 @@ add_task(async function testStorageIsolationMessage() {
   info(
     "Emit a new storage isolation message to check that it causes a grouping"
   );
-  const onStorageIsolationWarningGroupMessage = waitForMessage(
+  const onStorageIsolationWarningGroupMessage = waitForMessageByType(
     hud,
     STORAGE_ISOLATION_GROUP_LABEL,
     ".warn"

@@ -190,9 +190,10 @@ add_task(async function() {
 
   await logAndAssertInitialMessages(hud);
 
-  const onNavigatedMessage = waitForMessage(
+  const onNavigatedMessage = waitForMessageByType(
     hud,
-    "Navigated to " + TEST_COM_URI
+    "Navigated to " + TEST_COM_URI,
+    ".navigationMarker"
   );
   const onReloaded = hud.ui.once("reloaded");
   // Because will-navigate DOCUMENT_EVENT timestamp is shifted to workaround some other limitation,
@@ -214,9 +215,10 @@ add_task(async function() {
   info(
     "Testing that messages also persist when doing a cross origin navigation if logs are persisted"
   );
-  const onNavigatedMessage2 = waitForMessage(
+  const onNavigatedMessage2 = waitForMessageByType(
     hud,
-    "Navigated to " + TEST_ORG_URI
+    "Navigated to " + TEST_ORG_URI,
+    ".navigationMarker"
   );
   timeBeforeNavigation = Date.now() - WILL_NAVIGATE_TIME_SHIFT;
   await navigateTo(TEST_ORG_URI);
@@ -234,9 +236,10 @@ add_task(async function() {
   info(
     "Test doing a second cross origin navigation in order to triger a target switching with a target following the window global lifecycle"
   );
-  const onNavigatedMessage3 = waitForMessage(
+  const onNavigatedMessage3 = waitForMessageByType(
     hud,
-    "Navigated to " + TEST_MOCHI_URI
+    "Navigated to " + TEST_MOCHI_URI,
+    ".navigationMarker"
   );
   timeBeforeNavigation = Date.now() - WILL_NAVIGATE_TIME_SHIFT;
   await navigateTo(TEST_MOCHI_URI);

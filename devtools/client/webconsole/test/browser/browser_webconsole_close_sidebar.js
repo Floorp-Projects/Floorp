@@ -24,7 +24,11 @@ add_task(async function() {
   await showSidebar(hud);
 
   info("Send a console.clear()");
-  const onMessagesCleared = waitForMessage(hud, "Console was cleared");
+  const onMessagesCleared = waitForMessageByType(
+    hud,
+    "Console was cleared",
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.clear();
   });
@@ -69,7 +73,7 @@ add_task(async function() {
 });
 
 async function showSidebar(hud) {
-  const onMessage = waitForMessage(hud, "Object");
+  const onMessage = waitForMessageByType(hud, "Object", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log({ a: 1 });
   });

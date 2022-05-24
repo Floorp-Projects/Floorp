@@ -49,7 +49,7 @@ add_task(async function() {
 });
 
 function logTextInContentAndWaitForMessage(hud, text) {
-  const onMessage = waitForMessage(hud, text);
+  const onMessage = waitForMessageByType(hud, text, ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [text], function(str) {
     content.wrappedJSObject.console.log(str);
   });

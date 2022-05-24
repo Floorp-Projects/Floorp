@@ -13,15 +13,15 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
 
-  const onInputMessage = waitForMessage(
+  const onInputMessage = waitForMessageByType(
     hud,
     "window.location.href;",
-    ".message.command"
+    ".command"
   );
-  const onEvaluationResultMessage = waitForMessage(
+  const onEvaluationResultMessage = waitForMessageByType(
     hud,
     TEST_URI,
-    ".message.result"
+    ".result"
   );
   execute(hud, "window.location.href;");
 

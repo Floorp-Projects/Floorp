@@ -68,7 +68,11 @@ add_task(async function() {
 
   if (Services.appinfo.OS === "Darwin") {
     info("Log a new message from the content page");
-    const onMessage = waitForMessage(hud, "another simple text message");
+    const onMessage = waitForMessageByType(
+      hud,
+      "another simple text message",
+      ".console-api"
+    );
     SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
       content.console.log("another simple text message");
     });

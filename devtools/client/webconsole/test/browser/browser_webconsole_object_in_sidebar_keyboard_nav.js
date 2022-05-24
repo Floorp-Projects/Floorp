@@ -65,7 +65,7 @@ add_task(async function() {
   ok(true, "`b` node is focused again");
 
   info("Select another object in the console output");
-  const onArrayMessage = waitForMessage(hud, "Array");
+  const onArrayMessage = waitForMessageByType(hud, "Array", ".console-api");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log([4, 5, 6]);
   });

@@ -11,7 +11,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const label = "oi-test";
-  const onLoggedMessage = waitForMessage(hud, label);
+  const onLoggedMessage = waitForMessageByType(hud, label, ".console-api");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [label], function(str) {
     content.wrappedJSObject.console.log(str, [1, 2, 3]);
   });

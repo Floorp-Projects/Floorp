@@ -62,7 +62,11 @@ add_task(async function testContentBlockingMessage() {
   const message =
     `The resource at \u201chttps://tracking.example.com/?1&${now}\u201d ` +
     `was blocked because content blocking is enabled`;
-  const onContentBlockingWarningMessage = waitForMessage(hud, message, ".warn");
+  const onContentBlockingWarningMessage = waitForMessageByType(
+    hud,
+    message,
+    ".warn"
+  );
   emitContentBlockingMessage(tab, `${TRACKER_URL}?1&${now}`);
   await onContentBlockingWarningMessage;
 
@@ -71,7 +75,7 @@ add_task(async function testContentBlockingMessage() {
   info(
     "Emit a new content blocking message to check that it causes a grouping"
   );
-  const onContentBlockingWarningGroupMessage = waitForMessage(
+  const onContentBlockingWarningGroupMessage = waitForMessageByType(
     hud,
     CONTENT_BLOCKING_GROUP_LABEL,
     ".warn"
@@ -188,7 +192,7 @@ async function testStorageAccessBlockedGrouping(groupLabel) {
 
   const getWarningMessage = url => groupLabel.replace("<URL>", url);
 
-  const onStorageAccessBlockedMessage = waitForMessage(
+  const onStorageAccessBlockedMessage = waitForMessageByType(
     hud,
     getWarningMessage(`${TRACKER_IMG}?1&${now}`),
     ".warn"
@@ -200,7 +204,7 @@ async function testStorageAccessBlockedGrouping(groupLabel) {
     "Emit a new content blocking message to check that it causes a grouping"
   );
 
-  const onContentBlockingWarningGroupMessage = waitForMessage(
+  const onContentBlockingWarningGroupMessage = waitForMessageByType(
     hud,
     groupLabel,
     ".warn"

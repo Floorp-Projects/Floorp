@@ -16,7 +16,7 @@ add_task(async function() {
   await waitFor(() => findConsoleAPIMessage(hud, loggedString));
   ok(true, "The initial message is displayed in the console");
   // Create a promise for the message logged after the reload.
-  const onMessage = waitForMessage(hud, loggedString);
+  const onMessage = waitForMessageByType(hud, loggedString, ".console-api");
   BrowserReload();
   await onMessage;
   ok(true, "The message is also displayed after a page reload");

@@ -36,8 +36,12 @@ add_task(async function testContentBlockingMessage() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Log a console.group");
-  const onGroupMessage = waitForMessage(hud, "myGroup");
-  let onInGroupMessage = waitForMessage(hud, "log in group");
+  const onGroupMessage = waitForMessageByType(hud, "myGroup", ".console-api");
+  let onInGroupMessage = waitForMessageByType(
+    hud,
+    "log in group",
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.group("myGroup");
     content.wrappedJSObject.console.log("log in group");
@@ -51,7 +55,7 @@ add_task(async function testContentBlockingMessage() {
     "Log a tracking protection message to check a single message isn't grouped"
   );
   const now = Date.now();
-  let onContentBlockingWarningMessage = waitForMessage(
+  let onContentBlockingWarningMessage = waitForMessageByType(
     hud,
     BLOCKED_URL,
     ".warn"
@@ -84,7 +88,7 @@ add_task(async function testContentBlockingMessage() {
   info(
     "Log a second tracking protection message to check that it causes the grouping"
   );
-  const onContentBlockingWarningGroupMessage = waitForMessage(
+  const onContentBlockingWarningGroupMessage = waitForMessageByType(
     hud,
     CONTENT_BLOCKING_GROUP_LABEL,
     ".warn"
@@ -113,7 +117,11 @@ add_task(async function testContentBlockingMessage() {
   info(
     "Log a new tracking protection message to check it appears inside the group"
   );
-  onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
+  onContentBlockingWarningMessage = waitForMessageByType(
+    hud,
+    BLOCKED_URL,
+    ".warn"
+  );
   emitContentBlockedMessage(now);
   await onContentBlockingWarningMessage;
   ok(true, "The new tracking protection message is displayed");
@@ -128,7 +136,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Log a simple message to check if it goes into the console.group");
-  onInGroupMessage = waitForMessage(hud, "log in group");
+  onInGroupMessage = waitForMessageByType(hud, "log in group", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("second log in group");
   });

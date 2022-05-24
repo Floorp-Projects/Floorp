@@ -27,7 +27,7 @@ add_task(async function task() {
   info("Add an empty tab and open the console");
   const hud = await openNewTabAndConsole("");
 
-  const onMessageAvailable = waitForMessage(hud, TEST_URI, ".network");
+  const onMessageAvailable = waitForMessageByType(hud, TEST_URI, ".network");
   info(`Navigate to ${TEST_URI}`);
   await navigateTo(TEST_URI);
   const { node } = await onMessageAvailable;

@@ -80,7 +80,7 @@ async function openRequestBeforeUpdates(hud, tab) {
   await clearOutput(hud);
 
   const xhrUrl = TEST_PATH + "sjs_slow-response-test-server.sjs";
-  const onMessage = waitForMessage(hud, xhrUrl);
+  const onMessage = waitForMessageByType(hud, xhrUrl, ".network");
 
   // Fire an XHR POST request.
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {

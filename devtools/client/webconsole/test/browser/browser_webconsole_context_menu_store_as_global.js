@@ -64,7 +64,7 @@ add_task(async function() {
   info(
     "Check store as global variable is enabled for invisible-to-debugger objects"
   );
-  const onMessageInvisible = waitForMessage(hud, "foo");
+  const onMessageInvisible = waitForMessageByType(hud, "foo", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     const obj = Cu.Sandbox(Cu.getObjectPrincipal(content), {
       invisibleToDebugger: true,

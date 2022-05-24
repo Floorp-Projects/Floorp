@@ -55,7 +55,7 @@ add_task(async function() {
 
   for (const { input, shiftKey } of SHOULD_EXECUTE) {
     setInputValue(hud, input);
-    const onMessage = waitForMessage(hud, "", ".result");
+    const onMessage = waitForMessageByType(hud, "", ".result");
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey });
     await onMessage;
 

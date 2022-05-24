@@ -37,7 +37,7 @@ async function testWarningMessageVisibility(uri, visible) {
   const hud = await openNewTabAndConsole(uri, true);
 
   const sentinel = SENTINEL_MSG + Date.now();
-  const onSentinelMessage = waitForMessage(hud, sentinel);
+  const onSentinelMessage = waitForMessageByType(hud, sentinel, ".console-api");
 
   SpecialPowers.spawn(gBrowser.selectedBrowser, [sentinel], function(msg) {
     content.console.log(msg);

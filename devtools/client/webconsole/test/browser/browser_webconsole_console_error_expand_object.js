@@ -10,7 +10,11 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const onMessagesLogged = waitForMessage(hud, "myError");
+  const onMessagesLogged = waitForMessageByType(
+    hud,
+    "myError",
+    ".console-api.error"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.error("myError", { a: "a", b: "b" });
   });

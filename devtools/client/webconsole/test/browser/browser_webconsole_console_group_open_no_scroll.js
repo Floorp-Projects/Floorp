@@ -53,7 +53,7 @@ add_task(async function() {
     "Check that adding a message on an open group when scrolled to bottom scrolls " +
       "to bottom"
   );
-  const onNewMessage = waitForMessage(hud, "new-message");
+  const onNewMessage = waitForMessageByType(hud, "new-message", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.console.group("GROUP-2");
     content.console.log("new-message");

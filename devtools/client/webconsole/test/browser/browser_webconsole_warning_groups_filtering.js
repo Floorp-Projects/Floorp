@@ -36,7 +36,7 @@ add_task(async function testContentBlockingMessage() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Log a few content blocking messages and simple ones");
-  let onContentBlockingWarningMessage = waitForMessage(
+  let onContentBlockingWarningMessage = waitForMessageByType(
     hud,
     BLOCKED_URL,
     ".warn"
@@ -44,7 +44,7 @@ add_task(async function testContentBlockingMessage() {
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
   await logStrings(hud, "simple message A");
-  let onContentBlockingWarningGroupMessage = waitForMessage(
+  let onContentBlockingWarningGroupMessage = waitForMessageByType(
     hud,
     CONTENT_BLOCKING_GROUP_LABEL,
     ".warn"
@@ -66,11 +66,15 @@ add_task(async function testContentBlockingMessage() {
     findMessageByType(hud, "Navigated to", ".navigationMarker")
   );
 
-  onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
+  onContentBlockingWarningMessage = waitForMessageByType(
+    hud,
+    BLOCKED_URL,
+    ".warn"
+  );
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
   await logStrings(hud, "simple message C");
-  onContentBlockingWarningGroupMessage = waitForMessage(
+  onContentBlockingWarningGroupMessage = waitForMessageByType(
     hud,
     CONTENT_BLOCKING_GROUP_LABEL,
     ".warn"
@@ -311,8 +315,12 @@ function emitContentBlockedMessage(hud) {
  * @param {String} str
  */
 function logStrings(hud, str) {
-  const onFirstMessage = waitForMessage(hud, `${str} #1`);
-  const onSecondMessage = waitForMessage(hud, `${str} #2`);
+  const onFirstMessage = waitForMessageByType(hud, `${str} #1`, ".console-api");
+  const onSecondMessage = waitForMessageByType(
+    hud,
+    `${str} #2`,
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function(arg) {
     content.console.log(arg, "#1");
     content.console.log(arg, "#2");
