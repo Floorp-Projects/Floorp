@@ -55,7 +55,7 @@ function handleRequest(request, response) {
   }
 
   // just in case error handling for unexpected queries
-  if (expectedQueries.indexOf(queryString) == -1) {
+  if (!expectedQueries.includes(queryString)) {
     response.write("unexpected-response");
     return;
   }
