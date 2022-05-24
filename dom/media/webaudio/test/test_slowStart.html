@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioContext.currentTime</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("This test needs to periodically query the AudioContext's position.");
+const CUBEB_INIT_DELAY = 5000;
+// Delay audio stream start by a good 5 seconds
+SpecialPowers.pushPrefEnv({"set": [["media.cubeb.slow_stream_init_ms",
+    CUBEB_INIT_DELAY]]}, runTest);
+
+
+function runTest() {
+  let ac = new AudioContext();
+  let notStartedYetCount = 0;
+  let startWallClockTime = performance.now();
+  is(ac.currentTime, 0, "AudioContext.currentTime should be 0 initially");
+  is(ac.state, "suspended", "AudioContext.currentTime is initially suspended");
+  let intervalHandle = setInterval(function() {
+    if (ac.state == "running" || ac.currentTime > 0) {
+      clearInterval(intervalHandle);
+      return;
+    }
+    is(ac.currentTime, 0, "AudioContext.currentTime is still 0");
+    is(ac.state, "suspended", "AudioContext.currentTime is still suspended");
+    notStartedYetCount++;
+  });
+  ac.onstatechange = function() {
+    is(ac.state, "running", "The AudioContext eventually started.");
+    var startDuration = performance.now() - startWallClockTime;
+    info(`AudioContext start time with a delay of ${CUBEB_INIT_DELAY}): ${startDuration}`);
+    ok(notStartedYetCount > 0, "We should have observed the AudioContext in \"suspended\" state");
+    ok(startDuration >= CUBEB_INIT_DELAY, "The AudioContext state transition was correct.");
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
