@@ -192,14 +192,14 @@ class PeerConnectionRampUpTest : public ::testing::Test {
     dependencies.tls_cert_verifier =
         std::make_unique<rtc::TestCertificateVerifier>();
 
-    auto pc =
-        pc_factory_->CreatePeerConnection(config, std::move(dependencies));
-    if (!pc) {
+    auto result = pc_factory_->CreatePeerConnectionOrError(
+        config, std::move(dependencies));
+    if (!result.ok()) {
       return nullptr;
     }
 
     return std::make_unique<PeerConnectionWrapperForRampUpTest>(
-        pc_factory_, pc, std::move(observer));
+        pc_factory_, result.MoveValue(), std::move(observer));
   }
 
   void SetupOneWayCall() {

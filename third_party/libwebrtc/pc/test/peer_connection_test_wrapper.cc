@@ -123,10 +123,17 @@ bool PeerConnectionTestWrapper::CreatePc(
 
   std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator(
       new FakeRTCCertificateGenerator());
-  peer_connection_ = peer_connection_factory_->CreatePeerConnection(
-      config, std::move(port_allocator), std::move(cert_generator), this);
-
-  return peer_connection_.get() != NULL;
+  webrtc::PeerConnectionDependencies deps(this);
+  deps.allocator = std::move(port_allocator);
+  deps.cert_generator = std::move(cert_generator);
+  auto result = peer_connection_factory_->CreatePeerConnectionOrError(
+      config, std::move(deps));
+  if (result.ok()) {
+    peer_connection_ = result.MoveValue();
+    return true;
+  } else {
+    return false;
+  }
 }
 
 rtc::scoped_refptr<webrtc::DataChannelInterface>
