@@ -13284,6 +13284,26 @@
     "alert_emails": ["tihuang@mozilla.com", "pbz@mozilla.com", "seceng-telemetry@mozilla.com"],
     "bug_numbers": [1762374]
   },
+  "QUERY_STRIPPING_COUNT_BY_PARAM": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "param_mc_eid",
+      "param_oly_anon_id",
+      "param_oly_enc_id",
+      "param___s",
+      "param_vero_id",
+      "param__hsenc",
+      "param_mkt_tok",
+      "param_fbclid"
+    ],
+    "description": "Counts how often specific query parameters are stripped.",
+    "alert_emails": ["tihuang@mozilla.com", "pbz@mozilla.com", "seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1762374]
+  },
   "SERVICE_WORKER_LAUNCH_TIME_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
