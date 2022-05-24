@@ -14,10 +14,11 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-function waitForWhile() {
-  return new Promise(resolve => {
+async function waitForWhile() {
+  await new Promise(resolve => {
     requestIdleCallback(resolve, { timeout: 300 });
   });
+  await new Promise(r => requestAnimationFrame(r));
 }
 
 const NativePanHandlerForWindows = {
