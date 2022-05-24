@@ -66,6 +66,18 @@ def browser(full_configuration):
 
 
 @pytest.fixture
+def custom_profile(configuration):
+    # Clone the known profile for automation preferences
+    firefox_options = configuration["capabilities"]["moz:firefoxOptions"]
+    _, profile_folder = firefox_options["args"]
+    profile = Profile.clone(profile_folder)
+
+    yield profile
+
+    profile.cleanup()
+
+
+@pytest.fixture
 def geckodriver(configuration):
     """Start a geckodriver instance directly."""
     driver = None
