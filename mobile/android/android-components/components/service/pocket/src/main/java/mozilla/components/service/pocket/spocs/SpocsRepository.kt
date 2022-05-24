@@ -10,6 +10,7 @@ import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.ext.toLocalSpoc
 import mozilla.components.service.pocket.ext.toPocketSponsoredStory
 import mozilla.components.service.pocket.spocs.api.ApiSpoc
+import mozilla.components.service.pocket.spocs.db.SpocImpressionEntity
 import mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabase
 
 /**
@@ -22,10 +23,20 @@ internal class SpocsRepository(context: Context) {
     internal val spocsDao by lazy { database.value.spocsDao() }
 
     /**
-     * Get the current locally persisted list of sponsored Pocket stories.
+     * Get the current locally persisted list of sponsored Pocket stories
+     * complete with the list of all locally persisted impressions data.
      */
     suspend fun getAllSpocs(): List<PocketSponsoredStory> {
-        return spocsDao.getAllSpocs().map { it.toPocketSponsoredStory() }
+        val spocs = spocsDao.getAllSpocs()
+        val impressions = spocsDao.getSpocsImpressions().groupBy { it.spocId }
+
+        return spocs.map { spoc ->
+            spoc.toPocketSponsoredStory(
+                impressions[spoc.id]
+                    ?.map { impression -> impression.impressionDateInSeconds }
+                    ?: emptyList()
+            )
+        }
     }
 
     /**
@@ -42,5 +53,16 @@ internal class SpocsRepository(context: Context) {
      */
     suspend fun addSpocs(spocs: List<ApiSpoc>) {
         spocsDao.cleanOldAndInsertNewSpocs(spocs.map { it.toLocalSpoc() })
+    }
+
+    /**
+     * Add a new impression record for each of the spocs identified by the ids from [spocsShown].
+     * Will ignore adding new entries if the intended spocs are not persisted locally anymore.
+     * Recorded entries will automatically be cleaned when the spoc they target is deleted.
+     *
+     * @param spocsShown List of [PocketSponsoredStory.id] for which to record new impressions.
+     */
+    suspend fun recordImpressions(spocsShown: List<Int>) {
+        spocsDao.recordImpressions(spocsShown.map { SpocImpressionEntity(it) })
     }
 }

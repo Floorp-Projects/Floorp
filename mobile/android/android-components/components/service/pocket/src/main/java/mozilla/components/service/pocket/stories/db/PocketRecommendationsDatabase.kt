@@ -11,6 +11,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import mozilla.components.service.pocket.spocs.db.SpocEntity
+import mozilla.components.service.pocket.spocs.db.SpocImpressionEntity
 import mozilla.components.service.pocket.spocs.db.SpocsDao
 
 /**
@@ -19,9 +20,10 @@ import mozilla.components.service.pocket.spocs.db.SpocsDao
 @Database(
     entities = [
         PocketStoryEntity::class,
-        SpocEntity::class
+        SpocEntity::class,
+        SpocImpressionEntity::class
     ],
-    version = 2
+    version = 3
 )
 internal abstract class PocketRecommendationsDatabase : RoomDatabase() {
     abstract fun pocketRecommendationsDao(): PocketRecommendationsDao
@@ -31,6 +33,7 @@ internal abstract class PocketRecommendationsDatabase : RoomDatabase() {
         private const val DATABASE_NAME = "pocket_recommendations"
         const val TABLE_NAME_STORIES = "stories"
         const val TABLE_NAME_SPOCS = "spocs"
+        const val TABLE_NAME_SPOCS_IMPRESSIONS = "spocs_impressions"
 
         @Volatile
         private var instance: PocketRecommendationsDatabase? = null
@@ -46,6 +49,8 @@ internal abstract class PocketRecommendationsDatabase : RoomDatabase() {
             )
                 .addMigrations(
                     Migrations.migration_1_2,
+                    Migrations.migration_2_3,
+                    Migrations.migration_1_3,
                 )
                 .build().also {
                     instance = it
@@ -70,5 +75,62 @@ internal object Migrations {
                     ")"
             )
         }
+    }
+
+    /**
+     * Migration for when adding support for pacing sponsored stories.
+     */
+    val migration_2_3 = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // There are many new columns added. Drop the old table allowing to start fresh.
+            // This migration is expected to only be needed in debug builds
+            // with the feature not being live in any Fenix release.
+            database.execSQL(
+                "DROP TABLE ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}"
+            )
+
+            database.createNewSpocsTables()
+        }
+    }
+
+    /**
+     * Migration for when adding sponsored stories along with pacing support.
+     */
+    val migration_1_3 = object : Migration(1, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.createNewSpocsTables()
+        }
+    }
+
+    private fun SupportSQLiteDatabase.createNewSpocsTables() {
+        execSQL(
+            "CREATE TABLE IF NOT EXISTS " +
+                "`${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}` (" +
+                "`id` INTEGER NOT NULL, " +
+                "`url` TEXT NOT NULL, " +
+                "`title` TEXT NOT NULL, " +
+                "`imageUrl` TEXT NOT NULL, " +
+                "`sponsor` TEXT NOT NULL, " +
+                "`clickShim` TEXT NOT NULL, " +
+                "`impressionShim` TEXT NOT NULL, " +
+                "`priority` INTEGER NOT NULL, " +
+                "`lifetimeCapCount` INTEGER NOT NULL, " +
+                "`flightCapCount` INTEGER NOT NULL, " +
+                "`flightCapPeriod` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`id`)" +
+                ")"
+        )
+
+        execSQL(
+            "CREATE TABLE IF NOT EXISTS " +
+                "`${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}` (" +
+                "`spocId` INTEGER NOT NULL, " +
+                "`impressionId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`impressionDateInSeconds` INTEGER NOT NULL, " +
+                "FOREIGN KEY(`spocId`) " +
+                "REFERENCES `spocs`(`id`) " +
+                "ON UPDATE NO ACTION ON DELETE CASCADE " +
+                ")"
+        )
     }
 }

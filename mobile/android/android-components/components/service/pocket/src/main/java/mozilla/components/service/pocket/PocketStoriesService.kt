@@ -151,4 +151,13 @@ class PocketStoriesService(
     suspend fun updateStoriesTimesShown(updatedStories: List<PocketRecommendedStory>) {
         storiesUseCases.updateTimesShown(updatedStories)
     }
+
+    /**
+     * Persist locally that the sponsored Pocket stories containing the ids from [storiesShown]
+     * were shown to the user.
+     * This is safe to call with any ids, even ones for stories not currently persisted anymore.
+     */
+    suspend fun recordStoriesImpressions(storiesShown: List<Int>) {
+        spocsUseCases?.recordImpression?.invoke(storiesShown)
+    }
 }

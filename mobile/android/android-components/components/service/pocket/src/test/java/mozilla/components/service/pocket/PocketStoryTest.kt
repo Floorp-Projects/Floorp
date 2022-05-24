@@ -19,6 +19,11 @@ class PocketStoryTest {
     }
 
     @Test
+    fun `GIVEN PocketSponsoredStoryCaps THEN it should be publicly available`() {
+        assertConstructorsVisibility(PocketRecommendedStory::class, KVisibility.PUBLIC)
+    }
+
+    @Test
     fun `GIVEN PocketRecommendedStory THEN it should be publicly available`() {
         assertConstructorsVisibility(PocketRecommendedStory::class, KVisibility.PUBLIC)
     }
@@ -48,7 +53,14 @@ class PocketStoryTest {
     @Test
     fun `GIVEN a PocketSponsoredStory WHEN it's title is accessed from parent THEN it returns the previously set value`() {
         val pocketRecommendedStory = PocketSponsoredStory(
-            title = "testTitle", url = "", imageUrl = "", sponsor = "", shim = mock()
+            id = 1,
+            title = "testTitle",
+            url = "",
+            imageUrl = "",
+            sponsor = "",
+            shim = mock(),
+            priority = 11,
+            caps = mock(),
         )
 
         val result = (pocketRecommendedStory as PocketStory).title
@@ -59,7 +71,14 @@ class PocketStoryTest {
     @Test
     fun `GIVEN a PocketSponsoredStory WHEN it's url is accessed from parent THEN it returns the previously set value`() {
         val pocketRecommendedStory = PocketSponsoredStory(
-            title = "", url = "testUrl", imageUrl = "", sponsor = "", shim = mock()
+            id = 2,
+            title = "",
+            url = "testUrl",
+            imageUrl = "",
+            sponsor = "",
+            shim = mock(),
+            priority = 33,
+            caps = mock(),
         )
 
         val result = (pocketRecommendedStory as PocketStory).url

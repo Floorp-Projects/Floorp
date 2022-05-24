@@ -15,12 +15,24 @@ import org.json.JSONObject
 internal const val KEY_ARRAY_SPOCS = "spocs"
 @VisibleForTesting
 internal const val JSON_SPOC_SHIMS_KEY = "shim"
+@VisibleForTesting
+internal const val JSON_SPOC_CAPS_KEY = "caps"
+@VisibleForTesting
+internal const val JSON_SPOC_CAPS_LIFETIME_KEY = "lifetime"
+@VisibleForTesting
+internal const val JSON_SPOC_CAPS_FLIGHT_KEY = "campaign"
+@VisibleForTesting
+internal const val JSON_SPOC_CAPS_FLIGHT_COUNT_KEY = "count"
+@VisibleForTesting
+internal const val JSON_SPOC_CAPS_FLIGHT_PERIOD_KEY = "period"
+private const val JSON_SPOC_FLIGHT_ID_KEY = "flight_id"
 private const val JSON_SPOC_TITLE_KEY = "title"
 private const val JSON_SPOC_SPONSOR_KEY = "sponsor"
 private const val JSON_SPOC_URL_KEY = "url"
 private const val JSON_SPOC_IMAGE_SRC_KEY = "image_src"
 private const val JSON_SPOC_SHIM_CLICK_KEY = "click"
 private const val JSON_SPOC_SHIM_IMPRESSION_KEY = "impression"
+private const val JSON_SPOC_PRIORITY = "priority"
 
 /**
  * Holds functions that parse the JSON returned by the Pocket API and converts them to more usable Kotlin types.
@@ -43,11 +55,14 @@ internal object SpocsJSONParser {
 
     private fun jsonToSpoc(json: JSONObject): ApiSpoc? = try {
         ApiSpoc(
+            flightId = json.getInt(JSON_SPOC_FLIGHT_ID_KEY),
             title = json.getString(JSON_SPOC_TITLE_KEY),
             sponsor = json.getString(JSON_SPOC_SPONSOR_KEY),
             url = json.getString(JSON_SPOC_URL_KEY),
             imageSrc = json.getString(JSON_SPOC_IMAGE_SRC_KEY),
-            shim = jsonToShim(json.getJSONObject(JSON_SPOC_SHIMS_KEY))
+            shim = jsonToShim(json.getJSONObject(JSON_SPOC_SHIMS_KEY)),
+            priority = json.getInt(JSON_SPOC_PRIORITY),
+            caps = jsonToCaps(json.getJSONObject(JSON_SPOC_CAPS_KEY)),
         )
     } catch (e: JSONException) {
         null
@@ -57,4 +72,14 @@ internal object SpocsJSONParser {
         click = json.getString(JSON_SPOC_SHIM_CLICK_KEY),
         impression = json.getString(JSON_SPOC_SHIM_IMPRESSION_KEY)
     )
+
+    private fun jsonToCaps(json: JSONObject): ApiSpocCaps {
+        val flightCaps = json.getJSONObject(JSON_SPOC_CAPS_FLIGHT_KEY)
+
+        return ApiSpocCaps(
+            lifetimeCount = json.getInt(JSON_SPOC_CAPS_LIFETIME_KEY),
+            flightCount = flightCaps.getInt(JSON_SPOC_CAPS_FLIGHT_COUNT_KEY),
+            flightPeriod = flightCaps.getInt(JSON_SPOC_CAPS_FLIGHT_PERIOD_KEY)
+        )
+    }
 }

@@ -8,15 +8,16 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.service.pocket.ext.toLocalSpoc
-import mozilla.components.service.pocket.ext.toPocketSponsoredStory
 import mozilla.components.service.pocket.helpers.PocketTestResources
+import mozilla.components.service.pocket.spocs.db.SpocImpressionEntity
 import mozilla.components.service.pocket.spocs.db.SpocsDao
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
@@ -31,19 +32,33 @@ class SpocsRepositoryTest {
     @Before
     fun setUp() {
         doReturn(dao).`when`(spocsRepo).spocsDao
-        Mockito.`when`(spocsRepo.spocsDao).thenReturn(dao)
     }
 
     @Test
     fun `GIVEN SpocsRepository WHEN asking for all spocs THEN return db entities mapped to domain type`() = runTest {
         val spoc = PocketTestResources.dbExpectedPocketSpoc
+        val impressions = listOf(
+            SpocImpressionEntity(spoc.id),
+            SpocImpressionEntity(333),
+            SpocImpressionEntity(spoc.id),
+        )
         doReturn(listOf(spoc)).`when`(dao).getAllSpocs()
+        doReturn(impressions).`when`(dao).getSpocsImpressions()
 
         val result = spocsRepo.getAllSpocs()
 
         verify(dao).getAllSpocs()
         assertEquals(1, result.size)
-        assertEquals(spoc.toPocketSponsoredStory(), result[0])
+        assertSame(spoc.title, result[0].title)
+        assertSame(spoc.url, result[0].url)
+        assertSame(spoc.imageUrl, result[0].imageUrl)
+        assertSame(spoc.impressionShim, result[0].shim.impression)
+        assertSame(spoc.clickShim, result[0].shim.click)
+        assertEquals(spoc.priority, result[0].priority)
+        assertEquals(2, result[0].caps.currentImpressions.size)
+        assertEquals(spoc.lifetimeCapCount, result[0].caps.lifetimeCount)
+        assertEquals(spoc.flightCapCount, result[0].caps.flightCount)
+        assertEquals(spoc.flightCapPeriod, result[0].caps.flightPeriod)
     }
 
     @Test
@@ -60,5 +75,19 @@ class SpocsRepositoryTest {
         spocsRepo.addSpocs(listOf(spoc))
 
         verify(dao).cleanOldAndInsertNewSpocs(listOf(spoc.toLocalSpoc()))
+    }
+
+    @Test
+    fun `GIVEN SpocsRepository WHEN recording new spocs impressions THEN add this to the database`() = runTest {
+        val spocsIds = listOf(3, 33, 444)
+        val impressionsCaptor = argumentCaptor<List<SpocImpressionEntity>>()
+
+        spocsRepo.recordImpressions(spocsIds)
+
+        verify(dao).recordImpressions(impressionsCaptor.capture())
+        assertEquals(spocsIds.size, impressionsCaptor.value.size)
+        assertEquals(spocsIds[0], impressionsCaptor.value[0].spocId)
+        assertEquals(spocsIds[1], impressionsCaptor.value[1].spocId)
+        assertEquals(spocsIds[2], impressionsCaptor.value[2].spocId)
     }
 }

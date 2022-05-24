@@ -6,6 +6,7 @@ package mozilla.components.service.pocket.helpers
 
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.spocs.api.ApiSpoc
+import mozilla.components.service.pocket.spocs.api.ApiSpocCaps
 import mozilla.components.service.pocket.spocs.api.ApiSpocShim
 import mozilla.components.service.pocket.spocs.db.SpocEntity
 import mozilla.components.service.pocket.stories.api.PocketApiStory
@@ -70,6 +71,7 @@ internal object PocketTestResources {
 
     val apiExpectedPocketSpocs: List<ApiSpoc> = listOf(
         ApiSpoc(
+            flightId = 191739319,
             title = "Eating Keto Has Never Been So Easy With Green Chef",
             url = "https://i.geistm.com/l/GC_7ReasonsKetoV2_Journiest?bcid=601c567ac5b18a0414cce1d4&bhid=624f3ea9adad7604086ac6b3&utm_content=PKT_A_7ReasonsKetoV2_Journiest_40702022_RawMeatballUGC_130Off_601c567ac5b18a0414cce1d4_624f3ea9adad7604086ac6b3&tv=su4&ct=NAT-PK-PROS-130OFF5WEEK-037&utm_medium=DB&utm_source=pocket~geistm&utm_campaign=PKT_A_7ReasonsKetoV2_Journiest_40702022_RawMeatballUGC_130Off",
             imageSrc = "https://img-getpocket.cdn.mozilla.net/direct?url=realUrl.png&resize=w618-h310",
@@ -77,9 +79,16 @@ internal object PocketTestResources {
             shim = ApiSpocShim(
                 click = "193815086ClickShim",
                 impression = "193815086ImpressionShim"
-            )
+            ),
+            priority = 3,
+            caps = ApiSpocCaps(
+                lifetimeCount = 50,
+                flightPeriod = 86400,
+                flightCount = 10,
+            ),
         ),
         ApiSpoc(
+            flightId = 191739667,
             title = "This Leading Cash Back Card Is a Slam Dunk if You Want a One-Card Wallet",
             url = "https://www.fool.com/the-ascent/credit-cards/landing/discover-it-cash-back-review-v2-csr/?utm_site=theascent&utm_campaign=ta-cc-co-pocket-discb-04012022-5-na-firefox&utm_medium=cpc&utm_source=pocket",
             imageSrc = "https://img-getpocket.cdn.mozilla.net/direct?url=https%3A//s.zkcdn.net/Advertisers/359f56a5423c4926ab3aa148e448d839.webp&resize=w618-h310",
@@ -87,9 +96,16 @@ internal object PocketTestResources {
             shim = ApiSpocShim(
                 click = "177986195ClickShim",
                 impression = "177986195ImpressionShim"
-            )
+            ),
+            priority = 2,
+            caps = ApiSpocCaps(
+                lifetimeCount = 50,
+                flightPeriod = 86400,
+                flightCount = 10,
+            ),
         ),
         ApiSpoc(
+            flightId = 189212196,
             title = "The Incredible Lawn Hack That Can Make Your Neighbors Green With Envy Over Your Lawn",
             url = "https://go.lawnbuddy.org/zf/50/7673?campaign=SUN_Pocket2022&creative=SUN_LawnCompare4-TheIncredibleLawnHackThatCanMakeYourNeighborsGreenWithEnvyOverYourLawn-WithoutSpendingAFortuneOnNewGrassAndWithoutBreakingASweat-20220420",
             imageSrc = "https://img-getpocket.cdn.mozilla.net/direct?url=https%3A//s.zkcdn.net/Advertisers/ce16302e184342cda0619c08b7604c9c.jpg&resize=w618-h310",
@@ -97,7 +113,13 @@ internal object PocketTestResources {
             shim = ApiSpocShim(
                 click = "192560056ClickShim",
                 impression = "192560056ImpressionShim"
-            )
+            ),
+            priority = 1,
+            caps = ApiSpocCaps(
+                lifetimeCount = 50,
+                flightPeriod = 86400,
+                flightCount = 10,
+            ),
         )
     )
 
@@ -122,11 +144,16 @@ internal object PocketTestResources {
     )
 
     val dbExpectedPocketSpoc = SpocEntity(
+        id = 191739319,
         url = "https://i.geistm.com/l/GC_7ReasonsKetoV2_Journiest?bcid=601c567ac5b18a0414cce1d4&bhid=624f3ea9adad7604086ac6b3&utm_content=PKT_A_7ReasonsKetoV2_Journiest_40702022_RawMeatballUGC_130Off_601c567ac5b18a0414cce1d4_624f3ea9adad7604086ac6b3&tv=su4&ct=NAT-PK-PROS-130OFF5WEEK-037&utm_medium=DB&utm_source=pocket~geistm&utm_campaign=PKT_A_7ReasonsKetoV2_Journiest_40702022_RawMeatballUGC_130Off",
         title = "Eating Keto Has Never Been So Easy With Green Chef",
         imageUrl = "https://img-getpocket.cdn.mozilla.net/direct?url=realUrl.png&resize=w618-h310",
         sponsor = "Green Chef",
         clickShim = "193815086ClickShim",
-        impressionShim = "193815086ImpressionShim"
+        impressionShim = "193815086ImpressionShim",
+        priority = 3,
+        lifetimeCapCount = 50,
+        flightCapCount = 10,
+        flightCapPeriod = 86400,
     )
 }

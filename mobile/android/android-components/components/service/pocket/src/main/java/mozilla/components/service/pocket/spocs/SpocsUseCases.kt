@@ -7,6 +7,7 @@ package mozilla.components.service.pocket.spocs
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.fetch.Client
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.spocs.api.SpocsEndpoint
 import mozilla.components.service.pocket.stories.api.PocketResponse.Failure
@@ -39,6 +40,10 @@ internal class SpocsUseCases(
      */
     internal val getStories by lazy {
         GetSponsoredStories(appContext)
+    }
+
+    internal val recordImpression by lazy {
+        RecordImpression(appContext)
     }
 
     /**
@@ -98,6 +103,25 @@ internal class SpocsUseCases(
          */
         suspend operator fun invoke(): List<PocketSponsoredStory> {
             return getSpocsRepository(context).getAllSpocs()
+        }
+    }
+
+    /**
+     * Allows for atomically updating the [PocketRecommendedStory.timesShown] property of some recommended stories.
+     *
+     * @param context [Context] used for various system interactions and libraries initializations.
+     */
+    internal inner class RecordImpression(
+        @get:VisibleForTesting
+        internal val context: Context = this@SpocsUseCases.appContext
+    ) {
+        /**
+         * Update how many times certain stories were shown to the user.
+         */
+        suspend operator fun invoke(storiesShown: List<Int>) {
+            if (storiesShown.isNotEmpty()) {
+                getSpocsRepository(context).recordImpressions(storiesShown)
+            }
         }
     }
 

@@ -18,6 +18,7 @@ import mozilla.components.service.pocket.stories.api.PocketResponse
 import mozilla.components.service.pocket.stories.api.PocketResponse.Failure
 import mozilla.components.service.pocket.stories.api.PocketResponse.Success
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -175,6 +176,44 @@ class SpocsUseCasesTest {
 
         verify(spocsRepo).getAllSpocs()
         assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases WHEN RecordImpression is constructed THEN use the same parameters`() {
+        val recordImpressionsUseCase = useCases.getStories
+
+        assertSame(testContext, recordImpressionsUseCase.context)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases constructed WHEN RecordImpression is constructed separately THEN default to use the same parameters`() {
+        val recordImpressionsUseCase = useCases.RecordImpression()
+
+        assertSame(testContext, recordImpressionsUseCase.context)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases constructed WHEN RecordImpression is constructed separately THEN allow using different parameters`() {
+        val context2: Context = mock()
+
+        val recordImpressionsUseCase = useCases.RecordImpression(context2)
+
+        assertSame(context2, recordImpressionsUseCase.context)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases WHEN RecordImpression is called THEN record impressions in database`() = runTest {
+        val recordImpressionsUseCase = useCases.RecordImpression()
+        val storiesIds = listOf(5, 55, 4321)
+        val spocsIdsCaptor = argumentCaptor<List<Int>>()
+
+        recordImpressionsUseCase(storiesIds)
+
+        verify(spocsRepo).recordImpressions(spocsIdsCaptor.capture())
+        assertEquals(3, spocsIdsCaptor.value.size)
+        assertEquals(storiesIds[0], spocsIdsCaptor.value[0])
+        assertEquals(storiesIds[1], spocsIdsCaptor.value[1])
+        assertEquals(storiesIds[2], spocsIdsCaptor.value[2])
     }
 
     @Test

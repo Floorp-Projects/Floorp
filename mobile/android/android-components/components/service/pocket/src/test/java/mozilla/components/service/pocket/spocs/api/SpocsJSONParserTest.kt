@@ -112,6 +112,58 @@ class SpocsJSONParserTest {
     }
 
     @Test
+    fun `WHEN parsing spocs with missing priority THEN those entries are dropped`() {
+        val pocketJSON = PocketTestResources.pocketEndpointThreeSpocsResponse
+        val expectedSpocsIfMissingPriority = ArrayList(PocketTestResources.apiExpectedPocketSpocs)
+            .apply { removeAt(1) }
+        val pocketJsonWithMissingPriority = removeJsonFieldFromArrayIndex("priority", 1, pocketJSON)
+
+        val result = SpocsJSONParser.jsonToSpocs(pocketJsonWithMissingPriority)
+
+        assertEquals(2, result!!.size)
+        assertEquals(expectedSpocsIfMissingPriority.joinToString(), result.joinToString())
+    }
+
+    @Test
+    fun `WHEN parsing spocs with missing a lifetime count cap THEN those entries are dropped`() {
+        val pocketJSON = PocketTestResources.pocketEndpointThreeSpocsResponse
+        val expectedSpocsIfMissingLifetimeCap = ArrayList(PocketTestResources.apiExpectedPocketSpocs)
+            .apply { removeAt(0) }
+        val pocketJsonWithMissingLifetimeCap = removeCapFromSpoc(JSON_SPOC_CAPS_LIFETIME_KEY, 0, pocketJSON)
+
+        val result = SpocsJSONParser.jsonToSpocs(pocketJsonWithMissingLifetimeCap)
+
+        assertEquals(2, result!!.size)
+        assertEquals(expectedSpocsIfMissingLifetimeCap.joinToString(), result.joinToString())
+    }
+
+    @Test
+    fun `WHEN parsing spocs with missing a flight count cap THEN those entries are dropped`() {
+        val pocketJSON = PocketTestResources.pocketEndpointThreeSpocsResponse
+        val expectedSpocsIfMissingFlightCountCap = ArrayList(PocketTestResources.apiExpectedPocketSpocs)
+            .apply { removeAt(1) }
+        val pocketJsonWithMissingFlightCountCap = removeCapFromSpoc(JSON_SPOC_CAPS_FLIGHT_COUNT_KEY, 1, pocketJSON)
+
+        val result = SpocsJSONParser.jsonToSpocs(pocketJsonWithMissingFlightCountCap)
+
+        assertEquals(2, result!!.size)
+        assertEquals(expectedSpocsIfMissingFlightCountCap.joinToString(), result.joinToString())
+    }
+
+    @Test
+    fun `WHEN parsing spocs with missing a flight period cap THEN those entries are dropped`() {
+        val pocketJSON = PocketTestResources.pocketEndpointThreeSpocsResponse
+        val expectedSpocsIfMissingFlightPeriodCap = ArrayList(PocketTestResources.apiExpectedPocketSpocs)
+            .apply { removeAt(2) }
+        val pocketJsonWithMissingFlightPeriodCap = removeCapFromSpoc(JSON_SPOC_CAPS_FLIGHT_PERIOD_KEY, 2, pocketJSON)
+
+        val result = SpocsJSONParser.jsonToSpocs(pocketJsonWithMissingFlightPeriodCap)
+
+        assertEquals(2, result!!.size)
+        assertEquals(expectedSpocsIfMissingFlightPeriodCap.joinToString(), result.joinToString())
+    }
+
+    @Test
     fun `WHEN parsing spocs for an invalid JSON String THEN null is returned`() {
         assertNull(SpocsJSONParser.jsonToSpocs("{!!}}"))
     }
@@ -129,5 +181,20 @@ private fun removeShimFromSpoc(shimName: String, spocIndex: Int, json: String): 
     val spocsJson = obj.getJSONArray(KEY_ARRAY_SPOCS)
     val spocJson = spocsJson.getJSONObject(spocIndex)
     spocJson.getJSONObject(JSON_SPOC_SHIMS_KEY).remove(shimName)
+    return obj.toString()
+}
+
+private fun removeCapFromSpoc(cap: String, spocIndex: Int, json: String): String {
+    val obj = JSONObject(json)
+    val spocsJson = obj.getJSONArray(KEY_ARRAY_SPOCS)
+    val spocJson = spocsJson.getJSONObject(spocIndex)
+    val capsJSON = spocJson.getJSONObject(JSON_SPOC_CAPS_KEY)
+
+    if (cap == JSON_SPOC_CAPS_LIFETIME_KEY) {
+        capsJSON.remove(cap)
+    } else {
+        capsJSON.getJSONObject(JSON_SPOC_CAPS_FLIGHT_KEY).remove(cap)
+    }
+
     return obj.toString()
 }

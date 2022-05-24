@@ -14,6 +14,7 @@ import mozilla.components.service.pocket.helpers.assertConstructorsVisibility
 import mozilla.components.service.pocket.spocs.SpocsUseCases
 import mozilla.components.service.pocket.spocs.SpocsUseCases.DeleteProfile
 import mozilla.components.service.pocket.spocs.SpocsUseCases.GetSponsoredStories
+import mozilla.components.service.pocket.spocs.SpocsUseCases.RecordImpression
 import mozilla.components.service.pocket.stories.PocketStoriesUseCases
 import mozilla.components.service.pocket.stories.PocketStoriesUseCases.GetPocketStories
 import mozilla.components.service.pocket.stories.PocketStoriesUseCases.UpdateStoriesTimesShown
@@ -174,5 +175,16 @@ class PocketStoriesServiceTest {
         doReturn(true).`when`(deleteProfileUseCase).invoke()
         val existingProfileResponse = service.deleteProfile()
         assertTrue(existingProfileResponse)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesService WHEN recordStoriesImpressions THEN delegate to spocs useCases`() = runTest {
+        val recordImpressionsUseCase: RecordImpression = mock()
+        doReturn(recordImpressionsUseCase).`when`(spocsUseCases).recordImpression
+        val storiesIds = listOf(22, 33)
+
+        service.recordStoriesImpressions(storiesIds)
+
+        verify(recordImpressionsUseCase).invoke(storiesIds)
     }
 }
