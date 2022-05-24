@@ -154,6 +154,9 @@ var UrlbarUtils = {
     autofill_adaptive: 18,
     autofill_origin: 19,
     autofill_url: 20,
+    autofill_about: 21,
+    autofill_other: 22,
+    autofill_preloaded: 23,
     // n_values = 32, so you'll need to create a new histogram if you need more.
   },
 
@@ -1187,7 +1190,16 @@ var UrlbarUtils = {
         return result.payload.suggestion ? "searchsuggestion" : "searchengine";
       case UrlbarUtils.RESULT_TYPE.URL:
         if (result.autofill) {
-          return `autofill_${result.autofill.type}`;
+          let { type } = result.autofill;
+          if (!type) {
+            type = "other";
+            Cu.reportError(
+              new Error(
+                "`result.autofill.type` not set, falling back to 'other'"
+              )
+            );
+          }
+          return `autofill_${type}`;
         }
         if (
           result.source == UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL &&
