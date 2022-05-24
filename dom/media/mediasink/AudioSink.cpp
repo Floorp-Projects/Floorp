@@ -20,12 +20,12 @@
 
 namespace mozilla {
 
-extern LazyLogModule gMediaDecoderLog;
-#define SINK_LOG(msg, ...)                   \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, \
+mozilla::LazyLogModule gAudioSinkLog("AudioSink");
+#define SINK_LOG(msg, ...)                \
+  MOZ_LOG(gAudioSinkLog, LogLevel::Debug, \
           ("AudioSink=%p " msg, this, ##__VA_ARGS__))
-#define SINK_LOG_V(msg, ...)                   \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, \
+#define SINK_LOG_V(msg, ...)                \
+  MOZ_LOG(gAudioSinkLog, LogLevel::Verbose, \
           ("AudioSink=%p " msg, this, ##__VA_ARGS__))
 
 // The amount of audio frames that is used to fuzz rounding errors.
@@ -64,11 +64,17 @@ AudioSink::AudioSink(AbstractThread* aThread,
   // ready, if possible.
   RefPtr<AudioData> frontPacket = mAudioQueue.PeekFront();
   if (frontPacket) {
-    mAudibilityMonitor.ProcessInterleaved(frontPacket->Data(), frontPacket->mChannels);
+    mAudibilityMonitor.ProcessInterleaved(frontPacket->Data(),
+                                          frontPacket->mChannels);
     mIsAudioDataAudible = mAudibilityMonitor.RecentlyAudible();
+    SINK_LOG("New AudioSink -- audio is likely to be %s",
+             mIsAudioDataAudible ? "audible" : "inaudible");
   } else {
     // If no packets are available, consider the audio audible.
     mIsAudioDataAudible = true;
+    SINK_LOG(
+        "New AudioSink -- no audio packet avaialble, considering the stream "
+        "audible");
   }
 }
 
@@ -82,10 +88,13 @@ nsresult AudioSink::InitializeAudioStream(
     // finishes when unmuting, in case initialization takes some time and it
     // looked audible when the AudioSink was created.
     mAudibleEvent.Notify(mIsAudioDataAudible);
+    SINK_LOG("InitializeAudioStream (Unmuting) notifying that audio is %s",
+             mIsAudioDataAudible ? "audible" : "inaudible");
   } else {
     // If not unmuting, the audibility event will be dispatched as usual,
     // inspecting the audio content as it's being played and signaling the
     // audibility event when a different in state is detected.
+    SINK_LOG("InitializeAudioStream (initial)");
     mIsAudioDataAudible = false;
   }
 
@@ -356,6 +365,8 @@ void AudioSink::CheckIsAudible(const Span<AudioDataValue>& aInterleaved,
 
   if (isAudible != mIsAudioDataAudible) {
     mIsAudioDataAudible = isAudible;
+    SINK_LOG("Notifying that audio is now %s",
+             mIsAudioDataAudible ? "audible" : "inaudible");
     mAudibleEvent.Notify(mIsAudioDataAudible);
   }
 }
