@@ -2084,7 +2084,7 @@ void MacroAssembler::generateBailoutTail(Register scratch,
 
     // Restore values where they need to be and resume execution.
     AllocatableGeneralRegisterSet enterRegs(GeneralRegisterSet::All());
-    enterRegs.takeUnchecked(BaselineFrameReg);
+    MOZ_ASSERT(!enterRegs.has(BaselineFrameReg));
     Register jitcodeReg = enterRegs.takeAny();
 
     pop(jitcodeReg);

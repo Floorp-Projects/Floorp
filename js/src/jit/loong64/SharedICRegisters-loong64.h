@@ -15,7 +15,7 @@ namespace js {
 namespace jit {
 
 // Must be a callee-saved register for preservation around generateEnterJIT().
-static constexpr Register BaselineFrameReg = s0;
+static constexpr Register BaselineFrameReg = FramePointer;
 static constexpr Register BaselineStackReg = sp;
 
 // ValueOperands R0, R1, and R2.

@@ -517,9 +517,9 @@ bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
 
   Register objReg = R2.scratchReg();
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  MOZ_ASSERT(!regs.has(BaselineFrameReg));
   regs.take(R0);
   regs.take(objReg);
-  regs.takeUnchecked(BaselineFrameReg);
   Register scratch = regs.takeAny();
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
   // On ARM, save the link register before calling.  It contains the return
@@ -1452,7 +1452,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 #ifdef DEBUG
     // Get a scratch register that's not osrDataReg or OsrFrameReg.
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.takeUnchecked(BaselineFrameReg);
+    MOZ_ASSERT(!regs.has(BaselineFrameReg));
     regs.take(osrDataReg);
     regs.take(OsrFrameReg);
 
@@ -3689,7 +3689,7 @@ bool BaselineCompilerCodeGen::emit_SetAliasedVar() {
 template <>
 bool BaselineInterpreterCodeGen::emit_SetAliasedVar() {
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(BaselineFrameReg);
+  MOZ_ASSERT(!regs.has(BaselineFrameReg));
   regs.take(R2);
   if (HasInterpreterPCReg()) {
     regs.take(InterpreterPCReg);
@@ -5280,7 +5280,7 @@ bool BaselineCodeGen<Handler>::emit_EndIter() {
   frame.popRegsAndSync(1);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(BaselineFrameReg);
+  MOZ_ASSERT(!regs.has(BaselineFrameReg));
   if (HasInterpreterPCReg()) {
     regs.take(InterpreterPCReg);
   }
@@ -5775,7 +5775,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   masm.assertStackAlignment(sizeof(Value), 0);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(BaselineFrameReg);
+  MOZ_ASSERT(!regs.has(BaselineFrameReg));
   if (HasInterpreterPCReg()) {
     regs.take(InterpreterPCReg);
   }
@@ -6826,7 +6826,7 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
   AutoCreatedBy acb(masm, "JitRuntime::generateDebugTrapHandler");
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(BaselineFrameReg);
+  MOZ_ASSERT(!regs.has(BaselineFrameReg));
   regs.takeUnchecked(ICStubReg);
   if (HasInterpreterPCReg()) {
     regs.takeUnchecked(InterpreterPCReg);
