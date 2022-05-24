@@ -40,10 +40,6 @@ bool WriteDataChannelOpenMessage(const std::string& label,
 
 void WriteDataChannelOpenAckMessage(rtc::CopyOnWriteBuffer* payload);
 
-cricket::DataMessageType ToCricketDataMessageType(DataMessageType type);
-
-DataMessageType ToWebrtcDataMessageType(cricket::DataMessageType type);
-
 }  // namespace webrtc
 
 #endif  // PC_SCTP_UTILS_H_

@@ -81,7 +81,8 @@ class UsrsctpTransport : public SctpTransportInternal,
   bool Start(int local_port, int remote_port, int max_message_size) override;
   bool OpenStream(int sid) override;
   bool ResetStream(int sid) override;
-  bool SendData(const SendDataParams& params,
+  bool SendData(int sid,
+                const webrtc::SendDataParams& params,
                 const rtc::CopyOnWriteBuffer& payload,
                 SendDataResult* result = nullptr) override;
   bool ReadyToSendData() override;
@@ -113,8 +114,9 @@ class UsrsctpTransport : public SctpTransportInternal,
   class OutgoingMessage {
    public:
     OutgoingMessage(const rtc::CopyOnWriteBuffer& buffer,
-                    const SendDataParams& send_params)
-        : buffer_(buffer), send_params_(send_params) {}
+                    int sid,
+                    const webrtc::SendDataParams& send_params)
+        : buffer_(buffer), sid_(sid), send_params_(send_params) {}
 
     // Advances the buffer by the incremented amount. Must not advance further
     // than the current data size.
@@ -127,11 +129,13 @@ class UsrsctpTransport : public SctpTransportInternal,
 
     const void* data() const { return buffer_.data() + offset_; }
 
-    SendDataParams send_params() const { return send_params_; }
+    int sid() const { return sid_; }
+    webrtc::SendDataParams send_params() const { return send_params_; }
 
    private:
     const rtc::CopyOnWriteBuffer buffer_;
-    const SendDataParams send_params_;
+    int sid_;
+    const webrtc::SendDataParams send_params_;
     size_t offset_ = 0;
   };
 

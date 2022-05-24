@@ -406,7 +406,7 @@ void SctpDataChannel::OnDataReceived(const cricket::ReceiveDataParams& params,
     return;
   }
 
-  if (params.type == cricket::DMT_CONTROL) {
+  if (params.type == DataMessageType::kControl) {
     if (handshake_state_ != kHandshakeWaitingForAck) {
       // Ignore it if we are not expecting an ACK message.
       RTC_LOG(LS_WARNING)
@@ -427,8 +427,8 @@ void SctpDataChannel::OnDataReceived(const cricket::ReceiveDataParams& params,
     return;
   }
 
-  RTC_DCHECK(params.type == cricket::DMT_BINARY ||
-             params.type == cricket::DMT_TEXT);
+  RTC_DCHECK(params.type == DataMessageType::kBinary ||
+             params.type == DataMessageType::kText);
 
   RTC_LOG(LS_VERBOSE) << "DataChannel received DATA message, sid = "
                       << params.sid;
@@ -439,7 +439,7 @@ void SctpDataChannel::OnDataReceived(const cricket::ReceiveDataParams& params,
     handshake_state_ = kHandshakeReady;
   }
 
-  bool binary = (params.type == cricket::DMT_BINARY);
+  bool binary = (params.type == webrtc::DataMessageType::kBinary);
   auto buffer = std::make_unique<DataBuffer>(payload, binary);
   if (state_ == kOpen && observer_) {
     ++messages_received_;
@@ -620,7 +620,7 @@ void SctpDataChannel::SendQueuedDataMessages() {
 bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
                                       bool queue_if_blocked) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  cricket::SendDataParams send_params;
+  SendDataParams send_params;
 
   send_params.ordered = config_.ordered;
   // Send as ordered if it is still going through OPEN/ACK signaling.
@@ -633,11 +633,12 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
 
   send_params.max_rtx_count = config_.maxRetransmits;
   send_params.max_rtx_ms = config_.maxRetransmitTime;
-  send_params.sid = config_.id;
-  send_params.type = buffer.binary ? cricket::DMT_BINARY : cricket::DMT_TEXT;
+  send_params.type =
+      buffer.binary ? DataMessageType::kBinary : DataMessageType::kText;
 
   cricket::SendDataResult send_result = cricket::SDR_SUCCESS;
-  bool success = provider_->SendData(send_params, buffer.data, &send_result);
+  bool success =
+      provider_->SendData(config_.id, send_params, buffer.data, &send_result);
 
   if (success) {
     ++messages_sent_;
@@ -703,16 +704,16 @@ bool SctpDataChannel::SendControlMessage(const rtc::CopyOnWriteBuffer& buffer) {
   bool is_open_message = handshake_state_ == kHandshakeShouldSendOpen;
   RTC_DCHECK(!is_open_message || !config_.negotiated);
 
-  cricket::SendDataParams send_params;
-  send_params.sid = config_.id;
+  SendDataParams send_params;
   // Send data as ordered before we receive any message from the remote peer to
   // make sure the remote peer will not receive any data before it receives the
   // OPEN message.
   send_params.ordered = config_.ordered || is_open_message;
-  send_params.type = cricket::DMT_CONTROL;
+  send_params.type = DataMessageType::kControl;
 
   cricket::SendDataResult send_result = cricket::SDR_SUCCESS;
-  bool retval = provider_->SendData(send_params, buffer, &send_result);
+  bool retval =
+      provider_->SendData(config_.id, send_params, buffer, &send_result);
   if (retval) {
     RTC_LOG(LS_VERBOSE) << "Sent CONTROL message on channel " << config_.id;
 

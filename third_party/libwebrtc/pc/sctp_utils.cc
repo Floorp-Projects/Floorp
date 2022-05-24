@@ -230,33 +230,4 @@ void WriteDataChannelOpenAckMessage(rtc::CopyOnWriteBuffer* payload) {
   payload->SetData(&data, sizeof(data));
 }
 
-cricket::DataMessageType ToCricketDataMessageType(DataMessageType type) {
-  switch (type) {
-    case DataMessageType::kText:
-      return cricket::DMT_TEXT;
-    case DataMessageType::kBinary:
-      return cricket::DMT_BINARY;
-    case DataMessageType::kControl:
-      return cricket::DMT_CONTROL;
-    default:
-      return cricket::DMT_NONE;
-  }
-  return cricket::DMT_NONE;
-}
-
-DataMessageType ToWebrtcDataMessageType(cricket::DataMessageType type) {
-  switch (type) {
-    case cricket::DMT_TEXT:
-      return DataMessageType::kText;
-    case cricket::DMT_BINARY:
-      return DataMessageType::kBinary;
-    case cricket::DMT_CONTROL:
-      return DataMessageType::kControl;
-    case cricket::DMT_NONE:
-    default:
-      RTC_NOTREACHED();
-  }
-  return DataMessageType::kControl;
-}
-
 }  // namespace webrtc

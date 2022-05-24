@@ -133,23 +133,19 @@ class SimulatedPacketTransport final : public rtc::PacketTransportInternal {
 };
 
 /**
- * A helper class to send specified number of messages
- * over UsrsctpTransport with SCTP reliability settings
- * provided by user. The reliability settings are specified
- * by passing a template instance of SendDataParams.
- * When .sid field inside SendDataParams is specified to
- * negative value it means that actual .sid will be
- * assigned by sender itself, .sid will be assigned from
- * range [cricket::kMinSctpSid; cricket::kMaxSctpSid].
- * The wide range of sids are used to possibly trigger
- * more execution paths inside usrsctp.
+ * A helper class to send specified number of messages over UsrsctpTransport
+ * with SCTP reliability settings provided by user. The reliability settings are
+ * specified by passing a template instance of SendDataParams. The sid will be
+ * assigned by sender itself and will be assigned from range
+ * [cricket::kMinSctpSid; cricket::kMaxSctpSid]. The wide range of sids are used
+ * to possibly trigger more execution paths inside usrsctp.
  */
 class SctpDataSender final {
  public:
   SctpDataSender(rtc::Thread* thread,
                  cricket::UsrsctpTransport* transport,
                  uint64_t target_messages_count,
-                 cricket::SendDataParams send_params,
+                 webrtc::SendDataParams send_params,
                  uint32_t sender_id)
       : thread_(thread),
         transport_(transport),
@@ -200,14 +196,12 @@ class SctpDataSender final {
                        << target_messages_count_;
     }
 
-    cricket::SendDataParams params(send_params_);
-    if (params.sid < 0) {
-      params.sid = cricket::kMinSctpSid +
-                   (num_messages_sent_ % cricket::kMaxSctpStreams);
-    }
+    webrtc::SendDataParams params(send_params_);
+    int sid =
+        cricket::kMinSctpSid + (num_messages_sent_ % cricket::kMaxSctpStreams);
 
     cricket::SendDataResult result;
-    transport_->SendData(params, payload_, &result);
+    transport_->SendData(sid, params, payload_, &result);
     switch (result) {
       case cricket::SDR_BLOCK:
         // retry after timeout
@@ -233,7 +227,7 @@ class SctpDataSender final {
   rtc::Thread* const thread_;
   cricket::UsrsctpTransport* const transport_;
   const uint64_t target_messages_count_;
-  const cricket::SendDataParams send_params_;
+  const webrtc::SendDataParams send_params_;
   const uint32_t sender_id_;
   rtc::CopyOnWriteBuffer payload_{std::string(1400, '.').c_str(), 1400};
   std::atomic<bool> started_ ATOMIC_VAR_INIT(false);
@@ -329,7 +323,7 @@ class SctpPingPong final {
                uint32_t messages_count,
                uint8_t packet_loss_percents,
                uint16_t avg_send_delay_millis,
-               cricket::SendDataParams send_params)
+               webrtc::SendDataParams send_params)
       : id_(id),
         port1_(port1),
         port2_(port2),
@@ -582,7 +576,7 @@ class SctpPingPong final {
   const uint32_t messages_count_;
   const uint8_t packet_loss_percents_;
   const uint16_t avg_send_delay_millis_;
-  const cricket::SendDataParams send_params_;
+  const webrtc::SendDataParams send_params_;
   RTC_DISALLOW_COPY_AND_ASSIGN(SctpPingPong);
 };
 
@@ -643,8 +637,7 @@ TEST_F(UsrSctpReliabilityTest,
   static_assert(wait_timeout > 0,
                 "Timeout computation must produce positive value");
 
-  cricket::SendDataParams send_params;
-  send_params.sid = -1;
+  webrtc::SendDataParams send_params;
   send_params.ordered = true;
 
   SctpPingPong test(1, kTransport1Port, kTransport2Port, thread1.get(),
@@ -678,8 +671,7 @@ TEST_F(UsrSctpReliabilityTest,
   static_assert(wait_timeout > 0,
                 "Timeout computation must produce positive value");
 
-  cricket::SendDataParams send_params;
-  send_params.sid = -1;
+  webrtc::SendDataParams send_params;
   send_params.ordered = true;
 
   SctpPingPong test(1, kTransport1Port, kTransport2Port, thread1.get(),
@@ -714,8 +706,7 @@ TEST_F(UsrSctpReliabilityTest,
   static_assert(wait_timeout > 0,
                 "Timeout computation must produce positive value");
 
-  cricket::SendDataParams send_params;
-  send_params.sid = -1;
+  webrtc::SendDataParams send_params;
   send_params.ordered = false;
   send_params.max_rtx_count = std::numeric_limits<uint16_t>::max();
   send_params.max_rtx_ms = std::numeric_limits<uint16_t>::max();
@@ -750,8 +741,7 @@ TEST_F(UsrSctpReliabilityTest,
        DISABLED_AllMessagesAreDeliveredOverLossyConnectionConcurrentTests) {
   ThreadPool pool(16);
 
-  cricket::SendDataParams send_params;
-  send_params.sid = -1;
+  webrtc::SendDataParams send_params;
   send_params.ordered = true;
   constexpr uint32_t base_sctp_port = 5000;
 

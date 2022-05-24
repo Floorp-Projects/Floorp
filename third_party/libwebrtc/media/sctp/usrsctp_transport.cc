@@ -129,46 +129,37 @@ void DebugSctpPrintf(const char* format, ...) {
 }
 
 // Get the PPID to use for the terminating fragment of this type.
-uint32_t GetPpid(cricket::DataMessageType type, size_t size) {
+uint32_t GetPpid(webrtc::DataMessageType type, size_t size) {
   switch (type) {
-    default:
-    case cricket::DMT_NONE:
-      return PPID_NONE;
-    case cricket::DMT_CONTROL:
+    case webrtc::DataMessageType::kControl:
       return PPID_CONTROL;
-    case cricket::DMT_BINARY:
+    case webrtc::DataMessageType::kBinary:
       return size > 0 ? PPID_BINARY_LAST : PPID_BINARY_EMPTY;
-    case cricket::DMT_TEXT:
+    case webrtc::DataMessageType::kText:
       return size > 0 ? PPID_TEXT_LAST : PPID_TEXT_EMPTY;
   }
 }
 
-bool GetDataMediaType(uint32_t ppid, cricket::DataMessageType* dest) {
+bool GetDataMediaType(uint32_t ppid, webrtc::DataMessageType* dest) {
   RTC_DCHECK(dest != NULL);
   switch (ppid) {
     case PPID_BINARY_PARTIAL:
     case PPID_BINARY_LAST:
     case PPID_BINARY_EMPTY:
-      *dest = cricket::DMT_BINARY;
+      *dest = webrtc::DataMessageType::kBinary;
       return true;
 
     case PPID_TEXT_PARTIAL:
     case PPID_TEXT_LAST:
     case PPID_TEXT_EMPTY:
-      *dest = cricket::DMT_TEXT;
+      *dest = webrtc::DataMessageType::kText;
       return true;
 
     case PPID_CONTROL:
-      *dest = cricket::DMT_CONTROL;
+      *dest = webrtc::DataMessageType::kControl;
       return true;
-
-    case PPID_NONE:
-      *dest = cricket::DMT_NONE;
-      return true;
-
-    default:
-      return false;
   }
+  return false;
 }
 
 bool IsEmptyPPID(uint32_t ppid) {
@@ -212,11 +203,12 @@ void VerboseLogPacket(const void* data, size_t length, int direction) {
 
 // Creates the sctp_sendv_spa struct used for setting flags in the
 // sctp_sendv() call.
-sctp_sendv_spa CreateSctpSendParams(const cricket::SendDataParams& params,
+sctp_sendv_spa CreateSctpSendParams(int sid,
+                                    const webrtc::SendDataParams& params,
                                     size_t size) {
   struct sctp_sendv_spa spa = {0};
   spa.sendv_flags |= SCTP_SEND_SNDINFO_VALID;
-  spa.sendv_sndinfo.snd_sid = params.sid;
+  spa.sendv_sndinfo.snd_sid = sid;
   spa.sendv_sndinfo.snd_ppid = rtc::HostToNetwork32(GetPpid(params.type, size));
   // Explicitly marking the EOR flag turns the usrsctp_sendv call below into a
   // non atomic operation. This means that the sctp lib might only accept the
@@ -724,7 +716,8 @@ bool UsrsctpTransport::ResetStream(int sid) {
   return true;
 }
 
-bool UsrsctpTransport::SendData(const SendDataParams& params,
+bool UsrsctpTransport::SendData(int sid,
+                                const webrtc::SendDataParams& params,
                                 const rtc::CopyOnWriteBuffer& payload,
                                 SendDataResult* result) {
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -739,13 +732,13 @@ bool UsrsctpTransport::SendData(const SendDataParams& params,
   }
 
   // Do not queue data to send on a closing stream.
-  auto it = stream_status_by_sid_.find(params.sid);
+  auto it = stream_status_by_sid_.find(sid);
   if (it == stream_status_by_sid_.end() || !it->second.is_open()) {
     RTC_LOG(LS_WARNING)
         << debug_name_
         << "->SendData(...): "
            "Not sending data because sid is unknown or closing: "
-        << params.sid;
+        << sid;
     if (result) {
       *result = SDR_ERROR;
     }
@@ -753,7 +746,7 @@ bool UsrsctpTransport::SendData(const SendDataParams& params,
   }
 
   size_t payload_size = payload.size();
-  OutgoingMessage message(payload, params);
+  OutgoingMessage message(payload, sid, params);
   SendDataResult send_message_result = SendMessageInternal(&message);
   if (result) {
     *result = send_message_result;
@@ -782,17 +775,17 @@ SendDataResult UsrsctpTransport::SendMessageInternal(OutgoingMessage* message) {
     RTC_LOG(LS_WARNING) << debug_name_
                         << "->SendMessageInternal(...): "
                            "Not sending packet with sid="
-                        << message->send_params().sid
-                        << " len=" << message->size() << " before Start().";
+                        << message->sid() << " len=" << message->size()
+                        << " before Start().";
     return SDR_ERROR;
   }
-  if (message->send_params().type != DMT_CONTROL) {
-    auto it = stream_status_by_sid_.find(message->send_params().sid);
+  if (message->send_params().type != webrtc::DataMessageType::kControl) {
+    auto it = stream_status_by_sid_.find(message->sid());
     if (it == stream_status_by_sid_.end()) {
       RTC_LOG(LS_WARNING) << debug_name_
                           << "->SendMessageInternal(...): "
                              "Not sending data because sid is unknown: "
-                          << message->send_params().sid;
+                          << message->sid();
       return SDR_ERROR;
     }
   }
@@ -804,8 +797,8 @@ SendDataResult UsrsctpTransport::SendMessageInternal(OutgoingMessage* message) {
   }
 
   // Send data using SCTP.
-  sctp_sendv_spa spa =
-      CreateSctpSendParams(message->send_params(), message->size());
+  sctp_sendv_spa spa = CreateSctpSendParams(
+      message->sid(), message->send_params(), message->size());
   const void* data = message->data();
   size_t data_length = message->size();
   if (message->size() == 0) {
@@ -1081,7 +1074,7 @@ bool UsrsctpTransport::SendQueuedStreamResets() {
         // https://w3c.github.io/webrtc-pc/#closing-procedure
         return stream.second.need_outgoing_reset() &&
                (!partial_outgoing_message_.has_value() ||
-                partial_outgoing_message_.value().send_params().sid !=
+                partial_outgoing_message_.value().sid() !=
                     static_cast<int>(stream.first));
       };
   // Figure out how many streams need to be reset. We need to do this so we can
@@ -1158,7 +1151,7 @@ bool UsrsctpTransport::SendBufferedMessage() {
   }
   RTC_DCHECK_EQ(0u, partial_outgoing_message_->size());
 
-  int sid = partial_outgoing_message_->send_params().sid;
+  int sid = partial_outgoing_message_->sid();
   partial_outgoing_message_.reset();
 
   // Send the queued stream reset if it was pending for this stream.
@@ -1314,7 +1307,7 @@ void UsrsctpTransport::OnDataOrNotificationFromSctp(const void* data,
                       << ", eor=" << ((flags & MSG_EOR) ? "y" : "n");
 
   // Validate payload protocol identifier
-  DataMessageType type = DMT_NONE;
+  webrtc::DataMessageType type;
   if (!GetDataMediaType(ppid, &type)) {
     // Unexpected PPID, dropping
     RTC_LOG(LS_ERROR) << "Received an unknown PPID " << ppid
