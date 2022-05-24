@@ -487,7 +487,7 @@ BasicNetworkManager::BasicNetworkManager(
       allow_mac_based_ipv6_(
           webrtc::field_trial::IsEnabled("WebRTC-AllowMACBasedIPv6")),
       bind_using_ifname_(
-          webrtc::field_trial::IsEnabled("WebRTC-BindUsingInterfaceName")) {}
+          !webrtc::field_trial::IsDisabled("WebRTC-BindUsingInterfaceName")) {}
 
 BasicNetworkManager::~BasicNetworkManager() {}
 
