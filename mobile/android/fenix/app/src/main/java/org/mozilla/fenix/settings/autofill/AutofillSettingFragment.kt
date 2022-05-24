@@ -91,7 +91,10 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
         )
 
         updateSaveAndAutofillCardsSwitch()
-        updateSaveAndAutofillAddressesSwitch()
+
+        if (requireComponents.settings.addressFeature) {
+            updateSaveAndAutofillAddressesSwitch()
+        }
     }
 
     /**
