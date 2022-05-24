@@ -301,8 +301,13 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime) {
 
   if (!IsMuted()) {
     LOG("Not muted: starting a new audio sink");
-    mAudioSink.reset(mCreator->Create(aStartTime));
-    rv = mAudioSink->Start(mParams, mEndedPromiseHolder);
+    mAudioSink.reset(mCreator->Create());
+    rv = mAudioSink->InitializeAudioStream(mParams);
+    if (NS_FAILED(rv)) {
+      LOG("AudioSink initialization failure");
+      return rv;
+    }
+    rv = mAudioSink->Start(aStartTime, mEndedPromiseHolder);
   } else {
     LOG("Muted: not starting an audio sink");
   }
