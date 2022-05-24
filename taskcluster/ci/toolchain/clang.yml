@@ -300,6 +300,31 @@ macosx64-aarch64-clang-14:
             - macosx64-x64-compiler-rt-14
             - wasm32-wasi-compiler-rt-14
 
+win64-clang-14-stage1:
+    description: "Clang-cl 14 toolchain build stage 1"
+    treeherder:
+        symbol: TW64(clang-14-stage1)
+    worker-type: b-win2012
+    run:
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/win64.json'
+            - 'build/build-clang/clang-14.json'
+            - 'build/build-clang/1stage.json'
+        resources:
+            - 'build/build-clang/win64.json'
+            - 'build/build-clang/clang-14.json'
+            - 'build/build-clang/1stage.json'
+        toolchain-alias: win64-clang-toolchain
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-14
+            - cmake
+            - ninja
+        toolchain:
+            - win64-vs2019
+
 win64-clang-14-raw:
     description: "Clang-cl 14 toolchain build"
     treeherder:
@@ -361,31 +386,6 @@ win64-clang-14:
             - wasm32-wasi-compiler-rt-14
             - win32-compiler-rt-14
             - win64-compiler-rt-14
-
-win64-clang-14-stage1:
-    description: "Clang-cl 14 toolchain build stage 1"
-    treeherder:
-        symbol: TW64(clang-14-stage1)
-    worker-type: b-win2012
-    run:
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/win64.json'
-            - 'build/build-clang/clang-14.json'
-            - 'build/build-clang/1stage.json'
-        resources:
-            - 'build/build-clang/win64.json'
-            - 'build/build-clang/clang-14.json'
-            - 'build/build-clang/1stage.json'
-        toolchain-alias: win64-clang-toolchain
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-14
-            - cmake
-            - ninja
-        toolchain:
-            - win64-vs2019
 
 linux64-clang-trunk-mingw-x86:
     description: "MinGW-Clang trunk x86 toolchain build"
@@ -653,6 +653,32 @@ macosx64-aarch64-clang-trunk:
             - macosx64-x64-compiler-rt-trunk
             - wasm32-wasi-compiler-rt-trunk
 
+win64-clang-trunk-stage1:
+    description: "Clang-cl trunk toolchain build stage 1"
+    attributes:
+        cached_task: false
+    treeherder:
+        symbol: TW64(clang-trunk-stage1)
+    worker-type: b-win2012
+    run:
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/win64.json'
+            - 'build/build-clang/clang-trunk.json'
+            - 'build/build-clang/1stage.json'
+        resources:
+            - 'build/build-clang/win64.json'
+            - 'build/build-clang/clang-trunk.json'
+            - 'build/build-clang/1stage.json'
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-trunk
+            - cmake
+            - ninja
+        toolchain:
+            - win64-vs2019
+
 win64-clang-trunk-raw:
     description: "Clang-cl trunk toolchain build"
     attributes:
@@ -713,29 +739,3 @@ win64-clang-trunk:
             - wasm32-wasi-compiler-rt-trunk
             - win32-compiler-rt-trunk
             - win64-compiler-rt-trunk
-
-win64-clang-trunk-stage1:
-    description: "Clang-cl trunk toolchain build stage 1"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TW64(clang-trunk-stage1)
-    worker-type: b-win2012
-    run:
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/win64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/1stage.json'
-        resources:
-            - 'build/build-clang/win64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/1stage.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-trunk
-            - cmake
-            - ninja
-        toolchain:
-            - win64-vs2019
