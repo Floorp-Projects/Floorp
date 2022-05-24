@@ -580,12 +580,6 @@ void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
   double growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
 
-  // Discourage collection of the atoms zone during page load as this can block
-  // off-thread parsing.
-  if (isAtomsZone && state.inPageLoad) {
-    growthFactor *= 1.5;
-  }
-
   startBytes_ =
       computeZoneTriggerBytes(growthFactor, lastBytes, tunables, lock);
 
