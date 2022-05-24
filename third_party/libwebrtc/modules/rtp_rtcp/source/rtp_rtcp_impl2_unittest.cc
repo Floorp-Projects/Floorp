@@ -31,6 +31,7 @@
 #include "test/run_loop.h"
 #include "test/time_controller/simulated_time_controller.h"
 
+using ::testing::AllOf;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Field;
@@ -152,8 +153,17 @@ class FieldTrialConfig : public WebRtcKeyValueConfig {
   double max_padding_factor_;
 };
 
-class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
+class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
+                      public SendPacketObserver {
  public:
+  struct SentPacket {
+    SentPacket(uint16_t packet_id, int64_t capture_time_ms, uint32_t ssrc)
+        : packet_id(packet_id), capture_time_ms(capture_time_ms), ssrc(ssrc) {}
+    uint16_t packet_id;
+    int64_t capture_time_ms;
+    uint32_t ssrc;
+  };
+
   RtpRtcpModule(TimeController* time_controller,
                 bool is_sender,
                 const FieldTrialConfig& trials)
@@ -180,6 +190,16 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
       uint32_t ssrc,
       const RtcpPacketTypeCounter& packet_counter) override {
     counter_map_[ssrc] = packet_counter;
+  }
+
+  void OnSendPacket(uint16_t packet_id,
+                    int64_t capture_time_ms,
+                    uint32_t ssrc) override {
+    last_sent_packet_.emplace(packet_id, capture_time_ms, ssrc);
+  }
+
+  absl::optional<SentPacket> last_sent_packet() const {
+    return last_sent_packet_;
   }
 
   RtcpPacketTypeCounter RtcpSent() {
@@ -221,6 +241,7 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
     config.need_rtp_packet_infos = true;
     config.non_sender_rtt_measurement = true;
     config.field_trials = &trials_;
+    config.send_packet_observer = this;
 
     impl_.reset(new ModuleRtpRtcpImpl2(config));
     impl_->SetRemoteSSRC(is_sender_ ? kReceiverSsrc : kSenderSsrc);
@@ -229,6 +250,7 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
 
   TimeController* const time_controller_;
   std::map<uint32_t, RtcpPacketTypeCounter> counter_map_;
+  absl::optional<SentPacket> last_sent_packet_;
 };
 }  // namespace
 
@@ -913,6 +935,23 @@ TEST_P(RtpRtcpImpl2Test, AssignsAbsoluteSendTime) {
   EXPECT_TRUE(
       SendFrame(&sender_, sender_video_.get(), kBaseLayerTid, /*timestamp=*/0));
   EXPECT_NE(sender_.last_packet().GetExtension<AbsoluteSendTime>(), 0u);
+}
+
+TEST_P(RtpRtcpImpl2Test, PropagatesSentPacketInfo) {
+  sender_.RegisterHeaderExtension(TransportSequenceNumber::kUri,
+                                  kTransportSequenceNumberExtensionId);
+  int64_t now_ms = time_controller_.GetClock()->TimeInMilliseconds();
+  const int kCaptureTimeMsToRtpTimestamp = 90;  // 90 kHz clock
+  EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid,
+                        /*timestamp=*/kCaptureTimeMsToRtpTimestamp * now_ms));
+  EXPECT_THAT(
+      sender_.last_sent_packet(),
+      Optional(
+          AllOf(Field(&RtpRtcpModule::SentPacket::packet_id,
+                      Eq(sender_.last_packet()
+                             .GetExtension<TransportSequenceNumber>())),
+                Field(&RtpRtcpModule::SentPacket::capture_time_ms, Eq(now_ms)),
+                Field(&RtpRtcpModule::SentPacket::ssrc, Eq(kSenderSsrc)))));
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
