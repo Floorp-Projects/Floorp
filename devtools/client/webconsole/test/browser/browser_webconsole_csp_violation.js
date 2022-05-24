@@ -19,7 +19,12 @@ add_task(async function() {
       "Content Security Policy: The page\u2019s settings " +
       "blocked the loading of a resource at " +
       "http://some.example.com/test.png (\u201cimg-src\u201d).";
-    const onRepeatedMessage = waitForRepeatedMessage(hud, CSP_VIOLATION_MSG, 2);
+    const onRepeatedMessage = waitForRepeatedMessageByType(
+      hud,
+      CSP_VIOLATION_MSG,
+      ".error",
+      2
+    );
     await navigateTo(TEST_VIOLATION);
     await onRepeatedMessage;
     ok(true, "Received expected messages");
