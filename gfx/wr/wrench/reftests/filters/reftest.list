@@ -73,7 +73,6 @@ platform(linux,mac) == backdrop-filter-blur-across-tiles.yaml backdrop-filter-bl
 #platform(linux,mac) == backdrop-filter-drop-shadow.yaml backdrop-filter-drop-shadow.png
 == backdrop-filter-blur-edge-mode.yaml backdrop-filter-blur-edge-mode-ref.yaml
 == backdrop-filter-half-opacity.yaml backdrop-filter-half-opacity-ref.yaml
-platform(linux,mac) == backdrop-filter-transformed-filter.yaml backdrop-filter-transformed-filter.png
 platform(linux,max) == svg-filter-offset.yaml svg-filter-offset-ref.yaml
 skip_on(android,device) == fuzzy(1,100) svg-filter-composite.yaml svg-filter-composite-ref.yaml
 skip_on(android,device) == filter-mix-blend-scaling.yaml filter-mix-blend-scaling-ref.yaml

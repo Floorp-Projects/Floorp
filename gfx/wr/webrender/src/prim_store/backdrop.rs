@@ -7,168 +7,88 @@ use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
     InternablePrimitive, PrimitiveInstanceKind, PrimKey, PrimTemplate,
-    PrimTemplateCommonData, PrimitiveStore, PictureIndex,
+    PrimTemplateCommonData, PrimitiveStore,
 };
 use crate::scene_building::IsVisible;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, Eq, PartialEq, MallocSizeOf, Hash)]
-pub struct BackdropCapture {
+pub struct Backdrop {
 }
 
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Eq, PartialEq, MallocSizeOf, Hash)]
-pub struct BackdropRender {
-}
-
-impl From<BackdropCapture> for BackdropCaptureData {
-    fn from(_backdrop: BackdropCapture) -> Self {
-        BackdropCaptureData {
+impl From<Backdrop> for BackdropData {
+    fn from(_backdrop: Backdrop) -> Self {
+        BackdropData {
         }
     }
 }
 
-impl From<BackdropRender> for BackdropRenderData {
-    fn from(_backdrop: BackdropRender) -> Self {
-        BackdropRenderData {
-        }
-    }
-}
+pub type BackdropKey = PrimKey<Backdrop>;
 
-pub type BackdropCaptureKey = PrimKey<BackdropCapture>;
-pub type BackdropRenderKey = PrimKey<BackdropRender>;
-
-impl BackdropCaptureKey {
+impl BackdropKey {
     pub fn new(
         info: &LayoutPrimitiveInfo,
-        backdrop_capture: BackdropCapture,
+        backdrop: Backdrop,
     ) -> Self {
-        BackdropCaptureKey {
+        BackdropKey {
             common: info.into(),
-            kind: backdrop_capture,
+            kind: backdrop,
         }
     }
 }
 
-impl BackdropRenderKey {
-    pub fn new(
-        info: &LayoutPrimitiveInfo,
-        backdrop_render: BackdropRender,
-    ) -> Self {
-        BackdropRenderKey {
-            common: info.into(),
-            kind: backdrop_render,
-        }
-    }
-}
-
-impl InternDebug for BackdropCaptureKey {}
-impl InternDebug for BackdropRenderKey {}
+impl InternDebug for BackdropKey {}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, MallocSizeOf)]
-pub struct BackdropCaptureData {
+pub struct BackdropData {
 }
 
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, MallocSizeOf)]
-pub struct BackdropRenderData {
-}
+pub type BackdropTemplate = PrimTemplate<BackdropData>;
 
-pub type BackdropCaptureTemplate = PrimTemplate<BackdropCaptureData>;
-pub type BackdropRenderTemplate = PrimTemplate<BackdropRenderData>;
-
-impl From<BackdropCaptureKey> for BackdropCaptureTemplate {
-    fn from(backdrop: BackdropCaptureKey) -> Self {
+impl From<BackdropKey> for BackdropTemplate {
+    fn from(backdrop: BackdropKey) -> Self {
         let common = PrimTemplateCommonData::with_key_common(backdrop.common);
 
-        BackdropCaptureTemplate {
+        BackdropTemplate {
             common,
             kind: backdrop.kind.into(),
         }
     }
 }
 
-impl From<BackdropRenderKey> for BackdropRenderTemplate {
-    fn from(backdrop: BackdropRenderKey) -> Self {
-        let common = PrimTemplateCommonData::with_key_common(backdrop.common);
+pub type BackdropDataHandle = InternHandle<Backdrop>;
 
-        BackdropRenderTemplate {
-            common,
-            kind: backdrop.kind.into(),
-        }
-    }
-}
-
-pub type BackdropCaptureDataHandle = InternHandle<BackdropCapture>;
-pub type BackdropRenderDataHandle = InternHandle<BackdropRender>;
-
-impl Internable for BackdropCapture {
-    type Key = BackdropCaptureKey;
-    type StoreData = BackdropCaptureTemplate;
+impl Internable for Backdrop {
+    type Key = BackdropKey;
+    type StoreData = BackdropTemplate;
     type InternData = ();
     const PROFILE_COUNTER: usize = crate::profiler::INTERNED_BACKDROPS;
 }
 
-impl Internable for BackdropRender {
-    type Key = BackdropRenderKey;
-    type StoreData = BackdropRenderTemplate;
-    type InternData = ();
-    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_BACKDROPS;
-}
-
-impl InternablePrimitive for BackdropCapture {
+impl InternablePrimitive for Backdrop {
     fn into_key(
         self,
         info: &LayoutPrimitiveInfo,
-    ) -> BackdropCaptureKey {
-        BackdropCaptureKey::new(info, self)
+    ) -> BackdropKey {
+        BackdropKey::new(info, self)
     }
 
     fn make_instance_kind(
-        _key: BackdropCaptureKey,
-        data_handle: BackdropCaptureDataHandle,
+        _key: BackdropKey,
+        data_handle: BackdropDataHandle,
         _prim_store: &mut PrimitiveStore,
         _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
-        PrimitiveInstanceKind::BackdropCapture {
+        PrimitiveInstanceKind::Backdrop {
             data_handle,
         }
     }
 }
 
-impl InternablePrimitive for BackdropRender {
-    fn into_key(
-        self,
-        info: &LayoutPrimitiveInfo,
-    ) -> BackdropRenderKey {
-        BackdropRenderKey::new(info, self)
-    }
-
-    fn make_instance_kind(
-        _key: BackdropRenderKey,
-        data_handle: BackdropRenderDataHandle,
-        _prim_store: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        PrimitiveInstanceKind::BackdropRender {
-            data_handle,
-            pic_index: PictureIndex::INVALID,
-        }
-    }
-}
-
-impl IsVisible for BackdropCapture {
-    fn is_visible(&self) -> bool {
-        true
-    }
-}
-
-impl IsVisible for BackdropRender {
+impl IsVisible for Backdrop {
     fn is_visible(&self) -> bool {
         true
     }
