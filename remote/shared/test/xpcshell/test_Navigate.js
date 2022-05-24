@@ -563,6 +563,22 @@ add_test(
   }
 );
 
+add_test(async function test_ProgressListener_isStarted() {
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+
+  const progressListener = new ProgressListener(webProgress);
+  ok(!progressListener.isStarted);
+
+  progressListener.start();
+  ok(progressListener.isStarted);
+
+  progressListener.stop();
+  ok(!progressListener.isStarted);
+
+  run_next_test();
+});
+
 add_test(async function test_ProgressListener_notWaitForExplicitStart() {
   // Create a webprogress and start it before creating the progress listener.
   const browsingContext = new MockTopContext();

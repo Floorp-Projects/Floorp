@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 
+  Deferred: "chrome://remote/content/shared/Sync.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   truncate: "chrome://remote/content/shared/Format.jsm",
 });
@@ -93,7 +94,7 @@ class ProgressListener {
   #waitForExplicitStart;
   #webProgress;
 
-  #resolve;
+  #deferredNavigation;
   #seenStartFlag;
   #targetURI;
   #unloadTimerId;
@@ -136,7 +137,7 @@ class ProgressListener {
     this.#waitForExplicitStart = waitForExplicitStart;
     this.#webProgress = webProgress;
 
-    this.#resolve = null;
+    this.#deferredNavigation = null;
     this.#seenStartFlag = false;
     this.#targetURI = null;
     this.#unloadTimerId = null;
@@ -155,7 +156,7 @@ class ProgressListener {
   }
 
   get isStarted() {
-    return this.#resolve !== null;
+    return !!this.#deferredNavigation;
   }
 
   get targetURI() {
@@ -256,7 +257,7 @@ class ProgressListener {
    *     A promise that will resolve when the navigation has been finished.
    */
   start() {
-    if (this.#resolve) {
+    if (this.#deferredNavigation) {
       throw new Error(`Progress listener already started`);
     }
 
@@ -270,7 +271,7 @@ class ProgressListener {
       }
     }
 
-    const promise = new Promise(resolve => (this.#resolve = resolve));
+    this.#deferredNavigation = new Deferred();
 
     // Enable all location change and state notifications to get informed about an upcoming load
     // as early as possible.
@@ -291,14 +292,14 @@ class ProgressListener {
       this.#setUnloadTimer();
     }
 
-    return promise;
+    return this.#deferredNavigation.promise;
   }
 
   /**
    * Stop observing web progress changes.
    */
   stop() {
-    if (!this.#resolve) {
+    if (!this.#deferredNavigation) {
       throw new Error(`Progress listener not yet started`);
     }
 
@@ -316,8 +317,8 @@ class ProgressListener {
       this.#targetURI = this.browsingContext.currentURI;
     }
 
-    this.#resolve();
-    this.#resolve = null;
+    this.#deferredNavigation.resolve();
+    this.#deferredNavigation = null;
   }
 
   toString() {
