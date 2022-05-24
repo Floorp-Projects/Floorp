@@ -155,10 +155,7 @@ function handleRequest(request, response) {
     if (formData && "upload_file_minidump" in formData) {
       response.setHeader("Content-Type", "text/plain", false);
 
-      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-        Ci.nsIUUIDGenerator
-      );
-      let uuid = uuidGenerator.generateUUID().toString();
+      let uuid = Services.uuid.generateUUID().toString();
       // ditch the {}, add bp- prefix
       uuid = "bp-" + uuid.substring(1, uuid.length - 1);
 
