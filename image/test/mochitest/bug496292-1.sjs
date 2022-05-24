@@ -1,5 +1,7 @@
 function handleRequest(request, response) {
-  var file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+  var file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("CurWorkD", Ci.nsIFile);
 
   file.append("tests");
   file.append("image");

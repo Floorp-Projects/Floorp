@@ -24,7 +24,7 @@ function handleRequest(request, response) {
 
   var data = String.fromCharCode.apply(null, bytes);
   response.setHeader("Result-Content-Length", "" + data.length);
-  if (data.includes("TEST_REDIRECT_STR")) {
+  if (data.indexOf("TEST_REDIRECT_STR") >= 0) {
     var newURL = "http://" + data.split("&url=")[1];
     response.setStatusLine(null, 307, "redirect");
     response.setHeader("Location", newURL, false);

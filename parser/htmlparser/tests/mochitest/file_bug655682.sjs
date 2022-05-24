@@ -2,7 +2,7 @@ var timer;
 var callback;
 
 function handleRequest(request, response) {
-  if (request.queryString.includes("trigger")) {
+  if (request.queryString.indexOf("trigger") != -1) {
     setState("triggered", "triggered");
     response.setHeader("Cache-Control", "no-cache", false);
     response.setHeader("Content-Type", "text/javascript; charset=utf-8", false);

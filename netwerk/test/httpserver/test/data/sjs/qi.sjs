@@ -8,7 +8,6 @@ function handleRequest(request, response) {
     qid = request.QueryInterface(Ci.nsIHttpRequest);
     passed = qid === request;
   } catch (e) {
-    // eslint-disable-next-line no-control-regex
     exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
     response.setStatusLine(
       request.httpVersion,
@@ -27,7 +26,6 @@ function handleRequest(request, response) {
     qid = response.QueryInterface(Ci.nsIHttpResponse);
     passed = qid === response;
   } catch (e) {
-    // eslint-disable-next-line no-control-regex
     exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
     response.setStatusLine(
       request.httpVersion,
