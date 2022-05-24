@@ -2488,7 +2488,7 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
     return true;
   }
   // Ensure there is a clear border around the text.
-  xformBounds.Inflate(1);
+  xformBounds.Inflate(2);
   IntRect intBounds = RoundedOut(xformBounds);
 
   // Whether to render the text as a full color result as opposed to as a
