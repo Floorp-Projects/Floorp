@@ -378,6 +378,43 @@ function executeAndWaitForMessage(
 }
 
 /**
+ * Execute an input expression and wait for a message with the expected text
+ * with given message type to be displayed in the output.
+ *
+ * @param {Object} hud : The webconsole.
+ * @param {String} input : The input expression to execute.
+ * @param {String} matchingText : A string that should match the message body content.
+ * @param {String} typeSelector : A part of selector for the message, to
+ *                                specify the message type.
+ */
+function executeAndWaitForMessageByType(
+  hud,
+  input,
+  matchingText,
+  typeSelector
+) {
+  const onMessage = waitForMessageByType(hud, matchingText, typeSelector);
+  execute(hud, input);
+  return onMessage;
+}
+
+/**
+ * Type-specific wrappers for executeAndWaitForMessageByType
+ *
+ * @param {Object} hud : The webconsole.
+ * @param {String} input : The input expression to execute.
+ * @param {String} matchingText : A string that should match the message body
+ *                                content.
+ */
+function executeAndWaitForResultMessage(hud, input, matchingText) {
+  return executeAndWaitForMessageByType(hud, input, matchingText, ".result");
+}
+
+function executeAndWaitForErrorMessage(hud, input, matchingText) {
+  return executeAndWaitForMessageByType(hud, input, matchingText, ".error");
+}
+
+/**
  * Set the input value, simulates the right keyboard event to evaluate it, depending on
  * if the console is in editor mode or not, and wait for a message with the expected text
  * (and an optional selector) to be displayed in the output.
