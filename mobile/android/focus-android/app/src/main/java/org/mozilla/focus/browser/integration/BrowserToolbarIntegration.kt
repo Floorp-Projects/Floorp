@@ -27,6 +27,7 @@ import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
@@ -222,6 +223,7 @@ class BrowserToolbarIntegration(
             setBrowserActionButtons()
             observeEraseCfr()
         }
+        expandToolbarOnNavigation()
         observeTrackingProtectionCfr()
     }
 
@@ -271,6 +273,20 @@ class BrowserToolbarIntegration(
                             show()
                         }
                     }
+                }
+        }
+    }
+
+    private fun expandToolbarOnNavigation() {
+        store.flowScoped { flow ->
+            flow.mapNotNull { state ->
+                state.findCustomTabOrSelectedTab(customTabId)
+            }
+                .ifAnyChanged { tab ->
+                    arrayOf(tab.content.url, tab.content.loadRequest)
+                }
+                .collect {
+                    toolbar.expand()
                 }
         }
     }
