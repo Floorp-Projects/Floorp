@@ -409,7 +409,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 
 #tabbrowser-tabs {
   -moz-box-align: stretch;
-  padding-inline: 0;
   margin-bottom: 0;
   position: static;
 }
