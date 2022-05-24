@@ -191,7 +191,7 @@ TEST_F(FCFSSendQueueTest, ProduceWithLifetimeExpiry) {
   // Default is no expiry
   TimeMs now = kNow;
   buf_.Add(now, DcSctpMessage(kStreamID, kPPID, payload));
-  now = now + DurationMs(1000000);
+  now += DurationMs(1000000);
   ASSERT_TRUE(buf_.Produce(now, 100));
 
   SendOptions expires_2_seconds;
@@ -199,17 +199,17 @@ TEST_F(FCFSSendQueueTest, ProduceWithLifetimeExpiry) {
 
   // Add and consume within lifetime
   buf_.Add(now, DcSctpMessage(kStreamID, kPPID, payload), expires_2_seconds);
-  now = now + DurationMs(1999);
+  now += DurationMs(2000);
   ASSERT_TRUE(buf_.Produce(now, 100));
 
   // Add and consume just outside lifetime
   buf_.Add(now, DcSctpMessage(kStreamID, kPPID, payload), expires_2_seconds);
-  now = now + DurationMs(2000);
+  now += DurationMs(2001);
   ASSERT_FALSE(buf_.Produce(now, 100));
 
   // A long time after expiry
   buf_.Add(now, DcSctpMessage(kStreamID, kPPID, payload), expires_2_seconds);
-  now = now + DurationMs(1000000);
+  now += DurationMs(1000000);
   ASSERT_FALSE(buf_.Produce(now, 100));
 
   // Expire one message, but produce the second that is not expired.
@@ -219,7 +219,7 @@ TEST_F(FCFSSendQueueTest, ProduceWithLifetimeExpiry) {
   expires_4_seconds.lifetime = DurationMs(4000);
 
   buf_.Add(now, DcSctpMessage(kStreamID, kPPID, payload), expires_4_seconds);
-  now = now + DurationMs(2000);
+  now += DurationMs(2001);
 
   ASSERT_TRUE(buf_.Produce(now, 100));
   ASSERT_FALSE(buf_.Produce(now, 100));

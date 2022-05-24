@@ -36,7 +36,10 @@ void FCFSSendQueue::Add(TimeMs now,
   // has been added to the queue.
   absl::optional<TimeMs> expires_at = absl::nullopt;
   if (send_options.lifetime.has_value()) {
-    expires_at = now + *send_options.lifetime;
+    // `expires_at` is the time when it expires. Which is slightly larger than
+    // the message's lifetime, as the message is alive during its entire
+    // lifetime (which may be zero).
+    expires_at = now + *send_options.lifetime + DurationMs(1);
   }
   queue.emplace_back(std::move(message), expires_at, send_options);
 }

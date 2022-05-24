@@ -151,13 +151,14 @@ class TransmissionControlBlock : public Context {
   // only a single packet will be sent. Otherwise, zero, one or multiple may be
   // sent.
   void SendBufferedPackets(SctpPacket::Builder& builder,
+                           TimeMs now,
                            bool only_one_packet = false);
 
   // As above, but without passing in a builder and allowing sending many
   // packets.
-  void SendBufferedPackets() {
+  void SendBufferedPackets(TimeMs now) {
     SctpPacket::Builder builder(peer_verification_tag_, options_);
-    SendBufferedPackets(builder, /*only_one_packet=*/false);
+    SendBufferedPackets(builder, now, /*only_one_packet=*/false);
   }
 
   // Returns a textual representation of this object, for logging.

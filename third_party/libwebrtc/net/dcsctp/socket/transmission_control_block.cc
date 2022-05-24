@@ -51,11 +51,12 @@ void TransmissionControlBlock::ObserveRTT(DurationMs rtt) {
 }
 
 absl::optional<DurationMs> TransmissionControlBlock::OnRtxTimerExpiry() {
+  TimeMs now = callbacks_.TimeMillis();
   RTC_DLOG(LS_INFO) << log_prefix_ << "Timer " << t3_rtx_->name()
                     << " has expired";
   if (IncrementTxErrorCounter("t3-rtx expired")) {
     retransmission_queue_.HandleT3RtxTimerExpiry();
-    SendBufferedPackets();
+    SendBufferedPackets(now);
   }
   return absl::nullopt;
 }
@@ -76,8 +77,8 @@ void TransmissionControlBlock::MaybeSendSack() {
 }
 
 void TransmissionControlBlock::SendBufferedPackets(SctpPacket::Builder& builder,
+                                                   TimeMs now,
                                                    bool only_one_packet) {
-  TimeMs now = callbacks_.TimeMillis();
   for (int packet_idx = 0;; ++packet_idx) {
     // Only add control chunks to the first packet that is sent, if sending
     // multiple packets in one go (as allowed by the congestion window).

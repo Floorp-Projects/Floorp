@@ -78,6 +78,7 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
               << log_prefix_ << "Socket abort: " << ToString(error) << "; "
               << message;
         });
+    ON_CALL(*this, TimeMillis).WillByDefault([this]() { return now_; });
   }
   MOCK_METHOD(void,
               SendPacket,
@@ -88,8 +89,7 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
     return timeout_manager_.CreateTimeout();
   }
 
-  TimeMs TimeMillis() override { return now_; }
-
+  MOCK_METHOD(TimeMs, TimeMillis, (), (override));
   uint32_t GetRandomInt(uint32_t low, uint32_t high) override {
     return random_.Rand(low, high);
   }
