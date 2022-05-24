@@ -102,10 +102,13 @@ private val blockAudioAndVideoOption =
     mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_video)))
 
 private fun assertBlockAudioOnlyIsChecked() {
+    // the childSelector doesn't work anymore, so we are unable to find it by text
     val radioButton =
-        mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_only)))
-            .getFromParent(UiSelector().className("android.widget.RadioButton"))
-
+        mDevice.findObject(
+            UiSelector()
+                .checkable(true)
+                .index(1)
+        )
     assertTrue(radioButton.isChecked)
 }
 
@@ -145,8 +148,12 @@ private val DRMContentDefaultValue =
         .getFromParent(UiSelector().text("Ask to allow"))
 
 private val askToAllowRadioButton =
-    mDevice.findObject(UiSelector().text("Ask to allow"))
-        .getFromParent(UiSelector().className("android.widget.RadioButton"))
+    // the childSelector doesn't work anymore, so we are unable to find it by text
+    mDevice.findObject(
+        UiSelector()
+            .checkable(true)
+            .index(0)
+    )
 
 private val blockedRadioButton =
     mDevice.findObject(UiSelector().text("Blocked"))

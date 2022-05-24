@@ -50,7 +50,7 @@ class SettingsPrivacyMenuRobot {
         cookiesAndSiteDataSection().check(matches(isDisplayed()))
         blockCookies().check(matches(isDisplayed()))
         blockCookiesDefaultOption().check(matches(isDisplayed()))
-        sitePermissions().check(matches(isDisplayed()))
+        assertTrue(sitePermissions().exists())
         verifyExceptionsListDisabled()
         useFingerprintSwitch().check(matches(isDisplayed()))
         assertUseFingerprintSwitchState()
@@ -75,7 +75,7 @@ class SettingsPrivacyMenuRobot {
         cookiesAndSiteDataSection().check(matches(isDisplayed()))
         blockCookies().check(matches(isDisplayed()))
         blockCookiesDefaultOption().check(matches(isDisplayed()))
-        sitePermissions().check(matches(isDisplayed()))
+        assertTrue(sitePermissions().exists())
     }
 
     fun verifyBlockCookiesPrompt() {
@@ -258,7 +258,8 @@ class SettingsPrivacyMenuRobot {
         }
 
         fun clickSitePermissionsSettings(interact: SettingsSitePermissionsRobot.() -> Unit): SettingsSitePermissionsRobot.Transition {
-            sitePermissions().perform(click())
+            sitePermissions().waitForExists(waitingTime)
+            sitePermissions().click()
 
             SettingsSitePermissionsRobot().interact()
             return SettingsSitePermissionsRobot.Transition()
@@ -491,11 +492,9 @@ private fun blockCookiesDefaultOption(): ViewInteraction {
     return onView(withText(R.string.preference_privacy_should_block_cookies_cross_site_option))
 }
 
-private fun sitePermissions(): ViewInteraction {
+private fun sitePermissions() =
     privacySettingsList
-        .scrollTextIntoView("Cookies and Site Data")
-    return onView(withText(R.string.preference_site_permissions))
-}
+        .getChildByText(UiSelector().text("Site permissions"), "Site permissions", true)
 
 private fun useFingerprintSwitch(): ViewInteraction {
     val useFingerprintSwitchSummary = getStringResource(R.string.preference_security_biometric_summary)
@@ -566,9 +565,15 @@ private fun assertStealthModeSwitchState(enabled: Boolean = false) {
 }
 
 private fun safeBrowsingSwitch(): ViewInteraction {
-    val safeBrowsingSwitchText = getStringResource(R.string.preference_safe_browsing_summary)
-    privacySettingsList.scrollTextIntoView(safeBrowsingSwitchText)
-    return onView(withText(safeBrowsingSwitchText))
+    val safeBrowsingSwitchText =
+        mDevice.findObject(
+            UiSelector().text(
+                getStringResource(R.string.preference_safe_browsing_summary)
+            )
+        )
+    privacySettingsList.scrollToEnd(3)
+    privacySettingsList.scrollIntoView(safeBrowsingSwitchText)
+    return onView(withText(getStringResource(R.string.preference_safe_browsing_summary)))
 }
 
 private fun assertSafeBrowsingSwitchState(enabled: Boolean = true) {
