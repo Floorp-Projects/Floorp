@@ -64,7 +64,7 @@ void MigrateCookieLifetimePrefs() {
     mozilla::Preferences::SetBool("privacy.clearOnShutdown.history", false);
     mozilla::Preferences::SetBool("privacy.clearOnShutdown.formdata", false);
     mozilla::Preferences::SetBool("privacy.clearOnShutdown.downloads", false);
-    mozilla::Preferences::SetBool("privacy.clearOnShutdown.session", false);
+    mozilla::Preferences::SetBool("privacy.clearOnShutdown.sessions", false);
     mozilla::Preferences::SetBool("privacy.clearOnShutdown.siteSettings",
                                   false);
   }
