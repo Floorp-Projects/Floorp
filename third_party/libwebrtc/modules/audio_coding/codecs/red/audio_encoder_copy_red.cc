@@ -17,6 +17,8 @@
 
 #include "rtc_base/byte_order.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 static constexpr const int kRedMaxPacketSize =
@@ -36,6 +38,17 @@ AudioEncoderCopyRed::Config::Config() = default;
 AudioEncoderCopyRed::Config::Config(Config&&) = default;
 AudioEncoderCopyRed::Config::~Config() = default;
 
+size_t GetMaxRedundancyFromFieldTrial() {
+  const std::string red_trial =
+      webrtc::field_trial::FindFullName("WebRTC-Audio-Red-For-Opus");
+  size_t redundancy = 0;
+  if (sscanf(red_trial.c_str(), "Enabled-%zu", &redundancy) != 1 ||
+      redundancy < 1 || redundancy > 9) {
+    return kRedNumberOfRedundantEncodings;
+  }
+  return redundancy;
+}
+
 AudioEncoderCopyRed::AudioEncoderCopyRed(Config&& config)
     : speech_encoder_(std::move(config.speech_encoder)),
       primary_encoded_(0, kAudioMaxRtpPacketLen),
@@ -43,7 +56,8 @@ AudioEncoderCopyRed::AudioEncoderCopyRed(Config&& config)
       red_payload_type_(config.payload_type) {
   RTC_CHECK(speech_encoder_) << "Speech encoder not provided.";
 
-  for (size_t i = 0; i < kRedNumberOfRedundantEncodings; i++) {
+  auto number_of_redundant_encodings = GetMaxRedundancyFromFieldTrial();
+  for (size_t i = 0; i < number_of_redundant_encodings; i++) {
     std::pair<EncodedInfo, rtc::Buffer> redundant;
     redundant.second.EnsureCapacity(kAudioMaxRtpPacketLen);
     redundant_encodings_.push_front(std::move(redundant));
@@ -167,8 +181,9 @@ AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
 
 void AudioEncoderCopyRed::Reset() {
   speech_encoder_->Reset();
+  auto number_of_redundant_encodings = redundant_encodings_.size();
   redundant_encodings_.clear();
-  for (size_t i = 0; i < kRedNumberOfRedundantEncodings; i++) {
+  for (size_t i = 0; i < number_of_redundant_encodings; i++) {
     std::pair<EncodedInfo, rtc::Buffer> redundant;
     redundant.second.EnsureCapacity(kAudioMaxRtpPacketLen);
     redundant_encodings_.push_front(std::move(redundant));
