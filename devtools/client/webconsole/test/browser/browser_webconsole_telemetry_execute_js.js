@@ -21,30 +21,29 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Evaluate a single line");
-  await keyboardExecuteAndWaitForMessage(hud, `"single line"`, "", ".result");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"single line"`, "");
 
   info("Evaluate another single line");
-  await keyboardExecuteAndWaitForMessage(hud, `"single line 2"`, "", ".result");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"single line 2"`, "");
 
   info("Evaluate multiple lines");
-  await keyboardExecuteAndWaitForMessage(hud, `"n"\n.trim()`, "", ".result");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"n"\n.trim()`, "");
 
   info("Switch to editor mode");
   await toggleLayout(hud);
 
   info("Evaluate a single line in editor mode");
-  await keyboardExecuteAndWaitForMessage(hud, `"single line 3"`, "", ".result");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"single line 3"`, "");
 
   info("Evaluate multiple lines in editor mode");
-  await keyboardExecuteAndWaitForMessage(
+  await keyboardExecuteAndWaitForResultMessage(
     hud,
     `"y"\n.trim()\n.trim()`,
-    "",
-    ".result"
+    ""
   );
 
   info("Evaluate multiple lines again in editor mode");
-  await keyboardExecuteAndWaitForMessage(hud, `"x"\n.trim()`, "", ".result");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"x"\n.trim()`, "");
 
   checkEventTelemetry([
     getTelemetryEventData({ lines: 1, input: "inline" }),
