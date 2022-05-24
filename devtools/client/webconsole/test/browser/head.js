@@ -222,6 +222,70 @@ function waitForMessages({ hud, messages, selector = ".message" }) {
 }
 
 /**
+ * Wait for messages with given message type in the web console output,
+ * resolving once they are received.
+ *
+ * @param object options
+ *        - hud: the webconsole
+ *        - messages: Array[Object]. An array of messages to match.
+ *          Current supported options:
+ *            - text: {String} Partial text match in .message-body
+ *            - typeSelector: {String} A part of selector for the message, to
+ *                                     specify the message type.
+ * @return promise
+ *         A promise that is resolved to an array of the message nodes
+ */
+function waitForMessagesByType({ hud, messages }) {
+  return new Promise(resolve => {
+    const matchedMessages = [];
+    hud.ui.on("new-messages", function messagesReceived(newMessages) {
+      for (const message of messages) {
+        if (message.matched) {
+          continue;
+        }
+
+        const typeSelector = message.typeSelector;
+        if (!typeSelector) {
+          throw new Error("typeSelector property is required");
+        }
+        if (!typeSelector.startsWith(".")) {
+          throw new Error(
+            "typeSelector property start with a dot e.g. `.result`"
+          );
+        }
+        const selector = ".message" + typeSelector;
+
+        for (const newMessage of newMessages) {
+          const messageBody = newMessage.node.querySelector(`.message-body`);
+          if (
+            messageBody &&
+            newMessage.node.matches(selector) &&
+            messageBody.textContent.includes(message.text)
+          ) {
+            matchedMessages.push(newMessage);
+            message.matched = true;
+            const messagesLeft = messages.length - matchedMessages.length;
+            info(
+              `Matched a message with text: "${message.text}", ` +
+                (messagesLeft > 0
+                  ? `still waiting for ${messagesLeft} messages.`
+                  : `all messages received.`)
+            );
+            break;
+          }
+        }
+
+        if (matchedMessages.length === messages.length) {
+          hud.ui.off("new-messages", messagesReceived);
+          resolve(matchedMessages);
+          return;
+        }
+      }
+    });
+  });
+}
+
+/**
  * Wait for a message with the provided text and showing the provided repeat count.
  *
  * @param {Object} hud : the webconsole
@@ -260,6 +324,25 @@ async function waitForMessage(hud, text, selector) {
     hud,
     messages: [{ text }],
     selector,
+  });
+  return messages[0];
+}
+
+/**
+ * Wait for a single message with given message type in the web console output,
+ * resolving with the first message that matches the query once it is received.
+ *
+ * @param {Object} hud : the webconsole
+ * @param {String} text : text included in .message-body
+ * @param {String} typeSelector : A part of selector for the message, to
+ *                                specify the message type.
+ * @return promise
+ *         A promise that is resolved to the message node
+ */
+async function waitForMessageByType(hud, text, typeSelector) {
+  const messages = await waitForMessagesByType({
+    hud,
+    messages: [{ text, typeSelector }],
   });
   return messages[0];
 }
