@@ -19,6 +19,7 @@ add_task(async function migrateSanitizationPrefsClearCleaningPrefs() {
   Services.prefs.setBoolPref("privacy.clearOnShutdown.cookies", false);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.offlineApps", false);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.downloads", true);
+  Services.prefs.setBoolPref("privacy.clearOnShutdown.sessions", true);
 
   // The migration code is called in cookieService::Init
   Services.cookies;
@@ -52,6 +53,10 @@ add_task(async function migrateSanitizationPrefsClearCleaningPrefs() {
   Assert.ok(
     !Services.prefs.getBoolPref("privacy.clearOnShutdown.downloads"),
     "Clearing downloads on shutdown is not set anymore"
+  );
+  Assert.ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions"),
+    "Clearing active logins on shutdown is not set anymore"
   );
 
   Services.prefs.resetPrefs();
