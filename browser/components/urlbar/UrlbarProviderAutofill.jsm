@@ -739,6 +739,7 @@ class ProviderAutofill extends UrlbarProvider {
           queryContext.searchString +
           aboutUrl.substring(queryContext.searchString.length);
         result.autofill = {
+          type: "about",
           value: autofilledValue,
           selectionStart: queryContext.searchString.length,
           selectionEnd: autofilledValue.length,
