@@ -80,7 +80,7 @@ add_task(async function() {
   checkInputCompletionValue(hud, "xyz", "completeNode has expected value");
 
   info(`Quickly type "x", "y", "z" and "Enter"`);
-  const onResultMessage = waitForMessage(hud, "zyxwvu", ".result");
+  const onResultMessage = waitForMessageByType(hud, "zyxwvu", ".result");
   EventUtils.synthesizeKey("x");
   await waitForTime(5);
   EventUtils.synthesizeKey("y");
@@ -125,7 +125,7 @@ add_task(async function() {
 
   info(`Quickly type "x" and "Enter"`);
   onPopupClosed = autocompletePopup.once("popup-closed");
-  const onMessage = waitForMessage(hud, "docx is not defined");
+  const onMessage = waitForMessageByType(hud, "docx is not defined", ".error");
   EventUtils.synthesizeKey("x");
   await waitForTime(5);
   EventUtils.synthesizeKey("KEY_Enter");

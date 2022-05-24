@@ -18,7 +18,7 @@ add_task(async function() {
   const store = hud.ui.wrapper.getStore();
   logAllStoreChanges(hud);
 
-  const onMessagesLogged = waitForMessage(hud, "log-6");
+  const onMessagesLogged = waitForMessageByType(hud, "log-6", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.doLog();
   });

@@ -41,7 +41,7 @@ add_task(async function testContentBlockingMessage() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Log a few content blocking messages and simple ones");
-  let onContentBlockingWarningMessage = waitForMessage(
+  let onContentBlockingWarningMessage = waitForMessageByType(
     hud,
     `${BLOCKED_URL}?1`,
     ".warn"
@@ -50,7 +50,7 @@ add_task(async function testContentBlockingMessage() {
   await onContentBlockingWarningMessage;
   await logString(hud, "simple message 1");
 
-  onContentBlockingWarningMessage = waitForMessage(
+  onContentBlockingWarningMessage = waitForMessageByType(
     hud,
     `${BLOCKED_URL}?2`,
     ".warn"
@@ -58,7 +58,7 @@ add_task(async function testContentBlockingMessage() {
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
 
-  onContentBlockingWarningMessage = waitForMessage(
+  onContentBlockingWarningMessage = waitForMessageByType(
     hud,
     `${BLOCKED_URL}?3`,
     ".warn"
@@ -146,7 +146,11 @@ add_task(async function testContentBlockingMessage() {
 
   info("Add one warning message and one simple message");
   await waitFor(() => findWarningMessage(hud, `${BLOCKED_URL}?4`));
-  onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
+  onContentBlockingWarningMessage = waitForMessageByType(
+    hud,
+    BLOCKED_URL,
+    ".warn"
+  );
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
   await logString(hud, "simple message 2");
@@ -184,7 +188,7 @@ add_task(async function testContentBlockingMessage() {
   info(
     "Add a second warning and check it's placed in the second, closed, group"
   );
-  const onContentBlockingWarningGroupMessage = waitForMessage(
+  const onContentBlockingWarningGroupMessage = waitForMessageByType(
     hud,
     CONTENT_BLOCKING_GROUP_LABEL,
     ".warn"
@@ -248,7 +252,7 @@ function emitContentBlockedMessage(hud) {
  * @param {String} str
  */
 function logString(hud, str) {
-  const onMessage = waitForMessage(hud, str);
+  const onMessage = waitForMessageByType(hud, str, ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function(arg) {
     content.console.log(arg);
   });

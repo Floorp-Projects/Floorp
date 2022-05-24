@@ -52,7 +52,11 @@ add_task(async function() {
   await logTextToConsole(hud, NEW_CACHED_MESSAGE);
 
   info("Send a console.clear() from the content page");
-  const onConsoleCleared = waitForMessage(hud, "Console was cleared");
+  const onConsoleCleared = waitForMessageByType(
+    hud,
+    "Console was cleared",
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.clear();
   });
@@ -72,7 +76,7 @@ add_task(async function() {
 });
 
 function logTextToConsole(hud, text) {
-  const onMessage = waitForMessage(hud, text);
+  const onMessage = waitForMessageByType(hud, text, ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [text], function(str) {
     content.wrappedJSObject.console.log(str);
   });

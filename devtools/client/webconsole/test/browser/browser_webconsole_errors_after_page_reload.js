@@ -31,7 +31,11 @@ add_task(async function() {
     expectUncaughtException();
   }
 
-  const onMessage = waitForMessage(hud, "fooBazBaz is not defined");
+  const onMessage = waitForMessageByType(
+    hud,
+    "fooBazBaz is not defined",
+    ".error"
+  );
   BrowserTestUtils.synthesizeMouseAtCenter(
     "button",
     {},

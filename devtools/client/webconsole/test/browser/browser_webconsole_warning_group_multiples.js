@@ -52,7 +52,7 @@ add_task(async function testContentBlockingMessage() {
   info(
     "Log a tracking protection message to check a single message isn't grouped"
   );
-  let onContentBlockedMessage = waitForMessage(
+  let onContentBlockedMessage = waitForMessageByType(
     hud,
     CONTENT_BLOCKED_URL,
     ".warn"
@@ -76,7 +76,7 @@ add_task(async function testContentBlockingMessage() {
   info(
     "Log a second tracking protection message to check that it causes the grouping"
   );
-  let onContentBlockedWarningGroupMessage = waitForMessage(
+  let onContentBlockedWarningGroupMessage = waitForMessageByType(
     hud,
     CONTENT_BLOCKED_GROUP_LABEL,
     ".warn"
@@ -97,7 +97,7 @@ add_task(async function testContentBlockingMessage() {
     `simple message 1`,
   ]);
 
-  let onStorageBlockedWarningGroupMessage = waitForMessage(
+  let onStorageBlockedWarningGroupMessage = waitForMessageByType(
     hud,
     STORAGE_BLOCKED_URL,
     ".warn"
@@ -129,7 +129,7 @@ add_task(async function testContentBlockingMessage() {
   info(
     "Log a second storage blocked message to check that it creates another group"
   );
-  onStorageBlockedWarningGroupMessage = waitForMessage(
+  onStorageBlockedWarningGroupMessage = waitForMessageByType(
     hud,
     STORAGE_BLOCKED_GROUP_LABEL,
     ".warn"
@@ -161,7 +161,7 @@ add_task(async function testContentBlockingMessage() {
   info(
     "Add another storage blocked message to check it does go into the opened group"
   );
-  let onStorageBlockedMessage = waitForMessage(
+  let onStorageBlockedMessage = waitForMessageByType(
     hud,
     STORAGE_BLOCKED_URL,
     ".warn"
@@ -211,11 +211,19 @@ add_task(async function testContentBlockingMessage() {
   );
 
   info("Add a storage blocked message and a content blocked one");
-  onStorageBlockedMessage = waitForMessage(hud, STORAGE_BLOCKED_URL, ".warn");
+  onStorageBlockedMessage = waitForMessageByType(
+    hud,
+    STORAGE_BLOCKED_URL,
+    ".warn"
+  );
   emitStorageAccessBlockedMessage(hud);
   await onStorageBlockedMessage;
 
-  onContentBlockedMessage = waitForMessage(hud, CONTENT_BLOCKED_URL, ".warn");
+  onContentBlockedMessage = waitForMessageByType(
+    hud,
+    CONTENT_BLOCKED_URL,
+    ".warn"
+  );
   emitContentBlockingMessage(hud);
   await onContentBlockedMessage;
 
@@ -238,7 +246,7 @@ add_task(async function testContentBlockingMessage() {
   info(
     "Add a storage blocked message and a content blocked one to create warningGroups"
   );
-  onStorageBlockedWarningGroupMessage = waitForMessage(
+  onStorageBlockedWarningGroupMessage = waitForMessageByType(
     hud,
     STORAGE_BLOCKED_GROUP_LABEL,
     ".warn"
@@ -246,7 +254,7 @@ add_task(async function testContentBlockingMessage() {
   emitStorageAccessBlockedMessage();
   await onStorageBlockedWarningGroupMessage;
 
-  onContentBlockedWarningGroupMessage = waitForMessage(
+  onContentBlockedWarningGroupMessage = waitForMessageByType(
     hud,
     CONTENT_BLOCKED_GROUP_LABEL,
     ".warn"
@@ -304,7 +312,7 @@ function emitStorageAccessBlockedMessage() {
  * @param {String} str
  */
 function logString(hud, str) {
-  const onMessage = waitForMessage(hud, str);
+  const onMessage = waitForMessageByType(hud, str, ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function(arg) {
     content.console.log(arg);
   });

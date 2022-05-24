@@ -17,7 +17,7 @@ add_task(async function() {
     (_, i) => `Message number ${i + 1}`
   );
   const lastMessage = [...messages].pop();
-  const onMessage = waitForMessage(hud, lastMessage);
+  const onMessage = waitForMessageByType(hud, lastMessage, ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [messages], msgs => {
     msgs.forEach(msg => content.wrappedJSObject.console.log(msg));
   });

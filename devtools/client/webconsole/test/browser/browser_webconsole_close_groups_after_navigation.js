@@ -21,7 +21,7 @@ add_task(async function() {
 });
 
 async function reloadBrowserAndCheckIndent(hud) {
-  const onMessage = waitForMessage(hud, "hello", ".startGroup");
+  const onMessage = waitForMessageByType(hud, "hello", ".startGroup");
   await reloadBrowser();
   const { node } = await onMessage;
 

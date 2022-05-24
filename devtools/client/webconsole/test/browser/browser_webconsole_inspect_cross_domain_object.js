@@ -32,7 +32,7 @@ add_task(async function() {
     info(
       "Navigate and wait for the 'foobar' message to be logged by the frame"
     );
-    const onMessage = waitForMessage(hud, "foobar");
+    const onMessage = waitForMessageByType(hud, "foobar", ".console-api");
     await navigateTo(TEST_URI);
     ({ node } = await onMessage);
   }

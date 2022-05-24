@@ -58,7 +58,7 @@ add_task(async function() {
   navigateReverseSearch("mouse", "previous", hud);
 
   info("Reverse search evaluate expression");
-  const onMessage = waitForMessage(hud, "single line 3", ".result");
+  const onMessage = waitForMessageByType(hud, "single line 3", ".result");
   EventUtils.synthesizeKey("KEY_Enter");
   await onMessage;
 

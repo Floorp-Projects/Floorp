@@ -35,14 +35,7 @@ add_task(async function task() {
   const currentTab = gBrowser.selectedTab;
   info("Web console is open");
 
-  const onMessageAdded = waitForMessages({
-    hud,
-    messages: [
-      {
-        text: TEST_PATH,
-      },
-    ],
-  });
+  const onMessageAdded = waitForMessageByType(hud, TEST_PATH, ".network");
 
   await navigateTo(TEST_PATH);
   info("Document loaded.");

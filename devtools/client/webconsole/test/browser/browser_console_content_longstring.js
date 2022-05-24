@@ -25,7 +25,11 @@ add_task(async function() {
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   info("Log a longString");
-  const onMessage = waitForMessage(hud, LONGSTRING.slice(0, 50));
+  const onMessage = waitForMessageByType(
+    hud,
+    LONGSTRING.slice(0, 50),
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [LONGSTRING], str => {
     content.console.log(str);
   });

@@ -51,7 +51,7 @@ async function performEditorEnabledTests() {
     "input expressions should not have been executed"
   );
 
-  let onMessage = waitForMessage(hud, "11", ".result");
+  let onMessage = waitForMessageByType(hud, "11", ".result");
   EventUtils.synthesizeKey("KEY_Enter", {
     [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
   });
@@ -59,7 +59,7 @@ async function performEditorEnabledTests() {
   ok(true, "Input was executed on Ctrl/Cmd + Enter");
 
   setInputValue(hud, "function x() {");
-  onMessage = waitForMessage(hud, "SyntaxError");
+  onMessage = waitForMessageByType(hud, "SyntaxError", ".error");
   EventUtils.synthesizeKey("KEY_Enter", {
     [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
   });

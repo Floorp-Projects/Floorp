@@ -14,10 +14,7 @@ add_task(async function() {
   ok(ui.jsterm, "jsterm exists");
   ok(ui.wrapper, "wrapper exists");
 
-  const receievedMessages = waitForMessages({
-    hud,
-    messages: [{ text: "19" }],
-  });
+  const receievedMessages = waitForMessageByType(hud, "19", ".console-api");
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.doLogs(20);

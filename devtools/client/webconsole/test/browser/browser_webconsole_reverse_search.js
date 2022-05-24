@@ -24,10 +24,10 @@ add_task(async function() {
 
   // We have to wait for the same message twice in order to wait for the evaluation line
   // as well as the result line
-  const onLastMessage = waitForMessages({
-    hud,
-    messages: [{ text: `"a" + "😎"` }, { text: `"a😎"` }],
-  });
+  const onLastMessage = Promise.all([
+    waitForMessageByType(hud, `"a" + "😎"`, ".command"),
+    waitForMessageByType(hud, `"a😎"`, ".result"),
+  ]);
   for (const input of jstermHistory) {
     execute(hud, input);
   }
@@ -163,10 +163,10 @@ add_task(async function() {
   info("Check that Enter evaluates the JsTerm and closes the UI");
   // We have to wait for the same message twice in order to wait for the evaluation line
   // as well as the result line
-  const onMessage = waitForMessages({
-    hud,
-    messages: [{ text: `"a" + "😎"` }, { text: `"a😎"` }],
-  });
+  const onMessage = Promise.all([
+    waitForMessageByType(hud, `"a" + "😎"`, ".command"),
+    waitForMessageByType(hud, `"a😎"`, ".result"),
+  ]);
   const onReverseSearchClose = waitFor(() => !getReverseSearchElement(hud));
   EventUtils.synthesizeKey("KEY_Enter");
   await Promise.all([onMessage, onReverseSearchClose]);

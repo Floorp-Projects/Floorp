@@ -79,7 +79,7 @@ async function doXhrAndExpand(hud) {
   // Execute XHR and expand it after all network
   // update events are received. Consequently,
   // check out content of all (HTTP details) tabs.
-  const onMessage = waitForMessage(hud, XHR_URL);
+  const onMessage = waitForMessageByType(hud, XHR_URL, ".network");
   const onRequestUpdates = waitForRequestUpdates(hud);
   const onPayloadReady = waitForPayloadReady(hud);
 

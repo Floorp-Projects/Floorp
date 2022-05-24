@@ -88,7 +88,7 @@ add_task(async function() {
 async function navigateAndCheckWarningMessage({ url, name, text }, hud) {
   await clearOutput(hud);
 
-  const onMessage = waitForMessage(hud, text, ".message.warn");
+  const onMessage = waitForMessageByType(hud, text, ".warn");
   await navigateTo(url);
   const { node } = await onMessage;
   ok(node, name);
