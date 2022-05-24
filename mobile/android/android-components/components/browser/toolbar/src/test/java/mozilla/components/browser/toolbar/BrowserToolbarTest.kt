@@ -153,6 +153,38 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `searchTerms is truncated in case it is greater than MAX_URI_LENGTH`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.edit = spy(toolbar.edit)
+        toolbar.editMode()
+
+        toolbar.setSearchTerms("a".repeat(MAX_URI_LENGTH + 1))
+
+        // Value was too long and should've been truncated
+        assertEquals(toolbar.searchTerms.length, MAX_URI_LENGTH)
+        verify(toolbar.edit).editSuggestion("a".repeat(MAX_URI_LENGTH))
+    }
+
+    @Test
+    fun `searchTerms is not truncated in case it is equal or less than MAX_URI_LENGTH`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.edit = spy(toolbar.edit)
+        toolbar.editMode()
+
+        toolbar.setSearchTerms("b".repeat(MAX_URI_LENGTH))
+
+        // Value should be the same as before
+        assertEquals(toolbar.searchTerms.length, MAX_URI_LENGTH)
+        verify(toolbar.edit).editSuggestion("b".repeat(MAX_URI_LENGTH))
+
+        toolbar.setSearchTerms("c".repeat(MAX_URI_LENGTH - 1))
+
+        // Value should be the same as before
+        assertEquals(toolbar.searchTerms.length, MAX_URI_LENGTH - 1)
+        verify(toolbar.edit).editSuggestion("c".repeat(MAX_URI_LENGTH - 1))
+    }
+
+    @Test
     fun `last URL will be forwarded to edit toolbar when switching mode`() {
         val toolbar = BrowserToolbar(testContext)
         toolbar.edit = spy(toolbar.edit)

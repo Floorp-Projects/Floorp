@@ -75,7 +75,8 @@ class BrowserToolbar @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr), Toolbar {
     private var state: State = State.DISPLAY
-    private var searchTerms: String = ""
+    @VisibleForTesting
+    internal var searchTerms: String = ""
     private var urlCommitListener: ((String) -> Boolean)? = null
 
     /**
@@ -219,11 +220,11 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     override fun setSearchTerms(searchTerms: String) {
-        if (state == State.EDIT) {
-            edit.editSuggestion(searchTerms)
-        }
+        this.searchTerms = searchTerms.take(MAX_URI_LENGTH)
 
-        this.searchTerms = searchTerms
+        if (state == State.EDIT) {
+            edit.editSuggestion(this.searchTerms)
+        }
     }
 
     override fun displayProgress(progress: Int) {
