@@ -15,16 +15,23 @@
 
 #include "rtc_base/system/rtc_export.h"
 
+namespace webrtc {
+
+enum class MediaType { ANY, AUDIO, VIDEO, DATA, UNSUPPORTED };
+
+}  // namespace webrtc
+
 // The cricket and webrtc have separate definitions for what a media type is.
-// They're not compatible. Watch out for this.
+// They used to be incompatible, but now cricket is defined in terms of the
+// webrtc definition.
 
 namespace cricket {
 
 enum MediaType {
-  MEDIA_TYPE_AUDIO,
-  MEDIA_TYPE_VIDEO,
-  MEDIA_TYPE_DATA,
-  MEDIA_TYPE_UNSUPPORTED
+  MEDIA_TYPE_AUDIO = static_cast<int>(webrtc::MediaType::AUDIO),
+  MEDIA_TYPE_VIDEO = static_cast<int>(webrtc::MediaType::VIDEO),
+  MEDIA_TYPE_DATA = static_cast<int>(webrtc::MediaType::DATA),
+  MEDIA_TYPE_UNSUPPORTED = static_cast<int>(webrtc::MediaType::UNSUPPORTED),
 };
 
 extern const char kMediaTypeAudio[];
@@ -34,11 +41,5 @@ extern const char kMediaTypeData[];
 RTC_EXPORT std::string MediaTypeToString(MediaType type);
 
 }  // namespace cricket
-
-namespace webrtc {
-
-enum class MediaType { ANY, AUDIO, VIDEO, DATA };
-
-}  // namespace webrtc
 
 #endif  // API_MEDIA_TYPES_H_

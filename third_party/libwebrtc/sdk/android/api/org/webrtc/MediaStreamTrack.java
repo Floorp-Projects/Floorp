@@ -30,8 +30,8 @@ public class MediaStreamTrack {
 
   // Must be kept in sync with cricket::MediaType.
   public enum MediaType {
-    MEDIA_TYPE_AUDIO(0),
-    MEDIA_TYPE_VIDEO(1);
+    MEDIA_TYPE_AUDIO(1),
+    MEDIA_TYPE_VIDEO(2);
 
     private final int nativeIndex;
 
