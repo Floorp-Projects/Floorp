@@ -6769,6 +6769,58 @@ nsHttpChannel::GetRequestMethod(nsACString& aMethod) {
 // nsHttpChannel::nsIRequestObserver
 //-----------------------------------------------------------------------------
 
+static void RecordOnStartTelemetry(nsresult aStatus,
+                                   HttpTransactionShell* aTransaction,
+                                   bool aIsNavigation) {
+  Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS,
+                        NS_SUCCEEDED(aStatus));
+
+  if (aTransaction) {
+    Telemetry::Accumulate(
+        Telemetry::HTTP3_CHANNEL_ONSTART_SUCCESS,
+        (aTransaction->IsHttp3Used()) ? "http3"_ns : "no_http3"_ns,
+        NS_SUCCEEDED(aStatus));
+  }
+
+  enum class HttpOnStartState : uint32_t {
+    Success = 0,
+    DNSError = 1,
+    Others = 2,
+  };
+
+  if (StaticPrefs::network_trr_odoh_enabled()) {
+    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+    if (!dns) {
+      return;
+    }
+    bool ODoHActivated = false;
+    if (NS_SUCCEEDED(dns->GetODoHActivated(&ODoHActivated)) && ODoHActivated) {
+      Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_ODOH,
+                            NS_SUCCEEDED(aStatus));
+    }
+  } else if (TRRService::Get() && TRRService::Get()->IsConfirmed()) {
+    // Note this telemetry probe is not working when DNS resolution is done in
+    // the socket process.
+    HttpOnStartState state = HttpOnStartState::Others;
+    if (NS_SUCCEEDED(aStatus)) {
+      state = HttpOnStartState::Success;
+    } else if (aStatus == NS_ERROR_UNKNOWN_HOST ||
+               aStatus == NS_ERROR_UNKNOWN_PROXY_HOST) {
+      state = HttpOnStartState::DNSError;
+    }
+
+    if (aIsNavigation) {
+      Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_PAGE_ONSTART_SUCCESS_TRR3,
+                            TRRService::ProviderKey(),
+                            static_cast<uint32_t>(state));
+    } else {
+      Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_SUB_ONSTART_SUCCESS_TRR3,
+                            TRRService::ProviderKey(),
+                            static_cast<uint32_t>(state));
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsHttpChannel::OnStartRequest(nsIRequest* request) {
   nsresult rv;
@@ -6801,49 +6853,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
        "]\n",
        this, request, static_cast<uint32_t>(static_cast<nsresult>(mStatus))));
 
-  Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS,
-                        NS_SUCCEEDED(mStatus));
-
-  if (mTransaction) {
-    Telemetry::Accumulate(
-        Telemetry::HTTP3_CHANNEL_ONSTART_SUCCESS,
-        (mTransaction->IsHttp3Used()) ? "http3"_ns : "no_http3"_ns,
-        NS_SUCCEEDED(mStatus));
-  }
-
-  enum class HttpOnStartState : uint32_t {
-    Success = 0,
-    DNSError = 1,
-    Others = 2,
-  };
-
-  if (StaticPrefs::network_trr_odoh_enabled()) {
-    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-    bool ODoHActivated = false;
-    if (dns && NS_SUCCEEDED(dns->GetODoHActivated(&ODoHActivated)) &&
-        ODoHActivated) {
-      Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_ODOH,
-                            NS_SUCCEEDED(mStatus));
-    }
-  } else if (LoadResolvedByTRR()) {
-    HttpOnStartState state = HttpOnStartState::Others;
-    if (NS_SUCCEEDED(mStatus)) {
-      state = HttpOnStartState::Success;
-    } else if (mStatus == NS_ERROR_UNKNOWN_HOST ||
-               mStatus == NS_ERROR_UNKNOWN_PROXY_HOST) {
-      state = HttpOnStartState::DNSError;
-    }
-
-    if (IsNavigation()) {
-      Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_PAGE_ONSTART_SUCCESS_TRR3,
-                            TRRService::ProviderKey(),
-                            static_cast<uint32_t>(state));
-    } else {
-      Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_SUB_ONSTART_SUCCESS_TRR3,
-                            TRRService::ProviderKey(),
-                            static_cast<uint32_t>(state));
-    }
-  }
+  RecordOnStartTelemetry(mStatus, mTransaction, IsNavigation());
 
   if (mRaceCacheWithNetwork) {
     LOG(
