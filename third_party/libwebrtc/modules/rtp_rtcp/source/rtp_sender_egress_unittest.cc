@@ -220,6 +220,63 @@ TEST_P(RtpSenderEgressTest, TransportFeedbackObserverGetsCorrectByteCount) {
   sender->SendPacket(packet.get(), PacedPacketInfo());
 }
 
+TEST_P(RtpSenderEgressTest, PacketOptionsIsRetransmitSetByPacketType) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+
+  std::unique_ptr<RtpPacketToSend> media_packet = BuildRtpPacket();
+  media_packet->set_packet_type(RtpPacketMediaType::kVideo);
+  sender->SendPacket(media_packet.get(), PacedPacketInfo());
+  EXPECT_FALSE(transport_.last_packet()->options.is_retransmit);
+
+  std::unique_ptr<RtpPacketToSend> retransmission = BuildRtpPacket();
+  retransmission->set_packet_type(RtpPacketMediaType::kRetransmission);
+  sender->SendPacket(retransmission.get(), PacedPacketInfo());
+  EXPECT_TRUE(transport_.last_packet()->options.is_retransmit);
+}
+
+TEST_P(RtpSenderEgressTest, DoesnSetIncludedInAllocationByDefault) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+
+  std::unique_ptr<RtpPacketToSend> packet = BuildRtpPacket();
+  sender->SendPacket(packet.get(), PacedPacketInfo());
+  EXPECT_FALSE(transport_.last_packet()->options.included_in_feedback);
+  EXPECT_FALSE(transport_.last_packet()->options.included_in_allocation);
+}
+
+TEST_P(RtpSenderEgressTest,
+       SetsIncludedInFeedbackWhenTransportSequenceNumberExtensionIsRegistered) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+
+  header_extensions_.RegisterByUri(kTransportSequenceNumberExtensionId,
+                                   TransportSequenceNumber::kUri);
+  std::unique_ptr<RtpPacketToSend> packet = BuildRtpPacket();
+  sender->SendPacket(packet.get(), PacedPacketInfo());
+  EXPECT_TRUE(transport_.last_packet()->options.included_in_feedback);
+}
+
+TEST_P(
+    RtpSenderEgressTest,
+    SetsIncludedInAllocationWhenTransportSequenceNumberExtensionIsRegistered) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+
+  header_extensions_.RegisterByUri(kTransportSequenceNumberExtensionId,
+                                   TransportSequenceNumber::kUri);
+  std::unique_ptr<RtpPacketToSend> packet = BuildRtpPacket();
+  sender->SendPacket(packet.get(), PacedPacketInfo());
+  EXPECT_TRUE(transport_.last_packet()->options.included_in_allocation);
+}
+
+TEST_P(RtpSenderEgressTest,
+       SetsIncludedInAllocationWhenForcedAsPartOfAllocation) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+  sender->ForceIncludeSendPacketsInAllocation(true);
+
+  std::unique_ptr<RtpPacketToSend> packet = BuildRtpPacket();
+  sender->SendPacket(packet.get(), PacedPacketInfo());
+  EXPECT_FALSE(transport_.last_packet()->options.included_in_feedback);
+  EXPECT_TRUE(transport_.last_packet()->options.included_in_allocation);
+}
+
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
                          RtpSenderEgressTest,
                          ::testing::Values(TestConfig(false),
