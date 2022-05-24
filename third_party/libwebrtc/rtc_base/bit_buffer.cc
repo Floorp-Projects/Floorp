@@ -141,7 +141,45 @@ bool BitBuffer::PeekBits(uint32_t* val, size_t bit_count) {
   return true;
 }
 
+bool BitBuffer::PeekBits(uint64_t* val, size_t bit_count) {
+  // TODO(nisse): Could allow bit_count == 0 and always return success. But
+  // current code reads one byte beyond end of buffer in the case that
+  // RemainingBitCount() == 0 and bit_count == 0.
+  RTC_DCHECK(bit_count > 0);
+  if (!val || bit_count > RemainingBitCount() || bit_count > 64) {
+    return false;
+  }
+  const uint8_t* bytes = bytes_ + byte_offset_;
+  size_t remaining_bits_in_current_byte = 8 - bit_offset_;
+  uint64_t bits = LowestBits(*bytes++, remaining_bits_in_current_byte);
+  // If we're reading fewer bits than what's left in the current byte, just
+  // return the portion of this byte that we need.
+  if (bit_count < remaining_bits_in_current_byte) {
+    *val = HighestBits(bits, bit_offset_ + bit_count);
+    return true;
+  }
+  // Otherwise, subtract what we've read from the bit count and read as many
+  // full bytes as we can into bits.
+  bit_count -= remaining_bits_in_current_byte;
+  while (bit_count >= 8) {
+    bits = (bits << 8) | *bytes++;
+    bit_count -= 8;
+  }
+  // Whatever we have left is smaller than a byte, so grab just the bits we need
+  // and shift them into the lowest bits.
+  if (bit_count > 0) {
+    bits <<= bit_count;
+    bits |= HighestBits(*bytes, bit_count);
+  }
+  *val = bits;
+  return true;
+}
+
 bool BitBuffer::ReadBits(uint32_t* val, size_t bit_count) {
+  return PeekBits(val, bit_count) && ConsumeBits(bit_count);
+}
+
+bool BitBuffer::ReadBits(uint64_t* val, size_t bit_count) {
   return PeekBits(val, bit_count) && ConsumeBits(bit_count);
 }
 

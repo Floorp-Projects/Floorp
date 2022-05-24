@@ -45,11 +45,13 @@ class BitBuffer {
   // Reads bit-sized values from the buffer. Returns false if there isn't enough
   // data left for the specified bit count.
   bool ReadBits(uint32_t* val, size_t bit_count);
+  bool ReadBits(uint64_t* val, size_t bit_count);
 
   // Peeks bit-sized values from the buffer. Returns false if there isn't enough
   // data left for the specified number of bits. Doesn't move the current
   // offset.
   bool PeekBits(uint32_t* val, size_t bit_count);
+  bool PeekBits(uint64_t* val, size_t bit_count);
 
   // Reads value in range [0, num_values - 1].
   // This encoding is similar to ReadBits(val, Ceil(Log2(num_values)),
