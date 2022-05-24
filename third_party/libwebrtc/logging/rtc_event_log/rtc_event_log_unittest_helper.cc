@@ -931,7 +931,8 @@ void EventVerifier::VerifyLoggedIceCandidatePairEvent(
   }
 }
 
-void VerifyLoggedRtpHeader(const RtpPacket& original_header,
+template <typename Event>
+void VerifyLoggedRtpHeader(const Event& original_header,
                            const RTPHeader& logged_header) {
   // Standard RTP header.
   EXPECT_EQ(original_header.Marker(), logged_header.markerBit);
@@ -940,53 +941,57 @@ void VerifyLoggedRtpHeader(const RtpPacket& original_header,
   EXPECT_EQ(original_header.Timestamp(), logged_header.timestamp);
   EXPECT_EQ(original_header.Ssrc(), logged_header.ssrc);
 
-  EXPECT_EQ(original_header.headers_size(), logged_header.headerLength);
+  EXPECT_EQ(original_header.header_length(), logged_header.headerLength);
 
   // TransmissionOffset header extension.
-  ASSERT_EQ(original_header.HasExtension<TransmissionOffset>(),
+  ASSERT_EQ(original_header.template HasExtension<TransmissionOffset>(),
             logged_header.extension.hasTransmissionTimeOffset);
   if (logged_header.extension.hasTransmissionTimeOffset) {
     int32_t offset;
-    ASSERT_TRUE(original_header.GetExtension<TransmissionOffset>(&offset));
+    ASSERT_TRUE(
+        original_header.template GetExtension<TransmissionOffset>(&offset));
     EXPECT_EQ(offset, logged_header.extension.transmissionTimeOffset);
   }
 
   // AbsoluteSendTime header extension.
-  ASSERT_EQ(original_header.HasExtension<AbsoluteSendTime>(),
+  ASSERT_EQ(original_header.template HasExtension<AbsoluteSendTime>(),
             logged_header.extension.hasAbsoluteSendTime);
   if (logged_header.extension.hasAbsoluteSendTime) {
     uint32_t sendtime;
-    ASSERT_TRUE(original_header.GetExtension<AbsoluteSendTime>(&sendtime));
+    ASSERT_TRUE(
+        original_header.template GetExtension<AbsoluteSendTime>(&sendtime));
     EXPECT_EQ(sendtime, logged_header.extension.absoluteSendTime);
   }
 
   // TransportSequenceNumber header extension.
-  ASSERT_EQ(original_header.HasExtension<TransportSequenceNumber>(),
+  ASSERT_EQ(original_header.template HasExtension<TransportSequenceNumber>(),
             logged_header.extension.hasTransportSequenceNumber);
   if (logged_header.extension.hasTransportSequenceNumber) {
     uint16_t seqnum;
-    ASSERT_TRUE(original_header.GetExtension<TransportSequenceNumber>(&seqnum));
+    ASSERT_TRUE(original_header.template GetExtension<TransportSequenceNumber>(
+        &seqnum));
     EXPECT_EQ(seqnum, logged_header.extension.transportSequenceNumber);
   }
 
   // AudioLevel header extension.
-  ASSERT_EQ(original_header.HasExtension<AudioLevel>(),
+  ASSERT_EQ(original_header.template HasExtension<AudioLevel>(),
             logged_header.extension.hasAudioLevel);
   if (logged_header.extension.hasAudioLevel) {
     bool voice_activity;
     uint8_t audio_level;
-    ASSERT_TRUE(original_header.GetExtension<AudioLevel>(&voice_activity,
-                                                         &audio_level));
+    ASSERT_TRUE(original_header.template GetExtension<AudioLevel>(
+        &voice_activity, &audio_level));
     EXPECT_EQ(voice_activity, logged_header.extension.voiceActivity);
     EXPECT_EQ(audio_level, logged_header.extension.audioLevel);
   }
 
   // VideoOrientation header extension.
-  ASSERT_EQ(original_header.HasExtension<VideoOrientation>(),
+  ASSERT_EQ(original_header.template HasExtension<VideoOrientation>(),
             logged_header.extension.hasVideoRotation);
   if (logged_header.extension.hasVideoRotation) {
     uint8_t rotation;
-    ASSERT_TRUE(original_header.GetExtension<VideoOrientation>(&rotation));
+    ASSERT_TRUE(
+        original_header.template GetExtension<VideoOrientation>(&rotation));
     EXPECT_EQ(ConvertCVOByteToVideoRotation(rotation),
               logged_header.extension.videoRotation);
   }
@@ -1015,8 +1020,7 @@ void EventVerifier::VerifyLoggedRtpPacketIncoming(
     const LoggedRtpPacketIncoming& logged_event) const {
   EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
-  EXPECT_EQ(original_event.header().headers_size(),
-            logged_event.rtp.header_length);
+  EXPECT_EQ(original_event.header_length(), logged_event.rtp.header_length);
 
   EXPECT_EQ(original_event.packet_length(), logged_event.rtp.total_length);
 
@@ -1025,7 +1029,7 @@ void EventVerifier::VerifyLoggedRtpPacketIncoming(
   EXPECT_EQ(original_event.padding_length(),
             logged_event.rtp.header.paddingLength);
 
-  VerifyLoggedRtpHeader(original_event.header(), logged_event.rtp.header);
+  VerifyLoggedRtpHeader(original_event, logged_event.rtp.header);
 }
 
 void EventVerifier::VerifyLoggedRtpPacketOutgoing(
@@ -1033,8 +1037,7 @@ void EventVerifier::VerifyLoggedRtpPacketOutgoing(
     const LoggedRtpPacketOutgoing& logged_event) const {
   EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
-  EXPECT_EQ(original_event.header().headers_size(),
-            logged_event.rtp.header_length);
+  EXPECT_EQ(original_event.header_length(), logged_event.rtp.header_length);
 
   EXPECT_EQ(original_event.packet_length(), logged_event.rtp.total_length);
 
@@ -1046,7 +1049,7 @@ void EventVerifier::VerifyLoggedRtpPacketOutgoing(
   // TODO(terelius): Probe cluster ID isn't parsed, used or tested. Unless
   // someone has a strong reason to keep it, it'll be removed.
 
-  VerifyLoggedRtpHeader(original_event.header(), logged_event.rtp.header);
+  VerifyLoggedRtpHeader(original_event, logged_event.rtp.header);
 }
 
 void EventVerifier::VerifyLoggedGenericPacketSent(
