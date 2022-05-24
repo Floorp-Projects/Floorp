@@ -32,9 +32,10 @@ class URLQueryStringStripper final : public nsIURLQueryStrippingListObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLQUERYSTRIPPINGLISTOBSERVER
 
-  // Strip the query parameters that are in the strip list. Return true if there
-  // is any query parameter has been stripped. Otherwise, false.
-  static bool Strip(nsIURI* aURI, bool aIsPBM, nsCOMPtr<nsIURI>& aOutput);
+  // Strip the query parameters that are in the strip list. Return the amount of
+  // query parameters that have been stripped. Returns 0 if no query parameters
+  // have been stripped or the feature is disabled.
+  static uint32_t Strip(nsIURI* aURI, bool aIsPBM, nsCOMPtr<nsIURI>& aOutput);
 
  private:
   URLQueryStringStripper() = default;
@@ -46,7 +47,7 @@ class URLQueryStringStripper final : public nsIURLQueryStrippingListObserver {
   void Init();
   void Shutdown();
 
-  bool StripQueryString(nsIURI* aURI, nsCOMPtr<nsIURI>& aOutput);
+  uint32_t StripQueryString(nsIURI* aURI, nsCOMPtr<nsIURI>& aOutput);
 
   bool CheckAllowList(nsIURI* aURI);
 
