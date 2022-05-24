@@ -35,20 +35,13 @@ namespace webrtc {
 namespace video_coding {
 
 PacketBuffer::Packet::Packet(const RtpPacketReceived& rtp_packet,
-                             const RTPVideoHeader& video_header,
-                             Timestamp receive_time)
+                             const RTPVideoHeader& video_header)
     : marker_bit(rtp_packet.Marker()),
       payload_type(rtp_packet.PayloadType()),
       seq_num(rtp_packet.SequenceNumber()),
       timestamp(rtp_packet.Timestamp()),
       times_nacked(-1),
-      video_header(video_header),
-      packet_info(rtp_packet.Ssrc(),
-                  rtp_packet.Csrcs(),
-                  rtp_packet.Timestamp(),
-                  /*audio_level=*/absl::nullopt,
-                  rtp_packet.GetExtension<AbsoluteCaptureTimeExtension>(),
-                  receive_time) {}
+      video_header(video_header) {}
 
 PacketBuffer::PacketBuffer(size_t start_buffer_size, size_t max_buffer_size)
     : max_size_(max_buffer_size),

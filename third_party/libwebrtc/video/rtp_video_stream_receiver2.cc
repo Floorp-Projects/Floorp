@@ -479,18 +479,31 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
     const RtpPacketReceived& rtp_packet,
     const RTPVideoHeader& video) {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
-  auto packet = std::make_unique<video_coding::PacketBuffer::Packet>(
-      rtp_packet, video, clock_->CurrentTime());
+
+  auto packet =
+      std::make_unique<video_coding::PacketBuffer::Packet>(rtp_packet, video);
+
+  int64_t unwrapped_rtp_seq_num =
+      rtp_seq_num_unwrapper_.Unwrap(rtp_packet.SequenceNumber());
+  auto& packet_info =
+      packet_infos_
+          .emplace(
+              unwrapped_rtp_seq_num,
+              RtpPacketInfo(
+                  rtp_packet.Ssrc(), rtp_packet.Csrcs(), rtp_packet.Timestamp(),
+                  /*audio_level=*/absl::nullopt,
+                  rtp_packet.GetExtension<AbsoluteCaptureTimeExtension>(),
+                  /*receive_time_ms=*/clock_->CurrentTime()))
+          .first->second;
 
   // Try to extrapolate absolute capture time if it is missing.
-  packet->packet_info.set_absolute_capture_time(
+  packet_info.set_absolute_capture_time(
       absolute_capture_time_receiver_.OnReceivePacket(
-          AbsoluteCaptureTimeReceiver::GetSource(packet->packet_info.ssrc(),
-                                                 packet->packet_info.csrcs()),
-          packet->packet_info.rtp_timestamp(),
+          AbsoluteCaptureTimeReceiver::GetSource(packet_info.ssrc(),
+                                                 packet_info.csrcs()),
+          packet_info.rtp_timestamp(),
           // Assume frequency is the same one for all video frames.
-          kVideoPayloadTypeFrequency,
-          packet->packet_info.absolute_capture_time()));
+          kVideoPayloadTypeFrequency, packet_info.absolute_capture_time()));
 
   RTPVideoHeader& video_header = packet->video_header;
   video_header.rotation = kVideoRotation_0;
@@ -730,22 +743,24 @@ void RtpVideoStreamReceiver2::OnInsertedPacket(
     // PacketBuffer promisses frame boundaries are correctly set on each
     // packet. Document that assumption with the DCHECKs.
     RTC_DCHECK_EQ(frame_boundary, packet->is_first_packet_in_frame());
+    int64_t unwrapped_rtp_seq_num =
+        rtp_seq_num_unwrapper_.Unwrap(packet->seq_num);
+    RTC_DCHECK(packet_infos_.count(unwrapped_rtp_seq_num) > 0);
+    RtpPacketInfo& packet_info = packet_infos_[unwrapped_rtp_seq_num];
     if (packet->is_first_packet_in_frame()) {
       first_packet = packet.get();
       max_nack_count = packet->times_nacked;
-      min_recv_time = packet->packet_info.receive_time().ms();
-      max_recv_time = packet->packet_info.receive_time().ms();
+      min_recv_time = packet_info.receive_time().ms();
+      max_recv_time = packet_info.receive_time().ms();
       payloads.clear();
       packet_infos.clear();
     } else {
       max_nack_count = std::max(max_nack_count, packet->times_nacked);
-      min_recv_time =
-          std::min(min_recv_time, packet->packet_info.receive_time().ms());
-      max_recv_time =
-          std::max(max_recv_time, packet->packet_info.receive_time().ms());
+      min_recv_time = std::min(min_recv_time, packet_info.receive_time().ms());
+      max_recv_time = std::max(max_recv_time, packet_info.receive_time().ms());
     }
     payloads.emplace_back(packet->video_payload);
-    packet_infos.push_back(packet->packet_info);
+    packet_infos.push_back(packet_info);
 
     frame_boundary = packet->is_last_packet_in_frame();
     if (packet->is_last_packet_in_frame()) {
@@ -785,6 +800,7 @@ void RtpVideoStreamReceiver2::OnInsertedPacket(
     last_received_rtp_system_time_.reset();
     last_received_keyframe_rtp_system_time_.reset();
     last_received_keyframe_rtp_timestamp_.reset();
+    packet_infos_.clear();
     RequestKeyFrame();
   }
 }
@@ -1079,6 +1095,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
   }
 
   if (seq_num != -1) {
+    int64_t unwrapped_rtp_seq_num = rtp_seq_num_unwrapper_.Unwrap(seq_num);
+    packet_infos_.erase(packet_infos_.begin(),
+                        packet_infos_.upper_bound(unwrapped_rtp_seq_num));
     uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
     if (num_packets_cleared > 0) {
       TRACE_EVENT2("webrtc",

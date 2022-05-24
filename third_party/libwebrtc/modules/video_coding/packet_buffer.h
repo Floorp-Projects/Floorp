@@ -34,8 +34,7 @@ class PacketBuffer {
   struct Packet {
     Packet() = default;
     Packet(const RtpPacketReceived& rtp_packet,
-           const RTPVideoHeader& video_header,
-           Timestamp receive_time);
+           const RTPVideoHeader& video_header);
     Packet(const Packet&) = delete;
     Packet(Packet&&) = delete;
     Packet& operator=(const Packet&) = delete;
@@ -64,8 +63,6 @@ class PacketBuffer {
 
     rtc::CopyOnWriteBuffer video_payload;
     RTPVideoHeader video_header;
-
-    RtpPacketInfo packet_info;
   };
   struct InsertResult {
     std::vector<std::unique_ptr<Packet>> packets;
