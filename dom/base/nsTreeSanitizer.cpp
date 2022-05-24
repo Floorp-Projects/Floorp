@@ -1262,7 +1262,8 @@ void nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
       // else not allowed
     } else if (aAllowed.mXLink && kNameSpaceID_XLink == attrNs) {
       if (nsGkAtoms::href == attrLocal) {
-        if (SanitizeURL(aElement, attrNs, attrLocal)) {
+        bool fragmentOnly = aElement->IsSVGElement(nsGkAtoms::use);
+        if (SanitizeURL(aElement, attrNs, attrLocal, fragmentOnly)) {
           // in case the attribute removal shuffled the attribute order, start
           // the loop again.
           --ac;
