@@ -140,14 +140,16 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
   info("Trigger some code in the background page logging some stuff");
   const onMessage = waitUntil(() => {
-    return findMessages(hud, "Background page exception").length > 0;
+    return (
+      findMessagesByType(hud, "Background page exception", ".error").length > 0
+    );
   });
   hud.ui.wrapper.dispatchEvaluateExpression("myWebExtensionAddonFunction()");
   await onMessage;
 
   info("Open the two add-ons popups to cover popups messages");
   const onPopupMessage = waitUntil(() => {
-    return findMessages(hud, "Popup exception").length > 0;
+    return findMessagesByType(hud, "Popup exception", ".error").length > 0;
   });
   clickOnAddonWidget(OTHER_ADDON_ID);
   clickOnAddonWidget(ADDON_ID);
@@ -157,27 +159,29 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   await wait(1000);
 
   is(
-    findMessages(hud, "Background page exception").length,
+    findMessagesByType(hud, "Background page exception", ".error").length,
     1,
     "We get the background page exception"
   );
   is(
-    findMessages(hud, "Popup exception").length,
+    findMessagesByType(hud, "Popup exception", ".error").length,
     1,
     "We get the popup exception"
   );
   is(
-    findMessages(
+    findMessagesByType(
       hud,
-      "Expected color but found ‘error’.  Error in parsing value for ‘color’.  Declaration dropped."
+      "Expected color but found ‘error’.  Error in parsing value for ‘color’.  Declaration dropped.",
+      ".warn"
     ).length,
     1,
     "We get the addon's background page CSS error message"
   );
   is(
-    findMessages(
+    findMessagesByType(
       hud,
-      "Expected color but found ‘popup-error’.  Error in parsing value for ‘color’.  Declaration dropped."
+      "Expected color but found ‘popup-error’.  Error in parsing value for ‘color’.  Declaration dropped.",
+      ".warn"
     ).length,
     1,
     "We get the addon's popup CSS error message"
@@ -185,37 +189,39 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
   // Verify that we don't get the other addon log and errors
   is(
-    findMessages(hud, "Other addon log").length,
+    findMessagesByType(hud, "Other addon log", ".console-api").length,
     0,
     "We don't get the other addon log"
   );
   is(
-    findMessages(hud, "Other addon exception").length,
+    findMessagesByType(hud, "Other addon exception", ".console-api").length,
     0,
     "We don't get the other addon exception"
   );
   is(
-    findMessages(hud, "Other popup log").length,
+    findMessagesByType(hud, "Other popup log", ".console-api").length,
     0,
     "We don't get the other addon popup log"
   );
   is(
-    findMessages(hud, "Other popup exception").length,
+    findMessagesByType(hud, "Other popup exception", ".error").length,
     0,
     "We don't get the other addon popup exception"
   );
   is(
-    findMessages(
+    findMessagesByType(
       hud,
-      "Expected color but found ‘error’.  Error in parsing value for ‘background-color’.  Declaration dropped."
+      "Expected color but found ‘error’.  Error in parsing value for ‘background-color’.  Declaration dropped.",
+      ".warn"
     ).length,
     0,
     "We don't get the other addon's background page CSS error message"
   );
   is(
-    findMessages(
+    findMessagesByType(
       hud,
-      "Expected color but found ‘popup-error’.  Error in parsing value for ‘background-color’.  Declaration dropped."
+      "Expected color but found ‘popup-error’.  Error in parsing value for ‘background-color’.  Declaration dropped.",
+      ".warn"
     ).length,
     0,
     "We don't get the other addon's popup CSS error message"
@@ -231,10 +237,12 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
   info("Try to evaluate something after reload");
   const onEvaluationResultAfterReload = waitUntil(() => {
-    return findMessages(hud, "result:2").length > 0;
+    return findMessagesByType(hud, "result:2", ".result").length > 0;
   });
   const onMessageAfterReload = waitUntil(() => {
-    return findMessages(hud, "message after reload", ".console-api").length > 0;
+    return (
+      findMessagesByType(hud, "message after reload", ".console-api").length > 0
+    );
   });
   hud.ui.wrapper.dispatchEvaluateExpression(
     "console.log('message after reload'); 'result:' + (1 + 1)"

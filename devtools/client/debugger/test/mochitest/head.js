@@ -32,6 +32,12 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+/* import-globals-from ../../../webconsole/test/browser/shared-head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/shared-head.js",
+  this
+);
+
 /**
  * Helper function for `_loadAllIntegrationTests`.
  *
