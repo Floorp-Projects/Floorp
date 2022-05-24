@@ -225,18 +225,22 @@ sctp_sendv_spa CreateSctpSendParams(const cricket::SendDataParams& params,
   // example.
   spa.sendv_sndinfo.snd_flags |= SCTP_EOR;
 
-  // Ordered implies reliable.
   if (!params.ordered) {
     spa.sendv_sndinfo.snd_flags |= SCTP_UNORDERED;
-    if (params.max_rtx_count >= 0 || params.max_rtx_ms == 0) {
-      spa.sendv_flags |= SCTP_SEND_PRINFO_VALID;
-      spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_RTX;
-      spa.sendv_prinfo.pr_value = params.max_rtx_count;
-    } else {
-      spa.sendv_flags |= SCTP_SEND_PRINFO_VALID;
-      spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
-      spa.sendv_prinfo.pr_value = params.max_rtx_ms;
-    }
+  }
+  if (params.max_rtx_count.has_value()) {
+    RTC_DCHECK(*params.max_rtx_count >= 0 &&
+               *params.max_rtx_count <= std::numeric_limits<uint16_t>::max());
+    spa.sendv_flags |= SCTP_SEND_PRINFO_VALID;
+    spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_RTX;
+    spa.sendv_prinfo.pr_value = *params.max_rtx_count;
+  }
+  if (params.max_rtx_ms.has_value()) {
+    RTC_DCHECK(*params.max_rtx_ms >= 0 &&
+               *params.max_rtx_ms <= std::numeric_limits<uint16_t>::max());
+    spa.sendv_flags |= SCTP_SEND_PRINFO_VALID;
+    spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
+    spa.sendv_prinfo.pr_value = *params.max_rtx_ms;
   }
   return spa;
 }

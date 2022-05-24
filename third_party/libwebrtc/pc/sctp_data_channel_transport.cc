@@ -45,9 +45,8 @@ RTCError SctpDataChannelTransport::SendData(
   sd_params.sid = channel_id;
   sd_params.type = ToCricketDataMessageType(params.type);
   sd_params.ordered = params.ordered;
-  sd_params.reliable = !(params.max_rtx_count || params.max_rtx_ms);
-  sd_params.max_rtx_count = params.max_rtx_count.value_or(-1);
-  sd_params.max_rtx_ms = params.max_rtx_ms.value_or(-1);
+  sd_params.max_rtx_count = params.max_rtx_count;
+  sd_params.max_rtx_ms = params.max_rtx_ms;
 
   cricket::SendDataResult result;
   sctp_transport_->SendData(sd_params, buffer, &result);

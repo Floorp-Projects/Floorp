@@ -646,9 +646,6 @@ TEST_F(UsrSctpReliabilityTest,
   cricket::SendDataParams send_params;
   send_params.sid = -1;
   send_params.ordered = true;
-  send_params.reliable = true;
-  send_params.max_rtx_count = 0;
-  send_params.max_rtx_ms = 0;
 
   SctpPingPong test(1, kTransport1Port, kTransport2Port, thread1.get(),
                     thread2.get(), messages_count, packet_loss_percents,
@@ -684,9 +681,6 @@ TEST_F(UsrSctpReliabilityTest,
   cricket::SendDataParams send_params;
   send_params.sid = -1;
   send_params.ordered = true;
-  send_params.reliable = true;
-  send_params.max_rtx_count = 0;
-  send_params.max_rtx_ms = 0;
 
   SctpPingPong test(1, kTransport1Port, kTransport2Port, thread1.get(),
                     thread2.get(), messages_count, packet_loss_percents,
@@ -723,9 +717,8 @@ TEST_F(UsrSctpReliabilityTest,
   cricket::SendDataParams send_params;
   send_params.sid = -1;
   send_params.ordered = false;
-  send_params.reliable = false;
-  send_params.max_rtx_count = INT_MAX;
-  send_params.max_rtx_ms = INT_MAX;
+  send_params.max_rtx_count = std::numeric_limits<uint16_t>::max();
+  send_params.max_rtx_ms = std::numeric_limits<uint16_t>::max();
 
   SctpPingPong test(1, kTransport1Port, kTransport2Port, thread1.get(),
                     thread2.get(), messages_count, packet_loss_percents,
@@ -760,9 +753,6 @@ TEST_F(UsrSctpReliabilityTest,
   cricket::SendDataParams send_params;
   send_params.sid = -1;
   send_params.ordered = true;
-  send_params.reliable = true;
-  send_params.max_rtx_count = 0;
-  send_params.max_rtx_ms = 0;
   constexpr uint32_t base_sctp_port = 5000;
 
   // The constants value below were experimentally chosen
