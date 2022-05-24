@@ -271,10 +271,10 @@ nsresult AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
   if (mSinkInfo && mSinkInfo->DeviceID()) {
     deviceID = mSinkInfo->DeviceID();
   }
-  if (CubebUtils::CubebStreamInit(
-        aContext, &stream, "AudioStream", nullptr, nullptr,
-        deviceID, &aParams, latency_frames, DataCallback_S,
-        StateCallback_S, this) == CUBEB_OK) {
+  if (CubebUtils::CubebStreamInit(aContext, &stream, "AudioStream", nullptr,
+                                  nullptr, deviceID, &aParams, latency_frames,
+                                  DataCallback_S, StateCallback_S,
+                                  this) == CUBEB_OK) {
     mCubebStream.reset(stream);
     CubebUtils::ReportCubebBackendUsed();
   } else {

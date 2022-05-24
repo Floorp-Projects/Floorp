@@ -89,7 +89,6 @@ AudioSink::~AudioSink() {
   }
 }
 
-
 nsresult AudioSink::InitializeAudioStream(
     const PlaybackParams& aParams,
     AudioSink::InitializationType aInitializationType) {
