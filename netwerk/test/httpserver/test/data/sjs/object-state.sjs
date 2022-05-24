@@ -5,7 +5,7 @@ function parseQueryString(str) {
   for (var i = 0, sz = paramArray.length; i < sz; i++) {
     var match = regex.exec(paramArray[i]);
     if (!match) {
-      throw new Error("Bad parameter in queryString!  '" + paramArray[i] + "'");
+      throw "Bad parameter in queryString!  '" + paramArray[i] + "'";
     }
     params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
   }
