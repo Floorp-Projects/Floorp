@@ -446,15 +446,15 @@ fn read_dgram(
     local_address: &SocketAddr,
 ) -> Result<Option<Datagram>, io::Error> {
     let buf = &mut [0u8; 2048];
-    let (sz, remote_addr) = match socket.recv_from(&mut buf[..]) {
-        Err(ref err) if err.kind() == io::ErrorKind::WouldBlock => return Ok(None),
-        Err(err) => {
+    let res = socket.recv_from(&mut buf[..]);
+    if let Some(err) = res.as_ref().err() {
+        if err.kind() != io::ErrorKind::WouldBlock {
             eprintln!("UDP recv error: {:?}", err);
-            return Err(err);
         }
-        Ok(res) => res,
+        return Ok(None);
     };
 
+    let (sz, remote_addr) = res.unwrap();
     if sz == buf.len() {
         eprintln!("Might have received more than {} bytes", buf.len());
     }
