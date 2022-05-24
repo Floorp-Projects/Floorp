@@ -23,18 +23,18 @@ static const char kPrefQueryStrippingList[] =
     "privacy.query_stripping.strip_list";
 
 void DoTest(const nsACString& aTestURL, const bool aIsPBM,
-            const nsACString& aExpectedURL, bool aExpectedResult) {
+            const nsACString& aExpectedURL, uint32_t aExpectedResult) {
   nsCOMPtr<nsIURI> testURI;
 
   NS_NewURI(getter_AddRefs(testURI), aTestURL);
 
-  bool result;
   nsCOMPtr<nsIURI> strippedURI;
-  result = URLQueryStringStripper::Strip(testURI, aIsPBM, strippedURI);
+  uint32_t numStripped =
+      URLQueryStringStripper::Strip(testURI, aIsPBM, strippedURI);
 
-  EXPECT_TRUE(result == aExpectedResult);
+  EXPECT_TRUE(numStripped == aExpectedResult);
 
-  if (!result) {
+  if (!numStripped) {
     EXPECT_TRUE(!strippedURI);
   } else {
     EXPECT_TRUE(strippedURI->GetSpecOrDefault().Equals(aExpectedURL));
@@ -85,9 +85,9 @@ TEST(TestURLQueryStringStripper, TestPrefDisabled)
   Preferences::SetBool(kPrefQueryStrippingEnabledPBM, false);
 
   for (bool isPBM : {false, true}) {
-    DoTest("https://example.com/"_ns, isPBM, ""_ns, false);
-    DoTest("https://example.com/?Barfoo=123"_ns, isPBM, ""_ns, false);
-    DoTest("https://example.com/?fooBar=123&foobaz"_ns, isPBM, ""_ns, false);
+    DoTest("https://example.com/"_ns, isPBM, ""_ns, 0);
+    DoTest("https://example.com/?Barfoo=123"_ns, isPBM, ""_ns, 0);
+    DoTest("https://example.com/?fooBar=123&foobaz"_ns, isPBM, ""_ns, 0);
   }
 }
 
@@ -100,7 +100,7 @@ TEST(TestURLQueryStringStripper, TestEmptyStripList)
   // To create the URLQueryStringStripper, we need to run a dummy test after
   // the query stripping is enabled. By doing this, the stripper will be
   // initiated and we are good to test.
-  DoTest("https://example.com/"_ns, false, ""_ns, false);
+  DoTest("https://example.com/"_ns, false, ""_ns, 0);
 
   // Set the strip list to empty and wait until the pref setting is set to the
   // stripper.
@@ -112,16 +112,16 @@ TEST(TestURLQueryStringStripper, TestEmptyStripList)
       [&]() -> bool { return !observer->IsStillWaiting(); }));
 
   for (bool isPBM : {false, true}) {
-    DoTest("https://example.com/"_ns, isPBM, ""_ns, false);
-    DoTest("https://example.com/?Barfoo=123"_ns, isPBM, ""_ns, false);
-    DoTest("https://example.com/?fooBar=123&foobaz"_ns, isPBM, ""_ns, false);
+    DoTest("https://example.com/"_ns, isPBM, ""_ns, 0);
+    DoTest("https://example.com/?Barfoo=123"_ns, isPBM, ""_ns, 0);
+    DoTest("https://example.com/?fooBar=123&foobaz"_ns, isPBM, ""_ns, 0);
   }
 }
 
 TEST(TestURLQueryStringStripper, TestStripping)
 {
   // A dummy test to initiate the URLQueryStringStripper.
-  DoTest("https://example.com/"_ns, false, ""_ns, false);
+  DoTest("https://example.com/"_ns, false, ""_ns, 0);
 
   // Set the pref and create an observer to wait the pref setting is set to the
   // stripper.
@@ -144,24 +144,25 @@ TEST(TestURLQueryStringStripper, TestStripping)
       for (bool isPBM : {false, true}) {
         bool expectStrip = (prefPBM && isPBM) || (pref && !isPBM);
 
-        DoTest("https://example.com/"_ns, isPBM, ""_ns, false);
-        DoTest("https://example.com/?Barfoo=123"_ns, isPBM, ""_ns, false);
+        DoTest("https://example.com/"_ns, isPBM, ""_ns, 0);
+        DoTest("https://example.com/?Barfoo=123"_ns, isPBM, ""_ns, 0);
 
         DoTest("https://example.com/?fooBar=123"_ns, isPBM,
-               "https://example.com/"_ns, expectStrip);
+               "https://example.com/"_ns, expectStrip ? 1 : 0);
         DoTest("https://example.com/?fooBar=123&foobaz"_ns, isPBM,
-               "https://example.com/"_ns, expectStrip);
+               "https://example.com/"_ns, expectStrip ? 2 : 0);
         DoTest("https://example.com/?fooBar=123&Barfoo=456&foobaz"_ns, isPBM,
-               "https://example.com/?Barfoo=456"_ns, expectStrip);
+               "https://example.com/?Barfoo=456"_ns, expectStrip ? 2 : 0);
 
         DoTest("https://example.com/?FOOBAR=123"_ns, isPBM,
-               "https://example.com/"_ns, expectStrip);
+               "https://example.com/"_ns, expectStrip ? 1 : 0);
         DoTest("https://example.com/?barfoo=foobar"_ns, isPBM,
-               "https://example.com/?barfoo=foobar"_ns, false);
+               "https://example.com/?barfoo=foobar"_ns, 0);
         DoTest("https://example.com/?foobar=123&nostrip=456&FooBar=789"_ns,
-               isPBM, "https://example.com/?nostrip=456"_ns, expectStrip);
+               isPBM, "https://example.com/?nostrip=456"_ns,
+               expectStrip ? 2 : 0);
         DoTest("https://example.com/?AfoobazB=123"_ns, isPBM,
-               "https://example.com/?AfoobazB=123"_ns, false);
+               "https://example.com/?AfoobazB=123"_ns, 0);
       }
     }
   }
@@ -177,11 +178,11 @@ TEST(TestURLQueryStringStripper, TestStripping)
       "TEST(TestURLQueryStringStripper, TestStripping)"_ns,
       [&]() -> bool { return !observer->IsStillWaiting(); }));
 
-  DoTest("https://example.com/?fooBar=123"_ns, false, ""_ns, false);
-  DoTest("https://example.com/?fooBar=123&foobaz"_ns, false, ""_ns, false);
+  DoTest("https://example.com/?fooBar=123"_ns, false, ""_ns, 0);
+  DoTest("https://example.com/?fooBar=123&foobaz"_ns, false, ""_ns, 0);
 
   DoTest("https://example.com/?bazfoo=123"_ns, false, "https://example.com/"_ns,
-         true);
+         1);
   DoTest("https://example.com/?fooBar=123&Barfoo=456&foobaz=abc"_ns, false,
-         "https://example.com/?fooBar=123&foobaz=abc"_ns, true);
+         "https://example.com/?fooBar=123&foobaz=abc"_ns, 1);
 }
