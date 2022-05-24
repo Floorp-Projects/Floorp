@@ -172,56 +172,6 @@ function logAllStoreChanges(hud) {
 }
 
 /**
- * Wait for messages in the web console output, resolving once they are received.
- *
- * @param object options
- *        - hud: the webconsole
- *        - messages: Array[Object]. An array of messages to match.
-            Current supported options:
- *            - text: Partial text match in .message-body
- *        - selector: {String} a selector that should match the message node. Defaults to
- *                             ".message".
- */
-function waitForMessages({ hud, messages, selector = ".message" }) {
-  return new Promise(resolve => {
-    const matchedMessages = [];
-    hud.ui.on("new-messages", function messagesReceived(newMessages) {
-      for (const message of messages) {
-        if (message.matched) {
-          continue;
-        }
-
-        for (const newMessage of newMessages) {
-          const messageBody = newMessage.node.querySelector(`.message-body`);
-          if (
-            messageBody &&
-            newMessage.node.matches(selector) &&
-            messageBody.textContent.includes(message.text)
-          ) {
-            matchedMessages.push(newMessage);
-            message.matched = true;
-            const messagesLeft = messages.length - matchedMessages.length;
-            info(
-              `Matched a message with text: "${message.text}", ` +
-                (messagesLeft > 0
-                  ? `still waiting for ${messagesLeft} messages.`
-                  : `all messages received.`)
-            );
-            break;
-          }
-        }
-
-        if (matchedMessages.length === messages.length) {
-          hud.ui.off("new-messages", messagesReceived);
-          resolve(matchedMessages);
-          return;
-        }
-      }
-    });
-  });
-}
-
-/**
  * Wait for messages with given message type in the web console output,
  * resolving once they are received.
  *
@@ -310,22 +260,6 @@ function waitForRepeatedMessageByType(hud, text, typeSelector, repeat) {
 
     return false;
   });
-}
-
-/**
- * Wait for a single message in the web console output, resolving once it is received.
- *
- * @param {Object} hud : the webconsole
- * @param {String} text : text included in .message-body
- * @param {String} selector : A selector that should match the message node.
- */
-async function waitForMessage(hud, text, selector) {
-  const messages = await waitForMessages({
-    hud,
-    messages: [{ text }],
-    selector,
-  });
-  return messages[0];
 }
 
 /**
