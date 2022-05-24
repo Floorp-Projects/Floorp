@@ -1,5 +1,8 @@
 "use strict";
 
+const { FieldScanner } = ChromeUtils.import(
+  "resource://autofill/FormAutofillHeuristics.jsm"
+);
 var FormAutofillHeuristics, LabelUtils, FormAutofill;
 add_task(async function() {
   ({ FormAutofillHeuristics } = ChromeUtils.import(
@@ -284,7 +287,10 @@ TESTCASES.forEach(testcase => {
     );
 
     let element = doc.getElementById(testcase.elementId);
-    let value = FormAutofillHeuristics.getInfo(element);
+    let value = FormAutofillHeuristics.getInfo(
+      element,
+      new FieldScanner([element], {})
+    );
 
     Assert.deepEqual(value, testcase.expectedReturnValue);
     LabelUtils.clearLabelMap();
@@ -337,7 +343,10 @@ add_task(async function test_regexp_list() {
     );
 
     let element = doc.getElementById(testcase.elementId);
-    let value = FormAutofillHeuristics.getInfo(element);
+    let value = FormAutofillHeuristics.getInfo(
+      element,
+      new FieldScanner([element], {})
+    );
 
     Assert.deepEqual(value, testcase.expectedReturnValue, label);
   }
@@ -360,7 +369,10 @@ add_task(async function test_autofill_creditCards_autocomplete_off_pref() {
     document
   );
   let element = doc.getElementById("targetElement");
-  let value = FormAutofillHeuristics.getInfo(element);
+  let value = FormAutofillHeuristics.getInfo(
+    element,
+    new FieldScanner([element], {})
+  );
 
   Assert.deepEqual(value, expected);
   document = `<form>
@@ -385,7 +397,10 @@ add_task(async function test_autofill_creditCards_autocomplete_off_pref() {
     document
   );
   element = doc.getElementById("targetElement");
-  value = FormAutofillHeuristics.getInfo(element);
+  value = FormAutofillHeuristics.getInfo(
+    element,
+    new FieldScanner([element], {})
+  );
 
   Assert.deepEqual(value, expected);
   Services.prefs.clearUserPref(
@@ -408,7 +423,10 @@ add_task(async function test_autofill_addresses_autocomplete_off_pref() {
     document
   );
   let element = doc.getElementById("given-name");
-  let value = FormAutofillHeuristics.getInfo(element);
+  let value = FormAutofillHeuristics.getInfo(
+    element,
+    new FieldScanner([element], {})
+  );
 
   Assert.deepEqual(value, expected);
   document = `<form>
@@ -430,7 +448,10 @@ add_task(async function test_autofill_addresses_autocomplete_off_pref() {
     document
   );
   element = doc.getElementById("given-name");
-  value = FormAutofillHeuristics.getInfo(element);
+  value = FormAutofillHeuristics.getInfo(
+    element,
+    new FieldScanner([element], {})
+  );
 
   Assert.deepEqual(value, expected);
   Services.prefs.clearUserPref(
