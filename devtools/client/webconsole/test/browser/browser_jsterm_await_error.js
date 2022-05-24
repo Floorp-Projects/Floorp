@@ -166,7 +166,7 @@ add_task(async function() {
   info("Check that we have the expected number of commands");
   const expectedInputsNumber = 16;
   is(
-    (await findMessagesVirtualized({ hud, selector: ".message.command" }))
+    (await findMessagesVirtualizedByType({ hud, typeSelector: ".command" }))
       .length,
     expectedInputsNumber,
     "There is the expected number of commands messages"
@@ -175,14 +175,15 @@ add_task(async function() {
   info("Check that we have as many errors as commands");
   const expectedErrorsNumber = expectedInputsNumber;
   is(
-    (await findMessagesVirtualized({ hud, selector: ".message.error" })).length,
+    (await findMessagesVirtualizedByType({ hud, typeSelector: ".error" }))
+      .length,
     expectedErrorsNumber,
     "There is the expected number of error messages"
   );
 
   info("Check that there's no result message");
   is(
-    (await findMessagesVirtualized({ hud, selector: ".message.result" }))
+    (await findMessagesVirtualizedByType({ hud, typeSelector: ".result" }))
       .length,
     0,
     "There is no result messages"

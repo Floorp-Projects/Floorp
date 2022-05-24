@@ -123,8 +123,13 @@ add_task(async function() {
   info("Wait for all messages to be visible in the split console");
   await waitFor(
     async () =>
-      (await findMessagesVirtualized({ hud, text: "in-inspector log " }))
-        .length === MESSAGES_COUNT
+      (
+        await findMessagesVirtualizedByType({
+          hud,
+          text: "in-inspector log ",
+          typeSelector: ".console-api",
+        })
+      ).length === MESSAGES_COUNT
   );
   ok(true, "All the messages logged when we are using the split console");
 
