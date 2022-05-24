@@ -21,7 +21,7 @@ add_task(async function() {
     `"😎"`,
   ];
 
-  const onLastMessage = waitForMessage(hud, `"😎"`, ".result");
+  const onLastMessage = waitForMessageByType(hud, `"😎"`, ".result");
   for (const input of jstermHistory) {
     execute(hud, input);
   }

@@ -17,7 +17,7 @@ add_task(async function() {
 
   // Check that we syntax highlight output to look like the inputed text.
   // See Bug 1463669.
-  const onMessage = waitForMessage(hud, `var a = 'str';`);
+  const onMessage = waitForMessageByType(hud, `var a = 'str';`, ".command");
   execute(hud, "var a = 'str';");
   const message = await onMessage;
   const highlighted = message.node.querySelectorAll("syntax-highlighted");

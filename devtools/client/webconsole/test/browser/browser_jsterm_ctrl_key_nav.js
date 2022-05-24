@@ -231,7 +231,7 @@ async function testNavWithHistory(hud) {
 
   // submit to history
   for (const value of values) {
-    const onResult = waitForMessage(hud, "", ".result");
+    const onResult = waitForMessageByType(hud, "", ".result");
     setInputValue(hud, value);
     EventUtils.synthesizeKey("KEY_Enter");
     await onResult;

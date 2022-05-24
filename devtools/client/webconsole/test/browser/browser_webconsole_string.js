@@ -10,10 +10,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Test that console.log with a string argument does not include quotes");
-  let receivedMessages = waitForMessages({
-    hud,
-    messages: [{ text: "stringLog" }],
-  });
+  let receivedMessages = waitForMessageByType(hud, "stringLog", ".console-api");
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.stringLog();
@@ -24,10 +21,11 @@ add_task(async function() {
   info(
     "Test that console.log with empty string argument render <empty string>"
   );
-  receivedMessages = waitForMessages({
+  receivedMessages = waitForMessageByType(
     hud,
-    messages: [{ text: "hello <empty string>" }],
-  });
+    "hello <empty string>",
+    ".console-api"
+  );
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     const name = "";
@@ -39,10 +37,11 @@ add_task(async function() {
   info(
     "Test that log with object containing an empty string property renders as expected"
   );
-  receivedMessages = waitForMessages({
+  receivedMessages = waitForMessageByType(
     hud,
-    messages: [{ text: `Object { a: "" }` }],
-  });
+    `Object { a: "" }`,
+    ".console-api"
+  );
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log({ a: "" });

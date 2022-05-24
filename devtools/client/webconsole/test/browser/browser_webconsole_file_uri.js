@@ -45,26 +45,30 @@ add_task(async function() {
 });
 
 function testMessages() {
-  return waitForMessages({
+  return waitForMessagesByType({
     webconsole: hud,
     messages: [
       {
         text: "running network console logging tests",
+        typeSelector: ".console-api",
         category: CATEGORY_WEBDEV,
         severity: SEVERITY_LOG,
       },
       {
         text: "test-network.html",
+        typeSelector: ".network",
         category: CATEGORY_NETWORK,
         severity: SEVERITY_LOG,
       },
       {
         text: "test-image.png",
+        typeSelector: ".network",
         category: CATEGORY_NETWORK,
         severity: SEVERITY_LOG,
       },
       {
         text: "testscript.js",
+        typeSelector: ".network",
         category: CATEGORY_NETWORK,
         severity: SEVERITY_LOG,
       },

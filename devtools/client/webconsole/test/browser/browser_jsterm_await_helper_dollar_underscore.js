@@ -63,10 +63,10 @@ add_task(async function() {
   );
 
   // Let's wait for the message that should be displayed last.
-  const onMessage = waitForMessage(
+  const onMessage = waitForMessageByType(
     hud,
     "await-concurrent-4000",
-    ".message.result"
+    ".result"
   );
   for (const input of inputs) {
     execute(hud, input);

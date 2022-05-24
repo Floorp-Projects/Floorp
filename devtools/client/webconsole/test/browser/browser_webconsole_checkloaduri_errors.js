@@ -12,7 +12,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const targetURL = "file:///something-weird";
-  const onErrorMessage = waitForMessage(hud, "may not load or link");
+  const onErrorMessage = waitForMessageByType(
+    hud,
+    "may not load or link",
+    ".error"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [targetURL], url => {
     XPCNativeWrapper.unwrap(content).testImage(url);
   });

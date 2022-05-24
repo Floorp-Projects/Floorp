@@ -99,7 +99,7 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
   info(
     "Log a message and wait for it to appear so older messages would have been displayed"
   );
-  const onSmokeMessage = waitForMessage(newHud, "smoke");
+  const onSmokeMessage = waitForMessageByType(newHud, "smoke", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log("smoke");
   });

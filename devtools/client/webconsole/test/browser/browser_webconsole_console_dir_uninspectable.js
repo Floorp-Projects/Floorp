@@ -30,7 +30,11 @@ add_task(async function() {
   );
 
   info("Logging a second message to make sure the console is not broken");
-  const onLogMessage = waitForMessage(hud, SECOND_LOG_MESSAGE);
+  const onLogMessage = waitForMessageByType(
+    hud,
+    SECOND_LOG_MESSAGE,
+    ".console-api"
+  );
   // Logging from content to make sure the console API is working.
   SpecialPowers.spawn(
     gBrowser.selectedBrowser,

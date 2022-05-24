@@ -22,7 +22,7 @@ add_task(async function() {
   info("Test Copy URL menu item for text log");
 
   info("Logging a text message in the content window");
-  const onLogMessage = waitForMessage(hud, "stringLog");
+  const onLogMessage = waitForMessageByType(hud, "stringLog", ".console-api");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.stringLog();
   });
@@ -51,7 +51,11 @@ add_task(async function() {
   info("Test Copy URL menu item for network log");
 
   info("Reload the content window to produce a network log");
-  const onNetworkMessage = waitForMessage(hud, "test-console.html");
+  const onNetworkMessage = waitForMessageByType(
+    hud,
+    "test-console.html",
+    ".network"
+  );
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.location.reload();
   });

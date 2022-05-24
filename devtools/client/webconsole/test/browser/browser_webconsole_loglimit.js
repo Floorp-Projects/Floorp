@@ -14,7 +14,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
 
-  let onMessage = waitForMessage(hud, "test message [149]");
+  let onMessage = waitForMessageByType(
+    hud,
+    "test message [149]",
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     for (let i = 0; i < 150; i++) {
       content.console.log(`test message [${i}]`);
@@ -52,7 +56,7 @@ add_task(async function() {
     "Number of displayed messages is correct"
   );
 
-  onMessage = waitForMessage(hud, "hello world");
+  onMessage = waitForMessageByType(hud, "hello world", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.console.log("hello world");
   });

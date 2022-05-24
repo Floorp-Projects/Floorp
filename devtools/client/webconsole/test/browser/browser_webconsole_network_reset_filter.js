@@ -16,12 +16,21 @@ add_task(async function() {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
   const hud = toolbox.getCurrentPanel().hud;
 
-  const onMessages = waitForMessages({
+  const onMessages = waitForMessagesByType({
     hud,
     messages: [
-      { text: "running network console logging tests" },
-      { text: "test-network.html" },
-      { text: "testscript.js" },
+      {
+        text: "running network console logging tests",
+        typeSelector: ".console-api",
+      },
+      {
+        text: "test-network.html",
+        typeSelector: ".network",
+      },
+      {
+        text: "testscript.js",
+        typeSelector: ".network",
+      },
     ],
   });
 

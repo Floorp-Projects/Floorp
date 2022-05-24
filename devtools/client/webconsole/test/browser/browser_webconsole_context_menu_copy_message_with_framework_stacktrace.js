@@ -40,7 +40,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Call the log function defined in the test page");
-  const onMessage = waitForMessage(hud, "wrapperTrace");
+  const onMessage = waitForMessageByType(hud, "wrapperTrace", ".console-api");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.render();
   });

@@ -19,7 +19,7 @@ add_task(async function() {
     `Dog = "Snoopy"`,
   ];
 
-  const onLastMessage = waitForMessage(hud, `"Snoopy"`);
+  const onLastMessage = waitForMessageByType(hud, `"Snoopy"`, ".result");
   for (const input of jstermHistory) {
     execute(hud, input);
   }

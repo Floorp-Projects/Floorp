@@ -28,7 +28,11 @@ add_task(async function() {
   await autocompleteUpdated;
 
   setInputValue(hud, "window[0].document.title");
-  const onPermissionDeniedMessage = waitForMessage(hud, "Permission denied");
+  const onPermissionDeniedMessage = waitForMessageByType(
+    hud,
+    "Permission denied",
+    ".error"
+  );
   EventUtils.synthesizeKey("KEY_Enter");
   const permissionDenied = await onPermissionDeniedMessage;
   ok(

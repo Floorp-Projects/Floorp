@@ -37,10 +37,10 @@ add_task(async function() {
     setTimeout(() => res(result), 1000);
   })`;
 
-  const onAwaitResultMessage = waitForMessage(
+  const onAwaitResultMessage = waitForMessageByType(
     hud,
     `[ "res", "bar" ]`,
-    ".message.result"
+    ".result"
   );
   execute(hud, awaitExpression);
 
