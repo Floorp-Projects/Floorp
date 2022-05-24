@@ -545,7 +545,7 @@ uint32_t RemoteAccessibleBase<Derived>::GetCachedTextLength() {
 template <class Derived>
 Maybe<const nsTArray<int32_t>&>
 RemoteAccessibleBase<Derived>::GetCachedTextLines() {
-  MOZ_ASSERT(IsText());
+  MOZ_ASSERT(!HasChildren());
   if (!mCachedFields) {
     return Nothing();
   }

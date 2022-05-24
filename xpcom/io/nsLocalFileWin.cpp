@@ -1616,6 +1616,25 @@ nsLocalFile::SetLeafName(const nsAString& aLeafName) {
 }
 
 NS_IMETHODIMP
+nsLocalFile::GetDisplayName(nsAString& aLeafName) {
+  aLeafName.Truncate();
+
+  if (mWorkingPath.IsEmpty()) {
+    return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+  }
+  SHFILEINFOW sfi = {};
+  DWORD_PTR result = ::SHGetFileInfoW(mWorkingPath.get(), 0, &sfi, sizeof(sfi),
+                                      SHGFI_DISPLAYNAME);
+  // If we found a display name, return that:
+  if (result) {
+    aLeafName.Assign(sfi.szDisplayName);
+    return NS_OK;
+  }
+  // Nope - fall back to the regular leaf name.
+  return GetLeafName(aLeafName);
+}
+
+NS_IMETHODIMP
 nsLocalFile::GetPath(nsAString& aResult) {
   MOZ_ASSERT_IF(
       mUseDOSDevicePathSyntax,
