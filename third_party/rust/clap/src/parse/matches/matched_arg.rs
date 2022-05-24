@@ -5,13 +5,15 @@ use std::{
     slice::Iter,
 };
 
+use crate::build::ArgPredicate;
+use crate::parse::ValueSource;
 use crate::util::eq_ignore_case;
 use crate::INTERNAL_ERROR_MSG;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct MatchedArg {
-    pub(crate) occurs: u64,
-    pub(crate) ty: ValueType,
+    occurs: u64,
+    ty: Option<ValueSource>,
     indices: Vec<usize>,
     vals: Vec<Vec<OsString>>,
     ignore_case: bool,
@@ -22,12 +24,20 @@ impl MatchedArg {
     pub(crate) fn new() -> Self {
         MatchedArg {
             occurs: 0,
-            ty: ValueType::Unknown,
+            ty: None,
             indices: Vec::new(),
             vals: Vec::new(),
             ignore_case: false,
             invalid_utf8_allowed: None,
         }
+    }
+
+    pub(crate) fn inc_occurrences(&mut self) {
+        self.occurs += 1;
+    }
+
+    pub(crate) fn get_occurrences(&self) -> u64 {
+        self.occurs
     }
 
     pub(crate) fn indices(&self) -> Cloned<Iter<'_, usize>> {
@@ -108,19 +118,34 @@ impl MatchedArg {
         }
     }
 
-    pub(crate) fn contains_val(&self, val: &str) -> bool {
-        self.vals_flatten().any(|v| {
-            if self.ignore_case {
-                // If `v` isn't utf8, it can't match `val`, so `OsStr::to_str` should be fine
-                v.to_str().map_or(false, |v| eq_ignore_case(v, val))
-            } else {
-                OsString::as_os_str(v) == OsStr::new(val)
-            }
-        })
+    pub(crate) fn check_explicit(&self, predicate: ArgPredicate) -> bool {
+        if self.ty == Some(ValueSource::DefaultValue) {
+            return false;
+        }
+
+        match predicate {
+            ArgPredicate::Equals(val) => self.vals_flatten().any(|v| {
+                if self.ignore_case {
+                    // If `v` isn't utf8, it can't match `val`, so `OsStr::to_str` should be fine
+                    eq_ignore_case(&v.to_string_lossy(), &val.to_string_lossy())
+                } else {
+                    OsString::as_os_str(v) == OsStr::new(val)
+                }
+            }),
+            ArgPredicate::IsPresent => true,
+        }
     }
 
-    pub(crate) fn set_ty(&mut self, ty: ValueType) {
-        self.ty = ty;
+    pub(crate) fn source(&self) -> Option<ValueSource> {
+        self.ty
+    }
+
+    pub(crate) fn update_ty(&mut self, ty: ValueSource) {
+        if let Some(existing) = self.ty {
+            self.ty = Some(existing.max(ty));
+        } else {
+            self.ty = Some(ty)
+        }
     }
 
     pub(crate) fn set_ignore_case(&mut self, yes: bool) {
@@ -140,15 +165,6 @@ impl Default for MatchedArg {
     fn default() -> Self {
         Self::new()
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ValueType {
-    Unknown,
-    #[cfg(feature = "env")]
-    EnvVariable,
-    CommandLine,
-    DefaultValue,
 }
 
 #[cfg(test)]

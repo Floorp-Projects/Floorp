@@ -24,7 +24,7 @@ use std::str::FromStr;
 ///
 /// [^1]: fish completions currently only support named arguments (e.g. -o or --opt), not
 ///       positional arguments.
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 #[non_exhaustive]
 pub enum ValueHint {
     /// Default value if hint is not specified. Follows shell default behavior, which is usually
@@ -48,11 +48,11 @@ pub enum ValueHint {
     /// common when writing shell wrappers that execute anther command, for example `sudo` or `env`.
     ///
     /// This hint is special, the argument must be a positional argument and have
-    /// [`.multiple_values(true)`] and App must use [`AppSettings::TrailingVarArg`]. The result is that the
+    /// [`.multiple_values(true)`] and Command must use [`Command::trailing_var_arg(true)`]. The result is that the
     /// command line `my_app ls -la /` will be parsed as `["ls", "-la", "/"]` and clap won't try to
     /// parse the `-la` argument itself.
     ///
-    /// [`AppSettings::TrailingVarArg`]: crate::AppSettings::TrailingVarArg
+    /// [`Command::trailing_var_arg(true)`]: crate::Command::trailing_var_arg
     /// [`.multiple_values(true)`]: crate::Arg::multiple_values()
     CommandWithArguments,
     /// Name of a local operating system user.
