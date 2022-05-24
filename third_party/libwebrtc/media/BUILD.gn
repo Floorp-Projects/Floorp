@@ -106,6 +106,8 @@ rtc_library("rtc_media_base") {
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:file_wrapper",
     "../rtc_base/system:rtc_export",
+    "../rtc_base/task_utils:pending_task_safety_flag",
+    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/sigslot",
     "../system_wrappers:field_trial",
   ]

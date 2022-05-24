@@ -241,29 +241,9 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   // implements Transport interface
   bool SendRtp(const uint8_t* data,
                size_t len,
-               const webrtc::PacketOptions& options) override {
-    rtc::CopyOnWriteBuffer packet(data, len, kMaxRtpPacketLen);
-    rtc::PacketOptions rtc_options;
-    rtc_options.packet_id = options.packet_id;
-    if (DscpEnabled()) {
-      rtc_options.dscp = PreferredDscp();
-    }
-    rtc_options.info_signaled_after_sent.included_in_feedback =
-        options.included_in_feedback;
-    rtc_options.info_signaled_after_sent.included_in_allocation =
-        options.included_in_allocation;
-    return VoiceMediaChannel::SendPacket(&packet, rtc_options);
-  }
+               const webrtc::PacketOptions& options) override;
 
-  bool SendRtcp(const uint8_t* data, size_t len) override {
-    rtc::CopyOnWriteBuffer packet(data, len, kMaxRtpPacketLen);
-    rtc::PacketOptions rtc_options;
-    if (DscpEnabled()) {
-      rtc_options.dscp = PreferredDscp();
-    }
-
-    return VoiceMediaChannel::SendRtcp(&packet, rtc_options);
-  }
+  bool SendRtcp(const uint8_t* data, size_t len) override;
 
  private:
   bool SetOptions(const AudioOptions& options);
