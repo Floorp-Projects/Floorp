@@ -13,6 +13,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.content.getSystemService
 import mozilla.components.support.utils.SafeUrl
 import mozilla.components.support.utils.WebURLFinder
+import org.mozilla.fenix.perf.Performance.logger
 
 private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
 private const val MIME_TYPE_TEXT_HTML = "text/html"
@@ -90,8 +91,22 @@ class ClipboardHandler(val context: Context) {
 
     private fun ClipboardManager.isPrimaryClipEmpty() = primaryClip?.itemCount == 0
 
+    /**
+     * Returns a [ClipData.Item] from the Android clipboard.
+     * @return a string representation of the first item on the clipboard, if
+     * the clipboard currently has an item or null if it does not.
+     *
+     * Note: this can throw a [android.os.DeadSystemException] if the clipboard content is too large,
+     * or various exceptions for certain vendors, due to modifications made to the Android clipboard code.
+     */
+    @Suppress("TooGenericExceptionCaught")
     private val ClipboardManager.firstPrimaryClipItem: ClipData.Item?
-        get() = primaryClip?.getItemAt(0)
+        get() = try {
+            primaryClip?.getItemAt(0)
+        } catch (exception: Exception) {
+            logger.error("Fetching clipboard content failed with: $exception")
+            null
+        }
 
     @VisibleForTesting
     internal val firstSafePrimaryClipItemText: String?
