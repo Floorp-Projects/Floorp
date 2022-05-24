@@ -40,7 +40,6 @@
 namespace webrtc {
 class VideoDecoderFactory;
 class VideoEncoderFactory;
-struct MediaConfig;
 }  // namespace webrtc
 
 namespace cricket {
