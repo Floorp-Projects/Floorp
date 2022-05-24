@@ -305,7 +305,8 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
   ParseGenericDependenciesResult ParseGenericDependenciesExtension(
       const RtpPacketReceived& rtp_packet,
       RTPVideoHeader* video_header) RTC_RUN_ON(worker_task_checker_);
-  void OnAssembledFrame(std::unique_ptr<RtpFrameObject> frame);
+  void OnAssembledFrame(std::unique_ptr<RtpFrameObject> frame)
+      RTC_LOCKS_EXCLUDED(packet_buffer_lock_);
   void UpdatePacketReceiveTimestamps(const RtpPacketReceived& packet,
                                      bool is_keyframe)
       RTC_RUN_ON(worker_task_checker_);
@@ -409,6 +410,11 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
 
   rtc::scoped_refptr<RtpVideoStreamReceiverFrameTransformerDelegate>
       frame_transformer_delegate_;
+
+  SeqNumUnwrapper<uint16_t> rtp_seq_num_unwrapper_
+      RTC_GUARDED_BY(packet_buffer_lock_);
+  std::map<int64_t, RtpPacketInfo> packet_infos_
+      RTC_GUARDED_BY(packet_buffer_lock_);
 };
 
 }  // namespace webrtc
