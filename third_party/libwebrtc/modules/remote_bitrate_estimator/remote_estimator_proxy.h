@@ -77,19 +77,35 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
 
   static const int kMaxNumberOfPackets;
 
+  // Records the fact that a packet with `sequence_number` arrived at
+  // `arrival_time_ms`.
+  void AddPacket(int64_t sequence_number, int64_t arrival_time_ms)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(&lock_);
+  void MaybeCullOldPackets(int64_t sequence_number, int64_t arrival_time_ms)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(&lock_);
   void SendPeriodicFeedbacks() RTC_EXCLUSIVE_LOCKS_REQUIRED(&lock_);
   void SendFeedbackOnRequest(int64_t sequence_number,
                              const FeedbackRequest& feedback_request)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(&lock_);
-  static int64_t BuildFeedbackPacket(
-      uint8_t feedback_packet_count,
-      uint32_t media_ssrc,
+
+  // Returns a Transport Feedback packet with information about as many packets
+  // that has been received between [`begin_iterator`, `end_iterator`) that can
+  // fit in it. If `is_periodic_update`, this represents sending a periodic
+  // feedback message, which will make it update the
+  // `periodic_window_start_seq_` variable with the first packet that was not
+  // included in the feedback packet, so that the next update can continue from
+  // that sequence number.
+  //
+  // `include_timestamps` decide if the returned TransportFeedback should
+  // include timestamps.
+  std::unique_ptr<rtcp::TransportFeedback> BuildFeedbackPacket(
+      bool include_timestamps,
       int64_t base_sequence_number,
       std::map<int64_t, int64_t>::const_iterator
           begin_iterator,  // |begin_iterator| is inclusive.
       std::map<int64_t, int64_t>::const_iterator
           end_iterator,  // |end_iterator| is exclusive.
-      rtcp::TransportFeedback* feedback_packet);
+      bool is_periodic_update) RTC_EXCLUSIVE_LOCKS_REQUIRED(&lock_);
 
   Clock* const clock_;
   const TransportFeedbackSender feedback_sender_;
@@ -103,6 +119,9 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
   uint32_t media_ssrc_ RTC_GUARDED_BY(&lock_);
   uint8_t feedback_packet_count_ RTC_GUARDED_BY(&lock_);
   SeqNumUnwrapper<uint16_t> unwrapper_ RTC_GUARDED_BY(&lock_);
+
+  // The next sequence number that should be the start sequence number during
+  // periodic reporting. Will be absl::nullopt before the first seen packet.
   absl::optional<int64_t> periodic_window_start_seq_ RTC_GUARDED_BY(&lock_);
   // Map unwrapped seq -> time.
   std::map<int64_t, int64_t> packet_arrival_times_ RTC_GUARDED_BY(&lock_);
