@@ -126,11 +126,11 @@
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[<p>%1$s vi aiuta à stà à e cumande.</p>
 <p>Impiegatelu cum’è un navigatore privatu :
-· <ul>
-· <li>Fate ricerche è navigate cù l’appiecazione</li>
-· <li>Bluccate i perseguitatori (o mudificà e preferenze per auturizalli)</li>
-· <li>Squassà i canistrelli è ancu e cronolugie di navigazione è di ricerca</li>
-· </ul>
+  <ul>
+    <li>Fate ricerche è navigate cù l’appiecazione</li>
+    <li>Bluccate i perseguitatori (o mudificà e preferenze per auturizalli)</li>
+    <li>Squassate i canistrelli è ancu e cronolugie di navigazione è di ricerca</li>
+  </ul>
 </p>
 <p>%1$s hè sviluppatu da Mozilla. A nostra missione hè d’incuragisce un Internet apertu è in bella saluta.<br/>
 <a href="%2$s">Per sapene di più</a></p>]]></string>
