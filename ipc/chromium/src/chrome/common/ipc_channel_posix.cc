@@ -195,11 +195,13 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   // Verify that we fit in a "quantum-spaced" jemalloc bucket.
   static_assert(sizeof(*this) <= 512, "Exceeded expected size class");
 
-  DCHECK(kControlBufferHeaderSize >= CMSG_SPACE(0));
+  MOZ_RELEASE_ASSERT(kControlBufferHeaderSize >= CMSG_SPACE(0));
+  MOZ_RELEASE_ASSERT(kControlBufferSize >=
+                     CMSG_SPACE(sizeof(int) * kControlBufferMaxFds));
 
   mode_ = mode;
   is_blocked_on_write_ = false;
-  partial_write_iter_.reset();
+  partial_write_.reset();
   input_buf_offset_ = 0;
   input_buf_ = mozilla::MakeUnique<char[]>(Channel::kReadBufferSize);
   input_cmsg_buf_ = mozilla::MakeUnique<char[]>(kControlBufferSize);
@@ -569,11 +571,9 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 
     struct msghdr msgh = {0};
 
-    static const int tmp =
-        CMSG_SPACE(sizeof(int[IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE]));
-    char buf[tmp];
+    char cmsgBuf[kControlBufferSize];
 
-    if (partial_write_iter_.isNothing()) {
+    if (partial_write_.isNothing()) {
 #if defined(OS_MACOSX)
       if (!TransferMachPorts(*msg)) {
         return false;
@@ -581,44 +581,30 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 #endif
       Pickle::BufferList::IterImpl iter(msg->Buffers());
       MOZ_DIAGNOSTIC_ASSERT(!iter.Done(), "empty message");
-      partial_write_iter_.emplace(iter);
+      partial_write_.emplace(PartialWrite{iter, msg->attached_handles_});
     }
 
-    if (partial_write_iter_.ref().Done()) {
-      MOZ_DIAGNOSTIC_ASSERT(false, "partial_write_iter_ should not be null");
+    if (partial_write_->iter_.Done()) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "partial_write_->iter_ should not be done");
       // report a send error to our caller, which will close the channel.
       return false;
     }
 
-    if (partial_write_iter_.value().Data() == msg->Buffers().Start()) {
+    if (partial_write_->iter_.Data() == msg->Buffers().Start()) {
       AddIPCProfilerMarker(*msg, other_pid_, MessageDirection::eSending,
                            MessagePhase::TransferStart);
 
       if (!msg->attached_handles_.IsEmpty()) {
         // This is the first chunk of a message which has descriptors to send
-        struct cmsghdr* cmsg;
-        const unsigned num_fds = msg->attached_handles_.Length();
-
-        if (num_fds > IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE) {
+        if (msg->attached_handles_.Length() >
+            IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE) {
           MOZ_DIAGNOSTIC_ASSERT(false, "Too many file descriptors!");
           CHROMIUM_LOG(FATAL) << "Too many file descriptors!";
           // This should not be reached.
           return false;
         }
 
-        msgh.msg_control = buf;
-        msgh.msg_controllen = CMSG_SPACE(sizeof(int) * num_fds);
-        cmsg = CMSG_FIRSTHDR(&msgh);
-        cmsg->cmsg_level = SOL_SOCKET;
-        cmsg->cmsg_type = SCM_RIGHTS;
-        cmsg->cmsg_len = CMSG_LEN(sizeof(int) * num_fds);
-        for (unsigned i = 0; i < num_fds; ++i) {
-          reinterpret_cast<int*>(CMSG_DATA(cmsg))[i] =
-              msg->attached_handles_[i].get();
-        }
-        msgh.msg_controllen = cmsg->cmsg_len;
-
-        msg->header()->num_handles = num_fds;
+        msg->header()->num_handles = msg->attached_handles_.Length();
 #if defined(OS_MACOSX)
         msg->set_fd_cookie(++last_pending_fd_id_);
 #endif
@@ -630,14 +616,37 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     size_t amt_to_write = 0;
 
     // How much of this message have we written so far?
-    Pickle::BufferList::IterImpl iter = partial_write_iter_.value();
+    Pickle::BufferList::IterImpl iter = partial_write_->iter_;
+    auto handles = partial_write_->handles_;
 
-    // Store the unwritten part of the first segment to write into the iovec.
-    iov[0].iov_base = const_cast<char*>(iter.Data());
-    iov[0].iov_len = iter.RemainingInSegment();
-    amt_to_write += iov[0].iov_len;
-    iter.Advance(msg->Buffers(), iov[0].iov_len);
-    iov_count++;
+    size_t max_amt_to_write = iter.TotalBytesAvailable(msg->Buffers());
+    if (!handles.IsEmpty()) {
+      // We can only send at most kControlBufferMaxFds files per sendmsg call.
+      const size_t num_fds = std::min(handles.Length(), kControlBufferMaxFds);
+
+      // Populate the cmsg header for this call
+      msgh.msg_control = cmsgBuf;
+      msgh.msg_controllen = CMSG_LEN(sizeof(int) * num_fds);
+      struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msgh);
+      cmsg->cmsg_level = SOL_SOCKET;
+      cmsg->cmsg_type = SCM_RIGHTS;
+      cmsg->cmsg_len = msgh.msg_controllen;
+      for (size_t i = 0; i < num_fds; ++i) {
+        reinterpret_cast<int*>(CMSG_DATA(cmsg))[i] = handles[i].get();
+      }
+
+      // Update partial_write_ to record which handles were written.
+      auto remaining = handles.From(num_fds);
+      partial_write_->handles_ = remaining;
+
+      // Avoid writing one byte per remaining handle in excess of
+      // kControlBufferMaxFds.  Each handle written will consume a minimum of 4
+      // bytes in the message (to store it's index), so we can depend on there
+      // being enough data to send every handle.
+      MOZ_ASSERT(max_amt_to_write > remaining.Length(),
+                 "must be at least one byte in the message for each handle");
+      max_amt_to_write -= remaining.Length();
+    }
 
     // Store remaining segments to write into iovec.
     //
@@ -645,9 +654,11 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     // OS-dependent limits.  Also, stop adding iovecs if we've already
     // prepared to write at least the full buffer size.
     while (!iter.Done() && iov_count < kMaxIOVecSize &&
-           PipeBufHasSpaceAfter(amt_to_write)) {
+           PipeBufHasSpaceAfter(amt_to_write) &&
+           amt_to_write < max_amt_to_write) {
       char* data = iter.Data();
-      size_t size = iter.RemainingInSegment();
+      size_t size =
+          std::min(iter.RemainingInSegment(), max_amt_to_write - amt_to_write);
 
       iov[iov_count].iov_base = data;
       iov[iov_count].iov_len = size;
@@ -655,6 +666,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       amt_to_write += size;
       iter.Advance(msg->Buffers(), size);
     }
+    MOZ_ASSERT(amt_to_write <= max_amt_to_write);
 
     const bool intentional_short_write = !iter.Done();
     msgh.msg_iov = iov;
@@ -662,14 +674,6 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 
     ssize_t bytes_written =
         HANDLE_EINTR(corrected_sendmsg(pipe_, &msgh, MSG_DONTWAIT));
-
-#if !defined(OS_MACOSX)
-    // On OSX the attached_handles_ array gets cleared later, once we get the
-    // RECEIVED_FDS_MESSAGE_TYPE message.
-    if (bytes_written > 0) {
-      msg->attached_handles_.Clear();
-    }
-#endif
 
     if (bytes_written < 0) {
       switch (errno) {
@@ -716,10 +720,10 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
         MOZ_DIAGNOSTIC_ASSERT(intentional_short_write ||
                               static_cast<size_t>(bytes_written) <
                                   amt_to_write);
-        partial_write_iter_.ref().AdvanceAcrossSegments(msg->Buffers(),
-                                                        bytes_written);
+        partial_write_->iter_.AdvanceAcrossSegments(msg->Buffers(),
+                                                    bytes_written);
         // We should not hit the end of the buffer.
-        MOZ_DIAGNOSTIC_ASSERT(!partial_write_iter_.ref().Done());
+        MOZ_DIAGNOSTIC_ASSERT(!partial_write_->iter_.Done());
       }
 
       // Tell libevent to call us back once things are unblocked.
@@ -730,12 +734,16 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
           MessageLoopForIO::WATCH_WRITE, &write_watcher_, this);
       return true;
     } else {
-      partial_write_iter_.reset();
+      partial_write_.reset();
 
 #if defined(OS_MACOSX)
       if (!msg->attached_handles_.IsEmpty()) {
         pending_fds_.push_back(PendingDescriptors{
             msg->fd_cookie(), std::move(msg->attached_handles_)});
+      }
+#else
+      if (bytes_written > 0) {
+        msg->attached_handles_.Clear();
       }
 #endif
 
@@ -841,7 +849,7 @@ void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
 
 void Channel::ChannelImpl::OutputQueuePop() {
   // Clear any reference to the front of output_queue_ before we destroy it.
-  partial_write_iter_.reset();
+  partial_write_.reset();
 
   mozilla::UniquePtr<Message> message = output_queue_.Pop();
 }
