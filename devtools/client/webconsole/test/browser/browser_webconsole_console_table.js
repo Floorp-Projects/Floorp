@@ -424,7 +424,7 @@ add_task(async function() {
   });
   for (const [index, testCase] of testCases.entries()) {
     // Refresh the reference to the message, as it may have been scrolled out of existence.
-    const node = await findMessageVirtualized({
+    const node = await findMessageVirtualizedById({
       hud,
       messageId: messages[index].getAttribute("data-message-id"),
     });

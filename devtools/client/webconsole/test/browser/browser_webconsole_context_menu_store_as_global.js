@@ -84,7 +84,7 @@ add_task(async function() {
 
 async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
   // Refresh the reference to the message, as it may have been scrolled out of existence.
-  msg = await findMessageVirtualized({
+  msg = await findMessageVirtualizedById({
     hud,
     messageId: msg.getAttribute("data-message-id"),
   });
