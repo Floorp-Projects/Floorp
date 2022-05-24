@@ -545,60 +545,6 @@ TEST_P(RtpSenderTest, PaddingAlwaysAllowedOnAudio) {
   EXPECT_EQ(kMinPaddingSize, GenerateAndSendPadding(kMinPaddingSize - 5));
 }
 
-TEST_P(RtpSenderTestWithoutPacer, PacketOptionsNoRetransmission) {
-  RtpRtcpInterface::Configuration config;
-  config.clock = clock_;
-  config.outgoing_transport = &transport_;
-  config.local_media_ssrc = kSsrc;
-  config.transport_feedback_callback = &feedback_observer_;
-  config.event_log = &mock_rtc_event_log_;
-  config.send_packet_observer = &send_packet_observer_;
-  config.retransmission_rate_limiter = &retransmission_rate_limiter_;
-  rtp_sender_context_ =
-      std::make_unique<RtpSenderContext>(config, &time_controller_);
-
-  SendGenericPacket();
-
-  EXPECT_FALSE(transport_.last_options_.is_retransmit);
-}
-
-TEST_P(RtpSenderTestWithoutPacer,
-       SetsIncludedInFeedbackWhenTransportSequenceNumberExtensionIsRegistered) {
-  SetUpRtpSender(false, false, false);
-  rtp_sender()->RegisterRtpHeaderExtension(TransportSequenceNumber::kUri,
-                                           kTransportSequenceNumberExtensionId);
-  EXPECT_CALL(send_packet_observer_, OnSendPacket).Times(1);
-  SendGenericPacket();
-  EXPECT_TRUE(transport_.last_options_.included_in_feedback);
-}
-
-TEST_P(
-    RtpSenderTestWithoutPacer,
-    SetsIncludedInAllocationWhenTransportSequenceNumberExtensionIsRegistered) {
-  SetUpRtpSender(false, false, false);
-  rtp_sender()->RegisterRtpHeaderExtension(TransportSequenceNumber::kUri,
-                                           kTransportSequenceNumberExtensionId);
-  EXPECT_CALL(send_packet_observer_, OnSendPacket).Times(1);
-  SendGenericPacket();
-  EXPECT_TRUE(transport_.last_options_.included_in_allocation);
-}
-
-TEST_P(RtpSenderTestWithoutPacer,
-       SetsIncludedInAllocationWhenForcedAsPartOfAllocation) {
-  SetUpRtpSender(false, false, false);
-  rtp_egress()->ForceIncludeSendPacketsInAllocation(true);
-  SendGenericPacket();
-  EXPECT_FALSE(transport_.last_options_.included_in_feedback);
-  EXPECT_TRUE(transport_.last_options_.included_in_allocation);
-}
-
-TEST_P(RtpSenderTestWithoutPacer, DoesnSetIncludedInAllocationByDefault) {
-  SetUpRtpSender(false, false, false);
-  SendGenericPacket();
-  EXPECT_FALSE(transport_.last_options_.included_in_feedback);
-  EXPECT_FALSE(transport_.last_options_.included_in_allocation);
-}
-
 TEST_P(RtpSenderTestWithoutPacer, OnSendSideDelayUpdated) {
   StrictMock<MockSendSideDelayObserver> send_side_delay_observer_;
 
