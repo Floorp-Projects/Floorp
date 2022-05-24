@@ -22,7 +22,11 @@ add_task(async function() {
     await wait(1000);
 
     info("wait until the ORG message is displayed");
-    await checkUniqueMessageExists(hud, "early message on org page");
+    await checkUniqueMessageExists(
+      hud,
+      "early message on org page",
+      ".console-api"
+    );
   }
 
   {
@@ -33,6 +37,10 @@ add_task(async function() {
     await wait(1000);
 
     info("wait until the COM message is displayed");
-    await checkUniqueMessageExists(hud, "early message on com page");
+    await checkUniqueMessageExists(
+      hud,
+      "early message on com page",
+      ".console-api"
+    );
   }
 });
