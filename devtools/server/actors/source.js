@@ -188,6 +188,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       ),
       sourceMapURL: source.sourceMapURL,
       introductionType,
+      isInlineSource: this._isInlineSource,
     };
   },
 
