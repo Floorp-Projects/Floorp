@@ -1578,7 +1578,7 @@ async function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
 
   for (let [i, expectedMessage] of expectedMessages.entries()) {
     // Refresh the reference to the message, as it may have been scrolled out of existence.
-    const message = await findMessageVirtualized({
+    const message = await findMessageVirtualizedById({
       hud,
       messageId: messages[i].getAttribute("data-message-id"),
     });

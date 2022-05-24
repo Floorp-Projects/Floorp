@@ -16,25 +16,24 @@
 /* import-globals-from ../../../shared/test/shared-head.js */
 
 /**
- * Find a message in the output, scrolling through the output from top
- * to bottom in order to make sure the messages are actually rendered.
+ * Find a message with given messageId in the output, scrolling through the
+ * output from top to bottom in order to make sure the messages are actually
+ * rendered.
  *
  * @param object hud
  *        The web console.
- * @param string text
- *        A substring that can be found in the message.
- * @param selector [optional]
- *        The selector to use in finding the message.
- * @param messageId [optional]
+ * @param messageId
  *        A message ID to look for. This could be baked into the selector, but
  *        is provided as a convenience.
  * @return {Node} the node corresponding the found message
  */
-async function findMessageVirtualized({ hud, text, selector, messageId }) {
+async function findMessageVirtualizedById({ hud, messageId }) {
+  if (!messageId) {
+    throw new Error("messageId parameter is required");
+  }
+
   const elements = await findMessagesVirtualized({
     hud,
-    text,
-    selector,
     expectedCount: 1,
     messageId,
   });
