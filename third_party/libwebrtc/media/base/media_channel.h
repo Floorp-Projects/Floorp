@@ -301,7 +301,7 @@ class MediaChannel {
                     const rtc::PacketOptions& options);
 
   const bool enable_dscp_;
-  rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> network_safety_
+  const rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> network_safety_
       RTC_PT_GUARDED_BY(network_thread_);
   webrtc::TaskQueueBase* const network_thread_;
   NetworkInterface* network_interface_ RTC_GUARDED_BY(network_thread_) =
