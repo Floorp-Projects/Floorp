@@ -702,7 +702,7 @@ WebRtcVideoChannel::WebRtcVideoChannel(
     webrtc::VideoEncoderFactory* encoder_factory,
     webrtc::VideoDecoderFactory* decoder_factory,
     webrtc::VideoBitrateAllocatorFactory* bitrate_allocator_factory)
-    : VideoMediaChannel(config),
+    : VideoMediaChannel(config, call->network_thread()),
       worker_thread_(call->worker_thread()),
       call_(call),
       unsignalled_ssrc_handler_(&default_unsignalled_ssrc_handler_),
@@ -1869,7 +1869,7 @@ void WebRtcVideoChannel::OnNetworkRouteChanged(
 }
 
 void WebRtcVideoChannel::SetInterface(NetworkInterface* iface) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
   MediaChannel::SetInterface(iface);
   // Set the RTP recv/send buffer to a bigger size.
 

@@ -29,9 +29,11 @@ class VideoRtpReceiverTest : public testing::Test {
  protected:
   class MockVideoMediaChannel : public cricket::FakeVideoMediaChannel {
    public:
-    MockVideoMediaChannel(cricket::FakeVideoEngine* engine,
-                          const cricket::VideoOptions& options)
-        : FakeVideoMediaChannel(engine, options) {}
+    MockVideoMediaChannel(
+        cricket::FakeVideoEngine* engine,
+        const cricket::VideoOptions& options,
+        TaskQueueBase* network_thread = rtc::Thread::Current())
+        : FakeVideoMediaChannel(engine, options, network_thread) {}
     MOCK_METHOD(void,
                 SetRecordableEncodedFrameCallback,
                 (uint32_t, std::function<void(const RecordableEncodedFrame&)>),

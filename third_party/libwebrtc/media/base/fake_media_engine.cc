@@ -18,6 +18,7 @@
 #include "rtc_base/checks.h"
 
 namespace cricket {
+using webrtc::TaskQueueBase;
 
 FakeVoiceMediaChannel::DtmfInfo::DtmfInfo(uint32_t ssrc,
                                           int event_code,
@@ -49,8 +50,11 @@ AudioSource* FakeVoiceMediaChannel::VoiceChannelAudioSink::source() const {
 }
 
 FakeVoiceMediaChannel::FakeVoiceMediaChannel(FakeVoiceEngine* engine,
-                                             const AudioOptions& options)
-    : engine_(engine), max_bps_(-1) {
+                                             const AudioOptions& options,
+                                             TaskQueueBase* network_thread)
+    : RtpHelper<VoiceMediaChannel>(network_thread),
+      engine_(engine),
+      max_bps_(-1) {
   output_scalings_[0] = 1.0;  // For default channel.
   SetOptions(options);
 }
@@ -253,8 +257,11 @@ bool CompareDtmfInfo(const FakeVoiceMediaChannel::DtmfInfo& info,
 }
 
 FakeVideoMediaChannel::FakeVideoMediaChannel(FakeVideoEngine* engine,
-                                             const VideoOptions& options)
-    : engine_(engine), max_bps_(-1) {
+                                             const VideoOptions& options,
+                                             TaskQueueBase* network_thread)
+    : RtpHelper<VideoMediaChannel>(network_thread),
+      engine_(engine),
+      max_bps_(-1) {
   SetOptions(options);
 }
 FakeVideoMediaChannel::~FakeVideoMediaChannel() {
@@ -440,7 +447,8 @@ VoiceMediaChannel* FakeVoiceEngine::CreateMediaChannel(
     return nullptr;
   }
 
-  FakeVoiceMediaChannel* ch = new FakeVoiceMediaChannel(this, options);
+  FakeVoiceMediaChannel* ch =
+      new FakeVoiceMediaChannel(this, options, call->network_thread());
   channels_.push_back(ch);
   return ch;
 }
@@ -506,7 +514,8 @@ VideoMediaChannel* FakeVideoEngine::CreateMediaChannel(
     return nullptr;
   }
 
-  FakeVideoMediaChannel* ch = new FakeVideoMediaChannel(this, options);
+  FakeVideoMediaChannel* ch =
+      new FakeVideoMediaChannel(this, options, call->network_thread());
   channels_.emplace_back(ch);
   return ch;
 }
