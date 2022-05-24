@@ -337,7 +337,8 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
           // for that amount of time, and the video would therefore not
           // update. The Start() call is very cheap on the other hand, we can
           // do it from the MDSM thread.
-          nsresult rv = audioSink->InitializeAudioStream(mParams);
+          nsresult rv = audioSink->InitializeAudioStream(
+              mParams, AudioSink::InitializationType::UNMUTING);
           mOwnerThread->Dispatch(NS_NewRunnableFunction(
               "StartAudioSink (Async part: start from MDSM thread)",
               [self = RefPtr<AudioSinkWrapper>(this),
@@ -386,7 +387,8 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
         }));
   } else {
     mAudioSink.reset(mCreator->Create());
-    nsresult rv = mAudioSink->InitializeAudioStream(mParams);
+    nsresult rv = mAudioSink->InitializeAudioStream(
+        mParams, AudioSink::InitializationType::INITIAL);
     if (NS_FAILED(rv)) {
       mEndedPromiseHolder.RejectIfExists(rv, __func__);
       LOG("Sync AudioSinkWrapper initialization failed");

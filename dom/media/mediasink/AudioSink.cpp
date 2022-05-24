@@ -60,11 +60,35 @@ AudioSink::AudioSink(AbstractThread* aThread,
           capacitySeconds * static_cast<float>(mOutputChannels * mOutputRate)));
   SINK_LOG("Ringbuffer has space for %u elements (%lf seconds)",
            mProcessedSPSCQueue->Capacity(), capacitySeconds);
+  // Determine if the data is likely to be audible when the stream will be
+  // ready, if possible.
+  RefPtr<AudioData> frontPacket = mAudioQueue.PeekFront();
+  if (frontPacket) {
+    mAudibilityMonitor.ProcessInterleaved(frontPacket->Data(), frontPacket->mChannels);
+    mIsAudioDataAudible = mAudibilityMonitor.RecentlyAudible();
+  } else {
+    // If no packets are available, consider the audio audible.
+    mIsAudioDataAudible = true;
+  }
 }
 
 AudioSink::~AudioSink() = default;
 
-nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
+nsresult AudioSink::InitializeAudioStream(
+    const PlaybackParams& aParams,
+    AudioSink::InitializationType aInitializationType) {
+  if (aInitializationType == AudioSink::InitializationType::UNMUTING) {
+    // Consider the stream to be audible immediately, before initialization
+    // finishes when unmuting, in case initialization takes some time and it
+    // looked audible when the AudioSink was created.
+    mAudibleEvent.Notify(mIsAudioDataAudible);
+  } else {
+    // If not unmuting, the audibility event will be dispatched as usual,
+    // inspecting the audio content as it's being played and signaling the
+    // audibility event when a different in state is detected.
+    mIsAudioDataAudible = false;
+  }
+
   // When AudioQueue is empty, there is no way to know the channel layout of
   // the coming audio data, so we use the predefined channel map instead.
   AudioConfig::ChannelLayout::ChannelMap channelMap =
@@ -73,6 +97,7 @@ nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
   // mOutputChannels into SMPTE format, so there is no need to worry if
   // StaticPrefs::accessibility_monoaudio_enable() or
   // StaticPrefs::media_forcestereo_enabled() is applied.
+  MOZ_ASSERT(!mAudioStream);
   mAudioStream =
       new AudioStream(*this, mOutputRate, mOutputChannels, channelMap);
   nsresult rv = mAudioStream->Init(mAudioDevice);
@@ -87,6 +112,7 @@ nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
   mAudioStream->SetVolume(aParams.mVolume);
   mAudioStream->SetPlaybackRate(aParams.mPlaybackRate);
   mAudioStream->SetPreservesPitch(aParams.mPreservesPitch);
+
   return NS_OK;
 }
 
