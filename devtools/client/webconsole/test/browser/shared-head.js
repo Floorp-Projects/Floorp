@@ -350,6 +350,18 @@ function findMessagesByType(hud, text, typeSelector) {
 }
 
 /**
+ * Find all messages in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @return {Array} The nodes corresponding the found messages
+ */
+function findAllMessages(hud) {
+  const messages = hud.ui.outputNode.querySelectorAll(".message");
+  return Array.from(messages);
+}
+
+/**
  * Type-specific wrappers for findMessageByType and findMessagesByType.
  *
  * @param object hud
