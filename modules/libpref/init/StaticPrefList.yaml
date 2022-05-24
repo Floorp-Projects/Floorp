@@ -8516,6 +8516,13 @@
   value: 0
 #endif // XP_WIN
 
+# Whether to make the start of cubeb stream slower, and by how many
+# milliseconds.
+- name: media.cubeb.slow_stream_init_ms
+  type: RelaxedAtomicUint32
+  mirror: always
+  value: 0
+
 # ClockDrift desired buffering in milliseconds
 - name: media.clockdrift.buffering
   type: RelaxedAtomicUint32

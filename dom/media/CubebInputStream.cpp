@@ -97,10 +97,10 @@ UniquePtr<CubebInputStream> CubebInputStream::Create(cubeb_devid aDeviceId,
   cubeb_stream* cubebStream = nullptr;
 
   RefPtr<Listener> listener(aListener);
-  if (int r =
-          cubeb_stream_init(context, &cubebStream, "input-only stream",
-                            aDeviceId, &params, nullptr, nullptr, latencyFrames,
-                            DataCallback_s, StateCallback_s, listener.get());
+  if (int r = CubebUtils::CubebStreamInit(
+          context, &cubebStream, "input-only stream", aDeviceId, &params,
+          nullptr, nullptr, latencyFrames, DataCallback_s, StateCallback_s,
+          listener.get());
       r != CUBEB_OK) {
     CubebUtils::ReportCubebStreamInitFailure(CubebUtils::GetFirstStream());
     LOGE("Fail to create a cubeb stream. Error %d", r);
