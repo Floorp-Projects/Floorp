@@ -2640,3 +2640,11 @@ list-style-image: url("chrome://browser/skin/folder.png") !important;
 {
 	transform: scaleX(-1) !important;
 }
+
+/*fix dark theme bug*/
+
+#TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon:-moz-lwtheme,
+.tab-background[selected]:-moz-lwtheme {
+  outline: none !important;
+  outline-offset: -1px !important;
+}

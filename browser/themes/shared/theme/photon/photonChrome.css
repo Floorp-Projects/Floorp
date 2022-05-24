@@ -5235,13 +5235,6 @@
     margin-inline-start: 0 !important;
   }
 
-  #appMenu-multiView .subviewbutton::before,
-  #appMenu-proton-update-banner::before {
-    display: -moz-inline-box;
-    margin-inline-end: var(--arrowpanel-menuicon-padding);
-    width: 16px;
-    height: 16px;
-  }
 
   #appMenu-proton-update-banner {
     margin-bottom: 2px !important;

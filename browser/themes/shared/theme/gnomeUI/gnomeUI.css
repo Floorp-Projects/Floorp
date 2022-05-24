@@ -3634,3 +3634,12 @@
       background: none !important;
       border: 0 !important;
     }
+
+    
+/*fix dark theme bug*/
+
+#TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon:-moz-lwtheme,
+.tab-background[selected]:-moz-lwtheme {
+  outline: none !important;
+  outline-offset: -1px !important;
+}
