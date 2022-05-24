@@ -282,6 +282,46 @@ TEST_F(DcSctpSocketTest, EstablishConnectionWithSetupCollision) {
   EXPECT_EQ(sock_z_.state(), SocketState::kConnected);
 }
 
+TEST_F(DcSctpSocketTest, ShuttingDownWhileEstablishingConnection) {
+  EXPECT_CALL(cb_a_, OnConnected).Times(0);
+  EXPECT_CALL(cb_z_, OnConnected).Times(1);
+  sock_a_.Connect();
+
+  // Z reads INIT, produces INIT_ACK
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());
+  // A reads INIT_ACK, produces COOKIE_ECHO
+  sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());
+  // Z reads COOKIE_ECHO, produces COOKIE_ACK
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());
+  // Drop COOKIE_ACK, just to more easily verify shutdown protocol.
+  cb_z_.ConsumeSentPacket();
+
+  // As Socket A has received INIT_ACK, it has a TCB and is connected, while
+  // Socket Z needs to receive COOKIE_ECHO to get there. Socket A still has
+  // timers running at this point.
+  EXPECT_EQ(sock_a_.state(), SocketState::kConnecting);
+  EXPECT_EQ(sock_z_.state(), SocketState::kConnected);
+
+  // Socket A is now shut down, which should make it stop those timers.
+  sock_a_.Shutdown();
+
+  EXPECT_CALL(cb_a_, OnClosed).Times(1);
+  EXPECT_CALL(cb_z_, OnClosed).Times(1);
+
+  // Z reads SHUTDOWN, produces SHUTDOWN_ACK
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());
+  // A reads SHUTDOWN_ACK, produces SHUTDOWN_COMPLETE
+  sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());
+  // Z reads SHUTDOWN_COMPLETE.
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());
+
+  EXPECT_TRUE(cb_a_.ConsumeSentPacket().empty());
+  EXPECT_TRUE(cb_z_.ConsumeSentPacket().empty());
+
+  EXPECT_EQ(sock_a_.state(), SocketState::kClosed);
+  EXPECT_EQ(sock_z_.state(), SocketState::kClosed);
+}
+
 TEST_F(DcSctpSocketTest, EstablishSimultaneousConnection) {
   EXPECT_CALL(cb_a_, OnConnected).Times(1);
   EXPECT_CALL(cb_z_, OnConnected).Times(1);

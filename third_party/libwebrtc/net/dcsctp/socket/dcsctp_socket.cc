@@ -280,6 +280,8 @@ void DcSctpSocket::Shutdown() {
     // endpoint enters the SHUTDOWN-PENDING state and remains there until all
     // outstanding data has been acknowledged by its peer."
     SetState(State::kShutdownPending, "Shutdown called");
+    t1_init_->Stop();
+    t1_cookie_->Stop();
     MaybeSendShutdownOrAck();
   } else {
     // Connection closed before even starting to connect, or during the initial
