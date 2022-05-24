@@ -63,15 +63,3 @@ function get(arr, loc, len) {
 function set(arr, loc, vals) {
     iota(vals.length).map(i => arr[loc+i] = vals[i]);
 }
-
-function assertSame(got, expected) {
-    assertEq(got.length, expected.length);
-    iota(got.length).map(i => assertEq(got[i], expected[i]));
-}
-
-function iota(len) {
-    let xs = [];
-    for ( let i=0 ; i < len ; i++ )
-        xs.push(i);
-    return xs;
-}

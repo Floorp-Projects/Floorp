@@ -71,6 +71,3 @@ function getFuncBody(dis) {
     const parts = dis.split(/mov %rsp, %rbp\n|^[0-9A-Fa-f ]+pop %rbp/gm);
     return parts.at(-2).replace(/[0-9A-F]{8} (?: [0-9a-f]{2})+[\s\n]+/g, "");
 }
-function iota(len) {
-    return Array(len).fill(null).map((_, i) => i);
-}
