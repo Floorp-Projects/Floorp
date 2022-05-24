@@ -106,7 +106,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Open the group");
   node.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, BLOCKED_URL));
+  await waitFor(() => findWarningMessage(hud, BLOCKED_URL));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -139,7 +139,9 @@ add_task(async function testContentBlockingMessage() {
   await reloadPage();
 
   // Also wait for the navigation message to be displayed.
-  await waitFor(() => findMessage(hud, "Navigated to"));
+  await waitFor(() =>
+    findMessageByType(hud, "Navigated to", ".navigationMarker")
+  );
 
   info("Log a tracking protection message to check it is not grouped");
   onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
@@ -192,7 +194,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Check that opening this group works");
   node.querySelector(".arrow").click();
-  await waitFor(() => findMessages(hud, BLOCKED_URL).length === 6);
+  await waitFor(() => findWarningMessages(hud, BLOCKED_URL).length === 6);
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -211,7 +213,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Check that closing this group works, and let the other one open");
   node.querySelector(".arrow").click();
-  await waitFor(() => findMessages(hud, BLOCKED_URL).length === 4);
+  await waitFor(() => findWarningMessages(hud, BLOCKED_URL).length === 4);
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,

@@ -32,7 +32,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(PAGE_URL);
 
   info("Waiting for css warning");
-  const node = await waitFor(() => findMessage(hud, "octopus"));
+  const node = await waitFor(() => findWarningMessage(hud, "octopus"));
   ok(!!node, "css warning seen");
 
   info("Waiting for source map to be applied");

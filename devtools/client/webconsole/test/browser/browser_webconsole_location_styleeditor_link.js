@@ -27,7 +27,7 @@ add_task(async function() {
 async function testViewSource(hud, toolbox, text) {
   info(`Testing message with text "${text}"`);
   const messageNode = await waitFor(
-    () => findMessage(hud, text),
+    () => findWarningMessage(hud, text),
     `couldn't find message containing "${text}"`
   );
   const messageLocationNode = messageNode.querySelector(".message-location");

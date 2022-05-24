@@ -91,7 +91,7 @@ add_task(async function testSameSiteCookieMessage() {
 
     info("Open the group");
     node.querySelector(".arrow").click();
-    await waitFor(() => findMessage(hud, "SameSite"));
+    await waitFor(() => findWarningMessage(hud, "SameSite"));
 
     await checkConsoleOutputForWarningGroup(hud, [
       `▼︎⚠ ${test.groupLabel} 2`,
@@ -136,7 +136,7 @@ add_task(async function testInvalidSameSiteMessage() {
 
   info("Open the group");
   node.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, "SameSite"));
+  await waitFor(() => findWarningMessage(hud, "SameSite"));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${groupLabel} 2`,

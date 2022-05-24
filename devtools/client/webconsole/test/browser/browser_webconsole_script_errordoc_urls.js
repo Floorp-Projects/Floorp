@@ -18,12 +18,14 @@ const TestData = [
     jsmsg: "JSMSG_READ_ONLY",
     script:
       "'use strict'; (Object.freeze({name: 'Elsa', score: 157})).score = 0;",
+    selector: ".error",
     isException: true,
     expected: 'TypeError: "score" is read-only',
   },
   {
     jsmsg: "JSMSG_STMT_AFTER_RETURN",
     script: "function a() { return; 1 + 1; };",
+    selector: ".warn",
     isException: false,
     expected: "unreachable code after return statement",
   },
@@ -47,7 +49,9 @@ async function testScriptError(hud, testData) {
 
   const msg = "the expected error message was displayed";
   info(`waiting for ${msg} to be displayed`);
-  await waitFor(() => findMessage(hud, testData.expected));
+  await waitFor(() =>
+    findMessageByType(hud, testData.expected, testData.selector)
+  );
   ok(true, msg);
 
   // grab the most current error doc URL.

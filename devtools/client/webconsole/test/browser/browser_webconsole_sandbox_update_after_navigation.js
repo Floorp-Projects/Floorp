@@ -27,7 +27,10 @@ add_task(async function() {
   // load second url
   await navigateTo(TEST_URI2);
 
-  ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
+  ok(
+    !findErrorMessage(hud, "Permission denied"),
+    "no permission denied errors"
+  );
 
   info("wait for window.location.href after page navigation");
   await clearOutput(hud);
@@ -38,7 +41,10 @@ add_task(async function() {
     ".result"
   );
 
-  ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
+  ok(
+    !findErrorMessage(hud, "Permission denied"),
+    "no permission denied errors"
+  );
 
   // Navigation clears messages. Wait for that clear to happen before
   // continuing the test or it might destroy messages we wait later on (Bug
@@ -61,5 +67,8 @@ add_task(async function() {
     ".result"
   );
 
-  ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
+  ok(
+    !findErrorMessage(hud, "Permission denied"),
+    "no permission denied errors"
+  );
 });

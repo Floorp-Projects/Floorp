@@ -25,8 +25,8 @@ add_task(async function() {
   });
 
   // Wait for the messages
-  await waitFor(() => findMessage(hud, "status=404", ".network.error"));
-  await waitFor(() => findMessage(hud, "status=500", ".network.error"));
+  await waitFor(() => findErrorMessage(hud, "status=404", ".network"));
+  await waitFor(() => findErrorMessage(hud, "status=500", ".network"));
 
   // Check defaults.
 

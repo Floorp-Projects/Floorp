@@ -14,7 +14,7 @@ add_task(async function() {
 
   toolbox.target.logWarningInPage("beware the octopus", "content javascript");
 
-  const node = await waitFor(() => findMessage(hud, "octopus"));
+  const node = await waitFor(() => findWarningMessage(hud, "octopus"));
   ok(node, "text is displayed in web console");
   ok(node.classList.contains("warn"), "the log represents a warning");
 });

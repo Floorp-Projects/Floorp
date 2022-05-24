@@ -19,7 +19,7 @@ add_task(async function() {
     content.wrappedJSObject.console.log("oi-test", obj);
   });
 
-  const node = await waitFor(() => findMessage(hud, "oi-test"));
+  const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
   const objectInspector = node.querySelector(".tree");
   ok(objectInspector, "Object is printed in the console");
 

@@ -15,13 +15,13 @@ add_task(async function() {
   info(
     "Check that the error message is logged in telemetry with the expected key"
   );
-  await waitFor(() => findMessage(hud, "is not a function"));
+  await waitFor(() => findErrorMessage(hud, "is not a function"));
   checkErrorDisplayedTelemetry("JSMSG_NOT_FUNCTION", 1);
 
   await reloadBrowser();
 
   info("Reloading the page (and having the same error) increments the sum");
-  await waitFor(() => findMessage(hud, "is not a function"));
+  await waitFor(() => findErrorMessage(hud, "is not a function"));
   checkErrorDisplayedTelemetry("JSMSG_NOT_FUNCTION", 2);
 
   info(

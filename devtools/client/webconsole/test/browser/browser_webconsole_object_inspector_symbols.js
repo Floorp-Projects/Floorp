@@ -22,7 +22,9 @@ add_task(async function() {
     });
   });
 
-  const node = await waitFor(() => findMessage(hud, "oi-symbols-test"));
+  const node = await waitFor(() =>
+    findConsoleAPIMessage(hud, "oi-symbols-test")
+  );
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(
     objectInspectors.length,

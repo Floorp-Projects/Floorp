@@ -90,7 +90,9 @@ add_task(async function testContentBlockingMessage() {
 
   info("Open the group");
   node.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, "https://tracking.example.com/?1"));
+  await waitFor(() =>
+    findWarningMessage(hud, "https://tracking.example.com/?1")
+  );
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
@@ -215,7 +217,7 @@ async function testStorageAccessBlockedGrouping(groupLabel) {
 
   info("Open the group");
   node.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, TRACKER_IMG));
+  await waitFor(() => findWarningMessage(hud, TRACKER_IMG));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${groupLabel} 2`,

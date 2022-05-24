@@ -15,7 +15,7 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
   await waitFor(
-    () => findMessage(hud, "hello world"),
+    () => findConsoleAPIMessage(hud, "hello world"),
     "Wait for log message to be rendered"
   );
   ok(true, "Log message rendered");
@@ -27,13 +27,13 @@ add_task(async function() {
 
   // Wait for the navigation message to be displayed.
   await waitFor(
-    () => findMessage(hud, "Navigated to"),
+    () => findMessageByType(hud, "Navigated to", ".navigationMarker"),
     "Wait for navigation message to be rendered"
   );
 
   // Wait for 2 hellow world messages to be displayed.
   await waitFor(
-    () => findMessages(hud, "hello world").length == 2,
+    () => findConsoleAPIMessages(hud, "hello world").length == 2,
     "Wait for log message to be rendered after navigation"
   );
 
@@ -47,11 +47,11 @@ add_task(async function() {
   });
 
   await waitFor(
-    () => !findMessage(hud, "hello world"),
+    () => !findConsoleAPIMessage(hud, "hello world"),
     "Wait for the log messages to be hidden"
   );
   ok(
-    findMessage(hud, "Navigated to"),
+    findMessageByType(hud, "Navigated to", ".navigationMarker"),
     "The navigation marker is still visible"
   );
 
@@ -60,7 +60,7 @@ add_task(async function() {
   await navigateTo(newUrl);
   // Wait for the navigation message to be displayed.
   await waitFor(
-    () => findMessage(hud, "Navigated to " + newUrl),
+    () => findMessageByType(hud, "Navigated to " + newUrl, ".navigationMarker"),
     "Wait for example.net navigation message to be rendered"
   );
   ok(true, "Navigation message for example.net was displayed as expected");
@@ -70,7 +70,7 @@ add_task(async function() {
   await navigateTo(newUrl);
   // Wait for the navigation message to be displayed.
   await waitFor(
-    () => findMessage(hud, "Navigated to " + newUrl),
+    () => findMessageByType(hud, "Navigated to " + newUrl, ".navigationMarker"),
     "Wait for example.com navigation message to be rendered"
   );
   ok(true, "Navigation message for example.com was displayed as expected");

@@ -22,7 +22,7 @@ add_task(async function testExpandNestedPromise() {
     content.wrappedJSObject.console.log("oi-test", nestedPromise);
   });
 
-  const node = await waitFor(() => findMessage(hud, "oi-test"));
+  const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
   const oi = node.querySelector(".tree");
   const [promiseNode] = getObjectInspectorNodes(oi);
 
@@ -54,7 +54,7 @@ add_task(async function testExpandCyclicPromise() {
     content.wrappedJSObject.console.log("oi-test", cyclicPromise);
   });
 
-  const node = await waitFor(() => findMessage(hud, "oi-test"));
+  const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
   const oi = node.querySelector(".tree");
   const [promiseNode] = getObjectInspectorNodes(oi);
 

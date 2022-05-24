@@ -47,7 +47,9 @@ add_task(async function() {
     );
   });
 
-  const node = await waitFor(() => findMessage(hud, "private-properties-test"));
+  const node = await waitFor(() =>
+    findConsoleAPIMessage(hud, "private-properties-test")
+  );
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(
     objectInspectors.length,

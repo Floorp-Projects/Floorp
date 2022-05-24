@@ -55,7 +55,7 @@ add_task(async function() {
 
   for (const expectedError of expectedErrors) {
     const message = await waitFor(
-      () => findMessage(hud, expectedError, ".error"),
+      () => findErrorMessage(hud, expectedError),
       `Couldn't find «${expectedError}» message`
     );
     ok(message, `Found «${expectedError}» message`);
@@ -93,10 +93,9 @@ add_task(async function() {
   ok(true, "All expected messages were found");
 
   info("Check that object in errors can be expanded");
-  const rejectedObjectMessage = findMessage(
+  const rejectedObjectMessage = findErrorMessage(
     hud,
-    `Uncaught (in promise) Object { fav: "eggplant" }`,
-    ".error"
+    `Uncaught (in promise) Object { fav: "eggplant" }`
   );
   const oi = rejectedObjectMessage.querySelector(".tree");
   ok(true, "The object was rendered in an ObjectInspector");

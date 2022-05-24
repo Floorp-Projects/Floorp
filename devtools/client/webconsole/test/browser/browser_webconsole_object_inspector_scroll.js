@@ -17,7 +17,7 @@ add_task(async function() {
     );
   });
 
-  const node = await waitFor(() => findMessage(hud, "oi-test"));
+  const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
   const objectInspector = node.querySelector(".tree");
 
   let onOiMutation = waitForNodeMutation(objectInspector, {

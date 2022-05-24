@@ -26,8 +26,8 @@ const revealInInspectorMenuItemId = "#console-menu-open-node";
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const msgWithText = await waitFor(() => findMessage(hud, `foo`));
-  const msgWithObj = await waitFor(() => findMessage(hud, `Object`));
+  const msgWithText = await waitFor(() => findConsoleAPIMessage(hud, `foo`));
+  const msgWithObj = await waitFor(() => findConsoleAPIMessage(hud, `Object`));
   const nonDomEl = await waitFor(() =>
     findMessage(hud, `<span>`, ".objectBox-node")
   );

@@ -108,7 +108,7 @@ async function logMessages() {
 
 async function testMessagesVisibility(hud, checkNetworkMessage = true) {
   // wait for the last logged message to be displayed
-  await waitFor(() => findMessage(hud, "info Bazzle", ".message.info"));
+  await waitFor(() => findConsoleAPIMessage(hud, "info Bazzle", ".info"));
 
   const messages = Array.from(hud.ui.outputNode.querySelectorAll(".message"));
   const EXPECTED_MESSAGES = [
@@ -178,7 +178,7 @@ async function testMessagesVisibility(hud, checkNetworkMessage = true) {
 
   // We can't assert the CSS warning position, so we only check that it's visible.
   await waitFor(
-    () => findMessage(hud, "cssColorBug611032", ".message.warn.css"),
+    () => findWarningMessage(hud, "cssColorBug611032", ".css"),
     "Couldn't find the CSS warning message"
   );
   ok(true, "css warning message is visible");

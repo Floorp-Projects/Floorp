@@ -30,7 +30,7 @@ add_task(async function() {
 });
 
 async function waitForError(hud, text) {
-  await waitFor(() => findMessage(hud, text, ".message.error"));
+  await waitFor(() => findErrorMessage(hud, text));
   ok(true, "Received expected error message");
 }
 
