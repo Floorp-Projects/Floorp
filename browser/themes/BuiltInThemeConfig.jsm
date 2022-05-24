@@ -261,7 +261,7 @@ const ColorwayCollections = [
       colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
         ? "2022-04-20"
         : "2022-05-03",
-    l10nId: "colorway-collection-true-colors",
+    l10nId: "colorway-collection-life-in-color",
   },
 ];
 

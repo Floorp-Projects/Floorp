@@ -40,24 +40,6 @@ body > header {
   padding: .2em 1em;
 }
 
-#use-fx-home-controls:not(.success) > .success-prompt,
-#use-fx-home-controls.success > .reset-prompt {
-  display: none;
-}
-
-#use-fx-home-controls > .success-prompt::before {
-  display: inline-block;
-  content: "";
-  background: var(--green-50) url('chrome://global/skin/icons/check.svg') center center no-repeat;
-  -moz-context-properties: fill;
-  fill: white;
-  width: 22px;
-  height: 22px;
-  border-radius: 15px;
-  vertical-align: middle;
-  margin-inline-end: 0.5em;
-}
-
 body > section {
   grid-area: main;
 }
