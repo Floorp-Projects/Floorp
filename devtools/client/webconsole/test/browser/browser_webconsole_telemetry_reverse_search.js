@@ -24,9 +24,9 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Evaluate single line expressions");
-  await keyboardExecuteAndWaitForMessage(hud, `"single line 1"`, "", ".result");
-  await keyboardExecuteAndWaitForMessage(hud, `"single line 2"`, "", ".result");
-  await keyboardExecuteAndWaitForMessage(hud, `"single line 3"`, "", ".result");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"single line 1"`, "");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"single line 2"`, "");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"single line 3"`, "");
 
   info("Open editor mode");
   await toggleLayout(hud);

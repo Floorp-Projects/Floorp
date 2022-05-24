@@ -395,24 +395,26 @@ function executeAndWaitForErrorMessage(hud, input, matchingText) {
 }
 
 /**
- * Set the input value, simulates the right keyboard event to evaluate it, depending on
- * if the console is in editor mode or not, and wait for a message with the expected text
- * (and an optional selector) to be displayed in the output.
+ * Set the input value, simulates the right keyboard event to evaluate it,
+ * depending on if the console is in editor mode or not, and wait for a message
+ * with the expected text with given message type to be displayed in the output.
  *
  * @param {Object} hud : The webconsole.
  * @param {String} input : The input expression to execute.
- * @param {String} matchingText : A string that should match the message body content.
- * @param {String} selector : A selector that should match the message node.
+ * @param {String} matchingText : A string that should match the message body
+ *                                content.
+ * @param {String} typeSelector : A part of selector for the message, to
+ *                                specify the message type.
  */
-function keyboardExecuteAndWaitForMessage(
+function keyboardExecuteAndWaitForMessageByType(
   hud,
   input,
   matchingText,
-  selector = ".message"
+  typeSelector
 ) {
   hud.jsterm.focus();
   setInputValue(hud, input);
-  const onMessage = waitForMessage(hud, matchingText, selector);
+  const onMessage = waitForMessageByType(hud, matchingText, typeSelector);
   if (isEditorModeEnabled(hud)) {
     EventUtils.synthesizeKey("KEY_Enter", {
       [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
@@ -421,6 +423,23 @@ function keyboardExecuteAndWaitForMessage(
     EventUtils.synthesizeKey("VK_RETURN");
   }
   return onMessage;
+}
+
+/**
+ * Type-specific wrappers for keyboardExecuteAndWaitForMessageByType
+ *
+ * @param {Object} hud : The webconsole.
+ * @param {String} input : The input expression to execute.
+ * @param {String} matchingText : A string that should match the message body
+ *                                content.
+ */
+function keyboardExecuteAndWaitForResultMessage(hud, input, matchingText) {
+  return keyboardExecuteAndWaitForMessageByType(
+    hud,
+    input,
+    matchingText,
+    ".result"
+  );
 }
 
 /**
