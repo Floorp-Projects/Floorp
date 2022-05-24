@@ -35,10 +35,9 @@ using media::TimeUnit;
 
 AudioSink::AudioSink(AbstractThread* aThread,
                      MediaQueue<AudioData>& aAudioQueue,
-                     const TimeUnit& aStartTime, const AudioInfo& aInfo,
+                     const AudioInfo& aInfo,
                      AudioDeviceInfo* aAudioDevice)
-    : mStartTime(aStartTime),
-      mInfo(aInfo),
+    : mInfo(aInfo),
       mAudioDevice(aAudioDevice),
       mPlaying(true),
       mWritten(0),
@@ -66,8 +65,34 @@ AudioSink::AudioSink(AbstractThread* aThread,
 
 AudioSink::~AudioSink() = default;
 
+nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
+  // When AudioQueue is empty, there is no way to know the channel layout of
+  // the coming audio data, so we use the predefined channel map instead.
+  AudioConfig::ChannelLayout::ChannelMap channelMap =
+      AudioConfig::ChannelLayout(mOutputChannels).Map();
+  // The layout map used here is already processed by mConverter with
+  // mOutputChannels into SMPTE format, so there is no need to worry if
+  // StaticPrefs::accessibility_monoaudio_enable() or
+  // StaticPrefs::media_forcestereo_enabled() is applied.
+  mAudioStream =
+      new AudioStream(*this, mOutputRate, mOutputChannels, channelMap);
+  nsresult rv = mAudioStream->Init(mAudioDevice);
+  if (NS_FAILED(rv)) {
+    mAudioStream->Shutdown();
+    mAudioStream = nullptr;
+    return rv;
+  }
+
+  // Set playback params before calling Start() so they can take effect
+  // as soon as the 1st DataCallback of the AudioStream fires.
+  mAudioStream->SetVolume(aParams.mVolume);
+  mAudioStream->SetPlaybackRate(aParams.mPlaybackRate);
+  mAudioStream->SetPreservesPitch(aParams.mPreservesPitch);
+  return NS_OK;
+}
+
 nsresult AudioSink::Start(
-    const PlaybackParams& aParams,
+    const media::TimeUnit& aStartTime,
     MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise) {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
@@ -78,13 +103,11 @@ nsresult AudioSink::Start(
   mProcessedQueueListener =
       mAudioPopped.Connect(mOwnerThread, this, &AudioSink::OnAudioPopped);
 
+  mStartTime = aStartTime;
+
   // To ensure at least one audio packet will be popped from AudioQueue and
   // ready to be played.
   NotifyAudioNeeded();
-  nsresult rv = InitializeAudioStream(aParams);
-  if (NS_FAILED(rv)) {
-    return Err(rv);
-  }
 
   return mAudioStream->Start(aEndedPromise);
 }
@@ -186,9 +209,9 @@ Maybe<MozPromiseHolder<MediaSink::EndedPromise>> AudioSink::Shutdown(
     ShutdownCause aShutdownCause) {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-  mAudioQueueListener.Disconnect();
-  mAudioQueueFinishListener.Disconnect();
-  mProcessedQueueListener.Disconnect();
+  mAudioQueueListener.DisconnectIfExists();
+  mAudioQueueFinishListener.DisconnectIfExists();
+  mProcessedQueueListener.DisconnectIfExists();
 
   Maybe<MozPromiseHolder<MediaSink::EndedPromise>> rv;
 
@@ -240,33 +263,6 @@ void AudioSink::SetPlaying(bool aPlaying) {
     mAudioStream->Resume();
   }
   mPlaying = aPlaying;
-}
-
-nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
-  // When AudioQueue is empty, there is no way to know the channel layout of
-  // the coming audio data, so we use the predefined channel map instead.
-  AudioConfig::ChannelLayout::ChannelMap channelMap =
-      mConverter ? mConverter->OutputConfig().Layout().Map()
-                 : AudioConfig::ChannelLayout(mOutputChannels).Map();
-  // The layout map used here is already processed by mConverter with
-  // mOutputChannels into SMPTE format, so there is no need to worry if
-  // StaticPrefs::accessibility_monoaudio_enable() or
-  // StaticPrefs::media_forcestereo_enabled() is applied.
-  mAudioStream =
-      new AudioStream(*this, mOutputRate, mOutputChannels, channelMap);
-  nsresult rv = mAudioStream->Init(mAudioDevice);
-  if (NS_FAILED(rv)) {
-    mAudioStream->Shutdown();
-    mAudioStream = nullptr;
-    return rv;
-  }
-
-  // Set playback params before calling Start() so they can take effect
-  // as soon as the 1st DataCallback of the AudioStream fires.
-  mAudioStream->SetVolume(aParams.mVolume);
-  mAudioStream->SetPlaybackRate(aParams.mPlaybackRate);
-  mAudioStream->SetPreservesPitch(aParams.mPreservesPitch);
-  return NS_OK;
 }
 
 TimeUnit AudioSink::GetEndTime() const {
