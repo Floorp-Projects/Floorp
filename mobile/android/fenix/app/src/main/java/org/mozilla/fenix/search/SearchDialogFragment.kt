@@ -687,21 +687,23 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
      * @param searchEngines List of [SearchEngine] to display.
      */
     private fun updateSearchSelectorMenu(searchEngines: List<SearchEngine>) {
-        searchSelectorMenu.menuController.submitList(
-            searchSelectorMenu.menuItems() +
-                searchEngines
-                    .reversed()
-                    .map {
-                        TextMenuCandidate(
-                            text = it.name,
-                            start = DrawableMenuIcon(
-                                drawable = it.icon.toDrawable(resources)
-                            )
-                        ) {
-                            interactor.onMenuItemTapped(SearchSelectorMenu.Item.SearchEngine(it))
-                        }
-                    }
-        )
+        val searchEngineList = searchEngines
+            .map {
+                TextMenuCandidate(
+                    text = it.name,
+                    start = DrawableMenuIcon(
+                        drawable = it.icon.toDrawable(resources)
+                    )
+                ) {
+                    interactor.onMenuItemTapped(SearchSelectorMenu.Item.SearchEngine(it))
+                }
+            } + searchSelectorMenu.menuItems()
+
+        if (requireContext().settings().shouldUseBottomToolbar) {
+            searchSelectorMenu.menuController.submitList(searchEngineList.reversed())
+        } else {
+            searchSelectorMenu.menuController.submitList(searchEngineList)
+        }
     }
 
     private fun addSearchSelector() {

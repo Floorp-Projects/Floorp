@@ -13,11 +13,13 @@ import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.concept.menu.Orientation
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchDialogFragmentStore
 import java.lang.ref.WeakReference
 
@@ -54,7 +56,13 @@ class SearchSelectorToolbarAction(
             reference = WeakReference(this)
 
             setOnClickListener {
-                menu.menuController.show(anchor = it)
+                val orientation = if (context.settings().shouldUseBottomToolbar) {
+                    Orientation.UP
+                } else {
+                    Orientation.DOWN
+                }
+
+                menu.menuController.show(anchor = it, orientation = orientation)
             }
 
             setBackgroundResource(
