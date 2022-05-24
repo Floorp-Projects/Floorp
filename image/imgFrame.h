@@ -152,7 +152,10 @@ class imgFrame {
   IntRect GetBoundedBlendRect() const {
     return mBlendRect.Intersect(GetRect());
   }
-  const nsIntRect& GetDecodedRect() const { return mDecoded; }
+  nsIntRect GetDecodedRect() const {
+    MonitorAutoLock lock(mMonitor);
+    return mDecoded;
+  }
   FrameTimeout GetTimeout() const { return mTimeout; }
   BlendMethod GetBlendMethod() const { return mBlendMethod; }
   DisposalMethod GetDisposalMethod() const { return mDisposalMethod; }
