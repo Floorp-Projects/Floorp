@@ -92,6 +92,8 @@ class AudioSinkWrapper : public MediaSink {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
+  nsresult StartAudioSink(const media::TimeUnit& aStartTime);
+
   media::TimeUnit GetVideoPosition(TimeStamp aNow) const;
 
   void OnAudioEnded();
@@ -103,6 +105,7 @@ class AudioSinkWrapper : public MediaSink {
   UniquePtr<AudioSink> mAudioSink;
   // Will only exist when media has an audio track.
   RefPtr<EndedPromise> mEndedPromise;
+  MozPromiseHolder<EndedPromise> mEndedPromiseHolder;
 
   bool mIsStarted;
   PlaybackParams mParams;
