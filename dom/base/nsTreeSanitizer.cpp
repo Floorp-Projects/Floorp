@@ -1296,7 +1296,8 @@ void nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
 }
 
 bool nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
-                                  int32_t aNamespace, nsAtom* aLocalName, bool aFragmentsOnly) {
+                                  int32_t aNamespace, nsAtom* aLocalName,
+                                  bool aFragmentsOnly) {
   nsAutoString value;
   aElement->GetAttr(aNamespace, aLocalName, value);
 
