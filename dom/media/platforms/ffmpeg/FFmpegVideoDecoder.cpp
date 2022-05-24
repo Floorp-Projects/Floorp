@@ -75,18 +75,6 @@ typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
 namespace mozilla {
 
-#if LIBAVCODEC_VERSION_MAJOR >= 58
-static inline char* make_error_string(FFmpegLibWrapper* lib, char* errbuf,
-                                      size_t errbuf_size, int errnum) {
-  lib->av_strerror(errnum, errbuf, errbuf_size);
-  return errbuf;
-}
-#  undef av_err2str
-#  define av_err2str(errnum)                                     \
-    make_error_string(mLib, (char[AV_ERROR_MAX_STRING_SIZE]){0}, \
-                      AV_ERROR_MAX_STRING_SIZE, errnum)
-#endif
-
 #ifdef MOZ_WAYLAND_USE_VAAPI
 nsTArray<AVCodecID> FFmpegVideoDecoder<LIBAV_VER>::mAcceleratedFormats;
 #endif
@@ -849,10 +837,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     // In theory, avcodec_send_packet could sent -EAGAIN should its internal
     // buffers be full. In practice this can't happen as we only feed one frame
     // at a time, and we immediately call avcodec_receive_frame right after.
-    FFMPEG_LOG("avcodec_send_packet error: %s", av_err2str(res));
-    return MediaResult(
-        NS_ERROR_DOM_MEDIA_DECODE_ERR,
-        RESULT_DETAIL("avcodec_send_packet error: %s", av_err2str(res)));
+    FFMPEG_LOG("avcodec_send_packet error: %d", res);
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("avcodec_send_packet error: %d", res));
   }
   if (aGotFrame) {
     *aGotFrame = false;
@@ -885,10 +872,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       return NS_OK;
     }
     if (res < 0) {
-      FFMPEG_LOG("  avcodec_receive_frame error: %s", av_err2str(res));
-      return MediaResult(
-          NS_ERROR_DOM_MEDIA_DECODE_ERR,
-          RESULT_DETAIL("avcodec_receive_frame error: %s", av_err2str(res)));
+      FFMPEG_LOG("  avcodec_receive_frame error: %d", res);
+      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                         RESULT_DETAIL("avcodec_receive_frame error: %d", res));
     }
 
     UpdateDecodeTimes(decodeStart);
@@ -959,7 +945,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 
   if (bytesConsumed < 0) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       RESULT_DETAIL("FFmpeg video error: %d", bytesConsumed));
+                       RESULT_DETAIL("FFmpeg video error:%d", bytesConsumed));
   }
 
   if (!decoded) {
