@@ -234,50 +234,40 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- State -->
-        <TextView
-            android:id="@+id/state_title"
-            android:layout_width="wrap_content"
+        <!-- Subregion -->
+        <LinearLayout
+            android:id="@+id/subregion_layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:letterSpacing="0.05"
             android:paddingStart="3dp"
-            android:paddingEnd="0dp"
-            android:text="@string/addresses_state"
-            android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
-            android:labelFor="@id/state_input"
-            app:fontFamily="@font/metropolis_semibold"
+            android:paddingEnd="3dp"
+            android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/city_layout" />
+            app:layout_constraintTop_toBottomOf="@id/city_layout"
+            app:layout_constraintBottom_toTopOf="@id/zip_title">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/state_layout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:textColor="?attr/textPrimary"
-            app:hintEnabled="false"
-            app:layout_constraintHorizontal_bias="0.8"
-            app:layout_constraintEnd_toStartOf="@+id/zip_layout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/state_title">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/state_input"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/subregion_title"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif"
-                android:imeOptions="flagNoExtractUi"
-                android:letterSpacing="0.01"
-                android:lineSpacingExtra="8sp"
-                android:maxLines="1"
-                android:singleLine="true"
+                android:layout_marginTop="10dp"
                 android:textColor="?attr/textPrimary"
-                android:textSize="16sp" />
+                android:textSize="12sp"
+                android:labelFor="@id/subregion_drop_down"
+                app:fontFamily="@font/metropolis_semibold"
+                android:text="@string/addresses_state" />
 
-        </com.google.android.material.textfield.TextInputLayout>
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/subregion_drop_down"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/textPrimary" />
+
+        </LinearLayout>
 
         <!-- Zip -->
         <TextView
@@ -295,17 +285,16 @@
             android:labelFor="@id/zip_input"
             app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="@+id/zip_layout"
-            app:layout_constraintTop_toBottomOf="@+id/city_layout" />
+            app:layout_constraintTop_toBottomOf="@+id/subregion_layout" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/zip_layout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
             android:textColor="?attr/textPrimary"
             app:hintEnabled="false"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/state_layout"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/zip_title">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -331,7 +320,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:paddingStart="3dp"
-            android:paddingEnd="0dp"
+            android:paddingEnd="3dp"
             android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -341,6 +330,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:textColor="?attr/textPrimary"
                 android:textSize="12sp"
                 android:labelFor="@id/country_drop_down"
@@ -487,7 +477,7 @@
             android:paddingEnd="12dp"
             android:text="@string/addresses_save_button"
             app:layout_constraintTop_toTopOf="@+id/cancel_button"
-            app:layout_constraintBottom_toBottomOf="@+id/cancel_button"
+            app:layout_constraintBottom_toBottomOf="@id/cancel_button"
             app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

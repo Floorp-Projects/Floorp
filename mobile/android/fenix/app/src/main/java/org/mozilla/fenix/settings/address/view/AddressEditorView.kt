@@ -6,11 +6,12 @@ package org.mozilla.fenix.settings.address.view
 
 import android.content.Context
 import android.content.DialogInterface
+import android.view.View
+import android.widget.AdapterView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import mozilla.components.concept.storage.Address
 import android.widget.ArrayAdapter
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -19,12 +20,19 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentAddressEditorBinding
 import org.mozilla.fenix.ext.placeCursorAtEnd
 import org.mozilla.fenix.settings.address.AddressEditorFragment
+import org.mozilla.fenix.settings.address.AddressUtils.countries
+import org.mozilla.fenix.settings.address.Country
+import org.mozilla.fenix.settings.address.DEFAULT_COUNTRY
 import org.mozilla.fenix.settings.address.interactor.AddressEditorInteractor
-
-internal const val DEFAULT_COUNTRY = "US"
+import org.mozilla.fenix.settings.address.toCountryCode
 
 /**
- * Shows an address editor for adding or updating an address.
+ * An address editor for adding or updating an address.
+ *
+ * @param binding The binding used to display the view.
+ * @param interactor [AddressEditorInteractor] used to respond to any user interactions.
+ * @param region If the [RegionState] is available, it will be used to set the country when adding a new address.
+ * @param address An [Address] to edit.
  */
 class AddressEditorView(
     private val binding: FragmentAddressEditorBinding,
@@ -32,36 +40,6 @@ class AddressEditorView(
     private val region: RegionState? = RegionState.Default,
     private val address: Address? = null
 ) {
-
-    /**
-     * Value type representing properties determined by the country used in an [Address].
-     * This data is meant to mirror the data currently represented on desktop here:
-     * https://searchfox.org/mozilla-central/source/toolkit/components/formautofill/addressmetadata/addressReferences.js
-     *
-     * This can be expanded to included things like a list of applicable states/provinces per country
-     * or the names that should be used for each form field.
-     *
-     * Note: Most properties here need to be kept in sync with the data in the above desktop
-     * address reference file in order to prevent duplications when sync is enabled. There are
-     * ongoing conversations about how best to share that data cross-platform, if at all.
-     * Some more detail: https://bugzilla.mozilla.org/show_bug.cgi?id=1769809
-     *
-     * Exceptions: [displayName] is a local property and stop-gap to a more robust solution.
-     *
-     * @property key The country code used to lookup the address data. Should match desktop entries.
-     * @property displayName The name to display when selected.
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal data class Country(
-        val key: String,
-        val displayName: String,
-    )
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val countries = mapOf(
-        "CA" to Country("CA", "Canada"),
-        "US" to Country("US", "United States"),
-    )
 
     /**
      * Binds the view in the [AddressEditorFragment], using the current [Address] if available.
@@ -91,7 +69,6 @@ class AddressEditorView(
 
             binding.streetAddressInput.setText(address.streetAddress)
             binding.cityInput.setText(address.addressLevel2)
-            binding.stateInput.setText(address.addressLevel1)
             binding.zipInput.setText(address.postalCode)
 
             binding.deleteButton.apply {
@@ -102,7 +79,7 @@ class AddressEditorView(
             }
         }
 
-        bindCountryDropdown()
+        bindDropdowns()
     }
 
     internal fun saveAddress() {
@@ -116,7 +93,7 @@ class AddressEditorView(
             streetAddress = binding.streetAddressInput.text.toString(),
             addressLevel3 = "",
             addressLevel2 = "",
-            addressLevel1 = "",
+            addressLevel1 = binding.subregionDropDown.selectedItem.toString(),
             postalCode = binding.zipInput.text.toString(),
             country = binding.countryDropDown.selectedItem.toString().toCountryCode(),
             tel = binding.phoneInput.text.toString(),
@@ -143,26 +120,59 @@ class AddressEditorView(
         }.show()
     }
 
-    private fun bindCountryDropdown() {
-        val adapter = ArrayAdapter<String>(
+    private fun bindDropdowns() {
+        val adapter = ArrayAdapter(
             binding.root.context,
             android.R.layout.simple_spinner_dropdown_item,
+            countries.values.map { it.displayName }
         )
 
         val selectedCountryKey = (address?.country ?: region?.home).takeIf {
             it in countries.keys
         } ?: DEFAULT_COUNTRY
-        var selectedPosition = -1
-        countries.values.forEachIndexed { index, country ->
-            if (country.key == selectedCountryKey) selectedPosition = index
-            adapter.add(country.displayName)
-        }
+
+        val selectedPosition = countries.values
+            .indexOfFirst { it.countryCode == selectedCountryKey }
+            .takeIf { it > 0 }
+            ?: 0
 
         binding.countryDropDown.adapter = adapter
         binding.countryDropDown.setSelection(selectedPosition)
+        binding.countryDropDown.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                val newCountryKey = binding.countryDropDown.selectedItem.toString().toCountryCode()
+                countries[newCountryKey]?.let { country ->
+                    bindSubregionDropdown(country)
+                }
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) = Unit
+        }
+
+        countries[selectedCountryKey]?.let { country ->
+            bindSubregionDropdown(country)
+        }
     }
 
-    private fun String.toCountryCode() = countries.values.find {
-        it.displayName == this
-    }?.key ?: DEFAULT_COUNTRY
+    private fun bindSubregionDropdown(country: Country) {
+        val subregions = country.subregions
+        val selectedSubregion = address?.addressLevel1?.takeIf { it in subregions }
+            ?: subregions.first()
+
+        val adapter = ArrayAdapter(
+            binding.root.context,
+            android.R.layout.simple_spinner_dropdown_item,
+            country.subregions
+        )
+
+        val selectedPosition = subregions.indexOf(selectedSubregion).takeIf { it > 0 } ?: 0
+        binding.subregionDropDown.adapter = adapter
+        binding.subregionDropDown.setSelection(selectedPosition)
+        binding.subregionTitle.setText(country.subregionTitleResource)
+    }
 }

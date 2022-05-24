@@ -13,8 +13,10 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.concept.storage.Address
+import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,7 +25,6 @@ import org.mozilla.fenix.databinding.FragmentAddressEditorBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.address.interactor.AddressEditorInteractor
 import org.mozilla.fenix.settings.address.view.AddressEditorView
-import org.mozilla.fenix.settings.address.view.DEFAULT_COUNTRY
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AddressEditorViewTest {
@@ -43,6 +44,63 @@ class AddressEditorViewTest {
         every { address.guid } returns "123"
 
         addressEditorView = spyk(AddressEditorView(binding, interactor))
+    }
+
+    @Test
+    fun `GIVEN an existing address WHEN the save button is clicked THEN interactor updates address`() {
+        val country = AddressUtils.countries["US"]!!
+        val address = generateAddress(country = country.countryCode, addressLevel1 = country.subregions[0])
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+            address = address,
+        )
+
+        addressEditorView.bind()
+        addressEditorView.saveAddress()
+
+        val expected = UpdatableAddressFields(
+            givenName = address.givenName,
+            additionalName = address.additionalName,
+            familyName = address.familyName,
+            organization = "",
+            streetAddress = address.streetAddress,
+            addressLevel3 = "",
+            addressLevel2 = "",
+            addressLevel1 = address.addressLevel1,
+            postalCode = address.postalCode,
+            country = address.country,
+            tel = address.tel,
+            email = address.email,
+        )
+        verify { interactor.onUpdateAddress(address.guid, expected) }
+    }
+
+    @Test
+    fun `GIVEN a new address WHEN the save button is clicked THEN interactor saves new address`() {
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+        )
+
+        addressEditorView.bind()
+        addressEditorView.saveAddress()
+
+        val expected = UpdatableAddressFields(
+            givenName = "",
+            additionalName = "",
+            familyName = "",
+            organization = "",
+            streetAddress = "",
+            addressLevel3 = "",
+            addressLevel2 = "",
+            addressLevel1 = "Alabama",
+            postalCode = "",
+            country = "US",
+            tel = "",
+            email = "",
+        )
+        verify { interactor.onSaveAddress(expected) }
     }
 
     @Test
@@ -68,7 +126,7 @@ class AddressEditorViewTest {
         addressEditorView.bind()
 
         assertEquals("PostalCode", binding.zipInput.text.toString())
-        assertEquals("State", binding.stateInput.text.toString())
+        assertEquals(address.addressLevel1, binding.subregionDropDown.selectedItem.toString())
         assertEquals("City", binding.cityInput.text.toString())
         assertEquals("Street", binding.streetAddressInput.text.toString())
         assertEquals("Family", binding.lastNameInput.text.toString())
@@ -109,6 +167,72 @@ class AddressEditorViewTest {
     }
 
     @Test
+    fun `GIVEN existing address with correct subregion and country WHEN subregion dropdown is bound THEN adapter sets subregion dropdown to address`() {
+        val address = generateAddress(country = "US", addressLevel1 = "Oregon")
+
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+            address = address,
+        )
+        addressEditorView.bind()
+
+        assertEquals("Oregon", binding.subregionDropDown.selectedItem.toString())
+    }
+
+    @Test
+    fun `GIVEN existing address subregion outside of country WHEN subregion dropdown is bound THEN dropdown defaults to first subregion entry for country`() {
+        val address = generateAddress(country = "CA", addressLevel1 = "Alabama")
+
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+            address = address,
+        )
+        addressEditorView.bind()
+
+        assertEquals("Alberta", binding.subregionDropDown.selectedItem.toString())
+    }
+
+    @Test
+    fun `GIVEN no existing address WHEN subregion dropdown is bound THEN dropdown defaults to first subregion of default country`() {
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+        )
+        addressEditorView.bind()
+
+        assertEquals("Alabama", binding.subregionDropDown.selectedItem.toString())
+    }
+
+    @Test
+    fun `WHEN country is changed THEN available subregions are updated`() {
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+        )
+        addressEditorView.bind()
+
+        assertEquals("Alabama", binding.subregionDropDown.selectedItem.toString())
+        binding.countryDropDown.setSelection(0)
+        assertNotEquals("Alabama", binding.subregionDropDown.selectedItem.toString())
+    }
+
+    @Test
+    fun `GIVEN existing address not in available countries WHEN view is bound THEN country and subregion dropdowns are set to default `() {
+        val address = generateAddress(country = "I AM NOT A COUNTRY", addressLevel1 = "I AM NOT A STATE")
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+            address = address,
+        )
+        addressEditorView.bind()
+
+        assertEquals("United States", binding.countryDropDown.selectedItem.toString())
+        assertEquals("Alabama", binding.subregionDropDown.selectedItem.toString())
+    }
+
+    @Test
     fun `GIVEN existing address WHEN country dropdown is bound THEN adapter sets country dropdown to address`() {
         val addressEditorView = spyk(
             AddressEditorView(
@@ -119,7 +243,7 @@ class AddressEditorViewTest {
         )
         addressEditorView.bind()
 
-        assertEquals(addressEditorView.countries["CA"]?.displayName, binding.countryDropDown.selectedItem.toString())
+        assertEquals(AddressUtils.countries["CA"]?.displayName, binding.countryDropDown.selectedItem.toString())
     }
 
     @Test
@@ -134,7 +258,7 @@ class AddressEditorViewTest {
         )
         addressEditorView.bind()
 
-        assertEquals(addressEditorView.countries[DEFAULT_COUNTRY]!!.displayName, binding.countryDropDown.selectedItem.toString())
+        assertEquals(AddressUtils.countries[DEFAULT_COUNTRY]!!.displayName, binding.countryDropDown.selectedItem.toString())
     }
 
     @Test
@@ -147,7 +271,7 @@ class AddressEditorViewTest {
         )
         addressEditorView.bind()
 
-        assertEquals(addressEditorView.countries["CA"]?.displayName, binding.countryDropDown.selectedItem.toString())
+        assertEquals(AddressUtils.countries["CA"]?.displayName, binding.countryDropDown.selectedItem.toString())
     }
 
     @Test
@@ -160,7 +284,7 @@ class AddressEditorViewTest {
         )
         addressEditorView.bind()
 
-        assertEquals(addressEditorView.countries[DEFAULT_COUNTRY]!!.displayName, binding.countryDropDown.selectedItem.toString())
+        assertEquals(AddressUtils.countries[DEFAULT_COUNTRY]!!.displayName, binding.countryDropDown.selectedItem.toString())
     }
 
     @Test
@@ -173,10 +297,10 @@ class AddressEditorViewTest {
         )
         addressEditorView.bind()
 
-        assertEquals(addressEditorView.countries[DEFAULT_COUNTRY]!!.displayName, binding.countryDropDown.selectedItem.toString())
+        assertEquals(AddressUtils.countries[DEFAULT_COUNTRY]!!.displayName, binding.countryDropDown.selectedItem.toString())
     }
 
-    private fun generateAddress(country: String = "US") = Address(
+    private fun generateAddress(country: String = "US", addressLevel1: String = "Oregon") = Address(
         guid = "123",
         givenName = "Given",
         additionalName = "Additional",
@@ -185,7 +309,7 @@ class AddressEditorViewTest {
         streetAddress = "Street",
         addressLevel3 = "Suburb",
         addressLevel2 = "City",
-        addressLevel1 = "State",
+        addressLevel1 = addressLevel1,
         postalCode = "PostalCode",
         country = country,
         tel = "Telephone",

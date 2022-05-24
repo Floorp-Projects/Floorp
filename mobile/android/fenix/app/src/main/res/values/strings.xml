@@ -1567,8 +1567,10 @@
     <string name="addresses_street_address">Street Address</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">City</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">State</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Province</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Zip</string>
     <!-- The header for the country or region of an address -->
