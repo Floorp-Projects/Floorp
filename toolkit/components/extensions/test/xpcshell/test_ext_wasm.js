@@ -8,6 +8,12 @@ Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 function background() {
   globalThis.onsecuritypolicyviolation = event => {
     browser.test.assertEq("wasm-eval", event.blockedURI, "blockedURI");
+    if (browser.runtime.getManifest().version === 2) {
+      // In MV2, wasm eval violations are advisory only, as a transition tool.
+      browser.test.assertEq(event.disposition, "report", "MV2 disposition");
+    } else {
+      browser.test.assertEq(event.disposition, "enforce", "MV3 disposition");
+    }
     browser.test.sendMessage("violated_csp", event.originalPolicy);
   };
   try {
@@ -53,7 +59,8 @@ add_task(async function test_wasm_v2_explicit() {
   await extension.unload();
 });
 
-add_task(async function test_wasm_v2_blocked() {
+// MV3 counterpart is test_wasm_v3_blocked_by_custom_csp.
+add_task(async function test_wasm_v2_blocked_in_report_only_mode() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
@@ -63,7 +70,8 @@ add_task(async function test_wasm_v2_blocked() {
   });
 
   await extension.startup();
-  equal(await extension.awaitMessage("result"), "blocked");
+  // "allowed" because wasm-unsafe-eval in MV2 is in report-only mode.
+  equal(await extension.awaitMessage("result"), "allowed");
   equal(
     await extension.awaitMessage("violated_csp"),
     "object-src 'none'; script-src 'self'"
@@ -71,7 +79,7 @@ add_task(async function test_wasm_v2_blocked() {
   await extension.unload();
 });
 
-add_task(async function test_wasm_v3() {
+add_task(async function test_wasm_v3_blocked_by_default() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
@@ -84,6 +92,27 @@ add_task(async function test_wasm_v3() {
   equal(
     await extension.awaitMessage("violated_csp"),
     "script-src 'self'; object-src 'self'"
+  );
+  await extension.unload();
+});
+
+// MV2 counterpart is test_wasm_v2_blocked_in_report_only_mode.
+add_task(async function test_wasm_v3_blocked_by_custom_csp() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      manifest_version: 3,
+      content_security_policy: {
+        extension_pages: "object-src; script-src 'self'",
+      },
+    },
+  });
+
+  await extension.startup();
+  equal(await extension.awaitMessage("result"), "blocked");
+  equal(
+    await extension.awaitMessage("violated_csp"),
+    "object-src 'none'; script-src 'self'"
   );
   await extension.unload();
 });
