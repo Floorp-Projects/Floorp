@@ -33,7 +33,7 @@ class HistoryDataSource(
         val nextOffset = if (historyItems.isEmpty()) {
             null
         } else {
-            historyItems.last().position + 1
+            offset + params.loadSize
         }
         return LoadResult.Page(
             data = historyItems,
