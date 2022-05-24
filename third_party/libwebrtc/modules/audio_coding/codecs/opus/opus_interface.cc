@@ -247,9 +247,15 @@ int WebRtcOpus_Encode(OpusEncInst* inst,
           inst, rtc::MakeArrayView(audio_in, samples),
           rtc::MakeArrayView(encoded, res))) {
     // This packet is a high energy refresh DTX packet. For avoiding an increase
-    // of the energy in the DTX region at the decoder, this packet is dropped.
-    inst->in_dtx_mode = 0;
-    return 0;
+    // of the energy in the DTX region at the decoder, this packet is
+    // substituted by a TOC byte with one empty frame.
+    // The number of frames described in the TOC byte
+    // (https://tools.ietf.org/html/rfc6716#section-3.1) are overwritten to
+    // always indicate one frame (last two bits equal to 0).
+    encoded[0] = encoded[0] & 0b11111100;
+    inst->in_dtx_mode = 1;
+    // The payload is just the TOC byte and has 1 byte as length.
+    return 1;
   }
   inst->in_dtx_mode = 0;
   return res;
