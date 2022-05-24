@@ -16,14 +16,14 @@ use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId
 use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
 use crate::internal_types::{FastHashMap, Swizzle, TextureSource, Filter};
-use crate::picture::{Picture3DContext, PictureCompositeMode, TileKey, calculate_screen_uv};
+use crate::picture::{Picture3DContext, PictureCompositeMode, TileKey};
 use crate::prim_store::{PrimitiveInstanceKind, ClipData, PrimitiveInstanceIndex};
 use crate::prim_store::{PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
 use crate::prim_store::VECS_PER_SEGMENT;
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
-use crate::render_task::{RenderTaskAddress, RenderTaskKind};
+use crate::render_task::RenderTaskAddress;
 use crate::renderer::{BlendMode, ShaderColorMode};
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest};
@@ -1419,11 +1419,6 @@ impl BatchBuilder {
                                 //           it will only exist as a top level primitive and never
                                 //           be encountered during batching. Consider making TileCache
                                 //           a standalone type, not a picture.
-                            }
-                            PictureCompositeMode::IntermediateSurface { .. } => {
-                                // TODO(gw): As an optimization, support making this a pass-through
-                                //           and/or drawing directly from here when possible
-                                //           (e.g. if not wrapped by filters / different spatial node).
                             }
                             PictureCompositeMode::Filter(ref filter) => {
                                 assert!(filter.is_visible());
@@ -2936,111 +2931,7 @@ impl BatchBuilder {
                     }
                 }
             }
-            PrimitiveInstanceKind::BackdropCapture { .. } => {}
-            PrimitiveInstanceKind::BackdropRender { pic_index, .. } => {
-                let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
-                let blend_mode = BlendMode::PremultipliedAlpha;
-                let pic_task_id = ctx.prim_store.pictures[pic_index.0].primary_render_task_id;
-
-                let prim_header = PrimitiveHeader {
-                    local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
-                    specific_prim_address: prim_cache_address,
-                    transform_id,
-                };
-
-                let (clip_task_address, clip_mask_texture_id) = ctx.get_prim_clip_task_and_texture(
-                    prim_info.clip_task_index,
-                    render_tasks,
-                ).unwrap();
-
-                let kind = BatchKind::Brush(
-                    BrushBatchKind::Image(ImageBufferKind::Texture2D)
-                );
-                let (_, texture) = render_tasks.resolve_location(
-                    pic_task_id,
-                    gpu_cache,
-                ).unwrap();
-                let textures = BatchTextures::prim_textured(
-                    texture,
-                    clip_mask_texture_id,
-                );
-                let key = BatchKey::new(
-                    kind,
-                    blend_mode,
-                    textures,
-                );
-                let prim_header_index = prim_headers.push(
-                    &prim_header,
-                    z_id,
-                    ImageBrushData {
-                        color_mode: ShaderColorMode::Image,
-                        alpha_type: AlphaType::PremultipliedAlpha,
-                        raster_space: RasterizationSpace::Screen,
-                        opacity: 1.0,
-                    }.encode(),
-                );
-
-                let pic_task = &render_tasks[pic_task_id.unwrap()];
-                let pic_info = match pic_task.kind {
-                    RenderTaskKind::Picture(ref info) => info,
-                    _ => panic!("bug: not a picture"),
-                };
-                let target_rect = pic_task.get_target_rect();
-
-                let backdrop_rect = DeviceRect::from_origin_and_size(
-                    pic_info.content_origin,
-                    target_rect.size().to_f32(),
-                );
-
-                let map_prim_to_backdrop = SpaceMapper::new_with_target(
-                    pic_info.surface_spatial_node_index,
-                    prim_spatial_node_index,
-                    WorldRect::max_rect(),
-                    ctx.spatial_tree,
-                );
-
-                let top_left = map_prim_to_backdrop.map_point(prim_rect.top_left()).unwrap();
-                let top_right = map_prim_to_backdrop.map_point(prim_rect.top_right()).unwrap();
-                let bottom_left = map_prim_to_backdrop.map_point(prim_rect.bottom_left()).unwrap();
-                let bottom_right = map_prim_to_backdrop.map_point(prim_rect.bottom_right()).unwrap();
-
-                let top_left = calculate_screen_uv(top_left * pic_info.device_pixel_scale, backdrop_rect);
-                let top_right = calculate_screen_uv(top_right * pic_info.device_pixel_scale, backdrop_rect);
-                let bottom_left = calculate_screen_uv(bottom_left * pic_info.device_pixel_scale, backdrop_rect);
-                let bottom_right = calculate_screen_uv(bottom_right * pic_info.device_pixel_scale, backdrop_rect);
-
-                // TODO (gw): This is a hack that provides the GPU cache blocks for an
-                //            ImageSource. We should update the GPU cache interfaces to
-                //            allow pushing per-frame blocks via a request interface.
-                let gpu_blocks = &[
-                    GpuBlockData::from([
-                        target_rect.min.x as f32,
-                        target_rect.min.y as f32,
-                        target_rect.max.x as f32,
-                        target_rect.max.y as f32,
-                    ]),
-                    GpuBlockData::from([0.0; 4]),
-                    GpuBlockData::from(top_left),
-                    GpuBlockData::from(top_right),
-                    GpuBlockData::from(bottom_left),
-                    GpuBlockData::from(bottom_right),
-                ];
-                let uv_rect_handle = gpu_cache.push_per_frame_blocks(gpu_blocks);
-
-                self.add_brush_instance_to_batches(
-                    key,
-                    batch_features,
-                    bounding_rect,
-                    z_id,
-                    INVALID_SEGMENT_INDEX,
-                    EdgeAaSegmentMask::all(),
-                    clip_task_address,
-                    brush_flags,
-                    prim_header_index,
-                    uv_rect_handle.as_int(gpu_cache),
-                );
-            }
+            PrimitiveInstanceKind::Backdrop { .. } => {}
         }
     }
 
@@ -3959,6 +3850,10 @@ pub struct CommandBufferBuilder {
 
     /// List of render tasks that depend on the task that will be created for this builder
     pub extra_dependencies: Vec<RenderTaskId>,
+
+    /// If true, this represents a surface that wraps a sub-graph, and we need to look
+    /// higher in the surface hierarchy for the resolve surface.
+    pub wraps_sub_graph: bool,
 }
 
 impl CommandBufferBuilder {
@@ -3968,6 +3863,7 @@ impl CommandBufferBuilder {
             establishes_sub_graph: false,
             resolve_source: None,
             extra_dependencies: Vec::new(),
+            wraps_sub_graph: false,
         }
     }
 
@@ -3982,6 +3878,7 @@ impl CommandBufferBuilder {
             establishes_sub_graph: false,
             resolve_source: None,
             extra_dependencies: Vec::new(),
+            wraps_sub_graph: false,
         }
     }
 
@@ -3990,6 +3887,7 @@ impl CommandBufferBuilder {
         render_task_id: RenderTaskId,
         establishes_sub_graph: bool,
         root_task_id: Option<RenderTaskId>,
+        wraps_sub_graph: bool,
     ) -> Self {
         CommandBufferBuilder {
             kind: CommandBufferBuilderKind::Simple {
@@ -3999,6 +3897,7 @@ impl CommandBufferBuilder {
             establishes_sub_graph,
             resolve_source: None,
             extra_dependencies: Vec::new(),
+            wraps_sub_graph,
         }
     }
 }
