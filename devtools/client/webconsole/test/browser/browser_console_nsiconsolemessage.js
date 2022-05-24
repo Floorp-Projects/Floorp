@@ -54,12 +54,14 @@ add_task(async function() {
   hud = await BrowserConsoleManager.toggleBrowserConsole();
   ok(hud, "browser console opened");
 
-  await waitFor(() => findMessage(hud, "cachedBrowserConsoleMessage"));
+  await waitFor(() =>
+    findConsoleAPIMessage(hud, "cachedBrowserConsoleMessage")
+  );
   Services.console.logStringMessage("liveBrowserConsoleMessage2");
-  await waitFor(() => findMessage(hud, "liveBrowserConsoleMessage2"));
+  await waitFor(() => findConsoleAPIMessage(hud, "liveBrowserConsoleMessage2"));
 
   const msg = await waitFor(() =>
-    findMessage(hud, "liveBrowserConsoleMessage")
+    findConsoleAPIMessage(hud, "liveBrowserConsoleMessage")
   );
   ok(msg, "message element for liveBrowserConsoleMessage (nsIConsoleMessage)");
 
@@ -70,13 +72,14 @@ add_task(async function() {
 
   // And then checking that the log messages are hidden.
   await waitFor(
-    () => findMessages(hud, "cachedBrowserConsoleMessage").length === 0
+    () =>
+      findConsoleAPIMessages(hud, "cachedBrowserConsoleMessage").length === 0
   );
   await waitFor(
-    () => findMessages(hud, "liveBrowserConsoleMessage").length === 0
+    () => findConsoleAPIMessages(hud, "liveBrowserConsoleMessage").length === 0
   );
   await waitFor(
-    () => findMessages(hud, "liveBrowserConsoleMessage2").length === 0
+    () => findConsoleAPIMessages(hud, "liveBrowserConsoleMessage2").length === 0
   );
 
   resetFilters(hud);

@@ -53,7 +53,7 @@ add_task(async function() {
   info(`Check that no error was logged`);
   // wait a bit so potential errors can be printed
   await wait(1000);
-  const error = findMessage(hud, "", ".message.error:not(.network)");
+  const error = findErrorMessage(hud, "", ":not(.network)");
   if (error) {
     ok(false, `Got error ${JSON.stringify(error.textContent)}`);
   } else {
