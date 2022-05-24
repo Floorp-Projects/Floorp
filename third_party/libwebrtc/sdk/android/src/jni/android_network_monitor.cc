@@ -247,7 +247,7 @@ void AndroidNetworkMonitor::Start() {
       webrtc::field_trial::IsEnabled(
           "WebRTC-FindNetworkHandleWithoutIpv6TemporaryPart");
   bind_using_ifname_ =
-      webrtc::field_trial::IsEnabled("WebRTC-BindUsingInterfaceName");
+      !webrtc::field_trial::IsDisabled("WebRTC-BindUsingInterfaceName");
 
   // This pointer is also accessed by the methods called from java threads.
   // Assigning it here is safe, because the java monitor is in a stopped state,

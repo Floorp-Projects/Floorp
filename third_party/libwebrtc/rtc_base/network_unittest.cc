@@ -1307,9 +1307,6 @@ TEST_F(NetworkTest, WebRTC_AllowMACBasedIPv6Address) {
 
 #if defined(WEBRTC_POSIX)
 TEST_F(NetworkTest, WebRTC_BindUsingInterfaceName) {
-  webrtc::test::ScopedFieldTrials field_trials(
-      "WebRTC-BindUsingInterfaceName/Enabled/");
-
   char if_name1[20] = "wlan0";
   char if_name2[20] = "v4-wlan0";
   ifaddrs* list = nullptr;
