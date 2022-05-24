@@ -419,7 +419,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 null
             }
             resources.getString(R.string.pref_key_start_profiler) -> {
-                if (requireContext().components.core.engine.profiler?.isProfilerActive()!!) {
+                if (profilerViewModel.getProfilerState().value == true) {
                     SettingsFragmentDirections.actionSettingsFragmentToStopProfilerDialog()
                 } else {
                     SettingsFragmentDirections.actionSettingsFragmentToStartProfilerDialog()

@@ -57,6 +57,7 @@
     <!-- Profiler settings -->
     <string name="preferences_start_profiler">Start Profiler</string>
     <string name="profiler_stop">Stop Profiler</string>
+
     <string name="profiler_settings_title">Profiler Settings</string>
     <string name="profiler_filter_firefox">Firefox</string>
     <string name="profiler_running">Profiler is currently running</string>
@@ -67,30 +68,21 @@
     <string name="profiler_filter_media_explain">Preset for investigating audio and video bugs in Firefox</string>
     <string name="profiler_filter_networking">Networking</string>
     <string name="profiler_filter_networking_explain">Preset for investigating networking bugs in Firefox</string>
+
     <string name="profiler_start_dialog_started">Profiler started</string>
-    <string name="profiler_save_method">Would you like to save your profile as:</string>
-    <string name="profiler_save_method_url">URL</string>
-    <string name="profiler_save_method_url_explained">The profile will upload automatically with all the information gathered and provide you a link from profiler.firefox.com</string>
-    <string name="profiler_save_method_file">File</string>
-    <string name="profiler_save_method_file_explained">The file will be saved locally on your android device. To share it, go to profiler.firefox.com on your computer or mobile device</string>
+
     <string name="profiler_start_cancel">Cancel</string>
+
     <string name="profiler_gathering">Gathering the profile</string>
-    <string name="profiler_waiting_start">Waiting for Profiler to start</string>
-    <string name="profiler_url_warning">Saving to URL warning</string>
-    <string name="profiler_url_warning_explained">"Saving to URL could potentially show private information such as " +
-                        "urls and screenshots. If you want to keep these" +
-                        "privates, save your profile as a file instead and head on over to profiler.firefox.com" +
-                        "where you can select what to share and not share."</string>
-    <string name="profiler_file_save">Save as File</string>
-    <string name="profiler_as_url">Get Profile URL</string>
     <string name="profiler_no_info">No information was gathered</string>
+
+    <string name="profiler_waiting_start">Waiting for Profiler to start</string>
+
+    <string name="profiler_url_warning">⚠️ Warning: Profile Upload</string>
+    <string name="profiler_url_warning_explained">Performance profiles may contain sensitive information such as websites visited and screenshots of them. If you continue, your profile will be uploaded and made accessible to anyone with the link. Do you wish to continue?</string>
+    <string name="profiler_as_url">Upload profile</string>
     <string name="profiler_error">Something went wrong with the profiler</string>
     <string name="profiler_io_error">Something went wrong contacting the Profiler server.</string>
-    <string name="profiler_file_error">Something went wrong writing the profile data to the file</string>
-    <string name="profiler_error_saving">Something went wrong saving the profile</string>
 
-    <string name="profiler_stop_dialogue_file_saved">The profile was saved locally</string>
-    <string name="profiler_stop_dialogue_file_saved_failed">Saving profile to file failed, please try again</string>
     <string name="profiler_uploaded_url_to_clipboard">URL copied to clipboard successfully</string>
-    <string name="profile_stop_dialogue_cancel_save">Profile save operation canceled</string>
 </resources>

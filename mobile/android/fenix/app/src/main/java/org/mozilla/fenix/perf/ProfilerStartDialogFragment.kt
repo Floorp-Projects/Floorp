@@ -105,7 +105,9 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
         viewStateObserver: MutableState<CardState>,
         startProfiler: (Array<String>, Array<String>) -> Unit
     ) {
-        val featureAndThreadsObserver = remember { mutableStateOf("") }
+        val featureAndThreadsObserver = remember {
+            mutableStateOf(requireContext().resources.getString(R.string.profiler_filter_firefox))
+        }
         ProfilerDialogueCard {
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(

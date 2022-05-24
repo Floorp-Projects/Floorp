@@ -71,10 +71,6 @@ class ProfilerStopDialogFragment : DialogFragment() {
                 // since the user needs to wait for the profiler data to be ready and we don't want to handle
                 // the process in the background.
                 if (viewStateObserver.value != CardState.WaitForProfilerState) {
-                    profilerViewModel.setProfilerState(
-                        requireContext()
-                            .components.core.engine.profiler!!.isProfilerActive()
-                    )
                     this@ProfilerStopDialogFragment.dismiss()
                 }
             }
@@ -116,7 +112,8 @@ class ProfilerStopDialogFragment : DialogFragment() {
                 ) {
                     TextButton(
                         onClick = {
-                            displayToastAndDismiss(R.string.profile_stop_dialogue_cancel_save)
+                            requireContext().components.core.engine.profiler?.stopProfiler({}, {})
+                            dismiss()
                         }
                     ) {
                         Text(stringResource(R.string.profiler_start_cancel))
@@ -151,9 +148,9 @@ class ProfilerStopDialogFragment : DialogFragment() {
             },
             onError = {
                 error ->
-                error.message?.let {
+                if (error.message != null) {
                     displayToastAndDismiss(R.string.profiler_error, " error: $error")
-                }?.let {
+                } else {
                     displayToastAndDismiss(R.string.profiler_error)
                 }
             }

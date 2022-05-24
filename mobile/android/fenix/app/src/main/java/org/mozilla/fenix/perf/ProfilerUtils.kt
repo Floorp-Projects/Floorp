@@ -74,14 +74,18 @@ enum class ProfilerSettings(val threads: Array<String>, val features: Array<Stri
  */
 object ProfilerUtils {
 
-    private fun saveProfileUrlToClipboardAndToast(profileResult: ByteArray, context: Context): String {
+    private fun saveProfileUrlToClipboard(profileResult: ByteArray, context: Context): String {
         // The profile is saved to a temporary file since our fetch API takes a file or a string.
         // Converting the ByteArray to a String would hurt the encoding, which we need to preserve.
+        // The file may potentially contain sensitive data and should be handled carefully.
         val outputFile = createTemporaryFile(profileResult, context)
-        val response = networkCallToProfilerServer(outputFile, context)
-        val profileToken = decodeProfileToken(response)
-        outputFile.delete()
-        return PROFILER_DATA_URL + profileToken
+        try {
+            val response = networkCallToProfilerServer(outputFile, context)
+            val profileToken = decodeProfileToken(response)
+            return PROFILER_DATA_URL + profileToken
+        } finally {
+            outputFile.delete()
+        }
     }
 
     private fun finishProfileSave(context: Context, url: String, onUrlFinish: (Int) -> Unit) {
@@ -138,7 +142,7 @@ object ProfilerUtils {
         onUrlFinish: (Int) -> Unit
     ) {
         try {
-            val url = saveProfileUrlToClipboardAndToast(profile, context)
+            val url = saveProfileUrlToClipboard(profile, context)
             finishProfileSave(context, url, onUrlFinish)
         } catch (e: IOException) {
             onUrlFinish(R.string.profiler_io_error)

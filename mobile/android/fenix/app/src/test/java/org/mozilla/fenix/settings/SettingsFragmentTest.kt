@@ -42,15 +42,16 @@ class SettingsFragmentTest {
 
     @Before
     fun setup() {
+
         // Mock client for fetching account avatar
         val client = mockk<Client>()
         every { client.fetch(any()) } throws IOException("test")
 
+        every { testContext.components.core.engine.profiler } returns mockk(relaxed = true)
         every { testContext.components.core.client } returns client
         every { testContext.components.settings } returns mockk(relaxed = true)
         every { testContext.components.analytics } returns mockk(relaxed = true)
         every { testContext.components.backgroundServices } returns mockk(relaxed = true)
-
         mockkObject(Config)
         every { Config.channel } returns ReleaseChannel.Nightly
 
