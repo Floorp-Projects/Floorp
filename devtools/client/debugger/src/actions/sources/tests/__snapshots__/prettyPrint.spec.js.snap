@@ -6,7 +6,6 @@ Object {
   "id": "base.js/originalSource-36c718d4bde9a75edb388ff7733efe7f",
   "isBlackBoxed": false,
   "isExtension": false,
-  "isHTML": false,
   "isOriginal": true,
   "isPrettyPrinted": true,
   "isWasm": false,
@@ -17,6 +16,35 @@ Object {
 `;
 
 exports[`sources - pretty print returns a pretty source for a minified file 2`] = `
+Object {
+  "state": "fulfilled",
+  "value": Object {
+    "contentType": "text/javascript",
+    "type": "text",
+    "value": "function base() {
+  return base
+}
+",
+  },
+}
+`;
+
+exports[`sources - pretty print should create a source when first toggling pretty print 1`] = `
+Object {
+  "extensionName": null,
+  "id": "base.js/originalSource-36c718d4bde9a75edb388ff7733efe7f",
+  "isBlackBoxed": false,
+  "isExtension": false,
+  "isOriginal": true,
+  "isPrettyPrinted": true,
+  "isWasm": false,
+  "relativeUrl": "/examples/base.js:formatted",
+  "thread": "FakeThread",
+  "url": "http://localhost:8000/examples/base.js:formatted",
+}
+`;
+
+exports[`sources - pretty print should create a source when first toggling pretty print 2`] = `
 Object {
   "state": "fulfilled",
   "value": Object {
