@@ -12,19 +12,40 @@
 [package]
 edition = "2018"
 name = "clap"
-version = "3.0.10"
-include = ["build.rs", "src/**/*", "Cargo.toml", "LICENSE*", "README.md", "benches/**/*", "examples/**/*"]
+version = "3.1.18"
+include = [
+    "build.rs",
+    "src/**/*",
+    "Cargo.toml",
+    "LICENSE*",
+    "README.md",
+    "benches/**/*",
+    "examples/**/*",
+]
 description = "A simple to use, efficient, and full-featured Command Line Argument Parser"
 documentation = "https://docs.rs/clap/"
 readme = "README.md"
-keywords = ["argument", "cli", "arg", "parser", "parse"]
+keywords = [
+    "argument",
+    "cli",
+    "arg",
+    "parser",
+    "parse",
+]
 categories = ["command-line-interface"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/clap-rs/clap"
+
 [package.metadata.docs.rs]
-cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]
 features = ["unstable-doc"]
-rustdoc-args = ["--cfg", "docsrs"]
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
+cargo-args = [
+    "-Zunstable-options",
+    "-Zrustdoc-scrape-examples=examples",
+]
 
 [package.metadata.playground]
 features = ["unstable-doc"]
@@ -35,54 +56,60 @@ tag-name = "v{{version}}"
 
 [[package.metadata.release.pre-release-replacements]]
 file = "CHANGELOG.md"
-min = 1
-replace = "{{version}}"
 search = "Unreleased"
-
-[[package.metadata.release.pre-release-replacements]]
-exactly = 1
-file = "CHANGELOG.md"
-replace = "...{{tag_name}}"
-search = "\\.\\.\\.HEAD"
-
-[[package.metadata.release.pre-release-replacements]]
-file = "CHANGELOG.md"
+replace = "{{version}}"
 min = 1
-replace = "{{date}}"
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = '\.\.\.HEAD'
+replace = "...{{tag_name}}"
+exactly = 1
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
 search = "ReleaseDate"
+replace = "{{date}}"
+min = 1
 
 [[package.metadata.release.pre-release-replacements]]
-exactly = 1
 file = "CHANGELOG.md"
-replace = "<!-- next-header -->\n## [Unreleased] - ReleaseDate\n"
 search = "<!-- next-header -->"
+replace = """
+<!-- next-header -->
+## [Unreleased] - ReleaseDate
+"""
+exactly = 1
 
 [[package.metadata.release.pre-release-replacements]]
-exactly = 1
 file = "CHANGELOG.md"
-replace = "<!-- next-url -->\n[Unreleased]: https://github.com/clap-rs/clap/compare/{{tag_name}}...HEAD"
 search = "<!-- next-url -->"
-
-[[package.metadata.release.pre-release-replacements]]
-exactly = 9
-file = "README.md"
-prerelease = true
-replace = "github.com/clap-rs/clap/blob/{{tag_name}}/"
-search = "github.com/clap-rs/clap/blob/[^/]+/"
-
-[[package.metadata.release.pre-release-replacements]]
+replace = """
+<!-- next-url -->
+[Unreleased]: https://github.com/clap-rs/clap/compare/{{tag_name}}...HEAD"""
 exactly = 1
-file = "README.md"
-prerelease = true
-replace = "version = \"{{version}}\""
-search = "version = \"[a-z0-9\\.-]+\""
 
 [[package.metadata.release.pre-release-replacements]]
-exactly = 4
-file = "src/derive.rs"
-prerelease = true
-replace = "github.com/clap-rs/clap/blob/{{tag_name}}/"
+file = "README.md"
 search = "github.com/clap-rs/clap/blob/[^/]+/"
+replace = "github.com/clap-rs/clap/blob/{{tag_name}}/"
+exactly = 13
+prerelease = true
+
+[[package.metadata.release.pre-release-replacements]]
+file = "README.md"
+search = 'version = "[a-z0-9\.-]+"'
+replace = "version = \"{{version}}\""
+exactly = 1
+prerelease = true
+
+[[package.metadata.release.pre-release-replacements]]
+file = "src/derive.rs"
+search = "github.com/clap-rs/clap/blob/[^/]+/"
+replace = "github.com/clap-rs/clap/blob/{{tag_name}}/"
+exactly = 4
+prerelease = true
+
 [profile.bench]
 lto = true
 codegen-units = 1
@@ -118,7 +145,7 @@ name = "git-derive"
 required-features = ["derive"]
 
 [[example]]
-name = "keyvalue-derive"
+name = "typed-derive"
 required-features = ["derive"]
 
 [[example]]
@@ -132,6 +159,11 @@ path = "examples/multicall-hostname.rs"
 required-features = ["unstable-multicall"]
 
 [[example]]
+name = "repl"
+path = "examples/repl.rs"
+required-features = ["unstable-multicall"]
+
+[[example]]
 name = "01_quick"
 path = "examples/tutorial_builder/01_quick.rs"
 required-features = ["cargo"]
@@ -139,7 +171,6 @@ required-features = ["cargo"]
 [[example]]
 name = "02_apps"
 path = "examples/tutorial_builder/02_apps.rs"
-required-features = ["cargo"]
 
 [[example]]
 name = "02_crate"
@@ -189,7 +220,15 @@ required-features = ["cargo"]
 [[example]]
 name = "04_01_enum"
 path = "examples/tutorial_builder/04_01_enum.rs"
-required-features = ["cargo", "derive"]
+required-features = [
+    "cargo",
+    "derive",
+]
+
+[[example]]
+name = "04_02_parse"
+path = "examples/tutorial_builder/04_02_parse.rs"
+required-features = ["cargo"]
 
 [[example]]
 name = "04_02_validate"
@@ -258,6 +297,11 @@ path = "examples/tutorial_derive/03_04_subcommands.rs"
 required-features = ["derive"]
 
 [[example]]
+name = "03_04_subcommands_alt_derive"
+path = "examples/tutorial_derive/03_04_subcommands_alt.rs"
+required-features = ["derive"]
+
+[[example]]
 name = "03_05_default_values_derive"
 path = "examples/tutorial_derive/03_05_default_values.rs"
 required-features = ["derive"]
@@ -265,6 +309,11 @@ required-features = ["derive"]
 [[example]]
 name = "04_01_enum_derive"
 path = "examples/tutorial_derive/04_01_enum.rs"
+required-features = ["derive"]
+
+[[example]]
+name = "04_02_parse_derive"
+path = "examples/tutorial_derive/04_02_parse.rs"
 required-features = ["derive"]
 
 [[example]]
@@ -291,6 +340,26 @@ required-features = ["derive"]
 [[example]]
 name = "custom-bool"
 path = "examples/derive_ref/custom-bool.rs"
+required-features = ["derive"]
+
+[[example]]
+name = "interop_augment_args"
+path = "examples/derive_ref/augment_args.rs"
+required-features = ["derive"]
+
+[[example]]
+name = "interop_augment_subcommands"
+path = "examples/derive_ref/augment_subcommands.rs"
+required-features = ["derive"]
+
+[[example]]
+name = "interop_hand_subcommand"
+path = "examples/derive_ref/hand_subcommand.rs"
+required-features = ["derive"]
+
+[[example]]
+name = "interop_flatten_hand_args"
+path = "examples/derive_ref/flatten_hand_args.rs"
 required-features = ["derive"]
 
 [[bench]]
@@ -322,6 +391,7 @@ harness = false
 name = "06_rustup"
 path = "benches/06_rustup.rs"
 harness = false
+
 [dependencies.atty]
 version = "0.2"
 optional = true
@@ -334,8 +404,11 @@ optional = true
 version = "1.2"
 
 [dependencies.clap_derive]
-version = "3.0.0"
+version = "=3.1.18"
 optional = true
+
+[dependencies.clap_lex]
+version = "0.2.0"
 
 [dependencies.indexmap]
 version = "1.0"
@@ -343,9 +416,6 @@ version = "1.0"
 [dependencies.lazy_static]
 version = "1"
 optional = true
-
-[dependencies.os_str_bytes]
-version = "6.0"
 
 [dependencies.regex]
 version = "1.0"
@@ -364,7 +434,7 @@ version = "0.1.12"
 optional = true
 
 [dependencies.textwrap]
-version = "0.14.0"
+version = "0.15.0"
 features = []
 default-features = false
 
@@ -375,8 +445,12 @@ optional = true
 [dependencies.yaml-rust]
 version = "0.4.1"
 optional = true
+
 [dev-dependencies.criterion]
 version = "0.3.2"
+
+[dev-dependencies.humantime]
+version = "2"
 
 [dev-dependencies.lazy_static]
 version = "1"
@@ -387,27 +461,68 @@ version = "1.0"
 [dev-dependencies.rustversion]
 version = "1"
 
+[dev-dependencies.shlex]
+version = "1.1.0"
+
+[dev-dependencies.snapbox]
+version = "0.2.9"
+
 [dev-dependencies.trybuild]
 version = "1.0.18"
 
 [dev-dependencies.trycmd]
-version = "0.9"
-features = ["color-auto", "diff", "examples"]
+version = "0.13"
+features = [
+    "color-auto",
+    "diff",
+    "examples",
+]
 default-features = false
 
 [features]
 cargo = ["lazy_static"]
-color = ["atty", "termcolor"]
-debug = ["clap_derive/debug", "backtrace"]
-default = ["std", "color", "suggestions"]
-derive = ["clap_derive", "lazy_static"]
+color = [
+    "atty",
+    "termcolor",
+]
+debug = [
+    "clap_derive/debug",
+    "backtrace",
+]
+default = [
+    "std",
+    "color",
+    "suggestions",
+]
+derive = [
+    "clap_derive",
+    "lazy_static",
+]
 env = []
 std = ["indexmap/std"]
 suggestions = ["strsim"]
-unicode = ["textwrap/unicode-width", "unicase"]
-unstable-doc = ["derive", "cargo", "wrap_help", "yaml", "env", "unicode", "regex", "unstable-replace", "unstable-multicall", "unstable-grouped"]
+unicode = [
+    "textwrap/unicode-width",
+    "unicase",
+]
+unstable-doc = [
+    "derive",
+    "cargo",
+    "wrap_help",
+    "yaml",
+    "env",
+    "unicode",
+    "regex",
+    "unstable-replace",
+    "unstable-multicall",
+    "unstable-grouped",
+]
 unstable-grouped = []
 unstable-multicall = []
 unstable-replace = []
-wrap_help = ["terminal_size", "textwrap/terminal_size"]
+unstable-v4 = ["clap_derive/unstable-v4"]
+wrap_help = [
+    "terminal_size",
+    "textwrap/terminal_size",
+]
 yaml = ["yaml-rust"]
