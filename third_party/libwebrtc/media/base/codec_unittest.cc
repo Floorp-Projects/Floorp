@@ -30,7 +30,8 @@ class TestCodec : public Codec {
   TestCodec(int id, const std::string& name, int clockrate)
       : Codec(id, name, clockrate) {}
   TestCodec() : Codec() {}
-  TestCodec(const TestCodec& c) : Codec(c) {}
+  TestCodec(const TestCodec& c) = default;
+  TestCodec& operator=(const TestCodec& c) = default;
 };
 
 TEST(CodecTest, TestCodecOperators) {
