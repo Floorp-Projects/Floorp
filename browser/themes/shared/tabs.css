@@ -48,8 +48,6 @@
 #tabbrowser-tabs {
   --tab-min-width: 76px;
   --tab-loading-fill: #0A84FF;
-  --tab-overflow-pinned-tabs-width: 0px;
-  padding-inline-start: var(--tab-overflow-pinned-tabs-width);
 }
 
 #tabbrowser-tabpanels {
@@ -684,7 +682,7 @@
 
 :is(#firefox-view-button, #wrapper-firefox-view-button) + #tabbrowser-tabs {
   border-inline-start: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-  padding-inline-start: calc(var(--tab-overflow-pinned-tabs-width) + 4px);
+  padding-inline-start: 4px;
   margin-inline-start: 4px;
 }
 
