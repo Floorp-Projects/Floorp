@@ -226,12 +226,14 @@ function waitForMessages({ hud, messages, selector = ".message" }) {
  *
  * @param {Object} hud : the webconsole
  * @param {String} text : text included in .message-body
+ * @param {String} typeSelector : A part of selector for the message, to
+ *                                specify the message type.
  * @param {Number} repeat : expected repeat count in .message-repeats
  */
-function waitForRepeatedMessage(hud, text, repeat) {
+function waitForRepeatedMessageByType(hud, text, typeSelector, repeat) {
   return waitFor(() => {
     // Wait for a message matching the provided text.
-    const node = findMessage(hud, text);
+    const node = findMessageByType(hud, text, typeSelector);
     if (!node) {
       return false;
     }
