@@ -11,6 +11,7 @@
 #include "media/sctp/dcsctp_transport.h"
 
 #include <cstdint>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -221,11 +222,16 @@ bool DcSctpTransport::SendData(const cricket::SendDataParams& params,
 
   dcsctp::SendOptions send_options;
   send_options.unordered = dcsctp::IsUnordered(!params.ordered);
-  if (params.max_rtx_ms > 0)
-    send_options.lifetime = dcsctp::DurationMs(params.max_rtx_ms);
-  if (params.max_rtx_count > 0)
-    send_options.max_retransmissions =
-        static_cast<size_t>(params.max_rtx_count);
+  if (params.max_rtx_ms.has_value()) {
+    RTC_DCHECK(*params.max_rtx_ms >= 0 &&
+               *params.max_rtx_ms <= std::numeric_limits<uint16_t>::max());
+    send_options.lifetime = dcsctp::DurationMs(*params.max_rtx_ms);
+  }
+  if (params.max_rtx_count.has_value()) {
+    RTC_DCHECK(*params.max_rtx_count >= 0 &&
+               *params.max_rtx_count <= std::numeric_limits<uint16_t>::max());
+    send_options.max_retransmissions = *params.max_rtx_count;
+  }
 
   auto error = socket_->Send(std::move(message), send_options);
   switch (error) {

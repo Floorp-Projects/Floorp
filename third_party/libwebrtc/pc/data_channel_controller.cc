@@ -398,11 +398,8 @@ bool DataChannelController::DataChannelSendData(
   SendDataParams send_params;
   send_params.type = ToWebrtcDataMessageType(params.type);
   send_params.ordered = params.ordered;
-  if (params.max_rtx_count >= 0) {
-    send_params.max_rtx_count = params.max_rtx_count;
-  } else if (params.max_rtx_ms >= 0) {
-    send_params.max_rtx_ms = params.max_rtx_ms;
-  }
+  send_params.max_rtx_count = params.max_rtx_count;
+  send_params.max_rtx_ms = params.max_rtx_ms;
 
   RTCError error = network_thread()->Invoke<RTCError>(
       RTC_FROM_HERE, [this, params, send_params, payload] {

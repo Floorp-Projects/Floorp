@@ -922,21 +922,15 @@ struct SendDataParams {
   // The type of message (binary, text, or control).
   DataMessageType type = DMT_TEXT;
 
-  // TODO(pthatcher): Make |ordered| and |reliable| true by default?
   // For SCTP, whether to send messages flagged as ordered or not.
   // If false, messages can be received out of order.
   bool ordered = false;
-  // For SCTP, whether the messages are sent reliably or not.
-  // If false, messages may be lost.
-  bool reliable = false;
-  // For SCTP, if reliable == false, provide partial reliability by
-  // resending up to this many times.  Either count or millis
-  // is supported, not both at the same time.
-  int max_rtx_count = 0;
-  // For SCTP, if reliable == false, provide partial reliability by
-  // resending for up to this many milliseconds.  Either count or millis
-  // is supported, not both at the same time.
-  int max_rtx_ms = 0;
+  // Provide partial reliability by resending up to this many times. Either
+  // count or millis is supported, not both at the same time.
+  absl::optional<int> max_rtx_count;
+  // Provide partial reliability by resending for up to this many milliseconds.
+  // Either count or millis is supported, not both at the same time.
+  absl::optional<int> max_rtx_ms;
 };
 
 enum SendDataResult { SDR_SUCCESS, SDR_ERROR, SDR_BLOCK };
