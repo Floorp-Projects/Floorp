@@ -35,14 +35,6 @@ class RemoteBitrateObserver;
 class ReceiveSideCongestionController : public CallStatsObserver,
                                         public Module {
  public:
-  // TODO(bugs.webrtc.org/12693): Deprecate
-  ReceiveSideCongestionController(Clock* clock, PacketRouter* packet_router);
-  // TODO(bugs.webrtc.org/12693): Deprecate
-  ReceiveSideCongestionController(
-      Clock* clock,
-      PacketRouter* packet_router,
-      NetworkStateEstimator* network_state_estimator);
-
   ReceiveSideCongestionController(
       Clock* clock,
       RemoteEstimatorProxy::TransportFeedbackSender feedback_sender,

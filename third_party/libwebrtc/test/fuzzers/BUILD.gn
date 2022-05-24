@@ -245,6 +245,7 @@ webrtc_fuzzer_test("congestion_controller_feedback_fuzzer") {
     "../../modules/remote_bitrate_estimator",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/functional:bind_front" ]
 }
 
 rtc_library("audio_decoder_fuzzer") {

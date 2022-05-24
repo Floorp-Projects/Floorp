@@ -73,7 +73,10 @@ rtc_library("call_interfaces") {
     "../rtc_base:rtc_base_approved",
     "../rtc_base/network:sent_packet",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:bind_front",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_source_set("audio_sender_interface") {
@@ -304,7 +307,10 @@ rtc_library("call") {
     "../video",
     "adaptation:resource_adaptation",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:bind_front",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("video_stream_api") {

@@ -38,15 +38,6 @@ class RemoteBitrateObserver {
   virtual ~RemoteBitrateObserver() {}
 };
 
-// TODO(bugs.webrtc.org/12693): Deprecate
-class TransportFeedbackSenderInterface {
- public:
-  virtual ~TransportFeedbackSenderInterface() = default;
-
-  virtual bool SendCombinedRtcpPacket(
-      std::vector<std::unique_ptr<rtcp::RtcpPacket>> packets) = 0;
-};
-
 // TODO(holmer): Remove when all implementations have been updated.
 struct ReceiveBandwidthEstimatorStats {};
 

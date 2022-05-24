@@ -121,26 +121,6 @@ void ReceiveSideCongestionController::WrappingBitrateEstimator::
 
 ReceiveSideCongestionController::ReceiveSideCongestionController(
     Clock* clock,
-    PacketRouter* packet_router)
-    : ReceiveSideCongestionController(clock, packet_router, nullptr) {}
-
-ReceiveSideCongestionController::ReceiveSideCongestionController(
-    Clock* clock,
-    PacketRouter* packet_router,
-    NetworkStateEstimator* network_state_estimator)
-    : remb_throttler_([](auto...) {}, clock),
-      remote_bitrate_estimator_(packet_router, clock),
-      remote_estimator_proxy_(
-          clock,
-          [packet_router](
-              std::vector<std::unique_ptr<rtcp::RtcpPacket>> packets) {
-            packet_router->SendCombinedRtcpPacket(std::move(packets));
-          },
-          &field_trial_config_,
-          network_state_estimator) {}
-
-ReceiveSideCongestionController::ReceiveSideCongestionController(
-    Clock* clock,
     RemoteEstimatorProxy::TransportFeedbackSender feedback_sender,
     RembThrottler::RembSender remb_sender,
     NetworkStateEstimator* network_state_estimator)
