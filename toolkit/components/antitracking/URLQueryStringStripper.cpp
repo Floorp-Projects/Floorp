@@ -106,6 +106,15 @@ uint32_t URLQueryStringStripper::StripQueryString(nsIURI* aURI,
 
     if (mList.Contains(lowerCaseName)) {
       numStripped += 1;
+
+      // Count how often a specific query param is stripped. For privacy reasons
+      // this will only count query params listed in the Histogram definition.
+      // Calls for any other query params will be discarded.
+      nsAutoCString telemetryLabel("param_");
+      AppendUTF16toUTF8(lowerCaseName, telemetryLabel);
+      Telemetry::AccumulateCategorical(
+          Telemetry::QUERY_STRIPPING_COUNT_BY_PARAM, telemetryLabel);
+
       return true;
     }
 
