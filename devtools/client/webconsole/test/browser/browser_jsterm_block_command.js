@@ -16,13 +16,13 @@ add_task(async function() {
 
   info("Before blocking");
   await tryFetching();
-  const resp1 = await waitFor(() => findMessage(hud, "successful"));
+  const resp1 = await waitFor(() => findConsoleAPIMessage(hud, "successful"));
   ok(resp1, "the request was not blocked");
   info(`Execute the :block command and try to do execute a network request`);
   await executeAndWaitForMessage(hud, blockCommand, "are now blocked");
   await tryFetching();
 
-  const resp2 = await waitFor(() => findMessage(hud, "blocked"));
+  const resp2 = await waitFor(() => findConsoleAPIMessage(hud, "blocked"));
   ok(resp2, "the request was blocked as expected");
 
   info("Open netmonitor check the blocked filter is registered in its state");
@@ -57,7 +57,7 @@ add_task(async function() {
 
   await tryFetching();
 
-  const resp3 = await waitFor(() => findMessage(hud, "successful"));
+  const resp3 = await waitFor(() => findConsoleAPIMessage(hud, "successful"));
   ok(resp3, "the request was not blocked");
 });
 
