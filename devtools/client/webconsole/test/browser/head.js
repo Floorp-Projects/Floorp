@@ -324,40 +324,6 @@ function keyboardExecuteAndWaitForMessage(
 }
 
 /**
- * Find a message in the output.
- *
- * @param object hud
- *        The web console.
- * @param string text
- *        A substring that can be found in the message.
- * @param selector [optional]
- *        The selector to use in finding the message.
- * @return {Node} the node corresponding the found message
- */
-function findMessage(hud, text, selector = ".message") {
-  const elements = findMessages(hud, text, selector);
-  return elements.pop();
-}
-
-/**
- * Find multiple messages in the output.
- *
- * @param object hud
- *        The web console.
- * @param string text
- *        A substring that can be found in the message.
- * @param selector [optional]
- *        The selector to use in finding the message.
- */
-function findMessages(hud, text, selector = ".message") {
-  const messages = hud.ui.outputNode.querySelectorAll(selector);
-  const elements = Array.prototype.filter.call(messages, el =>
-    el.textContent.includes(text)
-  );
-  return elements;
-}
-
-/**
  * Wait for a message to be logged and ensure it is logged only once.
  *
  * @param object hud
