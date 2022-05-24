@@ -14,7 +14,6 @@
 namespace js {
 namespace jit {
 
-static constexpr Register BaselineFrameReg = FramePointer;
 static constexpr Register BaselineStackReg = esp;
 
 // ValueOperands R0, R1, and R2
