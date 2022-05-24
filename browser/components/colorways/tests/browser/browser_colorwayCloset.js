@@ -33,10 +33,7 @@ add_task(async function about_colorwaycloset_smoke_test() {
       );
 
       const useFXHomeControls = document.getElementById("use-fx-home-controls");
-      ok(
-        useFXHomeControls,
-        "firefox home controls exists"
-      );
+      ok(useFXHomeControls, "firefox home controls exists");
       useFXHomeControls.toggleAttribute("hidden", false);
       ok(
         document.querySelector("#use-fx-home-controls > .reset-prompt"),
