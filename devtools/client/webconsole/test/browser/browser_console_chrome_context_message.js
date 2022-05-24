@@ -27,9 +27,11 @@ add_task(async function() {
   execute(hud, `Cu.reportError("Cu.reportError");`); // bug 1561930
   info("Wait for expected message are shown on browser console");
   await waitFor(() =>
-    expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage))
+    expectedMessages.every(expectedMessage =>
+      findErrorMessage(hud, expectedMessage)
+    )
   );
-  await waitFor(() => findMessage(hud, "hello from content"));
+  await waitFor(() => findConsoleAPIMessage(hud, "hello from content"));
 
   ok(true, "Expected messages are displayed in the browser console");
 
@@ -38,12 +40,12 @@ add_task(async function() {
     hud,
     ".webconsole-console-settings-menu-item-contentMessages"
   );
-  await waitFor(() => !findMessage(hud, "hello from content"));
+  await waitFor(() => !findConsoleAPIMessage(hud, "hello from content"));
 
   info("Check the expected messages are still visiable in the browser console");
   for (const expectedMessage of expectedMessages) {
     ok(
-      findMessage(hud, expectedMessage),
+      findErrorMessage(hud, expectedMessage),
       `"${expectedMessage}" should be still visible`
     );
   }

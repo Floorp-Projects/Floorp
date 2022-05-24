@@ -27,7 +27,7 @@ add_task(async function() {
     content.console.log({ hello: "world" });
   });
 
-  await waitFor(() => findMessage(hud, "hello"));
+  await waitFor(() => findConsoleAPIMessage(hud, "hello"));
 
   await removeTab(tab);
   // Wait for a bit, so the actors and fronts are released.
@@ -36,6 +36,6 @@ add_task(async function() {
   info("Clear the console output");
   hud.ui.outputNode.querySelector(".devtools-clear-icon").click();
 
-  await waitFor(() => !findMessage(hud, "hello"));
+  await waitFor(() => !findConsoleAPIMessage(hud, "hello"));
   ok(true, "Browser Console was cleared");
 });
