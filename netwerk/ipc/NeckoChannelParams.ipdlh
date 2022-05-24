@@ -108,7 +108,7 @@ struct LoadInfoArgs
   uint64_t                    frameBrowsingContextID;
   bool                        initialSecurityCheckDone;
   bool                        isInThirdPartyContext;
-  bool                        isThirdPartyContextToTopWindow;
+  bool?                       isThirdPartyContextToTopWindow;
   bool                        isFormSubmission;
   bool                        sendCSPViolationEvents;
   OriginAttributes            originAttributes;
@@ -230,7 +230,7 @@ struct ParentLoadInfoForwarderArgs
 
   bool isMetaRefresh;
 
-  bool isThirdPartyContextToTopWindow;
+  bool? isThirdPartyContextToTopWindow;
 
   bool isInThirdPartyContext;
 
