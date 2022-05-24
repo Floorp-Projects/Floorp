@@ -4434,8 +4434,9 @@ pref("extensions.formautofill.creditCards.supportedCountries", "US,CA,GB,FR,DE")
 pref("extensions.formautofill.creditCards.hideui", false);
 // Algorithm used by formautofill while determine whether a field is a credit card field
 // 0:Heurstics based on regular expression string matching
-// 1:Fathom in js implementation, 2:Fathom in c++ implementation
-pref("extensions.formautofill.creditCards.heuristics.mode", 0);
+// 1:Fathom in js implementation
+// 2:Fathom in c++ implementation
+pref("extensions.formautofill.creditCards.heuristics.mode", 2);
 pref("extensions.formautofill.creditCards.heuristics.confidenceThreshold", "0.5");
 // Pref for shield/heartbeat to recognize users who have used Credit Card
 // Autofill. The valid values can be:
