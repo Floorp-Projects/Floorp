@@ -360,6 +360,7 @@ pub fn update_prim_visibility(
                 &frame_state.surface_stack,
                 &mut frame_state.composite_state,
                 &mut frame_state.gpu_cache,
+                &mut frame_state.scratch.primitive,
                 is_root_tile_cache,
                 surfaces,
             );

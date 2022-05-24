@@ -28,7 +28,7 @@ use std::{hash, ops, u32, usize};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::util::Recycler;
-use crate::internal_types::LayoutPrimitiveInfo;
+use crate::internal_types::{FastHashSet, LayoutPrimitiveInfo};
 #[cfg(debug_assertions)]
 use crate::internal_types::FrameId;
 use crate::visibility::PrimitiveVisibility;
@@ -44,7 +44,7 @@ pub mod interned;
 
 mod storage;
 
-use backdrop::BackdropDataHandle;
+use backdrop::{BackdropCaptureDataHandle, BackdropRenderDataHandle};
 use borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle, ConicGradientDataHandle};
 use image::{ImageDataHandle, ImageInstance, YuvImageDataHandle};
@@ -123,6 +123,10 @@ impl ClipTaskIndex {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureIndex(pub usize);
+
+impl PictureIndex {
+    pub const INVALID: PictureIndex = PictureIndex(!0);
+}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -1060,8 +1064,12 @@ pub enum PrimitiveInstanceKind {
         data_handle: PrimitiveDataHandle,
     },
     /// Render a portion of a specified backdrop.
-    Backdrop {
-        data_handle: BackdropDataHandle,
+    BackdropCapture {
+        data_handle: BackdropCaptureDataHandle,
+    },
+    BackdropRender {
+        data_handle: BackdropRenderDataHandle,
+        pic_index: PictureIndex,
     },
 }
 
@@ -1192,7 +1200,10 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
                 data_handle.uid()
             }
-            PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
+            PrimitiveInstanceKind::BackdropCapture { data_handle, .. } => {
+                data_handle.uid()
+            }
+            PrimitiveInstanceKind::BackdropRender { data_handle, .. } => {
                 data_handle.uid()
             }
         }
@@ -1257,6 +1268,9 @@ pub struct PrimitiveScratchBuffer {
 
     /// List of current debug messages to log on screen
     messages: Vec<DebugMessage>,
+
+    /// Set of sub-graphs that are required, determined during visibility pass
+    pub required_sub_graphs: FastHashSet<PictureIndex>,
 }
 
 impl Default for PrimitiveScratchBuffer {
@@ -1270,6 +1284,7 @@ impl Default for PrimitiveScratchBuffer {
             gradient_tiles: GradientTileStorage::new(0),
             debug_items: Vec::new(),
             messages: Vec::new(),
+            required_sub_graphs: FastHashSet::default(),
         }
     }
 }
@@ -1299,6 +1314,8 @@ impl PrimitiveScratchBuffer {
         //           every frame. This maintains the existing behavior, but we
         //           should fix this in the future to retain handles.
         self.gradient_tiles.clear();
+
+        self.required_sub_graphs.clear();
 
         self.debug_items.clear();
     }

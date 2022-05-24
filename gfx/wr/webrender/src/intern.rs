@@ -394,7 +394,8 @@ macro_rules! enumerate_interners {
             picture: Picture,
             text_run: TextRun,
             filter_data: FilterDataIntern,
-            backdrop: Backdrop,
+            backdrop_capture: BackdropCapture,
+            backdrop_render: BackdropRender,
             polygon: PolygonIntern,
         }
     }
