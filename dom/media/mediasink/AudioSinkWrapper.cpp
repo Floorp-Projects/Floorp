@@ -169,8 +169,10 @@ void AudioSinkWrapper::OnMuted(bool aMuted) {
     if (mAudioSink) {
       LOG("AudioSinkWrapper muted, shutting down AudioStream.");
       mAudioSinkEndedPromise.DisconnectIfExists();
-      mPlayDuration = mAudioSink->GetPosition();
-      mPlayStartTime = TimeStamp::Now();
+      if (IsPlaying()) {
+        mPlayDuration = mAudioSink->GetPosition();
+        mPlayStartTime = TimeStamp::Now();
+      }
       Maybe<MozPromiseHolder<MediaSink::EndedPromise>> rv =
           mAudioSink->Shutdown(ShutdownCause::Muting);
       MOZ_ASSERT(rv.isSome());
