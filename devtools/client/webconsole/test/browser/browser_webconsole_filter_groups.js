@@ -156,8 +156,16 @@ add_task(async function() {
     text: "",
   });
 
-  const groupA = await findMessageVirtualized({ hud, text: "[a]" });
-  const groupJ = await findMessageVirtualized({ hud, text: "[j]" });
+  const groupA = await findMessageVirtualizedByType({
+    hud,
+    text: "[a]",
+    typeSelector: ".console-api",
+  });
+  const groupJ = await findMessageVirtualizedByType({
+    hud,
+    text: "[j]",
+    typeSelector: ".console-api",
+  });
 
   toggleGroup(groupA);
   toggleGroup(groupJ);
