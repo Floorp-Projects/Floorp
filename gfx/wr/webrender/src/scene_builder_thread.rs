@@ -784,7 +784,9 @@ impl LowPrioritySceneBuilderThread {
 
     fn process_transaction(&mut self, mut txn: Box<TransactionMsg>) -> Box<TransactionMsg> {
         let is_low_priority = true;
+        txn.profile.start_time(profiler::BLOB_RASTERIZATION_TIME);
         rasterize_blobs(&mut txn, is_low_priority);
+        txn.profile.end_time(profiler::BLOB_RASTERIZATION_TIME);
         txn.blob_requests = Vec::new();
 
         txn
