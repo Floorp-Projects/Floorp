@@ -38,8 +38,6 @@ class AudioFrameProcessor;
 
 namespace cricket {
 
-class AudioDeviceModule;
-class AudioMixer;
 class AudioSource;
 class WebRtcVoiceMediaChannel;
 
