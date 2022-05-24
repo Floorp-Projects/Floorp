@@ -40,6 +40,7 @@
 #include "net/dcsctp/public/dcsctp_message.h"
 #include "net/dcsctp/public/dcsctp_options.h"
 #include "net/dcsctp/public/dcsctp_socket.h"
+#include "net/dcsctp/public/types.h"
 #include "net/dcsctp/rx/reassembly_queue.h"
 #include "net/dcsctp/socket/mock_dcsctp_socket_callbacks.h"
 #include "net/dcsctp/testing/testing_macros.h"
@@ -56,6 +57,7 @@ using ::testing::IsEmpty;
 using ::testing::SizeIs;
 
 constexpr SendOptions kSendOptions;
+constexpr size_t kLargeMessageSize = DcSctpOptions::kMaxSafeMTUSize * 20;
 
 MATCHER_P(HasDataChunkWithSsn, ssn, "") {
   absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
@@ -592,7 +594,7 @@ TEST_F(DcSctpSocketTest, TimeoutResendsPacket) {
 TEST_F(DcSctpSocketTest, SendALotOfBytesMissedSecondPacket) {
   ConnectSockets();
 
-  std::vector<uint8_t> payload(options_.mtu * 10);
+  std::vector<uint8_t> payload(kLargeMessageSize);
   sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53), payload), kSendOptions);
 
   // First DATA
@@ -832,7 +834,7 @@ TEST_F(DcSctpSocketTest, OnePeerReconnects) {
   EXPECT_CALL(cb_a_, OnConnectionRestarted).Times(1);
   // Let's be evil here - reconnect while a fragmented packet was about to be
   // sent. The receiving side should get it in full.
-  std::vector<uint8_t> payload(options_.mtu * 10);
+  std::vector<uint8_t> payload(kLargeMessageSize);
   sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53), payload), kSendOptions);
 
   // First DATA
@@ -1066,6 +1068,98 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
 TEST_F(DcSctpSocketTest, SetMaxMessageSize) {
   sock_a_.SetMaxMessageSize(42u);
   EXPECT_EQ(sock_a_.options().max_message_size, 42u);
+}
+
+TEST_F(DcSctpSocketTest, SendsMessagesWithLowLifetime) {
+  ConnectSockets();
+
+  // Mock that the time always goes forward.
+  TimeMs now(0);
+  EXPECT_CALL(cb_a_, TimeMillis).WillRepeatedly([&]() {
+    now += DurationMs(3);
+    return now;
+  });
+  EXPECT_CALL(cb_z_, TimeMillis).WillRepeatedly([&]() {
+    now += DurationMs(3);
+    return now;
+  });
+
+  // Queue a few small messages with low lifetime, both ordered and unordered,
+  // and validate that all are delivered.
+  static constexpr int kIterations = 100;
+  for (int i = 0; i < kIterations; ++i) {
+    SendOptions send_options;
+    send_options.unordered = IsUnordered((i % 2) == 0);
+    send_options.lifetime = DurationMs(i % 3);  // 0, 1, 2 ms
+
+    sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53), {1, 2}), send_options);
+  }
+
+  ExchangeMessages(sock_a_, cb_a_, sock_z_, cb_z_);
+
+  for (int i = 0; i < kIterations; ++i) {
+    EXPECT_TRUE(cb_z_.ConsumeReceivedMessage().has_value());
+  }
+
+  EXPECT_FALSE(cb_z_.ConsumeReceivedMessage().has_value());
+
+  // Validate that the sockets really make the time move forward.
+  EXPECT_GE(*now, kIterations * 2);
+}
+
+TEST_F(DcSctpSocketTest, DiscardsMessagesWithLowLifetimeIfMustBuffer) {
+  ConnectSockets();
+
+  SendOptions lifetime_0;
+  lifetime_0.unordered = IsUnordered(true);
+  lifetime_0.lifetime = DurationMs(0);
+
+  SendOptions lifetime_1;
+  lifetime_1.unordered = IsUnordered(true);
+  lifetime_1.lifetime = DurationMs(1);
+
+  // Mock that the time always goes forward.
+  TimeMs now(0);
+  EXPECT_CALL(cb_a_, TimeMillis).WillRepeatedly([&]() {
+    now += DurationMs(3);
+    return now;
+  });
+  EXPECT_CALL(cb_z_, TimeMillis).WillRepeatedly([&]() {
+    now += DurationMs(3);
+    return now;
+  });
+
+  // Fill up the send buffer with a large message.
+  std::vector<uint8_t> payload(kLargeMessageSize);
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53), payload), kSendOptions);
+
+  // And queue a few small messages with lifetime=0 or 1 ms - can't be sent.
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53), {1, 2, 3}), lifetime_0);
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53), {4, 5, 6}), lifetime_1);
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53), {7, 8, 9}), lifetime_0);
+
+  // Handle all that was sent until congestion window got full.
+  for (;;) {
+    std::vector<uint8_t> packet_from_a = cb_a_.ConsumeSentPacket();
+    if (packet_from_a.empty()) {
+      break;
+    }
+    sock_z_.ReceivePacket(std::move(packet_from_a));
+  }
+
+  // Shouldn't be enough to send that large message.
+  EXPECT_FALSE(cb_z_.ConsumeReceivedMessage().has_value());
+
+  // Exchange the rest of the messages, with the time ever increasing.
+  ExchangeMessages(sock_a_, cb_a_, sock_z_, cb_z_);
+
+  // The large message should be delivered. It was sent reliably.
+  ASSERT_HAS_VALUE_AND_ASSIGN(DcSctpMessage m1, cb_z_.ConsumeReceivedMessage());
+  EXPECT_EQ(m1.stream_id(), StreamID(1));
+  EXPECT_THAT(m1.payload(), SizeIs(kLargeMessageSize));
+
+  // But none of the smaller messages.
+  EXPECT_FALSE(cb_z_.ConsumeReceivedMessage().has_value());
 }
 
 }  // namespace
