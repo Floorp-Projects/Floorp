@@ -180,6 +180,8 @@ class DcSctpSocketTest : public testing::Test {
  protected:
   explicit DcSctpSocketTest(bool enable_message_interleaving = false)
       : options_(MakeOptionsForTest(enable_message_interleaving)),
+        cb_a_("A"),
+        cb_z_("Z"),
         sock_a_("A", cb_a_, nullptr, options_),
         sock_z_("Z", cb_z_, nullptr, options_) {}
 
@@ -765,7 +767,7 @@ TEST_F(DcSctpSocketTest, OnePeerReconnects) {
   sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());
 
   // Create a new association, z2 - and don't use z anymore.
-  testing::NiceMock<MockDcSctpSocketCallbacks> cb_z2;
+  testing::NiceMock<MockDcSctpSocketCallbacks> cb_z2("Z2");
   DcSctpSocket sock_z2("Z2", cb_z2, nullptr, options_);
 
   sock_z2.Connect();
@@ -888,7 +890,7 @@ TEST_F(DcSctpSocketTest, ReceivingErrorChunkReportsAsCallback) {
 
 TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
   // Create a new association, z2 - and don't use z anymore.
-  testing::NiceMock<MockDcSctpSocketCallbacks> cb_z2;
+  testing::NiceMock<MockDcSctpSocketCallbacks> cb_z2("Z2");
   DcSctpOptions options = options_;
   options.max_receiver_window_buffer_size = 100;
   DcSctpSocket sock_z2("Z2", cb_z2, nullptr, options);
