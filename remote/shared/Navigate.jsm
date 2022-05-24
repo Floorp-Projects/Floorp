@@ -164,7 +164,7 @@ class ProgressListener {
   }
 
   #checkLoadingState(request, options = {}) {
-    const { isStart = false, isStop = false } = options;
+    const { isStart = false, isStop = false, status = 0 } = options;
     const messagePrefix = `[${this.browsingContext.id}] ${this.constructor.name}`;
 
     if (isStart && !this.#seenStartFlag) {
@@ -189,6 +189,27 @@ class ProgressListener {
     }
 
     if (isStop && this.#seenStartFlag) {
+      if (!Components.isSuccessCode(status)) {
+        // Ignore if the current navigation to the initial document is stopped
+        // because the real document will be loaded instead.
+        if (
+          status == Cr.NS_BINDING_ABORTED &&
+          this.browsingContext.currentWindowGlobal.isInitialDocument
+        ) {
+          return;
+        }
+
+        // The navigation request caused an error.
+        const errorName = ChromeUtils.getXPCOMErrorName(status);
+        logger.trace(
+          truncate`${messagePrefix} state=stop: error=0x${status.toString(
+            16
+          )} (${errorName})`
+        );
+        this.stop({ error: new Error(errorName) });
+        return;
+      }
+
       logger.trace(
         truncate`${messagePrefix} state=stop: ${this.currentURI.spec}`
       );
@@ -233,19 +254,28 @@ class ProgressListener {
     this.#checkLoadingState(request, {
       isStart: flag & Ci.nsIWebProgressListener.STATE_START,
       isStop: flag & Ci.nsIWebProgressListener.STATE_STOP,
+      status,
     });
   }
 
   onLocationChange(progress, request, location, flag) {
+    const messagePrefix = `[${this.browsingContext.id}] ${this.constructor.name}`;
+
+    // If an error page has been loaded abort the navigation.
+    if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
+      logger.trace(
+        truncate`${messagePrefix} location=errorPage: ${location.spec}`
+      );
+      this.stop({ error: new Error("Address restricted") });
+      return;
+    }
+
     // If location has changed in the same document the navigation is done.
     if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
       this.#targetURI = location;
-
-      const messagePrefix = `[${this.browsingContext.id}] ${this.constructor.name}`;
       logger.trace(
         truncate`${messagePrefix} location=sameDocument: ${this.targetURI?.spec}`
       );
-
       this.stop();
     }
   }
@@ -297,8 +327,14 @@ class ProgressListener {
 
   /**
    * Stop observing web progress changes.
+   *
+   * @param {Object=} options
+   * @param {Error=} options.error
+   *     If specified the navigation promise will be rejected with this error.
    */
-  stop() {
+  stop(options = {}) {
+    const { error } = options;
+
     if (!this.#deferredNavigation) {
       throw new Error(`Progress listener not yet started`);
     }
@@ -317,7 +353,12 @@ class ProgressListener {
       this.#targetURI = this.browsingContext.currentURI;
     }
 
-    this.#deferredNavigation.resolve();
+    if (error) {
+      this.#deferredNavigation.reject(error);
+    } else {
+      this.#deferredNavigation.resolve();
+    }
+
     this.#deferredNavigation = null;
   }
 
