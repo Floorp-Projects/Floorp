@@ -200,7 +200,7 @@ add_task(async function() {
 
 async function checkCorsMessage(hud, message, category) {
   // Get a new reference to the node, as it may have been scrolled out of existence.
-  const node = await findMessageVirtualized({
+  const node = await findMessageVirtualizedById({
     hud,
     messageId: message.node.getAttribute("data-message-id"),
   });
