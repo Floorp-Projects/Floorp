@@ -12,6 +12,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/LoadInfo.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowContext.h"
@@ -617,8 +618,20 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
   Unused << aChannel->GetURI(getter_AddRefs(uri));
 
   // In some cases we don't have a browsingContext. For example, in xpcshell
-  // tests or channels that are used to download images.
+  // tests, channels that are used to download images and channels for loading
+  // worker script.
   if (!bc) {
+    // If the flag was set before, we don't need to compute again. This could
+    // happen for the channels used to load worker scripts.
+    //
+    // Note that we cannot stop computing the flag in general even it has set
+    // before because sometimes we need to get the up-to-date flag, e.g.
+    // redirects.
+    if (static_cast<net::LoadInfo*>(loadInfo.get())
+            ->HasIsThirdPartyContextToTopWindowSet()) {
+      return;
+    }
+
     // We turn to check the loading principal if there is no browsing context.
     auto* loadingPrincipal =
         BasePrincipal::Cast(loadInfo->GetLoadingPrincipal());
