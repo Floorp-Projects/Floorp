@@ -23,7 +23,10 @@ add_task(async function() {
 
   info("Wait until the content object is displayed");
   let objectMessage = await waitFor(() =>
-    findMessage(hud, `Object { contentObject: "YAY!", deep: (1) […] }`)
+    findConsoleAPIMessage(
+      hud,
+      `Object { contentObject: "YAY!", deep: (1) […] }`
+    )
   );
   ok(true, "Content object is displayed in the Browser Console");
 
@@ -35,7 +38,10 @@ add_task(async function() {
 
   info("Wait until the content object is displayed");
   objectMessage = await waitFor(() =>
-    findMessage(hud, `Object { contentObject: "YAY!", deep: (1) […] }`)
+    findConsoleAPIMessage(
+      hud,
+      `Object { contentObject: "YAY!", deep: (1) […] }`
+    )
   );
   ok(true, "Content object is displayed in the Browser Console after restart");
 

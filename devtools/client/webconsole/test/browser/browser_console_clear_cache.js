@@ -24,7 +24,7 @@ add_task(async function() {
 
   info("Click the clear output button");
   const onBrowserConsoleOutputCleared = waitFor(
-    () => !findMessage(hud, CACHED_MESSAGE)
+    () => !findConsoleAPIMessage(hud, CACHED_MESSAGE)
   );
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
   await onBrowserConsoleOutputCleared;
@@ -42,7 +42,7 @@ add_task(async function() {
   info("Log a smoke message in order to know that the console is ready");
   await logTextInContentAndWaitForMessage(hud, "Smoke message");
   is(
-    findMessage(hud, CACHED_MESSAGE),
+    findConsoleAPIMessage(hud, CACHED_MESSAGE),
     undefined,
     "The cached message is not visible anymore"
   );

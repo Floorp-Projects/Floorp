@@ -88,7 +88,7 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
   await waitFor(
     () =>
       expectedMessages.every(expectedMessage =>
-        findMessage(hud, expectedMessage)
+        findConsoleAPIMessage(hud, expectedMessage)
       ),
     "wait for all the messages to be displayed",
     100
@@ -96,7 +96,11 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
   ok(true, "Expected messages are displayed in the browser console");
 
   if (nonPrimitiveVariablesDisplayed) {
-    const tableMessage = findMessage(hud, "console.table()", ".message.table");
+    const tableMessage = findConsoleAPIMessage(
+      hud,
+      "console.table()",
+      ".table"
+    );
 
     const table = await waitFor(() =>
       tableMessage.querySelector(".consoletable")
@@ -113,7 +117,7 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
 
   info("Uncheck the Show content messages checkbox");
   const onContentMessagesHidden = waitFor(
-    () => !findMessage(hud, contentArgs.log)
+    () => !findConsoleAPIMessage(hud, contentArgs.log)
   );
   await toggleConsoleSetting(
     hud,
@@ -122,12 +126,17 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
   await onContentMessagesHidden;
 
   for (const expectedMessage of expectedMessages) {
-    ok(!findMessage(hud, expectedMessage), `"${expectedMessage}" is hidden`);
+    ok(
+      !findConsoleAPIMessage(hud, expectedMessage),
+      `"${expectedMessage}" is hidden`
+    );
   }
 
   info("Check the Show content messages checkbox");
   const onContentMessagesDisplayed = waitFor(() =>
-    expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage))
+    expectedMessages.every(expectedMessage =>
+      findConsoleAPIMessage(hud, expectedMessage)
+    )
   );
   await toggleConsoleSetting(
     hud,
@@ -136,7 +145,10 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
   await onContentMessagesDisplayed;
 
   for (const expectedMessage of expectedMessages) {
-    ok(findMessage(hud, expectedMessage), `"${expectedMessage}" is visible`);
+    ok(
+      findConsoleAPIMessage(hud, expectedMessage),
+      `"${expectedMessage}" is visible`
+    );
   }
 
   info("Clear and close the Browser Console");

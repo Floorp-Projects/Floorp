@@ -90,8 +90,8 @@ async function testBrowserConsole(publicTab) {
   hud = await openConsole(privateTab);
   ok(hud, "web console reopened");
 
-  await waitFor(() => findMessage(hud, PRIVATE_MESSAGE));
-  await waitFor(() => findMessage(hud, PRIVATE_EXCEPTION, ".message.error"));
+  await waitFor(() => findConsoleAPIMessage(hud, PRIVATE_MESSAGE));
+  await waitFor(() => findErrorMessage(hud, PRIVATE_EXCEPTION));
   ok(
     true,
     "Messages are still displayed after closing and reopening the console"
@@ -144,7 +144,7 @@ async function testBrowserConsole(publicTab) {
   await onPrivateMessagesCleared;
 
   ok(
-    findMessage(hud, NON_PRIVATE_MESSAGE),
+    findConsoleAPIMessage(hud, NON_PRIVATE_MESSAGE),
     "non-private messages are still shown after private window closed"
   );
   assertNoPrivateMessages(hud);
@@ -168,12 +168,12 @@ function logPrivateMessages(browser) {
 
 function assertNoPrivateMessages(hud) {
   is(
-    findMessage(hud, PRIVATE_MESSAGE, ".message:not(.error)")?.textContent,
+    findConsoleAPIMessage(hud, PRIVATE_MESSAGE, ":not(.error)")?.textContent,
     undefined,
     "no console message displayed"
   );
   is(
-    findMessage(hud, PRIVATE_EXCEPTION, ".message.error")?.textContent,
+    findErrorMessage(hud, PRIVATE_EXCEPTION)?.textContent,
     undefined,
     "no exception displayed"
   );

@@ -36,7 +36,7 @@ add_task(async function() {
 
   info("wait for long string expansion");
   const onLongStringFullTextDisplayed = waitFor(() =>
-    findMessage(hud, LONGSTRING)
+    findConsoleAPIMessage(hud, LONGSTRING)
   );
   arrow.click();
   await onLongStringFullTextDisplayed;
@@ -44,7 +44,9 @@ add_task(async function() {
   ok(true, "The full text of the longString is displayed");
 
   info("wait for long string collapse");
-  const onLongStringCollapsed = waitFor(() => !findMessage(hud, LONGSTRING));
+  const onLongStringCollapsed = waitFor(
+    () => !findConsoleAPIMessage(hud, LONGSTRING)
+  );
   arrow.click();
   await onLongStringCollapsed;
 

@@ -31,7 +31,7 @@ add_task(async function() {
   info("Open the Browser Console");
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
-  const message = await waitFor(() => findMessage(hud, "foo"));
+  const message = await waitFor(() => findConsoleAPIMessage(hud, "foo"));
   const [objectA, objectB] = message.querySelectorAll(
     ".object-inspector .objectBox-object"
   );
