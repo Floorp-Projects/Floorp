@@ -71,6 +71,14 @@ class MockStreamDataCountersCallback : public StreamDataCountersCallback {
               (override));
 };
 
+class MockSendSideDelayObserver : public SendSideDelayObserver {
+ public:
+  MOCK_METHOD(void,
+              SendSideDelayUpdated,
+              (int, int, uint64_t, uint32_t),
+              (override));
+};
+
 class FieldTrialConfig : public WebRtcKeyValueConfig {
  public:
   FieldTrialConfig() : overhead_enabled_(false) {}
@@ -180,7 +188,7 @@ class RtpSenderEgressTest : public ::testing::TestWithParam<TestConfig> {
   GlobalSimulatedTimeController time_controller_;
   Clock* const clock_;
   NiceMock<MockRtcEventLog> mock_rtc_event_log_;
-  StrictMock<MockStreamDataCountersCallback> mock_rtp_stats_callback_;
+  NiceMock<MockStreamDataCountersCallback> mock_rtp_stats_callback_;
   NiceMock<MockSendPacketObserver> send_packet_observer_;
   NiceMock<MockTransportFeedbackObserver> feedback_observer_;
   RtpHeaderExtensionMap header_extensions_;
@@ -275,6 +283,50 @@ TEST_P(RtpSenderEgressTest,
   sender->SendPacket(packet.get(), PacedPacketInfo());
   EXPECT_FALSE(transport_.last_packet()->options.included_in_feedback);
   EXPECT_TRUE(transport_.last_packet()->options.included_in_allocation);
+}
+
+TEST_P(RtpSenderEgressTest, OnSendSideDelayUpdated) {
+  StrictMock<MockSendSideDelayObserver> send_side_delay_observer;
+  RtpRtcpInterface::Configuration config = DefaultConfig();
+  config.send_side_delay_observer = &send_side_delay_observer;
+  auto sender = std::make_unique<RtpSenderEgress>(config, &packet_history_);
+
+  // Send packet with 10 ms send-side delay. The average, max and total should
+  // be 10 ms.
+  EXPECT_CALL(send_side_delay_observer,
+              SendSideDelayUpdated(10, 10, 10, kSsrc));
+  int64_t capture_time_ms = clock_->TimeInMilliseconds();
+  time_controller_.AdvanceTime(TimeDelta::Millis(10));
+  sender->SendPacket(BuildRtpPacket(/*marker=*/true, capture_time_ms).get(),
+                     PacedPacketInfo());
+
+  // Send another packet with 20 ms delay. The average, max and total should be
+  // 15, 20 and 30 ms respectively.
+  EXPECT_CALL(send_side_delay_observer,
+              SendSideDelayUpdated(15, 20, 30, kSsrc));
+  capture_time_ms = clock_->TimeInMilliseconds();
+  time_controller_.AdvanceTime(TimeDelta::Millis(20));
+  sender->SendPacket(BuildRtpPacket(/*marker=*/true, capture_time_ms).get(),
+                     PacedPacketInfo());
+
+  // Send another packet at the same time, which replaces the last packet.
+  // Since this packet has 0 ms delay, the average is now 5 ms and max is 10 ms.
+  // The total counter stays the same though.
+  // TODO(terelius): Is is not clear that this is the right behavior.
+  EXPECT_CALL(send_side_delay_observer, SendSideDelayUpdated(5, 10, 30, kSsrc));
+  capture_time_ms = clock_->TimeInMilliseconds();
+  sender->SendPacket(BuildRtpPacket(/*marker=*/true, capture_time_ms).get(),
+                     PacedPacketInfo());
+
+  // Send a packet 1 second later. The earlier packets should have timed
+  // out, so both max and average should be the delay of this packet. The total
+  // keeps increasing.
+  time_controller_.AdvanceTime(TimeDelta::Seconds(1));
+  EXPECT_CALL(send_side_delay_observer, SendSideDelayUpdated(1, 1, 31, kSsrc));
+  capture_time_ms = clock_->TimeInMilliseconds();
+  time_controller_.AdvanceTime(TimeDelta::Millis(1));
+  sender->SendPacket(BuildRtpPacket(/*marker=*/true, capture_time_ms).get(),
+                     PacedPacketInfo());
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
