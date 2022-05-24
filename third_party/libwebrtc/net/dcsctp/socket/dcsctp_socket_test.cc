@@ -30,6 +30,7 @@
 #include "net/dcsctp/packet/chunk/idata_chunk.h"
 #include "net/dcsctp/packet/chunk/init_chunk.h"
 #include "net/dcsctp/packet/chunk/sack_chunk.h"
+#include "net/dcsctp/packet/chunk/shutdown_chunk.h"
 #include "net/dcsctp/packet/error_cause/error_cause.h"
 #include "net/dcsctp/packet/error_cause/unrecognized_chunk_type_cause.h"
 #include "net/dcsctp/packet/parameter/heartbeat_info_parameter.h"
@@ -505,6 +506,37 @@ TEST_F(DcSctpSocketTest, ShutdownConnection) {
 
   EXPECT_EQ(sock_a_.state(), SocketState::kClosed);
   EXPECT_EQ(sock_z_.state(), SocketState::kClosed);
+}
+
+TEST_F(DcSctpSocketTest, ShutdownTimerExpiresTooManyTimeClosesConnection) {
+  ConnectSockets();
+
+  sock_a_.Shutdown();
+  // Drop first SHUTDOWN packet.
+  cb_a_.ConsumeSentPacket();
+
+  EXPECT_EQ(sock_a_.state(), SocketState::kShuttingDown);
+
+  for (int i = 0; i < options_.max_retransmissions; ++i) {
+    AdvanceTime(DurationMs(options_.rto_initial * (1 << i)));
+    RunTimers();
+
+    // Dropping every shutdown chunk.
+    ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet,
+                                SctpPacket::Parse(cb_a_.ConsumeSentPacket()));
+    EXPECT_EQ(packet.descriptors()[0].type, ShutdownChunk::kType);
+    EXPECT_TRUE(cb_a_.ConsumeSentPacket().empty());
+  }
+  // The last expiry, makes it abort the connection.
+  AdvanceTime(options_.rto_initial * (1 << options_.max_retransmissions));
+  EXPECT_CALL(cb_a_, OnAborted).Times(1);
+  RunTimers();
+
+  EXPECT_EQ(sock_a_.state(), SocketState::kClosed);
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet,
+                              SctpPacket::Parse(cb_a_.ConsumeSentPacket()));
+  EXPECT_EQ(packet.descriptors()[0].type, AbortChunk::kType);
+  EXPECT_TRUE(cb_a_.ConsumeSentPacket().empty());
 }
 
 TEST_F(DcSctpSocketTest, EstablishConnectionWhileSendingData) {

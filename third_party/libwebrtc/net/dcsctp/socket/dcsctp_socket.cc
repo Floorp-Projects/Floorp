@@ -763,12 +763,7 @@ absl::optional<DurationMs> DcSctpSocket::OnShutdownTimerExpiry() {
                        << " has expired: " << t2_shutdown_->expiration_count()
                        << "/" << t2_shutdown_->options().max_restarts;
 
-  // https://tools.ietf.org/html/rfc4960#section-9.2
-  // "If the timer expires, the endpoint must resend the SHUTDOWN with the
-  // updated last sequential TSN received from its peer."
-  if (t2_shutdown_->is_running()) {
-    SendShutdown();
-  } else {
+  if (!t2_shutdown_->is_running()) {
     // https://tools.ietf.org/html/rfc4960#section-9.2
     // "An endpoint should limit the number of retransmissions of the SHUTDOWN
     // chunk to the protocol parameter 'Association.Max.Retrans'. If this
@@ -781,7 +776,14 @@ absl::optional<DurationMs> DcSctpSocket::OnShutdownTimerExpiry() {
                              .Build())));
 
     InternalClose(ErrorKind::kTooManyRetries, "No SHUTDOWN_ACK received");
+    RTC_DCHECK(IsConsistent());
+    return absl::nullopt;
   }
+
+  // https://tools.ietf.org/html/rfc4960#section-9.2
+  // "If the timer expires, the endpoint must resend the SHUTDOWN with the
+  // updated last sequential TSN received from its peer."
+  SendShutdown();
   RTC_DCHECK(IsConsistent());
   return tcb_->current_rto();
 }
