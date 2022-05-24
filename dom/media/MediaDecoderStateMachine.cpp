@@ -3614,7 +3614,7 @@ media::TimeUnit MediaDecoderStateMachine::GetClock(
     TimeStamp* aTimeStamp) const {
   MOZ_ASSERT(OnTaskQueue());
   auto clockTime = mMediaSink->GetPosition(aTimeStamp);
-  NS_ASSERTION(GetMediaTime() <= clockTime, "Clock should go forwards.");
+  MOZ_ASSERT(GetMediaTime() <= clockTime, "Clock should go forwards.");
   return clockTime;
 }
 
