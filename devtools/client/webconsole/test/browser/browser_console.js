@@ -198,34 +198,60 @@ async function testMessages() {
   // Wait enough so any duplicated message would have the time to be rendered
   await wait(1000);
 
-  await checkUniqueMessageExists(hud, "message from chrome window");
   await checkUniqueMessageExists(
     hud,
-    "error thrown from test-cu-reporterror.js via Cu.reportError()"
+    "message from chrome window",
+    ".console-api"
   );
-  await checkUniqueMessageExists(hud, "error from nuked globals");
   await checkUniqueMessageExists(
     hud,
-    "privileged content process error message"
+    "error thrown from test-cu-reporterror.js via Cu.reportError()",
+    ".error"
   );
-  await checkUniqueMessageExists(hud, "message from content window");
-  await checkUniqueMessageExists(hud, "error from content window");
+  await checkUniqueMessageExists(hud, "error from nuked globals", ".error");
+  await checkUniqueMessageExists(
+    hud,
+    "privileged content process error message",
+    ".error"
+  );
+  await checkUniqueMessageExists(
+    hud,
+    "message from content window",
+    ".console-api"
+  );
+  await checkUniqueMessageExists(hud, "error from content window", ".error");
   await checkUniqueMessageExists(
     hud,
     `"Parent Process Location: chrome://browser/content/browser.xhtml"`,
     ".result"
   );
-  await checkUniqueMessageExists(hud, "framescript-message");
-  await checkUniqueMessageExists(hud, "Error from Services.console.logMessage");
-  await checkUniqueMessageExists(hud, "foobarException");
-  await checkUniqueMessageExists(hud, "test-console.html", ".message.network");
-  await checkUniqueMessageExists(hud, "404.html");
-  await checkUniqueMessageExists(hud, "test-image.png");
-  await checkUniqueMessageExists(hud, "Log.jsm content process messsage");
-  await checkUniqueMessageExists(hud, "message in content worker");
-  await checkUniqueMessageExists(hud, "error in content worker");
-  await checkUniqueMessageExists(hud, "message in parent worker");
-  await checkUniqueMessageExists(hud, "error in parent worker");
+  await checkUniqueMessageExists(hud, "framescript-message", ".console-api");
+  await checkUniqueMessageExists(
+    hud,
+    "Error from Services.console.logMessage",
+    ".warn"
+  );
+  await checkUniqueMessageExists(hud, "foobarException", ".error");
+  await checkUniqueMessageExists(hud, "test-console.html", ".network");
+  await checkUniqueMessageExists(hud, "404.html", ".network");
+  await checkUniqueMessageExists(hud, "test-image.png", ".network");
+  await checkUniqueMessageExists(
+    hud,
+    "Log.jsm content process messsage",
+    ".console-api"
+  );
+  await checkUniqueMessageExists(
+    hud,
+    "message in content worker",
+    ".console-api"
+  );
+  await checkUniqueMessageExists(hud, "error in content worker", ".error");
+  await checkUniqueMessageExists(
+    hud,
+    "message in parent worker",
+    ".console-api"
+  );
+  await checkUniqueMessageExists(hud, "error in parent worker", ".error");
   await checkUniqueMessageExists(
     hud,
     "Expected color but found ‘rainbow’",
