@@ -242,4 +242,60 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Asojú sáfà kọ asomọ́ra</string>
 
-    </resources>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Ìtàkùn-àgbáyé ni a ṣe lanà tí ó gbọ́dọ̀ lo asojú fáfà, ṣùgbọ́n asojú náà kọ ìsomọ́ra.</p>
+      <ul>
+        <li>Ǹjẹ́ ìfiṣiṣẹ́ asojú ìtàkùn-àgbáyé náà tọ̀nà? Yẹ ààtò wò kí o sì gbìyànjú sí i.</li>
+        <li>Ǹjẹ́ iṣẹ́ asojú fàyè gba ìsomọ́ra láti ọ̀dọ̀ nẹ́tíwọ̀kì yìí?</li>
+        <li>O sì ní ìsòro síbẹ̀? Kàn sí alákòóso nẹ́tíwọ̀kì rẹ tàbí olùpèsè íntánẹ́ẹ̀tì rẹ fún ìrànlọ́wọ́.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">A kò sí asokú sáfà </string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>A ṣe ìtànkùn-àgbáyé láti ṣiṣẹ́ pẹ̀lú asojú sáfà ṣùgbọ́n a kò rí asojú.</p>
+      <ul>
+        <li>Ǹjẹ́ ìfiṣiṣẹ́ ìtàkùn-àgbáyé tọ̀nà? Yẹ ààtò wò kí o sì gbìyànjú sí i.</li>
+        <li>Ǹjẹ́ ohun èlò rẹ wà ní ìsomọ́ nẹ́tíwọ̀kì tó ń ṣiṣẹ́?</li>
+        <li>Ǹjẹ́ o sì ní ìsòro síbẹ̀? Kàn sí asàkòóso nẹ́tíwọ̀kì rẹ tàbí apèsè íntánẹ́ẹ̀tì rẹ fún ìrànlọ́wọ́.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ìṣòro ìkànnì mẹ́rọṣisẹ́-onísùtá</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Ìkànnì ní  %1$s ni wan ti jábọ̀ pé wọ́n ti kọ lù ú, wọ́n sì ti dènà rẹ̀ nítorí ìdáàbòbò tí o yàn.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Ìṣòro ìkànnì tí a kò fẹ́</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Ìkànnì ní  %1$s ni wọ́n jábọ̀ pé ó ní amsọṣiṣẹ́ tí a kò fẹ́, wọ́n sì ti dènà rẹ̀ ítorí ìdáàbòbò tí o yàn.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Ìṣòro ìkànnì tó léwu</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Ìkànnì ní  %1$s ni wọ́n fi sùn pé ó jẹ́ ìkànnì tí ó ṣe é ṣe kí ó léwu, wọ́n sì di dènà rẹ̀ nítorí ìdàábòbò tí o yàn.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Ìṣòro ìkànnì atànnijẹ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Ojú-ìwé ìkànnì yìí  %1$s ni wọ́n ti fi sùn gẹ́gẹ́ ìkànnì àtànnijẹ, wọ́n sì ti dènà rẹ̀ nítorí ìdàábòbò tí o yàn.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Ìkànnì adánilójú kò sí </string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[O ti fàyè gba HTTPS-Only Mode láti kún ààbo rẹ nípa, àti ẹ̀dà HTTPS ti <em>%1$s</em> kò sí.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Tẹ̀síwájú sí ìkànnì HTTP</string>
+</resources>
