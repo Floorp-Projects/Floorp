@@ -42,8 +42,9 @@ class FakeVoiceEngine;
 template <class Base>
 class RtpHelper : public Base {
  public:
-  RtpHelper()
-      : sending_(false),
+  explicit RtpHelper(webrtc::TaskQueueBase* network_thread)
+      : Base(network_thread),
+        sending_(false),
         playout_(false),
         fail_set_send_codecs_(false),
         fail_set_recv_codecs_(false),
@@ -314,8 +315,9 @@ class FakeVoiceMediaChannel : public RtpHelper<VoiceMediaChannel> {
     int event_code;
     int duration;
   };
-  explicit FakeVoiceMediaChannel(FakeVoiceEngine* engine,
-                                 const AudioOptions& options);
+  FakeVoiceMediaChannel(FakeVoiceEngine* engine,
+                        const AudioOptions& options,
+                        webrtc::TaskQueueBase* network_thread);
   ~FakeVoiceMediaChannel();
   const std::vector<AudioCodec>& recv_codecs() const;
   const std::vector<AudioCodec>& send_codecs() const;
@@ -406,7 +408,9 @@ bool CompareDtmfInfo(const FakeVoiceMediaChannel::DtmfInfo& info,
 
 class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
  public:
-  FakeVideoMediaChannel(FakeVideoEngine* engine, const VideoOptions& options);
+  FakeVideoMediaChannel(FakeVideoEngine* engine,
+                        const VideoOptions& options,
+                        webrtc::TaskQueueBase* network_thread);
 
   ~FakeVideoMediaChannel();
 

@@ -168,8 +168,9 @@ class MediaChannel {
     virtual ~NetworkInterface() {}
   };
 
-  explicit MediaChannel(const MediaConfig& config);
-  MediaChannel();
+  MediaChannel(const MediaConfig& config,
+               webrtc::TaskQueueBase* network_thread);
+  explicit MediaChannel(webrtc::TaskQueueBase* network_thread);
   virtual ~MediaChannel();
 
   virtual cricket::MediaType media_type() const = 0;
@@ -296,6 +297,8 @@ class MediaChannel {
       RTC_LOCKS_EXCLUDED(network_interface_mutex_);
 
   const bool enable_dscp_;
+  webrtc::TaskQueueBase* const network_thread_;
+
   // |network_interface_| can be accessed from the worker_thread and
   // from any MediaEngine threads. This critical section is to protect accessing
   // of network_interface_ object.
@@ -764,9 +767,11 @@ struct AudioRecvParameters : RtpParameters<AudioCodec> {};
 
 class VoiceMediaChannel : public MediaChannel, public Delayable {
  public:
-  VoiceMediaChannel() {}
-  explicit VoiceMediaChannel(const MediaConfig& config)
-      : MediaChannel(config) {}
+  explicit VoiceMediaChannel(webrtc::TaskQueueBase* network_thread)
+      : MediaChannel(network_thread) {}
+  VoiceMediaChannel(const MediaConfig& config,
+                    webrtc::TaskQueueBase* network_thread)
+      : MediaChannel(config, network_thread) {}
   ~VoiceMediaChannel() override {}
 
   cricket::MediaType media_type() const override;
@@ -834,9 +839,11 @@ struct VideoRecvParameters : RtpParameters<VideoCodec> {};
 
 class VideoMediaChannel : public MediaChannel, public Delayable {
  public:
-  VideoMediaChannel() {}
-  explicit VideoMediaChannel(const MediaConfig& config)
-      : MediaChannel(config) {}
+  explicit VideoMediaChannel(webrtc::TaskQueueBase* network_thread)
+      : MediaChannel(network_thread) {}
+  VideoMediaChannel(const MediaConfig& config,
+                    webrtc::TaskQueueBase* network_thread)
+      : MediaChannel(config, network_thread) {}
   ~VideoMediaChannel() override {}
 
   cricket::MediaType media_type() const override;
