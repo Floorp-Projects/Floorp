@@ -10,12 +10,16 @@
 
 #include "media/base/media_channel.h"
 
+#include "media/base/rtp_utils.h"
+#include "rtc_base/task_utils/to_queued_task.h"
+
 namespace cricket {
 using webrtc::FrameDecryptorInterface;
 using webrtc::FrameEncryptorInterface;
 using webrtc::FrameTransformerInterface;
-using webrtc::MutexLock;
+using webrtc::PendingTaskSafetyFlag;
 using webrtc::TaskQueueBase;
+using webrtc::ToQueuedTask;
 using webrtc::VideoTrackInterface;
 
 VideoOptions::VideoOptions()
@@ -24,10 +28,14 @@ VideoOptions::~VideoOptions() = default;
 
 MediaChannel::MediaChannel(const MediaConfig& config,
                            TaskQueueBase* network_thread)
-    : enable_dscp_(config.enable_dscp), network_thread_(network_thread) {}
+    : enable_dscp_(config.enable_dscp),
+      network_safety_(PendingTaskSafetyFlag::CreateDetachedInactive()),
+      network_thread_(network_thread) {}
 
 MediaChannel::MediaChannel(TaskQueueBase* network_thread)
-    : enable_dscp_(false), network_thread_(network_thread) {}
+    : enable_dscp_(false),
+      network_safety_(PendingTaskSafetyFlag::CreateDetachedInactive()),
+      network_thread_(network_thread) {}
 
 MediaChannel::~MediaChannel() {
   RTC_DCHECK(!network_interface_);
@@ -35,7 +43,7 @@ MediaChannel::~MediaChannel() {
 
 void MediaChannel::SetInterface(NetworkInterface* iface) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  MutexLock lock(&network_interface_mutex_);
+  iface ? network_safety_->SetAlive() : network_safety_->SetNotAlive();
   network_interface_ = iface;
   UpdateDscp();
 }
@@ -70,9 +78,8 @@ bool MediaChannel::SendRtcp(rtc::CopyOnWriteBuffer* packet,
 
 int MediaChannel::SetOption(NetworkInterface::SocketType type,
                             rtc::Socket::Option opt,
-                            int option)
-    RTC_LOCKS_EXCLUDED(network_interface_mutex_) {
-  MutexLock lock(&network_interface_mutex_);
+                            int option) {
+  RTC_DCHECK_RUN_ON(network_thread_);
   return SetOptionLocked(type, opt, option);
 }
 
@@ -111,40 +118,98 @@ bool MediaChannel::DscpEnabled() const {
 // This is the DSCP value used for both RTP and RTCP channels if DSCP is
 // enabled. It can be changed at any time via |SetPreferredDscp|.
 rtc::DiffServCodePoint MediaChannel::PreferredDscp() const {
-  MutexLock lock(&network_interface_mutex_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   return preferred_dscp_;
 }
 
-int MediaChannel::SetPreferredDscp(rtc::DiffServCodePoint preferred_dscp) {
-  MutexLock lock(&network_interface_mutex_);
-  if (preferred_dscp == preferred_dscp_) {
-    return 0;
+void MediaChannel::SetPreferredDscp(rtc::DiffServCodePoint new_dscp) {
+  if (!network_thread_->IsCurrent()) {
+    // This is currently the common path as the derived channel classes
+    // get called on the worker thread. There are still some tests though
+    // that call directly on the network thread.
+    network_thread_->PostTask(ToQueuedTask(
+        network_safety_, [this, new_dscp]() { SetPreferredDscp(new_dscp); }));
+    return;
   }
-  preferred_dscp_ = preferred_dscp;
-  return UpdateDscp();
+
+  RTC_DCHECK_RUN_ON(network_thread_);
+  if (new_dscp == preferred_dscp_)
+    return;
+
+  preferred_dscp_ = new_dscp;
+  UpdateDscp();
 }
 
-int MediaChannel::UpdateDscp() {
+rtc::scoped_refptr<PendingTaskSafetyFlag> MediaChannel::network_safety() {
+  return network_safety_;
+}
+
+void MediaChannel::UpdateDscp() {
   rtc::DiffServCodePoint value =
       enable_dscp_ ? preferred_dscp_ : rtc::DSCP_DEFAULT;
   int ret =
       SetOptionLocked(NetworkInterface::ST_RTP, rtc::Socket::OPT_DSCP, value);
-  if (ret == 0) {
-    ret = SetOptionLocked(NetworkInterface::ST_RTCP, rtc::Socket::OPT_DSCP,
-                          value);
-  }
-  return ret;
+  if (ret == 0)
+    SetOptionLocked(NetworkInterface::ST_RTCP, rtc::Socket::OPT_DSCP, value);
 }
 
 bool MediaChannel::DoSendPacket(rtc::CopyOnWriteBuffer* packet,
                                 bool rtcp,
                                 const rtc::PacketOptions& options) {
-  MutexLock lock(&network_interface_mutex_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   if (!network_interface_)
     return false;
 
   return (!rtcp) ? network_interface_->SendPacket(packet, options)
                  : network_interface_->SendRtcp(packet, options);
+}
+
+void MediaChannel::SendRtp(const uint8_t* data,
+                           size_t len,
+                           const webrtc::PacketOptions& options) {
+  auto send =
+      [this, packet_id = options.packet_id,
+       included_in_feedback = options.included_in_feedback,
+       included_in_allocation = options.included_in_allocation,
+       packet = rtc::CopyOnWriteBuffer(data, len, kMaxRtpPacketLen)]() mutable {
+        rtc::PacketOptions rtc_options;
+        rtc_options.packet_id = packet_id;
+        if (DscpEnabled()) {
+          rtc_options.dscp = PreferredDscp();
+        }
+        rtc_options.info_signaled_after_sent.included_in_feedback =
+            included_in_feedback;
+        rtc_options.info_signaled_after_sent.included_in_allocation =
+            included_in_allocation;
+        SendPacket(&packet, rtc_options);
+      };
+
+  // TODO(bugs.webrtc.org/11993): ModuleRtpRtcpImpl2 and related classes (e.g.
+  // RTCPSender) aren't aware of the network thread and may trigger calls to
+  // this function from different threads. Update those classes to keep
+  // network traffic on the network thread.
+  if (network_thread_->IsCurrent()) {
+    send();
+  } else {
+    network_thread_->PostTask(ToQueuedTask(network_safety_, std::move(send)));
+  }
+}
+
+void MediaChannel::SendRtcp(const uint8_t* data, size_t len) {
+  auto send = [this, packet = rtc::CopyOnWriteBuffer(
+                         data, len, kMaxRtpPacketLen)]() mutable {
+    rtc::PacketOptions rtc_options;
+    if (DscpEnabled()) {
+      rtc_options.dscp = PreferredDscp();
+    }
+    SendRtcp(&packet, rtc_options);
+  };
+
+  if (network_thread_->IsCurrent()) {
+    send();
+  } else {
+    network_thread_->PostTask(ToQueuedTask(network_safety_, std::move(send)));
+  }
 }
 
 MediaSenderInfo::MediaSenderInfo() = default;

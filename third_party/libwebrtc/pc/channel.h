@@ -54,7 +54,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/location.h"
-#include "rtc_base/message_handler.h"
 #include "rtc_base/network.h"
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_route.h"
@@ -93,8 +92,6 @@ struct CryptoParams;
 // NetworkInterface.
 
 class BaseChannel : public ChannelInterface,
-                    // TODO(tommi): Remove MessageHandler inheritance.
-                    public rtc::MessageHandler,
                     // TODO(tommi): Remove has_slots inheritance.
                     public sigslot::has_slots<>,
                     // TODO(tommi): Consider implementing these interfaces
@@ -186,8 +183,6 @@ class BaseChannel : public ChannelInterface,
 
   // Only public for unit tests.  Otherwise, consider protected.
   int SetOption(SocketType type, rtc::Socket::Option o, int val) override;
-  int SetOption_n(SocketType type, rtc::Socket::Option o, int val)
-      RTC_RUN_ON(network_thread());
 
   // RtpPacketSinkInterface overrides.
   void OnRtpPacket(const webrtc::RtpPacketReceived& packet) override;
@@ -222,8 +217,6 @@ class BaseChannel : public ChannelInterface,
   bool IsReadyToReceiveMedia_w() const RTC_RUN_ON(worker_thread());
   bool IsReadyToSendMedia_w() const RTC_RUN_ON(worker_thread());
   rtc::Thread* signaling_thread() const { return signaling_thread_; }
-
-  void FlushRtcpMessages_n() RTC_RUN_ON(network_thread());
 
   // NetworkInterface implementation, called by MediaEngine
   bool SendPacket(rtc::CopyOnWriteBuffer* packet,
@@ -284,9 +277,6 @@ class BaseChannel : public ChannelInterface,
   // non-encrypted and encrypted extension is present for the same URI.
   RtpHeaderExtensions GetFilteredRtpHeaderExtensions(
       const RtpHeaderExtensions& extensions);
-
-  // From MessageHandler
-  void OnMessage(rtc::Message* pmsg) override;
 
   // Add |payload_type| to |demuxer_criteria_| if payload type demuxing is
   // enabled.

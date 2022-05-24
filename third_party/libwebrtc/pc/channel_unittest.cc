@@ -398,25 +398,6 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     return result;
   }
 
-  bool Terminate() {
-    channel1_.reset();
-    channel2_.reset();
-    fake_rtp_dtls_transport1_.reset();
-    fake_rtcp_dtls_transport1_.reset();
-    fake_rtp_dtls_transport2_.reset();
-    fake_rtcp_dtls_transport2_.reset();
-    fake_rtp_packet_transport1_.reset();
-    fake_rtcp_packet_transport1_.reset();
-    fake_rtp_packet_transport2_.reset();
-    fake_rtcp_packet_transport2_.reset();
-    if (network_thread_keeper_) {
-      RTC_DCHECK_EQ(network_thread_, network_thread_keeper_.get());
-      network_thread_ = nullptr;
-      network_thread_keeper_.reset();
-    }
-    return true;
-  }
-
   void SendRtp(typename T::MediaChannel* media_channel, rtc::Buffer data) {
     network_thread_->PostTask(webrtc::ToQueuedTask(
         network_thread_safety_, [media_channel, data = std::move(data)]() {
@@ -915,29 +896,6 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     }
     EXPECT_TRUE(media_channel2()->sending());
     EXPECT_EQ(1U, media_channel2()->codecs().size());
-  }
-
-  // Test that we don't crash if packets are sent during call teardown
-  // when RTCP mux is enabled. This is a regression test against a specific
-  // race condition that would only occur when a RTCP packet was sent during
-  // teardown of a channel on which RTCP mux was enabled.
-  void TestCallTeardownRtcpMux() {
-    class LastWordMediaChannel : public T::MediaChannel {
-     public:
-      explicit LastWordMediaChannel(rtc::Thread* network_thread)
-          : T::MediaChannel(NULL, typename T::Options(), network_thread) {}
-      ~LastWordMediaChannel() {
-        T::MediaChannel::SendRtp(kPcmuFrame, sizeof(kPcmuFrame),
-                                 rtc::PacketOptions());
-        T::MediaChannel::SendRtcp(kRtcpReport, sizeof(kRtcpReport));
-      }
-    };
-    CreateChannels(std::make_unique<LastWordMediaChannel>(network_thread_),
-                   std::make_unique<LastWordMediaChannel>(network_thread_),
-                   RTCP_MUX, RTCP_MUX);
-    EXPECT_TRUE(SendInitiate());
-    EXPECT_TRUE(SendAccept());
-    EXPECT_TRUE(Terminate());
   }
 
   // Send voice RTP data to the other side and ensure it gets there.
@@ -1668,10 +1626,6 @@ TEST_F(VoiceChannelSingleThreadTest, TestCallSetup) {
   Base::TestCallSetup();
 }
 
-TEST_F(VoiceChannelSingleThreadTest, TestCallTeardownRtcpMux) {
-  Base::TestCallTeardownRtcpMux();
-}
-
 TEST_F(VoiceChannelSingleThreadTest, SendRtpToRtp) {
   Base::SendRtpToRtp();
 }
@@ -1809,10 +1763,6 @@ TEST_F(VoiceChannelDoubleThreadTest, TestCallSetup) {
   Base::TestCallSetup();
 }
 
-TEST_F(VoiceChannelDoubleThreadTest, TestCallTeardownRtcpMux) {
-  Base::TestCallTeardownRtcpMux();
-}
-
 TEST_F(VoiceChannelDoubleThreadTest, SendRtpToRtp) {
   Base::SendRtpToRtp();
 }
@@ -1946,10 +1896,6 @@ TEST_F(VideoChannelSingleThreadTest, TestNetworkRouteChanges) {
 
 TEST_F(VideoChannelSingleThreadTest, TestCallSetup) {
   Base::TestCallSetup();
-}
-
-TEST_F(VideoChannelSingleThreadTest, TestCallTeardownRtcpMux) {
-  Base::TestCallTeardownRtcpMux();
 }
 
 TEST_F(VideoChannelSingleThreadTest, SendRtpToRtp) {
@@ -2235,10 +2181,6 @@ TEST_F(VideoChannelDoubleThreadTest, TestNetworkRouteChanges) {
 
 TEST_F(VideoChannelDoubleThreadTest, TestCallSetup) {
   Base::TestCallSetup();
-}
-
-TEST_F(VideoChannelDoubleThreadTest, TestCallTeardownRtcpMux) {
-  Base::TestCallTeardownRtcpMux();
 }
 
 TEST_F(VideoChannelDoubleThreadTest, SendRtpToRtp) {

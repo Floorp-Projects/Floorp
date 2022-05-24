@@ -50,7 +50,7 @@
 #include "rtc_base/socket.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 
 namespace rtc {
 class Timing;
@@ -176,8 +176,7 @@ class MediaChannel {
   virtual cricket::MediaType media_type() const = 0;
 
   // Sets the abstract interface class for sending RTP/RTCP data.
-  virtual void SetInterface(NetworkInterface* iface)
-      RTC_LOCKS_EXCLUDED(network_interface_mutex_);
+  virtual void SetInterface(NetworkInterface* iface);
   // Called on the network when an RTP packet is received.
   virtual void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
                                 int64_t packet_time_us) = 0;
@@ -249,7 +248,7 @@ class MediaChannel {
 
   int SetOption(NetworkInterface::SocketType type,
                 rtc::Socket::Option opt,
-                int option) RTC_LOCKS_EXCLUDED(network_interface_mutex_);
+                int option);
 
   // Corresponds to the SDP attribute extmap-allow-mixed, see RFC8285.
   // Set to true if it's allowed to mix one- and two-byte RTP header extensions
@@ -273,40 +272,42 @@ class MediaChannel {
  protected:
   int SetOptionLocked(NetworkInterface::SocketType type,
                       rtc::Socket::Option opt,
-                      int option)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(network_interface_mutex_);
+                      int option) RTC_RUN_ON(network_thread_);
 
   bool DscpEnabled() const;
 
   // This is the DSCP value used for both RTP and RTCP channels if DSCP is
   // enabled. It can be changed at any time via |SetPreferredDscp|.
-  rtc::DiffServCodePoint PreferredDscp() const
-      RTC_LOCKS_EXCLUDED(network_interface_mutex_);
+  rtc::DiffServCodePoint PreferredDscp() const;
+  void SetPreferredDscp(rtc::DiffServCodePoint new_dscp);
 
-  int SetPreferredDscp(rtc::DiffServCodePoint preferred_dscp)
-      RTC_LOCKS_EXCLUDED(network_interface_mutex_);
+  rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> network_safety();
+
+  // Utility implementation for derived classes (video/voice) that applies
+  // the packet options and passes the data onwards to `SendPacket`.
+  void SendRtp(const uint8_t* data,
+               size_t len,
+               const webrtc::PacketOptions& options);
+
+  void SendRtcp(const uint8_t* data, size_t len);
 
  private:
   // Apply the preferred DSCP setting to the underlying network interface RTP
   // and RTCP channels. If DSCP is disabled, then apply the default DSCP value.
-  int UpdateDscp() RTC_EXCLUSIVE_LOCKS_REQUIRED(network_interface_mutex_);
+  void UpdateDscp() RTC_RUN_ON(network_thread_);
 
   bool DoSendPacket(rtc::CopyOnWriteBuffer* packet,
                     bool rtcp,
-                    const rtc::PacketOptions& options)
-      RTC_LOCKS_EXCLUDED(network_interface_mutex_);
+                    const rtc::PacketOptions& options);
 
   const bool enable_dscp_;
+  rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> network_safety_
+      RTC_PT_GUARDED_BY(network_thread_);
   webrtc::TaskQueueBase* const network_thread_;
-
-  // |network_interface_| can be accessed from the worker_thread and
-  // from any MediaEngine threads. This critical section is to protect accessing
-  // of network_interface_ object.
-  mutable webrtc::Mutex network_interface_mutex_;
-  NetworkInterface* network_interface_
-      RTC_GUARDED_BY(network_interface_mutex_) = nullptr;
-  rtc::DiffServCodePoint preferred_dscp_
-      RTC_GUARDED_BY(network_interface_mutex_) = rtc::DSCP_DEFAULT;
+  NetworkInterface* network_interface_ RTC_GUARDED_BY(network_thread_) =
+      nullptr;
+  rtc::DiffServCodePoint preferred_dscp_ RTC_GUARDED_BY(network_thread_) =
+      rtc::DSCP_DEFAULT;
   bool extmap_allow_mixed_ = false;
 };
 
