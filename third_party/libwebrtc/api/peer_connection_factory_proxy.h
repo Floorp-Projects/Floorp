@@ -25,16 +25,6 @@ namespace webrtc {
 BEGIN_PROXY_MAP(PeerConnectionFactory)
 PROXY_PRIMARY_THREAD_DESTRUCTOR()
 PROXY_METHOD1(void, SetOptions, const Options&)
-PROXY_METHOD4(rtc::scoped_refptr<PeerConnectionInterface>,
-              CreatePeerConnection,
-              const PeerConnectionInterface::RTCConfiguration&,
-              std::unique_ptr<cricket::PortAllocator>,
-              std::unique_ptr<rtc::RTCCertificateGeneratorInterface>,
-              PeerConnectionObserver*)
-PROXY_METHOD2(rtc::scoped_refptr<PeerConnectionInterface>,
-              CreatePeerConnection,
-              const PeerConnectionInterface::RTCConfiguration&,
-              PeerConnectionDependencies)
 PROXY_METHOD2(RTCErrorOr<rtc::scoped_refptr<PeerConnectionInterface>>,
               CreatePeerConnectionOrError,
               const PeerConnectionInterface::RTCConfiguration&,

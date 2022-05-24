@@ -33,6 +33,7 @@
 #include "p2p/base/basic_async_resolver_factory.h"
 #include "p2p/base/basic_packet_socket_factory.h"
 #include "p2p/base/default_ice_transport_factory.h"
+#include "p2p/base/port_allocator.h"
 #include "p2p/client/basic_port_allocator.h"
 #include "pc/audio_track.h"
 #include "pc/local_audio_source.h"
@@ -48,6 +49,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/ref_counted_object.h"
+#include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/system/file_wrapper.h"
 
 namespace webrtc {
@@ -182,33 +184,6 @@ bool PeerConnectionFactory::StartAecDump(FILE* file, int64_t max_size_bytes) {
 void PeerConnectionFactory::StopAecDump() {
   RTC_DCHECK_RUN_ON(worker_thread());
   channel_manager()->StopAecDump();
-}
-
-rtc::scoped_refptr<PeerConnectionInterface>
-PeerConnectionFactory::CreatePeerConnection(
-    const PeerConnectionInterface::RTCConfiguration& configuration,
-    std::unique_ptr<cricket::PortAllocator> allocator,
-    std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator,
-    PeerConnectionObserver* observer) {
-  // Convert the legacy API into the new dependency structure.
-  PeerConnectionDependencies dependencies(observer);
-  dependencies.allocator = std::move(allocator);
-  dependencies.cert_generator = std::move(cert_generator);
-  // Pass that into the new API.
-  return CreatePeerConnection(configuration, std::move(dependencies));
-}
-
-rtc::scoped_refptr<PeerConnectionInterface>
-PeerConnectionFactory::CreatePeerConnection(
-    const PeerConnectionInterface::RTCConfiguration& configuration,
-    PeerConnectionDependencies dependencies) {
-  auto result =
-      CreatePeerConnectionOrError(configuration, std::move(dependencies));
-  if (result.ok()) {
-    return result.MoveValue();
-  } else {
-    return nullptr;
-  }
 }
 
 RTCErrorOr<rtc::scoped_refptr<PeerConnectionInterface>>
