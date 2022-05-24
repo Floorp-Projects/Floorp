@@ -1393,13 +1393,15 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
             {(const uint8_t*)viewportData, sizeof(viewportData)});
         mDirtyViewport = false;
       }
-      if (mDirtyAA) {
-        // AA is not supported for OP_SOURCE.
+      if (mDirtyAA || aStrokeOptions) {
+        // AA is not supported for OP_SOURCE. Native lines use line smoothing.
         float aaData =
-            mLastCompositionOp == CompositionOp::OP_SOURCE ? 0.0f : 1.0f;
+            mLastCompositionOp == CompositionOp::OP_SOURCE || aStrokeOptions
+                ? 0.0f
+                : 1.0f;
         mWebgl->UniformData(LOCAL_GL_FLOAT, mSolidProgramAA, false,
                             {(const uint8_t*)&aaData, sizeof(aaData)});
-        mDirtyAA = false;
+        mDirtyAA = !!aStrokeOptions;
       }
       float a = color.a * aOptions.mAlpha;
       float colorData[4] = {color.b * a, color.g * a, color.r * a, a};
@@ -1587,13 +1589,15 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
             {(const uint8_t*)viewportData, sizeof(viewportData)});
         mDirtyViewport = false;
       }
-      if (mDirtyAA) {
-        // AA is not supported for OP_SOURCE.
+      if (mDirtyAA || aStrokeOptions) {
+        // AA is not supported for OP_SOURCE. Native lines use line smoothing.
         float aaData =
-            mLastCompositionOp == CompositionOp::OP_SOURCE ? 0.0f : 1.0f;
+            mLastCompositionOp == CompositionOp::OP_SOURCE || aStrokeOptions
+                ? 0.0f
+                : 1.0f;
         mWebgl->UniformData(LOCAL_GL_FLOAT, mImageProgramAA, false,
                             {(const uint8_t*)&aaData, sizeof(aaData)});
-        mDirtyAA = false;
+        mDirtyAA = !!aStrokeOptions;
       }
       DeviceColor color = aMaskColor.valueOr(DeviceColor(1, 1, 1, 1));
       float a = color.a * aOptions.mAlpha;
@@ -2484,7 +2488,7 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
     return true;
   }
   // Ensure there is a clear border around the text.
-  xformBounds.Inflate(1);
+  xformBounds.Inflate(2);
   IntRect intBounds = RoundedOut(xformBounds);
 
   // Whether to render the text as a full color result as opposed to as a

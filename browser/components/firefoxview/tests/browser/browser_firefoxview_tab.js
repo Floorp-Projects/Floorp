@@ -107,3 +107,35 @@ add_task(async function accel_w_behavior() {
   EventUtils.synthesizeKey("w", { accelKey: true }, win);
   await windowClosed;
 });
+
+add_task(async function undo_close_tab() {
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  is(
+    SessionStore.getClosedTabCount(window),
+    0,
+    "Closed tab count after purging session history"
+  );
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:about"
+  );
+  await TestUtils.waitForTick();
+  gBrowser.removeTab(tab);
+  await TestUtils.waitForTick();
+  is(
+    SessionStore.getClosedTabCount(window),
+    1,
+    "Closing about:about added to the closed tab count"
+  );
+
+  await openFirefoxViewTab();
+  await TestUtils.waitForTick();
+  closeFirefoxViewTab();
+  await TestUtils.waitForTick();
+  is(
+    SessionStore.getClosedTabCount(window),
+    1,
+    "Closing the Firefox View tab did not add to the closed tab count"
+  );
+});

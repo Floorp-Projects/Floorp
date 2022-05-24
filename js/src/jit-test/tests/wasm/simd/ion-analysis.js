@@ -872,28 +872,6 @@ function set(arr, loc, vals) {
     }
 }
 
-function assertSame(got, expected) {
-    assertEq(got.length, expected.length);
-    for ( let i=0; i < got.length; i++ ) {
-        assertEq(got[i], expected[i]);
-    }
-}
-function iota(len) {
-    let xs = [];
-    for ( let i=0 ; i < len ; i++ )
-        xs.push(i);
-    return xs;
-}
-
-function interleave(xs, ys) {
-    let res = [];
-    for ( let i=0 ; i < xs.length; i++ ) {
-        res.push(xs[i]);
-        res.push(ys[i]);
-    }
-    return res;
-}
-
 function i32ToI8(xs) {
     return xs.map(x => [x*4, x*4+1, x*4+2, x*4+3]).flat();
 }

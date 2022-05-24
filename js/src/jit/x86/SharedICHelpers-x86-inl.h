@@ -20,7 +20,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
   // We assume during this that R0 and R1 have been pushed.
 
   // Compute frame size.
-  masm.movl(BaselineFrameReg, eax);
+  masm.movl(FramePointer, eax);
   masm.addl(Imm32(BaselineFrame::FramePointerOffset), eax);
   masm.subl(BaselineStackReg, eax);
 
@@ -28,7 +28,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
   // Store frame size without VMFunction arguments for debug assertions.
   masm.movl(eax, ebx);
   masm.subl(Imm32(argSize), ebx);
-  Address frameSizeAddr(BaselineFrameReg,
+  Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
   masm.store32(ebx, frameSizeAddr);
 #endif
@@ -45,7 +45,7 @@ inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm,
                                                   uint32_t headerSize) {
   // Compute stub frame size. We have to add two pointers: the stub reg and
   // previous frame pointer pushed by EmitEnterStubFrame.
-  masm.movl(BaselineFrameReg, reg);
+  masm.movl(FramePointer, reg);
   masm.addl(Imm32(sizeof(void*) * 2), reg);
   masm.subl(BaselineStackReg, reg);
 
@@ -66,23 +66,23 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   // Compute frame size. Because the return address is still on the stack,
   // this is:
   //
-  //   BaselineFrameReg
+  //   FramePointer
   //   + BaselineFrame::FramePointerOffset
   //   - BaselineStackReg
   //   - sizeof(return address)
   //
   // The two constants cancel each other out, so we can just calculate
-  // BaselineFrameReg - BaselineStackReg.
+  // FramePointer - BaselineStackReg.
 
   static_assert(
       BaselineFrame::FramePointerOffset == sizeof(void*),
       "FramePointerOffset must be the same as the return address size");
 
-  masm.movl(BaselineFrameReg, scratch);
+  masm.movl(FramePointer, scratch);
   masm.subl(BaselineStackReg, scratch);
 
 #ifdef DEBUG
-  Address frameSizeAddr(BaselineFrameReg,
+  Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
   masm.store32(scratch, frameSizeAddr);
 #endif
@@ -100,8 +100,8 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
 
   // Save old frame pointer, stack pointer and stub reg.
   masm.Push(ICStubReg);
-  masm.Push(BaselineFrameReg);
-  masm.mov(BaselineStackReg, BaselineFrameReg);
+  masm.Push(FramePointer);
+  masm.mov(BaselineStackReg, FramePointer);
 }
 
 }  // namespace jit
