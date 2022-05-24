@@ -358,26 +358,6 @@ function execute(hud, input) {
 }
 
 /**
- * Execute an input expression and wait for a message with the expected text (and an
- * optional selector) to be displayed in the output.
- *
- * @param {Object} hud : The webconsole.
- * @param {String} input : The input expression to execute.
- * @param {String} matchingText : A string that should match the message body content.
- * @param {String} selector : A selector that should match the message node.
- */
-function executeAndWaitForMessage(
-  hud,
-  input,
-  matchingText,
-  selector = ".message"
-) {
-  const onMessage = waitForMessage(hud, matchingText, selector);
-  execute(hud, input);
-  return onMessage;
-}
-
-/**
  * Execute an input expression and wait for a message with the expected text
  * with given message type to be displayed in the output.
  *
