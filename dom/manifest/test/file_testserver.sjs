@@ -6,9 +6,7 @@ function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.
   // Since it's relative to the cwd of the test runner, we start there and
   // append to get to the actual path of the file.
-  const testHTMLFile = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("CurWorkD", Ci.nsIFile);
+  const testHTMLFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
 
   const testHTMLFileStream = Cc[
     "@mozilla.org/network/file-input-stream;1"
