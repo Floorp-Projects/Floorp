@@ -56,7 +56,7 @@ add_task(async function() {
   await resume(dbg);
 
   info("Wait for the paused expression result to be displayed");
-  await waitFor(() => findMessage(hud, "pauseExpression-res", ".result"));
+  await waitFor(() => findEvaluationResultMessage(hud, "pauseExpression-res"));
 
   await onAwaitResultMessage;
   const messages = hud.ui.outputNode.querySelectorAll(
