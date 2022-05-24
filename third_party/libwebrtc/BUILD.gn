@@ -357,6 +357,13 @@ config("common_config") {
         # recognize.
         cflags += [ "-Wunused-lambda-capture" ]
       }
+
+      if (use_xcode_clang) {
+        # This may be removed if the clang version in xcode > 12.4 includes the
+        # fix https://reviews.llvm.org/D73007.
+        # https://bugs.llvm.org/show_bug.cgi?id=44556
+        cflags += [ "-Wno-range-loop-analysis" ]
+      }
     }
 
     if (is_win && !is_clang) {
