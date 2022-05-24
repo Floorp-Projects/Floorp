@@ -17,12 +17,7 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI1);
 
-  await executeAndWaitForMessage(
-    hud,
-    "window.location.href",
-    TEST_URI1,
-    ".result"
-  );
+  await executeAndWaitForResultMessage(hud, "window.location.href", TEST_URI1);
 
   // load second url
   await navigateTo(TEST_URI2);
@@ -34,12 +29,7 @@ add_task(async function() {
 
   info("wait for window.location.href after page navigation");
   await clearOutput(hud);
-  await executeAndWaitForMessage(
-    hud,
-    "window.location.href",
-    TEST_URI2,
-    ".result"
-  );
+  await executeAndWaitForResultMessage(hud, "window.location.href", TEST_URI2);
 
   ok(
     !findErrorMessage(hud, "Permission denied"),
@@ -60,12 +50,7 @@ add_task(async function() {
   await Promise.all(promises);
 
   info("Messages cleared after navigation; checking location");
-  await executeAndWaitForMessage(
-    hud,
-    "window.location.href",
-    TEST_URI1,
-    ".result"
-  );
+  await executeAndWaitForResultMessage(hud, "window.location.href", TEST_URI1);
 
   ok(
     !findErrorMessage(hud, "Permission denied"),

@@ -13,11 +13,10 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const evaluationResultMessage = await executeAndWaitForMessage(
+  const evaluationResultMessage = await executeAndWaitForResultMessage(
     hud,
     `for (let i = 0; i < 5; i++) { console.log("item-" + i); }`,
-    "undefined",
-    ".result"
+    "undefined"
   );
 
   info("Wait for all the log messages to be displayed");

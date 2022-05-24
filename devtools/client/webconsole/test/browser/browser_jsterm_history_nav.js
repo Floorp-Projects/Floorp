@@ -21,24 +21,22 @@ add_task(async function() {
   };
   popup.on("popup-opened", onShown);
 
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     `window.foobarBug660806 = {
     'location': 'value0',
     'locationbar': 'value1'
   }`,
-    "",
-    ".result"
+    ""
   );
   ok(!popup.isOpen, "popup is not open");
 
   // Let's add this expression in the input history. We don't use setInputValue since
   // it _does_ trigger an autocompletion request in codeMirror JsTerm.
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     "window.foobarBug660806.location",
-    "",
-    ".result"
+    ""
   );
 
   const onSetInputValue = jsterm.once("set-input-value");

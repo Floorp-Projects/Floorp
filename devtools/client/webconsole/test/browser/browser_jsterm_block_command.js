@@ -19,7 +19,12 @@ add_task(async function() {
   const resp1 = await waitFor(() => findConsoleAPIMessage(hud, "successful"));
   ok(resp1, "the request was not blocked");
   info(`Execute the :block command and try to do execute a network request`);
-  await executeAndWaitForMessage(hud, blockCommand, "are now blocked");
+  await executeAndWaitForMessageByType(
+    hud,
+    blockCommand,
+    "are now blocked",
+    ".console-api"
+  );
   await tryFetching();
 
   const resp2 = await waitFor(() => findConsoleAPIMessage(hud, "blocked"));
@@ -45,7 +50,12 @@ add_task(async function() {
   await hud.toolbox.selectTool("webconsole");
 
   // :unblock
-  await executeAndWaitForMessage(hud, unblockCommand, "Removed blocking");
+  await executeAndWaitForMessageByType(
+    hud,
+    unblockCommand,
+    "Removed blocking",
+    ".console-api"
+  );
   info("After unblocking");
 
   const netMonitorState2 = nmStore.getState();

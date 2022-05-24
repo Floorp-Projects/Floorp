@@ -50,11 +50,10 @@ add_task(async function() {
   ok(true, "object with empty string property renders as expected");
 
   info("evaluating a string constant");
-  let msg = await executeAndWaitForMessage(
+  let msg = await executeAndWaitForResultMessage(
     hud,
     '"string\\nconstant"',
-    "constant",
-    ".result"
+    "constant"
   );
   let body = msg.node.querySelector(".message-body");
   // On the other hand, a string constant result should be quoted, but
@@ -65,7 +64,7 @@ add_task(async function() {
   );
 
   info("evaluating an empty string constant");
-  msg = await executeAndWaitForMessage(hud, '""', '""', ".result");
+  msg = await executeAndWaitForResultMessage(hud, '""', '""');
   body = msg.node.querySelector(".message-body");
   ok(body.textContent.includes('""'), `found expected text`);
 });

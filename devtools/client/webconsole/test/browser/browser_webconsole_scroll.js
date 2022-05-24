@@ -83,7 +83,7 @@ add_task(async function() {
   is(outputContainer.scrollTop, 0, "The console stayed scrolled to the top");
 
   info("Evaluate a command to check that the console scrolls to the bottom");
-  await executeAndWaitForMessage(hud, "21 + 21", "42", ".result");
+  await executeAndWaitForResultMessage(hud, "21 + 21", "42");
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -107,14 +107,13 @@ add_task(async function() {
   info(
     "Evaluate an Error object to check that the console scrolls to the bottom"
   );
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForResultMessage(
     hud,
     `
     x = new Error("myErrorObject");
     x.stack = "a@b/c.js:1:2\\nd@e/f.js:3:4";
     x;`,
-    "myErrorObject",
-    ".result"
+    "myErrorObject"
   );
   ok(
     isScrolledToBottom(outputContainer),
@@ -135,15 +134,14 @@ add_task(async function() {
   info(
     "Throw an Error object in a direct evaluation to check that the console scrolls to the bottom"
   );
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForErrorMessage(
     hud,
     `
       x = new Error("myEvaluatedThrownErrorObject");
       x.stack = "a@b/c.js:1:2\\nd@e/f.js:3:4";
       throw x;
     `,
-    "Uncaught Error: myEvaluatedThrownErrorObject",
-    ".error"
+    "Uncaught Error: myEvaluatedThrownErrorObject"
   );
   ok(
     isScrolledToBottom(outputContainer),
@@ -162,7 +160,7 @@ add_task(async function() {
   );
 
   info("Throw an Error object to check that the console scrolls to the bottom");
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForErrorMessage(
     hud,
     `
     setTimeout(() => {
@@ -170,8 +168,7 @@ add_task(async function() {
       x.stack = "a@b/c.js:1:2\\nd@e/f.js:3:4";
       throw x
     }, 10)`,
-    "Uncaught Error: myThrownErrorObject",
-    ".error"
+    "Uncaught Error: myThrownErrorObject"
   );
   ok(
     isScrolledToBottom(outputContainer),
@@ -275,15 +272,14 @@ add_task(async function() {
   // Clear the output so we only have the object
   await clearOutput(hud);
   // Evaluate an object with a hundred properties
-  const result = await executeAndWaitForMessage(
+  const result = await executeAndWaitForResultMessage(
     hud,
     `Array.from({length: 100}, (_, i) => i)
       .reduce(
         (acc, item) => {acc["item-" + item] = item; return acc;},
         {}
       )`,
-    "Object",
-    ".message.result"
+    "Object"
   );
   // Expand the object
   result.node.querySelector(".arrow").click();

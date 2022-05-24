@@ -23,6 +23,6 @@ add_task(async function() {
   await waitForPaused(dbg);
   await openConsole();
 
-  await executeAndWaitForMessage(hud, "data", "42", ".result");
+  await executeAndWaitForResultMessage(hud, "data", "42");
   ok(true, "Evaluated console message in worker thread");
 });

@@ -15,11 +15,11 @@ add_task(async function() {
 
   for (const command of COMMANDS) {
     info(`Executing command ${command}`);
-    await executeAndWaitForMessage(hud, command, "", ".result");
+    await executeAndWaitForResultMessage(hud, command, "");
   }
 
   info(`Executing command :history`);
-  await executeAndWaitForMessage(hud, ":history", "", ".simpleTable");
+  await executeAndWaitForMessageByType(hud, ":history", "", ".simpleTable");
   const historyTableRows = hud.ui.outputNode.querySelectorAll(
     ".message.simpleTable tbody tr"
   );

@@ -78,7 +78,7 @@ add_task(async function() {
   info("Test Copy URL menu item from [Learn More] link");
 
   info("Generate a Reference Error in the JS Console");
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForErrorMessage(
     hud,
     "area51.aliens",
     "ReferenceError:"

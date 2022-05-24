@@ -16,38 +16,34 @@ const TEST_URI = `data:text/html,<!DOCTYPE html>
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  let message = await executeAndWaitForMessage(
+  let message = await executeAndWaitForResultMessage(
     hud,
     "$('main')",
-    "<main>",
-    ".result"
+    "<main>"
   );
   ok(message, "`$('main')` worked");
 
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForResultMessage(
     hud,
     "$('main > ul > li')",
-    "<li>",
-    ".result"
+    "<li>"
   );
   ok(message, "`$('main > ul > li')` worked");
 
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForResultMessage(
     hud,
     "$('main > ul > li').tagName",
-    "LI",
-    ".result"
+    "LI"
   );
   ok(message, "`$` result can be used right away");
 
-  message = await executeAndWaitForMessage(hud, "$('div')", "null", ".result");
+  message = await executeAndWaitForResultMessage(hud, "$('div')", "null");
   ok(message, "`$('div')` does return null");
 
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForErrorMessage(
     hud,
     "$(':foo')",
-    "':foo' is not a valid selector",
-    ".error"
+    "':foo' is not a valid selector"
   );
   ok(message, "`$(':foo')` returns an error message");
 });

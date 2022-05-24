@@ -14,11 +14,10 @@ add_task(async function() {
   const text =
     "TypeError: Request constructor: 'foo' (value of 'redirect' member of RequestInit) is not a valid value " +
     "for enumeration RequestRedirect";
-  await executeAndWaitForMessage(
+  await executeAndWaitForErrorMessage(
     hud,
     "new Request('',{redirect:'foo'})",
-    text,
-    ".message.error"
+    text
   );
   ok(
     true,

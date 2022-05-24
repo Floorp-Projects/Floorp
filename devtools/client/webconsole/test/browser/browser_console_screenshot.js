@@ -45,7 +45,12 @@ add_task(async function() {
   // to keep tests consistant across OSs we are setting the dpr to 1
   const command = `:screenshot ${file.path} --dpr 1`;
 
-  await executeAndWaitForMessage(hud, command, `Saved to ${file.path}`);
+  await executeAndWaitForMessageByType(
+    hud,
+    command,
+    `Saved to ${file.path}`,
+    ".console-api"
+  );
 
   info("Create an image using the downloaded file as source");
   const image = new Image();
