@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "builtin/FinalizationRegistryObject.h"
 #include "gc/PublicIterators.h"
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy
 #include "js/Wrapper.h"
@@ -542,6 +543,10 @@ void js::RemapDeadWrapper(JSContext* cx, HandleObject wobj,
   MOZ_ASSERT(IsDeadProxyObject(wobj));
   MOZ_ASSERT(!newTarget->is<CrossCompartmentWrapperObject>());
 
+  // These are not exposed. Doing this would require updating the
+  // FinalizationObservers data structures.
+  MOZ_ASSERT(!newTarget->is<FinalizationRecordObject>());
+
   AutoDisableProxyCheck adpc;
 
   // wobj is not a cross-compartment wrapper, so we can use nonCCWRealm.
@@ -632,6 +637,13 @@ JS_PUBLIC_API bool js::RecomputeWrappers(
     // Iterate over object wrappers, filtering appropriately.
     for (Compartment::ObjectWrapperEnum e(c, targetFilter); !e.empty();
          e.popFront()) {
+      // Don't remap wrappers to finalization record objects. These are used
+      // internally and are not exposed.
+      JSObject* wrapper = *e.front().value().unsafeGet();
+      if (Wrapper::wrappedObject(wrapper)->is<FinalizationRecordObject>()) {
+        continue;
+      }
+
       // Add the wrapper to the list.
       if (!toRecompute.append(WrapperValue(e))) {
         return false;

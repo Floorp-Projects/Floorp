@@ -33,28 +33,6 @@ function set(arr, loc, vals) {
     }
 }
 
-function assertSame(got, expected) {
-    assertEq(got.length, expected.length);
-    for ( let i=0; i < got.length; i++ ) {
-        let g = got[i];
-        let e = expected[i];
-        if (typeof g != typeof e) {
-            if (typeof g == "bigint")
-                e = BigInt(e);
-            else if (typeof e == "bigint")
-                g = BigInt(g);
-        }
-        assertEq(g, e);
-    }
-}
-
-function iota(len) {
-    let xs = [];
-    for ( let i=0 ; i < len ; i++ )
-        xs.push(i);
-    return xs;
-}
-
 const v2vSig = {args:[], ret:VoidCode};
 
 function V128Load(addr) {
@@ -431,12 +409,3 @@ for (let ai = 0; ai < testNeg.length - 15; ai++)
                 assertEq(expected, result[i]);
             }
         }
-
-// Misc utils.
-function cross(xs) {
-    let results = [];
-    for ( let x of xs )
-        for ( let y of xs )
-            results.push([x,y]);
-    return results;
-}

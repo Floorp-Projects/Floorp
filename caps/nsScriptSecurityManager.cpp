@@ -515,6 +515,17 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     if (NS_FAILED(csp->GetAllowsWasmEval(&reportViolation, &evalOK))) {
       return false;
     }
+    if (!evalOK) {
+      // Historically, CSP did not block WebAssembly in Firefox, and some
+      // add-ons use wasm and a stricter CSP. To avoid breaking them, ignore
+      // 'wasm-unsafe-eval' violations for MV2 extensions.
+      // TODO bug 1770909: remove this exception.
+      auto* addonPolicy = BasePrincipal::Cast(subjectPrincipal)->AddonPolicy();
+      if (addonPolicy && addonPolicy->ManifestVersion() == 2) {
+        reportViolation = true;
+        evalOK = true;
+      }
+    }
   }
 
   if (reportViolation) {

@@ -198,11 +198,7 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
   return NS_ERROR_FAILURE;
 #endif
 
-  bool usePrefDir =
-      StaticPrefs::browser_download_improvements_to_download_panel();
-#ifdef XP_MACOSX
-  usePrefDir = true;
-#endif
+  bool usePrefDir = !StaticPrefs::browser_download_start_downloads_in_tmp_dir();
 
   nsCOMPtr<nsIFile> dir;
   nsresult rv;

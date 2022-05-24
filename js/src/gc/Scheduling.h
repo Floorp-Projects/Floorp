@@ -693,12 +693,6 @@ class GCSchedulingState {
   mozilla::Atomic<bool, mozilla::ReleaseAcquire> inHighFrequencyGCMode_;
 
  public:
-  /*
-   * Influences the GC thresholds for the atoms zone to discourage collection of
-   * this zone during page load.
-   */
-  MainThreadOrGCTaskData<bool> inPageLoad;
-
   GCSchedulingState() : inHighFrequencyGCMode_(false) {}
 
   bool inHighFrequencyGCMode() const { return inHighFrequencyGCMode_; }

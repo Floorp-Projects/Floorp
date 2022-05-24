@@ -428,7 +428,7 @@ function findAllMessages(hud) {
  * @param object hud
  *        The web console.
  * @param object options
- *        - hud : {String} A substring that can be found in the message.
+ *        - text : {String} A substring that can be found in the message.
  *        - typeSelector: {String} A part of selector for the message,
  *                                 to specify the message type.
  *        - partSelector: {String} A selector for the part of the message.

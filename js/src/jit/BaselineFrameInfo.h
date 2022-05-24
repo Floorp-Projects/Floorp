@@ -173,50 +173,47 @@ class FrameInfo {
   explicit FrameInfo(MacroAssembler& masm) : masm(masm) {}
 
   Address addressOfLocal(size_t local) const {
-    return Address(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfLocal(local));
+    return Address(FramePointer, BaselineFrame::reverseOffsetOfLocal(local));
   }
   Address addressOfArg(size_t arg) const {
-    return Address(BaselineFrameReg, BaselineFrame::offsetOfArg(arg));
+    return Address(FramePointer, BaselineFrame::offsetOfArg(arg));
   }
   Address addressOfThis() const {
-    return Address(BaselineFrameReg, BaselineFrame::offsetOfThis());
+    return Address(FramePointer, BaselineFrame::offsetOfThis());
   }
   Address addressOfCalleeToken() const {
-    return Address(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
+    return Address(FramePointer, BaselineFrame::offsetOfCalleeToken());
   }
   Address addressOfEnvironmentChain() const {
-    return Address(BaselineFrameReg,
+    return Address(FramePointer,
                    BaselineFrame::reverseOffsetOfEnvironmentChain());
   }
   Address addressOfICScript() const {
-    return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfICScript());
+    return Address(FramePointer, BaselineFrame::reverseOffsetOfICScript());
   }
   Address addressOfFlags() const {
-    return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
+    return Address(FramePointer, BaselineFrame::reverseOffsetOfFlags());
   }
   Address addressOfReturnValue() const {
-    return Address(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfReturnValue());
+    return Address(FramePointer, BaselineFrame::reverseOffsetOfReturnValue());
   }
   Address addressOfArgsObj() const {
-    return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfArgsObj());
+    return Address(FramePointer, BaselineFrame::reverseOffsetOfArgsObj());
   }
   Address addressOfScratchValue() const {
-    return Address(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfScratchValue());
+    return Address(FramePointer, BaselineFrame::reverseOffsetOfScratchValue());
   }
   Address addressOfScratchValueLow32() const {
-    return Address(BaselineFrameReg,
+    return Address(FramePointer,
                    BaselineFrame::reverseOffsetOfScratchValueLow32());
   }
   Address addressOfScratchValueHigh32() const {
-    return Address(BaselineFrameReg,
+    return Address(FramePointer,
                    BaselineFrame::reverseOffsetOfScratchValueHigh32());
   }
 #ifdef DEBUG
   Address addressOfDebugFrameSize() const {
-    return Address(BaselineFrameReg,
+    return Address(FramePointer,
                    BaselineFrame::reverseOffsetOfDebugFrameSize());
   }
 #endif
@@ -312,7 +309,7 @@ class CompilerFrameInfo : public FrameInfo {
     MOZ_ASSERT(value->kind() == StackValue::Stack);
     size_t slot = value - &stack[0];
     MOZ_ASSERT(slot < stackDepth());
-    return Address(BaselineFrameReg,
+    return Address(FramePointer,
                    BaselineFrame::reverseOffsetOfLocal(nlocals() + slot));
   }
 
@@ -419,15 +416,14 @@ class InterpreterFrameInfo : public FrameInfo {
   void bumpInterpreterICEntry();
 
   Address addressOfInterpreterScript() const {
-    return Address(BaselineFrameReg,
+    return Address(FramePointer,
                    BaselineFrame::reverseOffsetOfInterpreterScript());
   }
   Address addressOfInterpreterPC() const {
-    return Address(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfInterpreterPC());
+    return Address(FramePointer, BaselineFrame::reverseOffsetOfInterpreterPC());
   }
   Address addressOfInterpreterICEntry() const {
-    return Address(BaselineFrameReg,
+    return Address(FramePointer,
                    BaselineFrame::reverseOffsetOfInterpreterICEntry());
   }
 };

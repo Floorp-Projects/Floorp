@@ -3395,7 +3395,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 127;
+    const UI_VERSION = 128;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4193,6 +4193,25 @@ BrowserGlue.prototype = {
     // Bug 1769071: The UI Version 127 was used for a clean up code that is not
     // necessary anymore. Please do not use 127 because this number is probably
     // set in Nightly and Beta channel.
+
+    // Non-macOS only (on macOS we've never used the tmp folder for downloads):
+    if (AppConstants.platform != "macosx" && currentUIVersion < 128) {
+      // Bug 1738574 - Add a pref to start downloads in the tmp folder.
+      // Users who wanted this behavior would have disabled the experimental
+      // pref browser.download.improvements_to_download_panel so we
+      // can migrate its inverted value to this new pref.
+      if (
+        !Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel",
+          true
+        )
+      ) {
+        Services.prefs.setBoolPref(
+          "browser.download.start_downloads_in_tmp_dir",
+          true
+        );
+      }
+    }
 
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);

@@ -10,29 +10,46 @@ const TEST_URL = "data:text/html;charset=utf-8,Network throttling test";
 
 addRDMTask(TEST_URL, async function({ ui, manager }) {
   // Test defaults
-  testNetworkThrottlingSelectorLabel(ui, "No Throttling");
+  testNetworkThrottlingSelectorLabel(ui, "No Throttling", "No Throttling");
   await testNetworkThrottlingState(ui, null);
 
   // Test a fast profile
-  await testThrottlingProfile(ui, "Wi-Fi");
+  await testThrottlingProfile(
+    ui,
+    "Wi-Fi",
+    "download 30Mbps, upload 15Mbps, latency 2ms"
+  );
 
   // Test a slower profile
-  await testThrottlingProfile(ui, "Regular 3G");
+  await testThrottlingProfile(
+    ui,
+    "Regular 3G",
+    "download 750Kbps, upload 250Kbps, latency 100ms"
+  );
 
   // Test switching back to no throttling
   await selectNetworkThrottling(ui, "No Throttling");
-  testNetworkThrottlingSelectorLabel(ui, "No Throttling");
+  testNetworkThrottlingSelectorLabel(ui, "No Throttling", "No Throttling");
   await testNetworkThrottlingState(ui, null);
 });
 
-function testNetworkThrottlingSelectorLabel(ui, expected) {
+function testNetworkThrottlingSelectorLabel(
+  ui,
+  expectedLabel,
+  expectedTooltip
+) {
   const title = ui.toolWindow.document.querySelector(
     "#network-throttling-menu .title"
   );
   is(
     title.textContent,
-    expected,
-    `Button title should be changed to ${expected}`
+    expectedLabel,
+    `Button label should be changed to ${expectedLabel}`
+  );
+  is(
+    title.parentNode.getAttribute("title"),
+    expectedTooltip,
+    `Button tooltip should be changed to ${expectedTooltip}`
   );
 }
 
@@ -45,9 +62,9 @@ var testNetworkThrottlingState = async function(ui, expected) {
   );
 };
 
-var testThrottlingProfile = async function(ui, profile) {
+var testThrottlingProfile = async function(ui, profile, tooltip) {
   await selectNetworkThrottling(ui, profile);
-  testNetworkThrottlingSelectorLabel(ui, profile);
+  testNetworkThrottlingSelectorLabel(ui, profile, tooltip);
   const data = throttlingProfiles.find(({ id }) => id == profile);
   const { download, upload, latency } = data;
   await testNetworkThrottlingState(ui, {
