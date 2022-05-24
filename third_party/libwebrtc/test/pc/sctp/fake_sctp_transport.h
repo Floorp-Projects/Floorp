@@ -29,7 +29,8 @@ class FakeSctpTransport : public cricket::SctpTransportInternal {
   }
   bool OpenStream(int sid) override { return true; }
   bool ResetStream(int sid) override { return true; }
-  bool SendData(const cricket::SendDataParams& params,
+  bool SendData(int sid,
+                const webrtc::SendDataParams& params,
                 const rtc::CopyOnWriteBuffer& payload,
                 cricket::SendDataResult* result = nullptr) override {
     return true;

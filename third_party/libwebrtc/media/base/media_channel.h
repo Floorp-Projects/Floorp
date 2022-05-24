@@ -26,6 +26,7 @@
 #include "api/media_stream_interface.h"
 #include "api/rtc_error.h"
 #include "api/rtp_parameters.h"
+#include "api/transport/data_channel_transport_interface.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "api/video/video_content_type.h"
 #include "api/video/video_sink_interface.h"
@@ -895,15 +896,6 @@ class VideoMediaChannel : public MediaChannel, public Delayable {
   virtual std::vector<webrtc::RtpSource> GetSources(uint32_t ssrc) const = 0;
 };
 
-enum DataMessageType {
-  // Chrome-Internal use only.  See SctpDataMediaChannel for the actual PPID
-  // values.
-  DMT_NONE = 0,
-  DMT_CONTROL = 1,
-  DMT_BINARY = 2,
-  DMT_TEXT = 3,
-};
-
 // Info about data received in DataMediaChannel.  For use in
 // DataMediaChannel::SignalDataReceived and in all of the signals that
 // signal fires, on up the chain.
@@ -912,26 +904,9 @@ struct ReceiveDataParams {
   // SCTP data channels use SIDs.
   int sid = 0;
   // The type of message (binary, text, or control).
-  DataMessageType type = DMT_TEXT;
+  webrtc::DataMessageType type = webrtc::DataMessageType::kText;
   // A per-stream value incremented per packet in the stream.
   int seq_num = 0;
-};
-
-struct SendDataParams {
-  // The in-packet stream indentifier.
-  int sid = 0;
-  // The type of message (binary, text, or control).
-  DataMessageType type = DMT_TEXT;
-
-  // For SCTP, whether to send messages flagged as ordered or not.
-  // If false, messages can be received out of order.
-  bool ordered = false;
-  // Provide partial reliability by resending up to this many times. Either
-  // count or millis is supported, not both at the same time.
-  absl::optional<int> max_rtx_count;
-  // Provide partial reliability by resending for up to this many milliseconds.
-  // Either count or millis is supported, not both at the same time.
-  absl::optional<int> max_rtx_ms;
 };
 
 enum SendDataResult { SDR_SUCCESS, SDR_ERROR, SDR_BLOCK };

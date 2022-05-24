@@ -31,11 +31,12 @@ bool DataChannelController::HasDataChannels() const {
   return !sctp_data_channels_.empty();
 }
 
-bool DataChannelController::SendData(const cricket::SendDataParams& params,
+bool DataChannelController::SendData(int sid,
+                                     const SendDataParams& params,
                                      const rtc::CopyOnWriteBuffer& payload,
                                      cricket::SendDataResult* result) {
   if (data_channel_transport())
-    return DataChannelSendData(params, payload, result);
+    return DataChannelSendData(sid, params, payload, result);
   RTC_LOG(LS_ERROR) << "SendData called before transport is ready";
   return false;
 }
@@ -106,7 +107,7 @@ void DataChannelController::OnDataReceived(
   RTC_DCHECK_RUN_ON(network_thread());
   cricket::ReceiveDataParams params;
   params.sid = channel_id;
-  params.type = ToCricketDataMessageType(type);
+  params.type = type;
   signaling_thread()->PostTask(
       ToQueuedTask([self = weak_factory_.GetWeakPtr(), params, buffer] {
         if (self) {
@@ -222,7 +223,7 @@ std::vector<DataChannelStats> DataChannelController::GetDataChannelStats()
 bool DataChannelController::HandleOpenMessage_s(
     const cricket::ReceiveDataParams& params,
     const rtc::CopyOnWriteBuffer& buffer) {
-  if (params.type == cricket::DMT_CONTROL && IsOpenMessage(buffer)) {
+  if (params.type == DataMessageType::kControl && IsOpenMessage(buffer)) {
     // Received OPEN message; parse and signal that a new data channel should
     // be created.
     std::string label;
@@ -386,7 +387,8 @@ void DataChannelController::set_data_channel_transport(
 }
 
 bool DataChannelController::DataChannelSendData(
-    const cricket::SendDataParams& params,
+    int sid,
+    const SendDataParams& params,
     const rtc::CopyOnWriteBuffer& payload,
     cricket::SendDataResult* result) {
   // TODO(bugs.webrtc.org/11547): Expect method to be called on the network
@@ -395,16 +397,9 @@ bool DataChannelController::DataChannelSendData(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(data_channel_transport());
 
-  SendDataParams send_params;
-  send_params.type = ToWebrtcDataMessageType(params.type);
-  send_params.ordered = params.ordered;
-  send_params.max_rtx_count = params.max_rtx_count;
-  send_params.max_rtx_ms = params.max_rtx_ms;
-
   RTCError error = network_thread()->Invoke<RTCError>(
-      RTC_FROM_HERE, [this, params, send_params, payload] {
-        return data_channel_transport()->SendData(params.sid, send_params,
-                                                  payload);
+      RTC_FROM_HERE, [this, sid, params, payload] {
+        return data_channel_transport()->SendData(sid, params, payload);
       });
 
   if (error.ok()) {

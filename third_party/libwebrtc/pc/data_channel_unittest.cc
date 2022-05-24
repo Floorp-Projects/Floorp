@@ -286,8 +286,9 @@ TEST_F(SctpDataChannelTest, OpenMessageSent) {
 
   SetChannelReady();
   EXPECT_GE(webrtc_data_channel_->id(), 0);
-  EXPECT_EQ(cricket::DMT_CONTROL, provider_->last_send_data_params().type);
-  EXPECT_EQ(provider_->last_send_data_params().sid, webrtc_data_channel_->id());
+  EXPECT_EQ(webrtc::DataMessageType::kControl,
+            provider_->last_send_data_params().type);
+  EXPECT_EQ(provider_->last_sid(), webrtc_data_channel_->id());
 }
 
 TEST_F(SctpDataChannelTest, QueuedOpenMessageSent) {
@@ -295,8 +296,9 @@ TEST_F(SctpDataChannelTest, QueuedOpenMessageSent) {
   SetChannelReady();
   provider_->set_send_blocked(false);
 
-  EXPECT_EQ(cricket::DMT_CONTROL, provider_->last_send_data_params().type);
-  EXPECT_EQ(provider_->last_send_data_params().sid, webrtc_data_channel_->id());
+  EXPECT_EQ(webrtc::DataMessageType::kControl,
+            provider_->last_send_data_params().type);
+  EXPECT_EQ(provider_->last_sid(), webrtc_data_channel_->id());
 }
 
 // Tests that the DataChannel created after transport gets ready can enter OPEN
@@ -333,7 +335,7 @@ TEST_F(SctpDataChannelTest, SendUnorderedAfterReceivesOpenAck) {
   // Emulates receiving an OPEN_ACK message.
   cricket::ReceiveDataParams params;
   params.sid = init.id;
-  params.type = cricket::DMT_CONTROL;
+  params.type = webrtc::DataMessageType::kControl;
   rtc::CopyOnWriteBuffer payload;
   webrtc::WriteDataChannelOpenAckMessage(&payload);
   dc->OnDataReceived(params, payload);
@@ -359,7 +361,7 @@ TEST_F(SctpDataChannelTest, SendUnorderedAfterReceiveData) {
   // Emulates receiving a DATA message.
   cricket::ReceiveDataParams params;
   params.sid = init.id;
-  params.type = cricket::DMT_TEXT;
+  params.type = webrtc::DataMessageType::kText;
   webrtc::DataBuffer buffer("data");
   dc->OnDataReceived(params, buffer.data);
 
@@ -380,7 +382,8 @@ TEST_F(SctpDataChannelTest, OpenWaitsForOpenMesssage) {
   provider_->set_send_blocked(false);
   EXPECT_EQ_WAIT(webrtc::DataChannelInterface::kOpen,
                  webrtc_data_channel_->state(), 1000);
-  EXPECT_EQ(cricket::DMT_CONTROL, provider_->last_send_data_params().type);
+  EXPECT_EQ(webrtc::DataMessageType::kControl,
+            provider_->last_send_data_params().type);
 }
 
 // Tests that close first makes sure all queued data gets sent.
@@ -401,7 +404,8 @@ TEST_F(SctpDataChannelTest, QueuedCloseFlushes) {
   EXPECT_EQ_WAIT(webrtc::DataChannelInterface::kClosed,
                  webrtc_data_channel_->state(), 1000);
   EXPECT_TRUE(webrtc_data_channel_->error().ok());
-  EXPECT_EQ(cricket::DMT_TEXT, provider_->last_send_data_params().type);
+  EXPECT_EQ(webrtc::DataMessageType::kText,
+            provider_->last_send_data_params().type);
 }
 
 // Tests that messages are sent with the right id.
@@ -410,7 +414,7 @@ TEST_F(SctpDataChannelTest, SendDataId) {
   SetChannelReady();
   webrtc::DataBuffer buffer("data");
   EXPECT_TRUE(webrtc_data_channel_->Send(buffer));
-  EXPECT_EQ(1, provider_->last_send_data_params().sid);
+  EXPECT_EQ(1, provider_->last_sid());
 }
 
 // Tests that the incoming messages with wrong ids are rejected.
@@ -457,7 +461,7 @@ TEST_F(SctpDataChannelTest, NoMsgSentIfNegotiatedAndNotFromOpenMsg) {
                               rtc::Thread::Current(), rtc::Thread::Current());
 
   EXPECT_EQ_WAIT(webrtc::DataChannelInterface::kOpen, dc->state(), 1000);
-  EXPECT_EQ(0, provider_->last_send_data_params().sid);
+  EXPECT_EQ(0, provider_->last_sid());
 }
 
 // Tests that DataChannel::messages_received() and DataChannel::bytes_received()
@@ -522,8 +526,9 @@ TEST_F(SctpDataChannelTest, OpenAckSentIfCreatedFromOpenMessage) {
 
   EXPECT_EQ_WAIT(webrtc::DataChannelInterface::kOpen, dc->state(), 1000);
 
-  EXPECT_EQ(config.id, provider_->last_send_data_params().sid);
-  EXPECT_EQ(cricket::DMT_CONTROL, provider_->last_send_data_params().type);
+  EXPECT_EQ(config.id, provider_->last_sid());
+  EXPECT_EQ(webrtc::DataMessageType::kControl,
+            provider_->last_send_data_params().type);
 }
 
 // Tests the OPEN_ACK role assigned by InternalDataChannelInit.

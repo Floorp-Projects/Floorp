@@ -81,6 +81,7 @@ rtc_library("rtc_media_base") {
     "../api/crypto:frame_decryptor_interface",
     "../api/crypto:frame_encryptor_interface",
     "../api/crypto:options",
+    "../api/transport:datagram_transport_interface",
     #"../api/transport:stun_types",
     "../api/transport:webrtc_key_value_config",
     "../api/transport/rtp:rtp_source",
@@ -382,6 +383,7 @@ if (!build_with_mozilla) {
 rtc_source_set("rtc_data_sctp_transport_internal") {
   sources = [ "sctp/sctp_transport_internal.h" ]
   deps = [
+    "../api/transport:datagram_transport_interface",
     "../media:rtc_media_base",
     "../p2p:rtc_p2p",
     "../rtc_base:rtc_base_approved",

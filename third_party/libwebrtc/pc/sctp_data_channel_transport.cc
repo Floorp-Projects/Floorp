@@ -39,17 +39,8 @@ RTCError SctpDataChannelTransport::SendData(
     int channel_id,
     const SendDataParams& params,
     const rtc::CopyOnWriteBuffer& buffer) {
-  // Map webrtc::SendDataParams to cricket::SendDataParams.
-  // TODO(mellem):  See about unifying these structs.
-  cricket::SendDataParams sd_params;
-  sd_params.sid = channel_id;
-  sd_params.type = ToCricketDataMessageType(params.type);
-  sd_params.ordered = params.ordered;
-  sd_params.max_rtx_count = params.max_rtx_count;
-  sd_params.max_rtx_ms = params.max_rtx_ms;
-
   cricket::SendDataResult result;
-  sctp_transport_->SendData(sd_params, buffer, &result);
+  sctp_transport_->SendData(channel_id, params, buffer, &result);
 
   // TODO(mellem):  See about changing the interfaces to not require mapping
   // SendDataResult to RTCError and back again.
@@ -94,8 +85,7 @@ void SctpDataChannelTransport::OnDataReceived(
     const cricket::ReceiveDataParams& params,
     const rtc::CopyOnWriteBuffer& buffer) {
   if (sink_) {
-    sink_->OnDataReceived(params.sid, ToWebrtcDataMessageType(params.type),
-                          buffer);
+    sink_->OnDataReceived(params.sid, params.type, buffer);
   }
 }
 

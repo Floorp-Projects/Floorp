@@ -185,12 +185,11 @@ class SctpTransportTest : public ::testing::Test, public sigslot::has_slots<> {
                 const std::string& msg,
                 SendDataResult* result,
                 bool ordered = false) {
-    SendDataParams params;
-    params.sid = sid;
+    webrtc::SendDataParams params;
     params.ordered = ordered;
 
-    return chan->SendData(params, rtc::CopyOnWriteBuffer(&msg[0], msg.length()),
-                          result);
+    return chan->SendData(
+        sid, params, rtc::CopyOnWriteBuffer(&msg[0], msg.length()), result);
   }
 
   bool ReceivedData(const SctpFakeDataReceiver* recv,
@@ -599,15 +598,14 @@ TEST_P(SctpTransportTestWithOrdered, SendDataBlocked) {
   SetupConnectedTransportsWithTwoStreams();
 
   SendDataResult result;
-  SendDataParams params;
-  params.sid = 1;
+  webrtc::SendDataParams params;
   params.ordered = GetParam();
 
   std::vector<char> buffer(1024 * 64, 0);
 
   for (size_t i = 0; i < 100; ++i) {
     transport1()->SendData(
-        params, rtc::CopyOnWriteBuffer(&buffer[0], buffer.size()), &result);
+        1, params, rtc::CopyOnWriteBuffer(&buffer[0], buffer.size()), &result);
     if (result == SDR_BLOCK)
       break;
   }
@@ -626,15 +624,15 @@ TEST_P(SctpTransportTestWithOrdered, SignalReadyToSendDataAfterBlocked) {
   fake_dtls1()->SetWritable(false);
   // Send messages until we get EWOULDBLOCK.
   static const size_t kMaxMessages = 1024;
-  SendDataParams params;
-  params.sid = 1;
+  webrtc::SendDataParams params;
   params.ordered = GetParam();
   rtc::CopyOnWriteBuffer buf(1024);
   memset(buf.MutableData(), 0, 1024);
   SendDataResult result;
   size_t message_count = 0;
   for (; message_count < kMaxMessages; ++message_count) {
-    if (!transport1()->SendData(params, buf, &result) && result == SDR_BLOCK) {
+    if (!transport1()->SendData(1, params, buf, &result) &&
+        result == SDR_BLOCK) {
       break;
     }
   }
