@@ -37,13 +37,15 @@ class AudioSink : private AudioStream::DataSource {
   };
 
   AudioSink(AbstractThread* aThread, MediaQueue<AudioData>& aAudioQueue,
-            const media::TimeUnit& aStartTime, const AudioInfo& aInfo,
-            AudioDeviceInfo* aAudioDevice);
+            const AudioInfo& aInfo, AudioDeviceInfo* aAudioDevice);
 
   ~AudioSink();
 
+  // Allocate and initialize mAudioStream. Returns NS_OK on success.
+  nsresult InitializeAudioStream(const PlaybackParams& aParams);
+
   // Start audio playback.
-  nsresult Start(const PlaybackParams& aParams,
+  nsresult Start(const media::TimeUnit& aStartTime,
                  MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise);
 
   /*
@@ -88,9 +90,6 @@ class AudioSink : private AudioStream::DataSource {
   }
 
  private:
-  // Allocate and initialize mAudioStream. Returns NS_OK on success.
-  nsresult InitializeAudioStream(const PlaybackParams& aParams);
-
   // Interface of AudioStream::DataSource.
   // Called on the callback thread of cubeb. Returns the number of frames that
   // were available.

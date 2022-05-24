@@ -30,7 +30,7 @@ class AudioSinkWrapper : public MediaSink {
   class Creator {
    public:
     virtual ~Creator() = default;
-    virtual AudioSink* Create(const media::TimeUnit& aStartTime) = 0;
+    virtual AudioSink* Create() = 0;
   };
 
   // Wrap around a function object which creates AudioSinks.
@@ -38,9 +38,7 @@ class AudioSinkWrapper : public MediaSink {
   class CreatorImpl : public Creator {
    public:
     explicit CreatorImpl(const Function& aFunc) : mFunction(aFunc) {}
-    AudioSink* Create(const media::TimeUnit& aStartTime) override {
-      return mFunction(aStartTime);
-    }
+    AudioSink* Create() override { return mFunction(); }
 
    private:
     Function mFunction;
