@@ -148,7 +148,9 @@ AudioStream::AudioStream(DataSource& aSource, uint32_t aInRate,
       mSandboxed(CubebUtils::SandboxEnabled()),
       mPlaybackComplete(false),
       mPlaybackRate(1.0f),
-      mPreservesPitch(true) {}
+      mPreservesPitch(true),
+      mCallbacksStarted(false)
+    {}
 
 AudioStream::~AudioStream() {
   LOG("deleted, state %d", mState.load());
@@ -231,8 +233,8 @@ nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo)
   auto startTime = TimeStamp::Now();
   TRACE("AudioStream::Init");
 
-  LOG("%s channels: %d, rate: %d", __FUNCTION__, mOutChannels,
-      mAudioClock.GetInputRate());
+  LOG("%s channels: %d, rate: %d", __FUNCTION__, mOutChannels, mAudioClock.GetInputRate());
+
   mSinkInfo = aSinkInfo;
 
   cubeb_stream_params params;
@@ -595,6 +597,9 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
     CubebUtils::GetAudioThreadRegistry()->Register(mAudioThreadId);
   }
   WebCore::DenormalDisabler disabler;
+  if (!mCallbacksStarted) {
+    mCallbacksStarted = true;
+  }
 
   TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
   TRACE("AudioStream::DataCallback");
