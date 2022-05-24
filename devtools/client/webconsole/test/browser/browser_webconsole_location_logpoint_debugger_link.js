@@ -50,27 +50,25 @@ add_task(async function() {
   info("Wait for two messages");
   await waitFor(() => findAllMessages(hud).length === 2);
 
-  await testOpenInDebugger(
-    hud,
-    toolbox,
-    "undefinedVariable is not defined",
-    true,
-    false,
-    false,
-    "undefinedVariable"
-  );
+  await testOpenInDebugger(hud, {
+    text: "undefinedVariable is not defined",
+    typeSelector: ".logPointError",
+    expectUrl: true,
+    expectLine: false,
+    expectColumn: false,
+    logPointExpr: "undefinedVariable",
+  });
 
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");
-  await testOpenInDebugger(
-    hud,
-    toolbox,
-    "a is 1",
-    true,
-    false,
-    false,
-    "`a is ${a}`"
-  );
+  await testOpenInDebugger(hud, {
+    text: "a is 1",
+    typeSelector: ".logPoint",
+    expectUrl: true,
+    expectLine: false,
+    expectColumn: false,
+    logPointExpr: "`a is ${a}`",
+  });
 
   // Test clicking location of a removed logpoint, or a newly added breakpoint
   // at an old logpoint's location will only highlight its line
@@ -85,18 +83,23 @@ add_task(async function() {
 
   info("Selecting the console");
   await toolbox.selectTool("webconsole");
-  await testOpenInDebugger(
-    hud,
-    toolbox,
-    "undefinedVariable is not defined",
-    true,
-    8,
-    10
-  );
+  await testOpenInDebugger(hud, {
+    text: "undefinedVariable is not defined",
+    typeSelector: ".logPointError",
+    expectUrl: true,
+    expectLine: true,
+    expectColumn: true,
+  });
 
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");
-  await testOpenInDebugger(hud, toolbox, "a is 1", true, 8, 10);
+  await testOpenInDebugger(hud, {
+    text: "a is 1",
+    typeSelector: ".logPoint",
+    expectUrl: true,
+    expectLine: true,
+    expectColumn: true,
+  });
 });
 
 // Test clicking locations of logpoints from different files
@@ -130,15 +133,14 @@ add_task(async function() {
 
   info("Wait for the first message");
   await waitFor(() => findAllMessages(hud).length === 1);
-  await testOpenInDebugger(
-    hud,
-    toolbox,
-    "a is 1",
-    true,
-    false,
-    false,
-    "`a is ${a}`"
-  );
+  await testOpenInDebugger(hud, {
+    text: "a is 1",
+    typeSelector: ".logPoint",
+    expectUrl: true,
+    expectLine: false,
+    expectColumn: false,
+    logPointExpr: "`a is ${a}`",
+  });
 
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");
@@ -148,15 +150,14 @@ add_task(async function() {
 
   info("Wait for the second message");
   await waitFor(() => findAllMessages(hud).length === 2);
-  await testOpenInDebugger(
-    hud,
-    toolbox,
-    "c is 1",
-    true,
-    false,
-    false,
-    "`c is ${c}`"
-  );
+  await testOpenInDebugger(hud, {
+    text: "c is 1",
+    typeSelector: ".logPoint",
+    expectUrl: true,
+    expectLine: false,
+    expectColumn: false,
+    logPointExpr: "`c is ${c}`",
+  });
 });
 
 async function setLogPoint(dbg, index, expression) {
