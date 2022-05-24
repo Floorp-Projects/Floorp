@@ -31,7 +31,7 @@ async function logAndAssertInitialMessages(hud) {
       content.wrappedJSObject.doLogs(count);
     }
   );
-  await waitFor(() => findMessages(hud, "").length === INITIAL_LOGS_NUMBER);
+  await waitFor(() => findAllMessages(hud).length === INITIAL_LOGS_NUMBER);
   ok(true, "Messages showed up initially");
 }
 
@@ -46,7 +46,7 @@ add_task(async function() {
   await onReloaded;
 
   info("Wait for messages to be cleared");
-  await waitFor(() => findMessages(hud, "").length === 0);
+  await waitFor(() => findAllMessages(hud).length === 0);
   ok(true, "Messages disappeared");
 
   await closeToolbox();
@@ -61,7 +61,7 @@ add_task(async function() {
   await logAndAssertInitialMessages(hud);
 
   await navigateTo(TEST_ORG_URI);
-  await waitFor(() => findMessages(hud, "").length === 0);
+  await waitFor(() => findAllMessages(hud).length === 0);
   ok(true, "Messages disappeared");
 
   await closeToolbox();
@@ -170,7 +170,7 @@ add_task(async function() {
 
   ok(true, "Navigation message appeared as expected");
   is(
-    findMessages(hud, "").length,
+    findAllMessages(hud).length,
     INITIAL_LOGS_NUMBER + 1,
     "Messages logged before navigation are still visible"
   );
@@ -190,7 +190,7 @@ add_task(async function() {
 
   ok(true, "Second navigation message appeared as expected");
   is(
-    findMessages(hud, "").length,
+    findAllMessages(hud).length,
     INITIAL_LOGS_NUMBER + 2,
     "Messages logged before the second navigation are still visible"
   );
@@ -210,7 +210,7 @@ add_task(async function() {
 
   ok(true, "Third navigation message appeared as expected");
   is(
-    findMessages(hud, "").length,
+    findAllMessages(hud).length,
     INITIAL_LOGS_NUMBER + 3,
     "Messages logged before the third navigation are still visible"
   );

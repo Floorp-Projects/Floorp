@@ -28,7 +28,7 @@ add_task(async function() {
     "Click the clear output button and wait until there's no messages in the output"
   );
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
-  await waitFor(() => findMessages(hud, "").length === 0);
+  await waitFor(() => findAllMessages(hud).length === 0);
 
   info("Close and re-open the console");
   await closeToolbox();

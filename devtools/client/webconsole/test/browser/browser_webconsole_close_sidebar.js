@@ -17,7 +17,7 @@ add_task(async function() {
   info("Click the clear console button");
   const clearButton = hud.ui.document.querySelector(".devtools-button");
   clearButton.click();
-  await waitFor(() => findMessages(hud, "").length == 0);
+  await waitFor(() => findAllMessages(hud).length == 0);
   let sidebar = hud.ui.document.querySelector(".sidebar");
   ok(!sidebar, "Sidebar hidden after clear console button clicked");
 
@@ -42,7 +42,7 @@ add_task(async function() {
     clearShortcut = WCUL10n.getStr("webconsole.clear.key");
   }
   synthesizeKeyShortcut(clearShortcut);
-  await waitFor(() => findMessages(hud, "").length == 0);
+  await waitFor(() => findAllMessages(hud).length == 0);
   sidebar = hud.ui.document.querySelector(".sidebar");
   ok(!sidebar, "Sidebar hidden after ctrl-l");
 
