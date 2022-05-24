@@ -25,6 +25,7 @@ Array [
         "thread": "FakeThread",
       },
     ],
+    "filename": "a",
     "source": Object {
       "extensionName": null,
       "id": "a",
@@ -41,11 +42,7 @@ Array [
 ]
 `;
 
-exports[`breakpoints should not re-add a breakpoint 1`] = `Array []`;
-
 exports[`breakpoints should not show a breakpoint that does not have text 1`] = `Array []`;
-
-exports[`breakpoints should not show a breakpoint that does not have text 2`] = `Array []`;
 
 exports[`breakpoints should remap breakpoints on pretty print 1`] = `
 Object {
@@ -95,6 +92,7 @@ Array [
         "thread": "FakeThread",
       },
     ],
+    "filename": "a",
     "source": Object {
       "extensionName": null,
       "id": "a",
