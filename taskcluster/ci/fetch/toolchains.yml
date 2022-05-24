@@ -653,4 +653,4 @@ aflplusplus-4.0:
     fetch:
         type: git
         repo: https://github.com/AFLplusplus/AFLplusplus
-        revision: ac80678592ea4a790ab2eedccfec4e3bc9f96447
+        revision: ba3c7bfe40f9b17a691958e3525828385127ad25
