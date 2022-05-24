@@ -1573,27 +1573,3 @@ if (getBuildConfiguration()["pointer-byte-size"] == 8) {
         assertEq(mem[Number(oobTarget-1n)], 0);
     }
 }
-
-//////////////////////////////////////////////////////////////////////////////
-
-function assertSame(got, expected) {
-    assertEq(got.length, expected.length);
-    for ( let i=0; i < got.length; i++ ) {
-        let g = got[i];
-        let e = expected[i];
-        if (typeof g != typeof e) {
-            if (typeof g == "bigint")
-                e = BigInt(e);
-            else if (typeof e == "bigint")
-                g = BigInt(g);
-        }
-        assertEq(g, e);
-    }
-}
-
-function iota(len) {
-    let xs = [];
-    for ( let i=0 ; i < len ; i++ )
-        xs.push(i);
-    return xs;
-}

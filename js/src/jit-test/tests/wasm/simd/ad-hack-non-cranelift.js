@@ -1,4 +1,7 @@
-// |jit-test| skip-if: !wasmSimdEnabled() || wasmCompileMode().indexOf("cranelift") >= 0; include:../tests/wasm/simd/ad-hack-preamble.js
+// |jit-test| skip-if: !wasmSimdEnabled() || wasmCompileMode().indexOf("cranelift") >= 0
+
+// Do not include this in the preamble, it must be loaded after lib/wasm.js
+load(scriptdir + "ad-hack-preamble.js")
 
 // New instructions, not yet supported by cranelift
 
