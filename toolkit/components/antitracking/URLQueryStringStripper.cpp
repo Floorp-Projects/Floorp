@@ -9,6 +9,7 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsEffectiveTLDService.h"
 #include "nsISupportsImpl.h"
@@ -42,22 +43,22 @@ URLQueryStringStripper* URLQueryStringStripper::GetOrCreate() {
 }
 
 /* static */
-bool URLQueryStringStripper::Strip(nsIURI* aURI, bool aIsPBM,
-                                   nsCOMPtr<nsIURI>& aOutput) {
+uint32_t URLQueryStringStripper::Strip(nsIURI* aURI, bool aIsPBM,
+                                       nsCOMPtr<nsIURI>& aOutput) {
   if (aIsPBM) {
     if (!StaticPrefs::privacy_query_stripping_enabled_pbmode()) {
-      return false;
+      return 0;
     }
   } else {
     if (!StaticPrefs::privacy_query_stripping_enabled()) {
-      return false;
+      return 0;
     }
   }
 
   RefPtr<URLQueryStringStripper> stripper = GetOrCreate();
 
   if (stripper->CheckAllowList(aURI)) {
-    return false;
+    return 0;
   }
 
   return stripper->StripQueryString(aURI, aOutput);
@@ -79,8 +80,8 @@ void URLQueryStringStripper::Shutdown() {
   mService = nullptr;
 }
 
-bool URLQueryStringStripper::StripQueryString(nsIURI* aURI,
-                                              nsCOMPtr<nsIURI>& aOutput) {
+uint32_t URLQueryStringStripper::StripQueryString(nsIURI* aURI,
+                                                  nsCOMPtr<nsIURI>& aOutput) {
   MOZ_ASSERT(aURI);
 
   nsCOMPtr<nsIURI> uri(aURI);
@@ -89,13 +90,14 @@ bool URLQueryStringStripper::StripQueryString(nsIURI* aURI,
   nsresult rv = aURI->GetQuery(query);
   NS_ENSURE_SUCCESS(rv, false);
 
+  uint32_t numStripped = 0;
+
   // We don't need to do anything if there is no query string.
   if (query.IsEmpty()) {
-    return false;
+    return numStripped;
   }
 
   URLParams params;
-  bool hasStripped = false;
 
   URLParams::Parse(query, [&](nsString&& name, nsString&& value) {
     nsAutoString lowerCaseName;
@@ -103,7 +105,7 @@ bool URLQueryStringStripper::StripQueryString(nsIURI* aURI,
     ToLowerCase(name, lowerCaseName);
 
     if (mList.Contains(lowerCaseName)) {
-      hasStripped = true;
+      numStripped += 1;
       return true;
     }
 
@@ -112,8 +114,8 @@ bool URLQueryStringStripper::StripQueryString(nsIURI* aURI,
   });
 
   // Return if there is no parameter has been stripped.
-  if (!hasStripped) {
-    return false;
+  if (!numStripped) {
+    return numStripped;
   }
 
   nsAutoString newQuery;
@@ -123,7 +125,7 @@ bool URLQueryStringStripper::StripQueryString(nsIURI* aURI,
                 .SetQuery(NS_ConvertUTF16toUTF8(newQuery))
                 .Finalize(aOutput);
 
-  return true;
+  return numStripped;
 }
 
 bool URLQueryStringStripper::CheckAllowList(nsIURI* aURI) {

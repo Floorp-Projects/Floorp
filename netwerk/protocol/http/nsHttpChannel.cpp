@@ -5149,15 +5149,21 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
                                         isRedirectURIInAllowList);
       }
 
-      nsCOMPtr<nsIURI> strippedURI;
-      if (!isRedirectURIInAllowList &&
-          URLQueryStringStripper::Strip(mRedirectURI, mPrivateBrowsing,
-                                        strippedURI)) {
-        mUnstrippedRedirectURI = mRedirectURI;
-        mRedirectURI = strippedURI;
+      if (!isRedirectURIInAllowList) {
+        nsCOMPtr<nsIURI> strippedURI;
+        uint32_t numStripped = URLQueryStringStripper::Strip(
+            mRedirectURI, mPrivateBrowsing, strippedURI);
 
-        Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_QUERY_STRIPPING_COUNT::StripForRedirect);
+        if (numStripped) {
+          mUnstrippedRedirectURI = mRedirectURI;
+          mRedirectURI = strippedURI;
+
+          // Record telemetry, but only if we stripped any query params.
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_QUERY_STRIPPING_COUNT::StripForRedirect);
+          Telemetry::Accumulate(Telemetry::QUERY_STRIPPING_PARAM_COUNT,
+                                numStripped);
+        }
       }
     }
   }
