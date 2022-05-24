@@ -362,6 +362,54 @@ function findAllMessages(hud) {
 }
 
 /**
+ * Find a part of the last message with given message type in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @param object options
+ *        - hud : {String} A substring that can be found in the message.
+ *        - typeSelector: {String} A part of selector for the message,
+ *                                 to specify the message type.
+ *        - partSelector: {String} A selector for the part of the message.
+ * @return {Node} the node corresponding the found part, otherwise undefined
+ */
+function findMessagePartByType(hud, options) {
+  const elements = findMessagePartsByType(hud, options);
+  return elements.at(-1);
+}
+
+/**
+ * Find parts of multiple messages with given message type in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @param object options
+ *        - text : {String} A substring that can be found in the message.
+ *        - typeSelector: {String} A part of selector for the message,
+ *                                 to specify the message type.
+ *        - partSelector: {String} A selector for the part of the message.
+ * @return {Array} The nodes corresponding the found parts
+ */
+function findMessagePartsByType(hud, { text, typeSelector, partSelector }) {
+  if (!typeSelector) {
+    throw new Error("typeSelector parameter is required");
+  }
+  if (!typeSelector.startsWith(".")) {
+    throw new Error("typeSelector should start with a dot e.g. `.result`");
+  }
+  if (!partSelector) {
+    throw new Error("partSelector parameter is required");
+  }
+
+  const selector = ".message" + typeSelector + " " + partSelector;
+  const parts = hud.ui.outputNode.querySelectorAll(selector);
+  const elements = Array.from(parts).filter(el =>
+    el.textContent.includes(text)
+  );
+  return elements;
+}
+
+/**
  * Type-specific wrappers for findMessageByType and findMessagesByType.
  *
  * @param object hud
