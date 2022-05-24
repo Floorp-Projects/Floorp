@@ -435,7 +435,7 @@ function buildLinkString(
 
   return `<link ${relString} ${href} ${policy} ${asString} id="test_link" onload='${onChildComplete}' onerror='${onChildComplete}'>`;
 }
-
+// eslint-disable-next-line complexity
 function handleRequest(request, response) {
   var params = new URLSearchParams(request.queryString);
   var action = params.get("ACTION");
@@ -495,10 +495,10 @@ function handleRequest(request, response) {
   }
   if (action === "test") {
     // ?action=test&policy=origin&name=name
-    var policy = params.get("policy");
-    var name = params.get("NAME");
-    var type = params.get("type");
-    var result = getSharedState(SHARED_KEY);
+    let policy = params.get("policy");
+    let name = params.get("NAME");
+    let type = params.get("type");
+    let result = getSharedState(SHARED_KEY);
 
     result = result ? JSON.parse(result) : {};
 
@@ -656,7 +656,7 @@ function handleRequest(request, response) {
     return;
   }
 
-  var _getPage = createLinkPageUsingRefferer.bind(
+  _getPage = createLinkPageUsingRefferer.bind(
     null,
     metaPolicy,
     attributePolicy,
