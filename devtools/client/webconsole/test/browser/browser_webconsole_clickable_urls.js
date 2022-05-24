@@ -24,7 +24,7 @@ add_task(async function() {
     }
   );
 
-  const node = await waitFor(() => findMessage(hud, firstURL));
+  const node = await waitFor(() => findConsoleAPIMessage(hud, firstURL));
   const [urlEl1, urlEl2] = Array.from(node.querySelectorAll("a.url"));
 
   let onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, firstURL, true);

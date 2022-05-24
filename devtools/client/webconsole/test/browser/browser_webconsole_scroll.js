@@ -23,7 +23,7 @@ add_task(async function() {
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
 
   info("Console should be scrolled to bottom on initial load from page logs");
-  await waitFor(() => findMessage(hud, "init-100"));
+  await waitFor(() => findConsoleAPIMessage(hud, "init-100"));
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -40,7 +40,7 @@ add_task(async function() {
   await reloadBrowser();
 
   info("Console should be scrolled to bottom after refresh from page logs");
-  await waitFor(() => findMessage(hud, "init-100"));
+  await waitFor(() => findConsoleAPIMessage(hud, "init-100"));
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -357,7 +357,9 @@ function isScrolledToBottom(container) {
 // LazyMessageList are disregarded.
 function allTraceMessagesAreExpanded(hud) {
   return (
-    findMessage(hud, "trace in C 100") &&
-    findMessages(hud, "trace in C").every(m => m.querySelector(".frames"))
+    findConsoleAPIMessage(hud, "trace in C 100") &&
+    findConsoleAPIMessages(hud, "trace in C").every(m =>
+      m.querySelector(".frames")
+    )
   );
 }

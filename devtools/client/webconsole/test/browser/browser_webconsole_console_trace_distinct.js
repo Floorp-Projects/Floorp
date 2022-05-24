@@ -14,9 +14,9 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><script>
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  await waitFor(() => findMessage(hud, "trace"));
+  await waitFor(() => findConsoleAPIMessage(hud, "trace"));
   ok(true, "console.trace() message is displayed in the console");
-  const messages = findMessages(hud, "console.trace()");
+  const messages = findConsoleAPIMessages(hud, "console.trace()");
   is(messages.length, 4, "There are 4 console.trace() messages");
 
   info("Wait until the stacktraces are displayed");

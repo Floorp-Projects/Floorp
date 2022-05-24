@@ -81,7 +81,7 @@ add_task(async function() {
 
   async function checkErrorMessage(text) {
     const message = await waitFor(
-      () => findMessage(hud, text, ".message.error"),
+      () => findErrorMessage(hud, text),
       undefined,
       100
     );

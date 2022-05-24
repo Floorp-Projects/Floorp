@@ -19,7 +19,7 @@ add_task(async function() {
     content.wrappedJSObject.console.log("oi-test", proxy);
   });
 
-  const node = await waitFor(() => findMessage(hud, "oi-test"));
+  const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
   const oi = node.querySelector(".tree");
   const [proxyNode] = getObjectInspectorNodes(oi);
 

@@ -32,7 +32,9 @@ add_task(async function() {
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("console message 2");
   });
-  const msg = await waitFor(() => findMessage(hud, "console message 2"));
+  const msg = await waitFor(() =>
+    findConsoleAPIMessage(hud, "console message 2")
+  );
   ok(isInputFocused(hud), "input node is focused, first time");
 
   // Checking that there's still a selection in the input

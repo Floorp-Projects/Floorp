@@ -46,7 +46,9 @@ async function testBatchLoggingAndClear(hud, messageNumber) {
   ) {
     content.wrappedJSObject.batchLogAndClear(numMessages);
   });
-  await waitFor(() => findMessage(hud, l10n.getStr("consoleCleared")));
+  await waitFor(() =>
+    findConsoleAPIMessage(hud, l10n.getStr("consoleCleared"))
+  );
   ok(true, "console cleared message is displayed");
 
   // Passing the text argument as an empty string will returns all the message,

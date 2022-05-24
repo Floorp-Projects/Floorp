@@ -78,7 +78,7 @@ add_task(async function testStorageIsolationMessage() {
 
   info("Open the group");
   node.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, url1));
+  await waitFor(() => findWarningMessage(hud, url1));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${STORAGE_ISOLATION_GROUP_LABEL} 2`,

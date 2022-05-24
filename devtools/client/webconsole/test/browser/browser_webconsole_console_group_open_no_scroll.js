@@ -16,8 +16,8 @@ add_task(async function() {
   const outputScroller = hud.ui.outputScroller;
 
   // Let's wait until the first message and the group are displayed.
-  await waitFor(() => findMessage(hud, "log-0"));
-  const groupMessage = await waitFor(() => findMessage(hud, "GROUP"));
+  await waitFor(() => findConsoleAPIMessage(hud, "log-0"));
+  const groupMessage = await waitFor(() => findConsoleAPIMessage(hud, "GROUP"));
 
   is(hasVerticalOverflow(outputScroller), true, "output node overflows");
   is(
@@ -28,7 +28,7 @@ add_task(async function() {
 
   info("Expand the group");
   groupMessage.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, "in group"));
+  await waitFor(() => findConsoleAPIMessage(hud, "in group"));
 
   is(hasVerticalOverflow(outputScroller), true, "output node overflows");
   is(

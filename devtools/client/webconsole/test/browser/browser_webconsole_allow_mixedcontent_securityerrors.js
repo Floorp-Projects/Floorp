@@ -36,7 +36,7 @@ add_task(async function() {
     "\u201chttp://example.com/tests/image/test/mochitest/blue.png\u201d on a secure page";
 
   const waitUntilWarningMessage = text =>
-    waitFor(() => findMessage(hud, text, ".message.warn"), undefined, 100);
+    waitFor(() => findWarningMessage(hud, text), undefined, 100);
 
   const onMixedActiveContent = waitUntilWarningMessage(activeContentText);
   const onMixedDisplayContent = waitUntilWarningMessage(displayContentText);

@@ -41,7 +41,9 @@ add_task(async function task() {
   const { hud } = await toolbox.selectTool("webconsole");
 
   const xhrUrl = TEST_PATH + "test-data.json";
-  const messageNode = await waitFor(() => findMessage(hud, xhrUrl));
+  const messageNode = await waitFor(() =>
+    findMessageByType(hud, xhrUrl, ".network")
+  );
   const urlNode = messageNode.querySelector(".url");
   info("Network message found.");
 

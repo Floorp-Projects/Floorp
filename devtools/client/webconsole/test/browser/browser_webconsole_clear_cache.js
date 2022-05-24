@@ -21,8 +21,8 @@ add_task(async function() {
   await closeToolbox();
   hud = await openConsole(tab);
 
-  await waitFor(() => findMessage(hud, EXPECTED_REPORT));
-  await waitFor(() => findMessage(hud, CACHED_MESSAGE));
+  await waitFor(() => findErrorMessage(hud, EXPECTED_REPORT));
+  await waitFor(() => findConsoleAPIMessage(hud, CACHED_MESSAGE));
 
   info(
     "Click the clear output button and wait until there's no messages in the output"
@@ -37,12 +37,12 @@ add_task(async function() {
   info("Log a smoke message in order to know that the console is ready");
   await logTextToConsole(hud, "Smoke message");
   is(
-    findMessage(hud, CACHED_MESSAGE),
+    findConsoleAPIMessage(hud, CACHED_MESSAGE),
     undefined,
     "The cached message is not visible anymore"
   );
   is(
-    findMessage(hud, EXPECTED_REPORT),
+    findErrorMessage(hud, EXPECTED_REPORT),
     undefined,
     "The cached error message is not visible anymore as well"
   );
@@ -65,7 +65,7 @@ add_task(async function() {
   info("Log a smoke message in order to know that the console is ready");
   await logTextToConsole(hud, "Second smoke message");
   is(
-    findMessage(hud, NEW_CACHED_MESSAGE),
+    findConsoleAPIMessage(hud, NEW_CACHED_MESSAGE),
     undefined,
     "The new cached message is not visible anymore"
   );

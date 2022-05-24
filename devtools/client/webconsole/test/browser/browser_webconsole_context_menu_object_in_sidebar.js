@@ -23,7 +23,9 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud, "Object { a: 1 }"));
+  const message = await waitFor(() =>
+    findConsoleAPIMessage(hud, "Object { a: 1 }")
+  );
   const [objectA, objectB] = message.querySelectorAll(
     ".object-inspector .objectBox-object"
   );
@@ -85,7 +87,7 @@ add_task(async function() {
   ok(sidebarText.includes("b: 1"), "Sidebar contents shown for {b:1}");
 
   info("Showing sidebar for Error object");
-  const errorMsg = findMessage(hud, "CustomServerError:");
+  const errorMsg = findConsoleAPIMessage(hud, "CustomServerError:");
   await showSidebarWithContextMenu(hud, errorMsg, false);
 
   sidebarContents = hud.ui.document.querySelector(".sidebar-contents");

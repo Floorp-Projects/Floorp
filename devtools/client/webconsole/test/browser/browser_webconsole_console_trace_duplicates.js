@@ -10,7 +10,7 @@ const TEST_URI =
 add_task(async function testTraceMessages() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud, "foo1"));
+  const message = await waitFor(() => findConsoleAPIMessage(hud, "foo1"));
   // Wait until stacktrace is displayed.
   await waitFor(() => !!message.querySelector(".frames"));
 

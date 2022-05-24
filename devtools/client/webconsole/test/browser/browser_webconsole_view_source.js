@@ -18,7 +18,7 @@ add_task(async function() {
   info("console opened");
 
   const msg = await waitFor(() =>
-    findMessage(hud, "Blocked loading mixed active content")
+    findErrorMessage(hud, "Blocked loading mixed active content")
   );
   ok(msg, "error message");
   const locationNode = msg.querySelector(

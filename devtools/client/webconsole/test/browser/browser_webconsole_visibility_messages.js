@@ -31,7 +31,7 @@ add_task(async function() {
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.log("in-console log");
   });
-  await waitFor(() => findMessage(hud, "in-console log"));
+  await waitFor(() => findConsoleAPIMessage(hud, "in-console log"));
 
   info("select the inspector");
   await toolbox.selectTool("inspector");
@@ -64,7 +64,7 @@ add_task(async function() {
   info("Waiting for all messages to be logged into the store");
   await onAllMessagesInStore;
 
-  const inInspectorMessages = await findMessages(hud, "in-inspector");
+  const inInspectorMessages = await findConsoleAPIMessages(hud, "in-inspector");
   is(
     inInspectorMessages.length,
     0,
@@ -78,7 +78,7 @@ add_task(async function() {
   const waitForMessagePromises = [];
   for (let j = 1; j <= MESSAGES_COUNT; j++) {
     waitForMessagePromises.push(
-      waitFor(() => findMessage(hud, "in-inspector log " + j))
+      waitFor(() => findConsoleAPIMessage(hud, "in-inspector log " + j))
     );
   }
 
@@ -99,7 +99,7 @@ add_task(async function() {
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.log("in-console log");
   });
-  await waitFor(() => findMessage(hud, "in-console log"));
+  await waitFor(() => findConsoleAPIMessage(hud, "in-console log"));
 
   info("select the inspector");
   await toolbox.selectTool("inspector");

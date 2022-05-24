@@ -27,7 +27,7 @@ add_task(async function() {
   for (const [input, output] of tests) {
     execute(hud, input);
     const message = await waitFor(
-      () => findMessage(hud, output, ".console-api"),
+      () => findConsoleAPIMessage(hud, output),
       `Waiting for output for ${input}`
     );
 

@@ -11,12 +11,12 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await waitFor(
-    () => findMessage(hud, "wss://0.0.0.0:81", ".error"),
+    () => findErrorMessage(hud, "wss://0.0.0.0:81"),
     "Did not find error message for wss://0.0.0.0:81 connection",
     500
   );
   await waitFor(
-    () => findMessage(hud, "wss://0.0.0.0:82", ".error"),
+    () => findErrorMessage(hud, "wss://0.0.0.0:82"),
     "Did not find error message for wss://0.0.0.0:82 connection",
     500
   );

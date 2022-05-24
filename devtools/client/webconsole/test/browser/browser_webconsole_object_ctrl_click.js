@@ -20,7 +20,7 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const message = findMessage(hud, "Object");
+  const message = findConsoleAPIMessage(hud, "Object");
   const object = message.querySelector(".object-inspector .objectBox-object");
 
   info("Ctrl+click on an object to put it in the sidebar");

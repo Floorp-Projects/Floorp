@@ -12,7 +12,9 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await waitFor(() => findMessage(hud, "[a]") && findMessage(hud, "[j]"));
+  await waitFor(
+    () => findConsoleAPIMessage(hud, "[a]") && findConsoleAPIMessage(hud, "[j]")
+  );
 
   /*
    * The output looks like the following:
@@ -214,7 +216,7 @@ add_task(async function() {
     text: "",
   });
 
-  const subGroup = findMessage(hud, "[subgroup]");
+  const subGroup = findConsoleAPIMessage(hud, "[subgroup]");
   toggleGroup(subGroup);
 
   await setFilterState(hud, {

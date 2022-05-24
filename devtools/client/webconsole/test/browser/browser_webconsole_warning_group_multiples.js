@@ -147,7 +147,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Expand the second warning group");
   storageBlockedWarningGroupNode.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, STORAGE_BLOCKED_URL));
+  await waitFor(() => findWarningMessage(hud, STORAGE_BLOCKED_URL));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${CONTENT_BLOCKED_GROUP_LABEL}`,
@@ -187,7 +187,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Expand the first warning group");
   contentBlockedWarningGroupNode.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, CONTENT_BLOCKED_URL));
+  await waitFor(() => findWarningMessage(hud, CONTENT_BLOCKED_URL));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKED_GROUP_LABEL}`,
@@ -206,7 +206,9 @@ add_task(async function testContentBlockingMessage() {
   await reloadPage();
 
   // Also wait for the navigation message to be displayed.
-  await waitFor(() => findMessage(hud, "Navigated to"));
+  await waitFor(() =>
+    findMessageByType(hud, "Navigated to", ".navigationMarker")
+  );
 
   info("Add a storage blocked message and a content blocked one");
   onStorageBlockedMessage = waitForMessage(hud, STORAGE_BLOCKED_URL, ".warn");

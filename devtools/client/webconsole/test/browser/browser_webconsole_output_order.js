@@ -24,11 +24,11 @@ add_task(async function() {
   // Console messages are batched by the Resource watcher API and might be rendered after
   // the result message.
   const logMessages = await waitFor(() => {
-    const messages = findMessages(hud, "item-", ".log.message:not(.command)");
+    const messages = findConsoleAPIMessages(hud, "item-", ".log");
     return messages.length === 5 ? messages : null;
   });
 
-  const commandMessage = findMessage(hud, "", ".command");
+  const commandMessage = findMessageByType(hud, "", ".command");
   is(
     commandMessage.nextElementSibling,
     logMessages[0],
