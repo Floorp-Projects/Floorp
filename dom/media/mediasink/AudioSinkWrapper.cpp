@@ -148,7 +148,8 @@ void AudioSinkWrapper::DropAudioPacketsIfNeeded(
     audio = mAudioQueue.PopFront();
     dropped++;
     if (audio) {
-      LOG("Dropping audio packets: media position: %lf, "
+      LOGV(
+          "Dropping audio packets: media position: %lf, "
           "packet dropped: [%lf, %lf] (%u so far).\n",
           aMediaPosition.ToSeconds(), audio->mTime.ToSeconds(),
           (audio->mTime + audio->mDuration).ToSeconds(), dropped);
@@ -181,9 +182,12 @@ void AudioSinkWrapper::OnMuted(bool aMuted) {
     }
   } else {
     if (!IsPlaying()) {
+      LOG("%p: AudioSinkWrapper::OnMuted: not playing, not re-creating an "
+          "AudioSink",
+          this);
       return;
     }
-    LOG("AudioSinkWrapper unmuted, re-creating an AudioStream.");
+    LOG("%p: AudioSinkWrapper unmuted, re-creating an AudioStream.", this);
     TimeUnit mediaPosition = GetSystemClockPosition(TimeStamp::Now());
     nsresult rv = StartAudioSink(mediaPosition, AudioSinkStartPolicy::ASYNC);
     if (NS_FAILED(rv)) {
@@ -248,7 +252,7 @@ void AudioSinkWrapper::SetPreservesPitch(bool aPreservesPitch) {
 
 void AudioSinkWrapper::SetPlaying(bool aPlaying) {
   AssertOwnerThread();
-  LOG("%p: SetPlaying %s", this, aPlaying ? "true" : "false");
+  LOG("%p: AudioSinkWrapper::SetPlaying %s", this, aPlaying ? "true" : "false");
 
   // Resume/pause matters only when playback started.
   if (!mIsStarted) {
@@ -285,6 +289,7 @@ double AudioSinkWrapper::PlaybackRate() const {
 
 nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
                                  const MediaInfo& aInfo) {
+  LOG("%p AudioSinkWrapper::Start", this);
   AssertOwnerThread();
   MOZ_ASSERT(!mIsStarted, "playback already started.");
 
@@ -318,14 +323,14 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
              &AudioSinkWrapper::OnAudioEnded, &AudioSinkWrapper::OnAudioEnded)
       ->Track(mAudioSinkEndedPromise);
 
-  LOG("AudioSinkWrapper::StartAudioSink (%s)",
+  LOG("%p: AudioSinkWrapper::StartAudioSink (%s)", this,
       aPolicy == AudioSinkStartPolicy::ASYNC ? "Async" : "Sync");
 
   if (IsMuted()) {
-    LOG("Muted: not starting an audio sink");
+    LOG("%p: Muted: not starting an audio sink", this);
     return NS_OK;
   }
-  LOG("Not muted: starting a new audio sink");
+  LOG("%p: Not muted: starting a new audio sink", this);
   if (aPolicy == AudioSinkStartPolicy::ASYNC) {
     UniquePtr<AudioSink> audioSink;
     audioSink.reset(mCreator->Create());
@@ -417,7 +422,7 @@ void AudioSinkWrapper::Stop() {
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "playback not started.");
 
-  LOG("%p: Stop", this);
+  LOG("%p: AudioSinkWrapper::Stop", this);
 
   mIsStarted = false;
   mAudioEnded = true;
@@ -445,6 +450,7 @@ bool AudioSinkWrapper::IsPlaying() const {
 
 void AudioSinkWrapper::OnAudioEnded() {
   AssertOwnerThread();
+  LOG("%p: AudioSinkWrapper::OnAudioEnded", this);
   mAudioSinkEndedPromise.Complete();
   mPlayDuration = GetPosition();
   if (!mPlayStartTime.IsNull()) {
