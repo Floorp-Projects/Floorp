@@ -7,7 +7,6 @@ dir=${artifact%.tar.*}
 scripts="$(realpath "${0%/*}")"
 
 cd "$MOZ_FETCHES_DIR/AFLplusplus"
-patch -p1 -i "$scripts/afl-wasm.patch"
 make -f GNUmakefile afl-showmap \
     CC="$MOZ_FETCHES_DIR/clang/bin/clang"
 make -f GNUmakefile.llvm install \
