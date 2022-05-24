@@ -395,6 +395,23 @@ uint32_t PreferredSampleRate() {
   return sPreferredSampleRate;
 }
 
+int CubebStreamInit(cubeb* context, cubeb_stream** stream,
+                    char const* stream_name, cubeb_devid input_device,
+                    cubeb_stream_params* input_stream_params,
+                    cubeb_devid output_device,
+                    cubeb_stream_params* output_stream_params,
+                    uint32_t latency_frames, cubeb_data_callback data_callback,
+                    cubeb_state_callback state_callback, void* user_ptr) {
+  uint32_t ms = StaticPrefs::media_cubeb_slow_stream_init_ms();
+  if (ms) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+  }
+  return cubeb_stream_init(context, stream, stream_name, input_device,
+                           input_stream_params, output_device,
+                           output_stream_params, latency_frames, data_callback,
+                           state_callback, user_ptr);
+}
+
 void InitBrandName() {
   if (sBrandName) {
     return;
