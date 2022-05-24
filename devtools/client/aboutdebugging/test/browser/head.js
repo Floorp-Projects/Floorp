@@ -16,6 +16,12 @@ Services.scriptloader.loadSubScript(
 /* import-globals-from helper-mocks.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
 
+/* import-globals-from ../../../webconsole/test/browser/shared-head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/shared-head.js",
+  this
+);
+
 // Make sure the ADB addon is removed and ADB is stopped when the test ends.
 registerCleanupFunction(async function() {
   // Reset the selected tool in case we opened about:devtools-toolbox to
@@ -445,27 +451,4 @@ function clickOnAddonWidget(addonId) {
 
   info("Show the web extension popup");
   browserActionEl.click();
-}
-
-/**
- * Retrieve console panel messages that includes a given string.
- *
- * @param {WebConsole} hud
- *        The WebConsole instance.
- * @param {string} text
- *        The string of text that should be used to select the
- *        console message elements to return.
- * @param {string} [selector]
- *        An optional CSS selector string (defaults to .message).
- *
- * @returns {Array<DOMElement>}
- *          The console panel DOM elements which are matching the
- *          given text and selector.
- */
-function findMessages(hud, text, selector = ".message") {
-  const messages = hud.ui.outputNode.querySelectorAll(selector);
-  const elements = Array.prototype.filter.call(messages, el =>
-    el.textContent.includes(text)
-  );
-  return elements;
 }
