@@ -392,7 +392,7 @@ TEST_F(UlpfecReceiverTest, PacketNotDroppedTooEarly) {
   delayed_fec = fec_packets.front();
 
   // Fill the FEC decoder. No packets should be dropped.
-  const size_t kNumMediaPacketsBatch2 = 46;
+  const size_t kNumMediaPacketsBatch2 = 191;
   std::list<AugmentedPacket*> augmented_media_packets_batch2;
   ForwardErrorCorrection::PacketList media_packets_batch2;
   for (size_t i = 0; i < kNumMediaPacketsBatch2; ++i) {
@@ -431,7 +431,7 @@ TEST_F(UlpfecReceiverTest, PacketDroppedWhenTooOld) {
   delayed_fec = fec_packets.front();
 
   // Fill the FEC decoder and force the last packet to be dropped.
-  const size_t kNumMediaPacketsBatch2 = 48;
+  const size_t kNumMediaPacketsBatch2 = 192;
   std::list<AugmentedPacket*> augmented_media_packets_batch2;
   ForwardErrorCorrection::PacketList media_packets_batch2;
   for (size_t i = 0; i < kNumMediaPacketsBatch2; ++i) {

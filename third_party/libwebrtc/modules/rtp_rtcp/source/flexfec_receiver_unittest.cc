@@ -374,7 +374,8 @@ TEST_F(FlexfecReceiverTest, RecoversFrom50PercentLoss) {
 TEST_F(FlexfecReceiverTest, DelayedFecPacketDoesHelp) {
   // These values need to be updated if the underlying erasure code
   // implementation changes.
-  const size_t kNumFrames = 48;
+  // Delay FEC packet by maximum number of media packets tracked by receiver.
+  const size_t kNumFrames = 192;
   const size_t kNumMediaPacketsPerFrame = 1;
   const size_t kNumFecPackets = 1;
 
@@ -412,14 +413,16 @@ TEST_F(FlexfecReceiverTest, DelayedFecPacketDoesHelp) {
 TEST_F(FlexfecReceiverTest, TooDelayedFecPacketDoesNotHelp) {
   // These values need to be updated if the underlying erasure code
   // implementation changes.
-  const size_t kNumFrames = 49;
+  // Delay FEC packet by one more than maximum number of media packets
+  // tracked by receiver.
+  const size_t kNumFrames = 193;
   const size_t kNumMediaPacketsPerFrame = 1;
   const size_t kNumFecPackets = 1;
 
   PacketList media_packets;
   PacketizeFrame(kNumMediaPacketsPerFrame, 0, &media_packets);
   PacketizeFrame(kNumMediaPacketsPerFrame, 1, &media_packets);
-  // Protect two first frames.
+  // Protect first two frames.
   std::list<Packet*> fec_packets = EncodeFec(media_packets, kNumFecPackets);
   for (size_t i = 2; i < kNumFrames; ++i) {
     PacketizeFrame(kNumMediaPacketsPerFrame, i, &media_packets);
@@ -667,11 +670,11 @@ TEST_F(FlexfecReceiverTest, DoesNotDecodeWrappedMediaSequenceUsingOldFec) {
     PacketizeFrame(kNumMediaPacketsPerFrame, i, &media_packets);
   }
 
-  // Receive first (|kFirstFrameNumMediaPackets| + 48) media packets.
+  // Receive first (|kFirstFrameNumMediaPackets| + 192) media packets.
   // Simulate an old FEC packet by separating it from its encoded media
-  // packets by at least 48 packets.
+  // packets by at least 192 packets.
   auto media_it = media_packets.begin();
-  for (size_t i = 0; i < (kFirstFrameNumMediaPackets + 48); i++) {
+  for (size_t i = 0; i < (kFirstFrameNumMediaPackets + 192); i++) {
     if (i == 1) {
       // Drop the second packet of the first frame.
       media_it++;
@@ -682,7 +685,7 @@ TEST_F(FlexfecReceiverTest, DoesNotDecodeWrappedMediaSequenceUsingOldFec) {
 
   // Receive FEC packet. Although a protected packet was dropped,
   // expect no recovery callback since it is delayed from first frame
-  // by more than 48 packets.
+  // by more than 192 packets.
   auto fec_it = fec_packets.begin();
   std::unique_ptr<Packet> fec_packet_with_rtp_header =
       packet_generator_.BuildFlexfecPacket(**fec_it);
