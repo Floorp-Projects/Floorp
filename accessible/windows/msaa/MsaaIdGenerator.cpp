@@ -15,6 +15,7 @@
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
+#include "nsAccessibilityService.h"
 #include "nsTHashMap.h"
 #include "sdnAccessible.h"
 
@@ -85,6 +86,15 @@ uint32_t MsaaIdGenerator::GetID() {
         MakeUnique<IDSet>(StaticPrefs::accessibility_cache_enabled_AtStartup()
                               ? kNumFullIDBits
                               : kNumUniqueIDBits);
+    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      // this is a static instance, so capturing this here is safe.
+      RunOnShutdown([this] {
+        if (mReleaseIDTimer) {
+          mReleaseIDTimer->Cancel();
+          ReleasePendingIDs();
+        }
+      });
+    }
   }
   uint32_t id = mIDSet->GetID();
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
@@ -93,6 +103,14 @@ uint32_t MsaaIdGenerator::GetID() {
   }
   MOZ_ASSERT(id <= ((1UL << kNumUniqueIDBits) - 1UL));
   return detail::BuildMsaaID(id, ResolveContentProcessID());
+}
+
+void MsaaIdGenerator::ReleasePendingIDs() {
+  for (auto id : mIDsToRelease) {
+    mIDSet->ReleaseID(~id);
+  }
+  mIDsToRelease.Clear();
+  mReleaseIDTimer = nullptr;
 }
 
 bool MsaaIdGenerator::ReleaseID(uint32_t aID) {
@@ -109,6 +127,14 @@ bool MsaaIdGenerator::ReleaseID(uint32_t aID) {
     // Therefore, we release ids after a short delay. This doesn't seem to be
     // necessary when the cache is disabled, perhaps because the COM runtime
     // holds references to our objects for longer.
+    if (nsAccessibilityService::IsShutdown()) {
+      // If accessibility is shut down, no more Accessibles will be created.
+      // Also, if the service is shut down, it's possible XPCOM is also shutting
+      // down, in which case timers won't work. Thus, we release the id
+      // immediately.
+      mIDSet->ReleaseID(~aID);
+      return true;
+    }
     const uint32_t kReleaseDelay = 1000;
     mIDsToRelease.AppendElement(aID);
     if (mReleaseIDTimer) {
@@ -116,17 +142,10 @@ bool MsaaIdGenerator::ReleaseID(uint32_t aID) {
     } else {
       NS_NewTimerWithCallback(
           getter_AddRefs(mReleaseIDTimer),
-          // MsaaIdGenerator's destructor cancels mReleaseIDTimer, so capturing
-          // this here is safe.
-          [this](nsITimer* aTimer) {
-            for (auto id : mIDsToRelease) {
-              mIDSet->ReleaseID(~id);
-            }
-            mIDsToRelease.Clear();
-            mReleaseIDTimer = nullptr;
-          },
-          kReleaseDelay, nsITimer::TYPE_ONE_SHOT,
-          "a11y::MsaaIdGenerator::ReleaseIDDelayed");
+          // mReleaseIDTimer is cancelled on shutdown and this is a static
+          // instance, so capturing this here is safe.
+          [this](nsITimer* aTimer) { ReleasePendingIDs(); }, kReleaseDelay,
+          nsITimer::TYPE_ONE_SHOT, "a11y::MsaaIdGenerator::ReleaseIDDelayed");
     }
     return true;
   }
