@@ -47,7 +47,7 @@ add_task(async function() {
   // We send an evaluation just after the await one to ensure the await evaluation was
   // done. We can't await on the previous execution because it waits for the result to
   // be send, which won't happen until we resume the debugger.
-  await executeAndWaitForMessage(hud, `"smoke"`, `"smoke"`, ".result");
+  await executeAndWaitForResultMessage(hud, `"smoke"`, `"smoke"`);
 
   // Give the engine some time to evaluate the await expression before resuming.
   await waitForTick();

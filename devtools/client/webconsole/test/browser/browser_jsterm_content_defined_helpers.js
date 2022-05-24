@@ -48,11 +48,10 @@ add_task(async function() {
       `There's no duplicated "${helper}" item in the autocomplete popup`
     );
 
-    await executeAndWaitForMessage(
+    await executeAndWaitForResultMessage(
       hud,
       `${helper}()`,
-      `"${PREFIX + helper}"`,
-      ".result"
+      `"${PREFIX + helper}"`
     );
     ok(true, `output is correct for ${helper}()`);
   }

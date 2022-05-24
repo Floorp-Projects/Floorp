@@ -117,10 +117,11 @@ async function testFullpageClipboardScrollbar(hud) {
  * @param {String} command
  */
 function executeScreenshotClipboardCommand(hud, command) {
-  return executeAndWaitForMessage(
+  return executeAndWaitForMessageByType(
     hud,
     command,
-    "Screenshot copied to clipboard."
+    "Screenshot copied to clipboard.",
+    ".console-api"
   );
 }
 

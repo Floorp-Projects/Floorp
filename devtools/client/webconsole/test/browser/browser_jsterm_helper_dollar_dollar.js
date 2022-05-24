@@ -26,43 +26,34 @@ add_task(async function() {
     hud.iframeWindow
   );
 
-  let message = await executeAndWaitForMessage(
+  let message = await executeAndWaitForResultMessage(
     hud,
     "$$('main')",
-    "Array [ main ]",
-    ".result"
+    "Array [ main ]"
   );
   ok(message, "`$$('main')` worked");
 
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForResultMessage(
     hud,
     "$$('main > ul > li')",
-    "Array [ li, li ]",
-    ".result"
+    "Array [ li, li ]"
   );
   ok(message, "`$$('main > ul > li')` worked");
 
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForResultMessage(
     hud,
     "$$('main > ul > li').map(el => el.tagName).join(' - ')",
-    "LI - LI",
-    ".result"
+    "LI - LI"
   );
   ok(message, "`$$` result can be used right away");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "$$('div')",
-    "Array []",
-    ".result"
-  );
+  message = await executeAndWaitForResultMessage(hud, "$$('div')", "Array []");
   ok(message, "`$$('div')` returns an empty array");
 
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForErrorMessage(
     hud,
     "$$(':foo')",
-    "':foo' is not a valid selector",
-    ".error"
+    "':foo' is not a valid selector"
   );
   ok(message, "`$$(':foo')` returns an error message");
 });

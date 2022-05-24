@@ -51,7 +51,7 @@ add_task(async function() {
     );
     // Triggering the Violation via JS
     await clearOutput(hud);
-    msg = await executeAndWaitForMessage(
+    msg = await executeAndWaitForErrorMessage(
       hud,
       "window.violate()",
       CSP_VIOLATION
@@ -76,7 +76,7 @@ add_task(async function() {
     ok(msg, "Base-URI validation was Printed");
     // Triggering the Violation via JS
     await clearOutput(hud);
-    msg = await executeAndWaitForMessage(
+    msg = await executeAndWaitForErrorMessage(
       hud,
       "window.violate()",
       CSP_VIOLATION

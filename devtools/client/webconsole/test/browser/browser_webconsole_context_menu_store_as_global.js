@@ -112,11 +112,10 @@ async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
 
   is(getInputValue(hud), "temp" + varIdx, "Input was set");
 
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     `temp${varIdx} === ${equalTo}`,
-    true,
-    ".result"
+    true
   );
   ok(true, "Correct variable assigned into console.");
 }

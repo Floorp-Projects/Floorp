@@ -10,14 +10,9 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Check that an evaluated null produces "null". See Bug 650780.
-  let message = await executeAndWaitForMessage(hud, "null", "null", ".result");
+  let message = await executeAndWaitForResultMessage(hud, "null", "null");
   ok(message, "`null` returned the expected value");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "undefined",
-    "undefined",
-    ".result"
-  );
+  message = await executeAndWaitForResultMessage(hud, "undefined", "undefined");
   ok(message, "`undefined` returned the expected value");
 });

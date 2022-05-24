@@ -13,12 +13,7 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await executeAndWaitForMessage(
-    hud,
-    "document.title",
-    "iframe parent",
-    ".result"
-  );
+  await executeAndWaitForResultMessage(hud, "document.title", "iframe parent");
   ok(true, "root document's title is accessible");
 
   // Make sure we don't throw when trying to autocomplete
@@ -40,11 +35,10 @@ add_task(async function() {
     "A message error is shown when trying to inspect window[0]"
   );
 
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     "window.location",
-    "test-iframe-parent.html",
-    ".result"
+    "test-iframe-parent.html"
   );
   ok(true, "root document's location is accessible");
 });

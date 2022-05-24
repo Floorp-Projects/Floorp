@@ -16,15 +16,16 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const executeAndWaitForResultMessage = (input, expectedOutput) =>
-    executeAndWaitForMessage(hud, input, expectedOutput, ".result");
-
   info("Evaluate an expression with a dynamic import");
   let importAwaitExpression = `
     var {sum} = await import("./test-dynamic-import.js");
     sum(1, 2, 3);
   `;
-  await executeAndWaitForResultMessage(importAwaitExpression, `1 + 2 + 3 = 6`);
+  await executeAndWaitForResultMessage(
+    hud,
+    importAwaitExpression,
+    `1 + 2 + 3 = 6`
+  );
   ok(true, "The `sum` module was imported and used successfully");
 
   info("Import the same module a second time");
@@ -33,6 +34,10 @@ add_task(async function() {
     var {sum} = await import("./test-dynamic-import.js");
     sum(2, 3, 4);
   `;
-  await executeAndWaitForResultMessage(importAwaitExpression, `2 + 3 + 4 = 9`);
+  await executeAndWaitForResultMessage(
+    hud,
+    importAwaitExpression,
+    `2 + 3 + 4 = 9`
+  );
   ok(true, "The `sum` module was imported and used successfully a second time");
 });

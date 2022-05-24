@@ -22,12 +22,7 @@ add_task(async function() {
 
   info(`Check objects inheriting from a DOM window`);
   async function check(input, expected, name) {
-    const msg = await executeAndWaitForMessage(
-      hud,
-      input,
-      "",
-      ".message.result"
-    );
+    const msg = await executeAndWaitForResultMessage(hud, input, "");
     is(msg.node.querySelector(".message-body").textContent, expected, name);
   }
   await check("Object.create(myWindow)", "Object {  }", "Empty object");

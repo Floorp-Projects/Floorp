@@ -28,7 +28,7 @@ add_task(async function() {
 
   // Input some commands to check if usage counting is working
   for (let i = 0; i <= 3; i++) {
-    await executeAndWaitForMessage(hud, i.toString(), i, ".result");
+    await executeAndWaitForResultMessage(hud, i.toString(), i);
   }
 
   is(WebConsoleUtils.usageCount, 4, "Usage count incremented");

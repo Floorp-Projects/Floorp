@@ -70,10 +70,10 @@ async function testBrowserConsole(publicTab) {
 
   info("Check that commands executed in private windows aren't put in history");
   const privateCommand = `"command in private window"`;
-  await executeAndWaitForMessage(hud, privateCommand, "", ".result");
+  await executeAndWaitForResultMessage(hud, privateCommand, "");
 
   const publicHud = await openConsole(publicTab);
-  const historyMessage = await executeAndWaitForMessage(
+  const historyMessage = await executeAndWaitForMessageByType(
     publicHud,
     ":history",
     "",

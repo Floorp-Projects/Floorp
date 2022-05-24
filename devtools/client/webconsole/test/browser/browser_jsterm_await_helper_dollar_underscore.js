@@ -14,45 +14,43 @@ add_task(async function() {
   await pushPref("devtools.debugger.features.map-await-expression", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const executeAndWaitForResultMessage = (input, expectedOutput) =>
-    executeAndWaitForMessage(hud, input, expectedOutput, ".result");
-
   info("Evaluate a simple expression to populate $_");
-  await executeAndWaitForResultMessage(`1 + 1`, `2`);
+  await executeAndWaitForResultMessage(hud, `1 + 1`, `2`);
 
-  await executeAndWaitForResultMessage(`$_ + 1`, `3`);
+  await executeAndWaitForResultMessage(hud, `$_ + 1`, `3`);
   ok(true, "$_ works as expected");
 
   info(
     "Check that $_ does not get replaced until the top-level await is resolved"
   );
   const onAwaitResultMessage = executeAndWaitForResultMessage(
+    hud,
     `await new Promise(res => setTimeout(() => res([1,2,3, $_]), 1000))`,
     `Array(4) [ 1, 2, 3, 4 ]`
   );
 
-  await executeAndWaitForResultMessage(`$_ + 1`, `4`);
+  await executeAndWaitForResultMessage(hud, `$_ + 1`, `4`);
   ok(true, "$_ was not impacted by the top-level await input");
 
   await onAwaitResultMessage;
   ok(true, "the top-level await result can use $_ in its returned value");
 
   await executeAndWaitForResultMessage(
+    hud,
     `await new Promise(res => setTimeout(() => res([...$_, 5]), 1000))`,
     `Array(5) [ 1, 2, 3, 4, 5 ]`
   );
   ok(true, "$_ is assigned with the result of the top-level await");
 
   info("Check that awaiting for a rejecting promise does not re-assign $_");
-  await executeAndWaitForMessage(
+  await executeAndWaitForErrorMessage(
     hud,
     `x = await new Promise((resolve,reject) =>
       setTimeout(() => reject("await-" + "rej"), 500))`,
-    `await-rej`,
-    `.error`
+    `await-rej`
   );
 
-  await executeAndWaitForResultMessage(`$_`, `Array(5) [ 1, 2, 3, 4, 5 ]`);
+  await executeAndWaitForResultMessage(hud, `$_`, `Array(5) [ 1, 2, 3, 4, 5 ]`);
   ok(true, "$_ wasn't re-assigned");
 
   info("Check that $_ gets the value of the last resolved await expression");
@@ -74,6 +72,7 @@ add_task(async function() {
   await onMessage;
 
   await executeAndWaitForResultMessage(
+    hud,
     `"result: " + $_`,
     `"result: await-concurrent-4000"`
   );
