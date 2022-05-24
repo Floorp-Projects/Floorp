@@ -26,7 +26,7 @@
         *   [Video coding](/modules/video_coding/g3doc/index.md)
         *   [Stats](/video/g3doc/stats.md)
     *   DataChannel
-    *   PeerConnection
+    *   [PeerConnection](/pc/g3doc/peer_connection.md)
     *   Desktop capture
     *   Stats
 *   Testing
