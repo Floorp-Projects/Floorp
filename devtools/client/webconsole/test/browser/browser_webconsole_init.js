@@ -27,7 +27,7 @@ add_task(async function() {
 
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
   is(
-    (await findMessagesVirtualized({ hud, selector: ".message.console-api" }))
+    (await findMessagesVirtualizedByType({ hud, typeSelector: ".console-api" }))
       .length,
     20,
     "Correct number of messages appear"

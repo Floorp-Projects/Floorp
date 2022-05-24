@@ -23,15 +23,27 @@ add_task(async function() {
   await onMessage;
 
   ok(
-    !(await findMessageVirtualized({ hud, text: "test message [0]" })),
+    !(await findMessageVirtualizedByType({
+      hud,
+      text: "test message [0]",
+      typeSelector: ".console-api",
+    })),
     "Message 0 has been pruned"
   );
   ok(
-    !(await findMessageVirtualized({ hud, text: "test message [9]" })),
+    !(await findMessageVirtualizedByType({
+      hud,
+      text: "test message [9]",
+      typeSelector: ".console-api",
+    })),
     "Message 9 has been pruned"
   );
   ok(
-    await findMessageVirtualized({ hud, text: "test message [10]" }),
+    await findMessageVirtualizedByType({
+      hud,
+      text: "test message [10]",
+      typeSelector: ".console-api",
+    }),
     "Message 10 is still displayed"
   );
   is(
@@ -47,11 +59,19 @@ add_task(async function() {
   await onMessage;
 
   ok(
-    !(await findMessageVirtualized({ hud, text: "test message [10]" })),
+    !(await findMessageVirtualizedByType({
+      hud,
+      text: "test message [10]",
+      typeSelector: ".console-api",
+    })),
     "Message 10 has been pruned"
   );
   ok(
-    await findMessageVirtualized({ hud, text: "test message [11]" }),
+    await findMessageVirtualizedByType({
+      hud,
+      text: "test message [11]",
+      typeSelector: ".console-api",
+    }),
     "Message 11 is still displayed"
   );
   is(
