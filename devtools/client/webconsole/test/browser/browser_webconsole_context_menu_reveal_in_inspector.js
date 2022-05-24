@@ -29,17 +29,33 @@ add_task(async function() {
   const msgWithText = await waitFor(() => findConsoleAPIMessage(hud, `foo`));
   const msgWithObj = await waitFor(() => findConsoleAPIMessage(hud, `Object`));
   const nonDomEl = await waitFor(() =>
-    findMessage(hud, `<span>`, ".objectBox-node")
+    findMessagePartByType(hud, {
+      text: `<span>`,
+      typeSelector: ".console-api",
+      partSelector: ".objectBox-node",
+    })
   );
 
   const domEl = await waitFor(() =>
-    findMessage(hud, `<div>`, ".objectBox-node")
+    findMessagePartByType(hud, {
+      text: `<div>`,
+      typeSelector: ".console-api",
+      partSelector: ".objectBox-node",
+    })
   );
   const domTextEl = await waitFor(() =>
-    findMessage(hud, `test-text`, ".objectBox-textNode")
+    findMessagePartByType(hud, {
+      text: `test-text`,
+      typeSelector: ".console-api",
+      partSelector: ".objectBox-textNode",
+    })
   );
   const domElCollection = await waitFor(() =>
-    findMessage(hud, `html`, ".objectBox-node")
+    findMessagePartByType(hud, {
+      text: `html`,
+      typeSelector: ".console-api",
+      partSelector: ".objectBox-node",
+    })
   );
 
   info("Check `Reveal in Inspector` is not visible for strings");
