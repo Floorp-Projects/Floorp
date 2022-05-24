@@ -452,6 +452,7 @@ webrtc::NetworkState FakeCall::GetNetworkState(webrtc::MediaType media) const {
       return video_network_state_;
     case webrtc::MediaType::DATA:
     case webrtc::MediaType::ANY:
+    case webrtc::MediaType::UNSUPPORTED:
       ADD_FAILURE() << "GetNetworkState called with unknown parameter.";
       return webrtc::kNetworkDown;
   }
@@ -638,6 +639,7 @@ void FakeCall::SignalChannelNetworkState(webrtc::MediaType media,
       break;
     case webrtc::MediaType::DATA:
     case webrtc::MediaType::ANY:
+    case webrtc::MediaType::UNSUPPORTED:
       ADD_FAILURE()
           << "SignalChannelNetworkState called with unknown parameter.";
   }

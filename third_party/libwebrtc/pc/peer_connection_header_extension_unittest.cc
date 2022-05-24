@@ -199,9 +199,9 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
 INSTANTIATE_TEST_SUITE_P(
     ,
     PeerConnectionHeaderExtensionTest,
-    Combine(Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan),
-            Values(cricket::MediaType::MEDIA_TYPE_AUDIO,
-                   cricket::MediaType::MEDIA_TYPE_VIDEO)),
+    Combine(Values(cricket::MediaType::MEDIA_TYPE_AUDIO,
+                   cricket::MediaType::MEDIA_TYPE_VIDEO),
+            Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan)),
     [](const testing::TestParamInfo<
         PeerConnectionHeaderExtensionTest::ParamType>& info) {
       cricket::MediaType media_type;
