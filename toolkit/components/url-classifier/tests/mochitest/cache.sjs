@@ -79,7 +79,7 @@ function parseV2Request(bytes) {
 
         for (var completion of completions) {
           if (completion.indexOf(PREFIXES.substr(start, PREFIXSIZE)) == 0) {
-            ret += list + ":" + "1" + ":" + "32" + "\n";
+            ret += list + ":1:32\n";
             ret += completion;
           }
         }

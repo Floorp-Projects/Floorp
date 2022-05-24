@@ -1,6 +1,6 @@
 function handleRequest(request, response) {
   if (request.queryString == "throw") {
-    throw "monkey wrench!";
+    throw new Error("monkey wrench!");
   }
 
   response.setHeader("Content-Type", "text/plain", false);
