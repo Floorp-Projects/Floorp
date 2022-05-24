@@ -94,20 +94,6 @@ ${suffix}
     assertSame(get(mem, 0, 16), values);
 }
 
-function iota(len) {
-    let xs = [];
-    for ( let i=0 ; i < len ; i++ )
-        xs.push(i);
-    return xs;
-}
-
-function assertSame(got, expected) {
-    assertEq(got.length, expected.length);
-    for ( let i=0; i < got.length; i++ ) {
-        assertEq(got[i], expected[i]);
-    }
-}
-
 function get(arr, loc, len) {
     let res = [];
     for ( let i=0; i < len; i++ ) {
