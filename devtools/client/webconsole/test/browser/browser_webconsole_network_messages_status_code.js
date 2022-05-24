@@ -39,7 +39,9 @@ add_task(async function task() {
   await onNetworkMessageUpdate;
 
   const xhrUrl = TEST_PATH + "test-data.json";
-  const messageNode = await waitFor(() => findMessage(hud, xhrUrl, ".network"));
+  const messageNode = await waitFor(() =>
+    findMessageByType(hud, xhrUrl, ".network")
+  );
   ok(!!messageNode, "Network message found.");
 
   const statusCodeNode = await waitFor(() =>

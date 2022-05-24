@@ -17,7 +17,7 @@ add_task(async function() {
   await clearOutput(hud);
   await navigateTo(TEST_DOC);
 
-  await waitFor(() => findMessage(hud, SAMPLE_MSG, ".message.warn"));
+  await waitFor(() => findWarningMessage(hud, SAMPLE_MSG));
 
   ok(true, "non-toplevel security warning message was displayed");
 });

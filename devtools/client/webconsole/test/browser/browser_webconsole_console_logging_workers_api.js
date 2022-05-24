@@ -23,7 +23,7 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const cachedMessage = await waitFor(() =>
-    findMessage(hud, "initial-message-from-worker")
+    findConsoleAPIMessage(hud, "initial-message-from-worker")
   );
   ok(true, "We get the cached message from the worker");
 
@@ -50,7 +50,9 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
     content.wrappedJSObject.logFromWorker("live-message");
   });
 
-  const liveMessage = await waitFor(() => findMessage(hud, "log-from-worker"));
+  const liveMessage = await waitFor(() =>
+    findConsoleAPIMessage(hud, "log-from-worker")
+  );
   ok(true, "We get the cached message from the worker");
 
   ok(
@@ -75,7 +77,7 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
     });
 
     const symbolMessage = await waitFor(() =>
-      findMessage(hud, 'Symbol("logged-symbol-from-worker")')
+      findConsoleAPIMessage(hud, 'Symbol("logged-symbol-from-worker")')
     );
     ok(symbolMessage, "Symbol logged from worker is visible in the console");
   }
@@ -84,8 +86,8 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
   await waitFor(
     () =>
-      !findMessage(hud, "initial-message-from-worker") &&
-      !findMessage(hud, "log-from-worker")
+      !findConsoleAPIMessage(hud, "initial-message-from-worker") &&
+      !findConsoleAPIMessage(hud, "log-from-worker")
   );
   ok(true, "Messages were removed");
 
@@ -104,12 +106,12 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
   await onSmokeMessage;
 
   is(
-    findMessage(newHud, "initial-message-from-worker"),
+    findConsoleAPIMessage(newHud, "initial-message-from-worker"),
     undefined,
     "Message cache was cleared"
   );
   is(
-    findMessage(newHud, "log-from-worker"),
+    findConsoleAPIMessage(newHud, "log-from-worker"),
     undefined,
     "Live message were cleared as well"
   );

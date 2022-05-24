@@ -27,7 +27,9 @@ add_task(async function() {
   // printed to the console
   const hud1 = await openNewTabAndConsole(TEST_URI);
 
-  const aTimerCompleted = await waitFor(() => findMessage(hud1, "aTimer: "));
+  const aTimerCompleted = await waitFor(() =>
+    findConsoleAPIMessage(hud1, "aTimer: ")
+  );
   ok(
     aTimerCompleted.textContent.includes("- timer ended"),
     "Calling " + "console.time('a') and console.timeEnd('a')ends the 'a' timer"
@@ -40,7 +42,7 @@ add_task(async function() {
   const hud2 = await openNewTabAndConsole(TEST_URI2);
 
   const error1 = await waitFor(() =>
-    findMessage(hud2, "bTimer", ".message.timeEnd.warn")
+    findWarningMessage(hud2, "bTimer", ".timeEnd")
   );
   ok(
     error1,
@@ -58,10 +60,10 @@ add_task(async function() {
   // We use this await to 'sync' until the message appears, as the console API
   // guarantees us that the smoke signal will be printed after the message for
   // console.time("bTimer") (if there were any)
-  await waitFor(() => findMessage(hud2, "smoke signal"));
+  await waitFor(() => findConsoleAPIMessage(hud2, "smoke signal"));
 
   is(
-    findMessage(hud2, "bTimer started"),
+    findConsoleAPIMessage(hud2, "bTimer started"),
     undefined,
     "No message is printed to " + "the console when the timer starts"
   );
@@ -75,7 +77,7 @@ add_task(async function() {
   await navigateTo(TEST_URI4);
 
   const error2 = await waitFor(() =>
-    findMessage(hud2, "bTimer", ".message.timeEnd.warn")
+    findWarningMessage(hud2, "bTimer", ".timeEnd")
   );
   ok(
     error2,

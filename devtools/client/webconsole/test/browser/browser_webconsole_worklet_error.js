@@ -21,7 +21,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await waitFor(() =>
-    findMessage(hud, "SyntaxError: duplicate formal argument")
+    findErrorMessage(hud, "SyntaxError: duplicate formal argument")
   );
   ok(true, "Received expected SyntaxError");
   await checkMessageStack(hud, "addModule", [18, 21]);

@@ -14,7 +14,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
-  let messageNode = await waitFor(() => findMessage(hud, "BAR"));
+  let messageNode = await waitFor(() => findErrorMessage(hud, "BAR"));
   await clickFirstStackElement(hud, messageNode, true);
 
   const dbg = toolbox.getPanel("jsdebugger");
@@ -33,7 +33,7 @@ add_task(async function() {
   await testOpenInDebugger(hud, toolbox, "BAZ", false);
 
   // Test that stacks in console.trace() calls work.
-  messageNode = await waitFor(() => findMessage(hud, "TRACE"));
+  messageNode = await waitFor(() => findConsoleAPIMessage(hud, "TRACE"));
   await clickFirstStackElement(hud, messageNode, false);
 
   is(

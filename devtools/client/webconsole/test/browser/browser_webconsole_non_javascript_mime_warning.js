@@ -15,10 +15,6 @@ const MIME_WARNING_MSG =
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  await waitFor(
-    () => findMessage(hud, MIME_WARNING_MSG, ".message.warn"),
-    "",
-    100
-  );
+  await waitFor(() => findWarningMessage(hud, MIME_WARNING_MSG), "", 100);
   ok(true, "MIME type warning displayed");
 });

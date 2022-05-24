@@ -32,7 +32,9 @@ add_task(async function() {
   });
 
   // Wait for the CSS warning to be displayed so we don't have a pending promise.
-  await waitFor(() => findMessage(hud, "Expected color but found ‘blouge’"));
+  await waitFor(() =>
+    findWarningMessage(hud, "Expected color but found ‘blouge’")
+  );
 
   info("Close and re-open the console");
   await closeTabAndToolbox();
@@ -45,7 +47,9 @@ add_task(async function() {
   });
 
   // Wait for the CSS warning to be displayed so we don't have a pending promise.
-  await waitFor(() => findMessage(hud, "Expected color but found ‘blouge’"));
+  await waitFor(() =>
+    findWarningMessage(hud, "Expected color but found ‘blouge’")
+  );
 
   // Check that the ui settings were persisted.
   await closeTabAndToolbox();

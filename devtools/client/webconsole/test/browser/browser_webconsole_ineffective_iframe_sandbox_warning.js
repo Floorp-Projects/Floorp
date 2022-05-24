@@ -44,11 +44,7 @@ async function testWarningMessageVisibility(uri, visible) {
   });
   await onSentinelMessage;
 
-  const warning = findMessage(
-    hud,
-    INEFFECTIVE_IFRAME_SANDBOXING_MSG,
-    ".message.warn"
-  );
+  const warning = findWarningMessage(hud, INEFFECTIVE_IFRAME_SANDBOXING_MSG);
   is(
     !!warning,
     visible,

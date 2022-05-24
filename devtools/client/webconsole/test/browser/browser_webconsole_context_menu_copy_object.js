@@ -26,7 +26,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const [msgWithText, msgWithObj, msgNested] = await waitFor(() =>
-    findMessages(hud, "foo")
+    findConsoleAPIMessages(hud, "foo")
   );
   ok(
     msgWithText && msgWithObj && msgNested,

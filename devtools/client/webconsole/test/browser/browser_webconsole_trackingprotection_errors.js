@@ -60,7 +60,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Test content blocking message");
   const message = await waitFor(() =>
-    findMessage(
+    findWarningMessage(
       hud,
       `The resource at \u201chttps://tracking.example.com/\u201d was blocked because ` +
         `content blocking is enabled`
@@ -84,7 +84,7 @@ add_task(async function testForeignCookieBlockedMessage() {
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT_FOREIGN);
   const { hud, win } = await openNewWindowAndConsole(TEST_URI);
   const message = await waitFor(() =>
-    findMessage(
+    findWarningMessage(
       hud,
       `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
         `blocking all third-party storage access requests and content blocking is enabled`
@@ -112,7 +112,7 @@ add_task(async function testLimitForeignCookieBlockedMessage() {
 
   const message = await waitFor(
     () =>
-      findMessage(
+      findWarningMessage(
         hud,
         `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
           `blocking all third-party storage access requests and content blocking is enabled`
@@ -140,7 +140,7 @@ add_task(async function testAllCookieBlockedMessage() {
   const { hud, win } = await openNewWindowAndConsole(TEST_URI);
 
   const message = await waitFor(() =>
-    findMessage(
+    findWarningMessage(
       hud,
       `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
         `blocking all storage access requests`
@@ -163,7 +163,7 @@ add_task(async function testTrackerCookieBlockedMessage() {
   const { hud, win } = await openNewWindowAndConsole(TEST_URI);
 
   const message = await waitFor(() =>
-    findMessage(
+    findWarningMessage(
       hud,
       `Request to access cookie or storage on ${BLOCKED_URL} was blocked because it came ` +
         `from a tracker and content blocking is enabled`
@@ -186,7 +186,7 @@ add_task(async function testForeignCookiePartitionedMessage() {
   const { hud, win } = await openNewWindowAndConsole(TEST_URI_THIRD_PARTY_ONLY);
 
   const message = await waitFor(() =>
-    findMessage(
+    findWarningMessage(
       hud,
       `Partitioned cookie or storage access was provided to ${PARTITIONED_URL} because it is ` +
         `loaded in the third-party context and dynamic state partitioning is enabled.`
@@ -217,7 +217,7 @@ add_task(async function testCookieBlockedByPermissionMessage() {
 
   const { hud, win } = await openNewWindowAndConsole(TEST_URI);
   const message = await waitFor(() =>
-    findMessage(
+    findWarningMessage(
       hud,
       `Request to access cookies or ` +
         `storage on ${BLOCKED_URL} was blocked because of custom cookie permission`

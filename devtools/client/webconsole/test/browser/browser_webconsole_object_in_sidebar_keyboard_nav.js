@@ -20,7 +20,7 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud, "Object"));
+  const message = await waitFor(() => findConsoleAPIMessage(hud, "Object"));
   const object = message.querySelector(".object-inspector .objectBox-object");
 
   const onSideBarVisible = waitFor(() =>

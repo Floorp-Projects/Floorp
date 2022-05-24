@@ -29,11 +29,11 @@ add_task(async function() {
   await reloadBrowser({ browser: tab1.linkedBrowser });
 
   info("Waiting for messages");
-  await waitFor(() => findMessage(hud1, TEST_IFRAME_URI, ".message.network"));
+  await waitFor(() => findMessageByType(hud1, TEST_IFRAME_URI, ".network"));
 
   const hud2 = await openConsole(tab2);
   is(
-    findMessage(hud2, TEST_IFRAME_URI),
+    findMessageByType(hud2, TEST_IFRAME_URI, ".network"),
     undefined,
     "iframe network request is not displayed in tab2"
   );

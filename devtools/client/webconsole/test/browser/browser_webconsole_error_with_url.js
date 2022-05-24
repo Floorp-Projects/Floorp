@@ -35,7 +35,7 @@ add_task(async function() {
 
   const EXPECTED_MESSAGE = `get more information on this error`;
 
-  const msg = await waitFor(() => findMessage(hud, EXPECTED_MESSAGE));
+  const msg = await waitFor(() => findErrorMessage(hud, EXPECTED_MESSAGE));
   ok(msg, `Link in error message are cropped as expected`);
 
   const [comLink, orgLink] = Array.from(msg.querySelectorAll("a"));

@@ -26,7 +26,7 @@ add_task(async function() {
 
 async function testOpenInDebugger(hud, toolbox, text) {
   info(`Testing message with text "${text}"`);
-  const messageNode = await waitFor(() => findMessage(hud, text));
+  const messageNode = await waitFor(() => findConsoleAPIMessage(hud, text));
   const framesNode = await waitFor(() => messageNode.querySelector(".frames"));
 
   const frameNodes = framesNode.querySelectorAll(".frame");

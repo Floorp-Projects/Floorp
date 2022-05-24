@@ -62,7 +62,9 @@ add_task(async function testContentBlockingMessage() {
   await reloadPage();
 
   // Wait for the navigation message to be displayed.
-  await waitFor(() => findMessage(hud, "Navigated to"));
+  await waitFor(() =>
+    findMessageByType(hud, "Navigated to", ".navigationMarker")
+  );
 
   onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
   emitContentBlockedMessage(hud);
@@ -93,7 +95,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Filter warnings");
   await setFilterState(hud, { warn: false });
-  await waitFor(() => !findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
+  await waitFor(() => !findWarningMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `simple message A #1`,
@@ -107,7 +109,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Display warning messages again");
   await setFilterState(hud, { warn: true });
-  await waitFor(() => findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
+  await waitFor(() => findWarningMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -122,10 +124,10 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Expand the first warning group");
-  findMessages(hud, CONTENT_BLOCKING_GROUP_LABEL)[0]
+  findWarningMessages(hud, CONTENT_BLOCKING_GROUP_LABEL)[0]
     .querySelector(".arrow")
     .click();
-  await waitFor(() => findMessage(hud, BLOCKED_URL));
+  await waitFor(() => findWarningMessage(hud, BLOCKED_URL));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -145,7 +147,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Filter warnings");
   await setFilterState(hud, { warn: false });
-  await waitFor(() => !findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
+  await waitFor(() => !findWarningMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `simple message A #1`,
@@ -159,7 +161,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Display warning messages again");
   await setFilterState(hud, { warn: true });
-  await waitFor(() => findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
+  await waitFor(() => findWarningMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
@@ -178,7 +180,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Filter on warning group text");
   await setFilterState(hud, { text: CONTENT_BLOCKING_GROUP_LABEL });
-  await waitFor(() => !findMessage(hud, "simple message"));
+  await waitFor(() => !findConsoleAPIMessage(hud, "simple message"));
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
@@ -190,10 +192,10 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Open the second warning group");
-  findMessages(hud, CONTENT_BLOCKING_GROUP_LABEL)[1]
+  findWarningMessages(hud, CONTENT_BLOCKING_GROUP_LABEL)[1]
     .querySelector(".arrow")
     .click();
-  await waitFor(() => findMessage(hud, "?6"));
+  await waitFor(() => findWarningMessage(hud, "?6"));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -210,7 +212,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Filter on warning message text from a single warning group");
   await setFilterState(hud, { text: "/\\?(2|4)/" });
-  await waitFor(() => !findMessage(hud, "?1"));
+  await waitFor(() => !findWarningMessage(hud, "?1"));
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?2`,
@@ -220,7 +222,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Filter on warning message text from two warning groups");
   await setFilterState(hud, { text: "/\\?(3|6|7)/" });
-  await waitFor(() => findMessage(hud, "?7"));
+  await waitFor(() => findWarningMessage(hud, "?7"));
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?3`,
@@ -253,7 +255,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Filter warnings with two opened warning groups");
   await setFilterState(hud, { warn: false });
-  await waitFor(() => !findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
+  await waitFor(() => !findWarningMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
   await checkConsoleOutputForWarningGroup(hud, [
     `simple message A #1`,
     `simple message A #2`,
@@ -266,7 +268,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Display warning messages again with two opened warning groups");
   await setFilterState(hud, { warn: true });
-  await waitFor(() => findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
+  await waitFor(() => findWarningMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
