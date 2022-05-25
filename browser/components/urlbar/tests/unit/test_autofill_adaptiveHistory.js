@@ -585,12 +585,87 @@ const TEST_DATA = [
     },
   },
   {
-    description:
-      "Prefixed URL for input history and protocol name for user input",
+    description: "Prefixed URL for input history and 'http' for user input",
     pref: true,
     visitHistory: ["http://example.com/test"],
     inputHistory: [{ uri: "http://example.com/test", input: "http" }],
     userInput: "http",
+    expected: {
+      autofilled: "http://example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Prefixed URL for input history and 'http:' for user input",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "http:" }],
+    userInput: "http:",
+    expected: {
+      autofilled: "http://example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Prefixed URL for input history and 'http:/' for user input",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "http:/" }],
+    userInput: "http:/",
+    expected: {
+      autofilled: "http://example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Prefixed URL for input history and 'http://' for user input",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "http://" }],
+    userInput: "http://",
+    expected: {
+      autofilled: "http://example.com/test",
+      completed: "http://example.com/test",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Prefixed URL for input history and 'http://e' for user input",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "http://e" }],
+    userInput: "http://e",
     expected: {
       autofilled: "http://example.com/test",
       completed: "http://example.com/test",

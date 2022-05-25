@@ -298,10 +298,6 @@ class ProviderAutofill extends UrlbarProvider {
     );
     this._strippedPrefix = this._strippedPrefix.toLowerCase();
 
-    if (!this._searchString || !this._searchString.length) {
-      return false;
-    }
-
     // Don't try to autofill if the search term includes any whitespace.
     // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
     // tokenizer ends up trimming the search string and returning a value
@@ -780,6 +776,15 @@ class ProviderAutofill extends UrlbarProvider {
       }
     }
 
+    // The adaptive history query is passed queryContext.searchString (the full
+    // search string), but the origin and URL queries are passed the prefix
+    // (this._strippedPrefix) and the rest of the search string
+    // (this._searchString) separately. The user must specify a non-prefix part
+    // to trigger origin and URL autofill.
+    if (!this._searchString.length) {
+      return null;
+    }
+
     // If search string looks like an origin, try to autofill against origins.
     // Otherwise treat it as a possible URL.  When the string has only one slash
     // at the end, we still treat it as an URL.
@@ -805,7 +810,10 @@ class ProviderAutofill extends UrlbarProvider {
   }
 
   async _matchSearchEngineDomain(queryContext) {
-    if (!UrlbarPrefs.get("autoFill.searchEngines")) {
+    if (
+      !UrlbarPrefs.get("autoFill.searchEngines") ||
+      !this._searchString.length
+    ) {
       return null;
     }
 
