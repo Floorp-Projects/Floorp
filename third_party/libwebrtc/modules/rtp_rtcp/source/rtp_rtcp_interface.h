@@ -80,13 +80,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     RtcpRttStats* rtt_stats = nullptr;
     RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer = nullptr;
     // Called on receipt of RTCP report block from remote side.
-    // TODO(bugs.webrtc.org/10678): Remove RtcpStatisticsCallback in
-    // favor of ReportBlockDataObserver.
     // TODO(bugs.webrtc.org/10679): Consider whether we want to use
     // only getters or only callbacks. If we decide on getters, the
     // ReportBlockDataObserver should also be removed in favor of
     // GetLatestReportBlockData().
-    RtcpStatisticsCallback* rtcp_statistics_callback = nullptr;
     RtcpCnameCallback* rtcp_cname_callback = nullptr;
     ReportBlockDataObserver* report_block_data_observer = nullptr;
 

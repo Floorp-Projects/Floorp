@@ -87,14 +87,6 @@ class MockRtcpLossNotificationObserver : public RtcpLossNotificationObserver {
               (override));
 };
 
-class MockRtcpCallbackImpl : public RtcpStatisticsCallback {
- public:
-  MOCK_METHOD(void,
-              StatisticsUpdated,
-              (const RtcpStatistics&, uint32_t),
-              (override));
-};
-
 class MockCnameCallbackImpl : public RtcpCnameCallback {
  public:
   MOCK_METHOD(void, OnCname, (uint32_t, absl::string_view), (override));
@@ -1273,43 +1265,6 @@ TEST(RtcpReceiverTest, TmmbrThreeConstraintsTimeOut) {
               UnorderedElementsAre(
                   Property(&rtcp::TmmbItem::ssrc, Eq(kSenderSsrc + 1)),
                   Property(&rtcp::TmmbItem::ssrc, Eq(kSenderSsrc + 2))));
-}
-
-TEST(RtcpReceiverTest, Callbacks) {
-  ReceiverMocks mocks;
-  MockRtcpCallbackImpl callback;
-  RtpRtcpInterface::Configuration config = DefaultConfiguration(&mocks);
-  config.rtcp_statistics_callback = &callback;
-  RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
-  receiver.SetRemoteSSRC(kSenderSsrc);
-
-  const uint8_t kFractionLoss = 3;
-  const uint32_t kCumulativeLoss = 7;
-  const uint32_t kJitter = 9;
-  const uint16_t kSequenceNumber = 1234;
-
-  // First packet, all numbers should just propagate.
-  rtcp::ReportBlock rb1;
-  rb1.SetMediaSsrc(kReceiverMainSsrc);
-  rb1.SetExtHighestSeqNum(kSequenceNumber);
-  rb1.SetFractionLost(kFractionLoss);
-  rb1.SetCumulativeLost(kCumulativeLoss);
-  rb1.SetJitter(kJitter);
-
-  rtcp::ReceiverReport rr1;
-  rr1.SetSenderSsrc(kSenderSsrc);
-  rr1.AddReportBlock(rb1);
-  EXPECT_CALL(callback,
-              StatisticsUpdated(
-                  AllOf(Field(&RtcpStatistics::fraction_lost, kFractionLoss),
-                        Field(&RtcpStatistics::packets_lost, kCumulativeLoss),
-                        Field(&RtcpStatistics::extended_highest_sequence_number,
-                              kSequenceNumber),
-                        Field(&RtcpStatistics::jitter, kJitter)),
-                  kReceiverMainSsrc));
-  EXPECT_CALL(mocks.rtp_rtcp_impl, OnReceivedRtcpReportBlocks);
-  EXPECT_CALL(mocks.bandwidth_observer, OnReceivedRtcpReceiverReport);
-  receiver.IncomingPacket(rr1.Build());
 }
 
 TEST(RtcpReceiverTest,

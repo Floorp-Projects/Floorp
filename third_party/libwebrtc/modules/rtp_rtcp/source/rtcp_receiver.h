@@ -347,11 +347,7 @@ class RTCPReceiver final {
   // delivered RTP packet to the remote side.
   Timestamp last_increased_sequence_number_ = Timestamp::PlusInfinity();
 
-  RtcpStatisticsCallback* const stats_callback_;
   RtcpCnameCallback* const cname_callback_;
-  // TODO(hbos): Remove RtcpStatisticsCallback in favor of
-  // ReportBlockDataObserver; the ReportBlockData contains a superset of the
-  // RtcpStatistics data.
   ReportBlockDataObserver* const report_block_data_observer_;
 
   RtcpPacketTypeCounterObserver* const packet_type_counter_observer_;

@@ -18,19 +18,13 @@
 namespace webrtc {
 
 // Statistics for an RTCP channel
+// TODO(bugs.webrtc.org/10678): Remove remaining usages of this struct in favor
+// of RTCPReportBlock, rtcp::ReportBlock or other similar structs.
 struct RtcpStatistics {
   uint8_t fraction_lost = 0;
   int32_t packets_lost = 0;  // Defined as a 24 bit signed integer in RTCP
   uint32_t extended_highest_sequence_number = 0;
   uint32_t jitter = 0;
-};
-
-class RtcpStatisticsCallback {
- public:
-  virtual ~RtcpStatisticsCallback() {}
-
-  virtual void StatisticsUpdated(const RtcpStatistics& statistics,
-                                 uint32_t ssrc) = 0;
 };
 
 // Statistics for RTCP packet types.
