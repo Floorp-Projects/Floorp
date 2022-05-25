@@ -253,8 +253,6 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
       "objc/AppRTCMobile/ARDAppClient.m",
       "objc/AppRTCMobile/ARDAppEngineClient.h",
       "objc/AppRTCMobile/ARDAppEngineClient.m",
-      "objc/AppRTCMobile/ARDBitrateTracker.h",
-      "objc/AppRTCMobile/ARDBitrateTracker.m",
       "objc/AppRTCMobile/ARDCaptureController.h",
       "objc/AppRTCMobile/ARDCaptureController.m",
       "objc/AppRTCMobile/ARDExternalSampleCapturer.h",

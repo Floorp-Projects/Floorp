@@ -48,7 +48,7 @@ typedef NS_ENUM(NSInteger, ARDAppClientState) {
 
 - (void)appClient:(ARDAppClient *)client didError:(NSError *)error;
 
-- (void)appClient:(ARDAppClient *)client didGetStats:(NSArray *)stats;
+- (void)appClient:(ARDAppClient *)client didGetStats:(RTC_OBJC_TYPE(RTCStatisticsReport) *)stats;
 
 @optional
 - (void)appClient:(ARDAppClient *)client
