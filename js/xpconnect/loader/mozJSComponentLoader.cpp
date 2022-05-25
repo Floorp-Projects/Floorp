@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+#include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
+#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include <cstdarg>
 
@@ -106,30 +107,37 @@ static LazyLogModule gJSCLLog("JSComponentLoader");
 #define ERROR_UNINITIALIZED_SYMBOL \
   "%s - Symbol '%s' accessed before initialization. Cyclic import?"
 
+static constexpr char JSMSuffix[] = ".jsm";
+static constexpr size_t JSMSuffixLength = mozilla::ArrayLength(JSMSuffix) - 1;
+static constexpr char MJSSuffix[] = ".sys.mjs";
+static constexpr size_t MJSSuffixLength = mozilla::ArrayLength(MJSSuffix) - 1;
+
 static bool IsJSM(const nsACString& aLocation) {
-  if (aLocation.Length() < 4) {
+  if (aLocation.Length() < JSMSuffixLength) {
     return false;
   }
-  const auto ext = Substring(aLocation, aLocation.Length() - 4);
-  return ext == ".jsm";
+  const auto ext = Substring(aLocation, aLocation.Length() - JSMSuffixLength);
+  return ext == JSMSuffix;
 }
 
 static bool IsMJS(const nsACString& aLocation) {
-  if (aLocation.Length() < 4) {
+  if (aLocation.Length() < MJSSuffixLength) {
     return false;
   }
-  const auto ext = Substring(aLocation, aLocation.Length() - 4);
-  return ext == ".mjs";
+  const auto ext = Substring(aLocation, aLocation.Length() - MJSSuffixLength);
+  return ext == MJSSuffix;
 }
 
 static void ToJSM(const nsACString& aLocation, nsAutoCString& aOut) {
-  aOut = Substring(aLocation, 0, aLocation.Length() - 4);
-  aOut += ".jsm";
+  MOZ_ASSERT(IsMJS(aLocation));
+  aOut = Substring(aLocation, 0, aLocation.Length() - MJSSuffixLength);
+  aOut += JSMSuffix;
 }
 
 static void ToMJS(const nsACString& aLocation, nsAutoCString& aOut) {
-  aOut = Substring(aLocation, 0, aLocation.Length() - 4);
-  aOut += ".mjs";
+  MOZ_ASSERT(IsJSM(aLocation));
+  aOut = Substring(aLocation, 0, aLocation.Length() - JSMSuffixLength);
+  aOut += MJSSuffix;
 }
 
 static bool Dump(JSContext* cx, unsigned argc, Value* vp) {
