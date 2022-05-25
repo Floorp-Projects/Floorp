@@ -7,31 +7,31 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '0321a6153c6c08f74107070f0f489c2f53a2ffb6',
+  'chromium_revision': '6291fe6f0ee76b58975db6384daa2342ff39736f',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@62a9dbcb7f3038ddd859d59833ae72be1f72de24',
+    'https://chromium.googlesource.com/chromium/src/base@bf402f265fd7c26746d4d396baebe601af481d1e',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@e0e25a3b8400d689641ee4eba26c2693b93ef1c8',
+    'https://chromium.googlesource.com/chromium/src/build@d3e82442026484fbb9410f3e47036f1dc00f0a4a',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@076a074891b2c851669c8ad4069af457faca9f21',
+    'https://chromium.googlesource.com/chromium/src/buildtools@b9af93e79fee9a13ec3d09d144ec42a6bd20a418',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@13d652bbe9a370370384e3e608a45865ce09ba05',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@f8290a0089869711fd2e2635571f78f732b1ca69',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@ddea311afa6dc04ada955219bf8b4b21166316aa',
+    'https://chromium.googlesource.com/chromium/src/testing@6fdd56ebac4c8c59338b0493d95bebb901ab2211',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@81afca40f50cd42ddd58643f1ca5371922550688',
+    'https://chromium.googlesource.com/chromium/src/third_party@2413ef87177f0f4b073d7371022e458ecd361532',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -120,9 +120,9 @@ deps = {
   'src/third_party/boringssl/src':
     'https://boringssl.googlesource.com/boringssl.git@ddecaabdc8c950d1417ed69785ac17c3400bae4c',
   'src/third_party/breakpad/breakpad':
-    'https://chromium.googlesource.com/breakpad/breakpad.git@3bea2815bfea6e641d50aad15bde2c494ef8f34b',
+    'https://chromium.googlesource.com/breakpad/breakpad.git@c484031f1f199ee53567241426efffee49008f82',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@64fcc4794c4e36bc60a2af6107e388bb6f6c166e',
+    'https://chromium.googlesource.com/catapult.git@7da48e9f874a0eec2d81aed2426c9da0af0d25ff',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -131,7 +131,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@5998f8451548244de8cde7fab387a550e7c4497d',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@3ffca4bed79f3b5336a93193c571484df09b1004',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@dd0076703b55ea14f15666c62759ea242906e4b7',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@280d5fd0df8b4284ad040bd29deb3241bd6dfc4a',
   'src/third_party/findbugs': {
@@ -265,7 +265,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@9367b5119d9e826ff296c99b6ca9c0094a098bb1',
+    'https://chromium.googlesource.com/chromium/src/tools@d7aa02d173511380db0112094860548bde185ae9',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
