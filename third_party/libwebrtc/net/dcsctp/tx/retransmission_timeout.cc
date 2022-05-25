@@ -58,6 +58,11 @@ void RetransmissionTimeout::ObserveRTT(DurationMs measured_rtt) {
     rto_ = srtt_ + 4 * rttvar_;
   }
 
+  // If the RTO becomes smaller or equal to RTT, expiration timers will be
+  // scheduled at the same time as packets are expected. Only happens in
+  // extremely stable RTTs, i.e. in simulations.
+  rto_ = std::fmax(rto_, rtt + 1);
+
   // Clamp RTO between min and max.
   rto_ = std::fmin(std::fmax(rto_, min_rto_), max_rto_);
 }
