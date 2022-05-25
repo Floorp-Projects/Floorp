@@ -377,7 +377,7 @@ export function getBreakableLines(state, sourceId) {
 
   // We pull generated file breakable lines directly from the source actors
   // so that breakable lines can be added as new source actors on HTML loads.
-  return getBreakableLinesForSourceActors(state, sourceActorIDs);
+  return getBreakableLinesForSourceActors(state, sourceActorIDs, source.isHTML);
 }
 
 export const getSelectedBreakableLines = createSelector(
