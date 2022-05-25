@@ -26,6 +26,7 @@
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
@@ -207,10 +208,10 @@ void FrameCombiner::LogMixingStats(
     uma_logging_counter_ = 0;
     RTC_HISTOGRAM_COUNTS_100("WebRTC.Audio.AudioMixer.NumIncomingStreams",
                              static_cast<int>(number_of_streams));
-    RTC_HISTOGRAM_ENUMERATION(
-        "WebRTC.Audio.AudioMixer.NumIncomingActiveStreams",
-        static_cast<int>(mix_list.size()),
-        AudioMixerImpl::kMaximumAmountOfMixedAudioSources);
+    RTC_HISTOGRAM_COUNTS_LINEAR(
+        "WebRTC.Audio.AudioMixer.NumIncomingActiveStreams2",
+        rtc::dchecked_cast<int>(mix_list.size()), /*min=*/1, /*max=*/16,
+        /*bucket_count=*/16);
 
     using NativeRate = AudioProcessing::NativeRate;
     static constexpr NativeRate native_rates[] = {
