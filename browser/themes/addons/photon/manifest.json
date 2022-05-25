@@ -15,6 +15,13 @@
     "icons": {"32": "icon.svg"},
   
     "theme": {
+      "colors": {
+        "toolbar": "rgb(255, 255, 255)",
+        "toolbar_text": "rgb(0, 0, 0)",
+        "frame": "rgb(11, 0, 48)",
+        "tab_background_text": "rgb(255, 255, 255)",
+        "toolbar_field": "rgb(230, 230, 230)"
+      }
     },
   
     "dark_theme": {
