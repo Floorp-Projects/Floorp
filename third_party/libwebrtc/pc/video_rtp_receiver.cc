@@ -49,7 +49,7 @@ VideoRtpReceiver::VideoRtpReceiver(
       attachment_id_(GenerateUniqueId()) {
   RTC_DCHECK(worker_thread_);
   SetStreams(streams);
-  RTC_DCHECK_EQ(source_->state(), MediaSourceInterface::kLive);
+  source_->SetState(MediaSourceInterface::kLive);
 }
 
 VideoRtpReceiver::~VideoRtpReceiver() {

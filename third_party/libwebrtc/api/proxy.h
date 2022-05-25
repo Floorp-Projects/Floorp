@@ -435,6 +435,10 @@ class ConstMethodCall : public QueuedTask {
 #define BYPASS_PROXY_CONSTMETHOD0(r, method)                                \
   r method() const override {                                               \
     proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method));     \
+    static_assert(                                                          \
+        std::is_same<r, rtc::Thread*>::value || !std::is_pointer<r>::value, \
+        "Type is a pointer");                                               \
+    static_assert(!std::is_reference<r>::value, "Type is a reference");     \
     return c_->method();                                                    \
   }
 
