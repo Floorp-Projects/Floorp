@@ -609,8 +609,8 @@ class [[nodiscard]] Result final {
    *     MOZ_ASSERT(res2.unwrapErr() == 5);
    */
   template <typename F>
-  constexpr auto map(F f) -> Result<std::result_of_t<F(V)>, E> {
-    using RetResult = Result<std::result_of_t<F(V)>, E>;
+  constexpr auto map(F f) -> Result<std::invoke_result_t<F, V>, E> {
+    using RetResult = Result<std::invoke_result_t<F, V>, E>;
     return MOZ_LIKELY(isOk()) ? RetResult(f(unwrap())) : RetResult(unwrapErr());
   }
 
@@ -643,7 +643,7 @@ class [[nodiscard]] Result final {
    */
   template <typename F>
   constexpr auto mapErr(F f) {
-    using RetResult = Result<V, std::result_of_t<F(E)>>;
+    using RetResult = Result<V, std::invoke_result_t<F, E>>;
     return MOZ_UNLIKELY(isErr()) ? RetResult(f(unwrapErr()))
                                  : RetResult(unwrap());
   }
@@ -704,7 +704,7 @@ class [[nodiscard]] Result final {
    *     MOZ_ASSERT(res2.unwrap() == 5);
    */
   template <typename F>
-  auto orElse(F f) -> Result<V, typename std::result_of_t<F(E)>::err_type> {
+  auto orElse(F f) -> Result<V, typename std::invoke_result_t<F, E>::err_type> {
     return MOZ_UNLIKELY(isErr()) ? f(unwrapErr()) : unwrap();
   }
 
