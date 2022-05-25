@@ -3561,6 +3561,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   const char* errorDescriptionID = nullptr;
   AutoTArray<nsString, 3> formatStrs;
   bool addHostPort = false;
+  bool isBadStsCertError = false;
   nsresult rv = NS_OK;
   nsAutoString messageStr;
   nsAutoCString cssClass;
@@ -3710,6 +3711,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       // In the future we should differentiate between an HSTS host and a
       // pinned host and display a more informative message to the user.
       if (isStsHost || isPinnedHost) {
+        isBadStsCertError = true;
         cssClass.AssignLiteral("badStsCert");
       }
 
@@ -3870,19 +3872,21 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     }
   }
 
+  nsresult delegateErrorCode = aError;
   // If the HTTPS-Only Mode upgraded this request and the upgrade might have
   // caused this error, we replace the error-page with about:httpsonlyerror
-  bool isHttpsOnlyError =
-      nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(aFailedChannel, aError);
-  if (isHttpsOnlyError) {
+  if (nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(aFailedChannel, aError)) {
     errorPage.AssignLiteral("httpsonlyerror");
+    delegateErrorCode = NS_ERROR_HTTPS_ONLY;
+  } else if (isBadStsCertError) {
+    delegateErrorCode = NS_ERROR_BAD_HSTS_CERT;
   }
 
   if (nsCOMPtr<nsILoadURIDelegate> loadURIDelegate = GetLoadURIDelegate()) {
-    nsresult code = isHttpsOnlyError ? NS_ERROR_HTTPS_ONLY : aError;
     nsCOMPtr<nsIURI> errorPageURI;
-    rv = loadURIDelegate->HandleLoadError(aURI, code, NS_ERROR_GET_MODULE(code),
-                                          getter_AddRefs(errorPageURI));
+    rv = loadURIDelegate->HandleLoadError(
+        aURI, delegateErrorCode, NS_ERROR_GET_MODULE(delegateErrorCode),
+        getter_AddRefs(errorPageURI));
     // If the docshell is going away there's no point in showing an error page.
     if (NS_FAILED(rv) || mIsBeingDestroyed) {
       *aDisplayedErrorPage = false;
