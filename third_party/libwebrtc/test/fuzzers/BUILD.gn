@@ -605,6 +605,17 @@ webrtc_fuzzer_test("sctp_utils_fuzzer") {
   ]
 }
 
+webrtc_fuzzer_test("dcsctp_socket_fuzzer") {
+  sources = [ "dcsctp_socket_fuzzer.cc" ]
+  deps = [
+    "../../net/dcsctp/fuzzers:dcsctp_fuzzers",
+    "../../net/dcsctp/public:socket",
+    "../../net/dcsctp/public:types",
+    "../../net/dcsctp/socket:dcsctp_socket",
+    "../../rtc_base:rtc_base_approved",
+  ]
+}
+
 webrtc_fuzzer_test("rtp_header_parser_fuzzer") {
   sources = [ "rtp_header_parser_fuzzer.cc" ]
   deps = [ "../:rtp_test_utils" ]
