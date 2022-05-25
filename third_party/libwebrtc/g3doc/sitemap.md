@@ -1,6 +1,7 @@
 *   [Home](/g3doc/index.md)
 *   How to contribute
     *   Code
+        * [Style guide](/g3doc/style-guide.md)
     *   [Documentation](/g3doc/how_to_write_documentation.md)
 *   [Public C++ API](/api/g3doc/index.md)
     *   [Threading](/api/g3doc/threading_design.md)
