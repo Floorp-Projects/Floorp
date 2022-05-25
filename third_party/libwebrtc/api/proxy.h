@@ -79,6 +79,9 @@ class Location;
 }
 
 namespace webrtc {
+namespace proxy_internal {
+RTC_EXPORT void TraceApiCall(const char* class_name, const char* method_name);
+}  // namespace proxy_internal
 
 template <typename R>
 class ReturnType {
@@ -181,6 +184,9 @@ class ConstMethodCall : public QueuedTask {
   rtc::Event event_;
 };
 
+#define PROXY_STRINGIZE_IMPL(x) #x
+#define PROXY_STRINGIZE(x) PROXY_STRINGIZE_IMPL(x)
+
 // Helper macros to reduce code duplication.
 #define PROXY_MAP_BOILERPLATE(c)                          \
   template <class INTERNAL_CLASS>                         \
@@ -190,6 +196,7 @@ class ConstMethodCall : public QueuedTask {
   class c##ProxyWithInternal : public c##Interface {      \
    protected:                                             \
     typedef c##Interface C;                               \
+    const char* class_name_ = PROXY_STRINGIZE(c);         \
                                                           \
    public:                                                \
     const INTERNAL_CLASS* internal() const { return c_; } \
@@ -299,46 +306,53 @@ class ConstMethodCall : public QueuedTask {
                                                                        \
  public:  // NOLINTNEXTLINE
 
-#define PROXY_METHOD0(r, method)                         \
-  r method() override {                                  \
-    MethodCall<C, r> call(c_, &C::method);               \
-    return call.Marshal(RTC_FROM_HERE, primary_thread_); \
+#define PROXY_METHOD0(r, method)                                        \
+  r method() override {                                                 \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    MethodCall<C, r> call(c_, &C::method);                              \
+    return call.Marshal(RTC_FROM_HERE, primary_thread_);                \
   }
 
-#define PROXY_CONSTMETHOD0(r, method)                    \
-  r method() const override {                            \
-    ConstMethodCall<C, r> call(c_, &C::method);          \
-    return call.Marshal(RTC_FROM_HERE, primary_thread_); \
+#define PROXY_CONSTMETHOD0(r, method)                                   \
+  r method() const override {                                           \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    ConstMethodCall<C, r> call(c_, &C::method);                         \
+    return call.Marshal(RTC_FROM_HERE, primary_thread_);                \
   }
 
-#define PROXY_METHOD1(r, method, t1)                          \
-  r method(t1 a1) override {                                  \
-    MethodCall<C, r, t1> call(c_, &C::method, std::move(a1)); \
-    return call.Marshal(RTC_FROM_HERE, primary_thread_);      \
+#define PROXY_METHOD1(r, method, t1)                                    \
+  r method(t1 a1) override {                                            \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    MethodCall<C, r, t1> call(c_, &C::method, std::move(a1));           \
+    return call.Marshal(RTC_FROM_HERE, primary_thread_);                \
   }
 
-#define PROXY_CONSTMETHOD1(r, method, t1)                          \
-  r method(t1 a1) const override {                                 \
-    ConstMethodCall<C, r, t1> call(c_, &C::method, std::move(a1)); \
-    return call.Marshal(RTC_FROM_HERE, primary_thread_);           \
+#define PROXY_CONSTMETHOD1(r, method, t1)                               \
+  r method(t1 a1) const override {                                      \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    ConstMethodCall<C, r, t1> call(c_, &C::method, std::move(a1));      \
+    return call.Marshal(RTC_FROM_HERE, primary_thread_);                \
   }
 
-#define PROXY_METHOD2(r, method, t1, t2)                         \
-  r method(t1 a1, t2 a2) override {                              \
-    MethodCall<C, r, t1, t2> call(c_, &C::method, std::move(a1), \
-                                  std::move(a2));                \
-    return call.Marshal(RTC_FROM_HERE, primary_thread_);         \
+#define PROXY_METHOD2(r, method, t1, t2)                                \
+  r method(t1 a1, t2 a2) override {                                     \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    MethodCall<C, r, t1, t2> call(c_, &C::method, std::move(a1),        \
+                                  std::move(a2));                       \
+    return call.Marshal(RTC_FROM_HERE, primary_thread_);                \
   }
 
-#define PROXY_METHOD3(r, method, t1, t2, t3)                         \
-  r method(t1 a1, t2 a2, t3 a3) override {                           \
-    MethodCall<C, r, t1, t2, t3> call(c_, &C::method, std::move(a1), \
-                                      std::move(a2), std::move(a3)); \
-    return call.Marshal(RTC_FROM_HERE, primary_thread_);             \
+#define PROXY_METHOD3(r, method, t1, t2, t3)                            \
+  r method(t1 a1, t2 a2, t3 a3) override {                              \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    MethodCall<C, r, t1, t2, t3> call(c_, &C::method, std::move(a1),    \
+                                      std::move(a2), std::move(a3));    \
+    return call.Marshal(RTC_FROM_HERE, primary_thread_);                \
   }
 
 #define PROXY_METHOD4(r, method, t1, t2, t3, t4)                         \
   r method(t1 a1, t2 a2, t3 a3, t4 a4) override {                        \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method));  \
     MethodCall<C, r, t1, t2, t3, t4> call(c_, &C::method, std::move(a1), \
                                           std::move(a2), std::move(a3),  \
                                           std::move(a4));                \
@@ -347,6 +361,7 @@ class ConstMethodCall : public QueuedTask {
 
 #define PROXY_METHOD5(r, method, t1, t2, t3, t4, t5)                         \
   r method(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5) override {                     \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method));      \
     MethodCall<C, r, t1, t2, t3, t4, t5> call(c_, &C::method, std::move(a1), \
                                               std::move(a2), std::move(a3),  \
                                               std::move(a4), std::move(a5)); \
@@ -354,53 +369,61 @@ class ConstMethodCall : public QueuedTask {
   }
 
 // Define methods which should be invoked on the secondary thread.
-#define PROXY_SECONDARY_METHOD0(r, method)                 \
-  r method() override {                                    \
-    MethodCall<C, r> call(c_, &C::method);                 \
-    return call.Marshal(RTC_FROM_HERE, secondary_thread_); \
+#define PROXY_SECONDARY_METHOD0(r, method)                              \
+  r method() override {                                                 \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    MethodCall<C, r> call(c_, &C::method);                              \
+    return call.Marshal(RTC_FROM_HERE, secondary_thread_);              \
   }
 
-#define PROXY_SECONDARY_CONSTMETHOD0(r, method)            \
-  r method() const override {                              \
-    ConstMethodCall<C, r> call(c_, &C::method);            \
-    return call.Marshal(RTC_FROM_HERE, secondary_thread_); \
+#define PROXY_SECONDARY_CONSTMETHOD0(r, method)                         \
+  r method() const override {                                           \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    ConstMethodCall<C, r> call(c_, &C::method);                         \
+    return call.Marshal(RTC_FROM_HERE, secondary_thread_);              \
   }
 
-#define PROXY_SECONDARY_METHOD1(r, method, t1)                \
-  r method(t1 a1) override {                                  \
-    MethodCall<C, r, t1> call(c_, &C::method, std::move(a1)); \
-    return call.Marshal(RTC_FROM_HERE, secondary_thread_);    \
+#define PROXY_SECONDARY_METHOD1(r, method, t1)                          \
+  r method(t1 a1) override {                                            \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    MethodCall<C, r, t1> call(c_, &C::method, std::move(a1));           \
+    return call.Marshal(RTC_FROM_HERE, secondary_thread_);              \
   }
 
-#define PROXY_SECONDARY_CONSTMETHOD1(r, method, t1)                \
-  r method(t1 a1) const override {                                 \
-    ConstMethodCall<C, r, t1> call(c_, &C::method, std::move(a1)); \
-    return call.Marshal(RTC_FROM_HERE, secondary_thread_);         \
+#define PROXY_SECONDARY_CONSTMETHOD1(r, method, t1)                     \
+  r method(t1 a1) const override {                                      \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    ConstMethodCall<C, r, t1> call(c_, &C::method, std::move(a1));      \
+    return call.Marshal(RTC_FROM_HERE, secondary_thread_);              \
   }
 
-#define PROXY_SECONDARY_METHOD2(r, method, t1, t2)               \
-  r method(t1 a1, t2 a2) override {                              \
-    MethodCall<C, r, t1, t2> call(c_, &C::method, std::move(a1), \
-                                  std::move(a2));                \
-    return call.Marshal(RTC_FROM_HERE, secondary_thread_);       \
+#define PROXY_SECONDARY_METHOD2(r, method, t1, t2)                      \
+  r method(t1 a1, t2 a2) override {                                     \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    MethodCall<C, r, t1, t2> call(c_, &C::method, std::move(a1),        \
+                                  std::move(a2));                       \
+    return call.Marshal(RTC_FROM_HERE, secondary_thread_);              \
   }
 
-#define PROXY_SECONDARY_CONSTMETHOD2(r, method, t1, t2)               \
-  r method(t1 a1, t2 a2) const override {                             \
-    ConstMethodCall<C, r, t1, t2> call(c_, &C::method, std::move(a1), \
-                                       std::move(a2));                \
-    return call.Marshal(RTC_FROM_HERE, secondary_thread_);            \
+#define PROXY_SECONDARY_CONSTMETHOD2(r, method, t1, t2)                 \
+  r method(t1 a1, t2 a2) const override {                               \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    ConstMethodCall<C, r, t1, t2> call(c_, &C::method, std::move(a1),   \
+                                       std::move(a2));                  \
+    return call.Marshal(RTC_FROM_HERE, secondary_thread_);              \
   }
 
-#define PROXY_SECONDARY_METHOD3(r, method, t1, t2, t3)               \
-  r method(t1 a1, t2 a2, t3 a3) override {                           \
-    MethodCall<C, r, t1, t2, t3> call(c_, &C::method, std::move(a1), \
-                                      std::move(a2), std::move(a3)); \
-    return call.Marshal(RTC_FROM_HERE, secondary_thread_);           \
+#define PROXY_SECONDARY_METHOD3(r, method, t1, t2, t3)                  \
+  r method(t1 a1, t2 a2, t3 a3) override {                              \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method)); \
+    MethodCall<C, r, t1, t2, t3> call(c_, &C::method, std::move(a1),    \
+                                      std::move(a2), std::move(a3));    \
+    return call.Marshal(RTC_FROM_HERE, secondary_thread_);              \
   }
 
 #define PROXY_SECONDARY_CONSTMETHOD3(r, method, t1, t2)                   \
   r method(t1 a1, t2 a2, t3 a3) const override {                          \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method));   \
     ConstMethodCall<C, r, t1, t2, t3> call(c_, &C::method, std::move(a1), \
                                            std::move(a2), std::move(a3)); \
     return call.Marshal(RTC_FROM_HERE, secondary_thread_);                \
@@ -411,6 +434,7 @@ class ConstMethodCall : public QueuedTask {
 // always be the same.
 #define BYPASS_PROXY_CONSTMETHOD0(r, method)                                \
   r method() const override {                                               \
+    proxy_internal::TraceApiCall(class_name_, PROXY_STRINGIZE(method));     \
     static_assert(                                                          \
         std::is_same<r, rtc::Thread*>::value || !std::is_pointer<r>::value, \
         "Type is a pointer");                                               \
