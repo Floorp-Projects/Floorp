@@ -574,7 +574,6 @@ impl RenderTarget for AlphaRenderTarget {
 #[derive(Debug, PartialEq, Clone)]
 pub struct ResolveOp {
     pub src_task_ids: Vec<RenderTaskId>,
-    pub dest_origin: DevicePoint,
     pub dest_task_id: RenderTaskId,
 }
 

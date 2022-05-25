@@ -5726,7 +5726,6 @@ impl PicturePrimitive {
             frame_state.surface_builder.pop_surface(
                 frame_state.rg_builder,
                 frame_state.cmd_buffers,
-                frame_context.spatial_tree,
             );
         }
 

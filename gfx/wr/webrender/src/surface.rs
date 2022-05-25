@@ -11,9 +11,6 @@ use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::render_target::ResolveOp;
 use crate::render_task::{RenderTask, RenderTaskKind, RenderTaskLocation};
-use crate::space::SpaceMapper;
-use crate::spatial_tree::{SpatialTree};
-use crate::util::MaxRect;
 use crate::visibility::{VisibilityState, PrimitiveVisibility};
 
 /*
@@ -387,7 +384,6 @@ impl SurfaceBuilder {
         &mut self,
         rg_builder: &mut RenderTaskGraphBuilder,
         cmd_buffers: &mut CommandBufferList,
-        spatial_tree: &SpatialTree,
     ) {
         self.dirty_rect_stack.pop().unwrap();
 
@@ -529,19 +525,8 @@ impl SurfaceBuilder {
 
                     match dest_task.kind {
                         RenderTaskKind::Picture(ref mut dest_task_info) => {
-                            // Handle cases when the raster spatial node is different between surfaces due to snapping
-                            let m: SpaceMapper<DevicePixel, DevicePixel> = SpaceMapper::new_with_target(
-                                dest_task_info.surface_spatial_node_index,
-                                dest_task_info.raster_spatial_node_index,
-                                DeviceRect::max_rect(),
-                                spatial_tree,
-                            );
-
-                            let dest_origin = m.map_point(dest_task_info.content_origin).unwrap();
-
                             assert!(dest_task_info.resolve_op.is_none());
                             dest_task_info.resolve_op = Some(ResolveOp {
-                                dest_origin,
                                 src_task_ids,
                                 dest_task_id: resolve_task_id,
                             })
