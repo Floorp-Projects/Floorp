@@ -1388,8 +1388,6 @@ LibvpxVp8Encoder::PrepareBuffers(rtc::scoped_refptr<VideoFrameBuffer> buffer) {
       }
       scaled_buffer = mapped_scaled_buffer;
     }
-    RTC_DCHECK_EQ(scaled_buffer->type(), mapped_buffer->type())
-        << "Scaled frames must have the same type as the mapped frame.";
     if (!IsCompatibleVideoFrameBufferType(scaled_buffer->type(),
                                           mapped_buffer->type())) {
       RTC_LOG(LS_ERROR) << "When scaling "
@@ -1399,6 +1397,10 @@ LibvpxVp8Encoder::PrepareBuffers(rtc::scoped_refptr<VideoFrameBuffer> buffer) {
                         << " instead of "
                         << VideoFrameBufferTypeToString(mapped_buffer->type())
                         << ". Can't encode frame.";
+      RTC_NOTREACHED() << "Scaled buffer type "
+                       << VideoFrameBufferTypeToString(scaled_buffer->type())
+                       << " is not compatible with mapped buffer type "
+                       << VideoFrameBufferTypeToString(mapped_buffer->type());
       return {};
     }
     SetRawImagePlanes(&raw_images_[i], scaled_buffer);
