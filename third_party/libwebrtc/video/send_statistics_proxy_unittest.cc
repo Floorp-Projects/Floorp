@@ -159,11 +159,19 @@ class SendStatisticsProxyTest : public ::testing::Test {
                 b.rtp_stats.retransmitted.packets);
       EXPECT_EQ(a.rtp_stats.fec.packets, b.rtp_stats.fec.packets);
 
-      EXPECT_EQ(a.rtcp_stats.fraction_lost, b.rtcp_stats.fraction_lost);
-      EXPECT_EQ(a.rtcp_stats.packets_lost, b.rtcp_stats.packets_lost);
-      EXPECT_EQ(a.rtcp_stats.extended_highest_sequence_number,
-                b.rtcp_stats.extended_highest_sequence_number);
-      EXPECT_EQ(a.rtcp_stats.jitter, b.rtcp_stats.jitter);
+      EXPECT_EQ(a.report_block_data.has_value(),
+                b.report_block_data.has_value());
+      if (a.report_block_data.has_value()) {
+        const RTCPReportBlock& a_rtcp_stats =
+            a.report_block_data->report_block();
+        const RTCPReportBlock& b_rtcp_stats =
+            b.report_block_data->report_block();
+        EXPECT_EQ(a_rtcp_stats.fraction_lost, b_rtcp_stats.fraction_lost);
+        EXPECT_EQ(a_rtcp_stats.packets_lost, b_rtcp_stats.packets_lost);
+        EXPECT_EQ(a_rtcp_stats.extended_highest_sequence_number,
+                  b_rtcp_stats.extended_highest_sequence_number);
+        EXPECT_EQ(a_rtcp_stats.jitter, b_rtcp_stats.jitter);
+      }
     }
   }
 
@@ -177,46 +185,32 @@ class SendStatisticsProxyTest : public ::testing::Test {
 TEST_F(SendStatisticsProxyTest, ReportBlockDataObserver) {
   ReportBlockDataObserver* callback = statistics_proxy_.get();
   for (uint32_t ssrc : config_.rtp.ssrcs) {
-    VideoSendStream::StreamStats& ssrc_stats = expected_.substreams[ssrc];
-
     // Add statistics with some arbitrary, but unique, numbers.
-    uint32_t offset = ssrc * sizeof(RtcpStatistics);
+    uint32_t offset = ssrc * 4;
     RTCPReportBlock report_block;
     report_block.source_ssrc = ssrc;
     report_block.packets_lost = offset;
     report_block.extended_highest_sequence_number = offset + 1;
     report_block.fraction_lost = offset + 2;
     report_block.jitter = offset + 3;
-
-    ssrc_stats.rtcp_stats.packets_lost = report_block.packets_lost;
-    ssrc_stats.rtcp_stats.extended_highest_sequence_number =
-        report_block.extended_highest_sequence_number;
-    ssrc_stats.rtcp_stats.fraction_lost = report_block.fraction_lost;
-    ssrc_stats.rtcp_stats.jitter = report_block.jitter;
     ReportBlockData data;
     data.SetReportBlock(report_block, 0);
+    expected_.substreams[ssrc].report_block_data = data;
 
     callback->OnReportBlockDataUpdated(data);
   }
   for (uint32_t ssrc : config_.rtp.rtx.ssrcs) {
-    VideoSendStream::StreamStats& ssrc_stats = expected_.substreams[ssrc];
-
     // Add statistics with some arbitrary, but unique, numbers.
-    uint32_t offset = ssrc * sizeof(RtcpStatistics);
+    uint32_t offset = ssrc * 4;
     RTCPReportBlock report_block;
     report_block.source_ssrc = ssrc;
     report_block.packets_lost = offset;
     report_block.extended_highest_sequence_number = offset + 1;
     report_block.fraction_lost = offset + 2;
     report_block.jitter = offset + 3;
-
-    ssrc_stats.rtcp_stats.packets_lost = report_block.packets_lost;
-    ssrc_stats.rtcp_stats.extended_highest_sequence_number =
-        report_block.extended_highest_sequence_number;
-    ssrc_stats.rtcp_stats.fraction_lost = report_block.fraction_lost;
-    ssrc_stats.rtcp_stats.jitter = report_block.jitter;
     ReportBlockData data;
     data.SetReportBlock(report_block, 0);
+    expected_.substreams[ssrc].report_block_data = data;
 
     callback->OnReportBlockDataUpdated(data);
   }
