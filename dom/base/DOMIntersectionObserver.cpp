@@ -316,8 +316,7 @@ static BrowsingContextOrigin SimilarOrigin(const Element& aTarget,
 
 // NOTE: This returns nullptr if |aDocument| is in another process from the top
 // level content document.
-static const Document* GetTopLevelContentDocumentInThisProcess(
-    const Document& aDocument) {
+static Document* GetTopLevelContentDocumentInThisProcess(Document& aDocument) {
   auto* wc = aDocument.GetTopLevelWindowContext();
   return wc ? wc->GetExtantDoc() : nullptr;
 }
@@ -463,9 +462,9 @@ struct OopIframeMetrics {
   nsRect mRemoteDocumentVisibleRect;
 };
 
-static Maybe<OopIframeMetrics> GetOopIframeMetrics(
-    const Document& aDocument, const Document* aRootDocument) {
-  const Document* rootDoc =
+static Maybe<OopIframeMetrics> GetOopIframeMetrics(Document& aDocument,
+                                                   Document* aRootDocument) {
+  Document* rootDoc =
       nsContentUtils::GetInProcessSubtreeRootDocument(&aDocument);
   MOZ_ASSERT(rootDoc);
 
@@ -523,10 +522,9 @@ static Maybe<OopIframeMetrics> GetOopIframeMetrics(
 }
 
 // https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo
-// step 2.1
-IntersectionInput DOMIntersectionObserver::ComputeInput(
-    const Document& aDocument, const nsINode* aRoot,
-    const StyleRect<LengthPercentage>* aRootMargin) {
+// (step 2)
+void DOMIntersectionObserver::Update(Document* aDocument,
+                                     DOMHighResTimeStamp time) {
   // 1 - Let rootBounds be observer's root intersection rectangle.
   //  ... but since the intersection rectangle depends on the target, we defer
   //      the inflation until later.
@@ -535,11 +533,10 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
   // document.
   nsRect rootRect;
   nsIFrame* rootFrame = nullptr;
-  const nsINode* root = aRoot;
-  const bool isImplicitRoot = !aRoot;
+  nsINode* root = mRoot;
   Maybe<nsRect> remoteDocumentVisibleRect;
-  if (aRoot && aRoot->IsElement()) {
-    if ((rootFrame = aRoot->AsElement()->GetPrimaryFrame())) {
+  if (mRoot && mRoot->IsElement()) {
+    if ((rootFrame = mRoot->AsElement()->GetPrimaryFrame())) {
       nsRect rootRectRelativeToRootFrame;
       if (nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame)) {
         // rootRectRelativeToRootFrame should be the content rect of rootFrame,
@@ -555,10 +552,10 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
           rootFrame, rootRectRelativeToRootFrame, containingBlock);
     }
   } else {
-    MOZ_ASSERT(!aRoot || aRoot->IsDocument());
-    const Document* rootDocument =
-        aRoot ? aRoot->AsDocument()
-              : GetTopLevelContentDocumentInThisProcess(aDocument);
+    MOZ_ASSERT(!mRoot || mRoot->IsDocument());
+    Document* rootDocument =
+        mRoot ? mRoot->AsDocument()
+              : GetTopLevelContentDocumentInThisProcess(*aDocument);
     root = rootDocument;
 
     if (rootDocument) {
@@ -584,7 +581,7 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
     }
 
     if (Maybe<OopIframeMetrics> metrics =
-            GetOopIframeMetrics(aDocument, rootDocument)) {
+            GetOopIframeMetrics(*aDocument, rootDocument)) {
       rootFrame = metrics->mInProcessRootFrame;
       if (!rootDocument) {
         rootRect = metrics->mInProcessRootRect;
@@ -595,104 +592,101 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
 
   nsMargin rootMargin;  // This root margin is NOT applied in `implicit root`
                         // case, e.g. in out-of-process iframes.
-  if (aRootMargin) {
-    for (const auto side : mozilla::AllPhysicalSides()) {
-      nscoord basis = side == eSideTop || side == eSideBottom
-                          ? rootRect.Height()
-                          : rootRect.Width();
-      rootMargin.Side(side) = aRootMargin->Get(side).Resolve(
-          basis, static_cast<nscoord (*)(float)>(NSToCoordRoundWithClamp));
-    }
+  for (const auto side : mozilla::AllPhysicalSides()) {
+    nscoord basis = side == eSideTop || side == eSideBottom ? rootRect.Height()
+                                                            : rootRect.Width();
+    rootMargin.Side(side) = mRootMargin.Get(side).Resolve(
+        basis, static_cast<nscoord (*)(float)>(NSToCoordRoundWithClamp));
   }
-  return {isImplicitRoot, root,       rootFrame,
-          rootRect,       rootMargin, remoteDocumentVisibleRect};
-}
-
-// https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo
-// (steps 2.1 - 2.5)
-IntersectionOutput DOMIntersectionObserver::Intersect(
-    const IntersectionInput& aInput, Element& aTarget) {
-  const bool isSimilarOrigin = SimilarOrigin(aTarget, aInput.mRootNode) ==
-                               BrowsingContextOrigin::Similar;
-  nsIFrame* targetFrame = aTarget.GetPrimaryFrame();
-  if (!targetFrame || !aInput.mRootFrame) {
-    return {isSimilarOrigin};
-  }
-
-  // "From the perspective of an IntersectionObserver, the skipped contents
-  // of an element are never intersecting the intersection root. This is
-  // true even if both the root and the target elements are in the skipped
-  // contents."
-  // https://drafts.csswg.org/css-contain/#cv-notes
-  if (targetFrame->AncestorHidesContent()) {
-    return {isSimilarOrigin};
-  }
-
-  // 2.2. If the intersection root is not the implicit root, and target is
-  // not in the same Document as the intersection root, skip to step 11.
-  if (!aInput.mIsImplicitRoot &&
-      aInput.mRootNode->OwnerDoc() != aTarget.OwnerDoc()) {
-    return {isSimilarOrigin};
-  }
-
-  // 2.3. If the intersection root is an element and target is not a descendant
-  // of the intersection root in the containing block chain, skip to step 11.
-  //
-  // NOTE(emilio): We also do this if target is the implicit root, pending
-  // clarification in
-  // https://github.com/w3c/IntersectionObserver/issues/456.
-  if (aInput.mRootFrame == targetFrame ||
-      !nsLayoutUtils::IsAncestorFrameCrossDocInProcess(aInput.mRootFrame,
-                                                       targetFrame)) {
-    return {isSimilarOrigin};
-  }
-
-  nsRect rootBounds = aInput.mRootRect;
-  if (isSimilarOrigin) {
-    rootBounds.Inflate(aInput.mRootMargin);
-  }
-
-  // 2.4. Set targetRect to the DOMRectReadOnly obtained by running the
-  // getBoundingClientRect() algorithm on target.
-  nsRect targetRect = targetFrame->GetBoundingClientRect();
-
-  // 2.5. Let intersectionRect be the result of running the compute the
-  // intersection algorithm on target and observer’s intersection root.
-  Maybe<nsRect> intersectionRect =
-      ComputeTheIntersection(targetFrame, aInput.mRootFrame, rootBounds,
-                             aInput.mRemoteDocumentVisibleRect);
-
-  return {isSimilarOrigin, rootBounds, targetRect, intersectionRect};
-}
-
-// https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo
-// (step 2)
-void DOMIntersectionObserver::Update(Document* aDocument,
-                                     DOMHighResTimeStamp time) {
-  auto input = ComputeInput(*aDocument, mRoot, &mRootMargin);
 
   // 2. For each target in observer’s internal [[ObservationTargets]] slot,
   // processed in the same order that observe() was called on each target:
   for (Element* target : mObservationTargets) {
-    // 2.1 - 2.4.
-    IntersectionOutput output = Intersect(input, *target);
+    nsIFrame* targetFrame = target->GetPrimaryFrame();
+    BrowsingContextOrigin origin = SimilarOrigin(*target, root);
+
+    Maybe<nsRect> intersectionRect;
+    nsRect targetRect;
+    nsRect rootBounds;
+
+    const bool canComputeIntersection = [&] {
+      if (!targetFrame || !rootFrame) {
+        return false;
+      }
+
+      // "From the perspective of an IntersectionObserver, the skipped contents
+      // of an element are never intersecting the intersection root. This is
+      // true even if both the root and the target elements are in the skipped
+      // contents."
+      // https://drafts.csswg.org/css-contain/#cv-notes
+      if (targetFrame->AncestorHidesContent()) {
+        return false;
+      }
+
+      // 2.1. If the intersection root is not the implicit root and target is
+      // not a descendant of the intersection root in the containing block
+      // chain, skip further processing for target.
+      //
+      // NOTE(emilio): We don't just "skip further processing" because that
+      // violates the invariant that there's at least one observation for a
+      // target (though that is also violated by 2.2), but it also causes
+      // different behavior when `target` is `display: none`, or not, which is
+      // really really odd, see:
+      // https://github.com/w3c/IntersectionObserver/issues/457
+      //
+      // NOTE(emilio): We also do this if target is the implicit root, pending
+      // clarification in
+      // https://github.com/w3c/IntersectionObserver/issues/456.
+      if (rootFrame == targetFrame ||
+          !nsLayoutUtils::IsAncestorFrameCrossDocInProcess(rootFrame,
+                                                           targetFrame)) {
+        return false;
+      }
+
+      // 2.2. If the intersection root is not the implicit root, and target is
+      // not in the same Document as the intersection root, skip further
+      // processing for target.
+      //
+      // NOTE(emilio): We don't just "skip further processing", because that
+      // doesn't match reality and other browsers, see
+      // https://github.com/w3c/IntersectionObserver/issues/457.
+      if (mRoot && mRoot->OwnerDoc() != target->OwnerDoc()) {
+        return false;
+      }
+
+      return true;
+    }();
+
+    if (canComputeIntersection) {
+      rootBounds = rootRect;
+      if (origin == BrowsingContextOrigin::Similar) {
+        rootBounds.Inflate(rootMargin);
+      }
+
+      // 2.3. Let targetRect be a DOMRectReadOnly obtained by running the
+      // getBoundingClientRect() algorithm on target.
+      targetRect = targetFrame->GetBoundingClientRect();
+
+      // 2.4. Let intersectionRect be the result of running the compute the
+      // intersection algorithm on target.
+      intersectionRect = ComputeTheIntersection(
+          targetFrame, rootFrame, rootBounds, remoteDocumentVisibleRect);
+    }
 
     // 2.5. Let targetArea be targetRect’s area.
-    int64_t targetArea = (int64_t)output.mTargetRect.Width() *
-                         (int64_t)output.mTargetRect.Height();
-
+    int64_t targetArea =
+        (int64_t)targetRect.Width() * (int64_t)targetRect.Height();
     // 2.6. Let intersectionArea be intersectionRect’s area.
-    int64_t intersectionArea =
-        !output.mIntersectionRect
-            ? 0
-            : (int64_t)output.mIntersectionRect->Width() *
-                  (int64_t)output.mIntersectionRect->Height();
+    int64_t intersectionArea = !intersectionRect
+                                   ? 0
+                                   : (int64_t)intersectionRect->Width() *
+                                         (int64_t)intersectionRect->Height();
 
     // 2.7. Let isIntersecting be true if targetRect and rootBounds intersect or
     // are edge-adjacent, even if the intersection has zero area (because
     // rootBounds or targetRect have zero area); otherwise, let isIntersecting
     // be false.
-    const bool isIntersecting = output.Intersects();
+    const bool isIntersecting = intersectionRect.isSome();
 
     // 2.8. If targetArea is non-zero, let intersectionRatio be intersectionArea
     // divided by targetArea. Otherwise, let intersectionRatio be 1 if
@@ -735,9 +729,9 @@ void DOMIntersectionObserver::Update(Document* aDocument,
       // entry's isIntersecting value.
       QueueIntersectionObserverEntry(
           target, time,
-          output.mIsSimilarOrigin ? Some(output.mRootBounds) : Nothing(),
-          output.mTargetRect, output.mIntersectionRect, thresholdIndex > 0,
-          intersectionRatio);
+          origin == BrowsingContextOrigin::Similar ? Some(rootBounds)
+                                                   : Nothing(),
+          targetRect, intersectionRect, thresholdIndex > 0, intersectionRatio);
     }
   }
 }

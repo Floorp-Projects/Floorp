@@ -80,32 +80,6 @@ class DOMIntersectionObserverEntry final : public nsISupports,
     }                                                \
   }
 
-// An input suitable to compute intersections with multiple targets.
-struct IntersectionInput {
-  // Whether the root is implicit (null, originally).
-  const bool mIsImplicitRoot = false;
-  // The computed root node. For the implicit root, this will be the in-process
-  // root document we can compute coordinates against (along with the remote
-  // document visible rect if appropriate).
-  const nsINode* mRootNode = nullptr;
-  nsIFrame* mRootFrame = nullptr;
-  // The rect of mRootFrame in client coordinates.
-  nsRect mRootRect;
-  // The root margin computed against the root rect.
-  nsMargin mRootMargin;
-  // If this is in an OOP iframe, the visible rect of the OOP frame.
-  Maybe<nsRect> mRemoteDocumentVisibleRect;
-};
-
-struct IntersectionOutput {
-  const bool mIsSimilarOrigin;
-  const nsRect mRootBounds;
-  const nsRect mTargetRect;
-  const Maybe<nsRect> mIntersectionRect;
-
-  bool Intersects() const { return mIntersectionRect.isSome(); }
-};
-
 class DOMIntersectionObserver final : public nsISupports,
                                       public nsWrapperCache {
   virtual ~DOMIntersectionObserver() { Disconnect(); }
@@ -147,11 +121,6 @@ class DOMIntersectionObserver final : public nsISupports,
   void Disconnect();
 
   void TakeRecords(nsTArray<RefPtr<DOMIntersectionObserverEntry>>& aRetVal);
-
-  static IntersectionInput ComputeInput(
-      const Document& aDocument, const nsINode* aRoot,
-      const StyleRect<LengthPercentage>* aRootMargin);
-  static IntersectionOutput Intersect(const IntersectionInput&, Element&);
 
   void Update(Document* aDocument, DOMHighResTimeStamp time);
   MOZ_CAN_RUN_SCRIPT void Notify();

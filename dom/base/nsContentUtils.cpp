@@ -6991,11 +6991,11 @@ void nsContentUtils::FireMutationEventsForDirectParsing(
 }
 
 /* static */
-const Document* nsContentUtils::GetInProcessSubtreeRootDocument(const Document* aDoc) {
+Document* nsContentUtils::GetInProcessSubtreeRootDocument(Document* aDoc) {
   if (!aDoc) {
     return nullptr;
   }
-  const Document* doc = aDoc;
+  Document* doc = aDoc;
   while (doc->GetInProcessParentDocument()) {
     doc = doc->GetInProcessParentDocument();
   }

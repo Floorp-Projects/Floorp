@@ -4442,6 +4442,11 @@ class nsIFrame : public nsQueryFrame {
   virtual void PullOverflowsFromPrevInFlow() {}
 
   /**
+   * @return true if we painted @aPresShell during the last repaint.
+   */
+  bool DidPaintPresShell(mozilla::PresShell* aPresShell);
+
+  /**
    * Accessors for the absolute containing block.
    */
   bool IsAbsoluteContainer() const {
