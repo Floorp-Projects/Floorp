@@ -9,7 +9,7 @@
         *   [ICE](/p2p/g3doc/ice.md)
         *   STUN
         *   TURN
-        *   DTLS
+        *   [DTLS](/pc/g3doc/dtls_transport.md)
         *   [SCTP](/pc/g3doc/sctp_transport.md)
         *   [Pacing buffer](/modules/pacing/g3doc/index.md)
     *   Congestion control and bandwidth estimation
