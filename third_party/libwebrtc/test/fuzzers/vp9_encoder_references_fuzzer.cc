@@ -45,33 +45,39 @@ class FrameValidator : public EncodedImageCallback {
     if (codec_specific_info->codecSpecific.VP9.first_frame_in_picture) {
       ++picture_id_;
     }
-    LayerFrame layer_frame;
+    int64_t frame_id = frame_id_++;
+    LayerFrame& layer_frame = frames_[frame_id % kMaxFrameHistorySize];
     layer_frame.picture_id = picture_id_;
     layer_frame.spatial_id = encoded_image.SpatialIndex().value_or(0);
     layer_frame.info = *codec_specific_info;
+    layer_frame.frame_id = frame_id;
     CheckVp9References(layer_frame);
 
     if (layer_frame.info.generic_frame_info.has_value()) {
-      int64_t frame_id = frames_.size();
       layer_frame.frame_dependencies =
           dependencies_calculator_.FromBuffersUsage(
               frame_id, layer_frame.info.generic_frame_info->encoder_buffers);
 
       CheckGenericReferences(layer_frame);
       CheckGenericAndCodecSpecificReferencesAreConsistent(layer_frame);
+    } else {
+      layer_frame.frame_dependencies = {};
     }
 
-    frames_.push_back(std::move(layer_frame));
     return Result(Result::OK);
   }
 
  private:
+  // With 4 spatial layers and patterns up to 8 pictures, it should be enought
+  // to keep 32 last frames to validate dependencies.
+  static constexpr size_t kMaxFrameHistorySize = 32;
   struct LayerFrame {
     const CodecSpecificInfoVP9& vp9() const { return info.codecSpecific.VP9; }
     int temporal_id() const {
       return vp9().temporal_idx == kNoTemporalIdx ? 0 : vp9().temporal_idx;
     }
 
+    int64_t frame_id;
     int64_t picture_id;
     int spatial_id;
     absl::InlinedVector<int64_t, 5> frame_dependencies;
@@ -79,20 +85,22 @@ class FrameValidator : public EncodedImageCallback {
   };
 
   void CheckVp9References(const LayerFrame& layer_frame) {
-    if (layer_frame.vp9().inter_layer_predicted) {
-      RTC_CHECK(!frames_.empty());
-      const LayerFrame& previous_frame = frames_.back();
-      RTC_CHECK(!previous_frame.vp9().non_ref_for_inter_layer_pred);
-      RTC_CHECK_EQ(layer_frame.picture_id, previous_frame.picture_id);
-    }
-    if (!frames_.empty() &&
-        frames_.back().picture_id == layer_frame.picture_id) {
-      RTC_CHECK_GT(layer_frame.spatial_id, frames_.back().spatial_id);
-      // The check below would fail for temporal shift structures. Remove it or
-      // move it to !flexible_mode section when vp9 encoder starts supporting
-      // such structures.
-      RTC_CHECK_EQ(layer_frame.vp9().temporal_idx,
-                   frames_.back().vp9().temporal_idx);
+    if (layer_frame.frame_id == 0) {
+      RTC_CHECK(!layer_frame.vp9().inter_layer_predicted);
+    } else {
+      const LayerFrame& previous_frame = Frame(layer_frame.frame_id - 1);
+      if (layer_frame.vp9().inter_layer_predicted) {
+        RTC_CHECK(!previous_frame.vp9().non_ref_for_inter_layer_pred);
+        RTC_CHECK_EQ(layer_frame.picture_id, previous_frame.picture_id);
+      }
+      if (previous_frame.picture_id == layer_frame.picture_id) {
+        RTC_CHECK_GT(layer_frame.spatial_id, previous_frame.spatial_id);
+        // The check below would fail for temporal shift structures. Remove it
+        // or move it to !flexible_mode section when vp9 encoder starts
+        // supporting such structures.
+        RTC_CHECK_EQ(layer_frame.vp9().temporal_idx,
+                     previous_frame.vp9().temporal_idx);
+      }
     }
     if (!layer_frame.vp9().flexible_mode) {
       if (layer_frame.vp9().gof.num_frames_in_gof > 0) {
@@ -107,7 +115,7 @@ class FrameValidator : public EncodedImageCallback {
     const GenericFrameInfo& generic_info = *layer_frame.info.generic_frame_info;
     for (int64_t dependency_frame_id : layer_frame.frame_dependencies) {
       RTC_CHECK_GE(dependency_frame_id, 0);
-      const LayerFrame& dependency = frames_[dependency_frame_id];
+      const LayerFrame& dependency = Frame(dependency_frame_id);
       RTC_CHECK(dependency.info.generic_frame_info.has_value());
       RTC_CHECK_GE(generic_info.spatial_id,
                    dependency.info.generic_frame_info->spatial_id);
@@ -128,7 +136,7 @@ class FrameValidator : public EncodedImageCallback {
                      (layer_frame.vp9().inter_layer_predicted ? 1 : 0));
     for (int64_t dependency_frame_id : layer_frame.frame_dependencies) {
       RTC_CHECK_GE(dependency_frame_id, 0);
-      const LayerFrame& dependency = frames_[dependency_frame_id];
+      const LayerFrame& dependency = Frame(dependency_frame_id);
       if (dependency.spatial_id != layer_frame.spatial_id) {
         RTC_CHECK(layer_frame.vp9().inter_layer_predicted);
         RTC_CHECK_EQ(layer_frame.picture_id, dependency.picture_id);
@@ -142,10 +150,17 @@ class FrameValidator : public EncodedImageCallback {
     }
   }
 
+  const LayerFrame& Frame(int64_t frame_id) const {
+    auto& frame = frames_[frame_id % kMaxFrameHistorySize];
+    RTC_CHECK_EQ(frame.frame_id, frame_id);
+    return frame;
+  }
+
   GofInfoVP9 gof_;
+  int64_t frame_id_ = 0;
   int64_t picture_id_ = 1;
   FrameDependenciesCalculator dependencies_calculator_;
-  std::vector<LayerFrame> frames_;
+  LayerFrame frames_[kMaxFrameHistorySize];
 };
 
 class FieldTrials : public WebRtcKeyValueConfig {
