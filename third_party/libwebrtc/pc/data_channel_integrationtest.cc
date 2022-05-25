@@ -34,6 +34,9 @@ namespace webrtc {
 
 namespace {
 
+// All tests in this file require SCTP support.
+#ifdef WEBRTC_HAVE_SCTP
+
 class DataChannelIntegrationTest : public PeerConnectionIntegrationBaseTest,
                                    public ::testing::WithParamInterface<
                                        std::tuple<SdpSemantics, std::string>> {
@@ -42,8 +45,6 @@ class DataChannelIntegrationTest : public PeerConnectionIntegrationBaseTest,
       : PeerConnectionIntegrationBaseTest(std::get<0>(GetParam()),
                                           std::get<1>(GetParam())) {}
 };
-
-GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(DataChannelIntegrationTest);
 
 // Fake clock must be set before threads are started to prevent race on
 // Set/GetClockForTesting().
@@ -64,11 +65,6 @@ class FakeClockForTest : public rtc::ScopedFakeClock {
   ScopedFakeClock& FakeClock() { return *this; }
 };
 
-// Ensure FakeClockForTest is constructed first (see class for rationale).
-class DataChannelIntegrationTestWithFakeClock
-    : public FakeClockForTest,
-      public DataChannelIntegrationTest {};
-
 class DataChannelIntegrationTestPlanB
     : public PeerConnectionIntegrationBaseTest {
  protected:
@@ -76,17 +72,12 @@ class DataChannelIntegrationTestPlanB
       : PeerConnectionIntegrationBaseTest(SdpSemantics::kPlanB) {}
 };
 
-GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(
-    DataChannelIntegrationTestWithFakeClock);
-
 class DataChannelIntegrationTestUnifiedPlan
     : public PeerConnectionIntegrationBaseTest {
  protected:
   DataChannelIntegrationTestUnifiedPlan()
       : PeerConnectionIntegrationBaseTest(SdpSemantics::kUnifiedPlan) {}
 };
-
-#ifdef WEBRTC_HAVE_SCTP
 
 // This test causes a PeerConnection to enter Disconnected state, and
 // sends data on a DataChannel while disconnected.
@@ -776,13 +767,6 @@ TEST_P(DataChannelIntegrationTest,
 INSTANTIATE_TEST_SUITE_P(
     DataChannelIntegrationTest,
     DataChannelIntegrationTest,
-    Combine(Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan),
-            Values("WebRTC-DataChannel-Dcsctp/Enabled/",
-                   "WebRTC-DataChannel-Dcsctp/Disabled/")));
-
-INSTANTIATE_TEST_SUITE_P(
-    DataChannelIntegrationTest,
-    DataChannelIntegrationTestWithFakeClock,
     Combine(Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan),
             Values("WebRTC-DataChannel-Dcsctp/Enabled/",
                    "WebRTC-DataChannel-Dcsctp/Disabled/")));
