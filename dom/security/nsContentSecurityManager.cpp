@@ -1291,9 +1291,11 @@ static nsresult CheckAllowFileProtocolScriptLoad(nsIChannel* aChannel) {
 
   if (!nsContentUtils::IsJavascriptMIMEType(
           NS_ConvertUTF8toUTF16(contentType))) {
+    Telemetry::Accumulate(Telemetry::SCRIPT_FILE_PROTOCOL_CORRECT_MIME, false);
     return NS_ERROR_CONTENT_BLOCKED;
   }
 
+  Telemetry::Accumulate(Telemetry::SCRIPT_FILE_PROTOCOL_CORRECT_MIME, true);
   return NS_OK;
 }
 
