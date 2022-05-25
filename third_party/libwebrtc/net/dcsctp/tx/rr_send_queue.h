@@ -12,9 +12,8 @@
 
 #include <cstdint>
 #include <deque>
+#include <map>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 
 #include "absl/algorithm/container.h"
@@ -78,44 +77,91 @@ class RRSendQueue : public SendQueue {
   size_t total_bytes() const;
 
  private:
-  // An enqueued message and metadata.
-  struct Item {
-    explicit Item(DcSctpMessage msg,
-                  absl::optional<TimeMs> expires_at,
-                  const SendOptions& send_options)
-        : message(std::move(msg)),
-          expires_at(expires_at),
-          send_options(send_options),
-          remaining_offset(0),
-          remaining_size(message.payload().size()) {}
-    DcSctpMessage message;
-    absl::optional<TimeMs> expires_at;
-    SendOptions send_options;
-    // The remaining payload (offset and size) to be sent, when it has been
-    // fragmented.
-    size_t remaining_offset;
-    size_t remaining_size;
-    // If set, an allocated Message ID and SSN. Will be allocated when the first
-    // fragment is sent.
-    absl::optional<MID> message_id = absl::nullopt;
-    absl::optional<SSN> ssn = absl::nullopt;
-    // The current Fragment Sequence Number, incremented for each fragment.
-    FSN current_fsn = FSN(0);
+  // Per-stream information.
+  class OutgoingStream {
+   public:
+    // Enqueues a message to this stream.
+    void Add(DcSctpMessage message,
+             absl::optional<TimeMs> expires_at,
+             const SendOptions& send_options);
+
+    // Possibly produces a data chunk to send.
+    absl::optional<DataToSend> Produce(TimeMs now, size_t max_size);
+
+    // The amount of data enqueued on this stream.
+    size_t buffered_amount() const;
+
+    // Discards a partially sent message, see `SendQueue::Discard`.
+    void Discard(IsUnordered unordered, MID message_id);
+
+    // Pauses this stream, which is used before resetting it.
+    void Pause();
+
+    // Resumes a paused stream.
+    void Resume() { is_paused_ = false; }
+
+    bool is_paused() const { return is_paused_; }
+
+    // Resets this stream, meaning MIDs and SSNs are set to zero.
+    void Reset();
+
+    // Indicates if this stream has a partially sent message in it.
+    bool has_partially_sent_message() const;
+
+   private:
+    // An enqueued message and metadata.
+    struct Item {
+      explicit Item(DcSctpMessage msg,
+                    absl::optional<TimeMs> expires_at,
+                    const SendOptions& send_options)
+          : message(std::move(msg)),
+            expires_at(expires_at),
+            send_options(send_options),
+            remaining_offset(0),
+            remaining_size(message.payload().size()) {}
+      DcSctpMessage message;
+      absl::optional<TimeMs> expires_at;
+      SendOptions send_options;
+      // The remaining payload (offset and size) to be sent, when it has been
+      // fragmented.
+      size_t remaining_offset;
+      size_t remaining_size;
+      // If set, an allocated Message ID and SSN. Will be allocated when the
+      // first fragment is sent.
+      absl::optional<MID> message_id = absl::nullopt;
+      absl::optional<SSN> ssn = absl::nullopt;
+      // The current Fragment Sequence Number, incremented for each fragment.
+      FSN current_fsn = FSN(0);
+    };
+
+    // Returns the first non-expired message, or nullptr if there isn't one.
+    Item* GetFirstNonExpiredMessage(TimeMs now);
+
+    // Streams are pause when they are about to be reset.
+    bool is_paused_ = false;
+    // MIDs are different for unordered and ordered messages sent on a stream.
+    MID next_unordered_mid_ = MID(0);
+    MID next_ordered_mid_ = MID(0);
+
+    SSN next_ssn_ = SSN(0);
+    // Enqueued messages, and metadata.
+    std::deque<Item> items_;
   };
 
-  Item* GetFirstNonExpiredMessage(TimeMs now);
-  bool IsPaused(StreamID stream_id) const;
+  OutgoingStream& GetOrCreateStreamInfo(StreamID stream_id);
+  absl::optional<DataToSend> Produce(
+      std::map<StreamID, OutgoingStream>::iterator it,
+      TimeMs now,
+      size_t max_size);
 
   const std::string log_prefix_;
   const size_t buffer_size_;
-  std::deque<Item> items_;
 
-  std::unordered_set<StreamID, StreamID::Hasher> paused_streams_;
-  std::deque<Item> paused_items_;
+  // The next stream to send chunks from.
+  StreamID next_stream_id_ = StreamID(0);
 
-  std::unordered_map<std::pair<IsUnordered, StreamID>, MID, UnorderedStreamHash>
-      mid_by_stream_id_;
-  std::unordered_map<StreamID, SSN, StreamID::Hasher> ssn_by_stream_id_;
+  // All streams, and messages added to those.
+  std::map<StreamID, OutgoingStream> streams_;
 };
 }  // namespace dcsctp
 
