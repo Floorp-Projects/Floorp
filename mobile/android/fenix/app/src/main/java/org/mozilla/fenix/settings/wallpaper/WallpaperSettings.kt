@@ -31,7 +31,6 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -55,12 +54,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.button.TextButton
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperManager
-import java.util.Locale
 
 /**
  * The screen for controlling settings around Wallpapers. When a new wallpaper is selected,
@@ -143,18 +142,11 @@ private fun WallpaperSnackbar(
         },
         action = {
             TextButton(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                text = stringResource(R.string.wallpaper_updated_snackbar_action),
                 onClick = onViewWallpaper,
-            ) {
-                Text(
-                    text = stringResource(R.string.wallpaper_updated_snackbar_action).uppercase(
-                        Locale.getDefault()
-                    ),
-                    color = FirefoxTheme.colors.textOnColorPrimary,
-                    fontFamily = FontFamily(Font(R.font.metropolis_medium)),
-                    fontSize = 14.sp,
-                )
-            }
+                modifier = Modifier.padding(all = 8.dp),
+                textColor = FirefoxTheme.colors.textOnColorPrimary,
+            )
         },
     )
 }
