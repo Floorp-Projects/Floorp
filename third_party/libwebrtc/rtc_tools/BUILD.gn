@@ -397,6 +397,7 @@ if (!build_with_chromium) {
         "../rtc_base:rtc_base_approved",
         "../rtc_base:rtc_numerics",
         "../rtc_base:stringutils",
+        "../system_wrappers",
         "../test:explicit_key_value_config",
       ]
       absl_deps = [

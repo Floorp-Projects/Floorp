@@ -14,6 +14,7 @@
 
 #include "logging/rtc_event_log/rtc_event_processor.h"
 #include "modules/rtp_rtcp/source/time_util.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -142,11 +143,13 @@ void LogBasedNetworkControllerSimulation::OnReceiverReport(
     HandleStateUpdate(controller_->OnTransportLossReport(msg));
   }
 
+  Clock* clock = Clock::GetRealTimeClock();
   TimeDelta rtt = TimeDelta::PlusInfinity();
   for (auto& rb : report.rr.report_blocks()) {
     if (rb.last_sr()) {
+      Timestamp report_log_time = Timestamp::Micros(report.log_time_us());
       uint32_t receive_time_ntp =
-          CompactNtp(TimeMicrosToNtp(report.log_time_us()));
+          CompactNtp(clock->ConvertTimestampToNtpTime(report_log_time));
       uint32_t rtt_ntp =
           receive_time_ntp - rb.delay_since_last_sr() - rb.last_sr();
       rtt = std::min(rtt, TimeDelta::Millis(CompactNtpRttToMs(rtt_ntp)));
