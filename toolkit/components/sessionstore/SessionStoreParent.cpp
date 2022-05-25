@@ -33,10 +33,10 @@ SessionStoreParent::SessionStoreParent(
     BrowserSessionStore* aSessionStore)
     : mBrowsingContext(aBrowsingContext), mSessionStore(aSessionStore) {}
 
-static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
-                                 const Maybe<nsCString>& aDocShellCaps,
-                                 const Maybe<bool>& aPrivatedMode,
-                                 bool aNeedCollectSHistory, uint32_t aEpoch) {
+static void SessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
+                               const Maybe<nsCString>& aDocShellCaps,
+                               const Maybe<bool>& aPrivatedMode,
+                               bool aNeedCollectSHistory, uint32_t aEpoch) {
   UpdateSessionStoreData data;
   if (aDocShellCaps.isSome()) {
     auto& disallow = data.mDisallow.Construct();
@@ -162,8 +162,8 @@ mozilla::ipc::IPCResult SessionStoreParent::RecvSessionStoreUpdate(
     return IPC_OK();
   }
 
-  DoSessionStoreUpdate(mBrowsingContext, aDocShellCaps, aPrivatedMode,
-                       aNeedCollectSHistory, aEpoch);
+  SessionStoreUpdate(mBrowsingContext, aDocShellCaps, aPrivatedMode,
+                     aNeedCollectSHistory, aEpoch);
   return IPC_OK();
 }
 
@@ -187,26 +187,6 @@ mozilla::ipc::IPCResult SessionStoreParent::RecvResetSessionStore(
         aBrowsingContext.GetMaybeDiscarded()->Canonical());
   }
   return IPC_OK();
-}
-
-void SessionStoreParent::SessionStoreUpdate(
-    const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-    const bool aNeedCollectSHistory, const uint32_t& aEpoch) {
-  Unused << RecvSessionStoreUpdate(aDocShellCaps, aPrivatedMode,
-                                   aNeedCollectSHistory, aEpoch);
-}
-
-void SessionStoreParent::IncrementalSessionStoreUpdate(
-    const MaybeDiscarded<BrowsingContext>& aBrowsingContext,
-    const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
-    uint32_t aEpoch) {
-  Unused << RecvIncrementalSessionStoreUpdate(aBrowsingContext, aFormData,
-                                              aScrollPosition, aEpoch);
-}
-
-void SessionStoreParent::ResetSessionStore(
-    const MaybeDiscarded<BrowsingContext>& aBrowsingContext, uint32_t aEpoch) {
-  Unused << RecvResetSessionStore(aBrowsingContext, aEpoch);
 }
 
 NS_IMPL_CYCLE_COLLECTION(SessionStoreParent, mBrowsingContext, mSessionStore)
