@@ -45,6 +45,26 @@ class SearchBar extends Component {
     };
   }
 
+  static get propTypes() {
+    return {
+      closeFileSearch: PropTypes.func.isRequired,
+      cx: PropTypes.object.isRequired,
+      doSearch: PropTypes.func.isRequired,
+      editor: PropTypes.object,
+      modifiers: PropTypes.object.isRequired,
+      query: PropTypes.string.isRequired,
+      searchOn: PropTypes.bool.isRequired,
+      searchResults: PropTypes.object.isRequired,
+      selectedContentLoaded: PropTypes.bool.isRequired,
+      selectedSource: PropTypes.object.isRequired,
+      setActiveSearch: PropTypes.func.isRequired,
+      showClose: PropTypes.bool,
+      size: PropTypes.string,
+      toggleFileSearchModifier: PropTypes.func.isRequired,
+      traverseResults: PropTypes.func.isRequired,
+    };
+  }
+
   componentWillUnmount() {
     const { shortcuts } = this.context;
 

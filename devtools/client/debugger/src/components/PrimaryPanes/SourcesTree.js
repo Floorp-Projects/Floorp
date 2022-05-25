@@ -4,6 +4,7 @@
 
 // Dependencies
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import classnames from "classnames";
 import { connect } from "../../utils/connect";
 
@@ -61,6 +62,24 @@ class SourcesTree extends Component {
       sources,
       threads,
     });
+  }
+
+  static get propTypes() {
+    return {
+      cx: PropTypes.object.isRequired,
+      debuggeeUrl: PropTypes.string.isRequired,
+      expanded: PropTypes.object.isRequired,
+      focusItem: PropTypes.func.isRequired,
+      focused: PropTypes.object,
+      projectRoot: PropTypes.string.isRequired,
+      selectSource: PropTypes.func.isRequired,
+      selectedSource: PropTypes.object,
+      setExpandedState: PropTypes.func.isRequired,
+      shownSource: PropTypes.object,
+      sourceCount: PropTypes.number,
+      sources: PropTypes.object.isRequired,
+      threads: PropTypes.array.isRequired,
+    };
   }
 
   componentWillReceiveProps(nextProps) {

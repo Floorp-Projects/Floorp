@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { Component } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import {
   getHighlightedCalls,
@@ -15,6 +16,16 @@ import "./HighlightCalls.css";
 
 export class HighlightCalls extends Component {
   previousCalls = null;
+
+  static get propTypes() {
+    return {
+      continueToHere: PropTypes.func.isRequired,
+      cx: PropTypes.object.isRequired,
+      editor: PropTypes.object.isRequired,
+      highlightedCalls: PropTypes.array,
+      selectedSource: PropTypes.object,
+    };
+  }
 
   componentDidUpdate() {
     this.unhighlightFunctionCalls();

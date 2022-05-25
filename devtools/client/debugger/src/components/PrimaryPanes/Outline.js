@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { showMenu } from "../../context-menu/menu";
 import { connect } from "../../utils/connect";
 import { score as fuzzaldrinScore } from "fuzzaldrin-plus";
@@ -61,6 +62,20 @@ export class Outline extends Component {
     super(props);
     this.focusedElRef = null;
     this.state = { filter: "", focusedItem: null };
+  }
+
+  static get propTypes() {
+    return {
+      alphabetizeOutline: PropTypes.bool.isRequired,
+      cursorPosition: PropTypes.object,
+      cx: PropTypes.object.isRequired,
+      flashLineRange: PropTypes.func.isRequired,
+      getFunctionText: PropTypes.func.isRequired,
+      onAlphabetizeClick: PropTypes.func.isRequired,
+      selectLocation: PropTypes.func.isRequired,
+      selectedSource: PropTypes.object.isRequired,
+      symbols: PropTypes.object.isRequired,
+    };
   }
 
   componentDidUpdate(prevProps) {

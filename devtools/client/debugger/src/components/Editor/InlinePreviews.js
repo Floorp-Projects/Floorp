@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import InlinePreviewRow from "./InlinePreviewRow";
 import { connect } from "../../utils/connect";
 import {
@@ -16,6 +17,15 @@ function hasPreviews(previews) {
 }
 
 class InlinePreviews extends Component {
+  static get propTypes() {
+    return {
+      editor: PropTypes.object.isRequired,
+      previews: PropTypes.object,
+      selectedFrame: PropTypes.object.isRequired,
+      selectedSource: PropTypes.object.isRequired,
+    };
+  }
+
   shouldComponentUpdate({ previews }) {
     return hasPreviews(previews);
   }
