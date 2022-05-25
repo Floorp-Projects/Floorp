@@ -49,7 +49,11 @@ void RetrieveFieldTrialValue(const char* trial_name,
   ParseFieldTrial({&field_trial_param}, field_trial_str);
   float field_trial_value = static_cast<float>(field_trial_param.Get());
 
-  if (field_trial_value >= min && field_trial_value <= max) {
+  if (field_trial_value >= min && field_trial_value <= max &&
+      field_trial_value != *value_to_update) {
+    RTC_LOG(LS_INFO) << "Key " << trial_name
+                     << " changing AEC3 parameter value from "
+                     << *value_to_update << " to " << field_trial_value;
     *value_to_update = field_trial_value;
   }
 }
@@ -65,7 +69,11 @@ void RetrieveFieldTrialValue(const char* trial_name,
   ParseFieldTrial({&field_trial_param}, field_trial_str);
   float field_trial_value = field_trial_param.Get();
 
-  if (field_trial_value >= min && field_trial_value <= max) {
+  if (field_trial_value >= min && field_trial_value <= max &&
+      field_trial_value != *value_to_update) {
+    RTC_LOG(LS_INFO) << "Key " << trial_name
+                     << " changing AEC3 parameter value from "
+                     << *value_to_update << " to " << field_trial_value;
     *value_to_update = field_trial_value;
   }
 }
@@ -737,6 +745,10 @@ EchoCanceller3::EchoCanceller3(const EchoCanceller3Config& config,
         std::vector<std::vector<rtc::ArrayView<float>>>(
             1, std::vector<rtc::ArrayView<float>>(num_capture_channels_));
   }
+
+  RTC_LOG(LS_INFO) << "AEC3 created with sample rate: " << sample_rate_hz_
+                   << " Hz, num render channels: " << num_render_channels_
+                   << ", num capture channels: " << num_capture_channels_;
 }
 
 EchoCanceller3::~EchoCanceller3() = default;
