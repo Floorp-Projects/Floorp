@@ -43,6 +43,7 @@ struct RTC_EXPORT EchoCanceller3Config {
     size_t hysteresis_limit_blocks = 1;
     size_t fixed_capture_delay_samples = 0;
     float delay_estimate_smoothing = 0.7f;
+    float delay_estimate_smoothing_delay_found = 0.7f;
     float delay_candidate_detection_threshold = 0.2f;
     struct DelaySelectionThresholds {
       int initial;
