@@ -529,12 +529,6 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
     return false;
   }
 
-  if (!gl->IsSupported(gl::GLFeature::vertex_array_object)) {
-    *out_failReason = {"FEATURE_FAILURE_WEBGL_VAOS",
-                       "Requires vertex_array_object."};
-    return false;
-  }
-
   // OpenGL core profiles remove the default VAO object from version
   // 4.0.0. We create a default VAO for all core profiles,
   // regardless of version.
