@@ -72,8 +72,6 @@ const uint64_t kStartTime = 123456789;
 const size_t kMaxPaddingSize = 224u;
 const uint8_t kPayloadData[] = {47, 11, 32, 93, 89};
 const int64_t kDefaultExpectedRetransmissionTimeMs = 125;
-const char kNoRid[] = "";
-const char kNoMid[] = "";
 const size_t kMaxPaddingLength = 224;      // Value taken from rtp_sender.cc.
 const uint32_t kTimestampTicksPerMs = 90;  // 90kHz clock.
 
@@ -775,6 +773,7 @@ TEST_P(RtpSenderTestWithoutPacer, RidIncludedOnSentPackets) {
 
 TEST_P(RtpSenderTestWithoutPacer, RidIncludedOnRtxSentPackets) {
   const char kRid[] = "f";
+  const char kNoRid[] = "";
 
   EnableRtx();
   EnableRidSending(kRid);
@@ -1010,147 +1009,6 @@ TEST_P(RtpSenderTestWithoutPacer,
   const RtpPacketReceived& rtx_packet = transport_.sent_packets_[1];
   EXPECT_FALSE(rtx_packet.HasExtension<RtpMid>());
   EXPECT_FALSE(rtx_packet.HasExtension<RepairedRtpStreamId>());
-}
-
-TEST_P(RtpSenderTest, FecOverheadRate) {
-  constexpr uint32_t kTimestamp = 1234;
-  constexpr int kMediaPayloadType = 127;
-  constexpr VideoCodecType kCodecType = VideoCodecType::kVideoCodecGeneric;
-  constexpr int kFlexfecPayloadType = 118;
-  const std::vector<RtpExtension> kNoRtpExtensions;
-  const std::vector<RtpExtensionSize> kNoRtpExtensionSizes;
-  FlexfecSender flexfec_sender(kFlexfecPayloadType, kFlexFecSsrc, kSsrc, kNoMid,
-                               kNoRtpExtensions, kNoRtpExtensionSizes,
-                               nullptr /* rtp_state */, clock_);
-
-  // Reset |rtp_sender_| to use this FlexFEC instance.
-  SetUpRtpSender(false, false, false, &flexfec_sender);
-
-  FieldTrialBasedConfig field_trials;
-  RTPSenderVideo::Config video_config;
-  video_config.clock = clock_;
-  video_config.rtp_sender = rtp_sender();
-  video_config.fec_type = flexfec_sender.GetFecType();
-  video_config.fec_overhead_bytes = flexfec_sender.MaxPacketOverhead();
-  video_config.field_trials = &field_trials;
-  RTPSenderVideo rtp_sender_video(video_config);
-  // Parameters selected to generate a single FEC packet per media packet.
-  FecProtectionParams params;
-  params.fec_rate = 15;
-  params.max_fec_frames = 1;
-  params.fec_mask_type = kFecMaskRandom;
-  rtp_egress()->SetFecProtectionParameters(params, params);
-
-  constexpr size_t kNumMediaPackets = 10;
-  constexpr size_t kNumFecPackets = kNumMediaPackets;
-  constexpr int64_t kTimeBetweenPacketsMs = 10;
-  for (size_t i = 0; i < kNumMediaPackets; ++i) {
-    RTPVideoHeader video_header;
-
-    video_header.frame_type = VideoFrameType::kVideoFrameKey;
-    EXPECT_TRUE(rtp_sender_video.SendVideo(
-        kMediaPayloadType, kCodecType, kTimestamp, clock_->TimeInMilliseconds(),
-        kPayloadData, video_header, kDefaultExpectedRetransmissionTimeMs));
-
-    time_controller_.AdvanceTime(TimeDelta::Millis(kTimeBetweenPacketsMs));
-  }
-  constexpr size_t kRtpHeaderLength = 12;
-  constexpr size_t kFlexfecHeaderLength = 20;
-  constexpr size_t kGenericCodecHeaderLength = 1;
-  constexpr size_t kPayloadLength = sizeof(kPayloadData);
-  constexpr size_t kPacketLength = kRtpHeaderLength + kFlexfecHeaderLength +
-                                   kGenericCodecHeaderLength + kPayloadLength;
-
-    EXPECT_NEAR(
-        kNumFecPackets * kPacketLength * 8 /
-            (kNumFecPackets * kTimeBetweenPacketsMs / 1000.0f),
-        rtp_egress()
-            ->GetSendRates()[RtpPacketMediaType::kForwardErrorCorrection]
-            .bps<double>(),
-        500);
-}
-
-TEST_P(RtpSenderTest, BitrateCallbacks) {
-  class TestCallback : public BitrateStatisticsObserver {
-   public:
-    TestCallback()
-        : BitrateStatisticsObserver(),
-          num_calls_(0),
-          ssrc_(0),
-          total_bitrate_(0),
-          retransmit_bitrate_(0) {}
-    ~TestCallback() override = default;
-
-    void Notify(uint32_t total_bitrate,
-                uint32_t retransmit_bitrate,
-                uint32_t ssrc) override {
-      ++num_calls_;
-      ssrc_ = ssrc;
-      total_bitrate_ = total_bitrate;
-      retransmit_bitrate_ = retransmit_bitrate;
-    }
-
-    uint32_t num_calls_;
-    uint32_t ssrc_;
-    uint32_t total_bitrate_;
-    uint32_t retransmit_bitrate_;
-  } callback;
-
-  RtpRtcpInterface::Configuration config;
-  config.clock = clock_;
-  config.outgoing_transport = &transport_;
-  config.local_media_ssrc = kSsrc;
-  config.send_bitrate_observer = &callback;
-  config.retransmission_rate_limiter = &retransmission_rate_limiter_;
-  rtp_sender_context_ =
-      std::make_unique<RtpSenderContext>(config, &time_controller_);
-
-  FieldTrialBasedConfig field_trials;
-  RTPSenderVideo::Config video_config;
-  video_config.clock = clock_;
-  video_config.rtp_sender = rtp_sender();
-  video_config.field_trials = &field_trials;
-  RTPSenderVideo rtp_sender_video(video_config);
-  const VideoCodecType kCodecType = VideoCodecType::kVideoCodecGeneric;
-  const uint8_t kPayloadType = 127;
-
-  // Simulate kNumPackets sent with kPacketInterval ms intervals, with the
-  // number of packets selected so that we fill (but don't overflow) the one
-  // second averaging window.
-  const uint32_t kWindowSizeMs = 1000;
-  const uint32_t kPacketInterval = 20;
-  const uint32_t kNumPackets =
-      (kWindowSizeMs - kPacketInterval) / kPacketInterval;
-  // Overhead = 12 bytes RTP header + 1 byte generic header.
-  const uint32_t kPacketOverhead = 13;
-
-  uint8_t payload[] = {47, 11, 32, 93, 89};
-  rtp_sender_context_->packet_history_.SetStorePacketsStatus(
-      RtpPacketHistory::StorageMode::kStoreAndCull, 1);
-  uint32_t ssrc = rtp_sender()->SSRC();
-
-  // Send a few frames.
-  RTPVideoHeader video_header;
-  for (uint32_t i = 0; i < kNumPackets; ++i) {
-    video_header.frame_type = VideoFrameType::kVideoFrameKey;
-    ASSERT_TRUE(rtp_sender_video.SendVideo(
-        kPayloadType, kCodecType, 1234, 4321, payload, video_header,
-        kDefaultExpectedRetransmissionTimeMs));
-    time_controller_.AdvanceTime(TimeDelta::Millis(kPacketInterval));
-  }
-
-  // We get one call for every stats updated, thus two calls since both the
-  // stream stats and the retransmit stats are updated once.
-  EXPECT_EQ(kNumPackets, callback.num_calls_);
-  EXPECT_EQ(ssrc, callback.ssrc_);
-  const uint32_t kTotalPacketSize = kPacketOverhead + sizeof(payload);
-  // Bitrate measured over delta between last and first timestamp, plus one.
-  const uint32_t kExpectedWindowMs = (kNumPackets - 1) * kPacketInterval + 1;
-  const uint32_t kExpectedBitsAccumulated = kTotalPacketSize * kNumPackets * 8;
-  const uint32_t kExpectedRateBps =
-      (kExpectedBitsAccumulated * 1000 + (kExpectedWindowMs / 2)) /
-      kExpectedWindowMs;
-  EXPECT_EQ(kExpectedRateBps, callback.total_bitrate_);
 }
 
 TEST_P(RtpSenderTestWithoutPacer, StreamDataCountersCallbacks) {
