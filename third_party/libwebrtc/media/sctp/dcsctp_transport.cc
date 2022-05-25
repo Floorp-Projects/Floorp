@@ -19,10 +19,13 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "media/base/media_channel.h"
+#include "net/dcsctp/public/packet_observer.h"
 #include "net/dcsctp/public/types.h"
 #include "net/dcsctp/socket/dcsctp_socket.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/clock.h"
@@ -75,6 +78,45 @@ bool IsEmptyPPID(dcsctp::PPID ppid) {
   return webrtc_ppid == WebrtcPPID::kStringEmpty ||
          webrtc_ppid == WebrtcPPID::kBinaryEmpty;
 }
+
+// Print outs all sent and received packets to the logs, at LS_VERBOSE severity.
+class TextPcapPacketObserver : public dcsctp::PacketObserver {
+ public:
+  explicit TextPcapPacketObserver(absl::string_view name) : name_(name) {}
+
+  void OnSentPacket(dcsctp::TimeMs now, rtc::ArrayView<const uint8_t> payload) {
+    PrintPacket("O ", now, payload);
+  }
+
+  void OnReceivedPacket(dcsctp::TimeMs now,
+                        rtc::ArrayView<const uint8_t> payload) {
+    PrintPacket("I ", now, payload);
+  }
+
+ private:
+  void PrintPacket(absl::string_view prefix,
+                   dcsctp::TimeMs now,
+                   rtc::ArrayView<const uint8_t> payload) {
+    rtc::StringBuilder s;
+    s << prefix;
+    int64_t remaining = *now % (24 * 60 * 60 * 1000);
+    int hours = remaining / (60 * 60 * 1000);
+    remaining = remaining % (60 * 60 * 1000);
+    int minutes = remaining / (60 * 1000);
+    remaining = remaining % (60 * 1000);
+    int seconds = remaining / 1000;
+    int ms = remaining % 1000;
+    s.AppendFormat("%02d:%02d:%02d.%03d", hours, minutes, seconds, ms);
+    s << " 0000";
+    for (uint8_t byte : payload) {
+      s.AppendFormat(" %02x", byte);
+    }
+    s << " # SCTP_PACKET " << name_;
+    RTC_LOG(LS_VERBOSE) << s.str();
+  }
+
+  const std::string name_;
+};
 
 }  // namespace
 
@@ -130,8 +172,13 @@ bool DcSctpTransport::Start(int local_sctp_port,
     options.remote_port = remote_sctp_port;
     options.max_message_size = max_message_size;
 
-    socket_ = std::make_unique<dcsctp::DcSctpSocket>(debug_name_, *this,
-                                                     nullptr, options);
+    std::unique_ptr<dcsctp::PacketObserver> packet_observer;
+    if (RTC_LOG_CHECK_LEVEL(LS_VERBOSE)) {
+      packet_observer = std::make_unique<TextPcapPacketObserver>(debug_name_);
+    }
+
+    socket_ = std::make_unique<dcsctp::DcSctpSocket>(
+        debug_name_, *this, std::move(packet_observer), options);
   } else {
     if (local_sctp_port != socket_->options().local_port ||
         remote_sctp_port != socket_->options().remote_port) {
