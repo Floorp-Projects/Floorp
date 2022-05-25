@@ -23,6 +23,8 @@ let types = {
   js: "application/x-javascript",
   binary: "application/octet-stream",
   gook: "application/x-gook",
+  zip: "application/zip",
+  json: "application/json",
 };
 
 const PNG_DATA = atob(
@@ -572,12 +574,17 @@ add_task(async function save_links() {
     let filename = PathUtils.filename(download.target.path);
 
     let expectedFilename = expectedItems[idx].filename;
-    if (AppConstants.platform == "win" && idx == 54) {
+    if (AppConstants.platform == "win") {
       // On Windows, .txt is added when saving as an attachment
       // to avoid this looking like an executable. This
       // is done in validateLeafName in HelperAppDlg.jsm.
       // XXXndeakin should we do this for all save mechanisms?
-      expectedFilename += ".txt";
+      if (idx == 54) {
+        expectedFilename += ".txt";
+      } else if (idx == 68) {
+        // jar files are considered to be executable.
+        expectedFilename += ".zip";
+      }
     }
 
     // Use checkShortenedFilename to check long filenames.
