@@ -621,69 +621,6 @@ TEST_P(RtpSenderTest, SendPadding) {
                  /*payload_size=*/100);
 }
 
-TEST_P(RtpSenderTestWithoutPacer, SendGenericVideo) {
-  const uint8_t kPayloadType = 127;
-  const VideoCodecType kCodecType = VideoCodecType::kVideoCodecGeneric;
-  FieldTrialBasedConfig field_trials;
-  RTPSenderVideo::Config video_config;
-  video_config.clock = clock_;
-  video_config.rtp_sender = rtp_sender();
-  video_config.field_trials = &field_trials;
-  RTPSenderVideo rtp_sender_video(video_config);
-  uint8_t payload[] = {47, 11, 32, 93, 89};
-
-  // Send keyframe
-  RTPVideoHeader video_header;
-  video_header.frame_type = VideoFrameType::kVideoFrameKey;
-  ASSERT_TRUE(rtp_sender_video.SendVideo(kPayloadType, kCodecType, 1234, 4321,
-                                         payload, video_header,
-                                         kDefaultExpectedRetransmissionTimeMs));
-
-  auto sent_payload = transport_.last_sent_packet().payload();
-  uint8_t generic_header = sent_payload[0];
-  EXPECT_TRUE(generic_header & RtpFormatVideoGeneric::kKeyFrameBit);
-  EXPECT_TRUE(generic_header & RtpFormatVideoGeneric::kFirstPacketBit);
-  EXPECT_THAT(sent_payload.subview(1), ElementsAreArray(payload));
-
-  // Send delta frame
-  payload[0] = 13;
-  payload[1] = 42;
-  payload[4] = 13;
-
-  video_header.frame_type = VideoFrameType::kVideoFrameDelta;
-  ASSERT_TRUE(rtp_sender_video.SendVideo(kPayloadType, kCodecType, 1234, 4321,
-                                         payload, video_header,
-                                         kDefaultExpectedRetransmissionTimeMs));
-
-  sent_payload = transport_.last_sent_packet().payload();
-  generic_header = sent_payload[0];
-  EXPECT_FALSE(generic_header & RtpFormatVideoGeneric::kKeyFrameBit);
-  EXPECT_TRUE(generic_header & RtpFormatVideoGeneric::kFirstPacketBit);
-  EXPECT_THAT(sent_payload.subview(1), ElementsAreArray(payload));
-}
-
-TEST_P(RtpSenderTestWithoutPacer, SendRawVideo) {
-  const uint8_t kPayloadType = 111;
-  const uint8_t payload[] = {11, 22, 33, 44, 55};
-
-  FieldTrialBasedConfig field_trials;
-  RTPSenderVideo::Config video_config;
-  video_config.clock = clock_;
-  video_config.rtp_sender = rtp_sender();
-  video_config.field_trials = &field_trials;
-  RTPSenderVideo rtp_sender_video(video_config);
-
-  // Send a frame.
-  RTPVideoHeader video_header;
-  video_header.frame_type = VideoFrameType::kVideoFrameKey;
-  ASSERT_TRUE(rtp_sender_video.SendVideo(kPayloadType, absl::nullopt, 1234,
-                                         4321, payload, video_header,
-                                         kDefaultExpectedRetransmissionTimeMs));
-
-  auto sent_payload = transport_.last_sent_packet().payload();
-  EXPECT_THAT(sent_payload, ElementsAreArray(payload));
-}
-
 TEST_P(RtpSenderTest, SendFlexfecPackets) {
   constexpr uint32_t kTimestamp = 1234;
   constexpr int kMediaPayloadType = 127;
