@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "net/dcsctp/tx/fcfs_send_queue.h"
+#include "net/dcsctp/tx/rr_send_queue.h"
 
 #include <cstdint>
 #include <deque>
@@ -26,9 +26,9 @@
 #include "rtc_base/logging.h"
 
 namespace dcsctp {
-void FCFSSendQueue::Add(TimeMs now,
-                        DcSctpMessage message,
-                        const SendOptions& send_options) {
+void RRSendQueue::Add(TimeMs now,
+                      DcSctpMessage message,
+                      const SendOptions& send_options) {
   RTC_DCHECK(!message.payload().empty());
   std::deque<Item>& queue =
       IsPaused(message.stream_id()) ? paused_items_ : items_;
@@ -44,7 +44,7 @@ void FCFSSendQueue::Add(TimeMs now,
   queue.emplace_back(std::move(message), expires_at, send_options);
 }
 
-size_t FCFSSendQueue::total_bytes() const {
+size_t RRSendQueue::total_bytes() const {
   // TODO(boivie): Have the current size as a member variable, so that's it not
   // calculated for every operation.
   return absl::c_accumulate(items_, 0,
@@ -57,17 +57,17 @@ size_t FCFSSendQueue::total_bytes() const {
                             });
 }
 
-bool FCFSSendQueue::IsFull() const {
+bool RRSendQueue::IsFull() const {
   return total_bytes() >= buffer_size_;
 }
 
-bool FCFSSendQueue::IsEmpty() const {
+bool RRSendQueue::IsEmpty() const {
   return items_.empty();
 }
 
-FCFSSendQueue::Item* FCFSSendQueue::GetFirstNonExpiredMessage(TimeMs now) {
+RRSendQueue::Item* RRSendQueue::GetFirstNonExpiredMessage(TimeMs now) {
   while (!items_.empty()) {
-    FCFSSendQueue::Item& item = items_.front();
+    RRSendQueue::Item& item = items_.front();
     // An entire item can be discarded iff:
     // 1) It hasn't been partially sent (has been allocated a message_id).
     // 2) It has a non-negative expiry time.
@@ -87,8 +87,8 @@ FCFSSendQueue::Item* FCFSSendQueue::GetFirstNonExpiredMessage(TimeMs now) {
   return nullptr;
 }
 
-absl::optional<SendQueue::DataToSend> FCFSSendQueue::Produce(TimeMs now,
-                                                             size_t max_size) {
+absl::optional<SendQueue::DataToSend> RRSendQueue::Produce(TimeMs now,
+                                                           size_t max_size) {
   Item* item = GetFirstNonExpiredMessage(now);
   if (item == nullptr) {
     return absl::nullopt;
@@ -163,9 +163,9 @@ absl::optional<SendQueue::DataToSend> FCFSSendQueue::Produce(TimeMs now,
   return chunk;
 }
 
-void FCFSSendQueue::Discard(IsUnordered unordered,
-                            StreamID stream_id,
-                            MID message_id) {
+void RRSendQueue::Discard(IsUnordered unordered,
+                          StreamID stream_id,
+                          MID message_id) {
   // As this method will only discard partially sent messages, and as the queue
   // is a FIFO queue, the only partially sent message would be the topmost
   // message.
@@ -179,8 +179,7 @@ void FCFSSendQueue::Discard(IsUnordered unordered,
   }
 }
 
-void FCFSSendQueue::PrepareResetStreams(
-    rtc::ArrayView<const StreamID> streams) {
+void RRSendQueue::PrepareResetStreams(rtc::ArrayView<const StreamID> streams) {
   for (StreamID stream_id : streams) {
     paused_streams_.insert(stream_id);
   }
@@ -197,7 +196,7 @@ void FCFSSendQueue::PrepareResetStreams(
   }
 }
 
-bool FCFSSendQueue::CanResetStreams() const {
+bool RRSendQueue::CanResetStreams() const {
   for (auto& item : items_) {
     if (IsPaused(item.message.stream_id())) {
       return false;
@@ -206,7 +205,7 @@ bool FCFSSendQueue::CanResetStreams() const {
   return true;
 }
 
-void FCFSSendQueue::CommitResetStreams() {
+void RRSendQueue::CommitResetStreams() {
   for (StreamID stream_id : paused_streams_) {
     ssn_by_stream_id_[stream_id] = SSN(0);
     // https://tools.ietf.org/html/rfc8260#section-2.3.2
@@ -219,7 +218,7 @@ void FCFSSendQueue::CommitResetStreams() {
   RollbackResetStreams();
 }
 
-void FCFSSendQueue::RollbackResetStreams() {
+void RRSendQueue::RollbackResetStreams() {
   while (!paused_items_.empty()) {
     items_.push_back(std::move(paused_items_.front()));
     paused_items_.pop_front();
@@ -227,7 +226,7 @@ void FCFSSendQueue::RollbackResetStreams() {
   paused_streams_.clear();
 }
 
-void FCFSSendQueue::Reset() {
+void RRSendQueue::Reset() {
   if (!items_.empty()) {
     // If this message has been partially sent, reset it so that it will be
     // re-sent.
@@ -243,7 +242,7 @@ void FCFSSendQueue::Reset() {
   ssn_by_stream_id_.clear();
 }
 
-bool FCFSSendQueue::IsPaused(StreamID stream_id) const {
+bool RRSendQueue::IsPaused(StreamID stream_id) const {
   return paused_streams_.find(stream_id) != paused_streams_.end();
 }
 
