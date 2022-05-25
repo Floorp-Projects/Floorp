@@ -362,6 +362,11 @@ struct RTC_EXPORT RtpExtension {
   static constexpr char kVideoFrameTrackingIdUri[] =
       "http://www.webrtc.org/experiments/rtp-hdrext/video-frame-tracking-id";
 
+  // Header extension for Mixer-to-Client audio levels per CSRC as defined in
+  // https://tools.ietf.org/html/rfc6465
+  static constexpr char kCsrcAudioLevelsUri[] =
+      "urn:ietf:params:rtp-hdrext:csrc-audio-level";
+
   // Inclusive min and max IDs for two-byte header extensions and one-byte
   // header extensions, per RFC8285 Section 4.2-4.3.
   static constexpr int kMinId = 1;
