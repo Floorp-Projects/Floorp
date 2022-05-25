@@ -33,7 +33,8 @@
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/absolute_capture_time_receiver.h"
+#include "modules/rtp_rtcp/source/absolute_capture_time_interpolator.h"
+#include "modules/rtp_rtcp/source/capture_clock_offset_updater.h"
 #include "modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
@@ -403,7 +404,10 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
   std::atomic<bool> frames_decryptable_;
   absl::optional<ColorSpace> last_color_space_;
 
-  AbsoluteCaptureTimeReceiver absolute_capture_time_receiver_
+  AbsoluteCaptureTimeInterpolator absolute_capture_time_interpolator_
+      RTC_GUARDED_BY(worker_task_checker_);
+
+  CaptureClockOffsetUpdater capture_clock_offset_updater_
       RTC_GUARDED_BY(worker_task_checker_);
 
   int64_t last_completed_picture_id_ = 0;

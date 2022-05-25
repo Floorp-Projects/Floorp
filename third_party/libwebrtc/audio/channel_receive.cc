@@ -34,7 +34,8 @@
 #include "modules/pacing/packet_router.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/include/remote_ntp_time_estimator.h"
-#include "modules/rtp_rtcp/source/absolute_capture_time_receiver.h"
+#include "modules/rtp_rtcp/source/absolute_capture_time_interpolator.h"
+#include "modules/rtp_rtcp/source/capture_clock_offset_updater.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
@@ -277,7 +278,9 @@ class ChannelReceive : public ChannelReceiveInterface {
   rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor_;
   webrtc::CryptoOptions crypto_options_;
 
-  webrtc::AbsoluteCaptureTimeReceiver absolute_capture_time_receiver_;
+  webrtc::AbsoluteCaptureTimeInterpolator absolute_capture_time_interpolator_;
+
+  webrtc::CaptureClockOffsetUpdater capture_clock_offset_updater_;
 
   rtc::scoped_refptr<ChannelReceiveFrameTransformerDelegate>
       frame_transformer_delegate_;
@@ -435,6 +438,22 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
     }
   }
 
+  // Fill in local capture clock offset in |audio_frame->packet_infos_|.
+  RtpPacketInfos::vector_type packet_infos;
+  for (auto& packet_info : audio_frame->packet_infos_) {
+    absl::optional<int64_t> local_capture_clock_offset;
+    if (packet_info.absolute_capture_time().has_value()) {
+      local_capture_clock_offset =
+          capture_clock_offset_updater_.AdjustEstimatedCaptureClockOffset(
+              packet_info.absolute_capture_time()
+                  ->estimated_capture_clock_offset);
+    }
+    RtpPacketInfo new_packet_info(packet_info);
+    new_packet_info.set_local_capture_clock_offset(local_capture_clock_offset);
+    packet_infos.push_back(std::move(new_packet_info));
+  }
+  audio_frame->packet_infos_ = RtpPacketInfos(packet_infos);
+
   {
     RTC_HISTOGRAM_COUNTS_1000("WebRTC.Audio.TargetJitterBufferDelayMs",
                               acm_receiver_.TargetDelayMs());
@@ -504,7 +523,7 @@ ChannelReceive::ChannelReceive(
       associated_send_channel_(nullptr),
       frame_decryptor_(frame_decryptor),
       crypto_options_(crypto_options),
-      absolute_capture_time_receiver_(clock) {
+      absolute_capture_time_interpolator_(clock) {
   RTC_DCHECK(module_process_thread_);
   RTC_DCHECK(audio_device_module);
 
@@ -621,9 +640,9 @@ void ChannelReceive::OnRtpPacket(const RtpPacketReceived& packet) {
 
   // Interpolates absolute capture timestamp RTP header extension.
   header.extension.absolute_capture_time =
-      absolute_capture_time_receiver_.OnReceivePacket(
-          AbsoluteCaptureTimeReceiver::GetSource(header.ssrc,
-                                                 header.arrOfCSRCs),
+      absolute_capture_time_interpolator_.OnReceivePacket(
+          AbsoluteCaptureTimeInterpolator::GetSource(header.ssrc,
+                                                     header.arrOfCSRCs),
           header.timestamp,
           rtc::saturated_cast<uint32_t>(packet_copy.payload_type_frequency()),
           header.extension.absolute_capture_time);
@@ -716,7 +735,7 @@ void ChannelReceive::ReceivedRTCPPacket(const uint8_t* data, size_t length) {
     absl::optional<int64_t> remote_to_local_clock_offset_ms =
         ntp_estimator_.EstimateRemoteToLocalClockOffsetMs();
     if (remote_to_local_clock_offset_ms.has_value()) {
-      absolute_capture_time_receiver_.SetRemoteToLocalClockOffset(
+      capture_clock_offset_updater_.SetRemoteToLocalClockOffset(
           Int64MsToQ32x32(*remote_to_local_clock_offset_ms));
     }
   }

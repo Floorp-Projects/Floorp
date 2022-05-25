@@ -138,12 +138,16 @@ rtc_library("rtp_rtcp") {
     "include/receive_statistics.h",
     "include/remote_ntp_time_estimator.h",
     "include/ulpfec_receiver.h",
-    "source/absolute_capture_time_receiver.cc",
-    "source/absolute_capture_time_receiver.h",
+    "source/absolute_capture_time_interpolator.cc",
+    "source/absolute_capture_time_interpolator.h",
+    "source/absolute_capture_time_receiver.cc",  # DEPRECATED
+    "source/absolute_capture_time_receiver.h",  # DEPRECATED
     "source/absolute_capture_time_sender.cc",
     "source/absolute_capture_time_sender.h",
     "source/active_decode_targets_helper.cc",
     "source/active_decode_targets_helper.h",
+    "source/capture_clock_offset_updater.cc",
+    "source/capture_clock_offset_updater.h",
     "source/create_video_rtp_depacketizer.cc",
     "source/create_video_rtp_depacketizer.h",
     "source/dtmf_queue.cc",
@@ -476,10 +480,11 @@ if (rtc_include_tests) {
     testonly = true
 
     sources = [
-      "source/absolute_capture_time_receiver_unittest.cc",
+      "source/absolute_capture_time_interpolator_unittest.cc",
       "source/absolute_capture_time_sender_unittest.cc",
       "source/active_decode_targets_helper_unittest.cc",
       "source/byte_io_unittest.cc",
+      "source/capture_clock_offset_updater_unittest.cc",
       "source/fec_private_tables_bursty_unittest.cc",
       "source/flexfec_header_reader_writer_unittest.cc",
       "source/flexfec_receiver_unittest.cc",

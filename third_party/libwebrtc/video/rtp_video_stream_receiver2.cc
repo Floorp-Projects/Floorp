@@ -260,7 +260,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       packet_buffer_(kPacketBufferStartSize, PacketBufferMaxSize()),
       has_received_frame_(false),
       frames_decryptable_(false),
-      absolute_capture_time_receiver_(clock) {
+      absolute_capture_time_interpolator_(clock) {
   if (packet_router_)
     packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), config_.rtp.remb);
 
@@ -498,9 +498,9 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
 
   // Try to extrapolate absolute capture time if it is missing.
   packet_info.set_absolute_capture_time(
-      absolute_capture_time_receiver_.OnReceivePacket(
-          AbsoluteCaptureTimeReceiver::GetSource(packet_info.ssrc(),
-                                                 packet_info.csrcs()),
+      absolute_capture_time_interpolator_.OnReceivePacket(
+          AbsoluteCaptureTimeInterpolator::GetSource(packet_info.ssrc(),
+                                                     packet_info.csrcs()),
           packet_info.rtp_timestamp(),
           // Assume frequency is the same one for all video frames.
           kVideoPayloadTypeFrequency, packet_info.absolute_capture_time()));
@@ -1062,7 +1062,7 @@ bool RtpVideoStreamReceiver2::DeliverRtcp(const uint8_t* rtcp_packet,
     absl::optional<int64_t> remote_to_local_clock_offset_ms =
         ntp_estimator_.EstimateRemoteToLocalClockOffsetMs();
     if (remote_to_local_clock_offset_ms.has_value()) {
-      absolute_capture_time_receiver_.SetRemoteToLocalClockOffset(
+      capture_clock_offset_updater_.SetRemoteToLocalClockOffset(
           Int64MsToQ32x32(*remote_to_local_clock_offset_ms));
     }
   }
