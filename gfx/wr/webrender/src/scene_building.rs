@@ -64,7 +64,7 @@ use crate::prim_store::{PrimitiveInstance, register_prim_chase_id};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex, PictureIndex};
 use crate::prim_store::{PolygonKey};
-use crate::prim_store::backdrop::Backdrop;
+use crate::prim_store::backdrop::{BackdropCapture, BackdropRender};
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
 use crate::prim_store::gradient::{
     GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams, ConicGradient,
@@ -287,7 +287,6 @@ impl PictureChainBuilder {
         interners: &mut Interners,
         prim_store: &mut PrimitiveStore,
         prim_instances: &mut Vec<PrimitiveInstance>,
-        extra_pic_flags: PictureFlags,
     ) -> PictureChainBuilder {
         let prim_list = match self.current {
             PictureSource::PrimitiveList { prim_list } => {
@@ -308,13 +307,11 @@ impl PictureChainBuilder {
             }
         };
 
-        let mut flags = if self.set_resolve_target {
+        let flags = if self.set_resolve_target {
             PictureFlags::IS_RESOLVE_TARGET
         } else {
             PictureFlags::empty()
         };
-
-        flags |= extra_pic_flags;
 
         let pic_index = PictureIndex(prim_store.pictures
             .alloc()
@@ -645,8 +642,8 @@ impl<'a> SceneBuilder<'a> {
 
             // If we're a surface, use that spatial node, otherwise the parent
             let spatial_node_index = match pic.composite_mode {
-                Some(_) if !pic.flags.contains(PictureFlags::WRAPS_SUB_GRAPH) => pic.spatial_node_index,
-                Some(_) | None => parent_spatial_node_index.expect("bug: no parent"),
+                Some(_) => pic.spatial_node_index,
+                None => parent_spatial_node_index.expect("bug: no parent"),
             };
 
             (
@@ -1993,12 +1990,20 @@ impl<'a> SceneBuilder<'a> {
     }
 
     fn make_current_slice_atomic_if_required(&mut self) {
-        if self.sc_stack.is_empty() {
-            // Shadows can only exist within a stacking context
-            assert!(self.pending_shadow_items.is_empty());
+        let has_non_wrapping_sc = self.sc_stack
+            .iter()
+            .position(|sc| {
+                !sc.flags.contains(StackingContextFlags::WRAPS_BACKDROP_FILTER)
+            })
+            .is_some();
 
-            self.tile_cache_builder.make_current_slice_atomic();
+        if has_non_wrapping_sc {
+            return;
         }
+
+        // Shadows can only exist within a stacking context
+        assert!(self.pending_shadow_items.is_empty());
+        self.tile_cache_builder.make_current_slice_atomic();
     }
 
     /// If no stacking contexts are present (i.e. we are adding prims to a tile
@@ -2283,12 +2288,6 @@ impl<'a> SceneBuilder<'a> {
             None => true,
         };
 
-        let pic_flags = if stacking_context.flags.contains(StackingContextFlags::WRAPS_BACKDROP_FILTER) {
-            PictureFlags::WRAPS_SUB_GRAPH
-        } else {
-            PictureFlags::empty()
-        };
-
         let mut source = match stacking_context.context_3d {
             // TODO(gw): For now, as soon as this picture is in
             //           a 3D context, we draw it to an intermediate
@@ -2313,7 +2312,7 @@ impl<'a> SceneBuilder<'a> {
                         stacking_context.prim_list,
                         stacking_context.spatial_node_index,
                         stacking_context.raster_space,
-                        pic_flags,
+                        PictureFlags::empty(),
                     ))
                 );
 
@@ -2357,7 +2356,7 @@ impl<'a> SceneBuilder<'a> {
                             stacking_context.prim_list,
                             stacking_context.spatial_node_index,
                             stacking_context.raster_space,
-                            pic_flags,
+                            PictureFlags::empty(),
                         ))
                     );
 
@@ -2487,7 +2486,6 @@ impl<'a> SceneBuilder<'a> {
             stacking_context.composite_ops.filter_primitives,
             stacking_context.composite_ops.filter_datas,
             None,
-            pic_flags,
         );
 
         // Same for mix-blend-mode, except we can skip if this primitive is the first in the parent
@@ -2516,7 +2514,6 @@ impl<'a> SceneBuilder<'a> {
                     &mut self.interners,
                     &mut self.prim_store,
                     &mut self.prim_instances,
-                    PictureFlags::empty(),
                 );
             } else {
                 // If we have a mix-blend-mode, the stacking context needs to be isolated
@@ -3619,11 +3616,11 @@ impl<'a> SceneBuilder<'a> {
 
         // Create the backdrop prim - this is a placeholder which sets the size of resolve
         // picture that reads from the backdrop root
-        let backdrop_instance = self.create_primitive(
+        let backdrop_capture_instance = self.create_primitive(
             info,
             spatial_node_index,
-            clip_chain_id,
-            Backdrop {
+            ClipChainId::NONE,
+            BackdropCapture {
             },
         );
 
@@ -3631,7 +3628,7 @@ impl<'a> SceneBuilder<'a> {
         // is needed for the call to `wrap_prim_with_filters` below
         let mut prim_list = PrimitiveList::empty();
         prim_list.add_prim(
-            backdrop_instance,
+            backdrop_capture_instance,
             info.rect,
             spatial_node_index,
             info.flags,
@@ -3654,41 +3651,86 @@ impl<'a> SceneBuilder<'a> {
             filter_primitives,
             filter_datas,
             Some(false),
-            PictureFlags::empty(),
-        );
-
-        // Clip the backdrop filter to the outline of the backdrop-filter prim. If this is
-        // axis-aligned with the backdrop root, no clip mask will be produced. Otherwise,
-        // it will result in a clip-mask matching the primitive shape that is used to mask
-        // the final backdrop-filter output
-        let filter_clips = vec![
-            ClipItemKey {
-                kind: ClipItemKeyKind::rectangle(
-                    info.rect,
-                    ClipMode::Clip,
-                ),
-                spatial_node_index,
-            },
-        ];
-
-        let filter_clip_chain_id = self.build_clip_chain(
-            filter_clips,
-            clip_chain_id,
         );
 
         // If all the filters were no-ops (e.g. opacity(0)) then we don't get a picture here
         // and we can skip adding the backdrop-filter.
         if source.has_picture() {
+            source = source.add_picture(
+                PictureCompositeMode::IntermediateSurface,
+                Picture3DContext::Out,
+                &mut self.interners,
+                &mut self.prim_store,
+                &mut self.prim_instances,
+            );
+
             let filtered_instance = source.finalize(
-                filter_clip_chain_id,
+                ClipChainId::NONE,
                 &mut self.interners,
                 &mut self.prim_store,
             );
 
+            // Extract the pic index for the intermediate surface. We need to
+            // supply this to the capture prim below.
+            let output_pic_index = match filtered_instance.kind {
+                PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
+                _ => panic!("bug: not a picture"),
+            };
+
+            // Find which stacking context (or root tile cache) to add the
+            // backdrop-filter chain to
+            let sc_index = self.sc_stack.iter().rposition(|sc| {
+                !sc.flags.contains(StackingContextFlags::WRAPS_BACKDROP_FILTER)
+            });
+
+            match sc_index {
+                Some(sc_index) => {
+                    self.sc_stack[sc_index].prim_list.add_prim(
+                        filtered_instance,
+                        info.rect,
+                        filter_spatial_node_index,
+                        info.flags,
+                        &mut self.prim_instances,
+                    );
+                }
+                None => {
+                    self.tile_cache_builder.add_prim(
+                        filtered_instance,
+                        info.rect,
+                        filter_spatial_node_index,
+                        info.flags,
+                        self.spatial_tree,
+                        &self.clip_store,
+                        self.interners,
+                        &self.quality_settings,
+                        &mut self.prim_instances,
+                    );
+                }
+            }
+
+            // Add the prim that renders the result of the backdrop filter chain
+            let mut backdrop_render_instance = self.create_primitive(
+                info,
+                spatial_node_index,
+                clip_chain_id,
+                BackdropRender {
+                },
+            );
+
+            // Set up the picture index for the backdrop-filter output in the prim
+            // that will draw it
+            match backdrop_render_instance.kind {
+                PrimitiveInstanceKind::BackdropRender { ref mut pic_index, .. } => {
+                    assert_eq!(*pic_index, PictureIndex::INVALID);
+                    *pic_index = output_pic_index;
+                }
+                _ => panic!("bug: unexpected prim kind"),
+            }
+
             self.add_primitive_to_draw_list(
-                filtered_instance,
+                backdrop_render_instance,
                 info.rect,
-                filter_spatial_node_index,
+                spatial_node_index,
                 info.flags,
             );
         }
@@ -3702,7 +3744,6 @@ impl<'a> SceneBuilder<'a> {
         mut filter_primitives: Vec<FilterPrimitive>,
         filter_datas: Vec<FilterData>,
         should_inflate_override: Option<bool>,
-        extra_pic_flags: PictureFlags,
     ) -> PictureChainBuilder {
         // TODO(cbrewster): Currently CSS and SVG filters live side by side in WebRender, but unexpected results will
         // happen if they are used simulataneously. Gecko only provides either filter ops or filter primitives.
@@ -3768,7 +3809,6 @@ impl<'a> SceneBuilder<'a> {
                 &mut self.interners,
                 &mut self.prim_store,
                 &mut self.prim_instances,
-                extra_pic_flags,
             );
         }
 
@@ -3805,7 +3845,6 @@ impl<'a> SceneBuilder<'a> {
                 &mut self.interners,
                 &mut self.prim_store,
                 &mut self.prim_instances,
-                extra_pic_flags,
             );
         }
 
