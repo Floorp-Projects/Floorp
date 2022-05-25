@@ -68,7 +68,6 @@ const uint16_t kSeqNum = 33;
 const uint32_t kSsrc = 725242;
 const uint32_t kRtxSsrc = 12345;
 const uint32_t kFlexFecSsrc = 45678;
-const uint16_t kTransportSequenceNumber = 1;
 const uint64_t kStartTime = 123456789;
 const size_t kMaxPaddingSize = 224u;
 const uint8_t kPayloadData[] = {47, 11, 32, 93, 89};
@@ -696,51 +695,6 @@ TEST_P(RtpSenderTest, SendPadding) {
   std::unique_ptr<RtpPacketToSend> next_media_packet =
       SendPacket(/*capture_time_ms=*/clock_->TimeInMilliseconds(),
                  /*payload_size=*/100);
-}
-
-TEST_P(RtpSenderTest, OnSendPacketUpdated) {
-  EXPECT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
-      TransportSequenceNumber::kUri, kTransportSequenceNumberExtensionId));
-  rtp_sender_context_->packet_history_.SetStorePacketsStatus(
-      RtpPacketHistory::StorageMode::kStoreAndCull, 10);
-
-  EXPECT_CALL(send_packet_observer_,
-              OnSendPacket(kTransportSequenceNumber, _, _))
-      .Times(1);
-
-  EXPECT_CALL(
-      mock_paced_sender_,
-      EnqueuePackets(Contains(AllOf(
-          Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
-          Pointee(Property(&RtpPacketToSend::SequenceNumber, kSeqNum))))));
-  auto packet = SendGenericPacket();
-  packet->set_packet_type(RtpPacketMediaType::kVideo);
-  packet->SetExtension<TransportSequenceNumber>(kTransportSequenceNumber);
-  rtp_sender_context_->InjectPacket(std::move(packet), PacedPacketInfo());
-
-  EXPECT_EQ(1, transport_.packets_sent());
-}
-
-TEST_P(RtpSenderTest, OnSendPacketNotUpdatedForRetransmits) {
-  EXPECT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
-      TransportSequenceNumber::kUri, kTransportSequenceNumberExtensionId));
-  rtp_sender_context_->packet_history_.SetStorePacketsStatus(
-      RtpPacketHistory::StorageMode::kStoreAndCull, 10);
-
-  EXPECT_CALL(send_packet_observer_, OnSendPacket(_, _, _)).Times(0);
-
-  EXPECT_CALL(
-      mock_paced_sender_,
-      EnqueuePackets(Contains(AllOf(
-          Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
-          Pointee(Property(&RtpPacketToSend::SequenceNumber, kSeqNum))))));
-  auto packet = SendGenericPacket();
-  packet->set_packet_type(RtpPacketMediaType::kRetransmission);
-  packet->SetExtension<TransportSequenceNumber>(kTransportSequenceNumber);
-  rtp_sender_context_->InjectPacket(std::move(packet), PacedPacketInfo());
-
-  EXPECT_EQ(1, transport_.packets_sent());
-  EXPECT_TRUE(transport_.last_options_.is_retransmit);
 }
 
 TEST_P(RtpSenderTestWithoutPacer, SendGenericVideo) {
