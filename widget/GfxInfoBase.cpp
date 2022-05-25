@@ -245,8 +245,8 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_VIDEO_OVERLAY:
       name = BLOCKLIST_PREF_BRANCH "video-overlay";
       break;
-    case nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY:
-      name = BLOCKLIST_PREF_BRANCH "hw-video-no-copy";
+    case nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY:
+      name = BLOCKLIST_PREF_BRANCH "hw-video-zero-copy";
       break;
     case nsIGfxInfo::FEATURE_WEBRENDER_SHADER_CACHE:
       name = BLOCKLIST_PREF_BRANCH "webrender.program-binary-disk";
@@ -513,8 +513,8 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   if (aFeature.EqualsLiteral("VIDEO_OVERLAY")) {
     return nsIGfxInfo::FEATURE_VIDEO_OVERLAY;
   }
-  if (aFeature.EqualsLiteral("HW_DECODED_VIDEO_NO_COPY")) {
-    return nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY;
+  if (aFeature.EqualsLiteral("HW_DECODED_VIDEO_ZERO_COPY")) {
+    return nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY;
   }
   if (aFeature.EqualsLiteral("WEBRENDER_PARTIAL_PRESENT")) {
     return nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT;
@@ -1255,7 +1255,7 @@ bool GfxInfoBase::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
 bool GfxInfoBase::IsFeatureAllowlisted(int32_t aFeature) const {
   return aFeature == nsIGfxInfo::FEATURE_WEBRENDER ||
          aFeature == nsIGfxInfo::FEATURE_VIDEO_OVERLAY ||
-         aFeature == nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY;
+         aFeature == nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY;
 }
 
 nsresult GfxInfoBase::GetFeatureStatusImpl(
@@ -1398,7 +1398,7 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_VAAPI,
                         nsIGfxInfo::FEATURE_WEBGPU,
                         nsIGfxInfo::FEATURE_VIDEO_OVERLAY,
-                        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+                        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
                         nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT,
                         0};
 
