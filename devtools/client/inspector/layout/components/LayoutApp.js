@@ -61,7 +61,7 @@ class LayoutApp extends PureComponent {
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelEditor: PropTypes.func.isRequired,
-      onShowGridOutlineHighlight: PropTypes.func.isRequired,
+      onShowGridOutlineHighlight: PropTypes.func,
       onToggleGeometryEditor: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
       onToggleShowGridAreas: PropTypes.func.isRequired,
