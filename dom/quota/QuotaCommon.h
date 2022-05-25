@@ -1085,11 +1085,12 @@ auto ErrToDefaultOk(const nsresult aValue) -> Result<V, nsresult> {
 // to Result<empty, E>.
 template <typename Step, typename Body>
 auto CollectEach(Step aStep, const Body& aBody)
-    -> Result<mozilla::Ok, typename std::result_of_t<Step()>::err_type> {
-  using StepResultType = typename std::result_of_t<Step()>::ok_type;
+    -> Result<mozilla::Ok, typename std::invoke_result_t<Step>::err_type> {
+  using StepResultType = typename std::invoke_result_t<Step>::ok_type;
 
-  static_assert(std::is_empty_v<
-                typename std::result_of_t<Body(StepResultType &&)>::ok_type>);
+  static_assert(
+      std::is_empty_v<
+          typename std::invoke_result_t<Body, StepResultType&&>::ok_type>);
 
   while (true) {
     StepResultType element;
@@ -1168,7 +1169,7 @@ auto CollectEachInRange(Range&& aRange, const Body& aBody)
 // convertible to Result<empty, E>.
 template <typename Cond, typename Body>
 auto CollectWhile(const Cond& aCond, const Body& aBody)
-    -> Result<mozilla::Ok, typename std::result_of_t<Cond()>::err_type> {
+    -> Result<mozilla::Ok, typename std::invoke_result_t<Cond>::err_type> {
   return CollectEach(aCond, [&aBody](bool) { return aBody(); });
 }
 
@@ -1543,7 +1544,7 @@ constexpr bool IsDatabaseCorruptionError(const nsresult aRv) {
 template <typename Func>
 auto CallWithDelayedRetriesIfAccessDenied(Func&& aFunc, uint32_t aMaxRetries,
                                           uint32_t aDelayMs)
-    -> Result<typename std::result_of_t<Func()>::ok_type, nsresult> {
+    -> Result<typename std::invoke_result_t<Func>::ok_type, nsresult> {
   uint32_t retries = 0;
 
   while (true) {
