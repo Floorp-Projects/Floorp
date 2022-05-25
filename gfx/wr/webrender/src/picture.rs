@@ -2945,7 +2945,6 @@ impl TileCacheInstance {
         surface_stack: &[(PictureIndex, SurfaceIndex)],
         composite_state: &mut CompositeState,
         gpu_cache: &mut GpuCache,
-        scratch: &mut PrimitiveScratchBuffer,
         is_root_tile_cache: bool,
         surfaces: &mut [SurfaceInfo],
     ) {
@@ -3309,12 +3308,7 @@ impl TileCacheInstance {
                     });
                 }
             }
-            PrimitiveInstanceKind::BackdropCapture { .. } => {}
-            PrimitiveInstanceKind::BackdropRender { pic_index, .. } => {
-                // Mark that we need the sub-graph this render depends on so that
-                // we don't skip it during the prepare pass
-                scratch.required_sub_graphs.insert(pic_index);
-
+            PrimitiveInstanceKind::Backdrop { .. } => {
                 // If this is a sub-graph, register the bounds on any affected tiles
                 // so we know how much to expand the content tile by.
 
@@ -3988,8 +3982,6 @@ pub enum PictureCompositeMode {
     },
     /// Apply an SVG filter
     SvgFilter(Vec<FilterPrimitive>, Vec<SFilterData>),
-    /// A surface that is used as an input to another primitive
-    IntermediateSurface,
 }
 
 impl PictureCompositeMode {
@@ -4400,8 +4392,10 @@ bitflags! {
         /// This picture establishes a sub-graph, which affects how SurfaceBuilder will
         /// set up dependencies in the render task graph
         const IS_SUB_GRAPH = 1 << 1;
+        /// This picture wraps a sub-graph, but is not the resolve source itself
+        const WRAPS_SUB_GRAPH = 1 << 2;
         /// If set, this picture should not apply snapping via changing the raster root
-        const DISABLE_SNAPPING = 1 << 2;
+        const DISABLE_SNAPPING = 1 << 3;
     }
 }
 
@@ -4494,7 +4488,6 @@ impl PicturePrimitive {
             Some(RasterConfig { composite_mode: PictureCompositeMode::ComponentTransferFilter(..), .. }) |
             Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) |
             Some(RasterConfig { composite_mode: PictureCompositeMode::SvgFilter(..), .. }) |
-            Some(RasterConfig { composite_mode: PictureCompositeMode::IntermediateSurface, .. }) |
             None => {
                 false
             }
@@ -5138,6 +5131,7 @@ impl PicturePrimitive {
                 frame_state.surface_builder.push_surface(
                     surface_index,
                     false,
+                    false,
                     surface_local_dirty_rect,
                     descriptor,
                     frame_state.surfaces,
@@ -5530,41 +5524,6 @@ impl PicturePrimitive {
                             surface_rects.clipped_local,
                         );
                     }
-                    PictureCompositeMode::IntermediateSurface => {
-                        if !scratch.required_sub_graphs.contains(&pic_index) {
-                            return None;
-                        }
-
-                        // TODO(gw): Remove all the mostly duplicated code in each of these
-                        //           match cases (they used to be quite different).
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-
-                        let render_task_id = frame_state.rg_builder.add().init(
-                            RenderTask::new_dynamic(
-                                surface_rects.task_size,
-                                RenderTaskKind::new_picture(
-                                    surface_rects.task_size,
-                                    surface_rects.needs_scissor_rect,
-                                    surface_rects.clipped.min,
-                                    surface_spatial_node_index,
-                                    raster_spatial_node_index,
-                                    device_pixel_scale,
-                                    None,
-                                    None,
-                                    None,
-                                    cmd_buffer_index,
-                                    can_use_shared_surface,
-                                )
-                            ).with_uv_rect_kind(surface_rects.uv_rect_kind)
-                        );
-
-                        primary_render_task_id = render_task_id;
-
-                        surface_descriptor = SurfaceDescriptor::new_simple(
-                            render_task_id,
-                            surface_rects.clipped_local,
-                        );
-                    }
                     PictureCompositeMode::SvgFilter(ref primitives, ref filter_datas) => {
                         let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
 
@@ -5608,10 +5567,12 @@ impl PicturePrimitive {
                 }
 
                 let is_sub_graph = self.flags.contains(PictureFlags::IS_SUB_GRAPH);
+                let wraps_sub_graph = self.flags.contains(PictureFlags::WRAPS_SUB_GRAPH);
 
                 frame_state.surface_builder.push_surface(
                     raster_config.surface_index,
                     is_sub_graph,
+                    wraps_sub_graph,
                     surface_rects.clipped_local,
                     surface_descriptor,
                     frame_state.surfaces,
@@ -5650,7 +5611,6 @@ impl PicturePrimitive {
                     PictureCompositeMode::ComponentTransferFilter(..) |
                     PictureCompositeMode::Filter(..) |
                     PictureCompositeMode::MixBlend(..) |
-                    PictureCompositeMode::IntermediateSurface |
                     PictureCompositeMode::SvgFilter(..) => {
                         // TODO(gw): We can take advantage of the same logic that
                         //           exists in the opaque rect detection for tile
@@ -6251,7 +6211,6 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::MixBlend(..) |
             PictureCompositeMode::Blit(_) |
-            PictureCompositeMode::IntermediateSurface |
             PictureCompositeMode::SvgFilter(..) => {}
         }
 
@@ -6972,7 +6931,7 @@ fn get_relative_scale_offset(
     scale_offset
 }
 
-pub fn calculate_screen_uv(
+fn calculate_screen_uv(
     p: DevicePoint,
     clipped: DeviceRect,
 ) -> DeviceHomogeneousVector {
