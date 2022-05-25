@@ -92,6 +92,8 @@ add_task(async function() {
     LEARN_MORE_URI,
     `Clicking the provided link opens ${response.link}`
   );
+
+  gIdentityHandler.enableMixedContentProtectionNoReload();
 });
 
 function pushPrefEnv() {
