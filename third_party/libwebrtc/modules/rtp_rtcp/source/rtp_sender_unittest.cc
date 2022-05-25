@@ -93,10 +93,6 @@ using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::StrictMock;
 
-uint64_t ConvertMsToAbsSendTime(int64_t time_ms) {
-  return (((time_ms << 18) + 500) / 1000) & 0x00ffffff;
-}
-
 class LoopbackTransportTest : public webrtc::Transport {
  public:
   LoopbackTransportTest() : total_bytes_sent_(0) {
@@ -544,109 +540,37 @@ TEST_P(RtpSenderTest, PaddingAlwaysAllowedOnAudio) {
   EXPECT_EQ(kMinPaddingSize, GenerateAndSendPadding(kMinPaddingSize - 5));
 }
 
-TEST_P(RtpSenderTest, TrafficSmoothingWithExtensions) {
-  EXPECT_CALL(mock_rtc_event_log_,
-              LogProxy(SameRtcEventTypeAs(RtcEvent::Type::RtpPacketOutgoing)));
+TEST_P(RtpSenderTest, SendToNetworkForwardsPacketsToPacer) {
+  auto packet = BuildRtpPacket(kPayload, kMarkerBit, kTimestamp, 0);
+  int64_t now_ms = clock_->TimeInMilliseconds();
 
-  rtp_sender_context_->packet_history_.SetStorePacketsStatus(
-      RtpPacketHistory::StorageMode::kStoreAndCull, 10);
-  EXPECT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
-      TransmissionOffset::kUri, kTransmissionTimeOffsetExtensionId));
-  EXPECT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
-      AbsoluteSendTime::kUri, kAbsoluteSendTimeExtensionId));
-  int64_t capture_time_ms = clock_->TimeInMilliseconds();
-  auto packet =
-      BuildRtpPacket(kPayload, kMarkerBit, kTimestamp, capture_time_ms);
-  size_t packet_size = packet->size();
-
-  const int kStoredTimeInMs = 100;
   EXPECT_CALL(
       mock_paced_sender_,
       EnqueuePackets(Contains(AllOf(
           Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
-          Pointee(Property(&RtpPacketToSend::SequenceNumber, kSeqNum))))));
-  packet->set_packet_type(RtpPacketMediaType::kVideo);
-  packet->set_allow_retransmission(true);
+          Pointee(Property(&RtpPacketToSend::SequenceNumber, kSeqNum)),
+          Pointee(Property(&RtpPacketToSend::capture_time_ms, now_ms))))));
   EXPECT_TRUE(
       rtp_sender()->SendToNetwork(std::make_unique<RtpPacketToSend>(*packet)));
-  EXPECT_EQ(0, transport_.packets_sent());
-  time_controller_.AdvanceTime(TimeDelta::Millis(kStoredTimeInMs));
-  rtp_sender_context_->InjectPacket(std::move(packet), PacedPacketInfo());
-
-  // Process send bucket. Packet should now be sent.
-  EXPECT_EQ(1, transport_.packets_sent());
-  EXPECT_EQ(packet_size, transport_.last_sent_packet().size());
-
-  webrtc::RTPHeader rtp_header;
-  transport_.last_sent_packet().GetHeader(&rtp_header);
-
-  // Verify transmission time offset.
-  EXPECT_EQ(kStoredTimeInMs * 90, rtp_header.extension.transmissionTimeOffset);
-  uint64_t expected_send_time =
-      ConvertMsToAbsSendTime(clock_->TimeInMilliseconds());
-  EXPECT_EQ(expected_send_time, rtp_header.extension.absoluteSendTime);
 }
 
-TEST_P(RtpSenderTest, TrafficSmoothingRetransmits) {
-  EXPECT_CALL(mock_rtc_event_log_,
-              LogProxy(SameRtcEventTypeAs(RtcEvent::Type::RtpPacketOutgoing)));
-
+TEST_P(RtpSenderTest, ReSendPacketForwardsPacketsToPacer) {
   rtp_sender_context_->packet_history_.SetStorePacketsStatus(
       RtpPacketHistory::StorageMode::kStoreAndCull, 10);
-  EXPECT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
-      TransmissionOffset::kUri, kTransmissionTimeOffsetExtensionId));
-  EXPECT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
-      AbsoluteSendTime::kUri, kAbsoluteSendTimeExtensionId));
-  int64_t capture_time_ms = clock_->TimeInMilliseconds();
-  auto packet =
-      BuildRtpPacket(kPayload, kMarkerBit, kTimestamp, capture_time_ms);
-  size_t packet_size = packet->size();
-
-  // Packet should be stored in a send bucket.
-  EXPECT_CALL(
-      mock_paced_sender_,
-      EnqueuePackets(Contains(AllOf(
-          Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
-          Pointee(Property(&RtpPacketToSend::SequenceNumber, kSeqNum))))));
-  packet->set_packet_type(RtpPacketMediaType::kVideo);
+  int64_t now_ms = clock_->TimeInMilliseconds();
+  auto packet = BuildRtpPacket(kPayload, kMarkerBit, kTimestamp, now_ms);
+  uint16_t seq_no = packet->SequenceNumber();
   packet->set_allow_retransmission(true);
-  EXPECT_TRUE(
-      rtp_sender()->SendToNetwork(std::make_unique<RtpPacketToSend>(*packet)));
-  // Immediately process send bucket and send packet.
-  rtp_sender_context_->InjectPacket(std::make_unique<RtpPacketToSend>(*packet),
-                                    PacedPacketInfo());
+  rtp_sender_context_->packet_history_.PutRtpPacket(std::move(packet), now_ms);
 
-  EXPECT_EQ(1, transport_.packets_sent());
-
-  // Retransmit packet.
-  const int kStoredTimeInMs = 100;
-  time_controller_.AdvanceTime(TimeDelta::Millis(kStoredTimeInMs));
-
-  EXPECT_CALL(mock_rtc_event_log_,
-              LogProxy(SameRtcEventTypeAs(RtcEvent::Type::RtpPacketOutgoing)));
-  packet->set_packet_type(RtpPacketMediaType::kRetransmission);
-  packet->set_retransmitted_sequence_number(kSeqNum);
-  EXPECT_CALL(
-      mock_paced_sender_,
-      EnqueuePackets(Contains(AllOf(
-          Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
-          Pointee(Property(&RtpPacketToSend::SequenceNumber, kSeqNum))))));
-  EXPECT_EQ(static_cast<int>(packet_size), rtp_sender()->ReSendPacket(kSeqNum));
-  EXPECT_EQ(1, transport_.packets_sent());
-  rtp_sender_context_->InjectPacket(std::move(packet), PacedPacketInfo());
-
-  // Process send bucket. Packet should now be sent.
-  EXPECT_EQ(2, transport_.packets_sent());
-  EXPECT_EQ(packet_size, transport_.last_sent_packet().size());
-
-  webrtc::RTPHeader rtp_header;
-  transport_.last_sent_packet().GetHeader(&rtp_header);
-
-  // Verify transmission time offset.
-  EXPECT_EQ(kStoredTimeInMs * 90, rtp_header.extension.transmissionTimeOffset);
-  uint64_t expected_send_time =
-      ConvertMsToAbsSendTime(clock_->TimeInMilliseconds());
-  EXPECT_EQ(expected_send_time, rtp_header.extension.absoluteSendTime);
+  EXPECT_CALL(mock_paced_sender_,
+              EnqueuePackets(Contains(AllOf(
+                  Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
+                  Pointee(Property(&RtpPacketToSend::SequenceNumber, kSeqNum)),
+                  Pointee(Property(&RtpPacketToSend::capture_time_ms, now_ms)),
+                  Pointee(Property(&RtpPacketToSend::packet_type,
+                                   RtpPacketMediaType::kRetransmission))))));
+  EXPECT_TRUE(rtp_sender()->ReSendPacket(seq_no));
 }
 
 // This test sends 1 regular video packet, then 4 padding packets, and then
