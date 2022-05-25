@@ -518,6 +518,10 @@ void VideoReceiveStream::OnFrame(const VideoFrame& video_frame) {
   int64_t video_playout_ntp_ms;
   int64_t sync_offset_ms;
   double estimated_freq_khz;
+
+  // TODO(bugs.webrtc.org/10739): we should set local capture clock offset for
+  // |video_frame.packet_infos|. But VideoFrame is const qualified here.
+
   // TODO(tommi): GetStreamSyncOffsetInMs grabs three locks.  One inside the
   // function itself, another in GetChannel() and a third in
   // GetPlayoutTimestamp.  Seems excessive.  Anyhow, I'm assuming the function
