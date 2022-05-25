@@ -646,16 +646,7 @@ struct PipeToReadRequest : public ReadRequest {
   virtual ~PipeToReadRequest() = default;
 };
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(PipeToReadRequest)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PipeToReadRequest, ReadRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPipeToPump)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PipeToReadRequest,
-                                                  ReadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPipeToPump)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(PipeToReadRequest, ReadRequest, mPipeToPump)
 
 NS_IMPL_ADDREF_INHERITED(PipeToReadRequest, ReadRequest)
 NS_IMPL_RELEASE_INHERITED(PipeToReadRequest, ReadRequest)

@@ -36,26 +36,10 @@ DOMRequest::DOMRequest(nsIGlobalObject* aGlobal)
 
 DOMRequest::~DOMRequest() { mozilla::DropJSObjects(this); }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMRequest)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMRequest,
-                                                  DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMRequest,
-                                                DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise)
-  tmp->mResult.setUndefined();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(DOMRequest, DOMEventTargetHelper)
-  // Don't need NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER because
-  // DOMEventTargetHelper does it for us.
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResult)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_WITH_JS_MEMBERS(DOMRequest,
+                                                   DOMEventTargetHelper,
+                                                   (mError, mPromise),
+                                                   (mResult))
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
