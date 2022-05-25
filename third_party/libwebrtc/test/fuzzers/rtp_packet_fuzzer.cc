@@ -9,6 +9,7 @@
  */
 
 #include <bitset>
+#include <vector>
 
 #include "absl/types/optional.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
@@ -76,6 +77,11 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
         uint8_t audio_level;
         packet.GetExtension<AudioLevel>(&voice_activity, &audio_level);
         break;
+      case kRtpExtensionCsrcAudioLevel: {
+        std::vector<uint8_t> audio_levels;
+        packet.GetExtension<CsrcAudioLevel>(&audio_levels);
+        break;
+      }
       case kRtpExtensionAbsoluteSendTime:
         uint32_t sendtime;
         packet.GetExtension<AbsoluteSendTime>(&sendtime);

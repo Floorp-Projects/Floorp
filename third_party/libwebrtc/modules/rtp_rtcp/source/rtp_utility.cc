@@ -377,6 +377,10 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           header->extension.hasTransmissionTimeOffset = true;
           break;
         }
+        case kRtpExtensionCsrcAudioLevel: {
+          RTC_LOG(LS_WARNING) << "Csrc audio level extension not supported";
+          return;
+        }
         case kRtpExtensionAudioLevel: {
           if (len != 0) {
             RTC_LOG(LS_WARNING) << "Incorrect audio level len: " << len;

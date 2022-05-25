@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 #include <string>
+#include <vector>
 
 #include "api/array_view.h"
 #include "api/rtp_headers.h"
@@ -75,6 +76,20 @@ class AudioLevel {
   static bool Write(rtc::ArrayView<uint8_t> data,
                     bool voice_activity,
                     uint8_t audio_level);
+};
+
+class CsrcAudioLevel {
+ public:
+  static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
+  static constexpr uint8_t kMaxValueSizeBytes = 15;
+  static constexpr const char kUri[] =
+      "urn:ietf:params:rtp-hdrext:csrc-audio-level";
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data,
+                    std::vector<uint8_t>* csrc_audio_levels);
+  static size_t ValueSize(rtc::ArrayView<const uint8_t> csrc_audio_levels);
+  static bool Write(rtc::ArrayView<uint8_t> data,
+                    rtc::ArrayView<const uint8_t> csrc_audio_levels);
 };
 
 class TransmissionOffset {

@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include <cmath>
+#include <cstdint>
 #include <limits>
 
 #include "modules/rtp_rtcp/include/rtp_cvo.h"
@@ -183,6 +184,60 @@ bool AudioLevel::Write(rtc::ArrayView<uint8_t> data,
   RTC_DCHECK_EQ(data.size(), 1);
   RTC_CHECK_LE(audio_level, 0x7f);
   data[0] = (voice_activity ? 0x80 : 0x00) | audio_level;
+  return true;
+}
+
+// An RTP Header Extension for Mixer-to-Client Audio Level Indication
+//
+// https://tools.ietf.org/html/rfc6465
+//
+// The form of the audio level extension block:
+//
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |  ID   | len=2 |0|   level 1   |0|   level 2   |0|   level 3   |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// Sample Audio Level Encoding Using the One-Byte Header Format
+//
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |      ID       |     len=3     |0|   level 1   |0|   level 2   |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |0|   level 3   |    0 (pad)    |               ...             |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// Sample Audio Level Encoding Using the Two-Byte Header Format
+constexpr RTPExtensionType CsrcAudioLevel::kId;
+constexpr uint8_t CsrcAudioLevel::kMaxValueSizeBytes;
+constexpr const char CsrcAudioLevel::kUri[];
+
+bool CsrcAudioLevel::Parse(rtc::ArrayView<const uint8_t> data,
+                           std::vector<uint8_t>* csrc_audio_levels) {
+  if (data.size() > kRtpCsrcSize) {
+    return false;
+  }
+  csrc_audio_levels->resize(data.size());
+  for (size_t i = 0; i < data.size(); i++) {
+    (*csrc_audio_levels)[i] = data[i] & 0x7F;
+  }
+  return true;
+}
+
+size_t CsrcAudioLevel::ValueSize(
+    rtc::ArrayView<const uint8_t> csrc_audio_levels) {
+  return csrc_audio_levels.size();
+}
+
+bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
+                           rtc::ArrayView<const uint8_t> csrc_audio_levels) {
+  RTC_CHECK_LE(csrc_audio_levels.size(), kRtpCsrcSize);
+  if (csrc_audio_levels.size() != data.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < csrc_audio_levels.size(); i++) {
+    data[i] = csrc_audio_levels[i] & 0x7F;
+  }
   return true;
 }
 
