@@ -42,6 +42,7 @@ constexpr uint32_t kSsrc = 725242;
 constexpr uint32_t kRtxSsrc = 12345;
 enum : int {
   kTransportSequenceNumberExtensionId = 1,
+  kVideoTimingExtensionExtensionId,
 };
 
 struct TestConfig {
@@ -327,6 +328,52 @@ TEST_P(RtpSenderEgressTest, OnSendSideDelayUpdated) {
   time_controller_.AdvanceTime(TimeDelta::Millis(1));
   sender->SendPacket(BuildRtpPacket(/*marker=*/true, capture_time_ms).get(),
                      PacedPacketInfo());
+}
+
+TEST_P(RtpSenderEgressTest, WritesPacerExitToTimingExtension) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+  header_extensions_.RegisterByUri(kVideoTimingExtensionExtensionId,
+                                   VideoTimingExtension::kUri);
+
+  std::unique_ptr<RtpPacketToSend> packet = BuildRtpPacket();
+  packet->SetExtension<VideoTimingExtension>(VideoSendTiming{});
+
+  const int kStoredTimeInMs = 100;
+  time_controller_.AdvanceTime(TimeDelta::Millis(kStoredTimeInMs));
+  sender->SendPacket(packet.get(), PacedPacketInfo());
+  ASSERT_TRUE(transport_.last_packet().has_value());
+
+  VideoSendTiming video_timing;
+  EXPECT_TRUE(
+      transport_.last_packet()->packet.GetExtension<VideoTimingExtension>(
+          &video_timing));
+  EXPECT_EQ(video_timing.pacer_exit_delta_ms, kStoredTimeInMs);
+}
+
+TEST_P(RtpSenderEgressTest, WritesNetwork2ToTimingExtension) {
+  RtpRtcpInterface::Configuration rtp_config = DefaultConfig();
+  rtp_config.populate_network2_timestamp = true;
+  auto sender = std::make_unique<RtpSenderEgress>(rtp_config, &packet_history_);
+  header_extensions_.RegisterByUri(kVideoTimingExtensionExtensionId,
+                                   VideoTimingExtension::kUri);
+
+  const uint16_t kPacerExitMs = 1234u;
+  std::unique_ptr<RtpPacketToSend> packet = BuildRtpPacket();
+  VideoSendTiming send_timing = {};
+  send_timing.pacer_exit_delta_ms = kPacerExitMs;
+  packet->SetExtension<VideoTimingExtension>(send_timing);
+
+  const int kStoredTimeInMs = 100;
+  time_controller_.AdvanceTime(TimeDelta::Millis(kStoredTimeInMs));
+  sender->SendPacket(packet.get(), PacedPacketInfo());
+  ASSERT_TRUE(transport_.last_packet().has_value());
+
+  VideoSendTiming video_timing;
+  EXPECT_TRUE(
+      transport_.last_packet()->packet.GetExtension<VideoTimingExtension>(
+          &video_timing));
+  EXPECT_EQ(video_timing.network2_timestamp_delta_ms, kStoredTimeInMs);
+  EXPECT_EQ(video_timing.pacer_exit_delta_ms, kPacerExitMs);
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
