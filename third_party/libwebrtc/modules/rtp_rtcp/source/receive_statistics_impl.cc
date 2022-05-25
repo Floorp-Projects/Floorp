@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "modules/rtp_rtcp/source/time_util.h"
@@ -47,6 +48,7 @@ StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc,
                         RateStatistics::kBpsScale),
       max_reordering_threshold_(max_reordering_threshold),
       enable_retransmit_detection_(false),
+      cumulative_loss_is_capped_(false),
       jitter_q4_(0),
       cumulative_loss_(0),
       cumulative_loss_rtcp_offset_(0),
@@ -189,22 +191,20 @@ RtpReceiveStats StreamStatisticianImpl::GetStats() const {
   return stats;
 }
 
-bool StreamStatisticianImpl::GetActiveStatisticsAndReset(
-    RtcpStatistics* statistics) {
-  if (clock_->TimeInMilliseconds() - last_receive_time_ms_ >=
-      kStatisticsTimeoutMs) {
+void StreamStatisticianImpl::MaybeAppendReportBlockAndReset(
+    std::vector<rtcp::ReportBlock>& report_blocks) {
+  int64_t now_ms = clock_->TimeInMilliseconds();
+  if (now_ms - last_receive_time_ms_ >= kStatisticsTimeoutMs) {
     // Not active.
-    return false;
+    return;
   }
   if (!ReceivedRtpPacket()) {
-    return false;
+    return;
   }
-  *statistics = CalculateRtcpStatistics();
-  return true;
-}
 
-RtcpStatistics StreamStatisticianImpl::CalculateRtcpStatistics() {
-  RtcpStatistics stats;
+  report_blocks.emplace_back();
+  rtcp::ReportBlock& stats = report_blocks.back();
+  stats.SetMediaSsrc(ssrc_);
   // Calculate fraction lost.
   int64_t exp_since_last = received_seq_max_ - last_report_seq_max_;
   RTC_DCHECK_GE(exp_since_last, 0);
@@ -212,37 +212,39 @@ RtcpStatistics StreamStatisticianImpl::CalculateRtcpStatistics() {
   int32_t lost_since_last = cumulative_loss_ - last_report_cumulative_loss_;
   if (exp_since_last > 0 && lost_since_last > 0) {
     // Scale 0 to 255, where 255 is 100% loss.
-    stats.fraction_lost =
-        static_cast<uint8_t>(255 * lost_since_last / exp_since_last);
-  } else {
-    stats.fraction_lost = 0;
+    stats.SetFractionLost(255 * lost_since_last / exp_since_last);
   }
 
-  // TODO(danilchap): Ensure |stats.packets_lost| is clamped to fit in a signed
-  // 24-bit value.
-  stats.packets_lost = cumulative_loss_ + cumulative_loss_rtcp_offset_;
-  if (stats.packets_lost < 0) {
+  int packets_lost = cumulative_loss_ + cumulative_loss_rtcp_offset_;
+  if (packets_lost < 0) {
     // Clamp to zero. Work around to accomodate for senders that misbehave with
     // negative cumulative loss.
-    stats.packets_lost = 0;
+    packets_lost = 0;
     cumulative_loss_rtcp_offset_ = -cumulative_loss_;
   }
-  stats.extended_highest_sequence_number =
-      static_cast<uint32_t>(received_seq_max_);
+  if (packets_lost > 0x7fffff) {
+    // Packets lost is a 24 bit signed field, and thus should be clamped, as
+    // described in https://datatracker.ietf.org/doc/html/rfc3550#appendix-A.3
+    if (!cumulative_loss_is_capped_) {
+      cumulative_loss_is_capped_ = true;
+      RTC_LOG(LS_WARNING) << "Cumulative loss reached maximum value for ssrc "
+                          << ssrc_;
+    }
+    packets_lost = 0x7fffff;
+  }
+  stats.SetCumulativeLost(packets_lost);
+  stats.SetExtHighestSeqNum(received_seq_max_);
   // Note: internal jitter value is in Q4 and needs to be scaled by 1/16.
-  stats.jitter = jitter_q4_ >> 4;
+  stats.SetJitter(jitter_q4_ >> 4);
 
   // Only for report blocks in RTCP SR and RR.
   last_report_cumulative_loss_ = cumulative_loss_;
   last_report_seq_max_ = received_seq_max_;
-  BWE_TEST_LOGGING_PLOT_WITH_SSRC(1, "cumulative_loss_pkts",
-                                  clock_->TimeInMilliseconds(),
+  BWE_TEST_LOGGING_PLOT_WITH_SSRC(1, "cumulative_loss_pkts", now_ms,
                                   cumulative_loss_, ssrc_);
-  BWE_TEST_LOGGING_PLOT_WITH_SSRC(
-      1, "received_seq_max_pkts", clock_->TimeInMilliseconds(),
-      (received_seq_max_ - received_seq_first_), ssrc_);
-
-  return stats;
+  BWE_TEST_LOGGING_PLOT_WITH_SSRC(1, "received_seq_max_pkts", now_ms,
+                                  (received_seq_max_ - received_seq_first_),
+                                  ssrc_);
 }
 
 absl::optional<int> StreamStatisticianImpl::GetFractionLostInPercent() const {
@@ -382,23 +384,7 @@ std::vector<rtcp::ReportBlock> ReceiveStatisticsImpl::RtcpReportBlocks(
     const uint32_t media_ssrc = all_ssrcs_[ssrc_idx];
     auto statistician_it = statisticians_.find(media_ssrc);
     RTC_DCHECK(statistician_it != statisticians_.end());
-
-    // Do we have receive statistics to send?
-    RtcpStatistics stats;
-    if (!statistician_it->second->GetActiveStatisticsAndReset(&stats))
-      continue;
-
-    result.emplace_back();
-    rtcp::ReportBlock& block = result.back();
-    block.SetMediaSsrc(media_ssrc);
-    block.SetFractionLost(stats.fraction_lost);
-    if (!block.SetCumulativeLost(stats.packets_lost)) {
-      RTC_LOG(LS_WARNING) << "Cumulative lost is oversized.";
-      result.pop_back();
-      continue;
-    }
-    block.SetExtHighestSeqNum(stats.extended_highest_sequence_number);
-    block.SetJitter(stats.jitter);
+    statistician_it->second->MaybeAppendReportBlockAndReset(result);
   }
   last_returned_ssrc_idx_ = ssrc_idx;
   return result;

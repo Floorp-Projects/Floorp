@@ -21,6 +21,7 @@
 #include "absl/types/optional.h"
 #include "modules/include/module_common_types_public.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -31,7 +32,8 @@ namespace webrtc {
 class StreamStatisticianImplInterface : public StreamStatistician {
  public:
   virtual ~StreamStatisticianImplInterface() = default;
-  virtual bool GetActiveStatisticsAndReset(RtcpStatistics* statistics) = 0;
+  virtual void MaybeAppendReportBlockAndReset(
+      std::vector<rtcp::ReportBlock>& report_blocks) = 0;
   virtual void SetMaxReorderingThreshold(int max_reordering_threshold) = 0;
   virtual void EnableRetransmitDetection(bool enable) = 0;
   virtual void UpdateCounters(const RtpPacketReceived& packet) = 0;
@@ -52,7 +54,8 @@ class StreamStatisticianImpl : public StreamStatisticianImplInterface {
   uint32_t BitrateReceived() const override;
 
   // Implements StreamStatisticianImplInterface
-  bool GetActiveStatisticsAndReset(RtcpStatistics* statistics) override;
+  void MaybeAppendReportBlockAndReset(
+      std::vector<rtcp::ReportBlock>& report_blocks) override;
   void SetMaxReorderingThreshold(int max_reordering_threshold) override;
   void EnableRetransmitDetection(bool enable) override;
   // Updates StreamStatistician for incoming packets.
@@ -61,7 +64,6 @@ class StreamStatisticianImpl : public StreamStatisticianImplInterface {
  private:
   bool IsRetransmitOfOldPacket(const RtpPacketReceived& packet,
                                int64_t now_ms) const;
-  RtcpStatistics CalculateRtcpStatistics();
   void UpdateJitter(const RtpPacketReceived& packet, int64_t receive_time_ms);
   // Updates StreamStatistician for out of order packets.
   // Returns true if packet considered to be out of order.
@@ -79,6 +81,7 @@ class StreamStatisticianImpl : public StreamStatisticianImplInterface {
   // In number of packets or sequence numbers.
   int max_reordering_threshold_;
   bool enable_retransmit_detection_;
+  bool cumulative_loss_is_capped_;
 
   // Stats on received RTP packets.
   uint32_t jitter_q4_;
@@ -132,9 +135,10 @@ class StreamStatisticianLocked : public StreamStatisticianImplInterface {
     MutexLock lock(&stream_lock_);
     return impl_.BitrateReceived();
   }
-  bool GetActiveStatisticsAndReset(RtcpStatistics* statistics) override {
+  void MaybeAppendReportBlockAndReset(
+      std::vector<rtcp::ReportBlock>& report_blocks) override {
     MutexLock lock(&stream_lock_);
-    return impl_.GetActiveStatisticsAndReset(statistics);
+    impl_.MaybeAppendReportBlockAndReset(report_blocks);
   }
   void SetMaxReorderingThreshold(int max_reordering_threshold) override {
     MutexLock lock(&stream_lock_);
