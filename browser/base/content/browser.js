@@ -10143,7 +10143,7 @@ if (Services.prefs.getBoolPref("floorp.optimized.msbutton.ope", false)){
   var Tag = document.createElement('style');
       
       Tag.innerText = `
-      @import url(chrome://browser/skin/browser/optioncss/msbutton.css)
+      @import url(chrome://browser/skin/optioncss/msbutton.css)
       `
 
   document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);  
@@ -10156,7 +10156,7 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {
   var Tag = document.createElement('style');
     
     Tag.innerText = `
-    @import url(chrome://browser/skin/browser/optioncss/bookmarkbar_autohide.css)
+    @import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)
     `
 
 document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
@@ -10169,7 +10169,7 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
   var Tag = document.createElement('style');
     
     Tag.innerText = `  
-    @import url(chrome://browser/skin/browser/optioncss/move_bookmarkbar.css)
+    @import url(chrome://browser/skin/optioncss/move_bookmarkbar.css)
     `
 
 document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
@@ -10183,7 +10183,7 @@ if (Services.prefs.getBoolPref("floorp.search.top.mode", false)) {
   var Tag = document.createElement('style');
     
     Tag.innerText = `  
-    @import url(chrome://browser/skin/browser/optioncss/move_page_inside_searchbar.css)
+    @import url(chrome://browser/skin/optioncss/move_page_inside_searchbar.css)
      ` 
 
      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
@@ -10195,7 +10195,7 @@ if (Services.prefs.getBoolPref("floorp.legacy.menu.mode", false)) {
   var Tag = document.createElement('style');
     
     Tag.innerText = `
-    @import url(chrome://browser/skin/browser/optioncss/legacy_firefox_menu_mode.css)
+    @import url(chrome://browser/skin/optioncss/legacy_firefox_menu_mode.css)
     `
 
 document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
