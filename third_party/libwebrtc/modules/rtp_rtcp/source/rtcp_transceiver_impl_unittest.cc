@@ -560,6 +560,7 @@ TEST(RtcpTransceiverImplTest, ReceiverReportUsesReceiveStatistics) {
       .WillRepeatedly(Return(report_blocks));
   SimulatedClock clock(0);
 
+  SimulatedClock clock(0);
   RtcpTransceiverConfig config;
   config.clock = &clock;
   config.feedback_ssrc = kSenderSsrc;
@@ -786,6 +787,7 @@ TEST(RtcpTransceiverImplTest,
       .WillOnce(Return(statistics_report_blocks));
   SimulatedClock clock(0);
 
+  SimulatedClock clock(0);
   RtcpTransceiverConfig config;
   config.clock = &clock;
   config.schedule_periodic_compound_packets = false;
@@ -833,6 +835,7 @@ TEST(RtcpTransceiverImplTest,
       .WillOnce(Return(statistics_report_blocks));
   SimulatedClock clock(0);
 
+  SimulatedClock clock(0);
   RtcpTransceiverConfig config;
   config.clock = &clock;
   config.schedule_periodic_compound_packets = false;
