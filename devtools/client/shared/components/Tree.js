@@ -483,7 +483,7 @@ class Tree extends Component {
       style: PropTypes.object,
       // Prevents blur when Tree loses focus
       preventBlur: PropTypes.bool,
-      initiallyExpanded: PropTypes.bool,
+      initiallyExpanded: PropTypes.func,
     };
   }
 
