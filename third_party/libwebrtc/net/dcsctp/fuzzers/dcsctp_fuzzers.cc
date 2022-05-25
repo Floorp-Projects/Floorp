@@ -35,6 +35,8 @@ namespace dcsctp {
 namespace dcsctp_fuzzers {
 namespace {
 static constexpr int kRandomValue = FuzzerCallbacks::kRandomValue;
+static constexpr size_t kMinInputLength = 5;
+static constexpr size_t kMaxInputLength = 1024;
 
 // A starting state for the socket, when fuzzing.
 enum class StartingState : int {
@@ -396,7 +398,7 @@ std::vector<uint8_t> GeneratePacket(FuzzState& state) {
 void FuzzSocket(DcSctpSocketInterface& socket,
                 FuzzerCallbacks& cb,
                 rtc::ArrayView<const uint8_t> data) {
-  if (data.size() < 5) {
+  if (data.size() < kMinInputLength || data.size() > kMaxInputLength) {
     return;
   }
   if (data[0] >= static_cast<int>(StartingState::kNumberOfStates)) {
