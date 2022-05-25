@@ -125,6 +125,8 @@
 // PortAllocator in the PeerConnection api. This will let us remove nogncheck.
 #include "p2p/base/port.h"            // nogncheck
 #include "p2p/base/port_allocator.h"  // nogncheck
+// TODO(https://crbug.com/1212611) Remove once includes fixed in nearby.
+#include "rtc_base/event.h"
 #include "rtc_base/network.h"
 #include "rtc_base/network_constants.h"
 #include "rtc_base/network_monitor_factory.h"

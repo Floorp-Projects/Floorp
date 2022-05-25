@@ -130,6 +130,8 @@ specific_include_rules = {
     "+media/base/media_engine.h",
     "+p2p/base/port.h",
     "+p2p/base/port_allocator.h",
+    # TODO(https://crbug.com/1212611) Remove once includes fixed in nearby.
+    "+rtc_base/event.h",
     "+rtc_base/network.h",
     "+rtc_base/network_constants.h",
     "+rtc_base/network_monitor_factory.h",
