@@ -409,6 +409,8 @@
     <string name="customize_toggle_recently_visited">Recently visited</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Sponsored stories</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Wallpapers</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->

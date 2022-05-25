@@ -150,9 +150,15 @@ internal object AppStoreReducer {
             pocketStories = emptyList(),
             pocketSponsoredStories = emptyList()
         )
-        is AppAction.PocketSponsoredStoriesChange -> state.copy(
-            pocketSponsoredStories = action.sponsoredStories
-        )
+        is AppAction.PocketSponsoredStoriesChange -> {
+            val updatedStoriesState = state.copy(
+                pocketSponsoredStories = action.sponsoredStories,
+            )
+
+            updatedStoriesState.copy(
+                pocketStories = updatedStoriesState.getFilteredStories()
+            )
+        }
         is AppAction.PocketStoriesShown -> {
             var updatedCategories = state.pocketStoriesCategories
             action.storiesShown.filterIsInstance<PocketRecommendedStory>().forEach { shownStory ->

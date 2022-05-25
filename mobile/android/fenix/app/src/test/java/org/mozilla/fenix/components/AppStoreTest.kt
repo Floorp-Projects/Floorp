@@ -15,6 +15,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.pocket.PocketStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryCaps
 import org.junit.Assert.assertEquals
@@ -364,7 +365,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test updating the list of Pocket sponsored stories`() = runTest {
+    fun `Test updating the list of Pocket sponsored stories also updates the list of stories to show`() = runTest {
         val story1 = PocketSponsoredStory(
             id = 3,
             title = "title",
@@ -379,13 +380,20 @@ class AppStoreTest {
 
         appStore = AppStore(AppState())
 
-        appStore.dispatch(AppAction.PocketSponsoredStoriesChange(listOf(story1, story2)))
-            .join()
-        assertTrue(appStore.state.pocketSponsoredStories.containsAll(listOf(story1, story2)))
+        mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
+            val firstFilteredStories = listOf(mockk<PocketSponsoredStory>())
+            every { any<AppState>().getFilteredStories() } returns firstFilteredStories
+            appStore.dispatch(AppAction.PocketSponsoredStoriesChange(listOf(story1, story2))).join()
+            assertTrue(appStore.state.pocketSponsoredStories.containsAll(listOf(story1, story2)))
+            assertEquals(firstFilteredStories, appStore.state.pocketStories)
 
-        val updatedStories = listOf(story2.copy(title = "title3"))
-        appStore.dispatch(AppAction.PocketSponsoredStoriesChange(updatedStories)).join()
-        assertTrue(updatedStories.containsAll(appStore.state.pocketSponsoredStories))
+            val secondFilteredStories = firstFilteredStories + mockk<PocketRecommendedStory>()
+            every { any<AppState>().getFilteredStories() } returns secondFilteredStories
+            val updatedStories = listOf(story2.copy(title = "title3"))
+            appStore.dispatch(AppAction.PocketSponsoredStoriesChange(updatedStories)).join()
+            assertTrue(updatedStories.containsAll(appStore.state.pocketSponsoredStories))
+            assertEquals(secondFilteredStories, appStore.state.pocketStories)
+        }
     }
 
     @Test
