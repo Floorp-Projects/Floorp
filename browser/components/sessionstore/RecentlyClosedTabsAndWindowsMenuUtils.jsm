@@ -192,7 +192,8 @@ function createEntry(
 
   element.setAttribute("label", aMenuLabel);
   if (aClosedTab.image) {
-    PlacesUIUtils.setImage(aClosedTab, element);
+    const iconURL = PlacesUIUtils.getImageURL(aClosedTab);
+    element.setAttribute("image", iconURL);
   }
   if (!aIsWindowsFragment) {
     element.setAttribute("value", aIndex);
