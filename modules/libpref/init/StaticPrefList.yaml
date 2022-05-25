@@ -8934,7 +8934,6 @@
 # When it is set to true, then the utility process will take precedence over RDD
 # to perform audio decoding.
 # TODO: Android: Bug 1767930
-# TODO: OpenBSD: Bug 1769033
 - name: media.utility-process.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN)
@@ -8944,7 +8943,7 @@
 #elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
 #elif defined(XP_OPENBSD)
-  value: false
+  value: true
 #else
   value: false
 #endif
