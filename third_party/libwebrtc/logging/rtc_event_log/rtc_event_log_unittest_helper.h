@@ -260,38 +260,38 @@ class EventVerifier {
       const RtcEventRtcpPacketOutgoing& original_event,
       const LoggedRtcpPacketOutgoing& logged_event) const;
 
-  void VerifyLoggedSenderReport(int64_t log_time_ms,
+  void VerifyLoggedSenderReport(int64_t log_time_us,
                                 const rtcp::SenderReport& original_sr,
                                 const LoggedRtcpPacketSenderReport& logged_sr);
   void VerifyLoggedReceiverReport(
-      int64_t log_time_ms,
+      int64_t log_time_us,
       const rtcp::ReceiverReport& original_rr,
       const LoggedRtcpPacketReceiverReport& logged_rr);
   void VerifyLoggedExtendedReports(
-      int64_t log_time_ms,
+      int64_t log_time_us,
       const rtcp::ExtendedReports& original_xr,
       const LoggedRtcpPacketExtendedReports& logged_xr);
-  void VerifyLoggedFir(int64_t log_time_ms,
+  void VerifyLoggedFir(int64_t log_time_us,
                        const rtcp::Fir& original_fir,
                        const LoggedRtcpPacketFir& logged_fir);
-  void VerifyLoggedPli(int64_t log_time_ms,
+  void VerifyLoggedPli(int64_t log_time_us,
                        const rtcp::Pli& original_pli,
                        const LoggedRtcpPacketPli& logged_pli);
-  void VerifyLoggedBye(int64_t log_time_ms,
+  void VerifyLoggedBye(int64_t log_time_us,
                        const rtcp::Bye& original_bye,
                        const LoggedRtcpPacketBye& logged_bye);
-  void VerifyLoggedNack(int64_t log_time_ms,
+  void VerifyLoggedNack(int64_t log_time_us,
                         const rtcp::Nack& original_nack,
                         const LoggedRtcpPacketNack& logged_nack);
   void VerifyLoggedTransportFeedback(
-      int64_t log_time_ms,
+      int64_t log_time_us,
       const rtcp::TransportFeedback& original_transport_feedback,
       const LoggedRtcpPacketTransportFeedback& logged_transport_feedback);
-  void VerifyLoggedRemb(int64_t log_time_ms,
+  void VerifyLoggedRemb(int64_t log_time_us,
                         const rtcp::Remb& original_remb,
                         const LoggedRtcpPacketRemb& logged_remb);
   void VerifyLoggedLossNotification(
-      int64_t log_time_ms,
+      int64_t log_time_us,
       const rtcp::LossNotification& original_loss_notification,
       const LoggedRtcpPacketLossNotification& logged_loss_notification);
 

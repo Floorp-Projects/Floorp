@@ -37,19 +37,19 @@ namespace webrtc {
 // adding a vptr.
 
 struct LoggedRtpPacket {
-  LoggedRtpPacket(Timestamp timestamp,
+  LoggedRtpPacket(int64_t timestamp_us,
                   RTPHeader header,
                   size_t header_length,
                   size_t total_length)
-      : timestamp(timestamp),
+      : timestamp_us(timestamp_us),
         header(header),
         header_length(header_length),
         total_length(total_length) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp;
+  int64_t timestamp_us;
   // TODO(terelius): This allocates space for 15 CSRCs even if none are used.
   RTPHeader header;
   size_t header_length;
@@ -57,145 +57,145 @@ struct LoggedRtpPacket {
 };
 
 struct LoggedRtpPacketIncoming {
-  LoggedRtpPacketIncoming(Timestamp timestamp,
+  LoggedRtpPacketIncoming(int64_t timestamp_us,
                           RTPHeader header,
                           size_t header_length,
                           size_t total_length)
-      : rtp(timestamp, header, header_length, total_length) {}
-  int64_t log_time_us() const { return rtp.timestamp.us(); }
-  int64_t log_time_ms() const { return rtp.timestamp.ms(); }
+      : rtp(timestamp_us, header, header_length, total_length) {}
+  int64_t log_time_us() const { return rtp.timestamp_us; }
+  int64_t log_time_ms() const { return rtp.timestamp_us / 1000; }
 
   LoggedRtpPacket rtp;
 };
 
 struct LoggedRtpPacketOutgoing {
-  LoggedRtpPacketOutgoing(Timestamp timestamp,
+  LoggedRtpPacketOutgoing(int64_t timestamp_us,
                           RTPHeader header,
                           size_t header_length,
                           size_t total_length)
-      : rtp(timestamp, header, header_length, total_length) {}
-  int64_t log_time_us() const { return rtp.timestamp.us(); }
-  int64_t log_time_ms() const { return rtp.timestamp.ms(); }
+      : rtp(timestamp_us, header, header_length, total_length) {}
+  int64_t log_time_us() const { return rtp.timestamp_us; }
+  int64_t log_time_ms() const { return rtp.timestamp_us / 1000; }
 
   LoggedRtpPacket rtp;
 };
 
 struct LoggedRtcpPacket {
-  LoggedRtcpPacket(Timestamp timestamp, const std::vector<uint8_t>& packet);
-  LoggedRtcpPacket(Timestamp timestamp, const std::string& packet);
+  LoggedRtcpPacket(int64_t timestamp_us, const std::vector<uint8_t>& packet);
+  LoggedRtcpPacket(int64_t timestamp_us, const std::string& packet);
   LoggedRtcpPacket(const LoggedRtcpPacket&);
   ~LoggedRtcpPacket();
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp;
+  int64_t timestamp_us;
   std::vector<uint8_t> raw_data;
 };
 
 struct LoggedRtcpPacketIncoming {
-  LoggedRtcpPacketIncoming(Timestamp timestamp,
+  LoggedRtcpPacketIncoming(int64_t timestamp_us,
                            const std::vector<uint8_t>& packet)
-      : rtcp(timestamp, packet) {}
-  LoggedRtcpPacketIncoming(Timestamp timestamp, const std::string& packet)
-      : rtcp(timestamp, packet) {}
+      : rtcp(timestamp_us, packet) {}
+  LoggedRtcpPacketIncoming(uint64_t timestamp_us, const std::string& packet)
+      : rtcp(timestamp_us, packet) {}
 
-  int64_t log_time_us() const { return rtcp.timestamp.us(); }
-  int64_t log_time_ms() const { return rtcp.timestamp.ms(); }
+  int64_t log_time_us() const { return rtcp.timestamp_us; }
+  int64_t log_time_ms() const { return rtcp.timestamp_us / 1000; }
 
   LoggedRtcpPacket rtcp;
 };
 
 struct LoggedRtcpPacketOutgoing {
-  LoggedRtcpPacketOutgoing(Timestamp timestamp,
+  LoggedRtcpPacketOutgoing(int64_t timestamp_us,
                            const std::vector<uint8_t>& packet)
-      : rtcp(timestamp, packet) {}
-  LoggedRtcpPacketOutgoing(Timestamp timestamp, const std::string& packet)
-      : rtcp(timestamp, packet) {}
+      : rtcp(timestamp_us, packet) {}
+  LoggedRtcpPacketOutgoing(uint64_t timestamp_us, const std::string& packet)
+      : rtcp(timestamp_us, packet) {}
 
-  int64_t log_time_us() const { return rtcp.timestamp.us(); }
-  int64_t log_time_ms() const { return rtcp.timestamp.ms(); }
+  int64_t log_time_us() const { return rtcp.timestamp_us; }
+  int64_t log_time_ms() const { return rtcp.timestamp_us / 1000; }
 
   LoggedRtcpPacket rtcp;
 };
 
 struct LoggedRtcpPacketReceiverReport {
   LoggedRtcpPacketReceiverReport() = default;
-  LoggedRtcpPacketReceiverReport(Timestamp timestamp,
+  LoggedRtcpPacketReceiverReport(int64_t timestamp_us,
                                  const rtcp::ReceiverReport& rr)
-      : timestamp(timestamp), rr(rr) {}
+      : timestamp_us(timestamp_us), rr(rr) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::ReceiverReport rr;
 };
 
 struct LoggedRtcpPacketSenderReport {
   LoggedRtcpPacketSenderReport() = default;
-  LoggedRtcpPacketSenderReport(Timestamp timestamp,
+  LoggedRtcpPacketSenderReport(int64_t timestamp_us,
                                const rtcp::SenderReport& sr)
-      : timestamp(timestamp), sr(sr) {}
+      : timestamp_us(timestamp_us), sr(sr) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::SenderReport sr;
 };
 
 struct LoggedRtcpPacketExtendedReports {
   LoggedRtcpPacketExtendedReports() = default;
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::ExtendedReports xr;
 };
 
 struct LoggedRtcpPacketRemb {
   LoggedRtcpPacketRemb() = default;
-  LoggedRtcpPacketRemb(Timestamp timestamp, const rtcp::Remb& remb)
-      : timestamp(timestamp), remb(remb) {}
+  LoggedRtcpPacketRemb(int64_t timestamp_us, const rtcp::Remb& remb)
+      : timestamp_us(timestamp_us), remb(remb) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::Remb remb;
 };
 
 struct LoggedRtcpPacketNack {
   LoggedRtcpPacketNack() = default;
-  LoggedRtcpPacketNack(Timestamp timestamp, const rtcp::Nack& nack)
-      : timestamp(timestamp), nack(nack) {}
+  LoggedRtcpPacketNack(int64_t timestamp_us, const rtcp::Nack& nack)
+      : timestamp_us(timestamp_us), nack(nack) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::Nack nack;
 };
 
 struct LoggedRtcpPacketFir {
   LoggedRtcpPacketFir() = default;
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::Fir fir;
 };
 
 struct LoggedRtcpPacketPli {
   LoggedRtcpPacketPli() = default;
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::Pli pli;
 };
 
@@ -204,64 +204,64 @@ struct LoggedRtcpPacketTransportFeedback {
       : transport_feedback(/*include_timestamps=*/true, /*include_lost*/ true) {
   }
   LoggedRtcpPacketTransportFeedback(
-      Timestamp timestamp,
+      int64_t timestamp_us,
       const rtcp::TransportFeedback& transport_feedback)
-      : timestamp(timestamp), transport_feedback(transport_feedback) {}
+      : timestamp_us(timestamp_us), transport_feedback(transport_feedback) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::TransportFeedback transport_feedback;
 };
 
 struct LoggedRtcpPacketLossNotification {
   LoggedRtcpPacketLossNotification() = default;
   LoggedRtcpPacketLossNotification(
-      Timestamp timestamp,
+      int64_t timestamp_us,
       const rtcp::LossNotification& loss_notification)
-      : timestamp(timestamp), loss_notification(loss_notification) {}
+      : timestamp_us(timestamp_us), loss_notification(loss_notification) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::LossNotification loss_notification;
 };
 
 struct LoggedRtcpPacketBye {
   LoggedRtcpPacketBye() = default;
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtcp::Bye bye;
 };
 
 struct LoggedStartEvent {
-  explicit LoggedStartEvent(Timestamp timestamp)
-      : LoggedStartEvent(timestamp, timestamp) {}
+  explicit LoggedStartEvent(int64_t timestamp_us)
+      : LoggedStartEvent(timestamp_us, timestamp_us / 1000) {}
 
-  LoggedStartEvent(Timestamp timestamp, Timestamp utc_start_time)
-      : timestamp(timestamp), utc_start_time(utc_start_time) {}
+  LoggedStartEvent(int64_t timestamp_us, int64_t utc_start_time_ms)
+      : timestamp_us(timestamp_us), utc_start_time_ms(utc_start_time_ms) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp utc_time() const { return utc_start_time; }
+  Timestamp utc_time() const { return Timestamp::Millis(utc_start_time_ms); }
 
-  Timestamp timestamp;
-  Timestamp utc_start_time;
+  int64_t timestamp_us;
+  int64_t utc_start_time_ms;
 };
 
 struct LoggedStopEvent {
-  explicit LoggedStopEvent(Timestamp timestamp) : timestamp(timestamp) {}
+  explicit LoggedStopEvent(int64_t timestamp_us) : timestamp_us(timestamp_us) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp;
+  int64_t timestamp_us;
 };
 
 struct InferredRouteChangeEvent {
@@ -337,6 +337,9 @@ struct LoggedIceEvent {
   Timestamp log_time;
   LoggedIceEventType event_type;
 };
+
+
+
 
 
 }  // namespace webrtc

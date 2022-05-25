@@ -944,7 +944,7 @@ TEST_P(RtcEventLogCircularBufferTest, KeepsMostRecentEvents) {
   EXPECT_LT(probe_success_events.size(), kNumEvents);
 
   ASSERT_GT(probe_success_events.size(), 1u);
-  int64_t first_timestamp_ms = probe_success_events[0].timestamp.ms();
+  int64_t first_timestamp_us = probe_success_events[0].timestamp_us;
   uint32_t first_id = probe_success_events[0].id;
   int32_t first_bitrate_bps = probe_success_events[0].bitrate_bps;
   // We want to reset the time to what we used when generating the events, but
@@ -953,7 +953,7 @@ TEST_P(RtcEventLogCircularBufferTest, KeepsMostRecentEvents) {
   // destroyed before the new one is created, so we have to reset() first.
   fake_clock.reset();
   fake_clock = std::make_unique<rtc::ScopedFakeClock>();
-  fake_clock->SetTime(Timestamp::Millis(first_timestamp_ms));
+  fake_clock->SetTime(Timestamp::Micros(first_timestamp_us));
   for (size_t i = 1; i < probe_success_events.size(); i++) {
     fake_clock->AdvanceTime(TimeDelta::Millis(10));
     verifier_.VerifyLoggedBweProbeSuccessEvent(

@@ -16,7 +16,6 @@
 #include <memory>
 
 #include "api/rtc_event_log/rtc_event.h"
-#include "api/units/timestamp.h"
 
 namespace webrtc {
 
@@ -57,19 +56,19 @@ class RtcEventIceCandidatePair final : public RtcEvent {
 
 struct LoggedIceCandidatePairEvent {
   LoggedIceCandidatePairEvent() = default;
-  LoggedIceCandidatePairEvent(Timestamp timestamp,
+  LoggedIceCandidatePairEvent(int64_t timestamp_us,
                               IceCandidatePairEventType type,
                               uint32_t candidate_pair_id,
                               uint32_t transaction_id)
-      : timestamp(timestamp),
+      : timestamp_us(timestamp_us),
         type(type),
         candidate_pair_id(candidate_pair_id),
         transaction_id(transaction_id) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   IceCandidatePairEventType type;
   uint32_t candidate_pair_id;
   uint32_t transaction_id;
