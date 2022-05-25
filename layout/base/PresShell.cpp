@@ -6411,10 +6411,14 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
               (aFlags & PaintInternalFlags::PaintComposite)
                   ? WindowRenderer::END_DEFAULT
                   : WindowRenderer::END_NO_COMPOSITE)) {
+        frame->UpdatePaintCountForPaintedPresShells();
         return;
       }
     }
     frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
+  }
+  if (frame) {
+    frame->ClearPresShellsFromLastPaint();
   }
 
   nscolor bgcolor = ComputeBackstopColor(aViewToPaint);
