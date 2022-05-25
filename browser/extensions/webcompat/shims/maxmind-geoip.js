@@ -9,13 +9,56 @@
  *
  * Some sites rely on Maxmind's GeoIP library which gets blocked by ETP's
  * fingerprinter blocking. With the library window global not being defined
- * functionality may break or the site does not render at all. This shim adds a
- * dummy object which returns errors for any request to mitigate the breakage.
+ * functionality may break or the site does not render at all. This shim
+ * has it return the United States as the location for all users.
  */
 
 if (!window.geoip2) {
-  const callback = (_, onError) => {
-    onError("");
+  const continent = {
+    code: "NA",
+    geoname_id: 6255149,
+    names: {
+      de: "Nordamerika",
+      en: "North America",
+      es: "Norteamérica",
+      fr: "Amérique du Nord",
+      ja: "北アメリカ",
+      "pt-BR": "América do Norte",
+      ru: "Северная Америка",
+      "zh-CN": "北美洲",
+    },
+  };
+
+  const country = {
+    geoname_id: 6252001,
+    iso_code: "US",
+    names: {
+      de: "USA",
+      en: "United States",
+      es: "Estados Unidos",
+      fr: "États-Unis",
+      ja: "アメリカ合衆国",
+      "pt-BR": "Estados Unidos",
+      ru: "США",
+      "zh-CN": "美国",
+    },
+  };
+
+  const city = {
+    names: {
+      en: "",
+    },
+  };
+
+  const callback = onSuccess => {
+    requestAnimationFrame(() => {
+      onSuccess({
+        city,
+        continent,
+        country,
+        registered_country: country,
+      });
+    });
   };
 
   window.geoip2 = {
