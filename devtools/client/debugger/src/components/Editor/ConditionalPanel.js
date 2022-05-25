@@ -4,6 +4,7 @@
 
 import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import classNames from "classnames";
 import "./ConditionalPanel.css";
@@ -34,6 +35,19 @@ export class ConditionalPanel extends PureComponent {
   constructor() {
     super();
     this.cbPanel = null;
+  }
+
+  static get propTypes() {
+    return {
+      breakpoint: PropTypes.object,
+      closeConditionalPanel: PropTypes.func.isRequired,
+      cx: PropTypes.object.isRequired,
+      editor: PropTypes.object.isRequired,
+      location: PropTypes.any.isRequired,
+      log: PropTypes.bool.isRequired,
+      openConditionalPanel: PropTypes.func.isRequired,
+      setBreakpointOptions: PropTypes.func.isRequired,
+    };
   }
 
   keepFocusOnInput() {

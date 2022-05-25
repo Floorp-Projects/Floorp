@@ -4,10 +4,19 @@
 
 import { connect } from "../../utils/connect";
 import { Component } from "react";
+import PropTypes from "prop-types";
 import { getSelectedSource, getSelectedBreakableLines } from "../../selectors";
 import { fromEditorLine } from "../../utils/editor";
 
 class EmptyLines extends Component {
+  static get propTypes() {
+    return {
+      breakableLines: PropTypes.object.isRequired,
+      editor: PropTypes.object.isRequired,
+      selectedSource: PropTypes.object.isRequired,
+    };
+  }
+
   componentDidMount() {
     this.disableEmptyLines();
   }

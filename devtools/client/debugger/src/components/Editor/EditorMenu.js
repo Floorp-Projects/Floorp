@@ -3,6 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { Component } from "react";
+import PropTypes from "prop-types";
+
 import { connect } from "../../utils/connect";
 import { showMenu } from "../../context-menu/menu";
 
@@ -19,6 +21,13 @@ import {
 import { editorMenuItems, editorItemActions } from "./menus/editor";
 
 class EditorMenu extends Component {
+  static get propTypes() {
+    return {
+      clearContextMenu: PropTypes.func.isRequired,
+      contextMenu: PropTypes.object,
+    };
+  }
+
   componentWillUpdate(nextProps) {
     this.props.clearContextMenu();
     if (nextProps.contextMenu) {
