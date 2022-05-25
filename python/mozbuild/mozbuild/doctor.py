@@ -15,14 +15,17 @@ from typing import (
     Callable,
     List,
     Union,
+    Optional,
 )
 
 import attr
 import psutil
 import requests
 
+from pathlib import Path
 from packaging.version import Version
 
+import mozversioncontrol
 import mozpack.path as mozpath
 
 # Minimum recommended logical processors in system.
@@ -44,6 +47,18 @@ directory access by deferring Last Access Time modification on disk by up to an
 hour. Backup programs that rely on this feature may be affected.
 https://technet.microsoft.com/en-us/library/cc785435.aspx
 """
+
+COMPILED_LANGUAGE_FILE_EXTENSIONS = [
+    ".cc",
+    ".cxx",
+    ".c",
+    ".cpp",
+    ".h",
+    ".hpp",
+    ".rs",
+    ".rlib",
+    ".mk",
+]
 
 
 def get_mount_point(path: str) -> str:
@@ -485,6 +500,60 @@ def bad_locale_utf8(**kwargs) -> DoctorCheck:
                 "  export LANG=en_US.UTF-8",
             ],
         )
+
+
+@check
+def artifact_build(
+    topsrcdir: str, configure_args: Optional[List[str]], **kwargs
+) -> DoctorCheck:
+    """Check that if Artifact Builds are enabled, that no
+    source files that would not be compiled are changed"""
+
+    if configure_args is None or "--enable-artifact-builds" not in configure_args:
+        return DoctorCheck(
+            name="artifact_build",
+            status=CheckStatus.SKIPPED,
+            display_text=[
+                "Artifact Builds are not enabled. No need to proceed checking for changed files."
+            ],
+        )
+
+    repo = mozversioncontrol.get_repository_object(topsrcdir)
+    changed_files = [
+        Path(file)
+        for file in set(repo.get_outgoing_files()) | set(repo.get_changed_files())
+    ]
+
+    compiled_language_files_changed = ""
+    for file in changed_files:
+        if (
+            file.suffix in COMPILED_LANGUAGE_FILE_EXTENSIONS
+            or file.stem.lower() == "makefile"
+            and not file.suffix == ".py"
+        ):
+            compiled_language_files_changed += ' - "' + str(file) + '"\n'
+
+    if compiled_language_files_changed:
+        return DoctorCheck(
+            name="artifact_build",
+            status=CheckStatus.FATAL,
+            display_text=[
+                "Artifact Builds are enabled, but the following files from compiled languages "
+                f"have been modified: \n{compiled_language_files_changed}\nThese files will "
+                "not be compiled, and your changes will not be realized in the build output."
+                "\n\nIf you want these changes to be realized, you should re-run './mach "
+                'boostrap` and select a build that does not state "Artifact Mode".'
+                "\nFor additional information on Artifact Builds see: "
+                "https://firefox-source-docs.mozilla.org/contributing/build/"
+                "artifact_builds.html"
+            ],
+        )
+
+    return DoctorCheck(
+        name="artifact_build",
+        status=CheckStatus.OK,
+        display_text=["No Artifact Build conflicts found."],
+    )
 
 
 def run_doctor(fix: bool = False, verbose: bool = False, **kwargs) -> int:
