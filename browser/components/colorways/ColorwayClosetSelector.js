@@ -44,10 +44,12 @@ class ColorwaySelector extends HTMLFieldSetElement {
     for (let input of this.children) {
       if (input.value == this.activeTheme.id) {
         input.classList.add("active");
+        input.setAttribute("aria-current", true);
         this.updateName(this.selectedTheme.name);
         this.updateDescription(input.value);
       } else {
         input.classList.remove("active");
+        input.setAttribute("aria-current", false);
       }
     }
   }
@@ -57,6 +59,7 @@ class ColorwaySelector extends HTMLFieldSetElement {
       input.type = "radio";
       input.name = "colorway";
       input.value = theme.id;
+      input.setAttribute("title", theme.name);
       input.style.setProperty("--colorway-icon", `url(${theme.iconURL})`);
       input.onclick = () => {
         this.selectedTheme = theme;
