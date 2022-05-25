@@ -228,6 +228,10 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
     transport_.header_extensions_.RegisterByUri(id, uri);
     transport_.last_packet_.IdentifyExtensions(transport_.header_extensions_);
   }
+  void ReinintWithFec(VideoFecGenerator* fec_generator) {
+    fec_generator_ = fec_generator;
+    CreateModuleImpl();
+  }
 
  private:
   void CreateModuleImpl() {
@@ -244,6 +248,7 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
     config.non_sender_rtt_measurement = true;
     config.field_trials = &trials_;
     config.send_packet_observer = this;
+    config.fec_generator = fec_generator_;
 
     impl_.reset(new ModuleRtpRtcpImpl2(config));
     impl_->SetRemoteSSRC(is_sender_ ? kReceiverSsrc : kSenderSsrc);
@@ -253,6 +258,7 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
   TimeController* const time_controller_;
   std::map<uint32_t, RtcpPacketTypeCounter> counter_map_;
   absl::optional<SentPacket> last_sent_packet_;
+  VideoFecGenerator* fec_generator_ = nullptr;
 };
 }  // namespace
 
@@ -291,6 +297,23 @@ class RtpRtcpImpl2Test : public ::testing::TestWithParam<TestConfig> {
 
   void AdvanceTimeMs(int64_t milliseconds) {
     time_controller_.AdvanceTime(TimeDelta::Millis(milliseconds));
+  }
+
+  void ReinitWithFec(VideoFecGenerator* fec_generator) {
+    sender_.ReinintWithFec(fec_generator);
+    EXPECT_EQ(0, sender_.impl_->SetSendingStatus(true));
+    sender_.impl_->SetSendingMediaStatus(true);
+    sender_.impl_->SetSequenceNumber(kSequenceNumber);
+    sender_.impl_->SetStorePacketsStatus(true, 100);
+    receiver_.transport_.SetRtpRtcpModule(sender_.impl_.get());
+
+    RTPSenderVideo::Config video_config;
+    video_config.clock = time_controller_.GetClock();
+    video_config.rtp_sender = sender_.impl_->RtpSender();
+    video_config.field_trials = &field_trials_;
+    video_config.fec_overhead_bytes = fec_generator->MaxPacketOverhead();
+    video_config.fec_type = fec_generator->GetFecType();
+    sender_video_ = std::make_unique<RTPSenderVideo>(video_config);
   }
 
   GlobalSimulatedTimeController time_controller_;
@@ -960,6 +983,39 @@ TEST_P(RtpRtcpImpl2Test, PropagatesSentPacketInfo) {
                              .GetExtension<TransportSequenceNumber>())),
                 Field(&RtpRtcpModule::SentPacket::capture_time_ms, Eq(now_ms)),
                 Field(&RtpRtcpModule::SentPacket::ssrc, Eq(kSenderSsrc)))));
+}
+
+TEST_P(RtpRtcpImpl2Test, GeneratesFlexfec) {
+  constexpr int kFlexfecPayloadType = 118;
+  constexpr uint32_t kFlexfecSsrc = 17;
+  const char kNoMid[] = "";
+  const std::vector<RtpExtension> kNoRtpExtensions;
+  const std::vector<RtpExtensionSize> kNoRtpExtensionSizes;
+
+  // Make sure FlexFec sequence numbers start at a different point than media.
+  const uint16_t fec_start_seq = sender_.impl_->SequenceNumber() + 100;
+  RtpState start_state;
+  start_state.sequence_number = fec_start_seq;
+  FlexfecSender flexfec_sender(kFlexfecPayloadType, kFlexfecSsrc, kSenderSsrc,
+                               kNoMid, kNoRtpExtensions, kNoRtpExtensionSizes,
+                               &start_state, time_controller_.GetClock());
+  ReinitWithFec(&flexfec_sender);
+
+  // Parameters selected to generate a single FEC packet per media packet.
+  FecProtectionParams params;
+  params.fec_rate = 15;
+  params.max_fec_frames = 1;
+  params.fec_mask_type = kFecMaskRandom;
+  sender_.impl_->SetFecProtectionParams(params, params);
+
+  // Send a one packet frame, expect one media packet and one FEC packet.
+  EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));
+  ASSERT_THAT(sender_.transport_.rtp_packets_sent_, Eq(2));
+
+  const RtpPacketReceived& fec_packet = sender_.last_packet();
+  EXPECT_EQ(fec_packet.SequenceNumber(), fec_start_seq);
+  EXPECT_EQ(fec_packet.Ssrc(), kFlexfecSsrc);
+  EXPECT_EQ(fec_packet.PayloadType(), kFlexfecPayloadType);
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
