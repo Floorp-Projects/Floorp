@@ -7589,9 +7589,17 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
           do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      const nsString& text = item.data().get_nsString();
-      rv = dataWrapper->SetData(text);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (item.data().type() == IPCDataTransferData::TShmem) {
+        Shmem itemData = item.data().get_Shmem();
+        const nsDependentSubstring text(itemData.get<char16_t>(),
+                                        itemData.Size<char16_t>());
+        rv = dataWrapper->SetData(text);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        const nsString& text = item.data().get_nsString();
+        rv = dataWrapper->SetData(text);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
       rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -7673,6 +7681,13 @@ nsresult nsContentUtils::IPCTransferableItemToVariant(
   });
 
   if (aDataTransferItem.dataType() == TransferableDataType::String) {
+    if (aDataTransferItem.data().type() == IPCDataTransferData::TShmem) {
+      Shmem data = aDataTransferItem.data().get_Shmem();
+      aVariant->SetAsAString(
+          nsDependentSubstring(data.get<char16_t>(), data.Size<char16_t>()));
+      return NS_OK;
+    }
+
     const nsString& data = aDataTransferItem.data().get_nsString();
     aVariant->SetAsAString(data);
     return NS_OK;
@@ -7851,21 +7866,41 @@ bool nsContentUtils::IsFlavorImage(const nsACString& aFlavor) {
          aFlavor.EqualsLiteral(kGIFImageMime);
 }
 
-static Shmem ConvertToShmem(mozilla::dom::ContentChild* aChild,
-                            mozilla::dom::ContentParent* aParent,
-                            const nsACString& aInput) {
+static bool AllocateShmem(mozilla::dom::ContentChild* aChild,
+                          mozilla::dom::ContentParent* aParent, size_t aSize,
+                          mozilla::ipc::Shmem* aShmem) {
   MOZ_ASSERT((aChild && !aParent) || (!aChild && aParent));
+  MOZ_ASSERT(aShmem);
 
   IShmemAllocator* allocator = aChild ? static_cast<IShmemAllocator*>(aChild)
                                       : static_cast<IShmemAllocator*>(aParent);
 
+  return allocator->AllocShmem(aSize, SharedMemory::TYPE_BASIC, aShmem);
+}
+
+static Shmem ConvertToShmem(mozilla::dom::ContentChild* aChild,
+                            mozilla::dom::ContentParent* aParent,
+                            const nsACString& aInput) {
   Shmem result;
-  if (!allocator->AllocShmem(aInput.Length(), SharedMemory::TYPE_BASIC,
-                             &result)) {
+  if (!AllocateShmem(aChild, aParent, aInput.Length(), &result)) {
     return result;
   }
 
   memcpy(result.get<char>(), aInput.BeginReading(), aInput.Length());
+
+  return result;
+}
+
+static Shmem ConvertToShmem(mozilla::dom::ContentChild* aChild,
+                            mozilla::dom::ContentParent* aParent,
+                            const nsAString& aInput) {
+  Shmem result;
+  uint32_t size = aInput.Length() * sizeof(char16_t);
+  if (!AllocateShmem(aChild, aParent, size, &result)) {
+    return result;
+  }
+
+  memcpy(result.get<char>(), aInput.BeginReading(), size);
 
   return result;
 }
@@ -7919,9 +7954,31 @@ void nsContentUtils::TransferableToIPCTransferable(
       if (nsCOMPtr<nsISupportsString> text = do_QueryInterface(data)) {
         nsAutoString dataAsString;
         text->GetData(dataAsString);
+
+        Maybe<Shmem> dataAsShmem;
+        uint32_t size = dataAsString.Length() * sizeof(char16_t);
+        // XXX IPCDataTransfer could contain multiple items, we give each item
+        // same bucket size. The IPC message includes more than data payload, so
+        // subtract 10 KB to make the total size within the bucket size. It
+        // would be nice if we could have a smarter way to decide when to use
+        // Shmem.
+        uint32_t threshold =
+            (IPC::Channel::kMaximumMessageSize / flavorList.Length()) -
+            (10 * 1024);
+        if (size > threshold) {
+          dataAsShmem.emplace(ConvertToShmem(aChild, aParent, dataAsString));
+          if (!dataAsShmem->IsReadable() || !dataAsShmem->Size<char16_t>()) {
+            continue;
+          }
+        }
+
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
-        item->data() = dataAsString;
+        if (dataAsShmem) {
+          item->data() = dataAsShmem.value();
+        } else {
+          item->data() = dataAsString;
+        }
         item->dataType() = TransferableDataType::String;
         continue;
       }
