@@ -296,7 +296,7 @@ class LRotateI64
 };
 
 // Allocate a new arguments object for an inlined frame.
-class LCreateInlinedArgumentsObject : public LVariadicInstruction<1, 1> {
+class LCreateInlinedArgumentsObject : public LVariadicInstruction<1, 2> {
  public:
   LIR_HEADER(CreateInlinedArgumentsObject)
 
@@ -307,16 +307,19 @@ class LCreateInlinedArgumentsObject : public LVariadicInstruction<1, 1> {
     return NumNonArgumentOperands + BOX_PIECES * i;
   }
 
-  LCreateInlinedArgumentsObject(uint32_t numOperands, const LDefinition& temp)
+  LCreateInlinedArgumentsObject(uint32_t numOperands, const LDefinition& temp1,
+                                const LDefinition& temp2)
       : LVariadicInstruction(classOpcode, numOperands) {
     setIsCall();
-    setTemp(0, temp);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
   }
 
   const LAllocation* getCallObject() { return getOperand(CallObj); }
   const LAllocation* getCallee() { return getOperand(Callee); }
 
-  const LDefinition* temp() { return getTemp(0); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
 
   MCreateInlinedArgumentsObject* mir() const {
     return mir_->toCreateInlinedArgumentsObject();

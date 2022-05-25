@@ -447,20 +447,11 @@ ArgumentsObject* ArgumentsObject::createForInlinedIon(JSContext* cx,
   return createFromValueArray(cx, argsArray, callee, scopeChain, numActuals);
 }
 
+template <typename CopyArgs>
 /* static */
-ArgumentsObject* ArgumentsObject::finishForIonPure(JSContext* cx,
-                                                   jit::JitFrameLayout* frame,
-                                                   JSObject* scopeChain,
-                                                   ArgumentsObject* obj) {
-  // JIT code calls this directly (no callVM), because it's faster, so we're
-  // not allowed to GC in here.
-  AutoUnsafeCallWithABI unsafe;
-
-  JSFunction* callee = jit::CalleeTokenToFunction(frame->calleeToken());
-  RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain : nullptr);
-  CopyJitFrameArgs copy(frame, callObj);
-
-  unsigned numActuals = frame->numActualArgs();
+ArgumentsObject* ArgumentsObject::finishPure(
+    JSContext* cx, ArgumentsObject* obj, JSFunction* callee, JSObject* callObj,
+    unsigned numActuals, CopyArgs& copy) {
   unsigned numFormals = callee->nargs();
   unsigned numArgs = std::max(numActuals, numFormals);
   unsigned numBytes = ArgumentsData::bytesRequired(numArgs);
@@ -494,6 +485,45 @@ ArgumentsObject* ArgumentsObject::finishForIonPure(JSContext* cx,
   MOZ_ASSERT(obj->initialLength() == numActuals);
   MOZ_ASSERT(!obj->hasOverriddenLength());
   return obj;
+}
+
+/* static */
+ArgumentsObject* ArgumentsObject::finishForIonPure(JSContext* cx,
+                                                   jit::JitFrameLayout* frame,
+                                                   JSObject* scopeChain,
+                                                   ArgumentsObject* obj) {
+  // JIT code calls this directly (no callVM), because it's faster, so we're
+  // not allowed to GC in here.
+  AutoUnsafeCallWithABI unsafe;
+
+  JSFunction* callee = jit::CalleeTokenToFunction(frame->calleeToken());
+  RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain : nullptr);
+  CopyJitFrameArgs copy(frame, callObj);
+
+  unsigned numActuals = frame->numActualArgs();
+
+  return finishPure(cx, obj, callee, callObj, numActuals, copy);
+}
+
+/* static */
+ArgumentsObject* ArgumentsObject::finishInlineForIonPure(
+    JSContext* cx, JSObject* rawCallObj, JSFunction* rawCallee, Value* args,
+    uint32_t numActuals, ArgumentsObject* obj) {
+  // JIT code calls this directly (no callVM), because it's faster, so we're
+  // not allowed to GC in here.
+  AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(numActuals <= MaxInlinedArgs);
+
+  RootedObject callObj(cx, rawCallObj);
+  RootedFunction callee(cx, rawCallee);
+  RootedExternalValueArray rootedArgs(cx, numActuals, args);
+  HandleValueArray argsArray =
+      HandleValueArray::fromMarkedLocation(numActuals, args);
+
+  CopyInlinedArgs copy(argsArray, callObj, callee, numActuals);
+
+  return finishPure(cx, obj, callee, callObj, numActuals, copy);
 }
 
 /* static */
