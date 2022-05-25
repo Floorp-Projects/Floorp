@@ -74,6 +74,7 @@ class CrashReportingTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25029")
     @SmokeTest
     @Test
     fun useAppWhileTabIsCrashedTest() {
