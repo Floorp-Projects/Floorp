@@ -29,4 +29,5 @@ window.addEventListener("load", () => {
 
 window.addEventListener("unload", () => {
   tabsSetupFlowManager?.uninit();
+  document.getElementById("recently-closed-tabs-container").cleanup();
 });
