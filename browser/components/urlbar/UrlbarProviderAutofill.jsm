@@ -90,6 +90,7 @@ function originQuery(where) {
          OR (host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF')
     )
     SELECT :query_type AS query_type,
+           :searchString AS search_string,
            iif(instr(host, :searchString) = 1, host, fixed) || '/' AS host_fixed,
            ifnull(:prefix, host_prefix) || host || '/' AS url
     FROM origins
@@ -106,6 +107,7 @@ function urlQuery(where1, where2) {
   // types a key when the urlbar value looks like a URL with a path.
   return `/* do not warn (bug no): cannot use an index to sort */
             SELECT :query_type AS query_type,
+                   :searchString AS search_string,
                    url,
                    :strippedURL AS stripped_url,
                    frecency,
@@ -117,6 +119,7 @@ function urlQuery(where1, where2) {
                   ${where1}
             UNION ALL
             SELECT :query_type AS query_type,
+                   :searchString AS search_string,
                    url,
                    :strippedURL AS stripped_url,
                    frecency,
@@ -525,6 +528,7 @@ class ProviderAutofill extends UrlbarProvider {
 
     let opts = {
       query_type: QUERYTYPE.AUTOFILL_URL,
+      searchString: this._searchString,
       revHost,
       strippedURL,
     };
@@ -588,6 +592,7 @@ class ProviderAutofill extends UrlbarProvider {
     const query = `
       SELECT
         :queryType AS query_type,
+        :searchString AS search_string,
         i.input AS input,
         h.url AS url,
         fixup_url(h.url) AS fixed_url,
@@ -616,6 +621,7 @@ class ProviderAutofill extends UrlbarProvider {
    */
   _processRow(row, queryContext) {
     let queryType = row.getResultByName("query_type");
+    let searchString = row.getResultByName("search_string");
     let autofilledValue, finalCompleteValue, autofilledType;
     let adaptiveHistoryInput;
     switch (queryType) {
@@ -656,8 +662,11 @@ class ProviderAutofill extends UrlbarProvider {
         autofilledType = "url";
         break;
       case QUERYTYPE.AUTOFILL_ADAPTIVE:
-        autofilledValue = row.getResultByName("fixed_url");
         finalCompleteValue = row.getResultByName("url");
+        const isFixedUrlMatched = row.getResultByName("fixed_url_match");
+        autofilledValue = isFixedUrlMatched
+          ? row.getResultByName("fixed_url")
+          : finalCompleteValue;
         adaptiveHistoryInput = row.getResultByName("input");
         autofilledType = "adaptive";
         break;
@@ -679,7 +688,7 @@ class ProviderAutofill extends UrlbarProvider {
     );
     autofilledValue =
       queryContext.searchString +
-      autofilledValue.substring(this._searchString.length);
+      autofilledValue.substring(searchString.length);
     result.autofill = {
       adaptiveHistoryInput,
       value: autofilledValue,
