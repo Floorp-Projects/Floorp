@@ -572,6 +572,12 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
   RetrieveFieldTrialValue("WebRTC-Aec3SuppressorEpStrengthDefaultLenOverride",
                           -1.f, 1.f, &adjusted_cfg.ep_strength.default_len);
 
+  // Field trial-based overrides of individual delay estimator parameters.
+  RetrieveFieldTrialValue("WebRTC-Aec3DelayEstimateSmoothingOverride", 0.f, 1.f,
+                          &adjusted_cfg.delay.delay_estimate_smoothing);
+  RetrieveFieldTrialValue(
+      "WebRTC-Aec3DelayEstimateSmoothingDelayFoundOverride", 0.f, 1.f,
+      &adjusted_cfg.delay.delay_estimate_smoothing_delay_found);
   return adjusted_cfg;
 }
 

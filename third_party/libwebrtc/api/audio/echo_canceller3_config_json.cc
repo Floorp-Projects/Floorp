@@ -191,6 +191,8 @@ void Aec3ConfigFromJsonString(absl::string_view json_string,
               &cfg.delay.fixed_capture_delay_samples);
     ReadParam(section, "delay_estimate_smoothing",
               &cfg.delay.delay_estimate_smoothing);
+    ReadParam(section, "delay_estimate_smoothing_delay_found",
+              &cfg.delay.delay_estimate_smoothing_delay_found);
     ReadParam(section, "delay_candidate_detection_threshold",
               &cfg.delay.delay_candidate_detection_threshold);
 
@@ -425,6 +427,8 @@ std::string Aec3ConfigToJsonString(const EchoCanceller3Config& config) {
       << config.delay.fixed_capture_delay_samples << ",";
   ost << "\"delay_estimate_smoothing\": "
       << config.delay.delay_estimate_smoothing << ",";
+  ost << "\"delay_estimate_smoothing_delay_found\": "
+      << config.delay.delay_estimate_smoothing_delay_found << ",";
   ost << "\"delay_candidate_detection_threshold\": "
       << config.delay.delay_candidate_detection_threshold << ",";
 
