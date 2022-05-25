@@ -182,7 +182,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     // TODO(steveanton): Switch tests to use RtpTransceivers directly.
     auto receiver_proxy =
         RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
-            signaling_thread_, receiver);
+            signaling_thread_, worker_thread_, receiver);
     GetOrCreateFirstTransceiverOfType(receiver->media_type())
         ->internal()
         ->AddReceiver(receiver_proxy);

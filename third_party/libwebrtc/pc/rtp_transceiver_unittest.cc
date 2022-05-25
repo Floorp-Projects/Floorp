@@ -94,6 +94,7 @@ class RtpTransceiverUnifiedPlanTest : public ::testing::Test {
                          sender_),
                      RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
                          rtc::Thread::Current(),
+                         rtc::Thread::Current(),
                          receiver_),
                      channel_manager_.get(),
                      channel_manager_->GetSupportedAudioRtpHeaderExtensions(),
@@ -162,6 +163,7 @@ class RtpTransceiverTestForHeaderExtensions : public ::testing::Test {
                          rtc::Thread::Current(),
                          sender_),
                      RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
+                         rtc::Thread::Current(),
                          rtc::Thread::Current(),
                          receiver_),
                      channel_manager_.get(),

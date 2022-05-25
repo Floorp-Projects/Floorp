@@ -39,20 +39,4 @@ RtpReceiverInternal::CreateStreamsFromIds(std::vector<std::string> stream_ids) {
   return streams;
 }
 
-// Attempt to attach the frame decryptor to the current media channel on the
-// correct worker thread only if both the media channel exists and a ssrc has
-// been allocated to the stream.
-void RtpReceiverInternal::MaybeAttachFrameDecryptorToMediaChannel(
-    const absl::optional<uint32_t>& ssrc,
-    rtc::Thread* worker_thread,
-    rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor,
-    cricket::MediaChannel* media_channel,
-    bool stopped) {
-  if (media_channel && frame_decryptor && ssrc.has_value() && !stopped) {
-    worker_thread->Invoke<void>(RTC_FROM_HERE, [&] {
-      media_channel->SetFrameDecryptor(*ssrc, frame_decryptor);
-    });
-  }
-}
-
 }  // namespace webrtc
