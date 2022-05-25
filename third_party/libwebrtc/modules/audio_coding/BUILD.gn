@@ -1249,7 +1249,6 @@ rtc_library("audio_coding_modules_tests_shared") {
     "../../system_wrappers",
     "../../test:fileutils",
     "../../test:test_support",
-    "../rtp_rtcp:rtp_rtcp_format",
     "//testing/gtest",
   ]
   absl_deps = [
