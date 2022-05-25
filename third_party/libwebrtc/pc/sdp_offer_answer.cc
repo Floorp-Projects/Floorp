@@ -4609,7 +4609,6 @@ void SdpOfferAnswerHandler::DestroyTransceiverChannel(
     // un-set the channel pointer and uninitialize/destruct the channel object
     // at the same time, rather than in separate steps.
     transceiver->internal()->SetChannel(nullptr);
-    RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(3);
     // TODO(tommi): All channel objects end up getting deleted on the
     // worker thread (ideally should be on the network thread but the
     // MediaChannel objects are tied to the worker. Can the teardown be done
