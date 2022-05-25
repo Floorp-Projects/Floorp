@@ -149,7 +149,15 @@ std::string AudioProcessing::Config::ToString() const {
       << ", enable_limiter: " << gain_controller1.enable_limiter
       << ", analog_level_minimum: " << gain_controller1.analog_level_minimum
       << ", analog_level_maximum: " << gain_controller1.analog_level_maximum
-      << " }, gain_controller2: { enabled: " << gain_controller2.enabled
+      << ", analog_gain_controller { enabled: "
+      << gain_controller1.analog_gain_controller.enabled
+      << ", startup_min_volume: "
+      << gain_controller1.analog_gain_controller.startup_min_volume
+      << ", clipped_level_min: "
+      << gain_controller1.analog_gain_controller.clipped_level_min
+      << ", enable_digital_adaptive: "
+      << gain_controller1.analog_gain_controller.enable_digital_adaptive
+      << " }}, gain_controller2: { enabled: " << gain_controller2.enabled
       << ", fixed_digital: { gain_db: "
       << gain_controller2.fixed_digital.gain_db
       << " }, adaptive_digital: { enabled: "
