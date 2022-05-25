@@ -1363,7 +1363,9 @@ PacketReceiver::DeliveryStatus Call::DeliverRtcp(MediaType media_type,
   // and make sure that the flow of packets is consistent from the
   // `RtpTransport` class, via the *Channel and *Engine classes and into Call.
   // This way we'll also know more about the context of the packet.
+#if !defined(WEBRTC_MOZILLA_BUILD)
   RTC_DCHECK_EQ(media_type, MediaType::ANY);
+#endif
 
   // TODO(pbos): Make sure it's a valid packet.
   //             Return DELIVERY_UNKNOWN_SSRC if it can be determined that
