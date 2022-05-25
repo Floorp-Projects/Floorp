@@ -216,7 +216,6 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
   configuration.rtt_stats = observers.rtcp_rtt_stats;
   configuration.rtcp_packet_type_counter_observer =
       observers.rtcp_type_observer;
-  configuration.rtcp_statistics_callback = observers.rtcp_stats;
   configuration.report_block_data_observer =
       observers.report_block_data_observer;
   configuration.paced_sender = transport->packet_sender();

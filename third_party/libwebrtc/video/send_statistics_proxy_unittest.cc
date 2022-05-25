@@ -174,29 +174,51 @@ class SendStatisticsProxyTest : public ::testing::Test {
   VideoSendStream::Stats expected_;
 };
 
-TEST_F(SendStatisticsProxyTest, RtcpStatistics) {
-  RtcpStatisticsCallback* callback = statistics_proxy_.get();
-  for (const auto& ssrc : config_.rtp.ssrcs) {
+TEST_F(SendStatisticsProxyTest, ReportBlockDataObserver) {
+  ReportBlockDataObserver* callback = statistics_proxy_.get();
+  for (uint32_t ssrc : config_.rtp.ssrcs) {
     VideoSendStream::StreamStats& ssrc_stats = expected_.substreams[ssrc];
 
     // Add statistics with some arbitrary, but unique, numbers.
     uint32_t offset = ssrc * sizeof(RtcpStatistics);
-    ssrc_stats.rtcp_stats.packets_lost = offset;
-    ssrc_stats.rtcp_stats.extended_highest_sequence_number = offset + 1;
-    ssrc_stats.rtcp_stats.fraction_lost = offset + 2;
-    ssrc_stats.rtcp_stats.jitter = offset + 3;
-    callback->StatisticsUpdated(ssrc_stats.rtcp_stats, ssrc);
+    RTCPReportBlock report_block;
+    report_block.source_ssrc = ssrc;
+    report_block.packets_lost = offset;
+    report_block.extended_highest_sequence_number = offset + 1;
+    report_block.fraction_lost = offset + 2;
+    report_block.jitter = offset + 3;
+
+    ssrc_stats.rtcp_stats.packets_lost = report_block.packets_lost;
+    ssrc_stats.rtcp_stats.extended_highest_sequence_number =
+        report_block.extended_highest_sequence_number;
+    ssrc_stats.rtcp_stats.fraction_lost = report_block.fraction_lost;
+    ssrc_stats.rtcp_stats.jitter = report_block.jitter;
+    ReportBlockData data;
+    data.SetReportBlock(report_block, 0);
+
+    callback->OnReportBlockDataUpdated(data);
   }
-  for (const auto& ssrc : config_.rtp.rtx.ssrcs) {
+  for (uint32_t ssrc : config_.rtp.rtx.ssrcs) {
     VideoSendStream::StreamStats& ssrc_stats = expected_.substreams[ssrc];
 
     // Add statistics with some arbitrary, but unique, numbers.
     uint32_t offset = ssrc * sizeof(RtcpStatistics);
-    ssrc_stats.rtcp_stats.packets_lost = offset;
-    ssrc_stats.rtcp_stats.extended_highest_sequence_number = offset + 1;
-    ssrc_stats.rtcp_stats.fraction_lost = offset + 2;
-    ssrc_stats.rtcp_stats.jitter = offset + 3;
-    callback->StatisticsUpdated(ssrc_stats.rtcp_stats, ssrc);
+    RTCPReportBlock report_block;
+    report_block.source_ssrc = ssrc;
+    report_block.packets_lost = offset;
+    report_block.extended_highest_sequence_number = offset + 1;
+    report_block.fraction_lost = offset + 2;
+    report_block.jitter = offset + 3;
+
+    ssrc_stats.rtcp_stats.packets_lost = report_block.packets_lost;
+    ssrc_stats.rtcp_stats.extended_highest_sequence_number =
+        report_block.extended_highest_sequence_number;
+    ssrc_stats.rtcp_stats.fraction_lost = report_block.fraction_lost;
+    ssrc_stats.rtcp_stats.jitter = report_block.jitter;
+    ReportBlockData data;
+    data.SetReportBlock(report_block, 0);
+
+    callback->OnReportBlockDataUpdated(data);
   }
   VideoSendStream::Stats stats = statistics_proxy_->GetStats();
   ExpectEqual(expected_, stats);
@@ -2171,10 +2193,13 @@ TEST_F(SendStatisticsProxyTest, NoSubstreams) {
       std::max(*absl::c_max_element(config_.rtp.ssrcs),
                *absl::c_max_element(config_.rtp.rtx.ssrcs)) +
       1;
-  // From RtcpStatisticsCallback.
-  RtcpStatistics rtcp_stats;
-  RtcpStatisticsCallback* rtcp_callback = statistics_proxy_.get();
-  rtcp_callback->StatisticsUpdated(rtcp_stats, excluded_ssrc);
+  // From ReportBlockDataObserver.
+  ReportBlockDataObserver* rtcp_callback = statistics_proxy_.get();
+  RTCPReportBlock report_block;
+  report_block.source_ssrc = excluded_ssrc;
+  ReportBlockData data;
+  data.SetReportBlock(report_block, 0);
+  rtcp_callback->OnReportBlockDataUpdated(data);
 
   // From BitrateStatisticsObserver.
   uint32_t total = 0;
@@ -2221,9 +2246,12 @@ TEST_F(SendStatisticsProxyTest, EncodedResolutionTimesOut) {
 
   // Update the first SSRC with bogus RTCP stats to make sure that encoded
   // resolution still times out (no global timeout for all stats).
-  RtcpStatistics rtcp_statistics;
-  RtcpStatisticsCallback* rtcp_stats = statistics_proxy_.get();
-  rtcp_stats->StatisticsUpdated(rtcp_statistics, config_.rtp.ssrcs[0]);
+  ReportBlockDataObserver* rtcp_callback = statistics_proxy_.get();
+  RTCPReportBlock report_block;
+  report_block.source_ssrc = config_.rtp.ssrcs[0];
+  ReportBlockData data;
+  data.SetReportBlock(report_block, 0);
+  rtcp_callback->OnReportBlockDataUpdated(data);
 
   // Report stats for second SSRC to make sure it's not outdated along with the
   // first SSRC.

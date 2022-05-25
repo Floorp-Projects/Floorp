@@ -143,7 +143,6 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       xr_rrtr_status_(config.non_sender_rtt_measurement),
       xr_rr_rtt_ms_(0),
       oldest_tmmbr_info_ms_(0),
-      stats_callback_(config.rtcp_statistics_callback),
       cname_callback_(config.rtcp_cname_callback),
       report_block_data_observer_(config.report_block_data_observer),
       packet_type_counter_observer_(config.rtcp_packet_type_counter_observer),
@@ -1125,18 +1124,6 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
   }
 
   if (!receiver_only_) {
-    if (stats_callback_) {
-      for (const auto& report_block : packet_information.report_blocks) {
-        RtcpStatistics stats;
-        stats.packets_lost = report_block.packets_lost;
-        stats.extended_highest_sequence_number =
-            report_block.extended_highest_sequence_number;
-        stats.fraction_lost = report_block.fraction_lost;
-        stats.jitter = report_block.jitter;
-
-        stats_callback_->StatisticsUpdated(stats, report_block.source_ssrc);
-      }
-    }
     if (report_block_data_observer_) {
       for (const auto& report_block_data :
            packet_information.report_block_datas) {
