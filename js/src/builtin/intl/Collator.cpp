@@ -220,9 +220,17 @@ static mozilla::intl::Collator* NewIntlCollator(
   if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
     return nullptr;
   }
-  UniqueChars locale = intl::EncodeLocale(cx, value.toString());
-  if (!locale) {
-    return nullptr;
+
+  mozilla::intl::Locale tag;
+  {
+    RootedLinearString locale(cx, value.toString()->ensureLinear(cx));
+    if (!locale) {
+      return nullptr;
+    }
+
+    if (!intl::ParseLocale(cx, locale, tag)) {
+      return nullptr;
+    }
   }
 
   using mozilla::intl::Collator;
@@ -233,54 +241,81 @@ static mozilla::intl::Collator* NewIntlCollator(
     return nullptr;
   }
 
+  enum class Usage { Search, Sort };
+
+  Usage usage;
   {
-    JSLinearString* usage = value.toString()->ensureLinear(cx);
-    if (!usage) {
+    JSLinearString* str = value.toString()->ensureLinear(cx);
+    if (!str) {
       return nullptr;
     }
-    if (StringEqualsLiteral(usage, "search")) {
-      // ICU expects search as a Unicode locale extension on locale.
-      mozilla::intl::Locale tag;
-      if (mozilla::intl::LocaleParser::TryParse(
-              mozilla::MakeStringSpan(locale.get()), tag)
-              .isErr()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_INVALID_LANGUAGE_TAG, locale.get());
-        return nullptr;
-      }
 
-      JS::RootedVector<intl::UnicodeExtensionKeyword> keywords(cx);
-
-      if (!keywords.emplaceBack("co", cx->names().search)) {
-        return nullptr;
-      }
-
-      // |ApplyUnicodeExtensionToTag| applies the new keywords to the front of
-      // the Unicode extension subtag. We're then relying on ICU to follow RFC
-      // 6067, which states that any trailing keywords using the same key
-      // should be ignored.
-      if (!intl::ApplyUnicodeExtensionToTag(cx, tag, keywords)) {
-        return nullptr;
-      }
-
-      intl::FormatBuffer<char> buffer(cx);
-      if (auto result = tag.ToString(buffer); result.isErr()) {
-        intl::ReportInternalError(cx, result.unwrapErr());
-        return nullptr;
-      }
-
-      locale = buffer.extractStringZ();
-      if (!locale) {
-        return nullptr;
-      }
+    if (StringEqualsLiteral(str, "search")) {
+      usage = Usage::Search;
     } else {
-      MOZ_ASSERT(StringEqualsLiteral(usage, "sort"));
+      MOZ_ASSERT(StringEqualsLiteral(str, "sort"));
+      usage = Usage::Sort;
     }
   }
 
-  // We don't need to look at the collation property - it can only be set
-  // via the Unicode locale extension and is therefore already set on
-  // locale.
+  JS::RootedVector<intl::UnicodeExtensionKeyword> keywords(cx);
+
+  // ICU expects collation as Unicode locale extensions on locale.
+  if (usage == Usage::Search) {
+    if (!keywords.emplaceBack("co", cx->names().search)) {
+      return nullptr;
+    }
+
+    // Search collations can't select a different collation, so the collation
+    // property is guaranteed to be "default".
+#ifdef DEBUG
+    if (!GetProperty(cx, internals, internals, cx->names().collation, &value)) {
+      return nullptr;
+    }
+
+    JSLinearString* collation = value.toString()->ensureLinear(cx);
+    if (!collation) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(StringEqualsLiteral(collation, "default"));
+#endif
+  } else {
+    if (!GetProperty(cx, internals, internals, cx->names().collation, &value)) {
+      return nullptr;
+    }
+
+    JSLinearString* collation = value.toString()->ensureLinear(cx);
+    if (!collation) {
+      return nullptr;
+    }
+
+    // Set collation as a Unicode locale extension when it was specified.
+    if (!StringEqualsLiteral(collation, "default")) {
+      if (!keywords.emplaceBack("co", collation)) {
+        return nullptr;
+      }
+    }
+  }
+
+  // |ApplyUnicodeExtensionToTag| applies the new keywords to the front of the
+  // Unicode extension subtag. We're then relying on ICU to follow RFC 6067,
+  // which states that any trailing keywords using the same key should be
+  // ignored.
+  if (!intl::ApplyUnicodeExtensionToTag(cx, tag, keywords)) {
+    return nullptr;
+  }
+
+  intl::FormatBuffer<char> buffer(cx);
+  if (auto result = tag.ToString(buffer); result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
+    return nullptr;
+  }
+
+  UniqueChars locale = buffer.extractStringZ();
+  if (!locale) {
+    return nullptr;
+  }
 
   if (!GetProperty(cx, internals, internals, cx->names().sensitivity, &value)) {
     return nullptr;
