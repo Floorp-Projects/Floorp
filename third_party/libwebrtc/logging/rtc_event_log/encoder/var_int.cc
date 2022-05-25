@@ -64,7 +64,7 @@ size_t DecodeVarInt(rtc::BitBuffer* input, uint64_t* output) {
   uint64_t decoded = 0;
   for (size_t i = 0; i < kMaxVarIntLengthBytes; ++i) {
     uint8_t byte;
-    if (!input->ReadUInt8(&byte)) {
+    if (!input->ReadUInt8(byte)) {
       return 0;
     }
     decoded +=
