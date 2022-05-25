@@ -230,8 +230,6 @@ void UpdateSessionStoreField(CanonicalBrowsingContext* aBrowsingContext,
     } else {
       currentEntry = (aBrowsingContext->Top()->*GetWeakRef)().get();
     }
-  } else {
-    currentEntry = (aBrowsingContext->Top()->*GetWeakRef)().get();
   }
 
   *aEntry = currentEntry.forget().take();
