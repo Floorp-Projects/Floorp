@@ -209,20 +209,20 @@ const char* IceCandidatePairStateToRTCStatsIceCandidatePairState(
 }
 
 const char* DtlsTransportStateToRTCDtlsTransportState(
-    cricket::DtlsTransportState state) {
+    DtlsTransportState state) {
   switch (state) {
-    case cricket::DTLS_TRANSPORT_NEW:
+    case DtlsTransportState::kNew:
       return RTCDtlsTransportState::kNew;
-    case cricket::DTLS_TRANSPORT_CONNECTING:
+    case DtlsTransportState::kConnecting:
       return RTCDtlsTransportState::kConnecting;
-    case cricket::DTLS_TRANSPORT_CONNECTED:
+    case DtlsTransportState::kConnected:
       return RTCDtlsTransportState::kConnected;
-    case cricket::DTLS_TRANSPORT_CLOSED:
+    case DtlsTransportState::kClosed:
       return RTCDtlsTransportState::kClosed;
-    case cricket::DTLS_TRANSPORT_FAILED:
+    case DtlsTransportState::kFailed:
       return RTCDtlsTransportState::kFailed;
     default:
-      RTC_NOTREACHED();
+      RTC_CHECK_NOTREACHED();
       return nullptr;
   }
 }

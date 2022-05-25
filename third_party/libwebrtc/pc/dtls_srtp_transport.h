@@ -16,6 +16,7 @@
 
 #include "absl/types/optional.h"
 #include "api/crypto_params.h"
+#include "api/dtls_transport_interface.h"
 #include "api/rtc_error.h"
 #include "p2p/base/dtls_transport_internal.h"
 #include "p2p/base/packet_transport_internal.h"
@@ -82,7 +83,7 @@ class DtlsSrtpTransport : public SrtpTransport {
       cricket::DtlsTransportInternal* rtcp_dtls_transport);
 
   void OnDtlsState(cricket::DtlsTransportInternal* dtls_transport,
-                   cricket::DtlsTransportState state);
+                   DtlsTransportState state);
 
   // Override the SrtpTransport::OnWritableState.
   void OnWritableState(rtc::PacketTransportInternal* packet_transport) override;

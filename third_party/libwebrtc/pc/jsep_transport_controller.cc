@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "api/dtls_transport_interface.h"
 #include "api/rtp_parameters.h"
 #include "api/sequence_checker.h"
 #include "api/transport/enums.h"
@@ -1291,7 +1292,7 @@ void JsepTransportController::UpdateAggregateStates_n() {
   bool all_done_gathering = !dtls_transports.empty();
 
   std::map<IceTransportState, int> ice_state_counts;
-  std::map<cricket::DtlsTransportState, int> dtls_state_counts;
+  std::map<DtlsTransportState, int> dtls_state_counts;
 
   for (const auto& dtls : dtls_transports) {
     any_failed = any_failed || dtls->ice_transport()->GetState() ==
@@ -1393,16 +1394,15 @@ void JsepTransportController::UpdateAggregateStates_n() {
   // Note that "connecting" is only a valid state for DTLS transports while
   // "checking", "completed" and "disconnected" are only valid for ICE
   // transports.
-  int total_connected = total_ice_connected +
-                        dtls_state_counts[cricket::DTLS_TRANSPORT_CONNECTED];
+  int total_connected =
+      total_ice_connected + dtls_state_counts[DtlsTransportState::kConnected];
   int total_dtls_connecting =
-      dtls_state_counts[cricket::DTLS_TRANSPORT_CONNECTING];
+      dtls_state_counts[DtlsTransportState::kConnecting];
   int total_failed =
-      total_ice_failed + dtls_state_counts[cricket::DTLS_TRANSPORT_FAILED];
+      total_ice_failed + dtls_state_counts[DtlsTransportState::kFailed];
   int total_closed =
-      total_ice_closed + dtls_state_counts[cricket::DTLS_TRANSPORT_CLOSED];
-  int total_new =
-      total_ice_new + dtls_state_counts[cricket::DTLS_TRANSPORT_NEW];
+      total_ice_closed + dtls_state_counts[DtlsTransportState::kClosed];
+  int total_new = total_ice_new + dtls_state_counts[DtlsTransportState::kNew];
   int total_transports = total_ice * 2;
 
   if (total_failed > 0) {
