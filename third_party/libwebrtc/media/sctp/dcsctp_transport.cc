@@ -237,11 +237,11 @@ bool DcSctpTransport::SendData(int sid,
 
   auto max_message_size = socket_->options().max_message_size;
   if (max_message_size > 0 && payload.size() > max_message_size) {
-    RTC_LOG(LS_ERROR) << debug_name_
-                      << "->SendData(...): "
-                         "Trying to send packet bigger "
-                         "than the max message size: "
-                      << payload.size() << " vs max of " << max_message_size;
+    RTC_LOG(LS_WARNING) << debug_name_
+                        << "->SendData(...): "
+                           "Trying to send packet bigger "
+                           "than the max message size: "
+                        << payload.size() << " vs max of " << max_message_size;
     *result = cricket::SDR_ERROR;
     return false;
   }
@@ -348,9 +348,9 @@ void DcSctpTransport::SendPacket(rtc::ArrayView<const uint8_t> data) {
                              data.size(), rtc::PacketOptions(), 0);
 
   if (result < 0) {
-    RTC_LOG(LS_ERROR) << debug_name_ << "->SendPacket(length=" << data.size()
-                      << ") failed with error: " << transport_->GetError()
-                      << ".";
+    RTC_LOG(LS_WARNING) << debug_name_ << "->SendPacket(length=" << data.size()
+                        << ") failed with error: " << transport_->GetError()
+                        << ".";
   }
 }
 
@@ -375,10 +375,10 @@ void DcSctpTransport::NotifyOutgoingMessageBufferEmpty() {
 
 void DcSctpTransport::OnMessageReceived(dcsctp::DcSctpMessage message) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  RTC_LOG(LS_INFO) << debug_name_
-                   << "->OnMessageReceived(sid=" << message.stream_id().value()
-                   << ", ppid=" << message.ppid().value()
-                   << ", length=" << message.payload().size() << ").";
+  RTC_LOG(LS_VERBOSE) << debug_name_ << "->OnMessageReceived(sid="
+                      << message.stream_id().value()
+                      << ", ppid=" << message.ppid().value()
+                      << ", length=" << message.payload().size() << ").";
   cricket::ReceiveDataParams receive_data_params;
   receive_data_params.sid = message.stream_id().value();
   auto type = ToDataMessageType(message.ppid());
@@ -435,7 +435,7 @@ void DcSctpTransport::OnStreamsResetFailed(
     absl::string_view reason) {
   // TODO(orphis): Need a test to check for correct behavior
   for (auto& stream_id : outgoing_streams) {
-    RTC_LOG(LS_ERROR)
+    RTC_LOG(LS_WARNING)
         << debug_name_
         << "->OnStreamsResetFailed(...): Outgoing stream reset failed"
         << ", sid=" << stream_id.value() << ", reason: " << reason << ".";
@@ -490,8 +490,9 @@ void DcSctpTransport::OnTransportWritableState(
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK_EQ(transport_, transport);
 
-  RTC_LOG(LS_INFO) << debug_name_ << "->OnTransportWritableState(), writable="
-                   << transport->writable();
+  RTC_LOG(LS_VERBOSE) << debug_name_
+                      << "->OnTransportWritableState(), writable="
+                      << transport->writable();
 
   MaybeConnectSocket();
 }
