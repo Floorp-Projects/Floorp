@@ -42,20 +42,18 @@ bitflags! {
         const IS_BACKFACE_VISIBLE = 1 << 0;
         /// If set, this primitive represents a scroll bar container
         const IS_SCROLLBAR_CONTAINER = 1 << 1;
-        /// If set, this primitive represents a scroll bar thumb
-        const IS_SCROLLBAR_THUMB = 1 << 2;
         /// This is used as a performance hint - this primitive may be promoted to a native
         /// compositor surface under certain (implementation specific) conditions. This
         /// is typically used for large videos, and canvas elements.
-        const PREFER_COMPOSITOR_SURFACE = 1 << 3;
+        const PREFER_COMPOSITOR_SURFACE = 1 << 2;
         /// If set, this primitive can be passed directly to the compositor via its
         /// ExternalImageId, and the compositor will use the native image directly.
         /// Used as a further extension on top of PREFER_COMPOSITOR_SURFACE.
-        const SUPPORTS_EXTERNAL_COMPOSITOR_SURFACE = 1 << 4;
+        const SUPPORTS_EXTERNAL_COMPOSITOR_SURFACE = 1 << 3;
         /// This flags disables snapping and forces anti-aliasing even if the primitive is axis-aligned.
-        const ANTIALISED = 1 << 5;
+        const ANTIALISED = 1 << 4;
         /// If true, this primitive is used as a background for checkerboarding
-        const CHECKERBOARD_BACKGROUND = 1 << 6;
+        const CHECKERBOARD_BACKGROUND = 1 << 5;
     }
 }
 
