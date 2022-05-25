@@ -229,7 +229,7 @@ class HomeFragment : Fragment() {
 
                 components.appStore.dispatch(AppAction.PocketStoriesCategoriesChange(categories))
 
-                if (FeatureFlags.isPocketSponsoredStoriesFeatureEnabled(requireContext())) {
+                if (requireContext().settings().showPocketSponsoredStories) {
                     components.appStore.dispatch(
                         AppAction.PocketSponsoredStoriesChange(
                             components.core.pocketStoriesService.getSponsoredStories()

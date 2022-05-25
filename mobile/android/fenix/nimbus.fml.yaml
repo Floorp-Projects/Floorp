@@ -190,6 +190,18 @@ features:
         value:
           enabled: false
 
+  pocket-sponsored-stories:
+    description: A feature showing sponsored stories in between the other Pocket recommended stories on homescreen.
+    variables:
+      enabled:
+        description:  If true, the Pocket stories shown on homescreen should contain sponsored stories also.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+
 types:
   objects:
     MessageData:

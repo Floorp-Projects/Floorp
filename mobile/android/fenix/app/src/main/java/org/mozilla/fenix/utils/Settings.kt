@@ -1276,6 +1276,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the Pocket recommendations homescreen section should also show sponsored stories.
+     */
+    val showPocketSponsoredStories by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories),
+        default = { FxNimbus.features.pocketSponsoredStories.value(appContext).enabled },
+        featureFlag = FeatureFlags.isPocketSponsoredStoriesFeatureEnabled(appContext)
+    )
+
+    /**
      * Get the profile id to use in the sponsored stories communications with the Pocket endpoint.
      */
     val pocketSponsoredStoriesProfileId by stringPreference(
