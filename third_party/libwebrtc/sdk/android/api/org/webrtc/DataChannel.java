@@ -123,6 +123,7 @@ public class DataChannel {
   public void unregisterObserver() {
     checkDataChannelExists();
     nativeUnregisterObserver(nativeObserver);
+    nativeObserver = 0;
   }
 
   public String label() {
