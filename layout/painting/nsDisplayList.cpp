@@ -3380,15 +3380,6 @@ static bool RoundedRectContainsRect(const nsRect& aRoundedRect,
 
 bool nsDisplayBackgroundImage::CanApplyOpacity(
     WebRenderLayerManager* aManager, nsDisplayListBuilder* aBuilder) const {
-  // Bug 1752919: WebRender does not properly handle opacity flattening for
-  // images larger than 4096 dest pixels.
-  static const nscoord WR_NSCOORD_LIMIT =
-      NSIntPixelsToAppUnits(4096, AppUnitsPerCSSPixel());
-  if MOZ_UNLIKELY (mDestRect.width > WR_NSCOORD_LIMIT ||
-                   mDestRect.height > WR_NSCOORD_LIMIT) {
-    return false;
-  }
-
   return CanBuildWebRenderDisplayItems(aManager, aBuilder);
 }
 
