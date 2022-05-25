@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import { showMenu } from "../../context-menu/menu";
@@ -37,6 +38,34 @@ import { downloadFile } from "../../utils/utils";
 import { isFulfilled } from "../../utils/async-value";
 
 class SourceTreeItem extends Component {
+  static get propTypes() {
+    return {
+      autoExpand: PropTypes.bool.isRequired,
+      blackBoxSources: PropTypes.func.isRequired,
+      clearProjectDirectoryRoot: PropTypes.func.isRequired,
+      cx: PropTypes.object.isRequired,
+      debuggeeUrl: PropTypes.string.isRequired,
+      depth: PropTypes.number.isRequired,
+      expanded: PropTypes.bool.isRequired,
+      extensionName: PropTypes.string,
+      focusItem: PropTypes.func.isRequired,
+      focused: PropTypes.bool.isRequired,
+      getSourcesGroups: PropTypes.func.isRequired,
+      hasMatchingGeneratedSource: PropTypes.bool.isRequired,
+      hasPrettyTab: PropTypes.bool.isRequired,
+      item: PropTypes.object.isRequired,
+      loadSourceText: PropTypes.func.isRequired,
+      projectRoot: PropTypes.string.isRequired,
+      selectItem: PropTypes.func.isRequired,
+      setExpanded: PropTypes.func.isRequired,
+      setProjectDirectoryRoot: PropTypes.func.isRequired,
+      source: PropTypes.object,
+      sourceContent: PropTypes.object,
+      threads: PropTypes.array.isRequired,
+      toggleBlackBox: PropTypes.func.isRequired,
+    };
+  }
+
   componentDidMount() {
     const { autoExpand, item } = this.props;
     if (autoExpand) {

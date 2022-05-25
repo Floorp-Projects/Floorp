@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { Component } from "react";
+import PropTypes from "prop-types";
 import { toEditorLine, endOperation, startOperation } from "../../utils/editor";
 import { getDocument, hasDocument } from "../../utils/editor/source-documents";
 
@@ -37,6 +38,21 @@ function isDocumentReady(selectedLocation, selectedSourceTextContent) {
 export class HighlightLine extends Component {
   isStepping = false;
   previousEditorLine = null;
+
+  static get propTypes() {
+    return {
+      pauseCommand: PropTypes.oneOf([
+        "expression",
+        "resume",
+        "stepOver",
+        "stepIn",
+        "stepOut",
+      ]),
+      selectedFrame: PropTypes.object,
+      selectedLocation: PropTypes.object.isRequired,
+      selectedSourceTextContent: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     const { selectedLocation, selectedSourceTextContent } = nextProps;

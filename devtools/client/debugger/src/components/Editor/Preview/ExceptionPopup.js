@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../../utils/connect";
 import classnames from "classnames";
 
@@ -32,6 +33,16 @@ class ExceptionPopup extends Component {
     super(props);
     this.state = {
       isStacktraceExpanded: false,
+    };
+  }
+
+  static get propTypes() {
+    return {
+      clearPreview: PropTypes.func.isRequired,
+      cx: PropTypes.object.isRequired,
+      mouseout: PropTypes.func.isRequired,
+      selectSourceURL: PropTypes.func.isRequired,
+      exception: PropTypes.object.isRequired,
     };
   }
 
