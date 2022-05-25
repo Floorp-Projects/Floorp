@@ -67,7 +67,8 @@ public class WebRequestError extends Exception {
     ERROR_UNSAFE_CONTENT_TYPE,
     ERROR_CORRUPTED_CONTENT,
     ERROR_DATA_URI_TOO_LONG,
-    ERROR_HTTPS_ONLY
+    ERROR_HTTPS_ONLY,
+    ERROR_BAD_HSTS_CERT
   })
   public @interface Error {}
 
@@ -133,6 +134,12 @@ public class WebRequestError extends Exception {
    * <p>See also {@link GeckoSession.NavigationDelegate#onLoadError}
    */
   public static final int ERROR_HTTPS_ONLY = 0xA3;
+
+  /**
+   * A certificate validation error occurred when connecting to a site that does not allow error
+   * overrides.
+   */
+  public static final int ERROR_BAD_HSTS_CERT = 0xB3;
 
   // Content
   /** A content type was returned which was deemed unsafe. */
@@ -325,6 +332,9 @@ public class WebRequestError extends Exception {
     }
     if (geckoError == XPCOMError.NS_ERROR_HTTPS_ONLY) {
       return ERROR_HTTPS_ONLY;
+    }
+    if (geckoError == XPCOMError.NS_ERROR_BAD_HSTS_CERT) {
+      return ERROR_BAD_HSTS_CERT;
     }
     if (geckoError == XPCOMError.NS_ERROR_OFFLINE) {
       return ERROR_OFFLINE;
