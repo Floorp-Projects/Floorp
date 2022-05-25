@@ -44,6 +44,21 @@ class SessionStoreParent final : public PSessionStoreParent {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SessionStoreParent)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(SessionStoreParent)
 
+ protected:
+  friend class SessionStoreChild;
+  void SessionStoreUpdate(const Maybe<nsCString>& aDocShellCaps,
+                          const Maybe<bool>& aPrivatedMode,
+                          const bool aNeedCollectSHistory,
+                          const uint32_t& aEpoch);
+
+  void IncrementalSessionStoreUpdate(
+      const MaybeDiscarded<BrowsingContext>& aBrowsingContext,
+      const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
+      uint32_t aEpoch);
+
+  void ResetSessionStore(
+      const MaybeDiscarded<BrowsingContext>& aBrowsingContext, uint32_t aEpoch);
+
  private:
   ~SessionStoreParent() = default;
 
