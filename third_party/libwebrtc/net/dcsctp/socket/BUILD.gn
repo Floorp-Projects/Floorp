@@ -133,10 +133,10 @@ rtc_library("dcsctp_socket") {
     "../rx:data_tracker",
     "../rx:reassembly_queue",
     "../timer",
-    "../tx:fcfs_send_queue",
     "../tx:retransmission_error_counter",
     "../tx:retransmission_queue",
     "../tx:retransmission_timeout",
+    "../tx:rr_send_queue",
     "../tx:send_queue",
   ]
   sources = [

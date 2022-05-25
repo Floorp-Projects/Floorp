@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "net/dcsctp/tx/fcfs_send_queue.h"
+#include "net/dcsctp/tx/rr_send_queue.h"
 
 #include <cstdint>
 #include <type_traits>
@@ -29,21 +29,21 @@ constexpr TimeMs kNow = TimeMs(0);
 constexpr StreamID kStreamID(1);
 constexpr PPID kPPID(53);
 
-class FCFSSendQueueTest : public testing::Test {
+class RRSendQueueTest : public testing::Test {
  protected:
-  FCFSSendQueueTest() : buf_("log: ", 100) {}
+  RRSendQueueTest() : buf_("log: ", 100) {}
 
   const DcSctpOptions options_;
-  FCFSSendQueue buf_;
+  RRSendQueue buf_;
 };
 
-TEST_F(FCFSSendQueueTest, EmptyBuffer) {
+TEST_F(RRSendQueueTest, EmptyBuffer) {
   EXPECT_TRUE(buf_.IsEmpty());
   EXPECT_FALSE(buf_.Produce(kNow, 100).has_value());
   EXPECT_FALSE(buf_.IsFull());
 }
 
-TEST_F(FCFSSendQueueTest, AddAndGetSingleChunk) {
+TEST_F(RRSendQueueTest, AddAndGetSingleChunk) {
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, {1, 2, 4, 5, 6}));
 
   EXPECT_FALSE(buf_.IsEmpty());
@@ -54,7 +54,7 @@ TEST_F(FCFSSendQueueTest, AddAndGetSingleChunk) {
   EXPECT_TRUE(chunk_opt->data.is_end);
 }
 
-TEST_F(FCFSSendQueueTest, CarveOutBeginningMiddleAndEnd) {
+TEST_F(RRSendQueueTest, CarveOutBeginningMiddleAndEnd) {
   std::vector<uint8_t> payload(60);
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
 
@@ -79,7 +79,7 @@ TEST_F(FCFSSendQueueTest, CarveOutBeginningMiddleAndEnd) {
   EXPECT_FALSE(buf_.Produce(kNow, 100).has_value());
 }
 
-TEST_F(FCFSSendQueueTest, GetChunksFromTwoMessages) {
+TEST_F(RRSendQueueTest, GetChunksFromTwoMessages) {
   std::vector<uint8_t> payload(60);
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
   buf_.Add(kNow, DcSctpMessage(StreamID(3), PPID(54), payload));
@@ -99,7 +99,7 @@ TEST_F(FCFSSendQueueTest, GetChunksFromTwoMessages) {
   EXPECT_TRUE(chunk_two->data.is_end);
 }
 
-TEST_F(FCFSSendQueueTest, BufferBecomesFullAndEmptied) {
+TEST_F(RRSendQueueTest, BufferBecomesFullAndEmptied) {
   std::vector<uint8_t> payload(60);
   EXPECT_FALSE(buf_.IsFull());
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
@@ -136,20 +136,20 @@ TEST_F(FCFSSendQueueTest, BufferBecomesFullAndEmptied) {
   EXPECT_TRUE(buf_.IsEmpty());
 }
 
-TEST_F(FCFSSendQueueTest, WillNotSendTooSmallPacket) {
-  std::vector<uint8_t> payload(FCFSSendQueue::kMinimumFragmentedPayload + 1);
+TEST_F(RRSendQueueTest, WillNotSendTooSmallPacket) {
+  std::vector<uint8_t> payload(RRSendQueue::kMinimumFragmentedPayload + 1);
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
 
   // Wouldn't fit enough payload (wouldn't want to fragment)
   EXPECT_FALSE(
       buf_.Produce(kNow,
-                   /*max_size=*/FCFSSendQueue::kMinimumFragmentedPayload - 1)
+                   /*max_size=*/RRSendQueue::kMinimumFragmentedPayload - 1)
           .has_value());
 
   // Minimum fragment
   absl::optional<SendQueue::DataToSend> chunk_one =
       buf_.Produce(kNow,
-                   /*max_size=*/FCFSSendQueue::kMinimumFragmentedPayload);
+                   /*max_size=*/RRSendQueue::kMinimumFragmentedPayload);
   ASSERT_TRUE(chunk_one.has_value());
   EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
   EXPECT_EQ(chunk_one->data.ppid, kPPID);
@@ -165,7 +165,7 @@ TEST_F(FCFSSendQueueTest, WillNotSendTooSmallPacket) {
   EXPECT_TRUE(buf_.IsEmpty());
 }
 
-TEST_F(FCFSSendQueueTest, DefaultsToOrderedSend) {
+TEST_F(RRSendQueueTest, DefaultsToOrderedSend) {
   std::vector<uint8_t> payload(20);
 
   // Default is ordered
@@ -185,7 +185,7 @@ TEST_F(FCFSSendQueueTest, DefaultsToOrderedSend) {
   EXPECT_TRUE(chunk_two->data.is_unordered);
 }
 
-TEST_F(FCFSSendQueueTest, ProduceWithLifetimeExpiry) {
+TEST_F(RRSendQueueTest, ProduceWithLifetimeExpiry) {
   std::vector<uint8_t> payload(20);
 
   // Default is no expiry
@@ -225,7 +225,7 @@ TEST_F(FCFSSendQueueTest, ProduceWithLifetimeExpiry) {
   ASSERT_FALSE(buf_.Produce(now, 100));
 }
 
-TEST_F(FCFSSendQueueTest, DiscardPartialPackets) {
+TEST_F(RRSendQueueTest, DiscardPartialPackets) {
   std::vector<uint8_t> payload(120);
 
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
@@ -255,7 +255,7 @@ TEST_F(FCFSSendQueueTest, DiscardPartialPackets) {
   ASSERT_FALSE(buf_.Produce(kNow, 100));
 }
 
-TEST_F(FCFSSendQueueTest, PrepareResetStreamsDiscardsStream) {
+TEST_F(RRSendQueueTest, PrepareResetStreamsDiscardsStream) {
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, {1, 2, 3}));
   buf_.Add(kNow, DcSctpMessage(StreamID(2), PPID(54), {1, 2, 3, 4, 5}));
   EXPECT_EQ(buf_.total_bytes(), 8u);
@@ -267,7 +267,7 @@ TEST_F(FCFSSendQueueTest, PrepareResetStreamsDiscardsStream) {
   EXPECT_EQ(buf_.total_bytes(), 0u);
 }
 
-TEST_F(FCFSSendQueueTest, PrepareResetStreamsNotPartialPackets) {
+TEST_F(RRSendQueueTest, PrepareResetStreamsNotPartialPackets) {
   std::vector<uint8_t> payload(120);
 
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
@@ -283,7 +283,7 @@ TEST_F(FCFSSendQueueTest, PrepareResetStreamsNotPartialPackets) {
   EXPECT_EQ(buf_.total_bytes(), payload.size() - 50);
 }
 
-TEST_F(FCFSSendQueueTest, EnqueuedItemsArePausedDuringStreamReset) {
+TEST_F(RRSendQueueTest, EnqueuedItemsArePausedDuringStreamReset) {
   std::vector<uint8_t> payload(50);
 
   buf_.PrepareResetStreams(std::vector<StreamID>({StreamID(1)}));
@@ -302,7 +302,7 @@ TEST_F(FCFSSendQueueTest, EnqueuedItemsArePausedDuringStreamReset) {
   EXPECT_EQ(buf_.total_bytes(), 0u);
 }
 
-TEST_F(FCFSSendQueueTest, CommittingResetsSSN) {
+TEST_F(RRSendQueueTest, CommittingResetsSSN) {
   std::vector<uint8_t> payload(50);
 
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
@@ -330,7 +330,7 @@ TEST_F(FCFSSendQueueTest, CommittingResetsSSN) {
   EXPECT_EQ(chunk_three->data.ssn, SSN(0));
 }
 
-TEST_F(FCFSSendQueueTest, RollBackResumesSSN) {
+TEST_F(RRSendQueueTest, RollBackResumesSSN) {
   std::vector<uint8_t> payload(50);
 
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));

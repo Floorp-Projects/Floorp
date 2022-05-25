@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef NET_DCSCTP_TX_FCFS_SEND_QUEUE_H_
-#define NET_DCSCTP_TX_FCFS_SEND_QUEUE_H_
+#ifndef NET_DCSCTP_TX_RR_SEND_QUEUE_H_
+#define NET_DCSCTP_TX_RR_SEND_QUEUE_H_
 
 #include <cstdint>
 #include <deque>
@@ -29,24 +29,23 @@
 
 namespace dcsctp {
 
-// The FCFSSendQueue (First-Come, First-Served Send Queue) holds all messages
-// that the client wants to send, but that haven't yet been split into chunks
-// and sent on the wire.
+// The Round Robin SendQueue holds all messages that the client wants to send,
+// but that haven't yet been split into chunks and fully sent on the wire.
 //
-// First-Come, First Served means that it passes the data in the exact same
-// order as they were delivered by the calling application, and is defined in
-// https://tools.ietf.org/html/rfc8260#section-3.1. It's a FIFO queue, but that
-// term isn't used in this RFC.
+// As defined in https://datatracker.ietf.org/doc/html/rfc8260#section-3.2,
+// it will cycle to send messages from different streams. It will send all
+// fragments from one message before continuing with a different message on
+// possibly a different stream, until support for message interleaving has been
+// implemented.
 //
-// As messages can be (requested to be) sent before
-// the connection is properly established, this send queue is always present -
-// even for closed connections.
-class FCFSSendQueue : public SendQueue {
+// As messages can be (requested to be) sent before the connection is properly
+// established, this send queue is always present - even for closed connections.
+class RRSendQueue : public SendQueue {
  public:
   // How small a data chunk's payload may be, if having to fragment a message.
   static constexpr size_t kMinimumFragmentedPayload = 10;
 
-  FCFSSendQueue(absl::string_view log_prefix, size_t buffer_size)
+  RRSendQueue(absl::string_view log_prefix, size_t buffer_size)
       : log_prefix_(std::string(log_prefix) + "fcfs: "),
         buffer_size_(buffer_size) {}
 
@@ -120,4 +119,4 @@ class FCFSSendQueue : public SendQueue {
 };
 }  // namespace dcsctp
 
-#endif  // NET_DCSCTP_TX_FCFS_SEND_QUEUE_H_
+#endif  // NET_DCSCTP_TX_RR_SEND_QUEUE_H_
