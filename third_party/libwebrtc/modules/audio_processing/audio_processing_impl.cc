@@ -271,7 +271,8 @@ AudioProcessingImpl::AudioProcessingImpl(
                  !field_trial::IsEnabled(
                      "WebRTC-ApmExperimentalMultiChannelCaptureKillSwitch"),
                  EnforceSplitBandHpf(),
-                 MinimizeProcessingForUnusedOutput()),
+                 MinimizeProcessingForUnusedOutput(),
+                 field_trial::IsEnabled("WebRTC-TransientSuppressorForcedOff")),
       capture_(),
       capture_nonlocked_() {
   RTC_LOG(LS_INFO) << "Injected APM submodules:"
@@ -1732,7 +1733,8 @@ bool AudioProcessingImpl::UpdateActiveSubmoduleStates() {
 }
 
 void AudioProcessingImpl::InitializeTransientSuppressor() {
-  if (config_.transient_suppression.enabled) {
+  if (config_.transient_suppression.enabled &&
+      !constants_.transient_suppressor_forced_off) {
     // Attempt to create a transient suppressor, if one is not already created.
     if (!submodules_.transient_suppressor) {
       submodules_.transient_suppressor =
