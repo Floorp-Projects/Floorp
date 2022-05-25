@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { URL as URLParser } from "whatwg-url";
-
 const defaultUrl = {
   hash: "",
   host: "",
@@ -57,7 +55,7 @@ export function parse(url) {
 
   let urlObj;
   try {
-    urlObj = new URLParser(url);
+    urlObj = new URL(url);
   } catch (err) {
     urlObj = { ...defaultUrl };
     // If we're given simply a filename...
@@ -89,6 +87,10 @@ export function parse(url) {
       urlObj.pathname = url;
     }
   }
+  // When provided a special URL like "webpack:///webpack/foo",
+  // prevents passing the three slashes in the path, and pass only onea.
+  // This will prevent displaying modules in empty-name sub folders.
+  urlObj.pathname = urlObj.pathname.replace(/\/+/, "/");
   urlObj.path = urlObj.pathname + urlObj.search;
 
   // Cache the result
