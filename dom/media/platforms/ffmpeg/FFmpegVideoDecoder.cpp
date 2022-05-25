@@ -837,9 +837,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     // In theory, avcodec_send_packet could sent -EAGAIN should its internal
     // buffers be full. In practice this can't happen as we only feed one frame
     // at a time, and we immediately call avcodec_receive_frame right after.
-    FFMPEG_LOG("avcodec_send_packet error: %d", res);
+    char errStr[AV_ERROR_MAX_STRING_SIZE];
+    mLib->av_strerror(res, errStr, AV_ERROR_MAX_STRING_SIZE);
+    FFMPEG_LOG("avcodec_send_packet error: %s", errStr);
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       RESULT_DETAIL("avcodec_send_packet error: %d", res));
+                       RESULT_DETAIL("avcodec_send_packet error: %s", errStr));
   }
   if (aGotFrame) {
     *aGotFrame = false;
@@ -872,9 +874,12 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       return NS_OK;
     }
     if (res < 0) {
-      FFMPEG_LOG("  avcodec_receive_frame error: %d", res);
-      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                         RESULT_DETAIL("avcodec_receive_frame error: %d", res));
+      char errStr[AV_ERROR_MAX_STRING_SIZE];
+      mLib->av_strerror(res, errStr, AV_ERROR_MAX_STRING_SIZE);
+      FFMPEG_LOG("  avcodec_receive_frame error: %s", errStr);
+      return MediaResult(
+          NS_ERROR_DOM_MEDIA_DECODE_ERR,
+          RESULT_DETAIL("avcodec_receive_frame error: %s", errStr));
     }
 
     UpdateDecodeTimes(decodeStart);
@@ -945,7 +950,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 
   if (bytesConsumed < 0) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       RESULT_DETAIL("FFmpeg video error:%d", bytesConsumed));
+                       RESULT_DETAIL("FFmpeg video error: %d", bytesConsumed));
   }
 
   if (!decoded) {
