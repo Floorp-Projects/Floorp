@@ -25,6 +25,7 @@ namespace dcsctp {
 namespace {
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+using ::testing::UnorderedElementsAre;
 
 constexpr size_t kArwnd = 10000;
 constexpr TSN kInitialTSN(11);
@@ -228,6 +229,44 @@ TEST_F(DataTrackerTest, WillNotAcceptInvalidTSNs) {
   EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn - 65536)));
   EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn + 0x8000000)));
   EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn - 0x8000000)));
+}
+
+TEST_F(DataTrackerTest, ReportSingleDuplicateTsns) {
+  Observer({11, 12, 11});
+  SackChunk sack = buf_.CreateSelectiveAck(kArwnd);
+  EXPECT_EQ(sack.cumulative_tsn_ack(), TSN(12));
+  EXPECT_THAT(sack.gap_ack_blocks(), IsEmpty());
+  EXPECT_THAT(sack.duplicate_tsns(), UnorderedElementsAre(TSN(11)));
+}
+
+TEST_F(DataTrackerTest, ReportMultipleDuplicateTsns) {
+  Observer({11, 12, 13, 14, 12, 13, 12, 13, 15, 16});
+  SackChunk sack = buf_.CreateSelectiveAck(kArwnd);
+  EXPECT_EQ(sack.cumulative_tsn_ack(), TSN(16));
+  EXPECT_THAT(sack.gap_ack_blocks(), IsEmpty());
+  EXPECT_THAT(sack.duplicate_tsns(), UnorderedElementsAre(TSN(12), TSN(13)));
+}
+
+TEST_F(DataTrackerTest, ReportDuplicateTsnsInGapAckBlocks) {
+  Observer({11, /*12,*/ 13, 14, 13, 14, 15, 16});
+  SackChunk sack = buf_.CreateSelectiveAck(kArwnd);
+  EXPECT_EQ(sack.cumulative_tsn_ack(), TSN(11));
+  EXPECT_THAT(sack.gap_ack_blocks(), ElementsAre(SackChunk::GapAckBlock(2, 5)));
+  EXPECT_THAT(sack.duplicate_tsns(), UnorderedElementsAre(TSN(13), TSN(14)));
+}
+
+TEST_F(DataTrackerTest, ClearsDuplicateTsnsAfterCreatingSack) {
+  Observer({11, 12, 13, 14, 12, 13, 12, 13, 15, 16});
+  SackChunk sack1 = buf_.CreateSelectiveAck(kArwnd);
+  EXPECT_EQ(sack1.cumulative_tsn_ack(), TSN(16));
+  EXPECT_THAT(sack1.gap_ack_blocks(), IsEmpty());
+  EXPECT_THAT(sack1.duplicate_tsns(), UnorderedElementsAre(TSN(12), TSN(13)));
+
+  Observer({17});
+  SackChunk sack2 = buf_.CreateSelectiveAck(kArwnd);
+  EXPECT_EQ(sack2.cumulative_tsn_ack(), TSN(17));
+  EXPECT_THAT(sack2.gap_ack_blocks(), IsEmpty());
+  EXPECT_THAT(sack2.duplicate_tsns(), IsEmpty());
 }
 
 }  // namespace

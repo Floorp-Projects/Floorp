@@ -126,7 +126,7 @@ class DataTracker {
   UnwrappedTSN last_cumulative_acked_tsn_;
   // Received TSNs that are not directly following `last_cumulative_acked_tsn_`.
   std::set<UnwrappedTSN> additional_tsns_;
-  std::set<UnwrappedTSN> duplicates_;
+  std::set<TSN> duplicate_tsns_;
 };
 }  // namespace dcsctp
 
