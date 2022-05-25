@@ -1755,45 +1755,45 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 #endif
 
     ////////////////////////////////////
-    // FEATURE_HW_DECODED_VIDEO_NO_COPY
+    // FEATURE_HW_DECODED_VIDEO_ZERO_COPY
 
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(
         OperatingSystem::Windows10, DeviceFamily::IntelSkylake,
-        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
         V(20, 19, 15, 4285), V(20, 19, 15, 4380), "FEATURE_FAILURE_BUG_1763280",
         "Intel driver 20.19.15.*");
 
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(
         OperatingSystem::Windows10, DeviceFamily::IntelSkylake,
-        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
         V(10, 18, 15, 4256), V(10, 18, 15, 4293), "FEATURE_FAILURE_BUG_1763280",
         "Intel driver 10.18.15.*");
 
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows, DeviceFamily::NvidiaAll,
-        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(21, 21, 13, 7576), "FEATURE_FAILURE_BUG_1767212");
 
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows, DeviceFamily::AtiAll,
-                                nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+                                nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
                                 nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
                                 DRIVER_LESS_THAN, V(23, 20, 826, 5120),
                                 "FEATURE_FAILURE_BUG_1767212");
 
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows, DeviceFamily::RadeonBlockNoVideoCopy,
-        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(26, 20, 15000, 37), "FEATURE_FAILURE_BUG_1767212");
 
     ////////////////////////////////////
-    // FEATURE_HW_DECODED_VIDEO_NO_COPY - ALLOWLIST
+    // FEATURE_HW_DECODED_VIDEO_ZERO_COPY - ALLOWLIST
 #ifdef NIGHTLY_BUILD
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows, DeviceFamily::All,
-                                nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+                                nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
                                 nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
                                 DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
                                 "FEATURE_ROLLOUT_ALL");
