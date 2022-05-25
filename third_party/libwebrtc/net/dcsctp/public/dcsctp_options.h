@@ -95,8 +95,9 @@ struct DcSctpOptions {
   // Maximum RTO value.
   DurationMs rto_max = DurationMs(800);
 
-  // Minimum RTO value.
-  DurationMs rto_min = DurationMs(120);
+  // Minimum RTO value. This must be larger than an expected peer delayed ack
+  // timeout.
+  DurationMs rto_min = DurationMs(220);
 
   // T1-init timeout.
   DurationMs t1_init_timeout = DurationMs(1000);
