@@ -24,7 +24,7 @@ native API header files.
  * Samples and reference apps: https://github.com/webrtc
  * Mailing list: http://groups.google.com/group/discuss-webrtc
  * Continuous build: https://ci.chromium.org/p/webrtc/g/ci/console
- * [Coding style guide](style-guide.md)
+ * [Coding style guide](g3doc/style-guide.md)
  * [Code of conduct](CODE_OF_CONDUCT.md)
  * [Reporting bugs](docs/bug-reporting.md)
 
