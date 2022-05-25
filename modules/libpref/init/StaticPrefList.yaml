@@ -8161,12 +8161,6 @@
   value: 1
   mirror: always
 
-# Whether we should throttle in-process iframes in the active tab.
-- name: layout.throttle_in_process_iframes
-  type: bool
-  value: true
-  mirror: always
-
 # Activity granted to out-of-process iframes in the foreground tab, in milliseconds.
 - name: layout.oopif_activity_grace_period_ms
   type: uint32_t
