@@ -216,8 +216,6 @@ rtc_library("peerconnection") {
     ":connection_context",
     ":dtmf_sender",
     ":jitter_buffer_delay",
-    ":jitter_buffer_delay_interface",
-    ":jitter_buffer_delay_proxy",
     ":media_protocol_names",
     ":media_stream",
     ":peer_connection_message_handler",
@@ -502,8 +500,6 @@ rtc_library("audio_rtp_receiver") {
   deps = [
     ":audio_track",
     ":jitter_buffer_delay",
-    ":jitter_buffer_delay_interface",
-    ":jitter_buffer_delay_proxy",
     ":media_stream",
     ":remote_audio_source",
     ":rtp_receiver",
@@ -520,6 +516,9 @@ rtc_library("audio_rtp_receiver") {
     "../rtc_base:checks",
     "../rtc_base:refcount",
     "../rtc_base:threading",
+    "../rtc_base/system:no_unique_address",
+    "../rtc_base/task_utils:pending_task_safety_flag",
+    "../rtc_base/task_utils:to_queued_task",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -535,8 +534,6 @@ rtc_library("video_rtp_receiver") {
   ]
   deps = [
     ":jitter_buffer_delay",
-    ":jitter_buffer_delay_interface",
-    ":jitter_buffer_delay_proxy",
     ":media_stream",
     ":rtp_receiver",
     ":video_rtp_track_source",
@@ -556,6 +553,7 @@ rtc_library("video_rtp_receiver") {
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:threading",
+    "../rtc_base/system:no_unique_address",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -615,33 +613,11 @@ rtc_library("video_track") {
   ]
 }
 
-rtc_source_set("jitter_buffer_delay_interface") {
-  sources = [ "jitter_buffer_delay_interface.h" ]
-  deps = [
-    "../media:rtc_media_base",
-    "../rtc_base:refcount",
-  ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/algorithm:container",
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-}
-
 rtc_source_set("sdp_state_provider") {
   sources = [ "sdp_state_provider.h" ]
   deps = [
     ":rtc_pc_base",
     "../api:libjingle_peerconnection_api",
-  ]
-}
-
-rtc_source_set("jitter_buffer_delay_proxy") {
-  sources = [ "jitter_buffer_delay_proxy.h" ]
-  deps = [
-    ":jitter_buffer_delay_interface",
-    "../api:libjingle_peerconnection_api",
-    "../media:rtc_media_base",
   ]
 }
 
@@ -651,20 +627,13 @@ rtc_library("jitter_buffer_delay") {
     "jitter_buffer_delay.h",
   ]
   deps = [
-    ":jitter_buffer_delay_interface",
     "../api:sequence_checker",
-    "../media:rtc_media_base",
-    "../rtc_base",
     "../rtc_base:checks",
-    "../rtc_base:refcount",
+    "../rtc_base:safe_conversions",
     "../rtc_base:safe_minmax",
-    "../rtc_base:threading",
+    "../rtc_base/system:no_unique_address",
   ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/algorithm:container",
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("remote_audio_source") {
@@ -1024,7 +993,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":dtmf_sender",
       ":integration_test_helpers",
       ":jitter_buffer_delay",
-      ":jitter_buffer_delay_interface",
       ":media_stream",
       ":peerconnection",
       ":remote_audio_source",
@@ -1092,6 +1060,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../test:field_trial",
       "../test:fileutils",
       "../test:rtp_test_utils",
+      "../test:test_common",
       "../test/pc/sctp:fake_sctp_transport",
       "./scenario_tests:pc_scenario_tests",
       "//third_party/abseil-cpp/absl/algorithm:container",
@@ -1181,7 +1150,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":audio_track",
       ":dtmf_sender",
       ":jitter_buffer_delay",
-      ":jitter_buffer_delay_interface",
       ":media_stream",
       ":pc_test_utils",
       ":peerconnection",
@@ -1291,7 +1259,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "test/frame_generator_capturer_video_track_source.h",
       "test/mock_channel_interface.h",
       "test/mock_data_channel.h",
-      "test/mock_delayable.h",
       "test/mock_peer_connection_observers.h",
       "test/mock_rtp_receiver_internal.h",
       "test/mock_rtp_sender_internal.h",
@@ -1303,7 +1270,6 @@ if (rtc_include_tests && !build_with_chromium) {
 
     deps = [
       ":jitter_buffer_delay",
-      ":jitter_buffer_delay_interface",
       ":libjingle_peerconnection",
       ":peerconnection",
       ":rtc_pc_base",

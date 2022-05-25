@@ -17,8 +17,10 @@
 #include "test/gmock.h"
 
 using ::testing::_;
+using ::testing::AnyNumber;
 using ::testing::InSequence;
 using ::testing::Mock;
+using ::testing::NiceMock;
 using ::testing::SaveArg;
 using ::testing::StrictMock;
 
@@ -53,11 +55,18 @@ class VideoRtpReceiverTest : public testing::Test {
   VideoRtpReceiverTest()
       : worker_thread_(rtc::Thread::Create()),
         channel_(nullptr, cricket::VideoOptions()),
-        receiver_(new VideoRtpReceiver(worker_thread_.get(),
-                                       "receiver",
-                                       {"stream"})) {
+        receiver_(rtc::make_ref_counted<VideoRtpReceiver>(
+            worker_thread_.get(),
+            std::string("receiver"),
+            std::vector<std::string>({"stream"}))) {
     worker_thread_->Start();
     receiver_->SetMediaChannel(&channel_);
+  }
+
+  ~VideoRtpReceiverTest() override {
+    // Clear expectations that tests may have set up before calling Stop().
+    Mock::VerifyAndClearExpectations(&channel_);
+    receiver_->Stop();
   }
 
   webrtc::VideoTrackSourceInterface* Source() {
@@ -65,7 +74,7 @@ class VideoRtpReceiverTest : public testing::Test {
   }
 
   std::unique_ptr<rtc::Thread> worker_thread_;
-  MockVideoMediaChannel channel_;
+  NiceMock<MockVideoMediaChannel> channel_;
   rtc::scoped_refptr<VideoRtpReceiver> receiver_;
 };
 
@@ -98,6 +107,10 @@ TEST_F(VideoRtpReceiverTest,
   // Switching to a new channel should now not cause calls to GenerateKeyFrame.
   StrictMock<MockVideoMediaChannel> channel4(nullptr, cricket::VideoOptions());
   receiver_->SetMediaChannel(&channel4);
+
+  // We must call Stop() here since the mock media channels live on the stack
+  // and `receiver_` still has a pointer to those objects.
+  receiver_->Stop();
 }
 
 TEST_F(VideoRtpReceiverTest, EnablesEncodedOutput) {
@@ -131,6 +144,10 @@ TEST_F(VideoRtpReceiverTest, DisablesEnablesEncodedOutputOnChannelSwitch) {
   Source()->RemoveEncodedSink(&sink);
   StrictMock<MockVideoMediaChannel> channel3(nullptr, cricket::VideoOptions());
   receiver_->SetMediaChannel(&channel3);
+
+  // We must call Stop() here since the mock media channels live on the stack
+  // and `receiver_` still has a pointer to those objects.
+  receiver_->Stop();
 }
 
 TEST_F(VideoRtpReceiverTest, BroadcastsEncodedFramesWhenEnabled) {

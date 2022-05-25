@@ -1163,9 +1163,10 @@ void StatsCollector::ExtractMediaInfo(
 
   std::vector<std::unique_ptr<MediaChannelStatsGatherer>> gatherers;
 
+  auto transceivers = pc_->GetTransceiversInternal();
   {
     rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
-    for (const auto& transceiver : pc_->GetTransceiversInternal()) {
+    for (const auto& transceiver : transceivers) {
       cricket::ChannelInterface* channel = transceiver->internal()->channel();
       if (!channel) {
         continue;
@@ -1176,20 +1177,37 @@ void StatsCollector::ExtractMediaInfo(
       gatherer->transport_name = transport_names_by_mid.at(gatherer->mid);
 
       for (const auto& sender : transceiver->internal()->senders()) {
-        std::string track_id = (sender->track() ? sender->track()->id() : "");
+        auto track = sender->track();
+        std::string track_id = (track ? track->id() : "");
         gatherer->sender_track_id_by_ssrc.insert(
             std::make_pair(sender->ssrc(), track_id));
       }
-      for (const auto& receiver : transceiver->internal()->receivers()) {
-        gatherer->receiver_track_id_by_ssrc.insert(std::make_pair(
-            receiver->internal()->ssrc(), receiver->track()->id()));
-      }
+
+      // Populating `receiver_track_id_by_ssrc` will be done on the worker
+      // thread as the `ssrc` property of the receiver needs to be accessed
+      // there.
+
       gatherers.push_back(std::move(gatherer));
     }
   }
 
   pc_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&] {
     rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+    // Populate `receiver_track_id_by_ssrc` for the gatherers.
+    int i = 0;
+    for (const auto& transceiver : transceivers) {
+      cricket::ChannelInterface* channel = transceiver->internal()->channel();
+      if (!channel)
+        continue;
+      MediaChannelStatsGatherer* gatherer = gatherers[i++].get();
+      RTC_DCHECK_EQ(gatherer->mid, channel->content_name());
+
+      for (const auto& receiver : transceiver->internal()->receivers()) {
+        gatherer->receiver_track_id_by_ssrc.insert(std::make_pair(
+            receiver->internal()->ssrc(), receiver->track()->id()));
+      }
+    }
+
     for (auto it = gatherers.begin(); it != gatherers.end();
          /* incremented manually */) {
       MediaChannelStatsGatherer* gatherer = it->get();

@@ -211,14 +211,10 @@ void RtpTransceiver::SetChannel(cricket::ChannelInterface* channel) {
 
   for (const auto& receiver : receivers_) {
     if (!channel_) {
-      // TODO(tommi): This can internally block and hop to the worker thread.
-      // It's likely that SetMediaChannel also does that, so perhaps we should
-      // require SetMediaChannel(nullptr) to also Stop() and skip this call.
       receiver->internal()->Stop();
+    } else {
+      receiver->internal()->SetMediaChannel(channel_->media_channel());
     }
-
-    receiver->internal()->SetMediaChannel(channel_ ? channel_->media_channel()
-                                                   : nullptr);
   }
 }
 
@@ -268,12 +264,8 @@ bool RtpTransceiver::RemoveReceiver(RtpReceiverInterface* receiver) {
   if (it == receivers_.end()) {
     return false;
   }
+  // `Stop()` will clear the internally cached pointer to the media channel.
   (*it)->internal()->Stop();
-  // After the receiver has been removed, there's no guarantee that the
-  // contained media channel isn't deleted shortly after this. To make sure that
-  // the receiver doesn't spontaneously try to use it's (potentially stale)
-  // media channel reference, we clear it out.
-  (*it)->internal()->SetMediaChannel(nullptr);
   receivers_.erase(it);
   return true;
 }

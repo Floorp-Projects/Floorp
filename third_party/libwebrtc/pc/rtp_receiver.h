@@ -92,13 +92,6 @@ class RtpReceiverInternal : public RtpReceiverInterface {
 
   static std::vector<rtc::scoped_refptr<MediaStreamInterface>>
   CreateStreamsFromIds(std::vector<std::string> stream_ids);
-
-  static void MaybeAttachFrameDecryptorToMediaChannel(
-      const absl::optional<uint32_t>& ssrc,
-      rtc::Thread* worker_thread,
-      rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor,
-      cricket::MediaChannel* media_channel,
-      bool stopped);
 };
 
 }  // namespace webrtc

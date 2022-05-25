@@ -63,6 +63,7 @@
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/run_loop.h"
 
 using ::testing::_;
 using ::testing::ContainerEq;
@@ -299,9 +300,9 @@ class RtpSenderReceiverTest
 
   void CreateAudioRtpReceiver(
       std::vector<rtc::scoped_refptr<MediaStreamInterface>> streams = {}) {
-    audio_rtp_receiver_ =
-        new AudioRtpReceiver(rtc::Thread::Current(), kAudioTrackId, streams,
-                             /*is_unified_plan=*/true);
+    audio_rtp_receiver_ = rtc::make_ref_counted<AudioRtpReceiver>(
+        rtc::Thread::Current(), kAudioTrackId, streams,
+        /*is_unified_plan=*/true);
     audio_rtp_receiver_->SetMediaChannel(voice_media_channel_);
     audio_rtp_receiver_->SetupMediaChannel(kAudioSsrc);
     audio_track_ = audio_rtp_receiver_->audio_track();
@@ -310,8 +311,8 @@ class RtpSenderReceiverTest
 
   void CreateVideoRtpReceiver(
       std::vector<rtc::scoped_refptr<MediaStreamInterface>> streams = {}) {
-    video_rtp_receiver_ =
-        new VideoRtpReceiver(rtc::Thread::Current(), kVideoTrackId, streams);
+    video_rtp_receiver_ = rtc::make_ref_counted<VideoRtpReceiver>(
+        rtc::Thread::Current(), kVideoTrackId, streams);
     video_rtp_receiver_->SetMediaChannel(video_media_channel_);
     video_rtp_receiver_->SetupMediaChannel(kVideoSsrc);
     video_track_ = video_rtp_receiver_->video_track();
@@ -330,19 +331,25 @@ class RtpSenderReceiverTest
     video_media_channel_->AddRecvStream(stream_params);
     uint32_t primary_ssrc = stream_params.first_ssrc();
 
-    video_rtp_receiver_ =
-        new VideoRtpReceiver(rtc::Thread::Current(), kVideoTrackId, streams);
+    video_rtp_receiver_ = rtc::make_ref_counted<VideoRtpReceiver>(
+        rtc::Thread::Current(), kVideoTrackId, streams);
     video_rtp_receiver_->SetMediaChannel(video_media_channel_);
     video_rtp_receiver_->SetupMediaChannel(primary_ssrc);
     video_track_ = video_rtp_receiver_->video_track();
   }
 
   void DestroyAudioRtpReceiver() {
+    if (!audio_rtp_receiver_)
+      return;
+    audio_rtp_receiver_->Stop();
     audio_rtp_receiver_ = nullptr;
     VerifyVoiceChannelNoOutput();
   }
 
   void DestroyVideoRtpReceiver() {
+    if (!video_rtp_receiver_)
+      return;
+    video_rtp_receiver_->Stop();
     video_rtp_receiver_ = nullptr;
     VerifyVideoChannelNoOutput();
   }
@@ -498,6 +505,7 @@ class RtpSenderReceiverTest
   }
 
  protected:
+  test::RunLoop run_loop_;
   rtc::Thread* const network_thread_;
   rtc::Thread* const worker_thread_;
   webrtc::RtcEventLogNull event_log_;
@@ -599,11 +607,15 @@ TEST_F(RtpSenderReceiverTest, RemoteAudioTrackDisable) {
   EXPECT_TRUE(voice_media_channel_->GetOutputVolume(kAudioSsrc, &volume));
   EXPECT_EQ(1, volume);
 
+  // Handling of enable/disable is applied asynchronously.
   audio_track_->set_enabled(false);
+  run_loop_.Flush();
+
   EXPECT_TRUE(voice_media_channel_->GetOutputVolume(kAudioSsrc, &volume));
   EXPECT_EQ(0, volume);
 
   audio_track_->set_enabled(true);
+  run_loop_.Flush();
   EXPECT_TRUE(voice_media_channel_->GetOutputVolume(kAudioSsrc, &volume));
   EXPECT_EQ(1, volume);
 
@@ -636,6 +648,7 @@ TEST_F(RtpSenderReceiverTest, RemoteVideoTrackState) {
   EXPECT_EQ(webrtc::MediaStreamTrackInterface::kEnded, video_track_->state());
   EXPECT_EQ(webrtc::MediaSourceInterface::kEnded,
             video_track_->GetSource()->state());
+  DestroyVideoRtpReceiver();
 }
 
 // Currently no action is taken when a remote video track is disabled or
@@ -657,22 +670,27 @@ TEST_F(RtpSenderReceiverTest, RemoteAudioTrackSetVolume) {
 
   double volume;
   audio_track_->GetSource()->SetVolume(0.5);
+  run_loop_.Flush();
   EXPECT_TRUE(voice_media_channel_->GetOutputVolume(kAudioSsrc, &volume));
   EXPECT_EQ(0.5, volume);
 
   // Disable the audio track, this should prevent setting the volume.
   audio_track_->set_enabled(false);
+  RTC_DCHECK_EQ(worker_thread_, run_loop_.task_queue());
+  run_loop_.Flush();
   audio_track_->GetSource()->SetVolume(0.8);
   EXPECT_TRUE(voice_media_channel_->GetOutputVolume(kAudioSsrc, &volume));
   EXPECT_EQ(0, volume);
 
   // When the track is enabled, the previously set volume should take effect.
   audio_track_->set_enabled(true);
+  run_loop_.Flush();
   EXPECT_TRUE(voice_media_channel_->GetOutputVolume(kAudioSsrc, &volume));
   EXPECT_EQ(0.8, volume);
 
   // Try changing volume one more time.
   audio_track_->GetSource()->SetVolume(0.9);
+  run_loop_.Flush();
   EXPECT_TRUE(voice_media_channel_->GetOutputVolume(kAudioSsrc, &volume));
   EXPECT_EQ(0.9, volume);
 
@@ -683,12 +701,14 @@ TEST_F(RtpSenderReceiverTest, AudioRtpReceiverDelay) {
   CreateAudioRtpReceiver();
   VerifyRtpReceiverDelayBehaviour(voice_media_channel_,
                                   audio_rtp_receiver_.get(), kAudioSsrc);
+  DestroyAudioRtpReceiver();
 }
 
 TEST_F(RtpSenderReceiverTest, VideoRtpReceiverDelay) {
   CreateVideoRtpReceiver();
   VerifyRtpReceiverDelayBehaviour(video_media_channel_,
                                   video_rtp_receiver_.get(), kVideoSsrc);
+  DestroyVideoRtpReceiver();
 }
 
 // Test that the media channel isn't enabled for sending if the audio sender
@@ -1582,6 +1602,7 @@ TEST_F(RtpSenderReceiverTest, AudioReceiverCanSetFrameDecryptor) {
   audio_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
   EXPECT_EQ(fake_frame_decryptor.get(),
             audio_rtp_receiver_->GetFrameDecryptor().get());
+  DestroyAudioRtpReceiver();
 }
 
 // Validate that the default FrameEncryptor setting is nullptr.
@@ -1593,6 +1614,7 @@ TEST_F(RtpSenderReceiverTest, AudioReceiverCannotSetFrameDecryptorAfterStop) {
   audio_rtp_receiver_->Stop();
   audio_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
   // TODO(webrtc:9926) - Validate media channel not set once fakes updated.
+  DestroyAudioRtpReceiver();
 }
 
 // Validate that the default FrameEncryptor setting is nullptr.
@@ -1627,6 +1649,7 @@ TEST_F(RtpSenderReceiverTest, VideoReceiverCanSetFrameDecryptor) {
   video_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
   EXPECT_EQ(fake_frame_decryptor.get(),
             video_rtp_receiver_->GetFrameDecryptor().get());
+  DestroyVideoRtpReceiver();
 }
 
 // Validate that the default FrameEncryptor setting is nullptr.
@@ -1638,6 +1661,7 @@ TEST_F(RtpSenderReceiverTest, VideoReceiverCannotSetFrameDecryptorAfterStop) {
   video_rtp_receiver_->Stop();
   video_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
   // TODO(webrtc:9926) - Validate media channel not set once fakes updated.
+  DestroyVideoRtpReceiver();
 }
 
 // Checks that calling the internal methods for get/set parameters do not
