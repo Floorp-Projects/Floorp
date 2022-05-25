@@ -14,6 +14,6 @@
 
 namespace webrtc {
 
-RtcEvent::RtcEvent() : timestamp_us_(rtc::TimeMillis() * 1000) {}
+RtcEvent::RtcEvent() : timestamp_us_(rtc::TimeMicros()) {}
 
 }  // namespace webrtc

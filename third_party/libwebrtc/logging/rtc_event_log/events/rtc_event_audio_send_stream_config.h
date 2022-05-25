@@ -41,13 +41,13 @@ class RtcEventAudioSendStreamConfig final : public RtcEvent {
 
 struct LoggedAudioSendConfig {
   LoggedAudioSendConfig() = default;
-  LoggedAudioSendConfig(Timestamp timestamp, const rtclog::StreamConfig config)
-      : timestamp(timestamp), config(config) {}
+  LoggedAudioSendConfig(int64_t timestamp_us, const rtclog::StreamConfig config)
+      : timestamp_us(timestamp_us), config(config) {}
 
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
 
-  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t timestamp_us;
   rtclog::StreamConfig config;
 };
 }  // namespace webrtc
