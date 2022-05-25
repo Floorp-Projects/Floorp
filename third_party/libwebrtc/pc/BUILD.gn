@@ -1056,6 +1056,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base/synchronization:mutex",
       "../rtc_base/third_party/base64",
       "../rtc_base/third_party/sigslot",
+      "../system_wrappers:field_trial",
       "../system_wrappers:metrics",
       "../test:field_trial",
       "../test:fileutils",

@@ -139,6 +139,7 @@ RtpCapabilities PeerConnectionFactory::GetRtpSenderCapabilities(
     case cricket::MEDIA_TYPE_UNSUPPORTED:
       return RtpCapabilities();
   }
+  RTC_DLOG(LS_ERROR) << "Got unexpected MediaType " << kind;
   RTC_CHECK_NOTREACHED();
 }
 
@@ -165,6 +166,7 @@ RtpCapabilities PeerConnectionFactory::GetRtpReceiverCapabilities(
     case cricket::MEDIA_TYPE_UNSUPPORTED:
       return RtpCapabilities();
   }
+  RTC_DLOG(LS_ERROR) << "Got unexpected MediaType " << kind;
   RTC_CHECK_NOTREACHED();
 }
 
