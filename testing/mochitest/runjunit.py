@@ -157,6 +157,11 @@ class JUnitTestRunner(MochitestDesktop):
         # Set preferences
         self.merge_base_profiles(self.options, "geckoview-junit")
 
+        if self.options.web_content_isolation_strategy is not None:
+            self.options.extra_prefs.append(
+                "fission.webContentIsolationStrategy=%s"
+                % self.options.web_content_isolation_strategy
+            )
         self.options.extra_prefs.append("fission.autostart=true")
         if self.options.disable_fission:
             self.options.extra_prefs.pop()
@@ -586,6 +591,13 @@ class JunitArgumentParser(argparse.ArgumentParser):
             dest="disable_fission",
             default=False,
             help="Run the tests without Fission (site isolation) enabled.",
+        )
+        self.add_argument(
+            "--web-content-isolation-strategy",
+            type=int,
+            dest="web_content_isolation_strategy",
+            help="Strategy used to determine whether or not a particular site should load into "
+            "a webIsolated content process, see fission.webContentIsolationStrategy.",
         )
         self.add_argument(
             "--repeat",
