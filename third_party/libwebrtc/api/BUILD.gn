@@ -158,7 +158,9 @@ rtc_library("libjingle_peerconnection_api") {
     "stats_types.h",
     "turn_customizer.h",
     "uma_metrics.h",
+    "video_track_source_proxy.cc",
     "video_track_source_proxy.h",
+    "video_track_source_proxy_factory.h",
   ]
   deps = [
     ":array_view",

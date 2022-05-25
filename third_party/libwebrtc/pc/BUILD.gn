@@ -50,6 +50,8 @@ rtc_library("rtc_pc_base") {
     "rtcp_mux_filter.h",
     "rtp_media_utils.cc",
     "rtp_media_utils.h",
+    "rtp_receiver_proxy.h",
+    "rtp_sender_proxy.h",
     "rtp_transport.cc",
     "rtp_transport.h",
     "rtp_transport_internal.h",
