@@ -1056,6 +1056,7 @@ nsCaret* nsDisplayListBuilder::GetCaret() {
 
 void nsDisplayListBuilder::IncrementPresShellPaintCount(PresShell* aPresShell) {
   if (mIsPaintingToWindow) {
+    mReferenceFrame->AddPaintedPresShell(aPresShell);
     aPresShell->IncrementPaintCount();
   }
 }
