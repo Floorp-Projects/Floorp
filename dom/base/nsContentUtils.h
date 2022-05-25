@@ -2459,7 +2459,11 @@ class nsContentUtils {
    * Returns the in-process subtree root document in a document hierarchy.
    * This could be a chrome document.
    */
-  static Document* GetInProcessSubtreeRootDocument(Document* aDoc);
+  static Document* GetInProcessSubtreeRootDocument(Document* aDoc) {
+    return const_cast<Document*>(
+        GetInProcessSubtreeRootDocument(const_cast<const Document*>(aDoc)));
+  }
+  static const Document* GetInProcessSubtreeRootDocument(const Document* aDoc);
 
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);
