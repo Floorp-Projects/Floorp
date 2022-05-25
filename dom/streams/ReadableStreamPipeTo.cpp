@@ -26,9 +26,6 @@ struct PipeToReadRequest;
 class WriteFinishedPromiseHandler;
 class ShutdownActionFinishedPromiseHandler;
 
-// TODO: Bug 1756794
-using ::ImplCycleCollectionUnlink;
-
 // https://streams.spec.whatwg.org/#readable-stream-pipe-to (Steps 14-15.)
 //
 // This class implements everything that is required to read all chunks from
