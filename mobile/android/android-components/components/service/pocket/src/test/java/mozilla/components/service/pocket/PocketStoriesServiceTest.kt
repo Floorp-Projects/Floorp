@@ -31,6 +31,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.util.UUID
 import kotlin.reflect.KVisibility
@@ -167,14 +169,16 @@ class PocketStoriesServiceTest {
 
     @Test
     fun `GIVEN PocketStoriesService WHEN deleteProfile THEN delegate to spocs useCases`() = runTest {
-        val noProfileResponse = service.deleteProfile()
+        val mockedService = spy(service)
+        val noProfileResponse = mockedService.deleteProfile()
         assertFalse(noProfileResponse)
 
         val deleteProfileUseCase: DeleteProfile = mock()
         doReturn(deleteProfileUseCase).`when`(spocsUseCases).deleteProfile
         doReturn(true).`when`(deleteProfileUseCase).invoke()
-        val existingProfileResponse = service.deleteProfile()
+        val existingProfileResponse = mockedService.deleteProfile()
         assertTrue(existingProfileResponse)
+        verify(mockedService, times(2)).stopPeriodicSponsoredStoriesRefresh()
     }
 
     @Test

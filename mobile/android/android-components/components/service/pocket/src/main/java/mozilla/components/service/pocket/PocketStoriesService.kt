@@ -128,6 +128,7 @@ class PocketStoriesService(
      * Delete all stored user data used for downloading personalized sponsored stories.
      */
     suspend fun deleteProfile(): Boolean {
+        stopPeriodicSponsoredStoriesRefresh()
         return spocsUseCases?.deleteProfile?.invoke() ?: false
     }
 
