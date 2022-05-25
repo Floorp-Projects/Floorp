@@ -497,7 +497,7 @@ private fun sitePermissions() =
         .getChildByText(UiSelector().text("Site permissions"), "Site permissions", true)
 
 private fun useFingerprintSwitch(): ViewInteraction {
-    val useFingerprintSwitchSummary = getStringResource(R.string.preference_security_biometric_summary)
+    val useFingerprintSwitchSummary = getStringResource(R.string.preference_security_biometric_summary2)
     privacySettingsList.scrollTextIntoView(useFingerprintSwitchSummary)
     return onView(withText(useFingerprintSwitchSummary))
 }
