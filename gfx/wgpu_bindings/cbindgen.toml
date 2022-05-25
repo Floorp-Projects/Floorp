@@ -2,10 +2,17 @@ header = """/* This Source Code Form is subject to the terms of the Mozilla Publ
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"""
 autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
- * To generate this file:
- *   1. Get the latest cbindgen using `cargo install --force cbindgen`
- *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
- *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --lockfile Cargo.lock --crate wgpu_bindings -o dom/webgpu/ffi/wgpu_ffi_generated.h`
+ *
+ * This file is generated based on the configuration in
+ * `gfx/wgpu_bindings/moz.build`, which directs the build system module
+ * `build/RunCbindgen.py` to run the following command at the top of
+ * the object file directory:
+ * 
+ *     $CBINDGEN $TOPSRCDIR --lockfile $TOPSRCDIR/Cargo.lock --crate wgpu_bindings --metadata config/cbindgen-metadata.json --cpp-compat > gfx/wgpu_bindings/wgpu_ffi_generated.h
+ *
+ * where:
+ * - $TOPSRCDIR is the top of the Firefox source tree, and
+ * - $CBINDGEN is the path to the cbindgen executable provided by mozbuild (the exact version often matters)
  */
 
 struct WGPUByteBuf;
