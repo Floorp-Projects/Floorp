@@ -1161,6 +1161,55 @@ TEST_P(RtpSenderVideoTest, PopulatesPlayoutDelay) {
   EXPECT_EQ(received_delay, kExpectedDelay);
 }
 
+TEST_P(RtpSenderVideoTest, SendGenericVideo) {
+  const uint8_t kPayloadType = 127;
+  const VideoCodecType kCodecType = VideoCodecType::kVideoCodecGeneric;
+  const uint8_t kPayload[] = {47, 11, 32, 93, 89};
+
+  // Send keyframe.
+  RTPVideoHeader video_header;
+  video_header.frame_type = VideoFrameType::kVideoFrameKey;
+  ASSERT_TRUE(rtp_sender_video_->SendVideo(kPayloadType, kCodecType, 1234, 4321,
+                                           kPayload, video_header,
+                                           absl::nullopt));
+
+  rtc::ArrayView<const uint8_t> sent_payload =
+      transport_.last_sent_packet().payload();
+  uint8_t generic_header = sent_payload[0];
+  EXPECT_TRUE(generic_header & RtpFormatVideoGeneric::kKeyFrameBit);
+  EXPECT_TRUE(generic_header & RtpFormatVideoGeneric::kFirstPacketBit);
+  EXPECT_THAT(sent_payload.subview(1), ElementsAreArray(kPayload));
+
+  // Send delta frame.
+  const uint8_t kDeltaPayload[] = {13, 42, 32, 93, 13};
+  video_header.frame_type = VideoFrameType::kVideoFrameDelta;
+  ASSERT_TRUE(rtp_sender_video_->SendVideo(kPayloadType, kCodecType, 1234, 4321,
+                                           kDeltaPayload, video_header,
+                                           absl::nullopt));
+
+  sent_payload = sent_payload = transport_.last_sent_packet().payload();
+  generic_header = sent_payload[0];
+  EXPECT_FALSE(generic_header & RtpFormatVideoGeneric::kKeyFrameBit);
+  EXPECT_TRUE(generic_header & RtpFormatVideoGeneric::kFirstPacketBit);
+  EXPECT_THAT(sent_payload.subview(1), ElementsAreArray(kDeltaPayload));
+}
+
+TEST_P(RtpSenderVideoTest, SendRawVideo) {
+  const uint8_t kPayloadType = 111;
+  const uint8_t kPayload[] = {11, 22, 33, 44, 55};
+
+  // Send a frame.
+  RTPVideoHeader video_header;
+  video_header.frame_type = VideoFrameType::kVideoFrameKey;
+  ASSERT_TRUE(rtp_sender_video_->SendVideo(kPayloadType, absl::nullopt, 1234,
+                                           4321, kPayload, video_header,
+                                           absl::nullopt));
+
+  rtc::ArrayView<const uint8_t> sent_payload =
+      transport_.last_sent_packet().payload();
+  EXPECT_THAT(sent_payload, ElementsAreArray(kPayload));
+}
+
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
                          RtpSenderVideoTest,
                          ::testing::Bool());
