@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
 import { showMenu, buildMenu } from "../../context-menu/menu";
@@ -35,6 +36,27 @@ import {
 import classnames from "classnames";
 
 class Tab extends PureComponent {
+  static get propTypes() {
+    return {
+      activeSearch: PropTypes.string,
+      closeTab: PropTypes.func.isRequired,
+      closeTabs: PropTypes.func.isRequired,
+      copyToClipboard: PropTypes.func.isRequired,
+      cx: PropTypes.object.isRequired,
+      hasSiblingOfSameName: PropTypes.bool.isRequired,
+      onDragEnd: PropTypes.func.isRequired,
+      onDragOver: PropTypes.func.isRequired,
+      onDragStart: PropTypes.func.isRequired,
+      selectSource: PropTypes.func.isRequired,
+      selectedSource: PropTypes.object,
+      showSource: PropTypes.func.isRequired,
+      source: PropTypes.object.isRequired,
+      tabSources: PropTypes.array.isRequired,
+      toggleBlackBox: PropTypes.func.isRequired,
+      togglePrettyPrint: PropTypes.func.isRequired,
+    };
+  }
+
   onTabContextMenu = (event, tab) => {
     event.preventDefault();
     this.showContextMenu(event, tab);

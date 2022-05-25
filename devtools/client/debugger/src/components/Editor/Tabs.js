@@ -4,6 +4,7 @@
 
 import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
 import {
@@ -54,6 +55,22 @@ class Tabs extends PureComponent {
     this.onResize = debounce(() => {
       this.updateHiddenTabs();
     });
+  }
+
+  static get propTypes() {
+    return {
+      cx: PropTypes.object.isRequired,
+      endPanelCollapsed: PropTypes.bool.isRequired,
+      horizontal: PropTypes.bool.isRequired,
+      isPaused: PropTypes.bool.isRequired,
+      moveTab: PropTypes.func.isRequired,
+      moveTabBySourceId: PropTypes.func.isRequired,
+      selectSource: PropTypes.func.isRequired,
+      selectedSource: PropTypes.object,
+      startPanelCollapsed: PropTypes.bool.isRequired,
+      tabSources: PropTypes.array.isRequired,
+      togglePaneCollapse: PropTypes.func.isRequired,
+    };
   }
 
   get draggedSource() {
