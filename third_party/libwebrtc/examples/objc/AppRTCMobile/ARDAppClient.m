@@ -191,9 +191,8 @@ static int const kKbpsMultiplier = 1000;
                                                   repeats:YES
                                              timerHandler:^{
       ARDAppClient *strongSelf = weakSelf;
-      [strongSelf.peerConnection statsForTrack:nil
-                              statsOutputLevel:RTCStatsOutputLevelDebug
-                             completionHandler:^(NSArray *stats) {
+      [strongSelf.peerConnection statisticsWithCompletionHandler:^(
+                                     RTC_OBJC_TYPE(RTCStatisticsReport) * stats) {
         dispatch_async(dispatch_get_main_queue(), ^{
           ARDAppClient *strongSelf = weakSelf;
           [strongSelf.delegate appClient:strongSelf didGetStats:stats];
