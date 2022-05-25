@@ -52,7 +52,7 @@ class BitstreamReader {
       std::function<bool()> f_true,
       std::function<bool()> f_false = [] { return true; }) {
     uint32_t val;
-    if (!buffer_->ReadBits(&val, 1)) {
+    if (!buffer_->ReadBits(1, val)) {
       return false;
     }
     if (val != 0) {
@@ -63,7 +63,7 @@ class BitstreamReader {
 
   absl::optional<bool> ReadBoolean() {
     uint32_t val;
-    if (!buffer_->ReadBits(&val, 1)) {
+    if (!buffer_->ReadBits(1, val)) {
       return {};
     }
     return {val != 0};
@@ -76,7 +76,7 @@ class BitstreamReader {
   //   logged as warning, if provided.
   bool VerifyNextBooleanIs(bool expected_val, absl::string_view error_msg) {
     uint32_t val;
-    if (!buffer_->ReadBits(&val, 1)) {
+    if (!buffer_->ReadBits(1, val)) {
       return false;
     }
     if ((val != 0) != expected_val) {
@@ -100,7 +100,7 @@ class BitstreamReader {
     RTC_DCHECK_LE(bits, 32);
     RTC_DCHECK_LE(bits, sizeof(T) * 8);
     uint32_t val;
-    if (!buffer_->ReadBits(&val, bits)) {
+    if (!buffer_->ReadBits(bits, val)) {
       return {};
     }
     return (static_cast<T>(val));
@@ -115,7 +115,7 @@ class BitstreamReader {
                             uint32_t expected_val,
                             absl::string_view error_msg) {
     uint32_t val;
-    if (!buffer_->ReadBits(&val, num_bits)) {
+    if (!buffer_->ReadBits(num_bits, val)) {
       return false;
     }
     if (val != expected_val) {
@@ -134,11 +134,11 @@ class BitstreamReader {
   template <typename T>
   absl::optional<T> ReadSigned(int bits = sizeof(T) * 8) {
     uint32_t sign;
-    if (!buffer_->ReadBits(&sign, 1)) {
+    if (!buffer_->ReadBits(1, sign)) {
       return {};
     }
     uint32_t val;
-    if (!buffer_->ReadBits(&val, bits)) {
+    if (!buffer_->ReadBits(bits, val)) {
       return {};
     }
     int64_t sign_val = val;
