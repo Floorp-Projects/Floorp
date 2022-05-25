@@ -77,7 +77,11 @@ bool Agc1Config::operator==(const Agc1Config& rhs) const {
          analog_lhs.startup_min_volume == analog_rhs.startup_min_volume &&
          analog_lhs.clipped_level_min == analog_rhs.clipped_level_min &&
          analog_lhs.enable_digital_adaptive ==
-             analog_rhs.enable_digital_adaptive;
+             analog_rhs.enable_digital_adaptive &&
+         analog_lhs.clipped_level_step == analog_rhs.clipped_level_step &&
+         analog_lhs.clipped_ratio_threshold ==
+             analog_rhs.clipped_ratio_threshold &&
+         analog_lhs.clipped_wait_frames == analog_rhs.clipped_wait_frames;
 }
 
 bool Agc2Config::AdaptiveDigital::operator==(
@@ -157,6 +161,12 @@ std::string AudioProcessing::Config::ToString() const {
       << gain_controller1.analog_gain_controller.clipped_level_min
       << ", enable_digital_adaptive: "
       << gain_controller1.analog_gain_controller.enable_digital_adaptive
+      << ", clipped_level_step: "
+      << gain_controller1.analog_gain_controller.clipped_level_step
+      << ", clipped_ratio_threshold: "
+      << gain_controller1.analog_gain_controller.clipped_ratio_threshold
+      << ", clipped_wait_frames: "
+      << gain_controller1.analog_gain_controller.clipped_wait_frames
       << " }}, gain_controller2: { enabled: " << gain_controller2.enabled
       << ", fixed_digital: { gain_db: "
       << gain_controller2.fixed_digital.gain_db

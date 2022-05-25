@@ -34,12 +34,20 @@ class AgcManagerDirect final {
   // AgcManagerDirect will configure GainControl internally. The user is
   // responsible for processing the audio using it after the call to Process.
   // The operating range of startup_min_level is [12, 255] and any input value
-  // outside that range will be clamped.
+  // outside that range will be clamped. `clipped_level_step` is the amount
+  // the microphone level is lowered with every clipping event, limited to
+  // (0, 255]. `clipped_ratio_threshold` is the proportion of clipped
+  // samples required to declare a clipping event, limited to (0.f, 1.f).
+  // `clipped_wait_frames` is the time in frames to wait after a clipping event
+  // before checking again, limited to values higher than 0.
   AgcManagerDirect(int num_capture_channels,
                    int startup_min_level,
                    int clipped_level_min,
                    bool disable_digital_adaptive,
-                   int sample_rate_hz);
+                   int sample_rate_hz,
+                   int clipped_level_step,
+                   float clipped_ratio_threshold,
+                   int clipped_wait_frames);
 
   ~AgcManagerDirect();
   AgcManagerDirect(const AgcManagerDirect&) = delete;
@@ -81,13 +89,18 @@ class AgcManagerDirect final {
                            AgcMinMicLevelExperimentEnabled50);
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
                            AgcMinMicLevelExperimentEnabledAboveStartupLevel);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+                           ClippingParametersVerified);
 
   // Dependency injection for testing. Don't delete |agc| as the memory is owned
   // by the manager.
   AgcManagerDirect(Agc* agc,
                    int startup_min_level,
                    int clipped_level_min,
-                   int sample_rate_hz);
+                   int sample_rate_hz,
+                   int clipped_level_step,
+                   float clipped_ratio_threshold,
+                   int clipped_wait_frames);
 
   void AnalyzePreProcess(const float* const* audio, size_t samples_per_channel);
 
@@ -104,6 +117,10 @@ class AgcManagerDirect final {
   int stream_analog_level_ = 0;
   bool capture_output_used_;
   int channel_controlling_gain_ = 0;
+
+  const int clipped_level_step_;
+  const float clipped_ratio_threshold_;
+  const int clipped_wait_frames_;
 
   std::vector<std::unique_ptr<MonoAgc>> channel_agcs_;
   std::vector<absl::optional<int>> new_compressions_to_set_;
@@ -123,7 +140,7 @@ class MonoAgc {
   void Initialize();
   void HandleCaptureOutputUsedChange(bool capture_output_used);
 
-  void HandleClipping();
+  void HandleClipping(int clipped_level_step);
 
   void Process(const int16_t* audio,
                size_t samples_per_channel,
