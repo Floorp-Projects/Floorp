@@ -912,7 +912,10 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
   mDevice = aDevice;
 
   if (!mDevice) {
-    mDevice = gfx::DeviceManagerDx::Get()->CreateDecoderDevice();
+    bool useHardwareWebRender =
+        aKnowsCompositor && aKnowsCompositor->UsingHardwareWebRender();
+    mDevice =
+        gfx::DeviceManagerDx::Get()->CreateDecoderDevice(useHardwareWebRender);
     if (!mDevice) {
       aFailureReason.AssignLiteral("Failed to create D3D11 device for decoder");
       return E_FAIL;
