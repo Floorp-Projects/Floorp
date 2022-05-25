@@ -76,7 +76,9 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
 
-        state.searchEngines.forEach { engine ->
+        state.searchEngines.filter { engine ->
+            engine.type != SearchEngine.Type.APPLICATION
+        }.forEach { engine ->
             val searchEngineView = makeButtonFromSearchEngine(
                 engine = engine,
                 layoutInflater = layoutInflater,
