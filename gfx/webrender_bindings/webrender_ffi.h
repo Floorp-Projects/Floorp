@@ -48,7 +48,8 @@ bool gecko_profiler_thread_is_being_profiled();
   macro(picture);                          \
   macro(text_run);                         \
   macro(filterdata);                       \
-  macro(backdrop);                         \
+  macro(backdrop_capture);                 \
+  macro(backdrop_render);                  \
   macro(polyon);
 
 // Prelude of types necessary before including webrender_ffi_generated.h

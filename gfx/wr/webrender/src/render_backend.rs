@@ -258,8 +258,12 @@ impl DataStores {
                 let prim_data = &self.yuv_image[data_handle];
                 &prim_data.common
             }
-            PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
-                let prim_data = &self.backdrop[data_handle];
+            PrimitiveInstanceKind::BackdropCapture { data_handle, .. } => {
+                let prim_data = &self.backdrop_capture[data_handle];
+                &prim_data.common
+            }
+            PrimitiveInstanceKind::BackdropRender { data_handle, .. } => {
+                let prim_data = &self.backdrop_render[data_handle];
                 &prim_data.common
             }
         }
