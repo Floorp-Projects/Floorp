@@ -633,10 +633,10 @@
     <string name="preference_autocomplete_duplicate_url_error">Le URL existe ja</string>
 
     <!-- Label for the Find in page button -->
-    <string name="find_in_page">Trovar in le pagina</string>
+    <string name="find_in_page">Cercar in le pagina</string>
 
     <!-- Watermark/Hint for the find in page input field -->
-    <string name="find_in_page_input">Trovar in le pagina</string>
+    <string name="find_in_page_input">Cercar in le pagina</string>
 
     <!-- String to show the number of results found in the page and the
         position the user is at. The first argument is the position, the second argument is the total -->
