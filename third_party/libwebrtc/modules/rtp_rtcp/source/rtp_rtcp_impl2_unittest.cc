@@ -299,7 +299,8 @@ class RtpRtcpImpl2Test : public ::testing::TestWithParam<TestConfig> {
     time_controller_.AdvanceTime(TimeDelta::Millis(milliseconds));
   }
 
-  void ReinitWithFec(VideoFecGenerator* fec_generator) {
+  void ReinitWithFec(VideoFecGenerator* fec_generator,
+                     absl::optional<int> red_payload_type) {
     sender_.ReinintWithFec(fec_generator);
     EXPECT_EQ(0, sender_.impl_->SetSendingStatus(true));
     sender_.impl_->SetSendingMediaStatus(true);
@@ -313,6 +314,7 @@ class RtpRtcpImpl2Test : public ::testing::TestWithParam<TestConfig> {
     video_config.field_trials = &field_trials_;
     video_config.fec_overhead_bytes = fec_generator->MaxPacketOverhead();
     video_config.fec_type = fec_generator->GetFecType();
+    video_config.red_payload_type = red_payload_type;
     sender_video_ = std::make_unique<RTPSenderVideo>(video_config);
   }
 
@@ -999,7 +1001,7 @@ TEST_P(RtpRtcpImpl2Test, GeneratesFlexfec) {
   FlexfecSender flexfec_sender(kFlexfecPayloadType, kFlexfecSsrc, kSenderSsrc,
                                kNoMid, kNoRtpExtensions, kNoRtpExtensionSizes,
                                &start_state, time_controller_.GetClock());
-  ReinitWithFec(&flexfec_sender);
+  ReinitWithFec(&flexfec_sender, /*red_payload_type=*/absl::nullopt);
 
   // Parameters selected to generate a single FEC packet per media packet.
   FecProtectionParams params;
@@ -1016,6 +1018,34 @@ TEST_P(RtpRtcpImpl2Test, GeneratesFlexfec) {
   EXPECT_EQ(fec_packet.SequenceNumber(), fec_start_seq);
   EXPECT_EQ(fec_packet.Ssrc(), kFlexfecSsrc);
   EXPECT_EQ(fec_packet.PayloadType(), kFlexfecPayloadType);
+}
+
+TEST_P(RtpRtcpImpl2Test, GeneratesUlpfec) {
+  constexpr int kUlpfecPayloadType = 118;
+  constexpr int kRedPayloadType = 119;
+  UlpfecGenerator ulpfec_sender(kRedPayloadType, kUlpfecPayloadType,
+                                time_controller_.GetClock());
+  ReinitWithFec(&ulpfec_sender, kRedPayloadType);
+
+  // Parameters selected to generate a single FEC packet per media packet.
+  FecProtectionParams params;
+  params.fec_rate = 15;
+  params.max_fec_frames = 1;
+  params.fec_mask_type = kFecMaskRandom;
+  sender_.impl_->SetFecProtectionParams(params, params);
+
+  // Send a one packet frame, expect one media packet and one FEC packet.
+  EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));
+  ASSERT_THAT(sender_.transport_.rtp_packets_sent_, Eq(2));
+
+  // Ulpfec is sent on the media ssrc, sharing the sequene number series.
+  const RtpPacketReceived& fec_packet = sender_.last_packet();
+  EXPECT_EQ(fec_packet.SequenceNumber(), kSequenceNumber + 1);
+  EXPECT_EQ(fec_packet.Ssrc(), kSenderSsrc);
+  // The packets are encapsulated in RED packets, check that and that the RED
+  // header (first byte of payload) indicates the desired FEC payload type.
+  EXPECT_EQ(fec_packet.PayloadType(), kRedPayloadType);
+  EXPECT_EQ(fec_packet.payload()[0], kUlpfecPayloadType);
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
