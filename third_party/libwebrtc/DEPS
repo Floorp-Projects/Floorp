@@ -7,14 +7,14 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '5469e0bb11b5bbb957c658415f341d0fb71a27b6',
+  'chromium_revision': 'fb62f861d30247132050c03d5eda894bcba565e8',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@59242336d978e13ae629f23b1bcd38ec57fc4e4f',
+    'https://chromium.googlesource.com/chromium/src/base@1afbc09004856f054a7c028fada3b121f5195964',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@c81ea932910009ab8b785ff4a2728a2b3952a5f3',
   'src/buildtools':
@@ -25,13 +25,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@c2badb41eea8fd7b43175a55600e70b2e11372c9',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@dfe29bbab263b7d8c770f6aad64097b099431a4e',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@31a90015ddd2082b1ce8269962603fa244da9c7a',
+    'https://chromium.googlesource.com/chromium/src/testing@743d6d5078b8a2064e2ed73bcdb626fc1071dae8',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@d822e7cb3398b1d48862405db4f6ae4a989662a4',
+    'https://chromium.googlesource.com/chromium/src/third_party@c9b2cc4d2d0065ba5d4d051d06968862a9fa60d5',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -118,7 +118,7 @@ deps = {
   },
 
   'src/third_party/boringssl/src':
-    'https://boringssl.googlesource.com/boringssl.git@9b2cdb769ac420b0f98ff7ef5df61115bbddc3d8',
+    'https://boringssl.googlesource.com/boringssl.git@ddecaabdc8c950d1417ed69785ac17c3400bae4c',
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@3bea2815bfea6e641d50aad15bde2c494ef8f34b',
   'src/third_party/catapult':
@@ -144,7 +144,7 @@ deps = {
       'condition': 'checkout_linux',
   },
   'src/third_party/freetype/src':
-    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@de15165774db6a0964635ab9186943cab8cad42d',
+    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@1bc801b0d6ae70683c0a7952e949d2b3edff76e2',
   'src/third_party/harfbuzz-ng/src':
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@b37f03f16b39d397a626f097858e9ae550234ca0',
   'src/third_party/google_benchmark/src': {
@@ -258,14 +258,14 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/third_party/usrsctp/usrsctplib':
-    'https://chromium.googlesource.com/external/github.com/sctplab/usrsctp@acfce46e428cc084b4bd0164e1b019261a8dbeda',
+    'https://chromium.googlesource.com/external/github.com/sctplab/usrsctp@22ba62ffe79c3881581ab430368bf3764d9533eb',
   # Dependency used by libjpeg-turbo.
   'src/third_party/yasm/binaries': {
     'url': 'https://chromium.googlesource.com/chromium/deps/yasm/binaries.git@52f9b3f4b0aa06da24ef8b123058bb61ee468881',
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@2b137a091c03dc651e7ff62483796efe6249969a',
+    'https://chromium.googlesource.com/chromium/src/tools@9fd79ca06a6f5d7c30b9d4df34f5598c1ec02629',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
