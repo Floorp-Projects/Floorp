@@ -286,9 +286,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   static void SetActiveManager(EventStateManager* aNewESM,
                                nsIContent* aContent);
 
-  // Sets the fullscreen event state on aElement to aIsFullscreen.
-  static void SetFullscreenState(dom::Element* aElement, bool aIsFullscreen);
-
   static bool IsRemoteTarget(nsIContent* target);
 
   static bool IsTopLevelRemoteTarget(nsIContent* aTarget);
