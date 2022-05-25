@@ -72,7 +72,7 @@ fun CollectionsPlaceholder(
                     modifier = Modifier.size(20.dp),
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.mozac_ic_close_20),
+                        painter = painterResource(R.drawable.ic_close),
                         contentDescription = stringResource(
                             R.string.remove_home_collection_placeholder_content_description
                         ),
