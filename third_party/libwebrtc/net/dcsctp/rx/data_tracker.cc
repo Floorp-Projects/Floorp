@@ -52,7 +52,7 @@ void DataTracker::Observe(TSN tsn,
 
   // Old chunk already seen before?
   if (unwrapped_tsn <= last_cumulative_acked_tsn_) {
-    // TODO(boivie) Set duplicate TSN, even if it's not used in SCTP yet.
+    duplicate_tsns_.insert(unwrapped_tsn.Wrap());
     return;
   }
 
@@ -66,7 +66,11 @@ void DataTracker::Observe(TSN tsn,
       additional_tsns_.erase(additional_tsns_.begin());
     }
   } else {
-    additional_tsns_.insert(unwrapped_tsn);
+    bool inserted = additional_tsns_.insert(unwrapped_tsn).second;
+    if (!inserted) {
+      // Already seen before.
+      duplicate_tsns_.insert(unwrapped_tsn.Wrap());
+    }
   }
 
   // https://tools.ietf.org/html/rfc4960#section-6.7
@@ -178,15 +182,11 @@ SackChunk DataTracker::CreateSelectiveAck(size_t a_rwnd) {
   // that. So this SACK produced is more like a NR-SACK as explained in
   // https://ieeexplore.ieee.org/document/4697037 and which there is an RFC
   // draft at https://tools.ietf.org/html/draft-tuexen-tsvwg-sctp-multipath-17.
-  std::vector<TSN> duplicate_tsns;
-  duplicate_tsns.reserve(duplicates_.size());
-  for (UnwrappedTSN tsn : duplicates_) {
-    duplicate_tsns.push_back(tsn.Wrap());
-  }
-  duplicates_.clear();
+  std::set<TSN> duplicate_tsns;
+  duplicate_tsns_.swap(duplicate_tsns);
 
   return SackChunk(last_cumulative_acked_tsn_.Wrap(), a_rwnd,
-                   CreateGapAckBlocks(), duplicate_tsns);
+                   CreateGapAckBlocks(), std::move(duplicate_tsns));
 }
 
 std::vector<SackChunk::GapAckBlock> DataTracker::CreateGapAckBlocks() const {
