@@ -88,6 +88,7 @@ namespace jit {
   ABIFUNCTION_JS_CODEGEN_ARM_LIST(_)                                  \
   ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                              \
   _(js::ArgumentsObject::finishForIonPure)                            \
+  _(js::ArgumentsObject::finishInlineForIonPure)                      \
   _(js::ArrayShiftMoveElements)                                       \
   _(js::ecmaAtan2)                                                    \
   _(js::ecmaHypot)                                                    \
