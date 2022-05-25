@@ -16,6 +16,7 @@
 
 #include "absl/types/optional.h"
 #include "api/rtc_event_log/rtc_event.h"
+#include "api/units/timestamp.h"
 
 namespace webrtc {
 
@@ -77,19 +78,19 @@ class RtcEventGenericAckReceived final : public RtcEvent {
 
 struct LoggedGenericAckReceived {
   LoggedGenericAckReceived() = default;
-  LoggedGenericAckReceived(int64_t timestamp_us,
+  LoggedGenericAckReceived(Timestamp timestamp,
                            int64_t packet_number,
                            int64_t acked_packet_number,
                            absl::optional<int64_t> receive_acked_packet_time_ms)
-      : timestamp_us(timestamp_us),
+      : timestamp(timestamp),
         packet_number(packet_number),
         acked_packet_number(acked_packet_number),
         receive_acked_packet_time_ms(receive_acked_packet_time_ms) {}
 
-  int64_t log_time_us() const { return timestamp_us; }
-  int64_t log_time_ms() const { return timestamp_us / 1000; }
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
 
-  int64_t timestamp_us;
+  Timestamp timestamp = Timestamp::MinusInfinity();
   int64_t packet_number;
   int64_t acked_packet_number;
   absl::optional<int64_t> receive_acked_packet_time_ms;
