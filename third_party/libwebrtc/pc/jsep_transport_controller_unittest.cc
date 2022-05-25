@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 
+#include "api/dtls_transport_interface.h"
 #include "p2p/base/dtls_transport_factory.h"
 #include "p2p/base/fake_dtls_transport.h"
 #include "p2p/base/fake_ice_transport.h"
@@ -693,8 +694,8 @@ TEST_F(JsepTransportControllerTest,
                  combined_connection_state_, kTimeout);
   EXPECT_EQ(2, combined_connection_state_signal_count_);
 
-  fake_audio_dtls->SetDtlsState(cricket::DTLS_TRANSPORT_CONNECTED);
-  fake_video_dtls->SetDtlsState(cricket::DTLS_TRANSPORT_CONNECTED);
+  fake_audio_dtls->SetDtlsState(DtlsTransportState::kConnected);
+  fake_video_dtls->SetDtlsState(DtlsTransportState::kConnected);
   // Set the connection count to be 2 and the cricket::FakeIceTransport will set
   // the transport state to be STATE_CONNECTING.
   fake_video_dtls->fake_ice_transport()->SetConnectionCount(2);
@@ -750,8 +751,8 @@ TEST_F(JsepTransportControllerTest, SignalConnectionStateComplete) {
                  combined_connection_state_, kTimeout);
   EXPECT_EQ(2, combined_connection_state_signal_count_);
 
-  fake_audio_dtls->SetDtlsState(cricket::DTLS_TRANSPORT_CONNECTED);
-  fake_video_dtls->SetDtlsState(cricket::DTLS_TRANSPORT_CONNECTED);
+  fake_audio_dtls->SetDtlsState(DtlsTransportState::kConnected);
+  fake_video_dtls->SetDtlsState(DtlsTransportState::kConnected);
   // Set the connection count to be 1 and the cricket::FakeIceTransport will set
   // the transport state to be STATE_COMPLETED.
   fake_video_dtls->fake_ice_transport()->SetTransportState(
@@ -839,7 +840,7 @@ TEST_F(JsepTransportControllerTest,
   fake_audio_dtls->SetWritable(true);
   fake_audio_dtls->fake_ice_transport()->SetCandidatesGatheringComplete();
   fake_audio_dtls->fake_ice_transport()->SetConnectionCount(1);
-  fake_audio_dtls->SetDtlsState(cricket::DTLS_TRANSPORT_CONNECTED);
+  fake_audio_dtls->SetDtlsState(DtlsTransportState::kConnected);
   EXPECT_EQ(1, gathering_state_signal_count_);
 
   // Set the remote description and enable the bundle.

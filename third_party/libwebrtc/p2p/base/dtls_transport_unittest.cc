@@ -15,6 +15,7 @@
 #include <set>
 #include <utility>
 
+#include "api/dtls_transport_interface.h"
 #include "p2p/base/fake_ice_transport.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "rtc_base/checks.h"
@@ -668,18 +669,19 @@ class DtlsEventOrderingTest
           // Sanity check that the handshake hasn't already finished.
           EXPECT_FALSE(client1_.dtls_transport()->IsDtlsConnected() ||
                        client1_.dtls_transport()->dtls_state() ==
-                           DTLS_TRANSPORT_FAILED);
+                           webrtc::DtlsTransportState::kFailed);
           EXPECT_TRUE_SIMULATED_WAIT(
               client1_.dtls_transport()->IsDtlsConnected() ||
                   client1_.dtls_transport()->dtls_state() ==
-                      DTLS_TRANSPORT_FAILED,
+                      webrtc::DtlsTransportState::kFailed,
               kTimeout, fake_clock_);
           break;
       }
     }
 
-    DtlsTransportState expected_final_state =
-        valid_fingerprint ? DTLS_TRANSPORT_CONNECTED : DTLS_TRANSPORT_FAILED;
+    webrtc::DtlsTransportState expected_final_state =
+        valid_fingerprint ? webrtc::DtlsTransportState::kConnected
+                          : webrtc::DtlsTransportState::kFailed;
     EXPECT_EQ_SIMULATED_WAIT(expected_final_state,
                              client1_.dtls_transport()->dtls_state(), kTimeout,
                              fake_clock_);

@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/str_replace.h"
+#include "api/dtls_transport_interface.h"
 #include "api/media_stream_track.h"
 #include "api/rtp_parameters.h"
 #include "api/stats/rtc_stats_report.h"
@@ -2322,7 +2323,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
   rtp_transport_channel_stats.component = cricket::ICE_CANDIDATE_COMPONENT_RTP;
   rtp_transport_channel_stats.ice_transport_stats.connection_infos.push_back(
       rtp_connection_info);
-  rtp_transport_channel_stats.dtls_state = cricket::DTLS_TRANSPORT_NEW;
+  rtp_transport_channel_stats.dtls_state = DtlsTransportState::kNew;
   rtp_transport_channel_stats.ice_transport_stats
       .selected_candidate_pair_changes = 1;
   pc_->SetTransportStats(kTransportName, {rtp_transport_channel_stats});
@@ -2360,7 +2361,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
       cricket::ICE_CANDIDATE_COMPONENT_RTCP;
   rtcp_transport_channel_stats.ice_transport_stats.connection_infos.push_back(
       rtcp_connection_info);
-  rtcp_transport_channel_stats.dtls_state = cricket::DTLS_TRANSPORT_CONNECTING;
+  rtcp_transport_channel_stats.dtls_state = DtlsTransportState::kConnecting;
   pc_->SetTransportStats(kTransportName, {rtp_transport_channel_stats,
                                           rtcp_transport_channel_stats});
 
@@ -2476,7 +2477,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStatsWithCrypto) {
   rtp_transport_channel_stats.ice_transport_stats.connection_infos.push_back(
       rtp_connection_info);
   // The state must be connected in order for crypto parameters to show up.
-  rtp_transport_channel_stats.dtls_state = cricket::DTLS_TRANSPORT_CONNECTED;
+  rtp_transport_channel_stats.dtls_state = DtlsTransportState::kConnected;
   rtp_transport_channel_stats.ice_transport_stats
       .selected_candidate_pair_changes = 1;
   rtp_transport_channel_stats.ssl_version_bytes = 0x0203;
@@ -2963,11 +2964,11 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
 
   cricket::TransportChannelStats rtp_transport_channel_stats;
   rtp_transport_channel_stats.component = cricket::ICE_CANDIDATE_COMPONENT_RTP;
-  rtp_transport_channel_stats.dtls_state = cricket::DTLS_TRANSPORT_NEW;
+  rtp_transport_channel_stats.dtls_state = DtlsTransportState::kNew;
   cricket::TransportChannelStats rtcp_transport_channel_stats;
   rtcp_transport_channel_stats.component =
       cricket::ICE_CANDIDATE_COMPONENT_RTCP;
-  rtcp_transport_channel_stats.dtls_state = cricket::DTLS_TRANSPORT_NEW;
+  rtcp_transport_channel_stats.dtls_state = DtlsTransportState::kNew;
   pc_->SetTransportStats("TransportName", {rtp_transport_channel_stats,
                                            rtcp_transport_channel_stats});
   AddSenderInfoAndMediaChannel("TransportName", {report_block_data},

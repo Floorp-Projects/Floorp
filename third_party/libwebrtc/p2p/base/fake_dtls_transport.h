@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "api/crypto/crypto_options.h"
+#include "api/dtls_transport_interface.h"
 #include "p2p/base/dtls_transport_internal.h"
 #include "p2p/base/fake_ice_transport.h"
 #include "rtc_base/fake_ssl_identity.h"
@@ -89,7 +90,7 @@ class FakeDtlsTransport : public DtlsTransportInternal {
     ice_transport_->SetReceiving(receiving);
     set_receiving(receiving);
   }
-  void SetDtlsState(DtlsTransportState state) {
+  void SetDtlsState(webrtc::DtlsTransportState state) {
     dtls_state_ = state;
     SendDtlsState(this, dtls_state_);
   }
@@ -121,7 +122,7 @@ class FakeDtlsTransport : public DtlsTransportInternal {
       if (!dtls_role_) {
         dtls_role_ = std::move(rtc::SSL_CLIENT);
       }
-      SetDtlsState(DTLS_TRANSPORT_CONNECTED);
+      SetDtlsState(webrtc::DtlsTransportState::kConnected);
       ice_transport_->SetDestination(
           static_cast<FakeIceTransport*>(dest->ice_transport()), asymmetric);
     } else {
@@ -133,7 +134,7 @@ class FakeDtlsTransport : public DtlsTransportInternal {
   }
 
   // Fake DtlsTransportInternal implementation.
-  DtlsTransportState dtls_state() const override { return dtls_state_; }
+  webrtc::DtlsTransportState dtls_state() const override { return dtls_state_; }
   const std::string& transport_name() const override { return transport_name_; }
   int component() const override { return component_; }
   const rtc::SSLFingerprint& dtls_fingerprint() const {
@@ -295,7 +296,7 @@ class FakeDtlsTransport : public DtlsTransportInternal {
   int crypto_suite_ = rtc::SRTP_AES128_CM_SHA1_80;
   absl::optional<int> ssl_cipher_suite_;
 
-  DtlsTransportState dtls_state_ = DTLS_TRANSPORT_NEW;
+  webrtc::DtlsTransportState dtls_state_ = webrtc::DtlsTransportState::kNew;
 
   bool receiving_ = false;
   bool writable_ = false;

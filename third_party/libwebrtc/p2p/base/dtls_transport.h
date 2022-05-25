@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "api/crypto/crypto_options.h"
+#include "api/dtls_transport_interface.h"
 #include "api/sequence_checker.h"
 #include "p2p/base/dtls_transport_internal.h"
 #include "p2p/base/ice_transport_internal.h"
@@ -109,7 +110,7 @@ class DtlsTransport : public DtlsTransportInternal {
 
   ~DtlsTransport() override;
 
-  DtlsTransportState dtls_state() const override;
+  webrtc::DtlsTransportState dtls_state() const override;
   const std::string& transport_name() const override;
   int component() const override;
 
@@ -219,12 +220,12 @@ class DtlsTransport : public DtlsTransportInternal {
   void set_receiving(bool receiving);
   void set_writable(bool writable);
   // Sets the DTLS state, signaling if necessary.
-  void set_dtls_state(DtlsTransportState state);
+  void set_dtls_state(webrtc::DtlsTransportState state);
 
   webrtc::SequenceChecker thread_checker_;
 
   const int component_;
-  DtlsTransportState dtls_state_ = DTLS_TRANSPORT_NEW;
+  webrtc::DtlsTransportState dtls_state_ = webrtc::DtlsTransportState::kNew;
   // Underlying ice_transport, not owned by this class.
   IceTransportInternal* const ice_transport_;
   std::unique_ptr<rtc::SSLStreamAdapter> dtls_;  // The DTLS stream
