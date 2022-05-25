@@ -42,7 +42,10 @@ class EmptyLines extends Component {
   shouldComponentUpdate(nextProps) {
     const { breakableLines, selectedSource } = this.props;
     return (
-      breakableLines != nextProps.breakableLines ||
+      // Breakable lines are something that evolves over time,
+      // but we either have them loaded or not. So only compare the size
+      // as sometimes we always get a blank new empty Set instance.
+      breakableLines.size != nextProps.breakableLines.size ||
       selectedSource.id != nextProps.selectedSource.id
     );
   }

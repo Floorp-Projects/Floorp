@@ -90,15 +90,24 @@ export function getSourceActorBreakableLines(state, id) {
  * @param {Object} state
  * @param {Array<String>} ids
  *        List of Source Actor IDs
- * @return {AsyncValue<Array<Number>>}
+ * @param {Boolean} isHTML
+ *        True, if we are fetching the breakable lines for an HTML source.
+ *        For them, we have to aggregate the lines of each source actors.
+ *        Otherwise, we might still have many source actors, but one per thread.
+ *        In this case, we simply return the first source actor to have the lines ready.
+ * @return {Array<Number>}
  *        List of all the breakable lines.
  */
-export function getBreakableLinesForSourceActors(state, ids) {
+export function getBreakableLinesForSourceActors(state, ids, isHTML) {
   const allBreakableLines = [];
   for (const id of ids) {
     const { breakableLines } = getSourceActor(state, id);
     if (breakableLines && breakableLines.state == "fulfilled") {
-      allBreakableLines.push(...breakableLines.value);
+      if (isHTML) {
+        allBreakableLines.push(...breakableLines.value);
+      } else {
+        return breakableLines.value;
+      }
     }
   }
   return allBreakableLines;
