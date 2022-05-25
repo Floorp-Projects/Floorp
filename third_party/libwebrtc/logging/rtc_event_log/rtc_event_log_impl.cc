@@ -90,8 +90,8 @@ bool RtcEventLogImpl::StartLogging(std::unique_ptr<RtcEventLogOutput> output,
     return false;
   }
 
-  const int64_t timestamp_us = rtc::TimeMicros();
-  const int64_t utc_time_us = rtc::TimeUTCMicros();
+  const int64_t timestamp_us = rtc::TimeMillis() * 1000;
+  const int64_t utc_time_us = rtc::TimeUTCMillis() * 1000;
   RTC_LOG(LS_INFO) << "Starting WebRTC event log. (Timestamp, UTC) = "
                       "("
                    << timestamp_us << ", " << utc_time_us << ").";
@@ -253,7 +253,7 @@ void RtcEventLogImpl::StopOutput() {
 void RtcEventLogImpl::StopLoggingInternal() {
   if (event_output_) {
     RTC_DCHECK(event_output_->IsActive());
-    const int64_t timestamp_us = rtc::TimeMicros();
+    const int64_t timestamp_us = rtc::TimeMillis() * 1000;
     event_output_->Write(event_encoder_->EncodeLogEnd(timestamp_us));
   }
   StopOutput();
