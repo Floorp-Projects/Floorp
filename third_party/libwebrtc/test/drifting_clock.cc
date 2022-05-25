@@ -42,8 +42,5 @@ NtpTime DriftingClock::CurrentNtpTime() {
   return NtpTime(total_fractions);
 }
 
-int64_t DriftingClock::CurrentNtpInMilliseconds() {
-  return clock_->CurrentNtpInMilliseconds() + Drift().ms();
-}
 }  // namespace test
 }  // namespace webrtc
