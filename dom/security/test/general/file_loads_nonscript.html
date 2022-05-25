@@ -5,7 +5,45 @@
 </head>
 <body>
   <script>
-    window.ran = 'before';
+    /* global equal */
+
+    const files = ["file_nonscript",
+                   "file_nonscript.xyz",
+                   "file_nonscript.html",
+                   "file_nonscript.txt",
+                   "file_nonscript.json"];
+
+    async function run() {
+      window.counter = 0;
+
+      for (let file of files) {
+        let script = document.createElement("script");
+        let promise = new Promise((resolve, reject) => {
+          script.addEventListener("error", resolve, {once: true});
+          script.addEventListener("load", reject, {once: true});
+        });
+        script.src = file;
+        document.body.append(script);
+
+        let event = await promise;
+        equal(event.type, "error");
+        equal(window.counter, 0);
+      }
+
+      let script = document.createElement("script");
+      let promise = new Promise((resolve, reject) => {
+        script.addEventListener("load", resolve, {once: true});
+        script.addEventListener("error", reject, {once: true});
+      });
+      script.src = "file_script.js";
+      document.body.append(script);
+
+      let event = await promise;
+      equal(event.type, "load");
+      equal(window.counter, 1);
+
+      window.postMessage("done", "*");
+    }
+    window.addEventListener("message", run, {once: true})
   </script>
-  <script src="file_nonscript.xyz" onerror="window.ran = 'error'"></script>
 </html>
