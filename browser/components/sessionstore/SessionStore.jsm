@@ -1081,7 +1081,6 @@ var SessionStoreInternal = {
           // Non-SHIP code calls this when the frame script is unloaded.
           this.onFinalTabStateUpdateComplete(aSubject);
         }
-        this._notifyOfClosedObjectsChange();
         break;
     }
   },
