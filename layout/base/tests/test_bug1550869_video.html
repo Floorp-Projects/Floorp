@@ -20,9 +20,13 @@
   });
 
   function click() {
+    ok(window.getSelection().isCollapsed, "The selection should start collapsed!");
     let container = document.getElementById("container");
     synthesizeMouseAtCenter(container, {});
-    setTimeout(() => { SimpleTest.finish(); });
+    setTimeout(() => {
+      ok(window.getSelection().isCollapsed, "The selection should remain collapsed!");
+      SimpleTest.finish();
+    });
   }
   </script>
   <body onload="SimpleTest.waitForFocus(click);">
