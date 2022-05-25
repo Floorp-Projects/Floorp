@@ -74,6 +74,8 @@ const uint8_t kPayloadData[] = {47, 11, 32, 93, 89};
 const int64_t kDefaultExpectedRetransmissionTimeMs = 125;
 const char kNoRid[] = "";
 const char kNoMid[] = "";
+const size_t kMaxPaddingLength = 224;      // Value taken from rtp_sender.cc.
+const uint32_t kTimestampTicksPerMs = 90;  // 90kHz clock.
 
 using ::testing::_;
 using ::testing::AllOf;
@@ -586,7 +588,6 @@ TEST_P(RtpSenderTest, SendPadding) {
   for (int i = 0; i < kNumPaddingPackets; ++i) {
     time_controller_.AdvanceTime(TimeDelta::Millis(50));
     const size_t kPaddingTargetBytes = 100;  // Request 100 bytes of padding.
-    const size_t kMaxPaddingLength = 224;    // Value taken from rtp_sender.cc.
 
     // Padding should be sent on the media ssrc, with a continous sequence
     // number range. Size will be forced to full pack size and the timestamp
@@ -619,6 +620,123 @@ TEST_P(RtpSenderTest, SendPadding) {
   std::unique_ptr<RtpPacketToSend> next_media_packet =
       SendPacket(/*capture_time_ms=*/clock_->TimeInMilliseconds(),
                  /*payload_size=*/100);
+}
+
+TEST_P(RtpSenderTest, NoPaddingAsFirstPacketWithoutBweExtensions) {
+  EXPECT_THAT(rtp_sender()->GeneratePadding(/*target_size_bytes=*/100,
+                                            /*media_has_been_sent=*/false),
+              IsEmpty());
+
+  // Don't send padding before media even with RTX.
+  EnableRtx();
+  EXPECT_THAT(rtp_sender()->GeneratePadding(/*target_size_bytes=*/100,
+                                            /*media_has_been_sent=*/false),
+              IsEmpty());
+}
+
+TEST_P(RtpSenderTest, AllowPaddingAsFirstPacketOnRtxWithTransportCc) {
+  ASSERT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
+      TransportSequenceNumber::kUri, kTransportSequenceNumberExtensionId));
+
+  // Padding can't be sent as first packet on media SSRC since we don't know
+  // what payload type to assign.
+  EXPECT_THAT(rtp_sender()->GeneratePadding(/*target_size_bytes=*/100,
+                                            /*media_has_been_sent=*/false),
+              IsEmpty());
+
+  // With transportcc padding can be sent as first packet on the RTX SSRC.
+  EnableRtx();
+  EXPECT_THAT(rtp_sender()->GeneratePadding(/*target_size_bytes=*/100,
+                                            /*media_has_been_sent=*/false),
+              Not(IsEmpty()));
+}
+
+TEST_P(RtpSenderTest, AllowPaddingAsFirstPacketOnRtxWithAbsSendTime) {
+  ASSERT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
+      AbsoluteSendTime::kUri, kAbsoluteSendTimeExtensionId));
+
+  // Padding can't be sent as first packet on media SSRC since we don't know
+  // what payload type to assign.
+  EXPECT_THAT(rtp_sender()->GeneratePadding(/*target_size_bytes=*/100,
+                                            /*media_has_been_sent=*/false),
+              IsEmpty());
+
+  // With abs send time, padding can be sent as first packet on the RTX SSRC.
+  EnableRtx();
+  EXPECT_THAT(rtp_sender()->GeneratePadding(/*target_size_bytes=*/100,
+                                            /*media_has_been_sent=*/false),
+              Not(IsEmpty()));
+}
+
+TEST_P(RtpSenderTest, UpdatesTimestampsOnPlainRtxPadding) {
+  EnableRtx();
+  // Timestamps as set based on capture time in RtpSenderTest.
+  const int64_t start_time = clock_->TimeInMilliseconds();
+  const uint32_t start_timestamp = start_time * kTimestampTicksPerMs;
+
+  // Start by sending one media packet.
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(Contains(AllOf(
+          Pointee(Property(&RtpPacketToSend::padding_size, 0u)),
+          Pointee(Property(&RtpPacketToSend::Timestamp, start_timestamp)),
+          Pointee(Property(&RtpPacketToSend::capture_time_ms, start_time))))));
+  std::unique_ptr<RtpPacketToSend> media_packet =
+      SendPacket(start_time, /*payload_size=*/600);
+
+  // Advance time before sending padding.
+  const TimeDelta kTimeDiff = TimeDelta::Millis(17);
+  time_controller_.AdvanceTime(kTimeDiff);
+
+  // Timestamps on padding should be offset from the sent media.
+  EXPECT_THAT(
+      rtp_sender()->GeneratePadding(/*target_size_bytes=*/100,
+                                    /*media_has_been_sent=*/true),
+      Each(AllOf(
+          Pointee(Property(&RtpPacketToSend::padding_size, kMaxPaddingLength)),
+          Pointee(Property(
+              &RtpPacketToSend::Timestamp,
+              start_timestamp + (kTimestampTicksPerMs * kTimeDiff.ms()))),
+          Pointee(Property(&RtpPacketToSend::capture_time_ms,
+                           start_time + kTimeDiff.ms())))));
+}
+
+TEST_P(RtpSenderTest, KeepsTimestampsOnPayloadPadding) {
+  ASSERT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
+      TransportSequenceNumber::kUri, kTransportSequenceNumberExtensionId));
+  EnableRtx();
+  // Timestamps as set based on capture time in RtpSenderTest.
+  const int64_t start_time = clock_->TimeInMilliseconds();
+  const uint32_t start_timestamp = start_time * kTimestampTicksPerMs;
+  const size_t kPayloadSize = 600;
+  const size_t kRtxHeaderSize = 2;
+
+  // Start by sending one media packet and putting in the packet history.
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(Contains(AllOf(
+          Pointee(Property(&RtpPacketToSend::padding_size, 0u)),
+          Pointee(Property(&RtpPacketToSend::Timestamp, start_timestamp)),
+          Pointee(Property(&RtpPacketToSend::capture_time_ms, start_time))))));
+  std::unique_ptr<RtpPacketToSend> media_packet =
+      SendPacket(start_time, kPayloadSize);
+  rtp_sender_context_->packet_history_.PutRtpPacket(std::move(media_packet),
+                                                    start_time);
+
+  // Advance time before sending padding.
+  const TimeDelta kTimeDiff = TimeDelta::Millis(17);
+  time_controller_.AdvanceTime(kTimeDiff);
+
+  // Timestamps on payload padding should be set to original.
+  EXPECT_THAT(
+      rtp_sender()->GeneratePadding(/*target_size_bytes=*/100,
+                                    /*media_has_been_sent=*/true),
+      Each(AllOf(
+          Pointee(Property(&RtpPacketToSend::padding_size, 0u)),
+          Pointee(Property(&RtpPacketToSend::payload_size,
+                           kPayloadSize + kRtxHeaderSize)),
+          Pointee(Property(&RtpPacketToSend::Timestamp, start_timestamp)),
+          Pointee(Property(&RtpPacketToSend::capture_time_ms, start_time)))));
 }
 
 TEST_P(RtpSenderTest, SendFlexfecPackets) {
@@ -1979,7 +2097,6 @@ TEST_P(RtpSenderTest, SetsCaptureTimeAndPopulatesTransmissionOffset) {
       RtpPacketHistory::StorageMode::kStoreAndCull, 10);
 
   const int64_t kMissingCaptureTimeMs = 0;
-  const uint32_t kTimestampTicksPerMs = 90;
   const int64_t kOffsetMs = 10;
 
   auto packet =
