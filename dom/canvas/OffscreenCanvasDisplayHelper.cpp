@@ -145,9 +145,22 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
   } else {
     surface = aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
     if (surface) {
-      auto surfaceImage = MakeRefPtr<layers::SourceSurfaceImage>(surface);
-      surfaceImage->SetTextureFlags(flags);
-      image = surfaceImage;
+      bool usable = true;
+      if (surface->GetType() == gfx::SurfaceType::WEBGL) {
+        // Ensure we can map in the surface. If we get a SourceSurfaceWebgl
+        // surface, then it may not be backed by raw pixels yet. We need to map
+        // it on the owning thread rather than the ImageBridge thread.
+        gfx::DataSourceSurface::ScopedMap map(
+            static_cast<gfx::DataSourceSurface*>(surface.get()),
+            gfx::DataSourceSurface::READ);
+        usable = map.IsMapped();
+      }
+
+      if (usable) {
+        auto surfaceImage = MakeRefPtr<layers::SourceSurfaceImage>(surface);
+        surfaceImage->SetTextureFlags(flags);
+        image = surfaceImage;
+      }
     }
   }
 
