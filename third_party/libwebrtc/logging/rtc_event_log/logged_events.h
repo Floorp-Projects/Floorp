@@ -249,6 +249,8 @@ struct LoggedStartEvent {
   int64_t log_time_us() const { return timestamp_us; }
   int64_t log_time_ms() const { return timestamp_us / 1000; }
 
+  Timestamp utc_time() const { return Timestamp::Millis(utc_start_time_ms); }
+
   int64_t timestamp_us;
   int64_t utc_start_time_ms;
 };
