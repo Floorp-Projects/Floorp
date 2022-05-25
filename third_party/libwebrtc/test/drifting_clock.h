@@ -32,7 +32,6 @@ class DriftingClock : public Clock {
 
   Timestamp CurrentTime() override;
   NtpTime CurrentNtpTime() override;
-  int64_t CurrentNtpInMilliseconds() override;
 
  private:
   TimeDelta Drift() const;
