@@ -1293,13 +1293,11 @@ void SendStatisticsProxy::OnReportBlockDataUpdated(
   if (!stats)
     return;
   const RTCPReportBlock& report_block = report_block_data.report_block();
-  stats->rtcp_stats.fraction_lost = report_block.fraction_lost;
-  stats->rtcp_stats.packets_lost = report_block.packets_lost;
-  stats->rtcp_stats.extended_highest_sequence_number =
-      report_block.extended_highest_sequence_number;
-  stats->rtcp_stats.jitter = report_block.jitter;
-  uma_container_->report_block_stats_.Store(report_block.source_ssrc,
-                                            stats->rtcp_stats);
+  uma_container_->report_block_stats_.Store(
+      /*ssrc=*/report_block.source_ssrc,
+      /*packets_lost=*/report_block.packets_lost,
+      /*extended_highest_sequence_number=*/
+      report_block.extended_highest_sequence_number);
 
   stats->report_block_data = std::move(report_block_data);
 }

@@ -2661,15 +2661,18 @@ WebRtcVideoChannel::WebRtcVideoSendStream::GetPerLayerVideoSenderInfos(
         stream_stats.rtp_stats.retransmitted.payload_bytes;
     info.retransmitted_packets_sent =
         stream_stats.rtp_stats.retransmitted.packets;
-    info.packets_lost = stream_stats.rtcp_stats.packets_lost;
     info.firs_rcvd = stream_stats.rtcp_packet_type_counts.fir_packets;
     info.nacks_rcvd = stream_stats.rtcp_packet_type_counts.nack_packets;
     info.plis_rcvd = stream_stats.rtcp_packet_type_counts.pli_packets;
     if (stream_stats.report_block_data.has_value()) {
-      info.report_block_datas.push_back(stream_stats.report_block_data.value());
+      info.packets_lost =
+          stream_stats.report_block_data->report_block().packets_lost;
+      info.fraction_lost =
+          static_cast<float>(
+              stream_stats.report_block_data->report_block().fraction_lost) /
+          (1 << 8);
+      info.report_block_datas.push_back(*stream_stats.report_block_data);
     }
-    info.fraction_lost =
-        static_cast<float>(stream_stats.rtcp_stats.fraction_lost) / (1 << 8);
     info.qp_sum = stream_stats.qp_sum;
     info.total_encode_time_ms = stream_stats.total_encode_time_ms;
     info.total_encoded_bytes_target = stream_stats.total_encoded_bytes_target;

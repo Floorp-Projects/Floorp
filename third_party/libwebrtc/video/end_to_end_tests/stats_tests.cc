@@ -182,9 +182,7 @@ TEST_F(StatsEndToEndTest, GetStats) {
         const VideoSendStream::StreamStats& stream_stats = kv.second;
 
         send_stats_filled_[CompoundKey("StatisticsUpdated", kv.first)] |=
-            stream_stats.rtcp_stats.packets_lost != 0 ||
-            stream_stats.rtcp_stats.extended_highest_sequence_number != 0 ||
-            stream_stats.rtcp_stats.fraction_lost != 0;
+            stream_stats.report_block_data.has_value();
 
         send_stats_filled_[CompoundKey("DataCountersUpdated", kv.first)] |=
             stream_stats.rtp_stats.fec.packets != 0 ||

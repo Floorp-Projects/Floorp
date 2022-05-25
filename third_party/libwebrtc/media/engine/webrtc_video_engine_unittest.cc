@@ -5585,9 +5585,11 @@ TEST_F(WebRtcVideoChannelTest, GetAggregatedStatsReportForSubStreams) {
   substream.rtcp_packet_type_counts.fir_packets = 14;
   substream.rtcp_packet_type_counts.nack_packets = 15;
   substream.rtcp_packet_type_counts.pli_packets = 16;
-  substream.rtcp_stats.packets_lost = 17;
-  substream.rtcp_stats.fraction_lost = 18;
+  webrtc::RTCPReportBlock report_block;
+  report_block.packets_lost = 17;
+  report_block.fraction_lost = 18;
   webrtc::ReportBlockData report_block_data;
+  report_block_data.SetReportBlock(report_block, 0);
   report_block_data.AddRoundTripTimeSample(19);
   substream.report_block_data = report_block_data;
   substream.encode_frame_rate = 20.0;
@@ -5621,9 +5623,12 @@ TEST_F(WebRtcVideoChannelTest, GetAggregatedStatsReportForSubStreams) {
             static_cast<int>(2 * substream.rtp_stats.transmitted.packets));
   EXPECT_EQ(sender.retransmitted_packets_sent,
             2u * substream.rtp_stats.retransmitted.packets);
-  EXPECT_EQ(sender.packets_lost, 2 * substream.rtcp_stats.packets_lost);
+  EXPECT_EQ(sender.packets_lost,
+            2 * substream.report_block_data->report_block().packets_lost);
   EXPECT_EQ(sender.fraction_lost,
-            static_cast<float>(substream.rtcp_stats.fraction_lost) / (1 << 8));
+            static_cast<float>(
+                substream.report_block_data->report_block().fraction_lost) /
+                (1 << 8));
   EXPECT_EQ(sender.rtt_ms, 0);
   EXPECT_EQ(sender.codec_name, DefaultCodec().name);
   EXPECT_EQ(sender.codec_payload_type, DefaultCodec().id);
@@ -5703,9 +5708,11 @@ TEST_F(WebRtcVideoChannelTest, GetPerLayerStatsReportForSubStreams) {
   substream.rtcp_packet_type_counts.fir_packets = 14;
   substream.rtcp_packet_type_counts.nack_packets = 15;
   substream.rtcp_packet_type_counts.pli_packets = 16;
-  substream.rtcp_stats.packets_lost = 17;
-  substream.rtcp_stats.fraction_lost = 18;
+  webrtc::RTCPReportBlock report_block;
+  report_block.packets_lost = 17;
+  report_block.fraction_lost = 18;
   webrtc::ReportBlockData report_block_data;
+  report_block_data.SetReportBlock(report_block, 0);
   report_block_data.AddRoundTripTimeSample(19);
   substream.report_block_data = report_block_data;
   substream.encode_frame_rate = 20.0;
@@ -5739,9 +5746,12 @@ TEST_F(WebRtcVideoChannelTest, GetPerLayerStatsReportForSubStreams) {
             static_cast<int>(substream.rtp_stats.transmitted.packets));
   EXPECT_EQ(sender.retransmitted_packets_sent,
             substream.rtp_stats.retransmitted.packets);
-  EXPECT_EQ(sender.packets_lost, substream.rtcp_stats.packets_lost);
+  EXPECT_EQ(sender.packets_lost,
+            substream.report_block_data->report_block().packets_lost);
   EXPECT_EQ(sender.fraction_lost,
-            static_cast<float>(substream.rtcp_stats.fraction_lost) / (1 << 8));
+            static_cast<float>(
+                substream.report_block_data->report_block().fraction_lost) /
+                (1 << 8));
   EXPECT_EQ(sender.rtt_ms, 0);
   EXPECT_EQ(sender.codec_name, DefaultCodec().name);
   EXPECT_EQ(sender.codec_payload_type, DefaultCodec().id);
