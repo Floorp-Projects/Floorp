@@ -1632,6 +1632,8 @@ See äpp ei saa enam turvauuendusi. Hangi uus Nightly ja lõpeta selle äpi kasu
     <string name="addresses_state">Maakond</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Postiindeks</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Riik või piirkond</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Telefon</string>
     <!-- The header for the email of an address -->
