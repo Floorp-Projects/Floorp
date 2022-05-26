@@ -468,6 +468,8 @@ void VideoReceiveStream2::Stop() {
 
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
     const Decoder& decoder) {
+  TRACE_EVENT0("webrtc",
+               "VideoReceiveStream2::CreateAndRegisterExternalDecoder");
   std::unique_ptr<VideoDecoder> video_decoder =
       config_.decoder_factory->CreateVideoDecoder(decoder.video_format);
   // If we still have no valid decoder, we have to create a "Null" decoder

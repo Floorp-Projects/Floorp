@@ -31,6 +31,7 @@
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/task_queue.h"
+#include "rtc_base/trace_event.h"
 
 namespace webrtc {
 
@@ -461,6 +462,7 @@ RtpVideoSender::~RtpVideoSender() {
 
 void RtpVideoSender::RegisterProcessThread(
     ProcessThread* module_process_thread) {
+  TRACE_EVENT0("webrtc", "RtpVideoSender::RegisterProcessThread");
   RTC_DCHECK_RUN_ON(&module_process_thread_checker_);
   RTC_DCHECK(!module_process_thread_);
   module_process_thread_ = module_process_thread;
