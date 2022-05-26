@@ -1972,7 +1972,8 @@ class nsContentUtils {
    * closed. At opening, aInstalling should be TRUE, otherwise, it should be
    * FALSE.
    */
-  static void NotifyInstalledMenuKeyboardListener(bool aInstalling);
+  MOZ_CAN_RUN_SCRIPT static void NotifyInstalledMenuKeyboardListener(
+      bool aInstalling);
 
   /**
    * Check whether the nsIURI uses the given scheme.

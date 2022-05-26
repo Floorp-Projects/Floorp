@@ -660,11 +660,10 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
   // Notifies clicking on editor to IMEStateManager even when the event was
   // consumed.
   if (EditorHasFocus()) {
-    RefPtr<nsPresContext> presContext = GetPresContext();
-    if (presContext) {
+    if (RefPtr<nsPresContext> presContext = GetPresContext()) {
       nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
-      IMEStateManager::OnClickInEditor(presContext, focusedContent,
-                                       aMouseClickEvent);
+      IMEStateManager::OnClickInEditor(*presContext, focusedContent,
+                                       *aMouseClickEvent);
       if (DetachedFromEditor()) {
         return NS_OK;
       }
