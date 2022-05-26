@@ -48,6 +48,7 @@
 #include "rtc_base/numerics/safe_minmax.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
 
@@ -201,7 +202,8 @@ class ChannelReceive : public ChannelReceiveInterface {
   // we know about. The goal is to eventually split up voe::ChannelReceive into
   // parts with single-threaded semantics, and thereby reduce the need for
   // locks.
-  SequenceChecker worker_thread_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_thread_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker network_thread_checker_;
 
   // Methods accessed from audio and video threads are checked for sequential-
   // only access. We don't necessarily own and control these threads, so thread
@@ -268,7 +270,7 @@ class ChannelReceive : public ChannelReceiveInterface {
   float _outputGain RTC_GUARDED_BY(volume_settings_mutex_);
 
   const ChannelSendInterface* associated_send_channel_
-      RTC_GUARDED_BY(worker_thread_checker_);
+      RTC_GUARDED_BY(network_thread_checker_);
 
   PacketRouter* packet_router_ = nullptr;
 
@@ -526,6 +528,8 @@ ChannelReceive::ChannelReceive(
       absolute_capture_time_interpolator_(clock) {
   RTC_DCHECK(module_process_thread_);
   RTC_DCHECK(audio_device_module);
+
+  network_thread_checker_.Detach();
 
   acm_receiver_.ResetInitialDelay();
   acm_receiver_.SetMinimumDelay(0);
@@ -860,8 +864,7 @@ int ChannelReceive::ResendPackets(const uint16_t* sequence_numbers,
 
 void ChannelReceive::SetAssociatedSendChannel(
     const ChannelSendInterface* channel) {
-  // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
   associated_send_channel_ = channel;
 }
 
@@ -1042,7 +1045,7 @@ int ChannelReceive::GetRtpTimestampRateHz() const {
 }
 
 int64_t ChannelReceive::GetRTT() const {
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
   std::vector<ReportBlockData> report_blocks =
       rtp_rtcp_->GetLatestReportBlockData();
 

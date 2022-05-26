@@ -912,14 +912,15 @@ webrtc::AudioReceiveStream* Call::CreateAudioReceiveStream(
   event_log_->Log(std::make_unique<RtcEventAudioReceiveStreamConfig>(
       CreateRtcLogStreamConfig(config)));
 
-  // TODO(bugs.webrtc.org/11993): Move the registration between |receive_stream|
-  // and |audio_receiver_controller_| out of AudioReceiveStream construction and
-  // set it up asynchronously on the network thread (the registration and
-  // |audio_receiver_controller_| need to live on the network thread).
   AudioReceiveStream* receive_stream = new AudioReceiveStream(
-      clock_, &audio_receiver_controller_, transport_send_->packet_router(),
+      clock_, transport_send_->packet_router(),
       module_process_thread_->process_thread(), config_.neteq_factory, config,
       config_.audio_state, event_log_);
+
+  // TODO(bugs.webrtc.org/11993): Make the registration on the network thread
+  // (asynchronously). The registration and `audio_receiver_controller_` need
+  // to live on the network thread.
+  receive_stream->RegisterWithTransport(&audio_receiver_controller_);
 
   // TODO(bugs.webrtc.org/11993): Update the below on the network thread.
   // We could possibly set up the audio_receiver_controller_ association up
@@ -952,7 +953,9 @@ void Call::DestroyAudioReceiveStream(
       ->RemoveStream(ssrc);
 
   // TODO(bugs.webrtc.org/11993): Access the map, rtp config, call ConfigureSync
-  // and UpdateAggregateNetworkState on the network thread.
+  // and UpdateAggregateNetworkState on the network thread. The call to
+  // `UnregisterFromTransport` should also happen on the network thread.
+  audio_receive_stream->UnregisterFromTransport();
   audio_receive_streams_.erase(audio_receive_stream);
   const std::string& sync_group = audio_receive_stream->config().sync_group;
 

@@ -147,11 +147,12 @@ struct ConfigHelper {
   }
 
   std::unique_ptr<internal::AudioReceiveStream> CreateAudioReceiveStream() {
-    return std::unique_ptr<internal::AudioReceiveStream>(
-        new internal::AudioReceiveStream(
-            Clock::GetRealTimeClock(), &rtp_stream_receiver_controller_,
-            &packet_router_, stream_config_, audio_state_, &event_log_,
-            std::unique_ptr<voe::ChannelReceiveInterface>(channel_receive_)));
+    auto ret = std::make_unique<internal::AudioReceiveStream>(
+        Clock::GetRealTimeClock(), &packet_router_, stream_config_,
+        audio_state_, &event_log_,
+        std::unique_ptr<voe::ChannelReceiveInterface>(channel_receive_));
+    ret->RegisterWithTransport(&rtp_stream_receiver_controller_);
+    return ret;
   }
 
   AudioReceiveStream::Config& config() { return stream_config_; }
@@ -225,6 +226,7 @@ TEST(AudioReceiveStreamTest, ConstructDestruct) {
   for (bool use_null_audio_processing : {false, true}) {
     ConfigHelper helper(use_null_audio_processing);
     auto recv_stream = helper.CreateAudioReceiveStream();
+    recv_stream->UnregisterFromTransport();
   }
 }
 
@@ -238,6 +240,7 @@ TEST(AudioReceiveStreamTest, ReceiveRtcpPacket) {
                 ReceivedRTCPPacket(&rtcp_packet[0], rtcp_packet.size()))
         .WillOnce(Return());
     recv_stream->DeliverRtcp(&rtcp_packet[0], rtcp_packet.size());
+    recv_stream->UnregisterFromTransport();
   }
 }
 
@@ -319,6 +322,7 @@ TEST(AudioReceiveStreamTest, GetStats) {
     EXPECT_EQ(kCallStats.capture_start_ntp_time_ms_,
               stats.capture_start_ntp_time_ms);
     EXPECT_EQ(kPlayoutNtpTimestampMs, stats.estimated_playout_ntp_timestamp_ms);
+    recv_stream->UnregisterFromTransport();
   }
 }
 
@@ -329,6 +333,7 @@ TEST(AudioReceiveStreamTest, SetGain) {
     EXPECT_CALL(*helper.channel_receive(),
                 SetChannelOutputVolumeScaling(FloatEq(0.765f)));
     recv_stream->SetGain(0.765f);
+    recv_stream->UnregisterFromTransport();
   }
 }
 
@@ -360,6 +365,9 @@ TEST(AudioReceiveStreamTest, StreamsShouldBeAddedToMixerOnceOnStart) {
 
     // Stop stream before it is being destructed.
     recv_stream2->Stop();
+
+    recv_stream1->UnregisterFromTransport();
+    recv_stream2->UnregisterFromTransport();
   }
 }
 
@@ -368,6 +376,7 @@ TEST(AudioReceiveStreamTest, ReconfigureWithSameConfig) {
     ConfigHelper helper(use_null_audio_processing);
     auto recv_stream = helper.CreateAudioReceiveStream();
     recv_stream->Reconfigure(helper.config());
+    recv_stream->UnregisterFromTransport();
   }
 }
 
@@ -391,6 +400,7 @@ TEST(AudioReceiveStreamTest, ReconfigureWithUpdatedConfig) {
     EXPECT_CALL(channel_receive, SetReceiveCodecs(new_config.decoder_map));
 
     recv_stream->Reconfigure(new_config);
+    recv_stream->UnregisterFromTransport();
   }
 }
 
@@ -412,6 +422,7 @@ TEST(AudioReceiveStreamTest, ReconfigureWithFrameDecryptor) {
     new_config_1.frame_decryptor = mock_frame_decryptor_1;
     new_config_1.crypto_options.sframe.require_frame_encryption = true;
     recv_stream->Reconfigure(new_config_1);
+    recv_stream->UnregisterFromTransport();
   }
 }
 
