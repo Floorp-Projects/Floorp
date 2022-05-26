@@ -972,7 +972,6 @@ void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove) {
   }
 
   NativeMoveResize(aMove, true);
-  NotifyRollupGeometryChange();
 
   DispatchResized();
 }
@@ -1042,7 +1041,6 @@ void nsWindow::Move(double aX, double aY) {
   }
 
   NativeMoveResize(/* move */ true, /* resize */ false);
-  NotifyRollupGeometryChange();
 }
 
 bool nsWindow::IsPopup() const { return mWindowType == eWindowType_popup; }
