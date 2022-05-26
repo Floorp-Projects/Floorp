@@ -364,11 +364,6 @@ void VideoSendStreamImpl::StartupVideoSendStream() {
 }
 
 void VideoSendStreamImpl::Stop() {
-  if (!rtp_transport_queue_->IsCurrent()) {
-    rtp_transport_queue_->PostTask(
-        ToQueuedTask(transport_queue_safety_, [this] { Stop(); }));
-    return;
-  }
   RTC_DCHECK_RUN_ON(rtp_transport_queue_);
   RTC_LOG(LS_INFO) << "VideoSendStreamImpl::Stop";
   if (!rtp_video_sender_->IsActive())

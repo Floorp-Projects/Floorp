@@ -642,6 +642,7 @@ if (rtc_include_tests) {
         "../rtc_base/experiments:min_video_bitrate_experiment",
         "../rtc_base/synchronization:mutex",
         "../rtc_base/third_party/sigslot",
+        "../system_wrappers:field_trial",
         "../test:audio_codec_mocks",
         "../test:fake_video_codecs",
         "../test:field_trial",

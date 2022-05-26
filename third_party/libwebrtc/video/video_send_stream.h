@@ -24,6 +24,7 @@
 #include "rtc_base/event.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "video/encoder_rtcp_feedback.h"
 #include "video/send_delay_stats.h"
 #include "video/send_statistics_proxy.h"
@@ -102,6 +103,8 @@ class VideoSendStream : public webrtc::VideoSendStream {
   rtc::TaskQueue* const rtp_transport_queue_;
   RtpTransportControllerSendInterface* const transport_;
   rtc::Event thread_sync_event_;
+  rtc::scoped_refptr<PendingTaskSafetyFlag> transport_queue_safety_ =
+      PendingTaskSafetyFlag::CreateDetached();
 
   SendStatisticsProxy stats_proxy_;
   const VideoSendStream::Config config_;
