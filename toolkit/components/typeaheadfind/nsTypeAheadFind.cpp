@@ -983,9 +983,8 @@ nsresult nsTypeAheadFind::FindInternal(uint32_t aMode,
       nsCOMPtr<Document> document = presShell->GetDocument();
       if (!document) return NS_ERROR_UNEXPECTED;
 
-      nsFocusManager* fm = nsFocusManager::GetFocusManager();
-      if (fm) {
-        nsPIDOMWindowOuter* window = document->GetWindow();
+      if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+        nsCOMPtr<nsPIDOMWindowOuter> window = document->GetWindow();
         RefPtr<Element> focusedElement;
         nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
         fm->GetFocusedElementForWindow(window, false,

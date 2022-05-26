@@ -5332,10 +5332,12 @@ nsresult EditorBase::FinalizeSelection() {
         "nsISelectionController::SetCaretEnabled(false) failed, but ignored");
   }
 
-  nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
+  RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
   if (NS_WARN_IF(!focusManager)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  // TODO: Running script from here makes harder to handle blur events.  We
+  //       should do this asynchronously.
   focusManager->UpdateCaretForCaretBrowsingMode();
   if (nsCOMPtr<nsINode> node = do_QueryInterface(GetDOMEventTarget())) {
     if (node->OwnerDoc()->GetUnretargetedFocusedContent() != node) {

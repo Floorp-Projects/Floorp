@@ -292,7 +292,7 @@ class EditorBase : public nsIEditor,
   /**
    * Finalizes selection and caret for the editor.
    */
-  nsresult FinalizeSelection();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult FinalizeSelection();
 
   /**
    * Returns true if selection is in an editable element and both the range
