@@ -1504,3 +1504,6 @@ floorp-fluentUI =
 
 floorp-gnomeUI =
  .label = Gnome Theme
+ 
+waterfox-lepton =
+ .label = Firefox Lepton UI

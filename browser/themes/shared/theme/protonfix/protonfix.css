@@ -1139,12 +1139,7 @@
   #pageActionButton{
     display: none !important;
   }
-  
-  #import-button {
-    margin-right: 10px !important;
-    margin-top: -0.4em !important;
-  }
-  
+
   #PanelUI-menu-button
   {
     list-style-image: url(chrome://browser/skin/menu.svg) !important;

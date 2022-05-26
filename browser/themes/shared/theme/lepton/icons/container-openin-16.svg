@@ -1,0 +1,9 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg data-name="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <rect fill="context-fill" fill-opacity="context-fill-opacity" x="1" y="1" width="6" height="6" rx="1"/>
+  <rect fill="context-fill" fill-opacity="context-fill-opacity" x="1" y="9" width="6" height="6" rx="1"/>
+  <rect fill="context-fill" fill-opacity="context-fill-opacity" x="9" y="9" width="6" height="6" rx="1"/>
+  <path fill="context-fill" fill-opacity="context-fill-opacity" d="M14.92 1.62a1 1 0 0 0-0.54-0.54A1 1 0 0 0 14 1h-4a1 1 0 0 0 0 2h1.59l-2.3 2.29a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0L13 4.41V6a1 1 0 0 0 2 0V2a1 1 0 0 0-0.08-0.38z"/>
+</svg>

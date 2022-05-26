@@ -10001,6 +10001,8 @@ PhotonUI : `@import url(chrome://browser/skin/photon/photonChrome.css);
 MaterialUI : `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`,
 fluentUI : `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`,
 gnomeUI :`@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
+leptonUI: `@import url(chrome://browser/skin/lepton/userChrome.css);
+           @import url(chrome://browser/skin/lepton/userContent.css);`,
 }
 
 switch(floorpinterfacenum){
@@ -10046,6 +10048,13 @@ switch(floorpinterfacenum){
      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
      }
     break;
+
+  case 7:
+     var Tag = document.createElement('style');
+     Tag.innerText = ThemeCSS.leptonUI;
+     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+     Services.prefs.setIntPref("browser.uidensity", 0);
+     break;
 
 }
 
