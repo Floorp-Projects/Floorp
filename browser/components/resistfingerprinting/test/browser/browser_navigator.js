@@ -132,7 +132,7 @@ const CONST_VENDOR = "";
 const CONST_VENDORSUB = "";
 
 const appVersion = parseInt(Services.appinfo.version);
-const spoofedVersion = appVersion - ((appVersion - 78) % 13);
+const spoofedVersion = AppConstants.platform == "android" ? "102" : appVersion;
 
 const LEGACY_UA_GECKO_TRAIL = "20100101";
 
