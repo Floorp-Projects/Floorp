@@ -6,6 +6,7 @@
 *   [Public C++ API](/api/g3doc/index.md)
     *   [Threading](/api/g3doc/threading_design.md)
 *   Implementation
+    *   [Basic concepts](/g3doc/implementation_basics.md)
     *   Network
         *   [ICE](/p2p/g3doc/ice.md)
         *   STUN
