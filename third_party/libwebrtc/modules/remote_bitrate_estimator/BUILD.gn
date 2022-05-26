@@ -47,6 +47,8 @@ rtc_library("remote_bitrate_estimator") {
     "../../api/transport:network_control",
     "../../api/transport:webrtc_key_value_config",
     "../../api/units:data_rate",
+    "../../api/units:data_size",
+    "../../api/units:time_delta",
     "../../api/units:timestamp",
     "../../modules:module_api",
     "../../modules:module_api_public",
