@@ -8,20 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef API_PEER_CONNECTION_FACTORY_PROXY_H_
-#define API_PEER_CONNECTION_FACTORY_PROXY_H_
+#ifndef PC_PEER_CONNECTION_FACTORY_PROXY_H_
+#define PC_PEER_CONNECTION_FACTORY_PROXY_H_
 
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "api/peer_connection_interface.h"
-#include "api/proxy.h"
+#include "pc/proxy.h"
 
 namespace webrtc {
 
-// TODO(deadbeef): Move this to .cc file and out of api/. What threads methods
-// are called on is an implementation detail.
+// TODO(deadbeef): Move this to .cc file. What threads methods are called on is
+// an implementation detail.
 BEGIN_PROXY_MAP(PeerConnectionFactory)
 PROXY_PRIMARY_THREAD_DESTRUCTOR()
 PROXY_METHOD1(void, SetOptions, const Options&)
@@ -55,4 +55,4 @@ END_PROXY_MAP()
 
 }  // namespace webrtc
 
-#endif  // API_PEER_CONNECTION_FACTORY_PROXY_H_
+#endif  // PC_PEER_CONNECTION_FACTORY_PROXY_H_

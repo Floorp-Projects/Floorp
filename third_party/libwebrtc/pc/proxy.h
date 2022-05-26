@@ -56,8 +56,8 @@
 // The variant defined with BEGIN_OWNED_PROXY_MAP does not use
 // refcounting, and instead just takes ownership of the object being proxied.
 
-#ifndef API_PROXY_H_
-#define API_PROXY_H_
+#ifndef PC_PROXY_H_
+#define PC_PROXY_H_
 
 #include <memory>
 #include <string>
@@ -440,4 +440,4 @@ class ConstMethodCall : public QueuedTask {
 
 }  // namespace webrtc
 
-#endif  //  API_PROXY_H_
+#endif  //  PC_PROXY_H_

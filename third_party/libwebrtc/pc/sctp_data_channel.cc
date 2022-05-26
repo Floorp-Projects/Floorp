@@ -15,8 +15,8 @@
 #include <string>
 #include <utility>
 
-#include "api/proxy.h"
 #include "media/sctp/sctp_transport_internal.h"
+#include "pc/proxy.h"
 #include "pc/sctp_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"

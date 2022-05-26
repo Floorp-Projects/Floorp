@@ -16,8 +16,8 @@
 #include <string>
 
 #include "api/dtmf_sender_interface.h"
-#include "api/proxy.h"
 #include "api/scoped_refptr.h"
+#include "pc/proxy.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/location.h"
 #include "rtc_base/ref_count.h"

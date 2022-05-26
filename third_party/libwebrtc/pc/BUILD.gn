@@ -23,6 +23,20 @@ config("rtc_pc_config") {
   }
 }
 
+rtc_library("proxy") {
+  sources = [
+    "proxy.cc",
+    "proxy.h",
+  ]
+  deps = [
+    "../api:scoped_refptr",
+    "../api/task_queue",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:threading",
+    "../rtc_base/system:rtc_export",
+  ]
+}
+
 rtc_library("rtc_pc_base") {
   visibility = [ "*" ]
   defines = []
@@ -46,6 +60,10 @@ rtc_library("rtc_pc_base") {
     "jsep_transport_controller.h",
     "media_session.cc",
     "media_session.h",
+    "media_stream_proxy.h",
+    "media_stream_track_proxy.h",
+    "peer_connection_factory_proxy.h",
+    "peer_connection_proxy.h",
     "rtcp_mux_filter.cc",
     "rtcp_mux_filter.h",
     "rtp_media_utils.cc",
@@ -74,10 +92,13 @@ rtc_library("rtc_pc_base") {
     "transport_stats.cc",
     "transport_stats.h",
     "used_ids.h",
+    "video_track_source_proxy.cc",
+    "video_track_source_proxy.h",
   ]
 
   deps = [
     ":media_protocol_names",
+    ":proxy",
     "../api:array_view",
     "../api:async_dns_resolver",
     "../api:audio_options_api",
@@ -85,6 +106,7 @@ rtc_library("rtc_pc_base") {
     "../api:function_view",
     "../api:ice_transport_factory",
     "../api:libjingle_peerconnection_api",
+    "../api:media_stream_interface",
     "../api:packet_socket_factory",
     "../api:priority",
     "../api:rtc_error",
@@ -221,6 +243,7 @@ rtc_library("peerconnection") {
     ":media_protocol_names",
     ":media_stream",
     ":peer_connection_message_handler",
+    ":proxy",
     ":remote_audio_source",
     ":rtc_pc_base",
     ":rtp_parameters_conversion",
@@ -382,6 +405,7 @@ rtc_library("rtp_transceiver") {
     "rtp_transceiver.h",
   ]
   deps = [
+    ":proxy",
     ":rtc_pc_base",
     ":rtp_parameters_conversion",
     ":rtp_receiver",
@@ -473,6 +497,7 @@ rtc_library("rtp_receiver") {
   ]
   deps = [
     ":media_stream",
+    ":rtc_pc_base",
     ":video_track_source",
     "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
@@ -504,6 +529,7 @@ rtc_library("audio_rtp_receiver") {
     ":jitter_buffer_delay",
     ":media_stream",
     ":remote_audio_source",
+    ":rtc_pc_base",
     ":rtp_receiver",
     "../api:frame_transformer_interface",
     "../api:libjingle_peerconnection_api",
@@ -537,6 +563,7 @@ rtc_library("video_rtp_receiver") {
   deps = [
     ":jitter_buffer_delay",
     ":media_stream",
+    ":rtc_pc_base",
     ":rtp_receiver",
     ":video_rtp_track_source",
     ":video_track",
@@ -725,6 +752,7 @@ rtc_library("dtmf_sender") {
     "dtmf_sender.h",
   ]
   deps = [
+    ":proxy",
     "../api:libjingle_peerconnection_api",
     "../api:scoped_refptr",
     "../rtc_base:checks",
@@ -997,6 +1025,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":jitter_buffer_delay",
       ":media_stream",
       ":peerconnection",
+      ":proxy",
       ":remote_audio_source",
       ":rtc_pc_base",
       ":rtp_parameters_conversion",

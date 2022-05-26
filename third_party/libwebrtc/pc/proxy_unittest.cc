@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "api/proxy.h"
+#include "pc/proxy.h"
 
 #include <memory>
 #include <string>
