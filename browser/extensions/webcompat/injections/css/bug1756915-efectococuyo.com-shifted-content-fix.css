@@ -1,8 +1,0 @@
-/**
- * efectococuyo.com - content is shifted off-screen due
- * to using floats and negative margins
- * Bug #1756915 - https://bugzilla.mozilla.org/show_bug.cgi?id=1756915
- */
-.code-block + .row {
-  clear: both;
-}
