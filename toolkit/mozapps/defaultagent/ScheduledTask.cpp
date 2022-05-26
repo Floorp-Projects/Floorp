@@ -143,9 +143,12 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
   ENSURE(taskSettings->put_MultipleInstances(TASK_INSTANCES_IGNORE_NEW));
   ENSURE(taskSettings->put_StartWhenAvailable(VARIANT_TRUE));
   ENSURE(taskSettings->put_StopIfGoingOnBatteries(VARIANT_FALSE));
-  // This cryptic string means "35 minutes". So, if the task runs for longer
-  // than that, the process will be killed, because that should never happen.
-  BStrPtr execTimeLimitBStr = BStrPtr(SysAllocString(L"PT35M"));
+  // This cryptic string means "12 hours 5 minutes". So, if the task runs for
+  // longer than that, the process will be killed, because that should never
+  // happen. See
+  // https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-executiontimelimit
+  // for a detailed explanation of these strings.
+  BStrPtr execTimeLimitBStr = BStrPtr(SysAllocString(L"PT12H5M"));
   ENSURE(taskSettings->put_ExecutionTimeLimit(execTimeLimitBStr.get()));
 
   RefPtr<IRegistrationInfo> regInfo;

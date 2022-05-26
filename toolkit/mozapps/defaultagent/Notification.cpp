@@ -28,9 +28,9 @@
 
 #define SEVEN_DAYS_IN_SECONDS (7 * 24 * 60 * 60)
 
-// If the notification hasn't been activated or dismissed within 30 minutes,
+// If the notification hasn't been activated or dismissed within 12 hours,
 // stop waiting for it.
-#define NOTIFICATION_WAIT_TIMEOUT_MS (30 * 60 * 1000)
+#define NOTIFICATION_WAIT_TIMEOUT_MS (12 * 60 * 60 * 1000)
 // If the mutex hasn't been released within a few minutes, something is wrong
 // and we should give up on it
 #define MUTEX_TIMEOUT_MS (10 * 60 * 1000)
@@ -523,6 +523,7 @@ static NotificationActivities ShowNotification(
   toastTemplate.addAction(toastStrings->action1.get());
   toastTemplate.addAction(toastStrings->action2.get());
   toastTemplate.setImagePath(absImagePath.get());
+  toastTemplate.setScenario(WinToastTemplate::Scenario::Reminder);
   ToastHandler* handler =
       new ToastHandler(whichNotification, isEnglishInstall, event.get(), aumi);
   INT64 id = WinToast::instance()->showToast(toastTemplate, handler, &error);
