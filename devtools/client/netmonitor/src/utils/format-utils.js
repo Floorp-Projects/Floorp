@@ -20,6 +20,11 @@ const MAX_SECOND = 60 * MAX_MILLISECOND;
 
 const REQUEST_DECIMALS = 2;
 
+// Constants for formatting the priority, derived from nsISupportsPriority.idl
+const PRIORITY_HIGH = -10;
+const PRIORITY_NORMAL = 0;
+const PRIORITY_LOW = 10;
+
 function getSizeWithDecimals(size, decimals = REQUEST_DECIMALS) {
   return L10N.numberWithDecimals(size, decimals);
 }
@@ -97,10 +102,31 @@ function getFormattedIPAndPort(ip, port) {
   return ip.match(/:+/) ? `[${ip}]:${port}` : `${ip}:${port}`;
 }
 
+/**
+ * Formats the priority of a request
+ * Based on unix conventions
+ * See xpcom/threads/nsISupportsPriority.idl
+ *
+ * @param {Number} priority - request priority
+ */
+function getRequestPriorityAsText(priority) {
+  if (priority < PRIORITY_HIGH) {
+    return "Highest";
+  } else if (priority >= PRIORITY_HIGH && priority < PRIORITY_NORMAL) {
+    return "High";
+  } else if (priority === PRIORITY_NORMAL) {
+    return "Normal";
+  } else if (priority > PRIORITY_NORMAL && priority <= PRIORITY_LOW) {
+    return "Low";
+  }
+  return "Lowest";
+}
+
 module.exports = {
   getFormattedIPAndPort,
   getFormattedSize,
   getFormattedTime,
   getSizeWithDecimals,
   getTimeWithDecimals,
+  getRequestPriorityAsText,
 };

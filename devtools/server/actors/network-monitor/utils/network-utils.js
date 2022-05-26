@@ -186,6 +186,10 @@ exports.createNetworkEvent = function(
     ? referrerInfo.getReferrerPolicyString()
     : "";
 
+  if (channel instanceof Ci.nsISupportsPriority) {
+    event.priority = channel.priority;
+  }
+
   // Determine the cause and if this is an XHR request.
   let causeType = Ci.nsIContentPolicy.TYPE_OTHER;
   let causeUri = null;

@@ -37,7 +37,8 @@ const {
   RequestListColumnTransferredSize,
   RequestListColumnType,
   RequestListColumnUrl,
-  RequestListColumnWaterfall
+  RequestListColumnWaterfall,
+  RequestListColumnPriority
 */
 loader.lazyGetter(this, "RequestListColumnInitiator", function() {
   return createFactory(
@@ -124,6 +125,11 @@ loader.lazyGetter(this, "RequestListColumnWaterfall", function() {
     require("devtools/client/netmonitor/src/components/request-list/RequestListColumnWaterfall")
   );
 });
+loader.lazyGetter(this, "RequestListColumnPriority", function() {
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/request-list/RequestListColumnPriority")
+  );
+});
 
 /**
  * Used by shouldComponentUpdate: compare two items, and compare only properties
@@ -154,6 +160,7 @@ const UPDATED_REQ_ITEM_PROPS = [
   "responseHeaders",
   "waitingTime",
   "isEventStream",
+  "priority",
 ];
 
 const UPDATED_REQ_PROPS = [
@@ -210,6 +217,7 @@ const COLUMN_COMPONENTS = [
   },
   { column: "transferred", ColumnComponent: RequestListColumnTransferredSize },
   { column: "contentSize", ColumnComponent: RequestListColumnContentSize },
+  { column: "priority", ColumnComponent: RequestListColumnPriority },
   {
     column: "startTime",
     ColumnComponent: RequestListColumnTime,

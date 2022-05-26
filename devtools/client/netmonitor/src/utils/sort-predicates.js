@@ -44,6 +44,11 @@ function waterfall(first, second) {
   return result || compareValues(first.id, second.id);
 }
 
+function priority(first, second) {
+  const result = compareValues(first.priority, second.priority);
+  return result || waterfall(first, second);
+}
+
 function status(first, second) {
   const result = compareValues(getStatusValue(first), getStatusValue(second));
   return result || waterfall(first, second);
@@ -309,5 +314,6 @@ const sorters = {
   latency,
   waterfall,
   url,
+  priority,
 };
 exports.Sorters = Object.assign(sorters, responseHeaders);
