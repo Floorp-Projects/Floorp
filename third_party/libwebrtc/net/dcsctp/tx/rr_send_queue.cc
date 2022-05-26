@@ -292,6 +292,7 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::Produce(TimeMs now,
                                                            size_t max_size) {
   auto start_it = streams_.lower_bound(next_stream_id_);
   for (auto it = start_it; it != streams_.end(); ++it) {
+    next_stream_id_ = it->first;
     absl::optional<DataToSend> ret = Produce(it, now, max_size);
     if (ret.has_value()) {
       return ret;
@@ -299,6 +300,7 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::Produce(TimeMs now,
   }
 
   for (auto it = streams_.begin(); it != start_it; ++it) {
+    next_stream_id_ = it->first;
     absl::optional<DataToSend> ret = Produce(it, now, max_size);
     if (ret.has_value()) {
       return ret;
