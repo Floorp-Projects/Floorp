@@ -566,6 +566,169 @@ TEST_P(RtpSenderEgressTest, UpdatesSendStatusOfRetransmittedPackets) {
           Field(&RtpPacketHistory::PacketState::pending_transmission, false)));
 }
 
+TEST_P(RtpSenderEgressTest, StreamDataCountersCallbacks) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+
+  const RtpPacketCounter kEmptyCounter;
+  RtpPacketCounter expected_transmitted_counter;
+  RtpPacketCounter expected_retransmission_counter;
+
+  // Send a media packet.
+  std::unique_ptr<RtpPacketToSend> media_packet = BuildRtpPacket();
+  media_packet->SetPayloadSize(6);
+  expected_transmitted_counter.packets += 1;
+  expected_transmitted_counter.payload_bytes += media_packet->payload_size();
+  expected_transmitted_counter.header_bytes += media_packet->headers_size();
+
+  EXPECT_CALL(
+      mock_rtp_stats_callback_,
+      DataCountersUpdated(AllOf(Field(&StreamDataCounters::transmitted,
+                                      expected_transmitted_counter),
+                                Field(&StreamDataCounters::retransmitted,
+                                      expected_retransmission_counter),
+                                Field(&StreamDataCounters::fec, kEmptyCounter)),
+                          kSsrc));
+  sender->SendPacket(media_packet.get(), PacedPacketInfo());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+
+  // Send a retransmission. Retransmissions are counted into both transmitted
+  // and retransmitted packet statistics.
+  std::unique_ptr<RtpPacketToSend> retransmission_packet = BuildRtpPacket();
+  retransmission_packet->set_packet_type(RtpPacketMediaType::kRetransmission);
+  media_packet->SetPayloadSize(7);
+  expected_transmitted_counter.packets += 1;
+  expected_transmitted_counter.payload_bytes +=
+      retransmission_packet->payload_size();
+  expected_transmitted_counter.header_bytes +=
+      retransmission_packet->headers_size();
+
+  expected_retransmission_counter.packets += 1;
+  expected_retransmission_counter.payload_bytes +=
+      retransmission_packet->payload_size();
+  expected_retransmission_counter.header_bytes +=
+      retransmission_packet->headers_size();
+
+  EXPECT_CALL(
+      mock_rtp_stats_callback_,
+      DataCountersUpdated(AllOf(Field(&StreamDataCounters::transmitted,
+                                      expected_transmitted_counter),
+                                Field(&StreamDataCounters::retransmitted,
+                                      expected_retransmission_counter),
+                                Field(&StreamDataCounters::fec, kEmptyCounter)),
+                          kSsrc));
+  sender->SendPacket(retransmission_packet.get(), PacedPacketInfo());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+
+  // Send a padding packet.
+  std::unique_ptr<RtpPacketToSend> padding_packet = BuildRtpPacket();
+  padding_packet->set_packet_type(RtpPacketMediaType::kPadding);
+  padding_packet->SetPadding(224);
+  expected_transmitted_counter.packets += 1;
+  expected_transmitted_counter.padding_bytes += padding_packet->padding_size();
+  expected_transmitted_counter.header_bytes += padding_packet->headers_size();
+
+  EXPECT_CALL(
+      mock_rtp_stats_callback_,
+      DataCountersUpdated(AllOf(Field(&StreamDataCounters::transmitted,
+                                      expected_transmitted_counter),
+                                Field(&StreamDataCounters::retransmitted,
+                                      expected_retransmission_counter),
+                                Field(&StreamDataCounters::fec, kEmptyCounter)),
+                          kSsrc));
+  sender->SendPacket(padding_packet.get(), PacedPacketInfo());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+}
+
+TEST_P(RtpSenderEgressTest, StreamDataCountersCallbacksFec) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+
+  const RtpPacketCounter kEmptyCounter;
+  RtpPacketCounter expected_transmitted_counter;
+  RtpPacketCounter expected_fec_counter;
+
+  // Send a media packet.
+  std::unique_ptr<RtpPacketToSend> media_packet = BuildRtpPacket();
+  media_packet->SetPayloadSize(6);
+  expected_transmitted_counter.packets += 1;
+  expected_transmitted_counter.payload_bytes += media_packet->payload_size();
+  expected_transmitted_counter.header_bytes += media_packet->headers_size();
+
+  EXPECT_CALL(
+      mock_rtp_stats_callback_,
+      DataCountersUpdated(
+          AllOf(Field(&StreamDataCounters::transmitted,
+                      expected_transmitted_counter),
+                Field(&StreamDataCounters::retransmitted, kEmptyCounter),
+                Field(&StreamDataCounters::fec, expected_fec_counter)),
+          kSsrc));
+  sender->SendPacket(media_packet.get(), PacedPacketInfo());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+
+  // Send and FEC packet. FEC is counted into both transmitted and FEC packet
+  // statistics.
+  std::unique_ptr<RtpPacketToSend> fec_packet = BuildRtpPacket();
+  fec_packet->set_packet_type(RtpPacketMediaType::kForwardErrorCorrection);
+  fec_packet->SetPayloadSize(6);
+  expected_transmitted_counter.packets += 1;
+  expected_transmitted_counter.payload_bytes += fec_packet->payload_size();
+  expected_transmitted_counter.header_bytes += fec_packet->headers_size();
+
+  expected_fec_counter.packets += 1;
+  expected_fec_counter.payload_bytes += fec_packet->payload_size();
+  expected_fec_counter.header_bytes += fec_packet->headers_size();
+
+  EXPECT_CALL(
+      mock_rtp_stats_callback_,
+      DataCountersUpdated(
+          AllOf(Field(&StreamDataCounters::transmitted,
+                      expected_transmitted_counter),
+                Field(&StreamDataCounters::retransmitted, kEmptyCounter),
+                Field(&StreamDataCounters::fec, expected_fec_counter)),
+          kSsrc));
+  sender->SendPacket(fec_packet.get(), PacedPacketInfo());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+}
+
+TEST_P(RtpSenderEgressTest, UpdatesDataCounters) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+
+  const RtpPacketCounter kEmptyCounter;
+
+  // Send a media packet.
+  std::unique_ptr<RtpPacketToSend> media_packet = BuildRtpPacket();
+  media_packet->SetPayloadSize(6);
+  sender->SendPacket(media_packet.get(), PacedPacketInfo());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+
+  // Send an RTX retransmission packet.
+  std::unique_ptr<RtpPacketToSend> rtx_packet = BuildRtpPacket();
+  rtx_packet->set_packet_type(RtpPacketMediaType::kRetransmission);
+  rtx_packet->SetSsrc(kRtxSsrc);
+  rtx_packet->SetPayloadSize(7);
+  sender->SendPacket(rtx_packet.get(), PacedPacketInfo());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+
+  StreamDataCounters rtp_stats;
+  StreamDataCounters rtx_stats;
+  sender->GetDataCounters(&rtp_stats, &rtx_stats);
+
+  EXPECT_EQ(rtp_stats.transmitted.packets, 1u);
+  EXPECT_EQ(rtp_stats.transmitted.payload_bytes, media_packet->payload_size());
+  EXPECT_EQ(rtp_stats.transmitted.padding_bytes, media_packet->padding_size());
+  EXPECT_EQ(rtp_stats.transmitted.header_bytes, media_packet->headers_size());
+  EXPECT_EQ(rtp_stats.retransmitted, kEmptyCounter);
+  EXPECT_EQ(rtp_stats.fec, kEmptyCounter);
+
+  // Retransmissions are counted both into transmitted and retransmitted
+  // packet counts.
+  EXPECT_EQ(rtx_stats.transmitted.packets, 1u);
+  EXPECT_EQ(rtx_stats.transmitted.payload_bytes, rtx_packet->payload_size());
+  EXPECT_EQ(rtx_stats.transmitted.padding_bytes, rtx_packet->padding_size());
+  EXPECT_EQ(rtx_stats.transmitted.header_bytes, rtx_packet->headers_size());
+  EXPECT_EQ(rtx_stats.retransmitted, rtx_stats.transmitted);
+  EXPECT_EQ(rtx_stats.fec, kEmptyCounter);
+}
+
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
                          RtpSenderEgressTest,
                          ::testing::Values(TestConfig(false),
