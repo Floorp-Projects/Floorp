@@ -487,8 +487,10 @@ void BasicPortAllocatorSession::GetCandidateStatsFromReadyPorts(
   for (auto* port : ports) {
     auto candidates = port->Candidates();
     for (const auto& candidate : candidates) {
-      CandidateStats candidate_stats(allocator_->SanitizeCandidate(candidate));
-      port->GetStunStats(&candidate_stats.stun_stats);
+      absl::optional<StunStats> stun_stats;
+      port->GetStunStats(&stun_stats);
+      CandidateStats candidate_stats(allocator_->SanitizeCandidate(candidate),
+                                     std::move(stun_stats));
       candidate_stats_list->push_back(std::move(candidate_stats));
     }
   }

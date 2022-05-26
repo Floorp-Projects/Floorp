@@ -811,7 +811,7 @@ StatsReport* StatsCollector::AddConnectionInfoReport(
 StatsReport* StatsCollector::AddCandidateReport(
     const cricket::CandidateStats& candidate_stats,
     bool local) {
-  const auto& candidate = candidate_stats.candidate;
+  const auto& candidate = candidate_stats.candidate();
   StatsReport::Id id(StatsReport::NewCandidateId(local, candidate.id()));
   StatsReport* report = reports_.Find(id);
   if (!report) {
@@ -834,8 +834,8 @@ StatsReport* StatsCollector::AddCandidateReport(
   }
   report->set_timestamp(stats_gathering_started_);
 
-  if (local && candidate_stats.stun_stats.has_value()) {
-    const auto& stun_stats = candidate_stats.stun_stats.value();
+  if (local && candidate_stats.stun_stats().has_value()) {
+    const auto& stun_stats = candidate_stats.stun_stats().value();
     report->AddInt64(StatsReport::kStatsValueNameSentStunKeepaliveRequests,
                      stun_stats.stun_binding_requests_sent);
     report->AddInt64(StatsReport::kStatsValueNameRecvStunKeepaliveResponses,
