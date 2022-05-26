@@ -105,7 +105,6 @@ class StreamResetHandlerTest : public testing::Test {
             producer_,
             [](DurationMs rtt_ms) {},
             []() {},
-            []() {},
             *t3_rtx_timer_,
             /*options=*/{}),
         handler_("log: ",

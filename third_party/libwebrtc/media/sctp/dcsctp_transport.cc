@@ -366,7 +366,7 @@ uint32_t DcSctpTransport::GetRandomInt(uint32_t low, uint32_t high) {
   return random_.Rand(low, high);
 }
 
-void DcSctpTransport::NotifyOutgoingMessageBufferEmpty() {
+void DcSctpTransport::OnTotalBufferedAmountLow() {
   if (!ready_to_send_data_) {
     ready_to_send_data_ = true;
     SignalReadyToSendData();

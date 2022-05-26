@@ -63,7 +63,7 @@ class DcSctpTransport : public cricket::SctpTransportInternal,
   std::unique_ptr<dcsctp::Timeout> CreateTimeout() override;
   dcsctp::TimeMs TimeMillis() override;
   uint32_t GetRandomInt(uint32_t low, uint32_t high) override;
-  void NotifyOutgoingMessageBufferEmpty() override;
+  void OnTotalBufferedAmountLow() override;
   void OnMessageReceived(dcsctp::DcSctpMessage message) override;
   void OnError(dcsctp::ErrorKind error, absl::string_view message) override;
   void OnAborted(dcsctp::ErrorKind error, absl::string_view message) override;

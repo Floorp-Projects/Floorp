@@ -93,7 +93,6 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
   uint32_t GetRandomInt(uint32_t low, uint32_t high) override {
     return random_.Rand(low, high);
   }
-  MOCK_METHOD(void, NotifyOutgoingMessageBufferEmpty, (), (override));
 
   MOCK_METHOD(void, OnMessageReceived, (DcSctpMessage message), (override));
   MOCK_METHOD(void,
@@ -120,6 +119,8 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
               OnIncomingStreamsReset,
               (rtc::ArrayView<const StreamID> incoming_streams),
               (override));
+  MOCK_METHOD(void, OnBufferedAmountLow, (StreamID stream_id), (override));
+  MOCK_METHOD(void, OnTotalBufferedAmountLow, (), (override));
 
   bool HasPacket() const { return !sent_packets_.empty(); }
 

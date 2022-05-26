@@ -89,7 +89,6 @@ class TransmissionControlBlock : public Context {
             a_rwnd,
             send_queue,
             [this](DurationMs rtt) { return ObserveRTT(rtt); },
-            [this]() { callbacks_.NotifyOutgoingMessageBufferEmpty(); },
             [this]() { tx_error_counter_.Clear(); },
             *t3_rtx_,
             options,

@@ -56,7 +56,6 @@ RetransmissionQueue::RetransmissionQueue(
     size_t a_rwnd,
     SendQueue& send_queue,
     std::function<void(DurationMs rtt)> on_new_rtt,
-    std::function<void()> on_send_queue_empty,
     std::function<void()> on_clear_retransmission_counter,
     Timer& t3_rtx,
     const DcSctpOptions& options,
@@ -69,7 +68,6 @@ RetransmissionQueue::RetransmissionQueue(
                                   ? IDataChunk::kHeaderSize
                                   : DataChunk::kHeaderSize),
       on_new_rtt_(std::move(on_new_rtt)),
-      on_send_queue_empty_(std::move(on_send_queue_empty)),
       on_clear_retransmission_counter_(
           std::move(on_clear_retransmission_counter)),
       t3_rtx_(t3_rtx),
@@ -592,7 +590,6 @@ std::vector<std::pair<TSN, Data>> RetransmissionQueue::GetChunksToSend(
       absl::optional<SendQueue::DataToSend> chunk_opt =
           send_queue_.Produce(now, max_bytes - data_chunk_header_size_);
       if (!chunk_opt.has_value()) {
-        on_send_queue_empty_();
         break;
       }
 
