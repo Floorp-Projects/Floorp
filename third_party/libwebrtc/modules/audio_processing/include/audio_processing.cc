@@ -81,7 +81,19 @@ bool Agc1Config::operator==(const Agc1Config& rhs) const {
          analog_lhs.clipped_level_step == analog_rhs.clipped_level_step &&
          analog_lhs.clipped_ratio_threshold ==
              analog_rhs.clipped_ratio_threshold &&
-         analog_lhs.clipped_wait_frames == analog_rhs.clipped_wait_frames;
+         analog_lhs.clipped_wait_frames == analog_rhs.clipped_wait_frames &&
+         analog_lhs.clipping_predictor.mode ==
+             analog_rhs.clipping_predictor.mode &&
+         analog_lhs.clipping_predictor.window_length ==
+             analog_rhs.clipping_predictor.window_length &&
+         analog_lhs.clipping_predictor.reference_window_length ==
+             analog_rhs.clipping_predictor.reference_window_length &&
+         analog_lhs.clipping_predictor.reference_window_delay ==
+             analog_rhs.clipping_predictor.reference_window_delay &&
+         analog_lhs.clipping_predictor.clipping_threshold ==
+             analog_rhs.clipping_predictor.clipping_threshold &&
+         analog_lhs.clipping_predictor.crest_factor_margin ==
+             analog_rhs.clipping_predictor.crest_factor_margin;
 }
 
 bool Agc2Config::AdaptiveDigital::operator==(
@@ -167,7 +179,26 @@ std::string AudioProcessing::Config::ToString() const {
       << gain_controller1.analog_gain_controller.clipped_ratio_threshold
       << ", clipped_wait_frames: "
       << gain_controller1.analog_gain_controller.clipped_wait_frames
-      << " }}, gain_controller2: { enabled: " << gain_controller2.enabled
+      << ", clipping_predictor:  { enabled: "
+      << gain_controller1.analog_gain_controller.clipping_predictor.enabled
+      << ", mode: "
+      << gain_controller1.analog_gain_controller.clipping_predictor.mode
+      << ", window_length: "
+      << gain_controller1.analog_gain_controller.clipping_predictor
+             .window_length
+      << ", reference_window_length: "
+      << gain_controller1.analog_gain_controller.clipping_predictor
+             .reference_window_length
+      << ", reference_window_delay: "
+      << gain_controller1.analog_gain_controller.clipping_predictor
+             .reference_window_delay
+      << ", clipping_threshold: "
+      << gain_controller1.analog_gain_controller.clipping_predictor
+             .clipping_threshold
+      << ", crest_factor_margin: "
+      << gain_controller1.analog_gain_controller.clipping_predictor
+             .crest_factor_margin
+      << " }}}, gain_controller2: { enabled: " << gain_controller2.enabled
       << ", fixed_digital: { gain_db: "
       << gain_controller2.fixed_digital.gain_db
       << " }, adaptive_digital: { enabled: "
