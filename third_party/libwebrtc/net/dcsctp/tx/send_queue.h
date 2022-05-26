@@ -113,6 +113,9 @@ class SendQueue {
   // e.g. inflight.
   virtual size_t buffered_amount(StreamID stream_id) const = 0;
 
+  // Returns the total amount of buffer data, for all streams.
+  virtual size_t total_buffered_amount() const = 0;
+
   // Returns the limit for the `OnBufferedAmountLow` event. Default value is 0.
   virtual size_t buffered_amount_low_threshold(StreamID stream_id) const = 0;
 

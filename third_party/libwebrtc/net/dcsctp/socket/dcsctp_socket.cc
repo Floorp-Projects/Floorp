@@ -167,9 +167,12 @@ DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
           TimerOptions(options.t2_shutdown_timeout,
                        TimerBackoffAlgorithm::kExponential,
                        options.max_retransmissions))),
-      send_queue_(log_prefix_,
-                  options_.max_send_buffer_size,
-                  [](StreamID stream_id) {}) {}
+      send_queue_(
+          log_prefix_,
+          options_.max_send_buffer_size,
+          [](StreamID stream_id) {},
+          /*total_buffered_amount_low_threshold=*/0,
+          []() {}) {}
 
 std::string DcSctpSocket::log_prefix() const {
   return log_prefix_ + "[" + std::string(ToString(state_)) + "] ";

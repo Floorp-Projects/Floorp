@@ -46,10 +46,15 @@ class RRSendQueue : public SendQueue {
 
   RRSendQueue(absl::string_view log_prefix,
               size_t buffer_size,
-              std::function<void(StreamID)> on_buffered_amount_low)
+              std::function<void(StreamID)> on_buffered_amount_low,
+              size_t total_buffered_amount_low_threshold,
+              std::function<void()> on_total_buffered_amount_low)
       : log_prefix_(std::string(log_prefix) + "fcfs: "),
         buffer_size_(buffer_size),
-        on_buffered_amount_low_(std::move(on_buffered_amount_low)) {}
+        on_buffered_amount_low_(std::move(on_buffered_amount_low)),
+        total_buffered_amount_(std::move(on_total_buffered_amount_low)) {
+    total_buffered_amount_.SetLowThreshold(total_buffered_amount_low_threshold);
+  }
 
   // Indicates if the buffer is full. Note that it's up to the caller to ensure
   // that the buffer is not full prior to adding new items to it.
@@ -76,11 +81,11 @@ class RRSendQueue : public SendQueue {
   void RollbackResetStreams() override;
   void Reset() override;
   size_t buffered_amount(StreamID stream_id) const override;
+  size_t total_buffered_amount() const override {
+    return total_buffered_amount_.value();
+  }
   size_t buffered_amount_low_threshold(StreamID stream_id) const override;
   void SetBufferedAmountLowThreshold(StreamID stream_id, size_t bytes) override;
-
-  // The size of the buffer, in "payload bytes".
-  size_t total_bytes() const;
 
  private:
   // Represents a value and a "low threshold" that when the value reaches or
@@ -109,8 +114,10 @@ class RRSendQueue : public SendQueue {
   // Per-stream information.
   class OutgoingStream {
    public:
-    explicit OutgoingStream(std::function<void()> on_buffered_amount_low)
-        : buffered_amount_(std::move(on_buffered_amount_low)) {}
+    explicit OutgoingStream(std::function<void()> on_buffered_amount_low,
+                            ThresholdWatcher& total_buffered_amount)
+        : buffered_amount_(std::move(on_buffered_amount_low)),
+          total_buffered_amount_(total_buffered_amount) {}
 
     // Enqueues a message to this stream.
     void Add(DcSctpMessage message,
@@ -182,8 +189,13 @@ class RRSendQueue : public SendQueue {
 
     // The current amount of buffered data.
     ThresholdWatcher buffered_amount_;
+
+    // Reference to the total buffered amount, which is updated directly by each
+    // stream.
+    ThresholdWatcher& total_buffered_amount_;
   };
 
+  bool IsConsistent() const;
   OutgoingStream& GetOrCreateStreamInfo(StreamID stream_id);
   absl::optional<DataToSend> Produce(
       std::map<StreamID, OutgoingStream>::iterator it,
@@ -192,9 +204,17 @@ class RRSendQueue : public SendQueue {
 
   const std::string log_prefix_;
   const size_t buffer_size_;
+
   // Called when the buffered amount is below what has been set using
   // `SetBufferedAmountLowThreshold`.
   const std::function<void(StreamID)> on_buffered_amount_low_;
+
+  // Called when the total buffered amount is below what has been set using
+  // `SetTotalBufferedAmountLowThreshold`.
+  const std::function<void()> on_total_buffered_amount_low_;
+
+  // The total amount of buffer data, for all streams.
+  ThresholdWatcher total_buffered_amount_;
 
   // The next stream to send chunks from.
   StreamID next_stream_id_ = StreamID(0);

@@ -31,17 +31,24 @@ constexpr TimeMs kNow = TimeMs(0);
 constexpr StreamID kStreamID(1);
 constexpr PPID kPPID(53);
 constexpr size_t kMaxQueueSize = 1000;
+constexpr size_t kBufferedAmountLowThreshold = 500;
 constexpr size_t kOneFragmentPacketSize = 100;
 constexpr size_t kTwoFragmentPacketSize = 101;
 
 class RRSendQueueTest : public testing::Test {
  protected:
   RRSendQueueTest()
-      : buf_("log: ", kMaxQueueSize, on_buffered_amount_low_.AsStdFunction()) {}
+      : buf_("log: ",
+             kMaxQueueSize,
+             on_buffered_amount_low_.AsStdFunction(),
+             kBufferedAmountLowThreshold,
+             on_total_buffered_amount_low_.AsStdFunction()) {}
 
   const DcSctpOptions options_;
   testing::NiceMock<testing::MockFunction<void(StreamID)>>
       on_buffered_amount_low_;
+  testing::NiceMock<testing::MockFunction<void()>>
+      on_total_buffered_amount_low_;
   RRSendQueue buf_;
 };
 
@@ -272,13 +279,13 @@ TEST_F(RRSendQueueTest, DiscardPartialPackets) {
 TEST_F(RRSendQueueTest, PrepareResetStreamsDiscardsStream) {
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, {1, 2, 3}));
   buf_.Add(kNow, DcSctpMessage(StreamID(2), PPID(54), {1, 2, 3, 4, 5}));
-  EXPECT_EQ(buf_.total_bytes(), 8u);
+  EXPECT_EQ(buf_.total_buffered_amount(), 8u);
 
   buf_.PrepareResetStreams(std::vector<StreamID>({StreamID(1)}));
-  EXPECT_EQ(buf_.total_bytes(), 5u);
+  EXPECT_EQ(buf_.total_buffered_amount(), 5u);
   buf_.CommitResetStreams();
   buf_.PrepareResetStreams(std::vector<StreamID>({StreamID(2)}));
-  EXPECT_EQ(buf_.total_bytes(), 0u);
+  EXPECT_EQ(buf_.total_buffered_amount(), 0u);
 }
 
 TEST_F(RRSendQueueTest, PrepareResetStreamsNotPartialPackets) {
@@ -290,30 +297,30 @@ TEST_F(RRSendQueueTest, PrepareResetStreamsNotPartialPackets) {
   absl::optional<SendQueue::DataToSend> chunk_one = buf_.Produce(kNow, 50);
   ASSERT_TRUE(chunk_one.has_value());
   EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
-  EXPECT_EQ(buf_.total_bytes(), 2 * payload.size() - 50);
+  EXPECT_EQ(buf_.total_buffered_amount(), 2 * payload.size() - 50);
 
   StreamID stream_ids[] = {StreamID(1)};
   buf_.PrepareResetStreams(stream_ids);
-  EXPECT_EQ(buf_.total_bytes(), payload.size() - 50);
+  EXPECT_EQ(buf_.total_buffered_amount(), payload.size() - 50);
 }
 
 TEST_F(RRSendQueueTest, EnqueuedItemsArePausedDuringStreamReset) {
   std::vector<uint8_t> payload(50);
 
   buf_.PrepareResetStreams(std::vector<StreamID>({StreamID(1)}));
-  EXPECT_EQ(buf_.total_bytes(), 0u);
+  EXPECT_EQ(buf_.total_buffered_amount(), 0u);
 
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
-  EXPECT_EQ(buf_.total_bytes(), payload.size());
+  EXPECT_EQ(buf_.total_buffered_amount(), payload.size());
 
   EXPECT_FALSE(buf_.Produce(kNow, kOneFragmentPacketSize).has_value());
   buf_.CommitResetStreams();
-  EXPECT_EQ(buf_.total_bytes(), payload.size());
+  EXPECT_EQ(buf_.total_buffered_amount(), payload.size());
 
   absl::optional<SendQueue::DataToSend> chunk_one = buf_.Produce(kNow, 50);
   ASSERT_TRUE(chunk_one.has_value());
   EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
-  EXPECT_EQ(buf_.total_bytes(), 0u);
+  EXPECT_EQ(buf_.total_buffered_amount(), 0u);
 }
 
 TEST_F(RRSendQueueTest, CommittingResetsSSN) {
@@ -633,5 +640,31 @@ TEST_F(RRSendQueueTest, TriggersOnBufferedAmountLowOnThresholdChanged) {
   buf_.SetBufferedAmountLowThreshold(StreamID(1), 0);
 }
 
+TEST_F(RRSendQueueTest,
+       OnTotalBufferedAmountLowDoesNotTriggerOnBufferFillingUp) {
+  EXPECT_CALL(on_total_buffered_amount_low_, Call).Times(0);
+  std::vector<uint8_t> payload(kBufferedAmountLowThreshold - 1);
+  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
+  EXPECT_EQ(buf_.total_buffered_amount(), payload.size());
+
+  // Will not trigger if going above but never below.
+  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID,
+                               std::vector<uint8_t>(kOneFragmentPacketSize)));
+}
+
+TEST_F(RRSendQueueTest, TriggersOnTotalBufferedAmountLowWhenCrossing) {
+  EXPECT_CALL(on_total_buffered_amount_low_, Call).Times(0);
+  std::vector<uint8_t> payload(kBufferedAmountLowThreshold);
+  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
+  EXPECT_EQ(buf_.total_buffered_amount(), payload.size());
+
+  // Reaches it.
+  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, std::vector<uint8_t>(1)));
+
+  // Drain it a bit - will trigger.
+  EXPECT_CALL(on_total_buffered_amount_low_, Call).Times(1);
+  absl::optional<SendQueue::DataToSend> chunk_two =
+      buf_.Produce(kNow, kOneFragmentPacketSize);
+}
 }  // namespace
 }  // namespace dcsctp
