@@ -25,6 +25,7 @@
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
@@ -66,7 +67,7 @@ LazyLogModule sISMLog("IMEStateManager");
 
 static const char* GetBoolName(bool aBool) { return aBool ? "true" : "false"; }
 
-StaticRefPtr<nsIContent> IMEStateManager::sFocusedContent;
+StaticRefPtr<Element> IMEStateManager::sFocusedElement;
 StaticRefPtr<nsPresContext> IMEStateManager::sFocusedPresContext;
 nsIWidget* IMEStateManager::sTextInputHandlingWidget = nullptr;
 nsIWidget* IMEStateManager::sFocusedIMEWidget = nullptr;
@@ -207,7 +208,7 @@ void IMEStateManager::OnFocusMovedBetweenBrowsers(BrowserParent* aBlur,
     MOZ_ASSERT(!sFocusedIMEBrowserParent);
   }
 
-  // We deliberately don't null out sFocusedContent or sFocusedPresContext here.
+  // We deliberately don't null out sFocusedElement or sFocusedPresContext here.
   // When focus is in remote content, as far as layout in the chrome process is
   // concerned, the corresponding content is the top-level XUL browser. Changes
   // among out-of-process iframes don't change that, so dropping the pointer to
@@ -264,7 +265,7 @@ void IMEStateManager::StopIMEStateManagement() {
   }
   sActiveInputContextWidget = nullptr;
   sFocusedPresContext = nullptr;
-  sFocusedContent = nullptr;
+  sFocusedElement = nullptr;
   sIsActive = false;
   DestroyIMEContentObserver();
 }
@@ -332,14 +333,14 @@ nsresult IMEStateManager::OnDestroyPresContext(nsPresContext& aPresContext) {
   MOZ_LOG(
       sISMLog, LogLevel::Info,
       ("OnDestroyPresContext(aPresContext=0x%p), "
-       "sFocusedPresContext=0x%p, sFocusedContent=0x%p, sTextCompositions=0x%p",
-       &aPresContext, sFocusedPresContext.get(), sFocusedContent.get(),
+       "sFocusedPresContext=0x%p, sFocusedElement=0x%p, sTextCompositions=0x%p",
+       &aPresContext, sFocusedPresContext.get(), sFocusedElement.get(),
        sTextCompositions));
 
   DestroyIMEContentObserver();
 
   if (sTextInputHandlingWidget) {
-    IMEState newState = GetNewIMEState(sFocusedPresContext, nullptr);
+    IMEState newState = GetNewIMEState(*sFocusedPresContext, nullptr);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::LOST_FOCUS);
     InputContext::Origin origin =
@@ -350,18 +351,18 @@ nsresult IMEStateManager::OnDestroyPresContext(nsPresContext& aPresContext) {
                 origin);
   }
   sTextInputHandlingWidget = nullptr;
-  sFocusedContent = nullptr;
+  sFocusedElement = nullptr;
   sFocusedPresContext = nullptr;
   return NS_OK;
 }
 
 // static
 nsresult IMEStateManager::OnRemoveContent(nsPresContext& aPresContext,
-                                          nsIContent& aContent) {
-  // First, if there is a composition in the aContent, clean up it.
+                                          Element& aElement) {
+  // First, if there is a composition in the aElement, clean up it.
   if (sTextCompositions) {
-    RefPtr<TextComposition> compositionInContent =
-        sTextCompositions->GetCompositionInContent(&aPresContext, &aContent);
+    const RefPtr<TextComposition> compositionInContent =
+        sTextCompositions->GetCompositionInContent(&aPresContext, &aElement);
 
     if (compositionInContent) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -380,23 +381,23 @@ nsresult IMEStateManager::OnRemoveContent(nsPresContext& aPresContext,
     }
   }
 
-  if (!sFocusedPresContext || !sFocusedContent ||
-      !sFocusedContent->IsInclusiveDescendantOf(&aContent)) {
+  if (!sFocusedPresContext || !sFocusedElement ||
+      !sFocusedElement->IsInclusiveDescendantOf(&aElement)) {
     return NS_OK;
   }
 
   MOZ_LOG(
       sISMLog, LogLevel::Info,
-      ("OnRemoveContent(aPresContext=0x%p, aContent=0x%p), "
-       "sFocusedPresContext=0x%p, sFocusedContent=0x%p, sTextCompositions=0x%p",
-       &aPresContext, &aContent, sFocusedPresContext.get(),
-       sFocusedContent.get(), sTextCompositions));
+      ("OnRemoveContent(aPresContext=0x%p, aElement=0x%p), "
+       "sFocusedPresContext=0x%p, sFocusedElement=0x%p, sTextCompositions=0x%p",
+       &aPresContext, &aElement, sFocusedPresContext.get(),
+       sFocusedElement.get(), sTextCompositions));
 
   DestroyIMEContentObserver();
 
   // Current IME transaction should commit
   if (sTextInputHandlingWidget) {
-    IMEState newState = GetNewIMEState(sFocusedPresContext, nullptr);
+    IMEState newState = GetNewIMEState(*sFocusedPresContext, nullptr);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::LOST_FOCUS);
     InputContext::Origin origin =
@@ -408,59 +409,59 @@ nsresult IMEStateManager::OnRemoveContent(nsPresContext& aPresContext,
   }
 
   sTextInputHandlingWidget = nullptr;
-  sFocusedContent = nullptr;
+  sFocusedElement = nullptr;
   sFocusedPresContext = nullptr;
 
   return NS_OK;
 }
 
 // static
-bool IMEStateManager::CanHandleWith(nsPresContext* aPresContext) {
+bool IMEStateManager::CanHandleWith(const nsPresContext* aPresContext) {
   return aPresContext && aPresContext->GetPresShell() &&
          !aPresContext->PresShell()->IsDestroying();
 }
 
 // static
 nsresult IMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
-                                        nsIContent* aContent,
+                                        Element* aElement,
                                         InputContextAction::Cause aCause) {
   MOZ_LOG(sISMLog, LogLevel::Info,
-          ("OnChangeFocus(aPresContext=0x%p, aContent=0x%p, aCause=%s)",
-           aPresContext, aContent, ToString(aCause).c_str()));
+          ("OnChangeFocus(aPresContext=0x%p, aElement=0x%p, aCause=%s)",
+           aPresContext, aElement, ToString(aCause).c_str()));
 
   InputContextAction action(aCause);
-  return OnChangeFocusInternal(aPresContext, aContent, action);
+  return OnChangeFocusInternal(aPresContext, aElement, action);
 }
 
 // static
 nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
-                                                nsIContent* aContent,
+                                                Element* aElement,
                                                 InputContextAction aAction) {
-  bool remoteHasFocus = EventStateManager::IsRemoteTarget(aContent);
+  bool remoteHasFocus = EventStateManager::IsRemoteTarget(aElement);
   // If we've handled focused content, we were inactive but now active,
   // a remote process has focus, and setting focus to same content in the main
   // process, it means that we're restoring focus without changing DOM focus
   // both in the main process and the remote process.
   const bool restoringContextForRemoteContent =
       XRE_IsParentProcess() && remoteHasFocus && !sIsActive && aPresContext &&
-      sFocusedPresContext && sFocusedContent &&
+      sFocusedPresContext && sFocusedElement &&
       sFocusedPresContext.get() == aPresContext &&
-      sFocusedContent.get() == aContent &&
+      sFocusedElement.get() == aElement &&
       aAction.mFocusChange != InputContextAction::MENU_GOT_PSEUDO_FOCUS;
 
   MOZ_LOG(
       sISMLog, LogLevel::Info,
       ("OnChangeFocusInternal(aPresContext=0x%p (available: %s), "
-       "aContent=0x%p (remote: %s), aAction={ mCause=%s, "
+       "aElement=0x%p (remote: %s), aAction={ mCause=%s, "
        "mFocusChange=%s }), sFocusedPresContext=0x%p (available: %s), "
-       "sFocusedContent=0x%p, sTextInputHandlingWidget=0x%p (available: %s), "
+       "sFocusedElement=0x%p, sTextInputHandlingWidget=0x%p (available: %s), "
        "BrowserParent::GetFocused()=0x%p, sActiveIMEContentObserver=0x%p, "
        "sInstalledMenuKeyboardListener=%s, sIsActive=%s, "
        "restoringContextForRemoteContent=%s",
-       aPresContext, GetBoolName(CanHandleWith(aPresContext)), aContent,
+       aPresContext, GetBoolName(CanHandleWith(aPresContext)), aElement,
        GetBoolName(remoteHasFocus), ToString(aAction.mCause).c_str(),
        ToString(aAction.mFocusChange).c_str(), sFocusedPresContext.get(),
-       GetBoolName(CanHandleWith(sFocusedPresContext)), sFocusedContent.get(),
+       GetBoolName(CanHandleWith(sFocusedPresContext)), sFocusedElement.get(),
        sTextInputHandlingWidget,
        GetBoolName(sTextInputHandlingWidget &&
                    !sTextInputHandlingWidget->Destroyed()),
@@ -471,8 +472,8 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   sIsActive = !!aPresContext;
   if (sPendingFocusedBrowserSwitchingData.isSome()) {
     MOZ_ASSERT(XRE_IsParentProcess());
-    nsCOMPtr<nsIContent> currentContent = sFocusedContent.get();
-    RefPtr<nsPresContext> currentPresContext = sFocusedPresContext.get();
+    RefPtr<Element> focusedElement = sFocusedElement;
+    RefPtr<nsPresContext> focusedPresContext = sFocusedPresContext;
     RefPtr<BrowserParent> browserParentBlurred =
         sPendingFocusedBrowserSwitchingData.ref().mBrowserParentBlurred;
     RefPtr<BrowserParent> browserParentFocused =
@@ -481,33 +482,33 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     // If another call of this method happens during the
     // OnFocusMovedBetweenBrowsers call, we shouldn't take back focus to
     // the old one.
-    if (currentContent != sFocusedContent.get() ||
-        currentPresContext != sFocusedPresContext.get()) {
+    if (focusedElement != sFocusedElement.get() ||
+        focusedPresContext != sFocusedPresContext.get()) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
-              ("  OnChangeFocusInternal(aPresContext=0x%p, aContent=0x%p) "
+              ("  OnChangeFocusInternal(aPresContext=0x%p, aElement=0x%p) "
                "stoped handling it because the focused content was changed to "
-               "sFocusedPresContext=0x%p, sFocusedContent=0x%p by another call",
-               aPresContext, aContent, sFocusedPresContext.get(),
-               sFocusedContent.get()));
+               "sFocusedPresContext=0x%p, sFocusedElement=0x%p by another call",
+               aPresContext, aElement, sFocusedPresContext.get(),
+               sFocusedElement.get()));
       return NS_OK;
     }
   }
 
   // If new aPresShell has been destroyed, this should handle the focus change
   // as nobody is getting focus.
-  if (NS_WARN_IF(aPresContext && !CanHandleWith(aPresContext))) {
+  if (NS_WARN_IF(!CanHandleWith(aPresContext))) {
     MOZ_LOG(sISMLog, LogLevel::Warning,
             ("  OnChangeFocusInternal(), called with destroyed PresShell, "
              "handling this call as nobody getting focus"));
     aPresContext = nullptr;
-    aContent = nullptr;
+    aElement = nullptr;
   }
 
   const nsCOMPtr<nsIWidget> oldWidget = sTextInputHandlingWidget;
   const nsCOMPtr<nsIWidget> newWidget =
       aPresContext ? aPresContext->GetTextInputHandlingWidget() : nullptr;
   const bool focusActuallyChanging =
-      (sFocusedContent != aContent || sFocusedPresContext != aPresContext ||
+      (sFocusedElement != aElement || sFocusedPresContext != aPresContext ||
        oldWidget != newWidget ||
        (remoteHasFocus && !restoringContextForRemoteContent &&
         (aAction.mFocusChange != InputContextAction::MENU_GOT_PSEUDO_FOCUS)));
@@ -549,7 +550,7 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     // Otherwise, i.e., new focused content is in this process, let's check
     // whether the new focused content is already being managed by the
     // active IME content observer.
-    else if (!sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
+    else if (!sActiveIMEContentObserver->IsManaging(aPresContext, aElement)) {
       DestroyIMEContentObserver();
     }
   }
@@ -575,7 +576,7 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   // process actually gets focus because if user types keys before that they
   // are handled by IME.
   IMEState newState = remoteHasFocus ? IMEState(IMEEnabled::Disabled)
-                                     : GetNewIMEState(aPresContext, aContent);
+                                     : GetNewIMEState(*aPresContext, aElement);
   bool setIMEState = true;
 
   if (remoteHasFocus && XRE_IsParentProcess()) {
@@ -651,9 +652,9 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
                   sFocusedIMEBrowserParent);
       }
     } else if (aAction.mFocusChange == InputContextAction::FOCUS_NOT_CHANGED) {
-      // If aContent isn't null or aContent is null but editable, somebody gets
+      // If aElement isn't null or aElement is null but editable, somebody gets
       // focus.
-      bool gotFocus = aContent || (newState.mEnabled == IMEEnabled::Enabled);
+      bool gotFocus = aElement || (newState.mEnabled == IMEEnabled::Enabled);
       aAction.mFocusChange = gotFocus ? InputContextAction::GOT_FOCUS
                                       : InputContextAction::LOST_FOCUS;
     }
@@ -663,24 +664,24 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       // Restore the input context in the active remote process when
       // menu keyboard listener is uninstalled and active remote tab has
       // focus.
-      SetInputContext(newWidget, sActiveChildInputContext, aAction);
+      SetInputContext(*newWidget, sActiveChildInputContext, aAction);
     } else {
       // Update IME state for new focus widget
-      SetIMEState(newState, aPresContext, aContent, newWidget, aAction,
+      SetIMEState(newState, aPresContext, aElement, *newWidget, aAction,
                   remoteHasFocus ? InputContext::ORIGIN_CONTENT : sOrigin);
     }
   }
 
   sFocusedPresContext = aPresContext;
-  sFocusedContent = aContent;
+  sFocusedElement = aElement;
 
   // Don't call CreateIMEContentObserver() here  because it will be called from
   // the focus event handler of focused editor.
 
   MOZ_LOG(sISMLog, LogLevel::Debug,
           ("  OnChangeFocusInternal(), modified IME state for "
-           "sFocusedPresContext=0x%p, sFocusedContent=0x%p",
-           sFocusedPresContext.get(), sFocusedContent.get()));
+           "sFocusedPresContext=0x%p, sFocusedElement=0x%p",
+           sFocusedPresContext.get(), sFocusedElement.get()));
 
   return NS_OK;
 }
@@ -703,28 +704,22 @@ void IMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling) {
                                 ? InputContextAction::MENU_GOT_PSEUDO_FOCUS
                                 : InputContextAction::MENU_LOST_PSEUDO_FOCUS);
   RefPtr<nsPresContext> focusedPresContext = sFocusedPresContext;
-  nsCOMPtr<nsIContent> focusedContent = sFocusedContent.get();
-  OnChangeFocusInternal(focusedPresContext, focusedContent, action);
+  RefPtr<Element> focusedElement = sFocusedElement;
+  OnChangeFocusInternal(focusedPresContext, focusedElement, action);
 }
 
 // static
 bool IMEStateManager::OnMouseButtonEventInEditor(
-    nsPresContext* aPresContext, nsIContent* aContent,
-    WidgetMouseEvent* aMouseEvent) {
+    nsPresContext& aPresContext, Element* aElement,
+    WidgetMouseEvent& aMouseEvent) {
   MOZ_LOG(sISMLog, LogLevel::Info,
           ("OnMouseButtonEventInEditor(aPresContext=0x%p (available: %s), "
-           "aContent=0x%p, aMouseEvent=0x%p), sFocusedPresContext=0x%p, "
-           "sFocusedContent=0x%p",
-           aPresContext, GetBoolName(CanHandleWith(aPresContext)), aContent,
-           aMouseEvent, sFocusedPresContext.get(), sFocusedContent.get()));
+           "aElement=0x%p, aMouseEvent=0x%p), sFocusedPresContext=0x%p, "
+           "sFocusedElement=0x%p",
+           &aPresContext, GetBoolName(CanHandleWith(&aPresContext)), aElement,
+           &aMouseEvent, sFocusedPresContext.get(), sFocusedElement.get()));
 
-  if (NS_WARN_IF(!aMouseEvent)) {
-    MOZ_LOG(sISMLog, LogLevel::Debug,
-            ("  OnMouseButtonEventInEditor(), aMouseEvent is nullptr"));
-    return false;
-  }
-
-  if (sFocusedPresContext != aPresContext || sFocusedContent != aContent) {
+  if (sFocusedPresContext != &aPresContext || sFocusedElement != aElement) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  OnMouseButtonEventInEditor(), "
              "the mouse event isn't fired on the editor managed by ISM"));
@@ -738,7 +733,7 @@ bool IMEStateManager::OnMouseButtonEventInEditor(
     return false;
   }
 
-  if (!sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
+  if (!sActiveIMEContentObserver->IsManaging(&aPresContext, aElement)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  OnMouseButtonEventInEditor(), "
              "the active IMEContentObserver isn't managing the editor"));
@@ -746,30 +741,30 @@ bool IMEStateManager::OnMouseButtonEventInEditor(
   }
 
   OwningNonNull<IMEContentObserver> observer = *sActiveIMEContentObserver;
-  bool consumed = observer->OnMouseButtonEvent(aPresContext, aMouseEvent);
+  bool consumed = observer->OnMouseButtonEvent(&aPresContext, &aMouseEvent);
   MOZ_LOG(sISMLog, LogLevel::Info,
           ("  OnMouseButtonEventInEditor(), "
            "mouse event (mMessage=%s, mButton=%d) is %s",
-           ToChar(aMouseEvent->mMessage), aMouseEvent->mButton,
+           ToChar(aMouseEvent.mMessage), aMouseEvent.mButton,
            consumed ? "consumed" : "not consumed"));
   return consumed;
 }
 
 // static
 void IMEStateManager::OnClickInEditor(nsPresContext& aPresContext,
-                                      nsIContent* aContent,
+                                      Element* aElement,
                                       const WidgetMouseEvent& aMouseEvent) {
   MOZ_LOG(sISMLog, LogLevel::Info,
-          ("OnClickInEditor(aPresContext=0x%p (available: %s), aContent=0x%p, "
-           "aMouseEvent=0x%p), sFocusedPresContext=0x%p, sFocusedContent=0x%p, "
+          ("OnClickInEditor(aPresContext=0x%p (available: %s), aElement=0x%p, "
+           "aMouseEvent=0x%p), sFocusedPresContext=0x%p, sFocusedElement=0x%p, "
            "sTextInputHandlingWidget=0x%p (available: %s)",
-           &aPresContext, GetBoolName(CanHandleWith(&aPresContext)), aContent,
-           &aMouseEvent, sFocusedPresContext.get(), sFocusedContent.get(),
+           &aPresContext, GetBoolName(CanHandleWith(&aPresContext)), aElement,
+           &aMouseEvent, sFocusedPresContext.get(), sFocusedElement.get(),
            sTextInputHandlingWidget,
            GetBoolName(sTextInputHandlingWidget &&
                        !sTextInputHandlingWidget->Destroyed())));
 
-  if (sFocusedPresContext != &aPresContext || sFocusedContent != aContent ||
+  if (sFocusedPresContext != &aPresContext || sFocusedElement != aElement ||
       NS_WARN_IF(!sFocusedPresContext) ||
       NS_WARN_IF(!sTextInputHandlingWidget) ||
       NS_WARN_IF(sTextInputHandlingWidget->Destroyed())) {
@@ -818,62 +813,61 @@ void IMEStateManager::OnClickInEditor(nsPresContext& aPresContext,
           : InputContextAction::CAUSE_MOUSE;
 
   InputContextAction action(cause, InputContextAction::FOCUS_NOT_CHANGED);
-  IMEState newState = GetNewIMEState(&aPresContext, aContent);
-  SetIMEState(newState, &aPresContext, aContent, textInputHandlingWidget,
+  IMEState newState = GetNewIMEState(aPresContext, aElement);
+  SetIMEState(newState, &aPresContext, aElement, textInputHandlingWidget,
               action, sOrigin);
 }
 
 // static
-bool IMEStateManager::IsFocusedContent(const nsPresContext* aPresContext,
-                                       const nsIContent* aFocusedContent) {
-  if (!aPresContext || !sFocusedPresContext ||
-      aPresContext != sFocusedPresContext) {
+bool IMEStateManager::IsFocusedElement(const nsPresContext& aPresContext,
+                                       const Element* aFocusedElement) {
+  if (!sFocusedPresContext || &aPresContext != sFocusedPresContext) {
     return false;
   }
 
-  if (sFocusedContent == aFocusedContent) {
+  if (sFocusedElement == aFocusedElement) {
     return true;
   }
 
-  // If sFocusedContent is not nullptr, but aFocusedContent is nullptr, it does
+  // If sFocusedElement is not nullptr, but aFocusedElement is nullptr, it does
   // not have focus from point of view of IMEStateManager.
-  if (sFocusedContent) {
+  if (sFocusedElement) {
     return false;
   }
 
   // If the caller does not think that nobody has focus, but we know there is
   // a focused content, the caller must be called with wrong content.
-  if (!aFocusedContent) {
+  if (!aFocusedElement) {
     return false;
   }
 
-  // If the aFocusedContent is in design mode, sFocusedContent may be nullptr.
-  if (aFocusedContent->IsInDesignMode()) {
-    MOZ_ASSERT(aPresContext == sFocusedPresContext && !sFocusedContent);
+  // If the aFocusedElement is in design mode, sFocusedElement may be nullptr.
+  if (aFocusedElement->IsInDesignMode()) {
+    MOZ_ASSERT(&aPresContext == sFocusedPresContext && !sFocusedElement);
     return true;
   }
 
-  // Otherwise, only when aFocusedContent is the root element, it can have
+  // Otherwise, only when aFocusedElement is the root element, it can have
   // focus, but IMEStateManager::OnChangeFocus is called with nullptr for
-  // aContent if it was not editable.
-  // XXX In this case, should the caller update sFocusedContent?
-  return aFocusedContent->IsEditable() &&
-         sFocusedPresContext->Document()->GetRootElement() == aFocusedContent;
+  // aFocusedElement if it was not editable.
+  // XXX In this case, should the caller update sFocusedElement?
+  return aFocusedElement->IsEditable() && sFocusedPresContext->Document() &&
+         sFocusedPresContext->Document()->GetRootElement() == aFocusedElement;
 }
 
 // static
-void IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
-                                      nsIContent* aContent,
+void IMEStateManager::OnFocusInEditor(nsPresContext& aPresContext,
+                                      Element* aElement,
                                       EditorBase& aEditorBase) {
   MOZ_LOG(sISMLog, LogLevel::Info,
-          ("OnFocusInEditor(aPresContext=0x%p (available: %s), aContent=0x%p, "
-           "aEditorBase=0x%p), sFocusedPresContext=0x%p, sFocusedContent=0x%p, "
+          ("OnFocusInEditor(aPresContext=0x%p (available: %s), aElement=0x%p, "
+           "aEditorBase=0x%p), sFocusedPresContext=0x%p, sFocusedElement=0x%p, "
            "sActiveIMEContentObserver=0x%p",
-           aPresContext, GetBoolName(CanHandleWith(aPresContext)), aContent,
-           &aEditorBase, sFocusedPresContext.get(), sFocusedContent.get(),
+           &aPresContext, GetBoolName(CanHandleWith(&aPresContext)), aElement,
+           &aEditorBase, sFocusedPresContext.get(), sFocusedElement.get(),
            sActiveIMEContentObserver.get()));
 
-  if (!IsFocusedContent(aPresContext, aContent)) {
+  if (!IsFocusedElement(aPresContext, aElement)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  OnFocusInEditor(), "
              "an editor not managed by ISM gets focus"));
@@ -883,7 +877,7 @@ void IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
   // If the IMEContentObserver instance isn't managing the editor actually,
   // we need to recreate the instance.
   if (sActiveIMEContentObserver) {
-    if (sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
+    if (sActiveIMEContentObserver->IsManaging(&aPresContext, aElement)) {
       MOZ_LOG(
           sISMLog, LogLevel::Debug,
           ("  OnFocusInEditor(), "
@@ -893,14 +887,14 @@ void IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
     // If the IMEContentObserver has not finished initializing itself yet,
     // we don't need to recreate it because the following
     // TryToFlushPendingNotifications call must make it initialized.
-    if (!sActiveIMEContentObserver->IsBeingInitializedFor(aPresContext,
-                                                          aContent)) {
+    if (!sActiveIMEContentObserver->IsBeingInitializedFor(&aPresContext,
+                                                          aElement)) {
       DestroyIMEContentObserver();
     }
   }
 
   if (!sActiveIMEContentObserver) {
-    CreateIMEContentObserver(aEditorBase, aContent);
+    CreateIMEContentObserver(aEditorBase, aElement);
     if (sActiveIMEContentObserver) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
               ("  OnFocusInEditor(), new IMEContentObserver is created (0x%p)",
@@ -946,12 +940,12 @@ void IMEStateManager::OnEditorDestroying(EditorBase& aEditorBase) {
 }
 
 void IMEStateManager::OnReFocus(nsPresContext& aPresContext,
-                                nsIContent& aContent) {
+                                Element& aElement) {
   MOZ_LOG(sISMLog, LogLevel::Info,
-          ("OnReFocus(aPresContext=0x%p (available: %s), aContent=0x%p), "
-           "sActiveIMEContentObserver=0x%p, sFocusedContent=0x%p",
-           &aPresContext, GetBoolName(CanHandleWith(&aPresContext)), &aContent,
-           sActiveIMEContentObserver.get(), sFocusedContent.get()));
+          ("OnReFocus(aPresContext=0x%p (available: %s), aElement=0x%p), "
+           "sActiveIMEContentObserver=0x%p, aElement=0x%p",
+           &aPresContext, GetBoolName(CanHandleWith(&aPresContext)), &aElement,
+           sActiveIMEContentObserver.get(), sFocusedElement.get()));
 
   if (NS_WARN_IF(!sTextInputHandlingWidget) ||
       NS_WARN_IF(sTextInputHandlingWidget->Destroyed())) {
@@ -959,14 +953,14 @@ void IMEStateManager::OnReFocus(nsPresContext& aPresContext,
   }
 
   if (!sActiveIMEContentObserver ||
-      !sActiveIMEContentObserver->IsManaging(&aPresContext, &aContent)) {
+      !sActiveIMEContentObserver->IsManaging(&aPresContext, &aElement)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  OnReFocus(), there is no valid IMEContentObserver, so we don't "
              "manage this. Ignore this"));
     return;
   }
 
-  MOZ_ASSERT(&aContent == sFocusedContent.get());
+  MOZ_ASSERT(&aElement == sFocusedElement.get());
 
   if (!UserActivation::IsHandlingUserInput() ||
       UserActivation::IsHandlingKeyboardInput()) {
@@ -988,25 +982,24 @@ void IMEStateManager::OnReFocus(nsPresContext& aPresContext,
 
   InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                             InputContextAction::FOCUS_NOT_CHANGED);
-  IMEState newState = GetNewIMEState(&aPresContext, &aContent);
-  SetIMEState(newState, &aPresContext, &aContent, textInputHandlingWidget,
+  IMEState newState = GetNewIMEState(aPresContext, &aElement);
+  SetIMEState(newState, &aPresContext, &aElement, textInputHandlingWidget,
               action, sOrigin);
 }
 
 // static
 void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
-                                     nsIContent* aContent,
-                                     EditorBase& aEditorBase,
+                                     Element* aElement, EditorBase& aEditorBase,
                                      const UpdateIMEStateOptions& aOptions) {
   MOZ_LOG(
       sISMLog, LogLevel::Info,
-      ("UpdateIMEState(aNewIMEState=%s, aContent=0x%p, aEditorBase=0x%p, "
+      ("UpdateIMEState(aNewIMEState=%s, aElement=0x%p, aEditorBase=0x%p, "
        "aOptions=0x%0x), sFocusedPresContext=0x%p (available: %s), "
-       "sFocusedContent=0x%p, sTextInputHandlingWidget=0x%p (available: %s), "
+       "sFocusedElement=0x%p, sTextInputHandlingWidget=0x%p (available: %s), "
        "sActiveIMEContentObserver=0x%p, sIsGettingNewIMEState=%s",
-       ToString(aNewIMEState).c_str(), aContent, &aEditorBase,
+       ToString(aNewIMEState).c_str(), aElement, &aEditorBase,
        aOptions.serialize(), sFocusedPresContext.get(),
-       GetBoolName(CanHandleWith(sFocusedPresContext)), sFocusedContent.get(),
+       GetBoolName(CanHandleWith(sFocusedPresContext)), sFocusedElement.get(),
        sTextInputHandlingWidget,
        GetBoolName(sTextInputHandlingWidget &&
                    !sTextInputHandlingWidget->Destroyed()),
@@ -1036,7 +1029,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   }
 
   // IMEStateManager::UpdateIMEState() should be called after
-  // IMEStateManager::OnChangeFocus() is called for setting focus to aContent
+  // IMEStateManager::OnChangeFocus() is called for setting focus to aElement
   // and aEditorBase.  However, when aEditorBase is an HTMLEditor, this may be
   // called by nsIEditor::PostCreate() before IMEStateManager::OnChangeFocus().
   // Similarly, when aEditorBase is a TextEditor, this may be called by
@@ -1094,7 +1087,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
         *sActiveIMEContentObserver;
     OwningNonNull<nsPresContext> presContext = *sFocusedPresContext;
     if (!contentObserver->MaybeReinitialize(
-            textInputHandlingWidget, presContext, aContent, aEditorBase)) {
+            textInputHandlingWidget, presContext, aElement, aEditorBase)) {
       MOZ_LOG(sISMLog, LogLevel::Error,
               ("  UpdateIMEState(), failed to reinitialize the "
                "active IMEContentObserver"));
@@ -1111,7 +1104,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   // editor correctly, we should recreate it.
   const bool createTextStateManager =
       (!sActiveIMEContentObserver ||
-       !sActiveIMEContentObserver->IsManaging(sFocusedPresContext, aContent));
+       !sActiveIMEContentObserver->IsManaging(sFocusedPresContext, aElement));
 
   const bool updateIMEState =
       aOptions.contains(UpdateIMEStateOption::ForceUpdate) ||
@@ -1144,7 +1137,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   if (updateIMEState) {
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::FOCUS_NOT_CHANGED);
-    SetIMEState(aNewIMEState, presContext, aContent, textInputHandlingWidget,
+    SetIMEState(aNewIMEState, presContext, aElement, textInputHandlingWidget,
                 action, sOrigin);
     if (NS_WARN_IF(textInputHandlingWidget->Destroyed())) {
       MOZ_LOG(
@@ -1154,27 +1147,27 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
     }
   }
 
-  NS_ASSERTION(IsFocusedContent(presContext, aContent),
-               "aContent does not match with sFocusedContent");
+  NS_ASSERTION(IsFocusedElement(*presContext, aElement),
+               "aElement does not match with sFocusedElement");
 
   if (createTextStateManager) {
     // XXX In this case, it might not be enough safe to notify IME of anything.
     //     So, don't try to flush pending notifications of IMEContentObserver
     //     here.
-    CreateIMEContentObserver(aEditorBase, aContent);
+    CreateIMEContentObserver(aEditorBase, aElement);
   }
 }
 
 // static
-IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
-                                         nsIContent* aContent) {
+IMEState IMEStateManager::GetNewIMEState(const nsPresContext& aPresContext,
+                                         Element* aElement) {
   MOZ_LOG(
       sISMLog, LogLevel::Info,
-      ("GetNewIMEState(aPresContext=0x%p, aContent=0x%p), "
+      ("GetNewIMEState(aPresContext=0x%p, aElement=0x%p), "
        "sInstalledMenuKeyboardListener=%s",
-       aPresContext, aContent, GetBoolName(sInstalledMenuKeyboardListener)));
+       &aPresContext, aElement, GetBoolName(sInstalledMenuKeyboardListener)));
 
-  if (!CanHandleWith(aPresContext)) {
+  if (!CanHandleWith(&aPresContext)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  GetNewIMEState() returns IMEEnabled::Disabled because "
              "the nsPresContext has been destroyed"));
@@ -1182,8 +1175,8 @@ IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   }
 
   // On Printing or Print Preview, we don't need IME.
-  if (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
-      aPresContext->Type() == nsPresContext::eContext_Print) {
+  if (aPresContext.Type() == nsPresContext::eContext_PrintPreview ||
+      aPresContext.Type() == nsPresContext::eContext_Print) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  GetNewIMEState() returns IMEEnabled::Disabled because "
              "the nsPresContext is for print or print preview"));
@@ -1197,11 +1190,10 @@ IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
     return IMEState(IMEEnabled::Disabled);
   }
 
-  if (!aContent) {
+  if (!aElement) {
     // Even if there are no focused content, the focused document might be
     // editable, such case is design mode.
-    if (aPresContext->Document() &&
-        aPresContext->Document()->IsInDesignMode()) {
+    if (aPresContext.Document() && aPresContext.Document()->IsInDesignMode()) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
               ("  GetNewIMEState() returns IMEEnabled::Enabled because "
                "design mode editor has focus"));
@@ -1213,9 +1205,9 @@ IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
     return IMEState(IMEEnabled::Disabled);
   }
 
-  // If aContent is in designMode, aContent should be the root node of the
+  // If aElement is in designMode, aElement should be the root node of the
   // document.
-  if (aContent && aContent->IsInDesignMode()) {
+  if (aElement && aElement->IsInDesignMode()) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  GetNewIMEState() returns IMEEnabled::Enabled because "
              "a content node in design mode editor has focus"));
@@ -1229,7 +1221,7 @@ IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   // sIsGettingNewIMEState here and UpdateIMEState() should check it.
   GettingNewIMEStateBlocker blocker;
 
-  IMEState newIMEState = aContent->GetDesiredIMEState();
+  IMEState newIMEState = aElement->GetDesiredIMEState();
   MOZ_LOG(sISMLog, LogLevel::Debug,
           ("  GetNewIMEState() returns %s", ToString(newIMEState).c_str()));
   return newIMEState;
@@ -1502,32 +1494,31 @@ static void GetInputmode(const IMEState& aState, const nsIContent& aContent,
   }
 }
 
-static void GetAutocapitalize(const IMEState& aState,
-                              const nsIContent& aContent,
+static void GetAutocapitalize(const IMEState& aState, const Element& aElement,
                               const InputContext& aInputContext,
                               nsAString& aAutocapitalize) {
-  if (aContent.IsHTMLElement() && aState.IsEditable() &&
+  if (aElement.IsHTMLElement() && aState.IsEditable() &&
       StaticPrefs::dom_forms_autocapitalize() &&
       aInputContext.IsAutocapitalizeSupported()) {
-    nsGenericHTMLElement::FromNode(&aContent)->GetAutocapitalize(
+    nsGenericHTMLElement::FromNode(&aElement)->GetAutocapitalize(
         aAutocapitalize);
   }
 }
 
 // static
 void IMEStateManager::SetIMEState(const IMEState& aState,
-                                  nsPresContext* aPresContext,
-                                  nsIContent* aContent, nsIWidget* aWidget,
+                                  const nsPresContext* aPresContext,
+                                  Element* aElement, nsIWidget& aWidget,
                                   InputContextAction aAction,
                                   InputContext::Origin aOrigin) {
   MOZ_LOG(sISMLog, LogLevel::Info,
-          ("SetIMEState(aState=%s, aContent=0x%p (BrowserParent=0x%p), "
-           "aWidget=0x%p, aAction={ mCause=%s, mFocusChange=%s }, aOrigin=%s)",
-           ToString(aState).c_str(), aContent, BrowserParent::GetFrom(aContent),
-           aWidget, ToString(aAction.mCause).c_str(),
+          ("SetIMEState(aState=%s, nsPresContext=0x%p, aElement=0x%p "
+           "(BrowserParent=0x%p), aWidget=0x%p, aAction={ mCause=%s, "
+           "mFocusChange=%s }, aOrigin=%s)",
+           ToString(aState).c_str(), aPresContext, aElement,
+           BrowserParent::GetFrom(aElement), &aWidget,
+           ToString(aAction.mCause).c_str(),
            ToString(aAction.mFocusChange).c_str(), ToChar(aOrigin)));
-
-  NS_ENSURE_TRUE_VOID(aWidget);
 
   InputContext context;
   context.mIMEState = aState;
@@ -1536,7 +1527,7 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
       context.mIMEState.IsEditable() &&
       StaticPrefs::
           intl_ime_hack_on_ime_unaware_apps_fire_key_events_for_composition() &&
-      MayBeIMEUnawareWebApp(aContent);
+      MayBeIMEUnawareWebApp(aElement);
 
   context.mHasHandledUserInput =
       aPresContext && aPresContext->PresShell()->HasHandledUserInput();
@@ -1545,14 +1536,16 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
       aPresContext &&
       nsContentUtils::IsInPrivateBrowsing(aPresContext->Document());
 
-  const nsCOMPtr<nsIContent> focusedContent =
-      aContent ? aContent->FindFirstNonChromeOnlyAccessContent() : nullptr;
+  const RefPtr<Element> focusedElement =
+      aElement ? Element::FromNodeOrNull(
+                     aElement->FindFirstNonChromeOnlyAccessContent())
+               : nullptr;
 
-  if (focusedContent && focusedContent->IsHTMLElement()) {
-    GetInputType(aState, *focusedContent, context.mHTMLInputType);
-    GetActionHint(aState, *focusedContent, context.mActionHint);
-    GetInputmode(aState, *focusedContent, context.mHTMLInputInputmode);
-    GetAutocapitalize(aState, *focusedContent, context,
+  if (focusedElement && focusedElement->IsHTMLElement()) {
+    GetInputType(aState, *focusedElement, context.mHTMLInputType);
+    GetActionHint(aState, *focusedElement, context.mActionHint);
+    GetInputmode(aState, *focusedElement, context.mHTMLInputInputmode);
+    GetAutocapitalize(aState, *focusedElement, context,
                       context.mAutocapitalize);
   }
 
@@ -1574,20 +1567,18 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
 }
 
 // static
-void IMEStateManager::SetInputContext(nsIWidget* aWidget,
+void IMEStateManager::SetInputContext(nsIWidget& aWidget,
                                       const InputContext& aInputContext,
                                       const InputContextAction& aAction) {
   MOZ_LOG(
       sISMLog, LogLevel::Info,
       ("SetInputContext(aWidget=0x%p, aInputContext=%s, "
        "aAction={ mCause=%s, mAction=%s }), BrowserParent::GetFocused()=0x%p",
-       aWidget, ToString(aInputContext).c_str(),
+       &aWidget, ToString(aInputContext).c_str(),
        ToString(aAction.mCause).c_str(), ToString(aAction.mFocusChange).c_str(),
        BrowserParent::GetFocused()));
 
-  MOZ_RELEASE_ASSERT(aWidget);
-
-  nsCOMPtr<nsIWidget> widget(aWidget);
+  OwningNonNull<nsIWidget> widget = aWidget;
   widget->SetInputContext(aInputContext, aAction);
   sActiveInputContextWidget = widget;
 }
@@ -2074,22 +2065,22 @@ void IMEStateManager::DestroyIMEContentObserver() {
 
 // static
 void IMEStateManager::CreateIMEContentObserver(EditorBase& aEditorBase,
-                                               nsIContent* aFocusedContent) {
+                                               Element* aFocusedElement) {
   MOZ_LOG(sISMLog, LogLevel::Info,
-          ("CreateIMEContentObserver(aEditorBase=0x%p, aFocusedContent=0x%p), "
-           "sFocusedPresContext=0x%p, sFocusedContent=0x%p, "
+          ("CreateIMEContentObserver(aEditorBase=0x%p, aFocusedElement=0x%p), "
+           "sFocusedPresContext=0x%p, sFocusedElement=0x%p, "
            "sTextInputHandlingWidget=0x%p (available: %s), "
            "sActiveIMEContentObserver=0x%p, "
            "sActiveIMEContentObserver->IsManaging(sFocusedPresContext, "
-           "sFocusedContent)=%s",
-           &aEditorBase, aFocusedContent, sFocusedPresContext.get(),
-           sFocusedContent.get(), sTextInputHandlingWidget,
+           "sFocusedElement)=%s",
+           &aEditorBase, aFocusedElement, sFocusedPresContext.get(),
+           sFocusedElement.get(), sTextInputHandlingWidget,
            GetBoolName(sTextInputHandlingWidget &&
                        !sTextInputHandlingWidget->Destroyed()),
            sActiveIMEContentObserver.get(),
            GetBoolName(sActiveIMEContentObserver
                            ? sActiveIMEContentObserver->IsManaging(
-                                 sFocusedPresContext, sFocusedContent)
+                                 sFocusedPresContext, sFocusedElement)
                            : false)));
 
   if (NS_WARN_IF(sActiveIMEContentObserver)) {
@@ -2097,7 +2088,7 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase& aEditorBase,
             ("  CreateIMEContentObserver(), FAILED due to "
              "there is already an active IMEContentObserver"));
     MOZ_ASSERT(sActiveIMEContentObserver->IsManaging(sFocusedPresContext,
-                                                     sFocusedContent));
+                                                     sFocusedElement));
     return;
   }
 
@@ -2153,10 +2144,10 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase& aEditorBase,
   // We should hold the current instance here.
   OwningNonNull<IMEContentObserver> activeIMEContentObserver =
       *sActiveIMEContentObserver;
-  OwningNonNull<nsPresContext> presContext = *sFocusedPresContext;
-  nsCOMPtr<nsIContent> content = aFocusedContent;
-  activeIMEContentObserver->Init(textInputHandlingWidget, presContext, content,
-                                 aEditorBase);
+  OwningNonNull<nsPresContext> focusedPresContext = *sFocusedPresContext;
+  RefPtr<Element> focusedElement = aFocusedElement;
+  activeIMEContentObserver->Init(textInputHandlingWidget, focusedPresContext,
+                                 focusedElement, aEditorBase);
 }
 
 // static

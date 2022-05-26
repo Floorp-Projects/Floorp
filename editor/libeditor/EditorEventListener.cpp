@@ -661,8 +661,9 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
   // consumed.
   if (EditorHasFocus()) {
     if (RefPtr<nsPresContext> presContext = GetPresContext()) {
-      nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
-      IMEStateManager::OnClickInEditor(*presContext, focusedContent,
+      RefPtr<Element> focusedElement =
+          Element::FromNodeOrNull(mEditorBase->GetFocusedContent());
+      IMEStateManager::OnClickInEditor(*presContext, focusedElement,
                                        *aMouseClickEvent);
       if (DetachedFromEditor()) {
         return NS_OK;
@@ -733,9 +734,10 @@ bool EditorEventListener::NotifyIMEOfMouseButtonEvent(
   if (NS_WARN_IF(!presContext)) {
     return false;
   }
-  nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
+  RefPtr<Element> focusedElement =
+      Element::FromNodeOrNull(mEditorBase->GetFocusedContent());
   return IMEStateManager::OnMouseButtonEventInEditor(
-      presContext, focusedContent, aMouseEvent);
+      *presContext, focusedElement, *aMouseEvent);
 }
 
 nsresult EditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
@@ -1156,7 +1158,7 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
     return NS_OK;
   }
 
-  RefPtr<EditorBase> editorBase(mEditorBase);
+  OwningNonNull<EditorBase> editorBase(*mEditorBase);
   editorBase->OnFocus(*originalEventTargetNode);
   if (DetachedFromEditorOrDefaultPrevented(aFocusEvent)) {
     return NS_OK;
@@ -1166,8 +1168,9 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
   if (MOZ_UNLIKELY(NS_WARN_IF(!presContext))) {
     return NS_OK;
   }
-  nsCOMPtr<nsIContent> focusedContent = editorBase->GetFocusedContent();
-  IMEStateManager::OnFocusInEditor(presContext, focusedContent, *editorBase);
+  RefPtr<Element> focusedElement =
+      Element::FromNodeOrNull(editorBase->GetFocusedContent());
+  IMEStateManager::OnFocusInEditor(*presContext, focusedElement, *editorBase);
 
   return NS_OK;
 }
