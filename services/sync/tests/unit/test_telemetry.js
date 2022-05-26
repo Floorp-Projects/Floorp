@@ -597,6 +597,67 @@ add_task(async function test_clean_urls() {
   }
 });
 
+// Test sanitization of some hard-coded error strings.
+add_task(async function test_clean_errors() {
+  let { ErrorSanitizer } = ChromeUtils.import(
+    "resource://services-sync/telemetry.js"
+  );
+
+  for (let [original, expected] of [
+    [
+      "Win error 112 during operation write on file [profileDir]\\weave\\addonsreconciler.json (Espacio en disco insuficiente. )",
+      "OS error [No space left on device] during operation write on file [profileDir]/weave/addonsreconciler.json",
+    ],
+    [
+      "Unix error 28 during operation write on file [profileDir]/weave/addonsreconciler.json (No space left on device)",
+      "OS error [No space left on device] during operation write on file [profileDir]/weave/addonsreconciler.json",
+    ],
+  ]) {
+    const sanitized = ErrorSanitizer.cleanErrorMessage(original);
+    Assert.equal(sanitized, expected);
+  }
+});
+
+// Arrange for a sync to hit a "real" OS error during a sync and make sure it's sanitized.
+add_task(async function test_clean_real_os_error() {
+  enableValidationPrefs();
+
+  // Simulate a real error.
+  await Service.engineManager.register(SteamEngine);
+  let engine = Service.engineManager.get("steam");
+  engine.enabled = true;
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+  let path =
+    Services.appinfo.OS == "WINNT"
+      ? "no\\such\\path.json"
+      : "no/such/path.json";
+  try {
+    await CommonUtils.writeJSON({}, path);
+    throw new Error("should fail to write the file");
+  } catch (ex) {
+    engine._errToThrow = ex;
+  }
+
+  try {
+    const changes = await engine._tracker.getChangedIDs();
+    _(`test_clean_urls: Steam tracker contents: ${JSON.stringify(changes)}`);
+    await sync_and_validate_telem(ping => {
+      equal(ping.status.service, SYNC_FAILED_PARTIAL);
+      let failureReason = ping.engines.find(e => e.name === "steam")
+        .failureReason;
+      equal(failureReason.name, "unexpectederror");
+      equal(
+        failureReason.error,
+        "OS error [File/Path not found] during operation open on file no/such/path.json"
+      );
+    });
+  } finally {
+    await cleanAndGo(engine, server);
+    await Service.engineManager.unregister(engine);
+  }
+});
+
 add_task(async function test_initial_sync_engines() {
   enableValidationPrefs();
 
