@@ -14,8 +14,8 @@
 #include <string>
 #include <vector>
 
-#include "api/proxy.h"
 #include "api/rtp_sender_interface.h"
+#include "pc/proxy.h"
 
 namespace webrtc {
 

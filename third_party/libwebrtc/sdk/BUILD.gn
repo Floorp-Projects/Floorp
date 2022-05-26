@@ -392,6 +392,7 @@ if (is_ios || is_mac) {
         "../api/video:video_rtp_headers",
         "../common_video",
         "../media:rtc_media_base",
+        "../pc:rtc_pc_base",
         "../rtc_base",
         "../rtc_base:checks",
         "../rtc_base:threading",

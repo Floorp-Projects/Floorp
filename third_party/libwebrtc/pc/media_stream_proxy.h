@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef API_MEDIA_STREAM_PROXY_H_
-#define API_MEDIA_STREAM_PROXY_H_
+#ifndef PC_MEDIA_STREAM_PROXY_H_
+#define PC_MEDIA_STREAM_PROXY_H_
 
 #include <string>
 
 #include "api/media_stream_interface.h"
-#include "api/proxy.h"
+#include "pc/proxy.h"
 
 namespace webrtc {
 
-// TODO(deadbeef): Move this to .cc file and out of api/. What threads methods
-// are called on is an implementation detail.
+// TODO(deadbeef): Move this to a .cc file. What threads methods are called on
+// is an implementation detail.
 BEGIN_PRIMARY_PROXY_MAP(MediaStream)
 PROXY_PRIMARY_THREAD_DESTRUCTOR()
 BYPASS_PROXY_CONSTMETHOD0(std::string, id)
@@ -41,4 +41,4 @@ END_PROXY_MAP()
 
 }  // namespace webrtc
 
-#endif  // API_MEDIA_STREAM_PROXY_H_
+#endif  // PC_MEDIA_STREAM_PROXY_H_
