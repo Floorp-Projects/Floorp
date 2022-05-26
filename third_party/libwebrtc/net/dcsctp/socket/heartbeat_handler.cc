@@ -104,10 +104,15 @@ HeartbeatHandler::HeartbeatHandler(absl::string_view log_prefix,
                        TimerBackoffAlgorithm::kExponential,
                        /*max_restarts=*/0))) {
   // The interval timer must always be running as long as the association is up.
-  interval_timer_->Start();
+  RestartTimer();
 }
 
 void HeartbeatHandler::RestartTimer() {
+  if (interval_duration_ == DurationMs(0)) {
+    // Heartbeating has been disabled.
+    return;
+  }
+
   if (interval_duration_should_include_rtt_) {
     // The RTT should be used, but it's not easy accessible. The RTO will
     // suffice.
