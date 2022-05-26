@@ -234,6 +234,7 @@ if (is_android) {
       "src/java/org/webrtc/GlGenericDrawer.java",
       "src/java/org/webrtc/H264Utils.java",
       "src/java/org/webrtc/NV21Buffer.java",
+      "src/java/org/webrtc/VideoCodecMimeType.java",
       "src/java/org/webrtc/VideoDecoderWrapper.java",
       "src/java/org/webrtc/VideoEncoderWrapper.java",
       "src/java/org/webrtc/WrappedNativeI420Buffer.java",
@@ -403,7 +404,6 @@ if (is_android) {
       "src/java/org/webrtc/MediaCodecWrapperFactory.java",
       "src/java/org/webrtc/MediaCodecWrapperFactoryImpl.java",
       "src/java/org/webrtc/NV12Buffer.java",
-      "src/java/org/webrtc/VideoCodecMimeType.java",
     ]
 
     deps = [
