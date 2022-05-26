@@ -197,12 +197,11 @@ class DcSctpSocketCallbacks {
   // Triggered when the outgoing message buffer is empty, meaning that there are
   // no more queued messages, but there can still be packets in-flight or to be
   // retransmitted. (in contrast to SCTP_SENDER_DRY_EVENT).
-  // TODO(boivie): This is currently only used in benchmarks to have a steady
-  // flow of packets to send
   //
   // Note that it's NOT ALLOWED to call into this library from within this
   // callback.
-  virtual void NotifyOutgoingMessageBufferEmpty() = 0;
+  ABSL_DEPRECATED("Use OnTotalBufferedAmountLow instead")
+  virtual void NotifyOutgoingMessageBufferEmpty() {}
 
   // Called when the library has received an SCTP message in full and delivers
   // it to the upper layer.
@@ -263,6 +262,17 @@ class DcSctpSocketCallbacks {
   // It is allowed to call into this library from within this callback.
   virtual void OnIncomingStreamsReset(
       rtc::ArrayView<const StreamID> incoming_streams) = 0;
+
+  // Will be called when the amount of data buffered to be sent falls to or
+  // below the threshold set when calling `SetBufferedAmountLowThreshold`.
+  //
+  // It is allowed to call into this library from within this callback.
+  virtual void OnBufferedAmountLow(StreamID stream_id) {}
+
+  // Will be called when the total amount of data buffered (in the entire send
+  // buffer, for all streams) falls to or below the threshold specified in
+  // `DcSctpOptions::total_buffered_amount_low_threshold`.
+  virtual void OnTotalBufferedAmountLow() {}
 };
 
 // The DcSctpSocket implementation implements the following interface.
@@ -326,6 +336,20 @@ class DcSctpSocketInterface {
   // or streams that don't support resetting will not perform any operation.
   virtual ResetStreamsStatus ResetStreams(
       rtc::ArrayView<const StreamID> outgoing_streams) = 0;
+
+  // Returns the number of bytes of data currently queued to be sent on a given
+  // stream.
+  virtual size_t buffered_amount(StreamID stream_id) const = 0;
+
+  // Returns the number of buffered outgoing bytes that is considered "low" for
+  // a given stream. See `SetBufferedAmountLowThreshold`.
+  virtual size_t buffered_amount_low_threshold(StreamID stream_id) const = 0;
+
+  // Used to specify the number of bytes of buffered outgoing data that is
+  // considered "low" for a given stream, which will trigger an
+  // OnBufferedAmountLow event. The default value is zero (0).
+  virtual void SetBufferedAmountLowThreshold(StreamID stream_id,
+                                             size_t bytes) = 0;
 };
 }  // namespace dcsctp
 

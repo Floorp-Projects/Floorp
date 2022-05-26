@@ -79,11 +79,6 @@ class CallbackDeferrer : public DcSctpSocketCallbacks {
     return underlying_.GetRandomInt(low, high);
   }
 
-  void NotifyOutgoingMessageBufferEmpty() override {
-    // Will not be deferred - call directly.
-    underlying_.NotifyOutgoingMessageBufferEmpty();
-  }
-
   void OnMessageReceived(DcSctpMessage message) override {
     deferred_.emplace_back(
         [deliverer = MessageDeliverer(std::move(message))](
@@ -143,6 +138,17 @@ class CallbackDeferrer : public DcSctpSocketCallbacks {
         [streams = std::vector<StreamID>(incoming_streams.begin(),
                                          incoming_streams.end())](
             DcSctpSocketCallbacks& cb) { cb.OnIncomingStreamsReset(streams); });
+  }
+
+  void OnBufferedAmountLow(StreamID stream_id) override {
+    deferred_.emplace_back([stream_id](DcSctpSocketCallbacks& cb) {
+      cb.OnBufferedAmountLow(stream_id);
+    });
+  }
+
+  void OnTotalBufferedAmountLow() override {
+    deferred_.emplace_back(
+        [](DcSctpSocketCallbacks& cb) { cb.OnTotalBufferedAmountLow(); });
   }
 
  private:
