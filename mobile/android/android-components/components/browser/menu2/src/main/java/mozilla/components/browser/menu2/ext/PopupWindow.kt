@@ -11,12 +11,11 @@ import android.widget.PopupWindow
 import androidx.core.widget.PopupWindowCompat
 import mozilla.components.browser.menu2.R
 import mozilla.components.concept.menu.Orientation
-import mozilla.components.support.ktx.android.view.isRTL
 
 internal fun PopupWindow.displayPopup(
     containerView: View,
     anchor: View,
-    preferredOrientation: Orientation
+    preferredOrientation: Orientation? = null,
 ) {
     // Measure menu
     val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -38,14 +37,12 @@ internal fun PopupWindow.displayPopup(
         preferredOrientation == Orientation.DOWN && fitsDown ->
             showPopupWithDownOrientation(anchor, reversed)
         preferredOrientation == Orientation.UP && fitsUp ->
-            showPopupWithUpOrientation(anchor, availableHeightToBottom, containerHeight, reversed)
+            showPopupWithUpOrientation(anchor, containerHeight, reversed)
         else -> {
             showPopupWhereBestFits(
                 anchor,
                 fitsUp,
                 fitsDown,
-                availableHeightToTop,
-                availableHeightToBottom,
                 reversed,
                 containerHeight
             )
@@ -58,74 +55,58 @@ private fun PopupWindow.showPopupWhereBestFits(
     anchor: View,
     fitsUp: Boolean,
     fitsDown: Boolean,
-    availableHeightToTop: Int,
-    availableHeightToBottom: Int,
     reversed: Boolean,
     containerHeight: Int
 ) {
-    // We don't have enough space to show the menu UP neither DOWN.
-    // Let's just show the popup at the location of the anchor.
-    if (!fitsUp && !fitsDown) {
-        showAtAnchorLocation(anchor, availableHeightToTop < availableHeightToBottom, reversed)
-    } else {
-        if (fitsDown) {
-            showPopupWithDownOrientation(anchor, reversed)
-        } else {
-            showPopupWithUpOrientation(anchor, availableHeightToBottom, containerHeight, reversed)
-        }
+    when {
+        // Not enough space to show the menu UP neither DOWN.
+        // Let's just show the popup at the location of the anchor.
+        !fitsUp && !fitsDown -> showAtAnchorLocation(anchor, reversed)
+        // Enough space to show menu down
+        fitsDown -> showPopupWithDownOrientation(anchor, reversed)
+        // Otherwise, show menu up
+        else -> showPopupWithUpOrientation(anchor, containerHeight, reversed)
     }
 }
 
 private fun PopupWindow.showPopupWithUpOrientation(
     anchor: View,
-    availableHeightToBottom: Int,
     containerHeight: Int,
     reversed: Boolean,
 ) {
-    val xOffset = if (anchor.isRTL) -anchor.width else 0
     animationStyle = if (reversed) {
         R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftBottom
     } else {
         R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRightBottom
     }
 
-    // Positioning the menu above and overlapping the anchor.
-    val yOffset = if (availableHeightToBottom < 0) {
-        // The anchor is partially below of the bottom of the screen, let's make the menu completely visible.
-        availableHeightToBottom - containerHeight
-    } else {
-        -containerHeight
-    }
-    showAsDropDown(anchor, xOffset, yOffset)
+    val yOffset = -containerHeight
+    showAsDropDown(anchor, 0, yOffset)
 }
 
 private fun PopupWindow.showPopupWithDownOrientation(anchor: View, reversed: Boolean) {
-    val xOffset = if (anchor.isRTL) -anchor.width else 0
+    // Apply the best fit animation style based on positioning
     animationStyle = if (reversed) {
         R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftTop
     } else {
         R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRightTop
     }
-    // Menu should overlay the anchor.
-    showAsDropDown(anchor, xOffset, -anchor.height)
+
+    PopupWindowCompat.setOverlapAnchor(this, true)
+    showAsDropDown(anchor)
 }
 
-private fun PopupWindow.showAtAnchorLocation(anchor: View, isCloserToTop: Boolean, reversed: Boolean) {
+private fun PopupWindow.showAtAnchorLocation(
+    anchor: View,
+    reversed: Boolean,
+) {
     val anchorPosition = IntArray(2)
 
     // Apply the best fit animation style based on positioning
-    animationStyle = if (isCloserToTop) {
-        if (reversed) {
-            R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftTop
-        } else {
-            R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRightTop
-        }
+    animationStyle = if (reversed) {
+        R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeft
     } else {
-        if (reversed) {
-            R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftBottom
-        } else {
-            R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRightBottom
-        }
+        R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRight
     }
 
     anchor.getLocationOnScreen(anchorPosition)

@@ -74,5 +74,15 @@
         <item name="android:windowEnterAnimation">@anim/menu_enter_right_bottom</item>
         <item name="android:windowExitAnimation">@anim/menu_exit</item>
     </style>
+
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuLeft" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_left</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuRight" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_right</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
     <!-- Animation -->
 </resources>

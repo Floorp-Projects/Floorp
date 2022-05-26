@@ -4,16 +4,11 @@
 
 package mozilla.components.browser.menu2
 
-import android.view.Gravity
-import android.view.View
 import android.widget.Button
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.menu.MenuController
-import mozilla.components.concept.menu.Orientation
 import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
 import mozilla.components.concept.menu.candidate.MenuCandidate
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -78,41 +73,5 @@ class BrowserMenuControllerTest {
 
         assertFalse(popup.isShowing)
         assertTrue(dismissed)
-    }
-
-    @Test
-    fun `determineMenuOrientation returns Orientation-DOWN by default`() {
-        assertEquals(
-            Orientation.DOWN,
-            determineMenuOrientation(mock())
-        )
-    }
-
-    @Test
-    fun `determineMenuOrientation returns Orientation-UP for views with bottom gravity in CoordinatorLayout`() {
-        val params = CoordinatorLayout.LayoutParams(100, 100)
-        params.gravity = Gravity.BOTTOM
-
-        val view = View(testContext)
-        view.layoutParams = params
-
-        assertEquals(
-            Orientation.UP,
-            determineMenuOrientation(view)
-        )
-    }
-
-    @Test
-    fun `determineMenuOrientation returns Orientation-DOWN for views with top gravity in CoordinatorLayout`() {
-        val params = CoordinatorLayout.LayoutParams(100, 100)
-        params.gravity = Gravity.TOP
-
-        val view = View(testContext)
-        view.layoutParams = params
-
-        assertEquals(
-            Orientation.DOWN,
-            determineMenuOrientation(view)
-        )
     }
 }

@@ -7,7 +7,6 @@ package mozilla.components.browser.menu2
 import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.PopupWindow
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.browser.menu2.ext.displayPopup
 import mozilla.components.browser.menu2.view.MenuView
 import mozilla.components.concept.menu.MenuController
@@ -46,7 +45,6 @@ class BrowserMenuController(
         anchor: View,
         orientation: Orientation?
     ): PopupWindow {
-        val desiredOrientation = orientation ?: determineMenuOrientation(anchor.parent as? View?)
         val view = MenuView(anchor.context).apply {
             // Show nested list if present, or the standard menu candidates list.
             submitList(menuCandidates)
@@ -58,12 +56,12 @@ class BrowserMenuController(
             view.onDismiss = ::dismiss
             view.onReopenMenu = ::reopenMenu
             setOnDismissListener(menuDismissListener)
-            displayPopup(view, anchor, desiredOrientation)
+            displayPopup(view, anchor, orientation)
         }.also {
             currentPopupInfo = PopupMenuInfo(
                 window = it,
                 anchor = anchor,
-                orientation = desiredOrientation,
+                orientation = orientation,
                 nested = null
             )
         }
@@ -134,18 +132,7 @@ class BrowserMenuController(
     private data class PopupMenuInfo(
         val window: MenuPopupWindow,
         val anchor: View,
-        val orientation: Orientation,
+        val orientation: Orientation?,
         val nested: NestedMenuCandidate? = null
     )
-}
-
-/**
- * Determines the orientation to be used for a menu
- * based on the positioning of the [parent] in the layout.
- */
-fun determineMenuOrientation(parent: View?): Orientation {
-    val params = parent?.layoutParams as? CoordinatorLayout.LayoutParams
-        ?: return Orientation.DOWN
-
-    return Orientation.fromGravity(params.gravity)
 }
