@@ -25,6 +25,7 @@ namespace dcsctp {
 namespace {
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
 constexpr size_t kArwnd = 10000;
@@ -267,6 +268,31 @@ TEST_F(DataTrackerTest, ClearsDuplicateTsnsAfterCreatingSack) {
   EXPECT_EQ(sack2.cumulative_tsn_ack(), TSN(17));
   EXPECT_THAT(sack2.gap_ack_blocks(), IsEmpty());
   EXPECT_THAT(sack2.duplicate_tsns(), IsEmpty());
+}
+
+TEST_F(DataTrackerTest, LimitsNumberOfDuplicatesReported) {
+  for (size_t i = 0; i < DataTracker::kMaxDuplicateTsnReported + 10; ++i) {
+    TSN tsn(11 + i);
+    buf_.Observe(tsn, AnyDataChunk::ImmediateAckFlag(false));
+    buf_.Observe(tsn, AnyDataChunk::ImmediateAckFlag(false));
+  }
+
+  SackChunk sack = buf_.CreateSelectiveAck(kArwnd);
+  EXPECT_THAT(sack.gap_ack_blocks(), IsEmpty());
+  EXPECT_THAT(sack.duplicate_tsns(),
+              SizeIs(DataTracker::kMaxDuplicateTsnReported));
+}
+
+TEST_F(DataTrackerTest, LimitsNumberOfGapAckBlocksReported) {
+  for (size_t i = 0; i < DataTracker::kMaxGapAckBlocksReported + 10; ++i) {
+    TSN tsn(11 + i * 2);
+    buf_.Observe(tsn, AnyDataChunk::ImmediateAckFlag(false));
+  }
+
+  SackChunk sack = buf_.CreateSelectiveAck(kArwnd);
+  EXPECT_EQ(sack.cumulative_tsn_ack(), TSN(11));
+  EXPECT_THAT(sack.gap_ack_blocks(),
+              SizeIs(DataTracker::kMaxGapAckBlocksReported));
 }
 
 }  // namespace

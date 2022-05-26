@@ -26,6 +26,9 @@
 
 namespace dcsctp {
 
+constexpr size_t DataTracker::kMaxDuplicateTsnReported;
+constexpr size_t DataTracker::kMaxGapAckBlocksReported;
+
 bool DataTracker::IsTSNValid(TSN tsn) const {
   UnwrappedTSN unwrapped_tsn = tsn_unwrapper_.PeekUnwrap(tsn);
 
@@ -52,7 +55,9 @@ void DataTracker::Observe(TSN tsn,
 
   // Old chunk already seen before?
   if (unwrapped_tsn <= last_cumulative_acked_tsn_) {
-    duplicate_tsns_.insert(unwrapped_tsn.Wrap());
+    if (duplicate_tsns_.size() < kMaxDuplicateTsnReported) {
+      duplicate_tsns_.insert(unwrapped_tsn.Wrap());
+    }
     return;
   }
 
@@ -69,7 +74,9 @@ void DataTracker::Observe(TSN tsn,
     bool inserted = additional_tsns_.insert(unwrapped_tsn).second;
     if (!inserted) {
       // Already seen before.
-      duplicate_tsns_.insert(unwrapped_tsn.Wrap());
+      if (duplicate_tsns_.size() < kMaxDuplicateTsnReported) {
+        duplicate_tsns_.insert(unwrapped_tsn.Wrap());
+      }
     }
   }
 
@@ -200,12 +207,14 @@ std::vector<SackChunk::GapAckBlock> DataTracker::CreateGapAckBlocks() const {
 
   auto flush = [&]() {
     if (first_tsn_in_block.has_value()) {
-      auto start_diff = UnwrappedTSN::Difference(*first_tsn_in_block,
+      if (gap_ack_blocks.size() < kMaxGapAckBlocksReported) {
+        auto start_diff = UnwrappedTSN::Difference(*first_tsn_in_block,
+                                                   last_cumulative_acked_tsn_);
+        auto end_diff = UnwrappedTSN::Difference(*last_tsn_in_block,
                                                  last_cumulative_acked_tsn_);
-      auto end_diff = UnwrappedTSN::Difference(*last_tsn_in_block,
-                                               last_cumulative_acked_tsn_);
-      gap_ack_blocks.emplace_back(static_cast<uint16_t>(start_diff),
-                                  static_cast<uint16_t>(end_diff));
+        gap_ack_blocks.emplace_back(static_cast<uint16_t>(start_diff),
+                                    static_cast<uint16_t>(end_diff));
+      }
       first_tsn_in_block = absl::nullopt;
       last_tsn_in_block = absl::nullopt;
     }
