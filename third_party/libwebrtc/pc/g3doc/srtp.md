@@ -2,36 +2,60 @@
 <?% config.freshness.owner = 'hta' %?>
 
 # SRTP in WebRTC
-WebRTC mandates encryption of media by means of the Secure Realtime Protocol, or SRTP, which is described in [RFC 3711](https://datatracker.ietf.org/doc/html/rfc3711).
 
-The key negotiation in WebRTC happens using DTLS-SRTP which is described in [RFC 5764](https://datatracker.ietf.org/doc/html/rfc5764).
-The older [SDES protocol](https://datatracker.ietf.org/doc/html/rfc4568) is implemented but not enabled by default.
+WebRTC mandates encryption of media by means of the Secure Realtime Protocol, or
+SRTP, which is described in
+[RFC 3711](https://datatracker.ietf.org/doc/html/rfc3711).
 
-Unencrypted RTP can be enabled for debugging purposes by setting the PeerConnections [`disable_encryption`][1] option to true.
+The key negotiation in WebRTC happens using DTLS-SRTP which is described in
+[RFC 5764](https://datatracker.ietf.org/doc/html/rfc5764). The older
+[SDES protocol](https://datatracker.ietf.org/doc/html/rfc4568) is implemented
+but not enabled by default.
+
+Unencrypted RTP can be enabled for debugging purposes by setting the
+PeerConnections [`disable_encryption`][1] option to true.
 
 ## Supported cipher suites
 
 The implementation supports the following cipher suites:
-- SRTP_AES128_CM_HMAC_SHA1_80
-- SRTP_AEAD_AES_128_GCM
-- SRTP_AEAD_AES_256_GCM
 
-The SRTP_AES128_CM_HMAC_SHA1_32 cipher suite is accepted for audio-only connections if offered by the other side. It is not actively supported, see [SelectCrypto][2] for details.
+*   SRTP_AES128_CM_HMAC_SHA1_80
+*   SRTP_AEAD_AES_128_GCM
+*   SRTP_AEAD_AES_256_GCM
 
-The cipher suite ordering allows a non-WebRTC peer to prefer GCM cipher suites, however they are not selected as default by two instances of the WebRTC library.
+The SRTP_AES128_CM_HMAC_SHA1_32 cipher suite is accepted for audio-only
+connections if offered by the other side. It is not actively supported, see
+[SelectCrypto][2] for details.
+
+The cipher suite ordering allows a non-WebRTC peer to prefer GCM cipher suites,
+however they are not selected as default by two instances of the WebRTC library.
 
 ## cricket::SrtpSession
-The [`cricket::SrtpSession`][3] is providing encryption and decryption of SRTP packets using [`libsrtp`](https://github.com/cisco/libsrtp). Keys will be provided by `SrtpTransport` or `DtlsSrtpTransport` in the [`SetSend`][4] and [`SetRecv`][5] methods.
 
-Encryption and decryption happens in-place in the [`ProtectRtp`][6], [`ProtectRtcp`][7], [`UnprotectRtp`][8] and [`UnprotectRtcp`][9] methods.
-The `SrtpSession` class also takes care of initializing and deinitializing `libsrtp` by keeping track of how many instances are being used.
+The [`cricket::SrtpSession`][3] is providing encryption and decryption of SRTP
+packets using [`libsrtp`](https://github.com/cisco/libsrtp). Keys will be
+provided by `SrtpTransport` or `DtlsSrtpTransport` in the [`SetSend`][4] and
+[`SetRecv`][5] methods.
+
+Encryption and decryption happens in-place in the [`ProtectRtp`][6],
+[`ProtectRtcp`][7], [`UnprotectRtp`][8] and [`UnprotectRtcp`][9] methods. The
+`SrtpSession` class also takes care of initializing and deinitializing `libsrtp`
+by keeping track of how many instances are being used.
 
 ## webrtc::SrtpTransport and webrtc::DtlsSrtpTransport
-The [`webrtc::SrtpTransport`][10] class is controlling the `SrtpSession` instances for RTP and RTCP. When [rtcp-mux](https://datatracker.ietf.org/doc/html/rfc5761) is used, the `SrtpSession` for RTCP is not needed.
 
-[`webrtc:DtlsSrtpTransport`][11] is a subclass of the `SrtpTransport` that extracts the keying material when the DTLS handshake is done and configures it in its base class. It will also become writable only once the DTLS handshake is done.
+The [`webrtc::SrtpTransport`][10] class is controlling the `SrtpSession`
+instances for RTP and RTCP. When
+[rtcp-mux](https://datatracker.ietf.org/doc/html/rfc5761) is used, the
+`SrtpSession` for RTCP is not needed.
+
+[`webrtc:DtlsSrtpTransport`][11] is a subclass of the `SrtpTransport` that
+extracts the keying material when the DTLS handshake is done and configures it
+in its base class. It will also become writable only once the DTLS handshake is
+done.
 
 ## cricket::SrtpFilter
+
 The [`cricket::SrtpFilter`][12] class is used to negotiate SDES.
 
 [1]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/peer_connection_interface.h;l=1413;drc=f467b445631189557d44de86a77ca6a0c3e2108d
