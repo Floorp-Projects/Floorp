@@ -4,7 +4,10 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SyncTelemetry"];
+var EXPORTED_SYMBOLS = [
+  "ErrorSanitizer", // for testing.
+  "SyncTelemetry",
+];
 
 // Support for Sync-and-FxA-related telemetry, which is submitted in a special-purpose
 // telemetry ping called the "sync ping", documented here:
@@ -97,15 +100,6 @@ const ENGINES = new Set([
   "creditcards",
 ]);
 
-// A regex we can use to replace the profile dir in error messages. We use a
-// regexp so we can simply replace all case-insensitive occurences.
-// This escaping function is from:
-// https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
-const reProfileDir = new RegExp(
-  OS.Constants.Path.profileDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-  "gi"
-);
-
 function tryGetMonotonicTimestamp() {
   try {
     return Services.telemetry.msSinceProcessStart();
@@ -132,7 +126,7 @@ function normalizeExtraTelemetryFields(extra) {
     let value = extra[key];
     let type = typeof value;
     if (type == "string") {
-      result[key] = cleanErrorMessage(value);
+      result[key] = ErrorSanitizer.cleanErrorMessage(value);
     } else if (type == "number") {
       result[key] = Number.isInteger(value)
         ? value.toString(10)
@@ -144,6 +138,94 @@ function normalizeExtraTelemetryFields(extra) {
     }
   }
   return ObjectUtils.isEmpty(result) ? undefined : result;
+}
+
+// The `ErrorSanitizer` has 2 main jobs:
+// * Remove PII from errors, such as the profile dir or URLs the user might
+//   have visited.
+// * Normalize errors so different locales or operating systems etc don't
+//   generate different messages for the same underlying error.
+// * [TODO] Normalize errors so environmental factors don't influence message.
+//   For example, timestamps or GUIDs should be replaced with something static.
+class ErrorSanitizer {
+  // Things we normalize - this isn't exhaustive, but covers the common error messages we see.
+  // Eg:
+  // > Win error 112 during operation write on file [profileDir]\weave\addonsreconciler.json (Espacio en disco insuficiente. )
+  // > Win error 112 during operation write on file [profileDir]\weave\addonsreconciler.json (Diskte yeterli yer yok. )
+  // > <snip many other translations of the error>
+  // > Unix error 28 during operation write on file [profileDir]/weave/addonsreconciler.json (No space left on device)
+  // These tend to crowd out other errors we might care about (eg, top 5 errors for some engines are
+  // variations of the "no space left on device")
+
+  // Note that only errors that have same-but-different errors on Windows and Unix are here - we
+  // still sanitize ones that aren't in these maps to remove the translations etc - eg,
+  // `ERROR_SHARING_VIOLATION` doesn't really have a unix equivalent, so doesn't appear here, but
+  // we still strip the translations to avoid the variants.
+  static E_NO_SPACE_ON_DEVICE = "OS error [No space left on device]";
+  static E_PERMISSION_DENIED = "OS error [Permission denied]";
+  static E_NO_FILE_OR_DIR = "OS error [File/Path not found]";
+  static E_NO_MEM = "OS error [No memory]";
+
+  static WindowsErrorSubstitutions = {
+    "2": this.E_NO_FILE_OR_DIR, // ERROR_FILE_NOT_FOUND
+    "3": this.E_NO_FILE_OR_DIR, // ERROR_PATH_NOT_FOUND
+    "5": this.E_PERMISSION_DENIED, // ERROR_ACCESS_DENIED
+    "8": this.E_NO_MEM, // ERROR_NOT_ENOUGH_MEMORY
+    "112": this.E_NO_SPACE_ON_DEVICE, // ERROR_DISK_FULL
+  };
+
+  static UnixErrorSubstitutions = {
+    "2": this.E_NO_FILE_OR_DIR, // ENOENT
+    "12": this.E_NO_MEM, // ENOMEM
+    "13": this.E_PERMISSION_DENIED, // EACCESS
+    "28": this.E_NO_SPACE_ON_DEVICE, // ENOSPC
+  };
+
+  static reWinError = /^(?<head>Win error (?<errno>\d+))(?<detail>.*) \(.*\r?\n?\)$/m;
+  static reUnixError = /^(?<head>Unix error (?<errno>\d+))(?<detail>.*) \(.*\)$/;
+
+  static #cleanOSErrorMessage(error) {
+    let match = this.reWinError.exec(error);
+    if (match) {
+      let head =
+        this.WindowsErrorSubstitutions[match.groups.errno] || match.groups.head;
+      return head + match.groups.detail.replaceAll("\\", "/");
+    }
+    match = this.reUnixError.exec(error);
+    if (match) {
+      let head =
+        this.UnixErrorSubstitutions[match.groups.errno] || match.groups.head;
+      return head + match.groups.detail;
+    }
+    return error;
+  }
+
+  // A regex we can use to replace the profile dir in error messages. We use a
+  // regexp so we can simply replace all case-insensitive occurences.
+  // This escaping function is from:
+  // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
+  static reProfileDir = new RegExp(
+    OS.Constants.Path.profileDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    "gi"
+  );
+
+  // The "public" entry-point.
+  static cleanErrorMessage(error) {
+    // There's a chance the profiledir is in the error string which is PII we
+    // want to avoid including in the ping.
+    error = error.replace(this.reProfileDir, "[profileDir]");
+    // MSG_INVALID_URL from /dom/bindings/Errors.msg -- no way to access this
+    // directly from JS.
+    if (error.endsWith("is not a valid URL.")) {
+      error = "<URL> is not a valid URL.";
+    }
+    // Try to filter things that look somewhat like a URL (in that they contain a
+    // colon in the middle of non-whitespace), in case anything else is including
+    // these in error messages. Note that JSON.stringified stuff comes through
+    // here, so we explicitly ignore double-quotes as well.
+    error = error.replace(/[^\s"]+:[^\s"]+/g, "<URL>");
+    return this.#cleanOSErrorMessage(error);
+  }
 }
 
 // This function validates the payload of a telemetry "event" - this can be
@@ -521,23 +603,6 @@ class SyncRecord {
     }
     return false;
   }
-}
-
-function cleanErrorMessage(error) {
-  // There's a chance the profiledir is in the error string which is PII we
-  // want to avoid including in the ping.
-  error = error.replace(reProfileDir, "[profileDir]");
-  // MSG_INVALID_URL from /dom/bindings/Errors.msg -- no way to access this
-  // directly from JS.
-  if (error.endsWith("is not a valid URL.")) {
-    error = "<URL> is not a valid URL.";
-  }
-  // Try to filter things that look somewhat like a URL (in that they contain a
-  // colon in the middle of non-whitespace), in case anything else is including
-  // these in error messages. Note that JSON.stringified stuff comes through
-  // here, so we explicitly ignore double-quotes as well.
-  error = error.replace(/[^\s"]+:[^\s"]+/g, "<URL>");
-  return error;
 }
 
 // The entire "sync ping" - it includes all the syncs, events etc recorded in
@@ -1059,7 +1124,7 @@ class SyncTelemetryImpl {
         // This is hacky, but I can't imagine that it's not also accurate.
         return { name: "othererror", error };
       }
-      error = cleanErrorMessage(error);
+      error = ErrorSanitizer.cleanErrorMessage(error);
       return { name: "unexpectederror", error };
     }
 
@@ -1096,7 +1161,7 @@ class SyncTelemetryImpl {
     }
     return {
       name: "unexpectederror",
-      error: cleanErrorMessage(msg),
+      error: ErrorSanitizer.cleanErrorMessage(msg),
     };
   }
 }
