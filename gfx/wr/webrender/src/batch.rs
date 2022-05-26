@@ -3000,15 +3000,23 @@ impl BatchBuilder {
                     ctx.spatial_tree,
                 );
 
-                let top_left = map_prim_to_backdrop.map_point(prim_rect.top_left()).unwrap();
-                let top_right = map_prim_to_backdrop.map_point(prim_rect.top_right()).unwrap();
-                let bottom_left = map_prim_to_backdrop.map_point(prim_rect.bottom_left()).unwrap();
-                let bottom_right = map_prim_to_backdrop.map_point(prim_rect.bottom_right()).unwrap();
+                let points = [
+                    map_prim_to_backdrop.map_point(prim_rect.top_left()),
+                    map_prim_to_backdrop.map_point(prim_rect.top_right()),
+                    map_prim_to_backdrop.map_point(prim_rect.bottom_left()),
+                    map_prim_to_backdrop.map_point(prim_rect.bottom_right()),
+                ];
 
-                let top_left = calculate_screen_uv(top_left * pic_info.device_pixel_scale, backdrop_rect);
-                let top_right = calculate_screen_uv(top_right * pic_info.device_pixel_scale, backdrop_rect);
-                let bottom_left = calculate_screen_uv(bottom_left * pic_info.device_pixel_scale, backdrop_rect);
-                let bottom_right = calculate_screen_uv(bottom_right * pic_info.device_pixel_scale, backdrop_rect);
+                if points.iter().any(|p| p.is_none()) {
+                    return;
+                }
+
+                let uvs = [
+                    calculate_screen_uv(points[0].unwrap() * pic_info.device_pixel_scale, backdrop_rect),
+                    calculate_screen_uv(points[1].unwrap() * pic_info.device_pixel_scale, backdrop_rect),
+                    calculate_screen_uv(points[2].unwrap() * pic_info.device_pixel_scale, backdrop_rect),
+                    calculate_screen_uv(points[3].unwrap() * pic_info.device_pixel_scale, backdrop_rect),
+                ];
 
                 // TODO (gw): This is a hack that provides the GPU cache blocks for an
                 //            ImageSource. We should update the GPU cache interfaces to
@@ -3021,10 +3029,10 @@ impl BatchBuilder {
                         target_rect.max.y as f32,
                     ]),
                     GpuBlockData::from([0.0; 4]),
-                    GpuBlockData::from(top_left),
-                    GpuBlockData::from(top_right),
-                    GpuBlockData::from(bottom_left),
-                    GpuBlockData::from(bottom_right),
+                    GpuBlockData::from(uvs[0]),
+                    GpuBlockData::from(uvs[1]),
+                    GpuBlockData::from(uvs[2]),
+                    GpuBlockData::from(uvs[3]),
                 ];
                 let uv_rect_handle = gpu_cache.push_per_frame_blocks(gpu_blocks);
 
