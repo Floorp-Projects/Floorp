@@ -17,6 +17,7 @@
 #include "absl/types/optional.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "media/base/media_constants.h"
+#include "rtc_base/trace_event.h"
 
 #if defined(WEBRTC_USE_H264)
 #include "modules/video_coding/codecs/h264/h264_decoder_impl.h"
@@ -65,6 +66,7 @@ void DisableRtcUseH264() {
 }
 
 std::vector<SdpVideoFormat> SupportedH264Codecs() {
+  TRACE_EVENT0("webrtc", __func__);
   if (!IsH264CodecSupported())
     return std::vector<SdpVideoFormat>();
   // We only support encoding Constrained Baseline Profile (CBP), but the
