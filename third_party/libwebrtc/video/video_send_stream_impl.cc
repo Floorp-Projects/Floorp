@@ -195,7 +195,7 @@ absl::optional<float> GetConfiguredPacingFactor(
   RateControlSettings rate_control_settings =
       RateControlSettings::ParseFromFieldTrials();
   return rate_control_settings.GetPacingFactor().value_or(
-      default_pacing_config.pacing_factor);
+      static_cast<double>(default_pacing_config.pacing_factor));
 }
 
 }  // namespace
