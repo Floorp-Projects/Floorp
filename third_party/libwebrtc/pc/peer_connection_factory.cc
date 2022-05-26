@@ -25,6 +25,7 @@
 #include "api/transport/bitrate_settings.h"
 #include "api/units/data_rate.h"
 #include "call/audio_state.h"
+#include "call/rtp_transport_controller_send_factory.h"
 #include "media/base/media_engine.h"
 #include "p2p/base/basic_async_resolver_factory.h"
 #include "p2p/base/basic_packet_socket_factory.h"
@@ -100,7 +101,11 @@ PeerConnectionFactory::PeerConnectionFactory(
           std::move(dependencies->network_state_predictor_factory)),
       injected_network_controller_factory_(
           std::move(dependencies->network_controller_factory)),
-      neteq_factory_(std::move(dependencies->neteq_factory)) {}
+      neteq_factory_(std::move(dependencies->neteq_factory)),
+      transport_controller_send_factory_(
+          (dependencies->transport_controller_send_factory)
+              ? std::move(dependencies->transport_controller_send_factory)
+              : std::make_unique<RtpTransportControllerSendFactory>()) {}
 
 PeerConnectionFactory::PeerConnectionFactory(
     PeerConnectionFactoryDependencies dependencies)
@@ -334,7 +339,8 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   }
 
   call_config.trials = &trials();
-
+  call_config.rtp_transport_controller_send_factory =
+      transport_controller_send_factory_.get();
   return std::unique_ptr<Call>(
       context_->call_factory()->CreateCall(call_config));
 }

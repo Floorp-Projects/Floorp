@@ -118,6 +118,7 @@
 #include "api/transport/webrtc_key_value_config.h"
 #include "api/turn_customizer.h"
 #include "api/video/video_bitrate_allocator_factory.h"
+#include "call/rtp_transport_controller_send_factory_interface.h"
 #include "media/base/media_config.h"
 #include "media/base/media_engine.h"
 // TODO(bugs.webrtc.org/7447): We plan to provide a way to let applications
@@ -1402,6 +1403,8 @@ struct RTC_EXPORT PeerConnectionFactoryDependencies final {
   std::unique_ptr<NetEqFactory> neteq_factory;
   std::unique_ptr<SctpTransportFactoryInterface> sctp_factory;
   std::unique_ptr<WebRtcKeyValueConfig> trials;
+  std::unique_ptr<RtpTransportControllerSendFactoryInterface>
+      transport_controller_send_factory;
 };
 
 // PeerConnectionFactoryInterface is the factory interface used for creating

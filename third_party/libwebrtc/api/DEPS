@@ -42,6 +42,11 @@ include_rules = [
 
 specific_include_rules = {
   # Some internal headers are allowed even in API headers:
+
+  "call_factory_interface\.h": [
+    "+call/rtp_transport_controller_send_factory_interface.h",
+  ],
+
   ".*\.h": [
     "+rtc_base/checks.h",
     "+rtc_base/system/rtc_export.h",
@@ -126,6 +131,7 @@ specific_include_rules = {
   ],
 
   "peer_connection_interface\.h": [
+    "+call/rtp_transport_controller_send_factory_interface.h",
     "+media/base/media_config.h",
     "+media/base/media_engine.h",
     "+p2p/base/port.h",

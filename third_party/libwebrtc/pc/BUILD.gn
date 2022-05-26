@@ -301,6 +301,8 @@ rtc_library("peerconnection") {
     "../api/video:video_rtp_headers",
     "../api/video_codecs:video_codecs_api",
     "../call:call_interfaces",
+    "../call:rtp_interfaces",
+    "../call:rtp_sender",
     "../common_video",
     "../logging:ice_log",
     "../media:rtc_data_sctp_transport_internal",
