@@ -284,6 +284,7 @@ class AwesomeBarView(
                 state.searchEngineSource.searchEngine
             )
             is SearchEngineSource.History -> emptyList()
+            is SearchEngineSource.Bookmarks -> emptyList()
             is SearchEngineSource.None -> emptyList()
         }
     }

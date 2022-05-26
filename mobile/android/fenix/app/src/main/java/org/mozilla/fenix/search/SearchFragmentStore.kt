@@ -56,6 +56,11 @@ sealed class SearchEngineSource {
      * Search engine for history
      */
     data class History(override val searchEngine: SearchEngine) : SearchEngineSource()
+
+    /**
+     * Search engine for bookmarks
+     */
+    data class Bookmarks(override val searchEngine: SearchEngine) : SearchEngineSource()
 }
 
 /**
@@ -171,6 +176,11 @@ sealed class SearchFragmentAction : Action {
     data class SearchHistoryEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
 
     /**
+     * Action when bookmarks search engine is selected.
+     */
+    data class SearchBookmarksEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
+
+    /**
      * Action when search engine picker is selected.
      */
     data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchFragmentAction()
@@ -247,6 +257,17 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showClipboardSuggestions = false,
                 showHistorySuggestions = true,
                 showBookmarkSuggestions = false,
+                showSyncedTabsSuggestions = false,
+                showSessionSuggestions = false,
+            )
+        is SearchFragmentAction.SearchBookmarksEngineSelected ->
+            state.copy(
+                searchEngineSource = SearchEngineSource.Bookmarks(action.engine),
+                showSearchSuggestions = false,
+                showSearchShortcuts = false,
+                showClipboardSuggestions = false,
+                showHistorySuggestions = false,
+                showBookmarkSuggestions = true,
                 showSyncedTabsSuggestions = false,
                 showSessionSuggestions = false,
             )

@@ -383,6 +383,31 @@ class SearchDialogControllerTest {
     }
 
     @Test
+    fun `WHEN bookmarks search engine is selected THEN dispatch correct action`() {
+        val searchEngine: SearchEngine = mockk(relaxed = true)
+        every { searchEngine.type } returns SearchEngine.Type.APPLICATION
+        every { searchEngine.id } returns Core.BOOKMARKS_SEARCH_ENGINE_ID
+
+        var focusToolbarInvoked = false
+        createController(
+            focusToolbar = {
+                focusToolbarInvoked = true
+            }
+        ).handleSearchShortcutEngineSelected(searchEngine)
+
+        assertTrue(focusToolbarInvoked)
+        verify { store.dispatch(SearchFragmentAction.SearchBookmarksEngineSelected(searchEngine)) }
+
+        assertTrue(SearchShortcuts.selected.testHasValue())
+        val recordedEvents = SearchShortcuts.selected.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        val eventExtra = recordedEvents.single().extra
+        assertNotNull(eventExtra)
+        assertTrue(eventExtra!!.containsKey("engine"))
+        assertEquals("application", eventExtra["engine"])
+    }
+
+    @Test
     fun handleClickSearchEngineSettings() {
         val directions: NavDirections = actionGlobalSearchEngineFragment()
 
