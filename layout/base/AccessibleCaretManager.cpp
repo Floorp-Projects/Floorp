@@ -918,12 +918,10 @@ void AccessibleCaretManager::ChangeFocusToOrClearOldFocus(
     MOZ_ASSERT(focusableContent, "Focusable frame must have content!");
     RefPtr<Element> focusableElement = Element::FromNode(focusableContent);
     fm->SetFocus(focusableElement, nsIFocusManager::FLAG_BYLONGPRESS);
-  } else {
-    nsPIDOMWindowOuter* win = mPresShell->GetDocument()->GetWindow();
-    if (win) {
-      fm->ClearFocus(win);
-      fm->SetFocusedWindow(win);
-    }
+  } else if (nsCOMPtr<nsPIDOMWindowOuter> win =
+                 mPresShell->GetDocument()->GetWindow()) {
+    fm->ClearFocus(win);
+    fm->SetFocusedWindow(win);
   }
 }
 

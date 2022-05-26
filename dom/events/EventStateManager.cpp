@@ -3514,7 +3514,9 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               //       for doing this.  Therefore, we should skip setting focus
               //       to clicked document for now.
               if (XRE_IsParentProcess() || IsInActiveTab(mDocument)) {
-                fm->SetFocusedWindow(mDocument->GetWindow());
+                nsCOMPtr<nsPIDOMWindowOuter> outerWindow =
+                    mDocument->GetWindow();
+                fm->SetFocusedWindow(outerWindow);
               }
             }
           }

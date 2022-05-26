@@ -528,8 +528,7 @@ RefPtr<ClientOpPromise> ClientSource::Focus(const ClientFocusArgs& aArgs) {
     rv.ThrowNotSupportedError("Not a Window client");
     return ClientOpPromise::CreateAndReject(rv, __func__);
   }
-  nsPIDOMWindowOuter* outer = nullptr;
-
+  nsCOMPtr<nsPIDOMWindowOuter> outer;
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (inner) {
     outer = inner->GetOuterWindow();
