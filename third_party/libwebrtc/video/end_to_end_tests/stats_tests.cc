@@ -17,7 +17,7 @@
 #include "api/test/video/function_video_encoder_factory.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
+#include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -71,12 +71,11 @@ TEST_F(StatsEndToEndTest, GetStats) {
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
       // Drop every 25th packet => 4% loss.
       static const int kPacketLossFrac = 25;
-      RTPHeader header;
-      RtpUtility::RtpHeaderParser parser(packet, length);
-      if (parser.Parse(&header) &&
-          expected_send_ssrcs_.find(header.ssrc) !=
+      RtpPacket header;
+      if (header.Parse(packet, length) &&
+          expected_send_ssrcs_.find(header.Ssrc()) !=
               expected_send_ssrcs_.end() &&
-          header.sequenceNumber % kPacketLossFrac == 0) {
+          header.SequenceNumber() % kPacketLossFrac == 0) {
         return DROP_PACKET;
       }
       check_stats_event_.Set();
@@ -613,11 +612,9 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
       MutexLock lock(&mutex_);
       if (++sent_rtp_packets_ == kPacketNumberToDrop) {
-        std::unique_ptr<RtpHeaderParser> parser(
-            RtpHeaderParser::CreateForTest());
-        RTPHeader header;
-        EXPECT_TRUE(parser->Parse(packet, length, &header));
-        dropped_rtp_packet_ = header.sequenceNumber;
+        RtpPacket header;
+        EXPECT_TRUE(header.Parse(packet, length));
+        dropped_rtp_packet_ = header.SequenceNumber();
         return DROP_PACKET;
       }
       task_queue_->PostTask(std::unique_ptr<QueuedTask>(this));

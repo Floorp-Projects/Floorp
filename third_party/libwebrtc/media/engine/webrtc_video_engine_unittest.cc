@@ -51,6 +51,7 @@
 #include "media/engine/fake_webrtc_video_engine.h"
 #include "media/engine/simulcast.h"
 #include "media/engine/webrtc_voice_engine.h"
+#include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/experiments/min_video_bitrate_experiment.h"
 #include "rtc_base/fake_clock.h"
@@ -61,7 +62,6 @@
 #include "test/field_trial.h"
 #include "test/frame_forwarder.h"
 #include "test/gmock.h"
-#include "test/rtp_header_parser.h"
 
 using ::testing::_;
 using ::testing::Contains;
@@ -1659,20 +1659,13 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
     return network_interface_.NumRtpPackets(ssrc);
   }
   int NumSentSsrcs() { return network_interface_.NumSentSsrcs(); }
-  const rtc::CopyOnWriteBuffer* GetRtpPacket(int index) {
+  rtc::CopyOnWriteBuffer GetRtpPacket(int index) {
     return network_interface_.GetRtpPacket(index);
   }
-  static int GetPayloadType(const rtc::CopyOnWriteBuffer* p) {
-    webrtc::RTPHeader header;
-    EXPECT_TRUE(ParseRtpPacket(p, &header));
-    return header.payloadType;
-  }
-
-  static bool ParseRtpPacket(const rtc::CopyOnWriteBuffer* p,
-                             webrtc::RTPHeader* header) {
-    std::unique_ptr<webrtc::RtpHeaderParser> parser(
-        webrtc::RtpHeaderParser::CreateForTest());
-    return parser->Parse(p->cdata(), p->size(), header);
+  static int GetPayloadType(rtc::CopyOnWriteBuffer p) {
+    webrtc::RtpPacket header;
+    EXPECT_TRUE(header.Parse(std::move(p)));
+    return header.PayloadType();
   }
 
   // Tests that we can send and receive frames.
@@ -1683,8 +1676,7 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
     EXPECT_EQ(0, renderer_.num_rendered_frames());
     SendFrame();
     EXPECT_FRAME_WAIT(1, kVideoWidth, kVideoHeight, kTimeout);
-    std::unique_ptr<const rtc::CopyOnWriteBuffer> p(GetRtpPacket(0));
-    EXPECT_EQ(codec.id, GetPayloadType(p.get()));
+    EXPECT_EQ(codec.id, GetPayloadType(GetRtpPacket(0)));
   }
 
   void SendReceiveManyAndGetStats(const cricket::VideoCodec& codec,
@@ -1700,8 +1692,7 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
         EXPECT_FRAME_WAIT(frame + i * fps, kVideoWidth, kVideoHeight, kTimeout);
       }
     }
-    std::unique_ptr<const rtc::CopyOnWriteBuffer> p(GetRtpPacket(0));
-    EXPECT_EQ(codec.id, GetPayloadType(p.get()));
+    EXPECT_EQ(codec.id, GetPayloadType(GetRtpPacket(0)));
   }
 
   cricket::VideoSenderInfo GetSenderStats(size_t i) {
@@ -2034,15 +2025,14 @@ TEST_F(WebRtcVideoChannelBaseTest, SetSendSsrc) {
   EXPECT_TRUE(SetSend(true));
   SendFrame();
   EXPECT_TRUE_WAIT(NumRtpPackets() > 0, kTimeout);
-  webrtc::RTPHeader header;
-  std::unique_ptr<const rtc::CopyOnWriteBuffer> p(GetRtpPacket(0));
-  EXPECT_TRUE(ParseRtpPacket(p.get(), &header));
-  EXPECT_EQ(kSsrc, header.ssrc);
+  webrtc::RtpPacket header;
+  EXPECT_TRUE(header.Parse(GetRtpPacket(0)));
+  EXPECT_EQ(kSsrc, header.Ssrc());
 
   // Packets are being paced out, so these can mismatch between the first and
   // second call to NumRtpPackets until pending packets are paced out.
-  EXPECT_EQ_WAIT(NumRtpPackets(), NumRtpPackets(header.ssrc), kTimeout);
-  EXPECT_EQ_WAIT(NumRtpBytes(), NumRtpBytes(header.ssrc), kTimeout);
+  EXPECT_EQ_WAIT(NumRtpPackets(), NumRtpPackets(header.Ssrc()), kTimeout);
+  EXPECT_EQ_WAIT(NumRtpBytes(), NumRtpBytes(header.Ssrc()), kTimeout);
   EXPECT_EQ(1, NumSentSsrcs());
   EXPECT_EQ(0, NumRtpPackets(kSsrc - 1));
   EXPECT_EQ(0, NumRtpBytes(kSsrc - 1));
@@ -2059,14 +2049,13 @@ TEST_F(WebRtcVideoChannelBaseTest, SetSendSsrcAfterSetCodecs) {
   EXPECT_TRUE(SetSend(true));
   EXPECT_TRUE(WaitAndSendFrame(0));
   EXPECT_TRUE_WAIT(NumRtpPackets() > 0, kTimeout);
-  webrtc::RTPHeader header;
-  std::unique_ptr<const rtc::CopyOnWriteBuffer> p(GetRtpPacket(0));
-  EXPECT_TRUE(ParseRtpPacket(p.get(), &header));
-  EXPECT_EQ(999u, header.ssrc);
+  webrtc::RtpPacket header;
+  EXPECT_TRUE(header.Parse(GetRtpPacket(0)));
+  EXPECT_EQ(999u, header.Ssrc());
   // Packets are being paced out, so these can mismatch between the first and
   // second call to NumRtpPackets until pending packets are paced out.
-  EXPECT_EQ_WAIT(NumRtpPackets(), NumRtpPackets(header.ssrc), kTimeout);
-  EXPECT_EQ_WAIT(NumRtpBytes(), NumRtpBytes(header.ssrc), kTimeout);
+  EXPECT_EQ_WAIT(NumRtpPackets(), NumRtpPackets(header.Ssrc()), kTimeout);
+  EXPECT_EQ_WAIT(NumRtpBytes(), NumRtpBytes(header.Ssrc()), kTimeout);
   EXPECT_EQ(1, NumSentSsrcs());
   EXPECT_EQ(0, NumRtpPackets(kSsrc));
   EXPECT_EQ(0, NumRtpBytes(kSsrc));
@@ -2098,12 +2087,10 @@ TEST_F(WebRtcVideoChannelBaseTest, AddRemoveSendStreams) {
   SendFrame();
   EXPECT_FRAME_WAIT(1, kVideoWidth, kVideoHeight, kTimeout);
   EXPECT_GT(NumRtpPackets(), 0);
-  webrtc::RTPHeader header;
+  webrtc::RtpPacket header;
   size_t last_packet = NumRtpPackets() - 1;
-  std::unique_ptr<const rtc::CopyOnWriteBuffer> p(
-      GetRtpPacket(static_cast<int>(last_packet)));
-  EXPECT_TRUE(ParseRtpPacket(p.get(), &header));
-  EXPECT_EQ(kSsrc, header.ssrc);
+  EXPECT_TRUE(header.Parse(GetRtpPacket(static_cast<int>(last_packet))));
+  EXPECT_EQ(kSsrc, header.Ssrc());
 
   // Remove the send stream that was added during Setup.
   EXPECT_TRUE(channel_->RemoveSendStream(kSsrc));
@@ -2118,9 +2105,8 @@ TEST_F(WebRtcVideoChannelBaseTest, AddRemoveSendStreams) {
   EXPECT_TRUE_WAIT(NumRtpPackets() > rtp_packets, kTimeout);
 
   last_packet = NumRtpPackets() - 1;
-  p.reset(GetRtpPacket(static_cast<int>(last_packet)));
-  EXPECT_TRUE(ParseRtpPacket(p.get(), &header));
-  EXPECT_EQ(789u, header.ssrc);
+  EXPECT_TRUE(header.Parse(GetRtpPacket(static_cast<int>(last_packet))));
+  EXPECT_EQ(789u, header.Ssrc());
 }
 
 // Tests the behavior of incoming streams in a conference scenario.
@@ -2148,8 +2134,7 @@ TEST_F(WebRtcVideoChannelBaseTest, SimulateConference) {
   EXPECT_FRAME_ON_RENDERER_WAIT(renderer2, 1, kVideoWidth, kVideoHeight,
                                 kTimeout);
 
-  std::unique_ptr<const rtc::CopyOnWriteBuffer> p(GetRtpPacket(0));
-  EXPECT_EQ(DefaultCodec().id, GetPayloadType(p.get()));
+  EXPECT_EQ(DefaultCodec().id, GetPayloadType(GetRtpPacket(0)));
   EXPECT_EQ(kVideoWidth, renderer1.width());
   EXPECT_EQ(kVideoHeight, renderer1.height());
   EXPECT_EQ(kVideoWidth, renderer2.width());
