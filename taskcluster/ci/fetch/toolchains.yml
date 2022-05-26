@@ -212,9 +212,13 @@ nsis-3.07-win:
     description: nsis 3.07 for windows
     fetch:
         type: static-url
-        url: https://downloads.sourceforge.net/project/nsis/NSIS%203/3.07/nsis-3.07.zip
-        sha256: 04dde28896ae9ab36ea3035ff3a294e78053f00048064f6d22a6f1c02bcb6ec0
-        size: 2335219
+        # Temporary: pull down our own repackage of NSIS, with its plugin DLLs signed by Mozilla
+        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1751450#c38 for more details
+        # bug 1771192 tracks adding a signing task downstream of the NSIS toolchain task
+        # to fix this more robustly.
+        url: https://github.com/mozilla-releng/adhoc-signing-blobs/raw/nsis/nsis-3.07-signed.zip
+        sha256: 5856cd49b52870caa41814d71ce30c4304d5001b80c04f4eb7028ffedd91df7e
+        size: 2618390
         artifact-name: nsis.tar.zst
         strip-components: 1
         add-prefix: nsis/
@@ -415,7 +419,7 @@ dump-syms:
     fetch:
         type: git
         repo: https://github.com/mozilla/dump_syms/
-        revision: c558ad1824b247e147dcc45ec105588883e379fb
+        revision: 29c131802494c52e9e89597f1d763f79e797b348
 
 rust-minidump:
     description: rust-minidump 0.10.4-prerelease source code (for minidump-stackwalk)

@@ -10,7 +10,7 @@ mk_add_options "export PATH=$MOZ_FETCHES_DIR/cctools/bin:$MOZ_FETCHES_DIR/binuti
 # dsymutil needs a libstdc++ more recent than what's on the system.
 mk_add_options "export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/clang/lib"
 
-CROSS_SYSROOT=$MOZ_FETCHES_DIR/MacOSX10.12.sdk
+CROSS_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
 
 export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
 export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"

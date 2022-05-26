@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>Test for bug 1730284 (throttling of same-origin iframes)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+  iframe {
+    width: 10px;
+    height: 10px;
+  }
+  .display-none {
+    display: none;
+  }
+  .vis-hidden {
+    visibility: hidden
+  }
+  .transparent {
+    opacity: 0;
+  }
+  .zero-size {
+    width: 0;
+    height: 0;
+    border: 0;
+  }
+  .offscreen {
+    position: absolute;
+    top: 500%;
+  }
+  .scroller {
+    height: 100px;
+    overflow: auto;
+  }
+  .scroller-padding {
+    height: 500px;
+  }
+</style>
+<iframe class="visible"></iframe>
+<iframe class="display-none" data-throttled-expected></iframe>
+<iframe class="vis-hidden"></iframe>
+<iframe class="transparent"></iframe>
+<iframe class="zero-size"></iframe>
+<div class="scroller">
+  <div class="scroller-padding"></div>
+  <iframe class="scrolled-out-of-view" data-throttled-expected></iframe>
+</div>
+<iframe class="offscreen" data-throttled-expected></iframe>
+<iframe class="offscreen zero-size" data-throttled-expected></iframe>
+<iframe class="offscreen vis-hidden" data-throttled-expected></iframe>
+<iframe class="offscreen transparent" data-throttled-expected></iframe>
+<script>
+async function assertThrottled(win, shouldThrottle, msg) {
+  if (isXOrigin) {
+    // In XOrigin mode we need to depend as well on the main process having
+    // painted the cross-origin iframe at least once for coordinates to be
+    // correct.
+    await SimpleTest.promiseWaitForCondition(() => {
+      return SpecialPowers.getDOMWindowUtils(win).effectivelyThrottlesFrameRequests == shouldThrottle;
+    }, msg);
+  }
+  is(SpecialPowers.getDOMWindowUtils(win).effectivelyThrottlesFrameRequests, shouldThrottle, msg);
+}
+
+add_task(async function() {
+  await SimpleTest.promiseFocus(window);
+  await assertThrottled(window, false, "Should not be throttling main page");
+  for (let frame of document.querySelectorAll("iframe")) {
+    let shouldThrottle = frame.getAttribute("data-throttled-expected") !== null;
+    await assertThrottled(frame.contentWindow, shouldThrottle, frame.className);
+  }
+});
+</script>

@@ -1629,6 +1629,19 @@ var AddonTestUtils = {
       return true;
     }
 
+    function validateOptionFormat(optionName, optionValue) {
+      for (let item of optionValue) {
+        if (!item || typeof item !== "object" || isRegExp(item)) {
+          throw new Error(
+            `Unexpected format in AddonTestUtils.checkMessages "${optionName}" parameter`
+          );
+        }
+      }
+    }
+
+    validateOptionFormat("expected", expected);
+    validateOptionFormat("forbidden", forbidden);
+
     let i = 0;
     for (let msg of messages) {
       if (forbidden.some(pat => msgMatches(msg, pat))) {

@@ -895,7 +895,7 @@ var UrlbarUtils = {
         LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = :input
         WHERE url_hash = hash(:url) AND url = :url
       `,
-        { url, input }
+        { url, input: input.toLowerCase() }
       );
     });
   },
