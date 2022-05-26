@@ -54,6 +54,16 @@ enum H264DecoderImplEvent {
   kH264DecoderEventMax = 16,
 };
 
+struct ScopedPtrAVFreePacket {
+  void operator()(AVPacket* packet) { av_packet_free(&packet); }
+};
+typedef std::unique_ptr<AVPacket, ScopedPtrAVFreePacket> ScopedAVPacket;
+
+ScopedAVPacket MakeScopedAVPacket() {
+  ScopedAVPacket packet(av_packet_alloc());
+  return packet;
+}
+
 }  // namespace
 
 int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
@@ -202,7 +212,7 @@ int32_t H264DecoderImpl::InitDecode(const VideoCodec* codec_settings,
   // a pointer |this|.
   av_context_->opaque = this;
 
-  AVCodec* codec = avcodec_find_decoder(av_context_->codec_id);
+  const AVCodec* codec = avcodec_find_decoder(av_context_->codec_id);
   if (!codec) {
     // This is an indication that FFmpeg has not been initialized or it has not
     // been compiled/initialized with the correct set of codecs.
@@ -261,21 +271,25 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
-  AVPacket packet;
-  av_init_packet(&packet);
+  ScopedAVPacket packet = MakeScopedAVPacket();
+  if (!packet) {
+    ReportError();
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
   // packet.data has a non-const type, but isn't modified by
   // avcodec_send_packet.
-  packet.data = const_cast<uint8_t*>(input_image.data());
+  packet->data = const_cast<uint8_t*>(input_image.data());
   if (input_image.size() >
       static_cast<size_t>(std::numeric_limits<int>::max())) {
     ReportError();
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  packet.size = static_cast<int>(input_image.size());
+  packet->size = static_cast<int>(input_image.size());
   int64_t frame_timestamp_us = input_image.ntp_time_ms_ * 1000;  // ms -> μs
   av_context_->reordered_opaque = frame_timestamp_us;
 
-  int result = avcodec_send_packet(av_context_.get(), &packet);
+  int result = avcodec_send_packet(av_context_.get(), packet.get());
+
   if (result < 0) {
     RTC_LOG(LS_ERROR) << "avcodec_send_packet error: " << result;
     ReportError();
