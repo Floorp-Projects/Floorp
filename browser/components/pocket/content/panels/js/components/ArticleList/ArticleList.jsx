@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React from "react";
+import React, { useState } from "react";
 import TelemetryLink from "../TelemetryLink/TelemetryLink";
 
 function ArticleUrl(props) {
@@ -33,6 +33,9 @@ function Article(props) {
         )}`
       : null;
   }
+
+  const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
+  const [thumbnailLoadFailed, setThumbnailLoadFailed] = useState(false);
 
   const {
     article,
@@ -82,13 +85,22 @@ function Article(props) {
         utmParams={utmParams}
       >
         <>
-          {thumbnail ? (
+          {thumbnail && !thumbnailLoadFailed ? (
             <img
               className="stp_article_list_thumb"
               src={thumbnail}
               alt={alt}
               width="40"
               height="40"
+              onLoad={() => {
+                setThumbnailLoaded(true);
+              }}
+              onError={() => {
+                setThumbnailLoadFailed(true);
+              }}
+              style={{
+                visibility: thumbnailLoaded ? `visible` : `hidden`,
+              }}
             />
           ) : (
             <div className="stp_article_list_thumb_placeholder" />

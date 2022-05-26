@@ -2218,10 +2218,7 @@ body.theme_dark .stp_article_list .stp_article_list_link:hover, body.theme_dark 
   border-radius: 4px;
   margin-inline-end: 8px;
   background-color: #ECECEE;
-}
-.stp_article_list .stp_article_list_thumb:-moz-broken,
-.stp_article_list .stp_article_list_thumb_placeholder:-moz-broken {
-  display: none;
+  flex-shrink: 0;
 }
 .stp_article_list .stp_article_list_header {
   font-style: normal;
