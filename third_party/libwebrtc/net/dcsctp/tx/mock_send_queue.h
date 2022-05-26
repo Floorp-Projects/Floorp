@@ -44,6 +44,7 @@ class MockSendQueue : public SendQueue {
   MOCK_METHOD(void, RollbackResetStreams, (), (override));
   MOCK_METHOD(void, Reset, (), (override));
   MOCK_METHOD(size_t, buffered_amount, (StreamID stream_id), (const, override));
+  MOCK_METHOD(size_t, total_buffered_amount, (), (const, override));
   MOCK_METHOD(size_t,
               buffered_amount_low_threshold,
               (StreamID stream_id),
