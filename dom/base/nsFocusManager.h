@@ -247,7 +247,8 @@ class nsFocusManager final : public nsIFocusManager,
    * If aNeedsFocus is true, then focus events are expected to be fired on the
    * window if this window is in the focused window chain.
    */
-  void WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus);
+  MOZ_CAN_RUN_SCRIPT void WindowShown(mozIDOMWindowProxy* aWindow,
+                                      bool aNeedsFocus);
 
   /**
    * Called when a document in a window has been hidden or otherwise can no
@@ -459,11 +460,11 @@ class nsFocusManager final : public nsIFocusManager,
    *
    * If aAdjustWidget is false, don't change the widget focus state.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void Focus(nsPIDOMWindowOuter* aWindow, mozilla::dom::Element* aContent,
-             uint32_t aFlags, bool aIsNewDocument, bool aFocusChanged,
-             bool aWindowRaised, bool aAdjustWidget, uint64_t aActionId,
-             const mozilla::Maybe<BlurredElementInfo>& = mozilla::Nothing());
+  MOZ_CAN_RUN_SCRIPT void Focus(
+      nsPIDOMWindowOuter* aWindow, mozilla::dom::Element* aContent,
+      uint32_t aFlags, bool aIsNewDocument, bool aFocusChanged,
+      bool aWindowRaised, bool aAdjustWidget, uint64_t aActionId,
+      const mozilla::Maybe<BlurredElementInfo>& = mozilla::Nothing());
 
   /**
    * Send a focus or blur event at aTarget. It may be added to the delayed
