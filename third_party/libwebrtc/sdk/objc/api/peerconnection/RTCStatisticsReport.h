@@ -44,8 +44,8 @@ RTC_OBJC_EXPORT
 @property(nonatomic, readonly) NSString *type;
 
 /** The keys and values of the subreport, e.g. "totalFramesDuration = 5.551".
-    The values are either NSNumbers or NSStrings, or NSArrays encapsulating NSNumbers
-    or NSStrings. */
+    The values are either NSNumbers or NSStrings or NSArrays encapsulating NSNumbers
+    or NSStrings, or NSDictionary of NSString keys to NSNumber values. */
 @property(nonatomic, readonly) NSDictionary<NSString *, NSObject *> *values;
 
 - (instancetype)init NS_UNAVAILABLE;
