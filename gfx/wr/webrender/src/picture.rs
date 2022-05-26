@@ -5791,6 +5791,7 @@ impl PicturePrimitive {
 
     pub fn restore_context(
         &mut self,
+        pic_index: PictureIndex,
         prim_list: PrimitiveList,
         context: PictureContext,
         prim_instances: &[PrimitiveInstance],
@@ -5804,6 +5805,7 @@ impl PicturePrimitive {
 
         if self.raster_config.is_some() {
             frame_state.surface_builder.pop_surface(
+                pic_index,
                 frame_state.rg_builder,
                 frame_state.cmd_buffers,
             );
