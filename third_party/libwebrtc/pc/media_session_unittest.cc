@@ -139,6 +139,7 @@ static const RtpExtension kAudioRtpExtensionEncrypted1[] = {
     RtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level", 8),
     RtpExtension("http://google.com/testing/audio_something", 10),
     RtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level", 12, true),
+    RtpExtension("http://google.com/testing/audio_something", 11, true),
 };
 
 static const RtpExtension kAudioRtpExtension2[] = {
@@ -161,7 +162,15 @@ static const RtpExtension kAudioRtpExtension3ForEncryption[] = {
 static const RtpExtension kAudioRtpExtension3ForEncryptionOffer[] = {
     RtpExtension("http://google.com/testing/audio_something", 2),
     RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 3),
-    RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 14, true),
+    RtpExtension("http://google.com/testing/audio_something", 14, true),
+    RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 13, true),
+};
+
+static const RtpExtension kVideoRtpExtension3ForEncryptionOffer[] = {
+    RtpExtension("http://google.com/testing/video_something", 4),
+    RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 3),
+    RtpExtension("http://google.com/testing/video_something", 12, true),
+    RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 13, true),
 };
 
 static const RtpExtension kAudioRtpExtensionAnswer[] = {
@@ -180,7 +189,8 @@ static const RtpExtension kVideoRtpExtension1[] = {
 static const RtpExtension kVideoRtpExtensionEncrypted1[] = {
     RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 14),
     RtpExtension("http://google.com/testing/video_something", 13),
-    RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 11, true),
+    RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 9, true),
+    RtpExtension("http://google.com/testing/video_something", 7, true),
 };
 
 static const RtpExtension kVideoRtpExtension2[] = {
@@ -205,7 +215,7 @@ static const RtpExtension kVideoRtpExtensionAnswer[] = {
 };
 
 static const RtpExtension kVideoRtpExtensionEncryptedAnswer[] = {
-    RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 11, true),
+    RtpExtension("urn:ietf:params:rtp-hdrext:toffset", 9, true),
 };
 
 static const RtpExtension kRtpExtensionTransportSequenceNumber01[] = {
@@ -3431,19 +3441,11 @@ TEST_F(MediaSessionDescriptionFactoryTest, RtpExtensionIdReusedEncrypted) {
       MAKE_VECTOR(kVideoRtpExtension3ForEncryption), &opts);
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, NULL);
 
-  // The extensions that are shared between audio and video should use the same
-  // id.
-  const RtpExtension kExpectedVideoRtpExtension[] = {
-      kVideoRtpExtension3ForEncryption[0],
-      kAudioRtpExtension3ForEncryptionOffer[1],
-      kAudioRtpExtension3ForEncryptionOffer[2],
-  };
-
   EXPECT_EQ(
       MAKE_VECTOR(kAudioRtpExtension3ForEncryptionOffer),
       GetFirstAudioContentDescription(offer.get())->rtp_header_extensions());
   EXPECT_EQ(
-      MAKE_VECTOR(kExpectedVideoRtpExtension),
+      MAKE_VECTOR(kVideoRtpExtension3ForEncryptionOffer),
       GetFirstVideoContentDescription(offer.get())->rtp_header_extensions());
 
   // Nothing should change when creating a new offer
@@ -3453,7 +3455,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, RtpExtensionIdReusedEncrypted) {
   EXPECT_EQ(MAKE_VECTOR(kAudioRtpExtension3ForEncryptionOffer),
             GetFirstAudioContentDescription(updated_offer.get())
                 ->rtp_header_extensions());
-  EXPECT_EQ(MAKE_VECTOR(kExpectedVideoRtpExtension),
+  EXPECT_EQ(MAKE_VECTOR(kVideoRtpExtension3ForEncryptionOffer),
             GetFirstVideoContentDescription(updated_offer.get())
                 ->rtp_header_extensions());
 }

@@ -143,6 +143,11 @@ class MediaContentDescription {
     cryptos_ = cryptos;
   }
 
+  // List of RTP header extensions. URIs are **NOT** guaranteed to be unique
+  // as they can appear twice when both encrypted and non-encrypted extensions
+  // are present.
+  // Use RtpExtension::FindHeaderExtensionByUri for finding and
+  // RtpExtension::DeduplicateHeaderExtensions for filtering.
   virtual const RtpHeaderExtensions& rtp_header_extensions() const {
     return rtp_header_extensions_;
   }
