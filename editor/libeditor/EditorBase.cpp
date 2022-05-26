@@ -460,9 +460,9 @@ nsresult EditorBase::PostCreateInternal() {
   }
 
   // update nsTextStateManager and caret if we have focus
-  nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
-  if (focusedContent) {
-    DebugOnly<nsresult> rvIgnored = InitializeSelection(*focusedContent);
+  if (RefPtr<Element> focusedElement =
+          Element::FromNodeOrNull(GetFocusedContent())) {
+    DebugOnly<nsresult> rvIgnored = InitializeSelection(*focusedElement);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "EditorBase::InitializeSelection() failed, but ignored");
@@ -482,7 +482,7 @@ nsresult EditorBase::PostCreateInternal() {
       NS_WARNING("EditorBase::GetPreferredIMEState() failed");
       return NS_OK;
     }
-    IMEStateManager::UpdateIMEState(newState, focusedContent, *this);
+    IMEStateManager::UpdateIMEState(newState, focusedElement, *this);
   }
 
   // FYI: This call might cause destroying this editor.
@@ -718,8 +718,8 @@ NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
 
   // Might be changing editable state, so, we need to reset current IME state
   // if we're focused and the flag change causes IME state change.
-  nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
-  if (focusedContent) {
+  if (RefPtr<Element> focusedElement =
+          Element::FromNodeOrNull(GetFocusedContent())) {
     IMEState newState;
     nsresult rv = GetPreferredIMEState(&newState);
     NS_WARNING_ASSERTION(
@@ -728,8 +728,7 @@ NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
     if (NS_SUCCEEDED(rv)) {
       // NOTE: When the enabled state isn't going to be modified, this method
       // is going to do nothing.
-      nsCOMPtr<nsIContent> content = GetFocusedContent();
-      IMEStateManager::UpdateIMEState(newState, content, *this);
+      IMEStateManager::UpdateIMEState(newState, focusedElement, *this);
     }
   }
 
@@ -5367,8 +5366,8 @@ void EditorBase::ReinitializeSelection(Element& aElement) {
   if (NS_WARN_IF(!presContext)) {
     return;
   }
-  nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
-  IMEStateManager::OnFocusInEditor(presContext, focusedContent, *this);
+  RefPtr<Element> focusedElement = Element::FromNodeOrNull(GetFocusedContent());
+  IMEStateManager::OnFocusInEditor(*presContext, focusedElement, *this);
 }
 
 Element* EditorBase::GetEditorRoot() const { return GetRoot(); }

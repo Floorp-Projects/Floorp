@@ -5276,12 +5276,12 @@ void nsFocusManager::SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow,
   }
 }
 
-void nsFocusManager::NotifyOfReFocus(nsIContent& aContent) {
-  nsPIDOMWindowOuter* window = GetCurrentWindow(&aContent);
+void nsFocusManager::NotifyOfReFocus(Element& aElement) {
+  nsPIDOMWindowOuter* window = GetCurrentWindow(&aElement);
   if (!window || window != mFocusedWindow) {
     return;
   }
-  if (!aContent.IsInComposedDoc() || IsNonFocusableRoot(&aContent)) {
+  if (!aElement.IsInComposedDoc() || IsNonFocusableRoot(&aElement)) {
     return;
   }
   nsIDocShell* docShell = window->GetDocShell();
@@ -5296,7 +5296,7 @@ void nsFocusManager::NotifyOfReFocus(nsIContent& aContent) {
   if (!presContext) {
     return;
   }
-  IMEStateManager::OnReFocus(*presContext, aContent);
+  IMEStateManager::OnReFocus(*presContext, aElement);
 }
 
 void nsFocusManager::MarkUncollectableForCCGeneration(uint32_t aGeneration) {
