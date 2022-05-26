@@ -12,6 +12,7 @@ function parseQuery(queryString) {
    const query = Object.fromEntries(new URLSearchParams(queryString).entries());
    injectValues(query)
    updateShowSSL(query)
+   updateShowHSTS(query)
 };
 
 /**
@@ -32,6 +33,7 @@ function injectValues(queryMap) {
     document.getElementById('badCertTechnicalInfo').innerHTML = queryMap.badCertTechInfo
     document.getElementById('advancedPanelBackButton').innerHTML = queryMap.badCertGoBack
     document.getElementById('advancedPanelAcceptButton').innerHTML = queryMap.badCertAcceptTemporary
+    document.getElementById('advancedPanelAcceptButton').s = queryMap.badCertAcceptTemporary
 
     // If no image is passed in, remove the element so as not to leave an empty iframe
     const errorImage = document.getElementById('errorImage');
@@ -63,6 +65,24 @@ function updateShowSSL(queryMap) {
     } else {
         if (showSSL === 'true') {
             document.getElementById('advancedButton').style.display='block';
+        } else {
+            document.getElementById('advancedButton').style.display='none';
+        }
+    }
+}
+
+/**
+ * Used to show or hide the "advanced" button based for the HSTS error page
+ */
+function updateShowHSTS(queryMap) {
+    /** @type {'true' | 'false'} */
+    const showHSTS = queryMap.showHSTS;
+    if (typeof document.addCertException === "undefined") {
+        document.getElementById('advancedButton').style.display='none';
+    } else {
+        if (showHSTS === 'true') {
+            document.getElementById('advancedButton').style.display='block';
+            document.getElementById('advancedPanelAcceptButton').style.display='none';
         } else {
             document.getElementById('advancedButton').style.display='none';
         }

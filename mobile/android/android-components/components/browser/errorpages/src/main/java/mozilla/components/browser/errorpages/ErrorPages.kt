@@ -39,10 +39,19 @@ object ErrorPages {
         val imageName = if (errorType.imageNameRes != null) context.getString(errorType.imageNameRes) + ".svg" else ""
         val continueHttpButton = context.getString(R.string.mozac_browser_errorpages_httpsonly_button)
         val badCertAdvanced = context.getString(R.string.mozac_browser_errorpages_security_bad_cert_advanced)
-        val badCertTechInfo = context.getString(
-            R.string.mozac_browser_errorpages_security_bad_cert_techInfo,
-            context.appName, uri.toString()
-        )
+        val badCertTechInfo = when (errorType) {
+            ErrorType.ERROR_SECURITY_BAD_CERT ->
+                context.getString(
+                    R.string.mozac_browser_errorpages_security_bad_cert_techInfo,
+                    context.appName, uri.toString()
+                )
+            ErrorType.ERROR_BAD_HSTS_CERT -> context.getString(
+                R.string.mozac_browser_errorpages_security_bad_hsts_cert_techInfo,
+                uri.toString().trim('/'), context.appName
+            )
+            else -> ""
+        }
+
         val badCertGoBack = context.getString(R.string.mozac_browser_errorpages_security_bad_cert_back)
         val badCertAcceptTemporary = context.getString(
             R.string.mozac_browser_errorpages_security_bad_cert_accept_temporary
@@ -50,6 +59,11 @@ object ErrorPages {
 
         val showSSLAdvanced: String = when (errorType) {
             ErrorType.ERROR_SECURITY_BAD_CERT -> true
+            else -> false
+        }.toString()
+
+        val showHSTSAdvanced: String = when (errorType) {
+            ErrorType.ERROR_BAD_HSTS_CERT -> true
             else -> false
         }.toString()
 
@@ -65,6 +79,7 @@ object ErrorPages {
             "&description=${description.urlEncode()}" +
             "&image=${imageName.urlEncode()}" +
             "&showSSL=${showSSLAdvanced.urlEncode()}" +
+            "&showHSTS=${showHSTSAdvanced.urlEncode()}" +
             "&badCertAdvanced=${badCertAdvanced.urlEncode()}" +
             "&badCertTechInfo=${badCertTechInfo.urlEncode()}" +
             "&badCertGoBack=${badCertGoBack.urlEncode()}" +
@@ -221,6 +236,11 @@ enum class ErrorType(
     ERROR_HTTPS_ONLY(
         R.string.mozac_browser_errorpages_httpsonly_title,
         R.string.mozac_browser_errorpages_httpsonly_message,
+        imageNameRes = R.string.mozac_error_lock
+    ),
+    ERROR_BAD_HSTS_CERT(
+        R.string.mozac_browser_errorpages_security_bad_hsts_cert_title,
+        R.string.mozac_browser_errorpages_security_bad_hsts_cert_message,
         imageNameRes = R.string.mozac_error_lock
     )
 }

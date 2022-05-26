@@ -1963,6 +1963,10 @@ class GeckoEngineSessionTest {
             ErrorType.ERROR_HTTPS_ONLY,
             GeckoEngineSession.geckoErrorToErrorType(WebRequestError.ERROR_HTTPS_ONLY)
         )
+        assertEquals(
+            ErrorType.ERROR_BAD_HSTS_CERT,
+            GeckoEngineSession.geckoErrorToErrorType(WebRequestError.ERROR_BAD_HSTS_CERT)
+        )
     }
 
     @Test
