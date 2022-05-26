@@ -1219,12 +1219,6 @@ void nsFocusManager::WasNuked(nsPIDOMWindowOuter* aWindow) {
   }
 }
 
-nsresult nsFocusManager::FocusPlugin(Element* aPlugin) {
-  NS_ENSURE_ARG(aPlugin);
-  SetFocusInner(aPlugin, 0, true, false, GenerateFocusActionId());
-  return NS_OK;
-}
-
 nsFocusManager::BlurredElementInfo::BlurredElementInfo(Element& aElement)
     : mElement(aElement) {}
 
