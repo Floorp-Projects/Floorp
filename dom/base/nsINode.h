@@ -448,6 +448,14 @@ class nsINode : public mozilla::dom::EventTarget {
   bool IsShadowIncludingInclusiveDescendantOf(const nsINode* aNode) const;
 
   /**
+   * Returns true if the given node is this node or one of its descendants
+   * in the "flat tree."
+   *
+   * @param aNode must not be nullptr.
+   */
+  bool IsInclusiveFlatTreeDescendantOf(const nsINode* aNode) const;
+
+  /**
    * Return this node as a document fragment. Asserts IsDocumentFragment().
    *
    * This is defined inline in DocumentFragment.h.
