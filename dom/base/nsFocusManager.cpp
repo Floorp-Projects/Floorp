@@ -391,9 +391,9 @@ nsFocusManager::GetActiveBrowsingContext(BrowsingContext** aBrowsingContext) {
 
 void nsFocusManager::FocusWindow(nsPIDOMWindowOuter* aWindow,
                                  CallerType aCallerType) {
-  if (sInstance) {
-    sInstance->SetFocusedWindowWithCallerType(
-        aWindow, aCallerType, sInstance->GenerateFocusActionId());
+  if (RefPtr<nsFocusManager> fm = sInstance) {
+    fm->SetFocusedWindowWithCallerType(aWindow, aCallerType,
+                                       sInstance->GenerateFocusActionId());
   }
 }
 

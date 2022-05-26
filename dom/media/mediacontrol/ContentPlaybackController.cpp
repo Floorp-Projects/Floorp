@@ -89,7 +89,7 @@ Maybe<uint64_t> ContentPlaybackController::GetActiveMediaSessionId() const {
 void ContentPlaybackController::Focus() {
   // Focus is not part of the MediaSession standard, so always use the
   // default behavior and focus the window currently playing media.
-  if (RefPtr<nsPIDOMWindowOuter> win = mBC->GetDOMWindow()) {
+  if (nsCOMPtr<nsPIDOMWindowOuter> win = mBC->GetDOMWindow()) {
     nsFocusManager::FocusWindow(win, CallerType::System);
   }
 }
