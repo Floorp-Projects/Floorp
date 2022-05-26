@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
@@ -274,6 +276,7 @@ private fun Modifier.onShown(
     onVisible: () -> Unit,
 ): Modifier {
     val initialTime = System.currentTimeMillis()
+    var lastVisibleCoordinates: LayoutCoordinates? = null
 
     return composed {
         val context = LocalContext.current
@@ -291,12 +294,26 @@ private fun Modifier.onShown(
                 }
             }
 
-        onGloballyPositioned { coordinates ->
-            if (!wasEventReported && coordinates.isVisible(screenBounds, threshold) &&
-                System.currentTimeMillis() - initialTime > MINIMUM_TIME_TO_SETTLE_MS
-            ) {
+        // In the event this composable starts as visible but then gets pushed offscreen
+        // before MINIMUM_TIME_TO_SETTLE_MS we will not report is as being visible.
+        // In the LaunchedEffect we add support for when the composable starts as visible and then
+        // it's position isn't changed after MINIMUM_TIME_TO_SETTLE_MS so it must be reported as visible.
+        LaunchedEffect(initialTime) {
+            delay(MINIMUM_TIME_TO_SETTLE_MS.toLong())
+            if (!wasEventReported && lastVisibleCoordinates?.isVisible(screenBounds, threshold) == true) {
                 wasEventReported = true
                 onVisible()
+            }
+        }
+
+        onGloballyPositioned { coordinates ->
+            if (!wasEventReported && coordinates.isVisible(screenBounds, threshold)) {
+                if (System.currentTimeMillis() - initialTime > MINIMUM_TIME_TO_SETTLE_MS) {
+                    wasEventReported = true
+                    onVisible()
+                } else {
+                    lastVisibleCoordinates = coordinates
+                }
             }
         }
     }

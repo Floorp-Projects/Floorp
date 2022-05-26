@@ -59,7 +59,9 @@ class PocketStoriesViewHolder(
             // We should report back when a certain story is actually being displayed.
             // Cannot do it reliably so for now we'll just mass report everything as being displayed.
             stories?.let {
-                interactor.onStoriesShown(it)
+                // Only report here the impressions for recommended stories.
+                // Sponsored stories use a different API for more accurate tracking.
+                interactor.onStoriesShown(it.filterIsInstance<PocketRecommendedStory>())
             }
         }
 
