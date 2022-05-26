@@ -1349,6 +1349,9 @@ impl YamlFrameReader {
                 item
             ),
         };
+        let color = item["color"]
+            .as_colorf()
+            .unwrap_or_else(|| ColorF::WHITE);
         let stretch_size = item["stretch-size"].as_size();
         let tile_spacing = item["tile-spacing"].as_size();
         if stretch_size.is_none() && tile_spacing.is_none() {
@@ -1358,7 +1361,7 @@ impl YamlFrameReader {
                 rendering,
                 alpha_type,
                 image_key,
-                ColorF::WHITE,
+                color,
            );
         } else {
             dl.push_repeating_image(
@@ -1369,7 +1372,7 @@ impl YamlFrameReader {
                 rendering,
                 alpha_type,
                 image_key,
-                ColorF::WHITE,
+                color,
            );
         }
     }

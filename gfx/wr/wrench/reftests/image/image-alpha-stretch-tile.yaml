@@ -1,0 +1,8 @@
+root:
+  items:
+    - image: solid-color(0, 255, 0, 255, 40, 4097)
+      bounds: 0 0 400 400
+      alpha: premultiplied-alpha
+      color: 255 255 255 0.5
+      stretch-size: 200 200
+      tile-spacing: 0 0
