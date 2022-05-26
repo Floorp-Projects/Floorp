@@ -283,7 +283,7 @@ void LIRGenerator::visitCreateInlinedArgumentsObject(
                          LCreateInlinedArgumentsObject::NumNonArgumentOperands;
 
   auto* lir = allocateVariadic<LCreateInlinedArgumentsObject>(
-      numOperands, tempFixed(CallTempReg0));
+      numOperands, tempFixed(CallTempReg0), tempFixed(CallTempReg1));
   if (!lir) {
     abort(AbortReason::Alloc,
           "OOM: LIRGenerator::visitCreateInlinedArgumentsObject");

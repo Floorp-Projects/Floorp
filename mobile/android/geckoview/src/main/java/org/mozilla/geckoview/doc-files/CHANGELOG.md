@@ -30,6 +30,8 @@ exclude: true
   ([bug 1758800]({{bugzilla}}1758800))
 - Deprecated [`GeckoSession.autofill`][102.18], use [`Autofill.Session.autofill`][102.19] instead.
   ([bug 1770010]({{bugzilla}}1770010))
+- Added [`WebRequestError.ERROR_BAD_HSTS_CERT`][102.20] error code to notify the app of a connection to a site that does not allow error overrides.
+  ([bug 1721220]({{bugzilla}}1721220))
 
 [102.1]: {{javadoc_uri}}/GeckoSession.PromptDelegate.DateTimePrompt.html#stepValue
 [102.2]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date#step
@@ -50,6 +52,7 @@ exclude: true
 [102.17]: {{javadoc_uri}}/GeckoSession.PromptDelegate.PromptInstanceDelegate.html#onPromptUpdate(org.mozilla.geckoview.GeckoSession.PromptDelegate.BasePrompt)
 [102.18]: {{javadoc_uri}}/GeckoSession.html#autofill(android.util.SparseArray)
 [102.19]: {{javadoc_uri}}/Autofill.Session.html#autofill(android.util.SparseArray)
+[102.20]: {{javadoc_uri}}/WebRequestError.html#ERROR_BAD_HSTS_CERT
 
 ## v101
 - Added [`GeckoDisplay.surfaceChanged`][101.1] function taking new type [`GeckoDisplay.SurfaceInfo`][101.2].
@@ -1204,4 +1207,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: dc9516b62971d881de4059eae2ea1b88a1ebb3d1
+[api-version]: d06ece1a8d568d3c62ee1f6786f4ffe13476b29f

@@ -64,6 +64,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    hulu: {
+      "https://www.hulu.com/watch/*": {
+        videoWrapperScriptPath: "video-wrappers/hulu.js",
+      },
+    },
+
     instagram: {
       "https://www.instagram.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },

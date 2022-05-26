@@ -1208,7 +1208,22 @@
       "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/utils/network-request.js": 1056,
       "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/worker-dispatcher.js": 1057,
       "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/utils/privileged-network-request.js": 1058,
-      "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/worker-utils.js": 1059
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/worker-utils.js": 1059,
+      "../packages/devtools-source-map/node_modules/whatwg-url/lib/url-state-machine.js": 1060,
+      "../packages/devtools-source-map/node_modules/whatwg-url/lib/urlencoded.js": 1061,
+      "../packages/devtools-source-map/node_modules/webidl-conversions/lib/index.js": 1062,
+      "../packages/devtools-source-map/node_modules/whatwg-url/lib/utils.js": 1063,
+      "../node_modules/node-libs-browser/node_modules/punycode/punycode.js": 1064,
+      "../packages/devtools-source-map/node_modules/whatwg-url/lib/infra.js": 1065,
+      "../packages/devtools-source-map/node_modules/whatwg-url/lib/URLSearchParams.js": 1066,
+      "../packages/devtools-source-map/node_modules/whatwg-url/lib/public-api.js": 1067,
+      "../packages/devtools-source-map/node_modules/whatwg-url/lib/URL.js": 1068,
+      "../packages/devtools-source-map/node_modules/whatwg-url/lib/URL-impl.js": 1069,
+      "../packages/devtools-source-map/node_modules/tr46/index.js": 1070,
+      "../packages/devtools-source-map/node_modules/tr46/lib/regexes.js": 1071,
+      "../node_modules/json-loader/index.js!../packages/devtools-source-map/node_modules/tr46/lib/mappingTable.json": 1072,
+      "../packages/devtools-source-map/node_modules/whatwg-url/lib/URLSearchParams-impl.js": 1073,
+      "../node_modules/lodash.sortby/index.js": 1074
     },
     "usedIds": {
       "0": 0,
@@ -2270,7 +2285,22 @@
       "1056": 1056,
       "1057": 1057,
       "1058": 1058,
-      "1059": 1059
+      "1059": 1059,
+      "1060": 1060,
+      "1061": 1061,
+      "1062": 1062,
+      "1063": 1063,
+      "1064": 1064,
+      "1065": 1065,
+      "1066": 1066,
+      "1067": 1067,
+      "1068": 1068,
+      "1069": 1069,
+      "1070": 1070,
+      "1071": 1071,
+      "1072": 1072,
+      "1073": 1073,
+      "1074": 1074
     }
   },
   "chunks": {
@@ -2415,7 +2445,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -2436,7 +2466,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }

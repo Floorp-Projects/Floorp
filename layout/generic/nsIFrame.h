@@ -4442,6 +4442,11 @@ class nsIFrame : public nsQueryFrame {
   virtual void PullOverflowsFromPrevInFlow() {}
 
   /**
+   * @return true if we painted @aPresShell during the last repaint.
+   */
+  bool DidPaintPresShell(mozilla::PresShell* aPresShell);
+
+  /**
    * Clear the list of child PresShells generated during the last paint
    * so that we can begin generating a new one.
    */
@@ -4458,11 +4463,6 @@ class nsIFrame : public nsQueryFrame {
    * the last repaint.
    */
   void UpdatePaintCountForPaintedPresShells();
-
-  /**
-   * @return true if we painted @aPresShell during the last repaint.
-   */
-  bool DidPaintPresShell(mozilla::PresShell* aPresShell);
 
   /**
    * Accessors for the absolute containing block.

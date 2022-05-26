@@ -7413,7 +7413,8 @@ void CodeGenerator::visitCreateInlinedArgumentsObject(
     LCreateInlinedArgumentsObject* lir) {
   Register callObj = ToRegister(lir->getCallObject());
   Register callee = ToRegister(lir->getCallee());
-  Register argsAddress = ToRegister(lir->temp());
+  Register argsAddress = ToRegister(lir->temp1());
+  Register argsObj = ToRegister(lir->temp2());
 
   // TODO: Do we have to worry about alignment here?
 
@@ -7429,6 +7430,63 @@ void CodeGenerator::visitCreateInlinedArgumentsObject(
   }
   masm.moveStackPtrTo(argsAddress);
 
+  Label done;
+  if (ArgumentsObject* templateObj = lir->mir()->templateObject()) {
+    LiveRegisterSet liveRegs;
+    liveRegs.add(callObj);
+    liveRegs.add(callee);
+
+    masm.PushRegsInMask(liveRegs);
+
+    // We are free to clobber all registers, as LCreateInlinedArgumentsObject is
+    // a call instruction.
+    AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
+    allRegs.take(callObj);
+    allRegs.take(callee);
+    allRegs.take(argsObj);
+    allRegs.take(argsAddress);
+
+    Register temp3 = allRegs.takeAny();
+    Register temp4 = allRegs.takeAny();
+
+    // Try to allocate an arguments object. This will leave the reserved slots
+    // uninitialized, so it's important we don't GC until we initialize these
+    // slots in ArgumentsObject::finishForIonPure.
+    Label failure;
+    TemplateObject templateObject(templateObj);
+    masm.createGCObject(argsObj, temp3, templateObject, gc::DefaultHeap,
+                        &failure,
+                        /* initContents = */ false);
+
+    Register numActuals = temp3;
+    masm.move32(Imm32(argc), numActuals);
+
+    using Fn = ArgumentsObject* (*)(JSContext*, JSObject*, JSFunction*, Value*,
+                                    uint32_t, ArgumentsObject*);
+    masm.setupAlignedABICall();
+    masm.loadJSContext(temp4);
+    masm.passABIArg(temp4);
+    masm.passABIArg(callObj);
+    masm.passABIArg(callee);
+    masm.passABIArg(argsAddress);
+    masm.passABIArg(numActuals);
+    masm.passABIArg(argsObj);
+
+    masm.callWithABI<Fn, ArgumentsObject::finishInlineForIonPure>();
+    masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, &failure);
+
+    // Discard saved callObj, callee, and values array on the stack.
+    masm.addToStackPtr(
+        Imm32(masm.PushRegsInMaskSizeInBytes(liveRegs) + argc * sizeof(Value)));
+    masm.jump(&done);
+
+    masm.bind(&failure);
+    masm.PopRegsInMask(liveRegs);
+
+    // Reload argsAddress because it may have been overridden.
+    masm.moveStackPtrTo(argsAddress);
+  }
+
   pushArg(Imm32(argc));
   pushArg(callObj);
   pushArg(callee);
@@ -7440,6 +7498,8 @@ void CodeGenerator::visitCreateInlinedArgumentsObject(
 
   // Discard the array of values.
   masm.freeStack(argc * sizeof(Value));
+
+  masm.bind(&done);
 }
 
 template <class GetInlinedArgument>

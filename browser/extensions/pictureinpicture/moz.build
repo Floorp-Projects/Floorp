@@ -32,6 +32,7 @@ FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["video-wrappers"] +=
     "video-wrappers/dailymotion.js",
     "video-wrappers/funimation.js",
     "video-wrappers/hotstar.js",
+    "video-wrappers/hulu.js",
     "video-wrappers/mock-wrapper.js",
     "video-wrappers/netflix.js",
     "video-wrappers/piped.js",
