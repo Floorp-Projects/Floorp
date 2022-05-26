@@ -10199,7 +10199,6 @@ nsIFrame::RenderedText nsTextFrame::GetRenderedText(
   uint32_t offsetInRenderedString = 0;
   bool haveOffsets = false;
 
-  Maybe<nsBlockFrame::AutoLineCursorSetup> autoLineCursor;
   for (textFrame = this; textFrame;
        textFrame = textFrame->GetNextContinuation()) {
     if (textFrame->HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
@@ -10225,8 +10224,7 @@ nsIFrame::RenderedText nsTextFrame::GetRenderedText(
       if (thisLc != lineContainer) {
         // Setup line cursor when needed.
         lineContainer = thisLc;
-        autoLineCursor.reset();
-        autoLineCursor.emplace(lineContainer);
+        lineContainer->SetupLineCursorForQuery();
       }
       LineStartsOrEndsAtHardLineBreak(textFrame, lineContainer,
                                       &startsAtHardBreak, &endsAtHardBreak);
