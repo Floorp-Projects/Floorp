@@ -312,10 +312,11 @@ add_task(async function test_normal_background_tab() {
       let origtabID = browsingContextChildID(
         originalTab.linkedBrowser.browsingContext
       );
+
       Assert.equal(
         originalTab.linkedBrowser.frameLoader.remoteTab.priorityHint,
         false,
-        "PriorityHint of the original tab should be false on default"
+        "PriorityHint of the original tab should be false by default"
       );
 
       // Changing renderLayers doesn't change priority of the background tab.
@@ -354,11 +355,6 @@ add_task(async function test_normal_background_tab() {
       );
 
       let tabID = browsingContextChildID(tab.linkedBrowser.browsingContext);
-      Assert.equal(
-        tab.linkedBrowser.frameLoader.remoteTab.priorityHint,
-        false,
-        "PriorityHint of the active tab should be false on default"
-      );
 
       // Test when priorityHint is true, the process priority of the
       // active tab remains PROCESS_PRIORITY_FOREGROUND.
