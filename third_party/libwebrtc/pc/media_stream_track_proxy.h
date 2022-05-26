@@ -37,7 +37,7 @@ PROXY_METHOD0(rtc::scoped_refptr<AudioProcessorInterface>, GetAudioProcessor)
 PROXY_METHOD1(bool, set_enabled, bool)
 PROXY_METHOD1(void, RegisterObserver, ObserverInterface*)
 PROXY_METHOD1(void, UnregisterObserver, ObserverInterface*)
-END_PROXY_MAP()
+END_PROXY_MAP(AudioTrack)
 
 BEGIN_PROXY_MAP(VideoTrack)
 PROXY_PRIMARY_THREAD_DESTRUCTOR()
@@ -57,7 +57,7 @@ BYPASS_PROXY_CONSTMETHOD0(VideoTrackSourceInterface*, GetSource)
 
 PROXY_METHOD1(void, RegisterObserver, ObserverInterface*)
 PROXY_METHOD1(void, UnregisterObserver, ObserverInterface*)
-END_PROXY_MAP()
+END_PROXY_MAP(VideoTrack)
 
 }  // namespace webrtc
 

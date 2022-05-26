@@ -310,7 +310,7 @@ PROXY_CONSTMETHOD0(std::vector<RtpHeaderExtensionCapability>,
 PROXY_METHOD1(webrtc::RTCError,
               SetOfferedRtpHeaderExtensions,
               rtc::ArrayView<const RtpHeaderExtensionCapability>)
-END_PROXY_MAP()
+END_PROXY_MAP(RtpTransceiver)
 
 }  // namespace webrtc
 

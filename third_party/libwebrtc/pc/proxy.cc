@@ -14,8 +14,12 @@
 
 namespace webrtc {
 namespace proxy_internal {
-void TraceApiCall(const char* class_name, const char* method_name) {
-  TRACE_EVENT1("webrtc", class_name, "method", method_name);
+ScopedTrace::ScopedTrace(const char* class_and_method_name)
+    : class_and_method_name_(class_and_method_name) {
+  TRACE_EVENT_BEGIN0("webrtc", class_and_method_name_);
+}
+ScopedTrace::~ScopedTrace() {
+  TRACE_EVENT_END0("webrtc", class_and_method_name_);
 }
 }  // namespace proxy_internal
 }  // namespace webrtc
