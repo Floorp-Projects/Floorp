@@ -72,6 +72,9 @@ const statsExpectedByType = {
       "frameWidth",
       "frameHeight",
       "framesSent",
+      "hugeFramesSent",
+      "totalEncodeTime",
+      "totalEncodedBytesTarget",
     ],
     unimplemented: ["mediaTrackId", "transportId", "sliCount", "targetBitrate"],
     deprecated: ["isRemote"],
@@ -715,6 +718,27 @@ function pedanticChecks(report) {
           stat.framesSent >= 0 && stat.framesSent < 100000,
           `${stat.type}.framesSent is a sane number for a short ` +
             `${stat.kind} test. value=${stat.framesSent}`
+        );
+
+        // hugeFramesSent
+        ok(
+          stat.hugeFramesSent >= 0 && stat.hugeFramesSent < 100000,
+          `${stat.type}.hugeFramesSent is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.hugeFramesSent}`
+        );
+
+        // totalEncodeTime
+        ok(
+          stat.totalEncodeTime >= 0,
+          `${stat.type}.totalEncodeTime is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.totalEncodeTime}`
+        );
+
+        // totalEncodedBytesTarget
+        ok(
+          stat.totalEncodedBytesTarget > 1000,
+          `${stat.type}.totalEncodedBytesTarget is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.totalEncodedBytesTarget}`
         );
       }
     } else if (stat.type == "remote-outbound-rtp") {

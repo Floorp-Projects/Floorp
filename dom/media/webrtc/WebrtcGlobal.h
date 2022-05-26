@@ -352,9 +352,12 @@ struct ParamTraits<mozilla::dom::RTCOutboundRtpStreamStats> {
     WriteParam(aWriter, aParam.mHeaderBytesSent);
     WriteParam(aWriter, aParam.mRetransmittedPacketsSent);
     WriteParam(aWriter, aParam.mRetransmittedBytesSent);
+    WriteParam(aWriter, aParam.mTotalEncodedBytesTarget);
     WriteParam(aWriter, aParam.mFrameWidth);
     WriteParam(aWriter, aParam.mFrameHeight);
     WriteParam(aWriter, aParam.mFramesSent);
+    WriteParam(aWriter, aParam.mHugeFramesSent);
+    WriteParam(aWriter, aParam.mTotalEncodeTime);
     WriteRTCSentRtpStreamStats(aWriter, aParam);
   }
 
@@ -368,9 +371,12 @@ struct ParamTraits<mozilla::dom::RTCOutboundRtpStreamStats> {
            ReadParam(aReader, &(aResult->mHeaderBytesSent)) &&
            ReadParam(aReader, &(aResult->mRetransmittedPacketsSent)) &&
            ReadParam(aReader, &(aResult->mRetransmittedBytesSent)) &&
+           ReadParam(aReader, &(aResult->mTotalEncodedBytesTarget)) &&
            ReadParam(aReader, &(aResult->mFrameWidth)) &&
            ReadParam(aReader, &(aResult->mFrameHeight)) &&
            ReadParam(aReader, &(aResult->mFramesSent)) &&
+           ReadParam(aReader, &(aResult->mHugeFramesSent)) &&
+           ReadParam(aReader, &(aResult->mTotalEncodeTime)) &&
            ReadRTCSentRtpStreamStats(aReader, aResult);
   }
 };
