@@ -72,6 +72,13 @@ void wr_compositor_create_external_surface(void* aCompositor,
   compositor->CreateExternalSurface(aId, aIsOpaque);
 }
 
+void wr_compositor_create_backdrop_surface(void* aCompositor,
+                                           wr::NativeSurfaceId aId,
+                                           wr::ColorF aColor) {
+  RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
+  compositor->CreateBackdropSurface(aId, aColor);
+}
+
 void wr_compositor_create_tile(void* aCompositor, wr::NativeSurfaceId aId,
                                int32_t aX, int32_t aY) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
