@@ -54,8 +54,9 @@ TEST_F(WindowCapturerTest, Enumerate) {
   }
 }
 
-// Flaky on Linux. See: crbug.com/webrtc/7830
-#if defined(WEBRTC_LINUX)
+// Flaky on Linux. See: crbug.com/webrtc/7830.
+// Failing on macOS 11: See bugs.webrtc.org/12801
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 #define MAYBE_Capture DISABLED_Capture
 #else
 #define MAYBE_Capture Capture
