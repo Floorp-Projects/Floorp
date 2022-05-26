@@ -75,7 +75,7 @@ you'll need to manually tell it you need two things:
 
 "use strict";
 
-add_task(function test_setup() {
+add_setup(function test_setup() {
   // FOG needs a profile directory to put its data in.
   do_get_profile();
 

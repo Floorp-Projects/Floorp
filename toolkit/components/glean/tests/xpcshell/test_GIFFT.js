@@ -29,7 +29,7 @@ function keyedScalarValue(aScalarName) {
   return "parent" in snapshot ? snapshot.parent[aScalarName] : undefined;
 }
 
-add_task(function test_setup() {
+add_setup(function test_setup() {
   // FOG needs a profile directory to put its data in.
   do_get_profile();
 

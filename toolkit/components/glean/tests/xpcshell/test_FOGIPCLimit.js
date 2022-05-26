@@ -7,7 +7,7 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-add_task(
+add_setup(
   /* on Android FOG is set up through head.js */
   { skip_if: () => !runningInParent || AppConstants.platform == "android" },
   function test_setup() {

@@ -175,12 +175,10 @@ class nsBlockFrame : public nsContainerFrame {
   mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  // Line cursor methods to speed up line searching in which one query
-  // result is expected to be close to the next in general. This is
-  // mainly for searching line(s) containing a point. It is also used
-  // as a cache for local computation. Use AutoLineCursorSetup for the
-  // latter case so that it wouldn't interact unexpectedly with the
-  // former. The basic idea for the former is that we set the cursor
+  // Line cursor methods to speed up line searching in which one query result
+  // is expected to be close to the next in general. This is mainly for
+  // searching line(s) containing a point. It is also used as a cache for local
+  // computation. The basic idea for the former is that we set the cursor
   // property if the lines' overflowArea.InkOverflow().ys and
   // overflowArea.InkOverflow().yMosts are non-decreasing
   // (considering only non-empty overflowArea.InkOverflow()s; empty
@@ -191,45 +189,46 @@ class nsBlockFrame : public nsContainerFrame {
   // "near" the cursor, then we can find those nearby lines quickly by
   // starting our search at the cursor.
 
-  // Clear out line cursor because we're disturbing the lines (i.e., Reflow)
-  void ClearLineCursor();
+  // We have two independent line cursors, one used for display-list building
+  // and the other for a11y or other frame queries. Either or both may be
+  // present at any given time. When we reflow or otherwise munge the lines,
+  // both cursors will be cleared.
+  // The display cursor is only created and used if the lines satisfy the non-
+  // decreasing y-coordinate condition (see SetupLineCursorForDisplay comment
+  // below), whereas the query cursor may be created for any block. The two
+  // are separated so creating a cursor for a11y queries (eg GetRenderedText)
+  // does not risk confusing the display-list building code.
+
+  // Clear out line cursors because we're disturbing the lines (i.e., Reflow)
+  void ClearLineCursors() {
+    if (MaybeHasLineCursor()) {
+      ClearLineCursorForDisplay();
+      ClearLineCursorForQuery();
+      RemoveStateBits(NS_BLOCK_HAS_LINE_CURSOR);
+    }
+  }
+  void ClearLineCursorForDisplay() {
+    RemoveProperty(LineCursorPropertyDisplay());
+  }
+  void ClearLineCursorForQuery() { RemoveProperty(LineCursorPropertyQuery()); }
+
   // Get the first line that might contain y-coord 'y', or nullptr if you must
   // search all lines. If nonnull is returned then we guarantee that the lines'
   // combinedArea.ys and combinedArea.yMosts are non-decreasing.
   // The actual line returned might not contain 'y', but if not, it is
   // guaranteed to be before any line which does contain 'y'.
   nsLineBox* GetFirstLineContaining(nscoord y);
-  // Set the line cursor to our first line. Only call this if you
-  // guarantee that either the lines' combinedArea.ys and combinedArea.
-  // yMosts are non-decreasing, or the line cursor is cleared before
-  // building the display list of this frame.
-  void SetupLineCursor();
 
-  /**
-   * Helper RAII class for automatically set and clear line cursor for
-   * temporary use. If the frame already has line cursor, this would be
-   * a no-op.
-   */
-  class MOZ_STACK_CLASS AutoLineCursorSetup {
-   public:
-    explicit AutoLineCursorSetup(nsBlockFrame* aFrame)
-        : mFrame(aFrame), mOrigCursor(aFrame->GetLineCursor()) {
-      if (!mOrigCursor) {
-        mFrame->SetupLineCursor();
-      }
-    }
-    ~AutoLineCursorSetup() {
-      if (mOrigCursor) {
-        mFrame->SetProperty(LineCursorProperty(), mOrigCursor);
-      } else {
-        mFrame->ClearLineCursor();
-      }
-    }
+  // Ensure the frame has a display-list line cursor, initializing it to the
+  // first line if it is not already present. (If there's an existing cursor,
+  // it is left untouched.) Only call this if you guarantee that the lines'
+  // combinedArea.ys and combinedArea.yMosts are non-decreasing.
+  void SetupLineCursorForDisplay();
 
-   private:
-    nsBlockFrame* mFrame;
-    nsLineBox* mOrigCursor;
-  };
+  // Ensure the frame has a query line cursor, initializing it to the first
+  // line if it is not already present. (If there's an existing cursor, it is
+  // left untouched.)
+  void SetupLineCursorForQuery();
 
   void ChildIsDirty(nsIFrame* aChild) override;
 
@@ -424,10 +423,23 @@ class nsBlockFrame : public nsContainerFrame {
       nsPresContext* aPresContext);
 #endif
 
-  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorProperty, nsLineBox)
-  bool HasLineCursor() { return HasAnyStateBits(NS_BLOCK_HAS_LINE_CURSOR); }
-  nsLineBox* GetLineCursor() {
-    return HasLineCursor() ? GetProperty(LineCursorProperty()) : nullptr;
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorPropertyDisplay, nsLineBox)
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorPropertyQuery, nsLineBox)
+  // Note that the NS_BLOCK_HAS_LINE_CURSOR flag does not necessarily mean the
+  // cursor is present, as it covers both the "display" and "query" cursors,
+  // but may remain set if they have been separately deleted. In such a case,
+  // the Get* accessors will be slightly more expensive, but will still safely
+  // return null if the cursor is absent.
+  bool MaybeHasLineCursor() {
+    return HasAnyStateBits(NS_BLOCK_HAS_LINE_CURSOR);
+  }
+  nsLineBox* GetLineCursorForDisplay() {
+    return MaybeHasLineCursor() ? GetProperty(LineCursorPropertyDisplay())
+                                : nullptr;
+  }
+  nsLineBox* GetLineCursorForQuery() {
+    return MaybeHasLineCursor() ? GetProperty(LineCursorPropertyQuery())
+                                : nullptr;
   }
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {
@@ -438,8 +450,11 @@ class nsBlockFrame : public nsContainerFrame {
     return NS_NewLineBox(PresShell(), aFromLine, aFrame, aCount);
   }
   void FreeLineBox(nsLineBox* aLine) {
-    if (aLine == GetLineCursor()) {
-      ClearLineCursor();
+    if (aLine == GetLineCursorForDisplay()) {
+      ClearLineCursorForDisplay();
+    }
+    if (aLine == GetLineCursorForQuery()) {
+      ClearLineCursorForQuery();
     }
     aLine->Destroy(PresShell());
   }
