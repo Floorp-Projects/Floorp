@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -360,6 +361,8 @@ class RetransmissionQueue {
   // cumulative acked. Note that it also contains chunks that have been acked in
   // gap ack blocks.
   std::map<UnwrappedTSN, TxData> outstanding_data_;
+  // Data chunks that are to be retransmitted.
+  std::set<UnwrappedTSN> to_be_retransmitted_;
   // The number of bytes that are in-flight (sent but not yet acked or nacked).
   size_t outstanding_bytes_ = 0;
 };
