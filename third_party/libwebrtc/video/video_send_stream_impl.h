@@ -60,9 +60,9 @@ struct PacingConfig {
 };
 
 // VideoSendStreamImpl implements internal::VideoSendStream.
-// It is created and destroyed on |worker_queue|. The intent is to decrease the
-// need for locking and to ensure methods are called in sequence.
-// Public methods except |DeliverRtcp| must be called on |worker_queue|.
+// It is created and destroyed on `rtp_transport_queue`. The intent is to
+// decrease the need for locking and to ensure methods are called in sequence.
+// Public methods except `DeliverRtcp` must be called on `rtp_transport_queue`.
 // DeliverRtcp is called on the libjingle worker thread or a network thread.
 // An encoder may deliver frames through the EncodedImageCallback on an
 // arbitrary thread.
@@ -72,7 +72,7 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   VideoSendStreamImpl(
       Clock* clock,
       SendStatisticsProxy* stats_proxy,
-      rtc::TaskQueue* worker_queue,
+      rtc::TaskQueue* rtp_transport_queue,
       RtcpRttStats* call_stats,
       RtpTransportControllerSendInterface* transport,
       BitrateAllocatorInterface* bitrate_allocator,
@@ -92,7 +92,7 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   // that use it. Registration has to happen on the thread were
   // |module_process_thread| was created (libjingle's worker thread).
   // TODO(perkj): Replace the use of |module_process_thread| with a TaskQueue,
-  // maybe |worker_queue|.
+  // maybe |rtp_transport_queue|.
   void RegisterProcessThread(ProcessThread* module_process_thread);
   void DeRegisterProcessThread();
 
@@ -140,14 +140,14 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   void StartupVideoSendStream();
   // Removes the bitrate observer, stops monitoring and notifies the video
   // encoder of the bitrate update.
-  void StopVideoSendStream() RTC_RUN_ON(worker_queue_);
+  void StopVideoSendStream() RTC_RUN_ON(rtp_transport_queue_);
 
   void ConfigureProtection();
   void ConfigureSsrcs();
   void SignalEncoderTimedOut();
   void SignalEncoderActive();
   MediaStreamAllocationConfig GetAllocationConfig() const
-      RTC_RUN_ON(worker_queue_);
+      RTC_RUN_ON(rtp_transport_queue_);
   Clock* const clock_;
   const bool has_alr_probing_;
   const PacingConfig pacing_config_;
@@ -155,13 +155,13 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   SendStatisticsProxy* const stats_proxy_;
   const VideoSendStream::Config* const config_;
 
-  rtc::TaskQueue* const worker_queue_;
+  rtc::TaskQueue* const rtp_transport_queue_;
 
   RepeatingTaskHandle check_encoder_activity_task_
-      RTC_GUARDED_BY(worker_queue_);
+      RTC_GUARDED_BY(rtp_transport_queue_);
 
   std::atomic_bool activity_;
-  bool timed_out_ RTC_GUARDED_BY(worker_queue_);
+  bool timed_out_ RTC_GUARDED_BY(rtp_transport_queue_);
 
   RtpTransportControllerSendInterface* const transport_;
   BitrateAllocatorInterface* const bitrate_allocator_;
@@ -197,7 +197,7 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
     int64_t last_send_time_ms;
   };
   absl::optional<VbaSendContext> video_bitrate_allocation_context_
-      RTC_GUARDED_BY(worker_queue_);
+      RTC_GUARDED_BY(rtp_transport_queue_);
   const absl::optional<float> configured_pacing_factor_;
 };
 }  // namespace internal
