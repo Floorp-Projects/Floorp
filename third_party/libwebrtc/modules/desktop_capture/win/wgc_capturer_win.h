@@ -47,8 +47,10 @@ class WindowEnumerator final : public SourceEnumerator {
   ~WindowEnumerator() override = default;
 
   bool FindAllSources(DesktopCapturer::SourceList* sources) override {
+    // WGC fails to capture windows with the WS_EX_TOOLWINDOW style, so we
+    // provide it as a filter to ensure windows with the style are not returned.
     return window_capture_helper_.EnumerateCapturableWindows(
-        sources, enumerate_current_process_windows_);
+        sources, enumerate_current_process_windows_, WS_EX_TOOLWINDOW);
   }
 
  private:
