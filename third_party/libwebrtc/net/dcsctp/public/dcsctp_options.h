@@ -112,7 +112,7 @@ struct DcSctpOptions {
   // T2-shutdown timeout.
   DurationMs t2_shutdown_timeout = DurationMs(1000);
 
-  // Hearbeat interval (on idle connections only).
+  // Hearbeat interval (on idle connections only). Set to zero to disable.
   DurationMs heartbeat_interval = DurationMs(30000);
 
   // The maximum time when a SACK will be sent from the arrival of an
