@@ -147,6 +147,10 @@ class RRSendQueue : public SendQueue {
     // Indicates if this stream has a partially sent message in it.
     bool has_partially_sent_message() const;
 
+    // Indicates if the stream has data to send. It will also try to remove any
+    // expired non-partially sent message.
+    bool HasDataToSend(TimeMs now);
+
    private:
     // An enqueued message and metadata.
     struct Item {
@@ -173,8 +177,6 @@ class RRSendQueue : public SendQueue {
       FSN current_fsn = FSN(0);
     };
 
-    // Returns the first non-expired message, or nullptr if there isn't one.
-    Item* GetFirstNonExpiredMessage(TimeMs now);
     bool IsConsistent() const;
 
     // Streams are pause when they are about to be reset.
@@ -202,6 +204,9 @@ class RRSendQueue : public SendQueue {
       TimeMs now,
       size_t max_size);
 
+  // Return the next stream, in round-robin fashion.
+  std::map<StreamID, OutgoingStream>::iterator GetNextStream(TimeMs now);
+
   const std::string log_prefix_;
   const size_t buffer_size_;
 
@@ -216,8 +221,14 @@ class RRSendQueue : public SendQueue {
   // The total amount of buffer data, for all streams.
   ThresholdWatcher total_buffered_amount_;
 
-  // The next stream to send chunks from.
-  StreamID next_stream_id_ = StreamID(0);
+  // Indicates if the previous fragment sent was the end of a message. For
+  // non-interleaved sending, this means that the next message may come from a
+  // different stream. If not true, the next fragment must be produced from the
+  // same stream as last time.
+  bool previous_message_has_ended_ = true;
+
+  // The current stream to send chunks from. Modified by `GetNextStream`.
+  StreamID current_stream_id_ = StreamID(0);
 
   // All streams, and messages added to those.
   std::map<StreamID, OutgoingStream> streams_;
