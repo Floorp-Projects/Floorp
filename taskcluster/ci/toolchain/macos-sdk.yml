@@ -24,6 +24,15 @@ macosx64-sdk-10.11:
             - /Applications/Xcode-7.3.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX10.11.sdk.tar.zst
 
+macosx64-sdk-10.12:
+    description: "MacOSX10.12 SDK"
+    treeherder:
+        symbol: TM(sdk10.12)
+    run:
+        arguments:
+            - /Applications/Xcode-8.3.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX10.12.sdk.tar.zst
+
 macosx64-sdk-11.0:
     description: "MacOSX11.0 SDK"
     treeherder:
