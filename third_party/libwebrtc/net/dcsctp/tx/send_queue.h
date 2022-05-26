@@ -108,6 +108,17 @@ class SendQueue {
   // of data loss. However, data loss cannot be completely guaranteed when a
   // peer restarts.
   virtual void Reset() = 0;
+
+  // Returns the amount of buffered data. This doesn't include packets that are
+  // e.g. inflight.
+  virtual size_t buffered_amount(StreamID stream_id) const = 0;
+
+  // Returns the limit for the `OnBufferedAmountLow` event. Default value is 0.
+  virtual size_t buffered_amount_low_threshold(StreamID stream_id) const = 0;
+
+  // Sets a limit for the `OnBufferedAmountLow` event.
+  virtual void SetBufferedAmountLowThreshold(StreamID stream_id,
+                                             size_t bytes) = 0;
 };
 }  // namespace dcsctp
 

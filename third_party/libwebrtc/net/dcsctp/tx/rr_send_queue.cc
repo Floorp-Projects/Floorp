@@ -38,19 +38,51 @@ RRSendQueue::OutgoingStream::GetFirstNonExpiredMessage(TimeMs now) {
     if (!item.message_id.has_value() && item.expires_at.has_value() &&
         *item.expires_at <= now) {
       // TODO(boivie): This should be reported to the client.
+      buffered_amount_.Decrease(item.remaining_size);
       items_.pop_front();
       continue;
     }
 
+    RTC_DCHECK(IsConsistent());
     return &item;
   }
+  RTC_DCHECK(IsConsistent());
   return nullptr;
+}
+
+bool RRSendQueue::OutgoingStream::IsConsistent() const {
+  size_t bytes = 0;
+  for (const auto& item : items_) {
+    bytes += item.remaining_size;
+  }
+  return bytes == buffered_amount_.value();
+}
+
+void RRSendQueue::ThresholdWatcher::Decrease(size_t bytes) {
+  RTC_DCHECK(bytes <= value_);
+  size_t old_value = value_;
+  value_ -= bytes;
+
+  if (old_value > low_threshold_ && value_ <= low_threshold_) {
+    on_threshold_reached_();
+  }
+}
+
+void RRSendQueue::ThresholdWatcher::SetLowThreshold(size_t low_threshold) {
+  // Betting on https://github.com/w3c/webrtc-pc/issues/2654 being accepted.
+  if (low_threshold_ < value_ && low_threshold >= value_) {
+    on_threshold_reached_();
+  }
+  low_threshold_ = low_threshold;
 }
 
 void RRSendQueue::OutgoingStream::Add(DcSctpMessage message,
                                       absl::optional<TimeMs> expires_at,
                                       const SendOptions& send_options) {
+  buffered_amount_.Increase(message.payload().size());
   items_.emplace_back(std::move(message), expires_at, send_options);
+
+  RTC_DCHECK(IsConsistent());
 }
 
 absl::optional<SendQueue::DataToSend> RRSendQueue::OutgoingStream::Produce(
@@ -58,18 +90,21 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::OutgoingStream::Produce(
     size_t max_size) {
   Item* item = GetFirstNonExpiredMessage(now);
   if (item == nullptr) {
+    RTC_DCHECK(IsConsistent());
     return absl::nullopt;
   }
 
   // If a stream is paused, it will allow sending all partially sent messages
   // but will not start sending new fragments of completely unsent messages.
   if (is_paused_ && !item->message_id.has_value()) {
+    RTC_DCHECK(IsConsistent());
     return absl::nullopt;
   }
 
   DcSctpMessage& message = item->message;
 
   if (item->remaining_size > max_size && max_size < kMinimumFragmentedPayload) {
+    RTC_DCHECK(IsConsistent());
     return absl::nullopt;
   }
 
@@ -105,6 +140,7 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::OutgoingStream::Produce(
 
   FSN fsn(item->current_fsn);
   item->current_fsn = FSN(*item->current_fsn + 1);
+  buffered_amount_.Decrease(payload.size());
 
   SendQueue::DataToSend chunk(Data(stream_id, item->ssn.value_or(SSN(0)),
                                    item->message_id.value(), fsn, ppid,
@@ -124,47 +160,45 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::OutgoingStream::Produce(
                item->message.payload().size());
     RTC_DCHECK(item->remaining_size > 0);
   }
+  RTC_DCHECK(IsConsistent());
   return chunk;
-}
-
-size_t RRSendQueue::OutgoingStream::buffered_amount() const {
-  size_t bytes = 0;
-  for (const auto& item : items_) {
-    bytes += item.remaining_size;
-  }
-  return bytes;
 }
 
 bool RRSendQueue::OutgoingStream::Discard(IsUnordered unordered,
                                           MID message_id) {
+  bool result = false;
   if (!items_.empty()) {
     Item& item = items_.front();
     if (item.send_options.unordered == unordered &&
         item.message_id.has_value() && *item.message_id == message_id) {
+      buffered_amount_.Decrease(item.remaining_size);
       items_.pop_front();
       // As the item still existed, it had unsent data.
-      return true;
+      result = true;
     }
   }
-  return false;
+  RTC_DCHECK(IsConsistent());
+  return result;
 }
 
 void RRSendQueue::OutgoingStream::Pause() {
   is_paused_ = true;
 
-  // A stream is pause when it's about to be reset. In this implementation,
+  // A stream is paused when it's about to be reset. In this implementation,
   // it will throw away all non-partially send messages. This is subject to
   // change. It will however not discard any partially sent messages - only
   // whole messages. Partially delivered messages (at the time of receiving a
-  // Stream Reset command) will always deliver all the fragments before actually
-  // resetting the stream.
+  // Stream Reset command) will always deliver all the fragments before
+  // actually resetting the stream.
   for (auto it = items_.begin(); it != items_.end();) {
     if (it->remaining_offset == 0) {
+      buffered_amount_.Decrease(it->remaining_size);
       it = items_.erase(it);
     } else {
       ++it;
     }
   }
+  RTC_DCHECK(IsConsistent());
 }
 
 void RRSendQueue::OutgoingStream::Reset() {
@@ -172,6 +206,8 @@ void RRSendQueue::OutgoingStream::Reset() {
     // If this message has been partially sent, reset it so that it will be
     // re-sent.
     auto& item = items_.front();
+    buffered_amount_.Increase(item.message.payload().size() -
+                              item.remaining_size);
     item.remaining_offset = 0;
     item.remaining_size = item.message.payload().size();
     item.message_id = absl::nullopt;
@@ -182,6 +218,7 @@ void RRSendQueue::OutgoingStream::Reset() {
   next_ordered_mid_ = MID(0);
   next_unordered_mid_ = MID(0);
   next_ssn_ = SSN(0);
+  RTC_DCHECK(IsConsistent());
 }
 
 bool RRSendQueue::OutgoingStream::has_partially_sent_message() const {
@@ -209,11 +246,11 @@ void RRSendQueue::Add(TimeMs now,
 }
 
 size_t RRSendQueue::total_bytes() const {
-  // TODO(boivie): Have the current size as a member variable, so that's it not
+  // TODO(boivie): Have the current size as a member variable, so that it's not
   // calculated for every operation.
   size_t bytes = 0;
   for (const auto& stream : streams_) {
-    bytes += stream.second.buffered_amount();
+    bytes += stream.second.buffered_amount().value();
   }
 
   return bytes;
@@ -306,6 +343,27 @@ void RRSendQueue::Reset() {
   }
 }
 
+size_t RRSendQueue::buffered_amount(StreamID stream_id) const {
+  auto it = streams_.find(stream_id);
+  if (it == streams_.end()) {
+    return 0;
+  }
+  return it->second.buffered_amount().value();
+}
+
+size_t RRSendQueue::buffered_amount_low_threshold(StreamID stream_id) const {
+  auto it = streams_.find(stream_id);
+  if (it == streams_.end()) {
+    return 0;
+  }
+  return it->second.buffered_amount().low_threshold();
+}
+
+void RRSendQueue::SetBufferedAmountLowThreshold(StreamID stream_id,
+                                                size_t bytes) {
+  GetOrCreateStreamInfo(stream_id).buffered_amount().SetLowThreshold(bytes);
+}
+
 RRSendQueue::OutgoingStream& RRSendQueue::GetOrCreateStreamInfo(
     StreamID stream_id) {
   auto it = streams_.find(stream_id);
@@ -313,6 +371,9 @@ RRSendQueue::OutgoingStream& RRSendQueue::GetOrCreateStreamInfo(
     return it->second;
   }
 
-  return streams_.emplace(stream_id, OutgoingStream()).first->second;
+  return streams_
+      .emplace(stream_id,
+               [this, stream_id]() { on_buffered_amount_low_(stream_id); })
+      .first->second;
 }
 }  // namespace dcsctp

@@ -36,9 +36,12 @@ constexpr size_t kTwoFragmentPacketSize = 101;
 
 class RRSendQueueTest : public testing::Test {
  protected:
-  RRSendQueueTest() : buf_("log: ", kMaxQueueSize) {}
+  RRSendQueueTest()
+      : buf_("log: ", kMaxQueueSize, on_buffered_amount_low_.AsStdFunction()) {}
 
   const DcSctpOptions options_;
+  testing::NiceMock<testing::MockFunction<void(StreamID)>>
+      on_buffered_amount_low_;
   RRSendQueue buf_;
 };
 
@@ -474,5 +477,161 @@ TEST_F(RRSendQueueTest, WillCycleInRoundRobinFashionBetweenStreams) {
   EXPECT_EQ(chunk8.data.stream_id, StreamID(4));
   EXPECT_THAT(chunk8.data.payload, SizeIs(8));
 }
+
+TEST_F(RRSendQueueTest, DoesntTriggerOnBufferedAmountLowWhenSetToZero) {
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 0u);
+}
+
+TEST_F(RRSendQueueTest, TriggersOnBufferedAmountAtZeroLowWhenSent) {
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, std::vector<uint8_t>(1)));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 1u);
+
+  EXPECT_CALL(on_buffered_amount_low_, Call(StreamID(1)));
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk1,
+                              buf_.Produce(kNow, kOneFragmentPacketSize));
+  EXPECT_EQ(chunk1.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk1.data.payload, SizeIs(1));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 0u);
+}
+
+TEST_F(RRSendQueueTest, WillRetriggerOnBufferedAmountLowIfAddingMore) {
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, std::vector<uint8_t>(1)));
+
+  EXPECT_CALL(on_buffered_amount_low_, Call(StreamID(1)));
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk1,
+                              buf_.Produce(kNow, kOneFragmentPacketSize));
+  EXPECT_EQ(chunk1.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk1.data.payload, SizeIs(1));
+
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, std::vector<uint8_t>(1)));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 1u);
+
+  // Should now trigger again, as buffer_amount went above the threshold.
+  EXPECT_CALL(on_buffered_amount_low_, Call(StreamID(1)));
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk2,
+                              buf_.Produce(kNow, kOneFragmentPacketSize));
+  EXPECT_EQ(chunk2.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk2.data.payload, SizeIs(1));
+}
+
+TEST_F(RRSendQueueTest, OnlyTriggersWhenTransitioningFromAboveToBelowOrEqual) {
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 1000);
+
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, std::vector<uint8_t>(10)));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 10u);
+
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk1,
+                              buf_.Produce(kNow, kOneFragmentPacketSize));
+  EXPECT_EQ(chunk1.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk1.data.payload, SizeIs(10));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 0u);
+
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, std::vector<uint8_t>(20)));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 20u);
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk2,
+                              buf_.Produce(kNow, kOneFragmentPacketSize));
+  EXPECT_EQ(chunk2.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk2.data.payload, SizeIs(20));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 0u);
+}
+
+TEST_F(RRSendQueueTest, WillTriggerOnBufferedAmountLowSetAboveZero) {
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 700);
+
+  std::vector<uint8_t> payload(1000);
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, payload));
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk1,
+                              buf_.Produce(kNow, kOneFragmentPacketSize));
+  EXPECT_EQ(chunk1.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk1.data.payload, SizeIs(kOneFragmentPacketSize));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 900u);
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk2,
+                              buf_.Produce(kNow, kOneFragmentPacketSize));
+  EXPECT_EQ(chunk2.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk2.data.payload, SizeIs(kOneFragmentPacketSize));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 800u);
+
+  EXPECT_CALL(on_buffered_amount_low_, Call(StreamID(1)));
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk3,
+                              buf_.Produce(kNow, kOneFragmentPacketSize));
+  EXPECT_EQ(chunk3.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk3.data.payload, SizeIs(kOneFragmentPacketSize));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 700u);
+
+  // Doesn't trigger when reducing even further.
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk4,
+                              buf_.Produce(kNow, kOneFragmentPacketSize));
+  EXPECT_EQ(chunk3.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk3.data.payload, SizeIs(kOneFragmentPacketSize));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 600u);
+}
+
+TEST_F(RRSendQueueTest, WillRetriggerOnBufferedAmountLowSetAboveZero) {
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 700);
+
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, std::vector<uint8_t>(1000)));
+
+  EXPECT_CALL(on_buffered_amount_low_, Call(StreamID(1)));
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk1,
+                              buf_.Produce(kNow, 400));
+  EXPECT_EQ(chunk1.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk1.data.payload, SizeIs(400));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 600u);
+
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, std::vector<uint8_t>(200)));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 800u);
+
+  // Will trigger again, as it went above the limit.
+  EXPECT_CALL(on_buffered_amount_low_, Call(StreamID(1)));
+  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk2,
+                              buf_.Produce(kNow, 200));
+  EXPECT_EQ(chunk2.data.stream_id, StreamID(1));
+  EXPECT_THAT(chunk2.data.payload, SizeIs(200));
+  EXPECT_EQ(buf_.buffered_amount(StreamID(1)), 600u);
+}
+
+TEST_F(RRSendQueueTest, TriggersOnBufferedAmountLowOnThresholdChanged) {
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, std::vector<uint8_t>(100)));
+
+  // Modifying the threshold, still under buffered_amount, should not trigger.
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 50);
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 99);
+
+  // When the threshold reaches buffered_amount, it will trigger.
+  EXPECT_CALL(on_buffered_amount_low_, Call(StreamID(1)));
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 100);
+
+  // But not when it's set low again.
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 50);
+
+  // But it will trigger when it overshoots.
+  EXPECT_CALL(on_buffered_amount_low_, Call(StreamID(1)));
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 150);
+
+  // But not when it's set low again.
+  EXPECT_CALL(on_buffered_amount_low_, Call).Times(0);
+  buf_.SetBufferedAmountLowThreshold(StreamID(1), 0);
+}
+
 }  // namespace
 }  // namespace dcsctp
