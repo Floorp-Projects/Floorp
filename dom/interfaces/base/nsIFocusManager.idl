@@ -167,6 +167,7 @@ interface nsIFocusManager : nsISupports
    * Check if given element (or potentially a descendant, see setFocus) is
    * focusable.
    */
+  [can_run_script]
   boolean elementIsFocusable(in Element aElement, in unsigned long aFlags);
 
   /*
