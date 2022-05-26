@@ -31,7 +31,7 @@ RTC_EXTERN const NSString *const kRTCVp8CodecName;
 RTC_EXTERN const NSString *const kRTCVp9CodecName;
 RTC_EXTERN const NSString *const kRTCH264CodecName;
 
-/** Defined in http://w3c.github.io/webrtc-pc/#idl-def-RTC_OBJC_TYPE(RTCRtpCodecParameters) */
+/** Defined in https://www.w3.org/TR/webrtc/#idl-def-rtcrtpcodecparameters */
 RTC_OBJC_EXPORT
 @interface RTC_OBJC_TYPE (RTCRtpCodecParameters) : NSObject
 
