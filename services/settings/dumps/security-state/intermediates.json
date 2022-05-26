@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1653403714265,
+      "derHash": "i37VNYSEeB9MCDdrGDsBjJV5CMqsMqpyrNAuUXB6WKc=",
+      "subject": "CN=AgID CA SSL SERVER,OU=Area Soluzioni per la Pubblica Amministrazione,O=Agenzia per l'Italia Digitale,L=Roma,C=IT",
+      "subjectDN": "MIGaMQswCQYDVQQGEwJJVDENMAsGA1UEBwwEUm9tYTEmMCQGA1UECgwdQWdlbnppYSBwZXIgbCdJdGFsaWEgRGlnaXRhbGUxNzA1BgNVBAsMLkFyZWEgU29sdXppb25pIHBlciBsYSBQdWJibGljYSBBbW1pbmlzdHJhemlvbmUxGzAZBgNVBAMMEkFnSUQgQ0EgU1NMIFNFUlZFUg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "aeb288789225a7be93f2a26e7689afe09bc2d723ab018c424a83625b8a2b6097",
+        "size": 2942,
+        "filename": "xA7IvqP1-jwREgZJFKP3YrIzEm1R0lv-gp863KEGym8=.pem",
+        "location": "security-state-staging/intermediates/9deab71e-8ac6-41a9-8260-c8b869eac32a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "xA7IvqP1+jwREgZJFKP3YrIzEm1R0lv+gp863KEGym8=",
+      "crlite_enrolled": false,
+      "id": "4668c79c-c956-430e-aa77-3238123864ff",
+      "last_modified": 1653404236699
+    },
+    {
       "schema": 1653145078285,
       "derHash": "EbbbW2jc3zRHmufnt7uqcWWQVXetg9R08ruXF84kTOo=",
       "subject": "CN=GlobalSign Atlas R3 AlphaSSL CA H2 2021,O=Globalsign nv-sa,C=BE",
@@ -24823,5 +24841,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1653188230074
+  "timestamp": 1653404236699
 }
