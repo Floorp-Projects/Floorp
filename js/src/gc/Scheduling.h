@@ -887,8 +887,6 @@ class MemoryTracker {
   void fixupAfterMovingGC();
   void checkEmptyOnDestroy();
 
-  void adopt(MemoryTracker& other);
-
   // Track memory by associated GC thing pointer.
   void trackGCMemory(Cell* cell, size_t nbytes, MemoryUse use);
   void untrackGCMemory(Cell* cell, size_t nbytes, MemoryUse use);

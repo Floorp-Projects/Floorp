@@ -608,32 +608,6 @@ void MallocHeapThreshold::updateStartThreshold(
 
 #ifdef DEBUG
 
-void MemoryTracker::adopt(MemoryTracker& other) {
-  LockGuard<Mutex> lock(mutex);
-
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-
-  for (auto r = other.gcMap.all(); !r.empty(); r.popFront()) {
-    if (!gcMap.put(r.front().key(), r.front().value())) {
-      oomUnsafe.crash("MemoryTracker::adopt");
-    }
-  }
-  other.gcMap.clear();
-
-  // There may still be ZoneAllocPolicies associated with the old zone since
-  // some are not destroyed until the zone itself dies. Instead check there is
-  // no memory associated with them and clear their zone pointer in debug builds
-  // to catch further memory association.
-  for (auto r = other.nonGCMap.all(); !r.empty(); r.popFront()) {
-    MOZ_ASSERT(r.front().value() == 0);
-    if (r.front().key().use() == MemoryUse::ZoneAllocPolicy) {
-      auto policy = static_cast<ZoneAllocPolicy*>(r.front().key().ptr());
-      policy->zone_ = nullptr;
-    }
-  }
-  other.nonGCMap.clear();
-}
-
 static const char* MemoryUseName(MemoryUse use) {
   switch (use) {
 #  define DEFINE_CASE(Name) \
