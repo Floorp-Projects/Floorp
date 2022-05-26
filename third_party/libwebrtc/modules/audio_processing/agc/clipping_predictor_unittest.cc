@@ -32,7 +32,7 @@ constexpr int kMaxMicLevel = 255;
 constexpr int kMinMicLevel = 12;
 constexpr int kDefaultClippedLevelStep = 15;
 
-using ClippingPredictorConfig = AudioProcessing::Config::GainController1 ::
+using ClippingPredictorConfig = AudioProcessing::Config::GainController1::
     AnalogGainController::ClippingPredictor;
 
 void CallProcess(int num_calls,

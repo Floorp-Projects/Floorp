@@ -37,6 +37,9 @@ constexpr int kClippedLevelStep = 15;
 constexpr float kClippedRatioThreshold = 0.1f;
 constexpr int kClippedWaitFrames = 300;
 
+using ClippingPredictorConfig = AudioProcessing::Config::GainController1::
+    AnalogGainController::ClippingPredictor;
+
 class MockGainControl : public GainControl {
  public:
   virtual ~MockGainControl() {}
@@ -67,7 +70,46 @@ std::unique_ptr<AgcManagerDirect> CreateAgcManagerDirect(
   return std::make_unique<AgcManagerDirect>(
       /*num_capture_channels=*/1, startup_min_level, kClippedMin,
       /*disable_digital_adaptive=*/true, kSampleRateHz, clipped_level_step,
-      clipped_ratio_threshold, clipped_wait_frames);
+      clipped_ratio_threshold, clipped_wait_frames, ClippingPredictorConfig());
+}
+
+std::unique_ptr<AgcManagerDirect> CreateAgcManagerDirect(
+    int startup_min_level,
+    int clipped_level_step,
+    float clipped_ratio_threshold,
+    int clipped_wait_frames,
+    const ClippingPredictorConfig& clipping_cfg) {
+  return std::make_unique<AgcManagerDirect>(
+      /*num_capture_channels=*/1, startup_min_level, kClippedMin,
+      /*disable_digital_adaptive=*/true, kSampleRateHz, clipped_level_step,
+      clipped_ratio_threshold, clipped_wait_frames, clipping_cfg);
+}
+
+void CallPreProcessAudioBuffer(int num_calls,
+                               float peak_ratio,
+                               AgcManagerDirect& manager) {
+  RTC_DCHECK_GE(1.f, peak_ratio);
+  AudioBuffer audio_buffer(kSampleRateHz, 1, kSampleRateHz, 1, kSampleRateHz,
+                           1);
+  const int num_channels = audio_buffer.num_channels();
+  const int num_frames = audio_buffer.num_frames();
+  for (int ch = 0; ch < num_channels; ++ch) {
+    for (int i = 0; i < num_frames; i += 2) {
+      audio_buffer.channels()[ch][i] = peak_ratio * 32767.f;
+      audio_buffer.channels()[ch][i + 1] = 0.0f;
+    }
+  }
+  for (int n = 0; n < num_calls / 2; ++n) {
+    manager.AnalyzePreProcess(&audio_buffer);
+  }
+  for (int ch = 0; ch < num_channels; ++ch) {
+    for (int i = 0; i < num_frames; ++i) {
+      audio_buffer.channels()[ch][i] = peak_ratio * 32767.f;
+    }
+  }
+  for (int n = 0; n < num_calls - num_calls / 2; ++n) {
+    manager.AnalyzePreProcess(&audio_buffer);
+  }
 }
 
 }  // namespace
@@ -82,7 +124,8 @@ class AgcManagerDirectTest : public ::testing::Test {
                  kSampleRateHz,
                  kClippedLevelStep,
                  kClippedRatioThreshold,
-                 kClippedWaitFrames),
+                 kClippedWaitFrames,
+                 ClippingPredictorConfig()),
         audio(kNumChannels),
         audio_data(kNumChannels * kSamplesPerChannel, 0.f) {
     ExpectInitialize();
@@ -137,8 +180,28 @@ class AgcManagerDirectTest : public ::testing::Test {
         audio[ch][k] = 32767.f;
       }
     }
-
     for (int i = 0; i < num_calls; ++i) {
+      manager_.AnalyzePreProcess(audio.data(), kSamplesPerChannel);
+    }
+  }
+
+  void CallPreProcForChangingAudio(int num_calls, float peak_ratio) {
+    RTC_DCHECK_GE(1.f, peak_ratio);
+    std::fill(audio_data.begin(), audio_data.end(), 0.f);
+    for (size_t ch = 0; ch < kNumChannels; ++ch) {
+      for (size_t k = 0; k < kSamplesPerChannel; k += 2) {
+        audio[ch][k] = peak_ratio * 32767.f;
+      }
+    }
+    for (int i = 0; i < num_calls / 2; ++i) {
+      manager_.AnalyzePreProcess(audio.data(), kSamplesPerChannel);
+    }
+    for (size_t ch = 0; ch < kNumChannels; ++ch) {
+      for (size_t k = 0; k < kSamplesPerChannel; ++k) {
+        audio[ch][k] = peak_ratio * 32767.f;
+      }
+    }
+    for (int i = 0; i < num_calls - num_calls / 2; ++i) {
       manager_.AnalyzePreProcess(audio.data(), kSamplesPerChannel);
     }
   }
@@ -709,6 +772,25 @@ TEST_F(AgcManagerDirectTest, TakesNoActionOnZeroMicVolume) {
   EXPECT_EQ(0, manager_.stream_analog_level());
 }
 
+TEST_F(AgcManagerDirectTest, ClippingDetectionLowersVolume) {
+  SetVolumeAndProcess(255);
+  EXPECT_EQ(255, manager_.stream_analog_level());
+  CallPreProcForChangingAudio(/*num_calls=*/100, /*peak_ratio=*/0.99f);
+  EXPECT_EQ(255, manager_.stream_analog_level());
+  CallPreProcForChangingAudio(/*num_calls=*/100, /*peak_ratio=*/1.0f);
+  EXPECT_EQ(240, manager_.stream_analog_level());
+}
+
+TEST_F(AgcManagerDirectTest, DisabledClippingPredictorDoesNotLowerVolume) {
+  SetVolumeAndProcess(255);
+  EXPECT_FALSE(manager_.clipping_predictor_enabled());
+  EXPECT_EQ(255, manager_.stream_analog_level());
+  CallPreProcForChangingAudio(/*num_calls=*/100, /*peak_ratio=*/0.99f);
+  EXPECT_EQ(255, manager_.stream_analog_level());
+  CallPreProcForChangingAudio(/*num_calls=*/100, /*peak_ratio=*/0.99f);
+  EXPECT_EQ(255, manager_.stream_analog_level());
+}
+
 TEST(AgcManagerDirectStandaloneTest, DisableDigitalDisablesDigital) {
   auto agc = std::unique_ptr<Agc>(new ::testing::NiceMock<MockAgc>());
   MockGainControl gctrl;
@@ -807,13 +889,81 @@ TEST(AgcManagerDirectStandaloneTest, ClippingParametersVerified) {
   EXPECT_EQ(manager->clipped_wait_frames_, kClippedWaitFrames);
   std::unique_ptr<AgcManagerDirect> manager_custom =
       CreateAgcManagerDirect(kInitialVolume,
-                             /*clipped_level_step*/ 10,
-                             /*clipped_ratio_threshold*/ 0.2f,
-                             /*clipped_wait_frames*/ 50);
+                             /*clipped_level_step=*/10,
+                             /*clipped_ratio_threshold=*/0.2f,
+                             /*clipped_wait_frames=*/50);
   manager_custom->Initialize();
   EXPECT_EQ(manager_custom->clipped_level_step_, 10);
   EXPECT_EQ(manager_custom->clipped_ratio_threshold_, 0.2f);
   EXPECT_EQ(manager_custom->clipped_wait_frames_, 50);
+}
+
+TEST(AgcManagerDirectStandaloneTest,
+     DisableClippingPredictorDisablesClippingPredictor) {
+  ClippingPredictorConfig default_config;
+  EXPECT_FALSE(default_config.enabled);
+  std::unique_ptr<AgcManagerDirect> manager = CreateAgcManagerDirect(
+      kInitialVolume, kClippedLevelStep, kClippedRatioThreshold,
+      kClippedWaitFrames, default_config);
+  manager->Initialize();
+  EXPECT_FALSE(manager->clipping_predictor_enabled());
+}
+
+TEST(AgcManagerDirectStandaloneTest,
+     EnableClippingPredictorEnablesClippingPredictor) {
+  const ClippingPredictorConfig config(
+      {/*enabled=*/true, ClippingPredictorConfig::kClippingEventPrediction,
+       /*window_length=*/5, /*reference_window_length=*/5,
+       /*reference_window_delay=*/5, /*clipping_threshold=*/-1.0f,
+       /*crest_factor_margin=*/3.0f});
+  std::unique_ptr<AgcManagerDirect> manager = CreateAgcManagerDirect(
+      kInitialVolume, kClippedLevelStep, kClippedRatioThreshold,
+      kClippedWaitFrames, config);
+  manager->Initialize();
+  EXPECT_TRUE(manager->clipping_predictor_enabled());
+}
+
+TEST(AgcManagerDirectStandaloneTest,
+     DisableClippingPredictorDoesNotLowerVolume) {
+  const ClippingPredictorConfig default_config;
+  EXPECT_FALSE(default_config.enabled);
+  AgcManagerDirect manager(new ::testing::NiceMock<MockAgc>(), kInitialVolume,
+                           kClippedMin, kSampleRateHz, kClippedLevelStep,
+                           kClippedRatioThreshold, kClippedWaitFrames,
+                           default_config);
+  manager.Initialize();
+  manager.set_stream_analog_level(/*level=*/255);
+  EXPECT_FALSE(manager.clipping_predictor_enabled());
+  EXPECT_EQ(manager.stream_analog_level(), 255);
+  manager.Process(nullptr);
+  CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
+  EXPECT_EQ(manager.stream_analog_level(), 255);
+  CallPreProcessAudioBuffer(/*num_calls=*/300, /*peak_ratio=*/0.99f, manager);
+  EXPECT_EQ(manager.stream_analog_level(), 255);
+  CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
+  EXPECT_EQ(manager.stream_analog_level(), 255);
+}
+
+TEST(AgcManagerDirectStandaloneTest, EnableClippingPredictorLowersVolume) {
+  const ClippingPredictorConfig config(
+      {/*enabled=*/true, ClippingPredictorConfig::kClippingEventPrediction,
+       /*window_length=*/5, /*reference_window_length=*/5,
+       /*reference_window_delay=*/5, /*clipping_threshold=*/-1.0f,
+       /*crest_factor_margin=*/3.0f});
+  AgcManagerDirect manager(new ::testing::NiceMock<MockAgc>(), kInitialVolume,
+                           kClippedMin, kSampleRateHz, kClippedLevelStep,
+                           kClippedRatioThreshold, kClippedWaitFrames, config);
+  manager.Initialize();
+  manager.set_stream_analog_level(/*level=*/255);
+  EXPECT_TRUE(manager.clipping_predictor_enabled());
+  EXPECT_EQ(manager.stream_analog_level(), 255);
+  manager.Process(nullptr);
+  CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
+  EXPECT_EQ(manager.stream_analog_level(), 240);
+  CallPreProcessAudioBuffer(/*num_calls=*/300, /*peak_ratio=*/0.99f, manager);
+  EXPECT_EQ(manager.stream_analog_level(), 240);
+  CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
+  EXPECT_EQ(manager.stream_analog_level(), 225);
 }
 
 }  // namespace webrtc
