@@ -739,19 +739,23 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
                 StaticPrefs::dom_forms_enterkeyhint())) {
       nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
       if (window && window->GetFocusedElement() == this) {
-        IMEContentObserver* observer =
-            IMEStateManager::GetActiveContentObserver();
-        nsPresContext* presContext = GetPresContext(eForComposedDoc);
-        if (observer && observer->IsManaging(presContext, this)) {
-          if (RefPtr<EditorBase> editor =
-                  nsContentUtils::GetActiveEditor(window)) {
-            IMEState newState;
-            editor->GetPreferredIMEState(&newState);
-            OwningNonNull<nsGenericHTMLElement> kungFuDeathGrip(*this);
-            IMEStateManager::UpdateIMEState(
-                newState, kungFuDeathGrip, *editor,
-                {IMEStateManager::UpdateIMEStateOption::ForceUpdate,
-                 IMEStateManager::UpdateIMEStateOption::DontCommitComposition});
+        if (IMEContentObserver* observer =
+                IMEStateManager::GetActiveContentObserver()) {
+          if (const nsPresContext* presContext =
+                  GetPresContext(eForComposedDoc)) {
+            if (observer->IsManaging(*presContext, this)) {
+              if (RefPtr<EditorBase> editor =
+                      nsContentUtils::GetActiveEditor(window)) {
+                IMEState newState;
+                editor->GetPreferredIMEState(&newState);
+                OwningNonNull<nsGenericHTMLElement> kungFuDeathGrip(*this);
+                IMEStateManager::UpdateIMEState(
+                    newState, kungFuDeathGrip, *editor,
+                    {IMEStateManager::UpdateIMEStateOption::ForceUpdate,
+                     IMEStateManager::UpdateIMEStateOption::
+                         DontCommitComposition});
+              }
+            }
           }
         }
       }

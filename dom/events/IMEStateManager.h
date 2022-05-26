@@ -182,8 +182,8 @@ class IMEStateManager {
   // control compared to having the two methods incorporated into OnChangeFocus
 
   // Get the focused editor's selection and root
-  static nsresult GetFocusSelectionAndRoot(dom::Selection** aSel,
-                                           nsIContent** aRoot);
+  static nsresult GetFocusSelectionAndRootElement(dom::Selection** aSel,
+                                                  dom::Element** aRootElement);
   // This method updates the current IME state.  However, if the enabled state
   // isn't changed by the new state, this method does nothing.
   // Note that this method changes the IME state of the active element in the
@@ -296,8 +296,8 @@ class IMEStateManager {
   static nsresult NotifyIME(IMEMessage aMessage, nsPresContext* aPresContext,
                             BrowserParent* aBrowserParent = nullptr);
 
-  static nsINode* GetRootEditableNode(const nsPresContext* aPresContext,
-                                      const nsIContent* aContent);
+  static nsINode* GetRootEditableNode(const nsPresContext& aPresContext,
+                                      const dom::Element* aElement);
 
   /**
    * Returns active IMEContentObserver but may be nullptr if focused content

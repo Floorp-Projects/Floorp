@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Logging.h"
+#include "IMEStateManager.h"
 
-#include "mozilla/IMEStateManager.h"
+#include "mozilla/Logging.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
@@ -550,7 +550,7 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     // Otherwise, i.e., new focused content is in this process, let's check
     // whether the new focused content is already being managed by the
     // active IME content observer.
-    else if (!sActiveIMEContentObserver->IsManaging(aPresContext, aElement)) {
+    else if (!sActiveIMEContentObserver->IsManaging(*aPresContext, aElement)) {
       DestroyIMEContentObserver();
     }
   }
@@ -733,7 +733,7 @@ bool IMEStateManager::OnMouseButtonEventInEditor(
     return false;
   }
 
-  if (!sActiveIMEContentObserver->IsManaging(&aPresContext, aElement)) {
+  if (!sActiveIMEContentObserver->IsManaging(aPresContext, aElement)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  OnMouseButtonEventInEditor(), "
              "the active IMEContentObserver isn't managing the editor"));
@@ -741,7 +741,7 @@ bool IMEStateManager::OnMouseButtonEventInEditor(
   }
 
   OwningNonNull<IMEContentObserver> observer = *sActiveIMEContentObserver;
-  bool consumed = observer->OnMouseButtonEvent(&aPresContext, &aMouseEvent);
+  bool consumed = observer->OnMouseButtonEvent(aPresContext, aMouseEvent);
   MOZ_LOG(sISMLog, LogLevel::Info,
           ("  OnMouseButtonEventInEditor(), "
            "mouse event (mMessage=%s, mButton=%d) is %s",
@@ -877,7 +877,7 @@ void IMEStateManager::OnFocusInEditor(nsPresContext& aPresContext,
   // If the IMEContentObserver instance isn't managing the editor actually,
   // we need to recreate the instance.
   if (sActiveIMEContentObserver) {
-    if (sActiveIMEContentObserver->IsManaging(&aPresContext, aElement)) {
+    if (sActiveIMEContentObserver->IsManaging(aPresContext, aElement)) {
       MOZ_LOG(
           sISMLog, LogLevel::Debug,
           ("  OnFocusInEditor(), "
@@ -887,7 +887,7 @@ void IMEStateManager::OnFocusInEditor(nsPresContext& aPresContext,
     // If the IMEContentObserver has not finished initializing itself yet,
     // we don't need to recreate it because the following
     // TryToFlushPendingNotifications call must make it initialized.
-    if (!sActiveIMEContentObserver->IsBeingInitializedFor(&aPresContext,
+    if (!sActiveIMEContentObserver->IsBeingInitializedFor(aPresContext,
                                                           aElement)) {
       DestroyIMEContentObserver();
     }
@@ -953,7 +953,7 @@ void IMEStateManager::OnReFocus(nsPresContext& aPresContext,
   }
 
   if (!sActiveIMEContentObserver ||
-      !sActiveIMEContentObserver->IsManaging(&aPresContext, &aElement)) {
+      !sActiveIMEContentObserver->IsManaging(aPresContext, &aElement)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  OnReFocus(), there is no valid IMEContentObserver, so we don't "
              "manage this. Ignore this"));
@@ -1104,7 +1104,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   // editor correctly, we should recreate it.
   const bool createTextStateManager =
       (!sActiveIMEContentObserver ||
-       !sActiveIMEContentObserver->IsManaging(sFocusedPresContext, aElement));
+       !sActiveIMEContentObserver->IsManaging(*sFocusedPresContext, aElement));
 
   const bool updateIMEState =
       aOptions.contains(UpdateIMEStateOption::ForceUpdate) ||
@@ -2003,39 +2003,37 @@ bool IMEStateManager::IsEditable(nsINode* node) {
 }
 
 // static
-nsINode* IMEStateManager::GetRootEditableNode(const nsPresContext* aPresContext,
-                                              const nsIContent* aContent) {
-  if (aContent) {
+nsINode* IMEStateManager::GetRootEditableNode(const nsPresContext& aPresContext,
+                                              const Element* aElement) {
+  if (aElement) {
     // If the focused content is in design mode, return is composed document
-    // because aContent may be in UA widget shadow tree.
-    if (aContent->IsInDesignMode()) {
-      return aContent->GetComposedDoc();
+    // because aElement may be in UA widget shadow tree.
+    if (aElement->IsInDesignMode()) {
+      return aElement->GetComposedDoc();
     }
 
-    nsINode* root = nullptr;
-    nsINode* node = const_cast<nsIContent*>(aContent);
-    while (node && IsEditable(node)) {
+    nsINode* candidateRootNode = const_cast<Element*>(aElement);
+    for (nsINode* node = candidateRootNode; node && IsEditable(node);
+         node = node->GetParentNode()) {
       // If the node has independent selection like <input type="text"> or
-      // <textarea>, the node should be the root editable node for aContent.
+      // <textarea>, the node should be the root editable node for aElement.
       // FYI: <select> element also has independent selection but IsEditable()
       //      returns false.
       // XXX: If somebody adds new editable element which has independent
       //      selection but doesn't own editor, we'll need more checks here.
-      // XXX: If aContent is not in native anonymous subtree, checking
+      // XXX: If aElement is not in native anonymous subtree, checking
       //      independent selection must be wrong, see bug 1731005.
       if (node->IsContent() && node->AsContent()->HasIndependentSelection()) {
         return node;
       }
-      root = node;
-      node = node->GetParentNode();
+      candidateRootNode = node;
     }
-    return root;
+    return candidateRootNode;
   }
-  if (aPresContext && aPresContext->Document() &&
-      aPresContext->Document()->IsInDesignMode()) {
-    return aPresContext->Document();
-  }
-  return nullptr;
+
+  return aPresContext.Document() && aPresContext.Document()->IsInDesignMode()
+             ? aPresContext.Document()
+             : nullptr;
 }
 
 // static
@@ -2078,16 +2076,16 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase& aEditorBase,
            GetBoolName(sTextInputHandlingWidget &&
                        !sTextInputHandlingWidget->Destroyed()),
            sActiveIMEContentObserver.get(),
-           GetBoolName(sActiveIMEContentObserver
-                           ? sActiveIMEContentObserver->IsManaging(
-                                 sFocusedPresContext, sFocusedElement)
-                           : false)));
+           GetBoolName(sActiveIMEContentObserver && sFocusedPresContext &&
+                       sActiveIMEContentObserver->IsManaging(
+                           *sFocusedPresContext, sFocusedElement))));
 
   if (NS_WARN_IF(sActiveIMEContentObserver)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
             ("  CreateIMEContentObserver(), FAILED due to "
              "there is already an active IMEContentObserver"));
-    MOZ_ASSERT(sActiveIMEContentObserver->IsManaging(sFocusedPresContext,
+    MOZ_ASSERT(sFocusedPresContext);
+    MOZ_ASSERT(sActiveIMEContentObserver->IsManaging(*sFocusedPresContext,
                                                      sFocusedElement));
     return;
   }
@@ -2151,13 +2149,13 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase& aEditorBase,
 }
 
 // static
-nsresult IMEStateManager::GetFocusSelectionAndRoot(Selection** aSelection,
-                                                   nsIContent** aRootContent) {
+nsresult IMEStateManager::GetFocusSelectionAndRootElement(
+    Selection** aSelection, Element** aRootElement) {
   if (!sActiveIMEContentObserver) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   return sActiveIMEContentObserver->GetSelectionAndRoot(aSelection,
-                                                        aRootContent);
+                                                        aRootElement);
 }
 
 // static
