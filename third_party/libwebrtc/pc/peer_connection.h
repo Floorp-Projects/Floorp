@@ -167,7 +167,7 @@ class PeerConnection : public PeerConnectionInternal,
   std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> GetTransceivers()
       const override;
 
-  rtc::scoped_refptr<DataChannelInterface> CreateDataChannel(
+  RTCErrorOr<rtc::scoped_refptr<DataChannelInterface>> CreateDataChannelOrError(
       const std::string& label,
       const DataChannelInit* config) override;
   // WARNING: LEGACY. See peerconnectioninterface.h

@@ -100,8 +100,8 @@ class MockPeerConnectionInterface
               GetSctpTransport,
               (),
               (const override));
-  MOCK_METHOD(rtc::scoped_refptr<DataChannelInterface>,
-              CreateDataChannel,
+  MOCK_METHOD(RTCErrorOr<rtc::scoped_refptr<DataChannelInterface>>,
+              CreateDataChannelOrError,
               (const std::string&, const DataChannelInit*),
               (override));
   MOCK_METHOD(const SessionDescriptionInterface*,
