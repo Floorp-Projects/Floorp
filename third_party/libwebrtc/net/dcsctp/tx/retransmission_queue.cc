@@ -14,6 +14,7 @@
 #include <functional>
 #include <iterator>
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -83,17 +84,21 @@ RetransmissionQueue::RetransmissionQueue(
       send_queue_(send_queue) {}
 
 bool RetransmissionQueue::IsConsistent() const {
-  size_t actual_outstanding_bytes = absl::c_accumulate(
-      outstanding_data_, 0,
-      [&](size_t r, const std::pair<const UnwrappedTSN, TxData>& d) {
-        // Packets that have been ACKED or NACKED are not outstanding, as they
-        // are received. And packets that are marked for retransmission or
-        // abandoned are lost, and not outstanding.
-        return r + (d.second.is_outstanding()
-                        ? GetSerializedChunkSize(d.second.data())
-                        : 0);
-      });
-  return actual_outstanding_bytes == outstanding_bytes_;
+  size_t actual_outstanding_bytes = 0;
+
+  std::set<UnwrappedTSN> actual_to_be_retransmitted;
+  for (const auto& elem : outstanding_data_) {
+    if (elem.second.is_outstanding()) {
+      actual_outstanding_bytes += GetSerializedChunkSize(elem.second.data());
+    }
+
+    if (elem.second.should_be_retransmitted()) {
+      actual_to_be_retransmitted.insert(elem.first);
+    }
+  }
+
+  return actual_outstanding_bytes == outstanding_bytes_ &&
+         actual_to_be_retransmitted == to_be_retransmitted_;
 }
 
 // Returns how large a chunk will be, serialized, carrying the data
@@ -110,6 +115,8 @@ void RetransmissionQueue::RemoveAcked(UnwrappedTSN cumulative_tsn_ack,
     ack_info.acked_tsns.push_back(it->first.Wrap());
     if (it->second.is_outstanding()) {
       outstanding_bytes_ -= GetSerializedChunkSize(it->second.data());
+    } else if (it->second.should_be_retransmitted()) {
+      to_be_retransmitted_.erase(it->first);
     }
   }
 
@@ -136,6 +143,9 @@ void RetransmissionQueue::AckGapBlocks(
             iter->second.data().size();
         if (iter->second.is_outstanding()) {
           outstanding_bytes_ -= GetSerializedChunkSize(iter->second.data());
+        }
+        if (iter->second.should_be_retransmitted()) {
+          to_be_retransmitted_.erase(iter->first);
         }
         iter->second.Ack();
         ack_info.highest_tsn_acked =
@@ -184,6 +194,7 @@ void RetransmissionQueue::NackBetweenAckBlocks(
 
         if (iter->second.Nack()) {
           ack_info.has_packet_loss = true;
+          to_be_retransmitted_.insert(iter->first);
           RTC_DLOG(LS_VERBOSE) << log_prefix_ << *iter->first.Wrap()
                                << " marked for retransmission";
         }
@@ -497,6 +508,7 @@ void RetransmissionQueue::HandleT3RtxTimerExpiry() {
         outstanding_bytes_ -= GetSerializedChunkSize(item.data());
       }
       if (item.Nack(/*retransmit_now=*/true)) {
+        to_be_retransmitted_.insert(tsn);
         RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Chunk " << *tsn.Wrap()
                              << " will be retransmitted due to T3-RTX";
         ++count;
@@ -521,19 +533,27 @@ void RetransmissionQueue::HandleT3RtxTimerExpiry() {
 std::vector<std::pair<TSN, Data>>
 RetransmissionQueue::GetChunksToBeRetransmitted(size_t max_size) {
   std::vector<std::pair<TSN, Data>> result;
-  for (auto& elem : outstanding_data_) {
-    UnwrappedTSN tsn = elem.first;
-    TxData& item = elem.second;
+
+  for (auto it = to_be_retransmitted_.begin();
+       it != to_be_retransmitted_.end();) {
+    UnwrappedTSN tsn = *it;
+    auto elem = outstanding_data_.find(tsn);
+    RTC_DCHECK(elem != outstanding_data_.end());
+    TxData& item = elem->second;
+    RTC_DCHECK(item.should_be_retransmitted());
+    RTC_DCHECK(!item.is_outstanding());
+    RTC_DCHECK(!item.is_abandoned());
+    RTC_DCHECK(!item.is_acked());
 
     size_t serialized_size = GetSerializedChunkSize(item.data());
-    if (item.should_be_retransmitted() && serialized_size <= max_size) {
-      RTC_DCHECK(!item.is_outstanding());
-      RTC_DCHECK(!item.is_abandoned());
-      RTC_DCHECK(!item.is_acked());
+    if (serialized_size <= max_size) {
       item.Retransmit();
       result.emplace_back(tsn.Wrap(), item.data().Clone());
       max_size -= serialized_size;
       outstanding_bytes_ += serialized_size;
+      it = to_be_retransmitted_.erase(it);
+    } else {
+      ++it;
     }
     // No point in continuing if the packet is full.
     if (max_size <= data_chunk_header_size_) {
@@ -780,6 +800,9 @@ void RetransmissionQueue::ExpireAllFor(
         other.data().message_id == item.data().message_id) {
       RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Marking chunk " << *tsn.Wrap()
                            << " as abandoned";
+      if (other.should_be_retransmitted()) {
+        to_be_retransmitted_.erase(tsn);
+      }
       other.Abandon();
     }
   }
