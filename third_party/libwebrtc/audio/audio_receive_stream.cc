@@ -128,7 +128,7 @@ AudioReceiveStream::AudioReceiveStream(
   RTC_DCHECK(audio_state_);
   RTC_DCHECK(channel_receive_);
 
-  network_thread_checker_.Detach();
+  packet_sequence_checker_.Detach();
 
   RTC_DCHECK(packet_router);
   // Configure bandwidth estimation.
@@ -159,14 +159,14 @@ AudioReceiveStream::~AudioReceiveStream() {
 
 void AudioReceiveStream::RegisterWithTransport(
     RtpStreamReceiverControllerInterface* receiver_controller) {
-  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   RTC_DCHECK(!rtp_stream_receiver_);
   rtp_stream_receiver_ = receiver_controller->CreateReceiver(
       config_.rtp.remote_ssrc, channel_receive_.get());
 }
 
 void AudioReceiveStream::UnregisterFromTransport() {
-  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   rtp_stream_receiver_.reset();
 }
 
@@ -397,7 +397,7 @@ bool AudioReceiveStream::SetMinimumPlayoutDelay(int delay_ms) {
 }
 
 void AudioReceiveStream::AssociateSendStream(AudioSendStream* send_stream) {
-  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   channel_receive_->SetAssociatedSendChannel(
       send_stream ? send_stream->GetChannel() : nullptr);
   associated_send_stream_ = send_stream;
@@ -418,7 +418,7 @@ const webrtc::AudioReceiveStream::Config& AudioReceiveStream::config() const {
 
 const AudioSendStream* AudioReceiveStream::GetAssociatedSendStreamForTesting()
     const {
-  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   return associated_send_stream_;
 }
 

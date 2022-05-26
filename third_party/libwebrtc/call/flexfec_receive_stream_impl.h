@@ -62,7 +62,7 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
   const Config& GetConfig() const override;
 
  private:
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker network_thread_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
 
   // Config.
   const Config config_;
@@ -76,7 +76,7 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
   ProcessThread* const process_thread_;
 
   std::unique_ptr<RtpStreamReceiverInterface> rtp_stream_receiver_
-      RTC_GUARDED_BY(network_thread_checker_);
+      RTC_GUARDED_BY(packet_sequence_checker_);
 };
 
 }  // namespace webrtc

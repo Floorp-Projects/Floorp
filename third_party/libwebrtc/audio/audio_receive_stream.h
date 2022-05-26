@@ -125,18 +125,18 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
   // thread, but still serves as a mechanism of grouping together concepts
   // that belong to the network thread. Once the packets are fully delivered
   // on the network thread, this comment will be deleted.
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker network_thread_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
   webrtc::AudioReceiveStream::Config config_;
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
   SourceTracker source_tracker_;
   const std::unique_ptr<voe::ChannelReceiveInterface> channel_receive_;
   AudioSendStream* associated_send_stream_
-      RTC_GUARDED_BY(network_thread_checker_) = nullptr;
+      RTC_GUARDED_BY(packet_sequence_checker_) = nullptr;
 
   bool playing_ RTC_GUARDED_BY(worker_thread_checker_) = false;
 
   std::unique_ptr<RtpStreamReceiverInterface> rtp_stream_receiver_
-      RTC_GUARDED_BY(network_thread_checker_);
+      RTC_GUARDED_BY(packet_sequence_checker_);
 };
 }  // namespace internal
 }  // namespace webrtc

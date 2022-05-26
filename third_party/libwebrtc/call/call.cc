@@ -1088,10 +1088,13 @@ webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
   // and set it up asynchronously on the network thread (the registration and
   // |video_receiver_controller_| need to live on the network thread).
   VideoReceiveStream2* receive_stream = new VideoReceiveStream2(
-      task_queue_factory_, worker_thread_, &video_receiver_controller_,
-      num_cpu_cores_, transport_send_->packet_router(),
-      std::move(configuration), module_process_thread_->process_thread(),
-      call_stats_.get(), clock_, new VCMTiming(clock_));
+      task_queue_factory_, this, num_cpu_cores_,
+      transport_send_->packet_router(), std::move(configuration),
+      module_process_thread_->process_thread(), call_stats_.get(), clock_,
+      new VCMTiming(clock_));
+  // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
+  // thread.
+  receive_stream->RegisterWithTransport(&video_receiver_controller_);
 
   const webrtc::VideoReceiveStream::Config& config = receive_stream->config();
   if (config.rtp.rtx_ssrc) {
@@ -1119,6 +1122,9 @@ void Call::DestroyVideoReceiveStream(
   RTC_DCHECK(receive_stream != nullptr);
   VideoReceiveStream2* receive_stream_impl =
       static_cast<VideoReceiveStream2*>(receive_stream);
+  // TODO(bugs.webrtc.org/11993): Unregister on the network thread.
+  receive_stream_impl->UnregisterFromTransport();
+
   const VideoReceiveStream::Config& config = receive_stream_impl->config();
 
   // Remove all ssrcs pointing to a receive stream. As RTX retransmits on a
