@@ -71,6 +71,7 @@ def install_moz_phab(command_context, force=False):
         or sys.platform.startswith("openbsd")
         or sys.platform.startswith("dragonfly")
         or sys.platform.startswith("freebsd")
+        or sys.platform.startswith("netbsd")
     ):
         # On all Linux and BSD distros we consider doing a user installation.
         platform_prefers_user_install = True

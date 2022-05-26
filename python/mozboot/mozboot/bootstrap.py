@@ -211,7 +211,7 @@ class Bootstrapper(object):
             cls = OpenBSDBootstrapper
             args["version"] = platform.uname()[2]
 
-        elif sys.platform.startswith("dragonfly") or sys.platform.startswith("freebsd"):
+        elif sys.platform.startswith(("dragonfly", "freebsd", "netbsd")):
             cls = FreeBSDBootstrapper
             args["version"] = platform.release()
             args["flavor"] = platform.system()
@@ -221,7 +221,6 @@ class Bootstrapper(object):
                 cls = MozillaBuildBootstrapper
             else:
                 cls = WindowsBootstrapper
-
         if cls is None:
             raise NotImplementedError(
                 "Bootstrap support is not yet available " "for your OS."
