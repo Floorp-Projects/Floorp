@@ -32,6 +32,7 @@
     *   [PeerConnection](/pc/g3doc/peer_connection.md)
     *   Desktop capture
     *   Stats
+    *   [Logging](/logging/g3doc/rtc_event_log.md)
 *   Testing
     *   Media Quality and performance
         *   [PeerConnection Framework](/test/pc/e2e/g3doc/index.md)
