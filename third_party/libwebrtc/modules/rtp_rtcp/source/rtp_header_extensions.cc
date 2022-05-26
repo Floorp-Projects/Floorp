@@ -187,6 +187,7 @@ bool AudioLevel::Write(rtc::ArrayView<uint8_t> data,
   return true;
 }
 
+#if !defined(WEBRTC_MOZILLA_BUILD)
 // An RTP Header Extension for Mixer-to-Client Audio Level Indication
 //
 // https://tools.ietf.org/html/rfc6465
@@ -240,6 +241,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
   }
   return true;
 }
+#endif
 
 // From RFC 5450: Transmission Time Offsets in RTP Streams.
 //
@@ -454,6 +456,7 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
   return true;
 }
 
+#if defined(WEBRTC_MOZILLA_BUILD)
 // CSRCAudioLevel
 //  Sample Audio Level Encoding Using the One-Byte Header Format
 //  Note that the range of len is 1 to 15 which is encoded as 0 to 14
@@ -492,6 +495,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
   // This extension if used must have at least one audio level
   return csrcAudioLevels.numAudioLevels;
 }
+#endif
 
 // Video Content Type.
 //

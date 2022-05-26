@@ -78,6 +78,7 @@ class AudioLevel {
                     uint8_t audio_level);
 };
 
+#if !defined(WEBRTC_MOZILLA_BUILD)
 class CsrcAudioLevel {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
@@ -91,6 +92,7 @@ class CsrcAudioLevel {
   static bool Write(rtc::ArrayView<uint8_t> data,
                     rtc::ArrayView<const uint8_t> csrc_audio_levels);
 };
+#endif
 
 class TransmissionOffset {
  public:
@@ -270,6 +272,7 @@ class ColorSpaceExtension {
   static size_t WriteLuminance(uint8_t* data, float f, int denominator);
 };
 
+#if defined(WEBRTC_MOZILLA_BUILD)
 class CsrcAudioLevel {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
@@ -281,6 +284,7 @@ class CsrcAudioLevel {
   static size_t ValueSize(const CsrcAudioLevelList& csrcAudioLevels);
   static bool Write(rtc::ArrayView<uint8_t> data, const CsrcAudioLevelList& csrcAudioLevels);
 };
+#endif
 
 // Base extension class for RTP header extensions which are strings.
 // Subclasses must defined kId and kUri static constexpr members.
