@@ -579,6 +579,8 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
         if (nsIScrollableFrame* scrollFrame =
                 presShell->GetRootScrollFrameAsScrollable()) {
           rootRect = scrollFrame->GetScrollPortRect();
+        } else if (rootFrame) {
+          rootRect = rootFrame->GetRectRelativeToSelf();
         }
       }
     }
