@@ -202,6 +202,7 @@ def doctor(command_context, fix=False, verbose=False):
     return run_doctor(
         topsrcdir=command_context.topsrcdir,
         topobjdir=command_context.topobjdir,
+        configure_args=command_context.mozconfig["configure_args"],
         fix=fix,
         verbose=verbose,
     )

@@ -52,6 +52,7 @@
 #  include "chrome/common/mach_ipc_mac.h"
 #  include "gfxPlatformMac.h"
 #endif
+#include "nsX11ErrorHandler.h"
 #include "nsGDKErrorHandler.h"
 #include "base/at_exit.h"
 #include "base/message_loop.h"
@@ -962,9 +963,15 @@ bool XRE_ShutdownTestShell() {
 void XRE_InstallX11ErrorHandler() {
 #  ifdef MOZ_WIDGET_GTK
   InstallGdkErrorHandler();
-#  else
-  InstallX11ErrorHandler();
 #  endif
+
+  // Ensure our X11 error handler overrides the default GDK error handler such
+  // that errors are ignored by default. GDK will install its own error handler
+  // temporarily when pushing error traps internally as needed. This avoids us
+  // otherwise having to frequently override the error handler merely to trap
+  // errors in multiple places that would otherwise contend with GDK or other
+  // libraries that might also override the handler.
+  InstallX11ErrorHandler();
 }
 #endif
 

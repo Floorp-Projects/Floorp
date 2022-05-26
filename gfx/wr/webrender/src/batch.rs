@@ -2435,7 +2435,7 @@ impl BatchBuilder {
                     let mut gpu_blocks = Vec::<GpuBlockData>::with_capacity(3 + max_tiles_per_header * 2);
                     for chunk in image_instance.visible_tiles.chunks(max_tiles_per_header) {
                         gpu_blocks.clear();
-                        gpu_blocks.push(PremultipliedColorF::WHITE.into()); //color
+                        gpu_blocks.push(image_data.color.premultiplied().into()); //color
                         gpu_blocks.push(PremultipliedColorF::WHITE.into()); //bg color
                         gpu_blocks.push([-1.0, 0.0, 0.0, 0.0].into()); //stretch size
                         // negative first value makes the shader code ignore it and use the local size instead

@@ -13,7 +13,8 @@
         href="chrome://global/skin/in-content/common.css">
   <link rel="stylesheet" type="text/css"
         href="chrome://browser/content/colorwaycloset.css">
-  <link rel="localization" href="browser/colorways.ftl"/>
+  <link rel="localization" href="branding/brand.ftl">
+  <link rel="localization" href="preview/colorwaycloset.ftl">
   <script src="chrome://browser/content/colorwaycloset.js" defer="async"></script>
   <script type="module" src="chrome://browser/content/ColorwayClosetSelector.js"></script>
 </head>
@@ -28,6 +29,16 @@
       <div id="colorway-details">
         <h2 id="colorway-name"></h2>
         <p id="colorway-description"></p>
+      </div>
+    </section>
+    <section id="use-fx-home-controls" hidden>
+      <div class="reset-prompt">
+        <span data-l10n-id="colorway-fx-home-link"></span>
+        <button data-l10n-id="colorway-fx-home-apply-button"></button>
+      </div>
+      <div class="success-prompt">
+        <span data-l10n-id="colorway-fx-home-link-success"></span>
+        <button data-l10n-id="colorway-fx-home-undo-button"></button>
       </div>
     </section>
   </main>

@@ -14206,8 +14206,7 @@ void Document::TryCancelDialog() {
   // Check if the document is blocked by modal dialog
   for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
     nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
-    if (HTMLDialogElement* dialog =
-            HTMLDialogElement::FromNodeOrNull(element)) {
+    if (auto* dialog = HTMLDialogElement::FromNodeOrNull(element)) {
       dialog->QueueCancelDialog();
       break;
     }
@@ -14532,24 +14531,22 @@ static void UpdateViewportScrollbarOverrideForFullscreen(Document* aDoc) {
   }
 }
 
-static void NotifyFullScreenChangedForMediaElement(Element* aElement,
-                                                   bool aIsInFullScreen) {
+static void NotifyFullScreenChangedForMediaElement(Element& aElement) {
   // When a media element enters the fullscreen, we would like to notify that
   // to the media controller in order to update its status.
-  if (!aElement->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video)) {
-    return;
+  if (auto* mediaElem = HTMLMediaElement::FromNode(aElement)) {
+    mediaElem->NotifyFullScreenChanged();
   }
-  HTMLMediaElement* mediaElem = HTMLMediaElement::FromNodeOrNull(aElement);
-  mediaElem->NotifyFullScreenChanged();
 }
 
-static void ClearFullscreenStateOnElement(Element* aElement) {
+/* static */
+void Document::ClearFullscreenStateOnElement(Element& aElement) {
   // Remove styles from existing top element.
-  EventStateManager::SetFullscreenState(aElement, false);
-  NotifyFullScreenChangedForMediaElement(aElement, false);
+  aElement.RemoveStates(NS_EVENT_STATE_FULLSCREEN);
+  NotifyFullScreenChangedForMediaElement(aElement);
   // Reset iframe fullscreen flag.
-  if (aElement->IsHTMLElement(nsGkAtoms::iframe)) {
-    static_cast<HTMLIFrameElement*>(aElement)->SetFullscreenFlag(false);
+  if (auto* iframe = HTMLIFrameElement::FromNode(aElement)) {
+    iframe->SetFullscreenFlag(false);
   }
 }
 
@@ -14569,7 +14566,7 @@ void Document::CleanupFullscreenState() {
     }
 
     if (element->State().HasState(NS_EVENT_STATE_FULLSCREEN)) {
-      ClearFullscreenStateOnElement(element);
+      ClearFullscreenStateOnElement(*element);
       return true;
     }
     return false;
@@ -14594,29 +14591,30 @@ void Document::UnsetFullscreenElement() {
   });
 
   MOZ_ASSERT(removedElement->State().HasState(NS_EVENT_STATE_FULLSCREEN));
-  ClearFullscreenStateOnElement(removedElement);
+  ClearFullscreenStateOnElement(*removedElement);
   UpdateViewportScrollbarOverrideForFullscreen(this);
 }
 
-void Document::SetFullscreenElement(Element* aElement) {
+void Document::SetFullscreenElement(Element& aElement) {
   TopLayerPush(aElement);
-  EventStateManager::SetFullscreenState(aElement, true);
-  NotifyFullScreenChangedForMediaElement(aElement, true);
+  aElement.AddStates(NS_EVENT_STATE_FULLSCREEN);
+  NotifyFullScreenChangedForMediaElement(aElement);
   UpdateViewportScrollbarOverrideForFullscreen(this);
 }
 
-void Document::TopLayerPush(Element* aElement) {
-  NS_ASSERTION(aElement, "Must pass non-null to TopLayerPush()");
+void Document::TopLayerPush(Element& aElement) {
   auto predictFunc = [&aElement](Element* element) {
-    return element == aElement;
+    return element == &aElement;
   };
   TopLayerPop(predictFunc);
 
-  mTopLayer.AppendElement(do_GetWeakReference(aElement));
-  NS_ASSERTION(GetTopLayerTop() == aElement, "Should match");
+  mTopLayer.AppendElement(do_GetWeakReference(&aElement));
+  NS_ASSERTION(GetTopLayerTop() == &aElement, "Should match");
 }
 
-void Document::SetBlockedByModalDialog(HTMLDialogElement& aDialogElement) {
+void Document::AddModalDialog(HTMLDialogElement& aDialogElement) {
+  TopLayerPush(aDialogElement);
+
   Element* root = GetRootElement();
   MOZ_RELEASE_ASSERT(root, "dialog in document without root?");
 
@@ -14626,7 +14624,8 @@ void Document::SetBlockedByModalDialog(HTMLDialogElement& aDialogElement) {
   // NS_EVENT_STATE_TOPMOST_MODAL_DIALOG to remove the inertness
   // explicitly.
   root->AddStates(NS_EVENT_STATE_MOZINERT);
-  aDialogElement.AddStates(NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
+  aDialogElement.AddStates(NS_EVENT_STATE_MODAL_DIALOG |
+                           NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
 
   // It's possible that there's another modal dialog has opened
   // previously which doesn't have the inertness (because we've
@@ -14646,8 +14645,16 @@ void Document::SetBlockedByModalDialog(HTMLDialogElement& aDialogElement) {
   }
 }
 
-void Document::UnsetBlockedByModalDialog(HTMLDialogElement& aDialogElement) {
-  aDialogElement.RemoveStates(NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
+void Document::RemoveModalDialog(HTMLDialogElement& aDialogElement) {
+  aDialogElement.RemoveStates(NS_EVENT_STATE_MODAL_DIALOG |
+                              NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
+
+  auto predicate = [&aDialogElement](Element* element) -> bool {
+    return element == &aDialogElement;
+  };
+
+  DebugOnly<Element*> removedElement = TopLayerPop(predicate);
+  MOZ_ASSERT(removedElement == &aDialogElement);
 
   // The document could still be blocked by another modal dialog.
   // We need to remove the inertness from this modal dialog.
@@ -14656,9 +14663,8 @@ void Document::UnsetBlockedByModalDialog(HTMLDialogElement& aDialogElement) {
     if (auto* dialog = HTMLDialogElement::FromNodeOrNull(element)) {
       if (dialog != &aDialogElement) {
         dialog->AddStates(NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
-        // Return here because we want to keep the inertness for the
-        // root element as the document is still blocked by a modal
-        // dialog
+        // Return early here because we want to keep the inertness for the root
+        // element as the document is still blocked by a modal dialog.
         return;
       }
     }
@@ -14670,7 +14676,7 @@ void Document::UnsetBlockedByModalDialog(HTMLDialogElement& aDialogElement) {
   }
 }
 
-Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc) {
+Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicate) {
   if (mTopLayer.IsEmpty()) {
     return nullptr;
   }
@@ -14681,7 +14687,7 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc) {
   Element* removedElement = nullptr;
   for (auto i : Reversed(IntegerRange(mTopLayer.Length()))) {
     nsCOMPtr<Element> element(do_QueryReferent(mTopLayer[i]));
-    if (element && aPredicateFunc(element)) {
+    if (element && aPredicate(element)) {
       removedElement = element;
       mTopLayer.RemoveElementAt(i);
       break;
@@ -15182,7 +15188,7 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
   // element, and the fullscreen-ancestor styles on ancestors of the element
   // in this document.
   Element* elem = aRequest->Element();
-  SetFullscreenElement(elem);
+  SetFullscreenElement(*elem);
   // Set the iframe fullscreen flag.
   if (auto* iframe = HTMLIFrameElement::FromNode(elem)) {
     iframe->SetFullscreenFlag(true);
@@ -15229,7 +15235,7 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
     }
 
     Document* parent = child->GetInProcessParentDocument();
-    parent->SetFullscreenElement(element);
+    parent->SetFullscreenElement(*element);
     changed.AppendElement(parent);
     child = parent;
   }

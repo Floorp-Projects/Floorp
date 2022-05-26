@@ -445,6 +445,107 @@ add_task(async () => {
 
 add_task(async () => {
   // Set the default values for an OS that supports swipe to nav, except for
+  // whole-page-pixel-size which varies by OS, we vary it in different tests
+  // in this file.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
+      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["widget.disable-swipe-tracker", false],
+      ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
+      // Set the velocity-contribution to 1 (default 0.05f) so velocity is a
+      // large contribution to the success value in SwipeTracker.cpp so it
+      // pushes us into success territory without going into success territory
+      // purely from th deltas.
+      ["widget.swipe.success-velocity-contribution", 2.0],
+      ["widget.swipe.whole-page-pixel-size", 550.0],
+    ],
+  });
+
+  async function runTest() {
+    const firstPage = "about:about";
+    const secondPage = "about:mozilla";
+    const tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      firstPage,
+      true /* waitForLoad */
+    );
+
+    BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
+
+    // Make sure we can go back to the previous page.
+    ok(gBrowser.webNavigation.canGoBack);
+    // and we cannot go forward to the next page.
+    ok(!gBrowser.webNavigation.canGoForward);
+
+    let wheelEventCount = 0;
+    tab.linkedBrowser.addEventListener("wheel", () => {
+      wheelEventCount++;
+    });
+
+    let startLoadingPromise = BrowserTestUtils.browserStarted(
+      tab.linkedBrowser,
+      firstPage
+    );
+    let stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+      tab.linkedBrowser,
+      firstPage
+    );
+    let startTime = performance.now();
+    await panLeftToRight(tab.linkedBrowser, 100, 100, 0.2);
+    let endTime = performance.now();
+
+    // If sending the events took too long then we might not have been able
+    // to generate enough velocity.
+    // The value 230 was picked based on try runs, in particular test verify
+    // runs on mac were the long pole, and when we get times near this we can
+    // still achieve the required velocity.
+    if (endTime - startTime > 230) {
+      BrowserTestUtils.removeTab(tab);
+      return false;
+    }
+
+    // NOTE: We only get a wheel event for the beginPhase, rest of events have
+    // been captured by the swipe gesture module.
+    is(wheelEventCount, 1, "Received a wheel event");
+
+    // The element.style opacity will be 0 because we set it to 0 on successful navigation, however
+    // we have a tranisition on it so the computed style opacity will still be 1 because the transition hasn't started yet.
+    let computedOpacity = window
+      .getComputedStyle(gHistorySwipeAnimation._prevBox)
+      .getPropertyValue("opacity");
+    ok(computedOpacity == 1, "computed opacity of prevbox is 1");
+    let opacity = gHistorySwipeAnimation._prevBox.style.opacity;
+    ok(opacity == 0, "element.style opacity of prevbox 0");
+
+    // Make sure the gesture triggered going back to the previous page.
+    await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
+
+    ok(gBrowser.webNavigation.canGoForward);
+
+    BrowserTestUtils.removeTab(tab);
+
+    return true;
+  }
+
+  let numTries = 15;
+  while (numTries > 0) {
+    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(resolve => requestIdleCallback(resolve));
+    await new Promise(r => requestAnimationFrame(r));
+
+    // runTest return value indicates if test was able to run to the end.
+    if (await runTest()) {
+      break;
+    }
+    numTries--;
+  }
+  ok(numTries > 0, "never ran the test");
+});
+
+add_task(async () => {
+  // Set the default values for an OS that supports swipe to nav, except for
   // whole-page-pixel-size which varies by OS, we vary it in differente tests
   // in this file.
   await SpecialPowers.pushPrefEnv({

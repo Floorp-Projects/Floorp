@@ -157,7 +157,6 @@ _OPT\.OBJ/
 ^tools/browsertime/node_modules/
 ^tools/lint/eslint/eslint-plugin-mozilla/node_modules/
 ^browser/components/newtab/node_modules/
-^browser/components/storybook/node_modules/
 
 # Ignore talos virtualenv and tp5n files.
 # The tp5n set is supposed to be decompressed at
@@ -243,3 +242,7 @@ toolkit/components/certviewer/content/package-lock.json
 
 # Ignore mypy files
 \.mypy_cache/
+
+# Ignore Storybook generated files
+^browser/components/storybook/node_modules/
+^browser/components/storybook/storybook-static/

@@ -6547,9 +6547,9 @@ bool MIonToWasmCall::isConsistentFloat32Use(MUse* use) const {
 
 MCreateInlinedArgumentsObject* MCreateInlinedArgumentsObject::New(
     TempAllocator& alloc, MDefinition* callObj, MDefinition* callee,
-    MDefinitionVector& args) {
+    MDefinitionVector& args, ArgumentsObject* templateObj) {
   MCreateInlinedArgumentsObject* ins =
-      new (alloc) MCreateInlinedArgumentsObject();
+      new (alloc) MCreateInlinedArgumentsObject(templateObj);
 
   uint32_t argc = args.length();
   MOZ_ASSERT(argc <= ArgumentsObject::MaxInlinedArgs);

@@ -9,25 +9,14 @@
 #include "mozilla/dom/Pose.h"
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(XRRigidTransform)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XRRigidTransform)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent, mPosition, mOrientation, mInverse)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mMatrixArray = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XRRigidTransform)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent, mPosition, mOrientation, mInverse)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(XRRigidTransform)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mMatrixArray)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(XRRigidTransform,
+                                                      (mParent, mPosition,
+                                                       mOrientation, mInverse),
+                                                      (mMatrixArray))
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRRigidTransform, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRRigidTransform, Release)

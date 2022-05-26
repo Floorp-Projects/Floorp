@@ -12,6 +12,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/PushUtil.h"
 #include "nsIGlobalObject.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla::dom {
 
@@ -30,19 +31,9 @@ PushSubscriptionOptions::~PushSubscriptionOptions() {
   mozilla::DropJSObjects(this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(PushSubscriptionOptions)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PushSubscriptionOptions)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mAppServerKey = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PushSubscriptionOptions)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(PushSubscriptionOptions)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAppServerKey)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(PushSubscriptionOptions,
+                                                      (mGlobal),
+                                                      (mAppServerKey))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PushSubscriptionOptions)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PushSubscriptionOptions)

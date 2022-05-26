@@ -2376,6 +2376,7 @@ package org.mozilla.geckoview {
   @AnyThread public class WebRequestError extends Exception {
     ctor public WebRequestError(int, int);
     ctor public WebRequestError(int, int, X509Certificate);
+    field public static final int ERROR_BAD_HSTS_CERT = 179;
     field public static final int ERROR_CATEGORY_CONTENT = 4;
     field public static final int ERROR_CATEGORY_NETWORK = 3;
     field public static final int ERROR_CATEGORY_PROXY = 6;
