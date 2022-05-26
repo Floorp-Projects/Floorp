@@ -205,12 +205,10 @@ void VideoSendStream::UpdateActiveSimulcastLayers(
   RTC_LOG(LS_INFO) << "UpdateActiveSimulcastLayers: "
                    << active_layers_string.str();
 
-  rtp_transport_queue_->PostTask([this, active_layers] {
-    send_stream_.UpdateActiveSimulcastLayers(active_layers);
-    thread_sync_event_.Set();
-  });
-
-  thread_sync_event_.Wait(rtc::Event::kForever);
+  rtp_transport_queue_->PostTask(
+      ToQueuedTask(transport_queue_safety_, [this, active_layers] {
+        send_stream_.UpdateActiveSimulcastLayers(active_layers);
+      }));
 }
 
 void VideoSendStream::Start() {
@@ -221,14 +219,16 @@ void VideoSendStream::Start() {
 
   running_ = true;
 
-  rtp_transport_queue_->PostTask([this] {
+  rtp_transport_queue_->PostTask(ToQueuedTask([this] {
+    transport_queue_safety_->SetAlive();
     send_stream_.Start();
     thread_sync_event_.Set();
-  });
+  }));
 
   // It is expected that after VideoSendStream::Start has been called, incoming
   // frames are not dropped in VideoStreamEncoder. To ensure this, Start has to
   // be synchronized.
+  // TODO(tommi): ^^^ Validate if this still holds.
   thread_sync_event_.Wait(rtc::Event::kForever);
 }
 
@@ -238,7 +238,10 @@ void VideoSendStream::Stop() {
     return;
   RTC_DLOG(LS_INFO) << "VideoSendStream::Stop";
   running_ = false;
-  send_stream_.Stop();  // Stop() will proceed asynchronously.
+  rtp_transport_queue_->PostTask(ToQueuedTask(transport_queue_safety_, [this] {
+    transport_queue_safety_->SetNotAlive();
+    send_stream_.Stop();
+  }));
 }
 
 void VideoSendStream::AddAdaptationResource(
@@ -290,6 +293,7 @@ void VideoSendStream::StopPermanentlyAndGetRtpStates(
   // or not. This will unregister callbacks before destruction.
   // See `VideoSendStreamImpl::StopVideoSendStream` for more.
   rtp_transport_queue_->PostTask([this, rtp_state_map, payload_state_map]() {
+    transport_queue_safety_->SetNotAlive();
     send_stream_.Stop();
     *rtp_state_map = send_stream_.GetRtpStates();
     *payload_state_map = send_stream_.GetRtpPayloadStates();
