@@ -251,12 +251,13 @@ class nsFocusManager final : public nsIFocusManager,
    * Called when a document in a window has been hidden or otherwise can no
    * longer accept focus.
    */
-  void WindowHidden(mozIDOMWindowProxy* aWindow, uint64_t aActionId);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void WindowHidden(mozIDOMWindowProxy* aWindow,
+                                                uint64_t aActionId);
 
   /**
    * Fire any events that have been delayed due to synchronized actions.
    */
-  void FireDelayedEvents(Document* aDocument);
+  MOZ_CAN_RUN_SCRIPT void FireDelayedEvents(Document* aDocument);
 
   void WasNuked(nsPIDOMWindowOuter* aWindow);
 
@@ -480,7 +481,7 @@ class nsFocusManager final : public nsIFocusManager,
    *
    * aWindowRaised should only be true if called from WindowRaised.
    */
-  void SendFocusOrBlurEvent(
+  MOZ_CAN_RUN_SCRIPT void SendFocusOrBlurEvent(
       mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
       Document* aDocument, nsISupports* aTarget, bool aWindowRaised,
       bool aIsRefocus = false,
@@ -493,7 +494,7 @@ class nsFocusManager final : public nsIFocusManager,
    *
    * aWindowRaised should only be true if called from WindowRaised.
    */
-  void FireFocusOrBlurEvent(
+  MOZ_CAN_RUN_SCRIPT void FireFocusOrBlurEvent(
       mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
       nsISupports* aTarget, bool aWindowRaised, bool aIsRefocus = false,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
@@ -515,7 +516,7 @@ class nsFocusManager final : public nsIFocusManager,
    *  aRelatedTarget is the content related to the event (the object
    *  losing focus for focusin, the object getting focus for focusout).
    */
-  void FireFocusInOrOutEvent(
+  MOZ_CAN_RUN_SCRIPT void FireFocusInOrOutEvent(
       mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
       nsISupports* aTarget, nsPIDOMWindowOuter* aCurrentFocusedWindow,
       nsIContent* aCurrentFocusedContent,
