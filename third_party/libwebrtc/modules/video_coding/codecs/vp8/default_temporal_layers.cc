@@ -265,7 +265,8 @@ DefaultTemporalLayers::DefaultTemporalLayers(int number_of_temporal_layers)
       temporal_ids_(GetTemporalIds(num_layers_)),
       temporal_pattern_(GetDependencyInfo(num_layers_)),
       is_static_buffer_(DetermineStaticBuffers(temporal_pattern_)),
-      pattern_idx_(kUninitializedPatternIndex) {
+      pattern_idx_(kUninitializedPatternIndex),
+      new_bitrates_bps_(std::vector<uint32_t>(num_layers_, 0u)) {
   RTC_CHECK_GE(kMaxTemporalStreams, number_of_temporal_layers);
   RTC_CHECK_GE(number_of_temporal_layers, 0);
   RTC_CHECK_LE(number_of_temporal_layers, 4);
