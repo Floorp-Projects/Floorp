@@ -2020,7 +2020,6 @@ void nsWindow::Move(double aX, double aY) {
 
     ResizeDirectManipulationViewport();
   }
-  NotifyRollupGeometryChange();
 }
 
 // Resize this component
@@ -2089,8 +2088,6 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
   }
 
   if (aRepaint) Invalidate();
-
-  NotifyRollupGeometryChange();
 }
 
 // Resize this component
@@ -2178,8 +2175,6 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
   }
 
   if (aRepaint) Invalidate();
-
-  NotifyRollupGeometryChange();
 }
 
 mozilla::Maybe<bool> nsWindow::IsResizingNativeWidget() {

@@ -593,14 +593,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   bool HasRemoteContent() const { return mHasRemoteContent; }
 
-  void NotifyRollupGeometryChange() {
-    // XULPopupManager isn't interested in this notification, so only
-    // send it if gRollupListener is set.
-    if (gRollupListener) {
-      gRollupListener->NotifyGeometryChange();
-    }
-  }
-
   /**
    * Apply the current size constraints to the given size.
    *
