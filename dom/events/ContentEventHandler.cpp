@@ -3029,9 +3029,11 @@ nsresult ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent) {
   // XXX why do we need to get them from ISM? This method should work fine
   //     without ISM.
   RefPtr<Selection> sel;
-  nsresult rv = IMEStateManager::GetFocusSelectionAndRoot(
-      getter_AddRefs(sel), getter_AddRefs(mRootContent));
+  RefPtr<Element> rootElement;
+  nsresult rv = IMEStateManager::GetFocusSelectionAndRootElement(
+      getter_AddRefs(sel), getter_AddRefs(rootElement));
   mSelection = sel;
+  mRootContent = rootElement;
   if (rv != NS_ERROR_NOT_AVAILABLE) {
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
