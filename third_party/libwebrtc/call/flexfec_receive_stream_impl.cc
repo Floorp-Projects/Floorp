@@ -154,7 +154,7 @@ FlexfecReceiveStreamImpl::FlexfecReceiveStreamImpl(
       process_thread_(process_thread) {
   RTC_LOG(LS_INFO) << "FlexfecReceiveStreamImpl: " << config_.ToString();
 
-  network_thread_checker_.Detach();
+  packet_sequence_checker_.Detach();
 
   // RTCP reporting.
   rtp_rtcp_->SetRTCPStatus(config_.rtcp_mode);
@@ -168,7 +168,7 @@ FlexfecReceiveStreamImpl::~FlexfecReceiveStreamImpl() {
 
 void FlexfecReceiveStreamImpl::RegisterWithTransport(
     RtpStreamReceiverControllerInterface* receiver_controller) {
-  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   RTC_DCHECK(!rtp_stream_receiver_);
 
   if (!receiver_)
@@ -183,7 +183,7 @@ void FlexfecReceiveStreamImpl::RegisterWithTransport(
 }
 
 void FlexfecReceiveStreamImpl::UnregisterFromTransport() {
-  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   rtp_stream_receiver_.reset();
 }
 

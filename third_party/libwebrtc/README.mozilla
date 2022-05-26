@@ -4038,3 +4038,5 @@ libwebrtc updated from /home/mfroman/git-checkouts/trial-webrtc-builds/moz-libwe
 libwebrtc updated from /home/mfroman/git-checkouts/trial-webrtc-builds/moz-libwebrtc-checkout/src commit mjfdev on 2022-05-26T18:01:31.005369.
 # python3 vendor-libwebrtc.py --from-local /home/mfroman/git-checkouts/trial-webrtc-builds/moz-libwebrtc-checkout/src --commit mjfdev libwebrtc
 libwebrtc updated from /home/mfroman/git-checkouts/trial-webrtc-builds/moz-libwebrtc-checkout/src commit mjfdev on 2022-05-26T18:02:13.331293.
+# python3 vendor-libwebrtc.py --from-local /home/mfroman/git-checkouts/trial-webrtc-builds/moz-libwebrtc-checkout/src --commit mjfdev libwebrtc
+libwebrtc updated from /home/mfroman/git-checkouts/trial-webrtc-builds/moz-libwebrtc-checkout/src commit mjfdev on 2022-05-26T18:04:35.203517.
