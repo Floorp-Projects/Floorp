@@ -182,7 +182,7 @@ public class WebNotification implements Parcelable {
     if (imageUrl.length() < IMAGE_URL_LENGTH_MAX) {
       dest.writeString(imageUrl);
     } else {
-      dest.writeString(null);
+      dest.writeString("");
     }
     dest.writeString(textDirection);
     dest.writeString(lang);

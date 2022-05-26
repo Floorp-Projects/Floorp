@@ -28,9 +28,7 @@
     border-radius: 4px;
     margin-inline-end: 8px;
     background-color: #ECECEE;
-    &:-moz-broken {
-      display: none;
-    }
+    flex-shrink: 0;
   }
 
   .stp_article_list_header {

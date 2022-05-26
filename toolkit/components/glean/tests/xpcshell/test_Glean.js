@@ -13,7 +13,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-add_task(
+add_setup(
   /* on Android FOG is set up through head.js */
   { skip_if: () => AppConstants.platform == "android" },
   function test_setup() {
