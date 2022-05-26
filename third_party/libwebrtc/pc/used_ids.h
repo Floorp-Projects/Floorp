@@ -108,7 +108,7 @@ class UsedPayloadTypes : public UsedIds<Codec> {
 
  private:
   static const int kFirstDynamicPayloadTypeLowerRange = 35;
-  static const int kLastDynamicPayloadTypeLowerRange = 65;
+  static const int kLastDynamicPayloadTypeLowerRange = 63;
 
   static const int kFirstDynamicPayloadTypeUpperRange = 96;
   static const int kLastDynamicPayloadTypeUpperRange = 127;

@@ -136,7 +136,7 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
   // Due to interoperability issues with old Chrome/WebRTC versions only use
   // the lower range for new codecs.
   static const int kFirstDynamicPayloadTypeLowerRange = 35;
-  static const int kLastDynamicPayloadTypeLowerRange = 65;
+  static const int kLastDynamicPayloadTypeLowerRange = 63;
 
   static const int kFirstDynamicPayloadTypeUpperRange = 96;
   static const int kLastDynamicPayloadTypeUpperRange = 127;
@@ -187,7 +187,7 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
       // TODO(https://bugs.chromium.org/p/webrtc/issues/detail?id=12248):
       // return an error.
       RTC_LOG(LS_ERROR)
-          << "Out of dynamic payload types [35,65], skipping the rest.";
+          << "Out of dynamic payload types [35,63], skipping the rest.";
       break;
     }
 
@@ -213,7 +213,7 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
         // TODO(https://bugs.chromium.org/p/webrtc/issues/detail?id=12248):
         // return an error.
         RTC_LOG(LS_ERROR)
-            << "Out of dynamic payload types [35,65], skipping rtx.";
+            << "Out of dynamic payload types [35,63], skipping rtx.";
         break;
       }
     }
