@@ -272,10 +272,11 @@ class BaseChannel : public ChannelInterface,
                                   webrtc::SdpType type,
                                   std::string* error_desc)
       RTC_RUN_ON(worker_thread()) = 0;
-  // Return a list of RTP header extensions with the non-encrypted extensions
-  // removed depending on the current crypto_options_ and only if both the
-  // non-encrypted and encrypted extension is present for the same URI.
-  RtpHeaderExtensions GetFilteredRtpHeaderExtensions(
+
+  // Returns a list of RTP header extensions where any extension URI is unique.
+  // Encrypted extensions will be either preferred or discarded, depending on
+  // the current crypto_options_.
+  RtpHeaderExtensions GetDeduplicatedRtpHeaderExtensions(
       const RtpHeaderExtensions& extensions);
 
   // Add |payload_type| to |demuxer_criteria_| if payload type demuxing is
