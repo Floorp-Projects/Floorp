@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:host,
+:root {
+  --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
+}
+
 body {
   display: flex;
   align-items: stretch;
@@ -81,12 +86,57 @@ body > main > aside {
   color: var(--in-content-deemphasized-text)
 }
 
-.setup-step > h2 {
-  margin-block: 4px;
+.setup-step {
+  padding: var(--card-padding);
+  margin: 0 0 8px;
 }
 
-.setup-step > .step-body > :is(.step-content, button.primary) {
-  flex: 0 1 auto;
+/* Bug 1770534 - Only use the zap-gradient for built-in, color-neutral themes */
+.setup-step {
+  border: none;
+  position: relative;
+  z-index: 0;
+}
+.setup-step::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  padding: 1px; /* the "border" thickness */
+  border-radius: 4px;
+  background-image: var(--card-border-zap-gradient);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.setup-step > h2 {
+  margin-block: 0 8px;
+}
+
+.setup-step > .step-body {
+  display: flex;
+  align-content: space-between;
+  align-items: center;
+  margin-block: 8px;
+  padding-block: 8px;
+}
+
+.setup-step > .step-body > .step-content {
+  flex: 1 1 auto;
+}
+
+.setup-step > .step-body > button.primary {
+  white-space: nowrap;
+}
+
+.setup-step > footer {
+  display: flex;
+  flex-direction: column;
+  margin-block: 0 8px;
+}
+
+.setup-step > footer > progress {
+  margin-block: 0 8px;
 }
 
 #recently-closed-tabs-container {
