@@ -63,7 +63,6 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.StartOnHome
@@ -276,7 +275,7 @@ class HomeFragment : Fragment() {
                 view = binding.root
             )
 
-            if (FeatureFlags.taskContinuityFeature) {
+            if (requireContext().settings().enableTaskContinuityEnhancements) {
                 recentSyncedTabFeature.set(
                     feature = syncedTabFeature,
                     owner = viewLifecycleOwner,

@@ -15,7 +15,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
@@ -69,7 +68,7 @@ class RecentTabViewHolder(
             )
 
             recentSyncedTabState.value?.let {
-                if (FeatureFlags.taskContinuityFeature && it != RecentSyncedTabState.None) {
+                if (components.settings.enableTaskContinuityEnhancements && it != RecentSyncedTabState.None) {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     val syncedTab = when (it) {

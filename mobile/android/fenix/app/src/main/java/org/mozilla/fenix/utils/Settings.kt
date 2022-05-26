@@ -1307,7 +1307,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var enableTaskContinuityEnhancements by featureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_task_continuity),
-        default = false,
+        default = FeatureFlags.taskContinuityFeature,
         featureFlag = FeatureFlags.taskContinuityFeature,
     )
 
