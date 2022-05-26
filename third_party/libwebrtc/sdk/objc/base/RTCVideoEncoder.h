@@ -43,6 +43,13 @@ RTC_OBJC_EXPORT
  *  disables quality scaling. */
 - (nullable RTC_OBJC_TYPE(RTCVideoEncoderQpThresholds) *)scalingSettings;
 
+/** Resolutions should be aligned to this value. */
+@property(nonatomic, readonly) NSInteger resolutionAlignment;
+
+/** If enabled, resolution alignment is applied to all simulcast layers simultaneously so that when
+    scaled, all resolutions comply with 'resolutionAlignment'. */
+@property(nonatomic, readonly) BOOL applyAlignmentToAllSimulcastLayers;
+
 @end
 
 NS_ASSUME_NONNULL_END

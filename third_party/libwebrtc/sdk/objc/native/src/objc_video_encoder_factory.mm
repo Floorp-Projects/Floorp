@@ -95,6 +95,8 @@ class ObjCVideoEncoder : public VideoEncoder {
     info.scaling_settings = qp_thresholds ? ScalingSettings(qp_thresholds.low, qp_thresholds.high) :
                                             ScalingSettings::kOff;
 
+    info.requested_resolution_alignment = encoder_.resolutionAlignment > 0 ?: 1;
+    info.apply_alignment_to_all_simulcast_layers = encoder_.applyAlignmentToAllSimulcastLayers;
     info.is_hardware_accelerated = true;
     info.has_internal_source = false;
     return info;
