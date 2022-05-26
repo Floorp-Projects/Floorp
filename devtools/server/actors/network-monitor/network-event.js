@@ -69,6 +69,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       private: this._private,
       isThirdPartyTrackingResource: this._isThirdPartyTrackingResource,
       referrerPolicy: this._referrerPolicy,
+      priority: this._priority,
       blockedReason: this._blockedReason,
       blockingExtension: this._blockingExtension,
       channelId: this._channelId,
@@ -113,6 +114,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._isThirdPartyTrackingResource =
       networkEvent.isThirdPartyTrackingResource;
     this._referrerPolicy = networkEvent.referrerPolicy;
+    this._priority = networkEvent.priority;
     this._channelId = networkEvent.channelId;
 
     // Stack trace info isn't sent automatically. The client

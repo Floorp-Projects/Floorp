@@ -18,6 +18,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   getFormattedIPAndPort,
   getFormattedSize,
+  getRequestPriorityAsText,
 } = require("devtools/client/netmonitor/src/utils/format-utils");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
@@ -105,6 +106,7 @@ const HEADERS_CONTENT_BLOCKING = L10N.getStr(
 const HEADERS_ETP = L10N.getStr(
   "netmonitor.trackingResource.enhancedTrackingProtection"
 );
+const HEADERS_PRIORITY = L10N.getStr("netmonitor.headers.requestPriority");
 
 /**
  * Headers panel component
@@ -541,6 +543,7 @@ class HeadersPanel extends Component {
         statusText,
         urlDetails,
         referrerPolicy,
+        priority,
         isThirdPartyTrackingResource,
         contentSize,
         transferredSize,
@@ -739,11 +742,16 @@ class HeadersPanel extends Component {
       ? this.renderSummary(HEADERS_REFERRER, referrerPolicy)
       : null;
 
+    const summaryPriority = priority
+      ? this.renderSummary(HEADERS_PRIORITY, getRequestPriorityAsText(priority))
+      : null;
+
     const summaryItems = [
       summaryStatus,
       summaryVersion,
       summarySize,
       summaryReferrerPolicy,
+      summaryPriority,
       trackingProtectionStatus,
       trackingProtectionDetails,
     ].filter(summaryItem => summaryItem !== null);

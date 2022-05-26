@@ -86,6 +86,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._isThirdPartyTrackingResource =
       networkEvent.isThirdPartyTrackingResource;
     this._referrerPolicy = networkEvent.referrerPolicy;
+    this._priority = networkEvent.priority;
     this._channelId = networkEvent.channelId;
     this._browsingContextID = networkEvent.browsingContextID;
     this.innerWindowId = networkEvent.innerWindowId;
@@ -139,6 +140,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       private: this._private,
       isThirdPartyTrackingResource: this._isThirdPartyTrackingResource,
       referrerPolicy: this._referrerPolicy,
+      priority: this._priority,
       blockedReason: this._blockedReason,
       blockingExtension: this._blockingExtension,
       // For websocket requests the serial is used instead of the channel id.
