@@ -94,18 +94,28 @@ assertErrorMessage(() => ins.exports.newfn(3),
 // RULE: WebAssembly.Global of type v128 is constructable from JS with a default
 // value.
 
-var gi = new WebAssembly.Global({value: "v128"});
-var gm = new WebAssembly.Global({value: "v128", mutable:true});
 
-// RULE: WebAssembly.Global constructor for type v128 does not accept any value
-// but throws TypeError.
+// RULE: WebAssembly.Global constructor for type v128 is not constructable with
+// or without a default value.
 
 assertErrorMessage(() => new WebAssembly.Global({value: "v128"}, 37),
+                   TypeError,
+                   /cannot pass.*v128.*to or from JS/);
+assertErrorMessage(() => new WebAssembly.Global({value: "v128"}),
+                   TypeError,
+                   /cannot pass.*v128.*to or from JS/);
+assertErrorMessage(() => new WebAssembly.Global({value: "v128", mutable: true}),
                    TypeError,
                    /cannot pass.*v128.*to or from JS/);
 
 // RULE: WebAssembly.Global of type v128 have getters and setters that throw
 // TypeError when called from JS.
+
+let {gi, gm} = wasmEvalText(`
+  (module
+    (global (export "gi") v128 v128.const i64x2 0 0)
+    (global (export "gm") (mut v128) v128.const i64x2 0 0)
+  )`).exports;
 
 assertErrorMessage(() => gi.value,
                    TypeError,

@@ -532,7 +532,8 @@ RemoteDecoderManagerChild::LaunchUtilityProcessIfNeeded() {
             managerThread, __func__,
             [](ipc::PBackgroundChild::
                    EnsureUtilityProcessAndCreateBridgePromise::
-                       ResolveOrRejectValue&& aResult) {
+                       ResolveOrRejectValue&& aResult)
+                -> RefPtr<GenericNonExclusivePromise> {
               nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
               if (!managerThread || aResult.IsReject()) {
                 // The parent process died or we got shutdown

@@ -75,6 +75,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.junit += [
     "geckoview/src/androidTest/assets/www/forms_iframe.html",
     "geckoview/src/androidTest/assets/www/forms_xorigin.html",
     "geckoview/src/androidTest/assets/www/hello.html",
+    "geckoview/src/androidTest/assets/www/hsts_header.sjs",
     "geckoview/src/androidTest/assets/www/iframe_http_only.html",
     "geckoview/src/androidTest/assets/www/simple_redirect.sjs",
     "geckoview/src/androidTest/assets/www/update_manifest.json",

@@ -1905,17 +1905,19 @@ class Document : public nsINode,
   void RequestFullscreenInParentProcess(UniquePtr<FullscreenRequest> aRequest,
                                         bool applyFullScreenDirectly);
 
+  static void ClearFullscreenStateOnElement(Element&);
+
+  // Pushes aElement onto the top layer
+  void TopLayerPush(Element&);
+
+  // Removes the topmost element for which aPredicate returns true from the top
+  // layer. The removed element, if any, is returned.
+  Element* TopLayerPop(FunctionRef<bool(Element*)> aPredicate);
+
  public:
   // Removes all the elements with fullscreen flag set from the top layer, and
   // clears their fullscreen flag.
   void CleanupFullscreenState();
-
-  // Pushes aElement onto the top layer
-  void TopLayerPush(Element* aElement);
-
-  // Removes the topmost element which have aPredicate return true from the top
-  // layer. The removed element, if any, is returned.
-  Element* TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc);
 
   // Pops the fullscreen element from the top layer and clears its
   // fullscreen flag.
@@ -1923,14 +1925,13 @@ class Document : public nsINode,
 
   // Pushes the given element into the top of top layer and set fullscreen
   // flag.
-  void SetFullscreenElement(Element* aElement);
+  void SetFullscreenElement(Element&);
 
   // Cancel the dialog element if the document is blocked by the dialog
   void TryCancelDialog();
 
-  void SetBlockedByModalDialog(HTMLDialogElement&);
-
-  void UnsetBlockedByModalDialog(HTMLDialogElement&);
+  void AddModalDialog(HTMLDialogElement&);
+  void RemoveModalDialog(HTMLDialogElement&);
 
   /**
    * Called when a frame in a child process has entered fullscreen or when a

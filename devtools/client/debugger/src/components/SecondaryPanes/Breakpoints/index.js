@@ -15,10 +15,7 @@ import actions from "../../../actions";
 import { getSelectedLocation } from "../../../utils/selected-location";
 import { createHeadlessEditor } from "../../../utils/editor/create-editor";
 
-import {
-  makeBreakpointId,
-  sortSelectedBreakpoints,
-} from "../../../utils/breakpoint";
+import { makeBreakpointId } from "../../../utils/breakpoint";
 
 import { getSelectedSource, getBreakpointSources } from "../../../selectors";
 
@@ -88,23 +85,18 @@ class Breakpoints extends Component {
     }
 
     const editor = this.getEditor();
-    const sources = [...breakpointSources.map(({ source }) => source)];
+    const sources = breakpointSources.map(({ source }) => source);
 
     return (
       <div className="pane breakpoints-list">
         {breakpointSources.map(({ source, breakpoints }) => {
-          const sortedBreakpoints = sortSelectedBreakpoints(
-            breakpoints,
-            selectedSource
-          );
-
           return [
             <BreakpointHeading
               key={source.id}
               source={source}
               sources={sources}
             />,
-            ...sortedBreakpoints.map(breakpoint => (
+            breakpoints.map(breakpoint => (
               <Breakpoint
                 breakpoint={breakpoint}
                 source={source}

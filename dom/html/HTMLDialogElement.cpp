@@ -85,27 +85,19 @@ bool HTMLDialogElement::IsInTopLayer() const {
 }
 
 void HTMLDialogElement::AddToTopLayerIfNeeded() {
+  MOZ_ASSERT(IsInComposedDoc());
   if (IsInTopLayer()) {
     return;
   }
 
-  Document* doc = OwnerDoc();
-  doc->TopLayerPush(this);
-  doc->SetBlockedByModalDialog(*this);
-  AddStates(NS_EVENT_STATE_MODAL_DIALOG);
+  OwnerDoc()->AddModalDialog(*this);
 }
 
 void HTMLDialogElement::RemoveFromTopLayerIfNeeded() {
   if (!IsInTopLayer()) {
     return;
   }
-  auto predictFunc = [&](Element* element) { return element == this; };
-
-  Document* doc = OwnerDoc();
-  DebugOnly<Element*> removedElement = doc->TopLayerPop(predictFunc);
-  MOZ_ASSERT(removedElement == this);
-  RemoveStates(NS_EVENT_STATE_MODAL_DIALOG);
-  doc->UnsetBlockedByModalDialog(*this);
+  OwnerDoc()->RemoveModalDialog(*this);
 }
 
 void HTMLDialogElement::StorePreviouslyFocusedElement() {

@@ -343,6 +343,8 @@ with modules["NETWORK"]:
     # A connection to a non local address is refused because
     # xpc::AreNonLocalConnectionsDisabled() returns true.
     errors["NS_ERROR_NON_LOCAL_CONNECTION_REFUSED"] = FAILURE(88)
+    # Connection to a sts host without a hsts header.
+    errors["NS_ERROR_BAD_HSTS_CERT"] = FAILURE(89)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??

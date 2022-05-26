@@ -1055,6 +1055,7 @@ inline void ImplCycleCollectionUnlink(JS::Heap<T*>& aField) {
                                                  js_members_)               \
   NS_IMPL_CYCLE_COLLECTION_CLASS(class_)                                    \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(class_)                             \
+    using ::ImplCycleCollectionUnlink;                                      \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(                                        \
         MOZ_FOR_EACH_EXPAND_HELPER native_members_)                         \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(MOZ_FOR_EACH_EXPAND_HELPER js_members_) \
@@ -1072,6 +1073,7 @@ inline void ImplCycleCollectionUnlink(JS::Heap<T*>& aField) {
     class_, _base, native_members_, js_members_)                            \
   NS_IMPL_CYCLE_COLLECTION_CLASS(class_)                                    \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(class_, _base)            \
+    using ::ImplCycleCollectionUnlink;                                      \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(                                        \
         MOZ_FOR_EACH_EXPAND_HELPER native_members_)                         \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(MOZ_FOR_EACH_EXPAND_HELPER js_members_) \
