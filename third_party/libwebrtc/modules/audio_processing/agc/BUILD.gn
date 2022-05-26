@@ -38,6 +38,18 @@ rtc_library("agc") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("clipping_predictor_level_buffer") {
+  sources = [
+    "clipping_predictor_level_buffer.cc",
+    "clipping_predictor_level_buffer.h",
+  ]
+  deps = [
+    "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
 rtc_library("level_estimation") {
   sources = [
     "agc.cc",
@@ -96,6 +108,7 @@ if (rtc_include_tests) {
     testonly = true
     sources = [
       "agc_manager_direct_unittest.cc",
+      "clipping_predictor_level_buffer_unittest.cc",
       "loudness_histogram_unittest.cc",
       "mock_agc.h",
     ]
@@ -103,6 +116,7 @@ if (rtc_include_tests) {
 
     deps = [
       ":agc",
+      ":clipping_predictor_level_buffer",
       ":gain_control_interface",
       ":level_estimation",
       "..:mocks",
