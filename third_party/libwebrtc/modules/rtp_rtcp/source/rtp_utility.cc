@@ -377,10 +377,12 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           header->extension.hasTransmissionTimeOffset = true;
           break;
         }
+#if !defined(WEBRTC_MOZILLA_BUILD)
         case kRtpExtensionCsrcAudioLevel: {
           RTC_LOG(LS_WARNING) << "Csrc audio level extension not supported";
           return;
         }
+#endif
         case kRtpExtensionAudioLevel: {
           if (len != 0) {
             RTC_LOG(LS_WARNING) << "Incorrect audio level len: " << len;
@@ -557,6 +559,7 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           RTC_LOG(WARNING)
               << "VideoFrameTrackingId unsupported by rtp header parser.";
           break;
+#if defined(WEBRTC_MOZILLA_BUILD)
         case kRtpExtensionCsrcAudioLevel: {
           auto& levels = header->extension.csrcAudioLevels;
           levels.numAudioLevels = static_cast<uint8_t>(len + 1);
@@ -571,6 +574,7 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           }
           break;
         }
+#endif
         case kRtpExtensionNone:
         case kRtpExtensionNumberOfExtensions: {
           RTC_NOTREACHED() << "Invalid extension type: " << type;
