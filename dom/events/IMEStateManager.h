@@ -150,17 +150,18 @@ class IMEStateManager {
   static void MaybeStartOffsetUpdatedInChild(nsIWidget* aWidget,
                                              uint32_t aStartOffset);
 
-  static nsresult OnDestroyPresContext(nsPresContext* aPresContext);
-  static nsresult OnRemoveContent(nsPresContext* aPresContext,
-                                  nsIContent* aContent);
+  MOZ_CAN_RUN_SCRIPT static nsresult OnDestroyPresContext(
+      nsPresContext& aPresContext);
+  MOZ_CAN_RUN_SCRIPT static nsresult OnRemoveContent(
+      nsPresContext& aPresContext, nsIContent& aContent);
   /**
    * OnChangeFocus() should be called when focused content is changed or
    * IME enabled state is changed.  If nobody has focus, set both aPresContext
    * and aContent nullptr.  E.g., all windows are deactivated.
    */
-  static nsresult OnChangeFocus(nsPresContext* aPresContext,
-                                nsIContent* aContent,
-                                InputContextAction::Cause aCause);
+  MOZ_CAN_RUN_SCRIPT static nsresult OnChangeFocus(
+      nsPresContext* aPresContext, nsIContent* aContent,
+      InputContextAction::Cause aCause);
 
   /**
    * OnInstalledMenuKeyboardListener() is called when menu keyboard listener
@@ -172,7 +173,8 @@ class IMEStateManager {
    *                        Otherwise, i.e., menu keyboard listener is
    *                        uninstalled, false.
    */
-  static void OnInstalledMenuKeyboardListener(bool aInstalling);
+  MOZ_CAN_RUN_SCRIPT static void OnInstalledMenuKeyboardListener(
+      bool aInstalling);
 
   // These two methods manage focus and selection/text observers.
   // They are separate from OnChangeFocus above because this offers finer
@@ -193,7 +195,7 @@ class IMEStateManager {
     DontCommitComposition,
   };
   using UpdateIMEStateOptions = EnumSet<UpdateIMEStateOption, uint32_t>;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void UpdateIMEState(
+  MOZ_CAN_RUN_SCRIPT static void UpdateIMEState(
       const IMEState& aNewIMEState, nsIContent* aContent,
       EditorBase& aEditorBase, const UpdateIMEStateOptions& aOptions = {});
 
@@ -209,8 +211,9 @@ class IMEStateManager {
   //   If the editor is for <input> or <textarea>, the element.
   //   If the editor is for contenteditable, the active editinghost.
   //   If the editor is for designMode, nullptr.
-  static void OnClickInEditor(nsPresContext* aPresContext, nsIContent* aContent,
-                              const WidgetMouseEvent* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT static void OnClickInEditor(
+      nsPresContext& aPresContext, nsIContent* aContent,
+      const WidgetMouseEvent& aMouseEvent);
 
   // This method is called when editor actually gets focus.
   // aContent must be:
@@ -228,7 +231,8 @@ class IMEStateManager {
   static void OnEditorDestroying(EditorBase& aEditorBase);
 
   // This method is called when focus is set to same content again.
-  static void OnReFocus(nsPresContext* aPresContext, nsIContent& aContent);
+  MOZ_CAN_RUN_SCRIPT static void OnReFocus(nsPresContext& aPresContext,
+                                           nsIContent& aContent);
 
   /**
    * All composition events must be dispatched via DispatchCompositionEvent()
@@ -301,13 +305,15 @@ class IMEStateManager {
   static IMEContentObserver* GetActiveContentObserver();
 
  protected:
-  static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
-                                        nsIContent* aContent,
-                                        InputContextAction aAction);
-  static void SetIMEState(const IMEState& aState, nsPresContext* aPresContext,
-                          nsIContent* aContent, nsIWidget* aWidget,
-                          InputContextAction aAction,
-                          InputContext::Origin aOrigin);
+  MOZ_CAN_RUN_SCRIPT static nsresult OnChangeFocusInternal(
+      nsPresContext* aPresContext, nsIContent* aContent,
+      InputContextAction aAction);
+  MOZ_CAN_RUN_SCRIPT static void SetIMEState(const IMEState& aState,
+                                             nsPresContext* aPresContext,
+                                             nsIContent* aContent,
+                                             nsIWidget* aWidget,
+                                             InputContextAction aAction,
+                                             InputContext::Origin aOrigin);
   static void SetInputContext(nsIWidget* aWidget,
                               const InputContext& aInputContext,
                               const InputContextAction& aAction);

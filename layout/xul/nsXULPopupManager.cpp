@@ -2021,6 +2021,7 @@ void nsXULPopupManager::UpdateKeyboardListeners() {
   }
 
   if (mKeyListener != newTarget) {
+    OwningNonNull<nsXULPopupManager> kungFuDeathGrip(*this);
     if (mKeyListener) {
       mKeyListener->RemoveEventListener(u"keypress"_ns, this, true);
       mKeyListener->RemoveEventListener(u"keydown"_ns, this, true);
