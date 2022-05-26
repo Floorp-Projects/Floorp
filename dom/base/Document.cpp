@@ -7075,7 +7075,7 @@ bool Document::ShouldThrottleFrameRequests() const {
   // acceptable / unlikely to be human-perceivable, though we could improve on
   // it if needed by adding an intersection margin or something of that sort.
   const IntersectionInput input = DOMIntersectionObserver::ComputeInput(
-      *this, /* aRoot = */ nullptr, /* aMargin = */ nullptr);
+      *el->OwnerDoc(), /* aRoot = */ nullptr, /* aMargin = */ nullptr);
   const IntersectionOutput output =
       DOMIntersectionObserver::Intersect(input, *el);
   return !output.Intersects();
