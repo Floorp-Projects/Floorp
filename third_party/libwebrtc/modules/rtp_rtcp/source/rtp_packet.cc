@@ -111,8 +111,6 @@ std::vector<uint32_t> RtpPacket::Csrcs() const {
 }
 
 void RtpPacket::CopyHeaderFrom(const RtpPacket& packet) {
-  RTC_DCHECK_GE(capacity(), packet.headers_size());
-
   marker_ = packet.marker_;
   payload_type_ = packet.payload_type_;
   sequence_number_ = packet.sequence_number_;
