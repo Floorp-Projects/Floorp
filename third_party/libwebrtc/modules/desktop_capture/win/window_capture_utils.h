@@ -88,6 +88,7 @@ enum GetWindowListFlags {
 // - [with kIgnoreUntitled] windows with no title.
 // - [with kIgnoreUnresponsive] windows that are unresponsive.
 // - [with kIgnoreCurrentProcessWindows] windows owned by the current process.
+// - Any windows with extended styles that match |ex_style_filters|.
 // Returns false if native APIs failed.
 bool GetWindowList(int flags,
                    DesktopCapturer::SourceList* windows,
