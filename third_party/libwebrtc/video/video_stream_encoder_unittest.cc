@@ -42,6 +42,7 @@
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
+#include "modules/video_coding/codecs/vp9/svc_config.h"
 #include "modules/video_coding/utility/quality_scaler.h"
 #include "modules/video_coding/utility/simulcast_rate_allocator.h"
 #include "rtc_base/event.h"
@@ -746,9 +747,10 @@ class VideoStreamEncoderTest : public ::testing::Test {
   }
 
   VideoFrame CreateFrame(int64_t ntp_time_ms, int width, int height) const {
+    auto buffer = rtc::make_ref_counted<TestBuffer>(nullptr, width, height);
+    I420Buffer::SetBlack(buffer.get());
     return VideoFrame::Builder()
-        .set_video_frame_buffer(
-            rtc::make_ref_counted<TestBuffer>(nullptr, width, height))
+        .set_video_frame_buffer(std::move(buffer))
         .set_ntp_time_ms(ntp_time_ms)
         .set_timestamp_ms(ntp_time_ms)
         .set_rotation(kVideoRotation_0)
@@ -1305,13 +1307,15 @@ class VideoStreamEncoderTest : public ::testing::Test {
       uint32_t timestamp = encoded_image.Timestamp();
       if (last_timestamp_ != timestamp) {
         num_received_layers_ = 1;
+        last_width_ = encoded_image._encodedWidth;
+        last_height_ = encoded_image._encodedHeight;
       } else {
         ++num_received_layers_;
+        last_width_ = std::max(encoded_image._encodedWidth, last_width_);
+        last_height_ = std::max(encoded_image._encodedHeight, last_height_);
       }
       last_timestamp_ = timestamp;
       last_capture_time_ms_ = encoded_image.capture_time_ms_;
-      last_width_ = encoded_image._encodedWidth;
-      last_height_ = encoded_image._encodedHeight;
       last_rotation_ = encoded_image.rotation_;
       if (num_received_layers_ == num_expected_layers_) {
         encoded_frame_event_.Set();
@@ -8064,6 +8068,133 @@ TEST_P(VideoStreamEncoderWithRealEncoderTest, EncoderMapsNativeNV12) {
   if (!allow_i420_conversion_) {
     EXPECT_FALSE(mappable_native_buffer->DidConvertToI420());
   }
+}
+
+TEST_P(VideoStreamEncoderWithRealEncoderTest, HandlesLayerToggling) {
+  if (codec_type_ == kVideoCodecMultiplex) {
+    // Multiplex codec here uses wrapped mock codecs, ignore for this test.
+    return;
+  }
+
+  const size_t kNumSpatialLayers = 3u;
+  const float kDownscaleFactors[] = {4.0, 2.0, 1.0};
+  const int kFrameWidth = 1280;
+  const int kFrameHeight = 720;
+  const rtc::VideoSinkWants::FrameSize kLayer0Size(
+      kFrameWidth / kDownscaleFactors[0], kFrameHeight / kDownscaleFactors[0]);
+  const rtc::VideoSinkWants::FrameSize kLayer1Size(
+      kFrameWidth / kDownscaleFactors[1], kFrameHeight / kDownscaleFactors[1]);
+  const rtc::VideoSinkWants::FrameSize kLayer2Size(
+      kFrameWidth / kDownscaleFactors[2], kFrameHeight / kDownscaleFactors[2]);
+
+  VideoEncoderConfig config;
+  if (codec_type_ == VideoCodecType::kVideoCodecVP9) {
+    test::FillEncoderConfiguration(codec_type_, 1, &config);
+    config.max_bitrate_bps = kSimulcastTargetBitrateBps;
+    VideoCodecVP9 vp9_settings = VideoEncoder::GetDefaultVp9Settings();
+    vp9_settings.numberOfSpatialLayers = kNumSpatialLayers;
+    vp9_settings.numberOfTemporalLayers = 3;
+    vp9_settings.automaticResizeOn = false;
+    config.encoder_specific_settings =
+        rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+            vp9_settings);
+    config.spatial_layers = GetSvcConfig(kFrameWidth, kFrameHeight,
+                                         /*fps=*/30.0,
+                                         /*first_active_layer=*/0,
+                                         /*num_spatial_layers=*/3,
+                                         /*num_temporal_layers=*/3,
+                                         /*is_screenshare=*/false);
+  } else if (codec_type_ == VideoCodecType::kVideoCodecAV1) {
+    test::FillEncoderConfiguration(codec_type_, 1, &config);
+    config.max_bitrate_bps = kSimulcastTargetBitrateBps;
+    config.spatial_layers = GetSvcConfig(kFrameWidth, kFrameHeight,
+                                         /*fps=*/30.0,
+                                         /*first_active_layer=*/0,
+                                         /*num_spatial_layers=*/3,
+                                         /*num_temporal_layers=*/3,
+                                         /*is_screenshare=*/false);
+    config.simulcast_layers[0].scalability_mode = "L3T3_KEY";
+  } else {
+    // Simulcast for VP8/H264.
+    test::FillEncoderConfiguration(codec_type_, kNumSpatialLayers, &config);
+    for (size_t i = 0; i < kNumSpatialLayers; ++i) {
+      config.simulcast_layers[i].scale_resolution_down_by =
+          kDownscaleFactors[i];
+      config.simulcast_layers[i].active = true;
+    }
+    if (codec_type_ == VideoCodecType::kVideoCodecH264) {
+      // Turn off frame dropping to prevent flakiness.
+      VideoCodecH264 h264_settings = VideoEncoder::GetDefaultH264Settings();
+      h264_settings.frameDroppingOn = false;
+      config.encoder_specific_settings = rtc::make_ref_counted<
+          VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
+    }
+  }
+
+  auto set_layer_active = [&](int layer_idx, bool active) {
+    if (codec_type_ == VideoCodecType::kVideoCodecVP9 ||
+        codec_type_ == VideoCodecType::kVideoCodecAV1) {
+      config.spatial_layers[layer_idx].active = active;
+    } else {
+      config.simulcast_layers[layer_idx].active = active;
+    }
+  };
+
+  config.video_stream_factory =
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
+          CodecTypeToPayloadString(codec_type_), /*max qp*/ 56,
+          /*screencast*/ false,
+          /*screenshare enabled*/ false);
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps),
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps),
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps), 0, 0, 0);
+
+  // Capture a frame with all layers active.
+  sink_.SetNumExpectedLayers(kNumSpatialLayers);
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+  int64_t timestamp_ms = kFrameIntervalMs;
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(timestamp_ms, kFrameWidth, kFrameHeight));
+
+  WaitForEncodedFrame(kLayer2Size.width, kLayer2Size.height);
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
+
+  // Capture a frame with one of the layers inactive.
+  set_layer_active(2, false);
+  sink_.SetNumExpectedLayers(kNumSpatialLayers - 1);
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+  timestamp_ms += kFrameIntervalMs;
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(timestamp_ms, kFrameWidth, kFrameHeight));
+  WaitForEncodedFrame(kLayer1Size.width, kLayer1Size.height);
+
+  // New target bitrates signaled based on lower resolution.
+  DataRate kTwoLayerBitrate = DataRate::KilobitsPerSec(833);
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      kTwoLayerBitrate, kTwoLayerBitrate, kTwoLayerBitrate, 0, 0, 0);
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
+
+  // Re-enable the top layer.
+  set_layer_active(2, true);
+  sink_.SetNumExpectedLayers(kNumSpatialLayers);
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
+
+  // Bitrate target adjusted back up to enable HD layer...
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::KilobitsPerSec(1800), DataRate::KilobitsPerSec(1800),
+      DataRate::KilobitsPerSec(1800), 0, 0, 0);
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
+
+  // ...then add a new frame.
+  timestamp_ms += kFrameIntervalMs;
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(timestamp_ms, kFrameWidth, kFrameHeight));
+  WaitForEncodedFrame(kLayer2Size.width, kLayer2Size.height);
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
+
+  video_stream_encoder_->Stop();
 }
 
 std::string TestParametersVideoCodecAndAllowI420ConversionToString(
