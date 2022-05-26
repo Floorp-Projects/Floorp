@@ -226,8 +226,7 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation(
       low_loss_threshold_(kDefaultLowLossThreshold),
       high_loss_threshold_(kDefaultHighLossThreshold),
       bitrate_threshold_(kDefaultBitrateThreshold),
-      loss_based_bandwidth_estimation_(key_value_config),
-      receiver_limit_caps_only_("Enabled") {
+      loss_based_bandwidth_estimation_(key_value_config) {
   RTC_DCHECK(event_log);
   if (BweLossExperimentIsEnabled()) {
     uint32_t bitrate_threshold_kbps;
@@ -240,8 +239,6 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation(
       bitrate_threshold_ = DataRate::KilobitsPerSec(bitrate_threshold_kbps);
     }
   }
-  ParseFieldTrial({&receiver_limit_caps_only_},
-                  key_value_config->Lookup("WebRTC-Bwe-ReceiverLimitCapsOnly"));
 }
 
 SendSideBandwidthEstimation::~SendSideBandwidthEstimation() {}
@@ -310,9 +307,7 @@ int SendSideBandwidthEstimation::GetMinBitrate() const {
 }
 
 DataRate SendSideBandwidthEstimation::target_rate() const {
-  DataRate target = current_target_;
-  if (receiver_limit_caps_only_)
-    target = std::min(target, receiver_limit_);
+  DataRate target = std::min(current_target_, receiver_limit_);
   return std::max(min_bitrate_configured_, target);
 }
 
@@ -588,8 +583,6 @@ void SendSideBandwidthEstimation::UpdateMinHistory(Timestamp at_time) {
 
 DataRate SendSideBandwidthEstimation::GetUpperLimit() const {
   DataRate upper_limit = delay_based_limit_;
-  if (!receiver_limit_caps_only_)
-    upper_limit = std::min(upper_limit, receiver_limit_);
   upper_limit = std::min(upper_limit, max_bitrate_configured_);
   return upper_limit;
 }

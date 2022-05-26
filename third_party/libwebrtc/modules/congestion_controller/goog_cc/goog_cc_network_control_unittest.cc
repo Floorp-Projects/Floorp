@@ -851,7 +851,6 @@ TEST_F(GoogCcNetworkControllerTest, IsFairToTCP) {
 }
 
 TEST(GoogCcScenario, RampupOnRembCapLifted) {
-  ScopedFieldTrials trial("WebRTC-Bwe-ReceiverLimitCapsOnly/Enabled/");
   Scenario s("googcc_unit/rampup_ramb_cap_lifted");
   NetworkSimulationConfig net_conf;
   net_conf.bandwidth = DataRate::KilobitsPerSec(2000);
