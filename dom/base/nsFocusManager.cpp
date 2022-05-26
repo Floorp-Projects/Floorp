@@ -693,8 +693,8 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow,
     }
 
     // lower the existing window, if any. This shouldn't happen usually.
-    if (mActiveWindow) {
-      WindowLowered(mActiveWindow, aActionId);
+    if (nsCOMPtr<nsPIDOMWindowOuter> activeWindow = mActiveWindow) {
+      WindowLowered(activeWindow, aActionId);
     }
   } else if (bc->IsTop()) {
     BrowsingContext* active = GetActiveBrowsingContext();
@@ -706,7 +706,8 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow,
 
     if (active && active != bc) {
       if (active->IsInProcess()) {
-        WindowLowered(active->GetDOMWindow(), aActionId);
+        nsCOMPtr<nsPIDOMWindowOuter> activeWindow = active->GetDOMWindow();
+        WindowLowered(activeWindow, aActionId);
       }
       // No else, because trying to lower other-process windows
       // from here can result in the BrowsingContext no longer
@@ -1124,16 +1125,17 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow,
     // directly.
 
     if (XRE_IsParentProcess()) {
-      if (mActiveWindow == mFocusedWindow || mActiveWindow == window) {
-        WindowLowered(mActiveWindow, aActionId);
+      nsCOMPtr<nsPIDOMWindowOuter> activeWindow = mActiveWindow;
+      if (activeWindow == mFocusedWindow || activeWindow == window) {
+        WindowLowered(activeWindow, aActionId);
       } else {
-        ClearFocus(mActiveWindow);
+        ClearFocus(activeWindow);
       }
     } else {
       BrowsingContext* active = GetActiveBrowsingContext();
       if (active) {
-        nsPIDOMWindowOuter* activeWindow = active->GetDOMWindow();
-        if (activeWindow) {
+        if (nsCOMPtr<nsPIDOMWindowOuter> activeWindow =
+                active->GetDOMWindow()) {
           if ((mFocusedWindow &&
                mFocusedWindow->GetBrowsingContext() == active) ||
               (window->GetBrowsingContext() == active)) {
@@ -1777,7 +1779,9 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
     if (aFlags & FLAG_RAISE) {
       if (newRootBrowsingContext) {
         if (XRE_IsParentProcess() || newRootBrowsingContext->IsInProcess()) {
-          RaiseWindow(newRootBrowsingContext->GetDOMWindow(),
+          nsCOMPtr<nsPIDOMWindowOuter> outerWindow =
+              newRootBrowsingContext->GetDOMWindow();
+          RaiseWindow(outerWindow,
                       aFlags & FLAG_NONSYSTEMCALLER ? CallerType::NonSystem
                                                     : CallerType::System,
                       aActionId);
@@ -2935,7 +2939,9 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow,
     nsCOMPtr<nsPIDOMWindowOuter> window(aWindow);
     RefPtr<nsFocusManager> self(this);
     NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "nsFocusManager::RaiseWindow", [self, window]() -> void {
+        "nsFocusManager::RaiseWindow",
+        // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1770093)
+        [self, window]() MOZ_CAN_RUN_SCRIPT_BOUNDARY -> void {
           self->WindowRaised(window, GenerateFocusActionId());
         }));
     return;

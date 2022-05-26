@@ -665,7 +665,7 @@ class ContentChild final : public PContentChild,
       uint64_t aActionId);
   mozilla::ipc::IPCResult RecvWindowBlur(
       const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType);
-  mozilla::ipc::IPCResult RecvRaiseWindow(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvRaiseWindow(
       const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType,
       uint64_t aActionId);
   mozilla::ipc::IPCResult RecvAdjustWindowFocus(

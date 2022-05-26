@@ -3877,8 +3877,7 @@ mozilla::ipc::IPCResult ContentChild::RecvRaiseWindow(
     return IPC_OK();
   }
 
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
+  if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
     fm->RaiseWindow(window, aCallerType, aActionId);
   }
   return IPC_OK();
