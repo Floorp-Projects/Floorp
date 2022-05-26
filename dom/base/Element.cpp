@@ -493,10 +493,10 @@ void Element::Blur(mozilla::ErrorResult& aError) {
     return;
   }
 
-  nsPIDOMWindowOuter* win = doc->GetWindow();
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (win && fm) {
-    aError = fm->ClearFocus(win);
+  if (nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow()) {
+    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+      aError = fm->ClearFocus(win);
+    }
   }
 }
 

@@ -139,7 +139,8 @@ class nsFocusManager final : public nsIFocusManager,
   /**
    * Called when content has been removed.
    */
-  nsresult ContentRemoved(Document* aDocument, nsIContent* aContent);
+  MOZ_CAN_RUN_SCRIPT nsresult ContentRemoved(Document* aDocument,
+                                             nsIContent* aContent);
 
   void NeedsFlushBeforeEventHandling(mozilla::dom::Element* aElement) {
     if (mFocusedElement == aElement) {
@@ -204,11 +205,9 @@ class nsFocusManager final : public nsIFocusManager,
    * aNavigateByKey to move focus by keyboard as a side effect of computing the
    * next target.
    */
-  nsresult DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
-                                       nsIContent* aStart, int32_t aType,
-                                       bool aNoParentTraversal,
-                                       bool aNavigateByKey,
-                                       nsIContent** aNextContent);
+  MOZ_CAN_RUN_SCRIPT nsresult DetermineElementToMoveFocus(
+      nsPIDOMWindowOuter* aWindow, nsIContent* aStart, int32_t aType,
+      bool aNoParentTraversal, bool aNavigateByKey, nsIContent** aNextContent);
 
   /**
    * Setter for focusedWindow with CallerType
@@ -359,12 +358,12 @@ class nsFocusManager final : public nsIFocusManager,
    * start at the active top-level window and navigate down the currently
    * focused elements for each frame in the tree to get to aBrowsingContext.
    */
-  bool AdjustInProcessWindowFocus(
+  MOZ_CAN_RUN_SCRIPT bool AdjustInProcessWindowFocus(
       mozilla::dom::BrowsingContext* aBrowsingContext, bool aCheckPermission,
       bool aIsVisible, uint64_t aActionId);
-  void AdjustWindowFocus(mozilla::dom::BrowsingContext* aBrowsingContext,
-                         bool aCheckPermission, bool aIsVisible,
-                         uint64_t aActionId);
+  MOZ_CAN_RUN_SCRIPT void AdjustWindowFocus(
+      mozilla::dom::BrowsingContext* aBrowsingContext, bool aCheckPermission,
+      bool aIsVisible, uint64_t aActionId);
 
   /**
    * Returns true if aWindow is visible.
@@ -418,12 +417,11 @@ class nsFocusManager final : public nsIFocusManager,
    *
    * If aAdjustWidget is false, don't change the widget focus state.
    */
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY for now, until we annotate callers.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  bool Blur(mozilla::dom::BrowsingContext* aBrowsingContextToClear,
-            mozilla::dom::BrowsingContext* aAncestorBrowsingContextToFocus,
-            bool aIsLeavingDocument, bool aAdjustWidget, uint64_t aActionId,
-            mozilla::dom::Element* aElementToFocus = nullptr);
+  MOZ_CAN_RUN_SCRIPT bool Blur(
+      mozilla::dom::BrowsingContext* aBrowsingContextToClear,
+      mozilla::dom::BrowsingContext* aAncestorBrowsingContextToFocus,
+      bool aIsLeavingDocument, bool aAdjustWidget, uint64_t aActionId,
+      mozilla::dom::Element* aElementToFocus = nullptr);
   MOZ_CAN_RUN_SCRIPT void BlurFromOtherProcess(
       mozilla::dom::BrowsingContext* aFocusedBrowsingContext,
       mozilla::dom::BrowsingContext* aBrowsingContextToClear,

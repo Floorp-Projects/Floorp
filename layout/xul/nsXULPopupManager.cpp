@@ -1583,8 +1583,7 @@ void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
       !popup->AsElement()->AttrValueIs(kNameSpaceID_None,
                                        nsGkAtoms::noautofocus, nsGkAtoms::_true,
                                        eCaseMatters)) {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (fm) {
+    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
       Document* doc = popup->GetUncomposedDoc();
 
       // Only remove the focus if the currently focused item is ouside the
@@ -1595,7 +1594,8 @@ void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
       RefPtr<Element> currentFocus = fm->GetFocusedElement();
       if (doc && currentFocus &&
           !nsContentUtils::ContentIsCrossDocDescendantOf(currentFocus, popup)) {
-        fm->ClearFocus(doc->GetWindow());
+        nsCOMPtr<nsPIDOMWindowOuter> outerWindow = doc->GetWindow();
+        fm->ClearFocus(outerWindow);
       }
     }
   }
@@ -1648,15 +1648,15 @@ void nsXULPopupManager::FirePopupHidingEvent(
       (!aPopup->IsElement() || !aPopup->AsElement()->AttrValueIs(
                                    kNameSpaceID_None, nsGkAtoms::noautofocus,
                                    nsGkAtoms::_true, eCaseMatters))) {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (fm) {
+    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
       Document* doc = aPopup->GetUncomposedDoc();
 
       // Remove the focus from the focused node only if it is inside the popup.
       RefPtr<Element> currentFocus = fm->GetFocusedElement();
       if (doc && currentFocus &&
           nsContentUtils::ContentIsCrossDocDescendantOf(currentFocus, aPopup)) {
-        fm->ClearFocus(doc->GetWindow());
+        nsCOMPtr<nsPIDOMWindowOuter> outerWindow = doc->GetWindow();
+        fm->ClearFocus(outerWindow);
       }
     }
   }
