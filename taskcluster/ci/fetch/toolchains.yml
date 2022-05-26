@@ -212,13 +212,9 @@ nsis-3.07-win:
     description: nsis 3.07 for windows
     fetch:
         type: static-url
-        # Temporary: pull down our own repackage of NSIS, with its plugin DLLs signed by Mozilla
-        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1751450#c38 for more details
-        # bug 1771192 tracks adding a signing task downstream of the NSIS toolchain task
-        # to fix this more robustly.
-        url: https://bugzilla.mozilla.org/attachment.cgi?id=9278166
-        sha256: 5856cd49b52870caa41814d71ce30c4304d5001b80c04f4eb7028ffedd91df7e
-        size: 2618390
+        url: https://downloads.sourceforge.net/project/nsis/NSIS%203/3.07/nsis-3.07.zip
+        sha256: 04dde28896ae9ab36ea3035ff3a294e78053f00048064f6d22a6f1c02bcb6ec0
+        size: 2335219
         artifact-name: nsis.tar.zst
         strip-components: 1
         add-prefix: nsis/
