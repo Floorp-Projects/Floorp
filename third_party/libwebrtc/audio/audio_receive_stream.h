@@ -102,10 +102,6 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
   const AudioSendStream* GetAssociatedSendStreamForTesting() const;
 
  private:
-  static void ConfigureStream(AudioReceiveStream* stream,
-                              const Config& new_config,
-                              bool first_time);
-
   AudioState* audio_state() const;
 
   SequenceChecker worker_thread_checker_;
