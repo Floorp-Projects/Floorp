@@ -26,4 +26,12 @@ enum VideoCodecMimeType {
   String mimeType() {
     return mimeType;
   }
+
+  static VideoCodecMimeType fromSdpCodecName(String codecName) {
+    return codecName.equals("AV1X") ? AV1 : valueOf(codecName);
+  }
+
+  String toSdpCodecName() {
+    return this == AV1 ? "AV1X" : name();
+  }
 }
