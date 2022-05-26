@@ -747,8 +747,9 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
                   nsContentUtils::GetActiveEditor(window)) {
             IMEState newState;
             editor->GetPreferredIMEState(&newState);
+            OwningNonNull<nsGenericHTMLElement> kungFuDeathGrip(*this);
             IMEStateManager::UpdateIMEState(
-                newState, this, *editor,
+                newState, kungFuDeathGrip, *editor,
                 {IMEStateManager::UpdateIMEStateOption::ForceUpdate,
                  IMEStateManager::UpdateIMEStateOption::DontCommitComposition});
           }

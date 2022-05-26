@@ -130,7 +130,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DispatchLegacyMouseScrollEvents(
       nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent, nsEventStatus* aStatus);
 
-  void NotifyDestroyPresContext(nsPresContext* aPresContext);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void NotifyDestroyPresContext(
+      nsPresContext* aPresContext);
   void SetPresContext(nsPresContext* aPresContext);
   void ClearFrameRefs(nsIFrame* aFrame);
 

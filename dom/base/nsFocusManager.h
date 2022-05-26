@@ -290,7 +290,7 @@ class nsFocusManager final : public nsIFocusManager,
    *
    * aContent is focused content.
    */
-  void NotifyOfReFocus(nsIContent& aContent);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void NotifyOfReFocus(nsIContent& aContent);
 
   static void MarkUncollectableForCCGeneration(uint32_t aGeneration);
 

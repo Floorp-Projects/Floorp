@@ -1063,7 +1063,7 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow,
     }
   }
 
-  nsPresContext* focusedPresContext =
+  const RefPtr<nsPresContext> focusedPresContext =
       presShell ? presShell->GetPresContext() : nullptr;
   IMEStateManager::OnChangeFocus(focusedPresContext, nullptr,
                                  GetFocusMoveActionCause(0));
@@ -2329,7 +2329,7 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
     mFirstBlurEvent = element;
   }
 
-  nsPresContext* focusedPresContext =
+  const RefPtr<nsPresContext> focusedPresContext =
       GetActiveBrowsingContext() ? presShell->GetPresContext() : nullptr;
   IMEStateManager::OnChangeFocus(focusedPresContext, nullptr,
                                  GetFocusMoveActionCause(0));
@@ -2608,7 +2608,8 @@ void nsFocusManager::Focus(
     // receive focus event.
     if (doc && ((aElement && aElement->IsInDesignMode()) ||
                 (!aElement && doc->IsInDesignMode()))) {
-      IMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
+      RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+      IMEStateManager::OnChangeFocus(presContext, nullptr,
                                      GetFocusMoveActionCause(aFlags));
     }
     if (doc && !focusInOtherContentProcess) {
@@ -2643,7 +2644,7 @@ void nsFocusManager::Focus(
     if (aElement && aFocusChanged) {
       ScrollIntoView(presShell, aElement, aFlags);
     }
-    nsPresContext* presContext = presShell->GetPresContext();
+    const RefPtr<nsPresContext> presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
       NotifyFocusStateChange(aElement, nullptr, aFlags,
                              /* aGettingFocus = */ true, shouldShowFocusRing);
@@ -2683,7 +2684,7 @@ void nsFocusManager::Focus(
     if (!mFocusedElement) {
       // When there is no focused element, IMEStateManager needs to adjust IME
       // enabled state with the document.
-      nsPresContext* presContext = presShell->GetPresContext();
+      RefPtr<nsPresContext> presContext = presShell->GetPresContext();
       IMEStateManager::OnChangeFocus(presContext, nullptr,
                                      GetFocusMoveActionCause(aFlags));
     }
@@ -5291,11 +5292,11 @@ void nsFocusManager::NotifyOfReFocus(nsIContent& aContent) {
   if (!presShell) {
     return;
   }
-  nsPresContext* presContext = presShell->GetPresContext();
+  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
   if (!presContext) {
     return;
   }
-  IMEStateManager::OnReFocus(presContext, aContent);
+  IMEStateManager::OnReFocus(*presContext, aContent);
 }
 
 void nsFocusManager::MarkUncollectableForCCGeneration(uint32_t aGeneration) {
