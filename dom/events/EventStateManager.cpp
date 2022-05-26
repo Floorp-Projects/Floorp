@@ -3501,10 +3501,11 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             // focused frame
             EnsureDocument(mPresContext);
             if (mDocument) {
+              nsCOMPtr<nsPIDOMWindowOuter> outerWindow = mDocument->GetWindow();
 #ifdef XP_MACOSX
               if (!activeContent || !activeContent->IsXULElement())
 #endif
-                fm->ClearFocus(mDocument->GetWindow());
+                fm->ClearFocus(outerWindow);
               // Prevent switch frame if we're already not in the foreground tab
               // and we're in a content process.
               // TODO: If we were inactive frame in this tab, and now in
@@ -3514,8 +3515,6 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               //       for doing this.  Therefore, we should skip setting focus
               //       to clicked document for now.
               if (XRE_IsParentProcess() || IsInActiveTab(mDocument)) {
-                nsCOMPtr<nsPIDOMWindowOuter> outerWindow =
-                    mDocument->GetWindow();
                 fm->SetFocusedWindow(outerWindow);
               }
             }
@@ -5823,8 +5822,9 @@ void EventStateManager::ContentRemoved(Document* aDocument,
 
   // inform the focus manager that the content is being removed. If this
   // content is focused, the focus will be removed without firing events.
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) fm->ContentRemoved(aDocument, aContent);
+  if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+    fm->ContentRemoved(aDocument, aContent);
+  }
 
   RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_HOVER, aContent, true);
   RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_ACTIVE, aContent, true);

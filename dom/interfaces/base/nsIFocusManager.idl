@@ -133,6 +133,7 @@ interface nsIFocusManager : nsISupports
    *
    * @throws NS_ERROR_INVALID_ARG if aWindow is null
    */
+  [can_run_script]
   void clearFocus(in mozIDOMWindowProxy aWindow);
 
   /**

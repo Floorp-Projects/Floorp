@@ -51,7 +51,7 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
 
  protected:
   virtual ~HTMLDialogElement();
-  void FocusDialog();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FocusDialog();
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
 
