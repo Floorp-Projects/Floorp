@@ -78,10 +78,9 @@ if (!build_with_chromium) {
       "tools/bwe_rtp.h",
     ]
     deps = [
-      ":remote_bitrate_estimator",
       "../../rtc_base:rtc_base_approved",
       "../../test:rtp_test_utils",
-      "../rtp_rtcp",
+      "../rtp_rtcp:rtp_rtcp_format",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/flags:flag",
@@ -94,10 +93,10 @@ if (!build_with_chromium) {
     sources = [ "tools/rtp_to_text.cc" ]
     deps = [
       ":bwe_rtp",
-      "../../modules/rtp_rtcp",
       "../../rtc_base:macromagic",
       "../../rtc_base:stringutils",
       "../../test:rtp_test_utils",
+      "../rtp_rtcp:rtp_rtcp_format",
     ]
   }
 }
