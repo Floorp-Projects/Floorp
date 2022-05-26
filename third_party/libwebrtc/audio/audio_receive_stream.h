@@ -22,6 +22,7 @@
 #include "call/audio_receive_stream.h"
 #include "call/syncable.h"
 #include "modules/rtp_rtcp/source/source_tracker.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -44,7 +45,6 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
                                  public Syncable {
  public:
   AudioReceiveStream(Clock* clock,
-                     RtpStreamReceiverControllerInterface* receiver_controller,
                      PacketRouter* packet_router,
                      ProcessThread* module_process_thread,
                      NetEqFactory* neteq_factory,
@@ -54,7 +54,6 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
   // For unit tests, which need to supply a mock channel receive.
   AudioReceiveStream(
       Clock* clock,
-      RtpStreamReceiverControllerInterface* receiver_controller,
       PacketRouter* packet_router,
       const webrtc::AudioReceiveStream::Config& config,
       const rtc::scoped_refptr<webrtc::AudioState>& audio_state,
@@ -65,7 +64,21 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
   AudioReceiveStream(const AudioReceiveStream&) = delete;
   AudioReceiveStream& operator=(const AudioReceiveStream&) = delete;
 
+  // Destruction happens on the worker thread. Prior to destruction the caller
+  // must ensure that a registration with the transport has been cleared. See
+  // `RegisterWithTransport` for details.
+  // TODO(tommi): As a further improvement to this, performing the full
+  // destruction on the network thread could be made the default.
   ~AudioReceiveStream() override;
+
+  // Called on the network thread to register/unregister with the network
+  // transport.
+  void RegisterWithTransport(
+      RtpStreamReceiverControllerInterface* receiver_controller);
+  // If registration has previously been done (via `RegisterWithTransport`) then
+  // `UnregisterFromTransport` must be called prior to destruction, on the
+  // network thread.
+  void UnregisterFromTransport();
 
   // webrtc::AudioReceiveStream implementation.
   void Reconfigure(const webrtc::AudioReceiveStream::Config& config) override;
@@ -104,16 +117,26 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
  private:
   AudioState* audio_state() const;
 
-  SequenceChecker worker_thread_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_thread_checker_;
+  // TODO(bugs.webrtc.org/11993): This checker conceptually represents
+  // operations that belong to the network thread. The Call class is currently
+  // moving towards handling network packets on the network thread and while
+  // that work is ongoing, this checker may in practice represent the worker
+  // thread, but still serves as a mechanism of grouping together concepts
+  // that belong to the network thread. Once the packets are fully delivered
+  // on the network thread, this comment will be deleted.
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker network_thread_checker_;
   webrtc::AudioReceiveStream::Config config_;
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
   SourceTracker source_tracker_;
   const std::unique_ptr<voe::ChannelReceiveInterface> channel_receive_;
-  AudioSendStream* associated_send_stream_ = nullptr;
+  AudioSendStream* associated_send_stream_
+      RTC_GUARDED_BY(network_thread_checker_) = nullptr;
 
   bool playing_ RTC_GUARDED_BY(worker_thread_checker_) = false;
 
-  std::unique_ptr<RtpStreamReceiverInterface> rtp_stream_receiver_;
+  std::unique_ptr<RtpStreamReceiverInterface> rtp_stream_receiver_
+      RTC_GUARDED_BY(network_thread_checker_);
 };
 }  // namespace internal
 }  // namespace webrtc
