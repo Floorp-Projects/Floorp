@@ -424,17 +424,16 @@ class nsFocusManager final : public nsIFocusManager,
             mozilla::dom::BrowsingContext* aAncestorBrowsingContextToFocus,
             bool aIsLeavingDocument, bool aAdjustWidget, uint64_t aActionId,
             mozilla::dom::Element* aElementToFocus = nullptr);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void BlurFromOtherProcess(
+  MOZ_CAN_RUN_SCRIPT void BlurFromOtherProcess(
       mozilla::dom::BrowsingContext* aFocusedBrowsingContext,
       mozilla::dom::BrowsingContext* aBrowsingContextToClear,
       mozilla::dom::BrowsingContext* aAncestorBrowsingContextToFocus,
       bool aIsLeavingDocument, bool aAdjustWidget, uint64_t aActionId);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  bool BlurImpl(mozilla::dom::BrowsingContext* aBrowsingContextToClear,
-                mozilla::dom::BrowsingContext* aAncestorBrowsingContextToFocus,
-                bool aIsLeavingDocument, bool aAdjustWidget,
-                mozilla::dom::Element* aElementToFocus, uint64_t aActionId);
+  MOZ_CAN_RUN_SCRIPT bool BlurImpl(
+      mozilla::dom::BrowsingContext* aBrowsingContextToClear,
+      mozilla::dom::BrowsingContext* aAncestorBrowsingContextToFocus,
+      bool aIsLeavingDocument, bool aAdjustWidget,
+      mozilla::dom::Element* aElementToFocus, uint64_t aActionId);
 
   /**
    * Focus an element in the active window and child frame.
