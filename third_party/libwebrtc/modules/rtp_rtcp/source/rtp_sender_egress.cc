@@ -409,7 +409,7 @@ void RtpSenderEgress::AddPacketToTransportFeedback(
     }
 
     RtpPacketSendInfo packet_info;
-    packet_info.ssrc = packet.Ssrc();
+    packet_info.ssrc = ssrc_;
     packet_info.transport_sequence_number = packet_id;
     packet_info.rtp_sequence_number = packet.SequenceNumber();
     packet_info.rtp_timestamp = packet.Timestamp();
