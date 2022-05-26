@@ -225,19 +225,21 @@ class nsFocusManager final : public nsIFocusManager,
   /**
    * Raises the top-level window aWindow at the widget level.
    */
-  void RaiseWindow(nsPIDOMWindowOuter* aWindow,
-                   mozilla::dom::CallerType aCallerType, uint64_t aActionId);
+  MOZ_CAN_RUN_SCRIPT void RaiseWindow(nsPIDOMWindowOuter* aWindow,
+                                      mozilla::dom::CallerType aCallerType,
+                                      uint64_t aActionId);
 
   /**
    * Called when a window has been raised.
    */
-  void WindowRaised(mozIDOMWindowProxy* aWindow, uint64_t aActionId);
+  MOZ_CAN_RUN_SCRIPT void WindowRaised(mozIDOMWindowProxy* aWindow,
+                                       uint64_t aActionId);
 
   /**
    * Called when a window has been lowered.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void WindowLowered(mozIDOMWindowProxy* aWindow,
-                                                 uint64_t aActionId);
+  MOZ_CAN_RUN_SCRIPT void WindowLowered(mozIDOMWindowProxy* aWindow,
+                                        uint64_t aActionId);
 
   /**
    * Called when a new document in a window is shown.

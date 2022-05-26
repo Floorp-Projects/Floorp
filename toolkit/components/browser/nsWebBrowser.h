@@ -103,8 +103,10 @@ class nsWebBrowser final : public nsIWebBrowser,
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   void SetAllowDNSPrefetch(bool aAllowPrefetch);
-  void FocusActivate(uint64_t aActionId);
-  void FocusDeactivate(uint64_t aActionId);
+  // TODO: Convert FocusDeactivate() to MOZ_CAN_RUN_SCRIPT
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FocusActivate(uint64_t aActionId);
+  // TODO: Convert FocusDeactivate() to MOZ_CAN_RUN_SCRIPT
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FocusDeactivate(uint64_t aActionId);
   void SetWillChangeProcess();
 
   static already_AddRefed<nsWebBrowser> Create(
