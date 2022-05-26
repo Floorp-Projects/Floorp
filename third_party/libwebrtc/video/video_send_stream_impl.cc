@@ -223,7 +223,13 @@ VideoSendStreamImpl::VideoSendStreamImpl(
       encoder_bitrate_priority_(initial_encoder_bitrate_priority),
       has_packet_feedback_(false),
       video_stream_encoder_(video_stream_encoder),
-      encoder_feedback_(clock, config_->rtp.ssrcs, video_stream_encoder),
+      encoder_feedback_(
+          clock,
+          config_->rtp.ssrcs,
+          video_stream_encoder,
+          [this](uint32_t ssrc, const std::vector<uint16_t>& seq_nums) {
+            return rtp_video_sender_->GetSentRtpPacketInfos(ssrc, seq_nums);
+          }),
       bandwidth_observer_(transport->GetBandwidthObserver()),
       rtp_video_sender_(
           transport_->CreateRtpVideoSender(suspended_ssrcs,
@@ -244,8 +250,6 @@ VideoSendStreamImpl::VideoSendStreamImpl(
   RTC_DCHECK_RUN_ON(worker_queue_);
   RTC_LOG(LS_INFO) << "VideoSendStreamInternal: " << config_->ToString();
   weak_ptr_ = weak_ptr_factory_.GetWeakPtr();
-
-  encoder_feedback_.SetRtpVideoSender(rtp_video_sender_);
 
   RTC_DCHECK(!config_->rtp.ssrcs.empty());
   RTC_DCHECK(transport_);
