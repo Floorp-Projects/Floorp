@@ -2188,6 +2188,7 @@ cricket::CandidateStatsList PeerConnection::GetPooledCandidateStats() const {
 std::map<std::string, cricket::TransportStats>
 PeerConnection::GetTransportStatsByNames(
     const std::set<std::string>& transport_names) {
+  TRACE_EVENT0("webrtc", "PeerConnection::GetTransportStatsByNames");
   RTC_DCHECK_RUN_ON(network_thread());
   if (!network_thread_safety_->alive())
     return {};
@@ -2636,6 +2637,7 @@ void PeerConnection::OnTransportControllerGatheringState(
 
 // Runs on network_thread().
 void PeerConnection::ReportTransportStats() {
+  TRACE_EVENT0("webrtc", "PeerConnection::ReportTransportStats");
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   std::map<std::string, std::set<cricket::MediaType>>
       media_types_by_transport_name;

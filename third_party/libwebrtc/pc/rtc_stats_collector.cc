@@ -1273,6 +1273,8 @@ void RTCStatsCollector::ProducePartialResultsOnSignalingThreadImpl(
 void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
     int64_t timestamp_us,
     absl::optional<std::string> sctp_transport_name) {
+  TRACE_EVENT0("webrtc",
+               "RTCStatsCollector::ProducePartialResultsOnNetworkThread");
   RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 

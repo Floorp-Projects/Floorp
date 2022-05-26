@@ -220,6 +220,7 @@ void BaseChannel::Deinit() {
 }
 
 bool BaseChannel::SetRtpTransport(webrtc::RtpTransportInternal* rtp_transport) {
+  TRACE_EVENT0("webrtc", "BaseChannel::SetRtpTransport");
   RTC_DCHECK_RUN_ON(network_thread());
   if (rtp_transport == rtp_transport_) {
     return true;
@@ -524,6 +525,7 @@ void BaseChannel::DisableMedia_w() {
 }
 
 void BaseChannel::UpdateWritableState_n() {
+  TRACE_EVENT0("webrtc", "BaseChannel::UpdateWritableState_n");
   if (rtp_transport_->IsWritable(/*rtcp=*/true) &&
       rtp_transport_->IsWritable(/*rtcp=*/false)) {
     ChannelWritable_n();
@@ -533,6 +535,7 @@ void BaseChannel::UpdateWritableState_n() {
 }
 
 void BaseChannel::ChannelWritable_n() {
+  TRACE_EVENT0("webrtc", "BaseChannel::ChannelWritable_n");
   if (writable_) {
     return;
   }
@@ -552,6 +555,7 @@ void BaseChannel::ChannelWritable_n() {
 }
 
 void BaseChannel::ChannelNotWritable_n() {
+  TRACE_EVENT0("webrtc", "BaseChannel::ChannelNotWritable_n");
   if (!writable_) {
     return;
   }

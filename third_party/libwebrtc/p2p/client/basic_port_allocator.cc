@@ -27,6 +27,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/trace_event.h"
 #include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 
@@ -268,12 +269,16 @@ BasicPortAllocatorSession::BasicPortAllocatorSession(
       network_manager_started_(false),
       allocation_sequences_created_(false),
       turn_port_prune_policy_(allocator->turn_port_prune_policy()) {
+  TRACE_EVENT0("webrtc",
+               "BasicPortAllocatorSession::BasicPortAllocatorSession");
   allocator_->network_manager()->SignalNetworksChanged.connect(
       this, &BasicPortAllocatorSession::OnNetworksChanged);
   allocator_->network_manager()->StartUpdating();
 }
 
 BasicPortAllocatorSession::~BasicPortAllocatorSession() {
+  TRACE_EVENT0("webrtc",
+               "BasicPortAllocatorSession::~BasicPortAllocatorSession");
   RTC_DCHECK_RUN_ON(network_thread_);
   allocator_->network_manager()->StopUpdating();
   if (network_thread_ != NULL)
@@ -1248,6 +1253,7 @@ void AllocationSequence::Init() {
 }
 
 void AllocationSequence::Clear() {
+  TRACE_EVENT0("webrtc", "AllocationSequence::Clear");
   udp_port_ = NULL;
   relay_ports_.clear();
 }

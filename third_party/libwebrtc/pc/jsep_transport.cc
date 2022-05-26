@@ -26,6 +26,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/strings/string_builder.h"
+#include "rtc_base/trace_event.h"
 
 using webrtc::SdpType;
 
@@ -104,6 +105,7 @@ JsepTransport::JsepTransport(
                           ? rtc::make_ref_counted<webrtc::SctpTransport>(
                                 std::move(sctp_transport))
                           : nullptr) {
+  TRACE_EVENT0("webrtc", "JsepTransport::JsepTransport");
   RTC_DCHECK(ice_transport_);
   RTC_DCHECK(rtp_dtls_transport_);
   // |rtcp_ice_transport_| must be present iff |rtcp_dtls_transport_| is
@@ -129,6 +131,7 @@ JsepTransport::JsepTransport(
 }
 
 JsepTransport::~JsepTransport() {
+  TRACE_EVENT0("webrtc", "JsepTransport::~JsepTransport");
   if (sctp_transport_) {
     sctp_transport_->Clear();
   }
@@ -147,7 +150,7 @@ webrtc::RTCError JsepTransport::SetLocalJsepTransportDescription(
     const JsepTransportDescription& jsep_description,
     SdpType type) {
   webrtc::RTCError error;
-
+  TRACE_EVENT0("webrtc", "JsepTransport::SetLocalJsepTransportDescription");
   RTC_DCHECK_RUN_ON(network_thread_);
 
   IceParameters ice_parameters =
@@ -233,6 +236,7 @@ webrtc::RTCError JsepTransport::SetLocalJsepTransportDescription(
 webrtc::RTCError JsepTransport::SetRemoteJsepTransportDescription(
     const JsepTransportDescription& jsep_description,
     webrtc::SdpType type) {
+  TRACE_EVENT0("webrtc", "JsepTransport::SetLocalJsepTransportDescription");
   webrtc::RTCError error;
 
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -344,6 +348,7 @@ absl::optional<rtc::SSLRole> JsepTransport::GetDtlsRole() const {
 }
 
 bool JsepTransport::GetStats(TransportStats* stats) {
+  TRACE_EVENT0("webrtc", "JsepTransport::GetStats");
   RTC_DCHECK_RUN_ON(network_thread_);
   stats->transport_name = mid();
   stats->channel_stats.clear();
@@ -362,6 +367,7 @@ bool JsepTransport::GetStats(TransportStats* stats) {
 webrtc::RTCError JsepTransport::VerifyCertificateFingerprint(
     const rtc::RTCCertificate* certificate,
     const rtc::SSLFingerprint* fingerprint) const {
+  TRACE_EVENT0("webrtc", "JsepTransport::VerifyCertificateFingerprint");
   RTC_DCHECK_RUN_ON(network_thread_);
   if (!fingerprint) {
     return webrtc::RTCError(webrtc::RTCErrorType::INVALID_PARAMETER,
@@ -400,6 +406,7 @@ void JsepTransport::SetActiveResetSrtpParams(bool active_reset_srtp_params) {
 void JsepTransport::SetRemoteIceParameters(
     const IceParameters& ice_parameters,
     IceTransportInternal* ice_transport) {
+  TRACE_EVENT0("webrtc", "JsepTransport::SetRemoteIceParameters");
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK(ice_transport);
   RTC_DCHECK(remote_description_);

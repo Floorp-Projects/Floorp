@@ -201,12 +201,12 @@ bool SrtpTransport::SendRtcpPacket(rtc::CopyOnWriteBuffer* packet,
 
 void SrtpTransport::OnRtpPacketReceived(rtc::CopyOnWriteBuffer packet,
                                         int64_t packet_time_us) {
+  TRACE_EVENT0("webrtc", "SrtpTransport::OnRtpPacketReceived");
   if (!IsSrtpActive()) {
     RTC_LOG(LS_WARNING)
         << "Inactive SRTP transport received an RTP packet. Drop it.";
     return;
   }
-  TRACE_EVENT0("webrtc", "SRTP Decode");
   char* data = packet.MutableData<char>();
   int len = rtc::checked_cast<int>(packet.size());
   if (!UnprotectRtp(data, len, &len)) {
@@ -233,12 +233,12 @@ void SrtpTransport::OnRtpPacketReceived(rtc::CopyOnWriteBuffer packet,
 
 void SrtpTransport::OnRtcpPacketReceived(rtc::CopyOnWriteBuffer packet,
                                          int64_t packet_time_us) {
+  TRACE_EVENT0("webrtc", "SrtpTransport::OnRtcpPacketReceived");
   if (!IsSrtpActive()) {
     RTC_LOG(LS_WARNING)
         << "Inactive SRTP transport received an RTCP packet. Drop it.";
     return;
   }
-  TRACE_EVENT0("webrtc", "SRTP Decode");
   char* data = packet.MutableData<char>();
   int len = rtc::checked_cast<int>(packet.size());
   if (!UnprotectRtcp(data, len, &len)) {

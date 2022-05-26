@@ -32,6 +32,7 @@
 #include "rtc_base/net_helper.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/thread.h"
+#include "rtc_base/trace_event.h"
 
 using webrtc::SdpType;
 
@@ -77,6 +78,7 @@ JsepTransportController::~JsepTransportController() {
 RTCError JsepTransportController::SetLocalDescription(
     SdpType type,
     const cricket::SessionDescription* description) {
+  TRACE_EVENT0("webrtc", "JsepTransportController::SetLocalDescription");
   if (!network_thread_->IsCurrent()) {
     return network_thread_->Invoke<RTCError>(
         RTC_FROM_HERE, [=] { return SetLocalDescription(type, description); });
@@ -97,6 +99,7 @@ RTCError JsepTransportController::SetLocalDescription(
 RTCError JsepTransportController::SetRemoteDescription(
     SdpType type,
     const cricket::SessionDescription* description) {
+  TRACE_EVENT0("webrtc", "JsepTransportController::SetRemoteDescription");
   if (!network_thread_->IsCurrent()) {
     return network_thread_->Invoke<RTCError>(
         RTC_FROM_HERE, [=] { return SetRemoteDescription(type, description); });
@@ -539,6 +542,7 @@ RTCError JsepTransportController::ApplyDescription_n(
     bool local,
     SdpType type,
     const cricket::SessionDescription* description) {
+  TRACE_EVENT0("webrtc", "JsepTransportController::ApplyDescription_n");
   RTC_DCHECK(description);
 
   if (local) {
@@ -866,6 +870,7 @@ void JsepTransportController::HandleRejectedContent(
 bool JsepTransportController::HandleBundledContent(
     const cricket::ContentInfo& content_info,
     const cricket::ContentGroup& bundle_group) {
+  TRACE_EVENT0("webrtc", "JsepTransportController::HandleBundledContent");
   RTC_DCHECK(bundle_group.FirstContentName());
   auto jsep_transport =
       GetJsepTransportByName(*bundle_group.FirstContentName());
@@ -887,6 +892,7 @@ bool JsepTransportController::HandleBundledContent(
 bool JsepTransportController::SetTransportForMid(
     const std::string& mid,
     cricket::JsepTransport* jsep_transport) {
+  TRACE_EVENT0("webrtc", "JsepTransportController::SetTransportForMid");
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK(jsep_transport);
 
@@ -924,6 +930,8 @@ JsepTransportController::CreateJsepTransportDescription(
     const cricket::TransportInfo& transport_info,
     const std::vector<int>& encrypted_extension_ids,
     int rtp_abs_sendtime_extn_id) {
+  TRACE_EVENT0("webrtc",
+               "JsepTransportController::CreateJsepTransportDescription");
   const cricket::MediaContentDescription* content_desc =
       content_info.media_description();
   RTC_DCHECK(content_desc);
@@ -1127,6 +1135,7 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
 
 void JsepTransportController::MaybeDestroyJsepTransport(
     const std::string& mid) {
+  TRACE_EVENT0("webrtc", "JsepTransportController::MaybeDestroyJsepTransport");
   auto jsep_transport = GetJsepTransportByName(mid);
   if (!jsep_transport) {
     return;
@@ -1280,6 +1289,7 @@ void JsepTransportController::OnTransportStateChanged_n(
 }
 
 void JsepTransportController::UpdateAggregateStates_n() {
+  TRACE_EVENT0("webrtc", "JsepTransportController::UpdateAggregateStates_n");
   auto dtls_transports = GetDtlsTransports();
   cricket::IceConnectionState new_connection_state =
       cricket::kIceConnectionConnecting;
