@@ -138,7 +138,6 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
 
 FlexfecReceiveStreamImpl::FlexfecReceiveStreamImpl(
     Clock* clock,
-    RtpStreamReceiverControllerInterface* receiver_controller,
     const Config& config,
     RecoveredPacketReceiver* recovered_packet_receiver,
     RtcpRttStats* rtt_stats,
@@ -155,28 +154,37 @@ FlexfecReceiveStreamImpl::FlexfecReceiveStreamImpl(
       process_thread_(process_thread) {
   RTC_LOG(LS_INFO) << "FlexfecReceiveStreamImpl: " << config_.ToString();
 
+  network_thread_checker_.Detach();
+
   // RTCP reporting.
   rtp_rtcp_->SetRTCPStatus(config_.rtcp_mode);
   process_thread_->RegisterModule(rtp_rtcp_.get(), RTC_FROM_HERE);
-
-  // Register with transport.
-  // TODO(nisse): OnRtpPacket in this class delegates all real work to
-  // |receiver_|. So maybe we don't need to implement RtpPacketSinkInterface
-  // here at all, we'd then delete the OnRtpPacket method and instead register
-  // |receiver_| as the RtpPacketSinkInterface for this stream.
-  // TODO(nisse): Passing |this| from the constructor to the RtpDemuxer, before
-  // the object is fully initialized, is risky. But it works in this case
-  // because locking in our caller, Call::CreateFlexfecReceiveStream, ensures
-  // that the demuxer doesn't call OnRtpPacket before this object is fully
-  // constructed. Registering |receiver_| instead of |this| would solve this
-  // problem too.
-  rtp_stream_receiver_ =
-      receiver_controller->CreateReceiver(config_.remote_ssrc, this);
 }
 
 FlexfecReceiveStreamImpl::~FlexfecReceiveStreamImpl() {
   RTC_LOG(LS_INFO) << "~FlexfecReceiveStreamImpl: " << config_.ToString();
   process_thread_->DeRegisterModule(rtp_rtcp_.get());
+}
+
+void FlexfecReceiveStreamImpl::RegisterWithTransport(
+    RtpStreamReceiverControllerInterface* receiver_controller) {
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  RTC_DCHECK(!rtp_stream_receiver_);
+
+  if (!receiver_)
+    return;
+
+  // TODO(nisse): OnRtpPacket in this class delegates all real work to
+  // `receiver_`. So maybe we don't need to implement RtpPacketSinkInterface
+  // here at all, we'd then delete the OnRtpPacket method and instead register
+  // `receiver_` as the RtpPacketSinkInterface for this stream.
+  rtp_stream_receiver_ =
+      receiver_controller->CreateReceiver(config_.remote_ssrc, this);
+}
+
+void FlexfecReceiveStreamImpl::UnregisterFromTransport() {
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  rtp_stream_receiver_.reset();
 }
 
 void FlexfecReceiveStreamImpl::OnRtpPacket(const RtpPacketReceived& packet) {

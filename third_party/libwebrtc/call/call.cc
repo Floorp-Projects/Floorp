@@ -1153,8 +1153,12 @@ FlexfecReceiveStream* Call::CreateFlexfecReceiveStream(
   // OnRtpPacket until the constructor is finished and the object is
   // in a valid state, since OnRtpPacket runs on the same thread.
   receive_stream = new FlexfecReceiveStreamImpl(
-      clock_, &video_receiver_controller_, config, recovered_packet_receiver,
-      call_stats_->AsRtcpRttStats(), module_process_thread_->process_thread());
+      clock_, config, recovered_packet_receiver, call_stats_->AsRtcpRttStats(),
+      module_process_thread_->process_thread());
+
+  // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
+  // thread.
+  receive_stream->RegisterWithTransport(&video_receiver_controller_);
 
   RTC_DCHECK(receive_rtp_config_.find(config.remote_ssrc) ==
              receive_rtp_config_.end());
@@ -1168,6 +1172,11 @@ FlexfecReceiveStream* Call::CreateFlexfecReceiveStream(
 void Call::DestroyFlexfecReceiveStream(FlexfecReceiveStream* receive_stream) {
   TRACE_EVENT0("webrtc", "Call::DestroyFlexfecReceiveStream");
   RTC_DCHECK_RUN_ON(worker_thread_);
+
+  FlexfecReceiveStreamImpl* receive_stream_impl =
+      static_cast<FlexfecReceiveStreamImpl*>(receive_stream);
+  // TODO(bugs.webrtc.org/11993): Unregister on the network thread.
+  receive_stream_impl->UnregisterFromTransport();
 
   RTC_DCHECK(receive_stream != nullptr);
   const FlexfecReceiveStream::Config& config = receive_stream->GetConfig();
