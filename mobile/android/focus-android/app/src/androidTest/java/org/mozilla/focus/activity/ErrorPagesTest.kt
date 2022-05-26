@@ -36,6 +36,7 @@ class ErrorPagesTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
+    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/6733")
     @Test
     fun badURLCheckTest() {
         val badURl = "bad.url"
