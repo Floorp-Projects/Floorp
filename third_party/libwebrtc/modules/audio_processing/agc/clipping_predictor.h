@@ -48,21 +48,21 @@ class ClippingPredictor {
 // prediction.
 std::unique_ptr<ClippingPredictor> CreateClippingEventPredictor(
     int num_channels,
-    const AudioProcessing::Config::GainController1 ::AnalogGainController::
+    const AudioProcessing::Config::GainController1::AnalogGainController::
         ClippingPredictor& config);
 
 // Creates a ClippingPredictor based on crest factor-based peak estimation and
 // fixed-step clipped level step estimation.
 std::unique_ptr<ClippingPredictor> CreateFixedStepClippingPeakPredictor(
     int num_channels,
-    const AudioProcessing::Config::GainController1 ::AnalogGainController::
+    const AudioProcessing::Config::GainController1::AnalogGainController::
         ClippingPredictor& config);
 
 // Creates a ClippingPredictor based on crest factor-based peak estimation and
 // adaptive-step clipped level step estimation.
 std::unique_ptr<ClippingPredictor> CreateAdaptiveStepClippingPeakPredictor(
     int num_channels,
-    const AudioProcessing::Config::GainController1 ::AnalogGainController::
+    const AudioProcessing::Config::GainController1::AnalogGainController::
         ClippingPredictor& config);
 
 }  // namespace webrtc

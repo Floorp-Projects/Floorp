@@ -1921,7 +1921,8 @@ void AudioProcessingImpl::InitializeGainController1() {
         capture_nonlocked_.split_rate,
         config_.gain_controller1.analog_gain_controller.clipped_level_step,
         config_.gain_controller1.analog_gain_controller.clipped_ratio_threshold,
-        config_.gain_controller1.analog_gain_controller.clipped_wait_frames));
+        config_.gain_controller1.analog_gain_controller.clipped_wait_frames,
+        config_.gain_controller1.analog_gain_controller.clipping_predictor));
     if (re_creation) {
       submodules_.agc_manager->set_stream_analog_level(stream_analog_level);
     }
