@@ -49,8 +49,8 @@ class IMEStateManager {
 
   /**
    * GetActiveBrowserParent() returns a pointer to a BrowserParent instance
-   * which is managed by the focused content (sContent).  If the focused content
-   * isn't managing another process, this returns nullptr.
+   * which is managed by the focused content (sFocusedContent).  If the focused
+   * content isn't managing another process, this returns nullptr.
    */
   static BrowserParent* GetActiveBrowserParent() {
     // If menu has pseudo focus, we should ignore active child process.
@@ -361,23 +361,27 @@ class IMEStateManager {
    */
   static bool HasActiveChildSetInputContext();
 
-  // sContent and sPresContext are the focused content and PresContext.  If a
-  // document has focus but there is no focused element, sContent may be
-  // nullptr.
-  static StaticRefPtr<nsIContent> sContent;
-  static StaticRefPtr<nsPresContext> sPresContext;
-  // sWidget is cache for the root widget of sPresContext.  Even afer
-  // sPresContext has gone, we need to clean up some IME state on the widget
-  // if the widget is available.
-  static nsIWidget* sWidget;
+  // sFocusedContent and sFocusedPresContext are the focused content and
+  // PresContext.  If a document has focus but there is no focused element,
+  // sFocusedContent may be nullptr.
+  static StaticRefPtr<nsIContent> sFocusedContent;
+  static StaticRefPtr<nsPresContext> sFocusedPresContext;
+  // sTextInputHandlingWidget is cache for the result of
+  // sFocusedPresContext->GetTextInputHandlingWidget().  Even after
+  // sFocusedPresContext has gone, we need to clean up some IME state on the
+  // widget if the widget is available.
+  // Note that this is cleared when the widget is being destroyed.
+  static nsIWidget* sTextInputHandlingWidget;
   // sFocusedIMEBrowserParent is the tab parent, which send "focus" notification
   // to sFocusedIMEWidget (and didn't yet sent "blur" notification).
+  // Note that this is cleared when the widget is being destroyed.
   static nsIWidget* sFocusedIMEWidget;
   static StaticRefPtr<BrowserParent> sFocusedIMEBrowserParent;
   // sActiveInputContextWidget is the last widget whose SetInputContext() is
   // called.  This is important to reduce sync IPC cost with parent process.
   // If IMEStateManager set input context to different widget, PuppetWidget can
   // return cached input context safely.
+  // Note that this is cleared when the widget is being destroyed.
   static nsIWidget* sActiveInputContextWidget;
   // sActiveIMEContentObserver points to the currently active
   // IMEContentObserver.  This is null if there is no focused editor.
