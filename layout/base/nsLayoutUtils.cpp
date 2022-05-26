@@ -1119,10 +1119,10 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
   MOZ_ASSERT(aContent1, "aContent1 must not be null");
   MOZ_ASSERT(aContent2, "aContent2 must not be null");
 
-  AutoTArray<nsIContent*, 32> content1Ancestors;
-  nsIContent* c1;
+  AutoTArray<nsINode*, 32> content1Ancestors;
+  nsINode* c1;
   for (c1 = aContent1; c1 && c1 != aCommonAncestor;
-       c1 = c1->GetFlattenedTreeParent()) {
+       c1 = c1->GetParentOrShadowHostNode()) {
     content1Ancestors.AppendElement(c1);
   }
   if (!c1 && aCommonAncestor) {
@@ -1131,10 +1131,10 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
     aCommonAncestor = nullptr;
   }
 
-  AutoTArray<nsIContent*, 32> content2Ancestors;
-  nsIContent* c2;
+  AutoTArray<nsINode*, 32> content2Ancestors;
+  nsINode* c2;
   for (c2 = aContent2; c2 && c2 != aCommonAncestor;
-       c2 = c2->GetFlattenedTreeParent()) {
+       c2 = c2->GetParentOrShadowHostNode()) {
     content2Ancestors.AppendElement(c2);
   }
   if (!c2 && aCommonAncestor) {
@@ -1146,8 +1146,8 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
 
   int last1 = content1Ancestors.Length() - 1;
   int last2 = content2Ancestors.Length() - 1;
-  nsIContent* content1Ancestor = nullptr;
-  nsIContent* content2Ancestor = nullptr;
+  nsINode* content1Ancestor = nullptr;
+  nsINode* content2Ancestor = nullptr;
   while (last1 >= 0 && last2 >= 0 &&
          ((content1Ancestor = content1Ancestors.ElementAt(last1)) ==
           (content2Ancestor = content2Ancestors.ElementAt(last2)))) {
@@ -1171,7 +1171,7 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
 
   // content1Ancestor != content2Ancestor, so they must be siblings with the
   // same parent
-  nsIContent* parent = content1Ancestor->GetFlattenedTreeParent();
+  nsINode* parent = content1Ancestor->GetParentOrShadowHostNode();
 #ifdef DEBUG
   // TODO: remove the uglyness, see bug 598468.
   NS_ASSERTION(gPreventAssertInCompareTreePosition || parent,
@@ -1181,10 +1181,8 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
     return 0;
   }
 
-  const Maybe<uint32_t> index1 =
-      parent->ComputeFlatTreeIndexOf(content1Ancestor);
-  const Maybe<uint32_t> index2 =
-      parent->ComputeFlatTreeIndexOf(content2Ancestor);
+  const Maybe<uint32_t> index1 = parent->ComputeIndexOf(content1Ancestor);
+  const Maybe<uint32_t> index2 = parent->ComputeIndexOf(content2Ancestor);
 
   // None of the nodes are anonymous, just do a regular comparison.
   if (index1.isSome() && index2.isSome()) {
