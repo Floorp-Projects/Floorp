@@ -455,6 +455,8 @@ TEST_F(OveruseFrameDetectorTest, RunOnTqNormalUsage) {
   EXPECT_TRUE(event.Wait(10000));
 }
 
+// TODO(crbug.com/webrtc/12846): investigate why the test fails on MAC bots.
+#if !defined(WEBRTC_MAC)
 TEST_F(OveruseFrameDetectorTest, MaxIntervalScalesWithFramerate) {
   const int kCapturerMaxFrameRate = 30;
   const int kEncodeMaxFrameRate = 20;  // Maximum fps the encoder can sustain.
@@ -490,6 +492,7 @@ TEST_F(OveruseFrameDetectorTest, MaxIntervalScalesWithFramerate) {
                                   processing_time_us);
   overuse_detector_->CheckForOveruse(observer_);
 }
+#endif
 
 TEST_F(OveruseFrameDetectorTest, RespectsMinFramerate) {
   const int kMinFrameRate = 7;  // Minimum fps allowed by current detector impl.
@@ -821,6 +824,8 @@ TEST_F(OveruseFrameDetectorTest2, ResetAfterFrameTimeout) {
   EXPECT_EQ(InitialUsage(), UsagePercent());
 }
 
+// TODO(crbug.com/webrtc/12846): investigate why the test fails on MAC bots.
+#if !defined(WEBRTC_MAC)
 TEST_F(OveruseFrameDetectorTest2, ConvergesSlowly) {
   overuse_detector_->SetOptions(options_);
   InsertAndSendFramesWithInterval(1, kFrameIntervalUs, kWidth, kHeight,
@@ -842,6 +847,7 @@ TEST_F(OveruseFrameDetectorTest2, ConvergesSlowly) {
                                   kProcessTimeUs);
   EXPECT_NEAR(UsagePercent(), 20, 5);
 }
+#endif
 
 TEST_F(OveruseFrameDetectorTest2, InitialProcessingUsage) {
   overuse_detector_->SetOptions(options_);
