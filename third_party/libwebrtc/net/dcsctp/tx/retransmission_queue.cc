@@ -724,11 +724,16 @@ void RetransmissionQueue::ExpireChunks(TimeMs now) {
     // can be expired easily. There is always a risk that a message is expired
     // that was already received by the peer, but for which there haven't been
     // a SACK received. But that's acceptable, and handled.
-    if (item.has_expired(now)) {
+    if (item.is_abandoned()) {
+      // Already abandoned.
+    } else if (item.has_expired(now)) {
       RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Marking chunk " << *tsn.Wrap()
                            << " and message " << *item.data().message_id
                            << " as expired";
       ExpireAllFor(item);
+    } else {
+      // A non-expired chunk. No need to iterate any further.
+      break;
     }
   }
 }
