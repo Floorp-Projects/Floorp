@@ -142,7 +142,7 @@ void LossBasedBandwidthEstimation::UpdateLossStatistics(
   }
   int loss_count = 0;
   for (const auto& pkt : packet_results) {
-    loss_count += pkt.receive_time.IsInfinite() ? 1 : 0;
+    loss_count += !pkt.IsReceived() ? 1 : 0;
   }
   last_loss_ratio_ = static_cast<double>(loss_count) / packet_results.size();
   const TimeDelta time_passed = last_loss_packet_report_.IsFinite()
