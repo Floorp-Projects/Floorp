@@ -11335,12 +11335,6 @@
   value: true
   mirror: always
 
-# Whether we allow the print progress dialog to show up.
-- name: print.show_print_progress
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether we attempt to generate links in Save As PDF output.
 - name: print.save_as_pdf.links.enabled
   type: RelaxedAtomicBool
