@@ -253,8 +253,8 @@ class nsFocusManager final : public nsIFocusManager,
    * Called when a document in a window has been hidden or otherwise can no
    * longer accept focus.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void WindowHidden(mozIDOMWindowProxy* aWindow,
-                                                uint64_t aActionId);
+  MOZ_CAN_RUN_SCRIPT void WindowHidden(mozIDOMWindowProxy* aWindow,
+                                       uint64_t aActionId);
 
   /**
    * Fire any events that have been delayed due to synchronized actions.
