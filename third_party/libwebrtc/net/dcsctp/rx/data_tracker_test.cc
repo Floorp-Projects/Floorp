@@ -295,5 +295,97 @@ TEST_F(DataTrackerTest, LimitsNumberOfGapAckBlocksReported) {
               SizeIs(DataTracker::kMaxGapAckBlocksReported));
 }
 
+TEST_F(DataTrackerTest, SendsSackForFirstPacketObserved) {
+  Observer({11});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+}
+
+TEST_F(DataTrackerTest, SendsSackEverySecondPacketWhenThereIsNoPacketLoss) {
+  Observer({11});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  Observer({12});
+  buf_.ObservePacketEnd();
+  EXPECT_FALSE(buf_.ShouldSendAck());
+  EXPECT_TRUE(timer_->is_running());
+  Observer({13});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  Observer({14});
+  buf_.ObservePacketEnd();
+  EXPECT_FALSE(buf_.ShouldSendAck());
+  EXPECT_TRUE(timer_->is_running());
+  Observer({15});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+}
+
+TEST_F(DataTrackerTest, SendsSackEveryPacketOnPacketLoss) {
+  Observer({11});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  Observer({13});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  Observer({14});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  Observer({15});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  Observer({16});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  // Fill the hole.
+  Observer({12});
+  buf_.ObservePacketEnd();
+  EXPECT_FALSE(buf_.ShouldSendAck());
+  EXPECT_TRUE(timer_->is_running());
+  // Goes back to every second packet
+  Observer({17});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  Observer({18});
+  buf_.ObservePacketEnd();
+  EXPECT_FALSE(buf_.ShouldSendAck());
+  EXPECT_TRUE(timer_->is_running());
+}
+
+TEST_F(DataTrackerTest, SendsSackOnDuplicateDataChunks) {
+  Observer({11});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  Observer({11});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  Observer({12});
+  buf_.ObservePacketEnd();
+  EXPECT_FALSE(buf_.ShouldSendAck());
+  EXPECT_TRUE(timer_->is_running());
+  // Goes back to every second packet
+  Observer({13});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+  // Duplicate again
+  Observer({12});
+  buf_.ObservePacketEnd();
+  EXPECT_TRUE(buf_.ShouldSendAck());
+  EXPECT_FALSE(timer_->is_running());
+}
+
 }  // namespace
 }  // namespace dcsctp

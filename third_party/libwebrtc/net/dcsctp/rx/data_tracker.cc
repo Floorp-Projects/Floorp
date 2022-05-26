@@ -58,24 +58,36 @@ void DataTracker::Observe(TSN tsn,
     if (duplicate_tsns_.size() < kMaxDuplicateTsnReported) {
       duplicate_tsns_.insert(unwrapped_tsn.Wrap());
     }
-    return;
-  }
-
-  if (unwrapped_tsn == last_cumulative_acked_tsn_.next_value()) {
-    last_cumulative_acked_tsn_ = unwrapped_tsn;
-    // The cumulative acked tsn may be moved even further, if a gap was filled.
-    while (!additional_tsns_.empty() &&
-           *additional_tsns_.begin() ==
-               last_cumulative_acked_tsn_.next_value()) {
-      last_cumulative_acked_tsn_.Increment();
-      additional_tsns_.erase(additional_tsns_.begin());
-    }
+    // https://datatracker.ietf.org/doc/html/rfc4960#section-6.2
+    // "When a packet arrives with duplicate DATA chunk(s) and with no new DATA
+    // chunk(s), the endpoint MUST immediately send a SACK with no delay. If a
+    // packet arrives with duplicate DATA chunk(s) bundled with new DATA chunks,
+    // the endpoint MAY immediately send a SACK."
+    UpdateAckState(AckState::kImmediate, "duplicate data");
   } else {
-    bool inserted = additional_tsns_.insert(unwrapped_tsn).second;
-    if (!inserted) {
-      // Already seen before.
-      if (duplicate_tsns_.size() < kMaxDuplicateTsnReported) {
-        duplicate_tsns_.insert(unwrapped_tsn.Wrap());
+    if (unwrapped_tsn == last_cumulative_acked_tsn_.next_value()) {
+      last_cumulative_acked_tsn_ = unwrapped_tsn;
+      // The cumulative acked tsn may be moved even further, if a gap was
+      // filled.
+      while (!additional_tsns_.empty() &&
+             *additional_tsns_.begin() ==
+                 last_cumulative_acked_tsn_.next_value()) {
+        last_cumulative_acked_tsn_.Increment();
+        additional_tsns_.erase(additional_tsns_.begin());
+      }
+    } else {
+      bool inserted = additional_tsns_.insert(unwrapped_tsn).second;
+      if (!inserted) {
+        // Already seen before.
+        if (duplicate_tsns_.size() < kMaxDuplicateTsnReported) {
+          duplicate_tsns_.insert(unwrapped_tsn.Wrap());
+        }
+        // https://datatracker.ietf.org/doc/html/rfc4960#section-6.2
+        // "When a packet arrives with duplicate DATA chunk(s) and with no new
+        // DATA chunk(s), the endpoint MUST immediately send a SACK with no
+        // delay. If a packet arrives with duplicate DATA chunk(s) bundled with
+        // new DATA chunks, the endpoint MAY immediately send a SACK."
+        // No need to do this. SACKs are sent immediately on packet loss below.
       }
     }
   }
