@@ -67,6 +67,39 @@ const TEST_DATA = [
     },
   },
   {
+    description: "Mutiple case difference input history",
+    pref: true,
+    visitHistory: ["http://example.com/yes", "http://example.com/no"],
+    inputHistory: [
+      { uri: "http://example.com/yes", input: "exa" },
+      { uri: "http://example.com/yes", input: "EXA" },
+      { uri: "http://example.com/yes", input: "EXa" },
+      { uri: "http://example.com/yes", input: "eXa" },
+      { uri: "http://example.com/yes", input: "eXA" },
+      { uri: "http://example.com/no", input: "exa" },
+      { uri: "http://example.com/no", input: "exa" },
+      { uri: "http://example.com/no", input: "exa" },
+    ],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/yes",
+      completed: "http://example.com/yes",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/yes",
+            title: "example.com/yes",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/no",
+            title: "test visit for http://example.com/no",
+          }),
+      ],
+    },
+  },
+  {
     description: "Multiple input history count",
     pref: true,
     visitHistory: ["http://example.com/few", "http://example.com/many"],
