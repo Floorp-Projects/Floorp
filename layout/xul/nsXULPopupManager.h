@@ -389,7 +389,6 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   virtual bool ShouldRollupOnMouseActivate() override;
   virtual uint32_t GetSubmenuWidgetChain(
       nsTArray<nsIWidget*>* aWidgetChain) override;
-  virtual void NotifyGeometryChange() override {}
   virtual nsIWidget* GetRollupWidget() override;
   virtual bool RollupNativeMenu() override;
 

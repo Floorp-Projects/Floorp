@@ -244,7 +244,6 @@ void HeadlessWidget::Move(double aX, double aY) {
   }
 
   mBounds.MoveTo(x, y);
-  NotifyRollupGeometryChange();
 }
 
 LayoutDeviceIntPoint HeadlessWidget::WidgetToScreenOffset() {
