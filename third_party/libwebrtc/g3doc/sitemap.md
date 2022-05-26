@@ -11,6 +11,7 @@
         *   STUN
         *   TURN
         *   [DTLS](/pc/g3doc/dtls_transport.md)
+        *   [SRTP](/pc/g3doc/srtp.md)
         *   [SCTP](/pc/g3doc/sctp_transport.md)
         *   [Pacing buffer](/modules/pacing/g3doc/index.md)
     *   Congestion control and bandwidth estimation
