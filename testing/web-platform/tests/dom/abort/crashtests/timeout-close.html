@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="test-wait">
+<meta charset="utf-8">
+<script>
+  const xhr = new XMLHttpRequest()
+  setTimeout(() => {
+    xhr.open('GET', '/', false)
+    xhr.send()
+    AbortSignal.timeout(41.62684667994843)
+  }, 1)
+  setTimeout(() => {
+    location.href = "about:blank"
+    document.documentElement.classList.remove("test-wait")
+  }, 0)
+</script>
