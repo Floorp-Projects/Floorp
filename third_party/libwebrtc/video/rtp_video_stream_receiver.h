@@ -427,9 +427,6 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
       RTC_GUARDED_BY(packet_buffer_lock_);
 };
 
-// TODO(philipel): Remove when downstream has been updated.
-using OnCompleteFrameCallback = RtpVideoStreamReceiver::OnCompleteFrameCallback;
-
 }  // namespace webrtc
 
 #endif  // VIDEO_RTP_VIDEO_STREAM_RECEIVER_H_
