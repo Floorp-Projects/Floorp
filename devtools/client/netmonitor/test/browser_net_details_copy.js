@@ -106,6 +106,7 @@ add_task(async function() {
       Status: "200OK",
       Version: "HTTP/1.1",
       Transferred: "650 B (465 B size)",
+      "Request Priority": "Highest",
     },
     null,
     "\t"
