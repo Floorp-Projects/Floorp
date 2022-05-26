@@ -106,7 +106,9 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
 
   std::map<uint32_t, RtpPayloadState> GetRtpPayloadStates() const;
 
-  absl::optional<float> configured_pacing_factor_;
+  const absl::optional<float>& configured_pacing_factor() const {
+    return configured_pacing_factor_;
+  }
 
  private:
   // Implements BitrateAllocatorObserver.
@@ -172,7 +174,6 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   uint32_t encoder_max_bitrate_bps_;
   uint32_t encoder_target_rate_bps_;
   double encoder_bitrate_priority_;
-  bool has_packet_feedback_;
 
   VideoStreamEncoderInterface* const video_stream_encoder_;
   EncoderRtcpFeedback encoder_feedback_;
@@ -197,6 +198,7 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   };
   absl::optional<VbaSendContext> video_bitrate_allocation_context_
       RTC_GUARDED_BY(worker_queue_);
+  const absl::optional<float> configured_pacing_factor_;
 };
 }  // namespace internal
 }  // namespace webrtc
