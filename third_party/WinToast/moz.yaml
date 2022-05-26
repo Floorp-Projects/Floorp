@@ -1,5 +1,5 @@
 # Version of this schema
-schema: 1
+schema: 2
 
 # Manual Update can be done with:
 # cd third_pary/WinToast
@@ -7,6 +7,7 @@ schema: 1
 # wget https://raw.githubusercontent.com/mohabouje/WinToast/master/src/wintoastlib.h
 # patch -p2 < moz-check-system-shortcut.patch
 # patch -p2 < moz-disable-create-shortcut.patch
+# patch -p2 < upstream-add-toast-scenario.patch
 
 bugzilla:
   # Bugzilla product and component for this directory and subdirectories

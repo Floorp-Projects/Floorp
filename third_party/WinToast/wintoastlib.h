@@ -63,6 +63,7 @@ namespace WinToastLib {
 
     class WinToastTemplate {
     public:
+        enum class Scenario { Default, Alarm, IncomingCall, Reminder };
         enum Duration { System, Short, Long };
         enum AudioOption { Default = 0, Silent, Loop };
         enum TextField { FirstLine = 0, SecondLine, ThirdLine };
@@ -114,13 +115,14 @@ namespace WinToastLib {
         void setSecondLine(_In_ const std::wstring& text);
         void setThirdLine(_In_ const std::wstring& text);
         void setTextField(_In_ const std::wstring& txt, _In_ TextField pos);
-        void setAttributionText(_In_ const std::wstring & attributionText);
+        void setAttributionText(_In_ const std::wstring& attributionText);
         void setImagePath(_In_ const std::wstring& imgPath);
         void setAudioPath(_In_ WinToastTemplate::AudioSystemFile audio);
         void setAudioPath(_In_ const std::wstring& audioPath);
         void setAudioOption(_In_ WinToastTemplate::AudioOption audioOption);
         void setDuration(_In_ Duration duration);
         void setExpiration(_In_ INT64 millisecondsFromNow);
+        void setScenario(_In_ Scenario scenario);
         void addAction(_In_ const std::wstring& label);
 
         std::size_t textFieldsCount() const;
@@ -132,6 +134,7 @@ namespace WinToastLib {
         const std::wstring& imagePath() const;
         const std::wstring& audioPath() const;
         const std::wstring& attributionText() const;
+        const std::wstring& scenario() const;
         INT64 expiration() const;
         WinToastTemplateType type() const;
         WinToastTemplate::AudioOption audioOption() const;
@@ -142,6 +145,7 @@ namespace WinToastLib {
         std::wstring                        _imagePath{};
         std::wstring                        _audioPath{};
         std::wstring                        _attributionText{};
+        std::wstring                        _scenario{L"Default"};
         INT64                               _expiration{0};
         AudioOption                         _audioOption{WinToastTemplate::AudioOption::Default};
         WinToastTemplateType                _type{WinToastTemplateType::Text01};
@@ -222,6 +226,7 @@ namespace WinToastLib {
         HRESULT setAttributionTextFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& text);
         HRESULT addActionHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& action, _In_ const std::wstring& arguments);
         HRESULT addDurationHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& duration);
+        HRESULT addScenarioHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& scenario);
         ComPtr<IToastNotifier> notifier(_In_ bool* succeded) const;
         void setError(_Out_ WinToastError* error, _In_ WinToastError value);
     };
