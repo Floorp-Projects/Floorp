@@ -14,11 +14,8 @@
 #include <map>
 #include <set>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "rtc_base/hash.h"
 
 namespace webrtc {
 
@@ -171,14 +168,12 @@ class RtpDemuxer {
   // Note: Mappings are only modified by AddSink/RemoveSink (except for
   // SSRC mapping which receives all MID, payload type, or RSID to SSRC bindings
   // discovered when demuxing packets).
-  std::unordered_map<std::string, RtpPacketSinkInterface*> sink_by_mid_;
-  std::unordered_map<uint32_t, RtpPacketSinkInterface*> sink_by_ssrc_;
-  std::unordered_multimap<uint8_t, RtpPacketSinkInterface*> sinks_by_pt_;
-  std::unordered_map<std::pair<std::string, std::string>,
-                     RtpPacketSinkInterface*,
-                     webrtc::PairHash>
+  std::map<std::string, RtpPacketSinkInterface*> sink_by_mid_;
+  std::map<uint32_t, RtpPacketSinkInterface*> sink_by_ssrc_;
+  std::multimap<uint8_t, RtpPacketSinkInterface*> sinks_by_pt_;
+  std::map<std::pair<std::string, std::string>, RtpPacketSinkInterface*>
       sink_by_mid_and_rsid_;
-  std::unordered_map<std::string, RtpPacketSinkInterface*> sink_by_rsid_;
+  std::map<std::string, RtpPacketSinkInterface*> sink_by_rsid_;
 
   // Tracks all the MIDs that have been identified in added criteria. Used to
   // determine if a packet should be dropped right away because the MID is
@@ -189,8 +184,8 @@ class RtpDemuxer {
   // received.
   // This is stored separately from the sink mappings because if a sink is
   // removed we want to still remember these associations.
-  std::unordered_map<uint32_t, std::string> mid_by_ssrc_;
-  std::unordered_map<uint32_t, std::string> rsid_by_ssrc_;
+  std::map<uint32_t, std::string> mid_by_ssrc_;
+  std::map<uint32_t, std::string> rsid_by_ssrc_;
 
   // Adds a binding from the SSRC to the given sink.
   void AddSsrcSinkBinding(uint32_t ssrc, RtpPacketSinkInterface* sink);
