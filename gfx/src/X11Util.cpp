@@ -39,4 +39,43 @@ void FinishX(Display* aDisplay) {
   XSync(aDisplay, X11False);
 }
 
+ScopedXErrorHandler::ErrorEvent* ScopedXErrorHandler::sXErrorPtr;
+
+int ScopedXErrorHandler::ErrorHandler(Display*, XErrorEvent* ev) {
+  // only record the error if no error was previously recorded.
+  // this means that in case of multiple errors, it's the first error that we
+  // report.
+  if (!sXErrorPtr->mError.error_code) sXErrorPtr->mError = *ev;
+  return 0;
+}
+
+ScopedXErrorHandler::ScopedXErrorHandler(bool aAllowOffMainThread) {
+  if (!aAllowOffMainThread) {
+    // Off main thread usage is not safe in general, but OMTC GL layers uses
+    // this with the main thread blocked, which makes it safe.
+    NS_WARNING_ASSERTION(
+        NS_IsMainThread(),
+        "ScopedXErrorHandler being called off main thread, may cause issues");
+  }
+  // let sXErrorPtr point to this object's mXError object, but don't reset this
+  // mXError object! think of the case of nested ScopedXErrorHandler's.
+  mOldXErrorPtr = sXErrorPtr;
+  sXErrorPtr = &mXError;
+  mOldErrorHandler = XSetErrorHandler(ErrorHandler);
+}
+
+ScopedXErrorHandler::~ScopedXErrorHandler() {
+  sXErrorPtr = mOldXErrorPtr;
+  XSetErrorHandler(mOldErrorHandler);
+}
+
+bool ScopedXErrorHandler::SyncAndGetError(Display* dpy, XErrorEvent* ev) {
+  FinishX(dpy);
+
+  bool retval = mXError.mError.error_code != 0;
+  if (ev) *ev = mXError.mError;
+  mXError = ErrorEvent();  // reset
+  return retval;
+}
+
 }  // namespace mozilla
