@@ -38,6 +38,11 @@ namespace dcsctp {
 // 200ms, whatever is smallest).
 class DataTracker {
  public:
+  // The maximum number of duplicate TSNs that will be reported in a SACK.
+  static constexpr size_t kMaxDuplicateTsnReported = 20;
+  // The maximum number of gap-ack-blocks that will be reported in a SACK.
+  static constexpr size_t kMaxGapAckBlocksReported = 20;
+
   // The maximum number of accepted in-flight DATA chunks. This indicates the
   // maximum difference from this buffer's last cumulative ack TSN, and any
   // received data. Data received beyond this limit will be dropped, which will
