@@ -53,11 +53,11 @@ class ICFallbackStub;
 //      ex) cacheIRHealthReport(foo)
 //
 // Once you have generated a health report, you may go to
-// https://carolinecullen.github.io/cacheirhealthreport/ to visualize the data
-// and aid in understanding what may be going wrong with the CacheIR for a
+// https://mozilla-spidermonkey.github.io/cacheirhealthreport/ to visualize the
+// data and aid in understanding what may be going wrong with the CacheIR for a
 // particular stub. For more information about the tool and why a particular
 // script, inline cache entry, or stub is unhappy go to:
-// https://carolinecullen.github.io/cacheirhealthreport/info.html
+// https://mozilla-spidermonkey.github.io/cacheirhealthreport/info.html
 //
 enum SpewContext : uint8_t { Shell, Transition, TrialInlining };
 
