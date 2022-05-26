@@ -1097,9 +1097,12 @@ void Call::DestroyVideoSendStream(webrtc::VideoSendStream* send_stream) {
   RTC_DCHECK(send_stream != nullptr);
   RTC_DCHECK_RUN_ON(worker_thread_);
 
-  send_stream->Stop();
-
-  VideoSendStream* send_stream_impl = nullptr;
+  VideoSendStream* send_stream_impl =
+      static_cast<VideoSendStream*>(send_stream);
+  VideoSendStream::RtpStateMap rtp_states;
+  VideoSendStream::RtpPayloadStateMap rtp_payload_states;
+  send_stream_impl->StopPermanentlyAndGetRtpStates(&rtp_states,
+                                                   &rtp_payload_states);
 
   auto it = video_send_ssrcs_.begin();
   while (it != video_send_ssrcs_.end()) {
@@ -1110,6 +1113,7 @@ void Call::DestroyVideoSendStream(webrtc::VideoSendStream* send_stream) {
       ++it;
     }
   }
+
   // Stop forwarding resources to the stream being destroyed.
   for (const auto& resource_forwarder : adaptation_resource_forwarders_) {
     resource_forwarder->OnDestroyVideoSendStream(send_stream_impl);
@@ -1118,12 +1122,6 @@ void Call::DestroyVideoSendStream(webrtc::VideoSendStream* send_stream) {
   if (video_send_streams_.empty())
     video_send_streams_empty_.store(true, std::memory_order_relaxed);
 
-  RTC_CHECK(send_stream_impl != nullptr);
-
-  VideoSendStream::RtpStateMap rtp_states;
-  VideoSendStream::RtpPayloadStateMap rtp_payload_states;
-  send_stream_impl->StopPermanentlyAndGetRtpStates(&rtp_states,
-                                                   &rtp_payload_states);
   for (const auto& kv : rtp_states) {
     suspended_video_send_ssrcs_[kv.first] = kv.second;
   }
@@ -1132,6 +1130,8 @@ void Call::DestroyVideoSendStream(webrtc::VideoSendStream* send_stream) {
   }
 
   UpdateAggregateNetworkState();
+  // TODO(tommi): consider deleting on the same thread as runs
+  // StopPermanentlyAndGetRtpStates.
   delete send_stream_impl;
 }
 
