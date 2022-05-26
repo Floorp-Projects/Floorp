@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Audio decoder in Utility process</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+(async function() {
+  for (let src of [
+    "small-shot.ogg",
+    "small-shot.mp3",
+    "small-shot.flac"
+  ]) {
+    try {
+      await runMochitestUtilityAudio(src, { expectUtility: true, expectContent: false });
+    } catch (ex) {
+      ok(false, "Failure");
+    }
+  }
+
+  // Remove all after Bug 1771196
+  for (let src of [
+    "small-shot.m4a",
+  ]) {
+    try {
+      await runMochitestUtilityAudio(src, { expectUtility: false, expectContent: true });
+    } catch (ex) {
+      ok(false, "Failure");
+    }
+  }
+
+  SimpleTest.finish();
+})();
+</script>
+</pre>
+</body>
+</html>
