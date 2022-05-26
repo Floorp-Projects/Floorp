@@ -22,9 +22,12 @@
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
 #include "rtc_base/event.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
+#include "video/encoder_rtcp_feedback.h"
 #include "video/send_delay_stats.h"
 #include "video/send_statistics_proxy.h"
+#include "video/video_send_stream_impl.h"
 
 namespace webrtc {
 namespace test {
@@ -44,8 +47,7 @@ class VideoSendStreamImpl;
 
 // VideoSendStream implements webrtc::VideoSendStream.
 // Internally, it delegates all public methods to VideoSendStreamImpl and / or
-// VideoStreamEncoder. VideoSendStreamInternal is created and deleted on
-// |worker_queue|.
+// VideoStreamEncoder.
 class VideoSendStream : public webrtc::VideoSendStream {
  public:
   using RtpStateMap = std::map<uint32_t, RtpState>;
@@ -96,15 +98,19 @@ class VideoSendStream : public webrtc::VideoSendStream {
 
   absl::optional<float> GetPacingFactorOverride() const;
 
-  SequenceChecker thread_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker thread_checker_;
   rtc::TaskQueue* const rtp_transport_queue_;
+  RtpTransportControllerSendInterface* const transport_;
   rtc::Event thread_sync_event_;
 
   SendStatisticsProxy stats_proxy_;
   const VideoSendStream::Config config_;
   const VideoEncoderConfig::ContentType content_type_;
-  std::unique_ptr<VideoSendStreamImpl> send_stream_;
   std::unique_ptr<VideoStreamEncoderInterface> video_stream_encoder_;
+  EncoderRtcpFeedback encoder_feedback_;
+  RtpVideoSenderInterface* const rtp_video_sender_ = nullptr;
+  VideoSendStreamImpl send_stream_;
+  bool running_ RTC_GUARDED_BY(thread_checker_) = false;
 };
 
 }  // namespace internal
