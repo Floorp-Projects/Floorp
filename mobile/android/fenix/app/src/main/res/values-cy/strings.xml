@@ -1618,6 +1618,8 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="addresses_state">Sir/Talaith</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Cod Post/Zip</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Gwlad neu ranbarth</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Ffôn</string>
     <!-- The header for the email of an address -->
