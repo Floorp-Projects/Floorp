@@ -41,6 +41,7 @@ rtc_library("rtc_pc_base") {
   visibility = [ "*" ]
   defines = []
   sources = [
+    "bundle_manager.h",
     "channel.cc",
     "channel.h",
     "channel_interface.h",
