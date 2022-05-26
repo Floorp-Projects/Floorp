@@ -154,7 +154,10 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // Decryption not SRTP.
   bool IsDecryptable() const;
 
-  // Don't use, still experimental.
+  // Request packet retransmits via NACK. Called via
+  // VideoReceiveStream2::SendNack, which gets called when
+  // RtpVideoStreamReceiver2::RtcpFeedbackBuffer's SendNack and
+  // SendBufferedRtcpFeedback methods (see `rtcp_feedback_buffer_` below).
   void RequestPacketRetransmit(const std::vector<uint16_t>& sequence_numbers);
 
   // Implements OnDecryptedFrameCallback.
