@@ -29,7 +29,10 @@ rtc_source_set("call_api") {
 rtc_source_set("callfactory_api") {
   visibility = [ "*" ]
   sources = [ "call/call_factory_interface.h" ]
-  deps = [ "../rtc_base/system:rtc_export" ]
+  deps = [
+    "../call:rtp_interfaces",
+    "../rtc_base/system:rtc_export",
+  ]
 }
 
 if (!build_with_chromium && !build_with_mozilla) {
@@ -173,6 +176,7 @@ rtc_library("libjingle_peerconnection_api") {
     ":rtp_transceiver_direction",
     ":scoped_refptr",
     ":sequence_checker",
+    "../call:rtp_interfaces",
     "../rtc_base:network_constants",
     "adaptation:resource_adaptation_api",
     "audio:audio_mixer_api",
@@ -1063,6 +1067,7 @@ if (rtc_include_tests) {
       ":time_controller",
       "../call",
       "../call:call_interfaces",
+      "../call:rtp_interfaces",
       "../test/time_controller",
     ]
   }
