@@ -11,8 +11,6 @@ body {
   display: flex;
   align-items: stretch;
   padding-block: 40px 80px;
-  font: message-box;
-  font-size: 1.5em;
 }
 
 h1 {
