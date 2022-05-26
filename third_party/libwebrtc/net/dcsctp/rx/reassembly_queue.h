@@ -104,8 +104,8 @@ class ReassemblyQueue {
   // data.
   size_t queued_bytes() const { return queued_bytes_; }
 
-  // The remaining bytes until the queue is full.
-  size_t remaining_bytes() const { return max_size_bytes_ - queued_bytes_; }
+  // The remaining bytes until the queue has reached the watermark limit.
+  size_t remaining_bytes() const { return watermark_bytes_ - queued_bytes_; }
 
   // Indicates if the queue is full. Data should not be added to the queue when
   // it's full.
