@@ -48,7 +48,7 @@ class DataTracker {
   // received data. Data received beyond this limit will be dropped, which will
   // force the transmitter to send data that actually increases the last
   // cumulative acked TSN.
-  static constexpr uint32_t kMaxAcceptedOutstandingFragments = 256;
+  static constexpr uint32_t kMaxAcceptedOutstandingFragments = 100000;
 
   explicit DataTracker(absl::string_view log_prefix,
                        Timer* delayed_ack_timer,
