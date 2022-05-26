@@ -87,10 +87,12 @@ using ::testing::Gt;
 using ::testing::IsEmpty;
 using ::testing::NiceMock;
 using ::testing::Not;
+using ::testing::Optional;
 using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::Return;
 using ::testing::SizeIs;
+using ::testing::StrEq;
 using ::testing::StrictMock;
 
 class LoopbackTransportTest : public webrtc::Transport {
@@ -706,64 +708,54 @@ TEST_P(RtpSenderTest, KeepsTimestampsOnPayloadPadding) {
 
 // Test that the MID header extension is included on sent packets when
 // configured.
-TEST_P(RtpSenderTestWithoutPacer, MidIncludedOnSentPackets) {
+TEST_P(RtpSenderTest, MidIncludedOnSentPackets) {
   const char kMid[] = "mid";
-
   EnableMidSending(kMid);
 
-  // Send a couple packets.
+  // Send a couple packets, expect both packets to have the MID set.
+  EXPECT_CALL(mock_paced_sender_,
+              EnqueuePackets(ElementsAre(Pointee(
+                  Property(&RtpPacketToSend::GetExtension<RtpMid>, kMid)))))
+      .Times(2);
   SendGenericPacket();
   SendGenericPacket();
-
-  // Expect both packets to have the MID set.
-  ASSERT_EQ(2u, transport_.sent_packets_.size());
-  for (const RtpPacketReceived& packet : transport_.sent_packets_) {
-    std::string mid;
-    ASSERT_TRUE(packet.GetExtension<RtpMid>(&mid));
-    EXPECT_EQ(kMid, mid);
-  }
 }
 
-TEST_P(RtpSenderTestWithoutPacer, RidIncludedOnSentPackets) {
+TEST_P(RtpSenderTest, RidIncludedOnSentPackets) {
   const char kRid[] = "f";
-
   EnableRidSending(kRid);
 
+  EXPECT_CALL(mock_paced_sender_,
+              EnqueuePackets(ElementsAre(Pointee(Property(
+                  &RtpPacketToSend::GetExtension<RtpStreamId>, kRid)))));
   SendGenericPacket();
-
-  ASSERT_EQ(1u, transport_.sent_packets_.size());
-  const RtpPacketReceived& packet = transport_.sent_packets_[0];
-  std::string rid;
-  ASSERT_TRUE(packet.GetExtension<RtpStreamId>(&rid));
-  EXPECT_EQ(kRid, rid);
 }
 
-TEST_P(RtpSenderTestWithoutPacer, RidIncludedOnRtxSentPackets) {
+TEST_P(RtpSenderTest, RidIncludedOnRtxSentPackets) {
   const char kRid[] = "f";
-  const char kNoRid[] = "";
-
   EnableRtx();
   EnableRidSending(kRid);
 
+  EXPECT_CALL(mock_paced_sender_,
+              EnqueuePackets(ElementsAre(Pointee(AllOf(
+                  Property(&RtpPacketToSend::GetExtension<RtpStreamId>, kRid),
+                  Property(&RtpPacketToSend::HasExtension<RepairedRtpStreamId>,
+                           false))))))
+      .WillOnce([&](std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
+        rtp_sender_context_->packet_history_.PutRtpPacket(
+            std::move(packets[0]), clock_->TimeInMilliseconds());
+      });
   SendGenericPacket();
-  ASSERT_EQ(1u, transport_.sent_packets_.size());
-  const RtpPacketReceived& packet = transport_.sent_packets_[0];
-  std::string rid;
-  ASSERT_TRUE(packet.GetExtension<RtpStreamId>(&rid));
-  EXPECT_EQ(kRid, rid);
-  rid = kNoRid;
-  EXPECT_FALSE(packet.HasExtension<RepairedRtpStreamId>());
 
-  uint16_t packet_id = packet.SequenceNumber();
-  rtp_sender()->ReSendPacket(packet_id);
-  ASSERT_EQ(2u, transport_.sent_packets_.size());
-  const RtpPacketReceived& rtx_packet = transport_.sent_packets_[1];
-  ASSERT_TRUE(rtx_packet.GetExtension<RepairedRtpStreamId>(&rid));
-  EXPECT_EQ(kRid, rid);
-  EXPECT_FALSE(rtx_packet.HasExtension<RtpStreamId>());
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(ElementsAre(Pointee(AllOf(
+          Property(&RtpPacketToSend::GetExtension<RepairedRtpStreamId>, kRid),
+          Property(&RtpPacketToSend::HasExtension<RtpStreamId>, false))))));
+  rtp_sender()->ReSendPacket(kSeqNum);
 }
 
-TEST_P(RtpSenderTestWithoutPacer, MidAndRidNotIncludedOnSentPacketsAfterAck) {
+TEST_P(RtpSenderTest, MidAndRidNotIncludedOnSentPacketsAfterAck) {
   const char kMid[] = "mid";
   const char kRid[] = "f";
 
@@ -771,53 +763,48 @@ TEST_P(RtpSenderTestWithoutPacer, MidAndRidNotIncludedOnSentPacketsAfterAck) {
   EnableRidSending(kRid);
 
   // This first packet should include both MID and RID.
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(ElementsAre(Pointee(AllOf(
+          Property(&RtpPacketToSend::GetExtension<RtpMid>, kMid),
+          Property(&RtpPacketToSend::GetExtension<RtpStreamId>, kRid))))));
   auto first_built_packet = SendGenericPacket();
-
   rtp_sender()->OnReceivedAckOnSsrc(first_built_packet->SequenceNumber());
 
   // The second packet should include neither since an ack was received.
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(ElementsAre(Pointee(AllOf(
+          Property(&RtpPacketToSend::HasExtension<RtpMid>, false),
+          Property(&RtpPacketToSend::HasExtension<RtpStreamId>, false))))));
   SendGenericPacket();
-
-  ASSERT_EQ(2u, transport_.sent_packets_.size());
-
-  const RtpPacketReceived& first_packet = transport_.sent_packets_[0];
-  std::string mid, rid;
-  ASSERT_TRUE(first_packet.GetExtension<RtpMid>(&mid));
-  EXPECT_EQ(kMid, mid);
-  ASSERT_TRUE(first_packet.GetExtension<RtpStreamId>(&rid));
-  EXPECT_EQ(kRid, rid);
-
-  const RtpPacketReceived& second_packet = transport_.sent_packets_[1];
-  EXPECT_FALSE(second_packet.HasExtension<RtpMid>());
-  EXPECT_FALSE(second_packet.HasExtension<RtpStreamId>());
 }
 
-TEST_P(RtpSenderTestWithoutPacer,
-       MidAndRidAlwaysIncludedOnSentPacketsWhenConfigured) {
-  SetUpRtpSender(false, false, /*always_send_mid_and_rid=*/true);
+TEST_P(RtpSenderTest, MidAndRidAlwaysIncludedOnSentPacketsWhenConfigured) {
+  SetUpRtpSender(true, false, /*always_send_mid_and_rid=*/true, nullptr);
   const char kMid[] = "mid";
   const char kRid[] = "f";
   EnableMidSending(kMid);
   EnableRidSending(kRid);
 
   // Send two media packets: one before and one after the ack.
-  auto first_packet = SendGenericPacket();
-  rtp_sender()->OnReceivedAckOnSsrc(first_packet->SequenceNumber());
-  SendGenericPacket();
-
   // Due to the configuration, both sent packets should contain MID and RID.
-  ASSERT_EQ(2u, transport_.sent_packets_.size());
-  for (const RtpPacketReceived& packet : transport_.sent_packets_) {
-    EXPECT_EQ(packet.GetExtension<RtpMid>(), kMid);
-    EXPECT_EQ(packet.GetExtension<RtpStreamId>(), kRid);
-  }
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(ElementsAre(Pointee(
+          AllOf(Property(&RtpPacketToSend::GetExtension<RtpMid>, kMid),
+                Property(&RtpPacketToSend::GetExtension<RtpStreamId>, kRid))))))
+      .Times(2);
+  auto first_built_packet = SendGenericPacket();
+  rtp_sender()->OnReceivedAckOnSsrc(first_built_packet->SequenceNumber());
+  SendGenericPacket();
 }
 
 // Test that the first RTX packet includes both MID and RRID even if the packet
 // being retransmitted did not have MID or RID. The MID and RID are needed on
 // the first packets for a given SSRC, and RTX packets are sent on a separate
 // SSRC.
-TEST_P(RtpSenderTestWithoutPacer, MidAndRidIncludedOnFirstRtxPacket) {
+TEST_P(RtpSenderTest, MidAndRidIncludedOnFirstRtxPacket) {
   const char kMid[] = "mid";
   const char kRid[] = "f";
 
@@ -826,30 +813,32 @@ TEST_P(RtpSenderTestWithoutPacer, MidAndRidIncludedOnFirstRtxPacket) {
   EnableRidSending(kRid);
 
   // This first packet will include both MID and RID.
+  EXPECT_CALL(mock_paced_sender_, EnqueuePackets);
   auto first_built_packet = SendGenericPacket();
   rtp_sender()->OnReceivedAckOnSsrc(first_built_packet->SequenceNumber());
 
-  // The second packet will include neither since an ack was received.
+  // The second packet will include neither since an ack was received, put
+  // it in the packet history for retransmission.
+  EXPECT_CALL(mock_paced_sender_, EnqueuePackets(SizeIs(1)))
+      .WillOnce([&](std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
+        rtp_sender_context_->packet_history_.PutRtpPacket(
+            std::move(packets[0]), clock_->TimeInMilliseconds());
+      });
   auto second_built_packet = SendGenericPacket();
 
   // The first RTX packet should include MID and RRID.
-  ASSERT_LT(0,
-            rtp_sender()->ReSendPacket(second_built_packet->SequenceNumber()));
-
-  ASSERT_EQ(3u, transport_.sent_packets_.size());
-
-  const RtpPacketReceived& rtx_packet = transport_.sent_packets_[2];
-  std::string mid, rrid;
-  ASSERT_TRUE(rtx_packet.GetExtension<RtpMid>(&mid));
-  EXPECT_EQ(kMid, mid);
-  ASSERT_TRUE(rtx_packet.GetExtension<RepairedRtpStreamId>(&rrid));
-  EXPECT_EQ(kRid, rrid);
+  EXPECT_CALL(mock_paced_sender_,
+              EnqueuePackets(ElementsAre(Pointee(AllOf(
+                  Property(&RtpPacketToSend::GetExtension<RtpMid>, kMid),
+                  Property(&RtpPacketToSend::GetExtension<RepairedRtpStreamId>,
+                           kRid))))));
+  rtp_sender()->ReSendPacket(second_built_packet->SequenceNumber());
 }
 
 // Test that the RTX packets sent after receving an ACK on the RTX SSRC does
 // not include either MID or RRID even if the packet being retransmitted did
 // had a MID or RID.
-TEST_P(RtpSenderTestWithoutPacer, MidAndRidNotIncludedOnRtxPacketsAfterAck) {
+TEST_P(RtpSenderTest, MidAndRidNotIncludedOnRtxPacketsAfterAck) {
   const char kMid[] = "mid";
   const char kRid[] = "f";
 
@@ -858,41 +847,44 @@ TEST_P(RtpSenderTestWithoutPacer, MidAndRidNotIncludedOnRtxPacketsAfterAck) {
   EnableRidSending(kRid);
 
   // This first packet will include both MID and RID.
+  EXPECT_CALL(mock_paced_sender_, EnqueuePackets(SizeIs(1)))
+      .WillOnce([&](std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
+        rtp_sender_context_->packet_history_.PutRtpPacket(
+            std::move(packets[0]), clock_->TimeInMilliseconds());
+      });
   auto first_built_packet = SendGenericPacket();
   rtp_sender()->OnReceivedAckOnSsrc(first_built_packet->SequenceNumber());
 
   // The second packet will include neither since an ack was received.
+  EXPECT_CALL(mock_paced_sender_, EnqueuePackets(SizeIs(1)))
+      .WillOnce([&](std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
+        rtp_sender_context_->packet_history_.PutRtpPacket(
+            std::move(packets[0]), clock_->TimeInMilliseconds());
+      });
   auto second_built_packet = SendGenericPacket();
 
   // The first RTX packet will include MID and RRID.
-  ASSERT_LT(0,
-            rtp_sender()->ReSendPacket(second_built_packet->SequenceNumber()));
-
-  ASSERT_EQ(3u, transport_.sent_packets_.size());
-  const RtpPacketReceived& first_rtx_packet = transport_.sent_packets_[2];
-
-  rtp_sender()->OnReceivedAckOnRtxSsrc(first_rtx_packet.SequenceNumber());
+  EXPECT_CALL(mock_paced_sender_, EnqueuePackets(SizeIs(1)))
+      .WillOnce([&](std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
+        rtp_sender()->OnReceivedAckOnRtxSsrc(packets[0]->SequenceNumber());
+        rtp_sender_context_->packet_history_.MarkPacketAsSent(
+            *packets[0]->retransmitted_sequence_number());
+      });
+  rtp_sender()->ReSendPacket(second_built_packet->SequenceNumber());
 
   // The second and third RTX packets should not include MID nor RRID.
-  ASSERT_LT(0,
-            rtp_sender()->ReSendPacket(first_built_packet->SequenceNumber()));
-  ASSERT_LT(0,
-            rtp_sender()->ReSendPacket(second_built_packet->SequenceNumber()));
-
-  ASSERT_EQ(5u, transport_.sent_packets_.size());
-
-  const RtpPacketReceived& second_rtx_packet = transport_.sent_packets_[3];
-  EXPECT_FALSE(second_rtx_packet.HasExtension<RtpMid>());
-  EXPECT_FALSE(second_rtx_packet.HasExtension<RepairedRtpStreamId>());
-
-  const RtpPacketReceived& third_rtx_packet = transport_.sent_packets_[4];
-  EXPECT_FALSE(third_rtx_packet.HasExtension<RtpMid>());
-  EXPECT_FALSE(third_rtx_packet.HasExtension<RepairedRtpStreamId>());
+  EXPECT_CALL(mock_paced_sender_,
+              EnqueuePackets(ElementsAre(Pointee(AllOf(
+                  Property(&RtpPacketToSend::HasExtension<RtpMid>, false),
+                  Property(&RtpPacketToSend::HasExtension<RepairedRtpStreamId>,
+                           false))))))
+      .Times(2);
+  rtp_sender()->ReSendPacket(first_built_packet->SequenceNumber());
+  rtp_sender()->ReSendPacket(second_built_packet->SequenceNumber());
 }
 
-TEST_P(RtpSenderTestWithoutPacer,
-       MidAndRidAlwaysIncludedOnRtxPacketsWhenConfigured) {
-  SetUpRtpSender(false, false, /*always_send_mid_and_rid=*/true);
+TEST_P(RtpSenderTest, MidAndRidAlwaysIncludedOnRtxPacketsWhenConfigured) {
+  SetUpRtpSender(true, false, /*always_send_mid_and_rid=*/true, nullptr);
   const char kMid[] = "mid";
   const char kRid[] = "f";
   EnableRtx();
@@ -900,39 +892,45 @@ TEST_P(RtpSenderTestWithoutPacer,
   EnableRidSending(kRid);
 
   // Send two media packets: one before and one after the ack.
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(ElementsAre(Pointee(
+          AllOf(Property(&RtpPacketToSend::GetExtension<RtpMid>, kMid),
+                Property(&RtpPacketToSend::GetExtension<RtpStreamId>, kRid))))))
+      .Times(2)
+      .WillRepeatedly(
+          [&](std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
+            rtp_sender_context_->packet_history_.PutRtpPacket(
+                std::move(packets[0]), clock_->TimeInMilliseconds());
+          });
   auto media_packet1 = SendGenericPacket();
   rtp_sender()->OnReceivedAckOnSsrc(media_packet1->SequenceNumber());
   auto media_packet2 = SendGenericPacket();
 
   // Send three RTX packets with different combinations of orders w.r.t. the
   // media and RTX acks.
-  ASSERT_LT(0, rtp_sender()->ReSendPacket(media_packet2->SequenceNumber()));
-  ASSERT_EQ(3u, transport_.sent_packets_.size());
-  rtp_sender()->OnReceivedAckOnRtxSsrc(
-      transport_.sent_packets_[2].SequenceNumber());
-  ASSERT_LT(0, rtp_sender()->ReSendPacket(media_packet1->SequenceNumber()));
-  ASSERT_LT(0, rtp_sender()->ReSendPacket(media_packet2->SequenceNumber()));
-
   // Due to the configuration, all sent packets should contain MID
   // and either RID (media) or RRID (RTX).
-  ASSERT_EQ(5u, transport_.sent_packets_.size());
-  for (const auto& packet : transport_.sent_packets_) {
-    EXPECT_EQ(packet.GetExtension<RtpMid>(), kMid);
-  }
-  for (size_t i = 0; i < 2; ++i) {
-    const RtpPacketReceived& packet = transport_.sent_packets_[i];
-    EXPECT_EQ(packet.GetExtension<RtpStreamId>(), kRid);
-  }
-  for (size_t i = 2; i < transport_.sent_packets_.size(); ++i) {
-    const RtpPacketReceived& packet = transport_.sent_packets_[i];
-    EXPECT_EQ(packet.GetExtension<RepairedRtpStreamId>(), kRid);
-  }
+  EXPECT_CALL(mock_paced_sender_,
+              EnqueuePackets(ElementsAre(Pointee(AllOf(
+                  Property(&RtpPacketToSend::GetExtension<RtpMid>, kMid),
+                  Property(&RtpPacketToSend::GetExtension<RepairedRtpStreamId>,
+                           kRid))))))
+      .Times(3)
+      .WillRepeatedly(
+          [&](std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
+            rtp_sender()->OnReceivedAckOnRtxSsrc(packets[0]->SequenceNumber());
+            rtp_sender_context_->packet_history_.MarkPacketAsSent(
+                *packets[0]->retransmitted_sequence_number());
+          });
+  rtp_sender()->ReSendPacket(media_packet2->SequenceNumber());
+  rtp_sender()->ReSendPacket(media_packet1->SequenceNumber());
+  rtp_sender()->ReSendPacket(media_packet2->SequenceNumber());
 }
 
 // Test that if the RtpState indicates an ACK has been received on that SSRC
 // then neither the MID nor RID header extensions will be sent.
-TEST_P(RtpSenderTestWithoutPacer,
-       MidAndRidNotIncludedOnSentPacketsAfterRtpStateRestored) {
+TEST_P(RtpSenderTest, MidAndRidNotIncludedOnSentPacketsAfterRtpStateRestored) {
   const char kMid[] = "mid";
   const char kRid[] = "f";
 
@@ -944,19 +942,18 @@ TEST_P(RtpSenderTestWithoutPacer,
   state.ssrc_has_acked = true;
   rtp_sender()->SetRtpState(state);
 
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(ElementsAre(Pointee(AllOf(
+          Property(&RtpPacketToSend::HasExtension<RtpMid>, false),
+          Property(&RtpPacketToSend::HasExtension<RtpStreamId>, false))))));
   SendGenericPacket();
-
-  ASSERT_EQ(1u, transport_.sent_packets_.size());
-  const RtpPacketReceived& packet = transport_.sent_packets_[0];
-  EXPECT_FALSE(packet.HasExtension<RtpMid>());
-  EXPECT_FALSE(packet.HasExtension<RtpStreamId>());
 }
 
 // Test that if the RTX RtpState indicates an ACK has been received on that
 // RTX SSRC then neither the MID nor RRID header extensions will be sent on
 // RTX packets.
-TEST_P(RtpSenderTestWithoutPacer,
-       MidAndRridNotIncludedOnRtxPacketsAfterRtpStateRestored) {
+TEST_P(RtpSenderTest, MidAndRridNotIncludedOnRtxPacketsAfterRtpStateRestored) {
   const char kMid[] = "mid";
   const char kRid[] = "f";
 
@@ -969,13 +966,19 @@ TEST_P(RtpSenderTestWithoutPacer,
   rtx_state.ssrc_has_acked = true;
   rtp_sender()->SetRtxRtpState(rtx_state);
 
+  EXPECT_CALL(mock_paced_sender_, EnqueuePackets(SizeIs(1)))
+      .WillOnce([&](std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
+        rtp_sender_context_->packet_history_.PutRtpPacket(
+            std::move(packets[0]), clock_->TimeInMilliseconds());
+      });
   auto built_packet = SendGenericPacket();
-  ASSERT_LT(0, rtp_sender()->ReSendPacket(built_packet->SequenceNumber()));
 
-  ASSERT_EQ(2u, transport_.sent_packets_.size());
-  const RtpPacketReceived& rtx_packet = transport_.sent_packets_[1];
-  EXPECT_FALSE(rtx_packet.HasExtension<RtpMid>());
-  EXPECT_FALSE(rtx_packet.HasExtension<RepairedRtpStreamId>());
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(ElementsAre(Pointee(AllOf(
+          Property(&RtpPacketToSend::HasExtension<RtpMid>, false),
+          Property(&RtpPacketToSend::HasExtension<RtpStreamId>, false))))));
+  ASSERT_LT(0, rtp_sender()->ReSendPacket(built_packet->SequenceNumber()));
 }
 
 TEST_P(RtpSenderTestWithoutPacer, RespectsNackBitrateLimit) {
