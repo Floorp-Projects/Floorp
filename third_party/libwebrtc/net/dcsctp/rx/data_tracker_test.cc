@@ -226,8 +226,6 @@ TEST_F(DataTrackerTest, WillNotAcceptInvalidTSNs) {
   size_t limit = DataTracker::kMaxAcceptedOutstandingFragments;
   EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn + limit + 1)));
   EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn - (limit + 1))));
-  EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn + 65536)));
-  EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn - 65536)));
   EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn + 0x8000000)));
   EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn - 0x8000000)));
 }
