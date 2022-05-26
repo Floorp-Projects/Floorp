@@ -262,7 +262,11 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
       break;
     }
     case kVideoCodecAV1:
-      if (!SetAv1SvcConfig(video_codec)) {
+      if (SetAv1SvcConfig(video_codec)) {
+        for (size_t i = 0; i < config.spatial_layers.size(); ++i) {
+          video_codec.spatialLayers[i].active = config.spatial_layers[i].active;
+        }
+      } else {
         RTC_LOG(LS_WARNING) << "Failed to configure svc bitrates for av1.";
       }
       break;
