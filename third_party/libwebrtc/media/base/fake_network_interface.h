@@ -83,14 +83,12 @@ class FakeNetworkInterface : public MediaChannel::NetworkInterface,
     return static_cast<int>(sent_ssrcs_.size());
   }
 
-  // Note: callers are responsible for deleting the returned buffer.
-  const rtc::CopyOnWriteBuffer* GetRtpPacket(int index)
-      RTC_LOCKS_EXCLUDED(mutex_) {
+  rtc::CopyOnWriteBuffer GetRtpPacket(int index) RTC_LOCKS_EXCLUDED(mutex_) {
     webrtc::MutexLock lock(&mutex_);
     if (index >= static_cast<int>(rtp_packets_.size())) {
-      return NULL;
+      return {};
     }
-    return new rtc::CopyOnWriteBuffer(rtp_packets_[index]);
+    return rtp_packets_[index];
   }
 
   int NumRtcpPackets() RTC_LOCKS_EXCLUDED(mutex_) {

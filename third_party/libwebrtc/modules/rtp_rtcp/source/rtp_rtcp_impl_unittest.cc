@@ -72,11 +72,10 @@ class SendTransport : public Transport {
   bool SendRtp(const uint8_t* data,
                size_t len,
                const PacketOptions& options) override {
-    RTPHeader header;
-    std::unique_ptr<RtpHeaderParser> parser(RtpHeaderParser::CreateForTest());
-    EXPECT_TRUE(parser->Parse(static_cast<const uint8_t*>(data), len, &header));
+    RtpPacket packet;
+    EXPECT_TRUE(packet.Parse(data, len));
     ++rtp_packets_sent_;
-    last_rtp_header_ = header;
+    last_rtp_sequence_number_ = packet.SequenceNumber();
     return true;
   }
   bool SendRtcp(const uint8_t* data, size_t len) override {
@@ -98,7 +97,7 @@ class SendTransport : public Transport {
   int64_t delay_ms_;
   int rtp_packets_sent_;
   size_t rtcp_packets_sent_;
-  RTPHeader last_rtp_header_;
+  uint16_t last_rtp_sequence_number_;
   std::vector<uint16_t> last_nack_list_;
 };
 
@@ -138,7 +137,7 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
   }
   int RtpSent() { return transport_.rtp_packets_sent_; }
   uint16_t LastRtpSequenceNumber() {
-    return transport_.last_rtp_header_.sequenceNumber;
+    return transport_.last_rtp_sequence_number_;
   }
   std::vector<uint16_t> LastNackListSent() {
     return transport_.last_nack_list_;
