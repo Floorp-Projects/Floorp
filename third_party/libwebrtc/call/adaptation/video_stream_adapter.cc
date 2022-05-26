@@ -416,8 +416,10 @@ VideoStreamAdapter::AdaptIfFpsDiffInsufficient(
     const VideoStreamInputState& input_state,
     const RestrictionsWithCounters& restrictions) const {
   RTC_DCHECK_EQ(degradation_preference_, DegradationPreference::BALANCED);
+  int frame_size_pixels = input_state.single_active_stream_pixels().value_or(
+      input_state.frame_size_pixels().value());
   absl::optional<int> min_fps_diff =
-      balanced_settings_.MinFpsDiff(input_state.frame_size_pixels().value());
+      balanced_settings_.MinFpsDiff(frame_size_pixels);
   if (current_restrictions_.counters.fps_adaptations <
           restrictions.counters.fps_adaptations &&
       min_fps_diff && input_state.frames_per_second() > 0) {
@@ -502,9 +504,10 @@ VideoStreamAdapter::RestrictionsOrState VideoStreamAdapter::DecreaseFramerate(
   if (degradation_preference_ == DegradationPreference::MAINTAIN_RESOLUTION) {
     max_frame_rate = GetLowerFrameRateThan(input_state.frames_per_second());
   } else if (degradation_preference_ == DegradationPreference::BALANCED) {
-    max_frame_rate =
-        balanced_settings_.MinFps(input_state.video_codec_type(),
-                                  input_state.frame_size_pixels().value());
+    int frame_size_pixels = input_state.single_active_stream_pixels().value_or(
+        input_state.frame_size_pixels().value());
+    max_frame_rate = balanced_settings_.MinFps(input_state.video_codec_type(),
+                                               frame_size_pixels);
   } else {
     RTC_NOTREACHED();
     max_frame_rate = GetLowerFrameRateThan(input_state.frames_per_second());
@@ -561,12 +564,13 @@ VideoStreamAdapter::RestrictionsOrState VideoStreamAdapter::IncreaseFramerate(
   if (degradation_preference_ == DegradationPreference::MAINTAIN_RESOLUTION) {
     max_frame_rate = GetHigherFrameRateThan(input_state.frames_per_second());
   } else if (degradation_preference_ == DegradationPreference::BALANCED) {
-    max_frame_rate =
-        balanced_settings_.MaxFps(input_state.video_codec_type(),
-                                  input_state.frame_size_pixels().value());
+    int frame_size_pixels = input_state.single_active_stream_pixels().value_or(
+        input_state.frame_size_pixels().value());
+    max_frame_rate = balanced_settings_.MaxFps(input_state.video_codec_type(),
+                                               frame_size_pixels);
     // In BALANCED, the max_frame_rate must be checked before proceeding. This
     // is because the MaxFps might be the current Fps and so the balanced
-    // settings may want to scale up the resolution.=
+    // settings may want to scale up the resolution.
     if (!CanIncreaseFrameRateTo(max_frame_rate,
                                 current_restrictions.restrictions)) {
       return Adaptation::Status::kLimitReached;
