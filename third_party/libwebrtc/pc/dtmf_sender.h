@@ -102,7 +102,6 @@ class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
 
 // Define proxy for DtmfSenderInterface.
 BEGIN_PRIMARY_PROXY_MAP(DtmfSender)
-
 PROXY_PRIMARY_THREAD_DESTRUCTOR()
 PROXY_METHOD1(void, RegisterObserver, DtmfSenderObserverInterface*)
 PROXY_METHOD0(void, UnregisterObserver)
@@ -112,7 +111,7 @@ PROXY_CONSTMETHOD0(std::string, tones)
 PROXY_CONSTMETHOD0(int, duration)
 PROXY_CONSTMETHOD0(int, inter_tone_gap)
 PROXY_CONSTMETHOD0(int, comma_delay)
-END_PROXY_MAP()
+END_PROXY_MAP(DtmfSender)
 
 // Get DTMF code from the DTMF event character.
 bool GetDtmfCode(char tone, int* code);

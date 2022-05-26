@@ -37,7 +37,7 @@ PROXY_METHOD1(bool, RemoveTrack, AudioTrackInterface*)
 PROXY_METHOD1(bool, RemoveTrack, VideoTrackInterface*)
 PROXY_METHOD1(void, RegisterObserver, ObserverInterface*)
 PROXY_METHOD1(void, UnregisterObserver, ObserverInterface*)
-END_PROXY_MAP()
+END_PROXY_MAP(MediaStream)
 
 }  // namespace webrtc
 
