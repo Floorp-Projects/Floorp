@@ -179,18 +179,18 @@ class VideoReceiveStream2
   void HandleEncodedFrame(std::unique_ptr<EncodedFrame> frame)
       RTC_RUN_ON(decode_queue_);
   void HandleFrameBufferTimeout(int64_t now_ms, int64_t wait_ms)
-      RTC_RUN_ON(worker_sequence_checker_);
+      RTC_RUN_ON(packet_sequence_checker_);
   void UpdatePlayoutDelays() const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(worker_sequence_checker_);
   void RequestKeyFrame(int64_t timestamp_ms)
-      RTC_RUN_ON(worker_sequence_checker_);
+      RTC_RUN_ON(packet_sequence_checker_);
   void HandleKeyFrameGeneration(bool received_frame_is_keyframe,
                                 int64_t now_ms,
                                 bool always_request_key_frame,
                                 bool keyframe_request_is_due)
-      RTC_RUN_ON(worker_sequence_checker_);
+      RTC_RUN_ON(packet_sequence_checker_);
   bool IsReceivingKeyFrame(int64_t timestamp_ms) const
-      RTC_RUN_ON(worker_sequence_checker_);
+      RTC_RUN_ON(packet_sequence_checker_);
   int DecodeAndMaybeDispatchEncodedFrame(std::unique_ptr<EncodedFrame> frame)
       RTC_RUN_ON(decode_queue_);
 
@@ -284,7 +284,7 @@ class VideoReceiveStream2
   std::function<void(const RecordableEncodedFrame&)>
       encoded_frame_buffer_function_ RTC_GUARDED_BY(decode_queue_);
   // Set to true while we're requesting keyframes but not yet received one.
-  bool keyframe_generation_requested_ RTC_GUARDED_BY(worker_sequence_checker_) =
+  bool keyframe_generation_requested_ RTC_GUARDED_BY(packet_sequence_checker_) =
       false;
   // Lock to avoid unnecessary per-frame idle wakeups in the code.
   webrtc::Mutex pending_resolution_mutex_;
