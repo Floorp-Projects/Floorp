@@ -44,6 +44,7 @@
 #include "p2p/base/port_allocator.h"
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_info.h"
+#include "pc/bundle_manager.h"
 #include "pc/channel.h"
 #include "pc/dtls_srtp_transport.h"
 #include "pc/dtls_transport.h"
@@ -483,13 +484,12 @@ class JsepTransportController : public sigslot::has_slots<> {
   const cricket::SessionDescription* remote_desc_ = nullptr;
   absl::optional<bool> initial_offerer_;
 
-  // Use unique_ptr<> to get a stable address.
-  std::vector<std::unique_ptr<cricket::ContentGroup>> bundle_groups_;
-
   cricket::IceConfig ice_config_;
   cricket::IceRole ice_role_ = cricket::ICEROLE_CONTROLLING;
   uint64_t ice_tiebreaker_ = rtc::CreateRandomId64();
   rtc::scoped_refptr<rtc::RTCCertificate> certificate_;
+
+  BundleManager bundles_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(JsepTransportController);
 };

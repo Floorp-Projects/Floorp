@@ -559,7 +559,7 @@ RTCError JsepTransportController::ApplyDescription_n(
   // Established BUNDLE groups by MID.
   std::map<std::string, cricket::ContentGroup*>
       established_bundle_groups_by_mid;
-  for (const auto& bundle_group : bundle_groups_) {
+  for (const auto& bundle_group : bundles_.bundle_groups()) {
     for (const std::string& content_name : bundle_group->content_names()) {
       established_bundle_groups_by_mid[content_name] = bundle_group.get();
     }
@@ -567,7 +567,7 @@ RTCError JsepTransportController::ApplyDescription_n(
 
   std::map<const cricket::ContentGroup*, std::vector<int>>
       merged_encrypted_extension_ids_by_bundle;
-  if (!bundle_groups_.empty()) {
+  if (!bundles_.bundle_groups().empty()) {
     merged_encrypted_extension_ids_by_bundle =
         MergeEncryptedHeaderExtensionIdsForBundles(
             established_bundle_groups_by_mid, description);
@@ -593,7 +593,7 @@ RTCError JsepTransportController::ApplyDescription_n(
     const cricket::TransportInfo& transport_info =
         description->transport_infos()[i];
     if (content_info.rejected) {
-      // This may cause groups to be removed from |bundle_groups_| and
+      // This may cause groups to be removed from |bundles_.bundle_groups()| and
       // |established_bundle_groups_by_mid|.
       HandleRejectedContent(content_info, established_bundle_groups_by_mid);
       continue;
@@ -752,7 +752,7 @@ RTCError JsepTransportController::ValidateAndMaybeUpdateBundleGroups(
       }
     }
 
-    for (const auto& bundle_group : bundle_groups_) {
+    for (const auto& bundle_group : bundles_.bundle_groups()) {
       for (const std::string& content_name : bundle_group->content_names()) {
         // An answer that removes m= sections from pre-negotiated BUNDLE group
         // without rejecting it, is invalid.
@@ -778,14 +778,14 @@ RTCError JsepTransportController::ValidateAndMaybeUpdateBundleGroups(
   }
 
   if (ShouldUpdateBundleGroup(type, description)) {
-    bundle_groups_.clear();
+    bundles_.bundle_groups().clear();
     for (const cricket::ContentGroup* new_bundle_group : new_bundle_groups) {
-      bundle_groups_.push_back(
+      bundles_.bundle_groups().push_back(
           std::make_unique<cricket::ContentGroup>(*new_bundle_group));
     }
   }
 
-  for (const auto& bundle_group : bundle_groups_) {
+  for (const auto& bundle_group : bundles_.bundle_groups()) {
     if (!bundle_group->FirstContentName())
       continue;
 
@@ -851,12 +851,12 @@ void JsepTransportController::HandleRejectedContent(
     }
     // Delete the BUNDLE group.
     auto bundle_group_it = std::find_if(
-        bundle_groups_.begin(), bundle_groups_.end(),
+        bundles_.bundle_groups().begin(), bundles_.bundle_groups().end(),
         [bundle_group](std::unique_ptr<cricket::ContentGroup>& group) {
           return bundle_group == group.get();
         });
-    RTC_DCHECK(bundle_group_it != bundle_groups_.end());
-    bundle_groups_.erase(bundle_group_it);
+    RTC_DCHECK(bundle_group_it != bundles_.bundle_groups().end());
+    bundles_.bundle_groups().erase(bundle_group_it);
   } else {
     RemoveTransportForMid(content_info.name);
     if (bundle_group) {
@@ -990,7 +990,7 @@ JsepTransportController::MergeEncryptedHeaderExtensionIdsForBundles(
     const std::map<std::string, cricket::ContentGroup*>& bundle_groups_by_mid,
     const cricket::SessionDescription* description) {
   RTC_DCHECK(description);
-  RTC_DCHECK(!bundle_groups_.empty());
+  RTC_DCHECK(!bundles_.bundle_groups().empty());
   std::map<const cricket::ContentGroup*, std::vector<int>>
       merged_encrypted_extension_ids_by_bundle;
   // Union the encrypted header IDs in the group when bundle is enabled.
