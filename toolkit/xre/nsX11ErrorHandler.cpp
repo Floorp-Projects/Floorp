@@ -105,14 +105,6 @@ int X11Error(Display* display, XErrorEvent* event) {
     }
   }
 
-  switch (XRE_GetProcessType()) {
-    case GeckoProcessType_Default:
-    case GeckoProcessType_Content:
-      CrashReporter::AppendAppNotesToCrashReport(notes);
-      break;
-    default:;  // crash report notes not supported.
-  }
-
 #ifdef DEBUG
   // The resource id is unlikely to be useful in a crash report without
   // context of other ids, but add it to the debug console output.
@@ -130,16 +122,18 @@ int X11Error(Display* display, XErrorEvent* event) {
 #  endif
 #endif
 
-  MOZ_CRASH_UNSAFE(notes.get());
+  NS_WARNING(notes.get());
+  return 0;
 }
 }
 
 void InstallX11ErrorHandler() {
   XSetErrorHandler(X11Error);
 
-  Display* display = mozilla::DefaultXDisplay();
-  NS_ASSERTION(display, "No X display");
   if (PR_GetEnv("MOZ_X_SYNC")) {
-    XSynchronize(display, X11True);
+    Display* display = mozilla::DefaultXDisplay();
+    if (display) {
+      XSynchronize(display, X11True);
+    }
   }
 }
