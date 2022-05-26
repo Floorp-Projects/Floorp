@@ -64,8 +64,9 @@ class nsFocusManager final : public nsIFocusManager,
   MOZ_CAN_RUN_SCRIPT static void FocusWindow(
       nsPIDOMWindowOuter* aWindow, mozilla::dom::CallerType aCallerType);
 
-  static void PrefChanged(const char* aPref, void* aSelf);
-  void PrefChanged(const char* aPref);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void PrefChanged(const char* aPref,
+                                                      void* aSelf);
+  MOZ_CAN_RUN_SCRIPT void PrefChanged(const char* aPref);
 
   /**
    * Retrieve the single focus manager.
@@ -161,7 +162,7 @@ class nsFocusManager final : public nsIFocusManager,
   /**
    * Update the caret with current mode (whether in caret browsing mode or not).
    */
-  void UpdateCaretForCaretBrowsingMode();
+  MOZ_CAN_RUN_SCRIPT void UpdateCaretForCaretBrowsingMode();
 
   /** @see nsIFocusManager.getLastFocusMethod() */
   uint32_t GetLastFocusMethod(nsPIDOMWindowOuter*) const;
@@ -531,14 +532,15 @@ class nsFocusManager final : public nsIFocusManager,
    * aUpdateVisibility should be true to update whether the caret is
    * visible or not.
    */
-  void UpdateCaret(bool aMoveCaretToFocus, bool aUpdateVisibility,
-                   nsIContent* aContent);
+  MOZ_CAN_RUN_SCRIPT void UpdateCaret(bool aMoveCaretToFocus,
+                                      bool aUpdateVisibility,
+                                      nsIContent* aContent);
 
   /**
    * Helper method to move the caret to the focused element aContent.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void MoveCaretToFocus(
-      mozilla::PresShell* aPresShell, nsIContent* aContent);
+  MOZ_CAN_RUN_SCRIPT void MoveCaretToFocus(mozilla::PresShell* aPresShell,
+                                           nsIContent* aContent);
 
   /**
    * Makes the caret visible or not, depending on aVisible.

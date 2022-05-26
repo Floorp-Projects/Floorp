@@ -159,6 +159,7 @@ interface nsIFocusManager : nsISupports
   /**
    * Moves the selection caret within aWindow to the current focus.
    */
+  [can_run_script]
   void moveCaretToFocus(in mozIDOMWindowProxy aWindow);
 
   /***
