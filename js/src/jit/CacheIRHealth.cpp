@@ -43,7 +43,6 @@ CacheIRHealth::Happiness CacheIRHealth::spewStubHealth(
   const CacheIRStubInfo* stubInfo = stub->stubInfo();
   CacheIRReader stubReader(stubInfo);
   uint32_t totalStubHealth = 0;
-
   spew->beginListProperty("cacheIROps");
   while (stubReader.more()) {
     CacheOp op = stubReader.readOp();
@@ -79,8 +78,9 @@ BaseScript* CacheIRHealth::maybeExtractBaseScript(JSContext* cx, Shape* shape) {
     return nullptr;
   }
   Value cval;
-  if (!GetPropertyPure(cx, taggedProto.toObject(),
-                       NameToId(cx->names().constructor), &cval)) {
+  JSObject* proto = taggedProto.toObject();
+  AutoRealm ar(cx, proto);
+  if (!GetPropertyPure(cx, proto, NameToId(cx->names().constructor), &cval)) {
     return nullptr;
   }
   if (!IsFunctionObject(cval)) {
