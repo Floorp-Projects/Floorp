@@ -7,16 +7,16 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '10da87c3f6ac8de5b5755e86d6f17468020ae9c0',
+  'chromium_revision': '45bbaf2c3c40f13f1f73a489c4c07df7cbedbc1a',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@2ca551e60b9d161801283cf9c3a71b6109d6d774',
+    'https://chromium.googlesource.com/chromium/src/base@ce32b174c91e66eed0ce1babaec5f65d64649e87',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@5fc569acb3477844d9171b06d583bcc373a8b6b3',
+    'https://chromium.googlesource.com/chromium/src/build@315c86c03e793e2df93dadbfab2564f95a9d2c41',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@cd7b8c0c227140da4a6d7e7353b73438c999bb2d',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -25,13 +25,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@36fad7d5679c81e00c3b815f7533353a24907b0a',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@602dc9f9bbfa0a34c01f2aeaf490bd7426ed078d',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@c829c1dd6508c725ee6aa8032833866a4d37a71b',
+    'https://chromium.googlesource.com/chromium/src/testing@9eb686fdda0a70653ca8039354b06df97b3ffb99',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@83e94aa41cbeda31b155fbb8198e4761b612c0b1',
+    'https://chromium.googlesource.com/chromium/src/third_party@155f8a29fabc8e78e70f1d6a1b36b49cb89d1dc3',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -122,7 +122,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@c484031f1f199ee53567241426efffee49008f82',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@12d96cda9ccc11826cce0a6390cc55576838e6ce',
+    'https://chromium.googlesource.com/catapult.git@26af1f63b6cbcb76d5a7045d6c1ea71f651cbdae',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -131,7 +131,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@5998f8451548244de8cde7fab387a550e7c4497d',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@424504a1b2e7c201af9b9dd1084537add80b8a2a',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@30cde45e06283ef80e0b5ce970cd5da9509cc0e8',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@7e1d53a09f9ae4d8909bc7d426368887342eca01',
   'src/third_party/findbugs': {
@@ -208,7 +208,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@0d6614b33d5318efd97120182405c700a25cb5ae',
+    'https://android.googlesource.com/platform/external/perfetto.git@d53f42ae593851c3d4762dd4dd8ba49be17c52ed',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@61edec1efbea1c02d71857e2aff9426d9cd2df4e',
   'src/third_party/libyuv':
@@ -265,7 +265,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@62445a37e850e4c5a76f8ac5601a7b250c2dea7c',
+    'https://chromium.googlesource.com/chromium/src/tools@6f3006eca1170312a36a953f92fd683246acb1f4',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
