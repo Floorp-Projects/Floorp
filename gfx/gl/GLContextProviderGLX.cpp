@@ -242,10 +242,11 @@ bool GLXLibrary::SupportsVideoSync(Display* aDisplay) {
 }
 
 static int (*sOldErrorHandler)(Display*, XErrorEvent*);
-ScopedXErrorHandler::ErrorEvent sErrorEvent;
+static XErrorEvent sErrorEvent = {};
+
 static int GLXErrorHandler(Display* display, XErrorEvent* ev) {
-  if (!sErrorEvent.mError.error_code) {
-    sErrorEvent.mError = *ev;
+  if (!sErrorEvent.error_code) {
+    sErrorEvent = *ev;
   }
   return 0;
 }
@@ -264,21 +265,23 @@ GLXLibrary::WrapperScope::~WrapperScope() {
     if (mDisplay) {
       FinishX(mDisplay);
     }
-    if (sErrorEvent.mError.error_code) {
+    if (sErrorEvent.error_code) {
       char buffer[100] = {};
       if (mDisplay) {
-        XGetErrorText(mDisplay, sErrorEvent.mError.error_code, buffer,
-                      sizeof(buffer));
+        XGetErrorText(mDisplay, sErrorEvent.error_code, buffer, sizeof(buffer));
       } else {
-        SprintfLiteral(buffer, "%d", sErrorEvent.mError.error_code);
+        SprintfLiteral(buffer, "%d", sErrorEvent.error_code);
       }
       printf_stderr("X ERROR after %s: %s (%i) - Request: %i.%i, Serial: %lu",
-                    mFuncName, buffer, sErrorEvent.mError.error_code,
-                    sErrorEvent.mError.request_code,
-                    sErrorEvent.mError.minor_code, sErrorEvent.mError.serial);
+                    mFuncName, buffer, sErrorEvent.error_code,
+                    sErrorEvent.request_code, sErrorEvent.minor_code,
+                    sErrorEvent.serial);
       MOZ_ASSERT_UNREACHABLE("AfterGLXCall sErrorEvent");
     }
-    XSetErrorHandler(sOldErrorHandler);
+    const auto was = XSetErrorHandler(sOldErrorHandler);
+    if (was != GLXErrorHandler) {
+      NS_WARNING("Concurrent XSetErrorHandlers");
+    }
   }
 }
 
@@ -338,24 +341,17 @@ already_AddRefed<GLContextGLX> GLContextGLX::CreateGLContext(
 
   const auto CreateWithAttribs =
       [&](const std::vector<int>& attribs) -> RefPtr<GLContextGLX> {
-    OffMainThreadScopedXErrorHandler handler;
-
     auto terminated = attribs;
     terminated.push_back(0);
 
-    // X Errors can happen even if this context creation returns non-null, and
-    // we should not try to use such contexts. (Errors may come from the
-    // distant server, or something)
     const auto glxContext = glx.fCreateContextAttribs(
         *display, cfg, nullptr, X11True, terminated.data());
     if (!glxContext) return nullptr;
     const RefPtr<GLContextGLX> ret =
         new GLContextGLX(desc, display, drawable, glxContext, deleteDrawable,
                          isDoubleBuffered, pixmap);
-    if (handler.SyncAndGetError(*display)) return nullptr;
 
     if (!ret->Init()) return nullptr;
-    if (handler.SyncAndGetError(*display)) return nullptr;
 
     return ret;
   };
@@ -439,13 +435,12 @@ GLContextGLX::~GLContextGLX() {
   }
 
   // see bug 659842 comment 76
-#ifdef DEBUG
-  bool success =
-#endif
-      mGLX->fMakeCurrent(*mDisplay, X11None, nullptr);
-  MOZ_ASSERT(success,
-             "glXMakeCurrent failed to release GL context before we call "
-             "glXDestroyContext!");
+  bool success = mGLX->fMakeCurrent(*mDisplay, X11None, nullptr);
+  if (!success) {
+    NS_WARNING(
+        "glXMakeCurrent failed to release GL context before we call "
+        "glXDestroyContext!");
+  }
 
   mGLX->fDestroyContext(*mDisplay, mContext);
 
@@ -476,7 +471,9 @@ bool GLContextGLX::MakeCurrentImpl() const {
   }
 
   const bool succeeded = mGLX->fMakeCurrent(*mDisplay, mDrawable, mContext);
-  NS_ASSERTION(succeeded, "Failed to make GL context current!");
+  if (!succeeded) {
+    NS_WARNING("Failed to make GL context current!");
+  }
 
   if (!IsOffscreen() && mGLX->SupportsSwapControl()) {
     // Many GLX implementations default to blocking until the next
@@ -868,14 +865,12 @@ static already_AddRefed<GLContextGLX> CreateOffscreenPixmapContext(
   int depth;
   FindVisualAndDepth(*display, visid, &visual, &depth);
 
-  OffMainThreadScopedXErrorHandler xErrorHandler;
   bool error = false;
 
   gfx::IntSize dummySize(16, 16);
   RefPtr<gfxXlibSurface> surface = gfxXlibSurface::Create(
       display, DefaultScreenOfDisplay(display->get()), visual, dummySize);
   if (surface->CairoStatus() != 0) {
-    mozilla::Unused << xErrorHandler.SyncAndGetError(*display);
     return nullptr;
   }
 
@@ -888,8 +883,7 @@ static already_AddRefed<GLContextGLX> CreateOffscreenPixmapContext(
     error = true;
   }
 
-  bool serverError = xErrorHandler.SyncAndGetError(*display);
-  if (error || serverError) return nullptr;
+  if (error) return nullptr;
 
   auto fullDesc = GLContextDesc{desc};
   fullDesc.isOffscreen = true;
