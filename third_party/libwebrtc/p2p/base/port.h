@@ -99,14 +99,24 @@ class StunStats {
 // Stats that we can return about a candidate.
 class CandidateStats {
  public:
-  CandidateStats();
-  explicit CandidateStats(Candidate candidate);
-  CandidateStats(const CandidateStats&);
-  ~CandidateStats();
+  CandidateStats() = default;
+  CandidateStats(const CandidateStats&) = default;
+  CandidateStats(CandidateStats&&) = default;
+  CandidateStats(Candidate candidate,
+                 absl::optional<StunStats> stats = absl::nullopt)
+      : candidate_(std::move(candidate)), stun_stats_(std::move(stats)) {}
+  ~CandidateStats() = default;
 
-  Candidate candidate;
+  CandidateStats& operator=(const CandidateStats& other) = default;
+
+  const Candidate& candidate() const { return candidate_; }
+
+  const absl::optional<StunStats>& stun_stats() const { return stun_stats_; }
+
+ private:
+  Candidate candidate_;
   // STUN port stats if this candidate is a STUN candidate.
-  absl::optional<StunStats> stun_stats;
+  absl::optional<StunStats> stun_stats_;
 };
 
 typedef std::vector<CandidateStats> CandidateStatsList;

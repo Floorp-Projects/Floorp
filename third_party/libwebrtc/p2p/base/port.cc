@@ -105,16 +105,6 @@ std::string Port::ComputeFoundation(const std::string& type,
   return rtc::ToString(rtc::ComputeCrc32(sb.Release()));
 }
 
-CandidateStats::CandidateStats() = default;
-
-CandidateStats::CandidateStats(const CandidateStats&) = default;
-
-CandidateStats::CandidateStats(Candidate candidate) {
-  this->candidate = candidate;
-}
-
-CandidateStats::~CandidateStats() = default;
-
 Port::Port(rtc::Thread* thread,
            const std::string& type,
            rtc::PacketSocketFactory* factory,
