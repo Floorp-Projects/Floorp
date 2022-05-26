@@ -120,6 +120,11 @@ bool RenderCompositorNative::ShouldUseNativeCompositor() {
   return gfx::gfxVars::UseWebRenderCompositor();
 }
 
+void RenderCompositorNative::GetCompositorCapabilities(
+    CompositorCapabilities* aCaps) {
+  RenderCompositor::GetCompositorCapabilities(aCaps);
+}
+
 bool RenderCompositorNative::MaybeReadback(
     const gfx::IntSize& aReadbackSize, const wr::ImageFormat& aReadbackFormat,
     const Range<uint8_t>& aReadbackBuffer, bool* aNeedsYFlip) {
