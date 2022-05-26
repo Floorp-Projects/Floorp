@@ -45,12 +45,13 @@ class VCMTiming;
 
 namespace internal {
 
-class VideoReceiveStream : public webrtc::DEPRECATED_VideoReceiveStream,
-                           public rtc::VideoSinkInterface<VideoFrame>,
-                           public NackSender,
-                           public OnCompleteFrameCallback,
-                           public Syncable,
-                           public CallStatsObserver {
+class VideoReceiveStream
+    : public webrtc::DEPRECATED_VideoReceiveStream,
+      public rtc::VideoSinkInterface<VideoFrame>,
+      public NackSender,
+      public RtpVideoStreamReceiver::OnCompleteFrameCallback,
+      public Syncable,
+      public CallStatsObserver {
  public:
   // The default number of milliseconds to pass before re-requesting a key frame
   // to be sent.
@@ -111,7 +112,7 @@ class VideoReceiveStream : public webrtc::DEPRECATED_VideoReceiveStream,
   void SendNack(const std::vector<uint16_t>& sequence_numbers,
                 bool buffering_allowed) override;
 
-  // Implements OnCompleteFrameCallback.
+  // Implements RtpVideoStreamReceiver::OnCompleteFrameCallback.
   void OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) override;
 
   // Implements CallStatsObserver::OnRttUpdate
