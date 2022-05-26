@@ -193,7 +193,6 @@ struct Statistics {
   }
 
   void measureInitialHeapSize();
-  void adoptHeapSizeDuringIncrementalGC(Zone* mergedZone);
 
   void nonincremental(GCAbortReason reason) {
     MOZ_ASSERT(reason != GCAbortReason::None);
