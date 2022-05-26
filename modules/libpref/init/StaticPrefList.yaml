@@ -9015,6 +9015,13 @@
     value: true
     mirror: always
 
+  # Bug 1771196
+  # Dont yet enable AndroidDecoderModule on Utility
+-   name: media.utility-android-media-codec.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 -   name: media.android-media-codec.preferred
     type: RelaxedAtomicBool
     value: true
