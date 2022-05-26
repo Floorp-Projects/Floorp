@@ -372,17 +372,6 @@ class nsIContent : public nsINode {
    */
   inline nsIContent* GetFlattenedTreeParent() const;
 
-  /**
-   * Get the index of a child within this content's flat tree children.
-   *
-   * @param aPossibleChild the child to get the index of.
-   * @return the index of the child, or Nothing if not a child. Be aware that
-   *         anonymous children (e.g. a <div> child of an <input> element) will
-   *         result in Nothing.
-   */
-  mozilla::Maybe<uint32_t> ComputeFlatTreeIndexOf(
-      const nsINode* aPossibleChild) const;
-
  protected:
   // Handles getting inserted or removed directly under a <slot> element.
   // This is meant to only be called from the two functions below.
