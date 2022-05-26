@@ -2586,18 +2586,13 @@ static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
   if (!property || !req_type) {
     return false;
   }
-  {
-    // Suppress fatal errors for a missing window.
-    ScopedXErrorHandler handler;
-    result =
-        XGetWindowProperty(xdisplay, wmWindow, property,
-                           0L,         // offset
-                           INT32_MAX,  // length
-                           false,      // delete
-                           req_type, &actual_type_return, &actual_format_return,
-                           &nitems_return, &bytes_after_return, &prop_return);
-  }
-
+  result =
+      XGetWindowProperty(xdisplay, wmWindow, property,
+                         0L,         // offset
+                         INT32_MAX,  // length
+                         false,      // delete
+                         req_type, &actual_type_return, &actual_format_return,
+                         &nitems_return, &bytes_after_return, &prop_return);
   if (result != Success || bytes_after_return != 0) {
     return false;
   }
