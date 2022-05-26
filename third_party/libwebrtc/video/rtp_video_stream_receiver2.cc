@@ -258,6 +258,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
                                             &rtcp_feedback_buffer_)),
       vcm_receive_statistics_(vcm_receive_statistics),
       packet_buffer_(kPacketBufferStartSize, PacketBufferMaxSize()),
+      reference_finder_(std::make_unique<RtpFrameReferenceFinder>()),
       has_received_frame_(false),
       frames_decryptable_(false),
       absolute_capture_time_interpolator_(clock) {
@@ -300,8 +301,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
         std::make_unique<LossNotificationController>(&rtcp_feedback_buffer_,
                                                      &rtcp_feedback_buffer_);
   }
-
-  reference_finder_ = std::make_unique<RtpFrameReferenceFinder>(this);
 
   // Only construct the encrypted receiver if frame encryption is enabled.
   if (config_.crypto_options.sframe.require_frame_encryption) {
@@ -847,7 +846,6 @@ void RtpVideoStreamReceiver2::OnAssembledFrame(
         // start from the |last_completed_picture_id_| and add an offset in case
         // of reordering.
         reference_finder_ = std::make_unique<RtpFrameReferenceFinder>(
-            this,
             last_completed_picture_id_ + std::numeric_limits<uint16_t>::max());
         current_codec_ = frame->codec_type();
       } else {
@@ -869,25 +867,27 @@ void RtpVideoStreamReceiver2::OnAssembledFrame(
   } else if (frame_transformer_delegate_) {
     frame_transformer_delegate_->TransformFrame(std::move(frame));
   } else {
-    reference_finder_->ManageFrame(std::move(frame));
+    OnCompleteFrames(reference_finder_->ManageFrame(std::move(frame)));
   }
 }
 
-void RtpVideoStreamReceiver2::OnCompleteFrame(
-    std::unique_ptr<EncodedFrame> frame) {
-  RTC_DCHECK_RUN_ON(&worker_task_checker_);
-  RtpFrameObject* rtp_frame = static_cast<RtpFrameObject*>(frame.get());
-  last_seq_num_for_pic_id_[rtp_frame->Id()] = rtp_frame->last_seq_num();
+void RtpVideoStreamReceiver2::OnCompleteFrames(
+    RtpFrameReferenceFinder::ReturnVector frames) {
+  for (auto& frame : frames) {
+    RTC_DCHECK_RUN_ON(&worker_task_checker_);
+    RtpFrameObject* rtp_frame = static_cast<RtpFrameObject*>(frame.get());
+    last_seq_num_for_pic_id_[rtp_frame->Id()] = rtp_frame->last_seq_num();
 
-  last_completed_picture_id_ =
-      std::max(last_completed_picture_id_, frame->Id());
-  complete_frame_callback_->OnCompleteFrame(std::move(frame));
+    last_completed_picture_id_ =
+        std::max(last_completed_picture_id_, frame->Id());
+    complete_frame_callback_->OnCompleteFrame(std::move(frame));
+  }
 }
 
 void RtpVideoStreamReceiver2::OnDecryptedFrame(
     std::unique_ptr<RtpFrameObject> frame) {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
-  reference_finder_->ManageFrame(std::move(frame));
+  OnCompleteFrames(reference_finder_->ManageFrame(std::move(frame)));
 }
 
 void RtpVideoStreamReceiver2::OnDecryptionStatusChange(
@@ -957,7 +957,7 @@ void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
 void RtpVideoStreamReceiver2::ManageFrame(
     std::unique_ptr<RtpFrameObject> frame) {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
-  reference_finder_->ManageFrame(std::move(frame));
+  OnCompleteFrames(reference_finder_->ManageFrame(std::move(frame)));
 }
 
 void RtpVideoStreamReceiver2::ReceivePacket(const RtpPacketReceived& packet) {
@@ -1013,7 +1013,7 @@ void RtpVideoStreamReceiver2::ParseAndHandleEncapsulatingHeader(
 void RtpVideoStreamReceiver2::NotifyReceiverOfEmptyPacket(uint16_t seq_num) {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
 
-  reference_finder_->PaddingReceived(seq_num);
+  OnCompleteFrames(reference_finder_->PaddingReceived(seq_num));
 
   OnInsertedPacket(packet_buffer_.InsertPadding(seq_num));
   if (nack_module_) {

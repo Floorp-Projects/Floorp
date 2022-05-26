@@ -75,12 +75,13 @@ struct VideoFrameMetaData {
   const Timestamp decode_timestamp;
 };
 
-class VideoReceiveStream2 : public webrtc::VideoReceiveStream,
-                            public rtc::VideoSinkInterface<VideoFrame>,
-                            public NackSender,
-                            public OnCompleteFrameCallback,
-                            public Syncable,
-                            public CallStatsObserver {
+class VideoReceiveStream2
+    : public webrtc::VideoReceiveStream,
+      public rtc::VideoSinkInterface<VideoFrame>,
+      public NackSender,
+      public RtpVideoStreamReceiver2::OnCompleteFrameCallback,
+      public Syncable,
+      public CallStatsObserver {
  public:
   // The default number of milliseconds to pass before re-requesting a key frame
   // to be sent.
@@ -134,7 +135,7 @@ class VideoReceiveStream2 : public webrtc::VideoReceiveStream,
   void SendNack(const std::vector<uint16_t>& sequence_numbers,
                 bool buffering_allowed) override;
 
-  // Implements OnCompleteFrameCallback.
+  // Implements RtpVideoStreamReceiver2::OnCompleteFrameCallback.
   void OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) override;
 
   // Implements CallStatsObserver::OnRttUpdate
