@@ -4213,18 +4213,25 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
     channels.push_back(std::make_pair(channel, content_desc));
   }
 
-  if (!channels.empty()) {
+  // This for-loop of invokes helps audio impairment during re-negotiations.
+  // One of the causes is that downstairs decoder creation is synchronous at the
+  // moment, and that a decoder is created for each codec listed in the SDP.
+  //
+  // TODO(bugs.webrtc.org/12840): consider merging the invokes again after
+  // these projects have shipped:
+  // - bugs.webrtc.org/12462
+  // - crbug.com/1157227
+  // - crbug.com/1187289
+  for (const auto& entry : channels) {
     RTCError error =
         pc_->worker_thread()->Invoke<RTCError>(RTC_FROM_HERE, [&]() {
           std::string error;
-          for (const auto& entry : channels) {
-            bool success =
-                (source == cricket::CS_LOCAL)
-                    ? entry.first->SetLocalContent(entry.second, type, &error)
-                    : entry.first->SetRemoteContent(entry.second, type, &error);
-            if (!success) {
-              LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, error);
-            }
+          bool success =
+              (source == cricket::CS_LOCAL)
+                  ? entry.first->SetLocalContent(entry.second, type, &error)
+                  : entry.first->SetRemoteContent(entry.second, type, &error);
+          if (!success) {
+            LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, error);
           }
           return RTCError::OK();
         });
