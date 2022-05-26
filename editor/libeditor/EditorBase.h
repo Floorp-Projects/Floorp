@@ -572,9 +572,9 @@ class EditorBase : public nsIEditor,
   }
 
   /**
-   * Get the focused content, if we're focused.  Returns null otherwise.
+   * Get the focused element, if we're focused.  Returns null otherwise.
    */
-  virtual nsIContent* GetFocusedContent() const;
+  virtual Element* GetFocusedElement() const;
 
   /**
    * Whether the aGUIEvent should be handled by this editor or not.  When this
@@ -1957,7 +1957,7 @@ class EditorBase : public nsIEditor,
 
   /**
    * Whether the editor is active on the DOM window.  Note that when this
-   * returns true but GetFocusedContent() returns null, it means that this
+   * returns true but GetFocusedElement() returns null, it means that this
    * editor was focused when the DOM window was active.
    */
   virtual bool IsActiveInDOMWindow() const;
