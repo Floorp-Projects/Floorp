@@ -103,6 +103,8 @@ class SuppressionGain {
 
   struct GainParameters {
     explicit GainParameters(
+        int last_lf_band,
+        int first_hf_band,
         const EchoCanceller3Config::Suppressor::Tuning& tuning);
     const float max_inc_factor;
     const float max_dec_factor_lf;

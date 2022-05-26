@@ -229,6 +229,12 @@ bool EchoCanceller3Config::Validate(EchoCanceller3Config* config) {
   res =
       res & Limit(&c->suppressor.nearend_tuning.max_dec_factor_lf, 0.f, 100.f);
 
+  res = res & Limit(&c->suppressor.last_permanent_lf_smoothing_band, 0, 64);
+  res = res & Limit(&c->suppressor.last_lf_smoothing_band, 0, 64);
+  res = res & Limit(&c->suppressor.last_lf_band, 0, 63);
+  res = res &
+        Limit(&c->suppressor.first_hf_band, c->suppressor.last_lf_band + 1, 64);
+
   res = res & Limit(&c->suppressor.dominant_nearend_detection.enr_threshold,
                     0.f, 1000000.f);
   res = res & Limit(&c->suppressor.dominant_nearend_detection.snr_threshold,

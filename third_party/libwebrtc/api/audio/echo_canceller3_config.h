@@ -194,6 +194,12 @@ struct RTC_EXPORT EchoCanceller3Config {
                                    2.0f,
                                    0.25f);
 
+    bool lf_smoothing_during_initial_phase = true;
+    int last_permanent_lf_smoothing_band = 0;
+    int last_lf_smoothing_band = 5;
+    int last_lf_band = 5;
+    int first_hf_band = 8;
+
     struct DominantNearendDetection {
       float enr_threshold = .25f;
       float enr_exit_threshold = 10.f;
