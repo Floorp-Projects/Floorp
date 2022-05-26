@@ -929,6 +929,7 @@ void Thread::Send(const Location& posted_from,
   msg.pdata = pdata;
   if (IsCurrent()) {
 #if RTC_DCHECK_IS_ON
+    RTC_DCHECK(this->IsInvokeToThreadAllowed(this));
     RTC_DCHECK_RUN_ON(this);
     could_be_blocking_call_count_++;
 #endif
