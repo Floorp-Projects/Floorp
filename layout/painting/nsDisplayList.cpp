@@ -5254,8 +5254,11 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
   params.animation = prop.ptrOr(nullptr);
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
-  if (IsScrollbarContainer() && IsRootScrollbarContainer()) {
+  if (IsScrollbarContainer()) {
     params.prim_flags |= wr::PrimitiveFlags::IS_SCROLLBAR_CONTAINER;
+  }
+  if (IsScrollThumbLayer()) {
+    params.prim_flags |= wr::PrimitiveFlags::IS_SCROLLBAR_THUMB;
   }
   if (IsZoomingLayer() ||
       ((IsFixedPositionLayer() && HasDynamicToolbar()) ||
