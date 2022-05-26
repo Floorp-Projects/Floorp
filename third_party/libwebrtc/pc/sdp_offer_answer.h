@@ -629,6 +629,11 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   uint32_t negotiation_needed_event_id_ = 0;
   bool update_negotiation_needed_on_empty_chain_
       RTC_GUARDED_BY(signaling_thread()) = false;
+  // If PT demuxing is successfully negotiated one time we will allow PT
+  // demuxing for the rest of the session so that PT-based apps default to PT
+  // demuxing in follow-up O/A exchanges.
+  bool pt_demuxing_has_been_used_audio_ = false;
+  bool pt_demuxing_has_been_used_video_ = false;
 
   // In Unified Plan, if we encounter remote SDP that does not contain an a=msid
   // line we create and use a stream with a random ID for our receivers. This is

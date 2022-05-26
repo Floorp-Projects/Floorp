@@ -60,6 +60,7 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/trace_event.h"
+#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 
 using cricket::ContentInfo;
@@ -86,6 +87,9 @@ namespace {
 
 typedef webrtc::PeerConnectionInterface::RTCOfferAnswerOptions
     RTCOfferAnswerOptions;
+
+constexpr const char* kAlwaysAllowPayloadTypeDemuxingFieldTrialName =
+    "WebRTC-AlwaysAllowPayloadTypeDemuxing";
 
 // Error messages
 const char kInvalidSdp[] = "Invalid session description.";
@@ -736,6 +740,17 @@ rtc::scoped_refptr<webrtc::DtlsTransport> LookupDtlsTransportByMid(
   return network_thread->Invoke<rtc::scoped_refptr<webrtc::DtlsTransport>>(
       RTC_FROM_HERE,
       [controller, &mid] { return controller->LookupDtlsTransportByMid(mid); });
+}
+
+bool ContentHasHeaderExtension(const cricket::ContentInfo& content_info,
+                               absl::string_view header_extension_uri) {
+  for (const RtpExtension& rtp_header_extension :
+       content_info.media_description()->rtp_header_extensions()) {
+    if (rtp_header_extension.uri == header_extension_uri) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace
@@ -4840,10 +4855,13 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
   struct PayloadTypes {
     std::set<int> audio_payload_types;
     std::set<int> video_payload_types;
-    bool pt_demuxing_enabled_audio = true;
-    bool pt_demuxing_enabled_video = true;
+    bool pt_demuxing_possible_audio = true;
+    bool pt_demuxing_possible_video = true;
   };
   std::map<const cricket::ContentGroup*, PayloadTypes> payload_types_by_bundle;
+  // If the MID is missing from *any* receiving m= section, this is set to true.
+  bool mid_header_extension_missing_audio = false;
+  bool mid_header_extension_missing_video = false;
   for (auto& content_info : sdesc->description()->contents()) {
     auto it = bundle_groups_by_mid.find(content_info.name);
     const cricket::ContentGroup* bundle_group =
@@ -4867,26 +4885,34 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
     }
     switch (content_info.media_description()->type()) {
       case cricket::MediaType::MEDIA_TYPE_AUDIO: {
+        if (!mid_header_extension_missing_audio) {
+          mid_header_extension_missing_audio =
+              !ContentHasHeaderExtension(content_info, RtpExtension::kMidUri);
+        }
         const cricket::AudioContentDescription* audio_desc =
             content_info.media_description()->as_audio();
         for (const cricket::AudioCodec& audio : audio_desc->codecs()) {
           if (payload_types->audio_payload_types.count(audio.id)) {
             // Two m= sections are using the same payload type, thus demuxing
             // by payload type is not possible.
-            payload_types->pt_demuxing_enabled_audio = false;
+            payload_types->pt_demuxing_possible_audio = false;
           }
           payload_types->audio_payload_types.insert(audio.id);
         }
         break;
       }
       case cricket::MediaType::MEDIA_TYPE_VIDEO: {
+        if (!mid_header_extension_missing_video) {
+          mid_header_extension_missing_video =
+              !ContentHasHeaderExtension(content_info, RtpExtension::kMidUri);
+        }
         const cricket::VideoContentDescription* video_desc =
             content_info.media_description()->as_video();
         for (const cricket::VideoCodec& video : video_desc->codecs()) {
           if (payload_types->video_payload_types.count(video.id)) {
             // Two m= sections are using the same payload type, thus demuxing
             // by payload type is not possible.
-            payload_types->pt_demuxing_enabled_video = false;
+            payload_types->pt_demuxing_possible_video = false;
           }
           payload_types->video_payload_types.insert(video.id);
         }
@@ -4920,9 +4946,39 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
   if (channels_to_update.empty()) {
     return true;
   }
+
+  // In Unified Plan, payload type demuxing is useful for legacy endpoints that
+  // don't support the MID header extension, but it can also cause incorrrect
+  // forwarding of packets when going from one m= section to multiple m=
+  // sections in the same BUNDLE. This only happens if media arrives prior to
+  // negotiation, but this can cause missing video and unsignalled ssrc bugs
+  // severe enough to warrant disabling PT demuxing in such cases. Therefore, if
+  // a MID header extension is present on all m= sections for a given kind
+  // (audio/video) then we use that as an OK to disable payload type demuxing in
+  // BUNDLEs of that kind. However if PT demuxing was ever turned on (e.g. MID
+  // was ever removed on ANY m= section of that kind) then we continue to allow
+  // PT demuxing in order to prevent disabling it in follow-up O/A exchanges and
+  // allowing early media by PT.
+  bool bundled_pt_demux_allowed_audio = !IsUnifiedPlan() ||
+                                        mid_header_extension_missing_audio ||
+                                        pt_demuxing_has_been_used_audio_;
+  bool bundled_pt_demux_allowed_video = !IsUnifiedPlan() ||
+                                        mid_header_extension_missing_video ||
+                                        pt_demuxing_has_been_used_video_;
+  // Kill switch for the above change.
+  if (field_trial::IsEnabled(kAlwaysAllowPayloadTypeDemuxingFieldTrialName)) {
+    // TODO(https://crbug.com/webrtc/12814): If disabling PT-based demux does
+    // not trigger regressions, remove this kill switch.
+    bundled_pt_demux_allowed_audio = true;
+    bundled_pt_demux_allowed_video = true;
+  }
+
   return pc_->worker_thread()->Invoke<bool>(
       RTC_FROM_HERE,
-      [&channels_to_update, &bundle_groups_by_mid, &payload_types_by_bundle]() {
+      [&channels_to_update, &bundle_groups_by_mid, &payload_types_by_bundle,
+       bundled_pt_demux_allowed_audio, bundled_pt_demux_allowed_video,
+       pt_demuxing_has_been_used_audio = &pt_demuxing_has_been_used_audio_,
+       pt_demuxing_has_been_used_video = &pt_demuxing_has_been_used_video_]() {
         for (const auto& it : channels_to_update) {
           RtpTransceiverDirection local_direction = it.first;
           cricket::ChannelInterface* channel = it.second;
@@ -4932,17 +4988,27 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
               bundle_it != bundle_groups_by_mid.end() ? bundle_it->second
                                                       : nullptr;
           if (media_type == cricket::MediaType::MEDIA_TYPE_AUDIO) {
-            if (!channel->SetPayloadTypeDemuxingEnabled(
-                    (!bundle_group || payload_types_by_bundle[bundle_group]
-                                          .pt_demuxing_enabled_audio) &&
-                    RtpTransceiverDirectionHasRecv(local_direction))) {
+            bool pt_demux_enabled =
+                RtpTransceiverDirectionHasRecv(local_direction) &&
+                (!bundle_group || (bundled_pt_demux_allowed_audio &&
+                                   payload_types_by_bundle[bundle_group]
+                                       .pt_demuxing_possible_audio));
+            if (pt_demux_enabled) {
+              *pt_demuxing_has_been_used_audio = true;
+            }
+            if (!channel->SetPayloadTypeDemuxingEnabled(pt_demux_enabled)) {
               return false;
             }
           } else if (media_type == cricket::MediaType::MEDIA_TYPE_VIDEO) {
-            if (!channel->SetPayloadTypeDemuxingEnabled(
-                    (!bundle_group || payload_types_by_bundle[bundle_group]
-                                          .pt_demuxing_enabled_video) &&
-                    RtpTransceiverDirectionHasRecv(local_direction))) {
+            bool pt_demux_enabled =
+                RtpTransceiverDirectionHasRecv(local_direction) &&
+                (!bundle_group || (bundled_pt_demux_allowed_video &&
+                                   payload_types_by_bundle[bundle_group]
+                                       .pt_demuxing_possible_video));
+            if (pt_demux_enabled) {
+              *pt_demuxing_has_been_used_video = true;
+            }
+            if (!channel->SetPayloadTypeDemuxingEnabled(pt_demux_enabled)) {
               return false;
             }
           }
