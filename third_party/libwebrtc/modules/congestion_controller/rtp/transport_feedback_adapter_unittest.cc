@@ -49,8 +49,8 @@ void ComparePacketFeedbackVectors(const std::vector<PacketResult>& truth,
   // equal. However, the difference must be the same for all x.
   TimeDelta arrival_time_delta = truth[0].receive_time - input[0].receive_time;
   for (size_t i = 0; i < len; ++i) {
-    RTC_CHECK(truth[i].receive_time.IsFinite());
-    if (input[i].receive_time.IsFinite()) {
+    RTC_CHECK(truth[i].IsReceived());
+    if (input[i].IsReceived()) {
       EXPECT_EQ(truth[i].receive_time - input[i].receive_time,
                 arrival_time_delta);
     }
