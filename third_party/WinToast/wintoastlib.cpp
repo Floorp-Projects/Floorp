@@ -706,6 +706,10 @@ INT64 WinToast::showToast(_In_ const WinToastTemplate& toast, _In_  IWinToastHan
                                 (toast.duration() == WinToastTemplate::Duration::Short) ? L"short" : L"long");
                         }
 
+                        if (SUCCEEDED(hr)) {
+                            hr = addScenarioHelper(xmlDocument.Get(), toast.scenario());
+                        }
+
                     } else {
                         DEBUG_MSG("Modern features (Actions/Sounds/Attributes) not supported in this os version");
                     }
@@ -850,6 +854,28 @@ HRESULT WinToast::addDurationHelper(_In_ IXmlDocument *xml, _In_ const std::wstr
                 if (SUCCEEDED(hr)) {
                     hr = toastElement->SetAttribute(WinToastStringWrapper(L"duration").Get(),
                                                     WinToastStringWrapper(duration).Get());
+                }
+            }
+        }
+    }
+    return hr;
+}
+
+HRESULT WinToast::addScenarioHelper(_In_ IXmlDocument* xml, _In_ const std::wstring& scenario) {
+    ComPtr<IXmlNodeList> nodeList;
+    HRESULT hr = xml->GetElementsByTagName(WinToastStringWrapper(L"toast").Get(), &nodeList);
+    if (SUCCEEDED(hr)) {
+        UINT32 length;
+        hr = nodeList->get_Length(&length);
+        if (SUCCEEDED(hr)) {
+            ComPtr<IXmlNode> toastNode;
+            hr = nodeList->Item(0, &toastNode);
+            if (SUCCEEDED(hr)) {
+                ComPtr<IXmlElement> toastElement;
+                hr = toastNode.As(&toastElement);
+                if (SUCCEEDED(hr)) {
+                    hr = toastElement->SetAttribute(WinToastStringWrapper(L"scenario").Get(),
+                        WinToastStringWrapper(scenario).Get());
                 }
             }
         }
@@ -1094,6 +1120,15 @@ void WinToastTemplate::setExpiration(_In_ INT64 millisecondsFromNow) {
     _expiration = millisecondsFromNow;
 }
 
+void WinToastLib::WinToastTemplate::setScenario(Scenario scenario) {
+    switch (scenario) {
+    case Scenario::Default: _scenario = L"Default"; break;
+    case Scenario::Alarm: _scenario = L"Alarm"; break;
+    case Scenario::IncomingCall: _scenario = L"IncomingCall"; break;
+    case Scenario::Reminder: _scenario = L"Reminder"; break;
+    }
+}
+
 void WinToastTemplate::setAttributionText(_In_ const std::wstring& attributionText) {
     _attributionText = attributionText;
 }
@@ -1139,6 +1174,10 @@ const std::wstring& WinToastTemplate::audioPath() const {
 
 const std::wstring& WinToastTemplate::attributionText() const {
     return _attributionText;
+}
+
+const std::wstring& WinToastLib::WinToastTemplate::scenario() const {
+    return _scenario;
 }
 
 INT64 WinToastTemplate::expiration() const {
