@@ -1,0 +1,123 @@
+diff --git a/src/wintoastlib.cpp b/src/wintoastlib.cpp
+index 3cf5f21..1adfe19 100644
+--- a/src/wintoastlib.cpp
++++ b/src/wintoastlib.cpp
+@@ -677,6 +677,10 @@ INT64 WinToast::showToast(_In_ const WinToastTemplate& toast, _In_  IWinToastHan
+                                 (toast.duration() == WinToastTemplate::Duration::Short) ? L"short" : L"long");
+                         }
+ 
++                        if (SUCCEEDED(hr)) {
++                            hr = addScenarioHelper(xmlDocument.Get(), toast.scenario());
++                        }
++
+                     } else {
+                         DEBUG_MSG("Modern features (Actions/Sounds/Attributes) not supported in this os version");
+                     }
+@@ -828,6 +832,28 @@ HRESULT WinToast::addDurationHelper(_In_ IXmlDocument *xml, _In_ const std::wstr
+     return hr;
+ }
+ 
++HRESULT WinToast::addScenarioHelper(_In_ IXmlDocument* xml, _In_ const std::wstring& scenario) {
++    ComPtr<IXmlNodeList> nodeList;
++    HRESULT hr = xml->GetElementsByTagName(WinToastStringWrapper(L"toast").Get(), &nodeList);
++    if (SUCCEEDED(hr)) {
++        UINT32 length;
++        hr = nodeList->get_Length(&length);
++        if (SUCCEEDED(hr)) {
++            ComPtr<IXmlNode> toastNode;
++            hr = nodeList->Item(0, &toastNode);
++            if (SUCCEEDED(hr)) {
++                ComPtr<IXmlElement> toastElement;
++                hr = toastNode.As(&toastElement);
++                if (SUCCEEDED(hr)) {
++                    hr = toastElement->SetAttribute(WinToastStringWrapper(L"scenario").Get(),
++                        WinToastStringWrapper(scenario).Get());
++                }
++            }
++        }
++    }
++    return hr;
++}
++
+ HRESULT WinToast::setTextFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& text, _In_ UINT32 pos) {
+     ComPtr<IXmlNodeList> nodeList;
+     HRESULT hr = xml->GetElementsByTagName(WinToastStringWrapper(L"text").Get(), &nodeList);
+@@ -1065,6 +1091,15 @@ void WinToastTemplate::setExpiration(_In_ INT64 millisecondsFromNow) {
+     _expiration = millisecondsFromNow;
+ }
+ 
++void WinToastLib::WinToastTemplate::setScenario(Scenario scenario) {
++    switch (scenario) {
++    case Scenario::Default: _scenario = L"Default"; break;
++    case Scenario::Alarm: _scenario = L"Alarm"; break;
++    case Scenario::IncomingCall: _scenario = L"IncomingCall"; break;
++    case Scenario::Reminder: _scenario = L"Reminder"; break;
++    }
++}
++
+ void WinToastTemplate::setAttributionText(_In_ const std::wstring& attributionText) {
+     _attributionText = attributionText;
+ }
+@@ -1112,6 +1147,10 @@ const std::wstring& WinToastTemplate::attributionText() const {
+     return _attributionText;
+ }
+ 
++const std::wstring& WinToastLib::WinToastTemplate::scenario() const {
++    return _scenario;
++}
++
+ INT64 WinToastTemplate::expiration() const {
+     return _expiration;
+ }
+diff --git a/src/wintoastlib.h b/src/wintoastlib.h
+index d028994..291e15f 100644
+--- a/src/wintoastlib.h
++++ b/src/wintoastlib.h
+@@ -63,6 +63,7 @@ namespace WinToastLib {
+ 
+     class WinToastTemplate {
+     public:
++        enum class Scenario { Default, Alarm, IncomingCall, Reminder };
+         enum Duration { System, Short, Long };
+         enum AudioOption { Default = 0, Silent, Loop };
+         enum TextField { FirstLine = 0, SecondLine, ThirdLine };
+@@ -114,13 +115,14 @@ namespace WinToastLib {
+         void setSecondLine(_In_ const std::wstring& text);
+         void setThirdLine(_In_ const std::wstring& text);
+         void setTextField(_In_ const std::wstring& txt, _In_ TextField pos);
+-        void setAttributionText(_In_ const std::wstring & attributionText);
++        void setAttributionText(_In_ const std::wstring& attributionText);
+         void setImagePath(_In_ const std::wstring& imgPath);
+         void setAudioPath(_In_ WinToastTemplate::AudioSystemFile audio);
+         void setAudioPath(_In_ const std::wstring& audioPath);
+         void setAudioOption(_In_ WinToastTemplate::AudioOption audioOption);
+         void setDuration(_In_ Duration duration);
+         void setExpiration(_In_ INT64 millisecondsFromNow);
++        void setScenario(_In_ Scenario scenario);
+         void addAction(_In_ const std::wstring& label);
+ 
+         std::size_t textFieldsCount() const;
+@@ -132,6 +134,7 @@ namespace WinToastLib {
+         const std::wstring& imagePath() const;
+         const std::wstring& audioPath() const;
+         const std::wstring& attributionText() const;
++        const std::wstring& scenario() const;
+         INT64 expiration() const;
+         WinToastTemplateType type() const;
+         WinToastTemplate::AudioOption audioOption() const;
+@@ -142,6 +145,7 @@ namespace WinToastLib {
+         std::wstring                        _imagePath{};
+         std::wstring                        _audioPath{};
+         std::wstring                        _attributionText{};
++        std::wstring                        _scenario{L"Default"};
+         INT64                               _expiration{0};
+         AudioOption                         _audioOption{WinToastTemplate::AudioOption::Default};
+         WinToastTemplateType                _type{WinToastTemplateType::Text01};
+@@ -210,6 +214,7 @@ namespace WinToastLib {
+         HRESULT setAttributionTextFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& text);
+         HRESULT addActionHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& action, _In_ const std::wstring& arguments);
+         HRESULT addDurationHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& duration);
++        HRESULT addScenarioHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& scenario);
+         ComPtr<IToastNotifier> notifier(_In_ bool* succeded) const;
+         void setError(_Out_opt_ WinToastError* error, _In_ WinToastError value);
+     };
