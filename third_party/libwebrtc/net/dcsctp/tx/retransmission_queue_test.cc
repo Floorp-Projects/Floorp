@@ -42,6 +42,7 @@ using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::NiceMock;
 using ::testing::Pair;
+using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
@@ -530,9 +531,68 @@ TEST_F(RetransmissionQueueTest, ProducesValidForwardTsn) {
                           Pair(TSN(12), State::kToBeRetransmitted)));
 
   EXPECT_CALL(producer_, Discard(IsUnordered(false), StreamID(1), MID(42)))
-      .Times(1);
+      .WillOnce(Return(true));
   EXPECT_TRUE(queue.ShouldSendForwardTsn(now_));
 
+  // NOTE: The TSN=13 represents the end fragment.
+  EXPECT_THAT(queue.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(10), State::kAcked),      //
+                          Pair(TSN(11), State::kAbandoned),  //
+                          Pair(TSN(12), State::kAbandoned),  //
+                          Pair(TSN(13), State::kAbandoned)));
+
+  ForwardTsnChunk forward_tsn = queue.CreateForwardTsn();
+  EXPECT_EQ(forward_tsn.new_cumulative_tsn(), TSN(13));
+  EXPECT_THAT(forward_tsn.skipped_streams(),
+              UnorderedElementsAre(
+                  ForwardTsnChunk::SkippedStream(StreamID(1), SSN(42))));
+}
+
+TEST_F(RetransmissionQueueTest, ProducesValidForwardTsnWhenFullySent) {
+  RetransmissionQueue queue = CreateQueue();
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce([this](TimeMs, size_t) {
+        SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "B"));
+        dts.max_retransmissions = 0;
+        return dts;
+      })
+      .WillOnce([this](TimeMs, size_t) {
+        SendQueue::DataToSend dts(gen_.Ordered({5, 6, 7, 8}, ""));
+        dts.max_retransmissions = 0;
+        return dts;
+      })
+      .WillOnce([this](TimeMs, size_t) {
+        SendQueue::DataToSend dts(gen_.Ordered({9, 10, 11, 12}, "E"));
+        dts.max_retransmissions = 0;
+        return dts;
+      })
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+
+  // Send and ack first chunk (TSN 10)
+  std::vector<std::pair<TSN, Data>> chunks_to_send =
+      queue.GetChunksToSend(now_, 1000);
+  EXPECT_THAT(chunks_to_send, ElementsAre(Pair(TSN(10), _), Pair(TSN(11), _),
+                                          Pair(TSN(12), _)));
+  EXPECT_THAT(queue.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(9), State::kAcked),      //
+                          Pair(TSN(10), State::kInFlight),  //
+                          Pair(TSN(11), State::kInFlight),  //
+                          Pair(TSN(12), State::kInFlight)));
+
+  // Chunk 10 is acked, but the remaining are lost
+  queue.HandleSack(now_, SackChunk(TSN(10), kArwnd, {}, {}));
+  queue.HandleT3RtxTimerExpiry();
+
+  EXPECT_THAT(queue.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(10), State::kAcked),              //
+                          Pair(TSN(11), State::kToBeRetransmitted),  //
+                          Pair(TSN(12), State::kToBeRetransmitted)));
+
+  EXPECT_CALL(producer_, Discard(IsUnordered(false), StreamID(1), MID(42)))
+      .WillOnce(Return(false));
+  EXPECT_TRUE(queue.ShouldSendForwardTsn(now_));
+
+  // NOTE: No additional TSN representing the end fragment, as that's TSN=12.
   EXPECT_THAT(queue.GetChunkStatesForTesting(),
               ElementsAre(Pair(TSN(10), State::kAcked),      //
                           Pair(TSN(11), State::kAbandoned),  //
@@ -609,11 +669,11 @@ TEST_F(RetransmissionQueueTest, ProducesValidIForwardTsn) {
                           Pair(TSN(13), State::kAcked)));
 
   EXPECT_CALL(producer_, Discard(IsUnordered(false), StreamID(1), MID(42)))
-      .Times(1);
+      .WillOnce(Return(true));
   EXPECT_CALL(producer_, Discard(IsUnordered(true), StreamID(2), MID(42)))
-      .Times(1);
+      .WillOnce(Return(true));
   EXPECT_CALL(producer_, Discard(IsUnordered(false), StreamID(3), MID(42)))
-      .Times(1);
+      .WillOnce(Return(true));
   EXPECT_TRUE(queue.ShouldSendForwardTsn(now_));
 
   EXPECT_THAT(queue.GetChunkStatesForTesting(),
@@ -621,12 +681,45 @@ TEST_F(RetransmissionQueueTest, ProducesValidIForwardTsn) {
                           Pair(TSN(10), State::kAbandoned),  //
                           Pair(TSN(11), State::kAbandoned),  //
                           Pair(TSN(12), State::kAbandoned),  //
-                          Pair(TSN(13), State::kAcked)));
+                          Pair(TSN(13), State::kAcked),
+                          // Representing end fragments of stream 1-3
+                          Pair(TSN(14), State::kAbandoned),  //
+                          Pair(TSN(15), State::kAbandoned),  //
+                          Pair(TSN(16), State::kAbandoned)));
 
-  IForwardTsnChunk forward_tsn = queue.CreateIForwardTsn();
-  EXPECT_EQ(forward_tsn.new_cumulative_tsn(), TSN(12));
+  IForwardTsnChunk forward_tsn1 = queue.CreateIForwardTsn();
+  EXPECT_EQ(forward_tsn1.new_cumulative_tsn(), TSN(12));
   EXPECT_THAT(
-      forward_tsn.skipped_streams(),
+      forward_tsn1.skipped_streams(),
+      UnorderedElementsAre(IForwardTsnChunk::SkippedStream(
+                               IsUnordered(false), StreamID(1), MID(42)),
+                           IForwardTsnChunk::SkippedStream(
+                               IsUnordered(true), StreamID(2), MID(42)),
+                           IForwardTsnChunk::SkippedStream(
+                               IsUnordered(false), StreamID(3), MID(42))));
+
+  // When TSN 13 is acked, the placeholder "end fragments" must be skipped as
+  // well.
+
+  // A receiver is more likely to ack TSN 13, but do it incrementally.
+  queue.HandleSack(now_, SackChunk(TSN(12), kArwnd, {}, {}));
+
+  EXPECT_CALL(producer_, Discard).Times(0);
+  EXPECT_FALSE(queue.ShouldSendForwardTsn(now_));
+
+  queue.HandleSack(now_, SackChunk(TSN(13), kArwnd, {}, {}));
+  EXPECT_TRUE(queue.ShouldSendForwardTsn(now_));
+
+  EXPECT_THAT(queue.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(13), State::kAcked),      //
+                          Pair(TSN(14), State::kAbandoned),  //
+                          Pair(TSN(15), State::kAbandoned),  //
+                          Pair(TSN(16), State::kAbandoned)));
+
+  IForwardTsnChunk forward_tsn2 = queue.CreateIForwardTsn();
+  EXPECT_EQ(forward_tsn2.new_cumulative_tsn(), TSN(16));
+  EXPECT_THAT(
+      forward_tsn2.skipped_streams(),
       UnorderedElementsAre(IForwardTsnChunk::SkippedStream(
                                IsUnordered(false), StreamID(1), MID(42)),
                            IForwardTsnChunk::SkippedStream(

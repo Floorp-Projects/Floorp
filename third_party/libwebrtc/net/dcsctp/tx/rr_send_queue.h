@@ -64,7 +64,7 @@ class RRSendQueue : public SendQueue {
 
   // Implementation of `SendQueue`.
   absl::optional<DataToSend> Produce(TimeMs now, size_t max_size) override;
-  void Discard(IsUnordered unordered,
+  bool Discard(IsUnordered unordered,
                StreamID stream_id,
                MID message_id) override;
   void PrepareResetStreams(rtc::ArrayView<const StreamID> streams) override;
@@ -92,7 +92,7 @@ class RRSendQueue : public SendQueue {
     size_t buffered_amount() const;
 
     // Discards a partially sent message, see `SendQueue::Discard`.
-    void Discard(IsUnordered unordered, MID message_id);
+    bool Discard(IsUnordered unordered, MID message_id);
 
     // Pauses this stream, which is used before resetting it.
     void Pause();
