@@ -177,6 +177,27 @@ bool SameStreamsEnabled(const VideoBitrateAllocation& lhs,
   }
   return true;
 }
+
+// Returns an optional that has value iff TransportSeqNumExtensionConfigured
+// is `true` for the given video send stream config.
+absl::optional<float> GetConfiguredPacingFactor(
+    const VideoSendStream::Config& config,
+    VideoEncoderConfig::ContentType content_type,
+    const PacingConfig& default_pacing_config) {
+  if (!TransportSeqNumExtensionConfigured(config))
+    return absl::nullopt;
+
+  absl::optional<AlrExperimentSettings> alr_settings =
+      GetAlrSettings(content_type);
+  if (alr_settings)
+    return alr_settings->pacing_factor;
+
+  RateControlSettings rate_control_settings =
+      RateControlSettings::ParseFromFieldTrials();
+  return rate_control_settings.GetPacingFactor().value_or(
+      default_pacing_config.pacing_factor);
+}
+
 }  // namespace
 
 PacingConfig::PacingConfig()
@@ -221,7 +242,6 @@ VideoSendStreamImpl::VideoSendStreamImpl(
       encoder_min_bitrate_bps_(0),
       encoder_target_rate_bps_(0),
       encoder_bitrate_priority_(initial_encoder_bitrate_priority),
-      has_packet_feedback_(false),
       video_stream_encoder_(video_stream_encoder),
       encoder_feedback_(
           clock,
@@ -245,7 +265,9 @@ VideoSendStreamImpl::VideoSendStreamImpl(
                                            std::move(fec_controller),
                                            CreateFrameEncryptionConfig(config_),
                                            config->frame_transformer)),
-      weak_ptr_factory_(this) {
+      weak_ptr_factory_(this),
+      configured_pacing_factor_(
+          GetConfiguredPacingFactor(*config_, content_type, pacing_config_)) {
   video_stream_encoder->SetFecControllerOverride(rtp_video_sender_);
   RTC_DCHECK_RUN_ON(worker_queue_);
   RTC_LOG(LS_INFO) << "VideoSendStreamInternal: " << config_->ToString();
@@ -275,15 +297,11 @@ VideoSendStreamImpl::VideoSendStreamImpl(
   RTC_CHECK(AlrExperimentSettings::MaxOneFieldTrialEnabled());
   // If send-side BWE is enabled, check if we should apply updated probing and
   // pacing settings.
-  if (TransportSeqNumExtensionConfigured(*config_)) {
-    has_packet_feedback_ = true;
-
+  if (configured_pacing_factor_.has_value()) {
     absl::optional<AlrExperimentSettings> alr_settings =
         GetAlrSettings(content_type);
     if (alr_settings) {
       transport->EnablePeriodicAlrProbing(true);
-      transport->SetPacingFactor(alr_settings->pacing_factor);
-      configured_pacing_factor_ = alr_settings->pacing_factor;
       transport->SetQueueTimeLimit(alr_settings->max_paced_queue_time);
     } else {
       RateControlSettings rate_control_settings =
@@ -291,13 +309,10 @@ VideoSendStreamImpl::VideoSendStreamImpl(
 
       transport->EnablePeriodicAlrProbing(
           rate_control_settings.UseAlrProbing());
-      const double pacing_factor =
-          rate_control_settings.GetPacingFactor().value_or(
-              static_cast<double>(pacing_config_.pacing_factor));
-      transport->SetPacingFactor(pacing_factor);
-      configured_pacing_factor_ = pacing_factor;
       transport->SetQueueTimeLimit(pacing_config_.max_pacing_delay.Get().ms());
     }
+
+    transport->SetPacingFactor(*configured_pacing_factor_);
   }
 
   if (config_->periodic_alr_bandwidth_probing) {

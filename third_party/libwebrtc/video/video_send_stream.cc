@@ -227,7 +227,7 @@ VideoSendStream::Stats VideoSendStream::GetStats() {
 }
 
 absl::optional<float> VideoSendStream::GetPacingFactorOverride() const {
-  return send_stream_->configured_pacing_factor_;
+  return send_stream_->configured_pacing_factor();
 }
 
 void VideoSendStream::StopPermanentlyAndGetRtpStates(
