@@ -50,6 +50,7 @@
 #include "rtc_base/string_encode.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
+#include "rtc_base/trace_event.h"
 #include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
@@ -849,6 +850,7 @@ StatsReport* StatsCollector::AddCandidateReport(
 }
 
 std::map<std::string, std::string> StatsCollector::ExtractSessionInfo() {
+  TRACE_EVENT0("webrtc", "StatsCollector::ExtractSessionInfo");
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   SessionStats stats;
@@ -870,6 +872,7 @@ StatsCollector::SessionStats StatsCollector::ExtractSessionInfo_n(
         RtpTransceiverProxyWithInternal<RtpTransceiver>>>& transceivers,
     absl::optional<std::string> sctp_transport_name,
     absl::optional<std::string> sctp_mid) {
+  TRACE_EVENT0("webrtc", "StatsCollector::ExtractSessionInfo_n");
   RTC_DCHECK_RUN_ON(pc_->network_thread());
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   SessionStats stats;

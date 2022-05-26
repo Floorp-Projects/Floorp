@@ -43,6 +43,7 @@
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/time_utils.h"
+#include "rtc_base/trace_event.h"
 #include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 
@@ -193,6 +194,7 @@ P2PTransportChannel::P2PTransportChannel(
               true /* presume_writable_when_fully_relayed */,
               REGATHER_ON_FAILED_NETWORKS_INTERVAL,
               RECEIVING_SWITCHING_DELAY) {
+  TRACE_EVENT0("webrtc", "P2PTransportChannel::P2PTransportChannel");
   RTC_DCHECK(allocator_ != nullptr);
   weak_ping_interval_ = GetWeakPingIntervalInFieldTrial();
   // Validate IceConfig even for mostly built-in constant default values in case
@@ -247,6 +249,7 @@ P2PTransportChannel::P2PTransportChannel(
           ice_controller_factory) {}
 
 P2PTransportChannel::~P2PTransportChannel() {
+  TRACE_EVENT0("webrtc", "P2PTransportChannel::~P2PTransportChannel");
   RTC_DCHECK_RUN_ON(network_thread_);
   std::vector<Connection*> copy(connections().begin(), connections().end());
   for (Connection* con : copy) {

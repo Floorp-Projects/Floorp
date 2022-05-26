@@ -1251,6 +1251,7 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
     std::unique_ptr<SessionDescriptionInterface> desc,
     const std::map<std::string, const cricket::ContentGroup*>&
         bundle_groups_by_mid) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::ApplyLocalDescription");
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(desc);
 
@@ -1540,6 +1541,7 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
     std::unique_ptr<SessionDescriptionInterface> desc,
     const std::map<std::string, const cricket::ContentGroup*>&
         bundle_groups_by_mid) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::ApplyRemoteDescription");
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(desc);
 
@@ -2025,6 +2027,7 @@ void SdpOfferAnswerHandler::DoCreateOffer(
 void SdpOfferAnswerHandler::CreateAnswer(
     CreateSessionDescriptionObserver* observer,
     const PeerConnectionInterface::RTCOfferAnswerOptions& options) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::CreateAnswer");
   RTC_DCHECK_RUN_ON(signaling_thread());
   // Chain this operation. If asynchronous operations are pending on the chain,
   // this operation will be queued to be invoked, otherwise the contents of the
@@ -2325,6 +2328,7 @@ AddIceCandidateResult SdpOfferAnswerHandler::AddIceCandidateInternal(
 void SdpOfferAnswerHandler::AddIceCandidate(
     std::unique_ptr<IceCandidateInterface> candidate,
     std::function<void(RTCError)> callback) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::AddIceCandidate");
   RTC_DCHECK_RUN_ON(signaling_thread());
   // Chain this operation. If asynchronous operations are pending on the chain,
   // this operation will be queued to be invoked, otherwise the contents of the
@@ -2456,6 +2460,7 @@ PeerConnectionInterface::SignalingState SdpOfferAnswerHandler::signaling_state()
 
 void SdpOfferAnswerHandler::ChangeSignalingState(
     PeerConnectionInterface::SignalingState signaling_state) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::ChangeSignalingState");
   RTC_DCHECK_RUN_ON(signaling_thread());
   if (signaling_state_ == signaling_state) {
     return;
@@ -2660,6 +2665,7 @@ void SdpOfferAnswerHandler::OnVideoTrackRemoved(VideoTrackInterface* track,
 }
 
 RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::Rollback");
   auto state = signaling_state();
   if (state != PeerConnectionInterface::kHaveLocalOffer &&
       state != PeerConnectionInterface::kHaveRemoteOffer) {
@@ -3119,6 +3125,8 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiversAndDataChannels(
     const SessionDescriptionInterface* old_remote_description,
     const std::map<std::string, const cricket::ContentGroup*>&
         bundle_groups_by_mid) {
+  TRACE_EVENT0("webrtc",
+               "SdpOfferAnswerHandler::UpdateTransceiversAndDataChannels");
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(IsUnifiedPlan());
 
@@ -3205,6 +3213,7 @@ SdpOfferAnswerHandler::AssociateTransceiver(
     const ContentInfo& content,
     const ContentInfo* old_local_content,
     const ContentInfo* old_remote_content) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::AssociateTransceiver");
   RTC_DCHECK(IsUnifiedPlan());
 #if RTC_DCHECK_IS_ON
   // If this is an offer then the m= section might be recycled. If the m=
@@ -3338,6 +3347,7 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiverChannel(
         transceiver,
     const cricket::ContentInfo& content,
     const cricket::ContentGroup* bundle_group) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::UpdateTransceiverChannel");
   RTC_DCHECK(IsUnifiedPlan());
   RTC_DCHECK(transceiver);
   cricket::ChannelInterface* channel = transceiver->internal()->channel();
@@ -4022,6 +4032,7 @@ void SdpOfferAnswerHandler::RemoveSenders(cricket::MediaType media_type) {
 void SdpOfferAnswerHandler::UpdateLocalSenders(
     const std::vector<cricket::StreamParams>& streams,
     cricket::MediaType media_type) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::UpdateLocalSenders");
   RTC_DCHECK_RUN_ON(signaling_thread());
   std::vector<RtpSenderInfo>* current_senders =
       rtp_manager()->GetLocalSenderInfos(media_type);
@@ -4064,6 +4075,7 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
     bool default_sender_needed,
     cricket::MediaType media_type,
     StreamCollection* new_streams) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::UpdateRemoteSendersList");
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(!IsUnifiedPlan());
 
@@ -4163,6 +4175,7 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
 }
 
 void SdpOfferAnswerHandler::EnableSending() {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::EnableSending");
   RTC_DCHECK_RUN_ON(signaling_thread());
   for (const auto& transceiver : transceivers()->ListInternal()) {
     cricket::ChannelInterface* channel = transceiver->channel();
@@ -4177,6 +4190,7 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
     cricket::ContentSource source,
     const std::map<std::string, const cricket::ContentGroup*>&
         bundle_groups_by_mid) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::PushdownMediaDescription");
   const SessionDescriptionInterface* sdesc =
       (source == cricket::CS_LOCAL ? local_description()
                                    : remote_description());
@@ -4270,6 +4284,7 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
 RTCError SdpOfferAnswerHandler::PushdownTransportDescription(
     cricket::ContentSource source,
     SdpType type) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::PushdownTransportDescription");
   RTC_DCHECK_RUN_ON(signaling_thread());
 
   if (source == cricket::CS_LOCAL) {
@@ -4286,6 +4301,7 @@ RTCError SdpOfferAnswerHandler::PushdownTransportDescription(
 }
 
 void SdpOfferAnswerHandler::RemoveStoppedTransceivers() {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::RemoveStoppedTransceivers");
   RTC_DCHECK_RUN_ON(signaling_thread());
   // 3.2.10.1: For each transceiver in the connection's set of transceivers
   //           run the following steps:
@@ -4505,6 +4521,7 @@ RTCErrorOr<const cricket::ContentInfo*> SdpOfferAnswerHandler::FindContentInfo(
 }
 
 RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::CreateChannels");
   // Creating the media channels. Transports should already have been created
   // at this point.
   RTC_DCHECK_RUN_ON(signaling_thread());
@@ -4545,6 +4562,7 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
 // TODO(steveanton): Perhaps this should be managed by the RtpTransceiver.
 cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
     const std::string& mid) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::CreateVoiceChannel");
   RTC_DCHECK_RUN_ON(signaling_thread());
   if (!channel_manager()->media_engine())
     return nullptr;
@@ -4563,6 +4581,7 @@ cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
 // TODO(steveanton): Perhaps this should be managed by the RtpTransceiver.
 cricket::VideoChannel* SdpOfferAnswerHandler::CreateVideoChannel(
     const std::string& mid) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::CreateVideoChannel");
   RTC_DCHECK_RUN_ON(signaling_thread());
   if (!channel_manager()->media_engine())
     return nullptr;
@@ -4600,6 +4619,7 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
 void SdpOfferAnswerHandler::DestroyTransceiverChannel(
     rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
         transceiver) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::DestroyTransceiverChannel");
   RTC_DCHECK(transceiver);
   RTC_LOG_THREAD_BLOCK_COUNT();
 
@@ -4648,6 +4668,7 @@ void SdpOfferAnswerHandler::DestroyDataChannelTransport() {
 
 void SdpOfferAnswerHandler::DestroyChannelInterface(
     cricket::ChannelInterface* channel) {
+  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::DestroyChannelInterface");
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(channel_manager()->media_engine());
   RTC_DCHECK(channel);
@@ -4802,6 +4823,8 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
     cricket::ContentSource source,
     const std::map<std::string, const cricket::ContentGroup*>&
         bundle_groups_by_mid) {
+  TRACE_EVENT0("webrtc",
+               "SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState");
   RTC_DCHECK_RUN_ON(signaling_thread());
   // We may need to delete any created default streams and disable creation of
   // new ones on the basis of payload type. This is needed to avoid SSRC
