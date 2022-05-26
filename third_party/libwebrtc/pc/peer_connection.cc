@@ -1279,9 +1279,9 @@ absl::optional<bool> PeerConnection::can_trickle_ice_candidates() {
       "trickle");
 }
 
-rtc::scoped_refptr<DataChannelInterface> PeerConnection::CreateDataChannel(
-    const std::string& label,
-    const DataChannelInit* config) {
+RTCErrorOr<rtc::scoped_refptr<DataChannelInterface>>
+PeerConnection::CreateDataChannelOrError(const std::string& label,
+                                         const DataChannelInit* config) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "PeerConnection::CreateDataChannel");
 
@@ -1291,11 +1291,13 @@ rtc::scoped_refptr<DataChannelInterface> PeerConnection::CreateDataChannel(
   if (config) {
     internal_config.reset(new InternalDataChannelInit(*config));
   }
+  // TODO(bugs.webrtc.org/12796): Return a more specific error.
   rtc::scoped_refptr<DataChannelInterface> channel(
       data_channel_controller_.InternalCreateDataChannelWithProxy(
           label, internal_config.get()));
   if (!channel.get()) {
-    return nullptr;
+    return RTCError(RTCErrorType::INTERNAL_ERROR,
+                    "Data channel creation failed");
   }
 
   // Trigger the onRenegotiationNeeded event for

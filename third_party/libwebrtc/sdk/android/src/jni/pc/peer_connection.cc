@@ -538,10 +538,12 @@ static ScopedJavaLocalRef<jobject> JNI_PeerConnection_CreateDataChannel(
     const JavaParamRef<jstring>& j_label,
     const JavaParamRef<jobject>& j_init) {
   DataChannelInit init = JavaToNativeDataChannelInit(jni, j_init);
-  rtc::scoped_refptr<DataChannelInterface> channel(
-      ExtractNativePC(jni, j_pc)->CreateDataChannel(
-          JavaToNativeString(jni, j_label), &init));
-  return WrapNativeDataChannel(jni, channel);
+  auto result = ExtractNativePC(jni, j_pc)->CreateDataChannelOrError(
+      JavaToNativeString(jni, j_label), &init);
+  if (!result.ok()) {
+    return WrapNativeDataChannel(jni, nullptr);
+  }
+  return WrapNativeDataChannel(jni, result.MoveValue());
 }
 
 static void JNI_PeerConnection_CreateOffer(
