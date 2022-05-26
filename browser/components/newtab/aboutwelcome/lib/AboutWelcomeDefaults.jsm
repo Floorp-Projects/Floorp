@@ -225,7 +225,7 @@ const DEFAULT_WELCOME_CONTENT = {
         },
         primary_button: {
           label: {
-            string_id: "mr1-onboarding-theme-primary-button-label",
+            string_id: "onboarding-theme-primary-button-label",
           },
           action: {
             navigate: true,
