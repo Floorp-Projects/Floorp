@@ -91,7 +91,6 @@
       'Win64 Debug (Clang)': 'win_clang_debug_bot_x64',
       'Win64 Release (Clang)': 'win_clang_release_bot_x64',
       'Win64 ASan': 'win_asan_clang_release_bot_x64',
-      'Win64 UWP': 'win_uwp_release_bot_x64',
       'Win (more configs)': {
         'bwe_test_logging':
           'bwe_test_logging_x86',
@@ -233,7 +232,6 @@
       'win_asan': 'win_asan_clang_release_bot_x64',
       'win_x64_clang_dbg_win8': 'win_clang_debug_bot_x64',
       'win_x64_clang_dbg_win10': 'win_clang_debug_bot_x64',
-      'win_x64_uwp': 'win_uwp_release_bot_x64',
       'win_x86_more_configs': {
         'bwe_test_logging':
           'bwe_test_logging_x86',
@@ -339,10 +337,6 @@
     'win_asan_clang_release_bot_x64': [
       'asan', 'clang',  'full_symbols', 'openh264', 'release_bot', 'x64',
       'win_fastlink',
-    ],
-    'win_uwp_release_bot_x64': [
-      # UWP passes compiler flags that are not supported by goma.
-      'no_clang', 'openh264', 'x64', 'winuwp', 'release_bot_no_goma'
     ],
 
     # Mac
@@ -613,10 +607,6 @@
 
     'no_sctp': {
       'gn_args': 'rtc_enable_sctp=false',
-    },
-
-    'winuwp': {
-      'gn_args': 'target_os="winuwp"',
     },
 
     'win_undef_unicode': {
