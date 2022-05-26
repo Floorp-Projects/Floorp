@@ -135,15 +135,18 @@ size_t RRSendQueue::OutgoingStream::buffered_amount() const {
   return bytes;
 }
 
-void RRSendQueue::OutgoingStream::Discard(IsUnordered unordered,
+bool RRSendQueue::OutgoingStream::Discard(IsUnordered unordered,
                                           MID message_id) {
   if (!items_.empty()) {
     Item& item = items_.front();
     if (item.send_options.unordered == unordered &&
         item.message_id.has_value() && *item.message_id == message_id) {
       items_.pop_front();
+      // As the item still existed, it had unsent data.
+      return true;
     }
   }
+  return false;
 }
 
 void RRSendQueue::OutgoingStream::Pause() {
@@ -262,10 +265,10 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::Produce(TimeMs now,
   return absl::nullopt;
 }
 
-void RRSendQueue::Discard(IsUnordered unordered,
+bool RRSendQueue::Discard(IsUnordered unordered,
                           StreamID stream_id,
                           MID message_id) {
-  GetOrCreateStreamInfo(stream_id).Discard(unordered, message_id);
+  return GetOrCreateStreamInfo(stream_id).Discard(unordered, message_id);
 }
 
 void RRSendQueue::PrepareResetStreams(rtc::ArrayView<const StreamID> streams) {

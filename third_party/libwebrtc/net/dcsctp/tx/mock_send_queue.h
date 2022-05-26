@@ -31,7 +31,7 @@ class MockSendQueue : public SendQueue {
               Produce,
               (TimeMs now, size_t max_size),
               (override));
-  MOCK_METHOD(void,
+  MOCK_METHOD(bool,
               Discard,
               (IsUnordered unordered, StreamID stream_id, MID message_id),
               (override));

@@ -739,8 +739,35 @@ void RetransmissionQueue::ExpireChunks(TimeMs now) {
 void RetransmissionQueue::ExpireAllFor(
     const RetransmissionQueue::TxData& item) {
   // Erase all remaining chunks from the producer, if any.
-  send_queue_.Discard(item.data().is_unordered, item.data().stream_id,
-                      item.data().message_id);
+  if (send_queue_.Discard(item.data().is_unordered, item.data().stream_id,
+                          item.data().message_id)) {
+    // There were remaining chunks to be produced for this message. Since the
+    // receiver may have already received all chunks (up till now) for this
+    // message, we can't just FORWARD-TSN to the last fragment in this
+    // (abandoned) message and start sending a new message, as the receiver will
+    // then see a new message before the end of the previous one was seen (or
+    // skipped over). So create a new fragment, representing the end, that the
+    // received will never see as it is abandoned immediately and used as cum
+    // TSN in the sent FORWARD-TSN.
+    UnwrappedTSN tsn = next_tsn_;
+    next_tsn_.Increment();
+    Data message_end(item.data().stream_id, item.data().ssn,
+                     item.data().message_id, item.data().fsn, item.data().ppid,
+                     std::vector<uint8_t>(), Data::IsBeginning(false),
+                     Data::IsEnd(true), item.data().is_unordered);
+    TxData& added_item =
+        outstanding_data_
+            .emplace(tsn, RetransmissionQueue::TxData(std::move(message_end),
+                                                      absl::nullopt, TimeMs(0),
+                                                      absl::nullopt))
+            .first->second;
+    // The added chunk shouldn't be included in `outstanding_bytes`, so set it
+    // as acked.
+    added_item.Ack();
+    RTC_DLOG(LS_VERBOSE) << log_prefix_
+                         << "Adding unsent end placeholder for message at tsn="
+                         << *tsn.Wrap();
+  }
   for (auto& elem : outstanding_data_) {
     UnwrappedTSN tsn = elem.first;
     TxData& other = elem.second;

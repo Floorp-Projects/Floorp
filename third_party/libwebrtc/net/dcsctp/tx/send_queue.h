@@ -60,7 +60,10 @@ class SendQueue {
   // receiver that any partially received message fragments should be skipped.
   // This means that any remaining fragments in the Send Queue must be removed
   // as well so that they are not sent.
-  virtual void Discard(IsUnordered unordered,
+  //
+  // This function returns true if this message had unsent fragments still in
+  // the queue that were discarded, and false if there were no such fragments.
+  virtual bool Discard(IsUnordered unordered,
                        StreamID stream_id,
                        MID message_id) = 0;
 
