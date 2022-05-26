@@ -687,6 +687,25 @@ TEST_F(TemporalLayersTest, KeyFrame) {
   }
 }
 
+TEST_F(TemporalLayersTest, SetsTlCountOnFirstConfigUpdate) {
+  // Create an instance and fetch config update without setting any rate.
+  constexpr int kNumLayers = 2;
+  DefaultTemporalLayers tl(kNumLayers);
+  Vp8EncoderConfig config = tl.UpdateConfiguration(0);
+
+  // Config should indicate correct number of temporal layers, but zero bitrate.
+  ASSERT_TRUE(config.temporal_layer_config.has_value());
+  EXPECT_EQ(config.temporal_layer_config->ts_number_layers,
+            uint32_t{kNumLayers});
+  std::array<uint32_t, Vp8EncoderConfig::TemporalLayerConfig::kMaxLayers>
+      kZeroRate = {};
+  EXPECT_EQ(config.temporal_layer_config->ts_target_bitrate, kZeroRate);
+
+  // On second call, no new update.
+  config = tl.UpdateConfiguration(0);
+  EXPECT_FALSE(config.temporal_layer_config.has_value());
+}
+
 class TemporalLayersReferenceTest : public TemporalLayersTest,
                                     public ::testing::WithParamInterface<int> {
  public:
