@@ -16936,6 +16936,100 @@ Document::GetContentBlockingEvents() {
       });
 }
 
+RefPtr<MozPromise<int, bool, true>> Document::RequestStorageAccessAsyncHelper(
+    nsPIDOMWindowInner* aInnerWindow, BrowsingContext* aBrowsingContext,
+    nsIPrincipal* aPrincipal, bool aHasUserInteraction,
+    ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier) {
+  RefPtr<Document> self(this);
+  RefPtr<nsPIDOMWindowInner> inner(aInnerWindow);
+  RefPtr<nsIPrincipal> principal(aPrincipal);
+  auto performFinalChecks = [inner, self, principal, aHasUserInteraction]() {
+    RefPtr<ContentBlocking::StorageAccessFinalCheckPromise::Private> p =
+        new ContentBlocking::StorageAccessFinalCheckPromise::Private(__func__);
+    RefPtr<StorageAccessPermissionRequest> sapr =
+        StorageAccessPermissionRequest::Create(
+            inner, principal,
+            // Allow
+            [p] {
+              Telemetry::AccumulateCategorical(
+                  Telemetry::LABELS_STORAGE_ACCESS_API_UI::Allow);
+              p->Resolve(ContentBlocking::eAllow, __func__);
+            },
+            // Block
+            [p] {
+              Telemetry::AccumulateCategorical(
+                  Telemetry::LABELS_STORAGE_ACCESS_API_UI::Deny);
+              p->Reject(false, __func__);
+            });
+
+    using PromptResult = ContentPermissionRequestBase::PromptResult;
+    PromptResult pr = sapr->CheckPromptPrefs();
+
+    if (pr == PromptResult::Pending) {
+      // We're about to show a prompt, record the request attempt
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_STORAGE_ACCESS_API_UI::Request);
+    }
+
+    self->AutomaticStorageAccessPermissionCanBeGranted(aHasUserInteraction)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [p, pr, sapr, inner](
+                const Document::AutomaticStorageAccessPermissionGrantPromise::
+                    ResolveOrRejectValue& aValue) -> void {
+              // Make a copy because we can't modified copy-captured lambda
+              // variables.
+              PromptResult pr2 = pr;
+
+              bool storageAccessCanBeGrantedAutomatically =
+                  aValue.IsResolve() && aValue.ResolveValue();
+
+              bool autoGrant = false;
+              if (pr2 == PromptResult::Pending &&
+                  storageAccessCanBeGrantedAutomatically) {
+                pr2 = PromptResult::Granted;
+                autoGrant = true;
+
+                Telemetry::AccumulateCategorical(
+                    Telemetry::LABELS_STORAGE_ACCESS_API_UI::
+                        AllowAutomatically);
+              }
+
+              if (pr2 != PromptResult::Pending) {
+                MOZ_ASSERT_IF(pr2 != PromptResult::Granted,
+                              pr2 == PromptResult::Denied);
+                if (pr2 == PromptResult::Granted) {
+                  ContentBlocking::StorageAccessPromptChoices choice =
+                      ContentBlocking::eAllow;
+                  if (autoGrant) {
+                    choice = ContentBlocking::eAllowAutoGrant;
+                  }
+                  if (!autoGrant) {
+                    p->Resolve(choice, __func__);
+                  } else {
+                    sapr->MaybeDelayAutomaticGrants()->Then(
+                        GetCurrentSerialEventTarget(), __func__,
+                        [p, choice] { p->Resolve(choice, __func__); },
+                        [p] { p->Reject(false, __func__); });
+                  }
+                  return;
+                }
+                p->Reject(false, __func__);
+                return;
+              }
+
+              sapr->RequestDelayedTask(
+                  inner->EventTargetFor(TaskCategory::Other),
+                  ContentPermissionRequestBase::DelayedTaskType::Request);
+            });
+
+    return p;
+  };
+
+  return ContentBlocking::AllowAccessFor(principal, aBrowsingContext, aNotifier,
+                                         performFinalChecks);
+}
+
 already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
     mozilla::ErrorResult& aRv) {
   nsIGlobalObject* global = GetScopeObject();
