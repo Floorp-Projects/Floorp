@@ -137,8 +137,6 @@ RTC_OBJC_EXPORT
  *  AVAudioSession.
  */
 @property(nonatomic, readonly) BOOL isActive;
-/** Whether RTCAudioSession is currently locked for configuration. */
-@property(nonatomic, readonly) BOOL isLocked;
 
 /** If YES, WebRTC will not initialize the audio unit automatically when an
  *  audio track is ready for playout or recording. Instead, applications should
