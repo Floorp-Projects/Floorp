@@ -774,7 +774,6 @@ VideoReceiveStream::RecordingState VideoReceiveStream::SetAndGetRecordingState(
     RTC_DCHECK_RUN_ON(&decode_queue_);
     // Save old state.
     old_state.callback = std::move(encoded_frame_buffer_function_);
-    old_state.keyframe_needed = keyframe_generation_requested_;
     old_state.last_keyframe_request_ms = last_keyframe_request_ms_;
 
     // Set new state.
@@ -783,7 +782,7 @@ VideoReceiveStream::RecordingState VideoReceiveStream::SetAndGetRecordingState(
       RequestKeyFrame(clock_->TimeInMilliseconds());
       keyframe_generation_requested_ = true;
     } else {
-      keyframe_generation_requested_ = state.keyframe_needed;
+      keyframe_generation_requested_ = false;
       last_keyframe_request_ms_ = state.last_keyframe_request_ms.value_or(0);
     }
     event.Set();

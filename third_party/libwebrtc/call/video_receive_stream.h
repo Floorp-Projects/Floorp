@@ -54,11 +54,6 @@ class VideoReceiveStream {
     // Callback stored from the VideoReceiveStream. The VideoReceiveStream
     // client should not interpret the attribute.
     std::function<void(const RecordableEncodedFrame&)> callback;
-    // Memento of internal state in VideoReceiveStream, recording wether
-    // we're currently causing generation of a keyframe from the sender. Needed
-    // to avoid sending double keyframe requests. The VideoReceiveStream client
-    // should not interpret the attribute.
-    bool keyframe_needed = false;
     // Memento of when a keyframe request was last sent. The VideoReceiveStream
     // client should not interpret the attribute.
     absl::optional<int64_t> last_keyframe_request_ms;
