@@ -811,6 +811,7 @@ WEBRTC_RTCSTATS_IMPL(
     &huge_frames_sent,
     &total_packet_send_delay,
     &quality_limitation_reason,
+    &quality_limitation_durations,
     &quality_limitation_resolution_changes,
     &content_type,
     &encoder_implementation,
@@ -847,6 +848,7 @@ RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(std::string&& id,
       huge_frames_sent("hugeFramesSent"),
       total_packet_send_delay("totalPacketSendDelay"),
       quality_limitation_reason("qualityLimitationReason"),
+      quality_limitation_durations("qualityLimitationDurations"),
       quality_limitation_resolution_changes(
           "qualityLimitationResolutionChanges"),
       content_type("contentType"),
@@ -879,6 +881,7 @@ RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(
       huge_frames_sent(other.huge_frames_sent),
       total_packet_send_delay(other.total_packet_send_delay),
       quality_limitation_reason(other.quality_limitation_reason),
+      quality_limitation_durations(other.quality_limitation_durations),
       quality_limitation_resolution_changes(
           other.quality_limitation_resolution_changes),
       content_type(other.content_type),

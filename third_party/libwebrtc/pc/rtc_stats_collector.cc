@@ -265,6 +265,17 @@ const char* QualityLimitationReasonToRTCQualityLimitationReason(
   RTC_CHECK_NOTREACHED();
 }
 
+std::map<std::string, double>
+QualityLimitationDurationToRTCQualityLimitationDuration(
+    std::map<webrtc::QualityLimitationReason, int64_t> durations_ms) {
+  std::map<std::string, double> result;
+  for (const auto& elem : durations_ms) {
+    result[QualityLimitationReasonToRTCQualityLimitationReason(elem.first)] =
+        elem.second;
+  }
+  return result;
+}
+
 double DoubleAudioLevelFromIntAudioLevel(int audio_level) {
   RTC_DCHECK_GE(audio_level, 0);
   RTC_DCHECK_LE(audio_level, 32767);
@@ -568,6 +579,9 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
   outbound_video->quality_limitation_reason =
       QualityLimitationReasonToRTCQualityLimitationReason(
           video_sender_info.quality_limitation_reason);
+  outbound_video->quality_limitation_durations =
+      QualityLimitationDurationToRTCQualityLimitationDuration(
+          video_sender_info.quality_limitation_durations_ms);
   outbound_video->quality_limitation_resolution_changes =
       video_sender_info.quality_limitation_resolution_changes;
   // TODO(https://crbug.com/webrtc/10529): When info's |content_info| is
