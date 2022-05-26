@@ -582,9 +582,7 @@ void SendSideBandwidthEstimation::UpdateMinHistory(Timestamp at_time) {
 }
 
 DataRate SendSideBandwidthEstimation::GetUpperLimit() const {
-  DataRate upper_limit = delay_based_limit_;
-  upper_limit = std::min(upper_limit, max_bitrate_configured_);
-  return upper_limit;
+  return std::min(delay_based_limit_, max_bitrate_configured_);
 }
 
 void SendSideBandwidthEstimation::MaybeLogLowBitrateWarning(DataRate bitrate,
