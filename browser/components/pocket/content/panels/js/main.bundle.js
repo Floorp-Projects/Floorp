@@ -162,6 +162,8 @@ function Article(props) {
     return rawSource ? `https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(rawSource)}` : null;
   }
 
+  const [thumbnailLoaded, setThumbnailLoaded] = (0,react.useState)(false);
+  const [thumbnailLoadFailed, setThumbnailLoadFailed] = (0,react.useState)(false);
   const {
     article,
     savedArticle,
@@ -197,12 +199,21 @@ function Article(props) {
     source: source,
     model: model,
     utmParams: utmParams
-  }, /*#__PURE__*/react.createElement(react.Fragment, null, thumbnail ? /*#__PURE__*/react.createElement("img", {
+  }, /*#__PURE__*/react.createElement(react.Fragment, null, thumbnail && !thumbnailLoadFailed ? /*#__PURE__*/react.createElement("img", {
     className: "stp_article_list_thumb",
     src: thumbnail,
     alt: alt,
     width: "40",
-    height: "40"
+    height: "40",
+    onLoad: () => {
+      setThumbnailLoaded(true);
+    },
+    onError: () => {
+      setThumbnailLoadFailed(true);
+    },
+    style: {
+      visibility: thumbnailLoaded ? `visible` : `hidden`
+    }
   }) : /*#__PURE__*/react.createElement("div", {
     className: "stp_article_list_thumb_placeholder"
   }), /*#__PURE__*/react.createElement("div", {
