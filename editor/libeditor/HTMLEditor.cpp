@@ -6099,20 +6099,20 @@ nsresult HTMLEditor::GetReturnInParagraphCreatesNewParagraph(
   return NS_OK;
 }
 
-nsIContent* HTMLEditor::GetFocusedContent() const {
+Element* HTMLEditor::GetFocusedElement() const {
   nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
   if (NS_WARN_IF(!focusManager)) {
     return nullptr;
   }
 
-  nsIContent* focusedContent = focusManager->GetFocusedElement();
+  Element* const focusedElement = focusManager->GetFocusedElement();
 
   Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
   const bool inDesignMode = IsInDesignMode();
-  if (!focusedContent) {
+  if (!focusedElement) {
     // in designMode, nobody gets focus in most cases.
     if (inDesignMode && OurWindowHasFocus()) {
       return document->GetRootElement();
@@ -6122,8 +6122,8 @@ nsIContent* HTMLEditor::GetFocusedContent() const {
 
   if (inDesignMode) {
     return OurWindowHasFocus() &&
-                   focusedContent->IsInclusiveDescendantOf(document)
-               ? focusedContent
+                   focusedElement->IsInclusiveDescendantOf(document)
+               ? focusedElement
                : nullptr;
   }
 
@@ -6131,12 +6131,12 @@ nsIContent* HTMLEditor::GetFocusedContent() const {
 
   // If the focused content isn't editable, or it has independent selection,
   // we don't have focus.
-  if (!focusedContent->HasFlag(NODE_IS_EDITABLE) ||
-      focusedContent->HasIndependentSelection()) {
+  if (!focusedElement->HasFlag(NODE_IS_EDITABLE) ||
+      focusedElement->HasIndependentSelection()) {
     return nullptr;
   }
   // If our window is focused, we're focused.
-  return OurWindowHasFocus() ? focusedContent : nullptr;
+  return OurWindowHasFocus() ? focusedElement : nullptr;
 }
 
 bool HTMLEditor::IsActiveInDOMWindow() const {
@@ -6342,20 +6342,19 @@ Element* HTMLEditor::GetBodyElement() const {
 }
 
 nsINode* HTMLEditor::GetFocusedNode() const {
-  nsIContent* focusedContent = GetFocusedContent();
-  if (!focusedContent) {
+  Element* focusedElement = GetFocusedElement();
+  if (!focusedElement) {
     return nullptr;
   }
 
-  // focusedContent might be non-null even focusManager->GetFocusedContent()
+  // focusedElement might be non-null even focusManager->GetFocusedElement()
   // is null.  That's the designMode case, and in that case our
   // FocusedContent() returns the root element, but we want to return
   // the document.
 
   nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
   NS_ASSERTION(focusManager, "Focus manager is null");
-  Element* focusedElement = focusManager->GetFocusedElement();
-  if (focusedElement) {
+  if ((focusedElement = focusManager->GetFocusedElement())) {
     return focusedElement;
   }
 

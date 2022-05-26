@@ -278,11 +278,8 @@ nsPresContext* EditorEventListener::GetPresContext() const {
 
 bool EditorEventListener::EditorHasFocus() {
   MOZ_ASSERT(!DetachedFromEditor());
-  nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
-  if (!focusedContent) {
-    return false;
-  }
-  return !!focusedContent->GetComposedDoc();
+  const Element* focusedElement = mEditorBase->GetFocusedElement();
+  return focusedElement && focusedElement->IsInComposedDoc();
 }
 
 NS_IMPL_ISUPPORTS(EditorEventListener, nsIDOMEventListener)
@@ -661,8 +658,7 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
   // consumed.
   if (EditorHasFocus()) {
     if (RefPtr<nsPresContext> presContext = GetPresContext()) {
-      RefPtr<Element> focusedElement =
-          Element::FromNodeOrNull(mEditorBase->GetFocusedContent());
+      RefPtr<Element> focusedElement = mEditorBase->GetFocusedElement();
       IMEStateManager::OnClickInEditor(*presContext, focusedElement,
                                        *aMouseClickEvent);
       if (DetachedFromEditor()) {
@@ -734,8 +730,7 @@ bool EditorEventListener::NotifyIMEOfMouseButtonEvent(
   if (NS_WARN_IF(!presContext)) {
     return false;
   }
-  RefPtr<Element> focusedElement =
-      Element::FromNodeOrNull(mEditorBase->GetFocusedContent());
+  RefPtr<Element> focusedElement = mEditorBase->GetFocusedElement();
   return IMEStateManager::OnMouseButtonEventInEditor(
       *presContext, focusedElement, *aMouseEvent);
 }
@@ -1168,8 +1163,7 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
   if (MOZ_UNLIKELY(NS_WARN_IF(!presContext))) {
     return NS_OK;
   }
-  RefPtr<Element> focusedElement =
-      Element::FromNodeOrNull(editorBase->GetFocusedContent());
+  RefPtr<Element> focusedElement = editorBase->GetFocusedElement();
   IMEStateManager::OnFocusInEditor(*presContext, focusedElement, *editorBase);
 
   return NS_OK;

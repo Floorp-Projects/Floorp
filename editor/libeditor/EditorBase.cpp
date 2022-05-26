@@ -460,8 +460,7 @@ nsresult EditorBase::PostCreateInternal() {
   }
 
   // update nsTextStateManager and caret if we have focus
-  if (RefPtr<Element> focusedElement =
-          Element::FromNodeOrNull(GetFocusedContent())) {
+  if (RefPtr<Element> focusedElement = GetFocusedElement()) {
     DebugOnly<nsresult> rvIgnored = InitializeSelection(*focusedElement);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
@@ -718,8 +717,7 @@ NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
 
   // Might be changing editable state, so, we need to reset current IME state
   // if we're focused and the flag change causes IME state change.
-  if (RefPtr<Element> focusedElement =
-          Element::FromNodeOrNull(GetFocusedContent())) {
+  if (RefPtr<Element> focusedElement = GetFocusedElement()) {
     IMEState newState;
     nsresult rv = GetPreferredIMEState(&newState);
     NS_WARNING_ASSERTION(
@@ -5366,7 +5364,7 @@ void EditorBase::ReinitializeSelection(Element& aElement) {
   if (NS_WARN_IF(!presContext)) {
     return;
   }
-  RefPtr<Element> focusedElement = Element::FromNodeOrNull(GetFocusedContent());
+  RefPtr<Element> focusedElement = GetFocusedElement();
   IMEStateManager::OnFocusInEditor(*presContext, focusedElement, *this);
 }
 
@@ -5527,9 +5525,9 @@ nsresult EditorBase::SetTextDirectionTo(TextDirection aTextDirection) {
   return NS_OK;
 }
 
-nsIContent* EditorBase::GetFocusedContent() const {
-  EventTarget* piTarget = GetDOMEventTarget();
-  if (!piTarget) {
+Element* EditorBase::GetFocusedElement() const {
+  EventTarget* eventTarget = GetDOMEventTarget();
+  if (!eventTarget) {
     return nullptr;
   }
 
@@ -5538,10 +5536,11 @@ nsIContent* EditorBase::GetFocusedContent() const {
     return nullptr;
   }
 
-  nsIContent* content = focusManager->GetFocusedElement();
-  MOZ_ASSERT((content == piTarget) == SameCOMIdentity(content, piTarget));
+  Element* focusedElement = focusManager->GetFocusedElement();
+  MOZ_ASSERT((focusedElement == eventTarget) ==
+             SameCOMIdentity(focusedElement, eventTarget));
 
-  return (content == piTarget) ? content : nullptr;
+  return (focusedElement == eventTarget) ? focusedElement : nullptr;
 }
 
 bool EditorBase::IsActiveInDOMWindow() const {
@@ -5574,11 +5573,8 @@ bool EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const {
 
   // If this is dispatched by using cordinates but this editor doesn't have
   // focus, we shouldn't handle it.
-  if (aGUIEvent->IsUsingCoordinates()) {
-    nsIContent* focusedContent = GetFocusedContent();
-    if (!focusedContent) {
-      return false;
-    }
+  if (aGUIEvent->IsUsingCoordinates() && !GetFocusedElement()) {
+    return false;
   }
 
   // If a composition event isn't dispatched via widget, we need to ignore them
