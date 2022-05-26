@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 
 #include "ds/TraceableFifo.h"
 #include "gc/Policy.h"
@@ -587,3 +589,326 @@ bool CheckMutableOperations(T maybe) {
 }
 
 END_TEST(testRootedMaybeValue)
+
+struct TestErr {};
+struct OtherTestErr {};
+
+struct SimpleTraceable {
+  // I'm using plain objects rather than Heap<T> because Heap<T> would get
+  // traced via the store buffer. Heap<T> would be a more realistic example,
+  // but would require compaction to test for tracing.
+  JSObject* obj;
+  JS::Value val;
+
+  void trace(JSTracer* trc) {
+    TraceRoot(trc, &obj, "obj");
+    TraceRoot(trc, &val, "val");
+  }
+};
+
+namespace JS {
+template <>
+struct GCPolicy<TestErr> : public IgnoreGCPolicy<TestErr> {};
+}  // namespace JS
+
+BEGIN_TEST_WITH_ATTRIBUTES(testGCRootedResult, JS_EXPECT_HAZARDS) {
+  AutoLeaveZeal noZeal(cx);
+
+  JSObject* unrootedObj = JS_NewPlainObject(cx);
+  CHECK(js::gc::IsInsideNursery(unrootedObj));
+  Value unrootedVal = ObjectValue(*unrootedObj);
+
+  RootedObject obj(cx, unrootedObj);
+  RootedValue val(cx, unrootedVal);
+
+  Result<Value, TestErr> unrootedValerr(val);
+  Rooted<Result<Value, TestErr>> valerr(cx, val);
+
+  Result<mozilla::Ok, Value> unrootedOkval(val);
+  Rooted<Result<mozilla::Ok, Value>> okval(cx, val);
+
+  Result<mozilla::Ok, TestErr> simple{mozilla::Ok()};
+
+  Result<Value, JSObject*> unrootedValobj1(val);
+  Rooted<Result<Value, JSObject*>> valobj1(cx, val);
+  Result<Value, JSObject*> unrootedValobj2(obj);
+  Rooted<Result<Value, JSObject*>> valobj2(cx, obj);
+
+  // Test nested traceable structures.
+  Result<mozilla::Maybe<mozilla::Ok>, JSObject*> maybeobj(
+      mozilla::Some(mozilla::Ok()));
+  Rooted<Result<mozilla::Maybe<mozilla::Ok>, JSObject*>> rooted_maybeobj(
+      cx, mozilla::Some(mozilla::Ok()));
+
+  // This would fail to compile because Result<> deletes its copy constructor,
+  // which prevents updating after tracing:
+  //
+  // Rooted<Result<Result<mozilla::Ok, JS::Value>, JSObject*>>
+
+  // But this should be fine when no tracing is required.
+  Result<Result<mozilla::Ok, int>, double> dummy(3.4);
+
+  // One thing I didn't realize initially about Result<>: unwrap() takes
+  // ownership of a value. In the case of Result<Maybe>, that means the
+  // contained Maybe is reset to Nothing.
+  Result<mozilla::Maybe<int>, int> confusing(mozilla::Some(7));
+  CHECK(confusing.unwrap().isSome());
+  CHECK(!confusing.unwrap().isSome());
+
+  Result<mozilla::Maybe<JS::Value>, JSObject*> maybevalobj(
+      mozilla::Some(val.get()));
+  Rooted<Result<mozilla::Maybe<JS::Value>, JSObject*>> rooted_maybevalobj(
+      cx, mozilla::Some(val.get()));
+
+  // Custom types that haven't had GCPolicy explicitly specialized.
+  SimpleTraceable s1{obj, val};
+  Result<SimpleTraceable, TestErr> custom(s1);
+  SimpleTraceable s2{obj, val};
+  Rooted<Result<SimpleTraceable, TestErr>> rootedCustom(cx, s2);
+
+  CHECK(obj == unrootedObj);
+  CHECK(val == unrootedVal);
+  CHECK(simple.isOk());
+  CHECK(unrootedValerr.inspect() == unrootedVal);
+  CHECK(valerr.get().inspect() == val);
+  CHECK(unrootedOkval.inspectErr() == unrootedVal);
+  CHECK(okval.get().inspectErr() == val);
+  CHECK(unrootedValobj1.inspect() == unrootedVal);
+  CHECK(valobj1.get().inspect() == val);
+  CHECK(unrootedValobj2.inspectErr() == unrootedObj);
+  CHECK(valobj2.get().inspectErr() == obj);
+  CHECK(*maybevalobj.inspect() == unrootedVal);
+  CHECK(*rooted_maybevalobj.get().inspect() == val);
+  CHECK(custom.inspect().obj == unrootedObj);
+  CHECK(custom.inspect().val == unrootedVal);
+  CHECK(rootedCustom.get().inspect().obj == obj);
+  CHECK(rootedCustom.get().inspect().val == val);
+
+  JS_GC(cx);
+
+  CHECK(obj != unrootedObj);
+  CHECK(val != unrootedVal);
+  CHECK(unrootedValerr.inspect() == unrootedVal);
+  CHECK(valerr.get().inspect() == val);
+  CHECK(unrootedOkval.inspectErr() == unrootedVal);
+  CHECK(okval.get().inspectErr() == val);
+  CHECK(unrootedValobj1.inspect() == unrootedVal);
+  CHECK(valobj1.get().inspect() == val);
+  CHECK(unrootedValobj2.inspectErr() == unrootedObj);
+  CHECK(valobj2.get().inspectErr() == obj);
+  CHECK(*maybevalobj.inspect() == unrootedVal);
+  CHECK(*rooted_maybevalobj.get().inspect() == val);
+  MOZ_ASSERT(custom.inspect().obj == unrootedObj);
+  CHECK(custom.inspect().obj == unrootedObj);
+  CHECK(custom.inspect().val == unrootedVal);
+  CHECK(rootedCustom.get().inspect().obj == obj);
+  CHECK(rootedCustom.get().inspect().val == val);
+
+  mozilla::Result<OtherTestErr, mozilla::Ok> r(mozilla::Ok{});
+  (void)r;
+
+  return true;
+}
+END_TEST(testGCRootedResult)
+
+static int copies = 0;
+
+struct DontCopyMe_Variant {
+  JSObject* obj;
+  explicit DontCopyMe_Variant(JSObject* objArg) : obj(objArg) {}
+  DontCopyMe_Variant(const DontCopyMe_Variant& other) : obj(other.obj) {
+    copies++;
+  }
+  DontCopyMe_Variant(DontCopyMe_Variant&& other) : obj(std::move(other.obj)) {
+    other.obj = nullptr;
+  }
+  void trace(JSTracer* trc) { TraceRoot(trc, &obj, "obj"); }
+};
+
+enum struct TestUnusedZeroEnum : int16_t { Ok = 0, NotOk = 1 };
+
+namespace mozilla::detail {
+template <>
+struct UnusedZero<TestUnusedZeroEnum> : UnusedZeroEnum<TestUnusedZeroEnum> {};
+}  // namespace mozilla::detail
+
+namespace JS {
+template <>
+struct GCPolicy<TestUnusedZeroEnum>
+    : public IgnoreGCPolicy<TestUnusedZeroEnum> {};
+}  // namespace JS
+
+struct DontCopyMe_NullIsOk {
+  JS::Value val;
+  DontCopyMe_NullIsOk() : val(UndefinedValue()) {}
+  explicit DontCopyMe_NullIsOk(const JS::Value& valArg) : val(valArg) {}
+  DontCopyMe_NullIsOk(const DontCopyMe_NullIsOk& other) = delete;
+  DontCopyMe_NullIsOk(DontCopyMe_NullIsOk&& other)
+      : val(std::move(other.val)) {}
+  DontCopyMe_NullIsOk& operator=(DontCopyMe_NullIsOk&& other) {
+    val = std::move(other.val);
+    other.val = UndefinedValue();
+    return *this;
+  }
+  void trace(JSTracer* trc) { TraceRoot(trc, &val, "val"); }
+};
+
+struct Failed {};
+
+namespace mozilla::detail {
+template <>
+struct UnusedZero<Failed> {
+  using StorageType = uintptr_t;
+
+  static constexpr bool value = true;
+  static constexpr StorageType nullValue = 0;
+  static constexpr StorageType GetDefaultValue() { return 2; }
+
+  static constexpr void AssertValid(StorageType aValue) {}
+  static constexpr Failed Inspect(const StorageType& aValue) {
+    return Failed{};
+  }
+  static constexpr Failed Unwrap(StorageType aValue) { return Failed{}; }
+  static constexpr StorageType Store(Failed aValue) {
+    return GetDefaultValue();
+  }
+};
+}  // namespace mozilla::detail
+
+namespace JS {
+template <>
+struct GCPolicy<Failed> : public IgnoreGCPolicy<Failed> {};
+}  // namespace JS
+
+struct TriviallyCopyable_LowBitTagIsError {
+  JSObject* obj;
+  TriviallyCopyable_LowBitTagIsError() : obj(nullptr) {}
+  explicit TriviallyCopyable_LowBitTagIsError(JSObject* objArg) : obj(objArg) {}
+  TriviallyCopyable_LowBitTagIsError(
+      const TriviallyCopyable_LowBitTagIsError& other) = default;
+  void trace(JSTracer* trc) { TraceRoot(trc, &obj, "obj"); }
+};
+
+namespace mozilla::detail {
+template <>
+struct HasFreeLSB<TriviallyCopyable_LowBitTagIsError> : HasFreeLSB<JSObject*> {
+};
+}  // namespace mozilla::detail
+
+BEGIN_TEST_WITH_ATTRIBUTES(testRootedResultCtors, JS_EXPECT_HAZARDS) {
+  JSObject* unrootedObj = JS_NewPlainObject(cx);
+  CHECK(unrootedObj);
+  Rooted<JSObject*> obj(cx, unrootedObj);
+
+  using mozilla::detail::PackingStrategy;
+
+  static_assert(Result<DontCopyMe_Variant, TestErr>::Strategy ==
+                PackingStrategy::Variant);
+  Rooted<Result<DontCopyMe_Variant, TestErr>> vv(cx, DontCopyMe_Variant{obj});
+  static_assert(Result<mozilla::Ok, DontCopyMe_Variant>::Strategy ==
+                PackingStrategy::Variant);
+  Rooted<Result<mozilla::Ok, DontCopyMe_Variant>> ve(cx,
+                                                     DontCopyMe_Variant{obj});
+
+  static_assert(Result<DontCopyMe_NullIsOk, TestUnusedZeroEnum>::Strategy ==
+                PackingStrategy::NullIsOk);
+  Rooted<Result<DontCopyMe_NullIsOk, TestUnusedZeroEnum>> nv(
+      cx, DontCopyMe_NullIsOk{JS::ObjectValue(*obj)});
+
+  static_assert(Result<TriviallyCopyable_LowBitTagIsError, Failed>::Strategy ==
+                PackingStrategy::LowBitTagIsError);
+  Rooted<Result<TriviallyCopyable_LowBitTagIsError, Failed>> lv(
+      cx, TriviallyCopyable_LowBitTagIsError{obj});
+
+  CHECK(obj == unrootedObj);
+
+  CHECK(vv.get().inspect().obj == obj);
+  CHECK(ve.get().inspectErr().obj == obj);
+  CHECK(nv.get().inspect().val.toObjectOrNull() == obj);
+  CHECK(lv.get().inspect().obj == obj);
+
+  JS_GC(cx);
+  CHECK(obj != unrootedObj);
+
+  CHECK(vv.get().inspect().obj == obj);
+  CHECK(ve.get().inspectErr().obj == obj);
+  CHECK(nv.get().inspect().val.toObjectOrNull() == obj);
+  CHECK(lv.get().inspect().obj == obj);
+  CHECK(copies == 0);
+  return true;
+}
+END_TEST(testRootedResultCtors)
+
+#if defined(HAVE_64BIT_BUILD) && !defined(XP_WIN)
+
+// This depends on a pointer fitting in 48 bits, leaving space for an empty
+// struct and a bool in a packed struct. Windows doesn't seem to do this
+// packing, so we'll skip this test here. We're primarily checking whether
+// copy constructors get called, which should be cross-platform, and
+// secondarily making sure that the Rooted/tracing stuff is compiled and
+// executed properly. There are certainly more clever ways to do this that
+// would work cross-platform, but it doesn't seem worth the bother right now.
+
+struct __attribute__((packed)) DontCopyMe_PackedVariant {
+  uintptr_t obj : 48;
+  static JSObject* Unwrap(uintptr_t packed) {
+    return reinterpret_cast<JSObject*>(packed);
+  }
+  static uintptr_t Store(JSObject* obj) {
+    return reinterpret_cast<uintptr_t>(obj);
+  }
+
+  DontCopyMe_PackedVariant() : obj(0) {}
+  explicit DontCopyMe_PackedVariant(JSObject* objArg)
+      : obj(reinterpret_cast<uintptr_t>(objArg)) {}
+  DontCopyMe_PackedVariant(const DontCopyMe_PackedVariant& other)
+      : obj(other.obj) {
+    copies++;
+  }
+  DontCopyMe_PackedVariant(DontCopyMe_PackedVariant&& other) : obj(other.obj) {
+    other.obj = 0;
+  }
+  void trace(JSTracer* trc) {
+    JSObject* realObj = Unwrap(obj);
+    TraceRoot(trc, &realObj, "obj");
+    obj = Store(realObj);
+  }
+};
+
+static_assert(std::is_default_constructible_v<DontCopyMe_PackedVariant>);
+static_assert(std::is_default_constructible_v<TestErr>);
+static_assert(mozilla::detail::IsPackableVariant<DontCopyMe_PackedVariant,
+                                                 TestErr>::value);
+
+BEGIN_TEST_WITH_ATTRIBUTES(testResultPackedVariant, JS_EXPECT_HAZARDS) {
+  JSObject* unrootedObj = JS_NewPlainObject(cx);
+  CHECK(unrootedObj);
+  Rooted<JSObject*> obj(cx, unrootedObj);
+
+  using mozilla::detail::PackingStrategy;
+
+  static_assert(Result<DontCopyMe_PackedVariant, TestErr>::Strategy ==
+                PackingStrategy::PackedVariant);
+  Rooted<Result<DontCopyMe_PackedVariant, TestErr>> pv(
+      cx, DontCopyMe_PackedVariant{obj});
+  static_assert(Result<mozilla::Ok, DontCopyMe_PackedVariant>::Strategy ==
+                PackingStrategy::PackedVariant);
+  Rooted<Result<mozilla::Ok, DontCopyMe_PackedVariant>> pe(
+      cx, DontCopyMe_PackedVariant{obj});
+
+  CHECK(obj == unrootedObj);
+
+  CHECK(DontCopyMe_PackedVariant::Unwrap(pv.get().inspect().obj) == obj);
+  CHECK(DontCopyMe_PackedVariant::Unwrap(pe.get().inspectErr().obj) == obj);
+
+  JS_GC(cx);
+  CHECK(obj != unrootedObj);
+
+  CHECK(DontCopyMe_PackedVariant::Unwrap(pv.get().inspect().obj) == obj);
+  CHECK(DontCopyMe_PackedVariant::Unwrap(pe.get().inspectErr().obj) == obj);
+
+  return true;
+}
+END_TEST(testResultPackedVariant)
+
+#endif  // HAVE_64BIT_BUILD
