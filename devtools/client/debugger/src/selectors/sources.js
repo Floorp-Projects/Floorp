@@ -140,7 +140,7 @@ export function getHasSiblingOfSameName(state, source) {
   return getSourcesUrlsInSources(state, source.url).length > 1;
 }
 
-// This is only used externaly by tabs selectors
+// This is only used externaly by tabs and breakpointSources selectors
 export function getSourcesMap(state) {
   return state.sources.sources;
 }
