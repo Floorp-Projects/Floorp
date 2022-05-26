@@ -595,7 +595,7 @@ class ProviderAutofill extends UrlbarProvider {
         fixup_url(h.url) COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF' AS fixed_url_match
       FROM moz_places h
       JOIN moz_inputhistory i ON i.place_id = h.id
-      WHERE :searchString COLLATE NOCASE BETWEEN i.input AND i.input || X'FFFF'
+      WHERE :searchString BETWEEN i.input AND i.input || X'FFFF'
       AND (
         fixed_url_match OR (h.url COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF')
       )
