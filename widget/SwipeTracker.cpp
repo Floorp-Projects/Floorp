@@ -55,7 +55,7 @@ SwipeTracker::SwipeTracker(nsIWidget& aWidget,
       mEventsHaveStartedNewGesture(false),
       mRegisteredWithRefreshDriver(false) {
   SendSwipeEvent(eSwipeGestureStart, 0, 0.0, aSwipeStartEvent.mTimeStamp);
-  ProcessEvent(aSwipeStartEvent);
+  ProcessEvent(aSwipeStartEvent, /* aProcessingFirstEvent = */ true);
 }
 
 void SwipeTracker::Destroy() { UnregisterFromRefreshDriver(); }
@@ -101,7 +101,8 @@ bool SwipeTracker::ComputeSwipeSuccess() const {
          kSwipeSuccessThreshold;
 }
 
-nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {
+nsEventStatus SwipeTracker::ProcessEvent(
+    const PanGestureInput& aEvent, bool aProcessingFirstEvent /* = false */) {
   // If the fingers have already been lifted or the swipe direction is where
   // navigation is impossible, don't process this event for swiping.
   if (!mEventsAreControllingSwipe || !SwipingInAllowedDirection()) {
@@ -119,16 +120,38 @@ nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {
                  mWidget.GetDefaultScaleInternal() /
                  StaticPrefs::widget_swipe_whole_page_pixel_size();
   mGestureAmount = ClampToAllowedRange(mGestureAmount + delta);
-  SendSwipeEvent(eSwipeGestureUpdate, 0, mGestureAmount, aEvent.mTimeStamp);
-
   if (aEvent.mType != PanGestureInput::PANGESTURE_END) {
-    double elapsedSeconds =
-        std::max(0.008, (aEvent.mTimeStamp - mLastEventTimeStamp).ToSeconds());
-    mCurrentVelocity = delta / elapsedSeconds;
+    if (!aProcessingFirstEvent) {
+      double elapsedSeconds = std::max(
+          0.008, (aEvent.mTimeStamp - mLastEventTimeStamp).ToSeconds());
+      mCurrentVelocity = delta / elapsedSeconds;
+    }
     mLastEventTimeStamp = aEvent.mTimeStamp;
-  } else {
+  }
+
+  const bool computedSwipeSuccess = ComputeSwipeSuccess();
+
+  // The velocity component might push us over the success threshold, in which
+  // case we want to pass the success threshold in the event we send so that the
+  // UI draws as 100% opacity to indicate such. We don't want to include the
+  // velocity in the amount we put on the event if we aren't over the success
+  // threshold because that would lead to the opacity decreasing even if the
+  // user continues to increase the swipe distance. If we do compute swipe
+  // success here and the user does not lift their fingers and then decreases
+  // the total swipe so that we go below the success threshold the opacity would
+  // also decrease in that case but that seems okay.
+  double eventAmount = mGestureAmount;
+  if (computedSwipeSuccess) {
+    eventAmount = kSwipeSuccessThreshold;
+    if (mGestureAmount < 0.f) {
+      eventAmount = -eventAmount;
+    }
+  }
+  SendSwipeEvent(eSwipeGestureUpdate, 0, eventAmount, aEvent.mTimeStamp);
+
+  if (aEvent.mType == PanGestureInput::PANGESTURE_END) {
     mEventsAreControllingSwipe = false;
-    if (ComputeSwipeSuccess()) {
+    if (computedSwipeSuccess) {
       // Let's use same timestamp as previous event because this is caused by
       // the preceding event.
       SendSwipeEvent(eSwipeGesture, mSwipeDirection, 0.0, aEvent.mTimeStamp);
