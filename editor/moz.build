@@ -37,3 +37,5 @@ SPHINX_TREES["/editor"] = "docs"
 
 with Files("docs/**"):
     SCHEDULES.exclusive = ["docs"]
+
+CXXFLAGS += CONFIG["MOZ_TRIVIAL_AUTO_VAR_INIT"]
