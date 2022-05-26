@@ -43,6 +43,15 @@ class MockSendQueue : public SendQueue {
   MOCK_METHOD(void, CommitResetStreams, (), (override));
   MOCK_METHOD(void, RollbackResetStreams, (), (override));
   MOCK_METHOD(void, Reset, (), (override));
+  MOCK_METHOD(size_t, buffered_amount, (StreamID stream_id), (const, override));
+  MOCK_METHOD(size_t,
+              buffered_amount_low_threshold,
+              (StreamID stream_id),
+              (const, override));
+  MOCK_METHOD(void,
+              SetBufferedAmountLowThreshold,
+              (StreamID stream_id, size_t bytes),
+              (override));
 };
 
 }  // namespace dcsctp
