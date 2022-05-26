@@ -131,20 +131,6 @@ void nsCounterUseNode::GetText(WritingMode aWM, CounterStyle* aStyle,
   }
 }
 
-static const nsIContent* GetParentContentForScope(nsIFrame* frame) {
-  // We do not want elements with `display: contents` to establish scope for
-  // counters. We'd like to do something like
-  // `nsIFrame::GetClosestFlattenedTreeAncestorPrimaryFrame()` above, but this
-  // may be called before the primary frame is set on frames.
-  nsIContent* content = frame->GetContent()->GetFlattenedTreeParent();
-  while (content && content->IsElement() &&
-         content->AsElement()->IsDisplayContents()) {
-    content = content->GetFlattenedTreeParent();
-  }
-
-  return content;
-}
-
 void nsCounterList::SetScope(nsCounterNode* aNode) {
   // This function is responsible for setting |mScopeStart| and
   // |mScopePrev| (whose purpose is described in nsCounterManager.h).
@@ -220,13 +206,9 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
 
   // Get the content node for aNode's rendering object's *parent*,
   // since scope includes siblings, so we want a descendant check on
-  // parents. Note here that mPseudoFrame is a bit of a misnomer, as it
-  // might not be a pseudo element at all, but a normal element that
-  // happens to increment a counter. We want to respect the flat tree
-  // here, but skipping any <slot> element that happens to contain
-  // mPseudoFrame. That's why this uses GetInFlowParent() instead
-  // of GetFlattenedTreeParent().
-  const nsIContent* nodeContent = GetParentContentForScope(aNode->mPseudoFrame);
+  // parents.
+  nsIContent* nodeContent = aNode->mPseudoFrame->GetContent()->GetParent();
+
   for (nsCounterNode *prev = Prev(aNode), *start; prev;
        prev = start->mScopePrev) {
     // If |prev| starts a scope (because it's a real or implied
@@ -239,8 +221,7 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
                 : prev->mScopeStart;
 
     // |startContent| is analogous to |nodeContent| (see above).
-    const nsIContent* startContent =
-        GetParentContentForScope(start->mPseudoFrame);
+    nsIContent* startContent = start->mPseudoFrame->GetContent()->GetParent();
     NS_ASSERTION(nodeContent || !startContent,
                  "null check on startContent should be sufficient to "
                  "null check nodeContent as well, since if nodeContent "
@@ -252,8 +233,8 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
           nodeContent == startContent) &&
         // everything is inside the root (except the case above,
         // a second reset on the root)
-        (!startContent ||
-         nodeContent->IsInclusiveFlatTreeDescendantOf(startContent))) {
+        // FIXME(bug 1477524): should use flattened tree here:
+        (!startContent || nodeContent->IsInclusiveDescendantOf(startContent))) {
       aNode->mScopeStart = start;
       aNode->mScopePrev = prev;
       didSetScopeFor(aNode);
