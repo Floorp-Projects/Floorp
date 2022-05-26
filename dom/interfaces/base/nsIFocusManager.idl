@@ -70,6 +70,7 @@ interface nsIFocusManager : nsISupports
    * If focus is in another process, this is null in content processes and
    * the closest ancestor in the parent process.
    */
+  [setter_can_run_script]
   attribute mozIDOMWindowProxy focusedWindow;
 
   /**
