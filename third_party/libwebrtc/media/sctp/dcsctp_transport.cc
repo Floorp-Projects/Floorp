@@ -98,7 +98,7 @@ class TextPcapPacketObserver : public dcsctp::PacketObserver {
                    dcsctp::TimeMs now,
                    rtc::ArrayView<const uint8_t> payload) {
     rtc::StringBuilder s;
-    s << prefix;
+    s << "\n" << prefix;
     int64_t remaining = *now % (24 * 60 * 60 * 1000);
     int hours = remaining / (60 * 60 * 1000);
     remaining = remaining % (60 * 60 * 1000);
