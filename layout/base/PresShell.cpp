@@ -8169,10 +8169,11 @@ nsresult PresShell::EventHandler::HandleEventWithCurrentEventInfo(
   }
 
   if (mPresShell->mCurrentEventContent && aEvent->IsTargetedAtFocusedWindow()) {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (fm) {
+    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
       // This may run script now.  So, mPresShell might be destroyed after here.
-      fm->FlushBeforeEventHandlingIfNeeded(mPresShell->mCurrentEventContent);
+      nsCOMPtr<nsIContent> currentEventContent =
+          mPresShell->mCurrentEventContent;
+      fm->FlushBeforeEventHandlingIfNeeded(currentEventContent);
     }
   }
 
