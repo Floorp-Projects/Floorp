@@ -778,11 +778,7 @@ RTCError JsepTransportController::ValidateAndMaybeUpdateBundleGroups(
   }
 
   if (ShouldUpdateBundleGroup(type, description)) {
-    bundles_.bundle_groups().clear();
-    for (const cricket::ContentGroup* new_bundle_group : new_bundle_groups) {
-      bundles_.bundle_groups().push_back(
-          std::make_unique<cricket::ContentGroup>(*new_bundle_group));
-    }
+    bundles_.Update(description);
   }
 
   for (const auto& bundle_group : bundles_.bundle_groups()) {
@@ -850,18 +846,12 @@ void JsepTransportController::HandleRejectedContent(
       established_bundle_groups_by_mid.erase(it);
     }
     // Delete the BUNDLE group.
-    auto bundle_group_it = std::find_if(
-        bundles_.bundle_groups().begin(), bundles_.bundle_groups().end(),
-        [bundle_group](std::unique_ptr<cricket::ContentGroup>& group) {
-          return bundle_group == group.get();
-        });
-    RTC_DCHECK(bundle_group_it != bundles_.bundle_groups().end());
-    bundles_.bundle_groups().erase(bundle_group_it);
+    bundles_.DeleteGroup(bundle_group);
   } else {
     RemoveTransportForMid(content_info.name);
     if (bundle_group) {
       // Remove the rejected content from the |bundle_group|.
-      bundle_group->RemoveContentName(content_info.name);
+      bundles_.DeleteMid(bundle_group, content_info.name);
     }
   }
   MaybeDestroyJsepTransport(content_info.name);

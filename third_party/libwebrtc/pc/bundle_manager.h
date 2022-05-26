@@ -12,6 +12,7 @@
 #define PC_BUNDLE_MANAGER_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "pc/session_description.h"
@@ -22,7 +23,7 @@ namespace webrtc {
 
 // This is a work-in-progress. Planned steps:
 // 1) Move all Bundle-related data structures from JsepTransport
-//  into this class.
+//    into this class.
 // 2) Move all Bundle-related functions into this class.
 // 3) Move remaining Bundle-related logic into this class.
 //    Make data members private.
@@ -35,12 +36,16 @@ class BundleManager {
       const {
     return bundle_groups_;
   }
-  std::vector<std::unique_ptr<cricket::ContentGroup>>& bundle_groups() {
-    return bundle_groups_;
-  }
+  // Update the groups description. This completely replaces the group
+  // description with the one from the SessionDescription.
+  void Update(const cricket::SessionDescription* description);
+  // Delete a MID from the group that contains it.
+  void DeleteMid(const cricket::ContentGroup* bundle_group,
+                 const std::string& mid);
+  // Delete a group.
+  void DeleteGroup(const cricket::ContentGroup* bundle_group);
 
  private:
-  // Use unique_ptr<> to get a stable address.
   std::vector<std::unique_ptr<cricket::ContentGroup>> bundle_groups_;
 };
 
