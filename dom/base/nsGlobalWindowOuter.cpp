@@ -5074,13 +5074,15 @@ void nsGlobalWindowOuter::BlurOuter(CallerType aCallerType) {
     siteWindow->Blur();
 
     // if the root is focused, clear the focus
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (fm && mDoc) {
-      RefPtr<Element> element;
-      fm->GetFocusedElementForWindow(this, false, nullptr,
-                                     getter_AddRefs(element));
-      if (element == mDoc->GetRootElement()) {
-        fm->ClearFocus(this);
+    if (mDoc) {
+      if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+        RefPtr<Element> element;
+        fm->GetFocusedElementForWindow(this, false, nullptr,
+                                       getter_AddRefs(element));
+        if (element == mDoc->GetRootElement()) {
+          OwningNonNull<nsGlobalWindowOuter> kungFuDeathGrip(*this);
+          fm->ClearFocus(kungFuDeathGrip);
+        }
       }
     }
   }

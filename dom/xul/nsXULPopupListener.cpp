@@ -209,7 +209,7 @@ nsresult nsXULPopupListener::FireFocusOnTargetContent(
       }
       fm->SetFocus(newFocusElement, focusFlags);
     } else if (!suppressBlur) {
-      nsPIDOMWindowOuter* window = doc->GetWindow();
+      nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
       fm->ClearFocus(window);
     }
   }

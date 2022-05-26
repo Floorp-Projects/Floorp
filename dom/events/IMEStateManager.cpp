@@ -1302,16 +1302,19 @@ void IMEStateManager::SetInputContextForChildProcess(
   SetInputContext(widget, aInputContext, aAction);
 }
 
-static bool IsNextFocusableElementTextControl(const Element* aInputContent) {
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY static bool IsNextFocusableElementTextControl(
+    const Element* aInputContent) {
+  RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();
+  if (MOZ_UNLIKELY(!fm)) {
     return false;
   }
   nsCOMPtr<nsIContent> nextContent;
+  const RefPtr<Element> inputContent = const_cast<Element*>(aInputContent);
+  const nsCOMPtr<nsPIDOMWindowOuter> outerWindow =
+      aInputContent->OwnerDoc()->GetWindow();
   nsresult rv = fm->DetermineElementToMoveFocus(
-      aInputContent->OwnerDoc()->GetWindow(),
-      const_cast<Element*>(aInputContent), nsIFocusManager::MOVEFOCUS_FORWARD,
-      true, false, getter_AddRefs(nextContent));
+      outerWindow, inputContent, nsIFocusManager::MOVEFOCUS_FORWARD, true,
+      false, getter_AddRefs(nextContent));
   if (NS_WARN_IF(NS_FAILED(rv)) || !nextContent) {
     return false;
   }
