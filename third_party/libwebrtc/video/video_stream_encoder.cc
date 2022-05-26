@@ -1616,6 +1616,12 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
   if (encoder_failed_)
     return;
 
+  // It's possible that EncodeVideoFrame can be called after we've completed
+  // a Stop() operation. Check if the encoder_ is set before continuing.
+  // See: bugs.webrtc.org/12857
+  if (!encoder_)
+    return;
+
   TraceFrameDropEnd();
 
   // Encoder metadata needs to be updated before encode complete callback.
