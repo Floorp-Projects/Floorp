@@ -712,7 +712,7 @@ var gHistorySwipeAnimation = {
     }
     if (box != null) {
       this._isStoppingAnimation = true;
-      box.style.transition = "opacity 0.2s cubic-bezier(.07,.95,0,1)";
+      box.style.transition = "opacity 0.35s cubic-bezier(.25,.1,0.25,1)";
       box.addEventListener("transitionend", this, true);
       box.style.opacity = 0;
     } else {
