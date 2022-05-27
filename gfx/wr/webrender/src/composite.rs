@@ -37,10 +37,6 @@ pub enum NativeSurfaceOperationDetails {
         id: NativeSurfaceId,
         is_opaque: bool,
     },
-    CreateBackdropSurface {
-        id: NativeSurfaceId,
-        color: ColorF,
-    },
     DestroySurface {
         id: NativeSurfaceId,
     },
@@ -645,20 +641,6 @@ impl CompositeState {
             ImageRendering::CrispEdges
         };
 
-        if let Some(backdrop_surface) = &tile_cache.backdrop_surface {
-            // Use the backdrop native surface we created and add that to the composite state.
-            self.descriptor.surfaces.push(
-                CompositeSurfaceDescriptor {
-                    surface_id: Some(backdrop_surface.id),
-                    clip_rect: device_clip_rect,
-                    transform: slice_transform,
-                    image_dependencies: [ImageDependency::INVALID; 3],
-                    image_rendering,
-                    tile_descriptors: Vec::new(),
-                }
-            );
-        }
-
         for sub_slice in &tile_cache.sub_slices {
             let mut surface_device_rect = DeviceRect::zero();
 
@@ -691,35 +673,32 @@ impl CompositeState {
                 .intersection(&surface_device_rect)
                 .unwrap_or(DeviceRect::zero());
 
-            // Only push tiles if they have valid clip rects.
-            if !surface_clip_rect.is_empty() {
-                // Add opaque surface before any compositor surfaces
-                if !sub_slice.opaque_tile_descriptors.is_empty() {
-                    self.descriptor.surfaces.push(
-                        CompositeSurfaceDescriptor {
-                            surface_id: sub_slice.native_surface.as_ref().map(|s| s.opaque),
-                            clip_rect: surface_clip_rect,
-                            transform: slice_transform,
-                            image_dependencies: [ImageDependency::INVALID; 3],
-                            image_rendering,
-                            tile_descriptors: sub_slice.opaque_tile_descriptors.clone(),
-                        }
-                    );
-                }
-    
-                // Add alpha tiles after opaque surfaces
-                if !sub_slice.alpha_tile_descriptors.is_empty() {
-                    self.descriptor.surfaces.push(
-                        CompositeSurfaceDescriptor {
-                            surface_id: sub_slice.native_surface.as_ref().map(|s| s.alpha),
-                            clip_rect: surface_clip_rect,
-                            transform: slice_transform,
-                            image_dependencies: [ImageDependency::INVALID; 3],
-                            image_rendering,
-                            tile_descriptors: sub_slice.alpha_tile_descriptors.clone(),
-                        }
-                    );
-                }
+            // Add opaque surface before any compositor surfaces
+            if !sub_slice.opaque_tile_descriptors.is_empty() {
+                self.descriptor.surfaces.push(
+                    CompositeSurfaceDescriptor {
+                        surface_id: sub_slice.native_surface.as_ref().map(|s| s.opaque),
+                        clip_rect: surface_clip_rect,
+                        transform: slice_transform,
+                        image_dependencies: [ImageDependency::INVALID; 3],
+                        image_rendering,
+                        tile_descriptors: sub_slice.opaque_tile_descriptors.clone(),
+                    }
+                );
+            }
+
+            // Add alpha tiles after opaque surfaces
+            if !sub_slice.alpha_tile_descriptors.is_empty() {
+                self.descriptor.surfaces.push(
+                    CompositeSurfaceDescriptor {
+                        surface_id: sub_slice.native_surface.as_ref().map(|s| s.alpha),
+                        clip_rect: surface_clip_rect,
+                        transform: slice_transform,
+                        image_dependencies: [ImageDependency::INVALID; 3],
+                        image_rendering,
+                        tile_descriptors: sub_slice.alpha_tile_descriptors.clone(),
+                    }
+                );
             }
 
             // For each compositor surface that was promoted, build the
@@ -731,11 +710,6 @@ impl CompositeState {
                     .clip_rect
                     .intersection(&device_clip_rect)
                     .unwrap_or_else(DeviceRect::zero);
-                    
-                // Skip compositor surfaces with empty clip rects.
-                if clip_rect.is_empty() {
-                    continue;
-                }
 
                 let required_plane_count =
                     match external_surface.dependency {
@@ -1018,8 +992,6 @@ pub struct CompositorCapabilities {
     /// surface update. If this is zero, the entire compositor surface for
     /// a given tile will be drawn if it's dirty.
     pub max_update_rects: usize,
-    /// Whether or not this compositor will create surfaces for backdrops.
-    pub supports_surface_for_backdrop: bool,
 }
 
 impl Default for CompositorCapabilities {
@@ -1034,7 +1006,6 @@ impl Default for CompositorCapabilities {
             // Assume compositors can do at least partial update of surfaces. If not,
             // the native compositor should override this to be 0.
             max_update_rects: 1,
-            supports_surface_for_backdrop: false,
         }
     }
 }
@@ -1095,13 +1066,6 @@ pub trait Compositor {
         &mut self,
         id: NativeSurfaceId,
         is_opaque: bool,
-    );
-
-    /// Create a new OS backdrop surface that will display a color.
-    fn create_backdrop_surface(
-        &mut self,
-        id: NativeSurfaceId,
-        color: ColorF,
     );
 
     /// Destroy the surface with the specified id. WR may call this
