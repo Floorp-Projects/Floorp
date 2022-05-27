@@ -2286,6 +2286,12 @@ var Policies = {
     },
   },
 
+  UseSystemPrintDialog: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("print.prefer_system_dialog", param);
+    },
+  },
+
   WebsiteFilter: {
     onBeforeUIStartup(manager, param) {
       WebsiteFilter.init(param.Block || [], param.Exceptions || []);
