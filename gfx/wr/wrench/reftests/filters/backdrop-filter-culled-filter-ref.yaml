@@ -1,0 +1,5 @@
+---
+root:
+  items:
+    - image: checkerboard(2,14,14,14,14)
+      bounds: 0 0 200 200
