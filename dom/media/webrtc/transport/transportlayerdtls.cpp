@@ -19,12 +19,10 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "sslexp.h"
 #include "sslproto.h"
-#include "transportflow.h"
 
 namespace mozilla {
 

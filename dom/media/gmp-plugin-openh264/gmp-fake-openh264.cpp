@@ -34,14 +34,9 @@
  */
 
 #include <stdint.h>
-#include <time.h>
-#include <cstdio>
 #include <cstring>
 #include <iostream>
-#include <string>
-#include <memory>
 #include <assert.h>
-#include <limits.h>
 
 #include "gmp-platform.h"
 #include "gmp-video-host.h"

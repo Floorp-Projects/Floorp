@@ -41,36 +41,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <string>
-#include <vector>
 
-#include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsNetCID.h"
-#include "nsServiceManagerUtils.h"
 
 // nICEr includes
 extern "C" {
 #include "nr_api.h"
-#include "registry.h"
-#include "async_timer.h"
 #include "ice_util.h"
 #include "transport_addr.h"
-#include "nr_crypto.h"
-#include "nr_socket.h"
-#include "nr_socket_local.h"
-#include "stun_client_ctx.h"
-#include "stun_server_ctx.h"
-#include "ice_ctx.h"
-#include "ice_candidate.h"
-#include "ice_handler.h"
 }
 
 // Local includes
 #include "logging.h"
-#include "nricectx.h"
 #include "nricemediastream.h"
-#include "transportflow.h"
 #include "transportlayerice.h"
 
 namespace mozilla {

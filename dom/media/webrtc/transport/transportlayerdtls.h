@@ -18,11 +18,8 @@
 #  include <Security/CipherSuite.h>
 #endif
 
-#include "sigslot.h"
-
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "ScopedNSSTypes.h"

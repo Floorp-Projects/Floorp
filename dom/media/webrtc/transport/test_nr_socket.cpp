@@ -82,19 +82,15 @@ nrappkit copyright:
 
 extern "C" {
 #include "stun_msg.h"  // for NR_STUN_MAX_MESSAGE_SIZE
-#include "nr_api.h"
 #include "async_wait.h"
 #include "async_timer.h"
 #include "nr_socket.h"
-#include "nr_socket_local.h"
 #include "stun.h"
-#include "stun_hint.h"
 #include "transport_addr.h"
 }
 
 #include "mozilla/RefPtr.h"
 #include "test_nr_socket.h"
-#include "runnable_utils.h"
 
 namespace mozilla {
 

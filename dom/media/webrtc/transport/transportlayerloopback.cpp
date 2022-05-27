@@ -7,15 +7,12 @@
 // Original author: ekr@rtfm.com
 
 #include "logging.h"
-#include "nspr.h"
 #include "prlock.h"
 
 #include "nsNetCID.h"
-#include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 
-#include "transportflow.h"
 #include "transportlayerloopback.h"
 
 namespace mozilla {
