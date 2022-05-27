@@ -7229,6 +7229,38 @@ credit_cards:
     metadata:
       tags:
         - Autofill
+  save_prompt_create:
+    type: event
+    description: |
+      User saved a credit card using the autofill save prompt.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/25397
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25411
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  save_prompt_update:
+    type: event
+    description: |
+      User updated a credit card using the autofill save prompt.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/25397
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25411
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
 
 search_terms:
   number_of_search_term_group:

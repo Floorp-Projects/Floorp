@@ -164,7 +164,10 @@ internal class ReleaseMetricController(
             CreditCards.autofillPromptExpanded.record(NoExtras())
         Component.FEATURE_PROMPTS to CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_DISMISSED ->
             CreditCards.autofillPromptDismissed.record(NoExtras())
-
+        Component.FEATURE_PROMPTS to CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_CREATED ->
+            CreditCards.savePromptCreate.record(NoExtras())
+        Component.FEATURE_PROMPTS to CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED ->
+            CreditCards.savePromptUpdate.record(NoExtras())
         Component.FEATURE_AUTOFILL to AutofillFacts.Items.AUTOFILL_REQUEST -> {
             val hasMatchingLogins = metadata?.get(AutofillFacts.Metadata.HAS_MATCHING_LOGINS) as Boolean?
             if (hasMatchingLogins == true) {

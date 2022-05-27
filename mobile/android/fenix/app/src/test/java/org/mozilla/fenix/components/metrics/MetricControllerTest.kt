@@ -581,6 +581,8 @@ class MetricControllerTest {
             CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_SHOWN to CreditCards.autofillPromptShown,
             CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_EXPANDED to CreditCards.autofillPromptExpanded,
             CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_DISMISSED to CreditCards.autofillPromptDismissed,
+            CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_CREATED to CreditCards.savePromptCreate,
+            CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED to CreditCards.savePromptUpdate,
         )
 
         itemsToEvents.forEach { (item, event) ->
