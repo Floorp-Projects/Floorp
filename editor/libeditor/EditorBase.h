@@ -591,14 +591,15 @@ class EditorBase : public nsIEditor,
    * designMode, you should set the document node to aNode except that an
    * element in the document has focus.
    */
-  virtual Element* FindSelectionRoot(nsINode* aNode) const;
+  [[nodiscard]] virtual Element* FindSelectionRoot(const nsINode& aNode) const;
 
   /**
-   * This method has to be called by EditorEventListener::Focus.
-   * All actions that have to be done when the editor is focused needs to be
-   * added here.
+   * OnFocus() is called when we get a focus event.
+   *
+   * @param aOriginalEventTargetNode    The original event target node of the
+   *                                    focus event.
    */
-  MOZ_CAN_RUN_SCRIPT void OnFocus(nsINode& aFocusEventTargetNode);
+  MOZ_CAN_RUN_SCRIPT void OnFocus(const nsINode& aOriginalEventTargetNode);
 
   /** Resyncs spellchecking state (enabled/disabled).  This should be called
    * when anything that affects spellchecking state changes, such as the
@@ -2427,11 +2428,15 @@ class EditorBase : public nsIEditor,
       nsIContent& aAncestorLimit) const;
 
   /**
-   * Initializes selection and caret for the editor.  If aEventTarget isn't
-   * a host of the editor, i.e., the editor doesn't get focus, this does
-   * nothing.
+   * Initializes selection and caret for the editor at getting focus.  If
+   * aOriginalEventTargetNode isn't a host of the editor, i.e., the editor
+   * doesn't get focus, this does nothing.
+   *
+   * @param aOriginalEventTargetNode    The original event target node of the
+   *                                    focus event.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InitializeSelection(nsINode& aFocusEventTarget);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InitializeSelection(const nsINode& aOriginalEventTargetNode);
 
   enum NotificationForEditorObservers {
     eNotifyEditorObserversOfEnd,

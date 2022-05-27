@@ -644,19 +644,15 @@ void HTMLEditor::UpdateRootElement() {
   }
 }
 
-Element* HTMLEditor::FindSelectionRoot(nsINode* aNode) const {
-  if (NS_WARN_IF(!aNode)) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(aNode->IsDocument() || aNode->IsContent(),
+Element* HTMLEditor::FindSelectionRoot(const nsINode& aNode) const {
+  MOZ_ASSERT(aNode.IsDocument() || aNode.IsContent(),
              "aNode must be content or document node");
 
-  if (MOZ_UNLIKELY(NS_WARN_IF(!aNode->IsInComposedDoc()))) {
+  if (NS_WARN_IF(!aNode.IsInComposedDoc())) {
     return nullptr;
   }
 
-  if (aNode->IsInDesignMode()) {
+  if (aNode.IsInDesignMode()) {
     return GetDocument()->GetRootElement();
   }
 
@@ -668,7 +664,7 @@ Element* HTMLEditor::FindSelectionRoot(nsINode* aNode) const {
     return GetRoot();
   }
 
-  nsIContent* content = aNode->AsContent();
+  nsIContent* content = const_cast<nsIContent*>(aNode.AsContent());
   if (!content->HasFlag(NODE_IS_EDITABLE)) {
     // If the content is in read-write state but is not editable itself,
     // return it as the selection root.
