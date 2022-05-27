@@ -623,14 +623,6 @@ class EditorBase : public nsIEditor,
   void SyncRealTimeSpell();
 
   /**
-   * This method re-initializes the selection and caret state that are for
-   * current editor state. When editor session is destroyed, it always reset
-   * selection state even if this has no focus.  So if destroying editor,
-   * we have to call this method for focused editor to set selection state.
-   */
-  MOZ_CAN_RUN_SCRIPT void ReinitializeSelection(Element& aElement);
-
-  /**
    * Do "cut".
    *
    * @param aPrincipal          If you know current context is subject
