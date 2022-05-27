@@ -1166,10 +1166,6 @@ impl Compositor for SwCompositor {
             .insert(id, SwSurface::new(DeviceIntSize::zero(), is_opaque));
     }
 
-    fn create_backdrop_surface(&mut self, _id: NativeSurfaceId, _color: ColorF) {
-        unreachable!("Not implemented.")
-    }
-
     fn destroy_surface(&mut self, id: NativeSurfaceId) {
         if let Some(surface) = self.surfaces.remove(&id) {
             self.deinit_surface(&surface);
