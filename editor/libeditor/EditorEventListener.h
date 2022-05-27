@@ -56,8 +56,6 @@ class EditorEventListener : public nsIDOMEventListener {
   // nsIDOMEventListener
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD HandleEvent(dom::Event* aEvent) override;
 
-  MOZ_CAN_RUN_SCRIPT void SpellCheckIfNeeded();
-
  protected:
   virtual ~EditorEventListener();
 
