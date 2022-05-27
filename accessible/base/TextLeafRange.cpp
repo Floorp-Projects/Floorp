@@ -1161,7 +1161,12 @@ LayoutDeviceIntRect TextLeafPoint::CharBounds() {
 
   RemoteAccessible* acc = mAcc->AsRemote();
   if (Maybe<nsTArray<nsRect>> charBounds = acc->GetCachedCharData()) {
-    return acc->BoundsWithOffset(Some(charBounds->ElementAt(mOffset)));
+    if (mOffset < static_cast<int32_t>(charBounds->Length())) {
+      return acc->BoundsWithOffset(Some(charBounds->ElementAt(mOffset)));
+    }
+    // It is valid for a client to call this with an offset 1 after the last
+    // character because of the insertion point at the end of text boxes.
+    MOZ_ASSERT(mOffset == static_cast<int32_t>(charBounds->Length()));
   }
 
   return LayoutDeviceIntRect();
