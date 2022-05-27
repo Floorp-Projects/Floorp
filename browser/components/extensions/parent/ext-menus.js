@@ -14,8 +14,8 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "Bookmarks",
-  "resource://gre/modules/Bookmarks.jsm"
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
 );
 
 var { DefaultMap, ExtensionError, parseMatchPatterns } = ExtensionUtils;
@@ -1208,16 +1208,13 @@ const menuTracker = {
     const tree = menu.triggerNode.parentElement;
     const cell = tree.getCellAt(event.x, event.y);
     const node = tree.view.nodeForTreeIndex(cell.row);
+    const bookmarkId = node && PlacesUtils.getConcreteItemGuid(node);
 
-    if (!node?.bookmarkGuid || Bookmarks.isVirtualRootItem(node.bookmarkGuid)) {
+    if (!bookmarkId || PlacesUtils.isVirtualLeftPaneItem(bookmarkId)) {
       return;
     }
 
-    gMenuBuilder.build({
-      menu,
-      bookmarkId: node.bookmarkGuid,
-      onBookmark: true,
-    });
+    gMenuBuilder.build({ menu, bookmarkId, onBookmark: true });
   },
 };
 
