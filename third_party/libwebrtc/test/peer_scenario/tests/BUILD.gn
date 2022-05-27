@@ -25,6 +25,7 @@ if (rtc_include_tests) {
       "../../../modules/rtp_rtcp:rtp_rtcp",
       "../../../modules/rtp_rtcp:rtp_rtcp_format",
       "../../../pc:rtc_pc_base",
+      "../../../pc:session_description",
     ]
   }
 }

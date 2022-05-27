@@ -289,6 +289,7 @@ if (!build_with_chromium) {
         "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api/video:video_frame",
         "../../../pc:peerconnection",
+        "../../../pc:session_description",
         "../../../pc:video_track_source",
       ]
       absl_deps = [ "//third_party/abseil-cpp/absl/types:variant" ]
@@ -737,6 +738,8 @@ if (!build_with_chromium) {
       "../../../p2p:rtc_p2p",
       "../../../pc:peerconnection",
       "../../../pc:rtc_pc_base",
+      "../../../pc:session_description",
+      "../../../pc:simulcast_description",
       "../../../rtc_base:stringutils",
     ]
     absl_deps = [
