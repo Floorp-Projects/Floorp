@@ -568,6 +568,14 @@ VideoStreamAdapter::RestrictionsOrState VideoStreamAdapter::IncreaseFramerate(
         input_state.frame_size_pixels().value());
     max_frame_rate = balanced_settings_.MaxFps(input_state.video_codec_type(),
                                                frame_size_pixels);
+    // Temporary fix for cases when there are fewer framerate adaptation steps
+    // up than down. Make number of down/up steps equal.
+    if (max_frame_rate == std::numeric_limits<int>::max() &&
+        current_restrictions.counters.fps_adaptations > 1) {
+      // Do not unrestrict framerate to allow additional adaptation up steps.
+      RTC_LOG(LS_INFO) << "Modifying framerate due to remaining fps count.";
+      max_frame_rate -= current_restrictions.counters.fps_adaptations;
+    }
     // In BALANCED, the max_frame_rate must be checked before proceeding. This
     // is because the MaxFps might be the current Fps and so the balanced
     // settings may want to scale up the resolution.
