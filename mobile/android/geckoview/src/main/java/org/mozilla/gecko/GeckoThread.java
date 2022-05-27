@@ -572,7 +572,7 @@ public class GeckoThread extends Thread {
     if (extras != null) {
       String env = extras.getString("env0");
       for (int c = 1; env != null; c++) {
-        if (BuildConfig.DEBUG_BUILD) {
+        if (BuildConfig.DEBUG) {
           Log.d(LOGTAG, "env var: " + env);
         }
         result.add(env);
