@@ -795,6 +795,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         CustomizeHome.mostVisitedSites.set(settings.showTopSitesFeature)
         CustomizeHome.recentlyVisited.set(settings.historyMetadataUIFeature)
         CustomizeHome.pocket.set(settings.showPocketRecommendationsFeature)
+        CustomizeHome.sponsoredPocket.set(settings.showPocketSponsoredStories)
         CustomizeHome.contile.set(settings.showContileFeature)
     }
 

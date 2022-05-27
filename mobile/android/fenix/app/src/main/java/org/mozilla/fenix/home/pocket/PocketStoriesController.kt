@@ -9,6 +9,8 @@ import androidx.navigation.NavController
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
+import mozilla.components.service.pocket.ext.getCurrentFlightImpressions
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.HomeActivity
@@ -22,8 +24,11 @@ import org.mozilla.fenix.components.appstate.AppAction
 interface PocketStoriesController {
     /**
      * Callback to decide what should happen as an effect of a specific story being shown.
+     *
+     * @param storyShown The just shown [PocketStory].
+     * @param storyPosition `row x column` matrix representing the grid position of the shown story.
      */
-    fun handleStoryShown(storyShown: PocketStory)
+    fun handleStoryShown(storyShown: PocketStory, storyPosition: Pair<Int, Int>)
 
     /**
      * Callback to decide what should happen as an effect of a new list of stories being shown.
@@ -74,8 +79,26 @@ internal class DefaultPocketStoriesController(
     private val appStore: AppStore,
     private val navController: NavController,
 ) : PocketStoriesController {
-    override fun handleStoryShown(storyShown: PocketStory) {
+    override fun handleStoryShown(
+        storyShown: PocketStory,
+        storyPosition: Pair<Int, Int>
+    ) {
         appStore.dispatch(AppAction.PocketStoriesShown(listOf(storyShown)))
+
+        when (storyShown) {
+            is PocketSponsoredStory -> {
+                Pocket.homeRecsSpocShown.record(
+                    Pocket.HomeRecsSpocShownExtra(
+                        position = "${storyPosition.first}x${storyPosition.second}",
+                        timesShown = storyShown.getCurrentFlightImpressions().size.inc().toString()
+                    )
+                )
+            }
+            else -> {
+                // no-op
+                // The telemetry for PocketRecommendedStory is sent separately for bulk updates.
+            }
+        }
     }
 
     override fun handleStoriesShown(storiesShown: List<PocketStory>) {
@@ -129,13 +152,24 @@ internal class DefaultPocketStoriesController(
     ) {
         dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(storyClicked.url, true, BrowserDirection.FromHome)
-        if (storyClicked is PocketRecommendedStory) {
-            Pocket.homeRecsStoryClicked.record(
-                Pocket.HomeRecsStoryClickedExtra(
-                    position = "${storyPosition.first}x${storyPosition.second}",
-                    timesShown = storyClicked.timesShown.inc().toString()
+
+        when (storyClicked) {
+            is PocketRecommendedStory -> {
+                Pocket.homeRecsStoryClicked.record(
+                    Pocket.HomeRecsStoryClickedExtra(
+                        position = "${storyPosition.first}x${storyPosition.second}",
+                        timesShown = storyClicked.timesShown.inc().toString()
+                    )
                 )
-            )
+            }
+            is PocketSponsoredStory -> {
+                Pocket.homeRecsSpocClicked.record(
+                    Pocket.HomeRecsSpocClickedExtra(
+                        position = "${storyPosition.first}x${storyPosition.second}",
+                        timesShown = storyClicked.getCurrentFlightImpressions().size.inc().toString()
+                    )
+                )
+            }
         }
     }
 

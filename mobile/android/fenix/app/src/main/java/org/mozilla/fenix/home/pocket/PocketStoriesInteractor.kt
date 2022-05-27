@@ -15,8 +15,9 @@ interface PocketStoriesInteractor {
      * Callback for when a certain story is shown to the user.
      *
      * @param storyShown The story shown to the user.
+     * @param storyPosition `row x column` matrix representing the grid position of the shown story.
      */
-    fun onStoryShown(storyShown: PocketStory)
+    fun onStoryShown(storyShown: PocketStory, storyPosition: Pair<Int, Int>)
 
     /**
      * Callback for then new stories are shown to the user.

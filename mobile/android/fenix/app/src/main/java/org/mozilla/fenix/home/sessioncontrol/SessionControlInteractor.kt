@@ -430,8 +430,8 @@ class SessionControlInteractor(
         controller.handleCustomizeHomeTapped()
     }
 
-    override fun onStoryShown(storyShown: PocketStory) {
-        pocketStoriesController.handleStoryShown(storyShown)
+    override fun onStoryShown(storyShown: PocketStory, storyPosition: Pair<Int, Int>) {
+        pocketStoriesController.handleStoryShown(storyShown, storyPosition)
     }
 
     override fun onStoriesShown(storiesShown: List<PocketStory>) {

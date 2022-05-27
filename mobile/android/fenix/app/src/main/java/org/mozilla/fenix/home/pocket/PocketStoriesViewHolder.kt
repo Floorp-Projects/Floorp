@@ -119,7 +119,7 @@ fun PocketStoriesViewHolderPreview() {
             PocketStories(
                 stories = getFakePocketStories(8),
                 contentPadding = 0.dp,
-                onStoryShown = {},
+                onStoryShown = { _, _ -> },
                 onStoryClicked = { _, _ -> },
                 onDiscoverMoreClicked = {}
             )

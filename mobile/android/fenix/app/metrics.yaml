@@ -1623,6 +1623,25 @@ customize_home:
     notification_emails:
       - android-probes@mozilla.com
     expires: 105
+  sponsored_pocket:
+    type: boolean
+    description: |
+      An indication of whether Pocket sponsored stories are enabled
+      to be displayed
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/25401
+    data_reviews:
+      - ???
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - PocketIntegration
   contile:
     type: boolean
     description: |
@@ -5394,6 +5413,59 @@ pocket:
     notification_emails:
       - android-probes@mozilla.com
     expires: 106
+  home_recs_spoc_clicked:
+    type: event
+    description: |
+      User tapped a Pocket sponsored story to be opened.
+    extra_keys:
+      times_shown:
+        type: string
+        description: |
+          How many times was this story shown, including current.
+      position:
+        type: string
+        description: |
+          Position of the clicked story in the list shown.
+          Uses the [row x column] matrix notation.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/25401
+    data_reviews:
+      - ?????
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 106
+    metadata:
+      tags:
+        - PocketIntegration
+  home_recs_spoc_shown:
+    type: event
+    description: |
+      A particular Pocket sponsored story was visible more than 50%
+      on the homescreen.
+    extra_keys:
+      times_shown:
+        type: string
+        description: |
+          How many times was this story shown, including current.
+      position:
+        type: string
+        description: |
+          Position of the story in the list shown.
+          Uses the [row x column] matrix notation.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/25401
+    data_reviews:
+      - ???
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 106
+    metadata:
+      tags:
+        - PocketIntegration
   home_recs_category_clicked:
     type: event
     description: |
