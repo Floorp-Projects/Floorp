@@ -6,8 +6,6 @@
 
 #include "nr_socket_proxy_config.h"
 
-#include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/WebrtcProxyConfig.h"
 
 namespace mozilla {

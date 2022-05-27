@@ -45,24 +45,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "nr_socket_proxy_config.h"
 #include "nsXULAppAPI.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 
 #include "logging.h"
-#include "nspr.h"
-#include "nss.h"
 #include "pk11pub.h"
 #include "plbase64.h"
 
 #include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "ScopedNSSTypes.h"
 #include "runnable_utils.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIUUIDGenerator.h"
 
 // nICEr includes
@@ -73,19 +66,15 @@ extern "C" {
 #include "r_crc32.h"
 #include "r_memory.h"
 #include "ice_reg.h"
-#include "ice_util.h"
 #include "transport_addr.h"
 #include "nr_crypto.h"
 #include "nr_socket.h"
 #include "nr_socket_local.h"
-#include "stun_client_ctx.h"
 #include "stun_reg.h"
-#include "stun_server_ctx.h"
 #include "stun_util.h"
 #include "ice_codeword.h"
 #include "ice_ctx.h"
 #include "ice_candidate.h"
-#include "ice_handler.h"
 }
 
 // Local includes
@@ -95,10 +84,6 @@ extern "C" {
 #include "nrinterfaceprioritizer.h"
 #include "rlogconnector.h"
 #include "test_nr_socket.h"
-
-extern "C" {
-#include "mdns_service/mdns_service.h"
-}
 
 namespace mozilla {
 

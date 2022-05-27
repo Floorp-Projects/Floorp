@@ -52,7 +52,6 @@
 #include <string>
 
 #include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIEventTarget.h"
 #include "nsINamed.h"
@@ -63,8 +62,10 @@
 #include "mozilla/UniquePtr.h"
 
 extern "C" {
-#include "nr_api.h"
+#include "async_wait.h"
 #include "async_timer.h"
+#include "r_errors.h"
+#include "r_log.h"
 }
 
 namespace mozilla {

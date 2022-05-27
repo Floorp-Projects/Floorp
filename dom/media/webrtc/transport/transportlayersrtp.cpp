@@ -12,7 +12,6 @@
 #include "logging.h"
 #include "nsError.h"
 #include "mozilla/Assertions.h"
-#include "srtp.h"
 
 namespace mozilla {
 
