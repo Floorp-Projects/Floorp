@@ -446,7 +446,11 @@ NS_IMETHODIMP EditorEventListener::HandleEvent(Event* aEvent) {
     }
     // blur
     case eBlur: {
-      nsresult rv = Blur(internalEvent->AsFocusEvent());
+      const InternalFocusEvent* blurEvent = internalEvent->AsFocusEvent();
+      if (NS_WARN_IF(!blurEvent)) {
+        return NS_ERROR_FAILURE;
+      }
+      nsresult rv = Blur(*blurEvent);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "EditorEventListener::Blur() failed");
       return rv;
@@ -1115,37 +1119,14 @@ nsresult EditorEventListener::Focus(const InternalFocusEvent& aFocusEvent) {
   return NS_OK;  // Don't return error code to the event listener manager.
 }
 
-nsresult EditorEventListener::Blur(InternalFocusEvent* aBlurEvent) {
-  if (NS_WARN_IF(!aBlurEvent) || DetachedFromEditor()) {
+nsresult EditorEventListener::Blur(const InternalFocusEvent& aBlurEvent) {
+  if (DetachedFromEditor()) {
     return NS_OK;
   }
 
-  // check if something else is focused. If another element is focused, then
-  // we should not change the selection.
-  nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
-  if (NS_WARN_IF(!focusManager)) {
-    return NS_OK;
-  }
-
-  Element* focusedElement = focusManager->GetFocusedElement();
-  if (!focusedElement) {
-    // If it's in the designMode, and blur occurs, the target must be the
-    // window.  If a blur event is fired and the target is an element, it
-    // must be delayed blur event at initializing the `HTMLEditor`.
-    // TODO: Add automated tests for checking the case that the target node
-    //       is in a shadow DOM tree whose host is in design mode.
-    if (mEditorBase->IsHTMLEditor() &&
-        mEditorBase->AsHTMLEditor()->IsInDesignMode()) {
-      if (Element::FromEventTargetOrNull(aBlurEvent->mTarget)) {
-        return NS_OK;
-      }
-    }
-    RefPtr<EditorBase> editorBase(mEditorBase);
-    DebugOnly<nsresult> rvIgnored = editorBase->FinalizeSelection();
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "EditorBase::FinalizeSelection() failed, but ignored");
-  }
-  return NS_OK;
+  DebugOnly<nsresult> rvIgnored = mEditorBase->OnBlur(aBlurEvent.mTarget);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "EditorBase::OnBlur() failed");
+  return NS_OK;  // Don't return error code to the event listener manager.
 }
 
 bool EditorEventListener::IsFileControlTextBox() {
