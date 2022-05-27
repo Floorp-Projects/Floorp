@@ -363,6 +363,42 @@ TEST_F(APZCAxisLockTester, BreakStickyAxisLock) {
                                            ScrollDirection::eVertical));
 }
 
+TEST_F(APZCAxisLockTester, BreakAxisLockByLockAngle) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
+  SCOPED_GFX_PREF_FLOAT("apz.axis_lock.lock_angle", M_PI / 4.0f);
+  SCOPED_GFX_PREF_FLOAT("apz.axis_lock.breakout_angle", M_PI / 8.0f);
+
+  SetupBasicTest();
+
+  apzc = ApzcOf(root);
+
+  // Start a gesture to get us locked onto the Y axis.
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  PanGesture(PanGestureInput::PANGESTURE_START, manager, ScreenIntPoint(50, 50),
+             ScreenIntPoint(1, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+
+  // Ensure that we have locked onto the Y axis.
+  apzc->AssertStateIsPanningLockedY();
+
+  // Stay within 45 degrees from the X axis, and more than 22.5 degrees from
+  // the Y axis. This should break the Y lock and lock us to the X axis.
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, manager, ScreenIntPoint(50, 50),
+             ScreenIntPoint(12, 10), mcc->Time());
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+
+  // Ensure that we have locked onto the X axis.
+  apzc->AssertStateIsPanningLockedX();
+
+  // End the gesture.
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  PanGesture(PanGestureInput::PANGESTURE_END, manager, ScreenIntPoint(50, 50),
+             ScreenPoint(0, 0), mcc->Time());
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+}
+
 TEST_F(APZCAxisLockTester, TestDominantAxisScrolling) {
   SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_FLOAT("apz.axis_lock.lock_angle", M_PI / 4.0f);
