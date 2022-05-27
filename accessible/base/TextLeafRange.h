@@ -135,18 +135,9 @@ class TextLeafPoint final {
    * (depending on the direction).
    * If aIncludeorigin is true and this is at a boundary, this will be
    * returned unchanged.
-   * aOriginAttrs allows the caller to supply the text attributes for this (as
-   * retrieved by GetTextAttributes). This can be used to avoid fetching the
-   * attributes twice if they are also to be used for something else; e.g.
-   * returning the attributes to a client. If aOriginAttrs is null, this method
-   * will fetch the attributes itself.
-   * aIncludeDefaults specifies whether aOriginAttrs includes default
-   * attributes.
    */
   TextLeafPoint FindTextAttrsStart(nsDirection aDirection,
-                                   bool aIncludeOrigin = false,
-                                   const AccAttributes* aOriginAttrs = nullptr,
-                                   bool aIncludeDefaults = true) const;
+                                   bool aIncludeOrigin = false) const;
 
   /**
    * Returns a rect (in dev pixels) describing position and size of
