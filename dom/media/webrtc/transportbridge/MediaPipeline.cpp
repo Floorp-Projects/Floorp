@@ -879,7 +879,8 @@ void MediaPipelineTransmit::UpdateSendState() {
       mSendTrackOverride.Ref() && !mSendTrackOverride.Ref()->IsDestroyed();
   const bool mustRemoveSendTrack =
       haveLiveSendTrack && !mSendTrackOverride.Ref() &&
-      (!haveLiveDomTrack || mDomTrack.Ref()->GetTrack() != mSendPortSource);
+      (!haveLiveDomTrack ||
+       mDomTrack.Ref()->GetTrack() != mSendPort->GetSource());
 
   mTransmitting = mActive && (haveLiveDomTrack || haveLiveOverrideTrack) &&
                   !mustRemoveSendTrack;
@@ -916,8 +917,7 @@ void MediaPipelineTransmit::UpdateSendState() {
     } else {
       mSendTrack = mDomTrack.Ref()->Graph()->CreateForwardedInputTrack(
           mDomTrack.Ref()->GetTrack()->mType);
-      mSendPortSource = mDomTrack.Ref()->GetTrack();
-      mSendPort = mSendTrack->AllocateInputPort(mSendPortSource.get());
+      mSendPort = mSendTrack->AllocateInputPort(mDomTrack.Ref()->GetTrack());
     }
     mSendTrack->QueueSetAutoend(false);
     if (mIsVideo) {
@@ -948,7 +948,6 @@ void MediaPipelineTransmit::UpdateSendState() {
       mSendTrack->Destroy();
       mSendPort->Destroy();
       mSendPort = nullptr;
-      mSendPortSource = nullptr;
     }
   }
 }

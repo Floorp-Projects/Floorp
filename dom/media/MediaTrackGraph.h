@@ -816,8 +816,8 @@ class MediaInputPort final {
   // and destination tracks.
   void Disconnect();
 
-  MediaTrack* GetSource() const;
-  ProcessedMediaTrack* GetDestination() const;
+  MediaTrack* GetSource() const { return mSource; }
+  ProcessedMediaTrack* GetDestination() const { return mDest; }
 
   uint16_t InputNumber() const { return mInputNumber; }
   uint16_t OutputNumber() const { return mOutputNumber; }
