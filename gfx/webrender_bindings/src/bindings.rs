@@ -1210,7 +1210,6 @@ extern "C" {
         is_opaque: bool,
     );
     fn wr_compositor_create_external_surface(compositor: *mut c_void, id: NativeSurfaceId, is_opaque: bool);
-    fn wr_compositor_create_backdrop_surface(compositor: *mut c_void, id: NativeSurfaceId, color: ColorF);
     fn wr_compositor_destroy_surface(compositor: *mut c_void, id: NativeSurfaceId);
     fn wr_compositor_create_tile(compositor: *mut c_void, id: NativeSurfaceId, x: i32, y: i32);
     fn wr_compositor_destroy_tile(compositor: *mut c_void, id: NativeSurfaceId, x: i32, y: i32);
@@ -1284,12 +1283,6 @@ impl Compositor for WrCompositor {
     fn create_external_surface(&mut self, id: NativeSurfaceId, is_opaque: bool) {
         unsafe {
             wr_compositor_create_external_surface(self.0, id, is_opaque);
-        }
-    }
-
-    fn create_backdrop_surface(&mut self, id: NativeSurfaceId, color: ColorF) {
-        unsafe {
-            wr_compositor_create_backdrop_surface(self.0, id, color);
         }
     }
 
