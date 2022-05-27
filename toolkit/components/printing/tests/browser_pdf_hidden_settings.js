@@ -3,12 +3,7 @@
 
 "use strict";
 
-const hiddenPdfIds = [
-  "margins",
-  "backgrounds",
-  "headers-footers",
-  "more-settings-options",
-];
+const hiddenPdfIds = ["backgrounds", "source-version-selection"];
 
 async function checkElements({ removed, file, testName }) {
   await PrintHelper.withTestPage(async helper => {
