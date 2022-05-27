@@ -47,6 +47,7 @@ namespace cricket {
 namespace {
 
 const int kMinLayerSize = 16;
+constexpr int64_t kUnsignaledSsrcCooldownMs = rtc::kNumMillisecsPerSec / 2;
 
 const char* StreamTypeToString(
     webrtc::VideoSendStream::StreamStats::StreamType type) {
@@ -1565,6 +1566,7 @@ void WebRtcVideoChannel::ResetUnsignaledRecvStream() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_LOG(LS_INFO) << "ResetUnsignaledRecvStream.";
   unsignaled_stream_params_ = StreamParams();
+  last_unsignalled_ssrc_creation_time_ms_ = absl::nullopt;
 
   // Delete any created default streams. This is needed to avoid SSRC collisions
   // in Call's RtpDemuxer, in the case that |this| has created a default video
@@ -1767,7 +1769,23 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
         if (demuxer_criteria_id_ != demuxer_criteria_completed_id_) {
           return;
         }
-
+        // Ignore unknown ssrcs if we recently created an unsignalled receive
+        // stream since this shouldn't happen frequently. Getting into a state
+        // of creating decoders on every packet eats up processing time (e.g.
+        // https://crbug.com/1069603) and this cooldown prevents that.
+        if (last_unsignalled_ssrc_creation_time_ms_.has_value()) {
+          int64_t now_ms = rtc::TimeMillis();
+          if (now_ms - last_unsignalled_ssrc_creation_time_ms_.value() <
+              kUnsignaledSsrcCooldownMs) {
+            // We've already created an unsignalled ssrc stream within the last
+            // 0.5 s, ignore with a warning.
+            RTC_LOG(LS_WARNING)
+                << "Another unsignalled ssrc packet arrived shortly after the "
+                << "creation of an unsignalled ssrc stream. Dropping packet.";
+            return;
+          }
+        }
+        // Let the unsignalled ssrc handler decide whether to drop or deliver.
         switch (unsignalled_ssrc_handler_->OnUnsignalledSsrc(this, ssrc)) {
           case UnsignalledSsrcHandler::kDropPacket:
             return;
@@ -1780,6 +1798,7 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
             webrtc::PacketReceiver::DELIVERY_OK) {
           RTC_LOG(LS_WARNING) << "Failed to deliver RTP packet on re-delivery.";
         }
+        last_unsignalled_ssrc_creation_time_ms_ = rtc::TimeMillis();
       }));
 }
 
