@@ -240,10 +240,11 @@ class SessionControlInteractorTest {
     @Test
     fun `GIVEN a PocketStoriesInteractor WHEN a story is shown THEN handle it in a PocketStoriesController`() {
         val shownStory: PocketStory = mockk()
+        val storyGridLocation = 1 to 2
 
-        interactor.onStoryShown(shownStory)
+        interactor.onStoryShown(shownStory, storyGridLocation)
 
-        verify { pocketStoriesController.handleStoryShown(shownStory) }
+        verify { pocketStoriesController.handleStoryShown(shownStory, storyGridLocation) }
     }
 
     @Test

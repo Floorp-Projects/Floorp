@@ -145,14 +145,28 @@ class DefaultPocketStoriesControllerTest {
     }
 
     @Test
-    fun `WHEN a new story is shown THEN update the State`() {
+    fun `WHEN a new recommended story is shown THEN update the State`() {
         val store = spyk(AppStore())
         val controller = DefaultPocketStoriesController(mockk(), store, mockk())
-        val storyShown: PocketStory = mockk()
+        val storyShown: PocketRecommendedStory = mockk()
+        val storyGridLocation = 1 to 2
 
-        controller.handleStoryShown(storyShown)
+        controller.handleStoryShown(storyShown, storyGridLocation)
 
         verify { store.dispatch(AppAction.PocketStoriesShown(listOf(storyShown))) }
+    }
+
+    @Test
+    fun `WHEN a new sponsored story is shown THEN update the State and record telemetry`() {
+        val store = spyk(AppStore())
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        val storyShown: PocketSponsoredStory = mockk(relaxed = true)
+        val storyGridLocation = 1 to 2
+
+        controller.handleStoryShown(storyShown, storyGridLocation)
+
+        verify { store.dispatch(AppAction.PocketStoriesShown(listOf(storyShown))) }
+        assertNotNull(Pocket.homeRecsSpocShown.testGetValue())
     }
 
     @Test
@@ -199,7 +213,7 @@ class DefaultPocketStoriesControllerTest {
     }
 
     @Test
-    fun `WHEN a sponsored story is clicked THEN open that story's url using HomeActivity and don't record telemetry`() {
+    fun `WHEN a sponsored story is clicked THEN open that story's url using HomeActivity and record telemetry`() {
         val story = PocketSponsoredStory(
             id = 7,
             title = "",
@@ -208,11 +222,11 @@ class DefaultPocketStoriesControllerTest {
             sponsor = "",
             shim = mockk(),
             priority = 3,
-            caps = mockk(),
+            caps = mockk(relaxed = true),
         )
         val homeActivity: HomeActivity = mockk(relaxed = true)
         val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))
-        assertNull(Pocket.homeRecsStoryClicked.testGetValue())
+        assertNull(Pocket.homeRecsSpocClicked.testGetValue())
 
         controller.handleStoryClicked(story, 1 to 2)
 

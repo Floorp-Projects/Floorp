@@ -1623,6 +1623,9 @@ customize_home:
     notification_emails:
       - android-probes@mozilla.com
     expires: 105
+    metadata:
+      tags:
+        - PocketIntegration
   sponsored_pocket:
     type: boolean
     description: |
@@ -5390,6 +5393,9 @@ pocket:
     notification_emails:
       - android-probes@mozilla.com
     expires: 106
+    metadata:
+      tags:
+        - PocketIntegration
   home_recs_story_clicked:
     type: event
     description: |
@@ -5413,6 +5419,9 @@ pocket:
     notification_emails:
       - android-probes@mozilla.com
     expires: 106
+    metadata:
+      tags:
+        - PocketIntegration
   home_recs_spoc_clicked:
     type: event
     description: |
@@ -5493,6 +5502,9 @@ pocket:
     notification_emails:
       - android-probes@mozilla.com
     expires: 106
+    metadata:
+      tags:
+        - PocketIntegration
   home_recs_discover_clicked:
     type: event
     description: |
@@ -5507,6 +5519,9 @@ pocket:
     notification_emails:
       - android-probes@mozilla.com
     expires: 106
+    metadata:
+      tags:
+        - PocketIntegration
   home_recs_learn_more_clicked:
     type: event
     description: |
@@ -5520,6 +5535,9 @@ pocket:
     notification_emails:
       - android-probes@mozilla.com
     expires: 106
+    metadata:
+      tags:
+        - PocketIntegration
 
 first_session:
   campaign:
