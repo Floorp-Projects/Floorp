@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import actions from "../../actions";
@@ -41,6 +42,21 @@ class XHRBreakpoints extends Component {
       focused: false,
       editIndex: -1,
       clickedOnFormElement: false,
+    };
+  }
+
+  static get propTypes() {
+    return {
+      disableXHRBreakpoint: PropTypes.func.isRequired,
+      enableXHRBreakpoint: PropTypes.func.isRequired,
+      onXHRAdded: PropTypes.func.isRequired,
+      removeXHRBreakpoint: PropTypes.func.isRequired,
+      setXHRBreakpoint: PropTypes.func.isRequired,
+      shouldPauseOnAny: PropTypes.bool.isRequired,
+      showInput: PropTypes.bool.isRequired,
+      togglePauseOnAny: PropTypes.func.isRequired,
+      updateXHRBreakpoint: PropTypes.func.isRequired,
+      xhrBreakpoints: PropTypes.array.isRequired,
     };
   }
 
