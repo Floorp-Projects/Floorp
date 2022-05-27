@@ -62,6 +62,7 @@ const {
   LocaleData,
   NoCloneSpreadArgs,
   SchemaAPIInterface,
+  updateAllowedOrigins,
   withHandlingUserInput,
 } = ExtensionCommon;
 
@@ -399,8 +400,6 @@ class BrowserExtensionContent extends EventEmitter {
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
-    let restrictSchemes = !this.hasPermission("mozillaAddons");
-
     this.apiManager = this.getAPIManager();
 
     this._manifest = null;
@@ -430,14 +429,7 @@ class BrowserExtensionContent extends EventEmitter {
         this.policy.permissions = perms;
       }
 
-      if (permissions.origins.length) {
-        let patterns = this.allowedOrigins.patterns.map(host => host.pattern);
-
-        this.policy.allowedOrigins = new MatchPatternSet(
-          [...patterns, ...permissions.origins],
-          { restrictSchemes, ignorePath: true }
-        );
-      }
+      updateAllowedOrigins(this.policy, permissions.origins, /* isAdd */ true);
     });
 
     this.on("remove-permissions", (ignoreEvent, permissions) => {
@@ -449,17 +441,7 @@ class BrowserExtensionContent extends EventEmitter {
         this.policy.permissions = perms;
       }
 
-      if (permissions.origins.length) {
-        let origins = permissions.origins.map(
-          origin => new MatchPattern(origin, { ignorePath: true }).pattern
-        );
-
-        this.policy.allowedOrigins = new MatchPatternSet(
-          this.allowedOrigins.patterns.filter(
-            host => !origins.includes(host.pattern)
-          )
-        );
-      }
+      updateAllowedOrigins(this.policy, permissions.origins, /* isAdd */ false);
     });
     /* eslint-enable mozilla/balanced-listeners */
 
