@@ -2083,8 +2083,6 @@ class ExtensionData {
 
 const PROXIED_EVENTS = new Set([
   "test-harness-message",
-  "add-permissions",
-  "remove-permissions",
   "background-script-suspend",
   "background-script-suspend-canceled",
   "background-script-suspend-ignored",
@@ -2329,6 +2327,12 @@ class Extension extends ExtensionData {
       if (this.policy.active) {
         this.setSharedData("", this.serialize());
         Services.ppmm.sharedData.flush();
+        this.broadcast("Extension:UpdatePermissions", {
+          id: this.id,
+          origins: permissions.origins,
+          permissions: permissions.permissions,
+          add: true,
+        });
       }
 
       this.cachePermissions();
@@ -2347,6 +2351,12 @@ class Extension extends ExtensionData {
       if (this.policy.active) {
         this.setSharedData("", this.serialize());
         Services.ppmm.sharedData.flush();
+        this.broadcast("Extension:UpdatePermissions", {
+          id: this.id,
+          origins: permissions.origins,
+          permissions: permissions.permissions,
+          add: false,
+        });
       }
 
       this.cachePermissions();
