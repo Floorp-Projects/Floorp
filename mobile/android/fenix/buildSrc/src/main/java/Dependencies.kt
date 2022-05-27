@@ -164,6 +164,7 @@ object Deps {
     const val mozilla_lib_publicsuffixlist = "org.mozilla.components:lib-publicsuffixlist:${Versions.mozilla_android_components}"
 
     const val mozilla_support_base = "org.mozilla.components:support-base:${Versions.mozilla_android_components}"
+    const val mozilla_support_rusterrors = "org.mozilla.components:support-rusterrors:${Versions.mozilla_android_components}"
     const val mozilla_support_images = "org.mozilla.components:support-images:${Versions.mozilla_android_components}"
     const val mozilla_support_ktx = "org.mozilla.components:support-ktx:${Versions.mozilla_android_components}"
     const val mozilla_support_rusthttp = "org.mozilla.components:support-rusthttp:${Versions.mozilla_android_components}"

@@ -538,6 +538,7 @@ dependencies {
 
     implementation Deps.mozilla_support_extensions
     implementation Deps.mozilla_support_base
+    implementation Deps.mozilla_support_rusterrors
     implementation Deps.mozilla_support_images
     implementation Deps.mozilla_support_ktx
     implementation Deps.mozilla_support_rustlog

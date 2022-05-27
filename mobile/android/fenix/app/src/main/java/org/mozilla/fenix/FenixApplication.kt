@@ -42,6 +42,7 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
+import mozilla.components.support.rusterrors.initializeRustErrors
 import mozilla.components.support.base.facts.register
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
@@ -398,8 +399,13 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         // Give the generated FxNimbus a closure to lazily get the Nimbus object
         FxNimbus.initialize { components.analytics.experiments }
         return GlobalScope.async(Dispatchers.IO) {
+            initializeRustErrors(components.analytics.crashReporter)
             // ... but RustHttpConfig.setClient() and RustLog.enable() can be called later.
             RustHttpConfig.setClient(lazy { components.core.client })
+            // Once application-services has switched to using the new
+            // error reporting system, RustLog shouldn't input a CrashReporter
+            // anymore.
+            // (https://github.com/mozilla/application-services/issues/4981).
             RustLog.enable(components.analytics.crashReporter)
             // We want to ensure Nimbus is initialized as early as possible so we can
             // experiment on features close to startup.
