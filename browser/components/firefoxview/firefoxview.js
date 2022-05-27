@@ -10,21 +10,27 @@ import "./recently-closed-tabs.js";
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { BuiltInThemes } = ChromeUtils.import(
+  "resource:///modules/BuiltInThemes.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(globalThis, {
   ColorwayClosetOpener: "resource:///modules/ColorwayClosetOpener.jsm",
 });
 
 window.addEventListener("load", () => {
-  document
-    .getElementById("colorway-closet-button")
-    .addEventListener("click", () => {
-      globalThis.ColorwayClosetOpener.openModal();
-    });
+  document.getElementById("colorways-button").addEventListener("click", () => {
+    globalThis.ColorwayClosetOpener.openModal();
+  });
   tabsSetupFlowManager.initialize(
     document.getElementById("tabs-pickup-container")
   );
   document.getElementById("recently-closed-tabs-container").onLoad();
+  const noColorwayCollection =
+    BuiltInThemes.findActiveColorwayCollection() === null;
+  document
+    .getElementById("colorways")
+    .classList.toggle("no-collection", noColorwayCollection);
 });
 
 window.addEventListener("unload", () => {
