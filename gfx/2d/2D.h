@@ -1215,6 +1215,8 @@ class ScaledFont : public SupportsThreadSafeWeakPtr<ScaledFont> {
 
   virtual bool HasVariationSettings() { return false; }
 
+  virtual bool MayUseBitmaps() { return false; }
+
   void AddUserData(UserDataKey* key, void* userData, void (*destroy)(void*)) {
     mUserData.Add(key, userData, destroy);
   }
