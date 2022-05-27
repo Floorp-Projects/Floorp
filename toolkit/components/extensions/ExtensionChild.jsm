@@ -62,7 +62,6 @@ const {
   LocaleData,
   NoCloneSpreadArgs,
   SchemaAPIInterface,
-  updateAllowedOrigins,
   withHandlingUserInput,
 } = ExtensionCommon;
 
@@ -419,32 +418,6 @@ class BrowserExtensionContent extends EventEmitter {
     // Only used for devtools views.
     this.devtoolsViews = new Set();
 
-    /* eslint-disable mozilla/balanced-listeners */
-    this.on("add-permissions", (ignoreEvent, permissions) => {
-      if (permissions.permissions.length) {
-        let perms = new Set(this.policy.permissions);
-        for (let perm of permissions.permissions) {
-          perms.add(perm);
-        }
-        this.policy.permissions = perms;
-      }
-
-      updateAllowedOrigins(this.policy, permissions.origins, /* isAdd */ true);
-    });
-
-    this.on("remove-permissions", (ignoreEvent, permissions) => {
-      if (permissions.permissions.length) {
-        let perms = new Set(this.policy.permissions);
-        for (let perm of permissions.permissions) {
-          perms.delete(perm);
-        }
-        this.policy.permissions = perms;
-      }
-
-      updateAllowedOrigins(this.policy, permissions.origins, /* isAdd */ false);
-    });
-    /* eslint-enable mozilla/balanced-listeners */
-
     ExtensionManager.extensions.set(this.id, this);
   }
 
@@ -796,8 +769,7 @@ class ChildAPIManager {
           }
         }
       };
-      this.context.extension.on("add-permissions", this.updatePermissions);
-      this.context.extension.on("remove-permissions", this.updatePermissions);
+      this.context.extension.on("update-permissions", this.updatePermissions);
     }
   }
 
@@ -939,8 +911,7 @@ class ChildAPIManager {
     this.conduit.close();
 
     if (this.updatePermissions) {
-      this.context.extension.off("add-permissions", this.updatePermissions);
-      this.context.extension.off("remove-permissions", this.updatePermissions);
+      this.context.extension.off("update-permissions", this.updatePermissions);
     }
   }
 

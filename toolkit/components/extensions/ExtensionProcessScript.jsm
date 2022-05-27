@@ -81,6 +81,7 @@ ExtensionManager = {
       this
     );
     Services.cpmm.addMessageListener("Extension:UpdateContentScripts", this);
+    Services.cpmm.addMessageListener("Extension:UpdatePermissions", this);
 
     this.updateStubExtensions();
 
@@ -318,6 +319,39 @@ ExtensionManager = {
               policy.registerContentScript(newScript);
               registeredContentScripts.set(scriptId, newScript);
             }
+          }
+          break;
+        }
+
+        case "Extension:UpdatePermissions": {
+          let policy = WebExtensionPolicy.getByID(data.id);
+          if (!policy) {
+            break;
+          }
+          // In the parent process, Extension.jsm updates the policy.
+          if (isContentProcess) {
+            ExtensionCommon.updateAllowedOrigins(
+              policy,
+              data.origins,
+              data.add
+            );
+
+            if (data.permissions.length) {
+              let perms = new Set(policy.permissions);
+              for (let perm of data.permissions) {
+                if (data.add) {
+                  perms.add(perm);
+                } else {
+                  perms.delete(perm);
+                }
+              }
+              policy.permissions = perms;
+            }
+          }
+
+          if (data.permissions.length && extensions.has(policy)) {
+            // Notify ChildApiManager of permission changes.
+            extensions.get(policy).emit("update-permissions");
           }
           break;
         }
