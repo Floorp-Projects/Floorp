@@ -132,7 +132,7 @@ var {
 
 const { getUniqueId, promiseTimeout } = ExtensionUtils;
 
-const { EventEmitter } = ExtensionCommon;
+const { EventEmitter, updateAllowedOrigins } = ExtensionCommon;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionCommon.getConsole);
 
@@ -2321,21 +2321,10 @@ class Extension extends ExtensionData {
       for (let perm of permissions.permissions) {
         this.permissions.add(perm);
       }
-
-      if (permissions.origins.length) {
-        let patterns = this.allowedOrigins.patterns.map(host => host.pattern);
-
-        this.allowedOrigins = new MatchPatternSet(
-          new Set([...patterns, ...permissions.origins]),
-          {
-            restrictSchemes: this.restrictSchemes,
-            ignorePath: true,
-          }
-        );
-      }
-
       this.policy.permissions = Array.from(this.permissions);
-      this.policy.allowedOrigins = this.allowedOrigins;
+
+      updateAllowedOrigins(this.policy, permissions.origins, /* isAdd */ true);
+      this.allowedOrigins = this.policy.allowedOrigins;
 
       if (this.policy.active) {
         this.setSharedData("", this.serialize());
@@ -2350,19 +2339,10 @@ class Extension extends ExtensionData {
       for (let perm of permissions.permissions) {
         this.permissions.delete(perm);
       }
-
-      let origins = permissions.origins.map(
-        origin => new MatchPattern(origin, { ignorePath: true }).pattern
-      );
-
-      this.allowedOrigins = new MatchPatternSet(
-        this.allowedOrigins.patterns.filter(
-          host => !origins.includes(host.pattern)
-        )
-      );
-
       this.policy.permissions = Array.from(this.permissions);
-      this.policy.allowedOrigins = this.allowedOrigins;
+
+      updateAllowedOrigins(this.policy, permissions.origins, /* isAdd */ false);
+      this.allowedOrigins = this.policy.allowedOrigins;
 
       if (this.policy.active) {
         this.setSharedData("", this.serialize());
