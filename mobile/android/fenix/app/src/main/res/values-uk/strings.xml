@@ -1558,6 +1558,11 @@
     <string name="preferences_addresses_add_address">Додати адресу</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Керувати адресами</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Зберігати та автоматично заповнювати адреси</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Включити дані, як-от номери, електронні адреси та адреси доставлення</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Додати картку</string>
     <!-- Title of the "Edit card" screen -->
@@ -1895,6 +1900,9 @@
     <string name="pocket_stories_feature_caption">Частина родини Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Докладніше</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Спонсоровано</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Увімкнути телеметрію для надсилання даних.</string>

@@ -70,8 +70,6 @@
     <string name="cfr_neg_button_text">Ez, eskerrik asko</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Loturak aplikazioetan automatikoki irekitzeko ezar dezakezu Firefox</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Loturak aplikazioetan automatikoki irekitzeko ezar dezakezu %1$s.</string>
     <!-- Text for the positive action button -->
@@ -100,8 +98,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Automatikoki itxi hilabete ondoren?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Azken hilabetean ikusi ez dituzun fitxak itxi ditzake Firefoxek.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">Azken hilabetean ikusi ez dituzun fitxak itxi ditzake %1$s(e)k.</string>
@@ -253,15 +249,14 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Bilatu helbide-barratik zuzenean</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Bilaketa-ezarpenak</string>
+
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefoxen berrikuntzak</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">%1$s(r)en nobedadeak</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Errazagoa da orain utzi zenuen tokitik jarraitzea.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Firefoxen hasiera-orri pertsonalizatua</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">%1$s hasiera-orri pertsonalizatua</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -279,8 +274,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Errazagoa da utzitako lekutik jarraitzea Firefoxen pertsonalizatutako hasiera-orriarekin. Aurkitu zure azken fitxak, laster-markak eta bilaketa-emaitzak.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Ireki Firefoxen fitxa berri bat</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Ireki %1$s fitxa berria</string>
     <!-- Text preview for smaller sized widgets -->
@@ -451,11 +444,7 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Ikusi</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Sakatu logoan horma-papera aldatzeko</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Aldatu horma-papera Firefoxen hasiera-orriko logoa sakatuz</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Txandakatu eta eguneratu irudia hasiera-orria utzi gabe.</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description">Firefox logoa - aldatu horma-papera, botoia</string>
@@ -681,8 +670,6 @@
     <string name="studies_remove">Kendu</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktibo</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Noizean behin esperimentuak instala eta exekuta litzake Firefoxek.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">Noizean behin esperimentuak instala eta exekuta litzake %1$s(e)k.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -770,8 +757,6 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Idatzi bilaketa-terminoa</string>
-    <!-- Text for the button to search all history -->
     <string name="history_search_1">Idatzi bilaketa-terminoak</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Ezabatu historia</string>
@@ -796,6 +781,11 @@
     <string name="history_older">Zaharragoa</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Historiarik ez hemen</string>
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Beste gailuetatik sinkronizatuta</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Beste gailuetakoa</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1181,6 +1171,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Nabigatze-datuak ezabatzen…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Elementu guztiak ezabatuko ditu.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Utzi</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Ezabatu</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Taldea ezabatuta</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview orain Firefox Nightly da</string>
@@ -1224,8 +1223,6 @@
     <string name="onboarding_firefox_account_sync_is_on">Sinkronizazioa aktibo dago</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Pribatutasuna beti aktibo</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefoxek automatikoki eragozten du konpainiek sekretuki zu webean zehar jarraitzea.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s(e)k automatikoki eragozten du konpainiek sekretuki zu webean zehar jarraitzea.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1531,7 +1528,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordenatu saio-hasieren menua</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Betetze automatikoa</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Helbideak</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kreditu-txartelak</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1547,6 +1548,10 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Kudeatu gordetako txartelak</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Gehitu helbidea</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Kudeatu helbideak</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Gehitu txartela</string>
     <!-- Title of the "Edit card" screen -->
@@ -1597,6 +1602,51 @@
     <string name="credit_cards_biometric_prompt_message_pin">Desblokeatu zure gailua</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Desblokeatu gordetako kreditu txartelaren informazioa erabiltzeko</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Gehitu helbidea</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">Editatu helbidea</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Kudeatu helbideak</string>
+    <!-- The header for the full name of an address -->
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Izen osoa</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Izena</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Bigarren izena</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Abizena</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Helbidea</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Hiria</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Estatua</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Posta-kodea</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Herrialdea edo eskualdea</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Telefonoa</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Helbide elektronikoa</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Gorde</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Utzi</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Ezabatu helbidea</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">Ziur zaude helbide hau ezabatu nahi duzula?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">Ezabatu</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">Utzi</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">Gorde helbidea</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">Ezabatu helbidea</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Gehitu bilaketa-motorra</string>
@@ -1808,25 +1858,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Automatikoki ixtea gaituta</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Lagundu Firefox hobetzen</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Zergatik desgaitu dituzu fitxa inaktiboak?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Ez dut ulertzen nola dabilen</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Fitxa zaharrak neronek garbitzea gustatzen zait</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Bi asteko denbora-tartea luzeegia da</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Bi asteko denbora-tartea laburregia da</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Bidali</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Itxi</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Ireki webgune, posta elektroniko eta mezuetako loturak Firefoxen automatikoki.</string>

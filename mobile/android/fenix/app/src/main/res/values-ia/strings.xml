@@ -1598,6 +1598,7 @@
     <string name="preferences_addresses_add_address">Adder adresse</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Gerer adresses</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Adder carta</string>
     <!-- Title of the "Edit card" screen -->
@@ -1925,7 +1926,7 @@
 
     <!-- Pocket recommended stories -->
     <!-- Header text for a section on the home screen. -->
-    <string name="pocket_stories_header_1">Historias hastive</string>
+    <string name="pocket_stories_header_1">Historias que face pensar</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">Historia per argumento</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
@@ -1936,6 +1937,9 @@
     <string name="pocket_stories_feature_caption">Parte del familia de Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Pro saper plus</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Sponsorisate</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Activar le telemetria pro inviar datos.</string>
