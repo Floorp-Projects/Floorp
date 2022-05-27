@@ -1638,9 +1638,9 @@ parent:
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);
 
-    async TestCookiePermissionDecided(MaybeDiscardedBrowsingContext aContext,
-                         Principal aPrincipal)
-          returns (bool? allowed);
+    async AsyncShouldAllowAccessFor(MaybeDiscardedBrowsingContext aContext,
+                                    Principal aPrincipal)
+          returns (bool allowed, uint32_t rejectReason);
 
    /**
     * When media element's controlled state changed in the content process, we
