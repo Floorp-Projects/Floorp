@@ -1321,7 +1321,7 @@ abstract class BaseBrowserFragment :
      * Exit fullscreen mode when exiting PIP mode
      */
     private fun pipModeChanged(session: SessionState) {
-        if (!session.content.pictureInPictureEnabled && session.content.fullScreen) {
+        if (!session.content.pictureInPictureEnabled && session.content.fullScreen && isAdded) {
             onBackPressed()
             fullScreenChanged(false)
         }
