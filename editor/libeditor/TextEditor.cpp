@@ -633,6 +633,23 @@ nsresult TextEditor::SelectEntireDocument() {
 
 EventTarget* TextEditor::GetDOMEventTarget() const { return mEventTarget; }
 
+void TextEditor::ReinitializeSelection(Element& aElement) {
+  if (NS_WARN_IF(Destroyed())) {
+    return;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return;
+  }
+
+  OnFocus(aElement);
+
+  // If previous focused editor turn on spellcheck and this editor doesn't
+  // turn on it, spellcheck state is mismatched.  So we need to re-sync it.
+  SyncRealTimeSpell();
+}
+
 nsresult TextEditor::SetAttributeOrEquivalent(Element* aElement,
                                               nsAtom* aAttribute,
                                               const nsAString& aValue,
