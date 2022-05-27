@@ -614,7 +614,7 @@ class EditorBase : public nsIEditor,
    * @param aOriginalEventTargetNode    The original event target node of the
    *                                    focus event.
    */
-  MOZ_CAN_RUN_SCRIPT void OnFocus(const nsINode& aOriginalEventTargetNode);
+  MOZ_CAN_RUN_SCRIPT nsresult OnFocus(const nsINode& aOriginalEventTargetNode);
 
   /** Resyncs spellchecking state (enabled/disabled).  This should be called
    * when anything that affects spellchecking state changes, such as the
