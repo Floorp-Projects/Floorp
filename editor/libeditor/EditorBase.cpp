@@ -469,14 +469,18 @@ nsresult EditorBase::PostCreateInternal() {
     // If the text control gets reframed during focus, Focus() would not be
     // called, so take a chance here to see if we need to spell check the text
     // control.
-    RefPtr<EditorEventListener> eventListener = mEventListener;
-    eventListener->SpellCheckIfNeeded();
-    if (NS_WARN_IF(Destroyed())) {
+    nsresult rv = FlushPendingSpellCheck();
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::FlushPendingSpellCheck() caused destroying the editor");
       return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
     }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::FlushPendingSpellCheck() failed, but ignored");
 
     IMEState newState;
-    nsresult rv = GetPreferredIMEState(&newState);
+    rv = GetPreferredIMEState(&newState);
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::GetPreferredIMEState() failed");
       return NS_OK;
@@ -5627,6 +5631,23 @@ bool EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const {
   // Otherwise, we shouldn't handle any input events when we're not an active
   // element of the DOM window.
   return IsActiveInDOMWindow();
+}
+
+nsresult EditorBase::FlushPendingSpellCheck() {
+  // If the spell check skip flag is still enabled from creation time,
+  // disable it because focused editors are allowed to spell check.
+  if (!ShouldSkipSpellCheck()) {
+    return NS_OK;
+  }
+  MOZ_ASSERT(!IsHTMLEditor(), "HTMLEditor should not has pending spell checks");
+  nsresult rv = RemoveFlags(nsIEditor::eEditorSkipSpellCheck);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::RemoveFlags(nsIEditor::eEditorSkipSpellCheck) failed");
+  return rv;
 }
 
 bool EditorBase::CanKeepHandlingFocusEvent(
