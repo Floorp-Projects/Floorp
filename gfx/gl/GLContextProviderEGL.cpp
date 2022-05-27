@@ -847,6 +847,9 @@ EGLSurface GLContextEGL::CreateWaylandBufferSurface(
 EGLSurface GLContextEGL::CreateGBMBufferSurface(EglDisplay& egl,
                                                 EGLConfig config,
                                                 mozilla::gfx::IntSize& pbsize) {
+  if (!nsGbmLib::IsAvailable()) {
+    return nullptr;
+  }
   struct gbm_surface* gbmSurface = nsGbmLib::CreateSurface(
       GetDMABufDevice()->GetGbmDevice(), pbsize.width, pbsize.height,
       GBM_FORMAT_ARGB8888, GBM_BO_USE_RENDERING);
