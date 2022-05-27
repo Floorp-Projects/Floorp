@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import "./ManagedTree.css";
 
 const Tree = require("devtools/client/shared/components/Tree");
@@ -18,6 +19,20 @@ class ManagedTree extends Component {
   static defaultProps = {
     onFocus: () => {},
   };
+
+  static get propTypes() {
+    return {
+      expanded: PropTypes.object,
+      focused: PropTypes.any,
+      getPath: PropTypes.func.isRequired,
+      highlightItems: PropTypes.array,
+      listItems: PropTypes.array,
+      onCollapse: PropTypes.func.isRequired,
+      onExpand: PropTypes.func.isRequired,
+      onFocus: PropTypes.func.isRequired,
+      renderItem: PropTypes.func.isRequired,
+    };
+  }
 
   componentWillReceiveProps(nextProps) {
     const { listItems, highlightItems } = this.props;

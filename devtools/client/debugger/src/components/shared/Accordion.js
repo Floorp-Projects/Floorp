@@ -3,11 +3,18 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { cloneElement, Component } from "react";
+import PropTypes from "prop-types";
 import AccessibleImage from "./AccessibleImage";
 
 import "./Accordion.css";
 
 class Accordion extends Component {
+  static get propTypes() {
+    return {
+      items: PropTypes.array.isRequired,
+    };
+  }
+
   handleHeaderClick(i) {
     const item = this.props.items[i];
     const opened = !item.opened;
