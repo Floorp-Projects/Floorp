@@ -467,11 +467,6 @@ deps = {
       'dep_type': 'cipd',
   },
 
-  'src/third_party/turbine/src': {
-      'url': 'https://chromium.googlesource.com/external/github.com/google/turbine.git' + '@' + '3c31e67ae25b5e43713fd868e3a9b535ff6298af',
-      'condition': 'checkout_android',
-  },
-
   'src/tools/luci-go': {
       'packages': [
         {
