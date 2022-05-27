@@ -49,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -333,15 +334,21 @@ private fun LayoutCoordinates.isVisible(
 ): Boolean {
     if (!isAttached) return false
 
-    return boundsInWindow().toAndroidRect().getIntersectPercentage(visibleRect) >= threshold
+    return boundsInWindow().toAndroidRect().getIntersectPercentage(size, visibleRect) >= threshold
 }
 
 /**
  * Returns the ratio of how much this intersects with [other].
+ *
+ * @param realSize [IntSize] containing the height and with of the composable.
+ * (The Rect may have a smaller height / width accounting for just what is visible)
+ * @param other Other [Rect] for whcih to check the intersection area.
+ *
+ * @return A `0..1` float range for how much this [Rect] intersects with other.
  */
 @FloatRange(from = 0.0, to = 1.0)
-private fun Rect.getIntersectPercentage(other: Rect): Float {
-    val composableArea = height() * width()
+private fun Rect.getIntersectPercentage(realSize: IntSize, other: Rect): Float {
+    val composableArea = realSize.height * realSize.width
     val heightOverlap = max(0, min(bottom, other.bottom) - max(top, other.top))
     val widthOverlap = max(0, min(right, other.right) - max(left, other.left))
     val intersectionArea = heightOverlap * widthOverlap
