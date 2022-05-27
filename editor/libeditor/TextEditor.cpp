@@ -683,6 +683,13 @@ nsresult TextEditor::OnFocus(const nsINode& aOriginalEventTargetNode) {
   return EditorBase::OnFocus(aOriginalEventTargetNode);
 }
 
+nsresult TextEditor::OnBlur(const EventTarget* aEventTarget) {
+  nsresult rv = FinalizeSelection();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::FinalizeSelection() failed");
+  return rv;
+}
+
 nsresult TextEditor::SetAttributeOrEquivalent(Element* aElement,
                                               nsAtom* aAttribute,
                                               const nsAString& aValue,

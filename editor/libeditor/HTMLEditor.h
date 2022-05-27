@@ -202,6 +202,7 @@ class HTMLEditor final : public EditorBase,
   nsresult GetPreferredIMEState(widget::IMEState* aState) final;
   MOZ_CAN_RUN_SCRIPT nsresult
   OnFocus(const nsINode& aOriginalEventTargetNode) final;
+  nsresult OnBlur(const dom::EventTarget* aEventTarget) final;
 
   /**
    * GetBackgroundColorState() returns what the background color of the

@@ -151,6 +151,8 @@ class TextEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult
   OnFocus(const nsINode& aOriginalEventTargetNode) final;
 
+  nsresult OnBlur(const dom::EventTarget* aEventTarget) final;
+
   /**
    * The maximum number of characters allowed.
    *   default: -1 (unlimited).
