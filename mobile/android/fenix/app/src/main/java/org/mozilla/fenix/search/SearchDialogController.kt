@@ -205,6 +205,9 @@ class SearchDialogController(
                 && searchEngine.id == Core.BOOKMARKS_SEARCH_ENGINE_ID -> {
                 fragmentStore.dispatch(SearchFragmentAction.SearchBookmarksEngineSelected(searchEngine))
             }
+            searchEngine.type == SearchEngine.Type.APPLICATION && searchEngine.id == Core.TABS_SEARCH_ENGINE_ID -> {
+                fragmentStore.dispatch(SearchFragmentAction.SearchTabsEngineSelected(searchEngine))
+            }
             searchEngine == store.state.search.selectedOrDefaultSearchEngine -> {
                 fragmentStore.dispatch(SearchFragmentAction.SearchDefaultEngineSelected(searchEngine, settings))
             }

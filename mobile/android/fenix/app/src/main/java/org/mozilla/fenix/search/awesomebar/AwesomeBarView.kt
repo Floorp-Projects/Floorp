@@ -285,6 +285,7 @@ class AwesomeBarView(
             )
             is SearchEngineSource.History -> emptyList()
             is SearchEngineSource.Bookmarks -> emptyList()
+            is SearchEngineSource.Tabs -> emptyList()
             is SearchEngineSource.None -> emptyList()
         }
     }

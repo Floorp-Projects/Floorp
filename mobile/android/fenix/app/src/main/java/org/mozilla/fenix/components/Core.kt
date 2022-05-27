@@ -206,6 +206,12 @@ class Core(
                 icon = getDrawable(context, R.drawable.ic_bookmarks_search)?.toBitmap()!!,
             ),
             createApplicationSearchEngine(
+                id = TABS_SEARCH_ENGINE_ID,
+                name = context.getString(R.string.preferences_tabs),
+                url = "",
+                icon = getDrawable(context, R.drawable.ic_tabs_search)?.toBitmap()!!,
+            ),
+            createApplicationSearchEngine(
                 id = HISTORY_SEARCH_ENGINE_ID,
                 name = context.getString(R.string.library_history),
                 url = "",
@@ -521,6 +527,7 @@ class Core(
         private const val CONTILE_MAX_CACHE_AGE = 60L // 60 minutes
         const val HISTORY_SEARCH_ENGINE_ID = "history_search_engine_id"
         const val BOOKMARKS_SEARCH_ENGINE_ID = "bookmarks_search_engine_id"
+        const val TABS_SEARCH_ENGINE_ID = "tabs_search_engine_id"
 
         // Maximum number of suggestions returned from the history search engine source.
         const val METADATA_HISTORY_SUGGESTION_LIMIT = 100
