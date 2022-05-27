@@ -3256,6 +3256,17 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
+  // If text changes, we must also update spelling errors.
+  if (aCacheDomain & (CacheDomain::Spelling | CacheDomain::Text) &&
+      IsTextLeaf()) {
+    auto spellingErrors = TextLeafPoint::GetSpellingErrorOffsets(this);
+    if (!spellingErrors.IsEmpty()) {
+      fields->SetAttribute(nsGkAtoms::spelling, std::move(spellingErrors));
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::spelling, DeleteEntry());
+    }
+  }
+
   nsIFrame* frame = GetFrame();
   if (aCacheDomain & (CacheDomain::Text | CacheDomain::Bounds) &&
       !HasChildren()) {

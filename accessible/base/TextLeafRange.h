@@ -15,6 +15,7 @@
 
 namespace mozilla::a11y {
 class Accessible;
+class LocalAccessible;
 
 /**
  * Represents a point within accessible text.
@@ -127,6 +128,13 @@ class TextLeafPoint final {
    */
   already_AddRefed<AccAttributes> GetTextAttributesLocalAcc(
       bool aIncludeDefaults = true) const;
+
+  /**
+   * Get the offsets of all spelling errors in a given LocalAccessible. This
+   * should only be used when pushing the cache. Most callers will want
+   * FindTextAttrsStart instead.
+   */
+  static nsTArray<int32_t> GetSpellingErrorOffsets(LocalAccessible* aAcc);
 
   /**
    * Find the start of a run of text attributes in a specific direction.

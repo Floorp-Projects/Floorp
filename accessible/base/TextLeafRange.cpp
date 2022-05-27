@@ -1065,7 +1065,38 @@ bool TextLeafPoint::IsInSpellingError() const {
     // spelling error.
     return !domRanges.IsEmpty();
   }
-  return false;
+
+  RemoteAccessible* acc = mAcc->AsRemote();
+  MOZ_ASSERT(acc);
+  if (!acc->mCachedFields) {
+    return false;
+  }
+  auto spellingErrors =
+      acc->mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::spelling);
+  if (!spellingErrors) {
+    return false;
+  }
+  size_t index;
+  const bool foundOrigin = BinarySearch(
+      *spellingErrors, 0, spellingErrors->Length(), mOffset, &index);
+  // In spellingErrors, even indices are start offsets, odd indices are end
+  // offsets.
+  const bool foundStart = index % 2 == 0;
+  if (foundOrigin) {
+    // mOffset is a spelling error boundary. If it's a start offset, we're in a
+    // spelling error.
+    return foundStart;
+  }
+  // index points at the next spelling error boundary after mOffset.
+  if (index == 0) {
+    return false;  // No spelling errors before mOffset.
+  }
+  if (foundStart) {
+    // We're not in a spelling error because it starts after mOffset.
+    return false;
+  }
+  // A spelling error ends after mOffset.
+  return true;
 }
 
 TextLeafPoint TextLeafPoint::FindSpellingErrorSameAcc(
@@ -1123,8 +1154,86 @@ TextLeafPoint TextLeafPoint::FindSpellingErrorSameAcc(
         }
       }
     }
+    return TextLeafPoint();
   }
-  return TextLeafPoint();
+
+  RemoteAccessible* acc = mAcc->AsRemote();
+  MOZ_ASSERT(acc);
+  if (!acc->mCachedFields) {
+    return TextLeafPoint();
+  }
+  auto spellingErrors =
+      acc->mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::spelling);
+  if (!spellingErrors) {
+    return TextLeafPoint();
+  }
+  size_t index;
+  if (BinarySearch(*spellingErrors, 0, spellingErrors->Length(), mOffset,
+                   &index)) {
+    // mOffset is in spellingErrors.
+    if (aIncludeOrigin) {
+      return *this;
+    }
+    if (aDirection == eDirNext) {
+      // We don't want the origin, so move to the next spelling error boundary
+      // after mOffset.
+      ++index;
+    }
+  }
+  // index points at the next spelling error boundary after mOffset.
+  if (aDirection == eDirNext) {
+    if (spellingErrors->Length() == index) {
+      return TextLeafPoint();  // No spelling error boundary after us.
+    }
+    return TextLeafPoint(mAcc, (*spellingErrors)[index]);
+  }
+  if (index == 0) {
+    return TextLeafPoint();  // No spelling error boundary before us.
+  }
+  // Decrement index so it points at a spelling error boundary before mOffset.
+  --index;
+  if ((*spellingErrors)[index] == -1) {
+    MOZ_ASSERT(index == 0);
+    // A spelling error starts before mAcc.
+    return TextLeafPoint();
+  }
+  return TextLeafPoint(mAcc, (*spellingErrors)[index]);
+}
+
+/* static */
+nsTArray<int32_t> TextLeafPoint::GetSpellingErrorOffsets(
+    LocalAccessible* aAcc) {
+  nsINode* node = aAcc->GetNode();
+  auto domRanges = FindDOMSpellingErrors(
+      aAcc, 0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT);
+  // Our offsets array will contain two offsets for each range: one for the
+  // start, one for the end. That is, the array is of the form:
+  // [r1start, r1end, r2start, r2end, ...]
+  nsTArray<int32_t> offsets(domRanges.Length() * 2);
+  for (nsRange* domRange : domRanges) {
+    if (domRange->GetStartContainer() == node) {
+      offsets.AppendElement(static_cast<int32_t>(ContentToRenderedOffset(
+          aAcc, static_cast<int32_t>(domRange->StartOffset()))));
+    } else {
+      // This range overlaps aAcc, but starts before it.
+      // This can only happen for the first range.
+      MOZ_ASSERT(domRange == *domRanges.begin() && offsets.IsEmpty());
+      // Using -1 here means this won't be treated as the start of a spelling
+      // error range, while still indicating that we're within a spelling error.
+      offsets.AppendElement(-1);
+    }
+    if (domRange->GetEndContainer() == node) {
+      offsets.AppendElement(static_cast<int32_t>(ContentToRenderedOffset(
+          aAcc, static_cast<int32_t>(domRange->EndOffset()))));
+    } else {
+      // This range overlaps aAcc, but ends after it.
+      // This can only happen for the last range.
+      MOZ_ASSERT(domRange == *domRanges.rbegin());
+      // We don't append -1 here because this would just make things harder for
+      // a binary search.
+    }
+  }
+  return offsets;
 }
 
 already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
