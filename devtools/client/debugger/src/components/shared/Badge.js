@@ -3,10 +3,15 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React from "react";
+import PropTypes from "prop-types";
 import "./Badge.css";
 
 const Badge = ({ children }) => (
   <span className="badge text-white text-center">{children}</span>
 );
+
+Badge.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export default Badge;

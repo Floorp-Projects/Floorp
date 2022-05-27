@@ -4,6 +4,7 @@
 
 import classnames from "classnames";
 import React from "react";
+import PropTypes from "prop-types";
 
 import AccessibleImage from "../AccessibleImage";
 
@@ -43,6 +44,12 @@ const CommandBarButton = props => {
       {children}
     </button>
   );
+};
+
+CommandBarButton.propTypes = {
+  children: PropTypes.node.isRequired,
+  className: PropTypes.string.isRequired,
+  pressed: PropTypes.bool,
 };
 
 export default CommandBarButton;

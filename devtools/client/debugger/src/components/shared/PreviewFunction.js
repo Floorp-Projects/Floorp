@@ -12,6 +12,12 @@ import "./PreviewFunction.css";
 const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 export default class PreviewFunction extends Component {
+  static get propTypes() {
+    return {
+      func: PropTypes.object.isRequired,
+    };
+  }
+
   renderFunctionName(func) {
     const { l10n } = this.context;
     const name = formatDisplayName(func, undefined, l10n);

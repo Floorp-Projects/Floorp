@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 
 import { connect } from "../utils/connect";
 
@@ -13,6 +14,14 @@ import { formatKeyShortcut } from "../utils/text";
 import "./WelcomeBox.css";
 
 export class WelcomeBox extends Component {
+  static get propTypes() {
+    return {
+      openQuickOpen: PropTypes.func.isRequired,
+      setActiveSearch: PropTypes.func.isRequired,
+      toggleShortcutsModal: PropTypes.func.isRequired,
+    };
+  }
+
   render() {
     const searchSourcesShortcut = formatKeyShortcut(
       L10N.getStr("sources.search.key2")

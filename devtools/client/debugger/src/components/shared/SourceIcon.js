@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
+import PropTypes from "prop-types";
 
 import { connect } from "../../utils/connect";
 
@@ -15,6 +16,15 @@ import { getSymbols, getTabs } from "../../selectors";
 import "./SourceIcon.css";
 
 class SourceIcon extends PureComponent {
+  static get propTypes() {
+    return {
+      framework: PropTypes.string.isRequired,
+      modifier: PropTypes.func.isRequired,
+      source: PropTypes.object.isRequired,
+      symbols: PropTypes.object,
+    };
+  }
+
   render() {
     const { modifier, source, symbols, framework } = this.props;
     let iconClass = "";
