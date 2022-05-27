@@ -185,6 +185,7 @@ rtc_library("rtc_pc_base") {
 }
 
 rtc_source_set("session_description") {
+  visibility = [ "*" ]
   sources = [
     # Future home of
     #"session_description.cc",
@@ -209,6 +210,7 @@ rtc_source_set("session_description") {
 }
 
 rtc_source_set("simulcast_description") {
+  visibility = [ "*" ]
   sources = [
     # Future home of
     # "simulcast_description.cc",
