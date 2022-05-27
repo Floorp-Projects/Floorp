@@ -20,6 +20,8 @@
     <string name="mozac_feature_prompt_dont_save">Ez gorde</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Ez gorde inoiz</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">Une honetan ez</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Gorde</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -103,6 +105,12 @@
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Zabaldu iradokitako kreditu-txartelak</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Tolestu iradokitako kreditu-txartelak</string>
-    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Kudeatu kreditu-txartelak</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Gorde txartela modu seguruan?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Eguneratu txartelaren iraungitze-data?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Txartel-zenbakia zifratu egingo da. Segurtasun-kodea ez da gordeko.</string>
 </resources>
