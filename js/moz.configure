@@ -202,8 +202,8 @@ def simulator(jit_enabled, simulator_enabled, target):
             die("The %s simulator only works on x86." % sim_cpu)
 
     if sim_cpu in ("arm64", "mips64", "loong64"):
-        if target.cpu != "x86_64":
-            die("The %s simulator only works on x86-64." % sim_cpu)
+        if target.cpu != "x86_64" and target.cpu != "aarch64":
+            die("The %s simulator only works on x86-64 or arm64." % sim_cpu)
 
     return namespace(**{sim_cpu: True})
 
