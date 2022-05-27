@@ -148,6 +148,9 @@ class TextEditor final : public EditorBase,
   PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
                            nsIPrincipal* aPrincipal = nullptr) final;
 
+  MOZ_CAN_RUN_SCRIPT nsresult
+  OnFocus(const nsINode& aOriginalEventTargetNode) final;
+
   /**
    * The maximum number of characters allowed.
    *   default: -1 (unlimited).

@@ -5661,34 +5661,7 @@ bool EditorBase::CanKeepHandlingFocusEvent(
 }
 
 nsresult EditorBase::OnFocus(const nsINode& aOriginalEventTargetNode) {
-  RefPtr<PresShell> presShell = GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
-    return NS_ERROR_FAILURE;
-  }
-  // Let's update the layout information right now because there are some
-  // pending notifications and flushing them may cause destroying the editor.
-  presShell->FlushPendingNotifications(FlushType::Layout);
-  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent(aOriginalEventTargetNode))) {
-    return NS_OK;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Spell check a textarea the first time that it is focused.
-  nsresult rv = FlushPendingSpellCheck();
-  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    NS_WARNING("EditorBase::FlushPendingSpellCheck() failed");
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "EditorBase::FlushPendingSpellCheck() failed, but ignored");
-  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent(aOriginalEventTargetNode))) {
-    return NS_OK;
-  }
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   InitializeSelection(aOriginalEventTargetNode);
   mSpellCheckerDictionaryUpdated = false;
