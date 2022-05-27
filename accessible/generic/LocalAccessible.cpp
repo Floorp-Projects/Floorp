@@ -3207,31 +3207,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  nsIFrame* frame = GetFrame();
-  if ((aCacheDomain & CacheDomain::TextBounds) && IsTextLeaf()) {
-    if (frame && frame->IsTextFrame()) {
-      nsTArray<int32_t> charData;
-      nsIFrame* currTextFrame = frame;
-      while (currTextFrame) {
-        nsTArray<nsRect> charBounds;
-        currTextFrame->GetCharacterRectsInRange(
-            0, static_cast<nsTextFrame*>(currTextFrame)->GetContentLength(),
-            charBounds);
-        for (const nsRect& rect : charBounds) {
-          charData.AppendElement(rect.x);
-          charData.AppendElement(rect.y);
-          charData.AppendElement(rect.width);
-          charData.AppendElement(rect.height);
-        }
-        currTextFrame = currTextFrame->GetNextContinuation();
-      }
-
-      if (charData.Length()) {
-        fields->SetAttribute(nsGkAtoms::characterData, std::move(charData));
-      }
-    }
-  }
-
   bool boundsChanged = false;
   if (aCacheDomain & CacheDomain::Bounds) {
     nsRect newBoundsRect = ParentRelativeBounds();
@@ -3281,6 +3256,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
+  nsIFrame* frame = GetFrame();
   if (aCacheDomain & (CacheDomain::Text | CacheDomain::Bounds) &&
       !HasChildren()) {
     // We cache line start offsets for both text and non-text leaf Accessibles
@@ -3289,9 +3265,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         TextLeafPoint(this, 0).FindNextLineStartSameLocalAcc(
             /* aIncludeOrigin */ true);
     int32_t lineStartOffset = lineStart ? lineStart.mOffset : -1;
-    // We push line starts in two cases:
+    // We push line starts and text bounds in two cases:
     // 1. Text or bounds changed, which means it's very likely that line starts
-    // changed too.
+    // and text bounds changed too.
     // 2. CacheDomain::Bounds was requested (indicating that the frame was
     // reflowed) but the bounds  didn't actually change. This can happen when
     // the spanned text is non-rectangular. For example, an Accessible might
@@ -3315,6 +3291,28 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(nsGkAtoms::line, DeleteEntry());
+      }
+
+      if (frame && frame->IsTextFrame()) {
+        nsTArray<int32_t> charData;
+        nsIFrame* currTextFrame = frame;
+        while (currTextFrame) {
+          nsTArray<nsRect> charBounds;
+          currTextFrame->GetCharacterRectsInRange(
+              0, static_cast<nsTextFrame*>(currTextFrame)->GetContentLength(),
+              charBounds);
+          for (const nsRect& rect : charBounds) {
+            charData.AppendElement(rect.x);
+            charData.AppendElement(rect.y);
+            charData.AppendElement(rect.width);
+            charData.AppendElement(rect.height);
+          }
+          currTextFrame = currTextFrame->GetNextContinuation();
+        }
+
+        if (charData.Length()) {
+          fields->SetAttribute(nsGkAtoms::characterData, std::move(charData));
+        }
       }
     }
   }
@@ -3483,7 +3481,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       }
     }
 
-    if (nsIFrame* frame = GetFrame()) {
+    if (frame) {
       // Note our frame's current computed style so we can track style changes
       // later on.
       mOldComputedStyle = frame->Style();
