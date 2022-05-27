@@ -1883,6 +1883,16 @@ void PeerConnection::SetConnectionState(
             configuration_.ice_candidate_pool_size, 0, 255, 256);
         break;
     }
+
+    // Record whether there was a local or remote provisional answer.
+    ProvisionalAnswerUsage pranswer = kProvisionalAnswerNotUsed;
+    if (local_description()->GetType() == SdpType::kPrAnswer) {
+      pranswer = kProvisionalAnswerLocal;
+    } else if (remote_description()->GetType() == SdpType::kPrAnswer) {
+      pranswer = kProvisionalAnswerRemote;
+    }
+    RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.ProvisionalAnswer",
+                              pranswer, kProvisionalAnswerMax);
   }
 }
 
