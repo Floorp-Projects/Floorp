@@ -5199,7 +5199,7 @@ nsresult EditorBase::HandleInlineSpellCheck(
   return rv;
 }
 
-Element* EditorBase::FindSelectionRoot(nsINode* aNode) const {
+Element* EditorBase::FindSelectionRoot(const nsINode& aNode) const {
   return GetRoot();
 }
 
@@ -5210,11 +5210,12 @@ void EditorBase::InitializeSelectionAncestorLimit(
   SelectionRef().SetAncestorLimiter(&aAncestorLimit);
 }
 
-nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
+nsresult EditorBase::InitializeSelection(
+    const nsINode& aOriginalEventTargetNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsCOMPtr<nsIContent> selectionRootContent =
-      FindSelectionRoot(&aFocusEventTargetNode);
+      FindSelectionRoot(aOriginalEventTargetNode);
   if (!selectionRootContent) {
     return NS_OK;
   }
@@ -5246,7 +5247,7 @@ nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
   // Also, make sure to always ignore it for designMode, since that effectively
   // overrides everything and we allow to edit stuff with
   // contenteditable="false" subtrees in such a document.
-  caret->SetIgnoreUserModify(aFocusEventTargetNode.IsInDesignMode());
+  caret->SetIgnoreUserModify(aOriginalEventTargetNode.IsInDesignMode());
 
   // Init selection
   rvIgnored =
@@ -5623,13 +5624,13 @@ bool EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const {
   return IsActiveInDOMWindow();
 }
 
-void EditorBase::OnFocus(nsINode& aFocusEventTargetNode) {
+void EditorBase::OnFocus(const nsINode& aOriginalEventTargetNode) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return;
   }
 
-  InitializeSelection(aFocusEventTargetNode);
+  InitializeSelection(aOriginalEventTargetNode);
   mSpellCheckerDictionaryUpdated = false;
   if (mInlineSpellChecker && CanEnableSpellCheck()) {
     DebugOnly<nsresult> rvIgnored =
