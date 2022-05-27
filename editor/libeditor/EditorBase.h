@@ -594,27 +594,13 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] virtual Element* FindSelectionRoot(const nsINode& aNode) const;
 
   /**
-   * Check whether the caller can keep handling focus event.
-   *
-   * @param aOriginalEventTargetNode    The original event target of the focus
-   *                                    event.
-   */
-  [[nodiscard]] bool CanKeepHandlingFocusEvent(
-      const nsINode& aOriginalEventTargetNode) const;
-
-  /**
-   * This editor has skipped spell checking and not yet flushed, this runs
-   * the spell checker.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult FlushPendingSpellCheck();
-
-  /**
    * OnFocus() is called when we get a focus event.
    *
    * @param aOriginalEventTargetNode    The original event target node of the
    *                                    focus event.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult OnFocus(const nsINode& aOriginalEventTargetNode);
+  MOZ_CAN_RUN_SCRIPT virtual nsresult OnFocus(
+      const nsINode& aOriginalEventTargetNode);
 
   /**
    * OnBlur() is called when we're blurred.
@@ -2249,6 +2235,21 @@ class EditorBase : public nsIEditor,
   MOZ_ALWAYS_INLINE EditorType GetEditorType() const {
     return mIsHTMLEditorClass ? EditorType::HTML : EditorType::Text;
   }
+
+  /**
+   * Check whether the caller can keep handling focus event.
+   *
+   * @param aOriginalEventTargetNode    The original event target of the focus
+   *                                    event.
+   */
+  [[nodiscard]] bool CanKeepHandlingFocusEvent(
+      const nsINode& aOriginalEventTargetNode) const;
+
+  /**
+   * If this editor has skipped spell checking and not yet flushed, this runs
+   * the spell checker.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult FlushPendingSpellCheck();
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult EnsureEmptyTextFirstChild();
 
