@@ -197,7 +197,7 @@ class HTMLEditor final : public EditorBase,
   Element* GetFocusedElement() const final;
   bool IsActiveInDOMWindow() const final;
   dom::EventTarget* GetDOMEventTarget() const final;
-  Element* FindSelectionRoot(nsINode* aNode) const final;
+  [[nodiscard]] Element* FindSelectionRoot(const nsINode& aNode) const final;
   bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const final;
   nsresult GetPreferredIMEState(widget::IMEState* aState) final;
 

@@ -82,15 +82,17 @@ class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
       return;
     }
 
-    Element* root = aHTMLEditor.FindSelectionRoot(&aStartPointNode);
-    if (root) {
-      aHTMLEditor.InitializeSelectionAncestorLimit(*root);
-      mSelection = &aSelection;
-      // Setting ancestor limiter may change ranges which were outer of
-      // the new limiter.  Therefore, we need to reinitialize aRanges.
-      if (aRanges) {
-        aRanges->Initialize(aSelection);
-      }
+    Element* selectionRootElement =
+        aHTMLEditor.FindSelectionRoot(aStartPointNode);
+    if (!selectionRootElement) {
+      return;
+    }
+    aHTMLEditor.InitializeSelectionAncestorLimit(*selectionRootElement);
+    mSelection = &aSelection;
+    // Setting ancestor limiter may change ranges which were outer of
+    // the new limiter.  Therefore, we need to reinitialize aRanges.
+    if (aRanges) {
+      aRanges->Initialize(aSelection);
     }
   }
 
