@@ -1707,6 +1707,7 @@ impl<'a> SceneBuilder<'a> {
 
                 self.add_backdrop_filter(
                     spatial_node_index,
+                    info.common.clip_id,
                     clip_chain_id,
                     &layout,
                     filters,
@@ -2217,6 +2218,7 @@ impl<'a> SceneBuilder<'a> {
                 prim_list: PrimitiveList::empty(),
                 prim_flags,
                 spatial_node_index,
+                clip_id,
                 clip_chain_id,
                 composite_ops,
                 blit_reason,
@@ -3601,6 +3603,7 @@ impl<'a> SceneBuilder<'a> {
     pub fn add_backdrop_filter(
         &mut self,
         spatial_node_index: SpatialNodeIndex,
+        clip_id: ClipId,
         clip_chain_id: ClipChainId,
         info: &LayoutPrimitiveInfo,
         filters: Vec<Filter>,
@@ -3614,12 +3617,39 @@ impl<'a> SceneBuilder<'a> {
 
         self.make_current_slice_atomic_if_required();
 
+        // Ensure we create a clip-chain for the capture primitive that matches
+        // the render primitive, otherwise one might get culled while the other
+        // is considered visible.
+        let mut filter_clips = Vec::new();
+        for sc in self.sc_stack.iter().rev() {
+            if sc.flags.contains(StackingContextFlags::WRAPS_BACKDROP_FILTER) {
+                if let Some(clip_id) = sc.clip_id {
+                    filter_clips.push(clip_id);
+                }
+            } else {
+                break;
+            }
+        }
+
+        let filter_clip_chain_id = if filter_clips.is_empty() {
+            clip_chain_id
+        } else {
+            self.clip_store.push_clip_root(None, false);
+            for clip_id in filter_clips {
+                self.clip_store.push_clip_root(Some(clip_id), true);
+            }
+            let filtered_clip_chain_id = self.clip_store.get_or_build_clip_chain_id(clip_id);
+            self.clip_store.pop_clip_root();
+
+            filtered_clip_chain_id
+        };
+
         // Create the backdrop prim - this is a placeholder which sets the size of resolve
         // picture that reads from the backdrop root
         let backdrop_capture_instance = self.create_primitive(
             info,
             spatial_node_index,
-            ClipChainId::NONE,
+            filter_clip_chain_id,
             BackdropCapture {
             },
         );
@@ -3900,6 +3930,9 @@ struct FlattenedStackingContext {
 
     /// The positioning node for this stacking context
     spatial_node_index: SpatialNodeIndex,
+
+    /// The clip id for this stacking context
+    clip_id: Option<ClipId>,
 
     /// The clip chain for this stacking context
     clip_chain_id: ClipChainId,
