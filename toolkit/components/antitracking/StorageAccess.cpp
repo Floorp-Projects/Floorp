@@ -384,6 +384,27 @@ bool StorageDisabledByAntiTracking(dom::Document* aDocument, nsIURI* aURI,
       aDocument->NodePrincipal(), aURI, aRejectedReason);
 }
 
+RefPtr<AsyncStorageDisabledByAntiTrackingPromise>
+AsyncStorageDisabledByAntiTracking(dom::BrowsingContext* aContext,
+                                   nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aContext);
+  MOZ_ASSERT(aPrincipal);
+
+  return ContentBlocking::AsyncShouldAllowAccessFor(aContext, aPrincipal)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [](const ContentBlocking::AsyncShouldAllowAccessForPromise::
+                 ResolveOrRejectValue&& aValue) {
+            if (aValue.IsResolve()) {
+              return AsyncStorageDisabledByAntiTrackingPromise::CreateAndReject(
+                  aValue.ResolveValue(), __func__);
+            }
+
+            return AsyncStorageDisabledByAntiTrackingPromise::CreateAndResolve(
+                aValue.RejectValue(), __func__);
+          });
+}
+
 bool ShouldPartitionStorage(StorageAccess aAccess) {
   return aAccess == StorageAccess::ePartitionTrackersOrDeny ||
          aAccess == StorageAccess::ePartitionForeignOrDeny;
