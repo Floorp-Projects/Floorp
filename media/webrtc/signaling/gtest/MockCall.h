@@ -75,7 +75,21 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStream {
     return mRtpSources;
   }
 
-  void Reconfigure(const Config& config) override;
+  virtual void SetDepacketizerToDecoderFrameTransformer(
+      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
+      override {
+    // Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure
+    // method.
+    MOZ_ASSERT(false);
+  }
+  virtual void SetDecoderMap(
+      std::map<int, webrtc::SdpAudioFormat> decoder_map) override;
+  virtual void SetUseTransportCcAndNackHistory(bool use_transport_cc,
+                                               int history_ms)  override {
+    // Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure
+    // method.
+    MOZ_ASSERT(false);
+  }
   bool SetBaseMinimumPlayoutDelayMs(int delay_ms) override { return false; }
   int GetBaseMinimumPlayoutDelayMs() const override { return 0; }
 

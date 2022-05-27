@@ -312,7 +312,7 @@ void WebrtcAudioConduit::OnControlConfigChange() {
 
   if (mRecvStream && recvStreamReconfigureNeeded) {
     MOZ_ASSERT(!recvStreamRecreationNeeded);
-    mRecvStream->Reconfigure(mRecvStreamConfig);
+    mRecvStream->SetDecoderMap(mRecvStreamConfig.decoder_map);
   }
 
   if (mSendStream && sendStreamReconfigureNeeded) {
