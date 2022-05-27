@@ -41,8 +41,6 @@ rtc_library("rtc_pc_base") {
   visibility = [ "*" ]
   defines = []
   sources = [
-    "bundle_manager.cc",
-    "bundle_manager.h",
     "channel.cc",
     "channel.h",
     "channel_interface.h",
@@ -58,6 +56,8 @@ rtc_library("rtc_pc_base") {
     "ice_transport.h",
     "jsep_transport.cc",
     "jsep_transport.h",
+    "jsep_transport_collection.cc",
+    "jsep_transport_collection.h",
     "jsep_transport_controller.cc",
     "jsep_transport_controller.h",
     "media_session.cc",
