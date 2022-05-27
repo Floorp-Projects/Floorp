@@ -15,7 +15,6 @@ sysroot-i686-linux-gnu:
     description: "Sysroot for linux32 builds"
     attributes:
         local-toolchain: true
-    run-on-projects: [trunk]
     worker:
         env:
             PACKAGES_TASKS: {task-reference: '<gcc-7>'}
@@ -32,7 +31,6 @@ sysroot-x86_64-linux-gnu:
     description: "Sysroot for linux64 builds"
     attributes:
         local-toolchain: true
-    run-on-projects: [trunk]
     worker:
         env:
             PACKAGES_TASKS: {task-reference: '<gcc-7>'}
@@ -49,7 +47,6 @@ sysroot-x86_64-linux-gnu-x11:
     description: "Sysroot for linux64 builds (X11-only)"
     attributes:
         local-toolchain: true
-    run-on-projects: [trunk]
     worker:
         env:
             PACKAGES_TASKS: {task-reference: '<gcc-7> <gtk3>'}
@@ -67,7 +64,6 @@ sysroot-wasm32-wasi-clang-14:
     description: "Sysroot for wasi"
     attributes:
         local-toolchain: true
-    run-on-projects: [trunk]
     treeherder:
         symbol: TL(sysroot-wasi-14)
     run:
@@ -101,7 +97,6 @@ sysroot-aarch64-linux-gnu:
     description: "Sysroot for linux64 aarch64 builds"
     attributes:
         local-toolchain: true
-    run-on-projects: [trunk]
     treeherder:
         symbol: TL(sysroot-aarch64)
     run:

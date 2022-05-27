@@ -8,7 +8,6 @@ job-defaults:
     description: "dump_syms toolchain build"
     worker:
         max-run-time: 1800
-    run-on-projects: [trunk]
     run:
         script: build-dump-syms.sh
     fetches:

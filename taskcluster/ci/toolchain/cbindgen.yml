@@ -12,7 +12,6 @@ job-defaults:
     run:
         script: build-cbindgen.sh
         toolchain-artifact: public/build/cbindgen.tar.zst
-    run-on-projects: [trunk]
     fetches:
         fetch:
             # If you update this, make sure to update the minimum version in
