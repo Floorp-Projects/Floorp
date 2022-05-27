@@ -5,8 +5,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ComputedTimingFunction.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/ServoBindings.h"
 #include "nsAlgorithm.h"  // For clamped()
+#include "mozilla/layers/LayersMessages.h"
 
 namespace mozilla {
 
@@ -190,6 +192,55 @@ void ComputedTimingFunction::AppendToString(nsACString& aResult) const {
             static_cast<int>(aFunction.mSteps), aFunction.mPos);
       })};
   Servo_SerializeEasing(&timing, &aResult);
+}
+
+Maybe<ComputedTimingFunction> ComputedTimingFunction::FromLayersTimingFunction(
+    const layers::TimingFunction& aTimingFunction) {
+  switch (aTimingFunction.type()) {
+    case layers::TimingFunction::Tnull_t:
+      return Nothing();
+    case layers::TimingFunction::TCubicBezierFunction: {
+      auto cbf = aTimingFunction.get_CubicBezierFunction();
+      return Some(ComputedTimingFunction::CubicBezier(cbf.x1(), cbf.y1(),
+                                                      cbf.x2(), cbf.y2()));
+    }
+    case layers::TimingFunction::TStepFunction: {
+      auto sf = aTimingFunction.get_StepFunction();
+      StyleStepPosition pos = static_cast<StyleStepPosition>(sf.type());
+      return Some(ComputedTimingFunction::Steps(sf.steps(), pos));
+    }
+    case layers::TimingFunction::T__None:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("Unexpected timing function type.");
+  return Nothing();
+}
+
+layers::TimingFunction ComputedTimingFunction::ToLayersTimingFunction(
+    const Maybe<ComputedTimingFunction>& aComputedTimingFunction) {
+  if (aComputedTimingFunction.isNothing()) {
+    return {null_t{}};
+  }
+  return aComputedTimingFunction->mFunction.match(
+      [](const KeywordFunction& aFunction) {
+        return layers::TimingFunction{layers::CubicBezierFunction{
+            static_cast<float>(aFunction.mFunction.X1()),
+            static_cast<float>(aFunction.mFunction.Y1()),
+            static_cast<float>(aFunction.mFunction.X2()),
+            static_cast<float>(aFunction.mFunction.Y2())}};
+      },
+      [](const SMILKeySpline& aFunction) {
+        return layers::TimingFunction{
+            layers::CubicBezierFunction{static_cast<float>(aFunction.X1()),
+                                        static_cast<float>(aFunction.Y1()),
+                                        static_cast<float>(aFunction.X2()),
+                                        static_cast<float>(aFunction.Y2())}};
+      },
+      [](const StepFunc& aFunction) {
+        return layers::TimingFunction{
+            layers::StepFunction{static_cast<int>(aFunction.mSteps),
+                                 static_cast<uint8_t>(aFunction.mPos)}};
+      });
 }
 
 }  // namespace mozilla
