@@ -96,9 +96,21 @@ bool FakeAudioReceiveStream::DeliverRtp(const uint8_t* packet,
   return true;
 }
 
-void FakeAudioReceiveStream::Reconfigure(
-    const webrtc::AudioReceiveStream::Config& config) {
-  config_ = config;
+void FakeAudioReceiveStream::SetDepacketizerToDecoderFrameTransformer(
+    rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer) {
+  config_.frame_transformer = std::move(frame_transformer);
+}
+
+void FakeAudioReceiveStream::SetDecoderMap(
+    std::map<int, webrtc::SdpAudioFormat> decoder_map) {
+  config_.decoder_map = std::move(decoder_map);
+}
+
+void FakeAudioReceiveStream::SetUseTransportCcAndNackHistory(
+    bool use_transport_cc,
+    int history_ms) {
+  config_.rtp.transport_cc = use_transport_cc;
+  config_.rtp.nack.rtp_history_ms = history_ms;
 }
 
 webrtc::AudioReceiveStream::Stats FakeAudioReceiveStream::GetStats(

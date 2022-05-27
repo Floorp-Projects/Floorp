@@ -10,8 +10,6 @@
 
 #include "audio/channel_receive.h"
 
-#include <assert.h>
-
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -566,7 +564,7 @@ ChannelReceive::ChannelReceive(
 }
 
 ChannelReceive::~ChannelReceive() {
-  RTC_DCHECK(construction_thread_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&construction_thread_);
 
   // Unregister the module before stopping playout etc, to match the order
   // things were set up in the ctor.
@@ -658,7 +656,7 @@ void ChannelReceive::ReceivePacket(const uint8_t* packet,
                                    size_t packet_length,
                                    const RTPHeader& header) {
   const uint8_t* payload = packet + header.headerLength;
-  assert(packet_length >= header.headerLength);
+  RTC_DCHECK_GE(packet_length, header.headerLength);
   size_t payload_length = packet_length - header.headerLength;
 
   size_t payload_data_length = payload_length - header.paddingLength;
@@ -873,8 +871,11 @@ void ChannelReceive::SetDepacketizerToDecoderFrameTransformer(
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   // Depending on when the channel is created, the transformer might be set
   // twice. Don't replace the delegate if it was already initialized.
-  if (!frame_transformer || frame_transformer_delegate_)
+  if (!frame_transformer || frame_transformer_delegate_) {
+    RTC_NOTREACHED() << "Not setting the transformer?";
     return;
+  }
+
   InitFrameTransformerDelegate(std::move(frame_transformer));
 }
 
@@ -1093,8 +1094,8 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
       rtcp_send_transport, rtc_event_log, local_ssrc, remote_ssrc,
       jitter_buffer_max_packets, jitter_buffer_fast_playout,
       jitter_buffer_min_delay_ms, jitter_buffer_enable_rtx_handling,
-      decoder_factory, codec_pair_id, frame_decryptor, crypto_options,
-      std::move(frame_transformer), rtcp_event_observer);
+      decoder_factory, codec_pair_id, std::move(frame_decryptor),
+      crypto_options, std::move(frame_transformer), rtcp_event_observer);
 }
 
 }  // namespace voe

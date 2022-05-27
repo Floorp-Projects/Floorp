@@ -924,7 +924,7 @@ webrtc::AudioSendStream* Call::CreateAudioSendStream(
   // TODO(bugs.webrtc.org/11993): call AssociateSendStream and
   // UpdateAggregateNetworkState asynchronously on the network thread.
   for (AudioReceiveStream* stream : audio_receive_streams_) {
-    if (stream->config().rtp.local_ssrc == config.rtp.ssrc) {
+    if (stream->local_ssrc() == config.rtp.ssrc) {
       stream->AssociateSendStream(send_stream);
     }
   }
@@ -952,7 +952,7 @@ void Call::DestroyAudioSendStream(webrtc::AudioSendStream* send_stream) {
   // TODO(bugs.webrtc.org/11993): call AssociateSendStream and
   // UpdateAggregateNetworkState asynchronously on the network thread.
   for (AudioReceiveStream* stream : audio_receive_streams_) {
-    if (stream->config().rtp.local_ssrc == ssrc) {
+    if (stream->local_ssrc() == ssrc) {
       stream->AssociateSendStream(nullptr);
     }
   }
@@ -974,6 +974,7 @@ webrtc::AudioReceiveStream* Call::CreateAudioReceiveStream(
       clock_, transport_send_->packet_router(),
       module_process_thread_->process_thread(), config_.neteq_factory, config,
       config_.audio_state, event_log_);
+  audio_receive_streams_.insert(receive_stream);
 
   // TODO(bugs.webrtc.org/11993): Make the registration on the network thread
   // (asynchronously). The registration and `audio_receiver_controller_` need
@@ -984,7 +985,6 @@ webrtc::AudioReceiveStream* Call::CreateAudioReceiveStream(
   // We could possibly set up the audio_receiver_controller_ association up
   // as part of the async setup.
   receive_rtp_config_.emplace(config.rtp.remote_ssrc, ReceiveRtpConfig(config));
-  audio_receive_streams_.insert(receive_stream);
 
   ConfigureSync(config.sync_group);
 
@@ -1005,22 +1005,24 @@ void Call::DestroyAudioReceiveStream(
   webrtc::internal::AudioReceiveStream* audio_receive_stream =
       static_cast<webrtc::internal::AudioReceiveStream*>(receive_stream);
 
-  const AudioReceiveStream::Config& config = audio_receive_stream->config();
-  uint32_t ssrc = config.rtp.remote_ssrc;
-  receive_side_cc_.GetRemoteBitrateEstimator(UseSendSideBwe(config))
-      ->RemoveStream(ssrc);
-
   // TODO(bugs.webrtc.org/11993): Access the map, rtp config, call ConfigureSync
   // and UpdateAggregateNetworkState on the network thread. The call to
   // `UnregisterFromTransport` should also happen on the network thread.
   audio_receive_stream->UnregisterFromTransport();
-  audio_receive_streams_.erase(audio_receive_stream);
-  const std::string& sync_group = audio_receive_stream->config().sync_group;
 
-  const auto it = sync_stream_mapping_.find(sync_group);
+  uint32_t ssrc = audio_receive_stream->remote_ssrc();
+  const AudioReceiveStream::Config& config = audio_receive_stream->config();
+  receive_side_cc_
+      .GetRemoteBitrateEstimator(
+          UseSendSideBwe(config.rtp.extensions, config.rtp.transport_cc))
+      ->RemoveStream(ssrc);
+
+  audio_receive_streams_.erase(audio_receive_stream);
+
+  const auto it = sync_stream_mapping_.find(config.sync_group);
   if (it != sync_stream_mapping_.end() && it->second == audio_receive_stream) {
     sync_stream_mapping_.erase(it);
-    ConfigureSync(sync_group);
+    ConfigureSync(config.sync_group);
   }
   receive_rtp_config_.erase(ssrc);
 
@@ -1433,6 +1435,7 @@ void Call::OnAllocationLimitsChanged(BitrateAllocationLimits limits) {
                                             std::memory_order_relaxed);
 }
 
+// RTC_RUN_ON(worker_thread_)
 void Call::ConfigureSync(const std::string& sync_group) {
   // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
   // Set sync only if there was no previous one.
