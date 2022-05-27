@@ -27,6 +27,8 @@ class ScaledFontWin : public ScaledFontBase {
 
   SkTypeface* CreateSkTypeface() override;
 
+  bool MayUseBitmaps() override { return true; }
+
  protected:
   cairo_font_face_t* CreateCairoFontFace(
       cairo_font_options_t* aFontOptions) override;
