@@ -644,6 +644,21 @@ void HTMLEditor::UpdateRootElement() {
   }
 }
 
+nsresult HTMLEditor::OnFocus(const nsINode& aOriginalEventTargetNode) {
+  // Before doing anything, we should check whether the original target is still
+  // valid focus event target because it may have already lost focus.
+  if (!CanKeepHandlingFocusEvent(aOriginalEventTargetNode)) {
+    return NS_OK;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return EditorBase::OnFocus(aOriginalEventTargetNode);
+}
+
 Element* HTMLEditor::FindSelectionRoot(const nsINode& aNode) const {
   MOZ_ASSERT(aNode.IsDocument() || aNode.IsContent(),
              "aNode must be content or document node");
