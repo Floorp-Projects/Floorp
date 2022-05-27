@@ -54,10 +54,6 @@ class NativeLayerRoot {
       SurfacePoolHandle* aSurfacePoolHandle) = 0;
   virtual already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
       bool aIsOpaque) = 0;
-  virtual already_AddRefed<NativeLayer> CreateLayerForColor(
-      gfx::DeviceColor aColor) {
-    return nullptr;
-  }
 
   virtual void AppendLayer(NativeLayer* aLayer) = 0;
   virtual void RemoveLayer(NativeLayer* aLayer) = 0;
