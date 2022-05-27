@@ -118,8 +118,6 @@ class NativeLayerRootCA : public NativeLayerRoot {
 
   already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
       bool aIsOpaque) override;
-  already_AddRefed<NativeLayer> CreateLayerForColor(
-      gfx::DeviceColor aColor) override;
 
   void SetWindowIsFullscreen(bool aFullscreen);
   void NoteMouseMoveAtTime(const TimeStamp& aTime);
@@ -261,7 +259,6 @@ class NativeLayerCA : public NativeLayer {
   NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque,
                 SurfacePoolHandleCA* aSurfacePoolHandle);
   explicit NativeLayerCA(bool aIsOpaque);
-  explicit NativeLayerCA(gfx::DeviceColor aColor);
   ~NativeLayerCA() override;
 
   // Gets the next surface for drawing from our swap chain and stores it in
@@ -351,8 +348,7 @@ class NativeLayerCA : public NativeLayer {
                       bool aSurfaceIsFlipped,
                       gfx::SamplingFilter aSamplingFilter,
                       bool aSpecializeVideo,
-                      CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
-                      CFTypeRefPtr<CGColorRef> aColor);
+                      CFTypeRefPtr<IOSurfaceRef> aFrontSurface);
 
     // Return whether any aspects of this layer representation have been mutated
     // since the last call to ApplyChanges, i.e. whether ApplyChanges needs to
@@ -451,7 +447,6 @@ class NativeLayerCA : public NativeLayer {
   gfx::SamplingFilter mSamplingFilter = gfx::SamplingFilter::POINT;
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
-  CFTypeRefPtr<CGColorRef> mColor;
   const bool mIsOpaque = false;
   bool mRootWindowIsFullscreen = false;
   bool mSpecializeVideo = false;
