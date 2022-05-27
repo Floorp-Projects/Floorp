@@ -285,6 +285,15 @@ class ChannelReceive : public ChannelReceiveInterface {
 
   rtc::scoped_refptr<ChannelReceiveFrameTransformerDelegate>
       frame_transformer_delegate_;
+
+  // Counter that's used to control the frequency of reporting histograms
+  // from the `GetAudioFrameWithInfo` callback.
+  int audio_frame_interval_count_ RTC_GUARDED_BY(audio_thread_race_checker_) =
+      0;
+  // Controls how many callbacks we let pass by before reporting callback stats.
+  // A value of 100 means 100 callbacks, each one of which represents 10ms worth
+  // of data, so the stats reporting frequency will be 1Hz (modulo failures).
+  constexpr static int kHistogramReportingInterval = 100;
 };
 
 void ChannelReceive::OnReceivedPayloadData(
@@ -333,7 +342,6 @@ void ChannelReceive::InitFrameTransformerDelegate(
     rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer) {
   RTC_DCHECK(frame_transformer);
   RTC_DCHECK(!frame_transformer_delegate_);
-  RTC_DCHECK(worker_thread_);
   RTC_DCHECK(worker_thread_->IsCurrent());
 
   // Pass a callback to ChannelReceive::OnReceivedPayloadData, to be called by
@@ -458,19 +466,22 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
   }
   audio_frame->packet_infos_ = RtpPacketInfos(packet_infos);
 
-  RTC_DCHECK(worker_thread_);
-  worker_thread_->PostTask(ToQueuedTask(worker_safety_, [this]() {
-    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-    RTC_HISTOGRAM_COUNTS_1000("WebRTC.Audio.TargetJitterBufferDelayMs",
-                              acm_receiver_.TargetDelayMs());
-    const int jitter_buffer_delay = acm_receiver_.FilteredCurrentDelayMs();
-    RTC_HISTOGRAM_COUNTS_1000("WebRTC.Audio.ReceiverDelayEstimateMs",
-                              jitter_buffer_delay + playout_delay_ms_);
-    RTC_HISTOGRAM_COUNTS_1000("WebRTC.Audio.ReceiverJitterBufferDelayMs",
-                              jitter_buffer_delay);
-    RTC_HISTOGRAM_COUNTS_1000("WebRTC.Audio.ReceiverDeviceDelayMs",
-                              playout_delay_ms_);
-  }));
+  ++audio_frame_interval_count_;
+  if (audio_frame_interval_count_ >= kHistogramReportingInterval) {
+    audio_frame_interval_count_ = 0;
+    worker_thread_->PostTask(ToQueuedTask(worker_safety_, [this]() {
+      RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+      RTC_HISTOGRAM_COUNTS_1000("WebRTC.Audio.TargetJitterBufferDelayMs",
+                                acm_receiver_.TargetDelayMs());
+      const int jitter_buffer_delay = acm_receiver_.FilteredCurrentDelayMs();
+      RTC_HISTOGRAM_COUNTS_1000("WebRTC.Audio.ReceiverDelayEstimateMs",
+                                jitter_buffer_delay + playout_delay_ms_);
+      RTC_HISTOGRAM_COUNTS_1000("WebRTC.Audio.ReceiverJitterBufferDelayMs",
+                                jitter_buffer_delay);
+      RTC_HISTOGRAM_COUNTS_1000("WebRTC.Audio.ReceiverDeviceDelayMs",
+                                playout_delay_ms_);
+    }));
+  }
 
   return muted ? AudioMixer::Source::AudioFrameInfo::kMuted
                : AudioMixer::Source::AudioFrameInfo::kNormal;

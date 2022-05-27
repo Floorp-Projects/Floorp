@@ -258,6 +258,7 @@ void SetAudioFrameActivityAndType(bool vad_enabled,
 
 int NetEqImpl::GetAudio(AudioFrame* audio_frame,
                         bool* muted,
+                        int* current_sample_rate_hz,
                         absl::optional<Operation> action_override) {
   TRACE_EVENT0("webrtc", "NetEqImpl::GetAudio");
   MutexLock lock(&mutex_);
@@ -294,6 +295,11 @@ int NetEqImpl::GetAudio(AudioFrame* audio_frame,
           (output_delay_chain_ix_ + 1) % output_delay_chain_.size();
       delayed_last_output_sample_rate_hz_ = audio_frame->sample_rate_hz();
     }
+  }
+
+  if (current_sample_rate_hz) {
+    *current_sample_rate_hz = delayed_last_output_sample_rate_hz_.value_or(
+        last_output_sample_rate_hz_);
   }
 
   return kOK;
