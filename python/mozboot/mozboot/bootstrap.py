@@ -56,8 +56,7 @@ https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html.
 
 Please choose the version of Firefox you want to build (see note above):
 %s
-Your choice:
-""".strip()
+Your choice: """
 
 APPLICATIONS = OrderedDict(
     [
