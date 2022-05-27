@@ -81,16 +81,6 @@ rtc_library("rtc_pc_base") {
     "sctp_transport.h",
     "sctp_utils.cc",
     "sctp_utils.h",
-
-    # Will move to "session_description" target
-    # when downstream projects depend on that.
-    "session_description.cc",
-    "session_description.h",
-
-    # Will move to "simulcast_description" target
-    # when downstream projects depend on that.
-    "simulcast_description.cc",
-    "simulcast_description.h",
     "srtp_filter.cc",
     "srtp_filter.h",
     "srtp_session.cc",
@@ -187,9 +177,8 @@ rtc_library("rtc_pc_base") {
 rtc_source_set("session_description") {
   visibility = [ "*" ]
   sources = [
-    # Future home of
-    #"session_description.cc",
-    #"session_description.h",
+    "session_description.cc",
+    "session_description.h",
   ]
   deps = [
     ":media_protocol_names",
@@ -212,9 +201,8 @@ rtc_source_set("session_description") {
 rtc_source_set("simulcast_description") {
   visibility = [ "*" ]
   sources = [
-    # Future home of
-    # "simulcast_description.cc",
-    # "simulcast_description.h",
+    "simulcast_description.cc",
+    "simulcast_description.h",
   ]
   deps = [
     "../rtc_base:checks",
