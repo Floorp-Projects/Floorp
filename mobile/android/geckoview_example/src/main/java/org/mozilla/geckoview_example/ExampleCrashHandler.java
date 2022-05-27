@@ -75,7 +75,7 @@ public class ExampleCrashHandler extends Service {
       startForeground(NOTIFY_ID, notification);
     } else if (ACTION_REPORT_CRASH.equals(intent.getAction())) {
       StrictMode.ThreadPolicy oldPolicy = null;
-      if (BuildConfig.DEBUG_BUILD) {
+      if (BuildConfig.DEBUG) {
         oldPolicy = StrictMode.getThreadPolicy();
 
         // We do some disk I/O and network I/O on the main thread, but it's fine.
