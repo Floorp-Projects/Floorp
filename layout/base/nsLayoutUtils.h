@@ -955,7 +955,8 @@ class nsLayoutUtils {
    * If some frame on the path from aFrame to the display root frame may have an
    * animated scale, returns the identity scale factors.
    */
-  static gfxSize GetTransformToAncestorScaleExcludingAnimated(nsIFrame* aFrame);
+  static MatrixScalesDouble GetTransformToAncestorScaleExcludingAnimated(
+      nsIFrame* aFrame);
 
   /**
    * Gets a scale that includes CSS transforms in this process as well as the
