@@ -35,8 +35,44 @@ body > main > section {
   grid-column: 1 / 9;
 }
 
-body > main > aside {
+#colorways {
+  position: relative;
   grid-column: 9 / 12;
+}
+
+#colorways.no-collection {
+  background: linear-gradient(51.95deg, #7542E5 -8.36%, #C953F2 98.73%);
+  border-radius: 8px;
+}
+
+#colorways.no-collection > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+#colorways.no-collection > div {
+  background: url("chrome://browser/content/colorway-background.svg");
+  background-size: 100%;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
+#colorways.no-collection > div > #colorways-button {
+  display: none;
+}
+
+#colorways.no-collection > div > #colorways-no-collection-message {
+  display: block;
+}
+
+#colorways-no-collection-message {
+  display: none;
+  color: #FFF;
+  font-size: 2em;
+  text-align: center;
+  margin: 0 1em 1em;
 }
 
 [hidden] {
