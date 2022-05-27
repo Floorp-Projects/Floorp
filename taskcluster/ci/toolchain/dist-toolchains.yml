@@ -7,8 +7,6 @@ job-defaults:
     attributes:
         local-toolchain: true
     worker-type: b-linux
-    run-on-projects:
-        - trunk
     run:
         using: toolchain-script
         script: build-dist-toolchains.sh

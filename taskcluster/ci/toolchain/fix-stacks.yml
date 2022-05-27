@@ -12,8 +12,6 @@ job-defaults:
     run:
         script: build-fix-stacks.sh
         toolchain-artifact: public/build/fix-stacks.tar.zst
-    run-on-projects:
-        - trunk
     fetches:
         fetch:
             - fix-stacks

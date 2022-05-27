@@ -8,7 +8,6 @@ job-defaults:
         local-toolchain: true
     treeherder:
         symbol: TL(sccache)
-    run-on-projects: [trunk]
     run:
         using: toolchain-script
         script: build-sccache.sh

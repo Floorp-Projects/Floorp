@@ -22,7 +22,6 @@ linux64-android-avd-x86_64-repack:
     description: "Android AVD (Linux) repack toolchain build"
     treeherder:
         symbol: TL(avd-x86_64-linux)
-    run-on-projects: [trunk]
     run:
         script: repack-android-avd-linux.sh
         arguments:
@@ -42,7 +41,6 @@ linux64-android-avd-arm-repack:
     description: "Android AVD (Linux) repack toolchain build"
     treeherder:
         symbol: TL(avd-arm-linux)
-    run-on-projects: [trunk]
     run:
         script: repack-android-avd-linux.sh
         arguments:
@@ -62,7 +60,6 @@ linux64-android-avd-arm64-repack:
     description: "Android AVD (Linux) repack toolchain build"
     treeherder:
         symbol: TL(avd-arm64-linux)
-    run-on-projects: [trunk]
     run:
         script: repack-android-avd-linux.sh
         arguments:
