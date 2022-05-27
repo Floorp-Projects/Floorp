@@ -11696,28 +11696,6 @@ nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
   return clip ? PhysicalAxes::Both : PhysicalAxes::None;
 }
 
-bool nsIFrame::DidPaintPresShell(mozilla::PresShell* aPresShell) {
-  for (nsWeakPtr& item : *PaintedPresShellList()) {
-    RefPtr<mozilla::PresShell> presShell = do_QueryReferent(item);
-    if (presShell == aPresShell) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void nsIFrame::AddPaintedPresShell(mozilla::PresShell* aPresShell) {
-  PaintedPresShellList()->AppendElement(do_GetWeakReference(aPresShell));
-}
-
-void nsIFrame::UpdatePaintCountForPaintedPresShells() {
-  for (nsWeakPtr& item : *PaintedPresShellList()) {
-    if (RefPtr<mozilla::PresShell> presShell = do_QueryReferent(item)) {
-      presShell->IncrementPaintCount();
-    }
-  }
-}
-
 #ifdef DEBUG
 static void GetTagName(nsIFrame* aFrame, nsIContent* aContent, int aResultSize,
                        char* aResult) {
