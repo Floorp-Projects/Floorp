@@ -1061,36 +1061,15 @@ already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributes(
   return attrs.forget();
 }
 
-TextLeafPoint TextLeafPoint::FindTextAttrsStart(
-    nsDirection aDirection, bool aIncludeOrigin,
-    const AccAttributes* aOriginAttrs, bool aIncludeDefaults) const {
+TextLeafPoint TextLeafPoint::FindTextAttrsStart(nsDirection aDirection,
+                                                bool aIncludeOrigin) const {
   if (IsCaret()) {
-    return ActualizeCaret().FindTextAttrsStart(aDirection, aIncludeOrigin,
-                                               aOriginAttrs, aIncludeDefaults);
+    return ActualizeCaret().FindTextAttrsStart(aDirection, aIncludeOrigin);
   }
-  // XXX Add support for spelling errors.
-  RefPtr<const AccAttributes> lastAttrs;
   const bool isRemote = mAcc->IsRemote();
-  if (isRemote) {
-    // For RemoteAccessible, leaf attrs and default attrs are cached
-    // separately. To combine them, we have to copy. Since we're not walking
-    // outside the container, we don't care about defaults. Therefore, we
-    // always just fetch the leaf attrs.
-    // We ignore aOriginAttrs because it might include defaults. Fetching leaf
-    // attrs is very cheap anyway.
-    lastAttrs = mAcc->AsRemote()->GetCachedTextAttributes();
-  } else {
-    // For LocalAccessible, we want to avoid calculating attrs more than
-    // necessary, so we want to use aOriginAttrs if provided.
-    if (aOriginAttrs) {
-      lastAttrs = aOriginAttrs;
-      // Whether we include defaults henceforth must match aOriginAttrs, which
-      // depends on aIncludeDefaults. Defaults are always calculated even if
-      // they aren't returned, so calculation cost isn't a concern.
-    } else {
-      lastAttrs = GetTextAttributesLocalAcc(aIncludeDefaults);
-    }
-  }
+  RefPtr<const AccAttributes> lastAttrs =
+      isRemote ? mAcc->AsRemote()->GetCachedTextAttributes()
+               : GetTextAttributesLocalAcc();
   if (aIncludeOrigin && aDirection == eDirNext && mOffset == 0) {
     // Even when searching forward, the only way to know whether the origin is
     // the start of a text attrs run is to compare with the previous sibling.
@@ -1104,7 +1083,7 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
     // calculation or copying.
     RefPtr<const AccAttributes> attrs =
         isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
-                 : point.GetTextAttributesLocalAcc(aIncludeDefaults);
+                 : point.GetTextAttributesLocalAcc();
     if (attrs && lastAttrs && !attrs->Equal(lastAttrs)) {
       return *this;
     }
@@ -1119,7 +1098,7 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
     }
     RefPtr<const AccAttributes> attrs =
         isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
-                 : point.GetTextAttributesLocalAcc(aIncludeDefaults);
+                 : point.GetTextAttributesLocalAcc();
     if (attrs && lastAttrs && !attrs->Equal(lastAttrs)) {
       // The attributes change here. If we're moving forward, we want to
       // return this point. If we're moving backward, we've now moved before

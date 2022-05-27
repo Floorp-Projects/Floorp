@@ -616,17 +616,16 @@ already_AddRefed<AccAttributes> HyperTextAccessibleBase::TextAttributes(
   }
 
   TextLeafPoint origin = ToTextLeafPoint(static_cast<int32_t>(offset));
-  RefPtr<AccAttributes> attributes = origin.GetTextAttributes(aIncludeDefAttrs);
-  TextLeafPoint start = origin.FindTextAttrsStart(
-      eDirPrevious, /* aIncludeOrigin */ true, attributes, aIncludeDefAttrs);
+  TextLeafPoint start =
+      origin.FindTextAttrsStart(eDirPrevious, /* aIncludeOrigin */ true);
   bool ok;
   std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
                                                 /* aIsEndOffset */ false);
-  TextLeafPoint end = origin.FindTextAttrsStart(
-      eDirNext, /* aIncludeOrigin */ false, attributes, aIncludeDefAttrs);
+  TextLeafPoint end =
+      origin.FindTextAttrsStart(eDirNext, /* aIncludeOrigin */ false);
   std::tie(ok, *aEndOffset) = TransformOffset(end.mAcc, end.mOffset,
                                               /* aIsEndOffset */ true);
-  return attributes.forget();
+  return origin.GetTextAttributes(aIncludeDefAttrs);
 }
 
 void HyperTextAccessibleBase::CroppedSelectionRanges(
