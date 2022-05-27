@@ -120,14 +120,6 @@ bool RenderCompositorNative::ShouldUseNativeCompositor() {
   return gfx::gfxVars::UseWebRenderCompositor();
 }
 
-void RenderCompositorNative::GetCompositorCapabilities(
-    CompositorCapabilities* aCaps) {
-  RenderCompositor::GetCompositorCapabilities(aCaps);
-#if defined(XP_MACOSX)
-  aCaps->supports_surface_for_backdrop = !gfx::gfxVars::UseSoftwareWebRender();
-#endif
-}
-
 bool RenderCompositorNative::MaybeReadback(
     const gfx::IntSize& aReadbackSize, const wr::ImageFormat& aReadbackFormat,
     const Range<uint8_t>& aReadbackBuffer, bool* aNeedsYFlip) {
@@ -309,20 +301,6 @@ void RenderCompositorNative::CreateExternalSurface(wr::NativeSurfaceId aId,
 
   Surface surface{DeviceIntSize{}, aIsOpaque};
   surface.mIsExternal = true;
-  surface.mNativeLayers.insert({TileKey(0, 0), layer});
-
-  mSurfaces.insert({aId, std::move(surface)});
-}
-
-void RenderCompositorNative::CreateBackdropSurface(wr::NativeSurfaceId aId,
-                                                   wr::ColorF aColor) {
-  MOZ_RELEASE_ASSERT(mSurfaces.find(aId) == mSurfaces.end());
-
-  gfx::DeviceColor color(aColor.r, aColor.g, aColor.b, aColor.a);
-  RefPtr<layers::NativeLayer> layer =
-      mNativeLayerRoot->CreateLayerForColor(color);
-
-  Surface surface{DeviceIntSize{}, (aColor.a >= 1.0f)};
   surface.mNativeLayers.insert({TileKey(0, 0), layer});
 
   mSurfaces.insert({aId, std::move(surface)});
