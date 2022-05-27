@@ -107,6 +107,80 @@
  * various kinds.
  */
 
+namespace geckoprofiler::markers {
+struct CCIntervalMarker {
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("CC");
+  }
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter, bool aIsStart,
+      const mozilla::ProfilerString8View& aReason,
+      uint32_t aForgetSkippableBeforeCC, uint32_t aSuspectedAtCCStart,
+      uint32_t aRemovedPurples, const mozilla::CycleCollectorResults& aResults,
+      mozilla::TimeDuration aMaxSliceTime) {
+    if (aIsStart) {
+      aWriter.StringProperty("mReason", aReason);
+      aWriter.IntProperty("mSuspected", aSuspectedAtCCStart);
+      aWriter.IntProperty("mForgetSkippable", aForgetSkippableBeforeCC);
+      aWriter.IntProperty("mRemovedPurples", aRemovedPurples);
+    } else {
+      aWriter.TimeDoubleMsProperty("mMaxSliceTime",
+                                   aMaxSliceTime.ToMilliseconds());
+      aWriter.IntProperty("mSlices", aResults.mNumSlices);
+
+      aWriter.BoolProperty("mAnyManual", aResults.mAnyManual);
+      aWriter.BoolProperty("mForcedGC", aResults.mForcedGC);
+      aWriter.BoolProperty("mMergedZones", aResults.mMergedZones);
+      aWriter.IntProperty("mVisitedRefCounted", aResults.mVisitedRefCounted);
+      aWriter.IntProperty("mVisitedGCed", aResults.mVisitedGCed);
+      aWriter.IntProperty("mFreedRefCounted", aResults.mFreedRefCounted);
+      aWriter.IntProperty("mFreedGCed", aResults.mFreedGCed);
+      aWriter.IntProperty("mFreedJSZones", aResults.mFreedJSZones);
+    }
+  }
+  static mozilla::MarkerSchema MarkerTypeDisplay() {
+    using MS = mozilla::MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+              MS::Location::TimelineMemory};
+    schema.AddStaticLabelValue(
+        "Description",
+        "Summary data for the core part of a cycle collection, possibly "
+        "encompassing a set of incremental slices. The main thread is not "
+        "blocked for the entire major CC interval, only for the individual "
+        "slices.");
+    schema.AddKeyLabelFormatSearchable("mReason", "Reason", MS::Format::String,
+                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("mMaxSliceTime", "Max Slice Time",
+                             MS::Format::Duration);
+    schema.AddKeyLabelFormat("mSuspected", "Suspected Objects",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mSlices", "Number of Slices",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mAnyManual", "Manually Triggered",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mForcedGC", "GC Forced", MS::Format::Integer);
+    schema.AddKeyLabelFormat("mMergedZones", "Zones Merged",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mForgetSkippable", "Forget Skippables",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mVisitedRefCounted", "Refcounted Objects Visited",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mVisitedGCed", "GC Objects Visited",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mFreedRefCounted", "Refcounted Objects Freed",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mFreedGCed", "GC Objects Freed",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mCollectedGCZones", "JS Zones Freed",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("mRemovedPurples",
+                             "Objects Removed From Purple Buffer",
+                             MS::Format::Integer);
+    return schema;
+  }
+};
+}  // namespace geckoprofiler::markers
+
 namespace mozilla {
 
 void CCGCScheduler::NoteGCBegin() {
@@ -147,59 +221,34 @@ void CCGCScheduler::NoteGCEnd() {
   }
 }
 
-#ifdef MOZ_GECKO_PROFILER
-struct CCIntervalMarker {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("CC");
-  }
-  static void StreamJSONMarkerData(
-      baseprofiler::SpliceableJSONWriter& aWriter,
-      const mozilla::ProfilerString8View& aReason) {
-    if (aReason.Length()) {
-      aWriter.StringProperty("reason", aReason);
-    }
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    using MS = mozilla::MarkerSchema;
-    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
-              MS::Location::TimelineMemory};
-    schema.AddStaticLabelValue(
-        "Description",
-        "Summary data for the core part of a cycle collection, possibly "
-        "encompassing a set of incremental slices. The main thread is not "
-        "blocked for the entire major CC interval, only for the individual "
-        "slices.");
-    schema.AddKeyLabelFormatSearchable("reason", "Reason", MS::Format::String,
-                                       MS::Searchable::Searchable);
-    return schema;
-  }
-};
-#endif
-
-void CCGCScheduler::NoteCCBegin(CCReason aReason, TimeStamp aWhen) {
-#ifdef MOZ_GECKO_PROFILER
-  profiler_add_marker(
-      "CC", baseprofiler::category::GCCC,
-      MarkerOptions(MarkerTiming::IntervalStart(aWhen)), CCIntervalMarker{},
-      ProfilerString8View::WrapNullTerminatedString(CCReasonToString(aReason)));
-#endif
+void CCGCScheduler::NoteCCBegin(CCReason aReason, TimeStamp aWhen,
+                                uint32_t aNumForgetSkippables,
+                                uint32_t aSuspected, uint32_t aRemovedPurples) {
+  CycleCollectorResults ignoredResults;
+  PROFILER_MARKER(
+      "CC", GCCC, MarkerOptions(MarkerTiming::IntervalStart(aWhen)),
+      CCIntervalMarker,
+      /* aIsStart */ true,
+      ProfilerString8View::WrapNullTerminatedString(CCReasonToString(aReason)),
+      aNumForgetSkippables, aSuspected, aRemovedPurples, ignoredResults,
+      TimeDuration());
 
   mIsCollectingCycles = true;
 }
 
-void CCGCScheduler::NoteCCEnd(TimeStamp aWhen) {
-#ifdef MOZ_GECKO_PROFILER
-  profiler_add_marker("CC", baseprofiler::category::GCCC,
-                      MarkerOptions(MarkerTiming::IntervalEnd(aWhen)),
-                      CCIntervalMarker{}, nullptr);
-#endif
+void CCGCScheduler::NoteCCEnd(const CycleCollectorResults& aResults,
+                              TimeStamp aWhen,
+                              mozilla::TimeDuration aMaxSliceTime) {
+  mCCollectedWaitingForGC += aResults.mFreedGCed;
+  mCCollectedZonesWaitingForGC += aResults.mFreedJSZones;
+
+  PROFILER_MARKER("CC", GCCC, MarkerOptions(MarkerTiming::IntervalEnd(aWhen)),
+                  CCIntervalMarker, /* aIsStart */ false, nullptr, 0, 0, 0,
+                  aResults, aMaxSliceTime);
 
   mIsCollectingCycles = false;
   mLastCCEndTime = aWhen;
   mNeedsFullCC = CCReason::NO_REASON;
-
-  // The GC for this CC has already been requested.
-  mNeedsGCAfterCC = false;
 }
 
 void CCGCScheduler::NoteWontGC() {
@@ -450,6 +499,9 @@ void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
     return;
   }
 
+  // If a post-CC GC was pending, then we'll make sure one is happening.
+  mNeedsGCAfterCC = false;
+
   if (aObj) {
     JS::Zone* zone = JS::GetObjectZone(aObj);
     CycleCollectedJSRuntime::Get()->AddZoneWaitingForGC(zone);
@@ -604,8 +656,8 @@ js::SliceBudget CCGCScheduler::ComputeCCSliceBudget(
   TimeDuration baseBudget =
       aDeadline.IsNull() ? kICCSliceBudget : aDeadline - aNow;
 
-  if (aCCBeginTime.IsNull()) {
-    // If no CC is in progress, use the standard slice time.
+  if (aPrevSliceEndTime.IsNull()) {
+    // The first slice gets the standard slice time.
     return js::SliceBudget(js::TimeBudget(baseBudget));
   }
 
