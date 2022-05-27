@@ -855,7 +855,6 @@ void JsepTransportController::HandleRejectedContent(
       bundles_.DeleteMid(bundle_group, content_info.name);
     }
   }
-  MaybeDestroyJsepTransport(content_info.name);
 }
 
 bool JsepTransportController::HandleBundledContent(
@@ -869,15 +868,11 @@ bool JsepTransportController::HandleBundledContent(
   // If the content is bundled, let the
   // BaseChannel/SctpTransport change the RtpTransport/DtlsTransport first,
   // then destroy the cricket::JsepTransport.
-  if (transports_.SetTransportForMid(content_info.name, jsep_transport)) {
-    // TODO(bugs.webrtc.org/9719) For media transport this is far from ideal,
-    // because it means that we first create media transport and start
-    // connecting it, and then we destroy it. We will need to address it before
-    // video path is enabled.
-    MaybeDestroyJsepTransport(content_info.name);
-    return true;
-  }
-  return false;
+  // TODO(bugs.webrtc.org/9719) For media transport this is far from ideal,
+  // because it means that we first create media transport and start
+  // connecting it, and then we destroy it. We will need to address it before
+  // video path is enabled.
+  return transports_.SetTransportForMid(content_info.name, jsep_transport);
 }
 
 cricket::JsepTransportDescription
@@ -1078,28 +1073,9 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
 
   jsep_transport->SignalRtcpMuxActive.connect(
       this, &JsepTransportController::UpdateAggregateStates_n);
-  transports_.SetTransportForMid(content_info.name, jsep_transport.get());
-
   transports_.RegisterTransport(content_info.name, std::move(jsep_transport));
   UpdateAggregateStates_n();
   return RTCError::OK();
-}
-
-void JsepTransportController::MaybeDestroyJsepTransport(
-    const std::string& mid) {
-  TRACE_EVENT0("webrtc", "JsepTransportController::MaybeDestroyJsepTransport");
-  auto jsep_transport = GetJsepTransportByName(mid);
-  if (!jsep_transport) {
-    return;
-  }
-
-  // Don't destroy the JsepTransport if there are still media sections referring
-  // to it.
-  if (transports_.TransportInUse(jsep_transport)) {
-    return;
-  }
-  transports_.MaybeDestroyJsepTransport(mid);
-  UpdateAggregateStates_n();
 }
 
 void JsepTransportController::DestroyAllJsepTransports_n() {

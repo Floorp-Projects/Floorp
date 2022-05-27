@@ -88,8 +88,12 @@ class JsepTransportCollection {
   cricket::JsepTransport* GetTransportForMid(const std::string& mid);
   const cricket::JsepTransport* GetTransportForMid(
       const std::string& mid) const;
+  // Set transport for a MID. This may destroy a transport if it is no
+  // longer in use.
   bool SetTransportForMid(const std::string& mid,
                           cricket::JsepTransport* jsep_transport);
+  // Remove a transport for a MID. This may destroy a transport if it is
+  // no longer in use.
   void RemoveTransportForMid(const std::string& mid);
   // Roll back pending mid-to-transport mappings.
   void RollbackTransports();
@@ -97,10 +101,13 @@ class JsepTransportCollection {
   void CommitTransports();
   // Returns true if any mid currently maps to this transport.
   bool TransportInUse(cricket::JsepTransport* jsep_transport) const;
-  // Destroy a transport if it's no longer in use.
-  void MaybeDestroyJsepTransport(const std::string& mid);
 
  private:
+  // Destroy a transport if it's no longer in use.
+  void MaybeDestroyJsepTransport(cricket::JsepTransport* transport);
+
+  bool IsConsistent();  // For testing only: Verify internal structure.
+
   RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
   // This member owns the JSEP transports.
   std::map<std::string, std::unique_ptr<cricket::JsepTransport>>

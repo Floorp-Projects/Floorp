@@ -381,8 +381,6 @@ class JsepTransportController : public sigslot::has_slots<> {
       const cricket::SessionDescription& description)
       RTC_RUN_ON(network_thread_);
 
-  void MaybeDestroyJsepTransport(const std::string& mid)
-      RTC_RUN_ON(network_thread_);
   void DestroyAllJsepTransports_n() RTC_RUN_ON(network_thread_);
 
   void SetIceRole_n(cricket::IceRole ice_role) RTC_RUN_ON(network_thread_);
