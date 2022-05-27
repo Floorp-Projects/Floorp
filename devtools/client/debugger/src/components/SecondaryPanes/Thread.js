@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
 
@@ -11,6 +12,16 @@ import { getCurrentThread, getIsPaused, getContext } from "../../selectors";
 import AccessibleImage from "../shared/AccessibleImage";
 
 export class Thread extends Component {
+  static get propTypes() {
+    return {
+      currentThread: PropTypes.string.isRequired,
+      cx: PropTypes.object.isRequired,
+      isPaused: PropTypes.bool.isRequired,
+      selectThread: PropTypes.func.isRequired,
+      thread: PropTypes.object.isRequired,
+    };
+  }
+
   onSelectThread = () => {
     const { thread } = this.props;
     this.props.selectThread(this.props.cx, thread.actor);

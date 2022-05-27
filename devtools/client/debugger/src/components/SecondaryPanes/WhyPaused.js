@@ -34,6 +34,17 @@ class WhyPaused extends PureComponent {
     this.state = { hideWhyPaused: "" };
   }
 
+  static get propTypes() {
+    return {
+      delay: PropTypes.number.isRequired,
+      endPanelCollapsed: PropTypes.bool.isRequired,
+      highlightDomElement: PropTypes.func.isRequired,
+      openElementInInspector: PropTypes.func.isRequired,
+      unHighlightDomElement: PropTypes.func.isRequired,
+      why: PropTypes.object,
+    };
+  }
+
   componentDidUpdate() {
     const { delay } = this.props;
 

@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 
 import Reps from "devtools/client/shared/components/reps/index";
 const {
@@ -30,6 +31,19 @@ const localizationTerms = {
 };
 
 class DOMMutationBreakpointsContents extends Component {
+  static get propTypes() {
+    return {
+      breakpoints: PropTypes.array.isRequired,
+      deleteBreakpoint: PropTypes.func.isRequired,
+      highlightDomElement: PropTypes.func.isRequired,
+      openElementInInspector: PropTypes.func.isRequired,
+      openInspector: PropTypes.func.isRequired,
+      setSkipPausing: PropTypes.func.isRequired,
+      toggleBreakpoint: PropTypes.func.isRequired,
+      unHighlightDomElement: PropTypes.func.isRequired,
+    };
+  }
+
   handleBreakpoint(breakpointId, shouldEnable) {
     const { toggleBreakpoint, setSkipPausing } = this.props;
 
@@ -127,6 +141,16 @@ const DOMMutationBreakpointsPanel = connect(
 )(DOMMutationBreakpointsContents);
 
 class DomMutationBreakpoints extends Component {
+  static get propTypes() {
+    return {
+      highlightDomElement: PropTypes.func.isRequired,
+      openElementInInspector: PropTypes.func.isRequired,
+      openInspector: PropTypes.func.isRequired,
+      setSkipPausing: PropTypes.func.isRequired,
+      unHighlightDomElement: PropTypes.func.isRequired,
+    };
+  }
+
   render() {
     return (
       <DOMMutationBreakpointsPanel
