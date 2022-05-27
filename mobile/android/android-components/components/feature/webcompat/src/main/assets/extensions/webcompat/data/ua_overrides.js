@@ -714,18 +714,19 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1743429",
     config: {
       matches: [
+        "*://*.commerzbank.de/*", // Bug 1767630
         "*://*.edf.com/*", // Bug 1764786
         "*://*.wordpress.org/*", // Bug 1743431
-        "*://bethesda.net/*", // #94607
+        "*://as.eservice.asus.com/*", // #104113
+        "*://bethesda.net/*", // #94607,
         "*://cdn-vzn.yottaa.net/*", // Bug 1764795
-        "*://citoyens.telerecours.fr/*", // #101066
-        "*://www.connexus.com/*", // Bug 1765925
         "*://dsae.co.za/*", // Bug 1765925
-        "*://genehmigung.ahs-vwa.at/*", // #100063
+        "*://fpt.dfp.microsoft.com/*", // #104237
         "*://moje.pzu.pl/*", // #99772
         "*://mon.allianzbanque.fr/*", // #101074
         "*://online.citi.com/*", // #101268
         "*://simperium.com/*", // #98934
+        "*://ubank.com.au/*", // #104099
         "*://wifi.sncf/*", // #100194
         "*://www.accringtonobserver.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.bathchronicle.co.uk/*", // Bug 1762928 (Reach Plc)
@@ -784,6 +785,7 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://www.irishmirror.ie/*", // Bug 1762928 (Reach Plc)
         "*://www.kentlive.news/*", // Bug 1762928 (Reach Plc)
         "*://www.lancs.live/*", // Bug 1762928 (Reach Plc)
+        "*://www.learningants.com/*", // #104080
         "*://www.leeds-live.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.leicestermercury.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.lincolnshirelive.co.uk/*", // Bug 1762928 (Reach Plc)
@@ -793,12 +795,10 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://www.macclesfield-express.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.macclesfield-live.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.manchestereveningnews.co.uk/*", // #100923
-        "*://www.mirror.co.uk/*", // #100053
         "*://www.mylondon.news/*", // Bug 1762928 (Reach Plc)
         "*://www.northantslive.news/*", // Bug 1762928 (Reach Plc)
         "*://www.nottinghampost.com/*", // Bug 1762928 (Reach Plc)
         "*://www.ok.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.petalmail.com/*", // #99339
         "*://www.plymouthherald.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.rossendalefreepress.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.rsvplive.ie/*", // Bug 1762928 (Reach Plc)
@@ -814,44 +814,11 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://survey.sogosurvey.com/*", // Bug 1765925
         "*://www.sussexlive.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.tm-awx.com/*", // Bug 1762928 (Reach Plc)
-        "*://www.twitch.tv/*", // Bug 1764591
         "*://www.walesonline.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.wharf.co.uk/*", // Bug 1762928 (Reach Plc)
       ],
       uaTransformer: originalUA => {
         return UAHelpers.capVersionTo99(originalUA);
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1751232 - Add override for sites returning desktop layout for Android 12
-     * Webcompat issue #92978 - https://github.com/webcompat/web-bugs/issues/92978
-     *
-     * A number of news sites returns desktop layout for Android 12 only. Changing it
-     * to Android 12.0 fixes the issue
-     */
-    id: "bug1751232",
-    platform: "android",
-    domain: "Sites with desktop layout for Android 12",
-    bug: "1751232",
-    config: {
-      matches: [
-        "*://*.dw.com/*",
-        "*://*.abc10.com/*",
-        "*://*.wnep.com/*",
-        "*://*.dn.se/*",
-        "*://*.dailymail.co.uk/*",
-        "*://*.kohls.com/*",
-        "*://*.expressen.se/*",
-        "*://*.walmart.com/*",
-      ],
-      uaTransformer: originalUA => {
-        if (!originalUA.includes("Android 12;")) {
-          return originalUA;
-        }
-
-        return originalUA.replace("Android 12;", "Android 12.0;");
       },
     },
   },
@@ -926,6 +893,25 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://www.otsuka.co.jp/fib/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA("97.0.4692.9");
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1771200 - UA override for animalplanet.com
+     * Webcompat issue #99993 - https://webcompat.com/issues/103727
+     *
+     * The videos are not playing and an error message is displayed
+     * in Firefox for Android, but work with Chrome UA
+     */
+    id: "bug1771200",
+    platform: "android",
+    domain: "animalplanet.com",
+    bug: "1771200",
+    config: {
+      matches: ["*://*.animalplanet.com/video/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },

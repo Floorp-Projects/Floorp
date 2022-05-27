@@ -122,16 +122,16 @@ const AVAILABLE_INJECTIONS = [
     customFunc: "noSniffFix",
   },
   {
-    id: "bug1561371",
-    platform: "android",
-    domain: "mail.google.com",
-    bug: "1561371",
+    id: "bug1768243",
+    platform: "desktop",
+    domain: "cloud.google.com",
+    bug: "1768243",
     contentScripts: {
-      matches: ["*://mail.google.com/*"],
+      matches: ["*://cloud.google.com/terms/*"],
       css: [
         {
           file:
-            "injections/css/bug1561371-mail.google.com-allow-horizontal-scrolling.css",
+            "injections/css/bug1768243-cloud.google.com-allow-table-scrolling.css",
         },
       ],
     },
@@ -319,21 +319,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1756054",
-    platform: "all",
-    domain: "tataplayrecharge.com",
-    bug: "1756054",
-    contentScripts: {
-      matches: ["*://www.tataplayrecharge.com/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1756054-tataplayrecharge.com-clear-float.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1731825",
     platform: "desktop",
     domain: "Office 365 email handling prompt",
@@ -404,20 +389,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1719870",
-    platform: "all",
-    domain: "lcbo.com",
-    bug: "1719870",
-    contentScripts: {
-      matches: ["*://*.lcbo.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1719870-lcbo.com-table-clearfix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1722955",
     platform: "android",
     domain: "frontgate.com",
@@ -462,35 +433,6 @@ const AVAILABLE_INJECTIONS = [
         },
       ],
       allFrames: true,
-    },
-  },
-  {
-    id: "bug1727080",
-    platform: "android",
-    domain: "nexity.fr",
-    bug: "1727080",
-    contentScripts: {
-      matches: ["*://*.nexity.fr/*"],
-      css: [
-        {
-          file: "injections/css/bug1727080-nexity.fr-svg-size-fix.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1738313",
-    platform: "desktop",
-    domain: "curriculum.gov.bc.ca",
-    bug: "1738313",
-    contentScripts: {
-      matches: ["*://curriculum.gov.bc.ca/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1738313-curriculum.gov.bc.ca-bootstrap-fix.css",
-        },
-      ],
     },
   },
   {
@@ -580,21 +522,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1756915",
-    platform: "desktop",
-    domain: "efectococuyo.com",
-    bug: "1756915",
-    contentScripts: {
-      matches: ["*://efectococuyo.com/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1756915-efectococuyo.com-shifted-content-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1739489",
     platform: "desktop",
     domain: "draft.js",
@@ -615,9 +542,38 @@ const AVAILABLE_INJECTIONS = [
     bug: "1765947",
     contentScripts: {
       matches: ["*://veniceincoming.com/*"],
-      js: [
+      css: [
         {
           file: "injections/css/bug1765947-veniceincoming.com-left-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug11769762",
+    platform: "all",
+    domain: "tiktok.com",
+    bug: "1769762",
+    contentScripts: {
+      matches: ["https://www.tiktok.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1769762-tiktok.com-plugins-shim.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1770962",
+    platform: "all",
+    domain: "coldwellbankerhomes.com",
+    bug: "1770962",
+    contentScripts: {
+      matches: ["*://*.coldwellbankerhomes.com/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1770962-coldwellbankerhomes.com-image-height.css",
         },
       ],
     },

@@ -397,7 +397,10 @@ const AVAILABLE_SHIMS = [
     name: "Integral Ad Science PET",
     bug: "1713701",
     file: "iaspet.js",
-    matches: ["*://cdn.adsafeprotected.com/iasPET.1.js"],
+    matches: [
+      "*://cdn.adsafeprotected.com/iasPET.1.js",
+      "*://static.adsafeprotected.com/iasPET.1.js",
+    ],
     onlyIfBlockedByETP: true,
   },
   {
@@ -606,6 +609,19 @@ const AVAILABLE_SHIMS = [
     bug: "1754389",
     file: "maxmind-geoip.js",
     matches: ["*://js.maxmind.com/js/apis/geoip2/*/geoip2.js"],
+    onlyIfBlockedByETP: true,
+  },
+  {
+    id: "WebTrends",
+    platform: "all",
+    name: "WebTrends",
+    bug: "1766414",
+    file: "webtrends.js",
+    matches: [
+      "*://s.webtrends.com/js/advancedLinkTracking.js",
+      "*://s.webtrends.com/js/webtrends.js",
+      "*://s.webtrends.com/js/webtrends.min.js",
+    ],
     onlyIfBlockedByETP: true,
   },
 ];

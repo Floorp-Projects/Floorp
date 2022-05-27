@@ -336,6 +336,9 @@ if (!window.google?.ima?.VERSION) {
     isLinear() {
       return true;
     }
+    isSkippable() {
+      return true;
+    }
   }
 
   class CompanionAd {

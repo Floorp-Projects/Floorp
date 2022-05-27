@@ -22,7 +22,7 @@ class AllowList {
 
   setAllows(patterns, hosts) {
     this._allowPatterns = patterns;
-    this._allowMatcher = new MatchPatternSet(patterns) || [];
+    this._allowMatcher = new MatchPatternSet(patterns || []);
     this._allowHosts = hosts || [];
     return this;
   }

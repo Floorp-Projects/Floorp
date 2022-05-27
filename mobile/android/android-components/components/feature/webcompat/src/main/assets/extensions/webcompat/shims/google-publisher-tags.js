@@ -32,7 +32,7 @@ if (window.googletag?.apiReady === undefined) {
       requestAnimationFrame(() => {
         const size = [0, 0];
         for (const cb of eventCallbacks.get(name) || []) {
-          cb({ isEmpty: true, size, slot });
+          cb({ isEmpty: false, size, slot });
         }
         resolve();
       });
@@ -53,11 +53,19 @@ if (window.googletag?.apiReady === undefined) {
     }
   };
 
+  const emptySlotElement = slot => {
+    const node = document.getElementById(slot.getSlotElementId());
+    while (node?.lastChild) {
+      node.lastChild.remove();
+    }
+  };
+
   const callbackIfSlotReady = async id => {
     const slot = slotsById.get(id);
     if (!slot || !refreshedSlots.has(id) || !displayedSlots.has(id)) {
       return;
     }
+    emptySlotElement(slot);
     recreateIframeForSlot(slot);
     await fireSlotEvent("slotRenderEnded", slot);
     await fireSlotEvent("slotRequested", slot);
