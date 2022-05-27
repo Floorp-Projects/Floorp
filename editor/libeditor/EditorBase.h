@@ -607,7 +607,7 @@ class EditorBase : public nsIEditor,
    *
    * @param aEventTarget        The event target of the blur event.
    */
-  nsresult OnBlur(const dom::EventTarget* aEventTarget);
+  virtual nsresult OnBlur(const dom::EventTarget* aEventTarget) = 0;
 
   /** Resyncs spellchecking state (enabled/disabled).  This should be called
    * when anything that affects spellchecking state changes, such as the
