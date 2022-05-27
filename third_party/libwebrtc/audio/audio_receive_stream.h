@@ -11,6 +11,7 @@
 #ifndef AUDIO_AUDIO_RECEIVE_STREAM_H_
 #define AUDIO_AUDIO_RECEIVE_STREAM_H_
 
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -81,10 +82,15 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
   void UnregisterFromTransport();
 
   // webrtc::AudioReceiveStream implementation.
-  void Reconfigure(const webrtc::AudioReceiveStream::Config& config) override;
   void Start() override;
   void Stop() override;
   bool IsRunning() const override;
+  void SetDepacketizerToDecoderFrameTransformer(
+      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
+      override;
+  void SetDecoderMap(std::map<int, SdpAudioFormat> decoder_map) override;
+  void SetUseTransportCcAndNackHistory(bool use_transport_cc,
+                                       int history_ms) override;
 
   webrtc::AudioReceiveStream::Stats GetStats(
       bool get_and_clear_legacy_stats) const override;
@@ -111,8 +117,24 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
 
   void AssociateSendStream(AudioSendStream* send_stream);
   void DeliverRtcp(const uint8_t* packet, size_t length);
+
+  uint32_t local_ssrc() const {
+    // The local_ssrc member variable of config_ will never change and can be
+    // considered const.
+    return config_.rtp.local_ssrc;
+  }
+
+  uint32_t remote_ssrc() const {
+    // The remote_ssrc member variable of config_ will never change and can be
+    // considered const.
+    return config_.rtp.remote_ssrc;
+  }
+
   const webrtc::AudioReceiveStream::Config& config() const;
   const AudioSendStream* GetAssociatedSendStreamForTesting() const;
+
+  // TODO(tommi): Remove this method.
+  void ReconfigureForTesting(const webrtc::AudioReceiveStream::Config& config);
 
  private:
   AudioState* audio_state() const;

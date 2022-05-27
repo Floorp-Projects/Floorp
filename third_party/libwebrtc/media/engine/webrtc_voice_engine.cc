@@ -1234,7 +1234,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     config_.rtp.transport_cc = use_transport_cc;
     config_.rtp.nack.rtp_history_ms = use_nack ? kNackRtpHistoryMs : 0;
-    ReconfigureAudioReceiveStream();
+    stream_->SetUseTransportCcAndNackHistory(use_transport_cc,
+                                             config_.rtp.nack.rtp_history_ms);
   }
 
   void SetRtpExtensionsAndRecreateStream(
@@ -1248,7 +1249,7 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
   void SetDecoderMap(const std::map<int, webrtc::SdpAudioFormat>& decoder_map) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     config_.decoder_map = decoder_map;
-    ReconfigureAudioReceiveStream();
+    stream_->SetDecoderMap(decoder_map);
   }
 
   void MaybeRecreateAudioReceiveStream(
@@ -1339,8 +1340,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
   void SetDepacketizerToDecoderFrameTransformer(
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+    stream_->SetDepacketizerToDecoderFrameTransformer(frame_transformer);
     config_.frame_transformer = std::move(frame_transformer);
-    ReconfigureAudioReceiveStream();
   }
 
  private:
@@ -1357,12 +1358,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
     if (was_running)
       SetPlayout(was_running);
     stream_->SetSink(raw_audio_sink_.get());
-  }
-
-  void ReconfigureAudioReceiveStream() {
-    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-    RTC_DCHECK(stream_);
-    stream_->Reconfigure(config_);
   }
 
   webrtc::SequenceChecker worker_thread_checker_;
