@@ -44,11 +44,11 @@
 #include "p2p/base/port_allocator.h"
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_info.h"
-#include "pc/bundle_manager.h"
 #include "pc/channel.h"
 #include "pc/dtls_srtp_transport.h"
 #include "pc/dtls_transport.h"
 #include "pc/jsep_transport.h"
+#include "pc/jsep_transport_collection.h"
 #include "pc/rtp_transport.h"
 #include "pc/rtp_transport_internal.h"
 #include "pc/sctp_transport.h"
@@ -336,10 +336,6 @@ class JsepTransportController : public sigslot::has_slots<> {
                             const cricket::ContentGroup& bundle_group)
       RTC_RUN_ON(network_thread_);
 
-  bool SetTransportForMid(const std::string& mid,
-                          cricket::JsepTransport* jsep_transport);
-  void RemoveTransportForMid(const std::string& mid);
-
   cricket::JsepTransportDescription CreateJsepTransportDescription(
       const cricket::ContentInfo& content_info,
       const cricket::TransportInfo& transport_info,
@@ -453,18 +449,14 @@ class JsepTransportController : public sigslot::has_slots<> {
 
   void OnDtlsHandshakeError(rtc::SSLHandshakeError error);
 
+  bool OnTransportChanged(const std::string& mid,
+                          cricket::JsepTransport* transport);
+
   rtc::Thread* const network_thread_ = nullptr;
   cricket::PortAllocator* const port_allocator_ = nullptr;
   AsyncDnsResolverFactoryInterface* const async_dns_resolver_factory_ = nullptr;
 
-  std::map<std::string, std::unique_ptr<cricket::JsepTransport>>
-      jsep_transports_by_name_ RTC_GUARDED_BY(network_thread_);
-  // This keeps track of the mapping between media section
-  // (BaseChannel/SctpTransport) and the JsepTransport underneath.
-  std::map<std::string, cricket::JsepTransport*> mid_to_transport_
-      RTC_GUARDED_BY(network_thread_);
-  // Keep track of mids that have been mapped to transports. Used for rollback.
-  std::vector<std::string> pending_mids_ RTC_GUARDED_BY(network_thread_);
+  JsepTransportCollection transports_ RTC_GUARDED_BY(network_thread_);
   // Aggregate states for Transports.
   // standardized_ice_connection_state_ is intended to replace
   // ice_connection_state, see bugs.webrtc.org/9308
