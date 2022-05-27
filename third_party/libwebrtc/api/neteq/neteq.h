@@ -214,11 +214,15 @@ class NetEq {
   // |data_| in |audio_frame| is not written, but should be interpreted as being
   // all zeros. For testing purposes, an override can be supplied in the
   // |action_override| argument, which will cause NetEq to take this action
-  // next, instead of the action it would normally choose.
+  // next, instead of the action it would normally choose. An optional output
+  // argument for fetching the current sample rate can be provided, which
+  // will return the same value as last_output_sample_rate_hz() but will avoid
+  // additional synchronization.
   // Returns kOK on success, or kFail in case of an error.
   virtual int GetAudio(
       AudioFrame* audio_frame,
       bool* muted,
+      int* current_sample_rate_hz = nullptr,
       absl::optional<Operation> action_override = absl::nullopt) = 0;
 
   // Replaces the current set of decoders with the given one.

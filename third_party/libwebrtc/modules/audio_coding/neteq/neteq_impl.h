@@ -133,6 +133,7 @@ class NetEqImpl : public webrtc::NetEq {
   int GetAudio(
       AudioFrame* audio_frame,
       bool* muted,
+      int* current_sample_rate_hz = nullptr,
       absl::optional<Operation> action_override = absl::nullopt) override;
 
   void SetCodecs(const std::map<int, SdpAudioFormat>& codecs) override;

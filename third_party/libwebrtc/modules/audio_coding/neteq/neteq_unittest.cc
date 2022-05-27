@@ -1066,7 +1066,7 @@ TEST_F(NetEqDecodingTestFaxMode, TestJitterBufferDelayWithAcceleration) {
   expected_target_delay += neteq_->TargetDelayMs() * 2 * kSamples;
   // We have two packets in the buffer and kAccelerate operation will
   // extract 20 ms of data.
-  neteq_->GetAudio(&out_frame_, &muted, NetEq::Operation::kAccelerate);
+  neteq_->GetAudio(&out_frame_, &muted, nullptr, NetEq::Operation::kAccelerate);
 
   // Check jitter buffer delay.
   NetEqLifetimeStatistics stats = neteq_->GetLifetimeStatistics();
