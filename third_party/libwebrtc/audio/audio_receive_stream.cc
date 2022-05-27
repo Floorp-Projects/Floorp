@@ -148,8 +148,6 @@ AudioReceiveStream::AudioReceiveStream(
   channel_receive_->SetReceiveCodecs(config.decoder_map);
   // `frame_transformer` and `frame_decryptor` have been given to
   // `channel_receive_` already.
-  RTC_DCHECK(!config.frame_transformer);
-  RTC_DCHECK(!config.frame_decryptor);
 }
 
 AudioReceiveStream::~AudioReceiveStream() {
