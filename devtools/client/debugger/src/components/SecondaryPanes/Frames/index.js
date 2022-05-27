@@ -34,6 +34,25 @@ class Frames extends Component {
     };
   }
 
+  static get propTypes() {
+    return {
+      cx: PropTypes.object,
+      disableContextMenu: PropTypes.bool.isRequired,
+      disableFrameTruncate: PropTypes.bool.isRequired,
+      displayFullUrl: PropTypes.bool.isRequired,
+      frames: PropTypes.array.isRequired,
+      frameworkGroupingOn: PropTypes.bool.isRequired,
+      getFrameTitle: PropTypes.func,
+      panel: PropTypes.oneOf(["debugger", "webconsole"]).isRequired,
+      restart: PropTypes.func,
+      selectFrame: PropTypes.func.isRequired,
+      selectLocation: PropTypes.func,
+      selectedFrame: PropTypes.object,
+      toggleBlackBox: PropTypes.func,
+      toggleFrameworkGrouping: PropTypes.func,
+    };
+  }
+
   shouldComponentUpdate(nextProps, nextState) {
     const { frames, selectedFrame, frameworkGroupingOn } = this.props;
     const { showAllFrames } = this.state;

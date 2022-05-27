@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../../utils/connect";
 import { createSelector } from "reselect";
 import classnames from "classnames";
@@ -28,6 +29,22 @@ import {
 } from "../../../selectors";
 
 class Breakpoint extends PureComponent {
+  static get propTypes() {
+    return {
+      breakpoint: PropTypes.object.isRequired,
+      cx: PropTypes.object.isRequired,
+      disableBreakpoint: PropTypes.func.isRequired,
+      editor: PropTypes.object.isRequired,
+      enableBreakpoint: PropTypes.func.isRequired,
+      frame: PropTypes.object,
+      openConditionalPanel: PropTypes.func.isRequired,
+      removeBreakpoint: PropTypes.func.isRequired,
+      selectSpecificLocation: PropTypes.func.isRequired,
+      selectedSource: PropTypes.object,
+      source: PropTypes.object.isRequired,
+    };
+  }
+
   onContextMenu = e => {
     showContextMenu({ ...this.props, contextMenuEvent: e });
   };

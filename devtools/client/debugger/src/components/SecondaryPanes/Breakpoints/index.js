@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import classnames from "classnames";
 import { connect } from "../../../utils/connect";
 
@@ -22,6 +23,16 @@ import { getSelectedSource, getBreakpointSources } from "../../../selectors";
 import "./Breakpoints.css";
 
 class Breakpoints extends Component {
+  static get propTypes() {
+    return {
+      breakpointSources: PropTypes.array.isRequired,
+      pauseOnExceptions: PropTypes.func.isRequired,
+      selectedSource: PropTypes.object,
+      shouldPauseOnCaughtExceptions: PropTypes.bool.isRequired,
+      shouldPauseOnExceptions: PropTypes.bool.isRequired,
+    };
+  }
+
   componentWillUnmount() {
     this.removeEditor();
   }
