@@ -245,13 +245,16 @@ class CCGCScheduler {
 
   // This is invoked when we reach the actual cycle collection portion of the
   // overall cycle collection.
-  void NoteCCBegin(CCReason aReason, TimeStamp aWhen);
+  void NoteCCBegin(CCReason aReason, TimeStamp aWhen,
+                   uint32_t aNumForgetSkippables, uint32_t aSuspected,
+                   uint32_t aRemovedPurples);
 
   // This is invoked when the whole process of collection is done -- i.e., CC
   // preparation (eg ForgetSkippables) in addition to the CC itself. There
   // really ought to be a separate name for the overall CC as opposed to the
   // actual cycle collection portion.
-  void NoteCCEnd(TimeStamp aWhen);
+  void NoteCCEnd(const CycleCollectorResults& aResults, TimeStamp aWhen,
+                 mozilla::TimeDuration aMaxSliceTime);
 
   void NoteGCSliceEnd(TimeDuration aSliceDuration) {
     if (mMajorGCReason == JS::GCReason::NO_REASON) {
@@ -302,13 +305,6 @@ class CCGCScheduler {
     mPreviousSuspectedCount = aSuspectedCCObjects;
     mCleanupsSinceLastGC++;
     return aSuspectedBeforeForgetSkippable - aSuspectedCCObjects;
-  }
-
-  // After collecting cycles, record the results that are used in scheduling
-  // decisions.
-  void NoteCycleCollected(const CycleCollectorResults& aResults) {
-    mCCollectedWaitingForGC += aResults.mFreedGCed;
-    mCCollectedZonesWaitingForGC += aResults.mFreedJSZones;
   }
 
   // Test if we are in the NoteCCBegin .. NoteCCEnd interval.
