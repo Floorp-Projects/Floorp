@@ -200,6 +200,15 @@ See the above repository for updates as well as full license text. */
 #appMenu-proton-addon-banners > .addon-banner-item::after{
   margin-top: 6px !important;
 }
+
+#appMenu-fxa-status2::before {
+  content: none !important;
+}
+
+#appMenu-zoom-controls2::before {
+  content: none !important;
+}
+
 /* Missing icons */
 #appMenu-proton-update-banner{ list-style-image: url("chrome://global/skin/icons/reload.svg"); }
 #appMenu-new-tab-button2{ list-style-image: url("chrome://browser/skin/new-tab.svg") }

@@ -10053,7 +10053,6 @@ switch(floorpinterfacenum){
      var Tag = document.createElement('style');
      Tag.innerText = ThemeCSS.leptonUI;
      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
-     Services.prefs.setIntPref("browser.uidensity", 0);
      break;
 
 }

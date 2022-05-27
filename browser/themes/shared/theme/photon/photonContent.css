@@ -192,11 +192,11 @@
 }
 @supports -moz-bool-pref("userContent.player.icon") {
   #controlsContainer .fullscreenButton {
-    background-image: url("../icons/enter-fullscreen.svg") !important;
+    background-image: url("chrome://browser/skin/lepton/enter-fullscreen.svg") !important;
   }
 
   #controlsContainer .fullscreenButton[fullscreened] {
-    background-image: url("../icons/exit-fullscreen.svg") !important;
+    background-image: url("chrome://browser/skin/lepton/exit-fullscreen.svg") !important;
   }
 }
 @supports -moz-bool-pref("userContent.player.noaudio") {
@@ -496,12 +496,12 @@
   url("about:restartrequired"), url("chrome://browser/content/aboutRestartRequired.xhtml")
   {
     #errorPageContainer {
-      background-image: url("../icons/error-connection-failure.svg");
+      background-image: url("chrome://browser/skin/lepton/error-connection-failure.svg");
     }
   }
   @-moz-document url-prefix("about:neterror?e=dnsNotFound") {
     #errorPageContainer {
-      background-image: url("../icons/error-server-not-found.svg");
+      background-image: url("chrome://browser/skin/lepton/error-server-not-found.svg");
     }
   }
   @-moz-document url-prefix("about:neterror?e=malformedURI") {
@@ -512,14 +512,14 @@
   @-moz-document url-prefix("about:neterror?e=clockSkewError"),
   url-prefix("about:neterror?e=nssFailure") {
     #errorPageContainer {
-      background-image: url("../icons/blue-berror.svg");
+      background-image: url("chrome://browser/skin/lepton/blue-berror.svg");
       background-size: 18.5em;
     }
   }
   @-moz-document url("about:sessionrestore"), url("chrome://browser/content/aboutSessionRestore.xhtml")
   {
     .description-wrapper {
-      background-image: url("../icons/error-session-restore.svg");
+      background-image: url("chrome://browser/skin/lepton/error-session-restore.svg");
     }
   }
   @-moz-document url-prefix("about:neterror?e=fileNotFound") {
@@ -551,7 +551,7 @@
   {
     @media (min-width: 970px) {
       .title {
-        background-image: url("../icons/welcome-back.svg") !important;
+        background-image: url("chrome://browser/skin/lepton/welcome-back.svg") !important;
       }
     }
   }
@@ -1841,7 +1841,7 @@
       #editBMPanel_folderMenuList:not([selectedGuid="toolbar_____"], [selectedGuid="menu________"]),
       #editBMPanel_folderMenuList .folder-icon:not([id]),
       .downloadIconShow > .button-box > .button-icon {
-        list-style-image: url("../icons/folder.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/folder.svg") !important;
       }
 
       /* Standard Folder - Open */
@@ -1849,7 +1849,7 @@
         .bookmark-item[container="true"]:not([query="true"], [tagContainer], [dayContainer])[open="true"],
       :-moz-any(#bookmarks-view, #historyTree, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(title, container, open) {
-        list-style-image: url("../icons/folder-open.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/folder-open.svg") !important;
       }
 
       /*= Other Folder - Inbox Icon ================================================*/
@@ -1863,7 +1863,7 @@
         treechildren::-moz-tree-image(container, queryFolder_unfiled_____),
       #editBMPanel_unfiledRootItem,
       #editBMPanel_folderMenuList[selectedGuid="unfiled_____"] {
-        list-style-image: url("../icons/mail-inbox-all.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg") !important;
       }
 
       /* Other Folder - Open */
@@ -1874,7 +1874,7 @@
         treechildren::-moz-tree-image(container, open, OrganizerQuery_UnfiledBookmarks),
       :-moz-any(#bookmarks-view, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(container, open, queryFolder_unfiled_____) {
-        list-style-image: url("../icons/mail-inbox.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/mail-inbox.svg") !important;
       }
 
       /*= Default Icon - Override ===================================================*/
@@ -1935,7 +1935,7 @@
         treechildren::-moz-tree-image(title, query, open, dayContainer),
       :-moz-any(#historyTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(query, open, OrganizerQuery_history____v) {
-        list-style-image: url("../icons/history-reverse.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/history-reverse.svg") !important;
       }
 
       /* Tag */
@@ -1943,7 +1943,7 @@
         .bookmark-item[container="true"][tagContainer="true"][open="true"],
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(title, query, open, tagContainer),
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(query, open, OrganizerQuery_tags_______v) {
-        list-style-image: url("../icons/tag-open.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/tag-open.svg") !important;
       }
 
       /* Boomark */
@@ -1956,13 +1956,13 @@
       #bookmarksMenuPopup #bookmarksToolbarFolderMenu[open="true"],
       :-moz-any(#bookmarks-view, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(container, open, queryFolder_toolbar_____) {
-        list-style-image: url("../icons/bookmarksToolbar-open.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/bookmarksToolbar-open.svg") !important;
       }
 
       /* Bookmark Menu */
       :-moz-any(#bookmarks-view, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(container, open, queryFolder_menu________) {
-        list-style-image: url("../icons/bookmarksMenu-open.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/bookmarksMenu-open.svg") !important;
         /* or bookmarksMenu-open2.svg" */
       }
 
@@ -1983,11 +1983,11 @@
       }
 
       #viewMenu {
-        list-style-image: url("../icons/sort.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/sort.svg") !important;
       }
 
       #maintenanceButton {
-        list-style-image: url("../icons/import-export.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/import-export.svg") !important;
       }
 
       #clearDownloadsButton {
@@ -2002,6 +2002,19 @@
         margin-inline-end: 2px;
       }
 
+      /* Replace */
+      #back-button {
+        list-style-image: url("chrome://browser/skin/back.svg") !important;
+      }
+
+      #forward-button {
+        list-style-image: url("chrome://browser/skin/forward.svg") !important;
+      }
+
+      #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+      #forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+        transform: scaleX(-1) !important;
+      }
     }
     /*= Context Menu ===========================================================*/
     @supports -moz-bool-pref("userChrome.icon.context_menu") {
@@ -2147,12 +2160,12 @@
       /* Icon lists */
       /*= placeContext =============================================================*/
       #placesContext_open {
-        --menuitem-image: url("../icons/link-square.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
       }
 
       #placesContext_openBookmarkContainer\:tabs,
       #placesContext_openBookmarkLinks\:tabs {
-        --menuitem-image: url("../icons/movetowindow-16.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
       }
 
       #placesContext_open\:newtab,
@@ -2183,11 +2196,11 @@
       }
 
       #placesContext_deleteHost {
-        --menuitem-image: url("../icons/eye-hide.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/eye-hide.svg");
       }
 
       #placesContext_sortBy\:name {
-        --menuitem-image: url("../icons/text-sort-ascending.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
       }
 
       #placesContext_cut {
@@ -2195,7 +2208,7 @@
       }
 
       #placesContext_copy {
-        --menuitem-image: url("../icons/edit-copy.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
       }
 
       #placesContext_paste_group {
@@ -2211,12 +2224,12 @@
       }
       @supports -moz-bool-pref("userChrome.icon.library") {
         #placesContext_new\:folder {
-          --menuitem-image: url("../icons/folder.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
         }
       }
 
       #placesContext_new\:separator {
-        --menuitem-image: url("../icons/vertical-line.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
       }
 
       #placesContext_paste {
@@ -2229,7 +2242,7 @@
 
       #show-other-bookmarks_PersonalToolbar {
         /* checkbox */
-        /* --menuitem-image: url("../icons/star-line-horizontal.svg"); */
+        /* --menuitem-image: url("chrome://browser/skin/lepton/star-line-horizontal.svg"); */
       }
 
       #placesContext_showAllBookmarks {
@@ -2237,7 +2250,7 @@
       }
 
       .openintabs-menuitem {
-        --menuitem-image: url("../icons/movetowindow-16.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
       }
 
       /*= organizeButtonPopup ======================================================*/
@@ -2250,16 +2263,16 @@
       }
       @supports -moz-bool-pref("userChrome.icon.library") {
         #newfolder {
-          --menuitem-image: url("../icons/folder.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
         }
       }
 
       #newseparator {
-        --menuitem-image: url("../icons/vertical-line.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
       }
 
       #orgUndo {
-        --menuitem-image: url("../icons/undo.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/undo.svg");
       }
 
       #orgCut {
@@ -2267,7 +2280,7 @@
       }
 
       #orgCopy {
-        --menuitem-image: url("../icons/edit-copy.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
       }
 
       #orgPaste {
@@ -2279,7 +2292,7 @@
       }
 
       #orgSelectAll {
-        --menuitem-image: url("../icons/select-all-on.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/select-all-on.svg");
       }
 
       #orgClose {
@@ -2292,7 +2305,7 @@
       }
 
       #viewSort {
-        --menuitem-image: url("../icons/text-sort-ascending.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
       }
 
       /*= maintenanceButtonPopup ===================================================*/
