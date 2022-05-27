@@ -5354,23 +5354,6 @@ nsresult EditorBase::FinalizeSelection() {
   return NS_OK;
 }
 
-void EditorBase::ReinitializeSelection(Element& aElement) {
-  if (NS_WARN_IF(Destroyed())) {
-    return;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return;
-  }
-
-  OnFocus(aElement);
-
-  // If previous focused editor turn on spellcheck and this editor doesn't
-  // turn on it, spellcheck state is mismatched.  So we need to re-sync it.
-  SyncRealTimeSpell();
-}
-
 Element* EditorBase::GetEditorRoot() const { return GetRoot(); }
 
 Element* EditorBase::GetExposedRoot() const {
