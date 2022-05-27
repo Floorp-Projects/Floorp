@@ -616,6 +616,13 @@ class EditorBase : public nsIEditor,
    */
   MOZ_CAN_RUN_SCRIPT nsresult OnFocus(const nsINode& aOriginalEventTargetNode);
 
+  /**
+   * OnBlur() is called when we're blurred.
+   *
+   * @param aEventTarget        The event target of the blur event.
+   */
+  nsresult OnBlur(const dom::EventTarget* aEventTarget);
+
   /** Resyncs spellchecking state (enabled/disabled).  This should be called
    * when anything that affects spellchecking state changes, such as the
    * spellcheck attribute value.
