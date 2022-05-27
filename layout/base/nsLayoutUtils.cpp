@@ -2144,15 +2144,15 @@ static Matrix4x4Flagged GetTransformToAncestorExcludingAnimated(
   return ctm;
 }
 
-gfxSize nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(
+MatrixScalesDouble nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(
     nsIFrame* aFrame) {
   Matrix4x4Flagged transform = GetTransformToAncestorExcludingAnimated(
       aFrame, nsLayoutUtils::GetDisplayRootFrame(aFrame));
   Matrix transform2D;
   if (transform.Is2D(&transform2D)) {
-    return ThebesMatrix(transform2D).ScaleFactors().ToSize();
+    return ThebesMatrix(transform2D).ScaleFactors();
   }
-  return gfxSize(1, 1);
+  return MatrixScalesDouble();
 }
 
 const nsIFrame* nsLayoutUtils::FindNearestCommonAncestorFrame(
