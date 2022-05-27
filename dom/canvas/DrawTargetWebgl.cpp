@@ -354,7 +354,7 @@ bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
   if (!mSkia->Init(size, SurfaceFormat::B8G8R8A8)) {
     return false;
   }
-  mSkia->SetPermitSubpixelAA(IsOpaque(format));
+  SetPermitSubpixelAA(IsOpaque(format));
   return true;
 }
 
@@ -384,11 +384,13 @@ bool DrawTargetWebgl::SharedContext::Initialize() {
   return true;
 }
 
-void DrawTargetWebgl::SharedContext::SetBlendState(CompositionOp aOp) {
-  if (aOp == mLastCompositionOp) {
+void DrawTargetWebgl::SharedContext::SetBlendState(
+    CompositionOp aOp, const Maybe<DeviceColor>& aColor) {
+  if (aOp == mLastCompositionOp && mLastBlendColor == aColor) {
     return;
   }
   mLastCompositionOp = aOp;
+  mLastBlendColor = aColor;
   // AA is not supported for all composition ops, so switching blend modes may
   // cause a toggle in AA state. Certain ops such as OP_SOURCE require output
   // alpha that is blended separately from AA coverage. This would require two
@@ -400,17 +402,20 @@ void DrawTargetWebgl::SharedContext::SetBlendState(CompositionOp aOp) {
   mWebgl->Enable(LOCAL_GL_BLEND);
   switch (aOp) {
     case CompositionOp::OP_OVER:
-      mWebgl->BlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
-                                LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
+      if (aColor) {
+        // If a color is supplied, then we blend subpixel text.
+        mWebgl->BlendColor(aColor->b, aColor->g, aColor->r, 1.0f);
+        mWebgl->BlendFunc(LOCAL_GL_CONSTANT_COLOR,
+                          LOCAL_GL_ONE_MINUS_SRC_COLOR);
+      } else {
+        mWebgl->BlendFunc(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
+      }
       break;
     case CompositionOp::OP_ADD:
-      mWebgl->BlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE, LOCAL_GL_ONE,
-                                LOCAL_GL_ONE);
+      mWebgl->BlendFunc(LOCAL_GL_ONE, LOCAL_GL_ONE);
       break;
     case CompositionOp::OP_ATOP:
-      mWebgl->BlendFuncSeparate(
-          LOCAL_GL_DST_ALPHA, LOCAL_GL_ONE_MINUS_SRC_ALPHA, LOCAL_GL_DST_ALPHA,
-          LOCAL_GL_ONE_MINUS_SRC_ALPHA);
+      mWebgl->BlendFunc(LOCAL_GL_DST_ALPHA, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
       break;
     case CompositionOp::OP_SOURCE:
     default:
@@ -1329,9 +1334,6 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
     return false;
   }
 
-  // Map the composition op to a WebGL blend mode, if possible.
-  SetBlendState(aOptions.mCompositionOp);
-
   // Set up the scissor test to reflect the clipping rectangle, if supplied.
   bool scissor = false;
   if (!mClipRect.Contains(IntRect(IntPoint(), mViewportSize))) {
@@ -1376,6 +1378,8 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
           break;
         }
       }
+      // Map the composition op to a WebGL blend mode, if possible.
+      SetBlendState(aOptions.mCompositionOp);
       // Since it couldn't be mapped to a scissored clear, we need to use the
       // solid color shader with supplied transform.
       if (mLastProgram != mSolidProgram) {
@@ -1573,6 +1577,11 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         }
       }
 
+      // Map the composition op to a WebGL blend mode, if possible. If there is
+      // a mask color and a texture with multiple channels, assume subpixel
+      // blending.
+      SetBlendState(aOptions.mCompositionOp,
+                    format != SurfaceFormat::A8 ? aMaskColor : Nothing());
       // Switch to the image shader and set up relevant transforms.
       if (mLastProgram != mImageProgram) {
         mWebgl->UseProgram(mImageProgram);
@@ -1599,10 +1608,13 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
                             {(const uint8_t*)&aaData, sizeof(aaData)});
         mDirtyAA = !!aStrokeOptions;
       }
-      DeviceColor color = aMaskColor.valueOr(DeviceColor(1, 1, 1, 1));
+      DeviceColor color = aMaskColor && format != SurfaceFormat::A8
+                              ? DeviceColor::Mask(1.0f, aMaskColor->a)
+                              : aMaskColor.valueOr(DeviceColor(1, 1, 1, 1));
       float a = color.a * aOptions.mAlpha;
       float colorData[4] = {color.b * a, color.g * a, color.r * a, a};
-      float swizzleData = aMaskColor ? 1.0f : 0.0f;
+      float swizzleData =
+          aMaskColor && format == SurfaceFormat::A8 ? 1.0f : 0.0f;
       Matrix xform(aRect.width, 0.0f, 0.0f, aRect.height, aRect.x, aRect.y);
       if (aTransformed) {
         xform *= currentTransform;
@@ -2140,8 +2152,8 @@ void DrawTargetWebgl::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
 }
 
 // Extract the surface's alpha values into an A8 surface.
-static already_AddRefed<DataSourceSurface> ExtractAlpha(
-    SourceSurface* aSurface) {
+static already_AddRefed<DataSourceSurface> ExtractAlpha(SourceSurface* aSurface,
+                                                        bool aAllowSubpixelAA) {
   RefPtr<DataSourceSurface> surfaceData = aSurface->GetDataSurface();
   if (!surfaceData) {
     return nullptr;
@@ -2160,8 +2172,12 @@ static already_AddRefed<DataSourceSurface> ExtractAlpha(
   if (!dstMap.IsMapped()) {
     return nullptr;
   }
-  SwizzleData(srcMap.GetData(), srcMap.GetStride(), surfaceData->GetFormat(),
-              dstMap.GetData(), dstMap.GetStride(), SurfaceFormat::A8, size);
+  // For subpixel masks, ignore the alpha and instead sample one of the color
+  // channels as if they were alpha.
+  SwizzleData(
+      srcMap.GetData(), srcMap.GetStride(),
+      aAllowSubpixelAA ? SurfaceFormat::A8R8G8B8 : surfaceData->GetFormat(),
+      dstMap.GetData(), dstMap.GetStride(), SurfaceFormat::A8, size);
   return alpha.forget();
 }
 
@@ -2491,12 +2507,14 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   xformBounds.Inflate(2);
   IntRect intBounds = RoundedOut(xformBounds);
 
-  // Whether to render the text as a full color result as opposed to as a
-  // grayscale mask. Subpixel AA or fonts with color glyphs require this.
-  // We currently have to check to check the rasterized result to see if
-  // there are any color glyphs as there is not yet a way to a priori know
-  // this.
-  bool useColor = aUseSubpixelAA;
+  // Whether the font may use bitmaps. If so, we need to render the glyphs with
+  // color as grayscale bitmaps will use the color while color emoji will not,
+  // with no easy way to know ahead of time. We currently have to check the
+  // rasterized result to see if there are any color glyphs. To render subpixel
+  // masks, we need to know that the rasterized result actually represents a
+  // subpixel mask rather than try to interpret it as a normal RGBA result such
+  // as for color emoji.
+  bool useBitmaps = aFont->MayUseBitmaps();
 
   // Look for an existing glyph cache on the font. If not there, create it.
   GlyphCache* cache =
@@ -2508,9 +2526,13 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   }
   // Hash the incoming text run and looking for a matching entry.
   DeviceColor color = static_cast<const ColorPattern&>(aPattern).mColor;
-  DeviceColor aaColor = useColor ? color : DeviceColor(1.0f, 1.0f, 1.0f, 1.0f);
-  RefPtr<GlyphCacheEntry> entry =
-      cache->FindOrInsertEntry(aBuffer, aaColor, currentTransform, intBounds);
+  // If the font has bitmaps, use the color directly. Otherwise, the texture
+  // will hold a grayscale mask, so encode the key's subpixel state in the
+  // color.
+  RefPtr<GlyphCacheEntry> entry = cache->FindOrInsertEntry(
+      aBuffer,
+      useBitmaps ? color : DeviceColor::Mask(aUseSubpixelAA ? 1 : 0, 1),
+      currentTransform, intBounds);
   if (!entry) {
     return false;
   }
@@ -2524,10 +2546,9 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
     // texture.
     SurfacePattern pattern(nullptr, ExtendMode::CLAMP,
                            Matrix::Translation(intBounds.TopLeft()));
-    if (DrawRectAccel(
-            Rect(intBounds), pattern, aOptions,
-            handle->GetFormat() == SurfaceFormat::A8 ? Some(color) : Nothing(),
-            &handle, false, true, true)) {
+    if (DrawRectAccel(Rect(intBounds), pattern, aOptions,
+                      useBitmaps ? Nothing() : Some(color), &handle, false,
+                      true, true)) {
       return true;
     }
   } else {
@@ -2536,28 +2557,34 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
     // If we get here, either there wasn't a cached texture handle or it
     // wasn't valid. Render the text run into a temporary target.
     RefPtr<DrawTargetSkia> textDT = new DrawTargetSkia;
-    if (textDT->Init(intBounds.Size(), SurfaceFormat::B8G8R8A8)) {
+    if (textDT->Init(intBounds.Size(), !useBitmaps && !aUseSubpixelAA
+                                           ? SurfaceFormat::A8
+                                           : SurfaceFormat::B8G8R8A8)) {
       textDT->SetTransform(currentTransform *
                            Matrix::Translation(-intBounds.TopLeft()));
       textDT->SetPermitSubpixelAA(aUseSubpixelAA);
       DrawOptions drawOptions(1.0f, CompositionOp::OP_OVER,
                               aOptions.mAntialiasMode);
-      textDT->FillGlyphs(aFont, aBuffer, ColorPattern(aaColor), drawOptions);
+      // If bitmaps might be used, then we have to supply the color, as color
+      // emoji may ignore it while grayscale bitmaps may use it, with no way to
+      // know ahead of time. Otherwise, assume the output will be a mask and
+      // just render it white to determine intensity.
+      textDT->FillGlyphs(
+          aFont, aBuffer,
+          ColorPattern(useBitmaps ? color : DeviceColor(1, 1, 1, 1)),
+          drawOptions);
       RefPtr<SourceSurface> textSurface = textDT->Snapshot();
       if (textSurface) {
-        if (!useColor) {
-          // If we don't expect the text surface to contain color glyphs
-          // such as from subpixel AA, then do one final check to see if
-          // any ended up in the result. If not, extract the alpha values
-          // from the surface so we can render it as a mask.
-          if (CheckForColorGlyphs(textSurface)) {
-            useColor = true;
-          } else {
-            textSurface = ExtractAlpha(textSurface);
-            if (!textSurface) {
-              // Failed extracting alpha for the text surface...
-              return false;
-            }
+        // If we don't expect the text surface to contain color glyphs
+        // such as from subpixel AA, then do one final check to see if
+        // any ended up in the result. If not, extract the alpha values
+        // from the surface so we can render it as a mask.
+        if (textSurface->GetFormat() != SurfaceFormat::A8 &&
+            !CheckForColorGlyphs(textSurface)) {
+          textSurface = ExtractAlpha(textSurface, !useBitmaps);
+          if (!textSurface) {
+            // Failed extracting alpha for the text surface...
+            return false;
           }
         }
         // Attempt to upload the rendered text surface into a texture
@@ -2565,7 +2592,7 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
         SurfacePattern pattern(textSurface, ExtendMode::CLAMP,
                                Matrix::Translation(intBounds.TopLeft()));
         if (DrawRectAccel(Rect(intBounds), pattern, aOptions,
-                          useColor ? Nothing() : Some(color), &handle, false,
+                          useBitmaps ? Nothing() : Some(color), &handle, false,
                           true) &&
             handle) {
           // If drawing succeeded, then the text surface was uploaded to
@@ -2595,7 +2622,8 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   }
   bool useSubpixelAA =
       GetPermitSubpixelAA() &&
-      (aaMode == AntialiasMode::DEFAULT || aaMode == AntialiasMode::SUBPIXEL);
+      (aaMode == AntialiasMode::DEFAULT || aaMode == AntialiasMode::SUBPIXEL) &&
+      aOptions.mCompositionOp == CompositionOp::OP_OVER;
 
   if (mWebglValid && SupportsDrawOptions(aOptions) &&
       aPattern.GetType() == PatternType::COLOR && PrepareContext() &&
