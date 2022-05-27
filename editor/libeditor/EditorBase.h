@@ -594,6 +594,15 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] virtual Element* FindSelectionRoot(const nsINode& aNode) const;
 
   /**
+   * Check whether the caller can keep handling focus event.
+   *
+   * @param aOriginalEventTargetNode    The original event target of the focus
+   *                                    event.
+   */
+  [[nodiscard]] bool CanKeepHandlingFocusEvent(
+      const nsINode& aOriginalEventTargetNode) const;
+
+  /**
    * OnFocus() is called when we get a focus event.
    *
    * @param aOriginalEventTargetNode    The original event target node of the
@@ -2391,6 +2400,7 @@ class EditorBase : public nsIEditor,
   virtual nsresult InstallEventListeners();
   virtual void CreateEventListeners();
   virtual void RemoveEventListeners();
+  [[nodiscard]] bool IsListeningToEvents() const;
 
   /**
    * Called if and only if this editor is in readonly mode.

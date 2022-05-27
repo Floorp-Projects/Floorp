@@ -555,6 +555,11 @@ void EditorBase::RemoveEventListeners() {
   mEventTarget = nullptr;
 }
 
+bool EditorBase::IsListeningToEvents() const {
+  return IsInitialized() && mEventListener &&
+         !mEventListener->DetachedFromEditor();
+}
+
 bool EditorBase::GetDesiredSpellCheckState() {
   // Check user override on this element
   if (mSpellcheckCheckboxState != eTriUnset) {
@@ -5622,6 +5627,40 @@ bool EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const {
   // Otherwise, we shouldn't handle any input events when we're not an active
   // element of the DOM window.
   return IsActiveInDOMWindow();
+}
+
+bool EditorBase::CanKeepHandlingFocusEvent(
+    const nsINode& aOriginalEventTargetNode) const {
+  if (MOZ_UNLIKELY(!IsListeningToEvents() || Destroyed())) {
+    return false;
+  }
+
+  nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
+  if (MOZ_UNLIKELY(!focusManager)) {
+    return false;
+  }
+
+  // If the event target is document mode, we only need to handle the focus
+  // event when the document is still in designMode.  Otherwise, the
+  // mode has been disabled by somebody while we're handling the focus event.
+  if (aOriginalEventTargetNode.IsDocument()) {
+    return IsHTMLEditor() && aOriginalEventTargetNode.IsInDesignMode();
+  }
+  MOZ_ASSERT(aOriginalEventTargetNode.IsContent());
+
+  // If nobody has focus, the focus event target has been blurred by somebody
+  // else.  So the editor shouldn't initialize itself to start to handle
+  // anything.
+  if (!focusManager->GetFocusedElement()) {
+    return false;
+  }
+  const nsIContent* exposedTargetContent =
+      aOriginalEventTargetNode.AsContent()
+          ->FindFirstNonChromeOnlyAccessContent();
+  const nsIContent* exposedFocusedContent =
+      focusManager->GetFocusedElement()->FindFirstNonChromeOnlyAccessContent();
+  return exposedTargetContent && exposedFocusedContent &&
+         exposedTargetContent == exposedFocusedContent;
 }
 
 void EditorBase::OnFocus(const nsINode& aOriginalEventTargetNode) {
