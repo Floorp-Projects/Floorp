@@ -33,6 +33,8 @@
       'Mac64 Release': 'release_bot_x64',
       'Mac64 Builder': 'pure_release_bot_x64',
       'Mac Asan': 'mac_asan_clang_release_bot_x64',
+      'MacARM64 M1 Debug': 'debug_bot_arm64',
+      'MacARM64 M1 Release': 'release_bot_arm64',
 
       # Linux
       'Linux32 Debug': 'no_h264_debug_bot_x86',
@@ -161,6 +163,8 @@
       'mac_dbg': 'debug_bot_x64',
       'mac_rel': 'release_bot_x64',
       'mac_asan': 'mac_asan_clang_release_bot_x64',
+      'MacARM64 M1 Debug try': 'debug_bot_arm64',
+      'MacARM64 M1 Release try': 'release_bot_arm64',
 
       # Linux
       'linux_compile_dbg': 'debug_bot_x64',
