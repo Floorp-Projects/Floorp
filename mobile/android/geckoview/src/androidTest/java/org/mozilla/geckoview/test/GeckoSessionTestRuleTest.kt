@@ -1532,6 +1532,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @TimeoutMillis(1000)
     @Test(expected = UiThreadUtils.TimeoutException::class)
+        // disable test on debug for frequently failing Bug 1605001
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
     fun evaluateJS_canTimeout() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
