@@ -338,3 +338,19 @@ addAccessibleTask(
     iframe: !isWinNoCache,
   }
 );
+
+/**
+ * Test character bounds on the insertion point at the end of a text box.
+ */
+addAccessibleTask(
+  `<input id="input" value="a">`,
+  async function(browser, docAcc) {
+    const input = findAccessibleChildByID(docAcc, "input");
+    testTextPos(input, 1, [0, 0], COORDTYPE_SCREEN_RELATIVE);
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);
