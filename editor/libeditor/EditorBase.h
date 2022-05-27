@@ -603,6 +603,12 @@ class EditorBase : public nsIEditor,
       const nsINode& aOriginalEventTargetNode) const;
 
   /**
+   * This editor has skipped spell checking and not yet flushed, this runs
+   * the spell checker.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult FlushPendingSpellCheck();
+
+  /**
    * OnFocus() is called when we get a focus event.
    *
    * @param aOriginalEventTargetNode    The original event target node of the
