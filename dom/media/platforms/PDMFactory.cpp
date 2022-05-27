@@ -568,6 +568,12 @@ void PDMFactory::CreateUtilityPDMs() {
         FFmpegRuntimeLinker::LinkStatusCode());
   }
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+  if (StaticPrefs::media_utility_android_media_codec_enabled()) {
+    StartupPDM(AndroidDecoderModule::Create(),
+               StaticPrefs::media_android_media_codec_preferred());
+  }
+#endif
   CreateAndStartupPDM<AgnosticDecoderModule>();
 }
 

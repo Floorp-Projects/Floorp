@@ -3001,8 +3001,11 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   }
 
 #ifdef MOZ_WIDGET_ANDROID
-  Unused << SendDecoderSupportedMimeTypes(
-      AndroidDecoderModule::GetSupportedMimeTypes());
+  if (!(StaticPrefs::media_utility_process_enabled() &&
+        StaticPrefs::media_utility_android_media_codec_enabled())) {
+    Unused << SendDecoderSupportedMimeTypes(
+        AndroidDecoderModule::GetSupportedMimeTypes());
+  }
 #endif
 
   // Must send screen info before send initialData
