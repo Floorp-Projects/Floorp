@@ -37,6 +37,9 @@ permalink: /changelog/
         Use `listOf` instead of `longArrayOf` or call `.toList`
       * `TimingDistributionMetricType.start` now always returns a valid `TimerId`, `TimingDistributionMetricType.stopAndAccumulate` always requires a `TimerId`.
 
+* **support-rusterrors**
+  * 🆕 New component to report Rust errors
+
 # 102.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v101.0.0...v102.0.1)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/149?closed=1)

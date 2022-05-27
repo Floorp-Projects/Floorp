@@ -343,6 +343,10 @@ projects:
     path: components/support/android-test
     description: 'A collection of helpers for testing components from instrumented (on device) tests.'
     publish: true
+  support-rusterrors:
+    path: components/support/rusterrors
+    description: 'A bridge for reporting Rust errors to Sentry/Glean'
+    publish: true
   support-test-appservices:
     path: components/support/test-appservices
     description: 'A component for synchronizing Application Services'' unit testing dependencies used in Android Components.'

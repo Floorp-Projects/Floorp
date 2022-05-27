@@ -104,6 +104,7 @@ treeherder:
         support-locale: support-locale
         support-migration: support-migration
         support-rusthttp: support-rusthttp
+        support-rusterrors: support-rusterrors
         support-rustlog: support-rustlog
         support-sync-telemetry: support-sync-telemetry
         support-test-appservices: support-test-appservices

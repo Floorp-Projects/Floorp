@@ -9,10 +9,13 @@ import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import io.sentry.Breadcrumb
 import io.sentry.Sentry
+import io.sentry.SentryEvent
 import io.sentry.SentryLevel
+import io.sentry.SentryOptions.BeforeSendCallback
 import io.sentry.android.core.SentryAndroid
 import io.sentry.protocol.SentryId
 import mozilla.components.Build
+import mozilla.components.concept.base.crash.RustCrashReport
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.service.CrashReporterService
 import java.util.Locale
@@ -131,6 +134,27 @@ class SentryService(
             options.isEnableNdk = false
             options.dsn = dsn
             options.environment = environment
+            options.beforeSend = BeforeSendCallback { event, _ ->
+                val throwable = event.throwable
+                if (throwable is RustCrashReport) {
+                    alterEventForRustCrash(event, throwable)
+                }
+                event
+            }
+        }
+    }
+
+    private fun alterEventForRustCrash(event: SentryEvent, crash: RustCrashReport) {
+        event.fingerprints = listOf(crash.typeName)
+        // Sentry supports multiple exceptions in an event, modify
+        // the top-level one controls how the event is displayed
+        //
+        // It's technically possible for the event to have a null
+        // or empty exception list, but that shouldn't happen in
+        // practice.
+        event.exceptions?.firstOrNull()?.let { sentryException ->
+            sentryException.type = crash.typeName
+            sentryException.value = crash.message
         }
     }
 
