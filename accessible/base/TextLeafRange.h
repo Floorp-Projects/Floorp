@@ -171,6 +171,16 @@ class TextLeafPoint final {
 
   TextLeafPoint FindParagraphSameAcc(nsDirection aDirection,
                                      bool aIncludeOrigin) const;
+
+  bool IsInSpellingError() const;
+
+  /**
+   * Find a spelling error boundary in the same Accessible. This function
+   * searches for either start or end points, since either means a change in
+   * text attributes.
+   */
+  TextLeafPoint FindSpellingErrorSameAcc(nsDirection aDirection,
+                                         bool aIncludeOrigin) const;
 };
 
 /**
