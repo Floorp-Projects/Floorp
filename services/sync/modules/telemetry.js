@@ -117,6 +117,16 @@ function timeDeltaFrom(monotonicStartTime) {
   return -1;
 }
 
+const NS_ERROR_MODULE_BASE_OFFSET = 0x45;
+const NS_ERROR_MODULE_NETWORK = 6;
+
+// A reimplementation of NS_ERROR_GET_MODULE, which surprisingly doesn't seem
+// to exist anywhere in .js code in a way that can be reused.
+// This is taken from DownloadCore.jsm.
+function NS_ERROR_GET_MODULE(code) {
+  return ((code & 0x7fff0000) >> 16) - NS_ERROR_MODULE_BASE_OFFSET;
+}
+
 // Converts extra integer fields to strings, rounds floats to three
 // decimal places (nanosecond precision for timings), and removes profile
 // directory paths and URLs from potential error messages.
@@ -1144,6 +1154,19 @@ class SyncTelemetryImpl {
     }
 
     if (error.result) {
+      // many "nsresult" errors are actually network errors - if they are
+      // associated with the "network" module we assume that's true.
+      // We also assume NS_ERROR_ABORT is such an error - for almost everything
+      // we care about, it acually is (eg, if the connection fails early enough
+      // or if we have a captive portal etc) - we don't lose anything by this
+      // assumption, it's just that the error will no longer be in the "nserror"
+      // category, so our analysis can still find them.
+      if (
+        error.result == Cr.NS_ERROR_ABORT ||
+        NS_ERROR_GET_MODULE(error.result) == NS_ERROR_MODULE_NETWORK
+      ) {
+        return { name: "httperror", code: error.result };
+      }
       return { name: "nserror", code: error.result };
     }
     // It's probably an Error object, but it also could be some

@@ -315,3 +315,42 @@ addAccessibleTask(
     iframe: !isWinNoCache,
   }
 );
+
+/**
+ * Test bounds after text mutations.
+ */
+addAccessibleTask(
+  `<p id="p">a</p>`,
+  async function(browser, docAcc) {
+    await testTextNode(docAcc, browser, "p");
+    const p = findAccessibleChildByID(docAcc, "p");
+    info("Appending a character to text leaf");
+    let textInserted = waitForEvent(EVENT_TEXT_INSERTED, p);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("p").firstChild.data = "ab";
+    });
+    await textInserted;
+    await testTextNode(docAcc, browser, "p");
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);
+
+/**
+ * Test character bounds on the insertion point at the end of a text box.
+ */
+addAccessibleTask(
+  `<input id="input" value="a">`,
+  async function(browser, docAcc) {
+    const input = findAccessibleChildByID(docAcc, "input");
+    testTextPos(input, 1, [0, 0], COORDTYPE_SCREEN_RELATIVE);
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);
