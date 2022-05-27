@@ -175,6 +175,7 @@ class NotificationController final : public EventQueue,
                "A text node is not visible");
 
     mTextHash.Insert(aTextNode);
+
     ScheduleProcessing();
   }
 
