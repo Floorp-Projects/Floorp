@@ -79,7 +79,7 @@ Paste the lines between the chevrons (>>> and <<<) into
 >>>
 %s
 <<<
-""".strip()
+"""
 
 CONFIGURE_MERCURIAL = """
 Mozilla recommends a number of changes to Mercurial to enhance your
