@@ -556,6 +556,27 @@ add_task(async function test_engine_fail_ioerror() {
   }
 });
 
+add_task(async function test_error_detections() {
+  let telem = get_sync_test_telemetry();
+
+  // Non-network NS_ERROR_ codes get their own category.
+  Assert.deepEqual(
+    telem.transformError(Components.Exception("", Cr.NS_ERROR_FAILURE)),
+    { name: "nserror", code: Cr.NS_ERROR_FAILURE }
+  );
+
+  // Some NS_ERROR_ code in the "network" module are treated as http errors.
+  Assert.deepEqual(
+    telem.transformError(Components.Exception("", Cr.NS_ERROR_UNKNOWN_HOST)),
+    { name: "httperror", code: Cr.NS_ERROR_UNKNOWN_HOST }
+  );
+  // Some NS_ERROR_ABORT is treated as network by our telemetry.
+  Assert.deepEqual(
+    telem.transformError(Components.Exception("", Cr.NS_ERROR_ABORT)),
+    { name: "httperror", code: Cr.NS_ERROR_ABORT }
+  );
+});
+
 add_task(async function test_clean_urls() {
   enableValidationPrefs();
 
@@ -722,7 +743,7 @@ add_task(async function test_nserror() {
       });
       let enginePing = ping.engines.find(e => e.name === "steam");
       deepEqual(enginePing.failureReason, {
-        name: "nserror",
+        name: "httperror",
         code: Cr.NS_ERROR_UNKNOWN_HOST,
       });
     });

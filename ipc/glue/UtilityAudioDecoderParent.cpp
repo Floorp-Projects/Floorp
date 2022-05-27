@@ -19,6 +19,11 @@
 #  include "mozilla/sandboxTarget.h"
 #endif  // defined(XP_WIN) && defined(MOZ_SANDBOX)
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/StaticPrefs_media.h"
+#  include "AndroidDecoderModule.h"
+#endif
+
 namespace mozilla::ipc {
 
 UtilityAudioDecoderParent::UtilityAudioDecoderParent() {
@@ -56,6 +61,13 @@ void UtilityAudioDecoderParent::Start(
 
   DebugOnly<bool> ok = std::move(aEndpoint).Bind(this);
   MOZ_ASSERT(ok);
+
+#ifdef MOZ_WIDGET_ANDROID
+  if (StaticPrefs::media_utility_android_media_codec_enabled()) {
+    AndroidDecoderModule::SetSupportedMimeTypes(
+        AndroidDecoderModule::GetSupportedMimeTypes());
+  }
+#endif
 
   auto supported = PDMFactory::Supported();
   Unused << SendUpdateMediaCodecsSupported(std::move(supported));

@@ -17,6 +17,7 @@
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsAccUtils.h"
+#include "nsBlockFrame.h"
 #include "nsContentUtils.h"
 #include "nsIAccessiblePivot.h"
 #include "nsILineIterator.h"
@@ -181,6 +182,22 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
     // If the blocks are different, that means there's nothing before us on the
     // same line, so we're at the start.
     return true;
+  }
+  if (nsBlockFrame* block = do_QueryFrame(thisBlock)) {
+    // If we have a block frame, it's faster for us to use
+    // BlockInFlowLineIterator because it uses the line cursor.
+    bool found = false;
+    block->SetupLineCursorForQuery();
+    nsBlockInFlowLineIterator prevIt(block, prevLineFrame, &found);
+    if (!found) {
+      // Error; play it safe.
+      return true;
+    }
+    found = false;
+    nsBlockInFlowLineIterator thisIt(block, thisLineFrame, &found);
+    // if the lines are different, that means there's nothing before us on the
+    // same line, so we're at the start.
+    return !found || prevIt.GetLine() != thisIt.GetLine();
   }
   nsAutoLineIterator it = prevBlock->GetLineIterator();
   MOZ_ASSERT(it, "GetLineIterator impl in line-container blocks is infallible");
@@ -1144,7 +1161,12 @@ LayoutDeviceIntRect TextLeafPoint::CharBounds() {
 
   RemoteAccessible* acc = mAcc->AsRemote();
   if (Maybe<nsTArray<nsRect>> charBounds = acc->GetCachedCharData()) {
-    return acc->BoundsWithOffset(Some(charBounds->ElementAt(mOffset)));
+    if (mOffset < static_cast<int32_t>(charBounds->Length())) {
+      return acc->BoundsWithOffset(Some(charBounds->ElementAt(mOffset)));
+    }
+    // It is valid for a client to call this with an offset 1 after the last
+    // character because of the insertion point at the end of text boxes.
+    MOZ_ASSERT(mOffset == static_cast<int32_t>(charBounds->Length()));
   }
 
   return LayoutDeviceIntRect();

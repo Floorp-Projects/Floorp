@@ -445,6 +445,7 @@ impl FrameBuilder {
 
                 let pic = &mut scene.prim_store.pictures[pic_index.0];
                 pic.restore_context(
+                    *pic_index,
                     prim_list,
                     pic_context,
                     &scene.prim_instances,
