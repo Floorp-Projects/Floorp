@@ -13,7 +13,14 @@
 #include "nsDirection.h"
 #include "nsIAccessibleText.h"
 
-namespace mozilla::a11y {
+class nsRange;
+
+namespace mozilla {
+namespace dom {
+class Document;
+}
+
+namespace a11y {
 class Accessible;
 class LocalAccessible;
 
@@ -137,6 +144,12 @@ class TextLeafPoint final {
   static nsTArray<int32_t> GetSpellingErrorOffsets(LocalAccessible* aAcc);
 
   /**
+   * Queue a cache update for a spelling error in a given DOM range.
+   */
+  static void UpdateCachedSpellingError(dom::Document* aDocument,
+                                        const nsRange& aRange);
+
+  /**
    * Find the start of a run of text attributes in a specific direction.
    * A text attributes run is a span of text where the attributes are the same.
    * If no boundary is found, the start/end of the container is returned
@@ -212,6 +225,7 @@ class TextLeafRange final {
   TextLeafPoint mEnd;
 };
 
-}  // namespace mozilla::a11y
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

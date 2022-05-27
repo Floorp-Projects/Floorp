@@ -8,15 +8,18 @@
 
 #include "HyperTextAccessible-inl.h"
 #include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/CacheConstants.h"
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/LocalAccessible.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/Casting.h"
 #include "mozilla/dom/CharacterData.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsBlockFrame.h"
 #include "nsContentUtils.h"
@@ -24,6 +27,7 @@
 #include "nsIAccessiblePivot.h"
 #include "nsILineIterator.h"
 #include "nsINode.h"
+#include "nsRange.h"
 #include "nsStyleStructInlines.h"
 #include "nsTArray.h"
 #include "nsTextFrame.h"
@@ -1234,6 +1238,32 @@ nsTArray<int32_t> TextLeafPoint::GetSpellingErrorOffsets(
     }
   }
   return offsets;
+}
+
+/* static */
+void TextLeafPoint::UpdateCachedSpellingError(dom::Document* aDocument,
+                                              const nsRange& aRange) {
+  DocAccessible* docAcc = GetExistingDocAccessible(aDocument);
+  if (!docAcc) {
+    return;
+  }
+  LocalAccessible* startAcc = docAcc->GetAccessible(aRange.GetStartContainer());
+  LocalAccessible* endAcc = docAcc->GetAccessible(aRange.GetEndContainer());
+  if (!startAcc || !endAcc) {
+    return;
+  }
+  for (Accessible* acc = startAcc; acc; acc = NextLeaf(acc)) {
+    if (acc->IsTextLeaf()) {
+      docAcc->QueueCacheUpdate(acc->AsLocal(), CacheDomain::Spelling);
+    }
+    if (acc == endAcc) {
+      // Subtle: We check this here rather than in the loop condition because
+      // we want to include endAcc but stop once we reach it. Putting it in the
+      // loop condition would mean we stop at endAcc, but we would also exclude
+      // it; i.e. we wouldn't push the cache for it.
+      break;
+    }
+  }
 }
 
 already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
