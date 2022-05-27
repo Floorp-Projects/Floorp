@@ -81,8 +81,14 @@ rtc_library("rtc_pc_base") {
     "sctp_transport.h",
     "sctp_utils.cc",
     "sctp_utils.h",
+
+    # Will move to "session_description" target
+    # when downstream projects depend on that.
     "session_description.cc",
     "session_description.h",
+
+    # Will move to "simulcast_description" target
+    # when downstream projects depend on that.
     "simulcast_description.cc",
     "simulcast_description.h",
     "srtp_filter.cc",
@@ -101,6 +107,8 @@ rtc_library("rtc_pc_base") {
   deps = [
     ":media_protocol_names",
     ":proxy",
+    ":session_description",
+    ":simulcast_description",
     "../api:array_view",
     "../api:async_dns_resolver",
     "../api:audio_options_api",
@@ -174,6 +182,43 @@ rtc_library("rtc_pc_base") {
   }
 
   public_configs = [ ":rtc_pc_config" ]
+}
+
+rtc_source_set("session_description") {
+  sources = [
+    # Future home of
+    #"session_description.cc",
+    #"session_description.h",
+  ]
+  deps = [
+    ":media_protocol_names",
+    ":simulcast_description",
+    "../api:libjingle_peerconnection_api",
+    "../api:rtp_parameters",
+    "../api:rtp_transceiver_direction",
+    "../media:rtc_media_base",
+    "../p2p:rtc_p2p",
+    "../rtc_base:checks",
+    "../rtc_base:socket_address",
+    "../rtc_base/system:rtc_export",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/memory:memory",
+  ]
+}
+
+rtc_source_set("simulcast_description") {
+  sources = [
+    # Future home of
+    # "simulcast_description.cc",
+    # "simulcast_description.h",
+  ]
+  deps = [
+    "../rtc_base:checks",
+    "../rtc_base:socket_address",
+    "../rtc_base/system:rtc_export",
+  ]
 }
 
 rtc_source_set("rtc_pc") {
@@ -254,6 +299,8 @@ rtc_library("peerconnection") {
     ":rtp_transceiver",
     ":rtp_transmission_manager",
     ":sdp_state_provider",
+    ":session_description",
+    ":simulcast_description",
     ":stats_collector_interface",
     ":transceiver_list",
     ":usage_pattern",
@@ -414,6 +461,7 @@ rtc_library("rtp_transceiver") {
     ":rtp_parameters_conversion",
     ":rtp_receiver",
     ":rtp_sender",
+    ":session_description",
     "../api:array_view",
     "../api:libjingle_peerconnection_api",
     "../api:rtc_error",
@@ -735,6 +783,7 @@ rtc_library("rtp_parameters_conversion") {
   ]
   deps = [
     ":rtc_pc_base",
+    ":session_description",
     "../api:array_view",
     "../api:libjingle_peerconnection_api",
     "../api:rtc_error",
@@ -865,6 +914,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":peerconnection",
       ":rtc_pc",
       ":rtc_pc_base",
+      ":session_description",
       ":video_rtp_receiver",
       "../api:array_view",
       "../api:audio_options_api",
@@ -1036,6 +1086,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtp_receiver",
       ":rtp_sender",
       ":rtp_transceiver",
+      ":session_description",
       ":usage_pattern",
       ":video_rtp_receiver",
       ":video_rtp_track_source",
@@ -1195,6 +1246,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtp_receiver",
       ":rtp_sender",
       ":rtp_transceiver",
+      ":session_description",
       ":usage_pattern",
       ":video_rtp_receiver",
       ":video_rtp_track_source",
