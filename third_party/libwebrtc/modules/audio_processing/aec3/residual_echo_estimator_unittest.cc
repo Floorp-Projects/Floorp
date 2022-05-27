@@ -48,6 +48,8 @@ TEST_P(ResidualEchoEstimatorMultiChannel, BasicTest) {
       num_capture_channels);
   std::vector<std::array<float, kFftLengthBy2Plus1>> Y2(num_capture_channels);
   std::vector<std::array<float, kFftLengthBy2Plus1>> R2(num_capture_channels);
+  std::vector<std::array<float, kFftLengthBy2Plus1>> R2_unbounded(
+      num_capture_channels);
   std::vector<std::vector<std::vector<float>>> x(
       kNumBands, std::vector<std::vector<float>>(
                      num_render_channels, std::vector<float>(kBlockSize, 0.f)));
@@ -100,7 +102,8 @@ TEST_P(ResidualEchoEstimatorMultiChannel, BasicTest) {
                      output);
 
     estimator.Estimate(aec_state, *render_delay_buffer->GetRenderBuffer(),
-                       S2_linear, Y2, /*dominant_nearend=*/false, R2);
+                       S2_linear, Y2, /*dominant_nearend=*/false, R2,
+                       R2_unbounded);
   }
 }
 

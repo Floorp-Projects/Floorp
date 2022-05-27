@@ -23,9 +23,14 @@
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
+
+bool UseUnboundedEchoSpectrum() {
+  return field_trial::IsEnabled("WebRTC-Aec3UseUnboundedEchoSpectrum");
+}
 
 void LimitLowFrequencyGains(std::array<float, kFftLengthBy2Plus1>* gain) {
   // Limit the low frequency gains to avoid the impact of the high-pass filter
@@ -342,7 +347,8 @@ SuppressionGain::SuppressionGain(const EchoCanceller3Config& config,
                       config_.suppressor.nearend_tuning),
       normal_params_(config_.suppressor.last_lf_band,
                      config_.suppressor.first_hf_band,
-                     config_.suppressor.normal_tuning) {
+                     config_.suppressor.normal_tuning),
+      use_unbounded_echo_spectrum_(UseUnboundedEchoSpectrum()) {
   RTC_DCHECK_LT(0, state_change_duration_blocks_);
   last_gain_.fill(1.f);
   if (config_.suppressor.use_subband_nearend_detection) {
@@ -364,6 +370,8 @@ void SuppressionGain::GetGain(
     rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>>
         residual_echo_spectrum,
     rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>>
+        residual_echo_spectrum_unbounded,
+    rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>>
         comfort_noise_spectrum,
     const RenderSignalAnalyzer& render_signal_analyzer,
     const AecState& aec_state,
@@ -374,8 +382,13 @@ void SuppressionGain::GetGain(
   RTC_DCHECK(high_bands_gain);
   RTC_DCHECK(low_band_gain);
 
+  // Choose residual echo spectrum for the dominant nearend detector.
+  const auto echo = use_unbounded_echo_spectrum_
+                        ? residual_echo_spectrum_unbounded
+                        : residual_echo_spectrum;
+
   // Update the nearend state selection.
-  dominant_nearend_detector_->Update(nearend_spectrum, residual_echo_spectrum,
+  dominant_nearend_detector_->Update(nearend_spectrum, echo,
                                      comfort_noise_spectrum, initial_state_);
 
   // Compute gain for the lower band.
@@ -391,6 +404,9 @@ void SuppressionGain::GetGain(
   *high_bands_gain =
       UpperBandsGain(echo_spectrum, comfort_noise_spectrum, narrow_peak_band,
                      aec_state.SaturatedEcho(), render, *low_band_gain);
+
+  data_dumper_->DumpRaw("aec3_dominant_nearend",
+                        dominant_nearend_detector_->IsNearendState());
 }
 
 void SuppressionGain::SetInitialState(bool state) {
