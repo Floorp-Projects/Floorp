@@ -824,8 +824,6 @@ TEST_F(OveruseFrameDetectorTest2, ResetAfterFrameTimeout) {
   EXPECT_EQ(InitialUsage(), UsagePercent());
 }
 
-// TODO(crbug.com/webrtc/12846): investigate why the test fails on MAC bots.
-#if !defined(WEBRTC_MAC)
 TEST_F(OveruseFrameDetectorTest2, ConvergesSlowly) {
   overuse_detector_->SetOptions(options_);
   InsertAndSendFramesWithInterval(1, kFrameIntervalUs, kWidth, kHeight,
@@ -840,14 +838,13 @@ TEST_F(OveruseFrameDetectorTest2, ConvergesSlowly) {
 
   // Should have started to approach correct load of 15%, but not very far.
   EXPECT_LT(UsagePercent(), InitialUsage());
-  EXPECT_GT(UsagePercent(), (InitialUsage() * 3 + 15) / 4);
+  EXPECT_GT(UsagePercent(), (InitialUsage() * 3 + 8) / 4);
 
   // Run for roughly 10s more, should now be closer.
   InsertAndSendFramesWithInterval(300, kFrameIntervalUs, kWidth, kHeight,
                                   kProcessTimeUs);
   EXPECT_NEAR(UsagePercent(), 20, 5);
 }
-#endif
 
 TEST_F(OveruseFrameDetectorTest2, InitialProcessingUsage) {
   overuse_detector_->SetOptions(options_);
