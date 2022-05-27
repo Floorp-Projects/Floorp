@@ -435,7 +435,11 @@ NS_IMETHODIMP EditorEventListener::HandleEvent(Event* aEvent) {
     }
     // focus
     case eFocus: {
-      nsresult rv = Focus(internalEvent->AsFocusEvent());
+      const InternalFocusEvent* focusEvent = internalEvent->AsFocusEvent();
+      if (NS_WARN_IF(!focusEvent)) {
+        return NS_ERROR_FAILURE;
+      }
+      nsresult rv = Focus(*focusEvent);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "EditorEventListener::Focus() failed");
       return rv;
@@ -1081,14 +1085,14 @@ void EditorEventListener::HandleEndComposition(
   editorBase->OnCompositionEnd(*aCompositionEndEvent);
 }
 
-nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
-  if (NS_WARN_IF(!aFocusEvent) || DetachedFromEditor()) {
+nsresult EditorEventListener::Focus(const InternalFocusEvent& aFocusEvent) {
+  if (DetachedFromEditor()) {
     return NS_OK;
   }
 
   nsCOMPtr<nsINode> originalEventTargetNode =
-      nsINode::FromEventTargetOrNull(aFocusEvent->GetOriginalDOMEventTarget());
-  if (MOZ_UNLIKELY(NS_WARN_IF(!originalEventTargetNode))) {
+      nsINode::FromEventTargetOrNull(aFocusEvent.GetOriginalDOMEventTarget());
+  if (NS_WARN_IF(!originalEventTargetNode)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1101,57 +1105,14 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
   }
   // We should not receive focus events whose target is not a content node
   // unless the node is a document node.
-  else if (MOZ_UNLIKELY(NS_WARN_IF(!originalEventTargetNode->IsContent()))) {
-    return NS_OK;
-  }
-
-  RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!focusManager))) {
+  else if (NS_WARN_IF(!originalEventTargetNode->IsContent())) {
     return NS_OK;
   }
 
   const OwningNonNull<EditorBase> editorBase(*mEditorBase);
-
-  RefPtr<PresShell> presShell = GetPresShell();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!presShell))) {
-    return NS_OK;
-  }
-  // Let's update the layout information right now because there are some
-  // pending notifications and flushing them may cause destroying the editor.
-  presShell->FlushPendingNotifications(FlushType::Layout);
-  if (MOZ_UNLIKELY(
-          !editorBase->CanKeepHandlingFocusEvent(*originalEventTargetNode))) {
-    return NS_OK;
-  }
-
-  // Spell check a textarea the first time that it is focused.
-  nsresult rv = editorBase->FlushPendingSpellCheck();
-  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    NS_WARNING(
-        "EditorBase::FlushPendingSpellCheck() caused destroying the editor");
-    return NS_OK;
-  }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "EditorBase::FlushPendingSpellCheck() failed, but ignored");
-  if (MOZ_UNLIKELY(
-          !editorBase->CanKeepHandlingFocusEvent(*originalEventTargetNode))) {
-    return NS_OK;
-  }
-
-  editorBase->OnFocus(*originalEventTargetNode);
-  if (DetachedFromEditorOrDefaultPrevented(aFocusEvent)) {
-    return NS_OK;
-  }
-
-  RefPtr<nsPresContext> presContext = GetPresContext();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!presContext))) {
-    return NS_OK;
-  }
-  RefPtr<Element> focusedElement = editorBase->GetFocusedElement();
-  IMEStateManager::OnFocusInEditor(*presContext, focusedElement, *editorBase);
-
-  return NS_OK;
+  DebugOnly<nsresult> rvIgnored = editorBase->OnFocus(*originalEventTargetNode);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "EditorBase::OnFocus() failed");
+  return NS_OK;  // Don't return error code to the event listener manager.
 }
 
 nsresult EditorEventListener::Blur(InternalFocusEvent* aBlurEvent) {
