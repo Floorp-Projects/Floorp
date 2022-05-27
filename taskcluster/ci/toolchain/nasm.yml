@@ -6,7 +6,6 @@ job-defaults:
     worker-type: b-linux
     worker:
         max-run-time: 1800
-    run-on-projects: [trunk]
     run:
         toolchain-artifact: public/build/nasm.tar.zst
 
