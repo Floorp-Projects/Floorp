@@ -45,6 +45,12 @@ class EditorEventListener : public nsIDOMEventListener {
 
   virtual void Disconnect();
 
+  /**
+   * DetachedFromEditor() returns true if editor was detached.
+   * Otherwise, false.
+   */
+  [[nodiscard]] bool DetachedFromEditor() const;
+
   NS_DECL_ISUPPORTS
 
   // nsIDOMEventListener
@@ -92,12 +98,6 @@ class EditorEventListener : public nsIDOMEventListener {
   bool EditorHasFocus();
   bool IsFileControlTextBox();
   bool ShouldHandleNativeKeyBindings(WidgetKeyboardEvent* aKeyboardEvent);
-
-  /**
-   * DetachedFromEditor() returns true if editor was detached.
-   * Otherwise, false.
-   */
-  bool DetachedFromEditor() const;
 
   /**
    * DetachedFromEditorOrDefaultPrevented() returns true if editor was detached
