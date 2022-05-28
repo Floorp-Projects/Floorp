@@ -1218,7 +1218,7 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
       rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     config_.frame_decryptor = frame_decryptor;
-    RecreateAudioReceiveStream();
+    stream_->SetFrameDecryptor(std::move(frame_decryptor));
   }
 
   void SetLocalSsrc(uint32_t local_ssrc) {

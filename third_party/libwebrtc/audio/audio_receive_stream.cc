@@ -249,6 +249,14 @@ void AudioReceiveStream::SetUseTransportCcAndNackHistory(bool use_transport_cc,
   }
 }
 
+void AudioReceiveStream::SetFrameDecryptor(
+    rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor) {
+  // TODO(bugs.webrtc.org/11993): This is called via WebRtcAudioReceiveStream,
+  // expect to be called on the network thread.
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  channel_receive_->SetFrameDecryptor(std::move(frame_decryptor));
+}
+
 webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats(
     bool get_and_clear_legacy_stats) const {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
