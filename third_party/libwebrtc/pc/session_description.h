@@ -488,6 +488,8 @@ class ContentGroup {
   bool HasContentName(const std::string& content_name) const;
   void AddContentName(const std::string& content_name);
   bool RemoveContentName(const std::string& content_name);
+  // for debugging
+  std::string ToString() const;
 
  private:
   std::string semantics_;
