@@ -314,7 +314,7 @@ class FlexfecRenderObserver : public test::EndToEndTest,
 
   void ModifyFlexfecConfigs(
       std::vector<FlexfecReceiveStream::Config>* receive_configs) override {
-    (*receive_configs)[0].local_ssrc = kFlexfecLocalSsrc;
+    (*receive_configs)[0].rtp.local_ssrc = kFlexfecLocalSsrc;
   }
 
   void PerformTest() override {

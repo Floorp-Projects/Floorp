@@ -248,7 +248,7 @@ TEST(CallTest, CreateDestroy_FlexfecReceiveStream) {
     MockTransport rtcp_send_transport;
     FlexfecReceiveStream::Config config(&rtcp_send_transport);
     config.payload_type = 118;
-    config.remote_ssrc = 38837212;
+    config.rtp.remote_ssrc = 38837212;
     config.protected_media_ssrcs = {27273};
 
     FlexfecReceiveStream* stream = call->CreateFlexfecReceiveStream(config);
@@ -267,7 +267,7 @@ TEST(CallTest, CreateDestroy_FlexfecReceiveStreams) {
 
     for (int i = 0; i < 2; ++i) {
       for (uint32_t ssrc = 0; ssrc < 1234567; ssrc += 34567) {
-        config.remote_ssrc = ssrc;
+        config.rtp.remote_ssrc = ssrc;
         config.protected_media_ssrcs = {ssrc + 1};
         FlexfecReceiveStream* stream = call->CreateFlexfecReceiveStream(config);
         EXPECT_NE(stream, nullptr);
@@ -295,22 +295,22 @@ TEST(CallTest, MultipleFlexfecReceiveStreamsProtectingSingleVideoStream) {
     FlexfecReceiveStream* stream;
     std::list<FlexfecReceiveStream*> streams;
 
-    config.remote_ssrc = 838383;
+    config.rtp.remote_ssrc = 838383;
     stream = call->CreateFlexfecReceiveStream(config);
     EXPECT_NE(stream, nullptr);
     streams.push_back(stream);
 
-    config.remote_ssrc = 424993;
+    config.rtp.remote_ssrc = 424993;
     stream = call->CreateFlexfecReceiveStream(config);
     EXPECT_NE(stream, nullptr);
     streams.push_back(stream);
 
-    config.remote_ssrc = 99383;
+    config.rtp.remote_ssrc = 99383;
     stream = call->CreateFlexfecReceiveStream(config);
     EXPECT_NE(stream, nullptr);
     streams.push_back(stream);
 
-    config.remote_ssrc = 5548;
+    config.rtp.remote_ssrc = 5548;
     stream = call->CreateFlexfecReceiveStream(config);
     EXPECT_NE(stream, nullptr);
     streams.push_back(stream);

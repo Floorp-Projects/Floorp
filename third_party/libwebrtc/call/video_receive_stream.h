@@ -21,17 +21,15 @@
 #include "api/call/transport.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "api/crypto/crypto_options.h"
-#include "api/crypto/frame_decryptor_interface.h"
-#include "api/frame_transformer_interface.h"
 #include "api/rtp_headers.h"
 #include "api/rtp_parameters.h"
-#include "api/transport/rtp/rtp_source.h"
 #include "api/video/recordable_encoded_frame.h"
 #include "api/video/video_content_type.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_timing.h"
 #include "api/video_codecs/sdp_video_format.h"
+#include "call/receive_stream.h"
 #include "call/rtp_config.h"
 #include "common_video/frame_counts.h"
 #include "modules/rtp_rtcp/include/rtcp_statistics.h"
@@ -42,7 +40,7 @@ namespace webrtc {
 class RtpPacketSinkInterface;
 class VideoDecoderFactory;
 
-class VideoReceiveStream {
+class VideoReceiveStream : public MediaReceiveStream {
  public:
   // Class for handling moving in/out recording state.
   struct RecordingState {
@@ -178,17 +176,14 @@ class VideoReceiveStream {
     VideoDecoderFactory* decoder_factory = nullptr;
 
     // Receive-stream specific RTP settings.
-    struct Rtp {
+    struct Rtp : public RtpConfig {
       Rtp();
       Rtp(const Rtp&);
       ~Rtp();
       std::string ToString() const;
 
-      // Synchronization source (stream identifier) to be received.
-      uint32_t remote_ssrc = 0;
-
-      // Sender SSRC used for sending RTCP (such as receiver reports).
-      uint32_t local_ssrc = 0;
+      // See NackConfig for description.
+      NackConfig nack;
 
       // See RtcpMode for description.
       RtcpMode rtcp_mode = RtcpMode::kCompound;
@@ -199,9 +194,6 @@ class VideoReceiveStream {
         // (RFC 3611) should be enabled.
         bool receiver_reference_time_report = false;
       } rtcp_xr;
-
-      // See draft-holmer-rmcat-transport-wide-cc-extensions for details.
-      bool transport_cc = false;
 
       // See draft-alvestrand-rmcat-remb for information.
       bool remb = false;
@@ -214,9 +206,6 @@ class VideoReceiveStream {
 
       // See LntfConfig for description.
       LntfConfig lntf;
-
-      // See NackConfig for description.
-      NackConfig nack;
 
       // Payload types for ULPFEC and RED, respectively.
       int ulpfec_payload_type = -1;
@@ -241,9 +230,6 @@ class VideoReceiveStream {
       // meta data is expected to be present in generic frame descriptor
       // RTP header extension).
       std::set<int> raw_payload_types;
-
-      // RTP header extensions used for the received stream.
-      std::vector<RtpExtension> extensions;
 
       RtcpEventObserver* rtcp_event_observer = nullptr;
     } rtp;
@@ -282,17 +268,8 @@ class VideoReceiveStream {
     rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer;
   };
 
-  // Starts stream activity.
-  // When a stream is active, it can receive, process and deliver packets.
-  virtual void Start() = 0;
-  // Stops stream activity.
-  // When a stream is stopped, it can't receive, process or deliver packets.
-  virtual void Stop() = 0;
-
   // TODO(pbos): Add info on currently-received codec to Stats.
   virtual Stats GetStats() const = 0;
-
-  virtual std::vector<RtpSource> GetSources() const = 0;
 
   // Sets a base minimum for the playout delay. Base minimum delay sets lower
   // bound on minimum delay value determining lower bound on playout delay.
@@ -302,16 +279,6 @@ class VideoReceiveStream {
 
   // Returns current value of base minimum delay in milliseconds.
   virtual int GetBaseMinimumPlayoutDelayMs() const = 0;
-
-  // Allows a FrameDecryptor to be attached to a VideoReceiveStream after
-  // creation without resetting the decoder state.
-  virtual void SetFrameDecryptor(
-      rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor) = 0;
-
-  // Allows a frame transformer to be attached to a VideoReceiveStream after
-  // creation without resetting the decoder state.
-  virtual void SetDepacketizerToDecoderFrameTransformer(
-      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) = 0;
 
   // Sets and returns recording state. The old state is moved out
   // of the video receive stream and returned to the caller, and |state|
