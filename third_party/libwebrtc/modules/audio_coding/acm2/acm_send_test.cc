@@ -140,8 +140,9 @@ int32_t AcmSendTestOldApi::SendData(AudioFrameType frame_type,
 
 std::unique_ptr<Packet> AcmSendTestOldApi::CreatePacket() {
   const size_t kRtpHeaderSize = 12;
-  size_t allocated_bytes = last_payload_vec_.size() + kRtpHeaderSize;
-  uint8_t* packet_memory = new uint8_t[allocated_bytes];
+  rtc::CopyOnWriteBuffer packet_buffer(last_payload_vec_.size() +
+                                       kRtpHeaderSize);
+  uint8_t* packet_memory = packet_buffer.MutableData();
   // Populate the header bytes.
   packet_memory[0] = 0x80;
   packet_memory[1] = static_cast<uint8_t>(payload_type_);
@@ -162,8 +163,8 @@ std::unique_ptr<Packet> AcmSendTestOldApi::CreatePacket() {
   // Copy the payload data.
   memcpy(packet_memory + kRtpHeaderSize, &last_payload_vec_[0],
          last_payload_vec_.size());
-  std::unique_ptr<Packet> packet(
-      new Packet(packet_memory, allocated_bytes, clock_.TimeInMilliseconds()));
+  auto packet = std::make_unique<Packet>(std::move(packet_buffer),
+                                         clock_.TimeInMilliseconds());
   RTC_DCHECK(packet);
   RTC_DCHECK(packet->valid_header());
   return packet;
