@@ -317,7 +317,8 @@ Candidate PortAllocator::SanitizeCandidate(const Candidate& c) const {
   // For a local host candidate, we need to conceal its IP address candidate if
   // the mDNS obfuscation is enabled.
   bool use_hostname_address =
-      c.type() == LOCAL_PORT_TYPE && MdnsObfuscationEnabled();
+      (c.type() == LOCAL_PORT_TYPE || c.type() == PRFLX_PORT_TYPE) &&
+      MdnsObfuscationEnabled();
   // If adapter enumeration is disabled or host candidates are disabled,
   // clear the raddr of STUN candidates to avoid local address leakage.
   bool filter_stun_related_address =
