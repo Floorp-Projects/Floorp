@@ -25,9 +25,6 @@ namespace {
 
 constexpr int kClippingPredictorMaxGainChange = 15;
 
-using ClippingPredictorConfig = AudioProcessing::Config::GainController1::
-    AnalogGainController::ClippingPredictor;
-
 // Estimates the new level from the gain error; a copy of the function
 // `LevelFromGainError` in agc_manager_direct.cc.
 int LevelFromGainError(int gain_error,
@@ -110,7 +107,7 @@ class ClippingEventPredictor : public ClippingPredictor {
 
   // Analyzes a frame of audio and stores the framewise metrics in
   // `ch_buffers_`.
-  void Process(const AudioFrameView<const float>& frame) {
+  void Analyze(const AudioFrameView<const float>& frame) {
     const int num_channels = frame.num_channels();
     RTC_DCHECK_EQ(num_channels, ch_buffers_.size());
     const int samples_per_channel = frame.samples_per_channel();
@@ -249,7 +246,7 @@ class ClippingPeakPredictor : public ClippingPredictor {
 
   // Analyzes a frame of audio and stores the framewise metrics in
   // `ch_buffers_`.
-  void Process(const AudioFrameView<const float>& frame) {
+  void Analyze(const AudioFrameView<const float>& frame) {
     const int num_channels = frame.num_channels();
     RTC_DCHECK_EQ(num_channels, ch_buffers_.size());
     const int samples_per_channel = frame.samples_per_channel();
@@ -352,31 +349,35 @@ class ClippingPeakPredictor : public ClippingPredictor {
 
 }  // namespace
 
-std::unique_ptr<ClippingPredictor> CreateClippingEventPredictor(
+std::unique_ptr<ClippingPredictor> CreateClippingPredictor(
     int num_channels,
-    const ClippingPredictorConfig& config) {
-  return std::make_unique<ClippingEventPredictor>(
-      num_channels, config.window_length, config.reference_window_length,
-      config.reference_window_delay, config.clipping_threshold,
-      config.crest_factor_margin);
-}
-
-std::unique_ptr<ClippingPredictor> CreateFixedStepClippingPeakPredictor(
-    int num_channels,
-    const ClippingPredictorConfig& config) {
-  return std::make_unique<ClippingPeakPredictor>(
-      num_channels, config.window_length, config.reference_window_length,
-      config.reference_window_delay, config.clipping_threshold,
-      /*adaptive_step_estimation=*/false);
-}
-
-std::unique_ptr<ClippingPredictor> CreateAdaptiveStepClippingPeakPredictor(
-    int num_channels,
-    const ClippingPredictorConfig& config) {
-  return std::make_unique<ClippingPeakPredictor>(
-      num_channels, config.window_length, config.reference_window_length,
-      config.reference_window_delay, config.clipping_threshold,
-      /*adaptive_step_estimation=*/true);
+    const AudioProcessing::Config::GainController1::AnalogGainController::
+        ClippingPredictor& config) {
+  if (!config.enabled) {
+    RTC_LOG(LS_INFO) << "[agc] Clipping prediction disabled.";
+    return nullptr;
+  }
+  RTC_LOG(LS_INFO) << "[agc] Clipping prediction enabled.";
+  using ClippingPredictorMode = AudioProcessing::Config::GainController1::
+      AnalogGainController::ClippingPredictor::Mode;
+  switch (config.mode) {
+    case ClippingPredictorMode::kClippingEventPrediction:
+      return std::make_unique<ClippingEventPredictor>(
+          num_channels, config.window_length, config.reference_window_length,
+          config.reference_window_delay, config.clipping_threshold,
+          config.crest_factor_margin);
+    case ClippingPredictorMode::kAdaptiveStepClippingPeakPrediction:
+      return std::make_unique<ClippingPeakPredictor>(
+          num_channels, config.window_length, config.reference_window_length,
+          config.reference_window_delay, config.clipping_threshold,
+          /*adaptive_step_estimation=*/true);
+    case ClippingPredictorMode::kFixedStepClippingPeakPrediction:
+      return std::make_unique<ClippingPeakPredictor>(
+          num_channels, config.window_length, config.reference_window_length,
+          config.reference_window_delay, config.clipping_threshold,
+          /*adaptive_step_estimation=*/false);
+  }
+  RTC_NOTREACHED();
 }
 
 }  // namespace webrtc

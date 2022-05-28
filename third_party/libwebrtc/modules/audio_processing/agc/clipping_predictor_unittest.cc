@@ -34,12 +34,14 @@ constexpr int kDefaultClippedLevelStep = 15;
 
 using ClippingPredictorConfig = AudioProcessing::Config::GainController1::
     AnalogGainController::ClippingPredictor;
+using ClippingPredictorMode = AudioProcessing::Config::GainController1::
+    AnalogGainController::ClippingPredictor::Mode;
 
 void CallProcess(int num_calls,
                  const AudioFrameView<const float>& frame,
                  ClippingPredictor& predictor) {
   for (int i = 0; i < num_calls; ++i) {
-    predictor.Process(frame);
+    predictor.Analyze(frame);
   }
 }
 
@@ -149,12 +151,14 @@ TEST_P(ClippingPredictorParameterization,
        CheckClippingEventPredictorEstimateAfterCrestFactorDrop) {
   if (reference_window_length() + reference_window_delay() > window_length()) {
     ClippingPredictorConfig config;
+    config.enabled = true;
+    config.mode = ClippingPredictorMode::kClippingEventPrediction;
     config.window_length = window_length();
     config.reference_window_length = reference_window_length();
     config.reference_window_delay = reference_window_delay();
     config.clipping_threshold = -1.0f;
     config.crest_factor_margin = 0.5f;
-    auto predictor = CreateClippingEventPredictor(num_channels(), config);
+    auto predictor = CreateClippingPredictor(num_channels(), config);
     ProcessNonZeroCrestFactorAudio(
         reference_window_length() + reference_window_delay() - window_length(),
         num_channels(), /*peak_ratio=*/0.99f, *predictor);
@@ -173,12 +177,14 @@ TEST_P(ClippingPredictorParameterization,
        CheckClippingEventPredictorNoEstimateAfterConstantCrestFactor) {
   if (reference_window_length() + reference_window_delay() > window_length()) {
     ClippingPredictorConfig config;
+    config.enabled = true;
+    config.mode = ClippingPredictorMode::kClippingEventPrediction;
     config.window_length = window_length();
     config.reference_window_length = reference_window_length();
     config.reference_window_delay = reference_window_delay();
     config.clipping_threshold = -1.0f;
     config.crest_factor_margin = 0.5f;
-    auto predictor = CreateClippingEventPredictor(num_channels(), config);
+    auto predictor = CreateClippingPredictor(num_channels(), config);
     ProcessNonZeroCrestFactorAudio(
         reference_window_length() + reference_window_delay() - window_length(),
         num_channels(), /*peak_ratio=*/0.99f, *predictor);
@@ -197,12 +203,13 @@ TEST_P(ClippingPredictorParameterization,
        CheckClippingPeakPredictorEstimateAfterHighCrestFactor) {
   if (reference_window_length() + reference_window_delay() > window_length()) {
     ClippingPredictorConfig config;
+    config.enabled = true;
+    config.mode = ClippingPredictorMode::kAdaptiveStepClippingPeakPrediction;
     config.window_length = window_length();
     config.reference_window_length = reference_window_length();
     config.reference_window_delay = reference_window_delay();
     config.clipping_threshold = -1.0f;
-    auto predictor =
-        CreateAdaptiveStepClippingPeakPredictor(num_channels(), config);
+    auto predictor = CreateClippingPredictor(num_channels(), config);
     ProcessNonZeroCrestFactorAudio(
         reference_window_length() + reference_window_delay() - window_length(),
         num_channels(), /*peak_ratio=*/0.99f, *predictor);
@@ -221,12 +228,13 @@ TEST_P(ClippingPredictorParameterization,
        CheckClippingPeakPredictorNoEstimateAfterLowCrestFactor) {
   if (reference_window_length() + reference_window_delay() > window_length()) {
     ClippingPredictorConfig config;
+    config.enabled = true;
+    config.mode = ClippingPredictorMode::kAdaptiveStepClippingPeakPrediction;
     config.window_length = window_length();
     config.reference_window_length = reference_window_length();
     config.reference_window_delay = reference_window_delay();
     config.clipping_threshold = -1.0f;
-    auto predictor =
-        CreateAdaptiveStepClippingPeakPredictor(num_channels(), config);
+    auto predictor = CreateClippingPredictor(num_channels(), config);
     ProcessZeroCrestFactorAudio(
         reference_window_length() + reference_window_delay() - window_length(),
         num_channels(), /*peak_ratio=*/0.99f, *predictor);
@@ -251,12 +259,14 @@ INSTANTIATE_TEST_SUITE_P(GainController1ClippingPredictor,
 TEST_P(ClippingEventPredictorParameterization,
        CheckEstimateAfterCrestFactorDrop) {
   ClippingPredictorConfig config;
+  config.enabled = true;
+  config.mode = ClippingPredictorMode::kClippingEventPrediction;
   config.window_length = kWindowLength;
   config.reference_window_length = kReferenceWindowLength;
   config.reference_window_delay = kReferenceWindowDelay;
   config.clipping_threshold = clipping_threshold();
   config.crest_factor_margin = crest_factor_margin();
-  auto predictor = CreateClippingEventPredictor(kNumChannels, config);
+  auto predictor = CreateClippingPredictor(kNumChannels, config);
   ProcessNonZeroCrestFactorAudio(kReferenceWindowLength, kNumChannels,
                                  /*peak_ratio=*/0.99f, *predictor);
   CheckChannelEstimatesWithoutValue(kNumChannels, /*level=*/255,
@@ -284,14 +294,15 @@ INSTANTIATE_TEST_SUITE_P(GainController1ClippingPredictor,
 TEST_P(ClippingPeakPredictorParameterization,
        CheckEstimateAfterHighCrestFactor) {
   ClippingPredictorConfig config;
+  config.enabled = true;
+  config.mode = adaptive_step_estimation()
+                    ? ClippingPredictorMode::kAdaptiveStepClippingPeakPrediction
+                    : ClippingPredictorMode::kFixedStepClippingPeakPrediction;
   config.window_length = kWindowLength;
   config.reference_window_length = kReferenceWindowLength;
   config.reference_window_delay = kReferenceWindowDelay;
   config.clipping_threshold = clipping_threshold();
-  auto predictor =
-      adaptive_step_estimation()
-          ? CreateAdaptiveStepClippingPeakPredictor(kNumChannels, config)
-          : CreateFixedStepClippingPeakPredictor(kNumChannels, config);
+  auto predictor = CreateClippingPredictor(kNumChannels, config);
   ProcessNonZeroCrestFactorAudio(kReferenceWindowLength, kNumChannels,
                                  /*peak_ratio=*/0.99f, *predictor);
   CheckChannelEstimatesWithoutValue(kNumChannels, /*level=*/255,
@@ -324,12 +335,14 @@ INSTANTIATE_TEST_SUITE_P(GainController1ClippingPredictor,
 
 TEST(ClippingEventPredictorTest, CheckEstimateAfterReset) {
   ClippingPredictorConfig config;
+  config.enabled = true;
+  config.mode = ClippingPredictorMode::kClippingEventPrediction;
   config.window_length = kWindowLength;
   config.reference_window_length = kReferenceWindowLength;
   config.reference_window_delay = kReferenceWindowDelay;
   config.clipping_threshold = -1.0f;
   config.crest_factor_margin = 3.0f;
-  auto predictor = CreateClippingEventPredictor(kNumChannels, config);
+  auto predictor = CreateClippingPredictor(kNumChannels, config);
   ProcessNonZeroCrestFactorAudio(kReferenceWindowLength, kNumChannels,
                                  /*peak_ratio=*/0.99f, *predictor);
   CheckChannelEstimatesWithoutValue(kNumChannels, /*level=*/255,
@@ -345,13 +358,14 @@ TEST(ClippingEventPredictorTest, CheckEstimateAfterReset) {
 
 TEST(ClippingPeakPredictorTest, CheckNoEstimateAfterReset) {
   ClippingPredictorConfig config;
+  config.enabled = true;
+  config.mode = ClippingPredictorMode::kAdaptiveStepClippingPeakPrediction;
   config.window_length = kWindowLength;
   config.reference_window_length = kReferenceWindowLength;
   config.reference_window_delay = kReferenceWindowDelay;
   config.clipping_threshold = -1.0f;
   config.crest_factor_margin = 3.0f;
-  auto predictor =
-      CreateAdaptiveStepClippingPeakPredictor(kNumChannels, config);
+  auto predictor = CreateClippingPredictor(kNumChannels, config);
   ProcessNonZeroCrestFactorAudio(kReferenceWindowLength, kNumChannels,
                                  /*peak_ratio=*/0.99f, *predictor);
   CheckChannelEstimatesWithoutValue(kNumChannels, /*level=*/255,
@@ -367,12 +381,13 @@ TEST(ClippingPeakPredictorTest, CheckNoEstimateAfterReset) {
 
 TEST(ClippingPeakPredictorTest, CheckAdaptiveStepEstimate) {
   ClippingPredictorConfig config;
+  config.enabled = true;
+  config.mode = ClippingPredictorMode::kAdaptiveStepClippingPeakPrediction;
   config.window_length = kWindowLength;
   config.reference_window_length = kReferenceWindowLength;
   config.reference_window_delay = kReferenceWindowDelay;
   config.clipping_threshold = -1.0f;
-  auto predictor =
-      CreateAdaptiveStepClippingPeakPredictor(kNumChannels, config);
+  auto predictor = CreateClippingPredictor(kNumChannels, config);
   ProcessNonZeroCrestFactorAudio(kReferenceWindowLength, kNumChannels,
                                  /*peak_ratio=*/0.99f, *predictor);
   CheckChannelEstimatesWithoutValue(kNumChannels, /*level=*/255,
@@ -387,11 +402,13 @@ TEST(ClippingPeakPredictorTest, CheckAdaptiveStepEstimate) {
 
 TEST(ClippingPeakPredictorTest, CheckFixedStepEstimate) {
   ClippingPredictorConfig config;
+  config.enabled = true;
+  config.mode = ClippingPredictorMode::kFixedStepClippingPeakPrediction;
   config.window_length = kWindowLength;
   config.reference_window_length = kReferenceWindowLength;
   config.reference_window_delay = kReferenceWindowDelay;
   config.clipping_threshold = -1.0f;
-  auto predictor = CreateFixedStepClippingPeakPredictor(kNumChannels, config);
+  auto predictor = CreateClippingPredictor(kNumChannels, config);
   ProcessNonZeroCrestFactorAudio(kReferenceWindowLength, kNumChannels,
                                  /*peak_ratio=*/0.99f, *predictor);
   CheckChannelEstimatesWithoutValue(kNumChannels, /*level=*/255,

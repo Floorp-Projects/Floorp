@@ -20,19 +20,26 @@
 
 namespace webrtc {
 
-// Frame-wise clipping prediction and clipped level step estimation. Processing
-// is done in two steps: Calling `Process` analyses a frame of audio and stores
-// the frame metrics and `EstimateClippedLevelStep` produces an estimate for the
-// required analog gain level decrease if clipping is predicted.
+// Frame-wise clipping prediction and clipped level step estimation. Analyzes
+// 10 ms multi-channel frames and estimates an analog mic level decrease step
+// to possibly avoid clipping when predicted. `Analyze()` and
+// `EstimateClippedLevelStep()` can be called in any order.
 class ClippingPredictor {
  public:
   virtual ~ClippingPredictor() = default;
 
   virtual void Reset() = 0;
 
-  // Estimates the analog gain clipped level step for channel `channel`.
-  // Returns absl::nullopt if clipping is not predicted, otherwise returns the
-  // suggested decrease in the analog gain level.
+  // Analyzes a 10 ms multi-channel audio frame.
+  virtual void Analyze(const AudioFrameView<const float>& frame) = 0;
+
+  // Predicts if clipping is going to occur for the specified `channel` in the
+  // near-future and, if so, it returns a recommended analog mic level decrease
+  // step. Returns absl::nullopt if clipping is not predicted.
+  // `level` is the current analog mic level, `default_step` is the amount the
+  // mic level is lowered by the analog controller with every clipping event and
+  // `min_mic_level` and `max_mic_level` is the range of allowed analog mic
+  // levels.
   virtual absl::optional<int> EstimateClippedLevelStep(
       int channel,
       int level,
@@ -40,27 +47,13 @@ class ClippingPredictor {
       int min_mic_level,
       int max_mic_level) const = 0;
 
-  // Analyses a frame of audio and stores the resulting metrics in `data_`.
-  virtual void Process(const AudioFrameView<const float>& frame) = 0;
 };
 
-// Creates a ClippingPredictor based on crest factor-based clipping event
-// prediction.
-std::unique_ptr<ClippingPredictor> CreateClippingEventPredictor(
-    int num_channels,
-    const AudioProcessing::Config::GainController1::AnalogGainController::
-        ClippingPredictor& config);
-
-// Creates a ClippingPredictor based on crest factor-based peak estimation and
-// fixed-step clipped level step estimation.
-std::unique_ptr<ClippingPredictor> CreateFixedStepClippingPeakPredictor(
-    int num_channels,
-    const AudioProcessing::Config::GainController1::AnalogGainController::
-        ClippingPredictor& config);
-
-// Creates a ClippingPredictor based on crest factor-based peak estimation and
-// adaptive-step clipped level step estimation.
-std::unique_ptr<ClippingPredictor> CreateAdaptiveStepClippingPeakPredictor(
+// Creates a ClippingPredictor based on the provided `config`. When enabled,
+// the following must hold for `config`:
+// `window_length < reference_window_length + reference_window_delay`.
+// Returns `nullptr` if `config.enabled` is false.
+std::unique_ptr<ClippingPredictor> CreateClippingPredictor(
     int num_channels,
     const AudioProcessing::Config::GainController1::AnalogGainController::
         ClippingPredictor& config);

@@ -129,26 +129,6 @@ float ComputeClippedRatio(const float* const* audio,
   return static_cast<float>(num_clipped) / (samples_per_channel);
 }
 
-std::unique_ptr<ClippingPredictor> CreateClippingPredictor(
-    int num_capture_channels,
-    const ClippingPredictorConfig& config) {
-  if (config.enabled) {
-    RTC_LOG(LS_INFO) << "[agc] Clipping prediction enabled.";
-    switch (config.mode) {
-      case ClippingPredictorConfig::kClippingEventPrediction:
-        return CreateClippingEventPredictor(num_capture_channels, config);
-      case ClippingPredictorConfig::kAdaptiveStepClippingPeakPrediction:
-        return CreateAdaptiveStepClippingPeakPredictor(num_capture_channels,
-                                                       config);
-      case ClippingPredictorConfig::kFixedStepClippingPeakPrediction:
-        return CreateFixedStepClippingPeakPredictor(num_capture_channels,
-                                                    config);
-    }
-  } else {
-    return nullptr;
-  }
-}
-
 }  // namespace
 
 MonoAgc::MonoAgc(ApmDataDumper* data_dumper,
@@ -531,7 +511,7 @@ void AgcManagerDirect::AnalyzePreProcess(const float* const* audio,
   if (!!clipping_predictor_) {
     AudioFrameView<const float> frame = AudioFrameView<const float>(
         audio, num_capture_channels_, static_cast<int>(samples_per_channel));
-    clipping_predictor_->Process(frame);
+    clipping_predictor_->Analyze(frame);
   }
 
   if (frames_since_clipped_ < clipped_wait_frames_) {
