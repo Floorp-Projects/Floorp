@@ -1,6 +1,9 @@
 # This file contains dependencies for WebRTC.
 
 gclient_gn_args_file = 'src/build/config/gclient_args.gni'
+gclient_gn_args = [
+  'generate_location_tags',
+]
 
 vars = {
   # By default, we should check out everything needed to run on the main
@@ -8,6 +11,9 @@ vars = {
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
   'chromium_revision': '570a173256905506ef3c28e3aeae4d899e5d38de',
+
+  # Keep the Chromium default of generating location tags.
+  'generate_location_tags': True,
 }
 
 deps = {
