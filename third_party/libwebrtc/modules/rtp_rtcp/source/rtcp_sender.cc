@@ -308,6 +308,16 @@ void RTCPSender::SetRtpClockRate(int8_t payload_type, int rtp_clock_rate_hz) {
   rtp_clock_rates_khz_[payload_type] = rtp_clock_rate_hz / 1000;
 }
 
+uint32_t RTCPSender::SSRC() const {
+  MutexLock lock(&mutex_rtcp_sender_);
+  return ssrc_;
+}
+
+void RTCPSender::SetSsrc(uint32_t ssrc) {
+  MutexLock lock(&mutex_rtcp_sender_);
+  ssrc_ = ssrc;
+}
+
 void RTCPSender::SetRemoteSSRC(uint32_t ssrc) {
   MutexLock lock(&mutex_rtcp_sender_);
   remote_ssrc_ = ssrc;

@@ -181,6 +181,9 @@ class ChannelReceive : public ChannelReceiveInterface {
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override;
 
+  void OnLocalSsrcChange(uint32_t local_ssrc) override;
+  uint32_t GetLocalSsrc() const override;
+
  private:
   void ReceivePacket(const uint8_t* packet,
                      size_t packet_length,
@@ -902,6 +905,18 @@ void ChannelReceive::SetFrameDecryptor(
   // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   frame_decryptor_ = std::move(frame_decryptor);
+}
+
+void ChannelReceive::OnLocalSsrcChange(uint32_t local_ssrc) {
+  // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  rtp_rtcp_->SetLocalSsrc(local_ssrc);
+}
+
+uint32_t ChannelReceive::GetLocalSsrc() const {
+  // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  return rtp_rtcp_->local_media_ssrc();
 }
 
 NetworkStatistics ChannelReceive::GetNetworkStatistics(

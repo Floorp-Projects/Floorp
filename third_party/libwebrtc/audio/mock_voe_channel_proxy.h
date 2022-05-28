@@ -104,6 +104,8 @@ class MockChannelReceive : public voe::ChannelReceiveInterface {
       SetFrameDecryptor,
       (rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor),
       (override));
+  MOCK_METHOD(void, OnLocalSsrcChange, (uint32_t local_ssrc), (override));
+  MOCK_METHOD(uint32_t, GetLocalSsrc, (), (const, override));
 };
 
 class MockChannelSend : public voe::ChannelSendInterface {

@@ -39,6 +39,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/tmmbr.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
+#include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
 #include "modules/rtp_rtcp/source/time_util.h"
 #include "modules/rtp_rtcp/source/tmmbr_help.h"
 #include "rtc_base/checks.h"
@@ -84,8 +85,14 @@ bool ResetTimestampIfExpired(const Timestamp now,
 
 }  // namespace
 
+constexpr size_t RTCPReceiver::RegisteredSsrcs::kMediaSsrcIndex;
+constexpr size_t RTCPReceiver::RegisteredSsrcs::kMaxSsrcs;
+
 RTCPReceiver::RegisteredSsrcs::RegisteredSsrcs(
-    const RtpRtcpInterface::Configuration& config) {
+    bool disable_sequence_checker,
+    const RtpRtcpInterface::Configuration& config)
+    : packet_sequence_checker_(disable_sequence_checker) {
+  packet_sequence_checker_.Detach();
   ssrcs_.push_back(config.local_media_ssrc);
   if (config.rtx_send_ssrc) {
     ssrcs_.push_back(*config.rtx_send_ssrc);
@@ -98,6 +105,21 @@ RTCPReceiver::RegisteredSsrcs::RegisteredSsrcs(
   }
   // Ensure that the RegisteredSsrcs can inline the SSRCs.
   RTC_DCHECK_LE(ssrcs_.size(), RTCPReceiver::RegisteredSsrcs::kMaxSsrcs);
+}
+
+bool RTCPReceiver::RegisteredSsrcs::contains(uint32_t ssrc) const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  return absl::c_linear_search(ssrcs_, ssrc);
+}
+
+uint32_t RTCPReceiver::RegisteredSsrcs::media_ssrc() const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  return ssrcs_[kMediaSsrcIndex];
+}
+
+void RTCPReceiver::RegisteredSsrcs::set_media_ssrc(uint32_t ssrc) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  ssrcs_[kMediaSsrcIndex] = ssrc;
 }
 
 struct RTCPReceiver::PacketInformation {
@@ -117,12 +139,46 @@ struct RTCPReceiver::PacketInformation {
 };
 
 RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
+                           ModuleRtpRtcpImpl2* owner)
+    : clock_(config.clock),
+      receiver_only_(config.receiver_only),
+      rtp_rtcp_(owner),
+      main_ssrc_(config.local_media_ssrc),
+      registered_ssrcs_(false, config),
+      rtcp_bandwidth_observer_(config.bandwidth_callback),
+      rtcp_intra_frame_observer_(config.intra_frame_callback),
+      rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
+      network_state_estimate_observer_(config.network_state_estimate_observer),
+      transport_feedback_observer_(config.transport_feedback_callback),
+      bitrate_allocation_observer_(config.bitrate_allocation_observer),
+      report_interval_(config.rtcp_report_interval_ms > 0
+                           ? TimeDelta::Millis(config.rtcp_report_interval_ms)
+                           : (config.audio ? kDefaultAudioReportInterval
+                                           : kDefaultVideoReportInterval)),
+      // TODO(bugs.webrtc.org/10774): Remove fallback.
+      remote_ssrc_(0),
+      remote_sender_rtp_time_(0),
+      remote_sender_packet_count_(0),
+      remote_sender_octet_count_(0),
+      remote_sender_reports_count_(0),
+      xr_rrtr_status_(config.non_sender_rtt_measurement),
+      xr_rr_rtt_ms_(0),
+      oldest_tmmbr_info_ms_(0),
+      cname_callback_(config.rtcp_cname_callback),
+      report_block_data_observer_(config.report_block_data_observer),
+      packet_type_counter_observer_(config.rtcp_packet_type_counter_observer),
+      num_skipped_packets_(0),
+      last_skipped_packets_warning_ms_(clock_->TimeInMilliseconds()) {
+  RTC_DCHECK(owner);
+}
+
+RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
                            ModuleRtpRtcp* owner)
     : clock_(config.clock),
       receiver_only_(config.receiver_only),
       rtp_rtcp_(owner),
       main_ssrc_(config.local_media_ssrc),
-      registered_ssrcs_(config),
+      registered_ssrcs_(true, config),
       rtcp_bandwidth_observer_(config.bandwidth_callback),
       rtcp_event_observer_(config.rtcp_event_observer),
       rtcp_intra_frame_observer_(config.intra_frame_callback),
@@ -149,6 +205,19 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       num_skipped_packets_(0),
       last_skipped_packets_warning_ms_(clock_->TimeInMilliseconds()) {
   RTC_DCHECK(owner);
+  // Dear reader - if you're here because of this log statement and are
+  // wondering what this is about, chances are that you are using an instance
+  // of RTCPReceiver without using the webrtc APIs. This creates a bit of a
+  // problem for WebRTC because this class is a part of an internal
+  // implementation that is constantly changing and being improved.
+  // The intention of this log statement is to give a heads up that changes
+  // are coming and encourage you to use the public APIs or be prepared that
+  // things might break down the line as more changes land. A thing you could
+  // try out for now is to replace the `CustomSequenceChecker` in the header
+  // with a regular `SequenceChecker` and see if that triggers an
+  // error in your code. If it does, chances are you have your own threading
+  // model that is not the same as WebRTC internally has.
+  RTC_LOG(LS_INFO) << "************** !!!DEPRECATION WARNING!! **************";
 }
 
 RTCPReceiver::~RTCPReceiver() {}
@@ -177,6 +246,14 @@ void RTCPReceiver::SetRemoteSSRC(uint32_t ssrc) {
   // New SSRC reset old reports.
   last_received_sr_ntp_.Reset();
   remote_ssrc_ = ssrc;
+}
+
+void RTCPReceiver::set_local_media_ssrc(uint32_t ssrc) {
+  registered_ssrcs_.set_media_ssrc(ssrc);
+}
+
+uint32_t RTCPReceiver::local_media_ssrc() const {
+  return registered_ssrcs_.media_ssrc();
 }
 
 uint32_t RTCPReceiver::RemoteSSRC() const {

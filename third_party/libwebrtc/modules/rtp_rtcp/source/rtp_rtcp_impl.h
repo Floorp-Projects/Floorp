@@ -63,6 +63,7 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
                           size_t incoming_packet_length) override;
 
   void SetRemoteSSRC(uint32_t ssrc) override;
+  void SetLocalSsrc(uint32_t ssrc) override;
 
   // Sender part.
   void RegisterSendPayloadFrequency(int payload_type,

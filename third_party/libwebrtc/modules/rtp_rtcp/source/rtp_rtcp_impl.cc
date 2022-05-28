@@ -690,6 +690,11 @@ void ModuleRtpRtcpImpl::SetRemoteSSRC(const uint32_t ssrc) {
   rtcp_receiver_.SetRemoteSSRC(ssrc);
 }
 
+void ModuleRtpRtcpImpl::SetLocalSsrc(uint32_t local_ssrc) {
+  rtcp_receiver_.set_local_media_ssrc(local_ssrc);
+  rtcp_sender_.SetSsrc(local_ssrc);
+}
+
 RtpSendRates ModuleRtpRtcpImpl::GetSendRates() const {
   return rtp_sender_->packet_sender.GetSendRates();
 }

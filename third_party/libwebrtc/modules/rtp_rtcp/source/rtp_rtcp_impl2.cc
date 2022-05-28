@@ -69,6 +69,7 @@ ModuleRtpRtcpImpl2::ModuleRtpRtcpImpl2(const Configuration& configuration)
       rtt_ms_(0) {
   RTC_DCHECK(worker_queue_);
   process_thread_checker_.Detach();
+  packet_sequence_checker_.Detach();
   if (!configuration.receiver_only) {
     rtp_sender_ = std::make_unique<RtpSenderContext>(configuration);
     // Make sure rtcp sender use same timestamp offset as rtp sender.
@@ -169,6 +170,7 @@ absl::optional<uint32_t> ModuleRtpRtcpImpl2::FlexfecSsrc() const {
 
 void ModuleRtpRtcpImpl2::IncomingRtcpPacket(const uint8_t* rtcp_packet,
                                             const size_t length) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   rtcp_receiver_.IncomingPacket(rtcp_packet, length);
 }
 
@@ -217,6 +219,12 @@ RtpState ModuleRtpRtcpImpl2::GetRtpState() const {
 
 RtpState ModuleRtpRtcpImpl2::GetRtxState() const {
   return rtp_sender_->packet_generator.GetRtxRtpState();
+}
+
+uint32_t ModuleRtpRtcpImpl2::local_media_ssrc() const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  RTC_DCHECK_EQ(rtcp_receiver_.local_media_ssrc(), rtcp_sender_.SSRC());
+  return rtcp_receiver_.local_media_ssrc();
 }
 
 void ModuleRtpRtcpImpl2::SetRid(const std::string& rid) {
@@ -655,6 +663,12 @@ void ModuleRtpRtcpImpl2::SetRemoteSSRC(const uint32_t ssrc) {
   // Inform about the incoming SSRC.
   rtcp_sender_.SetRemoteSSRC(ssrc);
   rtcp_receiver_.SetRemoteSSRC(ssrc);
+}
+
+void ModuleRtpRtcpImpl2::SetLocalSsrc(uint32_t local_ssrc) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtcp_receiver_.set_local_media_ssrc(local_ssrc);
+  rtcp_sender_.SetSsrc(local_ssrc);
 }
 
 RtpSendRates ModuleRtpRtcpImpl2::GetSendRates() const {

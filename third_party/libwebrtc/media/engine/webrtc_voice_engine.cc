@@ -1202,6 +1202,7 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
     config_.frame_decryptor = frame_decryptor;
     config_.crypto_options = crypto_options;
     config_.frame_transformer = std::move(frame_transformer);
+    // TODO(tommi): Remove RecreateAudioReceiveStream() and make stream_ const.
     RecreateAudioReceiveStream();
   }
 
@@ -1214,19 +1215,16 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
     call_->DestroyAudioReceiveStream(stream_);
   }
 
+  webrtc::AudioReceiveStream& stream() {
+    RTC_DCHECK(stream_);
+    return *stream_;
+  }
+
   void SetFrameDecryptor(
       rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     config_.frame_decryptor = frame_decryptor;
     stream_->SetFrameDecryptor(std::move(frame_decryptor));
-  }
-
-  void SetLocalSsrc(uint32_t local_ssrc) {
-    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-    if (local_ssrc != config_.rtp.local_ssrc) {
-      config_.rtp.local_ssrc = local_ssrc;
-      RecreateAudioReceiveStream();
-    }
   }
 
   void SetUseTransportCcAndRecreateStream(bool use_transport_cc,
@@ -1933,10 +1931,8 @@ bool WebRtcVoiceMediaChannel::AddSendStream(const StreamParams& sp) {
   // same SSRC in order to send receiver reports.
   if (send_streams_.size() == 1) {
     receiver_reports_ssrc_ = ssrc;
-    for (const auto& kv : recv_streams_) {
-      // TODO(solenberg): Allow applications to set the RTCP SSRC of receive
-      // streams instead, so we can avoid reconfiguring the streams here.
-      kv.second->SetLocalSsrc(ssrc);
+    for (auto& kv : recv_streams_) {
+      call_->OnLocalSsrcUpdated(kv.second->stream(), ssrc);
     }
   }
 

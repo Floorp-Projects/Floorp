@@ -122,11 +122,9 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
   void AssociateSendStream(AudioSendStream* send_stream);
   void DeliverRtcp(const uint8_t* packet, size_t length);
 
-  uint32_t local_ssrc() const {
-    // The local_ssrc member variable of config_ will never change and can be
-    // considered const.
-    return config_.rtp.local_ssrc;
-  }
+  void SetLocalSsrc(uint32_t local_ssrc);
+
+  uint32_t local_ssrc() const;
 
   uint32_t remote_ssrc() const {
     // The remote_ssrc member variable of config_ will never change and can be

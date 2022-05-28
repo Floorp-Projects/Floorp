@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "api/array_view.h"
+#include "api/sequence_checker.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtcp_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -27,11 +28,15 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/ntp_time.h"
 
 namespace webrtc {
+
+class ModuleRtpRtcpImpl2;
 class VideoBitrateAllocationObserver;
+
 namespace rtcp {
 class CommonHeader;
 class ReportBlock;
@@ -57,6 +62,10 @@ class RTCPReceiver final {
 
   RTCPReceiver(const RtpRtcpInterface::Configuration& config,
                ModuleRtpRtcp* owner);
+
+  RTCPReceiver(const RtpRtcpInterface::Configuration& config,
+               ModuleRtpRtcpImpl2* owner);
+
   ~RTCPReceiver();
 
   void IncomingPacket(const uint8_t* packet, size_t packet_size) {
@@ -66,8 +75,13 @@ class RTCPReceiver final {
 
   int64_t LastReceivedReportBlockMs() const;
 
+  void set_local_media_ssrc(uint32_t ssrc);
+  uint32_t local_media_ssrc() const;
+
   void SetRemoteSSRC(uint32_t ssrc);
   uint32_t RemoteSSRC() const;
+
+  bool receiver_only() const { return receiver_only_; }
 
   // Get received NTP.
   // The types for the arguments below derive from the specification:
@@ -132,21 +146,48 @@ class RTCPReceiver final {
   void NotifyTmmbrUpdated();
 
  private:
-  // A lightweight inlined set of local SSRCs.
-  class RegisteredSsrcs {
+#if RTC_DCHECK_IS_ON
+  class CustomSequenceChecker : public SequenceChecker {
    public:
-    static constexpr size_t kMaxSsrcs = 3;
-    // Initializes the set of registered local SSRCS by extracting them from the
-    // provided `config`.
-    explicit RegisteredSsrcs(const RtpRtcpInterface::Configuration& config);
-
-    // Indicates if `ssrc` is in the set of registered local SSRCs.
-    bool contains(uint32_t ssrc) const {
-      return absl::c_linear_search(ssrcs_, ssrc);
+    explicit CustomSequenceChecker(bool disable_checks)
+        : disable_checks_(disable_checks) {}
+    bool IsCurrent() const {
+      if (disable_checks_)
+        return true;
+      return SequenceChecker::IsCurrent();
     }
 
    private:
-    absl::InlinedVector<uint32_t, kMaxSsrcs> ssrcs_;
+    const bool disable_checks_;
+  };
+#else
+  class CustomSequenceChecker : public SequenceChecker {
+   public:
+    explicit CustomSequenceChecker(bool) {}
+  };
+#endif
+
+  // A lightweight inlined set of local SSRCs.
+  class RegisteredSsrcs {
+   public:
+    static constexpr size_t kMediaSsrcIndex = 0;
+    static constexpr size_t kMaxSsrcs = 3;
+    // Initializes the set of registered local SSRCS by extracting them from the
+    // provided `config`. The `disable_sequence_checker` flag is a workaround
+    // to be able to use a sequence checker without breaking downstream
+    // code that currently doesn't follow the same threading rules as webrtc.
+    RegisteredSsrcs(bool disable_sequence_checker,
+                    const RtpRtcpInterface::Configuration& config);
+
+    // Indicates if `ssrc` is in the set of registered local SSRCs.
+    bool contains(uint32_t ssrc) const;
+    uint32_t media_ssrc() const;
+    void set_media_ssrc(uint32_t ssrc);
+
+   private:
+    RTC_NO_UNIQUE_ADDRESS CustomSequenceChecker packet_sequence_checker_;
+    absl::InlinedVector<uint32_t, kMaxSsrcs> ssrcs_
+        RTC_GUARDED_BY(packet_sequence_checker_);
   };
 
   struct PacketInformation;
@@ -296,7 +337,7 @@ class RTCPReceiver final {
   ModuleRtpRtcp* const rtp_rtcp_;
   const uint32_t main_ssrc_;
   // The set of registered local SSRCs.
-  const RegisteredSsrcs registered_ssrcs_;
+  RegisteredSsrcs registered_ssrcs_;
 
   RtcpBandwidthObserver* const rtcp_bandwidth_observer_;
   RtcpEventObserver* const rtcp_event_observer_;
