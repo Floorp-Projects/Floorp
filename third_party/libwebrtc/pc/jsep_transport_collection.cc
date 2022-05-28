@@ -197,7 +197,7 @@ bool JsepTransportCollection::IsConsistent() {
   for (const auto& it : jsep_transports_by_name_) {
     if (!TransportInUse(it.second.get())) {
       RTC_LOG(LS_ERROR) << "Transport registered with mid " << it.first
-                        << " is not in use, transport " << it.second;
+                        << " is not in use, transport " << it.second.get();
       return false;
     }
     const auto& lookup = mid_to_transport_.find(it.first);
