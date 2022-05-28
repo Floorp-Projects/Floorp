@@ -14,6 +14,11 @@ void MockAudioSendStream::Reconfigure(const Config& config) {
   mCallWrapper->GetMockCall()->mAudioSendConfig = mozilla::Some(config);
 }
 
+const webrtc::ReceiveStream::RtpConfig& MockAudioReceiveStream::rtp_config() const {
+  MOZ_ASSERT(mCallWrapper->GetMockCall()->mAudioReceiveConfig.isSome());
+  return mCallWrapper->GetMockCall()->mAudioReceiveConfig->rtp;
+}
+
 void MockAudioReceiveStream::SetDecoderMap(
     std::map<int, webrtc::SdpAudioFormat> decoder_map) {
   MOZ_ASSERT(mCallWrapper->GetMockCall()->mAudioReceiveConfig.isSome());
@@ -25,6 +30,11 @@ void MockVideoSendStream::ReconfigureVideoEncoder(
     webrtc::VideoEncoderConfig config) {
   mCallWrapper->GetMockCall()->mVideoSendEncoderConfig =
       mozilla::Some(config.Copy());
+}
+
+const webrtc::ReceiveStream::RtpConfig& MockVideoReceiveStream::rtp_config() const {
+  MOZ_ASSERT(mCallWrapper->GetMockCall()->mVideoReceiveConfig.isSome());
+  return mCallWrapper->GetMockCall()->mVideoReceiveConfig->rtp;
 }
 
 }  // namespace test
