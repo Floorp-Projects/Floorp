@@ -38,19 +38,6 @@ using webrtc::SdpType;
 
 namespace webrtc {
 
-namespace {
-
-bool IsBundledButNotFirstMid(
-    const std::map<std::string, cricket::ContentGroup*>& bundle_groups_by_mid,
-    const std::string& mid) {
-  auto it = bundle_groups_by_mid.find(mid);
-  if (it == bundle_groups_by_mid.end())
-    return false;
-  return mid != *it->second->FirstContentName();
-}
-
-}  // namespace
-
 JsepTransportController::JsepTransportController(
     rtc::Thread* network_thread,
     cricket::PortAllocator* port_allocator,
@@ -556,21 +543,12 @@ RTCError JsepTransportController::ApplyDescription_n(
   if (!error.ok()) {
     return error;
   }
-  // Established BUNDLE groups by MID.
-  std::map<std::string, cricket::ContentGroup*>
-      established_bundle_groups_by_mid;
-  for (const auto& bundle_group : bundles_.bundle_groups()) {
-    for (const std::string& content_name : bundle_group->content_names()) {
-      established_bundle_groups_by_mid[content_name] = bundle_group.get();
-    }
-  }
 
   std::map<const cricket::ContentGroup*, std::vector<int>>
       merged_encrypted_extension_ids_by_bundle;
   if (!bundles_.bundle_groups().empty()) {
     merged_encrypted_extension_ids_by_bundle =
-        MergeEncryptedHeaderExtensionIdsForBundles(
-            established_bundle_groups_by_mid, description);
+        MergeEncryptedHeaderExtensionIdsForBundles(description);
   }
 
   // Because the creation of transports depends on whether
@@ -579,17 +557,15 @@ RTCError JsepTransportController::ApplyDescription_n(
   for (size_t i = 0; i < description->contents().size(); ++i) {
     const cricket::ContentInfo& content_info = description->contents()[i];
     if (content_info.rejected) {
-      // This may cause groups to be removed from |bundles_.bundle_groups()| and
-      // |established_bundle_groups_by_mid|.
-      HandleRejectedContent(content_info, established_bundle_groups_by_mid);
+      // This may cause groups to be removed from |bundles_.bundle_groups()|.
+      HandleRejectedContent(content_info);
     }
   }
 
   for (const cricket::ContentInfo& content_info : description->contents()) {
     // Don't create transports for rejected m-lines and bundled m-lines.
     if (content_info.rejected ||
-        IsBundledButNotFirstMid(established_bundle_groups_by_mid,
-                                content_info.name)) {
+        !bundles_.IsFirstMidInGroup(content_info.name)) {
       continue;
     }
     error = MaybeCreateJsepTransport(local, content_info, *description);
@@ -609,9 +585,8 @@ RTCError JsepTransportController::ApplyDescription_n(
       continue;
     }
 
-    auto it = established_bundle_groups_by_mid.find(content_info.name);
     const cricket::ContentGroup* established_bundle_group =
-        it != established_bundle_groups_by_mid.end() ? it->second : nullptr;
+        bundles_.LookupGroupByMid(content_info.name);
 
     // For bundle members that are not BUNDLE-tagged (not first in the group),
     // configure their transport to be the same as the BUNDLE-tagged transport.
@@ -835,25 +810,18 @@ RTCError JsepTransportController::ValidateContent(
 }
 
 void JsepTransportController::HandleRejectedContent(
-    const cricket::ContentInfo& content_info,
-    std::map<std::string, cricket::ContentGroup*>&
-        established_bundle_groups_by_mid) {
+    const cricket::ContentInfo& content_info) {
   // If the content is rejected, let the
   // BaseChannel/SctpTransport change the RtpTransport/DtlsTransport first,
   // then destroy the cricket::JsepTransport.
-  auto it = established_bundle_groups_by_mid.find(content_info.name);
   cricket::ContentGroup* bundle_group =
-      it != established_bundle_groups_by_mid.end() ? it->second : nullptr;
+      bundles_.LookupGroupByMid(content_info.name);
   if (bundle_group && !bundle_group->content_names().empty() &&
       content_info.name == *bundle_group->FirstContentName()) {
     // Rejecting a BUNDLE group's first mid means we are rejecting the entire
     // group.
     for (const auto& content_name : bundle_group->content_names()) {
       transports_.RemoveTransportForMid(content_name);
-      // We are about to delete this BUNDLE group, erase all mappings to it.
-      it = established_bundle_groups_by_mid.find(content_name);
-      RTC_DCHECK(it != established_bundle_groups_by_mid.end());
-      established_bundle_groups_by_mid.erase(it);
     }
     // Delete the BUNDLE group.
     bundles_.DeleteGroup(bundle_group);
@@ -947,7 +915,6 @@ std::vector<int> JsepTransportController::GetEncryptedHeaderExtensionIds(
 
 std::map<const cricket::ContentGroup*, std::vector<int>>
 JsepTransportController::MergeEncryptedHeaderExtensionIdsForBundles(
-    const std::map<std::string, cricket::ContentGroup*>& bundle_groups_by_mid,
     const cricket::SessionDescription* description) {
   RTC_DCHECK(description);
   RTC_DCHECK(!bundles_.bundle_groups().empty());
@@ -955,12 +922,12 @@ JsepTransportController::MergeEncryptedHeaderExtensionIdsForBundles(
       merged_encrypted_extension_ids_by_bundle;
   // Union the encrypted header IDs in the group when bundle is enabled.
   for (const cricket::ContentInfo& content_info : description->contents()) {
-    auto it = bundle_groups_by_mid.find(content_info.name);
-    if (it == bundle_groups_by_mid.end())
+    auto group = bundles_.LookupGroupByMid(content_info.name);
+    if (!group)
       continue;
     // Get or create list of IDs for the BUNDLE group.
     std::vector<int>& merged_ids =
-        merged_encrypted_extension_ids_by_bundle[it->second];
+        merged_encrypted_extension_ids_by_bundle[group];
     // Add IDs not already in the list.
     std::vector<int> extension_ids =
         GetEncryptedHeaderExtensionIds(content_info);

@@ -330,9 +330,7 @@ class JsepTransportController : public sigslot::has_slots<> {
       const cricket::SessionDescription* description);
   RTCError ValidateContent(const cricket::ContentInfo& content_info);
 
-  void HandleRejectedContent(const cricket::ContentInfo& content_info,
-                             std::map<std::string, cricket::ContentGroup*>&
-                                 established_bundle_groups_by_mid)
+  void HandleRejectedContent(const cricket::ContentInfo& content_info)
       RTC_RUN_ON(network_thread_);
   bool HandleBundledContent(const cricket::ContentInfo& content_info,
                             const cricket::ContentGroup& bundle_group)
@@ -349,7 +347,6 @@ class JsepTransportController : public sigslot::has_slots<> {
 
   std::map<const cricket::ContentGroup*, std::vector<int>>
   MergeEncryptedHeaderExtensionIdsForBundles(
-      const std::map<std::string, cricket::ContentGroup*>& bundle_groups_by_mid,
       const cricket::SessionDescription* description);
   std::vector<int> GetEncryptedHeaderExtensionIds(
       const cricket::ContentInfo& content_info);

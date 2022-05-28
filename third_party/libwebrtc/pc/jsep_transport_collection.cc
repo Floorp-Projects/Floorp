@@ -27,12 +27,40 @@ void BundleManager::Update(const cricket::SessionDescription* description) {
        description->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE)) {
     bundle_groups_.push_back(
         std::make_unique<cricket::ContentGroup>(*new_bundle_group));
+    RTC_DLOG(LS_VERBOSE) << "Establishing bundle group "
+                         << new_bundle_group->ToString();
   }
+  established_bundle_groups_by_mid_.clear();
+  for (const auto& bundle_group : bundle_groups_) {
+    for (const std::string& content_name : bundle_group->content_names()) {
+      established_bundle_groups_by_mid_[content_name] = bundle_group.get();
+    }
+  }
+}
+
+const cricket::ContentGroup* BundleManager::LookupGroupByMid(
+    const std::string& mid) const {
+  auto it = established_bundle_groups_by_mid_.find(mid);
+  return it != established_bundle_groups_by_mid_.end() ? it->second : nullptr;
+}
+bool BundleManager::IsFirstMidInGroup(const std::string& mid) const {
+  auto group = LookupGroupByMid(mid);
+  if (!group) {
+    return true;  // Unbundled MIDs are considered group leaders
+  }
+  return mid == *(group->FirstContentName());
+}
+
+cricket::ContentGroup* BundleManager::LookupGroupByMid(const std::string& mid) {
+  auto it = established_bundle_groups_by_mid_.find(mid);
+  return it != established_bundle_groups_by_mid_.end() ? it->second : nullptr;
 }
 
 void BundleManager::DeleteMid(const cricket::ContentGroup* bundle_group,
                               const std::string& mid) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
+  RTC_LOG(LS_VERBOSE) << "Deleting mid " << mid << " from bundle group "
+                      << bundle_group->ToString();
   // Remove the rejected content from the |bundle_group|.
   // The const pointer arg is used to identify the group, we verify
   // it before we use it to make a modification.
@@ -43,17 +71,24 @@ void BundleManager::DeleteMid(const cricket::ContentGroup* bundle_group,
       });
   RTC_DCHECK(bundle_group_it != bundle_groups_.end());
   (*bundle_group_it)->RemoveContentName(mid);
+  established_bundle_groups_by_mid_.erase(
+      established_bundle_groups_by_mid_.find(mid));
 }
 
 void BundleManager::DeleteGroup(const cricket::ContentGroup* bundle_group) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  // Delete the BUNDLE group.
+  RTC_DLOG(LS_VERBOSE) << "Deleting bundle group " << bundle_group->ToString();
+
   auto bundle_group_it = std::find_if(
       bundle_groups_.begin(), bundle_groups_.end(),
       [bundle_group](std::unique_ptr<cricket::ContentGroup>& group) {
         return bundle_group == group.get();
       });
   RTC_DCHECK(bundle_group_it != bundle_groups_.end());
+  auto mid_list = (*bundle_group_it)->content_names();
+  for (const auto& content_name : mid_list) {
+    DeleteMid(bundle_group, content_name);
+  }
   bundle_groups_.erase(bundle_group_it);
 }
 
@@ -208,7 +243,8 @@ bool JsepTransportCollection::IsConsistent() {
     }
     const auto& lookup = mid_to_transport_.find(it.first);
     if (lookup->second != it.second.get()) {
-      RTC_LOG(LS_ERROR) << "Note: Mid " << it.first << " was registered to "
+      // Not an error, but unusual.
+      RTC_DLOG(LS_INFO) << "Note: Mid " << it.first << " was registered to "
                         << it.second.get() << " but currently maps to "
                         << lookup->second;
     }
