@@ -53,6 +53,7 @@ rtc_library("rtc_event_pacing") {
   deps = [
     "../api:scoped_refptr",
     "../api/rtc_event_log",
+    "../api/units:timestamp",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
@@ -73,6 +74,7 @@ rtc_library("rtc_event_audio") {
     ":rtc_stream_config",
     "../api:scoped_refptr",
     "../api/rtc_event_log",
+    "../api/units:timestamp",
     "../modules/audio_coding:audio_network_adaptor_config",
     "../rtc_base:checks",
   ]
@@ -101,6 +103,7 @@ rtc_library("rtc_event_bwe") {
     "../api:scoped_refptr",
     "../api/rtc_event_log",
     "../api/units:data_rate",
+    "../api/units:timestamp",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
@@ -115,6 +118,7 @@ rtc_library("rtc_event_frame_events") {
   ]
   deps = [
     "../api/rtc_event_log",
+    "../api/units:timestamp",
     "../api/video:video_frame",
     "../rtc_base:timeutils",
   ]
@@ -136,6 +140,7 @@ rtc_library("rtc_event_generic_packet_events") {
   ]
   deps = [
     "../api/rtc_event_log",
+    "../api/units:timestamp",
     "../rtc_base:timeutils",
   ]
   absl_deps = [
@@ -179,6 +184,7 @@ rtc_library("rtc_event_video") {
     ":rtc_stream_config",
     "../api:scoped_refptr",
     "../api/rtc_event_log",
+    "../api/units:timestamp",
     "../rtc_base:checks",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
@@ -455,6 +461,7 @@ rtc_library("ice_log") {
     "../api:libjingle_logging_api",
     "../api:libjingle_peerconnection_api",  # For api/dtls_transport_interface.h
     "../api/rtc_event_log",
+    "../api/units:timestamp",
     "../rtc_base:rtc_base_approved",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
