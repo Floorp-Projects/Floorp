@@ -361,6 +361,10 @@ var pktApi = (function() {
     setSetting("premium_status", undefined);
     setSetting("latestSince", undefined);
     setSetting("tags", undefined);
+    // An old pref that is no longer used,
+    // but the user data may still exist on some profiles.
+    // So best to clean it up just in case.
+    // Can probably remove this line in the future.
     setSetting("usedTags", undefined);
 
     setSetting("fsv1", undefined);
@@ -615,32 +619,6 @@ var pktApi = (function() {
     };
     action = extend(action, actionPart);
 
-    // Backup the success callback as we need it later
-    var finalSuccessCallback = options.success;
-
-    // Switch the success callback
-    options.success = function(data) {
-      // Update used tags
-      var usedTagsJSON = getSetting("usedTags");
-      var usedTags = usedTagsJSON ? JSON.parse(usedTagsJSON) : {};
-
-      // Check for each tag if it's already in the used tags
-      for (var i = 0; i < tags.length; i++) {
-        var tagToSave = tags[i].trim();
-        var newUsedTagObject = {
-          tag: tagToSave,
-          timestamp: new Date().getTime(),
-        };
-        usedTags[tagToSave] = newUsedTagObject;
-      }
-      setSetting("usedTags", JSON.stringify(usedTags));
-
-      // Let the callback know that we are finished
-      if (finalSuccessCallback) {
-        finalSuccessCallback(data);
-      }
-    };
-
     // Execute the action
     return sendAction(action, options);
   }
@@ -657,40 +635,8 @@ var pktApi = (function() {
       return [];
     };
 
-    var sortedUsedTagsFromSettings = function() {
-      // Get and Sort used tags
-      var usedTags = [];
-
-      var usedTagsJSON = getSetting("usedTags");
-      if (typeof usedTagsJSON !== "undefined") {
-        var usedTagsObject = JSON.parse(usedTagsJSON);
-        var usedTagsObjectArray = [];
-        for (var tagKey in usedTagsObject) {
-          usedTagsObjectArray.push(usedTagsObject[tagKey]);
-        }
-
-        // Sort usedTagsObjectArray based on timestamp
-        usedTagsObjectArray.sort(function(usedTagA, usedTagB) {
-          var a = usedTagA.timestamp;
-          var b = usedTagB.timestamp;
-          return a - b;
-        });
-
-        // Get all keys tags
-        for (var j = 0; j < usedTagsObjectArray.length; j++) {
-          usedTags.push(usedTagsObjectArray[j].tag);
-        }
-
-        // Reverse to set the last recent used tags to the front
-        usedTags.reverse();
-      }
-
-      return usedTags;
-    };
-
     return {
       tags: tagsFromSettings(),
-      usedTags: sortedUsedTagsFromSettings(),
     };
   }
 

@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import { features } from "../../utils/prefs";
@@ -36,6 +37,27 @@ class Expressions extends Component {
       editIndex: -1,
       inputValue: "",
       focused: false,
+    };
+  }
+
+  static get propTypes() {
+    return {
+      addExpression: PropTypes.func.isRequired,
+      autocomplete: PropTypes.func.isRequired,
+      autocompleteMatches: PropTypes.array,
+      clearAutocomplete: PropTypes.func.isRequired,
+      clearExpressionError: PropTypes.func.isRequired,
+      cx: PropTypes.object.isRequired,
+      deleteExpression: PropTypes.func.isRequired,
+      expressionError: PropTypes.bool.isRequired,
+      expressions: PropTypes.array.isRequired,
+      highlightDomElement: PropTypes.func.isRequired,
+      onExpressionAdded: PropTypes.func.isRequired,
+      openElementInInspector: PropTypes.func.isRequired,
+      openLink: PropTypes.any.isRequired,
+      showInput: PropTypes.bool.isRequired,
+      unHighlightDomElement: PropTypes.func.isRequired,
+      updateExpression: PropTypes.func.isRequired,
     };
   }
 

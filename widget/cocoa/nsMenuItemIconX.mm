@@ -123,7 +123,7 @@ already_AddRefed<nsIURI> nsMenuItemIconX::GetIconURI(nsIContent* aContent) {
     return nullptr;
   }
 
-  RefPtr<ComputedStyle> sc = nsComputedDOMStyle::GetComputedStyle(aContent->AsElement());
+  RefPtr<const ComputedStyle> sc = nsComputedDOMStyle::GetComputedStyle(aContent->AsElement());
   if (!sc) {
     return nullptr;
   }

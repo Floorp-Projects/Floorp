@@ -12,15 +12,11 @@
 #include "nsError.h"
 #include "pk11pub.h"
 #include "sechash.h"
-#include "ssl.h"
 #include "mozpkix/nss_scoped_ptrs.h"
 #include "secerr.h"
 #include "sslerr.h"
 
 #include "mozilla/Sprintf.h"
-#include "mozilla/dom/CryptoBuffer.h"
-#include "mozilla/dom/CryptoKey.h"
-#include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {
 

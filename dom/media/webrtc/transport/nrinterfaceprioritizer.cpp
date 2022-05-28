@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 #include "logging.h"
+#include "nr_api.h"
 #include "nrinterfaceprioritizer.h"
-#include "nsCOMPtr.h"
 
 MOZ_MTLOG_MODULE("mtransport")
 

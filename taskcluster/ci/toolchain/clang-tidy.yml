@@ -36,8 +36,6 @@ linux64-clang-tidy:
             - 'build/build-clang/clang-tidy-linux64.json'
         resources:
             - 'build/build-clang/clang-tidy-linux64.json'
-    run-on-projects:
-        - trunk
     fetches:
         toolchain:
             - linux64-clang-14
@@ -55,8 +53,6 @@ macosx64-clang-tidy:
             - 'build/build-clang/clang-tidy-macosx64.json'
         resources:
             - 'build/build-clang/clang-tidy-macosx64.json'
-    run-on-projects:
-        - trunk
     fetches:
         toolchain:
             - linux64-cctools-port
@@ -78,8 +74,6 @@ macosx64-arch64-clang-tidy:
             - 'build/build-clang/clang-tidy-macosx64.json'
         resources:
             - 'build/build-clang/clang-tidy-macosx64.json'
-    run-on-projects:
-        - trunk
     fetches:
         toolchain:
             - linux64-cctools-port
@@ -102,8 +96,6 @@ win64-clang-tidy:
             - 'build/build-clang/clang-tidy-win64.json'
         resources:
             - 'build/build-clang/clang-tidy-win64.json'
-    run-on-projects:
-        - trunk
     fetches:
         fetch:
             - cmake

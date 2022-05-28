@@ -5,6 +5,7 @@
 const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import classnames from "classnames";
 import { isGeneratedId } from "devtools-source-map";
 import { connect } from "../../utils/connect";
@@ -68,6 +69,29 @@ class SecondaryPanes extends Component {
     this.state = {
       showExpressionsInput: false,
       showXHRInput: false,
+    };
+  }
+
+  static get propTypes() {
+    return {
+      cx: PropTypes.object.isRequired,
+      evaluateExpressions: PropTypes.func.isRequired,
+      expressions: PropTypes.array.isRequired,
+      hasFrames: PropTypes.bool.isRequired,
+      horizontal: PropTypes.bool.isRequired,
+      logEventBreakpoints: PropTypes.bool.isRequired,
+      mapScopesEnabled: PropTypes.bool.isRequired,
+      pauseOnExceptions: PropTypes.func.isRequired,
+      pauseReason: PropTypes.string.isRequired,
+      renderWhyPauseDelay: PropTypes.number.isRequired,
+      selectedFrame: PropTypes.object,
+      shouldPauseOnCaughtExceptions: PropTypes.bool.isRequired,
+      shouldPauseOnExceptions: PropTypes.bool.isRequired,
+      skipPausing: PropTypes.bool.isRequired,
+      source: PropTypes.object,
+      toggleEventLogging: PropTypes.func.isRequired,
+      toggleMapScopes: PropTypes.func.isRequired,
+      workers: PropTypes.array.isRequired,
     };
   }
 

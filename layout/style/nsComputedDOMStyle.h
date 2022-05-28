@@ -93,11 +93,11 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   nsINode* GetAssociatedNode() const override { return mElement; }
   nsINode* GetParentObject() const override { return mElement; }
 
-  static already_AddRefed<ComputedStyle> GetComputedStyle(
+  static already_AddRefed<const ComputedStyle> GetComputedStyle(
       Element* aElement, PseudoStyleType = PseudoStyleType::NotPseudo,
       StyleType = StyleType::All);
 
-  static already_AddRefed<ComputedStyle> GetComputedStyleNoFlush(
+  static already_AddRefed<const ComputedStyle> GetComputedStyleNoFlush(
       const Element* aElement,
       PseudoStyleType aPseudo = PseudoStyleType::NotPseudo,
       StyleType aStyleType = StyleType::All) {
@@ -106,7 +106,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
         aStyleType);
   }
 
-  static already_AddRefed<ComputedStyle> GetUnanimatedComputedStyleNoFlush(
+  static already_AddRefed<const ComputedStyle>
+  GetUnanimatedComputedStyleNoFlush(
       Element*, PseudoStyleType = PseudoStyleType::NotPseudo);
 
   // Helper for nsDOMWindowUtils::GetVisitedDependentComputedStyle
@@ -160,11 +161,11 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   // Helper functions called by UpdateCurrentStyleSources.
   void ClearComputedStyle();
-  void SetResolvedComputedStyle(RefPtr<ComputedStyle>&& aContext,
+  void SetResolvedComputedStyle(RefPtr<const ComputedStyle>&& aContext,
                                 uint64_t aGeneration);
   void SetFrameComputedStyle(ComputedStyle* aStyle, uint64_t aGeneration);
 
-  static already_AddRefed<ComputedStyle> DoGetComputedStyleNoFlush(
+  static already_AddRefed<const ComputedStyle> DoGetComputedStyleNoFlush(
       const Element*, PseudoStyleType, mozilla::PresShell*, StyleType);
 
 #define STYLE_STRUCT(name_)                \
@@ -339,7 +340,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
    * by checking whether flush styles results in any restyles having been
    * processed.
    */
-  RefPtr<ComputedStyle> mComputedStyle;
+  RefPtr<const ComputedStyle> mComputedStyle;
 
   /*
    * While computing style data, the primary frame for mContent --- named
