@@ -166,6 +166,9 @@ void WebRenderLayerScrollData::Dump(std::ostream& aOut,
     aOut << ", item=" << (void*)mInitializedFrom;
   }
 #endif
+  if (mAsyncZoomContainerId) {
+    aOut << ", asyncZoomContainer";
+  }
   for (size_t i = 0; i < mScrollIds.Length(); i++) {
     aOut << ", metadata" << i << "=" << aOwner.GetScrollMetadata(mScrollIds[i]);
   }
