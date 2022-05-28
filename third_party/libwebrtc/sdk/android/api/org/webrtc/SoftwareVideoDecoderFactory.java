@@ -16,13 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 
 public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
-  @Deprecated
-  @Nullable
-  @Override
-  public VideoDecoder createDecoder(String codecType) {
-    return createDecoder(new VideoCodecInfo(codecType, new HashMap<>()));
-  }
-
   @Nullable
   @Override
   public VideoDecoder createDecoder(VideoCodecInfo codecInfo) {
