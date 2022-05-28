@@ -164,6 +164,8 @@ int VirtualSocket::Close() {
   }
 
   if (SOCK_STREAM == type_) {
+    CritScope cs(&crit_);
+
     // Cancel pending sockets
     if (listen_queue_) {
       while (!listen_queue_->empty()) {
@@ -231,6 +233,8 @@ int VirtualSocket::RecvFrom(void* pv,
   if (timestamp) {
     *timestamp = -1;
   }
+
+  CritScope cs(&crit_);
   // If we don't have a packet, then either error or wait for one to arrive.
   if (recv_buffer_.empty()) {
     if (async_) {
@@ -273,6 +277,7 @@ int VirtualSocket::RecvFrom(void* pv,
 }
 
 int VirtualSocket::Listen(int backlog) {
+  CritScope cs(&crit_);
   RTC_DCHECK(SOCK_STREAM == type_);
   RTC_DCHECK(CS_CLOSED == state_);
   if (local_addr_.IsNil()) {
@@ -286,6 +291,7 @@ int VirtualSocket::Listen(int backlog) {
 }
 
 VirtualSocket* VirtualSocket::Accept(SocketAddress* paddr) {
+  CritScope cs(&crit_);
   if (nullptr == listen_queue_) {
     error_ = EINVAL;
     return nullptr;
@@ -341,47 +347,52 @@ int VirtualSocket::SetOption(Option opt, int value) {
 }
 
 void VirtualSocket::OnMessage(Message* pmsg) {
-  if (pmsg->message_id == MSG_ID_PACKET) {
-    RTC_DCHECK(nullptr != pmsg->pdata);
-    Packet* packet = static_cast<Packet*>(pmsg->pdata);
+  bool signal_read_event = false;
+  bool signal_close_event = false;
+  int error_to_signal = 0;
+  {
+    CritScope cs(&crit_);
+    if (pmsg->message_id == MSG_ID_PACKET) {
+      RTC_DCHECK(nullptr != pmsg->pdata);
+      Packet* packet = static_cast<Packet*>(pmsg->pdata);
 
-    recv_buffer_.push_back(packet);
-
-    if (async_) {
-      SignalReadEvent(this);
-    }
-  } else if (pmsg->message_id == MSG_ID_CONNECT) {
-    RTC_DCHECK(nullptr != pmsg->pdata);
-    MessageAddress* data = static_cast<MessageAddress*>(pmsg->pdata);
-    if (listen_queue_ != nullptr) {
-      listen_queue_->push_back(data->addr);
-      if (async_) {
-        SignalReadEvent(this);
+      recv_buffer_.push_back(packet);
+      signal_read_event = async_;
+    } else if (pmsg->message_id == MSG_ID_CONNECT) {
+      RTC_DCHECK(nullptr != pmsg->pdata);
+      MessageAddress* data = static_cast<MessageAddress*>(pmsg->pdata);
+      if (listen_queue_ != nullptr) {
+        listen_queue_->push_back(data->addr);
+        signal_read_event = async_;
+      } else if ((SOCK_STREAM == type_) && (CS_CONNECTING == state_)) {
+        CompleteConnect(data->addr, true);
+      } else {
+        RTC_LOG(LS_VERBOSE)
+            << "Socket at " << local_addr_.ToString() << " is not listening";
+        server_->Disconnect(data->addr);
       }
-    } else if ((SOCK_STREAM == type_) && (CS_CONNECTING == state_)) {
-      CompleteConnect(data->addr, true);
+      delete data;
+    } else if (pmsg->message_id == MSG_ID_DISCONNECT) {
+      RTC_DCHECK(SOCK_STREAM == type_);
+      if (CS_CLOSED != state_) {
+        error_to_signal = (CS_CONNECTING == state_) ? ECONNREFUSED : 0;
+        state_ = CS_CLOSED;
+        remote_addr_.Clear();
+        signal_close_event = async_;
+      }
+    } else if (pmsg->message_id == MSG_ID_SIGNALREADEVENT) {
+      signal_read_event = !recv_buffer_.empty();
     } else {
-      RTC_LOG(LS_VERBOSE) << "Socket at " << local_addr_.ToString()
-                          << " is not listening";
-      server_->Disconnect(data->addr);
+      RTC_NOTREACHED();
     }
-    delete data;
-  } else if (pmsg->message_id == MSG_ID_DISCONNECT) {
-    RTC_DCHECK(SOCK_STREAM == type_);
-    if (CS_CLOSED != state_) {
-      int error = (CS_CONNECTING == state_) ? ECONNREFUSED : 0;
-      state_ = CS_CLOSED;
-      remote_addr_.Clear();
-      if (async_) {
-        SignalCloseEvent(this, error);
-      }
-    }
-  } else if (pmsg->message_id == MSG_ID_SIGNALREADEVENT) {
-    if (!recv_buffer_.empty()) {
-      SignalReadEvent(this);
-    }
-  } else {
-    RTC_NOTREACHED();
+  }
+  // Signal events without holding `crit_`, to avoid lock order inversion with
+  // sigslot locks.
+  if (signal_read_event) {
+    SignalReadEvent(this);
+  }
+  if (signal_close_event) {
+    SignalCloseEvent(this, error_to_signal);
   }
 }
 
