@@ -169,6 +169,25 @@ TEST(RtcpTransceiverImplTest, NeedToStopPeriodicTaskToDestroyOnTaskQueue) {
   ASSERT_TRUE(done.Wait(/*milliseconds=*/1000));
 }
 
+TEST(RtcpTransceiverImplTest, CanBeDestroyedRightAfterCreation) {
+  SimulatedClock clock(0);
+  FakeRtcpTransport transport;
+  TaskQueueForTest queue("rtcp");
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.clock = &clock;
+  config.task_queue = queue.Get();
+  config.schedule_periodic_compound_packets = true;
+  config.outgoing_transport = &transport;
+
+  rtc::Event done;
+  queue.PostTask([&] {
+    RtcpTransceiverImpl rtcp_transceiver(config);
+    rtcp_transceiver.StopPeriodicTask();
+    done.Set();
+  });
+  ASSERT_TRUE(done.Wait(/*milliseconds=*/1000));
+}
+
 TEST(RtcpTransceiverImplTest, CanDestroyAfterTaskQueue) {
   SimulatedClock clock(0);
   FakeRtcpTransport transport;

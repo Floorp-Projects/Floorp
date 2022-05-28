@@ -92,9 +92,7 @@ RtcpTransceiverImpl::RtcpTransceiverImpl(const RtcpTransceiverConfig& config)
     : config_(config), ready_to_send_(config.initial_ready_to_send) {
   RTC_CHECK(config_.Validate());
   if (ready_to_send_ && config_.schedule_periodic_compound_packets) {
-    config_.task_queue->PostTask(ToQueuedTask([this] {
-      SchedulePeriodicCompoundPackets(config_.initial_report_delay_ms);
-    }));
+    SchedulePeriodicCompoundPackets(config_.initial_report_delay_ms);
   }
 }
 
