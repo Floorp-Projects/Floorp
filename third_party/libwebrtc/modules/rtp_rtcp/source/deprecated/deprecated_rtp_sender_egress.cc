@@ -313,7 +313,7 @@ void DEPRECATED_RtpSenderEgress::AddPacketToTransportFeedback(
     }
 
     RtpPacketSendInfo packet_info;
-    packet_info.media_ssrc = ssrc_;
+    packet_info.ssrc = ssrc_;
     packet_info.transport_sequence_number = packet_id;
     packet_info.rtp_sequence_number = packet.SequenceNumber();
     packet_info.length = packet_size;

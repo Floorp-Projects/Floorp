@@ -932,45 +932,43 @@ void RtpVideoSender::OnPacketFeedbackVector(
   // Map from SSRC to all acked packets for that RTP module.
   std::map<uint32_t, std::vector<uint16_t>> acked_packets_per_ssrc;
   for (const StreamPacketInfo& packet : packet_feedback_vector) {
-    if (packet.received && packet.ssrc) {
-      acked_packets_per_ssrc[*packet.ssrc].push_back(
-          packet.rtp_sequence_number);
+    if (packet.received) {
+      acked_packets_per_ssrc[packet.ssrc].push_back(packet.rtp_sequence_number);
     }
   }
 
-  // Map from SSRC to vector of RTP sequence numbers that are indicated as
-  // lost by feedback, without being trailed by any received packets.
-  std::map<uint32_t, std::vector<uint16_t>> early_loss_detected_per_ssrc;
+    // Map from SSRC to vector of RTP sequence numbers that are indicated as
+    // lost by feedback, without being trailed by any received packets.
+    std::map<uint32_t, std::vector<uint16_t>> early_loss_detected_per_ssrc;
 
-  for (const StreamPacketInfo& packet : packet_feedback_vector) {
-    // Only include new media packets, not retransmissions/padding/fec.
-    if (!packet.received && packet.ssrc && !packet.is_retransmission) {
-      // Last known lost packet, might not be detectable as lost by remote
-      // jitter buffer.
-      early_loss_detected_per_ssrc[*packet.ssrc].push_back(
-          packet.rtp_sequence_number);
-    } else {
-      // Packet received, so any loss prior to this is already detectable.
-      early_loss_detected_per_ssrc.erase(*packet.ssrc);
+    for (const StreamPacketInfo& packet : packet_feedback_vector) {
+      if (!packet.received) {
+        // Last known lost packet, might not be detectable as lost by remote
+        // jitter buffer.
+        early_loss_detected_per_ssrc[packet.ssrc].push_back(
+            packet.rtp_sequence_number);
+      } else {
+        // Packet received, so any loss prior to this is already detectable.
+        early_loss_detected_per_ssrc.erase(packet.ssrc);
+      }
     }
-  }
 
-  for (const auto& kv : early_loss_detected_per_ssrc) {
-    const uint32_t ssrc = kv.first;
-    auto it = ssrc_to_rtp_module_.find(ssrc);
-    RTC_CHECK(it != ssrc_to_rtp_module_.end());
-    RTPSender* rtp_sender = it->second->RtpSender();
-    for (uint16_t sequence_number : kv.second) {
-      rtp_sender->ReSendPacket(sequence_number);
+    for (const auto& kv : early_loss_detected_per_ssrc) {
+      const uint32_t ssrc = kv.first;
+      auto it = ssrc_to_rtp_module_.find(ssrc);
+      RTC_DCHECK(it != ssrc_to_rtp_module_.end());
+      RTPSender* rtp_sender = it->second->RtpSender();
+      for (uint16_t sequence_number : kv.second) {
+        rtp_sender->ReSendPacket(sequence_number);
+      }
     }
-  }
 
   for (const auto& kv : acked_packets_per_ssrc) {
     const uint32_t ssrc = kv.first;
     auto it = ssrc_to_rtp_module_.find(ssrc);
     if (it == ssrc_to_rtp_module_.end()) {
-      // No media, likely FEC or padding. Ignore since there's no RTP history to
-      // clean up anyway.
+      // Packets not for a media SSRC, so likely RTX or FEC. If so, ignore
+      // since there's no RTP history to clean up anyway.
       continue;
     }
     rtc::ArrayView<const uint16_t> rtp_sequence_numbers(kv.second);
