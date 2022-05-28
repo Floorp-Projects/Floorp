@@ -103,7 +103,7 @@ bool UseSendSideBwe(const AudioReceiveStream::Config& config) {
 }
 
 bool UseSendSideBwe(const FlexfecReceiveStream::Config& config) {
-  return UseSendSideBwe(config.rtp_header_extensions, config.transport_cc);
+  return UseSendSideBwe(config.rtp.extensions, config.rtp.transport_cc);
 }
 
 const int* FindKeyByValue(const std::map<int, int>& m, int v) {
@@ -421,7 +421,7 @@ class Call final : public webrtc::Call,
         : extensions(config.rtp.extensions),
           use_send_side_bwe(UseSendSideBwe(config)) {}
     explicit ReceiveRtpConfig(const FlexfecReceiveStream::Config& config)
-        : extensions(config.rtp_header_extensions),
+        : extensions(config.rtp.extensions),
           use_send_side_bwe(UseSendSideBwe(config)) {}
 
     // Registered RTP header extensions for each stream. Note that RTP header
@@ -1230,9 +1230,9 @@ FlexfecReceiveStream* Call::CreateFlexfecReceiveStream(
   // thread.
   receive_stream->RegisterWithTransport(&video_receiver_controller_);
 
-  RTC_DCHECK(receive_rtp_config_.find(config.remote_ssrc) ==
+  RTC_DCHECK(receive_rtp_config_.find(config.rtp.remote_ssrc) ==
              receive_rtp_config_.end());
-  receive_rtp_config_.emplace(config.remote_ssrc, ReceiveRtpConfig(config));
+  receive_rtp_config_.emplace(config.rtp.remote_ssrc, ReceiveRtpConfig(config));
 
   // TODO(brandtr): Store config in RtcEventLog here.
 
@@ -1250,7 +1250,7 @@ void Call::DestroyFlexfecReceiveStream(FlexfecReceiveStream* receive_stream) {
 
   RTC_DCHECK(receive_stream != nullptr);
   const FlexfecReceiveStream::Config& config = receive_stream->GetConfig();
-  uint32_t ssrc = config.remote_ssrc;
+  uint32_t ssrc = config.rtp.remote_ssrc;
   receive_rtp_config_.erase(ssrc);
 
   // Remove all SSRCs pointing to the FlexfecReceiveStreamImpl to be

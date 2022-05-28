@@ -409,7 +409,7 @@ void CallTest::CreateMatchingAudioAndFecConfigs(
   if (num_flexfec_streams_ == 1) {
     CreateMatchingFecConfig(rtcp_send_transport, *GetVideoSendConfig());
     for (const RtpExtension& extension : GetVideoSendConfig()->rtp.extensions)
-      GetFlexFecConfig()->rtp_header_extensions.push_back(extension);
+      GetFlexFecConfig()->rtp.extensions.push_back(extension);
   }
 }
 
@@ -444,9 +444,9 @@ void CallTest::CreateMatchingFecConfig(
     const VideoSendStream::Config& send_config) {
   FlexfecReceiveStream::Config config(transport);
   config.payload_type = send_config.rtp.flexfec.payload_type;
-  config.remote_ssrc = send_config.rtp.flexfec.ssrc;
+  config.rtp.remote_ssrc = send_config.rtp.flexfec.ssrc;
   config.protected_media_ssrcs = send_config.rtp.flexfec.protected_media_ssrcs;
-  config.local_ssrc = kReceiverLocalVideoSsrc;
+  config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
   if (!video_receive_configs_.empty()) {
     video_receive_configs_[0].rtp.protected_by_flexfec = true;
     video_receive_configs_[0].rtp.packet_sink_ = this;

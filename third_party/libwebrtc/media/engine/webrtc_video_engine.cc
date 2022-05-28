@@ -1535,14 +1535,14 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
   // TODO(brandtr): Generalize when we add support for multistream protection.
   flexfec_config->payload_type = recv_flexfec_payload_type_;
   if (!IsDisabled(call_->trials(), "WebRTC-FlexFEC-03-Advertised") &&
-      sp.GetFecFrSsrc(ssrc, &flexfec_config->remote_ssrc)) {
+      sp.GetFecFrSsrc(ssrc, &flexfec_config->rtp.remote_ssrc)) {
     flexfec_config->protected_media_ssrcs = {ssrc};
-    flexfec_config->local_ssrc = config->rtp.local_ssrc;
+    flexfec_config->rtp.local_ssrc = config->rtp.local_ssrc;
     flexfec_config->rtcp_mode = config->rtp.rtcp_mode;
     // TODO(brandtr): We should be spec-compliant and set |transport_cc| here
     // based on the rtcp-fb for the FlexFEC codec, not the media codec.
-    flexfec_config->transport_cc = config->rtp.transport_cc;
-    flexfec_config->rtp_header_extensions = config->rtp.extensions;
+    flexfec_config->rtp.transport_cc = config->rtp.transport_cc;
+    flexfec_config->rtp.extensions = config->rtp.extensions;
   }
 }
 
@@ -2933,7 +2933,7 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetLocalSsrc(
   }
 
   config_.rtp.local_ssrc = local_ssrc;
-  flexfec_config_.local_ssrc = local_ssrc;
+  flexfec_config_.rtp.local_ssrc = local_ssrc;
   RTC_LOG(LS_INFO)
       << "RecreateWebRtcVideoStream (recv) because of SetLocalSsrc; local_ssrc="
       << local_ssrc;
@@ -2966,7 +2966,7 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
   config_.rtp.rtcp_mode = rtcp_mode;
   // TODO(brandtr): We should be spec-compliant and set |transport_cc| here
   // based on the rtcp-fb for the FlexFEC codec, not the media codec.
-  flexfec_config_.transport_cc = config_.rtp.transport_cc;
+  flexfec_config_.rtp.transport_cc = config_.rtp.transport_cc;
   flexfec_config_.rtcp_mode = config_.rtp.rtcp_mode;
   RTC_LOG(LS_INFO) << "RecreateWebRtcVideoStream (recv) because of "
                       "SetFeedbackParameters; nack="
@@ -2983,7 +2983,7 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetRecvParameters(
   }
   if (params.rtp_header_extensions) {
     config_.rtp.extensions = *params.rtp_header_extensions;
-    flexfec_config_.rtp_header_extensions = *params.rtp_header_extensions;
+    flexfec_config_.rtp.extensions = *params.rtp_header_extensions;
     video_needs_recreation = true;
   }
   if (params.flexfec_payload_type) {

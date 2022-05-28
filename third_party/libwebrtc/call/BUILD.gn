@@ -35,8 +35,10 @@ rtc_library("call_interfaces") {
     "syncable.cc",
     "syncable.h",
   ]
+
   deps = [
     ":audio_sender_interface",
+    ":receive_stream_interface",
     ":rtp_interfaces",
     ":video_stream_api",
     "../api:fec_controller_api",
@@ -51,7 +53,6 @@ rtc_library("call_interfaces") {
     "../api/audio:audio_frame_processor",
     "../api/audio:audio_mixer_api",
     "../api/audio_codecs:audio_codecs_api",
-    "../api/crypto:frame_decryptor_interface",
     "../api/crypto:frame_encryptor_interface",
     "../api/crypto:options",
     "../api/neteq:neteq_api",
@@ -59,7 +60,6 @@ rtc_library("call_interfaces") {
     "../api/transport:bitrate_settings",
     "../api/transport:network_control",
     "../api/transport:webrtc_key_value_config",
-    "../api/transport/rtp:rtp_source",
     "../modules/async_audio_processing",
     "../modules/audio_device",
     "../modules/audio_processing",
@@ -321,6 +321,17 @@ rtc_library("call") {
   ]
 }
 
+rtc_source_set("receive_stream_interface") {
+  sources = [ "receive_stream.h" ]
+  deps = [
+    "../api:frame_transformer_interface",
+    "../api:rtp_parameters",
+    "../api:scoped_refptr",
+    "../api/crypto:frame_decryptor_interface",
+    "../api/transport/rtp:rtp_source",
+  ]
+}
+
 rtc_library("video_stream_api") {
   sources = [
     "video_receive_stream.cc",
@@ -329,6 +340,7 @@ rtc_library("video_stream_api") {
     "video_send_stream.h",
   ]
   deps = [
+    ":receive_stream_interface",
     ":rtp_interfaces",
     "../api:frame_transformer_interface",
     "../api:rtp_headers",
@@ -336,10 +348,8 @@ rtc_library("video_stream_api") {
     "../api:scoped_refptr",
     "../api:transport_api",
     "../api/adaptation:resource_adaptation_api",
-    "../api/crypto:frame_decryptor_interface",
     "../api/crypto:frame_encryptor_interface",
     "../api/crypto:options",
-    "../api/transport/rtp:rtp_source",
     "../api/video:recordable_encoded_frame",
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",

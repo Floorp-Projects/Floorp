@@ -101,7 +101,6 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
   }
 
  private:
-  // webrtc::AudioReceiveStream implementation.
   void Start() override { started_ = true; }
   void Stop() override { started_ = false; }
   bool IsRunning() const override { return started_; }
