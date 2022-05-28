@@ -668,6 +668,12 @@ void FakeCall::SignalChannelNetworkState(webrtc::MediaType media,
 void FakeCall::OnAudioTransportOverheadChanged(
     int transport_overhead_per_packet) {}
 
+void FakeCall::OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
+                                  uint32_t local_ssrc) {
+  auto& fake_stream = static_cast<FakeAudioReceiveStream&>(stream);
+  fake_stream.SetLocalSsrc(local_ssrc);
+}
+
 void FakeCall::OnSentPacket(const rtc::SentPacket& sent_packet) {
   last_sent_packet_ = sent_packet;
   if (sent_packet.packet_id >= 0) {

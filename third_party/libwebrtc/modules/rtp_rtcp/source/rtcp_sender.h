@@ -94,7 +94,8 @@ class RTCPSender final {
   void SetRtpClockRate(int8_t payload_type, int rtp_clock_rate_hz)
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
-  uint32_t SSRC() const { return ssrc_; }
+  uint32_t SSRC() const;
+  void SetSsrc(uint32_t ssrc);
 
   void SetRemoteSSRC(uint32_t ssrc) RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
@@ -187,7 +188,11 @@ class RTCPSender final {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_rtcp_sender_);
 
   const bool audio_;
-  const uint32_t ssrc_;
+  // TODO(bugs.webrtc.org/11581): `mutex_rtcp_sender_` shouldn't be required if
+  // we consistently run network related operations on the network thread.
+  // This is currently not possible due to callbacks from the process thread in
+  // ModuleRtpRtcpImpl2.
+  uint32_t ssrc_ RTC_GUARDED_BY(mutex_rtcp_sender_);
   Clock* const clock_;
   Random random_ RTC_GUARDED_BY(mutex_rtcp_sender_);
   RtcpMode method_ RTC_GUARDED_BY(mutex_rtcp_sender_);

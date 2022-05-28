@@ -93,6 +93,8 @@ class DegradedCall : public Call, private PacketReceiver {
   void SignalChannelNetworkState(MediaType media, NetworkState state) override;
   void OnAudioTransportOverheadChanged(
       int transport_overhead_per_packet) override;
+  void OnLocalSsrcUpdated(AudioReceiveStream& stream,
+                          uint32_t local_ssrc) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
 
  protected:

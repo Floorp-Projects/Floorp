@@ -183,6 +183,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
 
   virtual void SetRemoteSSRC(uint32_t ssrc) = 0;
 
+  // Called when the local ssrc changes (post initialization) for receive
+  // streams to match with send. Called on the packet receive thread/tq.
+  virtual void SetLocalSsrc(uint32_t ssrc) = 0;
+
   // **************************************************************************
   // Sender
   // **************************************************************************
