@@ -167,6 +167,16 @@ def common_toolchain(config, job, taskdesc, is_docker):
             "digest-data": digest_data,
         }
 
+    # Toolchains that are used for local development need to be built on a
+    # level-3 branch to be installable via `mach bootstrap`.
+    if taskdesc["attributes"].get("local-toolchain"):
+        if taskdesc.get("run-on-projects"):
+            raise Exception(
+                "Toolchain {} used for local developement must not have"
+                " run-on-projects set".format(taskdesc["label"])
+            )
+        taskdesc["run-on-projects"] = ["integration", "release"]
+
     run["using"] = "run-task"
     if is_docker:
         gecko_path = "workspace/build/src"

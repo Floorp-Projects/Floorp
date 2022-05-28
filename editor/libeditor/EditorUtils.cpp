@@ -542,7 +542,7 @@ bool EditorUtils::IsWhiteSpacePreformatted(const nsIContent& aContent) {
     return false;
   }
 
-  RefPtr<ComputedStyle> elementStyle =
+  RefPtr<const ComputedStyle> elementStyle =
       nsComputedDOMStyle::GetComputedStyleNoFlush(element);
   if (!elementStyle) {
     // Consider nodes without a ComputedStyle to be NOT preformatted:
@@ -563,7 +563,7 @@ bool EditorUtils::IsNewLinePreformatted(const nsIContent& aContent) {
     return false;
   }
 
-  RefPtr<ComputedStyle> elementStyle =
+  RefPtr<const ComputedStyle> elementStyle =
       nsComputedDOMStyle::GetComputedStyleNoFlush(element);
   if (!elementStyle) {
     // Consider nodes without a ComputedStyle to be NOT preformatted:
@@ -584,7 +584,7 @@ bool EditorUtils::IsOnlyNewLinePreformatted(const nsIContent& aContent) {
     return false;
   }
 
-  RefPtr<ComputedStyle> elementStyle =
+  RefPtr<const ComputedStyle> elementStyle =
       nsComputedDOMStyle::GetComputedStyleNoFlush(element);
   if (!elementStyle) {
     // Consider nodes without a ComputedStyle to be NOT preformatted:

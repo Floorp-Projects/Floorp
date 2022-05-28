@@ -19,9 +19,8 @@
 #include "mozilla/dom/Nullable.h"             // for dom::Nullable
 #include "mozilla/layers/APZSampler.h"        // for APZSampler
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
-#include "mozilla/layers/LayerAnimationUtils.h"  // for TimingFunctionToComputedTimingFunction
-#include "mozilla/LayerAnimationInfo.h"  // for GetCSSPropertiesFor()
-#include "mozilla/MotionPathUtils.h"     // for ResolveMotionPath()
+#include "mozilla/LayerAnimationInfo.h"       // for GetCSSPropertiesFor()
+#include "mozilla/MotionPathUtils.h"          // for ResolveMotionPath()
 #include "mozilla/ServoBindings.h"  // for Servo_ComposeAnimationSegment, etc
 #include "mozilla/StyleAnimationValue.h"  // for StyleAnimationValue, etc
 #include "nsDeviceContext.h"              // for AppUnitsPerCSSPixel
@@ -478,7 +477,7 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
                      animation.iterationStart(),
                      static_cast<dom::PlaybackDirection>(animation.direction()),
                      GetAdjustedFillMode(animation),
-                     AnimationUtils::TimingFunctionToComputedTimingFunction(
+                     ComputedTimingFunction::FromLayersTimingFunction(
                          animation.easingFunction())};
     propertyAnimation->mScrollTimelineOptions =
         animation.scrollTimelineOptions();
@@ -491,8 +490,7 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
                                          segment.startState()),
           AnimationValue::FromAnimatable(animation.property(),
                                          segment.endState()),
-          AnimationUtils::TimingFunctionToComputedTimingFunction(
-              segment.sampleFn()),
+          ComputedTimingFunction::FromLayersTimingFunction(segment.sampleFn()),
           segment.startPortion(), segment.endPortion(),
           static_cast<dom::CompositeOperation>(segment.startComposite()),
           static_cast<dom::CompositeOperation>(segment.endComposite())});

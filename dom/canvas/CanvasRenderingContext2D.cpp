@@ -1116,7 +1116,7 @@ bool CanvasRenderingContext2D::ParseColor(const nsACString& aString,
   if (wasCurrentColor && mCanvasElement) {
     // Otherwise, get the value of the color property, flushing style
     // if necessary.
-    RefPtr<ComputedStyle> canvasStyle =
+    RefPtr<const ComputedStyle> canvasStyle =
         nsComputedDOMStyle::GetComputedStyle(mCanvasElement);
     if (canvasStyle) {
       *aColor = canvasStyle->StyleText()->mColor.ToColor();
@@ -1696,7 +1696,7 @@ void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
 
   // For vertical writing-mode, unless text-orientation is sideways,
   // we'll modify the initial value of textBaseline to 'middle'.
-  RefPtr<ComputedStyle> canvasStyle =
+  RefPtr<const ComputedStyle> canvasStyle =
       nsComputedDOMStyle::GetComputedStyle(mCanvasElement);
   if (canvasStyle) {
     WritingMode wm(canvasStyle);
@@ -2453,7 +2453,7 @@ static already_AddRefed<RawServoDeclarationBlock> CreateFontDeclarationForServo(
   return CreateDeclarationForServo(eCSSProperty_font, aFont, aDocument);
 }
 
-static already_AddRefed<ComputedStyle> GetFontStyleForServo(
+static already_AddRefed<const ComputedStyle> GetFontStyleForServo(
     Element* aElement, const nsACString& aFont, PresShell* aPresShell,
     nsACString& aOutUsedFont, ErrorResult& aError) {
   RefPtr<RawServoDeclarationBlock> declarations =
@@ -2473,7 +2473,7 @@ static already_AddRefed<ComputedStyle> GetFontStyleForServo(
 
   ServoStyleSet* styleSet = aPresShell->StyleSet();
 
-  RefPtr<ComputedStyle> parentStyle;
+  RefPtr<const ComputedStyle> parentStyle;
   // have to get a parent ComputedStyle for inherit-like relative
   // values (2em, bolder, etc.)
   if (aElement && aElement->IsInComposedDoc()) {
@@ -2500,7 +2500,7 @@ static already_AddRefed<ComputedStyle> GetFontStyleForServo(
              "We should have returned an error above if the presshell is "
              "being destroyed.");
 
-  RefPtr<ComputedStyle> sc =
+  RefPtr<const ComputedStyle> sc =
       styleSet->ResolveForDeclarations(parentStyle, declarations);
 
   // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-font
@@ -2527,7 +2527,7 @@ CreateFilterDeclarationForServo(const nsACString& aFilter,
   return CreateDeclarationForServo(eCSSProperty_filter, aFilter, aDocument);
 }
 
-static already_AddRefed<ComputedStyle> ResolveFilterStyleForServo(
+static already_AddRefed<const ComputedStyle> ResolveFilterStyleForServo(
     const nsACString& aFilterString, const ComputedStyle* aParentStyle,
     PresShell* aPresShell, ErrorResult& aError) {
   RefPtr<RawServoDeclarationBlock> declarations =
@@ -2545,7 +2545,7 @@ static already_AddRefed<ComputedStyle> ResolveFilterStyleForServo(
   }
 
   ServoStyleSet* styleSet = aPresShell->StyleSet();
-  RefPtr<ComputedStyle> computedValues =
+  RefPtr<const ComputedStyle> computedValues =
       styleSet->ResolveForDeclarations(aParentStyle, declarations);
 
   return computedValues.forget();
@@ -2562,13 +2562,13 @@ bool CanvasRenderingContext2D::ParseFilter(
 
   nsAutoCString usedFont;  // unused
 
-  RefPtr<ComputedStyle> parentStyle = GetFontStyleForServo(
+  RefPtr<const ComputedStyle> parentStyle = GetFontStyleForServo(
       mCanvasElement, GetFont(), presShell, usedFont, aError);
   if (!parentStyle) {
     return false;
   }
 
-  RefPtr<ComputedStyle> style =
+  RefPtr<const ComputedStyle> style =
       ResolveFilterStyleForServo(aString, parentStyle, presShell, aError);
   if (!style) {
     return false;
@@ -3409,7 +3409,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   }
 
   nsCString usedFont;
-  RefPtr<ComputedStyle> sc =
+  RefPtr<const ComputedStyle> sc =
       GetFontStyleForServo(mCanvasElement, aFont, presShell, usedFont, aError);
   if (!sc) {
     return false;
@@ -3990,7 +3990,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
     textToDraw.Truncate();
   }
 
-  RefPtr<ComputedStyle> canvasStyle;
+  RefPtr<const ComputedStyle> canvasStyle;
   if (mCanvasElement && mCanvasElement->IsInComposedDoc()) {
     // try to find the closest context
     canvasStyle = nsComputedDOMStyle::GetComputedStyle(mCanvasElement);

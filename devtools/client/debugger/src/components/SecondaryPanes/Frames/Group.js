@@ -33,12 +33,36 @@ function FrameLocation({ frame, expanded }) {
   );
 }
 
+FrameLocation.propTypes = {
+  expanded: PropTypes.any.isRequired,
+  frame: PropTypes.object.isRequired,
+};
+
 FrameLocation.displayName = "FrameLocation";
 
 export default class Group extends Component {
   constructor(...args) {
     super(...args);
     this.state = { expanded: false };
+  }
+
+  static get propTypes() {
+    return {
+      copyStackTrace: PropTypes.func.isRequired,
+      cx: PropTypes.object,
+      disableContextMenu: PropTypes.bool.isRequired,
+      displayFullUrl: PropTypes.bool.isRequired,
+      frameworkGroupingOn: PropTypes.bool.isRequired,
+      getFrameTitle: PropTypes.func,
+      group: PropTypes.array.isRequired,
+      panel: PropTypes.oneOf(["debugger", "webconsole"]).isRequired,
+      restart: PropTypes.func,
+      selectFrame: PropTypes.func.isRequired,
+      selectLocation: PropTypes.func,
+      selectedFrame: PropTypes.object,
+      toggleBlackBox: PropTypes.func,
+      toggleFrameworkGrouping: PropTypes.func.isRequired,
+    };
   }
 
   get isSelectable() {

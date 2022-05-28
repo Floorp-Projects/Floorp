@@ -10,7 +10,6 @@
 #define transportlayerlog_h__
 
 #include "m_cpp_utils.h"
-#include "transportflow.h"
 #include "transportlayer.h"
 
 namespace mozilla {

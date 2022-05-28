@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import classnames from "classnames";
 
 import { connect } from "../../utils/connect";
@@ -22,6 +23,18 @@ class EventListeners extends Component {
     searchText: "",
     focused: false,
   };
+
+  static get propTypes() {
+    return {
+      activeEventListeners: PropTypes.array.isRequired,
+      addEventListenerExpanded: PropTypes.func.isRequired,
+      addEventListeners: PropTypes.func.isRequired,
+      categories: PropTypes.array.isRequired,
+      expandedCategories: PropTypes.array.isRequired,
+      removeEventListenerExpanded: PropTypes.func.isRequired,
+      removeEventListeners: PropTypes.func.isRequired,
+    };
+  }
 
   hasMatch(eventOrCategoryName, searchText) {
     const lowercaseEventOrCategoryName = eventOrCategoryName.toLowerCase();

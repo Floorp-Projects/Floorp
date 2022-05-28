@@ -40,6 +40,8 @@ class ScaledFontDWrite final : public ScaledFontBase {
 
   bool CanSerialize() override { return true; }
 
+  bool MayUseBitmaps() override;
+
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
 
   bool GetWRFontInstanceOptions(

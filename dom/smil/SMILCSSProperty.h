@@ -38,7 +38,7 @@ class SMILCSSProperty : public SMILAttr {
    *                             the SMILCSSValueType will be returned.
    */
   SMILCSSProperty(nsCSSPropertyID aPropID, dom::Element* aElement,
-                  ComputedStyle* aBaseComputedStyle);
+                  const ComputedStyle* aBaseComputedStyle);
 
   // SMILAttr methods
   virtual nsresult ValueFromString(
@@ -71,7 +71,7 @@ class SMILCSSProperty : public SMILAttr {
   // As with mElement, since a SMILAttr only lives as long as the
   // compositing step and since ComposeAttribute holds an owning reference to
   // the base ComputedStyle, we can use a non-owning reference here.
-  ComputedStyle* mBaseComputedStyle;
+  const ComputedStyle* mBaseComputedStyle;
 };
 
 }  // namespace mozilla

@@ -25,7 +25,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/BitSet.h"
 #include "mozilla/OriginTrials.h"
-#include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/CallState.h"
 #include "mozilla/EventStates.h"
@@ -1265,16 +1264,6 @@ class Document : public nsINode,
 
   nsresult HasStorageAccessSync(bool& aHasStorageAccess);
   already_AddRefed<Promise> HasStorageAccess(ErrorResult& aRv);
-
-  // This function performs the asynchronous portion of checking if requests
-  // for storage access will be sucessful or not. This includes creating a
-  // permission prompt request and trying to perform an "autogrant"
-  // This will return a promise whose values correspond to those of a
-  // ContentBlocking::AllowAccessFor call that ends the funciton.
-  RefPtr<MozPromise<int, bool, true>> RequestStorageAccessAsyncHelper(
-      nsPIDOMWindowInner* aInnerWindow, BrowsingContext* aBrowsingContext,
-      nsIPrincipal* aPrincipal, bool aHasUserInteraction,
-      ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier);
   already_AddRefed<Promise> RequestStorageAccess(ErrorResult& aRv);
 
   already_AddRefed<Promise> RequestStorageAccessForOrigin(

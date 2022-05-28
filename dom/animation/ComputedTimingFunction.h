@@ -18,6 +18,10 @@
 
 namespace mozilla {
 
+namespace layers {
+class TimingFunction;
+}
+
 class ComputedTimingFunction {
  public:
   struct StepFunc {
@@ -40,23 +44,17 @@ class ComputedTimingFunction {
     return ComputedTimingFunction(aSteps, aPos);
   }
 
+  static Maybe<ComputedTimingFunction> FromLayersTimingFunction(
+      const layers::TimingFunction& aTimingFunction);
+  static layers::TimingFunction ToLayersTimingFunction(
+      const Maybe<ComputedTimingFunction>& aComputedTimingFunction);
+
   explicit ComputedTimingFunction(const nsTimingFunction& aFunction);
 
   // BeforeFlag is used in step timing function.
   // https://drafts.csswg.org/css-easing/#before-flag
   enum class BeforeFlag { Unset, Set };
   double GetValue(double aPortion, BeforeFlag aBeforeFlag) const;
-  const SMILKeySpline* GetFunction() const {
-    NS_ASSERTION(HasSpline(), "Type mismatch");
-    return mFunction.match(
-        [](const KeywordFunction& aFunction) { return &aFunction.mFunction; },
-        [](const SMILKeySpline& aFunction) { return &aFunction; },
-        [](const StepFunc& aFunction) -> const SMILKeySpline* {
-          return nullptr;
-        });
-  }
-  bool HasSpline() const { return !mFunction.is<StepFunc>(); }
-  const StepFunc& GetSteps() const { return mFunction.as<StepFunc>(); }
   bool operator==(const ComputedTimingFunction& aOther) const {
     return mFunction == aOther.mFunction;
   }

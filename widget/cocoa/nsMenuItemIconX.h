@@ -61,7 +61,7 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
 
   Listener* mListener;            // [weak]
   nsIntRect mImageRegionRect;
-  RefPtr<mozilla::ComputedStyle> mComputedStyle;
+  RefPtr<const mozilla::ComputedStyle> mComputedStyle;
   RefPtr<nsPresContext> mPresContext;
   NSImage* mIconImage = nil;  // [strong]
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
