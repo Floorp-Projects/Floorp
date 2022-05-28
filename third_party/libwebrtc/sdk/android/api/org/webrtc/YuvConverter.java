@@ -12,6 +12,8 @@ package org.webrtc;
 
 import android.graphics.Matrix;
 import android.opengl.GLES20;
+import android.opengl.GLException;
+import android.support.annotation.Nullable;
 import java.nio.ByteBuffer;
 import org.webrtc.VideoFrame.I420Buffer;
 import org.webrtc.VideoFrame.TextureBuffer;
@@ -20,7 +22,9 @@ import org.webrtc.VideoFrame.TextureBuffer;
  * Class for converting OES textures to a YUV ByteBuffer. It can be constructed on any thread, but
  * should only be operated from a single thread with an active EGL context.
  */
-public class YuvConverter {
+public final class YuvConverter {
+  private static final String TAG = "YuvConverter";
+
   private static final String FRAGMENT_SHADER =
       // Difference in texture coordinate corresponding to one
       // sub-pixel in the x direction.
@@ -122,9 +126,17 @@ public class YuvConverter {
   }
 
   /** Converts the texture buffer to I420. */
+  @Nullable
   public I420Buffer convert(TextureBuffer inputTextureBuffer) {
-    threadChecker.checkIsOnValidThread();
+    try {
+      return convertInternal(inputTextureBuffer);
+    } catch (GLException e) {
+      Logging.w(TAG, "Failed to convert TextureBuffer", e);
+    }
+    return null;
+  }
 
+  private I420Buffer convertInternal(TextureBuffer inputTextureBuffer) {
     TextureBuffer preparedBuffer = (TextureBuffer) videoFrameDrawer.prepareBufferForViewportSize(
         inputTextureBuffer, inputTextureBuffer.getWidth(), inputTextureBuffer.getHeight());
 
