@@ -1038,5 +1038,58 @@ TEST_F(VideoSendStreamImplTest, ConfiguresBitratesForSvc) {
         RTC_FROM_HERE);
   }
 }
+
+// Check that a timed out stream is not allocated by doing the following:
+// 1. Allocate a video stream.
+// 2. Wait for the stream to time out which de-allocates the stream.
+// 3. Reconfigure the stream and make sure that this does not allocate the
+// stream again.
+TEST_F(VideoSendStreamImplTest, AvoidAllocationAfterTimeout) {
+  std::unique_ptr<VideoSendStreamImpl> vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo);
+
+  test_queue_.SendTask(
+      [&] {
+        EXPECT_CALL(bitrate_allocator_, AddObserver(vss_impl.get(), _));
+        vss_impl->Start();
+        const uint32_t kBitrateBps = 100000;
+        EXPECT_CALL(rtp_video_sender_, GetPayloadBitrateBps())
+            .WillOnce(Return(kBitrateBps));
+        static_cast<BitrateAllocatorObserver*>(vss_impl.get())
+            ->OnBitrateUpdated(CreateAllocation(kBitrateBps));
+
+        // The stream should be de-allocated after a timeout.
+        EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get()));
+      },
+      RTC_FROM_HERE);
+
+  rtc::Event done;
+  test_queue_.PostDelayedTask(
+      [&] {
+        VideoStream qvga_stream;
+        qvga_stream.width = 320;
+        qvga_stream.height = 180;
+        qvga_stream.max_framerate = 30;
+        qvga_stream.min_bitrate_bps = 30000;
+        qvga_stream.target_bitrate_bps = 150000;
+        qvga_stream.max_bitrate_bps = 200000;
+        qvga_stream.max_qp = 56;
+        qvga_stream.bitrate_priority = 1;
+
+        int min_transmit_bitrate_bps = 30000;
+        // This should not allocate the stream since it has timed out.
+        static_cast<VideoStreamEncoderInterface::EncoderSink*>(vss_impl.get())
+            ->OnEncoderConfigurationChanged(
+                std::vector<VideoStream>{qvga_stream}, false,
+                VideoEncoderConfig::ContentType::kRealtimeVideo,
+                min_transmit_bitrate_bps);
+        testing::Mock::VerifyAndClearExpectations(&bitrate_allocator_);
+        vss_impl->Stop();
+        done.Set();
+      },
+      2000);
+  ASSERT_TRUE(done.Wait(5000));
+}
 }  // namespace internal
 }  // namespace webrtc
