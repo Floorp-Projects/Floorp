@@ -16,6 +16,7 @@
 #include "absl/types/optional.h"
 #include "modules/audio_processing/agc/agc.h"
 #include "modules/audio_processing/agc/clipping_predictor.h"
+#include "modules/audio_processing/agc/clipping_predictor_evaluator.h"
 #include "modules/audio_processing/audio_buffer.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/gtest_prod_util.h"
@@ -41,16 +42,17 @@ class AgcManagerDirect final {
   // samples required to declare a clipping event, limited to (0.f, 1.f).
   // `clipped_wait_frames` is the time in frames to wait after a clipping event
   // before checking again, limited to values higher than 0.
-  AgcManagerDirect(int num_capture_channels,
-                   int startup_min_level,
-                   int clipped_level_min,
-                   bool disable_digital_adaptive,
-                   int sample_rate_hz,
-                   int clipped_level_step,
-                   float clipped_ratio_threshold,
-                   int clipped_wait_frames,
-                   const AudioProcessing::Config::GainController1::
-                       AnalogGainController::ClippingPredictor& clipping_cfg);
+  AgcManagerDirect(
+      int num_capture_channels,
+      int startup_min_level,
+      int clipped_level_min,
+      bool disable_digital_adaptive,
+      int sample_rate_hz,
+      int clipped_level_step,
+      float clipped_ratio_threshold,
+      int clipped_wait_frames,
+      const AudioProcessing::Config::GainController1::AnalogGainController::
+          ClippingPredictor& clipping_config);
 
   ~AgcManagerDirect();
   AgcManagerDirect(const AgcManagerDirect&) = delete;
@@ -72,11 +74,16 @@ class AgcManagerDirect final {
   int num_channels() const { return num_capture_channels_; }
   int sample_rate_hz() const { return sample_rate_hz_; }
 
-  // Returns true if clipping prediction was set to be used in ctor.
-  bool clipping_predictor_enabled() const;
-
   // If available, returns a new compression gain for the digital gain control.
   absl::optional<int> GetDigitalComressionGain();
+
+  // Returns true if clipping prediction is enabled.
+  bool clipping_predictor_enabled() const { return !!clipping_predictor_; }
+
+  // Returns true if clipping prediction is used to adjust the analog gain.
+  bool use_clipping_predictor_step() const {
+    return use_clipping_predictor_step_;
+  }
 
  private:
   friend class AgcManagerDirectTest;
@@ -99,20 +106,24 @@ class AgcManagerDirect final {
                            ClippingParametersVerified);
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
                            DisableClippingPredictorDoesNotLowerVolume);
+  FRIEND_TEST_ALL_PREFIXES(
+      AgcManagerDirectStandaloneTest,
+      EnableClippingPredictorWithUnusedPredictedStepDoesNotLowerVolume);
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
                            EnableClippingPredictorLowersVolume);
 
   // Dependency injection for testing. Don't delete |agc| as the memory is owned
   // by the manager.
-  AgcManagerDirect(Agc* agc,
-                   int startup_min_level,
-                   int clipped_level_min,
-                   int sample_rate_hz,
-                   int clipped_level_step,
-                   float clipped_ratio_threshold,
-                   int clipped_wait_frames,
-                   const AudioProcessing::Config::GainController1::
-                       AnalogGainController::ClippingPredictor& clipping_cfg);
+  AgcManagerDirect(
+      Agc* agc,
+      int startup_min_level,
+      int clipped_level_min,
+      int sample_rate_hz,
+      int clipped_level_step,
+      float clipped_ratio_threshold,
+      int clipped_wait_frames,
+      const AudioProcessing::Config::GainController1::AnalogGainController::
+          ClippingPredictor& clipping_config);
 
   void AnalyzePreProcess(const float* const* audio, size_t samples_per_channel);
 
@@ -138,6 +149,9 @@ class AgcManagerDirect final {
   std::vector<absl::optional<int>> new_compressions_to_set_;
 
   const std::unique_ptr<ClippingPredictor> clipping_predictor_;
+  const bool use_clipping_predictor_step_;
+  ClippingPredictorEvaluator clipping_predictor_evaluator_;
+  int clipping_predictor_log_counter_;
 };
 
 class MonoAgc {
