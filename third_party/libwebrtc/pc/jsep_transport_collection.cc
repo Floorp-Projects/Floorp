@@ -10,7 +10,13 @@
 
 #include "pc/jsep_transport_collection.h"
 
+#include <algorithm>
 #include <map>
+#include <type_traits>
+#include <utility>
+
+#include "p2p/base/p2p_constants.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
