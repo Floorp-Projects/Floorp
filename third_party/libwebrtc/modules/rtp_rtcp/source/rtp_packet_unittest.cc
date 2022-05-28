@@ -366,6 +366,35 @@ TEST(RtpPacketTest, CreateWithMaxSizeHeaderExtension) {
   EXPECT_EQ(read, kValue);
 }
 
+TEST(RtpPacketTest, SetsRegisteredExtension) {
+  RtpPacketToSend::ExtensionManager extensions;
+  extensions.Register<TransmissionOffset>(kTransmissionOffsetExtensionId);
+  RtpPacketToSend packet(&extensions);
+
+  EXPECT_TRUE(packet.IsRegistered<TransmissionOffset>());
+  EXPECT_FALSE(packet.HasExtension<TransmissionOffset>());
+
+  // Try to set the extensions.
+  EXPECT_TRUE(packet.SetExtension<TransmissionOffset>(kTimeOffset));
+
+  EXPECT_TRUE(packet.HasExtension<TransmissionOffset>());
+  EXPECT_EQ(packet.GetExtension<TransmissionOffset>(), kTimeOffset);
+}
+
+TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
+  RtpPacketToSend::ExtensionManager extensions;
+  extensions.Register<TransmissionOffset>(kTransmissionOffsetExtensionId);
+  RtpPacketToSend packet(&extensions);
+
+  EXPECT_FALSE(packet.IsRegistered<TransportSequenceNumber>());
+  EXPECT_FALSE(packet.HasExtension<TransportSequenceNumber>());
+
+  EXPECT_FALSE(packet.SetExtension<TransportSequenceNumber>(42));
+
+  EXPECT_FALSE(packet.HasExtension<TransportSequenceNumber>());
+  EXPECT_EQ(packet.GetExtension<TransportSequenceNumber>(), absl::nullopt);
+}
+
 TEST(RtpPacketTest, CreateWithDynamicSizedExtensionCsrcAudioLevel) {
   RtpPacketToSend::ExtensionManager extensions;
   extensions.Register<CsrcAudioLevel>(kCsrcAudioLevelExtensionId);
