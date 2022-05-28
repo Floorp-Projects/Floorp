@@ -494,6 +494,65 @@ TEST_F(DcSctpSocketTest, ResendingCookieEchoTooManyTimesAborts) {
   EXPECT_EQ(sock_a_.state(), SocketState::kClosed);
 }
 
+TEST_F(DcSctpSocketTest, DoesntSendMorePacketsUntilCookieAckHasBeenReceived) {
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53),
+                             std::vector<uint8_t>(kLargeMessageSize)),
+               kSendOptions);
+  sock_a_.Connect();
+
+  // Z reads INIT, produces INIT_ACK
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());
+  // A reads INIT_ACK, produces COOKIE_ECHO
+  sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());
+
+  // COOKIE_ECHO is never received by Z.
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket cookie_echo_packet1,
+                              SctpPacket::Parse(cb_a_.ConsumeSentPacket()));
+  EXPECT_THAT(cookie_echo_packet1.descriptors(), SizeIs(2));
+  EXPECT_EQ(cookie_echo_packet1.descriptors()[0].type, CookieEchoChunk::kType);
+  EXPECT_EQ(cookie_echo_packet1.descriptors()[1].type, DataChunk::kType);
+
+  EXPECT_THAT(cb_a_.ConsumeSentPacket(), IsEmpty());
+
+  // There are DATA chunks in the sent packet (that was lost), which means that
+  // the T3-RTX timer is running, but as the socket is in kCookieEcho state, it
+  // will be T1-COOKIE that drives retransmissions, so when the T3-RTX expires,
+  // nothing should be retransmitted.
+  ASSERT_TRUE(options_.rto_initial < options_.t1_cookie_timeout);
+  AdvanceTime(options_.rto_initial);
+  RunTimers();
+  EXPECT_THAT(cb_a_.ConsumeSentPacket(), IsEmpty());
+
+  // When T1-COOKIE expires, both the COOKIE-ECHO and DATA should be present.
+  AdvanceTime(options_.t1_cookie_timeout - options_.rto_initial);
+  RunTimers();
+
+  // And this COOKIE-ECHO and DATA is also lost - never received by Z.
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket cookie_echo_packet2,
+                              SctpPacket::Parse(cb_a_.ConsumeSentPacket()));
+  EXPECT_THAT(cookie_echo_packet2.descriptors(), SizeIs(2));
+  EXPECT_EQ(cookie_echo_packet2.descriptors()[0].type, CookieEchoChunk::kType);
+  EXPECT_EQ(cookie_echo_packet2.descriptors()[1].type, DataChunk::kType);
+
+  EXPECT_THAT(cb_a_.ConsumeSentPacket(), IsEmpty());
+
+  // COOKIE_ECHO has exponential backoff.
+  AdvanceTime(options_.t1_cookie_timeout * 2);
+  RunTimers();
+
+  // Z reads COOKIE_ECHO, produces COOKIE_ACK
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());
+  // A reads COOKIE_ACK.
+  sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());
+
+  EXPECT_EQ(sock_a_.state(), SocketState::kConnected);
+  EXPECT_EQ(sock_z_.state(), SocketState::kConnected);
+
+  ExchangeMessages(sock_a_, cb_a_, sock_z_, cb_z_);
+  EXPECT_THAT(cb_z_.ConsumeReceivedMessage()->payload(),
+              SizeIs(kLargeMessageSize));
+}
+
 TEST_F(DcSctpSocketTest, ShutdownConnection) {
   ConnectSockets();
 
