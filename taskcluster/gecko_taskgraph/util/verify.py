@@ -431,24 +431,3 @@ def verify_run_known_projects(task, taskgraph, scratch_pad, graph_config, parame
                 "Task '{}' has an invalid run-on-projects value: "
                 "{}".format(task.label, invalid_projects)
             )
-
-
-@verifications.add("full_task_graph")
-def verify_local_toolchains(task, taskgraph, scratch_pad, graph_config, parameters):
-    """
-    Toolchains that are used for local development need to be built on a
-    level-3 branch to installable via `mach bootstrap`. We ensure here that all
-    such tasks run on at least trunk projects, even if they aren't pulled in as
-    a dependency of other tasks in the graph.
-
-    There is code in `mach artifact toolchain` that verifies that anything
-    installed via `mach bootstrap` has the attribute set.
-    """
-    if task and task.attributes.get("local-toolchain"):
-        run_on_projects = task.attributes.get("run_on_projects", [])
-        if not any(alias in run_on_projects for alias in ["all", "trunk"]):
-            raise Exception(
-                "Toolchain {} used for local development is not built on trunk. {}".format(
-                    task.label, run_on_projects
-                )
-            )

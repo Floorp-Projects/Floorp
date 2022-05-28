@@ -2144,15 +2144,15 @@ static Matrix4x4Flagged GetTransformToAncestorExcludingAnimated(
   return ctm;
 }
 
-gfxSize nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(
+MatrixScalesDouble nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(
     nsIFrame* aFrame) {
   Matrix4x4Flagged transform = GetTransformToAncestorExcludingAnimated(
       aFrame, nsLayoutUtils::GetDisplayRootFrame(aFrame));
   Matrix transform2D;
   if (transform.Is2D(&transform2D)) {
-    return ThebesMatrix(transform2D).ScaleFactors().ToSize();
+    return ThebesMatrix(transform2D).ScaleFactors();
   }
-  return gfxSize(1, 1);
+  return MatrixScalesDouble();
 }
 
 const nsIFrame* nsLayoutUtils::FindNearestCommonAncestorFrame(
@@ -4063,7 +4063,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetFontMetricsForFrame(
 }
 
 already_AddRefed<nsFontMetrics> nsLayoutUtils::GetFontMetricsForComputedStyle(
-    ComputedStyle* aComputedStyle, nsPresContext* aPresContext,
+    const ComputedStyle* aComputedStyle, nsPresContext* aPresContext,
     float aInflation, uint8_t aVariantWidth) {
   WritingMode wm(aComputedStyle);
   const nsStyleFont* styleFont = aComputedStyle->StyleFont();
@@ -6903,7 +6903,7 @@ nsIFrame* nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame) {
 }
 
 /* static */ gfx::ShapedTextFlags nsLayoutUtils::GetTextRunFlagsForStyle(
-    ComputedStyle* aComputedStyle, nsPresContext* aPresContext,
+    const ComputedStyle* aComputedStyle, nsPresContext* aPresContext,
     const nsStyleFont* aStyleFont, const nsStyleText* aStyleText,
     nscoord aLetterSpacing) {
   gfx::ShapedTextFlags result = gfx::ShapedTextFlags();
@@ -6932,7 +6932,7 @@ nsIFrame* nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame) {
 }
 
 /* static */ gfx::ShapedTextFlags nsLayoutUtils::GetTextRunOrientFlagsForStyle(
-    ComputedStyle* aComputedStyle) {
+    const ComputedStyle* aComputedStyle) {
   auto writingMode = aComputedStyle->StyleVisibility()->mWritingMode;
   switch (writingMode) {
     case StyleWritingModeProperty::HorizontalTb:

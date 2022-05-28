@@ -76,6 +76,11 @@ void ScaledFontFontconfig::SetupSkFontDrawOptions(SkFont& aFont) {
   aFont.setHinting(GfxHintingToSkiaHinting(mInstanceData.mHinting));
 }
 
+bool ScaledFontFontconfig::MayUseBitmaps() {
+  return mInstanceData.mFlags & InstanceData::EMBEDDED_BITMAP &&
+         !FT_IS_SCALABLE(mFace->GetFace());
+}
+
 cairo_font_face_t* ScaledFontFontconfig::CreateCairoFontFace(
     cairo_font_options_t* aFontOptions) {
   int loadFlags;

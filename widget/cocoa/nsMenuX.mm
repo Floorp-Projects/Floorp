@@ -711,7 +711,7 @@ void nsMenuX::OnWillActivateItem(NSMenuItem* aItem) {
 static NSUserInterfaceLayoutDirection DirectionForElement(dom::Element* aElement) {
   // Get the direction from the computed style so that inheritance into submenus is respected.
   // aElement may not have a frame.
-  RefPtr<ComputedStyle> sc = nsComputedDOMStyle::GetComputedStyle(aElement);
+  RefPtr<const ComputedStyle> sc = nsComputedDOMStyle::GetComputedStyle(aElement);
   if (!sc) {
     return NSApp.userInterfaceLayoutDirection;
   }

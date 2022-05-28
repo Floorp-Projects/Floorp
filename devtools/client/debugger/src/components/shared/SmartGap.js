@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React from "react";
+import PropTypes from "prop-types";
 
 function shorten(coordinates) {
   // In cases where the token is wider than the preview, the smartGap
@@ -154,3 +155,12 @@ export default function SmartGap({
     </svg>
   );
 }
+
+SmartGap.propTypes = {
+  coords: PropTypes.object.isRequired,
+  gapHeight: PropTypes.number.isRequired,
+  offset: PropTypes.number.isRequired,
+  preview: PropTypes.object.isRequired,
+  token: PropTypes.object.isRequired,
+  type: PropTypes.oneOf(["popover", "tooltip"]).isRequired,
+};

@@ -21,7 +21,7 @@ class InlinePreview extends PureComponent {
       highlightDomElement: PropTypes.func.isRequired,
       openElementInInspector: PropTypes.func.isRequired,
       unHighlightDomElement: PropTypes.func.isRequired,
-      value: PropTypes.any.isRequired,
+      value: PropTypes.any,
       variable: PropTypes.string.isRequired,
     };
   }

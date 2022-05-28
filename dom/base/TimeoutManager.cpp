@@ -465,7 +465,7 @@ nsresult TimeoutManager::SetTimeout(TimeoutHandler* aHandler, int32_t interval,
   // If we don't have a document (we could have been unloaded since
   // the call to setTimeout was made), do nothing.
   nsCOMPtr<Document> doc = mWindow.GetExtantDoc();
-  if (!doc) {
+  if (!doc || mWindow.IsDying()) {
     return NS_OK;
   }
 

@@ -1301,6 +1301,10 @@
       }
     },
 
+    "UseSystemPrintDialog": {
+      "type": "boolean"
+    },
+
     "WebsiteFilter": {
       "type": "object",
       "properties": {

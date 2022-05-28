@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React from "react";
+import PropTypes from "prop-types";
 import classNames from "classnames";
 
 import "./BracketArrow.css";
@@ -14,6 +15,13 @@ const BracketArrow = ({ orientation, left, top, bottom }) => {
       style={{ left, top, bottom }}
     />
   );
+};
+
+BracketArrow.propTypes = {
+  bottom: PropTypes.number,
+  left: PropTypes.number,
+  orientation: PropTypes.string.isRequired,
+  top: PropTypes.number,
 };
 
 export default BracketArrow;

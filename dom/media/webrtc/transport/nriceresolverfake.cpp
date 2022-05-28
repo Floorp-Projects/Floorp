@@ -40,15 +40,14 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "nspr.h"
-#include "prnetdb.h"
-
+#include "prio.h"
 #include "mozilla/Assertions.h"
 
 extern "C" {
-#include "nr_api.h"
+#include "async_wait.h"
 #include "async_timer.h"
 #include "nr_resolver.h"
+#include "r_macros.h"
 #include "transport_addr.h"
 }
 

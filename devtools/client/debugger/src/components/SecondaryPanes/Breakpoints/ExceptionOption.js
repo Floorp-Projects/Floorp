@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React from "react";
+import PropTypes from "prop-types";
 
 export default function ExceptionOption({
   className,
@@ -21,3 +22,10 @@ export default function ExceptionOption({
     </div>
   );
 }
+
+ExceptionOption.propTypes = {
+  className: PropTypes.string.isRequired,
+  isChecked: PropTypes.bool.isRequired,
+  label: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+};

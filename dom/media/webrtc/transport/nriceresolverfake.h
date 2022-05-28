@@ -46,8 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <string>
 
-#include "nspr.h"
-#include "prnetdb.h"
+#include "csi_platform.h"
 
 typedef struct nr_resolver_ nr_resolver;
 typedef struct nr_resolver_vtbl_ nr_resolver_vtbl;

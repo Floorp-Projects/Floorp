@@ -6458,22 +6458,25 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvTestCookiePermissionDecided(
-    const MaybeDiscarded<BrowsingContext>& aContext,
+mozilla::ipc::IPCResult ContentParent::RecvAsyncShouldAllowAccessFor(
+    const MaybeDiscarded<BrowsingContext>& aTopContext,
     const Principal& aPrincipal,
-    const TestCookiePermissionDecidedResolver&& aResolver) {
-  if (aContext.IsNullOrDiscarded()) {
+    const AsyncShouldAllowAccessForResolver&& aResolver) {
+  if (aTopContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
 
-  RefPtr<WindowGlobalParent> wgp =
-      aContext.get_canonical()->GetCurrentWindowGlobal();
-  nsCOMPtr<nsICookieJarSettings> cjs = wgp->CookieJarSettings();
+  ContentBlocking::AsyncShouldAllowAccessFor(aTopContext.get_canonical(),
+                                             aPrincipal)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [aResolver](ContentBlocking::AsyncShouldAllowAccessForPromise::
+                             ResolveOrRejectValue&& aValue) {
+               bool allowed = aValue.IsResolve();
 
-  Maybe<bool> result =
-      ContentBlocking::CheckCookiesPermittedDecidesStorageAccessAPI(cjs,
-                                                                    aPrincipal);
-  aResolver(result);
+               aResolver(Tuple<const bool&, const uint32_t&>(
+                   allowed, allowed ? 0 : aValue.RejectValue()));
+             });
+
   return IPC_OK();
 }
 

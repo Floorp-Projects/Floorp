@@ -9,7 +9,6 @@ job-defaults:
     worker:
         max-run-time: 1800
     worker-type: b-linux
-    run-on-projects: [trunk]
     run:
         script: build-pkgconf.sh
         toolchain-artifact: public/build/pkgconf.tar.zst

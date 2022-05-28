@@ -77,7 +77,6 @@ linux64-clang-14-stage1:
     description: "Clang 14 toolchain build"
     treeherder:
         symbol: TL(clang-14-stage1)
-    run-on-projects: [trunk]
     run:
         using: toolchain-script
         script: build-clang.sh
@@ -158,7 +157,6 @@ linux64-clang-14:
     worker-type: b-linux
     worker:
         max-run-time: 600
-    run-on-projects: [trunk]
     run:
         script: repack-clang.sh
         toolchain-alias:
@@ -220,8 +218,6 @@ macosx64-clang-14:
     worker-type: b-linux
     worker:
         max-run-time: 600
-    run-on-projects:
-        - trunk
     run:
         script: repack-clang.sh
         toolchain-alias:
@@ -286,8 +282,6 @@ macosx64-aarch64-clang-14:
     worker-type: b-linux
     worker:
         max-run-time: 600
-    run-on-projects:
-        - trunk
     run:
         script: repack-clang.sh
         toolchain-alias: macosx64-aarch64-clang
@@ -373,8 +367,6 @@ win64-clang-14:
     worker-type: b-linux
     worker:
         max-run-time: 600
-    run-on-projects:
-        - trunk
     run:
         script: repack-clang.sh
         toolchain-alias: win64-clang

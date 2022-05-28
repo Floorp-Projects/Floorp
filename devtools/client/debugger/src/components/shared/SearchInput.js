@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 
 import { CloseButton } from "./Button";
 
@@ -40,6 +41,32 @@ class SearchInput extends Component {
 
     this.state = {
       history: [],
+    };
+  }
+
+  static get propTypes() {
+    return {
+      count: PropTypes.number.isRequired,
+      expanded: PropTypes.bool.isRequired,
+      handleClose: PropTypes.func,
+      handleNext: PropTypes.func.isRequired,
+      handlePrev: PropTypes.func.isRequired,
+      hasPrefix: PropTypes.bool.isRequired,
+      isLoading: PropTypes.bool.isRequired,
+      onBlur: PropTypes.func.isRequired,
+      onChange: PropTypes.func.isRequired,
+      onFocus: PropTypes.func.isRequired,
+      onHistoryScroll: PropTypes.func.isRequired,
+      onKeyDown: PropTypes.func.isRequired,
+      onKeyUp: PropTypes.func,
+      placeholder: PropTypes.string,
+      query: PropTypes.string,
+      selectedItemId: PropTypes.string,
+      shouldFocus: PropTypes.bool.isRequired,
+      showClose: PropTypes.bool.isRequired,
+      showErrorEmoji: PropTypes.bool.isRequired,
+      size: PropTypes.string,
+      summaryMsg: PropTypes.string,
     };
   }
 

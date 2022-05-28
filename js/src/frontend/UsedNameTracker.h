@@ -166,6 +166,17 @@ class UsedNameTracker {
     bool empty() { return uses_.empty(); }
 
     mozilla::Maybe<TokenPos> pos() { return firstUsePos_; }
+
+    // When we leave a scope, and subsequently find a new private name
+    // reference, we don't want our error messages to be attributed to an old
+    // scope, so we update the position in that scenario.
+    void maybeUpdatePos(mozilla::Maybe<TokenPos> p) {
+      MOZ_ASSERT_IF(!isPublic(), p.isSome());
+
+      if (empty() && !isPublic()) {
+        firstUsePos_ = p;
+      }
+    }
   };
 
   using UsedNameMap =

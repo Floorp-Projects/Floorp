@@ -129,8 +129,6 @@ const verifyRegisterContentScripts = async ({ manifest_version }) => {
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      // TODO: remove the pref below when Bug 1766822 has been fixed.
-      ["dom.ipc.processPrelaunch.enabled", false],
       ["extensions.manifestV3.enabled", true],
       ["extensions.webextOptionalPermissionPrompts", false],
     ],
