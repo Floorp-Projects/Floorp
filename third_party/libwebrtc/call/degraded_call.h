@@ -16,6 +16,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 
 #include "absl/types/optional.h"
 #include "api/call/transport.h"
@@ -95,6 +96,8 @@ class DegradedCall : public Call, private PacketReceiver {
       int transport_overhead_per_packet) override;
   void OnLocalSsrcUpdated(AudioReceiveStream& stream,
                           uint32_t local_ssrc) override;
+  void OnUpdateSyncGroup(AudioReceiveStream& stream,
+                         const std::string& sync_group) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
 
  protected:

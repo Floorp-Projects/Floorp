@@ -947,26 +947,21 @@ void ReceiveStatisticsProxy::OnRenderedFrame(
 void ReceiveStatisticsProxy::OnSyncOffsetUpdated(int64_t video_playout_ntp_ms,
                                                  int64_t sync_offset_ms,
                                                  double estimated_freq_khz) {
-  RTC_DCHECK_RUN_ON(&incoming_render_queue_);
-  int64_t now_ms = clock_->TimeInMilliseconds();
-  worker_thread_->PostTask(
-      ToQueuedTask(task_safety_, [video_playout_ntp_ms, sync_offset_ms,
-                                  estimated_freq_khz, now_ms, this]() {
-        RTC_DCHECK_RUN_ON(&main_thread_);
-        sync_offset_counter_.Add(std::abs(sync_offset_ms));
-        stats_.sync_offset_ms = sync_offset_ms;
-        last_estimated_playout_ntp_timestamp_ms_ = video_playout_ntp_ms;
-        last_estimated_playout_time_ms_ = now_ms;
+  RTC_DCHECK_RUN_ON(&main_thread_);
 
-        const double kMaxFreqKhz = 10000.0;
-        int offset_khz = kMaxFreqKhz;
-        // Should not be zero or negative. If so, report max.
-        if (estimated_freq_khz < kMaxFreqKhz && estimated_freq_khz > 0.0)
-          offset_khz =
-              static_cast<int>(std::fabs(estimated_freq_khz - 90.0) + 0.5);
+  const int64_t now_ms = clock_->TimeInMilliseconds();
+  sync_offset_counter_.Add(std::abs(sync_offset_ms));
+  stats_.sync_offset_ms = sync_offset_ms;
+  last_estimated_playout_ntp_timestamp_ms_ = video_playout_ntp_ms;
+  last_estimated_playout_time_ms_ = now_ms;
 
-        freq_offset_counter_.Add(offset_khz);
-      }));
+  const double kMaxFreqKhz = 10000.0;
+  int offset_khz = kMaxFreqKhz;
+  // Should not be zero or negative. If so, report max.
+  if (estimated_freq_khz < kMaxFreqKhz && estimated_freq_khz > 0.0)
+    offset_khz = static_cast<int>(std::fabs(estimated_freq_khz - 90.0) + 0.5);
+
+  freq_offset_counter_.Add(offset_khz);
 }
 
 void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,

@@ -1249,22 +1249,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
     stream_->SetDecoderMap(decoder_map);
   }
 
-  void MaybeRecreateAudioReceiveStream(
-      const std::vector<std::string>& stream_ids) {
-    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-    std::string sync_group;
-    if (!stream_ids.empty()) {
-      sync_group = stream_ids[0];
-    }
-    if (config_.sync_group != sync_group) {
-      RTC_LOG(LS_INFO) << "Recreating AudioReceiveStream for SSRC="
-                       << config_.rtp.remote_ssrc
-                       << " because of sync group change.";
-      config_.sync_group = sync_group;
-      RecreateAudioReceiveStream();
-    }
-  }
-
   webrtc::AudioReceiveStream::Stats GetStats(
       bool get_and_clear_legacy_stats) const {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
@@ -1985,9 +1969,12 @@ bool WebRtcVoiceMediaChannel::AddRecvStream(const StreamParams& sp) {
   const uint32_t ssrc = sp.first_ssrc();
 
   // If this stream was previously received unsignaled, we promote it, possibly
-  // recreating the AudioReceiveStream, if stream ids have changed.
+  // updating the sync group if stream ids have changed.
   if (MaybeDeregisterUnsignaledRecvStream(ssrc)) {
-    recv_streams_[ssrc]->MaybeRecreateAudioReceiveStream(sp.stream_ids());
+    auto stream_ids = sp.stream_ids();
+    std::string sync_group = stream_ids.empty() ? std::string() : stream_ids[0];
+    call_->OnUpdateSyncGroup(recv_streams_[ssrc]->stream(),
+                             std::move(sync_group));
     return true;
   }
 

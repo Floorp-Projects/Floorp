@@ -50,7 +50,6 @@
 #include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 #include "system_wrappers/include/ntp_time.h"
-#include "video/receive_statistics_proxy2.h"
 
 namespace webrtc {
 

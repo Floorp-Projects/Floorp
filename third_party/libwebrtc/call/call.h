@@ -121,6 +121,9 @@ class Call {
   virtual void OnLocalSsrcUpdated(AudioReceiveStream& stream,
                                   uint32_t local_ssrc) = 0;
 
+  virtual void OnUpdateSyncGroup(AudioReceiveStream& stream,
+                                 const std::string& sync_group) = 0;
+
   virtual void OnSentPacket(const rtc::SentPacket& sent_packet) = 0;
 
   virtual void SetClientBitratePreferences(
