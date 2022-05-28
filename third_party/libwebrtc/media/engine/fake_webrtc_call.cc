@@ -118,6 +118,11 @@ void FakeAudioReceiveStream::SetFrameDecryptor(
   config_.frame_decryptor = std::move(frame_decryptor);
 }
 
+void FakeAudioReceiveStream::SetRtpExtensions(
+    std::vector<webrtc::RtpExtension> extensions) {
+  config_.rtp.extensions = std::move(extensions);
+}
+
 webrtc::AudioReceiveStream::Stats FakeAudioReceiveStream::GetStats(
     bool get_and_clear_legacy_stats) const {
   return stats_;

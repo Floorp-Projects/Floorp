@@ -94,6 +94,7 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
                                        int history_ms) override;
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override;
+  void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
 
   webrtc::AudioReceiveStream::Stats GetStats(
       bool get_and_clear_legacy_stats) const override;
