@@ -49,6 +49,10 @@ void WebRenderLayerScrollData::Initialize(
              -1);  // Don't allow re-setting an already set value
   mDescendantCount = aDescendantCount;
 
+#if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
+  mInitializedFrom = aItem;
+#endif
+
   MOZ_ASSERT(aItem);
   aItem->UpdateScrollData(&aOwner, this);
 
@@ -157,6 +161,11 @@ void WebRenderLayerScrollData::Dump(std::ostream& aOut,
                                     const WebRenderScrollData& aOwner) const {
   aOut << "WebRenderLayerScrollData(" << this
        << "), descendantCount=" << mDescendantCount;
+#if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
+  if (mInitializedFrom) {
+    aOut << ", item=" << (void*)mInitializedFrom;
+  }
+#endif
   for (size_t i = 0; i < mScrollIds.Length(); i++) {
     aOut << ", metadata" << i << "=" << aOwner.GetScrollMetadata(mScrollIds[i]);
   }
@@ -377,6 +386,8 @@ void ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Write(
   WriteParam(aWriter, aParam.mStickyPositionAnimationId);
   WriteParam(aWriter, aParam.mZoomAnimationId);
   WriteParam(aWriter, aParam.mAsyncZoomContainerId);
+  // Do not write |mInitializedFrom|, the pointer wouldn't be valid
+  // on the compositor side.
 }
 
 bool ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Read(
