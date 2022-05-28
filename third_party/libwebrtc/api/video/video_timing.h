@@ -41,7 +41,7 @@ struct VideoSendTiming {
   uint16_t pacer_exit_delta_ms;
   uint16_t network_timestamp_delta_ms;
   uint16_t network2_timestamp_delta_ms;
-  uint8_t flags;
+  uint8_t flags = TimingFrameFlags::kInvalid;
 };
 
 // Used to report precise timings of a 'timing frames'. Contains all important
