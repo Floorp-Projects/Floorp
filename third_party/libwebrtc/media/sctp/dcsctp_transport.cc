@@ -19,9 +19,9 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "media/base/media_channel.h"
+#include "net/dcsctp/public/dcsctp_socket_factory.h"
 #include "net/dcsctp/public/packet_observer.h"
 #include "net/dcsctp/public/types.h"
-#include "net/dcsctp/socket/dcsctp_socket.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -177,8 +177,9 @@ bool DcSctpTransport::Start(int local_sctp_port,
       packet_observer = std::make_unique<TextPcapPacketObserver>(debug_name_);
     }
 
-    socket_ = std::make_unique<dcsctp::DcSctpSocket>(
-        debug_name_, *this, std::move(packet_observer), options);
+    dcsctp::DcSctpSocketFactory factory;
+    socket_ =
+        factory.Create(debug_name_, *this, std::move(packet_observer), options);
   } else {
     if (local_sctp_port != socket_->options().local_port ||
         remote_sctp_port != socket_->options().remote_port) {
