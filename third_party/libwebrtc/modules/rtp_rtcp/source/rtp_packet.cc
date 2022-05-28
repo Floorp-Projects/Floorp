@@ -71,8 +71,8 @@ RtpPacket::RtpPacket(const ExtensionManager* extensions, size_t capacity)
 
 RtpPacket::~RtpPacket() {}
 
-void RtpPacket::IdentifyExtensions(const ExtensionManager& extensions) {
-  extensions_ = extensions;
+void RtpPacket::IdentifyExtensions(ExtensionManager extensions) {
+  extensions_ = std::move(extensions);
 }
 
 bool RtpPacket::Parse(const uint8_t* buffer, size_t buffer_size) {

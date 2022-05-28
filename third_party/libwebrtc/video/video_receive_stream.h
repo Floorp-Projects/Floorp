@@ -87,6 +87,8 @@ class VideoReceiveStream
   void Start() override;
   void Stop() override;
 
+  const RtpConfig& rtp_config() const override { return config_.rtp; }
+
   webrtc::VideoReceiveStream::Stats GetStats() const override;
 
   void AddSecondarySink(RtpPacketSinkInterface* sink) override;

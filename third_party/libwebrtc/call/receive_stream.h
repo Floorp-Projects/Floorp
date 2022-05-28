@@ -28,20 +28,34 @@ class ReceiveStream {
   // Receive-stream specific RTP settings.
   struct RtpConfig {
     // Synchronization source (stream identifier) to be received.
+    // This member will not change mid-stream and can be assumed to be const
+    // post initialization.
     uint32_t remote_ssrc = 0;
 
     // Sender SSRC used for sending RTCP (such as receiver reports).
+    // This value may change mid-stream and must be done on the same thread
+    // that the value is read on (i.e. packet delivery).
     uint32_t local_ssrc = 0;
 
     // Enable feedback for send side bandwidth estimation.
     // See
     // https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions
     // for details.
+    // This value may change mid-stream and must be done on the same thread
+    // that the value is read on (i.e. packet delivery).
     bool transport_cc = false;
 
     // RTP header extensions used for the received stream.
+    // This value may change mid-stream and must be done on the same thread
+    // that the value is read on (i.e. packet delivery).
     std::vector<RtpExtension> extensions;
   };
+
+  // Called on the packet delivery thread since some members of the config may
+  // change mid-stream (e.g. the local ssrc). All mutation must also happen on
+  // the packet delivery thread. Return value can be assumed to
+  // only be used in the calling context (on the stack basically).
+  virtual const RtpConfig& rtp_config() const = 0;
 
  protected:
   virtual ~ReceiveStream() {}

@@ -205,9 +205,4 @@ FlexfecReceiveStreamImpl::Stats FlexfecReceiveStreamImpl::GetStats() const {
   return FlexfecReceiveStream::Stats();
 }
 
-const FlexfecReceiveStream::Config& FlexfecReceiveStreamImpl::GetConfig()
-    const {
-  return config_;
-}
-
 }  // namespace webrtc
