@@ -148,8 +148,6 @@ class DcSctpSocket : public DcSctpSocketInterface {
   void MaybeSendShutdownOnPacketReceived(const SctpPacket& packet);
   // Sends a INIT chunk.
   void SendInit();
-  // Sends a CookieEcho chunk.
-  void SendCookieEcho();
   // Sends a SHUTDOWN chunk.
   void SendShutdown();
   // Sends a SHUTDOWN-ACK chunk.
@@ -260,10 +258,6 @@ class DcSctpSocket : public DcSctpSocketInterface {
   // The actual SendQueue implementation. As data can be sent on a socket before
   // the connection is established, this component is not in the TCB.
   RRSendQueue send_queue_;
-
-  // Only valid when state == State::kCookieEchoed
-  // A cached Cookie Echo Chunk, to be re-sent on timer expiry.
-  absl::optional<CookieEchoChunk> cookie_echo_chunk_ = absl::nullopt;
 
   // Contains verification tag and initial TSN between having sent the INIT
   // until the connection is established (there is no TCB at this point).

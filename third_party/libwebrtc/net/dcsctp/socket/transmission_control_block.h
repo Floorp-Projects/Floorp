@@ -19,6 +19,7 @@
 
 #include "absl/strings/string_view.h"
 #include "net/dcsctp/common/sequence_numbers.h"
+#include "net/dcsctp/packet/chunk/cookie_echo_chunk.h"
 #include "net/dcsctp/packet/sctp_packet.h"
 #include "net/dcsctp/public/dcsctp_options.h"
 #include "net/dcsctp/public/dcsctp_socket.h"
@@ -144,20 +145,31 @@ class TransmissionControlBlock : public Context {
   // Sends a SACK, if there is a need to.
   void MaybeSendSack();
 
-  // Fills `builder` (which may already be filled with control chunks) with
-  // with other control and data chunks, and sends packets as much as can be
-  // allowed by the congestion control algorithm. If `only_one_packet` is true,
-  // only a single packet will be sent. Otherwise, zero, one or multiple may be
-  // sent.
-  void SendBufferedPackets(SctpPacket::Builder& builder,
-                           TimeMs now,
-                           bool only_one_packet = false);
+  // Will be set while the socket is in kCookieEcho state. In this state, there
+  // can only be a single packet outstanding, and it must contain the COOKIE
+  // ECHO chunk as the first chunk in that packet, until the COOKIE ACK has been
+  // received, which will make the socket call `ClearCookieEchoChunk`.
+  void SetCookieEchoChunk(CookieEchoChunk chunk) {
+    cookie_echo_chunk_ = std::move(chunk);
+  }
 
-  // As above, but without passing in a builder and allowing sending many
-  // packets.
+  // Called when the COOKIE ACK chunk has been received, to allow further
+  // packets to be sent.
+  void ClearCookieEchoChunk() { cookie_echo_chunk_ = absl::nullopt; }
+
+  bool has_cookie_echo_chunk() const { return cookie_echo_chunk_.has_value(); }
+
+  // Fills `builder` (which may already be filled with control chunks) with
+  // other control and data chunks, and sends packets as much as can be
+  // allowed by the congestion control algorithm.
+  void SendBufferedPackets(SctpPacket::Builder& builder, TimeMs now);
+
+  // As above, but without passing in a builder. If `cookie_echo_chunk_` is
+  // present, then only one packet will be sent, with this chunk as the first
+  // chunk.
   void SendBufferedPackets(TimeMs now) {
     SctpPacket::Builder builder(peer_verification_tag_, options_);
-    SendBufferedPackets(builder, now, /*only_one_packet=*/false);
+    SendBufferedPackets(builder, now);
   }
 
   // Returns a textual representation of this object, for logging.
@@ -195,6 +207,13 @@ class TransmissionControlBlock : public Context {
   RetransmissionQueue retransmission_queue_;
   StreamResetHandler stream_reset_handler_;
   HeartbeatHandler heartbeat_handler_;
+
+  // Only valid when the socket state == State::kCookieEchoed. In this state,
+  // the socket must wait for COOKIE ACK to continue sending any packets (not
+  // including a COOKIE ECHO). So if `cookie_echo_chunk_` is present, the
+  // SendBufferedChunks will always only just send one packet, with this chunk
+  // as the first chunk in the packet.
+  absl::optional<CookieEchoChunk> cookie_echo_chunk_ = absl::nullopt;
 };
 }  // namespace dcsctp
 
