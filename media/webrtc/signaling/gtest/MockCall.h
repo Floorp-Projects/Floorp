@@ -264,6 +264,9 @@ class MockCall : public webrtc::Call {
   void OnAudioTransportOverheadChanged(
       int transport_overhead_per_packet) override {}
 
+  void OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
+      uint32_t local_ssrc) override {}
+
   void OnSentPacket(const rtc::SentPacket& sent_packet) override {}
 
   void SetClientBitratePreferences(
