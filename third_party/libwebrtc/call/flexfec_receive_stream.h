@@ -68,8 +68,6 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface,
   };
 
   virtual Stats GetStats() const = 0;
-
-  virtual const Config& GetConfig() const = 0;
 };
 
 }  // namespace webrtc

@@ -4164,7 +4164,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetDefaultRecvCodecsWithSsrc) {
   const std::vector<FakeFlexfecReceiveStream*>& streams =
       fake_call_->GetFlexfecReceiveStreams();
   ASSERT_EQ(1U, streams.size());
-  const FakeFlexfecReceiveStream* stream = streams.front();
+  const auto* stream = streams.front();
   const webrtc::FlexfecReceiveStream::Config& config = stream->GetConfig();
   EXPECT_EQ(GetEngineCodec("flexfec-03").id, config.payload_type);
   EXPECT_EQ(kFlexfecSsrc, config.rtp.remote_ssrc);
@@ -4280,7 +4280,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, DuplicateFlexfecCodecIsDropped) {
   const std::vector<FakeFlexfecReceiveStream*>& streams =
       fake_call_->GetFlexfecReceiveStreams();
   ASSERT_EQ(1U, streams.size());
-  const FakeFlexfecReceiveStream* stream = streams.front();
+  const auto* stream = streams.front();
   const webrtc::FlexfecReceiveStream::Config& config = stream->GetConfig();
   EXPECT_EQ(GetEngineCodec("flexfec-03").id, config.payload_type);
 }
@@ -5126,7 +5126,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetRecvParamsWithoutFecDisablesFec) {
   ASSERT_EQ(1U, streams.size());
   const FakeFlexfecReceiveStream* stream = streams.front();
   EXPECT_EQ(GetEngineCodec("flexfec-03").id, stream->GetConfig().payload_type);
-  EXPECT_EQ(kFlexfecSsrc, stream->GetConfig().rtp.remote_ssrc);
+  EXPECT_EQ(kFlexfecSsrc, stream->rtp_config().remote_ssrc);
   ASSERT_EQ(1U, stream->GetConfig().protected_media_ssrcs.size());
   EXPECT_EQ(kSsrcs1[0], stream->GetConfig().protected_media_ssrcs[0]);
 

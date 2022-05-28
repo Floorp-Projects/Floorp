@@ -59,7 +59,9 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
   void OnRtpPacket(const RtpPacketReceived& packet) override;
 
   Stats GetStats() const override;
-  const Config& GetConfig() const override;
+
+  // ReceiveStream impl.
+  const RtpConfig& rtp_config() const override { return config_.rtp; }
 
  private:
   RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
