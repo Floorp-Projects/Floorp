@@ -84,7 +84,7 @@ void LogBasedNetworkControllerSimulation::OnPacketSent(
     }
 
     RtpPacketSendInfo packet_info;
-    packet_info.media_ssrc = packet.ssrc;
+    packet_info.ssrc = packet.ssrc;
     packet_info.transport_sequence_number = packet.transport_seq_no;
     packet_info.rtp_sequence_number = packet.stream_seq_no;
     packet_info.length = packet.size;

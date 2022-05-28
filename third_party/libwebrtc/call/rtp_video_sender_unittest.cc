@@ -462,13 +462,11 @@ TEST(RtpVideoSenderTest, DoesNotRetrasmitAckedPackets) {
   lost_packet_feedback.rtp_sequence_number = rtp_sequence_numbers[0];
   lost_packet_feedback.ssrc = kSsrc1;
   lost_packet_feedback.received = false;
-  lost_packet_feedback.is_retransmission = false;
 
   StreamFeedbackObserver::StreamPacketInfo received_packet_feedback;
   received_packet_feedback.rtp_sequence_number = rtp_sequence_numbers[1];
   received_packet_feedback.ssrc = kSsrc1;
   received_packet_feedback.received = true;
-  lost_packet_feedback.is_retransmission = false;
 
   test.router()->OnPacketFeedbackVector(
       {lost_packet_feedback, received_packet_feedback});
@@ -640,13 +638,11 @@ TEST(RtpVideoSenderTest, EarlyRetransmits) {
   first_packet_feedback.rtp_sequence_number = frame1_rtp_sequence_number;
   first_packet_feedback.ssrc = kSsrc1;
   first_packet_feedback.received = false;
-  first_packet_feedback.is_retransmission = false;
 
   StreamFeedbackObserver::StreamPacketInfo second_packet_feedback;
   second_packet_feedback.rtp_sequence_number = frame2_rtp_sequence_number;
   second_packet_feedback.ssrc = kSsrc2;
   second_packet_feedback.received = true;
-  first_packet_feedback.is_retransmission = false;
 
   test.router()->OnPacketFeedbackVector(
       {first_packet_feedback, second_packet_feedback});
