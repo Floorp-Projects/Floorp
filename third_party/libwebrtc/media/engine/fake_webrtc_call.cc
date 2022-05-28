@@ -113,6 +113,11 @@ void FakeAudioReceiveStream::SetUseTransportCcAndNackHistory(
   config_.rtp.nack.rtp_history_ms = history_ms;
 }
 
+void FakeAudioReceiveStream::SetFrameDecryptor(
+    rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor) {
+  config_.frame_decryptor = std::move(frame_decryptor);
+}
+
 webrtc::AudioReceiveStream::Stats FakeAudioReceiveStream::GetStats(
     bool get_and_clear_legacy_stats) const {
   return stats_;

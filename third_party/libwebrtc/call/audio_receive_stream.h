@@ -181,6 +181,8 @@ class AudioReceiveStream {
   virtual void SetDecoderMap(std::map<int, SdpAudioFormat> decoder_map) = 0;
   virtual void SetUseTransportCcAndNackHistory(bool use_transport_cc,
                                                int history_ms) = 0;
+  virtual void SetFrameDecryptor(
+      rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor) = 0;
 
   // Starts stream activity.
   // When a stream is active, it can receive, process and deliver packets.

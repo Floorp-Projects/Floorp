@@ -152,6 +152,7 @@ if (rtc_include_tests) {
       "../api/audio_codecs:audio_codecs_api",
       "../api/audio_codecs/opus:audio_decoder_opus",
       "../api/audio_codecs/opus:audio_encoder_opus",
+      "../api/crypto:frame_decryptor_interface",
       "../api/rtc_event_log",
       "../api/task_queue:default_task_queue_factory",
       "../api/units:time_delta",

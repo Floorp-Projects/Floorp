@@ -112,6 +112,8 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
       std::map<int, webrtc::SdpAudioFormat> decoder_map) override;
   void SetUseTransportCcAndNackHistory(bool use_transport_cc,
                                        int history_ms) override;
+  void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
+                             frame_decryptor) override;
 
   webrtc::AudioReceiveStream::Stats GetStats(
       bool get_and_clear_legacy_stats) const override;
