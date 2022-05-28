@@ -347,28 +347,21 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         struct ClippingPredictor {
           bool enabled = false;
           enum Mode {
-            // Sets clipping prediction for clipping event prediction with fixed
-            // step estimation.
+            // Clipping event prediction mode with fixed step estimation.
             kClippingEventPrediction,
-            // Sets clipping prediction for clipped peak estimation with
-            // adaptive step estimation.
+            // Clipped peak estimation mode with adaptive step estimation.
             kAdaptiveStepClippingPeakPrediction,
-            // Sets clipping prediction for clipped peak estimation with fixed
-            // step estimation.
+            // Clipped peak estimation mode with fixed step estimation.
             kFixedStepClippingPeakPrediction,
           };
           Mode mode = kClippingEventPrediction;
-          // Number of frames in the sliding analysis window. Limited to values
-          // higher than zero.
+          // Number of frames in the sliding analysis window.
           int window_length = 5;
-          // Number of frames in the sliding reference window. Limited to values
-          // higher than zero.
+          // Number of frames in the sliding reference window.
           int reference_window_length = 5;
-          // Number of frames the reference window is delayed. Limited to values
-          // zero and higher. An additional requirement:
-          // |window_length < reference_window_length + reference_window_delay|.
+          // Reference window delay (unit: number of frames).
           int reference_window_delay = 5;
-          // Clipping predictor ste estimation threshold (dB).
+          // Clipping prediction threshold (dBFS).
           float clipping_threshold = -1.0f;
           // Crest factor drop threshold (dB).
           float crest_factor_margin = 3.0f;
