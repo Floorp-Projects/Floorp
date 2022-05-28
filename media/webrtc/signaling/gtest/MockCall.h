@@ -94,6 +94,7 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStream {
   }
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override {}
+  void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
   bool SetBaseMinimumPlayoutDelayMs(int delay_ms) override { return false; }
   int GetBaseMinimumPlayoutDelayMs() const override { return 0; }
 
