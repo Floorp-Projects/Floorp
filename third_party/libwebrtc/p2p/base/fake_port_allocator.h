@@ -238,10 +238,19 @@ class FakePortAllocator : public cricket::PortAllocator {
 
   bool initialized() const { return initialized_; }
 
+  // For testing: Manipulate MdnsObfuscationEnabled()
+  bool MdnsObfuscationEnabled() const override {
+    return mdns_obfuscation_enabled_;
+  }
+  void SetMdnsObfuscationEnabledForTesting(bool enabled) {
+    mdns_obfuscation_enabled_ = enabled;
+  }
+
  private:
   rtc::Thread* network_thread_;
   rtc::PacketSocketFactory* factory_;
   std::unique_ptr<rtc::BasicPacketSocketFactory> owned_factory_;
+  bool mdns_obfuscation_enabled_ = false;
 };
 
 }  // namespace cricket
