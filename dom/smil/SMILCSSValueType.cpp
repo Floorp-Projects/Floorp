@@ -410,11 +410,10 @@ nsresult SMILCSSValueType::Interpolate(const SMILValue& aStartVal,
   return InterpolateForServo(startWrapper, *endWrapper, aUnitDistance, aResult);
 }
 
-static ServoAnimationValues ValueFromStringHelper(nsCSSPropertyID aPropID,
-                                                  Element* aTargetElement,
-                                                  nsPresContext* aPresContext,
-                                                  ComputedStyle* aComputedStyle,
-                                                  const nsAString& aString) {
+static ServoAnimationValues ValueFromStringHelper(
+    nsCSSPropertyID aPropID, Element* aTargetElement,
+    nsPresContext* aPresContext, const ComputedStyle* aComputedStyle,
+    const nsAString& aString) {
   ServoAnimationValues result;
 
   Document* doc = aTargetElement->GetComposedDoc();
@@ -461,7 +460,7 @@ void SMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
     return;
   }
 
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<const ComputedStyle> computedStyle =
       nsComputedDOMStyle::GetComputedStyle(aTargetElement);
   if (!computedStyle) {
     return;

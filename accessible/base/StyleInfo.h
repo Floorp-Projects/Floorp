@@ -40,7 +40,7 @@ class StyleInfo {
   CSSCoord Margin(Side aSide);
 
   dom::Element* mElement;
-  RefPtr<ComputedStyle> mComputedStyle;
+  RefPtr<const ComputedStyle> mComputedStyle;
 };
 
 }  // namespace a11y
