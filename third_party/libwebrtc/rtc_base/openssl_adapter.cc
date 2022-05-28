@@ -981,6 +981,9 @@ SSL_CTX* OpenSSLAdapter::CreateContext(SSLMode mode, bool enable_cache) {
   SSL_CTX_set_custom_verify(ctx, SSL_VERIFY_PEER, SSLVerifyCallback);
 #else
   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, SSLVerifyCallback);
+  // Verify certificate chains up to a depth of 4. This is not
+  // needed for DTLS-SRTP which uses self-signed certificates
+  // (so the depth is 0) but is required to support TURN/TLS.
   SSL_CTX_set_verify_depth(ctx, 4);
 #endif
   // Use defaults, but disable HMAC-SHA256 and HMAC-SHA384 ciphers
