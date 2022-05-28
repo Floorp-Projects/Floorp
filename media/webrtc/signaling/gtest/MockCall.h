@@ -63,6 +63,8 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStream {
 
   bool IsRunning() const override { return true; }
 
+  const webrtc::ReceiveStream::RtpConfig& rtp_config() const override;
+
   Stats GetStats(bool get_and_clear_legacy_stats) const override {
     return mStats;
   }
@@ -144,6 +146,8 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStream {
   void Start() override {}
 
   void Stop() override {}
+
+  const webrtc::ReceiveStream::RtpConfig& rtp_config() const override;
 
   Stats GetStats() const override { return mStats; }
 
