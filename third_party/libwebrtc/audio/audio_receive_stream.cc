@@ -257,6 +257,14 @@ void AudioReceiveStream::SetFrameDecryptor(
   channel_receive_->SetFrameDecryptor(std::move(frame_decryptor));
 }
 
+void AudioReceiveStream::SetRtpExtensions(
+    std::vector<RtpExtension> extensions) {
+  // TODO(bugs.webrtc.org/11993): This is called via WebRtcAudioReceiveStream,
+  // expect to be called on the network thread.
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  config_.rtp.extensions = std::move(extensions);
+}
+
 webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats(
     bool get_and_clear_legacy_stats) const {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);

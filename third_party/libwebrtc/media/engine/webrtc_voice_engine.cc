@@ -1238,11 +1238,10 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
                                              config_.rtp.nack.rtp_history_ms);
   }
 
-  void SetRtpExtensionsAndRecreateStream(
-      const std::vector<webrtc::RtpExtension>& extensions) {
+  void SetRtpExtensions(const std::vector<webrtc::RtpExtension>& extensions) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     config_.rtp.extensions = extensions;
-    RecreateAudioReceiveStream();
+    stream_->SetRtpExtensions(extensions);
   }
 
   // Set a new payload type -> decoder map.
@@ -1472,7 +1471,7 @@ bool WebRtcVoiceMediaChannel::SetRecvParameters(
   if (recv_rtp_extensions_ != filtered_extensions) {
     recv_rtp_extensions_.swap(filtered_extensions);
     for (auto& it : recv_streams_) {
-      it.second->SetRtpExtensionsAndRecreateStream(recv_rtp_extensions_);
+      it.second->SetRtpExtensions(recv_rtp_extensions_);
     }
   }
   return true;
