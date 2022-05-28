@@ -8,6 +8,7 @@
 #include "Blur.h"
 #include "Logging.h"
 #include "PathHelpers.h"
+#include "SourceSurfaceRawData.h"
 #include "Tools.h"
 
 #include "BufferEdgePad.h"
@@ -206,9 +207,9 @@ already_AddRefed<SourceSurface> DrawTarget::IntoLuminanceSource(
   }
 
   // Create alpha channel mask for output
-  RefPtr<DataSourceSurface> destMaskSurface =
-      Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
-  if (!destMaskSurface) {
+  RefPtr<SourceSurfaceAlignedRawData> destMaskSurface =
+      new SourceSurfaceAlignedRawData;
+  if (!destMaskSurface->Init(size, SurfaceFormat::A8, false, 0)) {
     return nullptr;
   }
   DataSourceSurface::MappedSurface destMap;
