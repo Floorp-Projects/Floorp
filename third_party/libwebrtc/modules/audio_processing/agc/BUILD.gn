@@ -20,6 +20,7 @@ rtc_library("agc") {
   configs += [ "..:apm_debug_dump" ]
   deps = [
     ":clipping_predictor",
+    ":clipping_predictor_evaluator",
     ":gain_control_interface",
     ":gain_map",
     ":level_estimation",

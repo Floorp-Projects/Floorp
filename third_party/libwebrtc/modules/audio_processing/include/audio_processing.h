@@ -365,6 +365,10 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
           float clipping_threshold = -1.0f;
           // Crest factor drop threshold (dB).
           float crest_factor_margin = 3.0f;
+          // If true, the recommended clipped level step is used to modify the
+          // analog gain. Otherwise, the predictor runs without affecting the
+          // analog gain.
+          bool use_predicted_step = true;
         } clipping_predictor;
       } analog_gain_controller;
     } gain_controller1;
