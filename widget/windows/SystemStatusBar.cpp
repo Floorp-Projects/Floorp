@@ -113,7 +113,6 @@ nsresult StatusBarEntry::Init() {
       mMenu->GetAttr(kNameSpaceID_None, nsGkAtoms::image, imageURIString);
 
   nsresult rv;
-  RefPtr<ComputedStyle> sc;
   nsCOMPtr<nsIURI> iconURI;
   if (!hasImageAttr) {
     // If the content node has no "image" attribute, get the
@@ -123,7 +122,8 @@ nsresult StatusBarEntry::Init() {
       return NS_ERROR_FAILURE;
     }
 
-    sc = nsComputedDOMStyle::GetComputedStyle(mMenu);
+    RefPtr<const ComputedStyle> sc =
+        nsComputedDOMStyle::GetComputedStyle(mMenu);
     if (!sc) {
       return NS_ERROR_FAILURE;
     }

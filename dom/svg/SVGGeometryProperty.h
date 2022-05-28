@@ -235,7 +235,7 @@ bool DoForComputedStyle(const SVGElement* aElement, Func aFunc) {
     return true;
   }
 
-  if (RefPtr<ComputedStyle> computedStyle =
+  if (RefPtr<const ComputedStyle> computedStyle =
           nsComputedDOMStyle::GetComputedStyleNoFlush(aElement)) {
     aFunc(computedStyle.get());
     return true;

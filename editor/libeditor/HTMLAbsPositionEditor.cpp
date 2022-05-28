@@ -937,7 +937,8 @@ nsresult HTMLEditor::GetTemporaryStyleForFocusedPositionedElement(
     return NS_OK;
   }
 
-  RefPtr<ComputedStyle> style = nsComputedDOMStyle::GetComputedStyle(&aElement);
+  RefPtr<const ComputedStyle> style =
+      nsComputedDOMStyle::GetComputedStyle(&aElement);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }

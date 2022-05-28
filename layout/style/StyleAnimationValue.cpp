@@ -195,7 +195,7 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
 
   // GetComputedStyle() flushes style, so we shouldn't assume that any
   // non-owning references we have are still valid.
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<const ComputedStyle> computedStyle =
       nsComputedDOMStyle::GetComputedStyle(aElement);
   MOZ_ASSERT(computedStyle);
 

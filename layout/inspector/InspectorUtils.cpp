@@ -53,7 +53,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace dom {
 
-static already_AddRefed<ComputedStyle> GetCleanComputedStyleForElement(
+static already_AddRefed<const ComputedStyle> GetCleanComputedStyleForElement(
     dom::Element* aElement, PseudoStyleType aPseudo) {
   MOZ_ASSERT(aElement);
 
@@ -189,7 +189,7 @@ void InspectorUtils::GetCSSStyleRules(
     return;
   }
 
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<const ComputedStyle> computedStyle =
       GetCleanComputedStyleForElement(&aElement, *type);
   if (!computedStyle) {
     // This can fail for elements that are not in the document or
