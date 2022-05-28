@@ -48,21 +48,24 @@ class ObjCVideoEncoder : public VideoEncoder {
   }
 
   int32_t RegisterEncodeCompleteCallback(EncodedImageCallback *callback) override {
-    [encoder_ setCallback:^BOOL(RTC_OBJC_TYPE(RTCEncodedImage) * _Nonnull frame,
-                                id<RTC_OBJC_TYPE(RTCCodecSpecificInfo)> _Nonnull info) {
-      EncodedImage encodedImage = [frame nativeEncodedImage];
+    if (callback) {
+      [encoder_ setCallback:^BOOL(RTC_OBJC_TYPE(RTCEncodedImage) * _Nonnull frame,
+                                  id<RTC_OBJC_TYPE(RTCCodecSpecificInfo)> _Nonnull info) {
+        EncodedImage encodedImage = [frame nativeEncodedImage];
 
-      // Handle types that can be converted into one of CodecSpecificInfo's hard coded cases.
-      CodecSpecificInfo codecSpecificInfo;
-      if ([info isKindOfClass:[RTC_OBJC_TYPE(RTCCodecSpecificInfoH264) class]]) {
-        codecSpecificInfo =
-            [(RTC_OBJC_TYPE(RTCCodecSpecificInfoH264) *)info nativeCodecSpecificInfo];
-      }
+        // Handle types that can be converted into one of CodecSpecificInfo's hard coded cases.
+        CodecSpecificInfo codecSpecificInfo;
+        if ([info isKindOfClass:[RTC_OBJC_TYPE(RTCCodecSpecificInfoH264) class]]) {
+          codecSpecificInfo =
+              [(RTC_OBJC_TYPE(RTCCodecSpecificInfoH264) *)info nativeCodecSpecificInfo];
+        }
 
-      EncodedImageCallback::Result res = callback->OnEncodedImage(encodedImage, &codecSpecificInfo);
-      return res.error == EncodedImageCallback::Result::OK;
-    }];
-
+        EncodedImageCallback::Result res = callback->OnEncodedImage(encodedImage, &codecSpecificInfo);
+        return res.error == EncodedImageCallback::Result::OK;
+      }];
+    } else {
+      [encoder_ setCallback:nil];
+    }
     return WEBRTC_VIDEO_CODEC_OK;
   }
 
