@@ -834,7 +834,12 @@ void OpenSSLStreamAdapter::SetTimeout(int delay_ms) {
         if (flag->alive()) {
           RTC_DLOG(LS_INFO) << "DTLS timeout expired";
           timeout_task_.Stop();
-          DTLSv1_handle_timeout(ssl_);
+          int res = DTLSv1_handle_timeout(ssl_);
+          if (res > 0) {
+            RTC_LOG(LS_INFO) << "DTLS retransmission";
+          } else if (res < 0) {
+            RTC_LOG(LS_INFO) << "DTLSv1_handle_timeout() return -1";
+          }
           ContinueSSL();
         } else {
           RTC_NOTREACHED();
