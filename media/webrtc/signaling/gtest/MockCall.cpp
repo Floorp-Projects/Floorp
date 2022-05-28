@@ -26,6 +26,13 @@ void MockAudioReceiveStream::SetDecoderMap(
       std::move(decoder_map);
 }
 
+void MockAudioReceiveStream::SetRtpExtensions(
+    std::vector<webrtc::RtpExtension> extensions) {
+  MOZ_ASSERT(mCallWrapper->GetMockCall()->mAudioReceiveConfig.isSome());
+  mCallWrapper->GetMockCall()->mAudioReceiveConfig->rtp.extensions =
+      std::move(extensions);
+}
+
 void MockVideoSendStream::ReconfigureVideoEncoder(
     webrtc::VideoEncoderConfig config) {
   mCallWrapper->GetMockCall()->mVideoSendEncoderConfig =
