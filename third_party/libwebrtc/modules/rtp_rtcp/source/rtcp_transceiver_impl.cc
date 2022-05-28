@@ -355,9 +355,12 @@ void RtcpTransceiverImpl::CreateCompoundPacket(PacketSender* sender) {
   rtcp::ReceiverReport receiver_report;
   receiver_report.SetSenderSsrc(sender_ssrc);
   receiver_report.SetReportBlocks(CreateReportBlocks(now));
-  sender->AppendPacket(receiver_report);
+  if (config_.rtcp_mode == RtcpMode::kCompound ||
+      !receiver_report.report_blocks().empty()) {
+    sender->AppendPacket(receiver_report);
+  }
 
-  if (!config_.cname.empty()) {
+  if (!config_.cname.empty() && !sender->IsEmpty()) {
     rtcp::Sdes sdes;
     bool added = sdes.AddCName(config_.feedback_ssrc, config_.cname);
     RTC_DCHECK(added) << "Failed to add cname " << config_.cname
