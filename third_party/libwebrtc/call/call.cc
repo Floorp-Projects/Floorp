@@ -272,6 +272,9 @@ class Call final : public webrtc::Call,
   void OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
                           uint32_t local_ssrc) override;
 
+  void OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
+                         const std::string& sync_group) override;
+
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
 
   // Implements TargetTransferRateObserver,
@@ -1358,6 +1361,15 @@ void Call::OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
   auto it = audio_send_ssrcs_.find(local_ssrc);
   receive_stream.AssociateSendStream(it != audio_send_ssrcs_.end() ? it->second
                                                                    : nullptr);
+}
+
+void Call::OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
+                             const std::string& sync_group) {
+  RTC_DCHECK_RUN_ON(worker_thread_);
+  webrtc::internal::AudioReceiveStream& receive_stream =
+      static_cast<webrtc::internal::AudioReceiveStream&>(stream);
+  receive_stream.SetSyncGroup(sync_group);
+  ConfigureSync(sync_group);
 }
 
 void Call::OnSentPacket(const rtc::SentPacket& sent_packet) {

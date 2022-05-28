@@ -104,6 +104,10 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
     config_.rtp.local_ssrc = local_ssrc;
   }
 
+  void SetSyncGroup(const std::string& sync_group) {
+    config_.sync_group = sync_group;
+  }
+
  private:
   const webrtc::ReceiveStream::RtpConfig& rtp_config() const override {
     return config_.rtp;
@@ -397,6 +401,8 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
       int transport_overhead_per_packet) override;
   void OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
                           uint32_t local_ssrc) override;
+  void OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
+                         const std::string& sync_group) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
 
   webrtc::TaskQueueBase* const network_thread_;

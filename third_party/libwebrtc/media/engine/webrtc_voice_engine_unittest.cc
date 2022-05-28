@@ -2845,7 +2845,7 @@ TEST_P(WebRtcVoiceEngineTestFake, AddRecvStreamAfterUnsignaled_NoRecreate) {
   EXPECT_EQ(audio_receive_stream_id, streams.front()->id());
 }
 
-TEST_P(WebRtcVoiceEngineTestFake, AddRecvStreamAfterUnsignaled_Recreate) {
+TEST_P(WebRtcVoiceEngineTestFake, AddRecvStreamAfterUnsignaled_Updates) {
   EXPECT_TRUE(SetupChannel());
 
   // Spawn unsignaled stream with SSRC=1.
@@ -2854,17 +2854,26 @@ TEST_P(WebRtcVoiceEngineTestFake, AddRecvStreamAfterUnsignaled_Recreate) {
   EXPECT_TRUE(
       GetRecvStream(1).VerifyLastPacket(kPcmuFrame, sizeof(kPcmuFrame)));
 
-  // Verify that the underlying stream object in Call *is* recreated when a
+  // Verify that the underlying stream object in Call gets updated when a
   // stream with SSRC=1 is added, and which has changed stream parameters.
   const auto& streams = call_.GetAudioReceiveStreams();
   EXPECT_EQ(1u, streams.size());
+  // The sync_group id should be empty.
+  EXPECT_TRUE(streams.front()->GetConfig().sync_group.empty());
+
+  const std::string new_stream_id("stream_id");
   int audio_receive_stream_id = streams.front()->id();
   cricket::StreamParams stream_params;
   stream_params.ssrcs.push_back(1);
-  stream_params.set_stream_ids({"stream_id"});
+  stream_params.set_stream_ids({new_stream_id});
+
   EXPECT_TRUE(channel_->AddRecvStream(stream_params));
   EXPECT_EQ(1u, streams.size());
-  EXPECT_NE(audio_receive_stream_id, streams.front()->id());
+  // The audio receive stream should not have been recreated.
+  EXPECT_EQ(audio_receive_stream_id, streams.front()->id());
+
+  // The sync_group id should now match with the new stream params.
+  EXPECT_EQ(new_stream_id, streams.front()->GetConfig().sync_group);
 }
 
 // Test that AddRecvStream creates new stream.
