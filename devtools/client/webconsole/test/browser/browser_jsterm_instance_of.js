@@ -10,27 +10,24 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  let message = await executeAndWaitForMessage(
+  let message = await executeAndWaitForResultMessage(
     hud,
     "[] instanceof Array",
-    "true",
-    ".result"
+    "true"
   );
   ok(message, "`instanceof Array` is correct");
 
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForResultMessage(
     hud,
     "({}) instanceof Object",
-    "true",
-    ".result"
+    "true"
   );
   ok(message, "`instanceof Object` is correct");
 
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForResultMessage(
     hud,
     "({}) instanceof Array",
-    "false",
-    ".result"
+    "false"
   );
   ok(message, "`instanceof Array` has expected result");
 });

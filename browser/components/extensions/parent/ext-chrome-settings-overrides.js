@@ -339,9 +339,10 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           extension.startupReason
         );
     }
-    // Ensure the item is disabled.  If addSetting was called above,
-    // Item may be null, and enabled may be undefined.
-    if (disable && item?.enabled !== false) {
+
+    // Ensure the item is disabled (either if exists and is not default or if it does not
+    // exist yet).
+    if (disable) {
       item = await ExtensionSettingsStore.disable(
         extension.id,
         DEFAULT_SEARCH_STORE_TYPE,
@@ -466,6 +467,37 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         DEFAULT_SEARCH_STORE_TYPE,
         DEFAULT_SEARCH_SETTING_NAME
       );
+
+      // Check for an inconsistency between the value returned by getLevelOfcontrol
+      // and the current engine actually set.
+      if (
+        control === "controlled_by_this_extension" &&
+        Services.search.defaultEngine.name !== engineName
+      ) {
+        // Check for and fix any inconsistency between the extensions settings storage
+        // and the current engine actually set.  If settings claims the extension is default
+        // but the search service claims otherwise, select what the search service claims
+        // (See Bug 1767550).
+        const allSettings = ExtensionSettingsStore.getAllSettings(
+          DEFAULT_SEARCH_STORE_TYPE,
+          DEFAULT_SEARCH_SETTING_NAME
+        );
+        for (const setting of allSettings) {
+          if (setting.value !== Services.search.defaultEngine.name) {
+            await ExtensionSettingsStore.disable(
+              setting.id,
+              DEFAULT_SEARCH_STORE_TYPE,
+              DEFAULT_SEARCH_SETTING_NAME
+            );
+          }
+        }
+        control = await ExtensionSettingsStore.getLevelOfControl(
+          extension.id,
+          DEFAULT_SEARCH_STORE_TYPE,
+          DEFAULT_SEARCH_SETTING_NAME
+        );
+      }
+
       if (control === "controlled_by_this_extension") {
         await Services.search.setDefault(
           Services.search.getEngineByName(engineName)

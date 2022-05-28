@@ -8,4 +8,4 @@ browser.jar:
     content/browser/firefoxview.css
     content/browser/tabs-pickup.js
     content/browser/recently-closed-tabs.js
-
+    content/browser/colorway-background.svg (content/colorway-background.svg)

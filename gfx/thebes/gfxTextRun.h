@@ -941,6 +941,10 @@ class gfxFontGroup final : public gfxTextRunFactory {
 
   const gfxFontStyle* GetStyle() const { return &mStyle; }
 
+  // Get the presContext for which this fontGroup was constructed. This may be
+  // null! (In the case of canvas not connected to a document.)
+  nsPresContext* GetPresContext() const { return mPresContext; }
+
   /**
    * The listed characters should be treated as invisible and zero-width
    * when creating textruns.

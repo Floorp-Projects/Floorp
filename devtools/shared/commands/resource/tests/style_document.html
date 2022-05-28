@@ -8,7 +8,13 @@
     <style>
     body { color: lime; }
     </style>
-    <link href="style_document.css" rel="stylesheet" type="text/css"/>
+    <link href="style_document.css" rel="stylesheet">
+    <script>
+      "use strict";
+      const s = new CSSStyleSheet();
+      s.replaceSync("body { background-color: blue }");
+      document.adoptedStyleSheets.push(s);
+    </script>
   </head>
   <body>
     <iframe src="https://example.org/browser/devtools/shared/commands/resource/tests/style_iframe.html"></iframe>

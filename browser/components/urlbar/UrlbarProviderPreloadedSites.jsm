@@ -265,6 +265,7 @@ class ProviderPreloadedSites extends UrlbarProvider {
       queryContext.searchString +
       value.substring(queryContext.searchString.length);
     result.autofill = {
+      type: "preloaded",
       value: autofilledValue,
       selectionStart: queryContext.searchString.length,
       selectionEnd: autofilledValue.length,

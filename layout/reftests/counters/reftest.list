@@ -7,8 +7,8 @@
 == t1202-counter-06-b-test.html t1202-counter-06-b-reference.html
 == t1202-counter-07-b-test.html t1202-counter-07-b-reference.html
 == t1202-counter-08-b-test.html t1202-counter-08-b-reference.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == t1202-counter-09-b-test.html t1202-counter-09-b-reference.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == t1202-counter-10-b-test.html t1202-counter-10-b-reference.html # Bug 1392106
+== t1202-counter-09-b-test.html t1202-counter-09-b-reference.html
+== t1202-counter-10-b-test.html t1202-counter-10-b-reference.html
 == t1202-counter-11-b-test.html t1202-counter-11-b-reference.html
 == t1202-counter-12-b-test.html t1202-counter-12-b-reference.html
 == t1202-counter-13-b-test.html t1202-counter-13-b-reference.html
@@ -24,8 +24,8 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == t1202-counter-10-b-test.
 == t1202-counters-06-b-test.html t1202-counters-06-b-reference.html
 == t1202-counters-07-b-test.html t1202-counters-07-b-reference.html
 == t1202-counters-08-b-test.html t1202-counters-08-b-reference.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == t1202-counters-09-b-test.html t1202-counters-09-b-reference.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == t1202-counters-10-b-test.html t1202-counters-10-b-reference.html # Bug 1392106
+== t1202-counters-09-b-test.html t1202-counters-09-b-reference.html
+== t1202-counters-10-b-test.html t1202-counters-10-b-reference.html
 == t1202-counters-11-b-test.html t1202-counters-11-b-reference.html
 == t1202-counters-12-b-test.html t1202-counters-12-b-reference.html
 == t1202-counters-13-b-test.html t1202-counters-13-b-reference.html
@@ -57,8 +57,8 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == t1202-counters-10-b-test
 == t120403-display-none-00-c-test.html t120403-display-none-00-c-reference.html
 == t120403-visibility-00-c-test.html t120403-visibility-00-c-reference.html
 == text-boundaries-subpixel.html text-boundaries-subpixel-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-hebrew-test.html counter-hebrew-reference.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counters-hebrew-test.html counters-hebrew-reference.html # Bug 1392106
+== counter-hebrew-test.html counter-hebrew-reference.html
+== counters-hebrew-test.html counters-hebrew-reference.html
 == counter-reset-integer-range.html counter-reset-integer-range-ref.html
 == counter-ua-limits-00.html counter-ua-limits-00-ref.html
 == counter-ua-limits-01.html counter-ua-limits-01-ref.html
@@ -67,15 +67,15 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counters-hebrew-test.htm
 == counter-ua-limits-list-00.html counter-ua-limits-list-00-ref.html
 == counter-ua-limits-list-01.html counter-ua-limits-list-01-ref.html
 == multiple-thai-counters.html multiple-thai-counters-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-suffix.html counter-suffix-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-cjk-decimal.html counter-cjk-decimal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-japanese-informal.html counter-japanese-informal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-japanese-formal.html counter-japanese-formal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-korean-hangul-formal.html counter-korean-hangul-formal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-korean-hanja-informal.html counter-korean-hanja-informal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-korean-hanja-formal.html counter-korean-hanja-formal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-simp-chinese-informal.html counter-simp-chinese-informal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-simp-chinese-formal.html counter-simp-chinese-formal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-trad-chinese-informal.html counter-trad-chinese-informal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-trad-chinese-formal.html counter-trad-chinese-formal-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-ethiopic-numeric.html counter-ethiopic-numeric-ref.html # Bug 1392106
+== counter-suffix.html counter-suffix-ref.html
+== counter-cjk-decimal.html counter-cjk-decimal-ref.html
+== counter-japanese-informal.html counter-japanese-informal-ref.html
+== counter-japanese-formal.html counter-japanese-formal-ref.html
+== counter-korean-hangul-formal.html counter-korean-hangul-formal-ref.html
+== counter-korean-hanja-informal.html counter-korean-hanja-informal-ref.html
+== counter-korean-hanja-formal.html counter-korean-hanja-formal-ref.html
+== counter-simp-chinese-informal.html counter-simp-chinese-informal-ref.html
+== counter-simp-chinese-formal.html counter-simp-chinese-formal-ref.html
+== counter-trad-chinese-informal.html counter-trad-chinese-informal-ref.html
+== counter-trad-chinese-formal.html counter-trad-chinese-formal-ref.html
+== counter-ethiopic-numeric.html counter-ethiopic-numeric-ref.html

@@ -693,12 +693,6 @@ class GCSchedulingState {
   mozilla::Atomic<bool, mozilla::ReleaseAcquire> inHighFrequencyGCMode_;
 
  public:
-  /*
-   * Influences the GC thresholds for the atoms zone to discourage collection of
-   * this zone during page load.
-   */
-  MainThreadOrGCTaskData<bool> inPageLoad;
-
   GCSchedulingState() : inHighFrequencyGCMode_(false) {}
 
   bool inHighFrequencyGCMode() const { return inHighFrequencyGCMode_; }
@@ -892,8 +886,6 @@ class MemoryTracker {
   MemoryTracker();
   void fixupAfterMovingGC();
   void checkEmptyOnDestroy();
-
-  void adopt(MemoryTracker& other);
 
   // Track memory by associated GC thing pointer.
   void trackGCMemory(Cell* cell, size_t nbytes, MemoryUse use);

@@ -2785,13 +2785,17 @@ impl Renderer {
             let src_task_rect = src_task.get_target_rect().to_f32();
 
             let dest_task = &render_tasks[resolve_op.dest_task_id];
+            let dest_info = match dest_task.kind {
+                RenderTaskKind::Picture(ref info) => info,
+                _ => panic!("bug: not a picture"),
+            };
             let dest_task_rect = dest_task.get_target_rect().to_f32();
 
             // Get the rect that we ideally want, in space of the parent surface
             let wanted_rect = DeviceRect::from_origin_and_size(
-                resolve_op.dest_origin,
+                dest_info.content_origin,
                 dest_task_rect.size().to_f32(),
-            );
+            ).cast_unit() * dest_info.device_pixel_scale.inverse();
 
             // Get the rect that is available on the parent surface. It may be smaller
             // than desired because this is a picture cache tile covering only part of
@@ -2799,29 +2803,31 @@ impl Renderer {
             let avail_rect = DeviceRect::from_origin_and_size(
                 src_info.content_origin,
                 src_task_rect.size().to_f32(),
-            );
+            ).cast_unit() * src_info.device_pixel_scale.inverse();
 
-            if let Some(int_rect) = wanted_rect.intersection(&avail_rect) {
+            if let Some(device_int_rect) = wanted_rect.intersection(&avail_rect) {
+                let src_int_rect = (device_int_rect * src_info.device_pixel_scale).cast_unit();
+                let dest_int_rect = (device_int_rect * dest_info.device_pixel_scale).cast_unit();
+
                 // If there is a valid intersection, work out the correct origins and
                 // sizes of the copy rects, and do the blit.
-                let copy_size = int_rect.size().to_i32();
 
                 let src_origin = src_task_rect.min.to_f32() +
-                    int_rect.min.to_vector() -
+                    src_int_rect.min.to_vector() -
                     src_info.content_origin.to_vector();
 
                 let src = DeviceIntRect::from_origin_and_size(
                     src_origin.to_i32(),
-                    copy_size,
+                    src_int_rect.size().round().to_i32(),
                 );
 
                 let dest_origin = dest_task_rect.min.to_f32() +
-                    int_rect.min.to_vector() -
-                    resolve_op.dest_origin.to_vector();
+                    dest_int_rect.min.to_vector() -
+                    dest_info.content_origin.to_vector();
 
                 let dest = DeviceIntRect::from_origin_and_size(
                     dest_origin.to_i32(),
-                    copy_size,
+                    dest_int_rect.size().round().to_i32(),
                 );
 
                 let texture_source = TextureSource::TextureCache(

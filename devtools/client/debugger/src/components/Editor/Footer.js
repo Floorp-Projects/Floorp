@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import actions from "../../actions";
@@ -28,6 +29,22 @@ class SourceFooter extends PureComponent {
     super();
 
     this.state = { cursorPosition: { line: 0, column: 0 } };
+  }
+
+  static get propTypes() {
+    return {
+      canPrettyPrint: PropTypes.bool.isRequired,
+      cx: PropTypes.object.isRequired,
+      endPanelCollapsed: PropTypes.bool.isRequired,
+      horizontal: PropTypes.bool.isRequired,
+      jumpToMappedLocation: PropTypes.func.isRequired,
+      mappedSource: PropTypes.object,
+      selectedSource: PropTypes.object,
+      sourceLoaded: PropTypes.bool.isRequired,
+      toggleBlackBox: PropTypes.func.isRequired,
+      togglePaneCollapse: PropTypes.func.isRequired,
+      togglePrettyPrint: PropTypes.func.isRequired,
+    };
   }
 
   componentDidUpdate() {

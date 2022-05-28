@@ -65,6 +65,11 @@ class AbstractSandboxBroker {
    */
   virtual void AddHandleToShare(HANDLE aHandle) = 0;
 
+  /**
+   * @return true if policy has win32k locked down, otherwise false
+   */
+  virtual bool IsWin32kLockedDown() = 0;
+
  protected:
   virtual ~AbstractSandboxBroker() {}
 };
@@ -119,6 +124,8 @@ class SandboxBroker : public AbstractSandboxBroker {
    * to communicate this address to the child.
    */
   void AddHandleToShare(HANDLE aHandle) override;
+
+  bool IsWin32kLockedDown() final;
 
   // Set up dummy interceptions via the broker, so we can log calls.
   void ApplyLoggingPolicy();

@@ -101,8 +101,8 @@ class HyperTextAccessibleBase {
               int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr);
 
   /**
-   * Return a rect (in dev pixels) for character at given offset relative given
-   * coordinate system.
+   * Return a rect (in dev pixels) for character at given offset relative
+   * given coordinate system.
    */
   virtual LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
 

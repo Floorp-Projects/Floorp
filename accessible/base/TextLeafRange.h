@@ -13,8 +13,16 @@
 #include "nsDirection.h"
 #include "nsIAccessibleText.h"
 
-namespace mozilla::a11y {
+class nsRange;
+
+namespace mozilla {
+namespace dom {
+class Document;
+}
+
+namespace a11y {
 class Accessible;
+class LocalAccessible;
 
 /**
  * Represents a point within accessible text.
@@ -129,24 +137,28 @@ class TextLeafPoint final {
       bool aIncludeDefaults = true) const;
 
   /**
+   * Get the offsets of all spelling errors in a given LocalAccessible. This
+   * should only be used when pushing the cache. Most callers will want
+   * FindTextAttrsStart instead.
+   */
+  static nsTArray<int32_t> GetSpellingErrorOffsets(LocalAccessible* aAcc);
+
+  /**
+   * Queue a cache update for a spelling error in a given DOM range.
+   */
+  static void UpdateCachedSpellingError(dom::Document* aDocument,
+                                        const nsRange& aRange);
+
+  /**
    * Find the start of a run of text attributes in a specific direction.
    * A text attributes run is a span of text where the attributes are the same.
    * If no boundary is found, the start/end of the container is returned
    * (depending on the direction).
    * If aIncludeorigin is true and this is at a boundary, this will be
    * returned unchanged.
-   * aOriginAttrs allows the caller to supply the text attributes for this (as
-   * retrieved by GetTextAttributes). This can be used to avoid fetching the
-   * attributes twice if they are also to be used for something else; e.g.
-   * returning the attributes to a client. If aOriginAttrs is null, this method
-   * will fetch the attributes itself.
-   * aIncludeDefaults specifies whether aOriginAttrs includes default
-   * attributes.
    */
   TextLeafPoint FindTextAttrsStart(nsDirection aDirection,
-                                   bool aIncludeOrigin = false,
-                                   const AccAttributes* aOriginAttrs = nullptr,
-                                   bool aIncludeDefaults = true) const;
+                                   bool aIncludeOrigin = false) const;
 
   /**
    * Returns a rect (in dev pixels) describing position and size of
@@ -180,6 +192,16 @@ class TextLeafPoint final {
 
   TextLeafPoint FindParagraphSameAcc(nsDirection aDirection,
                                      bool aIncludeOrigin) const;
+
+  bool IsInSpellingError() const;
+
+  /**
+   * Find a spelling error boundary in the same Accessible. This function
+   * searches for either start or end points, since either means a change in
+   * text attributes.
+   */
+  TextLeafPoint FindSpellingErrorSameAcc(nsDirection aDirection,
+                                         bool aIncludeOrigin) const;
 };
 
 /**
@@ -203,6 +225,7 @@ class TextLeafRange final {
   TextLeafPoint mEnd;
 };
 
-}  // namespace mozilla::a11y
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

@@ -57,11 +57,11 @@ inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm,
     masm.Lsr(scratch64, scratch64, FRAMESIZE_SHIFT);
     masm.Add(masm.GetStackPointer64(), masm.GetStackPointer64(), scratch64);
   } else {
-    masm.Mov(masm.GetStackPointer64(), BaselineFrameReg64);
+    masm.Mov(masm.GetStackPointer64(), FramePointer64);
   }
 
   // Pop values, discarding the frame descriptor.
-  masm.pop(BaselineFrameReg, ICStubReg, ICTailCallReg, scratch64.asUnsized());
+  masm.pop(FramePointer, ICStubReg, ICTailCallReg, scratch64.asUnsized());
 
   // Stack should remain 16-byte aligned.
   masm.checkStackAlignment();

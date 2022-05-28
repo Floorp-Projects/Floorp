@@ -227,6 +227,7 @@ const UPDATE_PROPS = [
   "stacktrace",
   "isThirdPartyTrackingResource",
   "referrerPolicy",
+  "priority",
   "blockedReason",
   "blockingExtension",
   "channelId",
@@ -325,6 +326,11 @@ const HEADERS = [
     name: "contentSize",
     boxName: "size",
     filterKey: "size",
+    canFilter: true,
+  },
+  {
+    name: "priority",
+    boxName: "priority",
     canFilter: true,
   },
   {

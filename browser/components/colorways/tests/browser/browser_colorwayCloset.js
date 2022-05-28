@@ -24,6 +24,25 @@ add_task(async function about_colorwaycloset_smoke_test() {
         document.getElementsByTagName("colorway-selector"),
         "Found colorway selector element"
       );
+
+      ok(document.getElementById("colorway-name"), "colorway name exists");
+
+      ok(
+        document.getElementById("colorway-description"),
+        "colorway description exists"
+      );
+
+      const useFXHomeControls = document.getElementById("use-fx-home-controls");
+      ok(useFXHomeControls, "firefox home controls exists");
+      useFXHomeControls.toggleAttribute("hidden", false);
+      ok(
+        document.querySelector("#use-fx-home-controls > .reset-prompt"),
+        "firefox home controls reset prompt exists"
+      );
+      ok(
+        document.querySelector("#use-fx-home-controls > .success-prompt"),
+        "firefox home controls reset prompt exists"
+      );
     }
   );
 });

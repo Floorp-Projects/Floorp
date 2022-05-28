@@ -1081,6 +1081,7 @@ var SessionStoreInternal = {
           // Non-SHIP code calls this when the frame script is unloaded.
           this.onFinalTabStateUpdateComplete(aSubject);
         }
+        this._notifyOfClosedObjectsChange();
         break;
     }
   },
@@ -2532,6 +2533,9 @@ var SessionStoreInternal = {
     // Don't save private tabs
     let isPrivateWindow = PrivateBrowsingUtils.isWindowPrivate(aWindow);
     if (!isPrivateWindow && tabState.isPrivate) {
+      return;
+    }
+    if (aTab == aWindow.gFirefoxViewTab) {
       return;
     }
 
@@ -4114,6 +4118,9 @@ var SessionStoreInternal = {
 
     // update the internal state data for this window
     for (let tab of tabs) {
+      if (tab == aWindow.gFirefoxViewTab) {
+        continue;
+      }
       let tabData = TabState.collect(tab, TAB_CUSTOM_VALUES.get(tab));
       tabMap.set(tab, tabData);
       tabsData.push(tabData);

@@ -153,19 +153,7 @@ const DEFAULT_SEVERITY = 3;
 const DEFAULT_LEVEL = 2;
 const MAX_BLOCK_LEVEL = 3;
 
-// Remote Settings blocklist constants
-const PREF_BLOCKLIST_BUCKET = "services.blocklist.bucket";
-const PREF_BLOCKLIST_GFX_COLLECTION = "services.blocklist.gfx.collection";
-const PREF_BLOCKLIST_GFX_CHECKED_SECONDS = "services.blocklist.gfx.checked";
-const PREF_BLOCKLIST_GFX_SIGNER = "services.blocklist.gfx.signer";
-
-const PREF_BLOCKLIST_ADDONS_COLLECTION = "services.blocklist.addons.collection";
-const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS =
-  "services.blocklist.addons.checked";
-const PREF_BLOCKLIST_ADDONS_SIGNER = "services.blocklist.addons.signer";
-// Blocklist v3 - MLBF format.
-const PREF_BLOCKLIST_ADDONS3_CHECKED_SECONDS =
-  "services.blocklist.addons-mlbf.checked";
+const BLOCKLIST_BUCKET = "blocklists";
 
 const BlocklistTelemetry = {
   init() {
@@ -513,15 +501,10 @@ const GfxBlocklistRS = {
       return;
     }
     this._initialized = true;
-    this._client = RemoteSettings(
-      Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION),
-      {
-        bucketNamePref: PREF_BLOCKLIST_BUCKET,
-        lastCheckTimePref: PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
-        signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_SIGNER),
-        filterFunc: targetAppFilter,
-      }
-    );
+    this._client = RemoteSettings("gfx", {
+      bucketName: BLOCKLIST_BUCKET,
+      filterFunc: targetAppFilter,
+    });
     this.checkForEntries = this.checkForEntries.bind(this);
     this._client.on("sync", this.checkForEntries);
   },
@@ -745,15 +728,10 @@ const ExtensionBlocklistRS = {
       return;
     }
     this._initialized = true;
-    this._client = RemoteSettings(
-      Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_COLLECTION),
-      {
-        bucketNamePref: PREF_BLOCKLIST_BUCKET,
-        lastCheckTimePref: PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
-        signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_SIGNER),
-        filterFunc: this._filterItem,
-      }
-    );
+    this._client = RemoteSettings("addons", {
+      bucketName: BLOCKLIST_BUCKET,
+      filterFunc: this._filterItem,
+    });
     this._onUpdate = this._onUpdate.bind(this);
     this._client.on("sync", this._onUpdate);
   },
@@ -1111,8 +1089,7 @@ const ExtensionBlocklistMLBF = {
     }
     this._initialized = true;
     this._client = RemoteSettings("addons-bloomfilters", {
-      bucketName: "blocklists",
-      lastCheckTimePref: PREF_BLOCKLIST_ADDONS3_CHECKED_SECONDS,
+      bucketName: BLOCKLIST_BUCKET,
     });
     this._onUpdate = this._onUpdate.bind(this);
     this._client.on("sync", this._onUpdate);

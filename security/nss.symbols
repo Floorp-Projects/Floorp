@@ -570,10 +570,10 @@ SECMOD_GetDefaultModuleListLock
 SECMOD_GetInternalModule
 SECMOD_GetModuleSpecList
 SECMOD_GetReadLock
-SECMOD_HasRemovableSlots
 SECMOD_InternaltoPubMechFlags
 SECMOD_LoadModule
 SECMOD_LoadUserModule
+SECMOD_LockedModuleHasRemovableSlots
 SECMOD_OpenUserDB
 SECMOD_PubCipherFlagstoInternal
 SECMOD_PubMechFlagstoInternal

@@ -293,6 +293,8 @@ class gfxGDIFontList final : public gfxPlatformFontList {
         gfxPlatformFontList::PlatformFontList());
   }
 
+  virtual ~gfxGDIFontList() { AutoLock lock(mLock); }
+
   // initialize font lists
   nsresult InitFontListForPlatform() REQUIRES(mLock) override;
 

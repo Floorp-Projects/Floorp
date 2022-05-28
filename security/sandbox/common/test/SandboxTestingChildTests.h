@@ -23,10 +23,12 @@
 #    include <sys/time.h>
 #    include <sys/utsname.h>
 #    include <sched.h>
+#    include <sys/socket.h>
 #    include <sys/syscall.h>
 #    include <sys/un.h>
 #    include <linux/mempolicy.h>
 #    include "mozilla/ProcInfo_linux.h"
+#    include "mozilla/UniquePtrExtensions.h"
 #    ifdef MOZ_X11
 #      include "X11/Xlib.h"
 #      include "X11UndefineNone.h"
@@ -597,8 +599,21 @@ void RunTestsRDD(SandboxTestingChild* child) {
 
   RunTestsSched(child);
 
-  child->ErrnoTest("socket"_ns, false,
-                   [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
+  child->ErrnoTest("socket_inet"_ns, false,
+                   [] { return socket(AF_INET, SOCK_STREAM, 0); });
+
+  {
+    UniqueFileHandle fd(socket(AF_UNIX, SOCK_STREAM, 0));
+    child->ErrnoTest("socket_unix"_ns, true, [&] { return fd.get(); });
+
+    struct sockaddr_un sun {};
+    sun.sun_family = AF_UNIX;
+    strncpy(sun.sun_path, "/tmp/forbidden-sock", sizeof(sun.sun_path));
+
+    child->ErrnoValueTest("socket_unix_bind"_ns, ENOSYS, [&] {
+      return bind(fd.get(), (struct sockaddr*)&sun, sizeof(sun));
+    });
+  }
 
   child->ErrnoTest("uname"_ns, true, [] {
     struct utsname uts;
@@ -744,6 +759,12 @@ void RunTestsUtilityAudioDecoder(SandboxTestingChild* child) {
     // <numaif.h> not installed by default, let's call directly the syscall
     long rv = syscall(SYS_get_mempolicy, &numa_node, NULL, 0, (void*)&test_val,
                       MPOL_F_NODE | MPOL_F_ADDR);
+    return rv;
+  });
+  // set_mempolicy is not allowed in Generic Utility but is on AudioDecoder
+  child->ErrnoValueTest("set_mempolicy"_ns, ENOSYS, [&] {
+    // <numaif.h> not installed by default, let's call directly the syscall
+    long rv = syscall(SYS_set_mempolicy, 0, NULL, 0);
     return rv;
   });
 #  elif XP_MACOSX  // XP_LINUX

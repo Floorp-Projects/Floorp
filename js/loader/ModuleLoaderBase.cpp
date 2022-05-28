@@ -976,7 +976,7 @@ bool ModuleLoaderBase::InstantiateModuleGraph(ModuleLoadRequest* aRequest) {
   }
 
   JS::Rooted<JSObject*> module(jsapi.cx(), moduleScript->ModuleRecord());
-  if (!xpc::Scriptability::Get(module).Allowed()) {
+  if (!xpc::Scriptability::AllowedIfExists(module)) {
     return true;
   }
 
@@ -1091,7 +1091,7 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
   MOZ_ASSERT(module);
 
-  if (!xpc::Scriptability::Get(module).Allowed()) {
+  if (!xpc::Scriptability::AllowedIfExists(module)) {
     return NS_OK;
   }
 

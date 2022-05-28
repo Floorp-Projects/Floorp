@@ -3,15 +3,17 @@
 
 "use strict";
 
-const utilityProcessTest = Cc[
-  "@mozilla.org/utility-process-test;1"
-].createInstance(Ci.nsIUtilityProcessTest);
+const utilityProcessTest = () => {
+  return Cc["@mozilla.org/utility-process-test;1"].createInstance(
+    Ci.nsIUtilityProcessTest
+  );
+};
 
 const kGenericUtility = 0x0;
 
 async function startUtilityProcess() {
   info("Start a UtilityProcess");
-  return utilityProcessTest.startProcess();
+  return utilityProcessTest().startProcess();
 }
 
 async function cleanUtilityProcessShutdown(utilityPid) {
@@ -22,7 +24,7 @@ async function cleanUtilityProcessShutdown(utilityPid) {
     "ipc:utility-shutdown",
     (subject, data) => parseInt(data, 10) === utilityPid
   );
-  await utilityProcessTest.stopProcess();
+  await utilityProcessTest().stopProcess();
 
   let [subject, data] = await utilityProcessGone;
   ok(
@@ -44,15 +46,17 @@ async function addMediaTab(src) {
   });
   const browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
-  await SpecialPowers.spawn(browser, [src], async src => {
-    const ROOT = "https://example.com/browser/ipc/glue/test/browser";
-    let audio = content.document.createElement("audio");
-    audio.setAttribute("controls", "true");
-    audio.setAttribute("loop", true);
-    audio.src = `${ROOT}/${src}`;
-    content.document.body.appendChild(audio);
-  });
+  await SpecialPowers.spawn(browser, [src], createAudioElement);
   return tab;
+}
+
+async function play(tab, expectUtility, expectContent = false) {
+  let browser = tab.linkedBrowser;
+  return SpecialPowers.spawn(
+    browser,
+    [expectUtility, expectContent],
+    checkAudioDecoder
+  );
 }
 
 async function stop(tab) {
@@ -63,37 +67,72 @@ async function stop(tab) {
   });
 }
 
-async function play(tab, expectUtility) {
-  let browser = tab.linkedBrowser;
-  return SpecialPowers.spawn(browser, [expectUtility], async expectUtility => {
-    let audio = content.document.querySelector("audio");
-    const checkPromise = new Promise((resolve, reject) => {
-      const timeUpdateHandler = async ev => {
-        const debugInfo = await SpecialPowers.wrap(audio).mozRequestDebugInfo();
-        const audioDecoderName = debugInfo.decoder.reader.audioDecoderName;
-        const isUtility = audioDecoderName.indexOf("(Utility remote)") > 0;
-        const isRDD = audioDecoderName.indexOf("(RDD remote)") > 0;
-        const isOk = expectUtility === true ? isUtility : isRDD;
+async function createAudioElement(src) {
+  const doc = typeof content !== "undefined" ? content.document : document;
+  const ROOT = "https://example.com/browser/ipc/glue/test/browser";
+  let audio = doc.createElement("audio");
+  audio.setAttribute("controls", "true");
+  audio.setAttribute("loop", true);
+  audio.src = `${ROOT}/${src}`;
+  doc.body.appendChild(audio);
+}
 
-        ok(isOk, `playback was from expected decoder ${audioDecoderName}`);
+async function checkAudioDecoder(expectUtility, expectContent = false) {
+  const doc = typeof content !== "undefined" ? content.document : document;
+  let audio = doc.querySelector("audio");
+  const checkPromise = new Promise((resolve, reject) => {
+    const timeUpdateHandler = async ev => {
+      const debugInfo = await SpecialPowers.wrap(audio).mozRequestDebugInfo();
+      const audioDecoderName = debugInfo.decoder.reader.audioDecoderName;
+      const isUtility = audioDecoderName.indexOf("(Utility remote)") > 0;
+      const isRDD = audioDecoderName.indexOf("(RDD remote)") > 0;
+      const isJavaRemote = audioDecoderName.indexOf("(remote)") > 0;
+      const isContent = !isUtility && !isRDD;
+      const isOk =
+        (expectUtility === true && isUtility && !isJavaRemote) ||
+        (expectUtility === false && isRDD && !isJavaRemote) ||
+        (expectContent === true && isContent);
 
-        if (isOk) {
-          resolve();
-        } else {
-          reject();
-        }
-      };
+      ok(
+        isOk,
+        `playback ${audio.src} was from expected decoder ${audioDecoderName}`
+      );
 
-      audio.addEventListener("timeupdate", timeUpdateHandler, { once: true });
-    });
+      if (isOk) {
+        resolve();
+      } else {
+        reject();
+      }
+    };
 
-    ok(
-      await audio.play().then(
-        _ => true,
-        _ => false
-      ),
-      "audio started playing"
-    );
-    await checkPromise;
+    audio.addEventListener("timeupdate", timeUpdateHandler, { once: true });
   });
+
+  ok(
+    await audio.play().then(
+      _ => true,
+      _ => false
+    ),
+    "audio started playing"
+  );
+  return checkPromise;
+}
+
+async function runMochitestUtilityAudio(
+  src,
+  { expectUtility, expectContent = false } = {}
+) {
+  info(`Add media: ${src}`);
+  await createAudioElement(src);
+  let audio = document.querySelector("audio");
+  ok(audio, "Found an audio element created");
+
+  info(`Play media: ${src}`);
+  await checkAudioDecoder(expectUtility, expectContent);
+
+  info(`Pause media: ${src}`);
+  await audio.pause();
+
+  info(`Remove media: ${src}`);
+  document.body.removeChild(audio);
 }

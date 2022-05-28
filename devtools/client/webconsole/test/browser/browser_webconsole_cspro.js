@@ -32,15 +32,15 @@ const CSP_REPORT_MSG =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const onCspViolationMessage = waitForMessage(
+  const onCspViolationMessage = waitForMessageByType(
     hud,
     CSP_VIOLATION_MSG,
-    ".message.error"
+    ".error"
   );
-  const onCspReportMessage = waitForMessage(
+  const onCspReportMessage = waitForMessageByType(
     hud,
     CSP_REPORT_MSG,
-    ".message.error"
+    ".error"
   );
 
   info("Load a page with CSP warnings.");

@@ -40,6 +40,24 @@ body > header {
   padding: .2em 1em;
 }
 
+#use-fx-home-controls:not(.success) > .success-prompt,
+#use-fx-home-controls.success > .reset-prompt {
+  display: none;
+}
+
+#use-fx-home-controls > .success-prompt::before {
+  display: inline-block;
+  content: "";
+  background: var(--green-50) url('chrome://global/skin/icons/check.svg') center center no-repeat;
+  -moz-context-properties: fill;
+  fill: white;
+  width: 22px;
+  height: 22px;
+  border-radius: 15px;
+  vertical-align: middle;
+  margin-inline-end: 0.5em;
+}
+
 body > section {
   grid-area: main;
 }
@@ -48,6 +66,7 @@ fieldset {
   border: none;
   display: flex;
   flex-direction: row;
+  padding: 0;
 }
 
 input[type="radio"] {
@@ -93,4 +112,22 @@ input[type="radio"]:checked,
 input[type="radio"]:enabled:checked:hover,
 input[type="radio"]:enabled:checked:hover:active {
   background-color: unset;
+}
+
+#colorway-customization-panel {
+  padding-inline: 24px;
+}
+
+#colorway-details {
+  margin-top: 50px;
+}
+
+#colorway-name {
+  font-size: 2em;
+  margin-block: 0 37px;
+}
+
+#colorway-description {
+  font-size: 1.1em;
+  margin-block: 0 24px;
 }

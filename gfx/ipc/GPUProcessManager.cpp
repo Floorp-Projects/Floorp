@@ -176,6 +176,22 @@ void GPUProcessManager::OnPreferenceChange(const char16_t* aData) {
   }
 }
 
+void GPUProcessManager::ResetProcessStable() {
+  mTotalProcessAttempts++;
+  mProcessStable = false;
+  mProcessAttemptLastTime = TimeStamp::Now();
+}
+
+bool GPUProcessManager::IsProcessStable(const TimeStamp& aNow) {
+  if (mTotalProcessAttempts > 0) {
+    auto delta = (int32_t)(aNow - mProcessAttemptLastTime).ToMilliseconds();
+    if (delta < StaticPrefs::layers_gpu_process_stable_min_uptime_ms()) {
+      return false;
+    }
+  }
+  return mProcessStable;
+}
+
 bool GPUProcessManager::LaunchGPUProcess() {
   if (mProcess) {
     return true;
@@ -204,18 +220,11 @@ bool GPUProcessManager::LaunchGPUProcess() {
   // If the process didn't live long enough, reset the stable flag so that we
   // don't end up in a restart loop.
   auto newTime = TimeStamp::Now();
-  if (mTotalProcessAttempts > 0) {
-    auto delta = (int32_t)(newTime - mProcessAttemptLastTime).ToMilliseconds();
-    if (delta < StaticPrefs::layers_gpu_process_stable_min_uptime_ms()) {
-      mProcessStable = false;
-    }
-  }
-  mProcessAttemptLastTime = newTime;
-
-  if (!mProcessStable) {
+  if (IsProcessStable(newTime)) {
     mUnstableProcessAttempts++;
   }
   mTotalProcessAttempts++;
+  mProcessAttemptLastTime = newTime;
   mProcessStable = false;
 
   std::vector<std::string> extraArgs;
@@ -250,9 +259,17 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
     gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
   }
 
-  bool wantRestart = gfxPlatform::FallbackFromAcceleration(
-      FeatureStatus::Unavailable, "GPU Process is disabled",
-      "FEATURE_FAILURE_GPU_PROCESS_DISABLED"_ns);
+  bool wantRestart;
+  if (mLastError) {
+    wantRestart =
+        FallbackFromAcceleration(mLastError.value(), mLastErrorMsg.ref());
+    mLastError.reset();
+    mLastErrorMsg.reset();
+  } else {
+    wantRestart = gfxPlatform::FallbackFromAcceleration(
+        FeatureStatus::Unavailable, "GPU Process is disabled",
+        "FEATURE_FAILURE_GPU_PROCESS_DISABLED"_ns);
+  }
   if (aAllowRestart && wantRestart) {
     // The fallback method can make use of the GPU process.
     return false;
@@ -271,6 +288,9 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
 
   DestroyProcess();
   ShutdownVsyncIOThread();
+
+  // Now the stability state is based upon the in process compositor session.
+  ResetProcessStable();
 
   // We may have been in the middle of guaranteeing our various services are
   // available when one failed. Some callers may fallback to using the same
@@ -318,6 +338,10 @@ bool GPUProcessManager::EnsureGPUReady() {
     DisableGPUProcess("Failed to initialize GPU process");
   }
 
+  // This is the first time we are trying to use the in-process compositor.
+  if (mTotalProcessAttempts == 0) {
+    ResetProcessStable();
+  }
   return false;
 }
 
@@ -521,47 +545,71 @@ void GPUProcessManager::SimulateDeviceReset() {
   }
 }
 
-bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
-                                               const nsCString& aMsg) {
-  if (!gfx::gfxVars::UseWebRender()) {
-    return false;
-  }
-  // Disable WebRender
-  bool wantRestart;
+bool GPUProcessManager::FallbackFromAcceleration(wr::WebRenderError aError,
+                                                 const nsCString& aMsg) {
   if (aError == wr::WebRenderError::INITIALIZE) {
-    wantRestart = gfxPlatform::FallbackFromAcceleration(
+    return gfxPlatform::FallbackFromAcceleration(
         gfx::FeatureStatus::Unavailable, "WebRender initialization failed",
         aMsg);
   } else if (aError == wr::WebRenderError::MAKE_CURRENT) {
-    wantRestart = gfxPlatform::FallbackFromAcceleration(
+    return gfxPlatform::FallbackFromAcceleration(
         gfx::FeatureStatus::Unavailable,
         "Failed to make render context current",
         "FEATURE_FAILURE_WEBRENDER_MAKE_CURRENT"_ns);
   } else if (aError == wr::WebRenderError::RENDER) {
-    wantRestart = gfxPlatform::FallbackFromAcceleration(
+    return gfxPlatform::FallbackFromAcceleration(
         gfx::FeatureStatus::Unavailable, "Failed to render WebRender",
         "FEATURE_FAILURE_WEBRENDER_RENDER"_ns);
   } else if (aError == wr::WebRenderError::NEW_SURFACE) {
     // If we cannot create a new Surface even in the final fallback
     // configuration then force a crash.
-    wantRestart = gfxPlatform::FallbackFromAcceleration(
+    return gfxPlatform::FallbackFromAcceleration(
         gfx::FeatureStatus::Unavailable, "Failed to create new surface",
         "FEATURE_FAILURE_WEBRENDER_NEW_SURFACE"_ns,
         /* aCrashAfterFinalFallback */ true);
   } else if (aError == wr::WebRenderError::BEGIN_DRAW) {
-    wantRestart = gfxPlatform::FallbackFromAcceleration(
+    return gfxPlatform::FallbackFromAcceleration(
         gfx::FeatureStatus::Unavailable, "BeginDraw() failed",
         "FEATURE_FAILURE_WEBRENDER_BEGIN_DRAW"_ns);
   } else if (aError == wr::WebRenderError::EXCESSIVE_RESETS) {
-    wantRestart = gfxPlatform::FallbackFromAcceleration(
+    return gfxPlatform::FallbackFromAcceleration(
         gfx::FeatureStatus::Unavailable, "Device resets exceeded threshold",
         "FEATURE_FAILURE_WEBRENDER_EXCESSIVE_RESETS"_ns);
   } else {
     MOZ_ASSERT_UNREACHABLE("Invalid value");
-    wantRestart = gfxPlatform::FallbackFromAcceleration(
+    return gfxPlatform::FallbackFromAcceleration(
         gfx::FeatureStatus::Unavailable, "Unhandled failure reason",
         "FEATURE_FAILURE_WEBRENDER_UNHANDLED"_ns);
   }
+}
+
+bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
+                                               const nsCString& aMsg) {
+  if (!gfx::gfxVars::UseWebRender()) {
+    return false;
+  }
+
+  // If we have a stable compositor process, this may just be due to an OOM or
+  // bad driver state. In that case, we should consider restarting the GPU
+  // process, or simulating a device reset to teardown the compositors to
+  // hopefully alleviate the situation.
+  if (IsProcessStable(TimeStamp::Now())) {
+    if (mProcess) {
+      mProcess->KillProcess();
+    } else {
+      SimulateDeviceReset();
+    }
+
+    mLastError = Some(aError);
+    mLastErrorMsg = Some(aMsg);
+    return false;
+  }
+
+  mLastError.reset();
+  mLastErrorMsg.reset();
+
+  // Disable WebRender
+  bool wantRestart = FallbackFromAcceleration(aError, aMsg);
   gfx::gfxVars::SetUseWebRenderDCompVideoOverlayWin(false);
 
   // If we still have the GPU process, and we fallback to a new configuration
@@ -837,6 +885,11 @@ void GPUProcessManager::DestroyInProcessCompositorSessions() {
   for (const auto& session : sessions) {
     session->NotifySessionLost();
   }
+
+  // Ensure our stablility state is reset so that we don't necessarily crash
+  // right away on some WebRender errors.
+  CompositorBridgeParent::ResetStable();
+  ResetProcessStable();
 }
 
 void GPUProcessManager::NotifyRemoteActorDestroyed(

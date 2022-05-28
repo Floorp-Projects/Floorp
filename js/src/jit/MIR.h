@@ -2920,7 +2920,10 @@ class MCreateArgumentsObject : public MUnaryInstruction,
 // Eager initialization of arguments object for inlined function
 class MCreateInlinedArgumentsObject : public MVariadicInstruction,
                                       public NoFloatPolicyAfter<0>::Data {
-  MCreateInlinedArgumentsObject() : MVariadicInstruction(classOpcode) {
+  CompilerGCPointer<ArgumentsObject*> templateObj_;
+
+  explicit MCreateInlinedArgumentsObject(ArgumentsObject* templateObj)
+      : MVariadicInstruction(classOpcode), templateObj_(templateObj) {
     setResultType(MIRType::Object);
   }
 
@@ -2931,8 +2934,11 @@ class MCreateInlinedArgumentsObject : public MVariadicInstruction,
   static MCreateInlinedArgumentsObject* New(TempAllocator& alloc,
                                             MDefinition* callObj,
                                             MDefinition* callee,
-                                            MDefinitionVector& args);
+                                            MDefinitionVector& args,
+                                            ArgumentsObject* templateObj);
   NAMED_OPERANDS((0, getCallObject), (1, getCallee))
+
+  ArgumentsObject* templateObject() const { return templateObj_; }
 
   MDefinition* getArg(uint32_t idx) const {
     return getOperand(idx + NumNonArgumentOperands);

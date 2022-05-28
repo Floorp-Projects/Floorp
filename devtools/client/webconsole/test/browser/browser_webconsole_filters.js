@@ -25,8 +25,8 @@ add_task(async function() {
   });
 
   // Wait for the messages
-  await waitFor(() => findMessage(hud, "status=404", ".network.error"));
-  await waitFor(() => findMessage(hud, "status=500", ".network.error"));
+  await waitFor(() => findErrorMessage(hud, "status=404", ".network"));
+  await waitFor(() => findErrorMessage(hud, "status=500", ".network"));
 
   // Check defaults.
 
@@ -42,7 +42,7 @@ add_task(async function() {
   // Check that messages are shown as expected. This depends on cached messages being
   // shown.
   is(
-    findMessages(hud, "").length,
+    findAllMessages(hud).length,
     7,
     "Messages of all levels shown when filters are on."
   );
@@ -51,7 +51,7 @@ add_task(async function() {
   await setFilterState(hud, {
     error: false,
   });
-  await waitFor(() => findMessages(hud, "").length == 4);
+  await waitFor(() => findAllMessages(hud).length == 4);
   ok(true, "When a filter is turned off, its messages are not shown.");
 
   // Check that the ui settings were persisted.
@@ -76,7 +76,7 @@ async function testFilterPersistence() {
     "Filter button setting is persisted"
   );
   is(
-    findMessages(hud, "").length,
+    findAllMessages(hud).length,
     4,
     "testFilterPersistence: Messages of all levels but error shown."
   );

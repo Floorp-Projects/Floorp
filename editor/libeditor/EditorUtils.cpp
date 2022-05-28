@@ -47,7 +47,7 @@ EditActionResult& EditActionResult::operator|=(
     const MoveNodeResult& aMoveNodeResult) {
   mHandled |= aMoveNodeResult.Handled();
   // When both result are same, keep the result.
-  if (mRv == aMoveNodeResult.Rv()) {
+  if (mRv == aMoveNodeResult.inspectErr()) {
     return *this;
   }
   // If one of the result is NS_ERROR_EDITOR_DESTROYED, use it since it's
@@ -58,11 +58,11 @@ EditActionResult& EditActionResult::operator|=(
   }
   // If aMoveNodeResult hasn't been set explicit nsresult value, keep current
   // result.
-  if (aMoveNodeResult.Rv() == NS_ERROR_NOT_INITIALIZED) {
+  if (aMoveNodeResult.NotInitialized()) {
     return *this;
   }
   // If one of the results is error, use NS_ERROR_FAILURE.
-  if (Failed() || aMoveNodeResult.Failed()) {
+  if (Failed() || aMoveNodeResult.isErr()) {
     mRv = NS_ERROR_FAILURE;
     return *this;
   }

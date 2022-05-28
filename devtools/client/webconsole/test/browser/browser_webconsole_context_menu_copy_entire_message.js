@@ -67,7 +67,9 @@ async function testMessagesCopy(hud, timestamp) {
   const newLineString = "\n";
 
   info("Test copy menu item for the simple log");
-  let message = await waitFor(() => findMessage(hud, "simple text message"));
+  let message = await waitFor(() =>
+    findConsoleAPIMessage(hud, "simple text message")
+  );
   let clipboardText = await copyMessageContent(hud, message);
   ok(true, "Clipboard text was found and saved");
 
@@ -90,7 +92,7 @@ async function testMessagesCopy(hud, timestamp) {
   }
 
   info("Test copy menu item for the console.trace message");
-  message = await waitFor(() => findMessage(hud, "console.trace"));
+  message = await waitFor(() => findConsoleAPIMessage(hud, "console.trace"));
   // Wait for the stacktrace to be rendered.
   await waitFor(() => message.querySelector(".frames"));
   clipboardText = await copyMessageContent(hud, message);
@@ -125,7 +127,7 @@ async function testMessagesCopy(hud, timestamp) {
   );
 
   info("Test copy menu item for the error message");
-  message = await waitFor(() => findMessage(hud, "Error:"));
+  message = await waitFor(() => findConsoleAPIMessage(hud, "Error:"));
   // Wait for the stacktrace to be rendered.
   await waitFor(() => message.querySelector(".frames"));
   clipboardText = await copyMessageContent(hud, message);
@@ -154,7 +156,7 @@ async function testMessagesCopy(hud, timestamp) {
   );
 
   info("Test copy menu item for the reference error message");
-  message = await waitFor(() => findMessage(hud, "ReferenceError:"));
+  message = await waitFor(() => findErrorMessage(hud, "ReferenceError:"));
   clipboardText = await copyMessageContent(hud, message);
   ok(true, "Clipboard text was found and saved");
   lines = clipboardText.split(newLineString);
@@ -185,7 +187,7 @@ async function testMessagesCopy(hud, timestamp) {
     "The Learn More text wasn't put in the clipboard"
   );
 
-  message = await waitFor(() => findMessage(hud, "repeated 2"));
+  message = await waitFor(() => findConsoleAPIMessage(hud, "repeated 2"));
   clipboardText = await copyMessageContent(hud, message);
   ok(true, "Clipboard text was found and saved");
 }

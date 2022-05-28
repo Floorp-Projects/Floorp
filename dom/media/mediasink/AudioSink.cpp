@@ -20,12 +20,12 @@
 
 namespace mozilla {
 
-extern LazyLogModule gMediaDecoderLog;
-#define SINK_LOG(msg, ...)                   \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, \
+mozilla::LazyLogModule gAudioSinkLog("AudioSink");
+#define SINK_LOG(msg, ...)                \
+  MOZ_LOG(gAudioSinkLog, LogLevel::Debug, \
           ("AudioSink=%p " msg, this, ##__VA_ARGS__))
-#define SINK_LOG_V(msg, ...)                   \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, \
+#define SINK_LOG_V(msg, ...)                \
+  MOZ_LOG(gAudioSinkLog, LogLevel::Verbose, \
           ("AudioSink=%p " msg, this, ##__VA_ARGS__))
 
 // The amount of audio frames that is used to fuzz rounding errors.
@@ -34,11 +34,9 @@ static const int64_t AUDIO_FUZZ_FRAMES = 1;
 using media::TimeUnit;
 
 AudioSink::AudioSink(AbstractThread* aThread,
-                     MediaQueue<AudioData>& aAudioQueue,
-                     const TimeUnit& aStartTime, const AudioInfo& aInfo,
+                     MediaQueue<AudioData>& aAudioQueue, const AudioInfo& aInfo,
                      AudioDeviceInfo* aAudioDevice)
-    : mStartTime(aStartTime),
-      mInfo(aInfo),
+    : mInfo(aInfo),
       mAudioDevice(aAudioDevice),
       mPlaying(true),
       mWritten(0),
@@ -62,12 +60,83 @@ AudioSink::AudioSink(AbstractThread* aThread,
           capacitySeconds * static_cast<float>(mOutputChannels * mOutputRate)));
   SINK_LOG("Ringbuffer has space for %u elements (%lf seconds)",
            mProcessedSPSCQueue->Capacity(), capacitySeconds);
+  // Determine if the data is likely to be audible when the stream will be
+  // ready, if possible.
+  RefPtr<AudioData> frontPacket = mAudioQueue.PeekFront();
+  if (frontPacket) {
+    mAudibilityMonitor.ProcessInterleaved(frontPacket->Data(),
+                                          frontPacket->mChannels);
+    mIsAudioDataAudible = mAudibilityMonitor.RecentlyAudible();
+    SINK_LOG("New AudioSink -- audio is likely to be %s",
+             mIsAudioDataAudible ? "audible" : "inaudible");
+  } else {
+    // If no packets are available, consider the audio audible.
+    mIsAudioDataAudible = true;
+    SINK_LOG(
+        "New AudioSink -- no audio packet avaialble, considering the stream "
+        "audible");
+  }
 }
 
-AudioSink::~AudioSink() = default;
+AudioSink::~AudioSink() {
+  // Generally instances of AudioSink should be properly Shutdown manually.
+  // The only way deleting an AudioSink without shutdown an happen is if the
+  // dispatch back to the MDSM thread after initializing it asynchronously
+  // fails. When that's the case, the stream has been initialized but not
+  // started. Manually shutdown the AudioStream in this case.
+  if (mAudioStream) {
+    mAudioStream->Shutdown();
+  }
+}
 
-Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> AudioSink::Start(
-    const PlaybackParams& aParams) {
+nsresult AudioSink::InitializeAudioStream(
+    const PlaybackParams& aParams,
+    AudioSink::InitializationType aInitializationType) {
+  if (aInitializationType == AudioSink::InitializationType::UNMUTING) {
+    // Consider the stream to be audible immediately, before initialization
+    // finishes when unmuting, in case initialization takes some time and it
+    // looked audible when the AudioSink was created.
+    mAudibleEvent.Notify(mIsAudioDataAudible);
+    SINK_LOG("InitializeAudioStream (Unmuting) notifying that audio is %s",
+             mIsAudioDataAudible ? "audible" : "inaudible");
+  } else {
+    // If not unmuting, the audibility event will be dispatched as usual,
+    // inspecting the audio content as it's being played and signaling the
+    // audibility event when a different in state is detected.
+    SINK_LOG("InitializeAudioStream (initial)");
+    mIsAudioDataAudible = false;
+  }
+
+  // When AudioQueue is empty, there is no way to know the channel layout of
+  // the coming audio data, so we use the predefined channel map instead.
+  AudioConfig::ChannelLayout::ChannelMap channelMap =
+      AudioConfig::ChannelLayout(mOutputChannels).Map();
+  // The layout map used here is already processed by mConverter with
+  // mOutputChannels into SMPTE format, so there is no need to worry if
+  // StaticPrefs::accessibility_monoaudio_enable() or
+  // StaticPrefs::media_forcestereo_enabled() is applied.
+  MOZ_ASSERT(!mAudioStream);
+  mAudioStream =
+      new AudioStream(*this, mOutputRate, mOutputChannels, channelMap);
+  nsresult rv = mAudioStream->Init(mAudioDevice);
+  if (NS_FAILED(rv)) {
+    mAudioStream->Shutdown();
+    mAudioStream = nullptr;
+    return rv;
+  }
+
+  // Set playback params before calling Start() so they can take effect
+  // as soon as the 1st DataCallback of the AudioStream fires.
+  mAudioStream->SetVolume(aParams.mVolume);
+  mAudioStream->SetPlaybackRate(aParams.mPlaybackRate);
+  mAudioStream->SetPreservesPitch(aParams.mPreservesPitch);
+
+  return NS_OK;
+}
+
+nsresult AudioSink::Start(
+    const media::TimeUnit& aStartTime,
+    MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise) {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
   mAudioQueueListener = mAudioQueue.PushEvent().Connect(
@@ -77,15 +146,13 @@ Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> AudioSink::Start(
   mProcessedQueueListener =
       mAudioPopped.Connect(mOwnerThread, this, &AudioSink::OnAudioPopped);
 
+  mStartTime = aStartTime;
+
   // To ensure at least one audio packet will be popped from AudioQueue and
   // ready to be played.
   NotifyAudioNeeded();
-  nsresult rv = InitializeAudioStream(aParams);
-  if (NS_FAILED(rv)) {
-    return Err(rv);
-  }
 
-  return mAudioStream->Start();
+  return mAudioStream->Start(aEndedPromise);
 }
 
 TimeUnit AudioSink::GetPosition() {
@@ -119,18 +186,86 @@ TimeUnit AudioSink::UnplayedDuration() const {
   return TimeUnit::FromMicroseconds(AudioQueuedInRingBufferMS());
 }
 
-void AudioSink::Shutdown() {
+void AudioSink::ReenqueueUnplayedAudioDataIfNeeded() {
+  // This is OK: the AudioStream has been shut down. Shutdown guarantees that
+  // the audio callback thread won't call back again.
+  mProcessedSPSCQueue->ResetThreadIds();
+
+  // construct an AudioData
+  int sampleCount = mProcessedSPSCQueue->AvailableRead();
+
+  if (!sampleCount) {
+    return;
+  }
+
+  uint32_t channelCount;
+  uint32_t rate;
+  if (mConverter) {
+    channelCount = mConverter->OutputConfig().Channels();
+    rate = mConverter->OutputConfig().Rate();
+  } else {
+    channelCount = mOutputChannels;
+    rate = mOutputRate;
+  }
+
+  uint32_t frameCount = sampleCount / channelCount;
+  auto duration = FramesToTimeUnit(frameCount, rate);
+  if (!duration.IsValid()) {
+    NS_WARNING("Int overflow in AudioSink");
+    mErrored = true;
+    return;
+  }
+
+  AlignedAudioBuffer queuedAudio(sampleCount);
+  DebugOnly<int> samplesRead =
+      mProcessedSPSCQueue->Dequeue(queuedAudio.Data(), sampleCount);
+  MOZ_ASSERT(samplesRead == sampleCount);
+
+  // Extrapolate mOffset, mTime from the front of the queue
+  // We can't really find a good value for `mOffset`, so we take what we have
+  // at the front of the queue.
+  // For `mTime`, assume there hasn't been a discontinuity recently.
+  RefPtr<AudioData> frontPacket = mAudioQueue.PeekFront();
+  uint32_t offset;
+  TimeUnit time;
+  if (!frontPacket) {
+    // We do our best here, but it's not going to be perfect.
+    offset = 0;
+    time = std::max(GetPosition() - duration, TimeUnit::Zero());
+  } else {
+    offset = frontPacket->mOffset;
+    time = frontPacket->mTime - duration;
+  }
+  RefPtr<AudioData> data =
+      new AudioData(offset, time, std::move(queuedAudio), channelCount, rate);
+  MOZ_DIAGNOSTIC_ASSERT(duration == data->mDuration, "must be equal");
+
+  SINK_LOG(
+      "Muting: Pushing back %u frames (%lfms) from the ring buffer back into "
+      "the audio queue",
+      frameCount, static_cast<float>(frameCount) / rate);
+
+  mAudioQueue.PushFront(data);
+}
+
+Maybe<MozPromiseHolder<MediaSink::EndedPromise>> AudioSink::Shutdown(
+    ShutdownCause aShutdownCause) {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-  mAudioQueueListener.Disconnect();
-  mAudioQueueFinishListener.Disconnect();
-  mProcessedQueueListener.Disconnect();
+  mAudioQueueListener.DisconnectIfExists();
+  mAudioQueueFinishListener.DisconnectIfExists();
+  mProcessedQueueListener.DisconnectIfExists();
+
+  Maybe<MozPromiseHolder<MediaSink::EndedPromise>> rv;
 
   if (mAudioStream) {
-    mAudioStream->Shutdown();
+    rv = mAudioStream->Shutdown(aShutdownCause);
     mAudioStream = nullptr;
+    ReenqueueUnplayedAudioDataIfNeeded();
   }
   mProcessedQueueFinished = true;
+
+  return rv;
 }
 
 void AudioSink::SetVolume(double aVolume) {
@@ -171,33 +306,6 @@ void AudioSink::SetPlaying(bool aPlaying) {
     mAudioStream->Resume();
   }
   mPlaying = aPlaying;
-}
-
-nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
-  // When AudioQueue is empty, there is no way to know the channel layout of
-  // the coming audio data, so we use the predefined channel map instead.
-  AudioConfig::ChannelLayout::ChannelMap channelMap =
-      mConverter ? mConverter->OutputConfig().Layout().Map()
-                 : AudioConfig::ChannelLayout(mOutputChannels).Map();
-  // The layout map used here is already processed by mConverter with
-  // mOutputChannels into SMPTE format, so there is no need to worry if
-  // StaticPrefs::accessibility_monoaudio_enable() or
-  // StaticPrefs::media_forcestereo_enabled() is applied.
-  mAudioStream =
-      new AudioStream(*this, mOutputRate, mOutputChannels, channelMap);
-  nsresult rv = mAudioStream->Init(mAudioDevice);
-  if (NS_FAILED(rv)) {
-    mAudioStream->Shutdown();
-    mAudioStream = nullptr;
-    return rv;
-  }
-
-  // Set playback params before calling Start() so they can take effect
-  // as soon as the 1st DataCallback of the AudioStream fires.
-  mAudioStream->SetVolume(aParams.mVolume);
-  mAudioStream->SetPlaybackRate(aParams.mPlaybackRate);
-  mAudioStream->SetPreservesPitch(aParams.mPreservesPitch);
-  return NS_OK;
 }
 
 TimeUnit AudioSink::GetEndTime() const {
@@ -266,6 +374,8 @@ void AudioSink::CheckIsAudible(const Span<AudioDataValue>& aInterleaved,
 
   if (isAudible != mIsAudioDataAudible) {
     mIsAudioDataAudible = isAudible;
+    SINK_LOG("Notifying that audio is now %s",
+             mIsAudioDataAudible ? "audible" : "inaudible");
     mAudibleEvent.Notify(mIsAudioDataAudible);
   }
 }
@@ -294,7 +404,8 @@ void AudioSink::NotifyAudioNeeded() {
              "Not called from the owner's thread");
 
   while (mAudioQueue.GetSize() &&
-         AudioQueuedInRingBufferMS() < mProcessedQueueThresholdMS) {
+         AudioQueuedInRingBufferMS() <
+             static_cast<uint32_t>(mProcessedQueueThresholdMS)) {
     // Check if there's room in our ring buffer.
     if (mAudioQueue.PeekFront()->Frames() >
         SampleToFrame(mProcessedSPSCQueue->AvailableWrite())) {

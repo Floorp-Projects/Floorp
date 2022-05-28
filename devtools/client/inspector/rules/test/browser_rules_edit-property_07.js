@@ -6,17 +6,24 @@
 // Tests that adding multiple values will enable the property even if the
 // property does not change, and that the extra values are added correctly.
 
-const TEST_URI = `
-  <style type='text/css'>
-  #testid {
-    background-color: #f00;
-  }
-  </style>
+const STYLE = "#testid { background-color: #f00 }";
+
+const TEST_URI_INLINE_SHEET = `
+  <style>${STYLE}</style>
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+const TEST_URI_CONSTRUCTED_SHEET = `
+  <div id='testid'>Styled Node</div>
+  <script>
+    let sheet = new CSSStyleSheet();
+    sheet.replaceSync("${STYLE}");
+    document.adoptedStyleSheets.push(sheet);
+  </script>
+`;
+
+async function runTest(testUri) {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(testUri));
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
@@ -61,4 +68,12 @@ add_task(async function() {
     "rgb(255, 0, 0)",
     "red color is set."
   );
+}
+
+add_task(async function test_inline_sheet() {
+  await runTest(TEST_URI_INLINE_SHEET);
+});
+
+add_task(async function test_constructed_sheet() {
+  await runTest(TEST_URI_CONSTRUCTED_SHEET);
 });

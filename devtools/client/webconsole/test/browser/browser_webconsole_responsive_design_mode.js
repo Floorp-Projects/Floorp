@@ -29,7 +29,7 @@ add_task(async function() {
   info("Open the console");
   const hud = await openConsole(tab);
   await waitFor(
-    () => findMessage(hud, "Cached message"),
+    () => findConsoleAPIMessage(hud, "Cached message"),
     "Cached message isn't displayed in the console output"
   );
   ok(true, "Cached message is displayed in the console");
@@ -40,7 +40,7 @@ add_task(async function() {
   });
 
   await waitFor(
-    () => findMessage(hud, "Live message"),
+    () => findConsoleAPIMessage(hud, "Live message"),
     "Live message isn't displayed in the console output"
   );
   ok(true, "Live message is displayed in the console");

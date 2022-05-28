@@ -5,12 +5,13 @@
 /*
 ** File:        nsrwlock.h
 ** Description: API to basic reader-writer lock functions of NSS.
-**  These are re-entrant reader writer locks; that is,
+**  These locks allow re-entry from writers but not readers. That is,
 **  If I hold the write lock, I can ask for it and get it again.
 **  If I hold the write lock, I can also ask for and get a read lock.
 **      I can then release the locks in any order (read or write).
+**  If I hold a read lock, I must not ask for another read lock or
+**      the write lock.
 **  I must release each lock type as many times as I acquired it.
-**  Otherwise, these are normal reader/writer locks.
 **
 ** For deadlock detection, locks should be ranked, and no lock may be aquired
 ** while I hold a lock of higher rank number.

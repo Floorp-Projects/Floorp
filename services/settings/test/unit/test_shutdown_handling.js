@@ -99,9 +99,7 @@ add_task(async function test_shutdown_immediate_abort() {
 });
 
 add_task(async function test_shutdown_worker() {
-  let client = new RemoteSettingsClient("language-dictionaries", {
-    bucketNamePref: "services.settings.default_bucket",
-  });
+  let client = new RemoteSettingsClient("language-dictionaries");
   const before = await client.get({ syncIfEmpty: false });
   Assert.equal(before.length, 0);
 

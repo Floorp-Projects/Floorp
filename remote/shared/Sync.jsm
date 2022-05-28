@@ -56,16 +56,32 @@ function AnimationFramePromise(win) {
  *
  * @returns {Object}
  *     An object that returns the following properties:
+ *       - fulfilled Flag that indicates that the promise got resolved
+ *       - pending Flag that indicates a not yet fulfilled/rejected promise
  *       - promise The actual promise
  *       - reject Callback to reject the promise
+ *       - rejected Flag that indicates that the promise got rejected
  *       - resolve Callback to resolve the promise
  */
 function Deferred() {
   const deferred = {};
 
   deferred.promise = new Promise((resolve, reject) => {
-    deferred.resolve = resolve;
-    deferred.reject = reject;
+    deferred.fulfilled = false;
+    deferred.pending = true;
+    deferred.rejected = false;
+
+    deferred.resolve = (...args) => {
+      deferred.fulfilled = true;
+      deferred.pending = false;
+      resolve(...args);
+    };
+
+    deferred.reject = (...args) => {
+      deferred.pending = false;
+      deferred.rejected = true;
+      reject(...args);
+    };
   });
 
   return deferred;

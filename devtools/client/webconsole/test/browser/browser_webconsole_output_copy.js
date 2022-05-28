@@ -11,7 +11,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const smokeMessage = "Hello world!";
-  const onMessage = waitForMessage(hud, smokeMessage);
+  const onMessage = waitForMessageByType(hud, smokeMessage, ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [smokeMessage], function(msg) {
     content.wrappedJSObject.console.log(msg);
   });

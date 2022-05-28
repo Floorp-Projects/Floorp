@@ -81,7 +81,7 @@ add_task(async function() {
     );
   });
 
-  const node = await waitFor(() => findMessage(hud, "oi-test"));
+  const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
   const oi = node.querySelector(".tree");
 
   expandObjectInspectorNode(oi);

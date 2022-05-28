@@ -945,6 +945,7 @@ gfxFT2FontList::gfxFT2FontList() : mJarModifiedTime(0) {
 }
 
 gfxFT2FontList::~gfxFT2FontList() {
+  AutoLock lock(mLock);
   if (mObserver) {
     mObserver->Remove();
   }

@@ -363,18 +363,6 @@ merge-automation:
             base-tag: "FIREFOX_ESR_{major_version}_BASE"
             from-repo: 'https://hg.mozilla.org/releases/mozilla-release'
             from-branch: 'release'
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr91'
-            to-branch: 'esr91'
-        release-to-esr102:
-            fetch-version-from: "browser/config/version.txt"
-            version-files:
-                - filename: "browser/config/version_display.txt"
-                  new-suffix: 'esr'
-            replacements: []
-            merge-old-head: false
-            base-tag: "FIREFOX_ESR_{major_version}_BASE"
-            from-repo: 'https://hg.mozilla.org/releases/mozilla-release'
-            from-branch: 'release'
             to-repo: 'https://hg.mozilla.org/releases/mozilla-esr102'
             to-branch: 'esr102'
         bump-central:

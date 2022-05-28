@@ -49,6 +49,8 @@ def pass_manager(enabled, compiler, host, target, pgo, enable_fuzzing, ubsan):
             return namespace(flags=["-Xclang", "-flegacy-pass-manager"], enabled=False)
 
     if not enabled:
+        if compiler.version >= "15.0.0":
+            die("--disable-new-pass-manager is only supported with clang < 15")
         return None
     if compiler.version < "9.0.0":
         if enabled.origin != "default":

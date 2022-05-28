@@ -29,7 +29,7 @@ add_task(async function() {
   executeButton.click();
 
   await waitFor(
-    () => findMessages(hud, "foo", ".result").length === 3,
+    () => findEvaluationResultMessages(hud, "foo").length === 3,
     "Waiting for all results to be printed in console",
     1000
   );

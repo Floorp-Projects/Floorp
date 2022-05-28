@@ -101,6 +101,18 @@ const backgroundtaskPhases = {
         "@mozilla.org/xpcom/debug;1",
         "@mozilla.org/xre/app-info;1",
         "@mozilla.org/mime;1",
+        {
+          name: "@mozilla.org/gfx/info;1",
+          condition: WIN,
+        },
+        {
+          name: "@mozilla.org/image/tools;1",
+          condition: WIN,
+        },
+        {
+          name: "@mozilla.org/gfx/screenmanager;1",
+          condition: WIN,
+        },
       ],
     },
   },

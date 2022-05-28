@@ -25,8 +25,8 @@ add_task(async function() {
     "window.nukedSandbox = Cu.Sandbox(null); Cu.nukeSandbox(nukedSandbox);"
   );
 
-  await executeAndWaitForMessage(hud, "nukedSandbox", "DeadObject");
-  const msg = await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(hud, "nukedSandbox", "DeadObject");
+  const msg = await executeAndWaitForErrorMessage(
     hud,
     "nukedSandbox.hello",
     "can't access dead object"
@@ -37,5 +37,9 @@ add_task(async function() {
   const anchor = msg.node.querySelector("a");
   is(anchor.textContent, "[Learn More]", "Link text is correct");
 
-  await executeAndWaitForMessage(hud, "delete window.nukedSandbox; 1 + 1", "2");
+  await executeAndWaitForResultMessage(
+    hud,
+    "delete window.nukedSandbox; 1 + 1",
+    "2"
+  );
 });

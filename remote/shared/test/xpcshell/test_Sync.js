@@ -85,6 +85,15 @@ add_task(async function test_AnimationFramePromiseAbortWhenWindowClosed() {
   await AnimationFramePromise(win);
 });
 
+add_task(async function test_DeferredPending() {
+  const deferred = Deferred();
+  ok(deferred.pending);
+
+  deferred.resolve();
+  await deferred.promise;
+  ok(!deferred.pending);
+});
+
 add_task(async function test_DeferredRejected() {
   const deferred = Deferred();
 
@@ -95,17 +104,26 @@ add_task(async function test_DeferredRejected() {
     await deferred.promise;
     ok(false);
   } catch (e) {
+    ok(!deferred.pending);
+
+    ok(!deferred.fulfilled);
+    ok(deferred.rejected);
     equal(e.message, "foo");
   }
 });
 
 add_task(async function test_DeferredResolved() {
   const deferred = Deferred();
+  ok(deferred.pending);
 
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   setTimeout(() => deferred.resolve("foo"), 100);
 
   const result = await deferred.promise;
+  ok(!deferred.pending);
+
+  ok(deferred.fulfilled);
+  ok(!deferred.rejected);
   equal(result, "foo");
 });
 

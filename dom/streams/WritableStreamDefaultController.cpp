@@ -12,11 +12,9 @@
 #include "mozilla/dom/AbortSignal.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Promise-inl.h"
-#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/WritableStream.h"
 #include "mozilla/dom/WritableStreamDefaultController.h"
 #include "mozilla/dom/WritableStreamDefaultControllerBinding.h"
-// #include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
 #include "mozilla/dom/UnderlyingSinkBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
@@ -185,7 +183,8 @@ void SetUpWritableStreamDefaultController(
   }
 
   // Step 16. Let startPromise be a promise resolved with startResult.
-  RefPtr<Promise> startPromise = Promise::Create(GetIncumbentGlobal(), aRv);
+  RefPtr<Promise> startPromise =
+      Promise::Create(aStream->GetParentObject(), aRv);
   if (aRv.Failed()) {
     return;
   }

@@ -4,6 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXPORTS.mozilla.dom.quota += [
+    "QuotaTestChild.h",
+    "QuotaTestParent.h",
+]
+
 UNIFIED_SOURCES = [
     "Common.cpp",
     "TestCheckedUnsafePtr.cpp",
@@ -17,6 +22,10 @@ UNIFIED_SOURCES = [
     "TestResultExtensions.cpp",
     "TestScopedLogExtraInfo.cpp",
     "TestUsageInfo.cpp",
+]
+
+IPDL_SOURCES += [
+    "PQuotaTest.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

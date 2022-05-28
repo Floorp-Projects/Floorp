@@ -31,9 +31,7 @@ add_task(async function() {
   await extension.startup();
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  await waitFor(() =>
-    findMessage(hud, "uncaught exception: abc", ".message.error")
-  );
+  await waitFor(() => findErrorMessage(hud, "uncaught exception: abc"));
 
   await extension.unload();
 });

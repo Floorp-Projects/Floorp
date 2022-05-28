@@ -24,7 +24,9 @@ add_task(async function() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log("simple text message");
   });
-  let message = await waitFor(() => findMessage(hud, "simple text message"));
+  let message = await waitFor(() =>
+    findConsoleAPIMessage(hud, "simple text message")
+  );
   ok(message, "Text log found in the console");
 
   info("Open and check the context menu for the logged text message");
@@ -40,7 +42,7 @@ add_task(async function() {
   });
 
   info("Open context menu for the link");
-  message = await waitFor(() => findMessage(hud, "Visit"));
+  message = await waitFor(() => findConsoleAPIMessage(hud, "Visit"));
   const urlNode = message.querySelector("a.url");
   menuPopup = await openContextMenu(hud, urlNode);
   openUrlItem = menuPopup.querySelector("#console-menu-open-url");
@@ -67,7 +69,7 @@ add_task(async function() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.location.reload();
   });
-  message = await waitFor(() => findMessage(hud, "test-console.html"));
+  message = await waitFor(() => findNetworkMessage(hud, "test-console.html"));
   ok(message, "Network log found in the console");
 
   info("Open and check the context menu for the logged network message");

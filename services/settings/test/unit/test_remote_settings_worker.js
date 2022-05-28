@@ -45,9 +45,7 @@ add_task(async function test_import_json_dump_into_idb() {
     // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
     return;
   }
-  const client = new RemoteSettingsClient("language-dictionaries", {
-    bucketNamePref: "services.settings.default_bucket",
-  });
+  const client = new RemoteSettingsClient("language-dictionaries");
   const before = await client.get({ syncIfEmpty: false });
   Assert.equal(before.length, 0);
 

@@ -908,8 +908,12 @@ sec_pkcs12_find_object(SEC_PKCS12SafeContents *safe,
     return NULL;
 }
 
-/* this function converts a password to unicode and encures that the
- * required double 0 byte be placed at the end of the string
+/* this function converts a password to UCS2 and ensures that the
+ * required double 0 byte be placed at the end of the string (if zeroTerm
+ * is set), or the 0 bytes at the end are dropped (if zeroTerm is not set).
+ * If toUnicode is false, we convert from UCS2 to UTF8/ASCII (latter is a
+ * proper subset of the former) depending on the state of the asciiCovert
+ * flag)
  */
 PRBool
 sec_pkcs12_convert_item_to_unicode(PLArenaPool *arena, SECItem *dest,
@@ -917,12 +921,15 @@ sec_pkcs12_convert_item_to_unicode(PLArenaPool *arena, SECItem *dest,
                                    PRBool asciiConvert, PRBool toUnicode)
 {
     PRBool success = PR_FALSE;
+    int bufferSize;
+
     if (!src || !dest) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return PR_FALSE;
     }
 
-    dest->len = src->len * 3 + 2;
+    bufferSize = src->len * 3 + 2;
+    dest->len = bufferSize;
     if (arena) {
         dest->data = (unsigned char *)PORT_ArenaZAlloc(arena, dest->len);
     } else {
@@ -956,24 +963,36 @@ sec_pkcs12_convert_item_to_unicode(PLArenaPool *arena, SECItem *dest,
         return PR_FALSE;
     }
 
-    if ((dest->len >= 2) &&
-        (dest->data[dest->len - 1] || dest->data[dest->len - 2]) && zeroTerm) {
-        if (dest->len + 2 > 3 * src->len) {
-            if (arena) {
-                dest->data = (unsigned char *)PORT_ArenaGrow(arena,
-                                                             dest->data, dest->len,
-                                                             dest->len + 2);
-            } else {
-                dest->data = (unsigned char *)PORT_Realloc(dest->data,
-                                                           dest->len + 2);
+    /* in some cases we need to add NULL terminations and in others
+     * we need to drop null terminations */
+    if (zeroTerm) {
+        /* unicode adds two nulls at the end */
+        if (toUnicode) {
+            if ((dest->len >= 2) &&
+                (dest->data[dest->len - 1] || dest->data[dest->len - 2])) {
+                /* we've already allocated space for these new NULLs */
+                PORT_Assert(dest->len + 2 <= bufferSize);
+                dest->len += 2;
+                dest->data[dest->len - 1] = dest->data[dest->len - 2] = 0;
             }
-
-            if (!dest->data) {
-                return PR_FALSE;
+            /* ascii/utf-8 adds just 1 */
+        } else if ((dest->len >= 1) && dest->data[dest->len - 1]) {
+            PORT_Assert(dest->len + 1 <= bufferSize);
+            dest->len++;
+            dest->data[dest->len - 1] = 0;
+        }
+    } else {
+        /* handle the drop case, no need to do any allocations here. */
+        if (toUnicode) {
+            while ((dest->len >= 2) && !dest->data[dest->len - 1] &&
+                   !dest->data[dest->len - 2]) {
+                dest->len -= 2;
+            }
+        } else {
+            while (dest->len && !dest->data[dest->len - 1]) {
+                dest->len--;
             }
         }
-        dest->len += 2;
-        dest->data[dest->len - 1] = dest->data[dest->len - 2] = 0;
     }
 
     return PR_TRUE;
@@ -1011,7 +1030,8 @@ sec_pkcs12_is_pkcs12_pbe_algorithm(SECOidTag algorithm)
  *
  * we assume that the pwitem is already encoded in Unicode by the
  * caller.  if the encryption scheme is not the one defined in PKCS
- * #12, decode the pwitem back into UTF-8. */
+ * #12, decode the pwitem back into UTF-8. NOTE: UTF-8 strings are
+ * used in the PRF without the trailing NULL */
 PRBool
 sec_pkcs12_decode_password(PLArenaPool *arena,
                            SECItem *result,
@@ -1021,7 +1041,7 @@ sec_pkcs12_decode_password(PLArenaPool *arena,
     if (!sec_pkcs12_is_pkcs12_pbe_algorithm(algorithm))
         return sec_pkcs12_convert_item_to_unicode(arena, result,
                                                   (SECItem *)pwitem,
-                                                  PR_TRUE, PR_FALSE, PR_FALSE);
+                                                  PR_FALSE, PR_FALSE, PR_FALSE);
 
     return SECITEM_CopyItem(arena, result, pwitem) == SECSuccess;
 }

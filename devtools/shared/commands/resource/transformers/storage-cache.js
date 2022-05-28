@@ -15,7 +15,6 @@ module.exports = function({ resource, watcherFront, targetFront }) {
     // instantiate front for local storage
     resource = types.getType("Cache").read(resource, targetFront);
     resource.resourceType = CACHE_STORAGE;
-    resource.resourceId = CACHE_STORAGE;
     resource.resourceKey = "Cache";
   }
 

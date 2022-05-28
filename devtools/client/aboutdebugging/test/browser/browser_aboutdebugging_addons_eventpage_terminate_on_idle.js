@@ -167,7 +167,7 @@ add_task(
       "Background event page was not terminated on idle because a DevTools toolbox is attached to the extension.";
     let consoleElements;
     await waitUntil(() => {
-      consoleElements = findMessages(hud, expectedWarning);
+      consoleElements = findMessagesByType(hud, expectedWarning, ".warn");
       return consoleElements.length > 0;
     });
 

@@ -34,11 +34,10 @@ add_task(async function() {
   await gDevTools.showToolboxForTab(tab, { toolId: "webconsole" });
 
   info("Test logging and inspecting objects while on a breakpoint.");
-  const message = await executeAndWaitForMessage(
+  const message = await executeAndWaitForResultMessage(
     hud,
     "fooObj",
-    '{ testProp2: "testValue2" }',
-    ".result"
+    '{ testProp2: "testValue2" }'
   );
 
   const objectInspectors = [...message.node.querySelectorAll(".tree")];

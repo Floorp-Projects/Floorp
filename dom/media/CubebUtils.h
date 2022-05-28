@@ -55,6 +55,17 @@ uint32_t MaxNumberOfChannels();
 // Get the sample rate the hardware/mixer runs at. Thread safe.
 uint32_t PreferredSampleRate();
 
+// Initialize a cubeb stream. A pass through wrapper for cubeb_stream_init,
+// that can simulate streams that are very slow to start, by setting the pref
+// media.cubeb.slow_stream_init_ms.
+int CubebStreamInit(cubeb * context, cubeb_stream ** stream,
+                    char const * stream_name, cubeb_devid input_device,
+                    cubeb_stream_params * input_stream_params,
+                    cubeb_devid output_device,
+                    cubeb_stream_params * output_stream_params,
+                    uint32_t latency_frames, cubeb_data_callback data_callback,
+                    cubeb_state_callback state_callback, void * user_ptr);
+
 enum Side { Input, Output };
 
 double GetVolumeScale();

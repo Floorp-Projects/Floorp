@@ -65,6 +65,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val POPUP_HTML_PATH = "/assets/www/popup.html"
         const val PROMPT_HTML_PATH = "/assets/www/prompts.html"
         const val SAVE_STATE_PATH = "/assets/www/saveState.html"
+        const val TEST_GIF_PATH = "/assets/www/images/test.gif"
         const val TITLE_CHANGE_HTML_PATH = "/assets/www/titleChange.html"
         const val TRACKERS_PATH = "/assets/www/trackers.html"
         const val VIDEO_OGG_PATH = "/assets/www/ogg.html"

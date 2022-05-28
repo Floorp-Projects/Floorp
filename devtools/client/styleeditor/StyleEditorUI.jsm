@@ -179,14 +179,44 @@ class StyleEditorUI extends EventEmitter {
 
   /**
    * Initiates the style editor ui creation, and start to track TargetCommand updates.
+   *
+   * @params {Object} options
+   * @params {Object} options.stylesheetToSelect
+   * @params {StyleSheetResource} options.stylesheetToSelect.stylesheet
+   * @params {Integer} options.stylesheetToSelect.line
+   * @params {Integer} options.stylesheetToSelect.column
    */
-  async initialize() {
+  async initialize(options = {}) {
     this.createUI();
+
+    if (options.stylesheetToSelect) {
+      const { stylesheet, line, column } = options.stylesheetToSelect;
+      // If a stylesheet resource and its location was passed (e.g. user clicked on a stylesheet
+      // location in the rule view), we can directly add it to the list and select it
+      // before watching for resources, for improved performance.
+      if (stylesheet.resourceId) {
+        try {
+          await this.#handleStyleSheetResource(stylesheet);
+          await this.selectStyleSheet(
+            stylesheet,
+            line - 1,
+            column ? column - 1 : 0
+          );
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
 
     await this.#toolbox.resourceCommand.watchResources(
       [this.#toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.#onResourceAvailable }
     );
+    await this.#commands.targetCommand.watchTargets({
+      types: [this.#commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.#onTargetAvailable,
+      onDestroyed: this.#onTargetDestroyed,
+    });
 
     this.#startLoadingStyleSheets();
     await this.#toolbox.resourceCommand.watchResources(
@@ -574,6 +604,11 @@ class StyleEditorUI extends EventEmitter {
       this.#seenSheets.set(resource, promise);
     }
     return this.#seenSheets.get(resource);
+  }
+
+  #removeStyleSheet(resource, editor) {
+    this.#seenSheets.delete(resource);
+    this.#removeStyleSheetEditor(editor);
   }
 
   #getInlineStyleSheetsCount() {
@@ -1430,6 +1465,22 @@ class StyleEditorUI extends EventEmitter {
     }
   }
 
+  // onAvailable is a mandatory argument for watchTargets,
+  // but we don't do anything when a new target gets created.
+  #onTargetAvailable = ({ targetFront }) => {};
+
+  #onTargetDestroyed = ({ targetFront }) => {
+    // Iterate over a copy of the list in order to prevent skipping
+    // over some items when removing items of this list
+    const editorsCopy = [...this.editors];
+    for (const editor of editorsCopy) {
+      const { styleSheet } = editor;
+      if (styleSheet.targetFront == targetFront) {
+        this.#removeStyleSheet(styleSheet, editor);
+      }
+    }
+  };
+
   #onResourceAvailable = async resources => {
     const promises = [];
     for (const resource of resources) {
@@ -1615,6 +1666,11 @@ class StyleEditorUI extends EventEmitter {
         onUpdated: this.#onResourceUpdated,
       }
     );
+    this.#commands.targetCommand.unwatchTargets({
+      types: [this.#commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.#onTargetAvailable,
+      onDestroyed: this.#onTargetDestroyed,
+    });
 
     if (this.#uiAbortController) {
       this.#uiAbortController.abort();

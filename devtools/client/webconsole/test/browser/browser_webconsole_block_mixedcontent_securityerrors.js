@@ -40,7 +40,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const waitForErrorMessage = text =>
-    waitFor(() => findMessage(hud, text, ".message.error"), undefined, 100);
+    waitFor(() => findErrorMessage(hud, text), undefined, 100);
 
   const onBlockedIframe = waitForErrorMessage(blockedActiveContentText);
   const onBlockedImage = waitForErrorMessage(blockedDisplayContentText);
@@ -73,7 +73,7 @@ add_task(async function() {
   gIdentityHandler.disableMixedContentProtection();
 
   const waitForWarningMessage = text =>
-    waitFor(() => findMessage(hud, text, ".message.warn"), undefined, 100);
+    waitFor(() => findWarningMessage(hud, text), undefined, 100);
 
   const onMixedActiveContent = waitForWarningMessage(activeContentText);
   const onMixedDisplayContent = waitForWarningMessage(displayContentText);
@@ -92,6 +92,8 @@ add_task(async function() {
     LEARN_MORE_URI,
     `Clicking the provided link opens ${response.link}`
   );
+
+  gIdentityHandler.enableMixedContentProtectionNoReload();
 });
 
 function pushPrefEnv() {

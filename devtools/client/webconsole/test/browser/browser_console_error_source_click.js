@@ -36,7 +36,7 @@ add_task(async function() {
   const messageText = "ReferenceError: foobar is not defined";
 
   const msg = await waitFor(
-    () => findMessage(hud, messageText),
+    () => findErrorMessage(hud, messageText),
     `Message "${messageText}" wasn't found`
   );
   ok(msg, `Message found: "${messageText}"`);

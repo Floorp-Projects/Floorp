@@ -26,6 +26,9 @@ std::ostream& operator<<(std::ostream& aStream, const FrameMetrics& aMetrics) {
   if (aMetrics.GetVisualScrollUpdateType() != FrameMetrics::eNone) {
     aStream << "] [vd=" << aMetrics.GetVisualDestination();
   }
+  if (aMetrics.IsScrollInfoLayer()) {
+    aStream << "] [scrollinfo";
+  }
   aStream << "] [dp=" << aMetrics.GetDisplayPort()
           << "] [rcs=" << aMetrics.GetBoundingCompositionSize()
           << "] [v=" << aMetrics.GetLayoutViewport()
@@ -319,10 +322,14 @@ std::ostream& operator<<(std::ostream& aStream,
 
 std::ostream& operator<<(std::ostream& aStream,
                          const ScrollMetadata& aMetadata) {
-  aStream << "{ [metrics=" << aMetadata.GetMetrics()
+  aStream << "{ [description=" << aMetadata.GetContentDescription()
+          << "] [metrics=" << aMetadata.GetMetrics()
           << "] [color=" << aMetadata.GetBackgroundColor();
   if (aMetadata.GetScrollParentId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
     aStream << "] [scrollParent=" << aMetadata.GetScrollParentId();
+  }
+  if (aMetadata.GetHasScrollgrab()) {
+    aStream << "] [scrollgrab";
   }
   aStream << "] [overscroll=" << aMetadata.GetOverscrollBehavior() << "] ["
           << aMetadata.GetScrollUpdates().Length() << " scrollupdates"

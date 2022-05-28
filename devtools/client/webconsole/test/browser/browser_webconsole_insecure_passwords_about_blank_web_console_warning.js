@@ -17,10 +17,6 @@ const INSECURE_PASSWORD_MSG =
 add_task(async function() {
   await pushPref("dom.security.https_first", false);
   const hud = await openNewTabAndConsole(TEST_URI);
-  await waitFor(
-    () => findMessage(hud, INSECURE_PASSWORD_MSG, ".message.warn"),
-    "",
-    100
-  );
+  await waitFor(() => findWarningMessage(hud, INSECURE_PASSWORD_MSG), "", 100);
   ok(true, "Insecure password error displayed successfully");
 });

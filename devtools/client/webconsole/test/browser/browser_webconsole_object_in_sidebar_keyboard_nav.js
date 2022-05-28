@@ -20,7 +20,7 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud, "Object"));
+  const message = await waitFor(() => findConsoleAPIMessage(hud, "Object"));
   const object = message.querySelector(".object-inspector .objectBox-object");
 
   const onSideBarVisible = waitFor(() =>
@@ -65,7 +65,7 @@ add_task(async function() {
   ok(true, "`b` node is focused again");
 
   info("Select another object in the console output");
-  const onArrayMessage = waitForMessage(hud, "Array");
+  const onArrayMessage = waitForMessageByType(hud, "Array", ".console-api");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log([4, 5, 6]);
   });

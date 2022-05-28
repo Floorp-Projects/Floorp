@@ -16,7 +16,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Log a longString");
-  const onMessage = waitForMessage(hud, LONGSTRING.slice(0, 50));
+  const onMessage = waitForMessageByType(
+    hud,
+    LONGSTRING.slice(0, 50),
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [LONGSTRING], str => {
     content.console.log(str);
   });
@@ -27,7 +31,7 @@ add_task(async function() {
 
   info("wait for long string expansion");
   const onLongStringFullTextDisplayed = waitFor(() =>
-    findMessage(hud, LONGSTRING)
+    findConsoleAPIMessage(hud, LONGSTRING)
   );
   arrow.click();
   await onLongStringFullTextDisplayed;
@@ -35,7 +39,9 @@ add_task(async function() {
   ok(true, "The full text of the longString is displayed");
 
   info("wait for long string collapse");
-  const onLongStringCollapsed = waitFor(() => !findMessage(hud, LONGSTRING));
+  const onLongStringCollapsed = waitFor(
+    () => !findConsoleAPIMessage(hud, LONGSTRING)
+  );
   arrow.click();
   await onLongStringCollapsed;
 

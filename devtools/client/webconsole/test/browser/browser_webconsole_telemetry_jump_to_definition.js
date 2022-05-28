@@ -22,7 +22,9 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud, "test message"));
+  const message = await waitFor(() =>
+    findConsoleAPIMessage(hud, "test message")
+  );
   info("Click on the 'jump to definition' button");
   const jumpIcon = message.querySelector(".jump-definition");
   jumpIcon.click();

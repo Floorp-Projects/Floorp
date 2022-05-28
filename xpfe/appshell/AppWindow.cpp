@@ -3024,11 +3024,12 @@ void AppWindow::WindowActivated() {
   nsCOMPtr<nsIAppWindow> appWindow(this);
 
   // focusing the window could cause it to close, so keep a reference to it
-  nsCOMPtr<nsPIDOMWindowOuter> window =
-      mDocShell ? mDocShell->GetWindow() : nullptr;
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && window) {
-    fm->WindowRaised(window, nsFocusManager::GenerateFocusActionId());
+  if (mDocShell) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow()) {
+      if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+        fm->WindowRaised(window, nsFocusManager::GenerateFocusActionId());
+      }
+    }
   }
 
   if (mChromeLoaded) {
@@ -3040,11 +3041,14 @@ void AppWindow::WindowActivated() {
 void AppWindow::WindowDeactivated() {
   nsCOMPtr<nsIAppWindow> appWindow(this);
 
-  nsCOMPtr<nsPIDOMWindowOuter> window =
-      mDocShell ? mDocShell->GetWindow() : nullptr;
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && window && !fm->IsTestMode()) {
-    fm->WindowLowered(window, nsFocusManager::GenerateFocusActionId());
+  if (mDocShell) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow()) {
+      if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+        if (!fm->IsTestMode()) {
+          fm->WindowLowered(window, nsFocusManager::GenerateFocusActionId());
+        }
+      }
+    }
   }
 }
 

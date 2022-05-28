@@ -18,7 +18,7 @@ add_task(async function() {
   }
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await waitFor(() => findMessage(hud, "fooDuplicateError1", ".message.error"));
+  await waitFor(() => findErrorMessage(hud, "fooDuplicateError1"));
 
   const errorMessages = hud.ui.outputNode.querySelectorAll(".message.error");
   is(

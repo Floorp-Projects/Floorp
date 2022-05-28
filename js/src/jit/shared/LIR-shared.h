@@ -296,7 +296,7 @@ class LRotateI64
 };
 
 // Allocate a new arguments object for an inlined frame.
-class LCreateInlinedArgumentsObject : public LVariadicInstruction<1, 1> {
+class LCreateInlinedArgumentsObject : public LVariadicInstruction<1, 2> {
  public:
   LIR_HEADER(CreateInlinedArgumentsObject)
 
@@ -307,16 +307,19 @@ class LCreateInlinedArgumentsObject : public LVariadicInstruction<1, 1> {
     return NumNonArgumentOperands + BOX_PIECES * i;
   }
 
-  LCreateInlinedArgumentsObject(uint32_t numOperands, const LDefinition& temp)
+  LCreateInlinedArgumentsObject(uint32_t numOperands, const LDefinition& temp1,
+                                const LDefinition& temp2)
       : LVariadicInstruction(classOpcode, numOperands) {
     setIsCall();
-    setTemp(0, temp);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
   }
 
   const LAllocation* getCallObject() { return getOperand(CallObj); }
   const LAllocation* getCallee() { return getOperand(Callee); }
 
-  const LDefinition* temp() { return getTemp(0); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
 
   MCreateInlinedArgumentsObject* mir() const {
     return mir_->toCreateInlinedArgumentsObject();
@@ -3609,16 +3612,15 @@ class LBigIntAsUintN32 : public LInstructionHelper<1, 1, 1 + INT64_PIECES> {
 };
 
 template <size_t NumDefs>
-class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
-  using Base = LVariadicInstruction<NumDefs, 2>;
+class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 1> {
+  using Base = LVariadicInstruction<NumDefs, 1>;
 
  public:
   explicit LIonToWasmCallBase(LNode::Opcode classOpcode, uint32_t numOperands,
-                              const LDefinition& temp, const LDefinition& fp)
+                              const LDefinition& temp)
       : Base(classOpcode, numOperands) {
     this->setIsCall();
     this->setTemp(0, temp);
-    this->setTemp(1, fp);
   }
   MIonToWasmCall* mir() const { return this->mir_->toIonToWasmCall(); }
   const LDefinition* temp() { return this->getTemp(0); }
@@ -3627,25 +3629,22 @@ class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
 class LIonToWasmCall : public LIonToWasmCallBase<1> {
  public:
   LIR_HEADER(IonToWasmCall);
-  LIonToWasmCall(uint32_t numOperands, const LDefinition& temp,
-                 const LDefinition& fp)
-      : LIonToWasmCallBase<1>(classOpcode, numOperands, temp, fp) {}
+  LIonToWasmCall(uint32_t numOperands, const LDefinition& temp)
+      : LIonToWasmCallBase<1>(classOpcode, numOperands, temp) {}
 };
 
 class LIonToWasmCallV : public LIonToWasmCallBase<BOX_PIECES> {
  public:
   LIR_HEADER(IonToWasmCallV);
-  LIonToWasmCallV(uint32_t numOperands, const LDefinition& temp,
-                  const LDefinition& fp)
-      : LIonToWasmCallBase<BOX_PIECES>(classOpcode, numOperands, temp, fp) {}
+  LIonToWasmCallV(uint32_t numOperands, const LDefinition& temp)
+      : LIonToWasmCallBase<BOX_PIECES>(classOpcode, numOperands, temp) {}
 };
 
 class LIonToWasmCallI64 : public LIonToWasmCallBase<INT64_PIECES> {
  public:
   LIR_HEADER(IonToWasmCallI64);
-  LIonToWasmCallI64(uint32_t numOperands, const LDefinition& temp,
-                    const LDefinition& fp)
-      : LIonToWasmCallBase<INT64_PIECES>(classOpcode, numOperands, temp, fp) {}
+  LIonToWasmCallI64(uint32_t numOperands, const LDefinition& temp)
+      : LIonToWasmCallBase<INT64_PIECES>(classOpcode, numOperands, temp) {}
 };
 // Wasm SIMD.
 

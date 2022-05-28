@@ -8,6 +8,7 @@ import {
   LastCardMessage,
 } from "../DSCard/DSCard.jsx";
 import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
+import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import { actionCreators as ac } from "common/Actions.jsm";
 import React from "react";
@@ -69,6 +70,7 @@ export class CardGrid extends React.PureComponent {
       readTime,
       essentialReadsHeader,
       editorsPicksHeader,
+      widgets,
     } = this.props;
     let showLastCardMessage = lastCardMessageEnabled;
     if (this.showLoadMore) {
@@ -146,6 +148,33 @@ export class CardGrid extends React.PureComponent {
         1,
         <LastCardMessage key={`dscard-last-${cards.length - 1}`} />
       );
+    }
+
+    if (widgets?.positions?.length && widgets?.data?.length) {
+      let positionIndex = 0;
+
+      for (const widget of widgets.data) {
+        let widgetComponent = null;
+        const position = widgets.positions[positionIndex];
+
+        // Stop if we run out of positions to place widgets.
+        if (!position) {
+          break;
+        }
+
+        switch (widget?.type) {
+          case "TopicsWidget":
+            widgetComponent = <TopicsWidget />;
+            break;
+        }
+
+        if (widgetComponent) {
+          // We found a widget, so up the position for next try.
+          positionIndex++;
+          // We replace an existing card with the widget.
+          cards.splice(position.index, 1, widgetComponent);
+        }
+      }
     }
 
     // Used for CSS overrides to default styling (eg: "hero")

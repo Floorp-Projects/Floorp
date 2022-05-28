@@ -142,8 +142,9 @@ Maybe<layers::SurfaceDescriptor>
 SharedSurface_ANGLEShareHandle::ToSurfaceDescriptor() {
   const auto format = gfx::SurfaceFormat::B8G8R8A8;
   return Some(layers::SurfaceDescriptorD3D10(
-      (WindowsHandle)mShareHandle, /* arrayIndex */ 0, format, mDesc.size,
-      gfx::YUVColorSpace::Identity, gfx::ColorRange::FULL));
+      (WindowsHandle)mShareHandle, /* gpuProcessTextureId */ Nothing(),
+      /* arrayIndex */ 0, format, mDesc.size, gfx::YUVColorSpace::Identity,
+      gfx::ColorRange::FULL));
 }
 
 class ScopedLockTexture final {

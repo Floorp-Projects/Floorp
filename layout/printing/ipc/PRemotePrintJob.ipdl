@@ -20,7 +20,7 @@ both:
 
 parent:
   // Initialize the real print device with the given information.
-  async InitializePrint(nsString aDocumentTitle, nsString aPrintToFile,
+  async InitializePrint(nsString aDocumentTitle,
                         int32_t aStartPage, int32_t aEndPage);
 
   // Translate the page recording writen into |fd| and play back the events to

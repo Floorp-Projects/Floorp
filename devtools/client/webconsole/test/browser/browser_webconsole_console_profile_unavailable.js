@@ -19,7 +19,7 @@ add_task(async function consoleProfileWarningWithNewPerfPanel() {
   });
 
   await waitFor(
-    () => findMessage(hud, EXPECTED_WARNING),
+    () => findWarningMessage(hud, EXPECTED_WARNING),
     "Wait until the warning about console.profile is displayed"
   );
   ok(true, "The expected warning was displayed.");

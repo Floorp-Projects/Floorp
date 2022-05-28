@@ -5,7 +5,6 @@
 loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.release:run_on_releases
     - gecko_taskgraph.transforms.release_deps:transforms
     - gecko_taskgraph.transforms.scriptworker:add_balrog_scopes
     - gecko_taskgraph.transforms.task:transforms

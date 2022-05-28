@@ -751,10 +751,12 @@ RemoteLazyInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
     }
   }
 
-  // if stream is nullptr here, that probably means the stream has
-  // been closed and the callback can be executed immediately
-  InputStreamCallbackRunnable::Execute(do_AddRef(aCallback),
-                                       do_AddRef(eventTarget), this);
+  if (aCallback) {
+    // if stream is nullptr here, that probably means the stream has
+    // been closed and the callback can be executed immediately
+    InputStreamCallbackRunnable::Execute(do_AddRef(aCallback),
+                                         do_AddRef(eventTarget), this);
+  }
   return NS_OK;
 }
 

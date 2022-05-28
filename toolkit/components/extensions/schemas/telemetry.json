@@ -57,7 +57,7 @@
         }
       }
     },{
-      "$extend": "PermissionNoPrompt",
+      "$extend": "PermissionPrivileged",
       "choices": [{
         "type": "string",
         "enum": [

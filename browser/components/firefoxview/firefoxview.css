@@ -2,16 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:host,
+:root {
+  --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
+}
+
 body {
   display: flex;
   align-items: stretch;
   padding-block: 40px 80px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
 }
 
 h1 {
-  font-size: 24px;
-  font-weight: 700;
+  font-weight: 500;
+  font-size: 1.5em;
 }
 
 body > nav {
@@ -31,8 +35,44 @@ body > main > section {
   grid-column: 1 / 9;
 }
 
-body > main > aside {
+#colorways {
+  position: relative;
   grid-column: 9 / 12;
+}
+
+#colorways.no-collection {
+  background: linear-gradient(51.95deg, #7542E5 -8.36%, #C953F2 98.73%);
+  border-radius: 8px;
+}
+
+#colorways.no-collection > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+#colorways.no-collection > div {
+  background: url("chrome://browser/content/colorway-background.svg");
+  background-size: 100%;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
+#colorways.no-collection > div > #colorways-button {
+  display: none;
+}
+
+#colorways.no-collection > div > #colorways-no-collection-message {
+  display: block;
+}
+
+#colorways-no-collection-message {
+  display: none;
+  color: #FFF;
+  font-size: 2em;
+  text-align: center;
+  margin: 0 1em 1em;
 }
 
 [hidden] {
@@ -77,14 +117,60 @@ body > main > aside {
 
 .page-section-header > .section-description {
   grid-area: desc;
+  color: var(--in-content-deemphasized-text)
+}
+
+.setup-step {
+  padding: var(--card-padding);
+  margin: 0 0 8px;
+}
+
+/* Bug 1770534 - Only use the zap-gradient for built-in, color-neutral themes */
+.setup-step {
+  border: none;
+  position: relative;
+  z-index: 0;
+}
+.setup-step::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  padding: 1px; /* the "border" thickness */
+  border-radius: 4px;
+  background-image: var(--card-border-zap-gradient);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
 }
 
 .setup-step > h2 {
-  margin-block: 4px;
+  margin-block: 0 8px;
 }
 
-.setup-step > .step-body > :is(.step-content, button.primary) {
-  flex: 0 1 auto;
+.setup-step > .step-body {
+  display: flex;
+  align-content: space-between;
+  align-items: center;
+  margin-block: 8px;
+  padding-block: 8px;
+}
+
+.setup-step > .step-body > .step-content {
+  flex: 1 1 auto;
+}
+
+.setup-step > .step-body > button.primary {
+  white-space: nowrap;
+}
+
+.setup-step > footer {
+  display: flex;
+  flex-direction: column;
+  margin-block: 0 8px;
+}
+
+.setup-step > footer > progress {
+  margin-block: 0 8px;
 }
 
 #recently-closed-tabs-container {
@@ -101,7 +187,7 @@ body > main > aside {
 
 .closed-tab-li {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: min-content repeat(8, 1fr);
   column-gap: 16px;
   padding: 8px;
   cursor: pointer;
@@ -119,6 +205,7 @@ body > main > aside {
 .closed-tab-li-title {
   grid-column: span 5;
   padding-inline-start: 2px;
+  font-weight: 500;
 }
 
 .closed-tab-li-url {
@@ -130,14 +217,23 @@ body > main > aside {
   text-align: end;
 }
 
+.closed-tab-li-url, .closed-tab-li-time {
+  color: var(--in-content-deemphasized-text);
+  font-weight: 400;
+}
+
+.closed-tab-li-title, .closed-tab-li-url {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .icon {
   background-position: center center;
   background-repeat: no-repeat;
   display: inline-block;
   -moz-context-properties: fill;
   fill: currentColor;
-  height: 16px;
-  width: 16px;
   margin-top: 10px;
 }
 
@@ -151,4 +247,14 @@ body > main > aside {
 
 .icon.history {
   background-image: url('chrome://browser/skin/history.svg');
+}
+
+.favicon {
+  background-size: cover;
+  margin: 2px;
+}
+
+.favicon, .icon {
+  width: 16px;
+  height: 16px;
 }

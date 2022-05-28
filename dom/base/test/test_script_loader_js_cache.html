@@ -231,6 +231,30 @@
 
     }, "Do not save bytecode on compilation errors");
 
+    promise_test(async function() {
+      // (see above)
+      await SpecialPowers.pushPrefEnv({set: [
+        ['dom.script_loader.bytecode_cache.enabled', true],
+        ['dom.expose_test_interfaces', true],
+        ['dom.script_loader.bytecode_cache.strategy', -1],
+        ['browser.cache.jsbc_compression_level', 2]
+      ]});
+
+      // Load the test page, and verify that the code path taken by the
+      // nsScriptLoadRequest corresponds to the code path which is loading a
+      // source and saving it as compressed bytecode.
+      var stateMachineResult = WaitForScriptTagEvent(`file_js_cache.html`);
+      assert_equals(await stateMachineResult, `bytecode_saved`,
+                    `[1-script] ScriptLoadRequest status after the first visit`);
+
+      // Reload the same test page, and verify that the code path taken by
+      // the nsScriptLoadRequest corresponds to the code path which is
+      // loading compressed bytecode, decompressing it, and executing it.
+      stateMachineResult = WaitForScriptTagEvent(`file_js_cache.html`);
+      assert_equals(await stateMachineResult, `bytecode_exec`,
+                    `[2-script] ScriptLoadRequest status after the second visit`);
+    }, "Check the JS bytecode cache can save and load compressed bytecode");
+
     done();
   </script>
 </head>

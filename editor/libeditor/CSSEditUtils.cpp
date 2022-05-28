@@ -588,12 +588,20 @@ nsresult CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
   }
 
   OwningNonNull<HTMLEditor> htmlEditor(*mHTMLEditor);
-  rv = htmlEditor->RemoveContainerWithTransaction(aStyledElement);
-  if (NS_WARN_IF(htmlEditor->Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  const Result<EditorDOMPoint, nsresult> unwrapStyledElementResult =
+      htmlEditor->RemoveContainerWithTransaction(aStyledElement);
+  if (MOZ_UNLIKELY(unwrapStyledElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
+    return unwrapStyledElementResult.inspectErr();
   }
+  const EditorDOMPoint& pointToPutCaret = unwrapStyledElementResult.inspect();
+  if (!htmlEditor->AllowsTransactionsToChangeSelection() ||
+      !pointToPutCaret.IsSet()) {
+    return NS_OK;
+  }
+  rv = htmlEditor->CollapseSelectionTo(pointToPutCaret);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RemoveContainerWithTransaction() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 

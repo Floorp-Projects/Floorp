@@ -67,9 +67,9 @@ var TabAttributesInternal = {
     }
 
     // Set attributes.
-    for (let name in data) {
+    for (let [name, value] of Object.entries(data)) {
       if (!ATTRIBUTES_TO_SKIP.has(name)) {
-        tab.setAttribute(name, data[name]);
+        tab.setAttribute(name, value);
       }
     }
   },

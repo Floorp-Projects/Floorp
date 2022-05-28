@@ -5,12 +5,6 @@
 
 "use strict";
 
-add_task(async function init() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.webcomponents.formAssociatedCustomElement.enabled", true]],
-  });
-});
-
 add_task(async function report_validity() {
   await BrowserTestUtils.withNewTab(
     {

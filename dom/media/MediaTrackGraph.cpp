@@ -378,7 +378,7 @@ void MediaTrackGraphImpl::CheckDriver() {
 
   AudioCallbackDriver* audioCallbackDriver =
       CurrentDriver()->AsAudioCallbackDriver();
-  if (audioCallbackDriver) {
+  if (audioCallbackDriver && !audioCallbackDriver->OnFallback()) {
     for (PendingResumeOperation& op : mPendingResumeOperations) {
       op.Apply(this);
     }

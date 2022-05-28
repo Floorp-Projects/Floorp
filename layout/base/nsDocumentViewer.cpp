@@ -3405,8 +3405,7 @@ NS_IMETHODIMP nsDocumentViewer::SetPrintSettingsForSubdocument(
 
     RefPtr<nsDeviceContextSpecProxy> devspec =
         new nsDeviceContextSpecProxy(aRemotePrintJob);
-    nsresult rv =
-        devspec->Init(nullptr, aPrintSettings, /* aIsPrintPreview = */ true);
+    nsresult rv = devspec->Init(aPrintSettings, /* aIsPrintPreview = */ true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mDeviceContext = new nsDeviceContext();

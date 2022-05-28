@@ -242,6 +242,9 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   void NotifyOfResolutionChange(mozilla::PresShell* aPresShell,
                                 float aResolution);
 
+  void NotifyOfDevPixelRatioChange(mozilla::PresShell* aPresShell,
+                                   int32_t aAppUnitsPerDevPixel);
+
   // nsAccessibiltiyService
 
   /**

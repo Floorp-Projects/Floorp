@@ -12,7 +12,7 @@ add_task(async function() {
     "Open the console and wait for the console.group message to be rendered"
   );
   const hud = await openNewTabAndConsole(TEST_URI);
-  await waitFor(() => findMessage(hud, "hello", ".startGroup"));
+  await waitFor(() => findConsoleAPIMessage(hud, "hello", ".startGroup"));
 
   info("Refresh tab several times and check for correct message indentation");
   for (let i = 0; i < 5; i++) {
@@ -21,7 +21,7 @@ add_task(async function() {
 });
 
 async function reloadBrowserAndCheckIndent(hud) {
-  const onMessage = waitForMessage(hud, "hello", ".startGroup");
+  const onMessage = waitForMessageByType(hud, "hello", ".startGroup");
   await reloadBrowser();
   const { node } = await onMessage;
 

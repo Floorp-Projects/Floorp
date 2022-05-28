@@ -822,14 +822,28 @@ class WorkerPrivate final
 
   bool IsEvalAllowed() const { return mLoadInfo.mEvalAllowed; }
 
-  void SetEvalAllowed(bool aEvalAllowed) {
-    mLoadInfo.mEvalAllowed = aEvalAllowed;
+  void SetEvalAllowed(bool aAllowed) { mLoadInfo.mEvalAllowed = aAllowed; }
+
+  bool GetReportEvalCSPViolations() const {
+    return mLoadInfo.mReportEvalCSPViolations;
   }
 
-  bool GetReportCSPViolations() const { return mLoadInfo.mReportCSPViolations; }
+  void SetReportEvalCSPViolations(bool aReport) {
+    mLoadInfo.mReportEvalCSPViolations = aReport;
+  }
 
-  void SetReportCSPViolations(bool aReport) {
-    mLoadInfo.mReportCSPViolations = aReport;
+  bool IsWasmEvalAllowed() const { return mLoadInfo.mWasmEvalAllowed; }
+
+  void SetWasmEvalAllowed(bool aAllowed) {
+    mLoadInfo.mWasmEvalAllowed = aAllowed;
+  }
+
+  bool GetReportWasmEvalCSPViolations() const {
+    return mLoadInfo.mReportWasmEvalCSPViolations;
+  }
+
+  void SetReportWasmEvalCSPViolations(bool aReport) {
+    mLoadInfo.mReportWasmEvalCSPViolations = aReport;
   }
 
   bool XHRParamsAllowed() const { return mLoadInfo.mXHRParamsAllowed; }

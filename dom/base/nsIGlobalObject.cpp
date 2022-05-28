@@ -51,7 +51,8 @@ bool nsIGlobalObject::IsScriptForbidden(JSObject* aCallback,
     if (aIsJSImplementedWebIDL) {
       return false;
     }
-    if (!xpc::Scriptability::Get(aCallback).Allowed()) {
+
+    if (!xpc::Scriptability::AllowedIfExists(aCallback)) {
       return true;
     }
   }

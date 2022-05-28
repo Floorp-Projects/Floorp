@@ -686,21 +686,6 @@ var AddonTestUtils = {
       extensionsMLBF: BlocklistPrivate.ExtensionBlocklistMLBF,
     };
 
-    // Since we load the specified test data, we shouldn't let the
-    // packaged JSON dumps to interfere.
-    const pref = "services.settings.load_dump";
-    const backup = Services.prefs.getBoolPref(pref, null);
-    Services.prefs.setBoolPref(pref, false);
-    if (this.testScope) {
-      this.testScope.registerCleanupFunction(() => {
-        if (backup === null) {
-          Services.prefs.clearUserPref(pref);
-        } else {
-          Services.prefs.setBoolPref(pref, backup);
-        }
-      });
-    }
-
     for (const [dataProp, blocklistObj] of Object.entries(blocklistMapping)) {
       let newData = data[dataProp];
       if (!newData) {
@@ -1643,6 +1628,19 @@ var AddonTestUtils = {
       }
       return true;
     }
+
+    function validateOptionFormat(optionName, optionValue) {
+      for (let item of optionValue) {
+        if (!item || typeof item !== "object" || isRegExp(item)) {
+          throw new Error(
+            `Unexpected format in AddonTestUtils.checkMessages "${optionName}" parameter`
+          );
+        }
+      }
+    }
+
+    validateOptionFormat("expected", expected);
+    validateOptionFormat("forbidden", forbidden);
 
     let i = 0;
     for (let msg of messages) {

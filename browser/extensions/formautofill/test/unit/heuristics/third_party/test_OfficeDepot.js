@@ -195,12 +195,12 @@ runHeuristicsTest(
             },
             // FIXME: bug 1392950 - the membership number should not be detected
             // as cc-number.
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
+            //{
+              //section: "",
+              //addressType: "",
+              //contactType: "",
+              //fieldName: "cc-number",
+            //},
           ],
         ],
       ],

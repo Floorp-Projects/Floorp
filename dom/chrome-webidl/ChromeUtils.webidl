@@ -61,13 +61,12 @@ dictionary InteractionData {
   unsigned long scrollingDistanceInPixels = 0;
 };
 
+/**
+ * Confidence value of credit card fields. This is used by the native
+ * Fathom Credit Card model to return the score to JS.
+ */
 dictionary FormAutofillConfidences {
   double ccNumber = 0;
-  double ccName = 0;
-  double ccType = 0;
-  double ccExp = 0;
-  double ccExpMonth = 0;
-  double ccExpYear = 0;
 };
 
 /**
@@ -428,20 +427,6 @@ partial namespace ChromeUtils {
    */
   [Throws]
   object import(UTF8String aResourceURI, optional object aTargetObj);
-
-  /**
-   * Synchronously loads and evaluates the JS module source located at
-   * 'aResourceURI'.
-   *
-   * @param aResourceURI A resource:// URI string to load the module from.
-   * @returns the module's namespace object.
-   *
-   * The implementation maintains a hash of aResourceURI->global obj.
-   * Subsequent invocations of import with 'aResourceURI' pointing to
-   * the same file will not cause the module to be re-evaluated.
-   */
-  [Throws]
-  object importModule(DOMString aResourceURI);
 
   /**
    * Defines a property on the given target which lazily imports a JavaScript

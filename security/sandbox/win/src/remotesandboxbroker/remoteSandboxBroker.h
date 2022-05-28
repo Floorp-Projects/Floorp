@@ -46,6 +46,8 @@ class RemoteSandboxBroker : public AbstractSandboxBroker {
   bool AllowReadFile(wchar_t const* file) override;
   void AddHandleToShare(HANDLE aHandle) override;
 
+  bool IsWin32kLockedDown() final { return false; };
+
  private:
   virtual ~RemoteSandboxBroker();
 

@@ -20,7 +20,11 @@ add_task(async function() {
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   info("Reload the content window to produce a network log");
-  const onNetworkMessage = waitForMessage(hud, "test-console.html");
+  const onNetworkMessage = waitForMessageByType(
+    hud,
+    "test-console.html",
+    ".network"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.location.reload();
   });
@@ -46,7 +50,11 @@ add_task(async function() {
   );
 
   info("Logging a text message in the content window");
-  const onLogMessage = waitForMessage(hud, "simple text message");
+  const onLogMessage = waitForMessageByType(
+    hud,
+    "simple text message",
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log("simple text message");
   });

@@ -113,11 +113,7 @@ describe("sources-tree", () => {
       expect(base.name).toBe("webpack://");
       expect(base.contents).toHaveLength(1);
 
-      const emptyNode = base.contents[0];
-      expect(emptyNode.name).toBe("");
-      expect(emptyNode.contents).toHaveLength(1);
-
-      const userNode = emptyNode.contents[0];
+      const userNode = base.contents[0];
       expect(userNode.name).toBe("Users");
       expect(userNode.contents).toHaveLength(1);
 

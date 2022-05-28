@@ -3,11 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from head.js */
-
-/* Tests that use TelemetryTestUtils.assertEvents (at the very least, those with
- * `{ process: "content" }`) seem to be super flaky and intermittent-prone when they
- * share a file with other telemetry tests, so each one gets its own file.
- */
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 add_task(async function test_experiment_messaging_system() {
   const LOCALE = Services.locale.appLocaleAsBCP47;
@@ -66,5 +62,86 @@ add_task(async function test_experiment_messaging_system() {
   });
 
   await BrowserTestUtils.closeWindow(win);
+  await doExperimentCleanup();
+});
+
+add_task(async function test_experiment_promo_action() {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_TEST",
+    template: "pb_newtab",
+    content: {
+      hideDefault: true,
+      promoEnabled: true,
+      infoEnabled: true,
+      infoBody: "fluent:about-private-browsing-info-title",
+      promoLinkText: "fluent:about-private-browsing-prominent-cta",
+      infoLinkUrl: "http://foo.example.com/%LOCALE%",
+      promoLinkType: "button",
+      promoButton: {
+        action: {
+          data: {
+            args: "https://foo.example.com",
+            where: "tabshifted",
+          },
+          type: "OPEN_URL",
+        },
+      },
+    },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
+  });
+
+  let { win, tab } = await openTabAndWaitForRender();
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => {
+    ASRouter.resetMessageState();
+    sandbox.restore();
+    BrowserTestUtils.closeWindow(win);
+  });
+
+  let windowGlobalParent =
+    win.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
+  let aboutPrivateBrowsingActor = windowGlobalParent.getActor(
+    "AboutPrivateBrowsing"
+  );
+
+  let specialActionSpy = sandbox.spy(
+    aboutPrivateBrowsingActor,
+    "receiveMessage"
+  );
+
+  let expectedUrl = "https://foo.example.com";
+
+  await SpecialPowers.spawn(tab, [], async function() {
+    ok(
+      content.document.querySelector(".promo"),
+      "should render the promo experiment message"
+    );
+    content.document.querySelector(".promo button").click();
+    info("promo button clicked");
+  });
+
+  Assert.equal(
+    specialActionSpy.callCount,
+    1,
+    "Should be called by promo action"
+  );
+
+  let promoAction = specialActionSpy.firstCall.args[0].data;
+
+  Assert.equal(
+    promoAction.type,
+    "OPEN_URL",
+    "Should be called with promo button action"
+  );
+
+  Assert.equal(
+    promoAction.data.args,
+    expectedUrl,
+    "Should be called with right URL"
+  );
+
   await doExperimentCleanup();
 });

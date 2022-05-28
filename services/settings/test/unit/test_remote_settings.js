@@ -1,7 +1,5 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
-const { Constructor: CC } = Components;
-
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -35,6 +33,10 @@ let client;
 let clientWithDump;
 
 async function clear_state() {
+  // Reset preview mode.
+  RemoteSettings.enablePreviewMode(undefined);
+  Services.prefs.clearUserPref("services.settings.preview_enabled");
+
   client.verifySignature = false;
   clientWithDump.verifySignature = false;
 
@@ -44,8 +46,6 @@ async function clear_state() {
   client._listeners.set("sync", []);
 
   await clientWithDump.db.clear();
-
-  Services.prefs.clearUserPref("services.settings.default_bucket");
 
   // Clear events snapshot.
   TelemetryTestUtils.assertEvents([], {}, { process: "dummy" });
@@ -264,16 +264,6 @@ add_task(
     // No synchronization happened (responses are not mocked).
   }
 );
-add_task(clear_state);
-
-add_task(async function test_get_does_not_load_dump_when_pref_is_false() {
-  Services.prefs.setBoolPref("services.settings.load_dump", false);
-
-  const data = await clientWithDump.get();
-
-  equal(data.map(r => r.id).join(", "), "pt-BR, xx"); // No dump, 2 pulled from test server.
-  Services.prefs.clearUserPref("services.settings.load_dump");
-});
 add_task(clear_state);
 
 add_task(async function test_get_loads_dump_only_once_if_called_in_parallel() {
@@ -995,42 +985,53 @@ add_task(async function test_telemetry_reports_error_name_as_event_nightly() {
 });
 add_task(clear_state);
 
-add_task(async function test_bucketname_changes_when_bucket_pref_changes() {
+add_task(async function test_bucketname_changes_when_preview_mode_is_enabled() {
   equal(client.bucketName, "main");
 
-  Services.prefs.setCharPref(
-    "services.settings.default_bucket",
-    "main-preview"
-  );
+  RemoteSettings.enablePreviewMode(true);
 
   equal(client.bucketName, "main-preview");
 });
 add_task(clear_state);
 
-add_task(async function test_bucket_pref_ignored_when_bucketName_set() {
-  let clientWithBucket = RemoteSettings("coll", { bucketName: "buck" });
-  equal(clientWithBucket.collectionName, "coll");
-  equal(clientWithBucket.bucketName, "buck");
+add_task(
+  async function test_preview_mode_pref_affects_bucket_names_before_instantiated() {
+    Services.prefs.setBoolPref("services.settings.preview_enabled", true);
 
-  Services.prefs.setCharPref(
-    "services.settings.default_bucket",
-    "coll-preview"
-  );
+    let clientWithDefaultBucket = RemoteSettings("other");
+    let clientWithBucket = RemoteSettings("coll", { bucketName: "buck" });
 
-  equal(clientWithBucket.bucketName, "buck");
-});
+    equal(clientWithDefaultBucket.bucketName, "main-preview");
+    equal(clientWithBucket.bucketName, "buck-preview");
+  }
+);
 add_task(clear_state);
 
 add_task(
-  async function test_get_loads_default_records_from_a_local_dump_if_preview_collection() {
+  async function test_preview_enabled_pref_ignored_when_mode_is_set_explicitly() {
+    Services.prefs.setBoolPref("services.settings.preview_enabled", true);
+
+    let clientWithDefaultBucket = RemoteSettings("other");
+    let clientWithBucket = RemoteSettings("coll", { bucketName: "buck" });
+
+    equal(clientWithDefaultBucket.bucketName, "main-preview");
+    equal(clientWithBucket.bucketName, "buck-preview");
+
+    RemoteSettings.enablePreviewMode(false);
+
+    equal(clientWithDefaultBucket.bucketName, "main");
+    equal(clientWithBucket.bucketName, "buck");
+  }
+);
+add_task(clear_state);
+
+add_task(
+  async function test_get_loads_default_records_from_a_local_dump_when_preview_mode_is_enabled() {
     if (IS_ANDROID) {
       // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
       return;
     }
-    Services.prefs.setCharPref(
-      "services.settings.default_bucket",
-      "main-preview"
-    );
+    RemoteSettings.enablePreviewMode(true);
     // When collection has a dump in services/settings/dumps/{bucket}/{collection}.json
     const data = await clientWithDump.get();
     notEqual(data.length, 0);
@@ -1039,16 +1040,38 @@ add_task(
 );
 add_task(clear_state);
 
+add_task(async function test_local_db_distinguishes_preview_records() {
+  RemoteSettings.enablePreviewMode(true);
+  client.db.importChanges({}, Date.now(), [{ id: "record-1" }], {
+    clear: true,
+  });
+
+  RemoteSettings.enablePreviewMode(false);
+  client.db.importChanges({}, Date.now(), [{ id: "record-2" }], {
+    clear: true,
+  });
+
+  deepEqual(await client.get(), [{ id: "record-2" }]);
+});
+add_task(clear_state);
+
 add_task(
-  async function test_inspect_changes_the_list_when_bucket_pref_is_changed() {
+  async function test_inspect_changes_the_list_when_preview_mode_is_enabled() {
     if (IS_ANDROID) {
-      // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
+      // Skip test: we don't ship remote settings dumps on Android (see package-manifest),
+      // and this test relies on the fact that clients are instantiated if a dump is packaged.
       return;
     }
+
     // Register a client only listed in -preview...
     RemoteSettings("crash-rate");
 
-    const { collections: before } = await RemoteSettings.inspect();
+    const {
+      collections: before,
+      previewMode: previewModeBefore,
+    } = await RemoteSettings.inspect();
+
+    Assert.ok(!previewModeBefore, "preview is not enabled");
 
     // These two collections are listed in the main bucket in monitor/changes (one with dump, one registered).
     deepEqual(before.map(c => c.collection).sort(), [
@@ -1056,12 +1079,16 @@ add_task(
       "password-fields",
     ]);
 
-    // Switch to main-preview bucket.
-    Services.prefs.setCharPref(
-      "services.settings.default_bucket",
-      "main-preview"
-    );
-    const { collections: after, mainBucket } = await RemoteSettings.inspect();
+    // Switch to preview mode.
+    RemoteSettings.enablePreviewMode(true);
+
+    const {
+      collections: after,
+      mainBucket,
+      previewMode,
+    } = await RemoteSettings.inspect();
+
+    Assert.ok(previewMode, "preview is enabled");
 
     // These two collections are listed in the main bucket in monitor/changes (both are registered).
     deepEqual(after.map(c => c.collection).sort(), [

@@ -60,6 +60,25 @@ class App extends Component {
     };
   }
 
+  static get propTypes() {
+    return {
+      activeSearch: PropTypes.oneOf(["file", "project"]),
+      closeActiveSearch: PropTypes.func.isRequired,
+      closeProjectSearch: PropTypes.func.isRequired,
+      closeQuickOpen: PropTypes.func.isRequired,
+      endPanelCollapsed: PropTypes.bool.isRequired,
+      fluentBundles: PropTypes.array.isRequired,
+      openQuickOpen: PropTypes.func.isRequired,
+      orientation: PropTypes.oneOf(["horizontal", "vertical"]).isRequired,
+      quickOpenEnabled: PropTypes.bool.isRequired,
+      selectedSource: PropTypes.object,
+      setActiveSearch: PropTypes.func.isRequired,
+      setOrientation: PropTypes.func.isRequired,
+      startPanelCollapsed: PropTypes.bool.isRequired,
+      toolboxDoc: PropTypes.object.isRequired,
+    };
+  }
+
   getChildContext() {
     return {
       fluentBundles: this.props.fluentBundles,

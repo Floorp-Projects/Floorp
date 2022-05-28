@@ -548,15 +548,24 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
       }
       if (result.inspect()) {
         // Previous sib is already right kind of inline node; slide this over
-        nsresult rv =
+        const MoveNodeResult moveTextNodeResult =
             MoveNodeToEndWithTransaction(*textNodeForTheRange, element);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+        if (moveTextNodeResult.isErr()) {
+          NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+          return moveTextNodeResult.unwrapErr();
+        }
+        nsresult rv = moveTextNodeResult.SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
+          return rv;
         }
         NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "HTMLEditor::MoveNodeToEndWithTransaction() failed");
-        return rv;
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+        return NS_OK;
       }
     }
     sibling = HTMLEditUtils::GetNextSibling(
@@ -571,14 +580,24 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
       }
       if (result.inspect()) {
         // Following sib is already right kind of inline node; slide this over
-        nsresult rv = MoveNodeWithTransaction(*textNodeForTheRange,
-                                              EditorDOMPoint(sibling, 0));
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+        const MoveNodeResult moveTextNodeResult = MoveNodeWithTransaction(
+            *textNodeForTheRange, EditorDOMPoint(sibling, 0u));
+        if (moveTextNodeResult.isErr()) {
+          NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
+          return moveTextNodeResult.unwrapErr();
         }
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "HTMLEditor::MoveNodeWithTransaction() failed");
-        return rv;
+        nsresult rv = moveTextNodeResult.SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
+          return rv;
+        }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+        return NS_OK;
       }
     }
   }
@@ -644,11 +663,23 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
       return canMoveIntoPreviousSibling.unwrapErr();
     }
     if (canMoveIntoPreviousSibling.inspect()) {
-      nsresult rv = MoveNodeToEndWithTransaction(aContent, *previousSibling);
-      if (NS_FAILED(rv)) {
+      const MoveNodeResult moveNodeResult =
+          MoveNodeToEndWithTransaction(aContent, *previousSibling);
+      if (moveNodeResult.isErr()) {
         NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+        return moveNodeResult.unwrapErr();
+      }
+      nsresult rv = moveNodeResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
         return rv;
       }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
       if (!nextSibling || !nextSibling->IsElement()) {
         return NS_OK;
       }
@@ -681,11 +712,24 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
       return canMoveIntoNextSibling.unwrapErr();
     }
     if (canMoveIntoNextSibling.inspect()) {
-      nsresult rv =
-          MoveNodeWithTransaction(aContent, EditorDOMPoint(nextElement, 0));
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::MoveNodeWithTransaction() failed");
-      return rv;
+      const MoveNodeResult moveNodeResult =
+          MoveNodeWithTransaction(aContent, EditorDOMPoint(nextElement, 0u));
+      if (moveNodeResult.isErr()) {
+        NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
+        return moveNodeResult.unwrapErr();
+      }
+      nsresult rv = moveNodeResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
+        return rv;
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+      return NS_OK;
     }
   }
 
@@ -1169,14 +1213,23 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   // the left node left node.  This is so we you don't revert back to the
   // previous style if you happen to click at the end of a line.
   if (brElement) {
-    nsresult rv = MoveNodeWithTransaction(*brElement, pointToPutCaret);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (NS_FAILED(rv)) {
+    const MoveNodeResult moveBRElementResult =
+        MoveNodeWithTransaction(*brElement, pointToPutCaret);
+    if (moveBRElementResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
+      return EditResult(moveBRElementResult.unwrapErr());
+    }
+    nsresult rv = moveBRElementResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
       return EditResult(rv);
     }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
     // Update the child.
     pointToPutCaret.Set(pointToPutCaret.GetContainer(), 0);
   }
@@ -1245,6 +1298,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
     removeHTMLStyle = HTMLEditUtils::IsRemovableInlineStyleElement(aElement);
   }
 
+  EditorDOMPoint pointToPutCaret;
   if (removeHTMLStyle) {
     // If aAttribute is nullptr, we want to remove any matching inline styles
     // entirely.
@@ -1291,26 +1345,30 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
           return rv;
         }
       }
-      nsresult rv = RemoveContainerWithTransaction(aElement);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_FAILED(rv)) {
+      Result<EditorDOMPoint, nsresult> unwrapElementResult =
+          RemoveContainerWithTransaction(aElement);
+      if (MOZ_UNLIKELY(unwrapElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-        return rv;
+        return unwrapElementResult.unwrapErr();
+      }
+      if (AllowsTransactionsToChangeSelection() &&
+          unwrapElementResult.inspect().IsSet()) {
+        pointToPutCaret = unwrapElementResult.unwrap();
       }
     }
     // If aAttribute is specified, we want to remove only the attribute
     // unless it's the last attribute of aElement.
     else if (aElement.HasAttr(kNameSpaceID_None, aAttribute)) {
       if (IsOnlyAttribute(&aElement, aAttribute)) {
-        nsresult rv = RemoveContainerWithTransaction(aElement);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        if (NS_FAILED(rv)) {
+        Result<EditorDOMPoint, nsresult> unwrapElementResult =
+            RemoveContainerWithTransaction(aElement);
+        if (MOZ_UNLIKELY(unwrapElementResult.isErr())) {
           NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-          return rv;
+          return unwrapElementResult.unwrapErr();
+        }
+        if (AllowsTransactionsToChangeSelection() &&
+            unwrapElementResult.inspect().IsSet()) {
+          pointToPutCaret = unwrapElementResult.unwrap();
         }
       } else {
         nsresult rv = RemoveAttributeWithTransaction(aElement, *aAttribute);
@@ -1322,6 +1380,14 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
           return rv;
         }
       }
+    }
+  }
+
+  if (pointToPutCaret.IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      return rv;
     }
   }
 
@@ -1360,32 +1426,57 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
       // and it does not have non-empty `style`, `id` nor `class` attribute.
       if (aElement.IsAnyOfHTMLElements(nsGkAtoms::span, nsGkAtoms::font) &&
           !HTMLEditor::HasStyleOrIdOrClassAttribute(aElement)) {
-        DebugOnly<nsresult> rvIgnored =
+        Result<EditorDOMPoint, nsresult> unwrapSpanOrFontElementResult =
             RemoveContainerWithTransaction(aElement);
-        if (NS_WARN_IF(Destroyed())) {
+        if (MOZ_UNLIKELY(unwrapSpanOrFontElementResult.isErr() &&
+                         unwrapSpanOrFontElementResult.inspectErr() ==
+                             NS_ERROR_EDITOR_DESTROYED)) {
+          NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
           return NS_ERROR_EDITOR_DESTROYED;
         }
         NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
+            unwrapSpanOrFontElementResult.isOk(),
             "HTMLEditor::RemoveContainerWithTransaction() failed, but ignored");
+        if (MOZ_LIKELY(unwrapSpanOrFontElementResult.isOk())) {
+          pointToPutCaret = unwrapSpanOrFontElementResult.unwrap();
+          if (AllowsTransactionsToChangeSelection() &&
+              pointToPutCaret.IsSet()) {
+            nsresult rv = CollapseSelectionTo(pointToPutCaret);
+            if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+              NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+              return NS_ERROR_EDITOR_DESTROYED;
+            }
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rv),
+                "EditorBase::CollapseSelectionTo() failed, but ignored");
+          }
+        }
       }
     }
   }
 
-  // Finally, remove aElement if it's a `<big>` or `<small>` element and
-  // we're removing `<font size>`.
-  if (aProperty == nsGkAtoms::font && aAttribute == nsGkAtoms::size &&
-      aElement.IsAnyOfHTMLElements(nsGkAtoms::big, nsGkAtoms::small)) {
-    nsresult rv = RemoveContainerWithTransaction(aElement);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::RemoveContainerWithTransaction() failed");
-    return rv;
+  if (aProperty != nsGkAtoms::font || aAttribute != nsGkAtoms::size ||
+      !aElement.IsAnyOfHTMLElements(nsGkAtoms::big, nsGkAtoms::small)) {
+    return NS_OK;
   }
 
-  return NS_OK;
+  // Finally, remove aElement if it's a `<big>` or `<small>` element and
+  // we're removing `<font size>`.
+  Result<EditorDOMPoint, nsresult> unwrapBigOrSmallElementResult =
+      RemoveContainerWithTransaction(aElement);
+  if (MOZ_UNLIKELY(unwrapBigOrSmallElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
+    return unwrapBigOrSmallElementResult.unwrapErr();
+  }
+  pointToPutCaret = unwrapBigOrSmallElementResult.unwrap();
+  if (!AllowsTransactionsToChangeSelection() || !pointToPutCaret.IsSet()) {
+    return NS_OK;
+  }
+  nsresult rv = CollapseSelectionTo(pointToPutCaret);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::CollapseSelectionTo() failed");
+
+  return rv;
 }
 
 bool HTMLEditor::IsOnlyAttribute(const Element* aElement, nsAtom* aAttribute) {
@@ -2596,20 +2687,47 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
       *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
   if (sibling && sibling->IsHTMLElement(nodeType)) {
     // Previous sib is already right kind of inline node; slide this over
-    nsresult rv = MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::MoveNodeToEndWithTransaction() failed");
-    return rv;
+    const MoveNodeResult moveTextNodeResult =
+        MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
+    if (moveTextNodeResult.isErr()) {
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+      return moveTextNodeResult.unwrapErr();
+    }
+    nsresult rv = moveTextNodeResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
+      return rv;
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+    return NS_OK;
   }
   sibling = HTMLEditUtils::GetNextSibling(
       *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
   if (sibling && sibling->IsHTMLElement(nodeType)) {
     // Following sib is already right kind of inline node; slide this over
-    nsresult rv = MoveNodeWithTransaction(*textNodeForTheRange,
-                                          EditorDOMPoint(sibling, 0));
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::MoveNodeWithTransaction() failed");
-    return rv;
+    const MoveNodeResult moveTextNodeResult = MoveNodeWithTransaction(
+        *textNodeForTheRange, EditorDOMPoint(sibling, 0u));
+    if (moveTextNodeResult.isErr()) {
+      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
+      return moveTextNodeResult.unwrapErr();
+    }
+    nsresult rv = moveTextNodeResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
+      return rv;
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+    return NS_OK;
   }
 
   // Else reparent the node inside font node with appropriate relative size
@@ -2705,9 +2823,20 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
       return rv;
     }
     // in that case, just remove this node and pull up the children
-    rv = RemoveContainerWithTransaction(MOZ_KnownLive(*aNode->AsElement()));
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::RemoveContainerWithTransaction() failed");
+    const Result<EditorDOMPoint, nsresult> unwrapBigOrSmallElementResult =
+        RemoveContainerWithTransaction(MOZ_KnownLive(*aNode->AsElement()));
+    if (MOZ_UNLIKELY(unwrapBigOrSmallElementResult.isErr())) {
+      NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
+      return unwrapBigOrSmallElementResult.inspectErr();
+    }
+    const EditorDOMPoint& pointToPutCaret =
+        unwrapBigOrSmallElementResult.inspect();
+    if (!AllowsTransactionsToChangeSelection() || !pointToPutCaret.IsSet()) {
+      return NS_OK;
+    }
+    rv = CollapseSelectionTo(pointToPutCaret);
+    NS_WARNING_ASSERTION(NS_FAILED(rv),
+                         "EditorBase::CollapseSelectionTo() failed");
     return rv;
   }
 
@@ -2728,10 +2857,24 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     if (sibling && sibling->IsHTMLElement(atom)) {
       // previous sib is already right kind of inline node; slide this over into
       // it
-      nsresult rv = MoveNodeToEndWithTransaction(*aNode, *sibling);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::MoveNodeToEndWithTransaction() failed");
-      return rv;
+      const MoveNodeResult moveNodeResult =
+          MoveNodeToEndWithTransaction(*aNode, *sibling);
+      if (moveNodeResult.isErr()) {
+        NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+        return moveNodeResult.unwrapErr();
+      }
+      nsresult rv = moveNodeResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
+        return rv;
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+      return NS_OK;
     }
 
     sibling = HTMLEditUtils::GetNextSibling(
@@ -2739,7 +2882,24 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     if (sibling && sibling->IsHTMLElement(atom)) {
       // following sib is already right kind of inline node; slide this over
       // into it
-      return MoveNodeWithTransaction(*aNode, EditorDOMPoint(sibling, 0));
+      const MoveNodeResult moveNodeResult =
+          MoveNodeWithTransaction(*aNode, EditorDOMPoint(sibling, 0u));
+      if (moveNodeResult.isErr()) {
+        NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
+        return moveNodeResult.unwrapErr();
+      }
+      nsresult rv = moveNodeResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
+        return rv;
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+      return NS_OK;
     }
 
     // else insert it above aNode

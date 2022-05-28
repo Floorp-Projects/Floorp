@@ -20,7 +20,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await navigateTo(TEST_FILE);
 
-  await waitFor(() => findMessage(hud, EXPECTED_RESULT, ".message.warn"));
+  await waitFor(() => findWarningMessage(hud, EXPECTED_RESULT));
   ok(
     true,
     `CSP logs displayed in console when using "reflected-xss" directive`

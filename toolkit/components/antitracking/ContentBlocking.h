@@ -30,6 +30,7 @@ class OriginAttributes;
 namespace dom {
 class BrowsingContext;
 class ContentParent;
+class Document;
 }  // namespace dom
 
 class ContentBlocking final {
@@ -69,11 +70,6 @@ class ContentBlocking final {
   // first party storage.
   static bool ShouldAllowAccessFor(nsIPrincipal* aPrincipal,
                                    nsICookieJarSettings* aCookieJarSettings);
-
-  typedef MozPromise<nsresult, uint32_t, true> AsyncShouldAllowAccessForPromise;
-  [[nodiscard]] static RefPtr<AsyncShouldAllowAccessForPromise>
-  AsyncShouldAllowAccessFor(dom::BrowsingContext* aBrowsingContext,
-                            nsIPrincipal* aPrincipal);
 
   enum StorageAccessPromptChoices { eAllow, eAllowAutoGrant };
 
@@ -123,6 +119,78 @@ class ContentBlocking final {
       nsIPrincipal* aTrackingPrincipal, int aAllowMode,
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
+
+  // This function checks if the document has explicit permission either to
+  // allow or deny access to cookies. This may be because of the "cookie"
+  // permission or because the domain is on the ContentBlockingAllowList
+  // e.g. because the user flipped the sheild.
+  // This returns:
+  //   Some(true) if unpartitioned cookies will be permitted
+  //   Some(false) if unpartitioned cookies will be blocked
+  //   None if it is not clear from permission alone what to do
+  static Maybe<bool> CheckCookiesPermittedDecidesStorageAccessAPI(
+      nsICookieJarSettings* aCookieJarSettings,
+      nsIPrincipal* aRequestingPrincipal);
+
+  // Calls CheckCookiesPermittedDecidesStorageAccessAPI in the Content Parent
+  // using aBrowsingContext's Top's Window Global's CookieJarSettings.
+  static RefPtr<MozPromise<Maybe<bool>, nsresult, true>>
+  AsyncCheckCookiesPermittedDecidesStorageAccessAPI(
+      dom::BrowsingContext* aBrowsingContext,
+      nsIPrincipal* aRequestingPrincipal);
+
+  // This function checks if the browser settings give explicit permission
+  // either to allow or deny access to cookies. This only checks the
+  // cookieBehavior setting. This requires an additional bool to indicate
+  // whether or not the context considered is third-party. This returns:
+  //   Some(true) if unpartitioned cookies will be permitted
+  //   Some(false) if unpartitioned cookies will be blocked
+  //   None if it is not clear from settings alone what to do
+  static Maybe<bool> CheckBrowserSettingsDecidesStorageAccessAPI(
+      nsICookieJarSettings* aCookieJarSettings, bool aThirdParty);
+
+  // This function checks if the document's context (like if it is third-party
+  // or an iframe) gives an answer of how a the StorageAccessAPI call, that is
+  // meant to be called by an embedded third party, should return.
+  // This requires an argument that allows some checks to be run only if the
+  // caller of this function is performing a request for storage access.
+  // This returns:
+  //   Some(true) if the calling context has access to cookies if it is not
+  //              disallowed by the browser settings and cookie permissions
+  //   Some(false) if the calling context should not have access to cookies if
+  //               it is not expressly allowed by the browser settings and
+  //               cookie permissions
+  //   None if the calling context does not determine the document's access to
+  //        unpartitioned cookies
+  static Maybe<bool> CheckCallingContextDecidesStorageAccessAPI(
+      dom::Document* aDocument, bool aRequestingStorageAccess);
+
+  // This function checks if the document's context (like if it is third-party
+  // or an iframe) gives an answer of how a the StorageAccessAPI call that is
+  // meant to be called in a top-level context, should return.
+  // This returns:
+  //   Some(true) if the calling context indicates calls to the top-level
+  //              API must resolve if it is not
+  //              disallowed by the browser settings and cookie permissions
+  //   Some(false) if the calling context must reject when calling top level
+  //               portions of the API if it is not expressly allowed by the
+  //               browser settings and cookie permissions
+  //   None if the calling context does not determine the outcome of the
+  //        document's use of the top-level portions of the Storage Access API.
+  static Maybe<bool> CheckSameSiteCallingContextDecidesStorageAccessAPI(
+      dom::Document* aDocument, bool aRequireUserActivation);
+
+  // This function checks if the document has already been granted or denied
+  // access to its unpartitioned cookies by the StorageAccessAPI
+  // This returns:
+  //   Some(true) if the document has been granted access by the Storage Access
+  //              API before
+  //   Some(false) if the document has been denied access by the Storage Access
+  //               API before
+  //   None if the document has not been granted or denied access by the Storage
+  //        Access API before
+  static Maybe<bool> CheckExistingPermissionDecidesStorageAccessAPI(
+      dom::Document* aDocument);
 
  private:
   friend class dom::ContentParent;

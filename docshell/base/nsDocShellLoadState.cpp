@@ -616,13 +616,15 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
       Telemetry::LABELS_QUERY_STRIPPING_COUNT::Navigation);
 
   nsCOMPtr<nsIURI> strippedURI;
-  if (URLQueryStringStripper::Strip(URI(), aContext->UsePrivateBrowsing(),
-                                    strippedURI)) {
+  uint32_t numStripped = URLQueryStringStripper::Strip(
+      URI(), aContext->UsePrivateBrowsing(), strippedURI);
+  if (numStripped) {
     mUnstrippedURI = URI();
     SetURI(strippedURI);
 
     Telemetry::AccumulateCategorical(
         Telemetry::LABELS_QUERY_STRIPPING_COUNT::StripForNavigation);
+    Telemetry::Accumulate(Telemetry::QUERY_STRIPPING_PARAM_COUNT, numStripped);
   } else if (LoadType() & nsIDocShell::LOAD_CMD_RELOAD) {
     // Preserve the Unstripped URI if it's a reload. By doing this, we can
     // restore the stripped query parameters once the ETP has been toggled to
@@ -635,8 +637,8 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
   // string could be different.
   if (mUnstrippedURI) {
     nsCOMPtr<nsIURI> uri;
-    URLQueryStringStripper::Strip(mUnstrippedURI,
-                                  aContext->UsePrivateBrowsing(), uri);
+    Unused << URLQueryStringStripper::Strip(
+        mUnstrippedURI, aContext->UsePrivateBrowsing(), uri);
     bool equals = false;
     Unused << URI()->Equals(uri, &equals);
     MOZ_ASSERT(equals);

@@ -13,9 +13,22 @@ add_task(async function test_fileurl_nonscript_load() {
     BrowserTestUtils.removeTab(tab);
   });
 
-  let ran = await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    return content.window.wrappedJSObject.ran;
+  let counter = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    Cu.exportFunction(Assert.equal.bind(Assert), content.window, {
+      defineAs: "equal",
+    });
+    content.window.postMessage("run", "*");
+
+    await new Promise(resolve => {
+      content.window.addEventListener("message", event => {
+        if (event.data === "done") {
+          resolve();
+        }
+      });
+    });
+
+    return content.window.wrappedJSObject.counter;
   });
 
-  is(ran, "error", "Script should not have run");
+  is(counter, 1, "Only one script should have run");
 });

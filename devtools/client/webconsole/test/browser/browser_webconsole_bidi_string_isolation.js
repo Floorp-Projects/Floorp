@@ -48,7 +48,7 @@ add_task(async function() {
   ];
   for (let i = 0; i < texts.length; ++i) {
     const msgId = "msg" + String(i + 1).padStart(2, "0");
-    const message = await waitFor(() => findMessage(hud, msgId));
+    const message = await waitFor(() => findConsoleAPIMessage(hud, msgId));
     const objectBox = message.querySelector(".objectBox");
     is(objectBox.textContent, texts[i], "Should have all the relevant text");
     checkRects(objectBox);

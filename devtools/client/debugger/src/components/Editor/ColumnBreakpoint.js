@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { PureComponent } from "react";
+import PropTypes from "prop-types";
 import classnames from "classnames";
 import { showMenu } from "../../context-menu/menu";
 
@@ -40,6 +41,15 @@ function makeBookmark({ breakpoint }, { onClick, onContextMenu }) {
 
 export default class ColumnBreakpoint extends PureComponent {
   bookmark;
+
+  static get propTypes() {
+    return {
+      breakpointActions: PropTypes.object.isRequired,
+      columnBreakpoint: PropTypes.object.isRequired,
+      cx: PropTypes.object.isRequired,
+      source: PropTypes.object.isRequired,
+    };
+  }
 
   addColumnBreakpoint = nextProps => {
     const { columnBreakpoint, source } = nextProps || this.props;

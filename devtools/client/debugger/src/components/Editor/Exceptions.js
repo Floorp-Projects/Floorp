@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
 import Exception from "./Exception";
@@ -14,6 +15,13 @@ import {
 import { getDocument } from "../../utils/editor";
 
 class Exceptions extends Component {
+  static get propTypes() {
+    return {
+      exceptions: PropTypes.array.isRequired,
+      selectedSource: PropTypes.object.isRequired,
+    };
+  }
+
   render() {
     const { exceptions, selectedSource } = this.props;
 

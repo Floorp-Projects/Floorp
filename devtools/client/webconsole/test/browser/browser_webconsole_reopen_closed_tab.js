@@ -39,7 +39,7 @@ add_task(async function() {
 
 async function waitForError(hud) {
   info("Wait for error message");
-  await waitFor(() => findMessage(hud, "fooBug597756_error", ".message.error"));
+  await waitFor(() => findErrorMessage(hud, "fooBug597756_error"));
   ok(true, "error message displayed");
 }
 

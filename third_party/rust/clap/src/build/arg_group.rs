@@ -16,7 +16,7 @@ use yaml_rust::Yaml;
 ///
 /// You can also do things such as name an entire `ArgGroup` as a [conflict] or [requirement] for
 /// another argument, meaning any of the arguments that belong to that group will cause a failure
-/// if present, or must present respectively.
+/// if present, or must be present respectively.
 ///
 /// Perhaps the most common use of `ArgGroup`s is to require one and *only* one argument to be
 /// present out of a given set. Imagine that you had multiple arguments, and you want one of them
@@ -37,8 +37,8 @@ use yaml_rust::Yaml;
 /// the arguments from the specified group is present at runtime.
 ///
 /// ```rust
-/// # use clap::{App, arg, ArgGroup, ErrorKind};
-/// let result = App::new("app")
+/// # use clap::{Command, arg, ArgGroup, ErrorKind};
+/// let result = Command::new("cmd")
 ///     .arg(arg!(--"set-ver" <ver> "set the version manually").required(false))
 ///     .arg(arg!(--major           "auto increase major"))
 ///     .arg(arg!(--minor           "auto increase minor"))
@@ -46,17 +46,17 @@ use yaml_rust::Yaml;
 ///     .group(ArgGroup::new("vers")
 ///          .args(&["set-ver", "major", "minor", "patch"])
 ///          .required(true))
-///     .try_get_matches_from(vec!["app", "--major", "--patch"]);
+///     .try_get_matches_from(vec!["cmd", "--major", "--patch"]);
 /// // Because we used two args in the group it's an error
 /// assert!(result.is_err());
 /// let err = result.unwrap_err();
-/// assert_eq!(err.kind, ErrorKind::ArgumentConflict);
+/// assert_eq!(err.kind(), ErrorKind::ArgumentConflict);
 /// ```
 /// This next example shows a passing parse of the same scenario
 ///
 /// ```rust
-/// # use clap::{App, arg, ArgGroup};
-/// let result = App::new("app")
+/// # use clap::{Command, arg, ArgGroup};
+/// let result = Command::new("cmd")
 ///     .arg(arg!(--"set-ver" <ver> "set the version manually").required(false))
 ///     .arg(arg!(--major           "auto increase major"))
 ///     .arg(arg!(--minor           "auto increase minor"))
@@ -64,7 +64,7 @@ use yaml_rust::Yaml;
 ///     .group(ArgGroup::new("vers")
 ///          .args(&["set-ver", "major", "minor","patch"])
 ///          .required(true))
-///     .try_get_matches_from(vec!["app", "--major"]);
+///     .try_get_matches_from(vec!["cmd", "--major"]);
 /// assert!(result.is_ok());
 /// let matches = result.unwrap();
 /// // We may not know which of the args was used, so we can test for the group...
@@ -104,12 +104,12 @@ impl<'help> ArgGroup<'help> {
     /// # Examples
     ///
     /// ```rust
-    /// # use clap::{App, ArgGroup};
+    /// # use clap::{Command, ArgGroup};
     /// ArgGroup::new("config")
     /// # ;
     /// ```
     pub fn new<S: Into<&'help str>>(n: S) -> Self {
-        ArgGroup::default().name(n)
+        ArgGroup::default().id(n)
     }
 
     /// Sets the group name.
@@ -117,15 +117,21 @@ impl<'help> ArgGroup<'help> {
     /// # Examples
     ///
     /// ```rust
-    /// # use clap::{App, ArgGroup};
+    /// # use clap::{Command, ArgGroup};
     /// ArgGroup::default().name("config")
     /// # ;
     /// ```
     #[must_use]
-    pub fn name<S: Into<&'help str>>(mut self, n: S) -> Self {
+    pub fn id<S: Into<&'help str>>(mut self, n: S) -> Self {
         self.name = n.into();
-        self.id = Id::from(&self.name);
+        self.id = Id::from(self.name);
         self
+    }
+
+    /// Deprecated, replaced with [`ArgGroup::id`]
+    #[deprecated(since = "3.1.0", note = "Replaced with `ArgGroup::id`")]
+    pub fn name<S: Into<&'help str>>(self, n: S) -> Self {
+        self.id(n)
     }
 
     /// Adds an [argument] to this group by name
@@ -133,8 +139,8 @@ impl<'help> ArgGroup<'help> {
     /// # Examples
     ///
     /// ```rust
-    /// # use clap::{App, Arg, ArgGroup};
-    /// let m = App::new("myprog")
+    /// # use clap::{Command, Arg, ArgGroup};
+    /// let m = Command::new("myprog")
     ///     .arg(Arg::new("flag")
     ///         .short('f'))
     ///     .arg(Arg::new("color")
@@ -160,8 +166,8 @@ impl<'help> ArgGroup<'help> {
     /// # Examples
     ///
     /// ```rust
-    /// # use clap::{App, Arg, ArgGroup};
-    /// let m = App::new("myprog")
+    /// # use clap::{Command, Arg, ArgGroup};
+    /// let m = Command::new("myprog")
     ///     .arg(Arg::new("flag")
     ///         .short('f'))
     ///     .arg(Arg::new("color")
@@ -191,8 +197,8 @@ impl<'help> ArgGroup<'help> {
     /// group
     ///
     /// ```rust
-    /// # use clap::{App, Arg, ArgGroup};
-    /// let m = App::new("myprog")
+    /// # use clap::{Command, Arg, ArgGroup};
+    /// let m = Command::new("myprog")
     ///     .arg(Arg::new("flag")
     ///         .short('f'))
     ///     .arg(Arg::new("color")
@@ -208,8 +214,8 @@ impl<'help> ArgGroup<'help> {
     /// an error if more than one of the args in the group was used.
     ///
     /// ```rust
-    /// # use clap::{App, Arg, ArgGroup, ErrorKind};
-    /// let result = App::new("myprog")
+    /// # use clap::{Command, Arg, ArgGroup, ErrorKind};
+    /// let result = Command::new("myprog")
     ///     .arg(Arg::new("flag")
     ///         .short('f'))
     ///     .arg(Arg::new("color")
@@ -220,7 +226,7 @@ impl<'help> ArgGroup<'help> {
     /// // Because we used both args in the group it's an error
     /// assert!(result.is_err());
     /// let err = result.unwrap_err();
-    /// assert_eq!(err.kind, ErrorKind::ArgumentConflict);
+    /// assert_eq!(err.kind(), ErrorKind::ArgumentConflict);
     /// ```
     ///
     /// [`Arg`]: crate::Arg
@@ -236,7 +242,7 @@ impl<'help> ArgGroup<'help> {
     /// This is unless conflicting with another argument.  A required group will be displayed in
     /// the usage string of the application in the format `<arg|arg2|arg3>`.
     ///
-    /// **NOTE:** This setting only applies to the current [`App`] / [`Subcommand`]s, and not
+    /// **NOTE:** This setting only applies to the current [`Command`] / [`Subcommand`]s, and not
     /// globally.
     ///
     /// **NOTE:** By default, [`ArgGroup::multiple`] is set to `false` which when combined with
@@ -244,14 +250,11 @@ impl<'help> ArgGroup<'help> {
     /// Use of more than one arg is an error." Vice setting `ArgGroup::multiple(true)` which
     /// states, '*At least* one arg from this group must be used. Using multiple is OK."
     ///
-    /// **NOTE:** An argument is considered present when there is a
-    /// [`Arg::default_value`](crate::Arg::default_value)
-    ///
     /// # Examples
     ///
     /// ```rust
-    /// # use clap::{App, Arg, ArgGroup, ErrorKind};
-    /// let result = App::new("myprog")
+    /// # use clap::{Command, Arg, ArgGroup, ErrorKind};
+    /// let result = Command::new("myprog")
     ///     .arg(Arg::new("flag")
     ///         .short('f'))
     ///     .arg(Arg::new("color")
@@ -263,12 +266,12 @@ impl<'help> ArgGroup<'help> {
     /// // Because we didn't use any of the args in the group, it's an error
     /// assert!(result.is_err());
     /// let err = result.unwrap_err();
-    /// assert_eq!(err.kind, ErrorKind::MissingRequiredArgument);
+    /// assert_eq!(err.kind(), ErrorKind::MissingRequiredArgument);
     /// ```
     ///
     /// [`Subcommand`]: crate::Subcommand
     /// [`ArgGroup::multiple`]: ArgGroup::multiple()
-    /// [`App`]: crate::App
+    /// [`Command`]: crate::Command
     #[inline]
     #[must_use]
     pub fn required(mut self, yes: bool) -> Self {
@@ -282,16 +285,13 @@ impl<'help> ArgGroup<'help> {
     /// [argument requirement rules], you can name other arguments or groups that must be present
     /// when any one of the arguments from this group is used.
     ///
-    /// **NOTE:** An argument is considered present when there is a
-    /// [`Arg::default_value`](crate::Arg::default_value)
-    ///
     /// **NOTE:** The name provided may be an argument or group name
     ///
     /// # Examples
     ///
     /// ```rust
-    /// # use clap::{App, Arg, ArgGroup, ErrorKind};
-    /// let result = App::new("myprog")
+    /// # use clap::{Command, Arg, ArgGroup, ErrorKind};
+    /// let result = Command::new("myprog")
     ///     .arg(Arg::new("flag")
     ///         .short('f'))
     ///     .arg(Arg::new("color")
@@ -306,7 +306,7 @@ impl<'help> ArgGroup<'help> {
     /// // error
     /// assert!(result.is_err());
     /// let err = result.unwrap_err();
-    /// assert_eq!(err.kind, ErrorKind::MissingRequiredArgument);
+    /// assert_eq!(err.kind(), ErrorKind::MissingRequiredArgument);
     /// ```
     /// [required group]: ArgGroup::required()
     /// [argument requirement rules]: crate::Arg::requires()
@@ -324,14 +324,11 @@ impl<'help> ArgGroup<'help> {
     ///
     /// **NOTE:** The names provided may be an argument or group name
     ///
-    /// **NOTE:** An argument is considered present when there is a
-    /// [`Arg::default_value`](crate::Arg::default_value)
-    ///
     /// # Examples
     ///
     /// ```rust
-    /// # use clap::{App, Arg, ArgGroup, ErrorKind};
-    /// let result = App::new("myprog")
+    /// # use clap::{Command, Arg, ArgGroup, ErrorKind};
+    /// let result = Command::new("myprog")
     ///     .arg(Arg::new("flag")
     ///         .short('f'))
     ///     .arg(Arg::new("color")
@@ -348,7 +345,7 @@ impl<'help> ArgGroup<'help> {
     /// // yet we only used "-d" it's an error
     /// assert!(result.is_err());
     /// let err = result.unwrap_err();
-    /// assert_eq!(err.kind, ErrorKind::MissingRequiredArgument);
+    /// assert_eq!(err.kind(), ErrorKind::MissingRequiredArgument);
     /// ```
     /// [required group]: ArgGroup::required()
     /// [argument requirement rules]: crate::Arg::requires_all()
@@ -368,14 +365,11 @@ impl<'help> ArgGroup<'help> {
     ///
     /// **NOTE:** The name provided may be an argument, or group name
     ///
-    /// **NOTE:** An argument is considered present when there is a
-    /// [`Arg::default_value`](crate::Arg::default_value)
-    ///
     /// # Examples
     ///
     /// ```rust
-    /// # use clap::{App, Arg, ArgGroup, ErrorKind};
-    /// let result = App::new("myprog")
+    /// # use clap::{Command, Arg, ArgGroup, ErrorKind};
+    /// let result = Command::new("myprog")
     ///     .arg(Arg::new("flag")
     ///         .short('f'))
     ///     .arg(Arg::new("color")
@@ -389,7 +383,7 @@ impl<'help> ArgGroup<'help> {
     /// // because we used an arg from the group, and the group conflicts with "-d", it's an error
     /// assert!(result.is_err());
     /// let err = result.unwrap_err();
-    /// assert_eq!(err.kind, ErrorKind::ArgumentConflict);
+    /// assert_eq!(err.kind(), ErrorKind::ArgumentConflict);
     /// ```
     /// [argument exclusion rules]: crate::Arg::conflicts_with()
     #[must_use]
@@ -405,14 +399,11 @@ impl<'help> ArgGroup<'help> {
     ///
     /// **NOTE:** The names provided may be an argument, or group name
     ///
-    /// **NOTE:** An argument is considered present when there is a
-    /// [`Arg::default_value`](crate::Arg::default_value)
-    ///
     /// # Examples
     ///
     /// ```rust
-    /// # use clap::{App, Arg, ArgGroup, ErrorKind};
-    /// let result = App::new("myprog")
+    /// # use clap::{Command, Arg, ArgGroup, ErrorKind};
+    /// let result = Command::new("myprog")
     ///     .arg(Arg::new("flag")
     ///         .short('f'))
     ///     .arg(Arg::new("color")
@@ -429,7 +420,7 @@ impl<'help> ArgGroup<'help> {
     /// // it's an error
     /// assert!(result.is_err());
     /// let err = result.unwrap_err();
-    /// assert_eq!(err.kind, ErrorKind::ArgumentConflict);
+    /// assert_eq!(err.kind(), ErrorKind::ArgumentConflict);
     /// ```
     ///
     /// [argument exclusion rules]: crate::Arg::conflicts_with_all()
@@ -443,6 +434,7 @@ impl<'help> ArgGroup<'help> {
 
     /// Deprecated, replaced with [`ArgGroup::new`]
     #[deprecated(since = "3.0.0", note = "Replaced with `ArgGroup::new`")]
+    #[doc(hidden)]
     pub fn with_name<S: Into<&'help str>>(n: S) -> Self {
         Self::new(n)
     }
@@ -453,6 +445,7 @@ impl<'help> ArgGroup<'help> {
         since = "3.0.0",
         note = "Maybe clap::Parser would fit your use case? (Issue #3087)"
     )]
+    #[doc(hidden)]
     pub fn from_yaml(yaml: &'help Yaml) -> Self {
         Self::from(yaml)
     }
@@ -510,7 +503,7 @@ impl<'help> From<&'help Yaml> for ArgGroup<'help> {
                 "conflicts_with" => yaml_vec_or_str!(a, v, conflicts_with),
                 "name" => {
                     if let Some(ys) = v.as_str() {
-                        a = a.name(ys);
+                        a = a.id(ys);
                     }
                     a
                 }

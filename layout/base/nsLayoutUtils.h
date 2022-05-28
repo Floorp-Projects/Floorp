@@ -163,6 +163,7 @@ class nsLayoutUtils {
   typedef mozilla::gfx::Size Size;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::gfx::Matrix4x4Flagged Matrix4x4Flagged;
+  typedef mozilla::gfx::MatrixScalesDouble MatrixScalesDouble;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
@@ -946,7 +947,7 @@ class nsLayoutUtils {
    * frame if this transform can be drawn 2D, or the identity scale factors
    * otherwise.
    */
-  static gfxSize GetTransformToAncestorScale(const nsIFrame* aFrame);
+  static MatrixScalesDouble GetTransformToAncestorScale(const nsIFrame* aFrame);
 
   /**
    * Gets the scale factors of the transform for aFrame relative to the root

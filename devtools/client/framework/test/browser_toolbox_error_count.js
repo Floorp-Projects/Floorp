@@ -180,5 +180,5 @@ add_task(async function() {
 });
 
 function findAllErrors(hud) {
-  return findMessagesVirtualized({ hud, selector: ".message.error" });
+  return findMessagesVirtualizedByType({ hud, typeSelector: ".error" });
 }

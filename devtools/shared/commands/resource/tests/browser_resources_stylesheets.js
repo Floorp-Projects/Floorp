@@ -17,6 +17,7 @@ const EXISTING_RESOURCES = [
       "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.html",
     isNew: false,
     disabled: false,
+    constructed: false,
     ruleCount: 1,
     mediaRules: [],
   },
@@ -28,6 +29,17 @@ const EXISTING_RESOURCES = [
       "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.html",
     isNew: false,
     disabled: false,
+    constructed: false,
+    ruleCount: 1,
+    mediaRules: [],
+  },
+  {
+    styleText: "",
+    href: null,
+    nodeHref: null,
+    isNew: false,
+    disabled: false,
+    constructed: true,
     ruleCount: 1,
     mediaRules: [],
   },
@@ -38,6 +50,7 @@ const EXISTING_RESOURCES = [
       "https://example.org/browser/devtools/shared/commands/resource/tests/style_iframe.html",
     isNew: false,
     disabled: false,
+    constructed: false,
     ruleCount: 1,
     mediaRules: [],
   },
@@ -49,12 +62,13 @@ const EXISTING_RESOURCES = [
       "https://example.org/browser/devtools/shared/commands/resource/tests/style_iframe.html",
     isNew: false,
     disabled: false,
+    constructed: false,
     ruleCount: 1,
     mediaRules: [],
   },
 ];
 
-const ADDITIONAL_RESOURCE = {
+const ADDITIONAL_INLINE_RESOURCE = {
   styleText:
     "@media all { body { color: red; } } @media print { body { color: cyan; } } body { font-size: 10px; }",
   href: null,
@@ -62,6 +76,7 @@ const ADDITIONAL_RESOURCE = {
     "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.html",
   isNew: false,
   disabled: false,
+  constructed: false,
   ruleCount: 3,
   mediaRules: [
     {
@@ -81,6 +96,17 @@ const ADDITIONAL_RESOURCE = {
   ],
 };
 
+const ADDITIONAL_CONSTRUCTED_RESOURCE = {
+  styleText: "",
+  href: null,
+  nodeHref: null,
+  isNew: false,
+  disabled: false,
+  constructed: true,
+  ruleCount: 2,
+  mediaRules: [],
+};
+
 const ADDITIONAL_FROM_ACTOR_RESOURCE = {
   styleText: "body { font-size: 10px; }",
   href: null,
@@ -88,6 +114,7 @@ const ADDITIONAL_FROM_ACTOR_RESOURCE = {
     "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.html",
   isNew: true,
   disabled: false,
+  constructed: false,
   ruleCount: 1,
   mediaRules: [],
 };
@@ -130,7 +157,7 @@ async function testResourceAvailableFeature() {
   info("Check whether ResourceCommand gets additonal stylesheet");
   await ContentTask.spawn(
     tab.linkedBrowser,
-    ADDITIONAL_RESOURCE.styleText,
+    ADDITIONAL_INLINE_RESOURCE.styleText,
     text => {
       const document = content.document;
       const stylesheet = document.createElement("style");
@@ -143,11 +170,29 @@ async function testResourceAvailableFeature() {
   );
   await assertResource(
     availableResources[availableResources.length - 1],
-    ADDITIONAL_RESOURCE
+    ADDITIONAL_INLINE_RESOURCE
+  );
+
+  info("Check whether ResourceCommand gets additonal constructed stylesheet");
+  await ContentTask.spawn(tab.linkedBrowser, null, () => {
+    const document = content.document;
+    const s = new content.CSSStyleSheet();
+    // We use the different number of rules to meaningfully differentiate
+    // between constructed stylesheets.
+    s.replaceSync("foo { color: red } bar { color: blue }");
+    // TODO(bug 1751346): wrappedJSObject should be unnecessary.
+    document.wrappedJSObject.adoptedStyleSheets.push(s);
+  });
+  await waitUntil(
+    () => availableResources.length === EXISTING_RESOURCES.length + 2
+  );
+  await assertResource(
+    availableResources[availableResources.length - 1],
+    ADDITIONAL_CONSTRUCTED_RESOURCE
   );
 
   info(
-    "Check whether ResourceCommand gets additonal stylesheet which is added by DevTool"
+    "Check whether ResourceCommand gets additonal stylesheet which is added by DevTools"
   );
   const styleSheetsFront = await targetCommand.targetFront.getFront(
     "stylesheets"
@@ -156,7 +201,7 @@ async function testResourceAvailableFeature() {
     ADDITIONAL_FROM_ACTOR_RESOURCE.styleText
   );
   await waitUntil(
-    () => availableResources.length === EXISTING_RESOURCES.length + 2
+    () => availableResources.length === EXISTING_RESOURCES.length + 3
   );
   await assertResource(
     availableResources[availableResources.length - 1],
@@ -399,7 +444,10 @@ async function testNestedResourceUpdateFeature() {
 function findMatchingExpectedResource(resource) {
   return EXISTING_RESOURCES.find(
     expected =>
-      resource.href === expected.href && resource.nodeHref === expected.nodeHref
+      resource.href === expected.href &&
+      resource.nodeHref === expected.nodeHref &&
+      resource.ruleCount === expected.ruleCount &&
+      resource.constructed == expected.constructed
   );
 }
 
@@ -473,6 +521,7 @@ async function assertResource(resource, expected) {
   is(resource.nodeHref, expected.nodeHref, "nodeHref is correct");
   is(resource.isNew, expected.isNew, "isNew is correct");
   is(resource.disabled, expected.disabled, "disabled is correct");
+  is(resource.constructed, expected.constructed, "constructed is correct");
   is(resource.ruleCount, expected.ruleCount, "ruleCount is correct");
   assertMediaRules(resource.mediaRules, expected.mediaRules);
 }

@@ -12,6 +12,7 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/HTMLEditHelpers.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/Result.h"
@@ -193,12 +194,15 @@ class HTMLEditor final : public EditorBase,
 
   MOZ_CAN_RUN_SCRIPT nsresult
   HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) final;
-  nsIContent* GetFocusedContent() const final;
+  Element* GetFocusedElement() const final;
   bool IsActiveInDOMWindow() const final;
   dom::EventTarget* GetDOMEventTarget() const final;
-  Element* FindSelectionRoot(nsINode* aNode) const final;
+  [[nodiscard]] Element* FindSelectionRoot(const nsINode& aNode) const final;
   bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const final;
   nsresult GetPreferredIMEState(widget::IMEState* aState) final;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  OnFocus(const nsINode& aOriginalEventTargetNode) final;
+  nsresult OnBlur(const dom::EventTarget* aEventTarget) final;
 
   /**
    * GetBackgroundColorState() returns what the background color of the
@@ -779,8 +783,10 @@ class HTMLEditor final : public EditorBase,
    * automatically.
    *
    * @param aElement            Block element to be removed.
+   * @return                    If succeeded, returns a suggesting point to put
+   *                            caret.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   RemoveBlockContainerWithTransaction(Element& aElement);
 
   Element* GetEditorRoot() const final;
@@ -1882,7 +1888,7 @@ class HTMLEditor final : public EditorBase,
    *                            with new element.
    * @param aTagName            The name of new element node.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   ReplaceContainerAndCloneAttributesWithTransaction(Element& aOldContainer,
                                                     nsAtom& aTagName) {
     return ReplaceContainerWithTransactionInternal(
@@ -1901,9 +1907,10 @@ class HTMLEditor final : public EditorBase,
    * @param aAttribute          Attribute name to be set to the new element.
    * @param aAttributeValue     Attribute value to be set to aAttribute.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> ReplaceContainerWithTransaction(
-      Element& aOldContainer, nsAtom& aTagName, nsAtom& aAttribute,
-      const nsAString& aAttributeValue) {
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  ReplaceContainerWithTransaction(Element& aOldContainer, nsAtom& aTagName,
+                                  nsAtom& aAttribute,
+                                  const nsAString& aAttributeValue) {
     return ReplaceContainerWithTransactionInternal(
         aOldContainer, aTagName, aAttribute, aAttributeValue, false);
   }
@@ -1917,8 +1924,8 @@ class HTMLEditor final : public EditorBase,
    *                            with new element.
    * @param aTagName            The name of new element node.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> ReplaceContainerWithTransaction(
-      Element& aOldContainer, nsAtom& aTagName) {
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  ReplaceContainerWithTransaction(Element& aOldContainer, nsAtom& aTagName) {
     return ReplaceContainerWithTransactionInternal(
         aOldContainer, aTagName, *nsGkAtoms::_empty, u""_ns, false);
   }
@@ -1928,8 +1935,10 @@ class HTMLEditor final : public EditorBase,
    * moves all its children to the parent of aElement.
    *
    * @param aElement            The element to be removed.
+   * @return                    A suggestion point to put caret.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RemoveContainerWithTransaction(Element& aElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  RemoveContainerWithTransaction(Element& aElement);
 
   /**
    * InsertContainerWithTransaction() creates new element whose name is
@@ -1976,25 +1985,26 @@ class HTMLEditor final : public EditorBase,
   }
 
   /**
-   * MoveNodeWithTransaction() moves aContent to aPointToInsert.
+   * MoveNodeWithTransaction() moves aContentToMove to aPointToInsert.
    *
-   * @param aContent        The node to be moved.
+   * @param aContentToMove  The node to be moved.
+   * @param aPointToInsert  The point where aContentToMove will be inserted.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult MoveNodeWithTransaction(
-      nsIContent& aContent, const EditorDOMPoint& aPointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveNodeWithTransaction(
+      nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert);
 
   /**
-   * MoveNodeToEndWithTransaction() moves aContent to end of aNewContainer.
+   * MoveNodeToEndWithTransaction() moves aContentToMove to end of
+   * aNewContainer.
    *
-   * @param aContent        The node to be moved.
-   * @param aNewContainer   The new container which will contain aContent as
-   *                        its last child.
+   * @param aContentToMove  The node to be moved.
+   * @param aNewContainer   The new container which will contain aContentToMove
+   *                        as its last child.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  MoveNodeToEndWithTransaction(nsIContent& aContent, nsINode& aNewContainer) {
-    EditorDOMPoint pointToInsert;
-    pointToInsert.SetToEndOf(&aNewContainer);
-    return MoveNodeWithTransaction(aContent, pointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveNodeToEndWithTransaction(
+      nsIContent& aContentToMove, nsINode& aNewContainer) {
+    return MoveNodeWithTransaction(aContentToMove,
+                                   EditorDOMPoint::AtEndOf(aNewContainer));
   }
 
   /**
@@ -2096,8 +2106,9 @@ class HTMLEditor final : public EditorBase,
                             ErrorResult& aError);
 
   /**
-   * MoveOneHardLineContents() moves the content in a hard line which contains
-   * aPointInHardLine to aPointToInsert or end of aPointToInsert's container.
+   * MoveOneHardLineContentsWithTransaction() moves the content in a hard line
+   * which contains aPointInHardLine to aPointToInsert or end of
+   * aPointToInsert's container.
    *
    * @param aPointInHardLine            A point in a hard line.  All nodes in
    *                                    same hard line will be moved.
@@ -2114,7 +2125,8 @@ class HTMLEditor final : public EditorBase,
    *                                    container while we're moving nodes.
    */
   enum class MoveToEndOfContainer { Yes, No };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveOneHardLineContents(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
+  MoveOneHardLineContentsWithTransaction(
       const EditorDOMPoint& aPointInHardLine,
       const EditorDOMPoint& aPointToInsert,
       MoveToEndOfContainer aMoveToEndOfContainer = MoveToEndOfContainer::No);
@@ -2891,8 +2903,8 @@ class HTMLEditor final : public EditorBase,
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
-  Element* GetInclusiveAncestorByTagNameInternal(const nsStaticAtom& aTagName,
-                                                 nsIContent& aContent) const;
+  Element* GetInclusiveAncestorByTagNameInternal(
+      const nsStaticAtom& aTagName, const nsIContent& aContent) const;
 
   /**
    * GetSelectedElement() returns a "selected" element node.  "selected" means:
@@ -2928,34 +2940,30 @@ class HTMLEditor final : public EditorBase,
   /**
    * GetFirstTableRowElement() returns the first <tr> element in the most
    * nearest ancestor of aTableOrElementInTable or itself.
+   * When aTableOrElementInTable is neither <table> nor in a <table> element,
+   * returns NS_ERROR_FAILURE. However, if <table> does not have <tr> element,
+   * returns nullptr.
    *
    * @param aTableOrElementInTable      <table> element or another element.
    *                                    If this is a <table> element, returns
    *                                    first <tr> element in it.  Otherwise,
    *                                    returns first <tr> element in nearest
    *                                    ancestor <table> element.
-   * @param aRv                         Returns an error code.  When
-   *                                    aTableOrElementInTable is neither
-   *                                    <table> nor in a <table> element,
-   *                                    returns NS_ERROR_FAILURE.
-   *                                    However, if <table> does not have
-   *                                    <tr> element, returns NS_OK.
    */
-  Element* GetFirstTableRowElement(Element& aTableOrElementInTable,
-                                   ErrorResult& aRv) const;
+  Result<RefPtr<Element>, nsresult> GetFirstTableRowElement(
+      const Element& aTableOrElementInTable) const;
 
   /**
    * GetNextTableRowElement() returns next <tr> element of aTableRowElement.
    * This won't cross <table> element boundary but may cross table section
    * elements like <tbody>.
+   * Note that if given element is <tr> but there is no next <tr> element, this
+   * returns nullptr but does not return error.
    *
    * @param aTableRowElement    A <tr> element.
-   * @param aRv                 Returns error.  If given element is <tr> but
-   *                            there is no next <tr> element, this returns
-   *                            nullptr but does not return error.
    */
-  Element* GetNextTableRowElement(Element& aTableRowElement,
-                                  ErrorResult& aRv) const;
+  Result<RefPtr<Element>, nsresult> GetNextTableRowElement(
+      const Element& aTableRowElement) const;
 
   struct CellData;
 
@@ -3056,6 +3064,13 @@ class HTMLEditor final : public EditorBase,
     [[nodiscard]] static CellData AtIndexInTableElement(
         const HTMLEditor& aHTMLEditor, const Element& aTableElement,
         int32_t aRowIndex, int32_t aColumnIndex);
+    [[nodiscard]] static CellData AtIndexInTableElement(
+        const HTMLEditor& aHTMLEditor, const Element& aTableElement,
+        const CellIndexes& aIndexes) {
+      MOZ_ASSERT(!aIndexes.isErr());
+      return AtIndexInTableElement(aHTMLEditor, aTableElement, aIndexes.mRow,
+                                   aIndexes.mColumn);
+    }
 
     /**
      * Treated as error if fails to compute current index or first index of the
@@ -3084,6 +3099,9 @@ class HTMLEditor final : public EditorBase,
     }
     [[nodiscard]] bool IsSpannedFromOtherRow() const {
       return mElement && mCurrent.mRow != mFirst.mRow;
+    }
+    [[nodiscard]] bool IsNextColumnSpannedFromOtherColumn() const {
+      return mElement && mCurrent.mColumn + 1 < NextColumnIndex();
     }
 
     /**
@@ -3243,8 +3261,15 @@ class HTMLEditor final : public EditorBase,
    * In #1 and #4, *aIsCellSelected will be set to true (i.e,, when
    * a selection range selects a cell element).
    */
-  already_AddRefed<Element> GetSelectedOrParentTableElement(
-      ErrorResult& aRv, bool* aIsCellSelected = nullptr) const;
+  Result<RefPtr<Element>, nsresult> GetSelectedOrParentTableElement(
+      bool* aIsCellSelected = nullptr) const;
+
+  /**
+   * GetFirstSelectedCellElementInTable() returns <td> or <th> element at
+   * first selection (using GetSelectedOrParentTableElement).  If found cell
+   * element is not in <table> or <tr> element, this returns nullptr.
+   */
+  Result<RefPtr<Element>, nsresult> GetFirstSelectedCellElementInTable() const;
 
   /**
    * PasteInternal() pasts text with replacing selected content.
@@ -3326,7 +3351,7 @@ class HTMLEditor final : public EditorBase,
    * @param aCloneAllAttributes If true, all attributes of aOldContainer will
    *                            be copied to the new element.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   ReplaceContainerWithTransactionInternal(Element& aElement, nsAtom& aTagName,
                                           nsAtom& aAttribute,
                                           const nsAString& aAttributeValue,
@@ -3461,8 +3486,6 @@ class HTMLEditor final : public EditorBase,
       bool* aMixed, nsAString& aOutColor, bool aBlockLevel);
   nsresult GetHTMLBackgroundColorState(bool* aMixed, nsAString& outColor);
 
-  nsresult GetLastCellInRow(nsINode* aRowNode, nsINode** aCellNode);
-
   /**
    * This sets background on the appropriate container element (table, cell,)
    * or calls to set the page background.
@@ -3581,10 +3604,7 @@ class HTMLEditor final : public EditorBase,
   };
 
   /**
-   * InsertTableCellsWithTransaction() inserts <td> elements before or after
-   * a cell element containing first selection range.  I.e., if the cell
-   * spans columns and aInsertPosition is eAfterSelectedCell, new columns
-   * will be inserted after the right-most column which contains the cell.
+   * InsertTableCellsWithTransaction() inserts <td> elements at aPointToInsert.
    * Note that this simply inserts <td> elements, i.e., colspan and rowspan
    * around the cell containing selection are not modified.  So, for example,
    * adding a cell to rectangular table changes non-rectangular table.
@@ -3592,45 +3612,45 @@ class HTMLEditor final : public EditorBase,
    * it may be moved to right side of the row-spanning cell after inserting
    * some cell elements before it.  Similarly, colspan won't be adjusted
    * for keeping table rectangle.
-   * If first selection range is not in table cell element, this does nothing
-   * but does not return error.
+   * Finally, puts caret into previous cell of the insertion point or the
+   * first inserted cell if aPointToInsert is start of the row.
    *
-   * @param aNumberOfCellssToInsert     Number of cells to insert.
-   * @param aInsertPosition             Before or after the target cell which
-   *                                    contains first selection range.
+   * @param aPointToInsert              The place to insert one or more cell
+   *                                    elements.  The container must be a
+   *                                    <tr> element.
+   * @param aNumberOfCellsToInsert      Number of cells to insert.
+   * @return                            The first inserted cell element and
+   *                                    start of the last inserted cell element
+   *                                    as a point to put caret.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertTableCellsWithTransaction(
-      int32_t aNumberOfCellsToInsert, InsertPosition aInsertPosition);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  InsertTableCellsWithTransaction(const EditorDOMPoint& aPointToInsert,
+                                  int32_t aNumberOfCellsToInsert);
 
   /**
-   * InsertTableColumnsWithTransaction() inserts columns before or after
-   * a cell element containing first selection range.  I.e., if the cell
-   * spans columns and aInsertPosition is eAfterSelectedCell, new columns
-   * will be inserted after the right-most row which contains the cell.
-   * If first selection range is not in table cell element, this does nothing
-   * but does not return error.
+   * InsertTableColumnsWithTransaction() inserts cell elements to every rows
+   * at same column index as the cell specified by aPointToInsert.
    *
    * @param aNumberOfColumnsToInsert    Number of columns to insert.
-   * @param aInsertPosition             Before or after the target cell which
-   *                                    contains first selection range.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertTableColumnsWithTransaction(
-      int32_t aNumberOfColumnsToInsert, InsertPosition aInsertPosition);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertTableColumnsWithTransaction(
+      const EditorDOMPoint& aPointToInsert, int32_t aNumberOfColumnsToInsert);
 
   /**
    * InsertTableRowsWithTransaction() inserts <tr> elements before or after
-   * a cell element containing first selection range.  I.e., if the cell
-   * spans rows and aInsertPosition is eAfterSelectedCell, new rows will be
-   * inserted after the most-bottom row which contains the cell.  If first
-   * selection range is not in table cell element, this does nothing but
-   * does not return error.
+   * aCellElement.  When aCellElement spans rows and aInsertPosition is
+   * eAfterSelectedCell, new rows will be inserted after the most-bottom row
+   * which contains the cell.
    *
+   * @param aCellElement                The cell element pinting where this will
+   *                                    insert a row before or after.
    * @param aNumberOfRowsToInsert       Number of rows to insert.
    * @param aInsertPosition             Before or after the target cell which
    *                                    contains first selection range.
    */
   MOZ_CAN_RUN_SCRIPT nsresult InsertTableRowsWithTransaction(
-      int32_t aNumberOfRowsToInsert, InsertPosition aInsertPosition);
+      Element& aCellElement, int32_t aNumberOfRowsToInsert,
+      InsertPosition aInsertPosition);
 
   /**
    * Insert a new cell after or before supplied aCell.
@@ -4636,6 +4656,11 @@ class HTMLEditor final : public EditorBase,
   friend class
       ListItemElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
                                       // CollectNonEditableNodes
+  friend class MoveNodeResult;       // AllowsTransactionsToChangeSelection,
+                                     // CollapseSelectionTo
+  friend class MoveNodeTransaction;  // AllowsTransactionsToChangeSelection,
+                                     // CollapseSelectionTo, MarkElementDirty,
+                                     // RangeUpdaterRef
   friend class
       ParagraphStateAtSelection;  // CollectChildren,
                                   // CollectEditTargetNodesInExtendedSelectionRanges,
@@ -4655,7 +4680,7 @@ class HTMLEditor final : public EditorBase,
                                    // DeleteTextAndTextNodesWithTransaction,
                                    // JoinNearestEditableNodesWithTransaction,
                                    // MoveChildrenWithTransaction,
-                                   // MoveOneHardLineContents,
+                                   // MoveOneHardLineContentsWithTransaction,
                                    // MoveToEndOfCOntainer,
                                    // SplitAncestorStyledInlineElementsAt,
                                    // TreatEmptyTextNodes

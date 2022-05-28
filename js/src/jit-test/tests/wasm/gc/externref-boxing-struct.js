@@ -72,10 +72,3 @@ for (let v of WasmExternrefValues)
     assertEq(typeof x[9], "object");
     assertEq(x[9].x, 9);
 }
-
-function iota(k) {
-    let a = new Array(k);
-    for ( let i=0 ; i < k; i++ )
-        a[i] = i;
-    return a;
-}

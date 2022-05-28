@@ -2161,6 +2161,8 @@ public class GeckoViewActivity extends AppCompatActivity
           return "ERROR_CORRUPTED_CONTENT";
         case WebRequestError.ERROR_HTTPS_ONLY:
           return "ERROR_HTTPS_ONLY";
+        case WebRequestError.ERROR_BAD_HSTS_CERT:
+          return "ERROR_BAD_HSTS_CERT";
         default:
           return "UNKNOWN";
       }

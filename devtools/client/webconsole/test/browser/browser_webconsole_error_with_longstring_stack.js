@@ -16,7 +16,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Wait for the error to be logged");
-  const msgNode = await waitFor(() => findMessage(hud, MESSAGE));
+  const msgNode = await waitFor(() => findConsoleAPIMessage(hud, MESSAGE));
   ok(msgNode, `Error logged`);
 
   const errorNode = msgNode.querySelector(".objectBox-stackTrace");

@@ -1,11 +1,15 @@
-use clap::{app_from_crate, arg};
+// Note: this requires the `cargo` feature
+
+use std::ops::RangeInclusive;
+
+use clap::{arg, command};
 
 fn main() {
-    let matches = app_from_crate!()
+    let matches = command!()
         .arg(
             arg!(<PORT>)
                 .help("Network port to use")
-                .validator(|s| s.parse::<usize>()),
+                .validator(port_in_range),
         )
         .get_matches();
 
@@ -14,4 +18,21 @@ fn main() {
         .value_of_t("PORT")
         .expect("'PORT' is required and parsing will fail if its missing");
     println!("PORT = {}", port);
+}
+
+const PORT_RANGE: RangeInclusive<usize> = 1..=65535;
+
+fn port_in_range(s: &str) -> Result<(), String> {
+    let port: usize = s
+        .parse()
+        .map_err(|_| format!("`{}` isn't a port number", s))?;
+    if PORT_RANGE.contains(&port) {
+        Ok(())
+    } else {
+        Err(format!(
+            "Port not in range {}-{}",
+            PORT_RANGE.start(),
+            PORT_RANGE.end()
+        ))
+    }
 }

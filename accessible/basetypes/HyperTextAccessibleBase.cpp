@@ -188,28 +188,32 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
     return LayoutDeviceIntRect();
   }
 
-  LayoutDeviceIntRect result = CharBounds(aStartOffset, aCoordType);
-  int32_t indexOfLastChar =
-      static_cast<int32_t>(ConvertMagicOffset(aEndOffset)) - 1;
-  if (aStartOffset == indexOfLastChar) {
-    // HyperTextAccessibleBase::CharBounds() above already
-    // does coord-type conversion, so simply return `result` here.
-    return result;
-  }
-
   // Here's where things get complicated. We can't simply query the first
   // and last character, and union their bounds. They might reside on different
   // lines, and a simple union may yield an incorrect width. We
   // should use the length of the longest spanned line for our width.
   // TODO: This functionality should probably live in TextLeafRange
+  // see bug 1769824
 
   TextLeafPoint currPoint = ToTextLeafPoint(aStartOffset, false);
-  TextLeafPoint endPoint = ToTextLeafPoint(indexOfLastChar, false);
+  TextLeafPoint endPoint =
+      ToTextLeafPoint(ConvertMagicOffset(aEndOffset), true);
+
+  // Step backwards from the point returned by ToTextLeafPoint above.
+  // For our purposes, `endPoint` should be inclusive.
+  endPoint = endPoint.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR,
+                                   eDirPrevious, false);
+
+  LayoutDeviceIntRect result;
+  if (endPoint == currPoint) {
+    result = currPoint.CharBounds();
+    nsAccUtils::ConvertScreenCoordsTo(&result.x, &result.y, aCoordType, Acc());
+    return result;
+  } else if (endPoint < currPoint) {
+    return result;
+  }
 
   bool locatedFinalLine = false;
-  // Note: we have to reset `result` here because the initialisation
-  // above potentially performed a coord-type conversion, and the rest of
-  // this function expects to work in screen coords.
   result = currPoint.CharBounds();
 
   // Union the first and last chars of each line to create a line rect. Then,
@@ -612,17 +616,16 @@ already_AddRefed<AccAttributes> HyperTextAccessibleBase::TextAttributes(
   }
 
   TextLeafPoint origin = ToTextLeafPoint(static_cast<int32_t>(offset));
-  RefPtr<AccAttributes> attributes = origin.GetTextAttributes(aIncludeDefAttrs);
-  TextLeafPoint start = origin.FindTextAttrsStart(
-      eDirPrevious, /* aIncludeOrigin */ true, attributes, aIncludeDefAttrs);
+  TextLeafPoint start =
+      origin.FindTextAttrsStart(eDirPrevious, /* aIncludeOrigin */ true);
   bool ok;
   std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
                                                 /* aIsEndOffset */ false);
-  TextLeafPoint end = origin.FindTextAttrsStart(
-      eDirNext, /* aIncludeOrigin */ false, attributes, aIncludeDefAttrs);
+  TextLeafPoint end =
+      origin.FindTextAttrsStart(eDirNext, /* aIncludeOrigin */ false);
   std::tie(ok, *aEndOffset) = TransformOffset(end.mAcc, end.mOffset,
                                               /* aIsEndOffset */ true);
-  return attributes.forget();
+  return origin.GetTextAttributes(aIncludeDefAttrs);
 }
 
 void HyperTextAccessibleBase::CroppedSelectionRanges(

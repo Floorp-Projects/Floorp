@@ -387,6 +387,30 @@ tools_p12_export_list_import_with_default_ciphers()
   ret=$?
   html_msg $ret 0 "Listing Alice's pk12 EC file (pk12util -l)"
   check_tmpfile
+
+  echo "$SCRIPTNAME: Exporting Alice's email EC cert & key with long pw------"
+  echo "pk12util -o Alice-ec-long.p12 -n \"Alice-ec\" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \\"
+  echo "         -w ${R_LONGPWFILE}"
+  ${BINDIR}/pk12util -o Alice-ec-long.p12 -n "Alice-ec" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \
+       -w ${R_LONGPWFILE} 2>&1
+  ret=$?
+  html_msg $ret 0 "Exporting Alice's email EC cert & key with long pw (pk12util -o)"
+  check_tmpfile
+  verify_p12 Alice-ec-long.p12 "default" "default" "default"
+
+  echo "$SCRIPTNAME: Importing Alice's email EC cert & key with long pw-----"
+  echo "pk12util -i Alice-ec-long.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_LONGPWFILE}"
+  ${BINDIR}/pk12util -i Alice-ec-long.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_LONGPWFILE} 2>&1
+  ret=$?
+  html_msg $ret 0 "Importing Alice's email EC cert & key with long pw (pk12util -i)"
+  check_tmpfile
+
+  echo "$SCRIPTNAME: Listing Alice's pk12 EC file with long pw ------------"
+  echo "pk12util -l Alice-ec-long.p12 -w ${R_LONGPWFILE}"
+  ${BINDIR}/pk12util -l Alice-ec-long.p12 -w ${R_LONGPWFILE} 2>&1
+  ret=$?
+  html_msg $ret 0 "Listing Alice's pk12 EC file with long pw (pk12util -l)"
+  check_tmpfile
 }
 
 tools_p12_import_old_files()

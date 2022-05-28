@@ -134,7 +134,9 @@ struct WorkerLoadInfoData {
   OriginTrials mTrials;
   bool mFromWindow;
   bool mEvalAllowed;
-  bool mReportCSPViolations;
+  bool mReportEvalCSPViolations;
+  bool mWasmEvalAllowed;
+  bool mReportWasmEvalCSPViolations;
   bool mXHRParamsAllowed;
   bool mPrincipalIsSystem;
   bool mPrincipalIsAddonOrExpandedAddon;

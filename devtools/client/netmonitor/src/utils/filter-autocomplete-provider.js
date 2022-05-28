@@ -9,6 +9,10 @@ const {
   SUPPORTED_HTTP_CODES,
 } = require("devtools/client/netmonitor/src/constants");
 
+const {
+  getRequestPriorityAsText,
+} = require("devtools/client/netmonitor/src/utils/format-utils");
+
 /**
  * Generates a value for the given filter
  * ie. if flag = status-code, will generate "200" from the given request item.
@@ -49,6 +53,9 @@ function getAutocompleteValuesForFlag(flag, request) {
       break;
     case "set-cookie-value":
       values = responseCookies.map(c => c.value);
+      break;
+    case "priority":
+      values.push(getRequestPriorityAsText(request.priority));
       break;
     case "set-cookie-domain":
       values = responseCookies.map(c =>

@@ -5,9 +5,9 @@
 1. [Quick Start](#quick-start)
 2. [Configuring the Parser](#configuring-the-parser)
 3. [Adding Arguments](#adding-arguments)
-    1. [Flags](#flags)
+    1. [Positionals](#positionals)
     2. [Options](#options)
-    3. [Positionals](#positionals)
+    3. [Flags](#flags)
     4. [Subcommands](#subcommands)
     5. [Defaults](#defaults)
 4. Validation
@@ -63,7 +63,7 @@ Not printing testing lists...
 
 ## Configuring the Parser
 
-You use the `App` the start building a parser.
+You use the `Command` the start building a parser.
 
 [Example:](02_apps.rs)
 ```console
@@ -86,7 +86,7 @@ MyApp 1.0
 
 ```
 
-You can use `app_from_crate!()` to fill these fields in from your `Cargo.toml`
+You can use `command!()` to fill these fields in from your `Cargo.toml`
 file.  **This requires the `cargo` feature flag.**
 
 [Example:](02_crate.rs)
@@ -109,9 +109,7 @@ clap [..]
 
 ```
 
-You can use `AppSettings` to change the application level behavior of clap. You
-can apply the setting to the top level command (`app.setting()`) or to it and
-all subcommands (`app.global_setting()`).
+You can use `Command` methods to change the application level behavior of clap.
 
 [Example:](02_app_settings.rs)
 ```console
@@ -136,9 +134,78 @@ one: "-3"
 
 ## Adding Arguments
 
+### Positionals
+
+You can have users specify values by their position on the command-line:
+
+[Example:](03_03_positional.rs)
+```console
+$ 03_03_positional --help
+clap [..]
+A simple to use, efficient, and full-featured Command Line Argument Parser
+
+USAGE:
+    03_03_positional[EXE] [NAME]
+
+ARGS:
+    <NAME>    
+
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
+
+$ 03_03_positional
+NAME: None
+
+$ 03_03_positional bob
+NAME: Some("bob")
+
+```
+
+### Options
+
+You can name your arguments with a flag:
+- Order doesn't matter
+- They can be optional
+- Intent is clearer
+
+[Example:](03_02_option.rs)
+```console
+$ 03_02_option --help
+clap [..]
+A simple to use, efficient, and full-featured Command Line Argument Parser
+
+USAGE:
+    03_02_option[EXE] [OPTIONS]
+
+OPTIONS:
+    -h, --help           Print help information
+    -n, --name <NAME>    
+    -V, --version        Print version information
+
+$ 03_02_option
+name: None
+
+$ 03_02_option --name bob
+name: Some("bob")
+
+$ 03_02_option --name=bob
+name: Some("bob")
+
+$ 03_02_option -n bob
+name: Some("bob")
+
+$ 03_02_option -n=bob
+name: Some("bob")
+
+$ 03_02_option -nbob
+name: Some("bob")
+
+```
+
 ### Flags
 
-Flags are switches that can be on/off:
+Flags can also be switches that can be on/off:
 
 [Example:](03_01_flag_bool.rs)
 ```console
@@ -198,96 +265,14 @@ verbose: 2
 
 ```
 
-### Options
-
-Flags can also accept a value.
-
-[Example:](03_02_option.rs)
-```console
-$ 03_02_option --help
-clap [..]
-A simple to use, efficient, and full-featured Command Line Argument Parser
-
-USAGE:
-    03_02_option[EXE] [OPTIONS]
-
-OPTIONS:
-    -h, --help           Print help information
-    -n, --name <NAME>    
-    -V, --version        Print version information
-
-$ 03_02_option
-name: None
-
-$ 03_02_option --name bob
-name: Some("bob")
-
-$ 03_02_option --name=bob
-name: Some("bob")
-
-$ 03_02_option -n bob
-name: Some("bob")
-
-$ 03_02_option -n=bob
-name: Some("bob")
-
-$ 03_02_option -nbob
-name: Some("bob")
-
-```
-
-### Positionals
-
-Or you can have users specify values by their position on the command-line:
-
-[Example:](03_03_positional.rs)
-```console
-$ 03_03_positional --help
-clap [..]
-A simple to use, efficient, and full-featured Command Line Argument Parser
-
-USAGE:
-    03_03_positional[EXE] [NAME]
-
-ARGS:
-    <NAME>    
-
-OPTIONS:
-    -h, --help       Print help information
-    -V, --version    Print version information
-
-$ 03_03_positional
-NAME: None
-
-$ 03_03_positional bob
-NAME: Some("bob")
-
-```
-
 ### Subcommands
 
-Subcommands are defined as `App`s that get added via `App::subcommand`. Each
+Subcommands are defined as `Command`s that get added via `Command::subcommand`. Each
 instance of a Subcommand can have its own version, author(s), Args, and even its own
 subcommands.
 
 [Example:](03_04_subcommands.rs)
 ```console
-$ 03_04_subcommands
-? failed
-clap [..]
-A simple to use, efficient, and full-featured Command Line Argument Parser
-
-USAGE:
-    03_04_subcommands[EXE] <SUBCOMMAND>
-
-OPTIONS:
-    -h, --help       Print help information
-    -V, --version    Print version information
-
-SUBCOMMANDS:
-    add     Adds files to myapp
-    help    Print this message or the help of the given subcommand(s)
-
 $ 03_04_subcommands help
 clap [..]
 A simple to use, efficient, and full-featured Command Line Argument Parser
@@ -322,7 +307,27 @@ $ 03_04_subcommands add bob
 
 ```
 
-Because we set `AppSettings::PropagateVersion`:
+Because we set `Command::arg_required_else_help`:
+```console
+$ 03_04_subcommands
+? failed
+clap [..]
+A simple to use, efficient, and full-featured Command Line Argument Parser
+
+USAGE:
+    03_04_subcommands[EXE] <SUBCOMMAND>
+
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
+
+SUBCOMMANDS:
+    add     Adds files to myapp
+    help    Print this message or the help of the given subcommand(s)
+
+```
+
+Because we set `Command::propagate_version`:
 ```console
 $ 03_04_subcommands --version
 clap [..]
@@ -445,7 +450,36 @@ For more information try --help
 
 ### Validated values
 
-More generally, you can validate and parse into any data type.
+More generally, you can parse into any data type.
+
+[Example:](04_02_parse.rs)
+```console
+$ 04_02_parse --help
+clap [..]
+A simple to use, efficient, and full-featured Command Line Argument Parser
+
+USAGE:
+    04_02_parse[EXE] <PORT>
+
+ARGS:
+    <PORT>    Network port to use
+
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
+
+$ 04_02_parse 22
+PORT = 22
+
+$ 04_02_parse foobar
+? failed
+error: Invalid value "foobar" for '<PORT>': invalid digit found in string
+
+For more information try --help
+
+```
+
+A custom validator can be used to improve the error messages or provide additional validation:
 
 [Example:](04_02_validate.rs)
 ```console
@@ -468,7 +502,13 @@ PORT = 22
 
 $ 04_02_validate foobar
 ? failed
-error: Invalid value for '<PORT>': invalid digit found in string
+error: Invalid value "foobar" for '<PORT>': `foobar` isn't a port number
+
+For more information try --help
+
+$ 04_02_validate 0
+? failed
+error: Invalid value "0" for '<PORT>': Port not in range 1-65535
 
 For more information try --help
 
@@ -574,7 +614,7 @@ OPTIONS:
 
 $ 04_04_custom
 ? failed
-error: Cam only modify one version field
+error: Can only modify one version field
 
 USAGE:
     04_04_custom[EXE] [OPTIONS] [INPUT_FILE]
@@ -586,7 +626,7 @@ Version: 2.2.3
 
 $ 04_04_custom --major --minor
 ? failed
-error: Cam only modify one version field
+error: Can only modify one version field
 
 USAGE:
     04_04_custom[EXE] [OPTIONS] [INPUT_FILE]
@@ -611,11 +651,13 @@ Doing work using input input.txt and config config.toml
 
 ## Tips
 
-- Proactively check for bad `App` configurations by calling `App::debug_assert` ([example](05_01_assert.rs))
+- For more complex demonstration of features, see our [examples](../README.md).
+- Proactively check for bad `Command` configurations by calling `Command::debug_assert` in a test ([example](05_01_assert.rs))
 
 ## Contributing
 
 New example code:
+- Please update the corresponding section in the [derive tutorial](../tutorial_derive/README.md)
 - Building: They must be added to [Cargo.toml](../../Cargo.toml) with the appropriate `required-features`.
 - Testing: Ensure there is a markdown file with [trycmd](https://docs.rs/trycmd) syntax (generally they'll go in here).
 

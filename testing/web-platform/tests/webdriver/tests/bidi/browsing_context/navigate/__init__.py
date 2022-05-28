@@ -1,13 +1,25 @@
-async def navigate_and_assert(bidi_session, context, url, wait="complete"):
-    result = await bidi_session.browsing_context.navigate(
-        context=context['context'], url=url, wait=wait
-    )
-    assert result["url"] == url
+import pytest
 
-    contexts = await bidi_session.browsing_context.get_tree(
-        root=context['context']
-    )
-    assert len(contexts) == 1
-    assert contexts[0]["url"] == url
+from webdriver.bidi.error import UnknownErrorException
 
-    return contexts
+
+async def navigate_and_assert(bidi_session, context, url, wait="complete", expected_error=False):
+    if expected_error:
+        with pytest.raises(UnknownErrorException):
+            await bidi_session.browsing_context.navigate(
+                context=context['context'], url=url, wait=wait
+            )
+
+    else:
+        result = await bidi_session.browsing_context.navigate(
+            context=context['context'], url=url, wait=wait
+        )
+        assert result["url"] == url
+
+        contexts = await bidi_session.browsing_context.get_tree(
+            root=context['context']
+        )
+        assert len(contexts) == 1
+        assert contexts[0]["url"] == url
+
+        return contexts

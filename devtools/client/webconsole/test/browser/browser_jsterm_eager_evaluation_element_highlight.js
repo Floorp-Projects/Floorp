@@ -68,7 +68,7 @@ add_task(async function() {
 
   onHighlighterHidden = highlighter.waitForHighlighterHidden();
   EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessage(hud, `#text "mydivtext"`, ".result"));
+  await waitFor(() => findEvaluationResultMessage(hud, `#text "mydivtext"`));
   await waitForNoEagerEvaluationResult(hud);
   isVisible = await highlighterTestFront.isHighlighting();
   is(isVisible, false, "Highlighter is closed after evaluating the expression");

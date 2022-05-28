@@ -831,6 +831,7 @@ struct ScrollMetadata {
         mPrefersReducedMotion(false),
         mForceMousewheelAutodir(false),
         mForceMousewheelAutodirHonourRoot(false),
+        mIsPaginatedPresentation(false),
         mOverscrollBehavior() {}
 
   bool operator==(const ScrollMetadata& aOther) const {
@@ -851,6 +852,7 @@ struct ScrollMetadata {
            mForceMousewheelAutodir == aOther.mForceMousewheelAutodir &&
            mForceMousewheelAutodirHonourRoot ==
                aOther.mForceMousewheelAutodirHonourRoot &&
+           mIsPaginatedPresentation == aOther.mIsPaginatedPresentation &&
            mDisregardedDirection == aOther.mDisregardedDirection &&
            mOverscrollBehavior == aOther.mOverscrollBehavior &&
            mScrollUpdates == aOther.mScrollUpdates;
@@ -936,6 +938,11 @@ struct ScrollMetadata {
   bool ForceMousewheelAutodirHonourRoot() const {
     return mForceMousewheelAutodirHonourRoot;
   }
+
+  void SetIsPaginatedPresentation(bool aValue) {
+    mIsPaginatedPresentation = aValue;
+  }
+  bool IsPaginatedPresentation() const { return mIsPaginatedPresentation; }
 
   bool DidContentGetPainted() const { return mDidContentGetPainted; }
 
@@ -1051,6 +1058,13 @@ struct ScrollMetadata {
   // enabled for the scroll frame.
   bool mForceMousewheelAutodir : 1;
   bool mForceMousewheelAutodirHonourRoot : 1;
+
+  // Whether this content is being displayed in a paginated fashion
+  // such as printing or print preview. In such cases, content that
+  // would normally only generate one display item may generated one
+  // display item per page, and the different instances may be subject
+  // to different transforms, which constrains the assumptions APZ can make.
+  bool mIsPaginatedPresentation : 1;
 
   // The disregarded direction means the direction which is disregarded anyway,
   // even if the scroll frame overflows in that direction and the direction is

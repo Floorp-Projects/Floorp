@@ -295,53 +295,6 @@ class SnapshotSelector extends EventEmitter {
   }
 
   /**
-   * Sets the current context's url for this selector.
-   *
-   * @param {string} url
-   *  The url of the context
-   */
-  setUrl(url) {
-    url = Snapshots.stripFragments(url);
-    if (this.#context.url == url) {
-      return;
-    }
-
-    this.#context.url = url;
-    this.rebuild();
-  }
-
-  /**
-   * Like setUrl, but rebuilds immediately instead of after a delay. Useful for
-   * startup.
-   *
-   * @param {string} url
-   *  The url of the context
-   */
-  setUrlAndRebuildNow(url) {
-    url = Snapshots.stripFragments(url);
-    if (this.#context.url == url) {
-      return;
-    }
-
-    this.#context.url = url;
-    this.#buildSnapshots();
-  }
-
-  /**
-   * Sets the type of snapshots for this selector.
-   *
-   * @param {PageDataCollector.DATA_TYPE | undefined} type
-   */
-  async setType(type) {
-    if (this.#context.type === type) {
-      return;
-    }
-
-    this.#context.type = type;
-    this.rebuild();
-  }
-
-  /**
    * Update context details and start a rebuild.
    * Undefined properties are ignored, thus pass null to nullify a property.
    * @param {string} [url]

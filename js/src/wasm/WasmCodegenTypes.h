@@ -555,28 +555,77 @@ using CallSiteTargetVector = Vector<CallSiteTarget, 0, SystemAllocPolicy>;
 // wasm try-catch blocks. These represent the information needed to take
 // exception handling actions after a throw is executed.
 struct WasmTryNote {
-  explicit WasmTryNote(uint32_t begin = 0, uint32_t end = 0,
-                       uint32_t framePushed = 0)
-      : begin(begin), end(end), framePushed(framePushed) {}
+ private:
+  // Sentinel value to detect a try note that has not been given a try body.
+  static const uint32_t BEGIN_NONE = UINT32_MAX;
 
-  uint32_t begin;        // Begin code offset of try instructions.
-  uint32_t end;          // End code offset of try instructions.
-  uint32_t entryPoint;   // The offset of the landing pad.
-  uint32_t framePushed;  // Track offset from frame of stack pointer.
+  // Begin code offset of the try body.
+  uint32_t begin_;
+  // End code offset of the try body.
+  uint32_t end_;
+  // The code offset of the landing pad.
+  uint32_t entryPoint_;
+  // Track offset from frame of stack pointer.
+  uint32_t framePushed_;
 
-  WASM_CHECK_CACHEABLE_POD(begin, end, entryPoint, framePushed);
+  WASM_CHECK_CACHEABLE_POD(begin_, end_, entryPoint_, framePushed_);
 
+ public:
+  explicit WasmTryNote()
+      : begin_(BEGIN_NONE), end_(0), entryPoint_(0), framePushed_(0) {}
+
+  // Returns whether a try note has been assigned a range for the try body.
+  bool hasTryBody() const { return begin_ != BEGIN_NONE; }
+
+  // The code offset of the beginning of the try body.
+  uint32_t tryBodyBegin() const { return begin_; }
+
+  // The code offset of the end of the try body.
+  uint32_t tryBodyEnd() const { return end_; }
+
+  // Returns whether an offset is within this try note's body.
+  bool offsetWithinTryBody(uint32_t offset) const {
+    return offset > begin_ && offset <= end_;
+  }
+
+  // The code offset of the entry to the landing pad.
+  uint32_t landingPadEntryPoint() const { return entryPoint_; }
+
+  // The stack frame pushed amount at the entry to the landing pad.
+  uint32_t landingPadFramePushed() const { return framePushed_; }
+
+  // Set the beginning of the try body.
+  void setTryBodyBegin(uint32_t begin) {
+    MOZ_ASSERT(begin_ == BEGIN_NONE);
+    begin_ = begin;
+  }
+
+  // Set the end of the try body.
+  void setTryBodyEnd(uint32_t end) {
+    MOZ_ASSERT(begin_ != BEGIN_NONE);
+    end_ = end;
+    // We do not allow empty try bodies
+    MOZ_ASSERT(end_ > begin_);
+  }
+
+  // Set the entry point and frame pushed of the landing pad.
+  void setLandingPad(uint32_t entryPoint, uint32_t framePushed) {
+    entryPoint_ = entryPoint;
+    framePushed_ = framePushed;
+  }
+
+  // Adjust all code offsets in this try note by a delta.
   void offsetBy(uint32_t offset) {
-    begin += offset;
-    end += offset;
-    entryPoint += offset;
+    begin_ += offset;
+    end_ += offset;
+    entryPoint_ += offset;
   }
 
   bool operator<(const WasmTryNote& other) const {
-    if (end == other.end) {
-      return begin > other.begin;
+    if (end_ == other.end_) {
+      return begin_ > other.begin_;
     }
-    return end < other.end;
+    return end_ < other.end_;
   }
 };
 

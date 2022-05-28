@@ -250,6 +250,14 @@ nsFlowAreaRect nsFloatManager::GetFlowArea(
       (haveFloats ? nsFlowAreaRectFlags::HasFloats
                   : nsFlowAreaRectFlags::NoFlags) |
       (mayWiden ? nsFlowAreaRectFlags::MayWiden : nsFlowAreaRectFlags::NoFlags);
+  // Some callers clamp the inline size of nsFlowAreaRect to be nonnegative
+  // "for compatibility with nsSpaceManager". So, we set a flag here to record
+  // the fact that the ISize is actually negative, so that downstream code can
+  // realize that there's no place here where we could put a float-avoiding
+  // block (even one with ISize of 0).
+  if (lineRight - lineLeft < 0) {
+    flags |= nsFlowAreaRectFlags::ISizeIsActuallyNegative;
+  }
 
   return nsFlowAreaRect(aWM, inlineStart, blockStart - mBlockStart,
                         lineRight - lineLeft, blockSize, flags);

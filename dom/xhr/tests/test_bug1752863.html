@@ -14,6 +14,9 @@
     worker.onmessage = function(event) {
       if (event.data == "DOMException") {
         ok(true, "Got DOMException");
+        // If we got our expected event first, eventually following wrong ones
+        // can be ignored.
+        worker.onmessage = null;
       } else if (event.data == "TERMINATE") {
         ok(false, "Got TERMINATE");
       } else {

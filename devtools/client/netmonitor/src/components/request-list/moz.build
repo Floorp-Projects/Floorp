@@ -10,6 +10,7 @@ DevToolsModules(
     "RequestListColumnFile.js",
     "RequestListColumnInitiator.js",
     "RequestListColumnMethod.js",
+    "RequestListColumnPriority.js",
     "RequestListColumnProtocol.js",
     "RequestListColumnRemoteIP.js",
     "RequestListColumnResponseHeader.js",

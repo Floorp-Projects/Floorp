@@ -597,6 +597,22 @@ TEST_P(TlsExtensionTestPre13, SupportedPointsTrailingData) {
       client_, ssl_ec_point_formats_xtn, extension));
 }
 
+TEST_P(TlsExtensionTestPre13, SupportedPointsCompressed) {
+  const uint8_t val[] = {0x01, 0x02};
+  DataBuffer extension(val, sizeof(val));
+  ClientHelloErrorTest(std::make_shared<TlsExtensionReplacer>(
+                           client_, ssl_ec_point_formats_xtn, extension),
+                       kTlsAlertIllegalParameter);
+}
+
+TEST_P(TlsExtensionTestPre13, SupportedPointsUndefined) {
+  const uint8_t val[] = {0x01, 0xAA};
+  DataBuffer extension(val, sizeof(val));
+  ClientHelloErrorTest(std::make_shared<TlsExtensionReplacer>(
+                           client_, ssl_ec_point_formats_xtn, extension),
+                       kTlsAlertIllegalParameter);
+}
+
 TEST_P(TlsExtensionTestPre13, RenegotiationInfoBadLength) {
   const uint8_t val[] = {0x99};
   DataBuffer extension(val, sizeof(val));

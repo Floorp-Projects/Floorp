@@ -467,7 +467,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 #if defined(JS_CODEGEN_X86)
     // On X86, the FramePointer is pushed as the first value in the Rectifier
     // frame.
-    static_assert(BaselineFrameReg == FramePointer);
     priorOffset -= sizeof(void*);
     return virtualPointerAtStackOffset(priorOffset);
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) ||   \

@@ -48,7 +48,7 @@ namespace gl {
 #include "GLContextProviderImpl.h"
 #undef GL_CONTEXT_PROVIDER_NAME
 
-#if defined(XP_LINUX) && !defined(ANDROID)
+#if defined(MOZ_WIDGET_GTK)
 #  ifdef MOZ_X11
 #    define GL_CONTEXT_PROVIDER_NAME GLContextProviderGLX
 #    include "GLContextProviderImpl.h"

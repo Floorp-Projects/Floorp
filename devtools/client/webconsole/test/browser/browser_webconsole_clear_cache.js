@@ -21,14 +21,14 @@ add_task(async function() {
   await closeToolbox();
   hud = await openConsole(tab);
 
-  await waitFor(() => findMessage(hud, EXPECTED_REPORT));
-  await waitFor(() => findMessage(hud, CACHED_MESSAGE));
+  await waitFor(() => findErrorMessage(hud, EXPECTED_REPORT));
+  await waitFor(() => findConsoleAPIMessage(hud, CACHED_MESSAGE));
 
   info(
     "Click the clear output button and wait until there's no messages in the output"
   );
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
-  await waitFor(() => findMessages(hud, "").length === 0);
+  await waitFor(() => findAllMessages(hud).length === 0);
 
   info("Close and re-open the console");
   await closeToolbox();
@@ -37,12 +37,12 @@ add_task(async function() {
   info("Log a smoke message in order to know that the console is ready");
   await logTextToConsole(hud, "Smoke message");
   is(
-    findMessage(hud, CACHED_MESSAGE),
+    findConsoleAPIMessage(hud, CACHED_MESSAGE),
     undefined,
     "The cached message is not visible anymore"
   );
   is(
-    findMessage(hud, EXPECTED_REPORT),
+    findErrorMessage(hud, EXPECTED_REPORT),
     undefined,
     "The cached error message is not visible anymore as well"
   );
@@ -52,7 +52,11 @@ add_task(async function() {
   await logTextToConsole(hud, NEW_CACHED_MESSAGE);
 
   info("Send a console.clear() from the content page");
-  const onConsoleCleared = waitForMessage(hud, "Console was cleared");
+  const onConsoleCleared = waitForMessageByType(
+    hud,
+    "Console was cleared",
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.clear();
   });
@@ -65,14 +69,14 @@ add_task(async function() {
   info("Log a smoke message in order to know that the console is ready");
   await logTextToConsole(hud, "Second smoke message");
   is(
-    findMessage(hud, NEW_CACHED_MESSAGE),
+    findConsoleAPIMessage(hud, NEW_CACHED_MESSAGE),
     undefined,
     "The new cached message is not visible anymore"
   );
 });
 
 function logTextToConsole(hud, text) {
-  const onMessage = waitForMessage(hud, text);
+  const onMessage = waitForMessageByType(hud, text, ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [text], function(str) {
     content.wrappedJSObject.console.log(str);
   });

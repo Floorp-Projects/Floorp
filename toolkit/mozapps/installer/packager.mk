@@ -126,10 +126,12 @@ ifdef MOZ_AUTOMATION
 endif
 ifdef MOZ_NORMANDY
 ifndef CROSS_COMPILE
+ifndef FUZZING_SNAPSHOT
 	# Generate a file that describes the local Normandy client.
 	env LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):$(DIST)/$(PKG_PATH)/bin" \
 		$(DIST)/$(PKG_PATH)/bin/xpcshell \
 		$(MOZILLA_DIR)/toolkit/components/normandy/metadata-script.js $(MOZ_NORMANDY_JSON)
+endif
 endif
 endif
 	$(TOUCH) $@

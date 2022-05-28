@@ -1082,6 +1082,7 @@ class MOZ_RAII AutoScratchRegisterMaybeOutputType {
 
   void operator=(const AutoScratchRegisterMaybeOutputType&) = delete;
 
+  Register get() const { return scratchReg_; }
   operator Register() const { return scratchReg_; }
 };
 

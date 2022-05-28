@@ -51,7 +51,7 @@ async function performEditorEnabledTests() {
     "input expressions should not have been executed"
   );
 
-  let onMessage = waitForMessage(hud, "11", ".result");
+  let onMessage = waitForMessageByType(hud, "11", ".result");
   EventUtils.synthesizeKey("KEY_Enter", {
     [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
   });
@@ -59,7 +59,7 @@ async function performEditorEnabledTests() {
   ok(true, "Input was executed on Ctrl/Cmd + Enter");
 
   setInputValue(hud, "function x() {");
-  onMessage = waitForMessage(hud, "SyntaxError");
+  onMessage = waitForMessageByType(hud, "SyntaxError", ".error");
   EventUtils.synthesizeKey("KEY_Enter", {
     [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
   });
@@ -74,10 +74,10 @@ async function performEditorDisabledTests() {
   // execute the 2nd expression which should have been entered but not executed
   EventUtils.sendKey("return");
 
-  let msg = await waitFor(() => findMessage(hud, "10"));
+  let msg = await waitFor(() => findEvaluationResultMessage(hud, "10"));
   ok(msg, "found evaluation result of 1st expression");
 
-  msg = await waitFor(() => findMessage(hud, "11"));
+  msg = await waitFor(() => findEvaluationResultMessage(hud, "11"));
   ok(msg, "found evaluation result of 2nd expression");
 
   is(getInputValue(hud), "", "input line is cleared after execution");

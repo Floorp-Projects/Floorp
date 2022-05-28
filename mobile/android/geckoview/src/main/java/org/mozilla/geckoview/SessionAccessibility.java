@@ -8,7 +8,6 @@ package org.mozilla.geckoview;
 import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
@@ -393,13 +392,14 @@ public class SessionAccessibility {
       // We set the bounds in parent here because we need to use the client-to-screen matrix
       // and it is only available in the UI thread.
       final Rect bounds = new Rect();
-      node.getBoundsInScreen(bounds);
+      node.getBoundsInParent(bounds);
+
       final Matrix matrix = new Matrix();
       mSession.getClientToScreenMatrix(matrix);
-      final RectF floatBounds = new RectF(bounds);
-      matrix.mapRect(floatBounds);
-      floatBounds.roundOut(bounds);
-      node.setBoundsInParent(bounds);
+      final float[] origin = new float[2];
+      matrix.mapPoints(origin);
+      bounds.offset((int) origin[0], (int) origin[1]);
+      node.setBoundsInScreen(bounds);
 
       return node;
     }
@@ -1220,8 +1220,8 @@ public class SessionAccessibility {
       }
       node.setFocused(mFocusedNode == id);
 
-      final Rect screenBounds = new Rect(bounds[0], bounds[1], bounds[2], bounds[3]);
-      node.setBoundsInScreen(screenBounds);
+      final Rect parentBounds = new Rect(bounds[0], bounds[1], bounds[2], bounds[3]);
+      node.setBoundsInParent(parentBounds);
 
       for (final int childId : children) {
         node.addChild(mView, childId);

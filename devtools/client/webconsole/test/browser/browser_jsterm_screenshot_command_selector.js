@@ -33,10 +33,11 @@ add_task(async function() {
   const sameOriginIframeScreenshotFile = FileUtils.getFile("TmpD", [
     "TestScreenshotFile-same-origin-iframe.png",
   ]);
-  await executeAndWaitForMessage(
+  await executeAndWaitForMessageByType(
     hud,
     `:screenshot --selector #same-origin-iframe ${sameOriginIframeScreenshotFile.path} ${dpr}`,
-    `Saved to ${sameOriginIframeScreenshotFile.path}`
+    `Saved to ${sameOriginIframeScreenshotFile.path}`,
+    ".console-api"
   );
 
   let fileExists = sameOriginIframeScreenshotFile.exists();
@@ -97,10 +98,11 @@ add_task(async function() {
   const remoteIframeSpanScreenshot = FileUtils.getFile("TmpD", [
     "TestScreenshotFile-remote-iframe.png",
   ]);
-  await executeAndWaitForMessage(
+  await executeAndWaitForMessageByType(
     hud,
     `:screenshot --selector span ${remoteIframeSpanScreenshot.path} ${dpr}`,
-    `Saved to ${remoteIframeSpanScreenshot.path}`
+    `Saved to ${remoteIframeSpanScreenshot.path}`,
+    ".console-api"
   );
 
   fileExists = remoteIframeSpanScreenshot.exists();
@@ -127,10 +129,11 @@ add_task(async function() {
   info(
     "Check that using a selector that doesn't match any element displays a warning in console"
   );
-  await executeAndWaitForMessage(
+  await executeAndWaitForMessageByType(
     hud,
     `:screenshot --selector #this-element-does-not-exist`,
-    `The ‘#this-element-does-not-exist’ selector does not match any element on the page.`
+    `The ‘#this-element-does-not-exist’ selector does not match any element on the page.`,
+    ".warn"
   );
   ok(
     true,

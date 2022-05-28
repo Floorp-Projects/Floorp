@@ -2227,6 +2227,12 @@ var Policies = {
     },
   },
 
+  StartDownloadsInTempDirectory: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("browser.downloads.start_downloads_in_tmp_dir", param);
+    },
+  },
+
   SupportMenu: {
     onProfileAfterChange(manager, param) {
       manager.setSupportMenu(param);

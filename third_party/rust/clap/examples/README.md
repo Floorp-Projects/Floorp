@@ -1,14 +1,34 @@
 # Examples
 
 - Basic demo: [derive](demo.md)
-- Key-value pair arguments: [derive](keyvalue-derive.md)
+- Typed arguments: [derive](typed-derive.md)
+  - Topics:
+    - Custom `parse()`
 - Custom cargo command: [builder](cargo-example.md), [derive](cargo-example-derive.md)
+  - Topics:
+    - Subcommands
+    - Cargo plugins
 - git-like interface: [builder](git.md), [derive](git-derive.md)
+  - Topics:
+    - Subcommands
+    - External subcommands
+    - Optional subcommands
+    - Default subcommands
 - pacman-like interface: [builder](pacman.md)
+  - Topics:
+    - Flag subcommands
+    - Conflicting arguments
 - Escaped positionals with `--`: [builder](escaped-positional.md), [derive](escaped-positional-derive.md)
 - Multi-call
   - busybox: [builder](multicall-busybox.md)
+    - Topics:
+      - Subcommands
   - hostname: [builder](multicall-hostname.md)
+    - Topics:
+      - Subcommands
+- repl: [builder](repl.rs)
+  - Topics:
+    - Read-Eval-Print Loops / Custom command lines
 
 ## Contributing
 
@@ -17,4 +37,4 @@ New examples:
 - Testing: Ensure there is a markdown file with [trycmd](https://docs.rs/trycmd) syntax
 - Link the `.md` file from here
 
-See also the general [CONTRIBUTING](../../CONTRIBUTING.md).
+See also the general [CONTRIBUTING](../CONTRIBUTING.md).

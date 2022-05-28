@@ -1393,13 +1393,15 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
             {(const uint8_t*)viewportData, sizeof(viewportData)});
         mDirtyViewport = false;
       }
-      if (mDirtyAA) {
-        // AA is not supported for OP_SOURCE.
+      if (mDirtyAA || aStrokeOptions) {
+        // AA is not supported for OP_SOURCE. Native lines use line smoothing.
         float aaData =
-            mLastCompositionOp == CompositionOp::OP_SOURCE ? 0.0f : 1.0f;
+            mLastCompositionOp == CompositionOp::OP_SOURCE || aStrokeOptions
+                ? 0.0f
+                : 1.0f;
         mWebgl->UniformData(LOCAL_GL_FLOAT, mSolidProgramAA, false,
                             {(const uint8_t*)&aaData, sizeof(aaData)});
-        mDirtyAA = false;
+        mDirtyAA = !!aStrokeOptions;
       }
       float a = color.a * aOptions.mAlpha;
       float colorData[4] = {color.b * a, color.g * a, color.r * a, a};
@@ -1587,13 +1589,15 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
             {(const uint8_t*)viewportData, sizeof(viewportData)});
         mDirtyViewport = false;
       }
-      if (mDirtyAA) {
-        // AA is not supported for OP_SOURCE.
+      if (mDirtyAA || aStrokeOptions) {
+        // AA is not supported for OP_SOURCE. Native lines use line smoothing.
         float aaData =
-            mLastCompositionOp == CompositionOp::OP_SOURCE ? 0.0f : 1.0f;
+            mLastCompositionOp == CompositionOp::OP_SOURCE || aStrokeOptions
+                ? 0.0f
+                : 1.0f;
         mWebgl->UniformData(LOCAL_GL_FLOAT, mImageProgramAA, false,
                             {(const uint8_t*)&aaData, sizeof(aaData)});
-        mDirtyAA = false;
+        mDirtyAA = !!aStrokeOptions;
       }
       DeviceColor color = aMaskColor.valueOr(DeviceColor(1, 1, 1, 1));
       float a = color.a * aOptions.mAlpha;
@@ -2238,6 +2242,34 @@ void DrawTargetWebgl::StrokeLine(const Point& aStart, const Point& aEnd,
                                  const Pattern& aPattern,
                                  const StrokeOptions& aStrokeOptions,
                                  const DrawOptions& aOptions) {
+  if (mWebglValid && SupportsPattern(aPattern) &&
+      (aStrokeOptions.mLineCap == CapStyle::BUTT ||
+       aStrokeOptions.mLineCap == CapStyle::SQUARE) &&
+      aStrokeOptions.mDashPattern == nullptr && aStrokeOptions.mLineWidth > 0) {
+    // Treat the line as a rectangle whose center-line is the supplied line and
+    // for which the height is the supplied line width. Generate a matrix that
+    // maps the X axis to the orientation of the line and the Y axis to the
+    // normal vector to the line. This only works if the line caps are squared,
+    // as rounded rectangles are currently not supported for round line caps.
+    Point start = aStart;
+    Point dirX = aEnd - aStart;
+    float scale = aStrokeOptions.mLineWidth / dirX.Length();
+    Point dirY = Point(-dirX.y, dirX.x) * scale;
+    if (aStrokeOptions.mLineCap == CapStyle::SQUARE) {
+      start -= (dirX * scale) * 0.5f;
+      dirX += dirX * scale;
+    }
+    Matrix lineXform(dirX.x, dirX.y, dirY.x, dirY.y, start.x - 0.5f * dirY.x,
+                     start.y - 0.5f * dirY.y);
+    AutoRestoreTransform restore(this);
+    ConcatTransform(lineXform);
+    if (DrawRect(Rect(0, 0, 1, 1), aPattern, aOptions, Nothing(), nullptr, true,
+                 true, true)) {
+      return;
+    }
+    // If drawing an accelerated rectangle failed, just fall back to Skia's line
+    // rendering.
+  }
   MarkSkiaChanged(aOptions);
   mSkia->StrokeLine(aStart, aEnd, aPattern, aStrokeOptions, aOptions);
 }
@@ -2250,16 +2282,30 @@ void DrawTargetWebgl::Stroke(const Path* aPath, const Pattern& aPattern,
   }
   const auto& skiaPath = static_cast<const PathSkia*>(aPath)->GetPath();
   SkRect rect;
-  SkPoint line[2];
   if (!mWebglValid) {
     MarkSkiaChanged(aOptions);
     mSkia->Stroke(aPath, aPattern, aStrokeOptions, aOptions);
   } else if (skiaPath.isRect(&rect)) {
     StrokeRect(SkRectToRect(rect), aPattern, aStrokeOptions, aOptions);
-  } else if (skiaPath.isLine(line)) {
-    StrokeLine(SkPointToPoint(line[0]), SkPointToPoint(line[1]), aPattern,
-               aStrokeOptions, aOptions);
   } else {
+    // Avoid using Skia's isLine here because some paths erroneously include a
+    // closePath at the end, causing isLine to not detect the line. In that case
+    // we just draw a line in reverse right over the original line.
+    int numVerbs = skiaPath.countVerbs();
+    if (numVerbs >= 2 && numVerbs <= 3) {
+      uint8_t verbs[3];
+      skiaPath.getVerbs(verbs, numVerbs);
+      if (verbs[0] == SkPath::kMove_Verb && verbs[1] == SkPath::kLine_Verb &&
+          (numVerbs < 3 || verbs[2] == SkPath::kClose_Verb)) {
+        Point start = SkPointToPoint(skiaPath.getPoint(0));
+        Point end = SkPointToPoint(skiaPath.getPoint(1));
+        StrokeLine(start, end, aPattern, aStrokeOptions, aOptions);
+        if (numVerbs >= 3) {
+          StrokeLine(end, start, aPattern, aStrokeOptions, aOptions);
+        }
+        return;
+      }
+    }
     DrawPath(aPath, aPattern, aOptions, &aStrokeOptions);
   }
 }
@@ -2442,7 +2488,7 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
     return true;
   }
   // Ensure there is a clear border around the text.
-  xformBounds.Inflate(1);
+  xformBounds.Inflate(2);
   IntRect intBounds = RoundedOut(xformBounds);
 
   // Whether to render the text as a full color result as opposed to as a

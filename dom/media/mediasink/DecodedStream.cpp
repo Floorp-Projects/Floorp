@@ -1066,7 +1066,7 @@ TimeUnit DecodedStream::GetEndTime(TrackType aType) const {
   return TimeUnit::Zero();
 }
 
-TimeUnit DecodedStream::GetPosition(TimeStamp* aTimeStamp) const {
+TimeUnit DecodedStream::GetPosition(TimeStamp* aTimeStamp) {
   AssertOwnerThread();
   TRACE("DecodedStream::GetPosition");
   // This is only called after MDSM starts playback. So mStartTime is

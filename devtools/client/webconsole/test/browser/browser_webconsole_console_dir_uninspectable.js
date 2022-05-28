@@ -15,22 +15,27 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Logging a first message to make sure everything is working");
-  await executeAndWaitForMessage(
+  await executeAndWaitForMessageByType(
     hud,
     `console.log("${FIRST_LOG_MESSAGE}")`,
     FIRST_LOG_MESSAGE,
-    ".message.log"
+    ".console-api"
   );
 
   info("console.dir on an uninspectable object");
-  await executeAndWaitForMessage(
+  await executeAndWaitForMessageByType(
     hud,
     "console.dir(Object.create(null))",
-    "Object {  }"
+    "Object {  }",
+    ".console-api"
   );
 
   info("Logging a second message to make sure the console is not broken");
-  const onLogMessage = waitForMessage(hud, SECOND_LOG_MESSAGE);
+  const onLogMessage = waitForMessageByType(
+    hud,
+    SECOND_LOG_MESSAGE,
+    ".console-api"
+  );
   // Logging from content to make sure the console API is working.
   SpecialPowers.spawn(
     gBrowser.selectedBrowser,

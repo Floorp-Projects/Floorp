@@ -2,19 +2,6 @@ from copy import deepcopy
 import os
 
 import pytest
-from mozprofile import Profile
-
-
-@pytest.fixture
-def custom_profile(configuration):
-    # Clone the known profile for automation preferences
-    firefox_options = configuration["capabilities"]["moz:firefoxOptions"]
-    _, profile_folder = firefox_options["args"]
-    profile = Profile.clone(profile_folder)
-
-    yield profile
-
-    profile.cleanup()
 
 
 @pytest.mark.parametrize("port", ["0", "2828"], ids=["system allocated", "fixed"])

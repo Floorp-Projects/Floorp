@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -67,8 +68,8 @@ class IMEContentObserver final : public nsStubMutationObserver,
    */
   void OnSelectionChange(dom::Selection& aSelection);
 
-  MOZ_CAN_RUN_SCRIPT bool OnMouseButtonEvent(nsPresContext* aPresContext,
-                                             WidgetMouseEvent* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT bool OnMouseButtonEvent(nsPresContext& aPresContext,
+                                             WidgetMouseEvent& aMouseEvent);
 
   MOZ_CAN_RUN_SCRIPT nsresult
   HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
@@ -81,12 +82,12 @@ class IMEContentObserver final : public nsStubMutationObserver,
    *
    * @param aWidget         The widget which can access native IME.
    * @param aPresContext    The PresContext which has aContent.
-   * @param aContent        An editable element or nullptr if this will observe
+   * @param aElement        An editable element or nullptr if this will observe
    *                        design mode document.
    * @param aEditorBase     The editor which is associated with aContent.
    */
   MOZ_CAN_RUN_SCRIPT void Init(nsIWidget& aWidget, nsPresContext& aPresContext,
-                               nsIContent* aContent, EditorBase& aEditorBase);
+                               dom::Element* aElement, EditorBase& aEditorBase);
 
   /**
    * Destroy() finalizes the instance, i.e., stops observing contents and
@@ -121,13 +122,14 @@ class IMEContentObserver final : public nsStubMutationObserver,
    */
   MOZ_CAN_RUN_SCRIPT bool MaybeReinitialize(nsIWidget& aWidget,
                                             nsPresContext& aPresContext,
-                                            nsIContent* aContent,
+                                            dom::Element* aElement,
                                             EditorBase& aEditorBase);
 
-  bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent) const;
-  bool IsBeingInitializedFor(nsPresContext* aPresContext,
-                             nsIContent* aContent) const;
-  bool IsManaging(const TextComposition* aTextComposition) const;
+  bool IsManaging(const nsPresContext& aPresContext,
+                  const dom::Element* aElement) const;
+  bool IsBeingInitializedFor(const nsPresContext& aPresContext,
+                             const dom::Element* aElement) const;
+  bool IsManaging(const TextComposition& aTextComposition) const;
   bool WasInitializedWith(const EditorBase& aEditorBase) const {
     return mEditorBase == &aEditorBase;
   }
@@ -141,7 +143,7 @@ class IMEContentObserver final : public nsStubMutationObserver,
   void UnsuppressNotifyingIME();
   nsPresContext* GetPresContext() const;
   nsresult GetSelectionAndRoot(dom::Selection** aSelection,
-                               nsIContent** aRoot) const;
+                               dom::Element** aRootElement) const;
 
   /**
    * TryToFlushPendingNotifications() should be called when pending events
@@ -167,8 +169,8 @@ class IMEContentObserver final : public nsStubMutationObserver,
   void BeforeEditAction();
   void CancelEditAction();
 
-  nsIContent* GetObservingContent() const {
-    return mIsObserving ? mRootContent.get() : nullptr;
+  dom::Element* GetObservingElement() const {
+    return mIsObserving ? mRootElement.get() : nullptr;
   }
 
  private:
@@ -182,15 +184,15 @@ class IMEContentObserver final : public nsStubMutationObserver,
   };
   State GetState() const;
   MOZ_CAN_RUN_SCRIPT bool InitWithEditor(nsPresContext& aPresContext,
-                                         nsIContent* aContent,
+                                         dom::Element* aElement,
                                          EditorBase& aEditorBase);
   void OnIMEReceivedFocus();
   void Clear();
-  bool IsObservingContent(nsPresContext* aPresContext,
-                          nsIContent* aContent) const;
-  bool IsReflowLocked() const;
-  bool IsSafeToNotifyIME() const;
-  bool IsEditorComposing() const;
+  [[nodiscard]] bool IsObservingContent(const nsPresContext& aPresContext,
+                                        const dom::Element* aElement) const;
+  [[nodiscard]] bool IsReflowLocked() const;
+  [[nodiscard]] bool IsSafeToNotifyIME() const;
+  [[nodiscard]] bool IsEditorComposing() const;
 
   // Following methods are called by DocumentObserver when
   // beginning to update the contents and ending updating the contents.
@@ -299,7 +301,7 @@ class IMEContentObserver final : public nsStubMutationObserver,
   // On the other hand, mWidget is its parent which handles IME.
   nsCOMPtr<nsIWidget> mFocusedWidget;
   RefPtr<dom::Selection> mSelection;
-  nsCOMPtr<nsIContent> mRootContent;
+  RefPtr<dom::Element> mRootElement;
   nsCOMPtr<nsINode> mEditableNode;
   nsCOMPtr<nsIDocShell> mDocShell;
   RefPtr<EditorBase> mEditorBase;

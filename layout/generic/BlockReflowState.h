@@ -108,6 +108,14 @@ class BlockReflowState {
    *
    * Returns whether there are floats present at the given block-direction
    * coordinate and within the inline size of the content rect.
+   *
+   * Note: some codepaths clamp this structure's inline-size to be >=0 "for
+   * compatibility with nsSpaceManager". So if you encounter a nsFlowAreaRect
+   * which appears to have an ISize of 0, you can't necessarily assume that a
+   * 0-ISize float-avoiding block would actually fit; you need to check the
+   * InitialISizeIsNegative flag to see whether that 0 is actually a clamped
+   * negative value (in which case a 0-ISize float-avoiding block *should not*
+   * be considered as fitting, because it would intersect some float).
    */
   nsFlowAreaRect GetFloatAvailableSpace() const {
     return GetFloatAvailableSpace(mBCoord);

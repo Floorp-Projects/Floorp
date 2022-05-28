@@ -20,8 +20,7 @@ class nsDeviceContextSpecX : public nsIDeviceContextSpec {
 
   nsDeviceContextSpecX();
 
-  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS,
-                  bool aIsPrintPreview) override;
+  NS_IMETHOD Init(nsIPrintSettings* aPS, bool aIsPrintPreview) override;
   already_AddRefed<PrintTarget> MakePrintTarget() final;
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
@@ -37,14 +36,13 @@ class nsDeviceContextSpecX : public nsIDeviceContextSpec {
   virtual ~nsDeviceContextSpecX();
 
  protected:
-  PMPrintSession mPrintSession = nullptr;    // printing context.
-  PMPageFormat mPageFormat = nullptr;        // page format.
-  PMPrintSettings mPrintSettings = nullptr;  // print settings.
-  nsCOMPtr<nsIOutputStream> mOutputStream;   // Output stream from settings.
+  PMPrintSession mPrintSession = nullptr;
+  PMPageFormat mPageFormat = nullptr;
+  PMPrintSettings mPMPrintSettings = nullptr;
+  nsCOMPtr<nsIOutputStream> mOutputStream;  // Output stream from settings.
 #ifdef MOZ_ENABLE_SKIA_PDF
   // file "print" output generated if printing via PDF
   nsCOMPtr<nsIFile> mTempFile;
-  bool mPrintViaSkPDF = false;
 #endif
 };
 

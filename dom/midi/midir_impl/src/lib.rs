@@ -55,6 +55,15 @@ struct MidiPortWrapper {
     open_count: u32,
 }
 
+impl MidiPortWrapper {
+    fn input(self: &MidiPortWrapper) -> bool {
+        match self.port {
+            MidiPort::Input(_) => true,
+            MidiPort::Output(_) => false,
+        }
+    }
+}
+
 pub struct MidirWrapper {
     ports: Vec<MidiPortWrapper>,
     connections: Vec<MidiConnectionWrapper>,
@@ -66,6 +75,43 @@ struct CallbackData {
 }
 
 impl MidirWrapper {
+    fn refresh(
+        self: &mut MidirWrapper,
+        add_callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
+        remove_callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
+    ) {
+        if let Ok(ports) = collect_ports() {
+            let old_ports = &mut self.ports;
+            let mut i = 0;
+            while i < old_ports.len() {
+                if !ports
+                    .iter()
+                    .any(|p| p.name == old_ports[i].name && p.input() == old_ports[i].input())
+                {
+                    let port = old_ports.remove(i);
+                    let id = nsString::from(&port.id);
+                    let name = nsString::from(&port.name);
+                    unsafe { remove_callback(&id, &name, port.input()) };
+                } else {
+                    i += 1;
+                }
+            }
+
+            for port in ports {
+                if !self
+                    .ports
+                    .iter()
+                    .any(|p| p.name == port.name && p.input() == port.input())
+                {
+                    let id = nsString::from(&port.id);
+                    let name = nsString::from(&port.name);
+                    unsafe { add_callback(&id, &name, port.input()) };
+                    self.ports.push(port);
+                }
+            }
+        }
+    }
+
     fn open_port(
         self: &mut MidirWrapper,
         nsid: &nsString,
@@ -106,22 +152,20 @@ impl MidirWrapper {
                                 data,
                             )
                             .map_err(|_err| ())?;
-                        let connection_wrapper = MidiConnectionWrapper {
+                        MidiConnectionWrapper {
                             id: id.clone(),
                             connection: MidiConnection::Input(connection),
-                        };
-                        connection_wrapper
+                        }
                     }
                     MidiPort::Output(port) => {
                         let output = MidiOutput::new("WebMIDI output").map_err(|_err| ())?;
                         let connection = output
                             .connect(port, "Output connection")
                             .map_err(|_err| ())?;
-                        let connection_wrapper = MidiConnectionWrapper {
+                        MidiConnectionWrapper {
                             connection: MidiConnection::Output(connection),
                             id: id.clone(),
-                        };
-                        connection_wrapper
+                        }
                     }
                 };
 
@@ -175,13 +219,18 @@ impl MidirWrapper {
     }
 }
 
+fn collect_ports() -> Result<Vec<MidiPortWrapper>, InitError> {
+    let input = MidiInput::new("WebMIDI input")?;
+    let output = MidiOutput::new("WebMIDI output")?;
+    let mut ports = Vec::<MidiPortWrapper>::new();
+    collect_input_ports(&input, &mut ports);
+    collect_output_ports(&output, &mut ports);
+    Ok(ports)
+}
+
 impl MidirWrapper {
     fn new() -> Result<MidirWrapper, InitError> {
-        let input = MidiInput::new("WebMIDI input")?;
-        let output = MidiOutput::new("WebMIDI output")?;
-        let mut ports: Vec<MidiPortWrapper> = Vec::new();
-        collect_input_ports(&input, &mut ports);
-        collect_output_ports(&output, &mut ports);
+        let ports = collect_ports()?;
         let connections: Vec<MidiConnectionWrapper> = Vec::new();
         Ok(MidirWrapper { ports, connections })
     }
@@ -208,6 +257,22 @@ pub unsafe extern "C" fn midir_impl_init(
     } else {
         ptr::null_mut()
     }
+}
+
+/// Refresh the list of ports.
+///
+/// This function will be exposed to C++
+///
+/// # Safety
+///
+/// `wrapper` must be the pointer returned by [midir_impl_init()].
+#[no_mangle]
+pub unsafe extern "C" fn midir_impl_refresh(
+    wrapper: *mut MidirWrapper,
+    add_callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
+    remove_callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
+) {
+    (*wrapper).refresh(add_callback, remove_callback)
 }
 
 /// Shutdown midir and free the C++ wrapper.

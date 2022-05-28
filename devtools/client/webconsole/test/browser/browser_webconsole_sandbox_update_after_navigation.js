@@ -17,28 +17,24 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI1);
 
-  await executeAndWaitForMessage(
-    hud,
-    "window.location.href",
-    TEST_URI1,
-    ".result"
-  );
+  await executeAndWaitForResultMessage(hud, "window.location.href", TEST_URI1);
 
   // load second url
   await navigateTo(TEST_URI2);
 
-  ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
+  ok(
+    !findErrorMessage(hud, "Permission denied"),
+    "no permission denied errors"
+  );
 
   info("wait for window.location.href after page navigation");
   await clearOutput(hud);
-  await executeAndWaitForMessage(
-    hud,
-    "window.location.href",
-    TEST_URI2,
-    ".result"
-  );
+  await executeAndWaitForResultMessage(hud, "window.location.href", TEST_URI2);
 
-  ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
+  ok(
+    !findErrorMessage(hud, "Permission denied"),
+    "no permission denied errors"
+  );
 
   // Navigation clears messages. Wait for that clear to happen before
   // continuing the test or it might destroy messages we wait later on (Bug
@@ -54,12 +50,10 @@ add_task(async function() {
   await Promise.all(promises);
 
   info("Messages cleared after navigation; checking location");
-  await executeAndWaitForMessage(
-    hud,
-    "window.location.href",
-    TEST_URI1,
-    ".result"
-  );
+  await executeAndWaitForResultMessage(hud, "window.location.href", TEST_URI1);
 
-  ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
+  ok(
+    !findErrorMessage(hud, "Permission denied"),
+    "no permission denied errors"
+  );
 });

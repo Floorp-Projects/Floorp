@@ -198,11 +198,7 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
   return NS_ERROR_FAILURE;
 #endif
 
-  bool usePrefDir =
-      StaticPrefs::browser_download_improvements_to_download_panel();
-#ifdef XP_MACOSX
-  usePrefDir = true;
-#endif
+  bool usePrefDir = !StaticPrefs::browser_download_start_downloads_in_tmp_dir();
 
   nsCOMPtr<nsIFile> dir;
   nsresult rv;
@@ -582,14 +578,23 @@ static const nsDefaultMimeTypeEntry nonDecodableExtensions[] = {
  *
  * In addition to this list, we do this for all audio/, video/ and
  * image/ mimetypes.
+ *
+ * Also see the list for anyExtensionMimetypes for those types that are
+ * never modified.
  */
 static const char* forcedExtensionMimetypes[] = {
-    // Note: zip and json mimetypes are commonly used with a variety of
-    // extensions; don't add them here. It's a similar story for text/xml,
-    // but slightly worse because we can use it when sniffing for a mimetype
-    // if one hasn't been provided, so don't re-add that here either.
     APPLICATION_PDF, APPLICATION_OGG, APPLICATION_WASM,
     TEXT_CALENDAR,   TEXT_CSS,        TEXT_VCARD};
+
+/**
+ * Mimetypes that are commonly used with a variety of extensions. These
+ * types will not have their extension modified.
+ *
+ * For XML, we can use it when sniffing for a mimetype if one hasn't been
+ * provided, so it is added here as well.
+ */
+static const char* anyExtensionMimetypes[] = {APPLICATION_ZIP, APPLICATION_JSON,
+                                              TEXT_XML};
 
 /**
  * Primary extensions of types whose descriptions should be overwritten.
@@ -604,23 +609,19 @@ static const char* descriptionOverwriteExtensions[] = {
 static StaticRefPtr<nsExternalHelperAppService> sExtHelperAppSvcSingleton;
 
 /**
- * On Mac child processes, return an nsOSHelperAppServiceChild for remoting
- * OS calls to the parent process. On all other platforms use
+ * In child processes, return an nsOSHelperAppServiceChild for remoting
+ * OS calls to the parent process.  In the parent process itself, use
  * nsOSHelperAppService.
  */
 /* static */
 already_AddRefed<nsExternalHelperAppService>
 nsExternalHelperAppService::GetSingleton() {
   if (!sExtHelperAppSvcSingleton) {
-#if defined(XP_MACOSX) || defined(XP_WIN)
     if (XRE_IsParentProcess()) {
       sExtHelperAppSvcSingleton = new nsOSHelperAppService();
     } else {
       sExtHelperAppSvcSingleton = new nsOSHelperAppServiceChild();
     }
-#else
-    sExtHelperAppSvcSingleton = new nsOSHelperAppService();
-#endif  // defined(XP_MACOSX) || defined(XP_WIN)
     ClearOnShutdown(&sExtHelperAppSvcSingleton);
   }
 
@@ -3656,6 +3657,16 @@ nsExternalHelperAppService::ShouldModifyExtension(nsIMIMEInfo* aMimeInfo,
   nsAutoCString MIMEType;
   if (!aMimeInfo || NS_FAILED(aMimeInfo->GetMIMEType(MIMEType))) {
     return ModifyExtension_Append;
+  }
+
+  // Skip those types for which we should never modify the extension, unless
+  // the extension is empty.
+  if (!aFileExt.IsEmpty()) {
+    for (const char* mime : anyExtensionMimetypes) {
+      if (MIMEType.Equals(mime)) {
+        return ModifyExtension_Ignore;
+      }
+    }
   }
 
   // Determine whether the extensions should be appended or replaced depending

@@ -69,18 +69,28 @@ class NetworkThrottlingMenu extends PureComponent {
 
   render() {
     const { networkThrottling } = this.props;
-    const selectedProfile = networkThrottling.enabled
+    const label = networkThrottling.enabled
       ? networkThrottling.profile
       : NO_THROTTLING_LABEL;
+
+    let title = NO_THROTTLING_LABEL;
+
+    if (networkThrottling.enabled) {
+      const id = networkThrottling.profile;
+      const selectedProfile = throttlingProfiles.find(
+        profile => profile.id === id
+      );
+      title = selectedProfile.description;
+    }
 
     return dom.button(
       {
         id: "network-throttling-menu",
         className: "devtools-button devtools-dropdown-button",
-        title: selectedProfile,
+        title,
         onClick: this.onShowThrottlingMenu,
       },
-      dom.span({ className: "title" }, selectedProfile)
+      dom.span({ className: "title" }, label)
     );
   }
 }

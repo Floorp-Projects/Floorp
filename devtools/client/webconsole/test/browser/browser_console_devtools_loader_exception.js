@@ -39,7 +39,7 @@ add_task(async function() {
   });
 
   const msg = await waitFor(() =>
-    findMessage(bcHud, "TypeError: this._toolPanels is not iterable")
+    findErrorMessage(bcHud, "TypeError: this._toolPanels is not iterable")
   );
 
   fixToolbox();

@@ -76,6 +76,10 @@ class Page extends ContentProcessDomain {
       this.chromeEventHandler.addEventListener("DOMContentLoaded", this, {
         mozSystemGroup: true,
       });
+      this.chromeEventHandler.addEventListener("hashchange", this, {
+        mozSystemGroup: true,
+        capture: true,
+      });
       this.chromeEventHandler.addEventListener("load", this, {
         mozSystemGroup: true,
         capture: true,
@@ -110,6 +114,10 @@ class Page extends ContentProcessDomain {
       });
       this.chromeEventHandler.removeEventListener("DOMContentLoaded", this, {
         mozSystemGroup: true,
+      });
+      this.chromeEventHandler.removeEventListener("hashchange", this, {
+        mozSystemGroup: true,
+        capture: true,
       });
       this.chromeEventHandler.removeEventListener("load", this, {
         mozSystemGroup: true,
@@ -332,10 +340,14 @@ class Page extends ContentProcessDomain {
 
   handleEvent({ type, target }) {
     const timestamp = Date.now() / 1000;
-    const frameId = target.defaultView.docShell.browsingContext.id;
-    const isFrame = !!target.defaultView.docShell.browsingContext.parent;
+
+    // Some events such as "hashchange" use the window as the target, while
+    // others have a document.
+    const win = Window.isInstance(target) ? target : target.defaultView;
+    const frameId = win.docShell.browsingContext.id;
+    const isFrame = !!win.docShell.browsingContext.parent;
     const loaderId = this.frameIdToLoaderId.get(frameId);
-    const url = target.location.href;
+    const url = win.location.href;
 
     switch (type) {
       case "DOMContentLoaded":
@@ -350,6 +362,13 @@ class Page extends ContentProcessDomain {
         );
         break;
 
+      case "hashchange":
+        this.emit("Page.navigatedWithinDocument", {
+          frameId: frameId.toString(),
+          url,
+        });
+        break;
+
       case "pagehide":
         // Maybe better to bound to "unload" once we can register for this event
         this.emit("Page.frameStartedLoading", { frameId: frameId.toString() });
@@ -361,12 +380,6 @@ class Page extends ContentProcessDomain {
           this.emit("Page.loadEventFired", { timestamp });
         }
         this.emitLifecycleEvent(frameId, loaderId, "load", timestamp);
-
-        // Todo: Only to be emitted for hashchange events (bug 1636453)
-        this.emit("Page.navigatedWithinDocument", {
-          frameId: frameId.toString(),
-          url,
-        });
 
         // XXX this should most likely be sent differently
         this.emit("Page.frameStoppedLoading", { frameId: frameId.toString() });

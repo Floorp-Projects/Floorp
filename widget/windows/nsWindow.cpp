@@ -663,14 +663,9 @@ static bool IsMouseVanishKey(WPARAM aVirtKey) {
     case VK_PRIOR:  // PgUp
     case VK_NEXT:   // PgDn
       return false;
-    case 'A':
-    case 'C':
-    case 'V':
-    case 'X':
-      // Ignore Ctrl-A, Ctrl-C, Ctrl-V, Ctrl-X
-      return (GetKeyState(VK_CONTROL) & 0x8000) != 0x8000;
     default:
-      return true;
+      // Return true unless Ctrl is pressed
+      return (GetKeyState(VK_CONTROL) & 0x8000) != 0x8000;
   }
 }
 
@@ -2025,7 +2020,6 @@ void nsWindow::Move(double aX, double aY) {
 
     ResizeDirectManipulationViewport();
   }
-  NotifyRollupGeometryChange();
 }
 
 // Resize this component
@@ -2094,8 +2088,6 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
   }
 
   if (aRepaint) Invalidate();
-
-  NotifyRollupGeometryChange();
 }
 
 // Resize this component
@@ -2183,8 +2175,6 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
   }
 
   if (aRepaint) Invalidate();
-
-  NotifyRollupGeometryChange();
 }
 
 mozilla::Maybe<bool> nsWindow::IsResizingNativeWidget() {

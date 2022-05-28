@@ -31,7 +31,7 @@ async function logAndAssertInitialMessages(hud) {
       content.wrappedJSObject.doLogs(count);
     }
   );
-  await waitFor(() => findMessages(hud, "").length === INITIAL_LOGS_NUMBER);
+  await waitFor(() => findAllMessages(hud).length === INITIAL_LOGS_NUMBER);
   ok(true, "Messages showed up initially");
 }
 
@@ -46,7 +46,7 @@ add_task(async function() {
   await onReloaded;
 
   info("Wait for messages to be cleared");
-  await waitFor(() => findMessages(hud, "").length === 0);
+  await waitFor(() => findAllMessages(hud).length === 0);
   ok(true, "Messages disappeared");
 
   await closeToolbox();
@@ -61,7 +61,7 @@ add_task(async function() {
   await logAndAssertInitialMessages(hud);
 
   await navigateTo(TEST_ORG_URI);
-  await waitFor(() => findMessages(hud, "").length === 0);
+  await waitFor(() => findAllMessages(hud).length === 0);
   ok(true, "Messages disappeared");
 
   await closeToolbox();
@@ -80,8 +80,16 @@ add_task(async function() {
   // which is the document url, which also include the logged string...
   await waitFor(
     () =>
-      findMessages(hud, "first document load", ".message-body").length === 1 &&
-      findMessages(hud, "first document show", ".message-body").length === 1
+      findMessagePartsByType(hud, {
+        text: "first document load",
+        typeSelector: ".console-api",
+        partSelector: ".message-body",
+      }).length === 1 &&
+      findMessagePartsByType(hud, {
+        text: "first document show",
+        typeSelector: ".console-api",
+        partSelector: ".message-body",
+      }).length === 1
   );
   const firstPageInnerWindowId =
     gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.innerWindowId;
@@ -96,11 +104,20 @@ add_task(async function() {
     "The second page is having a distinct inner window id"
   );
   await waitFor(
-    () => findMessages(hud, "second", ".message-body").length === 2
+    () =>
+      findMessagePartsByType(hud, {
+        text: "second",
+        typeSelector: ".console-api",
+        partSelector: ".message-body",
+      }).length === 2
   );
   ok("Second page message appeared");
   is(
-    findMessages(hud, "first", ".message-body").length,
+    findMessagePartsByType(hud, {
+      text: "first",
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    }).length,
     0,
     "First page message disappeared"
   );
@@ -109,7 +126,12 @@ add_task(async function() {
   gBrowser.selectedBrowser.goBack();
   // When going pack, the page isn't reloaded, so that we only get the pageshow event
   await waitFor(
-    () => findMessages(hud, "first document show", ".message-body").length === 1
+    () =>
+      findMessagePartsByType(hud, {
+        text: "first document show",
+        typeSelector: ".console-api",
+        partSelector: ".message-body",
+      }).length === 1
   );
   ok("First page message re-appeared");
   is(
@@ -118,7 +140,11 @@ add_task(async function() {
     "The first page is really a bfcache navigation, keeping the same WindowGlobal"
   );
   is(
-    findMessages(hud, "second", ".message-body").length,
+    findMessagePartsByType(hud, {
+      text: "second",
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    }).length,
     0,
     "Second page message disappeared"
   );
@@ -127,7 +153,11 @@ add_task(async function() {
   gBrowser.selectedBrowser.goForward();
   await waitFor(
     () =>
-      findMessages(hud, "second document show", ".message-body").length === 1
+      findMessagePartsByType(hud, {
+        text: "second document show",
+        typeSelector: ".console-api",
+        partSelector: ".message-body",
+      }).length === 1
   );
   ok("Second page message appeared");
   is(
@@ -136,7 +166,11 @@ add_task(async function() {
     "The second page is really a bfcache navigation, keeping the same WindowGlobal"
   );
   is(
-    findMessages(hud, "first", ".message-body").length,
+    findMessagePartsByType(hud, {
+      text: "first",
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    }).length,
     0,
     "First page message disappeared"
   );
@@ -156,9 +190,10 @@ add_task(async function() {
 
   await logAndAssertInitialMessages(hud);
 
-  const onNavigatedMessage = waitForMessage(
+  const onNavigatedMessage = waitForMessageByType(
     hud,
-    "Navigated to " + TEST_COM_URI
+    "Navigated to " + TEST_COM_URI,
+    ".navigationMarker"
   );
   const onReloaded = hud.ui.once("reloaded");
   // Because will-navigate DOCUMENT_EVENT timestamp is shifted to workaround some other limitation,
@@ -170,7 +205,7 @@ add_task(async function() {
 
   ok(true, "Navigation message appeared as expected");
   is(
-    findMessages(hud, "").length,
+    findAllMessages(hud).length,
     INITIAL_LOGS_NUMBER + 1,
     "Messages logged before navigation are still visible"
   );
@@ -180,9 +215,10 @@ add_task(async function() {
   info(
     "Testing that messages also persist when doing a cross origin navigation if logs are persisted"
   );
-  const onNavigatedMessage2 = waitForMessage(
+  const onNavigatedMessage2 = waitForMessageByType(
     hud,
-    "Navigated to " + TEST_ORG_URI
+    "Navigated to " + TEST_ORG_URI,
+    ".navigationMarker"
   );
   timeBeforeNavigation = Date.now() - WILL_NAVIGATE_TIME_SHIFT;
   await navigateTo(TEST_ORG_URI);
@@ -190,7 +226,7 @@ add_task(async function() {
 
   ok(true, "Second navigation message appeared as expected");
   is(
-    findMessages(hud, "").length,
+    findAllMessages(hud).length,
     INITIAL_LOGS_NUMBER + 2,
     "Messages logged before the second navigation are still visible"
   );
@@ -200,9 +236,10 @@ add_task(async function() {
   info(
     "Test doing a second cross origin navigation in order to triger a target switching with a target following the window global lifecycle"
   );
-  const onNavigatedMessage3 = waitForMessage(
+  const onNavigatedMessage3 = waitForMessageByType(
     hud,
-    "Navigated to " + TEST_MOCHI_URI
+    "Navigated to " + TEST_MOCHI_URI,
+    ".navigationMarker"
   );
   timeBeforeNavigation = Date.now() - WILL_NAVIGATE_TIME_SHIFT;
   await navigateTo(TEST_MOCHI_URI);
@@ -210,7 +247,7 @@ add_task(async function() {
 
   ok(true, "Third navigation message appeared as expected");
   is(
-    findMessages(hud, "").length,
+    findAllMessages(hud).length,
     INITIAL_LOGS_NUMBER + 3,
     "Messages logged before the third navigation are still visible"
   );

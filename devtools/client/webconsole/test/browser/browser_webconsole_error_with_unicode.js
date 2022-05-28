@@ -20,6 +20,6 @@ add_task(async function() {
 
   info("generate exception and wait for the message");
 
-  const msg = await waitFor(() => findMessage(hud, EXPECTED_REPORT));
+  const msg = await waitFor(() => findErrorMessage(hud, EXPECTED_REPORT));
   ok(msg, `Message found: "${EXPECTED_REPORT}"`);
 });

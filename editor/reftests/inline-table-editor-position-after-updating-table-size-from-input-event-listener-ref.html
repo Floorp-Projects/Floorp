@@ -5,9 +5,9 @@
 <title>Inline table editor should be positioned correctly even if modified the table from an input event listener</title>
 <script>
 addEventListener("load", async () => {
-  const cell = document.querySelector("td");
+  const cell = document.querySelector("td + td");
   document.body.focus();
-  getSelection().collapse(cell.firstChild, 0);
+  getSelection().collapse(cell, 0);
   document.execCommand("enableObjectResizing", false, "true");
   document.execCommand("enableInlineTableEditing", false, "true");
   requestAnimationFrame(

@@ -100,6 +100,10 @@ bool FrozenImage::StartDecodingWithResult(uint32_t aFlags,
   return InnerImage()->StartDecodingWithResult(aFlags, FRAME_FIRST);
 }
 
+bool FrozenImage::HasDecodedPixels() {
+  return InnerImage()->HasDecodedPixels();
+}
+
 imgIContainer::DecodeResult FrozenImage::RequestDecodeWithResult(
     uint32_t aFlags, uint32_t aWhichFrame) {
   return InnerImage()->RequestDecodeWithResult(aFlags, FRAME_FIRST);

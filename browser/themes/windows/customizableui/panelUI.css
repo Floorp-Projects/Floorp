@@ -20,12 +20,6 @@
 
 /* bookmark panel submenus */
 
-/* Override the menupopup shadow rule from windows/global/popup.css */
-#PlacesToolbar menupopup,
-#BMB_bookmarksPopup {
-  -moz-window-shadow: none;
-}
-
 #PlacesToolbar menupopup {
   margin-top: -2px;
 }
@@ -38,7 +32,6 @@
 }
 
 #BMB_bookmarksPopup menupopup {
-  -moz-window-shadow: none;
   margin-top: -13px; /* 8px of padding, 4px of shadow margin, 1px of border */
 }
 
@@ -79,8 +72,7 @@
 
 /* bookmark panel separator */
 #BMB_bookmarksPopup menuseparator {
-  padding-top: 0;
-  padding-bottom: 0;
+  padding-block: 0;
 }
 
 /* Disabled empty item looks too small otherwise, because it has no icon. */

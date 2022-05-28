@@ -265,6 +265,12 @@ class CSPValidator final : public nsCSPSrcVisitor {
       case CSP_NONE:
       case CSP_SELF:
         return true;
+      case CSP_WASM_UNSAFE_EVAL:
+        if (mPermittedPolicy & nsIAddonContentPolicy::CSP_ALLOW_WASM) {
+          return true;
+        }
+        // fall through to also check CSP_ALLOW_EVAL
+        [[fallthrough]];
       case CSP_UNSAFE_EVAL:
         if (mPermittedPolicy & nsIAddonContentPolicy::CSP_ALLOW_EVAL) {
           return true;

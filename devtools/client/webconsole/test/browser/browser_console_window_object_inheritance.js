@@ -22,12 +22,7 @@ add_task(async function() {
 
   info(`Check objects inheriting from a DOM window`);
   async function check(input, expected, name) {
-    const msg = await executeAndWaitForMessage(
-      hud,
-      input,
-      "",
-      ".message.result"
-    );
+    const msg = await executeAndWaitForResultMessage(hud, input, "");
     is(msg.node.querySelector(".message-body").textContent, expected, name);
   }
   await check("Object.create(myWindow)", "Object {  }", "Empty object");
@@ -53,7 +48,7 @@ add_task(async function() {
   info(`Check that no error was logged`);
   // wait a bit so potential errors can be printed
   await wait(1000);
-  const error = findMessage(hud, "", ".message.error:not(.network)");
+  const error = findErrorMessage(hud, "", ":not(.network)");
   if (error) {
     ok(false, `Got error ${JSON.stringify(error.textContent)}`);
   } else {

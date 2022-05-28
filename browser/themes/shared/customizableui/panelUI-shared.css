@@ -146,7 +146,8 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 #identity-popup,
 #permission-popup,
 #protections-popup,
-#appMenu-notification-popup {
+#appMenu-notification-popup,
+#editBookmarkPanel {
   margin-top: -4px;
 }
 
@@ -247,7 +248,6 @@ toolbarseparator + .panel-subview-body,
 
 #PlacesToolbar menupopup[placespopup=true]::part(arrowscrollbox) {
   padding: var(--panel-subview-body-padding);
-  border: 0;
   background: var(--arrowpanel-background) !important;
   color: var(--arrowpanel-color) !important;
 }

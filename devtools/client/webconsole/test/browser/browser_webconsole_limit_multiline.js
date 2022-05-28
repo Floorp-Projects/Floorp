@@ -22,10 +22,11 @@ add_task(async function() {
     "data:text/html,<!DOCTYPE html><meta charset=utf8>Test multi-line commands expandability"
   );
   info("Test that we don't slice messages with <= 5 lines");
-  const message = await executeAndWaitForMessage(
+  const message = await executeAndWaitForMessageByType(
     hud,
     SMALL_EXPRESSION,
-    "function fib"
+    "function fib",
+    ".command"
   );
 
   is(
@@ -36,10 +37,11 @@ add_task(async function() {
 
   info("Test messages with > 5 lines are sliced");
 
-  const messageExp = await executeAndWaitForMessage(
+  const messageExp = await executeAndWaitForMessageByType(
     hud,
     LONG_EXPRESSION,
-    "function fib"
+    "function fib",
+    ".command"
   );
 
   const toggleArrow = messageExp.node.querySelector(".collapse-button");

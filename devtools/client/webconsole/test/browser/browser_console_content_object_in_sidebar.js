@@ -31,15 +31,35 @@ add_task(async function() {
   info("Open the Browser Console");
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
-  const message = await waitFor(() => findMessage(hud, "foo"));
+  const message = await waitFor(() => findConsoleAPIMessage(hud, "foo"));
   const [objectA, objectB] = message.querySelectorAll(
     ".object-inspector .objectBox-object"
   );
-  const number = findMessage(hud, "100", ".objectBox");
-  const string = findMessage(hud, "foo", ".objectBox");
-  const bool = findMessage(hud, "false", ".objectBox");
-  const nullMessage = findMessage(hud, "null", ".objectBox");
-  const undefinedMsg = findMessage(hud, "undefined", ".objectBox");
+  const number = findMessagePartByType(hud, {
+    text: "100",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
+  const string = findMessagePartByType(hud, {
+    text: "foo",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
+  const bool = findMessagePartByType(hud, {
+    text: "false",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
+  const nullMessage = findMessagePartByType(hud, {
+    text: "null",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
+  const undefinedMsg = findMessagePartByType(hud, {
+    text: "undefined",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
 
   info("Showing sidebar for {a:1}");
   await showSidebarWithContextMenu(hud, objectA, true);

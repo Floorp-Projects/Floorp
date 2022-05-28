@@ -151,11 +151,19 @@ void RemoteDecoderManagerChild::Shutdown() {
             sRemoteDecoderManagerChildForRDDProcess->Close();
           }
           sRemoteDecoderManagerChildForRDDProcess = nullptr;
+          {
+            StaticMutexAutoLock lock(sLaunchRDDMutex);
+            sLaunchRDDPromise = nullptr;
+          }
           if (sRemoteDecoderManagerChildForUtilityProcess &&
               sRemoteDecoderManagerChildForUtilityProcess->CanSend()) {
             sRemoteDecoderManagerChildForUtilityProcess->Close();
           }
           sRemoteDecoderManagerChildForUtilityProcess = nullptr;
+          {
+            StaticMutexAutoLock lock(sLaunchUtilityMutex);
+            sLaunchUtilityPromise = nullptr;
+          }
           if (sRemoteDecoderManagerChildForGPUProcess &&
               sRemoteDecoderManagerChildForGPUProcess->CanSend()) {
             sRemoteDecoderManagerChildForGPUProcess->Close();
@@ -524,7 +532,8 @@ RemoteDecoderManagerChild::LaunchUtilityProcessIfNeeded() {
             managerThread, __func__,
             [](ipc::PBackgroundChild::
                    EnsureUtilityProcessAndCreateBridgePromise::
-                       ResolveOrRejectValue&& aResult) {
+                       ResolveOrRejectValue&& aResult)
+                -> RefPtr<GenericNonExclusivePromise> {
               nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
               if (!managerThread || aResult.IsReject()) {
                 // The parent process died or we got shutdown

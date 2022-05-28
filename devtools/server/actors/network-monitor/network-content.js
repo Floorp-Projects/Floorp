@@ -87,7 +87,13 @@ const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
         Ci.nsIRequest.INHIBIT_CACHING |
         Ci.nsIRequest.LOAD_ANONYMOUS;
 
+      if (method == "CONNECT") {
+        throw new Error(
+          "The CONNECT method is restricted and cannot be sent by devtools"
+        );
+      }
       channel.requestMethod = method;
+
       if (headers) {
         for (const { name, value } of headers) {
           if (name.toLowerCase() == "referer") {

@@ -10,11 +10,10 @@ const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>test autocompletion
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     "var testObject = {$$aaab: '', $$aaac: ''}",
-    "",
-    ".message.result"
+    ""
   );
 
   // Should work with bug 967468.
@@ -26,11 +25,10 @@ add_task(async function() {
   await testAutocomplete(hud, "testObject.$$aa");
 
   // Should work with bug 1207868.
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     "let foobar = {a: ''}; const blargh = {a: 1};",
-    "",
-    ".message.result"
+    ""
   );
   await testAutocomplete(hud, "foobar");
   await testAutocomplete(hud, "blargh");

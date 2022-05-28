@@ -37,6 +37,21 @@ class IMFSampleWrapper : public SupportsThreadSafeWeakPtr<IMFSampleWrapper> {
   RefPtr<IMFSample> mVideoSample;
 };
 
+class IMFSampleUsageInfo final {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IMFSampleUsageInfo)
+
+  IMFSampleUsageInfo() = default;
+
+  bool SupportsZeroCopyNV12Texture() { return mSupportsZeroCopyNV12Texture; }
+  void DisableZeroCopyNV12Texture() { mSupportsZeroCopyNV12Texture = false; }
+
+ protected:
+  ~IMFSampleUsageInfo() = default;
+
+  Atomic<bool> mSupportsZeroCopyNV12Texture{true};
+};
+
 // Image class that wraps ID3D11Texture2D of IMFSample
 // Expected to be used in GPU process.
 class D3D11TextureIMFSampleImage final : public Image {
@@ -48,7 +63,8 @@ class D3D11TextureIMFSampleImage final : public Image {
                              gfx::ColorRange aColorRange);
   virtual ~D3D11TextureIMFSampleImage() = default;
 
-  void AllocateTextureClient(KnowsCompositor* aKnowsCompositor);
+  void AllocateTextureClient(KnowsCompositor* aKnowsCompositor,
+                             RefPtr<IMFSampleUsageInfo> aUsageInfo);
 
   gfx::IntSize GetSize() const override;
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
@@ -72,7 +88,6 @@ class D3D11TextureIMFSampleImage final : public Image {
 
   // When ref of IMFSample is held, its ID3D11Texture2D is not reused by
   // IMFTransform.
-  // RefPtr<IMFSample> mVideoSample;
   RefPtr<IMFSampleWrapper> mVideoSample;
   RefPtr<ID3D11Texture2D> mTexture;
   const uint32_t mArrayIndex;

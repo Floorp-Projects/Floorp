@@ -185,6 +185,11 @@ interface imgIRequest : nsIRequest
   DecodeResult RequestDecodeWithResult(uint32_t aFlags);
 %}*/
 
+  /**
+   * Returns true if there is a image and the image has a frame and the frame
+   * currently has a least 1 decoded pixel. Only valid for raster images.
+   */
+  [noscript, notxpcom] boolean hasDecodedPixels();
 
   /**
    * Locks an image. If the image does not exist yet, locks it once it becomes

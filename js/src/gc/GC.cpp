@@ -4658,7 +4658,6 @@ void GCRuntime::setPerformanceHint(PerformanceHint hint) {
   }
 
   AutoLockGC lock(this);
-  schedulingState.inPageLoad = inPageLoad;
   atomsZone->updateGCStartThresholds(*this, lock);
   maybeTriggerGCAfterAlloc(atomsZone);
 }

@@ -25,10 +25,6 @@ AddonTestUtils.createAppInfo(
 SearchTestUtils.init(this);
 SearchTestUtils.initXPCShellAddonManager(this, "system");
 
-// Override ExtensionXPCShellUtils.jsm's overriding of the pref as the
-// search service needs it.
-Services.prefs.clearUserPref("services.settings.default_bucket");
-
 function promiseUninstallCompleted(extensionId) {
   return new Promise(resolve => {
     // eslint-disable-next-line mozilla/balanced-listeners

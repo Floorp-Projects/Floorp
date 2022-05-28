@@ -14,10 +14,7 @@ add_task(async function() {
   ok(ui.jsterm, "jsterm exists");
   ok(ui.wrapper, "wrapper exists");
 
-  const receievedMessages = waitForMessages({
-    hud,
-    messages: [{ text: "19" }],
-  });
+  const receievedMessages = waitForMessageByType(hud, "19", ".console-api");
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.doLogs(20);
@@ -27,7 +24,7 @@ add_task(async function() {
 
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
   is(
-    (await findMessagesVirtualized({ hud, selector: ".message.console-api" }))
+    (await findMessagesVirtualizedByType({ hud, typeSelector: ".console-api" }))
       .length,
     20,
     "Correct number of messages appear"

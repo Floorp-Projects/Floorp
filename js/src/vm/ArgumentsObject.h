@@ -237,6 +237,13 @@ class ArgumentsObject : public NativeObject {
                                                HandleObject scopeChain,
                                                uint32_t numActuals);
 
+ private:
+  template <typename CopyArgs>
+  static ArgumentsObject* finishPure(JSContext* cx, ArgumentsObject* obj,
+                                     JSFunction* callee, JSObject* callObj,
+                                     unsigned numActuals, CopyArgs& copy);
+
+ public:
   /*
    * Allocate ArgumentsData and fill reserved slots after allocating an
    * ArgumentsObject in Ion code.
@@ -245,6 +252,14 @@ class ArgumentsObject : public NativeObject {
                                            jit::JitFrameLayout* frame,
                                            JSObject* scopeChain,
                                            ArgumentsObject* obj);
+
+  /*
+   * Allocate ArgumentsData for inlined arguments and fill reserved slots after
+   * allocating an ArgumentsObject in Ion code.
+   */
+  static ArgumentsObject* finishInlineForIonPure(
+      JSContext* cx, JSObject* rawCallObj, JSFunction* rawCallee, Value* args,
+      uint32_t numActuals, ArgumentsObject* obj);
 
   static ArgumentsObject* createTemplateObject(JSContext* cx, bool mapped);
 

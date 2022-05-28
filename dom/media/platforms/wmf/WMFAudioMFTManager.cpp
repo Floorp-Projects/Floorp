@@ -90,13 +90,23 @@ WMFAudioMFTManager::WMFAudioMFTManager(const AudioInfo& aConfig)
   MOZ_COUNT_CTOR(WMFAudioMFTManager);
 
   if (mStreamType == WMFStreamType::AAC) {
-    const AacCodecSpecificData& aacCodecSpecificData =
+    const uint8_t* audioSpecConfig;
+    uint32_t configLength;
+    if (aConfig.mCodecSpecificConfig.is<AacCodecSpecificData>()) {
+      const AacCodecSpecificData& aacCodecSpecificData =
         aConfig.mCodecSpecificConfig.as<AacCodecSpecificData>();
-    AACAudioSpecificConfigToUserData(
-        aConfig.mExtendedProfile,
-        aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob->Elements(),
-        aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob->Length(),
-        mUserData);
+      audioSpecConfig = aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob->Elements();
+      configLength = aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob->Length();
+    } else {
+      // Gracefully handle failure to cover all codec specific cases above. Once
+      // we're confident there is no fall through from these cases above, we should
+      // remove this code.
+      RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
+        GetAudioCodecSpecificBlob(aConfig.mCodecSpecificConfig);
+      audioSpecConfig = audioCodecSpecificBinaryBlob->Elements();
+      configLength = audioCodecSpecificBinaryBlob->Length();
+    }
+    AACAudioSpecificConfigToUserData(aConfig.mExtendedProfile, audioSpecConfig, configLength, mUserData);
   }
 }
 

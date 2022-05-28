@@ -29,14 +29,23 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
-  await testOpenInDebugger(hud, toolbox, "document.bar");
+  await testOpenInDebugger(hud, {
+    text: "document.bar",
+    typeSelector: ".error",
+  });
 
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");
-  await testOpenInDebugger(hud, toolbox, "Blah Blah");
+  await testOpenInDebugger(hud, {
+    text: "Blah Blah",
+    typeSelector: ".console-api",
+  });
 
   // // check again the first node.
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");
-  await testOpenInDebugger(hud, toolbox, "document.bar");
+  await testOpenInDebugger(hud, {
+    text: "document.bar",
+    typeSelector: ".error",
+  });
 });

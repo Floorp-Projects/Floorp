@@ -16,7 +16,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Call the log function defined in the test page");
-  const onMessage = waitForMessage(hud, "simple text message");
+  const onMessage = waitForMessageByType(
+    hud,
+    "simple text message",
+    ".console-api"
+  );
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log("simple text message");
   });

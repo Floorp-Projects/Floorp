@@ -36,6 +36,7 @@ const {
 } = require("devtools/client/netmonitor/src/constants");
 const {
   getFormattedIPAndPort,
+  getRequestPriorityAsText,
 } = require("devtools/client/netmonitor/src/utils/format-utils");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 const {
@@ -218,6 +219,8 @@ function isFlagFilterMatch(item, { type, value, negative }) {
         return false;
       }
     },
+    priority: () =>
+      getRequestPriorityAsText(item.priority).toLowerCase() == value,
     "set-cookie-domain": () => {
       if (responseCookies.length > 0) {
         const { host } = item.urlDetails;

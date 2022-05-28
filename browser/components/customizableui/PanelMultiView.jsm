@@ -293,14 +293,17 @@ var PanelMultiView = class extends AssociatedToNode {
    * If the panel does not contain a <panelmultiview>, it is closed directly.
    * This allows consumers like page actions to accept different panel types.
    *
+   * @param {DOMNode} panelNode The <panel> node.
+   * @param {Boolean} [animate] Whether to show a fade animation. Optional.
+   *
    * @see The non-static hidePopup method for details.
    */
-  static hidePopup(panelNode) {
+  static hidePopup(panelNode, animate = false) {
     let panelMultiViewNode = panelNode.querySelector("panelmultiview");
     if (panelMultiViewNode) {
-      this.forNode(panelMultiViewNode).hidePopup();
+      this.forNode(panelMultiViewNode).hidePopup(animate);
     } else {
-      panelNode.hidePopup();
+      panelNode.hidePopup(animate);
     }
   }
 
@@ -594,8 +597,14 @@ var PanelMultiView = class extends AssociatedToNode {
    * This means that by the time this method returns all the operations handled
    * by the "popuphidden" event are completed, for example resetting the "open"
    * state of the anchor, and the panel is already invisible.
+   *
+   * @note The value of animate could be changed to true by default, in both
+   *       this and the static method above. (see bug 1769813)
+   *
+   * @param {Boolean} [animate] Whether to show a fade animation. Optional.
+   *
    */
-  hidePopup() {
+  hidePopup(animate = false) {
     if (!this.node || !this.connected) {
       return;
     }
@@ -605,7 +614,7 @@ var PanelMultiView = class extends AssociatedToNode {
     // request to open the panel, which will have no effect if the request has
     // been canceled already.
     if (["open", "showing"].includes(this._panel.state)) {
-      this._panel.hidePopup();
+      this._panel.hidePopup(animate);
     } else {
       this._openPopupCancelCallback();
     }

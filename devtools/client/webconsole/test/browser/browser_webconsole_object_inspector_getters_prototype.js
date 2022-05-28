@@ -43,7 +43,7 @@ add_task(async function() {
     content.wrappedJSObject.console.log("oi-test", a, b, c, d);
   });
 
-  const node = await waitFor(() => findMessage(hud, "oi-test"));
+  const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
   const [a, b, c, d] = node.querySelectorAll(".tree");
 
   await testObject(a, {

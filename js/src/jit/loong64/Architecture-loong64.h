@@ -188,7 +188,8 @@ class Registers {
       (1 << Registers::t7) |    // First scratch register.
       (1 << Registers::t8) |    // Second scratch register.
       (1 << Registers::rx) |    // Reserved Register.
-      (1 << Registers::ra) | (1 << Registers::tp) | (1 << Registers::sp);
+      (1 << Registers::ra) | (1 << Registers::tp) | (1 << Registers::sp) |
+      (1 << Registers::fp);
 
   static const SetType WrapperMask = VolatileMask;
 

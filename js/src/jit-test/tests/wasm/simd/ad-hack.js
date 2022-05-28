@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdEnabled(); include:../tests/wasm/simd/ad-hack-preamble.js
+// |jit-test| skip-if: !wasmSimdEnabled()
 
 // Ad-hoc test cases used during development.  Generally these are ordered from
 // easier toward harder.
@@ -6,6 +6,9 @@
 // The test cases here are usually those that require some special processing.
 // Simple binary operators (v128 x v128 -> v128) and unary operators (v128 ->
 // v128) are tested in ad-hack-simple-binops*.js and ad-hack-simple-unops.js.
+
+// Do not include this in the preamble, it must be loaded after lib/wasm.js
+load(scriptdir + "ad-hack-preamble.js")
 
 // v128.store
 // oob store

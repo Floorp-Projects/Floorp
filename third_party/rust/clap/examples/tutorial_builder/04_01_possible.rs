@@ -1,7 +1,9 @@
-use clap::{app_from_crate, arg};
+// Note: this requires the `cargo` feature
+
+use clap::{arg, command};
 
 fn main() {
-    let matches = app_from_crate!()
+    let matches = command!()
         .arg(
             arg!(<MODE>)
                 .help("What mode to run the program in")

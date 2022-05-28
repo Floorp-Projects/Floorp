@@ -9,25 +9,13 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/XRRigidTransform.h"
 #include "mozilla/dom/Pose.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(XRView)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XRView)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent, mTransform)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mJSProjectionMatrix = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XRView)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent, mTransform)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(XRView)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJSProjectionMatrix)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(XRView,
+                                                      (mParent, mTransform),
+                                                      (mJSProjectionMatrix))
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRView, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRView, Release)

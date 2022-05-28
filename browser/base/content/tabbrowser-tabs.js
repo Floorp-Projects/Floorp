@@ -1474,7 +1474,10 @@
           );
           tab._pinnedUnscrollable = true;
         }
-        this.style.paddingInlineStart = width + "px";
+        this.style.setProperty(
+          "--tab-overflow-pinned-tabs-width",
+          width + "px"
+        );
       } else {
         this.removeAttribute("positionpinnedtabs");
 
@@ -1484,7 +1487,7 @@
           tab._pinnedUnscrollable = false;
         }
 
-        this.style.paddingInlineStart = "";
+        this.style.removeProperty("--tab-overflow-pinned-tabs-width");
       }
 
       if (this._lastNumPinned != numPinned) {

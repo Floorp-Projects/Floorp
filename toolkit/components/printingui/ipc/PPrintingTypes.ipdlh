@@ -56,11 +56,15 @@ struct PrintData {
   int32_t numCopies;
   int32_t numPagesPerSheet;
 
+  // We do not transfer the following to the child process, since the child
+  // process should not need this information, and we don't want to leak it if
+  // the child process is compromised.
+  //nsString printerName;
+  //nsString toFileName;
+
   // TODO: Do we really need to deal with these in child processes?
   short outputDestination;
   short outputFormat;
-  nsString printerName;
-  nsString toFileName;
 
   int32_t printPageDelay;
   int32_t resolution;

@@ -26,7 +26,10 @@ add_task(async function() {
 
   info("Wait until the content object is displayed");
   const objectMessage = await waitFor(() =>
-    findMessage(hud, `Object { contentObject: "YAY!", deep: (2) […] }`)
+    findConsoleAPIMessage(
+      hud,
+      `Object { contentObject: "YAY!", deep: (2) […] }`
+    )
   );
   ok(true, "Content object is displayed in the Browser Console");
 

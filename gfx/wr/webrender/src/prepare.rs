@@ -164,6 +164,7 @@ fn prepare_prim_for_render(
                 // Restore the dependencies (borrow check dance)
                 store.pictures[pic_context_for_children.pic_index.0]
                     .restore_context(
+                        pic_context_for_children.pic_index,
                         prim_list,
                         pic_context_for_children,
                         prim_instances,
@@ -800,10 +801,25 @@ fn prepare_interned_prim_for_render(
                 prim_instance.clear_visibility();
             }
         }
-        PrimitiveInstanceKind::Backdrop { .. } => {
+        PrimitiveInstanceKind::BackdropCapture { .. } => {
             // Register the owner picture of this backdrop primitive as the
             // target for resolve of the sub-graph
             frame_state.surface_builder.register_resolve_source();
+        }
+        PrimitiveInstanceKind::BackdropRender { pic_index, .. } => {
+            match frame_state.surface_builder.sub_graph_output_map.get(pic_index).cloned() {
+                Some(sub_graph_output_id) => {
+                    frame_state.surface_builder.add_child_render_task(
+                        sub_graph_output_id,
+                        frame_state.rg_builder,
+                    );
+                }
+                None => {
+                    // Backdrop capture was found not visible, didn't produce a sub-graph
+                    // so we can just skip drawing
+                    prim_instance.clear_visibility();
+                }
+            }
         }
     };
 }
@@ -912,7 +928,8 @@ fn update_clip_task_for_brush(
         PrimitiveInstanceKind::TextRun { .. } |
         PrimitiveInstanceKind::Clear { .. } |
         PrimitiveInstanceKind::LineDecoration { .. } |
-        PrimitiveInstanceKind::Backdrop { .. } => {
+        PrimitiveInstanceKind::BackdropCapture { .. } |
+        PrimitiveInstanceKind::BackdropRender { .. } => {
             return None;
         }
         PrimitiveInstanceKind::Image { image_instance_index, .. } => {
@@ -1380,7 +1397,8 @@ fn build_segments_if_needed(
         PrimitiveInstanceKind::RadialGradient { .. } |
         PrimitiveInstanceKind::ConicGradient { .. } |
         PrimitiveInstanceKind::LineDecoration { .. } |
-        PrimitiveInstanceKind::Backdrop { .. } => {
+        PrimitiveInstanceKind::BackdropCapture { .. } |
+        PrimitiveInstanceKind::BackdropRender { .. } => {
             // These primitives don't support / need segments.
             return;
         }

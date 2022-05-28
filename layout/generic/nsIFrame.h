@@ -1456,13 +1456,13 @@ class nsIFrame : public nsQueryFrame {
    *
    * Indices into aRadii are the enum HalfCorner constants in gfx/2d/Types.h
    *
-   * Note that InsetBorderRadii is lossy, since it can turn nonzero
-   * radii into zero, and OutsetBorderRadii does not inflate zero radii.
-   * Therefore, callers should always inset or outset directly from the
-   * original value coming from style.
+   * Note that insetting the radii is lossy, since it can turn nonzero radii
+   * into zero, and re-adjusting does not inflate zero radii.
+   *
+   * Therefore, callers should always adjust directly from the original value
+   * coming from style.
    */
-  static void InsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets);
-  static void OutsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets);
+  static void AdjustBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets);
 
   /**
    * Fill in border radii for this frame.  Return whether any are nonzero.
@@ -1481,8 +1481,7 @@ class nsIFrame : public nsQueryFrame {
   bool GetMarginBoxBorderRadii(nscoord aRadii[8]) const;
   bool GetPaddingBoxBorderRadii(nscoord aRadii[8]) const;
   bool GetContentBoxBorderRadii(nscoord aRadii[8]) const;
-  bool GetBoxBorderRadii(nscoord aRadii[8], nsMargin aOffset,
-                         bool aIsOutset) const;
+  bool GetBoxBorderRadii(nscoord aRadii[8], const nsMargin& aOffset) const;
   bool GetShapeBoxBorderRadii(nscoord aRadii[8]) const;
 
   /**
@@ -2936,17 +2935,11 @@ class nsIFrame : public nsQueryFrame {
    */
   virtual void UnionChildOverflow(mozilla::OverflowAreas& aOverflowAreas);
 
-  // Represents zero or more physical axes.
-  enum class PhysicalAxes : uint8_t {
-    None = 0x0,
-    Horizontal = 0x1,
-    Vertical = 0x2,
-    Both = Horizontal | Vertical,
-  };
+  // Returns the applicable overflow-clip-margin values.
+  using PhysicalAxes = mozilla::PhysicalAxes;
 
-  /**
-   * Returns true if this frame should apply overflow clipping.
-   */
+  nsSize OverflowClipMargin(PhysicalAxes aClipAxes) const;
+  // Returns the axes on which this frame should apply overflow clipping.
   PhysicalAxes ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const;
 
   /**
@@ -4449,29 +4442,6 @@ class nsIFrame : public nsQueryFrame {
   virtual void PullOverflowsFromPrevInFlow() {}
 
   /**
-   * Clear the list of child PresShells generated during the last paint
-   * so that we can begin generating a new one.
-   */
-  void ClearPresShellsFromLastPaint() { PaintedPresShellList()->Clear(); }
-
-  /**
-   * Flag a child PresShell as painted so that it will get its paint count
-   * incremented during empty transactions.
-   */
-  void AddPaintedPresShell(mozilla::PresShell* aPresShell);
-
-  /**
-   * Increment the paint count of all child PresShells that were painted during
-   * the last repaint.
-   */
-  void UpdatePaintCountForPaintedPresShells();
-
-  /**
-   * @return true if we painted @aPresShell during the last repaint.
-   */
-  bool DidPaintPresShell(mozilla::PresShell* aPresShell);
-
-  /**
    * Accessors for the absolute containing block.
    */
   bool IsAbsoluteContainer() const {
@@ -4487,7 +4457,7 @@ class nsIFrame : public nsQueryFrame {
     return kAbsoluteList;
   }
 
-  // Checks if we (or any of our descendents) have NS_FRAME_PAINTED_THEBES set,
+  // Checks if we (or any of our descendants) have NS_FRAME_PAINTED_THEBES set,
   // and clears this bit if so.
   bool CheckAndClearPaintedState();
 
@@ -5022,27 +4992,6 @@ class nsIFrame : public nsQueryFrame {
 
   void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder);
 
-  // Stores weak references to all the PresShells that were painted during
-  // the last paint event so that we can increment their paint count during
-  // empty transactions
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(PaintedPresShellsProperty,
-                                      nsTArray<nsWeakPtr>)
-
-  nsTArray<nsWeakPtr>* PaintedPresShellList() {
-    bool found;
-    nsTArray<nsWeakPtr>* list =
-        GetProperty(PaintedPresShellsProperty(), &found);
-
-    if (!found) {
-      list = new nsTArray<nsWeakPtr>();
-      AddProperty(PaintedPresShellsProperty(), list);
-    } else {
-      MOZ_ASSERT(list, "this property should only store non-null values");
-    }
-
-    return list;
-  }
-
  protected:
   void MarkInReflow() {
 #ifdef DEBUG_dbaron_off
@@ -5556,7 +5505,6 @@ class nsIFrame : public nsQueryFrame {
 #endif
 };
 
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsIFrame::PhysicalAxes)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsIFrame::ReflowChildFlags)
 
 //----------------------------------------------------------------------

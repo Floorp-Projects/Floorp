@@ -371,6 +371,10 @@ function getSerializedPacket(
         return actorIdPlaceholder;
       }
 
+      if (key === "resourceId") {
+        return undefined;
+      }
+
       return value;
     },
     2

@@ -802,6 +802,195 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
   return ParentAccessGrantPromise::CreateAndResolve(rv, __func__);
 }
 
+// static
+Maybe<bool> ContentBlocking::CheckCookiesPermittedDecidesStorageAccessAPI(
+    nsICookieJarSettings* aCookieJarSettings,
+    nsIPrincipal* aRequestingPrincipal) {
+  MOZ_ASSERT(aCookieJarSettings);
+  MOZ_ASSERT(aRequestingPrincipal);
+  uint32_t cookiePermission = CheckCookiePermissionForPrincipal(
+      aCookieJarSettings, aRequestingPrincipal);
+  if (cookiePermission == nsICookiePermission::ACCESS_ALLOW ||
+      cookiePermission == nsICookiePermission::ACCESS_SESSION) {
+    return Some(true);
+  } else if (cookiePermission == nsICookiePermission::ACCESS_DENY) {
+    return Some(false);
+  }
+
+  if (ContentBlockingAllowList::Check(aCookieJarSettings)) {
+    return Some(true);
+  }
+  return Nothing();
+}
+
+// static
+RefPtr<MozPromise<Maybe<bool>, nsresult, true>>
+ContentBlocking::AsyncCheckCookiesPermittedDecidesStorageAccessAPI(
+    dom::BrowsingContext* aBrowsingContext,
+    nsIPrincipal* aRequestingPrincipal) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+
+  return cc
+      ->SendTestCookiePermissionDecided(aBrowsingContext,
+                                        IPC::Principal(aRequestingPrincipal))
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [](const ContentChild::TestCookiePermissionDecidedPromise::
+                 ResolveOrRejectValue& aPromise) {
+            if (aPromise.IsResolve()) {
+              return MozPromise<Maybe<bool>, nsresult, true>::CreateAndResolve(
+                  aPromise.ResolveValue(), __func__);
+            }
+            return MozPromise<Maybe<bool>, nsresult, true>::CreateAndReject(
+                NS_ERROR_UNEXPECTED, __func__);
+          });
+}
+
+// static
+Maybe<bool> ContentBlocking::CheckBrowserSettingsDecidesStorageAccessAPI(
+    nsICookieJarSettings* aCookieJarSettings, bool aThirdParty) {
+  MOZ_ASSERT(aCookieJarSettings);
+  if (aCookieJarSettings->GetBlockingAllContexts() ||
+      (aCookieJarSettings->GetBlockingAllThirdPartyContexts() && aThirdParty)) {
+    return Some(false);
+  }
+  if (!aCookieJarSettings->GetRejectThirdPartyContexts()) {
+    return Some(true);
+  }
+  return Nothing();
+}
+
+// static
+Maybe<bool> ContentBlocking::CheckCallingContextDecidesStorageAccessAPI(
+    Document* aDocument, bool aRequestingStorageAccess) {
+  MOZ_ASSERT(aDocument);
+  // Window doesn't have user activation and we are asking for access -> reject.
+  if (aRequestingStorageAccess) {
+    if (!aDocument->HasValidTransientUserGestureActivation()) {
+      // Report an error to the console for this case
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
+          aDocument, nsContentUtils::eDOM_PROPERTIES,
+          "RequestStorageAccessUserGesture");
+      return Some(false);
+    }
+  }
+
+  if (aDocument->IsTopLevelContentDocument()) {
+    return Some(true);
+  }
+
+  RefPtr<BrowsingContext> bc = aDocument->GetBrowsingContext();
+  if (!bc) {
+    return Some(false);
+  }
+
+  // We check if the document is a first-party document here by testing if the
+  // top-level window is same-origin. In non-Fission mode, we can directly get
+  // the top-level window through the top browsing context since it should be
+  // in-process. And test their principals.
+  //
+  // In fission, if the sub frame's origin differs from the main frame's
+  // origin, they will be in different processes. We use IsInProcess()
+  // check here to deterimine whether they have the same origin. In
+  // non-fission mode, it is always in-process so we need to compare their
+  // principals.
+  if (bc->Top()->IsInProcess()) {
+    nsCOMPtr<nsPIDOMWindowOuter> topOuter = bc->Top()->GetDOMWindow();
+    if (!topOuter) {
+      return Some(false);
+    }
+    nsCOMPtr<Document> topLevelDoc = topOuter->GetExtantDoc();
+    if (!topLevelDoc) {
+      return Some(false);
+    }
+
+    if (topLevelDoc->NodePrincipal()->Equals(aDocument->NodePrincipal())) {
+      return Some(true);
+    }
+  }
+
+  // If the document has a null origin, reject.
+  if (aDocument->NodePrincipal()->GetIsNullPrincipal()) {
+    // Report an error to the console for this case
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    nsLiteralCString("requestStorageAccess"),
+                                    aDocument, nsContentUtils::eDOM_PROPERTIES,
+                                    "RequestStorageAccessNullPrincipal");
+    return Some(false);
+  }
+
+  if (aRequestingStorageAccess) {
+    if (aDocument->StorageAccessSandboxed()) {
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
+          aDocument, nsContentUtils::eDOM_PROPERTIES,
+          "RequestStorageAccessSandboxed");
+      return Some(false);
+    }
+  }
+  return Nothing();
+}
+
+// static
+Maybe<bool> ContentBlocking::CheckSameSiteCallingContextDecidesStorageAccessAPI(
+    dom::Document* aDocument, bool aRequireUserActivation) {
+  MOZ_ASSERT(aDocument);
+  if (aRequireUserActivation) {
+    if (!aDocument->HasValidTransientUserGestureActivation()) {
+      // Report an error to the console for this case
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
+          aDocument, nsContentUtils::eDOM_PROPERTIES,
+          "RequestStorageAccessUserGesture");
+      return Some(false);
+    }
+  }
+
+  nsIChannel* chan = aDocument->GetChannel();
+  if (!chan) {
+    return Some(false);
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+  if (loadInfo->GetIsThirdPartyContextToTopWindow()) {
+    return Some(false);
+  }
+
+  // If the document has a null origin, reject.
+  if (aDocument->NodePrincipal()->GetIsNullPrincipal()) {
+    // Report an error to the console for this case
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    nsLiteralCString("requestStorageAccess"),
+                                    aDocument, nsContentUtils::eDOM_PROPERTIES,
+                                    "RequestStorageAccessNullPrincipal");
+    return Some(false);
+  }
+  return Maybe<bool>();
+}
+
+// static
+Maybe<bool> ContentBlocking::CheckExistingPermissionDecidesStorageAccessAPI(
+    dom::Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+  nsPIDOMWindowInner* inner = aDocument->GetInnerWindow();
+  if (!inner) {
+    return Some(false);
+  }
+  nsGlobalWindowOuter* outer =
+      nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
+  if (!outer) {
+    return Some(false);
+  }
+  bool explicitPermissionGranted = outer->IsStorageAccessPermissionGranted();
+  if (explicitPermissionGranted) {
+    return Some(true);
+  }
+  return Nothing();
+}
+
 // There are two methods to handle permission update:
 // 1. UpdateAllowAccessOnCurrentProcess
 // 2. UpdateAllowAccessOnParentProcess
@@ -1307,211 +1496,6 @@ bool ContentBlocking::ShouldAllowAccessFor(
 
   int32_t behavior = CookiesBehavior(aPrincipal, aCookieJarSettings);
   return behavior != nsICookieService::BEHAVIOR_REJECT;
-}
-
-/* static */
-RefPtr<ContentBlocking::AsyncShouldAllowAccessForPromise>
-ContentBlocking::AsyncShouldAllowAccessFor(
-    dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aBrowsingContext);
-  MOZ_ASSERT(aPrincipal);
-
-  if (XRE_IsContentProcess()) {
-    ContentChild* cc = ContentChild::GetSingleton();
-    MOZ_ASSERT(cc);
-
-    // The API should only be called from a first-party context.
-    MOZ_ASSERT(aBrowsingContext->SameOriginWithTop());
-
-    if (!aBrowsingContext->SameOriginWithTop()) {
-      return AsyncShouldAllowAccessForPromise::CreateAndResolve(
-          NS_ERROR_INVALID_ARG, __func__);
-    }
-
-    return cc
-        ->SendAsyncShouldAllowAccessFor(aBrowsingContext,
-                                        IPC::Principal(aPrincipal))
-        ->Then(GetCurrentSerialEventTarget(), __func__,
-               [](const ContentChild::AsyncShouldAllowAccessForPromise::
-                      ResolveOrRejectValue& aValue) {
-                 if (aValue.IsResolve()) {
-                   bool allowed;
-                   uint32_t blockReason;
-
-                   Tie(allowed, blockReason) = aValue.ResolveValue();
-
-                   if (allowed) {
-                     return AsyncShouldAllowAccessForPromise::CreateAndResolve(
-                         NS_OK, __func__);
-                   }
-
-                   return AsyncShouldAllowAccessForPromise::CreateAndReject(
-                       blockReason, __func__);
-                 }
-                 return AsyncShouldAllowAccessForPromise::CreateAndResolve(
-                     NS_ERROR_UNEXPECTED, __func__);
-               });
-  }
-
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  LOG(
-      ("Computing whether principal %p has storage access in the browsing "
-       "context %p",
-       aPrincipal, aBrowsingContext));
-
-  RefPtr<dom::BrowsingContext> topBC = aBrowsingContext->Top();
-
-  RefPtr<WindowGlobalParent> wgp = topBC->Canonical()->GetCurrentWindowGlobal();
-  nsCOMPtr<nsICookieJarSettings> cjs = wgp->CookieJarSettings();
-
-  uint32_t cookiePermission =
-      CheckCookiePermissionForPrincipal(cjs, aPrincipal);
-
-  if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
-    LOG(
-        ("CheckCookiePermissionForPrincipal() returned a non-default access "
-         "code (%d) for the principal, returning %s",
-         int(cookiePermission),
-         cookiePermission != nsICookiePermission::ACCESS_DENY ? "success"
-                                                              : "failure"));
-    if (cookiePermission != nsICookiePermission::ACCESS_DENY) {
-      return AsyncShouldAllowAccessForPromise::CreateAndResolve(NS_OK,
-                                                                __func__);
-    }
-
-    return AsyncShouldAllowAccessForPromise::CreateAndReject(
-        nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION, __func__);
-  }
-
-  uint32_t behavior = cjs->GetCookieBehavior();
-
-  if (behavior == nsICookieService::BEHAVIOR_ACCEPT) {
-    LOG(("The cookie behavior pref mandates accepting all cookies!"));
-    return AsyncShouldAllowAccessForPromise::CreateAndResolve(NS_OK, __func__);
-  }
-
-  if (ContentBlockingAllowList::Check(cjs)) {
-    return AsyncShouldAllowAccessForPromise::CreateAndResolve(NS_OK, __func__);
-  }
-
-  if (behavior == nsICookieService::BEHAVIOR_REJECT) {
-    LOG(("The cookie behavior pref mandates rejecting all cookies!"));
-    return AsyncShouldAllowAccessForPromise::CreateAndReject(
-        nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL, __func__);
-  }
-
-  bool isThirdParty = true;
-  wgp->DocumentPrincipal()->IsThirdPartyPrincipal(aPrincipal, &isThirdParty);
-
-  if (!isThirdParty) {
-    LOG(("Our principal isn't a third-party principal"));
-    return AsyncShouldAllowAccessForPromise::CreateAndResolve(NS_OK, __func__);
-  }
-
-  if ((behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
-       !CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior)) ||
-      behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) {
-    LOG(("Nothing more to do due to the behavior code %d", int(behavior)));
-    return AsyncShouldAllowAccessForPromise::CreateAndReject(
-        nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN, __func__);
-  }
-
-  MOZ_ASSERT(
-      CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
-      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      behavior ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
-
-  // To capture the principal in case it has been released.
-  RefPtr<nsIPrincipal> principal = aPrincipal;
-
-  auto checkPermission = [principal, wgp](uint32_t blockedReason) {
-    nsCOMPtr<nsIURI> uri = principal->GetURI();
-
-    if (!uri) {
-      LOG(("Cannot get uri from the principal."));
-      return AsyncShouldAllowAccessForPromise::CreateAndReject(blockedReason,
-                                                               __func__);
-    }
-
-    nsAutoCString origin;
-    nsresult rv = nsContentUtils::GetASCIIOrigin(uri, origin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(("Cannot get origin from the uri."));
-      return AsyncShouldAllowAccessForPromise::CreateAndReject(blockedReason,
-                                                               __func__);
-    }
-
-    nsAutoCString type;
-    AntiTrackingUtils::CreateStoragePermissionKey(origin, type);
-
-    bool usePrivateBrowsing =
-        wgp->DocumentPrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
-
-    uint32_t unused = 0;
-    bool allowed = AntiTrackingUtils::CheckStoragePermission(
-        wgp->DocumentPrincipal(), type, usePrivateBrowsing, &unused, unused);
-
-    return allowed ? AsyncShouldAllowAccessForPromise::CreateAndResolve(
-                         NS_OK, __func__)
-                   : AsyncShouldAllowAccessForPromise::CreateAndReject(
-                         blockedReason, __func__);
-  };
-
-  if (CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior)) {
-    if (RejectForeignAllowList::Check(aPrincipal)) {
-      LOG(("This principal is exception listed for reject foreign"));
-      return AsyncShouldAllowAccessForPromise::CreateAndResolve(NS_OK,
-                                                                __func__);
-    }
-
-    return checkPermission(
-        nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN);
-  }
-
-  // For BEHAVIOR_REJECT_TRACKER and STATE_COOKIES_PARTITIONED_FOREIGN, we need
-  // to know if the principal belongs to a tracker before we check the storage
-  // permission to get a correct block reason.
-
-  return CheckTrackerForPrincipal(aPrincipal)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [checkPermission, behavior, isThirdParty](
-              CheckTrackerForPrincipalPromise::ResolveOrRejectValue&& aValue) {
-            bool isTracker = aValue.IsResolve();
-            uint32_t blockedReason =
-                nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
-
-            if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-              if (!isTracker) {
-                LOG(("Our window isn't a third-party tracking window"));
-                return AsyncShouldAllowAccessForPromise::CreateAndResolve(
-                    NS_OK, __func__);
-              }
-
-              blockedReason = aValue.ResolveValue();
-            } else {
-              if (isTracker) {
-                // fall through
-              } else if (isThirdParty) {
-                LOG(
-                    ("We're in the third-party context, storage should be "
-                     "partitioned"));
-                // fall through, but remember that we're partitioning.
-                blockedReason =
-                    nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
-              } else {
-                LOG(
-                    ("Our window isn't a third-party window, storage is "
-                     "allowed"));
-                return AsyncShouldAllowAccessForPromise::CreateAndResolve(
-                    NS_OK, __func__);
-              }
-            }
-
-            return checkPermission(blockedReason);
-          });
 }
 
 /* static */

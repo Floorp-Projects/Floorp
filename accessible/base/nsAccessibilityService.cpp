@@ -396,9 +396,24 @@ void nsAccessibilityService::NotifyOfResolutionChange(
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     DocAccessible* document = GetDocAccessible(aPresShell);
     if (document && document->IPCDoc()) {
-      nsTArray<mozilla::a11y::CacheData> data(1);
+      AutoTArray<mozilla::a11y::CacheData, 1> data;
       RefPtr<AccAttributes> fields = new AccAttributes();
       fields->SetAttribute(nsGkAtoms::resolution, aResolution);
+      data.AppendElement(mozilla::a11y::CacheData(0, fields));
+      document->IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
+    }
+  }
+}
+
+void nsAccessibilityService::NotifyOfDevPixelRatioChange(
+    mozilla::PresShell* aPresShell, int32_t aAppUnitsPerDevPixel) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    DocAccessible* document = GetDocAccessible(aPresShell);
+    if (document && document->IPCDoc()) {
+      AutoTArray<mozilla::a11y::CacheData, 1> data;
+      RefPtr<AccAttributes> fields = new AccAttributes();
+      fields->SetAttribute(nsGkAtoms::_moz_device_pixel_ratio,
+                           aAppUnitsPerDevPixel);
       data.AppendElement(mozilla::a11y::CacheData(0, fields));
       document->IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
     }

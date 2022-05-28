@@ -25,6 +25,7 @@
 #include "mozilla/ResultVariant.h"
 #include "mozilla/Unused.h"
 #include "mozilla/fallible.h"
+#include "mozilla/dom/quota/QuotaTestParent.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsCOMPtr.h"
 #include "nsLiteralString.h"
@@ -36,6 +37,48 @@ class nsISupports;
 
 using namespace mozilla;
 using namespace mozilla::dom::quota;
+
+mozilla::ipc::IPCResult QuotaTestParent::RecvTry_Success_CustomErr_QmIpcFail(
+    bool* aTryDidNotReturn) {
+  QM_TRY(MOZ_TO_RESULT(NS_OK), QM_IPC_FAIL(this));
+
+  *aTryDidNotReturn = true;
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult QuotaTestParent::RecvTry_Success_CustomErr_IpcFail(
+    bool* aTryDidNotReturn) {
+  QM_TRY(MOZ_TO_RESULT(NS_OK), IPC_FAIL(this, "Custom why"));
+
+  *aTryDidNotReturn = true;
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+QuotaTestParent::RecvTryInspect_Success_CustomErr_QmIpcFail(
+    bool* aTryDidNotReturn) {
+  QM_TRY_INSPECT(const auto& x, (mozilla::Result<int32_t, nsresult>{42}),
+                 QM_IPC_FAIL(this));
+  Unused << x;
+
+  *aTryDidNotReturn = true;
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+QuotaTestParent::RecvTryInspect_Success_CustomErr_IpcFail(
+    bool* aTryDidNotReturn) {
+  QM_TRY_INSPECT(const auto& x, (mozilla::Result<int32_t, nsresult>{42}),
+                 IPC_FAIL(this, "Custom why"));
+  Unused << x;
+
+  *aTryDidNotReturn = true;
+
+  return IPC_OK();
+}
 
 #ifdef __clang__
 #  pragma clang diagnostic push
@@ -56,6 +99,30 @@ TEST(QuotaCommon_Try, Success)
 
   EXPECT_TRUE(tryDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_Try, Success_CustomErr_QmIpcFail)
+{
+  auto foo = MakeRefPtr<QuotaTestParent>();
+
+  bool tryDidNotReturn = false;
+
+  auto res = foo->RecvTry_Success_CustomErr_QmIpcFail(&tryDidNotReturn);
+
+  EXPECT_TRUE(tryDidNotReturn);
+  EXPECT_TRUE(res);
+}
+
+TEST(QuotaCommon_Try, Success_CustomErr_IpcFail)
+{
+  auto foo = MakeRefPtr<QuotaTestParent>();
+
+  bool tryDidNotReturn = false;
+
+  auto res = foo->RecvTry_Success_CustomErr_IpcFail(&tryDidNotReturn);
+
+  EXPECT_TRUE(tryDidNotReturn);
+  EXPECT_TRUE(res);
 }
 
 #ifdef DEBUG
@@ -409,6 +476,30 @@ TEST(QuotaCommon_TryInspect, Success)
 
   EXPECT_TRUE(tryInspectDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_TryInspect, Success_CustomErr_QmIpcFail)
+{
+  auto foo = MakeRefPtr<QuotaTestParent>();
+
+  bool tryDidNotReturn = false;
+
+  auto res = foo->RecvTryInspect_Success_CustomErr_QmIpcFail(&tryDidNotReturn);
+
+  EXPECT_TRUE(tryDidNotReturn);
+  EXPECT_TRUE(res);
+}
+
+TEST(QuotaCommon_TryInspect, Success_CustomErr_IpcFail)
+{
+  auto foo = MakeRefPtr<QuotaTestParent>();
+
+  bool tryDidNotReturn = false;
+
+  auto res = foo->RecvTryInspect_Success_CustomErr_IpcFail(&tryDidNotReturn);
+
+  EXPECT_TRUE(tryDidNotReturn);
+  EXPECT_TRUE(res);
 }
 
 #ifdef DEBUG

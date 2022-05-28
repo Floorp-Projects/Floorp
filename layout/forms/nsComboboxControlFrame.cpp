@@ -354,7 +354,12 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
           maxOptionSize, nsLayoutUtils::AppUnitWidthOfStringBidi(
                              *stringToUse, this, *fm, *aRenderingContext));
     }
-
+    if (maxOptionSize) {
+      // HACK: Add one app unit to workaround silly Netgear router styling, see
+      // bug 1769580. In practice since this comes from font metrics is unlikely
+      // to be perceivable.
+      maxOptionSize += 1;
+    }
     displayISize += maxOptionSize;
   }
 

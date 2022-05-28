@@ -292,3 +292,65 @@ addAccessibleTask(
     iframe: isCacheEnabled,
   }
 );
+
+/**
+ * Test text with embedded chars
+ */
+addAccessibleTask(
+  `<p id='p1' style='font-family: monospace;'>hello <a href="google.com">world</a></p>
+   <p id='p2' style='font-family: monospace;'>hello<br><a href="google.com">world</a></p>
+   <div id='d3'><p></p>hello world</div>
+   <div id='d4'>hello world<p></p></div>
+   <div id='d5'>oh<p></p>hello world</div>`,
+  async function(browser, accDoc) {
+    info("Testing embedded chars");
+    await testTextNode(accDoc, browser, "p1");
+    await testTextNode(accDoc, browser, "p2");
+    await testTextNode(accDoc, browser, "d3");
+    await testTextNode(accDoc, browser, "d4");
+    await testTextNode(accDoc, browser, "d5");
+  },
+  {
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);
+
+/**
+ * Test bounds after text mutations.
+ */
+addAccessibleTask(
+  `<p id="p">a</p>`,
+  async function(browser, docAcc) {
+    await testTextNode(docAcc, browser, "p");
+    const p = findAccessibleChildByID(docAcc, "p");
+    info("Appending a character to text leaf");
+    let textInserted = waitForEvent(EVENT_TEXT_INSERTED, p);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("p").firstChild.data = "ab";
+    });
+    await textInserted;
+    await testTextNode(docAcc, browser, "p");
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);
+
+/**
+ * Test character bounds on the insertion point at the end of a text box.
+ */
+addAccessibleTask(
+  `<input id="input" value="a">`,
+  async function(browser, docAcc) {
+    const input = findAccessibleChildByID(docAcc, "input");
+    testTextPos(input, 1, [0, 0], COORDTYPE_SCREEN_RELATIVE);
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);

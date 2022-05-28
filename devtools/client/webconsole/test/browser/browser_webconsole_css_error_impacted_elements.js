@@ -48,7 +48,7 @@ add_task(async function() {
 
   info("Check the CSS warning message for the top level document");
   let messageNode = await waitFor(() =>
-    findMessage(hud, "Error in parsing value for ‘cursor’", ".message.css")
+    findWarningMessage(hud, "Error in parsing value for ‘cursor’", ".css")
   );
 
   info("Click on the expand arrow");
@@ -88,7 +88,7 @@ add_task(async function() {
 
   info("Check the CSS warning message for the third-party iframe");
   messageNode = await waitFor(() =>
-    findMessage(hud, "Error in parsing value for ‘color’", ".message.css")
+    findWarningMessage(hud, "Error in parsing value for ‘color’", ".css")
   );
 
   info("Click on the expand arrow");

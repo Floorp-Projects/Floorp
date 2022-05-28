@@ -37,17 +37,17 @@ add_task(async function() {
     setTimeout(() => res(result), 1000);
   })`;
 
-  const onAwaitResultMessage = waitForMessage(
+  const onAwaitResultMessage = waitForMessageByType(
     hud,
     `[ "res", "bar" ]`,
-    ".message.result"
+    ".result"
   );
   execute(hud, awaitExpression);
 
   // We send an evaluation just after the await one to ensure the await evaluation was
   // done. We can't await on the previous execution because it waits for the result to
   // be send, which won't happen until we resume the debugger.
-  await executeAndWaitForMessage(hud, `"smoke"`, `"smoke"`, ".result");
+  await executeAndWaitForResultMessage(hud, `"smoke"`, `"smoke"`);
 
   // Give the engine some time to evaluate the await expression before resuming.
   await waitForTick();
@@ -56,7 +56,7 @@ add_task(async function() {
   await resume(dbg);
 
   info("Wait for the paused expression result to be displayed");
-  await waitFor(() => findMessage(hud, "pauseExpression-res", ".result"));
+  await waitFor(() => findEvaluationResultMessage(hud, "pauseExpression-res"));
 
   await onAwaitResultMessage;
   const messages = hud.ui.outputNode.querySelectorAll(

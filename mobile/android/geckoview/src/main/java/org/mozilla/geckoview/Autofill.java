@@ -257,6 +257,57 @@ public class Autofill {
       return data;
     }
 
+    /**
+     * Perform auto-fill using the specified values.
+     *
+     * @param values Map of auto-fill IDs to values.
+     */
+    @UiThread
+    public void autofill(@NonNull final SparseArray<CharSequence> values) {
+      ThreadUtils.assertOnUiThread();
+
+      if (isEmpty()) {
+        return;
+      }
+
+      final HashMap<Node, GeckoBundle> valueBundles = new HashMap<>();
+
+      for (int i = 0; i < values.size(); i++) {
+        final int id = values.keyAt(i);
+        final Node node = getNode(id);
+        if (node == null) {
+          Log.w(LOGTAG, "Could not find node id=" + id);
+          continue;
+        }
+
+        final CharSequence value = values.valueAt(i);
+
+        if (DEBUG) {
+          Log.d(LOGTAG, "Process autofill for id=" + id + ", value=" + value);
+        }
+
+        if (node == getRoot()) {
+          // We cannot autofill the session root as it does not correspond to a
+          // real element on the page.
+          Log.w(LOGTAG, "Ignoring autofill on session root.");
+          continue;
+        }
+
+        final Node root = node.getRoot();
+        if (!valueBundles.containsKey(root)) {
+          valueBundles.put(root, new GeckoBundle());
+        }
+        valueBundles.get(root).putString(node.getUuid(), String.valueOf(value));
+      }
+
+      for (final Node root : valueBundles.keySet()) {
+        final NodeData data = dataFor(root);
+        Objects.requireNonNull(data);
+        final EventCallback callback = data.callback;
+        callback.sendSuccess(valueBundles.get(root));
+      }
+    }
+
     /* package */ void addRoot(@NonNull final Node node, final EventCallback callback) {
       if (DEBUG) {
         Log.d(LOGTAG, "addRoot: " + node);
@@ -1082,57 +1133,6 @@ public class Autofill {
         commit(message.getBundle("node"));
       } else if ("GeckoView:UpdateAutofill".equals(event)) {
         update(message.getBundle("node"));
-      }
-    }
-
-    /**
-     * Perform auto-fill using the specified values.
-     *
-     * @param values Map of auto-fill IDs to values.
-     */
-    @UiThread
-    public void autofill(final SparseArray<CharSequence> values) {
-      ThreadUtils.assertOnUiThread();
-
-      if (getAutofillSession().isEmpty()) {
-        return;
-      }
-
-      final HashMap<Node, GeckoBundle> valueBundles = new HashMap<>();
-
-      for (int i = 0; i < values.size(); i++) {
-        final int id = values.keyAt(i);
-        final Node node = getAutofillSession().getNode(id);
-        if (node == null) {
-          Log.w(LOGTAG, "Could not find node id=" + id);
-          continue;
-        }
-
-        final CharSequence value = values.valueAt(i);
-
-        if (DEBUG) {
-          Log.d(LOGTAG, "Process autofill for id=" + id + ", value=" + value);
-        }
-
-        if (node == getAutofillSession().getRoot()) {
-          // We cannot autofill the session root as it does not correspond to a
-          // real element on the page.
-          Log.w(LOGTAG, "Ignoring autofill on session root.");
-          continue;
-        }
-
-        final Node root = node.getRoot();
-        if (!valueBundles.containsKey(root)) {
-          valueBundles.put(root, new GeckoBundle());
-        }
-        valueBundles.get(root).putString(node.getUuid(), String.valueOf(value));
-      }
-
-      for (final Node root : valueBundles.keySet()) {
-        final NodeData data = getAutofillSession().dataFor(root);
-        Objects.requireNonNull(data);
-        final EventCallback callback = data.callback;
-        callback.sendSuccess(valueBundles.get(root));
       }
     }
 

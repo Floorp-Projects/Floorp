@@ -66,14 +66,14 @@ const FIREFOX_DEFAULT_HEADERS = [
   "Upgrade",
   "Via",
 ];
-
+// This does not include the CONNECT method as it is restricted and special.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1769572#c2 for details
 const HTTP_METHODS = [
   "GET",
   "HEAD",
   "POST",
   "DELETE",
   "PUT",
-  "CONNECT",
   "OPTIONS",
   "TRACE",
   "PATH",

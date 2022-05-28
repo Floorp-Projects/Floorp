@@ -1199,10 +1199,9 @@ async function mockGfxBlocklistItems(items) {
   const { BlocklistPrivate } = ChromeUtils.import(
     "resource://gre/modules/Blocklist.jsm"
   );
-  const client = RemoteSettings(
-    Services.prefs.getCharPref("services.blocklist.gfx.collection"),
-    { bucketNamePref: "services.blocklist.bucket" }
-  );
+  const client = RemoteSettings("gfx", {
+    bucketName: "blocklists",
+  });
   const records = items.map(item => {
     if (item.id && item.last_modified) {
       return item;

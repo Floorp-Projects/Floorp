@@ -884,7 +884,7 @@ const wasm::WasmTryNote* CodeTier::lookupWasmTryNote(const void* pc) const {
   // We find the first hit (there may be multiple) to obtain the innermost
   // handler, which is why we cannot binary search here.
   for (const auto& tryNote : tryNotes) {
-    if (target > tryNote.begin && target <= tryNote.end) {
+    if (tryNote.offsetWithinTryBody(target)) {
       return &tryNote;
     }
   }

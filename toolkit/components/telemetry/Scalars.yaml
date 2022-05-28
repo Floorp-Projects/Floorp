@@ -6640,6 +6640,23 @@ urlbar.tabtosearch:
       - main
 
 urlbar.picked:
+    autofill_about:
+      bug_numbers:
+        - 1770483
+      description: >
+        Counts how many times an about-page autofill result (e.g.,
+        "about:config") was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
     autofill_adaptive:
       bug_numbers:
         - 1597791
@@ -6660,7 +6677,46 @@ urlbar.picked:
       bug_numbers:
         - 1597791
       description: >
-        Counts how many times this result type was picked at a given index.
+        Counts how many times an origin (domain) autofill result (e.g.,
+        "mozilla.org") was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
+    autofill_other:
+      bug_numbers:
+        - 1770483
+      description: >
+        Counts how many times some other type of autofill result that does not
+        have a specific keyed scalar was picked at a given index. This is a
+        fallback that is used when the code is not properly setting a specific
+        autofill type, and it should not normally be used. If it appears in the
+        data, it means we need to investigate and fix the code that is not
+        properly setting a specific autofill type.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
+    autofill_preloaded:
+      bug_numbers:
+        - 1770483
+      description: >
+        Counts how many times a preloaded site autofill result was picked at a
+        given index.
       expires: never
       kind: uint
       keyed: true
@@ -6676,7 +6732,8 @@ urlbar.picked:
       bug_numbers:
         - 1597791
       description: >
-        Counts how many times this result type was picked at a given index.
+        Counts how many times a URL autofill result (e.g.,
+        "mozilla.org/firefox") was picked at a given index.
       expires: never
       kind: uint
       keyed: true

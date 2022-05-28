@@ -666,7 +666,7 @@ where
 
 /// https://drafts.csswg.org/css-color-4/#hwb-to-rgb
 #[inline]
-fn hwb_to_rgb(h: f32, w: f32, b: f32) -> (f32, f32, f32) {
+pub fn hwb_to_rgb(h: f32, w: f32, b: f32) -> (f32, f32, f32) {
     if w + b >= 1.0 {
         let gray = w / (w + b);
         return (gray, gray, gray);
@@ -683,7 +683,7 @@ fn hwb_to_rgb(h: f32, w: f32, b: f32) -> (f32, f32, f32) {
 /// https://drafts.csswg.org/css-color/#hsl-color
 /// except with h pre-multiplied by 3, to avoid some rounding errors.
 #[inline]
-fn hsl_to_rgb(hue: f32, saturation: f32, lightness: f32) -> (f32, f32, f32) {
+pub fn hsl_to_rgb(hue: f32, saturation: f32, lightness: f32) -> (f32, f32, f32) {
     fn hue_to_rgb(m1: f32, m2: f32, mut h3: f32) -> f32 {
         if h3 < 0. {
             h3 += 3.
@@ -691,7 +691,6 @@ fn hsl_to_rgb(hue: f32, saturation: f32, lightness: f32) -> (f32, f32, f32) {
         if h3 > 3. {
             h3 -= 3.
         }
-
         if h3 * 2. < 1. {
             m1 + (m2 - m1) * h3 * 2.
         } else if h3 * 2. < 3. {

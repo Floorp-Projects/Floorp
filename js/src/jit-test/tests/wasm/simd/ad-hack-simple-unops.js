@@ -1,4 +1,7 @@
-// |jit-test| skip-if: !wasmSimdEnabled(); include:../tests/wasm/simd/ad-hack-preamble.js
+// |jit-test| skip-if: !wasmSimdEnabled()
+
+// Do not include this in the preamble, it must be loaded after lib/wasm.js
+load(scriptdir + "ad-hack-preamble.js")
 
 // Simple unary operators.  Place parameter in memory at offset 16,
 // read the result at offset 0.

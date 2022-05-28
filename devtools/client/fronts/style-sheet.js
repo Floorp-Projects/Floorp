@@ -42,6 +42,7 @@ class StyleSheetFront extends FrontClassWithSpec(styleSheetSpec) {
     this.href = form.href;
     this.nodeHref = form.nodeHref;
     this.disabled = form.disabled;
+    this.constructed = form.constructed;
     this.title = form.title;
     this.system = form.system;
     this.styleSheetIndex = form.styleSheetIndex;

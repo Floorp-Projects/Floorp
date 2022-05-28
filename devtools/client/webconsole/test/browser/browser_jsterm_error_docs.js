@@ -26,7 +26,7 @@ add_task(async function() {
 
     await clearOutput(hud);
 
-    const { node } = await executeAndWaitForMessage(
+    const { node } = await executeAndWaitForErrorMessage(
       hud,
       expression,
       "RangeError:"

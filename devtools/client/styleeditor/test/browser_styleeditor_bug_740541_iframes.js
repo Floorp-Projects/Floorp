@@ -88,4 +88,20 @@ add_task(async function() {
     EXPECTED_STYLE_SHEET_COUNT,
     "Got the expected number of style sheets."
   );
+
+  // Verify that stylesheets are removed when their related target is destroyed
+  if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
+    info("Remove all iframes");
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+      const iframes = content.document.querySelectorAll("iframe");
+      for (const iframe of iframes) {
+        iframe.remove();
+      }
+    });
+
+    await waitFor(
+      () => ui.editors.length == 1,
+      "Wait until all iframe stylesheets are removed and we only have the top document one"
+    );
+  }
 });

@@ -58,8 +58,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecAndroid::MakePrintTarget() {
 }
 
 NS_IMETHODIMP
-nsDeviceContextSpecAndroid::Init(nsIWidget* aWidget, nsIPrintSettings* aPS,
-                                 bool aIsPrintPreview) {
+nsDeviceContextSpecAndroid::Init(nsIPrintSettings* aPS, bool aIsPrintPreview) {
   mPrintSettings = aPS;
   return NS_OK;
 }

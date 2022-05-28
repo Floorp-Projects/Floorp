@@ -23,7 +23,7 @@ add_task(async function() {
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
 
   info("Console should be scrolled to bottom on initial load from page logs");
-  await waitFor(() => findMessage(hud, "init-100"));
+  await waitFor(() => findConsoleAPIMessage(hud, "init-100"));
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -40,7 +40,7 @@ add_task(async function() {
   await reloadBrowser();
 
   info("Console should be scrolled to bottom after refresh from page logs");
-  await waitFor(() => findMessage(hud, "init-100"));
+  await waitFor(() => findConsoleAPIMessage(hud, "init-100"));
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -70,7 +70,7 @@ add_task(async function() {
   );
 
   info("Add a console.trace message to check that the scroll isn't impacted");
-  let onMessage = waitForMessage(hud, "trace in C");
+  let onMessage = waitForMessageByType(hud, "trace in C", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.c();
   });
@@ -83,7 +83,7 @@ add_task(async function() {
   is(outputContainer.scrollTop, 0, "The console stayed scrolled to the top");
 
   info("Evaluate a command to check that the console scrolls to the bottom");
-  await executeAndWaitForMessage(hud, "21 + 21", "42", ".result");
+  await executeAndWaitForResultMessage(hud, "21 + 21", "42");
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -93,7 +93,7 @@ add_task(async function() {
   info(
     "Add a message to check that the console do scroll since we're at the bottom"
   );
-  onMessage = waitForMessage(hud, "scroll");
+  onMessage = waitForMessageByType(hud, "scroll", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("scroll");
   });
@@ -107,14 +107,13 @@ add_task(async function() {
   info(
     "Evaluate an Error object to check that the console scrolls to the bottom"
   );
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForResultMessage(
     hud,
     `
     x = new Error("myErrorObject");
     x.stack = "a@b/c.js:1:2\\nd@e/f.js:3:4";
     x;`,
-    "myErrorObject",
-    ".result"
+    "myErrorObject"
   );
   ok(
     isScrolledToBottom(outputContainer),
@@ -135,15 +134,14 @@ add_task(async function() {
   info(
     "Throw an Error object in a direct evaluation to check that the console scrolls to the bottom"
   );
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForErrorMessage(
     hud,
     `
       x = new Error("myEvaluatedThrownErrorObject");
       x.stack = "a@b/c.js:1:2\\nd@e/f.js:3:4";
       throw x;
     `,
-    "Uncaught Error: myEvaluatedThrownErrorObject",
-    ".error"
+    "Uncaught Error: myEvaluatedThrownErrorObject"
   );
   ok(
     isScrolledToBottom(outputContainer),
@@ -162,7 +160,7 @@ add_task(async function() {
   );
 
   info("Throw an Error object to check that the console scrolls to the bottom");
-  message = await executeAndWaitForMessage(
+  message = await executeAndWaitForErrorMessage(
     hud,
     `
     setTimeout(() => {
@@ -170,8 +168,7 @@ add_task(async function() {
       x.stack = "a@b/c.js:1:2\\nd@e/f.js:3:4";
       throw x
     }, 10)`,
-    "Uncaught Error: myThrownErrorObject",
-    ".error"
+    "Uncaught Error: myThrownErrorObject"
   );
   ok(
     isScrolledToBottom(outputContainer),
@@ -192,7 +189,7 @@ add_task(async function() {
   info(
     "Add a console.trace message to check that the console stays scrolled to bottom"
   );
-  onMessage = waitForMessage(hud, "trace in C");
+  onMessage = waitForMessageByType(hud, "trace in C", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.c();
   });
@@ -212,7 +209,7 @@ add_task(async function() {
 
   info("Check that repeated messages don't prevent scroll to bottom");
   // We log a first message.
-  onMessage = waitForMessage(hud, "repeat");
+  onMessage = waitForMessageByType(hud, "repeat", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("repeat");
   });
@@ -233,7 +230,7 @@ add_task(async function() {
   info(
     "Check that adding a message after a repeated message scrolls to bottom"
   );
-  onMessage = waitForMessage(hud, "after repeat");
+  onMessage = waitForMessageByType(hud, "after repeat", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("after repeat");
   });
@@ -275,15 +272,14 @@ add_task(async function() {
   // Clear the output so we only have the object
   await clearOutput(hud);
   // Evaluate an object with a hundred properties
-  const result = await executeAndWaitForMessage(
+  const result = await executeAndWaitForResultMessage(
     hud,
     `Array.from({length: 100}, (_, i) => i)
       .reduce(
         (acc, item) => {acc["item-" + item] = item; return acc;},
         {}
       )`,
-    "Object",
-    ".message.result"
+    "Object"
   );
   // Expand the object
   result.node.querySelector(".arrow").click();
@@ -300,7 +296,7 @@ add_task(async function() {
 
   await clearOutput(hud);
   // Log a big object that will be much larger than the output container
-  onMessage = waitForMessage(hud, "WE ALL LIVE IN A");
+  onMessage = waitForMessageByType(hud, "WE ALL LIVE IN A", ".warn");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const win = content.wrappedJSObject;
     for (let i = 1; i < 100; i++) {
@@ -323,7 +319,7 @@ add_task(async function() {
     "The output was scrolled to the bottom"
   );
   // Then log something else to make sure we haven't lost our scroll pinning
-  onMessage = waitForMessage(hud, "YELLOW SUBMARINE");
+  onMessage = waitForMessageByType(hud, "YELLOW SUBMARINE", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("YELLOW SUBMARINE");
   });
@@ -357,7 +353,9 @@ function isScrolledToBottom(container) {
 // LazyMessageList are disregarded.
 function allTraceMessagesAreExpanded(hud) {
   return (
-    findMessage(hud, "trace in C 100") &&
-    findMessages(hud, "trace in C").every(m => m.querySelector(".frames"))
+    findConsoleAPIMessage(hud, "trace in C 100") &&
+    findConsoleAPIMessages(hud, "trace in C").every(m =>
+      m.querySelector(".frames")
+    )
   );
 }

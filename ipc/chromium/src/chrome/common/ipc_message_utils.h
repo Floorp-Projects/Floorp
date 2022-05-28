@@ -623,6 +623,7 @@ struct ParamTraitsIPC<mozilla::UniqueFileHandle> {
     WriteParam(writer, valid);
     if (valid) {
       if (!writer->WriteFileHandle(std::move(p))) {
+        writer->FatalError("Too many file handles for one message!");
         NOTREACHED() << "Too many file handles for one message!";
       }
     }
@@ -630,6 +631,7 @@ struct ParamTraitsIPC<mozilla::UniqueFileHandle> {
   static bool Read(MessageReader* reader, param_type* r) {
     bool valid;
     if (!ReadParam(reader, &valid)) {
+      reader->FatalError("Error reading file handle validity");
       return false;
     }
 
@@ -638,7 +640,11 @@ struct ParamTraitsIPC<mozilla::UniqueFileHandle> {
       return true;
     }
 
-    return reader->ConsumeFileHandle(r);
+    if (!reader->ConsumeFileHandle(r)) {
+      reader->FatalError("File handle not found in message!");
+      return false;
+    }
+    return true;
   }
 };
 
@@ -661,6 +667,7 @@ struct ParamTraitsIPC<mozilla::UniqueMachSendRight> {
     WriteParam(writer, valid);
     if (valid) {
       if (!writer->WriteMachSendRight(std::move(p))) {
+        writer->FatalError("Too many mach send rights for one message!");
         NOTREACHED() << "Too many mach send rights for one message!";
       }
     }
@@ -668,6 +675,7 @@ struct ParamTraitsIPC<mozilla::UniqueMachSendRight> {
   static bool Read(MessageReader* reader, param_type* r) {
     bool valid;
     if (!ReadParam(reader, &valid)) {
+      reader->FatalError("Error reading mach send right validity");
       return false;
     }
 
@@ -676,7 +684,11 @@ struct ParamTraitsIPC<mozilla::UniqueMachSendRight> {
       return true;
     }
 
-    return reader->ConsumeMachSendRight(r);
+    if (!reader->ConsumeMachSendRight(r)) {
+      reader->FatalError("Mach send right not found in message!");
+      return false;
+    }
+    return true;
   }
 };
 #endif

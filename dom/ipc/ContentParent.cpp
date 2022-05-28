@@ -3001,8 +3001,11 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   }
 
 #ifdef MOZ_WIDGET_ANDROID
-  Unused << SendDecoderSupportedMimeTypes(
-      AndroidDecoderModule::GetSupportedMimeTypes());
+  if (!(StaticPrefs::media_utility_process_enabled() &&
+        StaticPrefs::media_utility_android_media_codec_enabled())) {
+    Unused << SendDecoderSupportedMimeTypes(
+        AndroidDecoderModule::GetSupportedMimeTypes());
+  }
 #endif
 
   // Must send screen info before send initialData
@@ -6455,25 +6458,22 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvAsyncShouldAllowAccessFor(
-    const MaybeDiscarded<BrowsingContext>& aTopContext,
+mozilla::ipc::IPCResult ContentParent::RecvTestCookiePermissionDecided(
+    const MaybeDiscarded<BrowsingContext>& aContext,
     const Principal& aPrincipal,
-    const AsyncShouldAllowAccessForResolver&& aResolver) {
-  if (aTopContext.IsNullOrDiscarded()) {
+    const TestCookiePermissionDecidedResolver&& aResolver) {
+  if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
 
-  ContentBlocking::AsyncShouldAllowAccessFor(aTopContext.get_canonical(),
-                                             aPrincipal)
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [aResolver](ContentBlocking::AsyncShouldAllowAccessForPromise::
-                             ResolveOrRejectValue&& aValue) {
-               bool allowed = aValue.IsResolve();
+  RefPtr<WindowGlobalParent> wgp =
+      aContext.get_canonical()->GetCurrentWindowGlobal();
+  nsCOMPtr<nsICookieJarSettings> cjs = wgp->CookieJarSettings();
 
-               aResolver(Tuple<const bool&, const uint32_t&>(
-                   allowed, allowed ? 0 : aValue.RejectValue()));
-             });
-
+  Maybe<bool> result =
+      ContentBlocking::CheckCookiesPermittedDecidesStorageAccessAPI(cjs,
+                                                                    aPrincipal);
+  aResolver(result);
   return IPC_OK();
 }
 

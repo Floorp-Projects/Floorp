@@ -458,7 +458,10 @@ void DataPipeWrite(IPC::MessageWriter* aWriter, T* aParam) {
 
   // Serialize relevant parameters to our peer.
   WriteParam(aWriter, std::move(aParam->mLink->mPort));
-  MOZ_ALWAYS_TRUE(aParam->mLink->mShmem->WriteHandle(aWriter));
+  if (!aParam->mLink->mShmem->WriteHandle(aWriter)) {
+    aWriter->FatalError("failed to write DataPipe shmem handle");
+    MOZ_CRASH("failed to write DataPipe shmem handle");
+  }
   WriteParam(aWriter, aParam->mLink->mCapacity);
   WriteParam(aWriter, aParam->mLink->mPeerStatus);
   WriteParam(aWriter, aParam->mLink->mOffset);
@@ -473,7 +476,7 @@ template <typename T>
 bool DataPipeRead(IPC::MessageReader* aReader, RefPtr<T>* aResult) {
   nsresult rv = NS_OK;
   if (!ReadParam(aReader, &rv)) {
-    NS_WARNING("failed to read status!");
+    aReader->FatalError("failed to read DataPipe status");
     return false;
   }
   if (NS_FAILED(rv)) {
@@ -484,23 +487,30 @@ bool DataPipeRead(IPC::MessageReader* aReader, RefPtr<T>* aResult) {
   }
 
   ScopedPort port;
+  if (!ReadParam(aReader, &port)) {
+    aReader->FatalError("failed to read DataPipe port");
+    return false;
+  }
   RefPtr shmem = new SharedMemoryBasic();
+  if (!shmem->ReadHandle(aReader)) {
+    aReader->FatalError("failed to read DataPipe shmem");
+    return false;
+  }
   uint32_t capacity = 0;
   nsresult peerStatus = NS_OK;
   uint32_t offset = 0;
   uint32_t available = 0;
-  if (!ReadParam(aReader, &port) || !shmem->ReadHandle(aReader) ||
-      !ReadParam(aReader, &capacity) || !ReadParam(aReader, &peerStatus) ||
+  if (!ReadParam(aReader, &capacity) || !ReadParam(aReader, &peerStatus) ||
       !ReadParam(aReader, &offset) || !ReadParam(aReader, &available)) {
-    NS_WARNING("failed to read fields!");
+    aReader->FatalError("failed to read DataPipe fields");
     return false;
   }
   if (!capacity || offset >= capacity || available > capacity) {
-    NS_WARNING("inconsistent state values");
+    aReader->FatalError("received DataPipe state values are inconsistent");
     return false;
   }
   if (!shmem->Map(SharedMemory::PageAlignedSize(capacity))) {
-    NS_WARNING("failed to map shared memory");
+    aReader->FatalError("failed to map DataPipe shared memory region");
     return false;
   }
 

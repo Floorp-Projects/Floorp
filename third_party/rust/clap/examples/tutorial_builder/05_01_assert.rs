@@ -1,7 +1,9 @@
-use clap::{app_from_crate, arg};
+// Note: this requires the `cargo` feature
+
+use clap::{arg, command};
 
 fn main() {
-    let matches = app().get_matches();
+    let matches = cmd().get_matches();
 
     // Note, it's safe to call unwrap() because the arg is required
     let port: usize = matches
@@ -10,8 +12,8 @@ fn main() {
     println!("PORT = {}", port);
 }
 
-fn app() -> clap::App<'static> {
-    app_from_crate!().arg(
+fn cmd() -> clap::Command<'static> {
+    command!().arg(
         arg!(<PORT>)
             .help("Network port to use")
             .validator(|s| s.parse::<usize>()),
@@ -20,5 +22,5 @@ fn app() -> clap::App<'static> {
 
 #[test]
 fn verify_app() {
-    app().debug_assert();
+    cmd().debug_assert();
 }

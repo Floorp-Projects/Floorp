@@ -16,27 +16,49 @@
 /* import-globals-from ../../../shared/test/shared-head.js */
 
 /**
- * Find a message in the output, scrolling through the output from top
- * to bottom in order to make sure the messages are actually rendered.
+ * Find a message with given messageId in the output, scrolling through the
+ * output from top to bottom in order to make sure the messages are actually
+ * rendered.
+ *
+ * @param object hud
+ *        The web console.
+ * @param messageId
+ *        A message ID to look for. This could be baked into the selector, but
+ *        is provided as a convenience.
+ * @return {Node} the node corresponding the found message
+ */
+async function findMessageVirtualizedById({ hud, messageId }) {
+  if (!messageId) {
+    throw new Error("messageId parameter is required");
+  }
+
+  const elements = await findMessagesVirtualized({
+    hud,
+    expectedCount: 1,
+    messageId,
+  });
+  return elements.at(-1);
+}
+
+/**
+ * Find the last message with given message type in the output, scrolling
+ * through the output from top to bottom in order to make sure the messages are
+ * actually rendered.
  *
  * @param object hud
  *        The web console.
  * @param string text
  *        A substring that can be found in the message.
- * @param selector [optional]
- *        The selector to use in finding the message.
- * @param messageId [optional]
- *        A message ID to look for. This could be baked into the selector, but
- *        is provided as a convenience.
+ * @param string typeSelector
+ *        A part of selector for the message, to specify the message type.
  * @return {Node} the node corresponding the found message
  */
-async function findMessageVirtualized({ hud, text, selector, messageId }) {
-  const elements = await findMessagesVirtualized({
+async function findMessageVirtualizedByType({ hud, text, typeSelector }) {
+  const elements = await findMessagesVirtualizedByType({
     hud,
     text,
-    selector,
+    typeSelector,
     expectedCount: 1,
-    messageId,
   });
   return elements.at(-1);
 }
@@ -67,6 +89,45 @@ let gInFindMessagesVirtualized = false;
 // And this lets us get a little more information in the error - it just holds
 // the stack of the prior call.
 let gFindMessagesVirtualizedStack = null;
+
+/**
+ * Find multiple messages in the output, scrolling through the output from top
+ * to bottom in order to make sure the messages are actually rendered.
+ *
+ * @param object options
+ * @param object options.hud
+ *        The web console.
+ * @param options.text [optional]
+ *        A substring that can be found in the message.
+ * @param options.typeSelector
+ *        A part of selector for the message, to specify the message type.
+ * @param options.expectedCount [optional]
+ *        The number of messages to get. This lets us stop scrolling early if
+ *        we find that number of messages.
+ * @return {Array} all of the message nodes in the console output matching the
+ *        provided filters. If expectedCount is greater than 1, or equal to -1,
+ *        some of these may be stale from having been scrolled out of view.
+ */
+async function findMessagesVirtualizedByType({
+  hud,
+  text,
+  typeSelector,
+  expectedCount,
+}) {
+  if (!typeSelector) {
+    throw new Error("typeSelector parameter is required");
+  }
+  if (!typeSelector.startsWith(".")) {
+    throw new Error("typeSelector should start with a dot e.g. `.result`");
+  }
+
+  return findMessagesVirtualized({
+    hud,
+    text,
+    selector: ".message" + typeSelector,
+    expectedCount,
+  });
+}
 
 /**
  * Find multiple messages in the output, scrolling through the output from top
@@ -304,4 +365,150 @@ async function findMessagesVirtualized({
     gInFindMessagesVirtualized = false;
     gFindMessagesVirtualizedStack = null;
   }
+}
+
+/**
+ * Find the last message with given message type in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @param string text
+ *        A substring that can be found in the message.
+ * @param string typeSelector
+ *        A part of selector for the message, to specify the message type.
+ * @return {Node} the node corresponding the found message, otherwise undefined
+ */
+function findMessageByType(hud, text, typeSelector) {
+  const elements = findMessagesByType(hud, text, typeSelector);
+  return elements.at(-1);
+}
+
+/**
+ * Find multiple messages with given message type in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @param string text
+ *        A substring that can be found in the message.
+ * @param string typeSelector
+ *        A part of selector for the message, to specify the message type.
+ * @return {Array} The nodes corresponding the found messages
+ */
+function findMessagesByType(hud, text, typeSelector) {
+  if (!typeSelector) {
+    throw new Error("typeSelector parameter is required");
+  }
+  if (!typeSelector.startsWith(".")) {
+    throw new Error("typeSelector should start with a dot e.g. `.result`");
+  }
+
+  const selector = ".message" + typeSelector;
+  const messages = hud.ui.outputNode.querySelectorAll(selector);
+  const elements = Array.from(messages).filter(el =>
+    el.textContent.includes(text)
+  );
+  return elements;
+}
+
+/**
+ * Find all messages in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @return {Array} The nodes corresponding the found messages
+ */
+function findAllMessages(hud) {
+  const messages = hud.ui.outputNode.querySelectorAll(".message");
+  return Array.from(messages);
+}
+
+/**
+ * Find a part of the last message with given message type in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @param object options
+ *        - text : {String} A substring that can be found in the message.
+ *        - typeSelector: {String} A part of selector for the message,
+ *                                 to specify the message type.
+ *        - partSelector: {String} A selector for the part of the message.
+ * @return {Node} the node corresponding the found part, otherwise undefined
+ */
+function findMessagePartByType(hud, options) {
+  const elements = findMessagePartsByType(hud, options);
+  return elements.at(-1);
+}
+
+/**
+ * Find parts of multiple messages with given message type in the output.
+ *
+ * @param object hud
+ *        The web console.
+ * @param object options
+ *        - text : {String} A substring that can be found in the message.
+ *        - typeSelector: {String} A part of selector for the message,
+ *                                 to specify the message type.
+ *        - partSelector: {String} A selector for the part of the message.
+ * @return {Array} The nodes corresponding the found parts
+ */
+function findMessagePartsByType(hud, { text, typeSelector, partSelector }) {
+  if (!typeSelector) {
+    throw new Error("typeSelector parameter is required");
+  }
+  if (!typeSelector.startsWith(".")) {
+    throw new Error("typeSelector should start with a dot e.g. `.result`");
+  }
+  if (!partSelector) {
+    throw new Error("partSelector parameter is required");
+  }
+
+  const selector = ".message" + typeSelector + " " + partSelector;
+  const parts = hud.ui.outputNode.querySelectorAll(selector);
+  const elements = Array.from(parts).filter(el =>
+    el.textContent.includes(text)
+  );
+  return elements;
+}
+
+/**
+ * Type-specific wrappers for findMessageByType and findMessagesByType.
+ *
+ * @param object hud
+ *        The web console.
+ * @param string text
+ *        A substring that can be found in the message.
+ * @param string extraSelector [optional]
+ *        An extra part of selector for the message, in addition to
+ *        type-specific selector.
+ * @return {Node|Array} See findMessageByType or findMessagesByType.
+ */
+function findEvaluationResultMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".result" + extraSelector);
+}
+function findEvaluationResultMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".result" + extraSelector);
+}
+function findErrorMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".error" + extraSelector);
+}
+function findErrorMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".error" + extraSelector);
+}
+function findWarningMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".warn" + extraSelector);
+}
+function findWarningMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".warn" + extraSelector);
+}
+function findConsoleAPIMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".console-api" + extraSelector);
+}
+function findConsoleAPIMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".console-api" + extraSelector);
+}
+function findNetworkMessage(hud, text, extraSelector = "") {
+  return findMessageByType(hud, text, ".network" + extraSelector);
+}
+function findNetworkMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".network" + extraSelector);
 }

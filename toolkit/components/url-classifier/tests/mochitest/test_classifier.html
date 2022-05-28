@@ -118,6 +118,9 @@ SpecialPowers.pushPrefEnv(
   {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful-simple"],
            ["urlclassifier.blockedTable", "test-block-simple"],
            ["urlclassifier.phishTable", "test-phish-simple"],
+           ["browser.safebrowsing.phishing.enabled", true],
+           ["browser.safebrowsing.malware.enabled", true],
+           ["browser.safebrowsing.blockedURIs.enabled", true],
            ["browser.safebrowsing.debug", true]]},
   function() {
     classifierHelper.waitForInit()

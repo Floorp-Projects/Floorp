@@ -448,7 +448,7 @@ NS_IMPL_ISUPPORTS(nsScriptSecurityManager, nsIScriptSecurityManager)
 ///////////////// Security Checks /////////////////
 
 bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
-    JSContext* cx, JS::HandleString aCode) {
+    JSContext* cx, JS::RuntimeCode aKind, JS::Handle<JSString*> aCode) {
   MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
   // Get the window, if any, corresponding to the current global
@@ -484,30 +484,48 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
 
   bool evalOK = true;
   bool reportViolation = false;
-  nsresult rv = csp->GetAllowsEval(&reportViolation, &evalOK);
-
-  // A little convoluted. We want the scriptSample for a) reporting a violation
-  // or b) passing it to AssertEvalNotUsingSystemPrincipal or c) we're in the
-  // parent process. So do the work to get it if either of those cases is true.
   nsAutoJSString scriptSample;
-  if (reportViolation || subjectPrincipal->IsSystemPrincipal() ||
-      XRE_IsE10sParentProcess()) {
-    if (NS_WARN_IF(!scriptSample.init(cx, aCode))) {
-      JS_ClearPendingException(cx);
-      return false;
+  if (aKind == JS::RuntimeCode::JS) {
+    nsresult rv = csp->GetAllowsEval(&reportViolation, &evalOK);
+
+    // A little convoluted. We want the scriptSample for a) reporting a
+    // violation or b) passing it to AssertEvalNotUsingSystemPrincipal or c)
+    // we're in the parent process. So do the work to get it if either of those
+    // cases is true.
+    if (reportViolation || subjectPrincipal->IsSystemPrincipal() ||
+        XRE_IsE10sParentProcess()) {
+      if (NS_WARN_IF(!scriptSample.init(cx, aCode))) {
+        JS_ClearPendingException(cx);
+        return false;
+      }
     }
-  }
 
 #if !defined(ANDROID)
-  if (!nsContentSecurityUtils::IsEvalAllowed(
-          cx, subjectPrincipal->IsSystemPrincipal(), scriptSample)) {
-    return false;
-  }
+    if (!nsContentSecurityUtils::IsEvalAllowed(
+            cx, subjectPrincipal->IsSystemPrincipal(), scriptSample)) {
+      return false;
+    }
 #endif
 
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CSP: failed to get allowsEval");
-    return true;  // fail open to not break sites.
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CSP: failed to get allowsEval");
+      return true;  // fail open to not break sites.
+    }
+  } else {
+    if (NS_FAILED(csp->GetAllowsWasmEval(&reportViolation, &evalOK))) {
+      return false;
+    }
+    if (!evalOK) {
+      // Historically, CSP did not block WebAssembly in Firefox, and some
+      // add-ons use wasm and a stricter CSP. To avoid breaking them, ignore
+      // 'wasm-unsafe-eval' violations for MV2 extensions.
+      // TODO bug 1770909: remove this exception.
+      auto* addonPolicy = BasePrincipal::Cast(subjectPrincipal)->AddonPolicy();
+      if (addonPolicy && addonPolicy->ManifestVersion() == 2) {
+        reportViolation = true;
+        evalOK = true;
+      }
+    }
   }
 
   if (reportViolation) {
@@ -522,7 +540,12 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     } else {
       MOZ_ASSERT(!JS_IsExceptionPending(cx));
     }
-    csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
+
+    uint16_t violationType =
+        aKind == JS::RuntimeCode::JS
+            ? nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL
+            : nsIContentSecurityPolicy::VIOLATION_TYPE_WASM_EVAL;
+    csp->LogViolationDetails(violationType,
                              nullptr,  // triggering element
                              cspEventListener, fileName, scriptSample, lineNum,
                              columnNum, u""_ns, u""_ns);

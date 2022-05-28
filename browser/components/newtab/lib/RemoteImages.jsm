@@ -133,17 +133,24 @@ class _RemoteImages {
    *         then the promise will resolve to null.
    */
   async patchMessage(message, replaceWith = "imageURL") {
-    if (!!message && !!message.imageId) {
-      const { imageId } = message;
-      const blobURL = await this.load(imageId);
+    try {
+      if (!!message && !!message.imageId) {
+        const { imageId } = message;
+        const blobURL = await this.load(imageId);
 
-      delete message.imageId;
+        delete message.imageId;
 
-      message[replaceWith] = blobURL;
+        message[replaceWith] = blobURL;
 
-      return () => this.unload(blobURL);
+        return () => this.unload(blobURL);
+      }
+      return null;
+    } catch (e) {
+      Cu.reportError(
+        `RemoteImages Could not patch message with imageId "${message.imageId}": ${e}`
+      );
+      return null;
     }
-    return null;
   }
 
   /**

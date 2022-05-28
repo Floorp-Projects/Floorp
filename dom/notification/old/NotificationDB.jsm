@@ -11,16 +11,14 @@ function debug(s) {
   dump("-*- NotificationDB component: " + s + "\n");
 }
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 ChromeUtils.defineModuleGetter(
   this,
   "Services",
   "resource://gre/modules/Services.jsm"
 );
 
-const NOTIFICATION_STORE_DIR = OS.Constants.Path.profileDir;
-const NOTIFICATION_STORE_PATH = OS.Path.join(
+const NOTIFICATION_STORE_DIR = PathUtils.profileDir;
+const NOTIFICATION_STORE_PATH = PathUtils.join(
   NOTIFICATION_STORE_DIR,
   "notificationstore.json"
 );
@@ -40,8 +38,8 @@ var NotificationDB = {
       return;
     }
 
-    this.notifications = {};
-    this.byTag = {};
+    this.notifications = Object.create(null);
+    this.byTag = Object.create(null);
     this.loaded = false;
 
     this.tasks = []; // read/write operation queue
@@ -75,13 +73,14 @@ var NotificationDB = {
   },
 
   filterNonAppNotifications(notifications) {
+    let result = Object.create(null);
     for (let origin in notifications) {
+      result[origin] = Object.create(null);
       let persistentNotificationCount = 0;
       for (let id in notifications[origin]) {
         if (notifications[origin][id].serviceWorkerRegistrationScope) {
           persistentNotificationCount++;
-        } else {
-          delete notifications[origin][id];
+          result[origin][id] = notifications[origin][id];
         }
       }
       if (persistentNotificationCount == 0) {
@@ -90,16 +89,16 @@ var NotificationDB = {
             "Origin " + origin + " is not linked to an app manifest, deleting."
           );
         }
-        delete notifications[origin];
+        delete result[origin];
       }
     }
 
-    return notifications;
+    return result;
   },
 
   // Attempt to read notification file, if it's not there we will create it.
   load() {
-    var promise = OS.File.read(NOTIFICATION_STORE_PATH, { encoding: "utf-8" });
+    var promise = IOUtils.readUTF8(NOTIFICATION_STORE_PATH);
     return promise.then(
       data => {
         if (data.length > 0) {
@@ -111,7 +110,7 @@ var NotificationDB = {
         // populate the list of notifications by tag
         if (this.notifications) {
           for (var origin in this.notifications) {
-            this.byTag[origin] = {};
+            this.byTag[origin] = Object.create(null);
             for (var id in this.notifications[origin]) {
               var curNotification = this.notifications[origin][id];
               if (curNotification.tag) {
@@ -134,7 +133,7 @@ var NotificationDB = {
 
   // Creates the notification directory.
   createStore() {
-    var promise = OS.File.makeDir(NOTIFICATION_STORE_DIR, {
+    var promise = IOUtils.makeDirectory(NOTIFICATION_STORE_DIR, {
       ignoreExisting: true,
     });
     return promise.then(this.createFile.bind(this));
@@ -142,14 +141,16 @@ var NotificationDB = {
 
   // Creates the notification file once the directory is created.
   createFile() {
-    return OS.File.writeAtomic(NOTIFICATION_STORE_PATH, "");
+    return IOUtils.writeUTF8(NOTIFICATION_STORE_PATH, "", {
+      tmpPath: NOTIFICATION_STORE_PATH + ".tmp",
+    });
   },
 
   // Save current notifications to the file.
   save() {
     var data = JSON.stringify(this.notifications);
-    return OS.File.writeAtomic(NOTIFICATION_STORE_PATH, data, {
-      encoding: "utf-8",
+    return IOUtils.writeUTF8(NOTIFICATION_STORE_PATH, data, {
+      tmpPath: NOTIFICATION_STORE_PATH + ".tmp",
     });
   },
 
@@ -344,8 +345,8 @@ var NotificationDB = {
     var origin = data.origin;
     var notification = data.notification;
     if (!this.notifications[origin]) {
-      this.notifications[origin] = {};
-      this.byTag[origin] = {};
+      this.notifications[origin] = Object.create(null);
+      this.byTag[origin] = Object.create(null);
     }
 
     // We might have existing notification with this tag,

@@ -140,7 +140,7 @@ export function getHasSiblingOfSameName(state, source) {
   return getSourcesUrlsInSources(state, source.url).length > 1;
 }
 
-// This is only used externaly by tabs selectors
+// This is only used externaly by tabs and breakpointSources selectors
 export function getSourcesMap(state) {
   return state.sources.sources;
 }
@@ -377,7 +377,7 @@ export function getBreakableLines(state, sourceId) {
 
   // We pull generated file breakable lines directly from the source actors
   // so that breakable lines can be added as new source actors on HTML loads.
-  return getBreakableLinesForSourceActors(state, sourceActorIDs);
+  return getBreakableLinesForSourceActors(state, sourceActorIDs, source.isHTML);
 }
 
 export const getSelectedBreakableLines = createSelector(

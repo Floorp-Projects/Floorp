@@ -19,7 +19,9 @@ add_task(async function() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.location.reload();
   });
-  const message = await waitFor(() => findMessage(hud, "test-console.html"));
+  const message = await waitFor(() =>
+    findMessageByType(hud, "test-console.html", ".network")
+  );
   ok(message, "Network log found in the console");
 
   const currentTab = gBrowser.selectedTab;

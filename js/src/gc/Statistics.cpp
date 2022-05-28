@@ -1000,13 +1000,6 @@ void Statistics::measureInitialHeapSize() {
   }
 }
 
-void Statistics::adoptHeapSizeDuringIncrementalGC(Zone* mergedZone) {
-  // A zone is being merged into a zone that's currently being collected so we
-  // need to adjust our record of the total size of heap for collected zones.
-  MOZ_ASSERT(gc->isIncrementalGCInProgress());
-  preCollectedHeapBytes += mergedZone->gcHeapSize.bytes();
-}
-
 void Statistics::endGC() {
   postTotalHeapBytes = gc->heapSize.bytes();
 

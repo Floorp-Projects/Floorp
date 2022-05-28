@@ -8009,10 +8009,21 @@ class DSEmptyState extends (external_React_default()).PureComponent {
   }
 
 }
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+function TopicsWidget(props) {
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "ds-topics-widget"
+  });
+}
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -8059,6 +8070,8 @@ class CardGrid extends (external_React_default()).PureComponent {
   }
 
   renderCards() {
+    var _widgets$positions, _widgets$data;
+
     let {
       items
     } = this.props;
@@ -8078,7 +8091,8 @@ class CardGrid extends (external_React_default()).PureComponent {
       descLines,
       readTime,
       essentialReadsHeader,
-      editorsPicksHeader
+      editorsPicksHeader,
+      widgets
     } = this.props;
     let showLastCardMessage = lastCardMessageEnabled;
 
@@ -8151,6 +8165,32 @@ class CardGrid extends (external_React_default()).PureComponent {
       cards.splice(cards.length - 1, 1, /*#__PURE__*/external_React_default().createElement(LastCardMessage, {
         key: `dscard-last-${cards.length - 1}`
       }));
+    }
+
+    if (widgets !== null && widgets !== void 0 && (_widgets$positions = widgets.positions) !== null && _widgets$positions !== void 0 && _widgets$positions.length && widgets !== null && widgets !== void 0 && (_widgets$data = widgets.data) !== null && _widgets$data !== void 0 && _widgets$data.length) {
+      let positionIndex = 0;
+
+      for (const widget of widgets.data) {
+        let widgetComponent = null;
+        const position = widgets.positions[positionIndex]; // Stop if we run out of positions to place widgets.
+
+        if (!position) {
+          break;
+        }
+
+        switch (widget === null || widget === void 0 ? void 0 : widget.type) {
+          case "TopicsWidget":
+            widgetComponent = /*#__PURE__*/external_React_default().createElement(TopicsWidget, null);
+            break;
+        }
+
+        if (widgetComponent) {
+          // We found a widget, so up the position for next try.
+          positionIndex++; // We replace an existing card with the widget.
+
+          cards.splice(position.index, 1, widgetComponent);
+        }
+      }
     } // Used for CSS overrides to default styling (eg: "hero")
 
 
@@ -13531,6 +13571,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           display_variant: component.properties.display_variant,
           data: component.data,
           feed: component.feed,
+          widgets: component.widgets,
           border: component.properties.border,
           type: component.type,
           dispatch: this.props.dispatch,

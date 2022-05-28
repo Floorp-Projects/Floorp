@@ -3,6 +3,7 @@ import {
   DSCard,
   LastCardMessage,
 } from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
+import { TopicsWidget } from "content-src/components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget";
 import { actionCreators as ac } from "common/Actions.jsm";
 import React from "react";
 import { shallow } from "enzyme";
@@ -139,5 +140,19 @@ describe("<CardGrid>", () => {
 
     loadMoreButton = wrapper.find(".ds-card-grid-load-more-button");
     assert.ok(!loadMoreButton.exists());
+  });
+
+  it("should create a widget card", () => {
+    wrapper.setProps({
+      widgets: {
+        positions: [{ index: 1 }],
+        data: [{ type: "TopicsWidget" }],
+      },
+      data: {
+        recommendations: [{}, {}, {}],
+      },
+    });
+
+    assert.ok(wrapper.find(TopicsWidget).exists());
   });
 });

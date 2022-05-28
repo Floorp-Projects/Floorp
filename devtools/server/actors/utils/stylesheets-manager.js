@@ -6,7 +6,6 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Ci } = require("chrome");
-const Services = require("Services");
 const { fetch } = require("devtools/shared/DevToolsUtils");
 const InspectorUtils = require("InspectorUtils");
 const {
@@ -32,13 +31,6 @@ loader.lazyRequireGetter(
   "devtools/server/actors/style-sheet",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "TargetActorRegistry",
-  "devtools/server/actors/targets/target-actor-registry.jsm",
-  true
-);
-const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
 const TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
 const TRANSITION_DURATION_MS = 500;
@@ -277,8 +269,13 @@ class StyleSheetsManager extends EventEmitter {
     }
 
     if (!styleSheet.href) {
-      // this is an inline <style> sheet
-      return styleSheet.ownerNode.textContent;
+      if (styleSheet.ownerNode) {
+        // this is an inline <style> sheet
+        return styleSheet.ownerNode.textContent;
+      }
+      // Constructed stylesheet.
+      // TODO(bug 176993): Maybe preserve authored text?
+      return "";
     }
 
     return this._fetchStyleSheet(styleSheet);
@@ -374,8 +371,8 @@ class StyleSheetsManager extends EventEmitter {
    */
   _startTransition(resourceId, kind, cause) {
     const styleSheet = this._styleSheetMap.get(resourceId);
-    const document = styleSheet.ownerNode.ownerDocument;
-    const window = styleSheet.ownerNode.ownerGlobal;
+    const document = styleSheet.associatedDocument;
+    const window = document.ownerGlobal;
 
     if (!this._transitionSheetLoaded) {
       this._transitionSheetLoaded = true;
@@ -407,7 +404,7 @@ class StyleSheetsManager extends EventEmitter {
    */
   _onTransitionEnd(resourceId, kind, cause) {
     const styleSheet = this._styleSheetMap.get(resourceId);
-    const document = styleSheet.ownerNode.ownerDocument;
+    const document = styleSheet.associatedDocument;
 
     this._transitionTimeout = null;
     removePseudoClassLock(document.documentElement, TRANSITION_PSEUDO_CLASS);
@@ -652,7 +649,9 @@ class StyleSheetsManager extends EventEmitter {
 
     if (ownerNode.nodeType == ownerNode.DOCUMENT_NODE) {
       return ownerNode.location.href;
-    } else if (ownerNode.ownerDocument?.location) {
+    }
+
+    if (ownerNode.ownerDocument?.location) {
       return ownerNode.ownerDocument.location.href;
     }
 
@@ -773,9 +772,10 @@ class StyleSheetsManager extends EventEmitter {
    * - Append <style> to document
    * - Change disable attribute of stylesheet object
    * - Change disable attribute of <link> to false
-   * When appending <link>, <style> or changing `disable` attribute to false, `applicable`
-   * is passed as true. The other hand, when changing `disable` to true, this will be
-   * false.
+   * - Stylesheet is constructed.
+   * When appending <link>, <style> or changing `disabled` attribute to false,
+   * `applicable` is passed as true. The other hand, when changing `disabled`
+   * to true, this will be false.
    * NOTE: For now, StyleSheetApplicableStateChanged will not be called when removing the
    *       link and style element.
    *
@@ -786,10 +786,10 @@ class StyleSheetsManager extends EventEmitter {
     if (
       // Have interest in applicable stylesheet only.
       applicable &&
-      // No ownerNode means that this stylesheet is *not* associated to a DOM Element.
-      styleSheet.ownerNode &&
+      styleSheet.associatedDocument &&
       (!this._targetActor.ignoreSubFrames ||
-        styleSheet.ownerNode.ownerGlobal === this._targetActor.window) &&
+        styleSheet.associatedDocument.ownerGlobal ===
+          this._targetActor.window) &&
       this._shouldListSheet(styleSheet) &&
       !this._haveAncestorWithSameURL(styleSheet)
     ) {
@@ -878,32 +878,18 @@ class StyleSheetsManager extends EventEmitter {
         e
       );
     }
+
+    this._styleSheetMap.clear();
+    this._styleSheetMap = null;
+    this._targetActor = null;
+    this._styleSheetCreationData = null;
+    this._mqlList = null;
   }
 }
 
 function hasStyleSheetWatcherSupportForTarget(targetActor) {
-  // Check if the watcher actor supports stylesheet resources.
-  // This is a temporary solution until we have a reliable way of propagating sessionData
-  // to all targets (so we'll be able to store this information via addDataEntry).
-  // This will be done in Bug 1700092.
-  const { sharedData } = Services.cpmm;
-  const sessionDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
-  if (!sessionDataByWatcherActor) {
-    return false;
-  }
-
-  const watcherSessionData = Array.from(
-    sessionDataByWatcherActor.values()
-  ).find(sessionData => {
-    const actors = TargetActorRegistry.getTargetActors(
-      sessionData.sessionContext,
-      sessionData.connectionPrefix
-    );
-    return actors.includes(targetActor);
-  });
-
   return (
-    watcherSessionData?.watcherTraits?.resources?.[TYPES.STYLESHEET] || false
+    targetActor.sessionContext.supportedResources?.[TYPES.STYLESHEET] || false
   );
 }
 

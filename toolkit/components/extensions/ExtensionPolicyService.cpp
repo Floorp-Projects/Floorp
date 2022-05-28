@@ -47,7 +47,12 @@ using dom::Promise;
 
 #define DEFAULT_CSP_PREF \
   "extensions.webextensions.default-content-security-policy"
-#define DEFAULT_DEFAULT_CSP "script-src 'self'; object-src 'self';"
+#define DEFAULT_DEFAULT_CSP \
+  "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+
+#define DEFAULT_CSP_PREF_V3 \
+  "extensions.webextensions.default-content-security-policy.v3"
+#define DEFAULT_DEFAULT_CSP_V3 "script-src 'self'; object-src 'self';"
 
 #define OBS_TOPIC_PRELOAD_SCRIPT "web-extension-preload-content-script"
 #define OBS_TOPIC_LOAD_SCRIPT "web-extension-load-content-script"
@@ -89,6 +94,7 @@ ExtensionPolicyService::ExtensionPolicyService() {
   MOZ_RELEASE_ASSERT(mObs);
 
   mDefaultCSP.SetIsVoid(true);
+  mDefaultCSPV3.SetIsVoid(true);
 
   RegisterObservers();
 }
@@ -213,6 +219,7 @@ void ExtensionPolicyService::RegisterObservers() {
   }
 
   Preferences::AddStrongObserver(this, DEFAULT_CSP_PREF);
+  Preferences::AddStrongObserver(this, DEFAULT_CSP_PREF_V3);
 }
 
 void ExtensionPolicyService::UnregisterObservers() {
@@ -223,6 +230,7 @@ void ExtensionPolicyService::UnregisterObservers() {
   }
 
   Preferences::RemoveObserver(this, DEFAULT_CSP_PREF);
+  Preferences::RemoveObserver(this, DEFAULT_CSP_PREF_V3);
 }
 
 nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
@@ -244,6 +252,8 @@ nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
     const char* pref = converted.get();
     if (!strcmp(pref, DEFAULT_CSP_PREF)) {
       mDefaultCSP.SetIsVoid(true);
+    } else if (!strcmp(pref, DEFAULT_CSP_PREF_V3)) {
+      mDefaultCSPV3.SetIsVoid(true);
     }
   }
   return NS_OK;
@@ -518,6 +528,19 @@ nsresult ExtensionPolicyService::GetDefaultCSP(nsAString& aDefaultCSP) {
   }
 
   aDefaultCSP.Assign(mDefaultCSP);
+  return NS_OK;
+}
+
+nsresult ExtensionPolicyService::GetDefaultCSPV3(nsAString& aDefaultCSP) {
+  if (mDefaultCSPV3.IsVoid()) {
+    nsresult rv = Preferences::GetString(DEFAULT_CSP_PREF_V3, mDefaultCSPV3);
+    if (NS_FAILED(rv)) {
+      mDefaultCSPV3.AssignLiteral(DEFAULT_DEFAULT_CSP_V3);
+    }
+    mDefaultCSPV3.SetIsVoid(false);
+  }
+
+  aDefaultCSP.Assign(mDefaultCSPV3);
   return NS_OK;
 }
 

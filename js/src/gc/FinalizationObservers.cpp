@@ -219,6 +219,7 @@ void FinalizationObservers::traceWeakFinalizationRegistryEdges(JSTracer* trc) {
       JSObject* obj =
           result.isLive() ? result.finalTarget() : result.initialTarget();
       FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
+      MOZ_ASSERT_IF(record, record->isInRecordMap());
 
       bool shouldRemove = !result.isLive() || shouldRemoveRecord(record);
       if (shouldRemove && record && record->isInRecordMap()) {
@@ -440,7 +441,7 @@ void FinalizationObservers::checkTables() const {
   for (auto r = recordMap.all(); !r.empty(); r.popFront()) {
     for (JSObject* object : r.front().value()) {
       FinalizationRecordObject* record = UnwrapFinalizationRecord(object);
-      if (record && record->zone() != zone) {
+      if (record && record->isInRecordMap() && record->zone() != zone) {
         MOZ_ASSERT(crossZoneRecords.has(object));
         recordCount++;
       }

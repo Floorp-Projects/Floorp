@@ -25,6 +25,7 @@ namespace mozilla {
 namespace dom {
 class BrowsingContext;
 class CanonicalBrowsingContext;
+class Document;
 class WindowGlobalParent;
 }  // namespace dom
 
@@ -125,6 +126,12 @@ class AntiTrackingUtils final {
   // third-party with respect to the URI. The function returns if it's true.
   // Otherwise, it will continue to check if the window is third-party.
   static bool IsThirdPartyWindow(nsPIDOMWindowInner* aWindow, nsIURI* aURI);
+
+  // Given a Document, this function determines if this document
+  // is considered as a third party with respect to the top level context.
+  // This prefers to use the document's Channel's LoadInfo, but falls back to
+  // the BrowsingContext.
+  static bool IsThirdPartyDocument(dom::Document* aDocument);
 
   // Given a browsing context, this function determines if this browsing context
   // is considered as a third party in respect to the top-level context.

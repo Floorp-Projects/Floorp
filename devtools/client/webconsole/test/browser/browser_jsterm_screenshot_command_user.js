@@ -23,17 +23,19 @@ add_task(async function() {
 
 async function testCommand(hud) {
   const command = `:screenshot --clipboard`;
-  await executeAndWaitForMessage(
+  await executeAndWaitForMessageByType(
     hud,
     command,
-    "Screenshot copied to clipboard."
+    "Screenshot copied to clipboard.",
+    ".console-api"
   );
   ok(true, ":screenshot was executed as expected");
 
-  const helpMessage = await executeAndWaitForMessage(
+  const helpMessage = await executeAndWaitForMessageByType(
     hud,
     `:screenshot --help`,
-    "Save an image of the page"
+    "Save an image of the page",
+    ".console-api"
   );
   ok(helpMessage, ":screenshot --help was executed as expected");
   is(
@@ -55,7 +57,12 @@ async function testCommand(hud) {
 // command should not overwrite the screenshot function
 async function testUserScreenshotFunction(hud) {
   const command = `screenshot()`;
-  await executeAndWaitForMessage(hud, command, "contextScreen");
+  await executeAndWaitForMessageByType(
+    hud,
+    command,
+    "contextScreen",
+    ".console-api"
+  );
   ok(
     true,
     "content screenshot function is not overidden and was executed as expected"

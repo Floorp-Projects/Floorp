@@ -28,7 +28,7 @@ add_task(async function() {
   info("Check that the filter bar layout changes when opening the sidebar");
   resizeWindow(750, win);
   await waitForFilterBarLayout(hud, ".wide");
-  const onMessage = waitForMessage(hud, "world");
+  const onMessage = waitForMessageByType(hud, "world", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.console.log({ hello: "world" });
   });

@@ -1,5 +1,5 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -56,9 +56,9 @@ typedef void (*DestroySurfaceFunc)(struct gbm_surface*);
 
 class nsGbmLib {
  public:
-  static bool Load();
-  static bool IsLoaded();
-  static bool IsAvailable();
+  static bool IsAvailable() {
+    return sLoaded || Load();
+  }
   static bool IsModifierAvailable();
 
   static struct gbm_device* CreateDevice(int fd) {
@@ -147,6 +147,9 @@ class nsGbmLib {
   }
 
  private:
+  static bool Load();
+  static bool IsLoaded();
+
   static CreateDeviceFunc sCreateDevice;
   static DestroyDeviceFunc sDestroyDevice;
   static CreateFunc sCreate;
@@ -165,11 +168,11 @@ class nsGbmLib {
   static DrmPrimeHandleToFDFunc sDrmPrimeHandleToFD;
   static CreateSurfaceFunc sCreateSurface;
   static DestroySurfaceFunc sDestroySurface;
+  static bool sLoaded;
 
   static void* sGbmLibHandle;
   static void* sXf86DrmLibHandle;
   static mozilla::StaticMutex sDRILock MOZ_UNANNOTATED;
-  static bool sLibLoaded;
 };
 
 struct GbmFormat {

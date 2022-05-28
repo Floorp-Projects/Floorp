@@ -256,6 +256,14 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // process, but only if aAllowRestart is also true.
   bool MaybeDisableGPUProcess(const char* aMessage, bool aAllowRestart);
 
+  bool FallbackFromAcceleration(wr::WebRenderError aError,
+                                const nsCString& aMsg);
+
+  void ResetProcessStable();
+
+  // Returns true if the composting pocess is currently considered to be stable.
+  bool IsProcessStable(const TimeStamp& aNow);
+
   // Shutdown the GPU process.
   void CleanShutdown();
   // Destroy the process and clean up resources.
@@ -330,6 +338,8 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   GPUProcessHost* mProcess;
   uint64_t mProcessToken;
   bool mProcessStable;
+  Maybe<wr::WebRenderError> mLastError;
+  Maybe<nsCString> mLastErrorMsg;
   GPUChild* mGPUChild;
   RefPtr<VsyncBridgeChild> mVsyncBridge;
   // Collects any pref changes that occur during process launch (after

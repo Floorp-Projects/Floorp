@@ -95,7 +95,7 @@ class WMFVideoMFTManager : public MFTManager {
   bool mDXVAEnabled;
   bool mUseHwAccel;
 
-  bool mNoCopyNV12Texture;
+  bool mZeroCopyNV12Texture;
 
   nsCString mDXVAFailureReason;
 

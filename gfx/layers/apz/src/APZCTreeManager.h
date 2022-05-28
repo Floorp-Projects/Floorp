@@ -712,8 +712,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const AncestorTransform& aAncestorTransform, HitTestingTreeNode* aParent,
       HitTestingTreeNode* aNextSibling, TreeBuildingState& aState);
 
-  void PrintAPZCInfo(const ScrollNode& aLayer,
-                     const AsyncPanZoomController* apzc);
+  void PrintLayerInfo(const ScrollNode& aLayer);
 
   void NotifyScrollbarDragInitiated(uint64_t aDragBlockId,
                                     const ScrollableLayerGuid& aGuid,

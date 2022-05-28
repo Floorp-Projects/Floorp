@@ -1,5 +1,5 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,9 +29,9 @@ namespace widget {
 // https://gitlab.freedesktop.org/mesa/mesa/-/issues/4422
 mozilla::StaticMutex nsGbmLib::sDRILock MOZ_UNANNOTATED;
 
+bool nsGbmLib::sLoaded = false;
 void* nsGbmLib::sGbmLibHandle = nullptr;
 void* nsGbmLib::sXf86DrmLibHandle = nullptr;
-bool nsGbmLib::sLibLoaded = false;
 CreateDeviceFunc nsGbmLib::sCreateDevice;
 DestroyDeviceFunc nsGbmLib::sDestroyDevice;
 CreateFunc nsGbmLib::sCreate;
@@ -63,63 +63,63 @@ bool nsGbmLib::IsLoaded() {
          sDestroySurface != nullptr;
 }
 
-bool nsGbmLib::IsAvailable() {
-  if (!Load()) {
+bool nsGbmLib::Load() {
+  static bool sTriedToLoad = false;
+  if (sTriedToLoad) {
+    return sLoaded;
+  }
+
+  sTriedToLoad = true;
+
+  MOZ_ASSERT(!sGbmLibHandle);
+  MOZ_ASSERT(!sLoaded);
+
+  LOGDMABUF(("Loading DMABuf system library %s ...\n", GBMLIB_NAME));
+
+  sGbmLibHandle = dlopen(GBMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
+  if (!sGbmLibHandle) {
+    LOGDMABUF(("Failed to load %s, dmabuf isn't available.\n", GBMLIB_NAME));
     return false;
   }
-  return IsLoaded();
-}
 
-bool nsGbmLib::Load() {
-  if (!sGbmLibHandle && !sLibLoaded) {
-    LOGDMABUF(("Loading DMABuf system library %s ...\n", GBMLIB_NAME));
-    sLibLoaded = true;
+  sCreateDevice = (CreateDeviceFunc)dlsym(sGbmLibHandle, "gbm_create_device");
+  sDestroyDevice =
+      (DestroyDeviceFunc)dlsym(sGbmLibHandle, "gbm_device_destroy");
+  sCreate = (CreateFunc)dlsym(sGbmLibHandle, "gbm_bo_create");
+  sCreateWithModifiers = (CreateWithModifiersFunc)dlsym(
+      sGbmLibHandle, "gbm_bo_create_with_modifiers");
+  sGetModifier = (GetModifierFunc)dlsym(sGbmLibHandle, "gbm_bo_get_modifier");
+  sGetStride = (GetStrideFunc)dlsym(sGbmLibHandle, "gbm_bo_get_stride");
+  sGetFd = (GetFdFunc)dlsym(sGbmLibHandle, "gbm_bo_get_fd");
+  sDestroy = (DestroyFunc)dlsym(sGbmLibHandle, "gbm_bo_destroy");
+  sMap = (MapFunc)dlsym(sGbmLibHandle, "gbm_bo_map");
+  sUnmap = (UnmapFunc)dlsym(sGbmLibHandle, "gbm_bo_unmap");
+  sGetPlaneCount =
+      (GetPlaneCountFunc)dlsym(sGbmLibHandle, "gbm_bo_get_plane_count");
+  sGetHandleForPlane = (GetHandleForPlaneFunc)dlsym(
+      sGbmLibHandle, "gbm_bo_get_handle_for_plane");
+  sGetStrideForPlane = (GetStrideForPlaneFunc)dlsym(
+      sGbmLibHandle, "gbm_bo_get_stride_for_plane");
+  sGetOffset = (GetOffsetFunc)dlsym(sGbmLibHandle, "gbm_bo_get_offset");
+  sDeviceIsFormatSupported = (DeviceIsFormatSupportedFunc)dlsym(
+      sGbmLibHandle, "gbm_device_is_format_supported");
+  sCreateSurface =
+      (CreateSurfaceFunc)dlsym(sGbmLibHandle, "gbm_surface_create");
+  sDestroySurface =
+      (DestroySurfaceFunc)dlsym(sGbmLibHandle, "gbm_surface_destroy");
 
-    sGbmLibHandle = dlopen(GBMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
-    if (!sGbmLibHandle) {
-      LOGDMABUF(("Failed to load %s, dmabuf isn't available.\n", GBMLIB_NAME));
-      return false;
-    }
-
-    sCreateDevice = (CreateDeviceFunc)dlsym(sGbmLibHandle, "gbm_create_device");
-    sDestroyDevice =
-        (DestroyDeviceFunc)dlsym(sGbmLibHandle, "gbm_device_destroy");
-    sCreate = (CreateFunc)dlsym(sGbmLibHandle, "gbm_bo_create");
-    sCreateWithModifiers = (CreateWithModifiersFunc)dlsym(
-        sGbmLibHandle, "gbm_bo_create_with_modifiers");
-    sGetModifier = (GetModifierFunc)dlsym(sGbmLibHandle, "gbm_bo_get_modifier");
-    sGetStride = (GetStrideFunc)dlsym(sGbmLibHandle, "gbm_bo_get_stride");
-    sGetFd = (GetFdFunc)dlsym(sGbmLibHandle, "gbm_bo_get_fd");
-    sDestroy = (DestroyFunc)dlsym(sGbmLibHandle, "gbm_bo_destroy");
-    sMap = (MapFunc)dlsym(sGbmLibHandle, "gbm_bo_map");
-    sUnmap = (UnmapFunc)dlsym(sGbmLibHandle, "gbm_bo_unmap");
-    sGetPlaneCount =
-        (GetPlaneCountFunc)dlsym(sGbmLibHandle, "gbm_bo_get_plane_count");
-    sGetHandleForPlane = (GetHandleForPlaneFunc)dlsym(
-        sGbmLibHandle, "gbm_bo_get_handle_for_plane");
-    sGetStrideForPlane = (GetStrideForPlaneFunc)dlsym(
-        sGbmLibHandle, "gbm_bo_get_stride_for_plane");
-    sGetOffset = (GetOffsetFunc)dlsym(sGbmLibHandle, "gbm_bo_get_offset");
-    sDeviceIsFormatSupported = (DeviceIsFormatSupportedFunc)dlsym(
-        sGbmLibHandle, "gbm_device_is_format_supported");
-    sCreateSurface =
-        (CreateSurfaceFunc)dlsym(sGbmLibHandle, "gbm_surface_create");
-    sDestroySurface =
-        (DestroySurfaceFunc)dlsym(sGbmLibHandle, "gbm_surface_destroy");
-
-    sXf86DrmLibHandle = dlopen(DRMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
-    if (!sXf86DrmLibHandle) {
-      LOGDMABUF(("Failed to load %s, dmabuf isn't available.\n", DRMLIB_NAME));
-      return false;
-    }
-    sDrmPrimeHandleToFD =
-        (DrmPrimeHandleToFDFunc)dlsym(sXf86DrmLibHandle, "drmPrimeHandleToFD");
-    if (!IsLoaded()) {
-      LOGDMABUF(("Failed to load all symbols from %s\n", GBMLIB_NAME));
-    }
+  sXf86DrmLibHandle = dlopen(DRMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
+  if (!sXf86DrmLibHandle) {
+    LOGDMABUF(("Failed to load %s, dmabuf isn't available.\n", DRMLIB_NAME));
+    return false;
   }
-
-  return sGbmLibHandle;
+  sDrmPrimeHandleToFD =
+      (DrmPrimeHandleToFDFunc)dlsym(sXf86DrmLibHandle, "drmPrimeHandleToFD");
+  sLoaded = IsLoaded();
+  if (!sLoaded) {
+    LOGDMABUF(("Failed to load all symbols from %s\n", GBMLIB_NAME));
+  }
+  return sLoaded;
 }
 
 gbm_device* nsDMABufDevice::GetGbmDevice() {

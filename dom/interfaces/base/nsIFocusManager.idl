@@ -70,6 +70,7 @@ interface nsIFocusManager : nsISupports
    * If focus is in another process, this is null in content processes and
    * the closest ancestor in the parent process.
    */
+  [setter_can_run_script]
   attribute mozIDOMWindowProxy focusedWindow;
 
   /**
@@ -132,6 +133,7 @@ interface nsIFocusManager : nsISupports
    *
    * @throws NS_ERROR_INVALID_ARG if aWindow is null
    */
+  [can_run_script]
   void clearFocus(in mozIDOMWindowProxy aWindow);
 
   /**
@@ -158,12 +160,14 @@ interface nsIFocusManager : nsISupports
   /**
    * Moves the selection caret within aWindow to the current focus.
    */
+  [can_run_script]
   void moveCaretToFocus(in mozIDOMWindowProxy aWindow);
 
   /***
    * Check if given element (or potentially a descendant, see setFocus) is
    * focusable.
    */
+  [can_run_script]
   boolean elementIsFocusable(in Element aElement, in unsigned long aFlags);
 
   /*

@@ -301,6 +301,8 @@ class Element : public FragmentOrElement {
   /**
    * Make focus on this element.
    */
+  // TODO: Convert Focus() to MOZ_CAN_RUN_SCRIPT and get rid of the
+  //       kungFuDeathGrip in it.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void Focus(const FocusOptions& aOptions,
                                                  const CallerType aCallerType,
                                                  ErrorResult& aError);
@@ -308,7 +310,7 @@ class Element : public FragmentOrElement {
   /**
    * Show blur and clear focus.
    */
-  virtual void Blur(mozilla::ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void Blur(mozilla::ErrorResult& aError);
 
   /**
    * The style state of this element. This is the real state of the element

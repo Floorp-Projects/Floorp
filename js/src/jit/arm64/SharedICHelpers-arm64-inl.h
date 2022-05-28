@@ -21,7 +21,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
   static_assert(R2 == ValueOperand(r0));
 
   // Compute frame size into w0. Used below in makeFrameDescriptor().
-  masm.Sub(x0, BaselineFrameReg64, masm.GetStackPointer64());
+  masm.Sub(x0, FramePointer64, masm.GetStackPointer64());
   masm.Add(w0, w0, Operand(BaselineFrame::FramePointerOffset));
 
 #ifdef DEBUG
@@ -30,7 +30,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
     vixl::UseScratchRegisterScope temps(&masm.asVIXL());
     const ARMRegister scratch32 = temps.AcquireW();
     masm.Sub(scratch32, w0, Operand(argSize));
-    Address frameSizeAddr(BaselineFrameReg,
+    Address frameSizeAddr(FramePointer,
                           BaselineFrame::reverseOffsetOfDebugFrameSize());
     masm.store32(scratch32.asUnsized(), frameSizeAddr);
   }
@@ -56,7 +56,7 @@ inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm,
 
   // Compute stub frame size.
   masm.Sub(reg64, masm.GetStackPointer64(), Operand(sizeof(void*) * 2));
-  masm.Sub(reg64, BaselineFrameReg64, reg64);
+  masm.Sub(reg64, FramePointer64, reg64);
 
   masm.makeFrameDescriptor(reg, FrameType::BaselineStub, headerSize);
 }
@@ -75,13 +75,13 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   MOZ_ASSERT(scratch != ICTailCallReg);
 
   // Compute frame size.
-  masm.Add(ARMRegister(scratch, 64), BaselineFrameReg64,
+  masm.Add(ARMRegister(scratch, 64), FramePointer64,
            Operand(BaselineFrame::FramePointerOffset));
   masm.Sub(ARMRegister(scratch, 64), ARMRegister(scratch, 64),
            masm.GetStackPointer64());
 
 #ifdef DEBUG
-  Address frameSizeAddr(BaselineFrameReg,
+  Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
   masm.store32(scratch, frameSizeAddr);
 #endif
@@ -92,10 +92,10 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   // Save old frame pointer, stack pointer, and stub reg.
   masm.makeFrameDescriptor(scratch, FrameType::BaselineJS,
                            BaselineStubFrameLayout::Size());
-  masm.Push(scratch, ICTailCallReg, ICStubReg, BaselineFrameReg);
+  masm.Push(scratch, ICTailCallReg, ICStubReg, FramePointer);
 
   // Update the frame register.
-  masm.Mov(BaselineFrameReg64, masm.GetStackPointer64());
+  masm.Mov(FramePointer64, masm.GetStackPointer64());
 
   // Stack should remain 16-byte aligned.
   masm.checkStackAlignment();

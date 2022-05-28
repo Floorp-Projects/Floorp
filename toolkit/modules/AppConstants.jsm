@@ -418,11 +418,25 @@ this.AppConstants = Object.freeze({
     false,
 #endif
 
+  REMOTE_SETTINGS_SERVER_URL:
+#ifdef MOZ_THUNDERBIRD
+    "https://thunderbird-settings.thunderbird.net/v1",
+#else
+    "https://firefox.settings.services.mozilla.com/v1",
+#endif
+
   REMOTE_SETTINGS_VERIFY_SIGNATURE:
 #ifdef MOZ_THUNDERBIRD
     false,
 #else
     true,
+#endif
+
+  REMOTE_SETTINGS_DEFAULT_BUCKET:
+#ifdef MOZ_THUNDERBIRD
+    "thunderbird",
+#else
+    "main",
 #endif
 
   MOZ_GLEAN_ANDROID:
@@ -431,7 +445,7 @@ this.AppConstants = Object.freeze({
 #else
     false,
 #endif
-  
+
   MOZ_JXL:
 #ifdef MOZ_JXL
     true,

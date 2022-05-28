@@ -19,7 +19,7 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud, "Object"));
+  const message = await waitFor(() => findConsoleAPIMessage(hud, "Object"));
   const object = message.querySelector(".object-inspector .objectBox-object");
 
   const sidebar = await showSidebarWithContextMenu(hud, object, true);
@@ -34,7 +34,7 @@ add_task(async function() {
 
   info("Log a message so the original one gets pruned");
   const messageText = "hello world";
-  const onMessage = waitForMessage(hud, messageText);
+  const onMessage = waitForMessageByType(hud, messageText, ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [messageText], async function(
     str
   ) {
@@ -42,7 +42,7 @@ add_task(async function() {
   });
   await onMessage;
 
-  ok(!findMessage(hud, "Object"), "Message with object was pruned");
+  ok(!findConsoleAPIMessage(hud, "Object"), "Message with object was pruned");
 
   info("Expand the 'c' node in the sidebar");
   // Here's what the object in the sidebar looks like:

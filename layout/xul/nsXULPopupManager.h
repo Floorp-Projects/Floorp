@@ -389,7 +389,6 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   virtual bool ShouldRollupOnMouseActivate() override;
   virtual uint32_t GetSubmenuWidgetChain(
       nsTArray<nsIWidget*>* aWidgetChain) override;
-  virtual void NotifyGeometryChange() override {}
   virtual nsIWidget* GetRollupWidget() override;
   virtual bool RollupNativeMenu() override;
 
@@ -878,7 +877,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * This is also used when only a menubar is active without any open menus,
    * so that keyboard navigation between menus on the menubar may be done.
    */
-  void UpdateKeyboardListeners();
+  // TODO: Convert UpdateKeyboardListeners() to MOZ_CAN_RUN_SCRIPT and get rid
+  //       of the kungFuDeathGrip in it.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void UpdateKeyboardListeners();
 
   /*
    * Returns true if the docshell for aDoc is aExpected or a child of aExpected.

@@ -12,7 +12,9 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await waitFor(() => findMessage(hud, "[a]") && findMessage(hud, "[j]"));
+  await waitFor(
+    () => findConsoleAPIMessage(hud, "[a]") && findConsoleAPIMessage(hud, "[j]")
+  );
 
   /*
    * The output looks like the following:
@@ -154,8 +156,16 @@ add_task(async function() {
     text: "",
   });
 
-  const groupA = await findMessageVirtualized({ hud, text: "[a]" });
-  const groupJ = await findMessageVirtualized({ hud, text: "[j]" });
+  const groupA = await findMessageVirtualizedByType({
+    hud,
+    text: "[a]",
+    typeSelector: ".console-api",
+  });
+  const groupJ = await findMessageVirtualizedByType({
+    hud,
+    text: "[j]",
+    typeSelector: ".console-api",
+  });
 
   toggleGroup(groupA);
   toggleGroup(groupJ);
@@ -214,7 +224,7 @@ add_task(async function() {
     text: "",
   });
 
-  const subGroup = findMessage(hud, "[subgroup]");
+  const subGroup = findConsoleAPIMessage(hud, "[subgroup]");
   toggleGroup(subGroup);
 
   await setFilterState(hud, {

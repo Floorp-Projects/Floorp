@@ -214,15 +214,6 @@ class InstructionDataMap {
   LNode* const& operator[](uint32_t ins) const { return insData_[ins]; }
 };
 
-inline void TakeJitRegisters(bool isProfiling, AllocatableRegisterSet* set) {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || \
-    defined(JS_CODEGEN_ARM64)
-  if (isProfiling) {
-    set->take(AnyRegister(FramePointer));
-  }
-#endif
-}
-
 // Common superclass for register allocators.
 class RegisterAllocator {
   void operator=(const RegisterAllocator&) = delete;
@@ -244,10 +235,9 @@ class RegisterAllocator {
 
   RegisterAllocator(MIRGenerator* mir, LIRGenerator* lir, LIRGraph& graph)
       : mir(mir), lir(lir), graph(graph), allRegisters_(RegisterSet::All()) {
+    MOZ_ASSERT(!allRegisters_.has(FramePointer));
     if (mir->compilingWasm()) {
       takeWasmRegisters(allRegisters_);
-    } else {
-      TakeJitRegisters(mir->instrumentedProfiling(), &allRegisters_);
     }
   }
 
@@ -319,7 +309,7 @@ class RegisterAllocator {
     defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
     regs.take(HeapReg);
 #endif
-    regs.take(FramePointer);
+    MOZ_ASSERT(!regs.has(FramePointer));
   }
 };
 

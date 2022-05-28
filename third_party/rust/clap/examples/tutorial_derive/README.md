@@ -5,9 +5,9 @@
 1. [Quick Start](#quick-start)
 2. [Configuring the Parser](#configuring-the-parser)
 3. [Adding Arguments](#adding-arguments)
-    1. [Flags](#flags)
+    1. [Positionals](#positionals)
     2. [Options](#options)
-    3. [Positionals](#positionals)
+    3. [Flags](#flags)
     4. [Subcommands](#subcommands)
     5. [Defaults](#defaults)
 4. Validation
@@ -66,7 +66,7 @@ In addition to this tutorial, see the [derive reference](../derive_ref/README.md
 
 ## Configuring the Parser
 
-You use the `App` the start building a parser.
+You use derive `Parser` the start building a parser.
 
 [Example:](02_apps.rs)
 ```console
@@ -89,7 +89,7 @@ MyApp 1.0
 
 ```
 
-You can use `app_from_crate!()` to fill these fields in from your `Cargo.toml` file.
+You can use `#[clap(author, version, about)]` attribute defaults to fill these fields in from your `Cargo.toml` file.
 
 [Example:](02_crate.rs)
 ```console
@@ -111,9 +111,7 @@ clap [..]
 
 ```
 
-You can use `AppSettings` to change the application level behavior of clap. You
-can apply the setting to the top level command (`app.setting()`) or to it and
-all subcommands (`app.global_setting()`).
+You can use attributes to change the application level behavior of clap.  Any `Command` builder function can be used as an attribute.
 
 [Example:](02_app_settings.rs)
 ```console
@@ -138,71 +136,44 @@ one: "-3"
 
 ## Adding Arguments
 
-### Flags
+### Positionals
 
-Flags are switches that can be on/off:
+You can have users specify values by their position on the command-line:
 
-[Example:](03_01_flag_bool.rs)
+[Example:](03_03_positional.rs)
 ```console
-$ 03_01_flag_bool_derive --help
+$ 03_03_positional_derive --help
 clap [..]
 A simple to use, efficient, and full-featured Command Line Argument Parser
 
 USAGE:
-    03_01_flag_bool_derive[EXE] [OPTIONS]
+    03_03_positional_derive[EXE] [NAME]
+
+ARGS:
+    <NAME>    
 
 OPTIONS:
     -h, --help       Print help information
-    -v, --verbose    
     -V, --version    Print version information
 
-$ 03_01_flag_bool_derive
-verbose: false
+$ 03_03_positional_derive
+name: None
 
-$ 03_01_flag_bool_derive --verbose
-verbose: true
-
-$ 03_01_flag_bool_derive --verbose --verbose
-? failed
-error: The argument '--verbose' was provided more than once, but cannot be used multiple times
-
-USAGE:
-    03_01_flag_bool_derive[EXE] [OPTIONS]
-
-For more information try --help
-
-```
-
-Or counted.
-
-[Example:](03_01_flag_count.rs)
-```console
-$ 03_01_flag_count_derive --help
-clap [..]
-A simple to use, efficient, and full-featured Command Line Argument Parser
-
-USAGE:
-    03_01_flag_count_derive[EXE] [OPTIONS]
-
-OPTIONS:
-    -h, --help       Print help information
-    -v, --verbose    
-    -V, --version    Print version information
-
-$ 03_01_flag_count_derive
-verbose: 0
-
-$ 03_01_flag_count_derive --verbose
-verbose: 1
-
-$ 03_01_flag_count_derive --verbose --verbose
-verbose: 2
+$ 03_03_positional_derive bob
+name: Some("bob")
 
 ```
 
 ### Options
 
-Flags can also accept a value.
+You can name your arguments with a flag:
+- Order doesn't matter
+- They can be optional
+- Intent is clearer
+
+The `#[clap(short = 'c')]` and `#[clap(long = "name")]` attributes that define
+the flags are `Arg` methods that are derived from the field name when no value
+is specified (`#[clap(short)]` and `#[clap(long)]`).
 
 [Example:](03_02_option.rs)
 ```console
@@ -238,58 +209,78 @@ name: Some("bob")
 
 ```
 
-### Positionals
+### Flags
 
-Or you can have users specify values by their position on the command-line:
+Flags can also be switches that can be on/off.  This is enabled via the
+`#[clap(parse(from_flag)]` attribute though this is implied when the field is a
+`bool`.
 
-[Example:](03_03_positional.rs)
+[Example:](03_01_flag_bool.rs)
 ```console
-$ 03_03_positional_derive --help
+$ 03_01_flag_bool_derive --help
 clap [..]
 A simple to use, efficient, and full-featured Command Line Argument Parser
 
 USAGE:
-    03_03_positional_derive[EXE] [NAME]
-
-ARGS:
-    <NAME>    
+    03_01_flag_bool_derive[EXE] [OPTIONS]
 
 OPTIONS:
     -h, --help       Print help information
+    -v, --verbose    
     -V, --version    Print version information
 
-$ 03_03_positional_derive
-name: None
+$ 03_01_flag_bool_derive
+verbose: false
 
-$ 03_03_positional_derive bob
-name: Some("bob")
+$ 03_01_flag_bool_derive --verbose
+verbose: true
+
+$ 03_01_flag_bool_derive --verbose --verbose
+? failed
+error: The argument '--verbose' was provided more than once, but cannot be used multiple times
+
+USAGE:
+    03_01_flag_bool_derive[EXE] [OPTIONS]
+
+For more information try --help
+
+```
+
+Or counted with `#[clap(parse(from_occurrences))]`:
+
+[Example:](03_01_flag_count.rs)
+```console
+$ 03_01_flag_count_derive --help
+clap [..]
+A simple to use, efficient, and full-featured Command Line Argument Parser
+
+USAGE:
+    03_01_flag_count_derive[EXE] [OPTIONS]
+
+OPTIONS:
+    -h, --help       Print help information
+    -v, --verbose    
+    -V, --version    Print version information
+
+$ 03_01_flag_count_derive
+verbose: 0
+
+$ 03_01_flag_count_derive --verbose
+verbose: 1
+
+$ 03_01_flag_count_derive --verbose --verbose
+verbose: 2
 
 ```
 
 ### Subcommands
 
-Subcommands are defined as `App`s that get added via `App::subcommand`. Each
+Subcommands are derived with `#[derive(Subcommand)]` and be added via `#[clap(subcommand)]` attribute. Each
 instance of a Subcommand can have its own version, author(s), Args, and even its own
 subcommands.
 
 [Example:](03_04_subcommands.rs)
 ```console
-$ 03_04_subcommands_derive
-? failed
-clap [..]
-A simple to use, efficient, and full-featured Command Line Argument Parser
-
-USAGE:
-    03_04_subcommands_derive[EXE] <SUBCOMMAND>
-
-OPTIONS:
-    -h, --help       Print help information
-    -V, --version    Print version information
-
-SUBCOMMANDS:
-    add     Adds files to myapp
-    help    Print this message or the help of the given subcommand(s)
-
 $ 03_04_subcommands_derive help
 clap [..]
 A simple to use, efficient, and full-featured Command Line Argument Parser
@@ -324,7 +315,31 @@ $ 03_04_subcommands_derive add bob
 
 ```
 
-Because we set `AppSettings::PropagateVersion`:
+Above, we used a struct-variant to define the `add` subcommand.  Alternatively,
+you can
+[use a struct for your subcommand's arguments](03_04_subcommands_alt.rs).
+
+Because we used `command: Commands` instead of `command: Option<Commands>`:
+```console
+$ 03_04_subcommands_derive
+? failed
+clap [..]
+A simple to use, efficient, and full-featured Command Line Argument Parser
+
+USAGE:
+    03_04_subcommands_derive[EXE] <SUBCOMMAND>
+
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
+
+SUBCOMMANDS:
+    add     Adds files to myapp
+    help    Print this message or the help of the given subcommand(s)
+
+```
+
+Because we added `#[clap(propagate_version = true)]`:
 ```console
 $ 03_04_subcommands_derive --version
 clap [..]
@@ -337,8 +352,8 @@ $ 03_04_subcommands_derive add --version
 ### Defaults
 
 We've previously showed that arguments can be `required` or optional.  When
-optional, you work with a `Option` and can `unwrap_or`.  Alternatively, you can
-set `Arg::default_value`.
+optional, you work with an `Option` and can `unwrap_or`.  Alternatively, you can
+set `#[clap(default_value_t)]`.
 
 [Example:](03_05_default_values.rs)
 ```console
@@ -413,6 +428,35 @@ For more information try --help
 
 More generally, you can validate and parse into any data type.
 
+[Example:](04_02_parse.rs)
+```console
+$ 04_02_parse_derive --help
+clap [..]
+A simple to use, efficient, and full-featured Command Line Argument Parser
+
+USAGE:
+    04_02_parse_derive[EXE] <PORT>
+
+ARGS:
+    <PORT>    Network port to use
+
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
+
+$ 04_02_parse_derive 22
+PORT = 22
+
+$ 04_02_parse_derive foobar
+? failed
+error: Invalid value "foobar" for '<PORT>': invalid digit found in string
+
+For more information try --help
+
+```
+
+A custom parser can be used to improve the error messages or provide additional validation:
+
 [Example:](04_02_validate.rs)
 ```console
 $ 04_02_validate_derive --help
@@ -434,7 +478,13 @@ PORT = 22
 
 $ 04_02_validate_derive foobar
 ? failed
-error: Invalid value for '<PORT>': invalid digit found in string
+error: Invalid value "foobar" for '<PORT>': `foobar` isn't a port number
+
+For more information try --help
+
+$ 04_02_validate_derive 0
+? failed
+error: Invalid value "0" for '<PORT>': Port not in range 1-65535
 
 For more information try --help
 
@@ -540,7 +590,7 @@ OPTIONS:
 
 $ 04_04_custom_derive
 ? failed
-error: Cam only modify one version field
+error: Can only modify one version field
 
 USAGE:
     clap [OPTIONS] [INPUT_FILE]
@@ -552,7 +602,7 @@ Version: 2.2.3
 
 $ 04_04_custom_derive --major --minor
 ? failed
-error: Cam only modify one version field
+error: Can only modify one version field
 
 USAGE:
     clap [OPTIONS] [INPUT_FILE]
@@ -577,11 +627,15 @@ Doing work using input input.txt and config config.toml
 
 ## Tips
 
-- Proactively check for bad `App` configurations by calling `App::debug_assert` ([example](05_01_assert.rs))
+- For more complex demonstration of features, see our [examples](../README.md).
+- See the [derive reference](../derive_ref/README.md) to understand how to use
+  anything in the [builder API](https://docs.rs/clap/) in the derive API.
+- Proactively check for bad `Command` configurations by calling `Command::debug_assert` in a test ([example](05_01_assert.rs))
 
 ## Contributing
 
 New example code:
+- Please update the corresponding section in the [builder tutorial](../tutorial_builder/README.md)
 - Building: They must be added to [Cargo.toml](../../Cargo.toml) with the appropriate `required-features`.
 - Testing: Ensure there is a markdown file with [trycmd](https://docs.rs/trycmd) syntax (generally they'll go in here).
 

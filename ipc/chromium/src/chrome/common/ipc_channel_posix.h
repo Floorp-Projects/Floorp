@@ -100,7 +100,11 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // If sending a message blocks then we use this iterator to keep track of
   // where in the message we are. It gets reset when the message is finished
   // sending.
-  mozilla::Maybe<Pickle::BufferList::IterImpl> partial_write_iter_;
+  struct PartialWrite {
+    Pickle::BufferList::IterImpl iter_;
+    mozilla::Span<const mozilla::UniqueFileHandle> handles_;
+  };
+  mozilla::Maybe<PartialWrite> partial_write_;
 
   int server_listen_pipe_;
   int pipe_;
@@ -120,18 +124,19 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // The control message buffer will hold all of the file descriptors that will
   // be read in during a single recvmsg call. Message::WriteFileDescriptor
   // always writes one word of data for every file descriptor added to the
-  // message, and the number of file descriptors per message will not exceed
-  // MAX_DESCRIPTORS_PER_MESSAGE.
+  // message, and the number of file descriptors per recvmsg will not exceed
+  // kControlBufferMaxFds. This is based on the true maximum SCM_RIGHTS
+  // descriptor count, which is just over 250 on both Linux and macOS.
   //
   // This buffer also holds a control message header of size CMSG_SPACE(0)
   // bytes. However, CMSG_SPACE is not a constant on Macs, so we can't use it
   // here. Consequently, we pick a number here that is at least CMSG_SPACE(0) on
   // all platforms. We assert at runtime, in Channel::ChannelImpl::Init, that
   // it's big enough.
+  static constexpr size_t kControlBufferMaxFds = 200;
   static constexpr size_t kControlBufferHeaderSize = 32;
   static constexpr size_t kControlBufferSize =
-      IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE * sizeof(int) +
-      kControlBufferHeaderSize;
+      kControlBufferMaxFds * sizeof(int) + kControlBufferHeaderSize;
 
   // Large incoming messages that span multiple pipe buffers get built-up in the
   // buffers of this message.

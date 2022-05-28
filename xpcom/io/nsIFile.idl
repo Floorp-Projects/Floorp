@@ -69,8 +69,9 @@ interface nsIFile : nsISupports
      *
      *   @param node
      *       A string which is intended to be a child node of the nsIFile.
-     *       For the |appendNative| method, the node must be in the native
-     *       filesystem charset.
+     *       For security reasons, this cannot contain .. and cannot start with
+     *       a directory separator. For the |appendNative| method, the node must
+     *       be in the native filesystem charset.
      */
     void append(in AString node);
     [noscript] void appendNative(in ACString node);
@@ -114,6 +115,18 @@ interface nsIFile : nsISupports
      */
     attribute AString leafName;
     [noscript] attribute ACString nativeLeafName;
+
+    /**
+     * The leaf name as displayed in OS-provided file pickers and similar UI.
+     * On Windows and macOS, 'real' leaf names of some directories can be
+     * in English, but the OS will show a different, translated name to users
+     * using a different locale. So folders like "Downloads", "Desktop" and
+     * "Documents" might not normally appear to users with that (English) name,
+     * but with an OS-localized translation. This API will return such a
+     * translation if it exists, or the leafName if it doesn't.
+     * On Linux, this will always be the same as `leafName`.
+     */
+    readonly attribute AString displayName;
 
     /**
      *  copyTo[Native]
@@ -463,7 +476,7 @@ interface nsIFile : nsISupports
      *
      *   @param relativeFilePath
      *       relativeFilePath is a native relative path. For security reasons,
-     *       this cannot contain .. or cannot start with a directory separator.
+     *       this cannot contain .. and cannot start with a directory separator.
      *       For the |appendRelativeNativePath| method, the relativeFilePath
      *       must be in the native filesystem charset.
      */

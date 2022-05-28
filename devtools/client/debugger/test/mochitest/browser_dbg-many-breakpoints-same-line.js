@@ -47,7 +47,8 @@ async function testSimpleAndLog(dbg) {
   info(
     "Wait for the log-point message. Only log-point breakpoint should work."
   );
-  await waitForMessage(dbg, "log point 42");
+
+  await waitForMessageByType(dbg, "log point 42", ".logPoint");
 
   const source = findSource(dbg, "simple2.js");
   await removeBreakpoint(dbg, source.id, BREAKPOINT_LINE);
@@ -80,19 +81,13 @@ async function testLogUpdates(dbg) {
   });
 
   info("Wait for the log-point message. Only the edited one should appear");
-  await waitForMessage(dbg, "log point edited");
+  await waitForMessageByType(dbg, "log point edited", ".logPoint");
 }
 
-function findMessages(win, query) {
-  return Array.prototype.filter.call(
-    win.document.querySelectorAll(".message"),
-    e => e.innerText.includes(query)
-  );
-}
-
-async function waitForMessage(dbg, msg) {
+async function waitForMessageByType(dbg, msg, typeSelector) {
   const webConsolePanel = await getDebuggerSplitConsole(dbg);
+  const hud = webConsolePanel.hud;
   return waitFor(
-    async () => findMessages(webConsolePanel._frameWindow, msg).length > 0
+    async () => findMessagesByType(hud, msg, typeSelector).length > 0
   );
 }

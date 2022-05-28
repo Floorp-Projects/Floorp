@@ -10,11 +10,10 @@
 namespace js {
 namespace gc {
 
-// API to let the DOM tell us whether we're currently in pageload, so we can
-// change the GC triggers to discourage collection of the atoms zone.
+// API to let the DOM tell us whether we're currently in pageload.
 //
-// This is a temporary measure until parsing is changed to not allocate GC
-// things off the main thread.
+// This currently affects nursery sizing; we tolerate large nursery sizes (and
+// hence longer minor GC pauses) during pageload so as not to limit performance.
 
 enum class PerformanceHint { Normal, InPageLoad };
 

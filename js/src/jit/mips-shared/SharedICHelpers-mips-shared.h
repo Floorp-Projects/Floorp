@@ -63,11 +63,11 @@ inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm,
     masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), ScratchRegister);
     masm.addPtr(ScratchRegister, BaselineStackReg);
   } else {
-    masm.movePtr(BaselineFrameReg, BaselineStackReg);
+    masm.movePtr(FramePointer, BaselineStackReg);
   }
 
   masm.loadPtr(Address(StackPointer, offsetof(BaselineStubFrame, savedFrame)),
-               BaselineFrameReg);
+               FramePointer);
   masm.loadPtr(Address(StackPointer, offsetof(BaselineStubFrame, savedStub)),
                ICStubReg);
 

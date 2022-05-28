@@ -24,13 +24,14 @@ add_task(async function task() {
   const xhrUrl = TEST_PATH + "sjs_slow-response-test-server.sjs";
 
   info("Fire an XHR POST request from the console.");
-  const { node: messageNode } = await executeAndWaitForMessage(
+  const { node: messageNode } = await executeAndWaitForMessageByType(
     hud,
     `
     xhrConsole = () => testXhrPostSlowResponse();
     xhrConsole();
   `,
-    xhrUrl
+    xhrUrl,
+    ".network"
   );
 
   ok(messageNode, "Network message found.");

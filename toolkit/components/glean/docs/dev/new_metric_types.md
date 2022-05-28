@@ -106,6 +106,25 @@ including test methods,
 and is at least all the methods exposed via the
 [metric traits](https://github.com/mozilla/glean/tree/main/glean-core/src/traits).
 
+To support IPC and the MLA FFI (see below)
+we identify metric instances by MetricId and store them in maps in
+[the `__glean_metric_maps` mod of `metrics.rs`](https://hg.mozilla.org/mozilla-central/toolkit/components/glean/api/src/metrics.rs).
+This work is done by the `rust.py` and `rust(_pings).jinja2` extensions to `glean_parser` found
+[in the `build_scripts/glean_parser_ext/` folder](https://searchfox.org/mozilla-central/source/toolkit/components/glean/build_scripts/glean_parser_ext).
+
+You shouldn't have to edit these files for new metric types,
+as the original modifications to `glean_parser` for this type should already be generating correct code.
+
+### Dealing with Clippy
+
+[Clippy](https://github.com/rust-lang/rust-clippy)
+cannot find the generated Rust metrics maps in `__glean_metric_maps`
+(see [bug 1674728](https://bugzilla.mozilla.org/show_bug.cgi?id=1674728)).
+This means any new metric type that is generating structures via `glean_parser`
+extensions requires you to add a copy of the new map to the clippy-only
+`__glean_metric_maps` at the bottom of
+[the non-generated `metrics.rs`](https://searchfox.org/mozilla-central/source/toolkit/components/glean/api/src/metrics.rs).
+
 ### Rust Tests
 
 You should be able to smoke test the basic functionality in Rust unit tests.

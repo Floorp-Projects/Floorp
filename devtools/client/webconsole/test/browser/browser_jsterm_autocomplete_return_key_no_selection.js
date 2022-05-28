@@ -49,7 +49,7 @@ add_task(async function() {
   );
   ok(!getInputCompletionValue(hud), "completeNode is empty");
 
-  const onMessage = waitForMessage(hud, "hello world");
+  const onMessage = waitForMessageByType(hud, "hello world", ".result");
   EventUtils.synthesizeKey("KEY_Enter");
   is(getInputValue(hud), "", "input is empty after KEY_Enter");
 

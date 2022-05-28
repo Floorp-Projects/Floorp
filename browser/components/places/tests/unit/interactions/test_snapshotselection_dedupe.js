@@ -130,7 +130,7 @@ add_task(async function test_relevancy_dedupe() {
     },
     getCurrentSessionUrls: () => new Set(),
   });
-  selector.setUrl("https://example.com/relevant");
+  selector.updateDetailsAndRebuild({ url: "https://example.com/relevant" });
 
   let snapshotPromise = selector.once("snapshots-updated");
   selector.rebuild();

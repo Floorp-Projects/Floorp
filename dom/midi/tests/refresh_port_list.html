@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Refresh MIDI port list test</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+</head>
+<body>
+<script>
+  var access = null;
+  async function get_access() {
+    access = await navigator.requestMIDIAccess({ sysex: true });
+  }
+
+  async function reset_access() {
+    access = null;
+  }
+
+  async function get_num_ports() {
+    return access.inputs.size + access.outputs.size;
+  }
+
+  async function add_port() {
+    let addPortPromise = new Promise(resolve => {
+      access.addEventListener("statechange", (event) => { dump("***** 1 event.port.name = " + event.port.name + "event.connection = " + event.port.connection + "\n"); if (event.port.connection != "open") { resolve(); } });
+    });
+    const outputs = access.outputs.values();
+    const output = outputs.next().value;
+    output.send([0x90, 0x01, 0x00]);
+    await addPortPromise;
+  }
+
+  async function remove_port() {
+    let removePortPromise = new Promise(resolve => {
+        access.addEventListener("statechange", (event) => { dump("***** 2 event.port.name = " + event.port.name + "event.connection = " + event.port.connection + "\n"); if (event.port.connection != "open") { resolve(); } });
+    });
+    const outputs = access.outputs.values();
+    const output = outputs.next().value;
+    output.send([0x90, 0x02, 0x00]);
+    await removePortPromise;
+  }
+
+  async function force_refresh() {
+    const outputs = access.outputs.values();
+    const output = outputs.next().value;
+    output.send([0x90, 0x04, 0x00]);
+  }
+</script>
+</body>
+</html>

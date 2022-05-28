@@ -31,10 +31,9 @@ RemotePrintJobParent::RemotePrintJobParent(nsIPrintSettings* aPrintSettings)
 }
 
 mozilla::ipc::IPCResult RemotePrintJobParent::RecvInitializePrint(
-    const nsString& aDocumentTitle, const nsString& aPrintToFile,
-    const int32_t& aStartPage, const int32_t& aEndPage) {
-  nsresult rv =
-      InitializePrintDevice(aDocumentTitle, aPrintToFile, aStartPage, aEndPage);
+    const nsString& aDocumentTitle, const int32_t& aStartPage,
+    const int32_t& aEndPage) {
+  nsresult rv = InitializePrintDevice(aDocumentTitle, aStartPage, aEndPage);
   if (NS_FAILED(rv)) {
     Unused << SendPrintInitializationResult(rv, FileDescriptor());
     // Let any listeners know about the failure before we delete.
@@ -59,8 +58,8 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvInitializePrint(
 }
 
 nsresult RemotePrintJobParent::InitializePrintDevice(
-    const nsString& aDocumentTitle, const nsString& aPrintToFile,
-    const int32_t& aStartPage, const int32_t& aEndPage) {
+    const nsString& aDocumentTitle, const int32_t& aStartPage,
+    const int32_t& aEndPage) {
   nsresult rv;
   nsCOMPtr<nsIDeviceContextSpec> deviceContextSpec =
       do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv);
@@ -68,7 +67,7 @@ nsresult RemotePrintJobParent::InitializePrintDevice(
     return rv;
   }
 
-  rv = deviceContextSpec->Init(nullptr, mPrintSettings, false);
+  rv = deviceContextSpec->Init(mPrintSettings, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -79,8 +78,11 @@ nsresult RemotePrintJobParent::InitializePrintDevice(
     return rv;
   }
 
-  rv = mPrintDeviceContext->BeginDocument(aDocumentTitle, aPrintToFile,
-                                          aStartPage, aEndPage);
+  nsAutoString fileName;
+  mPrintSettings->GetToFileName(fileName);
+
+  rv = mPrintDeviceContext->BeginDocument(aDocumentTitle, fileName, aStartPage,
+                                          aEndPage);
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_ABORT,
                          "Failed to initialize print device");
@@ -273,7 +275,9 @@ void RemotePrintJobParent::ActorDestroy(ActorDestroyReason aWhy) {
   // If progress dialog is opened, notify closing it.
   for (auto listener : mPrintProgressListeners) {
     listener->OnStateChange(nullptr, nullptr,
-                            nsIWebProgressListener::STATE_STOP, NS_OK);
+                            nsIWebProgressListener::STATE_STOP |
+                                nsIWebProgressListener::STATE_IS_DOCUMENT,
+                            NS_OK);
   }
 }
 

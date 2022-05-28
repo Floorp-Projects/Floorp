@@ -27,6 +27,7 @@ namespace layers {
 
 [Comparable] struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
+  uint64_t? gpuProcessTextureId;
   uint32_t arrayIndex;
   SurfaceFormat format;
   IntSize size;

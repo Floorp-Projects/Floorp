@@ -320,8 +320,8 @@ CssLogic.prototype = {
 
     if (domSheet.href) {
       cacheId = domSheet.href;
-    } else if (domSheet.ownerNode?.ownerDocument) {
-      cacheId = domSheet.ownerNode.ownerDocument.location;
+    } else if (domSheet.associatedDocument) {
+      cacheId = domSheet.associatedDocument.location;
     }
 
     let sheet = null;
@@ -723,12 +723,7 @@ CssLogic.getComputedStyle = function(node) {
  * @return {string} the address of the stylesheet.
  */
 CssLogic.href = function(sheet) {
-  let href = sheet.href;
-  if (!href) {
-    href = sheet.ownerNode.ownerDocument.location;
-  }
-
-  return href;
+  return sheet.href || sheet.associatedDocument.location;
 };
 
 /**

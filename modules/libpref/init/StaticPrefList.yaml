@@ -221,7 +221,11 @@
 # the parent process.
 - name: accessibility.cache.enabled
   type: bool
+#ifdef ANDROID
+  value: true
+#else
   value: false
+#endif
   mirror: once
 
 #---------------------------------------------------------------------------
@@ -993,6 +997,15 @@
   value: 3
   mirror: always
 
+# Compression level for cached JavaScript bytecode
+#   0 = do not compress,
+#   1 = minimal compression,
+#   9 = maximal compression
+- name: browser.cache.jsbc_compression_level
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+
 - name: browser.contentblocking.database.enabled
   type: bool
   value: false
@@ -1159,6 +1172,12 @@
 - name: browser.download.improvements_to_download_panel
   type: bool
   value: true
+  mirror: always
+
+# See bug 1738574
+- name: browser.download.start_downloads_in_tmp_dir
+  type: bool
+  value: false
   mirror: always
 
 # See bug 1747343
@@ -3653,6 +3672,11 @@
   value: true
   mirror: always
 
+- name: dom.streams.transferable.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # For area and anchor elements with target=_blank and no rel set to
 # opener/noopener.
 - name: dom.targetBlankNoOpener.enabled
@@ -4106,24 +4130,6 @@
 - name: dom.webcomponents.shadowdom.report_usage
   type: bool
   value: false
-  mirror: always
-
-# Is support for custom element disabledFeatures enabled?
-- name: dom.webcomponents.disabledFeatures.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Is support for custom element elementInternals enabled?
-- name: dom.webcomponents.elementInternals.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Is support for form-associated custom element enabled?
-- name: dom.webcomponents.formAssociatedCustomElement.enabled
-  type: bool
-  value: true
   mirror: always
 
 # Is support for the Web GPU API enabled?
@@ -5125,7 +5131,11 @@
 
 - name: gfx.canvas.accelerated
   type: RelaxedAtomicBool
+#if defined(XP_LINUX) && !defined(ANDROID) && defined(NIGHTLY_BUILD)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 - name: gfx.canvas.accelerated.cache-items
@@ -8151,6 +8161,12 @@
   value: 1
   mirror: always
 
+# Whether we should throttle in-process iframes in the active tab.
+- name: layout.throttle_in_process_iframes
+  type: bool
+  value: true
+  mirror: always
+
 # Activity granted to out-of-process iframes in the foreground tab, in milliseconds.
 - name: layout.oopif_activity_grace_period_ms
   type: uint32_t
@@ -8356,7 +8372,7 @@
 # Whether to draw images in CSS backgrounds if we only have a partial frame.
 - name: layout.display_partial_background_images
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -8511,6 +8527,13 @@
   mirror: always
   value: 0
 #endif // XP_WIN
+
+# Whether to make the start of cubeb stream slower, and by how many
+# milliseconds.
+- name: media.cubeb.slow_stream_init_ms
+  type: RelaxedAtomicUint32
+  mirror: always
+  value: 0
 
 # ClockDrift desired buffering in milliseconds
 - name: media.clockdrift.buffering
@@ -8917,7 +8940,6 @@
 # When it is set to true, then the utility process will take precedence over RDD
 # to perform audio decoding.
 # TODO: Android: Bug 1767930
-# TODO: OpenBSD: Bug 1769033
 - name: media.utility-process.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN)
@@ -8927,7 +8949,7 @@
 #elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
 #elif defined(XP_OPENBSD)
-  value: false
+  value: true
 #else
   value: false
 #endif
@@ -8943,17 +8965,7 @@
 #ifdef MOZ_FFVPX
 - name: media.utility-ffvpx.enabled
   type: RelaxedAtomicBool
-#if defined(XP_WIN)
   value: true
-#elif defined(XP_MACOSX)
-  value: true
-#elif defined(XP_LINUX) && !defined(ANDROID)
-  value: true
-#elif defined(XP_OPENBSD)
-  value: true
-#else
-  value: false
-#endif
   mirror: always
 #endif
 
@@ -8991,6 +9003,13 @@
 -   name: media.android-media-codec.enabled
     type: RelaxedAtomicBool
     value: true
+    mirror: always
+
+  # Bug 1771196
+  # Dont yet enable AndroidDecoderModule on Utility
+-   name: media.utility-android-media-codec.enabled
+    type: RelaxedAtomicBool
+    value: false
     mirror: always
 
 -   name: media.android-media-codec.preferred
@@ -9089,12 +9108,12 @@
     value: true
     mirror: always
 
--   name: media.wmf.no-copy-nv12-textures
+-   name: media.wmf.zero-copy-nv12-textures
     type: bool
     value: true
     mirror: once
 # Enable hardware decoded video no copy even when it is blocked.
--   name: media.wmf.no-copy-nv12-textures-force-enabled
+-   name: media.wmf.zero-copy-nv12-textures-force-enabled
     type: bool
     value: false
     mirror: once
@@ -11319,12 +11338,6 @@
   value: true
   mirror: always
 
-# Whether we allow the print progress dialog to show up.
-- name: print.show_print_progress
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether we attempt to generate links in Save As PDF output.
 - name: print.save_as_pdf.links.enabled
   type: RelaxedAtomicBool
@@ -12046,6 +12059,12 @@
   value: false
   mirror: always
 
+# wasm-unsafe-eval source keyword
+- name: security.csp.wasm-unsafe-eval.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # No way to enable on Android, Bug 1552602
 - name: security.webauth.u2f
   type: bool
@@ -12065,12 +12084,6 @@
   value: true
   mirror: always
 
-# Cancel outgoing requests from SystemPrincipal
-- name: security.cancel_non_local_loads_triggered_by_systemprincipal
-  type: bool
-  value: false
-  mirror: always
-
 # Cancel outgoing requests from SystemPrincipal:
 # but only with scheme http(s) and contentpolicytype subdocument
 - name: security.disallow_privileged_https_subdocuments_loads
@@ -12078,7 +12091,6 @@
   value: true
   mirror: always
 
-# Cancel outgoing requests from SystemPrincipal:
 # but only with scheme data and contentpolicytype subdocument
 - name: security.disallow_privileged_data_subdocuments_loads
   type: bool
@@ -12095,6 +12107,20 @@
 # Cancel outgoing requests from SystemPrincipal:
 # but only with scheme http(s) and contentpolicytype script
 - name: security.disallow_privileged_https_script_loads
+  type: bool
+  value: true
+  mirror: always
+
+# Cancel outgoing requests from SystemPrincipal:
+# where there is no finalURI.
+- name: security.disallow_privileged_no_finaluri_loads
+  type: bool
+  value: true
+  mirror: always
+
+# Cancel outgoing requests from privileged about pages:
+# but only with scheme http(s) and contentpolicytype script
+- name: security.disallow_privilegedabout_remote_script_loads
   type: bool
   value: true
   mirror: always
@@ -13640,7 +13666,7 @@
 - name: widget.disable-swipe-tracker
   type: bool
 #ifdef XP_WIN
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
 #else
   value: false
 #endif

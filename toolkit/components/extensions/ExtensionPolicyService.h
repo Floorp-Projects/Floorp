@@ -120,6 +120,7 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
   nsCOMPtr<nsIObserverService> mObs;
 
   nsString mDefaultCSP;
+  nsString mDefaultCSPV3;
 };
 
 }  // namespace mozilla

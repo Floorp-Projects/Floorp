@@ -175,9 +175,8 @@ add_task(async function test_check_success() {
   // add a test kinto client that will respond to lastModified information
   // for a collection called 'test-collection'.
   // Let's use a bucket that is not the default one (`test-bucket`).
-  Services.prefs.setCharPref("services.settings.test_bucket", "test-bucket");
   const c = RemoteSettings("test-collection", {
-    bucketNamePref: "services.settings.test_bucket",
+    bucketName: "test-bucket",
   });
   let maybeSyncCalled = false;
   c.maybeSync = () => {
@@ -1152,15 +1151,14 @@ add_task(async function test_syncs_clients_with_local_database() {
   // We don't want to instantiate a client using the RemoteSettings() API
   // since we want to test «unknown» clients that have a local database.
   new RemoteSettingsClient("addons", {
-    bucketNamePref: "services.blocklist.bucket", // bucketName = "blocklists"
+    bucketName: "blocklists",
   }).db.importChanges({}, 42);
-  new RemoteSettingsClient("recipes", {
-    bucketNamePref: "services.settings.default_bucket", // bucketName = "main"
-  }).db.importChanges({}, 43);
+  new RemoteSettingsClient("recipes").db.importChanges({}, 43);
 
   let error;
   try {
     await RemoteSettings.pollChanges();
+    Assert.ok(false, "pollChange() should throw when pulling recipes");
   } catch (e) {
     error = e;
   }

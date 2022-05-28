@@ -15,6 +15,7 @@
 #include "nsHashKeys.h"
 #include "nsIFrame.h"  // For WeakFrame
 #include "nsSize.h"
+#include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsWeakReference.h"
 
@@ -162,12 +163,14 @@ class nsPrintJob final : public nsIWebProgressListener,
   MOZ_CAN_RUN_SCRIPT nsresult SetupToPrintContent();
   nsresult EnablePOsForPrinting();
 
+  void BuildNestedPrintObjects(
+      const mozilla::UniquePtr<nsPrintObject>& aParentPO);
+
   bool PrintDocContent(const mozilla::UniquePtr<nsPrintObject>& aPO,
                        nsresult& aStatus);
   nsresult DoPrint(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
-  nsresult ReflowDocList(const mozilla::UniquePtr<nsPrintObject>& aPO,
-                         bool aSetPixelScale);
+  nsresult ReflowDocList(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult ReflowPrintObject(const mozilla::UniquePtr<nsPrintObject>& aPO);
@@ -223,15 +226,16 @@ class nsPrintJob final : public nsIWebProgressListener,
   nsresult SetRootView(nsPrintObject* aPO, bool& aDoReturn,
                        bool& aDocumentIsTopLevel, nsSize& aAdjSize);
   nsView* GetParentViewForRoot();
-  bool DoSetPixelScale();
-  void UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale);
-  MOZ_CAN_RUN_SCRIPT nsresult ReconstructAndReflow(bool aDoSetPixelScale);
+  void UpdateZoomRatio(nsPrintObject* aPO);
+  MOZ_CAN_RUN_SCRIPT nsresult ReconstructAndReflow();
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult UpdateSelectionAndShrinkPrintObject(
       nsPrintObject* aPO, bool aDocumentIsTopLevel);
   MOZ_CAN_RUN_SCRIPT nsresult InitPrintDocConstruction(bool aHandleError);
   void FirePrintPreviewUpdateEvent();
 
   void PageDone(nsresult aResult);
+
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
 
   // The docViewer that owns us, and its docShell.
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
@@ -246,16 +250,23 @@ class nsPrintJob final : public nsIWebProgressListener,
   // member-data.
   RefPtr<nsPrintData> mPrt;
 
-  // The nsPrintData for our last print preview (replaced every time the
-  // user changes settings in the print preview window).
-  // Note: Our new print preview nsPrintData is stored in mPtr until we move it
-  // to mPrtPreview once we've finish creating the print preview.
-  RefPtr<nsPrintData> mPrtPreview;
-
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
 
   // Only set if this nsPrintJob was created for a real print.
   RefPtr<RemotePrintJobChild> mRemotePrintJob;
+
+  // The root print object.
+  mozilla::UniquePtr<nsPrintObject> mPrintObject;
+
+  // If there is a focused iframe, mSelectionRoot is set to its nsPrintObject.
+  // Otherwise, if there is a selection, it is set to the root nsPrintObject.
+  // Otherwise, it is unset.
+  nsPrintObject* mSelectionRoot = nullptr;
+
+  // Array of non-owning pointers to all the nsPrintObjects owned by this
+  // nsPrintJob. This includes mPrintObject, as well as all of its mKids (and
+  // their mKids, etc.)
+  nsTArray<nsPrintObject*> mPrintDocList;
 
   // If the code that initiates a print preview passes a PrintPreviewResolver
   // (a std::function) to be notified of the final sheet/page counts (once
@@ -263,12 +274,24 @@ class nsPrintJob final : public nsIWebProgressListener,
   // callback is stored here.
   PrintPreviewResolver mPrintPreviewCallback;
 
+  // The scale factor that would need to be applied to all pages to make the
+  // widest page fit without overflowing/clipping.
+  float mShrinkToFitFactor = 1.0f;
+
   float mScreenDPI = 115.0f;
+
+  int32_t mNumPrintablePages = 0;
+
+  // If true, indicates that we have started Printing but have not gone to the
+  // timer to start printing the pages. It gets turned off right before we go
+  // to the timer.
+  bool mPreparingForPrint = false;
 
   bool mCreatedForPrintPreview = false;
   bool mIsCreatingPrintPreview = false;
   bool mIsDoingPrinting = false;
   bool mDidLoadDataForPrinting = false;
+  bool mShrinkToFit = false;
   bool mDoingInitialReflow = false;
   bool mIsDestroying = false;
   bool mDisallowSelectionPrint = false;

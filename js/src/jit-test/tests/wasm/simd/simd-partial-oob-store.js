@@ -18,22 +18,6 @@ function get(arr, loc, len) {
     return res;
 }
 
-function iota(len) {
-    let xs = [];
-    for ( let i=0 ; i < len ; i++ )
-        xs.push(i);
-    return xs;
-}
-
-function assertSame(got, expected) {
-    assertEq(got.length, expected.length);
-    for ( let i=0; i < got.length; i++ ) {
-        let g = got[i];
-        let e = expected[i];
-        assertEq(g, e);
-    }
-}
-
 for ( let offset of iota(16) ) {
     var ins = wasmEvalText(`
   (module

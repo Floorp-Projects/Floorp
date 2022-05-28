@@ -6,14 +6,11 @@ use api::units::*;
 use crate::batch::{CommandBufferBuilderKind, CommandBufferList, CommandBufferBuilder, CommandBufferIndex};
 use crate::internal_types::FastHashMap;
 use crate::picture::{SurfaceInfo, SurfaceIndex, TileKey, SubSliceIndex};
-use crate::prim_store::{PrimitiveInstanceIndex};
+use crate::prim_store::{PrimitiveInstanceIndex, PictureIndex};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::render_target::ResolveOp;
 use crate::render_task::{RenderTask, RenderTaskKind, RenderTaskLocation};
-use crate::space::SpaceMapper;
-use crate::spatial_tree::{SpatialTree};
-use crate::util::MaxRect;
 use crate::visibility::{VisibilityState, PrimitiveVisibility};
 
 /*
@@ -207,6 +204,9 @@ pub struct SurfaceBuilder {
     builder_stack: Vec<CommandBufferBuilder>,
     // Dirty rect stack used to reject adding primitives
     dirty_rect_stack: Vec<Vec<PictureRect>>,
+    // A map of the output render tasks from any sub-graphs that haven't
+    // been consumed by BackdropRender prims yet
+    pub sub_graph_output_map: FastHashMap<PictureIndex, RenderTaskId>,
 }
 
 impl SurfaceBuilder {
@@ -215,6 +215,7 @@ impl SurfaceBuilder {
             current_cmd_buffers: CommandBufferTargets::Tiled { tiles: FastHashMap::default() },
             builder_stack: Vec::new(),
             dirty_rect_stack: Vec::new(),
+            sub_graph_output_map: FastHashMap::default(),
         }
     }
 
@@ -245,7 +246,6 @@ impl SurfaceBuilder {
         &mut self,
         surface_index: SurfaceIndex,
         is_sub_graph: bool,
-        wraps_sub_graph: bool,
         clipping_rect: PictureRect,
         descriptor: SurfaceDescriptor,
         surfaces: &mut [SurfaceInfo],
@@ -267,7 +267,6 @@ impl SurfaceBuilder {
                     render_task_id,
                     is_sub_graph,
                     None,
-                    wraps_sub_graph,
                 )
             }
             SurfaceDescriptorKind::Chained { render_task_id, root_task_id } => {
@@ -275,7 +274,6 @@ impl SurfaceBuilder {
                     render_task_id,
                     is_sub_graph,
                     Some(root_task_id),
-                    wraps_sub_graph,
                 )
             }
         };
@@ -384,9 +382,9 @@ impl SurfaceBuilder {
     // Finish adding primitives and child tasks to a surface and pop it off the stack
     pub fn pop_surface(
         &mut self,
+        pic_index: PictureIndex,
         rg_builder: &mut RenderTaskGraphBuilder,
         cmd_buffers: &mut CommandBufferList,
-        spatial_tree: &SpatialTree,
     ) {
         self.dirty_rect_stack.pop().unwrap();
 
@@ -403,6 +401,13 @@ impl SurfaceBuilder {
                     let resolve_task_id = builder.resolve_source.expect("bug: no resolve set");
                     let mut src_task_ids = Vec::new();
 
+                    // Make the output of the sub-graph a dependency of the new replacement tile task
+                    let _old = self.sub_graph_output_map.insert(
+                        pic_index,
+                        child_root_task_id.unwrap_or(child_render_task_id),
+                    );
+                    debug_assert!(_old.is_none());
+
                     // Set up dependencies for the sub-graph. The basic concepts below are the same, but for
                     // tiled surfaces are a little more complex as there are multiple tasks to set up.
                     //  (a) Set up new task(s) on parent surface that write to the same location
@@ -410,26 +415,7 @@ impl SurfaceBuilder {
                     //  (c) Make the old parent surface tasks input dependencies of the resolve target
                     //  (d) Make the sub-graph output an input dependency of the new task(s).
 
-                    // If this surface wraps a sub-graph, we need to look up in the hierarchy to find where
-                    // the resource source actually is. This may happen in cases where a clip-mask applies to
-                    // a backdrop-filter and child content in the associated stacking context.
-                    let sub_graph_source_index = self.builder_stack
-                        .iter()
-                        .rposition(|builder| {
-                            !builder.wraps_sub_graph
-                        })
-                        .expect("bug: no parent that is not a sub graph wrapper");
-
-                    let sub_graph_parent = if sub_graph_source_index == self.builder_stack.len() - 1 {
-                        None
-                    } else {
-                        match self.builder_stack.last().unwrap().kind {
-                            CommandBufferBuilderKind::Simple { render_task_id, .. } => Some(render_task_id),
-                            _ => panic!("bug: should not occur on tiled surfaces"),
-                        }
-                    };
-
-                    match self.builder_stack[sub_graph_source_index].kind {
+                    match self.builder_stack.last_mut().unwrap().kind {
                         CommandBufferBuilderKind::Tiled { ref mut tiles } => {
                             let keys: Vec<TileKey> = tiles.keys().cloned().collect();
 
@@ -472,12 +458,6 @@ impl SurfaceBuilder {
                                                 location,          // draw to same place
                                                 RenderTaskKind::Picture(pic_task),
                                             ),
-                                        );
-
-                                        // Make the output of the sub-graph a dependency of the new replacement tile task
-                                        rg_builder.add_dependency(
-                                            sub_graph_parent.unwrap_or(new_task_id),
-                                            child_root_task_id.unwrap_or(child_render_task_id),
                                         );
 
                                         // Update the surface builder with the now current target for future primitives
@@ -538,12 +518,6 @@ impl SurfaceBuilder {
                                 ),
                             );
 
-                            // Make the output of the sub-graph a dependency of the new replacement tile task
-                            rg_builder.add_dependency(
-                                sub_graph_parent.unwrap_or(new_task_id),
-                                child_root_task_id.unwrap_or(child_render_task_id),
-                            );
-
                             // Update the surface builder with the now current target for future primitives
                             *parent_task_id = new_task_id;
                         }
@@ -556,19 +530,8 @@ impl SurfaceBuilder {
 
                     match dest_task.kind {
                         RenderTaskKind::Picture(ref mut dest_task_info) => {
-                            // Handle cases when the raster spatial node is different between surfaces due to snapping
-                            let m: SpaceMapper<DevicePixel, DevicePixel> = SpaceMapper::new_with_target(
-                                dest_task_info.surface_spatial_node_index,
-                                dest_task_info.raster_spatial_node_index,
-                                DeviceRect::max_rect(),
-                                spatial_tree,
-                            );
-
-                            let dest_origin = m.map_point(dest_task_info.content_origin).unwrap();
-
                             assert!(dest_task_info.resolve_op.is_none());
                             dest_task_info.resolve_op = Some(ResolveOp {
-                                dest_origin,
                                 src_task_ids,
                                 dest_task_id: resolve_task_id,
                             })

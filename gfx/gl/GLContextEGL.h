@@ -144,8 +144,12 @@ class GLContextEGL final : public GLContext {
       EglDisplay&, EGLConfig, EGLenum bindToTextureFormat,
       gfx::IntSize& pbsize);
 
+#ifdef MOZ_WAYLAND
   static EGLSurface CreateWaylandBufferSurface(EglDisplay&, EGLConfig,
                                                gfx::IntSize& pbsize);
+  static EGLSurface CreateGBMBufferSurface(EglDisplay&, EGLConfig,
+                                           gfx::IntSize& pbsize);
+#endif
 
  public:
   EGLSurface CreateCompatibleSurface(void* aWindow) const;

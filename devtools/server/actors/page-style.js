@@ -581,8 +581,12 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
     const result = this.getAppliedProps(node, entries, options);
     for (const rule of result.rules) {
-      // See the comment in |form| to understand this.
-      await rule.getAuthoredCssText();
+      try {
+        // See the comment in |StyleRuleActor.form| to understand this.
+        // This can throw if the authored rule text is not found (so e.g., with
+        // CSSOM or constructable stylesheets).
+        await rule.getAuthoredCssText();
+      } catch (ex) {}
     }
 
     // Reference to instances of StyleRuleActor for CSS rules matching the node.

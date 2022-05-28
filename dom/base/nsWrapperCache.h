@@ -495,6 +495,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
     class_, native_members_, js_members_)                                   \
   NS_IMPL_CYCLE_COLLECTION_CLASS(class_)                                    \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(class_)                             \
+    using ::ImplCycleCollectionUnlink;                                      \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(                                        \
         MOZ_FOR_EACH_EXPAND_HELPER native_members_)                         \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(MOZ_FOR_EACH_EXPAND_HELPER js_members_) \

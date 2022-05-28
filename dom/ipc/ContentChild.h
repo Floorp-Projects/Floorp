@@ -665,13 +665,13 @@ class ContentChild final : public PContentChild,
       uint64_t aActionId);
   mozilla::ipc::IPCResult RecvWindowBlur(
       const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType);
-  mozilla::ipc::IPCResult RecvRaiseWindow(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvRaiseWindow(
       const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType,
       uint64_t aActionId);
-  mozilla::ipc::IPCResult RecvAdjustWindowFocus(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvAdjustWindowFocus(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aIsVisible,
       uint64_t aActionId);
-  mozilla::ipc::IPCResult RecvClearFocus(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvClearFocus(
       const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvSetFocusedBrowsingContext(
       const MaybeDiscarded<BrowsingContext>& aContext, uint64_t aActionId);
@@ -686,7 +686,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvFinalizeFocusOuter(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aCanFocus,
       CallerType aCallerType);
-  mozilla::ipc::IPCResult RecvBlurToChild(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvBlurToChild(
       const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
       const MaybeDiscarded<BrowsingContext>& aBrowsingContextToClear,
       const MaybeDiscarded<BrowsingContext>& aAncestorBrowsingContextToFocus,

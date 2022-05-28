@@ -394,6 +394,12 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x6779);
       APPEND_DEVICE(0x677b);
       break;
+    case DeviceFamily::RadeonBlockNoVideoCopy:
+      // Stoney
+      APPEND_DEVICE(0x98e4);
+      // Carrizo
+      APPEND_RANGE(0x9870, 0x9877);
+      break;
     case DeviceFamily::Geforce7300GT:
       APPEND_DEVICE(0x0393);
       break;
@@ -991,6 +997,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
       vendor = DeviceVendor::NVIDIA;
       break;
     case DeviceFamily::AtiAll:
+    case DeviceFamily::RadeonBlockNoVideoCopy:
     case DeviceFamily::RadeonCaicos:
     case DeviceFamily::RadeonX1000:
     case DeviceFamily::Bug1447141:

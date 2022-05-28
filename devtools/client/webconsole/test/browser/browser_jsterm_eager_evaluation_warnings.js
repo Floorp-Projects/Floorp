@@ -14,13 +14,13 @@ add_task(async function() {
   info("Wait for a bit so a warning message could be displayed");
   await wait(2000);
   is(
-    findMessage(hud, "getElementById", ".warn"),
+    findWarningMessage(hud, "getElementById"),
     undefined,
     "The eager evaluation did not triggered a warning message"
   );
 
   info("Sanity check for the warning message when the expression is evaluated");
   EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessage(hud, "getElementById", ".warn"));
+  await waitFor(() => findWarningMessage(hud, "getElementById"));
   ok(true, "Evaluation of the expression does trigger the warning message");
 });

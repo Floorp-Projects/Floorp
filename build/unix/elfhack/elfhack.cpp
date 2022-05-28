@@ -7,6 +7,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+#include <memory>
+
 #include "elfxx.h"
 #include "mozilla/CheckedInt.h"
 
@@ -931,7 +933,8 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
 
   Elf_Shdr relhack_section(relhack64_section);
   Elf_Shdr relhackcode_section(relhackcode64_section);
-  ElfRelHack_Section* relhack = new ElfRelHack_Section(relhack_section);
+  auto relhack_ptr = std::make_unique<ElfRelHack_Section>(relhack_section);
+  auto relhack = relhack_ptr.get();
 
   ElfSymtab_Section* symtab = (ElfSymtab_Section*)section->getLink();
   Elf_SymValue* sym = symtab->lookup("__cxa_pure_virtual");
@@ -1175,9 +1178,10 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
   section->rels.assign(new_rels.begin(), new_rels.end());
   section->shrink(new_rels.size() * section->getEntSize());
 
-  ElfRelHackCode_Section* relhackcode =
-      new ElfRelHackCode_Section(relhackcode_section, *elf, *relhack,
-                                 original_init, mprotect_cb, sysconf_cb);
+  auto relhackcode_ptr = std::make_unique<ElfRelHackCode_Section>(
+      relhackcode_section, *elf, *relhack, original_init, mprotect_cb,
+      sysconf_cb);
+  auto relhackcode = relhackcode_ptr.get();
   // Find the first executable section, and insert the relhack code before
   // that. The relhack data is inserted between .rel.dyn and .rel.plt.
   ElfSection* first_executable = nullptr;
@@ -1193,8 +1197,19 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
     return -1;
   }
 
+  // Once the pointers for relhack, relhackcode, and init are inserted,
+  // their ownership is transferred to the Elf object, which will free
+  // them when itself is freed. Hence the .release() calls here (and
+  // the init.release() call later on). Please note that the raw
+  // pointers will continue to be used after .release(), which is why
+  // we are caching them (since .release() will end up setting the
+  // smart pointer's internal raw pointer to nullptr).
+
   relhack->insertBefore(section);
+  relhack_ptr.release();
+
   relhackcode->insertBefore(first_executable);
+  relhackcode_ptr.release();
 
   // Don't try further if we can't gain from the relocation section size change.
   // We account for the fact we're going to split the PT_LOAD before the
@@ -1266,8 +1281,8 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
 
   // Ensure Elf sections will be at their final location.
   elf->normalize();
-  ElfLocation* init =
-      new ElfLocation(relhackcode, relhackcode->getEntryPoint());
+  auto init =
+      std::make_unique<ElfLocation>(relhackcode, relhackcode->getEntryPoint());
   if (init_array) {
     // Adjust the first DT_INIT_ARRAY entry to point at the injected code
     // by transforming its relocation into a relative one pointing to the
@@ -1275,10 +1290,15 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
     Rel_Type* rel = &section->rels[init_array_insert];
     rel->r_info = ELF64_R_INFO(0, rel_type);  // Set as a relative relocation
     set_relative_reloc(rel, elf, init->getValue());
-  } else if (!dyn->setValueForType(DT_INIT, init)) {
-    fprintf(stderr, "Can't grow .dynamic section to set DT_INIT. Skipping\n");
-    return -1;
+  } else {
+    if (dyn->setValueForType(DT_INIT, init.get())) {
+      init.release();
+    } else {
+      fprintf(stderr, "Can't grow .dynamic section to set DT_INIT. Skipping\n");
+      return -1;
+    }
   }
+
   // TODO: adjust the value according to the remaining number of relative
   // relocations
   if (dyn->getValueForType(Rel_Type::d_tag_count))

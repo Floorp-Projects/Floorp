@@ -12,6 +12,10 @@
   overflow: hidden;
 
   direction: ltr;
+  /* Prevent selection from interacting weirdly with the page,
+   * see bug 1766093. Our text selection story with shadow dom should be
+   * better, see bug 1590379 */
+  user-select: none;
   /* Prevent unwanted style inheritance. See bug 554717. */
   text-align: left;
   list-style-image: none !important;

@@ -23,7 +23,7 @@ add_task(async function() {
 
   info("Emit a log message to display it in the Browser Console");
   console.log(TEST_MESSAGE);
-  await waitFor(() => findMessage(hud, TEST_MESSAGE));
+  await waitFor(() => findConsoleAPIMessage(hud, TEST_MESSAGE));
 
   let currWindow = Services.wm.getMostRecentWindow(null);
   is(

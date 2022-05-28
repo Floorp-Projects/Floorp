@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset=utf-8>
+<meta name="timeout" content="long">
 <title></title>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
@@ -99,7 +100,9 @@ self.addEventListener("message", () => handler(self.postMessage));
 // For shared workers:
 self.addEventListener("connect", (e) => {
   var port = e.ports[0];
-  handler(msg => port.postMessage(msg));
+  port.onmessage = () => handler(msg => port.postMessage(msg));
+  port.start();
+
 });
 `;
   return "data:,".concat(encodeURIComponent(source));

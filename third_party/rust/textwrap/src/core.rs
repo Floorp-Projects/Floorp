@@ -13,10 +13,9 @@
 //!    how to do this for text.
 //!
 //! 2. Potentially split your fragments into smaller pieces. This
-//!    allows you to implement things like hyphenation. If you are
-//!    wrapping text represented as a sequence of [`Word`]s, then you
-//!    can use [`split_words`](crate::word_splitters::split_words) can
-//!    help you do this.
+//!    allows you to implement things like hyphenation. If you use the
+//!    `Word` type, you can use [`WordSplitter`](crate::WordSplitter)
+//!    enum for this.
 //!
 //! 3. Potentially break apart fragments that are still too large to
 //!    fit on a single line. This is implemented in [`break_words`].
@@ -197,15 +196,15 @@ pub fn display_width(text: &str) -> usize {
 /// the displayed width of each part, which this trait provides.
 pub trait Fragment: std::fmt::Debug {
     /// Displayed width of word represented by this fragment.
-    fn width(&self) -> usize;
+    fn width(&self) -> f64;
 
     /// Displayed width of the whitespace that must follow the word
     /// when the word is not at the end of a line.
-    fn whitespace_width(&self) -> usize;
+    fn whitespace_width(&self) -> f64;
 
     /// Displayed width of the penalty that must be inserted if the
     /// word falls at the end of a line.
-    fn penalty_width(&self) -> usize;
+    fn penalty_width(&self) -> f64;
 }
 
 /// A piece of wrappable text, including any trailing whitespace.
@@ -241,7 +240,7 @@ impl<'a> Word<'a> {
         let trimmed = word.trim_end_matches(' ');
         Word {
             word: trimmed,
-            width: display_width(&trimmed),
+            width: display_width(trimmed),
             whitespace: &word[trimmed.len()..],
             penalty: "",
         }
@@ -304,22 +303,22 @@ impl<'a> Word<'a> {
 
 impl Fragment for Word<'_> {
     #[inline]
-    fn width(&self) -> usize {
-        self.width
+    fn width(&self) -> f64 {
+        self.width as f64
     }
 
     // We assume the whitespace consist of ' ' only. This allows us to
     // compute the display width in constant time.
     #[inline]
-    fn whitespace_width(&self) -> usize {
-        self.whitespace.len()
+    fn whitespace_width(&self) -> f64 {
+        self.whitespace.len() as f64
     }
 
     // We assume the penalty is `""` or `"-"`. This allows us to
     // compute the display width in constant time.
     #[inline]
-    fn penalty_width(&self) -> usize {
-        self.penalty.len()
+    fn penalty_width(&self) -> f64 {
+        self.penalty.len() as f64
     }
 }
 
@@ -334,7 +333,7 @@ where
 {
     let mut shortened_words = Vec::new();
     for word in words {
-        if word.width() > line_width {
+        if word.width() > line_width as f64 {
             shortened_words.extend(word.break_apart(line_width));
         } else {
             shortened_words.push(word);

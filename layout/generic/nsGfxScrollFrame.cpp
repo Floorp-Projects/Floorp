@@ -1955,6 +1955,14 @@ nsresult nsXULScrollFrame::GetFrameName(nsAString& aResult) const {
 
 NS_IMETHODIMP
 nsXULScrollFrame::DoXULLayout(nsBoxLayoutState& aState) {
+  if (nsIFrame* hScrollbarBox = GetScrollbarBox(false)) {
+    nsScrollbarFrame* scrollbar = do_QueryFrame(hScrollbarBox);
+    scrollbar->SetScrollbarMediatorContent(mContent);
+  }
+  if (nsIFrame* vScrollbarBox = GetScrollbarBox(true)) {
+    nsScrollbarFrame* scrollbar = do_QueryFrame(vScrollbarBox);
+    scrollbar->SetScrollbarMediatorContent(mContent);
+  }
   ReflowChildFlags flags = aState.LayoutFlags();
   nsresult rv = XULLayout(aState);
   aState.SetLayoutFlags(flags);
@@ -7828,8 +7836,7 @@ nsMargin ScrollFrameHelper::GetScrollPadding() const {
                                    GetScrollPortRect().Size());
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
-    const Maybe<nsPoint>& aDestination) const {
+layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
   ScrollSnapInfo result;
 
   nsIFrame* scrollSnapFrame = GetFrameForStyle();
@@ -7857,10 +7864,9 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
   return result;
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo(
-    const Maybe<nsPoint>& aDestination) const {
+layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo() const {
   // TODO(botond): Should we cache it?
-  return ComputeScrollSnapInfo(aDestination);
+  return ComputeScrollSnapInfo();
 }
 
 bool ScrollFrameHelper::GetSnapPointForDestination(ScrollUnit aUnit,
@@ -7868,8 +7874,8 @@ bool ScrollFrameHelper::GetSnapPointForDestination(ScrollUnit aUnit,
                                                    const nsPoint& aStartPos,
                                                    nsPoint& aDestination) {
   Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
-      GetScrollSnapInfo(Some(aDestination)), aUnit, aSnapFlags,
-      GetLayoutScrollRange(), aStartPos, aDestination);
+      GetScrollSnapInfo(), aUnit, aSnapFlags, GetLayoutScrollRange(), aStartPos,
+      aDestination);
   if (snapPoint) {
     aDestination = snapPoint.ref();
     return true;

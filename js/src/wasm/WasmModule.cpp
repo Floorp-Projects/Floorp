@@ -265,6 +265,12 @@ JSObject* Module::createObject(JSContext* cx) const {
     return nullptr;
   }
 
+  if (!cx->isRuntimeCodeGenEnabled(JS::RuntimeCode::WASM, nullptr)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_CSP_BLOCKED_WASM, "WebAssembly.Module");
+    return nullptr;
+  }
+
   RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule));
   return WasmModuleObject::create(cx, *this, proto);
 }

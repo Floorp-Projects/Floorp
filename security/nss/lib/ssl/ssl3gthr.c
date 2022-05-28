@@ -348,7 +348,15 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
     } else if (contentType == ssl_ct_application_data) {
         headerLen = 7;
     } else if (dtls_IsDtls13Ciphertext(ss->version, contentType)) {
-        /* We don't support CIDs. */
+        /* We don't support CIDs.
+         *
+         * This condition is met on all invalid outer content types.
+         * For lower DTLS versions as well as the inner content types,
+         * this is checked in ssl3con.c/ssl3_HandleNonApplicationData().
+         *
+         * In DTLS generally invalid records SHOULD be silently discarded,
+         * no alert is sent [RFC6347, Section 4.1.2.7].
+         */
         if (contentType & 0x10) {
             PORT_Assert(PR_FALSE);
             PORT_SetError(SSL_ERROR_RX_UNKNOWN_RECORD_TYPE);

@@ -1054,12 +1054,20 @@ class UrlbarInput {
       throw new Error(`Invalid url for result ${JSON.stringify(result)}`);
     }
 
-    if (!this.isPrivate && !result.heuristic) {
-      // We don't await for this, because a rejection should not interrupt
-      // the load. Just reportError it.
-      UrlbarUtils.addToInputHistory(url, this._lastSearchString).catch(
-        Cu.reportError
-      );
+    // Record input history but only in non-private windows.
+    if (!this.isPrivate) {
+      let input;
+      if (!result.heuristic) {
+        input = this._lastSearchString;
+      } else if (result.autofill?.type == "adaptive") {
+        input = result.autofill.adaptiveHistoryInput;
+      }
+      // `input` may be an empty string, so do a strict comparison here.
+      if (input !== undefined) {
+        // We don't await for this, because a rejection should not interrupt
+        // the load. Just reportError it.
+        UrlbarUtils.addToInputHistory(url, input).catch(Cu.reportError);
+      }
     }
 
     this.controller.engagementEvent.record(event, {

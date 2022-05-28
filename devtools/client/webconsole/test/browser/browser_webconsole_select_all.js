@@ -19,9 +19,9 @@ add_task(async function testSelectAll() {
 async function testSelectionWhenMovingBetweenBoxes(hud) {
   // Fill the console with some output.
   await clearOutput(hud);
-  await executeAndWaitForMessage(hud, "1 + 2", "3", ".result");
-  await executeAndWaitForMessage(hud, "3 + 4", "7", ".result");
-  await executeAndWaitForMessage(hud, "5 + 6", "11", ".result");
+  await executeAndWaitForResultMessage(hud, "1 + 2", "3");
+  await executeAndWaitForResultMessage(hud, "3 + 4", "7");
+  await executeAndWaitForResultMessage(hud, "5 + 6", "11");
 }
 
 function testBrowserMenuSelectAll(hud) {

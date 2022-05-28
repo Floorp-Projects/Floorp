@@ -320,14 +320,18 @@ RuleEditor.prototype = {
    *        The original position object (url/line/column) or null.
    */
   _updateLocation: function(originalLocation) {
-    let displayURL = this.rule.sheet ? this.rule.sheet.href : null;
+    let displayURL = this.rule.sheet?.href;
+    const constructed = this.rule.sheet?.constructed;
     let line = this.rule.ruleLine;
     if (originalLocation) {
       displayURL = originalLocation.url;
       line = originalLocation.line;
     }
 
-    let sourceTextContent = CssLogic.shortSource({ href: displayURL });
+    let sourceTextContent = CssLogic.shortSource({
+      constructed,
+      href: displayURL,
+    });
     let title = displayURL ? displayURL : sourceTextContent;
     if (line > 0) {
       sourceTextContent += ":" + line;
@@ -347,8 +351,7 @@ RuleEditor.prototype = {
         ".ruleview-rule-source-label"
       );
       const title = this.rule.title;
-      const sourceHref =
-        this.rule.sheet && this.rule.sheet.href ? this.rule.sheet.href : title;
+      const sourceHref = this.rule.sheet?.href || title;
 
       const uaLabel = STYLE_INSPECTOR_L10N.getStr("rule.userAgentStyles");
       sourceLabel.textContent = uaLabel + " " + title;

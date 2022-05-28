@@ -22,7 +22,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
   static_assert(R2 == ValueOperand(r1, r0));
 
   // Compute frame size.
-  masm.movePtr(BaselineFrameReg, r0);
+  masm.movePtr(FramePointer, r0);
   masm.as_add(r0, r0, Imm8(BaselineFrame::FramePointerOffset));
   masm.ma_sub(BaselineStackReg, r0);
 
@@ -32,7 +32,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
     ScratchRegisterScope scratch(masm);
     masm.ma_sub(r0, Imm32(argSize), r1, scratch);
   }
-  Address frameSizeAddr(BaselineFrameReg,
+  Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
   masm.store32(r1, frameSizeAddr);
 #endif
@@ -53,7 +53,7 @@ inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm,
                                                   uint32_t headerSize) {
   // Compute stub frame size. We have to add two pointers: the stub reg and
   // previous frame pointer pushed by EmitEnterStubFrame.
-  masm.mov(BaselineFrameReg, reg);
+  masm.mov(FramePointer, reg);
   masm.as_add(reg, reg, Imm8(sizeof(void*) * 2));
   masm.ma_sub(BaselineStackReg, reg);
 
@@ -74,12 +74,12 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   MOZ_ASSERT(scratch != ICTailCallReg);
 
   // Compute frame size.
-  masm.mov(BaselineFrameReg, scratch);
+  masm.mov(FramePointer, scratch);
   masm.as_add(scratch, scratch, Imm8(BaselineFrame::FramePointerOffset));
   masm.ma_sub(BaselineStackReg, scratch);
 
 #ifdef DEBUG
-  Address frameSizeAddr(BaselineFrameReg,
+  Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
   masm.store32(scratch, frameSizeAddr);
 #endif
@@ -95,8 +95,8 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
 
   // Save old frame pointer, stack pointer and stub reg.
   masm.Push(ICStubReg);
-  masm.Push(BaselineFrameReg);
-  masm.mov(BaselineStackReg, BaselineFrameReg);
+  masm.Push(FramePointer);
+  masm.mov(BaselineStackReg, FramePointer);
 
   // We pushed 4 words, so the stack is still aligned to 8 bytes.
   masm.checkStackAlignment();

@@ -27,13 +27,15 @@ async function logMessages(hud) {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.console.log("localStorage", content.localStorage);
   });
-  const localStorageMsg = await waitFor(() => findMessage(hud, "localStorage"));
+  const localStorageMsg = await waitFor(() =>
+    findConsoleAPIMessage(hud, "localStorage")
+  );
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.console.log("sessionStorage", content.sessionStorage);
   });
   const sessionStorageMsg = await waitFor(() =>
-    findMessage(hud, "sessionStorage")
+    findConsoleAPIMessage(hud, "sessionStorage")
   );
 
   return [localStorageMsg, sessionStorageMsg];

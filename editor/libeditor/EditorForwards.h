@@ -100,6 +100,7 @@ class InterCiter;                   // InterCiter.h
 class JoinNodesResult;              // HTMLEditHelpers.h
 class JoinNodesTransaction;         // JoinNodesTransaction.h
 class MoveNodeResult;               // HTMLEditHelpers.h
+class MoveNodeTransaction;          // MoveNodeTransaction.h
 class PlaceholderTransaction;       // PlaceholderTransaction.h
 class ReplaceTextTransaction;       // ReplaceTextTransaction.h
 class SplitNodeResult;              // HTMLEditHelpers.h

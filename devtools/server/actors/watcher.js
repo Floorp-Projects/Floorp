@@ -191,56 +191,13 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   form() {
-    // All target types and all resources types are supported for tab debugging and web extensions.
-    // But worker target type and most watcher classes are still disabled for the browser toolbox (sessionContext.type=all).
-    // And they may also be disabled for workers once we start supporting them by the watcher.
-    //
-    // So keep the traits to false for all the resources that we don't support yet
-    // and keep using the legacy listeners.
-    const shouldEnableAllWatchers =
-      this.sessionContext.type == "browser-element" ||
-      this.sessionContext.type == "webextension";
-
     return {
       actor: this.actorID,
       // The resources and target traits should be removed all at the same time since the
       // client has generic ways to deal with all of them (See Bug 1680280).
       traits: {
-        [Targets.TYPES.FRAME]: true,
-        [Targets.TYPES.PROCESS]: true,
-        [Targets.TYPES.WORKER]: shouldEnableAllWatchers,
-        resources: {
-          // In Firefox 81 we added support for:
-          // - CONSOLE_MESSAGE
-          // - CSS_CHANGE
-          // - CSS_MESSAGE
-          // - DOCUMENT_EVENT
-          // - ERROR_MESSAGE
-          // - PLATFORM_MESSAGE
-          //
-          // We enabled them for content toolboxes only because we don't support
-          // content process targets yet. Bug 1620248 should help supporting
-          // them and enable this more broadly.
-          [Resources.TYPES.CONSOLE_MESSAGE]: true,
-          [Resources.TYPES.CSS_CHANGE]: shouldEnableAllWatchers,
-          [Resources.TYPES.CSS_MESSAGE]: true,
-          [Resources.TYPES.DOCUMENT_EVENT]: shouldEnableAllWatchers,
-          [Resources.TYPES.CACHE_STORAGE]: shouldEnableAllWatchers,
-          [Resources.TYPES.COOKIE]: shouldEnableAllWatchers,
-          [Resources.TYPES.ERROR_MESSAGE]: true,
-          [Resources.TYPES.INDEXED_DB]: shouldEnableAllWatchers,
-          [Resources.TYPES.LOCAL_STORAGE]: shouldEnableAllWatchers,
-          [Resources.TYPES.SESSION_STORAGE]: shouldEnableAllWatchers,
-          [Resources.TYPES.PLATFORM_MESSAGE]: true,
-          [Resources.TYPES.NETWORK_EVENT]: true,
-          [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: true,
-          [Resources.TYPES.REFLOW]: true,
-          [Resources.TYPES.STYLESHEET]: shouldEnableAllWatchers,
-          [Resources.TYPES.SOURCE]: shouldEnableAllWatchers,
-          [Resources.TYPES.THREAD_STATE]: shouldEnableAllWatchers,
-          [Resources.TYPES.SERVER_SENT_EVENT]: shouldEnableAllWatchers,
-          [Resources.TYPES.WEBSOCKET]: shouldEnableAllWatchers,
-        },
+        ...this.sessionContext.supportedTargets,
+        resources: this.sessionContext.supportedResources,
       },
     };
   },

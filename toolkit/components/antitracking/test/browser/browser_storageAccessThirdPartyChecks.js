@@ -49,8 +49,6 @@ AntiTracking._createTask({
     "http://tracking.example.org",
     "http://tracking.example.org",
     "http://tracking.example.org",
-    "http://tracking.example.org",
-    "http://tracking.example.org",
   ],
 });
 

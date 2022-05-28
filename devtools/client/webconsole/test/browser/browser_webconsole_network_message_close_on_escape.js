@@ -24,7 +24,7 @@ add_task(async function task() {
   const toolbox = await gDevTools.getToolboxForTab(currentTab);
 
   const xhrUrl = TEST_PATH + "test-data.json";
-  const onMessage = waitForMessage(hud, xhrUrl);
+  const onMessage = waitForMessageByType(hud, xhrUrl, ".network");
 
   // Fire an XHR POST request.
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {

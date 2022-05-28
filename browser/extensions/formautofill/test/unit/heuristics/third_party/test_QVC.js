@@ -41,14 +41,14 @@ runHeuristicsTest(
             },
             //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
           ],
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-          ],
+          //[
+            //{
+              //section: "",
+              //addressType: "",
+              //contactType: "",
+              //fieldName: "cc-number", // txtQvcGiftCardNumber
+            //},
+          //],
         ],
         [
           [
@@ -104,14 +104,14 @@ runHeuristicsTest(
             },
             //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
           ],
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            }, // ac-off
-          ],
+          //[
+            //{
+              //section: "",
+              //addressType: "",
+              //contactType: "",
+              //fieldName: "cc-number", // txtQvcGiftCardNumber
+            //}, // ac-off
+          //],
         ],
         [
           [

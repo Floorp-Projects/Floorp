@@ -1,14 +1,6 @@
 // Testing runtime execution of select + comparison operations.
 // Normally they are folded into shorter/faster sequence than select alone.
 
-function cross(xs) {
-    let results = [];
-    for ( let x of xs )
-        for ( let y of xs )
-            results.push([x,y]);
-    return results;
-}
-
 const floatOps = {
     lt(a, b) { return a < b ? 0 : 1; },
     le(a, b) { return a <= b ? 0 : 1; },
@@ -84,13 +76,4 @@ for (let [ty, signed] of [['i32', true], ['i32', false], ['i64', true], ['i64', 
             assertEq(instance.exports.test(), intOps[op](arr[0], arr[1]))
         }
     }
-}
-
-
-function cross(xs) {
-    let results = [];
-    for ( let x of xs )
-        for ( let y of xs )
-            results.push([x,y]);
-    return results;
 }

@@ -54,7 +54,7 @@ add_task(async function testSameSiteCookieMessage() {
     );
 
     info("Test cookie messages");
-    const onLaxMissingWarningMessage = waitForMessage(
+    const onLaxMissingWarningMessage = waitForMessageByType(
       hud,
       test.message1,
       test.typeMessage1
@@ -70,7 +70,7 @@ add_task(async function testSameSiteCookieMessage() {
 
     info("Emit a new cookie message to check that it causes a grouping");
 
-    const onCookieSameSiteWarningGroupMessage = waitForMessage(
+    const onCookieSameSiteWarningGroupMessage = waitForMessageByType(
       hud,
       test.groupLabel,
       ".warn"
@@ -91,7 +91,7 @@ add_task(async function testSameSiteCookieMessage() {
 
     info("Open the group");
     node.querySelector(".arrow").click();
-    await waitFor(() => findMessage(hud, "SameSite"));
+    await waitFor(() => findWarningMessage(hud, "SameSite"));
 
     await checkConsoleOutputForWarningGroup(hud, [
       `▼︎⚠ ${test.groupLabel} 2`,
@@ -125,7 +125,7 @@ add_task(async function testInvalidSameSiteMessage() {
     content.wrappedJSObject.createCookie("a=1; sameSite=batman");
   });
 
-  const { node } = await waitForMessage(hud, groupLabel, ".warn");
+  const { node } = await waitForMessageByType(hud, groupLabel, ".warn");
   is(
     node.querySelector(".warning-group-badge").textContent,
     "2",
@@ -136,7 +136,7 @@ add_task(async function testInvalidSameSiteMessage() {
 
   info("Open the group");
   node.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, "SameSite"));
+  await waitFor(() => findWarningMessage(hud, "SameSite"));
 
   await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${groupLabel} 2`,

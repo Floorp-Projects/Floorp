@@ -114,9 +114,6 @@ const WatcherRegistry = {
         sessionContext: watcher.sessionContext,
         // The DevToolsServerConnection prefix will be used to compute actor IDs created in the content process
         connectionPrefix: watcher.conn.prefix,
-        // Expose watcher traits so we can retrieve them in content process.
-        // This should be removed as part of Bug 1700092.
-        watcherTraits: watcher.form().traits,
       };
       // Define empty default array for all data
       for (const name of Object.values(SUPPORTED_DATA)) {

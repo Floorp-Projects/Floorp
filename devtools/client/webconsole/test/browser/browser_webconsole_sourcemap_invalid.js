@@ -27,6 +27,6 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(PAGE_URL);
 
-  const node = await waitFor(() => findMessage(hud, "Source map error"));
+  const node = await waitFor(() => findWarningMessage(hud, "Source map error"));
   ok(node, "source map error is displayed in web console");
 });

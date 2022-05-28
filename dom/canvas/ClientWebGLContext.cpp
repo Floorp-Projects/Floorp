@@ -4219,6 +4219,15 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
         }
       }
 
+      if (sdType == layers::SurfaceDescriptor::TSurfaceDescriptorD3D10) {
+        const auto& sdD3D = sd.get_SurfaceDescriptorD3D10();
+        const auto& inProcess = mNotLost->inProcess;
+        if (sdD3D.gpuProcessTextureId().isSome() && inProcess) {
+          return Some(
+              std::string{"gpuProcessTextureId works only in GPU process."});
+        }
+      }
+
       if (StaticPrefs::webgl_disable_DOM_blit_uploads()) {
         return Some(std::string{"DOM blit uploads are disabled."});
       }

@@ -162,7 +162,6 @@ using namespace mozilla::widget;
 using namespace mozilla::gfx;
 
 using mozilla::LazyLogModule;
-using mozilla::Unused;
 
 extern mozilla::LazyLogModule gSHIPBFCacheLog;
 
@@ -243,10 +242,18 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
   // that some input events are dispatched before PBrowserConstructor.
   mIsReadyToHandleInputEvents = !ContentParent::IsInputEventQueueSupported();
 
+  // Make sure to compute our process priority if needed before the block of
+  // code below. This makes sure the block below prioritizes our process if
+  // needed.
+  if (aBrowsingContext->IsTop()) {
+    RecomputeProcessPriority();
+  }
+
   // If we're in a BC tree that is active with respect to the priority manager,
   // ensure that this new BrowserParent is marked as active. This ensures that
   // the process will be prioritized in a cross-site iframe navigation in an
-  // active tab.
+  // active tab, and also that the process is correctly prioritized if we got
+  // created for a browsing context which was already active.
   if (aBrowsingContext->Top()->IsPriorityActive()) {
     ProcessPriorityManager::BrowserPriorityChanged(this, true);
   }
@@ -3477,6 +3484,13 @@ bool BrowserParent::GetPriorityHint() { return mPriorityHint; }
 
 void BrowserParent::SetPriorityHint(bool aPriorityHint) {
   mPriorityHint = aPriorityHint;
+  RecomputeProcessPriority();
+}
+
+void BrowserParent::RecomputeProcessPriority() {
+  auto* bc = GetBrowsingContext();
+  ProcessPriorityManager::BrowserPriorityChanged(
+      bc, bc->IsActive() || mPriorityHint);
 }
 
 void BrowserParent::PreserveLayers(bool aPreserveLayers) {

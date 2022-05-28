@@ -98,6 +98,9 @@ var Log = {
   },
 
   stackTrace(e) {
+    if (!e) {
+      return Components.stack.caller.formattedStack.trim();
+    }
     // Wrapped nsIException
     if (e.location) {
       let frame = e.location;
@@ -137,6 +140,9 @@ var Log = {
       );
     }
 
+    if (e instanceof Ci.nsIStackFrame) {
+      return e.formattedStack.trim();
+    }
     return "No traceback available";
   },
 };

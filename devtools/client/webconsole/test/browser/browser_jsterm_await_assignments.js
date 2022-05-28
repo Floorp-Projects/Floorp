@@ -14,27 +14,25 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Check that declaring a let variable does not create a global property");
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     `let bazA = await new Promise(r => setTimeout(() => r("local-bazA"), 10))`,
-    "local-bazA",
-    ".result"
+    "local-bazA"
   );
   await checkVariable(hud, "bazA");
 
   info(
     "Check that declaring a const variable does not create a global property"
   );
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     `const bazB = await new Promise(r => setTimeout(() => r("local-bazB"), 10))`,
-    "local-bazB",
-    ".result"
+    "local-bazB"
   );
   await checkVariable(hud, "bazB");
 
   info("Check that complex variable declarations work as expected");
-  await executeAndWaitForMessage(
+  await executeAndWaitForResultMessage(
     hud,
     `
     let bazC = "local-bazC", bazD, bazE = "local-bazE";
@@ -58,8 +56,7 @@ add_task(async function() {
         }
       }
     });`,
-    "",
-    ".result"
+    ""
   );
   await checkVariable(hud, "bazC");
   await checkVariable(hud, "bazD");
@@ -73,13 +70,8 @@ add_task(async function() {
 });
 
 async function checkVariable(hud, varName) {
-  await executeAndWaitForMessage(
-    hud,
-    `window.${varName}`,
-    `undefined`,
-    ".result"
-  );
+  await executeAndWaitForResultMessage(hud, `window.${varName}`, `undefined`);
   ok(true, `The ${varName} assignment did not create a global variable`);
-  await executeAndWaitForMessage(hud, varName, `"local-${varName}"`, ".result");
+  await executeAndWaitForResultMessage(hud, varName, `"local-${varName}"`);
   ok(true, `"${varName}" has the expected value`);
 }

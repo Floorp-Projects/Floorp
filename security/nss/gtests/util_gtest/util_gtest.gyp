@@ -16,6 +16,7 @@
         'util_gtests.cc',
         'util_memcmpzero_unittest.cc',
         'util_pkcs11uri_unittest.cc',
+        'util_secasn1d_unittest.cc',
         'util_utf8_unittest.cc',
       ],
       'dependencies': [

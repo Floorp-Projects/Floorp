@@ -54,10 +54,10 @@ inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm,
     masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), scratch);
     masm.add32(scratch, BaselineStackReg);
   } else {
-    masm.mov(BaselineFrameReg, BaselineStackReg);
+    masm.mov(FramePointer, BaselineStackReg);
   }
 
-  masm.Pop(BaselineFrameReg);
+  masm.Pop(FramePointer);
   masm.Pop(ICStubReg);
 
   // Load the return address.

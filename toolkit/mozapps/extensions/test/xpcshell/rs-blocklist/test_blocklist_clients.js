@@ -4,12 +4,17 @@ const { BlocklistPrivate } = ChromeUtils.import(
 const { Utils: RemoteSettingsUtils } = ChromeUtils.import(
   "resource://services-settings/Utils.jsm"
 );
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
 
 const IS_ANDROID = AppConstants.platform == "android";
 
 let gBlocklistClients;
 
 async function clear_state() {
+  RemoteSettings.enablePreviewMode(undefined);
+
   for (let { client } of gBlocklistClients) {
     // Remove last server times.
     Services.prefs.clearUserPref(client.lastCheckTimePref);
@@ -209,16 +214,15 @@ add_task(
 );
 add_task(clear_state);
 
-add_task(async function test_bucketname_changes_when_bucket_pref_changes() {
+add_task(async function test_bucketname_changes_when_preview_mode_is_enabled() {
   for (const { client } of gBlocklistClients) {
     equal(client.bucketName, "blocklists");
   }
 
-  Services.prefs.setCharPref("services.blocklist.bucket", "blocklists-preview");
+  RemoteSettings.enablePreviewMode(true);
 
   for (const { client } of gBlocklistClients) {
     equal(client.bucketName, "blocklists-preview", client.identifier);
   }
-  Services.prefs.clearUserPref("services.blocklist.bucket");
 });
 add_task(clear_state);

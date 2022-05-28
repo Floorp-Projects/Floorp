@@ -163,43 +163,43 @@ The table below lists the numbers associated with each network type, but please 
     - Minimum latency (ms)
 
   * - GPRS
-    - 50 KB/s
-    - 20 KB/s
+    - 50 Kb/s
+    - 20 Kb/s
     - 500
 
   * - Regular 2G
-    - 250 KB/s
-    - 50 KB/s
+    - 250 Kb/s
+    - 50 Kb/s
     - 300
 
   * - Good 2G
-    - 450 KB/s
-    - 150 KB/s
+    - 450 Kb/s
+    - 150 Kb/s
     - 150
 
   * - Regular 3G
-    - 750 KB/s
-    - 250 KB/s
+    - 750 Kb/s
+    - 250 Kb/s
     - 100
 
   * - Good 3G
-    - 1.5 MB/s
-    - 750 KB/s
+    - 1.5 Mb/s
+    - 750 Kb/s
     - 40
 
   * - Regular 4G/LTE
-    - 4 MB/s
-    - 3 MB/s
+    - 4 Mb/s
+    - 3 Mb/s
     - 20
 
   * - DSL
-    - 2 MB/s
-    - 1 MB/s
+    - 2 Mb/s
+    - 1 Mb/s
     - 5
 
   * - Wi-Fi
-    - 30 MB/s
-    - 15 MB/s
+    - 30 Mb/s
+    - 15 Mb/s
     - 2
 
 To select a network, click the list box that's initially labeled "No throttling":

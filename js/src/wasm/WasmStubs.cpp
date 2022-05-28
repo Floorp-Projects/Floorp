@@ -1444,26 +1444,14 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
                                      const Instance& inst,
                                      const JitCallStackArgVector& stackArgs,
-                                     bool profilingEnabled, Register scratch,
-                                     uint32_t* callOffset) {
+                                     Register scratch, uint32_t* callOffset) {
   MOZ_ASSERT(!IsCompilingWasm());
 
   size_t framePushedAtStart = masm.framePushed();
 
-  if (profilingEnabled) {
-    // FramePointer isn't volatile, manually preserve it because it will be
-    // clobbered below.
-    masm.Push(FramePointer);
-  } else {
-#ifdef DEBUG
-    // Ensure that the FramePointer is actually Ion-volatile. This might
-    // assert when bug 1426134 lands.
-    AllocatableRegisterSet set(RegisterSet::All());
-    TakeJitRegisters(/* profiling */ false, &set);
-    MOZ_ASSERT(set.has(FramePointer),
-               "replace the whole if branch by the then body when this fails");
-#endif
-  }
+  // FramePointer isn't volatile, manually preserve it because it will be
+  // clobbered below.
+  masm.Push(FramePointer);
 
   // Note, if code here pushes a reference value into the frame for its own
   // purposes (and not just as an argument to the callee) then the frame must be
@@ -1679,10 +1667,8 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   // Free args + frame descriptor.
   masm.leaveExitFrame(bytesNeeded + ExitFrameLayout::Size());
 
-  // If we pushed it, free FramePointer.
-  if (profilingEnabled) {
-    masm.Pop(FramePointer);
-  }
+  // Free FramePointer.
+  masm.Pop(FramePointer);
 
   MOZ_ASSERT(framePushedAtStart == masm.framePushed());
 }

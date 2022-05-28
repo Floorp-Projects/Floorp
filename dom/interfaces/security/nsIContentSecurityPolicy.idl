@@ -165,7 +165,7 @@ interface nsIContentSecurityPolicy : nsISerializable
                               in boolean aEnforceWhitelist);
 
   /**
-   * whether this policy allows eval and eval-like functions
+   * Whether this policy allows eval and eval-like functions
    * such as setTimeout("code string", time).
    * @param shouldReportViolations
    *     Whether or not the use of eval should be reported.
@@ -177,6 +177,20 @@ interface nsIContentSecurityPolicy : nsISerializable
    *     (block the call if false).
    */
   boolean getAllowsEval(out boolean shouldReportViolations);
+
+  /**
+   * Whether this policy allows the evaluation (and compilation) of
+   * WASM code from functions like `WebAssembly.compile`.
+  * @param shouldReportViolations
+   *     Whether or not the use of WASM evaluation should be reported.
+   *     This function returns "true" when violating report-only policies, but
+   *     when any policy (report-only or otherwise) is violated,
+   *     shouldReportViolations is true as well.
+   * @return
+   *     Whether or not the effects of the WASM evaluation should be allowed
+   *     (block the call if false).
+   */
+  boolean getAllowsWasmEval(out boolean shouldReportViolations);
 
   /**
    * Delegate method called by the service when the protected document is loaded.
@@ -235,6 +249,7 @@ interface nsIContentSecurityPolicy : nsISerializable
   const unsigned short VIOLATION_TYPE_HASH_STYLE             = 7;
   const unsigned short VIOLATION_TYPE_REQUIRE_SRI_FOR_STYLE  = 8;
   const unsigned short VIOLATION_TYPE_REQUIRE_SRI_FOR_SCRIPT = 9;
+  const unsigned short VIOLATION_TYPE_WASM_EVAL              = 10;
 
   /**
    * Called after the CSP object is created to fill in appropriate request

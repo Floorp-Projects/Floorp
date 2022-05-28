@@ -8,18 +8,26 @@
 
 #include "HyperTextAccessible-inl.h"
 #include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/CacheConstants.h"
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/LocalAccessible.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/Casting.h"
+#include "mozilla/dom/CharacterData.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
+#include "nsBlockFrame.h"
 #include "nsContentUtils.h"
+#include "nsFrameSelection.h"
 #include "nsIAccessiblePivot.h"
 #include "nsILineIterator.h"
+#include "nsINode.h"
+#include "nsRange.h"
 #include "nsStyleStructInlines.h"
 #include "nsTArray.h"
 #include "nsTextFrame.h"
@@ -181,6 +189,22 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
     // If the blocks are different, that means there's nothing before us on the
     // same line, so we're at the start.
     return true;
+  }
+  if (nsBlockFrame* block = do_QueryFrame(thisBlock)) {
+    // If we have a block frame, it's faster for us to use
+    // BlockInFlowLineIterator because it uses the line cursor.
+    bool found = false;
+    block->SetupLineCursorForQuery();
+    nsBlockInFlowLineIterator prevIt(block, prevLineFrame, &found);
+    if (!found) {
+      // Error; play it safe.
+      return true;
+    }
+    found = false;
+    nsBlockInFlowLineIterator thisIt(block, thisLineFrame, &found);
+    // if the lines are different, that means there's nothing before us on the
+    // same line, so we're at the start.
+    return !found || prevIt.GetLine() != thisIt.GetLine();
   }
   nsAutoLineIterator it = prevBlock->GetLineIterator();
   MOZ_ASSERT(it, "GetLineIterator impl in line-container blocks is infallible");
@@ -367,6 +391,41 @@ class BlockRule : public PivotRule {
     return nsIAccessibleTraversalRule::FILTER_IGNORE;
   }
 };
+
+/**
+ * Find spelling error DOM ranges overlapping the requested LocalAccessible and
+ * offsets. This includes ranges that begin or end outside of the given
+ * LocalAccessible. Note that the offset arguments are rendered offsets, but
+ * because the returned ranges are DOM ranges, those offsets are content
+ * offsets. See the documentation for dom::Selection::GetRangesForIntervalArray
+ * for information about the aAllowAdjacent argument.
+ */
+static nsTArray<nsRange*> FindDOMSpellingErrors(LocalAccessible* aAcc,
+                                                int32_t aRenderedStart,
+                                                int32_t aRenderedEnd,
+                                                bool aAllowAdjacent = false) {
+  if (!aAcc->IsTextLeaf()) {
+    return {};
+  }
+  nsIFrame* frame = aAcc->GetFrame();
+  RefPtr<nsFrameSelection> frameSel =
+      frame ? frame->GetFrameSelection() : nullptr;
+  dom::Selection* domSel =
+      frameSel ? frameSel->GetSelection(SelectionType::eSpellCheck) : nullptr;
+  if (!domSel) {
+    return {};
+  }
+  nsINode* node = aAcc->GetNode();
+  uint32_t contentStart = RenderedToContentOffset(aAcc, aRenderedStart);
+  uint32_t contentEnd =
+      aRenderedEnd == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT
+          ? dom::CharacterData::FromNode(node)->TextLength()
+          : RenderedToContentOffset(aAcc, aRenderedEnd);
+  nsTArray<nsRange*> domRanges;
+  domSel->GetRangesForIntervalArray(node, contentStart, node, contentEnd,
+                                    aAllowAdjacent, &domRanges);
+  return domRanges;
+}
 
 /*** TextLeafPoint ***/
 
@@ -1003,6 +1062,210 @@ TextLeafPoint TextLeafPoint::FindParagraphSameAcc(nsDirection aDirection,
   return TextLeafPoint();
 }
 
+bool TextLeafPoint::IsInSpellingError() const {
+  if (LocalAccessible* acc = mAcc->AsLocal()) {
+    auto domRanges = FindDOMSpellingErrors(acc, mOffset, mOffset + 1);
+    // If there is a spelling error overlapping this character, we're in a
+    // spelling error.
+    return !domRanges.IsEmpty();
+  }
+
+  RemoteAccessible* acc = mAcc->AsRemote();
+  MOZ_ASSERT(acc);
+  if (!acc->mCachedFields) {
+    return false;
+  }
+  auto spellingErrors =
+      acc->mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::spelling);
+  if (!spellingErrors) {
+    return false;
+  }
+  size_t index;
+  const bool foundOrigin = BinarySearch(
+      *spellingErrors, 0, spellingErrors->Length(), mOffset, &index);
+  // In spellingErrors, even indices are start offsets, odd indices are end
+  // offsets.
+  const bool foundStart = index % 2 == 0;
+  if (foundOrigin) {
+    // mOffset is a spelling error boundary. If it's a start offset, we're in a
+    // spelling error.
+    return foundStart;
+  }
+  // index points at the next spelling error boundary after mOffset.
+  if (index == 0) {
+    return false;  // No spelling errors before mOffset.
+  }
+  if (foundStart) {
+    // We're not in a spelling error because it starts after mOffset.
+    return false;
+  }
+  // A spelling error ends after mOffset.
+  return true;
+}
+
+TextLeafPoint TextLeafPoint::FindSpellingErrorSameAcc(
+    nsDirection aDirection, bool aIncludeOrigin) const {
+  if (!aIncludeOrigin && mOffset == 0 && aDirection == eDirPrevious) {
+    return TextLeafPoint();
+  }
+  if (LocalAccessible* acc = mAcc->AsLocal()) {
+    // We want to find both start and end points, so we pass true for
+    // aAllowAdjacent.
+    auto domRanges =
+        aDirection == eDirNext
+            ? FindDOMSpellingErrors(acc, mOffset,
+                                    nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT,
+                                    /* aAllowAdjacent */ true)
+            : FindDOMSpellingErrors(acc, 0, mOffset,
+                                    /* aAllowAdjacent */ true);
+    nsINode* node = acc->GetNode();
+    if (aDirection == eDirNext) {
+      for (nsRange* domRange : domRanges) {
+        if (domRange->GetStartContainer() == node) {
+          int32_t matchOffset = static_cast<int32_t>(ContentToRenderedOffset(
+              acc, static_cast<int32_t>(domRange->StartOffset())));
+          if ((aIncludeOrigin && matchOffset == mOffset) ||
+              matchOffset > mOffset) {
+            return TextLeafPoint(mAcc, matchOffset);
+          }
+        }
+        if (domRange->GetEndContainer() == node) {
+          int32_t matchOffset = static_cast<int32_t>(ContentToRenderedOffset(
+              acc, static_cast<int32_t>(domRange->EndOffset())));
+          if ((aIncludeOrigin && matchOffset == mOffset) ||
+              matchOffset > mOffset) {
+            return TextLeafPoint(mAcc, matchOffset);
+          }
+        }
+      }
+    } else {
+      for (nsRange* domRange : Reversed(domRanges)) {
+        if (domRange->GetEndContainer() == node) {
+          int32_t matchOffset = static_cast<int32_t>(ContentToRenderedOffset(
+              acc, static_cast<int32_t>(domRange->EndOffset())));
+          if ((aIncludeOrigin && matchOffset == mOffset) ||
+              matchOffset < mOffset) {
+            return TextLeafPoint(mAcc, matchOffset);
+          }
+        }
+        if (domRange->GetStartContainer() == node) {
+          int32_t matchOffset = static_cast<int32_t>(ContentToRenderedOffset(
+              acc, static_cast<int32_t>(domRange->StartOffset())));
+          if ((aIncludeOrigin && matchOffset == mOffset) ||
+              matchOffset < mOffset) {
+            return TextLeafPoint(mAcc, matchOffset);
+          }
+        }
+      }
+    }
+    return TextLeafPoint();
+  }
+
+  RemoteAccessible* acc = mAcc->AsRemote();
+  MOZ_ASSERT(acc);
+  if (!acc->mCachedFields) {
+    return TextLeafPoint();
+  }
+  auto spellingErrors =
+      acc->mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::spelling);
+  if (!spellingErrors) {
+    return TextLeafPoint();
+  }
+  size_t index;
+  if (BinarySearch(*spellingErrors, 0, spellingErrors->Length(), mOffset,
+                   &index)) {
+    // mOffset is in spellingErrors.
+    if (aIncludeOrigin) {
+      return *this;
+    }
+    if (aDirection == eDirNext) {
+      // We don't want the origin, so move to the next spelling error boundary
+      // after mOffset.
+      ++index;
+    }
+  }
+  // index points at the next spelling error boundary after mOffset.
+  if (aDirection == eDirNext) {
+    if (spellingErrors->Length() == index) {
+      return TextLeafPoint();  // No spelling error boundary after us.
+    }
+    return TextLeafPoint(mAcc, (*spellingErrors)[index]);
+  }
+  if (index == 0) {
+    return TextLeafPoint();  // No spelling error boundary before us.
+  }
+  // Decrement index so it points at a spelling error boundary before mOffset.
+  --index;
+  if ((*spellingErrors)[index] == -1) {
+    MOZ_ASSERT(index == 0);
+    // A spelling error starts before mAcc.
+    return TextLeafPoint();
+  }
+  return TextLeafPoint(mAcc, (*spellingErrors)[index]);
+}
+
+/* static */
+nsTArray<int32_t> TextLeafPoint::GetSpellingErrorOffsets(
+    LocalAccessible* aAcc) {
+  nsINode* node = aAcc->GetNode();
+  auto domRanges = FindDOMSpellingErrors(
+      aAcc, 0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT);
+  // Our offsets array will contain two offsets for each range: one for the
+  // start, one for the end. That is, the array is of the form:
+  // [r1start, r1end, r2start, r2end, ...]
+  nsTArray<int32_t> offsets(domRanges.Length() * 2);
+  for (nsRange* domRange : domRanges) {
+    if (domRange->GetStartContainer() == node) {
+      offsets.AppendElement(static_cast<int32_t>(ContentToRenderedOffset(
+          aAcc, static_cast<int32_t>(domRange->StartOffset()))));
+    } else {
+      // This range overlaps aAcc, but starts before it.
+      // This can only happen for the first range.
+      MOZ_ASSERT(domRange == *domRanges.begin() && offsets.IsEmpty());
+      // Using -1 here means this won't be treated as the start of a spelling
+      // error range, while still indicating that we're within a spelling error.
+      offsets.AppendElement(-1);
+    }
+    if (domRange->GetEndContainer() == node) {
+      offsets.AppendElement(static_cast<int32_t>(ContentToRenderedOffset(
+          aAcc, static_cast<int32_t>(domRange->EndOffset()))));
+    } else {
+      // This range overlaps aAcc, but ends after it.
+      // This can only happen for the last range.
+      MOZ_ASSERT(domRange == *domRanges.rbegin());
+      // We don't append -1 here because this would just make things harder for
+      // a binary search.
+    }
+  }
+  return offsets;
+}
+
+/* static */
+void TextLeafPoint::UpdateCachedSpellingError(dom::Document* aDocument,
+                                              const nsRange& aRange) {
+  DocAccessible* docAcc = GetExistingDocAccessible(aDocument);
+  if (!docAcc) {
+    return;
+  }
+  LocalAccessible* startAcc = docAcc->GetAccessible(aRange.GetStartContainer());
+  LocalAccessible* endAcc = docAcc->GetAccessible(aRange.GetEndContainer());
+  if (!startAcc || !endAcc) {
+    return;
+  }
+  for (Accessible* acc = startAcc; acc; acc = NextLeaf(acc)) {
+    if (acc->IsTextLeaf()) {
+      docAcc->QueueCacheUpdate(acc->AsLocal(), CacheDomain::Spelling);
+    }
+    if (acc == endAcc) {
+      // Subtle: We check this here rather than in the loop condition because
+      // we want to include endAcc but stop once we reach it. Putting it in the
+      // loop condition would mean we stop at endAcc, but we would also exclude
+      // it; i.e. we wouldn't push the cache for it.
+      break;
+    }
+  }
+}
+
 already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
     bool aIncludeDefaults) const {
   LocalAccessible* acc = mAcc->AsLocal();
@@ -1026,54 +1289,38 @@ already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributes(
   if (!mAcc->IsText()) {
     return nullptr;
   }
+  RefPtr<AccAttributes> attrs;
   if (mAcc->IsLocal()) {
-    return GetTextAttributesLocalAcc(aIncludeDefaults);
-  }
-  RefPtr<AccAttributes> attrs = new AccAttributes();
-  if (aIncludeDefaults) {
-    Accessible* parent = mAcc->Parent();
-    if (parent && parent->IsRemote() && parent->IsHyperText()) {
-      if (auto defAttrs = parent->AsRemote()->GetCachedTextAttributes()) {
-        defAttrs->CopyTo(attrs);
+    attrs = GetTextAttributesLocalAcc(aIncludeDefaults);
+  } else {
+    attrs = new AccAttributes();
+    if (aIncludeDefaults) {
+      Accessible* parent = mAcc->Parent();
+      if (parent && parent->IsRemote() && parent->IsHyperText()) {
+        if (auto defAttrs = parent->AsRemote()->GetCachedTextAttributes()) {
+          defAttrs->CopyTo(attrs);
+        }
       }
     }
+    if (auto thisAttrs = mAcc->AsRemote()->GetCachedTextAttributes()) {
+      thisAttrs->CopyTo(attrs);
+    }
   }
-  if (auto thisAttrs = mAcc->AsRemote()->GetCachedTextAttributes()) {
-    thisAttrs->CopyTo(attrs);
+  if (IsInSpellingError()) {
+    attrs->SetAttribute(nsGkAtoms::invalid, nsGkAtoms::spelling);
   }
   return attrs.forget();
 }
 
-TextLeafPoint TextLeafPoint::FindTextAttrsStart(
-    nsDirection aDirection, bool aIncludeOrigin,
-    const AccAttributes* aOriginAttrs, bool aIncludeDefaults) const {
+TextLeafPoint TextLeafPoint::FindTextAttrsStart(nsDirection aDirection,
+                                                bool aIncludeOrigin) const {
   if (IsCaret()) {
-    return ActualizeCaret().FindTextAttrsStart(aDirection, aIncludeOrigin,
-                                               aOriginAttrs, aIncludeDefaults);
+    return ActualizeCaret().FindTextAttrsStart(aDirection, aIncludeOrigin);
   }
-  // XXX Add support for spelling errors.
-  RefPtr<const AccAttributes> lastAttrs;
   const bool isRemote = mAcc->IsRemote();
-  if (isRemote) {
-    // For RemoteAccessible, leaf attrs and default attrs are cached
-    // separately. To combine them, we have to copy. Since we're not walking
-    // outside the container, we don't care about defaults. Therefore, we
-    // always just fetch the leaf attrs.
-    // We ignore aOriginAttrs because it might include defaults. Fetching leaf
-    // attrs is very cheap anyway.
-    lastAttrs = mAcc->AsRemote()->GetCachedTextAttributes();
-  } else {
-    // For LocalAccessible, we want to avoid calculating attrs more than
-    // necessary, so we want to use aOriginAttrs if provided.
-    if (aOriginAttrs) {
-      lastAttrs = aOriginAttrs;
-      // Whether we include defaults henceforth must match aOriginAttrs, which
-      // depends on aIncludeDefaults. Defaults are always calculated even if
-      // they aren't returned, so calculation cost isn't a concern.
-    } else {
-      lastAttrs = GetTextAttributesLocalAcc(aIncludeDefaults);
-    }
-  }
+  RefPtr<const AccAttributes> lastAttrs =
+      isRemote ? mAcc->AsRemote()->GetCachedTextAttributes()
+               : GetTextAttributesLocalAcc();
   if (aIncludeOrigin && aDirection == eDirNext && mOffset == 0) {
     // Even when searching forward, the only way to know whether the origin is
     // the start of a text attrs run is to compare with the previous sibling.
@@ -1087,13 +1334,19 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
     // calculation or copying.
     RefPtr<const AccAttributes> attrs =
         isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
-                 : point.GetTextAttributesLocalAcc(aIncludeDefaults);
+                 : point.GetTextAttributesLocalAcc();
     if (attrs && lastAttrs && !attrs->Equal(lastAttrs)) {
       return *this;
     }
   }
-  TextLeafPoint lastPoint(mAcc, 0);
+  TextLeafPoint lastPoint = *this;
   for (;;) {
+    if (TextLeafPoint spelling = lastPoint.FindSpellingErrorSameAcc(
+            aDirection, aIncludeOrigin && lastPoint.mAcc == mAcc)) {
+      // A spelling error starts or ends somewhere in the Accessible we're
+      // considering. This causes an attribute change, so return that point.
+      return spelling;
+    }
     TextLeafPoint point;
     point.mAcc = aDirection == eDirNext ? lastPoint.mAcc->NextSibling()
                                         : lastPoint.mAcc->PrevSibling();
@@ -1102,14 +1355,15 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
     }
     RefPtr<const AccAttributes> attrs =
         isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
-                 : point.GetTextAttributesLocalAcc(aIncludeDefaults);
+                 : point.GetTextAttributesLocalAcc();
     if (attrs && lastAttrs && !attrs->Equal(lastAttrs)) {
       // The attributes change here. If we're moving forward, we want to
       // return this point. If we're moving backward, we've now moved before
-      // the start of the attrs run containing the origin, so return the last
-      // point we hit.
+      // the start of the attrs run containing the origin, so return that start
+      // point; i.e. the start of the last Accessible we hit.
       if (aDirection == eDirPrevious) {
         point = lastPoint;
+        point.mOffset = 0;
       }
       if (!aIncludeOrigin && point == *this) {
         MOZ_ASSERT(aDirection == eDirPrevious);
@@ -1120,6 +1374,12 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
       return point;
     }
     lastPoint = point;
+    if (aDirection == eDirPrevious) {
+      // On the next iteration, we want to search for spelling errors from the
+      // end of this Accessible.
+      lastPoint.mOffset =
+          static_cast<int32_t>(nsAccUtils::TextLength(point.mAcc));
+    }
     lastAttrs = attrs;
   }
   // We couldn't move any further. Use the start/end.
@@ -1131,6 +1391,12 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
 }
 
 LayoutDeviceIntRect TextLeafPoint::CharBounds() {
+  if (mAcc && !mAcc->IsText()) {
+    // If we're dealing with an empty embedded object, return the
+    // accessible's non-text bounds.
+    return mAcc->Bounds();
+  }
+
   if (!mAcc || !mAcc->IsRemote() || !mAcc->AsRemote() ||
       !mAcc->AsRemote()->mCachedFields) {
     return LayoutDeviceIntRect();
@@ -1138,7 +1404,12 @@ LayoutDeviceIntRect TextLeafPoint::CharBounds() {
 
   RemoteAccessible* acc = mAcc->AsRemote();
   if (Maybe<nsTArray<nsRect>> charBounds = acc->GetCachedCharData()) {
-    return acc->BoundsWithOffset(Some(charBounds->ElementAt(mOffset)));
+    if (mOffset < static_cast<int32_t>(charBounds->Length())) {
+      return acc->BoundsWithOffset(Some(charBounds->ElementAt(mOffset)));
+    }
+    // It is valid for a client to call this with an offset 1 after the last
+    // character because of the insertion point at the end of text boxes.
+    MOZ_ASSERT(mOffset == static_cast<int32_t>(charBounds->Length()));
   }
 
   return LayoutDeviceIntRect();

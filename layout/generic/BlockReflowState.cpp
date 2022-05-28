@@ -274,6 +274,15 @@ bool BlockReflowState::FloatAvoidingBlockFitsInAvailSpace(
     // somewhat expensive.
     return true;
   }
+
+  // |aFloatAvailableSpace| was computed as having a negative size, which means
+  // there are floats on both sides pushing inwards past each other, and
+  // |aFloatAvoidingBlock| would necessarily intersect a float if we put it
+  // here. So, it doesn't fit.
+  if (aFloatAvailableSpace.ISizeIsActuallyNegative()) {
+    return false;
+  }
+
   WritingMode wm = mReflowInput.GetWritingMode();
   nsBlockFrame::FloatAvoidingISizeToClear replacedISize =
       nsBlockFrame::ISizeToClearPastFloats(*this, aFloatAvailableSpace.mRect,

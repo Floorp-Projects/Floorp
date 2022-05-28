@@ -6,35 +6,40 @@
 "use strict";
 
 add_task(async function() {
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-
   UrlbarPrefs.set("autoFill.adaptiveHistory.enabled", true);
 
-  await PlacesTestUtils.addVisits([{ uri: "http://example.com/test" }]);
+  await PlacesUtils.history.clear();
+  await PlacesTestUtils.addVisits(["http://example.com/test"]);
   await UrlbarUtils.addToInputHistory("http://example.com/test", "exa");
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window: win,
+    window,
     value: "exa",
     fireInputEvent: true,
   });
 
-  const details = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
+  const details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.ok(details.autofill);
-  Assert.equal(win.gURLBar.value, "example.com/test");
-  Assert.equal(win.gURLBar.selectionStart, "exa".length);
-  Assert.equal(win.gURLBar.selectionEnd, "example.com/test".length);
+  Assert.equal(gURLBar.value, "example.com/test");
+  Assert.equal(gURLBar.selectionStart, "exa".length);
+  Assert.equal(gURLBar.selectionEnd, "example.com/test".length);
 
-  await searchAndCheck("e", "example.com/test", win);
-  await searchAndCheck("ex", "example.com/test", win);
-  await searchAndCheck("exa", "example.com/test", win);
+  await searchAndCheck("e", "example.com/", window);
+  await searchAndCheck("ex", "example.com/", window);
+  await searchAndCheck("exa", "example.com/test", window);
+  await searchAndCheck("exam", "example.com/test", window);
+  await searchAndCheck("example.com", "example.com/test", window);
+  await searchAndCheck("example.com/", "example.com/test", window);
+  await searchAndCheck("example.com/t", "example.com/test", window);
+  await searchAndCheck("example.com/test", "example.com/test", window);
 
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
+  await PlacesUtils.history.clear();
   UrlbarPrefs.clear("autoFill.adaptiveHistory.enabled");
-  await cleanUp(win);
-  await BrowserTestUtils.closeWindow(win);
 });
 
 async function searchAndCheck(searchString, expectedAutofillValue, win) {
+  win.gURLBar.value = "";
   win.gURLBar.value = searchString;
 
   // Placeholder autofill is done on input, so fire an input event.  As the
@@ -44,17 +49,11 @@ async function searchAndCheck(searchString, expectedAutofillValue, win) {
   // completes.
   UrlbarTestUtils.fireInputEvent(win);
 
+  await UrlbarTestUtils.promiseSearchComplete(win);
+
   // Check the input value and selection immediately, before waiting on the
   // search to complete.
   Assert.equal(win.gURLBar.value, expectedAutofillValue);
   Assert.equal(win.gURLBar.selectionStart, searchString.length);
   Assert.equal(win.gURLBar.selectionEnd, expectedAutofillValue.length);
-
-  await UrlbarTestUtils.promiseSearchComplete(win);
-}
-
-async function cleanUp(win) {
-  await UrlbarTestUtils.promisePopupClose(win, () => win.gURLBar.blur());
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesUtils.history.clear();
 }

@@ -23,15 +23,37 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud, "Object { a: 1 }"));
+  const message = await waitFor(() =>
+    findConsoleAPIMessage(hud, "Object { a: 1 }")
+  );
   const [objectA, objectB] = message.querySelectorAll(
     ".object-inspector .objectBox-object"
   );
-  const number = findMessage(hud, "100", ".objectBox");
-  const string = findMessage(hud, "foo", ".objectBox");
-  const bool = findMessage(hud, "false", ".objectBox");
-  const nullMessage = findMessage(hud, "null", ".objectBox");
-  const undefinedMsg = findMessage(hud, "undefined", ".objectBox");
+  const number = findMessagePartByType(hud, {
+    text: "100",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
+  const string = findMessagePartByType(hud, {
+    text: "foo",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
+  const bool = findMessagePartByType(hud, {
+    text: "false",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
+  const nullMessage = findMessagePartByType(hud, {
+    text: "null",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
+  const undefinedMsg = findMessagePartByType(hud, {
+    text: "undefined",
+    typeSelector: ".console-api",
+    partSelector: ".objectBox",
+  });
 
   info("Showing sidebar for {a:1}");
   await showSidebarWithContextMenu(hud, objectA, true);
@@ -85,7 +107,7 @@ add_task(async function() {
   ok(sidebarText.includes("b: 1"), "Sidebar contents shown for {b:1}");
 
   info("Showing sidebar for Error object");
-  const errorMsg = findMessage(hud, "CustomServerError:");
+  const errorMsg = findConsoleAPIMessage(hud, "CustomServerError:");
   await showSidebarWithContextMenu(hud, errorMsg, false);
 
   sidebarContents = hud.ui.document.querySelector(".sidebar-contents");

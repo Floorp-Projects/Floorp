@@ -505,11 +505,10 @@ void RangeUpdater::DidRemoveContainer(const Element& aRemovedElement,
 
 void RangeUpdater::DidMoveNode(const nsINode& aOldParent, uint32_t aOldOffset,
                                const nsINode& aNewParent, uint32_t aNewOffset) {
-  if (NS_WARN_IF(!mLocked)) {
+  if (mLocked) {
+    // Do nothing if moving nodes is occurred while changing the container.
     return;
   }
-  mLocked = false;
-
   for (RefPtr<RangeItem>& rangeItem : mArray) {
     if (NS_WARN_IF(!rangeItem)) {
       return;

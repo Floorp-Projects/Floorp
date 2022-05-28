@@ -18,14 +18,14 @@ add_task(async function() {
   const store = hud.ui.wrapper.getStore();
   logAllStoreChanges(hud);
 
-  const onMessagesLogged = waitForMessage(hud, "log-6");
+  const onMessagesLogged = waitForMessageByType(hud, "log-6", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.doLog();
   });
   await onMessagesLogged;
 
   info("Test a group at root level");
-  let node = findMessage(hud, "group-1");
+  let node = findConsoleAPIMessage(hud, "group-1");
   testClass(node, "startGroup");
   testIndent(node, 0);
   await testGroupToggle({
@@ -37,12 +37,12 @@ add_task(async function() {
   });
 
   info("Test a message in a 1 level deep group");
-  node = findMessage(hud, "log-1");
+  node = findConsoleAPIMessage(hud, "log-1");
   testClass(node, "log");
   testIndent(node, 1);
 
   info("Test a group in a 1 level deep group");
-  node = findMessage(hud, "group-2");
+  node = findConsoleAPIMessage(hud, "group-2");
   testClass(node, "startGroup");
   testIndent(node, 1);
   await testGroupToggle({
@@ -54,24 +54,24 @@ add_task(async function() {
   });
 
   info("Test a message in a 2 level deep group");
-  node = findMessage(hud, "log-2");
+  node = findConsoleAPIMessage(hud, "log-2");
   testClass(node, "log");
   testIndent(node, 2);
 
   info(
     "Test a message in a 1 level deep group, after closing a 2 level deep group"
   );
-  node = findMessage(hud, "log-3");
+  node = findConsoleAPIMessage(hud, "log-3");
   testClass(node, "log");
   testIndent(node, 1);
 
   info("Test a message at root level, after closing all the groups");
-  node = findMessage(hud, "log-4");
+  node = findConsoleAPIMessage(hud, "log-4");
   testClass(node, "log");
   testIndent(node, 0);
 
   info("Test a collapsed group at root level");
-  node = findMessage(hud, "group-3");
+  node = findConsoleAPIMessage(hud, "group-3");
   testClass(node, "startGroupCollapsed");
   testIndent(node, 0);
   await testGroupToggle({
@@ -93,7 +93,7 @@ add_task(async function() {
   });
 
   info("Test a message at root level, after closing a collapsed group");
-  node = findMessage(hud, "log-6");
+  node = findConsoleAPIMessage(hud, "log-6");
   testClass(node, "log");
   testIndent(node, 0);
   const nodes = hud.ui.outputNode.querySelectorAll(".message");

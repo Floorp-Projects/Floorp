@@ -29,7 +29,12 @@ add_task(async function() {
   info("Test :screenshot to file");
   const file = FileUtils.getFile("TmpD", ["TestScreenshotFile.png"]);
   const command = `:screenshot ${file.path} ${dpr}`;
-  await executeAndWaitForMessage(hud, command, `Saved to ${file.path}`);
+  await executeAndWaitForMessageByType(
+    hud,
+    command,
+    `Saved to ${file.path}`,
+    ".console-api"
+  );
 
   const fileExists = file.exists();
   if (!fileExists) {
@@ -82,10 +87,11 @@ add_task(async function() {
   });
 
   info("Test :screenshot to file default filename");
-  const message = await executeAndWaitForMessage(
+  const message = await executeAndWaitForMessageByType(
     hud,
     `:screenshot ${dpr}`,
-    `Saved to`
+    `Saved to`,
+    ".console-api"
   );
   const date = new Date();
   const monthString = (date.getMonth() + 1).toString().padStart(2, "0");

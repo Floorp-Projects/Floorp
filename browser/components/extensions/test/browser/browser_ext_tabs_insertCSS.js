@@ -300,18 +300,10 @@ add_task(async function test_csscode_cleanup_on_closed_windows() {
 
   // Look for nsIDOMWindowUtils.removeSheet and
   // nsIDOMWindowUtils.removeSheetUsingURIString errors.
-  messages = messages.filter(
-    m =>
-      m.errorMessage &&
-      m.errorMessage.includes(
-        "(NS_ERROR_FAILURE) [nsIDOMWindowUtils.removeSheet"
-      )
-  );
-
   AddonTestUtils.checkMessages(
     messages,
     {
-      forbidden: [/nsIDOMWindowUtils.removeSheet/],
+      forbidden: [{ errorMessage: /nsIDOMWindowUtils.removeSheet/ }],
     },
     "Expect no remoteSheet errors"
   );

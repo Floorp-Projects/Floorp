@@ -23,10 +23,9 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI_QUIRKY_DOCTYPE);
 
   const quirkyDocTypeMessage = await waitFor(() =>
-    findMessage(
+    findWarningMessage(
       hud,
-      `This page is in Quirks Mode. Page layout may be impacted. For Standards Mode use “<!DOCTYPE html>”`,
-      ".message.warn"
+      `This page is in Quirks Mode. Page layout may be impacted. For Standards Mode use “<!DOCTYPE html>”`
     )
   );
   ok(!!quirkyDocTypeMessage, "Quirky doctype warning message is visible");
@@ -50,10 +49,9 @@ add_task(async function() {
   await navigateTo(TEST_URI_ALMOST_STANDARD_DOCTYPE);
 
   const almostStandardDocTypeMessage = await waitFor(() =>
-    findMessage(
+    findWarningMessage(
       hud,
-      `This page is in Almost Standards Mode. Page layout may be impacted. For Standards Mode use “<!DOCTYPE html>”`,
-      ".message.warn"
+      `This page is in Almost Standards Mode. Page layout may be impacted. For Standards Mode use “<!DOCTYPE html>”`
     )
   );
   ok(
@@ -80,10 +78,9 @@ add_task(async function() {
   await navigateTo(TEST_URI_NO_DOCTYPE);
 
   const noDocTypeMessage = await waitFor(() =>
-    findMessage(
+    findWarningMessage(
       hud,
-      `This page is in Quirks Mode. Page layout may be impacted. For Standards Mode use “<!DOCTYPE html>”`,
-      ".message.warn"
+      `This page is in Quirks Mode. Page layout may be impacted. For Standards Mode use “<!DOCTYPE html>”`
     )
   );
   ok(!!noDocTypeMessage, "No doctype warning message is visible");
@@ -106,7 +103,7 @@ add_task(async function() {
   info("Wait for a bit to make sure there is no doctype messages");
   await wait(1000);
   ok(
-    !findMessage(hud, `doctype`, ".message.warn"),
+    !findWarningMessage(hud, `doctype`),
     "There is no doctype warning message"
   );
 

@@ -3,12 +3,20 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import classnames from "classnames";
 
 import "./OutlineFilter.css";
 
 export default class OutlineFilter extends Component {
   state = { focused: false };
+
+  static get propTypes() {
+    return {
+      filter: PropTypes.string.isRequired,
+      updateFilter: PropTypes.func.isRequired,
+    };
+  }
 
   setFocus = shouldFocus => {
     this.setState({ focused: shouldFocus });

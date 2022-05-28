@@ -29,7 +29,7 @@ add_task(async function() {
 
   info("Execute each test value in the console");
   for (const value of TEST_VALUES) {
-    await executeAndWaitForMessage(hud, value, "", ".result");
+    await executeAndWaitForResultMessage(hud, value, "");
   }
 
   EventUtils.synthesizeKey("KEY_ArrowUp");

@@ -31,10 +31,11 @@ add_task(async function() {
   const command = `:screenshot ${file.path} ${dpr} --fullpage`;
   // `-fullpage` is appended at the end of the provided filename
   const actualFilePath = file.path.replace(".png", "-fullpage.png");
-  await executeAndWaitForMessage(
+  await executeAndWaitForMessageByType(
     hud,
     command,
-    `Saved to ${file.path.replace(".png", "-fullpage.png")}`
+    `Saved to ${file.path.replace(".png", "-fullpage.png")}`,
+    ".console-api"
   );
 
   info("Create an image using the downloaded file as source");

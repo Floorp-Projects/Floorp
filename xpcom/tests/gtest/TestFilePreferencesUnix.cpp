@@ -151,20 +151,14 @@ TEST(TestFilePreferencesUnix, Simple)
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(newPath));
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->AppendRelativeNativePath("allowed/../forbidden_dir/file"_ns);
-  ASSERT_EQ(rv, NS_OK);
-  rv = newPath->Exists(&exists);
-  ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
+  ASSERT_EQ(rv, NS_ERROR_FILE_UNRECOGNIZED_PATH);
 
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(newPath));
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->AppendNative("allowed"_ns);
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->AppendNative(".."_ns);
-  ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendNative("forbidden_dir"_ns);
-  ASSERT_EQ(rv, NS_OK);
-  rv = newPath->Exists(&exists);
-  ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
+  ASSERT_EQ(rv, NS_ERROR_FILE_UNRECOGNIZED_PATH);
 
   nsAutoCString trickyPath(tempPath);
   trickyPath.AppendLiteral("/allowed/../forbidden_dir/file");

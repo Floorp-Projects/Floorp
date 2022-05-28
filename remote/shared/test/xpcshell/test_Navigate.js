@@ -13,6 +13,7 @@ const {
 const CURRENT_URI = Services.io.newURI("http://foo.bar/");
 const INITIAL_URI = Services.io.newURI("about:blank");
 const TARGET_URI = Services.io.newURI("http://foo.cheese/");
+const TARGET_URI_IS_ERROR_PAGE = Services.io.newURI("doesnotexist://");
 const TARGET_URI_WITH_HASH = Services.io.newURI("http://foo.cheese/#foo");
 
 class MockRequest {
@@ -52,6 +53,27 @@ class MockWebProgress {
     }
   }
 
+  sendLocationChange(options = {}) {
+    const { flag = 0 } = options;
+
+    this.documentRequest = null;
+
+    if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
+      this.browsingContext.currentURI = TARGET_URI_WITH_HASH;
+    } else if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
+      this.browsingContext.currentURI = TARGET_URI_IS_ERROR_PAGE;
+    }
+
+    this.listener?.onLocationChange(
+      this,
+      this.documentRequest,
+      TARGET_URI_WITH_HASH,
+      flag
+    );
+
+    return new Promise(executeSoon);
+  }
+
   sendStartState(options = {}) {
     const { coop = false, isInitial = false } = options;
 
@@ -79,7 +101,9 @@ class MockWebProgress {
     return new Promise(executeSoon);
   }
 
-  sendStopState() {
+  sendStopState(options = {}) {
+    const { errorFlag = 0 } = options;
+
     this.browsingContext.currentURI = this.documentRequest.originalURI;
 
     this.isLoadingDocument = false;
@@ -89,21 +113,7 @@ class MockWebProgress {
       this,
       this.documentRequest,
       Ci.nsIWebProgressListener.STATE_STOP,
-      null
-    );
-
-    return new Promise(executeSoon);
-  }
-
-  sendLocationChangeHashChange() {
-    this.documentRequest = null;
-    this.browsingContext.currentURI = TARGET_URI_WITH_HASH;
-
-    this.listener?.onLocationChange(
-      this,
-      this.documentRequest,
-      TARGET_URI_WITH_HASH,
-      Ci.nsIWebProgressListener.LOCATION_CHANGE_HASHCHANGE
+      errorFlag
     );
 
     return new Promise(executeSoon);
@@ -126,6 +136,14 @@ const hasPromiseResolved = async function(promise) {
   // Make sure microtasks have time to run.
   await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
   return resolved;
+};
+
+const hasPromiseRejected = async function(promise) {
+  let rejected = false;
+  promise.catch(() => (rejected = true));
+  // Make sure microtasks have time to run.
+  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
+  return rejected;
 };
 
 add_test(
@@ -563,6 +581,22 @@ add_test(
   }
 );
 
+add_test(async function test_ProgressListener_isStarted() {
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+
+  const progressListener = new ProgressListener(webProgress);
+  ok(!progressListener.isStarted);
+
+  progressListener.start();
+  ok(progressListener.isStarted);
+
+  progressListener.stop();
+  ok(!progressListener.isStarted);
+
+  run_next_test();
+});
+
 add_test(async function test_ProgressListener_notWaitForExplicitStart() {
   // Create a webprogress and start it before creating the progress listener.
   const browsingContext = new MockTopContext();
@@ -621,30 +655,78 @@ add_test(async function test_ProgressListener_waitForExplicitStart() {
   run_next_test();
 });
 
-add_test(async function test_ProgressListener_resolveWhenHashChange() {
+add_test(
+  async function test_ProgressListener_resolveWhenNavigatingInsideDocument() {
+    const browsingContext = new MockTopContext();
+    const webProgress = browsingContext.webProgress;
+
+    const progressListener = new ProgressListener(webProgress);
+    const navigated = progressListener.start();
+
+    ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved");
+
+    // Send hash change location change notification to complete the navigation
+    await webProgress.sendLocationChange({
+      flag: Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT,
+    });
+
+    ok(await hasPromiseResolved(navigated), "Listener has resolved");
+
+    const { currentURI, targetURI } = progressListener;
+    equal(
+      currentURI.spec,
+      TARGET_URI_WITH_HASH.spec,
+      "Expected current URI has been set"
+    );
+    equal(
+      targetURI.spec,
+      TARGET_URI_WITH_HASH.spec,
+      "Expected target URI has been set"
+    );
+
+    run_next_test();
+  }
+);
+
+add_test(async function test_ProgressListener_navigationRejectedOnErrorPage() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
-  const progressListener = new ProgressListener(webProgress);
+  const progressListener = new ProgressListener(webProgress, {
+    waitForExplicitStart: false,
+  });
   const navigated = progressListener.start();
 
-  ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved");
+  await webProgress.sendStartState();
+  await webProgress.sendLocationChange({
+    flag:
+      Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT |
+      Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE,
+  });
 
-  // Send hash change location change notification to complete the navigation
-  await webProgress.sendLocationChangeHashChange();
-
-  ok(await hasPromiseResolved(navigated), "Listener has resolved");
-
-  const { currentURI, targetURI } = progressListener;
-  equal(
-    currentURI.spec,
-    TARGET_URI_WITH_HASH.spec,
-    "Expected current URI has been set"
+  ok(
+    await hasPromiseRejected(navigated),
+    "Listener has rejected in location change for error page"
   );
-  equal(
-    targetURI.spec,
-    TARGET_URI_WITH_HASH.spec,
-    "Expected target URI has been set"
+
+  run_next_test();
+});
+
+add_test(async function test_ProgressListener_navigationRejectedOnStopState() {
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+
+  const progressListener = new ProgressListener(webProgress, {
+    waitForExplicitStart: false,
+  });
+  const navigated = progressListener.start();
+
+  await webProgress.sendStartState();
+  await webProgress.sendStopState({ errorFlag: Cr.NS_BINDING_ABORTED });
+
+  ok(
+    await hasPromiseRejected(navigated),
+    "Listener has rejected in stop state for erroneous navigation"
   );
 
   run_next_test();

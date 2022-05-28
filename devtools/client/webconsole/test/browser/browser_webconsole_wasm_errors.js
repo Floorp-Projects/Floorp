@@ -10,7 +10,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Wasm errors`;
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const onCompileError = waitForMessage(
+  const onCompileError = waitForMessageByType(
     hud,
     `Uncaught (in promise) CompileError: wasm validation error: at offset 0: failed to match magic number`,
     ".error"
@@ -19,7 +19,7 @@ add_task(async function() {
   await onCompileError;
   ok(true, "The expected error message is displayed for CompileError");
 
-  const onLinkError = waitForMessage(
+  const onLinkError = waitForMessageByType(
     hud,
     `Uncaught (in promise) LinkError: import object field 'f' is not a Function`,
     ".error"
@@ -34,7 +34,7 @@ add_task(async function() {
   await onLinkError;
   ok(true, "The expected error message is displayed for LinkError");
 
-  const onRuntimeError = waitForMessage(
+  const onRuntimeError = waitForMessageByType(
     hud,
     "Uncaught RuntimeError: unreachable executed",
     ".error"

@@ -1,0 +1,45 @@
+<html>
+
+<head>
+  <title>WebMIDI MIDIMessageEvent Test</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="application/javascript" src="MIDITestUtils.js"></script>
+</head>
+
+<body>
+  <script class="testbody" type="application/javascript">
+    add_task(async () => {
+      await MIDITestUtils.permissionSetup(true);
+
+      is(new MIDIMessageEvent('eventType').bubbles, false, "bubbles field is false by default");
+      is(new MIDIMessageEvent('eventType').cancelable, false, "cancelable field is false by default");
+      isDeeply(new MIDIMessageEvent('eventType').data, [], "The default message is empty");
+
+      is(new MIDIMessageEvent('eventType', { bubbles: false }).bubbles, false, "bubbles is passed");
+      is(new MIDIMessageEvent('eventType', { bubbles: true }).bubbles, true, "bubbles is passed");
+
+      is(new MIDIMessageEvent('eventType', { cancelable: false }).cancelable, false, "cancelable is passed");
+      is(new MIDIMessageEvent('eventType', { cancelable: true }).cancelable, true, "cancelable is passed");
+
+      var data = new Uint8Array(16);
+      isDeeply(new MIDIMessageEvent('eventType', { data }).data, data, "data is passed");
+
+      // All initializers are passed.
+      data = new Uint8Array(3);
+      is(new MIDIMessageEvent('eventType', { bubbles: true, cancelable: true, data }).bubbles, true, "all initializers are passed");
+      is(new MIDIMessageEvent('eventType', { bubbles: true, cancelable: true, data }).cancelable, true, "all initializers are passed");
+      isDeeply(new MIDIMessageEvent('eventType', { bubbles: true, cancelable: true, data }).data, data, "all initializers are passed");
+
+      if (window.SharedArrayBuffer) {
+        data = new Uint8Array(new SharedArrayBuffer(3));
+        doesThrow(() => { new MIDIMessageEvent('eventType', { data }); }, "shared array buffers are rejected");
+      } else {
+        todo(false, 'SharedArrayBuffer is unavailable.');
+      }
+    });
+  </script>
+</body>
+
+</html>

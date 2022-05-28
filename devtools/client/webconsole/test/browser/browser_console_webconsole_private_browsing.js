@@ -56,8 +56,12 @@ async function testBrowserConsole(publicTab) {
   let hud = await openConsole(privateTab);
   ok(hud, "web console opened");
 
-  const onLogMessage = waitForMessage(hud, PRIVATE_MESSAGE);
-  const onErrorMessage = waitForMessage(hud, PRIVATE_EXCEPTION, ".error");
+  const onLogMessage = waitForMessageByType(
+    hud,
+    PRIVATE_MESSAGE,
+    ".console-api"
+  );
+  const onErrorMessage = waitForMessageByType(hud, PRIVATE_EXCEPTION, ".error");
   logPrivateMessages(privateBrowser.selectedBrowser);
 
   await onLogMessage;
@@ -66,10 +70,10 @@ async function testBrowserConsole(publicTab) {
 
   info("Check that commands executed in private windows aren't put in history");
   const privateCommand = `"command in private window"`;
-  await executeAndWaitForMessage(hud, privateCommand, "", ".result");
+  await executeAndWaitForResultMessage(hud, privateCommand, "");
 
   const publicHud = await openConsole(publicTab);
-  const historyMessage = await executeAndWaitForMessage(
+  const historyMessage = await executeAndWaitForMessageByType(
     publicHud,
     ":history",
     "",
@@ -90,8 +94,8 @@ async function testBrowserConsole(publicTab) {
   hud = await openConsole(privateTab);
   ok(hud, "web console reopened");
 
-  await waitFor(() => findMessage(hud, PRIVATE_MESSAGE));
-  await waitFor(() => findMessage(hud, PRIVATE_EXCEPTION, ".message.error"));
+  await waitFor(() => findConsoleAPIMessage(hud, PRIVATE_MESSAGE));
+  await waitFor(() => findErrorMessage(hud, PRIVATE_EXCEPTION));
   ok(
     true,
     "Messages are still displayed after closing and reopening the console"
@@ -103,9 +107,10 @@ async function testBrowserConsole(publicTab) {
   hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   // Add a non-private message to the console.
-  const onBrowserConsoleNonPrivateMessage = waitForMessage(
+  const onBrowserConsoleNonPrivateMessage = waitForMessageByType(
     hud,
-    NON_PRIVATE_MESSAGE
+    NON_PRIVATE_MESSAGE,
+    ".console-api"
   );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [NON_PRIVATE_MESSAGE], function(
     msg
@@ -121,11 +126,12 @@ async function testBrowserConsole(publicTab) {
   // console would have displayed any cached messages by now.
   assertNoPrivateMessages(hud);
 
-  const onBrowserConsolePrivateLogMessage = waitForMessage(
+  const onBrowserConsolePrivateLogMessage = waitForMessageByType(
     hud,
-    PRIVATE_MESSAGE
+    PRIVATE_MESSAGE,
+    ".console-api"
   );
-  const onBrowserConsolePrivateErrorMessage = waitForMessage(
+  const onBrowserConsolePrivateErrorMessage = waitForMessageByType(
     hud,
     PRIVATE_EXCEPTION,
     ".error"
@@ -144,7 +150,7 @@ async function testBrowserConsole(publicTab) {
   await onPrivateMessagesCleared;
 
   ok(
-    findMessage(hud, NON_PRIVATE_MESSAGE),
+    findConsoleAPIMessage(hud, NON_PRIVATE_MESSAGE),
     "non-private messages are still shown after private window closed"
   );
   assertNoPrivateMessages(hud);
@@ -168,12 +174,12 @@ function logPrivateMessages(browser) {
 
 function assertNoPrivateMessages(hud) {
   is(
-    findMessage(hud, PRIVATE_MESSAGE, ".message:not(.error)")?.textContent,
+    findConsoleAPIMessage(hud, PRIVATE_MESSAGE, ":not(.error)")?.textContent,
     undefined,
     "no console message displayed"
   );
   is(
-    findMessage(hud, PRIVATE_EXCEPTION, ".message.error")?.textContent,
+    findErrorMessage(hud, PRIVATE_EXCEPTION)?.textContent,
     undefined,
     "no exception displayed"
   );

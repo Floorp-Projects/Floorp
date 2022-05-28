@@ -1,0 +1,4 @@
+root:
+  items:
+    - image: solid-color(0, 255, 0, 127, 400, 400)
+      bounds: 0 0 400 400

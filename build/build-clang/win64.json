@@ -1,5 +1,4 @@
 {
-    "build_wasm": true,
     "cc": "cl.exe",
     "cxx": "cl.exe",
     "ml": "ml64.exe"

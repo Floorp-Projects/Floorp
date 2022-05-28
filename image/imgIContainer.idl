@@ -318,6 +318,12 @@ interface imgIContainer : nsISupports
   [noscript, notxpcom] boolean willDrawOpaqueNow();
 
   /**
+   * Returns true if this image has a frame and the frame currently has a
+   * least 1 decoded pixel. Only valid for raster images.
+   */
+  [noscript, notxpcom] boolean hasDecodedPixels();
+
+  /**
    * @return true if getImageContainer() is expected to return a valid
    *         ImageContainer when passed the given @Renderer and @Flags
    *         parameters.

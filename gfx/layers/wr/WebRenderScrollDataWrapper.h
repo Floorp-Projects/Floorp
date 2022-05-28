@@ -482,6 +482,29 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     return mLayer;
   }
 
+  template <int Level>
+  size_t Dump(gfx::TreeLog<Level>& aOut) const {
+    std::string result = "(invalid)";
+    if (!IsValid()) {
+      aOut << result;
+      return result.length();
+    }
+    if (AtBottomLayer()) {
+      if (mData != nullptr) {
+        const WebRenderLayerScrollData* layerData =
+            mData->GetLayerData(mLayerIndex);
+        if (layerData != nullptr) {
+          std::stringstream ss;
+          layerData->Dump(ss, *mData);
+          result = ss.str();
+          aOut << result;
+          return result.length();
+        }
+      }
+    }
+    return 0;
+  }
+
  private:
   bool AtBottomLayer() const { return mMetadataIndex == 0; }
 

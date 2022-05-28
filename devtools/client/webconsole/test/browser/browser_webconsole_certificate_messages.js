@@ -36,7 +36,7 @@ add_task(async function() {
   // Run with all versions enabled for this test.
   Services.prefs.setIntPref("security.tls.version.min", 1);
   Services.prefs.setIntPref("security.tls.version.max", 4);
-  const onContentLog = waitForMessage(hud, TRIGGER_MSG);
+  const onContentLog = waitForMessageByType(hud, TRIGGER_MSG, ".console-api");
   await navigateTo(TLS_1_0_URL);
   await onContentLog;
 

@@ -648,13 +648,13 @@ fails-if(Android&&!asyncPan) == 371561-1.html 371561-1-ref.html
 == 371925-1b.html 371925-1-ref.html
 == 372037-1.html 372037-1-ref.html
 == 372062-1.html 372062-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 372063-1.html 372063-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 372553-1.html 372553-1-ref.html # Bug 1392106
+== 372063-1.html 372063-1-ref.html
+== 372553-1.html 372553-1-ref.html
 == 372632-1.html 372632-1-ref.html
 == 372768-1.html 372768-1-ref.html
 fuzzy-if(winWidget,46-92,1-2) == 373295-1.html 373295-1-ref.html
 == 373298-1.html 373298-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 373381-1.html 373381-1-ref.html # Bug 1392106
+== 373381-1.html 373381-1-ref.html
 fuzzy-if(!Android,0-2,0-40) == 373381-2.html 373381-2-ref.html
 random-if(d2d) == 373381-3.html 373381-3-ref.html
 == 373381-4.html 373381-4-ref.html
@@ -681,7 +681,7 @@ fails-if(Android) != 376532-3.html 376532-3-ref.html
 == 379178-html.html 379178-html-ref.html
 == 379178-svg.svg 379178-svg-ref.svg
 fuzzy(0-1,0-500) == 379316-1.html 379316-1-ref.html
-fails-if(Android) random-if(cocoaWidget) fuzzy(0-8,0-500) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 379316-2.html 379316-2-ref.html # bug 379786, Bug 1392106
+fails-if(Android) random-if(cocoaWidget) fuzzy(0-8,0-500) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
 # fuzzy because of different border rendering approach in bug 1185636
@@ -689,8 +689,8 @@ fuzzy(0-37,0-20) == 379349-1b.xhtml 379349-1-ref.xhtml
 fuzzy(0-37,0-20) == 379349-1c.xhtml 379349-1-ref.xhtml
 == 379349-2a.xhtml 379349-2-ref.xhtml
 == 379349-2b.xhtml 379349-2-ref.xhtml
-fuzzy-if(Android,0-2,0-140) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 379349-3a.xhtml 379349-3-ref.xhtml # bug 1392106
-fuzzy-if(Android,0-2,0-140) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 379349-3b.xhtml 379349-3-ref.xhtml # bug 1392106
+fuzzy-if(Android,0-2,0-140) == 379349-3a.xhtml 379349-3-ref.xhtml
+fuzzy-if(Android,0-2,0-140) == 379349-3b.xhtml 379349-3-ref.xhtml
 == 379361-1.html 379361-1-ref.html
 == 379361-2.html 379361-2-ref.html
 == 379361-3.html 379361-3-ref.html
@@ -709,7 +709,7 @@ fuzzy(0-2,0-5) == 381507-1.html 381507-1-ref.html
 == 382916-1.html 382916-1-ref.html
 == 383035-1.html about:blank
 == 383035-2.html about:blank
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 383488-1.html 383488-1-ref.html # Bug 1392106
+== 383488-1.html 383488-1-ref.html
 == 383551-1.html 383551-1-ref.html
 == 383883-1.html 383883-1-ref.html
 == 383883-2.html 383883-2-ref.html
@@ -747,7 +747,7 @@ fuzzy(0-2,0-3) == 385870-2.html 385870-2-ref.html
 == 386470-1a.html 386470-1-ref.html
 == 386470-1b.html 386470-1-ref.html
 == 386470-1c.html 386470-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 386920-1.html 386920-1-ref.html # Bug 1392106
+== 386920-1.html 386920-1-ref.html
 == 387201-1.html 387201-1-ref.html
 == 387201-2.html about:blank  # Really an assertion test rather than a rendering test
 == 387201-3.html about:blank  # Really an assertion test rather than a rendering test
@@ -762,7 +762,7 @@ fails == 387344-1.html 387344-1-ref.html # scrolling rowgroups were removed in b
 == 389074-1.html 389074-1-ref.html
 == 389224-1.html 389224-1-ref.html
 == 389224-2.html about:blank
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 389468-1.html 389468-1-ref.html # Bug 1392106
+== 389468-1.html 389468-1-ref.html
 == 389623-1.html 389623-1-ref.html
 == 389636-1.html about:blank  # assertion test
 == 389924-1a.html 389924-1-ref.html
@@ -924,7 +924,7 @@ fuzzy-if(winWidget,0-123,0-1600) fuzzy-if(swgl,0-1,0-39) == 409659-1a.html 40965
 != 409659-1c.html 409659-1-ref.html
 fuzzy-if(winWidget,0-123,0-1900) fuzzy-if(swgl,0-1,0-39) == 409659-1d.html 409659-1-ref.html # Bug 1128229
 == 410621-1.html 410621-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 411059-1.html 411059-1-ref.html # Bug 1392106
+== 411059-1.html 411059-1-ref.html
 fuzzy-if(winWidget,46-129,652-770) == 411334-1.xml 411334-1-ref.xml
 == 411367-3.html 411367-3-ref.html
 == 411585-1.html 411585-1-ref.html
@@ -950,8 +950,8 @@ fails == 413027-3.html 413027-3-ref.html
 == 413286-3.html 413286-3-ref.html
 == 413286-4a.html 413286-4-ref.html
 == 413286-4b.html 413286-4-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 413286-5.html 413286-5-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 413286-6.html 413286-6-ref.html # Bug 1392106
+== 413286-5.html 413286-5-ref.html
+== 413286-6.html 413286-6-ref.html
 skip-if(useDrawSnapshot) == 413292-1.html 413292-1-ref.html
 fuzzy(0-1,0-10) == 413361-1.html 413361-1-ref.html # bug 1128229
 == 413840-background-unchanged.html 413840-background-unchanged-ref.html
@@ -1144,13 +1144,13 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 445142-1c.html 445142-1-ref.html
 == 445142-2a.html 445142-2-ref.html
 == 445142-2b.html 445142-2-ref.html
-skip-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(!useDrawSnapshot&&!winWidget) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 446100-1a.html about:blank
-fuzzy-if(winWidget&&isCoverageBuild,178-178,127-127) fails-if(Android) fails-if(usesRepeatResampling) fails-if(!useDrawSnapshot&&!winWidget) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 446100-1b.html about:blank
-skip-if(winWidget&&isCoverageBuild) fuzzy(171-172,192-192) fails-if(!winWidget) fails-if(useDrawSnapshot) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 446100-1c.html about:blank
-skip-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(!winWidget) fails-if(useDrawSnapshot) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 446100-1d.html about:blank
-skip-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(!useDrawSnapshot&&!winWidget) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 446100-1e.html about:blank
-== 446100-1f.html about:blank
-fails-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(Android) fails-if(!useDrawSnapshot&&!winWidget) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 446100-1g.html about:blank
+skip-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(!useDrawSnapshot&&!winWidget) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),86-87,73-73) == 446100-1a.html about:blank
+fuzzy-if(winWidget&&isCoverageBuild,178-178,127-127) fails-if(Android) fails-if(usesRepeatResampling) fails-if(!useDrawSnapshot&&!winWidget) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),177-178,127-127) == 446100-1b.html about:blank
+skip-if(winWidget&&isCoverageBuild) fuzzy(171-172,192-192) fails-if(!winWidget) fails-if(useDrawSnapshot) == 446100-1c.html about:blank
+skip-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(!winWidget) fails-if(useDrawSnapshot) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),111-112,212-212) == 446100-1d.html about:blank
+skip-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(!useDrawSnapshot&&!winWidget) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),31-32,35-35) == 446100-1e.html about:blank
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-141,0-19) == 446100-1f.html about:blank
+fails-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(Android) fails-if(!useDrawSnapshot&&!winWidget) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),141-142,19-19) == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 == 447749-1.html 447749-1-ref.html
 fuzzy(0-127,0-2) == 448193.html 448193-ref.html
@@ -1330,22 +1330,22 @@ pref(browser.display.focus_ring_width,1) == 491180-2.html 491180-2-ref.html
 == 494667-1.html 494667-1-ref.html
 == 494667-2.html 494667-2-ref.html
 == 495274-1.html 495274-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-1a.html 495385-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-1b.html 495385-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-1c.html 495385-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-1d.html 495385-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-1e.html 495385-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-1f.html 495385-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2a.html 495385-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2b.html 495385-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2c.html 495385-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2d.html 495385-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2e.html 495385-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2g.html 495385-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2h.html 495385-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2i.html 495385-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-3.html 495385-3-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-4.html 495385-4-ref.html # Bug 1392106
+== 495385-1a.html 495385-1-ref.html
+== 495385-1b.html 495385-1-ref.html
+== 495385-1c.html 495385-1-ref.html
+== 495385-1d.html 495385-1-ref.html
+== 495385-1e.html 495385-1-ref.html
+== 495385-1f.html 495385-1-ref.html
+== 495385-2a.html 495385-2-ref.html
+== 495385-2b.html 495385-2-ref.html
+== 495385-2c.html 495385-2-ref.html
+== 495385-2d.html 495385-2-ref.html
+== 495385-2e.html 495385-2-ref.html
+== 495385-2g.html 495385-2-ref.html
+== 495385-2h.html 495385-2-ref.html
+== 495385-2i.html 495385-2-ref.html
+== 495385-3.html 495385-3-ref.html
+== 495385-4.html 495385-4-ref.html
 == 496032-1.html 496032-1-ref.html
 == 496840-1.html 496840-1-ref.html
 == 501037.html 501037-ref.html
@@ -1557,9 +1557,9 @@ random-if(winWidget) fuzzy(0-1,0-480) needs-focus == 598726-1.html 598726-1-ref.
 == 599882-2.html 599882-2-ref.html
 == 600045-1.html 600045-1-ref.html
 == 600803-1.html 600803-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 600974-1.html 600974-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 600974-2.html 600974-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 600974-3.html 600974-1-ref.html # Bug 1392106
+== 600974-1.html 600974-1-ref.html
+== 600974-2.html 600974-1-ref.html
+== 600974-3.html 600974-1-ref.html
 == 602200-1.html 602200-1-ref.html
 == 602200-2.html 602200-2-ref.html
 # Canvas with a fractional margin and translate snaps differently; non-WebRender
@@ -1605,10 +1605,10 @@ fuzzy-if(d2d,0-5,0-1) == 622585-1.html 622585-1-ref.html # bug 789402
 fuzzy(0-1,0-40000) == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 fuzzy(0-1,0-500) == 630835-1.html about:blank
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 631352-1.html 631352-1-ref.html # bug 1392106
+== 631352-1.html 631352-1-ref.html
 random-if(winWidget) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
-fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-559) fuzzy-if(!isDebugBuild&&gtkWidget&&/^Linux\x20i686/.test(http.oscpu),0-102,0-140) == 633344-1.html 633344-1-ref.html # bug 1103623, Linux32 from GCC update
+fuzzy-if(!isDebugBuild&&gtkWidget&&/^Linux\x20i686/.test(http.oscpu),0-102,0-140) == 633344-1.html 633344-1-ref.html # bug 1103623, Linux32 from GCC update
 fuzzy(0-1,0-500) == 634232-1.html 634232-1-ref.html
 fuzzy(0-3,0-120000) == 635302-1.html 635302-1-ref.html
 fuzzy(0-1,0-68) fuzzy-if(gtkWidget,0-1,0-70) fuzzy-if(!Android,0-2,0-300) == 635373-1.html 635373-1-ref.html
@@ -1722,7 +1722,7 @@ fuzzy-if(Android,0-4,0-400) == 815593-1.html 815593-1-ref.html
 fuzzy(0-1,0-5) == 816948-1.html 816948-1-ref.html
 == 817019-1.html about:blank
 fuzzy(0-1,0-5) == 818276-1.html 818276-1-ref.html
-fuzzy-if(asyncPan,0-190,0-510) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-510) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 825999.html 825999-ref.html # Bug 1392106
+fuzzy-if(asyncPan,0-190,0-510) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-510) == 825999.html 825999-ref.html
 == 827577-1a.html 827577-1-ref.html
 == 827577-1b.html 827577-1-ref.html
 == 827799-1.html about:blank
@@ -1759,7 +1759,7 @@ fuzzy(0-1,0-3) == 931464-1.html 931464-1-ref.html
 == 931853-quirks.html 931853-quirks-ref.html
 == 933264-1.html 933264-1-ref.html
 test-pref(font.minimum-size.x-western,32) fuzzy-if(Android,0-45,0-324) == 935056-1.html 935056-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 936670-1.svg 936670-1-ref.svg # Bug 1392106
+== 936670-1.svg 936670-1-ref.svg
 == 941940-1.html 941940-1-ref.html
 fails == 942017.html 942017-ref.html # bug 942017
 fuzzy(0-2,0-160000) fuzzy-if(winWidget&&isDebugBuild&&layersGPUAccelerated&&!is64Bit,1-1,12-175) == 942672-1.html 942672-1-ref.html
@@ -1791,7 +1791,7 @@ pref(layout.css.overflow-clip-box.enabled,true) fuzzy(0-2,0-845) == 992447.html 
 == 1003425-1.html 1003425-1-ref.html
 == 1003425-2.html 1003425-2-ref.html
 == 1005405-1.html 1005405-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1012640-1.html 1012640-1-ref.html # Bug 1392106
+== 1012640-1.html 1012640-1-ref.html
 == 1013054-1.html 1013054-1-ref.html
 == 1018522-1.html 1018522-1-ref.html
 == 1021564-1.html 1021564-ref.html

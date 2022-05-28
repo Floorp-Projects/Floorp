@@ -26,7 +26,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const [msgWithText, msgWithObj, msgNested] = await waitFor(() =>
-    findMessages(hud, "foo")
+    findConsoleAPIMessages(hud, "foo")
   );
   ok(
     msgWithText && msgWithObj && msgNested,
@@ -34,25 +34,53 @@ add_task(async function() {
   );
 
   const [groupMsgObj] = await waitFor(() =>
-    findMessages(hud, "group", ".message-body")
+    findMessagePartsByType(hud, {
+      text: "group",
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    })
   );
   const [collapsedGroupMsgObj] = await waitFor(() =>
-    findMessages(hud, "collapsed", ".message-body")
+    findMessagePartsByType(hud, {
+      text: "collapsed",
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    })
   );
   const [numberMsgObj] = await waitFor(() =>
-    findMessages(hud, `532`, ".message-body")
+    findMessagePartsByType(hud, {
+      text: `532`,
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    })
   );
   const [trueMsgObj] = await waitFor(() =>
-    findMessages(hud, `true`, ".message-body")
+    findMessagePartsByType(hud, {
+      text: `true`,
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    })
   );
   const [falseMsgObj] = await waitFor(() =>
-    findMessages(hud, `false`, ".message-body")
+    findMessagePartsByType(hud, {
+      text: `false`,
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    })
   );
   const [undefinedMsgObj] = await waitFor(() =>
-    findMessages(hud, `undefined`, ".message-body")
+    findMessagePartsByType(hud, {
+      text: `undefined`,
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    })
   );
   const [nullMsgObj] = await waitFor(() =>
-    findMessages(hud, `null`, ".message-body")
+    findMessagePartsByType(hud, {
+      text: `null`,
+      typeSelector: ".console-api",
+      partSelector: ".message-body",
+    })
   );
   ok(nullMsgObj, "One message with null value should have appeared");
 
@@ -66,7 +94,11 @@ add_task(async function() {
   const nestedObjInMsg = msgNested.querySelector(".objectBox-object");
 
   const consoleMessages = await waitFor(() =>
-    findMessages(hud, 'console.log("foo");', ".message-location")
+    findMessagePartsByType(hud, {
+      text: 'console.log("foo");',
+      typeSelector: ".console-api",
+      partSelector: ".message-location",
+    })
   );
   await testCopyObjectMenuItemDisabled(hud, consoleMessages[0]);
 

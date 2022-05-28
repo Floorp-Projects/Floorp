@@ -1,4 +1,4 @@
-//|jit-test| --delazification-mode=on-demand
+//|jit-test| --delazification-mode=on-demand; skip-if: isLcovEnabled()
 
 function foo() {
     return "foo";

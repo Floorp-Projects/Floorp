@@ -18,7 +18,10 @@ fuzzy(0-1,0-350) == svg-glyph-objectopacity.svg svg-glyph-objectopacity-ref.svg 
 fuzzy(0-8,0-13000) == svg-glyph-objectopacity2.svg svg-glyph-objectopacity2-ref.svg
 fuzzy(0-2,0-200) == svg-glyph-paintnone.svg svg-glyph-paintnone-ref.svg
 fuzzy(0-2,0-200) == svg-glyph-cachedopacity.svg svg-glyph-cachedopacity-ref.svg
-fuzzy-if(cocoaWidget,0-255,0-100) == svg-glyph-objectvalue.svg svg-glyph-objectvalue-ref.svg
+== svg-glyph-objectvalue.svg svg-glyph-objectvalue-ref.svg
+fails-if(useDrawSnapshot) != svg-glyph-objectvalue.svg svg-glyph-objectvalue-75.svg
+== svg-glyph-objectvalue-75.svg svg-glyph-objectvalue-75-ref.svg
+== svg-glyph-objectvalue-150.svg svg-glyph-objectvalue-150-ref.svg
 fuzzy(0-15,0-152) == svg-glyph-mask.svg svg-glyph-mask-ref.svg
 == svg-glyph-paint-server.svg svg-glyph-paint-server-ref.svg
 == svg-glyph-transform.svg svg-glyph-transform-ref.svg

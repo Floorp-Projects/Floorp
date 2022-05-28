@@ -14,12 +14,9 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const executeAndWaitForResultMessage = (input, expectedOutput) =>
-    executeAndWaitForMessage(hud, input, expectedOutput, ".result");
-
   info("Evaluate a top-level await expression");
   const simpleAwait = `await new Promise(r => setTimeout(() => r(["await1"]), 500))`;
-  await executeAndWaitForResultMessage(simpleAwait, `Array [ "await1" ]`);
+  await executeAndWaitForResultMessage(hud, simpleAwait, `Array [ "await1" ]`);
 
   // Check that the resulting promise of the async iife is not displayed.
   const messages = hud.ui.outputNode.querySelectorAll(".message .message-body");
@@ -48,11 +45,13 @@ add_task(async function() {
 
   info("Check that assigning the result of a top-level await expression works");
   await executeAndWaitForResultMessage(
+    hud,
     `x = await new Promise(r => setTimeout(() => r("await2"), 500))`,
     `await2`
   );
 
   let message = await executeAndWaitForResultMessage(
+    hud,
     `"-" + x + "-"`,
     `"-await2-"`
   );
@@ -60,6 +59,7 @@ add_task(async function() {
 
   info("Check that a logged promise is still displayed as a promise");
   message = await executeAndWaitForResultMessage(
+    hud,
     `new Promise(r => setTimeout(() => r(1), 1000))`,
     `Promise {`
   );

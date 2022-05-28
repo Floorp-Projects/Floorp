@@ -1026,6 +1026,21 @@ bool RasterImage::StartDecodingWithResult(uint32_t aFlags,
   return surface && surface->IsFinished();
 }
 
+bool RasterImage::HasDecodedPixels() {
+  LookupResult result = SurfaceCache::LookupBestMatch(
+      ImageKey(this),
+      RasterSurfaceKey(mSize.ToUnknownSize(), DefaultSurfaceFlags(),
+                       PlaybackType::eStatic),
+      /* aMarkUsed = */ false);
+  MatchType matchType = result.Type();
+  if (matchType == MatchType::NOT_FOUND || matchType == MatchType::PENDING ||
+      !bool(result.Surface())) {
+    return false;
+  }
+
+  return !result.Surface()->GetDecodedRect().IsEmpty();
+}
+
 imgIContainer::DecodeResult RasterImage::RequestDecodeWithResult(
     uint32_t aFlags, uint32_t aWhichFrame) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1679,9 +1694,11 @@ void RasterImage::NotifyDecodeComplete(
     // If we were a metadata decode and a full decode was requested, do it.
     if (LoadWantFullDecode()) {
       StoreWantFullDecode(false);
-      RequestDecodeForSizeInternal(
-          mSize, DECODE_FLAGS_DEFAULT | FLAG_HIGH_QUALITY_SCALING,
-          FRAME_CURRENT);
+      RequestDecodeForSizeInternal(mSize,
+                                   DECODE_FLAGS_DEFAULT |
+                                       FLAG_HIGH_QUALITY_SCALING |
+                                       FLAG_AVOID_REDECODE_FOR_SIZE,
+                                   FRAME_CURRENT);
     }
   }
 }

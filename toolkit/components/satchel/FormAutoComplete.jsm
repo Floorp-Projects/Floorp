@@ -452,7 +452,7 @@ FormAutoComplete.prototype = {
 
       // If we had datalistResults, re-merge them back into the filtered
       // entries.
-      if (datalistItems) {
+      if (datalistItems?.length) {
         filteredEntries = filteredEntries.map(elt => ({
           value: elt.text,
           // History entries don't have labels (their labels would be read

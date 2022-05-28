@@ -1,3 +1,5 @@
+// |jit-test| skip-if: isLcovEnabled()
+
 let source = `
   var m = function() {
     "use asm"

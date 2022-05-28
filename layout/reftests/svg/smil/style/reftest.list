@@ -67,34 +67,34 @@ fails == anim-css-fillopacity-3-clamp-big.svg     anim-css-fillopacity-3-ref.svg
 fuzzy(0-1,0-365) == anim-css-fillopacity-3-clamp-small.svg anim-css-fillopacity-3-ref.svg
 
 # 'font' shorthand property
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(gtkWidget,255-255,1520-1520) == anim-css-font-1.svg  anim-css-font-1-ref.svg # Windows: Bug 1392106 Linux: Bug 1599619
+fuzzy-if(gtkWidget,255-255,1520-1520) == anim-css-font-1.svg  anim-css-font-1-ref.svg # Windows: Bug 1392106 Linux: Bug 1599619
 
 # 'font-size' property, from/by/to with pixel values only
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-by-px-px.svg    anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-px-px.svg    anim-css-fontsize-1-ref.svg # Bug 1392106
+== anim-css-fontsize-1-from-by-px-px.svg    anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-px-px.svg    anim-css-fontsize-1-ref.svg
 
 # 'font-size' property (accepts unitless values)
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-no-no.svg    anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-no-px.svg    anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-px-no.svg    anim-css-fontsize-1-ref.svg # Bug 1392106
+== anim-css-fontsize-1-from-to-no-no.svg    anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-no-px.svg    anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-px-no.svg    anim-css-fontsize-1-ref.svg
 
 # 'font-size' mapped attribute (accepts unitless values)
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-mapped-fontsize-1-from-to-no-no.svg anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-mapped-fontsize-1-from-to-no-px.svg anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-mapped-fontsize-1-from-to-px-no.svg anim-css-fontsize-1-ref.svg # Bug 1392106
+== anim-mapped-fontsize-1-from-to-no-no.svg anim-css-fontsize-1-ref.svg
+== anim-mapped-fontsize-1-from-to-no-px.svg anim-css-fontsize-1-ref.svg
+== anim-mapped-fontsize-1-from-to-px-no.svg anim-css-fontsize-1-ref.svg
 
 # 'font-size' property, from/by/to with percent values
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-by-pct-pct.svg  anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-by-pct-px.svg   anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-by-px-pct.svg   anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-pct-pct.svg  anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-pct-px.svg   anim-css-fontsize-1-ref.svg # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-px-pct.svg   anim-css-fontsize-1-ref.svg # Bug 1392106
+== anim-css-fontsize-1-from-by-pct-pct.svg  anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-by-pct-px.svg   anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-by-px-pct.svg   anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-pct-pct.svg  anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-pct-px.svg   anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-px-pct.svg   anim-css-fontsize-1-ref.svg
 
 # 'font-size' property, with negative addition
 == anim-css-fontsize-2-from-by-px-px.svg    anim-css-fontsize-2-ref.svg
 == anim-css-fontsize-2-from-by-px-em.svg    anim-css-fontsize-2-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-2-from-by-em-em.svg    anim-css-fontsize-2-ref.svg # Bug 1392106
+== anim-css-fontsize-2-from-by-em-em.svg    anim-css-fontsize-2-ref.svg
 
 # 'stroke-dasharray' property, from/to with pixel values only
 fails == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg # bug 474049

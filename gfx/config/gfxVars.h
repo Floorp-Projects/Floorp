@@ -91,7 +91,7 @@ class gfxVarReceiver;
   _(AllowWebGPU, bool, false)                                      \
   _(UseVP8HwDecode, bool, false)                                   \
   _(UseVP9HwDecode, bool, false)                                   \
-  _(HwDecodedVideoNoCopy, bool, false)
+  _(HwDecodedVideoZeroCopy, bool, false)
 
 /* Add new entries above this line. */
 

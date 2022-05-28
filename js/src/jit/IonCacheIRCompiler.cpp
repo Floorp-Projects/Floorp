@@ -929,7 +929,7 @@ bool IonCacheIRCompiler::emitCallNativeGetterResult(
   MOZ_ASSERT(target->isNativeFun());
 
   AutoScratchRegisterMaybeOutput argJSContext(allocator, masm, output);
-  AutoScratchRegister argUintN(allocator, masm);
+  AutoScratchRegisterMaybeOutputType argUintN(allocator, masm, output);
   AutoScratchRegister argVp(allocator, masm);
   AutoScratchRegister scratch(allocator, masm);
 
@@ -1051,7 +1051,7 @@ bool IonCacheIRCompiler::emitProxyGetResult(ObjOperandId objId,
   // ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id,
   //                  MutableHandleValue vp)
   AutoScratchRegisterMaybeOutput argJSContext(allocator, masm, output);
-  AutoScratchRegister argProxy(allocator, masm);
+  AutoScratchRegisterMaybeOutputType argProxy(allocator, masm, output);
   AutoScratchRegister argId(allocator, masm);
   AutoScratchRegister argVp(allocator, masm);
   AutoScratchRegister scratch(allocator, masm);
@@ -1426,7 +1426,12 @@ bool IonCacheIRCompiler::emitCallNativeSetter(ObjOperandId receiverId,
   AutoScratchRegister argJSContext(allocator, masm);
   AutoScratchRegister argVp(allocator, masm);
   AutoScratchRegister argUintN(allocator, masm);
+#ifndef JS_CODEGEN_X86
   AutoScratchRegister scratch(allocator, masm);
+#else
+  // Not enough registers on x86.
+  Register scratch = argUintN;
+#endif
 
   allocator.discardStack(masm);
 
@@ -1461,6 +1466,10 @@ bool IonCacheIRCompiler::emitCallNativeSetter(ObjOperandId receiverId,
 
   // Make the call.
   masm.setupUnalignedABICall(scratch);
+#ifdef JS_CODEGEN_X86
+  // Reload argUintN because it was clobbered.
+  masm.move32(Imm32(1), argUintN);
+#endif
   masm.passABIArg(argJSContext);
   masm.passABIArg(argUintN);
   masm.passABIArg(argVp);

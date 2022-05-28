@@ -698,10 +698,21 @@ var gHistorySwipeAnimation = {
       return;
     }
 
-    let box = this._prevBox.style.opacity > 0 ? this._prevBox : this._nextBox;
-    if (box.style.opacity > 0) {
+    let prevOpacity = window
+      .getComputedStyle(this._prevBox)
+      .getPropertyValue("opacity");
+    let nextOpacity = window
+      .getComputedStyle(this._nextBox)
+      .getPropertyValue("opacity");
+    let box = null;
+    if (prevOpacity > 0) {
+      box = this._prevBox;
+    } else if (nextOpacity > 0) {
+      box = this._nextBox;
+    }
+    if (box != null) {
       this._isStoppingAnimation = true;
-      box.style.transition = "opacity 0.2s cubic-bezier(.07,.95,0,1)";
+      box.style.transition = "opacity 0.35s cubic-bezier(.25,.1,0.25,1)";
       box.addEventListener("transitionend", this, true);
       box.style.opacity = 0;
     } else {

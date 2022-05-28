@@ -103,9 +103,43 @@ class Page extends Domain {
       throw new UnsupportedError("frameId not supported");
     }
 
+    const hitsNetwork = ["https", "http"].includes(validURL.scheme);
+    let networkLessLoaderId;
+    if (!hitsNetwork) {
+      // This navigation will not hit the network, use a randomly generated id.
+      const uuid = Services.uuid.generateUUID().toString();
+      networkLessLoaderId = uuid.substring(1, uuid.length - 1);
+
+      // Update the content process map of loader ids.
+      await this.executeInChild("_updateLoaderId", {
+        frameId: this.session.browsingContext.id,
+        loaderId: networkLessLoaderId,
+      });
+    }
+
+    const currentURI = this.session.browsingContext.currentURI;
+
+    const isSameDocumentNavigation =
+      // The "host", "query" and "ref" getters can throw if the URLs are not
+      // http/https, so verify first that both currentURI and validURL are
+      // using http/https.
+      hitsNetwork &&
+      ["https", "http"].includes(currentURI.scheme) &&
+      currentURI.host === validURL.host &&
+      currentURI.query === validURL.query &&
+      !!validURL.ref;
+
     const requestDone = new Promise(resolve => {
-      if (!["https", "http"].includes(validURL.scheme)) {
+      if (isSameDocumentNavigation) {
+        // Per CDP documentation, same-document navigations should not emit any
+        // loader id (https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-navigate)
         resolve({});
+        return;
+      }
+
+      if (!hitsNetwork) {
+        // This navigation will not hit the network, use a randomly generated id.
+        resolve({ navigationRequestId: networkLessLoaderId });
         return;
       }
       let navigationRequestId, redirectedRequestId;

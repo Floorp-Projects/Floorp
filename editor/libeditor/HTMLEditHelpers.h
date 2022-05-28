@@ -108,21 +108,66 @@ class MOZ_STACK_CLASS EditResult final {
 /*****************************************************************************
  * MoveNodeResult is a simple class for MoveSomething() methods.
  * This holds error code and next insertion point if moving contents succeeded.
+ * TODO: Perhaps, we can make this inherits mozilla::Result for guaranteeing
+ *       same API.  Then, changing to/from Result<*, nsresult> can be easier.
+ *       For now, we should give same API name rather than same as
+ *       mozilla::ErrorResult.
  *****************************************************************************/
 class MOZ_STACK_CLASS MoveNodeResult final {
  public:
-  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
-  bool Failed() const { return NS_FAILED(mRv); }
-  bool Handled() const { return mHandled; }
-  bool Ignored() const { return !mHandled; }
-  nsresult Rv() const { return mRv; }
-  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
-  const EditorDOMPoint& NextInsertionPointRef() const {
+  // FYI: NS_SUCCEEDED and NS_FAILED contain MOZ_(UN)LIKELY so that isOk() and
+  //      isErr() must not required to wrap with them.
+  bool isOk() const { return NS_SUCCEEDED(mRv); }
+  bool isErr() const { return NS_FAILED(mRv); }
+  constexpr bool Handled() const { return mHandled; }
+  constexpr bool Ignored() const { return !Handled(); }
+  constexpr nsresult inspectErr() const { return mRv; }
+  constexpr nsresult unwrapErr() const { return mRv; }
+  constexpr bool EditorDestroyed() const {
+    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_DESTROYED);
+  }
+  constexpr bool NotInitialized() const {
+    return mRv == NS_ERROR_NOT_INITIALIZED;
+  }
+  constexpr const EditorDOMPoint& NextInsertionPointRef() const {
     return mNextInsertionPoint;
   }
   EditorDOMPoint NextInsertionPoint() const { return mNextInsertionPoint; }
 
   void MarkAsHandled() { mHandled = true; }
+
+  /**
+   * Suggest caret position to aHTMLEditor.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
+      const HTMLEditor& aHTMLEditor, const SuggestCaretOptions& aOptions) const;
+
+  /**
+   * IgnoreCaretPointSuggestion() should be called if the method does not want
+   * to use caret position recommended by this instance.
+   */
+  void IgnoreCaretPointSuggestion() const { mHandledCaretPoint = true; }
+
+  bool HasCaretPointSuggestion() const { return mCaretPoint.IsSet(); }
+  constexpr EditorDOMPoint&& UnwrapCaretPoint() {
+    mHandledCaretPoint = true;
+    return std::move(mCaretPoint);
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const SuggestCaretOptions& aOptions) {
+    MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+    MOZ_ASSERT(
+        !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
+    if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+        !mCaretPoint.IsSet()) {
+      return false;
+    }
+    aPointToPutCaret = UnwrapCaretPoint();
+    return true;
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const HTMLEditor& aHTMLEditor,
+                        const SuggestCaretOptions& aOptions);
 
   MoveNodeResult() : mRv(NS_ERROR_NOT_INITIALIZED), mHandled(false) {}
 
@@ -136,10 +181,19 @@ class MOZ_STACK_CLASS MoveNodeResult final {
   MoveNodeResult& operator=(MoveNodeResult&& aOther) = default;
 
   MoveNodeResult& operator|=(const MoveNodeResult& aOther) {
+    // aOther is merged with this instance so that its caret suggestion
+    // shouldn't be handled anymore.
+    aOther.mHandledCaretPoint = true;
+    // Should be handled again even if it's already handled
+    mHandledCaretPoint = false;
+
     mHandled |= aOther.mHandled;
     // When both result are same, keep the result but use newer point.
     if (mRv == aOther.mRv) {
       mNextInsertionPoint = aOther.mNextInsertionPoint;
+      if (aOther.mCaretPoint.IsSet()) {
+        mCaretPoint = aOther.mCaretPoint;
+      }
       return *this;
     }
     // If one of the result is NS_ERROR_EDITOR_DESTROYED, use it since it's
@@ -147,34 +201,46 @@ class MOZ_STACK_CLASS MoveNodeResult final {
     if (EditorDestroyed() || aOther.EditorDestroyed()) {
       mRv = NS_ERROR_EDITOR_DESTROYED;
       mNextInsertionPoint.Clear();
+      mCaretPoint.Clear();
       return *this;
     }
     // If the other one has not been set explicit nsresult, keep current
     // value.
-    if (aOther.mRv == NS_ERROR_NOT_INITIALIZED) {
+    if (aOther.NotInitialized()) {
       return *this;
     }
     // If this one has not been set explicit nsresult, copy the other one's.
-    if (mRv == NS_ERROR_NOT_INITIALIZED) {
+    if (NotInitialized()) {
       mRv = aOther.mRv;
       mNextInsertionPoint = aOther.mNextInsertionPoint;
+      mCaretPoint = aOther.mCaretPoint;
       return *this;
     }
     // If one of the results is error, use NS_ERROR_FAILURE.
-    if (Failed() || aOther.Failed()) {
+    if (isErr() || aOther.isErr()) {
       mRv = NS_ERROR_FAILURE;
       mNextInsertionPoint.Clear();
+      mCaretPoint.Clear();
       return *this;
     }
     // Otherwise, use generic success code, NS_OK, and use newer point.
     mRv = NS_OK;
     mNextInsertionPoint = aOther.mNextInsertionPoint;
+    if (aOther.mCaretPoint.IsSet()) {
+      mCaretPoint = aOther.mCaretPoint;
+    }
     return *this;
   }
 
+#ifdef DEBUG
+  ~MoveNodeResult() {
+    MOZ_ASSERT_IF(isOk() && Handled(),
+                  !mCaretPoint.IsSet() || mHandledCaretPoint);
+  }
+#endif
+
  private:
-  template <typename PT, typename CT>
-  explicit MoveNodeResult(const EditorDOMPointBase<PT, CT>& aNextInsertionPoint,
+  explicit MoveNodeResult(const EditorDOMPoint& aNextInsertionPoint,
                           bool aHandled)
       : mNextInsertionPoint(aNextInsertionPoint),
         mRv(aNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
@@ -184,65 +250,130 @@ class MOZ_STACK_CLASS MoveNodeResult final {
           mNextInsertionPoint);
     }
   }
-
-  MoveNodeResult(nsINode* aParentNode, uint32_t aOffsetOfNextInsertionPoint,
-                 bool aHandled) {
-    if (!aParentNode) {
-      mRv = NS_ERROR_FAILURE;
-      mHandled = false;
-      return;
+  explicit MoveNodeResult(EditorDOMPoint&& aNextInsertionPoint, bool aHandled)
+      : mNextInsertionPoint(std::move(aNextInsertionPoint)),
+        mRv(mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(aHandled && mNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
     }
-    aOffsetOfNextInsertionPoint =
-        std::min(aOffsetOfNextInsertionPoint, aParentNode->Length());
-    mNextInsertionPoint.Set(aParentNode, aOffsetOfNextInsertionPoint);
-    mRv = mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE;
-    mHandled = aHandled && mNextInsertionPoint.IsSet();
+  }
+  explicit MoveNodeResult(const EditorDOMPoint& aNextInsertionPoint,
+                          const EditorDOMPoint& aPointToPutCaret)
+      : mNextInsertionPoint(aNextInsertionPoint),
+        mCaretPoint(aPointToPutCaret),
+        mRv(mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(mNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
+    }
+  }
+  explicit MoveNodeResult(EditorDOMPoint&& aNextInsertionPoint,
+                          const EditorDOMPoint& aPointToPutCaret)
+      : mNextInsertionPoint(std::move(aNextInsertionPoint)),
+        mCaretPoint(aPointToPutCaret),
+        mRv(mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(mNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
+    }
+  }
+  explicit MoveNodeResult(const EditorDOMPoint& aNextInsertionPoint,
+                          EditorDOMPoint&& aPointToPutCaret)
+      : mNextInsertionPoint(aNextInsertionPoint),
+        mCaretPoint(std::move(aPointToPutCaret)),
+        mRv(mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(mNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
+    }
+  }
+  explicit MoveNodeResult(EditorDOMPoint&& aNextInsertionPoint,
+                          EditorDOMPoint&& aPointToPutCaret)
+      : mNextInsertionPoint(std::move(aNextInsertionPoint)),
+        mCaretPoint(std::move(aPointToPutCaret)),
+        mRv(mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(mNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
+    }
   }
 
   EditorDOMPoint mNextInsertionPoint;
+  // Recommended caret point after moving a node.
+  EditorDOMPoint mCaretPoint;
   nsresult mRv;
   bool mHandled;
+  bool mutable mHandledCaretPoint = false;
 
-  friend MoveNodeResult MoveNodeIgnored(nsINode* aParentNode,
-                                        uint32_t aOffsetOfNextInsertionPoint);
-  friend MoveNodeResult MoveNodeHandled(nsINode* aParentNode,
-                                        uint32_t aOffsetOfNextInsertionPoint);
-  template <typename PT, typename CT>
   friend MoveNodeResult MoveNodeIgnored(
-      const EditorDOMPointBase<PT, CT>& aNextInsertionPoint);
-  template <typename PT, typename CT>
+      const EditorDOMPoint& aNextInsertionPoint);
+  friend MoveNodeResult MoveNodeIgnored(EditorDOMPoint&& aNextInsertionPoint);
   friend MoveNodeResult MoveNodeHandled(
-      const EditorDOMPointBase<PT, CT>& aNextInsertionPoint);
+      const EditorDOMPoint& aNextInsertionPoint);
+  friend MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint);
+  friend MoveNodeResult MoveNodeHandled(
+      const EditorDOMPoint& aNextInsertionPoint,
+      const EditorDOMPoint& aPointToPutCaret);
+  friend MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint,
+                                        const EditorDOMPoint& aPointToPutCaret);
+  friend MoveNodeResult MoveNodeHandled(
+      const EditorDOMPoint& aNextInsertionPoint,
+      EditorDOMPoint&& aPointToPutCaret);
+  friend MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint,
+                                        EditorDOMPoint&& aPointToPutCaret);
 };
 
 /*****************************************************************************
  * When a move node handler (or its helper) does nothing,
  * MoveNodeIgnored should be returned.
  *****************************************************************************/
-inline MoveNodeResult MoveNodeIgnored(nsINode* aParentNode,
-                                      uint32_t aOffsetOfNextInsertionPoint) {
-  return MoveNodeResult(aParentNode, aOffsetOfNextInsertionPoint, false);
+inline MoveNodeResult MoveNodeIgnored(
+    const EditorDOMPoint& aNextInsertionPoint) {
+  return MoveNodeResult(aNextInsertionPoint, false);
 }
 
-template <typename PT, typename CT>
-inline MoveNodeResult MoveNodeIgnored(
-    const EditorDOMPointBase<PT, CT>& aNextInsertionPoint) {
-  return MoveNodeResult(aNextInsertionPoint, false);
+inline MoveNodeResult MoveNodeIgnored(EditorDOMPoint&& aNextInsertionPoint) {
+  return MoveNodeResult(std::move(aNextInsertionPoint), false);
 }
 
 /*****************************************************************************
  * When a move node handler (or its helper) handled and not canceled,
  * MoveNodeHandled should be returned.
  *****************************************************************************/
-inline MoveNodeResult MoveNodeHandled(nsINode* aParentNode,
-                                      uint32_t aOffsetOfNextInsertionPoint) {
-  return MoveNodeResult(aParentNode, aOffsetOfNextInsertionPoint, true);
+inline MoveNodeResult MoveNodeHandled(
+    const EditorDOMPoint& aNextInsertionPoint) {
+  return MoveNodeResult(aNextInsertionPoint, true);
 }
 
-template <typename PT, typename CT>
-inline MoveNodeResult MoveNodeHandled(
-    const EditorDOMPointBase<PT, CT>& aNextInsertionPoint) {
-  return MoveNodeResult(aNextInsertionPoint, true);
+inline MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint) {
+  return MoveNodeResult(std::move(aNextInsertionPoint), true);
+}
+
+inline MoveNodeResult MoveNodeHandled(const EditorDOMPoint& aNextInsertionPoint,
+                                      const EditorDOMPoint& aPointToPutCaret) {
+  return MoveNodeResult(aNextInsertionPoint, aPointToPutCaret);
+}
+
+inline MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint,
+                                      const EditorDOMPoint& aPointToPutCaret) {
+  return MoveNodeResult(std::move(aNextInsertionPoint), aPointToPutCaret);
+}
+
+inline MoveNodeResult MoveNodeHandled(const EditorDOMPoint& aNextInsertionPoint,
+                                      EditorDOMPoint&& aPointToPutCaret) {
+  return MoveNodeResult(aNextInsertionPoint, std::move(aPointToPutCaret));
+}
+
+inline MoveNodeResult MoveNodeHandled(EditorDOMPoint&& aNextInsertionPoint,
+                                      EditorDOMPoint&& aPointToPutCaret) {
+  return MoveNodeResult(std::move(aNextInsertionPoint),
+                        std::move(aPointToPutCaret));
 }
 
 /*****************************************************************************

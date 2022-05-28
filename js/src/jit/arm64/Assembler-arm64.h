@@ -95,9 +95,10 @@ static constexpr Register ReturnReg{Registers::x0};
 static constexpr Register64 ReturnReg64(ReturnReg);
 static constexpr Register JSReturnReg{Registers::x2};
 static constexpr Register FramePointer{Registers::fp};
+static constexpr ARMRegister FramePointer64{FramePointer, 64};
 static constexpr Register ZeroRegister{Registers::sp};
-static constexpr ARMRegister ZeroRegister64 = {Registers::sp, 64};
-static constexpr ARMRegister ZeroRegister32 = {Registers::sp, 32};
+static constexpr ARMRegister ZeroRegister64{Registers::sp, 64};
+static constexpr ARMRegister ZeroRegister32{Registers::sp, 32};
 
 // [SMDOC] AArch64 Stack Pointer and Pseudo Stack Pointer conventions
 //

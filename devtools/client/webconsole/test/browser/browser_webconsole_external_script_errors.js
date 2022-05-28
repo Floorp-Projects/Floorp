@@ -19,7 +19,7 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const onMessage = waitForMessage(hud, "bogus is not defined");
+  const onMessage = waitForMessageByType(hud, "bogus is not defined", ".error");
   BrowserTestUtils.synthesizeMouseAtCenter(
     "button",
     {},

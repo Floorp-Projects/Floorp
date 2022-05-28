@@ -276,7 +276,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     //     behavior, we should mark as handled.
     ret.MarkAsHandled();
   } else {
-    // XXX Why do we ignore the result of MoveOneHardLineContents()?
+    // XXX Why do we ignore the result of
+    //     MoveOneHardLineContentsWithTransaction()?
     NS_ASSERTION(rightBlockElement == afterRightBlockChild.GetContainer(),
                  "The relation is not guaranteed but assumed");
 #ifdef DEBUG
@@ -284,29 +285,33 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(EditorRawDOMPoint(
             rightBlockElement, afterRightBlockChild.Offset()));
 #endif  // #ifdef DEBUG
-    MoveNodeResult moveNodeResult = aHTMLEditor.MoveOneHardLineContents(
-        EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
-        EditorDOMPoint(&aLeftBlockElement, 0),
-        HTMLEditor::MoveToEndOfContainer::Yes);
-    if (moveNodeResult.Failed()) {
+    MoveNodeResult moveNodeResult =
+        aHTMLEditor.MoveOneHardLineContentsWithTransaction(
+            EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
+            EditorDOMPoint(&aLeftBlockElement, 0u),
+            HTMLEditor::MoveToEndOfContainer::Yes);
+    if (moveNodeResult.isErr()) {
       NS_WARNING(
-          "HTMLEditor::MoveOneHardLineContents(MoveToEndOfContainer::Yes) "
-          "failed");
-      return EditActionResult(moveNodeResult.Rv());
+          "HTMLEditor::MoveOneHardLineContentsWithTransaction("
+          "MoveToEndOfContainer::Yes) failed");
+      return EditActionResult(moveNodeResult.unwrapErr());
     }
-    if (moveNodeResult.Succeeded()) {
+
 #ifdef DEBUG
-      MOZ_ASSERT(!firstLineHasContent.isErr());
-      if (firstLineHasContent.inspect()) {
-        NS_ASSERTION(moveNodeResult.Handled(),
-                     "Failed to consider whether moving or not something");
-      } else {
-        NS_ASSERTION(moveNodeResult.Ignored(),
-                     "Failed to consider whether moving or not something");
-      }
-#endif  // #ifdef DEBUG
-      ret |= moveNodeResult;
+    MOZ_ASSERT(!firstLineHasContent.isErr());
+    if (firstLineHasContent.inspect()) {
+      NS_ASSERTION(moveNodeResult.Handled(),
+                   "Failed to consider whether moving or not something");
+    } else {
+      NS_ASSERTION(moveNodeResult.Ignored(),
+                   "Failed to consider whether moving or not something");
     }
+#endif  // #ifdef DEBUG
+
+    // We don't need to update selection here because of dontChangeMySelection
+    // above.
+    moveNodeResult.IgnoreCaretPointSuggestion();
+    ret |= moveNodeResult;
     // Now, all children of rightBlockElement were moved to leftBlockElement.
     // So, afterRightBlockChild is now invalid.
     afterRightBlockChild.Clear();
@@ -456,10 +461,14 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(
-        moveNodeResult.Succeeded(),
+        moveNodeResult.isOk(),
         "HTMLEditor::MoveChildrenWithTransaction() failed, but ignored");
-    if (moveNodeResult.Succeeded()) {
+    if (moveNodeResult.isOk()) {
+      // We don't need to update selection here because of dontChangeMySelection
+      // above.
+      moveNodeResult.IgnoreCaretPointSuggestion();
       ret |= moveNodeResult;
+
 #ifdef DEBUG
       MOZ_ASSERT(!rightBlockHasContent.isErr());
       if (rightBlockHasContent.inspect()) {
@@ -547,11 +556,12 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       MOZ_DIAGNOSTIC_ASSERT(atPreviousContent.IsSetAndValid());
     }
 
-    MoveNodeResult moveNodeResult = aHTMLEditor.MoveOneHardLineContents(
-        EditorDOMPoint(&aRightBlockElement, 0), atPreviousContent);
-    if (moveNodeResult.Failed()) {
-      NS_WARNING("HTMLEditor::MoveOneHardLineContents() failed");
-      return EditActionResult(moveNodeResult.Rv());
+    MoveNodeResult moveNodeResult =
+        aHTMLEditor.MoveOneHardLineContentsWithTransaction(
+            EditorDOMPoint(&aRightBlockElement, 0u), atPreviousContent);
+    if (moveNodeResult.isErr()) {
+      NS_WARNING("HTMLEditor::MoveOneHardLineContentsWithTransaction() failed");
+      return EditActionResult(moveNodeResult.unwrapErr());
     }
 
 #ifdef DEBUG
@@ -565,6 +575,9 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     }
 #endif  // #ifdef DEBUG
 
+    // We don't need to update selection here because of dontChangeMySelection
+    // above.
+    moveNodeResult.IgnoreCaretPointSuggestion();
     ret |= moveNodeResult;
   }
 
@@ -657,15 +670,16 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 #endif  // #ifdef DEBUG
 
     // Nodes are dissimilar types.
-    MoveNodeResult moveNodeResult = aHTMLEditor.MoveOneHardLineContents(
-        EditorDOMPoint(&aRightBlockElement, 0),
-        EditorDOMPoint(&aLeftBlockElement, 0),
-        HTMLEditor::MoveToEndOfContainer::Yes);
-    if (moveNodeResult.Failed()) {
+    MoveNodeResult moveNodeResult =
+        aHTMLEditor.MoveOneHardLineContentsWithTransaction(
+            EditorDOMPoint(&aRightBlockElement, 0u),
+            EditorDOMPoint(&aLeftBlockElement, 0u),
+            HTMLEditor::MoveToEndOfContainer::Yes);
+    if (moveNodeResult.isErr()) {
       NS_WARNING(
-          "HTMLEditor::MoveOneHardLineContents(MoveToEndOfContainer::Yes) "
-          "failed");
-      return EditActionResult(moveNodeResult.Rv());
+          "HTMLEditor::MoveOneHardLineContentsWithTransaction("
+          "MoveToEndOfContainer::Yes) failed");
+      return EditActionResult(moveNodeResult.unwrapErr());
     }
 
 #ifdef DEBUG
@@ -678,6 +692,10 @@ EditActionResult WhiteSpaceVisibilityKeeper::
                    "Failed to consider whether moving or not something");
     }
 #endif  // #ifdef DEBUG
+
+    // We don't need to update selection here because of dontChangeMySelection
+    // above.
+    moveNodeResult.IgnoreCaretPointSuggestion();
     ret |= moveNodeResult;
   }
 

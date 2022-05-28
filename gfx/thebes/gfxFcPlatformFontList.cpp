@@ -1335,6 +1335,8 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
 }
 
 gfxFcPlatformFontList::~gfxFcPlatformFontList() {
+  AutoLock lock(mLock);
+
   if (mCheckFontUpdatesTimer) {
     mCheckFontUpdatesTimer->Cancel();
     mCheckFontUpdatesTimer = nullptr;

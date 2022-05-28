@@ -399,6 +399,10 @@ void DocAccessible::Init() {
     // harm even if it isn't necessary. We set mLoadEventType here and it will
     // be fired in ProcessLoad as usual.
     mLoadEventType = nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE;
+  } else if (mDocumentNode->IsInitialDocument()) {
+    // The initial about:blank document will never finish loading, so we can
+    // immediately mark it loaded to avoid waiting for its load.
+    mLoadState |= eDOMLoaded;
   }
 
   AddEventListeners();

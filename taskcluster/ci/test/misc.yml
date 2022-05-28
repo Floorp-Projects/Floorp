@@ -8,7 +8,7 @@ job-defaults:
 geckoview-junit:
     description: "Geckoview junit run"
     suite: geckoview-junit
-    variants: ["geckoview-e10s-single", "geckoview-fission", "no-fission"]
+    variants: ["geckoview-e10s-single", "geckoview-fission", "fission-no-isolate", "no-fission"]
     treeherder-symbol: gv-junit
     loopback-video: true
     target: geckoview-androidTest.apk
@@ -17,6 +17,7 @@ geckoview-junit:
         by-variant:
             geckoview-e10s-single: ['trunk']
             geckoview-fission: ['trunk']
+            fission-no-isolate: ['trunk']
             no-fission: built-projects
             default: []
     tier: default

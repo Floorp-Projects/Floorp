@@ -38,6 +38,13 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.autoFill.adaptiveHistory.enabled
       description: Whether enabling adaptive history autofill.
+    autoFillAdaptiveHistoryMinCharsThreshold:
+      type: int
+      fallbackPref: browser.urlbar.autoFill.adaptiveHistory.minCharsThreshold
+      description: Minimum char length of the user's search string to trigger adaptive history autofill.
+    autoFillAdaptiveHistoryUseCountThreshold:
+      type: string
+      description: This value assumes float expression like "0.47". Threshold for use count of input history that we handle as adaptive history autofill. If the use count is this value or more, it will be a candidate.
     bestMatchBlockingEnabled:
       type: boolean
       fallbackPref: browser.urlbar.bestMatch.blockingEnabled
@@ -227,6 +234,10 @@ pocketNewtab:
       type: string
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.spoc-positions
       description: CSV string of spoc position indexes on newtab grid
+    widgetPositions:
+      type: string
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.widget-positions
+      description: CSV string of widget position indexes on newtab grid
     compactLayout:
       type: boolean
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.compactLayout.enabled

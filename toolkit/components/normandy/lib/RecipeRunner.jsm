@@ -620,9 +620,7 @@ var RecipeRunner = {
         "services.settings.main.normandy-recipes.last_check";
       if (Services.prefs.prefHasUserValue(lastCheckPref)) {
         // We instantiate a client, but it won't take part of sync.
-        const client = new RemoteSettingsClient("normandy-recipes", {
-          bucketNamePref: "services.settings.default_bucket",
-        });
+        const client = new RemoteSettingsClient("normandy-recipes");
         await client.db.clear();
         Services.prefs.clearUserPref(lastCheckPref);
       }

@@ -40,6 +40,7 @@
 #include "nsStringStream.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/dom/CSPReportBinding.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -116,6 +117,10 @@ static void BlockedContentSourceToString(
 
     case nsCSPContext::BlockedContentSource::eSelf:
       aString.AssignLiteral("self");
+      break;
+
+    case nsCSPContext::BlockedContentSource::eWasmEval:
+      aString.AssignLiteral("wasm-eval");
       break;
   }
 }
@@ -471,6 +476,36 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCSPContext::GetAllowsWasmEval(bool* outShouldReportViolation,
+                                bool* outAllowsWasmEval) {
+  EnsureIPCPoliciesRead();
+  *outShouldReportViolation = false;
+  *outAllowsWasmEval = true;
+
+  if (!StaticPrefs::security_csp_wasm_unsafe_eval_enabled()) {
+    // Allow and don't report when wasm-unsafe-eval isn't supported.
+    return NS_OK;
+  }
+
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    // Either 'unsafe-eval' or 'wasm-unsafe-eval' can allow this
+    if (!mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_WASM_UNSAFE_EVAL,
+                              u""_ns, false) &&
+        !mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_UNSAFE_EVAL, u""_ns,
+                              false)) {
+      // policy is violated: must report the violation and allow the inline
+      // script if the policy is report-only.
+      *outShouldReportViolation = true;
+      if (!mPolicies[i]->getReportOnlyFlag()) {
+        *outAllowsWasmEval = false;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 // Helper function to report inline violations
 void nsCSPContext::reportInlineViolation(
     CSPDirective aDirective, Element* aTriggeringElement,
@@ -719,6 +754,11 @@ nsCSPContext::GetAllowsNavigateTo(nsIURI* aURI, bool aIsFormSubmission,
       bool reportSample = false;                                               \
       mPolicies[p]->getDirectiveStringAndReportSampleForContentType(           \
           directive##_SRC_DIRECTIVE, violatedDirective, &reportSample);        \
+      if (aViolationType == nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL ||   \
+          aViolationType ==                                                    \
+              nsIContentSecurityPolicy::VIOLATION_TYPE_WASM_EVAL) {            \
+        violatedDirective = u"script-src"_ns;                                  \
+      }                                                                        \
       AsyncReportViolation(aTriggeringElement, aCSPEventListener, nullptr,     \
                            blockedContentSource, nullptr, violatedDirective,   \
                            p, NS_LITERAL_STRING_FROM_CSTRING(observerTopic),   \
@@ -766,6 +806,9 @@ nsCSPContext::LogViolationDetails(
     if (aViolationType == nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL) {
       blockedContentSource = BlockedContentSource::eEval;
     } else if (aViolationType ==
+               nsIContentSecurityPolicy::VIOLATION_TYPE_WASM_EVAL) {
+      blockedContentSource = BlockedContentSource::eWasmEval;
+    } else if (aViolationType ==
                    nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT ||
                aViolationType ==
                    nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_STYLE) {
@@ -791,6 +834,8 @@ nsCSPContext::LogViolationDetails(
                             SCRIPT_HASH_VIOLATION_OBSERVER_TOPIC);
       CASE_CHECK_AND_REPORT(HASH_STYLE, STYLE, aContent, CSP_UNSAFE_INLINE,
                             STYLE_HASH_VIOLATION_OBSERVER_TOPIC);
+      CASE_CHECK_AND_REPORT(WASM_EVAL, SCRIPT, u""_ns, CSP_WASM_UNSAFE_EVAL,
+                            WASM_EVAL_VIOLATION_OBSERVER_TOPIC);
 
       default:
         NS_ASSERTION(false, "LogViolationDetails with invalid type");

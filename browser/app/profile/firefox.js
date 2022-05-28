@@ -360,6 +360,10 @@ pref("browser.urlbar.autoFill", true);
 // Whether enabling adaptive history autofill.
 pref("browser.urlbar.autoFill.adaptiveHistory.enabled", false);
 
+// Minimum char length of the user's search string to enable adaptive history
+// autofill.
+pref("browser.urlbar.autoFill.adaptiveHistory.minCharsThreshold", 0);
+
 // Whether to warm up network connections for autofill or search results.
 pref("browser.urlbar.speculativeConnect.enabled", true);
 
@@ -1526,7 +1530,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.readTime.enabled", fals
 pref("browser.newtabpage.activity-stream.discoverystream.newSponsoredLabel.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.essentialReadsHeader.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.editorsPicksHeader.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "2,4,11,20");
+pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "1,5,7,11,18,20");
+pref("browser.newtabpage.activity-stream.discoverystream.widget-positions", "");
 
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint-query", "");
@@ -2440,12 +2445,8 @@ pref("devtools.netmonitor.audits.slow", 500);
 // Enable the EventSource Inspector
 pref("devtools.netmonitor.features.serverSentEvents", true);
 
-#if defined(NIGHTLY_BUILD)
 // Enable the new Edit and Resend panel
   pref("devtools.netmonitor.features.newEditAndResend", true);
-#else
-  pref("devtools.netmonitor.features.newEditAndResend", false);
-#endif
 
 pref("devtools.netmonitor.customRequest", '{}');
 

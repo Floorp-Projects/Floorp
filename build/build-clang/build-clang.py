@@ -192,12 +192,11 @@ def build_one_stage(
     src_dir,
     stage_dir,
     package_name,
-    build_libcxx,
     osx_cross_compile,
     build_type,
     assertions,
     libcxx_include_dir,
-    build_wasm,
+    targets,
     is_final_stage=False,
     profile=None,
 ):
@@ -212,9 +211,7 @@ def build_one_stage(
         return path.replace("\\", "/")
 
     def cmake_base_args(cc, cxx, asm, ld, ar, ranlib, libtool, inst_dir):
-        machine_targets = "X86;ARM;AArch64" if is_final_stage else "X86"
-        if build_wasm and is_final_stage:
-            machine_targets += ";WebAssembly"
+        machine_targets = targets if is_final_stage and targets else "X86"
 
         cmake_args = [
             "-GNinja",
@@ -243,7 +240,7 @@ def build_one_stage(
         # libc++ doesn't build with MSVC because of the use of #include_next.
         if is_final_stage and os.path.basename(cc[0]).lower() != "cl.exe":
             cmake_args += [
-                "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
+                "-DLLVM_TOOL_LIBCXX_BUILD=ON",
                 # libc++abi has conflicting definitions between the shared and static
                 # library on Windows because of the import library for the dll having
                 # the same name as the static library. libc++abi is not necessary on
@@ -575,16 +572,7 @@ def main():
                 "We only know how to do Release, Debug, RelWithDebInfo or "
                 "MinSizeRel builds"
             )
-    build_libcxx = True
-    if "build_libcxx" in config:
-        build_libcxx = config["build_libcxx"]
-        if build_libcxx not in (True, False):
-            raise ValueError("Only boolean values are accepted for build_libcxx.")
-    build_wasm = False
-    if "build_wasm" in config:
-        build_wasm = config["build_wasm"]
-        if build_wasm not in (True, False):
-            raise ValueError("Only boolean values are accepted for build_wasm.")
+    targets = config.get("targets")
     build_clang_tidy = False
     if "build_clang_tidy" in config:
         build_clang_tidy = config["build_clang_tidy"]
@@ -768,12 +756,11 @@ def main():
             llvm_source_dir,
             stage1_dir,
             package_name,
-            build_libcxx,
             osx_cross_compile,
             build_type,
             assertions,
             libcxx_include_dir,
-            build_wasm,
+            targets,
             is_final_stage=(stages == 1),
         )
 
@@ -796,12 +783,11 @@ def main():
             llvm_source_dir,
             stage2_dir,
             package_name,
-            build_libcxx,
             osx_cross_compile,
             build_type,
             assertions,
             libcxx_include_dir,
-            build_wasm,
+            targets,
             is_final_stage=(stages == 2),
             profile="gen" if pgo else None,
         )
@@ -825,12 +811,11 @@ def main():
             llvm_source_dir,
             stage3_dir,
             package_name,
-            build_libcxx,
             osx_cross_compile,
             build_type,
             assertions,
             libcxx_include_dir,
-            build_wasm,
+            targets,
             (stages == 3),
         )
         if pgo:
@@ -870,12 +855,11 @@ def main():
             llvm_source_dir,
             stage4_dir,
             package_name,
-            build_libcxx,
             osx_cross_compile,
             build_type,
             assertions,
             libcxx_include_dir,
-            build_wasm,
+            targets,
             (stages == 4),
             profile=profile,
         )

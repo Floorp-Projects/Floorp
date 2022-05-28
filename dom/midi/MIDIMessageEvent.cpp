@@ -18,21 +18,11 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(MIDIMessageEvent)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_WITH_JS_MEMBERS(MIDIMessageEvent, Event, (),
+                                                   (mData))
 
 NS_IMPL_ADDREF_INHERITED(MIDIMessageEvent, Event)
 NS_IMPL_RELEASE_INHERITED(MIDIMessageEvent, Event)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MIDIMessageEvent, Event)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MIDIMessageEvent, Event)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mData)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MIDIMessageEvent, Event)
-  tmp->mData = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MIDIMessageEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
@@ -72,12 +62,15 @@ already_AddRefed<MIDIMessageEvent> MIDIMessageEvent::Constructor(
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
   // Set data for event. Timestamp will always be set to Now() (default for
   // event) using this constructor.
-  const auto& a = aEventInitDict.mData.Value();
-  a.ComputeState();
-  e->mData = Uint8Array::Create(aGlobal.Context(), owner, a.Length(), a.Data());
-  if (NS_WARN_IF(!e->mData)) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
+  if (aEventInitDict.mData.WasPassed()) {
+    const auto& a = aEventInitDict.mData.Value();
+    a.ComputeState();
+    e->mData =
+        Uint8Array::Create(aGlobal.Context(), owner, a.Length(), a.Data());
+    if (NS_WARN_IF(!e->mData)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
   }
 
   e->SetTrusted(trusted);

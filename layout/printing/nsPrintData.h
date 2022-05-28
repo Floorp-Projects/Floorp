@@ -14,19 +14,11 @@
 #include "nsDeviceContext.h"
 #include "nsIPrintSettings.h"
 #include "nsISupportsImpl.h"
-#include "nsTArray.h"
 #include "nsCOMArray.h"
 
 class nsPrintObject;
 class nsIWebProgressListener;
 
-//------------------------------------------------------------------------
-// nsPrintData Class
-//
-// mPreparingForPrint - indicates that we have started Printing but
-//   have not gone to the timer to start printing the pages. It gets turned
-//   off right before we go to the timer.
-//------------------------------------------------------------------------
 class nsPrintData {
  public:
   typedef enum { eIsPrinting, eIsPrintPreview } ePrintDataType;
@@ -46,28 +38,10 @@ class nsPrintData {
   ePrintDataType mType;  // the type of data this is (Printing or Print Preview)
   RefPtr<nsDeviceContext> mPrintDC;
 
-  mozilla::UniquePtr<nsPrintObject> mPrintObject;
-
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
 
-  // If there is a focused iframe, mSelectionRoot is set to its nsPrintObject.
-  // Otherwise, if there is a selection, it is set to the root nsPrintObject.
-  // Otherwise, it is unset.
-  nsPrintObject* mSelectionRoot = nullptr;
-
-  // Array of non-owning pointers to all the nsPrintObjects owned by this
-  // nsPrintData. This includes this->mPrintObject, as well as all of its
-  // mKids (and their mKids, etc.)
-  nsTArray<nsPrintObject*> mPrintDocList;
-
   bool mOnStartSent;
-  bool mIsAborted;          // tells us the document is being aborted
-  bool mPreparingForPrint;  // see comments above
-  bool mShrinkToFit;
-  int32_t mNumPrintablePages;
-  float mShrinkRatio;
-
-  nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  bool mIsAborted;  // tells us the document is being aborted
 
  private:
   nsPrintData() = delete;

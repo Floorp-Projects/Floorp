@@ -129,7 +129,6 @@ SimpleTest.waitForFocus(() => {
                        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                      "</table>";
   editor.focus();
-  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -156,7 +155,6 @@ SimpleTest.waitForFocus(() => {
                        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                      "</table>";
   editor.focus();
-  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -183,7 +181,6 @@ SimpleTest.waitForFocus(() => {
                        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                      "</table>";
   editor.focus();
-  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -210,7 +207,6 @@ SimpleTest.waitForFocus(() => {
                        "<tr><td>cell3-1</td></tr>" +
                      "</table>";
   editor.focus();
-  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -237,7 +233,6 @@ SimpleTest.waitForFocus(() => {
                        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                      "</table>";
   editor.focus();
-  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -265,7 +260,6 @@ SimpleTest.waitForFocus(() => {
                        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                      "</table>";
   editor.focus();
-  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -286,6 +280,99 @@ SimpleTest.waitForFocus(() => {
      'Only one "input" event should be fired when selection is collapsed in a cell which is row-spanning (after)');
   checkInputEvent(inputEvents[0], "when selection is collapsed in a cell which is row-spanning (after)");
 
+  (function testInsertBeforeRowFollowingTextNode() {
+    selection.removeAllRanges();
+    editor.innerHTML =
+      "<table>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>\n" +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>\n' +
+        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+      "</table>";
+    editor.focus();
+    beforeInputEvents = [];
+    inputEvents = [];
+    selection.setBaseAndExtent(
+      document.getElementById("select").firstChild,
+      0,
+      document.getElementById("select").firstChild,
+      0
+    );
+    getTableEditor().insertTableRow(1, false);
+    is(
+      editor.innerHTML,
+      "<table><tbody>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>\n" +
+        '<tr><td valign="top"><br></td><td valign="top"><br></td></tr>' +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>\n' +
+        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+      "</tbody></table>",
+      "testInsertBeforeRowFollowingTextNode: nsITableEditor.insertTableRow(1, false) should insert a row above the second row");
+    is(
+      beforeInputEvents.length,
+      1,
+      'testInsertBeforeRowFollowingTextNode: Only one "beforeinput" event should be fired'
+    );
+    checkInputEvent(
+      beforeInputEvents[0],
+      "when selection is collapsed in a cell whose row follows a text node (testInsertBeforeRowFollowingTextNode)"
+    );
+    is(
+      inputEvents.length,
+      1,
+      'testInsertBeforeRowFollowingTextNode: Only one "input" event should be fired'
+    );
+    checkInputEvent(
+      inputEvents[0],
+      "when selection is collapsed in a cell whose row follows a text node (testInsertBeforeRowFollowingTextNode)"
+    );
+  })();
+
+  (function testInsertAfterRowFollowedTextNode() {
+    selection.removeAllRanges();
+    editor.innerHTML =
+      "<table>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>\n" +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>\n' +
+        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+      "</table>";
+    editor.focus();
+    beforeInputEvents = [];
+    inputEvents = [];
+    selection.setBaseAndExtent(
+      document.getElementById("select").firstChild,
+      0,
+      document.getElementById("select").firstChild,
+      0
+    );
+    getTableEditor().insertTableRow(1, true);
+    is(
+      editor.innerHTML,
+      "<table><tbody>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>\n" +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+        '<tr><td valign="top"><br></td><td valign="top"><br></td></tr>\n' +
+        "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+      "</tbody></table>",
+      "testInsertAfterRowFollowedTextNode: nsITableEditor.insertTableRow(1, true) should insert a row above the second row");
+    is(
+      beforeInputEvents.length,
+      1,
+      'testInsertAfterRowFollowedTextNode: Only one "beforeinput" event should be fired'
+    );
+    checkInputEvent(
+      beforeInputEvents[0],
+      "when selection is collapsed in a cell whose row follows a text node (testInsertAfterRowFollowedTextNode)"
+    );
+    is(
+      inputEvents.length,
+      1,
+      'testInsertAfterRowFollowedTextNode: Only one "input" event should be fired'
+    );
+    checkInputEvent(
+      inputEvents[0],
+      "when selection is collapsed in a cell whose row follows a text node (testInsertAfterRowFollowedTextNode)"
+    );
+  })();
   editor.removeEventListener("beforeinput", onBeforeInput);
   editor.removeEventListener("input", onInput);
 

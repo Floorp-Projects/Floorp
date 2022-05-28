@@ -856,9 +856,14 @@
 }
 
 #PopupSearchAutoComplete::part(content)  {
-  /* Remove the top border since the panel is flush with the input. */
-  border-top-width: 0;
   --panel-padding: var(--panel-subview-body-padding);
+}
+
+@media not (prefers-contrast) {
+  #PopupSearchAutoComplete::part(content)  {
+    /* Remove the top border since the panel is flush with the input. */
+   border-top-width: 0;
+  }
 }
 
 #PopupSearchAutoComplete .autocomplete-richlistitem[selected] {

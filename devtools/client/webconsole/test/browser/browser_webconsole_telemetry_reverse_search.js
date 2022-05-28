@@ -24,9 +24,9 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Evaluate single line expressions");
-  await keyboardExecuteAndWaitForMessage(hud, `"single line 1"`, "", ".result");
-  await keyboardExecuteAndWaitForMessage(hud, `"single line 2"`, "", ".result");
-  await keyboardExecuteAndWaitForMessage(hud, `"single line 3"`, "", ".result");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"single line 1"`, "");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"single line 2"`, "");
+  await keyboardExecuteAndWaitForResultMessage(hud, `"single line 3"`, "");
 
   info("Open editor mode");
   await toggleLayout(hud);
@@ -58,7 +58,7 @@ add_task(async function() {
   navigateReverseSearch("mouse", "previous", hud);
 
   info("Reverse search evaluate expression");
-  const onMessage = waitForMessage(hud, "single line 3", ".result");
+  const onMessage = waitForMessageByType(hud, "single line 3", ".result");
   EventUtils.synthesizeKey("KEY_Enter");
   await onMessage;
 

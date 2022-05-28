@@ -192,6 +192,7 @@ export function createGeneratedSource(sourceResource) {
     isWasm: !!features.wasm && sourceResource.introductionType === "wasm",
     isExtension:
       (sourceResource.url && isUrlExtension(sourceResource.url)) || false,
+    isHTML: !!sourceResource.isInlineSource,
   });
 }
 
@@ -210,6 +211,7 @@ function createSourceObject({
   isExtension = false,
   isPrettyPrinted = false,
   isOriginal = false,
+  isHTML = false,
 }) {
   return {
     // The ID, computed by:
@@ -241,6 +243,10 @@ function createSourceObject({
 
     // True if WASM is enabled *and* the generated source is a WASM source
     isWasm,
+
+    // True is this source is an HTML and relates to many sources actors,
+    // one for each of its inline <script>
+    isHTML,
 
     // True, if this is an original pretty printed source
     isPrettyPrinted,

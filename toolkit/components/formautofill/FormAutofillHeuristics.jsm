@@ -881,7 +881,10 @@ this.FormAutofillHeuristics = {
 
     // The heuristic below should be covered by fathom rules, so we can skip doing
     // it.
-    if (FormAutofillUtils.isFathomCreditCardsEnabled()) {
+    if (
+      FormAutofillUtils.isFathomCreditCardsEnabled() &&
+      creditCardRulesets.types.includes(detail.fieldName)
+    ) {
       fieldScanner.parsingIndex++;
       return true;
     }
@@ -1151,10 +1154,10 @@ this.FormAutofillHeuristics = {
       let fathomFields = fields.filter(r =>
         creditCardRulesets.types.includes(r)
       );
-      let fathomField = scanner.getFathomField(element, fathomFields);
+      let matchedFieldName = scanner.getFathomField(element, fathomFields);
       // At this point, use fathom's recommendation if it has one
-      if (fathomField) {
-        return infoRecordWithFieldName(fathomField);
+      if (matchedFieldName) {
+        return infoRecordWithFieldName(matchedFieldName);
       }
 
       // TODO: Do we want to run old heuristics for fields that fathom isn't confident?
@@ -1383,22 +1386,14 @@ XPCOMUtils.defineLazyGetter(FormAutofillHeuristics, "ADDRESS_FIELDNAMES", () =>
   )
 );
 
-XPCOMUtils.defineLazyGetter(FormAutofillHeuristics, "_prefEnabled", () => {
-  return Services.prefs.getBoolPref(PREF_HEURISTICS_ENABLED);
-});
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillHeuristics,
+  "_prefEnabled",
+  PREF_HEURISTICS_ENABLED
+);
 
-Services.prefs.addObserver(PREF_HEURISTICS_ENABLED, () => {
-  FormAutofillHeuristics._prefEnabled = Services.prefs.getBoolPref(
-    PREF_HEURISTICS_ENABLED
-  );
-});
-
-XPCOMUtils.defineLazyGetter(FormAutofillHeuristics, "_sectionEnabled", () => {
-  return Services.prefs.getBoolPref(PREF_SECTION_ENABLED);
-});
-
-Services.prefs.addObserver(PREF_SECTION_ENABLED, () => {
-  FormAutofillHeuristics._sectionEnabled = Services.prefs.getBoolPref(
-    PREF_SECTION_ENABLED
-  );
-});
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillHeuristics,
+  "_sectionEnabled",
+  PREF_SECTION_ENABLED
+);

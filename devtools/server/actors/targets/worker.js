@@ -55,6 +55,15 @@ exports.WorkerTargetActor = TargetActorMixin(
         },
         shouldAddNewGlobalAsDebuggee: () => true,
       });
+
+      // needed by the console actor
+      this.threadActor = new ThreadActor(this, this.workerGlobal);
+
+      // needed by the thread actor to communicate with the console when evaluating logpoints.
+      this._consoleActor = new WebConsoleActor(this.conn, this);
+
+      this.manage(this.threadActor);
+      this.manage(this._consoleActor);
     },
 
     form() {
@@ -70,21 +79,6 @@ exports.WorkerTargetActor = TargetActorMixin(
           supportsTopLevelTargetFlag: false,
         },
       };
-    },
-
-    attach() {
-      if (this.threadActor) {
-        return;
-      }
-
-      // needed by the console actor
-      this.threadActor = new ThreadActor(this, this.workerGlobal);
-
-      // needed by the thread actor to communicate with the console when evaluating logpoints.
-      this._consoleActor = new WebConsoleActor(this.conn, this);
-
-      this.manage(this.threadActor);
-      this.manage(this._consoleActor);
     },
 
     get dbg() {

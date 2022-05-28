@@ -18,39 +18,37 @@ add_task(async function() {
   await addBreakpoint(dbg, "doc-html-breakpoints.html", 8);
 
   // Ensure that the breakpoints get added once the later scripts load.
-  await waitForBreakableLine(dbg, "doc-html-breakpoints.html", 14);
-  await addBreakpoint(dbg, "doc-html-breakpoints.html", 14);
+  await waitForBreakableLine(dbg, "doc-html-breakpoints.html", 15);
+  await addBreakpoint(dbg, "doc-html-breakpoints.html", 15);
   await waitForBreakableLine(dbg, "doc-html-breakpoints.html", 20);
   await addBreakpoint(dbg, "doc-html-breakpoints.html", 20);
 
-  await reload(dbg, "doc-html-breakpoints.html");
+  await reload(dbg, "doc-html-breakpoints.html", "simple2.js");
 
   invokeInTab("test1");
   await waitForPaused(dbg);
-  assertPausedAtSourceAndLine(
-    dbg,
-    findSource(dbg, "doc-html-breakpoints.html").id,
-    8
+
+  const htmlSource = findSource(dbg, "doc-html-breakpoints.html");
+
+  is(htmlSource.isHTML, true, "The html page is flagged as an html source");
+  is(
+    findSource(dbg, "simple2.js").isHTML,
+    false,
+    "The js source is not flagged as an html source"
   );
+
+  assertPausedAtSourceAndLine(dbg, htmlSource.id, 8);
   await resume(dbg);
 
-  await waitForBreakableLine(dbg, "doc-html-breakpoints.html", 14);
+  await waitForBreakableLine(dbg, "doc-html-breakpoints.html", 15);
   invokeInTab("test3");
   await waitForPaused(dbg);
-  assertPausedAtSourceAndLine(
-    dbg,
-    findSource(dbg, "doc-html-breakpoints.html").id,
-    14
-  );
+  assertPausedAtSourceAndLine(dbg, htmlSource.id, 15);
   await resume(dbg);
 
   await waitForBreakableLine(dbg, "doc-html-breakpoints.html", 20);
   invokeInTab("test4");
   await waitForPaused(dbg);
-  assertPausedAtSourceAndLine(
-    dbg,
-    findSource(dbg, "doc-html-breakpoints.html").id,
-    20
-  );
+  assertPausedAtSourceAndLine(dbg, htmlSource.id, 20);
   await resume(dbg);
 });

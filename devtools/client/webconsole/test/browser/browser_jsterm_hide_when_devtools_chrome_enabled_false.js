@@ -79,11 +79,10 @@ add_task(async function() {
 
 async function logObject(hud) {
   const prop = "browser_console_hide_jsterm_test";
-  const { node } = await executeAndWaitForMessage(
+  const { node } = await executeAndWaitForResultMessage(
     hud,
     `new Object({ ${prop}: true })`,
-    prop,
-    ".result"
+    prop
   );
   return node.querySelector(".tree");
 }

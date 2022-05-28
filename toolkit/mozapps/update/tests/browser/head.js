@@ -658,7 +658,13 @@ function runAboutDialogUpdateTest(params, steps) {
       return step(aboutDialog);
     }
 
-    const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
+    const {
+      panelId,
+      checkActiveUpdate,
+      continueFile,
+      downloadInfo,
+      forceApply,
+    } = step;
     return (async function() {
       await TestUtils.waitForCondition(
         () =>
@@ -776,7 +782,7 @@ function runAboutDialogUpdateTest(params, steps) {
         ok(!buttonEl.disabled, "The button should be enabled");
         // Don't click the button on the apply panel since this will restart the
         // application.
-        if (panelId != "apply") {
+        if (panelId != "apply" || forceApply) {
           buttonEl.click();
         }
       }
@@ -865,7 +871,13 @@ function runAboutPrefsUpdateTest(params, steps) {
       return step(tab);
     }
 
-    const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
+    const {
+      panelId,
+      checkActiveUpdate,
+      continueFile,
+      downloadInfo,
+      forceApply,
+    } = step;
     return (async function() {
       await SpecialPowers.spawn(
         tab.linkedBrowser,
@@ -977,8 +989,8 @@ function runAboutPrefsUpdateTest(params, steps) {
 
       await SpecialPowers.spawn(
         tab.linkedBrowser,
-        [{ panelId, gDetailsURL }],
-        async ({ panelId, gDetailsURL }) => {
+        [{ panelId, gDetailsURL, forceApply }],
+        async ({ panelId, gDetailsURL, forceApply }) => {
           let linkPanels = [
             "downloadFailed",
             "manualUpdate",
@@ -1012,7 +1024,7 @@ function runAboutPrefsUpdateTest(params, steps) {
             ok(!buttonEl.disabled, "The button should be enabled");
             // Don't click the button on the apply panel since this will restart
             // the application.
-            if (selectedPanel.id != "apply") {
+            if (selectedPanel.id != "apply" || forceApply) {
               buttonEl.click();
             }
           }

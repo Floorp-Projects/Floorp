@@ -30,7 +30,7 @@ add_task(async function() {
 
   info('Finding "here" message and waiting for source map to be applied');
   await waitFor(() => {
-    const node = findMessage(hud, "here");
+    const node = findConsoleAPIMessage(hud, "here");
     if (!node) {
       return false;
     }
@@ -39,12 +39,18 @@ add_task(async function() {
     return url.includes("nosuchfile");
   });
 
-  await testOpenInDebugger(hud, toolbox, "here", true, false, false);
+  await testOpenInDebugger(hud, {
+    text: "here",
+    typeSelector: ".console-api",
+    expectUrl: true,
+    expectLine: false,
+    expectColumn: false,
+  });
 
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");
 
-  const node = await waitFor(() => findMessage(hud, "original source"));
+  const node = await waitFor(() => findWarningMessage(hud, "original source"));
   ok(node, "source map error is displayed in web console");
 
   ok(

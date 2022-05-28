@@ -14,7 +14,7 @@ add_task(async function() {
 
   toolbox.target.logErrorInPage("beware the octopus", "content javascript");
 
-  const node = await waitFor(() => findMessage(hud, "octopus"));
+  const node = await waitFor(() => findErrorMessage(hud, "octopus"));
   ok(node, "text is displayed in web console");
   ok(node.classList.contains("error"), "the log represents an error");
 });

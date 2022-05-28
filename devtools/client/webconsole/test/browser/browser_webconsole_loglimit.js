@@ -14,7 +14,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
 
-  let onMessage = waitForMessage(hud, "test message [149]");
+  let onMessage = waitForMessageByType(
+    hud,
+    "test message [149]",
+    ".console-api"
+  );
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     for (let i = 0; i < 150; i++) {
       content.console.log(`test message [${i}]`);
@@ -23,15 +27,27 @@ add_task(async function() {
   await onMessage;
 
   ok(
-    !(await findMessageVirtualized({ hud, text: "test message [0]" })),
+    !(await findMessageVirtualizedByType({
+      hud,
+      text: "test message [0]",
+      typeSelector: ".console-api",
+    })),
     "Message 0 has been pruned"
   );
   ok(
-    !(await findMessageVirtualized({ hud, text: "test message [9]" })),
+    !(await findMessageVirtualizedByType({
+      hud,
+      text: "test message [9]",
+      typeSelector: ".console-api",
+    })),
     "Message 9 has been pruned"
   );
   ok(
-    await findMessageVirtualized({ hud, text: "test message [10]" }),
+    await findMessageVirtualizedByType({
+      hud,
+      text: "test message [10]",
+      typeSelector: ".console-api",
+    }),
     "Message 10 is still displayed"
   );
   is(
@@ -40,18 +56,26 @@ add_task(async function() {
     "Number of displayed messages is correct"
   );
 
-  onMessage = waitForMessage(hud, "hello world");
+  onMessage = waitForMessageByType(hud, "hello world", ".console-api");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.console.log("hello world");
   });
   await onMessage;
 
   ok(
-    !(await findMessageVirtualized({ hud, text: "test message [10]" })),
+    !(await findMessageVirtualizedByType({
+      hud,
+      text: "test message [10]",
+      typeSelector: ".console-api",
+    })),
     "Message 10 has been pruned"
   );
   ok(
-    await findMessageVirtualized({ hud, text: "test message [11]" }),
+    await findMessageVirtualizedByType({
+      hud,
+      text: "test message [11]",
+      typeSelector: ".console-api",
+    }),
     "Message 11 is still displayed"
   );
   is(

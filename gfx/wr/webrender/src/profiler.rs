@@ -225,33 +225,34 @@ pub const INTERNED_RADIAL_GRADIENTS: usize = 94;
 pub const INTERNED_CONIC_GRADIENTS: usize = 95;
 pub const INTERNED_PICTURES: usize = 96;
 pub const INTERNED_FILTER_DATA: usize = 97;
-pub const INTERNED_BACKDROPS: usize = 98;
-pub const INTERNED_POLYGONS: usize = 99;
+pub const INTERNED_BACKDROP_CAPTURES: usize = 98;
+pub const INTERNED_BACKDROP_RENDERS: usize = 99;
+pub const INTERNED_POLYGONS: usize = 100;
 
-pub const DEPTH_TARGETS_MEM: usize = 100;
+pub const DEPTH_TARGETS_MEM: usize = 101;
 
-pub const SHADER_BUILD_TIME: usize = 101;
+pub const SHADER_BUILD_TIME: usize = 102;
 
-pub const RENDER_REASON_FIRST: usize = 102;
-pub const RENDER_REASON_SCENE: usize = 102;
-pub const RENDER_REASON_ANIMATED_PROPERTY: usize = 103;
-pub const RENDER_REASON_RESOURCE_UPDATE: usize = 104;
-pub const RENDER_REASON_ASYNC_IMAGE: usize = 105;
-pub const RENDER_REASON_CLEAR_RESOURCES: usize = 106;
-pub const RENDER_REASON_APZ: usize = 107;
-pub const RENDER_REASON_RESIZE: usize = 108;
-pub const RENDER_REASON_WIDGET: usize = 109;
-pub const RENDER_REASON_TEXTURE_CACHE_FLUSH: usize = 110;
-pub const RENDER_REASON_SNAPSHOT: usize = 111;
-pub const RENDER_REASON_POST_RESOURCE_UPDATE_HOOKS: usize = 112;
-pub const RENDER_REASON_CONFIG_CHANGE: usize = 113;
-pub const RENDER_REASON_CONTENT_SYNC: usize = 114;
-pub const RENDER_REASON_FLUSH: usize = 115;
-pub const RENDER_REASON_TESTING: usize = 116;
-pub const RENDER_REASON_OTHER: usize = 117;
-pub const RENDER_REASON_VSYNC: usize = 118;
+pub const RENDER_REASON_FIRST: usize = 103;
+pub const RENDER_REASON_SCENE: usize = 103;
+pub const RENDER_REASON_ANIMATED_PROPERTY: usize = 104;
+pub const RENDER_REASON_RESOURCE_UPDATE: usize = 105;
+pub const RENDER_REASON_ASYNC_IMAGE: usize = 106;
+pub const RENDER_REASON_CLEAR_RESOURCES: usize = 107;
+pub const RENDER_REASON_APZ: usize = 108;
+pub const RENDER_REASON_RESIZE: usize = 109;
+pub const RENDER_REASON_WIDGET: usize = 110;
+pub const RENDER_REASON_TEXTURE_CACHE_FLUSH: usize = 111;
+pub const RENDER_REASON_SNAPSHOT: usize = 112;
+pub const RENDER_REASON_POST_RESOURCE_UPDATE_HOOKS: usize = 113;
+pub const RENDER_REASON_CONFIG_CHANGE: usize = 114;
+pub const RENDER_REASON_CONTENT_SYNC: usize = 115;
+pub const RENDER_REASON_FLUSH: usize = 116;
+pub const RENDER_REASON_TESTING: usize = 117;
+pub const RENDER_REASON_OTHER: usize = 118;
+pub const RENDER_REASON_VSYNC: usize = 119;
 
-pub const NUM_PROFILER_EVENTS: usize = 119;
+pub const NUM_PROFILER_EVENTS: usize = 120;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -401,7 +402,8 @@ impl Profiler {
             int("Interned conic gradients", "", INTERNED_CONIC_GRADIENTS, Expected::none()),
             int("Interned pictures", "", INTERNED_PICTURES, Expected::none()),
             int("Interned filter data", "", INTERNED_FILTER_DATA, Expected::none()),
-            int("Interned backdrops", "", INTERNED_BACKDROPS, Expected::none()),
+            int("Interned backdrop captures", "", INTERNED_BACKDROP_CAPTURES, Expected::none()),
+            int("Interned backdrop renders", "", INTERNED_BACKDROP_RENDERS, Expected::none()),
             int("Interned polygons", "", INTERNED_POLYGONS, Expected::none()),
 
             float("Depth targets mem", "MB", DEPTH_TARGETS_MEM, Expected::none()),

@@ -25,7 +25,7 @@ class SplitBox extends Component {
       // Custom class name. You can use more names separated by a space.
       className: PropTypes.string,
       // Initial size of controlled panel.
-      initialSize: PropTypes.string,
+      initialSize: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       // Initial width of controlled panel.
       initialWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       // Initial height of controlled panel.

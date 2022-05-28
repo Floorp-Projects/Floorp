@@ -25,7 +25,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = hud.toolbox;
 
-  const onLoggedFunction = waitForMessage(hud, "function foo");
+  const onLoggedFunction = waitForMessageByType(
+    hud,
+    "function foo",
+    ".console-api"
+  );
   invokeInTab("foo");
   const { node } = await onLoggedFunction;
   const jumpIcon = node.querySelector(".jump-definition");

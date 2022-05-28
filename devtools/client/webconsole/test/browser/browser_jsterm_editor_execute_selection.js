@@ -20,7 +20,11 @@ add_task(async function() {
   info("Evaluate the whole expression");
   setInputValue(hud, expression);
 
-  let onResultMessage = waitForMessage(hud, "second assignment", ".result");
+  let onResultMessage = waitForMessageByType(
+    hud,
+    "second assignment",
+    ".result"
+  );
   synthesizeKeyboardEvaluation();
   await onResultMessage;
   ok(true, "The whole expression is evaluated when there's no selection");
@@ -30,13 +34,13 @@ add_task(async function() {
     { line: 0, ch: 0 },
     { line: 0, ch: expression.split("\n")[0].length }
   );
-  onResultMessage = waitForMessage(hud, "first assignment", ".result");
+  onResultMessage = waitForMessageByType(hud, "first assignment", ".result");
   synthesizeKeyboardEvaluation();
   await onResultMessage;
   ok(true, "Only the expression on the first line was evaluated");
 
   info("Check that it also works when clicking on the Run button");
-  onResultMessage = waitForMessage(hud, "first assignment", ".result");
+  onResultMessage = waitForMessageByType(hud, "first assignment", ".result");
   hud.ui.outputNode
     .querySelector(".webconsole-editor-toolbar-executeButton")
     .click();
@@ -52,7 +56,7 @@ add_task(async function() {
     { line: 0, ch: 0 },
     { line: 0, ch: expression.split("\n")[0].length }
   );
-  onResultMessage = waitForMessage(hud, "second assignment", ".result");
+  onResultMessage = waitForMessageByType(hud, "second assignment", ".result");
   synthesizeKeyboardEvaluation();
   await onResultMessage;
   ok(true, "The whole expression was evaluated in inline mode");

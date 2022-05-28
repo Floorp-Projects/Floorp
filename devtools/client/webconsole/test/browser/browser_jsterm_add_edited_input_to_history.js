@@ -23,7 +23,7 @@ add_task(async function() {
   is(getInputValue(hud), '"first item"', "null test history down");
 
   EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessage(hud, "first item", ".result"));
+  await waitFor(() => findEvaluationResultMessage(hud, "first item"));
   is(getInputValue(hud), "", "cleared input line after submit");
 
   setInputValue(hud, '"editing input 1"');
@@ -38,7 +38,7 @@ add_task(async function() {
 
   setInputValue(hud, '"second item"');
   EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessage(hud, "second item", ".result"));
+  await waitFor(() => findEvaluationResultMessage(hud, "second item"));
 
   setInputValue(hud, '"editing input 2"');
   EventUtils.synthesizeKey("KEY_ArrowUp");
@@ -59,11 +59,15 @@ add_task(async function() {
   // is properly trimmed.
   setInputValue(hud, '"second item"');
   EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessages(hud, "second item", ".result").length == 2);
+  await waitFor(
+    () => findEvaluationResultMessages(hud, "second item").length == 2
+  );
 
   setInputValue(hud, '"second item"    ');
   EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessages(hud, "second item", ".result").length == 3);
+  await waitFor(
+    () => findEvaluationResultMessages(hud, "second item").length == 3
+  );
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
   is(

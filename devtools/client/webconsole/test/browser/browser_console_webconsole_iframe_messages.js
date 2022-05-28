@@ -10,7 +10,12 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console-iframes.html";
 
-const expectedMessages = ["main file", "blah", "iframe 2", "iframe 3"];
+const expectedMessages = [
+  ["main file", ".console-api"],
+  ["blah", ".error"],
+  ["iframe 2", ".console-api"],
+  ["iframe 3", ".console-api"],
+];
 
 // This log comes from test-iframe1.html, which is included from test-console-iframes.html
 // __and__ from test-iframe3.html as well, so we should see it twice.
@@ -44,13 +49,15 @@ add_task(async function() {
 });
 
 async function testMessages(hud) {
-  for (const message of expectedMessages) {
+  for (const [message, selector] of expectedMessages) {
     info(`checking that the message "${message}" exists`);
-    await waitFor(() => findMessage(hud, message));
+    await waitFor(() => findMessageByType(hud, message, selector));
   }
 
   ok(true, "Found expected unique messages");
 
-  await waitFor(() => findMessages(hud, expectedDupedMessage).length == 2);
+  await waitFor(
+    () => findConsoleAPIMessages(hud, expectedDupedMessage).length == 2
+  );
   ok(true, `${expectedDupedMessage} is present twice`);
 }

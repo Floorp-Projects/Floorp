@@ -14,7 +14,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
-  let messageNode = await waitFor(() => findMessage(hud, "BAR"));
+  let messageNode = await waitFor(() => findErrorMessage(hud, "BAR"));
   await clickFirstStackElement(hud, messageNode, true);
 
   const dbg = toolbox.getPanel("jsdebugger");
@@ -25,15 +25,27 @@ add_task(async function() {
     "expected source url"
   );
 
-  await testOpenInDebugger(hud, toolbox, "FOO", false);
-  await testOpenInDebugger(hud, toolbox, "BAR", false);
+  await testOpenInDebugger(hud, {
+    text: "FOO",
+    typeSelector: ".console-api",
+    expectUrl: false,
+  });
+  await testOpenInDebugger(hud, {
+    text: "BAR",
+    typeSelector: ".error",
+    expectUrl: false,
+  });
 
   // Test that links in the API work when the eval source has a sourceURL property
   // which is not considered to be a valid URL.
-  await testOpenInDebugger(hud, toolbox, "BAZ", false);
+  await testOpenInDebugger(hud, {
+    text: "BAZ",
+    typeSelector: ".console-api",
+    expectUrl: false,
+  });
 
   // Test that stacks in console.trace() calls work.
-  messageNode = await waitFor(() => findMessage(hud, "TRACE"));
+  messageNode = await waitFor(() => findConsoleAPIMessage(hud, "TRACE"));
   await clickFirstStackElement(hud, messageNode, false);
 
   is(

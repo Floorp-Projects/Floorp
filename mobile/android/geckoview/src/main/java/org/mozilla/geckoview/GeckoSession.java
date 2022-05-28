@@ -6482,10 +6482,13 @@ public class GeckoSession {
    * Perform autofill using the specified values.
    *
    * @param values Map of autofill IDs to values.
+   * @deprecated Use {@link Autofill.Session#autofill} instead.
    */
   @UiThread
+  @Deprecated
+  @DeprecationSchedule(id = "autofill-node", version = 104)
   public void autofill(final @NonNull SparseArray<CharSequence> values) {
-    getAutofillSupport().autofill(values);
+    getAutofillSession().autofill(values);
   }
 
   /**

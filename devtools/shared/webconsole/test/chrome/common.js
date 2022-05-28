@@ -92,8 +92,8 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
           return null;
         }
         // This is still important to attach workers as target is still a descriptor front
-        // which "becomes" a target when calling its attach method.
-        await target.attach();
+        // which "becomes" a target when calling this method:
+        await target.morphWorkerDescriptorIntoWorkerTarget();
       }
     }
 

@@ -72,6 +72,7 @@
 #  include "gfxWindowsPlatform.h"
 #  include "mozilla/WindowsVersion.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/TextureD3D11.h"
 #  include "mozilla/widget/WinCompositorWindowThread.h"
 #else
 #  include <unistd.h>
@@ -189,6 +190,7 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
 #if defined(XP_WIN)
   gfxWindowsPlatform::InitMemoryReportersForGPUProcess();
   DeviceManagerDx::Init();
+  GpuProcessD3D11TextureMap::Init();
 #endif
 
   CompositorThreadHolder::Start();
@@ -721,6 +723,7 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
 
 #if defined(XP_WIN)
+        GpuProcessD3D11TextureMap::Shutdown();
         DeviceManagerDx::Shutdown();
 #endif
         LayerTreeOwnerTracker::Shutdown();

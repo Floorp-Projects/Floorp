@@ -55,16 +55,15 @@ class Registers {
     r1,
     r2,
     r3,
-    S0 = r3,
     r4,
     r5,
     r6,
     r7,
     r8,
-    S1 = r8,
     r9,
     r10,
     r11,
+    fp = r11,
     r12,
     ip = r12,
     r13,
@@ -133,7 +132,7 @@ class Registers {
 
   static const SetType NonAllocatableMask =
       (1 << Registers::sp) | (1 << Registers::r12) |  // r12 = ip = scratch
-      (1 << Registers::lr) | (1 << Registers::pc);
+      (1 << Registers::lr) | (1 << Registers::pc) | (1 << Registers::fp);
 
   // Registers returned from a JS -> JS call.
   static const SetType JSCallMask = (1 << Registers::r2) | (1 << Registers::r3);

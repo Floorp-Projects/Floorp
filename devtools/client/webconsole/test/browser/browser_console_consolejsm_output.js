@@ -125,12 +125,12 @@ add_task(async function testProfile() {
 
 async function checkMessageExists(hud, msg) {
   info(`Checking "${msg}" was logged`);
-  const message = await waitFor(() => findMessage(hud, msg));
+  const message = await waitFor(() => findConsoleAPIMessage(hud, msg));
   ok(message, `"${msg}" was logged`);
 }
 
 async function checkMessageHidden(hud, msg) {
   info(`Checking "${msg}" was not logged`);
-  await waitFor(() => findMessage(hud, msg) == null);
+  await waitFor(() => findConsoleAPIMessage(hud, msg) == null);
   ok(true, `"${msg}" was not logged`);
 }

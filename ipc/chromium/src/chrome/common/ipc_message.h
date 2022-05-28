@@ -93,9 +93,8 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     REPLY = 1,
   };
 
-  // Mac and Linux both limit the number of file descriptors per message to
-  // slightly more than 250.
-  enum { MAX_DESCRIPTORS_PER_MESSAGE = 200 };
+  // The hard limit of handles or file descriptors allowed in a single message.
+  static constexpr size_t MAX_DESCRIPTORS_PER_MESSAGE = 32767;
 
   class HeaderFlags {
     friend class Message;

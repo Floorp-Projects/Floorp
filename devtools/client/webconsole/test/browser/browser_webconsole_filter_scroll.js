@@ -17,7 +17,7 @@ add_task(async function() {
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
 
   info("Console should be scrolled to bottom on initial load from page logs");
-  await waitFor(() => findMessage(hud, "init-99"));
+  await waitFor(() => findConsoleAPIMessage(hud, "init-99"));
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -28,7 +28,7 @@ add_task(async function() {
     "Filter out some messages and check that the scroll position is not impacted"
   );
   let onMessagesFiltered = waitFor(
-    () => !findMessage(hud, "init-0"),
+    () => !findConsoleAPIMessage(hud, "init-0"),
     null,
     200
   );
@@ -43,7 +43,7 @@ add_task(async function() {
     "Clear the text filter and check that the scroll position is not impacted"
   );
   let onMessagesUnFiltered = waitFor(
-    () => findMessage(hud, "init-0"),
+    () => findConsoleAPIMessage(hud, "init-0"),
     null,
     200
   );
@@ -64,7 +64,7 @@ add_task(async function() {
 
   await setFilterState(hud, { text: "init-9" });
   onMessagesFiltered = waitFor(
-    async () => !findMessage(hud, "init-0"),
+    async () => !findConsoleAPIMessage(hud, "init-0"),
     null,
     200
   );
@@ -78,7 +78,11 @@ add_task(async function() {
   info(
     "Clear the text filter and check that the scroll position is not impacted"
   );
-  onMessagesUnFiltered = waitFor(() => findMessage(hud, "init-0"), null, 200);
+  onMessagesUnFiltered = waitFor(
+    () => findConsoleAPIMessage(hud, "init-0"),
+    null,
+    200
+  );
   await setFilterState(hud, { text: "" });
   await onMessagesUnFiltered;
   is(

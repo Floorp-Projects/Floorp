@@ -263,9 +263,8 @@ bool AutoResolving::alreadyStartedSlow() const {
 
 /*
  * Since memory has been exhausted, avoid the normal error-handling path which
- * allocates an error object, report and callstack. If code is running, simply
- * throw the static atom "out of memory". If code is not running, call the
- * error reporter directly.
+ * allocates an error object, report and callstack. Instead simply throw the
+ * static atom "out of memory".
  *
  * Furthermore, callers of ReportOutOfMemory (viz., malloc) assume a GC does
  * not occur, so GC must be avoided or suppressed.
@@ -1186,6 +1185,18 @@ bool JSContext::isThrowingDebuggeeWouldRun() {
          unwrappedException().toObject().is<ErrorObject>() &&
          unwrappedException().toObject().as<ErrorObject>().type() ==
              JSEXN_DEBUGGEEWOULDRUN;
+}
+
+bool JSContext::isRuntimeCodeGenEnabled(JS::RuntimeCode kind,
+                                        HandleString code) {
+  // Make sure that the CSP callback is installed and that it permits runtime
+  // code generation.
+  if (JSCSPEvalChecker allows =
+          runtime()->securityCallbacks->contentSecurityPolicyAllows) {
+    return allows(this, kind, code);
+  }
+
+  return true;
 }
 
 size_t JSContext::sizeOfExcludingThis(
