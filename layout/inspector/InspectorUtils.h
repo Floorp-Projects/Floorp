@@ -16,7 +16,6 @@ class nsAtom;
 class nsINode;
 class nsINodeList;
 class nsRange;
-class ComputedStyle;
 
 namespace mozilla {
 class BindingStyleRule;

@@ -633,7 +633,7 @@ bool nsXHTMLContentSerializer::IsElementPreformatted(nsIContent* aNode) {
   if (!aNode->IsElement()) {
     return false;
   }
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<const ComputedStyle> computedStyle =
       nsComputedDOMStyle::GetComputedStyleNoFlush(aNode->AsElement());
   if (computedStyle) {
     const nsStyleText* textStyle = computedStyle->StyleText();
