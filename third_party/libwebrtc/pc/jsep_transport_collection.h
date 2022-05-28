@@ -11,14 +11,19 @@
 #ifndef PC_JSEP_TRANSPORT_COLLECTION_H_
 #define PC_JSEP_TRANSPORT_COLLECTION_H_
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "api/sequence_checker.h"
 #include "pc/jsep_transport.h"
 #include "pc/session_description.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/system/no_unique_address.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 

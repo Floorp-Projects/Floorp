@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 #include "absl/algorithm/container.h"
@@ -30,8 +31,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/net_helper.h"
-#include "rtc_base/socket_address.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/trace_event.h"
 
