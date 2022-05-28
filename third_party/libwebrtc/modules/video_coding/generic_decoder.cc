@@ -113,7 +113,8 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
 
   if (!frameInfo) {
     RTC_LOG(LS_WARNING) << "Too many frames backed up in the decoder, dropping "
-                           "this one.";
+                           "frame with timestamp "
+                        << decodedImage.timestamp();
     return;
   }
 
