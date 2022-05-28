@@ -1036,10 +1036,9 @@ EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) const {
 static void FillContextAttribs(bool es3, bool useGles, nsTArray<EGLint>* out) {
   out->AppendElement(LOCAL_EGL_SURFACE_TYPE);
 #ifdef MOZ_WAYLAND
-  if (GdkIsWaylandDisplay() || !gdk_display_get_default()) {
+  if (GdkIsWaylandDisplay()) {
     // Wayland on desktop does not support PBuffer or FBO.
     // We create a dummy wl_egl_window instead.
-    // LOCAL_EGL_WINDOW_BIT is also needed for GBM backend.
     out->AppendElement(LOCAL_EGL_WINDOW_BIT);
   } else
 #endif
@@ -1160,9 +1159,7 @@ RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContextImpl(
   mozilla::gfx::IntSize pbSize(size);
   EGLSurface surface = nullptr;
 #ifdef MOZ_WAYLAND
-  if (!gdk_display_get_default()) {
-    surface = GLContextEGL::CreateGBMBufferSurface(*egl, config, pbSize);
-  } else if (GdkIsWaylandDisplay()) {
+  if (GdkIsWaylandDisplay()) {
     surface = GLContextEGL::CreateWaylandBufferSurface(*egl, config, pbSize);
   } else
 #endif
@@ -1215,16 +1212,42 @@ RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContext(
 }
 
 /*static*/
+RefPtr<GLContextEGL> GLContextEGL::CreateEGLSurfacelessContext(
+    const std::shared_ptr<EglDisplay> display, const GLContextCreateDesc& desc,
+    nsACString* const out_failureId) {
+  const EGLConfig config = {};
+  auto fullDesc = GLContextDesc{desc};
+  fullDesc.isOffscreen = true;
+  RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(
+      display, fullDesc, config, EGL_NO_SURFACE, false, out_failureId);
+  if (!gl) {
+    NS_WARNING("Failed to create surfaceless GL context");
+    return nullptr;
+  }
+  return gl;
+}
+
+/*static*/
 already_AddRefed<GLContext> GLContextProviderEGL::CreateHeadless(
     const GLContextCreateDesc& desc, nsACString* const out_failureId) {
   const auto display = DefaultEglDisplay(out_failureId);
   if (!display) {
     return nullptr;
   }
-  mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
-  auto ret = GLContextEGL::CreateEGLPBufferOffscreenContext(
-      display, desc, dummySize, out_failureId);
-  return ret.forget();
+  RefPtr<GLContextEGL> gl;
+#ifdef MOZ_WAYLAND
+  if (!gdk_display_get_default() &&
+      display->IsExtensionSupported(EGLExtension::MESA_platform_surfaceless)) {
+    gl =
+        GLContextEGL::CreateEGLSurfacelessContext(display, desc, out_failureId);
+  } else
+#endif
+  {
+    mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
+    gl = GLContextEGL::CreateEGLPBufferOffscreenContext(
+        display, desc, dummySize, out_failureId);
+  }
+  return gl.forget();
 }
 
 // Don't want a global context on Android as 1) share groups across 2 threads
