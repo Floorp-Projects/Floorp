@@ -80,7 +80,6 @@
 #    include <gdk/gdkwayland.h>
 #    include <wayland-egl.h>
 #    include "mozilla/widget/nsWaylandDisplay.h"
-#    include "mozilla/widget/DMABufLibWrapper.h"
 #  endif
 #endif
 
@@ -98,12 +97,10 @@ class SavedGLSurface {
  public:
   SavedGLSurface(struct wl_surface* aWaylandSurface,
                  struct wl_egl_window* aEGLWindow);
-  explicit SavedGLSurface(struct gbm_surface* aGbmSurface);
   ~SavedGLSurface();
 
  private:
   struct wl_surface* mWaylandSurface = nullptr;
-  struct gbm_surface* mGbmSurface = nullptr;
   struct wl_egl_window* mEGLWindow = nullptr;
 };
 
@@ -808,18 +805,12 @@ SavedGLSurface::SavedGLSurface(struct wl_surface* aWaylandSurface,
                                struct wl_egl_window* aEGLWindow)
     : mWaylandSurface(aWaylandSurface), mEGLWindow(aEGLWindow) {}
 
-SavedGLSurface::SavedGLSurface(struct gbm_surface* aGbmSurface)
-    : mGbmSurface(aGbmSurface) {}
-
 SavedGLSurface::~SavedGLSurface() {
   if (mEGLWindow) {
     wl_egl_window_destroy(mEGLWindow);
   }
   if (mWaylandSurface) {
     wl_surface_destroy(mWaylandSurface);
-  }
-  if (mGbmSurface) {
-    nsGbmLib::DestroySurface(mGbmSurface);
   }
 }
 
@@ -840,27 +831,6 @@ EGLSurface GLContextEGL::CreateWaylandBufferSurface(
     MOZ_ASSERT(!sSavedGLSurfaces.Contains(surface));
     sSavedGLSurfaces.LookupOrInsert(surface,
                                     new SavedGLSurface(wlsurface, eglwindow));
-  }
-  return surface;
-}
-
-EGLSurface GLContextEGL::CreateGBMBufferSurface(EglDisplay& egl,
-                                                EGLConfig config,
-                                                mozilla::gfx::IntSize& pbsize) {
-  if (!nsGbmLib::IsAvailable()) {
-    return nullptr;
-  }
-  struct gbm_surface* gbmSurface = nsGbmLib::CreateSurface(
-      GetDMABufDevice()->GetGbmDevice(), pbsize.width, pbsize.height,
-      GBM_FORMAT_ARGB8888, GBM_BO_USE_RENDERING);
-  if (!gbmSurface) {
-    return nullptr;
-  }
-  const auto surface = egl.fCreateWindowSurface(
-      config, reinterpret_cast<EGLNativeWindowType>(gbmSurface), 0);
-  if (surface) {
-    MOZ_ASSERT(!sSavedGLSurfaces.Contains(surface));
-    sSavedGLSurfaces.LookupOrInsert(surface, new SavedGLSurface(gbmSurface));
   }
   return surface;
 }
