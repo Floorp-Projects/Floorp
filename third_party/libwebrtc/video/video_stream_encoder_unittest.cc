@@ -8095,9 +8095,12 @@ TEST_F(VideoStreamEncoderTest, EncoderResolutionsExposedInSimulcast) {
 }
 
 TEST_F(VideoStreamEncoderTest, QpPresent_QpKept) {
-  // Enable encoder source to force encoder reconfig.
-  encoder_factory_.SetHasInternalSource(true);
   ResetEncoder("VP8", 1, 1, 1, false);
+
+  // Force encoder reconfig.
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(1, codec_width_, codec_height_));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
 
   // Set QP on encoded frame and pass the frame to encode complete callback.
   // Since QP is present QP parsing won't be triggered and the original value
@@ -8115,9 +8118,12 @@ TEST_F(VideoStreamEncoderTest, QpPresent_QpKept) {
 }
 
 TEST_F(VideoStreamEncoderTest, QpAbsent_QpParsed) {
-  // Enable encoder source to force encoder reconfig.
-  encoder_factory_.SetHasInternalSource(true);
   ResetEncoder("VP8", 1, 1, 1, false);
+
+  // Force encoder reconfig.
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(1, codec_width_, codec_height_));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
 
   // Pass an encoded frame without QP to encode complete callback. QP should be
   // parsed and set.
@@ -8137,9 +8143,12 @@ TEST_F(VideoStreamEncoderTest, QpAbsentParsingDisabled_QpAbsent) {
   webrtc::test::ScopedFieldTrials field_trials(
       "WebRTC-QpParsingKillSwitch/Enabled/");
 
-  // Enable encoder source to force encoder reconfig.
-  encoder_factory_.SetHasInternalSource(true);
   ResetEncoder("VP8", 1, 1, 1, false);
+
+  // Force encoder reconfig.
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(1, codec_width_, codec_height_));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
 
   EncodedImage encoded_image;
   encoded_image.qp_ = -1;
