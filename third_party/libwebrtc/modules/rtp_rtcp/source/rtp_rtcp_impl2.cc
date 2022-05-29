@@ -19,7 +19,9 @@
 #include <string>
 #include <utility>
 
+#include "absl/types/optional.h"
 #include "api/transport/field_trial_based_config.h"
+#include "api/units/timestamp.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "rtc_base/checks.h"
@@ -337,7 +339,16 @@ bool ModuleRtpRtcpImpl2::OnSendingRtpFrame(uint32_t timestamp,
   if (!Sending())
     return false;
 
-  rtcp_sender_.SetLastRtpTime(timestamp, capture_time_ms, payload_type);
+  // TODO(bugs.webrtc.org/12873): Migrate this method and it's users to use
+  // optional Timestamps.
+  absl::optional<Timestamp> capture_time;
+  if (capture_time_ms > 0) {
+    capture_time = Timestamp::Millis(capture_time_ms);
+  }
+  absl::optional<int> payload_type_optional;
+  if (payload_type >= 0)
+    payload_type_optional = payload_type;
+  rtcp_sender_.SetLastRtpTime(timestamp, capture_time, payload_type_optional);
   // Make sure an RTCP report isn't queued behind a key frame.
   if (rtcp_sender_.TimeToSendRTCPReport(force_sender_report))
     rtcp_sender_.SendRTCP(GetFeedbackState(), kRtcpReport);
