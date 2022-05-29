@@ -1077,8 +1077,15 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
           break;
         }
         default: {
-          i010_copy =
-              I010Buffer::Copy(*input_image.video_frame_buffer()->ToI420());
+          auto i420_buffer = input_image.video_frame_buffer()->ToI420();
+          if (!i420_buffer) {
+            RTC_LOG(LS_ERROR) << "Failed to convert "
+                              << VideoFrameBufferTypeToString(
+                                     input_image.video_frame_buffer()->type())
+                              << " image to I420. Can't encode frame.";
+            return WEBRTC_VIDEO_CODEC_ERROR;
+          }
+          i010_copy = I010Buffer::Copy(*i420_buffer);
           i010_buffer = i010_copy.get();
         }
       }
@@ -1959,6 +1966,12 @@ rtc::scoped_refptr<VideoFrameBuffer> LibvpxVp9Encoder::PrepareBufferForProfile0(
     if (converted_buffer->type() != VideoFrameBuffer::Type::kI420 &&
         converted_buffer->type() != VideoFrameBuffer::Type::kI420A) {
       converted_buffer = converted_buffer->ToI420();
+      if (!converted_buffer) {
+        RTC_LOG(LS_ERROR) << "Failed to convert "
+                          << VideoFrameBufferTypeToString(buffer->type())
+                          << " image to I420. Can't encode frame.";
+        return {};
+      }
       RTC_CHECK(converted_buffer->type() == VideoFrameBuffer::Type::kI420 ||
                 converted_buffer->type() == VideoFrameBuffer::Type::kI420A);
     }

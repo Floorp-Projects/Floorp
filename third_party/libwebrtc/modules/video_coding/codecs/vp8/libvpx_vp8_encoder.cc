@@ -1336,6 +1336,13 @@ LibvpxVp8Encoder::PrepareBuffers(rtc::scoped_refptr<VideoFrameBuffer> buffer) {
     if (converted_buffer->type() != VideoFrameBuffer::Type::kI420 &&
         converted_buffer->type() != VideoFrameBuffer::Type::kI420A) {
       converted_buffer = converted_buffer->ToI420();
+      if (!converted_buffer) {
+        RTC_LOG(LS_ERROR) << "Failed to convert "
+                          << VideoFrameBufferTypeToString(
+                                 converted_buffer->type())
+                          << " image to I420. Can't encode frame.";
+        return {};
+      }
       RTC_CHECK(converted_buffer->type() == VideoFrameBuffer::Type::kI420 ||
                 converted_buffer->type() == VideoFrameBuffer::Type::kI420A);
     }
