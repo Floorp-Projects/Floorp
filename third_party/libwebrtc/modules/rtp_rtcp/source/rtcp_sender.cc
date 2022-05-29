@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_rtcp_packet_outgoing.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/app.h"
@@ -35,6 +36,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/tmmbr.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
+#include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "modules/rtp_rtcp/source/time_util.h"
 #include "modules/rtp_rtcp/source/tmmbr_help.h"
 #include "rtc_base/checks.h"
@@ -50,7 +52,6 @@ const uint32_t kRtcpAnyExtendedReports = kRtcpXrReceiverReferenceTime |
                                          kRtcpXrTargetBitrate;
 constexpr int32_t kDefaultVideoReportInterval = 1000;
 constexpr int32_t kDefaultAudioReportInterval = 5000;
-
 }  // namespace
 
 // Helper to put several RTCP packets into lower layer datagram RTCP packet.
@@ -116,7 +117,26 @@ class RTCPSender::RtcpContext {
   const Timestamp now_;
 };
 
-RTCPSender::RTCPSender(const RtpRtcpInterface::Configuration& config)
+RTCPSender::Configuration RTCPSender::Configuration::FromRtpRtcpConfiguration(
+    const RtpRtcpInterface::Configuration& configuration) {
+  RTCPSender::Configuration result;
+  result.audio = configuration.audio;
+  result.local_media_ssrc = configuration.local_media_ssrc;
+  result.clock = configuration.clock;
+  result.outgoing_transport = configuration.outgoing_transport;
+  result.non_sender_rtt_measurement = configuration.non_sender_rtt_measurement;
+  result.event_log = configuration.event_log;
+  if (configuration.rtcp_report_interval_ms) {
+    result.rtcp_report_interval =
+        TimeDelta::Millis(configuration.rtcp_report_interval_ms);
+  }
+  result.receive_statistics = configuration.receive_statistics;
+  result.rtcp_packet_type_counter_observer =
+      configuration.rtcp_packet_type_counter_observer;
+  return result;
+}
+
+RTCPSender::RTCPSender(const Configuration& config)
     : audio_(config.audio),
       ssrc_(config.local_media_ssrc),
       clock_(config.clock),
@@ -124,10 +144,11 @@ RTCPSender::RTCPSender(const RtpRtcpInterface::Configuration& config)
       method_(RtcpMode::kOff),
       event_log_(config.event_log),
       transport_(config.outgoing_transport),
-      report_interval_ms_(config.rtcp_report_interval_ms > 0
-                              ? config.rtcp_report_interval_ms
-                              : (config.audio ? kDefaultAudioReportInterval
-                                              : kDefaultVideoReportInterval)),
+      report_interval_ms_(config.rtcp_report_interval
+                              .value_or(TimeDelta::Millis(
+                                  config.audio ? kDefaultAudioReportInterval
+                                               : kDefaultVideoReportInterval))
+                              .ms()),
       sending_(false),
       next_time_to_send_rtcp_(clock_->TimeInMilliseconds()),
       timestamp_offset_(0),
@@ -164,6 +185,9 @@ RTCPSender::RTCPSender(const RtpRtcpInterface::Configuration& config)
   builders_[kRtcpNack] = &RTCPSender::BuildNACK;
   builders_[kRtcpAnyExtendedReports] = &RTCPSender::BuildExtendedReports;
 }
+
+RTCPSender::RTCPSender(const RtpRtcpInterface::Configuration& config)
+    : RTCPSender(Configuration::FromRtpRtcpConfiguration(config)) {}
 
 RTCPSender::~RTCPSender() {}
 

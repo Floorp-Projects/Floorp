@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "absl/base/macros.h"
+#include "api/units/time_delta.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/bye.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
@@ -71,7 +72,7 @@ static const uint32_t kStartRtpTimestamp = 0x34567;
 static const uint32_t kRtpTimestamp = 0x45678;
 
 std::unique_ptr<RTCPSender> CreateRtcpSender(
-    const RtpRtcpInterface::Configuration& config,
+    const RTCPSender::Configuration& config,
     bool init_timestamps = true) {
   auto rtcp_sender = std::make_unique<RTCPSender>(config);
   rtcp_sender->SetRemoteSSRC(kRemoteSsrc);
@@ -83,29 +84,37 @@ std::unique_ptr<RTCPSender> CreateRtcpSender(
   }
   return rtcp_sender;
 }
-
 }  // namespace
 
 class RtcpSenderTest : public ::testing::Test {
  protected:
   RtcpSenderTest()
       : clock_(1335900000),
-        receive_statistics_(ReceiveStatistics::Create(&clock_)),
-        retransmission_rate_limiter_(&clock_, 1000) {
-    RtpRtcpInterface::Configuration configuration = GetDefaultConfig();
-    rtp_rtcp_impl_.reset(new ModuleRtpRtcpImpl2(configuration));
+        receive_statistics_(ReceiveStatistics::Create(&clock_)) {
+    rtp_rtcp_impl_.reset(new ModuleRtpRtcpImpl2(GetDefaultRtpRtcpConfig()));
   }
 
-  RtpRtcpInterface::Configuration GetDefaultConfig() {
-    RtpRtcpInterface::Configuration configuration;
+  RTCPSender::Configuration GetDefaultConfig() {
+    RTCPSender::Configuration configuration;
     configuration.audio = false;
     configuration.clock = &clock_;
     configuration.outgoing_transport = &test_transport_;
-    configuration.retransmission_rate_limiter = &retransmission_rate_limiter_;
-    configuration.rtcp_report_interval_ms = 1000;
+    configuration.rtcp_report_interval = TimeDelta::Millis(1000);
     configuration.receive_statistics = receive_statistics_.get();
     configuration.local_media_ssrc = kSenderSsrc;
     return configuration;
+  }
+
+  RtpRtcpInterface::Configuration GetDefaultRtpRtcpConfig() {
+    RTCPSender::Configuration config = GetDefaultConfig();
+    RtpRtcpInterface::Configuration result;
+    result.audio = config.audio;
+    result.clock = config.clock;
+    result.outgoing_transport = config.outgoing_transport;
+    result.rtcp_report_interval_ms = config.rtcp_report_interval->ms();
+    result.receive_statistics = config.receive_statistics;
+    result.local_media_ssrc = config.local_media_ssrc;
+    return result;
   }
 
   void InsertIncomingPacket(uint32_t remote_ssrc, uint16_t seq_num) {
@@ -127,7 +136,6 @@ class RtcpSenderTest : public ::testing::Test {
   TestTransport test_transport_;
   std::unique_ptr<ReceiveStatistics> receive_statistics_;
   std::unique_ptr<ModuleRtpRtcpImpl2> rtp_rtcp_impl_;
-  RateLimiter retransmission_rate_limiter_;
 };
 
 TEST_F(RtcpSenderTest, SetRtcpStatus) {
@@ -206,11 +214,11 @@ TEST_F(RtcpSenderTest, SendConsecutiveSrWithExactSlope) {
 }
 
 TEST_F(RtcpSenderTest, DoNotSendSrBeforeRtp) {
-  RtpRtcpInterface::Configuration config;
+  RTCPSender::Configuration config;
   config.clock = &clock_;
   config.receive_statistics = receive_statistics_.get();
   config.outgoing_transport = &test_transport_;
-  config.rtcp_report_interval_ms = 1000;
+  config.rtcp_report_interval = TimeDelta::Millis(1000);
   config.local_media_ssrc = kSenderSsrc;
   auto rtcp_sender = CreateRtcpSender(config, /*init_timestamps=*/false);
   rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
@@ -227,11 +235,11 @@ TEST_F(RtcpSenderTest, DoNotSendSrBeforeRtp) {
 }
 
 TEST_F(RtcpSenderTest, DoNotSendCompundBeforeRtp) {
-  RtpRtcpInterface::Configuration config;
+  RTCPSender::Configuration config;
   config.clock = &clock_;
   config.receive_statistics = receive_statistics_.get();
   config.outgoing_transport = &test_transport_;
-  config.rtcp_report_interval_ms = 1000;
+  config.rtcp_report_interval = TimeDelta::Millis(1000);
   config.local_media_ssrc = kSenderSsrc;
   auto rtcp_sender = CreateRtcpSender(config, /*init_timestamps=*/false);
   rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
@@ -510,7 +518,7 @@ TEST_F(RtcpSenderTest, SendXrWithMultipleDlrrSubBlocks) {
 }
 
 TEST_F(RtcpSenderTest, SendXrWithRrtr) {
-  RtpRtcpInterface::Configuration config = GetDefaultConfig();
+  RTCPSender::Configuration config = GetDefaultConfig();
   config.non_sender_rtt_measurement = true;
   auto rtcp_sender = CreateRtcpSender(config);
   rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
@@ -525,7 +533,7 @@ TEST_F(RtcpSenderTest, SendXrWithRrtr) {
 }
 
 TEST_F(RtcpSenderTest, TestNoXrRrtrSentIfSending) {
-  RtpRtcpInterface::Configuration config = GetDefaultConfig();
+  RTCPSender::Configuration config = GetDefaultConfig();
   config.non_sender_rtt_measurement = true;
   auto rtcp_sender = CreateRtcpSender(config);
   rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
@@ -535,7 +543,7 @@ TEST_F(RtcpSenderTest, TestNoXrRrtrSentIfSending) {
 }
 
 TEST_F(RtcpSenderTest, TestNoXrRrtrSentIfNotEnabled) {
-  RtpRtcpInterface::Configuration config = GetDefaultConfig();
+  RTCPSender::Configuration config = GetDefaultConfig();
   config.non_sender_rtt_measurement = false;
   auto rtcp_sender = CreateRtcpSender(config);
   rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
@@ -546,12 +554,12 @@ TEST_F(RtcpSenderTest, TestNoXrRrtrSentIfNotEnabled) {
 
 TEST_F(RtcpSenderTest, TestRegisterRtcpPacketTypeObserver) {
   RtcpPacketTypeCounterObserverImpl observer;
-  RtpRtcpInterface::Configuration config;
+  RTCPSender::Configuration config;
   config.clock = &clock_;
   config.receive_statistics = receive_statistics_.get();
   config.outgoing_transport = &test_transport_;
   config.rtcp_packet_type_counter_observer = &observer;
-  config.rtcp_report_interval_ms = 1000;
+  config.rtcp_report_interval = TimeDelta::Millis(1000);
   auto rtcp_sender = CreateRtcpSender(config);
   rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
   EXPECT_EQ(0, rtcp_sender->SendRTCP(feedback_state(), kRtcpPli));
@@ -643,11 +651,11 @@ TEST_F(RtcpSenderTest, ByeMustBeLast) {
       }));
 
   // Re-configure rtcp_sender with mock_transport_
-  RtpRtcpInterface::Configuration config;
+  RTCPSender::Configuration config;
   config.clock = &clock_;
   config.receive_statistics = receive_statistics_.get();
   config.outgoing_transport = &mock_transport;
-  config.rtcp_report_interval_ms = 1000;
+  config.rtcp_report_interval = TimeDelta::Millis(1000);
   config.local_media_ssrc = kSenderSsrc;
   auto rtcp_sender = CreateRtcpSender(config);
 
