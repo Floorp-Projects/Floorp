@@ -86,11 +86,7 @@
 #pragma mark - Private
 
 + (BOOL)isMetalAvailable {
-#if defined(RTC_SUPPORTS_METAL)
   return MTLCreateSystemDefaultDevice() != nil;
-#else
-  return NO;
-#endif
 }
 
 + (MTKView *)createMetalView:(CGRect)frame {
