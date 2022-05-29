@@ -743,10 +743,22 @@ const std::string& ProduceIceCandidateStats(int64_t timestamp_us,
   return stats->id();
 }
 
+template <typename StatsType>
+void SetAudioProcessingStats(StatsType* stats,
+                             const AudioProcessingStats& apm_stats) {
+  if (apm_stats.echo_return_loss) {
+    stats->echo_return_loss = *apm_stats.echo_return_loss;
+  }
+  if (apm_stats.echo_return_loss_enhancement) {
+    stats->echo_return_loss_enhancement =
+        *apm_stats.echo_return_loss_enhancement;
+  }
+}
+
 std::unique_ptr<RTCMediaStreamTrackStats>
 ProduceMediaStreamTrackStatsFromVoiceSenderInfo(
     int64_t timestamp_us,
-    const AudioTrackInterface& audio_track,
+    AudioTrackInterface& audio_track,
     const cricket::VoiceSenderInfo& voice_sender_info,
     int attachment_id) {
   std::unique_ptr<RTCMediaStreamTrackStats> audio_track_stats(
@@ -761,13 +773,17 @@ ProduceMediaStreamTrackStatsFromVoiceSenderInfo(
                                                  attachment_id);
   audio_track_stats->remote_source = false;
   audio_track_stats->detached = false;
-  if (voice_sender_info.apm_statistics.echo_return_loss) {
-    audio_track_stats->echo_return_loss =
-        *voice_sender_info.apm_statistics.echo_return_loss;
-  }
-  if (voice_sender_info.apm_statistics.echo_return_loss_enhancement) {
-    audio_track_stats->echo_return_loss_enhancement =
-        *voice_sender_info.apm_statistics.echo_return_loss_enhancement;
+  // Audio processor may be attached to either the track or the send
+  // stream, so look in both places.
+  SetAudioProcessingStats(audio_track_stats.get(),
+                          voice_sender_info.apm_statistics);
+  auto audio_processor(audio_track.GetAudioProcessor());
+  if (audio_processor.get()) {
+    // The |has_remote_tracks| argument is obsolete; makes no difference if it's
+    // set to true or false.
+    AudioProcessorInterface::AudioProcessorStatistics ap_stats =
+        audio_processor->GetStats(/*has_remote_tracks=*/false);
+    SetAudioProcessingStats(audio_track_stats.get(), ap_stats.apm_statistics);
   }
   return audio_track_stats;
 }
@@ -1657,6 +1673,8 @@ void RTCStatsCollector::ProduceMediaSourceStats_s(
       // create separate media source stats objects on a per-attachment basis.
       std::unique_ptr<RTCMediaSourceStats> media_source_stats;
       if (track->kind() == MediaStreamTrackInterface::kAudioKind) {
+        AudioTrackInterface* audio_track =
+            static_cast<AudioTrackInterface*>(track.get());
         auto audio_source_stats = std::make_unique<RTCAudioSourceStats>(
             RTCMediaSourceStatsIDFromKindAndAttachment(
                 cricket::MEDIA_TYPE_AUDIO, sender_internal->AttachmentId()),
@@ -1677,7 +1695,20 @@ void RTCStatsCollector::ProduceMediaSourceStats_s(
                 voice_sender_info->total_input_energy;
             audio_source_stats->total_samples_duration =
                 voice_sender_info->total_input_duration;
+            SetAudioProcessingStats(audio_source_stats.get(),
+                                    voice_sender_info->apm_statistics);
           }
+        }
+        // Audio processor may be attached to either the track or the send
+        // stream, so look in both places.
+        auto audio_processor(audio_track->GetAudioProcessor());
+        if (audio_processor.get()) {
+          // The |has_remote_tracks| argument is obsolete; makes no difference
+          // if it's set to true or false.
+          AudioProcessorInterface::AudioProcessorStatistics ap_stats =
+              audio_processor->GetStats(/*has_remote_tracks=*/false);
+          SetAudioProcessingStats(audio_source_stats.get(),
+                                  ap_stats.apm_statistics);
         }
         media_source_stats = std::move(audio_source_stats);
       } else {
