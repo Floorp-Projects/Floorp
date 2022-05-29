@@ -17,13 +17,13 @@
 
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/transport/field_trial_based_config.h"
+#include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "rtc_base/strings/json.h"
 #include "system_wrappers/include/clock.h"
 #include "test/call_config_utils.h"
 #include "test/encoder_settings.h"
 #include "test/fake_decoder.h"
 #include "test/rtp_file_reader.h"
-#include "test/rtp_header_parser.h"
 #include "test/run_loop.h"
 
 namespace webrtc {
@@ -164,37 +164,32 @@ void RtpReplayer::ReplayPackets(rtc::FakeClock* clock,
           std::min(deliver_in_ms, static_cast<int64_t>(100))));
     }
 
+    rtc::CopyOnWriteBuffer packet_buffer(packet.data, packet.length);
     ++num_packets;
-    switch (call->Receiver()->DeliverPacket(
-        webrtc::MediaType::VIDEO,
-        rtc::CopyOnWriteBuffer(packet.data, packet.length),
-        /* packet_time_us */ -1)) {
+    switch (call->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO,
+                                            packet_buffer,
+                                            /* packet_time_us */ -1)) {
       case PacketReceiver::DELIVERY_OK:
         break;
       case PacketReceiver::DELIVERY_UNKNOWN_SSRC: {
-        RTPHeader header;
-        std::unique_ptr<RtpHeaderParser> parser(
-            RtpHeaderParser::CreateForTest());
-
-        parser->Parse(packet.data, packet.length, &header);
-        if (unknown_packets[header.ssrc] == 0) {
-          RTC_LOG(LS_ERROR) << "Unknown SSRC: " << header.ssrc;
+        webrtc::RtpPacket header;
+        header.Parse(packet_buffer);
+        if (unknown_packets[header.Ssrc()] == 0) {
+          RTC_LOG(LS_ERROR) << "Unknown SSRC: " << header.Ssrc();
         }
-        ++unknown_packets[header.ssrc];
+        ++unknown_packets[header.Ssrc()];
         break;
       }
       case PacketReceiver::DELIVERY_PACKET_ERROR: {
         RTC_LOG(LS_ERROR)
             << "Packet error, corrupt packets or incorrect setup?";
-        RTPHeader header;
-        std::unique_ptr<RtpHeaderParser> parser(
-            RtpHeaderParser::CreateForTest());
-        parser->Parse(packet.data, packet.length, &header);
+        webrtc::RtpPacket header;
+        header.Parse(packet_buffer);
         RTC_LOG(LS_ERROR) << "Packet packet_length=" << packet.length
-                          << " payload_type=" << header.payloadType
-                          << " sequence_number=" << header.sequenceNumber
-                          << " time_stamp=" << header.timestamp
-                          << " ssrc=" << header.ssrc;
+                          << " payload_type=" << header.PayloadType()
+                          << " sequence_number=" << header.SequenceNumber()
+                          << " time_stamp=" << header.Timestamp()
+                          << " ssrc=" << header.Ssrc();
         break;
       }
     }

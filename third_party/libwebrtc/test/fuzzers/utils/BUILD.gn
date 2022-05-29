@@ -24,6 +24,7 @@ rtc_library("rtp_replayer") {
     "../../../call:call_interfaces",
     "../../../common_video",
     "../../../media:rtc_internal_video_codecs",
+    "../../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:rtc_base_tests_utils",

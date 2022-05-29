@@ -243,6 +243,7 @@ if (!is_component_build) {
       "../call:call_interfaces",
       "../common_video",
       "../media:rtc_internal_video_codecs",
+      "../modules/rtp_rtcp:rtp_rtcp_format",
       "../modules/video_coding:video_coding_utility",
       "../rtc_base:checks",
       "../rtc_base:rtc_json",
