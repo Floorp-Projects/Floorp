@@ -281,6 +281,7 @@
 ; Technically this is an app pref file, but we are keeping it in the original
 ; gre location for now.
 @RESPATH@/defaults/pref/channel-prefs.js
+@RESPATH@/distribution/policies.json
 
 ; Background tasks-specific preferences.  These are in the GRE
 ; location since they apply to all tasks at this time.

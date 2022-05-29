@@ -1,0 +1,5 @@
+FINAL_TARGET = "dist/bin/distribution"
+
+FINAL_TARGET_FILES += [
+    "policies.json"
+]

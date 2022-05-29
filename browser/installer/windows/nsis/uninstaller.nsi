@@ -618,6 +618,11 @@ Section "Uninstall"
 
   ${un.RemovePrecompleteEntries} "false"
 
+  ${If} ${FileExists} "$INSTDIR\distribution\policies.json"
+    Delete /REBOOTOK "$INSTDIR\distribution\policies.json"
+  ${EndIf}
+  RmDir "$INSTDIR\distribution"
+
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
     Delete /REBOOTOK "$INSTDIR\defaults\pref\channel-prefs.js"
   ${EndIf}

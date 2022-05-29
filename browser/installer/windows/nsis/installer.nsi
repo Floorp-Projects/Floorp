@@ -316,6 +316,15 @@ Section "-InstallStartCleanup"
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
     Delete "$INSTDIR\defaults\pref\channel-prefs.js"
   ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\distribution\policies.json"
+    Delete "$INSTDIR\distribution\policies.json"
+  ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\distribution"
+    RmDir "$INSTDIR\distribution"
+  ${EndIf}
+
   ${If} ${FileExists} "$INSTDIR\defaults\pref"
     RmDir "$INSTDIR\defaults\pref"
   ${EndIf}
