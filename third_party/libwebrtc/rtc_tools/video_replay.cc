@@ -25,6 +25,7 @@
 #include "call/call.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "media/engine/internal_decoder_factory.h"
+#include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "modules/video_coding/utility/ivf_file_writer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/string_to_number.h"
@@ -39,7 +40,6 @@
 #include "test/gtest.h"
 #include "test/null_transport.h"
 #include "test/rtp_file_reader.h"
-#include "test/rtp_header_parser.h"
 #include "test/run_loop.h"
 #include "test/run_test.h"
 #include "test/test_video_capturer.h"
@@ -544,11 +544,11 @@ class RtpReplayer final {
       if (!rtp_reader->NextPacket(&packet)) {
         break;
       }
-      RTPHeader header;
-      std::unique_ptr<RtpHeaderParser> parser(RtpHeaderParser::CreateForTest());
-      parser->Parse(packet.data, packet.length, &header);
-      if (header.timestamp < start_timestamp ||
-          header.timestamp > stop_timestamp) {
+      rtc::CopyOnWriteBuffer packet_buffer(packet.data, packet.length);
+      RtpPacket header;
+      header.Parse(packet_buffer);
+      if (header.Timestamp() < start_timestamp ||
+          header.Timestamp() > stop_timestamp) {
         continue;
       }
 
@@ -560,10 +560,9 @@ class RtpReplayer final {
       ++num_packets;
       PacketReceiver::DeliveryStatus result = PacketReceiver::DELIVERY_OK;
       worker_thread->PostTask(ToQueuedTask([&]() {
-        result = call->Receiver()->DeliverPacket(
-            webrtc::MediaType::VIDEO,
-            rtc::CopyOnWriteBuffer(packet.data, packet.length),
-            /* packet_time_us */ -1);
+        result = call->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO,
+                                                 std::move(packet_buffer),
+                                                 /* packet_time_us */ -1);
         event.Set();
       }));
       event.Wait(/*give_up_after_ms=*/10000);
@@ -571,21 +570,17 @@ class RtpReplayer final {
         case PacketReceiver::DELIVERY_OK:
           break;
         case PacketReceiver::DELIVERY_UNKNOWN_SSRC: {
-          if (unknown_packets[header.ssrc] == 0)
-            fprintf(stderr, "Unknown SSRC: %u!\n", header.ssrc);
-          ++unknown_packets[header.ssrc];
+          if (unknown_packets[header.Ssrc()] == 0)
+            fprintf(stderr, "Unknown SSRC: %u!\n", header.Ssrc());
+          ++unknown_packets[header.Ssrc()];
           break;
         }
         case PacketReceiver::DELIVERY_PACKET_ERROR: {
           fprintf(stderr,
                   "Packet error, corrupt packets or incorrect setup?\n");
-          RTPHeader header;
-          std::unique_ptr<RtpHeaderParser> parser(
-              RtpHeaderParser::CreateForTest());
-          parser->Parse(packet.data, packet.length, &header);
           fprintf(stderr, "Packet len=%zu pt=%u seq=%u ts=%u ssrc=0x%8x\n",
-                  packet.length, header.payloadType, header.sequenceNumber,
-                  header.timestamp, header.ssrc);
+                  packet.length, header.PayloadType(), header.SequenceNumber(),
+                  header.Timestamp(), header.Ssrc());
           break;
         }
       }
