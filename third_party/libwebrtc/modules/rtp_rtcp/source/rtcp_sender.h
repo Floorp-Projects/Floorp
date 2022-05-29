@@ -20,6 +20,7 @@
 #include "absl/types/optional.h"
 #include "api/call/transport.h"
 #include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
@@ -114,8 +115,14 @@ class RTCPSender final {
   void SetTimestampOffset(uint32_t timestamp_offset)
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
+  void SetLastRtpTime(uint32_t rtp_timestamp,
+                      absl::optional<Timestamp> capture_time,
+                      absl::optional<int8_t> payload_type)
+      RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
   // TODO(bugs.webrtc.org/6458): Remove default parameter value when all the
   // depending projects are updated to correctly set payload type.
+  // TODO(bugs.webrtc.org/12873): Remove once downstream consumers migrates to
+  // the new version of SetLastRtpTime declared above.
   void SetLastRtpTime(uint32_t rtp_timestamp,
                       int64_t capture_time_ms,
                       int8_t payload_type = -1)
@@ -230,16 +237,18 @@ class RTCPSender final {
   RtcEventLog* const event_log_;
   Transport* const transport_;
 
-  const int report_interval_ms_;
+  const TimeDelta report_interval_;
 
   mutable Mutex mutex_rtcp_sender_;
   bool sending_ RTC_GUARDED_BY(mutex_rtcp_sender_);
 
-  int64_t next_time_to_send_rtcp_ RTC_GUARDED_BY(mutex_rtcp_sender_);
+  absl::optional<Timestamp> next_time_to_send_rtcp_
+      RTC_GUARDED_BY(mutex_rtcp_sender_);
 
   uint32_t timestamp_offset_ RTC_GUARDED_BY(mutex_rtcp_sender_);
   uint32_t last_rtp_timestamp_ RTC_GUARDED_BY(mutex_rtcp_sender_);
-  int64_t last_frame_capture_time_ms_ RTC_GUARDED_BY(mutex_rtcp_sender_);
+  absl::optional<Timestamp> last_frame_capture_time_
+      RTC_GUARDED_BY(mutex_rtcp_sender_);
   // SSRC that we receive on our RTP channel
   uint32_t remote_ssrc_ RTC_GUARDED_BY(mutex_rtcp_sender_);
   std::string cname_ RTC_GUARDED_BY(mutex_rtcp_sender_);
