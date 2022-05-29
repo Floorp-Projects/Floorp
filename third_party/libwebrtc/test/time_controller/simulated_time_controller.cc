@@ -226,4 +226,14 @@ void GlobalSimulatedTimeController::AdvanceTime(TimeDelta duration) {
   impl_.RunReadyRunners();
 }
 
+void GlobalSimulatedTimeController::Register(
+    sim_time_impl::SimulatedSequenceRunner* runner) {
+  impl_.Register(runner);
+}
+
+void GlobalSimulatedTimeController::Unregister(
+    sim_time_impl::SimulatedSequenceRunner* runner) {
+  impl_.Unregister(runner);
+}
+
 }  // namespace webrtc
