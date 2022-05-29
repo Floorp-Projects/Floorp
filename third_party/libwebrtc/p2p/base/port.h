@@ -41,6 +41,7 @@
 #include "rtc_base/rate_tracker.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/system/rtc_export.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/weak_ptr.h"
@@ -171,7 +172,6 @@ typedef std::set<rtc::SocketAddress> ServerAddresses;
 // connections to similar mechanisms of the other client.  Subclasses of this
 // one add support for specific mechanisms like local UDP ports.
 class Port : public PortInterface,
-             public rtc::MessageHandler,
              public sigslot::has_slots<> {
  public:
   // INIT: The state when a port is just created.
@@ -219,9 +219,6 @@ class Port : public PortInterface,
   void KeepAliveUntilPruned();
   // Allows a port to be destroyed if no connection is using it.
   void Prune();
-
-  // Call to stop any currently pending operations from running.
-  void CancelPendingTasks();
 
   // The thread on which this port performs its I/O.
   rtc::Thread* thread() { return thread_; }
@@ -328,8 +325,6 @@ class Port : public PortInterface,
   // Called if the port has no connections and is no longer useful.
   void Destroy();
 
-  void OnMessage(rtc::Message* pmsg) override;
-
   // Debugging description of this port
   std::string ToString() const override;
   uint16_t min_port() { return min_port_; }
@@ -380,8 +375,6 @@ class Port : public PortInterface,
                                        const rtc::SocketAddress& base_address);
 
  protected:
-  enum { MSG_DESTROY_IF_DEAD = 0, MSG_FIRST_AVAILABLE };
-
   virtual void UpdateNetworkCost();
 
   void set_type(const std::string& type) { type_ = type; }
@@ -448,8 +441,9 @@ class Port : public PortInterface,
   void Construct();
   // Called when one of our connections deletes itself.
   void OnConnectionDestroyed(Connection* conn);
-
   void OnNetworkTypeChanged(const rtc::Network* network);
+  void ScheduleDelayedDestructionIfDead();
+  void DestroyIfDead();
 
   rtc::Thread* const thread_;
   rtc::PacketSocketFactory* const factory_;
@@ -499,6 +493,7 @@ class Port : public PortInterface,
 
   friend class Connection;
   webrtc::CallbackList<PortInterface*> port_destroyed_callback_list_;
+  webrtc::ScopedTaskSafety safety_;
 };
 
 }  // namespace cricket
