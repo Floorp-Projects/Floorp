@@ -987,7 +987,9 @@ RTCMediaSourceStats::~RTCMediaSourceStats() {}
 WEBRTC_RTCSTATS_IMPL(RTCAudioSourceStats, RTCMediaSourceStats, "media-source",
     &audio_level,
     &total_audio_energy,
-    &total_samples_duration)
+    &total_samples_duration,
+    &echo_return_loss,
+    &echo_return_loss_enhancement)
 // clang-format on
 
 RTCAudioSourceStats::RTCAudioSourceStats(const std::string& id,
@@ -998,13 +1000,17 @@ RTCAudioSourceStats::RTCAudioSourceStats(std::string&& id, int64_t timestamp_us)
     : RTCMediaSourceStats(std::move(id), timestamp_us),
       audio_level("audioLevel"),
       total_audio_energy("totalAudioEnergy"),
-      total_samples_duration("totalSamplesDuration") {}
+      total_samples_duration("totalSamplesDuration"),
+      echo_return_loss("echoReturnLoss"),
+      echo_return_loss_enhancement("echoReturnLossEnhancement") {}
 
 RTCAudioSourceStats::RTCAudioSourceStats(const RTCAudioSourceStats& other)
     : RTCMediaSourceStats(other),
       audio_level(other.audio_level),
       total_audio_energy(other.total_audio_energy),
-      total_samples_duration(other.total_samples_duration) {}
+      total_samples_duration(other.total_samples_duration),
+      echo_return_loss(other.echo_return_loss),
+      echo_return_loss_enhancement(other.echo_return_loss_enhancement) {}
 
 RTCAudioSourceStats::~RTCAudioSourceStats() {}
 
