@@ -83,7 +83,8 @@ static const char* sEGLExtensionNames[] = {
     "EGL_KHR_swap_buffers_with_damage",
     "EGL_EXT_buffer_age",
     "EGL_KHR_partial_update",
-    "EGL_NV_robustness_video_memory_purge"};
+    "EGL_NV_robustness_video_memory_purge",
+    "EGL_MESA_platform_surfaceless"};
 
 PRLibrary* LoadApitraceLibrary() {
   const char* path = nullptr;
@@ -151,6 +152,19 @@ static std::shared_ptr<EglDisplay> GetAndInitDisplay(
   if (!display) return nullptr;
   return EglDisplay::Create(egl, display, false, aProofOfLock);
 }
+
+#ifdef MOZ_WAYLAND
+static std::shared_ptr<EglDisplay> GetAndInitSurfacelessDisplay(
+    GLLibraryEGL& egl, const StaticMutexAutoLock& aProofOfLock) {
+  const EGLAttrib attrib_list[] = {LOCAL_EGL_NONE};
+  const EGLDisplay display = egl.fGetPlatformDisplay(
+      LOCAL_EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, attrib_list);
+  if (display == EGL_NO_DISPLAY) {
+    return nullptr;
+  }
+  return EglDisplay::Create(egl, display, true, aProofOfLock);
+}
+#endif
 
 static std::shared_ptr<EglDisplay> GetAndInitWARPDisplay(
     GLLibraryEGL& egl, void* displayType,
@@ -630,6 +644,11 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
         END_OF_SYMBOLS};
     (void)fnLoadSymbols(symbols);
   }
+  {
+    const SymLoadStruct symbols[] = {SYMBOL(GetPlatformDisplay),
+                                     END_OF_SYMBOLS};
+    (void)fnLoadSymbols(symbols);
+  }
 
   return true;
 }
@@ -805,22 +824,21 @@ std::shared_ptr<EglDisplay> GLLibraryEGL::CreateDisplayLocked(
   } else {
     void* nativeDisplay = EGL_DEFAULT_DISPLAY;
 #ifdef MOZ_WAYLAND
-    // Some drivers doesn't support EGL_DEFAULT_DISPLAY
     GdkDisplay* gdkDisplay = gdk_display_get_default();
-    if (widget::GdkIsWaylandDisplay(gdkDisplay)) {
+    if (!gdkDisplay) {
+      ret = GetAndInitSurfacelessDisplay(*this, aProofOfLock);
+    } else if (widget::GdkIsWaylandDisplay(gdkDisplay)) {
+      // Wayland does not support EGL_DEFAULT_DISPLAY
       nativeDisplay = widget::WaylandDisplayGetWLDisplay(gdkDisplay);
       if (!nativeDisplay) {
         NS_WARNING("Failed to get wl_display.");
         return nullptr;
       }
-    } else if (!gdkDisplay) {
-      // We're running without display connection.
-      // That can happens on RDD process which is not connected to compositor.
-      // In such case use GBM based display.
-      nativeDisplay = widget::GetDMABufDevice()->GetGbmDevice();
     }
 #endif
-    ret = GetAndInitDisplay(*this, nativeDisplay, aProofOfLock);
+    if (!ret) {
+      ret = GetAndInitDisplay(*this, nativeDisplay, aProofOfLock);
+    }
   }
 
   if (!ret) {

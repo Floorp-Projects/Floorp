@@ -106,6 +106,9 @@ class GLContextEGL final : public GLContext {
   static RefPtr<GLContextEGL> CreateEGLPBufferOffscreenContextImpl(
       std::shared_ptr<EglDisplay>, const GLContextCreateDesc&,
       const gfx::IntSize& size, bool aUseGles, nsACString* const out_FailureId);
+  static RefPtr<GLContextEGL> CreateEGLSurfacelessContext(
+      const std::shared_ptr<EglDisplay> display,
+      const GLContextCreateDesc& desc, nsACString* const out_failureId);
 
   static EGLSurface CreateEGLSurfaceForCompositorWidget(
       widget::CompositorWidget* aCompositorWidget, const EGLConfig aConfig);
@@ -147,8 +150,6 @@ class GLContextEGL final : public GLContext {
 #ifdef MOZ_WAYLAND
   static EGLSurface CreateWaylandBufferSurface(EglDisplay&, EGLConfig,
                                                gfx::IntSize& pbsize);
-  static EGLSurface CreateGBMBufferSurface(EglDisplay&, EGLConfig,
-                                           gfx::IntSize& pbsize);
 #endif
 
  public:
