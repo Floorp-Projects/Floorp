@@ -80,7 +80,6 @@
 #    include <gdk/gdkwayland.h>
 #    include <wayland-egl.h>
 #    include "mozilla/widget/nsWaylandDisplay.h"
-#    include "mozilla/widget/DMABufLibWrapper.h"
 #  endif
 #endif
 
@@ -98,12 +97,10 @@ class SavedGLSurface {
  public:
   SavedGLSurface(struct wl_surface* aWaylandSurface,
                  struct wl_egl_window* aEGLWindow);
-  explicit SavedGLSurface(struct gbm_surface* aGbmSurface);
   ~SavedGLSurface();
 
  private:
   struct wl_surface* mWaylandSurface = nullptr;
-  struct gbm_surface* mGbmSurface = nullptr;
   struct wl_egl_window* mEGLWindow = nullptr;
 };
 
@@ -808,18 +805,12 @@ SavedGLSurface::SavedGLSurface(struct wl_surface* aWaylandSurface,
                                struct wl_egl_window* aEGLWindow)
     : mWaylandSurface(aWaylandSurface), mEGLWindow(aEGLWindow) {}
 
-SavedGLSurface::SavedGLSurface(struct gbm_surface* aGbmSurface)
-    : mGbmSurface(aGbmSurface) {}
-
 SavedGLSurface::~SavedGLSurface() {
   if (mEGLWindow) {
     wl_egl_window_destroy(mEGLWindow);
   }
   if (mWaylandSurface) {
     wl_surface_destroy(mWaylandSurface);
-  }
-  if (mGbmSurface) {
-    nsGbmLib::DestroySurface(mGbmSurface);
   }
 }
 
@@ -840,27 +831,6 @@ EGLSurface GLContextEGL::CreateWaylandBufferSurface(
     MOZ_ASSERT(!sSavedGLSurfaces.Contains(surface));
     sSavedGLSurfaces.LookupOrInsert(surface,
                                     new SavedGLSurface(wlsurface, eglwindow));
-  }
-  return surface;
-}
-
-EGLSurface GLContextEGL::CreateGBMBufferSurface(EglDisplay& egl,
-                                                EGLConfig config,
-                                                mozilla::gfx::IntSize& pbsize) {
-  if (!nsGbmLib::IsAvailable()) {
-    return nullptr;
-  }
-  struct gbm_surface* gbmSurface = nsGbmLib::CreateSurface(
-      GetDMABufDevice()->GetGbmDevice(), pbsize.width, pbsize.height,
-      GBM_FORMAT_ARGB8888, GBM_BO_USE_RENDERING);
-  if (!gbmSurface) {
-    return nullptr;
-  }
-  const auto surface = egl.fCreateWindowSurface(
-      config, reinterpret_cast<EGLNativeWindowType>(gbmSurface), 0);
-  if (surface) {
-    MOZ_ASSERT(!sSavedGLSurfaces.Contains(surface));
-    sSavedGLSurfaces.LookupOrInsert(surface, new SavedGLSurface(gbmSurface));
   }
   return surface;
 }
@@ -1036,10 +1006,9 @@ EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) const {
 static void FillContextAttribs(bool es3, bool useGles, nsTArray<EGLint>* out) {
   out->AppendElement(LOCAL_EGL_SURFACE_TYPE);
 #ifdef MOZ_WAYLAND
-  if (GdkIsWaylandDisplay() || !gdk_display_get_default()) {
+  if (GdkIsWaylandDisplay()) {
     // Wayland on desktop does not support PBuffer or FBO.
     // We create a dummy wl_egl_window instead.
-    // LOCAL_EGL_WINDOW_BIT is also needed for GBM backend.
     out->AppendElement(LOCAL_EGL_WINDOW_BIT);
   } else
 #endif
@@ -1160,9 +1129,7 @@ RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContextImpl(
   mozilla::gfx::IntSize pbSize(size);
   EGLSurface surface = nullptr;
 #ifdef MOZ_WAYLAND
-  if (!gdk_display_get_default()) {
-    surface = GLContextEGL::CreateGBMBufferSurface(*egl, config, pbSize);
-  } else if (GdkIsWaylandDisplay()) {
+  if (GdkIsWaylandDisplay()) {
     surface = GLContextEGL::CreateWaylandBufferSurface(*egl, config, pbSize);
   } else
 #endif
@@ -1215,16 +1182,42 @@ RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContext(
 }
 
 /*static*/
+RefPtr<GLContextEGL> GLContextEGL::CreateEGLSurfacelessContext(
+    const std::shared_ptr<EglDisplay> display, const GLContextCreateDesc& desc,
+    nsACString* const out_failureId) {
+  const EGLConfig config = {};
+  auto fullDesc = GLContextDesc{desc};
+  fullDesc.isOffscreen = true;
+  RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(
+      display, fullDesc, config, EGL_NO_SURFACE, false, out_failureId);
+  if (!gl) {
+    NS_WARNING("Failed to create surfaceless GL context");
+    return nullptr;
+  }
+  return gl;
+}
+
+/*static*/
 already_AddRefed<GLContext> GLContextProviderEGL::CreateHeadless(
     const GLContextCreateDesc& desc, nsACString* const out_failureId) {
   const auto display = DefaultEglDisplay(out_failureId);
   if (!display) {
     return nullptr;
   }
-  mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
-  auto ret = GLContextEGL::CreateEGLPBufferOffscreenContext(
-      display, desc, dummySize, out_failureId);
-  return ret.forget();
+  RefPtr<GLContextEGL> gl;
+#ifdef MOZ_WAYLAND
+  if (!gdk_display_get_default() &&
+      display->IsExtensionSupported(EGLExtension::MESA_platform_surfaceless)) {
+    gl =
+        GLContextEGL::CreateEGLSurfacelessContext(display, desc, out_failureId);
+  } else
+#endif
+  {
+    mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
+    gl = GLContextEGL::CreateEGLPBufferOffscreenContext(
+        display, desc, dummySize, out_failureId);
+  }
+  return gl.forget();
 }
 
 // Don't want a global context on Android as 1) share groups across 2 threads
