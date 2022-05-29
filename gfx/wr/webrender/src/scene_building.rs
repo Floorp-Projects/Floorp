@@ -3634,12 +3634,16 @@ impl<'a> SceneBuilder<'a> {
         let filter_clip_chain_id = if filter_clips.is_empty() {
             clip_chain_id
         } else {
+            let mut clip_roots = 1;
             self.clip_store.push_clip_root(None, false);
             for clip_id in filter_clips {
                 self.clip_store.push_clip_root(Some(clip_id), true);
+                clip_roots += 1;
             }
             let filtered_clip_chain_id = self.clip_store.get_or_build_clip_chain_id(clip_id);
-            self.clip_store.pop_clip_root();
+            for _ in 0 .. clip_roots {
+                self.clip_store.pop_clip_root();
+            }
 
             filtered_clip_chain_id
         };
