@@ -1556,6 +1556,11 @@
     <string name="preferences_addresses_add_address">Adres toevoegen</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Adressen beheren</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Adressen opslaan en automatisch invullen</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Informatie zoals nummers, e-mail- en verzendadressen toevoegen</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kaart toevoegen</string>
     <!-- Title of the "Edit card" screen -->
@@ -1893,6 +1898,9 @@
     <string name="pocket_stories_feature_caption">Onderdeel van de Firefox-familie. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Meer info</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Gesponsord</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Schakel telemetrie in om gegevens te verzenden.</string>

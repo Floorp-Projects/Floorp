@@ -1558,6 +1558,12 @@
     <string name="preferences_addresses_add_address">Cím hozzáadása</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Címek kezelése</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Címek mentése és automatikus kitöltése</string>
+
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Olyan információk belevétele, mint a számok, e-mail-címek és szállítási címek</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kártya hozzáadása</string>
     <!-- Title of the "Edit card" screen -->
@@ -1896,6 +1902,9 @@
     <string name="pocket_stories_feature_caption">A Firefox család tagja. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">További tudnivalók</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Szponzorált</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Engedélyezze a telemetriát az adatok küldéséhez.</string>

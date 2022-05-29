@@ -1551,6 +1551,11 @@
     <string name="preferences_addresses_add_address">Илова кардани нишонӣ</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Идоракунии нишониҳо</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Нигоҳ доштан ва ба таври худкор пур кардани нишониҳо</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Илова кардани маълумот монанди рақамҳо, нишониҳои почтаи электронӣ ва бурдарасонӣ</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Илова кардани корт</string>
     <!-- Title of the "Edit card" screen -->
@@ -1888,6 +1893,9 @@
     <string name="pocket_stories_feature_caption">Қисми оилаи Firefox.%s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Маълумоти бештар</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Сарпарастӣ</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Барои фиристодани маълумот дурисанҷро фаъол созед.</string>

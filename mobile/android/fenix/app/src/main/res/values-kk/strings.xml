@@ -1540,6 +1540,11 @@
     <string name="preferences_addresses_add_address">Адресті қосу</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Адрестерді басқару</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Адрестерді сақтау және автотолтыру</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Нөмірлер, эл. пошта және жеткізу адрестері сияқты ақпаратты қосу</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Картаны қосу</string>
     <!-- Title of the "Edit card" screen -->
@@ -1877,6 +1882,9 @@
     <string name="pocket_stories_feature_caption">Firefox отбасының бөлігі. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Көбірек білу</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Демеуленген</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Деректерді жіберу үшін телеметрияны іске қосу.</string>

@@ -1552,6 +1552,9 @@
     <string name="preferences_addresses_add_address">Gehitu helbidea</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Kudeatu helbideak</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Gorde eta osatu automatikoki helbideak</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Gehitu txartela</string>
     <!-- Title of the "Edit card" screen -->

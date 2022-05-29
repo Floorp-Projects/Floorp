@@ -1352,4 +1352,9 @@
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Elymynty śledzōnce ôd społecznościowych serwisōw</string>
 
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Cookies elymyntōw, co śledzōm miyndzy strōnami</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Elymynty, co fedrujōm kryptopiniōndze</string>
+
     </resources>

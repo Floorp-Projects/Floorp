@@ -1590,6 +1590,12 @@
     <string name="preferences_addresses_add_address">주소 추가</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">주소 관리</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">주소 저장 및 자동 채우기</string>
+
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">숫자, 이메일 및 배송 주소와 같은 정보 포함</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">카드 추가</string>
     <!-- Title of the "Edit card" screen -->
@@ -1931,6 +1937,9 @@
     <string name="pocket_stories_feature_caption">Firefox 제품군의 일부입니다. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">더 알아보기</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">스폰서</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">데이터를 보내려면 원격 분석을 활성화하세요.</string>

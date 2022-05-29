@@ -1564,6 +1564,9 @@
     <string name="preferences_addresses_add_address">Дадаць адрас</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Кіраваць адрасамі</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Захоўваць і аўтаматычна запаўняць адрасы</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Дадаць карту</string>
     <!-- Title of the "Edit card" screen -->
