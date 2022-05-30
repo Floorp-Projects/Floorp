@@ -4,11 +4,11 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["kHandlerList", "kHandlerListVersion"];
+const EXPORTED_SYMBOLS = ["kHandlerList", "kHandlerListVersion"];
 
-this.kHandlerListVersion = 1;
+const kHandlerListVersion = 1;
 
-this.kHandlerList = {
+const kHandlerList = {
   default: {
     schemes: {
       mailto: {
