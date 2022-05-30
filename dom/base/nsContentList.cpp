@@ -453,22 +453,33 @@ Element* nsContentList::NamedItem(const nsAString& aName, bool aDoFlush) {
 
   BringSelfUpToDate(aDoFlush);
 
-  uint32_t i, count = mElements.Length();
+  if (mElements.IsEmpty()) {
+    return nullptr;
+  }
 
   // Typically IDs and names are atomized
   RefPtr<nsAtom> name = NS_Atomize(aName);
   NS_ENSURE_TRUE(name, nullptr);
 
-  for (i = 0; i < count; i++) {
-    nsIContent* content = mElements[i];
-    // XXX Should this pass eIgnoreCase?
-    if (content &&
-        ((content->IsHTMLElement() &&
-          content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                                            name, eCaseMatters)) ||
-         content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
-                                           name, eCaseMatters))) {
-      return content->AsElement();
+  for (const nsCOMPtr<nsIContent>& content : mElements) {
+    if (!content->HasName() && !content->HasID()) {
+      continue;
+    }
+
+    auto* el = nsGenericHTMLElement::FromNode(content);
+    if (!el) {
+      continue;
+    }
+
+    uint32_t i = 0;
+    while (BorrowedAttrInfo info = el->GetAttrInfoAt(i++)) {
+      if (info.mName->Equals(nsGkAtoms::name) ||
+          info.mName->Equals(nsGkAtoms::id)) {
+        // XXX should this pass eIgnoreCase?
+        if (info.mValue->Equals(name, eCaseMatters)) {
+          return el;
+        }
+      }
     }
   }
 
