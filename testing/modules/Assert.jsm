@@ -31,14 +31,14 @@ const { ObjectUtils } = ChromeUtils.import(
  * test-only modules. This is false when the reporter is set by content scripts,
  * because they may still run in the parent process.
  */
-var Assert = (this.Assert = function(reporterFunc, isDefault) {
+function Assert(reporterFunc, isDefault) {
   if (reporterFunc) {
     this.setReporter(reporterFunc);
   }
   if (isDefault) {
     Assert.setReporter(reporterFunc);
   }
-});
+}
 
 // This allows using the Assert object as an additional global instance.
 Object.setPrototypeOf(Assert, Assert.prototype);
