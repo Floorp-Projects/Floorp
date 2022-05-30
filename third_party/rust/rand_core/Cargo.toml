@@ -13,24 +13,18 @@
 [package]
 edition = "2018"
 name = "rand_core"
-version = "0.6.3"
+version = "0.5.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 description = "Core random number generator traits and tools for implementation.\n"
-homepage = "https://rust-random.github.io/book"
-documentation = "https://docs.rs/rand_core"
+homepage = "https://crates.io/crates/rand_core"
+documentation = "https://rust-random.github.io/rand/rand_core/"
 readme = "README.md"
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-random/rand"
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "doc_cfg"]
-
-[package.metadata.playground]
-all-features = true
 [dependencies.getrandom]
-version = "0.2"
+version = "0.1"
 optional = true
 
 [dependencies.serde]
@@ -42,3 +36,8 @@ optional = true
 alloc = []
 serde1 = ["serde"]
 std = ["alloc", "getrandom", "getrandom/std"]
+[badges.appveyor]
+repository = "rust-random/rand"
+
+[badges.travis-ci]
+repository = "rust-random/rand"

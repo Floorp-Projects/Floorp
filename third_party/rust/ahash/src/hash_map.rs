@@ -6,51 +6,22 @@ use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut, Index};
 use std::panic::UnwindSafe;
 
-#[cfg(feature = "serde")]
-use serde::{
-    de::{Deserialize, Deserializer},
-    ser::{Serialize, Serializer},
-};
-
-use crate::RandomState;
-
 /// A [`HashMap`](std::collections::HashMap) using [`RandomState`](crate::RandomState) to hash the items.
-/// (Requires the `std` feature to be enabled.)
+/// Requires the `std` feature to be enabled.
 #[derive(Clone)]
 pub struct AHashMap<K, V, S = crate::RandomState>(HashMap<K, V, S>);
 
-impl<K, V> From<HashMap<K, V, crate::RandomState>> for AHashMap<K, V> {
-    fn from(item: HashMap<K, V, crate::RandomState>) -> Self {
-        AHashMap(item)
-    }
-}
-
-impl<K, V> Into<HashMap<K, V, crate::RandomState>> for AHashMap<K, V> {
-    fn into(self) -> HashMap<K, V, crate::RandomState> {
-        self.0
-    }
-}
-
-impl<K, V> AHashMap<K, V, RandomState> {
+impl<K, V, S> AHashMap<K, V, S>
+where
+    K: Hash + Eq,
+    S: BuildHasher + Default,
+{
     pub fn new() -> Self {
-        AHashMap(HashMap::with_hasher(RandomState::default()))
+        AHashMap(HashMap::with_hasher(S::default()))
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
-        AHashMap(HashMap::with_capacity_and_hasher(capacity, RandomState::default()))
-    }
-}
-
-impl<K, V, S> AHashMap<K, V, S>
-where
-    S: BuildHasher,
-{
-    pub fn with_hasher(hash_builder: S) -> Self {
-        AHashMap(HashMap::with_hasher(hash_builder))
-    }
-
-    pub fn with_capacity_and_hasher(capacity: usize, hash_builder: S) -> Self {
-        AHashMap(HashMap::with_capacity_and_hasher(capacity, hash_builder))
+        AHashMap(HashMap::with_capacity_and_hasher(capacity, S::default()))
     }
 }
 
@@ -59,136 +30,12 @@ where
     K: Hash + Eq,
     S: BuildHasher,
 {
-    /// Returns a reference to the value corresponding to the key.
-    ///
-    /// The key may be any borrowed form of the map's key type, but
-    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
-    /// the key type.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use std::collections::HashMap;
-    ///
-    /// let mut map = HashMap::new();
-    /// map.insert(1, "a");
-    /// assert_eq!(map.get(&1), Some(&"a"));
-    /// assert_eq!(map.get(&2), None);
-    /// ```
-    #[inline]
-    pub fn get<Q: ?Sized>(&self, k: &Q) -> Option<&V>
-    where
-        K: Borrow<Q>,
-        Q: Hash + Eq,
-    {
-        self.0.get(k)
+    pub fn with_hasher(hash_builder: S) -> Self {
+        AHashMap(HashMap::with_hasher(hash_builder))
     }
 
-    /// Returns the key-value pair corresponding to the supplied key.
-    ///
-    /// The supplied key may be any borrowed form of the map's key type, but
-    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
-    /// the key type.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use std::collections::HashMap;
-    ///
-    /// let mut map = HashMap::new();
-    /// map.insert(1, "a");
-    /// assert_eq!(map.get_key_value(&1), Some((&1, &"a")));
-    /// assert_eq!(map.get_key_value(&2), None);
-    /// ```
-    #[inline]
-    pub fn get_key_value<Q: ?Sized>(&self, k: &Q) -> Option<(&K, &V)>
-    where
-        K: Borrow<Q>,
-        Q: Hash + Eq,
-    {
-        self.0.get_key_value(k)
-    }
-
-    /// Returns a mutable reference to the value corresponding to the key.
-    ///
-    /// The key may be any borrowed form of the map's key type, but
-    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
-    /// the key type.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use std::collections::HashMap;
-    ///
-    /// let mut map = HashMap::new();
-    /// map.insert(1, "a");
-    /// if let Some(x) = map.get_mut(&1) {
-    ///     *x = "b";
-    /// }
-    /// assert_eq!(map[&1], "b");
-    /// ```
-    #[inline]
-    pub fn get_mut<Q: ?Sized>(&mut self, k: &Q) -> Option<&mut V>
-    where
-        K: Borrow<Q>,
-        Q: Hash + Eq,
-    {
-        self.0.get_mut(k)
-    }
-
-    /// Inserts a key-value pair into the map.
-    ///
-    /// If the map did not have this key present, [`None`] is returned.
-    ///
-    /// If the map did have this key present, the value is updated, and the old
-    /// value is returned. The key is not updated, though; this matters for
-    /// types that can be `==` without being identical. See the [module-level
-    /// documentation] for more.
-    ///
-    /// [module-level documentation]: crate::collections#insert-and-complex-keys
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use std::collections::HashMap;
-    ///
-    /// let mut map = HashMap::new();
-    /// assert_eq!(map.insert(37, "a"), None);
-    /// assert_eq!(map.is_empty(), false);
-    ///
-    /// map.insert(37, "b");
-    /// assert_eq!(map.insert(37, "c"), Some("b"));
-    /// assert_eq!(map[&37], "c");
-    /// ```
-    #[inline]
-    pub fn insert(&mut self, k: K, v: V) -> Option<V> {
-        self.0.insert(k, v)
-    }
-
-    /// Removes a key from the map, returning the value at the key if the key
-    /// was previously in the map.
-    ///
-    /// The key may be any borrowed form of the map's key type, but
-    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
-    /// the key type.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use std::collections::HashMap;
-    ///
-    /// let mut map = HashMap::new();
-    /// map.insert(1, "a");
-    /// assert_eq!(map.remove(&1), Some("a"));
-    /// assert_eq!(map.remove(&1), None);
-    /// ```
-    #[inline]
-    pub fn remove<Q: ?Sized>(&mut self, k: &Q) -> Option<V>
-    where
-        K: Borrow<Q>,
-        Q: Hash + Eq,
-    {
-        self.0.remove(k)
+    pub fn with_capacity_and_hasher(capacity: usize, hash_builder: S) -> Self {
+        AHashMap(HashMap::with_capacity_and_hasher(capacity, hash_builder))
     }
 }
 
@@ -252,7 +99,7 @@ where
 
 impl<K, V, S> Debug for AHashMap<K, V, S>
 where
-    K: Debug,
+    K: Eq + Hash + Debug,
     V: Debug,
     S: BuildHasher,
 {
@@ -318,54 +165,13 @@ where
     }
 }
 
-impl<K, V> Default for AHashMap<K, V, RandomState> {
+impl<K, V, S> Default for AHashMap<K, V, S>
+where
+    K: Eq + Hash,
+    S: BuildHasher + Default,
+{
     #[inline]
-    fn default() -> AHashMap<K, V, RandomState> {
-        AHashMap::new()
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<K, V> Serialize for AHashMap<K, V>
-where
-    K: Serialize + Eq + Hash,
-    V: Serialize,
-{
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.deref().serialize(serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de, K, V> Deserialize<'de> for AHashMap<K, V>
-where
-    K: Deserialize<'de> + Eq + Hash,
-    V: Deserialize<'de>,
-{
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let hash_map = HashMap::deserialize(deserializer);
-        hash_map.map(|hash_map| Self(hash_map))
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn test_borrow() {
-        let mut map: AHashMap<String, String> = AHashMap::new();
-        map.insert("foo".to_string(), "Bar".to_string());
-        map.insert("Bar".to_string(), map.get("foo").unwrap().to_owned());
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_serde() {
-        let mut map = AHashMap::new();
-        map.insert("for".to_string(), 0);
-        map.insert("bar".to_string(), 1);
-        let serialization = serde_json::to_string(&map).unwrap();
-        let deserialization: AHashMap<String, u64> = serde_json::from_str(&serialization).unwrap();
-        assert_eq!(deserialization, map);
+    fn default() -> AHashMap<K, V, S> {
+        AHashMap::with_hasher(Default::default())
     }
 }

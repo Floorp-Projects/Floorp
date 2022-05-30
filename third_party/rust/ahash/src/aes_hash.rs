@@ -1,10 +1,8 @@
 use crate::convert::*;
-#[cfg(feature = "specialize")]
-use crate::fallback_hash::MULTIPLE;
 use crate::operations::*;
-use crate::RandomState;
+#[cfg(feature = "specialize")]
+use crate::HasherExt;
 use core::hash::Hasher;
-use crate::random_state::PI;
 
 /// A `Hasher` for hashing an arbitrary stream of bytes.
 ///
@@ -51,9 +49,6 @@ impl AHasher {
     /// ```
     #[inline]
     pub fn new_with_keys(key1: u128, key2: u128) -> Self {
-        let pi: [u128; 2] = PI.convert();
-        let key1 = key1 ^ pi[0];
-        let key2 = key2 ^ pi[1];
         Self {
             enc: key1,
             sum: key2,
@@ -61,24 +56,14 @@ impl AHasher {
         }
     }
 
-    #[allow(unused)] // False positive
-    pub(crate) fn test_with_keys(key1: u128, key2: u128) -> Self {
-        Self {
-            enc: key1,
-            sum: key2,
-            key: key1 ^ key2,
-        }
-    }
-
-
-    #[inline]
-    pub(crate) fn from_random_state(rand_state: &RandomState) -> Self {
-        let key1 = [rand_state.k0, rand_state.k1].convert();
-        let key2 = [rand_state.k2, rand_state.k3].convert();
-        Self {
-            enc: key1,
-            sum: key2,
-            key: key1 ^ key2,
+    #[cfg(test)]
+    pub(crate) fn test_with_keys(key1: u64, key2: u64) -> AHasher {
+        use crate::random_state::scramble_keys;
+        let (k1, k2, k3, k4) = scramble_keys(key1, key2);
+        AHasher {
+            enc: [k1, k2].convert(),
+            sum: [k3, k4].convert(),
+            key: add_by_64s([k1, k2], [k3, k4]).convert(),
         }
     }
 
@@ -103,19 +88,25 @@ impl AHasher {
         self.enc = aesenc(self.enc, v2);
         self.sum = shuffle_and_add(self.sum, v2);
     }
+}
+
+#[cfg(feature = "specialize")]
+impl HasherExt for AHasher {
+    #[inline]
+    fn hash_u64(self, value: u64) -> u64 {
+        let mask = self.sum as u64;
+        let rot = (self.enc & 64) as u32;
+        folded_multiply(value ^ mask, crate::fallback_hash::MULTIPLE).rotate_left(rot)
+    }
 
     #[inline]
-    #[cfg(feature = "specialize")]
     fn short_finish(&self) -> u64 {
-        let combined = aesdec(self.sum, self.enc);
-        let result: [u64; 2] = aesenc(combined, combined).convert();
-        result[0]
+        let buffer: [u64; 2] = self.enc.convert();
+        folded_multiply(buffer[0], buffer[1])
     }
 }
 
-/// Provides [Hasher] methods to hash all of the primitive types.
-///
-/// [Hasher]: core::hash::Hasher
+/// Provides methods to hash all of the primitive types.
 impl Hasher for AHasher {
     #[inline]
     fn write_u8(&mut self, i: u8) {
@@ -138,15 +129,8 @@ impl Hasher for AHasher {
     }
 
     #[inline]
-    #[cfg(any(target_pointer_width = "64", target_pointer_width = "32", target_pointer_width = "16"))]
     fn write_usize(&mut self, i: usize) {
         self.write_u64(i as u64);
-    }
-
-    #[inline]
-    #[cfg(target_pointer_width = "128")]
-    fn write_usize(&mut self, i: usize) {
-        self.write_u128(i as u128);
     }
 
     #[inline]
@@ -161,8 +145,22 @@ impl Hasher for AHasher {
         let length = data.len();
         self.add_in_length(length as u64);
         //A 'binary search' on sizes reduces the number of comparisons.
-        if data.len() <= 8 {
-            let value = read_small(data);
+        if data.len() < 8 {
+            let value: [u64; 2] = if data.len() >= 2 {
+                if data.len() >= 4 {
+                    //len 4-8
+                    [data.read_u32().0 as u64, data.read_last_u32() as u64]
+                } else {
+                    //len 2-3
+                    [data.read_u16().0 as u64, data[data.len() - 1] as u64]
+                }
+            } else {
+                if data.len() > 0 {
+                    [data[0] as u64, 0]
+                } else {
+                    [0, 0]
+                }
+            };
             self.hash_in(value.convert());
         } else {
             if data.len() > 32 {
@@ -219,151 +217,6 @@ impl Hasher for AHasher {
     }
 }
 
-#[cfg(feature = "specialize")]
-pub(crate) struct AHasherU64 {
-    pub(crate) buffer: u64,
-    pub(crate) pad: u64,
-}
-
-/// A specialized hasher for only primitives under 64 bits.
-#[cfg(feature = "specialize")]
-impl Hasher for AHasherU64 {
-    #[inline]
-    fn finish(&self) -> u64 {
-        let rot = (self.pad & 63) as u32;
-        self.buffer.rotate_left(rot)
-    }
-
-    #[inline]
-    fn write(&mut self, _bytes: &[u8]) {
-        unreachable!("Specialized hasher was called with a different type of object")
-    }
-
-    #[inline]
-    fn write_u8(&mut self, i: u8) {
-        self.write_u64(i as u64);
-    }
-
-    #[inline]
-    fn write_u16(&mut self, i: u16) {
-        self.write_u64(i as u64);
-    }
-
-    #[inline]
-    fn write_u32(&mut self, i: u32) {
-        self.write_u64(i as u64);
-    }
-
-    #[inline]
-    fn write_u64(&mut self, i: u64) {
-        self.buffer = folded_multiply(i ^ self.buffer, MULTIPLE);
-    }
-
-    #[inline]
-    fn write_u128(&mut self, _i: u128) {
-        unreachable!("Specialized hasher was called with a different type of object")
-    }
-
-    #[inline]
-    fn write_usize(&mut self, _i: usize) {
-        unreachable!("Specialized hasher was called with a different type of object")
-    }
-}
-
-#[cfg(feature = "specialize")]
-pub(crate) struct AHasherFixed(pub AHasher);
-
-/// A specialized hasher for fixed size primitives larger than 64 bits.
-#[cfg(feature = "specialize")]
-impl Hasher for AHasherFixed {
-    #[inline]
-    fn finish(&self) -> u64 {
-        self.0.short_finish()
-    }
-
-    #[inline]
-    fn write(&mut self, bytes: &[u8]) {
-        self.0.write(bytes)
-    }
-
-    #[inline]
-    fn write_u8(&mut self, i: u8) {
-        self.write_u64(i as u64);
-    }
-
-    #[inline]
-    fn write_u16(&mut self, i: u16) {
-        self.write_u64(i as u64);
-    }
-
-    #[inline]
-    fn write_u32(&mut self, i: u32) {
-        self.write_u64(i as u64);
-    }
-
-    #[inline]
-    fn write_u64(&mut self, i: u64) {
-        self.0.write_u64(i);
-    }
-
-    #[inline]
-    fn write_u128(&mut self, i: u128) {
-        self.0.write_u128(i);
-    }
-
-    #[inline]
-    fn write_usize(&mut self, i: usize) {
-        self.0.write_usize(i);
-    }
-}
-
-#[cfg(feature = "specialize")]
-pub(crate) struct AHasherStr(pub AHasher);
-
-/// A specialized hasher for strings
-/// Note that the other types don't panic because the hash impl for String tacks on an unneeded call. (As does vec)
-#[cfg(feature = "specialize")]
-impl Hasher for AHasherStr {
-    #[inline]
-    fn finish(&self) -> u64 {
-        let result : [u64; 2] = self.0.enc.convert();
-        result[0]
-    }
-
-    #[inline]
-    fn write(&mut self, bytes: &[u8]) {
-        if bytes.len() > 8 {
-            self.0.write(bytes);
-            self.0.enc = aesdec(self.0.sum, self.0.enc);
-            self.0.enc = aesenc(aesenc(self.0.enc, self.0.key), self.0.enc);
-        } else {
-            self.0.add_in_length(bytes.len() as u64);
-            let value = read_small(bytes).convert();
-            self.0.sum = shuffle_and_add(self.0.sum, value);
-            self.0.enc = aesdec(self.0.sum, self.0.enc);
-            self.0.enc = aesenc(aesenc(self.0.enc, self.0.key), self.0.enc);
-        }
-    }
-
-    #[inline]
-    fn write_u8(&mut self, _i: u8) {}
-
-    #[inline]
-    fn write_u16(&mut self, _i: u16) {}
-
-    #[inline]
-    fn write_u32(&mut self, _i: u32) {}
-
-    #[inline]
-    fn write_u64(&mut self, _i: u64) {}
-
-    #[inline]
-    fn write_u128(&mut self, _i: u128) {}
-
-    #[inline]
-    fn write_usize(&mut self, _i: usize) {}
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -373,7 +226,7 @@ mod tests {
     use std::hash::{BuildHasher, Hasher};
     #[test]
     fn test_sanity() {
-        let mut hasher = RandomState::with_seeds(1, 2, 3, 4).build_hasher();
+        let mut hasher = RandomState::with_seeds(192837465, 1234567890).build_hasher();
         hasher.write_u64(0);
         let h1 = hasher.finish();
         hasher.write(&[1, 0, 0, 0, 0, 0, 0, 0]);
@@ -436,4 +289,3 @@ mod tests {
         assert_eq!(bytes, 0x6464646464646464);
     }
 }
-

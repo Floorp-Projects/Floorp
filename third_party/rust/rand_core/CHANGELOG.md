@@ -4,37 +4,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.3] - 2021-06-15
-### Changed
-- Improved bound for `serde` impls on `BlockRng` (#1130)
-- Minor doc additions (#1118)
-
-## [0.6.2] - 2021-02-12
-### Fixed
-- Fixed assertions in `le::read_u32_into` and `le::read_u64_into` which could
-  have allowed buffers not to be fully populated (#1096)
-
-## [0.6.1] - 2021-01-03
-### Fixed
-- Avoid panic when using `RngCore::seed_from_u64` with a seed which is not a
-  multiple of four (#1082)
-### Other
-- Enable all stable features in the playground (#1081)
-
-## [0.6.0] - 2020-12-08
-### Breaking changes
-- Bump MSRV to 1.36, various code improvements (#1011)
-- Update to getrandom v0.2 (#1041)
-- Fix: `next_u32_via_fill` and `next_u64_via_fill` now use LE as documented (#1061)
-
-### Other
-- Reduce usage of `unsafe` (#962, #963, #1011)
-- Annotate feature-gates in documentation (#1019)
-- Document available error codes (#1061)
-- Various documentation tweaks
-- Fix some clippy warnings (#1036)
-- Apply rustfmt (#926)
-
 ## [0.5.1] - 2019-08-28
 - `OsRng` added to `rand_core` (#863)
 - `Error::INTERNAL_START` and `Error::CUSTOM_START` constants (#864)

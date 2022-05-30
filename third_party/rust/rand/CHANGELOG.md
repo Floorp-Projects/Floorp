@@ -8,107 +8,6 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [0.8.5] - 2021-08-20
-### Fixes
-- Fix build on non-32/64-bit architectures (#1144)
-- Fix "min_const_gen" feature for `no_std` (#1173)
-- Check `libc::pthread_atfork` return value with panic on error (#1178)
-- More robust reseeding in case `ReseedingRng` is used from a fork handler (#1178)
-- Fix nightly: remove unused `slice_partition_at_index` feature (#1215)
-- Fix nightly + `simd_support`: update `packed_simd` (#1216)
-
-### Rngs
-- `StdRng`: Switch from HC128 to ChaCha12 on emscripten (#1142).
-  We now use ChaCha12 on all platforms.
-
-### Documentation
-- Added docs about rand's use of const generics (#1150)
-- Better random chars example (#1157)
-
-
-## [0.8.4] - 2021-06-15
-### Additions
-- Use const-generics to support arrays of all sizes (#1104)
-- Implement `Clone` and `Copy` for `Alphanumeric` (#1126)
-- Add `Distribution::map` to derive a distribution using a closure (#1129)
-- Add `Slice` distribution (#1107)
-- Add `DistString` trait with impls for `Standard` and `Alphanumeric` (#1133)
-
-### Other
-- Reorder asserts in `Uniform` float distributions for easier debugging of non-finite arguments
-  (#1094, #1108)
-- Add range overflow check in `Uniform` float distributions (#1108)
-- Deprecate `rngs::adapter::ReadRng` (#1130)
-
-## [0.8.3] - 2021-01-25
-### Fixes
-- Fix `no-std` + `alloc` build by gating `choose_multiple_weighted` on `std` (#1088)
-
-## [0.8.2] - 2021-01-12
-### Fixes
-- Fix panic in `UniformInt::sample_single_inclusive` and `Rng::gen_range` when
-  providing a full integer range (eg `0..=MAX`) (#1087)
-
-## [0.8.1] - 2020-12-31
-### Other
-- Enable all stable features in the playground (#1081)
-
-## [0.8.0] - 2020-12-18
-### Platform support
-- The minimum supported Rust version is now 1.36 (#1011)
-- `getrandom` updated to v0.2 (#1041)
-- Remove `wasm-bindgen` and `stdweb` feature flags. For details of WASM support,
-  see the [getrandom documentation](https://docs.rs/getrandom/latest). (#948)
-- `ReadRng::next_u32` and `next_u64` now use little-Endian conversion instead
-  of native-Endian, affecting results on Big-Endian platforms (#1061)
-- The `nightly` feature no longer implies the `simd_support` feature (#1048)
-- Fix `simd_support` feature to work on current nightlies (#1056)
-
-### Rngs
-- `ThreadRng` is no longer `Copy` to enable safe usage within thread-local destructors (#1035)
-- `gen_range(a, b)` was replaced with `gen_range(a..b)`. `gen_range(a..=b)` is
-  also supported. Note that `a` and `b` can no longer be references or SIMD types. (#744, #1003)
-- Replace `AsByteSliceMut` with `Fill` and add support for `[bool], [char], [f32], [f64]` (#940)
-- Restrict `rand::rngs::adapter` to `std` (#1027; see also #928)
-- `StdRng`: add new `std_rng` feature flag (enabled by default, but might need
-  to be used if disabling default crate features) (#948)
-- `StdRng`: Switch from ChaCha20 to ChaCha12 for better performance (#1028)
-- `SmallRng`: Replace PCG algorithm with xoshiro{128,256}++ (#1038)
-
-### Sequences
-- Add `IteratorRandom::choose_stable` as an alternative to `choose` which does
-  not depend on size hints (#1057)
-- Improve accuracy and performance of `IteratorRandom::choose` (#1059)
-- Implement `IntoIterator` for `IndexVec`, replacing the `into_iter` method (#1007)
-- Add value stability tests for `seq` module (#933)
-
-### Misc
-- Support `PartialEq` and `Eq` for `StdRng`, `SmallRng` and `StepRng` (#979)
-- Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
-- Drop some unsafe code (#962, #963, #1011)
-- Reduce packaged crate size (#983)
-- Migrate to GitHub Actions from Travis+AppVeyor (#1073)
-
-### Distributions
-- `Alphanumeric` samples bytes instead of chars (#935)
-- `Uniform` now supports `char`, enabling `rng.gen_range('A'..='Z')` (#1068)
-- Add `UniformSampler::sample_single_inclusive` (#1003)
-
-#### Weighted sampling
-- Implement weighted sampling without replacement (#976, #1013)
-- `rand::distributions::alias_method::WeightedIndex` was moved to `rand_distr::WeightedAliasIndex`.
-  The simpler alternative `rand::distribution::WeightedIndex` remains. (#945)
-- Improve treatment of rounding errors in `WeightedIndex::update_weights` (#956)
-- `WeightedIndex`: return error on NaN instead of panic (#1005)
-
-### Documentation
-- Document types supported by `random` (#994)
-- Document notes on password generation (#995)
-- Note that `SmallRng` may not be the best choice for performance and in some
-  other cases (#1038)
-- Use `doc(cfg)` to annotate feature-gated items (#1019)
-- Adjust README (#1065)
-
 ## [0.7.3] - 2020-01-10
 ### Fixes
 - The `Bernoulli` distribution constructors now reports an error on NaN and on
@@ -141,7 +40,7 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 - Fix or squelch issues from Clippy lints (#840)
 
 ### Additions
-- Add a `no_std` target to CI to continuously evaluate `no_std` status (#844)
+- Add a `no_std` target to CI to continously evaluate `no_std` status (#844)
 - `WeightedIndex`: allow adjusting a sub-set of weights (#866)
 
 ## [0.7.0] - 2019-06-28
@@ -501,7 +400,7 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 
 ## [0.3.14] - 2016-02-13
 ### Fixed
-- Inline definitions from winapi/advapi32, which decreases build times
+- Inline definitions from winapi/advapi32, wich decreases build times
 
 
 ## [0.3.13] - 2016-01-09
@@ -696,4 +595,4 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 
 ## [0.10-pre] - 2014-03-02
 ### Added
-- Separate `rand` out of the standard library
+- Seperate `rand` out of the standard library

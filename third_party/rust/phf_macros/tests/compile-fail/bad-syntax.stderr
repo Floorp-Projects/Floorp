@@ -1,0 +1,5 @@
+error: expected identifier
+ --> $DIR/bad-syntax.rs:5:5
+  |
+5 |     => //~ ERROR expected identifier
+  |     ^^

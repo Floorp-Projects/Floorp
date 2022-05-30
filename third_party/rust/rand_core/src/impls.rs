@@ -17,8 +17,12 @@
 //! to/from byte sequences, and since its purpose is reproducibility,
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
 
-use crate::RngCore;
+use core::ptr::copy_nonoverlapping;
+use core::slice;
 use core::cmp::min;
+use core::mem::size_of;
+use crate::RngCore;
+
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
@@ -37,7 +41,7 @@ pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     let mut left = dest;
     while left.len() >= 8 {
-        let (l, r) = { left }.split_at_mut(8);
+        let (l, r) = {left}.split_at_mut(8);
         left = r;
         let chunk: [u8; 8] = rng.next_u64().to_le_bytes();
         l.copy_from_slice(&chunk);
@@ -52,36 +56,45 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     }
 }
 
-macro_rules! fill_via_chunks {
-    ($src:expr, $dst:expr, $ty:ty) => {{
-        const SIZE: usize = core::mem::size_of::<$ty>();
-        let chunk_size_u8 = min($src.len() * SIZE, $dst.len());
-        let chunk_size = (chunk_size_u8 + SIZE - 1) / SIZE;
+macro_rules! impl_uint_from_fill {
+    ($rng:expr, $ty:ty, $N:expr) => ({
+        debug_assert!($N == size_of::<$ty>());
 
-        // The following can be replaced with safe code, but unfortunately it's
-        // ca. 8% slower.
-        if cfg!(target_endian = "little") {
+        let mut int: $ty = 0;
+        unsafe {
+            let ptr = &mut int as *mut $ty as *mut u8;
+            let slice = slice::from_raw_parts_mut(ptr, $N);
+            $rng.fill_bytes(slice);
+        }
+        int
+    });
+}
+
+macro_rules! fill_via_chunks {
+    ($src:expr, $dst:expr, $ty:ty, $size:expr) => ({
+        let chunk_size_u8 = min($src.len() * $size, $dst.len());
+        let chunk_size = (chunk_size_u8 + $size - 1) / $size;
+        if cfg!(target_endian="little") {
             unsafe {
-                core::ptr::copy_nonoverlapping(
+                copy_nonoverlapping(
                     $src.as_ptr() as *const u8,
                     $dst.as_mut_ptr(),
                     chunk_size_u8);
             }
         } else {
-            for (&n, chunk) in $src.iter().zip($dst.chunks_mut(SIZE)) {
+            for (&n, chunk) in $src.iter().zip($dst.chunks_mut($size)) {
                 let tmp = n.to_le();
                 let src_ptr = &tmp as *const $ty as *const u8;
                 unsafe {
-                    core::ptr::copy_nonoverlapping(
-                        src_ptr,
-                        chunk.as_mut_ptr(),
-                        chunk.len());
+                    copy_nonoverlapping(src_ptr,
+                                        chunk.as_mut_ptr(),
+                                        chunk.len());
                 }
             }
         }
 
         (chunk_size, chunk_size_u8)
-    }};
+    });
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
@@ -115,7 +128,7 @@ macro_rules! fill_via_chunks {
 /// }
 /// ```
 pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, u32)
+    fill_via_chunks!(src, dest, u32, 4)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
@@ -129,56 +142,17 @@ pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
 ///
 /// See `fill_via_u32_chunks` for an example.
 pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, u64)
+    fill_via_chunks!(src, dest, u64, 8)
 }
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
 pub fn next_u32_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u32 {
-    let mut buf = [0; 4];
-    rng.fill_bytes(&mut buf);
-    u32::from_le_bytes(buf)
+    impl_uint_from_fill!(rng, u32, 4)
 }
 
 /// Implement `next_u64` via `fill_bytes`, little-endian order.
 pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
-    let mut buf = [0; 8];
-    rng.fill_bytes(&mut buf);
-    u64::from_le_bytes(buf)
+    impl_uint_from_fill!(rng, u64, 8)
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_fill_via_u32_chunks() {
-        let src = [1, 2, 3];
-        let mut dst = [0u8; 11];
-        assert_eq!(fill_via_u32_chunks(&src, &mut dst), (3, 11));
-        assert_eq!(dst, [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0]);
-
-        let mut dst = [0u8; 13];
-        assert_eq!(fill_via_u32_chunks(&src, &mut dst), (3, 12));
-        assert_eq!(dst, [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0]);
-
-        let mut dst = [0u8; 5];
-        assert_eq!(fill_via_u32_chunks(&src, &mut dst), (2, 5));
-        assert_eq!(dst, [1, 0, 0, 0, 2]);
-    }
-
-    #[test]
-    fn test_fill_via_u64_chunks() {
-        let src = [1, 2];
-        let mut dst = [0u8; 11];
-        assert_eq!(fill_via_u64_chunks(&src, &mut dst), (2, 11));
-        assert_eq!(dst, [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0]);
-
-        let mut dst = [0u8; 17];
-        assert_eq!(fill_via_u64_chunks(&src, &mut dst), (2, 16));
-        assert_eq!(dst, [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0]);
-
-        let mut dst = [0u8; 5];
-        assert_eq!(fill_via_u64_chunks(&src, &mut dst), (1, 5));
-        assert_eq!(dst, [1, 0, 0, 0, 0]);
-    }
-}
+// TODO: implement tests for the above
