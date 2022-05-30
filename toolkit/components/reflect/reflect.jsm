@@ -22,4 +22,7 @@ var EXPORTED_SYMBOLS = ["Reflect"];
 // Initialize the ctypes object. You do not need to do this yourself.
 const init = Cc["@mozilla.org/jsreflect;1"].createInstance();
 init();
-this.Reflect = Reflect;
+
+// Reflect is a standard built-in defined on the shared global.
+// Export it via a lexical variable on the per-JSM global.
+const Reflect = globalThis.Reflect;
