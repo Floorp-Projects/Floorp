@@ -466,14 +466,10 @@ Element* nsContentList::NamedItem(const nsAString& aName, bool aDoFlush) {
       continue;
     }
 
-    auto* el = nsGenericHTMLElement::FromNode(content);
-    if (!el) {
-      continue;
-    }
-
+    Element* el = content->AsElement();
     uint32_t i = 0;
     while (BorrowedAttrInfo info = el->GetAttrInfoAt(i++)) {
-      if (info.mName->Equals(nsGkAtoms::name) ||
+      if ((info.mName->Equals(nsGkAtoms::name) && el->IsHTMLElement()) ||
           info.mName->Equals(nsGkAtoms::id)) {
         // XXX should this pass eIgnoreCase?
         if (info.mValue->Equals(name, eCaseMatters)) {
