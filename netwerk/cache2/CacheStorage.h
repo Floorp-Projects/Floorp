@@ -9,9 +9,6 @@
 #include "CacheEntry.h"
 #include "LoadContextInfo.h"
 
-#include "nsRefPtrHashtable.h"
-#include "nsThreadUtils.h"
-#include "nsCOMPtr.h"
 #include "nsILoadContextInfo.h"
 
 class nsIURI;

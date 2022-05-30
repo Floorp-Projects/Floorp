@@ -11,9 +11,7 @@
 #include "nsICacheEntryDoomCallback.h"
 
 #include "nsIURI.h"
-#include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsServiceManagerUtils.h"
 
 namespace mozilla::net {
 
