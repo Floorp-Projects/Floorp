@@ -2009,10 +2009,10 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
-    JS_SELF_HOSTED_FN("withReversed", "TypedArrayWithReversed", 0, 0),
-    JS_SELF_HOSTED_FN("withSorted", "TypedArrayWithSorted", 1, 0),
-    JS_SELF_HOSTED_FN("withAt", "TypedArrayWithAt", 2, 0),
-    JS_SELF_HOSTED_FN("withSpliced", "TypedArrayWithSpliced", 3, 0),
+    JS_SELF_HOSTED_FN("toReversed", "TypedArrayToReversed", 0, 0),
+    JS_SELF_HOSTED_FN("toSorted", "TypedArrayToSorted", 1, 0),
+    JS_SELF_HOSTED_FN("with", "TypedArrayWith", 2, 0),
+    JS_SELF_HOSTED_FN("toSpliced", "TypedArrayToSpliced", 3, 0),
 
     JS_FS_END};
 

@@ -1225,8 +1225,8 @@ SetIsInlinableLargeFunction(ArrayAt);
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 
 // https://github.com/tc39/proposal-change-array-by-copy
-// Array.prototype.withReversed()
-function ArrayWithReversed() {
+// Array.prototype.toReversed()
+function ArrayToReversed() {
 
     /* Step 1. */
     var O = ToObject(this);
@@ -1253,13 +1253,13 @@ function ArrayWithReversed() {
 }
 
 // https://github.com/tc39/proposal-change-array-by-copy
-// Array.prototype.withSorted()
-function ArrayWithSorted(comparefn) {
+// Array.prototype.toSorted()
+function ArrayToSorted(comparefn) {
 
     /* Step 1. */
 
     if (comparefn !== undefined && !IsCallable(comparefn)) {
-        ThrowTypeError(JSMSG_BAD_WITHSORTED_ARG);
+        ThrowTypeError(JSMSG_BAD_TOSORTED_ARG);
     }
 
     /* Step 2. */
