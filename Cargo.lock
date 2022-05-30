@@ -4007,11 +4007,11 @@ dependencies = [
 
 [[package]]
 name = "plist"
-version = "0.5.5"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b59eb8d91dfa89208ec74a920e3b55f840476cf46568026c18dbaa2999e0d48"
+checksum = "a38d026d73eeaf2ade76309d0c65db5a35ecf649e3cec428db316243ea9d6711"
 dependencies = [
- "base64 0.10.1",
+ "base64 0.13.0",
  "chrono",
  "indexmap",
  "line-wrap",

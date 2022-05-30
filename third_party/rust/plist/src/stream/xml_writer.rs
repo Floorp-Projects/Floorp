@@ -9,7 +9,7 @@ use xml_rs::{
 
 use crate::{
     error::{self, Error, ErrorKind, EventKind},
-    stream::Writer,
+    stream::{Writer, XmlWriteOptions},
     Date, Integer, Uid,
 };
 
@@ -35,15 +35,21 @@ pub struct XmlWriter<W: Write> {
 
 impl<W: Write> XmlWriter<W> {
     pub fn new(writer: W) -> XmlWriter<W> {
+        let opts = XmlWriteOptions::default();
+        XmlWriter::new_with_options(writer, &opts)
+    }
+
+    pub fn new_with_options(writer: W, opts: &XmlWriteOptions) -> XmlWriter<W> {
         let config = EmitterConfig::new()
             .line_separator("\n")
-            .indent_string("\t")
+            .indent_string(opts.indent_str.clone())
             .perform_indent(true)
             .write_document_declaration(false)
             .normalize_empty_elements(true)
             .cdata_to_characters(true)
             .keep_element_names_stack(false)
-            .autopad_comments(true);
+            .autopad_comments(true)
+            .pad_self_closing(false);
 
         XmlWriter {
             xml_writer: EventWriter::new_with_config(writer, config),
@@ -300,27 +306,27 @@ mod tests {
     fn streaming_parser() {
         let plist = &[
             Event::StartDictionary(None),
-            Event::String("Author".to_owned()),
-            Event::String("William Shakespeare".to_owned()),
-            Event::String("Lines".to_owned()),
+            Event::String("Author".into()),
+            Event::String("William Shakespeare".into()),
+            Event::String("Lines".into()),
             Event::StartArray(None),
-            Event::String("It is a tale told by an idiot,".to_owned()),
-            Event::String("Full of sound and fury, signifying nothing.".to_owned()),
-            Event::Data((0..128).collect::<Vec<_>>()),
+            Event::String("It is a tale told by an idiot,".into()),
+            Event::String("Full of sound and fury, signifying nothing.".into()),
+            Event::Data((0..128).collect::<Vec<_>>().into()),
             Event::EndCollection,
-            Event::String("Death".to_owned()),
+            Event::String("Death".into()),
             Event::Integer(1564.into()),
-            Event::String("Height".to_owned()),
+            Event::String("Height".into()),
             Event::Real(1.60),
-            Event::String("Data".to_owned()),
-            Event::Data(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0]),
-            Event::String("Birthdate".to_owned()),
+            Event::String("Data".into()),
+            Event::Data(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0].into()),
+            Event::String("Birthdate".into()),
             Event::Date(super::Date::from_rfc3339("1981-05-16T11:32:06Z").unwrap()),
-            Event::String("Comment".to_owned()),
-            Event::String("2 < 3".to_owned()), // make sure characters are escaped
-            Event::String("BiggestNumber".to_owned()),
+            Event::String("Comment".into()),
+            Event::String("2 < 3".into()), // make sure characters are escaped
+            Event::String("BiggestNumber".into()),
             Event::Integer(18446744073709551615u64.into()),
-            Event::String("SmallestNumber".to_owned()),
+            Event::String("SmallestNumber".into()),
             Event::Integer((-9223372036854775808i64).into()),
             Event::String("IsTrue".into()),
             Event::Boolean(true),
@@ -372,9 +378,9 @@ mod tests {
 \t<key>SmallestNumber</key>
 \t<integer>-9223372036854775808</integer>
 \t<key>IsTrue</key>
-\t<true />
+\t<true/>
 \t<key>IsNotFalse</key>
-\t<false />
+\t<false/>
 </dict>
 </plist>";
 

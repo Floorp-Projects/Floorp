@@ -13,7 +13,7 @@ use xml_rs::{
 
 use crate::{
     error::{Error, ErrorKind, FilePosition},
-    stream::Event,
+    stream::{Event, OwnedEvent},
     Date, Integer,
 };
 
@@ -75,7 +75,7 @@ impl<R: Read> XmlReader<R> {
         }
     }
 
-    fn read_next(&mut self) -> Result<Option<Event>, Error> {
+    fn read_next(&mut self) -> Result<Option<OwnedEvent>, Error> {
         loop {
             match self.next_event() {
                 Ok(XmlEvent::StartDocument { .. }) => {}
@@ -87,7 +87,7 @@ impl<R: Read> XmlReader<R> {
                         "plist" => (),
                         "array" => return Ok(Some(Event::StartArray(None))),
                         "dict" => return Ok(Some(Event::StartDictionary(None))),
-                        "key" => return Ok(Some(Event::String(self.read_content()?))),
+                        "key" => return Ok(Some(Event::String(self.read_content()?.into()))),
                         "true" => return Ok(Some(Event::Boolean(true))),
                         "false" => return Ok(Some(Event::Boolean(false))),
                         "data" => {
@@ -96,7 +96,7 @@ impl<R: Read> XmlReader<R> {
                             s.retain(|c| !c.is_ascii_whitespace());
                             let data = base64::decode(&s)
                                 .map_err(|_| self.with_pos(ErrorKind::InvalidDataString))?;
-                            return Ok(Some(Event::Data(data)));
+                            return Ok(Some(Event::Data(data.into())));
                         }
                         "date" => {
                             let s = self.read_content()?;
@@ -120,7 +120,7 @@ impl<R: Read> XmlReader<R> {
                                 Err(_) => return Err(self.with_pos(ErrorKind::InvalidRealString)),
                             }
                         }
-                        "string" => return Ok(Some(Event::String(self.read_content()?))),
+                        "string" => return Ok(Some(Event::String(self.read_content()?.into()))),
                         _ => return Err(self.with_pos(ErrorKind::UnknownXmlElement)),
                     }
                 }
@@ -169,9 +169,9 @@ impl<R: Read> XmlReader<R> {
 }
 
 impl<R: Read> Iterator for XmlReader<R> {
-    type Item = Result<Event, Error>;
+    type Item = Result<OwnedEvent, Error>;
 
-    fn next(&mut self) -> Option<Result<Event, Error>> {
+    fn next(&mut self) -> Option<Result<OwnedEvent, Error>> {
         if self.finished {
             None
         } else {
@@ -231,28 +231,28 @@ mod tests {
 
         let comparison = &[
             StartDictionary(None),
-            String("Author".to_owned()),
-            String("William Shakespeare".to_owned()),
-            String("Lines".to_owned()),
+            String("Author".into()),
+            String("William Shakespeare".into()),
+            String("Lines".into()),
             StartArray(None),
-            String("It is a tale told by an idiot,".to_owned()),
-            String("Full of sound and fury, signifying nothing.".to_owned()),
+            String("It is a tale told by an idiot,".into()),
+            String("Full of sound and fury, signifying nothing.".into()),
             EndCollection,
-            String("Death".to_owned()),
+            String("Death".into()),
             Integer(1564.into()),
-            String("Height".to_owned()),
+            String("Height".into()),
             Real(1.60),
-            String("Data".to_owned()),
-            Data(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0]),
-            String("Birthdate".to_owned()),
+            String("Data".into()),
+            Data(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0].into()),
+            String("Birthdate".into()),
             Date(super::Date::from_rfc3339("1981-05-16T11:32:06Z").unwrap()),
-            String("Blank".to_owned()),
-            String("".to_owned()),
-            String("BiggestNumber".to_owned()),
+            String("Blank".into()),
+            String("".into()),
+            String("BiggestNumber".into()),
             Integer(18446744073709551615u64.into()),
-            String("SmallestNumber".to_owned()),
+            String("SmallestNumber".into()),
             Integer((-9223372036854775808i64).into()),
-            String("HexademicalNumber".to_owned()),
+            String("HexademicalNumber".into()),
             Integer(0xdead_beef_u64.into()),
             String("IsTrue".into()),
             Boolean(true),
