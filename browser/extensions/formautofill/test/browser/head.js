@@ -770,7 +770,6 @@ async function testDialog(url, testFn, arg = undefined) {
  * @param {...Object} items Can either be credit card or address objects
  */
 async function setStorage(...items) {
-  await removeAllRecords();
   for (let item of items) {
     if (item["cc-number"]) {
       await saveCreditCard(item);
