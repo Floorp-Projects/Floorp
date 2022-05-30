@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 /** @namespace */
-this.permissions = {};
+const permissions = {};
 
 /**
  * Set a permission's state.

@@ -26,7 +26,7 @@ const SAMESITE_MAP = new Map([
 ]);
 
 /** @namespace */
-this.cookie = {
+const cookie = {
   manager: Services.cookies,
 };
 

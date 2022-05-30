@@ -75,7 +75,7 @@ const INPUT_TYPES_NO_EVENT = new Set([
 ]);
 
 /** @namespace */
-this.interaction = {};
+const interaction = {};
 
 /**
  * Interact with an element by clicking it.

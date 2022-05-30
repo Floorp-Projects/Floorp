@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 /** @namespace */
-this.browser = {};
+const browser = {};
 
 /**
  * Variations of Marionette contexts.

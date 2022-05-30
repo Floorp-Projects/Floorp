@@ -31,9 +31,9 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
 const DEFAULT_CONTEXT_MENU_DELAY = 750; // ms
 
-/* global action */
 /** @namespace */
-this.legacyaction = this.action = {};
+const legacyaction = {};
+const action = legacyaction;
 
 /**
  * Functionality for (single finger) action chains.

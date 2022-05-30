@@ -31,7 +31,7 @@ const DEFAULT_TIMEOUT = 10000; // ms
 const FINISH = "finish";
 
 /** @namespace */
-this.evaluate = {};
+const evaluate = {};
 
 /**
  * Asserts that an arbitrary object is not cyclic.
@@ -461,7 +461,7 @@ evaluate.isDead = function(obj, prop) {
   return false;
 };
 
-this.sandbox = {};
+const sandbox = {};
 
 /**
  * Provides a safe way to take an object defined in a privileged scope and
@@ -570,7 +570,7 @@ sandbox.createSimpleTest = function(win, harness) {
  *
  * @memberof evaluate
  */
-this.Sandboxes = class {
+class Sandboxes {
   /**
    * @param {function(): Window} windowFn
    *     A function that returns the references to the current Window
@@ -622,4 +622,4 @@ this.Sandboxes = class {
   clear() {
     this.boxes_.clear();
   }
-};
+}

@@ -255,7 +255,7 @@ function delimitedRead(stream, delimiter, count) {
   return data;
 }
 
-this.StreamUtils = {
+const StreamUtils = {
   copyStream,
   delimitedRead,
 };

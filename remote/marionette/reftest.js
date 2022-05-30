@@ -61,7 +61,7 @@ const DEFAULT_PDF_RESOLUTION = 96 / 72;
  *
  * @namespace
  */
-this.reftest = {};
+const reftest = {};
 
 /**
  * @memberof reftest

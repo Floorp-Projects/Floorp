@@ -109,7 +109,7 @@ const TIMEOUT_NO_WINDOW_MANAGER = 5000;
  * @param {MarionetteServer} server
  *     The instance of Marionette server.
  */
-this.GeckoDriver = function(server) {
+function GeckoDriver(server) {
   this._server = server;
 
   // WebDriver Session
@@ -128,7 +128,7 @@ this.GeckoDriver = function(server) {
   // used for modal dialogs or tab modal alerts
   this.dialog = null;
   this.dialogObserver = null;
-};
+}
 
 /**
  * The current context decides if commands are executed in chrome- or

@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
 
 /** @namespace */
-this.modal = {
+const modal = {
   ACTION_CLOSED: "closed",
   ACTION_OPENED: "opened",
 };

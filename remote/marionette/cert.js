@@ -32,7 +32,7 @@ const CERT_PINNING_ENFORCEMENT_PREF = "security.cert_pinning.enforcement_level";
 const HSTS_PRELOAD_LIST_PREF = "network.stricttransportsecurity.preloadlist";
 
 /** @namespace */
-this.allowAllCerts = {};
+const allowAllCerts = {};
 
 /**
  * Disable all security check and allow all certs.

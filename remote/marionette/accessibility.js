@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyGetter(this, "service", () => {
 });
 
 /** @namespace */
-this.accessibility = {
+const accessibility = {
   get service() {
     return service;
   },
