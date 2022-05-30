@@ -2429,9 +2429,6 @@ void APZCTreeManager::UpdateZoomConstraints(
         return matches;
       });
 
-  MOZ_ASSERT(!node ||
-             !node->GetApzc());  // any node returned must not have an APZC
-
   // This does not hold because we can get zoom constraints updates before the
   // layer tree update with the async zoom container (I assume).
   // clang-format off
