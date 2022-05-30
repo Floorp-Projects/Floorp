@@ -15,6 +15,7 @@ from collections import defaultdict, OrderedDict
 from distutils.version import LooseVersion
 from itertools import dropwhile
 from mozboot.util import MINIMUM_RUST_VERSION
+from pathlib import Path
 
 import pytoml
 import mozpack.path as mozpath
@@ -568,7 +569,7 @@ license file's hash.
                             "crate": name,
                             "num": num,
                             "expected": expected,
-                            "file": __file__,
+                            "file": Path(__file__).relative_to(self.topsrcdir),
                         },
                         "There are {num} different versions of crate {crate} "
                         "(expected {expected}). Please avoid the extra duplication "
@@ -584,7 +585,7 @@ license file's hash.
                             "crate": name,
                             "num": num,
                             "expected": expected,
-                            "file": __file__,
+                            "file": Path(__file__).relative_to(self.topsrcdir),
                         },
                         "There are {num} different versions of crate {crate} "
                         "(expected {expected}). Please adjust TOLERATED_DUPES in "
@@ -597,7 +598,7 @@ license file's hash.
                         "less_duplicate_crate",
                         {
                             "crate": name,
-                            "file": __file__,
+                            "file": Path(__file__).relative_to(self.topsrcdir),
                         },
                         "Crate {crate} is not duplicated anymore. "
                         "Please adjust TOLERATED_DUPES in {file} to reflect this improvement.",
@@ -609,7 +610,7 @@ license file's hash.
                         "broken_allowed_dupes",
                         {
                             "crate": name,
-                            "file": __file__,
+                            "file": Path(__file__).relative_to(self.topsrcdir),
                         },
                         "Crate {crate} is not duplicated. Remove it from "
                         "TOLERATED_DUPES in {file}.",
@@ -623,7 +624,7 @@ license file's hash.
                         "outdated_allowed_dupes",
                         {
                             "crate": name,
-                            "file": __file__,
+                            "file": Path(__file__).relative_to(self.topsrcdir),
                         },
                         "Crate {crate} is not in Cargo.lock anymore. Remove it from "
                         "TOLERATED_DUPES in {file}.",
