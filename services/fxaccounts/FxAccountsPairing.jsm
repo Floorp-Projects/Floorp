@@ -174,7 +174,7 @@ class Errored extends State {
 }
 
 const flows = new Map();
-this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
+class FxAccountsPairingFlow {
   static get(channelId) {
     return flows.get(channelId);
   }
@@ -517,6 +517,6 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
       new TextEncoder().encode(JSON.stringify(scopedKeys))
     );
   }
-};
+}
 
 const EXPORTED_SYMBOLS = ["FxAccountsPairingFlow"];

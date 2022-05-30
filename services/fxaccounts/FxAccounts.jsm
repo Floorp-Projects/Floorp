@@ -118,7 +118,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // }
 // If the state has changed between the function being called and the promise
 // being resolved, the .resolve() call will actually be rejected.
-var AccountState = (this.AccountState = function(storageManager) {
+function AccountState(storageManager) {
   this.storageManager = storageManager;
   this.inFlightTokenRequests = new Map();
   this.promiseInitialized = this.storageManager
@@ -130,7 +130,7 @@ var AccountState = (this.AccountState = function(storageManager) {
       log.error("Failed to initialize the storage manager", err);
       // Things are going to fall apart, but not much we can do about it here.
     });
-});
+}
 
 AccountState.prototype = {
   oauthTokens: null,
