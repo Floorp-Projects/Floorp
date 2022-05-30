@@ -1635,7 +1635,6 @@ class WebElement {
     return uuid.substring(1, uuid.length - 1);
   }
 }
-this.WebElement = WebElement;
 
 /**
  * DOM elements are represented as web elements when they are
@@ -1660,7 +1659,6 @@ class ContentWebElement extends WebElement {
   }
 }
 ContentWebElement.Identifier = "element-6066-11e4-a52e-4f735466cecf";
-this.ContentWebElement = ContentWebElement;
 
 /**
  * Shadow Root elements are represented as web elements when they are
@@ -1685,7 +1683,6 @@ class ContentShadowRoot extends WebElement {
   }
 }
 ContentShadowRoot.Identifier = "shadow-6066-11e4-a52e-4f735466cecf";
-this.ContentShadowRoot = ContentShadowRoot;
 
 /**
  * Top-level browsing contexts, such as <code>WindowProxy</code>
@@ -1708,7 +1705,6 @@ class ContentWebWindow extends WebElement {
   }
 }
 ContentWebWindow.Identifier = "window-fcc6-11e5-b4f8-330a88ab9d7f";
-this.ContentWebWindow = ContentWebWindow;
 
 /**
  * Nested browsing contexts, such as the <code>WindowProxy</code>
@@ -1731,7 +1727,6 @@ class ContentWebFrame extends WebElement {
   }
 }
 ContentWebFrame.Identifier = "frame-075b-4da1-b6ba-e579c2d3230a";
-this.ContentWebFrame = ContentWebFrame;
 
 /**
  * XUL elements in chrome space are represented as chrome web elements
@@ -1754,4 +1749,3 @@ class ChromeWebElement extends WebElement {
   }
 }
 ChromeWebElement.Identifier = "chromeelement-9fc5-4b51-a3c8-01716eedeb04";
-this.ChromeWebElement = ChromeWebElement;

@@ -138,4 +138,3 @@ class Addon {
     });
   }
 }
-this.Addon = Addon;

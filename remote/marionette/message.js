@@ -325,7 +325,3 @@ class Response extends Message {
   }
 }
 Response.Type = 1;
-
-this.Message = Message;
-this.Command = Command;
-this.Response = Response;
