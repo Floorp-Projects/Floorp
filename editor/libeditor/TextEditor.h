@@ -83,14 +83,6 @@ class TextEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult PostCreate();
 
   /**
-   * This method re-initializes the selection and caret state that are for
-   * current editor state. When editor session is destroyed, it always reset
-   * selection state even if this has no focus.  So if destroying editor,
-   * we have to call this method for focused editor to set selection state.
-   */
-  MOZ_CAN_RUN_SCRIPT void ReinitializeSelection(Element& aElement);
-
-  /**
    * PreDestroy() is called before the editor goes away, and gives the editor a
    * chance to tell its documentStateObservers that the document is going away.
    * Note that TextEditor::PreDestroy() shouldn't cause running script
@@ -147,11 +139,6 @@ class TextEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult
   PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
                            nsIPrincipal* aPrincipal = nullptr) final;
-
-  MOZ_CAN_RUN_SCRIPT nsresult
-  OnFocus(const nsINode& aOriginalEventTargetNode) final;
-
-  nsresult OnBlur(const dom::EventTarget* aEventTarget) final;
 
   /**
    * The maximum number of characters allowed.
