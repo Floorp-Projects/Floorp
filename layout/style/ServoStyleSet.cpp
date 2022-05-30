@@ -1152,8 +1152,6 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
     const Element& aElement, PseudoStyleType aPseudoType,
     StyleRuleInclusion aRuleInclusion) {
   PreTraverseSync();
-  MOZ_ASSERT(GetPresContext(),
-             "For now, no style resolution without a pres context");
   MOZ_ASSERT(!StylistNeedsUpdate());
 
   AutoSetInServoTraversal guard(this);
@@ -1188,9 +1186,17 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
     }
   }
 
-  return Servo_ResolveStyleLazily(elementForStyleResolution,
-                                  pseudoTypeForStyleResolution, aRuleInclusion,
-                                  &Snapshots(), mRawSet.get())
+  nsPresContext* pc = GetPresContext();
+  MOZ_ASSERT(pc, "For now, no style resolution without a pres context");
+  auto* restyleManager = pc->RestyleManager();
+  const bool canUseCache = aRuleInclusion == StyleRuleInclusion::All &&
+                           aElement.OwnerDoc() == mDocument &&
+                           pc->PresShell()->DidInitialize();
+  return Servo_ResolveStyleLazily(
+             elementForStyleResolution, pseudoTypeForStyleResolution,
+             aRuleInclusion, &restyleManager->Snapshots(),
+             restyleManager->GetUndisplayedRestyleGeneration(), canUseCache,
+             mRawSet.get())
       .Consume();
 }
 
