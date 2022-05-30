@@ -7,8 +7,7 @@
         "NoDefaultBookmarks": true,
         "Extensions": {
             "Install": [
-               "https://addons.mozilla.org/firefox/downloads/file/3933192/ublock_origin-1.42.4.xpi",
-               "https://addons.mozilla.org/firefox/downloads/file/3934429/gesturefy-3.2.5.xpi"
+               "https://addons.mozilla.org/firefox/downloads/file/3933192/ublock_origin-1.42.4.xpi"
             ]
         },
         "SearchEngines": {
