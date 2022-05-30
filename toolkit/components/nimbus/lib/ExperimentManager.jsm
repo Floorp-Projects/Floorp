@@ -9,7 +9,6 @@ const EXPORTED_SYMBOLS = ["ExperimentManager", "_ExperimentManager"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
