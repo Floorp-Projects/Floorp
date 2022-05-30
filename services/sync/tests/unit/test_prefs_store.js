@@ -14,12 +14,11 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-const { PrefRec } = ChromeUtils.import(
+const { PrefRec, getPrefsGUIDForTest } = ChromeUtils.import(
   "resource://services-sync/engines/prefs.js"
 );
+const PREFS_GUID = getPrefsGUIDForTest();
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-
-const PREFS_GUID = CommonUtils.encodeBase64URL(Services.appinfo.ID);
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const COMPACT_THEME_ID = "firefox-compact-light@mozilla.org";
