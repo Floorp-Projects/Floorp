@@ -870,11 +870,11 @@ add_task(async function test_bad_executable() {
 });
 
 add_task(async function test_cleanup() {
-  let { SubprocessImpl } = ChromeUtils.import(
+  let { getSubprocessImplForTest } = ChromeUtils.import(
     "resource://gre/modules/Subprocess.jsm"
   );
 
-  let worker = SubprocessImpl.Process.getWorker();
+  let worker = getSubprocessImplForTest().Process.getWorker();
 
   let openFiles = await worker.call("getOpenFiles", []);
   let processes = await worker.call("getProcesses", []);
