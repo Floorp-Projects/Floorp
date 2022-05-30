@@ -1033,6 +1033,20 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPE_FOR_TYPED_ARRAY)
 
 } /* anonymous namespace */
 
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+JSObject* js::GetTypedArrayConstructorFromKind(JSContext* cx,
+                                               Scalar::Type type) {
+#  define TYPED_ARRAY_CONSTRUCTOR(_, T, N)                          \
+    if (type == Scalar::N) {                                        \
+      return N##Array::createConstructor(cx, N##Array::protoKey()); \
+    }
+  JS_FOR_EACH_TYPED_ARRAY(TYPED_ARRAY_CONSTRUCTOR)
+#  undef TYPED_ARRAY_CONSTRUCTOR
+
+  MOZ_CRASH("Unsupported TypedArray type");
+}
+#endif
+
 TypedArrayObject* js::NewTypedArrayWithTemplateAndLength(
     JSContext* cx, HandleObject templateObj, int32_t len) {
   MOZ_ASSERT(templateObj->is<TypedArrayObject>());

@@ -1783,6 +1783,20 @@ function SharedArrayBufferSlice(start, end) {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 
 // https://github.com/tc39/proposal-change-array-by-copy
+function TypedArrayCreateSameType(exemplar, length) {
+
+    // Step 1.
+    let contentType = GetTypedArrayKind(exemplar);
+    assert(contentType !== undefined, "in TypedArrayCreateSameType, exemplar does not have a [[ContentType]] internal slot");
+
+    // Step 2.
+    let constructor = GetTypedArrayConstructorFromKind(contentType);
+
+    // Steps 3, 6.
+    return TypedArrayCreateWithLength(constructor, length);
+}
+
+// https://github.com/tc39/proposal-change-array-by-copy
 // TypedArray.prototype.withReversed()
 function TypedArrayWithReversed() {
     /* Step 2. */
@@ -1797,8 +1811,7 @@ function TypedArrayWithReversed() {
     var len = TypedArrayLength(O);
 
     /* Step 4. */
-    var A = TypedArraySpeciesCreateWithLength(O, len);
-
+    var A = TypedArrayCreateSameType(O, len);
     /* Steps 5-6. */
     for (var k = 0; k < len; k++) {
         var from = len - k - 1;
@@ -1829,27 +1842,32 @@ function TypedArrayWithAt(index, value) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayWithAt", index, value);
     }
 
-    // Step 1.
-    var O = this;
+    /* Step 1. */
+    let O = this;
 
     /* Step 3. */
-    var len = TypedArrayLength(O);
+    let len = TypedArrayLength(O);
 
     /* Step 4. */
-    if (!Number_isInteger(index)) {
-        ThrowRangeError(JSMSG_BAD_INDEX);
+    let relativeIndex = ToInteger(index);
+
+    /* Step 5. */
+    var actualIndex;
+    if (relativeIndex >= 0) {
+        actualIndex = relativeIndex;
+    } else {
+        /* Step 6. */
+        actualIndex = len + relativeIndex;
     }
 
-    /* Steps 5-6. */
-    var actualIndex = index < 0 ? (len + index) : index;
-
     /* Step 7. */
-    if (!isValidIntegerIndex(O, actualIndex)) {
+    /* This check is an inlined version of the IsValidIntegerIndex abstract operation. */
+    if (actualIndex >= len || actualIndex < 0) {
         ThrowRangeError(JSMSG_BAD_INDEX);
     }
 
     /* Step 8. */
-    var A = TypedArraySpeciesCreateWithLength(O, len);
+    var A = TypedArrayCreateSameType(O, len);
 
     /* Steps 9-10. */
     for (var k = 0; k < len; k++) {
@@ -1882,7 +1900,7 @@ function TypedArrayWithSorted(comparefn) {
     // Step 4.
     var len = TypedArrayLength(O);
 
-    var A = TypedArraySpeciesCreateWithLength(O, len);
+    var A = TypedArrayCreateSameType(O, len);
     for(var k = 0; k < len; k++) {
         A[k] = O[k];
     }
@@ -1898,13 +1916,13 @@ function TypedArrayWithSpliced(start, deleteCount, ...items) {
     }
 
     // Step 1.
-    var O = this;
+    let O = this;
 
     // Step 3.
-    var len = TypedArrayLength(O);
+    let len = TypedArrayLength(O);
 
     // Step 4.
-    var relativeStart = ToInteger(start);
+    let relativeStart = ToInteger(start);
 
     // Step 5.
     var actualStart;
@@ -1918,52 +1936,55 @@ function TypedArrayWithSpliced(start, deleteCount, ...items) {
         actualStart = std_Math_min(relativeStart, len);
     }
 
-    var insertCount;
-    var actualDeleteCount;
     // Step 8.
-    if (start === undefined) {
-        insertCount = 0;
+    let insertCount = items.length;
+
+    // Step 9.
+    var actualDeleteCount;
+    if (arguments.length < 1) {
         actualDeleteCount = 0;
-    } else if (deleteCount === undefined) {
-        // Step 9.
-        insertCount = 0;
+    } else if (arguments.length < 2) {
+        // Step 10.
         actualDeleteCount = len - actualStart;
     } else {
-        // Step 10.
-        insertCount = items === undefined ? 0 : items.length;
+        // Step 11.
         var dc = ToInteger(deleteCount);
         actualDeleteCount = std_Math_min(len - actualStart, std_Math_max(0, dc));
     }
 
-    // Step 11.
-    var newLen = len + insertCount - actualDeleteCount;
-
     // Step 12.
-    var A = TypedArraySpeciesCreateWithLength(O, newLen);
+    let newLen = len + insertCount - actualDeleteCount;
 
-    // Steps 13-14
-    // Copy all the items before actualStart
-    for(var k = 0; k < actualStart; k++) {
-        var kValue = O[k];
-        DefineDataProperty(A, k, kValue);
-    }
+    // Step 13.
+    let A = TypedArrayCreateSameType(O, newLen);
 
-    // Step 15.
-    // Copy all the new items.
-    var k = actualStart;
-    for(var i = 0; i < insertCount; i++) {
-        DefineDataProperty(A, k++, items[i]);
-    }
+    // Step 14.
+    var i = 0;
+
+    // Step 15
+    var r = actualStart + actualDeleteCount;
 
     // Step 16.
-    // Copy all the items after the deleted / added items
-    while(k < newLen) {
-        var from = k + actualDeleteCount - insertCount;
-        var fromValue = O[from];
-        DefineDataProperty(A, k++, fromValue);
+    // Copy all the items before actualStart
+    while (i < actualStart) {
+        var iValue = O[i];
+        DefineDataProperty(A, i++, iValue);
     }
 
     // Step 17.
+    // Copy all the new items.
+    for(var j = 0; j < insertCount; j++) {
+        DefineDataProperty(A, i++, items[j]);
+    }
+
+    // Step 18.
+    // Copy all the items after the deleted / added items
+    while(i < newLen) {
+        let fromValue = O[r++];
+        DefineDataProperty(A, i++, fromValue);
+    }
+
+    // Step 19.
     return A;
 }
 #endif

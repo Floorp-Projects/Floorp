@@ -169,6 +169,11 @@ class TypedArrayObject : public ArrayBufferViewObject {
 [[nodiscard]] bool TypedArray_bufferGetter(JSContext* cx, unsigned argc,
                                            Value* vp);
 
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+extern JSObject* GetTypedArrayConstructorFromKind(JSContext* cx,
+                                                  Scalar::Type type);
+#endif
+
 extern TypedArrayObject* NewTypedArrayWithTemplateAndLength(
     JSContext* cx, HandleObject templateObj, int32_t len);
 

@@ -1147,6 +1147,21 @@ static bool intrinsic_GetTypedArrayKind(JSContext* cx, unsigned argc,
   return true;
 }
 
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+static bool intrinsic_GetTypedArrayConstructorFromKind(JSContext* cx,
+                                                       unsigned argc,
+                                                       Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(args[0].isInt32());
+
+  int32_t arrayKind = args[0].toInt32();
+  Scalar::Type type = static_cast<Scalar::Type>(arrayKind);
+  args.rval().setObject(*js::GetTypedArrayConstructorFromKind(cx, type));
+  return true;
+}
+#endif
+
 static bool intrinsic_IsTypedArrayConstructor(JSContext* cx, unsigned argc,
                                               Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2208,6 +2223,11 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GetOwnPropertyDescriptorToArray", GetOwnPropertyDescriptorToArray, 2,
           0),
     JS_FN("GetStringDataProperty", intrinsic_GetStringDataProperty, 2, 0),
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+    JS_FN("GetTypedArrayConstructorFromKind",
+          intrinsic_GetTypedArrayConstructorFromKind, 1, 0),
+#endif
+
     JS_FN("GetTypedArrayKind", intrinsic_GetTypedArrayKind, 1, 0),
     JS_INLINABLE_FN("GuardToArrayBuffer",
                     intrinsic_GuardToBuiltin<ArrayBufferObject>, 1, 0,
