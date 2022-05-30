@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyGetter(this, "domParser", () => {
 });
 
 /** @namespace */
-this.l10n = {};
+const l10n = {};
 
 /**
  * Retrieve the localized string for the specified entity id.

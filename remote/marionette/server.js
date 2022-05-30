@@ -36,9 +36,6 @@ XPCOMUtils.defineLazyGetter(this, "ServerSocket", () => {
 
 const { KeepWhenOffline, LoopbackOnly } = Ci.nsIServerSocket;
 
-/** @namespace */
-this.server = {};
-
 const PROTOCOL_VERSION = 3;
 
 /**

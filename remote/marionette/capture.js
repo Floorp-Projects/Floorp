@@ -31,7 +31,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  *
  * @namespace
  */
-this.capture = {};
+const capture = {};
 
 capture.Format = {
   Base64: 0,

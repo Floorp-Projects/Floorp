@@ -32,7 +32,7 @@ const TIMEOUT_BEFOREUNLOAD_EVENT = 200;
 const TIMEOUT_UNLOAD_EVENT = 5000;
 
 /** @namespace */
-this.navigate = {};
+const navigate = {};
 
 /**
  * Checks the value of readyState for the current page
