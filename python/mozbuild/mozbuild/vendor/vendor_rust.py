@@ -511,7 +511,10 @@ license file's hash.
         # We use check_call instead of mozprocess to ensure errors are displayed.
         # We do an |update -p| here to regenerate the Cargo.lock file with minimal
         # changes. See bug 1324462
-        subprocess.check_call([cargo, "update", "-p", "gkrust"], cwd=self.topsrcdir)
+        res = subprocess.run([cargo, "update", "-p", "gkrust"], cwd=self.topsrcdir)
+        if res.returncode:
+            self.log(logging.ERROR, "cargo_update_failed", {}, "Cargo update failed.")
+            return False
 
         with open(os.path.join(self.topsrcdir, "Cargo.lock")) as fh, open(
             os.path.join(self.topsrcdir, "Cargo.toml")
@@ -630,9 +633,13 @@ license file's hash.
             if failed:
                 return False
 
-        output = subprocess.check_output(
-            [cargo, "vendor", vendor_dir], cwd=self.topsrcdir
-        ).decode("UTF-8")
+        res = subprocess.run(
+            [cargo, "vendor", vendor_dir], cwd=self.topsrcdir, stdout=subprocess.PIPE
+        )
+        if res.returncode:
+            self.log(logging.ERROR, "cargo_vendor_failed", {}, "Cargo vendor failed.")
+            return False
+        output = res.stdout.decode("UTF-8")
 
         # Get the snippet of configuration that cargo vendor outputs, and
         # update .cargo/config with it.
