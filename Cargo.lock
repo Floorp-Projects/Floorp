@@ -2411,7 +2411,7 @@ dependencies = [
 name = "http3server"
 version = "0.1.1"
 dependencies = [
- "base64 0.10.1",
+ "base64 0.13.0",
  "bindgen 0.59.2",
  "log",
  "mio 0.6.23",

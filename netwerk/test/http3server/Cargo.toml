@@ -12,7 +12,7 @@ neqo-qpack = { tag = "v0.5.7", git = "https://github.com/mozilla/neqo" }
 mio = "0.6.17"
 mio-extras = "2.0.5"
 log = "0.4.0"
-base64 = "0.10"
+base64 = "0.13"
 
 [dependencies.neqo-crypto]
 tag = "v0.5.7"
