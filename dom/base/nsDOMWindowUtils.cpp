@@ -2124,7 +2124,7 @@ nsDOMWindowUtils::GetNodeObservedByIMEContentObserver(nsINode** aNode) {
     *aNode = nullptr;
     return NS_OK;
   }
-  *aNode = do_AddRef(observer->GetObservingElement()).take();
+  *aNode = do_AddRef(observer->GetObservingContent()).take();
   return NS_OK;
 }
 
