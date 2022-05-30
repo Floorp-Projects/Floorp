@@ -32,7 +32,7 @@ serde = { features = ["default", "derive", "rc", "serde_derive", "std"], version
 serde_derive = { features = ["default", "deserialize_in_place"], version = "1.0.66" }
 quote = { features = ["default", "proc-macro"], version = "1.0" }
 libc = { features = ["default", "std", "use_std"], version = "0.2" }
-bindgen = { default-features = false, features = ["runtime"], version = "0.56" }
+bindgen = { default-features = false, features = ["runtime"], version = "0.59" }
 
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.6"

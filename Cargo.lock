@@ -338,7 +338,7 @@ version = "1.1.0"
 name = "baldrdash"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.56.999",
+ "bindgen 0.59.2",
  "cranelift-codegen",
  "cranelift-wasm",
  "env_logger",
@@ -1921,7 +1921,7 @@ name = "gecko-profiler"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "bindgen 0.56.999",
+ "bindgen 0.59.2",
  "lazy_static",
  "mozbuild",
  "profiler-macros",
@@ -2428,7 +2428,7 @@ name = "http3server"
 version = "0.1.1"
 dependencies = [
  "base64 0.10.1",
- "bindgen 0.56.999",
+ "bindgen 0.59.2",
  "log",
  "mio 0.6.23",
  "mio-extras",
@@ -3351,7 +3351,7 @@ dependencies = [
 name = "mozilla-central-workspace-hack"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.56.999",
+ "bindgen 0.59.2",
  "libc",
  "quote",
  "serde",
@@ -4894,7 +4894,7 @@ dependencies = [
  "app_units",
  "arrayvec 0.5.2",
  "atomic_refcell",
- "bindgen 0.56.999",
+ "bindgen 0.59.2",
  "bitflags",
  "byteorder",
  "cssparser",
