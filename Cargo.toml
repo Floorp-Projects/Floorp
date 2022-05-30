@@ -108,6 +108,9 @@ itertools = { path = "build/rust/itertools" }
 # Patch redox_users to an empty crate
 redox_users = { path = "build/rust/redox_users" }
 
+# Patch memmap2 0.2 to 0.3
+memmap2 = { path = "build/rust/memmap2" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
