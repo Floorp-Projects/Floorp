@@ -42,7 +42,7 @@ function callForEveryWindow(callback) {
   }
 }
 
-this.EveryWindow = {
+const EveryWindow = {
   /**
    * Registers init and uninit functions to be called on every window.
    *

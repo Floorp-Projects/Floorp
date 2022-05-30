@@ -147,7 +147,7 @@ var WindowHelper = {
   },
 };
 
-this.BrowserWindowTracker = {
+const BrowserWindowTracker = {
   /**
    * Get the most recent browser window.
    *
