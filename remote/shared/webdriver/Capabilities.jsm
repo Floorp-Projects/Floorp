@@ -619,12 +619,6 @@ class Capabilities extends Map {
   }
 }
 
-this.Capabilities = Capabilities;
-this.PageLoadStrategy = PageLoadStrategy;
-this.Proxy = Proxy;
-this.Timeouts = Timeouts;
-this.UnhandledPromptBehavior = UnhandledPromptBehavior;
-
 function getWebDriverBrowserName() {
   // Similar to chromedriver which reports "chrome" as browser name for all
   // WebView apps, we will report "firefox" for all GeckoView apps.
