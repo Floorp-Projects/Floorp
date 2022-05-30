@@ -1,9 +1,13 @@
-use indexmap::IndexSet;
+use alloc::vec::Vec;
 
-use crate::alloc::vec::Vec;
+#[cfg(feature = "std")]
+type IndexSet<K> = indexmap::IndexSet<K>;
+#[cfg(not(feature = "std"))]
+type IndexSet<K> = indexmap::IndexSet<K, hashbrown::hash_map::DefaultHashBuilder>;
 
+/// An identifer for an entry in a string table.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct StringId(usize);
+pub struct StringId(usize);
 
 #[derive(Debug, Default)]
 pub(crate) struct StringTable<'a> {
@@ -21,6 +25,21 @@ impl<'a> StringTable<'a> {
         assert!(!string.contains(&0));
         let id = self.strings.insert_full(string).0;
         StringId(id)
+    }
+
+    /// Return the id of the given string.
+    ///
+    /// Panics if the string is not in the string table.
+    pub fn get_id(&self, string: &[u8]) -> StringId {
+        let id = self.strings.get_index_of(string).unwrap();
+        StringId(id)
+    }
+
+    /// Return the string for the given id.
+    ///
+    /// Panics if the string is not in the string table.
+    pub fn get_string(&self, id: StringId) -> &'a [u8] {
+        self.strings.get_index(id.0).unwrap()
     }
 
     /// Return the offset of the given string.

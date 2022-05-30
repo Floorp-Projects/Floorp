@@ -3,9 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use compact_symbol_table::CompactSymbolTable;
-use goblin::elf;
-use object::read::{ElfFile, Object};
-use object::SymbolKind;
+use object::read::{NativeFile, Object};
+use object::{ObjectSection, ObjectSymbol, SymbolKind, SectionKind};
 use std::cmp;
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -13,15 +12,15 @@ use uuid::Uuid;
 const UUID_SIZE: usize = 16;
 const PAGE_SIZE: usize = 4096;
 
-fn get_symbol_map<'a, 'b, T>(object_file: &'b T) -> HashMap<u32, &'a str>
+fn get_symbol_map<'a: 'b, 'b, T>(object_file: &'b T) -> HashMap<u32, &'a str>
 where
     T: Object<'a, 'b>,
 {
     object_file
         .dynamic_symbols()
         .chain(object_file.symbols())
-        .filter(|(_, symbol)| symbol.kind() == SymbolKind::Text)
-        .filter_map(|(_, symbol)| symbol.name().map(|name| (symbol.address() as u32, name)))
+        .filter(|symbol| symbol.kind() == SymbolKind::Text)
+        .filter_map(|symbol| symbol.name().map(|name| (symbol.address() as u32, name)).ok())
         .collect()
 }
 
@@ -29,8 +28,8 @@ pub fn get_compact_symbol_table(
     buffer: &[u8],
     breakpad_id: Option<&str>,
 ) -> Option<CompactSymbolTable> {
-    let elf_file = ElfFile::parse(buffer).ok()?;
-    let elf_id = get_elf_id(&elf_file, buffer)?;
+    let elf_file = NativeFile::parse(buffer).ok()?;
+    let elf_id = get_elf_id(&elf_file)?;
     if !breakpad_id.map_or(true, |id| id == format!("{:X}0", elf_id.to_simple_ref())) {
         return None;
     }
@@ -67,34 +66,31 @@ fn create_elf_id(identifier: &[u8], little_endian: bool) -> Uuid {
 /// processor does.
 ///
 /// If all of the above fails, this function will return `None`.
-pub fn get_elf_id(elf_file: &ElfFile, data: &[u8]) -> Option<Uuid> {
-    if let Some(identifier) = elf_file.build_id() {
-        return Some(create_elf_id(identifier, elf_file.elf().little_endian));
+pub fn get_elf_id(elf_file: &NativeFile) -> Option<Uuid> {
+    if let Ok(Some(identifier)) = elf_file.build_id() {
+        return Some(create_elf_id(identifier, elf_file.is_little_endian()));
     }
 
     // We were not able to locate the build ID, so fall back to hashing the
     // first page of the ".text" (program code) section. This algorithm XORs
     // 16-byte chunks directly into a UUID buffer.
-    if let Some(section_data) = find_text_section(elf_file.elf(), data) {
+    if let Some(section_data) = find_text_section(elf_file) {
         let mut hash = [0; UUID_SIZE];
         for i in 0..cmp::min(section_data.len(), PAGE_SIZE) {
             hash[i % UUID_SIZE] ^= section_data[i];
         }
-
-        return Some(create_elf_id(&hash, elf_file.elf().little_endian));
+        return Some(create_elf_id(&hash, elf_file.is_little_endian()));
     }
 
     None
 }
 
 /// Returns a reference to the data of the the .text section in an ELF binary.
-fn find_text_section<'elf, 'data>(elf: &'elf elf::Elf, data: &'data [u8]) -> Option<&'data [u8]> {
-    elf.section_headers.iter().find_map(|header| {
-        match (header.sh_type, elf.shdr_strtab.get(header.sh_name)) {
-            (elf::section_header::SHT_PROGBITS, Some(Ok(".text"))) => {
-                Some(&data[header.sh_offset as usize..][..header.sh_size as usize])
-            }
-            _ => None,
+fn find_text_section<'elf>(elf_file: &'elf NativeFile) -> Option<&'elf [u8]> {
+    if let Some(section) = elf_file.section_by_name(".text") {
+        if section.kind() == SectionKind::Text {
+            return section.data().ok();
         }
-    })
+    }
+    None
 }

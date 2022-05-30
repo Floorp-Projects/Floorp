@@ -3,67 +3,143 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "object"
-version = "0.16.0"
-authors = ["Nick Fitzgerald <fitzgen@gmail.com>", "Philip Craig <philipjcraig@gmail.com>"]
-exclude = ["/.coveralls.yml", "/.travis.yml"]
-description = "A unified interface for parsing object file formats."
-keywords = ["object", "loader", "elf", "mach-o", "pe"]
-license = "Apache-2.0/MIT"
+version = "0.28.4"
+exclude = [
+    "/.github",
+    "/testfiles",
+]
+description = "A unified interface for reading and writing object file formats."
+keywords = [
+    "object",
+    "elf",
+    "mach-o",
+    "pe",
+    "coff",
+]
+license = "Apache-2.0 OR MIT"
 repository = "https://github.com/gimli-rs/object"
-[package.metadata.docs.rs]
-all-features = true
 
-[[example]]
-name = "objcopy"
-required-features = ["read", "write"]
+[package.metadata.docs.rs]
+features = ["doc"]
+
+[dependencies.alloc]
+version = "1.0.0"
+optional = true
+package = "rustc-std-workspace-alloc"
+
+[dependencies.compiler_builtins]
+version = "0.1.2"
+optional = true
+
+[dependencies.core]
+version = "1.0.0"
+optional = true
+package = "rustc-std-workspace-core"
+
 [dependencies.crc32fast]
 version = "1.2"
 optional = true
+default-features = false
 
 [dependencies.flate2]
 version = "1"
 optional = true
 
-[dependencies.goblin]
-version = "0.1"
-features = ["endian_fd", "elf32", "elf64", "mach32", "mach64", "pe32", "pe64", "archive"]
+[dependencies.hashbrown]
+version = "0.11"
+features = ["ahash"]
+optional = true
 default-features = false
 
 [dependencies.indexmap]
-version = "1.1"
+version = "1.6"
 optional = true
 
-[dependencies.parity-wasm]
-version = "0.41.0"
+[dependencies.memchr]
+version = "2.4.1"
+default-features = false
+
+[dependencies.wasmparser]
+version = "0.57"
 optional = true
-
-[dependencies.scroll]
-version = "0.10"
-default-features = false
-
-[dependencies.target-lexicon]
-version = "0.9"
-
-[dependencies.uuid]
-version = "0.8"
-default-features = false
-[dev-dependencies.memmap]
-version = "0.7"
 
 [features]
-compression = ["flate2"]
-default = ["read", "std", "compression", "wasm"]
-read = []
-std = ["goblin/std"]
-wasm = ["std", "parity-wasm"]
-write = ["crc32fast", "indexmap", "std"]
+all = [
+    "read",
+    "write",
+    "std",
+    "compression",
+    "wasm",
+]
+archive = []
+cargo-all = []
+coff = []
+compression = [
+    "flate2",
+    "std",
+]
+default = [
+    "read",
+    "compression",
+]
+doc = [
+    "read_core",
+    "write_std",
+    "std",
+    "compression",
+    "archive",
+    "coff",
+    "elf",
+    "macho",
+    "pe",
+    "wasm",
+]
+elf = []
+macho = []
+pe = ["coff"]
+read = [
+    "read_core",
+    "archive",
+    "coff",
+    "elf",
+    "macho",
+    "pe",
+    "unaligned",
+]
+read_core = []
+rustc-dep-of-std = [
+    "core",
+    "compiler_builtins",
+    "alloc",
+    "memchr/rustc-dep-of-std",
+]
+std = ["memchr/std"]
+unaligned = []
+wasm = ["wasmparser"]
+write = [
+    "write_std",
+    "coff",
+    "elf",
+    "macho",
+    "pe",
+]
+write_core = [
+    "crc32fast",
+    "indexmap",
+    "hashbrown",
+]
+write_std = [
+    "write_core",
+    "std",
+    "indexmap/std",
+    "crc32fast/std",
+]
