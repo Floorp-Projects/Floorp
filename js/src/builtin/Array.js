@@ -1228,27 +1228,29 @@ SetIsInlinableLargeFunction(ArrayAt);
 // Array.prototype.toReversed()
 function ArrayToReversed() {
 
-    /* Step 1. */
+    /* Step 1. Let O be ? ToObject(this value). */
     var O = ToObject(this);
 
-    /* Step 2. */
+    /* Step 2. Let len be ? LengthOfArrayLike(O). */
     var len = ToLength(O.length);
 
-    /* Step 3. */
+    /* Step 3. Let A be ArrayCreate(𝔽(len)). */
     var A = std_Array(len);
 
-    /* Steps 4-5. */
+    /* Step 4. Let k be 0. */
+    /* Step 5. Repeat, while k < len, */
     for (var k = 0; k < len; k++) {
-        /* Step 5a. */
+        /* Step 5a. Let from be ! ToString(𝔽(len - k - 1)). */
         var from = len - k - 1;
-        /* Step 5b - not necessary. */
-        /* Step 5c. */
+        /* Skip Step 5b. Let Pk be ToString(𝔽(k)).
+         * k is coerced into a string through the property access. */
+        /* Step 5c. Let fromValue be ? Get(O, from).  */
         var fromValue = O[from];
-        /* Step 5d. */
+        /* Step 5d. Perform ! CreateDataPropertyOrThrow(A, 𝔽(k), fromValue. */
         DefineDataProperty(A, k, fromValue);
     }
 
-    /* Step 6. */
+    /* Step 6. Return A. */
     return A;
 }
 
@@ -1256,31 +1258,34 @@ function ArrayToReversed() {
 // Array.prototype.toSorted()
 function ArrayToSorted(comparefn) {
 
-    /* Step 1. */
-
+    /* Step 1.  If comparefn is not undefined and IsCallable(comparefn) is
+     * false, throw a TypeError exception.
+     */
     if (comparefn !== undefined && !IsCallable(comparefn)) {
         ThrowTypeError(JSMSG_BAD_TOSORTED_ARG);
     }
 
-    /* Step 2. */
+    /* Step 2. Let O be ? ToObject(this value). */
     var O = ToObject(this);
 
-    /* Step 3. */
+    /* Step 3. Let len be ? LengthOfArrayLike(O) */
     var len = ToLength(O.length);
 
-    /* Step 4. */
+    /* Step 4. Let A be ? ArrayCreate(𝔽(len)). */
     var items = std_Array(len);
 
-    /* Steps 5-6. */
+    /* We depart from steps 5-8 of the spec for performance reasons, as
+     * following the spec would require copying the input array twice.
+     * Instead, we create a new array that replaces holes with undefined,
+     * and sort this array.
+     */
     for (var k = 0; k < len; k++) {
         DefineDataProperty(items, k, O[k]);
     }
 
-    /* Step 7. */
     SortArray(items, comparefn);
 
-    /* Steps 8-10 unnecessary */
-    /* Step 11. */
+    /* Step 9. Return A */
     return items;
 }
 

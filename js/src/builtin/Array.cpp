@@ -2777,12 +2777,21 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
 static bool GetActualStart(JSContext* cx, const CallArgs& args, uint64_t len,
                            uint64_t* result) {
   double relativeStart;
+  /* Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
+   * Array.prototype.toSpliced()
+   */
+
+  /* Step 3. Let relativeStart be ? ToIntegerOrInfinity(start). */
   if (!ToInteger(cx, args.get(0), &relativeStart)) {
     return false;
   }
+  /* Steps 4-5. If relativeStart is -∞, let actualStart be 0.
+   * Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
+   */
   if (relativeStart < 0) {
     *result = uint64_t(std::max(double(len) + relativeStart, 0.0));
   } else {
+    /* Step 6. Else, let actualStart be min(relativeStart, len). */
     *result = uint64_t(std::min(relativeStart, double(len)));
   }
   return true;
@@ -2797,27 +2806,40 @@ static uint32_t GetItemCount(const CallArgs& args) {
 
 static bool GetActualDeleteCount(JSContext* cx, const CallArgs& args,
                                  HandleObject obj, uint64_t len,
-                                 uint64_t actualStart, uint64_t itemCount,
-                                 uint64_t* result) {
+                                 uint64_t actualStart, uint64_t insertCount,
+                                 uint64_t* actualDeleteCount) {
+  /* Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
+   * Array.prototype.toSpliced()
+   */
+
+  /* Step 8. If start is not present, then let actualDeleteCount be 0. */
   if (args.length() < 1) {
-    *result = 0;
+    *actualDeleteCount = 0;
+    /* Step 9. Else if deleteCount is not present, then let actualDeleteCount be
+     * len - actualStart. */
   } else if (args.length() < 2) {
-    *result = len - actualStart;
+    *actualDeleteCount = len - actualStart;
   } else {
     double deleteCount;
+    /* Step 10.a. Else, let dc be toIntegerOrInfinity(deleteCount). */
     if (!ToInteger(cx, args.get(1), &deleteCount)) {
       return false;
     }
-    *result = uint64_t(std::min(std::max(0.0, deleteCount),
-                                double(len) - double(actualStart)));
+    /* Step 10.b. Let actualDeleteCount be the result of clamping dc between 0
+     * and len - actualStart. */
+    *actualDeleteCount = uint64_t(std::min(std::max(0.0, deleteCount),
+                                           double(len) - double(actualStart)));
 
-    if (double(len + itemCount - *result) >= DOUBLE_INTEGRAL_PRECISION_LIMIT) {
+    /* Step 11. Let newLen be len + insertCount - actualDeleteCount. */
+    /* Step 12. If newLen > 2^53 - 1, throw a TypeError exception. */
+    if (double(len + insertCount - *actualDeleteCount) >=
+        DOUBLE_INTEGRAL_PRECISION_LIMIT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TOO_LONG_ARRAY);
       return false;
     }
   }
-  MOZ_ASSERT(actualStart + *result <= len);
+  MOZ_ASSERT(actualStart + *actualDeleteCount <= len);
 
   return true;
 }
@@ -3159,13 +3181,13 @@ static bool array_to_spliced(JSContext* cx, unsigned argc, Value* vp) {
 
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  /* Step 1. */
+  /* Step 1. Let O be ? ToObject(this value). */
   RootedObject obj(cx, ToObject(cx, args.thisv()));
   if (!obj) {
     return false;
   }
 
-  /* Step 2. */
+  /* Step 2. Let len be ? LengthOfArrayLike(O). */
   uint64_t len;
   if (!GetLengthPropertyInlined(cx, obj, &len)) {
     return false;
@@ -3180,8 +3202,7 @@ static bool array_to_spliced(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  /* Step 7. */
-  // insertCount is the number of elements being added
+  /* Step 7. Let insertCount be the number of elements in items. */
   uint32_t insertCount = GetItemCount(args);
 
   /* Steps 8-10. */
@@ -3192,56 +3213,79 @@ static bool array_to_spliced(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  /* Step 11. */
+  /* Step 11. Let newLen be len + insertCount - actualDeleteCount. */
   uint64_t newLen = len + insertCount - actualDeleteCount;
 
   /* Step 12 handled by GetActualDeleteCount(). */
-  /* Step 13. */
+  /* Step 13. Let A be ? ArrayCreate(𝔽(newLen)). */
   RootedObject A(cx, NewDenseArray(cx, args, newLen));
   if (!A) {
     return false;
   }
 
-  /* Steps 14-16. */
   // Copy everything before start
-  uint64_t k = 0;
-  while (k < actualStart) {
-    RootedValue kValue(cx);
-    if (!GetArrayElement(cx, obj, k, &kValue)) {
+
+  /* Step 14. Let i be 0. */
+  uint64_t i = 0;
+
+  /* Step 15. Let r be actualStart + actualDeleteCount. */
+  uint64_t r = actualStart + actualDeleteCount;
+
+  /* Step 16. Repeat while i < actualStart, */
+  while (i < actualStart) {
+    /* Skip Step 16.a. Let Pi be ! ToString(𝔽(i)). */
+    RootedValue iValue(cx);
+
+    /* Step 16.b. Let iValue be Get(O, 𝔽(i)). */
+    if (!GetArrayElement(cx, obj, i, &iValue)) {
       return false;
     }
-    if (!SetArrayElement(cx, A, k, kValue)) {
+
+    /* Step 16.c. Perform ! CreateDataPropertyOrThrow(A, 𝔽(i), iValue). */
+    if (!SetArrayElement(cx, A, i, iValue)) {
       return false;
     }
-    k++;
+
+    /* Step 16.d. Set i to i + 1. */
+    i++;
   }
 
   // result array now contains all elements before start
 
-  /* Step 17.*/
   // Copy new items
   Value* items = args.array() + 2;
 
+  /* Step 17.  For each element E of items, do
+   * Skip Step 17.a. Let Pi be ! ToString(𝔽(i)).
+   * Step 17.b. Perform ! CreateDataPropertyOrThrow(A, 𝔽(i), E). */
   if (!SetArrayElements(cx, A, actualStart, insertCount, items)) {
     return false;
   }
-  k += insertCount;
+  /* Step 17.c. Set i to i + 1. */
+  // (Equivalent)
+  i += insertCount;
 
-  /* Step 18. */
   // Copy items after new items
-  while (k < newLen) {
-    uint64_t from = k + actualDeleteCount - insertCount;
+  /* Step 18. Repeat, while i < newLen, */
+  while (i < newLen) {
+    /* Skip Step 18.a. Let Pi be ! ToString(𝔽(i)). */
+    /* Skip Step 18.b. Let from be ! ToString(𝔽(r)). */
     RootedValue fromValue(cx);
-    if (!GetArrayElement(cx, obj, from, &fromValue)) {
+    /* Step 18.c. Let fromValue be ? Get(O, 𝔽(r)). */
+    if (!GetArrayElement(cx, obj, r, &fromValue)) {
       return false;
     }
-    if (!SetArrayElement(cx, A, k, fromValue)) {
+    /* Step 18.d. Perform ! CreateDataPropertyOrThrow(A, 𝔽(i), fromValue). */
+    if (!SetArrayElement(cx, A, i, fromValue)) {
       return false;
     }
-    k++;
+    /* Step 18.e. Set i to i + 1. */
+    i++;
+    /* Step 18.f. Set r to r + 1. */
+    r++;
   }
 
-  /* Step 19. */
+  /* Step 19. Return A. */
   args.rval().setObject(*A);
 
   return true;
@@ -3270,19 +3314,19 @@ bool IsIntegralNumber(JSContext* cx, HandleValue v, bool* result) {
 static bool array_with(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  /* Step 1. */
+  /* Step 1. Let O be ? ToObject(this value). */
   RootedObject obj(cx, ToObject(cx, args.thisv()));
   if (!obj) {
     return false;
   }
 
-  /* Step 2. */
+  /* Step 2. Let len be ? LengthOfArrayLike(O). */
   uint64_t len;
   if (!GetLengthPropertyInlined(cx, obj, &len)) {
     return false;
   }
 
-  /* Step 3. */
+  /* Step 3. Let relativeIndex be ? ToIntegerOrInfinity(index). */
   double relativeIndex;
   if (!ToInteger(cx, args.get(0), &relativeIndex)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX,
@@ -3290,13 +3334,15 @@ static bool array_with(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  /* Steps 4-5. */
+  /* Step 4. If relativeIndex >= 0, let actualIndex be relativeIndex. */
   double actualIndex = relativeIndex;
   if (actualIndex < 0) {
+    /* Step 5. Else, let actualIndex be len + relativeIndex. */
     actualIndex = int64_t(len + actualIndex);
   }
 
-  /* Step 6. */
+  /* Step 6. If actualIndex >= len or actualIndex < 0, throw a RangeError
+   * exception. */
   if (actualIndex < 0 || actualIndex >= double(len)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX,
                               "Array.with: index out of bounds");
@@ -3304,28 +3350,33 @@ static bool array_with(JSContext* cx, unsigned argc, Value* vp) {
   }
   // actualIndex must be a non-negative integer at this point
 
-  /* Step 7 */
+  /* Step 7. Let A be ? ArrayCreate(𝔽(len)). */
   RootedObject A(cx, NewDenseArray(cx, args, len));
   if (!A) {
     return false;
   }
 
-  /* Steps 8-9. */
+  /* Steps 8-9. Let k be 0; repeat, while k < len, */
   for (uint64_t k = 0; k < len; k++) {
+    /* Skip Step 9.a. Let Pk be ! ToString(𝔽(k)). */
     RootedValue fromValue(cx);
+
+    /* Step 9.b. If k is actualIndex, let fromValue be value. */
     if (k == uint64_t(actualIndex)) {
       fromValue = args.get(1);
     } else {
+      /* Step 9.c. Else, let fromValue be ? Get(O, 𝔽(k)). */
       if (!GetArrayElement(cx, obj, k, &fromValue)) {
         return false;
       }
     }
+    /* Step 9.d. Perform ! CreateDataPropertyOrThrow(A, 𝔽(k), fromValue). */
     if (!SetArrayElement(cx, A, k, fromValue)) {
       return false;
     }
   }
 
-  /* Step 10. */
+  /* Step 10. Return A. */
   args.rval().setObject(*A);
   return true;
 }
