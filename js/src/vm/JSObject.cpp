@@ -2257,10 +2257,10 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (key == JSProto_Array && !cx->options().changeArrayByCopy() &&
-      (id == NameToId(cx->names().withAt) ||
-       id == NameToId(cx->names().withReversed) ||
-       id == NameToId(cx->names().withSorted) ||
-       id == NameToId(cx->names().withSpliced))) {
+      (id == NameToId(cx->names().with) ||
+       id == NameToId(cx->names().toReversed) ||
+       id == NameToId(cx->names().toSorted) ||
+       id == NameToId(cx->names().toSpliced))) {
     return true;
   }
 #endif

@@ -1797,11 +1797,11 @@ function TypedArrayCreateSameType(exemplar, length) {
 }
 
 // https://github.com/tc39/proposal-change-array-by-copy
-// TypedArray.prototype.withReversed()
-function TypedArrayWithReversed() {
+// TypedArray.prototype.toReversed()
+function TypedArrayToReversed() {
     /* Step 2. */
     if (!IsObject(this) || !IsTypedArray(this)) {
-        return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayWithReversed");
+        return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayToReversed");
     }
 
     // Step 1.
@@ -1834,12 +1834,12 @@ function isValidIntegerIndex(a, index) {
 }
 
 // https://github.com/tc39/proposal-change-array-by-copy
-// TypedArray.prototype.withAt()
-function TypedArrayWithAt(index, value) {
+// TypedArray.prototype.with()
+function TypedArrayWith(index, value) {
 
     /* Step 2. */
     if (!IsObject(this) || !IsTypedArray(this)) {
-        return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayWithAt", index, value);
+        return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayWith", index, value);
     }
 
     /* Step 1. */
@@ -1880,11 +1880,11 @@ function TypedArrayWithAt(index, value) {
 }
 
 // https://github.com/tc39/proposal-change-array-by-copy
-// TypedArray.prototype.withSorted()
-function TypedArrayWithSorted(comparefn) {
+// TypedArray.prototype.toSorted()
+function TypedArrayToSorted(comparefn) {
     // Step 3.
     if (!IsObject(this) || !IsTypedArray(this)) {
-        return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayWithSorted", comparefn);
+        return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayToSorted", comparefn);
     }
 
     // Step 1.
@@ -1908,11 +1908,11 @@ function TypedArrayWithSorted(comparefn) {
 }
 
 // https://github.com/tc39/proposal-change-array-by-copy
-// TypedArray.prototype.withSpliced()
-function TypedArrayWithSpliced(start, deleteCount, ...items) {
+// TypedArray.prototype.toSpliced()
+function TypedArrayToSpliced(start, deleteCount, ...items) {
     /* Step 2. */
     if (!IsObject(this) || !IsTypedArray(this)) {
-        return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayWithSpliced", start, deleteCount, items);
+        return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayToSpliced", start, deleteCount, items);
     }
 
     // Step 1.
