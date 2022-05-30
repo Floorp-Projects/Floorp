@@ -122,9 +122,9 @@ async function test_cookie_settings({
   await tab.linkedBrowser.contentWindow.gotoPref("panePrivacy");
   await SpecialPowers.spawn(
     tab.linkedBrowser,
-    [],
+    [{ cookiesEnabled, cookieJarSettingsLocked }],
     // eslint-disable-next-line no-shadow
-    async function() {
+    async function({ cookiesEnabled, cookieJarSettingsLocked }) {
       let deleteOnCloseCheckbox = content.document.getElementById(
         "deleteOnClose"
       );
@@ -132,6 +132,13 @@ async function test_cookie_settings({
         deleteOnCloseCheckbox,
         null,
         "deleteOnCloseCheckbox should not be null."
+      );
+
+      let expectControlsDisabled = !cookiesEnabled || cookieJarSettingsLocked;
+      is(
+        deleteOnCloseCheckbox.disabled,
+        expectControlsDisabled,
+        '"Delete cookies when Firefox is closed" checkbox disabled status should match expected'
       );
     }
   );
