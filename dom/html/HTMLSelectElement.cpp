@@ -267,7 +267,7 @@ void HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
         // This is sort of a hack ... we need to notify that the option was
         // set and change selectedIndex even though we didn't really change
         // its value.
-        OnOptionSelected(selectFrame, i, true, false, false);
+        OnOptionSelected(selectFrame, i, true, false, aNotify);
       }
     }
 
