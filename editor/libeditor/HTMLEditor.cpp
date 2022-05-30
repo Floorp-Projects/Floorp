@@ -644,58 +644,19 @@ void HTMLEditor::UpdateRootElement() {
   }
 }
 
-nsresult HTMLEditor::OnFocus(const nsINode& aOriginalEventTargetNode) {
-  // Before doing anything, we should check whether the original target is still
-  // valid focus event target because it may have already lost focus.
-  if (!CanKeepHandlingFocusEvent(aOriginalEventTargetNode)) {
-    return NS_OK;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return EditorBase::OnFocus(aOriginalEventTargetNode);
-}
-
-nsresult HTMLEditor::OnBlur(const EventTarget* aEventTarget) {
-  // check if something else is focused. If another element is focused, then
-  // we should not change the selection.
-  nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
-  if (MOZ_UNLIKELY(!focusManager)) {
-    return NS_OK;
-  }
-
-  // If another element already has focus, we should not maintain the selection
-  // because we may not have the rights doing it.
-  if (focusManager->GetFocusedElement()) {
-    return NS_OK;
-  }
-
-  // If it's in the designMode, and blur occurs, the target must be the
-  // document node.  If a blur event is fired and the target is an element, it
-  // must be delayed blur event at initializing the `HTMLEditor`.
-  // TODO: Add automated tests for checking the case that the target node
-  //       is in a shadow DOM tree whose host is in design mode.
-  if (IsInDesignMode() && Element::FromEventTargetOrNull(aEventTarget)) {
-    return NS_OK;
-  }
-  nsresult rv = FinalizeSelection();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::FinalizeSelection() failed");
-  return rv;
-}
-
-Element* HTMLEditor::FindSelectionRoot(const nsINode& aNode) const {
-  MOZ_ASSERT(aNode.IsDocument() || aNode.IsContent(),
-             "aNode must be content or document node");
-
-  if (NS_WARN_IF(!aNode.IsInComposedDoc())) {
+Element* HTMLEditor::FindSelectionRoot(nsINode* aNode) const {
+  if (NS_WARN_IF(!aNode)) {
     return nullptr;
   }
 
-  if (aNode.IsInDesignMode()) {
+  MOZ_ASSERT(aNode->IsDocument() || aNode->IsContent(),
+             "aNode must be content or document node");
+
+  if (MOZ_UNLIKELY(NS_WARN_IF(!aNode->IsInComposedDoc()))) {
+    return nullptr;
+  }
+
+  if (aNode->IsInDesignMode()) {
     return GetDocument()->GetRootElement();
   }
 
@@ -707,7 +668,7 @@ Element* HTMLEditor::FindSelectionRoot(const nsINode& aNode) const {
     return GetRoot();
   }
 
-  nsIContent* content = const_cast<nsIContent*>(aNode.AsContent());
+  nsIContent* content = aNode->AsContent();
   if (!content->HasFlag(NODE_IS_EDITABLE)) {
     // If the content is in read-write state but is not editable itself,
     // return it as the selection root.

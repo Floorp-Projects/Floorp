@@ -469,18 +469,14 @@ nsresult EditorBase::PostCreateInternal() {
     // If the text control gets reframed during focus, Focus() would not be
     // called, so take a chance here to see if we need to spell check the text
     // control.
-    nsresult rv = FlushPendingSpellCheck();
-    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      NS_WARNING(
-          "EditorBase::FlushPendingSpellCheck() caused destroying the editor");
+    RefPtr<EditorEventListener> eventListener = mEventListener;
+    eventListener->SpellCheckIfNeeded();
+    if (NS_WARN_IF(Destroyed())) {
       return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::FlushPendingSpellCheck() failed, but ignored");
 
     IMEState newState;
-    rv = GetPreferredIMEState(&newState);
+    nsresult rv = GetPreferredIMEState(&newState);
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::GetPreferredIMEState() failed");
       return NS_OK;
@@ -557,11 +553,6 @@ void EditorBase::RemoveEventListeners() {
     mComposition->EndHandlingComposition(this);
   }
   mEventTarget = nullptr;
-}
-
-bool EditorBase::IsListeningToEvents() const {
-  return IsInitialized() && mEventListener &&
-         !mEventListener->DetachedFromEditor();
 }
 
 bool EditorBase::GetDesiredSpellCheckState() {
@@ -5208,7 +5199,7 @@ nsresult EditorBase::HandleInlineSpellCheck(
   return rv;
 }
 
-Element* EditorBase::FindSelectionRoot(const nsINode& aNode) const {
+Element* EditorBase::FindSelectionRoot(nsINode* aNode) const {
   return GetRoot();
 }
 
@@ -5219,12 +5210,11 @@ void EditorBase::InitializeSelectionAncestorLimit(
   SelectionRef().SetAncestorLimiter(&aAncestorLimit);
 }
 
-nsresult EditorBase::InitializeSelection(
-    const nsINode& aOriginalEventTargetNode) {
+nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsCOMPtr<nsIContent> selectionRootContent =
-      FindSelectionRoot(aOriginalEventTargetNode);
+      FindSelectionRoot(&aFocusEventTargetNode);
   if (!selectionRootContent) {
     return NS_OK;
   }
@@ -5256,7 +5246,7 @@ nsresult EditorBase::InitializeSelection(
   // Also, make sure to always ignore it for designMode, since that effectively
   // overrides everything and we allow to edit stuff with
   // contenteditable="false" subtrees in such a document.
-  caret->SetIgnoreUserModify(aOriginalEventTargetNode.IsInDesignMode());
+  caret->SetIgnoreUserModify(aFocusEventTargetNode.IsInDesignMode());
 
   // Init selection
   rvIgnored =
@@ -5352,6 +5342,30 @@ nsresult EditorBase::FinalizeSelection() {
     }
   }
   return NS_OK;
+}
+
+void EditorBase::ReinitializeSelection(Element& aElement) {
+  if (NS_WARN_IF(Destroyed())) {
+    return;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return;
+  }
+
+  OnFocus(aElement);
+
+  // If previous focused editor turn on spellcheck and this editor doesn't
+  // turn on it, spellcheck state is mismatched.  So we need to re-sync it.
+  SyncRealTimeSpell();
+
+  RefPtr<nsPresContext> presContext = GetPresContext();
+  if (NS_WARN_IF(!presContext)) {
+    return;
+  }
+  RefPtr<Element> focusedElement = GetFocusedElement();
+  IMEStateManager::OnFocusInEditor(*presContext, focusedElement, *this);
 }
 
 Element* EditorBase::GetEditorRoot() const { return GetRoot(); }
@@ -5609,61 +5623,13 @@ bool EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const {
   return IsActiveInDOMWindow();
 }
 
-nsresult EditorBase::FlushPendingSpellCheck() {
-  // If the spell check skip flag is still enabled from creation time,
-  // disable it because focused editors are allowed to spell check.
-  if (!ShouldSkipSpellCheck()) {
-    return NS_OK;
-  }
-  MOZ_ASSERT(!IsHTMLEditor(), "HTMLEditor should not has pending spell checks");
-  nsresult rv = RemoveFlags(nsIEditor::eEditorSkipSpellCheck);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "EditorBase::RemoveFlags(nsIEditor::eEditorSkipSpellCheck) failed");
-  return rv;
-}
-
-bool EditorBase::CanKeepHandlingFocusEvent(
-    const nsINode& aOriginalEventTargetNode) const {
-  if (MOZ_UNLIKELY(!IsListeningToEvents() || Destroyed())) {
-    return false;
+void EditorBase::OnFocus(nsINode& aFocusEventTargetNode) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return;
   }
 
-  nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
-  if (MOZ_UNLIKELY(!focusManager)) {
-    return false;
-  }
-
-  // If the event target is document mode, we only need to handle the focus
-  // event when the document is still in designMode.  Otherwise, the
-  // mode has been disabled by somebody while we're handling the focus event.
-  if (aOriginalEventTargetNode.IsDocument()) {
-    return IsHTMLEditor() && aOriginalEventTargetNode.IsInDesignMode();
-  }
-  MOZ_ASSERT(aOriginalEventTargetNode.IsContent());
-
-  // If nobody has focus, the focus event target has been blurred by somebody
-  // else.  So the editor shouldn't initialize itself to start to handle
-  // anything.
-  if (!focusManager->GetFocusedElement()) {
-    return false;
-  }
-  const nsIContent* exposedTargetContent =
-      aOriginalEventTargetNode.AsContent()
-          ->FindFirstNonChromeOnlyAccessContent();
-  const nsIContent* exposedFocusedContent =
-      focusManager->GetFocusedElement()->FindFirstNonChromeOnlyAccessContent();
-  return exposedTargetContent && exposedFocusedContent &&
-         exposedTargetContent == exposedFocusedContent;
-}
-
-nsresult EditorBase::OnFocus(const nsINode& aOriginalEventTargetNode) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  InitializeSelection(aOriginalEventTargetNode);
+  InitializeSelection(aFocusEventTargetNode);
   mSpellCheckerDictionaryUpdated = false;
   if (mInlineSpellChecker && CanEnableSpellCheck()) {
     DebugOnly<nsresult> rvIgnored =
@@ -5673,20 +5639,6 @@ nsresult EditorBase::OnFocus(const nsINode& aOriginalEventTargetNode) {
         "mozInlineSpellCHecker::UpdateCurrentDictionary() failed, but ignored");
     mSpellCheckerDictionaryUpdated = true;
   }
-  // XXX Why don't we stop handling focus with the spell checker immediately
-  //     after calling InitializeSelection?
-  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent(aOriginalEventTargetNode))) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-
-  RefPtr<nsPresContext> presContext = GetPresContext();
-  if (NS_WARN_IF(!presContext)) {
-    return NS_ERROR_FAILURE;
-  }
-  RefPtr<Element> focusedElement = GetFocusedElement();
-  IMEStateManager::OnFocusInEditor(*presContext, focusedElement, *this);
-
-  return NS_OK;
 }
 
 void EditorBase::HideCaret(bool aHide) {

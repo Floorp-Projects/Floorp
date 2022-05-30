@@ -197,12 +197,9 @@ class HTMLEditor final : public EditorBase,
   Element* GetFocusedElement() const final;
   bool IsActiveInDOMWindow() const final;
   dom::EventTarget* GetDOMEventTarget() const final;
-  [[nodiscard]] Element* FindSelectionRoot(const nsINode& aNode) const final;
+  Element* FindSelectionRoot(nsINode* aNode) const final;
   bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const final;
   nsresult GetPreferredIMEState(widget::IMEState* aState) final;
-  MOZ_CAN_RUN_SCRIPT nsresult
-  OnFocus(const nsINode& aOriginalEventTargetNode) final;
-  nsresult OnBlur(const dom::EventTarget* aEventTarget) final;
 
   /**
    * GetBackgroundColorState() returns what the background color of the
