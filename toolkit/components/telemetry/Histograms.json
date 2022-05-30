@@ -16131,6 +16131,17 @@
     "n_buckets": 50,
     "description": "Time taken by WebRender to rasterize a set of glyphs"
   },
+  "WR_RASTERIZE_BLOBS_TIME": {
+    "record_in_processes": ["main", "gpu"],
+    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [ 1770974 ],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 50,
+    "description": "Time taken by WebRender to rasterize blobs"
+  },
   "WEB_AUDIO_BECOMES_AUDIBLE_TIME": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
