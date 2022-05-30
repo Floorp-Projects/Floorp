@@ -75,7 +75,6 @@ function testKeyboard() {
 function testMouse() {
   synthesizeMouse($("inputTarget"), 0, 0, {});
   synthesizeMouse($("buttonTarget"), 0, 0, {});
-  synthesizeMouse($("xulButtonTarget"), 0, 0, {});
   synthesizeMouse($("anchorTarget"), 0, 0, {});
   synthesizeMouse($("radioTarget1"), 0, 0, {});
   synthesizeMouse($("radioTarget2"), 0, 0, {});
@@ -85,14 +84,12 @@ function testMouse() {
 function testScriptedClicks() {
   $("inputTarget").click();
   $("buttonTarget").click();
-  $("xulButtonTarget").click();
 }
 
 function setup() {
   $("inputTarget").addEventListener("click", check);
   $("buttonTarget").addEventListener("click", check);
   $("anchorTarget").addEventListener("click", check);
-  $("xulButtonTarget").addEventListener("click", check);
   $("radioTarget1").addEventListener("click", check);
   $("radioTarget2").addEventListener("click", check);
   $("checkboxTarget").addEventListener("click", check);
@@ -102,7 +99,6 @@ function setup() {
 function cleanup() {
   $("inputTarget").removeEventListener("click", check);
   $("buttonTarget").removeEventListener("click", check);
-  $("xulButtonTarget").removeEventListener("click", check);
   $("anchorTarget").removeEventListener("click", check);
   $("radioTarget1").removeEventListener("click", check);
   $("radioTarget2").removeEventListener("click", check);
@@ -117,7 +113,6 @@ SimpleTest.waitForFocus(doTest, window);
 <input type="checkbox" id="checkboxTarget">Checkbox target</input>
 <input id="inputTarget" type="button" value="HTML Input" accesskey="o"/>
 <button id="buttonTarget">HTML Button</button>
-<xul:button id="xulButtonTarget" accesskey="t">XUL Button</xul:button>
 <a href="#" id="anchorTarget">Anchor</a>
 <input type="radio" id="radioTarget1" name="group">Radio Target 1</input>
 <input type="radio" id="radioTarget2" name="group">Radio Target 2</input>
