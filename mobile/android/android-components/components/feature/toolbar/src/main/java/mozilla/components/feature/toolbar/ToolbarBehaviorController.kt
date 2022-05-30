@@ -7,7 +7,6 @@ package mozilla.components.feature.toolbar
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -47,6 +46,7 @@ class ToolbarBehaviorController(
                 }
 
                 if (state.content.loading) {
+                    expandToolbar()
                     disableScrolling()
                 } else if (!state.content.loading) {
                     enableScrolling()

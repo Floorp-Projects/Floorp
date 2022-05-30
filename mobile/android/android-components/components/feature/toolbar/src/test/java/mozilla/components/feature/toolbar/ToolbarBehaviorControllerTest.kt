@@ -180,4 +180,21 @@ class ToolbarBehaviorControllerTest {
 
         verify(controller, never()).expandToolbar()
     }
+
+    @Test
+    fun `GIVEN the current tab is loading an url WHEN the page is scrolled THEN expand toolbar`() {
+        val tabContent = ContentState("loading", loading = true)
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(TabSessionState("tab_1", tabContent)),
+                selectedTabId = "tab_1"
+            )
+        )
+        val controller = spy(ToolbarBehaviorController(mock(), store))
+
+        controller.start()
+        shadowOf(getMainLooper()).idle()
+
+        verify(controller).expandToolbar()
+    }
 }
