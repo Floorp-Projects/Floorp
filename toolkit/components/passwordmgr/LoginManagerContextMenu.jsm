@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 /**
  * Password manager object for the browser contextual menu.
  */
-this.LoginManagerContextMenu = {
+const LoginManagerContextMenu = {
   /**
    * Look for login items and add them to the contextual menu.
    *

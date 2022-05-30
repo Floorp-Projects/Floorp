@@ -1495,9 +1495,9 @@ const FLAGS_MAP = [
   },
 ];
 
-this.ClearDataService = function() {
+function ClearDataService() {
   this._initialize();
-};
+}
 
 ClearDataService.prototype = Object.freeze({
   classID: Components.ID("{0c06583d-7dd8-4293-b1a5-912205f779aa}"),

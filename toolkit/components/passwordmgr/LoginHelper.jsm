@@ -357,7 +357,7 @@ class ImportRowProcessor {
 /**
  * Contains functions shared by different Login Manager components.
  */
-this.LoginHelper = {
+const LoginHelper = {
   debug: null,
   enabled: null,
   storageEnabled: null,

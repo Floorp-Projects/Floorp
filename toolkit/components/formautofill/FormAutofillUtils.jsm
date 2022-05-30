@@ -4,7 +4,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormAutofillUtils", "AddressDataLoader", "LabelUtils"];
+const EXPORTED_SYMBOLS = [
+  "FormAutofillUtils",
+  "AddressDataLoader",
+  "LabelUtils",
+];
+let FormAutofillUtils;
 
 const ADDRESS_METADATA_PATH = "resource://autofill/addressmetadata/";
 const ADDRESS_REFERENCES = "addressReferences.js";
@@ -209,7 +214,7 @@ let AddressDataLoader = {
   },
 };
 
-this.FormAutofillUtils = {
+FormAutofillUtils = {
   get AUTOFILL_FIELDS_THRESHOLD() {
     return 3;
   },

@@ -146,4 +146,4 @@ class PrincipalsCollector {
   }
 }
 
-this.EXPORTED_SYMBOLS = ["PrincipalsCollector"];
+const EXPORTED_SYMBOLS = ["PrincipalsCollector"];

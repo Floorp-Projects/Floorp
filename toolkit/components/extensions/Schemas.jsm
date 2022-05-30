@@ -55,7 +55,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-var EXPORTED_SYMBOLS = ["SchemaRoot", "Schemas"];
+const EXPORTED_SYMBOLS = ["SchemaRoot", "Schemas"];
+let Schemas;
 
 const KEY_CONTENT_SCHEMAS = "extensions-framework/schemas/content";
 const KEY_PRIVILEGED_SCHEMAS = "extensions-framework/schemas/privileged";
@@ -3605,7 +3606,7 @@ class SchemaRoot extends Namespace {
   }
 }
 
-this.Schemas = {
+Schemas = {
   initialized: false,
 
   REVOKE: Symbol("@@revoke"),

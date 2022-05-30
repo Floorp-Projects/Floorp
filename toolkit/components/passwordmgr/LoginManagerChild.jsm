@@ -520,7 +520,7 @@ const observer = {
 // Add this observer once for the process.
 Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
-this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
+class LoginManagerChild extends JSWindowActorChild {
   /**
    * WeakMap of the root element of a LoginForm to the DeferredTask to fill its fields.
    *
@@ -3174,4 +3174,4 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
     return result;
   }
-};
+}

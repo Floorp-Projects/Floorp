@@ -22,7 +22,7 @@ if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
   );
 }
 
-this.EXPORTED_SYMBOLS = ["ServiceWorkerCleanUp"];
+const EXPORTED_SYMBOLS = ["ServiceWorkerCleanUp"];
 
 function unregisterServiceWorker(aSW) {
   return new Promise(resolve => {
@@ -56,7 +56,7 @@ function unregisterServiceWorkersMatching(filterFn) {
   return Promise.all(promises);
 }
 
-this.ServiceWorkerCleanUp = {
+const ServiceWorkerCleanUp = {
   removeFromHost(aHost) {
     return unregisterServiceWorkersMatching(sw =>
       Services.eTLD.hasRootDomain(sw.principal.host, aHost)

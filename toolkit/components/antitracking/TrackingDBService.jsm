@@ -117,9 +117,9 @@ async function removeRecordsSince(db, date) {
   await db.execute(SQL.removeRecordsSince, { date });
 }
 
-this.TrackingDBService = function() {
+function TrackingDBService() {
   this._initPromise = this._initialize();
-};
+}
 
 TrackingDBService.prototype = {
   classID: Components.ID("{3c9c43b6-09eb-4ed2-9b87-e29f4221eef0}"),

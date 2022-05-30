@@ -15,7 +15,7 @@ var EXPORTED_SYMBOLS = ["Corroborate"];
 /**
  * Tools for verifying internal files in Mozilla products.
  */
-this.Corroborate = {
+const Corroborate = {
   async init() {},
 
   /**
