@@ -1,0 +1,355 @@
+<!DOCTYPE html [
+<!ATTLIST ns:x id ID #REQUIRED>
+<!ATTLIST ns2:x id_2 ID #REQUIRED>
+]>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:svg="http://www.w3.org/2000/svg"
+      xmlns:ns="urn:namespace"
+      xmlns:ns2="urn:namespace">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=564863
+-->
+<head>
+  <title>Test for Bug 564863</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<style>
+* {
+  color: rgb(0, 0, 0);
+}
+#div_id {
+  color: rgb(10, 10, 10);
+}
+#a_id {
+  color: rgb(20, 20, 20);
+}
+#xul_id {
+  color: rgb(30, 30, 30);
+}
+#svg_id {
+  color: rgb(40, 40, 40);
+}
+#ns_id {
+  color: rgb(50, 50, 50);
+}
+#ns2_id {
+  color: rgb(60, 60, 60);
+}
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=564863">Mozilla Bug 564863</a>
+<!-- Elements to ensure we have nodeinfos with id-attribute set -->
+<div><ns:x id="ns-holder"/><ns2:x id_2="ns2-holder"/></div>
+
+<!-- DOM to muck around with for tests -->
+<p id="root">
+<div id="div_id" />
+<a id="a_id" />
+<xul:button id="xul_id" />
+<svg:svg><svg:g id="svg_id" /></svg:svg>
+<ns:x id="ns_id" />
+</p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+root = $('root');
+div = root.children[0];
+a = root.children[1];
+xul = root.children[2];
+svg = root.children[3].firstChild;
+nsx = root.children[4];
+
+var div_cs = getComputedStyle(div, "");
+var a_cs = getComputedStyle(a, "");
+var xul_cs = getComputedStyle(xul, "");
+var svg_cs = getComputedStyle(svg, "");
+var nsx_cs = getComputedStyle(nsx, "");
+
+function checkHasId(test) {
+  // Check computed style first to avoid flushes from hiding problems
+  checkHasIdNoGEBI(test);
+
+  is($("div_id"), div, "div getElementById " + test);
+  is($("a_id"),   a,   "a getElementById " + test);
+  is($("xul_id"), xul, "xul getElementById " + test);
+  is($("svg_id"), svg, "svg getElementById " + test);
+  is($("ns_id"),  nsx, "ns getElementById " + test);
+}
+
+function checkHasIdNoGEBI(test) {
+  const connected = test != "removed node";
+  is(div_cs.color, connected ? "rgb(10, 10, 10)" : "", "div color " + test);
+  is(a_cs.color,   connected ? "rgb(20, 20, 20)" : "", "a color " + test);
+  is(xul_cs.color, connected ? "rgb(30, 30, 30)" : "", "xul color " + test);
+  is(svg_cs.color, connected ? "rgb(40, 40, 40)" : "", "svg color " + test);
+  is(nsx_cs.color, connected ? "rgb(50, 50, 50)" : "", "nsx color " + test);
+
+  is(div.id, "div_id", "div id " + test);
+  is(a.id,   "a_id",   "a id " + test);
+  is(xul.id, "xul_id", "xul id " + test);
+  is(svg.id, "svg_id", "svg id " + test);
+  is (nsx.getAttribute("id"), "ns_id", "ns id " + test);
+}
+
+function checkHasNoId(removed, test) {
+  is(div_cs.color, "rgb(0, 0, 0)", "div color " + test);
+  is(a_cs.color,   "rgb(0, 0, 0)", "a color " + test);
+  is(xul_cs.color, "rgb(0, 0, 0)", "xul color " + test);
+  is(svg_cs.color, "rgb(0, 0, 0)", "svg color " + test);
+  is(nsx_cs.color, "rgb(0, 0, 0)", "nsx color " + test);
+
+  attrValue = removed ? null : "";
+
+  is(div.id, "", "div id " + test);
+  is(a.id,   "", "a id " + test);
+  is(xul.id, "", "xul id " + test);
+  is(svg.id, "", "svg id " + test);
+
+  is(div.getAttribute("id"), attrValue, "div getAttribute " + test);
+  is(a.getAttribute("id"),   attrValue, "a getAttribute " + test);
+  is(xul.getAttribute("id"), "",        "xul getAttribute " + test);
+  is(svg.getAttribute("id"), attrValue, "svg getAttribute " + test);
+  is(nsx.getAttribute("id"), attrValue, "ns getAttribute " + test);
+  
+  is($("div_id"), null, "div getElementById " + test);
+  is($("a_id"),   null, "a getElementById " + test);
+  is($("xul_id"), null, "xul getElementById " + test);
+  is($("svg_id"), null, "svg getElementById " + test);
+  is($("ns_id"),  null, "ns getElementById " + test);
+}
+
+// Check that dynamic modifications of attribute work
+
+checkHasId("in markup");
+
+div.id = "";
+a.id = "";
+xul.id = "";
+svg.id = "";
+nsx.setAttribute("id", "");
+
+checkHasNoId(false, "set to empty");
+
+div.id = "div_id";
+a.id = "a_id";
+xul.id = "xul_id";
+svg.id = "svg_id";
+nsx.setAttribute("id", "ns_id");
+
+checkHasId("set using .id");
+
+div.setAttribute("id", "");
+a.setAttribute("id",   "");
+xul.setAttribute("id", "");
+svg.setAttribute("id", "");
+nsx.setAttribute("id", "");
+
+checkHasNoId(false, "setAttribute to empty");
+
+div.id = "div_id";
+a.id = "a_id";
+xul.id = "xul_id";
+svg.id = "svg_id";
+nsx.setAttribute("id", "ns_id");
+
+checkHasId("set again using .id");
+
+div.removeAttribute("id");
+a.removeAttribute("id");
+xul.removeAttribute("id");
+svg.removeAttribute("id");
+nsx.removeAttribute("id");
+
+checkHasNoId(true, "removed attribute");
+
+div.setAttribute("id", "div_id");
+a.setAttribute("id",   "a_id");
+xul.setAttribute("id", "xul_id");
+svg.setAttribute("id", "svg_id");
+nsx.setAttribute("id", "ns_id");
+
+checkHasId("set using setAttribute");
+
+t1 = document.createElement("div");
+t1.id = "div_id";
+t2 = document.createElement("a");
+t2.id = "a_id";
+t3 = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "button");
+t3.id = "xul_id";
+t4 = document.createElementNS("http://www.w3.org/2000/svg", "g");
+t4.id = "svg_id";
+t5 = document.createElementNS("urn:namespace", "ns:x");
+t5.setAttribute("id", "ns_id");
+
+// Check that inserting elements before/after existing work
+
+function insertAfter(newChild, existing) {
+  existing.parentNode.insertBefore(newChild, existing.nextSibling);
+}
+function insertBefore(newChild, existing) {
+  existing.parentNode.insertBefore(newChild, existing);
+}
+function removeNode(child) {
+  child.remove();
+}
+
+insertAfter(t1, div);
+insertAfter(t2, a);
+insertAfter(t3, xul);
+insertAfter(t4, svg);
+insertAfter(t5, nsx);
+
+checkHasId("inserted after");
+
+insertBefore(t1, div);
+insertBefore(t2, a);
+insertBefore(t3, xul);
+insertBefore(t4, svg);
+insertBefore(t5, nsx);
+
+checkHasIdNoGEBI("inserted before");
+is($("div_id"), t1, "div getElementById inserted before");
+is($("a_id"),   t2,   "a getElementById inserted before");
+is($("xul_id"), t3, "xul getElementById inserted before");
+is($("svg_id"), t4, "svg getElementById inserted before");
+is($("ns_id"),  t5, "ns getElementById inserted before");
+
+t1.removeAttribute("id");
+t2.removeAttribute("id");
+t3.removeAttribute("id");
+t4.removeAttribute("id");
+t5.removeAttribute("id");
+
+checkHasId("removed tx attribute");
+
+t1.setAttribute("id", "div_id");
+t2.setAttribute("id",   "a_id");
+t3.setAttribute("id", "xul_id");
+t4.setAttribute("id", "svg_id");
+t5.setAttribute("id", "ns_id");
+
+checkHasIdNoGEBI("setAttribute before");
+is($("div_id"), t1, "div getElementById setAttribute before");
+is($("a_id"),   t2,   "a getElementById setAttribute before");
+is($("xul_id"), t3, "xul getElementById setAttribute before");
+is($("svg_id"), t4, "svg getElementById setAttribute before");
+is($("ns_id"),  t5, "ns getElementById setAttribute before");
+
+removeNode(t1);
+removeNode(t2);
+removeNode(t3);
+removeNode(t4);
+removeNode(t5);
+
+checkHasId("removed temporaries");
+
+removeNode(div);
+removeNode(a);
+removeNode(xul);
+removeNode(svg);
+removeNode(nsx);
+
+checkHasIdNoGEBI("removed node");
+
+// Check that removing an element during UnsetAttr works
+is(div.id, "div_id", "div still has id set");
+var mutateFired = false;
+root.appendChild(div);
+div.addEventListener("DOMAttrModified", function(e) {
+  is(e.target, div, "target is div");
+  is(div.id, "", "div no longer has id");
+  is(div.getAttribute("id"), null, "div no longer has id attr");
+  removeNode(div);
+  is(div.parentNode, null, "div was removed");
+  mutateFired = true;
+}, {once: true});
+div.removeAttribute("id");
+ok(mutateFired, "mutation event fired");
+
+// Check same for XML elements
+is(nsx.getAttribute("id"), "ns_id", "nsx still has id set");
+mutateFired = false;
+root.appendChild(nsx);
+nsx.addEventListener("DOMAttrModified", function(e) {
+  is(e.target, nsx, "target is nsx");
+  is(nsx.getAttribute("id"), null, "nsx no longer has id attr");
+  removeNode(nsx);
+  is(nsx.parentNode, null, "nsx was removed");
+  mutateFired = true;
+}, {once: true});
+nsx.removeAttribute("id");
+ok(mutateFired, "mutation event fired");
+
+
+// Re-add the id inside a mutation event on a XML element
+is($("ns_id"), null, "no nsx");
+is($("ns2_id"), null, "no nsx");
+nsx = document.createElementNS("urn:namespace", "ns:x");
+nsx.setAttribute("id", "ns_id");
+root.appendChild(nsx);
+is($("ns_id"), nsx, "new nsx is set up");
+mutateFired = false;
+nsx.addEventListener("DOMAttrModified", function(e) {
+  is(e.target, nsx, "target is nsx");
+  is(nsx.getAttribute("id"), null, "nsx no longer has id attr");
+  nsx.setAttribute("id", "other_id");
+  mutateFired = true;
+}, {once: true});
+nsx.removeAttribute("id");
+ok(mutateFired, "mutation event fired");
+is($("ns_id"), null, "ns_id was removed from table");
+is($("other_id"), nsx, "other_id was added");
+removeNode(nsx);
+is($("other_id"), null, "other_id was removed");
+
+// Re-add the id inside a mutation event on a HTML element
+is($("div_id"), null, "no div");
+div = document.createElement("div");
+div.id = "div_id";
+root.appendChild(div);
+is($("div_id"), div, "new div is set up");
+mutateFired = false;
+div.addEventListener("DOMAttrModified", function(e) {
+  is(e.target, div, "target is div");
+  is(div.getAttribute("id"), null, "div no longer has id attr");
+  is(div.id, "", "div no longer has id");
+  div.id = "other_div_id";
+  mutateFired = true;
+}, {once: true});
+div.removeAttribute("id");
+ok(mutateFired, "mutation event fired");
+is($("div_id"), null, "div_id was removed from table");
+is($("other_div_id"), div, "other_div_id was added");
+removeNode(div);
+is($("other_div_id"), null, "other_div_id was removed");
+
+// Re-add the id inside a mutation event on a XUL element
+is($("xul_id"), null, "no xul");
+xul = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "button");
+xul.id = "xul_id";
+root.appendChild(xul);
+is($("xul_id"), xul, "new xul is set up");
+mutateFired = false;
+xul.addEventListener("DOMAttrModified", function(e) {
+  is(e.target, xul, "target is xul");
+  is(xul.getAttribute("id"), "", "xul no longer has id attr");
+  is(xul.id, "", "xul no longer has id");
+  xul.id = "other_xul_id";
+  mutateFired = true;
+}, {once: true});
+xul.removeAttribute("id");
+ok(mutateFired, "mutation event fired");
+is($("xul_id"), null, "xul_id was removed from table");
+is($("other_xul_id"), xul, "other_xul_id was added");
+removeNode(xul);
+is($("other_xul_id"), null, "other_xul_id was removed");
+
+]]>
+</script>
+</pre>
+</body>
+</html>
