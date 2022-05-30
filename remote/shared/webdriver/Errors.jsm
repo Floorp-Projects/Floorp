@@ -56,7 +56,7 @@ const BUILTIN_ERRORS = new Set([
 ]);
 
 /** @namespace */
-this.error = {
+const error = {
   /**
    * Check if ``val`` is an instance of the ``Error`` prototype.
    *

@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
-this.print = {
+const print = {
   maxScaleValue: 2.0,
   minScaleValue: 0.1,
   letterPaperSizeCm: {

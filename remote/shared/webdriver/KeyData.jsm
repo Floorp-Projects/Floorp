@@ -311,7 +311,7 @@ XPCOMUtils.defineLazyGetter(this, "SHIFT_DATA", () => {
   return shiftData;
 });
 
-this.keyData = {
+const keyData = {
   /**
    * Get key event data for a given key character.
    *
