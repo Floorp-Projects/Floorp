@@ -1785,41 +1785,53 @@ function SharedArrayBufferSlice(start, end) {
 // https://github.com/tc39/proposal-change-array-by-copy
 function TypedArrayCreateSameType(exemplar, length) {
 
-    // Step 1.
+    // Step 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
     let contentType = GetTypedArrayKind(exemplar);
     assert(contentType !== undefined, "in TypedArrayCreateSameType, exemplar does not have a [[ContentType]] internal slot");
 
-    // Step 2.
+    // Step 2. Let constructor be the intrinsic object listed in column one of Table 63 for exemplar.[[TypedArrayName]].
     let constructor = GetTypedArrayConstructorFromKind(contentType);
 
-    // Steps 3, 6.
+
+    // Step 4 omitted. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots. - guaranteed by the TypedArray implementation
+    // Step 5 omitted. Assert: result.[[ContentType]] is exemplar.[[ContentType]]. - guaranteed by the typed array implementation
+
+    // Step 3. Let result be ? TypedArrayCreate(constructor, argumentList).
+    // Step 6. Return result.
     return TypedArrayCreateWithLength(constructor, length);
 }
 
 // https://github.com/tc39/proposal-change-array-by-copy
 // TypedArray.prototype.toReversed()
 function TypedArrayToReversed() {
-    /* Step 2. */
+    // Step 2. Perform ? ValidateTypedArray(O).
     if (!IsObject(this) || !IsTypedArray(this)) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayToReversed");
     }
 
-    // Step 1.
+    // Step 1. Let O be the this value.
     var O = this;
 
-    /* Step 3. */
+    // Step 3. Let length be O.[[ArrayLength]].
     var len = TypedArrayLength(O);
 
-    /* Step 4. */
+    // Step 4. Let A be ? TypedArrayCreateSameType(O, « 𝔽(length) »).
     var A = TypedArrayCreateSameType(O, len);
-    /* Steps 5-6. */
+
+    // Step 5. Let k be 0.
+    // Step 6. Repeat, while k < length,
     for (var k = 0; k < len; k++) {
+        // Step 5.a. Let from be ! ToString(𝔽(length - k - 1)).
         var from = len - k - 1;
+        // Step 5.b. omitted - Let Pk be ! ToString(𝔽(k)).
+        // k coerced to String by property access
+        // Step 5.c. Let fromValue be ! Get(O, from).
         var fromValue = O[from];
+        // Step 5.d. Perform ! Set(A, k, kValue, true).
         DefineDataProperty(A, k, fromValue);
     }
 
-    /* Step 7. */
+    // Step 7. Return A.
     return A;
 }
 
@@ -1837,40 +1849,47 @@ function isValidIntegerIndex(a, index) {
 // TypedArray.prototype.with()
 function TypedArrayWith(index, value) {
 
-    /* Step 2. */
+    // Step 2. Perform ? ValidateTypedArray(O).
     if (!IsObject(this) || !IsTypedArray(this)) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayWith", index, value);
     }
 
-    /* Step 1. */
+    // Step 1. Let O be the this value.
     let O = this;
 
-    /* Step 3. */
+    // Step 3. Let len be O.[[ArrayLength]].
     let len = TypedArrayLength(O);
 
-    /* Step 4. */
+    // Step 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
     let relativeIndex = ToInteger(index);
 
-    /* Step 5. */
+    // Step 5. If relativeIndex ≥ 0, let actualIndex be relativeIndex.
     var actualIndex;
     if (relativeIndex >= 0) {
         actualIndex = relativeIndex;
     } else {
-        /* Step 6. */
+        // Step 6. Else, let actualIndex be len + relativeIndex.
         actualIndex = len + relativeIndex;
     }
 
-    /* Step 7. */
+    // Step 7. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
     /* This check is an inlined version of the IsValidIntegerIndex abstract operation. */
     if (actualIndex >= len || actualIndex < 0) {
         ThrowRangeError(JSMSG_BAD_INDEX);
     }
 
-    /* Step 8. */
+    // Step 8. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
     var A = TypedArrayCreateSameType(O, len);
 
-    /* Steps 9-10. */
+    // Step 9. Let k be 0.
+    // Step 10. Repeat, while k < len,
     for (var k = 0; k < len; k++) {
+        // Step 10.a. omitted - Let Pk be ! ToString(𝔽(k)).
+        // k coerced to String by property access
+        // Step 10.b. If k is actualIndex, then i. Perform ? Set(A, k, value, true).
+        /* Step 10.c. Else, i. Let fromValue be ! Get(O, k).
+         *                  ii. Perform ! Set(A, k, fromValue, true).
+         */
         var fromValue = k == actualIndex ? value : O[k];
         DefineDataProperty(A, k, fromValue);
     }
@@ -1882,109 +1901,137 @@ function TypedArrayWith(index, value) {
 // https://github.com/tc39/proposal-change-array-by-copy
 // TypedArray.prototype.toSorted()
 function TypedArrayToSorted(comparefn) {
-    // Step 3.
+    // Step 3. Perform ? ValidateTypedArray(this)
     if (!IsObject(this) || !IsTypedArray(this)) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayToSorted", comparefn);
     }
 
-    // Step 1.
+    // Step 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
     if (comparefn !== undefined) {
         if (!IsCallable(comparefn)) {
             ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, comparefn));
         }
     }
 
-    // Step 2.
+    // Step 2. Let O be the this value.
     var O = this;
 
-    // Step 4.
+    // Step 4. omitted.  Let buffer be obj.[[ViewedArrayBuffer]].
+
+    // Step 5. Let len be O.[[ArrayLength]].
     var len = TypedArrayLength(O);
 
+    // Step 6. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
     var A = TypedArrayCreateSameType(O, len);
+
+    /* Steps 7-11 not followed exactly; this implementation copies the list and then
+     * sorts the copy, rather than calling a sort method that copies the list and then
+     * copying the result again */
+    // Equivalent to steps 10-11
     for(var k = 0; k < len; k++) {
         A[k] = O[k];
     }
+
+    // Equivalent to steps 8-9 and 12
     return callFunction(CallTypedArrayMethodIfWrapped, A, comparefn, "TypedArraySort");
 }
 
 // https://github.com/tc39/proposal-change-array-by-copy
 // TypedArray.prototype.toSpliced()
 function TypedArrayToSpliced(start, deleteCount, ...items) {
-    /* Step 2. */
+    // Step 2. Perform ? ValidateTypedArray(this)
     if (!IsObject(this) || !IsTypedArray(this)) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayToSpliced", start, deleteCount, items);
     }
 
-    // Step 1.
+    // Step 1. Let O be ? ToObject(this value).
     let O = this;
 
-    // Step 3.
+    // Step 3. Let len be ? LengthOfArrayLike(O)
     let len = TypedArrayLength(O);
 
-    // Step 4.
+    // Step 4. Let relativeStart be ? ToIntegerOrInfinity(start)
     let relativeStart = ToInteger(start);
 
-    // Step 5.
+    // Step 5. If relativeStart is -∞, let actualStart be 0.
     var actualStart;
     if (!Global_isFinite(relativeStart) && relativeStart < 0) {
         actualStart = 0;
     } else if (relativeStart < 0) {
-        // Step 6.
+        // Step 6. Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
         actualStart = std_Math_max(len + relativeStart, 0);
     } else {
-        // Step 7.
+        // Step 7. Else, let actualStart be min(relativeStart, len).
         actualStart = std_Math_min(relativeStart, len);
     }
 
-    // Step 8.
+    // Step 8. Let insertCount be the number of elements in items.
     let insertCount = items.length;
 
-    // Step 9.
     var actualDeleteCount;
+    // Step 9. If start is not present, then let actualDeleteCount be 0.
     if (arguments.length < 1) {
         actualDeleteCount = 0;
     } else if (arguments.length < 2) {
-        // Step 10.
+        // Step 10. Else if deleteCount is not present, then let actualDeleteCount be len - actualStart.
         actualDeleteCount = len - actualStart;
     } else {
-        // Step 11.
+        // Step 11.a. Else, let dc be ? ToIntegerOrInfinity(deleteCount)
         var dc = ToInteger(deleteCount);
+        // Step 11.b. Let actualDeleteCount be the result of clamping dc between 0 and len - actualStart.
         actualDeleteCount = std_Math_min(len - actualStart, std_Math_max(0, dc));
     }
 
-    // Step 12.
+    // Step 12. Let newLen be len + insertCount - actualDeleteCount.
     let newLen = len + insertCount - actualDeleteCount;
 
-    // Step 13.
+    // Step 13. Let A be ? TypedArrayCreateSameType(O, « 𝔽(newLen) »).
     let A = TypedArrayCreateSameType(O, newLen);
 
-    // Step 14.
+    // Step 14. Let i be 0.
     var i = 0;
 
-    // Step 15
+    // Step 15. Let r be actualStart + actualDeleteCount.
     var r = actualStart + actualDeleteCount;
 
-    // Step 16.
+    // Step 16. Repeat, while i < actualStart,
     // Copy all the items before actualStart
     while (i < actualStart) {
+        // Step 16.a. omitted - Let Pi be ! ToString(𝔽(i)).
+        // i coerced to String by property access
+        // Step 16.b. Let iValue be ! Get(src, i)
         var iValue = O[i];
+        // Step 16.c. Perform ! Set(target, i, iValue, true)
+        // Step 16.d. Set i to i + 1
         DefineDataProperty(A, i++, iValue);
     }
 
-    // Step 17.
+    // Step 17. For each element E of items, do
     // Copy all the new items.
     for(var j = 0; j < insertCount; j++) {
+        // Step 17.a. omitted - Let Pi be ! ToString(𝔽(i)).
+        // i coerced to String by property access
+        // Step 17.b. Perform ? Set(A, i, E, true).
+        // Step 17.c. Set i to i + 1.
         DefineDataProperty(A, i++, items[j]);
     }
 
-    // Step 18.
+    // Step 18. Repeat, while r < newLen,
     // Copy all the items after the deleted / added items
     while(i < newLen) {
+        // Step 18.a. omitted - Let Pi be ! ToString(𝔽(i)).
+        // i coerced to String by property access
+        // Step 18.b. omitted - Let from be ! ToString(𝔽(r)).
+        // r coerced to String by property access
+        // Step 18.c. Let fromValue be ! Get(O, r).
+        // Step 18.f. Set r to r + 1.
         let fromValue = O[r++];
+        // Step 18.d. Perform ! Set(A, i, fromValue, true)
+        // Step 18.e. Set i to i + 1.
         DefineDataProperty(A, i++, fromValue);
     }
 
-    // Step 19.
+    // Step 19. Return A.
     return A;
 }
 #endif
