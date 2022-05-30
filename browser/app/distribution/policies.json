@@ -2,8 +2,6 @@
     "policies": {
         "AppUpdateURL": "https://localhost",
         "DisableAppUpdate": true,
-        "OverrideFirstRunPage": "",
-        "OverridePostUpdatePage": "",
         "DisableFirefoxStudies": true,
         "DisableTelemetry": true,
         "NoDefaultBookmarks": true,
