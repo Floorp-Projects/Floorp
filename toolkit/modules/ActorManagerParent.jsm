@@ -504,7 +504,8 @@ if (!Services.prefs.getBoolPref("browser.pagedata.enabled", false)) {
     child: {
       moduleURI: "resource://gre/actors/ContentMetaChild.jsm",
       events: {
-        DOMMetaAdded: {},
+        DOMContentLoaded: {},
+        DOMMetaAdded: { createActor: false },
       },
     },
 

@@ -38,6 +38,7 @@ const known_scripts = {
     "resource:///actors/LinkHandlerChild.jsm",
     "resource:///actors/PageStyleChild.jsm",
     "resource:///actors/SearchSERPTelemetryChild.jsm",
+    "resource://gre/actors/ContentMetaChild.jsm",
     "resource://gre/modules/Readerable.jsm",
 
     // Telemetry
