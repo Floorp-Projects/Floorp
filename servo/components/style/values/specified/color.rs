@@ -371,6 +371,10 @@ pub enum SystemColor {
     /// Inactive light hightlight
     MozMacSecondaryhighlight,
 
+    /// Font smoothing background colors needed by the Mac OS X theme, based on
+    /// -moz-appearance names.
+    MozMacVibrantTitlebarLight,
+    MozMacVibrantTitlebarDark,
     MozMacMenupopup,
     MozMacMenuitem,
     MozMacActiveMenuitem,
