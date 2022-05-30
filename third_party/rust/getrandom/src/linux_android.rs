@@ -7,9 +7,11 @@
 // except according to those terms.
 
 //! Implementation for Linux / Android
-use crate::util::LazyBool;
-use crate::util_libc::{last_os_error, sys_fill_exact};
-use crate::{use_file, Error};
+use crate::{
+    util::LazyBool,
+    util_libc::{last_os_error, sys_fill_exact},
+    {use_file, Error},
+};
 
 pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
     static HAS_GETRANDOM: LazyBool = LazyBool::new();

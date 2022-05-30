@@ -1,5 +1,4 @@
 #![feature(test)]
-extern crate getrandom;
 extern crate test;
 
 #[bench]
