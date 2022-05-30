@@ -7,6 +7,7 @@
 package org.mozilla.fenix.ui.robots
 
 import android.content.Context
+import android.text.TextUtils.indexOf
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
@@ -41,9 +42,9 @@ import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.Matcher
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
-import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
@@ -77,7 +78,7 @@ class TabDrawerRobot {
         assertPrivateBrowsingButtonIsSelected(isSelected)
     fun verifySyncedTabsButtonIsSelected(isSelected: Boolean) =
         assertSyncedTabsButtonIsSelected(isSelected)
-    fun verifyExistingOpenTabs(title: String) = assertExistingOpenTabs(title)
+    fun verifyExistingOpenTabs(vararg titles: String) = assertExistingOpenTabs(*titles)
     fun verifyCloseTabsButton(title: String) = assertCloseTabsButton(title)
 
     fun verifyExistingTabList() = assertExistingTabList()
@@ -229,28 +230,28 @@ class TabDrawerRobot {
         tabMediaControlButton().click()
     }
 
-    private fun clickSelectTabs() {
+    fun clickSelectTabsOption() {
         threeDotMenu().click()
 
-        mDevice.waitNotNull(
-            findObject(
-                text(getStringResource(R.string.tabs_tray_select_tabs))
-            ),
-            waitingTime
-        )
-
-        val selectTabsButton = mDevice.findObject(text(getStringResource(R.string.tabs_tray_select_tabs)))
+        val selectTabsButton = mDevice.findObject(UiSelector().text("Select tabs"))
+        selectTabsButton.waitForExists(waitingTime)
         selectTabsButton.click()
     }
 
-    fun selectTab(title: String) {
-        mDevice.waitNotNull(
-            findObject(text(title)),
-            waitingTime
+    fun selectTab(title: String, tabsSelected: Int) {
+        val tab = mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/tab_item")
+                .childSelector(UiSelector().text(title))
         )
-
-        val tab = mDevice.findObject(text(title))
+        tab.waitForExists(waitingTime)
         tab.click()
+        try {
+            verifyTabsMultiSelectionCounter(tabsSelected)
+        } catch (e: AssertionError) {
+            tab.click()
+            verifyTabsMultiSelectionCounter(tabsSelected)
+        }
     }
 
     fun longClickTab(title: String) {
@@ -264,13 +265,15 @@ class TabDrawerRobot {
     }
 
     fun createCollection(
-        tabTitle: String,
+        vararg tabTitle: String,
         collectionName: String,
         firstCollection: Boolean = true
     ) {
-        clickSelectTabs()
-        selectTab(tabTitle)
         tabDrawer {
+            clickSelectTabsOption()
+            for (tab in tabTitle) {
+                selectTab(tab, tabTitle.indexOf(tab) + 1)
+            }
         }.clickSaveCollection {
             if (!firstCollection)
                 clickAddNewCollection()
@@ -489,32 +492,27 @@ private fun syncedTabsButton() = onView(withContentDescription("Synced tabs"))
 private fun newTabButton() = mDevice.findObject(UiSelector().resourceId("$packageName:id/new_tab_button"))
 private fun threeDotMenu() = onView(withId(R.id.tab_tray_overflow))
 
-private fun assertExistingOpenTabs(title: String) {
-    try {
-        mDevice.findObject(
-            UiSelector()
-                .resourceId("$packageName:id/mozac_browser_tabstray_title")
-                .textContains(title)
-        )
-            .waitForExists(waitingTime)
-
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/mozac_browser_tabstray_title")
-                    .textContains(title)
-            ).waitForExists(waitingTime)
-        )
-    } catch (e: AssertionError) {
-        println("The tab wasn't found")
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/tabsTray")).swipeUp(2)
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/mozac_browser_tabstray_title")
-                    .textContains(title)
-            ).waitForExists(waitingTime)
-        )
+private fun assertExistingOpenTabs(vararg tabTitles: String) {
+    for (title in tabTitles) {
+        try {
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .resourceId("$packageName:id/mozac_browser_tabstray_title")
+                        .textContains(title)
+                ).waitForExists(waitingTimeLong)
+            )
+        } catch (e: AssertionError) {
+            println("The tab wasn't found")
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/tabsTray")).swipeUp(2)
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .resourceId("$packageName:id/mozac_browser_tabstray_title")
+                        .textContains(title)
+                ).waitForExists(waitingTime)
+            )
+        }
     }
 }
 

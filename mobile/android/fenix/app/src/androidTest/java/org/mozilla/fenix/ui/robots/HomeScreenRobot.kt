@@ -8,6 +8,10 @@ package org.mozilla.fenix.ui.robots
 
 import android.graphics.Bitmap
 import android.widget.EditText
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.performClick
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
@@ -42,6 +46,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appContext
@@ -188,8 +193,6 @@ class HomeScreenRobot {
             assertTrue(mDevice.findObject(UiSelector().text(title)).waitUntilGone(waitingTime))
         }
     }
-
-    fun verifyCollectionIcon() = onView(withId(R.id.collection_icon)).check(matches(isDisplayed()))
 
     fun togglePrivateBrowsingModeOnOff() {
         onView(ViewMatchers.withResourceName("privateBrowsingButton"))
@@ -392,21 +395,15 @@ class HomeScreenRobot {
             return TabDrawerRobot.Transition()
         }
 
-        // fun expandCollection(
-        //     title: String,
-        //     interact: CollectionRobot.() -> Unit
-        // ): CollectionRobot.Transition {
-        //     // Depending on the screen dimensions collections might report as visible on screen
-        //     // but actually have the bottom toolbar above so interactions with collections might fail.
-        //     // As a quick solution we'll try scrolling to the element below collection on the homescreen
-        //     // so that they are displayed above in their entirety.
-        //     scrollToElementByText(appContext.getString(R.string.pocket_stories_header_1))
-        //
-        //     collectionTitle(title).click()
-        //
-        //     CollectionRobot().interact()
-        //     return CollectionRobot.Transition()
-        // }
+        fun expandCollection(title: String, rule: ComposeTestRule, interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
+            homeScreenList().scrollToEnd(LISTS_MAXSWIPES)
+            collectionTitle(title, rule)
+                .assertIsDisplayed()
+                .performClick()
+
+            CollectionRobot().interact()
+            return CollectionRobot.Transition()
+        }
 
         fun openRecentlyVisitedSearchGroupHistoryList(title: String, interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
             val searchGroup = recentlyVisitedList.getChildByText(UiSelector().text(title), title, true)
@@ -648,6 +645,9 @@ private fun assertPrivateSessionMessage() =
                 )
         ).waitForExists(waitingTime)
     )
+
+private fun collectionTitle(title: String, rule: ComposeTestRule) =
+    rule.onNode(hasText(title))
 
 private fun assertExistingTopSitesList() =
     onView(allOf(withId(R.id.top_sites_list)))

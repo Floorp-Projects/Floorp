@@ -49,8 +49,13 @@ class ShareOverlayRobot {
         mDevice.waitNotNull(Until.findObject(By.res("android:id/resolver_list")))
     }
 
-    fun selectAppToShareWith(appName: String) =
-        mDevice.findObject(UiSelector().text(appName)).clickAndWaitForNewWindow()
+    fun verifySharingWithSelectedApp(appName: String, content: String, subject: String) {
+        val sharingApp = mDevice.findObject(UiSelector().text(appName))
+        if (sharingApp.exists()) {
+            sharingApp.clickAndWaitForNewWindow()
+            verifySharedTabsIntent(content, subject)
+        }
+    }
 
     fun verifySendToDeviceTitle() = assertSendToDeviceTitle()
 

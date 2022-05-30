@@ -16,6 +16,7 @@ class FeatureSettingsHelper {
     private var isPocketEnabled: Boolean = settings.showPocketRecommendationsFeature
     private var isJumpBackInCFREnabled: Boolean = settings.shouldShowJumpBackInCFR
     private var isRecentTabsFeatureEnabled: Boolean = settings.showRecentTabsFeature
+    private var isRecentlyVisitedFeatureEnabled: Boolean = settings.historyMetadataUIFeature
     private var isUserKnowsAboutPwasTrue: Boolean = settings.userKnowsAboutPwas
 
     fun setPocketEnabled(enabled: Boolean) {
@@ -28,6 +29,10 @@ class FeatureSettingsHelper {
 
     fun setRecentTabsFeatureEnabled(enabled: Boolean) {
         settings.showRecentTabsFeature = enabled
+    }
+
+    fun setRecentlyVisitedFeatureEnabled(enabled: Boolean) {
+        settings.historyMetadataUIFeature = enabled
     }
 
     fun setStrictETPEnabled() {
@@ -49,6 +54,7 @@ class FeatureSettingsHelper {
         settings.showPocketRecommendationsFeature = isPocketEnabled
         settings.shouldShowJumpBackInCFR = isJumpBackInCFREnabled
         settings.showRecentTabsFeature = isRecentTabsFeatureEnabled
+        settings.historyMetadataUIFeature = isRecentlyVisitedFeatureEnabled
         settings.userKnowsAboutPwas = isUserKnowsAboutPwasTrue
     }
 }
