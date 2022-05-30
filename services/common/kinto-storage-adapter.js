@@ -550,6 +550,5 @@ function transactionProxy(collection, preloaded) {
     },
   };
 }
-this.FirefoxAdapter = FirefoxAdapter;
 
 var EXPORTED_SYMBOLS = ["FirefoxAdapter"];
