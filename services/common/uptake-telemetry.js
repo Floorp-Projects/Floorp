@@ -209,5 +209,3 @@ class UptakeTelemetry {
     }
   }
 }
-
-this.UptakeTelemetry = UptakeTelemetry;
