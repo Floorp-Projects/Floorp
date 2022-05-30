@@ -6,18 +6,13 @@
 
 #include <string.h>
 #include "prprf.h"
-#include "plstr.h"
 #include "prmem.h"
 #include "plbase64.h"
 #include "nsCRT.h"
-#include "nsMemory.h"
 #include "nsTArray.h"
-#include "nsCOMPtr.h"
 #include "nsEscape.h"
 #include "nsMIMEHeaderParamImpl.h"
-#include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsError.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"

@@ -15,7 +15,6 @@
 #include "nsICategoryManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsServiceManagerUtils.h"
 #include "nsISimpleEnumerator.h"

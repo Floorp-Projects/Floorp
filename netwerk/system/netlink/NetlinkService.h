@@ -7,7 +7,6 @@
 #define NETLINKSERVICE_H_
 
 #include <netinet/in.h>
-#include <linux/netlink.h>
 
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"

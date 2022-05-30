@@ -9,7 +9,6 @@
 #include "nsIStreamConverterService.h"
 
 #include "nsClassHashtable.h"
-#include "nsCOMArray.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 

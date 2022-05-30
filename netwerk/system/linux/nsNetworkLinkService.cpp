@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIObserverService.h"
-#include "nsServiceManagerUtils.h"
 #include "nsNetworkLinkService.h"
 #include "nsString.h"
 #include "mozilla/Logging.h"
