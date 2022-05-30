@@ -12,7 +12,7 @@ use crate::{
     error::{self, Error, ErrorKind},
     stream::{self, Writer},
     uid::serde_impls::UID_NEWTYPE_STRUCT_NAME,
-    Date, Integer, Uid,
+    Date, Integer, Uid, XmlWriteOptions,
 };
 
 #[doc(hidden)]
@@ -234,10 +234,8 @@ impl<'a, W: Writer> ser::Serializer for &'a mut Serializer<W> {
         _variant_index: u32,
         variant: &'static str,
     ) -> Result<(), Error> {
-        self.write_start_dictionary(Some(1))?;
-        self.write_string(variant)?;
-        self.serialize_unit()?;
-        self.write_end_collection()
+        // `plist` since v1.1 serialises unit enum variants as plain strings.
+        self.write_string(variant)
     }
 
     fn serialize_newtype_struct<T: ?Sized + ser::Serialize>(
@@ -791,7 +789,16 @@ pub fn to_writer_binary<W: Write, T: ser::Serialize>(writer: W, value: &T) -> Re
 
 /// Serializes the given data structure to a byte stream as an XML encoded plist.
 pub fn to_writer_xml<W: Write, T: ser::Serialize>(writer: W, value: &T) -> Result<(), Error> {
-    let writer = stream::XmlWriter::new(writer);
+    to_writer_xml_with_options(writer, value, &XmlWriteOptions::default())
+}
+
+/// Serializes to a byte stream as an XML encoded plist, using custom [`XmlWriteOptions`].
+pub fn to_writer_xml_with_options<W: Write, T: ser::Serialize>(
+    writer: W,
+    value: &T,
+    options: &XmlWriteOptions,
+) -> Result<(), Error> {
+    let writer = stream::XmlWriter::new_with_options(writer, options);
     let mut ser = Serializer::new(writer);
     value.serialize(&mut ser)
 }

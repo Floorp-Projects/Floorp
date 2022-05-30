@@ -13,6 +13,7 @@ mod xml_writer;
 pub use self::xml_writer::XmlWriter;
 
 use std::{
+    borrow::Cow,
     io::{self, Read, Seek, SeekFrom},
     vec,
 };
@@ -37,8 +38,17 @@ use crate::{
 /// Integer(28)      // Value
 /// EndDictionary
 /// ```
+///
+/// ## Lifetimes
+///
+/// This type has a lifetime parameter; during serialization, data is borrowed
+/// from a [`Value`], and the lifetime of the event is the lifetime of the
+/// [`Value`] being serialized.
+///
+/// During deserialization, data is always copied anyway, and this lifetime
+/// is always `'static`.
 #[derive(Clone, Debug, PartialEq)]
-pub enum Event {
+pub enum Event<'a> {
     // While the length of an array or dict cannot be feasably greater than max(usize) this better
     // conveys the concept of an effectively unbounded event stream.
     StartArray(Option<u64>),
@@ -46,46 +56,81 @@ pub enum Event {
     EndCollection,
 
     Boolean(bool),
-    Data(Vec<u8>),
+    Data(Cow<'a, [u8]>),
     Date(Date),
     Integer(Integer),
     Real(f64),
-    String(String),
+    String(Cow<'a, str>),
     Uid(Uid),
 
     #[doc(hidden)]
     __Nonexhaustive,
 }
 
+/// An owned [`Event`].
+///
+/// During deserialization, events are always owned; this type alias helps
+/// keep that code a bit clearer.
+pub type OwnedEvent = Event<'static>;
+
 /// An `Event` stream returned by `Value::into_events`.
-pub struct IntoEvents {
-    stack: Vec<StackItem>,
+pub struct Events<'a> {
+    stack: Vec<StackItem<'a>>,
 }
 
-enum StackItem {
-    Root(Value),
-    Array(vec::IntoIter<Value>),
-    Dict(dictionary::IntoIter),
-    DictValue(Value),
+enum StackItem<'a> {
+    Root(&'a Value),
+    Array(std::slice::Iter<'a, Value>),
+    Dict(dictionary::Iter<'a>),
+    DictValue(&'a Value),
 }
 
-impl IntoEvents {
-    pub(crate) fn new(value: Value) -> IntoEvents {
-        IntoEvents {
+/// Options for customizing serialization of XML plists.
+#[derive(Clone, Debug)]
+pub struct XmlWriteOptions {
+    indent_str: Cow<'static, str>,
+}
+
+impl XmlWriteOptions {
+    /// Specify the sequence of characters used for indentation.
+    ///
+    /// This may be either an `&'static str` or an owned `String`.
+    ///
+    /// The default is `\t`.
+    pub fn indent_string(mut self, indent_str: impl Into<Cow<'static, str>>) -> Self {
+        self.indent_str = indent_str.into();
+        self
+    }
+}
+
+impl Default for XmlWriteOptions {
+    fn default() -> Self {
+        XmlWriteOptions {
+            indent_str: Cow::Borrowed("\t"),
+        }
+    }
+}
+
+impl<'a> Events<'a> {
+    pub(crate) fn new(value: &'a Value) -> Events<'a> {
+        Events {
             stack: vec![StackItem::Root(value)],
         }
     }
 }
 
-impl Iterator for IntoEvents {
-    type Item = Event;
+impl<'a> Iterator for Events<'a> {
+    type Item = Event<'a>;
 
-    fn next(&mut self) -> Option<Event> {
-        fn handle_value(value: Value, stack: &mut Vec<StackItem>) -> Event {
+    fn next(&mut self) -> Option<Event<'a>> {
+        fn handle_value<'c, 'b: 'c>(
+            value: &'b Value,
+            stack: &'c mut Vec<StackItem<'b>>,
+        ) -> Event<'b> {
             match value {
                 Value::Array(array) => {
                     let len = array.len();
-                    let iter = array.into_iter();
+                    let iter = array.iter();
                     stack.push(StackItem::Array(iter));
                     Event::StartArray(Some(len as u64))
                 }
@@ -95,13 +140,13 @@ impl Iterator for IntoEvents {
                     stack.push(StackItem::Dict(iter));
                     Event::StartDictionary(Some(len as u64))
                 }
-                Value::Boolean(value) => Event::Boolean(value),
-                Value::Data(value) => Event::Data(value),
-                Value::Date(value) => Event::Date(value),
-                Value::Real(value) => Event::Real(value),
-                Value::Integer(value) => Event::Integer(value),
-                Value::String(value) => Event::String(value),
-                Value::Uid(value) => Event::Uid(value),
+                Value::Boolean(value) => Event::Boolean(*value),
+                Value::Data(value) => Event::Data(Cow::Borrowed(&value)),
+                Value::Date(value) => Event::Date(*value),
+                Value::Real(value) => Event::Real(*value),
+                Value::Integer(value) => Event::Integer(*value),
+                Value::String(value) => Event::String(Cow::Borrowed(value.as_str())),
+                Value::Uid(value) => Event::Uid(*value),
                 Value::__Nonexhaustive => unreachable!(),
             }
         }
@@ -124,7 +169,7 @@ impl Iterator for IntoEvents {
                     // The next event to be returned must be the dictionary value.
                     self.stack.push(StackItem::DictValue(value));
                     // Return the key event now.
-                    Event::String(key)
+                    Event::String(Cow::Borrowed(key))
                 } else {
                     Event::EndCollection
                 }
@@ -162,25 +207,23 @@ impl<R: Read + Seek> Reader<R> {
 }
 
 impl<R: Read + Seek> Iterator for Reader<R> {
-    type Item = Result<Event, Error>;
+    type Item = Result<OwnedEvent, Error>;
 
-    fn next(&mut self) -> Option<Result<Event, Error>> {
+    fn next(&mut self) -> Option<Result<OwnedEvent, Error>> {
         let mut reader = match self.0 {
             ReaderInner::Xml(ref mut parser) => return parser.next(),
             ReaderInner::Binary(ref mut parser) => return parser.next(),
             ReaderInner::Uninitialized(ref mut reader) => reader.take().unwrap(),
         };
 
-        let event_reader = match Reader::is_binary(&mut reader) {
-            Ok(true) => ReaderInner::Binary(BinaryReader::new(reader)),
-            Ok(false) => ReaderInner::Xml(XmlReader::new(reader)),
+        match Reader::is_binary(&mut reader) {
+            Ok(true) => self.0 = ReaderInner::Binary(BinaryReader::new(reader)),
+            Ok(false) => self.0 = ReaderInner::Xml(XmlReader::new(reader)),
             Err(err) => {
-                ::std::mem::replace(&mut self.0, ReaderInner::Uninitialized(Some(reader)));
+                self.0 = ReaderInner::Uninitialized(Some(reader));
                 return Some(Err(err));
             }
-        };
-
-        ::std::mem::replace(&mut self.0, event_reader);
+        }
 
         self.next()
     }
