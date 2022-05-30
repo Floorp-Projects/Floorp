@@ -8,7 +8,8 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormAutofillHeuristics", "FieldScanner"];
+const EXPORTED_SYMBOLS = ["FormAutofillHeuristics", "FieldScanner"];
+let FormAutofillHeuristics;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -565,7 +566,7 @@ class FieldScanner {
 /**
  * Returns the autocomplete information of fields according to heuristics.
  */
-this.FormAutofillHeuristics = {
+FormAutofillHeuristics = {
   RULES: null,
 
   CREDIT_CARD_FIELDNAMES: [],

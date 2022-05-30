@@ -42,7 +42,7 @@ const LoginInfo = Components.Constructor(
   "init"
 );
 
-this.LoginTestUtils = {
+const LoginTestUtils = {
   setAssertReporter(reporterFunc) {
     Assert = new AssertCls(Cu.waiveXrays(reporterFunc));
   },

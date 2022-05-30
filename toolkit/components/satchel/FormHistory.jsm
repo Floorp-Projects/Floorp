@@ -85,7 +85,8 @@
  * an error occurred.
  */
 
-var EXPORTED_SYMBOLS = ["FormHistory"];
+const EXPORTED_SYMBOLS = ["FormHistory"];
+let FormHistory;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
@@ -1016,7 +1017,7 @@ var DB = {
   },
 };
 
-this.FormHistory = {
+FormHistory = {
   get db() {
     return DB.conn;
   },

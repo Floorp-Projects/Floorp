@@ -20,7 +20,8 @@
  *              values that correspond to the prefs to be set.
  */
 
-var EXPORTED_SYMBOLS = ["ExtensionPreferencesManager"];
+const EXPORTED_SYMBOLS = ["ExtensionPreferencesManager"];
+let ExtensionPreferencesManager;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -218,7 +219,7 @@ async function processSetting(id, name, action) {
   return false;
 }
 
-this.ExtensionPreferencesManager = {
+ExtensionPreferencesManager = {
   /**
    * Adds a setting to the settingsMap. This is how an API tells the
    * preferences manager what its setting object is. The preferences

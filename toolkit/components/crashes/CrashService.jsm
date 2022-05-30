@@ -161,9 +161,9 @@ function processExtraFile(extraPath) {
  *
  * It is a service because some background activity will eventually occur.
  */
-this.CrashService = function() {
+function CrashService() {
   Services.obs.addObserver(this, "quit-application");
-};
+}
 
 CrashService.prototype = Object.freeze({
   classID: Components.ID("{92668367-1b17-4190-86b2-1061b2179744}"),

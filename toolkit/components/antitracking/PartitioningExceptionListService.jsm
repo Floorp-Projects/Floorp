@@ -72,7 +72,7 @@ class Feature {
   }
 }
 
-this.PartitioningExceptionListService = function() {};
+function PartitioningExceptionListService() {}
 
 PartitioningExceptionListService.prototype = {
   classID: Components.ID("{ab94809d-33f0-4f28-af38-01efbd3baf22}"),

@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
  * A module that provides utility functions for form security.
  *
  */
-this.InsecurePasswordUtils = {
+const InsecurePasswordUtils = {
   _formRootsWarned: new WeakMap(),
 
   /**

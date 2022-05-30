@@ -10,7 +10,7 @@
 
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-this.EXPORTED_SYMBOLS = ["formAutofillStorage", "FormAutofillStorage"];
+const EXPORTED_SYMBOLS = ["formAutofillStorage", "FormAutofillStorage"];
 
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
@@ -289,6 +289,6 @@ class FormAutofillStorage extends FormAutofillStorageBase {
 }
 
 // The singleton exposed by this module.
-this.formAutofillStorage = new FormAutofillStorage(
+const formAutofillStorage = new FormAutofillStorage(
   OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME)
 );

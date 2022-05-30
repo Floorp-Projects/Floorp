@@ -244,7 +244,7 @@ LoginRecipesParent.prototype = {
   },
 };
 
-this.LoginRecipesContent = {
+const LoginRecipesContent = {
   _recipeCache: new WeakMap(),
 
   _clearRecipeCache() {

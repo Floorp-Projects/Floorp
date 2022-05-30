@@ -43,7 +43,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "privacy.purge_trackers.consider_entity_list"
 );
 
-this.PurgeTrackerService = function() {};
+function PurgeTrackerService() {}
 
 PurgeTrackerService.prototype = {
   classID: Components.ID("{90d1fd17-2018-4e16-b73c-a04a26fa6dd4}"),

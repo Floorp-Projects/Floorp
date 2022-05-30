@@ -30,7 +30,7 @@ const PREF_DISABLE_TEST_BACKOFF =
  *
  * @returns {function} A partially-applied form of the speficied function.
  */
-this.BindToObject = function BindToObject(fn, self, opt_args) {
+function BindToObject(fn, self, opt_args) {
   var boundargs = fn.boundArgs_ || [];
   boundargs = boundargs.concat(
     Array.prototype.slice.call(arguments, 2, arguments.length)
@@ -54,7 +54,7 @@ this.BindToObject = function BindToObject(fn, self, opt_args) {
   newfn.boundFn_ = fn;
 
   return newfn;
-};
+}
 
 // This implements logic for stopping requests if the server starts to return
 // too many errors.  If we get MAX_ERRORS errors in ERROR_PERIOD minutes, we
@@ -66,9 +66,9 @@ this.BindToObject = function BindToObject(fn, self, opt_args) {
 
 // HTTP responses that count as an error.  We also include any 5xx response
 // as an error.
-this.HTTP_FOUND = 302;
-this.HTTP_SEE_OTHER = 303;
-this.HTTP_TEMPORARY_REDIRECT = 307;
+const HTTP_FOUND = 302;
+const HTTP_SEE_OTHER = 303;
+const HTTP_TEMPORARY_REDIRECT = 307;
 
 /**
  * @param maxErrors Number of times to request before backing off.
@@ -81,7 +81,7 @@ this.HTTP_TEMPORARY_REDIRECT = 307;
  * @param maxTimeout Number time (ms) maximum timeout period
  * @param tolerance Checking next request tolerance.
  */
-this.RequestBackoff = function RequestBackoff(
+function RequestBackoff(
   maxErrors,
   retryIncrement,
   maxRequests,
@@ -116,7 +116,7 @@ this.RequestBackoff = function RequestBackoff(
       return this.canMakeRequestDefault();
     };
   }
-};
+}
 
 /**
  * Reset the object for reuse. This deliberately doesn't clear requestTimes_.
@@ -226,4 +226,4 @@ function UrlClassifierLib() {
 }
 UrlClassifierLib.prototype.QueryInterface = ChromeUtils.generateQI([]);
 
-var EXPORTED_SYMBOLS = ["UrlClassifierLib"];
+var EXPORTED_SYMBOLS = ["UrlClassifierLib", "BindToObject"];

@@ -10,7 +10,7 @@
 
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-this.EXPORTED_SYMBOLS = ["formAutofillStorage", "FormAutofillStorage"];
+const EXPORTED_SYMBOLS = ["formAutofillStorage", "FormAutofillStorage"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -262,4 +262,4 @@ class FormAutofillStorage extends FormAutofillStorageBase {
 }
 
 // The singleton exposed by this module.
-this.formAutofillStorage = new FormAutofillStorage();
+const formAutofillStorage = new FormAutofillStorage();
