@@ -374,6 +374,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
                         ),
                     )
                     return False
+            return True
 
         def check_package(package):
             self.log(
@@ -432,7 +433,8 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
 
                 if license_matches:
                     license = license_matches[0].group(1)
-                    verify_acceptable_license(package, license)
+                    if not verify_acceptable_license(package, license):
+                        return False
                 else:
                     license_file = license_file_matches[0].group(1)
                     self.log(
