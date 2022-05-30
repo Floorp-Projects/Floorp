@@ -24,9 +24,9 @@ impl Edge {
     }
 }
 
-impl Into<ItemId> for Edge {
-    fn into(self) -> ItemId {
-        self.to
+impl From<Edge> for ItemId {
+    fn from(val: Edge) -> Self {
+        val.to
     }
 }
 
@@ -201,7 +201,7 @@ pub fn all_edges(_: &BindgenContext, _: Edge) -> bool {
 /// A `TraversalPredicate` implementation that only follows
 /// `EdgeKind::InnerType` edges, and therefore traversals using this predicate
 /// will only visit the traversal's roots and their inner types. This is used
-/// in no-recursive-whitelist mode, where inner types such as anonymous
+/// in no-recursive-allowlist mode, where inner types such as anonymous
 /// structs/unions still need to be processed.
 pub fn only_inner_type_edges(_: &BindgenContext, edge: Edge) -> bool {
     edge.kind == EdgeKind::InnerType
@@ -377,7 +377,7 @@ pub trait Trace {
 
 /// An graph traversal of the transitive closure of references between items.
 ///
-/// See `BindgenContext::whitelisted_items` for more information.
+/// See `BindgenContext::allowlisted_items` for more information.
 pub struct ItemTraversal<'ctx, Storage, Queue, Predicate>
 where
     Storage: TraversalStorage<'ctx>,
@@ -424,10 +424,10 @@ where
         }
 
         ItemTraversal {
-            ctx: ctx,
-            seen: seen,
-            queue: queue,
-            predicate: predicate,
+            ctx,
+            seen,
+            queue,
+            predicate,
             currently_traversing: None,
         }
     }

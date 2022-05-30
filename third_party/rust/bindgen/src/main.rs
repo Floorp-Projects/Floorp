@@ -37,7 +37,7 @@ fn clang_version_check() {
     );
 
     if expected_version.is_some() {
-        assert_eq!(version.parsed, version.parsed);
+        // assert_eq!(version.parsed, version.parsed);
     }
 }
 
@@ -45,9 +45,7 @@ pub fn main() {
     #[cfg(feature = "logging")]
     env_logger::init();
 
-    let bind_args: Vec<_> = env::args().collect();
-
-    match builder_from_flags(bind_args.into_iter()) {
+    match builder_from_flags(env::args()) {
         Ok((builder, output, verbose)) => {
             clang_version_check();
             let builder_result = panic::catch_unwind(|| {

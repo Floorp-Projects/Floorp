@@ -22,12 +22,10 @@
 //! ```
 
 use super::bitfield_unit::__BindgenBitfieldUnit;
-use std::mem;
 
 #[test]
 fn bitfield_unit_get_bit() {
-    let unit =
-        __BindgenBitfieldUnit::<[u8; 2], u64>::new([0b10011101, 0b00011101]);
+    let unit = __BindgenBitfieldUnit::<[u8; 2]>::new([0b10011101, 0b00011101]);
 
     let mut bits = vec![];
     for i in 0..16 {
@@ -50,7 +48,7 @@ fn bitfield_unit_get_bit() {
 #[test]
 fn bitfield_unit_set_bit() {
     let mut unit =
-        __BindgenBitfieldUnit::<[u8; 2], u64>::new([0b00000000, 0b00000000]);
+        __BindgenBitfieldUnit::<[u8; 2]>::new([0b00000000, 0b00000000]);
 
     for i in 0..16 {
         if i % 3 == 0 {
@@ -63,7 +61,7 @@ fn bitfield_unit_set_bit() {
     }
 
     let mut unit =
-        __BindgenBitfieldUnit::<[u8; 2], u64>::new([0b11111111, 0b11111111]);
+        __BindgenBitfieldUnit::<[u8; 2]>::new([0b11111111, 0b11111111]);
 
     for i in 0..16 {
         if i % 3 == 0 {
@@ -76,43 +74,6 @@ fn bitfield_unit_set_bit() {
     }
 }
 
-#[test]
-fn bitfield_unit_align() {
-    assert_eq!(
-        mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u8>>(),
-        mem::align_of::<u8>()
-    );
-    assert_eq!(
-        mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u16>>(),
-        mem::align_of::<u16>()
-    );
-    assert_eq!(
-        mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u32>>(),
-        mem::align_of::<u32>()
-    );
-    assert_eq!(
-        mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u64>>(),
-        mem::align_of::<u64>()
-    );
-
-    assert_eq!(
-        mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u8>>(),
-        mem::align_of::<u8>()
-    );
-    assert_eq!(
-        mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u16>>(),
-        mem::align_of::<u16>()
-    );
-    assert_eq!(
-        mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u32>>(),
-        mem::align_of::<u32>()
-    );
-    assert_eq!(
-        mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u64>>(),
-        mem::align_of::<u64>()
-    );
-}
-
 macro_rules! bitfield_unit_get {
     (
         $(
@@ -123,7 +84,7 @@ macro_rules! bitfield_unit_get {
         fn bitfield_unit_get() {
             $({
                 let expected = $expected;
-                let unit = __BindgenBitfieldUnit::<_, u64>::new($storage);
+                let unit = __BindgenBitfieldUnit::<_>::new($storage);
                 let actual = unit.get($start, $len);
 
                 println!();
@@ -223,7 +184,7 @@ macro_rules! bitfield_unit_set {
         #[test]
         fn bitfield_unit_set() {
             $(
-                let mut unit = __BindgenBitfieldUnit::<[u8; 4], u64>::new([0, 0, 0, 0]);
+                let mut unit = __BindgenBitfieldUnit::<[u8; 4]>::new([0, 0, 0, 0]);
                 unit.set($start, $len, $val);
                 let actual = unit.get(0, 32);
 

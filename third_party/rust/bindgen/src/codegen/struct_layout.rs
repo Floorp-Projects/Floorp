@@ -18,6 +18,8 @@ pub struct StructLayoutTracker<'a> {
     ctx: &'a BindgenContext,
     comp: &'a CompInfo,
     is_packed: bool,
+    known_type_layout: Option<Layout>,
+    is_rust_union: bool,
     latest_offset: usize,
     padding_count: usize,
     latest_field_layout: Option<Layout>,
@@ -86,17 +88,27 @@ impl<'a> StructLayoutTracker<'a> {
         ty: &'a Type,
         name: &'a str,
     ) -> Self {
+        let known_type_layout = ty.layout(ctx);
+        let is_packed = comp.is_packed(ctx, known_type_layout.as_ref());
+        let is_rust_union = comp.is_union() &&
+            comp.can_be_rust_union(ctx, known_type_layout.as_ref());
         StructLayoutTracker {
             name,
             ctx,
             comp,
-            is_packed: comp.is_packed(ctx, &ty.layout(ctx)),
+            is_packed,
+            known_type_layout,
+            is_rust_union,
             latest_offset: 0,
             padding_count: 0,
             latest_field_layout: None,
             max_field_align: 0,
             last_field_was_bitfield: false,
         }
+    }
+
+    pub fn is_rust_union(&self) -> bool {
+        self.is_rust_union
     }
 
     pub fn saw_vtable(&mut self) {
@@ -139,18 +151,9 @@ impl<'a> StructLayoutTracker<'a> {
         // actually generate the dummy alignment.
     }
 
-    pub fn saw_union(&mut self, layout: Layout) {
-        debug!("saw union for {}: {:?}", self.name, layout);
-        self.align_to_latest_field(layout);
-
-        self.latest_offset += self.padding_bytes(layout) + layout.size;
-        self.latest_field_layout = Some(layout);
-        self.max_field_align = cmp::max(self.max_field_align, layout.align);
-    }
-
-    /// Add a padding field if necessary for a given new field _before_ adding
-    /// that field.
-    pub fn pad_field(
+    /// Returns a padding field if necessary for a given new field _before_
+    /// adding that field.
+    pub fn saw_field(
         &mut self,
         field_name: &str,
         field_ty: &Type,
@@ -177,25 +180,49 @@ impl<'a> StructLayoutTracker<'a> {
                 }
             }
         }
+        self.saw_field_with_layout(field_name, field_layout, field_offset)
+    }
 
+    pub fn saw_field_with_layout(
+        &mut self,
+        field_name: &str,
+        field_layout: Layout,
+        field_offset: Option<usize>,
+    ) -> Option<proc_macro2::TokenStream> {
         let will_merge_with_bitfield = self.align_to_latest_field(field_layout);
 
-        let padding_layout = if self.is_packed {
+        let is_union = self.comp.is_union();
+        let padding_bytes = match field_offset {
+            Some(offset) if offset / 8 > self.latest_offset => {
+                offset / 8 - self.latest_offset
+            }
+            _ => {
+                if will_merge_with_bitfield ||
+                    field_layout.align == 0 ||
+                    is_union
+                {
+                    0
+                } else if !self.is_packed {
+                    self.padding_bytes(field_layout)
+                } else if let Some(l) = self.known_type_layout {
+                    self.padding_bytes(l)
+                } else {
+                    0
+                }
+            }
+        };
+
+        self.latest_offset += padding_bytes;
+
+        let padding_layout = if self.is_packed || is_union {
             None
         } else {
-            let padding_bytes = match field_offset {
-                Some(offset) if offset / 8 > self.latest_offset => {
-                    offset / 8 - self.latest_offset
-                }
-                _ if will_merge_with_bitfield || field_layout.align == 0 => 0,
-                _ => self.padding_bytes(field_layout),
-            };
+            let force_padding = self.ctx.options().force_explicit_padding;
 
             // Otherwise the padding is useless.
-            let need_padding = padding_bytes >= field_layout.align ||
+            let need_padding = force_padding ||
+                padding_bytes >= field_layout.align ||
                 field_layout.align > MAX_GUARANTEED_ALIGN;
-
-            self.latest_offset += padding_bytes;
 
             debug!(
                 "Offset: <padding>: {} -> {}",
@@ -212,11 +239,14 @@ impl<'a> StructLayoutTracker<'a> {
                 field_layout
             );
 
+            let padding_align = if force_padding {
+                1
+            } else {
+                cmp::min(field_layout.align, MAX_GUARANTEED_ALIGN)
+            };
+
             if need_padding && padding_bytes != 0 {
-                Some(Layout::new(
-                    padding_bytes,
-                    cmp::min(field_layout.align, MAX_GUARANTEED_ALIGN),
-                ))
+                Some(Layout::new(padding_bytes, padding_align))
             } else {
                 None
             }
@@ -236,6 +266,37 @@ impl<'a> StructLayoutTracker<'a> {
         );
 
         padding_layout.map(|layout| self.padding_field(layout))
+    }
+
+    pub fn add_tail_padding(
+        &mut self,
+        comp_name: &str,
+        comp_layout: Layout,
+    ) -> Option<proc_macro2::TokenStream> {
+        // Only emit an padding field at the end of a struct if the
+        // user configures explicit padding.
+        if !self.ctx.options().force_explicit_padding {
+            return None;
+        }
+
+        // Padding doesn't make sense for rust unions.
+        if self.is_rust_union {
+            return None;
+        }
+
+        if self.latest_offset == comp_layout.size {
+            // This struct does not contain tail padding.
+            return None;
+        }
+
+        trace!(
+            "need a tail padding field for {}: offset {} -> size {}",
+            comp_name,
+            self.latest_offset,
+            comp_layout.size
+        );
+        let size = comp_layout.size - self.latest_offset;
+        Some(self.padding_field(Layout::new(size, 0)))
     }
 
     pub fn pad_struct(
@@ -372,6 +433,6 @@ impl<'a> StructLayoutTracker<'a> {
 
         // Else, just align the obvious way.
         self.latest_offset += self.padding_bytes(layout);
-        return false;
+        false
     }
 }
