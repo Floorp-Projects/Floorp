@@ -23,8 +23,18 @@ with Files("moz.build"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 with Files("Makefile.in"):
     BUG_COMPONENT = ("Firefox Build System", "General")
+with Files("profile/autoconfig.cfg"):
+    BUG_COMPONENT = ("Firefox", "Installer")
+
+FINAL_TARGET = "dist/bin/distribution"
+
+FINAL_TARGET_FILES += [
+    "profile/policies.json"
+]
 
 with Files("profile/channel-prefs.js"):
+    BUG_COMPONENT = ("Firefox", "Installer")
+with Files("profile/autoconfig.js"):
     BUG_COMPONENT = ("Firefox", "Installer")
 with Files("profile/firefox.js"):
     BUG_COMPONENT = ("Firefox", "General")

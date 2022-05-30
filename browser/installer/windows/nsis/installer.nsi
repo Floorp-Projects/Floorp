@@ -316,6 +316,15 @@ Section "-InstallStartCleanup"
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
     Delete "$INSTDIR\defaults\pref\channel-prefs.js"
   ${EndIf}
+ 
+  ${If} ${FileExists} "$INSTDIR\defaults\pref\autoconfig.js"
+    Delete "$INSTDIR\defaults\pref\autoconfig.js"
+  ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\autoconfig.cfg"
+    Delete "$INSTDIR\autoconfig.cfg"
+  ${EndIf}
+
   ${If} ${FileExists} "$INSTDIR\defaults\pref"
     RmDir "$INSTDIR\defaults\pref"
   ${EndIf}
