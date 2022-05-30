@@ -95,6 +95,36 @@ add_task(async function test_normandyAddonStudy_without_privilege() {
   });
 });
 
+add_task(async function test_normandyAddonStudy_temporary_without_privilege() {
+  let extension = ExtensionTestUtils.loadExtension({
+    temporarilyInstalled: true,
+    isPrivileged: false,
+    manifest: {
+      permissions: ["normandyAddonStudy"],
+    },
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  let { messages } = await promiseConsoleOutput(async () => {
+    await Assert.rejects(
+      extension.startup(),
+      /Using the privileged permission/,
+      "Startup failed with privileged permission"
+    );
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+  AddonTestUtils.checkMessages(
+    messages,
+    {
+      expected: [
+        {
+          message: /Using the privileged permission 'normandyAddonStudy' requires a privileged add-on/,
+        },
+      ],
+    },
+    true
+  );
+});
+
 add_task(async function test_getStudy_works() {
   const study = addonStudyFactory({
     addonId: "test@shield.mozilla.com",

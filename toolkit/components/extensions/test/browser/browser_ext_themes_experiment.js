@@ -7,6 +7,7 @@ const { AddonSettings } = ChromeUtils.import(
 // This test checks whether the theme experiments work
 add_task(async function test_experiment_static_theme() {
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
     manifest: {
       theme: {
         colors: {
@@ -129,6 +130,7 @@ add_task(async function test_experiment_static_theme() {
 
 add_task(async function test_experiment_dynamic_theme() {
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
     manifest: {
       permissions: ["theme"],
       theme_experiment: {
@@ -293,6 +295,7 @@ add_task(async function test_experiment_dynamic_theme() {
 
 add_task(async function test_experiment_stylesheet() {
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
     manifest: {
       theme: {
         colors: {

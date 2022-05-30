@@ -1,5 +1,20 @@
 "use strict";
 
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.usePrivilegedSignatures = false;
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
+
+add_setup(async () => {
+  await AddonTestUtils.promiseStartupManager();
+});
+
+// This test should produce a warning, but still startup
 add_task(async function test_api_restricted() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -15,7 +30,42 @@ add_task(async function test_api_restricted() {
         "activityLog is privileged"
       );
     },
+    useAddonManager: "permanent",
   });
   await extension.startup();
   await extension.unload();
+});
+
+// This test should produce a error and not startup
+add_task(async function test_api_restricted_temporary_without_privilege() {
+  let extension = ExtensionTestUtils.loadExtension({
+    temporarilyInstalled: true,
+    isPrivileged: false,
+    manifest: {
+      applications: {
+        gecko: { id: "activityLog-permission@tests.mozilla.org" },
+      },
+      permissions: ["activityLog"],
+    },
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  let { messages } = await promiseConsoleOutput(async () => {
+    await Assert.rejects(
+      extension.startup(),
+      /Using the privileged permission/,
+      "Startup failed with privileged permission"
+    );
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+  AddonTestUtils.checkMessages(
+    messages,
+    {
+      expected: [
+        {
+          message: /Using the privileged permission 'activityLog' requires a privileged add-on/,
+        },
+      ],
+    },
+    true
+  );
 });

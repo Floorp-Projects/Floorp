@@ -13,6 +13,7 @@ var EXPORTED_SYMBOLS = [
   "Management",
   "SitePermission",
   "ExtensionAddonObserver",
+  "PRIVILEGED_PERMS",
 ];
 
 /* exported Extension, ExtensionData */
@@ -178,17 +179,35 @@ const CHILD_SHUTDOWN_TIMEOUT_MS = 8000;
 const PRIVILEGED_PERMS = new Set([
   "activityLog",
   "mozillaAddons",
-  "geckoViewAddons",
+  "networkStatus",
+  "normandyAddonStudy",
   "telemetry",
   "urlbar",
-  "nativeMessagingFromContent",
-  "normandyAddonStudy",
-  "networkStatus",
 ]);
 
+const PRIVILEGED_PERMS_ANDROID_ONLY = new Set([
+  "geckoViewAddons",
+  "nativeMessagingFromContent",
+  "nativeMessaging",
+]);
+
+const PRIVILEGED_PERMS_DESKTOP_ONLY = new Set(["normandyAddonStudy", "urlbar"]);
+
 if (AppConstants.platform == "android") {
-  PRIVILEGED_PERMS.add("nativeMessaging");
+  for (const perm of PRIVILEGED_PERMS_ANDROID_ONLY) {
+    PRIVILEGED_PERMS.add(perm);
+  }
+
+  for (const perm of PRIVILEGED_PERMS_DESKTOP_ONLY) {
+    PRIVILEGED_PERMS.delete(perm);
+  }
 }
+
+// Message included in warnings and errors related to privileged permissions and
+// privileged manifest properties. Provides a link to the firefox-source-docs.mozilla.org
+// section related to developing and sign Privileged Add-ons.
+const PRIVILEGED_ADDONS_DEVDOCS_MESSAGE =
+  "See https://mzl.la/3NS9KJd for more details about how to develop a privileged add-on.";
 
 const INSTALL_AND_UPDATE_STARTUP_REASONS = new Set([
   "ADDON_INSTALL",
@@ -267,7 +286,7 @@ function classifyPermission(perm, restrictSchemes, isPrivileged) {
   } else if (match[1] == "experiments" && match[2]) {
     return { api: match[2] };
   } else if (!isPrivileged && PRIVILEGED_PERMS.has(match[1])) {
-    return { invalid: perm };
+    return { invalid: perm, privileged: true };
   }
   return { permission: perm };
 }
@@ -563,14 +582,21 @@ class ExtensionData {
    * @param {function(type, id)} checkPrivileged
    *  An (async) function that takes the addon type and addon ID and returns
    *  whether the given add-on is privileged.
+   * @param {boolean} temporarilyInstalled
+   *  whether the given add-on is installed as temporary.
    * @returns {ExtensionData}
    */
-  static async constructAsync({ rootURI, checkPrivileged }) {
+  static async constructAsync({
+    rootURI,
+    checkPrivileged,
+    temporarilyInstalled,
+  }) {
     let extension = new ExtensionData(rootURI);
     // checkPrivileged depends on the extension type and id.
     await extension.initializeAddonTypeAndID();
     let { type, id } = extension;
     extension.isPrivileged = await checkPrivileged(type, id);
+    extension.temporarilyInstalled = temporarilyInstalled;
     return extension;
   }
 
@@ -979,8 +1005,16 @@ class ExtensionData {
     });
   }
 
-  canUseExperiment(manifest) {
-    return this.experimentsAllowed && manifest.experiment_apis;
+  canUseAPIExperiment() {
+    return (
+      this.type == "extension" &&
+      (this.isPrivileged ||
+        // TODO(Bug 1771341): Allowing the "experiment_apis" property when only
+        // AddonSettings.EXPERIMENTS_ENABLED is true is currently needed to allow,
+        // while running under automation, the test harness extensions (like mochikit
+        // and specialpowers) to use that privileged manifest property.
+        AddonSettings.EXPERIMENTS_ENABLED)
+    );
   }
 
   get manifestVersion() {
@@ -1125,16 +1159,27 @@ class ExtensionData {
       await this.initLocale();
     }
 
-    // When parsing the manifest from an ExtensionData instance, we don't
-    // have isPrivileged, so ignore fluent localization in that pass.
-    // This means that fluent cannot be used to localize manifest properties
-    // read from the add-on manager (e.g., author, homepage, etc.)
-    if (manifest.l10n_resources && this.constructor != ExtensionData) {
+    if (manifest.l10n_resources) {
       if (this.isPrivileged) {
-        this.fluentL10n = new Localization(manifest.l10n_resources, true);
+        // TODO (Bug 1733466): For historical reasons fluent isn't being used to
+        // localize manifest properties read from the add-on manager (e.g., author,
+        // homepage, etc.), the changes introduced by Bug 1734987 does now ensure
+        // that isPrivileged will be set while parsing the manifest and so this
+        // can be now supported but requires some additional changes, being tracked
+        // by Bug 1733466.
+        if (this.constructor != ExtensionData) {
+          this.fluentL10n = new Localization(manifest.l10n_resources, true);
+        }
+      } else if (this.temporarilyInstalled) {
+        this.manifestError(
+          `Using 'l10n_resources' requires a privileged add-on. ` +
+            PRIVILEGED_ADDONS_DEVDOCS_MESSAGE
+        );
       } else {
         // Warn but don't make this fatal.
-        Cu.reportError("Ignoring l10n_resources in unprivileged extension");
+        this.manifestWarning(
+          "Ignoring l10n_resources in unprivileged extension"
+        );
       }
     }
 
@@ -1234,6 +1279,15 @@ class ExtensionData {
         } else if (type.api) {
           apiNames.add(type.api);
         } else if (type.invalid) {
+          // If EXPERIMENTS_ENABLED is not enabled prevent the install
+          // to ensure developer awareness.
+          if (this.temporarilyInstalled && type.privileged) {
+            this.manifestError(
+              `Using the privileged permission '${perm}' requires a privileged add-on. ` +
+                PRIVILEGED_ADDONS_DEVDOCS_MESSAGE
+            );
+            continue;
+          }
           this.manifestWarning(`Invalid extension permission: ${perm}`);
           continue;
         }
@@ -1293,35 +1347,47 @@ class ExtensionData {
         });
       }
 
-      if (this.canUseExperiment(manifest)) {
-        let parentModules = {};
-        let childModules = {};
+      if (manifest.experiment_apis) {
+        if (this.canUseAPIExperiment()) {
+          let parentModules = {};
+          let childModules = {};
 
-        for (let [name, data] of Object.entries(manifest.experiment_apis)) {
-          let schema = this.getURL(data.schema);
+          for (let [name, data] of Object.entries(manifest.experiment_apis)) {
+            let schema = this.getURL(data.schema);
 
-          if (!schemaPromises.has(schema)) {
-            schemaPromises.set(
-              schema,
-              this.readJSON(data.schema).then(json =>
-                Schemas.processSchema(json)
-              )
-            );
+            if (!schemaPromises.has(schema)) {
+              schemaPromises.set(
+                schema,
+                this.readJSON(data.schema).then(json =>
+                  Schemas.processSchema(json)
+                )
+              );
+            }
+
+            if (data.parent) {
+              parentModules[name] = moduleData(data.parent);
+            }
+
+            if (data.child) {
+              childModules[name] = moduleData(data.child);
+            }
           }
 
-          if (data.parent) {
-            parentModules[name] = moduleData(data.parent);
-          }
-
-          if (data.child) {
-            childModules[name] = moduleData(data.child);
-          }
+          result.modules = {
+            child: computeModuleInit("addon_child", childModules),
+            parent: computeModuleInit("addon_parent", parentModules),
+          };
+        } else if (this.temporarilyInstalled) {
+          // Hard error for un-privileged temporary installs using experimental apis.
+          this.manifestError(
+            `Using 'experiment_apis' requires a privileged add-on. ` +
+              PRIVILEGED_ADDONS_DEVDOCS_MESSAGE
+          );
+        } else {
+          this.manifestWarning(
+            `Using experimental APIs requires a privileged add-on.`
+          );
         }
-
-        result.modules = {
-          child: computeModuleInit("addon_child", childModules),
-          parent: computeModuleInit("addon_parent", parentModules),
-        };
       }
 
       // Normalize all patterns to contain a single leading /
@@ -2499,10 +2565,6 @@ class Extension extends ExtensionData {
 
   get temporarilyInstalled() {
     return !!this.addonData.temporarilyInstalled;
-  }
-
-  get experimentsAllowed() {
-    return AddonSettings.EXPERIMENTS_ENABLED || this.isPrivileged;
   }
 
   saveStartupData() {

@@ -4,6 +4,8 @@ const Cm = Components.manager;
 
 const uuidGenerator = Services.uuid;
 
+AddonTestUtils.init(this);
+
 var mockNetworkStatusService = {
   contractId: "@mozilla.org/network/network-link-service;1",
 
@@ -166,20 +168,33 @@ add_task(async function test_networkStatus() {
 
 add_task(async function test_networkStatus_permission() {
   let extension = ExtensionTestUtils.loadExtension({
+    temporarilyInstalled: true,
+    isPrivileged: false,
     manifest: {
       applications: {
         gecko: { id: "networkstatus-permission@tests.mozilla.org" },
       },
       permissions: ["networkStatus"],
     },
-    async background() {
-      browser.test.assertEq(
-        undefined,
-        browser.networkStatus,
-        "networkStatus is privileged"
-      );
-    },
   });
-  await extension.startup();
-  await extension.unload();
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  let { messages } = await promiseConsoleOutput(async () => {
+    await Assert.rejects(
+      extension.startup(),
+      /Using the privileged permission/,
+      "Startup failed with privileged permission"
+    );
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+  AddonTestUtils.checkMessages(
+    messages,
+    {
+      expected: [
+        {
+          message: /Using the privileged permission 'networkStatus' requires a privileged add-on/,
+        },
+      ],
+    },
+    true
+  );
 });

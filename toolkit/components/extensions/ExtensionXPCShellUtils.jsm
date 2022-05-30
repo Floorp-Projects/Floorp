@@ -565,6 +565,10 @@ class InstallableWrapper extends AOMExtensionWrapper {
         this.installTelemetryInfo
       ).then(install => {
         let listener = {
+          onDownloadFailed: () => {
+            this.state = "unloaded";
+            this.resolveStartup(Promise.reject(new Error("Install failed")));
+          },
           onInstallFailed: () => {
             this.state = "unloaded";
             this.resolveStartup(Promise.reject(new Error("Install failed")));

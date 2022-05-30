@@ -78,6 +78,16 @@ async function testLoadManifest({ location, expectPrivileged }) {
   });
   let actualPermissions;
   let { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
+    if (location.isTemporary && !expectPrivileged) {
+      ExtensionTestUtils.failOnSchemaWarnings(false);
+      await Assert.rejects(
+        XPIInstall.loadManifestFromFile(xpi, location),
+        /Extension is invalid/,
+        "load manifest failed with privileged permission"
+      );
+      ExtensionTestUtils.failOnSchemaWarnings(true);
+      return;
+    }
     let addon = await XPIInstall.loadManifestFromFile(xpi, location);
     actualPermissions = addon.userPermissions;
     equal(addon.isPrivileged, expectPrivileged, "addon.isPrivileged");
@@ -96,6 +106,15 @@ async function testLoadManifest({ location, expectPrivileged }) {
       { origins: [], permissions: ["mozillaAddons", "cookies"] },
       "Privileged permission should exist"
     );
+  } else if (location.isTemporary) {
+    AddonTestUtils.checkMessages(messages, {
+      expected: [
+        {
+          message: /Using the privileged permission 'mozillaAddons' requires a privileged add-on/,
+        },
+      ],
+      forbidden: [],
+    });
   } else {
     AddonTestUtils.checkMessages(messages, {
       expected: [

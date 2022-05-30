@@ -396,7 +396,7 @@ class Context {
       }
     }
 
-    let props = ["preprocessors", "isChromeCompat", "manifestVersion"];
+    let props = ["isChromeCompat", "manifestVersion", "preprocessors"];
     for (let prop of props) {
       if (prop in params) {
         if (prop in this && typeof this[prop] == "object") {
