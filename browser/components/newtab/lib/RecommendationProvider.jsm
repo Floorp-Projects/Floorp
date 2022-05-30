@@ -18,7 +18,7 @@ const PREF_PERSONALIZATION = "discoverystream.personalization.enabled";
 // A recommendation provider scores a list of stories, currently this is a personality provider.
 // So all calls to the provider, anything involved with the setup of the provider,
 // accessing prefs for the provider, or updaing devtools with provider state, is contained in here.
-this.RecommendationProvider = class RecommendationProvider {
+class RecommendationProvider {
   setProvider(scores) {
     // A provider is already set. This can happen when new stories come in
     // and we need to update their scores.
@@ -108,6 +108,6 @@ this.RecommendationProvider = class RecommendationProvider {
         break;
     }
   }
-};
+}
 
 const EXPORTED_SYMBOLS = ["RecommendationProvider"];

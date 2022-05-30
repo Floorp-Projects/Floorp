@@ -64,7 +64,7 @@ const BOOKMARKS_RESTORE_SUCCESS_EVENT = "bookmarks-restore-success";
 const BOOKMARKS_RESTORE_FAILED_EVENT = "bookmarks-restore-failed";
 const RECENT_DOWNLOAD_THRESHOLD = 36 * 60 * 60 * 1000;
 
-this.HighlightsFeed = class HighlightsFeed {
+class HighlightsFeed {
   constructor() {
     this.dedupe = new Dedupe(this._dedupeKey);
     this.linksCache = new LinksCache(
@@ -347,7 +347,7 @@ this.HighlightsFeed = class HighlightsFeed {
         break;
     }
   }
-};
+}
 
 const EXPORTED_SYMBOLS = [
   "HighlightsFeed",

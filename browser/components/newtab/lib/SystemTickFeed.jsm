@@ -21,7 +21,7 @@ ChromeUtils.defineModuleGetter(
 // Frequency at which SYSTEM_TICK events are fired
 const SYSTEM_TICK_INTERVAL = 5 * 60 * 1000;
 
-this.SystemTickFeed = class SystemTickFeed {
+class SystemTickFeed {
   init() {
     this.intervalId = setInterval(
       () => this.store.dispatch({ type: at.SYSTEM_TICK }),
@@ -39,7 +39,7 @@ this.SystemTickFeed = class SystemTickFeed {
         break;
     }
   }
-};
+}
 
 this.SYSTEM_TICK_INTERVAL = SYSTEM_TICK_INTERVAL;
 const EXPORTED_SYMBOLS = ["SystemTickFeed", "SYSTEM_TICK_INTERVAL"];

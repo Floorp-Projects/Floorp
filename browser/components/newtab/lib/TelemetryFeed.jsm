@@ -128,7 +128,7 @@ XPCOMUtils.defineLazyGetter(this, "contextId", () => {
   return _contextId;
 });
 
-this.TelemetryFeed = class TelemetryFeed {
+class TelemetryFeed {
   constructor() {
     this.sessions = new Map();
     this._prefs = new Prefs();
@@ -1169,7 +1169,7 @@ this.TelemetryFeed = class TelemetryFeed {
 
     // TODO: Send any unfinished sessions
   }
-};
+}
 
 const EXPORTED_SYMBOLS = [
   "TelemetryFeed",

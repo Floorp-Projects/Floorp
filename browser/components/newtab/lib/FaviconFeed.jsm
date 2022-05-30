@@ -129,7 +129,7 @@ async function fetchIconFromRedirects(url) {
   }
 }
 
-this.FaviconFeed = class FaviconFeed {
+class FaviconFeed {
   constructor() {
     this._queryForRedirects = new Set();
   }
@@ -206,6 +206,6 @@ this.FaviconFeed = class FaviconFeed {
         break;
     }
   }
-};
+}
 
 const EXPORTED_SYMBOLS = ["FaviconFeed", "fetchIconFromRedirects"];

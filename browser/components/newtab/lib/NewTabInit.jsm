@@ -11,7 +11,7 @@ const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
  * NewTabInit - A placeholder for now. This will send a copy of the state to all
  *              newly opened tabs.
  */
-this.NewTabInit = class NewTabInit {
+class NewTabInit {
   constructor() {
     this._repliedEarlyTabs = new Map();
   }
@@ -52,6 +52,6 @@ this.NewTabInit = class NewTabInit {
         break;
     }
   }
-};
+}
 
 const EXPORTED_SYMBOLS = ["NewTabInit"];
