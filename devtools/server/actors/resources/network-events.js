@@ -219,6 +219,8 @@ class NetworkEventWatcher {
     const resource = actor.asResource();
 
     this.networkEvents.set(resource.resourceId, {
+      browsingContextID: resource.browsingContextID,
+      innerWindowId: resource.innerWindowId,
       resourceId: resource.resourceId,
       resourceType: resource.resourceType,
       isBlocked: !!resource.blockedReason,
@@ -238,6 +240,8 @@ class NetworkEventWatcher {
     }
 
     const {
+      browsingContextID,
+      innerWindowId,
       resourceId,
       resourceType,
       resourceUpdates,
@@ -301,6 +305,8 @@ class NetworkEventWatcher {
         resourceType,
         resourceId,
         resourceUpdates,
+        browsingContextID,
+        innerWindowId,
       },
     ]);
   }

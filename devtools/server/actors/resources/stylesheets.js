@@ -111,6 +111,8 @@ class StyleSheetWatcher {
   ) {
     this._onUpdated([
       {
+        browsingContextID: this._targetActor.browsingContextID,
+        innerWindowId: this._targetActor.innerWindowId,
         resourceType: STYLESHEET,
         resourceId,
         updateType,

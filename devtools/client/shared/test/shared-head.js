@@ -434,7 +434,7 @@ function waitForAllTargetsToBeAttached(targetCommand) {
   return Promise.allSettled(
     targetCommand
       .getAllTargets(targetCommand.ALL_TYPES)
-      .map(target => target._onThreadInitialized)
+      .map(target => target.initialized)
   );
 }
 

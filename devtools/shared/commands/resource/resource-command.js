@@ -583,6 +583,16 @@ class ResourceCommand {
 
       if (watcherFront) {
         targetFront = await this._getTargetForWatcherResource(resource);
+        // When we receive resources from the Watcher actor,
+        // there is no guarantee that the target front is fully initialized.
+        // The Target Front is initialized by the TargetCommand, by calling TargetFront.attachAndInitThread.
+        // We have to wait for its completion as resources watchers are expecting it to be completed.
+        //
+        // But when navigating, we may receive resources packets for a destroyed target.
+        // Or, in the context of the browser toolbox, they may not relate to any target.
+        if (targetFront) {
+          await targetFront.initialized;
+        }
       }
 
       // isAlreadyExistingResource indicates that the resources already existed before
@@ -702,6 +712,20 @@ class ResourceCommand {
 
       if (!resourceId) {
         console.warn(`Expected resource ${resourceType} to have a resourceId`);
+      }
+
+      // See _onResourceAvailable()
+      // We also need to wait for the related targetFront to be initialized
+      // otherwise we would notify about the udpate *before* the available
+      // and the resource won't be in _cache.
+      if (watcherFront) {
+        targetFront = await this._getTargetForWatcherResource(update);
+        // When we receive the navigation request, the target front has already been
+        // destroyed, but this is fine. The cached resource has the reference to
+        // the (destroyed) target front and it is fully initialized.
+        if (targetFront) {
+          await targetFront.initialized;
+        }
       }
 
       const existingResource = this._cache.get(

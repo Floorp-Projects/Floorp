@@ -40,7 +40,7 @@ class ContentProcessStorage {
     this.onStoresCleared = this.onStoresCleared.bind(this);
   }
 
-  async watch(targetActor, { onAvailable, onUpdated, onDestroyed }) {
+  async watch(targetActor, { onAvailable }) {
     const ActorConstructor = storageTypePool.get(this.storageKey);
     const storageActor = new StorageActorMock(targetActor);
     this.storageActor = storageActor;

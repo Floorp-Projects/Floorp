@@ -149,6 +149,8 @@ class NetworkEventContentWatcher {
     const resource = actor.asResource();
 
     this._networkEvents.set(resource.resourceId, {
+      browsingContextID: resource.browsingContextID,
+      innerWindowId: resource.innerWindowId,
       resourceId: resource.resourceId,
       resourceType: resource.resourceType,
       url: resource.url,
@@ -184,13 +186,28 @@ class NetworkEventContentWatcher {
       return;
     }
 
-    const { resourceId, resourceType, resourceUpdates, types } = networkEvent;
+    const {
+      browsingContextID,
+      innerWindowId,
+      resourceId,
+      resourceType,
+      resourceUpdates,
+      types,
+    } = networkEvent;
 
     resourceUpdates[`${updateResource.updateType}Available`] = true;
     types.push(updateResource.updateType);
 
     if (allRequiredUpdates.every(header => types.includes(header))) {
-      this.onUpdated([{ resourceType, resourceId, resourceUpdates }]);
+      this.onUpdated([
+        {
+          browsingContextID,
+          innerWindowId,
+          resourceType,
+          resourceId,
+          resourceUpdates,
+        },
+      ]);
     }
   }
 
