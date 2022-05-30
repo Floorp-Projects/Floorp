@@ -5,6 +5,7 @@
 package mozilla.components.feature.prompts.creditcard
 
 import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.storage.CreditCardEntry
@@ -92,6 +93,9 @@ class CreditCardPicker(
         try {
             if (promptRequest != null) {
                 promptRequest.onDismiss()
+                sessionId?.let {
+                    store.dispatch(ContentAction.ConsumePromptRequestAction(it, promptRequest))
+                }
                 return
             }
 

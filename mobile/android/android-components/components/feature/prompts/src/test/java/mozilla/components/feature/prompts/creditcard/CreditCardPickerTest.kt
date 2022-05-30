@@ -5,6 +5,7 @@
 package mozilla.components.feature.prompts.creditcard
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
@@ -12,6 +13,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.storage.CreditCardEntry
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -20,6 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -136,6 +139,42 @@ class CreditCardPickerTest {
 
         assertNull(creditCardPicker.selectedCreditCard)
         assertTrue(onDismissCalled)
+    }
+
+    @Test
+    fun `WHEN dismissSelectCreditCardRequest is invoked without a parameter THEN the active prompt request is dismissed and removed from the session`() {
+        val session = setupSessionState(promptRequest)
+        creditCardPicker = CreditCardPicker(
+            store = store,
+            creditCardSelectBar = creditCardSelectBar,
+            manageCreditCardsCallback = manageCreditCardsCallback,
+            selectCreditCardCallback = selectCreditCardCallback,
+            sessionId = session.id,
+        )
+
+        verify(store, never()).dispatch(any())
+        creditCardPicker.dismissSelectCreditCardRequest()
+
+        assertTrue(onDismissCalled)
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(session.id, promptRequest))
+    }
+
+    @Test
+    fun `WHEN dismissSelectCreditCardRequest is invoked with the active prompt request as parameter THEN the request is dismissed and removed from the session`() {
+        val session = setupSessionState(promptRequest)
+        creditCardPicker = CreditCardPicker(
+            store = store,
+            creditCardSelectBar = creditCardSelectBar,
+            manageCreditCardsCallback = manageCreditCardsCallback,
+            selectCreditCardCallback = selectCreditCardCallback,
+            sessionId = session.id,
+        )
+
+        verify(store, never()).dispatch(any())
+        creditCardPicker.dismissSelectCreditCardRequest(promptRequest)
+
+        assertTrue(onDismissCalled)
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(session.id, promptRequest))
     }
 
     private fun setupSessionState(request: PromptRequest? = null): TabSessionState {

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.prompts.login
 
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.storage.Login
@@ -54,11 +55,17 @@ internal class LoginPicker(
     @Suppress("TooGenericExceptionCaught")
     fun dismissCurrentLoginSelect(promptRequest: PromptRequest.SelectLoginPrompt? = null) {
         try {
-            promptRequest
-                ?.let { it.onDismiss() }
-                ?: store.consumePromptFrom<PromptRequest.SelectLoginPrompt>(sessionId) {
-                    it.onDismiss()
+            if (promptRequest != null) {
+                promptRequest.onDismiss()
+                sessionId?.let {
+                    store.dispatch(ContentAction.ConsumePromptRequestAction(it, promptRequest))
                 }
+                return
+            }
+
+            store.consumePromptFrom<PromptRequest.SelectLoginPrompt>(sessionId) {
+                it.onDismiss()
+            }
         } catch (e: RuntimeException) {
             Logger.error("Can't dismiss this login select prompt", e)
         }
