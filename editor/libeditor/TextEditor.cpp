@@ -633,63 +633,6 @@ nsresult TextEditor::SelectEntireDocument() {
 
 EventTarget* TextEditor::GetDOMEventTarget() const { return mEventTarget; }
 
-void TextEditor::ReinitializeSelection(Element& aElement) {
-  if (NS_WARN_IF(Destroyed())) {
-    return;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return;
-  }
-
-  OnFocus(aElement);
-
-  // If previous focused editor turn on spellcheck and this editor doesn't
-  // turn on it, spellcheck state is mismatched.  So we need to re-sync it.
-  SyncRealTimeSpell();
-}
-
-nsresult TextEditor::OnFocus(const nsINode& aOriginalEventTargetNode) {
-  RefPtr<PresShell> presShell = GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
-    return NS_ERROR_FAILURE;
-  }
-  // Let's update the layout information right now because there are some
-  // pending notifications and flushing them may cause destroying the editor.
-  presShell->FlushPendingNotifications(FlushType::Layout);
-  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent(aOriginalEventTargetNode))) {
-    return NS_OK;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Spell check a textarea the first time that it is focused.
-  nsresult rv = FlushPendingSpellCheck();
-  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    NS_WARNING("EditorBase::FlushPendingSpellCheck() failed");
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "EditorBase::FlushPendingSpellCheck() failed, but ignored");
-  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent(aOriginalEventTargetNode))) {
-    return NS_OK;
-  }
-
-  return EditorBase::OnFocus(aOriginalEventTargetNode);
-}
-
-nsresult TextEditor::OnBlur(const EventTarget* aEventTarget) {
-  nsresult rv = FinalizeSelection();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::FinalizeSelection() failed");
-  return rv;
-}
-
 nsresult TextEditor::SetAttributeOrEquivalent(Element* aElement,
                                               nsAtom* aAttribute,
                                               const nsAString& aValue,

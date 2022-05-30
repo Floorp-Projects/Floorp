@@ -200,23 +200,22 @@ void EditorEventListener::Disconnect() {
   }
   UninstallFromEditor();
 
-  const OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  mEditorBase = nullptr;
-
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     nsIContent* focusedContent = fm->GetFocusedElement();
-    mozilla::dom::Element* root = editorBase->GetRoot();
+    mozilla::dom::Element* root = mEditorBase->GetRoot();
     if (focusedContent && root &&
         focusedContent->IsInclusiveDescendantOf(root)) {
       // Reset the Selection ancestor limiter and SelectionController state
       // that EditorBase::InitializeSelection set up.
-      DebugOnly<nsresult> rvIgnored = editorBase->FinalizeSelection();
+      DebugOnly<nsresult> rvIgnored = mEditorBase->FinalizeSelection();
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "EditorBase::FinalizeSelection() failed, but ignored");
     }
   }
+
+  mEditorBase = nullptr;
 }
 
 void EditorEventListener::UninstallFromEditor() {
@@ -435,22 +434,14 @@ NS_IMETHODIMP EditorEventListener::HandleEvent(Event* aEvent) {
     }
     // focus
     case eFocus: {
-      const InternalFocusEvent* focusEvent = internalEvent->AsFocusEvent();
-      if (NS_WARN_IF(!focusEvent)) {
-        return NS_ERROR_FAILURE;
-      }
-      nsresult rv = Focus(*focusEvent);
+      nsresult rv = Focus(internalEvent->AsFocusEvent());
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "EditorEventListener::Focus() failed");
       return rv;
     }
     // blur
     case eBlur: {
-      const InternalFocusEvent* blurEvent = internalEvent->AsFocusEvent();
-      if (NS_WARN_IF(!blurEvent)) {
-        return NS_ERROR_FAILURE;
-      }
-      nsresult rv = Blur(*blurEvent);
+      nsresult rv = Blur(internalEvent->AsFocusEvent());
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "EditorEventListener::Blur() failed");
       return rv;
@@ -1089,14 +1080,14 @@ void EditorEventListener::HandleEndComposition(
   editorBase->OnCompositionEnd(*aCompositionEndEvent);
 }
 
-nsresult EditorEventListener::Focus(const InternalFocusEvent& aFocusEvent) {
-  if (DetachedFromEditor()) {
+nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
+  if (NS_WARN_IF(!aFocusEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
 
   nsCOMPtr<nsINode> originalEventTargetNode =
-      nsINode::FromEventTargetOrNull(aFocusEvent.GetOriginalDOMEventTarget());
-  if (NS_WARN_IF(!originalEventTargetNode)) {
+      nsINode::FromEventTargetOrNull(aFocusEvent->GetOriginalDOMEventTarget());
+  if (MOZ_UNLIKELY(NS_WARN_IF(!originalEventTargetNode))) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1109,24 +1100,121 @@ nsresult EditorEventListener::Focus(const InternalFocusEvent& aFocusEvent) {
   }
   // We should not receive focus events whose target is not a content node
   // unless the node is a document node.
-  else if (NS_WARN_IF(!originalEventTargetNode->IsContent())) {
+  else if (MOZ_UNLIKELY(NS_WARN_IF(!originalEventTargetNode->IsContent()))) {
     return NS_OK;
   }
 
-  const OwningNonNull<EditorBase> editorBase(*mEditorBase);
-  DebugOnly<nsresult> rvIgnored = editorBase->OnFocus(*originalEventTargetNode);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "EditorBase::OnFocus() failed");
-  return NS_OK;  // Don't return error code to the event listener manager.
+  RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!focusManager))) {
+    return NS_OK;
+  }
+
+  auto CanKeepHandlingFocusEvent = [&]() -> bool {
+    if (this->DetachedFromEditor()) {
+      return false;
+    }
+    // If the event target is document mode, we only need to handle the focus
+    // event when the document is still in designMode.  Otherwise, the
+    // mode has been disabled by somebody while we're handling the focus event.
+    if (originalEventTargetNode->IsDocument()) {
+      return originalEventTargetNode->IsInDesignMode();
+    }
+    MOZ_ASSERT(originalEventTargetNode->IsContent());
+    // If nobody has focus, the focus event target has been blurred by somebody
+    // else.  So the editor shouldn't initialize itself to start to handle
+    // anything.
+    if (!focusManager->GetFocusedElement()) {
+      return false;
+    }
+    const nsIContent* const exposedTargetContent =
+        originalEventTargetNode->AsContent()
+            ->FindFirstNonChromeOnlyAccessContent();
+    const nsIContent* const exposedFocusedContent =
+        focusManager->GetFocusedElement()
+            ->FindFirstNonChromeOnlyAccessContent();
+    return exposedTargetContent && exposedFocusedContent &&
+           exposedTargetContent == exposedFocusedContent;
+  };
+
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!presShell))) {
+    return NS_OK;
+  }
+  // Let's update the layout information right now because there are some
+  // pending notifications and flushing them may cause destroying the editor.
+  presShell->FlushPendingNotifications(FlushType::Layout);
+  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent())) {
+    return NS_OK;
+  }
+
+  // Spell check a textarea the first time that it is focused.
+  SpellCheckIfNeeded();
+  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent())) {
+    return NS_OK;
+  }
+
+  OwningNonNull<EditorBase> editorBase(*mEditorBase);
+  editorBase->OnFocus(*originalEventTargetNode);
+  if (DetachedFromEditorOrDefaultPrevented(aFocusEvent)) {
+    return NS_OK;
+  }
+
+  RefPtr<nsPresContext> presContext = GetPresContext();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!presContext))) {
+    return NS_OK;
+  }
+  RefPtr<Element> focusedElement = editorBase->GetFocusedElement();
+  IMEStateManager::OnFocusInEditor(*presContext, focusedElement, *editorBase);
+
+  return NS_OK;
 }
 
-nsresult EditorEventListener::Blur(const InternalFocusEvent& aBlurEvent) {
-  if (DetachedFromEditor()) {
+nsresult EditorEventListener::Blur(InternalFocusEvent* aBlurEvent) {
+  if (NS_WARN_IF(!aBlurEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
 
-  DebugOnly<nsresult> rvIgnored = mEditorBase->OnBlur(aBlurEvent.mTarget);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "EditorBase::OnBlur() failed");
-  return NS_OK;  // Don't return error code to the event listener manager.
+  // check if something else is focused. If another element is focused, then
+  // we should not change the selection.
+  nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
+  if (NS_WARN_IF(!focusManager)) {
+    return NS_OK;
+  }
+
+  Element* focusedElement = focusManager->GetFocusedElement();
+  if (!focusedElement) {
+    // If it's in the designMode, and blur occurs, the target must be the
+    // window.  If a blur event is fired and the target is an element, it
+    // must be delayed blur event at initializing the `HTMLEditor`.
+    // TODO: Add automated tests for checking the case that the target node
+    //       is in a shadow DOM tree whose host is in design mode.
+    if (mEditorBase->IsHTMLEditor() &&
+        mEditorBase->AsHTMLEditor()->IsInDesignMode()) {
+      if (Element::FromEventTargetOrNull(aBlurEvent->mTarget)) {
+        return NS_OK;
+      }
+    }
+    RefPtr<EditorBase> editorBase(mEditorBase);
+    DebugOnly<nsresult> rvIgnored = editorBase->FinalizeSelection();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "EditorBase::FinalizeSelection() failed, but ignored");
+  }
+  return NS_OK;
+}
+
+void EditorEventListener::SpellCheckIfNeeded() {
+  MOZ_ASSERT(!DetachedFromEditor());
+
+  // If the spell check skip flag is still enabled from creation time,
+  // disable it because focused editors are allowed to spell check.
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  if (!editorBase->ShouldSkipSpellCheck()) {
+    return;
+  }
+  DebugOnly<nsresult> rvIgnored =
+      editorBase->RemoveFlags(nsIEditor::eEditorSkipSpellCheck);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "EditorBase::RemoveFlags() failed, but ignored");
 }
 
 bool EditorEventListener::IsFileControlTextBox() {

@@ -591,29 +591,28 @@ class EditorBase : public nsIEditor,
    * designMode, you should set the document node to aNode except that an
    * element in the document has focus.
    */
-  [[nodiscard]] virtual Element* FindSelectionRoot(const nsINode& aNode) const;
+  virtual Element* FindSelectionRoot(nsINode* aNode) const;
 
   /**
-   * OnFocus() is called when we get a focus event.
-   *
-   * @param aOriginalEventTargetNode    The original event target node of the
-   *                                    focus event.
+   * This method has to be called by EditorEventListener::Focus.
+   * All actions that have to be done when the editor is focused needs to be
+   * added here.
    */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult OnFocus(
-      const nsINode& aOriginalEventTargetNode);
-
-  /**
-   * OnBlur() is called when we're blurred.
-   *
-   * @param aEventTarget        The event target of the blur event.
-   */
-  virtual nsresult OnBlur(const dom::EventTarget* aEventTarget) = 0;
+  MOZ_CAN_RUN_SCRIPT void OnFocus(nsINode& aFocusEventTargetNode);
 
   /** Resyncs spellchecking state (enabled/disabled).  This should be called
    * when anything that affects spellchecking state changes, such as the
    * spellcheck attribute value.
    */
   void SyncRealTimeSpell();
+
+  /**
+   * This method re-initializes the selection and caret state that are for
+   * current editor state. When editor session is destroyed, it always reset
+   * selection state even if this has no focus.  So if destroying editor,
+   * we have to call this method for focused editor to set selection state.
+   */
+  MOZ_CAN_RUN_SCRIPT void ReinitializeSelection(Element& aElement);
 
   /**
    * Do "cut".
@@ -2236,21 +2235,6 @@ class EditorBase : public nsIEditor,
     return mIsHTMLEditorClass ? EditorType::HTML : EditorType::Text;
   }
 
-  /**
-   * Check whether the caller can keep handling focus event.
-   *
-   * @param aOriginalEventTargetNode    The original event target of the focus
-   *                                    event.
-   */
-  [[nodiscard]] bool CanKeepHandlingFocusEvent(
-      const nsINode& aOriginalEventTargetNode) const;
-
-  /**
-   * If this editor has skipped spell checking and not yet flushed, this runs
-   * the spell checker.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult FlushPendingSpellCheck();
-
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult EnsureEmptyTextFirstChild();
 
   /**
@@ -2406,7 +2390,6 @@ class EditorBase : public nsIEditor,
   virtual nsresult InstallEventListeners();
   virtual void CreateEventListeners();
   virtual void RemoveEventListeners();
-  [[nodiscard]] bool IsListeningToEvents() const;
 
   /**
    * Called if and only if this editor is in readonly mode.
@@ -2444,15 +2427,11 @@ class EditorBase : public nsIEditor,
       nsIContent& aAncestorLimit) const;
 
   /**
-   * Initializes selection and caret for the editor at getting focus.  If
-   * aOriginalEventTargetNode isn't a host of the editor, i.e., the editor
-   * doesn't get focus, this does nothing.
-   *
-   * @param aOriginalEventTargetNode    The original event target node of the
-   *                                    focus event.
+   * Initializes selection and caret for the editor.  If aEventTarget isn't
+   * a host of the editor, i.e., the editor doesn't get focus, this does
+   * nothing.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  InitializeSelection(const nsINode& aOriginalEventTargetNode);
+  MOZ_CAN_RUN_SCRIPT nsresult InitializeSelection(nsINode& aFocusEventTarget);
 
   enum NotificationForEditorObservers {
     eNotifyEditorObserversOfEnd,
