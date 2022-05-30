@@ -21,7 +21,6 @@ struct nsRect;
 namespace mozilla {
 
 namespace dom {
-class Element;
 class Text;
 }  // namespace dom
 
@@ -90,7 +89,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
     nsresult SetStartAndEnd(const RawRangeBoundary& aStart,
                             const RawRangeBoundary& aEnd);
 
-    nsresult SelectNodeContents(const nsINode* aNodeToSelectContents);
+    nsresult SelectNodeContents(nsINode* aNodeToSelectContents);
 
    private:
     inline void AssertStartIsBeforeOrEqualToEnd();
@@ -102,7 +101,6 @@ class MOZ_STACK_CLASS ContentEventHandler {
   };
 
  public:
-  using Element = dom::Element;
   using Selection = dom::Selection;
 
   explicit ContentEventHandler(nsPresContext* aPresContext);
@@ -152,7 +150,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // mFirstSelectedRawRange is initialized from the first range of mSelection,
   // if it exists.  Otherwise, it is reset by Clear().
   RawRange mFirstSelectedRawRange;
-  RefPtr<Element> mRootElement;
+  nsCOMPtr<nsIContent> mRootContent;
 
   MOZ_CAN_RUN_SCRIPT nsresult Init(WidgetQueryContentEvent* aEvent);
   MOZ_CAN_RUN_SCRIPT nsresult Init(WidgetSelectionEvent* aEvent);
@@ -229,8 +227,8 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // Get the flatten text length in the range.
   // @param aStartPosition      Start node and offset in the node of the range.
   // @param aEndPosition        End node and offset in the node of the range.
-  // @param aRootElement        The root element of the editor or document.
-  //                            aRootElement won't cause any text including
+  // @param aRootContent        The root content of the editor or document.
+  //                            aRootContent won't cause any text including
   //                            line breaks.
   // @param aLength             The result of the flatten text length of the
   //                            range.
@@ -246,7 +244,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
   //                            be number of the children of mNode.
   static nsresult GetFlatTextLengthInRange(const NodePosition& aStartPosition,
                                            const NodePosition& aEndPosition,
-                                           const Element* aRootElement,
+                                           nsIContent* aRootContent,
                                            uint32_t* aLength,
                                            LineBreakType aLineBreakType,
                                            bool aIsRemovingNode = false);
@@ -270,12 +268,12 @@ class MOZ_STACK_CLASS ContentEventHandler {
                                        uint32_t aXPStartOffset,
                                        uint32_t aXPEndOffset,
                                        LineBreakType aLineBreakType);
-  // Get the contents in aElement (meaning all children of aElement) as plain
-  // text.  E.g., specifying mRootElement gets whole text in it.
+  // Get the contents in aContent (meaning all children of aContent) as plain
+  // text.  E.g., specifying mRootContent gets whole text in it.
   // Note that the result is not same as .textContent.  The result is
   // optimized for native IMEs.  For example, <br> element and some block
   // elements causes "\n" (or "\r\n"), see also ShouldBreakLineBefore().
-  nsresult GenerateFlatTextContent(const Element* aElement, nsString& aString,
+  nsresult GenerateFlatTextContent(nsIContent* aContent, nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get the contents of aRange as plain text.
   nsresult GenerateFlatTextContent(const RawRange& aRawRange, nsString& aString,
@@ -289,7 +287,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // This should return false only when aContent is an html element which
   // is typically used in a paragraph like <em>.
   static bool ShouldBreakLineBefore(const nsIContent& aContent,
-                                    const Element* aRootElement);
+                                    const nsINode* aRootNode = nullptr);
   // Get the line breaker length.
   static inline uint32_t GetBRLength(LineBreakType aLineBreakType);
   static LineBreakType GetLineBreakType(WidgetQueryContentEvent* aEvent);
