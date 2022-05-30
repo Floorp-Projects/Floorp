@@ -460,6 +460,14 @@ impl SurfaceBuilder {
                                             ),
                                         );
 
+                                        // Ensure that the parent task will get scheduled earlier during
+                                        // pass assignment since we are reusing the existing surface,
+                                        // even though it's not technically needed for rendering order.
+                                        rg_builder.add_dependency(
+                                            new_task_id,
+                                            parent_task_id,
+                                        );
+
                                         // Update the surface builder with the now current target for future primitives
                                         tiles.insert(
                                             key,
@@ -516,6 +524,14 @@ impl SurfaceBuilder {
                                     location,          // draw to same place
                                     RenderTaskKind::Picture(pic_task),
                                 ),
+                            );
+
+                            // Ensure that the parent task will get scheduled earlier during
+                            // pass assignment since we are reusing the existing surface,
+                            // even though it's not technically needed for rendering order.
+                            rg_builder.add_dependency(
+                                new_task_id,
+                                *parent_task_id,
                             );
 
                             // Update the surface builder with the now current target for future primitives
