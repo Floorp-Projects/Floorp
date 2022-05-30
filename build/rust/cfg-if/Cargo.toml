@@ -1,0 +1,11 @@
+[package]
+name = "cfg-if"
+version = "0.1.999"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+cfg-if = "1.0"

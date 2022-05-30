@@ -76,7 +76,6 @@ TOLERATED_DUPES = {
     "arrayvec": 2,
     "base64": 3,
     "bytes": 3,
-    "cfg-if": 2,
     "crossbeam-deque": 2,
     "crossbeam-epoch": 2,
     "crossbeam-utils": 3,

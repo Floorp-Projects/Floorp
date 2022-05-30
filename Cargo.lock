@@ -195,7 +195,7 @@ version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b7cd1bfd03dab20ad72e0c5e58d65818d62c0d199d8dec8361053d0f073dbae"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 0.1.999",
  "dbus",
  "libc",
  "log",
@@ -651,9 +651,10 @@ dependencies = [
 
 [[package]]
 name = "cfg-if"
-version = "0.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
+version = "0.1.999"
+dependencies = [
+ "cfg-if 1.0.0",
+]
 
 [[package]]
 name = "cfg-if"
@@ -1024,7 +1025,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "058ed274caafc1f60c4997b5fc07bf7dc7cca454af7c6e81edffe5f33f70dace"
 dependencies = [
  "autocfg",
- "cfg-if 0.1.10",
+ "cfg-if 0.1.999",
  "crossbeam-utils 0.7.2",
  "lazy_static",
  "maybe-uninit",
@@ -1060,7 +1061,7 @@ version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04973fa96e96579258a5091af6003abde64af786b860f18622b82e026cca60e6"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 0.1.999",
  "lazy_static",
 ]
 
@@ -1071,7 +1072,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3c7c73a2d1e9fc0886a08b93e98eb643461230d5f1925e4036204d5f2e261a8"
 dependencies = [
  "autocfg",
- "cfg-if 0.1.10",
+ "cfg-if 0.1.999",
  "lazy_static",
 ]
 
@@ -1352,7 +1353,7 @@ version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13aea89a5c93364a98e9b37b2fa237effbb694d5cfe01c5b70941f7eb087d5e3"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 0.1.999",
  "dirs-sys",
 ]
 
@@ -3213,7 +3214,7 @@ dependencies = [
 name = "mio"
 version = "0.6.23"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 0.1.999",
  "fuchsia-zircon",
  "fuchsia-zircon-sys",
  "iovec",
@@ -3577,7 +3578,7 @@ version = "0.2.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "391630d12b68002ae1e25e8f974306474966550ad82dac6886fb8910c19568ae"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 0.1.999",
  "libc",
  "winapi",
 ]
@@ -3605,7 +3606,7 @@ checksum = "3b2e0b4f3320ed72aaedb9a5ac838690a8047c7b275da22711fddff4f8a14229"
 dependencies = [
  "bitflags",
  "cc",
- "cfg-if 0.1.10",
+ "cfg-if 0.1.999",
  "libc",
  "void",
 ]
@@ -5062,7 +5063,7 @@ version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a6e24d9338a0a5be79593e2fa15a648add6138caa803e2d5bc782c371732ca9"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 0.1.999",
  "libc",
  "rand",
  "redox_syscall",

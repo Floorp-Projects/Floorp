@@ -99,6 +99,9 @@ cexpr = { path = "build/rust/cexpr" }
 # Patch bindgen 0.56 to 0.59.
 bindgen = { path = "build/rust/bindgen" }
 
+# Patch cfg-if 0.1 to 1.0
+cfg-if = { path = "build/rust/cfg-if" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
