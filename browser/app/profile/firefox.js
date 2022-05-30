@@ -2216,16 +2216,6 @@ pref("app.normandy.onsync_skew_sec", 600);
   pref("intl.multilingual.aboutWelcome.languageMismatchEnabled", false);
 #endif
 
-// Simulate conditions that will happen when the browser
-// is running with Fission enabled. This is meant to assist
-// development and testing of Fission.
-// The current simulated conditions are:
-// - Don't propagate events from subframes to JS child actors
-pref("fission.frontend.simulate-events", false);
-// - Only deliver subframe messages that specifies
-//   their destination (using the BrowsingContext id).
-pref("fission.frontend.simulate-messages", false);
-
 // Coverage ping is disabled by default.
 pref("toolkit.coverage.enabled", false);
 pref("toolkit.coverage.endpoint.base", "https://coverage.mozilla.org");
