@@ -194,68 +194,75 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   Label osrReturnPoint;
   {
     // Check for Interpreter -> Baseline OSR.
+
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    MOZ_ASSERT(!regs.has(FramePointer));
+    regs.take(OsrFrameReg);
+    regs.take(reg_code);
+    regs.take(reg_osrNStack);
+    MOZ_ASSERT(!regs.has(ReturnReg), "ReturnReg matches reg_code");
+
     Label notOsr;
     masm.branchTestPtr(Assembler::Zero, OsrFrameReg, OsrFrameReg, &notOsr);
 
-    // Push return address and previous frame pointer.
-    {
-      vixl::UseScratchRegisterScope temps(&masm.asVIXL());
-      MOZ_ASSERT(temps.IsAvailable(ScratchReg2_64));  // ip1
-      temps.Exclude(ScratchReg2_64);
+    Register scratch = regs.takeAny();
 
-      masm.Adr(ScratchReg2_64, &osrReturnPoint);
-      masm.push(ScratchReg2, FramePointer);
-
-      // Reserve frame.
-      masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
-
-      masm.touchFrameValues(reg_osrNStack, ScratchReg2, FramePointer);
-    }
+    // Frame prologue.
+    masm.Adr(ARMRegister(scratch, 64), &osrReturnPoint);
+    masm.push(scratch, FramePointer);
     masm.moveStackPtrTo(FramePointer);
 
+    // Reserve frame.
+    masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
+
+    Register framePtrScratch = regs.takeAny();
+    masm.touchFrameValues(reg_osrNStack, scratch, framePtrScratch);
+    masm.moveStackPtrTo(framePtrScratch);
+
     // Reserve space for locals and stack values.
-    masm.Lsl(w19, ARMRegister(reg_osrNStack, 32),
-             3);  // w19 = num_stack_values * sizeof(Value).
-    masm.subFromStackPtr(r19);
+    // scratch = num_stack_values * sizeof(Value).
+    masm.Lsl(ARMRegister(scratch, 32), ARMRegister(reg_osrNStack, 32), 3);
+    masm.subFromStackPtr(scratch);
 
     // Enter exit frame.
     masm.addPtr(
-        Imm32(BaselineFrame::Size() + BaselineFrame::FramePointerOffset), r19);
-    masm.makeFrameDescriptor(r19, FrameType::BaselineJS,
+        Imm32(BaselineFrame::Size() + BaselineFrame::FramePointerOffset),
+        scratch);
+    masm.makeFrameDescriptor(scratch, FrameType::BaselineJS,
                              ExitFrameLayout::Size());
-    masm.asVIXL().Push(x19, xzr);  // Push xzr for a fake return address.
+    masm.asVIXL().Push(ARMRegister(scratch, 64),
+                       xzr);  // Push xzr for a fake return address.
     // No GC things to mark: push a bare token.
-    masm.loadJSContext(r19);
-    masm.enterFakeExitFrame(r19, r19, ExitFrameType::Bare);
+    masm.loadJSContext(scratch);
+    masm.enterFakeExitFrame(scratch, scratch, ExitFrameType::Bare);
 
-    masm.push(FramePointer, reg_code);
+    masm.push(reg_code);
 
     // Initialize the frame, including filling in the slots.
     using Fn = bool (*)(BaselineFrame * frame, InterpreterFrame * interpFrame,
                         uint32_t numStackValues);
     masm.setupUnalignedABICall(r19);
-    masm.passABIArg(FramePointer);  // BaselineFrame.
-    masm.passABIArg(reg_osrFrame);  // InterpreterFrame.
+    masm.passABIArg(framePtrScratch);  // BaselineFrame.
+    masm.passABIArg(reg_osrFrame);     // InterpreterFrame.
     masm.passABIArg(reg_osrNStack);
     masm.callWithABI<Fn, jit::InitBaselineFrameForOsr>(
         MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-    masm.pop(r19, FramePointer);
-    MOZ_ASSERT(r19 != ReturnReg);
+    masm.pop(scratch);
+    MOZ_ASSERT(scratch != ReturnReg);
 
     masm.addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));
-    masm.addPtr(Imm32(BaselineFrame::Size()), FramePointer);
 
     Label error;
     masm.branchIfFalseBool(ReturnReg, &error);
 
-    masm.jump(r19);
+    masm.jump(scratch);
 
-    // OOM: load error value, discard return address and previous frame
-    // pointer, and return.
+    // OOM: frame epilogue, load error value, discard return address and return.
     masm.bind(&error);
-    masm.Add(masm.GetStackPointer64(), FramePointer64,
-             Operand(2 * sizeof(uintptr_t)));
+    masm.moveToStackPtr(FramePointer);
+    masm.pop(FramePointer);
+    masm.addToStackPtr(Imm32(sizeof(uintptr_t)));  // Return address.
     masm.syncStackPtr();
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
     masm.B(&osrReturnPoint);
