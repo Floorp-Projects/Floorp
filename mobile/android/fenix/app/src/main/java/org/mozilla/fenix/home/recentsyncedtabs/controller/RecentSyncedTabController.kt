@@ -41,7 +41,7 @@ class DefaultRecentSyncedTabController(
     private val accessPoint: TabsTrayAccessPoint,
 ) : RecentSyncedTabController {
     override fun handleRecentSyncedTabClick(tab: RecentSyncedTab) {
-        RecentSyncedTabs.recentSyncedTabOpened[tab.deviceType.name].add()
+        RecentSyncedTabs.recentSyncedTabOpened[tab.deviceType.name.lowercase()].add()
         addNewTabUseCase.invoke(tab.url)
         navController.navigate(R.id.browserFragment)
     }

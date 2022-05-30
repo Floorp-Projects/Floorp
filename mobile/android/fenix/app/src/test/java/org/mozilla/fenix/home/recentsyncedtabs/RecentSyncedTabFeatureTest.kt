@@ -185,7 +185,7 @@ class RecentSyncedTabFeatureTest {
 
         feature.displaySyncedTabs(listOf(tab))
 
-        assertEquals(1, RecentSyncedTabs.recentSyncedTabShown[deviceAccessed1.deviceType.name].testGetValue())
+        assertEquals(1, RecentSyncedTabs.recentSyncedTabShown["desktop"].testGetValue())
     }
 
     @Test

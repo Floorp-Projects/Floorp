@@ -102,7 +102,7 @@ class DefaultRecentSyncedTabControllerTest {
 
         controller.handleRecentSyncedTabClick(tab)
 
-        assertEquals(1, RecentSyncedTabs.recentSyncedTabOpened[deviceType.name].testGetValue())
+        assertEquals(1, RecentSyncedTabs.recentSyncedTabOpened["desktop"].testGetValue())
     }
 
     @Test

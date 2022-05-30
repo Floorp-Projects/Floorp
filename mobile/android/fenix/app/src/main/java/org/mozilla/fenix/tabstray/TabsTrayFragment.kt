@@ -134,7 +134,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
         val args by navArgs<TabsTrayFragmentArgs>()
         args.accessPoint.takeIf { it != TabsTrayAccessPoint.None }?.let {
-            TabsTray.accessPoint[it.name].add()
+            TabsTray.accessPoint[it.name.lowercase()].add()
         }
         val initialMode = if (args.enterMultiselect) {
             TabsTrayState.Mode.Select(emptySet())
