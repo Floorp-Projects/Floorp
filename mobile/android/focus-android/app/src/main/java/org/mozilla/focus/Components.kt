@@ -71,6 +71,9 @@ import org.mozilla.focus.state.Screen
 import org.mozilla.focus.tabs.MergeTabsMiddleware
 import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.telemetry.TelemetryMiddleware
+import org.mozilla.focus.telemetry.startuptelemetry.AppStartReasonProvider
+import org.mozilla.focus.telemetry.startuptelemetry.StartupActivityLog
+import org.mozilla.focus.telemetry.startuptelemetry.StartupStateProvider
 import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.topsites.DefaultTopSitesStorage
 import org.mozilla.focus.utils.Settings
@@ -92,6 +95,12 @@ class Components(
             )
         )
     }
+
+    val appStartReasonProvider by lazy { AppStartReasonProvider() }
+
+    val startupActivityLog by lazy { StartupActivityLog() }
+
+    val startupStateProvider by lazy { StartupStateProvider(startupActivityLog, appStartReasonProvider) }
 
     val settings by lazy { Settings(context) }
 

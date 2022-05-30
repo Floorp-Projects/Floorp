@@ -44,6 +44,8 @@ import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.telemetry.startuptelemetry.StartupPathProvider
+import org.mozilla.focus.telemetry.startuptelemetry.StartupTypeTelemetry
 import org.mozilla.focus.utils.SupportUtils
 
 private const val REQUEST_TIME_OUT = 2000L
@@ -57,6 +59,9 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     private val navigator by lazy { Navigator(components.appStore, MainActivityNavigation(this)) }
     private val tabCount: Int
         get() = components.store.state.privateTabs.size
+
+    private val startupPathProvider = StartupPathProvider()
+    private lateinit var startupTypeTelemetry: StartupTypeTelemetry
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -94,6 +99,11 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val isTheFirstLaunch = settings.getAppLaunchCount() == 0
         if (isTheFirstLaunch) {
             setSplashScreenPreDrawListener()
+        }
+
+        startupPathProvider.attachOnActivityOnCreate(lifecycle, intent)
+        startupTypeTelemetry = StartupTypeTelemetry(components.startupStateProvider, startupPathProvider).apply {
+            attachOnMainActivityOnCreate(lifecycle)
         }
 
         val intent = SafeIntent(intent)
@@ -197,7 +207,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
             browserFragment?.handleTabCrash(crash)
         }
-
+        startupPathProvider.onIntentReceived(intent)
         val intent = SafeIntent(unsafeIntent)
 
         if (intent.dataString.equals(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL)) {

@@ -4,6 +4,10 @@
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 
+no_lint:
+  - CATEGORY_GENERIC
+  - COMMON_PREFIX
+
 browser:
   is_default:
     type: boolean
@@ -112,6 +116,82 @@ browser:
     notification_emails:
       - android-probes@mozilla.com
     expires: 107
+
+perf.startup:
+  startup_type:
+    type: labeled_counter
+    description: |
+      Indicates how the browser was started. The label is divided into two
+      variables. `state` is how cached the browser is when started. `path` is
+      what code path we are expected to take. Together, they create a combined
+      label: `state_path`. For brevity, the specific states are documented in
+      the [Fenix perf
+      glossary](https://wiki.mozilla.org/index.php?title=Performance/Fenix/Glossary).
+      <br><br>
+      This implementation is intended to be simple, not comprehensive. We list
+      the implications below.
+
+      <br><br>
+      These ways of opening the app undesirably adds events to our primary
+      buckets (non-`unknown` cases):
+      <br>- App switcher cold/warm: `cold/warm_` + duplicates path from
+      previous launch
+      <br>- An Intent is sent internally that's uses `ACTION_MAIN` or
+      `ACTION_VIEW` could be: `*_main/view` (unknown if this ever happens)
+      <br>- A command-line launch uses `ACTION_MAIN` or `ACTION_VIEW` could be:
+      `*_main/view`
+
+      <br><br>
+      These ways of opening the app undesirably do not add their events to our
+      primary buckets:
+      <br>- Close and reopen the app very quickly: no event is recorded.
+
+      <br><br>
+      These ways of opening the app don't affect our primary buckets:
+      <br>- App switcher hot: `hot_unknown`
+      <br>- PWA (all states): `unknown_unknown`
+      <br>- Custom tab: `unknown_view`
+      <br>- Cold start where a service or other non-activity starts the process
+      (not manually tested) - this seems to happen if you have the homescreen
+      widget: `unknown_*`
+      <br>- Another activity is drawn before MainActivity or CustomTabActivity
+      (e.g. widget voice
+      search): `unknown_*`
+
+      <br>
+      In addition to the events above, the `unknown` state may be chosen when we
+      were unable to determine a cause due to implementation details or the API
+      was used incorrectly. We may be able to record the events listed above
+      into different buckets but we kept the implementation simple for now.
+      <br><br>
+      N.B.: for implementation simplicity, we duplicate the logic in app that
+      determines `path` so it's not perfectly accurate. In one way, we record we
+      is intended to happen rather than what actually happened (e.g. the user
+      may click a link so we record VIEW but the app does a MAIN by going to the
+      homescreen because the link was invalid).
+    labels:
+      - cold_main
+      - cold_view
+      - cold_unknown
+      - warm_main
+      - warm_view
+      - warm_unknown
+      - hot_main
+      - hot_view
+      - hot_unknown
+      - unknown_main
+      - unknown_view
+      - unknown_unknown
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7079
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - mleclair@mozilla.com
+    expires: never
 
 activation:
   activation_id:
@@ -1757,3 +1837,45 @@ nimbus_experiments:
     expires: 112
     data_sensitivity:
       - technical
+
+metrics:
+  start_reason_process_error:
+    type: boolean
+    description: |
+      The `AppStartReasonProvider.ProcessLifecycleObserver.onCreate` was
+      unexpectedly called twice. We can use this metric to validate our
+      assumptions about how these APIs are called. This probe can be removed
+      once we validate these assumptions.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7079
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - mleclair@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - performance
+  start_reason_activity_error:
+    type: boolean
+    description: |
+      The `AppStartReasonProvider.ActivityLifecycleCallbacks.onActivityCreated`
+      was unexpectedly called twice. We can use this metric to validate our
+      assumptions about how these APIs are called. This probe can be removed
+      once we validate these assumptions.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7079
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - mleclair@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - performance

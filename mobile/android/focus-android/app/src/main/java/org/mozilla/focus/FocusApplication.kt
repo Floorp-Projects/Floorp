@@ -87,6 +87,9 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
 
             setupLeakCanary()
 
+            components.appStartReasonProvider.registerInAppOnCreate(this)
+            components.startupActivityLog.registerInAppOnCreate(this)
+
             ProcessLifecycleOwner.get().lifecycle.addObserver(lockObserver)
         }
     }

@@ -309,6 +309,7 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_coroutines
+    testImplementation Dependencies.androidx_work_testing
     testImplementation Dependencies.androidx_arch_core_testing
     testImplementation "org.mozilla.components:support-test:${AndroidComponents.VERSION}"
     testImplementation "org.mozilla.components:support-test-libstate:${AndroidComponents.VERSION}"

@@ -1,0 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Disable line-length rule because the links in the descriptions can be long
+# yamllint disable rule:line-length
+
+---
+$schema: moz://mozilla.org/schemas/glean/tags/1-0-0
+performance:
+  description: Used for data reviews to label metrics related to performance. Corresponds
+    to the [Feature:Performance](https://github.com/mozilla-mobile/focus-android/issues?q=label%3AFeature%3APerformance)
+    label on GitHub.

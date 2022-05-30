@@ -43,6 +43,7 @@ object Versions {
     object Test {
         const val robolectric = "4.6.1"
         const val mockito = "3.11.0"
+        const val androidx_work = "2.7.1"
     }
 }
 
@@ -83,4 +84,5 @@ object Dependencies {
     const val testing_robolectric = "org.robolectric:robolectric:${Versions.Test.robolectric}"
     const val testing_mockito = "org.mockito:mockito-core:${Versions.Test.mockito}"
     const val testing_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.Kotlin.coroutines}"
+    const val androidx_work_testing = "androidx.work:work-testing:${Versions.Test.androidx_work}"
 }
