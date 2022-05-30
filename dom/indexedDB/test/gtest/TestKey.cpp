@@ -12,10 +12,13 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Unused.h"
 
-#include "jsapi.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
 #include "js/ArrayBuffer.h"
 #include "js/PropertyAndElement.h"  // JS_GetElement, JS_SetElement
+#include "js/RootingAPI.h"
+#include "js/String.h"
+#include "js/TypeDecls.h"
+#include "js/Value.h"
 
 // TODO: This PrintTo overload is defined in dom/media/gtest/TestGroupId.cpp.
 // However, it is not used, probably because of
