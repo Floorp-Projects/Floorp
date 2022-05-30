@@ -60,7 +60,6 @@ class Context {
 }
 Context.Chrome = "chrome";
 Context.Content = "content";
-this.Context = Context;
 
 /**
  * Creates a browsing context wrapper.
@@ -379,4 +378,3 @@ const WindowState = {
     }
   },
 };
-this.WindowState = WindowState;

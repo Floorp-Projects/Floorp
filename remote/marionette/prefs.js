@@ -191,9 +191,6 @@ class EnvironmentPrefs {
   }
 }
 
-this.Branch = Branch;
-this.EnvironmentPrefs = EnvironmentPrefs;
-
 // There is a future potential of exposing this as Marionette.prefs.port
 // if we introduce a Marionette.jsm module.
 const MarionettePrefs = new MarionetteBranch();

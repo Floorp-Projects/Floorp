@@ -165,7 +165,6 @@ class TCPListener {
     this.conns.delete(conn);
   }
 }
-this.TCPListener = TCPListener;
 
 /**
  * Marionette client connection.
@@ -413,4 +412,3 @@ class TCPConnection {
     return `[object TCPConnection ${this.id}]`;
   }
 }
-this.TCPConnection = TCPConnection;

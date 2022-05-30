@@ -414,7 +414,6 @@ class DebounceCallback {
     );
   }
 }
-this.DebounceCallback = DebounceCallback;
 
 /**
  * Wait for a message to be fired from a particular message manager.
