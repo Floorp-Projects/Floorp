@@ -1,3 +1,4 @@
+use crate::codegen;
 use crate::ir::function::Abi;
 use proc_macro2::Ident;
 
@@ -76,6 +77,7 @@ impl DynamicItems {
         let constructor_inits = &self.constructor_inits;
         let init_fields = &self.init_fields;
         let struct_implementation = &self.struct_implementation;
+
         quote! {
             extern crate libloading;
 
@@ -89,14 +91,20 @@ impl DynamicItems {
                     path: P
                 ) -> Result<Self, ::libloading::Error>
                 where P: AsRef<::std::ffi::OsStr> {
-                    let __library = ::libloading::Library::new(path)?;
+                    let library = ::libloading::Library::new(path)?;
+                    Self::from_library(library)
+                }
+
+                pub unsafe fn from_library<L>(
+                    library: L
+                ) -> Result<Self, ::libloading::Error>
+                where L: Into<::libloading::Library> {
+                    let __library = library.into();
                     #( #constructor_inits )*
-                    Ok(
-                        #lib_ident {
-                            __library,
-                            #( #init_fields ),*
-                        }
-                    )
+                    Ok(#lib_ident {
+                        __library,
+                        #( #init_fields ),*
+                    })
                 }
 
                 #( #struct_implementation )*
@@ -109,6 +117,7 @@ impl DynamicItems {
         ident: Ident,
         abi: Abi,
         is_variadic: bool,
+        is_required: bool,
         args: Vec<proc_macro2::TokenStream>,
         args_identifiers: Vec<proc_macro2::TokenStream>,
         ret: proc_macro2::TokenStream,
@@ -118,24 +127,48 @@ impl DynamicItems {
             assert_eq!(args.len(), args_identifiers.len());
         }
 
+        let signature = quote! { unsafe extern #abi fn ( #( #args),* ) #ret };
+        let member = if is_required {
+            signature
+        } else {
+            quote! { Result<#signature, ::libloading::Error> }
+        };
+
         self.struct_members.push(quote! {
-            pub #ident: Result<unsafe extern #abi fn ( #( #args ),* ) #ret, ::libloading::Error>,
+            pub #ident: #member,
         });
+
+        // N.B: If the signature was required, it won't be wrapped in a Result<...>
+        //      and we can simply call it directly.
+        let fn_ = if is_required {
+            quote! { self.#ident }
+        } else {
+            quote! { self.#ident.as_ref().expect("Expected function, got error.") }
+        };
+        let call_body = quote! {
+            (#fn_)(#( #args_identifiers ),*)
+        };
 
         // We can't implement variadic functions from C easily, so we allow to
         // access the function pointer so that the user can call it just fine.
         if !is_variadic {
             self.struct_implementation.push(quote! {
                 pub unsafe fn #ident ( &self, #( #args ),* ) -> #ret_ty {
-                    let sym = self.#ident.as_ref().expect("Expected function, got error.");
-                    (sym)(#( #args_identifiers ),*)
+                    #call_body
                 }
             });
         }
 
-        let ident_str = ident.to_string();
-        self.constructor_inits.push(quote! {
-            let #ident = __library.get(#ident_str.as_bytes()).map(|sym| *sym);
+        // N.B: Unwrap the signature upon construction if it is required to be resolved.
+        let ident_str = codegen::helpers::ast_ty::cstr_expr(ident.to_string());
+        self.constructor_inits.push(if is_required {
+            quote! {
+                let #ident = __library.get(#ident_str).map(|sym| *sym)?;
+            }
+        } else {
+            quote! {
+                let #ident = __library.get(#ident_str).map(|sym| *sym);
+            }
         });
 
         self.init_fields.push(quote! {

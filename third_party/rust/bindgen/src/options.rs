@@ -30,6 +30,10 @@ where
             Arg::with_name("header")
                 .help("C or C++ header file")
                 .required(true),
+            Arg::with_name("depfile")
+                .long("depfile")
+                .takes_value(true)
+                .help("Path to write depfile to"),
             Arg::with_name("default-enum-style")
                 .long("default-enum-style")
                 .help("The default style of code used to generate enums.")
@@ -136,24 +140,35 @@ where
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
-            Arg::with_name("blacklist-type")
-                .long("blacklist-type")
+            Arg::with_name("blocklist-type")
+                .alias("blacklist-type")
+                .long("blocklist-type")
                 .help("Mark <type> as hidden.")
                 .value_name("type")
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
-            Arg::with_name("blacklist-function")
-                .long("blacklist-function")
+            Arg::with_name("blocklist-function")
+                .alias("blacklist-function")
+                .long("blocklist-function")
                 .help("Mark <function> as hidden.")
                 .value_name("function")
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
-            Arg::with_name("blacklist-item")
-                .long("blacklist-item")
+            Arg::with_name("blocklist-item")
+                .alias("blacklist-item")
+                .long("blocklist-item")
                 .help("Mark <item> as hidden.")
                 .value_name("item")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(1),
+            Arg::with_name("blocklist-file")
+                .alias("blacklist-file")
+                .long("blocklist-file")
+                .help("Mark all contents of <path> as hidden.")
+                .value_name("path")
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
@@ -210,12 +225,13 @@ where
                     "Avoid including doc comments in the output, see: \
                      https://github.com/rust-lang/rust-bindgen/issues/426",
                 ),
-            Arg::with_name("no-recursive-whitelist")
-                .long("no-recursive-whitelist")
+            Arg::with_name("no-recursive-allowlist")
+                .long("no-recursive-allowlist")
+                .alias("no-recursive-whitelist")
                 .help(
-                    "Disable whitelisting types recursively. This will cause \
+                    "Disable allowlisting types recursively. This will cause \
                      bindgen to emit Rust code that won't compile! See the \
-                     `bindgen::Builder::whitelist_recursively` method's \
+                     `bindgen::Builder::allowlist_recursively` method's \
                      documentation for details.",
                 ),
             Arg::with_name("objc-extern-crate")
@@ -316,6 +332,9 @@ where
             Arg::with_name("no-include-path-detection")
                 .long("no-include-path-detection")
                 .help("Do not try to detect default include paths"),
+            Arg::with_name("fit-macro-constant-types")
+                .long("fit-macro-constant-types")
+                .help("Try to fit macro constants into types smaller than u32/i32"),
             Arg::with_name("unstable-rust")
                 .long("unstable-rust")
                 .help("Generate unstable Rust code (deprecated; use --rust-target instead).")
@@ -338,6 +357,13 @@ where
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("module-raw-line")
+                .long("module-raw-line")
+                .help("Add a raw line of Rust code to a given module.")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(2)
+                .value_names(&["module-name", "raw-line"]),
             Arg::with_name("rust-target")
                 .long("rust-target")
                 .help(&rust_target_help)
@@ -354,11 +380,12 @@ where
             Arg::with_name("use-msvc-mangling")
                 .long("use-msvc-mangling")
                 .help("MSVC C++ ABI mangling. DEPRECATED: Has no effect."),
-            Arg::with_name("whitelist-function")
-                .long("whitelist-function")
+            Arg::with_name("allowlist-function")
+                .long("allowlist-function")
+                .alias("whitelist-function")
                 .help(
-                    "Whitelist all the free-standing functions matching \
-                     <regex>. Other non-whitelisted functions will not be \
+                    "Allowlist all the free-standing functions matching \
+                     <regex>. Other non-allowlisted functions will not be \
                      generated.",
                 )
                 .value_name("regex")
@@ -368,21 +395,23 @@ where
             Arg::with_name("generate-inline-functions")
                 .long("generate-inline-functions")
                 .help("Generate inline functions."),
-            Arg::with_name("whitelist-type")
-                .long("whitelist-type")
+            Arg::with_name("allowlist-type")
+                .long("allowlist-type")
+                .alias("whitelist-type")
                 .help(
-                    "Only generate types matching <regex>. Other non-whitelisted types will \
+                    "Only generate types matching <regex>. Other non-allowlisted types will \
                      not be generated.",
                 )
                 .value_name("regex")
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
-            Arg::with_name("whitelist-var")
-                .long("whitelist-var")
+            Arg::with_name("allowlist-var")
+                .long("allowlist-var")
+                .alias("whitelist-var")
                 .help(
-                    "Whitelist all the free-standing variables matching \
-                     <regex>. Other non-whitelisted variables will not be \
+                    "Allowlist all the free-standing variables matching \
+                     <regex>. Other non-allowlisted variables will not be \
                      generated.",
                 )
                 .value_name("regex")
@@ -465,6 +494,13 @@ where
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("must-use-type")
+                .long("must-use-type")
+                .help("Add #[must_use] annotation to types matching <regex>.")
+                .value_name("regex")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(1),
             Arg::with_name("enable-function-attribute-detection")
                 .long("enable-function-attribute-detection")
                 .help(
@@ -483,6 +519,21 @@ where
                 .long("dynamic-loading")
                 .takes_value(true)
                 .help("Use dynamic loading mode with the given library name."),
+            Arg::with_name("dynamic-link-require-all")
+                .long("dynamic-link-require-all")
+                .help("Require successful linkage to all functions in the library."),
+            Arg::with_name("respect-cxx-access-specs")
+                .long("respect-cxx-access-specs")
+                .help("Makes generated bindings `pub` only for items if the items are publically accessible in C++."),
+            Arg::with_name("translate-enum-integer-types")
+                .long("translate-enum-integer-types")
+                .help("Always translate enum integer types to native Rust integer types."),
+            Arg::with_name("c-naming")
+                .long("c-naming")
+                .help("Generate types with C style naming."),
+            Arg::with_name("explicit-padding")
+                .long("explicit-padding")
+                .help("Always output explicit padding fields."),
         ]) // .args()
         .get_matches_from(args);
 
@@ -569,21 +620,27 @@ where
         }
     }
 
-    if let Some(hidden_types) = matches.values_of("blacklist-type") {
+    if let Some(hidden_types) = matches.values_of("blocklist-type") {
         for ty in hidden_types {
-            builder = builder.blacklist_type(ty);
+            builder = builder.blocklist_type(ty);
         }
     }
 
-    if let Some(hidden_functions) = matches.values_of("blacklist-function") {
+    if let Some(hidden_functions) = matches.values_of("blocklist-function") {
         for fun in hidden_functions {
-            builder = builder.blacklist_function(fun);
+            builder = builder.blocklist_function(fun);
         }
     }
 
-    if let Some(hidden_identifiers) = matches.values_of("blacklist-item") {
+    if let Some(hidden_identifiers) = matches.values_of("blocklist-item") {
         for id in hidden_identifiers {
-            builder = builder.blacklist_item(id);
+            builder = builder.blocklist_item(id);
+        }
+    }
+
+    if let Some(hidden_files) = matches.values_of("blocklist-file") {
+        for file in hidden_files {
+            builder = builder.blocklist_file(file);
         }
     }
 
@@ -647,6 +704,10 @@ where
         builder = builder.detect_include_paths(false);
     }
 
+    if matches.is_present("fit-macro-constant-types") {
+        builder = builder.fit_macro_constants(true);
+    }
+
     if matches.is_present("time-phases") {
         builder = builder.time_phases(true);
     }
@@ -670,7 +731,7 @@ where
 
     if let Some(what_to_generate) = matches.value_of("generate") {
         let mut config = CodegenConfig::empty();
-        for what in what_to_generate.split(",") {
+        for what in what_to_generate.split(',') {
             match what {
                 "functions" => config.insert(CodegenConfig::FUNCTIONS),
                 "types" => config.insert(CodegenConfig::TYPES),
@@ -741,8 +802,8 @@ where
         builder = builder.generate_comments(false);
     }
 
-    if matches.is_present("no-recursive-whitelist") {
-        builder = builder.whitelist_recursively(false);
+    if matches.is_present("no-recursive-allowlist") {
+        builder = builder.allowlist_recursively(false);
     }
 
     if matches.is_present("objc-extern-crate") {
@@ -769,6 +830,13 @@ where
         }
     }
 
+    if let Some(mut values) = matches.values_of("module-raw-line") {
+        while let Some(module) = values.next() {
+            let line = values.next().unwrap();
+            builder = builder.module_raw_line(module, line);
+        }
+    }
+
     if matches.is_present("use-core") {
         builder = builder.use_core();
     }
@@ -785,21 +853,21 @@ where
         builder = builder.generate_inline_functions(true);
     }
 
-    if let Some(whitelist) = matches.values_of("whitelist-function") {
-        for regex in whitelist {
-            builder = builder.whitelist_function(regex);
+    if let Some(allowlist) = matches.values_of("allowlist-function") {
+        for regex in allowlist {
+            builder = builder.allowlist_function(regex);
         }
     }
 
-    if let Some(whitelist) = matches.values_of("whitelist-type") {
-        for regex in whitelist {
-            builder = builder.whitelist_type(regex);
+    if let Some(allowlist) = matches.values_of("allowlist-type") {
+        for regex in allowlist {
+            builder = builder.allowlist_type(regex);
         }
     }
 
-    if let Some(whitelist) = matches.values_of("whitelist-var") {
-        for regex in whitelist {
-            builder = builder.whitelist_var(regex);
+    if let Some(allowlist) = matches.values_of("allowlist-var") {
+        for regex in allowlist {
+            builder = builder.allowlist_var(regex);
         }
     }
 
@@ -811,8 +879,14 @@ where
 
     let output = if let Some(path) = matches.value_of("output") {
         let file = File::create(path)?;
+        if let Some(depfile) = matches.value_of("depfile") {
+            builder = builder.depfile(path, depfile);
+        }
         Box::new(io::BufWriter::new(file)) as Box<dyn io::Write>
     } else {
+        if let Some(depfile) = matches.value_of("depfile") {
+            builder = builder.depfile("-", depfile);
+        }
         Box::new(io::BufWriter::new(io::stdout())) as Box<dyn io::Write>
     };
 
@@ -890,8 +964,34 @@ where
         }
     }
 
+    if let Some(must_use_type) = matches.values_of("must-use-type") {
+        for regex in must_use_type {
+            builder = builder.must_use_type(regex);
+        }
+    }
+
     if let Some(dynamic_library_name) = matches.value_of("dynamic-loading") {
         builder = builder.dynamic_library_name(dynamic_library_name);
+    }
+
+    if matches.is_present("dynamic-link-require-all") {
+        builder = builder.dynamic_link_require_all(true);
+    }
+
+    if matches.is_present("respect-cxx-access-specs") {
+        builder = builder.respect_cxx_access_specs(true);
+    }
+
+    if matches.is_present("translate-enum-integer-types") {
+        builder = builder.translate_enum_integer_types(true);
+    }
+
+    if matches.is_present("c-naming") {
+        builder = builder.c_naming(true);
+    }
+
+    if matches.is_present("explicit-padding") {
+        builder = builder.explicit_padding(true);
     }
 
     let verbose = matches.is_present("verbose");

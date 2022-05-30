@@ -338,7 +338,7 @@ version = "1.1.0"
 name = "baldrdash"
 version = "0.1.0"
 dependencies = [
- "bindgen",
+ "bindgen 0.56.999",
  "cranelift-codegen",
  "cranelift-wasm",
  "env_logger",
@@ -393,12 +393,19 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.56.0"
+version = "0.56.999"
+dependencies = [
+ "bindgen 0.59.2",
+]
+
+[[package]]
+name = "bindgen"
+version = "0.59.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2da379dbebc0b76ef63ca68d8fc6e71c0f13e59432e0987e508c1820e6ab5239"
+checksum = "2bd2a9a458e8f4304c52c43ebb0cfbd520289f8379a52e329a38afda99bf8eb8"
 dependencies = [
  "bitflags",
- "cexpr",
+ "cexpr 0.6.999",
  "clang-sys",
  "lazy_static",
  "lazycell",
@@ -636,6 +643,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "cexpr"
+version = "0.6.999"
+dependencies = [
+ "cexpr 0.4.0",
+]
+
+[[package]]
 name = "cfg-if"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -829,7 +843,7 @@ version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca4679a59dbd8c15f064c012dfe8c1163b9453224238b59bb9328c142b8b248b"
 dependencies = [
- "bindgen",
+ "bindgen 0.56.999",
 ]
 
 [[package]]
@@ -1907,7 +1921,7 @@ name = "gecko-profiler"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "bindgen",
+ "bindgen 0.56.999",
  "lazy_static",
  "mozbuild",
  "profiler-macros",
@@ -2414,7 +2428,7 @@ name = "http3server"
 version = "0.1.1"
 dependencies = [
  "base64 0.10.1",
- "bindgen",
+ "bindgen 0.56.999",
  "log",
  "mio 0.6.23",
  "mio-extras",
@@ -3337,7 +3351,7 @@ dependencies = [
 name = "mozilla-central-workspace-hack"
 version = "0.1.0"
 dependencies = [
- "bindgen",
+ "bindgen 0.56.999",
  "libc",
  "quote",
  "serde",
@@ -3482,7 +3496,7 @@ name = "neqo-crypto"
 version = "0.5.7"
 source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
- "bindgen",
+ "bindgen 0.56.999",
  "log",
  "mozbuild",
  "neqo-common",
@@ -4746,9 +4760,9 @@ dependencies = [
 
 [[package]]
 name = "shlex"
-version = "0.1.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fdf1b9db47230893d76faad238fd6097fd6d6a9245cd7a4d90dbd639536bbd2"
+checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
 name = "siphasher"
@@ -4880,7 +4894,7 @@ dependencies = [
  "app_units",
  "arrayvec 0.5.2",
  "atomic_refcell",
- "bindgen",
+ "bindgen 0.56.999",
  "bitflags",
  "byteorder",
  "cssparser",

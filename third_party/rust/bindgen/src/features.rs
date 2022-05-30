@@ -87,8 +87,9 @@ macro_rules! rust_target_base {
         $x_macro!(
             /// Rust stable 1.0
             => Stable_1_0 => 1.0;
-            /// Rust stable 1.1
-            => Stable_1_1 => 1.1;
+            /// Rust stable 1.17
+            ///  * Static lifetime elision ([RFC 1623](https://github.com/rust-lang/rfcs/blob/master/text/1623-static.md))
+            => Stable_1_17 => 1.17;
             /// Rust stable 1.19
             ///  * Untagged unions ([RFC 1444](https://github.com/rust-lang/rfcs/blob/master/text/1444-union.md))
             => Stable_1_19 => 1.19;
@@ -123,6 +124,9 @@ macro_rules! rust_target_base {
             /// Rust stable 1.40
             /// * `non_exhaustive` enums/structs ([Tracking issue](https://github.com/rust-lang/rust/issues/44109))
             => Stable_1_40 => 1.40;
+            /// Rust stable 1.47
+            /// * `larger_arrays` ([Tracking issue](https://github.com/rust-lang/rust/pull/74060))
+            => Stable_1_47 => 1.47;
             /// Nightly rust
             ///  * `thiscall` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/42202))
             => Nightly => nightly;
@@ -134,7 +138,7 @@ rust_target_base!(rust_target_def);
 rust_target_base!(rust_target_values_def);
 
 /// Latest stable release of Rust
-pub const LATEST_STABLE_RUST: RustTarget = RustTarget::Stable_1_40;
+pub const LATEST_STABLE_RUST: RustTarget = RustTarget::Stable_1_47;
 
 /// Create RustFeatures struct definition, new(), and a getter for each field
 macro_rules! rust_feature_def {
@@ -188,6 +192,9 @@ macro_rules! rust_feature_def {
 // documentation for the relevant variant in the rust_target_base macro
 // definition.
 rust_feature_def!(
+    Stable_1_17 {
+        => static_lifetime_elision;
+    }
     Stable_1_19 {
         => untagged_union;
     }
@@ -222,6 +229,9 @@ rust_feature_def!(
     Stable_1_40 {
         => non_exhaustive;
     }
+    Stable_1_47 {
+        => larger_arrays;
+    }
     Nightly {
         => thiscall_abi;
     }
@@ -243,7 +253,8 @@ mod test {
     fn target_features() {
         let f_1_0 = RustFeatures::from(RustTarget::Stable_1_0);
         assert!(
-            !f_1_0.core_ffi_c_void &&
+            !f_1_0.static_lifetime_elision &&
+                !f_1_0.core_ffi_c_void &&
                 !f_1_0.untagged_union &&
                 !f_1_0.associated_const &&
                 !f_1_0.builtin_clone_impls &&
@@ -252,7 +263,8 @@ mod test {
         );
         let f_1_21 = RustFeatures::from(RustTarget::Stable_1_21);
         assert!(
-            !f_1_21.core_ffi_c_void &&
+            f_1_21.static_lifetime_elision &&
+                !f_1_21.core_ffi_c_void &&
                 f_1_21.untagged_union &&
                 f_1_21.associated_const &&
                 f_1_21.builtin_clone_impls &&
@@ -261,7 +273,8 @@ mod test {
         );
         let f_nightly = RustFeatures::from(RustTarget::Nightly);
         assert!(
-            f_nightly.core_ffi_c_void &&
+            f_nightly.static_lifetime_elision &&
+                f_nightly.core_ffi_c_void &&
                 f_nightly.untagged_union &&
                 f_nightly.associated_const &&
                 f_nightly.builtin_clone_impls &&
@@ -280,6 +293,7 @@ mod test {
     #[test]
     fn str_to_target() {
         test_target("1.0", RustTarget::Stable_1_0);
+        test_target("1.17", RustTarget::Stable_1_17);
         test_target("1.19", RustTarget::Stable_1_19);
         test_target("1.21", RustTarget::Stable_1_21);
         test_target("1.25", RustTarget::Stable_1_25);
