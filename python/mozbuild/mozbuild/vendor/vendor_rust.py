@@ -503,7 +503,8 @@ license file's hash.
 
         cargo = self._ensure_cargo()
         if not cargo:
-            return
+            self.log(logging.ERROR, "cargo_not_found", {}, "Cargo was not found.")
+            sys.exit(1)
 
         relative_vendor_dir = "third_party/rust"
         vendor_dir = mozpath.join(self.topsrcdir, relative_vendor_dir)
