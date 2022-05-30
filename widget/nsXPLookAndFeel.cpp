@@ -288,6 +288,8 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-mac-menutextselect",
     "ui.-moz_mac_disabledtoolbartext",
     "ui.-moz-mac-secondaryhighlight",
+    "ui.-moz-mac-vibrant-titlebar-light",
+    "ui.-moz-mac-vibrant-titlebar-dark",
     "ui.-moz-mac-menupopup",
     "ui.-moz-mac-menuitem",
     "ui.-moz-mac-active-menuitem",
@@ -621,6 +623,8 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(MozMacMenutextselect, 0xFF, 0xFF, 0xFF)
       COLOR(MozMacDisabledtoolbartext, 0x3F, 0x3F, 0x3F)
       COLOR(MozMacSecondaryhighlight, 0xD4, 0xD4, 0xD4)
+      COLOR(MozMacVibrantTitlebarLight, 0xf7, 0xf7, 0xf7)
+      COLOR(MozMacVibrantTitlebarDark, 0x28, 0x28, 0x28)
       COLOR(MozMacMenupopup, 0xe6, 0xe6, 0xe6)
       COLOR(MozMacMenuitem, 0xe6, 0xe6, 0xe6)
       COLOR(MozMacActiveMenuitem, 0x0a, 0x64, 0xdc)
