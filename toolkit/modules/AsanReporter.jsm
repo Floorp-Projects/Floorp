@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["AsanReporter"];
+const EXPORTED_SYMBOLS = ["AsanReporter"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyGetter(this, "asanDumpDir", () => {
   return OS.Path.join(profileDir.path, "asan");
 });
 
-this.AsanReporter = {
+const AsanReporter = {
   init() {
     if (this.initialized) {
       return;
