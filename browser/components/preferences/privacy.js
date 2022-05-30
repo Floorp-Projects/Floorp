@@ -21,18 +21,6 @@ const CONTENT_BLOCKING_PREFS = [
   "privacy.firstparty.isolate",
 ];
 
-/*
- * Prefs that are unique to sanitizeOnShutdown and are not shared
- * with the deleteOnClose mechanism like privacy.clearOnShutdown.cookies, -cache and -offlineApps
- */
-const SANITIZE_ON_SHUTDOWN_PREFS_ONLY = [
-  "privacy.clearOnShutdown.history",
-  "privacy.clearOnShutdown.downloads",
-  "privacy.clearOnShutdown.sessions",
-  "privacy.clearOnShutdown.formdata",
-  "privacy.clearOnShutdown.siteSettings",
-];
-
 const PREF_OPT_OUT_STUDIES_ENABLED = "app.shield.optoutstudies.enabled";
 const PREF_NORMANDY_ENABLED = "app.normandy.enabled";
 
@@ -123,9 +111,9 @@ Preferences.addAll([
   { id: "places.history.enabled", type: "bool" },
   { id: "browser.formfill.enable", type: "bool" },
   { id: "privacy.history.custom", type: "bool" },
-
   // Cookies
   { id: "network.cookie.cookieBehavior", type: "int" },
+  { id: "network.cookie.lifetimePolicy", type: "int" },
   { id: "network.cookie.blockFutureCookies", type: "bool" },
   // Content blocking category
   { id: "browser.contentblocking.category", type: "string" },
@@ -134,15 +122,6 @@ Preferences.addAll([
   // Clear Private Data
   { id: "privacy.sanitize.sanitizeOnShutdown", type: "bool" },
   { id: "privacy.sanitize.timeSpan", type: "int" },
-  { id: "privacy.clearOnShutdown.cookies", type: "bool" },
-  { id: "privacy.clearOnShutdown.cache", type: "bool" },
-  { id: "privacy.clearOnShutdown.offlineApps", type: "bool" },
-  { id: "privacy.clearOnShutdown.history", type: "bool" },
-  { id: "privacy.clearOnShutdown.downloads", type: "bool" },
-  { id: "privacy.clearOnShutdown.sessions", type: "bool" },
-  { id: "privacy.clearOnShutdown.formdata", type: "bool" },
-  { id: "privacy.clearOnShutdown.siteSettings", type: "bool" },
-
   // Do not track
   { id: "privacy.donottrackheader.enabled", type: "bool" },
 
@@ -518,8 +497,6 @@ var gPrivacyPane = {
    */
   init() {
     this._updateSanitizeSettingsButton();
-    this.initDeleteOnCloseBox();
-    this.syncSanitizationPrefsWithDeleteOnClose();
     this.initializeHistoryMode();
     this.updateHistoryModePane();
     this.updatePrivacyMicroControls();
@@ -546,6 +523,10 @@ var gPrivacyPane = {
 
     // Watch all of the prefs that the new Cookies & Site Data UI depends on
     Preferences.get("network.cookie.cookieBehavior").on(
+      "change",
+      gPrivacyPane.networkCookieBehaviorReadPrefs.bind(gPrivacyPane)
+    );
+    Preferences.get("network.cookie.lifetimePolicy").on(
       "change",
       gPrivacyPane.networkCookieBehaviorReadPrefs.bind(gPrivacyPane)
     );
@@ -712,7 +693,8 @@ var gPrivacyPane = {
     setSyncToPrefListener("blockCookiesMenu", () =>
       this.writeBlockCookiesFrom()
     );
-
+    setSyncFromPrefListener("deleteOnClose", () => this.readDeleteOnClose());
+    setSyncToPrefListener("deleteOnClose", () => this.writeDeleteOnClose());
     setSyncFromPrefListener("savePasswords", () => this.readSavePasswords());
 
     let microControlHandler = el =>
@@ -1296,7 +1278,11 @@ var gPrivacyPane = {
       behavior == Ci.nsICookieService.BEHAVIOR_REJECT;
     let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart")
       .value;
-    deleteOnCloseCheckbox.disabled = privateBrowsing || completelyBlockCookies;
+    let cookieExpirationLocked = Services.prefs.prefIsLocked(
+      "network.cookie.lifetimePolicy"
+    );
+    deleteOnCloseCheckbox.disabled =
+      privateBrowsing || completelyBlockCookies || cookieExpirationLocked;
     deleteOnCloseNote.hidden = !privateBrowsing;
 
     switch (behavior) {
@@ -1509,6 +1495,10 @@ var gPrivacyPane = {
    * value of the private browsing auto-start preference.
    */
   updatePrivacyMicroControls() {
+    // Check the "Delete cookies when Firefox is closed" checkbox and disable the setting
+    // when we're in auto private mode (or reset it back otherwise).
+    document.getElementById("deleteOnClose").checked = this.readDeleteOnClose();
+
     let clearDataSettings = document.getElementById("clearDataSettings");
 
     if (document.getElementById("historyMode").value == "custom") {
@@ -1595,97 +1585,6 @@ var gPrivacyPane = {
         Services.obs.notifyObservers(null, "clear-private-data");
       },
     });
-  },
-
-  /*
-   * On loading the page, assigns the state to the deleteOnClose checkbox that fits the pref selection
-   */
-  initDeleteOnCloseBox() {
-    let deleteOnCloseBox = document.getElementById("deleteOnClose");
-    deleteOnCloseBox.checked =
-      Preferences.get("privacy.sanitize.sanitizeOnShutdown").value &&
-      Preferences.get("privacy.clearOnShutdown.cookies").value &&
-      Preferences.get("privacy.clearOnShutdown.cache").value &&
-      Preferences.get("privacy.clearOnShutdown.offlineApps").value;
-  },
-
-  /*
-   * Keeps the state of the deleteOnClose checkbox in sync with the pref selection
-   */
-  syncSanitizationPrefsWithDeleteOnClose() {
-    let deleteOnCloseBox = document.getElementById("deleteOnClose");
-    let historyMode = Preferences.get("privacy.history.custom");
-    let sanitizeOnShutdownPref = Preferences.get(
-      "privacy.sanitize.sanitizeOnShutdown"
-    );
-    // ClearOnClose cleaning categories
-    let cookiePref = Preferences.get("privacy.clearOnShutdown.cookies");
-    let cachePref = Preferences.get("privacy.clearOnShutdown.cache");
-    let offlineAppsPref = Preferences.get(
-      "privacy.clearOnShutdown.offlineApps"
-    );
-
-    // Sync the cleaning prefs with the deleteOnClose box
-    deleteOnCloseBox.addEventListener("command", () => {
-      let { checked } = deleteOnCloseBox;
-      cookiePref.value = checked;
-      cachePref.value = checked;
-      offlineAppsPref.value = checked;
-      // Forget the current pref selection if sanitizeOnShutdown is disabled,
-      // to not over clear when it gets enabled by the sync mechanism
-      if (!sanitizeOnShutdownPref.value) {
-        this._resetCleaningPrefs();
-      }
-      // If no other cleaning category is selected, sanitizeOnShutdown gets synced with deleteOnClose
-      sanitizeOnShutdownPref.value =
-        this._isCustomCleaningPrefPresent() || checked;
-
-      // Update the view of the history settings
-      if (checked && !historyMode.value) {
-        historyMode.value = "custom";
-        this.initializeHistoryMode();
-        this.updateHistoryModePane();
-        this.updatePrivacyMicroControls();
-      }
-    });
-
-    cookiePref.on("change", this._onSanitizePrefChangeSyncClearOnClose);
-    cachePref.on("change", this._onSanitizePrefChangeSyncClearOnClose);
-    offlineAppsPref.on("change", this._onSanitizePrefChangeSyncClearOnClose);
-    sanitizeOnShutdownPref.on(
-      "change",
-      this._onSanitizePrefChangeSyncClearOnClose
-    );
-  },
-
-  /*
-   * Sync the deleteOnClose box to its cleaning prefs
-   */
-  _onSanitizePrefChangeSyncClearOnClose() {
-    let deleteOnCloseBox = document.getElementById("deleteOnClose");
-    deleteOnCloseBox.checked =
-      Preferences.get("privacy.clearOnShutdown.cookies").value &&
-      Preferences.get("privacy.clearOnShutdown.cache").value &&
-      Preferences.get("privacy.clearOnShutdown.offlineApps").value &&
-      Preferences.get("privacy.sanitize.sanitizeOnShutdown").value;
-  },
-
-  /*
-   * Unsets cleaning prefs that do not belong to DeleteOnClose
-   */
-  _resetCleaningPrefs() {
-    SANITIZE_ON_SHUTDOWN_PREFS_ONLY.forEach(
-      pref => (Preferences.get(pref).value = false)
-    );
-  },
-
-  /*
-   Checks if the user set cleaning prefs that do not belong to DeleteOnClose
-   */
-  _isCustomCleaningPrefPresent() {
-    return SANITIZE_ON_SHUTDOWN_PREFS_ONLY.some(
-      pref => Preferences.get(pref).value
-    );
   },
 
   /**
@@ -1811,7 +1710,29 @@ var gPrivacyPane = {
    *     4   means reject all trackers
    *     5   means reject all trackers and partition third-party cookies
    *         see netwerk/cookie/src/CookieService.cpp for details
+   * network.cookie.lifetimePolicy
+   * - determines how long cookies are stored:
+   *     0   means keep cookies until they expire
+   *     2   means keep cookies until the browser is closed
    */
+
+  readDeleteOnClose() {
+    let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart")
+      .value;
+    if (privateBrowsing) {
+      return true;
+    }
+
+    let lifetimePolicy = Preferences.get("network.cookie.lifetimePolicy").value;
+    return lifetimePolicy == Ci.nsICookieService.ACCEPT_SESSION;
+  },
+
+  writeDeleteOnClose() {
+    let checkbox = document.getElementById("deleteOnClose");
+    return checkbox.checked
+      ? Ci.nsICookieService.ACCEPT_SESSION
+      : Ci.nsICookieService.ACCEPT_NORMALLY;
+  },
 
   /**
    * Reads the network.cookie.cookieBehavior preference value and
