@@ -869,7 +869,8 @@ function registerProfileCaptureForBrowser(
 }
 
 // Provide a fake module.exports for the JSM to be properly read by TypeScript.
-/** @type {any} */ (this).module = { exports: {} };
+/** @type {any} */
+var module = { exports: {} };
 
 module.exports = {
   presets,

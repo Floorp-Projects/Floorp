@@ -43,7 +43,8 @@ function createLazyLoaders(definition) {
 }
 
 // Provide an exports object for the JSM to be properly read by TypeScript.
-/** @type {any} */ (this).module = {};
+/** @type {any} */
+var module = {};
 
 module.exports = {
   createLazyLoaders,

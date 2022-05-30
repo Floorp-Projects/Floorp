@@ -10,7 +10,8 @@
  */
 
 // Provide an exports object for the JSM to be properly read by TypeScript.
-/** @type {any} */ (this).exports = {};
+/** @type {any} */
+var exports = {};
 
 const { createLazyLoaders } = ChromeUtils.import(
   "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js"

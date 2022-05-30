@@ -355,7 +355,8 @@ function createLocalSymbolicationService(sharedLibraries, objdirs, perfFront) {
 }
 
 // Provide an exports object for the JSM to be properly read by TypeScript.
-/** @type {any} */ (this).module = {};
+/** @type {any} */
+var module = {};
 
 module.exports = {
   createLocalSymbolicationService,
