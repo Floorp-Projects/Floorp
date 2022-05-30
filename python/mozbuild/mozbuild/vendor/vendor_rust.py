@@ -568,8 +568,9 @@ license file's hash.
                             "file": __file__,
                         },
                         "There are {num} different versions of crate {crate} "
-                        "(expected {expected}). Please void the extra duplication "
-                        "or adjust TOLERATED_DUPES in {file} if not possible.",
+                        "(expected {expected}). Please avoid the extra duplication "
+                        "or adjust TOLERATED_DUPES in {file} if not possible "
+                        "(but we'd prefer the former).",
                     )
                     failed = True
                 elif num < expected and num > 1:
