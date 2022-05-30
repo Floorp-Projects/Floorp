@@ -95,6 +95,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/crave-ca.js",
     "shims/criteo.js",
     "shims/cxense.js",
+    "shims/doubleverify.js",
     "shims/eluminate.js",
     "shims/empty-script.js",
     "shims/empty-shim.txt",

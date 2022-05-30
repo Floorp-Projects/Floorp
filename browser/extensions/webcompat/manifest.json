@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "102.0.0",
+  "version": "102.1.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -102,6 +102,7 @@
     "shims/crave-ca.js",
     "shims/criteo.js",
     "shims/cxense.js",
+    "shims/doubleverify.js",
     "shims/eluminate.js",
     "shims/empty-script.js",
     "shims/empty-shim.txt",
