@@ -85,7 +85,7 @@ use super::redox_users::{All, AllUsers, Config};
 
 pub fn home_dir() -> Option<PathBuf> {
     let current_uid = redox_users::get_uid().ok()?;
-    let users = AllUsers::new(Config::default()).ok()?;
+    let users = AllUsers::basic(Config::default()).ok()?;
     let user = users.get_by_id(current_uid)?;
 
     Some(PathBuf::from(user.home.clone()))
@@ -158,6 +158,7 @@ pub fn known_folder(folder_id: shtypes::REFKNOWNFOLDERID) -> Option<PathBuf> {
             combaseapi::CoTaskMemFree(path_ptr as *mut winapi::ctypes::c_void);
             Some(PathBuf::from(ostr))
         } else {
+            combaseapi::CoTaskMemFree(path_ptr as *mut winapi::ctypes::c_void);
             None
         }
     }
