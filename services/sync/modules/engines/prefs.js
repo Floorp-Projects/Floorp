@@ -62,7 +62,7 @@ XPCOMUtils.defineLazyGetter(this, "PREFS_DOC_URL", () =>
 );
 
 // Check for a local control pref or PREF_SYNC_PREFS_ARBITRARY
-this.isAllowedPrefName = function(prefName) {
+function isAllowedPrefName(prefName) {
   if (prefName == PREF_SYNC_PREFS_ARBITRARY) {
     return false; // never allow this.
   }
@@ -80,7 +80,7 @@ this.isAllowedPrefName = function(prefName) {
   } catch (_) {
     return false;
   }
-};
+}
 
 function PrefRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
