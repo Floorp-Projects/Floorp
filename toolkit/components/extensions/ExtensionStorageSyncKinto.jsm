@@ -263,7 +263,6 @@ class EncryptionRemoteTransformer {
     return Promise.resolve(record.id);
   }
 }
-this.EncryptionRemoteTransformer = EncryptionRemoteTransformer;
 
 /**
  * An EncryptionRemoteTransformer that provides a keybundle derived
@@ -329,7 +328,6 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
     );
   }
 }
-this.KeyRingEncryptionRemoteTransformer = KeyRingEncryptionRemoteTransformer;
 
 /**
  * A Promise that centralizes initialization of ExtensionStorageSync.
@@ -648,7 +646,6 @@ class CryptoCollection {
     await collection.clear();
   }
 }
-this.CryptoCollection = CryptoCollection;
 
 /**
  * An EncryptionRemoteTransformer for extension records.
@@ -694,8 +691,6 @@ let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTra
       .then(hash => `id-${hash}`);
   }
 };
-
-this.CollectionKeyEncryptionRemoteTransformer = CollectionKeyEncryptionRemoteTransformer;
 
 /**
  * Clean up now that one context is no longer using this extension's collection.
@@ -1371,7 +1366,6 @@ class ExtensionStorageSync {
     }
   }
 }
-this.ExtensionStorageSync = ExtensionStorageSync;
 extensionStorageSync = new ExtensionStorageSync(_fxaService);
 
 // For test use only.
