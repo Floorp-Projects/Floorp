@@ -5821,11 +5821,8 @@ void EventStateManager::ContentRemoved(Document* aDocument,
     element->LeaveLink(element->GetPresContext(Element::eForComposedDoc));
   }
 
-  if (aContent->IsElement()) {
-    if (RefPtr<nsPresContext> presContext = mPresContext) {
-      IMEStateManager::OnRemoveContent(*presContext,
-                                       MOZ_KnownLive(*aContent->AsElement()));
-    }
+  if (RefPtr<nsPresContext> presContext = mPresContext) {
+    IMEStateManager::OnRemoveContent(*presContext, *aContent);
   }
 
   // inform the focus manager that the content is being removed. If this

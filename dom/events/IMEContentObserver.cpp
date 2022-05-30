@@ -85,7 +85,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
   tmp->UnregisterObservers();
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootContent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditableNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorBase)
@@ -102,7 +102,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWidget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedWidget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelection)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootContent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditableNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditorBase)
@@ -143,7 +143,7 @@ IMEContentObserver::IMEContentObserver()
 }
 
 void IMEContentObserver::Init(nsIWidget& aWidget, nsPresContext& aPresContext,
-                              Element* aElement, EditorBase& aEditorBase) {
+                              nsIContent* aContent, EditorBase& aEditorBase) {
   State state = GetState();
   if (NS_WARN_IF(state == eState_Observing)) {
     return;  // Nothing to do.
@@ -163,7 +163,7 @@ void IMEContentObserver::Init(nsIWidget& aWidget, nsPresContext& aPresContext,
   mWidget = &aWidget;
   mIMENotificationRequests = &mWidget->IMENotificationRequestsRef();
 
-  if (!InitWithEditor(aPresContext, aElement, aEditorBase)) {
+  if (!InitWithEditor(aPresContext, aContent, aEditorBase)) {
     MOZ_LOG(sIMECOLog, LogLevel::Error,
             ("0x%p   Init() FAILED, due to InitWithEditor() "
              "failure",
@@ -214,10 +214,10 @@ void IMEContentObserver::OnIMEReceivedFocus() {
   // NOTIFY_IME_OF_FOCUS might cause recreating IMEContentObserver
   // instance via IMEStateManager::UpdateIMEState().  So, this
   // instance might already have been destroyed, check it.
-  if (!mRootElement) {
+  if (!mRootContent) {
     MOZ_LOG(sIMECOLog, LogLevel::Warning,
             ("0x%p   OnIMEReceivedFocus(), "
-             "but mRootElement has already been cleared, so does nothing",
+             "but mRootContent has already been cleared, so does nothing",
              this));
     return;
   }
@@ -235,9 +235,9 @@ void IMEContentObserver::OnIMEReceivedFocus() {
 }
 
 bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
-                                        Element* aElement,
+                                        nsIContent* aContent,
                                         EditorBase& aEditorBase) {
-  mEditableNode = IMEStateManager::GetRootEditableNode(aPresContext, aElement);
+  mEditableNode = IMEStateManager::GetRootEditableNode(&aPresContext, aContent);
   if (NS_WARN_IF(!mEditableNode)) {
     return false;
   }
@@ -275,20 +275,18 @@ bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
     }
 
     nsCOMPtr<nsINode> startContainer = selRange->GetStartContainer();
-    mRootElement = Element::FromNodeOrNull(
-        startContainer->GetSelectionRootContent(presShell));
+    mRootContent = startContainer->GetSelectionRootContent(presShell);
   } else {
     nsCOMPtr<nsINode> editableNode = mEditableNode;
-    mRootElement = Element::FromNodeOrNull(
-        editableNode->GetSelectionRootContent(presShell));
+    mRootContent = editableNode->GetSelectionRootContent(presShell);
   }
-  if (!mRootElement && mEditableNode->IsDocument()) {
+  if (!mRootContent && mEditableNode->IsDocument()) {
     // The document node is editable, but there are no contents, this document
     // is not editable.
     return false;
   }
 
-  if (NS_WARN_IF(!mRootElement)) {
+  if (NS_WARN_IF(!mRootContent)) {
     return false;
   }
 
@@ -306,7 +304,7 @@ void IMEContentObserver::Clear() {
   mEditorBase = nullptr;
   mSelection = nullptr;
   mEditableNode = nullptr;
-  mRootElement = nullptr;
+  mRootContent = nullptr;
   mDocShell = nullptr;
   // Should be safe to clear mDocumentObserver here even though it grabs
   // this instance in most cases because this is called by Init() or Destroy().
@@ -318,7 +316,7 @@ void IMEContentObserver::Clear() {
 
 void IMEContentObserver::ObserveEditableNode() {
   MOZ_RELEASE_ASSERT(mSelection);
-  MOZ_RELEASE_ASSERT(mRootElement);
+  MOZ_RELEASE_ASSERT(mRootContent);
   MOZ_RELEASE_ASSERT(GetState() != eState_Observing);
 
   // If this is called before sending NOTIFY_IME_OF_FOCUS (it's possible when
@@ -338,10 +336,10 @@ void IMEContentObserver::ObserveEditableNode() {
     mEditorBase->SetIMEContentObserver(this);
   }
 
-  mRootElement->AddMutationObserver(this);
+  mRootContent->AddMutationObserver(this);
   // If it's in a document (should be so), we can use document observer to
   // reduce redundant computation of text change offsets.
-  Document* doc = mRootElement->GetComposedDoc();
+  Document* doc = mRootContent->GetComposedDoc();
   if (doc) {
     RefPtr<DocumentObserver> documentObserver = mDocumentObserver;
     documentObserver->Observe(doc);
@@ -404,8 +402,8 @@ void IMEContentObserver::UnregisterObservers() {
     mFocusedWidget = nullptr;
   }
 
-  if (mRootElement) {
-    mRootElement->RemoveMutationObserver(this);
+  if (mRootContent) {
+    mRootContent->RemoveMutationObserver(this);
   }
 
   if (mDocumentObserver) {
@@ -448,62 +446,62 @@ void IMEContentObserver::DisconnectFromEventStateManager() { mESM = nullptr; }
 
 bool IMEContentObserver::MaybeReinitialize(nsIWidget& aWidget,
                                            nsPresContext& aPresContext,
-                                           Element* aElement,
+                                           nsIContent* aContent,
                                            EditorBase& aEditorBase) {
-  if (!IsObservingContent(aPresContext, aElement)) {
+  if (!IsObservingContent(&aPresContext, aContent)) {
     return false;
   }
 
   if (GetState() == eState_StoppedObserving) {
-    Init(aWidget, aPresContext, aElement, aEditorBase);
+    Init(aWidget, aPresContext, aContent, aEditorBase);
   }
-  return IsManaging(aPresContext, aElement);
+  return IsManaging(&aPresContext, aContent);
 }
 
-bool IMEContentObserver::IsManaging(const nsPresContext& aPresContext,
-                                    const Element* aElement) const {
+bool IMEContentObserver::IsManaging(nsPresContext* aPresContext,
+                                    nsIContent* aContent) const {
   return GetState() == eState_Observing &&
-         IsObservingContent(aPresContext, aElement);
+         IsObservingContent(aPresContext, aContent);
 }
 
-bool IMEContentObserver::IsBeingInitializedFor(
-    const nsPresContext& aPresContext, const Element* aElement) const {
+bool IMEContentObserver::IsBeingInitializedFor(nsPresContext* aPresContext,
+                                               nsIContent* aContent) const {
   return GetState() == eState_Initializing &&
-         IsObservingContent(aPresContext, aElement);
+         IsObservingContent(aPresContext, aContent);
 }
 
-bool IMEContentObserver::IsManaging(
-    const TextComposition& aTextComposition) const {
+bool IMEContentObserver::IsManaging(const TextComposition* aComposition) const {
   if (GetState() != eState_Observing) {
     return false;
   }
-  nsPresContext* const presContext = aTextComposition.GetPresContext();
+  nsPresContext* presContext = aComposition->GetPresContext();
   if (NS_WARN_IF(!presContext)) {
     return false;
   }
   if (presContext != GetPresContext()) {
     return false;  // observing different document
   }
-  return IsObservingContent(
-      *presContext,
-      Element::FromNodeOrNull(aTextComposition.GetEventTargetNode()));
+  nsINode* targetNode = aComposition->GetEventTargetNode();
+  nsIContent* targetContent =
+      targetNode && targetNode->IsContent() ? targetNode->AsContent() : nullptr;
+  return IsObservingContent(presContext, targetContent);
 }
 
 IMEContentObserver::State IMEContentObserver::GetState() const {
-  if (!mSelection || !mRootElement || !mEditableNode) {
+  if (!mSelection || !mRootContent || !mEditableNode) {
     return eState_NotObserving;  // failed to initialize or finalized.
   }
-  if (!mRootElement->IsInComposedDoc()) {
+  if (!mRootContent->IsInComposedDoc()) {
     // the focused editor has already been reframed.
     return eState_StoppedObserving;
   }
   return mIsObserving ? eState_Observing : eState_Initializing;
 }
 
-bool IMEContentObserver::IsObservingContent(const nsPresContext& aPresContext,
-                                            const Element* aElement) const {
+bool IMEContentObserver::IsObservingContent(nsPresContext* aPresContext,
+                                            nsIContent* aContent) const {
   return mEditableNode ==
-         IMEStateManager::GetRootEditableNode(aPresContext, aElement);
+         IMEStateManager::GetRootEditableNode(aPresContext, aContent);
 }
 
 bool IMEContentObserver::IsEditorHandlingEventForComposition() const {
@@ -529,15 +527,15 @@ bool IMEContentObserver::IsEditorComposing() const {
   return mEditorBase->IsIMEComposing();
 }
 
-nsresult IMEContentObserver::GetSelectionAndRoot(Selection** aSelection,
-                                                 Element** aRootElement) const {
+nsresult IMEContentObserver::GetSelectionAndRoot(
+    Selection** aSelection, nsIContent** aRootContent) const {
   if (!mEditableNode || !mSelection) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_ASSERTION(mSelection && mRootElement, "uninitialized content observer");
+  NS_ASSERTION(mSelection && mRootContent, "uninitialized content observer");
   NS_ADDREF(*aSelection = mSelection);
-  NS_ADDREF(*aRootElement = mRootElement);
+  NS_ADDREF(*aRootContent = mRootContent);
   return NS_OK;
 }
 
@@ -607,7 +605,7 @@ nsresult IMEContentObserver::HandleQueryContentEvent(
                                              OffsetAndDataFor::SelectedString);
       aEvent->mReply->mReversed = mSelectionData.mReversed;
     }
-    aEvent->mReply->mContentsRoot = mRootElement;
+    aEvent->mReply->mContentsRoot = mRootContent;
     aEvent->mReply->mWritingMode = mSelectionData.GetWritingMode();
     // The selection cache in IMEContentObserver must always have been in
     // an editing host (or an editable annoymous <div> element).  Therefore,
@@ -669,25 +667,25 @@ nsresult IMEContentObserver::HandleQueryContentEvent(
   }
 
   if (aEvent->Succeeded() &&
-      NS_WARN_IF(aEvent->mReply->mContentsRoot != mRootElement)) {
+      NS_WARN_IF(aEvent->mReply->mContentsRoot != mRootContent)) {
     // Focus has changed unexpectedly, so make the query fail.
     aEvent->mReply.reset();
   }
   return rv;
 }
 
-bool IMEContentObserver::OnMouseButtonEvent(nsPresContext& aPresContext,
-                                            WidgetMouseEvent& aMouseEvent) {
+bool IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
+                                            WidgetMouseEvent* aMouseEvent) {
   if (!mIMENotificationRequests ||
       !mIMENotificationRequests->WantMouseButtonEventOnChar()) {
     return false;
   }
-  if (!aMouseEvent.IsTrusted() || aMouseEvent.DefaultPrevented() ||
-      !aMouseEvent.mWidget) {
+  if (!aMouseEvent->IsTrusted() || aMouseEvent->DefaultPrevented() ||
+      !aMouseEvent->mWidget) {
     return false;
   }
   // Now, we need to notify only mouse down and mouse up event.
-  switch (aMouseEvent.mMessage) {
+  switch (aMouseEvent->mMessage) {
     case eMouseUp:
     case eMouseDown:
       break;
@@ -698,10 +696,12 @@ bool IMEContentObserver::OnMouseButtonEvent(nsPresContext& aPresContext,
     return false;
   }
 
+  RefPtr<IMEContentObserver> kungFuDeathGrip(this);
+
   WidgetQueryContentEvent queryCharAtPointEvent(true, eQueryCharacterAtPoint,
-                                                aMouseEvent.mWidget);
-  queryCharAtPointEvent.mRefPoint = aMouseEvent.mRefPoint;
-  ContentEventHandler handler(&aPresContext);
+                                                aMouseEvent->mWidget);
+  queryCharAtPointEvent.mRefPoint = aMouseEvent->mRefPoint;
+  ContentEventHandler handler(aPresContext);
   handler.OnQueryCharacterAtPoint(&queryCharAtPointEvent);
   if (NS_WARN_IF(queryCharAtPointEvent.Failed()) ||
       queryCharAtPointEvent.DidNotFindChar()) {
@@ -724,23 +724,23 @@ bool IMEContentObserver::OnMouseButtonEvent(nsPresContext& aPresContext,
   }
   // The refPt is relative to its widget.
   // We should notify it with offset in the widget.
-  if (aMouseEvent.mWidget != mWidget) {
+  if (aMouseEvent->mWidget != mWidget) {
     queryCharAtPointEvent.mRefPoint +=
-        aMouseEvent.mWidget->WidgetToScreenOffset() -
+        aMouseEvent->mWidget->WidgetToScreenOffset() -
         mWidget->WidgetToScreenOffset();
   }
 
   IMENotification notification(NOTIFY_IME_OF_MOUSE_BUTTON_EVENT);
-  notification.mMouseButtonEventData.mEventMessage = aMouseEvent.mMessage;
+  notification.mMouseButtonEventData.mEventMessage = aMouseEvent->mMessage;
   notification.mMouseButtonEventData.mOffset =
       queryCharAtPointEvent.mReply->StartOffset();
   notification.mMouseButtonEventData.mCursorPos =
       queryCharAtPointEvent.mRefPoint;
   notification.mMouseButtonEventData.mCharRect =
       queryCharAtPointEvent.mReply->mRect;
-  notification.mMouseButtonEventData.mButton = aMouseEvent.mButton;
-  notification.mMouseButtonEventData.mButtons = aMouseEvent.mButtons;
-  notification.mMouseButtonEventData.mModifiers = aMouseEvent.mModifiers;
+  notification.mMouseButtonEventData.mButton = aMouseEvent->mButton;
+  notification.mMouseButtonEventData.mButtons = aMouseEvent->mButtons;
+  notification.mMouseButtonEventData.mModifiers = aMouseEvent->mModifiers;
 
   nsresult rv = IMEStateManager::NotifyIME(notification, mWidget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -749,7 +749,7 @@ bool IMEContentObserver::OnMouseButtonEvent(nsPresContext& aPresContext,
 
   bool consumed = (rv == NS_SUCCESS_EVENT_CONSUMED);
   if (consumed) {
-    aMouseEvent.PreventDefault();
+    aMouseEvent->PreventDefault();
   }
   return consumed;
 }
@@ -765,7 +765,7 @@ void IMEContentObserver::CharacterDataWillChange(
              "mPreCharacterDataChangeLength");
 
   if (!NeedsTextChangeNotification() ||
-      !nsContentUtils::IsInSameAnonymousTree(mRootElement, aContent)) {
+      !nsContentUtils::IsInSameAnonymousTree(mRootContent, aContent)) {
     return;
   }
 
@@ -802,7 +802,7 @@ void IMEContentObserver::CharacterDataChanged(
   }
 
   if (!NeedsTextChangeNotification() ||
-      !nsContentUtils::IsInSameAnonymousTree(mRootElement, aContent)) {
+      !nsContentUtils::IsInSameAnonymousTree(mRootContent, aContent)) {
     return;
   }
 
@@ -822,8 +822,8 @@ void IMEContentObserver::CharacterDataChanged(
   uint32_t offset = 0;
   // get offsets of change and fire notification
   nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
-      NodePosition(mRootElement, 0u),
-      NodePosition(aContent, aInfo.mChangeStart), mRootElement, &offset,
+      NodePosition(mRootContent, 0u),
+      NodePosition(aContent, aInfo.mChangeStart), mRootContent, &offset,
       LINE_BREAK_TYPE_NATIVE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -846,7 +846,7 @@ void IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
                                             nsIContent* aFirstContent,
                                             nsIContent* aLastContent) {
   if (!NeedsTextChangeNotification() ||
-      !nsContentUtils::IsInSameAnonymousTree(mRootElement, aFirstContent)) {
+      !nsContentUtils::IsInSameAnonymousTree(mRootContent, aFirstContent)) {
     return;
   }
 
@@ -899,9 +899,9 @@ void IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
                                   aFirstContent->GetPreviousSibling())) {
     mEndOfAddedTextCache.Clear();
     rv = ContentEventHandler::GetFlatTextLengthInRange(
-        NodePosition(mRootElement, 0u),
+        NodePosition(mRootContent, 0u),
         NodePositionBefore(aContainer, PointBefore(aContainer, aFirstContent)),
-        mRootElement, &offset, LINE_BREAK_TYPE_NATIVE);
+        mRootContent, &offset, LINE_BREAK_TYPE_NATIVE);
     if (NS_WARN_IF(NS_FAILED((rv)))) {
       return;
     }
@@ -913,7 +913,7 @@ void IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
   uint32_t addingLength = 0;
   rv = ContentEventHandler::GetFlatTextLengthInRange(
       NodePositionBefore(aContainer, PointBefore(aContainer, aFirstContent)),
-      NodePosition(aContainer, aLastContent), mRootElement, &addingLength,
+      NodePosition(aContainer, aLastContent), mRootContent, &addingLength,
       LINE_BREAK_TYPE_NATIVE);
   if (NS_WARN_IF(NS_FAILED((rv)))) {
     mEndOfAddedTextCache.Clear();
@@ -950,7 +950,7 @@ void IMEContentObserver::ContentInserted(nsIContent* aChild) {
 void IMEContentObserver::ContentRemoved(nsIContent* aChild,
                                         nsIContent* aPreviousSibling) {
   if (!NeedsTextChangeNotification() ||
-      !nsContentUtils::IsInSameAnonymousTree(mRootElement, aChild)) {
+      !nsContentUtils::IsInSameAnonymousTree(mRootContent, aChild)) {
     return;
   }
 
@@ -967,8 +967,8 @@ void IMEContentObserver::ContentRemoved(nsIContent* aChild,
     // by open tag of aContainer.  Be careful when aPreviousSibling is nullptr.
 
     rv = ContentEventHandler::GetFlatTextLengthInRange(
-        NodePosition(mRootElement, 0u),
-        NodePosition(containerNode, aPreviousSibling), mRootElement, &offset,
+        NodePosition(mRootContent, 0u),
+        NodePosition(containerNode, aPreviousSibling), mRootContent, &offset,
         LINE_BREAK_TYPE_NATIVE);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mStartOfRemovingTextRangeCache.Clear();
@@ -987,7 +987,7 @@ void IMEContentObserver::ContentRemoved(nsIContent* aChild,
   } else {
     nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
         NodePositionBefore(aChild, 0u),
-        NodePosition(aChild, aChild->GetChildCount()), mRootElement,
+        NodePosition(aChild, aChild->GetChildCount()), mRootContent,
         &textLength, LINE_BREAK_TYPE_NATIVE, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mStartOfRemovingTextRangeCache.Clear();
@@ -1018,7 +1018,7 @@ bool IMEContentObserver::IsNextNodeOfLastAddedNode(nsINode* aParent,
                                                    nsIContent* aChild) const {
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(aChild && aChild->GetParentNode() == aParent);
-  MOZ_ASSERT(mRootElement);
+  MOZ_ASSERT(mRootContent);
   MOZ_ASSERT(HasAddedNodesDuringDocumentChange());
 
   // If the parent node isn't changed, we can check that mLastAddedContent has
@@ -1047,7 +1047,7 @@ bool IMEContentObserver::IsNextNodeOfLastAddedNode(nsINode* aParent,
 
   // Otherwise, we need to check it even with slow path.
   nsIContent* nextContentOfLastAddedContent =
-      mLastAddedContent->GetNextNode(mRootElement->GetParentNode());
+      mLastAddedContent->GetNextNode(mRootContent->GetParentNode());
   if (NS_WARN_IF(!nextContentOfLastAddedContent)) {
     return false;
   }
@@ -1074,10 +1074,10 @@ void IMEContentObserver::MaybeNotifyIMEOfAddedTextDuringDocumentChange() {
   // editor.
   uint32_t offset;
   nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
-      NodePosition(mRootElement, 0u),
+      NodePosition(mRootContent, 0u),
       NodePosition(mFirstAddedContainer,
                    PointBefore(mFirstAddedContainer, mFirstAddedContent)),
-      mRootElement, &offset, LINE_BREAK_TYPE_NATIVE);
+      mRootContent, &offset, LINE_BREAK_TYPE_NATIVE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ClearAddedNodesDuringDocumentChange();
     return;
@@ -1088,7 +1088,7 @@ void IMEContentObserver::MaybeNotifyIMEOfAddedTextDuringDocumentChange() {
   rv = ContentEventHandler::GetFlatTextLengthInRange(
       NodePosition(mFirstAddedContainer,
                    PointBefore(mFirstAddedContainer, mFirstAddedContent)),
-      NodePosition(mLastAddedContainer, mLastAddedContent), mRootElement,
+      NodePosition(mLastAddedContainer, mLastAddedContent), mRootContent,
       &length, LINE_BREAK_TYPE_NATIVE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ClearAddedNodesDuringDocumentChange();
@@ -1289,7 +1289,7 @@ bool IMEContentObserver::UpdateSelectionCache(bool aRequireFlush /* = true */) {
   handler.OnQuerySelectedText(&querySelectedTextEvent);
   if (NS_WARN_IF(querySelectedTextEvent.Failed()) ||
       NS_WARN_IF(querySelectedTextEvent.mReply->mContentsRoot !=
-                 mRootElement)) {
+                 mRootContent)) {
     return false;
   }
 

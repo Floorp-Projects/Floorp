@@ -26,7 +26,6 @@ class TextCompositionArray;
 class TextComposition;
 
 namespace dom {
-class Element;
 class Selection;
 }  // namespace dom
 
@@ -50,8 +49,8 @@ class IMEStateManager {
 
   /**
    * GetActiveBrowserParent() returns a pointer to a BrowserParent instance
-   * which is managed by the focused content (sFocusedElement).  If the focused
-   * content isn't managing another process, this returns nullptr.
+   * which is managed by the focused content (sContent).  If the focused content
+   * isn't managing another process, this returns nullptr.
    */
   static BrowserParent* GetActiveBrowserParent() {
     // If menu has pseudo focus, we should ignore active child process.
@@ -154,14 +153,14 @@ class IMEStateManager {
   MOZ_CAN_RUN_SCRIPT static nsresult OnDestroyPresContext(
       nsPresContext& aPresContext);
   MOZ_CAN_RUN_SCRIPT static nsresult OnRemoveContent(
-      nsPresContext& aPresContext, dom::Element& aElement);
+      nsPresContext& aPresContext, nsIContent& aContent);
   /**
    * OnChangeFocus() should be called when focused content is changed or
    * IME enabled state is changed.  If nobody has focus, set both aPresContext
    * and aContent nullptr.  E.g., all windows are deactivated.
    */
   MOZ_CAN_RUN_SCRIPT static nsresult OnChangeFocus(
-      nsPresContext* aPresContext, dom::Element* aElement,
+      nsPresContext* aPresContext, nsIContent* aContent,
       InputContextAction::Cause aCause);
 
   /**
@@ -182,8 +181,8 @@ class IMEStateManager {
   // control compared to having the two methods incorporated into OnChangeFocus
 
   // Get the focused editor's selection and root
-  static nsresult GetFocusSelectionAndRootElement(dom::Selection** aSel,
-                                                  dom::Element** aRootElement);
+  static nsresult GetFocusSelectionAndRoot(dom::Selection** aSel,
+                                           nsIContent** aRoot);
   // This method updates the current IME state.  However, if the enabled state
   // isn't changed by the new state, this method does nothing.
   // Note that this method changes the IME state of the active element in the
@@ -197,23 +196,23 @@ class IMEStateManager {
   };
   using UpdateIMEStateOptions = EnumSet<UpdateIMEStateOption, uint32_t>;
   MOZ_CAN_RUN_SCRIPT static void UpdateIMEState(
-      const IMEState& aNewIMEState, dom::Element* aElement,
+      const IMEState& aNewIMEState, nsIContent* aContent,
       EditorBase& aEditorBase, const UpdateIMEStateOptions& aOptions = {});
 
   // This method is called when user operates mouse button in focused editor
   // and before the editor handles it.
   // Returns true if IME consumes the event.  Otherwise, false.
   MOZ_CAN_RUN_SCRIPT static bool OnMouseButtonEventInEditor(
-      nsPresContext& aPresContext, dom::Element* aElement,
-      WidgetMouseEvent& aMouseEvent);
+      nsPresContext* aPresContext, nsIContent* aContent,
+      WidgetMouseEvent* aMouseEvent);
 
   // This method is called when user clicked in an editor.
-  // aElement must be:
+  // aContent must be:
   //   If the editor is for <input> or <textarea>, the element.
   //   If the editor is for contenteditable, the active editinghost.
   //   If the editor is for designMode, nullptr.
   MOZ_CAN_RUN_SCRIPT static void OnClickInEditor(
-      nsPresContext& aPresContext, dom::Element* aElement,
+      nsPresContext& aPresContext, nsIContent* aContent,
       const WidgetMouseEvent& aMouseEvent);
 
   // This method is called when editor actually gets focus.
@@ -221,8 +220,8 @@ class IMEStateManager {
   //   If the editor is for <input> or <textarea>, the element.
   //   If the editor is for contenteditable, the active editinghost.
   //   If the editor is for designMode, nullptr.
-  static void OnFocusInEditor(nsPresContext& aPresContext,
-                              dom::Element* aElement, EditorBase& aEditorBase);
+  static void OnFocusInEditor(nsPresContext* aPresContext, nsIContent* aContent,
+                              EditorBase& aEditorBase);
 
   // This method is called when the editor is initialized.
   static void OnEditorInitialized(EditorBase& aEditorBase);
@@ -233,7 +232,7 @@ class IMEStateManager {
 
   // This method is called when focus is set to same content again.
   MOZ_CAN_RUN_SCRIPT static void OnReFocus(nsPresContext& aPresContext,
-                                           dom::Element& aElement);
+                                           nsIContent& aContent);
 
   /**
    * All composition events must be dispatched via DispatchCompositionEvent()
@@ -296,8 +295,8 @@ class IMEStateManager {
   static nsresult NotifyIME(IMEMessage aMessage, nsPresContext* aPresContext,
                             BrowserParent* aBrowserParent = nullptr);
 
-  static nsINode* GetRootEditableNode(const nsPresContext& aPresContext,
-                                      const dom::Element* aElement);
+  static nsINode* GetRootEditableNode(const nsPresContext* aPresContext,
+                                      const nsIContent* aContent);
 
   /**
    * Returns active IMEContentObserver but may be nullptr if focused content
@@ -307,19 +306,19 @@ class IMEStateManager {
 
  protected:
   MOZ_CAN_RUN_SCRIPT static nsresult OnChangeFocusInternal(
-      nsPresContext* aPresContext, dom::Element* aElement,
+      nsPresContext* aPresContext, nsIContent* aContent,
       InputContextAction aAction);
   MOZ_CAN_RUN_SCRIPT static void SetIMEState(const IMEState& aState,
-                                             const nsPresContext* aPresContext,
-                                             dom::Element* aElement,
-                                             nsIWidget& aWidget,
+                                             nsPresContext* aPresContext,
+                                             nsIContent* aContent,
+                                             nsIWidget* aWidget,
                                              InputContextAction aAction,
                                              InputContext::Origin aOrigin);
-  static void SetInputContext(nsIWidget& aWidget,
+  static void SetInputContext(nsIWidget* aWidget,
                               const InputContext& aInputContext,
                               const InputContextAction& aAction);
-  static IMEState GetNewIMEState(const nsPresContext& aPresContext,
-                                 dom::Element* aElement);
+  static IMEState GetNewIMEState(nsPresContext* aPresContext,
+                                 nsIContent* aContent);
 
   static void EnsureTextCompositionArray();
 
@@ -327,27 +326,27 @@ class IMEStateManager {
   //     marked too.  Probably, we should initialize IMEContentObserver
   //     asynchronously.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static void CreateIMEContentObserver(
-      EditorBase& aEditorBase, dom::Element* aFocusedElement);
+      EditorBase& aEditorBase, nsIContent* aFocusedContent);
 
   /**
    * Check whether the content matches or does not match with focus information
    * which is previously notified via OnChangeFocus();
    */
-  [[nodiscard]] static bool IsFocusedElement(
-      const nsPresContext& aPresContext, const dom::Element* aFocusedElement);
+  static bool IsFocusedContent(const nsPresContext* aPresContext,
+                               const nsIContent* aFocusedContent);
 
   static void DestroyIMEContentObserver();
 
-  [[nodiscard]] static bool IsEditable(nsINode* node);
+  static bool IsEditable(nsINode* node);
 
-  [[nodiscard]] static bool IsIMEObserverNeeded(const IMEState& aState);
+  static bool IsIMEObserverNeeded(const IMEState& aState);
 
-  [[nodiscard]] static nsIContent* GetRootContent(nsPresContext* aPresContext);
+  static nsIContent* GetRootContent(nsPresContext* aPresContext);
 
   /**
-   * CanHandleWith() returns false if it's destroyed.
+   * CanHandleWith() returns false if aPresContext is nullptr or it's destroyed.
    */
-  [[nodiscard]] static bool CanHandleWith(const nsPresContext* aPresContext);
+  static bool CanHandleWith(nsPresContext* aPresContext);
 
   /**
    * ResetActiveChildInputContext() resets sActiveChildInputContext.
@@ -362,27 +361,23 @@ class IMEStateManager {
    */
   static bool HasActiveChildSetInputContext();
 
-  // sFocusedElement and sFocusedPresContext are the focused content and
-  // PresContext.  If a document has focus but there is no focused element,
-  // sFocusedElement may be nullptr.
-  static StaticRefPtr<dom::Element> sFocusedElement;
-  static StaticRefPtr<nsPresContext> sFocusedPresContext;
-  // sTextInputHandlingWidget is cache for the result of
-  // sFocusedPresContext->GetTextInputHandlingWidget().  Even after
-  // sFocusedPresContext has gone, we need to clean up some IME state on the
-  // widget if the widget is available.
-  // Note that this is cleared when the widget is being destroyed.
-  static nsIWidget* sTextInputHandlingWidget;
+  // sContent and sPresContext are the focused content and PresContext.  If a
+  // document has focus but there is no focused element, sContent may be
+  // nullptr.
+  static StaticRefPtr<nsIContent> sContent;
+  static StaticRefPtr<nsPresContext> sPresContext;
+  // sWidget is cache for the root widget of sPresContext.  Even afer
+  // sPresContext has gone, we need to clean up some IME state on the widget
+  // if the widget is available.
+  static nsIWidget* sWidget;
   // sFocusedIMEBrowserParent is the tab parent, which send "focus" notification
   // to sFocusedIMEWidget (and didn't yet sent "blur" notification).
-  // Note that this is cleared when the widget is being destroyed.
   static nsIWidget* sFocusedIMEWidget;
   static StaticRefPtr<BrowserParent> sFocusedIMEBrowserParent;
   // sActiveInputContextWidget is the last widget whose SetInputContext() is
   // called.  This is important to reduce sync IPC cost with parent process.
   // If IMEStateManager set input context to different widget, PuppetWidget can
   // return cached input context safely.
-  // Note that this is cleared when the widget is being destroyed.
   static nsIWidget* sActiveInputContextWidget;
   // sActiveIMEContentObserver points to the currently active
   // IMEContentObserver.  This is null if there is no focused editor.
