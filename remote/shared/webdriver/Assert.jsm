@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  *
  * @namespace
  */
-this.assert = {};
+const assert = {};
 
 /**
  * Asserts that WebDriver has an active session.
