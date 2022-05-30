@@ -33,11 +33,16 @@ void nsWrapperCache::HoldJSObjects(void* aScriptObjectHolder,
   }
 }
 
-void nsWrapperCache::SetWrapperJSObject(JSObject* aWrapper) {
-  mWrapper = aWrapper;
+static inline bool IsNurseryWrapper(JSObject* aWrapper) {
+  return aWrapper && !JS::ObjectIsTenured(aWrapper);
+}
+
+void nsWrapperCache::SetWrapperJSObject(JSObject* aNewWrapper) {
+  JSObject* oldWrapper = mWrapper;
+  mWrapper = aNewWrapper;
   UnsetWrapperFlags(kWrapperFlagsMask);
 
-  if (aWrapper && !JS::ObjectIsTenured(aWrapper)) {
+  if (IsNurseryWrapper(aNewWrapper) && !IsNurseryWrapper(oldWrapper)) {
     CycleCollectedJSRuntime::Get()->NurseryWrapperAdded(this);
   }
 }
