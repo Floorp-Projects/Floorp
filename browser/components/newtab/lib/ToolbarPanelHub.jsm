@@ -599,8 +599,6 @@ class _ToolbarPanelHub {
   }
 }
 
-this._ToolbarPanelHub = _ToolbarPanelHub;
-
 /**
  * ToolbarPanelHub - singleton instance of _ToolbarPanelHub that can initiate
  * message requests and render messages.

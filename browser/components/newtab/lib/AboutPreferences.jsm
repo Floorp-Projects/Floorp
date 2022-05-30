@@ -307,5 +307,4 @@ class AboutPreferences {
   }
 }
 
-this.PREFERENCES_LOADED_EVENT = PREFERENCES_LOADED_EVENT;
 const EXPORTED_SYMBOLS = ["AboutPreferences", "PREFERENCES_LOADED_EVENT"];

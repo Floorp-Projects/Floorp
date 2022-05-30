@@ -678,6 +678,5 @@ const PanelTestProvider = {
     );
   },
 };
-this.PanelTestProvider = PanelTestProvider;
 
 const EXPORTED_SYMBOLS = ["PanelTestProvider"];

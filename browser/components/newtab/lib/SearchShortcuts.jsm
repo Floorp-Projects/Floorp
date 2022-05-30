@@ -17,7 +17,6 @@ const SEARCH_SHORTCUTS = [
     url: "https://yandex.com",
   },
 ];
-this.SEARCH_SHORTCUTS = SEARCH_SHORTCUTS;
 
 // These can be added via the editor but will not be added organically
 const CUSTOM_SEARCH_SHORTCUTS = [
@@ -50,7 +49,6 @@ function getSearchProvider(candidateShortURL) {
     null
   );
 }
-this.getSearchProvider = getSearchProvider;
 
 // Get the search form URL for a given search keyword. This allows us to pick
 // different tippytop icons for the different variants. Sush as yandex.com vs. yandex.ru.
@@ -59,7 +57,6 @@ async function getSearchFormURL(keyword) {
   const engine = await Services.search.getEngineByAlias(keyword);
   return engine?.wrappedJSObject._searchForm;
 }
-this.getSearchFormURL = getSearchFormURL;
 
 // Check topsite against predefined list of valid search engines
 // https://searchfox.org/mozilla-central/rev/ca869724246f4230b272ed1c8b9944596e80d920/toolkit/components/search/nsSearchService.js#939
@@ -68,7 +65,6 @@ async function checkHasSearchEngine(keyword) {
     e => e.aliases.includes(keyword) && !e.hidden
   );
 }
-this.checkHasSearchEngine = checkHasSearchEngine;
 
 const EXPORTED_SYMBOLS = [
   "checkHasSearchEngine",

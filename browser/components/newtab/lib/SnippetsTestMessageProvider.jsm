@@ -711,6 +711,5 @@ const SnippetsTestMessageProvider = {
     );
   },
 };
-this.SnippetsTestMessageProvider = SnippetsTestMessageProvider;
 
 const EXPORTED_SYMBOLS = ["SnippetsTestMessageProvider"];

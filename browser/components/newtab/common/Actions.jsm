@@ -16,8 +16,6 @@ const BACKGROUND_PROCESS = 2;
  */
 const globalImportContext =
   typeof Window === "undefined" ? BACKGROUND_PROCESS : UI_CODE;
-// Export for tests
-this.globalImportContext = globalImportContext;
 
 // Create an object that avoids accidental differing key/value pairs:
 // {
@@ -366,8 +364,6 @@ function WebExtEvent(type, data, importContext = globalImportContext) {
   const action = { type, data };
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
-
-this.actionTypes = actionTypes;
 
 const actionCreators = {
   BroadcastToContent,

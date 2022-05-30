@@ -195,11 +195,8 @@ class _ASRouterPreferences {
     this._callbacks.clear();
   }
 }
-this._ASRouterPreferences = _ASRouterPreferences;
 
 const ASRouterPreferences = new _ASRouterPreferences();
-this.TEST_PROVIDERS = TEST_PROVIDERS;
-this.TARGETING_PREFERENCES = TARGETING_PREFERENCES;
 
 const EXPORTED_SYMBOLS = [
   "_ASRouterPreferences",

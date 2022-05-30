@@ -825,6 +825,5 @@ const CFRMessageProvider = {
     return Promise.resolve(CFR_MESSAGES.filter(msg => !msg.exclude));
   },
 };
-this.CFRMessageProvider = CFRMessageProvider;
 
 const EXPORTED_SYMBOLS = ["CFRMessageProvider"];
