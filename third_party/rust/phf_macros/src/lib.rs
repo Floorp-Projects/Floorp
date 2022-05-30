@@ -1,3 +1,4 @@
+// FIXME: Remove `extern crate` below when we bump MSRV to 1.42 or higher.
 extern crate proc_macro;
 
 use phf_generator::HashState;
@@ -8,7 +9,11 @@ use std::collections::HashSet;
 use std::hash::Hasher;
 use syn::parse::{self, Parse, ParseStream};
 use syn::punctuated::Punctuated;
+#[cfg(feature = "unicase")]
+use syn::ExprLit;
 use syn::{parse_macro_input, Error, Expr, Lit, Token, UnOp};
+#[cfg(feature = "unicase")]
+use unicase_::UniCase;
 
 #[derive(Hash, PartialEq, Eq, Clone)]
 enum ParsedKey {
@@ -26,12 +31,14 @@ enum ParsedKey {
     U64(u64),
     U128(u128),
     Bool(bool),
+    #[cfg(feature = "unicase")]
+    UniCase(UniCase<String>),
 }
 
 impl PhfHash for ParsedKey {
     fn phf_hash<H>(&self, state: &mut H)
-        where
-            H: Hasher,
+    where
+        H: Hasher,
     {
         match self {
             ParsedKey::Str(s) => s.phf_hash(state),
@@ -48,6 +55,8 @@ impl PhfHash for ParsedKey {
             ParsedKey::U64(s) => s.phf_hash(state),
             ParsedKey::U128(s) => s.phf_hash(state),
             ParsedKey::Bool(s) => s.phf_hash(state),
+            #[cfg(feature = "unicase")]
+            ParsedKey::UniCase(s) => s.phf_hash(state),
         }
     }
 }
@@ -116,6 +125,36 @@ impl ParsedKey {
                 }
             }
             Expr::Group(group) => ParsedKey::from_expr(&group.expr),
+            #[cfg(feature = "unicase")]
+            Expr::Call(call) => {
+                if let Expr::Path(ep) = call.func.as_ref() {
+                    let segments = &mut ep.path.segments.iter().rev();
+                    let last = &segments.next()?.ident;
+                    let last_ahead = &segments.next()?.ident;
+                    let is_unicode = last_ahead == "UniCase" && last == "unicode";
+                    let is_ascii = last_ahead == "UniCase" && last == "ascii";
+                    if call.args.len() == 1 && (is_unicode || is_ascii) {
+                        if let Some(Expr::Lit(ExprLit {
+                            attrs: _,
+                            lit: Lit::Str(s),
+                        })) = call.args.first()
+                        {
+                            let v = if is_unicode {
+                                UniCase::unicode(s.value())
+                            } else {
+                                UniCase::ascii(s.value())
+                            };
+                            Some(ParsedKey::UniCase(v))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
             _ => None,
         }
     }
@@ -128,15 +167,15 @@ struct Key {
 
 impl PhfHash for Key {
     fn phf_hash<H>(&self, state: &mut H)
-        where
-            H: Hasher,
+    where
+        H: Hasher,
     {
         self.parsed.phf_hash(state)
     }
 }
 
 impl Parse for Key {
-    fn parse(input: ParseStream) -> parse::Result<Key> {
+    fn parse(input: ParseStream<'_>) -> parse::Result<Key> {
         let expr = input.parse()?;
         let parsed = ParsedKey::from_expr(&expr)
             .ok_or_else(|| Error::new_spanned(&expr, "unsupported key expression"))?;
@@ -152,15 +191,15 @@ struct Entry {
 
 impl PhfHash for Entry {
     fn phf_hash<H>(&self, state: &mut H)
-        where
-            H: Hasher,
+    where
+        H: Hasher,
     {
         self.key.phf_hash(state)
     }
 }
 
 impl Parse for Entry {
-    fn parse(input: ParseStream) -> parse::Result<Entry> {
+    fn parse(input: ParseStream<'_>) -> parse::Result<Entry> {
         let key = input.parse()?;
         input.parse::<Token![=>]>()?;
         let value = input.parse()?;
@@ -171,7 +210,7 @@ impl Parse for Entry {
 struct Map(Vec<Entry>);
 
 impl Parse for Map {
-    fn parse(input: ParseStream) -> parse::Result<Map> {
+    fn parse(input: ParseStream<'_>) -> parse::Result<Map> {
         let parsed = Punctuated::<Entry, Token![,]>::parse_terminated(input)?;
         let map = parsed.into_iter().collect::<Vec<_>>();
         check_duplicates(&map)?;
@@ -182,7 +221,7 @@ impl Parse for Map {
 struct Set(Vec<Entry>);
 
 impl Parse for Set {
-    fn parse(input: ParseStream) -> parse::Result<Set> {
+    fn parse(input: ParseStream<'_>) -> parse::Result<Set> {
         let parsed = Punctuated::<Key, Token![,]>::parse_terminated(input)?;
         let set = parsed
             .into_iter()
@@ -218,8 +257,28 @@ fn build_map(entries: &[Entry], state: HashState) -> proc_macro2::TokenStream {
     quote! {
         phf::Map {
             key: #key,
-            disps: phf::Slice::Static(&[#(#disps),*]),
-            entries: phf::Slice::Static(&[#(#entries),*]),
+            disps: &[#(#disps),*],
+            entries: &[#(#entries),*],
+        }
+    }
+}
+
+fn build_ordered_map(entries: &[Entry], state: HashState) -> proc_macro2::TokenStream {
+    let key = state.key;
+    let disps = state.disps.iter().map(|&(d1, d2)| quote!((#d1, #d2)));
+    let idxs = state.map.iter().map(|idx| quote!(#idx));
+    let entries = entries.iter().map(|entry| {
+        let key = &entry.key.expr;
+        let value = &entry.value;
+        quote!((#key, #value))
+    });
+
+    quote! {
+        phf::OrderedMap {
+            key: #key,
+            disps: &[#(#disps),*],
+            idxs: &[#(#idxs),*],
+            entries: &[#(#entries),*],
         }
     }
 }
@@ -239,4 +298,21 @@ pub fn phf_set(input: TokenStream) -> TokenStream {
 
     let map = build_map(&set.0, state);
     quote!(phf::Set { map: #map }).into()
+}
+
+#[::proc_macro_hack::proc_macro_hack]
+pub fn phf_ordered_map(input: TokenStream) -> TokenStream {
+    let map = parse_macro_input!(input as Map);
+    let state = phf_generator::generate_hash(&map.0);
+
+    build_ordered_map(&map.0, state).into()
+}
+
+#[::proc_macro_hack::proc_macro_hack]
+pub fn phf_ordered_set(input: TokenStream) -> TokenStream {
+    let set = parse_macro_input!(input as Set);
+    let state = phf_generator::generate_hash(&set.0);
+
+    let map = build_ordered_map(&set.0, state);
+    quote!(phf::OrderedSet { map: #map }).into()
 }

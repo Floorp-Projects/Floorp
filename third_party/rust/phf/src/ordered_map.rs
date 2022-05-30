@@ -1,30 +1,33 @@
-//! An immutable map constructed at compile time.
+//! An order-preserving immutable map constructed at compile time.
 use core::fmt;
 use core::iter::FusedIterator;
 use core::iter::IntoIterator;
 use core::ops::Index;
 use core::slice;
 use phf_shared::{self, HashKey, PhfBorrow, PhfHash};
-#[cfg(feature = "serde")]
-use serde::ser::{Serialize, SerializeMap, Serializer};
 
-/// An immutable map constructed at compile time.
+/// An order-preserving immutable map constructed at compile time.
+///
+/// Unlike a `Map`, iteration order is guaranteed to match the definition
+/// order.
 ///
 /// ## Note
 ///
 /// The fields of this struct are public so that they may be initialized by the
-/// `phf_map!` macro and code generation. They are subject to change at any
-/// time and should never be accessed directly.
-pub struct Map<K: 'static, V: 'static> {
+/// `phf_ordered_map!` macro and code generation. They are subject to change at
+/// any time and should never be accessed directly.
+pub struct OrderedMap<K: 'static, V: 'static> {
     #[doc(hidden)]
     pub key: HashKey,
     #[doc(hidden)]
     pub disps: &'static [(u32, u32)],
     #[doc(hidden)]
+    pub idxs: &'static [usize],
+    #[doc(hidden)]
     pub entries: &'static [(K, V)],
 }
 
-impl<K, V> fmt::Debug for Map<K, V>
+impl<K, V> fmt::Debug for OrderedMap<K, V>
 where
     K: fmt::Debug,
     V: fmt::Debug,
@@ -34,7 +37,7 @@ where
     }
 }
 
-impl<'a, K, V, T: ?Sized> Index<&'a T> for Map<K, V>
+impl<'a, K, V, T: ?Sized> Index<&'a T> for OrderedMap<K, V>
 where
     T: Eq + PhfHash,
     K: PhfBorrow<T>,
@@ -46,26 +49,17 @@ where
     }
 }
 
-impl<K, V> Map<K, V> {
-    /// Returns the number of entries in the `Map`.
+impl<K, V> OrderedMap<K, V> {
+    /// Returns the number of entries in the `OrderedMap`.
     #[inline]
     pub const fn len(&self) -> usize {
         self.entries.len()
     }
 
-    /// Returns true if the `Map` is empty.
+    /// Returns true if the `OrderedMap` is empty.
     #[inline]
     pub const fn is_empty(&self) -> bool {
         self.len() == 0
-    }
-
-    /// Determines if `key` is in the `Map`.
-    pub fn contains_key<T: ?Sized>(&self, key: &T) -> bool
-    where
-        T: Eq + PhfHash,
-        K: PhfBorrow<T>,
-    {
-        self.get(key).is_some()
     }
 
     /// Returns a reference to the value that `key` maps to.
@@ -89,8 +83,41 @@ impl<K, V> Map<K, V> {
         self.get_entry(key).map(|e| e.0)
     }
 
+    /// Determines if `key` is in the `OrderedMap`.
+    pub fn contains_key<T: ?Sized>(&self, key: &T) -> bool
+    where
+        T: Eq + PhfHash,
+        K: PhfBorrow<T>,
+    {
+        self.get(key).is_some()
+    }
+
+    /// Returns the index of the key within the list used to initialize
+    /// the ordered map.
+    pub fn get_index<T: ?Sized>(&self, key: &T) -> Option<usize>
+    where
+        T: Eq + PhfHash,
+        K: PhfBorrow<T>,
+    {
+        self.get_internal(key).map(|(i, _)| i)
+    }
+
+    /// Returns references to both the key and values at an index
+    /// within the list used to initialize the ordered map. See `.get_index(key)`.
+    pub fn index(&self, index: usize) -> Option<(&K, &V)> {
+        self.entries.get(index).map(|&(ref k, ref v)| (k, v))
+    }
+
     /// Like `get`, but returns both the key and the value.
     pub fn get_entry<T: ?Sized>(&self, key: &T) -> Option<(&K, &V)>
+    where
+        T: Eq + PhfHash,
+        K: PhfBorrow<T>,
+    {
+        self.get_internal(key).map(|(_, e)| e)
+    }
+
+    fn get_internal<T: ?Sized>(&self, key: &T) -> Option<(usize, (&K, &V))>
     where
         T: Eq + PhfHash,
         K: PhfBorrow<T>,
@@ -99,11 +126,13 @@ impl<K, V> Map<K, V> {
             return None;
         } //Prevent panic on empty map
         let hashes = phf_shared::hash(key, &self.key);
-        let index = phf_shared::get_index(&hashes, &*self.disps, self.entries.len());
-        let entry = &self.entries[index as usize];
+        let idx_index = phf_shared::get_index(&hashes, &*self.disps, self.idxs.len());
+        let idx = self.idxs[idx_index as usize];
+        let entry = &self.entries[idx];
+
         let b: &T = entry.0.borrow();
         if b == key {
-            Some((&entry.0, &entry.1))
+            Some((idx, (&entry.0, &entry.1)))
         } else {
             None
         }
@@ -111,7 +140,7 @@ impl<K, V> Map<K, V> {
 
     /// Returns an iterator over the key/value pairs in the map.
     ///
-    /// Entries are returned in an arbitrary but fixed order.
+    /// Entries are returned in the same order in which they were defined.
     pub fn entries(&self) -> Entries<'_, K, V> {
         Entries {
             iter: self.entries.iter(),
@@ -120,7 +149,7 @@ impl<K, V> Map<K, V> {
 
     /// Returns an iterator over the keys in the map.
     ///
-    /// Keys are returned in an arbitrary but fixed order.
+    /// Keys are returned in the same order in which they were defined.
     pub fn keys(&self) -> Keys<'_, K, V> {
         Keys {
             iter: self.entries(),
@@ -129,7 +158,7 @@ impl<K, V> Map<K, V> {
 
     /// Returns an iterator over the values in the map.
     ///
-    /// Values are returned in an arbitrary but fixed order.
+    /// Values are returned in the same order in which they were defined.
     pub fn values(&self) -> Values<'_, K, V> {
         Values {
             iter: self.entries(),
@@ -137,7 +166,7 @@ impl<K, V> Map<K, V> {
     }
 }
 
-impl<'a, K, V> IntoIterator for &'a Map<K, V> {
+impl<'a, K, V> IntoIterator for &'a OrderedMap<K, V> {
     type Item = (&'a K, &'a V);
     type IntoIter = Entries<'a, K, V>;
 
@@ -146,7 +175,7 @@ impl<'a, K, V> IntoIterator for &'a Map<K, V> {
     }
 }
 
-/// An iterator over the key/value pairs in a `Map`.
+/// An iterator over the entries in a `OrderedMap`.
 pub struct Entries<'a, K, V> {
     iter: slice::Iter<'a, (K, V)>,
 }
@@ -174,7 +203,7 @@ impl<'a, K, V> Iterator for Entries<'a, K, V> {
     type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<(&'a K, &'a V)> {
-        self.iter.next().map(|&(ref k, ref v)| (k, v))
+        self.iter.next().map(|e| (&e.0, &e.1))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -192,7 +221,7 @@ impl<'a, K, V> ExactSizeIterator for Entries<'a, K, V> {}
 
 impl<'a, K, V> FusedIterator for Entries<'a, K, V> {}
 
-/// An iterator over the keys in a `Map`.
+/// An iterator over the keys in a `OrderedMap`.
 pub struct Keys<'a, K, V> {
     iter: Entries<'a, K, V>,
 }
@@ -237,7 +266,7 @@ impl<'a, K, V> ExactSizeIterator for Keys<'a, K, V> {}
 
 impl<'a, K, V> FusedIterator for Keys<'a, K, V> {}
 
-/// An iterator over the values in a `Map`.
+/// An iterator over the values in a `OrderedMap`.
 pub struct Values<'a, K, V> {
     iter: Entries<'a, K, V>,
 }
@@ -281,21 +310,3 @@ impl<'a, K, V> DoubleEndedIterator for Values<'a, K, V> {
 impl<'a, K, V> ExactSizeIterator for Values<'a, K, V> {}
 
 impl<'a, K, V> FusedIterator for Values<'a, K, V> {}
-
-#[cfg(feature = "serde")]
-impl<K, V> Serialize for Map<K, V>
-where
-    K: Serialize,
-    V: Serialize,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut map = serializer.serialize_map(Some(self.len()))?;
-        for (k, v) in self.entries() {
-            map.serialize_entry(k, v)?;
-        }
-        map.end()
-    }
-}
