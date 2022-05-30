@@ -63,9 +63,9 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-this.EXPORTED_SYMBOLS = ["BookmarksPolicies"];
+const EXPORTED_SYMBOLS = ["BookmarksPolicies"];
 
-this.BookmarksPolicies = {
+const BookmarksPolicies = {
   // These prefixes must only contain characters
   // allowed by PlacesUtils.isValidGuid
   BOOKMARK_GUID_PREFIX: "PolB-",

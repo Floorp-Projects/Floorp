@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
 });
 
-this.LoginBreaches = {
+const LoginBreaches = {
   REMOTE_SETTINGS_COLLECTION: "fxmonitor-breaches",
 
   async update(breaches = null) {
