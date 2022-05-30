@@ -12,6 +12,7 @@ function parseQuery(queryString) {
     const query = Object.fromEntries(new URLSearchParams(queryString).entries());
     injectValues(query);
     updateShowSSL(query);
+    updateShowHSTS(query);
 };
 
 /**
@@ -70,6 +71,24 @@ function updateShowSSL(queryMap) {
         }
     }
 };
+
+/**
+ * Used to show or hide the "advanced" button based for the HSTS error page
+ */
+function updateShowHSTS(queryMap) {
+    /** @type {'true' | 'false'} */
+    const showHSTS = queryMap.showHSTS;
+    if (typeof document.addCertException === "undefined") {
+        document.getElementById('advancedButton').style.display='none';
+    } else {
+        if (showHSTS === 'true') {
+            document.getElementById('advancedButton').style.display='block';
+            document.getElementById('advancedPanelAcceptButton').style.display='none';
+        } else {
+            document.getElementById('advancedButton').style.display='none';
+        }
+    }
+}
 
 /**
  * Used to display information about the SSL certificate in `error_pages.html`
