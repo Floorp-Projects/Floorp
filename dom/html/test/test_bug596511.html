@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=596511
 <div id="content" style="display: none">
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 
 /** Test for Bug 596511 **/
 
@@ -37,6 +37,7 @@ function checkNotSufferingFromBeingMissing(element, aTodo)
   is(element.validationMessage, "",
     "Validation message should be the empty string");
 
+  ok(element.matches(":valid"), ":valid pseudo-class should apply");
   is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(0, 128, 0)", ":valid pseudo-class should apply");
 
