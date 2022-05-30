@@ -215,18 +215,14 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.push(r14);
 
   CodeLabel returnLabel;
-  CodeLabel oomReturnLabel;
+  Label oomReturnLabel;
   {
     // Handle Interpreter -> Baseline OSR.
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     MOZ_ASSERT(!regs.has(rbp));
-    regs.takeUnchecked(OsrFrameReg);
+    regs.take(OsrFrameReg);
     regs.take(reg_code);
 
-    // Ensure that |scratch| does not end up being JSReturnOperand.
-    // Do takeUnchecked because on Win64/x64, reg_code (IntArgReg0) and
-    // JSReturnOperand are the same (rcx).  See bug 849398.
-    regs.takeUnchecked(JSReturnOperand);
     Register scratch = regs.takeAny();
 
     Label notOsr;
@@ -313,8 +309,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.mov(framePtr, rsp);
     masm.addPtr(Imm32(2 * sizeof(uintptr_t)), rsp);
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-    masm.mov(&oomReturnLabel, scratch);
-    masm.jump(scratch);
+    masm.jump(&oomReturnLabel);
 
     masm.bind(&notOsr);
     masm.movq(scopeChain, R1.scratchReg());
@@ -332,7 +327,6 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&returnLabel);
     masm.addCodeLabel(returnLabel);
     masm.bind(&oomReturnLabel);
-    masm.addCodeLabel(oomReturnLabel);
   }
 
   // Pop arguments and padding from stack.
