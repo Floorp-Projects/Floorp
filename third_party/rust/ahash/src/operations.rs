@@ -7,28 +7,50 @@ const SHUFFLE_MASK: u128 = 0x020a0700_0c01030e_050f0d08_06090b04_u128;
 //const SHUFFLE_MASK: u128 = 0x000d0702_0a040301_05080f0c_0e0b0609_u128;
 //const SHUFFLE_MASK: u128 = 0x040A0700_030E0106_0D050F08_020B0C09_u128;
 
+#[inline(always)]
 pub(crate) const fn folded_multiply(s: u64, by: u64) -> u64 {
     let result = (s as u128).wrapping_mul(by as u128);
     ((result & 0xffff_ffff_ffff_ffff) as u64) ^ ((result >> 64) as u64)
 }
 
+
+/// Given a small (less than 8 byte slice) returns the same data stored in two u32s.
+/// (order of and non-duplication of bytes is NOT guaranteed)
+#[inline(always)]
+pub(crate) fn read_small(data: &[u8]) -> [u64; 2] {
+    debug_assert!(data.len() <= 8);
+    if data.len() >= 2 {
+        if data.len() >= 4 {
+            //len 4-8
+            [data.read_u32().0 as u64, data.read_last_u32() as u64]
+        } else {
+            //len 2-3
+            [data.read_u16().0 as u64, data[data.len() - 1] as u64]
+        }
+    } else {
+        if data.len() > 0 {
+            [data[0] as u64, data[0] as u64]
+        } else {
+            [0, 0]
+        }
+    }
+}
+
 #[inline(always)]
 pub(crate) fn shuffle(a: u128) -> u128 {
     #[cfg(all(target_feature = "ssse3", not(miri)))]
-        {
-            use core::mem::transmute;
-            #[cfg(target_arch = "x86")]
-            use core::arch::x86::*;
-            #[cfg(target_arch = "x86_64")]
-            use core::arch::x86_64::*;
-            unsafe {
-                transmute(_mm_shuffle_epi8(transmute(a), transmute(SHUFFLE_MASK)))
-            }
-        }
+    {
+        #[cfg(target_arch = "x86")]
+        use core::arch::x86::*;
+        #[cfg(target_arch = "x86_64")]
+        use core::arch::x86_64::*;
+        use core::mem::transmute;
+        unsafe { transmute(_mm_shuffle_epi8(transmute(a), transmute(SHUFFLE_MASK))) }
+    }
     #[cfg(not(all(target_feature = "ssse3", not(miri))))]
-        {
-            a.swap_bytes()
-        }
+    {
+        a.swap_bytes()
+    }
 }
 
 #[allow(unused)] //not used by fallback
@@ -78,6 +100,22 @@ pub(crate) fn aesenc(value: u128, xor: u128) -> u128 {
         transmute(_mm_aesenc_si128(value, transmute(xor)))
     }
 }
+
+#[cfg(all(any(target_arch = "arm", target_arch = "aarch64"), target_feature = "crypto", not(miri), feature = "stdsimd"))]
+#[allow(unused)]
+#[inline(always)]
+pub(crate) fn aesenc(value: u128, xor: u128) -> u128 {
+    #[cfg(target_arch = "arm")]
+    use core::arch::arm::*;
+    #[cfg(target_arch = "aarch64")]
+    use core::arch::aarch64::*;
+    use core::mem::transmute;
+    unsafe {
+        let value = transmute(value);
+        transmute(vaesmcq_u8(vaeseq_u8(value, transmute(xor))))
+    }
+}
+
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), target_feature = "aes", not(miri)))]
 #[allow(unused)]
 #[inline(always)]
@@ -90,6 +128,21 @@ pub(crate) fn aesdec(value: u128, xor: u128) -> u128 {
     unsafe {
         let value = transmute(value);
         transmute(_mm_aesdec_si128(value, transmute(xor)))
+    }
+}
+
+#[cfg(all(any(target_arch = "arm", target_arch = "aarch64"), target_feature = "crypto", not(miri), feature = "stdsimd"))]
+#[allow(unused)]
+#[inline(always)]
+pub(crate) fn aesdec(value: u128, xor: u128) -> u128 {
+    #[cfg(target_arch = "arm")]
+    use core::arch::arm::*;
+    #[cfg(target_arch = "aarch64")]
+    use core::arch::aarch64::*;
+    use core::mem::transmute;
+    unsafe {
+        let value = transmute(value);
+        transmute(vaesimcq_u8(vaesdq_u8(value, transmute(xor))))
     }
 }
 
