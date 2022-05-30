@@ -192,7 +192,8 @@ def vendor_rust(command_context, **kwargs):
     from mozbuild.vendor.vendor_rust import VendorRust
 
     vendor_command = command_context._spawn(VendorRust)
-    vendor_command.vendor(**kwargs)
+    ok = vendor_command.vendor(**kwargs)
+    sys.exit(0 if ok else 1)
 
 
 # =====================================================================

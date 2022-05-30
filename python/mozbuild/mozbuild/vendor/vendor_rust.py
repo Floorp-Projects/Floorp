@@ -11,7 +11,6 @@ import logging
 import os
 import re
 import subprocess
-import sys
 from collections import defaultdict, OrderedDict
 from distutils.version import LooseVersion
 from itertools import dropwhile
@@ -132,7 +131,7 @@ class VendorRust(MozbuildObject):
         self.log(logging.DEBUG, "cargo_version", {}, "cargo is new enough")
         return True
 
-    def check_modified_files(self):
+    def has_modified_files(self):
         """
         Ensure that there aren't any uncommitted changes to files
         in the working copy, since we're going to change some state
@@ -158,7 +157,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
                     files="\n".join(sorted(modified))
                 ),
             )
-            sys.exit(1)
+        return modified
 
     def check_openssl(self):
         """
@@ -498,13 +497,13 @@ license file's hash.
     ):
         self.populate_logger()
         self.log_manager.enable_unstructured()
-        if not ignore_modified:
-            self.check_modified_files()
+        if not ignore_modified and self.has_modified_files():
+            return False
 
         cargo = self._ensure_cargo()
         if not cargo:
             self.log(logging.ERROR, "cargo_not_found", {}, "Cargo was not found.")
-            sys.exit(1)
+            return False
 
         relative_vendor_dir = "third_party/rust"
         vendor_dir = mozpath.join(self.topsrcdir, relative_vendor_dir)
@@ -628,7 +627,7 @@ license file's hash.
                     failed = True
 
             if failed:
-                sys.exit(1)
+                return False
 
         output = subprocess.check_output(
             [cargo, "vendor", vendor_dir], cwd=self.topsrcdir
@@ -660,7 +659,7 @@ license file's hash.
                 """cargo vendor didn't output a unique replace-with. Found: %s."""
                 % replaces,
             )
-            sys.exit(1)
+            return False
 
         replace_name = replaces.pop()
         replace = config["source"].pop(replace_name)
@@ -714,7 +713,7 @@ license file's hash.
                 ),
             )
             self.repository.clean_directory(vendor_dir)
-            sys.exit(1)
+            return False
 
         self.repository.add_remove_files(vendor_dir)
 
@@ -754,7 +753,7 @@ The changes from `mach vendor rust` will NOT be added to version control.
             )
             self.repository.forget_add_remove_files(vendor_dir)
             self.repository.clean_directory(vendor_dir)
-            sys.exit(1)
+            return False
 
         # Only warn for large imports, since we may just have large code
         # drops from time to time (e.g. importing features into m-c).
@@ -773,3 +772,4 @@ a pull request upstream to ignore those files when publishing.""".format(
                     size=cumulative_added_size
                 ),
             )
+        return True
