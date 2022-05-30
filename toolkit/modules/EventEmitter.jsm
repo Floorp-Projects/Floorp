@@ -14,7 +14,7 @@ ChromeUtils.defineModuleGetter(
 
 var EXPORTED_SYMBOLS = ["EventEmitter"];
 
-let EventEmitter = (this.EventEmitter = function() {});
+function EventEmitter() {}
 
 let loggingEnabled = Services.prefs.getBoolPref("toolkit.dump.emit");
 Services.prefs.addObserver("toolkit.dump.emit", {

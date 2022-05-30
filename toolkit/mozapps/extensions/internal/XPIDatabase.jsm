@@ -1655,7 +1655,7 @@ function _filterDB(addonDB, aFilter) {
   return Array.from(addonDB.values()).filter(aFilter);
 }
 
-this.XPIDatabase = {
+const XPIDatabase = {
   // true if the database connection has been opened
   initialized: false,
   // The database file
@@ -2835,7 +2835,7 @@ this.XPIDatabase = {
   },
 };
 
-this.XPIDatabaseReconcile = {
+const XPIDatabaseReconcile = {
   /**
    * Returns a map of ID -> add-on. When the same add-on ID exists in multiple
    * install locations the highest priority location is chosen.
