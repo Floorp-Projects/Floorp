@@ -168,6 +168,15 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "DoubleVerify",
+    platform: "all",
+    name: "DoubleVerify",
+    bug: "1771557",
+    file: "doubleverify.js",
+    matches: ["*://pub.doubleverify.com/signals/pub.js*"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "AmazonTAM",
     platform: "all",
     name: "Amazon Transparent Ad Marketplace",
