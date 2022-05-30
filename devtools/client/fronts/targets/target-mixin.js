@@ -78,6 +78,12 @@ function TargetMixin(parentClass) {
         ["resource-available-form", offResourceAvailable],
         ["resource-updated-form", offResourceUpdated],
       ]);
+
+      // Expose a promise that is resolved once the target front is usable
+      // i.e. once attachAndInitThread has been called and resolved.
+      this.initialized = new Promise(resolve => {
+        this._onInitialized = resolve;
+      });
     }
 
     on(eventName, listener) {
@@ -479,6 +485,9 @@ function TargetMixin(parentClass) {
       }
 
       this._onThreadInitialized = this._attachAndInitThread(targetCommand);
+      // Resolve the `initialized` promise, while ignoring errors
+      // The empty function passed to catch will avoid spawning a new possibly rejected promise
+      this._onThreadInitialized.catch(() => {}).then(this._onInitialized);
       return this._onThreadInitialized;
     }
 

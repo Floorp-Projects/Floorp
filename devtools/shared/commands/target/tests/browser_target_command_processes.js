@@ -26,9 +26,7 @@ add_task(async function() {
   targetCommand.destroy();
   // Wait for all the targets to be fully attached so we don't have pending requests.
   await Promise.all(
-    targetCommand
-      .getAllTargets(targetCommand.ALL_TYPES)
-      .map(t => t.attachAndInitThread(targetCommand))
+    targetCommand.getAllTargets(targetCommand.ALL_TYPES).map(t => t.initialized)
   );
 
   await commands.destroy();
@@ -69,9 +67,7 @@ add_task(async function() {
   targetCommand.destroy();
   // Wait for all the targets to be fully attached so we don't have pending requests.
   await Promise.all(
-    targetCommand
-      .getAllTargets(targetCommand.ALL_TYPES)
-      .map(t => t.attachAndInitThread(targetCommand))
+    targetCommand.getAllTargets(targetCommand.ALL_TYPES).map(t => t.initialized)
   );
 
   await commands.destroy();

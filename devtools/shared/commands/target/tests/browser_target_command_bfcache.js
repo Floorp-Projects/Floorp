@@ -203,9 +203,8 @@ async function testTopLevelNavigations(bfcacheInParent) {
     );
     is(destroyedTargets[1], targets[1], "...and that's the second one");
 
-    // Attach and wait for full attach in order to having breaking any pending requests
+    // Wait for full attach in order to having breaking any pending requests
     // when navigating to another page and switching to new process and target.
-    await targets[2].attachAndInitThread(targetCommand);
     await waitForAllTargetsToBeAttached(targetCommand);
   } else {
     info("Wait for 'dom-complete' resource");
@@ -266,9 +265,8 @@ async function testTopLevelNavigations(bfcacheInParent) {
     );
     is(destroyedTargets[2], targets[2], "...and that's the third one");
 
-    // Attach and wait for full attach in order to having breaking any pending requests
+    // Wait for full attach in order to having breaking any pending requests
     // when navigating to another page and switching to new process and target.
-    await targets[3].attachAndInitThread(targetCommand);
     await waitForAllTargetsToBeAttached(targetCommand);
     await onNewTargetProcessed;
   } else {
