@@ -236,6 +236,6 @@ class _RemoteL10n {
   }
 }
 
-this.RemoteL10n = new _RemoteL10n();
+const RemoteL10n = new _RemoteL10n();
 
 const EXPORTED_SYMBOLS = ["RemoteL10n", "_RemoteL10n"];

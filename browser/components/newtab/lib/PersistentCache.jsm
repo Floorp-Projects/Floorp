@@ -6,7 +6,7 @@
 /**
  * A file (disk) based persistent cache of a JSON serializable object.
  */
-this.PersistentCache = class PersistentCache {
+class PersistentCache {
   /**
    * Create a cache object based on a name.
    *
@@ -90,6 +90,6 @@ this.PersistentCache = class PersistentCache {
       tmpPath: `${filepath}.tmp`,
     });
   }
-};
+}
 
 const EXPORTED_SYMBOLS = ["PersistentCache"];

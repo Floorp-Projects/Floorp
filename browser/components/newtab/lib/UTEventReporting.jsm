@@ -18,7 +18,7 @@ const EXTRAS_FIELD_NAMES = [
   "action_position",
 ];
 
-this.UTEventReporting = class UTEventReporting {
+class UTEventReporting {
   constructor() {
     Services.telemetry.setEventRecordingEnabled("activity_stream", true);
     this.sendUserEvent = this.sendUserEvent.bind(this);
@@ -63,6 +63,6 @@ this.UTEventReporting = class UTEventReporting {
   uninit() {
     Services.telemetry.setEventRecordingEnabled("activity_stream", false);
   }
-};
+}
 
 const EXPORTED_SYMBOLS = ["UTEventReporting"];

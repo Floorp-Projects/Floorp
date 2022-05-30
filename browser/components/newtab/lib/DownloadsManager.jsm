@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const DOWNLOAD_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for downloads changed events
 
-this.DownloadsManager = class DownloadsManager {
+class DownloadsManager {
   constructor(store) {
     this._downloadData = null;
     this._store = null;
@@ -190,5 +190,5 @@ this.DownloadsManager = class DownloadsManager {
         break;
     }
   }
-};
-this.EXPORTED_SYMBOLS = ["DownloadsManager"];
+}
+const EXPORTED_SYMBOLS = ["DownloadsManager"];

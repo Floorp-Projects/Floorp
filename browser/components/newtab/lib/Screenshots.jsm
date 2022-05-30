@@ -41,7 +41,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-this.Screenshots = {
+const Screenshots = {
   /**
    * Get a screenshot / thumbnail for a url. Either returns the disk cached
    * image or initiates a background request for the url.

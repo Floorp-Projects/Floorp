@@ -197,7 +197,7 @@ class _ASRouterPreferences {
 }
 this._ASRouterPreferences = _ASRouterPreferences;
 
-this.ASRouterPreferences = new _ASRouterPreferences();
+const ASRouterPreferences = new _ASRouterPreferences();
 this.TEST_PROVIDERS = TEST_PROVIDERS;
 this.TARGETING_PREFERENCES = TARGETING_PREFERENCES;
 

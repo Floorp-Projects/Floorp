@@ -67,7 +67,7 @@ const PREFS_AFTER_SECTIONS = () => [
   },
 ];
 
-this.AboutPreferences = class AboutPreferences {
+class AboutPreferences {
   init() {
     Services.obs.addObserver(this, PREFERENCES_LOADED_EVENT);
   }
@@ -305,7 +305,7 @@ this.AboutPreferences = class AboutPreferences {
     // Update the visibility of the Restore Defaults btn based on checked prefs
     gHomePane.toggleRestoreDefaultsBtn();
   }
-};
+}
 
 this.PREFERENCES_LOADED_EVENT = PREFERENCES_LOADED_EVENT;
 const EXPORTED_SYMBOLS = ["AboutPreferences", "PREFERENCES_LOADED_EVENT"];

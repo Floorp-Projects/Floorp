@@ -18,7 +18,7 @@ const EXPIRATION_TIME = 4.5 * 60 * 1000; // 4.5 minutes
  * amount of time has passed. Allows for migrating data from previously cached
  * links to the new links with the same url.
  */
-this.LinksCache = class LinksCache {
+class LinksCache {
   /**
    * Create a links cache for a given object property.
    *
@@ -133,4 +133,4 @@ this.LinksCache = class LinksCache {
     // Provide a shallow copy of the cached link objects for callers to modify
     return (await this.cache).map(link => link && Object.assign({}, link));
   }
-};
+}

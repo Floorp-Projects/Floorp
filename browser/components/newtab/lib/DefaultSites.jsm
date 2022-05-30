@@ -44,7 +44,7 @@ const DEFAULT_SITES_MAP = new Map([
   ],
 ]);
 
-this.EXPORTED_SYMBOLS = ["DEFAULT_SITES"];
+const EXPORTED_SYMBOLS = ["DEFAULT_SITES"];
 
 // Immutable for export.
-this.DEFAULT_SITES = Object.freeze(DEFAULT_SITES_MAP);
+const DEFAULT_SITES = Object.freeze(DEFAULT_SITES_MAP);

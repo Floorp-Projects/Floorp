@@ -216,7 +216,7 @@ class ContileIntegration {
   }
 }
 
-this.TopSitesFeed = class TopSitesFeed {
+class TopSitesFeed {
   constructor() {
     this._contile = new ContileIntegration(this);
     this._tippyTopProvider = new TippyTopProvider();
@@ -1400,7 +1400,7 @@ this.TopSitesFeed = class TopSitesFeed {
         break;
     }
   }
-};
+}
 
 this.DEFAULT_TOP_SITES = DEFAULT_TOP_SITES;
 const EXPORTED_SYMBOLS = [

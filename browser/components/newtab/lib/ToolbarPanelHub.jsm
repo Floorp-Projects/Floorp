@@ -605,6 +605,6 @@ this._ToolbarPanelHub = _ToolbarPanelHub;
  * ToolbarPanelHub - singleton instance of _ToolbarPanelHub that can initiate
  * message requests and render messages.
  */
-this.ToolbarPanelHub = new _ToolbarPanelHub();
+const ToolbarPanelHub = new _ToolbarPanelHub();
 
 const EXPORTED_SYMBOLS = ["ToolbarPanelHub", "_ToolbarPanelHub"];

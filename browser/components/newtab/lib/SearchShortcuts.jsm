@@ -20,7 +20,7 @@ const SEARCH_SHORTCUTS = [
 this.SEARCH_SHORTCUTS = SEARCH_SHORTCUTS;
 
 // These can be added via the editor but will not be added organically
-this.CUSTOM_SEARCH_SHORTCUTS = [
+const CUSTOM_SEARCH_SHORTCUTS = [
   ...SEARCH_SHORTCUTS,
   { keyword: "@bing", shortURL: "bing", url: "https://bing.com" },
   {
@@ -38,10 +38,10 @@ this.CUSTOM_SEARCH_SHORTCUTS = [
 ];
 
 // Note: you must add the activity stream branch to the beginning of this if using outside activity stream
-this.SEARCH_SHORTCUTS_EXPERIMENT = "improvesearch.topSiteSearchShortcuts";
-this.SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF =
+const SEARCH_SHORTCUTS_EXPERIMENT = "improvesearch.topSiteSearchShortcuts";
+const SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF =
   "improvesearch.topSiteSearchShortcuts.searchEngines";
-this.SEARCH_SHORTCUTS_HAVE_PINNED_PREF =
+const SEARCH_SHORTCUTS_HAVE_PINNED_PREF =
   "improvesearch.topSiteSearchShortcuts.havePinned";
 
 function getSearchProvider(candidateShortURL) {

@@ -8,7 +8,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/IndexedDB.jsm"
 );
 
-this.ActivityStreamStorage = class ActivityStreamStorage {
+class ActivityStreamStorage {
   /**
    * @param storeNames Array of strings used to create all the required stores
    */
@@ -112,7 +112,7 @@ this.ActivityStreamStorage = class ActivityStreamStorage {
 
     return result;
   }
-};
+}
 
 function getDefaultOptions(options) {
   return { collapsed: !!options.collapsed };

@@ -73,7 +73,7 @@ const PREF_PERSONALIZATION_OVERRIDE =
 
 let getHardcodedLayout;
 
-this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
+class DiscoveryStreamFeed {
   constructor() {
     // Internal state for checking if we've intialized all our data
     this.loaded = false;
@@ -1880,7 +1880,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         break;
     }
   }
-};
+}
 
 /* This function generates a hardcoded layout each call.
    This is because modifying the original object would

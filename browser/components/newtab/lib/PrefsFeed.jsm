@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Region: "resource://gre/modules/Region.jsm",
 });
 
-this.PrefsFeed = class PrefsFeed {
+class PrefsFeed {
   constructor(prefMap) {
     this._prefMap = prefMap;
     this._prefs = new Prefs();
@@ -261,6 +261,6 @@ this.PrefsFeed = class PrefsFeed {
         break;
     }
   }
-};
+}
 
 const EXPORTED_SYMBOLS = ["PrefsFeed"];

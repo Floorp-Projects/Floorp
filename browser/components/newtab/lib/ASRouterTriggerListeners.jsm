@@ -86,7 +86,7 @@ function createMatchPatternSet(patterns, flags) {
  * A Map from trigger IDs to singleton trigger listeners. Each listener must
  * have idempotent `init` and `uninit` methods.
  */
-this.ASRouterTriggerListeners = new Map([
+const ASRouterTriggerListeners = new Map([
   [
     "openArticleURL",
     {

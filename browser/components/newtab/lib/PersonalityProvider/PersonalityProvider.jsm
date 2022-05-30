@@ -29,7 +29,7 @@ const { BasePromiseWorker } = ChromeUtils.import(
 const RECIPE_NAME = "personality-provider-recipe";
 const MODELS_NAME = "personality-provider-models";
 
-this.PersonalityProvider = class PersonalityProvider {
+class PersonalityProvider {
   constructor(modelKeys) {
     this.modelKeys = modelKeys;
     this.onSync = this.onSync.bind(this);
@@ -288,6 +288,6 @@ this.PersonalityProvider = class PersonalityProvider {
       interestVector: this.interestVector,
     };
   }
-};
+}
 
 const EXPORTED_SYMBOLS = ["PersonalityProvider"];
