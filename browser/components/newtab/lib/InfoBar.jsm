@@ -170,6 +170,4 @@ const InfoBar = {
   },
 };
 
-this.InfoBar = InfoBar;
-
 const EXPORTED_SYMBOLS = ["InfoBar"];

@@ -1010,7 +1010,4 @@ const CFRPageActions = {
   },
 };
 
-this.PageAction = PageAction;
-this.CFRPageActions = CFRPageActions;
-
 const EXPORTED_SYMBOLS = ["CFRPageActions", "PageAction"];

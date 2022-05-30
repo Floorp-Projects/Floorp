@@ -414,6 +414,5 @@ const OnboardingMessageProvider = {
     return message;
   },
 };
-this.OnboardingMessageProvider = OnboardingMessageProvider;
 
 const EXPORTED_SYMBOLS = ["OnboardingMessageProvider"];

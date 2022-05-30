@@ -511,8 +511,6 @@ const MessageLoaderUtils = {
   },
 };
 
-this.MessageLoaderUtils = MessageLoaderUtils;
-
 /**
  * @class _ASRouter - Keeps track of all messages, UI surfaces, and
  * handles blocking, rotation, etc. Inspecting ASRouter.state will
@@ -1785,7 +1783,6 @@ class _ASRouter {
     await this.loadMessagesFromAllProviders([experimentProvider]);
   }
 }
-this._ASRouter = _ASRouter;
 
 /**
  * ASRouter - singleton instance of _ASRouter that controls all messages

@@ -340,5 +340,4 @@ class ActivityStreamMessageChannel {
   }
 }
 
-this.DEFAULT_OPTIONS = DEFAULT_OPTIONS;
 const EXPORTED_SYMBOLS = ["ActivityStreamMessageChannel", "DEFAULT_OPTIONS"];

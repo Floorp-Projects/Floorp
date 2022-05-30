@@ -305,8 +305,6 @@ class _ToolbarBadgeHub {
   }
 }
 
-this._ToolbarBadgeHub = _ToolbarBadgeHub;
-
 /**
  * ToolbarBadgeHub - singleton instance of _ToolbarBadgeHub that can initiate
  * message requests and render messages.

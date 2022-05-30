@@ -112,6 +112,4 @@ const Spotlight = {
   },
 };
 
-this.Spotlight = Spotlight;
-
 const EXPORTED_SYMBOLS = ["Spotlight"];

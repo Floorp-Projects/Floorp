@@ -604,8 +604,6 @@ class PlacesFeed {
   }
 }
 
-this.PlacesFeed = PlacesFeed;
-
 // Exported for testing only
 PlacesFeed.BookmarksObserver = BookmarksObserver;
 PlacesFeed.PlacesObserver = PlacesObserver;
