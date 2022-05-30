@@ -81,6 +81,7 @@ sequence = [1, 2, 3];
 let seq_withAt = sequence.withAt(1, 42);
 assertEq(arraysEqual(sequence, [1, 2, 3]), true);
 assertEq(arraysEqual(seq_withAt, [1, 42, 3]), true);
+assertEq(arraysEqual(sequence.withAt(-0, 42), [42, 2, 3]), true);
 
 /* false/true => index 0/1 */
 assertEq(arraysEqual(sequence.withAt(false, 42), [42, 2, 3]), true);
@@ -93,11 +94,13 @@ assertEq(arraysEqual(sequence.withAt([], 42), [42, 2, 3]), true);
 
 assertEq(arraysEqual(sequence.withAt("2", 42), [1, 2, 42]), true);
 
+/* Non-numeric indices => 0 */
+assertEq(arraysEqual(sequence.withAt("monkeys", 42), [42, 2, 3]), true);
+assertEq(arraysEqual(sequence.withAt(undefined, 42), [42, 2, 3]), true);
+assertEq(arraysEqual(sequence.withAt(function() {}, 42), [42, 2, 3]), true);
+
 assertThrowsInstanceOf(() => sequence.withAt(3, 42), RangeError);
 assertThrowsInstanceOf(() => sequence.withAt(5, 42), RangeError);
 assertThrowsInstanceOf(() => sequence.withAt(-10, 42), RangeError);
-assertThrowsInstanceOf(() => sequence.withAt("monkeys", 42), RangeError);
 assertThrowsInstanceOf(() => sequence.withAt(Infinity, 42), RangeError);
-assertThrowsInstanceOf(() => sequence.withAt(undefined, 42), RangeError);
-assertThrowsInstanceOf(() => sequence.withAt(function() {}, 42), RangeError);
 

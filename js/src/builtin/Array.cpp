@@ -3283,45 +3283,34 @@ static bool array_with_at(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   /* Step 3. */
-  int64_t index;
-  bool result;
-  if (!IsIntegralNumber(cx, args.get(0), &result)) {
+  double relativeIndex;
+  if (!ToInteger(cx, args.get(0), &relativeIndex)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX,
+                              "Array.withAt");
     return false;
   }
 
-  if (!result) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-    return false;
-  }
-  if (!ToInt64(cx, args.get(0), &index)) {
-    return false;
-  }
-  /* Step 4. */
-  if (index >= int64_t(len)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-    return false;
-  }
-
-  /* Steps 5-6. */
-  int64_t actualIndex = index;
-  if (index < 0) {
-    actualIndex = int64_t(len + index);
-  }
-
-  /* Step 7. */
+  /* Steps 4-5. */
+  double actualIndex = relativeIndex;
   if (actualIndex < 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+    actualIndex = int64_t(len + actualIndex);
+  }
+
+  /* Step 6. */
+  if (actualIndex < 0 || actualIndex >= double(len)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX,
+                              "Array.withAt: index out of bounds");
     return false;
   }
-  // actualIndex must be non-negative at this point
+  // actualIndex must be a non-negative integer at this point
 
-  /* Step 8 */
+  /* Step 7 */
   RootedObject A(cx, NewDenseArray(cx, args, len));
   if (!A) {
     return false;
   }
 
-  /* Steps 9-10. */
+  /* Steps 8-9. */
   for (uint64_t k = 0; k < len; k++) {
     RootedValue fromValue(cx);
     if (k == uint64_t(actualIndex)) {
@@ -3336,7 +3325,7 @@ static bool array_with_at(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  /* Step 11. */
+  /* Step 10. */
   args.rval().setObject(*A);
   return true;
 }

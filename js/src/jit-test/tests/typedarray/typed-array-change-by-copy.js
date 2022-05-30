@@ -12,9 +12,27 @@ let a_withAt = typedArray.withAt(1, 42);
 assertEq(arraysEqual(typedArray, new Uint8Array([1, 2, 3])), true);
 assertEq(arraysEqual(a_withAt, new Uint8Array([1, 42, 3])), true);
 
+let tarray1 = new Uint8Array([42, 2, 3]);
+let tarray2 = new Uint8Array([1, 2, 42]);
+
+assertEq(arraysEqual(typedArray.withAt(-0, 42), tarray1), true);
+
+/* null => 0 */
+assertEq(arraysEqual(typedArray.withAt(null, 42), tarray1), true);
+/* [] => 0 */
+assertEq(arraysEqual(typedArray.withAt([], 42), tarray1), true);
+
+assertEq(arraysEqual(typedArray.withAt("2", 42), tarray2), true);
+
+/* Non-numeric indices => 0 */
+assertEq(arraysEqual(typedArray.withAt("monkeys", 42), tarray1), true);
+assertEq(arraysEqual(typedArray.withAt(undefined, 42), tarray1), true);
+assertEq(arraysEqual(typedArray.withAt(function() {}, 42), tarray1), true);
+
+assertThrowsInstanceOf(() => typedArray.withAt(3, 42), RangeError);
 assertThrowsInstanceOf(() => typedArray.withAt(5, 42), RangeError);
 assertThrowsInstanceOf(() => typedArray.withAt(-10, 42), RangeError);
-assertThrowsInstanceOf(() => typedArray.withAt(-0, 42), RangeError);
+assertThrowsInstanceOf(() => typedArray.withAt(Infinity, 42), RangeError);
 
 let reversedIntArray = typedArray.withReversed();
 assertEq(arraysEqual(typedArray, typedArray123), true);
