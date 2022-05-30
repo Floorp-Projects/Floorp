@@ -10,11 +10,12 @@
 
 use crate::distributions::{Distribution, Standard};
 use crate::Rng;
-#[cfg(all(target_arch = "x86", feature = "nightly"))] use core::arch::x86::*;
-#[cfg(all(target_arch = "x86_64", feature = "nightly"))]
-use core::arch::x86_64::*;
-#[cfg(not(target_os = "emscripten"))] use core::num::NonZeroU128;
-use core::num::{NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize};
+#[cfg(all(target_arch = "x86", feature = "simd_support"))]
+use core::arch::x86::{__m128i, __m256i};
+#[cfg(all(target_arch = "x86_64", feature = "simd_support"))]
+use core::arch::x86_64::{__m128i, __m256i};
+use core::num::{NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,
+    NonZeroU128};
 #[cfg(feature = "simd_support")] use packed_simd::*;
 
 impl Distribution<u8> for Standard {
@@ -45,7 +46,6 @@ impl Distribution<u64> for Standard {
     }
 }
 
-#[cfg(not(target_os = "emscripten"))]
 impl Distribution<u128> for Standard {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u128 {
@@ -85,7 +85,6 @@ impl_int_from_uint! { i8, u8 }
 impl_int_from_uint! { i16, u16 }
 impl_int_from_uint! { i32, u32 }
 impl_int_from_uint! { i64, u64 }
-#[cfg(not(target_os = "emscripten"))]
 impl_int_from_uint! { i128, u128 }
 impl_int_from_uint! { isize, usize }
 
@@ -107,7 +106,6 @@ impl_nzint!(NonZeroU8, NonZeroU8::new);
 impl_nzint!(NonZeroU16, NonZeroU16::new);
 impl_nzint!(NonZeroU32, NonZeroU32::new);
 impl_nzint!(NonZeroU64, NonZeroU64::new);
-#[cfg(not(target_os = "emscripten"))]
 impl_nzint!(NonZeroU128, NonZeroU128::new);
 impl_nzint!(NonZeroUsize, NonZeroUsize::new);
 
@@ -155,10 +153,9 @@ simd_impl!(256, u8x32, i8x32, u16x16, i16x16, u32x8, i32x8, u64x4, i64x4,);
 simd_impl!(512, u8x64, i8x64, u16x32, i16x32, u32x16, i32x16, u64x8, i64x8,);
 #[cfg(all(
     feature = "simd_support",
-    feature = "nightly",
     any(target_arch = "x86", target_arch = "x86_64")
 ))]
-simd_impl!((__m64, u8x8), (__m128i, u8x16), (__m256i, u8x32),);
+simd_impl!((__m128i, u8x16), (__m256i, u8x32),);
 
 #[cfg(test)]
 mod tests {
@@ -173,7 +170,6 @@ mod tests {
         rng.sample::<i16, _>(Standard);
         rng.sample::<i32, _>(Standard);
         rng.sample::<i64, _>(Standard);
-        #[cfg(not(target_os = "emscripten"))]
         rng.sample::<i128, _>(Standard);
 
         rng.sample::<usize, _>(Standard);
@@ -181,7 +177,6 @@ mod tests {
         rng.sample::<u16, _>(Standard);
         rng.sample::<u32, _>(Standard);
         rng.sample::<u64, _>(Standard);
-        #[cfg(not(target_os = "emscripten"))]
         rng.sample::<u128, _>(Standard);
     }
 

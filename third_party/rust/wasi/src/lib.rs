@@ -34,3 +34,15 @@
 mod error;
 mod lib_generated;
 pub use lib_generated::*;
+
+/// Special `Dircookie` value indicating the start of a directory.
+pub const DIRCOOKIE_START: Dircookie = 0;
+
+/// The "standard input" descriptor number.
+pub const FD_STDIN: Fd = 0;
+
+/// The "standard output" descriptor number.
+pub const FD_STDOUT: Fd = 1;
+
+/// The "standard error" descriptor number.
+pub const FD_STDERR: Fd = 2;

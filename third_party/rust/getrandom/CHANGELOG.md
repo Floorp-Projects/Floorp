@@ -4,6 +4,110 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.6] - 2022-03-28
+### Added
+- Nintendo 3DS (`armv6k-nintendo-3ds`) support [#248]
+
+### Changed
+- Retry `open` when interrupted [#252]
+
+[#248]: https://github.com/rust-random/getrandom/pull/248
+[#252]: https://github.com/rust-random/getrandom/pull/252
+
+## [0.2.5] - 2022-02-22
+### Added
+- ESP-IDF targets (`*‑espidf`) support [#245]
+
+### Fixed
+- Webpack warning caused by dynamic require [#234]
+- Error checking on iOS for `SecRandomCopyBytes` [#244]
+
+[#234]: https://github.com/rust-random/getrandom/pull/234
+[#244]: https://github.com/rust-random/getrandom/pull/244
+[#245]: https://github.com/rust-random/getrandom/pull/245
+
+## [0.2.4] - 2021-12-13
+### Changed
+- Use explicit imports in the `js` backend [#220]
+- Use `/dev/urandom` on Redox instead of `rand:` [#222]
+- Use `NonZeroU32::new_unchecked` to convert wasi error [#233]
+
+### Added
+- SOLID targets (`*-kmc-solid_*`) support [#235]
+- Limited Hermit (`x86_64-unknown-hermit`) support [#236]
+
+[#220]: https://github.com/rust-random/getrandom/pull/220
+[#222]: https://github.com/rust-random/getrandom/pull/222
+[#233]: https://github.com/rust-random/getrandom/pull/233
+[#235]: https://github.com/rust-random/getrandom/pull/235
+[#236]: https://github.com/rust-random/getrandom/pull/236
+
+## [0.2.3] - 2021-04-10
+### Changed
+- Replace build.rs with link attributes. [#205]
+- Add support for getrandom syscall on DragonFly BSD. [#210]
+- Improve Node.js detection. [#215]
+
+[#205]: https://github.com/rust-random/getrandom/pull/205
+[#210]: https://github.com/rust-random/getrandom/pull/210
+[#215]: https://github.com/rust-random/getrandom/pull/215
+
+## [0.2.2] - 2021-01-19
+### Changed
+- Forward `rustc-dep-of-std` to dependencies. [#198]
+- Highlight feature-dependend functionality in documentation using the `doc_cfg` feature. [#200]
+
+[#198]: https://github.com/rust-random/getrandom/pull/198
+[#200]: https://github.com/rust-random/getrandom/pull/200
+
+## [0.2.1] - 2021-01-03
+### Changed
+- Update `cfg-if` to v1.0. [#166]
+- Update `wasi` to v0.10. [#167]
+
+### Fixed
+- Multithreaded WASM support. [#165]
+
+### Removed
+- Windows XP support. [#177]
+- Direct `stdweb` support. [#178]
+- CloudABI support. [#184]
+
+[#165]: https://github.com/rust-random/getrandom/pull/165
+[#166]: https://github.com/rust-random/getrandom/pull/166
+[#167]: https://github.com/rust-random/getrandom/pull/167
+[#177]: https://github.com/rust-random/getrandom/pull/177
+[#178]: https://github.com/rust-random/getrandom/pull/178
+[#184]: https://github.com/rust-random/getrandom/pull/184
+
+## [0.2.0] - 2020-09-10
+### Features for using getrandom on unsupported targets
+
+The following (off by default) Cargo features have been added:
+- `"rdrand"` - use the RDRAND instruction on `no_std` `x86`/`x86_64` targets [#133]
+- `"js"` - use JavaScript calls on `wasm32-unknown-unknown` [#149]
+  - Replaces the `stdweb` and `wasm-bindgen` features (which are removed)
+- `"custom"` - allows a user to specify a custom implementation [#109]
+
+### Breaking Changes
+- Unsupported targets no longer compile [#107]
+- Change/Add `Error` constants [#120]
+- Only impl `std` traits when the `"std"` Cargo feature is specified [#106]
+- Remove official support for Hermit, L4Re, and UEFI [#133]
+- Remove optional `"log"` dependency [#131]
+- Update minimum supported Linux kernel to 2.6.32 [#153]
+- Update MSRV to 1.34 [#159]
+
+[#106]: https://github.com/rust-random/getrandom/pull/106
+[#107]: https://github.com/rust-random/getrandom/pull/107
+[#109]: https://github.com/rust-random/getrandom/pull/109
+[#120]: https://github.com/rust-random/getrandom/pull/120
+[#131]: https://github.com/rust-random/getrandom/pull/131
+[#133]: https://github.com/rust-random/getrandom/pull/133
+[#149]: https://github.com/rust-random/getrandom/pull/149
+[#153]: https://github.com/rust-random/getrandom/pull/153
+[#159]: https://github.com/rust-random/getrandom/pull/159
+
 ## [0.1.16] - 2020-12-31
 ### Changed
 - Update `cfg-if` to v1.0. [#173]
@@ -186,3 +290,29 @@ Publish initial implementation.
 
 ## [0.0.0] - 2019-01-19
 Publish an empty template library.
+
+[0.2.5]: https://github.com/rust-random/getrandom/compare/v0.2.5...v0.2.6
+[0.2.5]: https://github.com/rust-random/getrandom/compare/v0.2.4...v0.2.5
+[0.2.4]: https://github.com/rust-random/getrandom/compare/v0.2.3...v0.2.4
+[0.2.3]: https://github.com/rust-random/getrandom/compare/v0.2.2...v0.2.3
+[0.2.2]: https://github.com/rust-random/getrandom/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/rust-random/getrandom/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/rust-random/getrandom/compare/v0.1.15...v0.2.0
+[0.1.16]: https://github.com/rust-random/getrandom/compare/v0.1.15...v0.1.16
+[0.1.15]: https://github.com/rust-random/getrandom/compare/v0.1.14...v0.1.15
+[0.1.14]: https://github.com/rust-random/getrandom/compare/v0.1.13...v0.1.14
+[0.1.13]: https://github.com/rust-random/getrandom/compare/v0.1.12...v0.1.13
+[0.1.12]: https://github.com/rust-random/getrandom/compare/v0.1.11...v0.1.12
+[0.1.11]: https://github.com/rust-random/getrandom/compare/v0.1.10...v0.1.11
+[0.1.10]: https://github.com/rust-random/getrandom/compare/v0.1.9...v0.1.10
+[0.1.9]: https://github.com/rust-random/getrandom/compare/v0.1.8...v0.1.9
+[0.1.8]: https://github.com/rust-random/getrandom/compare/v0.1.7...v0.1.8
+[0.1.7]: https://github.com/rust-random/getrandom/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/rust-random/getrandom/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/rust-random/getrandom/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/rust-random/getrandom/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/rust-random/getrandom/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/rust-random/getrandom/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/rust-random/getrandom/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/rust-random/getrandom/compare/v0.0.0...v0.1.0
+[0.0.0]: https://github.com/rust-random/getrandom/releases/tag/v0.0.0
