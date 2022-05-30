@@ -1423,6 +1423,8 @@ save-files-to-cloud-storage =
 
 # Floorp の固有設定。Firefox のソースコードではありません。from 8.7.2
 
+notice-from-floorp-projects = Floorp Administration Notice
+
 floorp-preference = Experimet Preferences
 browser-design-settings = Tab Bar Settings
 

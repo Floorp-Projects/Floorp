@@ -2954,8 +2954,6 @@ pref("extensions.webcompat-reporter.enabled", false);
 
 pref("browser.startup.page", 3);//自動復元
 pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように]
-
-pref("autoadmin.global_config_url", "https://github.com/Floorp-Projects/Floorp/raw/master/Floorp-config/autoconfig.js", locked); // Floorp の遠隔設定構成
 pref("general.config.obscure_value", 0);
 
 /*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
