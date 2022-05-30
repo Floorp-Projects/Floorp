@@ -824,17 +824,6 @@ dialog:not([open]) {
   display: none;
 }
 
-/* This pseudo-class is used to remove the inertness for the topmost modal
- * dialog in top layer.
- *
- * Avoid doing this if the dialog is explicitly inert though. */
-dialog:not([inert]):-moz-topmost-modal-dialog {
-  -moz-inert: none;
-  /* Topmost modal dialog needs to be selectable even though ancestors are
-   * inert, but allow users to override this if they want to. */
-  user-select: text;
-}
-
 dialog:-moz-modal-dialog {
   -moz-top-layer: top !important;
   position: fixed;

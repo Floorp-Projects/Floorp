@@ -1,0 +1,65 @@
+<!doctype html>
+<title>Test for bug 1771150</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+  #fullscreen {
+    background-color: rgba(0, 255, 0, .5);
+  }
+  #fullscreen::backdrop {
+    background-color: transparent;
+  }
+  #fullscreen, #fullscreen::backdrop {
+    pointer-events: none;
+  }
+</style>
+<div id="fullscreen"></div>
+<button>Go fullscreen</button>
+<script>
+const button = document.querySelector("button");
+let clickCount = 0;
+let lastFullscreenPromise = null;
+let shouldEnterFullscreen = false;
+button.addEventListener("click", function(e) {
+  clickCount++;
+  if (shouldEnterFullscreen) {
+    lastFullscreenPromise = document.getElementById("fullscreen").requestFullscreen();
+  }
+});
+
+function clickButton(expectEvent) {
+  let lastClickCount = clickCount;
+  synthesizeMouseAtCenter(button, {});
+  (expectEvent ? isnot : is)(lastClickCount, clickCount, `Should've ${expectEvent ? "" : "not "}been able to click`);
+}
+
+function enterFullscreen() {
+  lastFullscreenPromise = null;
+  shouldEnterFullscreen = true;
+  clickButton(true);
+  shouldEnterFullscreen = false;
+  isnot(lastFullscreenPromise, null, "Should be transitioning to fullscreen");
+  return lastFullscreenPromise;
+}
+
+async function testFullscreenIsModal(modal) {
+  info("testing modal: " + modal);
+  is(document.fullscreenElement, null, "Shouldn't be in fullscreen");
+  await SpecialPowers.pushPrefEnv({ set: [["dom.fullscreen.modal", modal]] });
+  await enterFullscreen();
+
+  clickButton(/* expectEvent = */ !modal);
+
+  await document.exitFullscreen();
+  clickButton(/* expectEvent = */ true);
+}
+
+add_task(async function() {
+  await testFullscreenIsModal(true);
+});
+
+add_task(async function() {
+  await testFullscreenIsModal(false);
+});
+</script>

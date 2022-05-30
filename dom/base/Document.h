@@ -1905,8 +1905,6 @@ class Document : public nsINode,
   void RequestFullscreenInParentProcess(UniquePtr<FullscreenRequest> aRequest,
                                         bool applyFullScreenDirectly);
 
-  static void ClearFullscreenStateOnElement(Element&);
-
   // Pushes aElement onto the top layer
   void TopLayerPush(Element&);
 
@@ -1920,8 +1918,8 @@ class Document : public nsINode,
   void CleanupFullscreenState();
 
   // Pops the fullscreen element from the top layer and clears its
-  // fullscreen flag.
-  void UnsetFullscreenElement();
+  // fullscreen flag. Returns whether there was any fullscreen element.
+  bool PopFullscreenElement();
 
   // Pushes the given element into the top of top layer and set fullscreen
   // flag.

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);
+@namespace html url(http://www.w3.org/1999/xhtml);
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 /* magic -- some of these rules are important to keep pages from overriding
@@ -343,14 +344,12 @@
 /* Printing */
 
 @media print {
-
   * {
     cursor: default !important;
   }
-
 }
 
-*|*:fullscreen:not(:root) {
+:fullscreen:not(:root) {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -376,6 +375,17 @@ xul|*:fullscreen:not(:root, [hidden="true"]) {
   display: block;
 }
 
+/* This pseudo-class is used to remove the inertness for the topmost modal
+ * element in top layer.
+ *
+ * Avoid doing this if the element is explicitly inert though. */
+:-moz-topmost-modal:not(html|*[inert]) {
+  -moz-inert: none;
+  /* Topmost modal elements need to be selectable even though ancestors are
+   * inert, but allow users to override this if they want to. */
+  user-select: text;
+}
+
 /**
  * Ensure we recompute the default color for the root based on its
  * computed color-scheme. This matches other browsers.
@@ -393,11 +403,11 @@ xul|*:fullscreen:not(:root, [hidden="true"]) {
 
 /* Selectors here should match the check in
  * nsViewportFrame.cpp:ShouldInTopLayerForFullscreen() */
-*|*:fullscreen:not(:root, :-moz-browser-frame) {
+:fullscreen:not(:root, :-moz-browser-frame) {
   -moz-top-layer: top !important;
 }
 
-*|*::backdrop {
+::backdrop {
   -moz-top-layer: top !important;
   display: block;
   position: fixed;
@@ -407,7 +417,7 @@ xul|*:fullscreen:not(:root, [hidden="true"]) {
   user-select: none;
 }
 
-*|*:-moz-full-screen:not(:root)::backdrop {
+:fullscreen:not(:root)::backdrop {
   background: black;
 }
 
