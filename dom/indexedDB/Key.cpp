@@ -8,10 +8,6 @@
 
 #include <algorithm>
 #include <stdint.h>  // for UINT32_MAX, uintptr_t
-#include "IndexedDBCommon.h"
-#include "IndexedDatabase.h"
-#include "IndexedDatabaseInlines.h"
-#include "IndexedDatabaseManager.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,NewArrayBuffer{,WithContents},GetArrayBufferLengthAndData}
 #include "js/Date.h"
@@ -28,10 +24,12 @@
 #include "mozilla/intl/Collator.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ReverseIterator.h"
+#include "mozilla/dom/indexedDB/IDBResult.h"
+#include "mozilla/dom/indexedDB/Key.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageValueArray.h"
-#include "nsAlgorithm.h"
 #include "nsJSUtils.h"
 #include "ReportInternalError.h"
 #include "xpcpublic.h"

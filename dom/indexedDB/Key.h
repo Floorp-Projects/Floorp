@@ -9,10 +9,6 @@
 
 #include "mozilla/dom/indexedDB/IDBResult.h"
 
-#include "js/RootingAPI.h"
-#include "js/TypeDecls.h"
-#include "nsString.h"
-
 class mozIStorageStatement;
 class mozIStorageValueArray;
 
