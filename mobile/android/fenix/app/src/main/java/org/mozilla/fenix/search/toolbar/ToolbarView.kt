@@ -10,6 +10,7 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
@@ -142,6 +143,13 @@ class ToolbarView(
         }
 
         val searchEngine = searchState.searchEngineSource.searchEngine
+
+        when (searchEngine?.type) {
+            SearchEngine.Type.APPLICATION ->
+                view.edit.hint = context.getString(R.string.application_search_hint)
+            else ->
+                view.edit.hint = context.getString(R.string.search_hint)
+        }
 
         if (!settings.showUnifiedSearchFeature && searchEngine != null) {
             val iconSize =

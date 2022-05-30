@@ -13,6 +13,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.engine.Engine
@@ -45,6 +46,7 @@ class ToolbarViewTest {
             mockk {
                 every { name } returns "Search Engine"
                 every { icon } returns testContext.getDrawable(R.drawable.ic_search)!!.toBitmap()
+                every { type } returns SearchEngine.Type.BUNDLED
             }
         ),
         defaultEngine = null,
