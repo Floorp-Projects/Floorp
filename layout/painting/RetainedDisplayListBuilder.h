@@ -19,18 +19,17 @@ class nsDisplayItem;
 class nsDisplayList;
 
 /**
- * RetainedDisplayListData contains frame invalidation information. It is stored
- * in root frames, and used by RetainedDisplayListBuilder.
+ * RetainedDisplayListData contains frame invalidation information.
  * Currently this is implemented as a map of frame pointers to flags.
  */
 struct RetainedDisplayListData {
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(DisplayListData, RetainedDisplayListData)
-
   enum class FrameFlag : uint8_t { Modified, HasProps, HadWillChange };
-
   using FrameFlags = mozilla::EnumSet<FrameFlag, uint8_t>;
 
-  RetainedDisplayListData() : mModifiedFramesCount(0) {}
+  RetainedDisplayListData() : mModifiedFrameCount(0) {
+    mModifiedFrameLimit =
+        StaticPrefs::layout_display_list_rebuild_frame_limit();
+  }
 
   /**
    * Adds the frame to modified frames list.
@@ -42,7 +41,7 @@ struct RetainedDisplayListData {
    */
   void Clear() {
     mFrames.Clear();
-    mModifiedFramesCount = 0;
+    mModifiedFrameCount = 0;
   }
 
   /**
@@ -74,9 +73,11 @@ struct RetainedDisplayListData {
   auto ConstIterator() { return mFrames.ConstIter(); }
 
   /**
-   * Returns the count of modified frames in this RetainedDisplayListData.
+   * Returns true if the modified frame limit has been reached.
    */
-  uint32_t ModifiedFramesCount() const { return mModifiedFramesCount; }
+  bool AtModifiedFrameLimit() {
+    return mModifiedFrameCount >= mModifiedFrameLimit;
+  }
 
   /**
    * Removes the given |aFrame| from this RetainedDisplayListData.
@@ -85,20 +86,9 @@ struct RetainedDisplayListData {
 
  private:
   nsTHashMap<nsPtrHashKey<nsIFrame>, FrameFlags> mFrames;
-  uint32_t mModifiedFramesCount;
+  uint32_t mModifiedFrameCount;
+  uint32_t mModifiedFrameLimit;
 };
-
-/**
- * Returns RetainedDisplayListData property for the given |aRootFrame|, or
- * nullptr if the property is not set.
- */
-RetainedDisplayListData* GetRetainedDisplayListData(nsIFrame* aRootFrame);
-
-/**
- * Returns RetainedDisplayListData property for the given |aRootFrame|. Creates
- * and sets a new RetainedDisplayListData property if it is not already set.
- */
-RetainedDisplayListData* GetOrSetRetainedDisplayListData(nsIFrame* aRootFrame);
 
 enum class PartialUpdateResult { Failed, NoChange, Updated };
 
@@ -174,7 +164,8 @@ struct RetainedDisplayListMetrics {
   PartialUpdateResult mPartialUpdateResult;
 };
 
-struct RetainedDisplayListBuilder {
+class RetainedDisplayListBuilder {
+ public:
   RetainedDisplayListBuilder(nsIFrame* aReferenceFrame,
                              nsDisplayListBuilderMode aMode, bool aBuildCaret)
       : mBuilder(aReferenceFrame, aMode, aBuildCaret, true), mList(&mBuilder) {}
@@ -186,15 +177,16 @@ struct RetainedDisplayListBuilder {
 
   RetainedDisplayListMetrics* Metrics() { return &mMetrics; }
 
+  RetainedDisplayListData* Data() { return &mData; }
+
   PartialUpdateResult AttemptPartialUpdate(nscolor aBackstop);
 
   /**
-   * Iterates through the display list builder reference frame document and
-   * subdocuments, and clears the modified frame lists from the root frames.
-   * Also clears the frame properties set by RetainedDisplayListBuilder for all
-   * the frames in the modified frame lists.
+   * Clears the modified state for frames in the retained display list data.
    */
   void ClearFramesWithProps();
+
+  void ClearRetainedData();
 
   void ClearReuseableDisplayItems() { mBuilder.ClearReuseableDisplayItems(); }
 
@@ -203,6 +195,9 @@ struct RetainedDisplayListBuilder {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(Cached, RetainedDisplayListBuilder)
 
  private:
+  void GetModifiedAndFramesWithProps(nsTArray<nsIFrame*>* aOutModifiedFrames,
+                                     nsTArray<nsIFrame*>* aOutFramesWithProps);
+
   void IncrementSubDocPresShellPaintCount(nsDisplayItem* aItem);
 
   /**
@@ -275,6 +270,7 @@ struct RetainedDisplayListBuilder {
   RetainedDisplayList mList;
   WeakFrame mPreviousCaret;
   RetainedDisplayListMetrics mMetrics;
+  RetainedDisplayListData mData;
 };
 
 namespace RDLUtils {

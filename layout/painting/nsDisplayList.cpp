@@ -5367,17 +5367,6 @@ void nsDisplaySubDocument::RemoveFrame(nsIFrame* aFrame) {
   nsDisplayOwnLayer::RemoveFrame(aFrame);
 }
 
-void nsDisplaySubDocument::Disown() {
-  if (mFrame) {
-    mFrame->RemoveDisplayItem(this);
-    RemoveFrame(mFrame);
-  }
-  if (mSubDocFrame) {
-    mSubDocFrame->RemoveDisplayItem(this);
-    RemoveFrame(mSubDocFrame);
-  }
-}
-
 static bool UseDisplayPortForViewport(nsDisplayListBuilder* aBuilder,
                                       nsIFrame* aFrame) {
   return aBuilder->IsPaintingToWindow() &&

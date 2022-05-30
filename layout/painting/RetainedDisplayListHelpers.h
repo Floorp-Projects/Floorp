@@ -145,7 +145,7 @@ class DirectedAcyclicGraph {
   nsTArray<Index<T>> mDirectPredecessorList;
 };
 
-struct RetainedDisplayListBuilder;
+class RetainedDisplayListBuilder;
 class nsDisplayItem;
 
 struct OldItemInfo {
