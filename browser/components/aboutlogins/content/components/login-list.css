@@ -119,11 +119,6 @@ ol {
   background-color: var(--in-content-box-background);
 }
 
-:not([hidden]) + .login-list-section,
-.login-list-item + .login-list-item {
-  border-top: 1px solid var(--in-content-border-color);
-}
-
 .login-list-item:not(.selected):hover {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
