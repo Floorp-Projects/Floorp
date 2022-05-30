@@ -3229,9 +3229,6 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
   }
 
   Element& element = *aContent->AsElement();
-  if (!element.HasServoData()) {
-    return;
-  }
 
   const EventStates kVisitedAndUnvisited =
       NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED;
@@ -3271,13 +3268,17 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
     return;
   }
 
-  ServoElementSnapshot& snapshot = SnapshotFor(element);
-  EventStates previousState = element.StyleState() ^ aChangedBits;
-  snapshot.AddState(previousState);
-
   // Assuming we need to invalidate cached style in getComputedStyle for
   // undisplayed elements, since we don't know if it is needed.
   IncrementUndisplayedRestyleGeneration();
+
+  if (!element.HasServoData()) {
+    return;
+  }
+
+  ServoElementSnapshot& snapshot = SnapshotFor(element);
+  EventStates previousState = element.StyleState() ^ aChangedBits;
+  snapshot.AddState(previousState);
 }
 
 static inline bool AttributeInfluencesOtherPseudoClassState(

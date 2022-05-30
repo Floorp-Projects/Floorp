@@ -220,13 +220,13 @@ fn is_in_servo_traversal() -> bool {
 fn create_shared_context<'a>(
     global_style_data: &GlobalStyleData,
     guard: &'a SharedRwLockReadGuard,
-    per_doc_data: &'a PerDocumentStyleDataImpl,
+    stylist: &'a Stylist,
     traversal_flags: TraversalFlags,
     snapshot_map: &'a ServoElementSnapshotTable,
 ) -> SharedStyleContext<'a> {
     SharedStyleContext {
-        stylist: &per_doc_data.stylist,
-        visited_styles_enabled: per_doc_data.visited_styles_enabled(),
+        stylist: &stylist,
+        visited_styles_enabled: stylist.device().visited_styles_enabled(),
         options: global_style_data.options.clone(),
         guards: StylesheetGuards::same(guard),
         current_time_for_animations: 0.0, // Unused for Gecko, at least for now.
@@ -246,7 +246,7 @@ fn traverse_subtree(
     let shared_style_context = create_shared_context(
         &global_style_data,
         &guard,
-        &per_doc_data,
+        &per_doc_data.stylist,
         traversal_flags,
         snapshots,
     );
@@ -1174,7 +1174,7 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(
     let shared = create_shared_context(
         &global_style_data,
         &guard,
-        &doc_data,
+        &doc_data.stylist,
         TraversalFlags::empty(),
         unsafe { &*snapshots },
     );
@@ -1225,7 +1225,7 @@ pub extern "C" fn Servo_StyleSet_GetComputedValuesByAddingAnimation(
     let shared = create_shared_context(
         &global_style_data,
         &guard,
-        &doc_data,
+        &doc_data.stylist,
         TraversalFlags::empty(),
         unsafe { &*snapshots },
     );
@@ -3911,7 +3911,7 @@ pub extern "C" fn Servo_ResolvePseudoStyle(
         RuleInclusion::All,
         &data.styles,
         inherited_style,
-        &*doc_data,
+        &doc_data.stylist,
         is_probe,
         /* matching_func = */ None,
     );
@@ -3984,7 +3984,7 @@ pub extern "C" fn Servo_ComputedValues_ResolveXULTreePseudoStyle(
         RuleInclusion::All,
         &data.styles,
         Some(inherited_style),
-        &*doc_data,
+        &doc_data.stylist,
         /* is_probe = */ false,
         Some(&matching_fn),
     )
@@ -4010,7 +4010,7 @@ fn get_pseudo_style(
     rule_inclusion: RuleInclusion,
     styles: &ElementStyles,
     inherited_styles: Option<&ComputedValues>,
-    doc_data: &PerDocumentStyleDataImpl,
+    stylist: &Stylist,
     is_probe: bool,
     matching_func: Option<&dyn Fn(&PseudoElement) -> bool>,
 ) -> Option<Arc<ComputedValues>> {
@@ -4028,7 +4028,7 @@ fn get_pseudo_style(
                         let guards = StylesheetGuards::same(guard);
                         let metrics = get_metrics_provider_for_product();
                         let inputs = CascadeInputs::new_from_style(pseudo_styles);
-                        doc_data.stylist.compute_pseudo_element_style_with_inputs(
+                        stylist.compute_pseudo_element_style_with_inputs(
                             inputs,
                             pseudo,
                             &guards,
@@ -4071,13 +4071,13 @@ fn get_pseudo_style(
                     ptr::eq(inherited_styles.unwrap(), &**styles.primary())
             );
             let base = if pseudo.inherits_from_default_values() {
-                doc_data.default_computed_values()
+                stylist.device().default_computed_values_arc()
             } else {
                 styles.primary()
             };
             let guards = StylesheetGuards::same(guard);
             let metrics = get_metrics_provider_for_product();
-            doc_data.stylist.lazily_compute_pseudo_element_style(
+            stylist.lazily_compute_pseudo_element_style(
                 &guards,
                 element,
                 &pseudo,
@@ -4096,7 +4096,7 @@ fn get_pseudo_style(
 
     Some(style.unwrap_or_else(|| {
         StyleBuilder::for_inheritance(
-            doc_data.stylist.device(),
+            stylist.device(),
             Some(styles.primary()),
             Some(pseudo),
         )
@@ -4279,6 +4279,7 @@ pub extern "C" fn Servo_StyleSet_Init(doc: &structs::Document) -> *mut RawServoS
 pub extern "C" fn Servo_StyleSet_RebuildCachedData(raw_data: &RawServoStyleSet) {
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
     data.stylist.device_mut().rebuild_cached_data();
+    data.undisplayed_style_cache.clear();
 }
 
 #[no_mangle]
@@ -5715,16 +5716,27 @@ pub extern "C" fn Servo_ResolveStyleLazily(
     pseudo_type: PseudoStyleType,
     rule_inclusion: StyleRuleInclusion,
     snapshots: *const ServoElementSnapshotTable,
+    cache_generation: u64,
+    can_use_cache: bool,
     raw_data: &RawServoStyleSet,
 ) -> Strong<ComputedValues> {
+    use selectors::Element;
     debug_assert!(!snapshots.is_null());
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let element = GeckoElement(element);
     let doc_data = PerDocumentStyleData::from_ffi(raw_data);
-    let data = doc_data.borrow();
+    let mut data = doc_data.borrow_mut();
+    let mut data = &mut *data;
     let rule_inclusion = RuleInclusion::from(rule_inclusion);
     let pseudo = PseudoElement::from_pseudo_type(pseudo_type);
+
+    if cache_generation != data.undisplayed_style_cache_generation {
+        data.undisplayed_style_cache.clear();
+        data.undisplayed_style_cache_generation = cache_generation;
+    }
+
+    let stylist = &data.stylist;
     let finish = |styles: &ElementStyles, is_probe: bool| -> Option<Arc<ComputedValues>> {
         match pseudo {
             Some(ref pseudo) => {
@@ -5735,7 +5747,7 @@ pub extern "C" fn Servo_ResolveStyleLazily(
                     rule_inclusion,
                     styles,
                     /* inherited_styles = */ None,
-                    &*data,
+                    &stylist,
                     is_probe,
                     /* matching_func = */ None,
                 )
@@ -5753,7 +5765,7 @@ pub extern "C" fn Servo_ResolveStyleLazily(
     // not be in the `ElementData`, given they may exist but not be applicable
     // to generate an actual pseudo-element (like, having a `content: none`).
     if rule_inclusion == RuleInclusion::All {
-        let styles = element.mutate_data().and_then(|d| {
+        let styles = element.borrow_data().and_then(|d| {
             if d.has_styles() {
                 finish(&d.styles, is_before_or_after)
             } else {
@@ -5763,13 +5775,18 @@ pub extern "C" fn Servo_ResolveStyleLazily(
         if let Some(result) = styles {
             return result.into();
         }
+        if pseudo.is_none() && can_use_cache {
+            if let Some(style) = data.undisplayed_style_cache.get(&element.opaque()) {
+                return style.clone().into();
+            }
+        }
     }
 
     // We don't have the style ready. Go ahead and compute it as necessary.
     let shared = create_shared_context(
         &global_style_data,
         &guard,
-        &data,
+        &stylist,
         TraversalFlags::empty(),
         unsafe { &*snapshots },
     );
@@ -5779,7 +5796,17 @@ pub extern "C" fn Servo_ResolveStyleLazily(
         thread_local: &mut tlc,
     };
 
-    let styles = resolve_style(&mut context, element, rule_inclusion, pseudo.as_ref());
+    let styles = resolve_style(
+        &mut context,
+        element,
+        rule_inclusion,
+        pseudo.as_ref(),
+        if can_use_cache {
+            Some(&mut data.undisplayed_style_cache)
+        } else {
+            None
+        },
+    );
 
     finish(&styles, /* is_probe = */ false)
         .expect("We're not probing, so we should always get a style back")
@@ -6678,7 +6705,7 @@ pub extern "C" fn Servo_ProcessInvalidations(
     let shared_style_context = create_shared_context(
         &global_style_data,
         &guard,
-        &per_doc_data,
+        &per_doc_data.stylist,
         TraversalFlags::empty(),
         unsafe { &*snapshots },
     );
