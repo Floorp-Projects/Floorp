@@ -158,7 +158,6 @@ class PingCentre {
   }
 }
 
-this.PingCentre = PingCentre;
 const PingCentreConstants = {
   FHR_UPLOAD_ENABLED_PREF,
   TELEMETRY_PREF,

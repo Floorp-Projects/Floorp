@@ -118,9 +118,6 @@ let gOpenDBs = new Map();
 
 // Track open libraries
 let gLibs = {};
-this.ESE = ESE; // Required for tests.
-this.KERNEL = KERNEL; // ditto
-this.gLibs = gLibs; // ditto
 
 function convertESEError(errorCode) {
   switch (errorCode) {
