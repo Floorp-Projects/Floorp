@@ -631,6 +631,7 @@ impl SceneBuilderThread {
             rasterize_blobs(&mut txn, is_low_priority);
 
             profile.end_time(profiler::BLOB_RASTERIZATION_TIME);
+            Telemetry::record_rasterize_blobs_time(Duration::from_micros((profile.get(profiler::BLOB_RASTERIZATION_TIME).unwrap() * 1000.00) as u64));
         }
 
         drain_filter(
@@ -787,6 +788,7 @@ impl LowPrioritySceneBuilderThread {
         txn.profile.start_time(profiler::BLOB_RASTERIZATION_TIME);
         rasterize_blobs(&mut txn, is_low_priority);
         txn.profile.end_time(profiler::BLOB_RASTERIZATION_TIME);
+        Telemetry::record_rasterize_blobs_time(Duration::from_micros((txn.profile.get(profiler::BLOB_RASTERIZATION_TIME).unwrap() * 1000.00) as u64));
         txn.blob_requests = Vec::new();
 
         txn

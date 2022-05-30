@@ -43,6 +43,21 @@ wr:
       - gfx-telemetry-alerts@mozilla.com
     expires: never
     telemetry_mirror: WR_RASTERIZE_GLYPHS_TIME
+  rasterize_blobs_time:
+    type: timing_distribution
+    description: >
+      The time to rasterize blobs for consumption by WebRender.
+    time_unit: microsecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1770974
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1770974
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: WR_RASTERIZE_BLOBS_TIME
   framebuild_time:
     type: timing_distribution
     description: >
