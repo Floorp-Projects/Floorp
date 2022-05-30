@@ -68,6 +68,7 @@ class nsDisplayItem;
 class nsDisplayList;
 class nsDisplayListBuilder;
 enum class nsDisplayListBuilderMode : uint8_t;
+class RetainedDisplayListBuilder;
 struct AspectRatio;
 class ComputedStyle;
 class DisplayPortUtils;
@@ -172,6 +173,7 @@ class nsLayoutUtils {
   using nsDisplayList = mozilla::nsDisplayList;
   using nsDisplayListBuilder = mozilla::nsDisplayListBuilder;
   using nsDisplayListBuilderMode = mozilla::nsDisplayListBuilderMode;
+  using RetainedDisplayListBuilder = mozilla::RetainedDisplayListBuilder;
 
  public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -2404,6 +2406,9 @@ class nsLayoutUtils {
   static bool AreRetainedDisplayListsEnabled();
 
   static bool DisplayRootHasRetainedDisplayListBuilder(nsIFrame* aFrame);
+
+  static RetainedDisplayListBuilder* GetRetainedDisplayListBuilder(
+      nsIFrame* aFrame);
 
   /**
    * Find a suitable scale for a element (aFrame's content) over the course of

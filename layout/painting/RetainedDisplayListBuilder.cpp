@@ -69,33 +69,13 @@
  * correct sorting with the modified ones.
  */
 
-using mozilla::dom::Document;
-
 namespace mozilla {
 
 void RetainedDisplayListData::AddModifiedFrame(nsIFrame* aFrame) {
   MOZ_ASSERT(!aFrame->IsFrameModified());
   Flags(aFrame) += RetainedDisplayListData::FrameFlag::Modified;
-  mModifiedFramesCount++;
-}
-
-RetainedDisplayListData* GetRetainedDisplayListData(nsIFrame* aRootFrame) {
-  RetainedDisplayListData* data =
-      aRootFrame->GetProperty(RetainedDisplayListData::DisplayListData());
-
-  return data;
-}
-
-RetainedDisplayListData* GetOrSetRetainedDisplayListData(nsIFrame* aRootFrame) {
-  RetainedDisplayListData* data = GetRetainedDisplayListData(aRootFrame);
-
-  if (!data) {
-    data = new RetainedDisplayListData();
-    aRootFrame->SetProperty(RetainedDisplayListData::DisplayListData(), data);
-  }
-
-  MOZ_ASSERT(data);
-  return data;
+  aFrame->SetFrameIsModified(true);
+  mModifiedFrameCount++;
 }
 
 static void MarkFramesWithItemsAndImagesModified(nsDisplayList* aList) {
@@ -113,7 +93,7 @@ static void MarkFramesWithItemsAndImagesModified(nsDisplayList* aList) {
       }
 
       if (invalidate) {
-        DL_LOGV("Invalidating item %p (%s)", i, i->Name());
+        DL_LOGV("RDL - Invalidating item %p (%s)", i, i->Name());
         i->FrameForInvalidation()->MarkNeedsDisplayItemRebuild();
         if (i->GetDependentFrame()) {
           i->GetDependentFrame()->MarkNeedsDisplayItemRebuild();
@@ -869,93 +849,27 @@ bool RetainedDisplayListBuilder::MergeDisplayLists(
   return merge.mResultIsModified;
 }
 
-static nsIFrame* GetRootFrameForPainting(nsDisplayListBuilder* aBuilder,
-                                         Document& aDocument) {
-  // Although this is the actual subdocument, it might not be
-  // what painting uses. Walk up to the nsSubDocumentFrame owning
-  // us, and then ask that which subdoc it's going to paint.
-
-  PresShell* presShell = aDocument.GetPresShell();
-  if (!presShell) {
-    return nullptr;
-  }
-  nsView* rootView = presShell->GetViewManager()->GetRootView();
-  if (!rootView) {
-    return nullptr;
-  }
-
-  // There should be an anonymous inner view between the root view
-  // of the subdoc, and the view for the nsSubDocumentFrame.
-  nsView* innerView = rootView->GetParent();
-  if (!innerView) {
-    return nullptr;
-  }
-
-  nsView* subDocView = innerView->GetParent();
-  if (!subDocView) {
-    return nullptr;
-  }
-
-  nsIFrame* subDocFrame = subDocView->GetFrame();
-  if (!subDocFrame) {
-    return nullptr;
-  }
-
-  nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(subDocFrame);
-  MOZ_ASSERT(subdocumentFrame);
-  presShell = subdocumentFrame->GetSubdocumentPresShellForPainting(
-      aBuilder->IsIgnoringPaintSuppression()
-          ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION
-          : 0);
-  return presShell ? presShell->GetRootFrame() : nullptr;
-}
-
-static void TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
-    nsDisplayListBuilder* aBuilder, nsTArray<nsIFrame*>* aModifiedFrames,
-    nsTArray<nsIFrame*>* aFramesWithProps, nsIFrame* aRootFrame,
-    Document& aDoc) {
-  MOZ_ASSERT(aRootFrame);
-
-  if (RetainedDisplayListData* data = GetRetainedDisplayListData(aRootFrame)) {
-    for (auto it = data->ConstIterator(); !it.Done(); it.Next()) {
-      nsIFrame* frame = it.Key();
-      const RetainedDisplayListData::FrameFlags& flags = it.Data();
-
-      if (flags.contains(RetainedDisplayListData::FrameFlag::Modified)) {
-        aModifiedFrames->AppendElement(frame);
-      }
-
-      if (flags.contains(RetainedDisplayListData::FrameFlag::HasProps)) {
-        aFramesWithProps->AppendElement(frame);
-      }
-
-      if (flags.contains(RetainedDisplayListData::FrameFlag::HadWillChange)) {
-        aBuilder->RemoveFromWillChangeBudgets(frame);
-      }
-    }
-
-    data->Clear();
-  }
-
-  auto recurse = [&](Document& aSubDoc) {
-    if (nsIFrame* rootFrame = GetRootFrameForPainting(aBuilder, aSubDoc)) {
-      TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
-          aBuilder, aModifiedFrames, aFramesWithProps, rootFrame, aSubDoc);
-    }
-    return CallState::Continue;
-  };
-  aDoc.EnumerateSubDocuments(recurse);
-}
-
-static void GetModifiedAndFramesWithProps(
-    nsDisplayListBuilder* aBuilder, nsTArray<nsIFrame*>* aOutModifiedFrames,
+void RetainedDisplayListBuilder::GetModifiedAndFramesWithProps(
+    nsTArray<nsIFrame*>* aOutModifiedFrames,
     nsTArray<nsIFrame*>* aOutFramesWithProps) {
-  nsIFrame* rootFrame = aBuilder->RootReferenceFrame();
-  MOZ_ASSERT(rootFrame);
+  for (auto it = Data()->ConstIterator(); !it.Done(); it.Next()) {
+    nsIFrame* frame = it.Key();
+    const RetainedDisplayListData::FrameFlags& flags = it.Data();
 
-  Document* rootDoc = rootFrame->PresContext()->Document();
-  TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
-      aBuilder, aOutModifiedFrames, aOutFramesWithProps, rootFrame, *rootDoc);
+    if (flags.contains(RetainedDisplayListData::FrameFlag::Modified)) {
+      aOutModifiedFrames->AppendElement(frame);
+    }
+
+    if (flags.contains(RetainedDisplayListData::FrameFlag::HasProps)) {
+      aOutFramesWithProps->AppendElement(frame);
+    }
+
+    if (flags.contains(RetainedDisplayListData::FrameFlag::HadWillChange)) {
+      Builder()->RemoveFromWillChangeBudgets(frame);
+    }
+  }
+
+  Data()->Clear();
 }
 
 // ComputeRebuildRegion  debugging
@@ -1409,6 +1323,7 @@ void RetainedDisplayListBuilder::InvalidateCaretFramesIfNeeded() {
 
 static void ClearFrameProps(nsTArray<nsIFrame*>& aFrames) {
   for (nsIFrame* f : aFrames) {
+    DL_LOGV("RDL - Clearing modified flags for frame %p", f);
     if (f->HasOverrideDirtyRegion()) {
       f->SetHasOverrideDirtyRegion(false);
       f->RemoveProperty(nsDisplayListBuilder::DisplayListBuildingRect());
@@ -1437,18 +1352,26 @@ class AutoClearFramePropsArray {
 void RetainedDisplayListBuilder::ClearFramesWithProps() {
   AutoClearFramePropsArray modifiedFrames;
   AutoClearFramePropsArray framesWithProps;
-  GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames.Frames(),
+  GetModifiedAndFramesWithProps(&modifiedFrames.Frames(),
                                 &framesWithProps.Frames());
+}
+
+void RetainedDisplayListBuilder::ClearRetainedData() {
+  DL_LOGI("(%p) RDL - Clearing retained display list builder data", this);
+  List()->DeleteAll(Builder());
+  ClearFramesWithProps();
+  ClearReuseableDisplayItems();
 }
 
 namespace RDLUtils {
 
 MOZ_NEVER_INLINE_DEBUG void AssertFrameSubtreeUnmodified(
     const nsIFrame* aFrame) {
+  MOZ_ASSERT(!aFrame->IsFrameModified());
+  MOZ_ASSERT(!aFrame->HasModifiedDescendants());
+
   for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
-      MOZ_ASSERT(!aFrame->IsFrameModified());
-      MOZ_ASSERT(!aFrame->HasModifiedDescendants());
       AssertFrameSubtreeUnmodified(child);
     }
   }
@@ -1641,7 +1564,8 @@ bool RetainedDisplayListBuilder::TrySimpleUpdate(
 
 PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
     nscolor aBackstop) {
-  DL_LOGI("RDL - AttemptPartialUpdate, root frame: %p", RootReferenceFrame());
+  DL_LOGI("(%p) RDL - AttemptPartialUpdate, root frame: %p", this,
+          RootReferenceFrame());
 
   mBuilder.RemoveModifiedWindowRegions();
 
@@ -1657,7 +1581,7 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
   // also marks the frame modified, so those regions are cleared here as well.
   AutoClearFramePropsArray modifiedFrames(64);
   AutoClearFramePropsArray framesWithProps(64);
-  GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames.Frames(),
+  GetModifiedAndFramesWithProps(&modifiedFrames.Frames(),
                                 &framesWithProps.Frames());
 
   if (!ShouldBuildPartial(modifiedFrames.Frames())) {

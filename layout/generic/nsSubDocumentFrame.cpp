@@ -939,6 +939,8 @@ void nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot,
   // the frame has been made position:fixed).
   RefPtr<nsFrameLoader> frameloader = FrameLoader();
   if (frameloader) {
+    ClearDisplayItems();
+
     nsView* detachedViews =
         ::BeginSwapDocShellsForViews(mInnerView->GetFirstChild());
 
@@ -1200,20 +1202,9 @@ void nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther) {
 }
 
 void nsSubDocumentFrame::ClearDisplayItems() {
-  for (nsDisplayItem* i : DisplayItems()) {
-    if (i->GetType() == DisplayItemType::TYPE_SUBDOCUMENT) {
-      nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
-      MOZ_ASSERT(displayRoot);
-
-      RetainedDisplayListBuilder* retainedBuilder =
-          displayRoot->GetProperty(RetainedDisplayListBuilder::Cached());
-      MOZ_ASSERT(retainedBuilder);
-
-      auto* item = static_cast<nsDisplaySubDocument*>(i);
-      item->GetChildren()->DeleteAll(retainedBuilder->Builder());
-      item->Disown();
-      break;
-    }
+  if (auto* builder = nsLayoutUtils::GetRetainedDisplayListBuilder(this)) {
+    DL_LOGD("nsSubDocumentFrame::ClearDisplayItems() %p", this);
+    builder->ClearRetainedData();
   }
 }
 

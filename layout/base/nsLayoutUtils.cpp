@@ -534,9 +534,25 @@ bool nsLayoutUtils::AreRetainedDisplayListsEnabled() {
 }
 
 bool nsLayoutUtils::DisplayRootHasRetainedDisplayListBuilder(nsIFrame* aFrame) {
-  const nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
-  MOZ_ASSERT(displayRoot);
-  return displayRoot->HasProperty(RetainedDisplayListBuilder::Cached());
+  return GetRetainedDisplayListBuilder(aFrame) != nullptr;
+}
+
+RetainedDisplayListBuilder* nsLayoutUtils::GetRetainedDisplayListBuilder(
+    nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aFrame->PresShell());
+
+  // Use the pres shell root frame to get the display root frame. This skips
+  // the early exit in |nsLayoutUtils::GetDisplayRootFrame()| for popup frames.
+  const nsIFrame* rootFrame = aFrame->PresShell()->GetRootFrame();
+  if (!rootFrame) {
+    return nullptr;
+  }
+
+  const nsIFrame* displayRootFrame = GetDisplayRootFrame(rootFrame);
+  MOZ_ASSERT(displayRootFrame);
+
+  return displayRootFrame->GetProperty(RetainedDisplayListBuilder::Cached());
 }
 
 bool nsLayoutUtils::GPUImageScalingEnabled() {
@@ -2912,30 +2928,6 @@ void nsLayoutUtils::AddExtraBackgroundItems(nsDisplayListBuilder* aBuilder,
   }
 }
 
-/**
- * Returns a retained display list builder for frame |aFrame|. If there is no
- * retained display list builder property set for the frame, and if the flag
- * |aRetainingEnabled| is true, a new retained display list builder is created,
- * stored as a property for the frame, and returned.
- */
-static RetainedDisplayListBuilder* GetOrCreateRetainedDisplayListBuilder(
-    nsIFrame* aFrame, bool aRetainingEnabled, bool aBuildCaret) {
-  RetainedDisplayListBuilder* retainedBuilder =
-      aFrame->GetProperty(RetainedDisplayListBuilder::Cached());
-
-  if (retainedBuilder) {
-    return retainedBuilder;
-  }
-
-  if (aRetainingEnabled) {
-    retainedBuilder = new RetainedDisplayListBuilder(
-        aFrame, nsDisplayListBuilderMode::Painting, aBuildCaret);
-    aFrame->SetProperty(RetainedDisplayListBuilder::Cached(), retainedBuilder);
-  }
-
-  return retainedBuilder;
-}
-
 // #define PRINT_HITTESTINFO_STATS
 #ifdef PRINT_HITTESTINFO_STATS
 void PrintHitTestInfoStatsInternal(nsDisplayList* aList, int& aTotal,
@@ -3098,9 +3090,11 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   AutoNestedPaintCount nestedPaintCount;
 #endif
 
+  nsIFrame* displayRoot = GetDisplayRootFrame(aFrame);
+
   if (aFlags & PaintFrameFlags::WidgetLayers) {
     nsView* view = aFrame->GetView();
-    if (!(view && view->GetWidget() && GetDisplayRootFrame(aFrame) == aFrame)) {
+    if (!(view && view->GetWidget() && displayRoot == aFrame)) {
       aFlags &= ~PaintFrameFlags::WidgetLayers;
       NS_ASSERTION(aRenderingContext, "need a rendering context");
     }
@@ -3122,24 +3116,26 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
   // Only allow retaining for painting when preffed on, and for root frames
   // (since the modified frame tracking is per-root-frame).
-  const bool retainingEnabled =
+  const bool retainDisplayList =
       isForPainting && AreRetainedDisplayListsEnabled() && !aFrame->GetParent();
 
-  RetainedDisplayListBuilder* retainedBuilder =
-      GetOrCreateRetainedDisplayListBuilder(aFrame, retainingEnabled,
-                                            buildCaret);
-
-  // Only use the retained display list builder if the retaining is currently
-  // enabled. This check is needed because it is possible that the pref has been
-  // disabled after creating the retained display list builder.
-  const bool useRetainedBuilder = retainedBuilder && retainingEnabled;
-
+  RetainedDisplayListBuilder* retainedBuilder = nullptr;
   Maybe<TemporaryDisplayListBuilder> temporaryBuilder;
+
   nsDisplayListBuilder* builder = nullptr;
   nsDisplayList* list = nullptr;
   RetainedDisplayListMetrics* metrics = nullptr;
 
-  if (useRetainedBuilder) {
+  if (retainDisplayList) {
+    MOZ_ASSERT(aFrame == displayRoot);
+    retainedBuilder = aFrame->GetProperty(RetainedDisplayListBuilder::Cached());
+    if (!retainedBuilder) {
+      retainedBuilder =
+          new RetainedDisplayListBuilder(aFrame, aBuilderMode, buildCaret);
+      aFrame->SetProperty(RetainedDisplayListBuilder::Cached(),
+                          retainedBuilder);
+    }
+
     builder = retainedBuilder->Builder();
     list = retainedBuilder->List();
     metrics = retainedBuilder->Metrics();
@@ -3151,6 +3147,22 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   }
 
   MOZ_ASSERT(builder && list && metrics);
+
+  nsAutoString uri;
+  Document* doc = presContext->Document();
+  MOZ_ASSERT(doc);
+  Unused << doc->GetDocumentURI(uri);
+
+  nsAutoString frameName, displayRootName;
+#ifdef DEBUG_FRAME_DUMP
+  aFrame->GetFrameName(frameName);
+  displayRoot->GetFrameName(displayRootName);
+#endif
+
+  DL_LOGI("PaintFrame: %p (%s), DisplayRoot: %p (%s), Builder: %p, URI: %s",
+          aFrame, NS_ConvertUTF16toUTF8(frameName).get(), displayRoot,
+          NS_ConvertUTF16toUTF8(displayRootName).get(), retainedBuilder,
+          NS_ConvertUTF16toUTF8(uri).get());
 
   metrics->Reset();
   metrics->StartBuild();
@@ -3287,107 +3299,104 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     AUTO_PROFILER_TRACING_MARKER("Paint", "DisplayList", GRAPHICS);
     PerfStats::AutoMetricRecording<PerfStats::Metric::DisplayListBuilding>
         autoRecording;
-    {
-      ViewID id = ScrollableLayerGuid::NULL_SCROLL_ID;
-      if (presShell->GetDocument() &&
-          presShell->GetDocument()->IsRootDisplayDocument() &&
-          !presShell->GetRootScrollFrame()) {
-        // In cases where the root document is a XUL document, we want to take
-        // the ViewID from the root element, as that will be the ViewID of the
-        // root APZC in the tree. Skip doing this in cases where we know
-        // nsGfxScrollFrame::BuilDisplayList will do it instead.
-        if (dom::Element* element =
-                presShell->GetDocument()->GetDocumentElement()) {
-          id = nsLayoutUtils::FindOrCreateIDFor(element);
+
+    ViewID id = ScrollableLayerGuid::NULL_SCROLL_ID;
+    if (presShell->GetDocument() &&
+        presShell->GetDocument()->IsRootDisplayDocument() &&
+        !presShell->GetRootScrollFrame()) {
+      // In cases where the root document is a XUL document, we want to take
+      // the ViewID from the root element, as that will be the ViewID of the
+      // root APZC in the tree. Skip doing this in cases where we know
+      // nsGfxScrollFrame::BuilDisplayList will do it instead.
+      if (dom::Element* element =
+              presShell->GetDocument()->GetDocumentElement()) {
+        id = nsLayoutUtils::FindOrCreateIDFor(element);
+      }
+      // In some cases we get a root document here on an APZ-enabled window
+      // that doesn't have the root displayport initialized yet, even though
+      // the ChromeProcessController is supposed to do it when the widget is
+      // created. This can happen simply because the ChromeProcessController
+      // does it on the next spin of the event loop, and we can trigger a
+      // paint synchronously after window creation but before that runs. In
+      // that case we should initialize the root displayport here before we do
+      // the paint.
+    } else if (XRE_IsParentProcess() && presContext->IsRoot() &&
+               presShell->GetDocument() != nullptr &&
+               presShell->GetRootScrollFrame() != nullptr &&
+               nsLayoutUtils::UsesAsyncScrolling(
+                   presShell->GetRootScrollFrame())) {
+      if (dom::Element* element =
+              presShell->GetDocument()->GetDocumentElement()) {
+        if (!DisplayPortUtils::HasNonMinimalDisplayPort(element)) {
+          APZCCallbackHelper::InitializeRootDisplayport(presShell);
         }
-        // In some cases we get a root document here on an APZ-enabled window
-        // that doesn't have the root displayport initialized yet, even though
-        // the ChromeProcessController is supposed to do it when the widget is
-        // created. This can happen simply because the ChromeProcessController
-        // does it on the next spin of the event loop, and we can trigger a
-        // paint synchronously after window creation but before that runs. In
-        // that case we should initialize the root displayport here before we do
-        // the paint.
-      } else if (XRE_IsParentProcess() && presContext->IsRoot() &&
-                 presShell->GetDocument() != nullptr &&
-                 presShell->GetRootScrollFrame() != nullptr &&
-                 nsLayoutUtils::UsesAsyncScrolling(
-                     presShell->GetRootScrollFrame())) {
-        if (dom::Element* element =
-                presShell->GetDocument()->GetDocumentElement()) {
-          if (!DisplayPortUtils::HasNonMinimalDisplayPort(element)) {
-            APZCCallbackHelper::InitializeRootDisplayport(presShell);
-          }
-        }
       }
+    }
 
-      nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(builder,
-                                                                     id);
+    nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(builder, id);
 
-      builder->SetVisibleRect(visibleRect);
-      builder->SetIsBuilding(true);
-      builder->SetAncestorHasApzAwareEventHandler(
-          gfxPlatform::AsyncPanZoomEnabled() &&
-          nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell));
+    builder->SetVisibleRect(visibleRect);
+    builder->SetIsBuilding(true);
+    builder->SetAncestorHasApzAwareEventHandler(
+        gfxPlatform::AsyncPanZoomEnabled() &&
+        nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell));
 
-      // If a pref is toggled that adds or removes display list items,
-      // we need to rebuild the display list. The pref may be toggled
-      // manually by the user, or during test setup.
-      if (useRetainedBuilder &&
-          !builder->ShouldRebuildDisplayListDueToPrefChange()) {
-        // Attempt to do a partial build and merge into the existing list.
-        // This calls BuildDisplayListForStacking context on a subset of the
-        // viewport.
-        updateState = retainedBuilder->AttemptPartialUpdate(aBackstop);
-        metrics->EndPartialBuild(updateState);
-      } else {
-        // Partial updates are disabled.
-        DL_LOGI("Partial updates are disabled");
-        metrics->mPartialUpdateResult = PartialUpdateResult::Failed;
-        metrics->mPartialUpdateFailReason = PartialUpdateFailReason::Disabled;
-      }
+    // If a pref is toggled that adds or removes display list items,
+    // we need to rebuild the display list. The pref may be toggled
+    // manually by the user, or during test setup.
+    if (retainDisplayList &&
+        !builder->ShouldRebuildDisplayListDueToPrefChange()) {
+      // Attempt to do a partial build and merge into the existing list.
+      // This calls BuildDisplayListForStacking context on a subset of the
+      // viewport.
+      updateState = retainedBuilder->AttemptPartialUpdate(aBackstop);
+      metrics->EndPartialBuild(updateState);
+    } else {
+      // Partial updates are disabled.
+      DL_LOGI("Partial updates are disabled");
+      metrics->mPartialUpdateResult = PartialUpdateResult::Failed;
+      metrics->mPartialUpdateFailReason = PartialUpdateFailReason::Disabled;
+    }
 
-      // Rebuild the full display list if the partial display list build failed.
-      bool doFullRebuild = updateState == PartialUpdateResult::Failed;
+    // Rebuild the full display list if the partial display list build failed.
+    bool doFullRebuild = updateState == PartialUpdateResult::Failed;
 
-      if (StaticPrefs::layout_display_list_build_twice()) {
-        // Build display list twice to compare partial and full display list
-        // build times.
-        metrics->StartBuild();
-        doFullRebuild = true;
-      }
+    if (StaticPrefs::layout_display_list_build_twice()) {
+      // Build display list twice to compare partial and full display list
+      // build times.
+      metrics->StartBuild();
+      doFullRebuild = true;
+    }
 
-      if (doFullRebuild) {
-        if (useRetainedBuilder) {
-          retainedBuilder->ClearFramesWithProps();
-          retainedBuilder->ClearReuseableDisplayItems();
+    if (doFullRebuild) {
+      if (retainDisplayList) {
+        retainedBuilder->ClearRetainedData();
 #ifdef DEBUG
-          mozilla::RDLUtils::AssertFrameSubtreeUnmodified(
-              builder->RootReferenceFrame());
+        mozilla::RDLUtils::AssertFrameSubtreeUnmodified(
+            builder->RootReferenceFrame());
 #endif
-        }
-
-        list->DeleteAll(builder);
-
-        builder->ClearRetainedWindowRegions();
-        builder->ClearWillChangeBudgets();
-
-        builder->EnterPresShell(aFrame);
-        builder->SetDirtyRect(visibleRect);
-
-        DL_LOGI("Starting full display list build, root frame: %p",
-                builder->RootReferenceFrame());
-
-        aFrame->BuildDisplayListForStackingContext(builder, list);
-        AddExtraBackgroundItems(builder, list, aFrame, canvasArea,
-                                visibleRegion, aBackstop);
-
-        builder->LeavePresShell(aFrame, list);
-        metrics->EndFullBuild();
-
-        DL_LOGI("Finished full display list build");
-        updateState = PartialUpdateResult::Updated;
       }
+
+      list->DeleteAll(builder);
+
+      builder->ClearRetainedWindowRegions();
+      builder->ClearWillChangeBudgets();
+
+      builder->EnterPresShell(aFrame);
+      builder->SetDirtyRect(visibleRect);
+
+      DL_LOGI("Starting full display list build, root frame: %p",
+              builder->RootReferenceFrame());
+
+      aFrame->BuildDisplayListForStackingContext(builder, list);
+      AddExtraBackgroundItems(builder, list, aFrame, canvasArea, visibleRegion,
+                              aBackstop);
+
+      builder->LeavePresShell(aFrame, list);
+      metrics->EndFullBuild();
+
+      DL_LOGI("Finished full display list build");
+      updateState = PartialUpdateResult::Updated;
     }
 
     builder->SetIsBuilding(false);
@@ -3412,11 +3421,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   UniquePtr<std::stringstream> ss;
   if (consoleNeedsDisplayList) {
     ss = MakeUnique<std::stringstream>();
-    Document* doc = presContext->Document();
-    nsAutoString uri;
-    if (doc && doc->GetDocumentURI(uri) == NS_OK) {
-      *ss << "Display list for " << uri << "\n";
-    }
+    *ss << "Display list for " << uri << "\n";
     DumpBeforePaintDisplayList(ss, builder, list, visibleRect);
   }
 
@@ -3491,7 +3496,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
     builder->EndFrame();
 
-    if (!useRetainedBuilder) {
+    if (temporaryBuilder) {
       temporaryBuilder.reset();
     }
   }

@@ -580,14 +580,18 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
     // properties.
     frame->SchedulePaint();
 
-    if (!nsLayoutUtils::AreRetainedDisplayListsEnabled() ||
-        !nsLayoutUtils::DisplayRootHasRetainedDisplayListBuilder(frame)) {
+    if (!nsLayoutUtils::AreRetainedDisplayListsEnabled()) {
       return;
     }
 
     if (StaticPrefs::layout_display_list_retain_sc()) {
       // DisplayListBuildingDisplayPortRect property is not used when retain sc
       // mode is enabled.
+      return;
+    }
+
+    auto* builder = nsLayoutUtils::GetRetainedDisplayListBuilder(frame);
+    if (!builder) {
       return;
     }
 
@@ -601,11 +605,8 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
           nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), rect);
       frame->SetHasOverrideDirtyRegion(true);
 
-      nsIFrame* rootFrame = frame->PresShell()->GetRootFrame();
-      MOZ_ASSERT(rootFrame);
-
-      RetainedDisplayListData* data =
-          GetOrSetRetainedDisplayListData(rootFrame);
+      DL_LOGV("Adding display port building rect for frame %p\n", frame);
+      RetainedDisplayListData* data = builder->Data();
       data->Flags(frame) += RetainedDisplayListData::FrameFlag::HasProps;
     } else {
       MOZ_ASSERT(rect, "this property should only store non-null values");

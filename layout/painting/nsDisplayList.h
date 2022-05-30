@@ -1728,7 +1728,7 @@ class nsDisplayListBuilder {
                                     const nsRect& aDirtyRect);
 
   friend class nsDisplayBackgroundImage;
-  friend struct RetainedDisplayListBuilder;
+  friend class RetainedDisplayListBuilder;
 
   /**
    * Returns whether a frame acts as an animated geometry root, optionally
@@ -5498,8 +5498,6 @@ class nsDisplaySubDocument : public nsDisplayOwnLayer {
 
   nsIFrame* FrameForInvalidation() const override;
   void RemoveFrame(nsIFrame* aFrame) override;
-
-  void Disown();
 
  protected:
   ViewID mScrollParentId;
