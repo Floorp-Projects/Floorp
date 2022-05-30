@@ -898,7 +898,7 @@ dependencies = [
  "log",
  "regalloc",
  "smallvec",
- "target-lexicon 0.12.3",
+ "target-lexicon",
 ]
 
 [[package]]
@@ -932,7 +932,7 @@ dependencies = [
  "cranelift-codegen",
  "log",
  "smallvec",
- "target-lexicon 0.12.3",
+ "target-lexicon",
 ]
 
 [[package]]
@@ -3700,14 +3700,11 @@ dependencies = [
 
 [[package]]
 name = "object"
-version = "0.16.0"
+version = "0.28.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3c61759aa254402e53c79a68dc519cda1ceee2ff2b6d70b3e58bf64ac2f03e3"
+checksum = "e42c982f2d955fac81dd7e1d0e1426a7d702acd9c98d19ab01083a6a0328c424"
 dependencies = [
- "goblin",
- "scroll",
- "target-lexicon 0.9.0",
- "uuid",
+ "memchr",
 ]
 
 [[package]]
@@ -4067,7 +4064,6 @@ dependencies = [
 name = "profiler_helper"
 version = "0.1.0"
 dependencies = [
- "goblin",
  "memmap2 0.3.1",
  "object",
  "rustc-demangle",
@@ -4995,12 +4991,6 @@ dependencies = [
  "syn",
  "unicode-xid",
 ]
-
-[[package]]
-name = "target-lexicon"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f4c118a7a38378f305a9e111fcb2f7f838c0be324bfb31a77ea04f7f6e684b4"
 
 [[package]]
 name = "target-lexicon"
