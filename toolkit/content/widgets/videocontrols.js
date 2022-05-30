@@ -2844,7 +2844,7 @@ this.VideoControlsImplWidget = class {
             <bdi class="statusLabel" id="errorDecode" data-l10n-id="videocontrols-error-decode"></bdi>
             <bdi class="statusLabel" id="errorSrcNotSupported" data-l10n-id="videocontrols-error-src-not-supported"></bdi>
             <bdi class="statusLabel" id="errorNoSource" data-l10n-id="videocontrols-error-no-source"></bdi>
-            <bdi class="statusLabel" id="errorGeneric"> data-l10n-id="videocontrols-error-generic"></bdi>
+            <bdi class="statusLabel" id="errorGeneric" data-l10n-id="videocontrols-error-generic"></bdi>
           </div>
 
           <div id="pictureInPictureOverlay" class="pictureInPictureOverlay stackItem" status="pictureInPicture" hidden="true">
