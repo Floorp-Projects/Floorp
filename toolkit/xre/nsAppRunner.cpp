@@ -5876,6 +5876,15 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   mAppData->sandboxPermissionsService = aConfig.sandboxPermissionsService;
 #endif
 
+  // Once we unset the exception handler, we lose the ability to properly
+  // detect hangs -- they show up as crashes.  We do this as late as possible.
+  // In particular, after ProcessRuntime is destroyed on Windows.
+  auto unsetExceptionHandler = MakeScopeExit([&] {
+    if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER)
+      return CrashReporter::UnsetExceptionHandler();
+    return NS_OK;
+  });
+
   mozilla::IOInterposerInit ioInterposerGuard;
 
 #if defined(XP_WIN)
@@ -5963,9 +5972,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 #  endif
   }
 #endif
-
-  if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER)
-    CrashReporter::UnsetExceptionHandler();
 
   XRE_DeinitCommandLine();
 
