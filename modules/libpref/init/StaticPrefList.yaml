@@ -2320,6 +2320,13 @@
   value: false
   mirror: always
 
+# Whether fullscreen should make the rest of the document inert.
+# This matches other browsers but historically not Gecko.
+- name: dom.fullscreen.modal
+  type: bool
+  value: false
+  mirror: always
+
 # Whether the Gamepad API is enabled
 - name: dom.gamepad.enabled
   type: bool
