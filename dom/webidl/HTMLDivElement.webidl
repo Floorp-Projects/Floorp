@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-[Exposed=Window, ProbablyShortLivingWrapper]
+[Exposed=Window]
 interface HTMLDivElement : HTMLElement {
   [HTMLConstructor] constructor();
 };
