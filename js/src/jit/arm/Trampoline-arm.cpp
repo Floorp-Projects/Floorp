@@ -220,9 +220,9 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     // Handle Interpreter -> Baseline OSR.
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     MOZ_ASSERT(!regs.has(r11));
-    regs.take(JSReturnOperand);
-    regs.takeUnchecked(OsrFrameReg);
-    regs.take(ReturnReg);
+    regs.take(OsrFrameReg);
+    regs.take(r0);  // jitcode
+    MOZ_ASSERT(!regs.has(ReturnReg), "ReturnReg matches r0");
 
     const Address slot_numStackValues(r11,
                                       offsetof(EnterJITStack, numStackValues));

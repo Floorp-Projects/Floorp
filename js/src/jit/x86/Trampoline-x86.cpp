@@ -164,13 +164,12 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.push(esi);
 
   CodeLabel returnLabel;
-  CodeLabel oomReturnLabel;
+  Label oomReturnLabel;
   {
     // Handle Interpreter -> Baseline OSR.
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     MOZ_ASSERT(!regs.has(ebp));
-    regs.take(JSReturnOperand);
-    regs.takeUnchecked(OsrFrameReg);
+    regs.take(OsrFrameReg);
     regs.take(ReturnReg);
 
     Register scratch = regs.takeAny();
@@ -259,8 +258,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.mov(framePtr, esp);
     masm.addPtr(Imm32(2 * sizeof(uintptr_t)), esp);
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-    masm.mov(&oomReturnLabel, scratch);
-    masm.jump(scratch);
+    masm.jump(&oomReturnLabel);
 
     masm.bind(&notOsr);
     masm.loadPtr(Address(ebp, ARG_SCOPECHAIN), R1.scratchReg());
@@ -281,7 +279,6 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&returnLabel);
     masm.addCodeLabel(returnLabel);
     masm.bind(&oomReturnLabel);
-    masm.addCodeLabel(oomReturnLabel);
   }
 
   // Pop arguments off the stack.

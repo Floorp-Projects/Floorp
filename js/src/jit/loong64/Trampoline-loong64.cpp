@@ -200,15 +200,14 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.push(s4);  // descriptor
 
   CodeLabel returnLabel;
-  CodeLabel oomReturnLabel;
+  Label oomReturnLabel;
   {
     // Handle Interpreter -> Baseline OSR.
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     MOZ_ASSERT(!regs.has(FramePointer));
     regs.take(OsrFrameReg);
     regs.take(reg_code);
-    // regs.take(ReturnReg);
-    regs.take(JSReturnOperand);
+    MOZ_ASSERT(!regs.has(ReturnReg), "ReturnReg matches reg_code");
 
     Label notOsr;
     masm.ma_b(OsrFrameReg, OsrFrameReg, &notOsr, Assembler::Zero, ShortJump);
@@ -299,8 +298,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.movePtr(framePtr, StackPointer);
     masm.addPtr(Imm32(2 * sizeof(uintptr_t)), StackPointer);
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-    masm.ma_li(scratch, &oomReturnLabel);
-    masm.jump(scratch);
+    masm.jump(&oomReturnLabel);
 
     masm.bind(&notOsr);
     // Load the scope chain in R1.
@@ -320,7 +318,6 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&returnLabel);
     masm.addCodeLabel(returnLabel);
     masm.bind(&oomReturnLabel);
-    masm.addCodeLabel(oomReturnLabel);
   }
 
   // s0 <- 8*argc (size of all arguments we pushed on the stack)
