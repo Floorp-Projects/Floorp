@@ -2819,13 +2819,6 @@ static bool GetActualDeleteCount(JSContext* cx, const CallArgs& args,
   }
   MOZ_ASSERT(actualStart + *result <= len);
 
-  if (IsArraySpecies(cx, obj)) {
-    if (*result > UINT32_MAX) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BAD_ARRAY_LENGTH);
-      return false;
-    }
-  }
   return true;
 }
 
@@ -2865,6 +2858,18 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
   if (!GetActualDeleteCount(cx, args, obj, len, actualStart, itemCount,
                             &actualDeleteCount)) {
     return false;
+  }
+
+  /* The following check can't be done by GetActualDeleteCount(), since
+   * it's also called by the implementation of withSpliced(), which
+   * doesn't create an array of deleted items and thus doesn't need
+   * this check. */
+  if (IsArraySpecies(cx, obj)) {
+    if (actualDeleteCount > UINT32_MAX) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_BAD_ARRAY_LENGTH);
+      return false;
+    }
   }
 
   RootedObject arr(cx);
@@ -3126,6 +3131,12 @@ static bool array_splice_noRetVal(JSContext* cx, unsigned argc, Value* vp) {
 
 static ArrayObject* NewDenseArray(JSContext* cx, const CallArgs& args,
                                   uint64_t len) {
+  if (len > UINT32_MAX) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_ARRAY_LENGTH);
+    return nullptr;
+  }
+
   RootedObject proto(cx);
   if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Array, &proto)) {
     return nullptr;
@@ -3169,9 +3180,11 @@ static bool array_with_spliced(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  /* Step 7. */
   // insertCount is the number of elements being added
   uint32_t insertCount = GetItemCount(args);
 
+  /* Steps 8-10. */
   // actualDeleteCount is the number of elements being deleted
   uint64_t actualDeleteCount;
   if (!GetActualDeleteCount(cx, args, obj, len, actualStart, insertCount,
@@ -3179,16 +3192,17 @@ static bool array_with_spliced(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  /* Step 10. */
+  /* Step 11. */
   uint64_t newLen = len + insertCount - actualDeleteCount;
 
-  /* Step 11. */
+  /* Step 12 handled by GetActualDeleteCount(). */
+  /* Step 13. */
   RootedObject A(cx, NewDenseArray(cx, args, newLen));
   if (!A) {
     return false;
   }
 
-  /* Steps 12-13. */
+  /* Steps 14-16. */
   // Copy everything before start
   uint64_t k = 0;
   while (k < actualStart) {
@@ -3204,7 +3218,7 @@ static bool array_with_spliced(JSContext* cx, unsigned argc, Value* vp) {
 
   // result array now contains all elements before start
 
-  /* Steps 14-15.*/
+  /* Step 17.*/
   // Copy new items
   Value* items = args.array() + 2;
 
@@ -3213,7 +3227,7 @@ static bool array_with_spliced(JSContext* cx, unsigned argc, Value* vp) {
   }
   k += insertCount;
 
-  /* Step 16. */
+  /* Step 18. */
   // Copy items after new items
   while (k < newLen) {
     uint64_t from = k + actualDeleteCount - insertCount;
@@ -3227,7 +3241,7 @@ static bool array_with_spliced(JSContext* cx, unsigned argc, Value* vp) {
     k++;
   }
 
-  /* Step 17. */
+  /* Step 19. */
   args.rval().setObject(*A);
 
   return true;
