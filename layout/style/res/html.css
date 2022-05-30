@@ -764,16 +764,17 @@ video > .caption-box {
 }
 
 /**
- * The pseudo element won't inheirt CSS styles from its direct parent, `::cue`
- * would acutally inherit styles from video because it's video's pseudo element.
- * Therefore, we have to explicitly set some styles which are aleady defined in
- * its parent element in vtt.jsm.
+ * The pseudo element won't inherit CSS styles from its direct parent, `::cue`
+ * would actually inherit styles from video because it's video's pseudo element.
+ * Therefore, we have to explicitly set some styles which are already defined
+ * in its parent element in vtt.jsm.
  */
 ::cue {
   color: rgba(255, 255, 255, 1);
   white-space: pre-line;
   background-color: rgba(0, 0, 0, 0.8);
-  font: var(--cue-font-size) sans-serif;
+  font: 10px sans-serif;
+  font-size: var(--cue-font-size);
   writing-mode: var(--cue-writing-mode, inherit);
   overflow-wrap: break-word;
   /* TODO : enable unicode-bidi, right now enable it would cause incorrect
