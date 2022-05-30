@@ -62,7 +62,6 @@ const GMP_PLUGINS = [
     isEME: true,
   },
 ];
-XPCOMUtils.defineConstant(this, "GMP_PLUGINS", GMP_PLUGINS);
 
 XPCOMUtils.defineLazyGetter(
   this,
