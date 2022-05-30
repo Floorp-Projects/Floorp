@@ -9,11 +9,8 @@ extern crate test;
 use test::{black_box, Bencher};
 
 use hashbrown::hash_map::DefaultHashBuilder;
-use hashbrown::{HashMap, HashSet};
-use std::{
-    collections::hash_map::RandomState,
-    sync::atomic::{self, AtomicUsize},
-};
+use hashbrown::HashMap;
+use std::collections::hash_map::RandomState;
 
 const SIZE: usize = 1000;
 
@@ -40,20 +37,6 @@ impl Iterator for RandomKeys {
         // Add 1 then multiply by some 32 bit prime.
         self.state = self.state.wrapping_add(1).wrapping_mul(3787392781);
         Some(self.state)
-    }
-}
-
-// Just an arbitrary side effect to make the maps not shortcircuit to the non-dropping path
-// when dropping maps/entries (most real world usages likely have drop in the key or value)
-lazy_static::lazy_static! {
-    static ref SIDE_EFFECT: AtomicUsize = AtomicUsize::new(0);
-}
-
-#[derive(Clone)]
-struct DropType(usize);
-impl Drop for DropType {
-    fn drop(&mut self) {
-        SIDE_EFFECT.fetch_add(self.0, atomic::Ordering::SeqCst);
     }
 }
 
@@ -86,11 +69,10 @@ macro_rules! bench_insert {
             b.iter(|| {
                 m.clear();
                 for i in ($keydist).take(SIZE) {
-                    m.insert(i, (DropType(i), [i; 20]));
+                    m.insert(i, i);
                 }
                 black_box(&mut m);
-            });
-            eprintln!("{}", SIDE_EFFECT.load(atomic::Ordering::SeqCst));
+            })
         }
     };
 }
@@ -105,38 +87,13 @@ bench_suite!(
     insert_std_random
 );
 
-macro_rules! bench_grow_insert {
-    ($name:ident, $maptype:ident, $keydist:expr) => {
-        #[bench]
-        fn $name(b: &mut Bencher) {
-            b.iter(|| {
-                let mut m = $maptype::default();
-                for i in ($keydist).take(SIZE) {
-                    m.insert(i, DropType(i));
-                }
-                black_box(&mut m);
-            })
-        }
-    };
-}
-
-bench_suite!(
-    bench_grow_insert,
-    grow_insert_ahash_serial,
-    grow_insert_std_serial,
-    grow_insert_ahash_highbits,
-    grow_insert_std_highbits,
-    grow_insert_ahash_random,
-    grow_insert_std_random
-);
-
 macro_rules! bench_insert_erase {
     ($name:ident, $maptype:ident, $keydist:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
             let mut base = $maptype::default();
             for i in ($keydist).take(SIZE) {
-                base.insert(i, DropType(i));
+                base.insert(i, i);
             }
             let skip = $keydist.skip(SIZE);
             b.iter(|| {
@@ -146,12 +103,11 @@ macro_rules! bench_insert_erase {
                 // While keeping the size constant,
                 // replace the first keydist with the second.
                 for (add, remove) in (&mut add_iter).zip(&mut remove_iter).take(SIZE) {
-                    m.insert(add, DropType(add));
+                    m.insert(add, add);
                     black_box(m.remove(&remove));
                 }
                 black_box(m);
-            });
-            eprintln!("{}", SIDE_EFFECT.load(atomic::Ordering::SeqCst));
+            })
         }
     };
 }
@@ -172,15 +128,14 @@ macro_rules! bench_lookup {
         fn $name(b: &mut Bencher) {
             let mut m = $maptype::default();
             for i in $keydist.take(SIZE) {
-                m.insert(i, DropType(i));
+                m.insert(i, i);
             }
 
             b.iter(|| {
                 for i in $keydist.take(SIZE) {
                     black_box(m.get(&i));
                 }
-            });
-            eprintln!("{}", SIDE_EFFECT.load(atomic::Ordering::SeqCst));
+            })
         }
     };
 }
@@ -202,7 +157,7 @@ macro_rules! bench_lookup_fail {
             let mut m = $maptype::default();
             let mut iter = $keydist;
             for i in (&mut iter).take(SIZE) {
-                m.insert(i, DropType(i));
+                m.insert(i, i);
             }
 
             b.iter(|| {
@@ -230,7 +185,7 @@ macro_rules! bench_iter {
         fn $name(b: &mut Bencher) {
             let mut m = $maptype::default();
             for i in ($keydist).take(SIZE) {
-                m.insert(i, DropType(i));
+                m.insert(i, i);
             }
 
             b.iter(|| {
@@ -256,7 +211,7 @@ bench_suite!(
 fn clone_small(b: &mut Bencher) {
     let mut m = HashMap::new();
     for i in 0..10 {
-        m.insert(i, DropType(i));
+        m.insert(i, i);
     }
 
     b.iter(|| {
@@ -269,7 +224,7 @@ fn clone_from_small(b: &mut Bencher) {
     let mut m = HashMap::new();
     let mut m2 = HashMap::new();
     for i in 0..10 {
-        m.insert(i, DropType(i));
+        m.insert(i, i);
     }
 
     b.iter(|| {
@@ -282,7 +237,7 @@ fn clone_from_small(b: &mut Bencher) {
 fn clone_large(b: &mut Bencher) {
     let mut m = HashMap::new();
     for i in 0..1000 {
-        m.insert(i, DropType(i));
+        m.insert(i, i);
     }
 
     b.iter(|| {
@@ -295,37 +250,11 @@ fn clone_from_large(b: &mut Bencher) {
     let mut m = HashMap::new();
     let mut m2 = HashMap::new();
     for i in 0..1000 {
-        m.insert(i, DropType(i));
+        m.insert(i, i);
     }
 
     b.iter(|| {
         m2.clone_from(&m);
         black_box(&mut m2);
     })
-}
-
-#[bench]
-fn rehash_in_place(b: &mut Bencher) {
-    b.iter(|| {
-        let mut set = HashSet::new();
-
-        // Each loop triggers one rehash
-        for _ in 0..10 {
-            for i in 0..224 {
-                set.insert(i);
-            }
-
-            assert_eq!(
-                set.capacity(),
-                224,
-                "The set must be at or close to capacity to trigger a re hashing"
-            );
-
-            for i in 100..1400 {
-                set.remove(&(i - 100));
-                set.insert(i);
-            }
-            set.clear();
-        }
-    });
 }

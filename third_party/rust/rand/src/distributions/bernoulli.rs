@@ -12,8 +12,6 @@ use crate::distributions::Distribution;
 use crate::Rng;
 use core::{fmt, u64};
 
-#[cfg(feature = "serde1")]
-use serde::{Serialize, Deserialize};
 /// The Bernoulli distribution.
 ///
 /// This is a special case of the Binomial distribution where `n = 1`.
@@ -33,8 +31,7 @@ use serde::{Serialize, Deserialize};
 /// This `Bernoulli` distribution uses 64 bits from the RNG (a `u64`),
 /// so only probabilities that are multiples of 2<sup>-64</sup> can be
 /// represented.
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[derive(Clone, Copy, Debug)]
 pub struct Bernoulli {
     /// Probability of success, relative to the maximal integer.
     p_int: u64,
@@ -49,7 +46,7 @@ pub struct Bernoulli {
 // `f64` only has 53 bits of precision, and the next largest value of `p` will
 // result in `2^64 - 2048`.
 //
-// Also there is a 100% theoretical concern: if someone consistently wants to
+// Also there is a 100% theoretical concern: if someone consistenly wants to
 // generate `true` using the Bernoulli distribution (i.e. by using a probability
 // of `1.0`), just using `u64::MAX` is not enough. On average it would return
 // false once every 2^64 iterations. Some people apparently care about this
@@ -96,7 +93,7 @@ impl Bernoulli {
     /// 2<sup>-64</sup> in `[0, 1]` can be represented as a `f64`.)
     #[inline]
     pub fn new(p: f64) -> Result<Bernoulli, BernoulliError> {
-        if !(0.0..1.0).contains(&p) {
+        if !(p >= 0.0 && p < 1.0) {
             if p == 1.0 {
                 return Ok(Bernoulli { p_int: ALWAYS_TRUE });
             }
@@ -147,19 +144,7 @@ mod test {
     use crate::Rng;
 
     #[test]
-    #[cfg(feature="serde1")]
-    fn test_serializing_deserializing_bernoulli() {
-        let coin_flip = Bernoulli::new(0.5).unwrap();
-        let de_coin_flip : Bernoulli = bincode::deserialize(&bincode::serialize(&coin_flip).unwrap()).unwrap();
-
-        assert_eq!(coin_flip.p_int, de_coin_flip.p_int);
-    }
-
-    #[test]
     fn test_trivial() {
-        // We prefer to be explicit here.
-        #![allow(clippy::bool_assert_comparison)]
-
         let mut r = crate::test::rng(1);
         let always_false = Bernoulli::new(0.0).unwrap();
         let always_true = Bernoulli::new(1.0).unwrap();
@@ -210,10 +195,5 @@ mod test {
         assert_eq!(buf, [
             true, false, false, true, false, false, true, true, true, true
         ]);
-    }
-
-    #[test]
-    fn bernoulli_distributions_can_be_compared() {
-        assert_eq!(Bernoulli::new(1.0), Bernoulli::new(1.0));
     }
 }

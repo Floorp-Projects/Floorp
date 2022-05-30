@@ -14,9 +14,6 @@ use crate::Rng;
 use core::mem;
 #[cfg(feature = "simd_support")] use packed_simd::*;
 
-#[cfg(feature = "serde1")]
-use serde::{Serialize, Deserialize};
-
 /// A distribution to sample floating point numbers uniformly in the half-open
 /// interval `(0, 1]`, i.e. including 1 but not 0.
 ///
@@ -42,7 +39,6 @@ use serde::{Serialize, Deserialize};
 /// [`Open01`]: crate::distributions::Open01
 /// [`Uniform`]: crate::distributions::uniform::Uniform
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct OpenClosed01;
 
 /// A distribution to sample floating point numbers uniformly in the open
@@ -69,7 +65,6 @@ pub struct OpenClosed01;
 /// [`OpenClosed01`]: crate::distributions::OpenClosed01
 /// [`Uniform`]: crate::distributions::uniform::Uniform
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Open01;
 
 
@@ -78,7 +73,7 @@ pub struct Open01;
 pub trait IntoFloat {
     type F;
 
-    /// Helper method to combine the fraction and a constant exponent into a
+    /// Helper method to combine the fraction and a contant exponent into a
     /// float.
     ///
     /// Only the least significant bits of `self` may be set, 23 for `f32` and

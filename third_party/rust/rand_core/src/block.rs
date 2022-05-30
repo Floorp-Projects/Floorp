@@ -21,14 +21,12 @@
 //!
 //! # Example
 //!
-//! ```no_run
-//! use rand_core::{RngCore, SeedableRng};
+//! ```norun
 //! use rand_core::block::{BlockRngCore, BlockRng};
 //!
 //! struct MyRngCore;
 //!
 //! impl BlockRngCore for MyRngCore {
-//!     type Item = u32;
 //!     type Results = [u32; 16];
 //!
 //!     fn generate(&mut self, results: &mut Self::Results) {
@@ -37,7 +35,7 @@
 //! }
 //!
 //! impl SeedableRng for MyRngCore {
-//!     type Seed = [u8; 32];
+//!     type Seed = unimplemented!();
 //!     fn from_seed(seed: Self::Seed) -> Self {
 //!         unimplemented!()
 //!     }
@@ -46,19 +44,17 @@
 //! // optionally, also implement CryptoRng for MyRngCore
 //!
 //! // Final RNG.
-//! let mut rng = BlockRng::<MyRngCore>::seed_from_u64(0);
-//! println!("First value: {}", rng.next_u32());
+//! type MyRng = BlockRng<u32, MyRngCore>;
 //! ```
 //!
 //! [`BlockRngCore`]: crate::block::BlockRngCore
 //! [`fill_bytes`]: RngCore::fill_bytes
 
-use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
-use crate::{CryptoRng, Error, RngCore, SeedableRng};
 use core::convert::AsRef;
-use core::fmt;
-#[cfg(feature = "serde1")]
-use serde::{Deserialize, Serialize};
+use core::{fmt, ptr};
+#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
+use crate::{RngCore, CryptoRng, SeedableRng, Error};
+use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 
 /// A trait for RNGs which do not generate random numbers individually, but in
 /// blocks (typically `[u32; N]`). This technique is commonly used by
@@ -76,6 +72,7 @@ pub trait BlockRngCore {
     /// Generate a new block of results.
     fn generate(&mut self, results: &mut Self::Results);
 }
+
 
 /// A wrapper type implementing [`RngCore`] for some type implementing
 /// [`BlockRngCore`] with `u32` array buffer; i.e. this can be used to implement
@@ -113,13 +110,7 @@ pub trait BlockRngCore {
 /// [`fill_bytes`]: RngCore::fill_bytes
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Clone)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "serde1",
-    serde(
-        bound = "for<'x> R: Serialize + Deserialize<'x> + Sized, for<'x> R::Results: Serialize + Deserialize<'x>"
-    )
-)]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng<R: BlockRngCore + ?Sized> {
     results: R::Results,
     index: usize,
@@ -131,10 +122,10 @@ pub struct BlockRng<R: BlockRngCore + ?Sized> {
 impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng<R> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("BlockRng")
-            .field("core", &self.core)
-            .field("result_len", &self.results.as_ref().len())
-            .field("index", &self.index)
-            .finish()
+           .field("core", &self.core)
+           .field("result_len", &self.results.as_ref().len())
+           .field("index", &self.index)
+           .finish()
     }
 }
 
@@ -142,7 +133,7 @@ impl<R: BlockRngCore> BlockRng<R> {
     /// Create a new `BlockRng` from an existing RNG implementing
     /// `BlockRngCore`. Results will be generated on first use.
     #[inline]
-    pub fn new(core: R) -> BlockRng<R> {
+    pub fn new(core: R) -> BlockRng<R>{
         let results_empty = R::Results::default();
         BlockRng {
             core,
@@ -178,9 +169,8 @@ impl<R: BlockRngCore> BlockRng<R> {
     }
 }
 
-impl<R: BlockRngCore<Item = u32>> RngCore for BlockRng<R>
-where
-    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>,
+impl<R: BlockRngCore<Item=u32>> RngCore for BlockRng<R>
+where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
@@ -196,14 +186,22 @@ where
     #[inline]
     fn next_u64(&mut self) -> u64 {
         let read_u64 = |results: &[u32], index| {
-            let data = &results[index..=index + 1];
-            u64::from(data[1]) << 32 | u64::from(data[0])
+            if cfg!(any(target_endian = "little")) {
+                // requires little-endian CPU
+                #[allow(clippy::cast_ptr_alignment)]  // false positive
+                let ptr: *const u64 = results[index..=index+1].as_ptr() as *const u64;
+                unsafe { ptr::read_unaligned(ptr) }
+            } else {
+                let x = u64::from(results[index]);
+                let y = u64::from(results[index + 1]);
+                (y << 32) | x
+            }
         };
 
         let len = self.results.as_ref().len();
 
         let index = self.index;
-        if index < len - 1 {
+        if index < len-1 {
             self.index += 2;
             // Read an u64 from the current index
             read_u64(self.results.as_ref(), index)
@@ -211,7 +209,7 @@ where
             self.generate_and_set(2);
             read_u64(self.results.as_ref(), 0)
         } else {
-            let x = u64::from(self.results.as_ref()[len - 1]);
+            let x = u64::from(self.results.as_ref()[len-1]);
             self.generate_and_set(1);
             let y = u64::from(self.results.as_ref()[0]);
             (y << 32) | x
@@ -226,7 +224,8 @@ where
                 self.generate_and_set(0);
             }
             let (consumed_u32, filled_u8) =
-                fill_via_u32_chunks(&self.results.as_ref()[self.index..], &mut dest[read_len..]);
+                fill_via_u32_chunks(&self.results.as_ref()[self.index..],
+                                    &mut dest[read_len..]);
 
             self.index += consumed_u32;
             read_len += filled_u8;
@@ -259,6 +258,8 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     }
 }
 
+
+
 /// A wrapper type implementing [`RngCore`] for some type implementing
 /// [`BlockRngCore`] with `u64` array buffer; i.e. this can be used to implement
 /// a full RNG from just a `generate` function.
@@ -282,7 +283,7 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
 /// [`fill_bytes`]: RngCore::fill_bytes
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Clone)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng64<R: BlockRngCore + ?Sized> {
     results: R::Results,
     index: usize,
@@ -295,11 +296,11 @@ pub struct BlockRng64<R: BlockRngCore + ?Sized> {
 impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng64<R> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("BlockRng64")
-            .field("core", &self.core)
-            .field("result_len", &self.results.as_ref().len())
-            .field("index", &self.index)
-            .field("half_used", &self.half_used)
-            .finish()
+           .field("core", &self.core)
+           .field("result_len", &self.results.as_ref().len())
+           .field("index", &self.index)
+           .field("half_used", &self.half_used)
+           .finish()
     }
 }
 
@@ -307,7 +308,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
     /// Create a new `BlockRng` from an existing RNG implementing
     /// `BlockRngCore`. Results will be generated on first use.
     #[inline]
-    pub fn new(core: R) -> BlockRng64<R> {
+    pub fn new(core: R) -> BlockRng64<R>{
         let results_empty = R::Results::default();
         BlockRng64 {
             core,
@@ -346,9 +347,8 @@ impl<R: BlockRngCore> BlockRng64<R> {
     }
 }
 
-impl<R: BlockRngCore<Item = u64>> RngCore for BlockRng64<R>
-where
-    <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>,
+impl<R: BlockRngCore<Item=u64>> RngCore for BlockRng64<R>
+where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
@@ -366,7 +366,8 @@ where
 
         // Index as if this is a u32 slice.
         unsafe {
-            let results = &*(self.results.as_ref() as *const [u64] as *const [u32]);
+            let results =
+                &*(self.results.as_ref() as *const [u64] as *const [u32]);
             if cfg!(target_endian = "little") {
                 *results.get_unchecked(index)
             } else {
@@ -398,10 +399,9 @@ where
                 self.index = 0;
             }
 
-            let (consumed_u64, filled_u8) = fill_via_u64_chunks(
-                &self.results.as_ref()[self.index as usize..],
-                &mut dest[read_len..],
-            );
+            let (consumed_u64, filled_u8) =
+                fill_via_u64_chunks(&self.results.as_ref()[self.index as usize..],
+                                    &mut dest[read_len..]);
 
             self.index += consumed_u64;
             read_len += filled_u8;

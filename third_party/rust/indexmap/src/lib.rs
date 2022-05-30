@@ -53,7 +53,7 @@
 //!
 //! ### Rust Version
 //!
-//! This version of indexmap requires Rust 1.49 or later.
+//! This version of indexmap requires Rust 1.36 or later.
 //!
 //! The indexmap 1.x release series will use a carefully considered version
 //! upgrade policy, where in a later 1.x version, we will raise the minimum
@@ -77,13 +77,18 @@
 //!
 //! [def]: map/struct.IndexMap.html#impl-Default
 
+#[cfg(not(has_std))]
 extern crate alloc;
 
 #[cfg(has_std)]
 #[macro_use]
 extern crate std;
 
+#[cfg(not(has_std))]
 use alloc::vec::{self, Vec};
+
+#[cfg(has_std)]
+use std::vec::{self, Vec};
 
 #[macro_use]
 mod macros;
@@ -102,9 +107,6 @@ pub mod set;
 // are documented after the "normal" methods.
 #[cfg(feature = "rayon")]
 mod rayon;
-
-#[cfg(feature = "rustc-rayon")]
-mod rustc;
 
 pub use crate::equivalent::Equivalent;
 pub use crate::map::IndexMap;
@@ -164,9 +166,6 @@ impl<K, V> Bucket<K, V> {
     }
     fn key(self) -> K {
         self.key
-    }
-    fn value(self) -> V {
-        self.value
     }
     fn key_value(self) -> (K, V) {
         (self.key, self.value)

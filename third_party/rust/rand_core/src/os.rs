@@ -7,11 +7,12 @@
 // except according to those terms.
 
 //! Interface to the random number generator of the operating system.
+// Note: keep this code in sync with the rand_os crate!
 
-use crate::{impls, CryptoRng, Error, RngCore};
 use getrandom::getrandom;
+use crate::{CryptoRng, RngCore, Error, impls};
 
-/// A random number generator that retrieves randomness from the
+/// A random number generator that retrieves randomness from from the
 /// operating system.
 ///
 /// This is a zero-sized struct. It can be freely constructed with `OsRng`.
@@ -43,7 +44,6 @@ use getrandom::getrandom;
 /// ```
 ///
 /// [getrandom]: https://crates.io/crates/getrandom
-#[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct OsRng;
 

@@ -1,11 +1,12 @@
 # rand_core
 
-[![Test Status](https://github.com/rust-random/rand/workflows/Tests/badge.svg?event=push)](https://github.com/rust-random/rand/actions)
+[![Build Status](https://travis-ci.org/rust-random/rand.svg)](https://travis-ci.org/rust-random/rand)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/rust-random/rand)
 [![Latest version](https://img.shields.io/crates/v/rand_core.svg)](https://crates.io/crates/rand_core)
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand_core)
 [![API](https://docs.rs/rand_core/badge.svg)](https://docs.rs/rand_core)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.36+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.32+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 Core traits and error types of the [rand] library, plus tools for implementing
 RNGs.
@@ -43,7 +44,7 @@ The traits and error types are also available via `rand`.
 
 The current version is:
 ```
-rand_core = "0.6.0"
+rand_core = "0.5.0"
 ```
 
 Rand libs have inter-dependencies and make use of the

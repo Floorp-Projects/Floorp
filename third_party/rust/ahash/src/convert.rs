@@ -8,7 +8,13 @@ macro_rules! convert {
             #[inline(always)]
             fn convert(self) -> $b {
                 unsafe {
-                    core::mem::transmute::<$a, $b>(self)
+                    let mut result: $b = core::mem::zeroed();
+                    core::ptr::copy_nonoverlapping(
+                        &self as *const $a as *const u8,
+                        &mut result as *mut $b as *mut u8,
+                        core::mem::size_of::<$b>(),
+                    );
+                    return result;
                 }
             }
         }
@@ -16,7 +22,13 @@ macro_rules! convert {
             #[inline(always)]
             fn convert(self) -> $a {
                 unsafe {
-                    core::mem::transmute::<$b, $a>(self)
+                    let mut result: $a = core::mem::zeroed();
+                    core::ptr::copy_nonoverlapping(
+                        &self as *const $b as *const u8,
+                        &mut result as *mut $a as *mut u8,
+                        core::mem::size_of::<$a>(),
+                    );
+                    return result;
                 }
             }
         }
@@ -35,12 +47,6 @@ convert!(u128, [u64; 2]);
 convert!(u128, [u32; 4]);
 convert!(u128, [u16; 8]);
 convert!(u128, [u8; 16]);
-convert!([u64; 8], [u32; 16]);
-convert!([u64; 8], [u16; 32]);
-convert!([u64; 8], [u8; 64]);
-convert!([u64; 4], [u32; 8]);
-convert!([u64; 4], [u16; 16]);
-convert!([u64; 4], [u8; 32]);
 convert!([u64; 2], [u32; 4]);
 convert!([u64; 2], [u16; 8]);
 convert!([u64; 2], [u8; 16]);
@@ -56,7 +62,6 @@ convert!(u32, [u16; 2]);
 convert!(u32, [u8; 4]);
 convert!([u16; 2], [u8; 4]);
 convert!(u16, [u8; 2]);
-convert!([[u64; 4]; 2], [u8; 64]);
 
 convert!([f64; 2], [u8; 16]);
 convert!([f32; 4], [u8; 16]);

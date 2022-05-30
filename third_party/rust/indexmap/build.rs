@@ -4,6 +4,5 @@ fn main() {
         Some(_) => autocfg::emit("has_std"),
         None => autocfg::new().emit_sysroot_crate("std"),
     }
-    autocfg::new().emit_rustc_version(1, 51);
     autocfg::rerun_path("build.rs");
 }

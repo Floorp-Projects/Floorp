@@ -11,11 +11,11 @@
 //!
 //! This module is the home of the [`Distribution`] trait and several of its
 //! implementations. It is the workhorse behind some of the convenient
-//! functionality of the [`Rng`] trait, e.g. [`Rng::gen`] and of course
-//! [`Rng::sample`].
+//! functionality of the [`Rng`] trait, e.g. [`Rng::gen`], [`Rng::gen_range`] and
+//! of course [`Rng::sample`].
 //!
 //! Abstractly, a [probability distribution] describes the probability of
-//! occurrence of each value in its sample space.
+//! occurance of each value in its sample space.
 //!
 //! More concretely, an implementation of `Distribution<T>` for type `X` is an
 //! algorithm for choosing values from the sample space (a subset of `T`)
@@ -54,16 +54,16 @@
 //! space to be specified as an arbitrary range within its target type `T`.
 //! Both [`Standard`] and [`Uniform`] are in some sense uniform distributions.
 //!
-//! Values may be sampled from this distribution using [`Rng::sample(Range)`] or
+//! Values may be sampled from this distribution using [`Rng::gen_range`] or
 //! by creating a distribution object with [`Uniform::new`],
 //! [`Uniform::new_inclusive`] or `From<Range>`. When the range limits are not
 //! known at compile time it is typically faster to reuse an existing
-//! `Uniform` object than to call [`Rng::sample(Range)`].
+//! distribution object than to call [`Rng::gen_range`].
 //!
 //! User types `T` may also implement `Distribution<T>` for [`Uniform`],
 //! although this is less straightforward than for [`Standard`] (see the
-//! documentation in the [`uniform`] module). Doing so enables generation of
-//! values of type `T` with  [`Rng::sample(Range)`].
+//! documentation in the [`uniform`] module. Doing so enables generation of
+//! values of type `T` with  [`Rng::gen_range`].
 //!
 //! ## Open and half-open ranges
 //!
@@ -79,7 +79,7 @@
 //! the [`Bernoulli`] distribution (this is used by [`Rng::gen_bool`]).
 //!
 //! For weighted sampling from a sequence of discrete values, use the
-//! [`WeightedIndex`] distribution.
+//! [`weighted`] module.
 //!
 //! This crate no longer includes other non-uniform distributions; instead
 //! it is recommended that you use either [`rand_distr`] or [`statrs`].
@@ -93,43 +93,201 @@
 //! [`rand_distr`]: https://crates.io/crates/rand_distr
 //! [`statrs`]: https://crates.io/crates/statrs
 
-mod bernoulli;
-mod distribution;
-mod float;
-mod integer;
-mod other;
-mod slice;
-mod utils;
-#[cfg(feature = "alloc")]
-mod weighted_index;
+use crate::Rng;
+use core::iter;
 
+pub use self::bernoulli::{Bernoulli, BernoulliError};
+pub use self::float::{Open01, OpenClosed01};
+pub use self::other::Alphanumeric;
+#[doc(inline)] pub use self::uniform::Uniform;
+#[cfg(feature = "alloc")]
+pub use self::weighted::{WeightedError, WeightedIndex};
+
+// The following are all deprecated after being moved to rand_distr
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::binomial::Binomial;
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::cauchy::Cauchy;
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::dirichlet::Dirichlet;
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::exponential::{Exp, Exp1};
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::gamma::{Beta, ChiSquared, FisherF, Gamma, StudentT};
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::normal::{LogNormal, Normal, StandardNormal};
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::pareto::Pareto;
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::poisson::Poisson;
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::triangular::Triangular;
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::unit_circle::UnitCircle;
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::unit_sphere::UnitSphereSurface;
+#[allow(deprecated)]
+#[cfg(feature = "std")]
+pub use self::weibull::Weibull;
+
+mod bernoulli;
+#[cfg(feature = "std")] mod binomial;
+#[cfg(feature = "std")] mod cauchy;
+#[cfg(feature = "std")] mod dirichlet;
+#[cfg(feature = "std")] mod exponential;
+#[cfg(feature = "std")] mod gamma;
+#[cfg(feature = "std")] mod normal;
+#[cfg(feature = "std")] mod pareto;
+#[cfg(feature = "std")] mod poisson;
+#[cfg(feature = "std")] mod triangular;
+pub mod uniform;
+#[cfg(feature = "std")] mod unit_circle;
+#[cfg(feature = "std")] mod unit_sphere;
+#[cfg(feature = "std")] mod weibull;
+#[cfg(feature = "alloc")] pub mod weighted;
+
+mod float;
 #[doc(hidden)]
 pub mod hidden_export {
     pub use super::float::IntoFloat; // used by rand_distr
 }
-pub mod uniform;
-#[deprecated(
-    since = "0.8.0",
-    note = "use rand::distributions::{WeightedIndex, WeightedError} instead"
-)]
-#[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-pub mod weighted;
+mod integer;
+mod other;
+mod utils;
+#[cfg(feature = "std")] mod ziggurat_tables;
 
-pub use self::bernoulli::{Bernoulli, BernoulliError};
-pub use self::distribution::{Distribution, DistIter, DistMap};
-#[cfg(feature = "alloc")]
-pub use self::distribution::DistString;
-pub use self::float::{Open01, OpenClosed01};
-pub use self::other::Alphanumeric;
-pub use self::slice::Slice;
-#[doc(inline)]
-pub use self::uniform::Uniform;
-#[cfg(feature = "alloc")]
-pub use self::weighted_index::{WeightedError, WeightedIndex};
+/// Types (distributions) that can be used to create a random instance of `T`.
+///
+/// It is possible to sample from a distribution through both the
+/// `Distribution` and [`Rng`] traits, via `distr.sample(&mut rng)` and
+/// `rng.sample(distr)`. They also both offer the [`sample_iter`] method, which
+/// produces an iterator that samples from the distribution.
+///
+/// All implementations are expected to be immutable; this has the significant
+/// advantage of not needing to consider thread safety, and for most
+/// distributions efficient state-less sampling algorithms are available.
+///
+/// Implementations are typically expected to be portable with reproducible
+/// results when used with a PRNG with fixed seed; see the
+/// [portability chapter](https://rust-random.github.io/book/portability.html)
+/// of The Rust Rand Book. In some cases this does not apply, e.g. the `usize`
+/// type requires different sampling on 32-bit and 64-bit machines.
+///
+/// [`sample_iter`]: Distribution::method.sample_iter
+pub trait Distribution<T> {
+    /// Generate a random value of `T`, using `rng` as the source of randomness.
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
 
-#[allow(unused)]
-use crate::Rng;
+    /// Create an iterator that generates random values of `T`, using `rng` as
+    /// the source of randomness.
+    ///
+    /// Note that this function takes `self` by value. This works since
+    /// `Distribution<T>` is impl'd for `&D` where `D: Distribution<T>`,
+    /// however borrowing is not automatic hence `distr.sample_iter(...)` may
+    /// need to be replaced with `(&distr).sample_iter(...)` to borrow or
+    /// `(&*distr).sample_iter(...)` to reborrow an existing reference.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::thread_rng;
+    /// use rand::distributions::{Distribution, Alphanumeric, Uniform, Standard};
+    ///
+    /// let rng = thread_rng();
+    ///
+    /// // Vec of 16 x f32:
+    /// let v: Vec<f32> = Standard.sample_iter(rng).take(16).collect();
+    ///
+    /// // String:
+    /// let s: String = Alphanumeric.sample_iter(rng).take(7).collect();
+    ///
+    /// // Dice-rolling:
+    /// let die_range = Uniform::new_inclusive(1, 6);
+    /// let mut roll_die = die_range.sample_iter(rng);
+    /// while roll_die.next().unwrap() != 6 {
+    ///     println!("Not a 6; rolling again!");
+    /// }
+    /// ```
+    fn sample_iter<R>(self, rng: R) -> DistIter<Self, R, T>
+    where
+        R: Rng,
+        Self: Sized,
+    {
+        DistIter {
+            distr: self,
+            rng,
+            phantom: ::core::marker::PhantomData,
+        }
+    }
+}
+
+impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
+        (*self).sample(rng)
+    }
+}
+
+
+/// An iterator that generates random values of `T` with distribution `D`,
+/// using `R` as the source of randomness.
+///
+/// This `struct` is created by the [`sample_iter`] method on [`Distribution`].
+/// See its documentation for more.
+///
+/// [`sample_iter`]: Distribution::sample_iter
+#[derive(Debug)]
+pub struct DistIter<D, R, T> {
+    distr: D,
+    rng: R,
+    phantom: ::core::marker::PhantomData<T>,
+}
+
+impl<D, R, T> Iterator for DistIter<D, R, T>
+where
+    D: Distribution<T>,
+    R: Rng,
+{
+    type Item = T;
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<T> {
+        // Here, self.rng may be a reference, but we must take &mut anyway.
+        // Even if sample could take an R: Rng by value, we would need to do this
+        // since Rng is not copyable and we cannot enforce that this is "reborrowable".
+        Some(self.distr.sample(&mut self.rng))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (usize::max_value(), None)
+    }
+}
+
+impl<D, R, T> iter::FusedIterator for DistIter<D, R, T>
+where
+    D: Distribution<T>,
+    R: Rng,
+{
+}
+
+#[cfg(features = "nightly")]
+impl<D, R, T> iter::TrustedLen for DistIter<D, R, T>
+where
+    D: Distribution<T>,
+    R: Rng,
+{
+}
+
 
 /// A generic random value distribution, implemented for many primitive types.
 /// Usually generates values with a numerically uniform distribution, and with a
@@ -158,13 +316,7 @@ use crate::Rng;
 /// *   Tuples (up to 12 elements): each element is generated sequentially.
 /// *   Arrays (up to 32 elements): each element is generated sequentially;
 ///     see also [`Rng::fill`] which supports arbitrary array length for integer
-///     and float types and tends to be faster for `u32` and smaller types.
-///     When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support
-///     arrays larger than 32 elements.
-///     Note that [`Rng::fill`] and `Standard`'s array support are *not* equivalent:
-///     the former is optimised for integer types (using fewer RNG calls for
-///     element types smaller than the RNG word size), while the latter supports
-///     any element type supported by `Standard`.
+///     types and tends to be faster for `u32` and smaller types.
 /// *   `Option<T>` first generates a `bool`, and if true generates and returns
 ///     `Some(value)` where `value: T`, otherwise returning `None`.
 ///
@@ -207,12 +359,48 @@ use crate::Rng;
 /// multiplicative method: `(rng.gen::<$uty>() >> N) as $ty * (ε/2)`.
 ///
 /// See also: [`Open01`] which samples from `(0, 1)`, [`OpenClosed01`] which
-/// samples from `(0, 1]` and `Rng::gen_range(0..1)` which also samples from
-/// `[0, 1)`. Note that `Open01` uses transmute-based methods which yield 1 bit
-/// less precision but may perform faster on some architectures (on modern Intel
-/// CPUs all methods have approximately equal performance).
+/// samples from `(0, 1]` and `Rng::gen_range(0, 1)` which also samples from
+/// `[0, 1)`. Note that `Open01` and `gen_range` (which uses [`Uniform`]) use
+/// transmute-based methods which yield 1 bit less precision but may perform
+/// faster on some architectures (on modern Intel CPUs all methods have
+/// approximately equal performance).
 ///
 /// [`Uniform`]: uniform::Uniform
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Standard;
+
+
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use super::{Distribution, Uniform};
+    use crate::Rng;
+
+    #[test]
+    fn test_distributions_iter() {
+        use crate::distributions::Open01;
+        let mut rng = crate::test::rng(210);
+        let distr = Open01;
+        let results: Vec<f32> = distr.sample_iter(&mut rng).take(100).collect();
+        println!("{:?}", results);
+    }
+
+    #[test]
+    fn test_make_an_iter() {
+        fn ten_dice_rolls_other_than_five<'a, R: Rng>(
+            rng: &'a mut R,
+        ) -> impl Iterator<Item = i32> + 'a {
+            Uniform::new_inclusive(1, 6)
+                .sample_iter(rng)
+                .filter(|x| *x != 5)
+                .take(10)
+        }
+
+        let mut rng = crate::test::rng(211);
+        let mut count = 0;
+        for val in ten_dice_rolls_other_than_five(&mut rng) {
+            assert!(val >= 1 && val <= 6 && val != 5);
+            count += 1;
+        }
+        assert_eq!(count, 10);
+    }
+}

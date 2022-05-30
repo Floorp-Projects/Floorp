@@ -120,7 +120,7 @@ impl<K, V> Entries for IndexMapCore<K, V> {
 
 impl<K, V> IndexMapCore<K, V> {
     #[inline]
-    pub(crate) const fn new() -> Self {
+    pub(crate) fn new() -> Self {
         IndexMapCore {
             indices: RawTable::new(),
             entries: Vec::new(),
@@ -164,19 +164,6 @@ impl<K, V> IndexMapCore<K, V> {
         let range = simplify_range(range, self.entries.len());
         self.erase_indices(range.start, range.end);
         self.entries.drain(range)
-    }
-
-    #[cfg(feature = "rayon")]
-    pub(crate) fn par_drain<R>(&mut self, range: R) -> rayon::vec::Drain<'_, Bucket<K, V>>
-    where
-        K: Send,
-        V: Send,
-        R: RangeBounds<usize>,
-    {
-        use rayon::iter::ParallelDrainRange;
-        let range = simplify_range(range, self.entries.len());
-        self.erase_indices(range.start, range.end);
-        self.entries.par_drain(range)
     }
 
     pub(crate) fn split_off(&mut self, at: usize) -> Self {

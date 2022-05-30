@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "hashbrown"
-version = "0.11.2"
+version = "0.9.1"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 exclude = [".travis.yml", "bors.toml", "/ci/*"]
 description = "A Rust port of Google's SwissTable hash map"
@@ -25,7 +25,7 @@ repository = "https://github.com/rust-lang/hashbrown"
 [package.metadata.docs.rs]
 features = ["nightly", "rayon", "serde", "raw"]
 [dependencies.ahash]
-version = "0.7.0"
+version = "0.4.4"
 optional = true
 default-features = false
 
@@ -33,10 +33,6 @@ default-features = false
 version = "1.0.0"
 optional = true
 package = "rustc-std-workspace-alloc"
-
-[dependencies.bumpalo]
-version = "3.5.0"
-optional = true
 
 [dependencies.compiler_builtins]
 version = "0.1.2"
@@ -58,11 +54,8 @@ default-features = false
 [dev-dependencies.doc-comment]
 version = "0.3.1"
 
-[dev-dependencies.fnv]
-version = "1.0.7"
-
 [dev-dependencies.lazy_static]
-version = "1.4"
+version = "1.2"
 
 [dev-dependencies.rand]
 version = "0.7.3"
@@ -70,6 +63,9 @@ features = ["small_rng"]
 
 [dev-dependencies.rayon]
 version = "1.0"
+
+[dev-dependencies.rustc-hash]
+version = "=1.0"
 
 [dev-dependencies.serde_test]
 version = "1.0"

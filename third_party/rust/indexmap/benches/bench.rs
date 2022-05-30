@@ -561,7 +561,7 @@ fn indexmap_merge_shuffle(b: &mut Bencher) {
 #[bench]
 fn swap_remove_indexmap_100_000(b: &mut Bencher) {
     let map = IMAP_100K.clone();
-    let mut keys = Vec::from_iter(map.keys().copied());
+    let mut keys = Vec::from_iter(map.keys().cloned());
     let mut rng = small_rng();
     keys.shuffle(&mut rng);
 
@@ -578,7 +578,7 @@ fn swap_remove_indexmap_100_000(b: &mut Bencher) {
 #[bench]
 fn shift_remove_indexmap_100_000_few(b: &mut Bencher) {
     let map = IMAP_100K.clone();
-    let mut keys = Vec::from_iter(map.keys().copied());
+    let mut keys = Vec::from_iter(map.keys().cloned());
     let mut rng = small_rng();
     keys.shuffle(&mut rng);
     keys.truncate(50);

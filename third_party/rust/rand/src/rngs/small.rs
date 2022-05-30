@@ -10,36 +10,33 @@
 
 use rand_core::{Error, RngCore, SeedableRng};
 
-#[cfg(target_pointer_width = "64")]
-type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
-#[cfg(not(target_pointer_width = "64"))]
-type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
+#[cfg(all(not(target_os = "emscripten"), target_pointer_width = "64"))]
+type Rng = rand_pcg::Pcg64Mcg;
+#[cfg(not(all(not(target_os = "emscripten"), target_pointer_width = "64")))]
+type Rng = rand_pcg::Pcg32;
 
 /// A small-state, fast non-crypto PRNG
 ///
 /// `SmallRng` may be a good choice when a PRNG with small state, cheap
 /// initialization, good statistical quality and good performance are required.
-/// Note that depending on the application, [`StdRng`] may be faster on many
-/// modern platforms while providing higher-quality randomness. Furthermore,
-/// `SmallRng` is **not** a good choice when:
-/// - Security against prediction is important. Use [`StdRng`] instead.
-/// - Seeds with many zeros are provided. In such cases, it takes `SmallRng`
-///   about 10 samples to produce 0 and 1 bits with equal probability. Either
-///   provide seeds with an approximately equal number of 0 and 1 (for example
-///   by using [`SeedableRng::from_entropy`] or [`SeedableRng::seed_from_u64`]),
-///   or use [`StdRng`] instead.
+/// It is **not** a good choice when security against prediction or
+/// reproducibility are important.
+///
+/// This PRNG is **feature-gated**: to use, you must enable the crate feature
+/// `small_rng`.
 ///
 /// The algorithm is deterministic but should not be considered reproducible
 /// due to dependence on platform and possible replacement in future
 /// library versions. For a reproducible generator, use a named PRNG from an
-/// external crate, e.g. [rand_xoshiro] or [rand_chacha].
+/// external crate, e.g. [rand_pcg] or [rand_chacha].
 /// Refer also to [The Book](https://rust-random.github.io/book/guide-rngs.html).
 ///
-/// The PRNG algorithm in `SmallRng` is chosen to be efficient on the current
-/// platform, without consideration for cryptography or security. The size of
-/// its state is much smaller than [`StdRng`]. The current algorithm is
-/// `Xoshiro256PlusPlus` on 64-bit platforms and `Xoshiro128PlusPlus` on 32-bit
-/// platforms. Both are also implemented by the [rand_xoshiro] crate.
+/// The PRNG algorithm in `SmallRng` is chosen to be
+/// efficient on the current platform, without consideration for cryptography
+/// or security. The size of its state is much smaller than [`StdRng`].
+/// The current algorithm is [`Pcg64Mcg`](rand_pcg::Pcg64Mcg) on 64-bit
+/// platforms and [`Pcg32`](rand_pcg::Pcg32) on 32-bit platforms. Both are
+/// implemented by the [rand_pcg] crate.
 ///
 /// # Examples
 ///
@@ -75,9 +72,8 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 /// [`StdRng`]: crate::rngs::StdRng
 /// [`thread_rng`]: crate::thread_rng
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
-/// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
-#[cfg_attr(doc_cfg, doc(cfg(feature = "small_rng")))]
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// [rand_pcg]: https://crates.io/crates/rand_pcg
+#[derive(Clone, Debug)]
 pub struct SmallRng(Rng);
 
 impl RngCore for SmallRng {

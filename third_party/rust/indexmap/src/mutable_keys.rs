@@ -8,10 +8,10 @@ pub struct PrivateMarker {}
 ///
 /// These methods expose `&mut K`, mutable references to the key as it is stored
 /// in the map.
-/// You are allowed to modify the keys in the hashmap **if the modification
+/// You are allowed to modify the keys in the hashmap **if the modifcation
 /// does not change the key’s hash and equality**.
 ///
-/// If keys are modified erroneously, you can no longer look them up.
+/// If keys are modified erronously, you can no longer look them up.
 /// This is sound (memory safe) but a logical error hazard (just like
 /// implementing PartialEq, Eq, or Hash incorrectly would be).
 ///
