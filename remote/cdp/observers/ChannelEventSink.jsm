@@ -110,5 +110,3 @@ ChannelEventSinkFactory.getService = function() {
   return Cc[SINK_CONTRACT_ID].getService(Ci.nsIChannelEventSink)
     .wrappedJSObject;
 };
-
-this.ChannelEventSinkFactory = ChannelEventSinkFactory;

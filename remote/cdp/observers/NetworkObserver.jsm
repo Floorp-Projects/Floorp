@@ -630,4 +630,3 @@ function getNetworkErrorStatusText(status) {
 }
 
 var EXPORTED_SYMBOLS = ["NetworkObserver"];
-this.NetworkObserver = NetworkObserver;
