@@ -1,5 +1,9 @@
 
 # cargo-vet audits file
 
-[audits]
+[[audits.atomic_refcell]]
+who = "Bobby Holley <bholley@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.1.8"
+notes = "I maintain this crate and have reviewed every line."
 

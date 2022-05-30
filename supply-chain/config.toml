@@ -61,10 +61,6 @@ criteria = "safe-to-deploy"
 version = "0.1.53"
 criteria = "safe-to-deploy"
 
-[[unaudited.atomic_refcell]]
-version = "0.1.8"
-criteria = "safe-to-deploy"
-
 [[unaudited.atty]]
 version = "0.2.14"
 criteria = "safe-to-deploy"
