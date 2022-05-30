@@ -6,6 +6,13 @@ const { AddonSettings } = ChromeUtils.import(
 );
 
 AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
 add_task(async function setup() {
   AddonTestUtils.overrideCertDB();
@@ -201,11 +208,21 @@ add_task(async function test_bundled_experiments() {
       files: fooExperimentFiles,
     });
 
-    await extension.startup();
+    if (testCase.temporarilyInstalled && !testCase.shouldHaveExperiments) {
+      ExtensionTestUtils.failOnSchemaWarnings(false);
+      await Assert.rejects(
+        extension.startup(),
+        /Using 'experiment_apis' requires a privileged add-on/,
+        "startup failed without experimental api access"
+      );
+      ExtensionTestUtils.failOnSchemaWarnings(true);
+    } else {
+      await extension.startup();
 
-    await extension.awaitFinish("background.experiments.foo");
+      await extension.awaitFinish("background.experiments.foo");
 
-    await extension.unload();
+      await extension.unload();
+    }
   }
 });
 

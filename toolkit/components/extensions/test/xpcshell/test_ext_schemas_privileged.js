@@ -4,8 +4,15 @@ const { ExtensionAPI } = ExtensionCommon;
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
+AddonTestUtils.usePrivilegedSignatures = false;
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
-add_task(async function() {
+add_setup(async () => {
   const schema = [
     {
       namespace: "privileged",
@@ -45,20 +52,27 @@ add_task(async function() {
     false
   );
 
-  AddonTestUtils.createAppInfo(
-    "xpcshell@tests.mozilla.org",
-    "XPCShell",
-    "1",
-    "42"
-  );
   await AddonTestUtils.promiseStartupManager();
 
+  registerCleanupFunction(async () => {
+    await AddonTestUtils.promiseShutdownManager();
+    Services.catMan.deleteCategoryEntry(
+      "webextension-modules",
+      "test-privileged",
+      false
+    );
+  });
+});
+
+add_task(async function() {
   // Try accessing the privileged namespace.
-  async function testOnce() {
+  async function testOnce({
+    isPrivileged = false,
+    temporarilyInstalled = false,
+  } = {}) {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
-        applications: { gecko: { id: "privilegedapi@tests.mozilla.org" } },
-        permissions: ["mozillaAddons"],
+        permissions: ["mozillaAddons", "tabs"],
       },
       background() {
         browser.test.sendMessage(
@@ -66,35 +80,75 @@ add_task(async function() {
           browser.privileged instanceof Object
         );
       },
-      useAddonManager: "permanent",
+      isPrivileged,
+      temporarilyInstalled,
     });
 
+    if (temporarilyInstalled && !isPrivileged) {
+      ExtensionTestUtils.failOnSchemaWarnings(false);
+      let { messages } = await promiseConsoleOutput(async () => {
+        await Assert.rejects(
+          extension.startup(),
+          /Using the privileged permission/,
+          "Startup failed with privileged permission"
+        );
+      });
+      ExtensionTestUtils.failOnSchemaWarnings(true);
+      AddonTestUtils.checkMessages(
+        messages,
+        {
+          expected: [
+            {
+              message: /Using the privileged permission 'mozillaAddons' requires a privileged add-on/,
+            },
+          ],
+        },
+        true
+      );
+      return null;
+    }
     await extension.startup();
     let result = await extension.awaitMessage("result");
     await extension.unload();
     return result;
   }
 
-  AddonTestUtils.usePrivilegedSignatures = false;
-  let result = await testOnce();
+  // Prevents startup
+  let result = await testOnce({ temporarilyInstalled: true });
   equal(
     result,
-    false,
+    null,
     "Privileged namespace should not be accessible to a regular webextension"
   );
 
-  AddonTestUtils.usePrivilegedSignatures = true;
-  result = await testOnce();
+  result = await testOnce({ isPrivileged: true });
   equal(
     result,
     true,
     "Privileged namespace should be accessible to a webextension signed with Mozilla Extensions"
   );
 
-  await AddonTestUtils.promiseShutdownManager();
-  Services.catMan.deleteCategoryEntry(
-    "webextension-modules",
-    "test-privileged",
-    false
+  // Allows startup, no access
+  result = await testOnce();
+  equal(
+    result,
+    false,
+    "Privileged namespace should not be accessible to a regular webextension"
+  );
+});
+
+// Test that Extension.jsm and schema correctly match.
+add_task(function test_privileged_permissions_match() {
+  const { PRIVILEGED_PERMS } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm"
+  );
+  let perms = Schemas.getPermissionNames(["PermissionPrivileged"]);
+  if (AppConstants.platform == "android") {
+    perms.push("nativeMessaging");
+  }
+  Assert.deepEqual(
+    Array.from(PRIVILEGED_PERMS).sort(),
+    perms.sort(),
+    "List of privileged permissions is correct."
   );
 });

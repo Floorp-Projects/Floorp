@@ -94,7 +94,7 @@ add_task(async function test_l10n_dom() {
   equal(results.success, true, "Translation succeeded in privileged extension");
   equal(results.result, "value", "Translation got the right value");
 
-  // In an unprivleged extension, document.l10n shouldn't show up
+  // In an unprivileged extension, document.l10n shouldn't show up
   results = await runTest(false);
   equal(results.success, false, "Translation failed in unprivileged extension");
   equal(
@@ -116,9 +116,13 @@ add_task(async function test_l10n_manifest() {
 
   AddonTestUtils.initializeURLPreloader();
 
-  async function runTest(isPrivileged) {
+  async function runTest({
+    isPrivileged = false,
+    temporarilyInstalled = false,
+  } = {}) {
     let extension = ExtensionTestUtils.loadExtension({
       isPrivileged,
+      temporarilyInstalled,
       manifest: {
         l10n_resources: ["test.ftl"],
         page_action: {
@@ -127,22 +131,36 @@ add_task(async function test_l10n_manifest() {
       },
     });
 
+    if (temporarilyInstalled && !isPrivileged) {
+      ExtensionTestUtils.failOnSchemaWarnings(false);
+      await Assert.rejects(
+        extension.startup(),
+        /Using 'l10n_resources' requires a privileged add-on/,
+        "startup failed without privileged api access"
+      );
+      ExtensionTestUtils.failOnSchemaWarnings(true);
+      return;
+    }
     await extension.startup();
     let title = extension.extension.manifest.page_action.default_title;
     await extension.unload();
     return title;
   }
 
-  let title = await runTest(true);
+  let title = await runTest({ isPrivileged: true });
   equal(
     title,
     "value",
     "Manifest key localized with fluent in privileged extension"
   );
-  title = await runTest(false);
+
+  title = await runTest();
   equal(
     title,
     "__MSG_key__",
     "Manifest key not localized in unprivileged extension"
   );
+
+  title = await runTest({ temporarilyInstalled: true });
+  equal(title, undefined, "Startup fails with temporarilyInstalled extension");
 });

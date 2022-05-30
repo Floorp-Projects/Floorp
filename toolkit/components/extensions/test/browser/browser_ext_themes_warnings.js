@@ -83,6 +83,7 @@ add_task(async function test_experiments_enabled() {
   info("Testing that experiments are handled correctly on nightly and deved");
 
   const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
     manifest: {
       theme: {
         properties: {

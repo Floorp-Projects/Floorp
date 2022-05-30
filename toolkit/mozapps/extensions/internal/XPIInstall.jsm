@@ -450,8 +450,10 @@ function waitForAllPromises(promises) {
  */
 async function loadManifestFromWebManifest(aPackage, aLocation) {
   let verifiedSignedState;
+  const temporarilyInstalled = aLocation.isTemporary;
   let extension = await ExtensionData.constructAsync({
     rootURI: XPIInternal.maybeResolveURI(aPackage.rootURI),
+    temporarilyInstalled,
     async checkPrivileged(type, id) {
       verifiedSignedState = await aPackage.verifySignedState(
         id,
@@ -461,7 +463,7 @@ async function loadManifestFromWebManifest(aPackage, aLocation) {
       return ExtensionData.getIsPrivileged({
         signedState: verifiedSignedState.signedState,
         builtIn: aLocation.isBuiltin,
-        temporarilyInstalled: aLocation.isTemporary,
+        temporarilyInstalled,
       });
     },
   });

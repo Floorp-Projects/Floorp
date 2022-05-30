@@ -111,6 +111,37 @@ add_task(async function test_urlbar_no_privilege() {
   await ext.unload();
 });
 
+// Extensions must be privileged to use browser.urlbar.
+add_task(async function test_urlbar_temporary_without_privilege() {
+  let extension = ExtensionTestUtils.loadExtension({
+    temporarilyInstalled: true,
+    isPrivileged: false,
+    manifest: {
+      permissions: ["urlbar"],
+    },
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  let { messages } = await promiseConsoleOutput(async () => {
+    await Assert.rejects(
+      extension.startup(),
+      /Using the privileged permission/,
+      "Startup failed with privileged permission"
+    );
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+  AddonTestUtils.checkMessages(
+    messages,
+    {
+      expected: [
+        {
+          message: /Using the privileged permission 'urlbar' requires a privileged add-on/,
+        },
+      ],
+    },
+    true
+  );
+});
+
 // Checks that providers are added and removed properly.
 add_task(async function test_registerProvider() {
   // A copy of the default providers.
