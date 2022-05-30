@@ -81,7 +81,6 @@ TOLERATED_DUPES = {
     "crossbeam-utils": 3,
     "futures": 2,
     "libloading": 2,
-    "memmap2": 2,
     "memoffset": 2,
     "mio": 2,
     "pin-project-lite": 2,
