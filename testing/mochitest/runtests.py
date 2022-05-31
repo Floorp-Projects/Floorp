@@ -431,6 +431,7 @@ if mozinfo.isWin:
         finally:
             ctypes.windll.kernel32.CloseHandle(pHandle)
 
+
 else:
     import errno
 
