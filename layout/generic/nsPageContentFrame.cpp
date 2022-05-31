@@ -7,6 +7,7 @@
 
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/dom/Document.h"
 
 #include "nsContentUtils.h"
 #include "nsPageFrame.h"

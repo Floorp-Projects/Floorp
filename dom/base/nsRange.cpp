@@ -22,6 +22,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
+#include "nsContainerFrame.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"

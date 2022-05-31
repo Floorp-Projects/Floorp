@@ -17,9 +17,9 @@
 #include "mozilla/FunctionRef.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/RestyleManager.h"
 #include "mozilla/ScrollStyles.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/PresShell.h"
 
 #include "nsCOMPtr.h"
 #include "nsILayoutHistoryState.h"
@@ -27,6 +27,7 @@
 #include "nsCounterManager.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
+#include "nsIFrame.h"
 
 struct nsStyleDisplay;
 struct nsGenConInitializer;
@@ -47,6 +48,7 @@ namespace mozilla {
 class ComputedStyle;
 class PresShell;
 class PrintedSheetFrame;
+class RestyleManager;
 
 namespace dom {
 
