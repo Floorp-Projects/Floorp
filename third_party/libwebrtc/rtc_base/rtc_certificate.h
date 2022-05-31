@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/attributes.h"
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/system/rtc_export.h"
@@ -64,9 +65,6 @@ class RTC_EXPORT RTCCertificate final
 
   const SSLCertificate& GetSSLCertificate() const;
   const SSLCertChain& GetSSLCertificateChain() const;
-
-  // Deprecated: TODO(benwright) - Remove once chromium is updated.
-  const SSLCertificate& ssl_certificate() const;
 
   // TODO(hbos): If possible, remove once RTCCertificate and its
   // GetSSLCertificate() is used in all relevant places. Should not pass around
