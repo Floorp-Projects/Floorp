@@ -37,6 +37,10 @@ pub enum NativeSurfaceOperationDetails {
         id: NativeSurfaceId,
         is_opaque: bool,
     },
+    CreateBackdropSurface {
+        id: NativeSurfaceId,
+        color: ColorF,
+    },
     DestroySurface {
         id: NativeSurfaceId,
     },
@@ -1066,6 +1070,13 @@ pub trait Compositor {
         &mut self,
         id: NativeSurfaceId,
         is_opaque: bool,
+    );
+
+    /// Create a new OS backdrop surface that will display a color.
+    fn create_backdrop_surface(
+        &mut self,
+        id: NativeSurfaceId,
+        color: ColorF,
     );
 
     /// Destroy the surface with the specified id. WR may call this
