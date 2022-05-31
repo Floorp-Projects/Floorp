@@ -637,10 +637,6 @@ rtc_library("rtc_stats_counters") {
 config("rtc_json_suppressions") {
   if (!is_win || is_clang) {
     cflags_cc = [
-      # TODO(bugs.webrtc.org/10770): Update jsoncpp API usage and remove
-      # -Wno-deprecated-declarations.
-      "-Wno-deprecated-declarations",
-
       # TODO(bugs.webrtc.org/10814): Remove -Wno-undef as soon as it get
       # removed upstream.
       "-Wno-undef",

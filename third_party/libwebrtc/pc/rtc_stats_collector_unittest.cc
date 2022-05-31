@@ -951,9 +951,14 @@ TEST_F(RTCStatsCollectorTest, ToJsonProducesParseableJson) {
   ExampleStatsGraph graph = SetupExampleStatsGraphForSelectorTests();
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
   std::string json_format = report->ToJson();
-  Json::Reader reader;
+
+  Json::CharReaderBuilder builder;
   Json::Value json_value;
-  ASSERT_TRUE(reader.parse(json_format, json_value));
+  std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+  ASSERT_TRUE(reader->parse(json_format.c_str(),
+                            json_format.c_str() + json_format.size(),
+                            &json_value, nullptr));
+
   // A very brief sanity check on the result.
   EXPECT_EQ(report->size(), json_value.size());
 }

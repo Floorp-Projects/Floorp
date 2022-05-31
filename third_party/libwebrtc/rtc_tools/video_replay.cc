@@ -399,11 +399,14 @@ class RtpReplayer final {
     std::stringstream raw_json_buffer;
     raw_json_buffer << config_file.rdbuf();
     std::string raw_json = raw_json_buffer.str();
-    Json::Reader json_reader;
+    Json::CharReaderBuilder builder;
     Json::Value json_configs;
-    if (!json_reader.parse(raw_json, json_configs)) {
+    std::string error_message;
+    std::unique_ptr<Json::CharReader> json_reader(builder.newCharReader());
+    if (!json_reader->parse(raw_json.data(), raw_json.data() + raw_json.size(),
+                            &json_configs, &error_message)) {
       fprintf(stderr, "Error parsing JSON config\n");
-      fprintf(stderr, "%s\n", json_reader.getFormatedErrorMessages().c_str());
+      fprintf(stderr, "%s\n", error_message.c_str());
       return nullptr;
     }
 
