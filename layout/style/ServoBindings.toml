@@ -164,7 +164,7 @@ rusty-enums = [
     "mozilla::StyleMaskComposite",
     "mozilla::StyleWritingModeProperty",
 ]
-whitelist-vars = [
+allowlist-vars = [
     "NS_ATTRVALUE_.*",
     "NODE_.*",
     "ELEMENT_.*",
@@ -188,7 +188,7 @@ whitelist-vars = [
 ]
 # TODO(emilio): A bunch of types here can go away once we generate bindings and
 # structs together.
-whitelist-types = [
+allowlist-types = [
     "RawGecko.*",
     "RawServo.*",
     "ServoCssRules",
@@ -614,4 +614,4 @@ mapped-generic-types = [
     { generic = false, gecko = "nsString", servo = "nsstring::nsString" },
 ]
 
-whitelist-functions = ["Servo_.*", "Gecko_.*"]
+allowlist-functions = ["Servo_.*", "Gecko_.*"]

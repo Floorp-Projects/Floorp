@@ -79,9 +79,9 @@ fn generate_bindings() {
     let bindings = builder
         .header(add_include("GeckoProfiler.h"))
         .header(add_include("ProfilerBindings.h"))
-        .whitelist_function("gecko_profiler_.*")
-        .whitelist_var("mozilla::profiler::detail::RacyFeatures::sActiveAndFeatures")
-        .whitelist_type("mozilla::profiler::detail::RacyFeatures")
+        .allowlist_function("gecko_profiler_.*")
+        .allowlist_var("mozilla::profiler::detail::RacyFeatures::sActiveAndFeatures")
+        .allowlist_type("mozilla::profiler::detail::RacyFeatures")
         .rustified_enum("mozilla::StackCaptureOptions")
         .rustified_enum("mozilla::MarkerSchema_Location")
         .rustified_enum("mozilla::MarkerSchema_Format")
