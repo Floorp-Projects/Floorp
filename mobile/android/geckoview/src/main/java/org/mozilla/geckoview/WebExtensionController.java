@@ -777,7 +777,7 @@ public class WebExtensionController {
               // are handled below.
               final String nativeApp = bundle.getString("nativeApp");
               if (nativeApp == null) {
-                if (BuildConfig.DEBUG) {
+                if (BuildConfig.DEBUG_BUILD) {
                   throw new RuntimeException("Missing required nativeApp message parameter.");
                 }
                 callback.sendError("Missing nativeApp parameter.");
@@ -789,7 +789,7 @@ public class WebExtensionController {
                   fromBundle(extension, senderBundle, session);
               if (sender == null) {
                 if (callback != null) {
-                  if (BuildConfig.DEBUG) {
+                  if (BuildConfig.DEBUG_BUILD) {
                     try {
                       Log.e(
                           LOGTAG, "Could not find recipient for message: " + bundle.toJSONObject());
@@ -814,7 +814,7 @@ public class WebExtensionController {
     if (extensionBundle == null
         || !extensionBundle.containsKey("webExtensionId")
         || !extensionBundle.containsKey("locationURI")) {
-      if (BuildConfig.DEBUG) {
+      if (BuildConfig.DEBUG_BUILD) {
         throw new RuntimeException("Missing webExtensionId or locationURI");
       }
 
@@ -850,7 +850,7 @@ public class WebExtensionController {
     final String[] newPermissions = message.getStringArray("newPermissions");
     final String[] newOrigins = message.getStringArray("newOrigins");
     if (currentBundle == null || updatedBundle == null) {
-      if (BuildConfig.DEBUG) {
+      if (BuildConfig.DEBUG_BUILD) {
         throw new RuntimeException("Missing bundle");
       }
 
@@ -1130,7 +1130,7 @@ public class WebExtensionController {
     }
 
     if (environmentType == WebExtension.MessageSender.ENV_TYPE_UNKNOWN) {
-      if (BuildConfig.DEBUG) {
+      if (BuildConfig.DEBUG_BUILD) {
         throw new RuntimeException("Missing or unknown envType: " + envType);
       }
 
@@ -1151,7 +1151,7 @@ public class WebExtensionController {
           sender.containsKey("frameId") && sender.getInt("frameId", -1) != -1;
       final boolean hasUrl = sender.containsKey("url");
       if (!hasFrameId || !hasUrl) {
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG_BUILD) {
           throw new RuntimeException(
               "Missing sender information. hasFrameId: " + hasFrameId + " hasUrl: " + hasUrl);
         }

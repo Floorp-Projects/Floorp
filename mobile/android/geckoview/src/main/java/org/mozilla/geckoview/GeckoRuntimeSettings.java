@@ -952,7 +952,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
   private float sanitizeFontSizeFactor(final float fontSizeFactor) {
     if (fontSizeFactor < 0) {
-      if (BuildConfig.DEBUG) {
+      if (BuildConfig.DEBUG_BUILD) {
         throw new IllegalArgumentException("fontSizeFactor cannot be < 0");
       } else {
         Log.e(LOGTAG, "fontSizeFactor cannot be < 0");

@@ -45,7 +45,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
     public void addPrompt(final String id, final BasePrompt prompt) {
       if (mPrompts.containsKey(id)) {
         Log.e(LOGTAG, "Prompt already exists! id=" + id);
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG_BUILD) {
           throw new RuntimeException("Prompt already exists! id=" + id);
         }
       }
