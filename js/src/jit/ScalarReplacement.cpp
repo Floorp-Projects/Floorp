@@ -86,6 +86,9 @@ bool EmulateStateOf<MemoryView>::run(MemoryView& view) {
       } else {
         view.visitResumePoint(ins->toResumePoint());
       }
+      if (!graph_.alloc().ensureBallast()) {
+        return false;
+      }
       if (view.oom()) {
         return false;
       }
@@ -1837,6 +1840,9 @@ bool ArgumentsReplacer::run() {
         MIR_OPCODE_LIST(MIR_OP)
 #undef MIR_OP
       }
+      if (!graph_.alloc().ensureBallast()) {
+        return false;
+      }
       if (oom()) {
         return false;
       }
@@ -2633,6 +2639,9 @@ bool RestReplacer::run() {
     break;
         MIR_OPCODE_LIST(MIR_OP)
 #undef MIR_OP
+      }
+      if (!graph_.alloc().ensureBallast()) {
+        return false;
       }
     }
   }
