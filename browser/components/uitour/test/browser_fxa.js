@@ -5,14 +5,11 @@
 
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+ChromeUtils.defineModuleGetter(
+  this,
+  "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
-  return ChromeUtils.import(
-    "resource://gre/modules/FxAccounts.jsm"
-  ).getFxAccountsSingleton();
-});
 
 var gTestTab;
 var gContentAPI;

@@ -53,11 +53,11 @@ ChromeUtils.defineModuleGetter(
   "WebChannel",
   "resource://gre/modules/WebChannel.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
-  return ChromeUtils.import(
-    "resource://gre/modules/FxAccounts.jsm"
-  ).getFxAccountsSingleton();
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "FxAccountsStorageManagerCanStoreField",

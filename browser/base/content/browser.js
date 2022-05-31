@@ -90,15 +90,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
   Weave: "resource://services-sync/main.js",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
+  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   webrtcUI: "resource:///modules/webrtcUI.jsm",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.jsm",
   ZoomUI: "resource:///modules/ZoomUI.jsm",
-});
-
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
-  return ChromeUtils.import(
-    "resource://gre/modules/FxAccounts.jsm"
-  ).getFxAccountsSingleton();
 });
 
 if (AppConstants.MOZ_CRASHREPORTER) {

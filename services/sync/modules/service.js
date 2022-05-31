@@ -76,10 +76,9 @@ const { DeclinedEngines } = ChromeUtils.import(
 const { Status } = ChromeUtils.import("resource://services-sync/status.js");
 ChromeUtils.import("resource://services-sync/telemetry.js");
 const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
-const { getFxAccountsSingleton } = ChromeUtils.import(
+const { fxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
-const fxAccounts = getFxAccountsSingleton();
 
 function getEngineModules() {
   let result = {

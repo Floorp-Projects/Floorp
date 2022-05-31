@@ -14,6 +14,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -21,12 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Region: "resource://gre/modules/Region.jsm",
-});
-
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
-  return ChromeUtils.import(
-    "resource://gre/modules/FxAccounts.jsm"
-  ).getFxAccountsSingleton();
 });
 
 XPCOMUtils.defineLazyServiceGetter(
