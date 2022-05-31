@@ -435,9 +435,8 @@ class VideoInfo : public TrackInfo {
 
   // Color primaries are assumed to match the colorspace.
 
-  // Transfer functions get their own member, since we support different
-  // values for the BT2020 primaries. For other colorspaces, this member
-  // is ignored.
+  // Transfer functions get their own member, which may not be strongly
+  // correlated to the colorspace.
   Maybe<gfx::TransferFunction> mTransferFunction;
 
   // True indicates no restriction on Y, U, V values (otherwise 16-235 for 8
