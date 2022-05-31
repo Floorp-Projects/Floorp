@@ -17,6 +17,7 @@ from copy import deepcopy
 
 import attr
 from mozbuild.util import memoize
+from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.time import value_of
 from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
 
@@ -24,7 +25,6 @@ from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try, release_leve
 from gecko_taskgraph.util.hash import hash_path
 from gecko_taskgraph.util.treeherder import split_symbol
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.keyed_by import evaluate_keyed_by
 from gecko_taskgraph.util.schema import (
     validate_schema,
     Schema,

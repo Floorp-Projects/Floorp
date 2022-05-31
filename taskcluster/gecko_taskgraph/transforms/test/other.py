@@ -9,6 +9,7 @@ import re
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
 from mozbuild.util import ReadOnlyDict
 from taskgraph.util.attributes import keymatch
+from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.taskcluster import get_artifact_path, get_index_url
 from voluptuous import (
     Any,
@@ -18,7 +19,6 @@ from voluptuous import (
 
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.test.variant import TEST_VARIANTS
-from gecko_taskgraph.util.keyed_by import evaluate_keyed_by
 from gecko_taskgraph.util.platforms import platform_family
 from gecko_taskgraph.util.schema import (
     resolve_keyed_by,
