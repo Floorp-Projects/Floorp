@@ -74,20 +74,15 @@ ABSL_FLAG(int,
           webrtc::test::CallTest::kRtxRedPayloadType,
           "RED over RTX payload type");
 
-// Flag for SSRC.
-const std::string& DefaultSsrc() {
-  static const std::string ssrc =
-      std::to_string(webrtc::test::CallTest::kVideoSendSsrcs[0]);
-  return ssrc;
-}
-ABSL_FLAG(std::string, ssrc, DefaultSsrc().c_str(), "Incoming SSRC");
-
-const std::string& DefaultSsrcRtx() {
-  static const std::string ssrc_rtx =
-      std::to_string(webrtc::test::CallTest::kSendRtxSsrcs[0]);
-  return ssrc_rtx;
-}
-ABSL_FLAG(std::string, ssrc_rtx, DefaultSsrcRtx().c_str(), "Incoming RTX SSRC");
+// Flag for SSRC and RTX SSRC.
+ABSL_FLAG(uint32_t,
+          ssrc,
+          webrtc::test::CallTest::kVideoSendSsrcs[0],
+          "Incoming SSRC");
+ABSL_FLAG(uint32_t,
+          ssrc_rtx,
+          webrtc::test::CallTest::kSendRtxSsrcs[0],
+          "Incoming RTX SSRC");
 
 // Flag for abs-send-time id.
 ABSL_FLAG(int, abs_send_time_id, -1, "RTP extension ID for abs-send-time");
@@ -137,10 +132,6 @@ static bool ValidatePayloadType(int32_t payload_type) {
   return payload_type > 0 && payload_type <= 127;
 }
 
-static bool ValidateSsrc(const char* ssrc_string) {
-  return rtc::StringToNumber<uint32_t>(ssrc_string).has_value();
-}
-
 static bool ValidateOptionalPayloadType(int32_t payload_type) {
   return payload_type == -1 || ValidatePayloadType(payload_type);
 }
@@ -174,11 +165,11 @@ static int RedPayloadTypeRtx() {
 }
 
 static uint32_t Ssrc() {
-  return rtc::StringToNumber<uint32_t>(absl::GetFlag(FLAGS_ssrc)).value();
+  return absl::GetFlag(FLAGS_ssrc);
 }
 
 static uint32_t SsrcRtx() {
-  return rtc::StringToNumber<uint32_t>(absl::GetFlag(FLAGS_ssrc_rtx)).value();
+  return absl::GetFlag(FLAGS_ssrc_rtx);
 }
 
 static int AbsSendTimeId() {
@@ -615,8 +606,6 @@ int main(int argc, char* argv[]) {
       ValidateOptionalPayloadType(absl::GetFlag(FLAGS_red_payload_type_rtx)));
   RTC_CHECK(
       ValidateOptionalPayloadType(absl::GetFlag(FLAGS_ulpfec_payload_type)));
-  RTC_CHECK(ValidateSsrc(absl::GetFlag(FLAGS_ssrc).c_str()));
-  RTC_CHECK(ValidateSsrc(absl::GetFlag(FLAGS_ssrc_rtx).c_str()));
   RTC_CHECK(
       ValidateRtpHeaderExtensionId(absl::GetFlag(FLAGS_abs_send_time_id)));
   RTC_CHECK(ValidateRtpHeaderExtensionId(
