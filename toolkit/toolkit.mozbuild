@@ -41,13 +41,6 @@ if CONFIG['MOZ_SANDBOX']:
 if CONFIG["MOZ_USING_WASM_SANDBOXING"] and CONFIG["COMPILE_ENVIRONMENT"]:
     DIRS += ["/security/rlbox"]
 
-DIRS += [
-    # Depends on NSS and NSPR
-    '/security/certverifier',
-    # Depends on certverifier
-    '/security/apps',
-]
-
 # the signing related bits of libmar depend on nss
 if CONFIG['MOZ_UPDATER']:
     DIRS += ['/modules/libmar']
@@ -134,6 +127,7 @@ DIRS += [
     '/tools/power',
     '/tools/profiler',
     '/extensions/spellcheck',
+    '/security/certverifier',
     '/security/manager',
     '/toolkit',
 ]
