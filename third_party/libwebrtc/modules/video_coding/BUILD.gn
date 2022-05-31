@@ -1009,6 +1009,7 @@ if (rtc_include_tests) {
       "utility/qp_parser_unittest.cc",
       "utility/quality_scaler_unittest.cc",
       "utility/simulcast_rate_allocator_unittest.cc",
+      "utility/vp9_uncompressed_header_parser_unittest.cc",
       "video_codec_initializer_unittest.cc",
       "video_receiver_unittest.cc",
     ]

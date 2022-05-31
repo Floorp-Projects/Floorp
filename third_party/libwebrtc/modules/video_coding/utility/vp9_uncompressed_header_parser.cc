@@ -300,7 +300,12 @@ bool Vp9ReadQp(BitstreamReader* br, FrameInfo* frame_info) {
 }
 
 bool Vp9ReadSegmentationParams(BitstreamReader* br) {
-  return br->IfNextBoolean([&] {    // segmentation_enabled
+  constexpr int kVp9MaxSegments = 8;
+  constexpr int kVp9SegLvlMax = 4;
+  constexpr int kSegmentationFeatureBits[kVp9SegLvlMax] = {8, 6, 2, 0};
+  constexpr bool kSegmentationFeatureSigned[kVp9SegLvlMax] = {1, 1, 0, 0};
+
+  RETURN_IF_FALSE(br->IfNextBoolean([&] {  // segmentation_enabled
     return br->IfNextBoolean([&] {  // update_map
       // Consume probs.
       for (int i = 0; i < 7; ++i) {
@@ -316,6 +321,19 @@ bool Vp9ReadSegmentationParams(BitstreamReader* br) {
         return true;
       });
     });
+  }));
+
+  return br->IfNextBoolean([&] {
+    RETURN_IF_FALSE(br->ConsumeBits(1));  // abs_or_delta
+    for (int i = 0; i < kVp9MaxSegments; ++i) {
+      for (int j = 0; j < kVp9SegLvlMax; ++j) {
+        RETURN_IF_FALSE(br->IfNextBoolean([&] {  // feature_enabled
+          return br->ConsumeBits(kSegmentationFeatureBits[j] +
+                                 kSegmentationFeatureSigned[j]);
+        }));
+      }
+    }
+    return true;
   });
 }
 
