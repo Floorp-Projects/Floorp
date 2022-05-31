@@ -107,7 +107,6 @@ UNIFIED_SOURCES += [
     "CommonSocketControl.cpp",
     "ContentSignatureVerifier.cpp",
     "CryptoTask.cpp",
-    "CSTrustDomain.cpp",
     "DataStorage.cpp",
     "EnterpriseRoots.cpp",
     "IPCClientCertsChild.cpp",
@@ -255,6 +254,27 @@ headers_arrays_certs = [
         "addons-public-intermediate.crt",
     ),
     ("addons-stage.inc", "addonsStageRoot", "addons-stage.crt"),
+    (
+        "content-signature-prod.inc",
+        "contentSignatureProdRoot",
+        "content-signature-prod.crt",
+    ),
+    (
+        "content-signature-stage.inc",
+        "contentSignatureStageRoot",
+        "content-signature-stage.crt",
+    ),
+    # The dev root is the same as the stage root.
+    (
+        "content-signature-dev.inc",
+        "contentSignatureDevRoot",
+        "content-signature-stage.crt",
+    ),
+    (
+        "content-signature-local.inc",
+        "contentSignatureLocalRoot",
+        "content-signature-local.crt",
+    ),
 ]
 
 for header, array_name, cert in headers_arrays_certs:

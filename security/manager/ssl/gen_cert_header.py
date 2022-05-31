@@ -29,10 +29,14 @@ def _create_header(array_name, cert_bytes):
 #   def arrayName(header, cert_filename):
 #     header.write(_create_header("arrayName", cert_filename))
 array_names = [
-    "xpcshellRoot",
-    "addonsPublicRoot",
     "addonsPublicIntermediate",
+    "addonsPublicRoot",
     "addonsStageRoot",
+    "contentSignatureDevRoot",
+    "contentSignatureLocalRoot",
+    "contentSignatureProdRoot",
+    "contentSignatureStageRoot",
+    "xpcshellRoot",
 ]
 
 for n in array_names:

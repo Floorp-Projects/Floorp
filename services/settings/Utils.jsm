@@ -113,6 +113,25 @@ var Utils = {
    */
   log,
 
+  get CERT_CHAIN_ROOT_IDENTIFIER() {
+    if (this.SERVER_URL == AppConstants.REMOTE_SETTINGS_SERVER_URL) {
+      return Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot;
+    }
+    if (this.SERVER_URL.includes("stage.")) {
+      return Ci.nsIContentSignatureVerifier.ContentSignatureStageRoot;
+    }
+    if (this.SERVER_URL.includes("dev.")) {
+      return Ci.nsIContentSignatureVerifier.ContentSignatureDevRoot;
+    }
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    if (env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+      return Ci.nsIX509CertDB.AppXPCShellRoot;
+    }
+    return Ci.nsIContentSignatureVerifier.ContentSignatureLocalRoot;
+  },
+
   get LOAD_DUMPS() {
     // Load dumps only if pulling data from the production server, or in tests.
     return (
