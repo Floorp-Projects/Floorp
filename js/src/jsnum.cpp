@@ -10,12 +10,14 @@
 
 #include "jsnum.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
+#include <algorithm>
 #include <iterator>
 #ifdef HAVE_LOCALECONV
 #  include <locale.h>
@@ -354,8 +356,35 @@ bool js::GetDecimal(JSContext* cx, const CharT* start, const CharT* end,
   MOZ_ASSERT(start <= end);
 
   size_t length = end - start;
+
+  auto convert = [](auto* chars, size_t length) -> double {
+    using SToDConverter = double_conversion::StringToDoubleConverter;
+    SToDConverter converter(/* flags = */ 0, /* empty_string_value = */ 0.0,
+                            /* junk_string_value = */ 0.0,
+                            /* infinity_symbol = */ nullptr,
+                            /* nan_symbol = */ nullptr);
+    int lengthInt = mozilla::AssertedCast<int>(length);
+    int processed = 0;
+    double d = converter.StringToDouble(chars, lengthInt, &processed);
+    MOZ_ASSERT(processed >= 0);
+    MOZ_ASSERT(size_t(processed) == length);
+    return d;
+  };
+
+  // If there are no underscores, we don't need to copy the chars.
+  bool hasUnderscore = std::any_of(start, end, [](auto c) { return c == '_'; });
+  if (!hasUnderscore) {
+    if constexpr (std::is_same_v<CharT, char16_t>) {
+      *dp = convert(reinterpret_cast<const uc16*>(start), length);
+    } else {
+      static_assert(std::is_same_v<CharT, Latin1Char>);
+      *dp = convert(reinterpret_cast<const char*>(start), length);
+    }
+    return true;
+  }
+
   Vector<char, 32> chars(cx);
-  if (!chars.growByUninitialized(length + 1)) {
+  if (!chars.growByUninitialized(length)) {
     return false;
   }
 
@@ -371,16 +400,8 @@ bool js::GetDecimal(JSContext* cx, const CharT* start, const CharT* end,
                c == '+' || c == '-');
     chars[i++] = char(c);
   }
-  chars[i] = 0;
 
-  if (!EnsureDtoaState(cx)) {
-    return false;
-  }
-
-  char* ep;
-  *dp = js_strtod_harder(cx->dtoaState, chars.begin(), &ep);
-  MOZ_ASSERT(ep == chars.begin() + i);
-
+  *dp = convert(chars.begin(), i);
   return true;
 }
 
