@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sts=4 et sw=4 tw=99:
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -52,6 +52,41 @@ const ClassSpec RecordType::classSpec_ = {
 Shape* RecordType::getInitialShape(JSContext* cx) {
   return SharedShape::getInitialShape(cx, &RecordType::class_, cx->realm(),
                                       TaggedProto(nullptr), SLOT_COUNT);
+}
+
+bool RecordType::copy(JSContext* cx, Handle<RecordType*> in,
+                      MutableHandle<RecordType*> out) {
+  ArrayObject& sortedKeys = in->getFixedSlot(RecordType::SORTED_KEYS_SLOT)
+                                .toObject()
+                                .as<ArrayObject>();
+  uint32_t len = sortedKeys.length();
+  out.set(RecordType::createUninitialized(cx, len));
+  if (!out) {
+    return false;
+  }
+  RootedId k(cx);
+  RootedValue v(cx), vCopy(cx);
+  for (uint32_t i = 0; i < len; i++) {
+    // Get the ith record key and convert it to a string, then to an id `k`
+    Value kVal = sortedKeys.getDenseElement(i);
+    MOZ_ASSERT(kVal.isString());
+    k.set(AtomToId(&kVal.toString()->asAtom()));
+    cx->markId(k);
+
+    // Get the value corresponding to `k`
+    MOZ_ALWAYS_TRUE(in->getOwnProperty(cx, k, &v));
+
+    // Copy `v` for the new record
+    if (!CopyRecordTupleElement(cx, v, &vCopy)) {
+      return false;
+    }
+
+    // Set `k` to `v` in the new record
+    if (!out->initializeNextProperty(cx, k, vCopy)) {
+      return false;
+    }
+  }
+  return out->finishInitialization(cx);
 }
 
 RecordType* RecordType::createUninitialized(JSContext* cx,
