@@ -11,6 +11,12 @@
 <script>
 "use strict";
 
+promise_test(function waitForLoad() {
+  return new Promise(resolve => {
+    window.addEventListener("load", resolve, { once: true });
+  });
+});
+
 promise_test(async t => {
   // See below, but we should ensure we are in a rAF callback before proceeding
   // or else we will get inconsistent results.
