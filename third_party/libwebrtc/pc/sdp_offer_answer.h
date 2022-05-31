@@ -13,6 +13,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -520,7 +521,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
 
   // Destroys the RTP data channel transport and/or the SCTP data channel
   // transport and clears it.
-  void DestroyDataChannelTransport();
+  void DestroyDataChannelTransport(RTCError error);
 
   // Destroys the given ChannelInterface.
   // The channel cannot be accessed after this method is called.

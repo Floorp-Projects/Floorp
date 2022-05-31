@@ -73,6 +73,28 @@ absl::optional<DataMessageType> ToDataMessageType(dcsctp::PPID ppid) {
   return absl::nullopt;
 }
 
+absl::optional<cricket::SctpErrorCauseCode> ToErrorCauseCode(
+    dcsctp::ErrorKind error) {
+  switch (error) {
+    case dcsctp::ErrorKind::kParseFailed:
+      return cricket::SctpErrorCauseCode::kUnrecognizedParameters;
+    case dcsctp::ErrorKind::kPeerReported:
+      return cricket::SctpErrorCauseCode::kUserInitiatedAbort;
+    case dcsctp::ErrorKind::kWrongSequence:
+    case dcsctp::ErrorKind::kProtocolViolation:
+      return cricket::SctpErrorCauseCode::kProtocolViolation;
+    case dcsctp::ErrorKind::kResourceExhaustion:
+      return cricket::SctpErrorCauseCode::kOutOfResource;
+    case dcsctp::ErrorKind::kTooManyRetries:
+    case dcsctp::ErrorKind::kUnsupportedOperation:
+    case dcsctp::ErrorKind::kNoError:
+    case dcsctp::ErrorKind::kNotConnected:
+      // No SCTP error cause code matches those
+      break;
+  }
+  return absl::nullopt;
+}
+
 bool IsEmptyPPID(dcsctp::PPID ppid) {
   WebrtcPPID webrtc_ppid = static_cast<WebrtcPPID>(ppid.value());
   return webrtc_ppid == WebrtcPPID::kStringEmpty ||
@@ -413,6 +435,14 @@ void DcSctpTransport::OnAborted(dcsctp::ErrorKind error,
                     << "->OnAborted(error=" << dcsctp::ToString(error)
                     << ", message=" << message << ").";
   ready_to_send_data_ = false;
+  RTCError rtc_error(RTCErrorType::OPERATION_ERROR_WITH_DATA,
+                     std::string(message));
+  rtc_error.set_error_detail(RTCErrorDetailType::SCTP_FAILURE);
+  auto code = ToErrorCauseCode(error);
+  if (code.has_value()) {
+    rtc_error.set_sctp_cause_code(static_cast<uint16_t>(*code));
+  }
+  SignalClosedAbruptly(rtc_error);
 }
 
 void DcSctpTransport::OnConnected() {
@@ -520,7 +550,7 @@ void DcSctpTransport::OnTransportReadPacket(
 void DcSctpTransport::OnTransportClosed(
     rtc::PacketTransportInternal* transport) {
   RTC_LOG(LS_VERBOSE) << debug_name_ << "->OnTransportClosed().";
-  SignalClosedAbruptly();
+  SignalClosedAbruptly({});
 }
 
 void DcSctpTransport::MaybeConnectSocket() {

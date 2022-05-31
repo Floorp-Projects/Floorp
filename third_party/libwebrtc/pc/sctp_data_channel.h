@@ -177,8 +177,6 @@ class SctpDataChannel : public DataChannelInterface,
   void CloseAbruptlyWithError(RTCError error);
   // Specializations of CloseAbruptlyWithError
   void CloseAbruptlyWithDataChannelFailure(const std::string& message);
-  void CloseAbruptlyWithSctpCauseCode(const std::string& message,
-                                      uint16_t cause_code);
 
   // Slots for provider to connect signals to.
   //
@@ -209,7 +207,7 @@ class SctpDataChannel : public DataChannelInterface,
   // Called when the transport channel is unusable.
   // This method makes sure the DataChannel is disconnected and changes state
   // to kClosed.
-  void OnTransportChannelClosed();
+  void OnTransportChannelClosed(RTCError error);
 
   DataChannelStats GetStats() const;
 
