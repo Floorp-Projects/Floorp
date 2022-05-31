@@ -21,7 +21,6 @@
 #include "api/task_queue/queued_task.h"
 #include "modules/include/module.h"
 #include "modules/utility/include/process_thread.h"
-#include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/event.h"
 #include "rtc_base/location.h"
 #include "rtc_base/platform_thread.h"
