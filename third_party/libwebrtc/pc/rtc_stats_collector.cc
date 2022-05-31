@@ -516,6 +516,7 @@ void SetOutboundRTPStreamStatsFromMediaSenderInfo(
       static_cast<uint64_t>(media_sender_info.header_and_padding_bytes_sent);
   outbound_stats->retransmitted_bytes_sent =
       media_sender_info.retransmitted_bytes_sent;
+  outbound_stats->nack_count = media_sender_info.nacks_rcvd;
 }
 
 void SetOutboundRTPStreamStatsFromVoiceSenderInfo(
@@ -550,8 +551,6 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
       static_cast<uint32_t>(video_sender_info.firs_rcvd);
   outbound_video->pli_count =
       static_cast<uint32_t>(video_sender_info.plis_rcvd);
-  outbound_video->nack_count =
-      static_cast<uint32_t>(video_sender_info.nacks_rcvd);
   if (video_sender_info.qp_sum)
     outbound_video->qp_sum = *video_sender_info.qp_sum;
   outbound_video->frames_encoded = video_sender_info.frames_encoded;

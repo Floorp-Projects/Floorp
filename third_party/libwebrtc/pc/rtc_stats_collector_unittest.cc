@@ -2165,6 +2165,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Audio) {
   voice_media_info.senders[0].payload_bytes_sent = 3;
   voice_media_info.senders[0].header_and_padding_bytes_sent = 12;
   voice_media_info.senders[0].retransmitted_bytes_sent = 30;
+  voice_media_info.senders[0].nacks_rcvd = 31;
   voice_media_info.senders[0].codec_payload_type = 42;
 
   RtpCodecParameters codec_parameters;
@@ -2198,6 +2199,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Audio) {
   expected_audio.bytes_sent = 3;
   expected_audio.header_bytes_sent = 12;
   expected_audio.retransmitted_bytes_sent = 30;
+  expected_audio.nack_count = 31;
 
   ASSERT_TRUE(report->Get(expected_audio.id()));
   EXPECT_EQ(
@@ -2562,6 +2564,7 @@ TEST_F(RTCStatsCollectorTest, CollectNoStreamRTCOutboundRTPStreamStats_Audio) {
   voice_media_info.senders[0].payload_bytes_sent = 3;
   voice_media_info.senders[0].header_and_padding_bytes_sent = 4;
   voice_media_info.senders[0].retransmitted_bytes_sent = 30;
+  voice_media_info.senders[0].nacks_rcvd = 31;
   voice_media_info.senders[0].codec_payload_type = 42;
 
   RtpCodecParameters codec_parameters;
@@ -2595,6 +2598,7 @@ TEST_F(RTCStatsCollectorTest, CollectNoStreamRTCOutboundRTPStreamStats_Audio) {
   expected_audio.bytes_sent = 3;
   expected_audio.header_bytes_sent = 4;
   expected_audio.retransmitted_bytes_sent = 30;
+  expected_audio.nack_count = 31;
 
   ASSERT_TRUE(report->Get(expected_audio.id()));
   EXPECT_EQ(

@@ -1894,7 +1894,7 @@ TEST_F(WebRtcVideoChannelBaseTest, GetStats) {
   EXPECT_EQ(DefaultCodec().id, *info.senders[0].codec_payload_type);
   EXPECT_EQ(0, info.senders[0].firs_rcvd);
   EXPECT_EQ(0, info.senders[0].plis_rcvd);
-  EXPECT_EQ(0, info.senders[0].nacks_rcvd);
+  EXPECT_EQ(0u, info.senders[0].nacks_rcvd);
   EXPECT_EQ(kVideoWidth, info.senders[0].send_frame_width);
   EXPECT_EQ(kVideoHeight, info.senders[0].send_frame_height);
   EXPECT_GT(info.senders[0].framerate_input, 0);
@@ -5555,7 +5555,7 @@ TEST_F(WebRtcVideoChannelTest, GetAggregatedStatsReportWithoutSubStreams) {
   // Comes from substream only.
   EXPECT_EQ(sender.firs_rcvd, 0);
   EXPECT_EQ(sender.plis_rcvd, 0);
-  EXPECT_EQ(sender.nacks_rcvd, 0);
+  EXPECT_EQ(sender.nacks_rcvd, 0u);
   EXPECT_EQ(sender.send_frame_width, 0);
   EXPECT_EQ(sender.send_frame_height, 0);
 
@@ -5679,9 +5679,8 @@ TEST_F(WebRtcVideoChannelTest, GetAggregatedStatsReportForSubStreams) {
   EXPECT_EQ(
       sender.plis_rcvd,
       static_cast<int>(2 * substream.rtcp_packet_type_counts.pli_packets));
-  EXPECT_EQ(
-      sender.nacks_rcvd,
-      static_cast<int>(2 * substream.rtcp_packet_type_counts.nack_packets));
+  EXPECT_EQ(sender.nacks_rcvd,
+            2 * substream.rtcp_packet_type_counts.nack_packets);
   EXPECT_EQ(sender.send_frame_width, substream.width);
   EXPECT_EQ(sender.send_frame_height, substream.height);
 
@@ -5800,8 +5799,7 @@ TEST_F(WebRtcVideoChannelTest, GetPerLayerStatsReportForSubStreams) {
             static_cast<int>(substream.rtcp_packet_type_counts.fir_packets));
   EXPECT_EQ(sender.plis_rcvd,
             static_cast<int>(substream.rtcp_packet_type_counts.pli_packets));
-  EXPECT_EQ(sender.nacks_rcvd,
-            static_cast<int>(substream.rtcp_packet_type_counts.nack_packets));
+  EXPECT_EQ(sender.nacks_rcvd, substream.rtcp_packet_type_counts.nack_packets);
   EXPECT_EQ(sender.send_frame_width, substream.width);
   EXPECT_EQ(sender.send_frame_height, substream.height);
 
@@ -6122,15 +6120,15 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesSendRtcpPacketTypesCorrectly) {
   cricket::VideoMediaInfo info;
   ASSERT_TRUE(channel_->GetStats(&info));
   EXPECT_EQ(2, info.senders[0].firs_rcvd);
-  EXPECT_EQ(3, info.senders[0].nacks_rcvd);
+  EXPECT_EQ(3u, info.senders[0].nacks_rcvd);
   EXPECT_EQ(4, info.senders[0].plis_rcvd);
 
   EXPECT_EQ(5, info.senders[1].firs_rcvd);
-  EXPECT_EQ(7, info.senders[1].nacks_rcvd);
+  EXPECT_EQ(7u, info.senders[1].nacks_rcvd);
   EXPECT_EQ(9, info.senders[1].plis_rcvd);
 
   EXPECT_EQ(7, info.aggregated_senders[0].firs_rcvd);
-  EXPECT_EQ(10, info.aggregated_senders[0].nacks_rcvd);
+  EXPECT_EQ(10u, info.aggregated_senders[0].nacks_rcvd);
   EXPECT_EQ(13, info.aggregated_senders[0].plis_rcvd);
 }
 

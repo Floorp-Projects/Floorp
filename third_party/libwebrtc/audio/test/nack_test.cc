@@ -20,7 +20,7 @@ using NackTest = CallTest;
 TEST_F(NackTest, ShouldNackInLossyNetwork) {
   class NackTest : public AudioEndToEndTest {
    public:
-    const int kTestDurationMs = 1000;
+    const int kTestDurationMs = 2000;
     const int64_t kRttMs = 30;
     const int64_t kLossPercent = 30;
     const int kNackHistoryMs = 1000;
@@ -46,6 +46,9 @@ TEST_F(NackTest, ShouldNackInLossyNetwork) {
       AudioReceiveStream::Stats recv_stats =
           receive_stream()->GetStats(/*get_and_clear_legacy_stats=*/true);
       EXPECT_GT(recv_stats.nacks_sent, 0U);
+      AudioSendStream::Stats send_stats = send_stream()->GetStats();
+      EXPECT_GT(send_stats.retransmitted_packets_sent, 0U);
+      EXPECT_GT(send_stats.nacks_rcvd, 0U);
     }
   } test;
 
