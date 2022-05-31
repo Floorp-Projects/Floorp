@@ -25,7 +25,6 @@
 #include "p2p/client/basic_port_allocator.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_resolver_interface.h"
-#include "rtc_base/message_handler.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 
@@ -42,7 +41,7 @@ extern const char TURN_PORT_TYPE[];
 class TurnAllocateRequest;
 class TurnEntry;
 
-class TurnPort : public Port, public rtc::MessageHandler {
+class TurnPort : public Port {
  public:
   enum PortState {
     STATE_CONNECTING,    // Initial state, cannot send any packets.
@@ -299,7 +298,7 @@ class TurnPort : public Port, public rtc::MessageHandler {
 
  private:
   enum {
-    MSG_ALLOCATE_ERROR,
+    MSG_ALLOCATE_ERROR = MSG_FIRST_AVAILABLE,
     MSG_ALLOCATE_MISMATCH,
     MSG_TRY_ALTERNATE_SERVER,
     MSG_REFRESH_ERROR,

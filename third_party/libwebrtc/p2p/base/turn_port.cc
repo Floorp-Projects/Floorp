@@ -990,7 +990,7 @@ void TurnPort::OnMessage(rtc::Message* message) {
       Close();
       break;
     default:
-      RTC_NOTREACHED();
+      Port::OnMessage(message);
   }
 }
 
