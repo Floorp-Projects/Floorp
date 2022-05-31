@@ -531,6 +531,35 @@ TEST_F(RtcpSenderTest, SendXrWithRrtr) {
   EXPECT_EQ(ntp, parser()->xr()->rrtr()->ntp());
 }
 
+// Same test as above, but enable Rrtr with the setter.
+TEST_F(RtcpSenderTest, SendXrWithRrtrUsingSetter) {
+  RTCPSender::Configuration config = GetDefaultConfig();
+  config.non_sender_rtt_measurement = false;
+  auto rtcp_sender = CreateRtcpSender(config);
+  rtcp_sender->SetNonSenderRttMeasurement(true);
+  rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
+  rtcp_sender->SetSendingStatus(feedback_state(), false);
+  NtpTime ntp = clock_.CurrentNtpTime();
+  EXPECT_EQ(0, rtcp_sender->SendRTCP(feedback_state(), kRtcpReport));
+  EXPECT_EQ(1, parser()->xr()->num_packets());
+  EXPECT_EQ(kSenderSsrc, parser()->xr()->sender_ssrc());
+  EXPECT_FALSE(parser()->xr()->dlrr());
+  ASSERT_TRUE(parser()->xr()->rrtr());
+  EXPECT_EQ(ntp, parser()->xr()->rrtr()->ntp());
+}
+
+// Same test as above, but disable Rrtr with the setter.
+TEST_F(RtcpSenderTest, SendsNoRrtrUsingSetter) {
+  RTCPSender::Configuration config = GetDefaultConfig();
+  config.non_sender_rtt_measurement = true;
+  auto rtcp_sender = CreateRtcpSender(config);
+  rtcp_sender->SetNonSenderRttMeasurement(false);
+  rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
+  rtcp_sender->SetSendingStatus(feedback_state(), false);
+  EXPECT_EQ(0, rtcp_sender->SendRTCP(feedback_state(), kRtcpReport));
+  EXPECT_EQ(0, parser()->xr()->num_packets());
+}
+
 TEST_F(RtcpSenderTest, TestNoXrRrtrSentIfSending) {
   RTCPSender::Configuration config = GetDefaultConfig();
   config.non_sender_rtt_measurement = true;

@@ -11,6 +11,7 @@
 #include "modules/rtp_rtcp/source/rtcp_receiver.h"
 
 #include <memory>
+#include <set>
 #include <utility>
 
 #include "api/array_view.h"
@@ -937,6 +938,64 @@ TEST(RtcpReceiverTest, RttCalculatedAfterExtendedReportsDlrr) {
   int64_t rtt_ms = 0;
   EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
   EXPECT_NEAR(kRttMs, rtt_ms, 1);
+}
+
+// Same test as above but enables receive-side RTT using the setter instead of
+// the config struct.
+TEST(RtcpReceiverTest, SetterEnablesReceiverRtt) {
+  ReceiverMocks mocks;
+  auto config = DefaultConfiguration(&mocks);
+  config.non_sender_rtt_measurement = false;
+  RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
+  receiver.SetRemoteSSRC(kSenderSsrc);
+  receiver.SetNonSenderRttMeasurement(true);
+
+  Random rand(0x0123456789abcdef);
+  const int64_t kRttMs = rand.Rand(1, 9 * 3600 * 1000);
+  const uint32_t kDelayNtp = rand.Rand(0, 0x7fffffff);
+  const int64_t kDelayMs = CompactNtpRttToMs(kDelayNtp);
+  NtpTime now = mocks.clock.CurrentNtpTime();
+  uint32_t sent_ntp = CompactNtp(now);
+  mocks.clock.AdvanceTimeMilliseconds(kRttMs + kDelayMs);
+
+  rtcp::ExtendedReports xr;
+  xr.SetSenderSsrc(kSenderSsrc);
+  xr.AddDlrrItem(ReceiveTimeInfo(kReceiverMainSsrc, sent_ntp, kDelayNtp));
+
+  receiver.IncomingPacket(xr.Build());
+
+  int64_t rtt_ms = 0;
+  EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
+  EXPECT_NEAR(rtt_ms, kRttMs, 1);
+}
+
+// Same test as above but disables receive-side RTT using the setter instead of
+// the config struct.
+TEST(RtcpReceiverTest, DoesntCalculateRttOnReceivedDlrr) {
+  ReceiverMocks mocks;
+  auto config = DefaultConfiguration(&mocks);
+  config.non_sender_rtt_measurement = true;
+  RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
+  receiver.SetRemoteSSRC(kSenderSsrc);
+  receiver.SetNonSenderRttMeasurement(false);
+
+  Random rand(0x0123456789abcdef);
+  const int64_t kRttMs = rand.Rand(1, 9 * 3600 * 1000);
+  const uint32_t kDelayNtp = rand.Rand(0, 0x7fffffff);
+  const int64_t kDelayMs = CompactNtpRttToMs(kDelayNtp);
+  NtpTime now = mocks.clock.CurrentNtpTime();
+  uint32_t sent_ntp = CompactNtp(now);
+  mocks.clock.AdvanceTimeMilliseconds(kRttMs + kDelayMs);
+
+  rtcp::ExtendedReports xr;
+  xr.SetSenderSsrc(kSenderSsrc);
+  xr.AddDlrrItem(ReceiveTimeInfo(kReceiverMainSsrc, sent_ntp, kDelayNtp));
+
+  receiver.IncomingPacket(xr.Build());
+
+  // We expect that no RTT is available (because receive-side RTT was disabled).
+  int64_t rtt_ms = 0;
+  EXPECT_FALSE(receiver.GetAndResetXrRrRtt(&rtt_ms));
 }
 
 TEST(RtcpReceiverTest, XrDlrrCalculatesNegativeRttAsOne) {

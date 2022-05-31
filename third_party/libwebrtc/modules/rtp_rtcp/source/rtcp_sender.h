@@ -118,7 +118,8 @@ class RTCPSender final {
                         bool enabled)
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);  // combine the functions
 
-  int32_t SetNackStatus(bool enable) RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
+  void SetNonSenderRttMeasurement(bool enabled)
+      RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
   void SetTimestampOffset(uint32_t timestamp_offset)
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
@@ -282,7 +283,8 @@ class RTCPSender final {
   size_t max_packet_size_ RTC_GUARDED_BY(mutex_rtcp_sender_);
 
   // True if sending of XR Receiver reference time report is enabled.
-  const bool xr_send_receiver_reference_time_enabled_;
+  bool xr_send_receiver_reference_time_enabled_
+      RTC_GUARDED_BY(mutex_rtcp_sender_);
 
   RtcpPacketTypeCounterObserver* const packet_type_counter_observer_;
   RtcpPacketTypeCounter packet_type_counter_ RTC_GUARDED_BY(mutex_rtcp_sender_);

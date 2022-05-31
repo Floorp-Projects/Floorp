@@ -231,6 +231,11 @@ void RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
   }
 }
 
+void RTCPSender::SetNonSenderRttMeasurement(bool enabled) {
+  MutexLock lock(&mutex_rtcp_sender_);
+  xr_send_receiver_reference_time_enabled_ = enabled;
+}
+
 int32_t RTCPSender::SendLossNotification(const FeedbackState& feedback_state,
                                          uint16_t last_decoded_seq_num,
                                          uint16_t last_received_seq_num,
