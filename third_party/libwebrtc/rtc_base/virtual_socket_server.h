@@ -17,11 +17,11 @@
 
 #include "rtc_base/checks.h"
 #include "rtc_base/constructor_magic.h"
-#include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/event.h"
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/message_handler.h"
 #include "rtc_base/socket_server.h"
+#include "rtc_base/synchronization/mutex.h"
 
 namespace rtc {
 
@@ -394,7 +394,7 @@ class VirtualSocket : public AsyncSocket,
   typedef std::map<Option, int> OptionsMap;
 
   int InitiateConnect(const SocketAddress& addr, bool use_delay);
-  void CompleteConnect(const SocketAddress& addr, bool notify);
+  void CompleteConnect(const SocketAddress& addr);
   int SendUdp(const void* pv, size_t cb, const SocketAddress& addr);
   int SendTcp(const void* pv, size_t cb);
 
@@ -409,7 +409,8 @@ class VirtualSocket : public AsyncSocket,
   SocketAddress remote_addr_;
 
   // Pending sockets which can be Accepted
-  ListenQueue* listen_queue_ RTC_GUARDED_BY(crit_) RTC_PT_GUARDED_BY(crit_);
+  std::unique_ptr<ListenQueue> listen_queue_ RTC_GUARDED_BY(mutex_)
+      RTC_PT_GUARDED_BY(mutex_);
 
   // Data which tcp has buffered for sending
   SendBuffer send_buffer_;
@@ -417,8 +418,8 @@ class VirtualSocket : public AsyncSocket,
   // Set back to true when the socket can send again.
   bool ready_to_send_ = true;
 
-  // Critical section to protect the recv_buffer and listen_queue_
-  RecursiveCriticalSection crit_;
+  // Mutex to protect the recv_buffer and listen_queue_
+  webrtc::Mutex mutex_;
 
   // Network model that enforces bandwidth and capacity constraints
   NetworkQueue network_;
@@ -428,7 +429,7 @@ class VirtualSocket : public AsyncSocket,
   int64_t last_delivery_time_ = 0;
 
   // Data which has been received from the network
-  RecvBuffer recv_buffer_ RTC_GUARDED_BY(crit_);
+  RecvBuffer recv_buffer_ RTC_GUARDED_BY(mutex_);
   // The amount of data which is in flight or in recv_buffer_
   size_t recv_buffer_size_;
 
