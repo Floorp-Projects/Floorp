@@ -3289,14 +3289,6 @@ bool EditorBase::IsRoot(const nsINode* inNode) const {
   return inNode == rootNode;
 }
 
-bool EditorBase::IsEditorRoot(const nsINode* aNode) const {
-  if (NS_WARN_IF(!aNode)) {
-    return false;
-  }
-  nsINode* rootNode = GetEditorRoot();
-  return aNode == rootNode;
-}
-
 bool EditorBase::IsDescendantOfRoot(const nsINode* inNode) const {
   if (NS_WARN_IF(!inNode)) {
     return false;
