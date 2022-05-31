@@ -844,6 +844,17 @@ if (rtc_include_tests) {
     ]
   }
 
+  rtc_source_set("mock_audio_sink") {
+    testonly = true
+    sources = [ "test/mock_audio_sink.h" ]
+
+    deps = [
+      "../api:media_stream_interface",
+      "../test:test_support",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
   rtc_source_set("mock_data_channel") {
     visibility = [ "*" ]
     testonly = true
@@ -1128,6 +1139,7 @@ if (rtc_include_tests) {
       ":fake_frame_encryptor",
       ":mock_async_dns_resolver",
       ":mock_audio_mixer",
+      ":mock_audio_sink",
       ":mock_data_channel",
       ":mock_frame_decryptor",
       ":mock_frame_encryptor",
