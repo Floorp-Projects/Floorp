@@ -99,12 +99,21 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
         "Check the download panel state is 'open'"
       );
       downloadList = await Downloads.getList(Downloads.PUBLIC);
-      let currentDownloadCount = (await downloadList.getAll()).length;
+      const allDownloads = await downloadList.getAll();
+      let currentDownloadCount = allDownloads.length;
       is(
         currentDownloadCount,
         initialDownloadCount + 1,
         "A download was added when we clicked download"
       );
+
+      const dl = allDownloads.find(dl => dl.source.originalUrl === pdfUrl);
+      ok(!!dl, "The pdf download has the correct url in source.originalUrl");
+
+      SpecialPowers.clipboardCopyString("");
+      DownloadsCommon.copyDownloadLink(dl);
+      const copiedUrl = SpecialPowers.getClipboardData("text/unicode");
+      is(copiedUrl, pdfUrl, "The copied url must be the original one");
 
       is(
         gBrowser.tabs.length,
