@@ -13,12 +13,15 @@
 [package]
 edition = "2018"
 name = "ahash"
-version = "0.4.7"
+version = "0.7.6"
 authors = ["Tom Kaitchuck <Tom.Kaitchuck@gmail.com>"]
+build = "./build.rs"
+exclude = ["/smhasher", "/benchmark_tools"]
 description = "A non-cryptographic hash function using AES-NI for high performance"
 documentation = "https://docs.rs/ahash"
 readme = "README.md"
-keywords = ["hash", "hashmap", "aes", "aes-ni", "no-std"]
+keywords = ["hash", "hasher", "hashmap", "aes", "no-std"]
+categories = ["algorithms", "data-structures", "no-std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/tkaitchuck/ahash"
 [package.metadata.docs.rs]
@@ -60,9 +63,6 @@ harness = false
 name = "map"
 path = "tests/map_tests.rs"
 harness = false
-[dependencies.const-random]
-version = "0.1.6"
-optional = true
 [dev-dependencies.criterion]
 version = "0.3.2"
 
@@ -73,19 +73,44 @@ version = "1.0.5"
 version = "0.2.1"
 
 [dev-dependencies.hex]
-version = "0.3.2"
+version = "0.4.2"
 
 [dev-dependencies.no-panic]
 version = "0.1.10"
 
 [dev-dependencies.rand]
-version = "0.6.5"
+version = "0.7.3"
 
 [dev-dependencies.seahash]
-version = "3.0.5"
+version = "4.0"
+
+[dev-dependencies.serde_json]
+version = "1.0.59"
+[build-dependencies.version_check]
+version = "0.9"
 
 [features]
 compile-time-rng = ["const-random"]
-default = ["compile-time-rng", "std"]
-specialize = []
+default = ["std"]
 std = []
+[target."cfg(any(target_os = \"linux\", target_os = \"android\", target_os = \"windows\", target_os = \"macos\", target_os = \"ios\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\", target_os = \"dragonfly\", target_os = \"solaris\", target_os = \"illumos\", target_os = \"fuchsia\", target_os = \"redox\", target_os = \"cloudabi\", target_os = \"haiku\", target_os = \"vxworks\", target_os = \"emscripten\", target_os = \"wasi\"))".dependencies.const-random]
+version = "0.1.12"
+optional = true
+
+[target."cfg(any(target_os = \"linux\", target_os = \"android\", target_os = \"windows\", target_os = \"macos\", target_os = \"ios\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\", target_os = \"dragonfly\", target_os = \"solaris\", target_os = \"illumos\", target_os = \"fuchsia\", target_os = \"redox\", target_os = \"cloudabi\", target_os = \"haiku\", target_os = \"vxworks\", target_os = \"emscripten\", target_os = \"wasi\"))".dependencies.getrandom]
+version = "0.2.3"
+
+[target."cfg(any(target_os = \"linux\", target_os = \"android\", target_os = \"windows\", target_os = \"macos\", target_os = \"ios\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\", target_os = \"dragonfly\", target_os = \"solaris\", target_os = \"illumos\", target_os = \"fuchsia\", target_os = \"redox\", target_os = \"cloudabi\", target_os = \"haiku\", target_os = \"vxworks\", target_os = \"emscripten\", target_os = \"wasi\"))".dependencies.serde]
+version = "1.0.117"
+optional = true
+[target."cfg(not(all(target_arch = \"arm\", target_os = \"none\")))".dependencies.once_cell]
+version = "1.8"
+features = ["alloc"]
+default-features = false
+[target."cfg(not(any(target_os = \"linux\", target_os = \"android\", target_os = \"windows\", target_os = \"macos\", target_os = \"ios\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\", target_os = \"dragonfly\", target_os = \"solaris\", target_os = \"illumos\", target_os = \"fuchsia\", target_os = \"redox\", target_os = \"cloudabi\", target_os = \"haiku\", target_os = \"vxworks\", target_os = \"emscripten\", target_os = \"wasi\")))".dependencies.const-random]
+version = "0.1.12"
+optional = true
+
+[target."cfg(not(any(target_os = \"linux\", target_os = \"android\", target_os = \"windows\", target_os = \"macos\", target_os = \"ios\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\", target_os = \"dragonfly\", target_os = \"solaris\", target_os = \"illumos\", target_os = \"fuchsia\", target_os = \"redox\", target_os = \"cloudabi\", target_os = \"haiku\", target_os = \"vxworks\", target_os = \"emscripten\", target_os = \"wasi\")))".dependencies.serde]
+version = "1.0.117"
+optional = true

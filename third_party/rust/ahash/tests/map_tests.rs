@@ -1,9 +1,9 @@
-use std::hash::{Hash, Hasher};
+use std::hash::{BuildHasher, Hash, Hasher};
 
 use criterion::*;
 use fxhash::FxHasher;
 
-use ahash::{AHasher, CallHasher};
+use ahash::{AHasher, CallHasher, RandomState};
 
 fn gen_word_pairs() -> Vec<String> {
     let words: Vec<_> = r#"
@@ -119,16 +119,16 @@ yet, you, young, your, yourself"#
 }
 
 #[allow(unused)] // False positive
-fn test_hash_common_words<T: Hasher>(hasher: impl Fn() -> T) {
+fn test_hash_common_words<B: BuildHasher>(build_hasher: &B) {
     let word_pairs: Vec<_> = gen_word_pairs();
-    check_for_collisions(&hasher, &word_pairs, 32);
+    check_for_collisions(build_hasher, &word_pairs, 32);
 }
 
 #[allow(unused)] // False positive
-fn check_for_collisions<T: Hasher, H: Hash>(hasher: &impl Fn() -> T, items: &[H], bucket_count: usize) {
+fn check_for_collisions<H: Hash, B: BuildHasher>(build_hasher: &B, items: &[H], bucket_count: usize) {
     let mut buckets = vec![0; bucket_count];
     for item in items {
-        let value = hash(item, &hasher) as usize;
+        let value = hash(item, build_hasher) as usize;
         buckets[value % bucket_count] += 1;
     }
     let mean = items.len() / bucket_count;
@@ -151,23 +151,22 @@ fn check_for_collisions<T: Hasher, H: Hash>(hasher: &impl Fn() -> T, items: &[H]
 }
 
 #[allow(unused)] // False positive
-fn hash<T: Hasher>(b: &impl Hash, hasher: &dyn Fn() -> T) -> u64 {
-    let hasher = hasher();
-    b.get_hash(hasher)
+fn hash<H: Hash, B: BuildHasher>(b: &H, build_hasher: &B) -> u64 {
+    H::get_hash(b, build_hasher)
 }
 
 #[test]
 fn test_bucket_distribution() {
-    let hasher = || AHasher::new_with_keys(123456789, 987654321);
-    test_hash_common_words(&hasher);
+    let build_hasher = RandomState::with_seeds(1, 2, 3, 4);
+    test_hash_common_words(&build_hasher);
     let sequence: Vec<_> = (0..320000).collect();
-    check_for_collisions(&hasher, &sequence, 32);
+    check_for_collisions(&build_hasher, &sequence, 32);
     let sequence: Vec<_> = (0..2560000).collect();
-    check_for_collisions(&hasher, &sequence, 256);
+    check_for_collisions(&build_hasher, &sequence, 256);
     let sequence: Vec<_> = (0..320000).map(|i| i * 1024).collect();
-    check_for_collisions(&hasher, &sequence, 32);
+    check_for_collisions(&build_hasher, &sequence, 32);
     let sequence: Vec<_> = (0..2560000_u64).map(|i| i * 1024).collect();
-    check_for_collisions(&hasher, &sequence, 256);
+    check_for_collisions(&build_hasher, &sequence, 256);
 }
 
 fn ahash_vec<H: Hash>(b: &Vec<H>) -> u64 {
