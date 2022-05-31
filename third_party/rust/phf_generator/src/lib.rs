@@ -1,8 +1,8 @@
-#![doc(html_root_url="https://docs.rs/phf_generator/0.7")]
-use phf_shared::{PhfHash, HashKey};
-use rand::{SeedableRng, Rng};
+#![doc(html_root_url = "https://docs.rs/phf_generator/0.9")]
+use phf_shared::{HashKey, PhfHash};
 use rand::distributions::Standard;
 use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 
 const DEFAULT_LAMBDA: usize = 5;
 
@@ -27,20 +27,23 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], key: HashKey) -> Option<HashStat
         keys: Vec<usize>,
     }
 
-    let hashes: Vec<_> = entries.iter().map(|entry| phf_shared::hash(entry, &key)).collect();
+    let hashes: Vec<_> = entries
+        .iter()
+        .map(|entry| phf_shared::hash(entry, &key))
+        .collect();
 
     let buckets_len = (hashes.len() + DEFAULT_LAMBDA - 1) / DEFAULT_LAMBDA;
     let mut buckets = (0..buckets_len)
-                          .map(|i| {
-                              Bucket {
-                                  idx: i,
-                                  keys: vec![],
-                              }
-                          })
-                          .collect::<Vec<_>>();
+        .map(|i| Bucket {
+            idx: i,
+            keys: vec![],
+        })
+        .collect::<Vec<_>>();
 
     for (i, hash) in hashes.iter().enumerate() {
-        buckets[(hash.g % (buckets_len as u32)) as usize].keys.push(i);
+        buckets[(hash.g % (buckets_len as u32)) as usize]
+            .keys
+            .push(i);
     }
 
     // Sort descending
@@ -72,8 +75,8 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], key: HashKey) -> Option<HashStat
                 generation += 1;
 
                 for &key in &bucket.keys {
-                    let idx = (phf_shared::displace(hashes[key].f1, hashes[key].f2, d1, d2) %
-                               (table_len as u32)) as usize;
+                    let idx = (phf_shared::displace(hashes[key].f1, hashes[key].f2, d1, d2)
+                        % (table_len as u32)) as usize;
                     if map[idx].is_some() || try_map[idx] == generation {
                         continue 'disps;
                     }
