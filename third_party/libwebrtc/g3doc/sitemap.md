@@ -7,6 +7,7 @@
     *   [Threading](/api/g3doc/threading_design.md)
 *   Implementation
     *   [Basic concepts](/g3doc/implementation_basics.md)
+    *   [Supported Platforms and Compilers](/g3doc/supported-platforms-and-compilers.md)
     *   Network
         *   [ICE](/p2p/g3doc/ice.md)
         *   STUN
