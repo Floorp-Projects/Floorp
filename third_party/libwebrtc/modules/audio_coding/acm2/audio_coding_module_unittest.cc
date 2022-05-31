@@ -1411,12 +1411,12 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_Ilbc_30ms) {
           "7b6ec10910debd9af08011d3ed5249f7",
           "7b6ec10910debd9af08011d3ed5249f7", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
-          "Mac_arm64_checksum_placeholder"),
+          "7b6ec10910debd9af08011d3ed5249f7"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "cfae2e9f6aba96e145f2bcdd5050ce78",
           "cfae2e9f6aba96e145f2bcdd5050ce78", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
-          "Mac_arm64_checksum_placeholder"),
+          "cfae2e9f6aba96e145f2bcdd5050ce78"),
       33, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 #endif
