@@ -91,6 +91,33 @@ MATCHER_P(HasDataChunkWithStreamId, stream_id, "") {
   return true;
 }
 
+MATCHER_P(HasDataChunkWithPPID, ppid, "") {
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  if (!packet.has_value()) {
+    *result_listener << "data didn't parse as an SctpPacket";
+    return false;
+  }
+
+  if (packet->descriptors()[0].type != DataChunk::kType) {
+    *result_listener << "the first chunk in the packet is not a data chunk";
+    return false;
+  }
+
+  absl::optional<DataChunk> dc =
+      DataChunk::Parse(packet->descriptors()[0].data);
+  if (!dc.has_value()) {
+    *result_listener << "The first chunk didn't parse as a data chunk";
+    return false;
+  }
+
+  if (dc->ppid() != ppid) {
+    *result_listener << "the ppid is " << *dc->ppid();
+    return false;
+  }
+
+  return true;
+}
+
 MATCHER_P(HasDataChunkWithSsn, ssn, "") {
   absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
   if (!packet.has_value()) {
@@ -1049,7 +1076,14 @@ TEST_F(DcSctpSocketTest, SendMessageWithLimitedRtx) {
   // Third DATA
   sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());
 
-  // Handle SACK
+  // Handle SACK for first DATA
+  sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());
+
+  // Handle delayed SACK for third DATA
+  AdvanceTime(options_.delayed_ack_max_timeout);
+  RunTimers();
+
+  // Handle SACK for second DATA
   sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());
 
   // Now the missing data chunk will be marked as nacked, but it might still be
@@ -1065,11 +1099,7 @@ TEST_F(DcSctpSocketTest, SendMessageWithLimitedRtx) {
   // FORWARD-TSN (third)
   sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());
 
-  // The receiver might have moved into delayed ack mode.
-  AdvanceTime(options_.rto_initial);
-  RunTimers();
-
-  // Handle SACK
+  // Which will trigger a SACK
   sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());
 
   absl::optional<DcSctpMessage> msg1 = cb_z_.ConsumeReceivedMessage();
@@ -1082,6 +1112,78 @@ TEST_F(DcSctpSocketTest, SendMessageWithLimitedRtx) {
 
   absl::optional<DcSctpMessage> msg3 = cb_z_.ConsumeReceivedMessage();
   EXPECT_FALSE(msg3.has_value());
+}
+
+TEST_F(DcSctpSocketTest, SendManyFragmentedMessagesWithLimitedRtx) {
+  ConnectSockets();
+
+  SendOptions send_options;
+  send_options.unordered = IsUnordered(true);
+  send_options.max_retransmissions = 0;
+  std::vector<uint8_t> payload(options_.mtu * 2 - 100 /* margin */);
+  // Sending first message
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(51), payload), send_options);
+  // Sending second message
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(52), payload), send_options);
+  // Sending third message
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53), payload), send_options);
+  // Sending fourth message
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(54), payload), send_options);
+
+  // First DATA, first fragment
+  std::vector<uint8_t> packet = cb_a_.ConsumeSentPacket();
+  EXPECT_THAT(packet, HasDataChunkWithPPID(PPID(51)));
+  sock_z_.ReceivePacket(std::move(packet));
+
+  // First DATA, second fragment (lost)
+  packet = cb_a_.ConsumeSentPacket();
+  EXPECT_THAT(packet, HasDataChunkWithPPID(PPID(51)));
+
+  // Second DATA, first fragment
+  packet = cb_a_.ConsumeSentPacket();
+  EXPECT_THAT(packet, HasDataChunkWithPPID(PPID(52)));
+  sock_z_.ReceivePacket(std::move(packet));
+
+  // Second DATA, second fragment (lost)
+  packet = cb_a_.ConsumeSentPacket();
+  EXPECT_THAT(packet, HasDataChunkWithPPID(PPID(52)));
+  EXPECT_THAT(packet, HasDataChunkWithSsn(SSN(0)));
+
+  // Third DATA, first fragment
+  packet = cb_a_.ConsumeSentPacket();
+  EXPECT_THAT(packet, HasDataChunkWithPPID(PPID(53)));
+  EXPECT_THAT(packet, HasDataChunkWithSsn(SSN(0)));
+  sock_z_.ReceivePacket(std::move(packet));
+
+  // Third DATA, second fragment (lost)
+  packet = cb_a_.ConsumeSentPacket();
+  EXPECT_THAT(packet, HasDataChunkWithPPID(PPID(53)));
+  EXPECT_THAT(packet, HasDataChunkWithSsn(SSN(0)));
+
+  // Fourth DATA, first fragment
+  packet = cb_a_.ConsumeSentPacket();
+  EXPECT_THAT(packet, HasDataChunkWithPPID(PPID(54)));
+  EXPECT_THAT(packet, HasDataChunkWithSsn(SSN(0)));
+  sock_z_.ReceivePacket(std::move(packet));
+
+  // Fourth DATA, second fragment
+  packet = cb_a_.ConsumeSentPacket();
+  EXPECT_THAT(packet, HasDataChunkWithPPID(PPID(54)));
+  EXPECT_THAT(packet, HasDataChunkWithSsn(SSN(0)));
+  sock_z_.ReceivePacket(std::move(packet));
+
+  ExchangeMessages(sock_a_, cb_a_, sock_z_, cb_z_);
+
+  // Let the RTX timer expire, and exchange FORWARD-TSN/SACKs
+  AdvanceTime(options_.rto_initial);
+  RunTimers();
+  ExchangeMessages(sock_a_, cb_a_, sock_z_, cb_z_);
+
+  absl::optional<DcSctpMessage> msg1 = cb_z_.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg1.has_value());
+  EXPECT_EQ(msg1->ppid(), PPID(54));
+
+  ASSERT_FALSE(cb_z_.ConsumeReceivedMessage().has_value());
 }
 
 struct FakeChunkConfig : ChunkConfig {
