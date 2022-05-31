@@ -2968,6 +2968,7 @@ exports.CSS_PROPERTIES = {
       "scroll-behavior",
       "scroll-snap-align",
       "scroll-snap-type",
+      "scroll-snap-stop",
       "overscroll-behavior-x",
       "overscroll-behavior-y",
       "isolation",
@@ -10193,6 +10194,22 @@ exports.CSS_PROPERTIES = {
       "revert",
       "revert-layer",
       "start",
+      "unset"
+    ]
+  },
+  "scroll-snap-stop": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-snap-stop"
+    ],
+    "supports": [],
+    "values": [
+      "always",
+      "inherit",
+      "initial",
+      "normal",
+      "revert",
+      "revert-layer",
       "unset"
     ]
   },

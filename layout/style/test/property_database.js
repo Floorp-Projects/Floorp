@@ -7222,6 +7222,14 @@ var gCSSProperties = {
     other_values: ["smooth"],
     invalid_values: ["none", "1px"],
   },
+  "scroll-snap-stop": {
+    domProp: "scrollSnapStop",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["normal"],
+    other_values: ["always"],
+    invalid_values: ["auto", "none", "1px"],
+  },
   "scroll-snap-type": {
     domProp: "scrollSnapType",
     inherited: false,

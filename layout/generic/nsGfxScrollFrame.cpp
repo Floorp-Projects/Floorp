@@ -7743,10 +7743,12 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
         aWritingModeOnScroller.IsVertical()
             ? ScrollSnapInfo::SnapTarget(std::move(blockDirectionPosition),
                                          std::move(inlineDirectionPosition),
-                                         std::move(snapArea))
+                                         std::move(snapArea),
+                                         styleDisplay->mScrollSnapStop)
             : ScrollSnapInfo::SnapTarget(std::move(inlineDirectionPosition),
                                          std::move(blockDirectionPosition),
-                                         std::move(snapArea)));
+                                         std::move(snapArea),
+                                         styleDisplay->mScrollSnapStop));
   }
 }
 

@@ -347,6 +347,12 @@ struct ParamTraits<nsSize> {
 };
 
 template <>
+struct ParamTraits<mozilla::StyleScrollSnapStop>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::StyleScrollSnapStop, mozilla::StyleScrollSnapStop::Normal,
+          mozilla::StyleScrollSnapStop::Always> {};
+
+template <>
 struct ParamTraits<mozilla::layers::ScrollSnapInfo::SnapTarget> {
   typedef mozilla::layers::ScrollSnapInfo::SnapTarget paramType;
 
@@ -354,12 +360,14 @@ struct ParamTraits<mozilla::layers::ScrollSnapInfo::SnapTarget> {
     WriteParam(aWriter, aParam.mSnapPositionX);
     WriteParam(aWriter, aParam.mSnapPositionY);
     WriteParam(aWriter, aParam.mSnapArea);
+    WriteParam(aWriter, aParam.mScrollSnapStop);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mSnapPositionX) &&
            ReadParam(aReader, &aResult->mSnapPositionY) &&
-           ReadParam(aReader, &aResult->mSnapArea);
+           ReadParam(aReader, &aResult->mSnapArea) &&
+           ReadParam(aReader, &aResult->mScrollSnapStop);
   }
 };
 
