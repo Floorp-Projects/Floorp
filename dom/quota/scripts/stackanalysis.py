@@ -296,10 +296,10 @@ def filterStacksForPropagation(
 
 # Bugzilla comment markup
 def printStacks(stacks):
-    out = ""
     row_format = "{} | {} | {} | {} | {}\n"
-    out += row_format.format("Clients", "Sessions", "Hits", "Anchor", "Stack")
-    out += row_format.format("-------", "-------", "--------", "--------", "--------")
+    out = ""
+    out += row_format.format("Clients", "Sessions", "Hits", "Anchor (Context)", "Stack")
+    out += row_format.format("-------", "--------", "----", "----------------", "-----")
     for stack in stacks:
         framestr = ""
         first = True
@@ -317,7 +317,7 @@ def printStacks(stacks):
             stack["client_count"],
             stack["session_count"],
             stack["hit_count"],
-            stack["frames"][0]["anchor"],
+            "{} ({})".format(stack["frames"][0]["anchor"], stack["context"]),
             framestr,
         )
 
