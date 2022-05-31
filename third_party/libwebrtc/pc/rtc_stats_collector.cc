@@ -333,6 +333,10 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
       static_cast<uint64_t>(media_receiver_info.header_and_padding_bytes_rcvd);
   inbound_stats->packets_lost =
       static_cast<int32_t>(media_receiver_info.packets_lost);
+  inbound_stats->jitter_buffer_delay =
+      media_receiver_info.jitter_buffer_delay_seconds;
+  inbound_stats->jitter_buffer_emitted_count =
+      media_receiver_info.jitter_buffer_emitted_count;
 }
 
 std::unique_ptr<RTCInboundRTPStreamStats> CreateInboundAudioStreamStats(
@@ -353,10 +357,6 @@ std::unique_ptr<RTCInboundRTPStreamStats> CreateInboundAudioStreamStats(
   }
   inbound_audio->jitter = static_cast<double>(voice_receiver_info.jitter_ms) /
                           rtc::kNumMillisecsPerSec;
-  inbound_audio->jitter_buffer_delay =
-      voice_receiver_info.jitter_buffer_delay_seconds;
-  inbound_audio->jitter_buffer_emitted_count =
-      voice_receiver_info.jitter_buffer_emitted_count;
   inbound_audio->total_samples_received =
       voice_receiver_info.total_samples_received;
   inbound_audio->concealed_samples = voice_receiver_info.concealed_samples;

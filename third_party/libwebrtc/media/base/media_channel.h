@@ -426,6 +426,12 @@ struct MediaReceiverInfo {
   int64_t header_and_padding_bytes_rcvd = 0;
   int packets_rcvd = 0;
   int packets_lost = 0;
+  // Jitter (network-related) latency (cumulative).
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferdelay
+  double jitter_buffer_delay_seconds = 0.0;
+  // Number of observations for cumulative jitter latency.
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferemittedcount
+  uint64_t jitter_buffer_emitted_count = 0;
   // The timestamp at which the last packet was received, i.e. the time of the
   // local clock when it was received - not the RTP timestamp of that packet.
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-lastpacketreceivedtimestamp
@@ -469,8 +475,6 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
   uint64_t concealed_samples = 0;
   uint64_t silent_concealed_samples = 0;
   uint64_t concealment_events = 0;
-  double jitter_buffer_delay_seconds = 0.0;
-  uint64_t jitter_buffer_emitted_count = 0;
   double jitter_buffer_target_delay_seconds = 0.0;
   uint64_t inserted_samples_for_deceleration = 0;
   uint64_t removed_samples_for_acceleration = 0;
@@ -619,12 +623,6 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
   int max_decode_ms = 0;
   // Jitter (network-related) latency.
   int jitter_buffer_ms = 0;
-  // Jitter (network-related) latency (cumulative).
-  // https://w3c.github.io/webrtc-stats/#dom-rtcvideoreceiverstats-jitterbufferdelay
-  double jitter_buffer_delay_seconds = 0;
-  // Number of observations for cumulative jitter latency.
-  // https://w3c.github.io/webrtc-stats/#dom-rtcvideoreceiverstats-jitterbufferemittedcount
-  uint64_t jitter_buffer_emitted_count = 0;
   // Requested minimum playout latency.
   int min_playout_delay_ms = 0;
   // Requested latency to account for rendering delay.
