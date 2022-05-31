@@ -738,6 +738,7 @@ function saveMedia() {
       saveURL(
         url,
         null,
+        null,
         titleKey,
         false,
         false,
@@ -764,6 +765,7 @@ function saveMedia() {
           );
           internalSave(
             aURIString,
+            null,
             null,
             null,
             null,

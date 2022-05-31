@@ -265,6 +265,7 @@ DownloadLegacyTransfer.prototype = {
   // nsITransfer
   init: function DLT_init(
     aSource,
+    aSourceOriginalURI,
     aTarget,
     aDisplayName,
     aMIMEInfo,
@@ -277,6 +278,7 @@ DownloadLegacyTransfer.prototype = {
   ) {
     return this._nsITransferInitInternal(
       aSource,
+      aSourceOriginalURI,
       aTarget,
       aDisplayName,
       aMIMEInfo,
@@ -315,6 +317,7 @@ DownloadLegacyTransfer.prototype = {
     }
     return this._nsITransferInitInternal(
       aSource,
+      null,
       aTarget,
       aDisplayName,
       aMIMEInfo,
@@ -333,6 +336,7 @@ DownloadLegacyTransfer.prototype = {
 
   _nsITransferInitInternal(
     aSource,
+    aSourceOriginalURI,
     aTarget,
     aDisplayName,
     aMIMEInfo,
@@ -377,6 +381,7 @@ DownloadLegacyTransfer.prototype = {
     let serialisedDownload = {
       source: {
         url: aSource.spec,
+        originalUrl: aSourceOriginalURI && aSourceOriginalURI.spec,
         isPrivate,
         userContextId,
         browsingContextId,
