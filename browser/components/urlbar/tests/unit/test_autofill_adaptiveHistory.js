@@ -1031,6 +1031,76 @@ add_task(async function inputTest() {
   }
 });
 
+add_task(async function urlCase() {
+  UrlbarPrefs.set("autoFill.adaptiveHistory.enabled", true);
+
+  const testVisitFixed = "example.com/ABC/DEF";
+  const testVisitURL = `http://${testVisitFixed}`;
+  const testInput = "example";
+  await PlacesTestUtils.addVisits([testVisitURL]);
+  await UrlbarUtils.addToInputHistory(testVisitURL, testInput);
+
+  const userInput = "example.COM/abc/def";
+  for (let i = 1; i <= userInput.length; i++) {
+    const currentUserInput = userInput.substring(0, i);
+    const context = createContext(currentUserInput, { isPrivate: false });
+
+    if (currentUserInput.length < testInput.length) {
+      // Not autofill.
+      await check_results({
+        context,
+        matches: [
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            title: "example.com",
+            heuristic: true,
+          }),
+          makeVisitResult(context, {
+            uri: "http://example.com/ABC/DEF",
+            title: "test visit for http://example.com/ABC/DEF",
+          }),
+        ],
+      });
+    } else if (currentUserInput.length !== testVisitFixed.length) {
+      // Autofill using input history.
+      const autofilled = currentUserInput + testVisitFixed.substring(i);
+      await check_results({
+        context,
+        autofilled,
+        completed: "http://example.com/ABC/DEF",
+        matches: [
+          makeVisitResult(context, {
+            uri: "http://example.com/ABC/DEF",
+            title: "example.com/ABC/DEF",
+            heuristic: true,
+          }),
+        ],
+      });
+    } else {
+      // Autofill using user's input.
+      await check_results({
+        context,
+        autofilled: "example.COM/abc/def",
+        completed: "http://example.com/abc/def",
+        matches: [
+          makeVisitResult(context, {
+            uri: "http://example.com/abc/def",
+            title: "example.com/abc/def",
+            heuristic: true,
+          }),
+          makeVisitResult(context, {
+            uri: "http://example.com/ABC/DEF",
+            title: "test visit for http://example.com/ABC/DEF",
+          }),
+        ],
+      });
+    }
+  }
+
+  await cleanupPlaces();
+  UrlbarPrefs.clear("autoFill.adaptiveHistory.enabled");
+});
+
 add_task(async function decayTest() {
   UrlbarPrefs.set("autoFill.adaptiveHistory.enabled", true);
 
