@@ -2191,13 +2191,17 @@ static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
   // between chrome and content sizes on aDocShellItem's window.
   // This latter point becomes important if chrome and content
   // specifications are mixed in aFeatures, and when bringing the window
-  // back from too far off the right or bottom edges of the screen. */
-  DesktopIntCoord left = 0, top = 0;
-  CSSIntCoord width = 0, height = 0;
+  // back from too far off the right or bottom edges of the screen.
+  DesktopIntCoord left = 0;
+  DesktopIntCoord top = 0;
+  CSSIntCoord width = 0;
+  CSSIntCoord height = 0;
   // difference between chrome and content size
-  CSSIntCoord chromeWidth = 0, chromeHeight = 0;
+  CSSIntCoord chromeWidth = 0;
+  CSSIntCoord chromeHeight = 0;
   // whether the window size spec refers to chrome or content
-  bool sizeChromeWidth = true, sizeChromeHeight = true;
+  bool sizeChromeWidth = true;
+  bool sizeChromeHeight = true;
 
   {
     CSSToLayoutDeviceScale cssToDevScale =
