@@ -107,7 +107,17 @@ void DMABufSurface::GlobalRefCountCreate() {
 void DMABufSurface::GlobalRefCountImport(int aFd) {
   MOZ_ASSERT(!mGlobalRefCountFd);
   mGlobalRefCountFd = aFd;
-  GlobalRefAdd();
+  MOZ_DIAGNOSTIC_ASSERT(IsGlobalRefSet(),
+                        "We're importing unreferenced surface!");
+}
+
+int DMABufSurface::GlobalRefCountExport() {
+  if (mGlobalRefCountFd) {
+    MOZ_DIAGNOSTIC_ASSERT(IsGlobalRefSet(),
+                          "We're exporting unreferenced surface!");
+    GlobalRefAdd();
+  }
+  return mGlobalRefCountFd;
 }
 
 void DMABufSurface::GlobalRefCountDelete() {
@@ -477,7 +487,7 @@ bool DMABufSurfaceRGBA::Serialize(
   }
 
   if (mGlobalRefCountFd) {
-    refCountFDs.AppendElement(ipc::FileDescriptor(mGlobalRefCountFd));
+    refCountFDs.AppendElement(ipc::FileDescriptor(GlobalRefCountExport()));
   }
 
   aOutDescriptor = SurfaceDescriptorDMABuf(
@@ -1120,7 +1130,7 @@ bool DMABufSurfaceYUV::Serialize(
   }
 
   if (mGlobalRefCountFd) {
-    refCountFDs.AppendElement(ipc::FileDescriptor(mGlobalRefCountFd));
+    refCountFDs.AppendElement(ipc::FileDescriptor(GlobalRefCountExport()));
   }
 
   aOutDescriptor = SurfaceDescriptorDMABuf(
