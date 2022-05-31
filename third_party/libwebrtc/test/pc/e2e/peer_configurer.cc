@@ -100,6 +100,9 @@ void SetDefaultValuesForMissingParams(
         p->video_codecs.push_back(
             PeerConnectionE2EQualityTestFixture::VideoCodecConfig(
                 cricket::kVp8CodecName));
+        run_params->video_codecs = {
+            PeerConnectionE2EQualityTestFixture::VideoCodecConfig(
+                cricket::kVp8CodecName)};
       }
     } else {
       RTC_CHECK(run_params->video_codecs.empty())
