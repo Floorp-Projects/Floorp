@@ -17,6 +17,7 @@
 #include "api/rtc_event_log/rtc_event_log_factory.h"
 #include "api/transport/network_types.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "test/rtp_header_parser.h"
 
 namespace webrtc {
@@ -293,7 +294,7 @@ void CallClient::UpdateBitrateConstraints(
 
 void CallClient::OnPacketReceived(EmulatedIpPacket packet) {
   MediaType media_type = MediaType::ANY;
-  if (!RtpHeaderParser::IsRtcp(packet.cdata(), packet.data.size())) {
+  if (IsRtpPacket(packet.data)) {
     auto ssrc = RtpHeaderParser::GetSsrc(packet.cdata(), packet.data.size());
     RTC_CHECK(ssrc.has_value());
     media_type = ssrc_media_types_[*ssrc];

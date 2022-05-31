@@ -739,7 +739,6 @@ rtc_library("direct_transport") {
     "direct_transport.h",
   ]
   deps = [
-    ":rtp_test_utils",
     "../api:sequence_checker",
     "../api:simulated_network_api",
     "../api:transport_api",
@@ -747,6 +746,7 @@ rtc_library("direct_transport") {
     "../api/units:time_delta",
     "../call:call_interfaces",
     "../call:simulated_packet_receiver",
+    "../modules/rtp_rtcp:rtp_rtcp_format",
     "../rtc_base:macromagic",
     "../rtc_base:timeutils",
     "../rtc_base/synchronization:mutex",
@@ -851,9 +851,9 @@ rtc_library("test_common") {
     ":fake_video_codecs",
     ":fileutils",
     ":mock_transport",
-    ":rtp_test_utils",
     ":test_support",
     ":video_test_common",
+    "../api:array_view",
     "../api:create_frame_generator",
     "../api:frame_generator_api",
     "../api:rtp_headers",

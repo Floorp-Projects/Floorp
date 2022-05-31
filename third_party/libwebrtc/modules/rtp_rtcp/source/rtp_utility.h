@@ -15,6 +15,7 @@
 
 #include <algorithm>
 
+#include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
 #include "api/rtp_headers.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
@@ -34,6 +35,7 @@ class RtpHeaderParser {
   RtpHeaderParser(const uint8_t* rtpData, size_t rtpDataLength);
   ~RtpHeaderParser();
 
+  ABSL_DEPRECATED("Use IsRtpPacket or IsRtcpPacket")
   bool RTCP() const;
   bool ParseRtcp(RTPHeader* header) const;
   bool Parse(RTPHeader* parsedPacket,

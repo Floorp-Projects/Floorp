@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "modules/rtp_rtcp/source/rtp_utility.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/constructor_magic.h"
@@ -434,7 +435,7 @@ class PcapReader : public RtpFileReaderImpl {
     TRY_PCAP(Read(read_buffer_, marker.payload_length));
 
     RtpUtility::RtpHeaderParser rtp_parser(read_buffer_, marker.payload_length);
-    if (rtp_parser.RTCP()) {
+    if (IsRtcpPacket(rtc::MakeArrayView(read_buffer_, marker.payload_length))) {
       rtp_parser.ParseRtcp(&marker.rtp_header);
       packets_.push_back(marker);
     } else {

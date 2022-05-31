@@ -52,6 +52,7 @@ rtc_library("rtp_rtcp_format") {
     "source/rtp_packet.h",
     "source/rtp_packet_received.h",
     "source/rtp_packet_to_send.h",
+    "source/rtp_util.h",
     "source/rtp_video_layers_allocation_extension.h",
   ]
   sources = [
@@ -96,6 +97,7 @@ rtc_library("rtp_rtcp_format") {
     "source/rtp_packet.cc",
     "source/rtp_packet_received.cc",
     "source/rtp_packet_to_send.cc",
+    "source/rtp_util.cc",
     "source/rtp_video_layers_allocation_extension.cc",
   ]
 
@@ -550,6 +552,7 @@ if (rtc_include_tests) {
       "source/rtp_sender_unittest.cc",
       "source/rtp_sender_video_unittest.cc",
       "source/rtp_sequence_number_map_unittest.cc",
+      "source/rtp_util_unittest.cc",
       "source/rtp_utility_unittest.cc",
       "source/rtp_video_layers_allocation_extension_unittest.cc",
       "source/source_tracker_unittest.cc",

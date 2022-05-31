@@ -13,11 +13,6 @@
 
 namespace webrtc {
 
-bool RtpHeaderParser::IsRtcp(const uint8_t* packet, size_t length) {
-  RtpUtility::RtpHeaderParser rtp_parser(packet, length);
-  return rtp_parser.RTCP();
-}
-
 absl::optional<uint32_t> RtpHeaderParser::GetSsrc(const uint8_t* packet,
                                                   size_t length) {
   RtpUtility::RtpHeaderParser rtp_parser(packet, length);

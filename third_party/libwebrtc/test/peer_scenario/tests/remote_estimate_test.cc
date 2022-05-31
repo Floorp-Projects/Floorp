@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "modules/rtp_rtcp/source/rtp_utility.h"
 #include "pc/media_session.h"
 #include "pc/session_description.h"
@@ -29,7 +30,7 @@ absl::optional<RTPHeaderExtension> GetRtpPacketExtensions(
     const rtc::ArrayView<const uint8_t> packet,
     const RtpHeaderExtensionMap& extension_map) {
   RtpUtility::RtpHeaderParser rtp_parser(packet.data(), packet.size());
-  if (!rtp_parser.RTCP()) {
+  if (IsRtpPacket(packet)) {
     RTPHeader header;
     if (rtp_parser.Parse(&header, &extension_map, true)) {
       return header.extension;

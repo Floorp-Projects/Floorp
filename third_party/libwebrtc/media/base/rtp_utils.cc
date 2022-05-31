@@ -17,6 +17,7 @@
 // PacketTimeUpdateParams is defined in asyncpacketsocket.h.
 // TODO(sergeyu): Find more appropriate place for PacketTimeUpdateParams.
 #include "media/base/turn_utils.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/byte_order.h"
 #include "rtc_base/checks.h"
@@ -279,29 +280,6 @@ bool SetRtpHeader(void* data, size_t len, const RtpHeader& header) {
           SetRtpSsrc(data, len, header.ssrc));
 }
 
-static bool HasCorrectRtpVersion(rtc::ArrayView<const uint8_t> packet) {
-  return packet.data()[0] >> 6 == kRtpVersion;
-}
-
-bool IsRtpPacket(rtc::ArrayView<const char> packet) {
-  return packet.size() >= kMinRtpPacketLen &&
-         HasCorrectRtpVersion(
-             rtc::reinterpret_array_view<const uint8_t>(packet));
-}
-
-// Check the RTP payload type. If 63 < payload type < 96, it's RTCP.
-// For additional details, see http://tools.ietf.org/html/rfc5761.
-bool IsRtcpPacket(rtc::ArrayView<const char> packet) {
-  if (packet.size() < kMinRtcpPacketLen ||
-      !HasCorrectRtpVersion(
-          rtc::reinterpret_array_view<const uint8_t>(packet))) {
-    return false;
-  }
-
-  char pt = packet[1] & 0x7F;
-  return (63 < pt) && (pt < 96);
-}
-
 bool IsValidRtpPayloadType(int payload_type) {
   return payload_type >= 0 && payload_type <= 127;
 }
@@ -327,11 +305,11 @@ absl::string_view RtpPacketTypeToString(RtpPacketType packet_type) {
 }
 
 RtpPacketType InferRtpPacketType(rtc::ArrayView<const char> packet) {
-  // RTCP packets are RTP packets so must check that first.
-  if (IsRtcpPacket(packet)) {
+  if (webrtc::IsRtcpPacket(
+          rtc::reinterpret_array_view<const uint8_t>(packet))) {
     return RtpPacketType::kRtcp;
   }
-  if (IsRtpPacket(packet)) {
+  if (webrtc::IsRtpPacket(rtc::reinterpret_array_view<const uint8_t>(packet))) {
     return RtpPacketType::kRtp;
   }
   return RtpPacketType::kUnknown;
@@ -532,7 +510,7 @@ bool ApplyPacketOptions(uint8_t* data,
 
   // Making sure we have a valid RTP packet at the end.
   auto packet = rtc::MakeArrayView(data + rtp_start_pos, rtp_length);
-  if (!IsRtpPacket(rtc::reinterpret_array_view<const char>(packet)) ||
+  if (!webrtc::IsRtpPacket(packet) ||
       !ValidateRtpHeader(data + rtp_start_pos, rtp_length, nullptr)) {
     RTC_NOTREACHED();
     return false;
