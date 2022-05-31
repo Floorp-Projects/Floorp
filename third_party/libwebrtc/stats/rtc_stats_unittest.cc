@@ -267,9 +267,14 @@ TEST(RTCStatsTest, RTCStatsPrintsValidJson) {
   stats.m_sequence_string = sequence_string;
   stats.m_map_string_uint64 = map_string_uint64;
   stats.m_map_string_double = map_string_double;
+  std::string json_stats = stats.ToJson();
 
+  Json::CharReaderBuilder builder;
   Json::Value json_output;
-  EXPECT_TRUE(Json::Reader().parse(stats.ToJson(), json_output));
+  std::unique_ptr<Json::CharReader> json_reader(builder.newCharReader());
+  EXPECT_TRUE(json_reader->parse(json_stats.c_str(),
+                                 json_stats.c_str() + json_stats.size(),
+                                 &json_output, nullptr));
 
   EXPECT_TRUE(rtc::GetStringFromJsonObject(json_output, "id", &id));
   EXPECT_TRUE(rtc::GetIntFromJsonObject(json_output, "timestamp", &timestamp));

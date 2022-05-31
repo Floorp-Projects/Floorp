@@ -11,6 +11,7 @@
 
 #include <stddef.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -156,9 +157,14 @@ void Aec3ConfigFromJsonString(absl::string_view json_string,
   *parsing_successful = true;
 
   Json::Value root;
-  bool success = Json::Reader().parse(std::string(json_string), root);
+  Json::CharReaderBuilder builder;
+  std::string error_message;
+  std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+  bool success =
+      reader->parse(json_string.data(), json_string.data() + json_string.size(),
+                    &root, &error_message);
   if (!success) {
-    RTC_LOG(LS_ERROR) << "Incorrect JSON format: " << json_string;
+    RTC_LOG(LS_ERROR) << "Incorrect JSON format: " << error_message;
     *parsing_successful = false;
     return;
   }
