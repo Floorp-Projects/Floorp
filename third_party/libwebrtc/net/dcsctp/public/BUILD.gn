@@ -56,11 +56,21 @@ rtc_source_set("factory") {
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
+rtc_source_set("mocks") {
+  testonly = true
+  sources = [ "mock_dcsctp_socket.h" ]
+  deps = [
+    ":socket",
+    "../../../test:test_support",
+  ]
+}
+
 if (rtc_include_tests) {
   rtc_library("dcsctp_public_unittests") {
     testonly = true
 
     deps = [
+      ":mocks",
       ":strong_alias",
       ":types",
       "../../../rtc_base:checks",
@@ -69,6 +79,7 @@ if (rtc_include_tests) {
       "../../../test:test_support",
     ]
     sources = [
+      "mock_dcsctp_socket_test.cc",
       "strong_alias_test.cc",
       "types_test.cc",
     ]
