@@ -216,7 +216,6 @@ VideoReceiveStream2::VideoReceiveStream2(TaskQueueFactory* task_queue_factory,
                                          int num_cpu_cores,
                                          PacketRouter* packet_router,
                                          VideoReceiveStream::Config config,
-                                         ProcessThread* process_thread,
                                          CallStats* call_stats,
                                          Clock* clock,
                                          VCMTiming* timing)
@@ -242,7 +241,6 @@ VideoReceiveStream2::VideoReceiveStream2(TaskQueueFactory* task_queue_factory,
                                  &stats_proxy_,
                                  &stats_proxy_,
                                  &stats_proxy_,
-                                 process_thread,
                                  this,     // NackSender
                                  nullptr,  // Use default KeyFrameRequestSender
                                  this,     // OnCompleteFrameCallback
@@ -263,7 +261,6 @@ VideoReceiveStream2::VideoReceiveStream2(TaskQueueFactory* task_queue_factory,
   RTC_DCHECK(call_->worker_thread());
   RTC_DCHECK(config_.renderer);
   RTC_DCHECK(call_stats_);
-  module_process_sequence_checker_.Detach();
   packet_sequence_checker_.Detach();
 
   RTC_DCHECK(!config_.decoders.empty());

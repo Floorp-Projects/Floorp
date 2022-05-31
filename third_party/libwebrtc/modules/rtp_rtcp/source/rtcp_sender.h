@@ -69,6 +69,11 @@ class RTCPSender final {
     // TimeToSendRTCPReport/SendRTCP.
     // The RTCPSender client still needs to call TimeToSendRTCPReport/SendRTCP
     // to actually get RTCP sent.
+    //
+    // Note: It's recommended to use the callback to ensure program design that
+    // doesn't use polling.
+    // TODO(bugs.webrtc.org/11581): Make mandatory once downstream consumers
+    // have migrated to the callback solution.
     std::function<void(TimeDelta)> schedule_next_rtcp_send_evaluation_function;
 
     RtcEventLog* event_log = nullptr;

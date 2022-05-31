@@ -882,9 +882,8 @@ webrtc::AudioSendStream* Call::CreateAudioSendStream(
 
   AudioSendStream* send_stream = new AudioSendStream(
       clock_, config, config_.audio_state, task_queue_factory_,
-      module_process_thread_->process_thread(), transport_send_.get(),
-      bitrate_allocator_.get(), event_log_, call_stats_->AsRtcpRttStats(),
-      suspended_rtp_state);
+      transport_send_.get(), bitrate_allocator_.get(), event_log_,
+      call_stats_->AsRtcpRttStats(), suspended_rtp_state);
   RTC_DCHECK(audio_send_ssrcs_.find(config.rtp.ssrc) ==
              audio_send_ssrcs_.end());
   audio_send_ssrcs_[config.rtp.ssrc] = send_stream;
@@ -939,8 +938,7 @@ webrtc::AudioReceiveStream* Call::CreateAudioReceiveStream(
       CreateRtcLogStreamConfig(config)));
 
   AudioReceiveStream* receive_stream = new AudioReceiveStream(
-      clock_, transport_send_->packet_router(),
-      module_process_thread_->process_thread(), config_.neteq_factory, config,
+      clock_, transport_send_->packet_router(), config_.neteq_factory, config,
       config_.audio_state, event_log_);
   audio_receive_streams_.insert(receive_stream);
 
@@ -1022,8 +1020,8 @@ webrtc::VideoSendStream* Call::CreateVideoSendStream(
   std::vector<uint32_t> ssrcs = config.rtp.ssrcs;
 
   VideoSendStream* send_stream = new VideoSendStream(
-      clock_, num_cpu_cores_, module_process_thread_->process_thread(),
-      task_queue_factory_, call_stats_->AsRtcpRttStats(), transport_send_.get(),
+      clock_, num_cpu_cores_, task_queue_factory_,
+      call_stats_->AsRtcpRttStats(), transport_send_.get(),
       bitrate_allocator_.get(), video_send_delay_stats_.get(), event_log_,
       std::move(config), std::move(encoder_config), suspended_video_send_ssrcs_,
       suspended_video_payload_states_, std::move(fec_controller));
@@ -1120,8 +1118,7 @@ webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
   VideoReceiveStream2* receive_stream = new VideoReceiveStream2(
       task_queue_factory_, this, num_cpu_cores_,
       transport_send_->packet_router(), std::move(configuration),
-      module_process_thread_->process_thread(), call_stats_.get(), clock_,
-      new VCMTiming(clock_));
+      call_stats_.get(), clock_, new VCMTiming(clock_));
   // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
   // thread.
   receive_stream->RegisterWithTransport(&video_receiver_controller_);
@@ -1189,8 +1186,7 @@ FlexfecReceiveStream* Call::CreateFlexfecReceiveStream(
   // OnRtpPacket until the constructor is finished and the object is
   // in a valid state, since OnRtpPacket runs on the same thread.
   receive_stream = new FlexfecReceiveStreamImpl(
-      clock_, config, recovered_packet_receiver, call_stats_->AsRtcpRttStats(),
-      module_process_thread_->process_thread());
+      clock_, config, recovered_packet_receiver, call_stats_->AsRtcpRttStats());
 
   // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
   // thread.

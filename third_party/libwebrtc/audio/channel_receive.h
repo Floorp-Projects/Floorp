@@ -45,7 +45,6 @@ namespace webrtc {
 class AudioDeviceModule;
 class FrameDecryptorInterface;
 class PacketRouter;
-class ProcessThread;
 class RateLimiter;
 class ReceiveStatistics;
 class RtcEventLog;
@@ -170,7 +169,6 @@ class ChannelReceiveInterface : public RtpPacketSinkInterface {
 
 std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
     Clock* clock,
-    ProcessThread* module_process_thread,
     NetEqFactory* neteq_factory,
     AudioDeviceModule* audio_device_module,
     Transport* rtcp_send_transport,

@@ -36,7 +36,6 @@
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer.h"
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer_raw.h"
-#include "modules/utility/include/process_thread.h"
 #include "modules/video_coding/frame_object.h"
 #include "modules/video_coding/h264_sprop_parameter_sets.h"
 #include "modules/video_coding/h264_sps_pps_tracker.h"
@@ -215,7 +214,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
     RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
     RtcpCnameCallback* rtcp_cname_callback,
     VCMReceiveStatisticsCallback* vcm_receive_statistics,
-    ProcessThread* process_thread,
     NackSender* nack_sender,
     KeyFrameRequestSender* keyframe_request_sender,
     OnCompleteFrameCallback* complete_frame_callback,
@@ -224,7 +222,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
     : clock_(clock),
       config_(*config),
       packet_router_(packet_router),
-      process_thread_(process_thread),
       ntp_estimator_(clock),
       rtp_header_extensions_(config_.rtp.extensions),
       forced_playout_delay_max_ms_("max_ms", absl::nullopt),
@@ -295,8 +292,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       {&forced_playout_delay_max_ms_, &forced_playout_delay_min_ms_},
       field_trial::FindFullName("WebRTC-ForcePlayoutDelay"));
 
-  process_thread_->RegisterModule(rtp_rtcp_.get(), RTC_FROM_HERE);
-
   if (config_.rtp.lntf.enabled) {
     loss_notification_controller_ =
         std::make_unique<LossNotificationController>(&rtcp_feedback_buffer_,
@@ -322,8 +317,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
 }
 
 RtpVideoStreamReceiver2::~RtpVideoStreamReceiver2() {
-  process_thread_->DeRegisterModule(rtp_rtcp_.get());
-
   if (packet_router_)
     packet_router_->RemoveReceiveRtpModule(rtp_rtcp_.get());
   UpdateHistograms();

@@ -26,7 +26,6 @@
 #include "modules/rtp_rtcp/source/byte_io.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
-#include "modules/utility/include/mock/mock_process_thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_transport.h"
@@ -87,15 +86,13 @@ class FlexfecReceiveStreamTest : public ::testing::Test {
  protected:
   FlexfecReceiveStreamTest()
       : config_(CreateDefaultConfig(&rtcp_send_transport_)) {
-    EXPECT_CALL(process_thread_, RegisterModule(_, _)).Times(1);
     receive_stream_ = std::make_unique<FlexfecReceiveStreamImpl>(
         Clock::GetRealTimeClock(), config_, &recovered_packet_receiver_,
-        &rtt_stats_, &process_thread_);
+        &rtt_stats_);
     receive_stream_->RegisterWithTransport(&rtp_stream_receiver_controller_);
   }
 
   ~FlexfecReceiveStreamTest() {
-    EXPECT_CALL(process_thread_, DeRegisterModule(_)).Times(1);
     receive_stream_->UnregisterFromTransport();
   }
 
@@ -103,7 +100,6 @@ class FlexfecReceiveStreamTest : public ::testing::Test {
   FlexfecReceiveStream::Config config_;
   MockRecoveredPacketReceiver recovered_packet_receiver_;
   MockRtcpRttStats rtt_stats_;
-  MockProcessThread process_thread_;
   RtpStreamReceiverController rtp_stream_receiver_controller_;
   std::unique_ptr<FlexfecReceiveStreamImpl> receive_stream_;
 };
@@ -146,10 +142,9 @@ TEST_F(FlexfecReceiveStreamTest, RecoversPacket) {
   // clang-format on
 
   ::testing::StrictMock<MockRecoveredPacketReceiver> recovered_packet_receiver;
-  EXPECT_CALL(process_thread_, RegisterModule(_, _)).Times(1);
   FlexfecReceiveStreamImpl receive_stream(Clock::GetRealTimeClock(), config_,
                                           &recovered_packet_receiver,
-                                          &rtt_stats_, &process_thread_);
+                                          &rtt_stats_);
   receive_stream.RegisterWithTransport(&rtp_stream_receiver_controller_);
 
   EXPECT_CALL(recovered_packet_receiver,
@@ -158,8 +153,6 @@ TEST_F(FlexfecReceiveStreamTest, RecoversPacket) {
   receive_stream.OnRtpPacket(ParsePacket(kFlexfecPacket));
 
   // Tear-down
-  EXPECT_CALL(process_thread_, DeRegisterModule(_)).Times(1);
-
   receive_stream.UnregisterFromTransport();
 }
 

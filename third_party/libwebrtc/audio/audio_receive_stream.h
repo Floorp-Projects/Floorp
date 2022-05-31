@@ -48,7 +48,6 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
  public:
   AudioReceiveStream(Clock* clock,
                      PacketRouter* packet_router,
-                     ProcessThread* module_process_thread,
                      NetEqFactory* neteq_factory,
                      const webrtc::AudioReceiveStream::Config& config,
                      const rtc::scoped_refptr<webrtc::AudioState>& audio_state,

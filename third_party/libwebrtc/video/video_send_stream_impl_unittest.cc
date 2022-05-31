@@ -62,8 +62,6 @@ std::string GetAlrProbingExperimentString() {
 }
 class MockRtpVideoSender : public RtpVideoSenderInterface {
  public:
-  MOCK_METHOD(void, RegisterProcessThread, (ProcessThread*), (override));
-  MOCK_METHOD(void, DeRegisterProcessThread, (), (override));
   MOCK_METHOD(void, SetActive, (bool), (override));
   MOCK_METHOD(void, SetActiveModules, (const std::vector<bool>), (override));
   MOCK_METHOD(bool, IsActive, (), (override));
