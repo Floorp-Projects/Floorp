@@ -4838,7 +4838,7 @@ name = "style"
 version = "0.0.1"
 dependencies = [
  "app_units",
- "arrayvec 0.5.2",
+ "arrayvec 0.7.2",
  "atomic_refcell",
  "bindgen 0.59.2",
  "bitflags",
