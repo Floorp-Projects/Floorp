@@ -85,8 +85,9 @@ class RtcpCounterObserver : public RtcpPacketTypeCounterObserver {
 };
 
 class ChannelSend : public ChannelSendInterface,
-                    public AudioPacketizationCallback {  // receive encoded
-                                                         // packets from the ACM
+                    public AudioPacketizationCallback,  // receive encoded
+                                                        // packets from the ACM
+                    public RtcpPacketTypeCounterObserver {
  public:
   // TODO(nisse): Make OnUplinkPacketLossRate public, and delete friend
   // declaration.
@@ -175,6 +176,11 @@ class ChannelSend : public ChannelSendInterface,
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
       override;
 
+  // RtcpPacketTypeCounterObserver.
+  void RtcpPacketTypesCounterUpdated(
+      uint32_t ssrc,
+      const RtcpPacketTypeCounter& packet_counter) override;
+
  private:
   // From AudioPacketizationCallback in the ACM
   int32_t SendData(AudioFrameType frameType,
@@ -212,6 +218,7 @@ class ChannelSend : public ChannelSendInterface,
 
   mutable Mutex volume_settings_mutex_;
 
+  const uint32_t ssrc_;
   bool sending_ RTC_GUARDED_BY(&worker_thread_checker_) = false;
 
   RtcEventLog* const event_log_;
@@ -266,6 +273,10 @@ class ChannelSend : public ChannelSendInterface,
   rtc::TaskQueue encoder_queue_;
 
   const bool fixing_timestamp_stall_;
+
+  mutable Mutex rtcp_counter_mutex_;
+  RtcpPacketTypeCounter rtcp_packet_type_counter_
+      RTC_GUARDED_BY(rtcp_counter_mutex_);
 };
 
 const int kTelephoneEventAttenuationdB = 10;
@@ -479,7 +490,8 @@ ChannelSend::ChannelSend(
     uint32_t ssrc,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
     TransportFeedbackObserver* feedback_observer)
-    : event_log_(rtc_event_log),
+    : ssrc_(ssrc),
+      event_log_(rtc_event_log),
       _timeStamp(0),  // This is just an offset, RTP module will add it's own
                       // random offset
       input_mute_(false),
@@ -517,6 +529,7 @@ ChannelSend::ChannelSend(
       retransmission_rate_limiter_.get();
   configuration.extmap_allow_mixed = extmap_allow_mixed;
   configuration.rtcp_report_interval_ms = rtcp_report_interval_ms;
+  configuration.rtcp_packet_type_counter_observer = this;
 
   configuration.local_media_ssrc = ssrc;
 
@@ -808,7 +821,22 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
   stats.retransmitted_packets_sent = rtp_stats.retransmitted.packets;
   stats.report_block_datas = rtp_rtcp_->GetLatestReportBlockData();
 
+  {
+    MutexLock lock(&rtcp_counter_mutex_);
+    stats.nacks_rcvd = rtcp_packet_type_counter_.nack_packets;
+  }
+
   return stats;
+}
+
+void ChannelSend::RtcpPacketTypesCounterUpdated(
+    uint32_t ssrc,
+    const RtcpPacketTypeCounter& packet_counter) {
+  if (ssrc != ssrc_) {
+    return;
+  }
+  MutexLock lock(&rtcp_counter_mutex_);
+  rtcp_packet_type_counter_ = packet_counter;
 }
 
 void ChannelSend::ProcessAndEncodeAudio(

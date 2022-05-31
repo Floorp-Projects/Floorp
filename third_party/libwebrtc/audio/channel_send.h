@@ -46,6 +46,7 @@ struct CallSendStatistics {
   // ReportBlockData represents the latest Report Block that was received for
   // that pair.
   std::vector<ReportBlockData> report_block_datas;
+  uint32_t nacks_rcvd;
 };
 
 // See section 6.4.2 in http://www.ietf.org/rfc/rfc3550.txt for details.

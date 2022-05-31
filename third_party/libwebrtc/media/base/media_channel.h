@@ -372,6 +372,8 @@ struct MediaSenderInfo {
   int packets_sent = 0;
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-retransmittedpacketssent
   uint64_t retransmitted_packets_sent = 0;
+  // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-nackcount
+  uint32_t nacks_rcvd = 0;
   int packets_lost = 0;
   float fraction_lost = 0.0f;
   int64_t rtt_ms = 0;
@@ -538,7 +540,6 @@ struct VideoSenderInfo : public MediaSenderInfo {
   std::string encoder_implementation_name;
   int firs_rcvd = 0;
   int plis_rcvd = 0;
-  int nacks_rcvd = 0;
   int send_frame_width = 0;
   int send_frame_height = 0;
   int frames = 0;
