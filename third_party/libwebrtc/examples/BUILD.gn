@@ -342,15 +342,13 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "../sdk:base_objc",
         "../sdk:helpers_objc",
         "../sdk:mediaconstraints_objc",
+        "../sdk:metal_objc",
         "../sdk:peerconnectionfactory_base_objc",
         "../sdk:peerconnectionfactory_base_objc",
         "../sdk:ui_objc",
         "../sdk:videocapture_objc",
         "../sdk:videocodec_objc",
       ]
-      if (rtc_use_metal_rendering) {
-        deps += [ "../sdk:metal_objc" ]
-      }
 
       frameworks = [ "AVFoundation.framework" ]
     }
@@ -499,6 +497,7 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "../sdk:base_objc",
         "../sdk:default_codec_factory_objc",
         "../sdk:helpers_objc",
+        "../sdk:metal_objc",
         "../sdk:native_api",
         "../sdk:ui_objc",
         "../sdk:videocapture_objc",
