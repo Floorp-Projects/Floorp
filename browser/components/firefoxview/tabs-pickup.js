@@ -21,7 +21,11 @@ const tabsSetupFlowManager = new (class {
 
     XPCOMUtils.defineLazyModuleGetters(this, {
       Services: "resource://gre/modules/Services.jsm",
-      fxAccounts: "resource://gre/modules/FxAccounts.jsm",
+    });
+    XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+      return ChromeUtils.import(
+        "resource://gre/modules/FxAccounts.jsm"
+      ).getFxAccountsSingleton();
     });
     ChromeUtils.defineModuleGetter(
       this.sync,
