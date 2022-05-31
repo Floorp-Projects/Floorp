@@ -961,23 +961,21 @@ ParsedRtcEventLog::LoggedRtpStreamOutgoing::~LoggedRtpStreamOutgoing() =
 
 ParsedRtcEventLog::LoggedRtpStreamView::LoggedRtpStreamView(
     uint32_t ssrc,
-    const LoggedRtpPacketIncoming* ptr,
-    size_t num_elements)
-    : ssrc(ssrc),
-      packet_view(PacketView<const LoggedRtpPacket>::Create(
-          ptr,
-          num_elements,
-          offsetof(LoggedRtpPacketIncoming, rtp))) {}
+    const std::vector<LoggedRtpPacketIncoming>& packets)
+    : ssrc(ssrc), packet_view() {
+  for (const LoggedRtpPacketIncoming& packet : packets) {
+    packet_view.push_back(&(packet.rtp));
+  }
+}
 
 ParsedRtcEventLog::LoggedRtpStreamView::LoggedRtpStreamView(
     uint32_t ssrc,
-    const LoggedRtpPacketOutgoing* ptr,
-    size_t num_elements)
-    : ssrc(ssrc),
-      packet_view(PacketView<const LoggedRtpPacket>::Create(
-          ptr,
-          num_elements,
-          offsetof(LoggedRtpPacketOutgoing, rtp))) {}
+    const std::vector<LoggedRtpPacketOutgoing>& packets)
+    : ssrc(ssrc), packet_view() {
+  for (const LoggedRtpPacketOutgoing& packet : packets) {
+    packet_view.push_back(&(packet.rtp));
+  }
+}
 
 ParsedRtcEventLog::LoggedRtpStreamView::LoggedRtpStreamView(
     const LoggedRtpStreamView&) = default;
@@ -1161,13 +1159,11 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStream(
   // Build PacketViews for easier iteration over RTP packets.
   for (const auto& stream : incoming_rtp_packets_by_ssrc_) {
     incoming_rtp_packet_views_by_ssrc_.emplace_back(
-        LoggedRtpStreamView(stream.ssrc, stream.incoming_packets.data(),
-                            stream.incoming_packets.size()));
+        LoggedRtpStreamView(stream.ssrc, stream.incoming_packets));
   }
   for (const auto& stream : outgoing_rtp_packets_by_ssrc_) {
     outgoing_rtp_packet_views_by_ssrc_.emplace_back(
-        LoggedRtpStreamView(stream.ssrc, stream.outgoing_packets.data(),
-                            stream.outgoing_packets.size()));
+        LoggedRtpStreamView(stream.ssrc, stream.outgoing_packets));
   }
 
   // Set up convenience wrappers around the most commonly used RTCP types.
