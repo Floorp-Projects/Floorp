@@ -30,6 +30,7 @@
 
 struct nsStyleDisplay;
 namespace mozilla {
+enum class StyleScrollSnapStop : uint8_t;
 enum class StyleScrollSnapStrictness : uint8_t;
 enum class StyleOverscrollBehavior : uint8_t;
 class WritingMode;
@@ -717,18 +718,23 @@ struct ScrollSnapInfo {
     // https://drafts.csswg.org/css-scroll-snap/#scroll-snap-area
     nsRect mSnapArea;
 
+    // https://drafts.csswg.org/css-scroll-snap/#propdef-scroll-snap-stop
+    StyleScrollSnapStop mScrollSnapStop;
+
     SnapTarget() = default;
 
     SnapTarget(Maybe<nscoord>&& aSnapPositionX, Maybe<nscoord>&& aSnapPositionY,
-               nsRect&& aSnapArea)
+               nsRect&& aSnapArea, StyleScrollSnapStop aScrollSnapStop)
         : mSnapPositionX(std::move(aSnapPositionX)),
           mSnapPositionY(std::move(aSnapPositionY)),
-          mSnapArea(std::move(aSnapArea)) {}
+          mSnapArea(std::move(aSnapArea)),
+          mScrollSnapStop(aScrollSnapStop) {}
 
     bool operator==(const SnapTarget& aOther) const {
       return mSnapPositionX == aOther.mSnapPositionX &&
              mSnapPositionY == aOther.mSnapPositionY &&
-             mSnapArea == aOther.mSnapArea;
+             mSnapArea == aOther.mSnapArea &&
+             mScrollSnapStop == aOther.mScrollSnapStop;
     }
   };
 
