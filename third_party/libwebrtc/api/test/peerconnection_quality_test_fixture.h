@@ -391,19 +391,6 @@ class PeerConnectionE2EQualityTestFixture {
     // it will be shut downed.
     TimeDelta run_duration;
 
-    // DEPRECATED: Instead of setting the codecs in RunParams (which apply to
-    //             all the participants in the call, please set them with
-    //             PeerConfigurer, this will allow more flexibility and let
-    //             different Peers support different codecs.
-    //
-    // List of video codecs to use during the test. These codecs will be
-    // negotiated in SDP during offer/answer exchange. The order of these codecs
-    // during negotiation will be the same as in |video_codecs|. Codecs have
-    // to be available in codecs list provided by peer connection to be
-    // negotiated. If some of specified codecs won't be found, the test will
-    // crash.
-    // If list is empty Vp8 with no required_params will be used.
-    std::vector<VideoCodecConfig> video_codecs;
     bool use_ulp_fec = false;
     bool use_flex_fec = false;
     // Specifies how much video encoder target bitrate should be different than
