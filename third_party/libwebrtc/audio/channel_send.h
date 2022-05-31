@@ -28,7 +28,6 @@
 namespace webrtc {
 
 class FrameEncryptorInterface;
-class ProcessThread;
 class RtcEventLog;
 class RtpTransportControllerSendInterface;
 
@@ -127,7 +126,6 @@ class ChannelSendInterface {
 std::unique_ptr<ChannelSendInterface> CreateChannelSend(
     Clock* clock,
     TaskQueueFactory* task_queue_factory,
-    ProcessThread* module_process_thread,
     Transport* rtp_transport,
     RtcpRttStats* rtcp_rtt_stats,
     RtcEventLog* rtc_event_log,

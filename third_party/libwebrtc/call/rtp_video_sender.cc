@@ -371,7 +371,6 @@ RtpVideoSender::RtpVideoSender(
           field_trials_.Lookup("WebRTC-Vp9DependencyDescriptor"),
           "Enabled")),
       active_(false),
-      module_process_thread_(nullptr),
       suspended_ssrcs_(std::move(suspended_ssrcs)),
       fec_controller_(std::move(fec_controller)),
       fec_allowed_(true),
@@ -399,7 +398,6 @@ RtpVideoSender::RtpVideoSender(
   RTC_DCHECK_EQ(rtp_config_.ssrcs.size(), rtp_streams_.size());
   if (send_side_bwe_with_overhead_ && has_packet_feedback_)
     transport_->IncludeOverheadInPacedSender();
-  module_process_thread_checker_.Detach();
   // SSRCs are assumed to be sorted in the same order as |rtp_modules|.
   for (uint32_t ssrc : rtp_config_.ssrcs) {
     // Restore state if it previously existed.
@@ -458,25 +456,6 @@ RtpVideoSender::~RtpVideoSender() {
       std::vector<bool>(rtp_streams_.size(), /*active=*/false));
   transport_->GetStreamFeedbackProvider()->DeRegisterStreamFeedbackObserver(
       this);
-}
-
-void RtpVideoSender::RegisterProcessThread(
-    ProcessThread* module_process_thread) {
-  TRACE_EVENT0("webrtc", "RtpVideoSender::RegisterProcessThread");
-  RTC_DCHECK_RUN_ON(&module_process_thread_checker_);
-  RTC_DCHECK(!module_process_thread_);
-  module_process_thread_ = module_process_thread;
-
-  for (const RtpStreamSender& stream : rtp_streams_) {
-    module_process_thread_->RegisterModule(stream.rtp_rtcp.get(),
-                                           RTC_FROM_HERE);
-  }
-}
-
-void RtpVideoSender::DeRegisterProcessThread() {
-  RTC_DCHECK_RUN_ON(&module_process_thread_checker_);
-  for (const RtpStreamSender& stream : rtp_streams_)
-    module_process_thread_->DeRegisterModule(stream.rtp_rtcp.get());
 }
 
 void RtpVideoSender::SetActive(bool active) {

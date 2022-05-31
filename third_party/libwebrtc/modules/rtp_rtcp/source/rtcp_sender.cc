@@ -955,6 +955,8 @@ void RTCPSender::SendCombinedRtcpPacket(
 
 void RTCPSender::SetNextRtcpSendEvaluationDuration(TimeDelta duration) {
   next_time_to_send_rtcp_ = clock_->CurrentTime() + duration;
+  // TODO(bugs.webrtc.org/11581): make unconditional once downstream consumers
+  // are using the callback method.
   if (schedule_next_rtcp_send_evaluation_function_)
     schedule_next_rtcp_send_evaluation_function_(duration);
 }

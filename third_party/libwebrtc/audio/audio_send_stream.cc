@@ -102,7 +102,6 @@ AudioSendStream::AudioSendStream(
     const webrtc::AudioSendStream::Config& config,
     const rtc::scoped_refptr<webrtc::AudioState>& audio_state,
     TaskQueueFactory* task_queue_factory,
-    ProcessThread* module_process_thread,
     RtpTransportControllerSendInterface* rtp_transport,
     BitrateAllocatorInterface* bitrate_allocator,
     RtcEventLog* event_log,
@@ -119,7 +118,6 @@ AudioSendStream::AudioSendStream(
                       voe::CreateChannelSend(
                           clock,
                           task_queue_factory,
-                          module_process_thread,
                           config.send_transport,
                           rtcp_rtt_stats,
                           event_log,

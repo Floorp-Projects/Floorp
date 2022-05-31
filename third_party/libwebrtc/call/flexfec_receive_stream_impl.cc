@@ -140,8 +140,7 @@ FlexfecReceiveStreamImpl::FlexfecReceiveStreamImpl(
     Clock* clock,
     const Config& config,
     RecoveredPacketReceiver* recovered_packet_receiver,
-    RtcpRttStats* rtt_stats,
-    ProcessThread* process_thread)
+    RtcpRttStats* rtt_stats)
     : config_(config),
       receiver_(MaybeCreateFlexfecReceiver(clock,
                                            config_,
@@ -150,20 +149,17 @@ FlexfecReceiveStreamImpl::FlexfecReceiveStreamImpl(
       rtp_rtcp_(CreateRtpRtcpModule(clock,
                                     rtp_receive_statistics_.get(),
                                     config_,
-                                    rtt_stats)),
-      process_thread_(process_thread) {
+                                    rtt_stats)) {
   RTC_LOG(LS_INFO) << "FlexfecReceiveStreamImpl: " << config_.ToString();
 
   packet_sequence_checker_.Detach();
 
   // RTCP reporting.
   rtp_rtcp_->SetRTCPStatus(config_.rtcp_mode);
-  process_thread_->RegisterModule(rtp_rtcp_.get(), RTC_FROM_HERE);
 }
 
 FlexfecReceiveStreamImpl::~FlexfecReceiveStreamImpl() {
   RTC_LOG(LS_INFO) << "~FlexfecReceiveStreamImpl: " << config_.ToString();
-  process_thread_->DeRegisterModule(rtp_rtcp_.get());
 }
 
 void FlexfecReceiveStreamImpl::RegisterWithTransport(

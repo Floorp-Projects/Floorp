@@ -86,7 +86,6 @@ class ChannelReceive : public ChannelReceiveInterface {
   // Used for receive streams.
   ChannelReceive(
       Clock* clock,
-      ProcessThread* module_process_thread,
       NetEqFactory* neteq_factory,
       AudioDeviceModule* audio_device_module,
       Transport* rtcp_send_transport,
@@ -270,7 +269,6 @@ class ChannelReceive : public ChannelReceiveInterface {
   // frame.
   int64_t capture_start_ntp_time_ms_ RTC_GUARDED_BY(ts_stats_lock_);
 
-  ProcessThread* const module_process_thread_;
   AudioDeviceModule* _audioDeviceModulePtr;
   float _outputGain RTC_GUARDED_BY(volume_settings_mutex_);
 
@@ -508,7 +506,6 @@ void ChannelReceive::SetSourceTracker(SourceTracker* source_tracker) {
 
 ChannelReceive::ChannelReceive(
     Clock* clock,
-    ProcessThread* module_process_thread,
     NetEqFactory* neteq_factory,
     AudioDeviceModule* audio_device_module,
     Transport* rtcp_send_transport,
@@ -542,15 +539,12 @@ ChannelReceive::ChannelReceive(
       rtp_ts_wraparound_handler_(new rtc::TimestampWrapAroundHandler()),
       capture_start_rtp_time_stamp_(-1),
       capture_start_ntp_time_ms_(-1),
-      module_process_thread_(module_process_thread),
       _audioDeviceModulePtr(audio_device_module),
       _outputGain(1.0f),
       associated_send_channel_(nullptr),
       frame_decryptor_(frame_decryptor),
       crypto_options_(crypto_options),
       absolute_capture_time_interpolator_(clock) {
-  RTC_DCHECK(worker_thread_);
-  RTC_DCHECK(module_process_thread_);
   RTC_DCHECK(audio_device_module);
 
   network_thread_checker_.Detach();
@@ -582,19 +576,10 @@ ChannelReceive::ChannelReceive(
 
   // Ensure that RTCP is enabled for the created channel.
   rtp_rtcp_->SetRTCPStatus(RtcpMode::kCompound);
-
-  // TODO(tommi): This should be an implementation detail of ModuleRtpRtcpImpl2
-  // and the pointer to the process thread should be there (which also localizes
-  // the problem of getting rid of that dependency).
-  module_process_thread_->RegisterModule(rtp_rtcp_.get(), RTC_FROM_HERE);
 }
 
 ChannelReceive::~ChannelReceive() {
   RTC_DCHECK_RUN_ON(&construction_thread_);
-
-  // Unregister the module before stopping playout etc, to match the order
-  // things were set up in the ctor.
-  module_process_thread_->DeRegisterModule(rtp_rtcp_.get());
 
   // Resets the delegate's callback to ChannelReceive::OnReceivedPayloadData.
   if (frame_transformer_delegate_)
@@ -1093,7 +1078,6 @@ int64_t ChannelReceive::GetRTT() const {
 
 std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
     Clock* clock,
-    ProcessThread* module_process_thread,
     NetEqFactory* neteq_factory,
     AudioDeviceModule* audio_device_module,
     Transport* rtcp_send_transport,
@@ -1111,12 +1095,12 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
     RtcpEventObserver* rtcp_event_observer) {
   return std::make_unique<ChannelReceive>(
-      clock, module_process_thread, neteq_factory, audio_device_module,
-      rtcp_send_transport, rtc_event_log, local_ssrc, remote_ssrc,
-      jitter_buffer_max_packets, jitter_buffer_fast_playout,
-      jitter_buffer_min_delay_ms, jitter_buffer_enable_rtx_handling,
-      decoder_factory, codec_pair_id, std::move(frame_decryptor),
-      crypto_options, std::move(frame_transformer), rtcp_event_observer);
+      clock, neteq_factory, audio_device_module, rtcp_send_transport,
+      rtc_event_log, local_ssrc, remote_ssrc, jitter_buffer_max_packets,
+      jitter_buffer_fast_playout, jitter_buffer_min_delay_ms,
+      jitter_buffer_enable_rtx_handling, decoder_factory, codec_pair_id,
+      std::move(frame_decryptor), crypto_options, std::move(frame_transformer),
+      rtcp_event_observer);
 }
 
 }  // namespace voe

@@ -166,16 +166,14 @@ class RtpVideoStreamReceiver2Test : public ::testing::Test,
             TaskQueueFactory::Priority::NORMAL)),
         task_queue_setter_(task_queue_.get()),
         override_field_trials_(field_trials),
-        config_(CreateConfig()),
-        process_thread_(ProcessThread::Create("TestThread")) {
+        config_(CreateConfig()) {
     rtp_receive_statistics_ =
         ReceiveStatistics::Create(Clock::GetRealTimeClock());
     rtp_video_stream_receiver_ = std::make_unique<RtpVideoStreamReceiver2>(
         TaskQueueBase::Current(), Clock::GetRealTimeClock(), &mock_transport_,
         nullptr, nullptr, &config_, rtp_receive_statistics_.get(), nullptr,
-        nullptr, process_thread_.get(), &mock_nack_sender_,
-        &mock_key_frame_request_sender_, &mock_on_complete_frame_callback_,
-        nullptr, nullptr);
+        nullptr, &mock_nack_sender_, &mock_key_frame_request_sender_,
+        &mock_on_complete_frame_callback_, nullptr, nullptr);
     VideoCodec codec;
     codec.codecType = kVideoCodecGeneric;
     rtp_video_stream_receiver_->AddReceiveCodec(kPayloadType, codec, {},
@@ -250,7 +248,6 @@ class RtpVideoStreamReceiver2Test : public ::testing::Test,
   MockKeyFrameRequestSender mock_key_frame_request_sender_;
   MockTransport mock_transport_;
   MockOnCompleteFrameCallback mock_on_complete_frame_callback_;
-  std::unique_ptr<ProcessThread> process_thread_;
   std::unique_ptr<ReceiveStatistics> rtp_receive_statistics_;
   std::unique_ptr<RtpVideoStreamReceiver2> rtp_video_stream_receiver_;
   RtpPacketSinkInterface* test_packet_sink_ = nullptr;
@@ -1135,8 +1132,8 @@ TEST_F(RtpVideoStreamReceiver2Test, TransformFrame) {
   auto receiver = std::make_unique<RtpVideoStreamReceiver2>(
       TaskQueueBase::Current(), Clock::GetRealTimeClock(), &mock_transport_,
       nullptr, nullptr, &config_, rtp_receive_statistics_.get(), nullptr,
-      nullptr, process_thread_.get(), &mock_nack_sender_, nullptr,
-      &mock_on_complete_frame_callback_, nullptr, mock_frame_transformer);
+      nullptr, &mock_nack_sender_, nullptr, &mock_on_complete_frame_callback_,
+      nullptr, mock_frame_transformer);
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecGeneric;
   receiver->AddReceiveCodec(kPayloadType, video_codec, {},

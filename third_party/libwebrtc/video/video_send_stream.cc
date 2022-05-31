@@ -112,7 +112,6 @@ namespace internal {
 VideoSendStream::VideoSendStream(
     Clock* clock,
     int num_cpu_cores,
-    ProcessThread* module_process_thread,
     TaskQueueFactory* task_queue_factory,
     RtcpRttStats* call_stats,
     RtpTransportControllerSendInterface* transport,
@@ -174,14 +173,12 @@ VideoSendStream::VideoSendStream(
 
   video_stream_encoder_->SetFecControllerOverride(rtp_video_sender_);
 
-  rtp_video_sender_->RegisterProcessThread(module_process_thread);
   ReconfigureVideoEncoder(std::move(encoder_config));
 }
 
 VideoSendStream::~VideoSendStream() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_DCHECK(!running_);
-  rtp_video_sender_->DeRegisterProcessThread();
   transport_->DestroyRtpVideoSender(rtp_video_sender_);
 }
 

@@ -94,7 +94,6 @@ class ChannelSend : public ChannelSendInterface,
 
   ChannelSend(Clock* clock,
               TaskQueueFactory* task_queue_factory,
-              ProcessThread* module_process_thread,
               Transport* rtp_transport,
               RtcpRttStats* rtcp_rtt_stats,
               RtcEventLog* rtc_event_log,
@@ -205,7 +204,6 @@ class ChannelSend : public ChannelSendInterface,
   // voe::Channel into parts with single-threaded semantics, and thereby reduce
   // the need for locks.
   SequenceChecker worker_thread_checker_;
-  SequenceChecker module_process_thread_checker_;
   // Methods accessed from audio and video threads are checked for sequential-
   // only access. We don't necessarily own and control these threads, so thread
   // checkers cannot be used. E.g. Chromium may transfer "ownership" from one
@@ -225,7 +223,6 @@ class ChannelSend : public ChannelSendInterface,
   uint32_t _timeStamp RTC_GUARDED_BY(encoder_queue_);
 
   // uses
-  ProcessThread* const _moduleProcessThreadPtr;
   RmsLevel rms_level_ RTC_GUARDED_BY(encoder_queue_);
   bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_);
   bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_);
@@ -472,7 +469,6 @@ int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
 ChannelSend::ChannelSend(
     Clock* clock,
     TaskQueueFactory* task_queue_factory,
-    ProcessThread* module_process_thread,
     Transport* rtp_transport,
     RtcpRttStats* rtcp_rtt_stats,
     RtcEventLog* rtc_event_log,
@@ -486,7 +482,6 @@ ChannelSend::ChannelSend(
     : event_log_(rtc_event_log),
       _timeStamp(0),  // This is just an offset, RTP module will add it's own
                       // random offset
-      _moduleProcessThreadPtr(module_process_thread),
       input_mute_(false),
       previous_frame_muted_(false),
       _includeAudioLevelIndication(false),
@@ -503,9 +498,6 @@ ChannelSend::ChannelSend(
           TaskQueueFactory::Priority::NORMAL)),
       fixing_timestamp_stall_(
           !field_trial::IsDisabled("WebRTC-Audio-FixTimestampStall")) {
-  RTC_DCHECK(module_process_thread);
-  module_process_thread_checker_.Detach();
-
   audio_coding_.reset(AudioCodingModule::Create(AudioCodingModule::Config()));
 
   RtpRtcpInterface::Configuration configuration;
@@ -534,8 +526,6 @@ ChannelSend::ChannelSend(
   rtp_sender_audio_ = std::make_unique<RTPSenderAudio>(configuration.clock,
                                                        rtp_rtcp_->RtpSender());
 
-  _moduleProcessThreadPtr->RegisterModule(rtp_rtcp_.get(), RTC_FROM_HERE);
-
   // Ensure that RTCP is enabled by default for the created channel.
   rtp_rtcp_->SetRTCPStatus(RtcpMode::kCompound);
 
@@ -555,9 +545,6 @@ ChannelSend::~ChannelSend() {
   StopSend();
   int error = audio_coding_->RegisterTransportCallback(NULL);
   RTC_DCHECK_EQ(0, error);
-
-  if (_moduleProcessThreadPtr)
-    _moduleProcessThreadPtr->DeRegisterModule(rtp_rtcp_.get());
 }
 
 void ChannelSend::StartSend() {
@@ -889,7 +876,6 @@ ANAStats ChannelSend::GetANAStatistics() const {
 }
 
 RtpRtcpInterface* ChannelSend::GetRtpRtcp() const {
-  RTC_DCHECK(module_process_thread_checker_.IsCurrent());
   return rtp_rtcp_.get();
 }
 
@@ -961,7 +947,6 @@ void ChannelSend::InitFrameTransformerDelegate(
 std::unique_ptr<ChannelSendInterface> CreateChannelSend(
     Clock* clock,
     TaskQueueFactory* task_queue_factory,
-    ProcessThread* module_process_thread,
     Transport* rtp_transport,
     RtcpRttStats* rtcp_rtt_stats,
     RtcEventLog* rtc_event_log,
@@ -973,10 +958,10 @@ std::unique_ptr<ChannelSendInterface> CreateChannelSend(
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
     TransportFeedbackObserver* feedback_observer) {
   return std::make_unique<ChannelSend>(
-      clock, task_queue_factory, module_process_thread, rtp_transport,
-      rtcp_rtt_stats, rtc_event_log, frame_encryptor, crypto_options,
-      extmap_allow_mixed, rtcp_report_interval_ms, ssrc,
-      std::move(frame_transformer), feedback_observer);
+      clock, task_queue_factory, rtp_transport, rtcp_rtt_stats, rtc_event_log,
+      frame_encryptor, crypto_options, extmap_allow_mixed,
+      rtcp_report_interval_ms, ssrc, std::move(frame_transformer),
+      feedback_observer);
 }
 
 }  // namespace voe
