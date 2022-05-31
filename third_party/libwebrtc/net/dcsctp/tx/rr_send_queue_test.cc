@@ -354,6 +354,47 @@ TEST_F(RRSendQueueTest, CommittingResetsSSN) {
   EXPECT_EQ(chunk_three->data.ssn, SSN(0));
 }
 
+TEST_F(RRSendQueueTest, CommittingResetsSSNForPausedStreamsOnly) {
+  std::vector<uint8_t> payload(50);
+
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, payload));
+  buf_.Add(kNow, DcSctpMessage(StreamID(3), kPPID, payload));
+
+  absl::optional<SendQueue::DataToSend> chunk_one =
+      buf_.Produce(kNow, kOneFragmentPacketSize);
+  ASSERT_TRUE(chunk_one.has_value());
+  EXPECT_EQ(chunk_one->data.stream_id, StreamID(1));
+  EXPECT_EQ(chunk_one->data.ssn, SSN(0));
+
+  absl::optional<SendQueue::DataToSend> chunk_two =
+      buf_.Produce(kNow, kOneFragmentPacketSize);
+  ASSERT_TRUE(chunk_two.has_value());
+  EXPECT_EQ(chunk_two->data.stream_id, StreamID(3));
+  EXPECT_EQ(chunk_two->data.ssn, SSN(0));
+
+  StreamID stream_ids[] = {StreamID(3)};
+  buf_.PrepareResetStreams(stream_ids);
+
+  // Send two more messages - SID 3 will buffer, SID 1 will send.
+  buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, payload));
+  buf_.Add(kNow, DcSctpMessage(StreamID(3), kPPID, payload));
+
+  EXPECT_TRUE(buf_.CanResetStreams());
+  buf_.CommitResetStreams();
+
+  absl::optional<SendQueue::DataToSend> chunk_three =
+      buf_.Produce(kNow, kOneFragmentPacketSize);
+  ASSERT_TRUE(chunk_three.has_value());
+  EXPECT_EQ(chunk_three->data.stream_id, StreamID(1));
+  EXPECT_EQ(chunk_three->data.ssn, SSN(1));
+
+  absl::optional<SendQueue::DataToSend> chunk_four =
+      buf_.Produce(kNow, kOneFragmentPacketSize);
+  ASSERT_TRUE(chunk_four.has_value());
+  EXPECT_EQ(chunk_four->data.stream_id, StreamID(3));
+  EXPECT_EQ(chunk_four->data.ssn, SSN(0));
+}
+
 TEST_F(RRSendQueueTest, RollBackResumesSSN) {
   std::vector<uint8_t> payload(50);
 

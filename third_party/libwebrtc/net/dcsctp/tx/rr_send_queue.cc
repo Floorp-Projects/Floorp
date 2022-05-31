@@ -373,7 +373,11 @@ bool RRSendQueue::CanResetStreams() const {
 }
 
 void RRSendQueue::CommitResetStreams() {
-  Reset();
+  for (auto& stream_entry : streams_) {
+    if (stream_entry.second.is_paused()) {
+      stream_entry.second.Reset();
+    }
+  }
   RTC_DCHECK(IsConsistent());
 }
 
