@@ -10211,8 +10211,20 @@ document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
 
 /*--------------------------------------------------------userChrome.js(uc.js)のコーナー---------------------------------------------------------*/
 
-/*
-const script = document.createElement('script');
-script.src = "chrome://userchromejs/content/読み込むJS"; 
+if (Services.prefs.getBoolPref("floorp.memory.free.button", false)) {
+var script = document.createElement('script');
+script.src = "chrome://userchromejs/content/memory-free.uc.js"; 
 document.head.appendChild(script); 
-*/
+}
+
+if (Services.prefs.getBoolPref("floorp.entable.deepl.translate", false)) {
+var script = document.createElement('script');
+script.src = "chrome://userchromejs/content/deepl.uc.js"; 
+document.head.appendChild(script); 
+}
+
+if (Services.prefs.getBoolPref("floorp.multitab.bottommode", false)) {
+var firefox = document.createElement('script');
+firefox.src = "chrome://userchromejs/content/multitab.uc.js"; 
+document.head.appendChild(firefox); 
+}

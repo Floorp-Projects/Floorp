@@ -6,6 +6,10 @@ browser.jar:
 
 # userScript (今後ここに追加)
 
+   content/userchromejs/deepl.uc.js                 (deepl.uc.js)
+   content/userchromejs/multitab.uc.js              (multitab.uc.js)
+   content/userchromejs/memory-free.uc.js           (memory-free.uc.js)
+
 
 # Loader
    content/userchromejs/bootstraploader.jsm         (loader/bootstrapLoader.jsm)

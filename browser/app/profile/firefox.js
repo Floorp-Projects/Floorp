@@ -2820,6 +2820,10 @@ pref("floorp.enable.auto.restart", false);
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 pref("browser.newtabpage.activity-stream.feeds.section.highlights", true);
 
+pref("floorp.memory.free.button", true);
+pref("floorp.entable.deepl.translate", false);
+pref("floorp.multitab.bottommode", false);
+
 
 #if defined(XP_LINUX)
 pref("update.id.floorp", "", locked);
@@ -2853,19 +2857,6 @@ pref("browser.shell.checkDefaultBrowser", false, locked);
 
 //addon推奨プロンプトを消す
 pref("extensions.getAddons.showPane", false);
-//軽量化
-pref("browser.tabs.animate", false);
-pref("browser.panorama.animate_zoom", false);
-pref("network.http.pipelining", false);
-pref("network.http.pipelining.firstrequest", true);
-pref("network.http.pipelining.maxrequests", 8);
-pref("network.http.max-connections-per-server", 8);
-pref("network.http.max-connections", 32);
-pref("nglayout.initialpaint.delay", 0);
-pref("toolkit.telemetry.updatePing.enabledr", false);
-pref("content.notify.ontimer", true);
-pref("content.interrupt.parsing", true);
-pref("nglayout.initialpaint.delay", 0);
 
 //調査と思われるものを削除。Torでは削除済み。
 pref("app.normandy.api_url", "");
