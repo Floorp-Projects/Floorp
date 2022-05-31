@@ -18,6 +18,7 @@
 #include "media/base/media_channel.h"
 #include "media/base/rtp_utils.h"
 #include "rtc_base/byte_order.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/dscp.h"
 #include "rtc_base/message_handler.h"
@@ -127,10 +128,7 @@ class FakeNetworkInterface : public MediaChannel::NetworkInterface,
     rtp_packets_.push_back(*packet);
     if (conf_) {
       for (size_t i = 0; i < conf_sent_ssrcs_.size(); ++i) {
-        if (!SetRtpSsrc(packet->MutableData(), packet->size(),
-                        conf_sent_ssrcs_[i])) {
-          return false;
-        }
+        SetRtpSsrc(conf_sent_ssrcs_[i], *packet);
         PostMessage(ST_RTP, *packet);
       }
     } else {
@@ -182,6 +180,11 @@ class FakeNetworkInterface : public MediaChannel::NetworkInterface,
   }
 
  private:
+  void SetRtpSsrc(uint32_t ssrc, rtc::CopyOnWriteBuffer& buffer) {
+    RTC_CHECK_GE(buffer.size(), 12);
+    rtc::SetBE32(buffer.MutableData() + 8, ssrc);
+  }
+
   void GetNumRtpBytesAndPackets(uint32_t ssrc, int* bytes, int* packets) {
     if (bytes) {
       *bytes = 0;
