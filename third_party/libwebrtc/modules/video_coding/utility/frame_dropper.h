@@ -44,7 +44,7 @@ class FrameDropper {
   // Input:
   //          - framesize_bytes    : The size of the latest frame returned
   //                                 from the encoder.
-  //          - delta_frame        : True if the encoder returned a key frame.
+  //          - delta_frame        : True if the encoder returned a delta frame.
   void Fill(size_t framesize_bytes, bool delta_frame);
 
   void Leak(uint32_t input_framerate);
