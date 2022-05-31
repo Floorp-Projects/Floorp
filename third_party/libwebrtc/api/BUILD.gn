@@ -845,6 +845,7 @@ if (rtc_include_tests) {
   }
 
   rtc_source_set("mock_audio_sink") {
+    visibility = [ "*" ]
     testonly = true
     sources = [ "test/mock_audio_sink.h" ]
 
