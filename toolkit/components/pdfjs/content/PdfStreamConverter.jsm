@@ -353,6 +353,7 @@ class ChromeActions {
     let actor = getActor(this.domWindow);
     actor.sendAsyncMessage("PDFJS:Parent:saveURL", {
       blobUrl,
+      originalUrl,
       filename,
     });
   }

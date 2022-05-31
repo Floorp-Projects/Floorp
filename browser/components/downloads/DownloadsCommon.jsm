@@ -442,7 +442,9 @@ var DownloadsCommon = {
    * Copies the source URI of the given Download object to the clipboard.
    */
   copyDownloadLink(download) {
-    gClipboardHelper.copyString(download.source.url);
+    gClipboardHelper.copyString(
+      download.source.originalUrl || download.source.url
+    );
   },
 
   /**

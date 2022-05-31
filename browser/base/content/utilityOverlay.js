@@ -319,6 +319,7 @@ function openLinkIn(url, where, params) {
         url,
         null,
         null,
+        null,
         true,
         true,
         aReferrerInfo,
@@ -335,7 +336,17 @@ function openLinkIn(url, where, params) {
         );
         return;
       }
-      saveURL(url, null, null, true, true, aReferrerInfo, null, aInitiatingDoc);
+      saveURL(
+        url,
+        null,
+        null,
+        null,
+        true,
+        true,
+        aReferrerInfo,
+        null,
+        aInitiatingDoc
+      );
     }
     return;
   }

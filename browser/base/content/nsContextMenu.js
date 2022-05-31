@@ -1566,6 +1566,7 @@ class nsContextMenu {
       // FIXME can we switch this to a blob URL?
       internalSave(
         dataURL,
+        null, // originalURL
         null, // document
         name,
         null, // content disposition
@@ -1754,6 +1755,7 @@ class nsContextMenu {
           // it can without waiting.
           saveURL(
             linkURL,
+            null,
             linkText,
             dialogTitle,
             bypassCache,
@@ -1904,6 +1906,7 @@ class nsContextMenu {
       this._canvasToBlobURL(this.targetIdentifier).then(function(blobURL) {
         internalSave(
           blobURL,
+          null, // originalURL
           null, // document
           "canvas.png",
           null, // content disposition
@@ -1924,6 +1927,7 @@ class nsContextMenu {
       urlSecurityCheck(this.mediaURL, this.principal);
       internalSave(
         this.mediaURL,
+        null, // originalURL
         null, // document
         null, // file name; we'll take it from the URL
         this.contentData.contentDisposition,
