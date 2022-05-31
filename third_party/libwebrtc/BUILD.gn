@@ -439,10 +439,6 @@ config("common_config") {
 if (is_mac) {
 config("common_objc") {
   frameworks = [ "Foundation.framework" ]
-
-  if (rtc_use_metal_rendering) {
-    defines = [ "RTC_SUPPORTS_METAL" ]
-  }
   cflags = [ "-fobjc-arc" ]
 }
 }
