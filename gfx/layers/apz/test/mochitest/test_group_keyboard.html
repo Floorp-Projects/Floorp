@@ -52,6 +52,9 @@ var subtests = [
   {"file": "helper_bug1756529.html", prefs: bug1756529_prefs},
   {"file": "helper_bug1756529.html", prefs: [...bug1756529_prefs,
                                              ["test.events.async.enabled", true]]},
+  {"file": "helper_scroll_snap_on_page_down_scroll.html"},
+  {"file": "helper_scroll_snap_on_page_down_scroll.html",
+    prefs: [["test.events.async.enabled", true]]},
 ];
 
 if (isKeyApzEnabled()) {

@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page scroll snaps a snap point in the same page rather than the one in the next page</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    div {
+      position: absolute;
+      margin: 0px;
+    }
+    body {
+      margin: 0px;
+    }
+    html {
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+    }
+    .snap {
+      scroll-snap-align: start;
+      background: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="snap" style="top:   0vh; width: 100%; height: 20px;">1</div>
+  <div class="snap" style="top:  50vh; width: 100%; height: 20px;">2</div>
+  <div class="snap" style="top: 102vh; width: 100%; height: 20px;">3</div>
+  <div class="snap" style="top: 300vh; width: 100%; height: 20px;">4</div>
+  <div class="snap" style="top: 400vh; width: 100%; height: 20px;">5</div>
+
+  <script type="application/javascript">
+    async function test() {
+      const expectedPosition =
+        document.querySelectorAll(".snap")[1].getBoundingClientRect().top;
+
+      const keyPromise = promiseOneEvent(window, "keydown", null);
+      window.synthesizeKey("KEY_PageDown");
+      await keyPromise;
+
+      let startedScroll = false;
+      let sameScrollPosition = false;
+      let prevScrollPos = window.scrollY;
+      while (true) {
+        // Flush APZ repaints to ensure that scroll offset changes from
+        // a compositor sample reach the content process.
+        await promiseApzFlushedRepaints();
+
+        let scrollPos = window.scrollY;
+        if (scrollPos == prevScrollPos) {
+          if (startedScroll) {
+            // If we had the same scroll position in two frames consecutively,
+            // we consider scroll has finished.
+            if (sameScrollPosition) {
+              break;
+            }
+            sameScrollPosition = true;
+          }
+        } else {
+          sameScrollPosition = false;
+        }
+
+        if (!startedScroll && scrollPos > 0) {
+          startedScroll = true;
+        }
+        prevScrollPos = scrollPos;
+      }
+
+      is(window.scrollY, expectedPosition,
+         "Snaps to the second snap point rather than the third snap point " +
+         "which was initially out of the scrollport even if it's closer to " +
+         "the top of the next page than the second snap point");
+    }
+
+    waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>
