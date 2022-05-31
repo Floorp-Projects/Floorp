@@ -1418,25 +1418,6 @@ void nsNSSComponent::setValidationOptions(
     Telemetry::Accumulate(Telemetry::CERT_OCSP_REQUIRED, ocspRequired);
   }
 
-  CertVerifier::SHA1Mode sha1Mode = static_cast<CertVerifier::SHA1Mode>(
-      StaticPrefs::security_pki_sha1_enforcement_level());
-  switch (sha1Mode) {
-    case CertVerifier::SHA1Mode::Allowed:
-    case CertVerifier::SHA1Mode::Forbidden:
-    case CertVerifier::SHA1Mode::UsedToBeBefore2016ButNowIsForbidden:
-    case CertVerifier::SHA1Mode::ImportedRoot:
-    case CertVerifier::SHA1Mode::ImportedRootOrBefore2016:
-      break;
-    default:
-      sha1Mode = CertVerifier::SHA1Mode::Allowed;
-      break;
-  }
-
-  // Convert a previously-available setting to a safe one.
-  if (sha1Mode == CertVerifier::SHA1Mode::UsedToBeBefore2016ButNowIsForbidden) {
-    sha1Mode = CertVerifier::SHA1Mode::Forbidden;
-  }
-
   NetscapeStepUpPolicy netscapeStepUpPolicy = static_cast<NetscapeStepUpPolicy>(
       StaticPrefs::security_pki_netscape_step_up_policy());
   switch (netscapeStepUpPolicy) {
@@ -1474,7 +1455,7 @@ void nsNSSComponent::setValidationOptions(
                                  softTimeout, hardTimeout);
 
   mDefaultCertVerifier = new SharedCertVerifier(
-      odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays, sha1Mode,
+      odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays,
       netscapeStepUpPolicy, ctMode, crliteMode, mEnterpriseCerts);
 }
 
@@ -1491,7 +1472,7 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
       oldCertVerifier->mOCSPStrict ? CertVerifier::ocspStrict
                                    : CertVerifier::ocspRelaxed,
       oldCertVerifier->mOCSPTimeoutSoft, oldCertVerifier->mOCSPTimeoutHard,
-      oldCertVerifier->mCertShortLifetimeInDays, oldCertVerifier->mSHA1Mode,
+      oldCertVerifier->mCertShortLifetimeInDays,
       oldCertVerifier->mNetscapeStepUpPolicy, oldCertVerifier->mCTMode,
       oldCertVerifier->mCRLiteMode, mEnterpriseCerts);
 }
@@ -2292,7 +2273,6 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                prefName.EqualsLiteral("security.ssl.enable_ocsp_must_staple") ||
                prefName.EqualsLiteral(
                    "security.pki.certificate_transparency.mode") ||
-               prefName.EqualsLiteral("security.pki.sha1_enforcement_level") ||
                prefName.EqualsLiteral("security.pki.netscape_step_up_policy") ||
                prefName.EqualsLiteral(
                    "security.OCSP.timeoutMilliseconds.soft") ||

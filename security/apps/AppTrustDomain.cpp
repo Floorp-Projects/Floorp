@@ -214,10 +214,16 @@ Result AppTrustDomain::IsChainValid(const DERArray& certChain, Time time,
   return Success;
 }
 
-Result AppTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm,
+Result AppTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm digestAlg,
                                                      EndEntityOrCA, Time) {
-  // TODO: We should restrict signatures to SHA-256 or better.
-  return Success;
+  switch (digestAlg) {
+    case DigestAlgorithm::sha256:  // fall through
+    case DigestAlgorithm::sha384:  // fall through
+    case DigestAlgorithm::sha512:
+      return Success;
+    case DigestAlgorithm::sha1:
+      return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+  }
 }
 
 Result AppTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
