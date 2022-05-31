@@ -23,6 +23,7 @@
 #include "AndroidView.h"
 #include "gfxContext.h"
 #include "GeckoEditableSupport.h"
+#include "GeckoViewOutputStream.h"
 #include "GeckoViewSupport.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
@@ -42,6 +43,7 @@
 #include "nsFocusManager.h"
 #include "nsGkAtoms.h"
 #include "nsGfxCIID.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsLayoutUtils.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
@@ -57,6 +59,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIAppWindow.h"
 
+#include "mozilla/Logging.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
@@ -67,6 +70,7 @@
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
 #include "mozilla/a11y/SessionAccessibility.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -96,6 +100,8 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/widget/AndroidVsync.h"
 
+#define GVS_LOG(...) MOZ_LOG(sGVSupportLog, LogLevel::Warning, (__VA_ARGS__))
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -109,6 +115,9 @@ using mozilla::gfx::IntSize;
 using mozilla::gfx::Matrix;
 using mozilla::gfx::SurfaceFormat;
 using mozilla::java::GeckoSession;
+using mozilla::java::sdk::IllegalStateException;
+
+static mozilla::LazyLogModule sGVSupportLog("GeckoViewSupport");
 
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gTopLevelWindows[0] is the topmost
@@ -1718,6 +1727,79 @@ void GeckoViewSupport::PassExternalResponse(
                       response] { window->PassExternalWebResponse(response); });
 }
 
+RefPtr<CanonicalBrowsingContext>
+GeckoViewSupport::GetContentCanonicalBrowsingContext() {
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner = mDOMWindow->GetTreeOwner();
+  if (!treeOwner) {
+    return nullptr;
+  }
+  RefPtr<BrowsingContext> bc;
+  nsresult rv = treeOwner->GetPrimaryContentBrowsingContext(getter_AddRefs(bc));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !bc) {
+    return nullptr;
+  }
+  return bc->Canonical();
+}
+
+void GeckoViewSupport::PrintToPdf(
+    const java::GeckoSession::Window::LocalRef& inst,
+    jni::Object::Param aResult) {
+  auto stream = java::GeckoInputStream::New(nullptr);
+  auto geckoResult = java::GeckoResult::Ref::From(aResult);
+  const auto pdfErrorMsg = "Coud not save this page as PDF.";
+  RefPtr<GeckoViewOutputStream> streamListener =
+      new GeckoViewOutputStream(stream);
+
+  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+      do_GetService("@mozilla.org/gfx/printsettings-service;1");
+  if (!printSettingsService) {
+    geckoResult->CompleteExceptionally(
+        IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+    GVS_LOG("Could not create print settings service.");
+    return;
+  }
+
+  nsCOMPtr<nsIPrintSettings> printSettings;
+  nsresult rv = printSettingsService->CreateNewPrintSettings(
+      getter_AddRefs(printSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    geckoResult->CompleteExceptionally(
+        IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+    GVS_LOG("Could not create print settings.");
+  }
+
+  printSettings->SetPrinterName(u"Mozilla Save to PDF"_ns);
+  printSettings->SetOutputDestination(
+      nsIPrintSettings::kOutputDestinationStream);
+  printSettings->SetOutputFormat(nsIPrintSettings::kOutputFormatPDF);
+  printSettings->SetOutputStream(streamListener);
+  printSettings->SetPrintSilent(true);
+
+  RefPtr<CanonicalBrowsingContext> cbc = GetContentCanonicalBrowsingContext();
+  if (!cbc) {
+    geckoResult->CompleteExceptionally(
+        IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+    GVS_LOG("Could not retrieve content canonical browsing context.");
+    return;
+  }
+
+  RefPtr<CanonicalBrowsingContext::PrintPromise> print =
+      cbc->Print(printSettings);
+
+  print->Then(
+      mozilla::GetCurrentSerialEventTarget(), __func__,
+      [result = java::GeckoResult::GlobalRef(geckoResult), stream, pdfErrorMsg](
+          const CanonicalBrowsingContext::PrintPromise::ResolveOrRejectValue&
+              aValue) {
+        if (aValue.IsReject()) {
+          result->CompleteExceptionally(
+              IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+          GVS_LOG("Could not print.");
+        } else {
+          result->Complete(stream);
+        }
+      });
+}
 }  // namespace widget
 }  // namespace mozilla
 
