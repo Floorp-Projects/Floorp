@@ -37,41 +37,45 @@ internal const val POCKET_SPONSORED_STORIES_TO_SHOW_COUNT = 2
  * @return a list of [PocketStory]es from the currently selected categories.
  */
 fun AppState.getFilteredStories(): List<PocketStory> {
-    if (pocketStoriesCategoriesSelections.isEmpty()) {
-        val recommendedStories = pocketStoriesCategories
-            .find {
-                it.name == POCKET_STORIES_DEFAULT_CATEGORY_NAME
-            }?.stories
-            ?.sortedBy { it.timesShown }
-            ?.take(POCKET_STORIES_TO_SHOW_COUNT) ?: emptyList()
+    val recommendedStories = when (pocketStoriesCategoriesSelections.isEmpty()) {
+        true -> {
+            pocketStoriesCategories
+                .find { it.name == POCKET_STORIES_DEFAULT_CATEGORY_NAME }
+                ?.stories
+                ?.sortedBy { it.timesShown }
+                ?.take(POCKET_STORIES_TO_SHOW_COUNT) ?: emptyList()
+        }
+        false -> {
+            val oldestSortedCategories = pocketStoriesCategoriesSelections
+                .sortedByDescending { it.selectionTimestamp }
+                .mapNotNull { selectedCategory ->
+                    pocketStoriesCategories.find {
+                        it.name == selectedCategory.name
+                    }
+                }
 
-        val sponsoredStories = getFilteredSponsoredStories(
-            stories = pocketSponsoredStories,
-            limit = POCKET_SPONSORED_STORIES_TO_SHOW_COUNT,
-        )
+            val filteredStoriesCount = getFilteredStoriesCount(
+                oldestSortedCategories, POCKET_STORIES_TO_SHOW_COUNT
+            )
 
-        return combineRecommendedAndSponsoredStories(
-            recommendedStories = recommendedStories,
-            sponsoredStories = sponsoredStories
-        )
+            oldestSortedCategories
+                .flatMap { category ->
+                    category.stories
+                        .sortedBy { it.timesShown }
+                        .take(filteredStoriesCount[category.name]!!)
+                }.take(POCKET_STORIES_TO_SHOW_COUNT)
+        }
     }
 
-    val oldestSortedCategories = pocketStoriesCategoriesSelections
-        .sortedByDescending { it.selectionTimestamp }
-        .mapNotNull { selectedCategory ->
-            pocketStoriesCategories.find {
-                it.name == selectedCategory.name
-            }
-        }
-
-    val filteredStoriesCount = getFilteredStoriesCount(
-        oldestSortedCategories, POCKET_STORIES_TO_SHOW_COUNT
+    val sponsoredStories = getFilteredSponsoredStories(
+        stories = pocketSponsoredStories,
+        limit = POCKET_SPONSORED_STORIES_TO_SHOW_COUNT,
     )
 
-    return oldestSortedCategories
-        .flatMap { category ->
-            category.stories.sortedBy { it.timesShown }.take(filteredStoriesCount[category.name]!!)
-        }.take(POCKET_STORIES_TO_SHOW_COUNT)
+    return combineRecommendedAndSponsoredStories(
+        recommendedStories = recommendedStories,
+        sponsoredStories = sponsoredStories
+    )
 }
 
 /**
