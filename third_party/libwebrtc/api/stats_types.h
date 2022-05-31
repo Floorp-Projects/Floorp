@@ -24,7 +24,6 @@
 #include "api/sequence_checker.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/ref_count.h"
-#include "rtc_base/string_encode.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
