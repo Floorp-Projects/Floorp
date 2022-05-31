@@ -2079,10 +2079,10 @@ NS_IMETHODIMP HTMLEditor::SelectElement(Element* aElement) {
 nsresult HTMLEditor::SelectContentInternal(nsIContent& aContentToSelect) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // Must be sure that element is contained in the editor root node
-  const RefPtr<Element> editorRoot = GetEditorRoot();
-  if (NS_WARN_IF(!editorRoot) ||
-      NS_WARN_IF(!aContentToSelect.IsInclusiveDescendantOf(editorRoot))) {
+  // Must be sure that element is contained in the editing host
+  const RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost) ||
+      NS_WARN_IF(!aContentToSelect.IsInclusiveDescendantOf(editingHost))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -4293,8 +4293,8 @@ bool HTMLEditor::SetCaretInTableCell(Element* aElement) {
       !HTMLEditUtils::IsAnyTableElement(aElement)) {
     return false;
   }
-  const RefPtr<Element> editorRoot = GetEditorRoot();
-  if (!editorRoot || !aElement->IsInclusiveDescendantOf(editorRoot)) {
+  const RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (!editingHost || !aElement->IsInclusiveDescendantOf(editingHost)) {
     return false;
   }
 
@@ -6560,8 +6560,6 @@ already_AddRefed<Element> HTMLEditor::GetInputEventTargetElement() const {
   }
   return nullptr;
 }
-
-Element* HTMLEditor::GetEditorRoot() const { return GetActiveEditingHost(); }
 
 nsresult HTMLEditor::OnModifyDocument() {
   MOZ_ASSERT(mPendingDocumentModifiedRunner,

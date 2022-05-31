@@ -374,9 +374,9 @@ void HTMLEditor::HideGrabberInternal() {
 nsresult HTMLEditor::ShowGrabberInternal(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  const RefPtr<Element> editorRoot = GetEditorRoot();
-  if (NS_WARN_IF(!editorRoot) ||
-      NS_WARN_IF(!aElement.IsInclusiveDescendantOf(editorRoot))) {
+  const RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost) ||
+      NS_WARN_IF(!aElement.IsInclusiveDescendantOf(editingHost))) {
     return NS_ERROR_UNEXPECTED;
   }
 

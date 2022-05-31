@@ -6525,16 +6525,12 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
         aEditSubAction == EditSubAction::eOutdent ||
         aEditSubAction == EditSubAction::eSetOrClearAlignment ||
         aEditSubAction == EditSubAction::eCreateOrRemoveBlock;
-    Element* const editorRoot = GetEditorRoot();
-    if (!editorRoot) {
-      break;
-    }
     // XXX So, does this check whether the container is removable or not? It
     //     seems that here can be rewritten as obviously what here tries to
     //     check.
-    if (!point.GetContainerParent()->IsInclusiveDescendantOf(editorRoot) &&
+    if (!point.GetContainerParent()->IsInclusiveDescendantOf(&aEditingHost) &&
         (blockLevelAction ||
-         !point.GetContainer()->IsInclusiveDescendantOf(editorRoot))) {
+         !point.GetContainer()->IsInclusiveDescendantOf(&aEditingHost))) {
       break;
     }
 
@@ -6674,12 +6670,8 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     // XXX Maybe returning parent of editing host is really error prone since
     //     everybody need to check whether the end point is in editing host
     //     when they touch there.
-    Element* const editorRoot = GetEditorRoot();
-    if (!editorRoot) {
-      break;
-    }
-    if (!point.GetContainer()->IsInclusiveDescendantOf(editorRoot) &&
-        !point.GetContainerParent()->IsInclusiveDescendantOf(editorRoot)) {
+    if (!point.GetContainer()->IsInclusiveDescendantOf(&aEditingHost) &&
+        !point.GetContainerParent()->IsInclusiveDescendantOf(&aEditingHost)) {
       break;
     }
 
@@ -6812,7 +6804,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     return nullptr;
   }
 
-  const Element* editingHost = GetActiveEditingHost();
+  const Element* const editingHost = GetActiveEditingHost();
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
@@ -6842,13 +6834,9 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
       MOZ_ALWAYS_TRUE(startPoint.RewindOffset());
     }
   }
-  const RefPtr<Element> editorRoot = GetEditorRoot();
-  if (!editorRoot) {
-    return nullptr;
-  }
   if (!startPoint.GetChildOrContainerIfDataNode() ||
       !startPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
-          editorRoot)) {
+          editingHost)) {
     return nullptr;
   }
   if (endPoint.IsInTextNode()) {
@@ -6865,7 +6853,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
   }
   if (!lastRawPoint.GetChildOrContainerIfDataNode() ||
       !lastRawPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
-          editorRoot)) {
+          editingHost)) {
     return nullptr;
   }
 
@@ -6897,7 +6885,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     return nullptr;
   }
 
-  const Element* editingHost = GetActiveEditingHost();
+  const Element* const editingHost = GetActiveEditingHost();
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
@@ -6920,15 +6908,11 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
   // XXX GetCurrentHardLineStartPoint() may return point of editing
   //     host.  Perhaps, we should change it and stop checking it here
   //     since this check may be expensive.
-  Element* const editorRoot = GetEditorRoot();
-  if (!editorRoot) {
-    return nullptr;
-  }
-  // XXX If the container is an element in the editor root but it points end of
+  // XXX If the container is an element in the editing host but it points end of
   //     the container, this returns nullptr.  Is it intentional?
   if (!startPoint.GetChildOrContainerIfDataNode() ||
       !startPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
-          editorRoot)) {
+          editingHost)) {
     return nullptr;
   }
   endPoint = GetCurrentHardLineEndPoint(endPoint, *editingHost);
@@ -6937,11 +6921,11 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
   // XXX GetCurrentHardLineEndPoint() may return point of editing host.
   //     Perhaps, we should change it and stop checking it here since this
   //     check may be expensive.
-  // XXX If the container is an element in the editor root but it points end of
+  // XXX If the container is an element in the editing host but it points end of
   //     the container, this returns nullptr.  Is it intentional?
   if (!lastRawPoint.GetChildOrContainerIfDataNode() ||
       !lastRawPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
-          editorRoot)) {
+          editingHost)) {
     return nullptr;
   }
 

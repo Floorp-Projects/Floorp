@@ -1953,12 +1953,6 @@ class EditorBase : public nsIEditor,
       const dom::AbstractRange* aRange = nullptr);
 
   /**
-   * Likewise, but gets the editor's root instead, which is different for HTML
-   * editors.
-   */
-  virtual Element* GetEditorRoot() const;
-
-  /**
    * Whether the editor is active on the DOM window.  Note that when this
    * returns true but GetFocusedElement() returns null, it means that this
    * editor was focused when the DOM window was active.

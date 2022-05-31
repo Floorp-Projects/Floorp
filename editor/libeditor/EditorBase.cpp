@@ -3902,6 +3902,8 @@ EditorBase::CreateTransactionForCollapsedRange(
 
   // build a transaction for deleting the appropriate data
   // XXX: this has to come from rule section
+  const Element* const anonymousDivOrEditingHost =
+      IsTextEditor() ? GetRoot() : AsHTMLEditor()->GetActiveEditingHost();
   if (aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward &&
       point.IsStartOfContainer()) {
     MOZ_ASSERT(IsHTMLEditor());
@@ -3909,7 +3911,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     // of previous editable content.
     nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
         *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
-        GetEditorRoot());
+        anonymousDivOrEditingHost);
     if (!previousEditableContent) {
       NS_WARNING("There was no editable content before the collapsed range");
       return nullptr;
@@ -3957,7 +3959,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     // next editable content.
     nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
         *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
-        GetEditorRoot());
+        anonymousDivOrEditingHost);
     if (!nextEditableContent) {
       NS_WARNING("There was no editable content after the collapsed range");
       return nullptr;
@@ -4024,10 +4026,10 @@ EditorBase::CreateTransactionForCollapsedRange(
         aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward
             ? HTMLEditUtils::GetPreviousContent(
                   point, {WalkTreeOption::IgnoreNonEditableNode},
-                  GetEditorRoot())
+                  anonymousDivOrEditingHost)
             : HTMLEditUtils::GetNextContent(
                   point, {WalkTreeOption::IgnoreNonEditableNode},
-                  GetEditorRoot());
+                  anonymousDivOrEditingHost);
     if (!editableContent) {
       NS_WARNING("There was no editable content around the collapsed range");
       return nullptr;
@@ -4040,10 +4042,10 @@ EditorBase::CreateTransactionForCollapsedRange(
                   HowToHandleCollapsedRange::ExtendBackward
               ? HTMLEditUtils::GetPreviousContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                    GetEditorRoot())
+                    anonymousDivOrEditingHost)
               : HTMLEditUtils::GetNextContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                    GetEditorRoot());
+                    anonymousDivOrEditingHost);
     }
     if (!editableContent) {
       NS_WARNING(
@@ -5333,8 +5335,6 @@ nsresult EditorBase::FinalizeSelection() {
   }
   return NS_OK;
 }
-
-Element* EditorBase::GetEditorRoot() const { return GetRoot(); }
 
 Element* EditorBase::GetExposedRoot() const {
   Element* rootElement = GetRoot();
