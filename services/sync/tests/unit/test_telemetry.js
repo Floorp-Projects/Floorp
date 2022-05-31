@@ -8,9 +8,10 @@ const { RotaryEngine } = ChromeUtils.import(
   "resource://testing-common/services/sync/rotaryengine.js"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { fxAccounts } = ChromeUtils.import(
+const { getFxAccountsSingleton } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
+const fxAccounts = getFxAccountsSingleton();
 
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);
