@@ -17,6 +17,7 @@
 #include "MediaData.h"
 #include "VPXDecoder.h"
 #include "VideoUtils.h"
+#include "gfxMacUtils.h"
 #include "gfxPlatform.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Logging.h"
@@ -44,8 +45,9 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
       mColorSpace(aConfig.mColorSpace
                       ? *aConfig.mColorSpace
                       : DefaultColorSpace({mPictureWidth, mPictureHeight})),
-      mTransferFunction(aConfig.mTransferFunction ? *aConfig.mTransferFunction
-                                                  : gfx::TransferFunction::PQ),
+      mTransferFunction(aConfig.mTransferFunction
+                            ? *aConfig.mTransferFunction
+                            : gfx::TransferFunction::BT709),
       mColorRange(aConfig.mColorRange),
       mColorDepth(aConfig.mColorDepth),
       mStreamType(MP4Decoder::IsH264(aConfig.mMimeType)  ? StreamType::H264
@@ -430,14 +432,6 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     // Unlock the returned image data.
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
   } else {
-#if !defined(MAC_OS_VERSION_10_13) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
-    CFStringRef kCVImageBufferTransferFunction_ITU_R_2100_HLG =
-        CFSTR("ITU_R_2100_HLG");
-    CFStringRef kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ =
-        CFSTR("SMPTE_ST_2084_PQ");
-#endif
-
 #ifndef MOZ_WIDGET_UIKIT
     // Set pixel buffer properties on aImage before we extract its surface.
     // This ensures that we can use defined enums to set values instead
@@ -453,9 +447,6 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
       CVBufferSetAttachment(aImage, kCVImageBufferColorPrimariesKey,
                             kCVImageBufferColorPrimaries_ITU_R_709_2,
                             kCVAttachmentMode_ShouldPropagate);
-      CVBufferSetAttachment(aImage, kCVImageBufferTransferFunctionKey,
-                            kCVImageBufferTransferFunction_ITU_R_709_2,
-                            kCVAttachmentMode_ShouldPropagate);
     } else if (mColorSpace == gfx::YUVColorSpace::BT2020) {
       CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
                             kCVImageBufferYCbCrMatrix_ITU_R_2020,
@@ -463,13 +454,13 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
       CVBufferSetAttachment(aImage, kCVImageBufferColorPrimariesKey,
                             kCVImageBufferColorPrimaries_ITU_R_2020,
                             kCVAttachmentMode_ShouldPropagate);
-      CVBufferSetAttachment(
-          aImage, kCVImageBufferTransferFunctionKey,
-          (mTransferFunction == gfx::TransferFunction::HLG)
-              ? kCVImageBufferTransferFunction_ITU_R_2100_HLG
-              : kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ,
-          kCVAttachmentMode_ShouldPropagate);
     }
+
+    // Transfer function is applied independently from the colorSpace.
+    CVBufferSetAttachment(
+        aImage, kCVImageBufferTransferFunctionKey,
+        gfxMacUtils::CFStringForTransferFunction(mTransferFunction),
+        kCVAttachmentMode_ShouldPropagate);
 
     CFTypeRefPtr<IOSurfaceRef> surface =
         CFTypeRefPtr<IOSurfaceRef>::WrapUnderGetRule(
