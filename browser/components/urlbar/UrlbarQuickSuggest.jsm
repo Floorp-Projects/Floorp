@@ -134,17 +134,28 @@ class QuickSuggest extends EventEmitter {
    *
    * @param {string} phrase
    *   The search string.
-   * @returns {object}
-   *   The matched suggestion object or null if none.
+   * @returns {array}
+   *   The matched suggestion objects. If there are no matches, an empty array
+   *   is returned.
    */
   async query(phrase) {
     log.info("Handling query for", phrase);
     phrase = phrase.toLowerCase();
-    let result = this._resultsByKeyword.get(phrase);
-    if (!result) {
-      return null;
+    let object = this._resultsByKeyword.get(phrase);
+    if (!object) {
+      return [];
     }
-    return {
+
+    // `object` will be a single result object if there's only one match or an
+    // array of result objects if there's more than one match.
+    let results = [object].flat();
+
+    // Start each icon fetch at the same time and wait for them all to finish.
+    let icons = await Promise.all(
+      results.map(({ icon }) => this._fetchIcon(icon))
+    );
+
+    return results.map(result => ({
       full_keyword: this.getFullKeyword(phrase, result.keywords),
       title: result.title,
       url: result.url,
@@ -156,10 +167,10 @@ class QuickSuggest extends EventEmitter {
       is_sponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
       score: SUGGESTION_SCORE,
       source: QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
-      icon: await this._fetchIcon(result.icon),
+      icon: icons.shift(),
       position: result.position,
       _test_is_best_match: result._test_is_best_match,
-    };
+    }));
   }
 
   /**
@@ -369,8 +380,13 @@ class QuickSuggest extends EventEmitter {
   // Configuration data synced from remote settings. See the `config` getter.
   _config = {};
 
-  // Maps from keywords to their corresponding results. Keywords are unique in
-  // the underlying data, so a keyword will only ever map to one result.
+  // Maps each keyword in the dataset to one or more results for the keyword. If
+  // only one result uses a keyword, the keyword's value in the map will be the
+  // result object. If more than one result uses the keyword, the value will be
+  // an array of the results. The reason for not always using an array is that
+  // we expect the vast majority of keywords to be used by only one result, and
+  // since there are potentially very many keywords and results and we keep them
+  // in memory all the time, we want to save as much memory as possible.
   _resultsByKeyword = new Map();
 
   /**
@@ -468,7 +484,17 @@ class QuickSuggest extends EventEmitter {
   _addResults(results) {
     for (let result of results) {
       for (let keyword of result.keywords) {
-        this._resultsByKeyword.set(keyword, result);
+        // If the keyword's only result is `result`, store it directly as the
+        // value. Otherwise store an array of results. For details, see the
+        // `_resultsByKeyword` comment.
+        let object = this._resultsByKeyword.get(keyword);
+        if (!object) {
+          this._resultsByKeyword.set(keyword, result);
+        } else if (!Array.isArray(object)) {
+          this._resultsByKeyword.set(keyword, [object, result]);
+        } else {
+          object.push(result);
+        }
       }
     }
   }
