@@ -2486,6 +2486,11 @@ public class GeckoSessionTestRule implements TestRule {
     webExtensionApiCall("CrashGpuProcess", null);
   }
 
+  /** Clears sites from the HSTS list. */
+  public void clearHSTSState() {
+    webExtensionApiCall("ClearHSTSState", null);
+  }
+
   private Object webExtensionApiCall(
       final @NonNull String apiName, final @NonNull SetArgs argsSetter) {
     return webExtensionApiCall(null, apiName, argsSetter);

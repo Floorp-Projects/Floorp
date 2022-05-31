@@ -633,13 +633,13 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("https pref should be false", sessionRule.getPrefs(httpsFirstPref)[0] as Boolean, equalTo(false))
 
         // load secure url with hsts header
-        val uri = "https://example.org/tests/junit/hsts_header.sjs"
+        val uri = "https://example.com/tests/junit/hsts_header.sjs"
         mainSession.loadUri(uri)
         mainSession.waitForPageStop()
 
         // load insecure subdomain url to see if it gets upgraded to https
-        val http_uri = "http://test1.example.org/"
-        val https_uri = "https://test1.example.org/"
+        val http_uri = "http://test1.example.com/"
+        val https_uri = "https://test1.example.com/"
 
         mainSession.loadUri(http_uri)
         mainSession.waitForPageStop()
@@ -656,7 +656,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
 
         // load subdomain that will trigger the cert error
-        val no_cert_uri = "https://nocert.example.org/"
+        val no_cert_uri = "https://nocert.example.com/"
         mainSession.loadUri(no_cert_uri)
         mainSession.waitForPageStop()
 
@@ -668,6 +668,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 return null
             }
         })
+        sessionRule.clearHSTSState()
     }
 
     @Ignore // Disabled for bug 1619344.
