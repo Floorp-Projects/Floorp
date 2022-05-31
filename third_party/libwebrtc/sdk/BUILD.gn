@@ -464,6 +464,9 @@ if (is_ios || is_mac) {
           "OpenGL.framework",
         ]
       }
+
+      # TODO(bugs.webrtc.org/12937): Remove OpenGL deprecation warning
+      # workaround.
       defines = [ "GLES_SILENCE_DEPRECATION" ]
 
       deps = [
@@ -502,6 +505,9 @@ if (is_ios || is_mac) {
           "objc/components/renderer/opengl/RTCEAGLVideoView.h",
           "objc/components/renderer/opengl/RTCEAGLVideoView.m",
         ]
+
+        # TODO(bugs.webrtc.org/12937): Remove OpenGL deprecation warning
+        # workaround.
         defines = [ "GLES_SILENCE_DEPRECATION" ]
       }
       if (is_mac) {
@@ -1040,6 +1046,10 @@ if (is_ios || is_mac) {
             "objc/unittests/frame_buffer_helpers.mm",
             "objc/unittests/nalu_rewriter_xctest.mm",
           ]
+
+          # TODO(bugs.webrtc.org/12937): Remove OpenGL deprecation warning
+          # workaround.
+          defines = [ "GLES_SILENCE_DEPRECATION" ]
 
           # TODO(peterhanspers): Reenable these tests on simulator.
           # See bugs.webrtc.org/7812
