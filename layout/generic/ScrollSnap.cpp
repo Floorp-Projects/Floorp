@@ -151,40 +151,49 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
     }
   };
 
-  if (mUnit == ScrollUnit::DEVICE_PIXELS || mUnit == ScrollUnit::LINES ||
-      mUnit == ScrollUnit::WHOLE) {
-    nscoord distance = std::abs(aEdge - aDestination);
-    updateBestEdges(
-        distance < std::abs(*aBestEdge - aDestination),
-        distance < std::abs(NSCoordSaturatingSubtract(
-                       *aSecondBestEdge, aDestination, nscoord_MAX)));
-  } else if (mUnit == ScrollUnit::PAGES) {
-    // distance to the edge from the scrolling destination in the direction of
-    // scrolling
-    nscoord overshoot = (aEdge - aDestination) * aScrollingDirection;
-    // distance to the current best edge from the scrolling destination in the
-    // direction of scrolling
-    nscoord curOvershoot = (*aBestEdge - aDestination) * aScrollingDirection;
-
-    nscoord secondOvershoot =
-        NSCoordSaturatingSubtract(*aSecondBestEdge, aDestination, nscoord_MAX) *
-        aScrollingDirection;
-
-    // edges between the current position and the scrolling destination are
-    // favoured to preserve context
-    if (overshoot < 0) {
-      updateBestEdges(overshoot > curOvershoot || curOvershoot >= 0,
-                      overshoot > secondOvershoot || secondOvershoot >= 0);
+  bool isCandidateOfBest = false;
+  bool isCandidateOfSecondBest = false;
+  switch (mUnit) {
+    case ScrollUnit::DEVICE_PIXELS:
+    case ScrollUnit::LINES:
+    case ScrollUnit::WHOLE: {
+      nscoord distance = std::abs(aEdge - aDestination);
+      isCandidateOfBest = distance < std::abs(*aBestEdge - aDestination);
+      isCandidateOfSecondBest =
+          distance < std::abs(NSCoordSaturatingSubtract(
+                         *aSecondBestEdge, aDestination, nscoord_MAX));
+      break;
     }
-    // if there are no edges between the current position and the scrolling
-    // destination the closest edge beyond the destination is used
-    if (overshoot > 0) {
-      updateBestEdges(overshoot < curOvershoot, overshoot < secondOvershoot);
+    case ScrollUnit::PAGES: {
+      // distance to the edge from the scrolling destination in the direction of
+      // scrolling
+      nscoord overshoot = (aEdge - aDestination) * aScrollingDirection;
+      // distance to the current best edge from the scrolling destination in the
+      // direction of scrolling
+      nscoord curOvershoot = (*aBestEdge - aDestination) * aScrollingDirection;
+
+      nscoord secondOvershoot =
+          NSCoordSaturatingSubtract(*aSecondBestEdge, aDestination,
+                                    nscoord_MAX) *
+          aScrollingDirection;
+
+      // edges between the current position and the scrolling destination are
+      // favoured to preserve context
+      if (overshoot < 0) {
+        isCandidateOfBest = overshoot > curOvershoot || curOvershoot >= 0;
+        isCandidateOfSecondBest =
+            overshoot > secondOvershoot || secondOvershoot >= 0;
+      }
+      // if there are no edges between the current position and the scrolling
+      // destination the closest edge beyond the destination is used
+      if (overshoot > 0) {
+        isCandidateOfBest = overshoot < curOvershoot;
+        isCandidateOfSecondBest = overshoot < secondOvershoot;
+      }
     }
-  } else {
-    NS_ERROR("Invalid scroll mode");
-    return;
   }
+
+  updateBestEdges(isCandidateOfBest, isCandidateOfSecondBest);
 }
 
 static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
