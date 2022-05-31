@@ -110,24 +110,25 @@ const mozilla::StylePositionOrAuto& AnimationValue::GetOffsetAnchorProperty()
   return *Servo_AnimationValue_GetOffsetAnchor(mServo);
 }
 
-Size AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
+MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   using namespace nsStyleTransformMatrix;
 
   switch (Servo_AnimationValue_GetPropertyId(mServo)) {
     case eCSSProperty_scale: {
       const StyleScale& scale = GetScaleProperty();
-      return scale.IsNone() ? Size(1.0, 1.0)
-                            : Size(scale.AsScale()._0, scale.AsScale()._1);
+      return scale.IsNone()
+                 ? MatrixScales()
+                 : MatrixScales(scale.AsScale()._0, scale.AsScale()._1);
     }
     case eCSSProperty_rotate:
     case eCSSProperty_translate:
-      return Size(1.0, 1.0);
+      return MatrixScales();
     case eCSSProperty_transform:
       break;
     default:
       MOZ_ASSERT_UNREACHABLE(
           "Should only need to check in transform properties");
-      return Size(1.0, 1.0);
+      return MatrixScales();
   }
 
   TransformReferenceBox refBox(aFrame);
@@ -138,9 +139,9 @@ Size AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   Matrix transform2d;
   bool canDraw2D = t.CanDraw2D(&transform2d);
   if (!canDraw2D) {
-    return Size();
+    return MatrixScales(0, 0);
   }
-  return transform2d.ScaleFactors().ToSize();
+  return transform2d.ScaleFactors();
 }
 
 void AnimationValue::SerializeSpecifiedValue(nsCSSPropertyID aProperty,

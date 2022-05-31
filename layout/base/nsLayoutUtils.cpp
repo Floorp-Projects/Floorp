@@ -366,12 +366,12 @@ using MinAndMaxScale = std::pair<Size, Size>;
 static inline void UpdateMinMaxScale(const nsIFrame* aFrame,
                                      const AnimationValue& aValue,
                                      MinAndMaxScale& aMinAndMaxScale) {
-  Size size = aValue.GetScaleValue(aFrame);
+  MatrixScales size = aValue.GetScaleValue(aFrame);
   Size& minScale = aMinAndMaxScale.first;
   Size& maxScale = aMinAndMaxScale.second;
 
-  minScale = Min(minScale, size);
-  maxScale = Max(maxScale, size);
+  minScale = Min(minScale, {size.xScale, size.yScale});
+  maxScale = Max(maxScale, {size.xScale, size.yScale});
 }
 
 // The final transform matrix is calculated by merging the final results of each

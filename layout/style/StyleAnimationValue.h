@@ -83,7 +83,7 @@ struct AnimationValue {
   const mozilla::StylePositionOrAuto& GetOffsetAnchorProperty() const;
 
   // Return the scale for mServo, which is calculated with reference to aFrame.
-  mozilla::gfx::Size GetScaleValue(const nsIFrame* aFrame) const;
+  mozilla::gfx::MatrixScales GetScaleValue(const nsIFrame* aFrame) const;
 
   // Uncompute this AnimationValue and then serialize it.
   void SerializeSpecifiedValue(nsCSSPropertyID aProperty,
