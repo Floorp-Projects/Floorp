@@ -55,8 +55,7 @@ class VCMTimingFake : public VCMTiming {
     return last_ms_;
   }
 
-  int64_t MaxWaitingTime(int64_t render_time_ms,
-                         int64_t now_ms) const override {
+  int64_t MaxWaitingTime(int64_t render_time_ms, int64_t now_ms) override {
     return render_time_ms - now_ms - kDecodeTime;
   }
 
