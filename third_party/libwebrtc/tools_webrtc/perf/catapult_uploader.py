@@ -145,13 +145,13 @@ def _CheckFullUploadInfo(url, upload_token,
                                      '?additional_info=measurements',
                                      method='GET', headers=headers)
 
-    print 'Full upload info: %r.' % content
-
     if response.status != 200:
         print 'Failed to reach the dashboard to get full upload info.'
         return False
 
     resp_json = json.loads(content)
+    print 'Full upload info: %s.' % json.dumps(resp_json, indent=4)
+
     if 'measurements' in resp_json:
         measurements_cnt = len(resp_json['measurements'])
         not_completed_state_cnt = len([
@@ -247,10 +247,13 @@ def UploadToDashboard(options):
         print 'Upload completed.'
         return 0
 
-    if response.status != 200 or resp_json['state'] == 'FAILED':
-        print('Upload failed with %d: %s\n\n%s' % (response.status,
-                                                  response.reason,
-                                                  str(resp_json)))
+    if response.status != 200:
+        print('Upload status poll failed with %d: %s' % (response.status,
+                                                         response.reason))
+        return 1
+
+    if resp_json['state'] == 'FAILED':
+        print 'Upload failed.'
         return 1
 
     print('Upload wasn\'t completed in a given time: %d seconds.' %
