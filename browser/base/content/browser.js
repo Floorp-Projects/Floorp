@@ -10208,3 +10208,8 @@ if (Services.prefs.getBoolPref("floorp.legacy.menu.mode", false)) {
 
 document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
 }
+
+/*--------------------------------------------------------userChrome.js(uc.js)のコーナー---------------------------------------------------------*/
+const script = document.createElement('script');
+script.src = "chrome://userChromejs/content/memory.js"; 
+document.head.appendChild(script); 

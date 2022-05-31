@@ -1,0 +1,1 @@
+document.getElementById('navigator-toolbox').insertBefore(document.getElementById('TabsToolbar'), document.getElementById('nav-bar').nextSibling)
