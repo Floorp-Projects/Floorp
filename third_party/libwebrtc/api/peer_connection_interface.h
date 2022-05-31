@@ -1106,13 +1106,11 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
   // playout of the underlying audio device but starts a task which will poll
   // for audio data every 10ms to ensure that audio processing happens and the
   // audio statistics are updated.
-  // TODO(henrika): deprecate and remove this.
   virtual void SetAudioPlayout(bool playout) {}
 
   // Enable/disable recording of transmitted audio streams. Enabled by default.
   // Note that even if recording is enabled, streams will only be recorded if
   // the appropriate SDP is also applied.
-  // TODO(henrika): deprecate and remove this.
   virtual void SetAudioRecording(bool recording) {}
 
   // Looks up the DtlsTransport associated with a MID value.
