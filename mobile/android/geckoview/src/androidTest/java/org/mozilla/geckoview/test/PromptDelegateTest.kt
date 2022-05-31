@@ -432,6 +432,33 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @Test
+    @WithDisplay(width = 100, height = 100)
+    fun selectTestDismiss() {
+        mainSession.loadTestPath(SELECT_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        val result = GeckoResult<PromptDelegate.PromptResponse>()
+        val promptInstanceDelegate = object : PromptDelegate.PromptInstanceDelegate {
+            override fun onPromptDismiss(prompt: PromptDelegate.BasePrompt) {
+                result.complete(prompt.dismiss())
+            }
+        }
+
+        sessionRule.delegateUntilTestEnd(object: PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("There should be two choices", prompt.choices.size, equalTo(2))
+                prompt.setDelegate(promptInstanceDelegate)
+                return GeckoResult()
+            }
+        })
+
+        mainSession.evaluateJS("document.querySelector('select').addEventListener('click', e => window.setTimeout(() => e.target.blur(), 500))")
+        mainSession.synthesizeTap(10, 10)
+        sessionRule.waitForResult(result)
+    }
+
+    @Test
     fun onBeforeUnloadTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false

@@ -156,6 +156,9 @@ class PromptFactory {
       attributes: true,
     });
 
+    const dismissPrompt = () => prompt.dismiss();
+    aElement.addEventListener("blur", dismissPrompt, { mozSystemGroup: true });
+
     prompt.asyncShowPrompt(
       {
         type: "choice",
@@ -165,6 +168,9 @@ class PromptFactory {
       result => {
         deferredUpdate.disarm();
         mut.disconnect();
+        aElement.removeEventListener("blur", dismissPrompt, {
+          mozSystemGroup: true,
+        });
 
         if (aIsDropDown) {
           aElement.openInParentProcess = false;
