@@ -5,8 +5,9 @@
 
 from mozbuild.util import memoize
 
+from taskgraph.util.attributes import keymatch
+
 from .keyed_by import evaluate_keyed_by
-from .attributes import keymatch
 
 WORKER_TYPES = {
     "gce/gecko-1-b-linux": ("docker-worker", "linux"),

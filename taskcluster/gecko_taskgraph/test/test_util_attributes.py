@@ -4,11 +4,11 @@
 
 
 import unittest
-from gecko_taskgraph.util.attributes import (
-    attrmatch,
-    match_run_on_projects,
-)
+
 from mozunit import main
+from taskgraph.util.attributes import attrmatch
+
+from gecko_taskgraph.util.attributes import match_run_on_projects
 
 
 class Attrmatch(unittest.TestCase):
