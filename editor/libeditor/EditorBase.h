@@ -1843,10 +1843,12 @@ class EditorBase : public nsIEditor,
   DoTransactionInternal(nsITransaction* aTransaction);
 
   /**
-   * Returns true if aNode is our root node.
+   * Returns true if aNode is our root node.  The root is:
+   * If TextEditor, the anonymous <div> element.
+   * If HTMLEditor, a <body> element or the document element which may not be
+   * editable if it's not in the design mode.
    */
   bool IsRoot(const nsINode* inNode) const;
-  bool IsEditorRoot(const nsINode* aNode) const;
 
   /**
    * Returns true if aNode is a descendant of our root node.
