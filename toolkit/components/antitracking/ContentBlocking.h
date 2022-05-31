@@ -163,6 +163,21 @@ class ContentBlocking final {
   static Maybe<bool> CheckCallingContextDecidesStorageAccessAPI(
       dom::Document* aDocument, bool aRequestingStorageAccess);
 
+  // This function checks if the document's context (like if it is third-party
+  // or an iframe) gives an answer of how a the StorageAccessAPI call that is
+  // meant to be called in a top-level context, should return.
+  // This returns:
+  //   Some(true) if the calling context indicates calls to the top-level
+  //              API must resolve if it is not
+  //              disallowed by the browser settings and cookie permissions
+  //   Some(false) if the calling context must reject when calling top level
+  //               portions of the API if it is not expressly allowed by the
+  //               browser settings and cookie permissions
+  //   None if the calling context does not determine the outcome of the
+  //        document's use of the top-level portions of the Storage Access API.
+  static Maybe<bool> CheckSameSiteCallingContextDecidesStorageAccessAPI(
+      dom::Document* aDocument, bool aRequireUserActivation);
+
   // This function checks if the document has already been granted or denied
   // access to its unpartitioned cookies by the StorageAccessAPI
   // This returns:
