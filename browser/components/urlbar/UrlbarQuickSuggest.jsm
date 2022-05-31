@@ -58,10 +58,10 @@ const ONBOARDING_URI =
   "chrome://browser/content/urlbar/quicksuggestOnboarding.html";
 
 // This is a score in the range [0, 1] used by the provider to compare
-// suggestions from remote settings to suggestions from Merino. Remote settings
-// suggestions don't have a natural score so we hardcode a value, and we choose
-// a low value to allow Merino to experiment with a broad range of scores.
-const SUGGESTION_SCORE = 0.2;
+// suggestions. All suggestions require a score, so if a remote settings
+// suggestion does not have one, it's assigned this value. We choose a low value
+// to allow Merino to experiment with a broad range of scores server side.
+const DEFAULT_SUGGESTION_SCORE = 0.2;
 
 /**
  * Fetches the suggestions data from RemoteSettings and builds the structures
@@ -84,12 +84,12 @@ class QuickSuggest extends EventEmitter {
 
   /**
    * @returns {number}
-   *   A score in the range [0, 1] that can be used to compare suggestions from
-   *   remote settings to suggestions from Merino. Remote settings suggestions
-   *   don't have a natural score so we hardcode a value.
+   *   A score in the range [0, 1] that can be used to compare suggestions. All
+   *   suggestions require a score, so if a remote settings suggestion does not
+   *   have one, it's assigned this value.
    */
-  get SUGGESTION_SCORE() {
-    return SUGGESTION_SCORE;
+  get DEFAULT_SUGGESTION_SCORE() {
+    return DEFAULT_SUGGESTION_SCORE;
   }
 
   /**
@@ -165,7 +165,10 @@ class QuickSuggest extends EventEmitter {
       advertiser: result.advertiser,
       iab_category: result.iab_category,
       is_sponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
-      score: SUGGESTION_SCORE,
+      score:
+        typeof result.score == "number"
+          ? result.score
+          : DEFAULT_SUGGESTION_SCORE,
       source: QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
       icon: icons.shift(),
       position: result.position,
