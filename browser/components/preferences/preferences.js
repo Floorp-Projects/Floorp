@@ -38,11 +38,9 @@ var { PrivateBrowsingUtils } = ChromeUtils.import(
 );
 
 var { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-
-var { FxAccounts, getFxAccountsSingleton } = ChromeUtils.import(
+var { FxAccounts, fxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
-var fxAccounts = getFxAccountsSingleton();
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   gApplicationUpdateService: [

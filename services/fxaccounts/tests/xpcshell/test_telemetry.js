@@ -3,10 +3,9 @@
 
 "use strict";
 
-const { getFxAccountsSingleton } = ChromeUtils.import(
+const { fxAccounts, FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
-const fxAccounts = getFxAccountsSingleton();
 
 const { PREF_ACCOUNT_ROOT } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"

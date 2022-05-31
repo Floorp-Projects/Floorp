@@ -26,6 +26,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Async: "resource://services-common/async.js",
   AuthenticationError: "resource://services-sync/sync_auth.js",
+  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   Log: "resource://gre/modules/Log.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
@@ -39,12 +40,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   Weave: "resource://services-sync/main.js",
-});
-
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
-  return ChromeUtils.import(
-    "resource://gre/modules/FxAccounts.jsm"
-  ).getFxAccountsSingleton();
 });
 
 let constants = ChromeUtils.import("resource://services-sync/constants.js");

@@ -40,14 +40,11 @@ const { CryptoWrapper } = ChromeUtils.import(
 const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
 const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+ChromeUtils.defineModuleGetter(
+  this,
+  "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
-  return ChromeUtils.import(
-    "resource://gre/modules/FxAccounts.jsm"
-  ).getFxAccountsSingleton();
-});
 
 const { PREF_ACCOUNT_ROOT } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
