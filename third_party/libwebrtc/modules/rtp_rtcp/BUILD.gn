@@ -303,6 +303,7 @@ rtc_library("rtp_rtcp") {
     "../../rtc_base/task_utils:repeating_task",
     "../../rtc_base/task_utils:to_queued_task",
     "../../rtc_base/time:timestamp_extrapolator",
+    "../../rtc_base/containers:flat_map",
     "../../system_wrappers",
     "../../system_wrappers:metrics",
     "../remote_bitrate_estimator",
