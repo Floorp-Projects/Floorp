@@ -297,8 +297,11 @@
     <string name="preference_security_biometric">Defnyddio ôl bys i ddatgloi ap</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Gall eich ôl bys ddatgloi %1$s os oes URL ar agor yn barod yn yr ap. Bydd y modd Dirgel ymlaen.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Gall eich ôl bys ddatgloi %1$s os oes URL ar agor yn barod yn yr ap. Bydd y modd Dirgel ymlaen.</string>
+
+    <string name="preference_security_biometric_summary2">Datglowch gan ddefnyddio bysbrint os ydych wedi ychwanegu Llwybrau Byr neu pan fo gwefan eisoes ar agor yn %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->

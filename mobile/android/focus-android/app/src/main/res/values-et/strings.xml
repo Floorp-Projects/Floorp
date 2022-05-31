@@ -301,9 +301,12 @@
 
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Sinu sõrmejälg saab %1$se lahti lukustada, kui mingi URl on juba äpis avatud.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Sinu sõrmejälg saab %1$se lahti lukustada, kui mingi URl on juba äpis avatud.
     Salajasus lülitatakse sisse.</string>
+
+    <string name="preference_security_biometric_summary2">Kui oled juba lisanud otsetee või avanud kaardi, siis saad %se avada sõrmejäljega.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
