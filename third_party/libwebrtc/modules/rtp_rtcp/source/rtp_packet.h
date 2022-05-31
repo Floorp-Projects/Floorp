@@ -65,6 +65,7 @@ class RtpPacket {
 
   // Payload.
   size_t payload_size() const { return payload_size_; }
+  bool has_padding() const { return buffer_[0] & 0x20; }
   size_t padding_size() const { return padding_size_; }
   rtc::ArrayView<const uint8_t> payload() const {
     return rtc::MakeArrayView(data() + payload_offset_, payload_size_);

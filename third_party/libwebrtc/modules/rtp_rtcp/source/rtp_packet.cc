@@ -474,16 +474,6 @@ bool RtpPacket::ParseBuffer(const uint8_t* buffer, size_t size) {
   }
   payload_offset_ = kFixedHeaderSize + number_of_crcs * 4;
 
-  if (has_padding) {
-    padding_size_ = buffer[size - 1];
-    if (padding_size_ == 0) {
-      RTC_LOG(LS_WARNING) << "Padding was set, but padding size is zero";
-      return false;
-    }
-  } else {
-    padding_size_ = 0;
-  }
-
   extensions_size_ = 0;
   extension_entries_.clear();
   if (has_extension) {
@@ -562,6 +552,16 @@ bool RtpPacket::ParseBuffer(const uint8_t* buffer, size_t size) {
       }
     }
     payload_offset_ = extension_offset + extensions_capacity;
+  }
+
+  if (has_padding && payload_offset_ < size) {
+    padding_size_ = buffer[size - 1];
+    if (padding_size_ == 0) {
+      RTC_LOG(LS_WARNING) << "Padding was set, but padding size is zero";
+      return false;
+    }
+  } else {
+    padding_size_ = 0;
   }
 
   if (payload_offset_ + padding_size_ > size) {
