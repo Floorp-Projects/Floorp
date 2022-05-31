@@ -102,43 +102,6 @@ static inline void AssertWellPlacedNumericSeparator(const CharT* s,
              "separator can't be preceded by another separator");
 }
 
-/*
- * If we're accumulating a decimal number and the number is >= 2^53, then the
- * fast result from the loop in Get{Prefix,Decimal}Integer may be inaccurate.
- * Call js_strtod_harder to get the correct answer.
- */
-template <typename CharT>
-static bool ComputeAccurateDecimalInteger(JSContext* cx, const CharT* start,
-                                          const CharT* end, double* dp) {
-  size_t length = end - start;
-  auto cstr = cx->make_pod_array<char>(length + 1);
-  if (!cstr) {
-    return false;
-  }
-
-  size_t j = 0;
-  for (size_t i = 0; i < length; i++) {
-    char c = char(start[i]);
-    if (c == '_') {
-      AssertWellPlacedNumericSeparator(start + i, start, end);
-      continue;
-    }
-    MOZ_ASSERT(IsAsciiAlphanumeric(c));
-    cstr[j++] = c;
-  }
-  cstr[j] = 0;
-
-  if (!EnsureDtoaState(cx)) {
-    return false;
-  }
-
-  char* estr;
-  *dp = js_strtod_harder(cx->dtoaState, cstr.get(), &estr);
-  MOZ_ASSERT(estr == cstr.get() + j);
-
-  return true;
-}
-
 namespace {
 
 template <typename CharT>
@@ -321,7 +284,10 @@ bool js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end,
   // Can only fail for base 10.
   MOZ_ASSERT(base == 10);
 
-  return ComputeAccurateDecimalInteger(cx, start, *endp, dp);
+  // If we're accumulating a decimal number and the number is >= 2^53, then the
+  // fast result from the loop in GetPrefixInteger may be inaccurate. Call
+  // GetDecimal to get the correct answer.
+  return GetDecimal(cx, start, *endp, dp);
 }
 
 namespace js {
@@ -343,9 +309,8 @@ bool js::GetDecimalInteger(JSContext* cx, const CharT* start, const CharT* end,
                            double* dp) {
   MOZ_ASSERT(start <= end);
 
-  const CharT* s = start;
   double d = 0.0;
-  for (; s < end; s++) {
+  for (const CharT* s = start; s < end; s++) {
     CharT c = *s;
     if (c == '_') {
       AssertWellPlacedNumericSeparator(s, start, end);
@@ -356,15 +321,14 @@ bool js::GetDecimalInteger(JSContext* cx, const CharT* start, const CharT* end,
     d = d * 10 + digit;
   }
 
-  *dp = d;
-
   // If we haven't reached the limit of integer precision, we're done.
   if (d < DOUBLE_INTEGRAL_PRECISION_LIMIT) {
+    *dp = d;
     return true;
   }
 
-  // Otherwise compute the correct integer from the prefix of valid digits.
-  return ComputeAccurateDecimalInteger(cx, start, s, dp);
+  // Otherwise compute the correct integer using GetDecimal.
+  return GetDecimal(cx, start, end, dp);
 }
 
 namespace js {
@@ -385,8 +349,8 @@ bool GetDecimalInteger<Utf8Unit>(JSContext* cx, const Utf8Unit* start,
 }  // namespace js
 
 template <typename CharT>
-bool js::GetDecimalNonInteger(JSContext* cx, const CharT* start,
-                              const CharT* end, double* dp) {
+bool js::GetDecimal(JSContext* cx, const CharT* start, const CharT* end,
+                    double* dp) {
   MOZ_ASSERT(start <= end);
 
   size_t length = end - start;
@@ -422,17 +386,17 @@ bool js::GetDecimalNonInteger(JSContext* cx, const CharT* start,
 
 namespace js {
 
-template bool GetDecimalNonInteger(JSContext* cx, const char16_t* start,
-                                   const char16_t* end, double* dp);
+template bool GetDecimal(JSContext* cx, const char16_t* start,
+                         const char16_t* end, double* dp);
 
-template bool GetDecimalNonInteger(JSContext* cx, const Latin1Char* start,
-                                   const Latin1Char* end, double* dp);
+template bool GetDecimal(JSContext* cx, const Latin1Char* start,
+                         const Latin1Char* end, double* dp);
 
 template <>
-bool GetDecimalNonInteger<Utf8Unit>(JSContext* cx, const Utf8Unit* start,
-                                    const Utf8Unit* end, double* dp) {
-  return GetDecimalNonInteger(cx, Utf8AsUnsignedChars(start),
-                              Utf8AsUnsignedChars(end), dp);
+bool GetDecimal<Utf8Unit>(JSContext* cx, const Utf8Unit* start,
+                          const Utf8Unit* end, double* dp) {
+  return GetDecimal(cx, Utf8AsUnsignedChars(start), Utf8AsUnsignedChars(end),
+                    dp);
 }
 
 }  // namespace js
