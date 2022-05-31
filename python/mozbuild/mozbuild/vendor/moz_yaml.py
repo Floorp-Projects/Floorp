@@ -134,6 +134,7 @@ updatebot:
       filter: security
       frequency: every
       platform: windows
+      blocking: 1234
     - type: vendoring
       branch: master
       enabled: False
@@ -430,6 +431,7 @@ def _schema_1():
                                 msg="Invalid filter value specified in tasks",
                             ),
                             "source-extensions": Unique([str]),
+                            "blocking": Match(r"^[0-9]+$"),
                             "frequency": Match(
                                 r"^(every|release|[1-9][0-9]* weeks?|[1-9][0-9]* commits?|"
                                 + r"[1-9][0-9]* weeks?, ?[1-9][0-9]* commits?)$"
