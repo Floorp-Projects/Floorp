@@ -1852,9 +1852,9 @@ class EditorBase : public nsIEditor,
 
   /**
    * Returns true if aNode is a descendant of our root node.
+   * See the comment for IsRoot() for what the root node means.
    */
   bool IsDescendantOfRoot(const nsINode* inNode) const;
-  bool IsDescendantOfEditorRoot(const nsINode* aNode) const;
 
   /**
    * Returns true when inserting text should be a part of current composition.
