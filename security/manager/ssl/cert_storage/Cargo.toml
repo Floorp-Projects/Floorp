@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = ["Dana Keeler <dkeeler@mozilla.com>", "Mark Goodwin <mgoodwin@mozilla.com"]
 
 [dependencies]
-base64 = "0.10"
+base64 = "0.13"
 byteorder = "1.2.7"
 crossbeam-utils = "0.8"
 cstr = "0.2"

@@ -1173,7 +1173,7 @@ bool EditorEventListener::ShouldHandleNativeKeyBindings(
     return true;
   }
 
-  nsIContent* editingHost = htmlEditor->GetActiveEditingHost();
+  nsIContent* editingHost = htmlEditor->ComputeEditingHost();
   if (!editingHost) {
     return false;
   }

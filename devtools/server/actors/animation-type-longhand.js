@@ -140,6 +140,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "ruby-position",
       "scroll-behavior",
       "scroll-snap-align",
+      "scroll-snap-stop",
       "scroll-snap-type",
       "shape-rendering",
       "scrollbar-gutter",

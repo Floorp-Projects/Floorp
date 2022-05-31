@@ -120,16 +120,9 @@ pub fn bitfield_unit(ctx: &BindgenContext, layout: Layout) -> TokenStream {
         tokens.append_all(quote! { root:: });
     }
 
-    let align = match layout.align {
-        n if n >= 8 => quote! { u64 },
-        4 => quote! { u32 },
-        2 => quote! { u16 },
-        _ => quote! { u8  },
-    };
-
     let size = layout.size;
     tokens.append_all(quote! {
-        __BindgenBitfieldUnit<[u8; #size], #align>
+        __BindgenBitfieldUnit<[u8; #size]>
     });
 
     tokens
@@ -237,14 +230,14 @@ pub mod ast_ty {
     }
 
     pub fn byte_array_expr(bytes: &[u8]) -> TokenStream {
-        let mut bytes: Vec<_> = bytes.iter().cloned().collect();
+        let mut bytes: Vec<_> = bytes.to_vec();
         bytes.push(0);
         quote! { [ #(#bytes),* ] }
     }
 
     pub fn cstr_expr(mut string: String) -> TokenStream {
         string.push('\0');
-        let b = proc_macro2::Literal::byte_string(&string.as_bytes());
+        let b = proc_macro2::Literal::byte_string(string.as_bytes());
         quote! {
             #b
         }
@@ -278,7 +271,7 @@ pub mod ast_ty {
         }
 
         warn!("Unknown non-finite float number: {:?}", f);
-        return Err(());
+        Err(())
     }
 
     pub fn arguments_from_signature(

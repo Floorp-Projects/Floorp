@@ -86,7 +86,7 @@ impl Enum {
         } else {
             Some(type_name)
         };
-        let type_name = type_name.as_ref().map(String::as_str);
+        let type_name = type_name.as_deref();
 
         let definition = declaration.definition().unwrap_or(declaration);
         definition.visit(|cursor| {
@@ -118,7 +118,7 @@ impl Enum {
                             }
                         });
 
-                    let name = ctx
+                    let new_name = ctx
                         .parse_callbacks()
                         .and_then(|callbacks| {
                             callbacks.enum_variant_name(type_name, &name, val)
@@ -130,10 +130,11 @@ impl Enum {
                                 .last()
                                 .cloned()
                         })
-                        .unwrap_or(name);
+                        .unwrap_or_else(|| name.clone());
 
                     let comment = cursor.raw_comment();
                     variants.push(EnumVariant::new(
+                        new_name,
                         name,
                         comment,
                         val,
@@ -152,7 +153,7 @@ impl Enum {
         enums: &RegexSet,
         item: &Item,
     ) -> bool {
-        let path = item.path_for_whitelisting(ctx);
+        let path = item.path_for_allowlisting(ctx);
         let enum_ty = item.expect_type();
 
         if enums.matches(&path[1..].join("::")) {
@@ -224,6 +225,9 @@ pub struct EnumVariant {
     /// The name of the variant.
     name: String,
 
+    /// The original name of the variant (without user mangling)
+    name_for_allowlisting: String,
+
     /// An optional doc comment.
     comment: Option<String>,
 
@@ -251,12 +255,14 @@ impl EnumVariant {
     /// Construct a new enumeration variant from the given parts.
     pub fn new(
         name: String,
+        name_for_allowlisting: String,
         comment: Option<String>,
         val: EnumVariantValue,
         custom_behavior: Option<EnumVariantCustomBehavior>,
     ) -> Self {
         EnumVariant {
             name,
+            name_for_allowlisting,
             comment,
             val,
             custom_behavior,
@@ -268,6 +274,11 @@ impl EnumVariant {
         &self.name
     }
 
+    /// Get this variant's name.
+    pub fn name_for_allowlisting(&self) -> &str {
+        &self.name_for_allowlisting
+    }
+
     /// Get this variant's value.
     pub fn val(&self) -> EnumVariantValue {
         self.val
@@ -275,7 +286,7 @@ impl EnumVariant {
 
     /// Get this variant's documentation.
     pub fn comment(&self) -> Option<&str> {
-        self.comment.as_ref().map(|s| &**s)
+        self.comment.as_deref()
     }
 
     /// Returns whether this variant should be enforced to be a constant by code

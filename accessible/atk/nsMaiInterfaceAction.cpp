@@ -8,7 +8,6 @@
 
 #include "LocalAccessible-inl.h"
 #include "nsMai.h"
-#include "Role.h"
 #include "mozilla/Likely.h"
 #include "RemoteAccessible.h"
 #include "nsString.h"

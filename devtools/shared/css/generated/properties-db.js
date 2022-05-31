@@ -210,8 +210,6 @@ exports.CSS_PROPERTIES = {
       "-moz-mac-help-button",
       "-moz-mac-source-list",
       "-moz-mac-source-list-selection",
-      "-moz-mac-vibrant-titlebar-dark",
-      "-moz-mac-vibrant-titlebar-light",
       "-moz-menulist-arrow-button",
       "-moz-win-borderless-glass",
       "-moz-win-browsertabbar-toolbox",
@@ -1483,8 +1481,6 @@ exports.CSS_PROPERTIES = {
       "-moz-mac-help-button",
       "-moz-mac-source-list",
       "-moz-mac-source-list-selection",
-      "-moz-mac-vibrant-titlebar-dark",
-      "-moz-mac-vibrant-titlebar-light",
       "-moz-menulist-arrow-button",
       "-moz-win-borderless-glass",
       "-moz-win-browsertabbar-toolbox",
@@ -2968,6 +2964,7 @@ exports.CSS_PROPERTIES = {
       "scroll-behavior",
       "scroll-snap-align",
       "scroll-snap-type",
+      "scroll-snap-stop",
       "overscroll-behavior-x",
       "overscroll-behavior-y",
       "isolation",
@@ -3435,8 +3432,6 @@ exports.CSS_PROPERTIES = {
       "-moz-mac-help-button",
       "-moz-mac-source-list",
       "-moz-mac-source-list-selection",
-      "-moz-mac-vibrant-titlebar-dark",
-      "-moz-mac-vibrant-titlebar-light",
       "-moz-menulist-arrow-button",
       "-moz-win-borderless-glass",
       "-moz-win-browsertabbar-toolbox",
@@ -10193,6 +10188,22 @@ exports.CSS_PROPERTIES = {
       "revert",
       "revert-layer",
       "start",
+      "unset"
+    ]
+  },
+  "scroll-snap-stop": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-snap-stop"
+    ],
+    "supports": [],
+    "values": [
+      "always",
+      "inherit",
+      "initial",
+      "normal",
+      "revert",
+      "revert-layer",
       "unset"
     ]
   },

@@ -93,6 +93,24 @@ mozbuild = { path = "build/rust/mozbuild" }
 # Patch itoa 0.4 to 1.0.
 itoa = { path = "build/rust/itoa" }
 
+# Patch cexpr 0.6 down to cexpr 0.4, which is enough for bindgen 0.59's needs and avoids pulling another version of nom.
+cexpr = { path = "build/rust/cexpr" }
+
+# Patch bindgen 0.56 to 0.59.
+bindgen = { path = "build/rust/bindgen" }
+
+# Patch cfg-if 0.1 to 1.0
+cfg-if = { path = "build/rust/cfg-if" }
+
+# Patch itertools 0.8 to 1.0
+itertools = { path = "build/rust/itertools" }
+
+# Patch redox_users to an empty crate
+redox_users = { path = "build/rust/redox_users" }
+
+# Patch memmap2 0.2 to 0.3
+memmap2 = { path = "build/rust/memmap2" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 

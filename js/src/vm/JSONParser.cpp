@@ -349,10 +349,7 @@ JSONParserBase::Token JSONParser<CharT>::readNumber() {
     }
   }
 
-  double d;
-  if (!FullStringToDouble(cx, digitStart.get(), current.get(), &d)) {
-    return token(OOM);
-  }
+  double d = FullStringToDouble(digitStart.get(), current.get());
   return numberToken(negative ? -d : d);
 }
 

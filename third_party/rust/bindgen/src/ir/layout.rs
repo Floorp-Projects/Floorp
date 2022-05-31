@@ -64,7 +64,7 @@ impl Layout {
             next_align *= 2;
         }
         Layout {
-            size: size,
+            size,
             align: next_align / 2,
             packed: false,
         }

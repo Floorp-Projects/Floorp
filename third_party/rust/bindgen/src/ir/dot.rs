@@ -32,13 +32,13 @@ where
     let mut err: Option<io::Result<_>> = None;
 
     for (id, item) in ctx.items() {
-        let is_whitelisted = ctx.whitelisted_items().contains(&id);
+        let is_allowlisted = ctx.allowlisted_items().contains(&id);
 
         writeln!(
             &mut dot_file,
             r#"{} [fontname="courier", color={}, label=< <table border="0" align="left">"#,
             id.as_usize(),
-            if is_whitelisted { "black" } else { "gray" }
+            if is_allowlisted { "black" } else { "gray" }
         )?;
         item.dot_attributes(ctx, &mut dot_file)?;
         writeln!(&mut dot_file, r#"</table> >];"#)?;
@@ -56,7 +56,7 @@ where
                     id.as_usize(),
                     sub_id.as_usize(),
                     edge_kind,
-                    if is_whitelisted { "black" } else { "gray" }
+                    if is_allowlisted { "black" } else { "gray" }
                 ) {
                     Ok(_) => {}
                     Err(e) => err = Some(Err(e)),

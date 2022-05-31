@@ -435,10 +435,7 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
   } else if (StringEqualsLiteral(type, "calendar")) {
     result = dn->GetCalendar(buffer, codeSpan, fallback);
   } else if (StringEqualsLiteral(type, "weekday")) {
-    double d;
-    if (!StringToNumber(cx, code, &d)) {
-      return false;
-    }
+    double d = LinearStringToNumber(code);
     if (!IsInteger(d) || d < 1 || d > 7) {
       ReportInvalidOptionError(cx, "weekday", d);
       return false;
@@ -447,11 +444,7 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
         dn->GetWeekday(buffer, static_cast<mozilla::intl::Weekday>(d),
                        mozilla::MakeStringSpan(calendarChars.get()), fallback);
   } else if (StringEqualsLiteral(type, "month")) {
-    double d;
-    if (!StringToNumber(cx, code, &d)) {
-      return false;
-    }
-
+    double d = LinearStringToNumber(code);
     if (!IsInteger(d) || d < 1 || d > 13) {
       ReportInvalidOptionError(cx, "month", d);
       return false;
@@ -462,10 +455,7 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
                      mozilla::MakeStringSpan(calendarChars.get()), fallback);
 
   } else if (StringEqualsLiteral(type, "quarter")) {
-    double d;
-    if (!StringToNumber(cx, code, &d)) {
-      return false;
-    }
+    double d = LinearStringToNumber(code);
 
     // Inlined implementation of `IsValidQuarterCode ( quarter )`.
     if (!IsInteger(d) || d < 1 || d > 4) {

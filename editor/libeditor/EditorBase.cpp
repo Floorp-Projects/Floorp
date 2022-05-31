@@ -3289,14 +3289,6 @@ bool EditorBase::IsRoot(const nsINode* inNode) const {
   return inNode == rootNode;
 }
 
-bool EditorBase::IsEditorRoot(const nsINode* aNode) const {
-  if (NS_WARN_IF(!aNode)) {
-    return false;
-  }
-  nsINode* rootNode = GetEditorRoot();
-  return aNode == rootNode;
-}
-
 bool EditorBase::IsDescendantOfRoot(const nsINode* inNode) const {
   if (NS_WARN_IF(!inNode)) {
     return false;
@@ -3307,18 +3299,6 @@ bool EditorBase::IsDescendantOfRoot(const nsINode* inNode) const {
   }
 
   return inNode->IsInclusiveDescendantOf(root);
-}
-
-bool EditorBase::IsDescendantOfEditorRoot(const nsINode* aNode) const {
-  if (NS_WARN_IF(!aNode)) {
-    return false;
-  }
-  nsIContent* root = GetEditorRoot();
-  if (NS_WARN_IF(!root)) {
-    return false;
-  }
-
-  return aNode->IsInclusiveDescendantOf(root);
 }
 
 NS_IMETHODIMP EditorBase::IncrementModificationCount(int32_t inNumMods) {
@@ -3922,6 +3902,8 @@ EditorBase::CreateTransactionForCollapsedRange(
 
   // build a transaction for deleting the appropriate data
   // XXX: this has to come from rule section
+  const Element* const anonymousDivOrEditingHost =
+      IsTextEditor() ? GetRoot() : AsHTMLEditor()->ComputeEditingHost();
   if (aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward &&
       point.IsStartOfContainer()) {
     MOZ_ASSERT(IsHTMLEditor());
@@ -3929,7 +3911,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     // of previous editable content.
     nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
         *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
-        GetEditorRoot());
+        anonymousDivOrEditingHost);
     if (!previousEditableContent) {
       NS_WARNING("There was no editable content before the collapsed range");
       return nullptr;
@@ -3977,7 +3959,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     // next editable content.
     nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
         *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
-        GetEditorRoot());
+        anonymousDivOrEditingHost);
     if (!nextEditableContent) {
       NS_WARNING("There was no editable content after the collapsed range");
       return nullptr;
@@ -4044,10 +4026,10 @@ EditorBase::CreateTransactionForCollapsedRange(
         aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward
             ? HTMLEditUtils::GetPreviousContent(
                   point, {WalkTreeOption::IgnoreNonEditableNode},
-                  GetEditorRoot())
+                  anonymousDivOrEditingHost)
             : HTMLEditUtils::GetNextContent(
                   point, {WalkTreeOption::IgnoreNonEditableNode},
-                  GetEditorRoot());
+                  anonymousDivOrEditingHost);
     if (!editableContent) {
       NS_WARNING("There was no editable content around the collapsed range");
       return nullptr;
@@ -4060,10 +4042,10 @@ EditorBase::CreateTransactionForCollapsedRange(
                   HowToHandleCollapsedRange::ExtendBackward
               ? HTMLEditUtils::GetPreviousContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                    GetEditorRoot())
+                    anonymousDivOrEditingHost)
               : HTMLEditUtils::GetNextContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                    GetEditorRoot());
+                    anonymousDivOrEditingHost);
     }
     if (!editableContent) {
       NS_WARNING(
@@ -4549,7 +4531,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   //       editing host for contenteditable which is in a shadow DOM tree
   //       and its host which is in design mode.
   else if (!AsHTMLEditor()->IsInDesignMode()) {
-    focusedElement = AsHTMLEditor()->GetActiveEditingHost();
+    focusedElement = AsHTMLEditor()->ComputeEditingHost();
     if (focusedElement &&
         droppedAt.GetContainerAsContent()->IsInclusiveDescendantOf(
             focusedElement)) {
@@ -4599,8 +4581,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
     // contenteditable, we cannot handle it without focus.  So, we should give
     // it up.
     if (IsHTMLEditor() && !AsHTMLEditor()->IsInDesignMode() &&
-        NS_WARN_IF(newFocusedElement !=
-                   AsHTMLEditor()->GetActiveEditingHost())) {
+        NS_WARN_IF(newFocusedElement != AsHTMLEditor()->ComputeEditingHost())) {
       editActionData.Abort();
       return NS_OK;
     }
@@ -5089,7 +5070,7 @@ nsresult EditorBase::ReplaceTextAsAction(
       NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
                            "StaticRange::Create() failed");
     } else {
-      Element* editingHost = AsHTMLEditor()->GetActiveEditingHost();
+      Element* editingHost = AsHTMLEditor()->ComputeEditingHost();
       NS_WARNING_ASSERTION(editingHost,
                            "No active editing host, no target ranges");
       if (editingHost) {
@@ -5353,8 +5334,6 @@ nsresult EditorBase::FinalizeSelection() {
   }
   return NS_OK;
 }
-
-Element* EditorBase::GetEditorRoot() const { return GetRoot(); }
 
 Element* EditorBase::GetExposedRoot() const {
   Element* rootElement = GetRoot();

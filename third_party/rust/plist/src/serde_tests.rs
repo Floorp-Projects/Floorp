@@ -1,13 +1,16 @@
-use serde::{de::DeserializeOwned, ser::Serialize};
+use serde::{
+    de::{Deserialize, DeserializeOwned},
+    ser::Serialize,
+};
 use std::{collections::BTreeMap, fmt::Debug};
 
 use crate::{
-    stream::{private::Sealed, Event, Writer},
+    stream::{private::Sealed, Event, OwnedEvent, Writer},
     Date, Deserializer, Error, Integer, Serializer, Uid,
 };
 
 struct VecWriter {
-    events: Vec<Event>,
+    events: Vec<OwnedEvent>,
 }
 
 impl VecWriter {
@@ -15,7 +18,7 @@ impl VecWriter {
         VecWriter { events: Vec::new() }
     }
 
-    pub fn into_inner(self) -> Vec<Event> {
+    pub fn into_inner(self) -> Vec<OwnedEvent> {
         self.events
     }
 }
@@ -42,7 +45,7 @@ impl Writer for VecWriter {
     }
 
     fn write_data(&mut self, value: &[u8]) -> Result<(), Error> {
-        self.events.push(Event::Data(value.to_owned()));
+        self.events.push(Event::Data(value.to_owned().into()));
         Ok(())
     }
 
@@ -62,7 +65,7 @@ impl Writer for VecWriter {
     }
 
     fn write_string(&mut self, value: &str) -> Result<(), Error> {
-        self.events.push(Event::String(value.to_owned()));
+        self.events.push(Event::String(value.to_owned().into()));
         Ok(())
     }
 
@@ -78,7 +81,7 @@ fn new_serializer() -> Serializer<VecWriter> {
     Serializer::new(VecWriter::new())
 }
 
-fn new_deserializer(events: Vec<Event>) -> Deserializer<Vec<Result<Event, Error>>> {
+fn new_deserializer(events: Vec<OwnedEvent>) -> Deserializer<Vec<Result<OwnedEvent, Error>>> {
     let result_events = events.into_iter().map(Ok).collect();
     Deserializer::new(result_events)
 }
@@ -133,12 +136,7 @@ struct DogInner {
 fn cow() {
     let cow = Animal::Cow;
 
-    let comparison = &[
-        Event::StartDictionary(Some(1)),
-        Event::String("Cow".to_owned()),
-        Event::String("".to_owned()),
-        Event::EndCollection,
-    ];
+    let comparison = &[Event::String("Cow".into())];
 
     assert_roundtrip(cow, Some(comparison));
 }
@@ -156,21 +154,21 @@ fn dog() {
 
     let comparison = &[
         Event::StartDictionary(Some(1)),
-        Event::String("Dog".to_owned()),
+        Event::String("Dog".into()),
         Event::StartDictionary(None),
-        Event::String("inner".to_owned()),
+        Event::String("inner".into()),
         Event::StartArray(Some(1)),
         Event::StartDictionary(None),
-        Event::String("a".to_owned()),
-        Event::String("".to_owned()),
-        Event::String("b".to_owned()),
+        Event::String("a".into()),
+        Event::String("".into()),
+        Event::String("b".into()),
         Event::Integer(12.into()),
-        Event::String("c".to_owned()),
+        Event::String("c".into()),
         Event::StartArray(Some(2)),
-        Event::String("a".to_owned()),
-        Event::String("b".to_owned()),
+        Event::String("a".into()),
+        Event::String("b".into()),
         Event::EndCollection,
-        Event::String("d".to_owned()),
+        Event::String("d".into()),
         Event::Uid(Uid::new(42)),
         Event::EndCollection,
         Event::EndCollection,
@@ -190,14 +188,14 @@ fn frog() {
 
     let comparison = &[
         Event::StartDictionary(Some(1)),
-        Event::String("Frog".to_owned()),
+        Event::String("Frog".into()),
         Event::StartArray(Some(2)),
         Event::StartDictionary(Some(1)),
-        Event::String("Ok".to_owned()),
-        Event::String("hello".to_owned()),
+        Event::String("Ok".into()),
+        Event::String("hello".into()),
         Event::EndCollection,
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::StartArray(Some(5)),
         Event::Real(1.0),
         Event::Real(2.0),
@@ -223,13 +221,13 @@ fn cat_with_firmware() {
 
     let comparison = &[
         Event::StartDictionary(Some(1)),
-        Event::String("Cat".to_owned()),
+        Event::String("Cat".into()),
         Event::StartDictionary(None),
-        Event::String("age".to_owned()),
+        Event::String("age".into()),
         Event::Integer(12.into()),
-        Event::String("name".to_owned()),
-        Event::String("Paws".to_owned()),
-        Event::String("firmware".to_owned()),
+        Event::String("name".into()),
+        Event::String("Paws".into()),
+        Event::String("firmware".into()),
         Event::StartArray(Some(9)),
         Event::Integer(0.into()),
         Event::Integer(1.into()),
@@ -258,12 +256,12 @@ fn cat_without_firmware() {
 
     let comparison = &[
         Event::StartDictionary(Some(1)),
-        Event::String("Cat".to_owned()),
+        Event::String("Cat".into()),
         Event::StartDictionary(None),
-        Event::String("age".to_owned()),
+        Event::String("age".into()),
         Event::Integer(Integer::from(-12)),
-        Event::String("name".to_owned()),
-        Event::String("Paws".to_owned()),
+        Event::String("name".into()),
+        Event::String("Paws".into()),
         Event::EndCollection,
         Event::EndCollection,
     ];
@@ -315,18 +313,18 @@ fn type_with_options() {
 
     let comparison = &[
         Event::StartDictionary(None),
-        Event::String("a".to_owned()),
-        Event::String("hello".to_owned()),
-        Event::String("b".to_owned()),
+        Event::String("a".into()),
+        Event::String("hello".into()),
+        Event::String("b".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("None".to_owned()),
-        Event::String("".to_owned()),
+        Event::String("None".into()),
+        Event::String("".into()),
         Event::EndCollection,
-        Event::String("c".to_owned()),
+        Event::String("c".into()),
         Event::StartDictionary(None),
-        Event::String("b".to_owned()),
+        Event::String("b".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::Integer(12.into()),
         Event::EndCollection,
         Event::EndCollection,
@@ -353,9 +351,9 @@ fn type_with_date() {
 
     let comparison = &[
         Event::StartDictionary(None),
-        Event::String("a".to_owned()),
+        Event::String("a".into()),
         Event::Integer(28.into()),
-        Event::String("b".to_owned()),
+        Event::String("b".into()),
         Event::Date(date),
         Event::EndCollection,
     ];
@@ -387,7 +385,7 @@ fn option_some_some() {
 
     let comparison = &[
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::Integer(12.into()),
         Event::EndCollection,
     ];
@@ -401,8 +399,8 @@ fn option_some_none() {
 
     let comparison = &[
         Event::StartDictionary(Some(1)),
-        Event::String("None".to_owned()),
-        Event::String("".to_owned()),
+        Event::String("None".into()),
+        Event::String("".into()),
         Event::EndCollection,
     ];
 
@@ -418,24 +416,24 @@ fn option_dictionary_values() {
 
     let comparison = &[
         Event::StartDictionary(Some(3)),
-        Event::String("a".to_owned()),
+        Event::String("a".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("None".to_owned()),
-        Event::String("".to_owned()),
+        Event::String("None".into()),
+        Event::String("".into()),
         Event::EndCollection,
-        Event::String("b".to_owned()),
+        Event::String("b".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("None".to_owned()),
-        Event::String("".to_owned()),
+        Event::String("None".into()),
+        Event::String("".into()),
         Event::EndCollection,
         Event::EndCollection,
-        Event::String("c".to_owned()),
+        Event::String("c".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::Integer(144.into()),
         Event::EndCollection,
         Event::EndCollection,
@@ -455,22 +453,22 @@ fn option_dictionary_keys() {
     let comparison = &[
         Event::StartDictionary(Some(3)),
         Event::StartDictionary(Some(1)),
-        Event::String("None".to_owned()),
-        Event::String("".to_owned()),
+        Event::String("None".into()),
+        Event::String("".into()),
         Event::EndCollection,
         Event::Integer(1.into()),
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("None".to_owned()),
-        Event::String("".to_owned()),
+        Event::String("None".into()),
+        Event::String("".into()),
         Event::EndCollection,
         Event::EndCollection,
         Event::Integer(2.into()),
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::Integer(144.into()),
         Event::EndCollection,
         Event::EndCollection,
@@ -488,20 +486,20 @@ fn option_array() {
     let comparison = &[
         Event::StartArray(Some(3)),
         Event::StartDictionary(Some(1)),
-        Event::String("None".to_owned()),
-        Event::String("".to_owned()),
+        Event::String("None".into()),
+        Event::String("".into()),
         Event::EndCollection,
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("None".to_owned()),
-        Event::String("".to_owned()),
+        Event::String("None".into()),
+        Event::String("".into()),
         Event::EndCollection,
         Event::EndCollection,
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::StartDictionary(Some(1)),
-        Event::String("Some".to_owned()),
+        Event::String("Some".into()),
         Event::Integer(144.into()),
         Event::EndCollection,
         Event::EndCollection,
@@ -509,4 +507,79 @@ fn option_array() {
     ];
 
     assert_roundtrip(obj, Some(comparison));
+}
+
+#[test]
+fn enum_variant_types() {
+    #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+    enum Foo {
+        Unit,
+        Newtype(u32),
+        Tuple(u32, String),
+        Struct { v: u32, s: String },
+    }
+
+    let expected = &[Event::String("Unit".into())];
+    assert_roundtrip(Foo::Unit, Some(expected));
+
+    let expected = &[
+        Event::StartDictionary(Some(1)),
+        Event::String("Newtype".into()),
+        Event::Integer(42.into()),
+        Event::EndCollection,
+    ];
+    assert_roundtrip(Foo::Newtype(42), Some(expected));
+
+    let expected = &[
+        Event::StartDictionary(Some(1)),
+        Event::String("Tuple".into()),
+        Event::StartArray(Some(2)),
+        Event::Integer(42.into()),
+        Event::String("bar".into()),
+        Event::EndCollection,
+        Event::EndCollection,
+    ];
+    assert_roundtrip(Foo::Tuple(42, "bar".into()), Some(expected));
+
+    let expected = &[
+        Event::StartDictionary(Some(1)),
+        Event::String("Struct".into()),
+        Event::StartDictionary(None),
+        Event::String("v".into()),
+        Event::Integer(42.into()),
+        Event::String("s".into()),
+        Event::String("bar".into()),
+        Event::EndCollection,
+        Event::EndCollection,
+    ];
+    assert_roundtrip(
+        Foo::Struct {
+            v: 42,
+            s: "bar".into(),
+        },
+        Some(expected),
+    );
+}
+
+#[test]
+fn deserialise_old_enum_unit_variant_encoding() {
+    #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+    enum Foo {
+        Bar,
+        Baz,
+    }
+
+    // `plist` before v1.1 serialised unit enum variants as if they were newtype variants
+    // containing an empty string.
+    let events = &[
+        Event::StartDictionary(Some(1)),
+        Event::String("Baz".into()),
+        Event::String("".into()),
+        Event::EndCollection,
+    ];
+
+    let mut de = new_deserializer(events.to_vec());
+    let obj = Foo::deserialize(&mut de).unwrap();
+
+    assert_eq!(obj, Foo::Baz);
 }

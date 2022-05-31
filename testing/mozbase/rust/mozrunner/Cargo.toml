@@ -10,7 +10,7 @@ edition = "2018"
 [dependencies]
 log = "0.4"
 mozprofile = { path = "../mozprofile", version = "0.8" }
-plist = "0.5"
+plist = "1.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winreg = "0.5"

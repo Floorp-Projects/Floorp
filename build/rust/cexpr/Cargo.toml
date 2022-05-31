@@ -1,0 +1,11 @@
+[package]
+name = "cexpr"
+version = "0.6.999"
+edition = "2018"
+license = "Apache-2.0/MIT"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+cexpr = "0.4"

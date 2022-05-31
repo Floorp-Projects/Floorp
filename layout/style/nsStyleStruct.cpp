@@ -2436,7 +2436,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     // FIXME: Bug 1530253 Support re-snapping when scroll-snap-align changes.
     hint |= nsChangeHint_NeutralChange;
   }
-  if (mScrollSnapType != aNewData.mScrollSnapType) {
+  if (mScrollSnapType != aNewData.mScrollSnapType ||
+      mScrollSnapStop != aNewData.mScrollSnapStop) {
     // FIXME: Bug 1530253 Support re-snapping when scroll-snap-type changes.
     hint |= nsChangeHint_RepaintFrame;
   }

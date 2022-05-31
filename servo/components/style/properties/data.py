@@ -511,6 +511,7 @@ class Longhand(Property):
                 "ScrollbarGutter",
                 "ScrollSnapAlign",
                 "ScrollSnapAxis",
+                "ScrollSnapStop",
                 "ScrollSnapStrictness",
                 "ScrollSnapType",
                 "TextAlign",

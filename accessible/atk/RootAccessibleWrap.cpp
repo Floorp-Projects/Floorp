@@ -6,7 +6,10 @@
 
 #include "RootAccessibleWrap.h"
 
-#include "nsMai.h"
+#include "atk/atkobject.h"
+#include "nsTArray.h"
+
+#include <glib-object.h>
 
 using namespace mozilla::a11y;
 

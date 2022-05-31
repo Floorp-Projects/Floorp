@@ -218,7 +218,7 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
 
   RefPtr<Element> editingHost;
   if (aEditorBase.IsHTMLEditor()) {
-    editingHost = aEditorBase.AsHTMLEditor()->GetActiveEditingHost();
+    editingHost = aEditorBase.AsHTMLEditor()->ComputeEditingHost();
     if (!editingHost) {
       return Err(NS_ERROR_FAILURE);
     }

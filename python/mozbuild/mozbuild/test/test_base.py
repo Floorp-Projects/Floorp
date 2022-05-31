@@ -267,7 +267,9 @@ class TestMozbuildObject(unittest.TestCase):
 
             mozconfig = os.path.join(d, "mozconfig")
             with open(mozconfig, "wt") as fh:
-                fh.write("mk_add_options MOZ_OBJDIR=%s" % real_topobjdir)
+                fh.write(
+                    "mk_add_options MOZ_OBJDIR=%s" % real_topobjdir.replace("\\", "/")
+                )
 
             mozinfo = os.path.join(topobjdir, "mozinfo.json")
             with open(mozinfo, "wt") as fh:

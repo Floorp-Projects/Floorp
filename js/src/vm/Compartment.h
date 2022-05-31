@@ -24,6 +24,8 @@
 
 namespace js {
 
+JSString* CopyStringPure(JSContext* cx, JSString* str);
+
 // The data structure use to storing JSObject CCWs for a given source
 // compartment. These are partitioned by target compartment so that we can
 // easily select wrappers by source and target compartment. String CCWs are
@@ -365,6 +367,10 @@ class JS::Compartment {
       JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
   [[nodiscard]] bool wrap(JSContext* cx,
                           JS::MutableHandle<JS::GCVector<JS::Value>> vec);
+#ifdef ENABLE_RECORD_TUPLE
+  [[nodiscard]] bool wrapExtendedPrimitive(JSContext* cx,
+                                           JS::MutableHandleObject obj);
+#endif
   [[nodiscard]] bool rewrap(JSContext* cx, JS::MutableHandleObject obj,
                             JS::HandleObject existing);
 

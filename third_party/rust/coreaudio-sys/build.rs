@@ -128,9 +128,14 @@ fn build(sdk_path: Option<&str>, target: &str) {
     if target.contains("apple-ios") {
         // time.h as has a variable called timezone that conflicts with some of the objective-c
         // calls from NSCalendar.h in the Foundation framework. This removes that one variable.
-        builder = builder.blacklist_item("timezone");
-        builder = builder.blacklist_item("objc_object");
+        builder = builder.blocklist_item("timezone");
+        builder = builder.blocklist_item("objc_object");
     }
+
+    // bindgen produces alignment tests that cause undefined behavior in some cases.
+    // This seems to happen across all apple target tripples :/.
+    // https://github.com/rust-lang/rust-bindgen/issues/1651
+    builder = builder.layout_tests(false);
 
     let meta_header: Vec<_> = headers
         .iter()

@@ -1843,16 +1843,18 @@ class EditorBase : public nsIEditor,
   DoTransactionInternal(nsITransaction* aTransaction);
 
   /**
-   * Returns true if aNode is our root node.
+   * Returns true if aNode is our root node.  The root is:
+   * If TextEditor, the anonymous <div> element.
+   * If HTMLEditor, a <body> element or the document element which may not be
+   * editable if it's not in the design mode.
    */
   bool IsRoot(const nsINode* inNode) const;
-  bool IsEditorRoot(const nsINode* aNode) const;
 
   /**
    * Returns true if aNode is a descendant of our root node.
+   * See the comment for IsRoot() for what the root node means.
    */
   bool IsDescendantOfRoot(const nsINode* inNode) const;
-  bool IsDescendantOfEditorRoot(const nsINode* aNode) const;
 
   /**
    * Returns true when inserting text should be a part of current composition.
@@ -1949,12 +1951,6 @@ class EditorBase : public nsIEditor,
   nsresult HandleInlineSpellCheck(
       const EditorDOMPoint& aPreviouslySelectedStart,
       const dom::AbstractRange* aRange = nullptr);
-
-  /**
-   * Likewise, but gets the editor's root instead, which is different for HTML
-   * editors.
-   */
-  virtual Element* GetEditorRoot() const;
 
   /**
    * Whether the editor is active on the DOM window.  Note that when this

@@ -1197,6 +1197,7 @@ FormAutofillHeuristics = {
       *[Symbol.iterator]() {
         yield element.id;
         yield element.name;
+        yield element.placeholder?.trim();
 
         const labels = LabelUtils.findLabelElements(element);
         for (let label of labels) {
@@ -1219,7 +1220,7 @@ FormAutofillHeuristics = {
     const getElementStrings = this._getElementStrings(element);
     for (let regexp of regexps) {
       for (let string of getElementStrings) {
-        if (this.RULES[regexp].test(string.toLowerCase())) {
+        if (this.RULES[regexp].test(string?.toLowerCase())) {
           return regexp;
         }
       }
