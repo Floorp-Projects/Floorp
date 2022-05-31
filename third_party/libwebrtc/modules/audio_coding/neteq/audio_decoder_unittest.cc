@@ -587,7 +587,7 @@ TEST_F(AudioDecoderIsacFixTest, EncodeDecode) {
   int delay = 54;  // Delay from input to output.
 #if defined(WEBRTC_ANDROID) && defined(WEBRTC_ARCH_ARM)
   static const int kEncodedBytes = 685;
-#elif defined(WEBRTC_ANDROID) && defined(WEBRTC_ARCH_ARM64)
+#elif defined(WEBRTC_ARCH_ARM64)
   static const int kEncodedBytes = 673;
 #else
   static const int kEncodedBytes = 671;
