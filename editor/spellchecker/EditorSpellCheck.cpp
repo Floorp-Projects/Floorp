@@ -659,13 +659,14 @@ EditorSpellCheck::SetCurrentDictionaries(
       // Since the mail editor can only influence the language selection by the
       // html lang attribute, set the content-language document to persist
       // multi language selections.
-      nsCOMPtr<nsIContent> rootContent;
+      // XXX Why doesn't here use the document of the editor directly?
+      nsCOMPtr<nsIContent> anonymousDivOrEditingHost;
       if (HTMLEditor* htmlEditor = mEditor->GetAsHTMLEditor()) {
-        rootContent = htmlEditor->GetActiveEditingHost();
+        anonymousDivOrEditingHost = htmlEditor->ComputeEditingHost();
       } else {
-        rootContent = mEditor->GetRoot();
+        anonymousDivOrEditingHost = mEditor->GetRoot();
       }
-      RefPtr<Document> ownerDoc = rootContent->OwnerDoc();
+      RefPtr<Document> ownerDoc = anonymousDivOrEditingHost->OwnerDoc();
       Document* parentDoc = ownerDoc->GetInProcessParentDocument();
       if (parentDoc) {
         parentDoc->SetHeaderData(
@@ -743,8 +744,9 @@ EditorSpellCheck::UpdateCurrentDictionary(
     if (aEditorBase.IsMailEditor()) {
       // Shouldn't run spellcheck in a mail editor without focus
       // (bug 1507543)
+      // XXX Why doesn't here use the document of the editor directly?
       Element* const editingHost =
-          aEditorBase.AsHTMLEditor()->GetActiveEditingHost();
+          aEditorBase.AsHTMLEditor()->ComputeEditingHost();
       if (!editingHost) {
         return nullptr;
       }

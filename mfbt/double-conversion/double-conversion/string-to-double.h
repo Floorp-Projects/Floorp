@@ -28,6 +28,7 @@
 #ifndef DOUBLE_CONVERSION_STRING_TO_DOUBLE_H_
 #define DOUBLE_CONVERSION_STRING_TO_DOUBLE_H_
 
+#include "mozilla/Types.h"
 #include "utils.h"
 
 namespace double_conversion {
@@ -183,12 +184,12 @@ class StringToDoubleConverter {
   // of characters that have been processed to read the number.
   // Spaces than are processed with ALLOW_{LEADING|TRAILING}_SPACES are included
   // in the 'processed_characters_count'. Trailing junk is never included.
-  double StringToDouble(const char* buffer,
+  MFBT_API double StringToDouble(const char* buffer,
                         int length,
                         int* processed_characters_count) const;
 
   // Same as StringToDouble above but for 16 bit characters.
-  double StringToDouble(const uc16* buffer,
+  MFBT_API double StringToDouble(const uc16* buffer,
                         int length,
                         int* processed_characters_count) const;
 

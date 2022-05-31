@@ -29,12 +29,12 @@ runHeuristicsTest(
               contactType: "",
               fieldName: "family-name"
             },
-            // {
-            //   section: "",
-            //   addressType: "",
-            //   contactType: "",
-            //   fieldName: "address-line1"
-            // },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-line1"
+            },
             {
               section: "",
               addressType: "",
@@ -177,12 +177,12 @@ runHeuristicsTest(
               contactType: "",
               fieldName: "cc-number",
             },
-            // {
-            //   section: "",
-            //   addressType: "",
-            //   contactType: "",
-            //   fieldName: "cc-name"
-            // },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "cc-name"
+            },
             // {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
             {
               section: "",

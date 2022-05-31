@@ -1,7 +1,5 @@
 //! Utilities for manipulating C/C++ comments.
 
-use std::iter;
-
 /// The type of a comment.
 #[derive(Debug, PartialEq, Eq)]
 enum Kind {
@@ -15,7 +13,7 @@ enum Kind {
 
 /// Preprocesses a C/C++ comment so that it is a valid Rust comment.
 pub fn preprocess(comment: &str, indent: usize) -> String {
-    match self::kind(&comment) {
+    match self::kind(comment) {
         Some(Kind::SingleLines) => preprocess_single_lines(comment, indent),
         Some(Kind::MultiLine) => preprocess_multi_line(comment, indent),
         None => comment.to_owned(),
@@ -35,7 +33,7 @@ fn kind(comment: &str) -> Option<Kind> {
 
 fn make_indent(indent: usize) -> String {
     const RUST_INDENTATION: usize = 4;
-    iter::repeat(' ').take(indent * RUST_INDENTATION).collect()
+    " ".repeat(indent * RUST_INDENTATION)
 }
 
 /// Preprocesses multiple single line comments.

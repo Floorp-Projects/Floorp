@@ -640,7 +640,7 @@ class HTMLEditor final : public EditorBase,
    * active in the DOM window, this returns NULL.
    */
   enum class LimitInBodyElement { No, Yes };
-  Element* GetActiveEditingHost(
+  Element* ComputeEditingHost(
       LimitInBodyElement aLimitInBodyElement = LimitInBodyElement::Yes) const;
 
   /**
@@ -789,7 +789,6 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   RemoveBlockContainerWithTransaction(Element& aElement);
 
-  Element* GetEditorRoot() const final;
   MOZ_CAN_RUN_SCRIPT nsresult RemoveAttributeOrEquivalent(
       Element* aElement, nsAtom* aAttribute, bool aSuppressTransaction) final;
   MOZ_CAN_RUN_SCRIPT nsresult SetAttributeOrEquivalent(

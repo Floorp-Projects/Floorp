@@ -14,4 +14,7 @@ fn main() {
     if version().unwrap() >= Version::parse("1.60.0-alpha").unwrap() {
         println!("cargo:rustc-cfg=std_arch");
     }
+    if version().unwrap() < Version::parse("1.61.0-alpha").unwrap() {
+        println!("cargo:rustc-cfg=aarch64_target_feature");
+    }
 }

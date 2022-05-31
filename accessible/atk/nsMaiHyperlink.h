@@ -8,7 +8,10 @@
 #define __MAI_HYPERLINK_H__
 
 #include "nsMai.h"
-#include "LocalAccessible.h"
+#include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/LocalAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
+#include "nsDebug.h"
 
 struct _AtkHyperlink;
 typedef struct _AtkHyperlink AtkHyperlink;

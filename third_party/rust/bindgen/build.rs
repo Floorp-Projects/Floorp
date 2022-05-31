@@ -79,4 +79,12 @@ fn main() {
     println!("cargo:rerun-if-env-changed=LIBCLANG_PATH");
     println!("cargo:rerun-if-env-changed=LIBCLANG_STATIC_PATH");
     println!("cargo:rerun-if-env-changed=BINDGEN_EXTRA_CLANG_ARGS");
+    println!(
+        "cargo:rerun-if-env-changed=BINDGEN_EXTRA_CLANG_ARGS_{}",
+        std::env::var("TARGET").unwrap()
+    );
+    println!(
+        "cargo:rerun-if-env-changed=BINDGEN_EXTRA_CLANG_ARGS_{}",
+        std::env::var("TARGET").unwrap().replace("-", "_")
+    );
 }

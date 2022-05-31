@@ -865,48 +865,41 @@ uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
   return 3;
 }
 
-bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
-                                double* result) const {
+double ParserAtomsTable::toNumber(TaggedParserAtomIndex index) const {
   if (index.isParserAtomIndex()) {
     const auto* atom = getParserAtom(index.toParserAtomIndex());
     size_t len = atom->length();
-    return atom->hasLatin1Chars()
-               ? CharsToNumber(cx, atom->latin1Chars(), len, result)
-               : CharsToNumber(cx, atom->twoByteChars(), len, result);
+    return atom->hasLatin1Chars() ? CharsToNumber(atom->latin1Chars(), len)
+                                  : CharsToNumber(atom->twoByteChars(), len);
   }
 
   if (index.isWellKnownAtomId()) {
     const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
-    return CharsToNumber(cx, reinterpret_cast<const Latin1Char*>(info.content),
-                         info.length, result);
+    return CharsToNumber(reinterpret_cast<const Latin1Char*>(info.content),
+                         info.length);
   }
 
   if (index.isLength1StaticParserString()) {
     Latin1Char content[1];
     getLength1Content(index.toLength1StaticParserString(), content);
-    return CharsToNumber(cx, content, 1, result);
+    return CharsToNumber(content, 1);
   }
 
   if (index.isLength2StaticParserString()) {
     char content[2];
     getLength2Content(index.toLength2StaticParserString(), content);
-    return CharsToNumber(cx, reinterpret_cast<const Latin1Char*>(content), 2,
-                         result);
+    return CharsToNumber(reinterpret_cast<const Latin1Char*>(content), 2);
   }
 
   MOZ_ASSERT(index.isLength3StaticParserString());
-  *result = double(index.toLength3StaticParserString());
+  double result = double(index.toLength3StaticParserString());
 #ifdef DEBUG
   char content[3];
-  double tmp;
   getLength3Content(index.toLength3StaticParserString(), content);
-  if (!CharsToNumber(cx, reinterpret_cast<const Latin1Char*>(content), 3,
-                     &tmp)) {
-    return false;
-  }
-  MOZ_ASSERT(tmp == *result);
+  double tmp = CharsToNumber(reinterpret_cast<const Latin1Char*>(content), 3);
+  MOZ_ASSERT(tmp == result);
 #endif
-  return true;
+  return result;
 }
 
 UniqueChars ParserAtomsTable::toNewUTF8CharsZ(

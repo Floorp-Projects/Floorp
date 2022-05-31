@@ -112,6 +112,7 @@ include = [
   "OverscrollBehavior",
   "ScrollSnapAlign",
   "ScrollSnapAxis",
+  "ScrollSnapStop",
   "ScrollSnapStrictness",
   "ScrollSnapType",
   "OverflowAnchor",

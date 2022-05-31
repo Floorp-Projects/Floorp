@@ -442,6 +442,7 @@ cbindgen-types = [
     { gecko = "StyleOutlineStyle", servo = "crate::values::computed::OutlineStyle" },
     { gecko = "StyleScrollDirection", servo = "crate::stylesheets::scroll_timeline_rule::ScrollDirection" },
     { gecko = "StyleScrollSnapAlign", servo = "crate::values::computed::ScrollSnapAlign" },
+    { gecko = "StyleScrollSnapStop", servo = "crate::values::computed::ScrollSnapStop" },
     { gecko = "StyleScrollSnapStrictness", servo = "crate::values::computed::ScrollSnapStrictness" },
     { gecko = "StyleScrollSnapType", servo = "crate::values::computed::ScrollSnapType" },
     { gecko = "StyleResize", servo = "crate::values::computed::Resize" },

@@ -3232,8 +3232,6 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, StyleAppearance aAppear
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Meter:
     case StyleAppearance::Meterchunk:
-    case StyleAppearance::MozMacVibrantTitlebarLight:
-    case StyleAppearance::MozMacVibrantTitlebarDark:
       *aShouldRepaint = false;
       return NS_OK;
     default:
@@ -3366,9 +3364,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
     case StyleAppearance::FocusOutline:
       return true;
 
-    case StyleAppearance::MozMacVibrantTitlebarLight:
-    case StyleAppearance::MozMacVibrantTitlebarDark:
-      return true;
     default:
       break;
   }
@@ -3460,10 +3455,6 @@ nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(
       return eThemeGeometryTypeToolbox;
     case StyleAppearance::MozWindowButtonBox:
       return eThemeGeometryTypeWindowButtons;
-    case StyleAppearance::MozMacVibrantTitlebarLight:
-      return eThemeGeometryTypeVibrantTitlebarLight;
-    case StyleAppearance::MozMacVibrantTitlebarDark:
-      return eThemeGeometryTypeVibrantTitlebarDark;
     case StyleAppearance::Tooltip:
       return eThemeGeometryTypeTooltip;
     case StyleAppearance::Menupopup:

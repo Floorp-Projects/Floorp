@@ -436,7 +436,7 @@ nsresult HTMLEditor::RefreshEditingUI() {
   }
 
   // now, let's display all contextual UI for good
-  nsIContent* hostContent = GetActiveEditingHost();
+  nsIContent* hostContent = ComputeEditingHost();
 
   if (IsObjectResizerEnabled() && focusElement &&
       HTMLEditUtils::IsSimplyEditableNode(*focusElement) &&
