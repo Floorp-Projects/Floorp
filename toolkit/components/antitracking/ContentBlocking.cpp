@@ -910,6 +910,42 @@ Maybe<bool> ContentBlocking::CheckCallingContextDecidesStorageAccessAPI(
 }
 
 // static
+Maybe<bool> ContentBlocking::CheckSameSiteCallingContextDecidesStorageAccessAPI(
+    dom::Document* aDocument, bool aRequireUserActivation) {
+  MOZ_ASSERT(aDocument);
+  if (aRequireUserActivation) {
+    if (!aDocument->HasValidTransientUserGestureActivation()) {
+      // Report an error to the console for this case
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
+          aDocument, nsContentUtils::eDOM_PROPERTIES,
+          "RequestStorageAccessUserGesture");
+      return Some(false);
+    }
+  }
+
+  nsIChannel* chan = aDocument->GetChannel();
+  if (!chan) {
+    return Some(false);
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+  if (loadInfo->GetIsThirdPartyContextToTopWindow()) {
+    return Some(false);
+  }
+
+  // If the document has a null origin, reject.
+  if (aDocument->NodePrincipal()->GetIsNullPrincipal()) {
+    // Report an error to the console for this case
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    nsLiteralCString("requestStorageAccess"),
+                                    aDocument, nsContentUtils::eDOM_PROPERTIES,
+                                    "RequestStorageAccessNullPrincipal");
+    return Some(false);
+  }
+  return Maybe<bool>();
+}
+
+// static
 Maybe<bool> ContentBlocking::CheckExistingPermissionDecidesStorageAccessAPI(
     dom::Document* aDocument) {
   MOZ_ASSERT(aDocument);
