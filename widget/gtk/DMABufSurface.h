@@ -148,7 +148,12 @@ class DMABufSurface {
  protected:
   virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
 
+  // Import global ref count from IPC by file descriptor.
   void GlobalRefCountImport(int aFd);
+  // Export global ref count by file descriptor. This adds global ref count
+  // reference to the surface.
+  // It's used when dmabuf surface is shared with another process via. IPC.
+  int GlobalRefCountExport();
   void GlobalRefCountDelete();
 
   void ReleaseDMABuf();
