@@ -7,8 +7,7 @@
 // except according to those terms.
 
 //! Implementation for VxWorks
-use crate::error::{Error, RAND_SECURE_FATAL};
-use crate::util_libc::last_os_error;
+use crate::{util_libc::last_os_error, Error};
 use core::sync::atomic::{AtomicBool, Ordering::Relaxed};
 
 pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
@@ -16,7 +15,7 @@ pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
     while !RNG_INIT.load(Relaxed) {
         let ret = unsafe { libc::randSecure() };
         if ret < 0 {
-            return Err(RAND_SECURE_FATAL);
+            return Err(Error::VXWORKS_RAND_SECURE);
         } else if ret > 0 {
             RNG_INIT.store(true, Relaxed);
             break;

@@ -7,14 +7,16 @@
 // except according to those terms.
 
 //! Implementations that just need to read from a file
-use crate::util::LazyUsize;
-use crate::util_libc::{open_readonly, sys_fill_exact};
-use crate::Error;
-use core::cell::UnsafeCell;
-use core::sync::atomic::{AtomicUsize, Ordering::Relaxed};
+use crate::{
+    util::LazyUsize,
+    util_libc::{open_readonly, sys_fill_exact},
+    Error,
+};
+use core::{
+    cell::UnsafeCell,
+    sync::atomic::{AtomicUsize, Ordering::Relaxed},
+};
 
-#[cfg(target_os = "redox")]
-const FILE_PATH: &str = "rand:\0";
 #[cfg(any(
     target_os = "dragonfly",
     target_os = "emscripten",
@@ -24,7 +26,7 @@ const FILE_PATH: &str = "rand:\0";
     target_os = "illumos"
 ))]
 const FILE_PATH: &str = "/dev/random\0";
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "redox"))]
 const FILE_PATH: &str = "/dev/urandom\0";
 
 pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
@@ -43,7 +45,7 @@ pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
 }
 
 // Returns the file descriptor for the device file used to retrieve random
-// bytes. The file will be opened exactly once. All successful calls will
+// bytes. The file will be opened exactly once. All subsequent calls will
 // return the same file descriptor. This file descriptor is never closed.
 fn get_rng_fd() -> Result<libc::c_int, Error> {
     static FD: AtomicUsize = AtomicUsize::new(LazyUsize::UNINIT);
@@ -99,7 +101,7 @@ fn wait_until_rng_ready() -> Result<(), Error> {
         // A negative timeout means an infinite timeout.
         let res = unsafe { libc::poll(&mut pfd, 1, -1) };
         if res >= 0 {
-            assert_eq!(res, 1); // We only used one fd, and cannot timeout.
+            debug_assert_eq!(res, 1); // We only used one fd, and cannot timeout.
             return Ok(());
         }
         let err = crate::util_libc::last_os_error();
