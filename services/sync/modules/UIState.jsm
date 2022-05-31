@@ -234,11 +234,14 @@ const UIStateInternal = {
   },
 };
 
-ChromeUtils.defineModuleGetter(
-  UIStateInternal,
-  "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
+XPCOMUtils.defineLazyGetter(UIStateInternal, "fxAccounts", () => {
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
+  ).getFxAccountsSingleton();
+});
 
 for (let topic of TOPICS) {
   Services.obs.addObserver(UIStateInternal, topic);

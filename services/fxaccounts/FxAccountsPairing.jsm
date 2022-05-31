@@ -14,9 +14,10 @@ const {
   COMMAND_PAIR_HEARTBEAT,
   COMMAND_PAIR_COMPLETE,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const { fxAccounts, FxAccounts } = ChromeUtils.import(
+const { getFxAccountsSingleton, FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
+const fxAccounts = getFxAccountsSingleton();
 const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );

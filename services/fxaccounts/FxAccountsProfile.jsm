@@ -18,9 +18,10 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-const { fxAccounts } = ChromeUtils.import(
+const { getFxAccountsSingleton } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
+const fxAccounts = getFxAccountsSingleton();
 
 ChromeUtils.defineModuleGetter(
   this,
