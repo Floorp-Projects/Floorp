@@ -2420,6 +2420,10 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
     rinfo.sender_reports_bytes_sent = stats.sender_reports_bytes_sent;
     rinfo.sender_reports_reports_count = stats.sender_reports_reports_count;
 
+    if (recv_nack_enabled_) {
+      rinfo.nacks_sent = stats.nacks_sent;
+    }
+
     info->receivers.push_back(rinfo);
   }
 

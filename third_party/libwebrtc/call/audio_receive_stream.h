@@ -40,6 +40,7 @@ class AudioReceiveStream : public MediaReceiveStream {
     uint64_t fec_packets_received = 0;
     uint64_t fec_packets_discarded = 0;
     uint32_t packets_lost = 0;
+    uint32_t nacks_sent = 0;
     uint64_t packets_discarded = 0;
     std::string codec_name;
     absl::optional<int> codec_payload_type;

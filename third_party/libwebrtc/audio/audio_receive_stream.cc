@@ -281,6 +281,7 @@ webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats(
       call_stats.header_and_padding_bytes_rcvd;
   stats.packets_rcvd = call_stats.packetsReceived;
   stats.packets_lost = call_stats.cumulativeLost;
+  stats.nacks_sent = call_stats.nacks_sent;
   stats.capture_start_ntp_time_ms = call_stats.capture_start_ntp_time_ms_;
   stats.last_packet_received_timestamp_ms =
       call_stats.last_packet_received_timestamp_ms;

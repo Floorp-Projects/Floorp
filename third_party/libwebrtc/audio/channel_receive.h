@@ -58,6 +58,7 @@ struct CallReceiveStatistics {
   int64_t payload_bytes_rcvd = 0;
   int64_t header_and_padding_bytes_rcvd = 0;
   int packetsReceived;
+  uint32_t nacks_sent = 0;
   // The capture NTP time (in local timebase) of the first played out audio
   // frame.
   int64_t capture_start_ntp_time_ms_;

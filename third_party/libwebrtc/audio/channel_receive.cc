@@ -81,7 +81,8 @@ AudioCodingModule::Config AcmConfig(
   return acm_config;
 }
 
-class ChannelReceive : public ChannelReceiveInterface {
+class ChannelReceive : public ChannelReceiveInterface,
+                       public RtcpPacketTypeCounterObserver {
  public:
   // Used for receive streams.
   ChannelReceive(
@@ -182,6 +183,10 @@ class ChannelReceive : public ChannelReceiveInterface {
 
   void OnLocalSsrcChange(uint32_t local_ssrc) override;
   uint32_t GetLocalSsrc() const override;
+
+  void RtcpPacketTypesCounterUpdated(
+      uint32_t ssrc,
+      const RtcpPacketTypeCounter& packet_counter) override;
 
  private:
   void ReceivePacket(const uint8_t* packet,
@@ -300,6 +305,10 @@ class ChannelReceive : public ChannelReceiveInterface {
   // A value of 100 means 100 callbacks, each one of which represents 10ms worth
   // of data, so the stats reporting frequency will be 1Hz (modulo failures).
   constexpr static int kHistogramReportingInterval = 100;
+
+  mutable Mutex rtcp_counter_mutex_;
+  RtcpPacketTypeCounter rtcp_packet_type_counter_
+      RTC_GUARDED_BY(rtcp_counter_mutex_);
 };
 
 void ChannelReceive::OnReceivedPayloadData(
@@ -565,6 +574,7 @@ ChannelReceive::ChannelReceive(
   configuration.receive_statistics = rtp_receive_statistics_.get();
   configuration.event_log = event_log_;
   configuration.local_media_ssrc = local_ssrc;
+  configuration.rtcp_packet_type_counter_observer = this;
   configuration.rtcp_event_observer = rtcp_event_observer;
 
   if (frame_transformer)
@@ -822,6 +832,11 @@ CallReceiveStatistics ChannelReceive::GetRTCPStatistics() const {
     stats.last_packet_received_timestamp_ms = absl::nullopt;
   }
 
+  {
+    MutexLock lock(&rtcp_counter_mutex_);
+    stats.nacks_sent = rtcp_packet_type_counter_.nack_packets;
+  }
+
   // Timestamps.
   {
     MutexLock lock(&ts_stats_lock_);
@@ -864,6 +879,16 @@ void ChannelReceive::SetNACKStatus(bool enable, int max_packets) {
 int ChannelReceive::ResendPackets(const uint16_t* sequence_numbers,
                                   int length) {
   return rtp_rtcp_->SendNACK(sequence_numbers, length);
+}
+
+void ChannelReceive::RtcpPacketTypesCounterUpdated(
+    uint32_t ssrc,
+    const RtcpPacketTypeCounter& packet_counter) {
+  if (ssrc != remote_ssrc_) {
+    return;
+  }
+  MutexLock lock(&rtcp_counter_mutex_);
+  rtcp_packet_type_counter_ = packet_counter;
 }
 
 void ChannelReceive::SetAssociatedSendChannel(
