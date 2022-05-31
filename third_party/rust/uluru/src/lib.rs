@@ -7,23 +7,13 @@
 
 //! A simple, fast, least-recently-used (LRU) cache.
 //!
-//! `LRUCache` uses a fixed-capacity array for storage. It provides `O(1)` insertion, and `O(n)`
+//! [`LRUCache`] uses a fixed-capacity array for storage. It provides `O(1)` insertion, and `O(n)`
 //! lookup.  It does not require an allocator and can be used in `no_std` crates.
 //!
 //! See the [`LRUCache`](LRUCache) docs for details.
 
-extern crate arrayvec;
-
-use arrayvec::{Array, ArrayVec};
-
-use core::fmt;
-
-#[cfg(test)]
-extern crate quickcheck;
-
-#[cfg(test)]
-#[macro_use(quickcheck)]
-extern crate quickcheck_macros;
+use arrayvec::ArrayVec;
+use core::{fmt, mem::replace};
 
 #[cfg(test)]
 mod tests;
@@ -40,7 +30,7 @@ mod tests;
 /// # Example
 ///
 /// ```
-/// use uluru::{LRUCache, Entry};
+/// use uluru::LRUCache;
 ///
 /// struct MyValue {
 ///     id: u32,
@@ -48,7 +38,7 @@ mod tests;
 /// }
 ///
 /// // A cache with a capacity of three.
-/// type MyCache = LRUCache<[Entry<MyValue>; 3]>;
+/// type MyCache = LRUCache<MyValue, 3>;
 ///
 /// // Create an empty cache, then insert some items.
 /// let mut cache = MyCache::default();
@@ -56,31 +46,29 @@ mod tests;
 /// cache.insert(MyValue { id: 2, name: "Venus" });
 /// cache.insert(MyValue { id: 3, name: "Earth" });
 ///
-/// {
-///     // Use the `find` method to retrieve an item from the cache.
-///     // This also "touches" the item, marking it most-recently-used.
-///     let item = cache.find(|x| x.id == 1);
-///     assert_eq!(item.unwrap().name, "Mercury");
-/// }
+/// // Use the `find` method to retrieve an item from the cache.
+/// // This also "touches" the item, marking it most-recently-used.
+/// let item = cache.find(|x| x.id == 1);
+/// assert_eq!(item.unwrap().name, "Mercury");
 ///
 /// // If the cache is full, inserting a new item evicts the least-recently-used item:
 /// cache.insert(MyValue { id: 4, name: "Mars" });
 /// assert!(cache.find(|x| x.id == 2).is_none());
 /// ```
-pub struct LRUCache<A: Array> {
+pub struct LRUCache<T, const N: usize> {
     /// The most-recently-used entry is at index `head`. The entries form a linked list, linked to
     /// each other by indices within the `entries` array.  After an entry is added to the array,
     /// its index never changes, so these links are never invalidated.
-    entries: ArrayVec<A>,
+    entries: ArrayVec<Entry<T>, N>,
     /// Index of the first entry. If the cache is empty, ignore this field.
     head: u16,
     /// Index of the last entry. If the cache is empty, ignore this field.
     tail: u16,
 }
 
-/// An entry in an LRUCache.
+/// An entry in an `LRUCache`.
 #[derive(Debug, Clone)]
-pub struct Entry<T> {
+struct Entry<T> {
     val: T,
     /// Index of the previous entry. If this entry is the head, ignore this field.
     prev: u16,
@@ -88,7 +76,7 @@ pub struct Entry<T> {
     next: u16,
 }
 
-impl<A: Array> Default for LRUCache<A> {
+impl<T, const N: usize> Default for LRUCache<T, N> {
     fn default() -> Self {
         let cache = LRUCache {
             entries: ArrayVec::new(),
@@ -103,30 +91,43 @@ impl<A: Array> Default for LRUCache<A> {
     }
 }
 
-impl<T, A> LRUCache<A>
-where
-    A: Array<Item = Entry<T>>,
-{
-    /// Returns the number of elements in the cache.
-    pub fn len(&self) -> usize {
-        self.entries.len()
+impl<T, const N: usize> LRUCache<T, N> {
+    /// Insert a given key in the cache.
+    ///
+    /// This item becomes the front (most-recently-used) item in the cache.  If the cache is full,
+    /// the back (least-recently-used) item will be removed and returned.
+    pub fn insert(&mut self, val: T) -> Option<T> {
+        let entry = Entry {
+            val,
+            prev: 0,
+            next: 0,
+        };
+
+        // If the cache is full, replace the oldest entry. Otherwise, add an entry.
+        let (new_head, previous_entry) = if self.entries.len() == self.entries.capacity() {
+            let i = self.pop_back();
+            let previous_entry = replace(&mut self.entries[i as usize], entry);
+            (i, Some(previous_entry.val))
+        } else {
+            self.entries.push(entry);
+            (self.entries.len() as u16 - 1, None)
+        };
+
+        self.push_front(new_head);
+        previous_entry
     }
 
-    /// Returns the number of elements in the cache.
-    #[inline]
-    #[deprecated = "Use the 'len' method instead."]
-    pub fn num_entries(&self) -> usize {
-        self.len()
-    }
-
-    /// Returns the front entry in the list (most recently used).
-    pub fn front(&self) -> Option<&T> {
-        self.entries.get(self.head as usize).map(|e| &e.val)
-    }
-
-    /// Returns a mutable reference to the front entry in the list (most recently used).
-    pub fn front_mut(&mut self) -> Option<&mut T> {
-        self.entries.get_mut(self.head as usize).map(|e| &mut e.val)
+    /// Returns the first item in the cache that matches the given predicate.
+    /// Touches the result (makes it most-recently-used) on a hit.
+    pub fn find<F>(&mut self, pred: F) -> Option<&mut T>
+    where
+        F: FnMut(&T) -> bool,
+    {
+        if self.touch(pred) {
+            self.front_mut()
+        } else {
+            None
+        }
     }
 
     /// Performs a lookup on the cache with the given test routine. Touches
@@ -153,7 +154,41 @@ where
         }
     }
 
-    /// Touches the first item in the cache that matches the given predicate.
+    /// Returns the number of elements in the cache.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    /// Returns true if the cache is empty.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    /// Evict all elements from the cache.
+    #[inline]
+    pub fn clear(&mut self) {
+        self.entries.clear();
+    }
+
+    /// Returns the front entry in the list (most recently used).
+    pub fn front(&self) -> Option<&T> {
+        self.entries.get(self.head as usize).map(|e| &e.val)
+    }
+
+    /// Returns a mutable reference to the front entry in the list (most recently used).
+    pub fn front_mut(&mut self) -> Option<&mut T> {
+        self.entries.get_mut(self.head as usize).map(|e| &mut e.val)
+    }
+
+    /// Returns the n-th entry in the list (most recently used).
+    pub fn get(&self, index: usize) -> Option<&T> {
+        self.iter().nth(index)
+    }
+
+    /// Touches the first item in the cache that matches the given predicate (marks it as
+    /// most-recently-used).
     /// Returns `true` on a hit, `false` if no matches.
     pub fn touch<F>(&mut self, mut pred: F) -> bool
     where
@@ -163,63 +198,24 @@ where
         while let Some((i, val)) = iter.next() {
             if pred(val) {
                 self.touch_index(i);
-                return true
+                return true;
             }
         }
         false
     }
 
-    /// Returns the first item in the cache that matches the given predicate.
-    /// Touches the result on a hit.
-    pub fn find<F>(&mut self, pred: F) -> Option<&mut T>
-    where
-        F: FnMut(&T) -> bool,
-    {
-        if self.touch(pred) {
-            self.front_mut()
-        } else {
-            None
+    /// Iterate over the contents of this cache in order from most-recently-used to
+    /// least-recently-used.
+    pub fn iter(&self) -> Iter<'_, T, N> {
+        Iter {
+            pos: self.head,
+            cache: self,
         }
     }
 
-    /// Insert a given key in the cache.
-    ///
-    /// This item becomes the front (most-recently-used) item in the cache.  If the cache is full,
-    /// the back (least-recently-used) item will be removed.
-    pub fn insert(&mut self, val: T) {
-        let entry = Entry {
-            val,
-            prev: 0,
-            next: 0,
-        };
-
-        // If the cache is full, replace the oldest entry. Otherwise, add an entry.
-        let new_head = if self.entries.len() == self.entries.capacity() {
-            let i = self.pop_back();
-            self.entries[i as usize] = entry;
-            i
-        } else {
-            self.entries.push(entry);
-            self.entries.len() as u16 - 1
-        };
-
-        self.push_front(new_head);
-    }
-
-    /// Evict all elements from the cache.
-    pub fn clear(&mut self) {
-        self.entries.clear();
-    }
-
-    /// Evict all elements from the cache.
-    #[inline]
-    #[deprecated = "Use the 'clear' method instead."]
-    pub fn evict_all(&mut self) {
-        self.clear();
-    }
-
-    /// Iterate mutably over the contents of this cache.
-    fn iter_mut(&mut self) -> IterMut<A> {
+    /// Iterate mutably over the contents of this cache in order from most-recently-used to
+    /// least-recently-used.
+    fn iter_mut(&mut self) -> IterMut<'_, T, N> {
         IterMut {
             pos: self.head,
             cache: self,
@@ -277,9 +273,8 @@ where
     }
 }
 
-impl<T, A> Clone for LRUCache<A>
+impl<T, const N: usize> Clone for LRUCache<T, N>
 where
-    A: Array<Item = Entry<T>>,
     T: Clone,
 {
     fn clone(&self) -> Self {
@@ -291,9 +286,8 @@ where
     }
 }
 
-impl<T, A> fmt::Debug for LRUCache<A>
+impl<T, const N: usize> fmt::Debug for LRUCache<T, N>
 where
-    A: Array<Item = Entry<T>>,
     T: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -305,25 +299,43 @@ where
     }
 }
 
-/// Mutable iterator over values in an LRUCache, from most-recently-used to least-recently-used.
-struct IterMut<'a, A: 'a + Array> {
-    cache: &'a mut LRUCache<A>,
+/// Mutable iterator over values in an `LRUCache`, from most-recently-used to least-recently-used.
+struct IterMut<'a, T, const N: usize> {
+    cache: &'a mut LRUCache<T, N>,
     pos: u16,
 }
 
-impl<'a, A, T> IterMut<'a, A>
-where
-    A: Array<Item = Entry<T>>,
-{
+impl<'a, T, const N: usize> IterMut<'a, T, N> {
     fn next(&mut self) -> Option<(u16, &mut T)> {
         let index = self.pos;
         let entry = self.cache.entries.get_mut(index as usize)?;
 
         self.pos = if index == self.cache.tail {
-            A::CAPACITY as u16 // Point past the end of the array to signal we are done.
+            N as u16 // Point past the end of the array to signal we are done.
         } else {
             entry.next
         };
         Some((index, &mut entry.val))
+    }
+}
+
+/// Iterator over values in an [`LRUCache`], from most-recently-used to least-recently-used.
+pub struct Iter<'a, T, const N: usize> {
+    cache: &'a LRUCache<T, N>,
+    pos: u16,
+}
+
+impl<'a, T, const N: usize> Iterator for Iter<'a, T, N> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+        let entry = self.cache.entries.get(self.pos as usize)?;
+
+        self.pos = if self.pos == self.cache.tail {
+            N as u16 // Point past the end of the array to signal we are done.
+        } else {
+            entry.next
+        };
+        Some(&entry.val)
     }
 }
