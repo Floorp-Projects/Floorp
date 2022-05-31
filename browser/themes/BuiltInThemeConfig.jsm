@@ -240,151 +240,6 @@ const BuiltInThemeConfig = new Map([
       collection: "life-in-color",
     },
   ],
-  [
-    "playmaker-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022playmaker/soft/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "playmaker-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022playmaker/balanced/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "playmaker-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022playmaker/bold/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "expressionist-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022expressionist/soft/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "expressionist-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path:
-        "resource://builtin-themes/monochromatic/2022expressionist/balanced/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "expressionist-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022expressionist/bold/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "visionary-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022visionary/soft/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "visionary-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022visionary/balanced/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "visionary-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022visionary/bold/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "activist-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022activist/soft/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "activist-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022activist/balanced/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "activist-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022activist/bold/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "dreamer-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022dreamer/soft/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "dreamer-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022dreamer/balanced/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "dreamer-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022dreamer/bold/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "innovator-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022innovator/soft/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "innovator-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022innovator/balanced/",
-      collection: "independent-voices",
-    },
-  ],
-  [
-    "innovator-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/monochromatic/2022innovator/bold/",
-      collection: "independent-voices",
-    },
-  ],
 ]);
 
 const colorwayClosetEnabled = Services.prefs.getBoolPref(
@@ -394,23 +249,21 @@ const colorwayClosetEnabled = Services.prefs.getBoolPref(
 const ColorwayCollections = [
   {
     id: "life-in-color",
-    expiry: "2022-02-08",
+    expiry:
+      colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
+        ? "2022-08-03"
+        : "2022-02-08",
     l10nId: "colorway-collection-life-in-color",
   },
   {
     id: "true-colors",
-    expiry: "2022-05-03",
+    expiry:
+      colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
+        ? "2022-04-20"
+        : "2022-05-03",
     l10nId: "colorway-collection-true-colors",
   },
 ];
-
-if (colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD) {
-  ColorwayCollections.push({
-    id: "independent-voices",
-    expiry: "2022-12-31",
-    l10nId: "colorway-collection-independent-voices",
-  });
-}
 
 function _applyColorwayConfig(collections) {
   const collectionsSorted = collections
