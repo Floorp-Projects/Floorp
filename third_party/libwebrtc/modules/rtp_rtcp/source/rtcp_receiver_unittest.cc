@@ -497,7 +497,8 @@ TEST(RtcpReceiverTest, InjectRrPacketWithTwoReportBlocks) {
                           kSequenceNumbers[1])))));
 }
 
-TEST(RtcpReceiverTest, InjectRrPacketsFromTwoRemoteSsrcs) {
+TEST(RtcpReceiverTest,
+     InjectRrPacketsFromTwoRemoteSsrcsReturnsLatestReportBlock) {
   const uint32_t kSenderSsrc2 = 0x20304;
   const uint16_t kSequenceNumbers[] = {10, 12423};
   const int32_t kCumLost[] = {13, 555};
@@ -552,14 +553,6 @@ TEST(RtcpReceiverTest, InjectRrPacketsFromTwoRemoteSsrcs) {
   EXPECT_THAT(
       receiver.GetLatestReportBlockData(),
       UnorderedElementsAre(
-          Property(
-              &ReportBlockData::report_block,
-              AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverMainSsrc),
-                    Field(&RTCPReportBlock::sender_ssrc, kSenderSsrc),
-                    Field(&RTCPReportBlock::fraction_lost, kFracLost[0]),
-                    Field(&RTCPReportBlock::packets_lost, kCumLost[0]),
-                    Field(&RTCPReportBlock::extended_highest_sequence_number,
-                          kSequenceNumbers[0]))),
           Property(
               &ReportBlockData::report_block,
               AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverMainSsrc),

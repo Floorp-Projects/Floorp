@@ -262,6 +262,18 @@ uint32_t RTCPReceiver::RemoteSSRC() const {
   return remote_ssrc_;
 }
 
+void RTCPReceiver::RttStats::AddRtt(TimeDelta rtt) {
+  last_rtt_ = rtt;
+  if (rtt < min_rtt_) {
+    min_rtt_ = rtt;
+  }
+  if (rtt > max_rtt_) {
+    max_rtt_ = rtt;
+  }
+  sum_rtt_ += rtt;
+  ++num_rtts_;
+}
+
 int32_t RTCPReceiver::RTT(uint32_t remote_ssrc,
                           int64_t* last_rtt_ms,
                           int64_t* avg_rtt_ms,
@@ -269,32 +281,26 @@ int32_t RTCPReceiver::RTT(uint32_t remote_ssrc,
                           int64_t* max_rtt_ms) const {
   MutexLock lock(&rtcp_receiver_lock_);
 
-  auto it = received_report_blocks_.find(main_ssrc_);
-  if (it == received_report_blocks_.end())
+  auto it = rtts_.find(remote_ssrc);
+  if (it == rtts_.end()) {
     return -1;
-
-  auto it_info = it->second.find(remote_ssrc);
-  if (it_info == it->second.end())
-    return -1;
-
-  const ReportBlockData* report_block_data = &it_info->second;
-
-  if (report_block_data->num_rtts() == 0)
-    return -1;
-
-  if (last_rtt_ms)
-    *last_rtt_ms = report_block_data->last_rtt_ms();
-
-  if (avg_rtt_ms) {
-    *avg_rtt_ms =
-        report_block_data->sum_rtt_ms() / report_block_data->num_rtts();
   }
 
-  if (min_rtt_ms)
-    *min_rtt_ms = report_block_data->min_rtt_ms();
+  if (last_rtt_ms) {
+    *last_rtt_ms = it->second.last_rtt().ms();
+  }
 
-  if (max_rtt_ms)
-    *max_rtt_ms = report_block_data->max_rtt_ms();
+  if (avg_rtt_ms) {
+    *avg_rtt_ms = it->second.average_rtt().ms();
+  }
+
+  if (min_rtt_ms) {
+    *min_rtt_ms = it->second.min_rtt().ms();
+  }
+
+  if (max_rtt_ms) {
+    *max_rtt_ms = it->second.max_rtt().ms();
+  }
 
   return 0;
 }
@@ -322,26 +328,14 @@ absl::optional<TimeDelta> RTCPReceiver::OnPeriodicRttUpdate(
     // amount of time.
     MutexLock lock(&rtcp_receiver_lock_);
     if (last_received_rb_.IsInfinite() || last_received_rb_ > newer_than) {
-      // Stow away the report block for the main ssrc. We'll use the associated
-      // data map to look up each sender and check the last_rtt_ms().
-      auto main_report_it = received_report_blocks_.find(main_ssrc_);
-      if (main_report_it != received_report_blocks_.end()) {
-        const ReportBlockDataMap& main_data_map = main_report_it->second;
-        int64_t max_rtt = 0;
-        for (const auto& reports_per_receiver : received_report_blocks_) {
-          for (const auto& report : reports_per_receiver.second) {
-            const RTCPReportBlock& block = report.second.report_block();
-            auto it_info = main_data_map.find(block.sender_ssrc);
-            if (it_info != main_data_map.end()) {
-              const ReportBlockData* report_block_data = &it_info->second;
-              if (report_block_data->num_rtts() > 0) {
-                max_rtt = std::max(report_block_data->last_rtt_ms(), max_rtt);
-              }
-            }
-          }
+      TimeDelta max_rtt = TimeDelta::MinusInfinity();
+      for (const auto& rtt_stats : rtts_) {
+        if (rtt_stats.second.last_rtt() > max_rtt) {
+          max_rtt = rtt_stats.second.last_rtt();
         }
-        if (max_rtt)
-          rtt.emplace(TimeDelta::Millis(max_rtt));
+      }
+      if (max_rtt.IsFinite()) {
+        rtt = max_rtt;
       }
     }
 
@@ -438,9 +432,9 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
 std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
   std::vector<ReportBlockData> result;
   MutexLock lock(&rtcp_receiver_lock_);
-  for (const auto& reports_per_receiver : received_report_blocks_)
-    for (const auto& report : reports_per_receiver.second)
-      result.push_back(report.second);
+  for (const auto& report : received_report_blocks_) {
+    result.push_back(report.second);
+  }
   return result;
 }
 
@@ -623,7 +617,7 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   last_received_rb_ = clock_->CurrentTime();
 
   ReportBlockData* report_block_data =
-      &received_report_blocks_[report_block.source_ssrc()][remote_ssrc];
+      &received_report_blocks_[report_block.source_ssrc()];
   RTCPReportBlock rtcp_report_block;
   rtcp_report_block.sender_ssrc = remote_ssrc;
   rtcp_report_block.source_ssrc = report_block.source_ssrc();
@@ -673,6 +667,9 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
     // Convert to 1/1000 seconds (milliseconds).
     rtt_ms = CompactNtpRttToMs(rtt_ntp);
     report_block_data->AddRoundTripTimeSample(rtt_ms);
+    if (report_block.source_ssrc() == main_ssrc_) {
+      rtts_[remote_ssrc].AddRtt(TimeDelta::Millis(rtt_ms));
+    }
 
     packet_information->rtt_ms = rtt_ms;
   }
@@ -834,8 +831,15 @@ void RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
   }
 
   // Clear our lists.
-  for (auto& reports_per_receiver : received_report_blocks_)
-    reports_per_receiver.second.erase(bye.sender_ssrc());
+  rtts_.erase(bye.sender_ssrc());
+  for (auto it = received_report_blocks_.begin();
+       it != received_report_blocks_.end();) {
+    if (it->second.report_block().sender_ssrc == bye.sender_ssrc()) {
+      received_report_blocks_.erase(it++);
+    } else {
+      ++it;
+    }
+  }
 
   TmmbrInformation* tmmbr_info = GetTmmbrInformation(bye.sender_ssrc());
   if (tmmbr_info)
