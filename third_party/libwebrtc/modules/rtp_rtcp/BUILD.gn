@@ -140,8 +140,6 @@ rtc_library("rtp_rtcp") {
     "include/ulpfec_receiver.h",
     "source/absolute_capture_time_interpolator.cc",
     "source/absolute_capture_time_interpolator.h",
-    "source/absolute_capture_time_receiver.cc",  # DEPRECATED
-    "source/absolute_capture_time_receiver.h",  # DEPRECATED
     "source/absolute_capture_time_sender.cc",
     "source/absolute_capture_time_sender.h",
     "source/active_decode_targets_helper.cc",
