@@ -162,13 +162,13 @@ void DataChannelController::OnReadyToSend() {
       }));
 }
 
-void DataChannelController::OnTransportClosed() {
+void DataChannelController::OnTransportClosed(RTCError error) {
   RTC_DCHECK_RUN_ON(network_thread());
   signaling_thread()->PostTask(
-      ToQueuedTask([self = weak_factory_.GetWeakPtr()] {
+      ToQueuedTask([self = weak_factory_.GetWeakPtr(), error] {
         if (self) {
           RTC_DCHECK_RUN_ON(self->signaling_thread());
-          self->OnTransportChannelClosed();
+          self->OnTransportChannelClosed(error);
         }
       }));
 }
@@ -351,14 +351,14 @@ void DataChannelController::OnSctpDataChannelClosed(SctpDataChannel* channel) {
   }
 }
 
-void DataChannelController::OnTransportChannelClosed() {
+void DataChannelController::OnTransportChannelClosed(RTCError error) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   // Use a temporary copy of the SCTP DataChannel list because the
   // DataChannel may callback to us and try to modify the list.
   std::vector<rtc::scoped_refptr<SctpDataChannel>> temp_sctp_dcs;
   temp_sctp_dcs.swap(sctp_data_channels_);
   for (const auto& channel : temp_sctp_dcs) {
-    channel->OnTransportChannelClosed();
+    channel->OnTransportChannelClosed(error);
   }
 }
 

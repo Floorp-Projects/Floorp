@@ -3395,8 +3395,14 @@ RTCError SdpOfferAnswerHandler::UpdateDataChannel(
     const cricket::ContentInfo& content,
     const cricket::ContentGroup* bundle_group) {
   if (content.rejected) {
-    RTC_LOG(LS_INFO) << "Rejected data channel, mid=" << content.mid();
-    DestroyDataChannelTransport();
+    RTC_LOG(LS_INFO) << "Rejected data channel transport with mid="
+                     << content.mid();
+
+    rtc::StringBuilder sb;
+    sb << "Rejected data channel transport with mid=" << content.mid();
+    RTCError error(RTCErrorType::OPERATION_ERROR_WITH_DATA, sb.Release());
+    error.set_error_detail(RTCErrorDetailType::DATA_CHANNEL_FAILURE);
+    DestroyDataChannelTransport(error);
   } else {
     if (!data_channel_controller()->data_channel_transport()) {
       RTC_LOG(LS_INFO) << "Creating data channel, mid=" << content.mid();
@@ -4369,8 +4375,18 @@ void SdpOfferAnswerHandler::RemoveUnusedChannels(
   }
 
   const cricket::ContentInfo* data_info = cricket::GetFirstDataContent(desc);
-  if (!data_info || data_info->rejected) {
-    DestroyDataChannelTransport();
+  if (!data_info) {
+    RTCError error(RTCErrorType::OPERATION_ERROR_WITH_DATA,
+                   "No data channel section in the description.");
+    error.set_error_detail(RTCErrorDetailType::DATA_CHANNEL_FAILURE);
+    DestroyDataChannelTransport(error);
+  } else if (data_info->rejected) {
+    rtc::StringBuilder sb;
+    sb << "Rejected data channel with mid=" << data_info->name << ".";
+
+    RTCError error(RTCErrorType::OPERATION_ERROR_WITH_DATA, sb.Release());
+    error.set_error_detail(RTCErrorDetailType::DATA_CHANNEL_FAILURE);
+    DestroyDataChannelTransport(error);
   }
 }
 
@@ -4665,12 +4681,12 @@ void SdpOfferAnswerHandler::DestroyTransceiverChannel(
   }
 }
 
-void SdpOfferAnswerHandler::DestroyDataChannelTransport() {
+void SdpOfferAnswerHandler::DestroyDataChannelTransport(RTCError error) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   const bool has_sctp = pc_->sctp_mid().has_value();
 
   if (has_sctp)
-    data_channel_controller()->OnTransportChannelClosed();
+    data_channel_controller()->OnTransportChannelClosed(error);
 
   pc_->network_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
     RTC_DCHECK_RUN_ON(pc_->network_thread());
@@ -4743,7 +4759,7 @@ void SdpOfferAnswerHandler::DestroyAllChannels() {
     }
   }
 
-  DestroyDataChannelTransport();
+  DestroyDataChannelTransport({});
 }
 
 void SdpOfferAnswerHandler::GenerateMediaDescriptionOptions(

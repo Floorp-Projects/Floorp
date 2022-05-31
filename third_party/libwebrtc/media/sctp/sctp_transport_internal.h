@@ -53,6 +53,24 @@ constexpr uint16_t kMinSctpSid = 0;
 // usrsctp.h)
 const int kSctpDefaultPort = 5000;
 
+// Error cause codes defined at
+// https://www.iana.org/assignments/sctp-parameters/sctp-parameters.xhtml#sctp-parameters-24
+enum class SctpErrorCauseCode : uint16_t {
+  kInvalidStreamIdentifier = 1,
+  kMissingMandatoryParameter = 2,
+  kStaleCookieError = 3,
+  kOutOfResource = 4,
+  kUnresolvableAddress = 5,
+  kUnrecognizedChunkType = 6,
+  kInvalidMandatoryParameter = 7,
+  kUnrecognizedParameters = 8,
+  kNoUserData = 9,
+  kCookieReceivedWhileShuttingDown = 10,
+  kRestartWithNewAddresses = 11,
+  kUserInitiatedAbort = 12,
+  kProtocolViolation = 13,
+};
+
 // Abstract SctpTransport interface for use internally (by PeerConnection etc.).
 // Exists to allow mock/fake SctpTransports to be created.
 class SctpTransportInternal {
@@ -137,8 +155,8 @@ class SctpTransportInternal {
   // and outgoing streams reset).
   sigslot::signal1<int> SignalClosingProcedureComplete;
   // Fired when the underlying DTLS transport has closed due to an error
-  // or an incoming DTLS disconnect.
-  sigslot::signal0<> SignalClosedAbruptly;
+  // or an incoming DTLS disconnect or SCTP transport errors.
+  sigslot::signal1<webrtc::RTCError> SignalClosedAbruptly;
 
   // Helper for debugging.
   virtual void set_debug_name_for_testing(const char* debug_name) = 0;
