@@ -120,6 +120,8 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val REMOTE_IFRAME = "/assets/www/accessibility/test-remote-iframe.html"
         const val LOCAL_IFRAME = "/assets/www/accessibility/test-local-iframe.html"
         const val BODY_FULLY_COVERED_BY_GREEN_ELEMENT = "/assets/www/red-background-body-fully-covered-by-green-element.html"
+        const val COLOR_GRID_HTML_PATH = "/assets/www/color_grid.html"
+        const val COLOR_ORANGE_BACKGROUND_HTML_PATH = "/assets/www/color_orange_background.html"
 
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
         const val TEST_HOST = GeckoSessionTestRule.TEST_HOST

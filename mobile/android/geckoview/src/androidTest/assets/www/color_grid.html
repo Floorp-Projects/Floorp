@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" content="width=device-width, height=device-height">
+        <title>Color Grid</title>
+    </head>
+    <style>
+        body {
+            margin: 0;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        .box {
+            height: 100vh;
+            width: 33.33vw;
+        }
+        .red {
+            background-color: rgb(255, 0, 0);
+            color-adjust: exact;
+        }
+        .green {
+            background-color: rgb(0, 255, 0);
+            color-adjust: exact;
+        }
+        .blue {
+            background-color: rgb(0, 0, 255);
+            color-adjust: exact;
+        }
+    </style>
+
+    <body>
+        <div class="container">
+            <div class="red box"></div>
+            <div class="green box"></div>
+            <div class="blue box"></div>
+        </div>
+    </body>
+</html>

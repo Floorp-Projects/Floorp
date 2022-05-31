@@ -933,6 +933,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void reload();
     method @AnyThread public void reload(int);
     method @AnyThread public void restoreState(@NonNull GeckoSession.SessionState);
+    method @AnyThread @NonNull public GeckoResult<InputStream> saveAsPdf();
     method @AnyThread public void setActive(boolean);
     method @UiThread public void setAutofillDelegate(@Nullable Autofill.Delegate);
     method @AnyThread public void setContentBlockingDelegate(@Nullable ContentBlocking.Delegate);
