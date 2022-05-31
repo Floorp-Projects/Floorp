@@ -959,6 +959,8 @@ if (rtc_include_tests) {
 
     deps = [
       ":libjingle_peerconnection_api",
+      "../api:scoped_refptr",
+      "../rtc_base:refcount",
       "../test:test_support",
     ]
   }
