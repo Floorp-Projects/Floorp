@@ -3324,7 +3324,7 @@ dependencies = [
 name = "mozglue-static"
 version = "0.1.0"
 dependencies = [
- "arrayvec 0.5.2",
+ "arrayvec 0.7.2",
  "cc",
  "mozbuild",
  "rustc_version",
