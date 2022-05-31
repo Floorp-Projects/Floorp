@@ -161,6 +161,18 @@ template <class Key,
 using flat_set = typename ::webrtc::flat_containers_internal::
     flat_tree<Key, webrtc::identity, Compare, Container>;
 
+// ----------------------------------------------------------------------------
+// General operations.
+
+// Erases all elements that match predicate. It has O(size) complexity.
+//
+//  flat_set<int> numbers;
+//  ...
+//  EraseIf(numbers, [](int number) { return number % 2 == 1; });
+
+// NOLINTNEXTLINE(misc-unused-using-decls)
+using ::webrtc::flat_containers_internal::EraseIf;
+
 }  // namespace webrtc
 
 #endif  // RTC_BASE_CONTAINERS_FLAT_SET_H_
