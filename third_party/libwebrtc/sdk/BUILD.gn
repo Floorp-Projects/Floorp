@@ -464,6 +464,7 @@ if (is_ios || is_mac) {
           "OpenGL.framework",
         ]
       }
+      defines = [ "GLES_SILENCE_DEPRECATION" ]
 
       deps = [
         ":base_objc",
@@ -501,6 +502,7 @@ if (is_ios || is_mac) {
           "objc/components/renderer/opengl/RTCEAGLVideoView.h",
           "objc/components/renderer/opengl/RTCEAGLVideoView.m",
         ]
+        defines = [ "GLES_SILENCE_DEPRECATION" ]
       }
       if (is_mac) {
         sources = [
