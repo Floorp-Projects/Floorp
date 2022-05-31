@@ -49,3 +49,4 @@
 #include "api/test/mock_video_decoder_factory.h"
 #include "api/test/mock_video_encoder.h"
 #include "api/test/mock_video_encoder_factory.h"
+#include "api/test/mock_video_track.h"
