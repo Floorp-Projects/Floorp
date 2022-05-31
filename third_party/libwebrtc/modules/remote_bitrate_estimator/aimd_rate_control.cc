@@ -362,7 +362,7 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
       break;
     }
     default:
-      assert(false);
+      RTC_NOTREACHED();
   }
 
   current_bitrate_ = ClampBitrate(new_bitrate.value_or(current_bitrate_));
@@ -417,7 +417,7 @@ void AimdRateControl::ChangeState(const RateControlInput& input,
       rate_control_state_ = RateControlState::kRcHold;
       break;
     default:
-      assert(false);
+      RTC_NOTREACHED();
   }
 }
 

@@ -87,10 +87,10 @@ VCMNackFecMethod::VCMNackFecMethod(int64_t lowRttNackThresholdMs,
       _lowRttNackMs(lowRttNackThresholdMs),
       _highRttNackMs(highRttNackThresholdMs),
       _maxFramesFec(1) {
-  assert(lowRttNackThresholdMs >= -1 && highRttNackThresholdMs >= -1);
-  assert(highRttNackThresholdMs == -1 ||
-         lowRttNackThresholdMs <= highRttNackThresholdMs);
-  assert(lowRttNackThresholdMs > -1 || highRttNackThresholdMs == -1);
+  RTC_DCHECK(lowRttNackThresholdMs >= -1 && highRttNackThresholdMs >= -1);
+  RTC_DCHECK(highRttNackThresholdMs == -1 ||
+             lowRttNackThresholdMs <= highRttNackThresholdMs);
+  RTC_DCHECK(lowRttNackThresholdMs > -1 || highRttNackThresholdMs == -1);
   _type = kNackFec;
 }
 
@@ -384,7 +384,7 @@ bool VCMFecMethod::ProtectionFactor(const VCMProtectionParameters* parameters) {
   indexTableKey = VCM_MIN(indexTableKey, kFecRateTableSize);
 
   // Check on table index
-  assert(indexTableKey < kFecRateTableSize);
+  RTC_DCHECK_LT(indexTableKey, kFecRateTableSize);
 
   // Protection factor for I frame
   codeRateKey = kFecRateTable[indexTableKey];

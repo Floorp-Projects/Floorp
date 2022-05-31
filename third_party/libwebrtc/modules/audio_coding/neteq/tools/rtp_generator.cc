@@ -18,7 +18,7 @@ namespace test {
 uint32_t RtpGenerator::GetRtpHeader(uint8_t payload_type,
                                     size_t payload_length_samples,
                                     RTPHeader* rtp_header) {
-  assert(rtp_header);
+  RTC_DCHECK(rtp_header);
   if (!rtp_header) {
     return 0;
   }
@@ -31,7 +31,7 @@ uint32_t RtpGenerator::GetRtpHeader(uint8_t payload_type,
   rtp_header->numCSRCs = 0;
 
   uint32_t this_send_time = next_send_time_ms_;
-  assert(samples_per_ms_ > 0);
+  RTC_DCHECK_GT(samples_per_ms_, 0);
   next_send_time_ms_ +=
       ((1.0 + drift_factor_) * payload_length_samples) / samples_per_ms_;
   return this_send_time;

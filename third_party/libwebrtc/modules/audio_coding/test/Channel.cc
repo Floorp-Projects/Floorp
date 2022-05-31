@@ -125,7 +125,7 @@ void Channel::CalcStatistics(const RTPHeader& rtp_header, size_t payloadSize) {
             (uint32_t)((uint32_t)rtp_header.timestamp -
                        (uint32_t)currentPayloadStr->lastTimestamp);
       }
-      assert(_lastFrameSizeSample > 0);
+      RTC_DCHECK_GT(_lastFrameSizeSample, 0);
       int k = 0;
       for (; k < MAX_NUM_FRAMESIZES; ++k) {
         if ((currentPayloadStr->frameSizeStats[k].frameSizeSample ==

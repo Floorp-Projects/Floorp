@@ -190,7 +190,7 @@ void ConfigureStream(int width,
                      float max_framerate,
                      SpatialLayer* stream,
                      int num_temporal_layers) {
-  assert(stream);
+  RTC_DCHECK(stream);
   stream->width = width;
   stream->height = height;
   stream->maxBitrate = max_bitrate;

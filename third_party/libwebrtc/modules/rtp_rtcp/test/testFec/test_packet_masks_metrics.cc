@@ -225,7 +225,7 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
               }
             }
             // Check that we can only recover 1 packet.
-            assert(check_num_recovered == 1);
+            RTC_DCHECK_EQ(check_num_recovered, 1);
             // Update the state with the newly recovered media packet.
             state_tmp[jsel] = 0;
           }
@@ -260,7 +260,7 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
           }
         }
       } else {  // Gilbert-Elliot model for burst model.
-        assert(loss_model_[k].loss_type == kBurstyLossModel);
+        RTC_DCHECK_EQ(loss_model_[k].loss_type, kBurstyLossModel);
         // Transition probabilities: from previous to current state.
         // Prob. of previous = lost --> current = received.
         double prob10 = 1.0 / burst_length;
@@ -425,8 +425,8 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
           }
         }
       }  // Done with loop over total number of packets.
-      assert(num_media_packets_lost <= num_media_packets);
-      assert(num_packets_lost <= tot_num_packets && num_packets_lost > 0);
+      RTC_DCHECK_LE(num_media_packets_lost, num_media_packets);
+      RTC_DCHECK_LE(num_packets_lost, tot_num_packets && num_packets_lost > 0);
       double residual_loss = 0.0;
       // Only need to compute residual loss (number of recovered packets) for
       // configurations that have at least one media packet lost.
@@ -445,7 +445,7 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
             num_recovered_packets = num_media_packets_lost;
           }
         }
-        assert(num_recovered_packets <= num_media_packets);
+        RTC_DCHECK_LE(num_recovered_packets, num_media_packets);
         // Compute the residual loss. We only care about recovering media/source
         // packets, so residual loss is based on lost/recovered media packets.
         residual_loss =
@@ -464,9 +464,9 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
       // Update the distribution statistics.
       // Compute the gap of the loss (the "consecutiveness" of the loss).
       int gap_loss = GapLoss(tot_num_packets, state.get());
-      assert(gap_loss < kMaxGapSize);
+      RTC_DCHECK_LT(gap_loss, kMaxGapSize);
       int index = gap_loss * (2 * kMaxMediaPacketsTest) + num_packets_lost;
-      assert(index < kNumStatesDistribution);
+      RTC_DCHECK_LT(index, kNumStatesDistribution);
       metrics_code.residual_loss_per_loss_gap[index] += residual_loss;
       if (code_type == xor_random_code) {
         // The configuration density is only a function of the code length and
@@ -492,8 +492,8 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
           metrics_code.variance_residual_loss[k] -
           (metrics_code.average_residual_loss[k] *
            metrics_code.average_residual_loss[k]);
-      assert(metrics_code.variance_residual_loss[k] >= 0.0);
-      assert(metrics_code.average_residual_loss[k] > 0.0);
+      RTC_DCHECK_GE(metrics_code.variance_residual_loss[k], 0.0);
+      RTC_DCHECK_GT(metrics_code.average_residual_loss[k], 0.0);
       metrics_code.variance_residual_loss[k] =
           std::sqrt(metrics_code.variance_residual_loss[k]) /
           metrics_code.average_residual_loss[k];
@@ -509,7 +509,7 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
     } else if (code_type == xor_bursty_code) {
       CopyMetrics(&kMetricsXorBursty[code_index], metrics_code);
     } else {
-      assert(false);
+      RTC_NOTREACHED();
     }
   }
 
@@ -588,7 +588,7 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
         num_loss_models++;
       }
     }
-    assert(num_loss_models == kNumLossModels);
+    RTC_DCHECK_EQ(num_loss_models, kNumLossModels);
   }
 
   void SetCodeParams() {
@@ -738,7 +738,7 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
         code_index++;
       }
     }
-    assert(code_index == kNumberCodes);
+    RTC_DCHECK_EQ(code_index, kNumberCodes);
     return 0;
   }
 

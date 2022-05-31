@@ -54,7 +54,7 @@ class FrameGeneratorTest : public ::testing::Test {
 
  protected:
   void WriteYuvFile(FILE* file, uint8_t y, uint8_t u, uint8_t v) {
-    assert(file);
+    RTC_DCHECK(file);
     std::unique_ptr<uint8_t[]> plane_buffer(new uint8_t[y_size]);
     memset(plane_buffer.get(), y, y_size);
     fwrite(plane_buffer.get(), 1, y_size, file);

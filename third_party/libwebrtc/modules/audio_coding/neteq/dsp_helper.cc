@@ -89,7 +89,7 @@ int DspHelper::RampSignal(AudioMultiVector* signal,
                           size_t length,
                           int factor,
                           int increment) {
-  assert(start_index + length <= signal->Size());
+  RTC_DCHECK_LE(start_index + length, signal->Size());
   if (start_index + length > signal->Size()) {
     // Wrong parameters. Do nothing and return the scale factor unaltered.
     return factor;
@@ -355,7 +355,7 @@ int DspHelper::DownsampleTo4kHz(const int16_t* input,
       break;
     }
     default: {
-      assert(false);
+      RTC_NOTREACHED();
       return -1;
     }
   }

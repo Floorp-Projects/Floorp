@@ -66,7 +66,7 @@ TimeStretch::ReturnCodes TimeStretch::Process(const int16_t* input,
   DspHelper::PeakDetection(auto_correlation_, kCorrelationLen, kNumPeaks,
                            fs_mult_, &peak_index, &peak_value);
   // Assert that |peak_index| stays within boundaries.
-  assert(peak_index <= (2 * kCorrelationLen - 1) * fs_mult_);
+  RTC_DCHECK_LE(peak_index, (2 * kCorrelationLen - 1) * fs_mult_);
 
   // Compensate peak_index for displaced starting position. The displacement
   // happens in AutoCorrelation(). Here, |kMinLag| is in the down-sampled 4 kHz
@@ -74,8 +74,9 @@ TimeStretch::ReturnCodes TimeStretch::Process(const int16_t* input,
   // multiplication by fs_mult_ * 2.
   peak_index += kMinLag * fs_mult_ * 2;
   // Assert that |peak_index| stays within boundaries.
-  assert(peak_index >= static_cast<size_t>(20 * fs_mult_));
-  assert(peak_index <= 20 * fs_mult_ + (2 * kCorrelationLen - 1) * fs_mult_);
+  RTC_DCHECK_GE(peak_index, static_cast<size_t>(20 * fs_mult_));
+  RTC_DCHECK_LE(peak_index,
+                20 * fs_mult_ + (2 * kCorrelationLen - 1) * fs_mult_);
 
   // Calculate scaling to ensure that |peak_index| samples can be square-summed
   // without overflowing.

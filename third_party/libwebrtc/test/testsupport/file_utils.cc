@@ -107,7 +107,7 @@ std::string TempFilename(const std::string& dir, const std::string& prefix) {
   if (::GetTempFileNameW(rtc::ToUtf16(dir).c_str(),
                          rtc::ToUtf16(prefix).c_str(), 0, filename) != 0)
     return rtc::ToUtf8(filename);
-  assert(false);
+  RTC_NOTREACHED();
   return "";
 #else
   int len = dir.size() + prefix.size() + 2 + 6;
@@ -116,7 +116,7 @@ std::string TempFilename(const std::string& dir, const std::string& prefix) {
   snprintf(tempname.get(), len, "%s/%sXXXXXX", dir.c_str(), prefix.c_str());
   int fd = ::mkstemp(tempname.get());
   if (fd == -1) {
-    assert(false);
+    RTC_NOTREACHED();
     return "";
   } else {
     ::close(fd);

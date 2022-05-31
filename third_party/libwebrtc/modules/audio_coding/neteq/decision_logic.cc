@@ -96,7 +96,8 @@ void DecisionLogic::SoftReset() {
 
 void DecisionLogic::SetSampleRate(int fs_hz, size_t output_size_samples) {
   // TODO(hlundin): Change to an enumerator and skip assert.
-  assert(fs_hz == 8000 || fs_hz == 16000 || fs_hz == 32000 || fs_hz == 48000);
+  RTC_DCHECK(fs_hz == 8000 || fs_hz == 16000 || fs_hz == 32000 ||
+             fs_hz == 48000);
   sample_rate_ = fs_hz;
   output_size_samples_ = output_size_samples;
 }

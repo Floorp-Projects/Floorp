@@ -136,7 +136,7 @@ void BackgroundNoise::GenerateBackgroundNoise(
     int16_t* buffer) {
   constexpr size_t kNoiseLpcOrder = kMaxLpcOrder;
   int16_t scaled_random_vector[kMaxSampleRate / 8000 * 125];
-  assert(num_noise_samples <= (kMaxSampleRate / 8000 * 125));
+  RTC_DCHECK_LE(num_noise_samples, (kMaxSampleRate / 8000 * 125));
   RTC_DCHECK_GE(random_vector.size(), num_noise_samples);
   int16_t* noise_samples = &buffer[kNoiseLpcOrder];
   if (initialized()) {
@@ -178,44 +178,44 @@ void BackgroundNoise::GenerateBackgroundNoise(
 }
 
 int32_t BackgroundNoise::Energy(size_t channel) const {
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   return channel_parameters_[channel].energy;
 }
 
 void BackgroundNoise::SetMuteFactor(size_t channel, int16_t value) {
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   channel_parameters_[channel].mute_factor = value;
 }
 
 int16_t BackgroundNoise::MuteFactor(size_t channel) const {
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   return channel_parameters_[channel].mute_factor;
 }
 
 const int16_t* BackgroundNoise::Filter(size_t channel) const {
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   return channel_parameters_[channel].filter;
 }
 
 const int16_t* BackgroundNoise::FilterState(size_t channel) const {
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   return channel_parameters_[channel].filter_state;
 }
 
 void BackgroundNoise::SetFilterState(size_t channel,
                                      rtc::ArrayView<const int16_t> input) {
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   size_t length = std::min(input.size(), kMaxLpcOrder);
   memcpy(channel_parameters_[channel].filter_state, input.data(),
          length * sizeof(int16_t));
 }
 
 int16_t BackgroundNoise::Scale(size_t channel) const {
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   return channel_parameters_[channel].scale;
 }
 int16_t BackgroundNoise::ScaleShift(size_t channel) const {
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   return channel_parameters_[channel].scale_shift;
 }
 
@@ -240,7 +240,7 @@ void BackgroundNoise::IncrementEnergyThreshold(size_t channel,
   // to the limited-width operations, it is not exactly the same. The
   // difference should be inaudible, but bit-exactness would not be
   // maintained.
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   ChannelParameters& parameters = channel_parameters_[channel];
   int32_t temp_energy =
       (kThresholdIncrement * parameters.low_energy_update_threshold) >> 16;
@@ -278,7 +278,7 @@ void BackgroundNoise::SaveParameters(size_t channel,
                                      const int16_t* filter_state,
                                      int32_t sample_energy,
                                      int32_t residual_energy) {
-  assert(channel < num_channels_);
+  RTC_DCHECK_LT(channel, num_channels_);
   ChannelParameters& parameters = channel_parameters_[channel];
   memcpy(parameters.filter, lpc_coefficients,
          (kMaxLpcOrder + 1) * sizeof(int16_t));

@@ -51,8 +51,8 @@ AcmSendTestOldApi::AcmSendTestOldApi(InputAudioFile* audio_source,
   input_frame_.sample_rate_hz_ = source_rate_hz_;
   input_frame_.num_channels_ = 1;
   input_frame_.samples_per_channel_ = input_block_size_samples_;
-  assert(input_block_size_samples_ * input_frame_.num_channels_ <=
-         AudioFrame::kMaxDataSizeSamples);
+  RTC_DCHECK_LE(input_block_size_samples_ * input_frame_.num_channels_,
+                AudioFrame::kMaxDataSizeSamples);
   acm_->RegisterTransportCallback(this);
 }
 
@@ -81,8 +81,8 @@ bool AcmSendTestOldApi::RegisterCodec(const char* payload_name,
       factory->MakeAudioEncoder(payload_type, format, absl::nullopt));
   codec_registered_ = true;
   input_frame_.num_channels_ = num_channels;
-  assert(input_block_size_samples_ * input_frame_.num_channels_ <=
-         AudioFrame::kMaxDataSizeSamples);
+  RTC_DCHECK_LE(input_block_size_samples_ * input_frame_.num_channels_,
+                AudioFrame::kMaxDataSizeSamples);
   return codec_registered_;
 }
 
@@ -90,13 +90,13 @@ void AcmSendTestOldApi::RegisterExternalCodec(
     std::unique_ptr<AudioEncoder> external_speech_encoder) {
   input_frame_.num_channels_ = external_speech_encoder->NumChannels();
   acm_->SetEncoder(std::move(external_speech_encoder));
-  assert(input_block_size_samples_ * input_frame_.num_channels_ <=
-         AudioFrame::kMaxDataSizeSamples);
+  RTC_DCHECK_LE(input_block_size_samples_ * input_frame_.num_channels_,
+                AudioFrame::kMaxDataSizeSamples);
   codec_registered_ = true;
 }
 
 std::unique_ptr<Packet> AcmSendTestOldApi::NextPacket() {
-  assert(codec_registered_);
+  RTC_DCHECK(codec_registered_);
   if (filter_.test(static_cast<size_t>(payload_type_))) {
     // This payload type should be filtered out. Since the payload type is the
     // same throughout the whole test run, no packet at all will be delivered.
@@ -133,7 +133,7 @@ int32_t AcmSendTestOldApi::SendData(AudioFrameType frame_type,
   payload_type_ = payload_type;
   timestamp_ = timestamp;
   last_payload_vec_.assign(payload_data, payload_data + payload_len_bytes);
-  assert(last_payload_vec_.size() == payload_len_bytes);
+  RTC_DCHECK_EQ(last_payload_vec_.size(), payload_len_bytes);
   data_to_send_ = true;
   return 0;
 }

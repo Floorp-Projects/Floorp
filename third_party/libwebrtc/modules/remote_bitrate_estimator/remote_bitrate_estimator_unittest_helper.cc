@@ -46,7 +46,7 @@ RtpStream::RtpStream(int fps,
       next_rtcp_time_(rtcp_receive_time),
       rtp_timestamp_offset_(timestamp_offset),
       kNtpFracPerMs(4.294967296E6) {
-  assert(fps_ > 0);
+  RTC_DCHECK_GT(fps_, 0);
 }
 
 void RtpStream::set_rtp_timestamp_offset(uint32_t offset) {
@@ -60,7 +60,7 @@ int64_t RtpStream::GenerateFrame(int64_t time_now_us, PacketList* packets) {
   if (time_now_us < next_rtp_time_) {
     return next_rtp_time_;
   }
-  assert(packets != NULL);
+  RTC_DCHECK(packets);
   size_t bits_per_frame = (bitrate_bps_ + fps_ / 2) / fps_;
   size_t n_packets =
       std::max<size_t>((bits_per_frame + 4 * kMtu) / (8 * kMtu), 1u);
@@ -173,9 +173,9 @@ void StreamGenerator::set_rtp_timestamp_offset(uint32_t ssrc, uint32_t offset) {
 // it possible to simulate different types of channels.
 int64_t StreamGenerator::GenerateFrame(RtpStream::PacketList* packets,
                                        int64_t time_now_us) {
-  assert(packets != NULL);
-  assert(packets->empty());
-  assert(capacity_ > 0);
+  RTC_DCHECK(packets);
+  RTC_DCHECK(packets->empty());
+  RTC_DCHECK_GT(capacity_, 0);
   StreamMap::iterator it =
       std::min_element(streams_.begin(), streams_.end(), RtpStream::Compare);
   (*it).second->GenerateFrame(time_now_us, packets);

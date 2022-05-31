@@ -77,9 +77,9 @@ double MseInputOutput(const std::vector<int16_t>& input,
                       size_t num_samples,
                       size_t channels,
                       int delay) {
-  assert(delay < static_cast<int>(num_samples));
-  assert(num_samples <= input.size());
-  assert(num_samples * channels <= output.size());
+  RTC_DCHECK_LT(delay, static_cast<int>(num_samples));
+  RTC_DCHECK_LE(num_samples, input.size());
+  RTC_DCHECK_LE(num_samples * channels, output.size());
   if (num_samples == 0)
     return 0.0;
   double squared_sum = 0.0;
@@ -303,7 +303,7 @@ class AudioDecoderPcm16BTest : public AudioDecoderTest {
     frame_size_ = 20 * codec_input_rate_hz_ / 1000;
     data_length_ = 10 * frame_size_;
     decoder_ = new AudioDecoderPcm16B(codec_input_rate_hz_, 1);
-    assert(decoder_);
+    RTC_DCHECK(decoder_);
     AudioEncoderPcm16B::Config config;
     config.sample_rate_hz = codec_input_rate_hz_;
     config.frame_size_ms =
@@ -320,7 +320,7 @@ class AudioDecoderIlbcTest : public AudioDecoderTest {
     frame_size_ = 240;
     data_length_ = 10 * frame_size_;
     decoder_ = new AudioDecoderIlbcImpl;
-    assert(decoder_);
+    RTC_DCHECK(decoder_);
     AudioEncoderIlbcConfig config;
     config.frame_size_ms = 30;
     audio_encoder_.reset(new AudioEncoderIlbcImpl(config, payload_type_));
@@ -414,7 +414,7 @@ class AudioDecoderG722Test : public AudioDecoderTest {
     frame_size_ = 160;
     data_length_ = 10 * frame_size_;
     decoder_ = new AudioDecoderG722Impl;
-    assert(decoder_);
+    RTC_DCHECK(decoder_);
     AudioEncoderG722Config config;
     config.frame_size_ms = 10;
     config.num_channels = 1;
@@ -430,7 +430,7 @@ class AudioDecoderG722StereoTest : public AudioDecoderTest {
     frame_size_ = 160;
     data_length_ = 10 * frame_size_;
     decoder_ = new AudioDecoderG722StereoImpl;
-    assert(decoder_);
+    RTC_DCHECK(decoder_);
     AudioEncoderG722Config config;
     config.frame_size_ms = 10;
     config.num_channels = 2;
