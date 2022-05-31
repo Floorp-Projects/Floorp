@@ -323,7 +323,7 @@ nsresult HTMLEditor::ShowResizersInternal(Element& aResizedElement) {
     return NS_ERROR_FAILURE;
   }
 
-  const RefPtr<Element> editingHost = GetActiveEditingHost();
+  const RefPtr<Element> editingHost = ComputeEditingHost();
   if (NS_WARN_IF(!editingHost) ||
       NS_WARN_IF(!aResizedElement.IsInclusiveDescendantOf(editingHost))) {
     return NS_ERROR_UNEXPECTED;

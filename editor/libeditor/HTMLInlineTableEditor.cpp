@@ -36,7 +36,7 @@ nsresult HTMLEditor::ShowInlineTableEditingUIInternal(Element& aCellElement) {
     return NS_OK;
   }
 
-  const RefPtr<Element> editingHost = GetActiveEditingHost();
+  const RefPtr<Element> editingHost = ComputeEditingHost();
   if (NS_WARN_IF(!editingHost) ||
       NS_WARN_IF(!aCellElement.IsInclusiveDescendantOf(editingHost))) {
     return NS_ERROR_FAILURE;

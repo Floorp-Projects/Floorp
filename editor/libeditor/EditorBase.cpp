@@ -3903,7 +3903,7 @@ EditorBase::CreateTransactionForCollapsedRange(
   // build a transaction for deleting the appropriate data
   // XXX: this has to come from rule section
   const Element* const anonymousDivOrEditingHost =
-      IsTextEditor() ? GetRoot() : AsHTMLEditor()->GetActiveEditingHost();
+      IsTextEditor() ? GetRoot() : AsHTMLEditor()->ComputeEditingHost();
   if (aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward &&
       point.IsStartOfContainer()) {
     MOZ_ASSERT(IsHTMLEditor());
@@ -4531,7 +4531,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   //       editing host for contenteditable which is in a shadow DOM tree
   //       and its host which is in design mode.
   else if (!AsHTMLEditor()->IsInDesignMode()) {
-    focusedElement = AsHTMLEditor()->GetActiveEditingHost();
+    focusedElement = AsHTMLEditor()->ComputeEditingHost();
     if (focusedElement &&
         droppedAt.GetContainerAsContent()->IsInclusiveDescendantOf(
             focusedElement)) {
@@ -4581,8 +4581,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
     // contenteditable, we cannot handle it without focus.  So, we should give
     // it up.
     if (IsHTMLEditor() && !AsHTMLEditor()->IsInDesignMode() &&
-        NS_WARN_IF(newFocusedElement !=
-                   AsHTMLEditor()->GetActiveEditingHost())) {
+        NS_WARN_IF(newFocusedElement != AsHTMLEditor()->ComputeEditingHost())) {
       editActionData.Abort();
       return NS_OK;
     }
@@ -5071,7 +5070,7 @@ nsresult EditorBase::ReplaceTextAsAction(
       NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
                            "StaticRange::Create() failed");
     } else {
-      Element* editingHost = AsHTMLEditor()->GetActiveEditingHost();
+      Element* editingHost = AsHTMLEditor()->ComputeEditingHost();
       NS_WARNING_ASSERTION(editingHost,
                            "No active editing host, no target ranges");
       if (editingHost) {
