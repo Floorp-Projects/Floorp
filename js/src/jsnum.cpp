@@ -1838,55 +1838,24 @@ template double js::CharsToNumber(const Latin1Char* chars, size_t length);
 
 template double js::CharsToNumber(const char16_t* chars, size_t length);
 
-template <typename CharT>
-static bool CharsToNumber(const CharT* chars, size_t length, double* result) {
-  if (length == 1) {
-    *result = CharToNumber(chars[0]);
-    return true;
+double js::LinearStringToNumber(JSLinearString* str) {
+  if (str->hasIndexValue()) {
+    return str->getIndexValue();
   }
 
-  const CharT* end = chars + length;
-  const CharT* start = SkipSpace(chars, end);
-
-  // ECMA doesn't allow signed non-decimal numbers (bug 273467).
-  if (end - start >= 2 && start[0] == '0') {
-    if (CharsToNonDecimalNumber(start, end, result)) {
-      return true;
-    }
-  }
-
-  // It's probably a decimal number. Accept if no non-whitespace characters
-  // follow all the digits.
-  //
-  // NB: Fractional digits are not supported, because they require calling into
-  // dtoa, which isn't possible without a JSContext.
-  const CharT* endptr;
-  double d;
-  if (!GetPrefixInteger(start, end, 10, IntegerSeparatorHandling::None, &endptr,
-                        &d) ||
-      SkipSpace(endptr, end) != end) {
-    return false;
-  }
-
-  *result = d;
-  return true;
+  AutoCheckCannotGC nogc;
+  return str->hasLatin1Chars()
+             ? CharsToNumber(str->latin1Chars(nogc), str->length())
+             : CharsToNumber(str->twoByteChars(nogc), str->length());
 }
 
 bool js::StringToNumber(JSContext* cx, JSString* str, double* result) {
-  AutoCheckCannotGC nogc;
   JSLinearString* linearStr = str->ensureLinear(cx);
   if (!linearStr) {
     return false;
   }
 
-  if (str->hasIndexValue()) {
-    *result = str->getIndexValue();
-    return true;
-  }
-
-  *result = linearStr->hasLatin1Chars()
-                ? CharsToNumber(linearStr->latin1Chars(nogc), str->length())
-                : CharsToNumber(linearStr->twoByteChars(nogc), str->length());
+  *result = LinearStringToNumber(linearStr);
   return true;
 }
 
@@ -1899,19 +1868,6 @@ bool js::StringToNumberPure(JSContext* cx, JSString* str, double* result) {
     return false;
   }
   return true;
-}
-
-bool js::MaybeStringToNumber(JSLinearString* str, double* result) {
-  AutoCheckCannotGC nogc;
-
-  if (str->hasIndexValue()) {
-    *result = str->getIndexValue();
-    return true;
-  }
-
-  return str->hasLatin1Chars()
-             ? ::CharsToNumber(str->latin1Chars(nogc), str->length(), result)
-             : ::CharsToNumber(str->twoByteChars(nogc), str->length(), result);
 }
 
 JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,
