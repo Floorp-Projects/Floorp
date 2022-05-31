@@ -483,7 +483,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
    private:
     void RecreateWebRtcVideoStream();
 
-    void ConfigureCodecs(const std::vector<VideoCodecSettings>& recv_codecs);
+    // Applies a new receive codecs configration to `config_`. Returns true
+    // if the internal stream needs to be reconstructed, or false if no changes
+    // were applied.
+    bool ConfigureCodecs(const std::vector<VideoCodecSettings>& recv_codecs);
 
     std::string GetCodecNameFromPayloadType(int payload_type);
 

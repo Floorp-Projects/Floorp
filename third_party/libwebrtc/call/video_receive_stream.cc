@@ -14,9 +14,17 @@
 
 namespace webrtc {
 
+VideoReceiveStream::Decoder::Decoder(SdpVideoFormat video_format,
+                                     int payload_type)
+    : video_format(std::move(video_format)), payload_type(payload_type) {}
 VideoReceiveStream::Decoder::Decoder() : video_format("Unset") {}
 VideoReceiveStream::Decoder::Decoder(const Decoder&) = default;
 VideoReceiveStream::Decoder::~Decoder() = default;
+
+bool VideoReceiveStream::Decoder::operator==(const Decoder& other) const {
+  return payload_type == other.payload_type &&
+         video_format == other.video_format;
+}
 
 std::string VideoReceiveStream::Decoder::ToString() const {
   char buf[1024];
