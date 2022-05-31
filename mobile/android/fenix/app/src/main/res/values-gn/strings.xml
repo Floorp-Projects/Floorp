@@ -1581,6 +1581,9 @@
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Eñongatu ha emyanyhẽ kundaharape</string>
 
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Emoĩ marandu ipapapy, ñanduti veve ha kundaharape ñemondorãva</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Embojuaju kuatia’atã</string>
     <!-- Title of the "Edit card" screen -->
@@ -1669,6 +1672,8 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Embogue kundaharape</string>
 
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">¿Añetehápepa remboguese ko kundaharape?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Mboguete</string>
     <!-- The text for the negative button on "Delete address" dialog -->

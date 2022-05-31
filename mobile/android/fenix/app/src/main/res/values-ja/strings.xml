@@ -1565,6 +1565,7 @@
     <string name="preferences_addresses_add_address">アドレスを追加</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">アドレスの管理</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">カードの追加</string>
 
@@ -1905,6 +1906,9 @@
     <string name="pocket_stories_feature_caption">Firefox ファミリーの一員です。 %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">詳細情報</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">広告</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">データを送信するにはテレメトリーを有効にしてください。</string>

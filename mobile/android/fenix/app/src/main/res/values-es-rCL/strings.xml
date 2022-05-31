@@ -1543,6 +1543,11 @@
     <string name="preferences_addresses_add_address">Añadir dirección</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Administrar direcciones</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Guardar y autocompletar direcciones</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Incluye información como números, correos electrónicos y direcciones</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Añadir tarjeta</string>
     <!-- Title of the "Edit card" screen -->
@@ -1878,6 +1883,9 @@
     <string name="pocket_stories_feature_caption">Parte de la familia Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Aprender más</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Patrocinado</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Habilita la telemetría para enviar datos.</string>
