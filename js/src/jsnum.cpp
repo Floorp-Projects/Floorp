@@ -33,6 +33,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/GCAPI.h"
 #if !JS_HAS_INTL_API
 #  include "js/LocaleSensitive.h"
 #endif
@@ -2195,52 +2196,57 @@ bool js_strtod(JSContext* cx, const CharT* begin, const CharT* end,
   const CharT* s = SkipSpace(begin, end);
   size_t length = end - s;
 
-  Vector<char, 32> chars(cx);
-  if (!chars.growByUninitialized(length + 1)) {
-    return false;
-  }
-
-  size_t i = 0;
-  for (; i < length; i++) {
-    char16_t c = s[i];
-    if (c >> 8) {
-      break;
-    }
-    chars[i] = char(c);
-  }
-  chars[i] = 0;
-
-  /* Try to parse +Infinity, -Infinity or Infinity. */
   {
-    char* afterSign = chars.begin();
-    bool negative = (*afterSign == '-');
-    if (negative || *afterSign == '+') {
-      afterSign++;
-    }
+    // StringToDouble can make indirect calls but can't trigger a GC.
+    JS::AutoSuppressGCAnalysis nogc;
 
-    if (*afterSign == 'I' && !strncmp(afterSign, "Infinity", 8)) {
-      *d = negative ? NegativeInfinity<double>() : PositiveInfinity<double>();
-      *dEnd = s + (afterSign - chars.begin()) + 8;
+    using SToDConverter = double_conversion::StringToDoubleConverter;
+    SToDConverter converter(SToDConverter::ALLOW_TRAILING_JUNK,
+                            /* empty_string_value = */ 0.0,
+                            /* junk_string_value = */ GenericNaN(),
+                            /* infinity_symbol = */ nullptr,
+                            /* nan_symbol = */ nullptr);
+    int lengthInt = mozilla::AssertedCast<int>(length);
+    int processed = 0;
+    if constexpr (std::is_same_v<CharT, char16_t>) {
+      *d = converter.StringToDouble(reinterpret_cast<const uc16*>(s), lengthInt,
+                                    &processed);
+    } else {
+      static_assert(std::is_same_v<CharT, Latin1Char>);
+      *d = converter.StringToDouble(reinterpret_cast<const char*>(s), lengthInt,
+                                    &processed);
+    }
+    MOZ_ASSERT(processed >= 0);
+    MOZ_ASSERT(processed <= lengthInt);
+
+    if (processed > 0) {
+      *dEnd = s + processed;
       return true;
     }
   }
 
-  if (!EnsureDtoaState(cx)) {
-    return false;
+  // Try to parse +Infinity, -Infinity or Infinity. Note that we do this here
+  // instead of using StringToDoubleConverter's infinity_symbol because it's
+  // faster: the code below is less generic and not on the fast path for regular
+  // doubles.
+  static constexpr char InfinityStr[] = "Infinity";
+  static constexpr size_t InfinityLen = sizeof(InfinityStr) - 1;
+  if (length >= InfinityLen) {
+    const CharT* afterSign = s;
+    bool negative = (*afterSign == '-');
+    if (negative || *afterSign == '+') {
+      afterSign++;
+    }
+    MOZ_ASSERT(afterSign < end);
+    if (*afterSign == 'I' && size_t(end - afterSign) >= InfinityLen &&
+        EqualChars(afterSign, InfinityStr, InfinityLen)) {
+      *d = negative ? NegativeInfinity<double>() : PositiveInfinity<double>();
+      *dEnd = afterSign + InfinityLen;
+      return true;
+    }
   }
 
-  /* Everything else. */
-  char* ep;
-  *d = js_strtod_harder(cx->dtoaState, chars.begin(), &ep);
-
-  MOZ_ASSERT(ep >= chars.begin());
-
-  if (ep == chars.begin()) {
-    *dEnd = begin;
-  } else {
-    *dEnd = s + (ep - chars.begin());
-  }
-
+  *dEnd = begin;
   return true;
 }
 
