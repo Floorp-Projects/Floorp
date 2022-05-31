@@ -186,9 +186,6 @@ RTCPSender::RTCPSender(Configuration config)
   builders_[kRtcpAnyExtendedReports] = &RTCPSender::BuildExtendedReports;
 }
 
-RTCPSender::RTCPSender(const RtpRtcpInterface::Configuration& config)
-    : RTCPSender(Configuration::FromRtpRtcpConfiguration(config)) {}
-
 RTCPSender::~RTCPSender() {}
 
 RtcpMode RTCPSender::Status() const {
@@ -326,16 +323,6 @@ void RTCPSender::SetLastRtpTime(uint32_t rtp_timestamp,
   } else {
     last_frame_capture_time_ = *capture_time;
   }
-}
-
-void RTCPSender::SetLastRtpTime(uint32_t rtp_timestamp,
-                                int64_t capture_time_ms,
-                                int8_t payload_type) {
-  absl::optional<int8_t> payload_type_optional;
-  if (payload_type != -1)
-    payload_type_optional = payload_type;
-  SetLastRtpTime(rtp_timestamp, Timestamp::Millis(capture_time_ms),
-                 payload_type_optional);
 }
 
 void RTCPSender::SetRtpClockRate(int8_t payload_type, int rtp_clock_rate_hz) {

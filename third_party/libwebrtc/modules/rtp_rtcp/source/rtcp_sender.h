@@ -98,9 +98,6 @@ class RTCPSender final {
   };
 
   explicit RTCPSender(Configuration config);
-  // TODO(bugs.webrtc.org/11581): delete this temporary compatibility helper
-  // once downstream dependencies migrates.
-  explicit RTCPSender(const RtpRtcpInterface::Configuration& config);
 
   RTCPSender() = delete;
   RTCPSender(const RTCPSender&) = delete;
@@ -124,14 +121,6 @@ class RTCPSender final {
   void SetLastRtpTime(uint32_t rtp_timestamp,
                       absl::optional<Timestamp> capture_time,
                       absl::optional<int8_t> payload_type)
-      RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
-  // TODO(bugs.webrtc.org/6458): Remove default parameter value when all the
-  // depending projects are updated to correctly set payload type.
-  // TODO(bugs.webrtc.org/12873): Remove once downstream consumers migrates to
-  // the new version of SetLastRtpTime declared above.
-  void SetLastRtpTime(uint32_t rtp_timestamp,
-                      int64_t capture_time_ms,
-                      int8_t payload_type = -1)
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
   void SetRtpClockRate(int8_t payload_type, int rtp_clock_rate_hz)
