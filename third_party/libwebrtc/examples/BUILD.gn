@@ -345,10 +345,12 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "../sdk:metal_objc",
         "../sdk:peerconnectionfactory_base_objc",
         "../sdk:peerconnectionfactory_base_objc",
-        "../sdk:ui_objc",
         "../sdk:videocapture_objc",
         "../sdk:videocodec_objc",
       ]
+      if (rtc_ios_macos_use_opengl_rendering) {
+        deps += [ "../sdk:opengl_ui_objc" ]
+      }
 
       frameworks = [ "AVFoundation.framework" ]
     }
@@ -499,13 +501,12 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "../sdk:helpers_objc",
         "../sdk:metal_objc",
         "../sdk:native_api",
-        "../sdk:ui_objc",
         "../sdk:videocapture_objc",
         "../sdk:videotoolbox_objc",
       ]
 
-      if (current_cpu == "arm64") {
-        deps += [ "../sdk:metal_objc" ]
+      if (rtc_ios_macos_use_opengl_rendering) {
+        deps += [ "../sdk:opengl_ui_objc" ]
       }
     }
 
@@ -543,9 +544,9 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "../sdk:helpers_objc",
         "../sdk:mediaconstraints_objc",
         "../sdk:metal_objc",
+        "../sdk:opengl_ui_objc",
         "../sdk:peerconnectionfactory_base_objc",
         "../sdk:peerconnectionfactory_base_objc",
-        "../sdk:ui_objc",
         "../sdk:videocapture_objc",
         "../sdk:videocodec_objc",
       ]

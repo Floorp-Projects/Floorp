@@ -436,7 +436,7 @@ if (is_ios || is_mac) {
       ]
     }
 
-    rtc_library("video_objc") {
+    rtc_library("opengl_objc") {
       sources = [
         "objc/components/renderer/opengl/RTCDefaultShader.h",
         "objc/components/renderer/opengl/RTCDefaultShader.mm",
@@ -492,7 +492,7 @@ if (is_ios || is_mac) {
       ]
     }
 
-    rtc_library("ui_objc") {
+    rtc_library("opengl_ui_objc") {
       visibility = [ "*" ]
       allow_poison = [
         "audio_codecs",  # TODO(bugs.webrtc.org/8396): Remove.
@@ -521,10 +521,25 @@ if (is_ios || is_mac) {
         ":base_objc",
         ":helpers_objc",
         ":metal_objc",
-        ":video_objc",
+        ":opengl_objc",
         ":videocapture_objc",
         ":videoframebuffer_objc",
       ]
+    }
+
+    # For backward compatibility.
+    rtc_source_set("video_objc") {
+      visibility = [ "*" ]
+      public_deps = [ ":opengl_objc" ]  # no-presubmit-check TODO(webrtc:8603)
+    }
+    rtc_source_set("ui_objc") {
+      visibility = [ "*" ]
+      allow_poison = [
+        "audio_codecs",  # TODO(bugs.webrtc.org/8396): Remove.
+        "default_task_queue",
+      ]
+      public_deps =  # no-presubmit-check TODO(webrtc:8603)
+          [ ":opengl_ui_objc" ]
     }
 
     rtc_library("metal_objc") {
@@ -565,7 +580,6 @@ if (is_ios || is_mac) {
       deps = [
         ":base_objc",
         ":peerconnectionfactory_base_objc",
-        ":video_objc",
         ":videoframebuffer_objc",
         "../api/video:video_frame",
         "../api/video:video_rtp_headers",
@@ -613,7 +627,6 @@ if (is_ios || is_mac) {
       deps = [
         ":base_objc",
         ":helpers_objc",
-        ":video_objc",
         ":videoframebuffer_objc",
         "../rtc_base/system:gcd_helpers",
       ]
@@ -985,7 +998,6 @@ if (is_ios || is_mac) {
         ":mediasource_objc",
         ":native_api",
         ":native_video",
-        ":video_objc",
         ":videoframebuffer_objc",
         ":videorendereradapter_objc",
         ":videosource_objc",
@@ -1073,7 +1085,6 @@ if (is_ios || is_mac) {
             ":native_api_audio_device_module",
             ":native_video",
             ":peerconnectionfactory_base_objc",
-            ":video_objc",
             ":video_toolbox_cc",
             ":videocapture_objc",
             ":videocodec_objc",
@@ -1091,6 +1102,10 @@ if (is_ios || is_mac) {
             "../system_wrappers",
             "//third_party/libyuv",
           ]
+
+          if (rtc_ios_macos_use_opengl_rendering) {
+            deps += [ ":opengl_objc" ]
+          }
 
           public_deps = [
             "//build/config/ios:xctest",
@@ -1183,7 +1198,6 @@ if (is_ios || is_mac) {
           ":native_api",
           ":native_video",
           ":peerconnectionfactory_base_objc",
-          ":video_objc",
           ":videocapture_objc",
           ":videocodec_objc",
           ":videoframebuffer_objc",
@@ -1326,12 +1340,14 @@ if (is_ios || is_mac) {
           ":native_api",
           ":native_video",
           ":peerconnectionfactory_base_objc",
-          ":ui_objc",
           ":videocapture_objc",
           ":videocodec_objc",
           ":videotoolbox_objc",
           "../rtc_base:rtc_base_approved",
         ]
+        if (rtc_ios_macos_use_opengl_rendering) {
+          deps += [ ":opengl_ui_objc" ]
+        }
         if (!build_with_chromium) {
           deps += [
             ":callback_logger_objc",
@@ -1343,7 +1359,6 @@ if (is_ios || is_mac) {
           "AVFoundation.framework",
           "CoreGraphics.framework",
           "CoreMedia.framework",
-          "GLKit.framework",
         ]
 
         configs += [
@@ -1456,8 +1471,8 @@ if (is_ios || is_mac) {
           ":default_codec_factory_objc",
           ":native_api",
           ":native_video",
+          ":opengl_ui_objc",
           ":peerconnectionfactory_base_objc",
-          ":ui_objc",
           ":videocapture_objc",
           ":videocodec_objc",
           ":videotoolbox_objc",

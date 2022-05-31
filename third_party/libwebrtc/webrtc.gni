@@ -189,6 +189,10 @@ declare_args() {
     rtc_apprtcmobile_broadcast_extension = false
   }
 
+  # Determines whether OpenGL is available on iOS/macOS.
+  rtc_ios_macos_use_opengl_rendering =
+      !(is_ios && target_environment == "catalyst")
+
   # When set to false, builtin audio encoder/decoder factories and all the
   # audio codecs they depend on will not be included in libwebrtc.{a|lib}
   # (they will still be included in libjingle_peerconnection_so.so and
@@ -1000,10 +1004,16 @@ if (is_ios) {
       deps = [ ":create_bracket_include_headers_$this_target_name" ]
     }
 
+    if (target_environment == "catalyst") {
+      # Catalyst frameworks use the same layout as regular Mac frameworks.
+      headers_dir = "Versions/A/Headers"
+    } else {
+      headers_dir = "Headers"
+    }
     copy("copy_umbrella_header_$target_name") {
       sources = [ umbrella_header_path ]
       outputs =
-          [ "$root_out_dir/$output_name.framework/Headers/$output_name.h" ]
+          [ "$root_out_dir/$output_name.framework/$headers_dir/$output_name.h" ]
 
       deps = [ ":umbrella_header_$target_name" ]
     }
