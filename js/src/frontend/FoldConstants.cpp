@@ -479,11 +479,8 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
     switch (kind) {
       case ParseNodeKind::NumberExpr:
         if (pn->isKind(ParseNodeKind::StringExpr)) {
-          double d;
           auto atom = pn->as<NameNode>().atom();
-          if (!info.parserAtoms.toNumber(info.cx, atom, &d)) {
-            return false;
-          }
+          double d = info.parserAtoms.toNumber(atom);
           if (!TryReplaceNode(
                   pnp, info.handler->newNumber(d, NoDecimal, pn->pn_pos))) {
             return false;

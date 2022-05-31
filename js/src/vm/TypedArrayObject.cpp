@@ -2475,10 +2475,7 @@ static bool StringToTypedArrayIndexSlow(JSContext* cx,
   const mozilla::RangedPtr<const CharT> end = s.end();
 
   const CharT* actualEnd;
-  double result;
-  if (!js_strtod(cx, start.get(), end.get(), &actualEnd, &result)) {
-    return false;
-  }
+  double result = js_strtod(start.get(), end.get(), &actualEnd);
 
   // The complete string must have been parsed.
   if (actualEnd != end.get()) {

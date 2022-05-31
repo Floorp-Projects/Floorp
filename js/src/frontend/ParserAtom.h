@@ -760,8 +760,7 @@ class ParserAtomsTable {
                          ParserAtom::Atomize atomize) const;
   void markAtomize(TaggedParserAtomIndex index,
                    ParserAtom::Atomize atomize) const;
-  bool toNumber(JSContext* cx, TaggedParserAtomIndex index,
-                double* result) const;
+  double toNumber(TaggedParserAtomIndex index) const;
   UniqueChars toNewUTF8CharsZ(JSContext* cx, TaggedParserAtomIndex index) const;
   UniqueChars toPrintableString(JSContext* cx,
                                 TaggedParserAtomIndex index) const;

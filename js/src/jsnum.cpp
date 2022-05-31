@@ -461,18 +461,14 @@ static bool num_parseFloat(JSContext* cx, unsigned argc, Value* vp) {
   if (linear->hasLatin1Chars()) {
     const Latin1Char* begin = linear->latin1Chars(nogc);
     const Latin1Char* end;
-    if (!js_strtod(cx, begin, begin + linear->length(), &end, &d)) {
-      return false;
-    }
+    d = js_strtod(begin, begin + linear->length(), &end);
     if (end == begin) {
       d = GenericNaN();
     }
   } else {
     const char16_t* begin = linear->twoByteChars(nogc);
     const char16_t* end;
-    if (!js_strtod(cx, begin, begin + linear->length(), &end, &d)) {
-      return false;
-    }
+    d = js_strtod(begin, begin + linear->length(), &end);
     if (end == begin) {
       d = GenericNaN();
     }
@@ -1764,14 +1760,14 @@ bool js::NumberValueToStringBuffer(JSContext* cx, const Value& v,
 }
 
 template <typename CharT>
-inline void CharToNumber(CharT c, double* result) {
+inline double CharToNumber(CharT c) {
   if ('0' <= c && c <= '9') {
-    *result = c - '0';
-  } else if (unicode::IsSpace(c)) {
-    *result = 0.0;
-  } else {
-    *result = GenericNaN();
+    return c - '0';
   }
+  if (unicode::IsSpace(c)) {
+    return 0.0;
+  }
+  return GenericNaN();
 }
 
 template <typename CharT>
@@ -1807,11 +1803,9 @@ inline bool CharsToNonDecimalNumber(const CharT* start, const CharT* end,
 }
 
 template <typename CharT>
-bool js::CharsToNumber(JSContext* cx, const CharT* chars, size_t length,
-                       double* result) {
+double js::CharsToNumber(const CharT* chars, size_t length) {
   if (length == 1) {
-    CharToNumber(chars[0], result);
-    return true;
+    return CharToNumber(chars[0]);
   }
 
   const CharT* end = chars + length;
@@ -1819,8 +1813,9 @@ bool js::CharsToNumber(JSContext* cx, const CharT* chars, size_t length,
 
   // ECMA doesn't allow signed non-decimal numbers (bug 273467).
   if (end - start >= 2 && start[0] == '0') {
-    if (CharsToNonDecimalNumber(start, end, result)) {
-      return true;
+    double d;
+    if (CharsToNonDecimalNumber(start, end, &d)) {
+      return d;
     }
   }
 
@@ -1832,31 +1827,21 @@ bool js::CharsToNumber(JSContext* cx, const CharT* chars, size_t length,
    * be treated as 0 without consuming the 'x' by js_strtod.
    */
   const CharT* ep;
-  double d;
-  if (!js_strtod(cx, start, end, &ep, &d)) {
-    *result = GenericNaN();
-    return false;
-  }
-
+  double d = js_strtod(start, end, &ep);
   if (SkipSpace(ep, end) != end) {
-    *result = GenericNaN();
-  } else {
-    *result = d;
+    return GenericNaN();
   }
-
-  return true;
+  return d;
 }
 
-template bool js::CharsToNumber(JSContext* cx, const Latin1Char* chars,
-                                size_t length, double* result);
+template double js::CharsToNumber(const Latin1Char* chars, size_t length);
 
-template bool js::CharsToNumber(JSContext* cx, const char16_t* chars,
-                                size_t length, double* result);
+template double js::CharsToNumber(const char16_t* chars, size_t length);
 
 template <typename CharT>
 static bool CharsToNumber(const CharT* chars, size_t length, double* result) {
   if (length == 1) {
-    CharToNumber(chars[0], result);
+    *result = CharToNumber(chars[0]);
     return true;
   }
 
@@ -1899,11 +1884,10 @@ bool js::StringToNumber(JSContext* cx, JSString* str, double* result) {
     return true;
   }
 
-  return linearStr->hasLatin1Chars()
-             ? CharsToNumber(cx, linearStr->latin1Chars(nogc), str->length(),
-                             result)
-             : CharsToNumber(cx, linearStr->twoByteChars(nogc), str->length(),
-                             result);
+  *result = linearStr->hasLatin1Chars()
+                ? CharsToNumber(linearStr->latin1Chars(nogc), str->length())
+                : CharsToNumber(linearStr->twoByteChars(nogc), str->length());
+  return true;
 }
 
 bool js::StringToNumberPure(JSContext* cx, JSString* str, double* result) {
@@ -2191,8 +2175,7 @@ bool js::ToIndexSlow(JSContext* cx, JS::HandleValue v,
 }
 
 template <typename CharT>
-bool js_strtod(JSContext* cx, const CharT* begin, const CharT* end,
-               const CharT** dEnd, double* d) {
+double js_strtod(const CharT* begin, const CharT* end, const CharT** dEnd) {
   const CharT* s = SkipSpace(begin, end);
   size_t length = end - s;
 
@@ -2207,21 +2190,22 @@ bool js_strtod(JSContext* cx, const CharT* begin, const CharT* end,
                             /* infinity_symbol = */ nullptr,
                             /* nan_symbol = */ nullptr);
     int lengthInt = mozilla::AssertedCast<int>(length);
+    double d;
     int processed = 0;
     if constexpr (std::is_same_v<CharT, char16_t>) {
-      *d = converter.StringToDouble(reinterpret_cast<const uc16*>(s), lengthInt,
-                                    &processed);
+      d = converter.StringToDouble(reinterpret_cast<const uc16*>(s), lengthInt,
+                                   &processed);
     } else {
       static_assert(std::is_same_v<CharT, Latin1Char>);
-      *d = converter.StringToDouble(reinterpret_cast<const char*>(s), lengthInt,
-                                    &processed);
+      d = converter.StringToDouble(reinterpret_cast<const char*>(s), lengthInt,
+                                   &processed);
     }
     MOZ_ASSERT(processed >= 0);
     MOZ_ASSERT(processed <= lengthInt);
 
     if (processed > 0) {
       *dEnd = s + processed;
-      return true;
+      return d;
     }
   }
 
@@ -2240,19 +2224,17 @@ bool js_strtod(JSContext* cx, const CharT* begin, const CharT* end,
     MOZ_ASSERT(afterSign < end);
     if (*afterSign == 'I' && size_t(end - afterSign) >= InfinityLen &&
         EqualChars(afterSign, InfinityStr, InfinityLen)) {
-      *d = negative ? NegativeInfinity<double>() : PositiveInfinity<double>();
       *dEnd = afterSign + InfinityLen;
-      return true;
+      return negative ? NegativeInfinity<double>() : PositiveInfinity<double>();
     }
   }
 
   *dEnd = begin;
-  return true;
+  return 0.0;
 }
 
-template bool js_strtod(JSContext* cx, const char16_t* begin,
-                        const char16_t* end, const char16_t** dEnd, double* d);
+template double js_strtod(const char16_t* begin, const char16_t* end,
+                          const char16_t** dEnd);
 
-template bool js_strtod(JSContext* cx, const Latin1Char* begin,
-                        const Latin1Char* end, const Latin1Char** dEnd,
-                        double* d);
+template double js_strtod(const Latin1Char* begin, const Latin1Char* end,
+                          const Latin1Char** dEnd);
