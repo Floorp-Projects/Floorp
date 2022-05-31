@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '6d8828f6a6eea769a05fa1c0b7acf10aca631d4a',
+  'chromium_revision': 'fca17b97760a8c391ac7865e20e1cf9243ba8b89',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,7 +20,7 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@e1acc6a30942360d4789d6c245cf7933e7e9bbec',
+    'https://chromium.googlesource.com/chromium/src/base@0fce7279af597d8a149914c52e446cec4e5d0a53',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@826926008327af276adbaafcfa92b525eb5bf326',
   'src/buildtools':
@@ -31,13 +31,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@695a3541172406518e45c377048956a3e5270d7c',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@f52bcbaa5884e2a51fb00fbc84b9f2c9dee46795',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@d749d1b98b475ea15face1c9d2311ed6b8e4b91f',
+    'https://chromium.googlesource.com/chromium/src/testing@b9b3552b27bf3467b98b0bcf0cee657fc3217825',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@c1d40d8b399db4c5ebab5e5022a002dca5b3dbb2',
+    'https://chromium.googlesource.com/chromium/src/third_party@f5db6b1b4e45ad1147ddda1c13884685e0ba59c0',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -271,7 +271,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@1a00526b21d46b8b86f13add37003fd33885f32b',
+    'https://chromium.googlesource.com/chromium/src/tools@c93f12de192a8e60b81f30b427a0623d215902d0',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
