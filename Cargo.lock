@@ -468,7 +468,7 @@ dependencies = [
  "comedy",
  "guid_win",
  "lazy_static",
- "rand 0.7.999",
+ "rand 0.8.5",
  "regex",
  "tempfile",
  "thiserror",
