@@ -140,6 +140,7 @@ if (rtc_include_tests) {
       "mock_voe_channel_proxy.h",
       "remix_resample_unittest.cc",
       "test/audio_stats_test.cc",
+      "test/nack_test.cc",
     ]
     deps = [
       ":audio",

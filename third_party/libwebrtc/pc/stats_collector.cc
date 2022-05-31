@@ -319,6 +319,10 @@ void ExtractStats(const cricket::VideoReceiverInfo& info,
   if (info.qp_sum)
     report->AddInt64(StatsReport::kStatsValueNameQpSum, *info.qp_sum);
 
+  if (info.nacks_sent) {
+    report->AddInt(StatsReport::kStatsValueNameNacksSent, *info.nacks_sent);
+  }
+
   const IntForAdd ints[] = {
       {StatsReport::kStatsValueNameCurrentDelayMs, info.current_delay_ms},
       {StatsReport::kStatsValueNameDecodeMs, info.decode_ms},
@@ -332,7 +336,6 @@ void ExtractStats(const cricket::VideoReceiverInfo& info,
       {StatsReport::kStatsValueNameMaxDecodeMs, info.max_decode_ms},
       {StatsReport::kStatsValueNameMinPlayoutDelayMs,
        info.min_playout_delay_ms},
-      {StatsReport::kStatsValueNameNacksSent, info.nacks_sent},
       {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
       {StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd},
       {StatsReport::kStatsValueNamePlisSent, info.plis_sent},

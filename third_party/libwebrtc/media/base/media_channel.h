@@ -426,6 +426,7 @@ struct MediaReceiverInfo {
   int64_t header_and_padding_bytes_rcvd = 0;
   int packets_rcvd = 0;
   int packets_lost = 0;
+  absl::optional<uint32_t> nacks_sent;
   // Jitter (network-related) latency (cumulative).
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferdelay
   double jitter_buffer_delay_seconds = 0.0;
@@ -582,7 +583,6 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
   int packets_concealed = 0;
   int firs_sent = 0;
   int plis_sent = 0;
-  int nacks_sent = 0;
   int frame_width = 0;
   int frame_height = 0;
   int framerate_rcvd = 0;
