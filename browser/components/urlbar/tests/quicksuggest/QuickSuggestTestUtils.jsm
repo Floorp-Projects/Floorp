@@ -194,6 +194,7 @@ class QSTestUtils {
     this.registerCleanupFunction?.(cleanup);
 
     if (results) {
+      UrlbarQuickSuggest._resultsByKeyword.clear();
       UrlbarQuickSuggest._addResults(results);
     }
     if (config) {

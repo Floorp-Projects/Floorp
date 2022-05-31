@@ -223,7 +223,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let promises = [];
     if (UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled")) {
       promises.push(
-        this._fetchRemoteSettingsSuggestion(queryContext, searchString)
+        this._fetchRemoteSettingsSuggestions(queryContext, searchString)
       );
     }
     if (
@@ -781,36 +781,37 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
-   * Fetches a remote settings suggestion.
+   * Fetches remote settings suggestions.
    *
    * @param {UrlbarQueryContext} queryContext
    * @param {string} searchString
-   * @returns {object}
-   *   The remote settings suggestion or null if there's no match.
+   * @returns {array}
+   *   The remote settings suggestions. If there are no matches, an empty array
+   *   is returned.
    */
-  async _fetchRemoteSettingsSuggestion(queryContext, searchString) {
+  async _fetchRemoteSettingsSuggestions(queryContext, searchString) {
     let instance = this.queryInstance;
 
-    let suggestion;
+    let suggestions;
     TelemetryStopwatch.start(TELEMETRY_REMOTE_SETTINGS_LATENCY, queryContext);
     try {
-      suggestion = await UrlbarQuickSuggest.query(searchString);
+      suggestions = await UrlbarQuickSuggest.query(searchString);
       TelemetryStopwatch.finish(
         TELEMETRY_REMOTE_SETTINGS_LATENCY,
         queryContext
       );
       if (instance != this.queryInstance) {
-        return null;
+        return [];
       }
     } catch (error) {
       TelemetryStopwatch.cancel(
         TELEMETRY_REMOTE_SETTINGS_LATENCY,
         queryContext
       );
-      this.logger.error("Could not fetch remote settings suggestion: " + error);
+      this.logger.error("Couldn't fetch remote settings suggestions: " + error);
     }
 
-    return suggestion;
+    return suggestions || [];
   }
 
   /**
