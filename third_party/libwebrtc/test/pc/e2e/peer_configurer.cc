@@ -92,22 +92,9 @@ void SetDefaultValuesForMissingParams(
     }
 
     if (p->video_codecs.empty()) {
-      // TODO(mbonadei): Remove the usage of RunParams to set codecs, this is
-      // only needed for backwards compatibility.
-      if (!run_params->video_codecs.empty()) {
-        p->video_codecs = run_params->video_codecs;
-      } else {
-        p->video_codecs.push_back(
-            PeerConnectionE2EQualityTestFixture::VideoCodecConfig(
-                cricket::kVp8CodecName));
-        run_params->video_codecs = {
-            PeerConnectionE2EQualityTestFixture::VideoCodecConfig(
-                cricket::kVp8CodecName)};
-      }
-    } else {
-      RTC_CHECK(run_params->video_codecs.empty())
-          << "Setting video_codecs in both PeerConfigurer and RunParams is not "
-             "supported.";
+      p->video_codecs.push_back(
+          PeerConnectionE2EQualityTestFixture::VideoCodecConfig(
+              cricket::kVp8CodecName));
     }
   }
 }
