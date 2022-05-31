@@ -44,7 +44,13 @@ class WindowCapturerTest : public ::testing::Test,
 };
 
 // Verify that we can enumerate windows.
-TEST_F(WindowCapturerTest, Enumerate) {
+// TODO(bugs.webrtc.org/12950): Re-enable when libc++ issue is fixed
+#if defined(WEBRTC_LINUX) && defined(MEMORY_SANITIZER)
+#define MAYBE_Enumerate DISABLED_Enumerate
+#else
+#define MAYBE_Enumerate Enumerate
+#endif
+TEST_F(WindowCapturerTest, MAYBE_Enumerate) {
   DesktopCapturer::SourceList sources;
   EXPECT_TRUE(capturer_->GetSourceList(&sources));
 
