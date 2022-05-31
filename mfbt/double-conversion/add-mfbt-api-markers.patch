@@ -146,3 +146,49 @@ index 6317a08a72aeb..6b7d30a63138c 100644
    const int flags_;
    const char* const infinity_symbol_;
    const char* const nan_symbol_;
+diff --git a/mfbt/double-conversion/double-conversion/string-to-double.h b/mfbt/double-conversion/double-conversion/string-to-double.h
+--- a/mfbt/double-conversion/double-conversion/string-to-double.h
++++ b/mfbt/double-conversion/double-conversion/string-to-double.h
+@@ -23,16 +23,17 @@
+ // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #ifndef DOUBLE_CONVERSION_STRING_TO_DOUBLE_H_
+ #define DOUBLE_CONVERSION_STRING_TO_DOUBLE_H_
+ 
++#include "mozilla/Types.h"
+ #include "utils.h"
+ 
+ namespace double_conversion {
+ 
+ class StringToDoubleConverter {
+  public:
+   // Enumeration for allowing octals and ignoring junk when converting
+   // strings to numbers.
+@@ -178,22 +179,22 @@ class StringToDoubleConverter {
+         separator_(separator) {
+   }
+ 
+   // Performs the conversion.
+   // The output parameter 'processed_characters_count' is set to the number
+   // of characters that have been processed to read the number.
+   // Spaces than are processed with ALLOW_{LEADING|TRAILING}_SPACES are included
+   // in the 'processed_characters_count'. Trailing junk is never included.
+-  double StringToDouble(const char* buffer,
++  MFBT_API double StringToDouble(const char* buffer,
+                         int length,
+                         int* processed_characters_count) const;
+ 
+   // Same as StringToDouble above but for 16 bit characters.
+-  double StringToDouble(const uc16* buffer,
++  MFBT_API double StringToDouble(const uc16* buffer,
+                         int length,
+                         int* processed_characters_count) const;
+ 
+   // Same as StringToDouble but reads a float.
+   // Note that this is not equivalent to static_cast<float>(StringToDouble(...))
+   // due to potential double-rounding.
+   float StringToFloat(const char* buffer,
+                       int length,
