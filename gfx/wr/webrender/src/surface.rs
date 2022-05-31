@@ -398,162 +398,190 @@ impl SurfaceBuilder {
                 }
                 CommandBufferBuilderKind::Simple { render_task_id: child_render_task_id, root_task_id: child_root_task_id } => {
                     // Get info about the resolve operation to copy from parent surface or tiles to the picture cache task
-                    let resolve_task_id = builder.resolve_source.expect("bug: no resolve set");
-                    let mut src_task_ids = Vec::new();
+                    if let Some(resolve_task_id) = builder.resolve_source {
+                        let mut src_task_ids = Vec::new();
 
-                    // Make the output of the sub-graph a dependency of the new replacement tile task
-                    let _old = self.sub_graph_output_map.insert(
-                        pic_index,
-                        child_root_task_id.unwrap_or(child_render_task_id),
-                    );
-                    debug_assert!(_old.is_none());
+                        // Make the output of the sub-graph a dependency of the new replacement tile task
+                        let _old = self.sub_graph_output_map.insert(
+                            pic_index,
+                            child_root_task_id.unwrap_or(child_render_task_id),
+                        );
+                        debug_assert!(_old.is_none());
 
-                    // Set up dependencies for the sub-graph. The basic concepts below are the same, but for
-                    // tiled surfaces are a little more complex as there are multiple tasks to set up.
-                    //  (a) Set up new task(s) on parent surface that write to the same location
-                    //  (b) Set up a resolve target to copy from parent surface tasks(s) to the resolve target
-                    //  (c) Make the old parent surface tasks input dependencies of the resolve target
-                    //  (d) Make the sub-graph output an input dependency of the new task(s).
+                        // Set up dependencies for the sub-graph. The basic concepts below are the same, but for
+                        // tiled surfaces are a little more complex as there are multiple tasks to set up.
+                        //  (a) Set up new task(s) on parent surface that write to the same location
+                        //  (b) Set up a resolve target to copy from parent surface tasks(s) to the resolve target
+                        //  (c) Make the old parent surface tasks input dependencies of the resolve target
+                        //  (d) Make the sub-graph output an input dependency of the new task(s).
 
-                    match self.builder_stack.last_mut().unwrap().kind {
-                        CommandBufferBuilderKind::Tiled { ref mut tiles } => {
-                            let keys: Vec<TileKey> = tiles.keys().cloned().collect();
+                        match self.builder_stack.last_mut().unwrap().kind {
+                            CommandBufferBuilderKind::Tiled { ref mut tiles } => {
+                                let keys: Vec<TileKey> = tiles.keys().cloned().collect();
 
-                            // For each tile in parent surface
-                            for key in keys {
-                                let descriptor = tiles.remove(&key).unwrap();
-                                let parent_task_id = descriptor.current_task_id;
-                                let parent_task = rg_builder.get_task_mut(parent_task_id);
+                                // For each tile in parent surface
+                                for key in keys {
+                                    let descriptor = tiles.remove(&key).unwrap();
+                                    let parent_task_id = descriptor.current_task_id;
+                                    let parent_task = rg_builder.get_task_mut(parent_task_id);
 
-                                match parent_task.location {
-                                    RenderTaskLocation::Unallocated { .. } | RenderTaskLocation::Existing { .. } => {
-                                        // Get info about the parent tile task location and params
-                                        let location = RenderTaskLocation::Existing {
-                                            parent_task_id,
-                                            size: parent_task.location.size(),
-                                        };
+                                    match parent_task.location {
+                                        RenderTaskLocation::Unallocated { .. } | RenderTaskLocation::Existing { .. } => {
+                                            // Get info about the parent tile task location and params
+                                            let location = RenderTaskLocation::Existing {
+                                                parent_task_id,
+                                                size: parent_task.location.size(),
+                                            };
 
-                                        let pic_task = match parent_task.kind {
-                                            RenderTaskKind::Picture(ref mut pic_task) => {
-                                                let cmd_buffer_index = cmd_buffers.create_cmd_buffer();
-                                                let new_pic_task = pic_task.duplicate(cmd_buffer_index);
+                                            let pic_task = match parent_task.kind {
+                                                RenderTaskKind::Picture(ref mut pic_task) => {
+                                                    let cmd_buffer_index = cmd_buffers.create_cmd_buffer();
+                                                    let new_pic_task = pic_task.duplicate(cmd_buffer_index);
 
-                                                // Add the resolve src to copy from tile -> picture input task
-                                                src_task_ids.push(parent_task_id);
+                                                    // Add the resolve src to copy from tile -> picture input task
+                                                    src_task_ids.push(parent_task_id);
 
-                                                new_pic_task
-                                            }
-                                            _ => panic!("bug: not a picture"),
-                                        };
+                                                    new_pic_task
+                                                }
+                                                _ => panic!("bug: not a picture"),
+                                            };
 
-                                        // Make the existing tile an input dependency of the resolve target
-                                        rg_builder.add_dependency(
-                                            resolve_task_id,
-                                            parent_task_id,
-                                        );
+                                            // Make the existing tile an input dependency of the resolve target
+                                            rg_builder.add_dependency(
+                                                resolve_task_id,
+                                                parent_task_id,
+                                            );
 
-                                        // Create the new task to replace the tile task
-                                        let new_task_id = rg_builder.add().init(
-                                            RenderTask::new(
-                                                location,          // draw to same place
-                                                RenderTaskKind::Picture(pic_task),
-                                            ),
-                                        );
+                                            // Create the new task to replace the tile task
+                                            let new_task_id = rg_builder.add().init(
+                                                RenderTask::new(
+                                                    location,          // draw to same place
+                                                    RenderTaskKind::Picture(pic_task),
+                                                ),
+                                            );
 
-                                        // Ensure that the parent task will get scheduled earlier during
-                                        // pass assignment since we are reusing the existing surface,
-                                        // even though it's not technically needed for rendering order.
-                                        rg_builder.add_dependency(
-                                            new_task_id,
-                                            parent_task_id,
-                                        );
+                                            // Ensure that the parent task will get scheduled earlier during
+                                            // pass assignment since we are reusing the existing surface,
+                                            // even though it's not technically needed for rendering order.
+                                            rg_builder.add_dependency(
+                                                new_task_id,
+                                                parent_task_id,
+                                            );
 
-                                        // Update the surface builder with the now current target for future primitives
-                                        tiles.insert(
-                                            key,
-                                            SurfaceTileDescriptor {
-                                                current_task_id: new_task_id,
-                                                ..descriptor
-                                            },
-                                        );
-                                    }
-                                    RenderTaskLocation::Static { .. } => {
-                                        // Update the surface builder with the now current target for future primitives
-                                        tiles.insert(
-                                            key,
-                                            descriptor,
-                                        );
-                                    }
-                                    _ => {
-                                        panic!("bug: unexpected task location");
+                                            // Update the surface builder with the now current target for future primitives
+                                            tiles.insert(
+                                                key,
+                                                SurfaceTileDescriptor {
+                                                    current_task_id: new_task_id,
+                                                    ..descriptor
+                                                },
+                                            );
+                                        }
+                                        RenderTaskLocation::Static { .. } => {
+                                            // Update the surface builder with the now current target for future primitives
+                                            tiles.insert(
+                                                key,
+                                                descriptor,
+                                            );
+                                        }
+                                        _ => {
+                                            panic!("bug: unexpected task location");
+                                        }
                                     }
                                 }
                             }
+                            CommandBufferBuilderKind::Simple { render_task_id: ref mut parent_task_id, .. } => {
+                                let parent_task = rg_builder.get_task_mut(*parent_task_id);
+
+                                // Get info about the parent tile task location and params
+                                let location = RenderTaskLocation::Existing {
+                                    parent_task_id: *parent_task_id,
+                                    size: parent_task.location.size(),
+                                };
+                                let pic_task = match parent_task.kind {
+                                    RenderTaskKind::Picture(ref mut pic_task) => {
+                                        let cmd_buffer_index = cmd_buffers.create_cmd_buffer();
+
+                                        let new_pic_task = pic_task.duplicate(cmd_buffer_index);
+
+                                        // Add the resolve src to copy from tile -> picture input task
+                                        src_task_ids.push(*parent_task_id);
+
+                                        new_pic_task
+                                    }
+                                    _ => panic!("bug: not a picture"),
+                                };
+
+                                // Make the existing surface an input dependency of the resolve target
+                                rg_builder.add_dependency(
+                                    resolve_task_id,
+                                    *parent_task_id,
+                                );
+
+                                // Create the new task to replace the parent surface task
+                                let new_task_id = rg_builder.add().init(
+                                    RenderTask::new(
+                                        location,          // draw to same place
+                                        RenderTaskKind::Picture(pic_task),
+                                    ),
+                                );
+
+                                // Ensure that the parent task will get scheduled earlier during
+                                // pass assignment since we are reusing the existing surface,
+                                // even though it's not technically needed for rendering order.
+                                rg_builder.add_dependency(
+                                    new_task_id,
+                                    *parent_task_id,
+                                );
+
+                                // Update the surface builder with the now current target for future primitives
+                                *parent_task_id = new_task_id;
+                            }
+                            CommandBufferBuilderKind::Invalid => {
+                                unreachable!();
+                            }
                         }
-                        CommandBufferBuilderKind::Simple { render_task_id: ref mut parent_task_id, .. } => {
-                            let parent_task = rg_builder.get_task_mut(*parent_task_id);
 
-                            // Get info about the parent tile task location and params
-                            let location = RenderTaskLocation::Existing {
-                                parent_task_id: *parent_task_id,
-                                size: parent_task.location.size(),
-                            };
-                            let pic_task = match parent_task.kind {
-                                RenderTaskKind::Picture(ref mut pic_task) => {
-                                    let cmd_buffer_index = cmd_buffers.create_cmd_buffer();
+                        let dest_task = rg_builder.get_task_mut(resolve_task_id);
 
-                                    let new_pic_task = pic_task.duplicate(cmd_buffer_index);
-
-                                    // Add the resolve src to copy from tile -> picture input task
-                                    src_task_ids.push(*parent_task_id);
-
-                                    new_pic_task
-                                }
-                                _ => panic!("bug: not a picture"),
-                            };
-
-                            // Make the existing surface an input dependency of the resolve target
-                            rg_builder.add_dependency(
-                                resolve_task_id,
-                                *parent_task_id,
-                            );
-
-                            // Create the new task to replace the parent surface task
-                            let new_task_id = rg_builder.add().init(
-                                RenderTask::new(
-                                    location,          // draw to same place
-                                    RenderTaskKind::Picture(pic_task),
-                                ),
-                            );
-
-                            // Ensure that the parent task will get scheduled earlier during
-                            // pass assignment since we are reusing the existing surface,
-                            // even though it's not technically needed for rendering order.
-                            rg_builder.add_dependency(
-                                new_task_id,
-                                *parent_task_id,
-                            );
-
-                            // Update the surface builder with the now current target for future primitives
-                            *parent_task_id = new_task_id;
-                        }
-                        CommandBufferBuilderKind::Invalid => {
-                            unreachable!();
+                        match dest_task.kind {
+                            RenderTaskKind::Picture(ref mut dest_task_info) => {
+                                assert!(dest_task_info.resolve_op.is_none());
+                                dest_task_info.resolve_op = Some(ResolveOp {
+                                    src_task_ids,
+                                    dest_task_id: resolve_task_id,
+                                })
+                            }
+                            _ => {
+                                unreachable!("bug: not a picture");
+                            }
                         }
                     }
 
-                    let dest_task = rg_builder.get_task_mut(resolve_task_id);
-
-                    match dest_task.kind {
-                        RenderTaskKind::Picture(ref mut dest_task_info) => {
-                            assert!(dest_task_info.resolve_op.is_none());
-                            dest_task_info.resolve_op = Some(ResolveOp {
-                                src_task_ids,
-                                dest_task_id: resolve_task_id,
-                            })
+                    // This can occur if there is an edge case where the resolve target is found
+                    // not visible even though the filter chain was (for example, in the case of
+                    // an extreme scale causing floating point inaccuracies). Adding a dependency
+                    // here is also a safety in case for some reason the backdrop render primitive
+                    // doesn't pick up the dependency, ensuring that it gets scheduled and freed
+                    // as early as possible.
+                    match self.builder_stack.last().unwrap().kind {
+                        CommandBufferBuilderKind::Tiled { ref tiles } => {
+                            // For a tiled render task, add as a dependency to every tile.
+                            for (_, descriptor) in tiles {
+                                rg_builder.add_dependency(
+                                    descriptor.current_task_id,
+                                    child_root_task_id.unwrap_or(child_render_task_id),
+                                );
+                            }
                         }
-                        _ => {
-                            unreachable!("bug: not a picture");
+                        CommandBufferBuilderKind::Simple { render_task_id: parent_task_id, .. } => {
+                            rg_builder.add_dependency(
+                                parent_task_id,
+                                child_root_task_id.unwrap_or(child_render_task_id),
+                            );
+                        }
+                        CommandBufferBuilderKind::Invalid => {
+                            unreachable!();
                         }
                     }
                 }
