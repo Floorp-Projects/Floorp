@@ -1285,13 +1285,15 @@ TEST_F(AcmSenderBitExactnessOldApi, IsacWb30ms) {
           "9336a9b993cbd8a751f0e8958e66c89c",
           "5c2eb46199994506236f68b2c8e51b0d",
           "343f1f42be0607c61e6516aece424609",
-          "2c9cb15d4ed55b5a0cadd04883bc73b0", "Mac_arm64_checksum_placeholder"),
+          "2c9cb15d4ed55b5a0cadd04883bc73b0",
+          "2c9cb15d4ed55b5a0cadd04883bc73b0"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "3c79f16f34218271f3dca4e2b1dfe1bb",
           "d42cb5195463da26c8129bbfe73a22e6",
           "83de248aea9c3c2bd680b6952401b4ca",
           "3c79f16f34218271f3dca4e2b1dfe1bb",
-          "3c79f16f34218271f3dca4e2b1dfe1bb", "Mac_arm64_checksum_placeholder"),
+          "3c79f16f34218271f3dca4e2b1dfe1bb",
+          "3c79f16f34218271f3dca4e2b1dfe1bb"),
       33, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 
@@ -1302,13 +1304,15 @@ TEST_F(AcmSenderBitExactnessOldApi, IsacWb60ms) {
           "14d63c5f08127d280e722e3191b73bdd",
           "9a81e467eb1485f84aca796f8ea65011",
           "ef75e900e6f375e3061163c53fd09a63",
-          "1ad29139a04782a33daad8c2b9b35875", "Mac_arm64_checksum_placeholder"),
+          "1ad29139a04782a33daad8c2b9b35875",
+          "1ad29139a04782a33daad8c2b9b35875"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "9e0a0ab743ad987b55b8e14802769c56",
           "ebe04a819d3a9d83a83a17f271e1139a",
           "97aeef98553b5a4b5a68f8b716e8eaf0",
           "9e0a0ab743ad987b55b8e14802769c56",
-          "9e0a0ab743ad987b55b8e14802769c56", "Mac_arm64_checksum_placeholder"),
+          "9e0a0ab743ad987b55b8e14802769c56",
+          "9e0a0ab743ad987b55b8e14802769c56"),
       16, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 #endif
@@ -1325,12 +1329,12 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_IsacSwb30ms) {
           "5683b58da0fbf2063c7adc2e6bfb3fb8",
           "2b3c387d06f00b7b7aad4c9be56fb83d", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
-          "Mac_arm64_checksum_placeholder"),
+          "5683b58da0fbf2063c7adc2e6bfb3fb8"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "ce86106a93419aefb063097108ec94ab",
           "bcc2041e7744c7ebd9f701866856849c", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
-          "Mac_arm64_checksum_placeholder"),
+          "ce86106a93419aefb063097108ec94ab"),
       33, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 #endif
@@ -1428,12 +1432,12 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_G722_20ms) {
           "e99c89be49a46325d03c0d990c292d68",
           "e99c89be49a46325d03c0d990c292d68", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
-          "Mac_arm64_checksum_placeholder"),
+          "e99c89be49a46325d03c0d990c292d68"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "fc68a87e1380614e658087cb35d5ca10",
           "fc68a87e1380614e658087cb35d5ca10", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
-          "Mac_arm64_checksum_placeholder"),
+          "fc68a87e1380614e658087cb35d5ca10"),
       50, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 
@@ -1448,12 +1452,12 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_G722_stereo_20ms) {
           "e280aed283e499d37091b481ca094807",
           "e280aed283e499d37091b481ca094807", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
-          "Mac_arm64_checksum_placeholder"),
+          "e280aed283e499d37091b481ca094807"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "66516152eeaa1e650ad94ff85f668dac",
           "66516152eeaa1e650ad94ff85f668dac", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
-          "Mac_arm64_checksum_placeholder"),
+          "66516152eeaa1e650ad94ff85f668dac"),
       50, test::AcmReceiveTestOldApi::kStereoOutput);
 }
 
