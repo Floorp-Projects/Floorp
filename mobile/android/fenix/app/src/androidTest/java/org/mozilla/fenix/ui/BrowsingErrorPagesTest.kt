@@ -69,6 +69,7 @@ class BrowsingErrorPagesTest {
         }
     }
 
+    @Ignore("Failing, see https://github.com/mozilla-mobile/fenix/issues/25394")
     @SmokeTest
     @Test
     fun blockUnwantedSoftwarePageTest() {
