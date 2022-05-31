@@ -640,7 +640,7 @@ class HTMLEditor final : public EditorBase,
    * active in the DOM window, this returns NULL.
    */
   enum class LimitInBodyElement { No, Yes };
-  Element* GetActiveEditingHost(
+  Element* ComputeEditingHost(
       LimitInBodyElement aLimitInBodyElement = LimitInBodyElement::Yes) const;
 
   /**

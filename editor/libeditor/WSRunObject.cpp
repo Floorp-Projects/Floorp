@@ -250,7 +250,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   // Do br adjustment.
   RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
-          aHTMLEditor.GetActiveEditingHost(),
+          aHTMLEditor.ComputeEditingHost(),
           EditorDOMPoint::AtEndOf(aLeftBlockElement));
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
@@ -439,7 +439,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   // Do br adjustment.
   RefPtr<HTMLBRElement> invisibleBRElementBeforeLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
-          aHTMLEditor.GetActiveEditingHost(), atLeftBlockChild);
+          aHTMLEditor.ComputeEditingHost(), atLeftBlockChild);
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementBeforeLeftBlockElement,
       "The preceding invisible BR element computation was different");
@@ -522,7 +522,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 #endif  // #ifdef DEBUG
 
     Element* editingHost =
-        aHTMLEditor.GetActiveEditingHost(HTMLEditor::LimitInBodyElement::No);
+        aHTMLEditor.ComputeEditingHost(HTMLEditor::LimitInBodyElement::No);
     if (MOZ_UNLIKELY(NS_WARN_IF(!editingHost))) {
       return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
@@ -630,7 +630,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   // Do br adjustment.
   RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
-          aHTMLEditor.GetActiveEditingHost(),
+          aHTMLEditor.ComputeEditingHost(),
           EditorDOMPoint::AtEndOf(aLeftBlockElement));
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
@@ -916,7 +916,7 @@ Result<EditorDOMPoint, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
     return EditorDOMPoint(aRangeToBeReplaced.StartRef());
   }
 
-  RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
+  RefPtr<Element> editingHost = aHTMLEditor.ComputeEditingHost();
   TextFragmentData textFragmentDataAtStart(aRangeToBeReplaced.StartRef(),
                                            editingHost);
   if (MOZ_UNLIKELY(NS_WARN_IF(!textFragmentDataAtStart.IsInitialized()))) {
@@ -1268,7 +1268,7 @@ Result<EditorDOMPoint, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
 // static
 nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
-  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+  Element* editingHost = aHTMLEditor.ComputeEditingHost();
   TextFragmentData textFragmentDataAtDeletion(aPoint, editingHost);
   if (NS_WARN_IF(!textFragmentDataAtDeletion.IsInitialized())) {
     return NS_ERROR_FAILURE;
@@ -1346,7 +1346,7 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
 // static
 nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
-  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+  Element* editingHost = aHTMLEditor.ComputeEditingHost();
   TextFragmentData textFragmentDataAtDeletion(aPoint, editingHost);
   if (NS_WARN_IF(!textFragmentDataAtDeletion.IsInitialized())) {
     return NS_ERROR_FAILURE;
@@ -2153,7 +2153,7 @@ nsresult WhiteSpaceVisibilityKeeper::
       NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
       NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
 
-  RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
+  RefPtr<Element> editingHost = aHTMLEditor.ComputeEditingHost();
   TextFragmentData textFragmentDataAtStart(rangeToDelete.StartRef(),
                                            editingHost);
   if (NS_WARN_IF(!textFragmentDataAtStart.IsInitialized())) {
@@ -2245,7 +2245,7 @@ nsresult WhiteSpaceVisibilityKeeper::
     if (mayBecomeUnexpectedDOMTree) {
       // If focus is changed by mutation event listeners, we should stop
       // handling this edit action.
-      if (editingHost != aHTMLEditor.GetActiveEditingHost()) {
+      if (editingHost != aHTMLEditor.ComputeEditingHost()) {
         NS_WARNING("Active editing host was changed");
         return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
       }
@@ -2443,7 +2443,7 @@ nsresult
 WhiteSpaceVisibilityKeeper::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToSplit) {
   TextFragmentData textFragmentDataAtSplitPoint(
-      aPointToSplit, aHTMLEditor.GetActiveEditingHost());
+      aPointToSplit, aHTMLEditor.ComputeEditingHost());
   if (NS_WARN_IF(!textFragmentDataAtSplitPoint.IsInitialized())) {
     return NS_ERROR_FAILURE;
   }
@@ -3021,7 +3021,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
   MOZ_ASSERT(aPoint.IsInContentNode());
   MOZ_ASSERT(EditorUtils::IsEditableContent(*aPoint.ContainerAsContent(),
                                             EditorType::HTML));
-  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+  Element* editingHost = aHTMLEditor.ComputeEditingHost();
   TextFragmentData textFragmentData(aPoint, editingHost);
   if (NS_WARN_IF(!textFragmentData.IsInitialized())) {
     return NS_ERROR_FAILURE;
@@ -3453,7 +3453,7 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
 nsresult WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
   MOZ_ASSERT(aPoint.IsSet());
-  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+  Element* editingHost = aHTMLEditor.ComputeEditingHost();
   TextFragmentData textFragmentData(aPoint, editingHost);
   if (NS_WARN_IF(!textFragmentData.IsInitialized())) {
     return NS_ERROR_FAILURE;
@@ -3892,7 +3892,7 @@ EditorDOMRange WSRunScanner::GetRangeForDeletingBlockElementBoundaries(
                     .IsBefore(EditorRawDOMPoint(
                         const_cast<Element*>(&aRightBlockElement))));
 
-  const Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+  const Element* editingHost = aHTMLEditor.ComputeEditingHost();
 
   EditorDOMRange range;
   // Include trailing invisible white-spaces in aLeftBlockElement.

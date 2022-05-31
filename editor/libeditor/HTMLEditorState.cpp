@@ -250,7 +250,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
            atStartOfSelection.Offset() == atBodyOrDocumentElement.Offset()) {
     editTargetContent = HTMLEditUtils::GetNextContent(
         atStartOfSelection, {WalkTreeOption::IgnoreNonEditableNode},
-        aHTMLEditor.GetActiveEditingHost());
+        aHTMLEditor.ComputeEditingHost());
     if (NS_WARN_IF(!editTargetContent)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
