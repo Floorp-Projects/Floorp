@@ -20,7 +20,6 @@
 #include "nsTHashSet.h"
 
 class nsAttrValue;
-class nsCSSFrameConstructor;
 class nsAtom;
 class nsIContent;
 class nsIFrame;
@@ -502,10 +501,6 @@ class RestyleManager {
   nsPresContext* PresContext() const {
     MOZ_ASSERT(mPresContext);
     return mPresContext;
-  }
-
-  nsCSSFrameConstructor* FrameConstructor() const {
-    return PresContext()->FrameConstructor();
   }
 
  private:

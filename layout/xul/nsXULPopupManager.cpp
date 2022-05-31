@@ -29,6 +29,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsPIWindowRoot.h"
 #include "nsFrameManager.h"
+#include "nsPresContextInlines.h"
 #include "nsIObserverService.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/dom/DocumentInlines.h"

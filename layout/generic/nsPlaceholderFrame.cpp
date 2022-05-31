@@ -22,6 +22,7 @@
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 #include "nsIFrameInlines.h"
 #include "nsIContentInlines.h"
 
