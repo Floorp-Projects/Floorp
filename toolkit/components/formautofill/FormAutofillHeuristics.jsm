@@ -595,7 +595,7 @@ FormAutofillHeuristics = {
    *          the current element.
    */
   _isExpirationMonthLikely(element) {
-    if (ChromeUtils.getClassName(element) !== "HTMLSelectElement") {
+    if (!HTMLSelectElement.isInstance(element)) {
       return false;
     }
 
@@ -631,7 +631,7 @@ FormAutofillHeuristics = {
    *          the current element.
    */
   _isExpirationYearLikely(element) {
-    if (ChromeUtils.getClassName(element) !== "HTMLSelectElement") {
+    if (!HTMLSelectElement.isInstance(element)) {
       return false;
     }
 
@@ -894,7 +894,7 @@ FormAutofillHeuristics = {
 
     // If we didn't auto-discover type field, check every select for options that
     // match credit card network names in value or label.
-    if (ChromeUtils.getClassName(element) == "HTMLSelectElement") {
+    if (HTMLSelectElement.isInstance(element)) {
       for (let option of element.querySelectorAll("option")) {
         if (
           CreditCard.getNetworkFromName(option.value) ||

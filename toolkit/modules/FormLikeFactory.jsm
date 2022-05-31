@@ -26,7 +26,7 @@ let FormLikeFactory = {
    * @throws Error if aForm isn't an HTMLFormElement
    */
   createFromForm(aForm) {
-    if (ChromeUtils.getClassName(aForm) !== "HTMLFormElement") {
+    if (!HTMLFormElement.isInstance(aForm)) {
       throw new Error("createFromForm: aForm must be a HTMLFormElement");
     }
 
@@ -62,15 +62,15 @@ let FormLikeFactory = {
    */
   createFromField(aField) {
     if (
-      (ChromeUtils.getClassName(aField) !== "HTMLInputElement" &&
-        ChromeUtils.getClassName(aField) !== "HTMLSelectElement") ||
+      (!HTMLInputElement.isInstance(aField) &&
+        !HTMLSelectElement.isInstance(aField)) ||
       !aField.ownerDocument
     ) {
       throw new Error("createFromField requires a field in a document");
     }
 
     let rootElement = this.findRootForField(aField);
-    if (ChromeUtils.getClassName(rootElement) === "HTMLFormElement") {
+    if (HTMLFormElement.isInstance(rootElement)) {
       return this.createFromForm(rootElement);
     }
 
@@ -116,7 +116,7 @@ let FormLikeFactory = {
     let current = aField;
     while (!form) {
       let shadowRoot = current.getRootNode();
-      if (ChromeUtils.getClassName(shadowRoot) !== "ShadowRoot") {
+      if (!ShadowRoot.isInstance(shadowRoot)) {
         break;
       }
       let host = shadowRoot.host;
