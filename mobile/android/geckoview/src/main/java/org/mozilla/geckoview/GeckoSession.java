@@ -1359,7 +1359,7 @@ public class GeckoSession {
     mAutofillSupport = new Autofill.Support(this);
     mAutofillSupport.registerListeners();
 
-    if (BuildConfig.DEBUG && handlersCount != mSessionHandlers.length) {
+    if (BuildConfig.DEBUG_BUILD && handlersCount != mSessionHandlers.length) {
       throw new AssertionError("Add new handler to handlers list");
     }
   }

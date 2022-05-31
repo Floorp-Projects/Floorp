@@ -55,13 +55,13 @@ public final class XPCOMEventTarget extends JNIObject implements IXPCOMEventTarg
   }
 
   public static void assertOnLauncherThread() {
-    if (BuildConfig.DEBUG && !launcherThread().isOnCurrentThread()) {
+    if (BuildConfig.DEBUG_BUILD && !launcherThread().isOnCurrentThread()) {
       throw new AssertionError("Expected to be running on XPCOM launcher thread");
     }
   }
 
   public static void assertNotOnLauncherThread() {
-    if (BuildConfig.DEBUG && launcherThread().isOnCurrentThread()) {
+    if (BuildConfig.DEBUG_BUILD && launcherThread().isOnCurrentThread()) {
       throw new AssertionError("Expected to not be running on XPCOM launcher thread");
     }
   }
