@@ -134,6 +134,7 @@ static bool ComputeAccurateDecimalInteger(JSContext* cx, const CharT* start,
 
   char* estr;
   *dp = js_strtod_harder(cx->dtoaState, cstr.get(), &estr);
+  MOZ_ASSERT(estr == cstr.get() + j);
 
   return true;
 }
