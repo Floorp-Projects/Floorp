@@ -8,12 +8,10 @@
 
 //! Math helper functions
 
-#[cfg(feature = "std")] use crate::distributions::ziggurat_tables;
-#[cfg(feature = "std")] use crate::Rng;
 #[cfg(feature = "simd_support")] use packed_simd::*;
 
 
-pub trait WideningMultiply<RHS = Self> {
+pub(crate) trait WideningMultiply<RHS = Self> {
     type Output;
 
     fn wmul(self, x: RHS) -> Self::Output;
@@ -58,7 +56,6 @@ macro_rules! wmul_impl {
 wmul_impl! { u8, u16, 8 }
 wmul_impl! { u16, u32, 16 }
 wmul_impl! { u32, u64, 32 }
-#[cfg(not(target_os = "emscripten"))]
 wmul_impl! { u64, u128, 64 }
 
 // This code is a translation of the __mulddi3 function in LLVM's
@@ -122,9 +119,6 @@ macro_rules! wmul_impl_large {
         )+
     };
 }
-#[cfg(target_os = "emscripten")]
-wmul_impl_large! { u64, 32 }
-#[cfg(not(target_os = "emscripten"))]
 wmul_impl_large! { u128, 64 }
 
 macro_rules! wmul_impl_usize {
@@ -140,12 +134,14 @@ macro_rules! wmul_impl_usize {
         }
     };
 }
+#[cfg(target_pointer_width = "16")]
+wmul_impl_usize! { u16 }
 #[cfg(target_pointer_width = "32")]
 wmul_impl_usize! { u32 }
 #[cfg(target_pointer_width = "64")]
 wmul_impl_usize! { u64 }
 
-#[cfg(all(feature = "simd_support", feature = "nightly"))]
+#[cfg(feature = "simd_support")]
 mod simd_wmul {
     use super::*;
     #[cfg(target_arch = "x86")] use core::arch::x86::*;
@@ -161,9 +157,8 @@ mod simd_wmul {
     }
 
     wmul_impl! { (u16x2, u32x2),, 16 }
-    #[cfg(not(target_feature = "sse2"))]
     wmul_impl! { (u16x4, u32x4),, 16 }
-    #[cfg(not(target_feature = "sse4.2"))]
+    #[cfg(not(target_feature = "sse2"))]
     wmul_impl! { (u16x8, u32x8),, 16 }
     #[cfg(not(target_feature = "avx2"))]
     wmul_impl! { (u16x16, u32x16),, 16 }
@@ -189,8 +184,6 @@ mod simd_wmul {
     }
 
     #[cfg(target_feature = "sse2")]
-    wmul_impl_16! { u16x4, __m64, _mm_mulhi_pu16, _mm_mullo_pi16 }
-    #[cfg(target_feature = "sse4.2")]
     wmul_impl_16! { u16x8, __m128i, _mm_mulhi_epu16, _mm_mullo_epi16 }
     #[cfg(target_feature = "avx2")]
     wmul_impl_16! { u16x16, __m256i, _mm256_mulhi_epu16, _mm256_mullo_epi16 }
@@ -210,9 +203,6 @@ mod simd_wmul {
     wmul_impl_large! { (u32x16,) u32, 16 }
     wmul_impl_large! { (u64x2, u64x4, u64x8,) u64, 32 }
 }
-#[cfg(all(feature = "simd_support", feature = "nightly"))]
-pub use self::simd_wmul::*;
-
 
 /// Helper trait when dealing with scalar and SIMD floating point types.
 pub(crate) trait FloatSIMDUtils {
@@ -243,6 +233,8 @@ pub(crate) trait FloatSIMDUtils {
 
 /// Implement functions available in std builds but missing from core primitives
 #[cfg(not(std))]
+// False positive: We are following `std` here.
+#[allow(clippy::wrong_self_convention)]
 pub(crate) trait Float: Sized {
     fn is_nan(self) -> bool;
     fn is_infinite(self) -> bool;
@@ -435,113 +427,3 @@ macro_rules! simd_impl {
 #[cfg(feature="simd_support")] simd_impl! { f64x2, f64, m64x2, u64x2 }
 #[cfg(feature="simd_support")] simd_impl! { f64x4, f64, m64x4, u64x4 }
 #[cfg(feature="simd_support")] simd_impl! { f64x8, f64, m64x8, u64x8 }
-
-/// Calculates ln(gamma(x)) (natural logarithm of the gamma
-/// function) using the Lanczos approximation.
-///
-/// The approximation expresses the gamma function as:
-/// `gamma(z+1) = sqrt(2*pi)*(z+g+0.5)^(z+0.5)*exp(-z-g-0.5)*Ag(z)`
-/// `g` is an arbitrary constant; we use the approximation with `g=5`.
-///
-/// Noting that `gamma(z+1) = z*gamma(z)` and applying `ln` to both sides:
-/// `ln(gamma(z)) = (z+0.5)*ln(z+g+0.5)-(z+g+0.5) + ln(sqrt(2*pi)*Ag(z)/z)`
-///
-/// `Ag(z)` is an infinite series with coefficients that can be calculated
-/// ahead of time - we use just the first 6 terms, which is good enough
-/// for most purposes.
-#[cfg(feature = "std")]
-pub fn log_gamma(x: f64) -> f64 {
-    // precalculated 6 coefficients for the first 6 terms of the series
-    let coefficients: [f64; 6] = [
-        76.18009172947146,
-        -86.50532032941677,
-        24.01409824083091,
-        -1.231739572450155,
-        0.1208650973866179e-2,
-        -0.5395239384953e-5,
-    ];
-
-    // (x+0.5)*ln(x+g+0.5)-(x+g+0.5)
-    let tmp = x + 5.5;
-    let log = (x + 0.5) * tmp.ln() - tmp;
-
-    // the first few terms of the series for Ag(x)
-    let mut a = 1.000000000190015;
-    let mut denom = x;
-    for coeff in &coefficients {
-        denom += 1.0;
-        a += coeff / denom;
-    }
-
-    // get everything together
-    // a is Ag(x)
-    // 2.5066... is sqrt(2pi)
-    log + (2.5066282746310005 * a / x).ln()
-}
-
-/// Sample a random number using the Ziggurat method (specifically the
-/// ZIGNOR variant from Doornik 2005). Most of the arguments are
-/// directly from the paper:
-///
-/// * `rng`: source of randomness
-/// * `symmetric`: whether this is a symmetric distribution, or one-sided with P(x < 0) = 0.
-/// * `X`: the $x_i$ abscissae.
-/// * `F`: precomputed values of the PDF at the $x_i$, (i.e. $f(x_i)$)
-/// * `F_DIFF`: precomputed values of $f(x_i) - f(x_{i+1})$
-/// * `pdf`: the probability density function
-/// * `zero_case`: manual sampling from the tail when we chose the
-///    bottom box (i.e. i == 0)
-
-// the perf improvement (25-50%) is definitely worth the extra code
-// size from force-inlining.
-#[cfg(feature = "std")]
-#[inline(always)]
-pub fn ziggurat<R: Rng + ?Sized, P, Z>(
-    rng: &mut R,
-    symmetric: bool,
-    x_tab: ziggurat_tables::ZigTable,
-    f_tab: ziggurat_tables::ZigTable,
-    mut pdf: P,
-    mut zero_case: Z
-) -> f64
-where
-    P: FnMut(f64) -> f64,
-    Z: FnMut(&mut R, f64) -> f64,
-{
-    use crate::distributions::float::IntoFloat;
-    loop {
-        // As an optimisation we re-implement the conversion to a f64.
-        // From the remaining 12 most significant bits we use 8 to construct `i`.
-        // This saves us generating a whole extra random number, while the added
-        // precision of using 64 bits for f64 does not buy us much.
-        let bits = rng.next_u64();
-        let i = bits as usize & 0xff;
-
-        let u = if symmetric {
-            // Convert to a value in the range [2,4) and substract to get [-1,1)
-            // We can't convert to an open range directly, that would require
-            // substracting `3.0 - EPSILON`, which is not representable.
-            // It is possible with an extra step, but an open range does not
-            // seem neccesary for the ziggurat algorithm anyway.
-            (bits >> 12).into_float_with_exponent(1) - 3.0
-        } else {
-            // Convert to a value in the range [1,2) and substract to get (0,1)
-            (bits >> 12).into_float_with_exponent(0) - (1.0 - ::core::f64::EPSILON / 2.0)
-        };
-        let x = u * x_tab[i];
-
-        let test_x = if symmetric { x.abs() } else { x };
-
-        // algebraically equivalent to |u| < x_tab[i+1]/x_tab[i] (or u < x_tab[i+1]/x_tab[i])
-        if test_x < x_tab[i + 1] {
-            return x;
-        }
-        if i == 0 {
-            return zero_case(rng, u);
-        }
-        // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
-        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * rng.gen::<f64>() < pdf(x) {
-            return x;
-        }
-    }
-}

@@ -1,0 +1,21 @@
+[package]
+name = "rand"
+version = "0.7.999"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+rand = "0.8"
+
+[features]
+alloc = ["rand/alloc"]
+default = ["rand/default"]
+getrandom = ["rand/getrandom"]
+nightly = ["rand/nightly"]
+serde1 = ["rand/serde1"]
+simd_support = ["rand/simd_support"]
+small_rng = ["rand/small_rng"]
+std = ["rand/std"]

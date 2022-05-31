@@ -111,6 +111,9 @@ redox_users = { path = "build/rust/redox_users" }
 # Patch memmap2 0.2 to 0.3
 memmap2 = { path = "build/rust/memmap2" }
 
+# Patch getrandom 0.7 to 0.8
+rand = { path = "build/rust/rand" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 

@@ -7,8 +7,11 @@
 // except according to those terms.
 
 //! Implementation for macOS
-use crate::util_libc::{last_os_error, Weak};
-use crate::{use_file, Error};
+use crate::{
+    use_file,
+    util_libc::{last_os_error, Weak},
+    Error,
+};
 use core::mem;
 
 type GetEntropyFn = unsafe extern "C" fn(*mut u8, libc::size_t) -> libc::c_int;
@@ -20,9 +23,7 @@ pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
         for chunk in dest.chunks_mut(256) {
             let ret = unsafe { func(chunk.as_mut_ptr(), chunk.len()) };
             if ret != 0 {
-                let err = last_os_error();
-                error!("getentropy syscall failed");
-                return Err(err);
+                return Err(last_os_error());
             }
         }
         Ok(())

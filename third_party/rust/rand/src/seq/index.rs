@@ -10,22 +10,26 @@
 
 #[cfg(feature = "alloc")] use core::slice;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-use crate::alloc::vec::{self, Vec};
-#[cfg(feature = "std")] use std::vec;
+#[cfg(feature = "alloc")] use alloc::vec::{self, Vec};
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(all(feature = "alloc", not(feature = "std")))]
-use crate::alloc::collections::BTreeSet;
+use alloc::collections::BTreeSet;
 #[cfg(feature = "std")] use std::collections::HashSet;
 
+#[cfg(feature = "std")]
+use crate::distributions::WeightedError;
+
 #[cfg(feature = "alloc")]
-use crate::distributions::{uniform::SampleUniform, Distribution, Uniform};
-use crate::Rng;
+use crate::{Rng, distributions::{uniform::SampleUniform, Distribution, Uniform}};
+
+#[cfg(feature = "serde1")]
+use serde::{Serialize, Deserialize};
 
 /// A vector of indices.
 ///
 /// Multiple internal representations are possible.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub enum IndexVec {
     #[doc(hidden)]
     U32(Vec<u32>),
@@ -81,10 +85,15 @@ impl IndexVec {
             IndexVec::USize(ref v) => IndexVecIter::USize(v.iter()),
         }
     }
+}
+
+impl IntoIterator for IndexVec {
+    type Item = usize;
+    type IntoIter = IndexVecIntoIter;
 
     /// Convert into an iterator over the indices as a sequence of `usize` values
     #[inline]
-    pub fn into_iter(self) -> IndexVecIntoIter {
+    fn into_iter(self) -> IndexVecIntoIter {
         match self {
             IndexVec::U32(v) => IndexVecIntoIter::U32(v.into_iter()),
             IndexVec::USize(v) => IndexVecIntoIter::USize(v.into_iter()),
@@ -249,6 +258,154 @@ where R: Rng + ?Sized {
     }
 }
 
+/// Randomly sample exactly `amount` distinct indices from `0..length`, and
+/// return them in an arbitrary order (there is no guarantee of shuffling or
+/// ordering). The weights are to be provided by the input function `weights`,
+/// which will be called once for each index.
+///
+/// This method is used internally by the slice sampling methods, but it can
+/// sometimes be useful to have the indices themselves so this is provided as
+/// an alternative.
+///
+/// This implementation uses `O(length + amount)` space and `O(length)` time
+/// if the "nightly" feature is enabled, or `O(length)` space and
+/// `O(length + amount * log length)` time otherwise.
+///
+/// Panics if `amount > length`.
+#[cfg(feature = "std")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
+pub fn sample_weighted<R, F, X>(
+    rng: &mut R, length: usize, weight: F, amount: usize,
+) -> Result<IndexVec, WeightedError>
+where
+    R: Rng + ?Sized,
+    F: Fn(usize) -> X,
+    X: Into<f64>,
+{
+    if length > (core::u32::MAX as usize) {
+        sample_efraimidis_spirakis(rng, length, weight, amount)
+    } else {
+        assert!(amount <= core::u32::MAX as usize);
+        let amount = amount as u32;
+        let length = length as u32;
+        sample_efraimidis_spirakis(rng, length, weight, amount)
+    }
+}
+
+
+/// Randomly sample exactly `amount` distinct indices from `0..length`, and
+/// return them in an arbitrary order (there is no guarantee of shuffling or
+/// ordering). The weights are to be provided by the input function `weights`,
+/// which will be called once for each index.
+///
+/// This implementation uses the algorithm described by Efraimidis and Spirakis
+/// in this paper: https://doi.org/10.1016/j.ipl.2005.11.003
+/// It uses `O(length + amount)` space and `O(length)` time if the
+/// "nightly" feature is enabled, or `O(length)` space and `O(length
+/// + amount * log length)` time otherwise.
+///
+/// Panics if `amount > length`.
+#[cfg(feature = "std")]
+fn sample_efraimidis_spirakis<R, F, X, N>(
+    rng: &mut R, length: N, weight: F, amount: N,
+) -> Result<IndexVec, WeightedError>
+where
+    R: Rng + ?Sized,
+    F: Fn(usize) -> X,
+    X: Into<f64>,
+    N: UInt,
+    IndexVec: From<Vec<N>>,
+{
+    if amount == N::zero() {
+        return Ok(IndexVec::U32(Vec::new()));
+    }
+
+    if amount > length {
+        panic!("`amount` of samples must be less than or equal to `length`");
+    }
+
+    struct Element<N> {
+        index: N,
+        key: f64,
+    }
+    impl<N> PartialOrd for Element<N> {
+        fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+            self.key.partial_cmp(&other.key)
+        }
+    }
+    impl<N> Ord for Element<N> {
+        fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+             // partial_cmp will always produce a value,
+             // because we check that the weights are not nan
+            self.partial_cmp(other).unwrap()
+        }
+    }
+    impl<N> PartialEq for Element<N> {
+        fn eq(&self, other: &Self) -> bool {
+            self.key == other.key
+        }
+    }
+    impl<N> Eq for Element<N> {}
+
+    #[cfg(feature = "nightly")]
+    {
+        let mut candidates = Vec::with_capacity(length.as_usize());
+        let mut index = N::zero();
+        while index < length {
+            let weight = weight(index.as_usize()).into();
+            if !(weight >= 0.) {
+                return Err(WeightedError::InvalidWeight);
+            }
+
+            let key = rng.gen::<f64>().powf(1.0 / weight);
+            candidates.push(Element { index, key });
+
+            index += N::one();
+        }
+
+        // Partially sort the array to find the `amount` elements with the greatest
+        // keys. Do this by using `select_nth_unstable` to put the elements with
+        // the *smallest* keys at the beginning of the list in `O(n)` time, which
+        // provides equivalent information about the elements with the *greatest* keys.
+        let (_, mid, greater)
+            = candidates.select_nth_unstable(length.as_usize() - amount.as_usize());
+
+        let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
+        result.push(mid.index);
+        for element in greater {
+            result.push(element.index);
+        }
+        Ok(IndexVec::from(result))
+    }
+
+    #[cfg(not(feature = "nightly"))]
+    {
+        use alloc::collections::BinaryHeap;
+
+        // Partially sort the array such that the `amount` elements with the largest
+        // keys are first using a binary max heap.
+        let mut candidates = BinaryHeap::with_capacity(length.as_usize());
+        let mut index = N::zero();
+        while index < length {
+            let weight = weight(index.as_usize()).into();
+            if !(weight >= 0.) {
+                return Err(WeightedError::InvalidWeight);
+            }
+
+            let key = rng.gen::<f64>().powf(1.0 / weight);
+            candidates.push(Element { index, key });
+
+            index += N::one();
+        }
+
+        let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
+        while result.len() < amount.as_usize() {
+            result.push(candidates.pop().unwrap().index);
+        }
+        Ok(IndexVec::from(result))
+    }
+}
+
 /// Randomly sample exactly `amount` indices from `0..length`, using Floyd's
 /// combination algorithm.
 ///
@@ -265,7 +422,7 @@ where R: Rng + ?Sized {
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
     for j in length - amount..length {
-        let t = rng.gen_range(0, j + 1);
+        let t = rng.gen_range(0..=j);
         if floyd_shuffle {
             if let Some(pos) = indices.iter().position(|&x| x == t) {
                 indices.insert(pos, j);
@@ -281,7 +438,7 @@ where R: Rng + ?Sized {
         // Reimplement SliceRandom::shuffle with smaller indices
         for i in (1..amount).rev() {
             // invariant: elements with index > i have been locked in place.
-            indices.swap(i as usize, rng.gen_range(0, i + 1) as usize);
+            indices.swap(i as usize, rng.gen_range(0..=i) as usize);
         }
     }
     IndexVec::from(indices)
@@ -305,7 +462,7 @@ where R: Rng + ?Sized {
     let mut indices: Vec<u32> = Vec::with_capacity(length as usize);
     indices.extend(0..length);
     for i in 0..amount {
-        let j: u32 = rng.gen_range(i, length);
+        let j: u32 = rng.gen_range(i..length);
         indices.swap(i as usize, j as usize);
     }
     indices.truncate(amount as usize);
@@ -313,14 +470,21 @@ where R: Rng + ?Sized {
     IndexVec::from(indices)
 }
 
-trait UInt: Copy + PartialOrd + Ord + PartialEq + Eq + SampleUniform + core::hash::Hash {
+trait UInt: Copy + PartialOrd + Ord + PartialEq + Eq + SampleUniform
+    + core::hash::Hash + core::ops::AddAssign {
     fn zero() -> Self;
+    fn one() -> Self;
     fn as_usize(self) -> usize;
 }
 impl UInt for u32 {
     #[inline]
     fn zero() -> Self {
         0
+    }
+
+    #[inline]
+    fn one() -> Self {
+        1
     }
 
     #[inline]
@@ -332,6 +496,11 @@ impl UInt for usize {
     #[inline]
     fn zero() -> Self {
         0
+    }
+
+    #[inline]
+    fn one() -> Self {
+        1
     }
 
     #[inline]
@@ -376,8 +545,24 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    #[cfg(all(feature = "alloc", not(feature = "std")))] use crate::alloc::vec;
-    #[cfg(feature = "std")] use std::vec;
+
+    #[test]
+    #[cfg(feature = "serde1")]
+    fn test_serialization_index_vec() {
+        let some_index_vec = IndexVec::from(vec![254_usize, 234, 2, 1]);
+        let de_some_index_vec: IndexVec = bincode::deserialize(&bincode::serialize(&some_index_vec).unwrap()).unwrap();
+        match (some_index_vec, de_some_index_vec) {
+            (IndexVec::U32(a), IndexVec::U32(b)) => {
+                assert_eq!(a, b);
+            },
+            (IndexVec::USize(a), IndexVec::USize(b)) => {
+                assert_eq!(a, b);
+            },
+            _ => {panic!("failed to seralize/deserialize `IndexVec`")}
+        }
+    }
+
+    #[cfg(feature = "alloc")] use alloc::vec;
 
     #[test]
     fn test_sample_boundaries() {
@@ -434,5 +619,60 @@ mod test {
         let v2 = sample_rejection(&mut seed_rng(422), length as u32, amount as u32);
         assert!(v1.iter().all(|e| e < length));
         assert_eq!(v1, v2);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_sample_weighted() {
+        let seed_rng = crate::test::rng;
+        for &(amount, len) in &[(0, 10), (5, 10), (10, 10)] {
+            let v = sample_weighted(&mut seed_rng(423), len, |i| i as f64, amount).unwrap();
+            match v {
+                IndexVec::U32(mut indices) => {
+                    assert_eq!(indices.len(), amount);
+                    indices.sort_unstable();
+                    indices.dedup();
+                    assert_eq!(indices.len(), amount);
+                    for &i in &indices {
+                        assert!((i as usize) < len);
+                    }
+                },
+                IndexVec::USize(_) => panic!("expected `IndexVec::U32`"),
+            }
+        }
+    }
+
+    #[test]
+    fn value_stability_sample() {
+        let do_test = |length, amount, values: &[u32]| {
+            let mut buf = [0u32; 8];
+            let mut rng = crate::test::rng(410);
+
+            let res = sample(&mut rng, length, amount);
+            let len = res.len().min(buf.len());
+            for (x, y) in res.into_iter().zip(buf.iter_mut()) {
+                *y = x as u32;
+            }
+            assert_eq!(
+                &buf[0..len],
+                values,
+                "failed sampling {}, {}",
+                length,
+                amount
+            );
+        };
+
+        do_test(10, 6, &[8, 0, 3, 5, 9, 6]); // floyd
+        do_test(25, 10, &[18, 15, 14, 9, 0, 13, 5, 24]); // floyd
+        do_test(300, 8, &[30, 283, 150, 1, 73, 13, 285, 35]); // floyd
+        do_test(300, 80, &[31, 289, 248, 154, 5, 78, 19, 286]); // inplace
+        do_test(300, 180, &[31, 289, 248, 154, 5, 78, 19, 286]); // inplace
+
+        do_test(1_000_000, 8, &[
+            103717, 963485, 826422, 509101, 736394, 807035, 5327, 632573,
+        ]); // floyd
+        do_test(1_000_000, 180, &[
+            103718, 963490, 826426, 509103, 736396, 807036, 5327, 632573,
+        ]); // rejection
     }
 }
