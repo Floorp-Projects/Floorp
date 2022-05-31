@@ -1403,6 +1403,7 @@ if (rtc_include_tests) {
         "../test:fileutils",
         "../test:test_main",
         "../test:test_support",
+        "containers:unittests",
         "memory:unittests",
         "synchronization:mutex",
         "task_utils:to_queued_task",
