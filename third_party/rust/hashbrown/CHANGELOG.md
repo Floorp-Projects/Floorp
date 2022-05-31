@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.11.2] - 2021-03-25
+
+## Fixed
+
+- Added missing allocator type parameter to `HashMap`'s and `HashSet`'s `Clone` impls. (#252)
+
+## [v0.11.1] - 2021-03-20
+
+## Fixed
+
+- Added missing `pub` modifier to `BumpWrapper`. (#251)
+
+## [v0.11.0] - 2021-03-14
+
+## Added
+- Added safe `try_insert_no_grow` method to `RawTable`. (#229)
+- Added support for `bumpalo` as an allocator without the `nightly` feature. (#231)
+- Implemented `Default` for `RawTable`. (#237)
+- Added new safe methods `RawTable::get_each_mut`, `HashMap::get_each_mut`, and
+  `HashMap::get_each_key_value_mut`. (#239)
+- Added `From<HashMap<T, ()>>` for `HashSet<T>`. (#235)
+- Added `try_insert` method to `HashMap`. (#247)
+
+## Changed
+- The minimum Rust version has been bumped to 1.49.0. (#230)
+- Significantly improved compilation times by reducing the amount of generated IR. (#205)
+
+## Removed
+- We no longer re-export the unstable allocator items from the standard library, nor the stable shims approximating the same. (#227)
+- Removed hasher specialization support from `aHash`, which was resulting in inconsistent hashes being generated for a key. (#248)
+
+## Fixed
+- Fixed union length comparison. (#228)
+
+## ~~[v0.10.0] - 2021-01-16~~
+
+This release was _yanked_ due to inconsistent hashes being generated with the `nightly` feature. (#248)
+
+## Changed
+- Parametrized `RawTable`, `HashSet` and `HashMap` over an allocator. (#133)
+- Improved branch prediction hints on stable. (#209)
+- Optimized hashing of primitive types with AHash using specialization. (#207)
+- Only instantiate `RawTable`'s reserve functions once per key-value. (#204)
+
 ## [v0.9.1] - 2020-09-28
 
 ## Added
@@ -263,7 +307,11 @@ This release was _yanked_ due to a breaking change for users of `no-default-feat
 
 - Initial release
 
-[Unreleased]: https://github.com/rust-lang/hashbrown/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/rust-lang/hashbrown/compare/v0.11.2...HEAD
+[v0.11.2]: https://github.com/rust-lang/hashbrown/compare/v0.11.1...v0.11.2
+[v0.11.1]: https://github.com/rust-lang/hashbrown/compare/v0.11.0...v0.11.1
+[v0.11.0]: https://github.com/rust-lang/hashbrown/compare/v0.10.0...v0.11.0
+[v0.10.0]: https://github.com/rust-lang/hashbrown/compare/v0.9.1...v0.10.0
 [v0.9.1]: https://github.com/rust-lang/hashbrown/compare/v0.9.0...v0.9.1
 [v0.9.0]: https://github.com/rust-lang/hashbrown/compare/v0.8.2...v0.9.0
 [v0.8.2]: https://github.com/rust-lang/hashbrown/compare/v0.8.1...v0.8.2
