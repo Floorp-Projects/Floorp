@@ -15,6 +15,9 @@
 namespace js {
 
 bool IsExtendedPrimitive(const JSObject& obj);
+JSObject* CopyExtendedPrimitive(JSContext* cx, HandleObject extPrim);
+bool CopyRecordTupleElement(JSContext* cx, HandleValue v,
+                            MutableHandleValue out);
 bool IsExtendedPrimitiveWrapper(const JSObject& obj);
 bool ExtendedPrimitiveGetProperty(JSContext* cx, JS::HandleObject obj,
                                   JS::HandleValue receiver, JS::HandleId id,

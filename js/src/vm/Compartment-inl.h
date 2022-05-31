@@ -66,6 +66,17 @@ inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
     return true;
   }
 
+#ifdef ENABLE_RECORD_TUPLE
+  if (vp.isExtendedPrimitive()) {
+    JS::RootedObject extPrim(cx, &vp.toExtendedPrimitive());
+    if (!wrapExtendedPrimitive(cx, &extPrim)) {
+      return false;
+    }
+    vp.setExtendedPrimitive(*extPrim);
+    return true;
+  }
+#endif
+
   MOZ_ASSERT(vp.isObject());
 
   /*

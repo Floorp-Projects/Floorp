@@ -28,6 +28,9 @@
 #include "proxy/DOMProxy.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordTupleShared.h"
+#endif
 #include "vm/WrapperObject.h"
 
 #include "gc/GC-inl.h"
@@ -100,7 +103,7 @@ void Compartment::removeWrapper(js::ObjectWrapperMap::Ptr p) {
   crossCompartmentObjectWrappers.remove(p);
 }
 
-static JSString* CopyStringPure(JSContext* cx, JSString* str) {
+JSString* js::CopyStringPure(JSContext* cx, JSString* str) {
   /*
    * Directly allocate the copy in the destination compartment, rather than
    * first flattening it (and possibly allocating in source compartment),
@@ -328,12 +331,36 @@ bool Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing,
   return true;
 }
 
+#ifdef ENABLE_RECORD_TUPLE
+bool Compartment::wrapExtendedPrimitive(JSContext* cx,
+                                        MutableHandleObject obj) {
+  MOZ_ASSERT(IsExtendedPrimitive(*obj));
+  MOZ_ASSERT(cx->compartment() == this);
+
+  if (obj->compartment() == this) {
+    return true;
+  }
+
+  JSObject* copy = CopyExtendedPrimitive(cx, obj);
+  if (!copy) {
+    return false;
+  }
+
+  obj.set(copy);
+  return true;
+}
+#endif
+
 bool Compartment::wrap(JSContext* cx, MutableHandleObject obj) {
   MOZ_ASSERT(cx->compartment() == this);
 
   if (!obj) {
     return true;
   }
+
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!IsExtendedPrimitive(*obj));
+#endif
 
   AutoDisableProxyCheck adpc;
 

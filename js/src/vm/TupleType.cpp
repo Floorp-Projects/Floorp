@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sts=4 et sw=4 tw=99:
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,6 +21,7 @@
 #include "vm/EqualityOperations.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
+#include "vm/RecordTupleShared.h"
 #include "vm/RecordType.h"
 #include "vm/SelfHosting.h"
 #include "vm/ToSource.h"
@@ -223,6 +224,31 @@ bool js::tuple_value_of(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setExtendedPrimitive(*tuple);
+  return true;
+}
+
+bool TupleType::copy(JSContext* cx, Handle<TupleType*> in,
+                     MutableHandle<TupleType*> out) {
+  out.set(TupleType::createUninitialized(cx, in->length()));
+  if (!out) {
+    return false;
+  }
+  RootedValue v(cx), vCopy(cx);
+  for (uint32_t i = 0; i < in->length(); i++) {
+    // Let v = in[i]
+    v.set(in->getDenseElement(i));
+
+    // Copy v
+    if (!CopyRecordTupleElement(cx, v, &vCopy)) {
+      return false;
+    }
+
+    // Set result[i] to v
+    if (!out->initializeNextElement(cx, vCopy)) {
+      return false;
+    }
+  }
+  out->finishInitialization(cx);
   return true;
 }
 
