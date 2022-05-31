@@ -20,7 +20,7 @@ WebRTC follows the [Chromium C++ style guide][chr-style] and the
 style guide trumps the Google style guide, and the rules in this file trump them
 both.
 
-[chr-style]: https://chromium.googlesource.com/chromium/src/+/HEAD/styleguide/c++/c++.md
+[chr-style]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++.md
 [goog-style]: https://google.github.io/styleguide/cppguide.html
 
 ### C++ version
@@ -197,13 +197,13 @@ WebRTC follows the [Google Java style guide][goog-java-style].
 WebRTC follows the
 [Chromium Objective-C and Objective-C++ style guide][chr-objc-style].
 
-[chr-objc-style]: https://chromium.googlesource.com/chromium/src/+/HEAD/styleguide/objective-c/objective-c.md
+[chr-objc-style]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/objective-c/objective-c.md
 
 ## Python
 
 WebRTC follows [Chromium's Python style][chr-py-style].
 
-[chr-py-style]: https://chromium.googlesource.com/chromium/src/+/HEAD/styleguide/python/python.md
+[chr-py-style]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/python/python.md
 
 ## Build files
 

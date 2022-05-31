@@ -53,7 +53,7 @@ The most up-to-date implementations of the ADM interface are for [iOS][27] and
 for [Android][28].
 
 Desktop version are not updated to comply with the latest
-[C++ style guide](https://chromium.googlesource.com/chromium/src/+/master/styleguide/c++/c++.md)
+[C++ style guide](https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++.md)
 and more work is also needed to improve the performance and stability of these
 versions.
 

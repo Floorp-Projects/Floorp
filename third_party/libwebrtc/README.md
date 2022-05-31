@@ -28,4 +28,4 @@ native API header files.
  * [Code of conduct](CODE_OF_CONDUCT.md)
  * [Reporting bugs](docs/bug-reporting.md)
 
-[native-dev]: https://webrtc.googlesource.com/src/+/refs/heads/master/docs/native-code/index.md
+[native-dev]: https://webrtc.googlesource.com/src/+/main/docs/native-code/index.md

@@ -23,7 +23,7 @@ if (!build_with_chromium && is_component_build) {
         "WebRTC static library, so there is no difference between " +
         "`is_component_build=true` and `is_component_build=false`.")
   print(
-      "More info about component builds at: " + "https://chromium.googlesource.com/chromium/src/+/master/docs/component_build.md")
+      "More info about component builds at: " + "https://chromium.googlesource.com/chromium/src/+/main/docs/component_build.md")
   assert(!is_component_build, "Component builds are not supported in WebRTC.")
 }
 

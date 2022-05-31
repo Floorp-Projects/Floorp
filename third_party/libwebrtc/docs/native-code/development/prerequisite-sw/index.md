@@ -54,7 +54,7 @@ need to install the NDK/SDK separately.
 [depot-tools]: https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
 [git]: http://git-scm.com
 [install-build-deps]: https://cs.chromium.org/chromium/src/build/install-build-deps.sh
-[chromium-linux-build-instructions]: https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md
-[chromium-win-build-instructions]: https://chromium.googlesource.com/chromium/src/+/master/docs/windows_build_instructions.md
-[chromium-linux-prerequisites]: https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#notes
-[chromium-android-build-build-instructions]: https://chromium.googlesource.com/chromium/src/+/master/docs/android_build_instructions.md
+[chromium-linux-build-instructions]: https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md
+[chromium-win-build-instructions]: https://chromium.googlesource.com/chromium/src/+/main/docs/windows_build_instructions.md
+[chromium-linux-prerequisites]: https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md#notes
+[chromium-android-build-build-instructions]: https://chromium.googlesource.com/chromium/src/+/main/docs/android_build_instructions.md
