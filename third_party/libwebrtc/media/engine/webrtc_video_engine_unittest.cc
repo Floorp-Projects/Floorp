@@ -7002,18 +7002,14 @@ TEST_F(WebRtcVideoChannelTest, ReceiveDifferentUnsignaledSsrc) {
   channel_->SetDefaultSink(&renderer);
 
   // Receive VP8 packet on first SSRC.
-  uint8_t data[kMinRtpPacketLen];
-  cricket::RtpHeader rtpHeader;
-  rtpHeader.payload_type = GetEngineCodec("VP8").id;
-  rtpHeader.seq_num = rtpHeader.timestamp = 0;
-  rtpHeader.ssrc = kIncomingUnsignalledSsrc + 1;
-  cricket::SetRtpHeader(data, sizeof(data), rtpHeader);
-  rtc::CopyOnWriteBuffer packet(data, sizeof(data));
-  ReceivePacketAndAdvanceTime(packet, /* packet_time_us */ -1);
+  webrtc::RtpPacket rtp_packet;
+  rtp_packet.SetPayloadType(GetEngineCodec("VP8").id);
+  rtp_packet.SetSsrc(kIncomingUnsignalledSsrc + 1);
+  ReceivePacketAndAdvanceTime(rtp_packet.Buffer(), /* packet_time_us */ -1);
   // VP8 packet should create default receive stream.
   ASSERT_EQ(1u, fake_call_->GetVideoReceiveStreams().size());
   FakeVideoReceiveStream* recv_stream = fake_call_->GetVideoReceiveStreams()[0];
-  EXPECT_EQ(rtpHeader.ssrc, recv_stream->GetConfig().rtp.remote_ssrc);
+  EXPECT_EQ(rtp_packet.Ssrc(), recv_stream->GetConfig().rtp.remote_ssrc);
   // Verify that the receive stream sinks to a renderer.
   webrtc::VideoFrame video_frame =
       webrtc::VideoFrame::Builder()
@@ -7026,15 +7022,13 @@ TEST_F(WebRtcVideoChannelTest, ReceiveDifferentUnsignaledSsrc) {
   EXPECT_EQ(1, renderer.num_rendered_frames());
 
   // Receive VP9 packet on second SSRC.
-  rtpHeader.payload_type = GetEngineCodec("VP9").id;
-  rtpHeader.ssrc = kIncomingUnsignalledSsrc + 2;
-  cricket::SetRtpHeader(data, sizeof(data), rtpHeader);
-  rtc::CopyOnWriteBuffer packet2(data, sizeof(data));
-  ReceivePacketAndAdvanceTime(packet2, /* packet_time_us */ -1);
+  rtp_packet.SetPayloadType(GetEngineCodec("VP9").id);
+  rtp_packet.SetSsrc(kIncomingUnsignalledSsrc + 2);
+  ReceivePacketAndAdvanceTime(rtp_packet.Buffer(), /* packet_time_us */ -1);
   // VP9 packet should replace the default receive SSRC.
   ASSERT_EQ(1u, fake_call_->GetVideoReceiveStreams().size());
   recv_stream = fake_call_->GetVideoReceiveStreams()[0];
-  EXPECT_EQ(rtpHeader.ssrc, recv_stream->GetConfig().rtp.remote_ssrc);
+  EXPECT_EQ(rtp_packet.Ssrc(), recv_stream->GetConfig().rtp.remote_ssrc);
   // Verify that the receive stream sinks to a renderer.
   webrtc::VideoFrame video_frame2 =
       webrtc::VideoFrame::Builder()
@@ -7048,15 +7042,13 @@ TEST_F(WebRtcVideoChannelTest, ReceiveDifferentUnsignaledSsrc) {
 
 #if defined(WEBRTC_USE_H264)
   // Receive H264 packet on third SSRC.
-  rtpHeader.payload_type = 126;
-  rtpHeader.ssrc = kIncomingUnsignalledSsrc + 3;
-  cricket::SetRtpHeader(data, sizeof(data), rtpHeader);
-  rtc::CopyOnWriteBuffer packet3(data, sizeof(data));
-  ReceivePacketAndAdvanceTime(packet3, /* packet_time_us */ -1);
+  rtp_packet.SetPayloadType(126);
+  rtp_packet.SetSsrc(kIncomingUnsignalledSsrc + 3);
+  ReceivePacketAndAdvanceTime(rtp_packet.Buffer(), /* packet_time_us */ -1);
   // H264 packet should replace the default receive SSRC.
   ASSERT_EQ(1u, fake_call_->GetVideoReceiveStreams().size());
   recv_stream = fake_call_->GetVideoReceiveStreams()[0];
-  EXPECT_EQ(rtpHeader.ssrc, recv_stream->GetConfig().rtp.remote_ssrc);
+  EXPECT_EQ(rtp_packet.Ssrc(), recv_stream->GetConfig().rtp.remote_ssrc);
   // Verify that the receive stream sinks to a renderer.
   webrtc::VideoFrame video_frame3 =
       webrtc::VideoFrame::Builder()
@@ -7084,14 +7076,10 @@ TEST_F(WebRtcVideoChannelTest,
   EXPECT_EQ(0u, fake_call_->GetVideoReceiveStreams().size());
 
   // Receive packet on an unsignaled SSRC.
-  uint8_t data[kMinRtpPacketLen];
-  cricket::RtpHeader rtp_header;
-  rtp_header.payload_type = GetEngineCodec("VP8").id;
-  rtp_header.seq_num = rtp_header.timestamp = 0;
-  rtp_header.ssrc = kSsrcs3[0];
-  cricket::SetRtpHeader(data, sizeof(data), rtp_header);
-  rtc::CopyOnWriteBuffer packet(data, sizeof(data));
-  ReceivePacketAndAdvanceTime(packet, /* packet_time_us */ -1);
+  webrtc::RtpPacket rtp_packet;
+  rtp_packet.SetPayloadType(GetEngineCodec("VP8").id);
+  rtp_packet.SetSsrc(kSsrcs3[0]);
+  ReceivePacketAndAdvanceTime(rtp_packet.Buffer(), /* packet_time_us */ -1);
   // Default receive stream should be created.
   ASSERT_EQ(1u, fake_call_->GetVideoReceiveStreams().size());
   FakeVideoReceiveStream* recv_stream0 =
@@ -7106,10 +7094,8 @@ TEST_F(WebRtcVideoChannelTest,
   EXPECT_EQ(kSsrcs3[0], recv_stream0->GetConfig().rtp.remote_ssrc);
 
   // Receive packet on a different unsignaled SSRC.
-  rtp_header.ssrc = kSsrcs3[1];
-  cricket::SetRtpHeader(data, sizeof(data), rtp_header);
-  packet.SetData(data, sizeof(data));
-  ReceivePacketAndAdvanceTime(packet, /* packet_time_us */ -1);
+  rtp_packet.SetSsrc(kSsrcs3[1]);
+  ReceivePacketAndAdvanceTime(rtp_packet.Buffer(), /* packet_time_us */ -1);
   // New default receive stream should be created, but old stream should remain.
   ASSERT_EQ(2u, fake_call_->GetVideoReceiveStreams().size());
   EXPECT_EQ(recv_stream0, fake_call_->GetVideoReceiveStreams()[0]);
@@ -8715,14 +8701,10 @@ TEST_F(WebRtcVideoChannelTest,
   EXPECT_FALSE(rtp_parameters.encodings[0].ssrc);
 
   // Receive VP8 packet.
-  uint8_t data[kMinRtpPacketLen];
-  cricket::RtpHeader rtpHeader;
-  rtpHeader.payload_type = GetEngineCodec("VP8").id;
-  rtpHeader.seq_num = rtpHeader.timestamp = 0;
-  rtpHeader.ssrc = kIncomingUnsignalledSsrc;
-  cricket::SetRtpHeader(data, sizeof(data), rtpHeader);
-  rtc::CopyOnWriteBuffer packet(data, sizeof(data));
-  ReceivePacketAndAdvanceTime(packet, /* packet_time_us */ -1);
+  webrtc::RtpPacket rtp_packet;
+  rtp_packet.SetPayloadType(GetEngineCodec("VP8").id);
+  rtp_packet.SetSsrc(kIncomingUnsignalledSsrc);
+  ReceivePacketAndAdvanceTime(rtp_packet.Buffer(), /* packet_time_us */ -1);
 
   // The |ssrc| member should still be unset.
   rtp_parameters = channel_->GetDefaultRtpReceiveParameters();
