@@ -67,6 +67,5 @@ The documentation is written in GitHub Markdown
 
 Documentation of specific classes and function APIs and their usage, including
 their purpose, is embedded in the .h files defining that API. See
-[C++ style guide](https://chromium.googlesource.com/chromium/src/+/master/styleguide/c++/c++.md)
+[C++ style guide](https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++.md)
 for pointers on how to write API documentatin in .h files.
-
