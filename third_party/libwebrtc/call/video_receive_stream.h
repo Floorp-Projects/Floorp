@@ -159,7 +159,8 @@ class VideoReceiveStream : public MediaReceiveStream {
    public:
     Config() = delete;
     Config(Config&&);
-    explicit Config(Transport* rtcp_send_transport);
+    Config(Transport* rtcp_send_transport,
+           VideoDecoderFactory* decoder_factory = nullptr);
     Config& operator=(Config&&);
     Config& operator=(const Config&) = delete;
     ~Config();

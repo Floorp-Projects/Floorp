@@ -1468,7 +1468,7 @@ bool WebRtcVideoChannel::AddRecvStream(const StreamParams& sp,
   for (uint32_t used_ssrc : sp.ssrcs)
     receive_ssrcs_.insert(used_ssrc);
 
-  webrtc::VideoReceiveStream::Config config(this);
+  webrtc::VideoReceiveStream::Config config(this, decoder_factory_);
   webrtc::FlexfecReceiveStream::Config flexfec_config(this);
   ConfigureReceiverRtp(&config, &flexfec_config, sp);
 
@@ -1483,8 +1483,8 @@ bool WebRtcVideoChannel::AddRecvStream(const StreamParams& sp,
     config.frame_transformer = unsignaled_frame_transformer_;
 
   receive_streams_[ssrc] = new WebRtcVideoReceiveStream(
-      this, call_, sp, std::move(config), decoder_factory_, default_stream,
-      recv_codecs_, flexfec_config);
+      this, call_, sp, std::move(config), default_stream, recv_codecs_,
+      flexfec_config);
 
   return true;
 }
@@ -2819,7 +2819,6 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::WebRtcVideoReceiveStream(
     webrtc::Call* call,
     const StreamParams& sp,
     webrtc::VideoReceiveStream::Config config,
-    webrtc::VideoDecoderFactory* decoder_factory,
     bool default_stream,
     const std::vector<VideoCodecSettings>& recv_codecs,
     const webrtc::FlexfecReceiveStream::Config& flexfec_config)
@@ -2831,10 +2830,10 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::WebRtcVideoReceiveStream(
       config_(std::move(config)),
       flexfec_config_(flexfec_config),
       flexfec_stream_(nullptr),
-      decoder_factory_(decoder_factory),
       sink_(NULL),
       first_frame_timestamp_(-1),
       estimated_remote_start_ntp_time_ms_(0) {
+  RTC_DCHECK(config_.decoder_factory);
   config_.renderer = this;
   ConfigureCodecs(recv_codecs);
   flexfec_config_.payload_type = flexfec_config.payload_type;
@@ -2879,16 +2878,12 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::GetRtpParameters() const {
 void WebRtcVideoChannel::WebRtcVideoReceiveStream::ConfigureCodecs(
     const std::vector<VideoCodecSettings>& recv_codecs) {
   RTC_DCHECK(!recv_codecs.empty());
+
   config_.decoders.clear();
   config_.rtp.rtx_associated_payload_types.clear();
   config_.rtp.raw_payload_types.clear();
-  config_.decoder_factory = decoder_factory_;
   for (const auto& recv_codec : recv_codecs) {
-    webrtc::SdpVideoFormat video_format(recv_codec.codec.name,
-                                        recv_codec.codec.params);
-
     webrtc::VideoReceiveStream::Decoder decoder;
-    decoder.video_format = video_format;
     decoder.payload_type = recv_codec.codec.id;
     decoder.video_format =
         webrtc::SdpVideoFormat(recv_codec.codec.name, recv_codec.codec.params);
@@ -2981,10 +2976,18 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetRecvParameters(
     ConfigureCodecs(*params.codec_settings);
     video_needs_recreation = true;
   }
+
   if (params.rtp_header_extensions) {
-    config_.rtp.extensions = *params.rtp_header_extensions;
-    flexfec_config_.rtp.extensions = *params.rtp_header_extensions;
-    video_needs_recreation = true;
+    if (config_.rtp.extensions != *params.rtp_header_extensions) {
+      config_.rtp.extensions = *params.rtp_header_extensions;
+      video_needs_recreation = true;
+    }
+
+    if (flexfec_config_.rtp.extensions != *params.rtp_header_extensions) {
+      flexfec_config_.rtp.extensions = *params.rtp_header_extensions;
+      if (flexfec_stream_ || flexfec_config_.IsCompleteAndEnabled())
+        video_needs_recreation = true;
+    }
   }
   if (params.flexfec_payload_type) {
     flexfec_config_.payload_type = *params.flexfec_payload_type;
@@ -2992,7 +2995,8 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetRecvParameters(
     // configured and instead of recreating the video stream, reconfigure the
     // flexfec object from within the rtp callback (soon to be on the network
     // thread).
-    video_needs_recreation = true;
+    if (flexfec_stream_ || flexfec_config_.IsCompleteAndEnabled())
+      video_needs_recreation = true;
   }
   if (video_needs_recreation) {
     RecreateWebRtcVideoStream();

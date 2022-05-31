@@ -96,16 +96,15 @@ class VideoReceiveStreamTest : public ::testing::Test {
   VideoReceiveStreamTest()
       : process_thread_(ProcessThread::Create("TestThread")),
         task_queue_factory_(CreateDefaultTaskQueueFactory()),
-        config_(&mock_transport_),
-        call_stats_(Clock::GetRealTimeClock(), process_thread_.get()),
-        h264_decoder_factory_(&mock_h264_video_decoder_) {}
+        h264_decoder_factory_(&mock_h264_video_decoder_),
+        config_(&mock_transport_, &h264_decoder_factory_),
+        call_stats_(Clock::GetRealTimeClock(), process_thread_.get()) {}
 
   void SetUp() {
     constexpr int kDefaultNumCpuCores = 2;
     config_.rtp.remote_ssrc = 1111;
     config_.rtp.local_ssrc = 2222;
     config_.renderer = &fake_renderer_;
-    config_.decoder_factory = &h264_decoder_factory_;
     VideoReceiveStream::Decoder h264_decoder;
     h264_decoder.payload_type = 99;
     h264_decoder.video_format = SdpVideoFormat("H264");
@@ -126,10 +125,10 @@ class VideoReceiveStreamTest : public ::testing::Test {
  protected:
   std::unique_ptr<ProcessThread> process_thread_;
   const std::unique_ptr<TaskQueueFactory> task_queue_factory_;
+  test::VideoDecoderProxyFactory h264_decoder_factory_;
   VideoReceiveStream::Config config_;
   CallStats call_stats_;
   MockVideoDecoder mock_h264_video_decoder_;
-  test::VideoDecoderProxyFactory h264_decoder_factory_;
   cricket::FakeVideoRenderer fake_renderer_;
   MockTransport mock_transport_;
   PacketRouter packet_router_;
@@ -235,14 +234,13 @@ class VideoReceiveStreamTestWithFakeDecoder : public ::testing::Test {
             []() { return std::make_unique<test::FakeDecoder>(); }),
         process_thread_(ProcessThread::Create("TestThread")),
         task_queue_factory_(CreateDefaultTaskQueueFactory()),
-        config_(&mock_transport_),
+        config_(&mock_transport_, &fake_decoder_factory_),
         call_stats_(Clock::GetRealTimeClock(), process_thread_.get()) {}
 
   void SetUp() {
     config_.rtp.remote_ssrc = 1111;
     config_.rtp.local_ssrc = 2222;
     config_.renderer = &fake_renderer_;
-    config_.decoder_factory = &fake_decoder_factory_;
     VideoReceiveStream::Decoder fake_decoder;
     fake_decoder.payload_type = 99;
     fake_decoder.video_format = SdpVideoFormat("VP8");
