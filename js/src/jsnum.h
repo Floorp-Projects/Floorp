@@ -186,9 +186,8 @@ template <typename CharT>
  * cf. ES2020, 11.8.3 Numeric Literals.
  */
 template <typename CharT>
-[[nodiscard]] extern bool GetDecimalNonInteger(JSContext* cx,
-                                               const CharT* start,
-                                               const CharT* end, double* dp);
+[[nodiscard]] extern bool GetDecimal(JSContext* cx, const CharT* start,
+                                     const CharT* end, double* dp);
 
 template <typename CharT>
 bool CharsToNumber(JSContext* cx, const CharT* chars, size_t length,
