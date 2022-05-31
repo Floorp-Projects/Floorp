@@ -114,6 +114,7 @@ class RTCPReceiver final {
               int64_t* min_rtt_ms,
               int64_t* max_rtt_ms) const;
 
+  void SetNonSenderRttMeasurement(bool enabled);
   bool GetAndResetXrRrRtt(int64_t* rtt_ms);
 
   // Called once per second on the worker thread to do rtt calculations.
@@ -378,7 +379,7 @@ class RTCPReceiver final {
       received_rrtrs_ssrc_it_ RTC_GUARDED_BY(rtcp_receiver_lock_);
 
   // Estimated rtt, zero when there is no valid estimate.
-  const bool xr_rrtr_status_;
+  bool xr_rrtr_status_ RTC_GUARDED_BY(rtcp_receiver_lock_);
   int64_t xr_rr_rtt_ms_;
 
   int64_t oldest_tmmbr_info_ms_ RTC_GUARDED_BY(rtcp_receiver_lock_);

@@ -66,6 +66,7 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
   MOCK_METHOD(void, SetSequenceNumber, (uint16_t seq), (override));
   MOCK_METHOD(void, SetRtpState, (const RtpState& rtp_state), (override));
   MOCK_METHOD(void, SetRtxState, (const RtpState& rtp_state), (override));
+  MOCK_METHOD(void, SetNonSenderRttMeasurement, (bool enabled), (override));
   MOCK_METHOD(RtpState, GetRtpState, (), (const, override));
   MOCK_METHOD(RtpState, GetRtxState, (), (const, override));
   MOCK_METHOD(uint32_t, SSRC, (), (const, override));

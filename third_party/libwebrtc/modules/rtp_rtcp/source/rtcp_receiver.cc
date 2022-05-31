@@ -305,6 +305,11 @@ int32_t RTCPReceiver::RTT(uint32_t remote_ssrc,
   return 0;
 }
 
+void RTCPReceiver::SetNonSenderRttMeasurement(bool enabled) {
+  MutexLock lock(&rtcp_receiver_lock_);
+  xr_rrtr_status_ = enabled;
+}
+
 bool RTCPReceiver::GetAndResetXrRrRtt(int64_t* rtt_ms) {
   RTC_DCHECK(rtt_ms);
   MutexLock lock(&rtcp_receiver_lock_);

@@ -104,6 +104,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   RtpState GetRtpState() const override;
   RtpState GetRtxState() const override;
 
+  void SetNonSenderRttMeasurement(bool enabled) override;
+
   uint32_t SSRC() const override { return rtcp_sender_.SSRC(); }
 
   // Semantically identical to `SSRC()` but must be called on the packet

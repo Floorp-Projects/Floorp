@@ -240,6 +240,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   virtual RtpState GetRtpState() const = 0;
   virtual RtpState GetRtxState() const = 0;
 
+  // This can be used to enable/disable receive-side RTT.
+  virtual void SetNonSenderRttMeasurement(bool enabled) = 0;
+
   // Returns SSRC.
   virtual uint32_t SSRC() const = 0;
 

@@ -103,14 +103,11 @@ ModuleRtpRtcpImpl2::ModuleRtpRtcpImpl2(const Configuration& configuration)
   // webrtc::VideoSendStream::Config::Rtp::kDefaultMaxPacketSize.
   const size_t kTcpOverIpv4HeaderSize = 40;
   SetMaxRtpPacketSize(IP_PACKET_SIZE - kTcpOverIpv4HeaderSize);
-
-  if (rtt_stats_) {
-    rtt_update_task_ = RepeatingTaskHandle::DelayedStart(
-        worker_queue_, kRttUpdateInterval, [this]() {
-          PeriodicUpdate();
-          return kRttUpdateInterval;
-        });
-  }
+  rtt_update_task_ = RepeatingTaskHandle::DelayedStart(
+      worker_queue_, kRttUpdateInterval, [this]() {
+        PeriodicUpdate();
+        return kRttUpdateInterval;
+      });
 }
 
 ModuleRtpRtcpImpl2::~ModuleRtpRtcpImpl2() {
@@ -202,6 +199,11 @@ RtpState ModuleRtpRtcpImpl2::GetRtpState() const {
 
 RtpState ModuleRtpRtcpImpl2::GetRtxState() const {
   return rtp_sender_->packet_generator.GetRtxRtpState();
+}
+
+void ModuleRtpRtcpImpl2::SetNonSenderRttMeasurement(bool enabled) {
+  rtcp_sender_.SetNonSenderRttMeasurement(enabled);
+  rtcp_receiver_.SetNonSenderRttMeasurement(enabled);
 }
 
 uint32_t ModuleRtpRtcpImpl2::local_media_ssrc() const {
@@ -746,7 +748,9 @@ void ModuleRtpRtcpImpl2::PeriodicUpdate() {
   absl::optional<TimeDelta> rtt =
       rtcp_receiver_.OnPeriodicRttUpdate(check_since, rtcp_sender_.Sending());
   if (rtt) {
-    rtt_stats_->OnRttUpdate(rtt->ms());
+    if (rtt_stats_) {
+      rtt_stats_->OnRttUpdate(rtt->ms());
+    }
     set_rtt_ms(rtt->ms());
   }
 }
