@@ -13,6 +13,7 @@
 #include <memory>
 #include <utility>
 
+#include "api/task_queue/task_queue_base.h"
 #include "api/video/video_codec_type.h"
 #include "api/video/video_frame_type.h"
 #include "common_video/h264/h264_common.h"
@@ -38,6 +39,7 @@
 #include "test/gtest.h"
 #include "test/mock_frame_transformer.h"
 #include "test/time_controller/simulated_task_queue.h"
+#include "test/time_controller/simulated_time_controller.h"
 
 using ::testing::_;
 using ::testing::ElementsAre;
@@ -158,7 +160,12 @@ class RtpVideoStreamReceiver2Test : public ::testing::Test,
  public:
   RtpVideoStreamReceiver2Test() : RtpVideoStreamReceiver2Test("") {}
   explicit RtpVideoStreamReceiver2Test(std::string field_trials)
-      : override_field_trials_(field_trials),
+      : time_controller_(Timestamp::Millis(100)),
+        task_queue_(time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
+            "RtpVideoStreamReceiver2Test",
+            TaskQueueFactory::Priority::NORMAL)),
+        task_queue_setter_(task_queue_.get()),
+        override_field_trials_(field_trials),
         config_(CreateConfig()),
         process_thread_(ProcessThread::Create("TestThread")) {
     rtp_receive_statistics_ =
@@ -233,8 +240,9 @@ class RtpVideoStreamReceiver2Test : public ::testing::Test,
     return config;
   }
 
-  TokenTaskQueue task_queue_;
-  TokenTaskQueue::CurrentTaskQueueSetter task_queue_setter_{&task_queue_};
+  GlobalSimulatedTimeController time_controller_;
+  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> task_queue_;
+  TokenTaskQueue::CurrentTaskQueueSetter task_queue_setter_;
 
   const webrtc::test::ScopedFieldTrials override_field_trials_;
   VideoReceiveStream::Config config_;

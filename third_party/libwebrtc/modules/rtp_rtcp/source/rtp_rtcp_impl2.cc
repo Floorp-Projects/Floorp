@@ -20,12 +20,16 @@
 #include <utility>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "api/transport/field_trial_based_config.h"
+#include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/task_utils/to_queued_task.h"
+#include "rtc_base/time_utils.h"
 #include "system_wrappers/include/ntp_time.h"
 
 #ifdef _WIN32
@@ -39,6 +43,22 @@ const int64_t kRtpRtcpMaxIdleTimeProcessMs = 5;
 const int64_t kDefaultExpectedRetransmissionTimeMs = 125;
 
 constexpr TimeDelta kRttUpdateInterval = TimeDelta::Millis(1000);
+
+RTCPSender::Configuration AddRtcpSendEvaluationCallback(
+    RTCPSender::Configuration config,
+    std::function<void(TimeDelta)> send_evaluation_callback) {
+  config.schedule_next_rtcp_send_evaluation_function =
+      std::move(send_evaluation_callback);
+  return config;
+}
+
+int DelayMillisForDuration(TimeDelta duration) {
+  // TimeDelta::ms() rounds downwards sometimes which leads to too little time
+  // slept. Account for this, unless |duration| is exactly representable in
+  // millisecs.
+  return (duration.us() + rtc::kNumMillisecsPerSec - 1) /
+         rtc::kNumMicrosecsPerMillisec;
+}
 }  // namespace
 
 ModuleRtpRtcpImpl2::RtpSenderContext::RtpSenderContext(
@@ -57,8 +77,11 @@ void ModuleRtpRtcpImpl2::RtpSenderContext::AssignSequenceNumber(
 
 ModuleRtpRtcpImpl2::ModuleRtpRtcpImpl2(const Configuration& configuration)
     : worker_queue_(TaskQueueBase::Current()),
-      rtcp_sender_(
-          RTCPSender::Configuration::FromRtpRtcpConfiguration(configuration)),
+      rtcp_sender_(AddRtcpSendEvaluationCallback(
+          RTCPSender::Configuration::FromRtpRtcpConfiguration(configuration),
+          [this](TimeDelta duration) {
+            ScheduleRtcpSendEvaluation(duration);
+          })),
       rtcp_receiver_(configuration, this),
       clock_(configuration.clock),
       last_rtt_process_time_(clock_->TimeInMilliseconds()),
@@ -139,11 +162,6 @@ void ModuleRtpRtcpImpl2::Process() {
       rtcp_sender_.SetTargetBitrate(target_bitrate);
     }
   }
-
-  // TODO(bugs.webrtc.org/11581): Run this on a separate set of delayed tasks
-  // based off of next_time_to_send_rtcp_ in RTCPSender.
-  if (rtcp_sender_.TimeToSendRTCPReport())
-    rtcp_sender_.SendRTCP(GetFeedbackState(), kRtcpReport);
 }
 
 void ModuleRtpRtcpImpl2::SetRtxSendStatus(int mode) {
@@ -776,6 +794,62 @@ void ModuleRtpRtcpImpl2::PeriodicUpdate() {
   // rtcp_sender_.TMMBR().
   if (rtcp_sender_.TMMBR() && rtcp_receiver_.UpdateTmmbrTimers())
     rtcp_receiver_.NotifyTmmbrUpdated();
+}
+
+// RTC_RUN_ON(worker_queue_);
+void ModuleRtpRtcpImpl2::MaybeSendRtcp() {
+  if (rtcp_sender_.TimeToSendRTCPReport())
+    rtcp_sender_.SendRTCP(GetFeedbackState(), kRtcpReport);
+}
+
+// TODO(bugs.webrtc.org/12889): Consider removing this function when the issue
+// is resolved.
+// RTC_RUN_ON(worker_queue_);
+void ModuleRtpRtcpImpl2::MaybeSendRtcpAtOrAfterTimestamp(
+    Timestamp execution_time) {
+  Timestamp now = clock_->CurrentTime();
+  if (now >= execution_time) {
+    MaybeSendRtcp();
+    return;
+  }
+
+  RTC_DLOG(LS_WARNING)
+      << "BUGBUG: Task queue scheduled delayed call too early.";
+
+  ScheduleMaybeSendRtcpAtOrAfterTimestamp(execution_time, execution_time - now);
+}
+
+void ModuleRtpRtcpImpl2::ScheduleRtcpSendEvaluation(TimeDelta duration) {
+  // We end up here under various sequences including the worker queue, and
+  // the RTCPSender lock is held.
+  // We're assuming that the fact that RTCPSender executes under other sequences
+  // than the worker queue on which it's created on implies that external
+  // synchronization is present and removes this activity before destruction.
+  if (duration.IsZero()) {
+    worker_queue_->PostTask(ToQueuedTask(task_safety_, [this] {
+      RTC_DCHECK_RUN_ON(worker_queue_);
+      MaybeSendRtcp();
+    }));
+  } else {
+    Timestamp execution_time = clock_->CurrentTime() + duration;
+    ScheduleMaybeSendRtcpAtOrAfterTimestamp(execution_time, duration);
+  }
+}
+
+void ModuleRtpRtcpImpl2::ScheduleMaybeSendRtcpAtOrAfterTimestamp(
+    Timestamp execution_time,
+    TimeDelta duration) {
+  // We end up here under various sequences including the worker queue, and
+  // the RTCPSender lock is held.
+  // See note in ScheduleRtcpSendEvaluation about why |worker_queue_| can be
+  // accessed.
+  worker_queue_->PostDelayedTask(
+      ToQueuedTask(task_safety_,
+                   [this, execution_time] {
+                     RTC_DCHECK_RUN_ON(worker_queue_);
+                     MaybeSendRtcpAtOrAfterTimestamp(execution_time);
+                   }),
+      DelayMillisForDuration(duration));
 }
 
 }  // namespace webrtc

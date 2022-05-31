@@ -138,7 +138,7 @@ RTCPSender::Configuration RTCPSender::Configuration::FromRtpRtcpConfiguration(
   return result;
 }
 
-RTCPSender::RTCPSender(const Configuration& config)
+RTCPSender::RTCPSender(Configuration config)
     : audio_(config.audio),
       ssrc_(config.local_media_ssrc),
       clock_(config.clock),
@@ -149,6 +149,8 @@ RTCPSender::RTCPSender(const Configuration& config)
       report_interval_(config.rtcp_report_interval.value_or(
           TimeDelta::Millis(config.audio ? kDefaultAudioReportInterval
                                          : kDefaultVideoReportInterval))),
+      schedule_next_rtcp_send_evaluation_function_(
+          std::move(config.schedule_next_rtcp_send_evaluation_function)),
       sending_(false),
       timestamp_offset_(0),
       last_rtp_timestamp_(0),
@@ -201,8 +203,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
     next_time_to_send_rtcp_ = absl::nullopt;
   } else if (method_ == RtcpMode::kOff) {
     // When switching on, reschedule the next packet
-    next_time_to_send_rtcp_ =
-        clock_->CurrentTime() + RTCP_INTERVAL_RAPID_SYNC_MS / 2;
+    SetNextRtcpSendEvaluationDuration(RTCP_INTERVAL_RAPID_SYNC_MS / 2);
   }
   method_ = new_method;
 }
@@ -285,7 +286,7 @@ void RTCPSender::SetRemb(int64_t bitrate_bps, std::vector<uint32_t> ssrcs) {
   SetFlag(kRtcpRemb, /*is_volatile=*/false);
   // Send a REMB immediately if we have a new REMB. The frequency of REMBs is
   // throttled by the caller.
-  next_time_to_send_rtcp_ = clock_->CurrentTime();
+  SetNextRtcpSendEvaluationDuration(TimeDelta::Zero());
 }
 
 void RTCPSender::UnsetRemb() {
@@ -429,7 +430,9 @@ bool RTCPSender::TimeToSendRTCPReport(bool sendKeyframeBeforeRTP) const {
   Timestamp now = clock_->CurrentTime();
 
   MutexLock lock(&mutex_rtcp_sender_);
-
+  RTC_DCHECK(
+      (method_ == RtcpMode::kOff && !next_time_to_send_rtcp_.has_value()) ||
+      (method_ != RtcpMode::kOff && next_time_to_send_rtcp_.has_value()));
   if (method_ == RtcpMode::kOff)
     return false;
 
@@ -808,7 +811,7 @@ void RTCPSender::PrepareReport(const FeedbackState& feedback_state) {
         random_.Rand(min_interval_int * 1 / 2, min_interval_int * 3 / 2));
 
     RTC_DCHECK(!time_to_next.IsZero());
-    next_time_to_send_rtcp_ = clock_->CurrentTime() + time_to_next;
+    SetNextRtcpSendEvaluationDuration(time_to_next);
 
     // RtcpSender expected to be used for sending either just sender reports
     // or just receiver reports.
@@ -902,7 +905,7 @@ void RTCPSender::SetVideoBitrateAllocation(
     RTC_LOG(LS_INFO) << "Emitting TargetBitrate XR for SSRC " << ssrc_
                      << " with new layers enabled/disabled: "
                      << video_bitrate_allocation_.ToString();
-    next_time_to_send_rtcp_ = clock_->CurrentTime();
+    SetNextRtcpSendEvaluationDuration(TimeDelta::Zero());
   } else {
     video_bitrate_allocation_ = bitrate;
   }
@@ -961,6 +964,12 @@ void RTCPSender::SendCombinedRtcpPacket(
     sender.AppendPacket(*rtcp_packet);
   }
   sender.Send();
+}
+
+void RTCPSender::SetNextRtcpSendEvaluationDuration(TimeDelta duration) {
+  next_time_to_send_rtcp_ = clock_->CurrentTime() + duration;
+  if (schedule_next_rtcp_send_evaluation_function_)
+    schedule_next_rtcp_send_evaluation_function_(duration);
 }
 
 }  // namespace webrtc
