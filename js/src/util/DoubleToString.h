@@ -24,19 +24,6 @@ extern void DestroyDtoaState(DtoaState* state);
 
 }  // namespace js
 
-/*
- * js_strtod_harder() returns as a double-precision floating-point number the
- * value represented by the character string pointed to by s00. The string is
- * scanned up to the first unrecognized character.
- *
- * If se is not nullptr, *se receives a pointer to the character terminating
- * the scan. If no number can be formed, *se receives a pointer to the first
- * unparseable character in s00, and zero is returned.
- *
- * On overflow, this function returns infinity and does not indicate an error.
- */
-double js_strtod_harder(DtoaState* state, const char* s00, char** se);
-
 /* Maximum number of characters (including trailing null) that a DTOSTR_STANDARD
  * or DTOSTR_STANDARD_EXPONENTIAL conversion can produce.  This maximum is
  * reached for a number like -0.0000012345678901234567. */
