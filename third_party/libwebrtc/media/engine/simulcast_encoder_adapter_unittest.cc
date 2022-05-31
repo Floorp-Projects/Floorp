@@ -900,8 +900,6 @@ TEST_F(TestSimulcastEncoderAdapterFake, SetRatesUnderMinBitrate) {
 }
 
 TEST_F(TestSimulcastEncoderAdapterFake, SupportsImplementationName) {
-  EXPECT_EQ("SimulcastEncoderAdapter",
-            adapter_->GetEncoderInfo().implementation_name);
   SimulcastTestFixtureImpl::DefaultSettings(
       &codec_, static_cast<const int*>(kTestTemporalLayerProfile),
       kVideoCodecVP8);
@@ -910,6 +908,8 @@ TEST_F(TestSimulcastEncoderAdapterFake, SupportsImplementationName) {
   encoder_names.push_back("codec2");
   encoder_names.push_back("codec3");
   helper_->factory()->SetEncoderNames(encoder_names);
+  EXPECT_EQ("SimulcastEncoderAdapter",
+            adapter_->GetEncoderInfo().implementation_name);
   EXPECT_EQ(0, adapter_->InitEncode(&codec_, kSettings));
   EXPECT_EQ("SimulcastEncoderAdapter (codec1, codec2, codec3)",
             adapter_->GetEncoderInfo().implementation_name);
