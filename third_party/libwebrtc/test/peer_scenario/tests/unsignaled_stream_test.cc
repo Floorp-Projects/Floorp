@@ -10,15 +10,14 @@
 
 #include "media/base/stream_params.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
-
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "pc/media_session.h"
 #include "pc/session_description.h"
 #include "test/field_trial.h"
-#include "test/peer_scenario/peer_scenario.h"
-#include "test/rtp_header_parser.h"
-
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/peer_scenario/peer_scenario.h"
+#include "test/rtp_header_parser.h"
 
 namespace webrtc {
 namespace test {
@@ -184,51 +183,48 @@ TEST_P(UnsignaledStreamTest, ReplacesUnsignaledStreamOnCompletedSignaling) {
         second_ssrc = first_ssrc + 1;
 
         send_node->router()->SetWatcher([&](const EmulatedIpPacket& packet) {
-          if (packet.size() > 1 && packet.cdata()[0] >> 6 == 2 &&
-              !RtpHeaderParser::IsRtcp(packet.data.cdata(),
-                                       packet.data.size())) {
-            if (ByteReader<uint32_t>::ReadBigEndian(&(packet.cdata()[8])) ==
-                    first_ssrc &&
-                !got_unsignaled_packet) {
-              // Parse packet and modify the SSRC to simulate a second m=
-              // section that has not been negotiated yet.
-              std::vector<RtpExtension> extensions;
-              extensions.emplace_back(RtpExtension::kMidUri,
-                                      mid_header_extension_id.value());
-              RtpHeaderExtensionMap extensions_map(extensions);
-              RtpPacket parsed_packet;
-              parsed_packet.IdentifyExtensions(extensions_map);
-              ASSERT_TRUE(parsed_packet.Parse(packet.data));
-              parsed_packet.SetSsrc(second_ssrc);
-              // The MID extension is present if and only if it was negotiated.
-              // If present, we either want to remove it or modify it depending
-              // on setup.
-              switch (kMidTestConfiguration) {
-                case MidTestConfiguration::kMidNotNegotiated:
-                  EXPECT_FALSE(parsed_packet.HasExtension<RtpMid>());
-                  break;
-                case MidTestConfiguration::kMidNegotiatedButMissingFromPackets:
-                  EXPECT_TRUE(parsed_packet.HasExtension<RtpMid>());
-                  ASSERT_TRUE(parsed_packet.RemoveExtension(RtpMid::kId));
-                  break;
-                case MidTestConfiguration::kMidNegotiatedAndPresentInPackets:
-                  EXPECT_TRUE(parsed_packet.HasExtension<RtpMid>());
-                  // The simulated second m= section would have a different MID.
-                  // If we don't modify it here then |second_ssrc| would end up
-                  // being mapped to the first m= section which would cause SSRC
-                  // conflicts if we later add the same SSRC to a second m=
-                  // section. Hidden assumption: first m= section does not use
-                  // MID:1.
-                  ASSERT_TRUE(parsed_packet.SetExtension<RtpMid>("1"));
-                  break;
-              }
-              // Inject the modified packet.
-              rtc::CopyOnWriteBuffer updated_buffer = parsed_packet.Buffer();
-              EmulatedIpPacket updated_packet(
-                  packet.from, packet.to, updated_buffer, packet.arrival_time);
-              send_node->OnPacketReceived(std::move(updated_packet));
-              got_unsignaled_packet = true;
+          if (IsRtpPacket(packet.data) &&
+              ByteReader<uint32_t>::ReadBigEndian(&(packet.cdata()[8])) ==
+                  first_ssrc &&
+              !got_unsignaled_packet) {
+            // Parse packet and modify the SSRC to simulate a second m=
+            // section that has not been negotiated yet.
+            std::vector<RtpExtension> extensions;
+            extensions.emplace_back(RtpExtension::kMidUri,
+                                    mid_header_extension_id.value());
+            RtpHeaderExtensionMap extensions_map(extensions);
+            RtpPacket parsed_packet;
+            parsed_packet.IdentifyExtensions(extensions_map);
+            ASSERT_TRUE(parsed_packet.Parse(packet.data));
+            parsed_packet.SetSsrc(second_ssrc);
+            // The MID extension is present if and only if it was negotiated.
+            // If present, we either want to remove it or modify it depending
+            // on setup.
+            switch (kMidTestConfiguration) {
+              case MidTestConfiguration::kMidNotNegotiated:
+                EXPECT_FALSE(parsed_packet.HasExtension<RtpMid>());
+                break;
+              case MidTestConfiguration::kMidNegotiatedButMissingFromPackets:
+                EXPECT_TRUE(parsed_packet.HasExtension<RtpMid>());
+                ASSERT_TRUE(parsed_packet.RemoveExtension(RtpMid::kId));
+                break;
+              case MidTestConfiguration::kMidNegotiatedAndPresentInPackets:
+                EXPECT_TRUE(parsed_packet.HasExtension<RtpMid>());
+                // The simulated second m= section would have a different MID.
+                // If we don't modify it here then |second_ssrc| would end up
+                // being mapped to the first m= section which would cause SSRC
+                // conflicts if we later add the same SSRC to a second m=
+                // section. Hidden assumption: first m= section does not use
+                // MID:1.
+                ASSERT_TRUE(parsed_packet.SetExtension<RtpMid>("1"));
+                break;
             }
+            // Inject the modified packet.
+            rtc::CopyOnWriteBuffer updated_buffer = parsed_packet.Buffer();
+            EmulatedIpPacket updated_packet(
+                packet.from, packet.to, updated_buffer, packet.arrival_time);
+            send_node->OnPacketReceived(std::move(updated_packet));
+            got_unsignaled_packet = true;
           }
         });
       },

@@ -19,8 +19,6 @@ namespace webrtc {
 
 class RtpHeaderParser {
  public:
-  // Returns true if the packet is an RTCP packet, false otherwise.
-  static bool IsRtcp(const uint8_t* packet, size_t length);
   static absl::optional<uint32_t> GetSsrc(const uint8_t* packet, size_t length);
 };
 }  // namespace webrtc

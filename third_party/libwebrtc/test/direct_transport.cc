@@ -14,9 +14,9 @@
 #include "api/units/time_delta.h"
 #include "call/call.h"
 #include "call/fake_network_pipe.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/time_utils.h"
-#include "test/rtp_header_parser.h"
 
 namespace webrtc {
 namespace test {
@@ -26,7 +26,7 @@ Demuxer::Demuxer(const std::map<uint8_t, MediaType>& payload_type_map)
 
 MediaType Demuxer::GetMediaType(const uint8_t* packet_data,
                                 const size_t packet_length) const {
-  if (!RtpHeaderParser::IsRtcp(packet_data, packet_length)) {
+  if (IsRtpPacket(rtc::MakeArrayView(packet_data, packet_length))) {
     RTC_CHECK_GE(packet_length, 2);
     const uint8_t payload_type = packet_data[1] & 0x7f;
     std::map<uint8_t, MediaType>::const_iterator it =

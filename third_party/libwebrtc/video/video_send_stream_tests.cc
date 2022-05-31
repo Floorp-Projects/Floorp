@@ -30,6 +30,7 @@
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer_vp9.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
@@ -57,7 +58,6 @@
 #include "test/gtest.h"
 #include "test/null_transport.h"
 #include "test/rtcp_packet_parser.h"
-#include "test/rtp_header_parser.h"
 #include "test/testsupport/perf_test.h"
 #include "test/video_encoder_proxy_factory.h"
 #include "video/send_statistics_proxy.h"
@@ -1467,7 +1467,7 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
 
    private:
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
-      if (RtpHeaderParser::IsRtcp(packet, length))
+      if (IsRtcpPacket(rtc::MakeArrayView(packet, length)))
         return DROP_PACKET;
 
       RtpPacket rtp_packet;

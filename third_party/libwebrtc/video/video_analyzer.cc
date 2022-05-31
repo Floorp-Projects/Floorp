@@ -18,6 +18,7 @@
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/rtp_rtcp/source/create_video_rtp_depacketizer.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/cpu_time.h"
 #include "rtc_base/format_macros.h"
 #include "rtc_base/memory_usage.h"
@@ -212,7 +213,7 @@ PacketReceiver::DeliveryStatus VideoAnalyzer::DeliverPacket(
     int64_t packet_time_us) {
   // Ignore timestamps of RTCP packets. They're not synchronized with
   // RTP packet timestamps and so they would confuse wrap_handler_.
-  if (RtpHeaderParser::IsRtcp(packet.cdata(), packet.size())) {
+  if (IsRtcpPacket(packet)) {
     return receiver_->DeliverPacket(media_type, std::move(packet),
                                     packet_time_us);
   }

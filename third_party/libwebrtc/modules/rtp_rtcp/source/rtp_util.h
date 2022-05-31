@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2021 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,19 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <stddef.h>
-#include <stdint.h>
+#ifndef MODULES_RTP_RTCP_SOURCE_RTP_UTIL_H_
+#define MODULES_RTP_RTCP_SOURCE_RTP_UTIL_H_
 
-#include <algorithm>
-#include <memory>
-#include <string>
+#include <cstdint>
 
-#include "test/rtp_header_parser.h"
+#include "api/array_view.h"
 
 namespace webrtc {
 
-void FuzzOneInput(const uint8_t* data, size_t size) {
-  RtpHeaderParser::GetSsrc(data, size);
-}
+bool IsRtcpPacket(rtc::ArrayView<const uint8_t> packet);
+bool IsRtpPacket(rtc::ArrayView<const uint8_t> packet);
 
 }  // namespace webrtc
+
+#endif  // MODULES_RTP_RTCP_SOURCE_RTP_UTIL_H_
