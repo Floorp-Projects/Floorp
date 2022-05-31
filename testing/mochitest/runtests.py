@@ -41,9 +41,6 @@ import uuid
 import zipfile
 import bisection
 
-from condprof.client import get_profile
-from condprof.util import get_current_platform
-
 from ctypes.util import find_library
 from datetime import datetime, timedelta
 from manifestparser import TestManifest
@@ -131,7 +128,7 @@ class MessageLogger(object):
 
     BUFFERING_THRESHOLD = 100
     # This is a delimiter used by the JS side to avoid logs interleaving
-    DELIMITER = "\ue175\uee31\u2c32\uacbf"
+    DELIMITER = u"\ue175\uee31\u2c32\uacbf"
     BUFFERED_ACTIONS = set(["test_status", "log"])
     VALID_ACTIONS = set(
         [
@@ -962,7 +959,6 @@ class MochitestDesktop(object):
         self.extraPrefs = {}
         self.extraEnv = {}
         self.extraTestsDirs = []
-        self.conditioned_profile_dir = None
 
         if logger_options.get("log"):
             self.log = logger_options["log"]
@@ -1582,12 +1578,6 @@ toolbar#nav-bar {
                 subsuite(options.subsuite),
             ]
 
-            # Allow for only running tests/manifests which match this tag
-            if options.conditionedProfile:
-                if not options.test_tags:
-                    options.test_tags = []
-                options.test_tags.append("condprof")
-
             if options.test_tags:
                 filters.append(tags(options.test_tags))
 
@@ -2139,61 +2129,6 @@ toolbar#nav-bar {
             path = os.path.join(profile_data_dir, profile)
             self.profile.merge(path, interpolation=interpolation)
 
-    @property
-    def conditioned_profile_copy(self):
-        """Returns a copy of the original conditioned profile that was created."""
-
-        condprof_copy = os.path.join(tempfile.mkdtemp(), "profile")
-        shutil.copytree(
-            self.conditioned_profile_dir,
-            condprof_copy,
-            ignore=shutil.ignore_patterns("lock"),
-        )
-        self.log.info("Created a conditioned-profile copy: %s" % condprof_copy)
-        return condprof_copy
-
-    def downloadConditionedProfile(self, profile_scenario):
-        if self.conditioned_profile_dir:
-            # We already have a directory, so provide a copy that
-            # will get deleted after it's done with
-            return self.conditioned_profile_copy
-
-        temp_download_dir = tempfile.mkdtemp()
-
-        # Call condprof's client API to yield our platform-specific
-        # conditioned-profile binary
-        platform = get_current_platform()
-
-        if not profile_scenario:
-            profile_scenario = "settled"
-
-        cond_prof_target_dir = get_profile(
-            temp_download_dir,
-            platform,
-            profile_scenario,
-            repo="mozilla-central",
-        )
-
-        # Now get the full directory path to our fetched conditioned profile
-        self.conditioned_profile_dir = os.path.join(
-            temp_download_dir, cond_prof_target_dir
-        )
-        if not os.path.exists(cond_prof_target_dir):
-            self.log.critical(
-                "Can't find target_dir {}, from get_profile()"
-                "temp_download_dir {}, platform {}, scenario {}".format(
-                    cond_prof_target_dir, temp_download_dir, platform, profile_scenario
-                )
-            )
-            raise OSError
-
-        self.log.info(
-            "Original self.conditioned_profile_dir is now set: {}".format(
-                self.conditioned_profile_dir
-            )
-        )
-        return self.conditioned_profile_copy
-
     def buildProfile(self, options):
         """create the profile and add optional chrome bits and files if requested"""
         # get extensions to install
@@ -2210,20 +2145,6 @@ toolbar#nav-bar {
             sandbox_whitelist_paths = [
                 os.path.join(p, "") for p in sandbox_whitelist_paths
             ]
-
-        if options.conditionedProfile:
-            if options.profilePath and os.path.exists(options.profilePath):
-                shutil.rmtree(options.profilePath, ignore_errors=True)
-            options.profilePath = self.downloadConditionedProfile("full")
-
-            # This is causing `certutil -N -d -f`` to not use -f (pwd file)
-            try:
-                os.remove(os.path.join(options.profilePath, "key4.db"))
-            except Exception as e:
-                self.log.info(
-                    "Caught exception while removing key4.db"
-                    "during setup of conditioned profile: %s" % e
-                )
 
         # Create the profile
         self.profile = Profile(
@@ -2815,12 +2736,6 @@ toolbar#nav-bar {
         This method is used to clear the contents before each run of for loop.
         This method is used for --run-by-dir and --bisect-chunk.
         """
-        if options.conditionedProfile:
-            if options.profilePath and os.path.exists(options.profilePath):
-                shutil.rmtree(options.profilePath, ignore_errors=True)
-                if options.manifestFile and os.path.exists(options.manifestFile):
-                    os.remove(options.manifestFile)
-
         self.expectedError.clear()
         self.result.clear()
         options.manifestFile = None
@@ -3127,7 +3042,6 @@ toolbar#nav-bar {
                 "verify_fission": options.verify_fission,
                 "webgl_ipc": self.extraPrefs.get("webgl.out-of-process", False),
                 "xorigin": options.xOriginTests,
-                "condprof": options.conditionedProfile,
             }
         )
 
@@ -3448,9 +3362,6 @@ toolbar#nav-bar {
 
                 if options.timeoutAsPass:
                     testURL += "&timeoutAsPass=true"
-
-                if options.conditionedProfile:
-                    testURL += "&conditionedProfile=true"
 
                 self.log.info("runtests.py | Running with scheme: {}".format(scheme))
                 self.log.info(
