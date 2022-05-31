@@ -4,7 +4,7 @@
 
 #![cfg_attr(feature = "oom_with_hook", feature(alloc_error_hook))]
 
-use arrayvec::{Array, ArrayString};
+use arrayvec::ArrayString;
 use std::cmp;
 use std::ops::Deref;
 use std::os::raw::c_char;
@@ -34,21 +34,21 @@ fn str_truncate_valid(s: &str, mut mid: usize) -> &str {
 
 /// Similar to ArrayString, but with terminating nul character.
 #[derive(Debug, PartialEq)]
-struct ArrayCString<A: Array<Item = u8> + Copy> {
-    inner: ArrayString<A>,
+struct ArrayCString<const CAP: usize> {
+    inner: ArrayString<CAP>,
 }
 
-impl<S: AsRef<str>, A: Array<Item = u8> + Copy> From<S> for ArrayCString<A> {
+impl<S: AsRef<str>, const CAP: usize> From<S> for ArrayCString<CAP> {
     /// Contrary to ArrayString::from, truncates at the closest unicode
     /// character boundary.
     /// ```
-    /// assert_eq!(ArrayCString::<[_; 4]>::from("éà"),
-    ///            ArrayCString::<[_; 4]>::from("é"));
-    /// assert_eq!(&*ArrayCString::<[_; 4]>::from("éà"), "é\0");
+    /// assert_eq!(ArrayCString::<4>::from("éà"),
+    ///            ArrayCString::<4>::from("é"));
+    /// assert_eq!(&*ArrayCString::<4>::from("éà"), "é\0");
     /// ```
     fn from(s: S) -> Self {
         let s = s.as_ref();
-        let len = cmp::min(s.len(), A::CAPACITY - 1);
+        let len = cmp::min(s.len(), CAP - 1);
         let mut result = Self {
             inner: ArrayString::from(str_truncate_valid(s, len)).unwrap(),
         };
@@ -57,7 +57,7 @@ impl<S: AsRef<str>, A: Array<Item = u8> + Copy> From<S> for ArrayCString<A> {
     }
 }
 
-impl<A: Array<Item = u8> + Copy> Deref for ArrayCString<A> {
+impl<const CAP: usize> Deref for ArrayCString<CAP> {
     type Target = str;
 
     fn deref(&self) -> &str {
@@ -85,8 +85,8 @@ fn panic_hook(info: &panic::PanicInfo) {
     // Copy the message and filename to the stack in order to safely add
     // a terminating nul character (since rust strings don't come with one
     // and RustMozCrash wants one).
-    let message = ArrayCString::<[_; 512]>::from(message);
-    let filename = ArrayCString::<[_; 512]>::from(filename);
+    let message = ArrayCString::<512>::from(message);
+    let filename = ArrayCString::<512>::from(filename);
     unsafe {
         RustMozCrash(
             filename.as_ptr() as *const c_char,
