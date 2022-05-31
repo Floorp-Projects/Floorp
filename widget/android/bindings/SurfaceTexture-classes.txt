@@ -2,4 +2,4 @@
 [android.view.Surface = exceptionMode:nsresult]
 <init>(Landroid/view/SurfaceControl;)V = stubName:FromSurfaceControl, exceptionMode:abort
 [android.view.SurfaceControl = exceptionMode:nsresult]
-[android.view.SurfaceControl$Transaction = exceptionMode:abort]
+isValid()Z = exceptionMode:abort
