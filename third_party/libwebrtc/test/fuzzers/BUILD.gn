@@ -622,8 +622,12 @@ webrtc_fuzzer_test("rtp_header_parser_fuzzer") {
 }
 
 webrtc_fuzzer_test("ssl_certificate_fuzzer") {
-  sources = [ "rtp_header_parser_fuzzer.cc" ]
-  deps = [ "../:rtp_test_utils" ]
+  sources = [ "ssl_certificate_fuzzer.cc" ]
+  deps = [
+    "../:rtp_test_utils",
+    "../../rtc_base",
+    "../../rtc_base:stringutils",
+  ]
 }
 
 webrtc_fuzzer_test("vp8_replay_fuzzer") {
