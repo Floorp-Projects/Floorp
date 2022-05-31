@@ -359,6 +359,16 @@ void flat_map<Key, Mapped, Compare, Container>::swap(flat_map& other) noexcept {
   tree::swap(other);
 }
 
+// Erases all elements that match predicate. It has O(size) complexity.
+//
+//  flat_map<int, Timestamp> last_times;
+//  ...
+//  EraseIf(last_times,
+//          [&](const auto& element) { return now - element.second > kLimit; });
+
+// NOLINTNEXTLINE(misc-unused-using-decls)
+using ::webrtc::flat_containers_internal::EraseIf;
+
 }  // namespace webrtc
 
 #endif  // RTC_BASE_CONTAINERS_FLAT_MAP_H_

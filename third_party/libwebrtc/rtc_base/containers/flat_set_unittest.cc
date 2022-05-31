@@ -125,5 +125,25 @@ TEST(FlatSet, UsingTransparentCompare) {
   s.erase(s.begin());
   s.erase(s.cbegin());
 }
+
+TEST(FlatSet, SupportsEraseIf) {
+  flat_set<MoveOnlyInt> s;
+  s.emplace(MoveOnlyInt(1));
+  s.emplace(MoveOnlyInt(2));
+  s.emplace(MoveOnlyInt(3));
+  s.emplace(MoveOnlyInt(4));
+  s.emplace(MoveOnlyInt(5));
+
+  EraseIf(s, [to_be_removed = MoveOnlyInt(2)](const MoveOnlyInt& elem) {
+    return elem == to_be_removed;
+  });
+
+  EXPECT_EQ(s.size(), 4u);
+  ASSERT_TRUE(s.find(MoveOnlyInt(1)) != s.end());
+  ASSERT_FALSE(s.find(MoveOnlyInt(2)) != s.end());
+  ASSERT_TRUE(s.find(MoveOnlyInt(3)) != s.end());
+  ASSERT_TRUE(s.find(MoveOnlyInt(4)) != s.end());
+  ASSERT_TRUE(s.find(MoveOnlyInt(5)) != s.end());
+}
 }  // namespace
 }  // namespace webrtc

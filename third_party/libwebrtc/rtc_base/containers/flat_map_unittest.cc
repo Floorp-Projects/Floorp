@@ -429,5 +429,26 @@ TEST(FlatMap, UsingTransparentCompare) {
   m.erase(m.cbegin());
 }
 
+TEST(FlatMap, SupportsEraseIf) {
+  flat_map<MoveOnlyInt, MoveOnlyInt> m;
+  m.insert(std::make_pair(MoveOnlyInt(1), MoveOnlyInt(1)));
+  m.insert(std::make_pair(MoveOnlyInt(2), MoveOnlyInt(2)));
+  m.insert(std::make_pair(MoveOnlyInt(3), MoveOnlyInt(3)));
+  m.insert(std::make_pair(MoveOnlyInt(4), MoveOnlyInt(4)));
+  m.insert(std::make_pair(MoveOnlyInt(5), MoveOnlyInt(5)));
+
+  EraseIf(m, [to_be_removed = MoveOnlyInt(2)](
+                 const std::pair<MoveOnlyInt, MoveOnlyInt>& e) {
+    return e.first == to_be_removed;
+  });
+
+  EXPECT_EQ(m.size(), 4u);
+  ASSERT_TRUE(m.find(MoveOnlyInt(1)) != m.end());
+  ASSERT_FALSE(m.find(MoveOnlyInt(2)) != m.end());
+  ASSERT_TRUE(m.find(MoveOnlyInt(3)) != m.end());
+  ASSERT_TRUE(m.find(MoveOnlyInt(4)) != m.end());
+  ASSERT_TRUE(m.find(MoveOnlyInt(5)) != m.end());
+}
+
 }  // namespace
 }  // namespace webrtc
