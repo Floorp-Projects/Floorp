@@ -44,7 +44,7 @@ NackTracker* NackTracker::Create(int nack_threshold_packets) {
 }
 
 void NackTracker::UpdateSampleRate(int sample_rate_hz) {
-  assert(sample_rate_hz > 0);
+  RTC_DCHECK_GT(sample_rate_hz, 0);
   sample_rate_khz_ = sample_rate_hz / 1000;
 }
 
@@ -120,9 +120,9 @@ uint32_t NackTracker::EstimateTimestamp(uint16_t sequence_num) {
 }
 
 void NackTracker::AddToList(uint16_t sequence_number_current_received_rtp) {
-  assert(!any_rtp_decoded_ ||
-         IsNewerSequenceNumber(sequence_number_current_received_rtp,
-                               sequence_num_last_decoded_rtp_));
+  RTC_DCHECK(!any_rtp_decoded_ ||
+             IsNewerSequenceNumber(sequence_number_current_received_rtp,
+                                   sequence_num_last_decoded_rtp_));
 
   // Packets with sequence numbers older than |upper_bound_missing| are
   // considered missing, and the rest are considered late.
@@ -164,7 +164,7 @@ void NackTracker::UpdateLastDecodedPacket(uint16_t sequence_number,
          ++it)
       it->second.time_to_play_ms = TimeToPlay(it->second.estimated_timestamp);
   } else {
-    assert(sequence_number == sequence_num_last_decoded_rtp_);
+    RTC_DCHECK_EQ(sequence_number, sequence_num_last_decoded_rtp_);
 
     // Same sequence number as before. 10 ms is elapsed, update estimations for
     // time-to-play.

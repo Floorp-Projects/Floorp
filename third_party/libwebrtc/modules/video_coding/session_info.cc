@@ -49,7 +49,7 @@ void VCMSessionInfo::UpdateDataPointers(const uint8_t* old_base_ptr,
                                         const uint8_t* new_base_ptr) {
   for (PacketIterator it = packets_.begin(); it != packets_.end(); ++it)
     if ((*it).dataPtr != NULL) {
-      assert(old_base_ptr != NULL && new_base_ptr != NULL);
+      RTC_DCHECK(old_base_ptr != NULL && new_base_ptr != NULL);
       (*it).dataPtr = new_base_ptr + ((*it).dataPtr - old_base_ptr);
     }
 }
@@ -358,7 +358,7 @@ VCMSessionInfo::PacketIterator VCMSessionInfo::FindNextPartitionBeginning(
 
 VCMSessionInfo::PacketIterator VCMSessionInfo::FindPartitionEnd(
     PacketIterator it) const {
-  assert((*it).codec() == kVideoCodecVP8);
+  RTC_DCHECK_EQ((*it).codec(), kVideoCodecVP8);
   PacketIterator prev_it = it;
   const int partition_id =
       absl::get<RTPVideoHeaderVP8>((*it).video_header.video_type_header)

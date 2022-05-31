@@ -1037,7 +1037,7 @@ int LibvpxVp8Encoder::Encode(const VideoFrame& frame,
   // would like to use the duration of the previous frame. Unfortunately the
   // rate control seems to be off with that setup. Using the average input
   // frame rate to calculate an average duration for now.
-  assert(codec_.maxFramerate > 0);
+  RTC_DCHECK_GT(codec_.maxFramerate, 0);
   uint32_t duration = kRtpTicksPerSecond / codec_.maxFramerate;
 
   int error = WEBRTC_VIDEO_CODEC_OK;
@@ -1074,7 +1074,7 @@ void LibvpxVp8Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                                              int stream_idx,
                                              int encoder_idx,
                                              uint32_t timestamp) {
-  assert(codec_specific != NULL);
+  RTC_DCHECK(codec_specific);
   codec_specific->codecType = kVideoCodecVP8;
   codec_specific->codecSpecific.VP8.keyIdx =
       kNoKeyIdx;  // TODO(hlundin) populate this

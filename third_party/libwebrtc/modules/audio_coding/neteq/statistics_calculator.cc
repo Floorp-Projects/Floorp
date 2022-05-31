@@ -375,7 +375,7 @@ uint16_t StatisticsCalculator::CalculateQ14Ratio(size_t numerator,
     return 0;
   } else if (numerator < denominator) {
     // Ratio must be smaller than 1 in Q14.
-    assert((numerator << 14) / denominator < (1 << 14));
+    RTC_DCHECK_LT((numerator << 14) / denominator, (1 << 14));
     return static_cast<uint16_t>((numerator << 14) / denominator);
   } else {
     // Will not produce a ratio larger than 1, since this is probably an error.

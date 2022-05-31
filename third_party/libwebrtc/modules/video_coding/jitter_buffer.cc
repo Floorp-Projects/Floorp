@@ -347,7 +347,7 @@ VCMFrameBufferEnum VCMJitterBuffer::GetFrame(const VCMPacket& packet,
 
 int64_t VCMJitterBuffer::LastPacketTime(const VCMEncodedFrame* frame,
                                         bool* retransmitted) const {
-  assert(retransmitted);
+  RTC_DCHECK(retransmitted);
   MutexLock lock(&mutex_);
   const VCMFrameBuffer* frame_buffer =
       static_cast<const VCMFrameBuffer*>(frame);
@@ -498,7 +498,7 @@ VCMFrameBufferEnum VCMJitterBuffer::InsertPacket(const VCMPacket& packet,
       RecycleFrameBuffer(frame);
       return kFlushIndicator;
     default:
-      assert(false);
+      RTC_NOTREACHED();
   }
   return buffer_state;
 }
@@ -580,8 +580,8 @@ void VCMJitterBuffer::SetNackSettings(size_t max_nack_list_size,
                                       int max_packet_age_to_nack,
                                       int max_incomplete_time_ms) {
   MutexLock lock(&mutex_);
-  assert(max_packet_age_to_nack >= 0);
-  assert(max_incomplete_time_ms_ >= 0);
+  RTC_DCHECK_GE(max_packet_age_to_nack, 0);
+  RTC_DCHECK_GE(max_incomplete_time_ms_, 0);
   max_nack_list_size_ = max_nack_list_size;
   max_packet_age_to_nack_ = max_packet_age_to_nack;
   max_incomplete_time_ms_ = max_incomplete_time_ms;
@@ -600,7 +600,7 @@ int VCMJitterBuffer::NonContinuousOrIncompleteDuration() {
 
 uint16_t VCMJitterBuffer::EstimatedLowSequenceNumber(
     const VCMFrameBuffer& frame) const {
-  assert(frame.GetLowSeqNum() >= 0);
+  RTC_DCHECK_GE(frame.GetLowSeqNum(), 0);
   if (frame.HaveFirstPacket())
     return frame.GetLowSeqNum();
 

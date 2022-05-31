@@ -83,7 +83,7 @@ class InterleavedRtpFileReader : public RtpFileReaderImpl {
   }
 
   bool NextPacket(RtpPacket* packet) override {
-    assert(file_ != nullptr);
+    RTC_DCHECK(file_);
     packet->length = RtpPacket::kMaxPacketBufferSize;
     uint32_t len = 0;
     TRY(ReadUint32(&len, file_));
@@ -276,7 +276,7 @@ class PcapReader : public RtpFileReaderImpl {
       if (result == kResultFail) {
         break;
       } else if (result == kResultSuccess && packets_.size() == 1) {
-        assert(stream_start_ms == 0);
+        RTC_DCHECK_EQ(stream_start_ms, 0);
         PacketIterator it = packets_.begin();
         stream_start_ms = it->time_offset_ms;
         it->time_offset_ms = 0;
@@ -330,9 +330,9 @@ class PcapReader : public RtpFileReaderImpl {
   }
 
   virtual int NextPcap(uint8_t* data, uint32_t* length, uint32_t* time_ms) {
-    assert(data);
-    assert(length);
-    assert(time_ms);
+    RTC_DCHECK(data);
+    RTC_DCHECK(length);
+    RTC_DCHECK(time_ms);
 
     if (next_packet_it_ == packets_.end()) {
       return -1;
@@ -409,7 +409,7 @@ class PcapReader : public RtpFileReaderImpl {
                  uint32_t stream_start_ms,
                  uint32_t number,
                  const std::set<uint32_t>& ssrc_filter) {
-    assert(next_packet_pos);
+    RTC_DCHECK(next_packet_pos);
 
     uint32_t ts_sec;    // Timestamp seconds.
     uint32_t ts_usec;   // Timestamp microseconds.
@@ -504,7 +504,7 @@ class PcapReader : public RtpFileReaderImpl {
   }
 
   int ReadXxpIpHeader(RtpPacketMarker* marker) {
-    assert(marker);
+    RTC_DCHECK(marker);
 
     uint16_t version;
     uint16_t length;
@@ -534,7 +534,7 @@ class PcapReader : public RtpFileReaderImpl {
 
     // Skip remaining fields of IP header.
     uint16_t header_length = (version & 0x0f00) >> (8 - 2);
-    assert(header_length >= kMinIpHeaderLength);
+    RTC_DCHECK_GE(header_length, kMinIpHeaderLength);
     TRY_PCAP(Skip(header_length - kMinIpHeaderLength));
 
     protocol = protocol & 0x00ff;

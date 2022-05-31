@@ -18,6 +18,7 @@
 #include <stdint.h>
 
 #include "modules/video_coding/codecs/interface/common_constants.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -131,7 +132,7 @@ struct GofInfoVP9 {
         pid_diff[7][1] = 2;
         break;
       default:
-        assert(false);
+        RTC_NOTREACHED();
     }
   }
 

@@ -38,7 +38,7 @@ Merge::Merge(int fs_hz,
       expand_(expand),
       sync_buffer_(sync_buffer),
       expanded_(num_channels_) {
-  assert(num_channels_ > 0);
+  RTC_DCHECK_GT(num_channels_, 0);
 }
 
 Merge::~Merge() = default;
@@ -47,9 +47,9 @@ size_t Merge::Process(int16_t* input,
                       size_t input_length,
                       AudioMultiVector* output) {
   // TODO(hlundin): Change to an enumerator and skip assert.
-  assert(fs_hz_ == 8000 || fs_hz_ == 16000 || fs_hz_ == 32000 ||
-         fs_hz_ == 48000);
-  assert(fs_hz_ <= kMaxSampleRate);  // Should not be possible.
+  RTC_DCHECK(fs_hz_ == 8000 || fs_hz_ == 16000 || fs_hz_ == 32000 ||
+             fs_hz_ == 48000);
+  RTC_DCHECK_LE(fs_hz_, kMaxSampleRate);  // Should not be possible.
   if (input_length == 0) {
     return 0;
   }
@@ -64,7 +64,7 @@ size_t Merge::Process(int16_t* input,
   input_vector.PushBackInterleaved(
       rtc::ArrayView<const int16_t>(input, input_length));
   size_t input_length_per_channel = input_vector.Size();
-  assert(input_length_per_channel == input_length / num_channels_);
+  RTC_DCHECK_EQ(input_length_per_channel, input_length / num_channels_);
 
   size_t best_correlation_index = 0;
   size_t output_length = 0;
@@ -142,10 +142,10 @@ size_t Merge::Process(int16_t* input,
 
     output_length = best_correlation_index + input_length_per_channel;
     if (channel == 0) {
-      assert(output->Empty());  // Output should be empty at this point.
+      RTC_DCHECK(output->Empty());  // Output should be empty at this point.
       output->AssertSize(output_length);
     } else {
-      assert(output->Size() == output_length);
+      RTC_DCHECK_EQ(output->Size(), output_length);
     }
     (*output)[channel].OverwriteAt(temp_data_.data(), output_length, 0);
   }
@@ -165,7 +165,7 @@ size_t Merge::GetExpandedSignal(size_t* old_length, size_t* expand_period) {
   // Check how much data that is left since earlier.
   *old_length = sync_buffer_->FutureLength();
   // Should never be less than overlap_length.
-  assert(*old_length >= expand_->overlap_length());
+  RTC_DCHECK_GE(*old_length, expand_->overlap_length());
   // Generate data to merge the overlap with using expand.
   expand_->SetParametersForMergeAfterExpand();
 
@@ -182,7 +182,7 @@ size_t Merge::GetExpandedSignal(size_t* old_length, size_t* expand_period) {
     // This is the truncated length.
   }
   // This assert should always be true thanks to the if statement above.
-  assert(210 * kMaxSampleRate / 8000 >= *old_length);
+  RTC_DCHECK_GE(210 * kMaxSampleRate / 8000, *old_length);
 
   AudioMultiVector expanded_temp(num_channels_);
   expand_->Process(&expanded_temp);
@@ -191,8 +191,8 @@ size_t Merge::GetExpandedSignal(size_t* old_length, size_t* expand_period) {
   expanded_.Clear();
   // Copy what is left since earlier into the expanded vector.
   expanded_.PushBackFromIndex(*sync_buffer_, sync_buffer_->next_index());
-  assert(expanded_.Size() == *old_length);
-  assert(expanded_temp.Size() > 0);
+  RTC_DCHECK_EQ(expanded_.Size(), *old_length);
+  RTC_DCHECK_GT(expanded_temp.Size(), 0);
   // Do "ugly" copy and paste from the expanded in order to generate more data
   // to correlate (but not interpolate) with.
   const size_t required_length = static_cast<size_t>((120 + 80 + 2) * fs_mult_);
@@ -204,7 +204,7 @@ size_t Merge::GetExpandedSignal(size_t* old_length, size_t* expand_period) {
     // Trim the length to exactly |required_length|.
     expanded_.PopBack(expanded_.Size() - required_length);
   }
-  assert(expanded_.Size() >= required_length);
+  RTC_DCHECK_GE(expanded_.Size(), required_length);
   return required_length;
 }
 
@@ -379,7 +379,7 @@ size_t Merge::CorrelateAndPeakSearch(size_t start_position,
   while (((best_correlation_index + input_length) <
           (timestamps_per_call_ + expand_->overlap_length())) ||
          ((best_correlation_index + input_length) < start_position)) {
-    assert(false);                            // Should never happen.
+    RTC_NOTREACHED();                         // Should never happen.
     best_correlation_index += expand_period;  // Jump one lag ahead.
   }
   return best_correlation_index;

@@ -131,7 +131,7 @@ bool RtpHeaderParser::RTCP() const {
 }
 
 bool RtpHeaderParser::ParseRtcp(RTPHeader* header) const {
-  assert(header != NULL);
+  RTC_DCHECK(header);
 
   const ptrdiff_t length = _ptrRTPDataEnd - _ptrRTPDataBegin;
   if (length < kRtcpMinParseLength) {

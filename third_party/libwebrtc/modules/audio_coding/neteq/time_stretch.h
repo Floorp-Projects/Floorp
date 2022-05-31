@@ -42,9 +42,9 @@ class TimeStretch {
         num_channels_(num_channels),
         background_noise_(background_noise),
         max_input_value_(0) {
-    assert(sample_rate_hz_ == 8000 || sample_rate_hz_ == 16000 ||
-           sample_rate_hz_ == 32000 || sample_rate_hz_ == 48000);
-    assert(num_channels_ > 0);
+    RTC_DCHECK(sample_rate_hz_ == 8000 || sample_rate_hz_ == 16000 ||
+               sample_rate_hz_ == 32000 || sample_rate_hz_ == 48000);
+    RTC_DCHECK_GT(num_channels_, 0);
     memset(auto_correlation_, 0, sizeof(auto_correlation_));
   }
 

@@ -59,7 +59,7 @@ class Expand {
 
   // Returns the mute factor for |channel|.
   int16_t MuteFactor(size_t channel) const {
-    assert(channel < num_channels_);
+    RTC_DCHECK_LT(channel, num_channels_);
     return channel_parameters_[channel].mute_factor;
   }
 

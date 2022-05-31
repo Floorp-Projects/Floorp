@@ -74,7 +74,7 @@ static int UpToMultiple(int x, int n, int nMask) {
 void ScreenCapturerHelper::ExpandToGrid(const DesktopRegion& region,
                                         int log_grid_size,
                                         DesktopRegion* result) {
-  assert(log_grid_size >= 1);
+  RTC_DCHECK_GE(log_grid_size, 1);
   int grid_size = 1 << log_grid_size;
   int grid_size_mask = ~(grid_size - 1);
 

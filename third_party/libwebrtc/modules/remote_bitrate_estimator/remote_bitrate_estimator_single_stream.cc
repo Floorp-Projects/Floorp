@@ -234,7 +234,7 @@ bool RemoteBitrateEstimatorSingleStream::LatestEstimate(
     std::vector<uint32_t>* ssrcs,
     uint32_t* bitrate_bps) const {
   MutexLock lock(&mutex_);
-  assert(bitrate_bps);
+  RTC_DCHECK(bitrate_bps);
   if (!remote_rate_->ValidEstimate()) {
     return false;
   }
@@ -248,7 +248,7 @@ bool RemoteBitrateEstimatorSingleStream::LatestEstimate(
 
 void RemoteBitrateEstimatorSingleStream::GetSsrcs(
     std::vector<uint32_t>* ssrcs) const {
-  assert(ssrcs);
+  RTC_DCHECK(ssrcs);
   ssrcs->resize(overuse_detectors_.size());
   int i = 0;
   for (SsrcOveruseEstimatorMap::const_iterator it = overuse_detectors_.begin();

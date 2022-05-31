@@ -48,9 +48,10 @@ Expand::Expand(BackgroundNoise* background_noise,
       stop_muting_(false),
       expand_duration_samples_(0),
       channel_parameters_(new ChannelParameters[num_channels_]) {
-  assert(fs == 8000 || fs == 16000 || fs == 32000 || fs == 48000);
-  assert(fs <= static_cast<int>(kMaxSampleRate));  // Should not be possible.
-  assert(num_channels_ > 0);
+  RTC_DCHECK(fs == 8000 || fs == 16000 || fs == 32000 || fs == 48000);
+  RTC_DCHECK_LE(fs,
+                static_cast<int>(kMaxSampleRate));  // Should not be possible.
+  RTC_DCHECK_GT(num_channels_, 0);
   memset(expand_lags_, 0, sizeof(expand_lags_));
   Reset();
 }
@@ -91,7 +92,7 @@ int Expand::Process(AudioMultiVector* output) {
     // Extract a noise segment.
     size_t rand_length = max_lag_;
     // This only applies to SWB where length could be larger than 256.
-    assert(rand_length <= kMaxSampleRate / 8000 * 120 + 30);
+    RTC_DCHECK_LE(rand_length, kMaxSampleRate / 8000 * 120 + 30);
     GenerateRandomVector(2, rand_length, random_vector);
   }
 
@@ -110,8 +111,8 @@ int Expand::Process(AudioMultiVector* output) {
     ChannelParameters& parameters = channel_parameters_[channel_ix];
     if (current_lag_index_ == 0) {
       // Use only expand_vector0.
-      assert(expansion_vector_position + temp_length <=
-             parameters.expand_vector0.Size());
+      RTC_DCHECK_LE(expansion_vector_position + temp_length,
+                    parameters.expand_vector0.Size());
       parameters.expand_vector0.CopyTo(temp_length, expansion_vector_position,
                                        voiced_vector_storage);
     } else if (current_lag_index_ == 1) {
@@ -126,10 +127,10 @@ int Expand::Process(AudioMultiVector* output) {
                                             voiced_vector_storage, temp_length);
     } else if (current_lag_index_ == 2) {
       // Mix 1/2 of expand_vector0 with 1/2 of expand_vector1.
-      assert(expansion_vector_position + temp_length <=
-             parameters.expand_vector0.Size());
-      assert(expansion_vector_position + temp_length <=
-             parameters.expand_vector1.Size());
+      RTC_DCHECK_LE(expansion_vector_position + temp_length,
+                    parameters.expand_vector0.Size());
+      RTC_DCHECK_LE(expansion_vector_position + temp_length,
+                    parameters.expand_vector1.Size());
 
       std::unique_ptr<int16_t[]> temp_0(new int16_t[temp_length]);
       parameters.expand_vector0.CopyTo(temp_length, expansion_vector_position,
@@ -303,7 +304,7 @@ int Expand::Process(AudioMultiVector* output) {
     if (channel_ix == 0) {
       output->AssertSize(current_lag);
     } else {
-      assert(output->Size() == current_lag);
+      RTC_DCHECK_EQ(output->Size(), current_lag);
     }
     (*output)[channel_ix].OverwriteAt(temp_data, current_lag, 0);
   }
@@ -465,7 +466,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
   size_t start_index = std::min(distortion_lag, correlation_lag);
   size_t correlation_lags = static_cast<size_t>(
       WEBRTC_SPL_ABS_W16((distortion_lag - correlation_lag)) + 1);
-  assert(correlation_lags <= static_cast<size_t>(99 * fs_mult + 1));
+  RTC_DCHECK_LE(correlation_lags, static_cast<size_t>(99 * fs_mult + 1));
 
   for (size_t channel_ix = 0; channel_ix < num_channels_; ++channel_ix) {
     ChannelParameters& parameters = channel_parameters_[channel_ix];
@@ -659,7 +660,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
         // |kRandomTableSize|.
         memcpy(random_vector, RandomVector::kRandomTable,
                sizeof(int16_t) * RandomVector::kRandomTableSize);
-        assert(noise_length <= kMaxSampleRate / 8000 * 120 + 30);
+        RTC_DCHECK_LE(noise_length, kMaxSampleRate / 8000 * 120 + 30);
         random_vector_->IncreaseSeedIncrement(2);
         random_vector_->Generate(
             noise_length - RandomVector::kRandomTableSize,

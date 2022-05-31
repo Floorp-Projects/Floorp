@@ -20,8 +20,8 @@ namespace test {
 
 GlxRenderer::GlxRenderer(size_t width, size_t height)
     : width_(width), height_(height), display_(NULL), context_(NULL) {
-  assert(width > 0);
-  assert(height > 0);
+  RTC_DCHECK_GT(width, 0);
+  RTC_DCHECK_GT(height, 0);
 }
 
 GlxRenderer::~GlxRenderer() {

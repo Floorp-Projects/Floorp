@@ -1490,7 +1490,7 @@ bool AudioDeviceLinuxALSA::PlayThreadProcess() {
     Lock();
 
     _playoutFramesLeft = _ptrAudioBuffer->GetPlayoutData(_playoutBuffer);
-    assert(_playoutFramesLeft == _playoutFramesIn10MS);
+    RTC_DCHECK_EQ(_playoutFramesLeft, _playoutFramesIn10MS);
   }
 
   if (static_cast<uint32_t>(avail_frames) > _playoutFramesLeft)
@@ -1509,7 +1509,7 @@ bool AudioDeviceLinuxALSA::PlayThreadProcess() {
     UnLock();
     return true;
   } else {
-    assert(frames == avail_frames);
+    RTC_DCHECK_EQ(frames, avail_frames);
     _playoutFramesLeft -= frames;
   }
 
@@ -1559,7 +1559,7 @@ bool AudioDeviceLinuxALSA::RecThreadProcess() {
     UnLock();
     return true;
   } else if (frames > 0) {
-    assert(frames == avail_frames);
+    RTC_DCHECK_EQ(frames, avail_frames);
 
     int left_size =
         LATE(snd_pcm_frames_to_bytes)(_handleRecord, _recordingFramesLeft);

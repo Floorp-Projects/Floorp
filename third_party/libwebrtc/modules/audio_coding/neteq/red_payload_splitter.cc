@@ -41,7 +41,7 @@ bool RedPayloadSplitter::SplitRed(PacketList* packet_list) {
   PacketList::iterator it = packet_list->begin();
   while (it != packet_list->end()) {
     const Packet& red_packet = *it;
-    assert(!red_packet.payload.empty());
+    RTC_DCHECK(!red_packet.payload.empty());
     const uint8_t* payload_ptr = red_packet.payload.data();
     size_t payload_length = red_packet.payload.size();
 

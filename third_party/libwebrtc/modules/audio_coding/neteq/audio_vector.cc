@@ -247,8 +247,8 @@ void AudioVector::OverwriteAt(const int16_t* insert_this,
 void AudioVector::CrossFade(const AudioVector& append_this,
                             size_t fade_length) {
   // Fade length cannot be longer than the current vector or |append_this|.
-  assert(fade_length <= Size());
-  assert(fade_length <= append_this.Size());
+  RTC_DCHECK_LE(fade_length, Size());
+  RTC_DCHECK_LE(fade_length, append_this.Size());
   fade_length = std::min(fade_length, Size());
   fade_length = std::min(fade_length, append_this.Size());
   size_t position = Size() - fade_length + begin_index_;
@@ -265,7 +265,7 @@ void AudioVector::CrossFade(const AudioVector& append_this,
          (16384 - alpha) * append_this[i] + 8192) >>
         14;
   }
-  assert(alpha >= 0);  // Verify that the slope was correct.
+  RTC_DCHECK_GE(alpha, 0);  // Verify that the slope was correct.
   // Append what is left of |append_this|.
   size_t samples_to_push_back = append_this.Size() - fade_length;
   if (samples_to_push_back > 0)

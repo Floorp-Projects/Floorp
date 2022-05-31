@@ -65,7 +65,7 @@ TEST_F(MouseCursorMonitorTest, MAYBE(FromScreen)) {
       MouseCursorMonitor::CreateForScreen(
           DesktopCaptureOptions::CreateDefault(),
           webrtc::kFullDesktopScreenId));
-  assert(capturer.get());
+  RTC_DCHECK(capturer.get());
   capturer->Init(this, MouseCursorMonitor::SHAPE_AND_POSITION);
   capturer->Capture();
 
@@ -102,7 +102,7 @@ TEST_F(MouseCursorMonitorTest, MAYBE(FromWindow)) {
     std::unique_ptr<MouseCursorMonitor> capturer(
         MouseCursorMonitor::CreateForWindow(
             DesktopCaptureOptions::CreateDefault(), sources[i].id));
-    assert(capturer.get());
+    RTC_DCHECK(capturer.get());
 
     capturer->Init(this, MouseCursorMonitor::SHAPE_AND_POSITION);
     capturer->Capture();
@@ -118,7 +118,7 @@ TEST_F(MouseCursorMonitorTest, MAYBE(ShapeOnly)) {
       MouseCursorMonitor::CreateForScreen(
           DesktopCaptureOptions::CreateDefault(),
           webrtc::kFullDesktopScreenId));
-  assert(capturer.get());
+  RTC_DCHECK(capturer.get());
   capturer->Init(this, MouseCursorMonitor::SHAPE_ONLY);
   capturer->Capture();
 

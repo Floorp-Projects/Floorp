@@ -601,7 +601,7 @@ bool VideoAnalyzer::AllFramesRecordedLocked() {
 bool VideoAnalyzer::FrameProcessed() {
   MutexLock lock(&comparison_lock_);
   ++frames_processed_;
-  assert(frames_processed_ <= frames_to_process_);
+  RTC_DCHECK_LE(frames_processed_, frames_to_process_);
   return frames_processed_ == frames_to_process_ ||
          (clock_->CurrentTime() > test_end_ && comparisons_.empty());
 }

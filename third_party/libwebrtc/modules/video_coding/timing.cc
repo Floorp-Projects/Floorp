@@ -157,7 +157,7 @@ void VCMTiming::StopDecodeTimer(uint32_t /*time_stamp*/,
 void VCMTiming::StopDecodeTimer(int32_t decode_time_ms, int64_t now_ms) {
   MutexLock lock(&mutex_);
   codec_timer_->AddTiming(decode_time_ms, now_ms);
-  assert(decode_time_ms >= 0);
+  RTC_DCHECK_GE(decode_time_ms, 0);
   ++num_decoded_frames_;
 }
 
@@ -199,7 +199,7 @@ int64_t VCMTiming::RenderTimeMsInternal(uint32_t frame_timestamp,
 
 int VCMTiming::RequiredDecodeTimeMs() const {
   const int decode_time_ms = codec_timer_->RequiredDecodeTimeMs();
-  assert(decode_time_ms >= 0);
+  RTC_DCHECK_GE(decode_time_ms, 0);
   return decode_time_ms;
 }
 

@@ -36,7 +36,7 @@ class OutputAudioFile : public AudioSink {
   }
 
   bool WriteArray(const int16_t* audio, size_t num_samples) override {
-    assert(out_file_);
+    RTC_DCHECK(out_file_);
     return fwrite(audio, sizeof(*audio), num_samples, out_file_) == num_samples;
   }
 

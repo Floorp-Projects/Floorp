@@ -760,6 +760,7 @@ if (is_linux || is_chromeos || is_win) {
       "peerconnection/server/utils.h",
     ]
     deps = [
+      "../rtc_base:checks",
       "../rtc_base:rtc_base_approved",
       "../system_wrappers:field_trial",
       "../test:field_trial",
