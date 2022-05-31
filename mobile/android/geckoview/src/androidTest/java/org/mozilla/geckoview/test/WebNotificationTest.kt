@@ -4,6 +4,8 @@ import android.os.Parcel
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,6 +15,8 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.WebNotification
 import org.mozilla.geckoview.WebNotificationDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+
+const val VERY_LONG_IMAGE_URL = "https://example.com/this/is/a/very/long/address/that/is/meant/to/be/longer/than/is/one/hundred/and/fifth/characters/long/for/testing/imageurl/length.ico"
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -213,5 +217,78 @@ class WebNotificationTest : BaseSessionTest() {
         notificationShown!!.dismiss()
 
         assertThat("Promise should have been resolved", promiseResult.value as Double, equalTo(1.0))
+    }
+
+    @Test fun writeToParcel() {
+        val notificationResult = GeckoResult<WebNotification>()
+
+        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
+            @GeckoSessionTestRule.AssertCalled
+            override fun onShowNotification(notification: WebNotification) {
+                notificationResult.complete(notification)
+            }
+        })
+
+        val promiseResult = mainSession.evaluatePromiseJS("""
+            new Promise(resolve => {
+                const notification = new Notification('The Title', { body: 'The Text' });
+                notification.onclose = function() {
+                    resolve(1);
+                }
+            });
+        """.trimIndent())
+
+        val notification = sessionRule.waitForResult(notificationResult)
+        notification.dismiss()
+
+        // Ensure we always have a non-null URL from js.
+        assertNotNull(notification.imageUrl)
+
+        // Test that we can serialize a notification
+        val parcel = Parcel.obtain()
+        notification.writeToParcel(parcel, /* ignored */ -1)
+
+        assertThat("Promise should have been resolved.", promiseResult.value as Double, equalTo(1.0))
+    }
+
+    @Test fun writeToParcelLongImageUrl() {
+        val notificationResult = GeckoResult<WebNotification>()
+
+        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
+            @GeckoSessionTestRule.AssertCalled
+            override fun onShowNotification(notification: WebNotification) {
+                notificationResult.complete(notification)
+            }
+        })
+
+        val promiseResult = mainSession.evaluatePromiseJS("""
+            new Promise(resolve => {
+                const notification = new Notification('The Title',
+                    {
+                        body: 'The Text',
+                        icon: '$VERY_LONG_IMAGE_URL'
+                    });
+                notification.onclose = function() {
+                    resolve(1);
+                }
+            });
+        """.trimIndent())
+
+        val notification = sessionRule.waitForResult(notificationResult)
+        notification.dismiss()
+
+        // Ensure we have an imageUrl longer than our max to start with.
+        assertNotNull(notification.imageUrl)
+        assertTrue(notification.imageUrl!!.length > 150)
+
+        // Test that we can serialize a notification with an imageUrl.length >= 150
+        val parcel = Parcel.obtain()
+        notification.writeToParcel(parcel, /* ignored */ -1)
+        parcel.setDataPosition(0)
+
+        val serializedNotification = WebNotification.CREATOR.createFromParcel(parcel)
+        assertTrue(serializedNotification.imageUrl!!.isBlank())
+
+        assertThat("Promise should have been resolved.", promiseResult.value as Double, equalTo(1.0))
     }
 }
