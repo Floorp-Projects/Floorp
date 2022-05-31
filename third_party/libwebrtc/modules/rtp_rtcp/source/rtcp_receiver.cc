@@ -832,14 +832,9 @@ void RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
 
   // Clear our lists.
   rtts_.erase(bye.sender_ssrc());
-  for (auto it = received_report_blocks_.begin();
-       it != received_report_blocks_.end();) {
-    if (it->second.report_block().sender_ssrc == bye.sender_ssrc()) {
-      received_report_blocks_.erase(it++);
-    } else {
-      ++it;
-    }
-  }
+  EraseIf(received_report_blocks_, [&](const auto& elem) {
+    return elem.second.report_block().sender_ssrc == bye.sender_ssrc();
+  });
 
   TmmbrInformation* tmmbr_info = GetTmmbrInformation(bye.sender_ssrc());
   if (tmmbr_info)
