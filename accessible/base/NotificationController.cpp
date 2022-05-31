@@ -636,10 +636,10 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   if (!mDocument) return;
 
   // Wait until an update, we have started, or an interruptible reflow is
-  // finished.
+  // finished, and the PresShell has initialized.
   if (mObservingState == eRefreshProcessing ||
       mObservingState == eRefreshProcessingForUpdate ||
-      mPresShell->IsReflowInterrupted()) {
+      mPresShell->IsReflowInterrupted() || !mPresShell->DidInitialize()) {
     return;
   }
 
