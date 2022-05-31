@@ -3369,6 +3369,13 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     return EditActionHandled(rv);
   }
 
+  if (NS_WARN_IF(!mLeftContent->GetParentNode()) ||
+      NS_WARN_IF(!mRightContent->GetParentNode()) ||
+      NS_WARN_IF(mLeftContent->GetParentNode() !=
+                 mRightContent->GetParentNode())) {
+    return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+
   Result<EditorDOMPoint, nsresult> atFirstChildOfTheLastRightNodeOrError =
       JoinNodesDeepWithTransaction(aHTMLEditor, MOZ_KnownLive(*mLeftContent),
                                    MOZ_KnownLive(*mRightContent));
