@@ -47,9 +47,9 @@ class SettingsPrivacyMenuRobot {
         assertBlockWebFontsSwitchState()
         blockJavaScriptSwitch().check(matches(isDisplayed()))
         assertBlockJavaScriptSwitchState()
-        cookiesAndSiteDataSection().check(matches(isDisplayed()))
-        blockCookies().check(matches(isDisplayed()))
-        blockCookiesDefaultOption().check(matches(isDisplayed()))
+        assertTrue(cookiesAndSiteDataSection().exists())
+        assertTrue(blockCookiesMenuButton().exists())
+        assertTrue(blockCookiesDefaultOption().exists())
         assertTrue(sitePermissions().exists())
         verifyExceptionsListDisabled()
         useFingerprintSwitch().check(matches(isDisplayed()))
@@ -72,9 +72,9 @@ class SettingsPrivacyMenuRobot {
 
     fun verifyCookiesAndSiteDataSection() {
         privacySettingsList.waitForExists(waitingTime)
-        cookiesAndSiteDataSection().check(matches(isDisplayed()))
-        blockCookies().check(matches(isDisplayed()))
-        blockCookiesDefaultOption().check(matches(isDisplayed()))
+        assertTrue(cookiesAndSiteDataSection().exists())
+        assertTrue(blockCookiesMenuButton().exists())
+        assertTrue(blockCookiesDefaultOption().exists())
         assertTrue(sitePermissions().exists())
     }
 
@@ -208,7 +208,7 @@ class SettingsPrivacyMenuRobot {
 
     fun clickOtherContentTrackersBlockSwitch() = otherContentTrackersBlockSwitch().perform(click())
 
-    fun clickBlockCookies() = blockCookies().perform(click())
+    fun clickBlockCookies() = blockCookiesMenuButton().click()
 
     fun clickCancelBlockCookiesPrompt() {
         cancelBlockCookiesPrompt.click()
@@ -474,23 +474,29 @@ private fun assertBlockJavaScriptSwitchState(enabled: Boolean = false) {
     }
 }
 
-private fun cookiesAndSiteDataSection(): ViewInteraction {
+private fun cookiesAndSiteDataSection() =
     privacySettingsList
-        .scrollTextIntoView("Cookies and Site Data")
-    return onView(withText(R.string.preference_category_cookies))
-}
+        .getChildByText(
+            UiSelector().text("Cookies and Site Data"),
+            "Cookies and Site Data",
+            true
+        )
 
-private fun blockCookies(): ViewInteraction {
+private fun blockCookiesMenuButton() =
     privacySettingsList
-        .scrollTextIntoView("Cookies and Site Data")
-    return onView(withText(R.string.preference_privacy_category_cookies))
-}
+        .getChildByText(
+            UiSelector().text("Block cookies"),
+            "Block cookies",
+            true
+        )
 
-private fun blockCookiesDefaultOption(): ViewInteraction {
+private fun blockCookiesDefaultOption() =
     privacySettingsList
-        .scrollTextIntoView("Cookies and Site Data")
-    return onView(withText(R.string.preference_privacy_should_block_cookies_cross_site_option))
-}
+        .getChildByText(
+            UiSelector().text("Block cross-site cookies"),
+            "Block cross-site cookies",
+            true
+        )
 
 private fun sitePermissions() =
     privacySettingsList

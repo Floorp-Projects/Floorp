@@ -95,14 +95,15 @@ class CustomTabTest {
 
     @SmokeTest
     @Test
-    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6908")
     fun openCustomTabInFocusTest() {
         val browserPage = getGenericAsset(webServer)
         val customTabPage = getGenericTabAsset(webServer, 1)
 
         launchActivity<IntentReceiverActivity>()
         homeScreen {
-            clickStartBrowsing()
+            // The new onboarding moved to experiments, remove comment when implemented again in Focus
+            // clickStartBrowsing()
+            skipFirstRun()
         }
 
         searchScreen {
