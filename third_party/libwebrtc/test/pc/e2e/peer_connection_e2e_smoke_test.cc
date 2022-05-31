@@ -147,6 +147,8 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Smoke) {
     audio.sampling_frequency_in_hz = 48000;
     audio.sync_group = "alice-media";
     alice->SetAudioConfig(std::move(audio));
+    alice->SetVideoCodecs(
+        {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
   });
   AddPeer(network_links.second, [](PeerConfigurer* charlie) {
     charlie->SetName("charlie");
@@ -161,6 +163,8 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Smoke) {
     audio.input_file_name =
         test::ResourcePath("pc_quality_smoke_test_bob_source", "wav");
     charlie->SetAudioConfig(std::move(audio));
+    charlie->SetVideoCodecs(
+        {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
   });
   fixture()->AddQualityMetricsReporter(
       std::make_unique<StatsBasedNetworkQualityMetricsReporter>(
@@ -169,8 +173,6 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Smoke) {
                {"charlie", network_links.second->endpoints()}}),
           network_emulation()));
   RunParams run_params(TimeDelta::Seconds(2));
-  run_params.video_codecs = {
-      VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})};
   run_params.use_flex_fec = true;
   run_params.use_ulp_fec = true;
   run_params.video_encoder_bitrate_multiplier = 1.1;
@@ -217,8 +219,13 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_ChangeNetworkConditions) {
     video.stream_label = "alice-video";
     video.sync_group = "alice-media";
     alice->AddVideoConfig(std::move(video));
+    alice->SetVideoCodecs(
+        {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
   });
-  AddPeer(bob_network, [](PeerConfigurer* bob) {});
+  AddPeer(bob_network, [](PeerConfigurer* bob) {
+    bob->SetVideoCodecs(
+        {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
+  });
   fixture()->AddQualityMetricsReporter(
       std::make_unique<StatsBasedNetworkQualityMetricsReporter>(
           std::map<std::string, std::vector<EmulatedEndpoint*>>(
@@ -233,8 +240,6 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_ChangeNetworkConditions) {
   });
 
   RunParams run_params(TimeDelta::Seconds(2));
-  run_params.video_codecs = {
-      VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})};
   run_params.use_flex_fec = true;
   run_params.use_ulp_fec = true;
   run_params.video_encoder_bitrate_multiplier = 1.1;
@@ -323,7 +328,6 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Simulcast) {
   });
   AddPeer(network_links.second, [](PeerConfigurer* bob) {});
   RunParams run_params(TimeDelta::Seconds(2));
-  run_params.video_codecs = {VideoCodecConfig(cricket::kVp8CodecName)};
   RunAndCheckEachVideoStreamReceivedFrames(run_params);
 }
 
@@ -350,10 +354,12 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Svc) {
     audio.input_file_name =
         test::ResourcePath("pc_quality_smoke_test_alice_source", "wav");
     alice->SetAudioConfig(std::move(audio));
+    alice->SetVideoCodecs({VideoCodecConfig(cricket::kVp9CodecName)});
   });
-  AddPeer(network_links.second, [](PeerConfigurer* bob) {});
+  AddPeer(network_links.second, [](PeerConfigurer* bob) {
+    bob->SetVideoCodecs({VideoCodecConfig(cricket::kVp9CodecName)});
+  });
   RunParams run_params(TimeDelta::Seconds(2));
-  run_params.video_codecs = {VideoCodecConfig(cricket::kVp9CodecName)};
   RunAndCheckEachVideoStreamReceivedFrames(run_params);
 }
 
@@ -384,11 +390,14 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_HighBitrate) {
         test::ResourcePath("pc_quality_smoke_test_alice_source", "wav");
     audio.sampling_frequency_in_hz = 48000;
     alice->SetAudioConfig(std::move(audio));
+    alice->SetVideoCodecs(
+        {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
   });
-  AddPeer(network_links.second, [](PeerConfigurer* bob) {});
+  AddPeer(network_links.second, [](PeerConfigurer* bob) {
+    bob->SetVideoCodecs(
+        {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
+  });
   RunParams run_params(TimeDelta::Seconds(2));
-  run_params.video_codecs = {
-      VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})};
   RunAndCheckEachVideoStreamReceivedFrames(run_params);
 }
 
