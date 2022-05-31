@@ -840,11 +840,12 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(inbound_stream.frames_per_second);
     }
     verifier.TestMemberIsUndefined(inbound_stream.frame_bit_depth);
+    verifier.TestMemberIsNonNegative<double>(
+        inbound_stream.jitter_buffer_delay);
+    verifier.TestMemberIsNonNegative<uint64_t>(
+        inbound_stream.jitter_buffer_emitted_count);
     if (inbound_stream.media_type.is_defined() &&
         *inbound_stream.media_type == "video") {
-      verifier.TestMemberIsUndefined(inbound_stream.jitter_buffer_delay);
-      verifier.TestMemberIsUndefined(
-          inbound_stream.jitter_buffer_emitted_count);
       verifier.TestMemberIsUndefined(inbound_stream.total_samples_received);
       verifier.TestMemberIsUndefined(inbound_stream.concealed_samples);
       verifier.TestMemberIsUndefined(inbound_stream.silent_concealed_samples);
@@ -864,10 +865,6 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(inbound_stream.fir_count);
       verifier.TestMemberIsUndefined(inbound_stream.pli_count);
       verifier.TestMemberIsUndefined(inbound_stream.nack_count);
-      verifier.TestMemberIsNonNegative<double>(
-          inbound_stream.jitter_buffer_delay);
-      verifier.TestMemberIsNonNegative<uint64_t>(
-          inbound_stream.jitter_buffer_emitted_count);
       verifier.TestMemberIsPositive<uint64_t>(
           inbound_stream.total_samples_received);
       verifier.TestMemberIsNonNegative<uint64_t>(

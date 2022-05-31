@@ -1737,7 +1737,7 @@ TEST_F(RTCStatsCollectorTest,
   voice_receiver_info.inserted_samples_for_deceleration = 987;
   voice_receiver_info.removed_samples_for_acceleration = 876;
   voice_receiver_info.silent_concealed_samples = 765;
-  voice_receiver_info.jitter_buffer_delay_seconds = 3456;
+  voice_receiver_info.jitter_buffer_delay_seconds = 3.456;
   voice_receiver_info.jitter_buffer_emitted_count = 13;
   voice_receiver_info.jitter_buffer_target_delay_seconds = 7.894;
   voice_receiver_info.jitter_buffer_flushes = 7;
@@ -1782,7 +1782,7 @@ TEST_F(RTCStatsCollectorTest,
   expected_remote_audio_track.inserted_samples_for_deceleration = 987;
   expected_remote_audio_track.removed_samples_for_acceleration = 876;
   expected_remote_audio_track.silent_concealed_samples = 765;
-  expected_remote_audio_track.jitter_buffer_delay = 3456;
+  expected_remote_audio_track.jitter_buffer_delay = 3.456;
   expected_remote_audio_track.jitter_buffer_emitted_count = 13;
   expected_remote_audio_track.jitter_buffer_target_delay = 7.894;
   expected_remote_audio_track.jitter_buffer_flushes = 7;
@@ -2068,6 +2068,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   video_media_info.receivers[0].total_inter_frame_delay = 0.123;
   video_media_info.receivers[0].total_squared_inter_frame_delay = 0.00456;
   video_media_info.receivers[0].jitter_ms = 1199;
+  video_media_info.receivers[0].jitter_buffer_delay_seconds = 3.456;
+  video_media_info.receivers[0].jitter_buffer_emitted_count = 13;
 
   video_media_info.receivers[0].last_packet_received_timestamp_ms =
       absl::nullopt;
@@ -2115,6 +2117,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   expected_video.total_inter_frame_delay = 0.123;
   expected_video.total_squared_inter_frame_delay = 0.00456;
   expected_video.jitter = 1.199;
+  expected_video.jitter_buffer_delay = 3.456;
+  expected_video.jitter_buffer_emitted_count = 13;
   // |expected_video.last_packet_received_timestamp| should be undefined.
   // |expected_video.content_type| should be undefined.
   // |expected_video.decoder_implementation| should be undefined.
