@@ -56,10 +56,8 @@ rtc::FunctionView<float(float)> GetActivationFunction(
   switch (activation_function) {
     case ActivationFunction::kTansigApproximated:
       return ::rnnoise::TansigApproximated;
-      break;
     case ActivationFunction::kSigmoidApproximated:
       return ::rnnoise::SigmoidApproximated;
-      break;
   }
 }
 
