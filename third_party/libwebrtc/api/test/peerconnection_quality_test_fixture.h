@@ -268,6 +268,27 @@ class PeerConnectionE2EQualityTestFixture {
     absl::optional<std::string> sync_group;
   };
 
+  struct VideoCodecConfig {
+    explicit VideoCodecConfig(std::string name)
+        : name(std::move(name)), required_params() {}
+    VideoCodecConfig(std::string name,
+                     std::map<std::string, std::string> required_params)
+        : name(std::move(name)), required_params(std::move(required_params)) {}
+    // Next two fields are used to specify concrete video codec, that should be
+    // used in the test. Video code will be negotiated in SDP during offer/
+    // answer exchange.
+    // Video codec name. You can find valid names in
+    // media/base/media_constants.h
+    std::string name = cricket::kVp8CodecName;
+    // Map of parameters, that have to be specified on SDP codec. Each parameter
+    // is described by key and value. Codec parameters will match the specified
+    // map if and only if for each key from |required_params| there will be
+    // a parameter with name equal to this key and parameter value will be equal
+    // to the value from |required_params| for this key.
+    // If empty then only name will be used to match the codec.
+    std::map<std::string, std::string> required_params;
+  };
+
   // This class is used to fully configure one peer inside the call.
   class PeerConfigurer {
    public:
@@ -343,6 +364,14 @@ class PeerConnectionE2EQualityTestFixture {
     // applied to all summed RTP streams for this peer.
     virtual PeerConfigurer* SetBitrateSettings(
         BitrateSettings bitrate_settings) = 0;
+    // Set the list of video codecs used by the peer during the test. These
+    // codecs will be negotiated in SDP during offer/answer exchange. The order
+    // of these codecs during negotiation will be the same as in |video_codecs|.
+    // Codecs have to be available in codecs list provided by peer connection to
+    // be negotiated. If some of specified codecs won't be found, the test will
+    // crash.
+    virtual PeerConfigurer* SetVideoCodecs(
+        std::vector<VideoCodecConfig> video_codecs) = 0;
   };
 
   // Contains configuration for echo emulator.
@@ -350,27 +379,6 @@ class PeerConnectionE2EQualityTestFixture {
     // Delay which represents the echo path delay, i.e. how soon rendered signal
     // should reach capturer.
     TimeDelta echo_delay = TimeDelta::Millis(50);
-  };
-
-  struct VideoCodecConfig {
-    explicit VideoCodecConfig(std::string name)
-        : name(std::move(name)), required_params() {}
-    VideoCodecConfig(std::string name,
-                     std::map<std::string, std::string> required_params)
-        : name(std::move(name)), required_params(std::move(required_params)) {}
-    // Next two fields are used to specify concrete video codec, that should be
-    // used in the test. Video code will be negotiated in SDP during offer/
-    // answer exchange.
-    // Video codec name. You can find valid names in
-    // media/base/media_constants.h
-    std::string name = cricket::kVp8CodecName;
-    // Map of parameters, that have to be specified on SDP codec. Each parameter
-    // is described by key and value. Codec parameters will match the specified
-    // map if and only if for each key from |required_params| there will be
-    // a parameter with name equal to this key and parameter value will be equal
-    // to the value from |required_params| for this key.
-    // If empty then only name will be used to match the codec.
-    std::map<std::string, std::string> required_params;
   };
 
   // Contains parameters, that describe how long framework should run quality
@@ -383,6 +391,11 @@ class PeerConnectionE2EQualityTestFixture {
     // it will be shut downed.
     TimeDelta run_duration;
 
+    // DEPRECATED: Instead of setting the codecs in RunParams (which apply to
+    //             all the participants in the call, please set them with
+    //             PeerConfigurer, this will allow more flexibility and let
+    //             different Peers support different codecs.
+    //
     // List of video codecs to use during the test. These codecs will be
     // negotiated in SDP during offer/answer exchange. The order of these codecs
     // during negotiation will be the same as in |video_codecs|. Codecs have

@@ -168,6 +168,12 @@ class PeerConfigurerImpl final
     params_->bitrate_settings = bitrate_settings;
     return this;
   }
+  PeerConfigurer* SetVideoCodecs(
+      std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
+          video_codecs) override {
+    params_->video_codecs = std::move(video_codecs);
+    return this;
+  }
 
   PeerConfigurer* SetIceTransportFactory(
       std::unique_ptr<IceTransportFactory> factory) override {

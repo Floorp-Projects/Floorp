@@ -116,6 +116,8 @@ struct Params {
 
   PeerConnectionInterface::RTCConfiguration rtc_configuration;
   BitrateSettings bitrate_settings;
+  std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
+      video_codecs;
 };
 
 }  // namespace webrtc_pc_e2e
