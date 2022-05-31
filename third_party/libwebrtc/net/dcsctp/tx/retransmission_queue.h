@@ -143,6 +143,12 @@ class RetransmissionQueue {
   // its associated metadata.
   class TxData {
    public:
+    enum class NackAction {
+      kNothing,
+      kRetransmit,
+      kAbandon,
+    };
+
     explicit TxData(Data data,
                     absl::optional<size_t> max_retransmissions,
                     TimeMs time_sent,
@@ -160,9 +166,10 @@ class RetransmissionQueue {
     void Ack();
 
     // Nacks an item. If it has been nacked enough times, or if `retransmit_now`
-    // is set, it might be marked for retransmission, which is indicated by the
-    // return value.
-    bool Nack(bool retransmit_now = false);
+    // is set, it might be marked for retransmission. If the item has reached
+    // its max retransmission value, it will instead be abandoned. The action
+    // performed is indicated as return value.
+    NackAction Nack(bool retransmit_now = false);
 
     // Prepares the item to be retransmitted. Sets it as outstanding and
     // clears all nack counters.
@@ -173,6 +180,7 @@ class RetransmissionQueue {
 
     bool is_outstanding() const { return ack_state_ == AckState::kUnacked; }
     bool is_acked() const { return ack_state_ == AckState::kAcked; }
+    bool is_nacked() const { return ack_state_ == AckState::kNacked; }
     bool is_abandoned() const { return is_abandoned_; }
 
     // Indicates if this chunk should be retransmitted.
@@ -264,6 +272,14 @@ class RetransmissionQueue {
   // by setting `bytes_acked_by_cumulative_tsn_ack` and `acked_tsns`.
   void RemoveAcked(UnwrappedTSN cumulative_tsn_ack, AckInfo& ack_info);
 
+  // Helper method to nack an item and perform the correct operations given the
+  // action indicated when nacking an item (e.g. retransmitting or abandoning).
+  // The return value indicate if an action was performed, meaning that packet
+  // loss was detected and acted upon.
+  bool NackItem(UnwrappedTSN cumulative_tsn_ack,
+                TxData& item,
+                bool retransmit_now);
+
   // Will mark the chunks covered by the `gap_ack_blocks` from an incoming SACK
   // as "acked" and update `ack_info` by adding new TSNs to `added_tsns`.
   void AckGapBlocks(UnwrappedTSN cumulative_tsn_ack,
@@ -307,13 +323,13 @@ class RetransmissionQueue {
   // is running.
   void StartT3RtxTimerIfOutstandingData();
 
-  // Given the current time `now_ms`, expire chunks that have a limited
-  // lifetime.
-  void ExpireChunks(TimeMs now);
-  // Given that a message fragment, `item` has expired, expire all other
-  // fragments that share the same message - even never-before-sent fragments
-  // that are still in the SendQueue.
-  void ExpireAllFor(const RetransmissionQueue::TxData& item);
+  // Given the current time `now_ms`, expire and abandon outstanding (sent at
+  // least once) chunks that have a limited lifetime.
+  void ExpireOutstandingChunks(TimeMs now);
+  // Given that a message fragment, `item` has been abandoned, abandon all other
+  // fragments that share the same message - both never-before-sent fragments
+  // that are still in the SendQueue and outstanding chunks.
+  void AbandonAllFor(const RetransmissionQueue::TxData& item);
 
   // Returns the current congestion control algorithm phase.
   CongestionAlgorithmPhase phase() const {

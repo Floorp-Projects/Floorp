@@ -188,16 +188,8 @@ void RetransmissionQueue::NackBetweenAckBlocks(
     for (auto iter = outstanding_data_.upper_bound(prev_block_last_acked);
          iter != outstanding_data_.lower_bound(cur_block_first_acked); ++iter) {
       if (iter->first <= max_tsn_to_nack) {
-        if (iter->second.is_outstanding()) {
-          outstanding_bytes_ -= GetSerializedChunkSize(iter->second.data());
-        }
-
-        if (iter->second.Nack()) {
-          ack_info.has_packet_loss = true;
-          to_be_retransmitted_.insert(iter->first);
-          RTC_DLOG(LS_VERBOSE) << log_prefix_ << *iter->first.Wrap()
-                               << " marked for retransmission";
-        }
+        ack_info.has_packet_loss =
+            NackItem(iter->first, iter->second, /*retransmit_now=*/false);
       }
     }
     prev_block_last_acked = UnwrappedTSN::AddTo(cumulative_tsn_ack, block.end);
@@ -499,20 +491,11 @@ void RetransmissionQueue::HandleT3RtxTimerExpiry() {
   // T3-rtx timer expired but did not fit in one MTU (rule E3 above) should be
   // marked for retransmission and sent as soon as cwnd allows (normally, when a
   // SACK arrives)."
-  int count = 0;
   for (auto& elem : outstanding_data_) {
     UnwrappedTSN tsn = elem.first;
     TxData& item = elem.second;
     if (!item.is_acked()) {
-      if (item.is_outstanding()) {
-        outstanding_bytes_ -= GetSerializedChunkSize(item.data());
-      }
-      if (item.Nack(/*retransmit_now=*/true)) {
-        to_be_retransmitted_.insert(tsn);
-        RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Chunk " << *tsn.Wrap()
-                             << " will be retransmitted due to T3-RTX";
-        ++count;
-      }
+      NackItem(tsn, item, /*retransmit_now=*/true);
     }
   }
 
@@ -524,10 +507,31 @@ void RetransmissionQueue::HandleT3RtxTimerExpiry() {
 
   RTC_DLOG(LS_INFO) << log_prefix_ << "t3-rtx expired. new cwnd=" << cwnd_
                     << " (" << old_cwnd << "), ssthresh=" << ssthresh_
-                    << ", rtx-packets=" << count << ", outstanding_bytes "
-                    << outstanding_bytes_ << " (" << old_outstanding_bytes
-                    << ")";
+                    << ", outstanding_bytes " << outstanding_bytes_ << " ("
+                    << old_outstanding_bytes << ")";
   RTC_DCHECK(IsConsistent());
+}
+
+bool RetransmissionQueue::NackItem(UnwrappedTSN tsn,
+                                   TxData& item,
+                                   bool retransmit_now) {
+  if (item.is_outstanding()) {
+    outstanding_bytes_ -= GetSerializedChunkSize(item.data());
+  }
+
+  switch (item.Nack(retransmit_now)) {
+    case TxData::NackAction::kNothing:
+      return false;
+    case TxData::NackAction::kRetransmit:
+      to_be_retransmitted_.insert(tsn);
+      RTC_DLOG(LS_VERBOSE) << log_prefix_ << *tsn.Wrap()
+                           << " marked for retransmission";
+      break;
+    case TxData::NackAction::kAbandon:
+      AbandonAllFor(item);
+      break;
+  }
+  return true;
 }
 
 std::vector<std::pair<TSN, Data>>
@@ -615,17 +619,35 @@ std::vector<std::pair<TSN, Data>> RetransmissionQueue::GetChunksToSend(
 
       UnwrappedTSN tsn = next_tsn_;
       next_tsn_.Increment();
-      to_be_sent.emplace_back(tsn.Wrap(), chunk_opt->data.Clone());
 
       // All chunks are always padded to be even divisible by 4.
       size_t chunk_size = GetSerializedChunkSize(chunk_opt->data);
       max_bytes -= chunk_size;
       outstanding_bytes_ += chunk_size;
       rwnd_ -= chunk_size;
-      outstanding_data_.emplace(
-          tsn, RetransmissionQueue::TxData(std::move(chunk_opt->data),
-                                           chunk_opt->max_retransmissions, now,
-                                           chunk_opt->expires_at));
+      auto item_it =
+          outstanding_data_
+              .emplace(tsn,
+                       RetransmissionQueue::TxData(
+                           chunk_opt->data.Clone(),
+                           partial_reliability_ ? chunk_opt->max_retransmissions
+                                                : absl::nullopt,
+                           now,
+                           partial_reliability_ ? chunk_opt->expires_at
+                                                : absl::nullopt))
+              .first;
+
+      if (item_it->second.has_expired(now)) {
+        // No need to send it - it was expired when it was in the send
+        // queue.
+        RTC_DLOG(LS_VERBOSE)
+            << log_prefix_ << "Marking freshly produced chunk "
+            << *item_it->first.Wrap() << " and message "
+            << *item_it->second.data().message_id << " as expired";
+        AbandonAllFor(item_it->second);
+      } else {
+        to_be_sent.emplace_back(tsn.Wrap(), std::move(chunk_opt->data));
+      }
     }
   }
 
@@ -684,7 +706,7 @@ bool RetransmissionQueue::ShouldSendForwardTsn(TimeMs now) {
   if (!partial_reliability_) {
     return false;
   }
-  ExpireChunks(now);
+  ExpireOutstandingChunks(now);
   if (!outstanding_data_.empty()) {
     auto it = outstanding_data_.begin();
     return it->first == last_cumulative_tsn_ack_.next_value() &&
@@ -699,15 +721,22 @@ void RetransmissionQueue::TxData::Ack() {
   should_be_retransmitted_ = false;
 }
 
-bool RetransmissionQueue::TxData::Nack(bool retransmit_now) {
+RetransmissionQueue::TxData::NackAction RetransmissionQueue::TxData::Nack(
+    bool retransmit_now) {
   ack_state_ = AckState::kNacked;
   ++nack_count_;
   if ((retransmit_now || nack_count_ >= kNumberOfNacksForRetransmission) &&
       !is_abandoned_) {
-    should_be_retransmitted_ = true;
-    return true;
+    // Nacked enough times - it's considered lost.
+    if (!max_retransmissions_.has_value() ||
+        num_retransmissions_ < max_retransmissions_) {
+      should_be_retransmitted_ = true;
+      return NackAction::kRetransmit;
+    }
+    Abandon();
+    return NackAction::kAbandon;
   }
-  return false;
+  return NackAction::kNothing;
 }
 
 void RetransmissionQueue::TxData::Retransmit() {
@@ -724,33 +753,24 @@ void RetransmissionQueue::TxData::Abandon() {
 }
 
 bool RetransmissionQueue::TxData::has_expired(TimeMs now) const {
-  if (ack_state_ != AckState::kAcked && !is_abandoned_) {
-    if (max_retransmissions_.has_value() &&
-        num_retransmissions_ >= *max_retransmissions_) {
-      return true;
-    } else if (expires_at_.has_value() && *expires_at_ <= now) {
-      return true;
-    }
-  }
-  return false;
+  return expires_at_.has_value() && *expires_at_ <= now;
 }
 
-void RetransmissionQueue::ExpireChunks(TimeMs now) {
+void RetransmissionQueue::ExpireOutstandingChunks(TimeMs now) {
   for (const auto& elem : outstanding_data_) {
     UnwrappedTSN tsn = elem.first;
     const TxData& item = elem.second;
 
-    // Chunks that are in-flight (possibly lost?), nacked or to be retransmitted
-    // can be expired easily. There is always a risk that a message is expired
-    // that was already received by the peer, but for which there haven't been
-    // a SACK received. But that's acceptable, and handled.
+    // Chunks that are nacked can be expired. Care should be taken not to expire
+    // unacked (in-flight) chunks as they might have been received, but the SACK
+    // is either delayed or in-flight and may be received later.
     if (item.is_abandoned()) {
       // Already abandoned.
-    } else if (item.has_expired(now)) {
-      RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Marking chunk " << *tsn.Wrap()
-                           << " and message " << *item.data().message_id
-                           << " as expired";
-      ExpireAllFor(item);
+    } else if (item.is_nacked() && item.has_expired(now)) {
+      RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Marking nacked chunk "
+                           << *tsn.Wrap() << " and message "
+                           << *item.data().message_id << " as expired";
+      AbandonAllFor(item);
     } else {
       // A non-expired chunk. No need to iterate any further.
       break;
@@ -758,7 +778,7 @@ void RetransmissionQueue::ExpireChunks(TimeMs now) {
   }
 }
 
-void RetransmissionQueue::ExpireAllFor(
+void RetransmissionQueue::AbandonAllFor(
     const RetransmissionQueue::TxData& item) {
   // Erase all remaining chunks from the producer, if any.
   if (send_queue_.Discard(item.data().is_unordered, item.data().stream_id,
