@@ -428,6 +428,9 @@ NSPR_API(void) PR_FreeAddrInfo(PRAddrInfo *addrInfo);
 NSPR_API(void *) PR_EnumerateAddrInfo(
     void *enumPtr, const PRAddrInfo *addrInfo, PRUint16 port, PRNetAddr *result);
 
+NSPR_API(PRStatus) PR_GetPrefLoopbackAddrInfo(PRNetAddr *result,
+                                              PRUint16 port);
+
 /***********************************************************************
 ** FUNCTION:
 ** DESCRIPTION: PR_GetCanonNameFromAddrInfo()
