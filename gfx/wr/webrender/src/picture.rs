@@ -3344,38 +3344,45 @@ impl TileCacheInstance {
             }
             PrimitiveInstanceKind::BackdropCapture { .. } => {}
             PrimitiveInstanceKind::BackdropRender { pic_index, .. } => {
-                // Mark that we need the sub-graph this render depends on so that
-                // we don't skip it during the prepare pass
-                scratch.required_sub_graphs.insert(pic_index);
+                // If the area that the backdrop covers in the space of the surface it draws on
+                // is empty, skip any sub-graph processing. This is not just a performance win,
+                // it also ensures that we don't do a deferred dirty test that invalidates a tile
+                // even if the tile isn't actually dirty, which can cause panics later in the
+                // WR pipeline.
+                if !pic_coverage_rect.is_empty() {
+                    // Mark that we need the sub-graph this render depends on so that
+                    // we don't skip it during the prepare pass
+                    scratch.required_sub_graphs.insert(pic_index);
 
-                // If this is a sub-graph, register the bounds on any affected tiles
-                // so we know how much to expand the content tile by.
+                    // If this is a sub-graph, register the bounds on any affected tiles
+                    // so we know how much to expand the content tile by.
 
-                // Implicitly, we know that any slice with a sub-graph disables compositor
-                // surface promotion, so sub_slice_index will always be 0.
-                debug_assert_eq!(sub_slice_index, 0);
-                let sub_slice = &mut self.sub_slices[sub_slice_index];
+                    // Implicitly, we know that any slice with a sub-graph disables compositor
+                    // surface promotion, so sub_slice_index will always be 0.
+                    debug_assert_eq!(sub_slice_index, 0);
+                    let sub_slice = &mut self.sub_slices[sub_slice_index];
 
-                let mut surface_info = Vec::new();
-                for (pic_index, surface_index) in surface_stack.iter().rev() {
-                    let pic = &pictures[pic_index.0];
-                    surface_info.push((pic.composite_mode.as_ref().unwrap().clone(), *surface_index));
-                }
-
-                for y in p0.y .. p1.y {
-                    for x in p0.x .. p1.x {
-                        let key = TileOffset::new(x, y);
-                        let tile = sub_slice.tiles.get_mut(&key).expect("bug: no tile");
-                        tile.sub_graphs.push((pic_coverage_rect, surface_info.clone()));
+                    let mut surface_info = Vec::new();
+                    for (pic_index, surface_index) in surface_stack.iter().rev() {
+                        let pic = &pictures[pic_index.0];
+                        surface_info.push((pic.composite_mode.as_ref().unwrap().clone(), *surface_index));
                     }
-                }
 
-                // For backdrop-filter, we need to check if any of the dirty rects
-                // in tiles that are affected by the filter primitive are dirty.
-                self.deferred_dirty_tests.push(DeferredDirtyTest {
-                    tile_rect: TileRect::new(p0, p1),
-                    prim_rect: pic_coverage_rect,
-                });
+                    for y in p0.y .. p1.y {
+                        for x in p0.x .. p1.x {
+                            let key = TileOffset::new(x, y);
+                            let tile = sub_slice.tiles.get_mut(&key).expect("bug: no tile");
+                            tile.sub_graphs.push((pic_coverage_rect, surface_info.clone()));
+                        }
+                    }
+
+                    // For backdrop-filter, we need to check if any of the dirty rects
+                    // in tiles that are affected by the filter primitive are dirty.
+                    self.deferred_dirty_tests.push(DeferredDirtyTest {
+                        tile_rect: TileRect::new(p0, p1),
+                        prim_rect: pic_coverage_rect,
+                    });
+                }
             }
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
