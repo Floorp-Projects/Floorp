@@ -56,6 +56,7 @@
 #include "nsPrintfCString.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
+#  include "mozilla/java/SurfaceControlManagerWrappers.h"
 #  include "mozilla/widget/AndroidUiThread.h"
 #  include "mozilla/layers/UiCompositorControllerChild.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
@@ -824,6 +825,10 @@ void GPUProcessManager::HandleProcessLost() {
   //      tick occurs, but on other platforms this is not necessary.
 
   DestroyRemoteCompositorSessions();
+
+#ifdef MOZ_WIDGET_ANDROID
+  java::SurfaceControlManager::GetInstance()->OnGpuProcessLoss();
+#endif
 
   // Re-launch the process if immediately if the GPU process is still enabled.
   // Except on Android if the app is in the background, where we want to wait

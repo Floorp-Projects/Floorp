@@ -88,6 +88,7 @@
 #include "mozilla/java/GeckoSystemStateListenerWrappers.h"
 #include "mozilla/java/PanZoomControllerNatives.h"
 #include "mozilla/java/SessionAccessibilityWrappers.h"
+#include "mozilla/java/SurfaceControlManagerWrappers.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
@@ -899,6 +900,8 @@ class LayerViewSupport final
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
   java::sdk::Surface::GlobalRef mSurface;
   java::sdk::SurfaceControl::GlobalRef mSurfaceControl;
+  int32_t mWidth;
+  int32_t mHeight;
   // Used to communicate with the gecko compositor from the UI thread.
   // Set in NotifyCompositorCreated and cleared in NotifyCompositorSessionLost.
   RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
@@ -1019,19 +1022,27 @@ class LayerViewSupport final
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     mUiCompositorControllerChild = aUiCompositorControllerChild;
 
-    if (auto window{mWindow.Access()}) {
-      nsWindow* gkWindow = window->GetNsWindow();
-      if (gkWindow) {
-        mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-            gkWindow->mWidgetId, mSurface, mSurfaceControl);
-      }
-    }
-
     if (mDefaultClearColor) {
       mUiCompositorControllerChild->SetDefaultClearColor(*mDefaultClearColor);
     }
 
     if (!mCompositorPaused) {
+      // If we are using SurfaceControl but mSurface is null, that means the
+      // previous surface was destroyed along with the the previous compositor,
+      // and we need to create a new one.
+      if (mSurfaceControl && !mSurface) {
+        mSurface = java::SurfaceControlManager::GetInstance()->GetChildSurface(
+            mSurfaceControl, mWidth, mHeight);
+      }
+
+      if (auto window{mWindow.Access()}) {
+        nsWindow* gkWindow = window->GetNsWindow();
+        if (gkWindow) {
+          mUiCompositorControllerChild->OnCompositorSurfaceChanged(
+              gkWindow->mWidgetId, mSurface);
+        }
+      }
+
       mUiCompositorControllerChild->Resume();
     }
   }
@@ -1040,6 +1051,12 @@ class LayerViewSupport final
   void NotifyCompositorSessionLost() {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     mUiCompositorControllerChild = nullptr;
+
+    if (mSurfaceControl) {
+      // If we are using SurfaceControl then we must set the Surface to null
+      // here to ensure we create a new one when the new compositor is created.
+      mSurface = nullptr;
+    }
 
     if (auto window = mWindow.Access()) {
       while (!mCapturePixelsResults.empty()) {
@@ -1057,9 +1074,6 @@ class LayerViewSupport final
   }
 
   java::sdk::Surface::Param GetSurface() { return mSurface; }
-  java::sdk::SurfaceControl::Param GetSurfaceControl() {
-    return mSurfaceControl;
-  }
 
  private:
   already_AddRefed<DataSourceSurface> FlipScreenPixels(
@@ -1178,6 +1192,16 @@ class LayerViewSupport final
 
     if (mUiCompositorControllerChild) {
       mUiCompositorControllerChild->Pause();
+
+      mSurface = nullptr;
+      mSurfaceControl = nullptr;
+      if (auto window = mWindow.Access()) {
+        nsWindow* gkWindow = window->GetNsWindow();
+        if (gkWindow) {
+          mUiCompositorControllerChild->OnCompositorSurfaceChanged(
+              gkWindow->mWidgetId, nullptr);
+        }
+      }
     }
 
     if (auto lock{mWindow.Access()}) {
@@ -1210,20 +1234,19 @@ class LayerViewSupport final
       jni::Object::Param aSurfaceControl) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-    mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
-    // Disable the SurfaceControl compositing path for now, until we have a
-    // solution to bug 1767128. This means users on Android 12 will be unable to
-    // recover from a GPU process crash (due to bug 1762025), and the parent
-    // process will crash as a result (which is no worse than not using the GPU
-    // process in the first place).
-    mSurfaceControl = nullptr;
-
+    mWidth = aWidth;
+    mHeight = aHeight;
+    mSurfaceControl =
+        java::sdk::SurfaceControl::GlobalRef::From(aSurfaceControl);
     if (mSurfaceControl) {
-      // Setting the SurfaceControl's buffer size here ensures child Surfaces
-      // created by the compositor have the correct size.
-      java::sdk::SurfaceControl::Transaction::LocalRef transaction =
-          java::sdk::SurfaceControl::Transaction::New();
-      transaction->SetBufferSize(mSurfaceControl, aWidth, aHeight)->Apply();
+      // When using SurfaceControl, we create a child Surface to render in to
+      // rather than rendering directly in to the Surface provided by the
+      // application. This allows us to work around a bug on some versions of
+      // Android when recovering from a GPU process crash.
+      mSurface = java::SurfaceControlManager::GetInstance()->GetChildSurface(
+          mSurfaceControl, mWidth, mHeight);
+    } else {
+      mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
     }
 
     if (mUiCompositorControllerChild) {
@@ -1232,7 +1255,7 @@ class LayerViewSupport final
         if (gkWindow) {
           // Send new Surface to GPU process, if one exists.
           mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-              gkWindow->mWidgetId, mSurface, mSurfaceControl);
+              gkWindow->mWidgetId, mSurface);
         }
       }
 
@@ -2491,13 +2514,6 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       if (::mozilla::jni::NativeWeakPtr<LayerViewSupport>::Accessor lvs{
               mLayerViewSupport.Access()}) {
         return lvs->GetSurface().Get();
-      }
-      return nullptr;
-
-    case NS_JAVA_SURFACE_CONTROL:
-      if (::mozilla::jni::NativeWeakPtr<LayerViewSupport>::Accessor lvs{
-              mLayerViewSupport.Access()}) {
-        return lvs->GetSurfaceControl().Get();
       }
       return nullptr;
   }
