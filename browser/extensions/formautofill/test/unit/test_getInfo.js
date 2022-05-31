@@ -275,6 +275,45 @@ const TESTCASES = [
       contactType: "",
     },
   },
+  {
+    description: `Identify address field that has a placeholder but no label associated with it`,
+    document: `<form>
+                <input id="targetElement" placeholder="Name">
+               </form>`,
+    elementId: "targetElement",
+    expectedReturnValue: {
+      fieldName: "name",
+      section: "",
+      addressType: "",
+      contactType: "",
+    },
+  },
+  {
+    description: `Identify address field that has a placeholder, no associated label, and its autocomplete attribute is "off"`,
+    document: `<form>
+                <input id="targetElement" placeholder="Address" autocomplete="off">
+               </form>`,
+    elementId: "targetElement",
+    expectedReturnValue: {
+      fieldName: "street-address",
+      section: "",
+      addressType: "",
+      contactType: "",
+    },
+  },
+  {
+    description: `Identify address field that has a placeholder, no associated label, and the form's autocomplete attribute is "off"`,
+    document: `<form autocomplete="off">
+                <input id="targetElement" placeholder="Country">
+               </form>`,
+    elementId: "targetElement",
+    expectedReturnValue: {
+      fieldName: "country",
+      section: "",
+      addressType: "",
+      contactType: "",
+    },
+  },
 ];
 
 TESTCASES.forEach(testcase => {
