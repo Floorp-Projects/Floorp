@@ -441,6 +441,14 @@ rtc_library("mock_rtp_rtcp") {
 }
 }
 
+rtc_library("rtp_packetizer_av1_test_helper") {
+  testonly = true
+  sources = [
+    "source/rtp_packetizer_av1_test_helper.cc",
+    "source/rtp_packetizer_av1_test_helper.h",
+  ]
+}
+
 if (rtc_include_tests) {
   if (!build_with_chromium) {
     rtc_executable("test_packet_masks_metrics") {
@@ -560,6 +568,7 @@ if (rtc_include_tests) {
       ":fec_test_helper",
       ":mock_rtp_rtcp",
       ":rtcp_transceiver",
+      ":rtp_packetizer_av1_test_helper",
       ":rtp_rtcp",
       ":rtp_rtcp_format",
       ":rtp_rtcp_legacy",
