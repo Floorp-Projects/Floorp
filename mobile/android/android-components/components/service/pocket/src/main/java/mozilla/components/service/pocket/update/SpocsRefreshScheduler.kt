@@ -8,12 +8,16 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import mozilla.components.service.pocket.PocketStoriesConfig
 import mozilla.components.service.pocket.logger
+import mozilla.components.service.pocket.update.DeleteSpocsProfileWorker.Companion.DELETE_SPOCS_PROFILE_WORK_TAG
 import mozilla.components.service.pocket.update.RefreshSpocsWorker.Companion.REFRESH_SPOCS_WORK_TAG
 import mozilla.components.support.base.worker.Frequency
 
@@ -26,7 +30,7 @@ internal class SpocsRefreshScheduler(
     internal fun schedulePeriodicRefreshes(context: Context) {
         logger.info("Scheduling sponsored stories background refresh")
 
-        val refreshWork = createPeriodicWorkerRequest(
+        val refreshWork = createPeriodicRefreshWorkerRequest(
             frequency = pocketStoriesConfig.sponsoredStoriesRefreshFrequency
         )
 
@@ -39,8 +43,34 @@ internal class SpocsRefreshScheduler(
             .cancelAllWorkByTag(REFRESH_SPOCS_WORK_TAG)
     }
 
+    internal fun scheduleProfileDeletion(context: Context) {
+        logger.info("Scheduling sponsored stories profile deletion")
+
+        val deleteProfileWork = createOneTimeProfileDeletionWorkerRequest()
+
+        getWorkManager(context)
+            .enqueueUniqueWork(DELETE_SPOCS_PROFILE_WORK_TAG, ExistingWorkPolicy.KEEP, deleteProfileWork)
+    }
+
+    internal fun stopProfileDeletion(context: Context) {
+        getWorkManager(context)
+            .cancelAllWorkByTag(DELETE_SPOCS_PROFILE_WORK_TAG)
+    }
+
     @VisibleForTesting
-    internal fun createPeriodicWorkerRequest(
+    internal fun createOneTimeProfileDeletionWorkerRequest(): OneTimeWorkRequest {
+        val constraints = getWorkerConstrains()
+
+        return OneTimeWorkRequestBuilder<DeleteSpocsProfileWorker>()
+            .apply {
+                setConstraints(constraints)
+                addTag(DELETE_SPOCS_PROFILE_WORK_TAG)
+            }
+            .build()
+    }
+
+    @VisibleForTesting
+    internal fun createPeriodicRefreshWorkerRequest(
         frequency: Frequency
     ): PeriodicWorkRequest {
         val constraints = getWorkerConstrains()

@@ -101,6 +101,7 @@ class PocketStoriesService(
         }
 
         GlobalDependencyProvider.SponsoredStories.initialize(useCases)
+        spocsRefreshscheduler.stopProfileDeletion(context)
         spocsRefreshscheduler.schedulePeriodicRefreshes(context)
     }
 
@@ -114,7 +115,6 @@ class PocketStoriesService(
      */
     fun stopPeriodicSponsoredStoriesRefresh() {
         spocsRefreshscheduler.stopPeriodicRefreshes(context)
-        GlobalDependencyProvider.SponsoredStories.reset()
     }
 
     /**
@@ -126,10 +126,18 @@ class PocketStoriesService(
 
     /**
      * Delete all stored user data used for downloading personalized sponsored stories.
+     * This returns immediately but will handle the profile deletion in background.
      */
-    suspend fun deleteProfile(): Boolean {
-        stopPeriodicSponsoredStoriesRefresh()
-        return spocsUseCases?.deleteProfile?.invoke() ?: false
+    fun deleteProfile() {
+        val useCases = spocsUseCases
+        if (useCases == null) {
+            logger.warn("Cannot delete sponsored stories profile. Service has incomplete setup")
+            return
+        }
+
+        GlobalDependencyProvider.SponsoredStories.initialize(useCases)
+        spocsRefreshscheduler.stopPeriodicRefreshes(context)
+        spocsRefreshscheduler.scheduleProfileDeletion(context)
     }
 
     /**

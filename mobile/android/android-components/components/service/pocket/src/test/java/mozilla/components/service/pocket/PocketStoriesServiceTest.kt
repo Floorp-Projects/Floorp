@@ -12,7 +12,6 @@ import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.helpers.assertConstructorsVisibility
 import mozilla.components.service.pocket.spocs.SpocsUseCases
-import mozilla.components.service.pocket.spocs.SpocsUseCases.DeleteProfile
 import mozilla.components.service.pocket.spocs.SpocsUseCases.GetSponsoredStories
 import mozilla.components.service.pocket.spocs.SpocsUseCases.RecordImpression
 import mozilla.components.service.pocket.stories.PocketStoriesUseCases
@@ -23,7 +22,6 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -31,8 +29,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.util.UUID
 import kotlin.reflect.KVisibility
@@ -77,7 +73,7 @@ class PocketStoriesServiceTest {
     }
 
     @Test
-    fun `GIVEN PocketStoriesService is initialized with a valid profile WHEN called to start periodic refreshes THEN persist dependencies and schedule stories refresh`() {
+    fun `GIVEN PocketStoriesService is initialized with a valid profile WHEN called to start periodic refreshes THEN persist dependencies, cancel profile deletion and schedule stories refresh`() {
         val client: Client = mock()
         val profileId = UUID.randomUUID()
         val appId = "test"
@@ -97,6 +93,7 @@ class PocketStoriesServiceTest {
         service.startPeriodicSponsoredStoriesRefresh()
 
         assertNotNull(GlobalDependencyProvider.SponsoredStories.useCases)
+        verify(service.spocsRefreshscheduler).stopProfileDeletion(any())
         verify(service.spocsRefreshscheduler).schedulePeriodicRefreshes(any())
     }
 
@@ -119,7 +116,7 @@ class PocketStoriesServiceTest {
     }
 
     @Test
-    fun `GIVEN PocketStoriesService WHEN called to stop periodic refreshes THEN stop refreshing stories and clear dependencies`() {
+    fun `GIVEN PocketStoriesService WHEN called to stop periodic refreshes THEN stop refreshing stories`() {
         // Mock periodic refreshes were started previously and profile details were set.
         // Now they will have to be cleaned.
         GlobalDependencyProvider.SponsoredStories.initialize(mock())
@@ -128,7 +125,6 @@ class PocketStoriesServiceTest {
         service.stopPeriodicSponsoredStoriesRefresh()
 
         verify(service.spocsRefreshscheduler).stopPeriodicRefreshes(any())
-        assertNull(GlobalDependencyProvider.SponsoredStories.useCases)
     }
 
     @Test
@@ -168,17 +164,46 @@ class PocketStoriesServiceTest {
     }
 
     @Test
-    fun `GIVEN PocketStoriesService WHEN deleteProfile THEN delegate to spocs useCases`() = runTest {
-        val mockedService = spy(service)
-        val noProfileResponse = mockedService.deleteProfile()
-        assertFalse(noProfileResponse)
+    fun `GIVEN PocketStoriesService is initialized with a valid profile WHEN called to delete profile THEN persist dependencies, cancel stories refresh and schedule profile deletion`() {
+        val client: Client = mock()
+        val profileId = UUID.randomUUID()
+        val appId = "test"
+        val service = PocketStoriesService(
+            context = testContext,
+            pocketStoriesConfig = PocketStoriesConfig(
+                client = client,
+                profile = Profile(
+                    profileId = profileId,
+                    appId = appId
+                )
+            )
+        ).apply {
+            spocsRefreshscheduler = mock()
+        }
 
-        val deleteProfileUseCase: DeleteProfile = mock()
-        doReturn(deleteProfileUseCase).`when`(spocsUseCases).deleteProfile
-        doReturn(true).`when`(deleteProfileUseCase).invoke()
-        val existingProfileResponse = mockedService.deleteProfile()
-        assertTrue(existingProfileResponse)
-        verify(mockedService, times(2)).stopPeriodicSponsoredStoriesRefresh()
+        service.deleteProfile()
+
+        assertNotNull(GlobalDependencyProvider.SponsoredStories.useCases)
+        verify(service.spocsRefreshscheduler).stopPeriodicRefreshes(any())
+        verify(service.spocsRefreshscheduler).scheduleProfileDeletion(any())
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesService is initialized with an invalid profile WHEN called to delete profile THEN don't schedule profile deletion and don't persist dependencies`() {
+        val service = PocketStoriesService(
+            context = testContext,
+            pocketStoriesConfig = PocketStoriesConfig(
+                client = mock(),
+                profile = null
+            )
+        ).apply {
+            spocsRefreshscheduler = mock()
+        }
+
+        service.deleteProfile()
+
+        verify(service.spocsRefreshscheduler, never()).scheduleProfileDeletion(any())
+        assertNull(GlobalDependencyProvider.SponsoredStories.useCases)
     }
 
     @Test
