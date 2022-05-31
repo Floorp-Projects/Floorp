@@ -89,6 +89,16 @@ class OpenSSLAdapter final : public SSLAdapter,
   void OnCloseEvent(AsyncSocket* socket, int err) override;
 
  private:
+  class EarlyExitCatcher {
+   public:
+    EarlyExitCatcher(OpenSSLAdapter& adapter_ptr);
+    void disable();
+    ~EarlyExitCatcher();
+
+   private:
+    bool disabled_ = false;
+    OpenSSLAdapter& adapter_ptr_;
+  };
   enum SSLState {
     SSL_NONE,
     SSL_WAIT,
@@ -201,6 +211,10 @@ class OpenSSLAdapterFactory : public SSLAdapterFactory {
   // Hold a friend class to the OpenSSLAdapter to retrieve the context.
   friend class OpenSSLAdapter;
 };
+
+// The EarlyExitCatcher is responsible for calling OpenSSLAdapter::Cleanup on
+// destruction. By doing this we have scoped cleanup which can be disabled if
+// there were no errors, aka early exits.
 
 std::string TransformAlpnProtocols(const std::vector<std::string>& protos);
 
