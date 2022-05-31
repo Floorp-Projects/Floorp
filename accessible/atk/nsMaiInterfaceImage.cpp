@@ -7,11 +7,11 @@
 #include "InterfaceInitFuncs.h"
 
 #include "AccessibleWrap.h"
-#include "ImageAccessible.h"
+#include "mozilla/a11y/Accessible.h"
 #include "mozilla/Likely.h"
 #include "nsMai.h"
 #include "nsIAccessibleTypes.h"
-#include "RemoteAccessible.h"
+
 
 using namespace mozilla;
 using namespace mozilla::a11y;
