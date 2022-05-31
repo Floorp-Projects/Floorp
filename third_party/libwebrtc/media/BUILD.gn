@@ -406,6 +406,7 @@ if (rtc_build_dcsctp) {
       "../net/dcsctp/public:factory",
       "../net/dcsctp/public:socket",
       "../net/dcsctp/public:types",
+      "../net/dcsctp/public:utils",
       "../net/dcsctp/timer:task_queue_timeout",
       "../p2p:rtc_p2p",
       "../rtc_base:checks",
