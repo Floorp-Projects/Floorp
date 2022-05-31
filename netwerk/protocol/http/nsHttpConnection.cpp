@@ -668,8 +668,7 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
       gHttpHandler->ClearHostMapping(mConnInfo);
     }
     if (mTlsHandshaker->EarlyDataWasAvailable() &&
-        (reason ==
-         psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT))) {
+        SecurityErrorThatMayNeedRestart(reason)) {
       gHttpHandler->Exclude0RttTcp(mConnInfo);
     }
 

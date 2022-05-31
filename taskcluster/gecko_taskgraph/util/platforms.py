@@ -5,7 +5,7 @@
 
 import re
 
-from .attributes import keymatch
+from taskgraph.util.attributes import keymatch
 
 # platform family is extracted from build platform by taking the alphabetic prefix
 # and then translating win -> windows

@@ -315,6 +315,11 @@ double RemoteAccessibleBase<Derived>::Step() const {
 
 template <class Derived>
 Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
+  MOZ_ASSERT(mCachedFields);
+  if (!mCachedFields) {
+    return Nothing();
+  }
+
   Maybe<const nsTArray<int32_t>&> maybeArray =
       mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::relativeBounds);
   if (maybeArray) {
@@ -392,102 +397,99 @@ nsRect RemoteAccessibleBase<Derived>::GetBoundsInAppUnits() const {
 template <class Derived>
 LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
     Maybe<nsRect> aOffset) const {
-  if (mCachedFields) {
-    Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
-    if (maybeBounds) {
-      nsRect bounds = *maybeBounds;
-      const DocAccessibleParent* topDoc = IsDoc() ? AsDoc() : nullptr;
+  Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
+  if (maybeBounds) {
+    nsRect bounds = *maybeBounds;
+    const DocAccessibleParent* topDoc = IsDoc() ? AsDoc() : nullptr;
 
-      if (aOffset.isSome()) {
-        // The rect we've passed in is in app units, so no conversion needed.
-        nsRect internalRect = *aOffset;
-        bounds.SetRectX(bounds.x + internalRect.x, internalRect.width);
-        bounds.SetRectY(bounds.y + internalRect.y, internalRect.height);
-      }
+    if (aOffset.isSome()) {
+      // The rect we've passed in is in app units, so no conversion needed.
+      nsRect internalRect = *aOffset;
+      bounds.SetRectX(bounds.x + internalRect.x, internalRect.width);
+      bounds.SetRectY(bounds.y + internalRect.y, internalRect.height);
+    }
 
-      Unused << ApplyTransform(bounds);
+    Unused << ApplyTransform(bounds);
 
-      LayoutDeviceIntRect devPxBounds;
-      const Accessible* acc = Parent();
+    LayoutDeviceIntRect devPxBounds;
+    const Accessible* acc = Parent();
 
-      while (acc && acc->IsRemote()) {
-        RemoteAccessible* remoteAcc = const_cast<Accessible*>(acc)->AsRemote();
+    while (acc && acc->IsRemote()) {
+      RemoteAccessible* remoteAcc = const_cast<Accessible*>(acc)->AsRemote();
 
-        if (Maybe<nsRect> maybeRemoteBounds =
-                remoteAcc->RetrieveCachedBounds()) {
-          nsRect remoteBounds = *maybeRemoteBounds;
-          // We need to take into account a non-1 resolution set on the
-          // presshell. This happens with async pinch zooming, among other
-          // things. We can't reliably query this value in the parent process,
-          // so we retrieve it from the document's cache.
-          Maybe<float> res;
-          if (remoteAcc->IsDoc()) {
-            // Apply the document's resolution to the bounds we've gathered
-            // thus far. We do this before applying the document's offset
-            // because document accs should not have their bounds scaled by
-            // their own resolution. They should be scaled by the resolution
-            // of their containing document (if any). We also skip this in the
-            // case that remoteAcc == this, since that implies `bounds` should
-            // be scaled relative to its parent doc.
-            res = remoteAcc->AsDoc()->mCachedFields->GetAttribute<float>(
-                nsGkAtoms::resolution);
-            MOZ_ASSERT(res, "No cached document resolution found.");
-            bounds.ScaleRoundOut(res.valueOr(1.0f));
+      if (Maybe<nsRect> maybeRemoteBounds = remoteAcc->RetrieveCachedBounds()) {
+        nsRect remoteBounds = *maybeRemoteBounds;
+        // We need to take into account a non-1 resolution set on the
+        // presshell. This happens with async pinch zooming, among other
+        // things. We can't reliably query this value in the parent process,
+        // so we retrieve it from the document's cache.
+        Maybe<float> res;
+        if (remoteAcc->IsDoc()) {
+          // Apply the document's resolution to the bounds we've gathered
+          // thus far. We do this before applying the document's offset
+          // because document accs should not have their bounds scaled by
+          // their own resolution. They should be scaled by the resolution
+          // of their containing document (if any). We also skip this in the
+          // case that remoteAcc == this, since that implies `bounds` should
+          // be scaled relative to its parent doc.
+          res = remoteAcc->AsDoc()->mCachedFields->GetAttribute<float>(
+              nsGkAtoms::resolution);
+          MOZ_ASSERT(res, "No cached document resolution found.");
+          bounds.ScaleRoundOut(res.valueOr(1.0f));
 
-            topDoc = remoteAcc->AsDoc();
-          }
-
-          // Apply scroll offset, if applicable. Only the contents of an
-          // element are affected by its scroll offset, which is why this call
-          // happens in this loop instead of both inside and outside of
-          // the loop (like ApplyTransform).
-          remoteAcc->ApplyScrollOffset(remoteBounds);
-
-          // Regardless of whether this is a doc, we should offset `bounds`
-          // by the bounds retrieved here. This is how we build screen
-          // coordinates from relative coordinates.
-          bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
-          Unused << remoteAcc->ApplyTransform(bounds);
+          topDoc = remoteAcc->AsDoc();
         }
 
-        acc = acc->Parent();
+        // Apply scroll offset, if applicable. Only the contents of an
+        // element are affected by its scroll offset, which is why this call
+        // happens in this loop instead of both inside and outside of
+        // the loop (like ApplyTransform).
+        remoteAcc->ApplyScrollOffset(remoteBounds);
+
+        // Regardless of whether this is a doc, we should offset `bounds`
+        // by the bounds retrieved here. This is how we build screen
+        // coordinates from relative coordinates.
+        bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
+        Unused << remoteAcc->ApplyTransform(bounds);
       }
 
-      MOZ_ASSERT(topDoc);
-      if (topDoc) {
-        // We use the top documents app-unites-per-dev-pixel even though
-        // theoretically nested docs can have different values. Practically,
-        // that isn't likely since we only offer zoom controls for the top
-        // document and all subdocuments inherit from it.
-        auto appUnitsPerDevPixel = topDoc->mCachedFields->GetAttribute<int32_t>(
-            nsGkAtoms::_moz_device_pixel_ratio);
-        MOZ_ASSERT(appUnitsPerDevPixel);
-        if (appUnitsPerDevPixel) {
-          // Convert our existing `bounds` rect from app units to dev pixels
-          devPxBounds = LayoutDeviceIntRect::FromAppUnitsToNearest(
-              bounds, *appUnitsPerDevPixel);
-        }
+      acc = acc->Parent();
+    }
+
+    MOZ_ASSERT(topDoc);
+    if (topDoc) {
+      // We use the top documents app-unites-per-dev-pixel even though
+      // theoretically nested docs can have different values. Practically,
+      // that isn't likely since we only offer zoom controls for the top
+      // document and all subdocuments inherit from it.
+      auto appUnitsPerDevPixel = topDoc->mCachedFields->GetAttribute<int32_t>(
+          nsGkAtoms::_moz_device_pixel_ratio);
+      MOZ_ASSERT(appUnitsPerDevPixel);
+      if (appUnitsPerDevPixel) {
+        // Convert our existing `bounds` rect from app units to dev pixels
+        devPxBounds = LayoutDeviceIntRect::FromAppUnitsToNearest(
+            bounds, *appUnitsPerDevPixel);
       }
+    }
 
 #if !defined(ANDROID)
-      // This block is not thread safe because it queries a LocalAccessible.
-      // It is also not needed in Android since the only local accessible is
-      // the outer doc browser that has an offset of 0.
-      if (LocalAccessible* localAcc = const_cast<Accessible*>(acc)->AsLocal()) {
-        // LocalAccessible::Bounds returns screen-relative bounds in
-        // dev pixels.
-        LayoutDeviceIntRect localBounds = localAcc->Bounds();
+    // This block is not thread safe because it queries a LocalAccessible.
+    // It is also not needed in Android since the only local accessible is
+    // the outer doc browser that has an offset of 0.
+    if (LocalAccessible* localAcc = const_cast<Accessible*>(acc)->AsLocal()) {
+      // LocalAccessible::Bounds returns screen-relative bounds in
+      // dev pixels.
+      LayoutDeviceIntRect localBounds = localAcc->Bounds();
 
-        // The root document will always have an APZ resolution of 1,
-        // so we don't factor in its scale here. We also don't scale
-        // by GetFullZoom because LocalAccessible::Bounds already does
-        // that.
-        devPxBounds.MoveBy(localBounds.X(), localBounds.Y());
-      }
+      // The root document will always have an APZ resolution of 1,
+      // so we don't factor in its scale here. We also don't scale
+      // by GetFullZoom because LocalAccessible::Bounds already does
+      // that.
+      devPxBounds.MoveBy(localBounds.X(), localBounds.Y());
+    }
 #endif
 
-      return devPxBounds;
-    }
+    return devPxBounds;
   }
 
   return LayoutDeviceIntRect();

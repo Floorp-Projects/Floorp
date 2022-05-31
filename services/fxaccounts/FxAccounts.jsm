@@ -1612,16 +1612,20 @@ FxAccountsInternal.prototype = {
   },
 };
 
-// A getter for the instance to export
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", function() {
-  let a = new FxAccounts();
+let fxAccountsSingleton = null;
+function getFxAccountsSingleton() {
+  if (fxAccountsSingleton) {
+    return fxAccountsSingleton;
+  }
+
+  fxAccountsSingleton = new FxAccounts();
 
   // XXX Bug 947061 - We need a strategy for resuming email verification after
   // browser restart
-  a._internal.loadAndPoll();
+  fxAccountsSingleton._internal.loadAndPoll();
 
-  return a;
-});
+  return fxAccountsSingleton;
+}
 
 // `AccountState` is exported for tests.
-var EXPORTED_SYMBOLS = ["fxAccounts", "FxAccounts", "AccountState"];
+var EXPORTED_SYMBOLS = ["getFxAccountsSingleton", "FxAccounts", "AccountState"];

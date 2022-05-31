@@ -202,18 +202,18 @@ nsWatcherWindowEntry* nsWatcherWindowEnumerator::FindNext() {
   nsWatcherWindowEntry* info;
 
   if (!mCurrentPosition) {
-    return 0;
+    return nullptr;
   }
 
   info = mCurrentPosition->mYounger;
-  return info == mWindowWatcher->mOldestWindow ? 0 : info;
+  return info == mWindowWatcher->mOldestWindow ? nullptr : info;
 }
 
 // if a window is being removed adjust the iterator's current position
 void nsWatcherWindowEnumerator::WindowRemoved(nsWatcherWindowEntry* aInfo) {
   if (mCurrentPosition == aInfo) {
     mCurrentPosition =
-        mCurrentPosition != aInfo->mYounger ? aInfo->mYounger : 0;
+        mCurrentPosition != aInfo->mYounger ? aInfo->mYounger : nullptr;
   }
 }
 
@@ -228,7 +228,7 @@ NS_IMPL_QUERY_INTERFACE(nsWindowWatcher, nsIWindowWatcher, nsIPromptFactory,
 
 nsWindowWatcher::nsWindowWatcher()
     : mEnumeratorList(),
-      mOldestWindow(0),
+      mOldestWindow(nullptr),
       mListLock("nsWindowWatcher.mListLock") {}
 
 nsWindowWatcher::~nsWindowWatcher() {
@@ -636,7 +636,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       aParent ? nsPIDOMWindowOuter::From(aParent) : nullptr;
 
   NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = 0;
+  *aResult = nullptr;
 
   if (!nsContentUtils::IsSafeToRunScript()) {
     nsContentUtils::WarnScriptWasIgnored(nullptr);
@@ -1563,7 +1563,7 @@ nsWindowWatcher::AddWindow(mozIDOMWindowProxy* aWindow,
   }
 
   nsCOMPtr<nsISupports> domwin(do_QueryInterface(aWindow));
-  return os->NotifyObservers(domwin, "domwindowopened", 0);
+  return os->NotifyObservers(domwin, "domwindowopened", nullptr);
 }
 
 NS_IMETHODIMP
@@ -1590,7 +1590,7 @@ nsWatcherWindowEntry* nsWindowWatcher::FindWindowEntry(
   nsWatcherWindowEntry* listEnd;
 
   info = mOldestWindow;
-  listEnd = 0;
+  listEnd = nullptr;
   while (info != listEnd) {
     if (info->mWindow == aWindow) {
       return info;
@@ -1598,7 +1598,7 @@ nsWatcherWindowEntry* nsWindowWatcher::FindWindowEntry(
     info = info->mYounger;
     listEnd = mOldestWindow;
   }
-  return 0;
+  return nullptr;
 }
 
 nsresult nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry* aInfo) {
@@ -1613,7 +1613,8 @@ nsresult nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry* aInfo) {
 
     // remove the element from the list
     if (aInfo == mOldestWindow) {
-      mOldestWindow = aInfo->mYounger == mOldestWindow ? 0 : aInfo->mYounger;
+      mOldestWindow =
+          aInfo->mYounger == mOldestWindow ? nullptr : aInfo->mYounger;
     }
     aInfo->Unlink();
   }
@@ -1623,7 +1624,7 @@ nsresult nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry* aInfo) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     nsCOMPtr<nsISupports> domwin(do_QueryInterface(aInfo->mWindow));
-    os->NotifyObservers(domwin, "domwindowclosed", 0);
+    os->NotifyObservers(domwin, "domwindowclosed", nullptr);
   }
 
   delete aInfo;
@@ -1636,7 +1637,7 @@ nsWindowWatcher::GetChromeForWindow(mozIDOMWindowProxy* aWindow,
   if (!aWindow || !aResult) {
     return NS_ERROR_INVALID_ARG;
   }
-  *aResult = 0;
+  *aResult = nullptr;
 
   MutexAutoLock lock(mListLock);
   nsWatcherWindowEntry* info = FindWindowEntry(aWindow);
@@ -2190,13 +2191,17 @@ static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
   // between chrome and content sizes on aDocShellItem's window.
   // This latter point becomes important if chrome and content
   // specifications are mixed in aFeatures, and when bringing the window
-  // back from too far off the right or bottom edges of the screen. */
-  DesktopIntCoord left = 0, top = 0;
-  CSSIntCoord width = 0, height = 0;
+  // back from too far off the right or bottom edges of the screen.
+  DesktopIntCoord left = 0;
+  DesktopIntCoord top = 0;
+  CSSIntCoord width = 0;
+  CSSIntCoord height = 0;
   // difference between chrome and content size
-  CSSIntCoord chromeWidth = 0, chromeHeight = 0;
+  CSSIntCoord chromeWidth = 0;
+  CSSIntCoord chromeHeight = 0;
   // whether the window size spec refers to chrome or content
-  bool sizeChromeWidth = true, sizeChromeHeight = true;
+  bool sizeChromeWidth = true;
+  bool sizeChromeHeight = true;
 
   {
     CSSToLayoutDeviceScale cssToDevScale =

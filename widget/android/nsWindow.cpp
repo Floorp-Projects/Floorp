@@ -23,6 +23,7 @@
 #include "AndroidView.h"
 #include "gfxContext.h"
 #include "GeckoEditableSupport.h"
+#include "GeckoViewOutputStream.h"
 #include "GeckoViewSupport.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
@@ -42,6 +43,7 @@
 #include "nsFocusManager.h"
 #include "nsGkAtoms.h"
 #include "nsGfxCIID.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsLayoutUtils.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
@@ -57,6 +59,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIAppWindow.h"
 
+#include "mozilla/Logging.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
@@ -67,6 +70,7 @@
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
 #include "mozilla/a11y/SessionAccessibility.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -84,6 +88,7 @@
 #include "mozilla/java/GeckoSystemStateListenerWrappers.h"
 #include "mozilla/java/PanZoomControllerNatives.h"
 #include "mozilla/java/SessionAccessibilityWrappers.h"
+#include "mozilla/java/SurfaceControlManagerWrappers.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
@@ -95,6 +100,8 @@
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/widget/AndroidVsync.h"
+
+#define GVS_LOG(...) MOZ_LOG(sGVSupportLog, LogLevel::Warning, (__VA_ARGS__))
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -109,6 +116,9 @@ using mozilla::gfx::IntSize;
 using mozilla::gfx::Matrix;
 using mozilla::gfx::SurfaceFormat;
 using mozilla::java::GeckoSession;
+using mozilla::java::sdk::IllegalStateException;
+
+static mozilla::LazyLogModule sGVSupportLog("GeckoViewSupport");
 
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gTopLevelWindows[0] is the topmost
@@ -890,6 +900,8 @@ class LayerViewSupport final
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
   java::sdk::Surface::GlobalRef mSurface;
   java::sdk::SurfaceControl::GlobalRef mSurfaceControl;
+  int32_t mWidth;
+  int32_t mHeight;
   // Used to communicate with the gecko compositor from the UI thread.
   // Set in NotifyCompositorCreated and cleared in NotifyCompositorSessionLost.
   RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
@@ -1010,19 +1022,27 @@ class LayerViewSupport final
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     mUiCompositorControllerChild = aUiCompositorControllerChild;
 
-    if (auto window{mWindow.Access()}) {
-      nsWindow* gkWindow = window->GetNsWindow();
-      if (gkWindow) {
-        mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-            gkWindow->mWidgetId, mSurface, mSurfaceControl);
-      }
-    }
-
     if (mDefaultClearColor) {
       mUiCompositorControllerChild->SetDefaultClearColor(*mDefaultClearColor);
     }
 
     if (!mCompositorPaused) {
+      // If we are using SurfaceControl but mSurface is null, that means the
+      // previous surface was destroyed along with the the previous compositor,
+      // and we need to create a new one.
+      if (mSurfaceControl && !mSurface) {
+        mSurface = java::SurfaceControlManager::GetInstance()->GetChildSurface(
+            mSurfaceControl, mWidth, mHeight);
+      }
+
+      if (auto window{mWindow.Access()}) {
+        nsWindow* gkWindow = window->GetNsWindow();
+        if (gkWindow) {
+          mUiCompositorControllerChild->OnCompositorSurfaceChanged(
+              gkWindow->mWidgetId, mSurface);
+        }
+      }
+
       mUiCompositorControllerChild->Resume();
     }
   }
@@ -1031,6 +1051,12 @@ class LayerViewSupport final
   void NotifyCompositorSessionLost() {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     mUiCompositorControllerChild = nullptr;
+
+    if (mSurfaceControl) {
+      // If we are using SurfaceControl then we must set the Surface to null
+      // here to ensure we create a new one when the new compositor is created.
+      mSurface = nullptr;
+    }
 
     if (auto window = mWindow.Access()) {
       while (!mCapturePixelsResults.empty()) {
@@ -1048,9 +1074,6 @@ class LayerViewSupport final
   }
 
   java::sdk::Surface::Param GetSurface() { return mSurface; }
-  java::sdk::SurfaceControl::Param GetSurfaceControl() {
-    return mSurfaceControl;
-  }
 
  private:
   already_AddRefed<DataSourceSurface> FlipScreenPixels(
@@ -1169,6 +1192,16 @@ class LayerViewSupport final
 
     if (mUiCompositorControllerChild) {
       mUiCompositorControllerChild->Pause();
+
+      mSurface = nullptr;
+      mSurfaceControl = nullptr;
+      if (auto window = mWindow.Access()) {
+        nsWindow* gkWindow = window->GetNsWindow();
+        if (gkWindow) {
+          mUiCompositorControllerChild->OnCompositorSurfaceChanged(
+              gkWindow->mWidgetId, nullptr);
+        }
+      }
     }
 
     if (auto lock{mWindow.Access()}) {
@@ -1201,20 +1234,19 @@ class LayerViewSupport final
       jni::Object::Param aSurfaceControl) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-    mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
-    // Disable the SurfaceControl compositing path for now, until we have a
-    // solution to bug 1767128. This means users on Android 12 will be unable to
-    // recover from a GPU process crash (due to bug 1762025), and the parent
-    // process will crash as a result (which is no worse than not using the GPU
-    // process in the first place).
-    mSurfaceControl = nullptr;
-
+    mWidth = aWidth;
+    mHeight = aHeight;
+    mSurfaceControl =
+        java::sdk::SurfaceControl::GlobalRef::From(aSurfaceControl);
     if (mSurfaceControl) {
-      // Setting the SurfaceControl's buffer size here ensures child Surfaces
-      // created by the compositor have the correct size.
-      java::sdk::SurfaceControl::Transaction::LocalRef transaction =
-          java::sdk::SurfaceControl::Transaction::New();
-      transaction->SetBufferSize(mSurfaceControl, aWidth, aHeight)->Apply();
+      // When using SurfaceControl, we create a child Surface to render in to
+      // rather than rendering directly in to the Surface provided by the
+      // application. This allows us to work around a bug on some versions of
+      // Android when recovering from a GPU process crash.
+      mSurface = java::SurfaceControlManager::GetInstance()->GetChildSurface(
+          mSurfaceControl, mWidth, mHeight);
+    } else {
+      mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
     }
 
     if (mUiCompositorControllerChild) {
@@ -1223,7 +1255,7 @@ class LayerViewSupport final
         if (gkWindow) {
           // Send new Surface to GPU process, if one exists.
           mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-              gkWindow->mWidgetId, mSurface, mSurfaceControl);
+              gkWindow->mWidgetId, mSurface);
         }
       }
 
@@ -1718,6 +1750,79 @@ void GeckoViewSupport::PassExternalResponse(
                       response] { window->PassExternalWebResponse(response); });
 }
 
+RefPtr<CanonicalBrowsingContext>
+GeckoViewSupport::GetContentCanonicalBrowsingContext() {
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner = mDOMWindow->GetTreeOwner();
+  if (!treeOwner) {
+    return nullptr;
+  }
+  RefPtr<BrowsingContext> bc;
+  nsresult rv = treeOwner->GetPrimaryContentBrowsingContext(getter_AddRefs(bc));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !bc) {
+    return nullptr;
+  }
+  return bc->Canonical();
+}
+
+void GeckoViewSupport::PrintToPdf(
+    const java::GeckoSession::Window::LocalRef& inst,
+    jni::Object::Param aResult) {
+  auto stream = java::GeckoInputStream::New(nullptr);
+  auto geckoResult = java::GeckoResult::Ref::From(aResult);
+  const auto pdfErrorMsg = "Coud not save this page as PDF.";
+  RefPtr<GeckoViewOutputStream> streamListener =
+      new GeckoViewOutputStream(stream);
+
+  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+      do_GetService("@mozilla.org/gfx/printsettings-service;1");
+  if (!printSettingsService) {
+    geckoResult->CompleteExceptionally(
+        IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+    GVS_LOG("Could not create print settings service.");
+    return;
+  }
+
+  nsCOMPtr<nsIPrintSettings> printSettings;
+  nsresult rv = printSettingsService->CreateNewPrintSettings(
+      getter_AddRefs(printSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    geckoResult->CompleteExceptionally(
+        IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+    GVS_LOG("Could not create print settings.");
+  }
+
+  printSettings->SetPrinterName(u"Mozilla Save to PDF"_ns);
+  printSettings->SetOutputDestination(
+      nsIPrintSettings::kOutputDestinationStream);
+  printSettings->SetOutputFormat(nsIPrintSettings::kOutputFormatPDF);
+  printSettings->SetOutputStream(streamListener);
+  printSettings->SetPrintSilent(true);
+
+  RefPtr<CanonicalBrowsingContext> cbc = GetContentCanonicalBrowsingContext();
+  if (!cbc) {
+    geckoResult->CompleteExceptionally(
+        IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+    GVS_LOG("Could not retrieve content canonical browsing context.");
+    return;
+  }
+
+  RefPtr<CanonicalBrowsingContext::PrintPromise> print =
+      cbc->Print(printSettings);
+
+  print->Then(
+      mozilla::GetCurrentSerialEventTarget(), __func__,
+      [result = java::GeckoResult::GlobalRef(geckoResult), stream, pdfErrorMsg](
+          const CanonicalBrowsingContext::PrintPromise::ResolveOrRejectValue&
+              aValue) {
+        if (aValue.IsReject()) {
+          result->CompleteExceptionally(
+              IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+          GVS_LOG("Could not print.");
+        } else {
+          result->Complete(stream);
+        }
+      });
+}
 }  // namespace widget
 }  // namespace mozilla
 
@@ -2409,13 +2514,6 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       if (::mozilla::jni::NativeWeakPtr<LayerViewSupport>::Accessor lvs{
               mLayerViewSupport.Access()}) {
         return lvs->GetSurface().Get();
-      }
-      return nullptr;
-
-    case NS_JAVA_SURFACE_CONTROL:
-      if (::mozilla::jni::NativeWeakPtr<LayerViewSupport>::Accessor lvs{
-              mLayerViewSupport.Access()}) {
-        return lvs->GetSurfaceControl().Get();
       }
       return nullptr;
   }

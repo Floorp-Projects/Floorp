@@ -2354,7 +2354,7 @@ nsresult nsExternalAppHandler::CreateTransfer() {
         mDownloadClassification, referrerInfo, mBrowsingContext,
         mHandleInternally, nullptr);
   } else {
-    rv = transfer->Init(mSourceUrl, target, u""_ns, mMimeInfo,
+    rv = transfer->Init(mSourceUrl, nullptr, target, u""_ns, mMimeInfo,
                         mTimeDownloadStarted, mTempFile, this,
                         channel && NS_UsePrivateBrowsing(channel),
                         mDownloadClassification, referrerInfo);
@@ -2446,7 +2446,7 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
         mDownloadClassification, referrerInfo, mBrowsingContext,
         mHandleInternally, httpChannel);
   } else {
-    rv = transfer->Init(mSourceUrl, pseudoTarget, u""_ns, mMimeInfo,
+    rv = transfer->Init(mSourceUrl, nullptr, pseudoTarget, u""_ns, mMimeInfo,
                         mTimeDownloadStarted, mTempFile, this,
                         channel && NS_UsePrivateBrowsing(channel),
                         mDownloadClassification, referrerInfo);

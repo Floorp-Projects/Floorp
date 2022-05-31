@@ -423,6 +423,10 @@ class GeckoViewNavigation extends GeckoViewModule {
                                        where=${aWhere} flags=${aFlags}
                                        name=${aName}`;
 
+    if (aWhere === Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER) {
+      return this.moduleManager.onNewPrintWindow(aParams);
+    }
+
     if (
       LoadURIDelegate.load(
         this.window,

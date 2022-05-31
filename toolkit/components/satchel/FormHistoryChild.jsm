@@ -70,7 +70,7 @@ class FormHistoryChild extends JSWindowActorChild {
 
     let entries = [];
     for (let input of form.elements) {
-      if (ChromeUtils.getClassName(input) !== "HTMLInputElement") {
+      if (!HTMLInputElement.isInstance(input)) {
         continue;
       }
 

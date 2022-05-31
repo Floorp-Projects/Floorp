@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
-  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   PanelMultiView: "resource:///modules/PanelMultiView.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
@@ -26,6 +25,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
+  ).getFxAccountsSingleton();
 });
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".

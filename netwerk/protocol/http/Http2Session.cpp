@@ -215,8 +215,7 @@ void Http2Session::Shutdown(nsresult aReason) {
       CloseStream(stream, NS_ERROR_NET_INADEQUATE_SECURITY);
     } else if (!mCleanShutdown && (mGoAwayReason != NO_HTTP_ERROR)) {
       CloseStream(stream, NS_ERROR_NET_HTTP2_SENT_GOAWAY);
-    } else if (!mCleanShutdown &&
-               SecurityErrorToBeHandledByTransaction(aReason)) {
+    } else if (!mCleanShutdown && SecurityErrorThatMayNeedRestart(aReason)) {
       CloseStream(stream, aReason);
     } else {
       CloseStream(stream, NS_ERROR_ABORT);

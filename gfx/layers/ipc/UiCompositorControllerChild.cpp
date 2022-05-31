@@ -332,16 +332,15 @@ void UiCompositorControllerChild::SetCompositorSurfaceManager(
 };
 
 void UiCompositorControllerChild::OnCompositorSurfaceChanged(
-    int32_t aWidgetId, java::sdk::Surface::Param aSurface,
-    java::sdk::SurfaceControl::Param aSurfaceControl) {
+    int32_t aWidgetId, java::sdk::Surface::Param aSurface) {
   // If mCompositorSurfaceManager is not set then there is no GPU process and
   // we do not need to do anything.
   if (mCompositorSurfaceManager == nullptr) {
     return;
   }
 
-  nsresult result = mCompositorSurfaceManager->OnSurfaceChanged(
-      aWidgetId, aSurface, aSurfaceControl);
+  nsresult result =
+      mCompositorSurfaceManager->OnSurfaceChanged(aWidgetId, aSurface);
 
   // If our remote binder has died then notify the GPU process manager.
   if (NS_FAILED(result)) {

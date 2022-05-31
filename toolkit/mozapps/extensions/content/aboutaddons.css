@@ -810,3 +810,63 @@ section:not(:empty) ~ #empty-addons-message {
 .permission-header > .addon-sitepermissions-host {
   font-weight: bolder;
 }
+
+#colorways-section-heading {
+  margin-bottom: 0;
+}
+
+#colorways-expiry-date-container {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row;
+}
+
+#colorways-expiry-date {
+  display: inline-block;
+  background: linear-gradient(to right, purple, pink, orange);
+  background-origin: border-box;
+  border-radius: 1.5em;
+  padding: 1px;
+  vertical-align: bottom;
+}
+
+#colorways-expiry-date > span {
+  display: inline-block;
+  color: black;
+  background: white;
+  border-radius: 1.5em;
+  padding: .2em 1em;
+}
+
+#colorways-button {
+  flex-shrink: 0;
+  flex-grow: 0;
+  align-self: baseline;
+  margin-inline-end: 0;
+}
+
+#colorways-preview-text-container {
+  z-index: 1;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* Make sure text fits within addon card dimensions */
+  width: var(--section-width);
+  height: calc(var(--section-width) * 92 / 680);
+  margin: -16px -16px;
+}
+
+#colorways-preview-text-container > h3,
+#colorways-preview-text-container > p {
+  margin: 0;
+}
+
+#colorways-preview-text-container > h3 {
+  font-size: 2.6em;
+}
+
+#colorways-preview-text-container > p {
+  font-size: 1.1em;
+}

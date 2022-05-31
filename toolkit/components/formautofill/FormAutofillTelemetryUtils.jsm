@@ -153,9 +153,8 @@ const CreditCardTelemetry = {
       let state = profile[fieldDetail.fieldName] ? "filled" : "not_filled";
       if (
         fieldDetail.state == FIELD_STATES.NORMAL &&
-        (ChromeUtils.getClassName(element) == "HTMLSelectElement" ||
-          (ChromeUtils.getClassName(element) == "HTMLInputElement" &&
-            element.value.length))
+        (HTMLSelectElement.isInstance(element) ||
+          (HTMLInputElement.isInstance(element) && element.value.length))
       ) {
         state = "user_filled";
       }

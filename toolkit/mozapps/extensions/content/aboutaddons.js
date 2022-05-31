@@ -3625,6 +3625,59 @@ class AddonCard extends HTMLElement {
 }
 customElements.define("addon-card", AddonCard);
 
+class ColorwayClosetCard extends HTMLElement {
+  render() {
+    let card = importTemplate("card").firstElementChild;
+    let heading = card.querySelector(".addon-name-container");
+    // remove elipsis button
+    heading.textContent = "";
+    heading.append(importTemplate("colorways-card-container"));
+    this.setCardPreviewText(card);
+    this.setCardContent(card);
+    this.append(card);
+  }
+
+  setCardPreviewText(card) {
+    // Create new elements for card preview text
+    let colorwayPreviewHeading = document.createElement("h3");
+    let colorwayPreviewSubHeading = document.createElement("p");
+    let colorwayPreviewTextContainer = document.createElement("div");
+
+    // TODO: Bug 1770465 - insert dynamic localized collection details
+    colorwayPreviewHeading.textContent = "Life in Color";
+    colorwayPreviewSubHeading.textContent =
+      "Make Firefox feel a little more you.";
+
+    colorwayPreviewTextContainer.appendChild(colorwayPreviewHeading);
+    colorwayPreviewTextContainer.appendChild(colorwayPreviewSubHeading);
+    colorwayPreviewTextContainer.id = "colorways-preview-text-container";
+
+    // Insert colorway card preview text
+    let cardHeadingImage = card.querySelector(".card-heading-image");
+    cardHeadingImage.parentNode.insertBefore(
+      colorwayPreviewTextContainer,
+      cardHeadingImage
+    );
+  }
+
+  setCardContent(card) {
+    card.querySelector(".addon-icon").hidden = true;
+
+    let preview = card.querySelector(".card-heading-image");
+    // TODO: Bug 1770465 - set preview.src for colorways card preview
+    preview.hidden = false;
+
+    let colorwayExpiryDateSpan = card.querySelector(
+      "#colorways-expiry-date > span"
+    );
+    // TODO: Bug 1770465 - set dynamic date here
+    colorwayExpiryDateSpan.textContent = "Expires June 2";
+    let colorwaysButton = card.querySelector("[action='open-colorways']");
+    colorwaysButton.hidden = false;
+  }
+}
+customElements.define("colorways-card", ColorwayClosetCard);
+
 /**
  * A child element of `<recommended-addon-list>`. It should be initialized
  * by calling `setDiscoAddon()` first. Call `setAddon(addon)` if it has been
@@ -4368,6 +4421,22 @@ class AddonList extends HTMLElement {
 }
 customElements.define("addon-list", AddonList);
 
+class ColorwayClosetList extends HTMLElement {
+  connectedCallback() {
+    this.appendChild(importTemplate(this.template));
+    let frag = document.createDocumentFragment();
+    let card = document.createElement("colorways-card");
+    card.render();
+    frag.append(card);
+    this.append(frag);
+  }
+
+  get template() {
+    return "colorways-list";
+  }
+}
+customElements.define("colorways-list", ColorwayClosetList);
+
 class RecommendedAddonList extends HTMLElement {
   connectedCallback() {
     if (this.isConnected) {
@@ -4718,6 +4787,14 @@ gViewController.defineView("list", async type => {
       },
     ]);
     frag.appendChild(monochromaticList);
+
+    const colorwayClosetPrefEnabled = Services.prefs.getBoolPref(
+      "browser.theme.colorway-closet"
+    );
+    if (colorwayClosetPrefEnabled) {
+      let colorwayClosetList = document.createElement("colorways-list");
+      frag.appendChild(colorwayClosetList);
+    }
   }
 
   // Show recommendations for themes and extensions.

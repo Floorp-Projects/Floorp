@@ -94,7 +94,7 @@ const LoginFormFactory = {
    */
   createFromField(aField) {
     if (
-      ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
+      !HTMLInputElement.isInstance(aField) ||
       (!aField.hasBeenTypePassword &&
         !LoginHelper.isUsernameFieldType(aField)) ||
       !aField.ownerDocument

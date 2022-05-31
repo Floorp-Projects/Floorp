@@ -30,6 +30,12 @@ XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher", () =>
   EventDispatcher.for(window)
 );
 
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  "PrintUtils",
+  "chrome://global/content/printUtils.js"
+);
+
 // This file assumes `warn` and `debug` are imported into scope
 // by the child scripts.
 /* global debug, warn */
@@ -115,6 +121,10 @@ var ModuleManager = {
     });
 
     MODULES_INIT_PROBE.finish();
+  },
+
+  onNewPrintWindow(aParams) {
+    return PrintUtils.handleStaticCloneCreatedForPrint(aParams.openWindowInfo);
   },
 
   get window() {

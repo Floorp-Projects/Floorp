@@ -85,7 +85,7 @@ const InsecurePasswordUtils = {
   _checkFormSecurity(aForm) {
     let isFormSubmitHTTP = false,
       isFormSubmitSecure = false;
-    if (ChromeUtils.getClassName(aForm.rootElement) === "HTMLFormElement") {
+    if (HTMLFormElement.isInstance(aForm.rootElement)) {
       let uri = Services.io.newURI(
         aForm.rootElement.action || aForm.rootElement.baseURI
       );

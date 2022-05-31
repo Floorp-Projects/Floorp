@@ -12078,6 +12078,12 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# WebAuthn CTAP2 support
+- name: security.webauthn.ctap2
+  type: bool
+  value: false
+  mirror: always
+
 # Block Worker/SharedWorker scripts with wrong MIME type.
 - name: security.block_Worker_with_wrong_mime
   type: bool

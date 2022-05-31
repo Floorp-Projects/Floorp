@@ -551,6 +551,7 @@ const TEST_GLOBAL = {
     removeExpirationFilter() {},
   },
   Logger,
+  getFxAccountsSingleton() {},
 };
 overrider.set(TEST_GLOBAL);
 

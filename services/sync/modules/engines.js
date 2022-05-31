@@ -37,9 +37,14 @@ const { SerializableSet, Svc, Utils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
+  ).getFxAccountsSingleton();
 });
 
 function ensureDirectory(path) {

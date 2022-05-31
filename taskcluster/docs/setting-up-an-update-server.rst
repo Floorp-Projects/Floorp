@@ -88,6 +88,14 @@ substituting ``<obj dir>``, ``<MAR output path>``, ``<version>`` and
    $ touch "<obj dir>/dist/firefox/precomplete"
    $ MAR="<obj dir>/dist/host/bin/mar.exe" MOZ_PRODUCT_VERSION=<version> MAR_CHANNEL_ID=<channel> ./tools/update-packaging/make_full_update.sh <MAR output path> "<obj dir>/dist/firefox"
 
+For macOS you should use these commands:
+
+.. code:: bash
+
+   $ ./mach package
+   $ touch "<obj dir>/dist/firefox/Firefox.app/Contents/Resources/precomplete"
+   $ MAR="<obj dir>/dist/host/bin/mar.exe" MOZ_PRODUCT_VERSION=<version> MAR_CHANNEL_ID=<channel> ./tools/update-packaging/make_full_update.sh <MAR output path> "<obj dir>/dist/firefox/Firefox.app"
+
 For a local build, ``<channel>`` can be ``default``, and ``<version>``
 can be the value from ``browser/config/version.txt`` (or something
 arbitrarily large like ``2000.0a1``).
@@ -189,8 +197,7 @@ update directory:
 
 .. code::
 
-   const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-   FileUtils.getDir("UpdRootD", [], false).path
+   ChromeUtils.import("resource://gre/modules/FileUtils.jsm").FileUtils.getDir("UpdRootD", [], false).path
 
 Once you have determined the update directory, close Firefox, browse to
 the directory and remove the subdirectory called ``updates``.

@@ -564,6 +564,11 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
     prompt.setDelegate(
         new PromptInstanceDelegate() {
           @Override
+          public void onPromptDismiss(final BasePrompt prompt) {
+            dialog.dismiss();
+          }
+
+          @Override
           public void onPromptUpdate(final BasePrompt prompt) {
             dialog.setOnDismissListener(null);
             dialog.dismiss();

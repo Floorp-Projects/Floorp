@@ -224,6 +224,14 @@
         "async": true,
         "description": "Causes the GPU process to crash.",
         "parameters": []
+      },
+
+      {
+        "name": "clearHSTSState",
+        "type": "function",
+        "async": true,
+        "description": "Clears the sites on the HSTS list.",
+        "parameters": []
       }
     ]
   }
