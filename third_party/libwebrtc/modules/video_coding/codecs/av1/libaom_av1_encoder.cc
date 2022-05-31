@@ -214,6 +214,11 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
   cfg_.kf_mode = AOM_KF_DISABLED;
   cfg_.rc_min_quantizer = kQpMin;
   cfg_.rc_max_quantizer = encoder_settings_.qpMax;
+  cfg_.rc_undershoot_pct = 50;
+  cfg_.rc_overshoot_pct = 50;
+  cfg_.rc_buf_initial_sz = 600;
+  cfg_.rc_buf_optimal_sz = 600;
+  cfg_.rc_buf_sz = 1000;
   cfg_.g_usage = kUsageProfile;
   cfg_.g_error_resilient = 0;
   // Low-latency settings.
