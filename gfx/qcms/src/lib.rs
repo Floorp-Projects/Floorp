@@ -10,7 +10,11 @@
 #![cfg_attr(feature = "neon", feature(stdsimd))]
 #![cfg_attr(
     feature = "neon",
-    feature(aarch64_target_feature, arm_target_feature, raw_ref_op)
+    feature(arm_target_feature, raw_ref_op)
+)]
+#![cfg_attr(
+    all(feature = "neon", aarch64_target_feature),
+    feature(aarch64_target_feature)
 )]
 
 /// These values match the Rendering Intent values from the ICC spec
