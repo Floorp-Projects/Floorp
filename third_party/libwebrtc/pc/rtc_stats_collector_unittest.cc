@@ -200,14 +200,34 @@ std::unique_ptr<cricket::Candidate> CreateFakeCandidate(
   return candidate;
 }
 
+class FakeAudioProcessor : public AudioProcessorInterface {
+ public:
+  FakeAudioProcessor() {}
+  ~FakeAudioProcessor() {}
+
+ private:
+  AudioProcessorInterface::AudioProcessorStatistics GetStats(
+      bool has_recv_streams) override {
+    AudioProcessorStatistics stats;
+    stats.apm_statistics.echo_return_loss = 2.0;
+    stats.apm_statistics.echo_return_loss_enhancement = 3.0;
+    return stats;
+  }
+};
+
 class FakeAudioTrackForStats : public MediaStreamTrack<AudioTrackInterface> {
  public:
   static rtc::scoped_refptr<FakeAudioTrackForStats> Create(
       const std::string& id,
-      MediaStreamTrackInterface::TrackState state) {
+      MediaStreamTrackInterface::TrackState state,
+      bool create_fake_audio_processor) {
     rtc::scoped_refptr<FakeAudioTrackForStats> audio_track_stats(
         new rtc::RefCountedObject<FakeAudioTrackForStats>(id));
     audio_track_stats->set_state(state);
+    if (create_fake_audio_processor) {
+      audio_track_stats->processor_ =
+          rtc::make_ref_counted<FakeAudioProcessor>();
+    }
     return audio_track_stats;
   }
 
@@ -222,8 +242,11 @@ class FakeAudioTrackForStats : public MediaStreamTrack<AudioTrackInterface> {
   void RemoveSink(webrtc::AudioTrackSinkInterface* sink) override {}
   bool GetSignalLevel(int* level) override { return false; }
   rtc::scoped_refptr<AudioProcessorInterface> GetAudioProcessor() override {
-    return nullptr;
+    return processor_;
   }
+
+ private:
+  rtc::scoped_refptr<FakeAudioProcessor> processor_;
 };
 
 class FakeVideoTrackSourceForStats : public VideoTrackSourceInterface {
@@ -308,9 +331,11 @@ class FakeVideoTrackForStats : public MediaStreamTrack<VideoTrackInterface> {
 rtc::scoped_refptr<MediaStreamTrackInterface> CreateFakeTrack(
     cricket::MediaType media_type,
     const std::string& track_id,
-    MediaStreamTrackInterface::TrackState track_state) {
+    MediaStreamTrackInterface::TrackState track_state,
+    bool create_fake_audio_processor = false) {
   if (media_type == cricket::MEDIA_TYPE_AUDIO) {
-    return FakeAudioTrackForStats::Create(track_id, track_state);
+    return FakeAudioTrackForStats::Create(track_id, track_state,
+                                          create_fake_audio_processor);
   } else {
     RTC_DCHECK_EQ(media_type, cricket::MEDIA_TYPE_VIDEO);
     return FakeVideoTrackForStats::Create(track_id, track_state, nullptr);
@@ -2580,6 +2605,9 @@ TEST_F(RTCStatsCollectorTest, RTCAudioSourceStatsCollectedForSenderWithTrack) {
   voice_media_info.senders[0].audio_level = 32767;  // [0,32767]
   voice_media_info.senders[0].total_input_energy = 2.0;
   voice_media_info.senders[0].total_input_duration = 3.0;
+  voice_media_info.senders[0].apm_statistics.echo_return_loss = 42.0;
+  voice_media_info.senders[0].apm_statistics.echo_return_loss_enhancement =
+      52.0;
   auto* voice_media_channel = pc_->AddVoiceChannel("AudioMid", "TransportName");
   voice_media_channel->SetStats(voice_media_info);
   stats_->SetupLocalTrackAndSender(cricket::MEDIA_TYPE_AUDIO,
@@ -2595,6 +2623,8 @@ TEST_F(RTCStatsCollectorTest, RTCAudioSourceStatsCollectedForSenderWithTrack) {
   expected_audio.audio_level = 1.0;  // [0,1]
   expected_audio.total_audio_energy = 2.0;
   expected_audio.total_samples_duration = 3.0;
+  expected_audio.echo_return_loss = 42.0;
+  expected_audio.echo_return_loss_enhancement = 52.0;
 
   ASSERT_TRUE(report->Get(expected_audio.id()));
   EXPECT_EQ(report->Get(expected_audio.id())->cast_to<RTCAudioSourceStats>(),
@@ -3054,6 +3084,64 @@ TEST_F(RTCStatsCollectorTest,
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
   EXPECT_FALSE(report->Get("RTCVideoSource_42"));
+}
+
+// Test collecting echo return loss stats from the audio processor attached to
+// the track, rather than the voice sender info.
+TEST_F(RTCStatsCollectorTest, CollectEchoReturnLossFromTrackAudioProcessor) {
+  rtc::scoped_refptr<MediaStream> local_stream =
+      MediaStream::Create("LocalStreamId");
+  pc_->mutable_local_streams()->AddStream(local_stream);
+
+  // Local audio track
+  rtc::scoped_refptr<MediaStreamTrackInterface> local_audio_track =
+      CreateFakeTrack(cricket::MEDIA_TYPE_AUDIO, "LocalAudioTrackID",
+                      MediaStreamTrackInterface::kEnded,
+                      /*create_fake_audio_processor=*/true);
+  local_stream->AddTrack(
+      static_cast<AudioTrackInterface*>(local_audio_track.get()));
+
+  cricket::VoiceSenderInfo voice_sender_info_ssrc1;
+  voice_sender_info_ssrc1.local_stats.push_back(cricket::SsrcSenderInfo());
+  voice_sender_info_ssrc1.local_stats[0].ssrc = 1;
+
+  stats_->CreateMockRtpSendersReceiversAndChannels(
+      {std::make_pair(local_audio_track.get(), voice_sender_info_ssrc1)}, {},
+      {}, {}, {local_stream->id()}, {});
+
+  rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
+
+  RTCMediaStreamTrackStats expected_local_audio_track_ssrc1(
+      IdForType<RTCMediaStreamTrackStats>(report), report->timestamp_us(),
+      RTCMediaStreamTrackKind::kAudio);
+  expected_local_audio_track_ssrc1.track_identifier = local_audio_track->id();
+  expected_local_audio_track_ssrc1.media_source_id =
+      "RTCAudioSource_11";  // Attachment ID = SSRC + 10
+  expected_local_audio_track_ssrc1.remote_source = false;
+  expected_local_audio_track_ssrc1.ended = true;
+  expected_local_audio_track_ssrc1.detached = false;
+  expected_local_audio_track_ssrc1.echo_return_loss = 2.0;
+  expected_local_audio_track_ssrc1.echo_return_loss_enhancement = 3.0;
+  ASSERT_TRUE(report->Get(expected_local_audio_track_ssrc1.id()))
+      << "Did not find " << expected_local_audio_track_ssrc1.id() << " in "
+      << report->ToJson();
+  EXPECT_EQ(expected_local_audio_track_ssrc1,
+            report->Get(expected_local_audio_track_ssrc1.id())
+                ->cast_to<RTCMediaStreamTrackStats>());
+
+  RTCAudioSourceStats expected_audio("RTCAudioSource_11",
+                                     report->timestamp_us());
+  expected_audio.track_identifier = "LocalAudioTrackID";
+  expected_audio.kind = "audio";
+  expected_audio.audio_level = 0;
+  expected_audio.total_audio_energy = 0;
+  expected_audio.total_samples_duration = 0;
+  expected_audio.echo_return_loss = 2.0;
+  expected_audio.echo_return_loss_enhancement = 3.0;
+
+  ASSERT_TRUE(report->Get(expected_audio.id()));
+  EXPECT_EQ(report->Get(expected_audio.id())->cast_to<RTCAudioSourceStats>(),
+            expected_audio);
 }
 
 TEST_F(RTCStatsCollectorTest, GetStatsWithSenderSelector) {
