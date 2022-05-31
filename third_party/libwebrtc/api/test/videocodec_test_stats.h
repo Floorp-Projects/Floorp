@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -32,6 +33,9 @@ class VideoCodecTestStats {
                     size_t spatial_idx);
 
     std::string ToString() const;
+
+    // Returns name -> value text map of frame statistics.
+    std::map<std::string, std::string> ToMap() const;
 
     size_t frame_number = 0;
     size_t rtp_timestamp = 0;
@@ -77,6 +81,9 @@ class VideoCodecTestStats {
 
   struct VideoStatistics {
     std::string ToString(std::string prefix) const;
+
+    // Returns name -> value text map of video statistics.
+    std::map<std::string, std::string> ToMap() const;
 
     size_t target_bitrate_kbps = 0;
     float input_framerate_fps = 0.0f;
