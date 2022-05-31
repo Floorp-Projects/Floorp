@@ -13,9 +13,7 @@
 
 #include <list>
 #include <map>
-#include <set>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "api/array_view.h"
@@ -27,6 +25,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
+#include "rtc_base/containers/flat_map.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
@@ -375,7 +374,7 @@ class RTCPReceiver final {
   std::list<RrtrInformation> received_rrtrs_
       RTC_GUARDED_BY(rtcp_receiver_lock_);
   // Received RRTR information mapped by remote ssrc.
-  std::unordered_map<uint32_t, std::list<RrtrInformation>::iterator>
+  flat_map<uint32_t, std::list<RrtrInformation>::iterator>
       received_rrtrs_ssrc_it_ RTC_GUARDED_BY(rtcp_receiver_lock_);
 
   // Estimated rtt, zero when there is no valid estimate.
@@ -384,21 +383,16 @@ class RTCPReceiver final {
 
   int64_t oldest_tmmbr_info_ms_ RTC_GUARDED_BY(rtcp_receiver_lock_);
   // Mapped by remote ssrc.
-  std::unordered_map<uint32_t, TmmbrInformation> tmmbr_infos_
+  flat_map<uint32_t, TmmbrInformation> tmmbr_infos_
       RTC_GUARDED_BY(rtcp_receiver_lock_);
 
   // Round-Trip Time per remote sender ssrc.
-  std::unordered_map<uint32_t, RttStats> rtts_
-      RTC_GUARDED_BY(rtcp_receiver_lock_);
-
-  // TODO(boivie): `received_report_blocks_` should be converted
-  // to std::unordered_map, but as there are too many tests that assume a
-  // specific order, it's not easily done.
+  flat_map<uint32_t, RttStats> rtts_ RTC_GUARDED_BY(rtcp_receiver_lock_);
 
   // Report blocks per local source ssrc.
-  std::map<uint32_t, ReportBlockData> received_report_blocks_
+  flat_map<uint32_t, ReportBlockData> received_report_blocks_
       RTC_GUARDED_BY(rtcp_receiver_lock_);
-  std::unordered_map<uint32_t, LastFirStatus> last_fir_
+  flat_map<uint32_t, LastFirStatus> last_fir_
       RTC_GUARDED_BY(rtcp_receiver_lock_);
 
   // The last time we received an RTCP Report block for this module.
