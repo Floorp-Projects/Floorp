@@ -1953,8 +1953,8 @@ bool KeyframeEffect::ContainsAnimatedScale(const nsIFrame* aFrame) const {
 
     AnimationValue baseStyle = BaseStyle(prop.mProperty);
     if (!baseStyle.IsNull()) {
-      gfx::Size size = baseStyle.GetScaleValue(aFrame);
-      if (size != gfx::Size(1.0f, 1.0f)) {
+      gfx::MatrixScales size = baseStyle.GetScaleValue(aFrame);
+      if (size != gfx::MatrixScales()) {
         return true;
       }
     }
@@ -1964,14 +1964,14 @@ bool KeyframeEffect::ContainsAnimatedScale(const nsIFrame* aFrame) const {
     // really matter.
     for (const AnimationPropertySegment& segment : prop.mSegments) {
       if (!segment.mFromValue.IsNull()) {
-        gfx::Size from = segment.mFromValue.GetScaleValue(aFrame);
-        if (from != gfx::Size(1.0f, 1.0f)) {
+        gfx::MatrixScales from = segment.mFromValue.GetScaleValue(aFrame);
+        if (from != gfx::MatrixScales()) {
           return true;
         }
       }
       if (!segment.mToValue.IsNull()) {
-        gfx::Size to = segment.mToValue.GetScaleValue(aFrame);
-        if (to != gfx::Size(1.0f, 1.0f)) {
+        gfx::MatrixScales to = segment.mToValue.GetScaleValue(aFrame);
+        if (to != gfx::MatrixScales()) {
           return true;
         }
       }
