@@ -582,7 +582,8 @@ RTCRTPStreamStats::~RTCRTPStreamStats() {}
 WEBRTC_RTCSTATS_IMPL(
     RTCReceivedRtpStreamStats, RTCRTPStreamStats, "received-rtp",
     &jitter,
-    &packets_lost)
+    &packets_lost,
+    &packets_discarded)
 // clang-format on
 
 RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(const std::string&& id,
@@ -593,13 +594,15 @@ RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(std::string&& id,
                                                      int64_t timestamp_us)
     : RTCRTPStreamStats(std::move(id), timestamp_us),
       jitter("jitter"),
-      packets_lost("packetsLost") {}
+      packets_lost("packetsLost"),
+      packets_discarded("packetsDiscarded") {}
 
 RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(
     const RTCReceivedRtpStreamStats& other)
     : RTCRTPStreamStats(other),
       jitter(other.jitter),
-      packets_lost(other.packets_lost) {}
+      packets_lost(other.packets_lost),
+      packets_discarded(other.packets_discarded) {}
 
 RTCReceivedRtpStreamStats::~RTCReceivedRtpStreamStats() {}
 
@@ -650,7 +653,6 @@ WEBRTC_RTCSTATS_IMPL(
     &total_samples_duration,
     &frames_received,
     &round_trip_time,
-    &packets_discarded,
     &packets_repaired,
     &burst_packets_lost,
     &burst_packets_discarded,
@@ -706,7 +708,6 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string&& id,
       total_samples_duration("totalSamplesDuration"),
       frames_received("framesReceived"),
       round_trip_time("roundTripTime"),
-      packets_discarded("packetsDiscarded"),
       packets_repaired("packetsRepaired"),
       burst_packets_lost("burstPacketsLost"),
       burst_packets_discarded("burstPacketsDiscarded"),
@@ -758,7 +759,6 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
       total_samples_duration(other.total_samples_duration),
       frames_received(other.frames_received),
       round_trip_time(other.round_trip_time),
-      packets_discarded(other.packets_discarded),
       packets_repaired(other.packets_repaired),
       burst_packets_lost(other.burst_packets_lost),
       burst_packets_discarded(other.burst_packets_discarded),
