@@ -190,8 +190,7 @@ template <typename CharT>
                                      const CharT* end, double* dp);
 
 template <typename CharT>
-bool CharsToNumber(JSContext* cx, const CharT* chars, size_t length,
-                   double* result);
+double CharsToNumber(const CharT* chars, size_t length);
 
 [[nodiscard]] extern bool StringToNumber(JSContext* cx, JSString* str,
                                          double* result);
@@ -250,19 +249,15 @@ bool ToInt32OrBigIntSlow(JSContext* cx, JS::MutableHandleValue vp);
 /*
  * Similar to strtod except that it replaces overflows with infinities of the
  * correct sign, and underflows with zeros of the correct sign.  Guaranteed to
- * return the closest double number to the given input in dp.
+ * return the closest double number to the given input.
  *
  * Also allows inputs of the form [+|-]Infinity, which produce an infinity of
  * the appropriate sign.  The case of the "Infinity" string must match exactly.
- * If the string does not contain a number, set *dEnd to begin and return 0.0
- * in *d.
- *
- * Return false if out of memory.
+ * If the string does not contain a number, set *dEnd to begin and return 0.0.
  */
 template <typename CharT>
-[[nodiscard]] extern bool js_strtod(JSContext* cx, const CharT* begin,
-                                    const CharT* end, const CharT** dEnd,
-                                    double* d);
+[[nodiscard]] extern double js_strtod(const CharT* begin, const CharT* end,
+                                      const CharT** dEnd);
 
 namespace js {
 
@@ -271,14 +266,12 @@ namespace js {
  * (and so |dEnd| would be a value already known).
  */
 template <typename CharT>
-[[nodiscard]] extern bool FullStringToDouble(JSContext* cx, const CharT* begin,
-                                             const CharT* end, double* d) {
+[[nodiscard]] extern double FullStringToDouble(const CharT* begin,
+                                               const CharT* end) {
   decltype(ToRawChars(begin)) realEnd;
-  if (js_strtod(cx, ToRawChars(begin), ToRawChars(end), &realEnd, d)) {
-    MOZ_ASSERT(end == static_cast<const void*>(realEnd));
-    return true;
-  }
-  return false;
+  double d = js_strtod(ToRawChars(begin), ToRawChars(end), &realEnd);
+  MOZ_ASSERT(end == static_cast<const void*>(realEnd));
+  return d;
 }
 
 [[nodiscard]] extern bool ThisNumberValueForToLocaleString(JSContext* cx,
