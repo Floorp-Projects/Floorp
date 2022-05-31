@@ -6501,7 +6501,7 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
   for (nsIContent* nearContent = HTMLEditUtils::GetPreviousContent(
            point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
-       point.GetContainer()->GetParentNode();
+       point.GetContainerParent();
        nearContent = HTMLEditUtils::GetPreviousContent(
            point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
     // Don't keep looking up if we have found a blockquote element to act on
@@ -6520,15 +6520,21 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
     // before walking up to a parent because we need to return the parent
     // object, so the parent itself might not be in the editable area, but
     // it's OK if we're not performing a block-level action.
-    // XXX Here is too slow.  Let's cache active editing host first, then,
-    //     compair with container of the point when we climb up the tree.
     bool blockLevelAction =
         aEditSubAction == EditSubAction::eIndent ||
         aEditSubAction == EditSubAction::eOutdent ||
         aEditSubAction == EditSubAction::eSetOrClearAlignment ||
         aEditSubAction == EditSubAction::eCreateOrRemoveBlock;
-    if (!IsDescendantOfEditorRoot(point.GetContainer()->GetParentNode()) &&
-        (blockLevelAction || !IsDescendantOfEditorRoot(point.GetContainer()))) {
+    Element* const editorRoot = GetEditorRoot();
+    if (!editorRoot) {
+      break;
+    }
+    // XXX So, does this check whether the container is removable or not? It
+    //     seems that here can be rewritten as obviously what here tries to
+    //     check.
+    if (!point.GetContainerParent()->IsInclusiveDescendantOf(editorRoot) &&
+        (blockLevelAction ||
+         !point.GetContainer()->IsInclusiveDescendantOf(editorRoot))) {
       break;
     }
 
@@ -6659,7 +6665,7 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
   for (nsIContent* nearContent = HTMLEditUtils::GetNextContent(
            point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
-       point.GetContainer()->GetParentNode();
+       point.GetContainerParent();
        nearContent = HTMLEditUtils::GetNextContent(
            point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
     // Don't walk past the editable section. Note that we need to check before
@@ -6668,10 +6674,12 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     // XXX Maybe returning parent of editing host is really error prone since
     //     everybody need to check whether the end point is in editing host
     //     when they touch there.
-    // XXX Here is too slow.  Let's cache active editing host first, then,
-    //     compair with container of the point when we climb up the tree.
-    if (!IsDescendantOfEditorRoot(point.GetContainer()) &&
-        !IsDescendantOfEditorRoot(point.GetContainer()->GetParentNode())) {
+    Element* const editorRoot = GetEditorRoot();
+    if (!editorRoot) {
+      break;
+    }
+    if (!point.GetContainer()->IsInclusiveDescendantOf(editorRoot) &&
+        !point.GetContainerParent()->IsInclusiveDescendantOf(editorRoot)) {
       break;
     }
 
@@ -6834,7 +6842,13 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
       MOZ_ALWAYS_TRUE(startPoint.RewindOffset());
     }
   }
-  if (!IsDescendantOfEditorRoot(startPoint.GetChildOrContainerIfDataNode())) {
+  const RefPtr<Element> editorRoot = GetEditorRoot();
+  if (!editorRoot) {
+    return nullptr;
+  }
+  if (!startPoint.GetChildOrContainerIfDataNode() ||
+      !startPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
+          editorRoot)) {
     return nullptr;
   }
   if (endPoint.IsInTextNode()) {
@@ -6849,7 +6863,9 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
   if (!lastRawPoint.IsStartOfContainer()) {
     lastRawPoint.RewindOffset();
   }
-  if (!IsDescendantOfEditorRoot(lastRawPoint.GetChildOrContainerIfDataNode())) {
+  if (!lastRawPoint.GetChildOrContainerIfDataNode() ||
+      !lastRawPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
+          editorRoot)) {
     return nullptr;
   }
 
@@ -6904,7 +6920,15 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
   // XXX GetCurrentHardLineStartPoint() may return point of editing
   //     host.  Perhaps, we should change it and stop checking it here
   //     since this check may be expensive.
-  if (!IsDescendantOfEditorRoot(startPoint.GetChildOrContainerIfDataNode())) {
+  Element* const editorRoot = GetEditorRoot();
+  if (!editorRoot) {
+    return nullptr;
+  }
+  // XXX If the container is an element in the editor root but it points end of
+  //     the container, this returns nullptr.  Is it intentional?
+  if (!startPoint.GetChildOrContainerIfDataNode() ||
+      !startPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
+          editorRoot)) {
     return nullptr;
   }
   endPoint = GetCurrentHardLineEndPoint(endPoint, *editingHost);
@@ -6913,7 +6937,11 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
   // XXX GetCurrentHardLineEndPoint() may return point of editing host.
   //     Perhaps, we should change it and stop checking it here since this
   //     check may be expensive.
-  if (!IsDescendantOfEditorRoot(lastRawPoint.GetChildOrContainerIfDataNode())) {
+  // XXX If the container is an element in the editor root but it points end of
+  //     the container, this returns nullptr.  Is it intentional?
+  if (!lastRawPoint.GetChildOrContainerIfDataNode() ||
+      !lastRawPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
+          editorRoot)) {
     return nullptr;
   }
 

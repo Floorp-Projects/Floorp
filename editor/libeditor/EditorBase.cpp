@@ -3301,18 +3301,6 @@ bool EditorBase::IsDescendantOfRoot(const nsINode* inNode) const {
   return inNode->IsInclusiveDescendantOf(root);
 }
 
-bool EditorBase::IsDescendantOfEditorRoot(const nsINode* aNode) const {
-  if (NS_WARN_IF(!aNode)) {
-    return false;
-  }
-  nsIContent* root = GetEditorRoot();
-  if (NS_WARN_IF(!root)) {
-    return false;
-  }
-
-  return aNode->IsInclusiveDescendantOf(root);
-}
-
 NS_IMETHODIMP EditorBase::IncrementModificationCount(int32_t inNumMods) {
   uint32_t oldModCount = mModCount;
 
