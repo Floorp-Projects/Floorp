@@ -54,7 +54,6 @@ Services.prefs.setIntPref("security.OCSP.enabled", 1);
 // That aspect of OCSP requests is not what we're testing here, so we can just
 // bump the timeout and hopefully avoid these failures.
 Services.prefs.setIntPref("security.OCSP.timeoutMilliseconds.soft", 5000);
-Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 4);
 var args = [
   ["good", "default-ee", "unused", 0],
   ["expiredresponse", "default-ee", "unused", 0],
@@ -80,9 +79,8 @@ var ocspResponseGoodMustStaple = ocspResponses[5];
 var willNotRetry = 1;
 // but sometimes, since a bad response is in the cache, OCSP fetch will be
 // attempted for each validation - in practice, for these test certs, this
-// means 6 requests because various hash algorithm and key size combinations
-// are tried.
-var willRetry = 6;
+// means 2 requests because various key sizes are tried.
+var willRetry = 2;
 
 function run_test() {
   let ocspResponder = new HttpServer();
