@@ -10,7 +10,7 @@ bumpalo = "3.4.0"
 jsparagus-ast = { path = "../ast" }
 jsparagus-json-log = { path = "../json-log" }
 jsparagus-generated-parser = { path = "../generated_parser" }
-arrayvec = "0.5.1"
+arrayvec = "0.7"
 
 [features]
 logging = ["jsparagus-json-log/logging"]
