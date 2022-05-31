@@ -12245,6 +12245,14 @@
   value: 10
   mirror: always
 
+# NB: Changes to this pref affect CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
+# See the comment in CertVerifier.cpp.
+# 1 = forbid sha1 in certificate signatures, even for imported roots
+- name: security.pki.sha1_enforcement_level
+  type: RelaxedAtomicUint32
+  value: 1
+  mirror: always
+
 # security.pki.netscape_step_up_policy controls how the platform handles the
 # id-Netscape-stepUp OID in extended key usage extensions of CA certificates.
 # 0: id-Netscape-stepUp is always considered equivalent to id-kp-serverAuth
