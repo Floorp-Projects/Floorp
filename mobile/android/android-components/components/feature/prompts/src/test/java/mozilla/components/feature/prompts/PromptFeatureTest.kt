@@ -45,6 +45,7 @@ import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.feature.prompts.address.AddressDelegate
 import mozilla.components.feature.prompts.address.AddressPicker
 import mozilla.components.feature.prompts.concept.SelectablePromptView
+import mozilla.components.feature.prompts.creditcard.CreditCardDelegate
 import mozilla.components.feature.prompts.creditcard.CreditCardPicker
 import mozilla.components.feature.prompts.creditcard.CreditCardSaveDialogFragment
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
@@ -53,6 +54,7 @@ import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
+import mozilla.components.feature.prompts.login.LoginDelegate
 import mozilla.components.feature.prompts.login.LoginPicker
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.support.test.any
@@ -277,7 +279,10 @@ class PromptFeatureTest {
                 mock<Activity>(),
                 store,
                 fragmentManager = fragmentManager,
-                loginPickerView = loginPickerView
+                loginDelegate = object : LoginDelegate {
+                    override val loginPickerView = loginPickerView
+                    override val onManageLogins = {}
+                }
             ) { }
         )
         val selectLoginPrompt = mock<PromptRequest.SelectLoginPrompt>()
@@ -430,7 +435,10 @@ class PromptFeatureTest {
                 mock<Activity>(),
                 store,
                 fragmentManager = fragmentManager,
-                loginPickerView = loginPickerView
+                loginDelegate = object : LoginDelegate {
+                    override val loginPickerView = loginPickerView
+                    override val onManageLogins = {}
+                }
             ) { }
         )
         val selectLoginPrompt = mock<PromptRequest.SelectLoginPrompt>()
@@ -455,7 +463,10 @@ class PromptFeatureTest {
                 mock<Activity>(),
                 store,
                 fragmentManager = fragmentManager,
-                loginPickerView = loginPickerView
+                loginDelegate = object : LoginDelegate {
+                    override val loginPickerView = loginPickerView
+                    override val onManageLogins = {}
+                }
             ) { }
         )
         val selectLoginPrompt = mock<PromptRequest.SelectLoginPrompt>()
@@ -480,7 +491,10 @@ class PromptFeatureTest {
                 mock<Activity>(),
                 store,
                 fragmentManager = fragmentManager,
-                loginPickerView = loginPickerView
+                loginDelegate = object : LoginDelegate {
+                    override val loginPickerView = loginPickerView
+                    override val onManageLogins = {}
+                }
             ) { }
         )
         val selectLoginPrompt = mock<PromptRequest.SelectLoginPrompt>()
@@ -506,7 +520,11 @@ class PromptFeatureTest {
                 mock<Activity>(),
                 store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView = creditCardPickerView
+                    override val onSelectCreditCard = {}
+                    override val onManageCreditCards = {}
+                }
             ) { }
         )
         val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
@@ -530,7 +548,11 @@ class PromptFeatureTest {
                 mock<Activity>(),
                 store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView = creditCardPickerView
+                    override val onSelectCreditCard = {}
+                    override val onManageCreditCards = {}
+                }
             ) { }
         )
         val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
@@ -553,7 +575,11 @@ class PromptFeatureTest {
                 mock<Activity>(),
                 store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView = creditCardPickerView
+                    override val onSelectCreditCard = {}
+                    override val onManageCreditCards = {}
+                }
             ) { }
         )
         val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
@@ -577,7 +603,11 @@ class PromptFeatureTest {
                 mock<Activity>(),
                 store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView = creditCardPickerView
+                    override val onSelectCreditCard = {}
+                    override val onManageCreditCards = {}
+                }
             ) { }
         )
         feature.creditCardPicker = creditCardPicker
@@ -971,7 +1001,11 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView,
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView = creditCardPickerView
+                    override val onSelectCreditCard = {}
+                    override val onManageCreditCards = {}
+                },
                 isCreditCardAutofillEnabled = { true }
             ) { }
         feature.creditCardPicker = creditCardPicker
@@ -990,7 +1024,11 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView,
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView = creditCardPickerView
+                    override val onSelectCreditCard = {}
+                    override val onManageCreditCards = {}
+                },
                 isCreditCardAutofillEnabled = { true }
             ) { }
         feature.creditCardPicker = creditCardPicker
@@ -1009,7 +1047,11 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView,
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView = creditCardPickerView
+                    override val onSelectCreditCard = {}
+                    override val onManageCreditCards = {}
+                },
                 isCreditCardAutofillEnabled = { true }
             ) { }
         feature.creditCardPicker = creditCardPicker
@@ -1027,7 +1069,11 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView,
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView = creditCardPickerView
+                    override val onSelectCreditCard = {}
+                    override val onManageCreditCards = {}
+                },
                 isCreditCardAutofillEnabled = { true }
             ) { }
         feature.creditCardPicker = creditCardPicker
@@ -1514,7 +1560,10 @@ class PromptFeatureTest {
         val feature =
             PromptFeature(
                 activity = mock(), store = store, fragmentManager = fragmentManager,
-                loginPickerView = loginPickerView
+                loginDelegate = object : LoginDelegate {
+                    override val loginPickerView = loginPickerView
+                    override val onManageLogins = {}
+                }
             ) { }
         feature.loginPicker = loginPicker
         val onLoginDismiss: () -> Unit = {}
@@ -1547,7 +1596,11 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView,
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView = creditCardPickerView
+                    override val onSelectCreditCard = {}
+                    override val onManageCreditCards = {}
+                },
                 isCreditCardAutofillEnabled = { true }
             ) { }
         feature.creditCardPicker = creditCardPicker

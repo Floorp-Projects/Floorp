@@ -25,6 +25,7 @@ permalink: /changelog/
 
 * **feature-prompts**:
   * Added optional `addressPickerView` and `onManageAddresses` parameters through `AddressDelegate` to `PromptFeature` for a new `AddressPicker` to display a view for selecting addresses to autofill into a site. [#12061](https://github.com/mozilla-mobile/android-components/issues/12061)
+  * ⚠️ **This is a breaking change**: `PromptFeature` constructor now takes `LoginDelegate` and `CreditCardDelegate` instead of login picker and credit card picker parameters. [#12257](https://github.com/mozilla-mobile/android-components/issues/12257)
 
 * **service-glean**
   * 🆙 Updated Glean to version 50.0.1 ([changelog](https://github.com/mozilla/glean/releases/tag/v50.0.1))

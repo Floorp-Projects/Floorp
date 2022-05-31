@@ -43,13 +43,12 @@ import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardValidationDelegate
-import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.address.AddressDelegate
 import mozilla.components.feature.prompts.address.AddressPicker
 import mozilla.components.feature.prompts.address.DefaultAddressDelegate
-import mozilla.components.feature.prompts.concept.SelectablePromptView
+import mozilla.components.feature.prompts.creditcard.CreditCardDelegate
 import mozilla.components.feature.prompts.creditcard.CreditCardPicker
 import mozilla.components.feature.prompts.creditcard.CreditCardSaveDialogFragment
 import mozilla.components.feature.prompts.dialog.AlertDialogFragment
@@ -70,6 +69,7 @@ import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
 import mozilla.components.feature.prompts.facts.emitSuccessfulAddressAutofillFormDetectedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFormDetectedFact
 import mozilla.components.feature.prompts.file.FilePicker
+import mozilla.components.feature.prompts.login.LoginDelegate
 import mozilla.components.feature.prompts.login.LoginExceptions
 import mozilla.components.feature.prompts.login.LoginPicker
 import mozilla.components.feature.prompts.share.DefaultShareDelegate
@@ -126,16 +126,8 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * will be shown.
  * @property loginExceptionStorage An implementation of [LoginExceptions] that saves and checks origins
  * the user does not want to see a save login dialog for.
- * @property loginPickerView The [SelectablePromptView] used for [LoginPicker] to display a
- * selectable prompt list of login options.
- * @property onManageLogins A callback invoked when a user selects "manage logins" from the
- * select login prompt.
- * @property creditCardPickerView The [SelectablePromptView] used for [CreditCardPicker] to display
- * a selectable prompt list of credit card options.
- * @property onManageCreditCards A callback invoked when a user selects "Manage credit cards" from
- * the select credit card prompt.
- * @property onSelectCreditCard A callback invoked when a user selects a credit card from the
- * select credit card prompt.
+ * @property loginDelegate Delegate for login picker.
+ * @property creditCardDelegate Delegate for credit card picker.
  * @property addressDelegate Delegate for address picker.
  * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
@@ -154,11 +146,8 @@ class PromptFeature private constructor(
     private val isCreditCardAutofillEnabled: () -> Boolean = { false },
     private val isAddressAutofillEnabled: () -> Boolean = { false },
     override val loginExceptionStorage: LoginExceptions? = null,
-    private val loginPickerView: SelectablePromptView<Login>? = null,
-    private val onManageLogins: () -> Unit = {},
-    private val creditCardPickerView: SelectablePromptView<CreditCardEntry>? = null,
-    private val onManageCreditCards: () -> Unit = {},
-    private val onSelectCreditCard: () -> Unit = {},
+    private val loginDelegate: LoginDelegate = object : LoginDelegate {},
+    private val creditCardDelegate: CreditCardDelegate = object : CreditCardDelegate {},
     private val addressDelegate: AddressDelegate = DefaultAddressDelegate(),
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature,
@@ -195,11 +184,8 @@ class PromptFeature private constructor(
         isCreditCardAutofillEnabled: () -> Boolean = { false },
         isAddressAutofillEnabled: () -> Boolean = { false },
         loginExceptionStorage: LoginExceptions? = null,
-        loginPickerView: SelectablePromptView<Login>? = null,
-        onManageLogins: () -> Unit = {},
-        creditCardPickerView: SelectablePromptView<CreditCardEntry>? = null,
-        onManageCreditCards: () -> Unit = {},
-        onSelectCreditCard: () -> Unit = {},
+        loginDelegate: LoginDelegate = object : LoginDelegate {},
+        creditCardDelegate: CreditCardDelegate = object : CreditCardDelegate {},
         addressDelegate: AddressDelegate = DefaultAddressDelegate(),
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
@@ -215,11 +201,8 @@ class PromptFeature private constructor(
         isAddressAutofillEnabled = isAddressAutofillEnabled,
         loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
-        loginPickerView = loginPickerView,
-        onManageLogins = onManageLogins,
-        creditCardPickerView = creditCardPickerView,
-        onManageCreditCards = onManageCreditCards,
-        onSelectCreditCard = onSelectCreditCard,
+        loginDelegate = loginDelegate,
+        creditCardDelegate = creditCardDelegate,
         addressDelegate = addressDelegate
     )
 
@@ -235,11 +218,8 @@ class PromptFeature private constructor(
         isCreditCardAutofillEnabled: () -> Boolean = { false },
         isAddressAutofillEnabled: () -> Boolean = { false },
         loginExceptionStorage: LoginExceptions? = null,
-        loginPickerView: SelectablePromptView<Login>? = null,
-        onManageLogins: () -> Unit = {},
-        creditCardPickerView: SelectablePromptView<CreditCardEntry>? = null,
-        onManageCreditCards: () -> Unit = {},
-        onSelectCreditCard: () -> Unit = {},
+        loginDelegate: LoginDelegate = object : LoginDelegate {},
+        creditCardDelegate: CreditCardDelegate = object : CreditCardDelegate {},
         addressDelegate: AddressDelegate = DefaultAddressDelegate(),
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
@@ -255,11 +235,8 @@ class PromptFeature private constructor(
         isAddressAutofillEnabled = isAddressAutofillEnabled,
         loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
-        loginPickerView = loginPickerView,
-        onManageLogins = onManageLogins,
-        creditCardPickerView = creditCardPickerView,
-        onManageCreditCards = onManageCreditCards,
-        onSelectCreditCard = onSelectCreditCard,
+        loginDelegate = loginDelegate,
+        creditCardDelegate = creditCardDelegate,
         addressDelegate = addressDelegate
     )
 
@@ -267,18 +244,24 @@ class PromptFeature private constructor(
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal var loginPicker =
-        loginPickerView?.let { LoginPicker(store, it, onManageLogins, customTabId) }
+        with(loginDelegate) {
+            loginPickerView?.let {
+                LoginPicker(store, it, onManageLogins, customTabId)
+            }
+        }
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal var creditCardPicker =
-        creditCardPickerView?.let {
-            CreditCardPicker(
-                store = store,
-                creditCardSelectBar = it,
-                manageCreditCardsCallback = onManageCreditCards,
-                selectCreditCardCallback = onSelectCreditCard,
-                sessionId = customTabId
-            )
+        with(creditCardDelegate) {
+            creditCardPickerView?.let {
+                CreditCardPicker(
+                    store = store,
+                    creditCardSelectBar = it,
+                    manageCreditCardsCallback = onManageCreditCards,
+                    selectCreditCardCallback = onSelectCreditCard,
+                    sessionId = customTabId
+                )
+            }
         }
 
     @VisibleForTesting(otherwise = PRIVATE)
@@ -922,7 +905,7 @@ class PromptFeature private constructor(
 
         (activePromptRequest as? SelectLoginPrompt)?.let { selectLoginPrompt ->
             loginPicker?.let { loginPicker ->
-                if (loginPickerView?.asView()?.isVisible == true) {
+                if (loginDelegate.loginPickerView?.asView()?.isVisible == true) {
                     loginPicker.dismissCurrentLoginSelect(selectLoginPrompt)
                     result = true
                 }
@@ -931,7 +914,7 @@ class PromptFeature private constructor(
 
         (activePromptRequest as? SelectCreditCard)?.let { selectCreditCardPrompt ->
             creditCardPicker?.let { creditCardPicker ->
-                if (creditCardPickerView?.asView()?.isVisible == true) {
+                if (creditCardDelegate.creditCardPickerView?.asView()?.isVisible == true) {
                     creditCardPicker.dismissSelectCreditCardRequest(selectCreditCardPrompt)
                     result = true
                 }
