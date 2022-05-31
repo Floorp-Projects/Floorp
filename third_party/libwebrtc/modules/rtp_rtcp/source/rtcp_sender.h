@@ -64,6 +64,12 @@ class RTCPSender final {
     // Estimate RTT as non-sender as described in
     // https://tools.ietf.org/html/rfc3611#section-4.4 and #section-4.5
     bool non_sender_rtt_measurement = false;
+    // Optional callback which, if specified, is used by RTCPSender to schedule
+    // the next time to evaluate if RTCP should be sent by means of
+    // TimeToSendRTCPReport/SendRTCP.
+    // The RTCPSender client still needs to call TimeToSendRTCPReport/SendRTCP
+    // to actually get RTCP sent.
+    std::function<void(TimeDelta)> schedule_next_rtcp_send_evaluation_function;
 
     RtcEventLog* event_log = nullptr;
     absl::optional<TimeDelta> rtcp_report_interval;
@@ -91,7 +97,7 @@ class RTCPSender final {
     RTCPReceiver* receiver;
   };
 
-  explicit RTCPSender(const Configuration& config);
+  explicit RTCPSender(Configuration config);
   // TODO(bugs.webrtc.org/11581): delete this temporary compatibility helper
   // once downstream dependencies migrates.
   explicit RTCPSender(const RtpRtcpInterface::Configuration& config);
@@ -224,6 +230,10 @@ class RTCPSender final {
   void BuildNACK(const RtcpContext& context, PacketSender& sender)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_rtcp_sender_);
 
+  // |duration| being TimeDelta::Zero() means schedule immediately.
+  void SetNextRtcpSendEvaluationDuration(TimeDelta duration)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_rtcp_sender_);
+
   const bool audio_;
   // TODO(bugs.webrtc.org/11581): `mutex_rtcp_sender_` shouldn't be required if
   // we consistently run network related operations on the network thread.
@@ -238,6 +248,10 @@ class RTCPSender final {
   Transport* const transport_;
 
   const TimeDelta report_interval_;
+  // Set from
+  // RTCPSender::Configuration::schedule_next_rtcp_send_evaluation_function.
+  const std::function<void(TimeDelta)>
+      schedule_next_rtcp_send_evaluation_function_;
 
   mutable Mutex mutex_rtcp_sender_;
   bool sending_ RTC_GUARDED_BY(mutex_rtcp_sender_);
