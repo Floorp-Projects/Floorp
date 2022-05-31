@@ -462,3 +462,7 @@ EXPORTS ;-
 		PR_DuplicateEnvironment;
 		PR_GetEnvSecure;
 ;+} NSPR_4.10.3;
+;+NSPR_4.34 {
+;+      global:
+    PR_GetPrefLoopbackAddrInfo;
+;+} NSPR_4.12;

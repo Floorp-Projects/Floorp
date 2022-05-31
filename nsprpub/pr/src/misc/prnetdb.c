@@ -2178,6 +2178,73 @@ PR_IMPLEMENT(PRAddrInfo *) PR_GetAddrInfoByName(const char  *hostname,
 #endif
 }
 
+PR_IMPLEMENT(PRStatus)
+PR_GetPrefLoopbackAddrInfo(PRNetAddr *result,
+                           PRUint16 port)
+{
+    char          tmpBuf[ 40 ];
+    const int     tmpBufSize = sizeof( tmpBuf );
+
+    if (!result) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
+    PR_snprintf(tmpBuf, tmpBufSize, "%u", port );
+
+#if !defined(_PR_HAVE_GETADDRINFO) || !defined(AI_PASSIVE)
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return PR_FAILURE;
+#else
+
+    PRADDRINFO *res, hints;
+    PRStatus rv;
+
+    memset(&hints, 0, sizeof(hints));
+
+    rv = GETADDRINFO(NULL, tmpBuf, &hints, &res);
+    if (rv == 0) {
+        PRBool result_still_empty = PR_TRUE;
+        PRADDRINFO *ai = res;
+        do {
+            PRNetAddr aNetAddr;
+
+            while (ai && ai->ai_addrlen > sizeof(PRNetAddr))
+                ai = ai->ai_next;
+
+            if (ai) {
+                /* copy sockaddr to PRNetAddr */
+                memcpy(&aNetAddr, ai->ai_addr, ai->ai_addrlen);
+                aNetAddr.raw.family = ai->ai_addr->sa_family;
+#ifdef _PR_INET6
+                if (AF_INET6 == aNetAddr.raw.family)
+                    aNetAddr.raw.family = PR_AF_INET6;
+#endif
+                if (ai->ai_addrlen < sizeof(PRNetAddr))
+                    memset(((char*)result)+ai->ai_addrlen, 0,
+                           sizeof(PRNetAddr) - ai->ai_addrlen);
+            }
+
+            /* If we obtain more than one result, prefer IPv6. */
+            if (result_still_empty || aNetAddr.raw.family == PR_AF_INET6) {
+                memcpy(result, &aNetAddr, sizeof(PRNetAddr));
+            }
+            result_still_empty = PR_FALSE;
+            ai = ai->ai_next;
+        }
+        while (ai);
+
+        FREEADDRINFO(res);
+        return PR_SUCCESS;
+    }
+
+    PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, rv);
+    return PR_FAILURE;
+#endif
+}
+
 PR_IMPLEMENT(void) PR_FreeAddrInfo(PRAddrInfo *ai)
 {
 #if defined(_PR_HAVE_GETADDRINFO)
