@@ -1,5 +1,0 @@
-error: unsupported key expression
- --> $DIR/equivalent-keys.rs:5:5
-  |
-5 |     UniCase("FOO") => 42, //~ NOTE one occurrence here
-  |     ^^^^^^^^^^^^^^

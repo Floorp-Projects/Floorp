@@ -3,29 +3,31 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "phf_macros"
-version = "0.8.0"
+version = "0.10.0"
 authors = ["Steven Fackler <sfackler@gmail.com>"]
+include = ["src/lib.rs"]
 description = "Macros to generate types in the phf crate"
+readme = "../README.md"
 license = "MIT"
 repository = "https://github.com/sfackler/rust-phf"
 
 [lib]
 proc-macro = true
 [dependencies.phf_generator]
-version = "0.8.0"
+version = "0.10.0"
 
 [dependencies.phf_shared]
-version = "0.8.0"
+version = "0.10.0"
+default-features = false
 
 [dependencies.proc-macro-hack]
 version = "0.5.4"
@@ -39,12 +41,21 @@ version = "1"
 [dependencies.syn]
 version = "1"
 features = ["full"]
+
+[dependencies.unicase_]
+version = "2.4.0"
+optional = true
+package = "unicase"
 [dev-dependencies.phf]
-version = "0.8"
+version = "0.9"
 features = ["macros", "unicase"]
 
 [dev-dependencies.trybuild]
 version = "1.0"
 
-[dev-dependencies.unicase]
+[dev-dependencies.unicase_]
 version = "2.4.0"
+package = "unicase"
+
+[features]
+unicase = ["unicase_", "phf_shared/unicase"]
