@@ -921,7 +921,13 @@ class AcmReceiverBitExactnessOldApi : public ::testing::Test {
 TEST_F(AcmReceiverBitExactnessOldApi, 8kHzOutput) {
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "e0c966d7b8c36ff60167988fa35d33e0"
+// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
+// checksum.
+#if defined(WEBRTC_LINUX) && defined(NDEBUG)
+                             : "5af28619e3a3c606b2242c9a12f4f64e";
+#else
                              : "7d8f6b84abd1e57ec010a53bc2130652";
+#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "405a50f0bcb8827e20aa944299fc59f6"
                              : "0ed5830930f5527a01bbec0ba11f8541";
@@ -936,7 +942,14 @@ TEST_F(AcmReceiverBitExactnessOldApi, 8kHzOutput) {
 TEST_F(AcmReceiverBitExactnessOldApi, 16kHzOutput) {
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "a63c578e1195c8420f453962c6d8519c"
+
+// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
+// checksum.
+#if defined(WEBRTC_LINUX) && defined(NDEBUG)
+                             : "f788cc9200ac4a7d498d9081987808a3";
+#else
                              : "6bac83762c1306b932cd25a560155681";
+#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "58fd62a5c49ee513f9fa6fe7dbf62c97"
                              : "0509cf0672f543efb4b050e8cffefb1d";
@@ -951,7 +964,13 @@ TEST_F(AcmReceiverBitExactnessOldApi, 16kHzOutput) {
 TEST_F(AcmReceiverBitExactnessOldApi, 32kHzOutput) {
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "8775ce387f44dc5ff4a26da295d5ee7c"
+// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
+// checksum.
+#if defined(WEBRTC_LINUX) && defined(NDEBUG)
+                             : "5b84b2a179cb8533a8f9bcd19612e7f0";
+#else
                              : "e319222ca47733709f90fdf33c8574db";
+#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "04ce6a1dac5ffdd8438d804623d0132f"
                              : "39a4a7a1c455b35baeffb9fd193d7858";
@@ -966,7 +985,13 @@ TEST_F(AcmReceiverBitExactnessOldApi, 32kHzOutput) {
 TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutput) {
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "7a55700b7ca9aa60237db58b33e55606"
+// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
+// checksum.
+#if defined(WEBRTC_LINUX) && defined(NDEBUG)
+                             : "a2459749062f96297283cce4a8c7e6db";
+#else
                              : "57d1d316c88279f4f3da3511665069a9";
+#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "f59833d9b0924f4b0704707dd3589f80"
                              : "74cbe7345e2b6b45c1e455a5d1e921ca";
@@ -1055,7 +1080,13 @@ TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutputExternalDecoder) {
       new rtc::RefCountedObject<ADFactory>);
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "7a55700b7ca9aa60237db58b33e55606"
+// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
+// checksum.
+#if defined(WEBRTC_LINUX) && defined(NDEBUG)
+                             : "a2459749062f96297283cce4a8c7e6db";
+#else
                              : "57d1d316c88279f4f3da3511665069a9";
+#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "f59833d9b0924f4b0704707dd3589f80"
                              : "74cbe7345e2b6b45c1e455a5d1e921ca";
@@ -1326,7 +1357,13 @@ TEST_F(AcmSenderBitExactnessOldApi, IsacWb60ms) {
 TEST_F(AcmSenderBitExactnessOldApi, MAYBE_IsacSwb30ms) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("ISAC", 32000, 1, 104, 960, 960));
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
+// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
+// checksum.
+#if defined(WEBRTC_LINUX) && defined(NDEBUG) && defined(WEBRTC_ARCH_X86)
+          "13d4d2a4c9e8e94a4b74a176e4bf7cc4",
+#else
           "5683b58da0fbf2063c7adc2e6bfb3fb8",
+#endif
           "2b3c387d06f00b7b7aad4c9be56fb83d", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
           "5683b58da0fbf2063c7adc2e6bfb3fb8"),
