@@ -43,6 +43,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
 import androidx.annotation.UiThread;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
@@ -1167,6 +1168,9 @@ public class GeckoSession {
     @WrapForJNI(dispatchTo = "proxy")
     public native void attachAccessibility(
         SessionAccessibility.NativeProvider sessionAccessibility);
+
+    @WrapForJNI(dispatchTo = "proxy")
+    public native void printToPdf(GeckoResult<InputStream> geckoResult);
 
     @WrapForJNI(calledFrom = "gecko")
     private synchronized void onReady(final @Nullable NativeQueue queue) {
@@ -6502,6 +6506,18 @@ public class GeckoSession {
   @UiThread
   public @NonNull Autofill.Session getAutofillSession() {
     return getAutofillSupport().getAutofillSession();
+  }
+
+  /**
+   * Saves a PDF of the currently displayed page.
+   *
+   * @return A GeckoResult with an InputStream containing the PDF
+   */
+  @AnyThread
+  public @NonNull GeckoResult<InputStream> saveAsPdf() {
+    final GeckoResult<InputStream> geckoResult = new GeckoResult<>();
+    this.mWindow.printToPdf(geckoResult);
+    return geckoResult;
   }
 
   private static String rgbaToArgb(final String color) {

@@ -157,11 +157,9 @@ Retriggering Browsertime Visual Metrics Tasks
 
 You can retrigger Browsertime tasks just like you retrigger any other tasks from Treeherder (using the retrigger buttons, add-new-jobs, retrigger-multiple, etc.).
 
-When you retrigger the Browsertime test task, it will trigger a new vismet task as well. If you retrigger a Browsertime vismet task, then it will cause the test task to be retriggered and a new vismet task will be produced from there. This means that both of these tasks are treated as "one" task when it comes to retriggering them.
+The following metrics are collected each time: ``fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange``
 
-There is only one path that still doesn't work for retriggering Browsertime tests and that happens when you use ``--rebuild X`` in a try push submission.
-
-For details on how we previously retriggered visual metrics tasks see `VisualMetrics <https://wiki.mozilla.org/TestEngineering/Performance/Raptor/VisualMetrics>`_ (this will stay here for a few months just in case).
+Further information regarding these metrics can be viewed at `visual-metrics <https://www.sitespeed.io/documentation/sitespeed.io/metrics/#visual-metrics>`_
 
 Gecko Profiling with Browsertime
 --------------------------------
@@ -206,55 +204,32 @@ Once the side-by-side comparison is produced, the video on the left is the old/b
 Mach Browsertime Setup
 ----------------------
 
-Note that if you are running Raptor-Browsertime then it will get installed automatically and also updates itself.
+**WARNING**
+ Raptor-Browsertime (i.e. ``./mach raptor --browsertime -t <TEST>``) is currently required to be ran first in order to acquire the Node-16 binary. In general, it is also not reccomended to use ``./mach browsertime`` for testing as it will be deprecated soon.
+
+Note that if you are running Raptor-Browsertime then it will get installed automatically and also update itself. Otherwise, you can run:
 
 - ``./mach browsertime --clobber --setup --install-vismet-reqs``
 
-This will automatically check your setup, which will output something like this:
+This will automatically check your setup and install the necessary dependencies if required. If successful, the output should read as something similar to:
 
 ::
 
-    ffmpeg:   OK
-    convert:  OK
-    compare:  OK
-    Pillow:   OK
-    SSIM:     OK
+    browsertime installed successfully!
 
-- To manually check your setup, run ``./mach browsertime --check``
+    NOTE: Your local browsertime binary is at <...>/mozilla-unified/tools/browsertime/node_modules/.bin/browsertime
+
+- To manually check your setup, you can also run ``./mach browsertime --check``
 
 Known Issues
 ^^^^^^^^^^^^
 
-**If you aren't running visual metrics, then failures in** ``Pillow`` **and** ``SSIM`` **can be ignored.**
-
-`Bug 1735410: [meta] browsertime visual metrics dependencies not installing correctly <https://bugzilla.mozilla.org/show_bug.cgi?id=1735410>`_
-
-Currently there are issues on all platforms installing browsertime vismet dependencies. There is a fix for Linux (`Bug 1746208 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746208>`__) but not on Windows (`Bug 1746206 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746206>`__) or OSX (`Bug 1746207 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746207>`__)
-
-Linux
-"""""
-`Bug 1746208 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746208>`__ **(resolved)**
-
-If ``ffmpeg`` is listed as FAIL, try `downloading ffmpeg manually <https://ffmpeg.org/>`_ and adding it to your PATH
-
-OSX
-"""
-
-`Bug 1746207 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746207>`__ **(resolved)**
-
-**Current Status**: ``convert`` and ``compare`` fail to install. Rebuilding Firefox and running browsertime setup has not shown to resolve this issue.
-
-Windows
-"""""""
-
-`Bug 1746206 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746206>`__ **(unresolved)**
-
-If the ImageMagick URL returns a 404 during setup, please `file a bug like this <https://bugzilla.mozilla.org/show_bug.cgi?id=1735540>_` to have the URL updated.
-
-**Current Status**: ``convert``, ``compare``, and ``ffmpeg`` fail to install. Neither adding ``ffmpeg`` to the PATH, nor rebuilding Firefox have shown to resolve this issue.
+With the replacement of ImageMagick, former cross platform installation issues have been resolved. The details of this can be viewed in the meta bug tracker
+`Bug 1735410 <https://bugzilla.mozilla.org/show_bug.cgi?id=1735410>`_
 
 
--  For other issues, try deleting the ``~/.mozbuild/browsertime`` folder and re-running the browsertime setup command.
+
+- For other issues, try deleting the ``~/.mozbuild/browsertime`` folder and re-running the browsertime setup command or a Raptor-Browsertime test
 
 - If you plan on running Browsertime on Android, your Android device must already be set up (see more below in the :ref: `Running on Android` section)
 

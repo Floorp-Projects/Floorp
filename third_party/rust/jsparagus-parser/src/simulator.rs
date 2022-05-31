@@ -26,19 +26,19 @@ pub struct Simulator<'alloc, 'parser> {
     ///
     /// Uses a fixed-size array as the number of lookahead is bounded to a lower
     /// value, panics otherwise.
-    sim_state_stack: ArrayVec<[usize; 4]>,
+    sim_state_stack: ArrayVec<usize, 4>,
     /// Mutable term stack used by the simulator on top of the immutable
     /// parser's term stack.
     ///
     /// Uses a fixed-size array as the number of lookahead is bounded to a lower
     /// value, panics otherwise.
-    sim_node_stack: ArrayVec<[TermValue<()>; 4]>,
+    sim_node_stack: ArrayVec<TermValue<()>, 4>,
     /// Mutable term stack used by the simulator for replaying terms when
     /// reducing non-terminals are replaying lookahead terminals.
     ///
     /// Uses a fixed-size array as the number of lookahead is bounded to a lower
     /// value, panics otherwise.
-    replay_stack: ArrayVec<[TermValue<()>; 4]>,
+    replay_stack: ArrayVec<TermValue<()>, 4>,
 }
 
 impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {

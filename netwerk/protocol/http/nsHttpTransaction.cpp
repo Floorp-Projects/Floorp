@@ -1320,8 +1320,7 @@ bool nsHttpTransaction::ShouldRestartOn0RttError(nsresult reason) {
        "mEarlyDataWasAvailable=%d error=%" PRIx32 "]\n",
        this, mEarlyDataWasAvailable, static_cast<uint32_t>(reason)));
   return StaticPrefs::network_http_early_data_disable_on_error() &&
-         mEarlyDataWasAvailable &&
-         SecurityErrorToBeHandledByTransaction(reason);
+         mEarlyDataWasAvailable && SecurityErrorThatMayNeedRestart(reason);
 }
 
 void nsHttpTransaction::Close(nsresult reason) {

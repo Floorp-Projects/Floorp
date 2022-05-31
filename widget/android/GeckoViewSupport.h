@@ -10,6 +10,7 @@
 #include "mozilla/java/GeckoResultWrappers.h"
 #include "mozilla/java/GeckoSessionNatives.h"
 #include "mozilla/java/WebResponseWrappers.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/widget/WindowEvent.h"
 
 class nsPIDOMWindowOuter;
@@ -53,6 +54,7 @@ class GeckoViewSupport final
  private:
   nsCOMPtr<nsPIDOMWindowOuter> mDOMWindow;
   bool mIsReady{false};
+  RefPtr<dom::CanonicalBrowsingContext> GetContentCanonicalBrowsingContext();
 
  public:
   // Create and attach a window.
@@ -103,6 +105,9 @@ class GeckoViewSupport final
     RefPtr<Runnable> disposer(aDisposer);
     disposer->Run();
   }
+
+  void PrintToPdf(const java::GeckoSession::Window::LocalRef& inst,
+                  jni::Object::Param aStream);
 };
 
 }  // namespace widget

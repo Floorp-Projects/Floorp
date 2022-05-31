@@ -1249,7 +1249,7 @@ const LoginHelper = {
    *                    be treated as a password input
    */
   isPasswordFieldType(element, { ignoreConnect = false } = {}) {
-    if (ChromeUtils.getClassName(element) !== "HTMLInputElement") {
+    if (!HTMLInputElement.isInstance(element)) {
       return false;
     }
 
@@ -1287,7 +1287,7 @@ const LoginHelper = {
    *                    of the username types.
    */
   isUsernameFieldType(element, { ignoreConnect = false } = {}) {
-    if (ChromeUtils.getClassName(element) !== "HTMLInputElement") {
+    if (!HTMLInputElement.isInstance(element)) {
       return false;
     }
 

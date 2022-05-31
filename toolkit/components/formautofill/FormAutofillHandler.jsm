@@ -223,7 +223,7 @@ class FormAutofillSection {
       }
 
       let element = fieldDetail.elementWeakRef.get();
-      if (ChromeUtils.getClassName(element) !== "HTMLSelectElement") {
+      if (!HTMLSelectElement.isInstance(element)) {
         continue;
       }
 
@@ -376,7 +376,7 @@ class FormAutofillSection {
       if (fieldDetail.transform) {
         value = fieldDetail.transform(value);
       }
-      if (ChromeUtils.getClassName(element) === "HTMLInputElement" && value) {
+      if (HTMLInputElement.isInstance(element) && value) {
         // For the focused input element, it will be filled with a valid value
         // anyway.
         // For the others, the fields should be only filled when their values are empty
@@ -392,7 +392,7 @@ class FormAutofillSection {
           element.setUserInput(value);
           this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
         }
-      } else if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
+      } else if (HTMLSelectElement.isInstance(element)) {
         let cache = this._cacheValue.matchingSelectOption.get(element) || {};
         let option = cache[value] && cache[value].get();
         if (!option) {
@@ -441,7 +441,7 @@ class FormAutofillSection {
         continue;
       }
 
-      if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
+      if (HTMLSelectElement.isInstance(element)) {
         // Unlike text input, select element is always previewed even if
         // the option is already selected.
         if (value) {
@@ -502,9 +502,9 @@ class FormAutofillSection {
       }
 
       if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
-        if (ChromeUtils.getClassName(element) === "HTMLInputElement") {
+        if (HTMLInputElement.isInstance(element)) {
           element.setUserInput("");
-        } else if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
+        } else if (HTMLSelectElement.isInstance(element)) {
           // If we can't find a selected option, then we should just reset to the first option's value
           this._resetSelectElementValue(element);
         }
@@ -677,7 +677,7 @@ class FormAutofillSection {
         // If the user manually blanks a credit card field, then
         // we want the popup to be activated.
         if (
-          ChromeUtils.getClassName(target) !== "HTMLSelectElement" &&
+          !HTMLSelectElement.isInstance(target) &&
           isCreditCardField &&
           target.value === ""
         ) {
@@ -702,7 +702,7 @@ class FormAutofillSection {
         for (const fieldDetail of this.fieldDetails) {
           const element = fieldDetail.elementWeakRef.get();
 
-          if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
+          if (HTMLSelectElement.isInstance(element)) {
             // Dim fields are those we don't attempt to revert their value
             // when clear the target set, such as <select>.
             dimFieldDetails.push(fieldDetail);
@@ -813,8 +813,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
       let streetAddressDetail = this.getFieldDetailByName("street-address");
       if (
         streetAddressDetail &&
-        ChromeUtils.getClassName(streetAddressDetail.elementWeakRef.get()) ===
-          "HTMLInputElement"
+        HTMLInputElement.isInstance(streetAddressDetail.elementWeakRef.get())
       ) {
         profile["street-address"] = profile["-moz-street-address-one-line"];
       }
@@ -907,7 +906,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
     // Try to abbreviate the value of select element.
     if (
       fieldDetail.fieldName == "address-level1" &&
-      ChromeUtils.getClassName(element) === "HTMLSelectElement"
+      HTMLSelectElement.isInstance(element)
     ) {
       // Don't save the record when the option value is empty *OR* there
       // are multiple options being selected. The empty option is usually
@@ -1256,7 +1255,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
   computeFillingValue(value, fieldDetail, element) {
     if (
       fieldDetail.fieldName != "cc-type" ||
-      ChromeUtils.getClassName(element) !== "HTMLSelectElement"
+      !HTMLSelectElement.isInstance(element)
     ) {
       return value;
     }

@@ -1096,9 +1096,6 @@ class Raptor(
         metrics tests.
         """
 
-        # TODO expand this logic below for Windows and Linux (Bug 1746206 and 1746208)
-        # and refactor once all the paths are finalized across platforms
-
         if "ffmpeg" in os.environ["PATH"]:
             return
 

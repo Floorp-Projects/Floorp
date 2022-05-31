@@ -180,6 +180,13 @@ this.test = class extends ExtensionAPI {
           );
           return gfxInfo.crashGPUProcessForTests();
         },
+
+        async clearHSTSState() {
+          const sss = Cc["@mozilla.org/ssservice;1"].getService(
+            Ci.nsISiteSecurityService
+          );
+          return sss.clearAll();
+        },
       },
     };
   }

@@ -40,6 +40,7 @@ add_task(async function preferred_API() {
       let filePickerPromise = waitForFilePicker();
       internalSave(
         url,
+        null, // originalURL
         null, // document
         "image.jpg",
         null, // content disposition

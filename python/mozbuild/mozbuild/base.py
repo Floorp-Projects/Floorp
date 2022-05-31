@@ -50,16 +50,6 @@ except Exception:
     psutil = None
 
 
-def ancestors(path):
-    """Emit the parent directories of a path."""
-    while path:
-        yield path
-        newpath = os.path.dirname(path)
-        if newpath == path:
-            break
-        path = newpath
-
-
 class BadEnvironmentException(Exception):
     """Base class for errors raised when the build environment is not sane."""
 
@@ -169,7 +159,7 @@ class MozbuildObject(ProcessExecutionMixin):
             mozconfig = info.get("mozconfig")
             return topsrcdir, topobjdir, mozconfig
 
-        for dir_path in ancestors(cwd):
+        for dir_path in [str(path) for path in [cwd] + list(Path(cwd).parents)]:
             # If we find a mozinfo.json, we are in the objdir.
             mozinfo_path = os.path.join(dir_path, "mozinfo.json")
             if os.path.isfile(mozinfo_path):

@@ -6,6 +6,7 @@
 package org.mozilla.geckoview_example;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -40,6 +41,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -1216,6 +1218,9 @@ public class GeckoViewActivity extends AppCompatActivity
       case R.id.action_close_tab:
         closeTab((TabSession) session);
         break;
+      case R.id.save_pdf:
+        savePdf(session);
+        break;
       default:
         return super.onOptionsItemSelected(item);
     }
@@ -1296,6 +1301,28 @@ public class GeckoViewActivity extends AppCompatActivity
     setGeckoViewSession(newSession);
     mToolbarView.updateTabCount();
     sGeckoRuntime.getProfilerController().addMarker("Create new tab", startTime);
+  }
+
+  @SuppressLint("WrongThread")
+  @UiThread
+  private void savePdf(GeckoSession session) {
+    session
+        .saveAsPdf()
+        .accept(
+            pdfStream -> {
+              try {
+                WebResponse response =
+                    new WebResponse.Builder(null)
+                        .body(pdfStream)
+                        .addHeader("Content-Type", "application/pdf")
+                        .addHeader("Content-Disposition", "attachment; filename=PDFDownload.pdf")
+                        .build();
+                session.getContentDelegate().onExternalResponse(session, response);
+
+              } catch (Exception e) {
+                Log.d(LOGTAG, e.getMessage());
+              }
+            });
   }
 
   @Override
@@ -1485,6 +1512,7 @@ public class GeckoViewActivity extends AppCompatActivity
               + "/"
               + filename;
 
+      Log.i(LOGTAG, "Downloading to: " + downloadsPath);
       int bufferSize = 1024; // to read in 1Mb increments
       byte[] buffer = new byte[bufferSize];
       try (OutputStream out = new BufferedOutputStream(new FileOutputStream(downloadsPath))) {

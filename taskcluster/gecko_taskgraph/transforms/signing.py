@@ -5,6 +5,7 @@
 Transform the signing task into an actual task description.
 """
 
+from taskgraph.util.keyed_by import evaluate_keyed_by
 
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.base import TransformSequence
@@ -12,7 +13,6 @@ from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
     release_level,
 )
-from gecko_taskgraph.util.keyed_by import evaluate_keyed_by
 from gecko_taskgraph.util.schema import taskref_or_string
 from gecko_taskgraph.util.scriptworker import get_signing_cert_scope_per_platform
 from gecko_taskgraph.transforms.task import task_description_schema

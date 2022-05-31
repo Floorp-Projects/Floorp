@@ -68,6 +68,9 @@ const APIS = {
   CrashGpuProcess() {
     return browser.test.crashGpuProcess();
   },
+  ClearHSTSState() {
+    return browser.test.clearHSTSState();
+  },
 };
 
 port.onMessage.addListener(async message => {

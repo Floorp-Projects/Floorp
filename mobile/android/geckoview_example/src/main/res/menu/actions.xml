@@ -13,5 +13,6 @@
     <item android:title="@string/close_tab" android:id="@+id/action_close_tab"/>
     <item android:title="@string/forward" android:id="@+id/action_forward"/>
     <item android:title="@string/reload" android:id="@+id/action_reload"/>
+    <item android:title="@string/save_pdf" android:id="@+id/save_pdf"/>
     <item android:title="@string/settings" android:id="@+id/settings" app:showAsAction="never" />
 </menu>

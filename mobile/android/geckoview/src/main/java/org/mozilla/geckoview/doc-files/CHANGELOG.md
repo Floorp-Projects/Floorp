@@ -13,6 +13,11 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v103
+- Added [`GeckoSession.saveAsPdf`][103.1] that returns a `GeckoResult<InputStream>` that contains a PDF of the current session's page.
+
+[103.1]: {{javadoc_uri}}/GeckoSession.html#saveAsPdf()
+
 ## v102
 - Added [`DateTimePrompt.stepValue`][102.1] to export [`step`][102.2] attribute of input element.
   ([bug 1499635]({{bugzilla}}1499635))
@@ -1207,4 +1212,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d06ece1a8d568d3c62ee1f6786f4ffe13476b29f
+[api-version]: 0eb75fc90870ef3fe0f213e9508d124e5b65fd4e

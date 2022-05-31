@@ -1,21 +1,3 @@
-/* exported MANAGE_ADDRESSES_DIALOG_URL, MANAGE_CREDIT_CARDS_DIALOG_URL, EDIT_ADDRESS_DIALOG_URL, EDIT_CREDIT_CARD_DIALOG_URL,
-            BASE_URL, TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3, TEST_ADDRESS_4, TEST_ADDRESS_5, TEST_ADDRESS_CA_1, TEST_ADDRESS_DE_1,
-            TEST_ADDRESS_IE_1,
-            TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3, TEST_CREDIT_CARD_4, TEST_CREDIT_CARD_5,
-            FORM_URL, CREDITCARD_FORM_URL, CREDITCARD_FORM_IFRAME_URL, CREDITCARD_FORM_COMBINED_EXPIRY_URL,
-            FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF,
-            AUTOFILL_ADDRESSES_AVAILABLE_PREF,
-            ENABLED_AUTOFILL_ADDRESSES_SUPPORTED_COUNTRIES_PREF,
-            ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
-            SUPPORTED_COUNTRIES_PREF,
-            SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
-            sleep, waitForStorageChangedEvents, waitForAutofill, focusUpdateSubmitForm, runAndWaitForAutocompletePopupOpen,
-            openPopupOn, openPopupOnSubframe, closePopup, closePopupForSubframe,
-            clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard, setStorage,
-            getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
-            getNotification, waitForPopupShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog,
-            TIMEOUT_ENSURE_PROFILE_NOT_SAVED TIMEOUT_ENSURE_CC_EDIT_DIALOG_NOT_CLOSED */
-
 "use strict";
 
 const { OSKeyStore } = ChromeUtils.import(

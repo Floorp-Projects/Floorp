@@ -47,13 +47,7 @@ void CompositorWidgetParent::OnCompositorSurfaceChanged() {
   java::GeckoServiceGpuProcess::RemoteCompositorSurfaceManager::LocalRef
       manager = java::GeckoServiceGpuProcess::RemoteCompositorSurfaceManager::
           GetInstance();
-  java::sdk::SurfaceControl::LocalRef surfaceControl =
-      manager->GetCompositorSurfaceControl(mWidgetId);
-  if (surfaceControl) {
-    mSurface = java::sdk::Surface::FromSurfaceControl(surfaceControl);
-  } else {
-    mSurface = manager->GetCompositorSurface(mWidgetId);
-  }
+  mSurface = manager->GetCompositorSurface(mWidgetId);
 }
 
 }  // namespace widget

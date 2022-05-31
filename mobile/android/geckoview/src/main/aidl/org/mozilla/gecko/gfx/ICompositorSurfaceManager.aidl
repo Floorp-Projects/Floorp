@@ -5,8 +5,7 @@
 package org.mozilla.gecko.gfx;
 
 import android.view.Surface;
-import android.view.SurfaceControl;
 
 interface ICompositorSurfaceManager {
-    void onSurfaceChanged(int widgetId, in Surface surface, in SurfaceControl surfaceControl);
+    void onSurfaceChanged(int widgetId, in Surface surface);
 }

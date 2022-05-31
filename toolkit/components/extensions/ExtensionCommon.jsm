@@ -186,14 +186,6 @@ function makeWidgetId(id) {
   return id.replace(/[^a-z0-9_-]/g, "_");
 }
 
-function isDeadOrRemote(obj) {
-  return Cu.isDeadWrapper(obj) || Cu.isRemoteProxy(obj);
-}
-
-function isInBFCache(window) {
-  return !!window?.windowGlobalChild?.windowContext?.isInBFCache;
-}
-
 /**
  * A sentinel class to indicate that an array of values should be
  * treated as an array when used as a promise resolution value, but as a
@@ -435,78 +427,6 @@ class ExtensionAPIPersistent extends ExtensionAPI {
 }
 
 /**
- * A wrapper around a window that returns the window iff the inner window
- * matches the inner window at the construction of this wrapper.
- *
- * This wrapper should not be used after the inner window is destroyed.
- **/
-class InnerWindowReference {
-  constructor(contentWindow, innerWindowID) {
-    this.contentWindow = contentWindow;
-    this.innerWindowID = innerWindowID;
-    this.needWindowIDCheck = false;
-
-    contentWindow.addEventListener(
-      "pagehide",
-      this,
-      { mozSystemGroup: true },
-      false
-    );
-    contentWindow.addEventListener(
-      "pageshow",
-      this,
-      { mozSystemGroup: true },
-      false
-    );
-  }
-
-  get() {
-    // If the pagehide event has fired, the inner window ID needs to be checked,
-    // in case the window ref is dereferenced in a pageshow listener (before our
-    // pageshow listener was dispatched) or during the unload event.
-    if (
-      !this.needWindowIDCheck ||
-      (!isDeadOrRemote(this.contentWindow) &&
-        !isInBFCache(this.contentWindow) &&
-        getInnerWindowID(this.contentWindow) === this.innerWindowID)
-    ) {
-      return this.contentWindow;
-    }
-    return null;
-  }
-
-  invalidate() {
-    // If invalidate() is called while the inner window is in the bfcache, then
-    // we are unable to remove the event listener, and handleEvent will be
-    // called once more if the page is revived from the bfcache.
-    if (this.contentWindow && !isDeadOrRemote(this.contentWindow)) {
-      this.contentWindow.removeEventListener("pagehide", this, {
-        mozSystemGroup: true,
-      });
-      this.contentWindow.removeEventListener("pageshow", this, {
-        mozSystemGroup: true,
-      });
-    }
-    this.contentWindow = null;
-    this.needWindowIDCheck = false;
-  }
-
-  handleEvent(event) {
-    if (this.contentWindow) {
-      this.needWindowIDCheck = event.type === "pagehide";
-    } else {
-      // Remove listener when restoring from the bfcache - see invalidate().
-      event.currentTarget.removeEventListener("pagehide", this, {
-        mozSystemGroup: true,
-      });
-      event.currentTarget.removeEventListener("pageshow", this, {
-        mozSystemGroup: true,
-      });
-    }
-  }
-}
-
-/**
  * This class contains the information we have about an individual
  * extension.  It is never instantiated directly, instead subclasses
  * for each type of process extend this class and add members that are
@@ -616,25 +536,24 @@ class BaseContext {
       );
     }
 
-    let windowRef = new InnerWindowReference(contentWindow, this.innerWindowID);
+    let wgc = contentWindow.windowGlobalChild;
     Object.defineProperty(this, "active", {
       configurable: true,
       enumerable: true,
-      get: () => windowRef.get() !== null,
+      get: () => wgc.isCurrentGlobal && !wgc.windowContext.isInBFCache,
     });
     Object.defineProperty(this, "contentWindow", {
       configurable: true,
       enumerable: true,
-      get: () => windowRef.get(),
+      get: () => (this.active ? wgc.browsingContext.window : null),
     });
     this.callOnClose({
       close: () => {
         // Allow other "close" handlers to use these properties, until the next tick.
         Promise.resolve().then(() => {
-          windowRef.invalidate();
-          windowRef = null;
           Object.defineProperty(this, "contentWindow", { value: null });
           Object.defineProperty(this, "active", { value: false });
+          wgc = null;
         });
       },
     });

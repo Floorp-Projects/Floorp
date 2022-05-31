@@ -368,6 +368,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
         // the Download object to be created and added to the public downloads.
         transfer.init(
           sourceURI,
+          null,
           NetUtil.newURI(targetFile),
           null,
           mimeInfo,
