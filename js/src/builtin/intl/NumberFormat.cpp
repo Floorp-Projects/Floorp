@@ -1021,11 +1021,8 @@ static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value,
     return false;
   }
 
-  // Call StringToNumber to validate the input can be parsed as a number.
-  double number;
-  if (!StringToNumber(cx, str, &number)) {
-    return false;
-  }
+  // Parse the string as a number.
+  double number = LinearStringToNumber(str);
   if (numberApproximation) {
     *numberApproximation = number;
   }
