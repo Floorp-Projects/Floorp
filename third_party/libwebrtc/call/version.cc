@@ -13,7 +13,7 @@
 namespace webrtc {
 
 // The timestamp is always in UTC.
-const char* const kSourceTimestamp = "WebRTC source stamp 2021-07-11T04:04:45";
+const char* const kSourceTimestamp = "WebRTC source stamp 2021-07-12T04:04:47";
 
 void LoadWebRTCVersionInRegister() {
   // Using volatile to instruct the compiler to not optimize `p` away even
