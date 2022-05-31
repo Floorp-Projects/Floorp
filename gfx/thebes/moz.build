@@ -94,6 +94,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXPORTS += [
+        "gfxMacUtils.h",
         "gfxPlatformMac.h",
         "gfxQuartzNativeDrawing.h",
         "gfxQuartzSurface.h",
@@ -104,6 +105,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     SOURCES += [
         "gfxCoreTextShaper.cpp",
         "gfxMacFont.cpp",
+        "gfxMacUtils.cpp",
         "gfxPlatformMac.cpp",
         "gfxQuartzNativeDrawing.cpp",
         "gfxQuartzSurface.cpp",

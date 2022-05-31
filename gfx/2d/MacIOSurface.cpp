@@ -10,6 +10,7 @@
 #include <QuartzCore/QuartzCore.h>
 #include "GLConsts.h"
 #include "GLContextCGL.h"
+#include "gfxMacUtils.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
@@ -210,14 +211,6 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateNV12OrP010Surface(
   // the same. Since we are creating the IOSurface directly, we use hard-coded
   // keys derived from inspecting the extracted IOSurfaces in the copying case,
   // but we use the API-defined values from CVImageBuffer.
-#if !defined(MAC_OS_VERSION_10_13) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
-  CFStringRef kCVImageBufferTransferFunction_ITU_R_2100_HLG =
-      CFSTR("ITU_R_2100_HLG");
-  CFStringRef kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ =
-      CFSTR("SMPTE_ST_2084_PQ");
-#endif
-
   if (aColorSpace == YUVColorSpace::BT601) {
     IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceYCbCrMatrix"),
                       kCVImageBufferYCbCrMatrix_ITU_R_601_4);
@@ -226,18 +219,18 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateNV12OrP010Surface(
                       kCVImageBufferYCbCrMatrix_ITU_R_709_2);
     IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorPrimaries"),
                       kCVImageBufferColorPrimaries_ITU_R_709_2);
-    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceTransferFunction"),
-                      kCVImageBufferTransferFunction_ITU_R_709_2);
   } else {
     IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceYCbCrMatrix"),
                       kCVImageBufferYCbCrMatrix_ITU_R_2020);
     IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorPrimaries"),
                       kCVImageBufferColorPrimaries_ITU_R_2020);
-    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceTransferFunction"),
-                      (aTransferFunction == TransferFunction::HLG)
-                          ? kCVImageBufferTransferFunction_ITU_R_2100_HLG
-                          : kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ);
   }
+
+  // Transfer function is applied independently from the colorSpace.
+  IOSurfaceSetValue(
+      surfaceRef.get(), CFSTR("IOSurfaceTransferFunction"),
+      gfxMacUtils::CFStringForTransferFunction(aTransferFunction));
+
   // Override the color space to be the same as the main display, so that
   // CoreAnimation won't try to do any color correction (from the IOSurface
   // space, to the display). In the future we may want to try specifying this
