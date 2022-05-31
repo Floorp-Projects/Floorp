@@ -65,6 +65,22 @@ rtc_source_set("mocks") {
   ]
 }
 
+rtc_source_set("utils") {
+  deps = [
+    ":socket",
+    ":types",
+    "../../../api:array_view",
+    "../../../rtc_base:logging",
+    "../../../rtc_base:stringutils",
+    "../socket:dcsctp_socket",
+  ]
+  sources = [
+    "text_pcap_packet_observer.cc",
+    "text_pcap_packet_observer.h",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+}
+
 if (rtc_include_tests) {
   rtc_library("dcsctp_public_unittests") {
     testonly = true
