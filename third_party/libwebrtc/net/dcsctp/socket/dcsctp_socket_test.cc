@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/flags/flag.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -40,12 +41,15 @@
 #include "net/dcsctp/public/dcsctp_message.h"
 #include "net/dcsctp/public/dcsctp_options.h"
 #include "net/dcsctp/public/dcsctp_socket.h"
+#include "net/dcsctp/public/text_pcap_packet_observer.h"
 #include "net/dcsctp/public/types.h"
 #include "net/dcsctp/rx/reassembly_queue.h"
 #include "net/dcsctp/socket/mock_dcsctp_socket_callbacks.h"
 #include "net/dcsctp/testing/testing_macros.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"
+
+ABSL_FLAG(bool, dcsctp_capture_packets, false, "Print packet capture.");
 
 namespace dcsctp {
 namespace {
@@ -207,14 +211,21 @@ DcSctpOptions MakeOptionsForTest(bool enable_message_interleaving) {
   return options;
 }
 
+std::unique_ptr<PacketObserver> GetPacketObserver(absl::string_view name) {
+  if (absl::GetFlag(FLAGS_dcsctp_capture_packets)) {
+    return std::make_unique<TextPcapPacketObserver>(name);
+  }
+  return nullptr;
+}
+
 class DcSctpSocketTest : public testing::Test {
  protected:
   explicit DcSctpSocketTest(bool enable_message_interleaving = false)
       : options_(MakeOptionsForTest(enable_message_interleaving)),
         cb_a_("A"),
         cb_z_("Z"),
-        sock_a_("A", cb_a_, nullptr, options_),
-        sock_z_("Z", cb_z_, nullptr, options_) {}
+        sock_a_("A", cb_a_, GetPacketObserver("A"), options_),
+        sock_z_("Z", cb_z_, GetPacketObserver("Z"), options_) {}
 
   void AdvanceTime(DurationMs duration) {
     cb_a_.AdvanceTime(duration);
