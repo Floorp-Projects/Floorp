@@ -120,7 +120,8 @@ TestRunner.slowestTestTime = 0;
 TestRunner.slowestTestURL = "";
 TestRunner.interactiveDebugger = false;
 TestRunner.cleanupCrashes = false;
-TestRunner.timeoutAspass = false;
+TestRunner.timeoutAsPass = false;
+TestRunner.conditionedProfile = false;
 
 TestRunner._expectingProcessCrash = false;
 TestRunner._structuredFormatter = new StructuredFormatter();
