@@ -61,17 +61,12 @@ struct LocalAndRemoteSdp {
 
 struct PatchingParams {
   PatchingParams(
-      std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
-          video_codecs,
       bool use_conference_mode,
       std::map<std::string, int> stream_label_to_simulcast_streams_count)
-      : video_codecs(std::move(video_codecs)),
-        use_conference_mode(use_conference_mode),
+      : use_conference_mode(use_conference_mode),
         stream_label_to_simulcast_streams_count(
             stream_label_to_simulcast_streams_count) {}
 
-  std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
-      video_codecs;
   bool use_conference_mode;
   std::map<std::string, int> stream_label_to_simulcast_streams_count;
 };
@@ -81,9 +76,11 @@ class SignalingInterceptor {
   explicit SignalingInterceptor(PatchingParams params) : params_(params) {}
 
   LocalAndRemoteSdp PatchOffer(
-      std::unique_ptr<SessionDescriptionInterface> offer);
+      std::unique_ptr<SessionDescriptionInterface> offer,
+      const PeerConnectionE2EQualityTestFixture::VideoCodecConfig& first_codec);
   LocalAndRemoteSdp PatchAnswer(
-      std::unique_ptr<SessionDescriptionInterface> offer);
+      std::unique_ptr<SessionDescriptionInterface> answer,
+      const PeerConnectionE2EQualityTestFixture::VideoCodecConfig& first_codec);
 
   std::vector<std::unique_ptr<IceCandidateInterface>> PatchOffererIceCandidates(
       rtc::ArrayView<const IceCandidateInterface* const> candidates);
@@ -132,9 +129,9 @@ class SignalingInterceptor {
   LocalAndRemoteSdp PatchVp9Offer(
       std::unique_ptr<SessionDescriptionInterface> offer);
   LocalAndRemoteSdp PatchVp8Answer(
-      std::unique_ptr<SessionDescriptionInterface> offer);
+      std::unique_ptr<SessionDescriptionInterface> answer);
   LocalAndRemoteSdp PatchVp9Answer(
-      std::unique_ptr<SessionDescriptionInterface> offer);
+      std::unique_ptr<SessionDescriptionInterface> answer);
 
   void FillSimulcastContext(SessionDescriptionInterface* offer);
   std::unique_ptr<cricket::SessionDescription> RestoreMediaSectionsOrder(
