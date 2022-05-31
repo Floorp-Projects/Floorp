@@ -40,7 +40,7 @@ The list of reflected prefs includes the global telemetry opt-out pref ``datarep
 
 Enterprise policies also exist to perform the same functions as these prefs. These work the same way as all other Firefox policies and `the documentation for those <https://github.com/mozilla/policy-templates/blob/master/README.md>`_ explains how to use them.
 
-In addition, the following Firefox Remote Settings prefs are reflected: ``services.settings.server`` and ``security.content.signature.root_hash``.  The former is the service endpoint to consult for remote-disablement and the latter is used to secure the content of queries to that service endpoint.
+In addition, the following Firefox Remote Settings pref is reflected: ``services.settings.server``.  It is the service endpoint to consult for remote-disablement.
 
 
 Default Browser Setting

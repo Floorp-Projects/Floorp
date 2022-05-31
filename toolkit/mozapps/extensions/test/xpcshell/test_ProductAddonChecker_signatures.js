@@ -26,7 +26,6 @@ const validX5uPath = "/valid_x5u";
 const validCertChain = loadCertChain(testDataDir + "content_signing", [
   "aus_ee",
   "int",
-  "root",
 ]);
 signedTestServer.registerPathHandler(validX5uPath, (req, res) => {
   res.write(validCertChain.join("\n"));
@@ -38,7 +37,6 @@ const invalidX5uPath = "/invalid_x5u";
 const invalidCertChain = loadCertChain(testDataDir + "content_signing", [
   "aus_ee",
   // This cert chain is missing the intermediate cert!
-  "root",
 ]);
 signedTestServer.registerPathHandler(invalidX5uPath, (req, res) => {
   res.write(invalidCertChain.join("\n"));
@@ -88,9 +86,6 @@ signedTestServer.registerPathHandler(goodXmlPath, (req, res) => {
   }
   res.write(goodXml);
 });
-
-// Override our root so that test cert chains will be valid.
-setCertRoot(testDataDir + "content_signing_root.pem");
 
 // Handle aysnc load of good.xml.
 add_task(async function load_good_xml() {

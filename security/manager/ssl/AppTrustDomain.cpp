@@ -15,6 +15,7 @@
 #include "mozpkix/pkixnss.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsIContentSignatureVerifier.h"
 #include "nsIX509CertDB.h"
 #include "nsNSSCertificate.h"
 #include "nsNetUtil.h"
@@ -26,6 +27,11 @@
 #include "addons-public.inc"
 #include "addons-public-intermediate.inc"
 #include "addons-stage.inc"
+// Content signature root certificates
+#include "content-signature-dev.inc"
+#include "content-signature-local.inc"
+#include "content-signature-prod.inc"
+#include "content-signature-stage.inc"
 
 using namespace mozilla::pkix;
 
@@ -50,6 +56,22 @@ nsresult AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot) {
 
     case nsIX509CertDB::AddonsStageRoot:
       mTrustedRoot = {addonsStageRoot};
+      break;
+
+    case nsIContentSignatureVerifier::ContentSignatureLocalRoot:
+      mTrustedRoot = {contentSignatureLocalRoot};
+      break;
+
+    case nsIContentSignatureVerifier::ContentSignatureProdRoot:
+      mTrustedRoot = {contentSignatureProdRoot};
+      break;
+
+    case nsIContentSignatureVerifier::ContentSignatureStageRoot:
+      mTrustedRoot = {contentSignatureStageRoot};
+      break;
+
+    case nsIContentSignatureVerifier::ContentSignatureDevRoot:
+      mTrustedRoot = {contentSignatureDevRoot};
       break;
 
     default:

@@ -37,12 +37,6 @@ interface nsINSSComponent : nsISupports {
   [noscript] bool isCertTestBuiltInRoot(in Array<octet> cert);
 
   /**
-   * Used to determine if the given certificate (represented as an array of
-   * bytes) is the content signing root certificate.
-   */
-  [noscript] bool isCertContentSigningRoot(in Array<octet> cert);
-
-  /**
    * If enabled by the preference "security.enterprise_roots.enabled", returns
    * an array of arrays of bytes representing the imported enterprise root
    * certificates (i.e. root certificates gleaned from the OS certificate

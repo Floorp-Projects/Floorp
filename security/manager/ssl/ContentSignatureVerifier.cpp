@@ -7,7 +7,6 @@
 #include "ContentSignatureVerifier.h"
 
 #include "CryptoTask.h"
-#include "CSTrustDomain.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
 #include "cryptohi.h"
@@ -45,11 +44,13 @@ class VerifyContentSignatureTask : public CryptoTask {
                              const nsACString& aCSHeader,
                              const nsACString& aCertChain,
                              const nsACString& aHostname,
+                             AppTrustedRoot aTrustedRoot,
                              RefPtr<Promise>& aPromise)
       : mData(aData),
         mCSHeader(aCSHeader),
         mCertChain(aCertChain),
         mHostname(aHostname),
+        mTrustedRoot(aTrustedRoot),
         mSignatureVerified(false),
         mPromise(new nsMainThreadPtrHolder<Promise>(
             "VerifyContentSignatureTask::mPromise", aPromise)) {}
@@ -62,6 +63,7 @@ class VerifyContentSignatureTask : public CryptoTask {
   nsCString mCSHeader;
   nsCString mCertChain;
   nsCString mHostname;
+  AppTrustedRoot mTrustedRoot;
   bool mSignatureVerified;
   nsMainThreadPtrHandle<Promise> mPromise;
 };
@@ -69,8 +71,8 @@ class VerifyContentSignatureTask : public CryptoTask {
 NS_IMETHODIMP
 ContentSignatureVerifier::AsyncVerifyContentSignature(
     const nsACString& aData, const nsACString& aCSHeader,
-    const nsACString& aCertChain, const nsACString& aHostname, JSContext* aCx,
-    Promise** aPromise) {
+    const nsACString& aCertChain, const nsACString& aHostname,
+    AppTrustedRoot aTrustedRoot, JSContext* aCx, Promise** aPromise) {
   NS_ENSURE_ARG_POINTER(aCx);
 
   nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
@@ -85,7 +87,7 @@ ContentSignatureVerifier::AsyncVerifyContentSignature(
   }
 
   RefPtr<VerifyContentSignatureTask> task(new VerifyContentSignatureTask(
-      aData, aCSHeader, aCertChain, aHostname, promise));
+      aData, aCSHeader, aCertChain, aHostname, aTrustedRoot, promise));
   nsresult rv = task->Dispatch();
   if (NS_FAILED(rv)) {
     return rv;
@@ -98,6 +100,7 @@ ContentSignatureVerifier::AsyncVerifyContentSignature(
 static nsresult VerifyContentSignatureInternal(
     const nsACString& aData, const nsACString& aCSHeader,
     const nsACString& aCertChain, const nsACString& aHostname,
+    AppTrustedRoot aTrustedRoot,
     /* out */
     mozilla::Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS&
         aErrorLabel,
@@ -112,9 +115,9 @@ nsresult VerifyContentSignatureTask::CalculateResult() {
       Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err3;
   nsAutoCString certFingerprint;
   uint32_t errorValue = 3;
-  nsresult rv =
-      VerifyContentSignatureInternal(mData, mCSHeader, mCertChain, mHostname,
-                                     errorLabel, certFingerprint, errorValue);
+  nsresult rv = VerifyContentSignatureInternal(
+      mData, mCSHeader, mCertChain, mHostname, mTrustedRoot, errorLabel,
+      certFingerprint, errorValue);
   if (NS_FAILED(rv)) {
     CSVerifier_LOG(("CSVerifier: Signature verification failed"));
     if (certFingerprint.Length() > 0) {
@@ -198,6 +201,7 @@ nsresult ReadChainIntoCertList(const nsACString& aCertChain,
 static nsresult VerifyContentSignatureInternal(
     const nsACString& aData, const nsACString& aCSHeader,
     const nsACString& aCertChain, const nsACString& aHostname,
+    AppTrustedRoot aTrustedRoot,
     /* out */
     Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS& aErrorLabel,
     /* out */ nsACString& aCertFingerprint,
@@ -236,8 +240,19 @@ static nsresult VerifyContentSignatureInternal(
   }
   aCertFingerprint.Assign(tmpFingerprintString.get());
 
+  nsTArray<Span<const uint8_t>> certSpans;
+  // Collect just the CAs.
+  for (size_t i = 1; i < certList.Length(); i++) {
+    Span<const uint8_t> certSpan(certList.ElementAt(i).Elements(),
+                                 certList.ElementAt(i).Length());
+    certSpans.AppendElement(std::move(certSpan));
+  }
+  AppTrustDomain trustDomain(std::move(certSpans));
+  rv = trustDomain.SetTrustedRoot(aTrustedRoot);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   // Check the signerCert chain is good
-  CSTrustDomain trustDomain(certList);
   result = BuildCertChain(
       trustDomain, certInput, Now(), EndEntityOrCA::MustBeEndEntity,
       KeyUsage::noParticularKeyUsageRequired, KeyPurposeId::id_kp_codeSigning,

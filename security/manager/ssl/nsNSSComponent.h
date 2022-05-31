@@ -127,7 +127,6 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 #ifdef DEBUG
   nsCString mTestBuiltInRootHash GUARDED_BY(mMutex);
 #endif
-  nsCString mContentSigningRootHash GUARDED_BY(mMutex);
   RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier
       GUARDED_BY(mMutex);
   nsString mMitmCanaryIssuer GUARDED_BY(mMutex);

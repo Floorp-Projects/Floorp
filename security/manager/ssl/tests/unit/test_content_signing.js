@@ -6,9 +6,6 @@
 
 // These tests ensure content signatures are working correctly.
 
-// First, we need to set up some data
-const PREF_SIGNATURE_ROOT = "security.content.signature.root_hash";
-
 const TEST_DATA_DIR = "test_content_signing/";
 
 const ONECRL_NAME = "oneCRL-signer.mozilla.org";
@@ -24,11 +21,6 @@ function getSignatureVerifier() {
   return Cc["@mozilla.org/security/contentsignatureverifier;1"].getService(
     Ci.nsIContentSignatureVerifier
   );
-}
-
-function setRoot(filename) {
-  let cert = constructCertFromFile(filename);
-  Services.prefs.setCharPref(PREF_SIGNATURE_ROOT, cert.sha256Fingerprint);
 }
 
 function getCertHash(name) {
@@ -88,40 +80,35 @@ add_task(async function run_test() {
   let remoteNewTabChain = loadChain(TEST_DATA_DIR + "content_signing", [
     "remote_newtab_ee",
     "int",
-    "root",
   ]);
 
   let oneCRLChain = loadChain(TEST_DATA_DIR + "content_signing", [
     "onecrl_ee",
     "int",
-    "root",
   ]);
 
   let oneCRLBadKeyChain = loadChain(TEST_DATA_DIR + "content_signing", [
     "onecrl_wrong_key_ee",
     "int",
-    "root",
   ]);
 
   let noSANChain = loadChain(TEST_DATA_DIR + "content_signing", [
     "onecrl_no_SAN_ee",
     "int",
-    "root",
   ]);
 
   let expiredOneCRLChain = loadChain(TEST_DATA_DIR + "content_signing", [
     "onecrl_ee_expired",
     "int",
-    "root",
   ]);
 
   let notValidYetOneCRLChain = loadChain(TEST_DATA_DIR + "content_signing", [
     "onecrl_ee_not_valid_yet",
     "int",
-    "root",
   ]);
 
-  // Check signature verification works without error before the root is set
+  // Check signature verification works without throwing when using the wrong
+  // root
   VERIFICATION_HISTOGRAM.clear();
   let chain1 = oneCRLChain.join("\n");
   let verifier = getSignatureVerifier();
@@ -130,14 +117,13 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chain1,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot
     )),
-    "Before the root is set, signatures should fail to verify but not throw."
+    "using the wrong root, signatures should fail to verify but not throw."
   );
   // Check for generic chain building error.
   check_telemetry(6, 1, getCertHash("content_signing_onecrl_ee"));
-
-  setRoot(TEST_DATA_DIR + "content_signing_root.pem");
 
   // Check good signatures from good certificates with the correct SAN
   ok(
@@ -145,7 +131,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chain1,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     ),
     "A OneCRL signature should verify with the OneCRL chain"
   );
@@ -155,7 +142,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chain2,
-      ABOUT_NEWTAB_NAME
+      ABOUT_NEWTAB_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     ),
     "A newtab signature should verify with the newtab chain"
   );
@@ -169,7 +157,8 @@ add_task(async function run_test() {
       DATA,
       BAD_SIGNATURE,
       chain1,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A bad signature should not verify"
   );
@@ -184,7 +173,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       badKeyChain,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A signature should not verify if the signing key is wrong"
   );
@@ -199,26 +189,13 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       rsaKeyChain,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A signature should not verify if the signing key is wrong (RSA)"
   );
   // Check for wrong key in cert.
   check_telemetry(9, 1, getCertHash("content_signing_onecrl_wrong_key_ee"));
-
-  // Check a good signature from cert with good SAN but with chain missing root
-  let missingRoot = [oneCRLChain[0], oneCRLChain[1]].join("\n");
-  ok(
-    !(await verifier.asyncVerifyContentSignature(
-      DATA,
-      GOOD_SIGNATURE,
-      missingRoot,
-      ONECRL_NAME
-    )),
-    "A signature should not verify if the chain is incomplete (missing root)"
-  );
-  // Check for generic chain building error.
-  check_telemetry(6, 1, getCertHash("content_signing_onecrl_ee"));
 
   // Check a good signature from cert with good SAN but with no path to root
   let missingInt = [oneCRLChain[0], oneCRLChain[2]].join("\n");
@@ -227,7 +204,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       missingInt,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A signature should not verify if the chain is incomplete (missing int)"
   );
@@ -241,7 +219,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chain1,
-      ABOUT_NEWTAB_NAME
+      ABOUT_NEWTAB_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A OneCRL signature should not verify if we require the newtab SAN"
   );
@@ -254,7 +233,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chain2,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A newtab signature should not verify if we require the OneCRL SAN"
   );
@@ -267,7 +247,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chain1,
-      ""
+      "",
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A signature should not verify if the SANs do not match an empty name"
   );
@@ -281,7 +262,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chainExpired,
-      ""
+      "",
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A signature should not verify if the signing certificate is expired"
   );
@@ -295,7 +277,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chainNotValidYet,
-      ""
+      "",
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A signature should not verify if the signing certificate is not valid yet"
   );
@@ -308,7 +291,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chain1,
-      relatedName
+      relatedName,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A signature should not verify if the SANs do not match a related name"
   );
@@ -321,7 +305,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chain1,
-      randomName
+      randomName,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A signature should not verify if the SANs do not match a random name"
   );
@@ -333,7 +318,8 @@ add_task(async function run_test() {
       DATA,
       GOOD_SIGNATURE,
       chain1,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A signature should not verify if the SANs do not match a supplied name"
   );
@@ -359,7 +345,13 @@ add_task(async function run_test() {
   ];
   for (let badSig of bad_signatures) {
     await Assert.rejects(
-      verifier.asyncVerifyContentSignature(DATA, badSig, chain1, ONECRL_NAME),
+      verifier.asyncVerifyContentSignature(
+        DATA,
+        badSig,
+        chain1,
+        ONECRL_NAME,
+        Ci.nsIX509CertDB.AppXPCShellRoot
+      ),
       /NS_ERROR/,
       `Bad or malformed signature "${badSig}" should be rejected`
     );
@@ -397,7 +389,8 @@ add_task(async function run_test() {
         DATA,
         GOOD_SIGNATURE,
         badChain,
-        ONECRL_NAME
+        ONECRL_NAME,
+        Ci.nsIX509CertDB.AppXPCShellRoot
       ),
       /NS_ERROR/,
       `Bad chain data starting "${badChain.substring(0, 80)}" ` +
@@ -410,7 +403,8 @@ add_task(async function run_test() {
       DATA + "appended data",
       GOOD_SIGNATURE,
       chain1,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A good signature should not verify if the data is tampered with (append)"
   );
@@ -419,7 +413,8 @@ add_task(async function run_test() {
       "prefixed data" + DATA,
       GOOD_SIGNATURE,
       chain1,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A good signature should not verify if the data is tampered with (prefix)"
   );
@@ -428,7 +423,8 @@ add_task(async function run_test() {
       DATA.replace(/e/g, "i"),
       GOOD_SIGNATURE,
       chain1,
-      ONECRL_NAME
+      ONECRL_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )),
     "A good signature should not verify if the data is tampered with (modify)"
   );

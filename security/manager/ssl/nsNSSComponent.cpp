@@ -1951,10 +1951,6 @@ nsresult nsNSSComponent::InitializeNSS() {
     Preferences::GetCString("security.test.built_in_root_hash",
                             mTestBuiltInRootHash);
 #endif
-    mContentSigningRootHash.Truncate();
-    Preferences::GetCString("security.content.signature.root_hash",
-                            mContentSigningRootHash);
-
     mMitmCanaryIssuer.Truncate();
     Preferences::GetString("security.pki.mitm_canary_issuer",
                            mMitmCanaryIssuer);
@@ -2308,11 +2304,6 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
       Preferences::GetCString("security.test.built_in_root_hash",
                               mTestBuiltInRootHash);
 #endif  // DEBUG
-    } else if (prefName.EqualsLiteral("security.content.signature.root_hash")) {
-      MutexAutoLock lock(mMutex);
-      mContentSigningRootHash.Truncate();
-      Preferences::GetCString("security.content.signature.root_hash",
-                              mContentSigningRootHash);
     } else if (prefName.Equals("security.enterprise_roots.enabled") ||
                prefName.Equals("security.family_safety.mode")) {
       UnloadEnterpriseRoots();
@@ -2445,22 +2436,6 @@ nsNSSComponent::IsCertTestBuiltInRoot(const nsTArray<uint8_t>& cert,
     return rv;
   }
 #endif  // DEBUG
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::IsCertContentSigningRoot(const nsTArray<uint8_t>& cert,
-                                         bool* result) {
-  NS_ENSURE_ARG_POINTER(result);
-  *result = false;
-
-  MutexAutoLock lock(mMutex);
-  nsresult rv =
-      DoesCertMatchFingerprint(cert, mContentSigningRootHash, *result);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   return NS_OK;
 }
