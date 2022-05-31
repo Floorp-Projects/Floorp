@@ -527,21 +527,6 @@ if (is_ios || is_mac) {
       ]
     }
 
-    # For backward compatibility.
-    rtc_source_set("video_objc") {
-      visibility = [ "*" ]
-      public_deps = [ ":opengl_objc" ]  # no-presubmit-check TODO(webrtc:8603)
-    }
-    rtc_source_set("ui_objc") {
-      visibility = [ "*" ]
-      allow_poison = [
-        "audio_codecs",  # TODO(bugs.webrtc.org/8396): Remove.
-        "default_task_queue",
-      ]
-      public_deps =  # no-presubmit-check TODO(webrtc:8603)
-          [ ":opengl_ui_objc" ]
-    }
-
     rtc_library("metal_objc") {
       visibility = [ "*" ]
       allow_poison = [
