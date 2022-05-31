@@ -25,7 +25,6 @@
 #include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "sdk/android/src/jni/jni_helpers.h"
-#include "sdk/android/src/jni/video_frame.h"
 
 namespace webrtc {
 namespace jni {
