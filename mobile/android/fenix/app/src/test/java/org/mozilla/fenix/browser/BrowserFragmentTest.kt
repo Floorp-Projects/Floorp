@@ -14,11 +14,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
@@ -150,35 +148,6 @@ class BrowserFragmentTest {
         verify(exactly = 1) {
             browserFragment.resumeDownloadDialogState(newSelectedTab.id, store, context, any())
         }
-    }
-
-    @Test
-    fun `WHEN url changes THEN toolbar is expanded`() {
-        addAndSelectTab(testTab)
-        browserFragment.expandToolbarOnNavigation(store)
-
-        val toolbar: BrowserToolbarView = mockk(relaxed = true)
-        every { browserFragment.browserToolbarView } returns toolbar
-
-        store.dispatch(ContentAction.UpdateUrlAction(testTab.id, "https://firefox.com")).joinBlocking()
-        verify(exactly = 1) { toolbar.expand() }
-    }
-
-    @Test
-    fun `WHEN load request is triggered THEN toolbar is expanded`() {
-        addAndSelectTab(testTab)
-        browserFragment.expandToolbarOnNavigation(store)
-
-        val toolbar: BrowserToolbarView = mockk(relaxed = true)
-        every { browserFragment.browserToolbarView } returns toolbar
-
-        store.dispatch(
-            ContentAction.UpdateLoadRequestAction(
-                testTab.id,
-                LoadRequestState("https://firefox.com", false, true)
-            )
-        ).joinBlocking()
-        verify(exactly = 1) { toolbar.expand() }
     }
 
     @Test
