@@ -114,12 +114,6 @@ checksum = "a4c527152e37cf757a3f78aae5a06fbeefdb07ccc535c980a3208ee3060dd544"
 
 [[package]]
 name = "arrayvec"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
-
-[[package]]
-name = "arrayvec"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
@@ -272,7 +266,7 @@ name = "audioipc2"
 version = "0.5.0"
 source = "git+https://github.com/kinetiknz/audioipc-2?rev=85e9839059f4bf8f68130825b8fd02c39a6a51b9#85e9839059f4bf8f68130825b8fd02c39a6a51b9"
 dependencies = [
- "arrayvec 0.7.2",
+ "arrayvec",
  "ashmem",
  "audio_thread_priority",
  "bincode",
@@ -2688,7 +2682,7 @@ name = "jsparagus-parser"
 version = "0.1.0"
 source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=b86a26dee550081fa49bf34e3a5e6d7a673ea7a9#b86a26dee550081fa49bf34e3a5e6d7a673ea7a9"
 dependencies = [
- "arrayvec 0.7.2",
+ "arrayvec",
  "bumpalo",
  "jsparagus-ast",
  "jsparagus-generated-parser",
@@ -3324,7 +3318,7 @@ dependencies = [
 name = "mozglue-static"
 version = "0.1.0"
 dependencies = [
- "arrayvec 0.7.2",
+ "arrayvec",
  "cc",
  "mozbuild",
  "rustc_version",
@@ -4414,7 +4408,7 @@ version = "1.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22dc69eadbf0ee2110b8d20418c0c6edbaefec2811c4963dc17b6344e11fe0f8"
 dependencies = [
- "arrayvec 0.7.2",
+ "arrayvec",
  "num-traits",
  "serde",
 ]
@@ -4838,7 +4832,7 @@ name = "style"
 version = "0.0.1"
 dependencies = [
  "app_units",
- "arrayvec 0.7.2",
+ "arrayvec",
  "atomic_refcell",
  "bindgen 0.59.2",
  "bitflags",
@@ -5388,11 +5382,11 @@ checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 
 [[package]]
 name = "uluru"
-version = "1.1.1"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6ee6f45294ecb6e220e76b8afddb50a8b69d433f31ad9eb2d16fb44029ef5db"
+checksum = "794a32261a1f5eb6a4462c81b59cec87b5c27d5deea7dd1ac8fc781c41d226db"
 dependencies = [
- "arrayvec 0.5.2",
+ "arrayvec",
 ]
 
 [[package]]
@@ -5844,7 +5838,7 @@ name = "wgpu-core"
 version = "0.12.0"
 source = "git+https://github.com/gfx-rs/wgpu?rev=b51fd851#b51fd851be51cfe40c937ef789a44244e7dc2971"
 dependencies = [
- "arrayvec 0.7.2",
+ "arrayvec",
  "bitflags",
  "cfg_aliases",
  "codespan-reporting",
@@ -5867,7 +5861,7 @@ name = "wgpu-hal"
 version = "0.12.0"
 source = "git+https://github.com/gfx-rs/wgpu?rev=b51fd851#b51fd851be51cfe40c937ef789a44244e7dc2971"
 dependencies = [
- "arrayvec 0.7.2",
+ "arrayvec",
  "ash",
  "bit-set",
  "bitflags",

@@ -73,7 +73,6 @@ PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
 # If you do need to make changes increasing the number of duplicates, please
 # add a comment as to why.
 TOLERATED_DUPES = {
-    "arrayvec": 2,
     "base64": 2,
     "bytes": 3,
     "crossbeam-deque": 2,

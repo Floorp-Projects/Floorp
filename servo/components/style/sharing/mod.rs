@@ -84,7 +84,7 @@ use std::marker::PhantomData;
 use std::mem::{self, ManuallyDrop};
 use std::ops::Deref;
 use std::ptr::NonNull;
-use uluru::{Entry, LRUCache};
+use uluru::LRUCache;
 
 mod checks;
 
@@ -449,7 +449,7 @@ impl<E: TElement> StyleSharingTarget<E> {
 }
 
 struct SharingCacheBase<Candidate> {
-    entries: LRUCache<[Entry<Candidate>; SHARING_CACHE_SIZE]>,
+    entries: LRUCache<Candidate, SHARING_CACHE_SIZE>,
 }
 
 impl<Candidate> Default for SharingCacheBase<Candidate> {
