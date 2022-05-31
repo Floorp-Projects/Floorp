@@ -13,6 +13,7 @@
 #include "ExtendedValidation.h"
 #include "MultiLogCTVerifier.h"
 #include "NSSErrorsService.h"
+#include "OCSPVerificationTrustDomain.h"
 #include "PublicKeyPinningService.h"
 #include "cert.h"
 #include "cert_storage/src/cert_storage.h"
@@ -71,8 +72,8 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     /*optional but shouldn't be*/ void* pinArg, TimeDuration ocspTimeoutSoft,
     TimeDuration ocspTimeoutHard, uint32_t certShortLifetimeInDays,
     unsigned int minRSABits, ValidityCheckingMode validityCheckingMode,
-    NetscapeStepUpPolicy netscapeStepUpPolicy, CRLiteMode crliteMode,
-    const OriginAttributes& originAttributes,
+    CertVerifier::SHA1Mode sha1Mode, NetscapeStepUpPolicy netscapeStepUpPolicy,
+    CRLiteMode crliteMode, const OriginAttributes& originAttributes,
     const Vector<Input>& thirdPartyRootInputs,
     const Vector<Input>& thirdPartyIntermediateInputs,
     const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
@@ -88,6 +89,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mCertShortLifetimeInDays(certShortLifetimeInDays),
       mMinRSABits(minRSABits),
       mValidityCheckingMode(validityCheckingMode),
+      mSHA1Mode(sha1Mode),
       mNetscapeStepUpPolicy(netscapeStepUpPolicy),
       mCRLiteMode(crliteMode),
       mSawDistrustedCAByPolicyError(false),
@@ -1120,9 +1122,18 @@ Result NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
   Time thisUpdate(Time::uninitialized);
   Time validThrough(Time::uninitialized);
 
-  Result rv = VerifyEncodedOCSPResponse(*this, certID, time, maxLifetimeInDays,
-                                        encodedResponse, expired, &thisUpdate,
-                                        &validThrough);
+  // We use a try and fallback approach which first mandates good signature
+  // digest algorithms, then falls back to SHA-1 if this fails. If a delegated
+  // OCSP response signing certificate was issued with a SHA-1 signature,
+  // verification initially fails. We cache the failure and then re-use that
+  // result even when doing fallback (i.e. when weak signature digest algorithms
+  // should succeed). To address this we use an OCSPVerificationTrustDomain
+  // here, rather than using *this, to ensure verification succeeds for all
+  // allowed signature digest algorithms.
+  OCSPVerificationTrustDomain trustDomain(*this);
+  Result rv = VerifyEncodedOCSPResponse(trustDomain, certID, time,
+                                        maxLifetimeInDays, encodedResponse,
+                                        expired, &thisUpdate, &validThrough);
   // If a response was stapled and expired, we don't want to cache it. Return
   // early to simplify the logic here.
   if (responseSource == ResponseWasStapled && expired) {
@@ -1370,15 +1381,39 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& reversedDERArray,
 }
 
 Result NSSCertDBTrustDomain::CheckSignatureDigestAlgorithm(
-    DigestAlgorithm aAlg, EndEntityOrCA /*endEntityOrCA*/, Time /*notBefore*/) {
-  switch (aAlg) {
-    case DigestAlgorithm::sha256:  // fall through
-    case DigestAlgorithm::sha384:  // fall through
-    case DigestAlgorithm::sha512:
-      return Success;
-    case DigestAlgorithm::sha1:
-      return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+    DigestAlgorithm aAlg, EndEntityOrCA endEntityOrCA, Time notBefore) {
+  // (new Date("2016-01-01T00:00:00Z")).getTime() / 1000
+  static const Time JANUARY_FIRST_2016 = TimeFromEpochInSeconds(1451606400);
+
+  MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+          ("NSSCertDBTrustDomain: CheckSignatureDigestAlgorithm"));
+  if (aAlg == DigestAlgorithm::sha1) {
+    switch (mSHA1Mode) {
+      case CertVerifier::SHA1Mode::Forbidden:
+        MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+                ("SHA-1 certificate rejected"));
+        return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+      case CertVerifier::SHA1Mode::ImportedRootOrBefore2016:
+        if (JANUARY_FIRST_2016 <= notBefore) {
+          MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+                  ("Post-2015 SHA-1 certificate rejected"));
+          return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+        }
+        break;
+      case CertVerifier::SHA1Mode::Allowed:
+      // Enforcing that the resulting chain uses an imported root is only
+      // possible at a higher level. This is done in CertVerifier::VerifyCert.
+      case CertVerifier::SHA1Mode::ImportedRoot:
+      default:
+        break;
+      // MSVC warns unless we explicitly handle this now-unused option.
+      case CertVerifier::SHA1Mode::UsedToBeBefore2016ButNowIsForbidden:
+        MOZ_ASSERT_UNREACHABLE("unexpected SHA1Mode type");
+        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    }
   }
+
+  return Success;
 }
 
 Result NSSCertDBTrustDomain::CheckRSAPublicKeyModulusSizeInBits(

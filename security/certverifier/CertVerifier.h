@@ -61,6 +61,16 @@ enum class KeySizeStatus {
   AlreadyBad = 3,
 };
 
+// These values correspond to the CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
+enum class SHA1ModeResult {
+  NeverChecked = 0,
+  SucceededWithoutSHA1 = 1,
+  SucceededWithImportedRoot = 2,
+  SucceededWithImportedRootOrSHA1Before2016 = 3,
+  SucceededWithSHA1 = 4,
+  Failed = 5,
+};
+
 enum class CRLiteMode {
   Disabled = 0,
   TelemetryOnly = 1,
@@ -160,6 +170,7 @@ class CertVerifier {
       /*optional out*/ EVStatus* evStatus = nullptr,
       /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr,
       /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
+      /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
       /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr,
       /*optional out*/ bool* isBuiltChainRootBuiltInRoot = nullptr);
@@ -180,9 +191,21 @@ class CertVerifier {
       /*optional out*/ EVStatus* evStatus = nullptr,
       /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr,
       /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
+      /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
       /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr,
       /*optional out*/ bool* isBuiltChainRootBuiltInRoot = nullptr);
+
+  enum class SHA1Mode {
+    Allowed = 0,
+    Forbidden = 1,
+    // There used to be a policy that only allowed SHA1 for certificates issued
+    // before 2016. This is no longer available. If a user has selected this
+    // policy in about:config, it now maps to Forbidden.
+    UsedToBeBefore2016ButNowIsForbidden = 2,
+    ImportedRoot = 3,
+    ImportedRootOrBefore2016 = 4,
+  };
 
   enum OcspDownloadConfig { ocspOff = 0, ocspOn = 1, ocspEVOnly = 2 };
   enum OcspStrictConfig { ocspRelaxed = 0, ocspStrict };
@@ -195,7 +218,7 @@ class CertVerifier {
   CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
                mozilla::TimeDuration ocspTimeoutSoft,
                mozilla::TimeDuration ocspTimeoutHard,
-               uint32_t certShortLifetimeInDays,
+               uint32_t certShortLifetimeInDays, SHA1Mode sha1Mode,
                NetscapeStepUpPolicy netscapeStepUpPolicy,
                CertificateTransparencyMode ctMode, CRLiteMode crliteMode,
                const Vector<EnterpriseCert>& thirdPartyCerts);
@@ -208,6 +231,7 @@ class CertVerifier {
   const mozilla::TimeDuration mOCSPTimeoutSoft;
   const mozilla::TimeDuration mOCSPTimeoutHard;
   const uint32_t mCertShortLifetimeInDays;
+  const SHA1Mode mSHA1Mode;
   const NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   const CertificateTransparencyMode mCTMode;
   const CRLiteMode mCRLiteMode;
@@ -233,6 +257,12 @@ class CertVerifier {
       const nsTArray<nsTArray<uint8_t>>& builtChain,
       mozilla::pkix::Input sctsFromTLS, mozilla::pkix::Time time,
       /*optional out*/ CertificateTransparencyInfo* ctInfo);
+
+  // Returns true if the configured SHA1 mode is more restrictive than the given
+  // mode. SHA1Mode::Forbidden is more restrictive than any other mode except
+  // Forbidden. Next is ImportedRoot, then ImportedRootOrBefore2016, then
+  // Allowed. (A mode is never more restrictive than itself.)
+  bool SHA1ModeMoreRestrictiveThanGivenMode(SHA1Mode mode);
 };
 
 mozilla::pkix::Result IsCertBuiltInRoot(pkix::Input certInput, bool& result);

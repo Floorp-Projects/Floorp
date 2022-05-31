@@ -78,6 +78,7 @@ function run_test() {
   do_get_profile();
   Services.prefs.setBoolPref("security.ssl.enable_ocsp_stapling", true);
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
+  Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 4);
   add_tls_server_setup("OCSPStaplingServer", "ocsp_certs");
 
   let ocspResponder = new HttpServer();
@@ -162,7 +163,14 @@ function add_tests() {
   add_ocsp_test(
     "ocsp-stapling-none.example.com",
     SEC_ERROR_OCSP_UNKNOWN_CERT,
-    [respondWithError, respondWithError],
+    [
+      respondWithError,
+      respondWithError,
+      respondWithError,
+      respondWithError,
+      respondWithError,
+      respondWithError,
+    ],
     "No stapled response -> a fetch should have been attempted"
   );
 
@@ -243,9 +251,9 @@ function add_tests() {
 
   add_ocsp_test(
     "ocsp-stapling-none.example.com",
-    SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
+    PRErrorCodeSuccess,
     [respondWithSHA1OCSP],
-    "OCSP signing cert was issued with sha1 - should fail"
+    "signing cert is good (though sha1) - should succeed"
   );
 
   add_test(function() {
