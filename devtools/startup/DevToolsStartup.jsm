@@ -1178,6 +1178,7 @@ const JsonView = {
           const filename = chrome.getDefaultFileName(undefined, uri, doc, null);
           chrome.internalSave(
             message.data,
+            null /* originalURL */,
             null,
             filename,
             null,

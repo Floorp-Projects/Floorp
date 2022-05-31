@@ -27,6 +27,9 @@ interface nsITransfer : nsIWebProgressListener2 {
      *
      * @param aSource The source URI of the transfer. Must not be null.
      *
+     * @param aSourceOriginalURI The original URI of the transfer in case
+     *                           aSource is a blob URL. Can be null.
+     *
      * @param aTarget The target URI of the transfer. Must not be null.
      *
      * @param aDisplayName The user-readable description of the transfer.
@@ -62,6 +65,7 @@ interface nsITransfer : nsIWebProgressListener2 {
      * @param aReferrerInfo The Referrer this download is started with
      */
     void init(in nsIURI aSource,
+              in nsIURI aSourceOriginalURI,
               in nsIURI aTarget,
               in AString aDisplayName,
               in nsIMIMEInfo aMIMEInfo,
