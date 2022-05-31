@@ -6,7 +6,7 @@ function handleRequest(request, response) {
     <!DOCTYPE html>
     <html>
         <head>
-            <meta charset="utf-8">
+            <meta charset="utf-8"/>
         </head>
         <body>
             <p>Cookie: <span id="cookieSpan">${cookies}</span></p>
