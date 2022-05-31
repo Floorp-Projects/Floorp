@@ -128,6 +128,8 @@ std::string CodecSpecificToString(const VideoCodec& codec) {
     case kVideoCodecH264:
       ss << "frame_dropping: " << codec.H264().frameDroppingOn;
       ss << "\nkey_frame_interval: " << codec.H264().keyFrameInterval;
+      ss << "\nnum_temporal_layers: "
+         << static_cast<int>(codec.H264().numberOfTemporalLayers);
       break;
     default:
       break;
@@ -214,6 +216,8 @@ void VideoCodecTestFixtureImpl::Config::SetCodecSettings(
     case kVideoCodecH264:
       codec_settings.H264()->frameDroppingOn = frame_dropper_on;
       codec_settings.H264()->keyFrameInterval = kBaseKeyFrameInterval;
+      codec_settings.H264()->numberOfTemporalLayers =
+          static_cast<uint8_t>(num_temporal_layers);
       break;
     default:
       break;
@@ -236,6 +240,8 @@ size_t VideoCodecTestFixtureImpl::Config::NumberOfTemporalLayers() const {
     return codec_settings.VP8().numberOfTemporalLayers;
   } else if (codec_settings.codecType == kVideoCodecVP9) {
     return codec_settings.VP9().numberOfTemporalLayers;
+  } else if (codec_settings.codecType == kVideoCodecH264) {
+    return codec_settings.H264().numberOfTemporalLayers;
   } else {
     return 1;
   }

@@ -590,6 +590,7 @@ void SimulcastTestFixtureImpl::SwitchingToOneStream(int width, int height) {
     settings_.VP8()->numberOfTemporalLayers = 1;
     temporal_layer_profile = kDefaultTemporalLayerProfile;
   } else {
+    settings_.H264()->numberOfTemporalLayers = 1;
     temporal_layer_profile = kNoTemporalLayerProfile;
   }
   settings_.maxBitrate = 100;
