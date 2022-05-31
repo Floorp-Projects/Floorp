@@ -668,6 +668,33 @@ class ProviderAutofill extends UrlbarProvider {
         break;
     }
 
+    // `autofilledValue` is the value that will be set in the input, and it
+    // should respect the case of the characters the user has typed so far.
+    autofilledValue =
+      queryContext.searchString +
+      autofilledValue.substring(searchString.length);
+
+    // If more than an origin was autofilled and the user typed the full
+    // autofilled value, override the final URL by using the exact value the
+    // user typed. This allows the user to visit a URL that differs from the
+    // autofilled URL only in character case (for example "wikipedia.org/RAID"
+    // vs. "wikipedia.org/Raid") by typing the full desired URL.
+    if (
+      queryType != QUERYTYPE.AUTOFILL_ORIGIN &&
+      queryContext.searchString.length == autofilledValue.length
+    ) {
+      finalCompleteValue =
+        finalCompleteValue.substring(
+          0,
+          finalCompleteValue.length - autofilledValue.length
+        ) + autofilledValue;
+      // Make sure the domain is lowercased in the final URL. This isn't
+      // necessary since domains are case insensitive, but it looks nicer
+      // because it means the domain will remain lowercased in the input, and it
+      // also reflects the fact that Firefox will visit the lowercased name.
+      finalCompleteValue = new URL(finalCompleteValue).href;
+    }
+
     let [title] = UrlbarUtils.stripPrefixAndTrim(finalCompleteValue, {
       stripHttp: true,
       trimEmptyQuery: true,
@@ -682,9 +709,6 @@ class ProviderAutofill extends UrlbarProvider {
         icon: UrlbarUtils.getIconForUrl(finalCompleteValue),
       })
     );
-    autofilledValue =
-      queryContext.searchString +
-      autofilledValue.substring(searchString.length);
     result.autofill = {
       adaptiveHistoryInput,
       value: autofilledValue,
