@@ -4,9 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AccessibleWrap.h"
+#include <glib.h>
+#include <cstdint>
+#include "mozilla/TypedEnumBits.h"
+#include "nsCharTraits.h"
 #include "nsString.h"
-#include "nsMai.h"
 
 /**
  * ATK offsets are counted in unicode codepoints, while DOM offsets are counted

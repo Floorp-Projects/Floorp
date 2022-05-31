@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsMai.h"
 #include "DocAccessibleWrap.h"
 #include "mozilla/PresShell.h"
+#include "nsIWidgetListener.h"
+#include "nsTArray.h"
 #include "nsWindow.h"
 
 using namespace mozilla;

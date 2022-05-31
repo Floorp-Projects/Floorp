@@ -7,13 +7,11 @@
 #include "InterfaceInitFuncs.h"
 
 #include "AccessibleWrap.h"
-#include "nsAccUtils.h"
 #include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/a11y/TableCellAccessibleBase.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "nsMai.h"
 #include "RemoteAccessible.h"
-#include "nsArrayUtils.h"
+#include "nsTArray.h"
 
 #include "mozilla/Likely.h"
 

@@ -9,10 +9,10 @@
 #include "LocalAccessible-inl.h"
 #include "AccessibleWrap.h"
 #include "nsMai.h"
-#include "RemoteAccessible.h"
 #include "mozilla/Likely.h"
 
-#include <atk/atk.h>
+#include <atk/atkobject.h>
+#include <atk/atkselection.h>
 
 using namespace mozilla::a11y;
 
