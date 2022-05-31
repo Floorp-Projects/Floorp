@@ -1388,6 +1388,9 @@ const float kIdentityNarrowYCbCrToRGB_RowMajor[16] = {
 /* static */ Maybe<gfx::TransferFunction> gfxUtils::CicpToTransferFunction(
     const CICP::TransferCharacteristics aTransferCharacteristics) {
   switch (aTransferCharacteristics) {
+    case CICP::TransferCharacteristics::TC_BT709:
+      return Some(gfx::TransferFunction::BT709);
+
     case CICP::TransferCharacteristics::TC_SRGB:
       return Some(gfx::TransferFunction::SRGB);
 
