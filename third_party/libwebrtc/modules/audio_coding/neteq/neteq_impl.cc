@@ -628,8 +628,7 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
     if (update_sample_rate_and_channels) {
       nack_->Reset();
     }
-    nack_->UpdateLastReceivedPacket(rtp_header.sequenceNumber,
-                                    rtp_header.timestamp);
+    nack_->UpdateLastReceivedPacket(main_sequence_number, main_timestamp);
   }
 
   // Check for RED payload type, and separate payloads into several packets.

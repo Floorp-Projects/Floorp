@@ -736,6 +736,15 @@ class NetEqImplTestSampleRateParameter
   const int initial_sample_rate_hz_;
 };
 
+class NetEqImplTestSdpFormatParameter
+    : public NetEqImplTest,
+      public testing::WithParamInterface<SdpAudioFormat> {
+ protected:
+  NetEqImplTestSdpFormatParameter()
+      : NetEqImplTest(), sdp_format_(GetParam()) {}
+  const SdpAudioFormat sdp_format_;
+};
+
 // This test does the following:
 // 0. Set up NetEq with initial sample rate given by test parameter, and a codec
 //    sample rate of 16000.
@@ -918,6 +927,67 @@ TEST_P(NetEqImplTestSampleRateParameter, AudioInterruptionLogged) {
 INSTANTIATE_TEST_SUITE_P(SampleRates,
                          NetEqImplTestSampleRateParameter,
                          testing::Values(8000, 16000, 32000, 48000));
+
+TEST_P(NetEqImplTestSdpFormatParameter, GetNackListScaledTimestamp) {
+  UseNoMocks();
+  CreateInstance();
+
+  neteq_->EnableNack(128);
+
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
+  const int kPayloadSampleRateHz = sdp_format_.clockrate_hz;
+  const size_t kPayloadLengthSamples =
+      static_cast<size_t>(10 * kPayloadSampleRateHz / 1000);  // 10 ms.
+  const size_t kPayloadLengthBytes = kPayloadLengthSamples * 2;
+  std::vector<uint8_t> payload(kPayloadLengthBytes, 0);
+  RTPHeader rtp_header;
+  rtp_header.payloadType = kPayloadType;
+  rtp_header.sequenceNumber = 0x1234;
+  rtp_header.timestamp = 0x12345678;
+  rtp_header.ssrc = 0x87654321;
+
+  EXPECT_TRUE(neteq_->RegisterPayloadType(kPayloadType, sdp_format_));
+
+  auto insert_packet = [&](bool lost = false) {
+    rtp_header.sequenceNumber++;
+    rtp_header.timestamp += kPayloadLengthSamples;
+    if (!lost)
+      EXPECT_EQ(NetEq::kOK, neteq_->InsertPacket(rtp_header, payload));
+  };
+
+  // Insert and decode 10 packets.
+  for (size_t i = 0; i < 10; ++i) {
+    insert_packet();
+  }
+  AudioFrame output;
+  size_t count_loops = 0;
+  do {
+    bool muted;
+    // Make sure we don't hang the test if we never go to PLC.
+    ASSERT_LT(++count_loops, 100u);
+    EXPECT_EQ(NetEq::kOK, neteq_->GetAudio(&output, &muted));
+  } while (output.speech_type_ == AudioFrame::kNormalSpeech);
+
+  insert_packet();
+
+  insert_packet(/*lost=*/true);
+
+  // Ensure packet gets marked as missing.
+  for (int i = 0; i < 5; ++i) {
+    insert_packet();
+  }
+
+  // Missing packet recoverable with 5ms RTT.
+  EXPECT_THAT(neteq_->GetNackList(5), Not(IsEmpty()));
+
+  // No packets should have TimeToPlay > 500ms.
+  EXPECT_THAT(neteq_->GetNackList(500), IsEmpty());
+}
+
+INSTANTIATE_TEST_SUITE_P(GetNackList,
+                         NetEqImplTestSdpFormatParameter,
+                         testing::Values(SdpAudioFormat("g722", 8000, 1),
+                                         SdpAudioFormat("opus", 48000, 2)));
 
 // This test verifies that NetEq can handle comfort noise and enters/quits codec
 // internal CNG mode properly.
