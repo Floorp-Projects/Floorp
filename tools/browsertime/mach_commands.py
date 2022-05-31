@@ -382,10 +382,7 @@ def node(command_context, args):
 def append_env(command_context, append_path=True):
     fetches = host_fetches[host_platform()]
 
-    # Ensure that bare `ffmpeg` and ImageMagick commands
-    # {`convert`,`compare`,`mogrify`} are found.  The `visualmetrics.py`
-    # script doesn't take these as configuration, so we do this (for now).
-    # We should update the script itself to accept this configuration.
+    # Ensure that `ffmpeg` is found and added to the environment
     path = os.environ.get("PATH", "").split(os.pathsep) if append_path else []
     path_to_ffmpeg = mozpath.join(
         state_path(command_context), fetches["ffmpeg"]["path"]
@@ -404,20 +401,6 @@ def append_env(command_context, append_path=True):
     # extension API.
     node_dir = os.path.dirname(node_path(command_context))
     path = [node_dir] + path
-
-    # On macOs, we can't install our own ImageMagick because the
-    # System Integrity Protection (SIP) won't let us set DYLD_LIBRARY_PATH
-    # unless we deactivate SIP with "csrutil disable".
-    # So we're asking the user to install it.
-    #
-    # if ImageMagick was installed via brew, we want to make sure we
-    # include the PATH
-    if host_platform() == "darwin":
-        for p in os.environ["PATH"].split(os.pathsep):
-            p = p.strip()
-            if not p or p in path:
-                continue
-            path.append(p)
 
     append_env = {
         "PATH": os.pathsep.join(path),
@@ -455,8 +438,7 @@ def activate_browsertime_virtualenv(command_context, *args, **kwargs):
     This function will also install Pillow and pyssim if needed.
     It will raise an error in case the install failed.
     """
-    # TODO: (Bug 1758990) Have packages be pulled from the Mozilla pypi mirror
-    # for consistency in user environments
+    # TODO: Remove `./mach browsertime` completely, as a follow up to Bug 1758990
     MachCommandBase.activate_virtualenv(command_context, *args, **kwargs)
 
     # installing Python deps on the fly
@@ -486,9 +468,7 @@ def check(command_context):
     args = ["--check"]
     status = command_context.run_process(
         [command_context.virtualenv_manager.python_path, visualmetrics_path()] + args,
-        # For --check, don't allow user's path to interfere with
-        # path testing except on Linux, where ImageMagick needs to
-        # be installed manually.
+        # For --check, don't allow user's path to interfere with path testing except on Linux
         append_env=append_env(
             command_context, append_path=host_platform().startswith("linux")
         ),
