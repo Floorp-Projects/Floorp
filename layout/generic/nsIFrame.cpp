@@ -3070,10 +3070,15 @@ bool TryToReuseStackingContextItem(nsDisplayListBuilder* aBuilder,
 void nsIFrame::BuildDisplayListForStackingContext(
     nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
     bool* aCreatedContainerItem) {
-  DL_LOGV("BuildDisplayListForStackingContext (%p) <", this);
+  if (aBuilder->IsForContent()) {
+    DL_LOGV("BuildDisplayListForStackingContext (%p) <", this);
+  }
 
-  ScopeExit e(
-      [this]() { DL_LOGV("> BuildDisplayListForStackingContext (%p)", this); });
+  ScopeExit e([this, aBuilder]() {
+    if (aBuilder->IsForContent()) {
+      DL_LOGV("> BuildDisplayListForStackingContext (%p)", this);
+    }
+  });
 
   AutoCheckBuilder check(aBuilder);
 
@@ -4019,10 +4024,14 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists,
                                         DisplayChildFlags aFlags) {
   AutoCheckBuilder check(aBuilder);
-  DL_LOGV("BuildDisplayListForChild (%p) <", aChild);
-
-  ScopeExit e(
-      [aChild]() { DL_LOGV("> BuildDisplayListForChild (%p)", aChild); });
+  if (aBuilder->IsForContent()) {
+    DL_LOGV("BuildDisplayListForChild (%p) <", aChild);
+  }
+  ScopeExit e([aChild, aBuilder]() {
+    if (aBuilder->IsForContent()) {
+      DL_LOGV("> BuildDisplayListForChild (%p)", aChild);
+    }
+  });
 
   if (ShouldSkipFrame(aBuilder, aChild)) {
     return;

@@ -120,13 +120,7 @@ using namespace layout;
 using namespace layers;
 using namespace image;
 
-LazyLogModule sContentDisplayListLog("dl.content");
-LazyLogModule sParentDisplayListLog("dl.parent");
-
-LazyLogModule& GetLoggerByProcess() {
-  return XRE_IsContentProcess() ? sContentDisplayListLog
-                                : sParentDisplayListLog;
-}
+LazyLogModule sDisplayListLog("displaylist");
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 void AssertUniqueItem(nsDisplayItem* aItem) {
@@ -717,7 +711,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   static_assert(
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
       "Check TYPE_MAX should not overflow");
-
+  mIsForContent = XRE_IsContentProcess();
   mIsReusingStackingContextItems =
       mRetainingDisplayList && StaticPrefs::layout_display_list_retain_sc();
 }
