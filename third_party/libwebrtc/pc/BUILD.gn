@@ -1094,6 +1094,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:libjingle_peerconnection_api",
       "../api:media_stream_interface",
       "../api:mock_rtp",
+      "../api:mock_video_track",
       "../api:packet_socket_factory",
       "../api:rtc_error",
       "../api:rtp_transceiver_direction",

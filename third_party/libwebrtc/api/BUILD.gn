@@ -1067,6 +1067,20 @@ if (rtc_include_tests) {
     ]
   }
 
+  rtc_library("mock_video_track") {
+    visibility = [ "*" ]
+
+    testonly = true
+    sources = [ "test/mock_video_track.h" ]
+
+    deps = [
+      "../api:media_stream_interface",
+      "../api:scoped_refptr",
+      "../rtc_base:refcount",
+      "../test:test_support",
+    ]
+  }
+
   rtc_library("create_time_controller") {
     visibility = [ "*" ]
     testonly = true
@@ -1155,6 +1169,7 @@ if (rtc_include_tests) {
       ":mock_video_codec_factory",
       ":mock_video_decoder",
       ":mock_video_encoder",
+      ":mock_video_track",
       ":rtc_api_unittests",
       "units:units_unittests",
     ]

@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "api/rtp_sender_interface.h"
+#include "api/test/mock_video_track.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "media/base/media_channel.h"
 #include "pc/audio_track.h"
@@ -30,45 +31,6 @@
 namespace webrtc {
 
 namespace {
-
-class MockVideoTrack : public VideoTrackInterface {
- public:
-  // NotifierInterface
-  MOCK_METHOD(void,
-              RegisterObserver,
-              (ObserverInterface * observer),
-              (override));
-  MOCK_METHOD(void,
-              UnregisterObserver,
-              (ObserverInterface * observer),
-              (override));
-
-  // MediaStreamTrackInterface
-  MOCK_METHOD(std::string, kind, (), (const, override));
-  MOCK_METHOD(std::string, id, (), (const, override));
-  MOCK_METHOD(bool, enabled, (), (const, override));
-  MOCK_METHOD(bool, set_enabled, (bool enable), (override));
-  MOCK_METHOD(TrackState, state, (), (const, override));
-
-  // VideoSourceInterface
-  MOCK_METHOD(void,
-              AddOrUpdateSink,
-              (rtc::VideoSinkInterface<VideoFrame> * sink,
-               const rtc::VideoSinkWants& wants),
-              (override));
-  // RemoveSink must guarantee that at the time the method returns,
-  // there is no current and no future calls to VideoSinkInterface::OnFrame.
-  MOCK_METHOD(void,
-              RemoveSink,
-              (rtc::VideoSinkInterface<VideoFrame> * sink),
-              (override));
-
-  // VideoTrackInterface
-  MOCK_METHOD(VideoTrackSourceInterface*, GetSource, (), (const, override));
-
-  MOCK_METHOD(ContentHint, content_hint, (), (const, override));
-  MOCK_METHOD(void, set_content_hint, (ContentHint hint), (override));
-};
 
 RtpParameters CreateRtpParametersWithSsrcs(
     std::initializer_list<uint32_t> ssrcs) {
@@ -126,7 +88,7 @@ rtc::scoped_refptr<VideoTrackInterface> CreateVideoTrack(
 
 rtc::scoped_refptr<VideoTrackInterface> CreateMockVideoTrack(
     const std::string& id) {
-  auto track = rtc::make_ref_counted<MockVideoTrack>();
+  auto track = MockVideoTrack::Create();
   EXPECT_CALL(*track, kind())
       .WillRepeatedly(::testing::Return(VideoTrack::kVideoKind));
   return track;
