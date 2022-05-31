@@ -14,9 +14,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   Utils: "resource://services-sync/util.js",
+});
+
+XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
+  ).getFxAccountsSingleton();
 });
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
