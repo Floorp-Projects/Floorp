@@ -974,4 +974,64 @@ INSTANTIATE_TEST_SUITE_P(
 // TODO(terelius): Verify parser behavior if the timestamps are not
 // monotonically increasing in the log.
 
+TEST(DereferencingVectorTest, NonConstVector) {
+  std::vector<int> v{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  DereferencingVector<int> even;
+  EXPECT_TRUE(even.empty());
+  EXPECT_EQ(even.size(), 0u);
+  EXPECT_EQ(even.begin(), even.end());
+  for (size_t i = 0; i < v.size(); i += 2) {
+    even.push_back(&v[i]);
+  }
+  EXPECT_FALSE(even.empty());
+  EXPECT_EQ(even.size(), 5u);
+  EXPECT_NE(even.begin(), even.end());
+
+  // Test direct access.
+  for (size_t i = 0; i < even.size(); i++) {
+    EXPECT_EQ(even[i], 2 * static_cast<int>(i));
+  }
+
+  // Test iterator.
+  for (int val : even) {
+    EXPECT_EQ(val % 2, 0);
+  }
+
+  // Test modification through iterator.
+  for (int& val : even) {
+    val = val * 2;
+    EXPECT_EQ(val % 2, 0);
+  }
+
+  // Backing vector should have been modified.
+  std::vector<int> expected{0, 1, 4, 3, 8, 5, 12, 7, 16, 9};
+  for (size_t i = 0; i < v.size(); i++) {
+    EXPECT_EQ(v[i], expected[i]);
+  }
+}
+
+TEST(DereferencingVectorTest, ConstVector) {
+  std::vector<int> v{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  DereferencingVector<const int> odd;
+  EXPECT_TRUE(odd.empty());
+  EXPECT_EQ(odd.size(), 0u);
+  EXPECT_EQ(odd.begin(), odd.end());
+  for (size_t i = 1; i < v.size(); i += 2) {
+    odd.push_back(&v[i]);
+  }
+  EXPECT_FALSE(odd.empty());
+  EXPECT_EQ(odd.size(), 5u);
+  EXPECT_NE(odd.begin(), odd.end());
+
+  // Test direct access.
+  for (size_t i = 0; i < odd.size(); i++) {
+    EXPECT_EQ(odd[i], 2 * static_cast<int>(i) + 1);
+  }
+
+  // Test iterator.
+  for (int val : odd) {
+    EXPECT_EQ(val % 2, 1);
+  }
+}
+
 }  // namespace webrtc
