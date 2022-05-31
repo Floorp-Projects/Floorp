@@ -7,11 +7,11 @@ import re
 import pprint
 import collections
 import collections.abc
+
 import voluptuous
+from taskgraph.util.keyed_by import evaluate_keyed_by
 
 import gecko_taskgraph
-
-from .keyed_by import evaluate_keyed_by
 
 
 def validate_schema(schema, obj, msg_prefix):
