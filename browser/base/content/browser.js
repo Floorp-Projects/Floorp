@@ -10210,6 +10210,9 @@ document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
 }
 
 /*--------------------------------------------------------userChrome.js(uc.js)のコーナー---------------------------------------------------------*/
+
+/*
 const script = document.createElement('script');
-script.src = "chrome://userChromejs/content/memory.js"; 
+script.src = "chrome://userchromejs/content/読み込むJS"; 
 document.head.appendChild(script); 
+*/

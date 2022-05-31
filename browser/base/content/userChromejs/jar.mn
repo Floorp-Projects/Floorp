@@ -4,12 +4,12 @@
 browser.jar:
 %  content browser %content/browser/ contentaccessible=yes
 
-# userScript
+# userScript (今後ここに追加)
 
 
 # Loader
-   content/userChromejs/BootstrapLoader.jsm         (loader/BootstrapLoader.jsm)
-   content/userChromejs/RDFDataSource.jsm           (loader/RDFDataSource.jsm)
-   content/userChromejs/RDFManifestConverter.jsm    (loader/RDFManifestConverter.jsm)
-   content/userChromejs/userChrome.jsm              (loader/userChrome.jsm)
-   content/userChromejs/xPref.jsm                   (loader/xPref.jsm)
+   content/userchromejs/bootstraploader.jsm         (loader/bootstrapLoader.jsm)
+   content/userchromejs/rdfdatasource.jsm           (loader/RDFDataSource.jsm)
+   content/userchromejs/rdfmanifestconverter.jsm    (loader/RDFManifestConverter.jsm)
+   content/userchromejs/userchrome.jsm              (loader/userChrome.jsm)
+   content/userchromejs/xpref.jsm                   (loader/xPref.jsm)
