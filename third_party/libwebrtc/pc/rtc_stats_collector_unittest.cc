@@ -1953,6 +1953,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
       cricket::SsrcReceiverInfo());
   voice_media_info.receivers[0].local_stats[0].ssrc = 1;
   voice_media_info.receivers[0].packets_lost = -1;  // Signed per RFC3550
+  voice_media_info.receivers[0].packets_discarded = 7788;
   voice_media_info.receivers[0].packets_rcvd = 2;
   voice_media_info.receivers[0].nacks_sent = 5;
   voice_media_info.receivers[0].fec_packets_discarded = 5566;
@@ -2009,6 +2010,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   expected_audio.bytes_received = 3;
   expected_audio.header_bytes_received = 4;
   expected_audio.packets_lost = -1;
+  expected_audio.packets_discarded = 7788;
   // |expected_audio.last_packet_received_timestamp| should be undefined.
   expected_audio.jitter = 4.5;
   expected_audio.jitter_buffer_delay = 1.0;
