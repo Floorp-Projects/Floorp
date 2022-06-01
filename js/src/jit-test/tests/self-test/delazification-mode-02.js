@@ -16,9 +16,9 @@ let source = `
 `;
 
 const options = {
-    fileName: "inner-01.js",
+    fileName: "inner-02.js",
     lineNumber: 1,
-    eagerDelazificationStrategy: "CheckConcurrentWithOnDemand",
+    eagerDelazificationStrategy: "ConcurrentDepthFirst",
     newContext: true,
 };
 evaluate(source, options);
