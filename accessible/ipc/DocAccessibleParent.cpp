@@ -1186,5 +1186,18 @@ void DocAccessibleParent::SelectionRanges(nsTArray<TextRange>* aRanges) const {
   }
 }
 
+void DocAccessibleParent::URL(nsAString& aURL) const {
+  if (!mBrowsingContext) {
+    return;
+  }
+  nsAutoCString url;
+  nsCOMPtr<nsIURI> uri = mBrowsingContext->GetCurrentURI();
+  if (!uri) {
+    return;
+  }
+  uri->GetSpec(url);
+  CopyUTF8toUTF16(url, aURL);
+}
+
 }  // namespace a11y
 }  // namespace mozilla

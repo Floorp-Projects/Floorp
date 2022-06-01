@@ -10,6 +10,7 @@
 #include "xpcAccessibleTableCell.h"
 
 #include "mozilla/a11y/DocAccessibleParent.h"
+#include "nsAccUtils.h"
 #include "DocAccessible-inl.h"
 
 using namespace mozilla;
@@ -42,9 +43,9 @@ NS_IMETHODIMP_(MozExternalRefCountType) xpcAccessibleDocument::Release(void) {
 
 NS_IMETHODIMP
 xpcAccessibleDocument::GetURL(nsAString& aURL) {
-  if (!Intl()) return NS_ERROR_FAILURE;
+  if (!mIntl) return NS_ERROR_FAILURE;
 
-  Intl()->URL(aURL);
+  nsAccUtils::DocumentURL(mIntl, aURL);
   return NS_OK;
 }
 
