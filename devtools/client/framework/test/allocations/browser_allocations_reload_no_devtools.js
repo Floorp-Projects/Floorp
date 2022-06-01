@@ -9,9 +9,7 @@ const TEST_URL =
   "http://example.com/browser/devtools/client/framework/test/allocations/reloaded-page.html";
 
 async function testScript() {
-  const onReloaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.reloadTab(gBrowser.selectedTab);
-  await onReloaded;
+  await BrowserTestUtils.reloadTab(gBrowser.selectedTab);
 
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));

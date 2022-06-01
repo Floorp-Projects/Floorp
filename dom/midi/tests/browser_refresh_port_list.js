@@ -61,9 +61,7 @@ add_task(async function() {
   ports_num = await get_num_ports(gBrowser.selectedBrowser);
   Assert.equal(ports_num, 4, "One port is removed manually");
 
-  const finished = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.reloadTab(gBrowser.selectedTab);
-  await finished;
+  await BrowserTestUtils.reloadTab(gBrowser.selectedTab);
 
   await get_access(gBrowser.selectedBrowser);
   let refreshed_ports_num = await get_num_ports(gBrowser.selectedBrowser);

@@ -69,9 +69,7 @@ add_task(async function test_NavigationBetweenTwoDomains_NoDestroy() {
   });
 
   info("Reload .org page, onAvailable and onDestroyed should not be called");
-  const reloaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.reloadTab(gBrowser.selectedTab);
-  await reloaded;
+  await BrowserTestUtils.reloadTab(gBrowser.selectedTab);
   await checkHooks(hooks, {
     available: 2,
     destroyed: 0,

@@ -23,7 +23,7 @@ add_task(async function() {
     gBrowser,
   });
 
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
 
   info("Check that the correct content is displayed for users with no logins.");
   await checkNoLoginsContentIsDisplayed(tab, "monitor-sign-up");
@@ -33,7 +33,7 @@ add_task(async function() {
   );
   Services.logins.addLogin(TEST_LOGIN1);
   AboutProtectionsParent.setTestOverride(mockGetMonitorData(mockMonitorData));
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
 
   Assert.ok(
     true,
@@ -84,7 +84,7 @@ add_task(async function() {
     "Check that correct content is displayed when monitor data contains an error message."
   );
   AboutProtectionsParent.setTestOverride(mockGetMonitorData(monitorErrorData));
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await checkNoLoginsContentIsDisplayed(tab);
 
   info("Disable showing the Monitor card.");
@@ -92,7 +92,7 @@ add_task(async function() {
     "browser.contentblocking.report.monitor.enabled",
     false
   );
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {

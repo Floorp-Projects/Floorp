@@ -1777,6 +1777,25 @@ var BrowserTestUtils = {
   },
 
   /**
+   *
+   * @param {tab} tab
+   *        The tab that will be reloaded.
+   * @param {Boolean} [includeSubFrames = false]
+   *        A boolean indicating if loads from subframes should be included
+   *        when waiting for the frame to reload.
+   * @returns {Promise}
+   * @resolves When the tab finishes reloading.
+   */
+  reloadTab(tab, includeSubFrames = false) {
+    const finished = BrowserTestUtils.browserLoaded(
+      tab.linkedBrowser,
+      includeSubFrames
+    );
+    tab.ownerGlobal.gBrowser.reloadTab(tab);
+    return finished;
+  },
+
+  /**
    * Crashes a remote frame tab and cleans up the generated minidumps.
    * Resolves with the data from the .extra file (the crash annotations).
    *

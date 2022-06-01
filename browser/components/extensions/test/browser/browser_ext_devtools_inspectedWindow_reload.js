@@ -299,14 +299,7 @@ add_task(
         await checkUserAgent(CUSTOM_USER_AGENT);
 
         info("Check that the user agent persists after a reload");
-        onPageLoaded = BrowserTestUtils.browserLoaded(
-          gBrowser.selectedBrowser,
-          true
-        );
-        // Mimick the user reloading the page through firefox UI.
-        gBrowser.reloadTab(tab);
-        await onPageLoaded;
-
+        await BrowserTestUtils.reloadTab(tab, /* includeSubFrames */ true);
         await checkUserAgent(CUSTOM_USER_AGENT);
 
         info(
@@ -345,14 +338,7 @@ add_task(
           "The flag on the browsing context was reset"
         );
         await checkUserAgent(CUSTOM_USER_AGENT);
-
-        onPageLoaded = BrowserTestUtils.browserLoaded(
-          gBrowser.selectedBrowser,
-          true
-        );
-        gBrowser.reloadTab(tab);
-        await onPageLoaded;
-
+        await BrowserTestUtils.reloadTab(tab, /* includeSubFrames */ true);
         await checkUserAgent(initialUserAgent);
       },
     });

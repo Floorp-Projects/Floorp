@@ -94,7 +94,7 @@ add_task(async function testLockwiseCardUIWithLogins() {
     "Add a login and check that lockwise card content for a logged in user is displayed correctly"
   );
   Services.logins.addLogin(TEST_LOGIN1);
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
@@ -177,7 +177,7 @@ add_task(async function testLockwiseCardUIWithLogins() {
     "Add another login and check that the scanned text about stored logins is updated after reload."
   );
   Services.logins.addLogin(TEST_LOGIN2);
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const lockwiseScannedText = content.document.querySelector(
@@ -211,7 +211,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
   AboutProtectionsParent.setTestOverride(
     mockGetLoginDataWithSyncedDevices(false, 1)
   );
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const lockwiseScannedText = content.document.querySelector(
@@ -235,7 +235,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
   AboutProtectionsParent.setTestOverride(
     mockGetLoginDataWithSyncedDevices(false, 2)
   );
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const lockwiseScannedText = content.document.querySelector(
       "#lockwise-scanned-text"
@@ -268,7 +268,7 @@ add_task(async function testLockwiseCardPref() {
     "browser.contentblocking.report.lockwise.enabled",
     false
   );
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const lockwiseCard = content.document.querySelector(".lockwise-card");
     await ContentTaskUtils.waitForCondition(() => {

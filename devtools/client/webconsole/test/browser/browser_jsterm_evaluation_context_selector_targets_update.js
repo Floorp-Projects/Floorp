@@ -229,11 +229,7 @@ add_task(async function() {
 
   // Reloading the tab while having two popups opened used to
   // generate exception in the context selector component
-  const onBrowserLoaded = BrowserTestUtils.browserLoaded(
-    originalTab.linkedBrowser
-  );
-  gBrowser.reloadTab(originalTab);
-  await onBrowserLoaded;
+  await BrowserTestUtils.reloadTab(originalTab);
 
   ok(
     !hud.ui.document.querySelector(".app-error-panel"),

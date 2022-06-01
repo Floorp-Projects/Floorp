@@ -126,7 +126,7 @@ add_task(async function checkTelemetryLoadEvents() {
   }, "recorded telemetry for showing the report");
 
   is(loadEvents.length, 1, `recorded telemetry for showing the report`);
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   loadEvents = await TestUtils.waitForCondition(() => {
     let events = Services.telemetry.snapshotEvents(
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
@@ -208,7 +208,7 @@ add_task(async function checkTelemetryClickEvents() {
 
   // Add user logins.
   Services.logins.addLogin(TEST_LOGIN1);
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const managePasswordsButton = await ContentTaskUtils.waitForCondition(
       () => {
@@ -242,7 +242,7 @@ add_task(async function checkTelemetryClickEvents() {
   AboutProtectionsParent.setTestOverride(
     mockGetLoginDataWithSyncedDevices(false, 4)
   );
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const managePasswordsButton = await ContentTaskUtils.waitForCondition(
       () => {
@@ -273,7 +273,7 @@ add_task(async function checkTelemetryClickEvents() {
   AboutProtectionsParent.setTestOverride(null);
   Services.logins.removeLogin(TEST_LOGIN1);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     // Show all elements, so we can click on them, even though our user is not logged in.
@@ -527,7 +527,7 @@ add_task(async function checkTelemetryClickEvents() {
       numBreachesResolved: 1,
     })
   );
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const resolveBreachesButton = await ContentTaskUtils.waitForCondition(
       () => {
@@ -610,7 +610,7 @@ add_task(async function checkTelemetryClickEvents() {
       numBreachesResolved: 0,
     })
   );
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const manageBreachesButton = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("monitor-breaches-link");
@@ -642,7 +642,7 @@ add_task(async function checkTelemetryClickEvents() {
       numBreachesResolved: 3,
     })
   );
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const viewReportButton = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("monitor-breaches-link");
@@ -673,7 +673,7 @@ add_task(async function checkTelemetryClickEvents() {
       numBreachesResolved: 0,
     })
   );
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const viewReportButton = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("monitor-breaches-link");
@@ -952,7 +952,7 @@ add_task(async function checkTelemetryClickEventsVPN() {
 
   // User is subscribed to VPN
   AboutProtectionsParent.setTestOverride(getVPNOverrides(true, "us"));
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const androidVPNLink = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("vpn-google-playstore-link");
@@ -1095,7 +1095,7 @@ add_task(async function checkTelemetryEventsVPNBanner() {
     set: [["browser.contentblocking.report.hide_vpn_banner", false]],
   });
 
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const bannerExitLink = await ContentTaskUtils.waitForCondition(() => {
       return content.document.querySelector(".vpn-banner .exit-icon");

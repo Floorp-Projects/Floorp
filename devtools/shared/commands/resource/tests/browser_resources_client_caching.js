@@ -135,9 +135,7 @@ add_task(async function() {
   );
 
   info("Reload the page");
-  const onReloaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.reloadTab(tab);
-  await onReloaded;
+  await BrowserTestUtils.reloadTab(tab);
 
   info("Register second listener");
   const cachedResources = [];

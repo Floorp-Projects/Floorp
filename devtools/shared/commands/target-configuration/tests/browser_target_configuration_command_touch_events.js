@@ -40,12 +40,7 @@ add_task(async function() {
   });
 
   info("Reload the page");
-  const onPageReloaded = BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    true
-  );
-  gBrowser.reloadTab(tab);
-  await onPageReloaded;
+  await BrowserTestUtils.reloadTab(tab, /* includeSubFrames */ true);
 
   is(
     await topLevelDocumentMatchesCoarsePointerAtStartup(),

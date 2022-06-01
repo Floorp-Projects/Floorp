@@ -77,14 +77,6 @@ var FullZoomHelper = {
     });
   },
 
-  async refreshTab(tab = gBrowser.selectedTab) {
-    info("Refreshing tab.");
-    const finished = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    gBrowser.reloadTab(tab);
-    await finished;
-    info("Tab finished refreshing.");
-  },
-
   waitForLocationChange: function waitForLocationChange() {
     return new Promise(resolve => {
       Services.obs.addObserver(function obs(subj, topic, data) {

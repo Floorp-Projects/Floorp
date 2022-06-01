@@ -99,7 +99,7 @@ add_task(async function test_disabled_ss_custom() {
   zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser1);
   is(zoomLevel, 1.7, "tab 1 zoom has been set to 170%");
 
-  await FullZoomHelper.refreshTab(tab1);
+  await BrowserTestUtils.reloadTab(tab1);
 
   zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser1);
   is(zoomLevel, 1.7, "tab 1 zoom remains 170%");

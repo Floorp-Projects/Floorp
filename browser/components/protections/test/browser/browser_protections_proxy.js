@@ -45,7 +45,7 @@ add_task(async function() {
     "Check that secure proxy card is hidden if user's language is not en-US"
   );
   Services.prefs.setCharPref("intl.accept_languages", "en-CA");
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await checkProxyCardVisibility(tab, true);
 
   info(
@@ -54,14 +54,14 @@ add_task(async function() {
   // Set language back to en-US
   Services.prefs.setCharPref("intl.accept_languages", "en-US");
   Region._setHomeRegion("US", false);
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await checkProxyCardVisibility(tab, false);
 
   info(
     "Check that secure proxy card is hidden if user's location is not in the US."
   );
   Region._setHomeRegion("CA", false);
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await checkProxyCardVisibility(tab, true);
 
   info(
@@ -78,7 +78,7 @@ add_task(async function() {
     useAddonManager: "temporary",
   });
   await extension.startup();
-  await reloadTab(tab);
+  await BrowserTestUtils.reloadTab(tab);
   await checkProxyCardVisibility(tab, true);
   await extension.unload();
 
