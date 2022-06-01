@@ -929,7 +929,7 @@ void js::Nursery::printProfileHeader() {
   fprintf(
       file,
       "MinorGC: PID     Runtime        Timestamp  Reason               PRate  "
-      "OldSz  NewSz  Dedup ");
+      "OldKB  NewKB  Dedup ");
 #define PRINT_HEADER(name, text) fprintf(file, " %-6.6s", text);
   FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
 #undef PRINT_HEADER
