@@ -283,7 +283,6 @@ class RTC_EXPORT PortAllocatorSession : public sigslot::has_slots<> {
 
   virtual uint32_t generation();
   virtual void set_generation(uint32_t generation);
-  sigslot::signal1<PortAllocatorSession*> SignalDestroyed;
 
  protected:
   // This method is called when a pooled session (which doesn't have these
