@@ -214,6 +214,7 @@ where
     U: 'static + WebDriverExtensionRoute + Send + Sync,
 {
     let listener = StdTcpListener::bind(address)?;
+    listener.set_nonblocking(true)?;
     let addr = listener.local_addr()?;
     let (msg_send, msg_recv) = channel();
 
