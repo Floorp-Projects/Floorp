@@ -965,7 +965,9 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
           do_GetInterface(mDocument->DocumentNode()->GetDocShell());
       if (browserChild) {
         static_cast<BrowserChild*>(browserChild.get())
-            ->SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id, 0, 0);
+            ->SendPDocAccessibleConstructor(
+                ipcDoc, parentIPCDoc, id,
+                childDoc->DocumentNode()->GetBrowsingContext(), 0, 0);
         ipcDoc->SendPDocAccessiblePlatformExtConstructor();
       }
 #endif
