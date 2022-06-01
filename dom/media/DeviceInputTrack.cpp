@@ -129,13 +129,13 @@ NotNull<AudioDataListener*> DeviceInputConsumerTrack::GetAudioDataListener()
 }
 
 bool DeviceInputConsumerTrack::ConnectToNativeDevice() const {
-  return mPort &&
-         mPort->GetSource()->AsDeviceInputTrack()->AsNativeInputTrack();
+  MOZ_ASSERT(NS_IsMainThread());
+  return mDeviceInputTrack && mDeviceInputTrack->AsNativeInputTrack();
 }
 
 bool DeviceInputConsumerTrack::ConnectToNonNativeDevice() const {
-  return mPort &&
-         mPort->GetSource()->AsDeviceInputTrack()->AsNonNativeInputTrack();
+  MOZ_ASSERT(NS_IsMainThread());
+  return mDeviceInputTrack && mDeviceInputTrack->AsNonNativeInputTrack();
 }
 
 void DeviceInputConsumerTrack::GetInputSourceData(AudioSegment& aOutput,
