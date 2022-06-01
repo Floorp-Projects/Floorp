@@ -1056,13 +1056,14 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
           content_info.name, certificate_, std::move(ice), std::move(rtcp_ice),
           std::move(unencrypted_rtp_transport), std::move(sdes_transport),
           std::move(dtls_srtp_transport), std::move(rtp_dtls_transport),
-          std::move(rtcp_dtls_transport), std::move(sctp_transport));
+          std::move(rtcp_dtls_transport), std::move(sctp_transport), [&]() {
+            RTC_DCHECK_RUN_ON(network_thread_);
+            UpdateAggregateStates_n();
+          });
 
   jsep_transport->rtp_transport()->SignalRtcpPacketReceived.connect(
       this, &JsepTransportController::OnRtcpPacketReceived_n);
 
-  jsep_transport->SignalRtcpMuxActive.connect(
-      this, &JsepTransportController::UpdateAggregateStates_n);
   transports_.RegisterTransport(content_info.name, std::move(jsep_transport));
   UpdateAggregateStates_n();
   return RTCError::OK();

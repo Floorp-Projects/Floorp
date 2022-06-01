@@ -13,8 +13,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <functional>
 #include <memory>
-#include <utility>  // for std::pair
+#include <utility>
 
 #include "api/array_view.h"
 #include "api/candidate.h"
@@ -80,7 +81,8 @@ JsepTransport::JsepTransport(
     std::unique_ptr<webrtc::DtlsSrtpTransport> dtls_srtp_transport,
     std::unique_ptr<DtlsTransportInternal> rtp_dtls_transport,
     std::unique_ptr<DtlsTransportInternal> rtcp_dtls_transport,
-    std::unique_ptr<SctpTransportInternal> sctp_transport)
+    std::unique_ptr<SctpTransportInternal> sctp_transport,
+    std::function<void()> rtcp_mux_active_callback)
     : network_thread_(rtc::Thread::Current()),
       mid_(mid),
       local_certificate_(local_certificate),
@@ -104,7 +106,8 @@ JsepTransport::JsepTransport(
       sctp_transport_(sctp_transport
                           ? rtc::make_ref_counted<webrtc::SctpTransport>(
                                 std::move(sctp_transport))
-                          : nullptr) {
+                          : nullptr),
+      rtcp_mux_active_callback_(std::move(rtcp_mux_active_callback)) {
   TRACE_EVENT0("webrtc", "JsepTransport::JsepTransport");
   RTC_DCHECK(ice_transport_);
   RTC_DCHECK(rtp_dtls_transport_);
@@ -487,7 +490,7 @@ void JsepTransport::ActivateRtcpMux() {
   }
   rtcp_dtls_transport_ = nullptr;  // Destroy this reference.
   // Notify the JsepTransportController to update the aggregate states.
-  SignalRtcpMuxActive();
+  rtcp_mux_active_callback_();
 }
 
 bool JsepTransport::SetSdes(const std::vector<CryptoParams>& cryptos,
