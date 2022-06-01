@@ -24,15 +24,6 @@ const char kCsAesCm128HmacSha1_32[] = "AES_CM_128_HMAC_SHA1_32";
 const char kCsAeadAes128Gcm[] = "AEAD_AES_128_GCM";
 const char kCsAeadAes256Gcm[] = "AEAD_AES_256_GCM";
 
-// TODO(bugs.webrtc.org/12997): Start.
-// Remove the following constants which violate the style guide and can
-// potentially clash with OpenSSL macros.
-const char CS_AES_CM_128_HMAC_SHA1_80[] = "AES_CM_128_HMAC_SHA1_80";
-const char CS_AES_CM_128_HMAC_SHA1_32[] = "AES_CM_128_HMAC_SHA1_32";
-const char CS_AEAD_AES_128_GCM[] = "AEAD_AES_128_GCM";
-const char CS_AEAD_AES_256_GCM[] = "AEAD_AES_256_GCM";
-// TODO(bugs.webrtc.org/12997): End.
-
 std::string SrtpCryptoSuiteToName(int crypto_suite) {
   switch (crypto_suite) {
     case kSrtpAes128CmSha1_32:

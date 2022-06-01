@@ -29,32 +29,6 @@ namespace rtc {
 constexpr int kTlsNullWithNullNull = 0;
 constexpr int kSslCipherSuiteMaxValue = 0xFFFF;
 
-// TODO(bugs.webrtc.org/12997): Start.
-// Remove the following constants which violate the style guide and can
-// potentially clash with OpenSSL macros.
-#ifndef SRTP_AES128_CM_SHA1_80
-const int SRTP_AES128_CM_SHA1_80 = 0x0001;
-#endif
-#ifndef SRTP_AES128_CM_SHA1_32
-const int SRTP_AES128_CM_SHA1_32 = 0x0002;
-#endif
-#ifndef SRTP_AEAD_AES_128_GCM
-const int SRTP_AEAD_AES_128_GCM = 0x0007;
-#endif
-#ifndef SRTP_AEAD_AES_256_GCM
-const int SRTP_AEAD_AES_256_GCM = 0x0008;
-#endif
-// Names of SRTP profiles listed above.
-// 128-bit AES with 80-bit SHA-1 HMAC.
-extern const char CS_AES_CM_128_HMAC_SHA1_80[];
-// 128-bit AES with 32-bit SHA-1 HMAC.
-extern const char CS_AES_CM_128_HMAC_SHA1_32[];
-// 128-bit AES GCM with 16 byte AEAD auth tag.
-extern const char CS_AEAD_AES_128_GCM[];
-// 256-bit AES GCM with 16 byte AEAD auth tag.
-extern const char CS_AEAD_AES_256_GCM[];
-// TODO(bugs.webrtc.org/12997): End.
-
 // Constants for SRTP profiles.
 constexpr int kSrtpInvalidCryptoSuite = 0;
 constexpr int kSrtpAes128CmSha1_80 = 0x0001;
