@@ -218,6 +218,15 @@ class VideoSendStream {
   // When a stream is stopped, it can't receive, process or deliver packets.
   virtual void Stop() = 0;
 
+  // Accessor for determining if the stream is active. This is an inexpensive
+  // call that must be made on the same thread as `Start()` and `Stop()` methods
+  // are called on and will return `true` iff activity has been started either
+  // via `Start()` or `UpdateActiveSimulcastLayers()`. If activity is either
+  // stopped or is in the process of being stopped as a result of a call to
+  // either `Stop()` or `UpdateActiveSimulcastLayers()` where all layers were
+  // deactivated, the return value will be `false`.
+  virtual bool started() = 0;
+
   // If the resource is overusing, the VideoSendStream will try to reduce
   // resolution or frame rate until no resource is overusing.
   // TODO(https://crbug.com/webrtc/11565): When the ResourceAdaptationProcessor

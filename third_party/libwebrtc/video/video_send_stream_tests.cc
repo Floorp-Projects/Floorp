@@ -2251,6 +2251,8 @@ TEST_F(VideoSendStreamTest, VideoSendStreamUpdateActiveSimulcastLayers) {
 
              CreateVideoStreams();
 
+             EXPECT_FALSE(GetVideoSendStream()->started());
+
              // Inject a frame, to force encoder creation.
              GetVideoSendStream()->Start();
              GetVideoSendStream()->SetSource(&forwarder,
@@ -2264,6 +2266,7 @@ TEST_F(VideoSendStreamTest, VideoSendStreamUpdateActiveSimulcastLayers) {
   // which in turn updates the VideoEncoder's bitrate.
   SendTask(RTC_FROM_HERE, task_queue(), [this]() {
     GetVideoSendStream()->UpdateActiveSimulcastLayers({true, true});
+    EXPECT_TRUE(GetVideoSendStream()->started());
   });
   EXPECT_TRUE(encoder.WaitBitrateChanged(true));
 
@@ -2280,6 +2283,7 @@ TEST_F(VideoSendStreamTest, VideoSendStreamUpdateActiveSimulcastLayers) {
   GetVideoEncoderConfig()->simulcast_layers[1].active = false;
   SendTask(RTC_FROM_HERE, task_queue(), [this]() {
     GetVideoSendStream()->UpdateActiveSimulcastLayers({false, false});
+    EXPECT_FALSE(GetVideoSendStream()->started());
   });
   EXPECT_TRUE(encoder.WaitBitrateChanged(false));
 

@@ -196,6 +196,7 @@ class FakeVideoSendStream final
       const std::vector<bool> active_layers) override;
   void Start() override;
   void Stop() override;
+  bool started() override { return IsSending(); }
   void AddAdaptationResource(
       rtc::scoped_refptr<webrtc::Resource> resource) override;
   std::vector<rtc::scoped_refptr<webrtc::Resource>> GetAdaptationResources()
