@@ -248,7 +248,7 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
   }
   // We configure the proxy with a pointer to the network thread for methods
   // that need to be invoked there rather than on the signaling thread.
-  // Internally, the proxy object has a member variable named `worker_thread_`
+  // Internally, the proxy object has a member variable named |worker_thread_|
   // which will point to the network thread (and not the factory's
   // worker_thread()).  All such methods have thread checks though, so the code
   // should still be clear (outside of macro expansion).

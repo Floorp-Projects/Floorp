@@ -73,7 +73,7 @@ class SctpTransport : public SctpTransportInterface,
   void OnDtlsStateChange(cricket::DtlsTransportInternal* transport,
                          DtlsTransportState state);
 
-  // NOTE: `owner_thread_` is the thread that the SctpTransport object is
+  // NOTE: |owner_thread_| is the thread that the SctpTransport object is
   // constructed on. In the context of PeerConnection, it's the network thread.
   rtc::Thread* const owner_thread_;
   SctpTransportInformation info_ RTC_GUARDED_BY(owner_thread_);

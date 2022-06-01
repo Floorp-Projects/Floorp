@@ -88,8 +88,8 @@ struct JsepTransportDescription {
 // so its methods should only be called on the network thread.
 class JsepTransport {
  public:
-  // `mid` is just used for log statements in order to identify the Transport.
-  // Note that `local_certificate` is allowed to be null since a remote
+  // |mid| is just used for log statements in order to identify the Transport.
+  // Note that |local_certificate| is allowed to be null since a remote
   // description may be set before a local certificate is generated.
   JsepTransport(
       const std::string& mid,
@@ -138,7 +138,7 @@ class JsepTransport {
   // set, offers should generate new ufrags/passwords until an ICE restart
   // occurs.
   //
-  // This and `needs_ice_restart()` must be called on the network thread.
+  // This and |needs_ice_restart()| must be called on the network thread.
   void SetNeedsIceRestartFlag();
 
   // Returns true if the ICE restart flag above was set, and no ICE restart has

@@ -188,7 +188,7 @@ void PeerConnectionTestWrapper::OnDataChannel(
 }
 
 void PeerConnectionTestWrapper::OnSuccess(SessionDescriptionInterface* desc) {
-  // This callback should take the ownership of `desc`.
+  // This callback should take the ownership of |desc|.
   std::unique_ptr<SessionDescriptionInterface> owned_desc(desc);
   std::string sdp;
   EXPECT_TRUE(desc->ToString(&sdp));

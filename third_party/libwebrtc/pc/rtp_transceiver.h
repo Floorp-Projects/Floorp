@@ -77,14 +77,14 @@ class RtpTransceiver final
  public:
   // Construct a Plan B-style RtpTransceiver with no senders, receivers, or
   // channel set.
-  // `media_type` specifies the type of RtpTransceiver (and, by transitivity,
+  // |media_type| specifies the type of RtpTransceiver (and, by transitivity,
   // the type of senders, receivers, and channel). Can either by audio or video.
   RtpTransceiver(cricket::MediaType media_type,
                  cricket::ChannelManager* channel_manager);
   // Construct a Unified Plan-style RtpTransceiver with the given sender and
   // receiver. The media type will be derived from the media types of the sender
   // and receiver. The sender and receiver should have the same media type.
-  // `HeaderExtensionsToOffer` is used for initializing the return value of
+  // |HeaderExtensionsToOffer| is used for initializing the return value of
   // HeaderExtensionsToOffer().
   RtpTransceiver(
       rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>> sender,
@@ -275,7 +275,7 @@ class RtpTransceiver final
   std::vector<RtpCodecCapability> codec_preferences_;
   std::vector<RtpHeaderExtensionCapability> header_extensions_to_offer_;
 
-  // `negotiated_header_extensions_` is read and written to on the signaling
+  // |negotiated_header_extensions_| is read and written to on the signaling
   // thread from the SdpOfferAnswerHandler class (e.g.
   // PushdownMediaDescription().
   cricket::RtpHeaderExtensions negotiated_header_extensions_

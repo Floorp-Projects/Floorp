@@ -54,7 +54,7 @@ class VideoTrack : public MediaStreamTrack<VideoTrackInterface>,
   ~VideoTrack();
 
  private:
-  // Implements ObserverInterface. Observes `video_source_` state.
+  // Implements ObserverInterface. Observes |video_source_| state.
   void OnChanged() override;
 
   RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker signaling_thread_;
