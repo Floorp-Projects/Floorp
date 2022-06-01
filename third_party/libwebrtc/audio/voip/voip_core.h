@@ -53,7 +53,7 @@ class VoipCore : public VoipEngine,
                  public VoipVolumeControl {
  public:
   // Construct VoipCore with provided arguments.
-  // ProcessThread implementation can be injected by |process_thread|
+  // ProcessThread implementation can be injected by `process_thread`
   // (mainly for testing purpose) and when set to nullptr, default
   // implementation will be used.
   VoipCore(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
@@ -128,7 +128,7 @@ class VoipCore : public VoipEngine,
   // mode. Therefore it would be better to delay the logic as late as possible.
   bool InitializeIfNeeded();
 
-  // Fetches the corresponding AudioChannel assigned with given |channel|.
+  // Fetches the corresponding AudioChannel assigned with given `channel`.
   // Returns nullptr if not found.
   rtc::scoped_refptr<AudioChannel> GetChannel(ChannelId channel_id);
 
@@ -144,15 +144,15 @@ class VoipCore : public VoipEngine,
   std::unique_ptr<TaskQueueFactory> task_queue_factory_;
 
   // Synchronization is handled internally by AudioProcessing.
-  // Must be placed before |audio_device_module_| for proper destruction.
+  // Must be placed before `audio_device_module_` for proper destruction.
   rtc::scoped_refptr<AudioProcessing> audio_processing_;
 
   // Synchronization is handled internally by AudioMixer.
-  // Must be placed before |audio_device_module_| for proper destruction.
+  // Must be placed before `audio_device_module_` for proper destruction.
   rtc::scoped_refptr<AudioMixer> audio_mixer_;
 
   // Synchronization is handled internally by AudioTransportImpl.
-  // Must be placed before |audio_device_module_| for proper destruction.
+  // Must be placed before `audio_device_module_` for proper destruction.
   std::unique_ptr<AudioTransportImpl> audio_transport_;
 
   // Synchronization is handled internally by AudioDeviceModule.

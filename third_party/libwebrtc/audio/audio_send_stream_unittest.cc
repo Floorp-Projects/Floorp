@@ -172,7 +172,7 @@ struct ConfigHelper {
     SetupMockForSetupSendCodec(expect_set_encoder_call);
     SetupMockForCallEncoder();
 
-    // Use ISAC as default codec so as to prevent unnecessary |channel_proxy_|
+    // Use ISAC as default codec so as to prevent unnecessary `channel_proxy_`
     // calls from the default ctor behavior.
     stream_config_.send_codec_spec =
         AudioSendStream::Config::SendCodecSpec(kIsacPayloadType, kIsacFormat);
@@ -336,7 +336,7 @@ struct ConfigHelper {
   ::testing::NiceMock<MockRtpRtcpInterface> rtp_rtcp_;
   ::testing::NiceMock<MockLimitObserver> limit_observer_;
   BitrateAllocator bitrate_allocator_;
-  // |worker_queue| is defined last to ensure all pending tasks are cancelled
+  // `worker_queue` is defined last to ensure all pending tasks are cancelled
   // and deleted before any other members.
   TaskQueueForTest worker_queue_;
   std::unique_ptr<AudioEncoder> audio_encoder_;

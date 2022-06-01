@@ -430,8 +430,8 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
   }
 
   // Measure audio level (0-9)
-  // TODO(henrik.lundin) Use the |muted| information here too.
-  // TODO(deadbeef): Use RmsLevel for |_outputAudioLevel| (see
+  // TODO(henrik.lundin) Use the `muted` information here too.
+  // TODO(deadbeef): Use RmsLevel for `_outputAudioLevel` (see
   // https://crbug.com/webrtc/7517).
   _outputAudioLevel.ComputeLevel(*audio_frame, kAudioSampleDurationSeconds);
 
@@ -455,10 +455,10 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
       // Compute ntp time.
       audio_frame->ntp_time_ms_ =
           ntp_estimator_.Estimate(audio_frame->timestamp_);
-      // |ntp_time_ms_| won't be valid until at least 2 RTCP SRs are received.
+      // `ntp_time_ms_` won't be valid until at least 2 RTCP SRs are received.
       if (audio_frame->ntp_time_ms_ > 0) {
-        // Compute |capture_start_ntp_time_ms_| so that
-        // |capture_start_ntp_time_ms_| + |elapsed_time_ms_| == |ntp_time_ms_|
+        // Compute `capture_start_ntp_time_ms_` so that
+        // `capture_start_ntp_time_ms_` + `elapsed_time_ms_` == `ntp_time_ms_`
         capture_start_ntp_time_ms_ =
             audio_frame->ntp_time_ms_ - audio_frame->elapsed_time_ms_;
       }

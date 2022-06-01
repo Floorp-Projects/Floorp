@@ -75,7 +75,7 @@ AudioChannel::~AudioChannel() {
 
   audio_mixer_->RemoveSource(ingress_.get());
 
-  // TODO(bugs.webrtc.org/11581): unclear if we still need to clear |egress_|
+  // TODO(bugs.webrtc.org/11581): unclear if we still need to clear `egress_`
   // here.
   egress_.reset();
   ingress_.reset();
