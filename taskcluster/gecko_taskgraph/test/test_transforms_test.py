@@ -283,7 +283,6 @@ def assert_spi_disabled(task):
         pytest.param(
             {"attributes": {"unittest_variant": "fission+socketprocess"}},
             assert_spi_not_disabled,
-            marks=pytest.mark.xfail,
             id="composite variant",
         ),
     ),

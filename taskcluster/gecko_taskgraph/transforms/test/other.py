@@ -734,8 +734,7 @@ def ensure_spi_disabled_on_all_but_spi(config, tasks):
 
         if (
             all(s not in task["suite"] for s in has_no_setpref)
-            and variant != "socketprocess"
-            and variant != "socketprocess_networking"
+            and "socketprocess" not in variant
         ):
             task["mozharness"]["extra-options"].append(
                 "--setpref=media.peerconnection.mtransport_process=false"
