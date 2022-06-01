@@ -36,13 +36,16 @@ class smartptr_printer(object):
     def __init__(self, value):
         self.value = value["mRawPtr"]
 
+    def children(self):
+        yield("mRawPtr", self.value)
+
     def to_string(self):
         if not self.value:
             type_name = str(self.value.type)
         else:
             type_name = str(self.value.dereference().dynamic_type.pointer())
 
-        return "[(%s) %s]" % (type_name, str(self.value))
+        return "[(%s)]" % (type_name)
 
 
 @GeckoPrettyPrinter("UniquePtr", "^mozilla::UniquePtr<.*>$")
