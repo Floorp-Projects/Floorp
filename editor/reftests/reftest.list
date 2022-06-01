@@ -28,7 +28,7 @@ needs-focus == passwd-9-with-TextEditor.html passwd-2.html
 == emptypasswd-2.html emptypasswd-ref.html
 == caret_on_positioned.html caret_on_positioned-ref.html
 # Android turns off spellchecker (Bug 1541697)
-skip-if(Android) needs-focus != spellcheck-input-disabled.html spellcheck-input-ref.html
+skip-if(Android) skip-if(cocoaWidget) needs-focus != spellcheck-input-disabled.html spellcheck-input-ref.html # Bug 1666056
 skip-if(Android) == spellcheck-input-attr-before.html spellcheck-input-nofocus-ref.html
 skip-if(Android) needs-focus != spellcheck-input-attr-before.html spellcheck-input-ref.html
 skip-if(Android) == spellcheck-input-attr-after.html spellcheck-input-nofocus-ref.html
