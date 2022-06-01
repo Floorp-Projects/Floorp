@@ -814,7 +814,7 @@ RtpState RTPSender::GetRtpState() const {
   state.start_timestamp = timestamp_offset_;
   state.ssrc_has_acked = ssrc_has_acked_;
   if (sequencer_) {
-    sequencer_->PupulateRtpState(state);
+    sequencer_->PopulateRtpState(state);
   }
   return state;
 }

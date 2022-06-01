@@ -44,7 +44,7 @@ class PacketSequencer {
   }
 
   void SetRtpState(const RtpState& state);
-  void PupulateRtpState(RtpState& state) const;
+  void PopulateRtpState(RtpState& state) const;
 
   uint16_t media_sequence_number() const { return media_sequence_number_; }
   uint16_t rtx_sequence_number() const { return rtx_sequence_number_; }
