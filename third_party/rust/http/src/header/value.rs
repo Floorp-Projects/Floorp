@@ -2,7 +2,6 @@ use bytes::{Bytes, BytesMut};
 
 use std::convert::TryFrom;
 use std::error::Error;
-use std::fmt::Write;
 use std::str::FromStr;
 use std::{cmp, fmt, mem, str};
 
@@ -79,7 +78,7 @@ impl HeaderValue {
     /// assert_eq!(val, "hello");
     /// ```
     #[inline]
-    #[allow(unconditional_panic)] // required for the panic circumvention
+    #[allow(unconditional_panic)] // required for the panic circumventon
     pub const fn from_static(src: &'static str) -> HeaderValue {
         let bytes = src.as_bytes();
         let mut i = 0;
@@ -428,7 +427,7 @@ macro_rules! from_integers {
                     // full value fits inline, so don't allocate!
                     BytesMut::new()
                 };
-                let _ = buf.write_str(::itoa::Buffer::new().format(num));
+                let _ = ::itoa::fmt(&mut buf, num);
                 HeaderValue {
                     inner: buf.freeze(),
                     is_sensitive: false,

@@ -17,9 +17,9 @@ use crate::utils::SliceExt;
 //
 // At this stage, only attributes are parsed and the following attributes are
 // added to the attributes of the item.
-// - `#[derive(InternalDerive)]` - An internal helper macro that does the above
+// * `#[derive(InternalDerive)]` - An internal helper macro that does the above
 //   processing.
-// - `#[pin(__private(#args))]` - Pass the argument of `#[pin_project]` to
+// * `#[pin(__private(#args))]` - Pass the argument of `#[pin_project]` to
 //   proc-macro-derive (`InternalDerive`).
 
 pub(super) fn parse_attribute(args: &TokenStream, input: TokenStream) -> Result<TokenStream> {
@@ -36,7 +36,7 @@ pub(super) fn parse_attribute(args: &TokenStream, input: TokenStream) -> Result<
     })
 }
 
-#[allow(dead_code)] // false positive that fixed in Rust 1.39
+#[allow(dead_code)] // https://github.com/rust-lang/rust/issues/56750
 struct Input {
     attrs: Vec<Attribute>,
     body: TokenStream,
@@ -51,15 +51,16 @@ impl Parse for Input {
         if !ahead.peek(Token![struct]) && !ahead.peek(Token![enum]) {
             // If we check this only on proc-macro-derive, it may generate unhelpful error
             // messages. So it is preferable to be able to detect it here.
-            bail!(
+            Err(error!(
                 input.parse::<TokenStream>()?,
                 "#[pin_project] attribute may only be used on structs or enums"
-            );
+            ))
         } else if let Some(attr) = attrs.find(PIN) {
-            bail!(attr, "#[pin] attribute may only be used on fields of structs or variants");
+            Err(error!(attr, "#[pin] attribute may only be used on fields of structs or variants"))
         } else if let Some(attr) = attrs.find("pin_project") {
-            bail!(attr, "duplicate #[pin_project] attribute");
+            Err(error!(attr, "duplicate #[pin_project] attribute"))
+        } else {
+            Ok(Self { attrs, body: input.parse()? })
         }
-        Ok(Self { attrs, body: input.parse()? })
     }
 }

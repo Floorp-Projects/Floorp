@@ -1,22 +1,22 @@
-error: unexpected token: `()`
+error: unexpected token: ()
  --> tests/ui/pin_project/invalid.rs:6:14
   |
 6 |         #[pin()] //~ ERROR unexpected token
   |              ^^
 
-error: unexpected token: `(foo)`
+error: unexpected token: (foo)
   --> tests/ui/pin_project/invalid.rs:11:29
    |
 11 |     struct TupleStruct(#[pin(foo)] ()); //~ ERROR unexpected token
    |                             ^^^^^
 
-error: unexpected token: `(foo)`
+error: unexpected token: (foo)
   --> tests/ui/pin_project/invalid.rs:15:16
    |
 15 |         V(#[pin(foo)] ()), //~ ERROR unexpected token
    |                ^^^^^
 
-error: unexpected token: `(foo)`
+error: unexpected token: (foo)
   --> tests/ui/pin_project/invalid.rs:21:18
    |
 21 |             #[pin(foo)] //~ ERROR unexpected token
@@ -64,41 +64,41 @@ error: #[pin] attribute may only be used on fields of structs or variants
 82 |     #[pin] //~ ERROR may only be used on fields of structs or variants
    |     ^^^^^^
 
-error: `Replace` argument was removed, use `project_replace` argument instead
-  --> tests/ui/pin_project/invalid.rs:91:19
-   |
-91 |     #[pin_project(Replace)] //~ ERROR `Replace` argument was removed, use `project_replace` argument instead
-   |                   ^^^^^^^
-
 error: expected identifier
-  --> tests/ui/pin_project/invalid.rs:94:31
+  --> tests/ui/pin_project/invalid.rs:91:31
    |
-94 |     #[pin_project(UnsafeUnpin,,)] //~ ERROR expected identifier
+91 |     #[pin_project(UnsafeUnpin,,)] //~ ERROR expected identifier
    |                               ^
 
 error: unexpected argument: Foo
-  --> tests/ui/pin_project/invalid.rs:97:19
+  --> tests/ui/pin_project/invalid.rs:94:19
    |
-97 |     #[pin_project(Foo)] //~ ERROR unexpected argument
+94 |     #[pin_project(Foo)] //~ ERROR unexpected argument
    |                   ^^^
 
 error: expected identifier
-   --> tests/ui/pin_project/invalid.rs:100:19
-    |
-100 |     #[pin_project(,UnsafeUnpin)] //~ ERROR expected identifier
-    |                   ^
+  --> tests/ui/pin_project/invalid.rs:97:19
+   |
+97 |     #[pin_project(,UnsafeUnpin)] //~ ERROR expected identifier
+   |                   ^
 
 error: expected `,`
-   --> tests/ui/pin_project/invalid.rs:106:30
+   --> tests/ui/pin_project/invalid.rs:103:30
     |
-106 |     #[pin_project(PinnedDrop PinnedDrop)] //~ ERROR expected `,`
+103 |     #[pin_project(PinnedDrop PinnedDrop)] //~ ERROR expected `,`
     |                              ^^^^^^^^^^
 
 error: duplicate `PinnedDrop` argument
-   --> tests/ui/pin_project/invalid.rs:109:31
+   --> tests/ui/pin_project/invalid.rs:106:31
     |
-109 |     #[pin_project(PinnedDrop, PinnedDrop)] //~ ERROR duplicate `PinnedDrop` argument
+106 |     #[pin_project(PinnedDrop, PinnedDrop)] //~ ERROR duplicate `PinnedDrop` argument
     |                               ^^^^^^^^^^
+
+error: duplicate `Replace` argument
+   --> tests/ui/pin_project/invalid.rs:109:28
+    |
+109 |     #[pin_project(Replace, Replace)] //~ ERROR duplicate `Replace` argument
+    |                            ^^^^^^^
 
 error: duplicate `UnsafeUnpin` argument
    --> tests/ui/pin_project/invalid.rs:112:32
@@ -160,205 +160,187 @@ error: duplicate `project_replace` argument
 139 |     #[pin_project(project_replace = A, project_replace)] //~ ERROR duplicate `project_replace` argument
     |                                        ^^^^^^^^^^^^^^^
 
-error: arguments `PinnedDrop` and `project_replace` are mutually exclusive
+error: arguments `PinnedDrop` and `Replace` are mutually exclusive
    --> tests/ui/pin_project/invalid.rs:145:19
     |
-145 |     #[pin_project(PinnedDrop, project_replace)] //~ ERROR arguments `PinnedDrop` and `project_replace` are mutually exclusive
+145 |     #[pin_project(PinnedDrop, Replace)] //~ ERROR arguments `PinnedDrop` and `Replace` are mutually exclusive
+    |                   ^^^^^^^^^^
+
+error: arguments `PinnedDrop` and `Replace` are mutually exclusive
+   --> tests/ui/pin_project/invalid.rs:148:41
+    |
+148 |     #[pin_project(Replace, UnsafeUnpin, PinnedDrop)] //~ ERROR arguments `PinnedDrop` and `Replace` are mutually exclusive
+    |                                         ^^^^^^^^^^
+
+error: arguments `PinnedDrop` and `project_replace` are mutually exclusive
+   --> tests/ui/pin_project/invalid.rs:151:19
+    |
+151 |     #[pin_project(PinnedDrop, project_replace)] //~ ERROR arguments `PinnedDrop` and `project_replace` are mutually exclusive
     |                   ^^^^^^^^^^
 
 error: arguments `PinnedDrop` and `project_replace` are mutually exclusive
-   --> tests/ui/pin_project/invalid.rs:148:49
+   --> tests/ui/pin_project/invalid.rs:154:49
     |
-148 |     #[pin_project(project_replace, UnsafeUnpin, PinnedDrop)] //~ ERROR arguments `PinnedDrop` and `project_replace` are mutually exclusive
+154 |     #[pin_project(project_replace, UnsafeUnpin, PinnedDrop)] //~ ERROR arguments `PinnedDrop` and `project_replace` are mutually exclusive
     |                                                 ^^^^^^^^^^
 
 error: arguments `UnsafeUnpin` and `!Unpin` are mutually exclusive
-   --> tests/ui/pin_project/invalid.rs:151:19
+   --> tests/ui/pin_project/invalid.rs:163:19
     |
-151 |     #[pin_project(UnsafeUnpin, !Unpin)] //~ ERROR arguments `UnsafeUnpin` and `!Unpin` are mutually exclusive
+163 |     #[pin_project(UnsafeUnpin, !Unpin)] //~ ERROR arguments `UnsafeUnpin` and `!Unpin` are mutually exclusive
     |                   ^^^^^^^^^^^
 
 error: arguments `UnsafeUnpin` and `!Unpin` are mutually exclusive
-   --> tests/ui/pin_project/invalid.rs:154:39
+   --> tests/ui/pin_project/invalid.rs:166:39
     |
-154 |     #[pin_project(!Unpin, PinnedDrop, UnsafeUnpin)] //~ ERROR arguments `UnsafeUnpin` and `!Unpin` are mutually exclusive
+166 |     #[pin_project(!Unpin, PinnedDrop, UnsafeUnpin)] //~ ERROR arguments `UnsafeUnpin` and `!Unpin` are mutually exclusive
     |                                       ^^^^^^^^^^^
 
 error: expected `!Unpin`, found `!`
-   --> tests/ui/pin_project/invalid.rs:157:19
+   --> tests/ui/pin_project/invalid.rs:169:19
     |
-157 |     #[pin_project(!)] //~ ERROR expected `!Unpin`, found `!`
+169 |     #[pin_project(!)] //~ ERROR expected `!Unpin`, found `!`
     |                   ^
 
 error: unexpected argument: Unpin
-   --> tests/ui/pin_project/invalid.rs:160:19
+   --> tests/ui/pin_project/invalid.rs:172:19
     |
-160 |     #[pin_project(Unpin)] //~ ERROR unexpected argument
+172 |     #[pin_project(Unpin)] //~ ERROR unexpected argument
     |                   ^^^^^
 
 error: expected `project = <identifier>`, found `project`
-   --> tests/ui/pin_project/invalid.rs:163:19
+   --> tests/ui/pin_project/invalid.rs:175:19
     |
-163 |     #[pin_project(project)] //~ ERROR expected `project = <identifier>`, found `project`
+175 |     #[pin_project(project)] //~ ERROR expected `project = <identifier>`, found `project`
     |                   ^^^^^^^
 
 error: expected `project = <identifier>`, found `project =`
-   --> tests/ui/pin_project/invalid.rs:166:19
+   --> tests/ui/pin_project/invalid.rs:178:19
     |
-166 |     #[pin_project(project = )] //~ ERROR expected `project = <identifier>`, found `project =`
+178 |     #[pin_project(project = )] //~ ERROR expected `project = <identifier>`, found `project =`
     |                   ^^^^^^^^^
 
 error: expected identifier
-   --> tests/ui/pin_project/invalid.rs:169:29
+   --> tests/ui/pin_project/invalid.rs:181:29
     |
-169 |     #[pin_project(project = !)] //~ ERROR expected identifier
+181 |     #[pin_project(project = !)] //~ ERROR expected identifier
     |                             ^
 
 error: expected `project_ref = <identifier>`, found `project_ref`
-   --> tests/ui/pin_project/invalid.rs:172:19
+   --> tests/ui/pin_project/invalid.rs:184:19
     |
-172 |     #[pin_project(project_ref)] //~ ERROR expected `project_ref = <identifier>`, found `project_ref`
+184 |     #[pin_project(project_ref)] //~ ERROR expected `project_ref = <identifier>`, found `project_ref`
     |                   ^^^^^^^^^^^
 
 error: expected `project_ref = <identifier>`, found `project_ref =`
-   --> tests/ui/pin_project/invalid.rs:175:19
+   --> tests/ui/pin_project/invalid.rs:187:19
     |
-175 |     #[pin_project(project_ref = )] //~ ERROR expected `project_ref = <identifier>`, found `project_ref =`
+187 |     #[pin_project(project_ref = )] //~ ERROR expected `project_ref = <identifier>`, found `project_ref =`
     |                   ^^^^^^^^^^^^^
 
 error: expected identifier
-   --> tests/ui/pin_project/invalid.rs:178:33
+   --> tests/ui/pin_project/invalid.rs:190:33
     |
-178 |     #[pin_project(project_ref = !)] //~ ERROR expected identifier
+190 |     #[pin_project(project_ref = !)] //~ ERROR expected identifier
     |                                 ^
 
 error: expected `project_replace = <identifier>`, found `project_replace =`
-   --> tests/ui/pin_project/invalid.rs:184:19
+   --> tests/ui/pin_project/invalid.rs:196:19
     |
-184 |     #[pin_project(project_replace = )] //~ ERROR expected `project_replace = <identifier>`, found `project_replace =`
+196 |     #[pin_project(project_replace = )] //~ ERROR expected `project_replace = <identifier>`, found `project_replace =`
     |                   ^^^^^^^^^^^^^^^^^
 
 error: expected identifier
-   --> tests/ui/pin_project/invalid.rs:187:37
+   --> tests/ui/pin_project/invalid.rs:199:37
     |
-187 |     #[pin_project(project_replace = !)] //~ ERROR expected identifier
+199 |     #[pin_project(project_replace = !)] //~ ERROR expected identifier
     |                                     ^
 
-error: `project_replace` argument requires a value when used on enums
-   --> tests/ui/pin_project/invalid.rs:190:19
-    |
-190 |     #[pin_project(project_replace)] //~ ERROR `project_replace` argument requires a value when used on enums
-    |                   ^^^^^^^^^^^^^^^
-
-error: name `OrigAndProj` is the same as the original type name
-   --> tests/ui/pin_project/invalid.rs:199:29
-    |
-199 |     #[pin_project(project = OrigAndProj)] //~ ERROR name `OrigAndProj` is the same as the original type name
-    |                             ^^^^^^^^^^^
-
-error: name `OrigAndProjRef` is the same as the original type name
-   --> tests/ui/pin_project/invalid.rs:202:33
-    |
-202 |     #[pin_project(project_ref = OrigAndProjRef)] //~ ERROR name `OrigAndProjRef` is the same as the original type name
-    |                                 ^^^^^^^^^^^^^^
-
-error: name `OrigAndProjOwn` is the same as the original type name
-   --> tests/ui/pin_project/invalid.rs:205:37
-    |
-205 |     #[pin_project(project_replace = OrigAndProjOwn)] //~ ERROR name `OrigAndProjOwn` is the same as the original type name
-    |                                     ^^^^^^^^^^^^^^
-
 error: name `A` is already specified by `project` argument
-   --> tests/ui/pin_project/invalid.rs:208:46
+   --> tests/ui/pin_project/invalid.rs:206:46
     |
-208 |     #[pin_project(project = A, project_ref = A)] //~ ERROR name `A` is already specified by `project` argument
+206 |     #[pin_project(project = A, project_ref = A)] //~ ERROR name `A` is already specified by `project` argument
     |                                              ^
 
 error: name `A` is already specified by `project` argument
-   --> tests/ui/pin_project/invalid.rs:211:50
+   --> tests/ui/pin_project/invalid.rs:209:50
     |
-211 |     #[pin_project(project = A, project_replace = A)] //~ ERROR name `A` is already specified by `project` argument
+209 |     #[pin_project(project = A, project_replace = A)] //~ ERROR name `A` is already specified by `project` argument
     |                                                  ^
 
 error: name `A` is already specified by `project_ref` argument
-   --> tests/ui/pin_project/invalid.rs:214:54
+   --> tests/ui/pin_project/invalid.rs:212:54
     |
-214 |     #[pin_project(project_ref = A, project_replace = A)] //~ ERROR name `A` is already specified by `project_ref` argument
+212 |     #[pin_project(project_ref = A, project_replace = A)] //~ ERROR name `A` is already specified by `project_ref` argument
     |                                                      ^
 
 error: duplicate #[pin_project] attribute
-   --> tests/ui/pin_project/invalid.rs:222:5
+   --> tests/ui/pin_project/invalid.rs:220:5
     |
-222 |     #[pin_project] //~ ERROR duplicate #[pin_project] attribute
+220 |     #[pin_project] //~ ERROR duplicate #[pin_project] attribute
     |     ^^^^^^^^^^^^^^
 
 error: #[pin_project] attribute may not be used on structs with zero fields
-   --> tests/ui/pin_project/invalid.rs:230:19
+   --> tests/ui/pin_project/invalid.rs:228:19
     |
-230 |     struct Struct {} //~ ERROR may not be used on structs with zero fields
+228 |     struct Struct {} //~ ERROR may not be used on structs with zero fields
     |                   ^^
 
 error: #[pin_project] attribute may not be used on structs with zero fields
-   --> tests/ui/pin_project/invalid.rs:233:23
+   --> tests/ui/pin_project/invalid.rs:231:23
     |
-233 |     struct TupleStruct(); //~ ERROR may not be used on structs with zero fields
+231 |     struct TupleStruct(); //~ ERROR may not be used on structs with zero fields
     |                       ^^
 
 error: #[pin_project] attribute may not be used on structs with zero fields
-   --> tests/ui/pin_project/invalid.rs:236:12
+   --> tests/ui/pin_project/invalid.rs:234:12
     |
-236 |     struct UnitStruct; //~ ERROR may not be used on structs with zero fields
+234 |     struct UnitStruct; //~ ERROR may not be used on structs with zero fields
     |            ^^^^^^^^^^
 
 error: #[pin_project] attribute may not be used on enums without variants
-   --> tests/ui/pin_project/invalid.rs:239:20
+   --> tests/ui/pin_project/invalid.rs:237:20
     |
-239 |     enum EnumEmpty {} //~ ERROR may not be used on enums without variants
+237 |     enum EnumEmpty {} //~ ERROR may not be used on enums without variants
     |                    ^^
 
 error: #[pin_project] attribute may not be used on enums with discriminants
-   --> tests/ui/pin_project/invalid.rs:243:13
+   --> tests/ui/pin_project/invalid.rs:241:13
     |
-243 |         V = 2, //~ ERROR may not be used on enums with discriminants
+241 |         V = 2, //~ ERROR may not be used on enums with discriminants
     |             ^
 
 error: #[pin_project] attribute may not be used on enums with zero fields
-   --> tests/ui/pin_project/invalid.rs:248:9
+   --> tests/ui/pin_project/invalid.rs:246:9
     |
-248 | /         Unit, //~ ERROR may not be used on enums with zero fields
-249 | |         Tuple(),
-250 | |         Struct {},
+246 | /         Unit, //~ ERROR may not be used on enums with zero fields
+247 | |         Tuple(),
+248 | |         Struct {},
     | |__________________^
 
 error: #[pin_project] attribute may only be used on structs or enums
-   --> tests/ui/pin_project/invalid.rs:254:5
+   --> tests/ui/pin_project/invalid.rs:252:5
     |
-254 | /     union Union {
-255 | |         //~^ ERROR may only be used on structs or enums
-256 | |         f: (),
-257 | |     }
+252 | /     union Union {
+253 | |         //~^ ERROR may only be used on structs or enums
+254 | |         f: (),
+255 | |     }
     | |_____^
 
-error: #[pin_project] attribute may only be used on structs or enums
-   --> tests/ui/pin_project/invalid.rs:260:5
-    |
-260 |     impl Impl {} //~ ERROR may only be used on structs or enums
-    |     ^^^^^^^^^^^^
-
 error: #[pin_project] attribute may not be used on #[repr(packed)] types
-   --> tests/ui/pin_project/invalid.rs:268:12
+   --> tests/ui/pin_project/invalid.rs:263:12
     |
-268 |     #[repr(packed)]
+263 |     #[repr(packed)]
     |            ^^^^^^
 
 error: #[pin_project] attribute may not be used on #[repr(packed)] types
-   --> tests/ui/pin_project/invalid.rs:272:12
+   --> tests/ui/pin_project/invalid.rs:267:12
     |
-272 |     #[repr(packed)]
+267 |     #[repr(packed)]
     |            ^^^^^^
 
 error: #[pin_project] attribute may not be used on #[repr(packed)] types
-   --> tests/ui/pin_project/invalid.rs:276:12
+   --> tests/ui/pin_project/invalid.rs:271:12
     |
-276 |     #[repr(packed)]
+271 |     #[repr(packed)]
     |            ^^^^^^

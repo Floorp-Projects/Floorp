@@ -1,12 +1,11 @@
 use super::{DecoderError, NeedMore};
-use crate::ext::Protocol;
 
 use bytes::Bytes;
 use http::header::{HeaderName, HeaderValue};
 use http::{Method, StatusCode};
 use std::fmt;
 
-/// HTTP/2 Header
+/// HTTP/2.0 Header
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Header<T = HeaderName> {
     Field { name: T, value: HeaderValue },
@@ -15,7 +14,6 @@ pub enum Header<T = HeaderName> {
     Method(Method),
     Scheme(BytesStr),
     Path(BytesStr),
-    Protocol(Protocol),
     Status(StatusCode),
 }
 
@@ -27,7 +25,6 @@ pub enum Name<'a> {
     Method,
     Scheme,
     Path,
-    Protocol,
     Status,
 }
 
@@ -54,7 +51,6 @@ impl Header<Option<HeaderName>> {
             Method(v) => Method(v),
             Scheme(v) => Scheme(v),
             Path(v) => Path(v),
-            Protocol(v) => Protocol(v),
             Status(v) => Status(v),
         })
     }
@@ -83,10 +79,6 @@ impl Header {
                     let value = BytesStr::try_from(value)?;
                     Ok(Header::Path(value))
                 }
-                b"protocol" => {
-                    let value = Protocol::try_from(value)?;
-                    Ok(Header::Protocol(value))
-                }
                 b"status" => {
                     let status = StatusCode::from_bytes(&value)?;
                     Ok(Header::Status(status))
@@ -112,7 +104,6 @@ impl Header {
             Header::Method(ref v) => 32 + 7 + v.as_ref().len(),
             Header::Scheme(ref v) => 32 + 7 + v.len(),
             Header::Path(ref v) => 32 + 5 + v.len(),
-            Header::Protocol(ref v) => 32 + 9 + v.as_str().len(),
             Header::Status(_) => 32 + 7 + 3,
         }
     }
@@ -125,7 +116,6 @@ impl Header {
             Header::Method(..) => Name::Method,
             Header::Scheme(..) => Name::Scheme,
             Header::Path(..) => Name::Path,
-            Header::Protocol(..) => Name::Protocol,
             Header::Status(..) => Name::Status,
         }
     }
@@ -137,7 +127,6 @@ impl Header {
             Header::Method(ref v) => v.as_ref().as_ref(),
             Header::Scheme(ref v) => v.as_ref(),
             Header::Path(ref v) => v.as_ref(),
-            Header::Protocol(ref v) => v.as_ref(),
             Header::Status(ref v) => v.as_str().as_ref(),
         }
     }
@@ -165,10 +154,6 @@ impl Header {
             },
             Header::Path(ref a) => match *other {
                 Header::Path(ref b) => a == b,
-                _ => false,
-            },
-            Header::Protocol(ref a) => match *other {
-                Header::Protocol(ref b) => a == b,
                 _ => false,
             },
             Header::Status(ref a) => match *other {
@@ -220,7 +205,6 @@ impl From<Header> for Header<Option<HeaderName>> {
             Header::Method(v) => Header::Method(v),
             Header::Scheme(v) => Header::Scheme(v),
             Header::Path(v) => Header::Path(v),
-            Header::Protocol(v) => Header::Protocol(v),
             Header::Status(v) => Header::Status(v),
         }
     }
@@ -237,7 +221,6 @@ impl<'a> Name<'a> {
             Name::Method => Ok(Header::Method(Method::from_bytes(&*value)?)),
             Name::Scheme => Ok(Header::Scheme(BytesStr::try_from(value)?)),
             Name::Path => Ok(Header::Path(BytesStr::try_from(value)?)),
-            Name::Protocol => Ok(Header::Protocol(Protocol::try_from(value)?)),
             Name::Status => {
                 match StatusCode::from_bytes(&value) {
                     Ok(status) => Ok(Header::Status(status)),
@@ -255,7 +238,6 @@ impl<'a> Name<'a> {
             Name::Method => b":method",
             Name::Scheme => b":scheme",
             Name::Path => b":path",
-            Name::Protocol => b":protocol",
             Name::Status => b":status",
         }
     }
@@ -264,12 +246,8 @@ impl<'a> Name<'a> {
 // ===== impl BytesStr =====
 
 impl BytesStr {
-    pub(crate) const fn from_static(value: &'static str) -> Self {
-        BytesStr(Bytes::from_static(value.as_bytes()))
-    }
-
-    pub(crate) fn from(value: &str) -> Self {
-        BytesStr(Bytes::copy_from_slice(value.as_bytes()))
+    pub(crate) unsafe fn from_utf8_unchecked(bytes: Bytes) -> Self {
+        BytesStr(bytes)
     }
 
     #[doc(hidden)]

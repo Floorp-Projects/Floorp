@@ -1,8 +1,8 @@
 error[E0308]: mismatched types
-  --> tests/ui/pin_project/remove-attr-from-field.rs:28:38
+  --> tests/ui/pin_project/remove-attr-from-field.rs:27:38
    |
-28 |     let _: Pin<&mut PhantomPinned> = x.f; //~ ERROR E0308
-   |            -----------------------   ^^^ expected struct `Pin`, found `&mut PhantomPinned`
+27 |     let _: Pin<&mut PhantomPinned> = x.field; //~ ERROR E0308
+   |            -----------------------   ^^^^^^^ expected struct `Pin`, found `&mut PhantomPinned`
    |            |
    |            expected due to this
    |
@@ -10,10 +10,10 @@ error[E0308]: mismatched types
            found mutable reference `&mut PhantomPinned`
 
 error[E0308]: mismatched types
-  --> tests/ui/pin_project/remove-attr-from-field.rs:32:38
+  --> tests/ui/pin_project/remove-attr-from-field.rs:31:38
    |
-32 |     let _: Pin<&mut PhantomPinned> = x.f; //~ ERROR E0308
-   |            -----------------------   ^^^ expected struct `Pin`, found `&mut PhantomPinned`
+31 |     let _: Pin<&mut PhantomPinned> = x.field; //~ ERROR E0308
+   |            -----------------------   ^^^^^^^ expected struct `Pin`, found `&mut PhantomPinned`
    |            |
    |            expected due to this
    |

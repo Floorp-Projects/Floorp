@@ -15,20 +15,19 @@
 // ```
 
 #![allow(dead_code, unused_imports, unused_parens, unknown_lints, renamed_and_removed_lints)]
-#![allow(
-    clippy::needless_lifetimes,
-    clippy::just_underscores_and_digits,
-    clippy::used_underscore_binding
-)]
+#![allow(clippy::needless_lifetimes, clippy::just_underscores_and_digits)]
 
 use pin_project::pin_project;
 
-// #[pin_project(project = EnumProj)]
 enum Enum<T, U> {
     Pinned(/* #[pin] */ T),
     Unpinned(U),
 }
 
+#[allow(dead_code)]
+#[allow(single_use_lifetimes)]
+#[allow(clippy::mut_mut)]
+#[allow(clippy::type_repetition_in_bounds)]
 enum EnumProj<'pin, T, U>
 where
     Enum<T, U>: 'pin,
@@ -36,23 +35,45 @@ where
     Pinned(::pin_project::__private::Pin<&'pin mut (T)>),
     Unpinned(&'pin mut (U)),
 }
+#[doc(hidden)]
+#[allow(dead_code)]
+#[allow(single_use_lifetimes)]
+#[allow(clippy::type_repetition_in_bounds)]
+enum __EnumProjectionRef<'pin, T, U>
+where
+    Enum<T, U>: 'pin,
+{
+    Pinned(::pin_project::__private::Pin<&'pin (T)>),
+    Unpinned(&'pin (U)),
+}
 
+#[doc(hidden)]
+#[allow(non_upper_case_globals)]
+#[allow(single_use_lifetimes)]
+#[allow(clippy::used_underscore_binding)]
 const _: () = {
-    // When `#[pin_project]` is used on enums, only named projection types and
-    // methods are generated because there is no way to access variants of
-    // projected types without naming it.
-    // (When `#[pin_project]` is used on structs, both methods are always generated.)
-
     impl<T, U> Enum<T, U> {
         fn project<'pin>(
             self: ::pin_project::__private::Pin<&'pin mut Self>,
         ) -> EnumProj<'pin, T, U> {
             unsafe {
                 match self.get_unchecked_mut() {
-                    Self::Pinned(_0) => {
+                    Enum::Pinned(_0) => {
                         EnumProj::Pinned(::pin_project::__private::Pin::new_unchecked(_0))
                     }
-                    Self::Unpinned(_0) => EnumProj::Unpinned(_0),
+                    Enum::Unpinned(_0) => EnumProj::Unpinned(_0),
+                }
+            }
+        }
+        fn project_ref<'pin>(
+            self: ::pin_project::__private::Pin<&'pin Self>,
+        ) -> __EnumProjectionRef<'pin, T, U> {
+            unsafe {
+                match self.get_ref() {
+                    Enum::Pinned(_0) => __EnumProjectionRef::Pinned(
+                        ::pin_project::__private::Pin::new_unchecked(_0),
+                    ),
+                    Enum::Unpinned(_0) => __EnumProjectionRef::Unpinned(_0),
                 }
             }
         }
@@ -73,12 +94,7 @@ const _: () = {
         __Enum<'pin, T, U>: ::pin_project::__private::Unpin
     {
     }
-    // A dummy impl of `UnsafeUnpin`, to ensure that the user cannot implement it.
-    #[doc(hidden)]
-    unsafe impl<'pin, T, U> ::pin_project::UnsafeUnpin for Enum<T, U> where
-        __Enum<'pin, T, U>: ::pin_project::__private::Unpin
-    {
-    }
+    unsafe impl<T, U> ::pin_project::UnsafeUnpin for Enum<T, U> {}
 
     // Ensure that enum does not implement `Drop`.
     //
@@ -87,9 +103,6 @@ const _: () = {
     #[allow(clippy::drop_bounds, drop_bounds)]
     impl<T: ::pin_project::__private::Drop> EnumMustNotImplDrop for T {}
     impl<T, U> EnumMustNotImplDrop for Enum<T, U> {}
-    // A dummy impl of `PinnedDrop`, to ensure that users don't accidentally
-    // write a non-functional `PinnedDrop` impls.
-    #[doc(hidden)]
     impl<T, U> ::pin_project::__private::PinnedDrop for Enum<T, U> {
         unsafe fn drop(self: ::pin_project::__private::Pin<&mut Self>) {}
     }

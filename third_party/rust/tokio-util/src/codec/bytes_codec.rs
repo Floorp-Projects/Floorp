@@ -33,7 +33,7 @@ use std::io;
 /// #     }
 /// # }
 /// #
-/// # #[tokio::main(flavor = "current_thread")]
+/// # #[tokio::main(core_threads = 1)]
 /// # async fn main() -> Result<(), std::io::Error> {
 /// let my_async_read = File::open("filename.txt").await?;
 /// let my_stream_of_bytes = FramedRead::new(my_async_read, BytesCodec::new());
@@ -69,16 +69,6 @@ impl Encoder<Bytes> for BytesCodec {
     type Error = io::Error;
 
     fn encode(&mut self, data: Bytes, buf: &mut BytesMut) -> Result<(), io::Error> {
-        buf.reserve(data.len());
-        buf.put(data);
-        Ok(())
-    }
-}
-
-impl Encoder<BytesMut> for BytesCodec {
-    type Error = io::Error;
-
-    fn encode(&mut self, data: BytesMut, buf: &mut BytesMut) -> Result<(), io::Error> {
         buf.reserve(data.len());
         buf.put(data);
         Ok(())

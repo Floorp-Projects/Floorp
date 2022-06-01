@@ -4,7 +4,7 @@ mod pin_argument {
     #[pin_project]
     struct Struct {
         #[pin()] //~ ERROR unexpected token
-        f: (),
+        field: (),
     }
 
     #[pin_project]
@@ -19,7 +19,7 @@ mod pin_argument {
     enum EnumStruct {
         V {
             #[pin(foo)] //~ ERROR unexpected token
-            f: (),
+            field: (),
         },
     }
 }
@@ -31,7 +31,7 @@ mod pin_attribute {
     struct DuplicateStruct {
         #[pin]
         #[pin] //~ ERROR duplicate #[pin] attribute
-        f: (),
+        field: (),
     }
 
     #[pin_project]
@@ -57,7 +57,7 @@ mod pin_attribute {
         V {
             #[pin]
             #[pin] //~ ERROR duplicate #[pin] attribute
-            f: (),
+            field: (),
         },
     }
 }
@@ -69,7 +69,7 @@ mod pin_item {
     #[pin] //~ ERROR may only be used on fields of structs or variants
     struct Struct {
         #[pin]
-        f: (),
+        field: (),
     }
 
     #[pin_project]
@@ -88,9 +88,6 @@ mod pin_item {
 mod pin_project_argument {
     use pin_project::pin_project;
 
-    #[pin_project(Replace)] //~ ERROR `Replace` argument was removed, use `project_replace` argument instead
-    struct RemovedReplace(#[pin] ());
-
     #[pin_project(UnsafeUnpin,,)] //~ ERROR expected identifier
     struct Unexpected1(#[pin] ());
 
@@ -108,6 +105,9 @@ mod pin_project_argument {
 
     #[pin_project(PinnedDrop, PinnedDrop)] //~ ERROR duplicate `PinnedDrop` argument
     struct DuplicatePinnedDrop(#[pin] ());
+
+    #[pin_project(Replace, Replace)] //~ ERROR duplicate `Replace` argument
+    struct DuplicateReplace(#[pin] ());
 
     #[pin_project(UnsafeUnpin, UnsafeUnpin)] //~ ERROR duplicate `UnsafeUnpin` argument
     struct DuplicateUnsafeUnpin(#[pin] ());
@@ -142,11 +142,23 @@ mod pin_project_argument {
     #[pin_project(project_replace = A)] // Ok
     struct ProjectReplaceWithoutReplace(#[pin] ());
 
+    #[pin_project(PinnedDrop, Replace)] //~ ERROR arguments `PinnedDrop` and `Replace` are mutually exclusive
+    struct PinnedDropWithReplace1(#[pin] ());
+
+    #[pin_project(Replace, UnsafeUnpin, PinnedDrop)] //~ ERROR arguments `PinnedDrop` and `Replace` are mutually exclusive
+    struct PinnedDropWithReplace2(#[pin] ());
+
     #[pin_project(PinnedDrop, project_replace)] //~ ERROR arguments `PinnedDrop` and `project_replace` are mutually exclusive
     struct PinnedDropWithProjectReplace1(#[pin] ());
 
     #[pin_project(project_replace, UnsafeUnpin, PinnedDrop)] //~ ERROR arguments `PinnedDrop` and `project_replace` are mutually exclusive
     struct PinnedDropWithProjectReplace2(#[pin] ());
+
+    #[pin_project(project_replace, Replace)] // Ok
+    struct ProjectReplaceWithReplace1(#[pin] ());
+
+    #[pin_project(project_replace = B, Replace)] // Ok
+    struct ProjectReplaceWithReplace2(#[pin] ());
 
     #[pin_project(UnsafeUnpin, !Unpin)] //~ ERROR arguments `UnsafeUnpin` and `!Unpin` are mutually exclusive
     struct UnsafeUnpinWithNotUnpin1(#[pin] ());
@@ -186,24 +198,10 @@ mod pin_project_argument {
 
     #[pin_project(project_replace = !)] //~ ERROR expected identifier
     struct ProjectReplace3(#[pin] ());
-
-    #[pin_project(project_replace)] //~ ERROR `project_replace` argument requires a value when used on enums
-    enum ProjectReplaceEnum {
-        V(#[pin] ()),
-    }
 }
 
 mod pin_project_conflict_naming {
     use pin_project::pin_project;
-
-    #[pin_project(project = OrigAndProj)] //~ ERROR name `OrigAndProj` is the same as the original type name
-    struct OrigAndProj(#[pin] ());
-
-    #[pin_project(project_ref = OrigAndProjRef)] //~ ERROR name `OrigAndProjRef` is the same as the original type name
-    struct OrigAndProjRef(#[pin] ());
-
-    #[pin_project(project_replace = OrigAndProjOwn)] //~ ERROR name `OrigAndProjOwn` is the same as the original type name
-    struct OrigAndProjOwn(#[pin] ());
 
     #[pin_project(project = A, project_ref = A)] //~ ERROR name `A` is already specified by `project` argument
     struct ProjAndProjRef(#[pin] ());
@@ -255,9 +253,6 @@ mod pin_project_item {
         //~^ ERROR may only be used on structs or enums
         f: (),
     }
-
-    #[pin_project]
-    impl Impl {} //~ ERROR may only be used on structs or enums
 }
 
 // #[repr(packed)] is always detected first, even on unsupported structs.

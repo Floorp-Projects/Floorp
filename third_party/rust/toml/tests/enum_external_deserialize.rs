@@ -3,11 +3,6 @@ extern crate serde_derive;
 extern crate toml;
 
 #[derive(Debug, Deserialize, PartialEq)]
-struct OuterStruct {
-    inner: TheEnum,
-}
-
-#[derive(Debug, Deserialize, PartialEq)]
 enum TheEnum {
     Plain,
     Tuple(i64, bool),
@@ -180,21 +175,6 @@ mod enum_struct {
             TheEnum::Struct { value: -123 },
             toml::from_str(
                 r#"[Struct]
-                value = -123
-                "#
-            )
-            .unwrap()
-        );
-    }
-
-    #[test]
-    fn from_nested_dotted_table() {
-        assert_eq!(
-            OuterStruct {
-                inner: TheEnum::Struct { value: -123 }
-            },
-            toml::from_str(
-                r#"[inner.Struct]
                 value = -123
                 "#
             )

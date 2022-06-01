@@ -15,6 +15,7 @@ use std::fmt;
 /// let buf: [u8; 4] = [0, 0, 0, 1];
 /// assert_eq!(1u32, unpack_octets_4!(buf, 0, u32));
 /// ```
+#[macro_escape]
 macro_rules! unpack_octets_4 {
     // TODO: Get rid of this macro
     ($buf:expr, $offset:expr, $tip:ty) => {

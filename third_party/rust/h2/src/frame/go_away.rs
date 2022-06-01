@@ -29,7 +29,8 @@ impl GoAway {
         self.error_code
     }
 
-    pub fn debug_data(&self) -> &Bytes {
+    #[cfg(feature = "unstable")]
+    pub fn debug_data(&self) -> &[u8] {
         &self.debug_data
     }
 
@@ -50,7 +51,7 @@ impl GoAway {
     }
 
     pub fn encode<B: BufMut>(&self, dst: &mut B) {
-        tracing::trace!("encoding GO_AWAY; code={:?}", self.error_code);
+        log::trace!("encoding GO_AWAY; code={:?}", self.error_code);
         let head = Head::new(Kind::GoAway, 0, StreamId::zero());
         head.encode(8, dst);
         dst.put_u32(self.last_stream_id.into());

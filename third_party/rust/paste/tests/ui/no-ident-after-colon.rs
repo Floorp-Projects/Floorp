@@ -1,6 +1,4 @@
-use paste::paste;
-
-paste! {
+paste::item! {
     fn [<name:0>]() {}
 }
 

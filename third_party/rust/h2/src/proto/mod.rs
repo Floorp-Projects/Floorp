@@ -7,10 +7,10 @@ mod settings;
 mod streams;
 
 pub(crate) use self::connection::{Config, Connection};
-pub use self::error::{Error, Initiator};
+pub(crate) use self::error::Error;
 pub(crate) use self::peer::{Dyn as DynPeer, Peer};
 pub(crate) use self::ping_pong::UserPings;
-pub(crate) use self::streams::{DynStreams, OpaqueStreamRef, StreamRef, Streams};
+pub(crate) use self::streams::{OpaqueStreamRef, StreamRef, Streams};
 pub(crate) use self::streams::{Open, PollReset, Prioritized};
 
 use crate::codec::Codec;
@@ -33,4 +33,3 @@ pub type WindowSize = u32;
 pub const MAX_WINDOW_SIZE: WindowSize = (1 << 31) - 1;
 pub const DEFAULT_RESET_STREAM_MAX: usize = 10;
 pub const DEFAULT_RESET_STREAM_SECS: u64 = 30;
-pub const DEFAULT_MAX_SEND_BUFFER_SIZE: usize = 1024 * 400;

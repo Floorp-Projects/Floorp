@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 use std::hash::{Hash, Hasher};
 use std::borrow::Borrow;
 
-use crate::Cookie;
+use Cookie;
 
 /// A `DeltaCookie` is a helper structure used in a cookie jar. It wraps a
 /// `Cookie` so that it can be hashed and compared purely by name. It further
@@ -19,14 +19,20 @@ impl DeltaCookie {
     /// Create a new `DeltaCookie` that is being added to a jar.
     #[inline]
     pub fn added(cookie: Cookie<'static>) -> DeltaCookie {
-        DeltaCookie { cookie, removed: false, }
+        DeltaCookie {
+            cookie: cookie,
+            removed: false,
+        }
     }
 
     /// Create a new `DeltaCookie` that is being removed from a jar. The
     /// `cookie` should be a "removal" cookie.
     #[inline]
     pub fn removed(cookie: Cookie<'static>) -> DeltaCookie {
-        DeltaCookie { cookie, removed: true, }
+        DeltaCookie {
+            cookie: cookie,
+            removed: true,
+        }
     }
 }
 

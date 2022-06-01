@@ -1,7 +1,7 @@
 mod table;
 
 use self::table::{DECODE_TABLE, ENCODE_TABLE};
-use crate::hpack::DecoderError;
+use crate::hpack::{DecoderError, EncoderError};
 
 use bytes::{BufMut, BytesMut};
 
@@ -40,9 +40,11 @@ pub fn decode(src: &[u8], buf: &mut BytesMut) -> Result<BytesMut, DecoderError> 
     Ok(buf.split())
 }
 
-pub fn encode(src: &[u8], dst: &mut BytesMut) {
+// TODO: return error when there is not enough room to encode the value
+pub fn encode<B: BufMut>(src: &[u8], dst: &mut B) -> Result<(), EncoderError> {
     let mut bits: u64 = 0;
     let mut bits_left = 40;
+    let mut rem = dst.remaining_mut();
 
     for &b in src {
         let (nbits, code) = ENCODE_TABLE[b as usize];
@@ -51,18 +53,29 @@ pub fn encode(src: &[u8], dst: &mut BytesMut) {
         bits_left -= nbits;
 
         while bits_left <= 32 {
+            if rem == 0 {
+                return Err(EncoderError::BufferOverflow);
+            }
+
             dst.put_u8((bits >> 32) as u8);
 
             bits <<= 8;
             bits_left += 8;
+            rem -= 1;
         }
     }
 
     if bits_left != 40 {
+        if rem == 0 {
+            return Err(EncoderError::BufferOverflow);
+        }
+
         // This writes the EOS token
         bits |= (1 << bits_left) - 1;
         dst.put_u8((bits >> 32) as u8);
     }
+
+    Ok(())
 }
 
 impl Decoder {
@@ -131,17 +144,17 @@ mod test {
 
     #[test]
     fn encode_single_byte() {
-        let mut dst = BytesMut::with_capacity(1);
+        let mut dst = Vec::with_capacity(1);
 
-        encode(b"o", &mut dst);
+        encode(b"o", &mut dst).unwrap();
         assert_eq!(&dst[..], &[0b00111111]);
 
         dst.clear();
-        encode(b"0", &mut dst);
+        encode(b"0", &mut dst).unwrap();
         assert_eq!(&dst[..], &[0x0 + 7]);
 
         dst.clear();
-        encode(b"A", &mut dst);
+        encode(b"A", &mut dst).unwrap();
         assert_eq!(&dst[..], &[(0x21 << 2) + 3]);
     }
 
@@ -172,9 +185,9 @@ mod test {
         ];
 
         for s in DATA {
-            let mut dst = BytesMut::with_capacity(s.len());
+            let mut dst = Vec::with_capacity(s.len());
 
-            encode(s.as_bytes(), &mut dst);
+            encode(s.as_bytes(), &mut dst).unwrap();
 
             let decoded = decode(&dst).unwrap();
 
@@ -188,9 +201,9 @@ mod test {
             &[b"\0", b"\0\0\0", b"\0\x01\x02\x03\x04\x05", b"\xFF\xF8"];
 
         for s in DATA {
-            let mut dst = BytesMut::with_capacity(s.len());
+            let mut dst = Vec::with_capacity(s.len());
 
-            encode(s, &mut dst);
+            encode(s, &mut dst).unwrap();
 
             let decoded = decode(&dst).unwrap();
 

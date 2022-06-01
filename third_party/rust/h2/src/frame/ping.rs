@@ -85,7 +85,7 @@ impl Ping {
 
     pub fn encode<B: BufMut>(&self, dst: &mut B) {
         let sz = self.payload.len();
-        tracing::trace!("encoding PING; ack={} len={}", self.ack, sz);
+        log::trace!("encoding PING; ack={} len={}", self.ack, sz);
 
         let flags = if self.ack { ACK_FLAG } else { 0 };
         let head = Head::new(Kind::Ping, flags, StreamId::zero());

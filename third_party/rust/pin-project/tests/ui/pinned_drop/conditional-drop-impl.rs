@@ -1,11 +1,10 @@
-use std::pin::Pin;
-
 use pin_project::{pin_project, pinned_drop};
+use std::pin::Pin;
 
 // In `Drop` impl, the implementor must specify the same requirement as type definition.
 
 struct DropImpl<T> {
-    f: T,
+    field: T,
 }
 
 impl<T: Unpin> Drop for DropImpl<T> {
@@ -16,7 +15,7 @@ impl<T: Unpin> Drop for DropImpl<T> {
 #[pin_project(PinnedDrop)] //~ ERROR E0277
 struct PinnedDropImpl<T> {
     #[pin]
-    f: T,
+    field: T,
 }
 
 #[pinned_drop]

@@ -3,15 +3,14 @@ use std::io;
 use std::net::{SocketAddr, TcpListener as StdTcpListener};
 use std::time::Duration;
 
+use futures_util::FutureExt as _;
 use tokio::net::TcpListener;
-use tokio::time::Sleep;
-use tracing::{debug, error, trace};
+use tokio::time::Delay;
 
 use crate::common::{task, Future, Pin, Poll};
 
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
 pub use self::addr_stream::AddrStream;
-use super::accept::Accept;
+use super::Accept;
 
 /// A stream of connections from binding to an address.
 #[must_use = "streams do nothing unless polled"]
@@ -21,7 +20,7 @@ pub struct AddrIncoming {
     sleep_on_errors: bool,
     tcp_keepalive_timeout: Option<Duration>,
     tcp_nodelay: bool,
-    timeout: Option<Pin<Box<Sleep>>>,
+    timeout: Option<Delay>,
 }
 
 impl AddrIncoming {
@@ -32,21 +31,7 @@ impl AddrIncoming {
     }
 
     pub(super) fn from_std(std_listener: StdTcpListener) -> crate::Result<Self> {
-        // TcpListener::from_std doesn't set O_NONBLOCK
-        std_listener
-            .set_nonblocking(true)
-            .map_err(crate::Error::new_listen)?;
         let listener = TcpListener::from_std(std_listener).map_err(crate::Error::new_listen)?;
-        AddrIncoming::from_listener(listener)
-    }
-
-    /// Creates a new `AddrIncoming` binding to provided socket address.
-    pub fn bind(addr: &SocketAddr) -> crate::Result<Self> {
-        AddrIncoming::new(addr)
-    }
-
-    /// Creates a new `AddrIncoming` from an existing `tokio::net::TcpListener`.
-    pub fn from_listener(listener: TcpListener) -> crate::Result<Self> {
         let addr = listener.local_addr().map_err(crate::Error::new_listen)?;
         Ok(AddrIncoming {
             listener,
@@ -56,6 +41,11 @@ impl AddrIncoming {
             tcp_nodelay: false,
             timeout: None,
         })
+    }
+
+    /// Creates a new `AddrIncoming` binding to provided socket address.
+    pub fn bind(addr: &SocketAddr) -> crate::Result<Self> {
+        AddrIncoming::new(addr)
     }
 
     /// Get the local address bound to this listener.
@@ -101,17 +91,21 @@ impl AddrIncoming {
     fn poll_next_(&mut self, cx: &mut task::Context<'_>) -> Poll<io::Result<AddrStream>> {
         // Check if a previous timeout is active that was set by IO errors.
         if let Some(ref mut to) = self.timeout {
-            ready!(Pin::new(to).poll(cx));
+            match Pin::new(to).poll(cx) {
+                Poll::Ready(()) => {}
+                Poll::Pending => return Poll::Pending,
+            }
         }
         self.timeout = None;
 
+        let accept = self.listener.accept();
+        futures_util::pin_mut!(accept);
+
         loop {
-            match ready!(self.listener.poll_accept(cx)) {
-                Ok((socket, addr)) => {
+            match accept.poll_unpin(cx) {
+                Poll::Ready(Ok((socket, addr))) => {
                     if let Some(dur) = self.tcp_keepalive_timeout {
-                        let socket = socket2::SockRef::from(&socket);
-                        let conf = socket2::TcpKeepalive::new().with_time(dur);
-                        if let Err(e) = socket.set_tcp_keepalive(&conf) {
+                        if let Err(e) = socket.set_keepalive(Some(dur)) {
                             trace!("error trying to set TCP keepalive: {}", e);
                         }
                     }
@@ -120,7 +114,8 @@ impl AddrIncoming {
                     }
                     return Poll::Ready(Ok(AddrStream::new(socket, addr)));
                 }
-                Err(e) => {
+                Poll::Pending => return Poll::Pending,
+                Poll::Ready(Err(e)) => {
                     // Connection errors can be ignored directly, continue by
                     // accepting the next request.
                     if is_connection_error(&e) {
@@ -132,9 +127,9 @@ impl AddrIncoming {
                         error!("accept error: {}", e);
 
                         // Sleep 1s.
-                        let mut timeout = Box::pin(tokio::time::sleep(Duration::from_secs(1)));
+                        let mut timeout = tokio::time::delay_for(Duration::from_secs(1));
 
-                        match timeout.as_mut().poll(cx) {
+                        match Pin::new(&mut timeout).poll(cx) {
                             Poll::Ready(()) => {
                                 // Wow, it's been a second already? Ok then...
                                 continue;
@@ -174,9 +169,12 @@ impl Accept for AddrIncoming {
 /// The timeout is useful to handle resource exhaustion errors like ENFILE
 /// and EMFILE. Otherwise, could enter into tight loop.
 fn is_connection_error(e: &io::Error) -> bool {
-    matches!(e.kind(), io::ErrorKind::ConnectionRefused
+    match e.kind() {
+        io::ErrorKind::ConnectionRefused
         | io::ErrorKind::ConnectionAborted
-        | io::ErrorKind::ConnectionReset)
+        | io::ErrorKind::ConnectionReset => true,
+        _ => false,
+    }
 }
 
 impl fmt::Debug for AddrIncoming {
@@ -191,23 +189,19 @@ impl fmt::Debug for AddrIncoming {
 }
 
 mod addr_stream {
+    use bytes::{Buf, BufMut};
     use std::io;
     use std::net::SocketAddr;
-    #[cfg(unix)]
-    use std::os::unix::io::{AsRawFd, RawFd};
-    use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+    use tokio::io::{AsyncRead, AsyncWrite};
     use tokio::net::TcpStream;
 
     use crate::common::{task, Pin, Poll};
 
-    pin_project_lite::pin_project! {
-        /// A transport returned yieled by `AddrIncoming`.
-        #[derive(Debug)]
-        pub struct AddrStream {
-            #[pin]
-            inner: TcpStream,
-            pub(super) remote_addr: SocketAddr,
-        }
+    /// A transport returned yieled by `AddrIncoming`.
+    #[derive(Debug)]
+    pub struct AddrStream {
+        inner: TcpStream,
+        pub(super) remote_addr: SocketAddr,
     }
 
     impl AddrStream {
@@ -236,40 +230,56 @@ mod addr_stream {
         pub fn poll_peek(
             &mut self,
             cx: &mut task::Context<'_>,
-            buf: &mut tokio::io::ReadBuf<'_>,
+            buf: &mut [u8],
         ) -> Poll<io::Result<usize>> {
             self.inner.poll_peek(cx, buf)
         }
     }
 
     impl AsyncRead for AddrStream {
+        unsafe fn prepare_uninitialized_buffer(
+            &self,
+            buf: &mut [std::mem::MaybeUninit<u8>],
+        ) -> bool {
+            self.inner.prepare_uninitialized_buffer(buf)
+        }
+
         #[inline]
         fn poll_read(
-            self: Pin<&mut Self>,
+            mut self: Pin<&mut Self>,
             cx: &mut task::Context<'_>,
-            buf: &mut ReadBuf<'_>,
-        ) -> Poll<io::Result<()>> {
-            self.project().inner.poll_read(cx, buf)
+            buf: &mut [u8],
+        ) -> Poll<io::Result<usize>> {
+            Pin::new(&mut self.inner).poll_read(cx, buf)
+        }
+
+        #[inline]
+        fn poll_read_buf<B: BufMut>(
+            mut self: Pin<&mut Self>,
+            cx: &mut task::Context<'_>,
+            buf: &mut B,
+        ) -> Poll<io::Result<usize>> {
+            Pin::new(&mut self.inner).poll_read_buf(cx, buf)
         }
     }
 
     impl AsyncWrite for AddrStream {
         #[inline]
         fn poll_write(
-            self: Pin<&mut Self>,
+            mut self: Pin<&mut Self>,
             cx: &mut task::Context<'_>,
             buf: &[u8],
         ) -> Poll<io::Result<usize>> {
-            self.project().inner.poll_write(cx, buf)
+            Pin::new(&mut self.inner).poll_write(cx, buf)
         }
 
         #[inline]
-        fn poll_write_vectored(
-            self: Pin<&mut Self>,
+        fn poll_write_buf<B: Buf>(
+            mut self: Pin<&mut Self>,
             cx: &mut task::Context<'_>,
-            bufs: &[io::IoSlice<'_>],
+            buf: &mut B,
         ) -> Poll<io::Result<usize>> {
-            self.project().inner.poll_write_vectored(cx, bufs)
+            Pin::new(&mut self.inner).poll_write_buf(cx, buf)
         }
 
         #[inline]
@@ -279,24 +289,11 @@ mod addr_stream {
         }
 
         #[inline]
-        fn poll_shutdown(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
-            self.project().inner.poll_shutdown(cx)
-        }
-
-        #[inline]
-        fn is_write_vectored(&self) -> bool {
-            // Note that since `self.inner` is a `TcpStream`, this could
-            // *probably* be hard-coded to return `true`...but it seems more
-            // correct to ask it anyway (maybe we're on some platform without
-            // scatter-gather IO?)
-            self.inner.is_write_vectored()
-        }
-    }
-
-    #[cfg(unix)]
-    impl AsRawFd for AddrStream {
-        fn as_raw_fd(&self) -> RawFd {
-            self.inner.as_raw_fd()
+        fn poll_shutdown(
+            mut self: Pin<&mut Self>,
+            cx: &mut task::Context<'_>,
+        ) -> Poll<io::Result<()>> {
+            Pin::new(&mut self.inner).poll_shutdown(cx)
         }
     }
 }

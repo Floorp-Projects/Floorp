@@ -7,9 +7,8 @@ license = "MPL-2.0"
 [lib]
 path = "lib.rs"
 
-[dependencies.hashbrown]
-version = "0.11"
-default-features = false
+[dependencies]
+hashbrown = "0.11"
 
 [features]
 ahash-compile-time-rng = ["hashbrown/ahash-compile-time-rng"]

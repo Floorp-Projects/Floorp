@@ -1,5 +1,5 @@
 error: unexpected token
- --> tests/ui/unexpected-group.rs:4:12
+ --> $DIR/unexpected-group.rs:2:12
   |
-4 |     fn [<a {} b>]() {}
+2 |     fn [<a {} b>]() {}
   |            ^^

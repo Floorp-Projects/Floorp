@@ -1,6 +1,6 @@
 #![deny(warnings)]
 use bytes::BufMut;
-use futures_util::{TryFutureExt, TryStreamExt};
+use futures::{TryFutureExt, TryStreamExt};
 use warp::{multipart, Filter};
 
 #[tokio::test]

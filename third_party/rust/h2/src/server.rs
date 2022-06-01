@@ -1,10 +1,10 @@
-//! Server implementation of the HTTP/2 protocol.
+//! Server implementation of the HTTP/2.0 protocol.
 //!
 //! # Getting started
 //!
-//! Running an HTTP/2 server requires the caller to manage accepting the
+//! Running an HTTP/2.0 server requires the caller to manage accepting the
 //! connections as well as getting the connections to a state that is ready to
-//! begin the HTTP/2 handshake. See [here](../index.html#handshake) for more
+//! begin the HTTP/2.0 handshake. See [here](../index.html#handshake) for more
 //! details.
 //!
 //! This could be as basic as using Tokio's [`TcpListener`] to accept
@@ -12,8 +12,8 @@
 //! upgrades.
 //!
 //! Once a connection is obtained, it is passed to [`handshake`],
-//! which will begin the [HTTP/2 handshake]. This returns a future that
-//! completes once the handshake process is performed and HTTP/2 streams may
+//! which will begin the [HTTP/2.0 handshake]. This returns a future that
+//! completes once the handshake process is performed and HTTP/2.0 streams may
 //! be received.
 //!
 //! [`handshake`] uses default configuration values. There are a number of
@@ -21,12 +21,12 @@
 //!
 //! # Inbound streams
 //!
-//! The [`Connection`] instance is used to accept inbound HTTP/2 streams. It
+//! The [`Connection`] instance is used to accept inbound HTTP/2.0 streams. It
 //! does this by implementing [`futures::Stream`]. When a new stream is
-//! received, a call to [`Connection::accept`] will return `(request, response)`.
+//! received, a call to [`Connection::poll`] will return `(request, response)`.
 //! The `request` handle (of type [`http::Request<RecvStream>`]) contains the
 //! HTTP request head as well as provides a way to receive the inbound data
-//! stream and the trailers. The `response` handle (of type [`SendResponse`])
+//! stream and the trailers. The `response` handle (of type [`SendStream`])
 //! allows responding to the request, stream the response payload, send
 //! trailers, and send push promises.
 //!
@@ -36,19 +36,19 @@
 //! # Managing the connection
 //!
 //! The [`Connection`] instance is used to manage connection state. The caller
-//! is required to call either [`Connection::accept`] or
+//! is required to call either [`Connection::poll`] or
 //! [`Connection::poll_close`] in order to advance the connection state. Simply
 //! operating on [`SendStream`] or [`RecvStream`] will have no effect unless the
 //! connection state is advanced.
 //!
-//! It is not required to call **both** [`Connection::accept`] and
+//! It is not required to call **both** [`Connection::poll`] and
 //! [`Connection::poll_close`]. If the caller is ready to accept a new stream,
-//! then only [`Connection::accept`] should be called. When the caller **does
+//! then only [`Connection::poll`] should be called. When the caller **does
 //! not** want to accept a new stream, [`Connection::poll_close`] should be
 //! called.
 //!
 //! The [`Connection`] instance should only be dropped once
-//! [`Connection::poll_close`] returns `Ready`. Once [`Connection::accept`]
+//! [`Connection::poll_close`] returns `Ready`. Once [`Connection::poll`]
 //! returns `Ready(None)`, there will no longer be any more inbound streams. At
 //! this point, only [`Connection::poll_close`] should be called.
 //!
@@ -59,9 +59,9 @@
 //!
 //! # Example
 //!
-//! A basic HTTP/2 server example that runs over TCP and assumes [prior
+//! A basic HTTP/2.0 server example that runs over TCP and assumes [prior
 //! knowledge], i.e. both the client and the server assume that the TCP socket
-//! will use the HTTP/2 protocol without prior negotiation.
+//! will use the HTTP/2.0 protocol without prior negotiation.
 //!
 //! ```no_run
 //! use h2::server;
@@ -77,9 +77,9 @@
 //!         if let Ok((socket, _peer_addr)) = listener.accept().await {
 //!             // Spawn a new task to process each connection.
 //!             tokio::spawn(async {
-//!                 // Start the HTTP/2 connection handshake
+//!                 // Start the HTTP/2.0 connection handshake
 //!                 let mut h2 = server::handshake(socket).await.unwrap();
-//!                 // Accept all inbound HTTP/2 streams sent over the
+//!                 // Accept all inbound HTTP/2.0 streams sent over the
 //!                 // connection.
 //!                 while let Some(request) = h2.accept().await {
 //!                     let (request, mut respond) = request.unwrap();
@@ -104,7 +104,7 @@
 //!
 //! [prior knowledge]: http://httpwg.org/specs/rfc7540.html#known-http
 //! [`handshake`]: fn.handshake.html
-//! [HTTP/2 handshake]: http://httpwg.org/specs/rfc7540.html#ConnectionHeader
+//! [HTTP/2.0 handshake]: http://httpwg.org/specs/rfc7540.html#ConnectionHeader
 //! [`Builder`]: struct.Builder.html
 //! [`Connection`]: struct.Connection.html
 //! [`Connection::poll`]: struct.Connection.html#method.poll
@@ -115,9 +115,9 @@
 //! [`SendStream`]: ../struct.SendStream.html
 //! [`TcpListener`]: https://docs.rs/tokio-core/0.1/tokio_core/net/struct.TcpListener.html
 
-use crate::codec::{Codec, UserError};
+use crate::codec::{Codec, RecvError, UserError};
 use crate::frame::{self, Pseudo, PushPromiseHeaderError, Reason, Settings, StreamId};
-use crate::proto::{self, Config, Error, Prioritized};
+use crate::proto::{self, Config, Prioritized};
 use crate::{FlowControl, PingPong, RecvStream, SendStream};
 
 use bytes::{Buf, Bytes};
@@ -126,11 +126,10 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::Duration;
-use std::{fmt, io};
-use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
-use tracing::instrument::{Instrument, Instrumented};
+use std::{convert, fmt, io, mem};
+use tokio::io::{AsyncRead, AsyncWrite};
 
-/// In progress HTTP/2 connection handshake future.
+/// In progress HTTP/2.0 connection handshake future.
 ///
 /// This type implements `Future`, yielding a `Connection` instance once the
 /// handshake has completed.
@@ -150,14 +149,12 @@ pub struct Handshake<T, B: Buf = Bytes> {
     builder: Builder,
     /// The current state of the handshake.
     state: Handshaking<T, B>,
-    /// Span tracking the handshake
-    span: tracing::Span,
 }
 
-/// Accepts inbound HTTP/2 streams on a connection.
+/// Accepts inbound HTTP/2.0 streams on a connection.
 ///
 /// A `Connection` is backed by an I/O resource (usually a TCP socket) and
-/// implements the HTTP/2 server logic for that connection. It is responsible
+/// implements the HTTP/2.0 server logic for that connection. It is responsible
 /// for receiving inbound streams initiated by the client as well as driving the
 /// internal state forward.
 ///
@@ -182,11 +179,9 @@ pub struct Handshake<T, B: Buf = Bytes> {
 /// # async fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T) {
 /// let mut server = server::handshake(my_io).await.unwrap();
 /// while let Some(request) = server.accept().await {
-///     tokio::spawn(async move {
-///         let (request, respond) = request.unwrap();
-///         // Process the request and send the response back to the client
-///         // using `respond`.
-///     });
+///     let (request, respond) = request.unwrap();
+///     // Process the request and send the response back to the client
+///     // using `respond`.
 /// }
 /// # }
 /// #
@@ -202,7 +197,7 @@ pub struct Connection<T, B: Buf> {
 /// Methods can be chained in order to set the configuration values.
 ///
 /// The server is constructed by calling [`handshake`] and passing the I/O
-/// handle that will back the HTTP/2 server.
+/// handle that will back the HTTP/2.0 server.
 ///
 /// New instances of `Builder` are obtained via [`Builder::new`].
 ///
@@ -221,7 +216,7 @@ pub struct Connection<T, B: Buf> {
 /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
 /// # -> Handshake<T>
 /// # {
-/// // `server_fut` is a future representing the completion of the HTTP/2
+/// // `server_fut` is a future representing the completion of the HTTP/2.0
 /// // handshake.
 /// let server_fut = Builder::new()
 ///     .initial_window_size(1_000_000)
@@ -245,9 +240,6 @@ pub struct Builder {
 
     /// Initial target window size for new connections.
     initial_target_connection_window_size: Option<u32>,
-
-    /// Maximum amount of bytes to "buffer" for writing per stream.
-    max_send_buffer_size: usize,
 }
 
 /// Send a response back to the client
@@ -260,7 +252,7 @@ pub struct Builder {
 /// stream.
 ///
 /// If the `SendResponse` instance is dropped without sending a response, then
-/// the HTTP/2 stream will be reset.
+/// the HTTP/2.0 stream will be reset.
 ///
 /// See [module] level docs for more details.
 ///
@@ -279,7 +271,7 @@ pub struct SendResponse<B: Buf> {
 /// It can not be used to initiate push promises.
 ///
 /// If the `SendPushedResponse` instance is dropped without sending a response, then
-/// the HTTP/2 stream will be reset.
+/// the HTTP/2.0 stream will be reset.
 ///
 /// See [module] level docs for more details.
 ///
@@ -298,11 +290,11 @@ impl<B: Buf + fmt::Debug> fmt::Debug for SendPushedResponse<B> {
 /// Stages of an in-progress handshake.
 enum Handshaking<T, B: Buf> {
     /// State 1. Connection is flushing pending SETTINGS frame.
-    Flushing(Instrumented<Flush<T, Prioritized<B>>>),
+    Flushing(Flush<T, Prioritized<B>>),
     /// State 2. Connection is waiting for the client preface.
-    ReadingPreface(Instrumented<ReadPreface<T, Prioritized<B>>>),
-    /// State 3. Handshake is done, polling again would panic.
-    Done,
+    ReadingPreface(ReadPreface<T, Prioritized<B>>),
+    /// Dummy state for `mem::replace`.
+    Empty,
 }
 
 /// Flush a Sink
@@ -321,18 +313,18 @@ pub(crate) struct Peer;
 
 const PREFACE: [u8; 24] = *b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
 
-/// Creates a new configured HTTP/2 server with default configuration
+/// Creates a new configured HTTP/2.0 server with default configuration
 /// values backed by `io`.
 ///
 /// It is expected that `io` already be in an appropriate state to commence
-/// the [HTTP/2 handshake]. See [Handshake] for more details.
+/// the [HTTP/2.0 handshake]. See [Handshake] for more details.
 ///
 /// Returns a future which resolves to the [`Connection`] instance once the
-/// HTTP/2 handshake has been completed. The returned [`Connection`]
+/// HTTP/2.0 handshake has been completed. The returned [`Connection`]
 /// instance will be using default configuration values. Use [`Builder`] to
 /// customize the configuration values used by a [`Connection`] instance.
 ///
-/// [HTTP/2 handshake]: http://httpwg.org/specs/rfc7540.html#ConnectionHeader
+/// [HTTP/2.0 handshake]: http://httpwg.org/specs/rfc7540.html#ConnectionHeader
 /// [Handshake]: ../index.html#handshake
 /// [`Connection`]: struct.Connection.html
 ///
@@ -346,8 +338,8 @@ const PREFACE: [u8; 24] = *b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
 /// # async fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
 /// # {
 /// let connection = server::handshake(my_io).await.unwrap();
-/// // The HTTP/2 handshake has completed, now use `connection` to
-/// // accept inbound HTTP/2 streams.
+/// // The HTTP/2.0 handshake has completed, now use `connection` to
+/// // accept inbound HTTP/2.0 streams.
 /// # }
 /// #
 /// # pub fn main() {}
@@ -367,9 +359,6 @@ where
     B: Buf + 'static,
 {
     fn handshake2(io: T, builder: Builder) -> Handshake<T, B> {
-        let span = tracing::trace_span!("server_handshake");
-        let entered = span.enter();
-
         // Create the codec.
         let mut codec = Codec::new(io);
 
@@ -387,16 +376,9 @@ where
             .expect("invalid SETTINGS frame");
 
         // Create the handshake future.
-        let state =
-            Handshaking::Flushing(Flush::new(codec).instrument(tracing::trace_span!("flush")));
+        let state = Handshaking::from(codec);
 
-        drop(entered);
-
-        Handshake {
-            builder,
-            state,
-            span,
-        }
+        Handshake { builder, state }
     }
 
     /// Accept the next incoming request on this connection.
@@ -420,7 +402,7 @@ where
         }
 
         if let Some(inner) = self.connection.next_incoming() {
-            tracing::trace!("received incoming");
+            log::trace!("received incoming");
             let (head, _) = inner.take_request().into_parts();
             let body = RecvStream::new(FlowControl::new(inner.clone_to_opaque()));
 
@@ -471,19 +453,6 @@ where
     pub fn set_initial_window_size(&mut self, size: u32) -> Result<(), crate::Error> {
         assert!(size <= proto::MAX_WINDOW_SIZE);
         self.connection.set_initial_window_size(size)?;
-        Ok(())
-    }
-
-    /// Enables the [extended CONNECT protocol].
-    ///
-    /// [extended CONNECT protocol]: https://datatracker.ietf.org/doc/html/rfc8441#section-4
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if a previous call is still pending acknowledgement
-    /// from the remote endpoint.
-    pub fn enable_connect_protocol(&mut self) -> Result<(), crate::Error> {
-        self.connection.set_enable_connect_protocol()?;
         Ok(())
     }
 
@@ -548,34 +517,6 @@ where
     pub fn ping_pong(&mut self) -> Option<PingPong> {
         self.connection.take_user_pings().map(PingPong::new)
     }
-
-    /// Returns the maximum number of concurrent streams that may be initiated
-    /// by the server on this connection.
-    ///
-    /// This limit is configured by the client peer by sending the
-    /// [`SETTINGS_MAX_CONCURRENT_STREAMS` parameter][1] in a `SETTINGS` frame.
-    /// This method returns the currently acknowledged value recieved from the
-    /// remote.
-    ///
-    /// [1]: https://tools.ietf.org/html/rfc7540#section-5.1.2
-    pub fn max_concurrent_send_streams(&self) -> usize {
-        self.connection.max_send_streams()
-    }
-
-    /// Returns the maximum number of concurrent streams that may be initiated
-    /// by the client on this connection.
-    ///
-    /// This returns the value of the [`SETTINGS_MAX_CONCURRENT_STREAMS`
-    /// parameter][1] sent in a `SETTINGS` frame that has been
-    /// acknowledged by the remote peer. The value to be sent is configured by
-    /// the [`Builder::max_concurrent_streams`][2] method before handshaking
-    /// with the remote peer.
-    ///
-    /// [1]: https://tools.ietf.org/html/rfc7540#section-5.1.2
-    /// [2]: ../struct.Builder.html#method.max_concurrent_streams
-    pub fn max_concurrent_recv_streams(&self) -> usize {
-        self.connection.max_recv_streams()
-    }
 }
 
 #[cfg(feature = "stream")]
@@ -620,7 +561,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut = Builder::new()
     ///     .initial_window_size(1_000_000)
@@ -637,7 +578,6 @@ impl Builder {
             reset_stream_max: proto::DEFAULT_RESET_STREAM_MAX,
             settings: Settings::default(),
             initial_target_connection_window_size: None,
-            max_send_buffer_size: proto::DEFAULT_MAX_SEND_BUFFER_SIZE,
         }
     }
 
@@ -660,7 +600,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut = Builder::new()
     ///     .initial_window_size(1_000_000)
@@ -694,7 +634,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut = Builder::new()
     ///     .initial_connection_window_size(1_000_000)
@@ -709,7 +649,7 @@ impl Builder {
         self
     }
 
-    /// Indicates the size (in octets) of the largest HTTP/2 frame payload that the
+    /// Indicates the size (in octets) of the largest HTTP/2.0 frame payload that the
     /// configured server is able to accept.
     ///
     /// The sender may send data frames that are **smaller** than this value,
@@ -727,7 +667,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut = Builder::new()
     ///     .max_frame_size(1_000_000)
@@ -766,7 +706,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut = Builder::new()
     ///     .max_header_list_size(16 * 1024)
@@ -801,7 +741,7 @@ impl Builder {
     /// a protocol level error. Instead, the `h2` library will immediately reset
     /// the stream.
     ///
-    /// See [Section 5.1.2] in the HTTP/2 spec for more details.
+    /// See [Section 5.1.2] in the HTTP/2.0 spec for more details.
     ///
     /// [Section 5.1.2]: https://http2.github.io/http2-spec/#rfc.section.5.1.2
     ///
@@ -814,7 +754,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut = Builder::new()
     ///     .max_concurrent_streams(1000)
@@ -833,7 +773,7 @@ impl Builder {
     ///
     /// When a stream is explicitly reset by either calling
     /// [`SendResponse::send_reset`] or by dropping a [`SendResponse`] instance
-    /// before completing the stream, the HTTP/2 specification requires that
+    /// before completing the stream, the HTTP/2.0 specification requires that
     /// any further frames received for that stream must be ignored for "some
     /// time".
     ///
@@ -860,7 +800,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut = Builder::new()
     ///     .max_concurrent_reset_streams(1000)
@@ -875,29 +815,11 @@ impl Builder {
         self
     }
 
-    /// Sets the maximum send buffer size per stream.
-    ///
-    /// Once a stream has buffered up to (or over) the maximum, the stream's
-    /// flow control will not "poll" additional capacity. Once bytes for the
-    /// stream have been written to the connection, the send buffer capacity
-    /// will be freed up again.
-    ///
-    /// The default is currently ~400MB, but may change.
-    ///
-    /// # Panics
-    ///
-    /// This function panics if `max` is larger than `u32::MAX`.
-    pub fn max_send_buffer_size(&mut self, max: usize) -> &mut Self {
-        assert!(max <= std::u32::MAX as usize);
-        self.max_send_buffer_size = max;
-        self
-    }
-
     /// Sets the maximum number of concurrent locally reset streams.
     ///
     /// When a stream is explicitly reset by either calling
     /// [`SendResponse::send_reset`] or by dropping a [`SendResponse`] instance
-    /// before completing the stream, the HTTP/2 specification requires that
+    /// before completing the stream, the HTTP/2.0 specification requires that
     /// any further frames received for that stream must be ignored for "some
     /// time".
     ///
@@ -925,7 +847,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut = Builder::new()
     ///     .reset_stream_duration(Duration::from_secs(10))
@@ -940,26 +862,18 @@ impl Builder {
         self
     }
 
-    /// Enables the [extended CONNECT protocol].
-    ///
-    /// [extended CONNECT protocol]: https://datatracker.ietf.org/doc/html/rfc8441#section-4
-    pub fn enable_connect_protocol(&mut self) -> &mut Self {
-        self.settings.set_enable_connect_protocol(Some(1));
-        self
-    }
-
-    /// Creates a new configured HTTP/2 server backed by `io`.
+    /// Creates a new configured HTTP/2.0 server backed by `io`.
     ///
     /// It is expected that `io` already be in an appropriate state to commence
-    /// the [HTTP/2 handshake]. See [Handshake] for more details.
+    /// the [HTTP/2.0 handshake]. See [Handshake] for more details.
     ///
     /// Returns a future which resolves to the [`Connection`] instance once the
-    /// HTTP/2 handshake has been completed.
+    /// HTTP/2.0 handshake has been completed.
     ///
     /// This function also allows the caller to configure the send payload data
     /// type. See [Outbound data type] for more details.
     ///
-    /// [HTTP/2 handshake]: http://httpwg.org/specs/rfc7540.html#ConnectionHeader
+    /// [HTTP/2.0 handshake]: http://httpwg.org/specs/rfc7540.html#ConnectionHeader
     /// [Handshake]: ../index.html#handshake
     /// [`Connection`]: struct.Connection.html
     /// [Outbound data type]: ../index.html#outbound-data-type.
@@ -975,7 +889,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut = Builder::new()
     ///     .handshake(my_io);
@@ -995,7 +909,7 @@ impl Builder {
     /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
     /// # -> Handshake<T, &'static [u8]>
     /// # {
-    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // `server_fut` is a future representing the completion of the HTTP/2.0
     /// // handshake.
     /// let server_fut: Handshake<_, &'static [u8]> = Builder::new()
     ///     .handshake(my_io);
@@ -1105,7 +1019,7 @@ impl<B: Buf> SendResponse<B> {
     ///
     /// # Panics
     ///
-    /// If the lock on the stream store has been poisoned.
+    /// If the lock on the strean store has been poisoned.
     pub fn stream_id(&self) -> crate::StreamId {
         crate::StreamId::from_internal(self.inner.stream_id())
     }
@@ -1177,7 +1091,7 @@ impl<B: Buf> SendPushedResponse<B> {
     ///
     /// # Panics
     ///
-    /// If the lock on the stream store has been poisoned.
+    /// If the lock on the strean store has been poisoned.
     pub fn stream_id(&self) -> crate::StreamId {
         self.inner.stream_id()
     }
@@ -1232,10 +1146,8 @@ where
         let mut rem = PREFACE.len() - self.pos;
 
         while rem > 0 {
-            let mut buf = ReadBuf::new(&mut buf[..rem]);
-            ready!(Pin::new(self.inner_mut()).poll_read(cx, &mut buf))
+            let n = ready!(Pin::new(self.inner_mut()).poll_read(cx, &mut buf[..rem]))
                 .map_err(crate::Error::from_io)?;
-            let n = buf.filled().len();
             if n == 0 {
                 return Poll::Ready(Err(crate::Error::from_io(io::Error::new(
                     io::ErrorKind::UnexpectedEof,
@@ -1243,10 +1155,10 @@ where
                 ))));
             }
 
-            if &PREFACE[self.pos..self.pos + n] != buf.filled() {
+            if PREFACE[self.pos..self.pos + n] != buf[..n] {
                 proto_err!(conn: "read_preface: invalid preface");
                 // TODO: Should this just write the GO_AWAY frame directly?
-                return Poll::Ready(Err(Error::library_go_away(Reason::PROTOCOL_ERROR).into()));
+                return Poll::Ready(Err(Reason::PROTOCOL_ERROR.into()));
             }
 
             self.pos += n;
@@ -1267,61 +1179,63 @@ where
     type Output = Result<Connection<T, B>, crate::Error>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let span = self.span.clone(); // XXX(eliza): T_T
-        let _e = span.enter();
-        tracing::trace!(state = ?self.state);
+        log::trace!("Handshake::poll(); state={:?};", self.state);
+        use crate::server::Handshaking::*;
 
-        loop {
-            match &mut self.state {
-                Handshaking::Flushing(flush) => {
-                    // We're currently flushing a pending SETTINGS frame. Poll the
-                    // flush future, and, if it's completed, advance our state to wait
-                    // for the client preface.
-                    let codec = match Pin::new(flush).poll(cx)? {
-                        Poll::Pending => {
-                            tracing::trace!(flush.poll = %"Pending");
-                            return Poll::Pending;
-                        }
-                        Poll::Ready(flushed) => {
-                            tracing::trace!(flush.poll = %"Ready");
-                            flushed
-                        }
-                    };
-                    self.state = Handshaking::ReadingPreface(
-                        ReadPreface::new(codec).instrument(tracing::trace_span!("read_preface")),
-                    );
+        self.state = if let Flushing(ref mut flush) = self.state {
+            // We're currently flushing a pending SETTINGS frame. Poll the
+            // flush future, and, if it's completed, advance our state to wait
+            // for the client preface.
+            let codec = match Pin::new(flush).poll(cx)? {
+                Poll::Pending => {
+                    log::trace!("Handshake::poll(); flush.poll()=Pending");
+                    return Poll::Pending;
                 }
-                Handshaking::ReadingPreface(read) => {
-                    let codec = ready!(Pin::new(read).poll(cx)?);
-
-                    self.state = Handshaking::Done;
-
-                    let connection = proto::Connection::new(
-                        codec,
-                        Config {
-                            next_stream_id: 2.into(),
-                            // Server does not need to locally initiate any streams
-                            initial_max_send_streams: 0,
-                            max_send_buffer_size: self.builder.max_send_buffer_size,
-                            reset_stream_duration: self.builder.reset_stream_duration,
-                            reset_stream_max: self.builder.reset_stream_max,
-                            settings: self.builder.settings.clone(),
-                        },
-                    );
-
-                    tracing::trace!("connection established!");
-                    let mut c = Connection { connection };
-                    if let Some(sz) = self.builder.initial_target_connection_window_size {
-                        c.set_target_window_size(sz);
-                    }
-
-                    return Poll::Ready(Ok(c));
+                Poll::Ready(flushed) => {
+                    log::trace!("Handshake::poll(); flush.poll()=Ready");
+                    flushed
                 }
-                Handshaking::Done => {
-                    panic!("Handshaking::poll() called again after handshaking was complete")
-                }
+            };
+            Handshaking::from(ReadPreface::new(codec))
+        } else {
+            // Otherwise, we haven't actually advanced the state, but we have
+            // to replace it with itself, because we have to return a value.
+            // (note that the assignment to `self.state` has to be outside of
+            // the `if let` block above in order to placate the borrow checker).
+            mem::replace(&mut self.state, Handshaking::Empty)
+        };
+        let poll = if let ReadingPreface(ref mut read) = self.state {
+            // We're now waiting for the client preface. Poll the `ReadPreface`
+            // future. If it has completed, we will create a `Connection` handle
+            // for the connection.
+            Pin::new(read).poll(cx)
+        // Actually creating the `Connection` has to occur outside of this
+        // `if let` block, because we've borrowed `self` mutably in order
+        // to poll the state and won't be able to borrow the SETTINGS frame
+        // as well until we release the borrow for `poll()`.
+        } else {
+            unreachable!("Handshake::poll() state was not advanced completely!")
+        };
+        poll?.map(|codec| {
+            let connection = proto::Connection::new(
+                codec,
+                Config {
+                    next_stream_id: 2.into(),
+                    // Server does not need to locally initiate any streams
+                    initial_max_send_streams: 0,
+                    reset_stream_duration: self.builder.reset_stream_duration,
+                    reset_stream_max: self.builder.reset_stream_max,
+                    settings: self.builder.settings.clone(),
+                },
+            );
+
+            log::trace!("Handshake::poll(); connection established!");
+            let mut c = Connection { connection };
+            if let Some(sz) = self.builder.initial_target_connection_window_size {
+                c.set_target_window_size(sz);
             }
-        }
+            Ok(c)
+        })
     }
 }
 
@@ -1375,15 +1289,15 @@ impl Peer {
         if let Err(e) = frame::PushPromise::validate_request(&request) {
             use PushPromiseHeaderError::*;
             match e {
-                NotSafeAndCacheable => tracing::debug!(
-                    ?promised_id,
-                    "convert_push_message: method {} is not safe and cacheable",
+                NotSafeAndCacheable => log::debug!(
+                    "convert_push_message: method {} is not safe and cacheable; promised_id={:?}",
                     request.method(),
+                    promised_id,
                 ),
-                InvalidContentLength(e) => tracing::debug!(
-                    ?promised_id,
-                    "convert_push_message; promised request has invalid content-length {:?}",
+                InvalidContentLength(e) => log::debug!(
+                    "convert_push_message; promised request has invalid content-length {:?}; promised_id={:?}",
                     e,
+                    promised_id,
                 ),
             }
             return Err(UserError::MalformedHeaders);
@@ -1400,7 +1314,7 @@ impl Peer {
             _,
         ) = request.into_parts();
 
-        let pseudo = Pseudo::request(method, uri, None);
+        let pseudo = Pseudo::request(method, uri);
 
         Ok(frame::PushPromise::new(
             stream_id,
@@ -1414,8 +1328,6 @@ impl Peer {
 impl proto::Peer for Peer {
     type Poll = Request<()>;
 
-    const NAME: &'static str = "Server";
-
     fn is_server() -> bool {
         true
     }
@@ -1428,17 +1340,20 @@ impl proto::Peer for Peer {
         pseudo: Pseudo,
         fields: HeaderMap,
         stream_id: StreamId,
-    ) -> Result<Self::Poll, Error> {
+    ) -> Result<Self::Poll, RecvError> {
         use http::{uri, Version};
 
         let mut b = Request::builder();
 
         macro_rules! malformed {
             ($($arg:tt)*) => {{
-                tracing::debug!($($arg)*);
-                return Err(Error::library_reset(stream_id, Reason::PROTOCOL_ERROR));
+                log::debug!($($arg)*);
+                return Err(RecvError::Stream {
+                    id: stream_id,
+                    reason: Reason::PROTOCOL_ERROR,
+                });
             }}
-        }
+        };
 
         b = b.version(Version::HTTP_2);
 
@@ -1450,13 +1365,10 @@ impl proto::Peer for Peer {
             malformed!("malformed headers: missing method");
         }
 
-        let has_protocol = pseudo.protocol.is_some();
-        if !is_connect && has_protocol {
-            malformed!("malformed headers: :protocol on non-CONNECT request");
-        }
-
+        // Specifying :status for a request is a protocol error
         if pseudo.status.is_some() {
-            malformed!("malformed headers: :status field on request");
+            log::trace!("malformed headers: :status field on request; PROTOCOL_ERROR");
+            return Err(RecvError::Connection(Reason::PROTOCOL_ERROR));
         }
 
         // Convert the URI
@@ -1477,7 +1389,7 @@ impl proto::Peer for Peer {
 
         // A :scheme is required, except CONNECT.
         if let Some(scheme) = pseudo.scheme {
-            if is_connect && !has_protocol {
+            if is_connect {
                 malformed!(":scheme in CONNECT");
             }
             let maybe_scheme = scheme.parse();
@@ -1495,12 +1407,12 @@ impl proto::Peer for Peer {
             if parts.authority.is_some() {
                 parts.scheme = Some(scheme);
             }
-        } else if !is_connect || has_protocol {
+        } else if !is_connect {
             malformed!("malformed headers: missing scheme");
         }
 
         if let Some(path) = pseudo.path {
-            if is_connect && !has_protocol {
+            if is_connect {
                 malformed!(":path in CONNECT");
             }
 
@@ -1513,8 +1425,6 @@ impl proto::Peer for Peer {
             parts.path_and_query = Some(maybe_path.or_else(|why| {
                 malformed!("malformed headers: malformed path ({:?}): {}", path, why,)
             })?);
-        } else if is_connect && has_protocol {
-            malformed!("malformed headers: missing path in extended CONNECT");
         }
 
         b = b.uri(parts);
@@ -1525,7 +1435,10 @@ impl proto::Peer for Peer {
                 // TODO: Should there be more specialized handling for different
                 // kinds of errors
                 proto_err!(stream: "error building request: {}; stream={:?}", e, stream_id);
-                return Err(Error::library_reset(stream_id, Reason::PROTOCOL_ERROR));
+                return Err(RecvError::Stream {
+                    id: stream_id,
+                    reason: Reason::PROTOCOL_ERROR,
+                });
             }
         };
 
@@ -1544,9 +1457,42 @@ where
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match *self {
-            Handshaking::Flushing(_) => f.write_str("Flushing(_)"),
-            Handshaking::ReadingPreface(_) => f.write_str("ReadingPreface(_)"),
-            Handshaking::Done => f.write_str("Done"),
+            Handshaking::Flushing(_) => write!(f, "Handshaking::Flushing(_)"),
+            Handshaking::ReadingPreface(_) => write!(f, "Handshaking::ReadingPreface(_)"),
+            Handshaking::Empty => write!(f, "Handshaking::Empty"),
         }
+    }
+}
+
+impl<T, B> convert::From<Flush<T, Prioritized<B>>> for Handshaking<T, B>
+where
+    T: AsyncRead + AsyncWrite,
+    B: Buf,
+{
+    #[inline]
+    fn from(flush: Flush<T, Prioritized<B>>) -> Self {
+        Handshaking::Flushing(flush)
+    }
+}
+
+impl<T, B> convert::From<ReadPreface<T, Prioritized<B>>> for Handshaking<T, B>
+where
+    T: AsyncRead + AsyncWrite,
+    B: Buf,
+{
+    #[inline]
+    fn from(read: ReadPreface<T, Prioritized<B>>) -> Self {
+        Handshaking::ReadingPreface(read)
+    }
+}
+
+impl<T, B> convert::From<Codec<T, Prioritized<B>>> for Handshaking<T, B>
+where
+    T: AsyncRead + AsyncWrite,
+    B: Buf,
+{
+    #[inline]
+    fn from(codec: Codec<T, Prioritized<B>>) -> Self {
+        Handshaking::from(Flush::new(codec))
     }
 }

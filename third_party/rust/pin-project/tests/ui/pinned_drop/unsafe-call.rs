@@ -1,17 +1,16 @@
+use pin_project::{pin_project, pinned_drop};
 use std::pin::Pin;
 
-use pin_project::{pin_project, pinned_drop};
-
 #[pin_project(PinnedDrop)]
-struct S {
+struct Struct {
     #[pin]
-    f: u8,
+    field: u8,
 }
 
 #[pinned_drop]
-impl PinnedDrop for S {
+impl PinnedDrop for Struct {
     fn drop(self: Pin<&mut Self>) {
-        self.project().f.get_unchecked_mut(); //~ ERROR call to unsafe function is unsafe and requires unsafe function or block [E0133]
+        self.project().field.get_unchecked_mut(); //~ ERROR call to unsafe function is unsafe and requires unsafe function or block [E0133]
     }
 }
 

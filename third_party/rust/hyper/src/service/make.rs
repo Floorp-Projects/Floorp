@@ -177,7 +177,6 @@ impl<F> fmt::Debug for MakeServiceFn<F> {
 mod sealed {
     pub trait Sealed<X> {}
 
-    #[allow(unreachable_pub)] // This is intentional.
     pub trait CantImpl {}
 
     #[allow(missing_debug_implementations)]

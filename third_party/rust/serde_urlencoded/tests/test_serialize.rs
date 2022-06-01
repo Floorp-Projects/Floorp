@@ -1,4 +1,6 @@
-use serde_derive::Serialize;
+extern crate serde_urlencoded;
+#[macro_use]
+extern crate serde_derive;
 
 #[derive(Serialize)]
 struct NewType<T>(T);
@@ -9,24 +11,6 @@ fn serialize_newtype_i32() {
     assert_eq!(
         serde_urlencoded::to_string(params),
         Ok("field=11".to_owned())
-    );
-}
-
-#[test]
-fn serialize_newtype_u128() {
-    let params = &[("field", Some(NewType(u128::MAX)))];
-    assert_eq!(
-        serde_urlencoded::to_string(params),
-        Ok(format!("field={}", u128::MAX))
-    );
-}
-
-#[test]
-fn serialize_newtype_i128() {
-    let params = &[("field", Some(NewType(i128::MIN)))];
-    assert_eq!(
-        serde_urlencoded::to_string(params),
-        Ok(format!("field={}", i128::MIN))
     );
 }
 
@@ -96,9 +80,4 @@ struct Unit;
 #[test]
 fn serialize_unit_struct() {
     assert_eq!(serde_urlencoded::to_string(Unit), Ok("".to_owned()));
-}
-
-#[test]
-fn serialize_unit_type() {
-    assert_eq!(serde_urlencoded::to_string(()), Ok("".to_owned()));
 }
