@@ -111,7 +111,7 @@ def ParseDepsDict(deps_content):
         'Var': VarLookup(local_scope),
         'deps_os': {},
     }
-    exec (deps_content, global_scope, local_scope)
+    exec(deps_content, global_scope, local_scope)
     return local_scope
 
 
@@ -138,11 +138,11 @@ def _RunCommand(command,
                 input_data=None):
     """Runs a command and returns the output from that command.
 
-  If the command fails (exit code != 0), the function will exit the process.
+    If the command fails (exit code != 0), the function will exit the process.
 
-  Returns:
-    A tuple containing the stdout and stderr outputs as strings.
-  """
+    Returns:
+      A tuple containing the stdout and stderr outputs as strings.
+    """
     working_dir = working_dir or CHECKOUT_SRC_DIR
     logging.debug('CMD: %s CWD: %s', ' '.join(command), working_dir)
     env = os.environ.copy()
@@ -172,9 +172,9 @@ def _RunCommand(command,
 def _GetBranches():
     """Returns a tuple of active,branches.
 
-  The 'active' is the name of the currently active branch and 'branches' is a
-  list of all branches.
-  """
+    The 'active' is the name of the currently active branch and 'branches' is a
+    list of all branches.
+    """
     lines = _RunCommand(['git', 'branch'])[0].split('\n')
     branches = []
     active = ''
@@ -236,15 +236,16 @@ def ReadUrlContent(url):
 def GetMatchingDepsEntries(depsentry_dict, dir_path):
     """Gets all deps entries matching the provided path.
 
-  This list may contain more than one DepsEntry object.
-  Example: dir_path='src/testing' would give results containing both
-  'src/testing/gtest' and 'src/testing/gmock' deps entries for Chromium's DEPS.
-  Example 2: dir_path='src/build' should return 'src/build' but not
-  'src/buildtools'.
+    This list may contain more than one DepsEntry object.
+    Example: dir_path='src/testing' would give results containing both
+    'src/testing/gtest' and 'src/testing/gmock' deps entries for Chromium's
+    DEPS.
+    Example 2: dir_path='src/build' should return 'src/build' but not
+    'src/buildtools'.
 
-  Returns:
-    A list of DepsEntry objects.
-  """
+    Returns:
+      A list of DepsEntry objects.
+    """
     result = []
     for path, depsentry in depsentry_dict.iteritems():
         if path == dir_path:
@@ -282,9 +283,8 @@ def BuildDepsentryDict(deps_dict):
 
 
 def _FindChangedCipdPackages(path, old_pkgs, new_pkgs):
-    pkgs_equal = ({p['package']
-                   for p in old_pkgs} == {p['package']
-                                          for p in new_pkgs})
+    pkgs_equal = ({p['package'] for p in old_pkgs
+                  } == {p['package'] for p in new_pkgs})
     assert pkgs_equal, ('Old: %s\n New: %s.\nYou need to do a manual roll '
                         'and remove/add entries in DEPS so the old and new '
                         'list match.' % (old_pkgs, new_pkgs))
@@ -292,8 +292,8 @@ def _FindChangedCipdPackages(path, old_pkgs, new_pkgs):
         for new_pkg in new_pkgs:
             old_version = old_pkg['version']
             new_version = new_pkg['version']
-            if (old_pkg['package'] == new_pkg['package']
-                    and old_version != new_version):
+            if (old_pkg['package'] == new_pkg['package'] and
+                    old_version != new_version):
                 logging.debug('Roll dependency %s to %s', path, new_version)
                 yield ChangedCipdPackage(path, old_pkg['package'], old_version,
                                          new_version)
@@ -311,26 +311,26 @@ def _FindNewDeps(old, new):
 
 def FindAddedDeps(webrtc_deps, new_cr_deps):
     """
-  Calculate new deps entries of interest.
+    Calculate new deps entries of interest.
 
-  Ideally, that would mean: only appearing in chromium DEPS
-  but transitively used in WebRTC.
+    Ideally, that would mean: only appearing in chromium DEPS
+    but transitively used in WebRTC.
 
-  Since it's hard to compute, we restrict ourselves to a well defined subset:
-  deps sitting in `ANDROID_DEPS_PATH`.
-  Otherwise, assumes that's a Chromium-only dependency.
+    Since it's hard to compute, we restrict ourselves to a well defined subset:
+    deps sitting in `ANDROID_DEPS_PATH`.
+    Otherwise, assumes that's a Chromium-only dependency.
 
-  Args:
-    webrtc_deps: dict of deps as defined in the WebRTC DEPS file.
-    new_cr_deps: dict of deps as defined in the chromium DEPS file.
+    Args:
+      webrtc_deps: dict of deps as defined in the WebRTC DEPS file.
+      new_cr_deps: dict of deps as defined in the chromium DEPS file.
 
-  Caveat: Doesn't detect a new package in existing dep.
+    Caveat: Doesn't detect a new package in existing dep.
 
-  Returns:
-    A tuple consisting of:
-      A list of paths added dependencies sitting in `ANDROID_DEPS_PATH`.
-      A list of paths for other added dependencies.
-  """
+    Returns:
+      A tuple consisting of:
+        A list of paths added dependencies sitting in `ANDROID_DEPS_PATH`.
+        A list of paths for other added dependencies.
+    """
     all_added_deps = _FindNewDeps(webrtc_deps, new_cr_deps)
     generated_android_deps = [
         path for path in all_added_deps if path.startswith(ANDROID_DEPS_PATH)
@@ -343,28 +343,28 @@ def FindAddedDeps(webrtc_deps, new_cr_deps):
 
 def FindRemovedDeps(webrtc_deps, new_cr_deps):
     """
-  Calculate obsolete deps entries.
+    Calculate obsolete deps entries.
 
-  Ideally, that would mean: no more appearing in chromium DEPS
-  and not used in WebRTC.
+    Ideally, that would mean: no more appearing in chromium DEPS
+    and not used in WebRTC.
 
-  Since it's hard to compute:
-   1/ We restrict ourselves to a well defined subset:
-      deps sitting in `ANDROID_DEPS_PATH`.
-   2/ We rely on existing behavior of CalculateChangeDeps.
-      I.e. Assumes non-CIPD dependencies are WebRTC-only, don't remove them.
+    Since it's hard to compute:
+     1/ We restrict ourselves to a well defined subset:
+        deps sitting in `ANDROID_DEPS_PATH`.
+     2/ We rely on existing behavior of CalculateChangeDeps.
+        I.e. Assumes non-CIPD dependencies are WebRTC-only, don't remove them.
 
-  Args:
-    webrtc_deps: dict of deps as defined in the WebRTC DEPS file.
-    new_cr_deps: dict of deps as defined in the chromium DEPS file.
+    Args:
+      webrtc_deps: dict of deps as defined in the WebRTC DEPS file.
+      new_cr_deps: dict of deps as defined in the chromium DEPS file.
 
-  Caveat: Doesn't detect a deleted package in existing dep.
+    Caveat: Doesn't detect a deleted package in existing dep.
 
-  Returns:
-    A tuple consisting of:
-      A list of paths of dependencies removed from `ANDROID_DEPS_PATH`.
-      A list of paths of unexpected disappearing dependencies.
-  """
+    Returns:
+      A tuple consisting of:
+        A list of paths of dependencies removed from `ANDROID_DEPS_PATH`.
+        A list of paths of unexpected disappearing dependencies.
+    """
     all_removed_deps = _FindNewDeps(new_cr_deps, webrtc_deps)
     generated_android_deps = [
         path for path in all_removed_deps if path.startswith(ANDROID_DEPS_PATH)
@@ -379,8 +379,8 @@ def FindRemovedDeps(webrtc_deps, new_cr_deps):
 
 def CalculateChangedDeps(webrtc_deps, new_cr_deps):
     """
-  Calculate changed deps entries based on entries defined in the WebRTC DEPS
-  file:
+    Calculate changed deps entries based on entries defined in the WebRTC DEPS
+    file:
      - If a shared dependency with the Chromium DEPS file: roll it to the same
        revision as Chromium (i.e. entry in the new_cr_deps dict)
      - If it's a Chromium sub-directory, roll it to the HEAD revision (notice
@@ -389,9 +389,9 @@ def CalculateChangedDeps(webrtc_deps, new_cr_deps):
      - If it's another DEPS entry (not shared with Chromium), roll it to HEAD
        unless it's configured to be skipped.
 
-  Returns:
-    A list of ChangedDep objects representing the changed deps.
-  """
+    Returns:
+      A list of ChangedDep objects representing the changed deps.
+    """
     result = []
     webrtc_entries = BuildDepsentryDict(webrtc_deps)
     new_cr_entries = BuildDepsentryDict(new_cr_deps)
@@ -434,6 +434,7 @@ def CalculateChangedDeps(webrtc_deps, new_cr_deps):
 
 
 def CalculateChangedClang(new_cr_rev):
+
     def GetClangRev(lines):
         for line in lines:
             match = CLANG_REVISION_RE.match(line)
@@ -585,8 +586,7 @@ def _EnsureUpdatedMainBranch(dry_run):
     current_branch = _RunCommand(['git', 'rev-parse', '--abbrev-ref',
                                   'HEAD'])[0].splitlines()[0]
     if current_branch != 'main':
-        logging.error(
-            'Please checkout the main branch and re-run this script.')
+        logging.error('Please checkout the main branch and re-run this script.')
         if not dry_run:
             sys.exit(-1)
 
@@ -629,11 +629,11 @@ def ChooseCQMode(skip_cq, cq_over, current_commit_pos, new_commit_pos):
 def _UploadCL(commit_queue_mode):
     """Upload the committed changes as a changelist to Gerrit.
 
-  commit_queue_mode:
-    - 2: Submit to commit queue.
-    - 1: Run trybots but do not submit to CQ.
-    - 0: Skip CQ, upload only.
-  """
+    commit_queue_mode:
+     - 2: Submit to commit queue.
+     - 1: Run trybots but do not submit to CQ.
+     - 0: Skip CQ, upload only.
+    """
     cmd = ['git', 'cl', 'upload', '--force', '--bypass-hooks']
     if commit_queue_mode >= 2:
         logging.info('Sending the CL to the CQ...')
@@ -673,20 +673,18 @@ def main():
                    '--revision',
                    help=('Chromium Git revision to roll to. Defaults to the '
                          'Chromium HEAD revision if omitted.'))
-    p.add_argument(
-        '--dry-run',
-        action='store_true',
-        default=False,
-        help=('Calculate changes and modify DEPS, but don\'t create '
-              'any local branch, commit, upload CL or send any '
-              'tryjobs.'))
-    p.add_argument(
-        '-i',
-        '--ignore-unclean-workdir',
-        action='store_true',
-        default=False,
-        help=('Ignore if the current branch is not main or if there '
-              'are uncommitted changes (default: %(default)s).'))
+    p.add_argument('--dry-run',
+                   action='store_true',
+                   default=False,
+                   help=('Calculate changes and modify DEPS, but don\'t create '
+                         'any local branch, commit, upload CL or send any '
+                         'tryjobs.'))
+    p.add_argument('-i',
+                   '--ignore-unclean-workdir',
+                   action='store_true',
+                   default=False,
+                   help=('Ignore if the current branch is not main or if there '
+                         'are uncommitted changes (default: %(default)s).'))
     grp = p.add_mutually_exclusive_group()
     grp.add_argument(
         '--skip-cq',
@@ -740,8 +738,7 @@ def main():
     if other_deps:
         raise RollError('WebRTC DEPS entries are missing from Chromium: %s.\n'
                         'Remove them or add them to either '
-                        'WEBRTC_ONLY_DEPS or DONT_AUTOROLL_THESE.' %
-                        other_deps)
+                        'WEBRTC_ONLY_DEPS or DONT_AUTOROLL_THESE.' % other_deps)
     clang_change = CalculateChangedClang(rev_update.new_chromium_rev)
     commit_msg = GenerateCommitMessage(
         rev_update,
