@@ -459,8 +459,12 @@
       'gn_args': 'is_clang=true',
     },
 
+    # This mixin also sets 'dcheck_always_on=true' to ensure Chromium's
+    # GN files (e.g. things in //build, etc..) agree with the value of
+    # 'rtc_dcheck_always_on' when they read 'dcheck_always_on'.
+    # See crbug.com/1231890#c9 for more info.
     'rtc_dcheck_always_on': {
-      'gn_args': 'rtc_dcheck_always_on=true',
+      'gn_args': 'rtc_dcheck_always_on=true dcheck_always_on=true',
     },
 
     'debug': {
@@ -539,14 +543,17 @@
       'gn_args': 'optimize_for_fuzzing=true',
     },
 
+    'release': {
+      'gn_args': 'is_debug=false dcheck_always_on=false',
+    },
+
+    # The 'pure_release_bot' configuration is for release bots that are doing a
+    # 100% release build without DCHECKs while 'release_bot' is a partial
+    # release configs since both `rtc_dcheck_always_on` and `dcheck_always_on`
+    # are set to true.
     'pure_release_bot': {
       'mixins': ['release', 'goma'],
     },
-
-    'release': {
-      'gn_args': 'is_debug=false',
-    },
-
     'release_bot': {
       'mixins': ['pure_release_bot', 'rtc_dcheck_always_on'],
     },
