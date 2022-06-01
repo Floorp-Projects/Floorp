@@ -341,15 +341,13 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Svc) {
   std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
       network_links = CreateNetwork();
   AddPeer(network_links.first, [](PeerConfigurer* alice) {
-    VideoConfig simulcast(1280, 720, 15);
-    simulcast.stream_label = "alice-svc";
+    VideoConfig simulcast("alice-svc", 1280, 720, 15);
     // Because we have network with packets loss we can analyze only the
     // highest spatial layer in SVC mode.
     simulcast.simulcast_config = VideoSimulcastConfig(2, 1);
     alice->AddVideoConfig(std::move(simulcast));
 
-    AudioConfig audio;
-    audio.stream_label = "alice-audio";
+    AudioConfig audio("alice-audio");
     audio.mode = AudioConfig::Mode::kFile;
     audio.input_file_name =
         test::ResourcePath("pc_quality_smoke_test_alice_source", "wav");
