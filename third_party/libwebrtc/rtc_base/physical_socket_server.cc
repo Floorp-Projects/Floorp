@@ -714,7 +714,7 @@ bool SocketDispatcher::IsDescriptorClosed() {
   if (udp_) {
     // The MSG_PEEK trick doesn't work for UDP, since (at least in some
     // circumstances) it requires reading an entire UDP packet, which would be
-    // bad for performance here. So, just check whether |s_| has been closed,
+    // bad for performance here. So, just check whether `s_` has been closed,
     // which should be sufficient.
     return s_ == INVALID_SOCKET;
   }

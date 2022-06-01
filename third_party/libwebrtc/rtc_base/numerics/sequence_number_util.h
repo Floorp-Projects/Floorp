@@ -22,9 +22,9 @@
 
 namespace webrtc {
 
-// Test if the sequence number |a| is ahead or at sequence number |b|.
+// Test if the sequence number `a` is ahead or at sequence number `b`.
 //
-// If |M| is an even number and the two sequence numbers are at max distance
+// If `M` is an even number and the two sequence numbers are at max distance
 // from each other, then the sequence number with the highest value is
 // considered to be ahead.
 template <typename T, T M>
@@ -52,9 +52,9 @@ inline bool AheadOrAt(T a, T b) {
   return AheadOrAt<T, 0>(a, b);
 }
 
-// Test if the sequence number |a| is ahead of sequence number |b|.
+// Test if the sequence number `a` is ahead of sequence number `b`.
 //
-// If |M| is an even number and the two sequence numbers are at max distance
+// If `M` is an even number and the two sequence numbers are at max distance
 // from each other, then the sequence number with the highest value is
 // considered to be ahead.
 template <typename T, T M = 0>

@@ -242,7 +242,7 @@ TEST(FlatMap, InsertOrAssignMoveOnlyKey) {
   flat_map<MoveOnlyInt, MoveOnlyInt> m;
 
   // Initial insertion should return an iterator to the element and set the
-  // second pair member to |true|. The inserted key and value should be moved
+  // second pair member to `true`. The inserted key and value should be moved
   // from.
   MoveOnlyInt key(1);
   MoveOnlyInt val(22);
@@ -256,7 +256,7 @@ TEST(FlatMap, InsertOrAssignMoveOnlyKey) {
 
   // Second call with same key should result in an assignment, overwriting the
   // old value. Assignment should be indicated by setting the second pair member
-  // to |false|. Only the inserted value should be moved from, the key should be
+  // to `false`. Only the inserted value should be moved from, the key should be
   // left intact.
   key = MoveOnlyInt(1);
   val = MoveOnlyInt(44);
@@ -316,7 +316,7 @@ TEST(FlatMap, TryEmplaceMoveOnlyKey) {
   flat_map<MoveOnlyInt, std::pair<MoveOnlyInt, MoveOnlyInt>> m;
 
   // Trying to emplace into an empty map should succeed. Insertion should return
-  // an iterator to the element and set the second pair member to |true|. The
+  // an iterator to the element and set the second pair member to `true`. The
   // inserted key and value should be moved from.
   MoveOnlyInt key(1);
   MoveOnlyInt val1(22);

@@ -55,17 +55,17 @@ class AsyncTCPSocketBase : public AsyncPacketSocket {
   void SetError(int error) override;
 
  protected:
-  // Binds and connects |socket| and creates AsyncTCPSocket for
-  // it. Takes ownership of |socket|. Returns null if bind() or
-  // connect() fail (|socket| is destroyed in that case).
+  // Binds and connects `socket` and creates AsyncTCPSocket for
+  // it. Takes ownership of `socket`. Returns null if bind() or
+  // connect() fail (`socket` is destroyed in that case).
   static AsyncSocket* ConnectSocket(AsyncSocket* socket,
                                     const SocketAddress& bind_address,
                                     const SocketAddress& remote_address);
   int FlushOutBuffer();
-  // Add data to |outbuf_|.
+  // Add data to `outbuf_`.
   void AppendToOutBuffer(const void* pv, size_t cb);
 
-  // Helper methods for |outpos_|.
+  // Helper methods for `outpos_`.
   bool IsOutBufferEmpty() const { return outbuf_.size() == 0; }
   void ClearOutBuffer() { outbuf_.Clear(); }
 
@@ -88,9 +88,9 @@ class AsyncTCPSocketBase : public AsyncPacketSocket {
 
 class AsyncTCPSocket : public AsyncTCPSocketBase {
  public:
-  // Binds and connects |socket| and creates AsyncTCPSocket for
-  // it. Takes ownership of |socket|. Returns null if bind() or
-  // connect() fail (|socket| is destroyed in that case).
+  // Binds and connects `socket` and creates AsyncTCPSocket for
+  // it. Takes ownership of `socket`. Returns null if bind() or
+  // connect() fail (`socket` is destroyed in that case).
   static AsyncTCPSocket* Create(AsyncSocket* socket,
                                 const SocketAddress& bind_address,
                                 const SocketAddress& remote_address);

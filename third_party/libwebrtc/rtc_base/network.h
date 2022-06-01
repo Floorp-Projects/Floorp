@@ -175,14 +175,14 @@ class RTC_EXPORT NetworkManagerBase : public NetworkManager {
 
  protected:
   typedef std::map<std::string, Network*> NetworkMap;
-  // Updates |networks_| with the networks listed in |list|. If
-  // |network_map_| already has a Network object for a network listed
-  // in the |list| then it is reused. Accept ownership of the Network
-  // objects in the |list|. |changed| will be set to true if there is
+  // Updates `networks_` with the networks listed in `list`. If
+  // `network_map_` already has a Network object for a network listed
+  // in the `list` then it is reused. Accept ownership of the Network
+  // objects in the `list`. `changed` will be set to true if there is
   // any change in the network list.
   void MergeNetworkList(const NetworkList& list, bool* changed);
 
-  // |stats| will be populated even if |*changed| is false.
+  // `stats` will be populated even if |*changed| is false.
   void MergeNetworkList(const NetworkList& list,
                         bool* changed,
                         NetworkManager::Stats* stats);
@@ -353,7 +353,7 @@ class RTC_EXPORT Network {
   // Returns the length, in bits, of this network's prefix.
   int prefix_length() const { return prefix_length_; }
 
-  // |key_| has unique value per network interface. Used in sorting network
+  // `key_` has unique value per network interface. Used in sorting network
   // interfaces. Key is derived from interface name and it's prefix.
   std::string key() const { return key_; }
 

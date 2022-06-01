@@ -104,10 +104,10 @@ class VirtualSocketServer : public SocketServer {
 
   size_t largest_seen_udp_payload() { return largest_seen_udp_payload_; }
 
-  // If |blocked| is true, subsequent attempts to send will result in -1 being
+  // If `blocked` is true, subsequent attempts to send will result in -1 being
   // returned, with the socket error set to EWOULDBLOCK.
   //
-  // If this method is later called with |blocked| set to false, any sockets
+  // If this method is later called with `blocked` set to false, any sockets
   // that previously failed to send with EWOULDBLOCK will emit SignalWriteEvent.
   //
   // This can be used to simulate the send buffer on a network interface being

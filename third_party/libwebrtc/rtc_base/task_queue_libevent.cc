@@ -283,7 +283,7 @@ void TaskQueueLibevent::OnWakeup(int socket,
         if (task->Run()) {
           task.reset();
         } else {
-          // |false| means the task should *not* be deleted.
+          // `false` means the task should *not* be deleted.
           task.release();
         }
       }

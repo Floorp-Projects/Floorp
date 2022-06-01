@@ -53,13 +53,13 @@ class RTCCertificatePEM {
 class RTC_EXPORT RTCCertificate final
     : public RefCountedNonVirtual<RTCCertificate> {
  public:
-  // Takes ownership of |identity|.
+  // Takes ownership of `identity`.
   static scoped_refptr<RTCCertificate> Create(
       std::unique_ptr<SSLIdentity> identity);
 
   // Returns the expiration time in ms relative to epoch, 1970-01-01T00:00:00Z.
   uint64_t Expires() const;
-  // Checks if the certificate has expired, where |now| is expressed in ms
+  // Checks if the certificate has expired, where `now` is expressed in ms
   // relative to epoch, 1970-01-01T00:00:00Z.
   bool HasExpired(uint64_t now) const;
 
@@ -87,7 +87,7 @@ class RTC_EXPORT RTCCertificate final
 
  private:
   // The SSLIdentity is the owner of the SSLCertificate. To protect our
-  // GetSSLCertificate() we take ownership of |identity_|.
+  // GetSSLCertificate() we take ownership of `identity_`.
   const std::unique_ptr<SSLIdentity> identity_;
 };
 

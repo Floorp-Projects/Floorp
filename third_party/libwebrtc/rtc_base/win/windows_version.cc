@@ -99,7 +99,7 @@ class RegKey {
     }
   }
 
-  // Reads a REG_DWORD (uint32_t) into |out_value|. If |name| is null or empty,
+  // Reads a REG_DWORD (uint32_t) into `out_value`. If `name` is null or empty,
   // reads the key's default value, if any.
   LONG ReadValueDW(const wchar_t* name, DWORD* out_value) const {
     RTC_DCHECK(out_value);
@@ -117,7 +117,7 @@ class RegKey {
     return result;
   }
 
-  // Reads a string into |out_value|. If |name| is null or empty, reads
+  // Reads a string into `out_value`. If `name` is null or empty, reads
   // the key's default value, if any.
   LONG ReadValue(const wchar_t* name, std::wstring* out_value) const {
     RTC_DCHECK(out_value);

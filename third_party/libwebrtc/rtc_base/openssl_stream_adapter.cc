@@ -57,7 +57,7 @@
 
 namespace rtc {
 namespace {
-// SRTP cipher suite table. |internal_name| is used to construct a
+// SRTP cipher suite table. `internal_name` is used to construct a
 // colon-separated profile strings which is needed by
 // SSL_CTX_set_tlsext_use_srtp().
 struct SrtpCipherMapEntry {
