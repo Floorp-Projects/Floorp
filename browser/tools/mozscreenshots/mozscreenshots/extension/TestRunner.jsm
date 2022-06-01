@@ -17,7 +17,6 @@ const { AppConstants } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -478,7 +477,7 @@ var TestRunner = {
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
     await this._cropImage(
       browserWindow,
-      OS.Path.toFileURI(imagePath),
+      PathUtils.toFileURI(imagePath),
       bounds,
       rects,
       imagePath
@@ -557,7 +556,7 @@ var TestRunner = {
           fr.onload = e => {
             const buffer = new Uint8Array(e.target.result);
             // Save the file and complete the promise
-            OS.File.writeAtomic(targetPath, buffer, {}).then(resolve);
+            IOUtils.write(targetPath, buffer).then(resolve);
           };
           // Do the conversion
           fr.readAsArrayBuffer(blob);
