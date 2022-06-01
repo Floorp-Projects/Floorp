@@ -11,15 +11,22 @@
 
 [package]
 edition = "2018"
+rust-version = "1.49.0"
 name = "http"
-version = "0.2.5"
-authors = ["Alex Crichton <alex@alexcrichton.com>", "Carl Lerche <me@carllerche.com>", "Sean McArthur <sean@seanmonstar.com>"]
-description = "A set of types for representing HTTP requests and responses.\n"
+version = "0.2.7"
+authors = [
+    "Alex Crichton <alex@alexcrichton.com>",
+    "Carl Lerche <me@carllerche.com>",
+    "Sean McArthur <sean@seanmonstar.com>",
+]
+description = """
+A set of types for representing HTTP requests and responses.
+"""
 documentation = "https://docs.rs/http"
 readme = "README.md"
 keywords = ["http"]
 categories = ["web-programming"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/hyperium/http"
 
 [[bench]]
@@ -41,6 +48,7 @@ path = "benches/method.rs"
 [[bench]]
 name = "uri"
 path = "benches/uri.rs"
+
 [dependencies.bytes]
 version = "1"
 
@@ -48,7 +56,8 @@ version = "1"
 version = "1.0.5"
 
 [dependencies.itoa]
-version = "0.4.1"
+version = "1"
+
 [dev-dependencies.doc-comment]
 version = "0.3"
 

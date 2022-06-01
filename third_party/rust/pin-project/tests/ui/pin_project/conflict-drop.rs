@@ -1,11 +1,12 @@
-use pin_project::{pin_project, pinned_drop};
 use std::pin::Pin;
+
+use pin_project::{pin_project, pinned_drop};
 
 #[pin_project] //~ ERROR E0119
 struct Foo<T, U> {
     #[pin]
-    future: T,
-    field: U,
+    f1: T,
+    f2: U,
 }
 
 impl<T, U> Drop for Foo<T, U> {
@@ -15,8 +16,8 @@ impl<T, U> Drop for Foo<T, U> {
 #[pin_project(PinnedDrop)] //~ ERROR E0119
 struct Bar<T, U> {
     #[pin]
-    future: T,
-    field: U,
+    f1: T,
+    f2: U,
 }
 
 #[pinned_drop]

@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.34"
+rust-version = "1.37"
 name = "pin-project"
-version = "0.4.29"
+version = "1.0.10"
 exclude = ["/.*", "/ci", "/tools"]
 description = "A crate for safe and ergonomic pin-projection.\n"
 keywords = ["pin", "macros", "attribute"]
@@ -23,16 +23,15 @@ repository = "https://github.com/taiki-e/pin-project"
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 [dependencies.pin-project-internal]
-version = "=0.4.29"
-default-features = false
+version = "=1.0.10"
+[dev-dependencies.macrotest]
+version = "1.0.8"
+
 [dev-dependencies.rustversion]
-version = "1.0"
+version = "1"
 
-[dev-dependencies.ryu]
-version = "=1.0.6"
-
-[dev-dependencies.serde_json]
-version = "=1.0.72"
+[dev-dependencies.static_assertions]
+version = "1"
 
 [dev-dependencies.trybuild]
-version = "1.0"
+version = "1.0.49"

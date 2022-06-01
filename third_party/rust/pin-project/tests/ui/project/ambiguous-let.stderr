@@ -1,5 +1,0 @@
-error: Both initializer expression and pattern are replaceable, you need to split the initializer expression into separate let bindings to avoid ambiguity
-  --> tests/ui/project/ambiguous-let.rs:18:9
-   |
-18 |     let Struct(x) = match Pin::new(&mut foo).project() {
-   |         ^^^^^^^^^

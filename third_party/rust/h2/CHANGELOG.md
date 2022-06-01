@@ -1,3 +1,90 @@
+# 0.3.13 (March 31, 2022)
+
+* Update private internal `tokio-util` dependency.
+
+# 0.3.12 (March 9, 2022)
+
+* Avoid time operations that can panic (#599)
+* Bump MSRV to Rust 1.49 (#606)
+* Fix header decoding error when a header name is contained at a continuation
+  header boundary (#589)
+* Remove I/O type names from handshake `tracing` spans (#608)
+
+# 0.3.11 (January 26, 2022)
+
+* Make `SendStream::poll_capacity` never return `Ok(Some(0))` (#596)
+* Fix panic when receiving already reset push promise (#597)
+
+# 0.3.10 (January 6, 2022)
+
+* Add `Error::is_go_away()` and `Error::is_remote()` methods.
+* Fix panic if receiving malformed PUSH_PROMISE with stream ID of 0.
+
+# 0.3.9 (December 9, 2021)
+
+* Fix hang related to new `max_send_buffer_size`.
+
+# 0.3.8 (December 8, 2021)
+
+* Add "extended CONNECT support". Adds `h2::ext::Protocol`, which is used for request and response extensions to connect new protocols over an HTTP/2 stream.
+* Add `max_send_buffer_size` options to client and server builders, and a default of ~400MB. This acts like a high-water mark for the `poll_capacity()` method.
+* Fix panic if receiving malformed HEADERS with stream ID of 0.
+
+# 0.3.7 (October 22, 2021)
+
+* Fix panic if server sends a malformed frame on a stream client was about to open.
+* Fix server to treat `:status` in a request as a stream error instead of connection error.
+
+# 0.3.6 (September 30, 2021)
+
+* Fix regression of `h2::Error` that were created via `From<h2::Reason>` not returning their reason code in `Error::reason()`.
+
+# 0.3.5 (September 29, 2021)
+
+* Fix sending of very large headers. Previously when a single header was too big to fit in a single `HEADERS` frame, an error was returned. Now it is broken up and sent correctly.
+* Fix buffered data field to be a bigger integer size.
+* Refactor error format to include what initiated the error (remote, local, or user), if it was a stream or connection-level error, and any received debug data.
+
+# 0.3.4 (August 20, 2021)
+
+* Fix panic when encoding header size update over a certain size.
+* Fix `SendRequest` to wake up connection when dropped.
+* Fix potential hang if `RecvStream` is placed in the request or response `extensions`.
+* Stop calling `Instant::now` if zero reset streams are configured.
+
+# 0.3.3 (April 29, 2021)
+
+* Fix client being able to make `CONNECT` requests without a `:path`.
+* Expose `RecvStream::poll_data`.
+* Fix some docs.
+
+# 0.3.2 (March 24, 2021)
+
+* Fix incorrect handling of received 1xx responses on the client when the request body is still streaming.
+
+# 0.3.1 (February 26, 2021)
+
+* Add `Connection::max_concurrent_recv_streams()` getter.
+* Add `Connection::max_concurrent_send_streams()` getter.
+* Fix client to ignore receipt of 1xx headers frames.
+* Fix incorrect calculation of pseudo header lengths when determining if a received header is too big.
+* Reduce monomorphized code size of internal code.
+
+# 0.3.0 (December 23, 2020)
+
+* Update to Tokio v1 and Bytes v1.
+* Disable `tracing`'s `log` feature. (It can still be enabled by a user in their own `Cargo.toml`.)
+
+# 0.2.7 (October 22, 2020)
+
+* Fix stream ref count when sending a push promise
+* Fix receiving empty DATA frames in response to a HEAD request
+* Fix handling of client disabling SERVER_PUSH
+
+# 0.2.6 (July 13, 2020)
+
+* Integrate `tracing` directly where `log` was used. (For 0.2.x, `log`s are still emitted by default.)
+
 # 0.2.5 (May 6, 2020)
 
 * Fix rare debug assert failure in store shutdown.

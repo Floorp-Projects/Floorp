@@ -12,11 +12,11 @@ edition = "2018"
 
 [features]
 default = ["server"]
-server = ["tokio", "warp"]
+server = ["tokio", "tokio-stream", "warp"]
 
 [dependencies]
 base64 = "0.12"
-bytes = "0.5"
+bytes = "1.0"
 cookie = { version = "0.16", default-features = false }
 http = "0.2"
 log = "0.4"
@@ -24,7 +24,8 @@ serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
 time = "0.3"
-tokio = { version = "0.2", features = ["rt-core"], optional = true}
+tokio = { version = "1.0", features = ["rt", "net"], optional = true}
+tokio-stream = { version = "0.1", features = ["net"], optional = true}
 unicode-segmentation = "1.2"
 url = "2.0"
-warp = { version = "0.2", default-features = false, optional = true }
+warp = { version = "0.3", default-features = false, optional = true }

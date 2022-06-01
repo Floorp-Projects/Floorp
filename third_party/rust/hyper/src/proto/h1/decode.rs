@@ -4,6 +4,7 @@ use std::io;
 use std::usize;
 
 use bytes::Bytes;
+use tracing::{debug, trace};
 
 use crate::common::{task, Poll};
 
@@ -17,7 +18,7 @@ use self::Kind::{Chunked, Eof, Length};
 /// If a message body does not include a Transfer-Encoding, it *should*
 /// include a Content-Length header.
 #[derive(Clone, PartialEq)]
-pub struct Decoder {
+pub(crate) struct Decoder {
     kind: Kind,
 }
 
@@ -55,6 +56,8 @@ enum ChunkedState {
     Body,
     BodyCr,
     BodyLf,
+    Trailer,
+    TrailerLf,
     EndCr,
     EndLf,
     End,
@@ -63,19 +66,19 @@ enum ChunkedState {
 impl Decoder {
     // constructors
 
-    pub fn length(x: u64) -> Decoder {
+    pub(crate) fn length(x: u64) -> Decoder {
         Decoder {
             kind: Kind::Length(x),
         }
     }
 
-    pub fn chunked() -> Decoder {
+    pub(crate) fn chunked() -> Decoder {
         Decoder {
             kind: Kind::Chunked(ChunkedState::Size, 0),
         }
     }
 
-    pub fn eof() -> Decoder {
+    pub(crate) fn eof() -> Decoder {
         Decoder {
             kind: Kind::Eof(false),
         }
@@ -91,14 +94,11 @@ impl Decoder {
 
     // methods
 
-    pub fn is_eof(&self) -> bool {
-        match self.kind {
-            Length(0) | Chunked(ChunkedState::End, _) | Eof(true) => true,
-            _ => false,
-        }
+    pub(crate) fn is_eof(&self) -> bool {
+        matches!(self.kind, Length(0) | Chunked(ChunkedState::End, _) | Eof(true))
     }
 
-    pub fn decode<R: MemRead>(
+    pub(crate) fn decode<R: MemRead>(
         &mut self,
         cx: &mut task::Context<'_>,
         body: &mut R,
@@ -196,6 +196,8 @@ impl ChunkedState {
             Body => ChunkedState::read_body(cx, body, size, buf),
             BodyCr => ChunkedState::read_body_cr(cx, body),
             BodyLf => ChunkedState::read_body_lf(cx, body),
+            Trailer => ChunkedState::read_trailer(cx, body),
+            TrailerLf => ChunkedState::read_trailer_lf(cx, body),
             EndCr => ChunkedState::read_end_cr(cx, body),
             EndLf => ChunkedState::read_end_lf(cx, body),
             End => Poll::Ready(Ok(ChunkedState::End)),
@@ -207,19 +209,32 @@ impl ChunkedState {
         size: &mut u64,
     ) -> Poll<Result<ChunkedState, io::Error>> {
         trace!("Read chunk hex size");
+
+        macro_rules! or_overflow {
+            ($e:expr) => (
+                match $e {
+                    Some(val) => val,
+                    None => return Poll::Ready(Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "invalid chunk size: overflow",
+                    ))),
+                }
+            )
+        }
+
         let radix = 16;
         match byte!(rdr, cx) {
             b @ b'0'..=b'9' => {
-                *size *= radix;
-                *size += (b - b'0') as u64;
+                *size = or_overflow!(size.checked_mul(radix));
+                *size = or_overflow!(size.checked_add((b - b'0') as u64));
             }
             b @ b'a'..=b'f' => {
-                *size *= radix;
-                *size += (b + 10 - b'a') as u64;
+                *size = or_overflow!(size.checked_mul(radix));
+                *size = or_overflow!(size.checked_add((b + 10 - b'a') as u64));
             }
             b @ b'A'..=b'F' => {
-                *size *= radix;
-                *size += (b + 10 - b'A') as u64;
+                *size = or_overflow!(size.checked_mul(radix));
+                *size = or_overflow!(size.checked_add((b + 10 - b'A') as u64));
             }
             b'\t' | b' ' => return Poll::Ready(Ok(ChunkedState::SizeLws)),
             b';' => return Poll::Ready(Ok(ChunkedState::Extension)),
@@ -254,8 +269,18 @@ impl ChunkedState {
         rdr: &mut R,
     ) -> Poll<Result<ChunkedState, io::Error>> {
         trace!("read_extension");
+        // We don't care about extensions really at all. Just ignore them.
+        // They "end" at the next CRLF.
+        //
+        // However, some implementations may not check for the CR, so to save
+        // them from themselves, we reject extensions containing plain LF as
+        // well.
         match byte!(rdr, cx) {
             b'\r' => Poll::Ready(Ok(ChunkedState::SizeLf)),
+            b'\n' => Poll::Ready(Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "invalid chunk extension contains newline",
+            ))),
             _ => Poll::Ready(Ok(ChunkedState::Extension)), // no supported extensions
         }
     }
@@ -340,16 +365,36 @@ impl ChunkedState {
         }
     }
 
+    fn read_trailer<R: MemRead>(
+        cx: &mut task::Context<'_>,
+        rdr: &mut R,
+    ) -> Poll<Result<ChunkedState, io::Error>> {
+        trace!("read_trailer");
+        match byte!(rdr, cx) {
+            b'\r' => Poll::Ready(Ok(ChunkedState::TrailerLf)),
+            _ => Poll::Ready(Ok(ChunkedState::Trailer)),
+        }
+    }
+    fn read_trailer_lf<R: MemRead>(
+        cx: &mut task::Context<'_>,
+        rdr: &mut R,
+    ) -> Poll<Result<ChunkedState, io::Error>> {
+        match byte!(rdr, cx) {
+            b'\n' => Poll::Ready(Ok(ChunkedState::EndCr)),
+            _ => Poll::Ready(Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Invalid trailer end LF",
+            ))),
+        }
+    }
+
     fn read_end_cr<R: MemRead>(
         cx: &mut task::Context<'_>,
         rdr: &mut R,
     ) -> Poll<Result<ChunkedState, io::Error>> {
         match byte!(rdr, cx) {
             b'\r' => Poll::Ready(Ok(ChunkedState::EndLf)),
-            _ => Poll::Ready(Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Invalid chunk end CR",
-            ))),
+            _ => Poll::Ready(Ok(ChunkedState::Trailer)),
         }
     }
     fn read_end_lf<R: MemRead>(
@@ -382,7 +427,7 @@ mod tests {
     use super::*;
     use std::pin::Pin;
     use std::time::Duration;
-    use tokio::io::AsyncRead;
+    use tokio::io::{AsyncRead, ReadBuf};
 
     impl<'a> MemRead for &'a [u8] {
         fn read_mem(&mut self, _: &mut task::Context<'_>, len: usize) -> Poll<io::Result<Bytes>> {
@@ -401,8 +446,9 @@ mod tests {
     impl<'a> MemRead for &'a mut (dyn AsyncRead + Unpin) {
         fn read_mem(&mut self, cx: &mut task::Context<'_>, len: usize) -> Poll<io::Result<Bytes>> {
             let mut v = vec![0; len];
-            let n = ready!(Pin::new(self).poll_read(cx, &mut v)?);
-            Poll::Ready(Ok(Bytes::copy_from_slice(&v[..n])))
+            let mut buf = ReadBuf::new(&mut v);
+            ready!(Pin::new(self).poll_read(cx, &mut buf)?);
+            Poll::Ready(Ok(Bytes::copy_from_slice(&buf.filled())))
         }
     }
 
@@ -427,7 +473,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_read_chunk_size() {
-        use std::io::ErrorKind::{InvalidInput, UnexpectedEof};
+        use std::io::ErrorKind::{InvalidData, InvalidInput, UnexpectedEof};
 
         async fn read(s: &str) -> u64 {
             let mut state = ChunkedState::Size;
@@ -468,7 +514,7 @@ mod tests {
                     }
                 };
                 if state == ChunkedState::Body || state == ChunkedState::End {
-                    panic!(format!("Was Ok. Expected Err for {:?}", s));
+                    panic!("Was Ok. Expected Err for {:?}", s);
                 }
             }
         }
@@ -502,6 +548,9 @@ mod tests {
         read_err("1 invalid extension\r\n", InvalidInput).await;
         read_err("1 A\r\n", InvalidInput).await;
         read_err("1;no CRLF", UnexpectedEof).await;
+        read_err("1;reject\nnewlines\r\n", InvalidData).await;
+        // Overflow
+        read_err("f0000000000000003\r\n", InvalidData).await;
     }
 
     #[tokio::test]
@@ -535,6 +584,15 @@ mod tests {
         assert_eq!(16, buf.len());
         let result = String::from_utf8(buf.as_ref().to_vec()).expect("decode String");
         assert_eq!("1234567890abcdef", &result);
+    }
+
+    #[tokio::test]
+    async fn test_read_chunked_trailer_with_missing_lf() {
+        let mut mock_buf = &b"10\r\n1234567890abcdef\r\n0\r\nbad\r\r\n"[..];
+        let mut decoder = Decoder::chunked();
+        decoder.decode_fut(&mut mock_buf).await.expect("decode");
+        let e = decoder.decode_fut(&mut mock_buf).await.unwrap_err();
+        assert_eq!(e.kind(), io::ErrorKind::InvalidInput);
     }
 
     #[tokio::test]
@@ -623,7 +681,7 @@ mod tests {
     #[cfg(feature = "nightly")]
     #[bench]
     fn bench_decode_chunked_1kb(b: &mut test::Bencher) {
-        let mut rt = new_runtime();
+        let rt = new_runtime();
 
         const LEN: usize = 1024;
         let mut vec = Vec::new();
@@ -647,7 +705,7 @@ mod tests {
     #[cfg(feature = "nightly")]
     #[bench]
     fn bench_decode_length_1kb(b: &mut test::Bencher) {
-        let mut rt = new_runtime();
+        let rt = new_runtime();
 
         const LEN: usize = 1024;
         let content = Bytes::from(&[0; LEN][..]);
@@ -665,9 +723,8 @@ mod tests {
 
     #[cfg(feature = "nightly")]
     fn new_runtime() -> tokio::runtime::Runtime {
-        tokio::runtime::Builder::new()
+        tokio::runtime::Builder::new_current_thread()
             .enable_all()
-            .basic_scheduler()
             .build()
             .expect("rt build")
     }

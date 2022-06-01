@@ -8,11 +8,32 @@ pub struct DefaultStruct<T, U> {
     pub unpinned: U,
 }
 
+#[::pin_project::pin_project(
+    project = DefaultStructNamedProj,
+    project_ref = DefaultStructNamedProjRef,
+)]
+#[derive(Debug)]
+pub struct DefaultStructNamed<T, U> {
+    #[pin]
+    pub pinned: T,
+    pub unpinned: U,
+}
+
 #[::pin_project::pin_project]
 #[derive(Debug)]
 pub struct DefaultTupleStruct<T, U>(#[pin] pub T, pub U);
 
-#[::pin_project::pin_project]
+#[::pin_project::pin_project(
+    project = DefaultTupleStructNamedProj,
+    project_ref = DefaultTupleStructNamedProjRef,
+)]
+#[derive(Debug)]
+pub struct DefaultTupleStructNamed<T, U>(#[pin] pub T, pub U);
+
+#[::pin_project::pin_project(
+    project = DefaultEnumProj,
+    project_ref = DefaultEnumProjRef,
+)]
 #[derive(Debug)]
 pub enum DefaultEnum<T, U> {
     Struct {
@@ -46,7 +67,11 @@ impl<T, U> PinnedDrop for PinnedDropTupleStruct<T, U> {
     fn drop(self: ::pin_project::__private::Pin<&mut Self>) {}
 }
 
-#[::pin_project::pin_project(PinnedDrop)]
+#[::pin_project::pin_project(
+    PinnedDrop,
+    project = PinnedDropEnumProj,
+    project_ref = PinnedDropEnumProjRef,
+)]
 #[derive(Debug)]
 pub enum PinnedDropEnum<T, U> {
     Struct {
@@ -71,11 +96,35 @@ pub struct ReplaceStruct<T, U> {
     pub unpinned: U,
 }
 
+#[::pin_project::pin_project(
+    project = ReplaceStructNamedProj,
+    project_ref = ReplaceStructNamedProjRef,
+    project_replace = ReplaceStructNamedProjOwn,
+)]
+#[derive(Debug)]
+pub struct ReplaceStructNamed<T, U> {
+    #[pin]
+    pub pinned: T,
+    pub unpinned: U,
+}
+
 #[::pin_project::pin_project(project_replace)]
 #[derive(Debug)]
 pub struct ReplaceTupleStruct<T, U>(#[pin] pub T, pub U);
 
-#[::pin_project::pin_project(project_replace)]
+#[::pin_project::pin_project(
+    project = ReplaceTupleStructNamedProj,
+    project_ref = ReplaceTupleStructNamedProjRef,
+    project_replace = ReplaceTupleStructNamedProjOwn,
+)]
+#[derive(Debug)]
+pub struct ReplaceTupleStructNamed<T, U>(#[pin] pub T, pub U);
+
+#[::pin_project::pin_project(
+    project = ReplaceEnumProj,
+    project_ref = ReplaceEnumProjRef,
+    project_replace = ReplaceEnumProjOwn,
+)]
 #[derive(Debug)]
 pub enum ReplaceEnum<T, U> {
     Struct {
@@ -99,7 +148,11 @@ pub struct UnsafeUnpinStruct<T, U> {
 #[derive(Debug)]
 pub struct UnsafeUnpinTupleStruct<T, U>(#[pin] pub T, pub U);
 
-#[::pin_project::pin_project(UnsafeUnpin)]
+#[::pin_project::pin_project(
+    UnsafeUnpin,
+    project = UnsafeUnpinEnumProj,
+    project_ref = UnsafeUnpinEnumProjRef,
+)]
 #[derive(Debug)]
 pub enum UnsafeUnpinEnum<T, U> {
     Struct {
@@ -123,7 +176,11 @@ pub struct NotUnpinStruct<T, U> {
 #[derive(Debug)]
 pub struct NotUnpinTupleStruct<T, U>(#[pin] pub T, pub U);
 
-#[::pin_project::pin_project(!Unpin)]
+#[::pin_project::pin_project(
+    !Unpin,
+    project = NotUnpinEnumProj,
+    project_ref = NotUnpinEnumProjRef,
+)]
 #[derive(Debug)]
 pub enum NotUnpinEnum<T, U> {
     Struct {

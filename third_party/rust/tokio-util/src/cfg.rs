@@ -18,11 +18,53 @@ macro_rules! cfg_compat {
     }
 }
 
-macro_rules! cfg_udp {
+macro_rules! cfg_net {
     ($($item:item)*) => {
         $(
-            #[cfg(all(feature = "udp", feature = "codec"))]
-            #[cfg_attr(docsrs, doc(cfg(all(feature = "udp", feature = "codec"))))]
+            #[cfg(all(feature = "net", feature = "codec"))]
+            #[cfg_attr(docsrs, doc(cfg(all(feature = "net", feature = "codec"))))]
+            $item
+        )*
+    }
+}
+
+macro_rules! cfg_io {
+    ($($item:item)*) => {
+        $(
+            #[cfg(feature = "io")]
+            #[cfg_attr(docsrs, doc(cfg(feature = "io")))]
+            $item
+        )*
+    }
+}
+
+cfg_io! {
+    macro_rules! cfg_io_util {
+        ($($item:item)*) => {
+            $(
+                #[cfg(feature = "io-util")]
+                #[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+                $item
+            )*
+        }
+    }
+}
+
+macro_rules! cfg_rt {
+    ($($item:item)*) => {
+        $(
+            #[cfg(feature = "rt")]
+            #[cfg_attr(docsrs, doc(cfg(feature = "rt")))]
+            $item
+        )*
+    }
+}
+
+macro_rules! cfg_time {
+    ($($item:item)*) => {
+        $(
+            #[cfg(feature = "time")]
+            #[cfg_attr(docsrs, doc(cfg(feature = "time")))]
             $item
         )*
     }
