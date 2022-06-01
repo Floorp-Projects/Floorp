@@ -112,7 +112,7 @@ class RTC_EXPORT Candidate {
   uint32_t generation() const { return generation_; }
   void set_generation(uint32_t generation) { generation_ = generation; }
 
-  // |network_cost| measures the cost/penalty of using this candidate. A network
+  // `network_cost` measures the cost/penalty of using this candidate. A network
   // cost of 0 indicates this candidate can be used freely. A value of
   // rtc::kNetworkCostMax indicates it should be used only as the last resort.
   void set_network_cost(uint16_t network_cost) {
@@ -167,9 +167,9 @@ class RTC_EXPORT Candidate {
   bool operator!=(const Candidate& o) const;
 
   // Returns a sanitized copy configured by the given booleans. If
-  // |use_host_address| is true, the returned copy has its IP removed from
-  // |address()|, which leads |address()| to be a hostname address. If
-  // |filter_related_address|, the returned copy has its related address reset
+  // `use_host_address` is true, the returned copy has its IP removed from
+  // `address()`, which leads `address()` to be a hostname address. If
+  // `filter_related_address`, the returned copy has its related address reset
   // to the wildcard address (i.e. 0.0.0.0 for IPv4 and :: for IPv6). Note that
   // setting both booleans to false returns an identical copy to the original
   // candidate.

@@ -126,7 +126,7 @@ struct RTC_EXPORT RtpCodecCapability {
   RtpCodecCapability();
   ~RtpCodecCapability();
 
-  // Build MIME "type/subtype" string from |name| and |kind|.
+  // Build MIME "type/subtype" string from `name` and `kind`.
   std::string mime_type() const { return MediaTypeToString(kind) + "/" + name; }
 
   // Used to identify the codec. Equivalent to MIME subtype.
@@ -546,7 +546,7 @@ struct RTC_EXPORT RtpCodecParameters {
   RtpCodecParameters(const RtpCodecParameters&);
   ~RtpCodecParameters();
 
-  // Build MIME "type/subtype" string from |name| and |kind|.
+  // Build MIME "type/subtype" string from `name` and `kind`.
   std::string mime_type() const { return MediaTypeToString(kind) + "/" + name; }
 
   // Used to identify the codec. Equivalent to MIME subtype.
@@ -571,7 +571,7 @@ struct RTC_EXPORT RtpCodecParameters {
   absl::optional<int> num_channels;
 
   // The maximum packetization time to be used by an RtpSender.
-  // If |ptime| is also set, this will be ignored.
+  // If `ptime` is also set, this will be ignored.
   // TODO(deadbeef): Not implemented.
   absl::optional<int> max_ptime;
 
@@ -616,7 +616,7 @@ struct RTC_EXPORT RtpCapabilities {
 
   // Supported Forward Error Correction (FEC) mechanisms. Note that the RED,
   // ulpfec and flexfec codecs used by these mechanisms will still appear in
-  // |codecs|.
+  // `codecs`.
   std::vector<FecMechanism> fec;
 
   bool operator==(const RtpCapabilities& o) const {

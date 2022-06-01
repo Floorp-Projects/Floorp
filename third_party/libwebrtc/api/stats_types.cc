@@ -835,7 +835,7 @@ StatsReport* StatsCollection::ReplaceOrAddNew(const StatsReport::Id& id) {
   return InsertNew(id);
 }
 
-// Looks for a report with the given |id|.  If one is not found, null
+// Looks for a report with the given `id`.  If one is not found, null
 // will be returned.
 StatsReport* StatsCollection::Find(const StatsReport::Id& id) {
   RTC_DCHECK(thread_checker_.IsCurrent());

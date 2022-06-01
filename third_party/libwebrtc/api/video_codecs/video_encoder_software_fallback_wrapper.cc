@@ -39,8 +39,8 @@ namespace {
 // If forced fallback is allowed, either:
 //
 // 1) The forced fallback is requested if the resolution is less than or equal
-//    to |max_pixels_|. The resolution is allowed to be scaled down to
-//    |min_pixels_|.
+//    to `max_pixels_`. The resolution is allowed to be scaled down to
+//    `min_pixels_`.
 //
 // 2) The forced fallback is requested if temporal support is preferred and the
 //    SW fallback supports temporal layers while the HW encoder does not.
@@ -269,8 +269,8 @@ bool VideoEncoderSoftwareFallbackWrapper::InitFallbackEncoder(bool is_forced) {
 void VideoEncoderSoftwareFallbackWrapper::SetFecControllerOverride(
     FecControllerOverride* fec_controller_override) {
   // It is important that only one of those would ever interact with the
-  // |fec_controller_override| at a given time. This is the responsibility
-  // of |this| to maintain.
+  // `fec_controller_override` at a given time. This is the responsibility
+  // of `this` to maintain.
 
   encoder_->SetFecControllerOverride(fec_controller_override);
   fallback_encoder_->SetFecControllerOverride(fec_controller_override);

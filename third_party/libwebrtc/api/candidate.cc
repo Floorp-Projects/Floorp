@@ -92,7 +92,7 @@ uint32_t Candidate::GetPriority(uint32_t type_preference,
   //            (2^8)*(local preference) +
   //            (2^0)*(256 - component ID)
 
-  // |local_preference| length is 2 bytes, 0-65535 inclusive.
+  // `local_preference` length is 2 bytes, 0-65535 inclusive.
   // In our implemenation we will partion local_preference into
   //              0                 1
   //       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
