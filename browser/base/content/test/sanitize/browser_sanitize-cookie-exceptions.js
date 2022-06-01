@@ -120,3 +120,73 @@ add_task(async function sanitizeNoExceptionsInTimeRange() {
     "We should not have cookies for " + originDENY
   );
 });
+
+add_task(async function sanitizeWithExceptionsOnStartup() {
+  info(
+    "Test that cookies that are marked as allowed from the user do not get \
+    cleared when cleaning on startup is done, for example after a crash"
+  );
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.sanitizer.loglevel", "All"],
+      ["privacy.sanitize.sanitizeOnShutdown", true],
+    ],
+  });
+
+  // Clean up before start
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve);
+  });
+
+  let originALLOW = "https://mozilla.org";
+  PermissionTestUtils.add(
+    originALLOW,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_ALLOW
+  );
+
+  let originDENY = "https://example123.com";
+  PermissionTestUtils.add(
+    originDENY,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_DENY
+  );
+
+  SiteDataTestUtils.addToCookies({ origin: originALLOW });
+  ok(
+    SiteDataTestUtils.hasCookies(originALLOW),
+    "We have cookies for " + originALLOW
+  );
+
+  SiteDataTestUtils.addToCookies({ origin: originDENY });
+  ok(
+    SiteDataTestUtils.hasCookies(originDENY),
+    "We have cookies for " + originDENY
+  );
+
+  let pendingSanitizations = [
+    {
+      id: "shutdown",
+      itemsToClear: ["cookies"],
+      options: {},
+    },
+  ];
+  Services.prefs.setBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, true);
+  Services.prefs.setStringPref(
+    Sanitizer.PREF_PENDING_SANITIZATIONS,
+    JSON.stringify(pendingSanitizations)
+  );
+
+  await Sanitizer.onStartup();
+
+  ok(
+    SiteDataTestUtils.hasCookies(originALLOW),
+    "We should have cookies for " + originALLOW
+  );
+
+  ok(
+    !SiteDataTestUtils.hasCookies(originDENY),
+    "We should not have cookies for " + originDENY
+  );
+});
