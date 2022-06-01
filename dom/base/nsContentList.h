@@ -344,12 +344,16 @@ class nsContentList : public nsBaseContentList,
    */
   void SetDirty() {
     mState = State::Dirty;
+    mNamedItemsCache = nullptr;
+    mNamedItemsCacheValid = false;
     Reset();
   }
 
   void LastRelease() override;
 
  protected:
+  void EnsureNamedItemsCacheValid(bool aDoFlush);
+
   /**
    * Returns whether the element matches our criterion
    *
@@ -428,6 +432,12 @@ class nsContentList : public nsBaseContentList,
    */
   void* mData = nullptr;
 
+  // A cache from name to the first named item in mElements. Only possibly
+  // non-null when mState is State::UpToDate. Elements are kept alive by our
+  // mElements array.
+  using NamedItemsCache = nsTHashMap<RefPtr<nsAtom>, Element*>;
+  mozilla::UniquePtr<NamedItemsCache> mNamedItemsCache;
+
   // The current state of the list.
   State mState;
 
@@ -455,6 +465,11 @@ class nsContentList : public nsBaseContentList,
    * when doing function matching, always false otherwise.
    */
   bool mIsHTMLDocument : 1;
+  /**
+   * True mNamedItemsCache is valid. Note mNamedItemsCache might still be null
+   * if there's no named items at all.
+   */
+  bool mNamedItemsCacheValid : 1;
   /**
    * Whether the list observes mutations to the DOM tree.
    */
