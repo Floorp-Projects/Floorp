@@ -130,36 +130,6 @@ bool RtpHeaderParser::RTCP() const {
   }
 }
 
-bool RtpHeaderParser::ParseRtcp(RTPHeader* header) const {
-  RTC_DCHECK(header);
-
-  const ptrdiff_t length = _ptrRTPDataEnd - _ptrRTPDataBegin;
-  if (length < kRtcpMinParseLength) {
-    return false;
-  }
-
-  const uint8_t V = _ptrRTPDataBegin[0] >> 6;
-  if (V != kRtcpExpectedVersion) {
-    return false;
-  }
-
-  const uint8_t PT = _ptrRTPDataBegin[1];
-  const size_t len = (_ptrRTPDataBegin[2] << 8) + _ptrRTPDataBegin[3];
-  const uint8_t* ptr = &_ptrRTPDataBegin[4];
-
-  uint32_t SSRC = ByteReader<uint32_t>::ReadBigEndian(ptr);
-  ptr += 4;
-
-  header->payloadType = PT;
-  header->ssrc = SSRC;
-  header->headerLength = 4 + (len << 2);
-  if (header->headerLength > static_cast<size_t>(length)) {
-    return false;
-  }
-
-  return true;
-}
-
 bool RtpHeaderParser::Parse(RTPHeader* header,
                             const RtpHeaderExtensionMap* ptrExtensionMap,
                             bool header_only, bool secured) const {
