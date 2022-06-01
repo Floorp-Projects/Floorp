@@ -23,47 +23,35 @@
 // ```
 
 #![allow(dead_code, unused_imports, unused_parens, unknown_lints, renamed_and_removed_lints)]
-#![allow(clippy::no_effect, clippy::needless_lifetimes)]
+#![allow(clippy::needless_lifetimes, clippy::mut_mut)]
 
 use std::pin::Pin;
 
 use pin_project::{pin_project, pinned_drop};
 
+// #[pin_project(PinnedDrop)]
 pub struct Struct<'a, T> {
     was_dropped: &'a mut bool,
     // #[pin]
     field: T,
 }
 
-#[doc(hidden)]
-#[allow(dead_code)]
-#[allow(single_use_lifetimes)]
-#[allow(clippy::mut_mut)]
-#[allow(clippy::type_repetition_in_bounds)]
-pub(crate) struct __StructProjection<'pin, 'a, T>
-where
-    Struct<'a, T>: 'pin,
-{
-    was_dropped: &'pin mut (&'a mut bool),
-    field: ::pin_project::__private::Pin<&'pin mut (T)>,
-}
-#[doc(hidden)]
-#[allow(dead_code)]
-#[allow(single_use_lifetimes)]
-#[allow(clippy::type_repetition_in_bounds)]
-pub(crate) struct __StructProjectionRef<'pin, 'a, T>
-where
-    Struct<'a, T>: 'pin,
-{
-    was_dropped: &'pin (&'a mut bool),
-    field: ::pin_project::__private::Pin<&'pin (T)>,
-}
-
-#[doc(hidden)]
-#[allow(non_upper_case_globals)]
-#[allow(single_use_lifetimes)]
-#[allow(clippy::used_underscore_binding)]
 const _: () = {
+    pub(crate) struct __StructProjection<'pin, 'a, T>
+    where
+        Struct<'a, T>: 'pin,
+    {
+        was_dropped: &'pin mut (&'a mut bool),
+        field: ::pin_project::__private::Pin<&'pin mut (T)>,
+    }
+    pub(crate) struct __StructProjectionRef<'pin, 'a, T>
+    where
+        Struct<'a, T>: 'pin,
+    {
+        was_dropped: &'pin (&'a mut bool),
+        field: ::pin_project::__private::Pin<&'pin (T)>,
+    }
+
     impl<'a, T> Struct<'a, T> {
         pub(crate) fn project<'pin>(
             self: ::pin_project::__private::Pin<&'pin mut Self>,
@@ -87,6 +75,17 @@ const _: () = {
                 }
             }
         }
+    }
+
+    // Ensure that it's impossible to use pin projections on a #[repr(packed)]
+    // struct.
+    //
+    // See ./struct-default-expanded.rs and https://github.com/taiki-e/pin-project/pull/34
+    // for details.
+    #[forbid(unaligned_references, safe_packed_borrows)]
+    fn __assert_not_repr_packed<'a, T>(this: &Struct<'a, T>) {
+        let _ = &this.was_dropped;
+        let _ = &this.field;
     }
 
     impl<'a, T> ::pin_project::__private::Drop for Struct<'a, T> {
@@ -116,17 +115,11 @@ const _: () = {
         __Struct<'pin, 'a, T>: ::pin_project::__private::Unpin
     {
     }
-    unsafe impl<'a, T> ::pin_project::UnsafeUnpin for Struct<'a, T> {}
-
-    // Ensure that it's impossible to use pin projections on a #[repr(packed)]
-    // struct.
-    //
-    // See ./struct-default-expanded.rs and https://github.com/taiki-e/pin-project/pull/34
-    // for details.
-    #[forbid(unaligned_references, safe_packed_borrows)]
-    fn __assert_not_repr_packed<'a, T>(this: &Struct<'a, T>) {
-        let _ = &this.was_dropped;
-        let _ = &this.field;
+    // A dummy impl of `UnsafeUnpin`, to ensure that the user cannot implement it.
+    #[doc(hidden)]
+    unsafe impl<'pin, 'a, T> ::pin_project::UnsafeUnpin for Struct<'a, T> where
+        __Struct<'pin, 'a, T>: ::pin_project::__private::Unpin
+    {
     }
 };
 
@@ -142,6 +135,7 @@ const _: () = {
 // Users can implement [`Drop`] safely using `#[pinned_drop]` and can drop a
 // type that implements `PinnedDrop` using the [`drop`] function safely.
 // **Do not call or implement this trait directly.**
+#[doc(hidden)]
 impl<T> ::pin_project::__private::PinnedDrop for Struct<'_, T> {
     // Since calling it twice on the same object would be UB,
     // this method is unsafe.

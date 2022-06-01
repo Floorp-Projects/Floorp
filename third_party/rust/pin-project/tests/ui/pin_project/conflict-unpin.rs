@@ -5,8 +5,8 @@ use pin_project::pin_project;
 #[pin_project] //~ ERROR E0119
 struct Foo<T, U> {
     #[pin]
-    future: T,
-    field: U,
+    f1: T,
+    f2: U,
 }
 
 // conflicting implementations
@@ -17,8 +17,8 @@ impl<T, U> Unpin for Foo<T, U> where T: Unpin {} // Conditional Unpin impl
 #[pin_project] //~ ERROR E0119
 struct Bar<T, U> {
     #[pin]
-    future: T,
-    field: U,
+    f1: T,
+    f2: U,
 }
 
 // conflicting implementations
@@ -27,8 +27,8 @@ impl<T, U> Unpin for Bar<T, U> {} // Non-conditional Unpin impl
 #[pin_project] //~ ERROR E0119
 struct Baz<T, U> {
     #[pin]
-    future: T,
-    field: U,
+    f1: T,
+    f2: U,
 }
 
 // conflicting implementations

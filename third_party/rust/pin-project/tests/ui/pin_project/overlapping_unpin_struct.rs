@@ -1,18 +1,19 @@
-use pin_project::pin_project;
 use std::marker::PhantomPinned;
 
+use pin_project::pin_project;
+
 #[pin_project]
-struct Foo<T> {
+struct S<T> {
     #[pin]
-    inner: T,
+    f: T,
 }
 
-struct __Foo {}
+struct __S {}
 
-impl Unpin for __Foo {}
+impl Unpin for __S {}
 
 fn is_unpin<T: Unpin>() {}
 
 fn main() {
-    is_unpin::<Foo<PhantomPinned>>(); //~ ERROR E0277
+    is_unpin::<S<PhantomPinned>>(); //~ ERROR E0277
 }

@@ -1,8 +1,8 @@
 error[E0308]: mismatched types
-  --> tests/ui/cfg/cfg_attr-type-mismatch.rs:19:27
+  --> tests/ui/cfg/cfg_attr-type-mismatch.rs:20:27
    |
-19 |     let _: Pin<&mut u8> = x.inner; //~ ERROR E0308
-   |            ------------   ^^^^^^^ expected struct `Pin`, found `&mut u8`
+20 |     let _: Pin<&mut u8> = x.f; //~ ERROR E0308
+   |            ------------   ^^^ expected struct `Pin`, found `&mut u8`
    |            |
    |            expected due to this
    |
@@ -10,13 +10,13 @@ error[E0308]: mismatched types
            found mutable reference `&mut u8`
 
 error[E0308]: mismatched types
-  --> tests/ui/cfg/cfg_attr-type-mismatch.rs:23:22
+  --> tests/ui/cfg/cfg_attr-type-mismatch.rs:24:22
    |
-23 |     let _: &mut u8 = x.inner; //~ ERROR E0308
-   |            -------   ^^^^^^^
+24 |     let _: &mut u8 = x.f; //~ ERROR E0308
+   |            -------   ^^^
    |            |         |
    |            |         expected `&mut u8`, found struct `Pin`
-   |            |         help: consider mutably borrowing here: `&mut x.inner`
+   |            |         help: consider mutably borrowing here: `&mut x.f`
    |            expected due to this
    |
    = note: expected mutable reference `&mut u8`

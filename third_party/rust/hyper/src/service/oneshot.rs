@@ -1,8 +1,6 @@
 // TODO: Eventually to be replaced with tower_util::Oneshot.
 
-use std::marker::Unpin;
-use std::mem;
-
+use pin_project_lite::pin_project;
 use tower_service::Service;
 
 use crate::common::{task, Future, Pin, Poll};
@@ -12,30 +10,35 @@ where
     S: Service<Req>,
 {
     Oneshot {
-        state: State::NotReady(svc, req),
+        state: State::NotReady { svc, req },
     }
 }
 
-// A `Future` consuming a `Service` and request, waiting until the `Service`
-// is ready, and then calling `Service::call` with the request, and
-// waiting for that `Future`.
-#[allow(missing_debug_implementations)]
-pub struct Oneshot<S: Service<Req>, Req> {
-    state: State<S, Req>,
+pin_project! {
+    // A `Future` consuming a `Service` and request, waiting until the `Service`
+    // is ready, and then calling `Service::call` with the request, and
+    // waiting for that `Future`.
+    #[allow(missing_debug_implementations)]
+    pub struct Oneshot<S: Service<Req>, Req> {
+        #[pin]
+        state: State<S, Req>,
+    }
 }
 
-enum State<S: Service<Req>, Req> {
-    NotReady(S, Req),
-    Called(S::Future),
-    Tmp,
-}
-
-// Unpin is projected to S::Future, but never S.
-impl<S, Req> Unpin for Oneshot<S, Req>
-where
-    S: Service<Req>,
-    S::Future: Unpin,
-{
+pin_project! {
+    #[project = StateProj]
+    #[project_replace = StateProjOwn]
+    enum State<S: Service<Req>, Req> {
+        NotReady {
+            svc: S,
+            req: Req,
+        },
+        Called {
+            #[pin]
+            fut: S::Future,
+        },
+        Tmp,
+    }
 }
 
 impl<S, Req> Future for Oneshot<S, Req>
@@ -45,24 +48,23 @@ where
     type Output = Result<S::Response, S::Error>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
-        // Safety: The service's future is never moved once we get one.
-        let mut me = unsafe { Pin::get_unchecked_mut(self) };
+        let mut me = self.project();
 
         loop {
-            match me.state {
-                State::NotReady(ref mut svc, _) => {
+            match me.state.as_mut().project() {
+                StateProj::NotReady { ref mut svc, .. } => {
                     ready!(svc.poll_ready(cx))?;
                     // fallthrough out of the match's borrow
                 }
-                State::Called(ref mut fut) => {
-                    return unsafe { Pin::new_unchecked(fut) }.poll(cx);
+                StateProj::Called { fut } => {
+                    return fut.poll(cx);
                 }
-                State::Tmp => unreachable!(),
+                StateProj::Tmp => unreachable!(),
             }
 
-            match mem::replace(&mut me.state, State::Tmp) {
-                State::NotReady(mut svc, req) => {
-                    me.state = State::Called(svc.call(req));
+            match me.state.as_mut().project_replace(State::Tmp) {
+                StateProjOwn::NotReady { mut svc, req } => {
+                    me.state.set(State::Called { fut: svc.call(req) });
                 }
                 _ => unreachable!(),
             }
