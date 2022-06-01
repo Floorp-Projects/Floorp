@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <queue>
 #include <type_traits>
 #include <utility>
@@ -2591,16 +2592,29 @@ bool SdpOfferAnswerHandler::AddStream(MediaStreamInterface* local_stream) {
   }
 
   local_streams_->AddStream(local_stream);
-  MediaStreamObserver* observer = new MediaStreamObserver(local_stream);
-  observer->SignalAudioTrackAdded.connect(
-      this, &SdpOfferAnswerHandler::OnAudioTrackAdded);
-  observer->SignalAudioTrackRemoved.connect(
-      this, &SdpOfferAnswerHandler::OnAudioTrackRemoved);
-  observer->SignalVideoTrackAdded.connect(
-      this, &SdpOfferAnswerHandler::OnVideoTrackAdded);
-  observer->SignalVideoTrackRemoved.connect(
-      this, &SdpOfferAnswerHandler::OnVideoTrackRemoved);
-  stream_observers_.push_back(std::unique_ptr<MediaStreamObserver>(observer));
+  auto observer = std::make_unique<MediaStreamObserver>(
+      local_stream,
+      [this](AudioTrackInterface* audio_track,
+             MediaStreamInterface* media_stream) {
+        RTC_DCHECK_RUN_ON(signaling_thread());
+        OnAudioTrackAdded(audio_track, media_stream);
+      },
+      [this](AudioTrackInterface* audio_track,
+             MediaStreamInterface* media_stream) {
+        RTC_DCHECK_RUN_ON(signaling_thread());
+        OnAudioTrackRemoved(audio_track, media_stream);
+      },
+      [this](VideoTrackInterface* video_track,
+             MediaStreamInterface* media_stream) {
+        RTC_DCHECK_RUN_ON(signaling_thread());
+        OnVideoTrackAdded(video_track, media_stream);
+      },
+      [this](VideoTrackInterface* video_track,
+             MediaStreamInterface* media_stream) {
+        RTC_DCHECK_RUN_ON(signaling_thread());
+        OnVideoTrackRemoved(video_track, media_stream);
+      });
+  stream_observers_.push_back(std::move(observer));
 
   for (const auto& track : local_stream->GetAudioTracks()) {
     rtp_manager()->AddAudioTrack(track.get(), local_stream);
