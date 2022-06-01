@@ -10,9 +10,11 @@ const BROWSER_TOOLBOX_WINDOW_URL =
   "chrome://devtools/content/framework/browser-toolbox/window.html";
 const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
-const { require, DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
+const {
+  require,
+  useDistinctSystemPrincipalLoader,
+  releaseDistinctSystemPrincipalLoader,
+} = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -139,9 +141,7 @@ BrowserToolboxLauncher.prototype = {
     // This allows us to safely use the tools against even the actors and
     // DebuggingServer itself, especially since we can mark this loader as
     // invisible to the debugger (unlike the usual loader settings).
-    this.loader = new DevToolsLoader({
-      invisibleToDebugger: true,
-    });
+    this.loader = useDistinctSystemPrincipalLoader(this);
     const { DevToolsServer } = this.loader.require(
       "devtools/server/devtools-server"
     );
@@ -418,10 +418,10 @@ BrowserToolboxLauncher.prototype = {
       this.listener.close();
     }
 
-    if (this.devToolsServer) {
-      this.devToolsServer.destroy();
-      this.devToolsServer = null;
-    }
+    // Note that the DevToolsServer can be shared with the DevToolsServer
+    // spawned by DevToolsFrameChild. We shouldn't destroy it from here.
+    // Instead we should let it auto-destroy itself once the last connection is closed.
+    this.devToolsServer = null;
 
     this._dbgProcess.stdout.close();
     await this._dbgProcess.kill();
@@ -436,7 +436,7 @@ BrowserToolboxLauncher.prototype = {
 
     this._dbgProcess = null;
     if (this.loader) {
-      this.loader.destroy();
+      releaseDistinctSystemPrincipalLoader(this);
     }
     this.loader = null;
     this._telemetry = null;

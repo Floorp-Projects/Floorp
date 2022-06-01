@@ -18,6 +18,8 @@ var { requireRawId } = ChromeUtils.import(
 
 const EXPORTED_SYMBOLS = [
   "DevToolsLoader",
+  "useDistinctSystemPrincipalLoader",
+  "releaseDistinctSystemPrincipalLoader",
   "require",
   "loader",
   // Export StructuredCloneHolder for its use from builtin-modules
@@ -25,6 +27,37 @@ const EXPORTED_SYMBOLS = [
 ];
 
 var gNextLoaderID = 0;
+
+// When debugging system principal resources (JSMs, chrome documents, ...)
+// We have to load DevTools actors in another system principal global.
+// That's mostly because of spidermonkey's Debugger API which requires
+// debuggee and debugger to be in distinct principals.
+//
+// We try to hold a single instance of this special loader via this API.
+//
+// @param requester object
+//        Object/instance which is using the loader.
+//        The same requester object should be passed to release method.
+var systemLoader = null;
+var systemLoaderRequesters = new Set();
+function useDistinctSystemPrincipalLoader(requester) {
+  if (!systemLoader) {
+    systemLoader = new DevToolsLoader({
+      invisibleToDebugger: true,
+    });
+    systemLoaderRequesters.clear();
+  }
+  systemLoaderRequesters.add(requester);
+  return systemLoader;
+}
+
+function releaseDistinctSystemPrincipalLoader(requester) {
+  systemLoaderRequesters.delete(requester);
+  if (systemLoaderRequesters.size == 0) {
+    systemLoader.destroy();
+    systemLoader = null;
+  }
+}
 
 /**
  * The main devtools API. The standard instance of this loader is exported as

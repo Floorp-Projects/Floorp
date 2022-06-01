@@ -313,12 +313,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
   _createConnectionAndActor(forwardingPrefix, sessionData) {
     this.useCustomLoader = this.document.nodePrincipal.isSystemPrincipal;
 
-    // When debugging chrome pages, use a new dedicated loader, using a distinct chrome compartment.
     if (!this.loader) {
+      // When debugging chrome pages, use a new dedicated loader, using a distinct chrome compartment.
       this.loader = this.useCustomLoader
-        ? new Loader.DevToolsLoader({
-            invisibleToDebugger: true,
-          })
+        ? Loader.useDistinctSystemPrincipalLoader(this)
         : Loader;
     }
     const { DevToolsServer } = this.loader.require(
@@ -687,7 +685,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
     if (this.loader) {
       if (this.useCustomLoader) {
-        this.loader.destroy();
+        Loader.releaseDistinctSystemPrincipalLoader(this);
       }
       this.loader = null;
     }
