@@ -164,7 +164,7 @@ var Sanitizer = {
     // will be updated during sanitization and reported with the crash in case of
     // a shutdown timeout.
     // We use the `options` argument to pass the `progress` object to sanitize().
-    let progress = { isShutdown: true };
+    let progress = { isShutdown: true, clearHonoringExceptions: true };
     shutdownClient.addBlocker(
       "sanitize.js: Sanitize on shutdown",
       () => sanitizeOnShutdown(progress),
@@ -189,6 +189,8 @@ var Sanitizer = {
     // before completing them.
     for (let { itemsToClear, options } of pendingSanitizations) {
       try {
+        // We need to set this flag to watch out for the users exceptions like we do on shutdown
+        options.progress = { clearHonoringExceptions: true };
         await this.sanitize(itemsToClear, options);
       } catch (ex) {
         Cu.reportError(
@@ -346,7 +348,10 @@ var Sanitizer = {
 
   // This method is meant to be used by tests.
   async runSanitizeOnShutdown() {
-    return sanitizeOnShutdown({ isShutdown: true });
+    return sanitizeOnShutdown({
+      isShutdown: true,
+      clearHonoringExceptions: true,
+    });
   },
 
   // When making any changes to the sanitize implementations here,
@@ -746,7 +751,7 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
   };
 
   // When clearing on shutdown we clear by principal for certain cleaning categories, to consider the users exceptions
-  if (progress.isShutdown) {
+  if (progress.clearHonoringExceptions) {
     let principalsCollector = new PrincipalsCollector();
     let principals = await principalsCollector.getAllPrincipals(progress);
     options.principalsForShutdownClearing = principals;
