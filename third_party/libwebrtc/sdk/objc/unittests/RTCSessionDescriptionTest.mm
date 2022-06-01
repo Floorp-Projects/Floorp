@@ -42,13 +42,6 @@
   EXPECT_EQ([self sdp].stdString, sdp);
 }
 
-- (void)testInvalidSessionDescriptionConversion {
-  RTC_OBJC_TYPE(RTCSessionDescription) *description =
-      [[RTC_OBJC_TYPE(RTCSessionDescription) alloc] initWithType:RTCSdpTypeAnswer sdp:@"invalid"];
-
-  EXPECT_EQ(nil, description);
-}
-
 - (void)testInitFromNativeSessionDescription {
   webrtc::SessionDescriptionInterface *nativeDescription;
 
@@ -139,13 +132,6 @@ TEST(RTCSessionDescriptionTest, SessionDescriptionConversionTest) {
   @autoreleasepool {
     RTCSessionDescriptionTest *test = [[RTCSessionDescriptionTest alloc] init];
     [test testSessionDescriptionConversion];
-  }
-}
-
-TEST(RTCSessionDescriptionTest, InvalidSessionDescriptionConversionTest) {
-  @autoreleasepool {
-    RTCSessionDescriptionTest *test = [[RTCSessionDescriptionTest alloc] init];
-    [test testInvalidSessionDescriptionConversion];
   }
 }
 
