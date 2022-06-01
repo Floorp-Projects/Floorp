@@ -30,7 +30,7 @@ namespace dcsctp {
 namespace {
 
 // For test correctnenss, it's important that these getters return lexically
-// incrementing values as |index| grows.
+// incrementing values as `index` grows.
 template <typename T>
 T GetExampleValue(int index);
 
