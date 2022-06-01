@@ -9,6 +9,9 @@ import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.jsm";
 import { RecommendationProvider } from "lib/RecommendationProvider.jsm";
 import { reducers } from "common/Reducers.jsm";
 
+import { PersistentCache } from "lib/PersistentCache.jsm";
+import { PersonalityProvider } from "lib/PersonalityProvider/PersonalityProvider.jsm";
+
 const CONFIG_PREF_NAME = "discoverystream.config";
 const DUMMY_ENDPOINT = "https://getpocket.cdn.mozilla.net/dummy";
 const ENDPOINTS_PREF_NAME = "discoverystream.endpoints";
@@ -52,7 +55,11 @@ describe("DiscoveryStreamFeed", () => {
     clock = sinon.useFakeTimers();
 
     globals = new GlobalOverrider();
-    globals.set("gUUIDGenerator", { generateUUID: () => FAKE_UUID });
+    globals.set({
+      gUUIDGenerator: { generateUUID: () => FAKE_UUID },
+      PersistentCache,
+      PersonalityProvider,
+    });
 
     sandbox
       .stub(global.Services.prefs, "getBoolPref")
