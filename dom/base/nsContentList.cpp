@@ -342,7 +342,6 @@ nsContentList::nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
       mDeep(aDeep),
       mFuncMayDependOnAttr(false),
       mIsHTMLDocument(aRootNode->OwnerDoc()->IsHTMLDocument()),
-      mNamedItemsCacheValid(false),
       mIsLiveList(aLiveList) {
   NS_ASSERTION(mRootNode, "Must have root");
   if (nsGkAtoms::_asterisk == mHTMLMatchAtom) {
@@ -445,58 +444,14 @@ nsIContent* nsContentList::Item(uint32_t aIndex, bool aDoFlush) {
   return mElements.SafeElementAt(aIndex);
 }
 
-void nsContentList::EnsureNamedItemsCacheValid(bool aDoFlush) {
-  BringSelfUpToDate(aDoFlush);
-
-  if (mNamedItemsCacheValid) {
-    return;
-  }
-
-  MOZ_ASSERT(!mNamedItemsCache);
-
-  // https://dom.spec.whatwg.org/#dom-htmlcollection-nameditem-key
-  // XXX: Blink/WebKit don't follow the spec here, and searches first-by-id,
-  // then by name.
-  for (const nsCOMPtr<nsIContent>& content : mElements) {
-    const bool hasName = content->HasName();
-    const bool hasId = content->HasID();
-    if (!hasName && !hasId) {
-      continue;
-    }
-
-    Element* el = content->AsElement();
-    MOZ_ASSERT_IF(hasName, el->IsHTMLElement());
-
-    uint32_t i = 0;
-    while (BorrowedAttrInfo info = el->GetAttrInfoAt(i++)) {
-      const bool valid = (info.mName->Equals(nsGkAtoms::name) && hasName) ||
-                         (info.mName->Equals(nsGkAtoms::id) && hasId);
-      if (!valid) {
-        continue;
-      }
-
-      if (!mNamedItemsCache) {
-        mNamedItemsCache = MakeUnique<NamedItemsCache>();
-      }
-
-      nsAtom* name = info.mValue->GetAtomValue();
-      // NOTE: LookupOrInsert makes sure we keep the first element we find for a
-      // given name.
-      mNamedItemsCache->LookupOrInsert(name, el);
-    }
-  }
-
-  mNamedItemsCacheValid = true;
-}
-
 Element* nsContentList::NamedItem(const nsAString& aName, bool aDoFlush) {
   if (aName.IsEmpty()) {
     return nullptr;
   }
 
-  EnsureNamedItemsCacheValid(aDoFlush);
+  BringSelfUpToDate(aDoFlush);
 
-  if (!mNamedItemsCache) {
+  if (mElements.IsEmpty()) {
     return nullptr;
   }
 
@@ -504,7 +459,25 @@ Element* nsContentList::NamedItem(const nsAString& aName, bool aDoFlush) {
   RefPtr<nsAtom> name = NS_Atomize(aName);
   NS_ENSURE_TRUE(name, nullptr);
 
-  return mNamedItemsCache->Get(name);
+  for (const nsCOMPtr<nsIContent>& content : mElements) {
+    if (!content->HasName() && !content->HasID()) {
+      continue;
+    }
+
+    Element* el = content->AsElement();
+    uint32_t i = 0;
+    while (BorrowedAttrInfo info = el->GetAttrInfoAt(i++)) {
+      if ((info.mName->Equals(nsGkAtoms::name) && el->IsHTMLElement()) ||
+          info.mName->Equals(nsGkAtoms::id)) {
+        // XXX should this pass eIgnoreCase?
+        if (info.mValue->Equals(name, eCaseMatters)) {
+          return el;
+        }
+      }
+    }
+  }
+
+  return nullptr;
 }
 
 void nsContentList::GetSupportedNames(nsTArray<nsString>& aNames) {
