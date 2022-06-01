@@ -349,6 +349,14 @@ class PeerConnectionE2EQualityTestFixture {
     virtual PeerConfigurer* AddVideoConfig(
         VideoConfig config,
         CapturingDeviceIndex capturing_device_index) = 0;
+    // Set the list of video codecs used by the peer during the test. These
+    // codecs will be negotiated in SDP during offer/answer exchange. The order
+    // of these codecs during negotiation will be the same as in |video_codecs|.
+    // Codecs have to be available in codecs list provided by peer connection to
+    // be negotiated. If some of specified codecs won't be found, the test will
+    // crash.
+    virtual PeerConfigurer* SetVideoCodecs(
+        std::vector<VideoCodecConfig> video_codecs) = 0;
     // Set the audio stream for the call from this peer. If this method won't
     // be invoked, this peer will send no audio.
     virtual PeerConfigurer* SetAudioConfig(AudioConfig config) = 0;
@@ -364,14 +372,6 @@ class PeerConnectionE2EQualityTestFixture {
     // applied to all summed RTP streams for this peer.
     virtual PeerConfigurer* SetBitrateSettings(
         BitrateSettings bitrate_settings) = 0;
-    // Set the list of video codecs used by the peer during the test. These
-    // codecs will be negotiated in SDP during offer/answer exchange. The order
-    // of these codecs during negotiation will be the same as in |video_codecs|.
-    // Codecs have to be available in codecs list provided by peer connection to
-    // be negotiated. If some of specified codecs won't be found, the test will
-    // crash.
-    virtual PeerConfigurer* SetVideoCodecs(
-        std::vector<VideoCodecConfig> video_codecs) = 0;
   };
 
   // Contains configuration for echo emulator.
