@@ -450,37 +450,6 @@ class nsTStringRepr {
 
   int32_t RFindCharInSet(const char_type* aString, int32_t aOffset = -1) const;
 
-  /**
-   * Perform string to double-precision float conversion.
-   *
-   * @param   aErrorCode will contain error if one occurs
-   * @return  double-precision float rep of string value
-   */
-  double ToDouble(nsresult* aErrorCode) const {
-    return ToDouble(/* aAllowTrailingChars = */ false, aErrorCode);
-  }
-
-  /**
-   * Perform string to single-precision float conversion.
-   *
-   * @param   aErrorCode will contain error if one occurs
-   * @return  single-precision float rep of string value
-   */
-  float ToFloat(nsresult* aErrorCode) const {
-    return float(ToDouble(aErrorCode));
-  }
-
-  /**
-   * Similar to above ToDouble and ToFloat but allows trailing characters that
-   * are not converted.
-   */
-  double ToDoubleAllowTrailingChars(nsresult* aErrorCode) const {
-    return ToDouble(/* aAllowTrailingChars = */ true, aErrorCode);
-  }
-  float ToFloatAllowTrailingChars(nsresult* aErrorCode) const {
-    return float(ToDoubleAllowTrailingChars(aErrorCode));
-  }
-
  protected:
   nsTStringRepr() = delete;  // Never instantiate directly
 
@@ -492,8 +461,6 @@ class nsTStringRepr {
         mClassFlags(aClassFlags) {}
 
   static constexpr size_type kMaxCapacity = LengthStorage::kMax;
-
-  double ToDouble(bool aAllowTrailingChars, nsresult* aErrorCode) const;
 
   /**
    * Checks if the given capacity is valid for this string type.
@@ -507,13 +474,6 @@ class nsTStringRepr {
   DataFlags mDataFlags;
   ClassFlags const mClassFlags;
 };
-
-template <>
-double nsTStringRepr<char>::ToDouble(bool aAllowTrailingChars,
-                                     nsresult* aErrorCode) const;
-template <>
-double nsTStringRepr<char16_t>::ToDouble(bool aAllowTrailingChars,
-                                         nsresult* aErrorCode) const;
 
 extern template class nsTStringRepr<char>;
 extern template class nsTStringRepr<char16_t>;
