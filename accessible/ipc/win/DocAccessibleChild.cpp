@@ -10,6 +10,7 @@
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/PlatformChild.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "RootAccessible.h"
 
@@ -287,7 +288,9 @@ bool DocAccessibleChild::ConstructChildDocInParentProcess(
     auto browserChild = static_cast<dom::BrowserChild*>(Manager());
     MOZ_ASSERT(browserChild);
     bool result = browserChild->SendPDocAccessibleConstructor(
-        aNewChildDoc, this, aUniqueID, aMsaaID, IAccessibleHolder());
+        aNewChildDoc, this, aUniqueID,
+        aNewChildDoc->mDoc->DocumentNode()->GetBrowsingContext(), aMsaaID,
+        IAccessibleHolder());
     if (result) {
       aNewChildDoc->SetConstructedInParentProcess();
     }
@@ -295,7 +298,8 @@ bool DocAccessibleChild::ConstructChildDocInParentProcess(
   }
 
   PushDeferredEvent(MakeUnique<SerializedChildDocConstructor>(
-      aNewChildDoc, this, aUniqueID, aMsaaID));
+      aNewChildDoc, this, aUniqueID,
+      aNewChildDoc->mDoc->DocumentNode()->GetBrowsingContext(), aMsaaID));
   return true;
 }
 

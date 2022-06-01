@@ -206,6 +206,7 @@ parent:
      * is also Windows-specific and should be set to 0 on other platforms.
      */
     async PDocAccessible(nullable PDocAccessible aParentDoc, uint64_t aParentAcc,
+                         MaybeDiscardedBrowsingContext aBrowsingContext,
                          uint32_t aMsaaID, IAccessibleHolder aDocCOMProxy);
 #endif
 

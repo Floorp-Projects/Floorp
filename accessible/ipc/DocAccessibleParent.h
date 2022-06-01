@@ -16,6 +16,10 @@
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
+namespace dom {
+class CanonicalBrowsingContext;
+}
+
 namespace a11y {
 
 class TextRange;
@@ -34,24 +38,7 @@ class DocAccessibleParent : public RemoteAccessible,
  public:
   NS_INLINE_DECL_REFCOUNTING(DocAccessibleParent);
 
-  DocAccessibleParent()
-      : RemoteAccessible(this),
-        mParentDoc(kNoParentDoc),
-#if defined(XP_WIN)
-        mEmulatedWindowHandle(nullptr),
-#endif  // defined(XP_WIN)
-        mTopLevel(false),
-        mTopLevelInContentProcess(false),
-        mShutdown(false),
-        mFocus(0),
-        mCaretId(0),
-        mCaretOffset(-1),
-        mIsCaretAtEndOfLine(false) {
-    sMaxDocID++;
-    mActorID = sMaxDocID;
-    MOZ_ASSERT(!LiveDocs().Get(mActorID));
-    LiveDocs().InsertOrUpdate(mActorID, this);
-  }
+  DocAccessibleParent();
 
   /**
    * Set this as a top level document; i.e. it is not embedded by another remote
@@ -85,6 +72,12 @@ class DocAccessibleParent : public RemoteAccessible,
     MOZ_ASSERT(mChildDocs.IsEmpty());
     MOZ_ASSERT(mAccessibles.Count() == 0);
     mShutdown = true;
+  }
+
+  void SetBrowsingContext(dom::CanonicalBrowsingContext* aBrowsingContext);
+
+  dom::CanonicalBrowsingContext* GetBrowsingContext() const {
+    return mBrowsingContext;
   }
 
   /*
@@ -324,11 +317,7 @@ class DocAccessibleParent : public RemoteAccessible,
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
  private:
-  ~DocAccessibleParent() {
-    LiveDocs().Remove(mActorID);
-    MOZ_ASSERT(mChildDocs.Length() == 0);
-    MOZ_ASSERT(!ParentDoc());
-  }
+  ~DocAccessibleParent();
 
   class ProxyEntry : public PLDHashEntryHdr {
    public:
@@ -392,6 +381,7 @@ class DocAccessibleParent : public RemoteAccessible,
   bool mTopLevel;
   bool mTopLevelInContentProcess;
   bool mShutdown;
+  RefPtr<dom::CanonicalBrowsingContext> mBrowsingContext;
 
   nsTHashSet<RefPtr<dom::BrowserBridgeParent>> mPendingOOPChildDocs;
 
