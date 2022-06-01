@@ -902,6 +902,67 @@ TEST(DefaultVideoQualityAnalyzerTest, RuntimeParticipantsAdding) {
   }
 }
 
+TEST(DefaultVideoQualityAnalyzerTest,
+     SimulcastFrameWasFullyReceivedByAllPeersBeforeEncodeFinish) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       AnalyzerOptionsForTest());
+  constexpr char kAlice[] = "alice";
+  constexpr char kBob[] = "bob";
+  constexpr char kCharlie[] = "charlie";
+  analyzer.Start("test_case", std::vector<std::string>{kAlice, kBob, kCharlie},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame = NextFrame(frame_generator.get(), 1);
+
+  frame.set_id(analyzer.OnFrameCaptured(kAlice, kStreamLabel, frame));
+  analyzer.OnFramePreEncode(kAlice, frame);
+  // Encode 1st simulcast layer
+  analyzer.OnFrameEncoded(kAlice, frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  // Receive by Bob
+  VideoFrame received_frame = DeepCopy(frame);
+  analyzer.OnFramePreDecode(kBob, received_frame.id(),
+                            FakeEncode(received_frame));
+  analyzer.OnFrameDecoded(kBob, received_frame,
+                          VideoQualityAnalyzerInterface::DecoderStats());
+  analyzer.OnFrameRendered(kBob, received_frame);
+  // Receive by Charlie
+  received_frame = DeepCopy(frame);
+  analyzer.OnFramePreDecode(kCharlie, received_frame.id(),
+                            FakeEncode(received_frame));
+  analyzer.OnFrameDecoded(kCharlie, received_frame,
+                          VideoQualityAnalyzerInterface::DecoderStats());
+  analyzer.OnFrameRendered(kCharlie, received_frame);
+
+  // Encode 2nd simulcast layer
+  analyzer.OnFrameEncoded(kAlice, frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  AnalyzerStats stats = analyzer.GetAnalyzerStats();
+  EXPECT_EQ(stats.comparisons_done, 2);
+
+  std::vector<StatsSample> frames_in_flight_sizes =
+      GetSortedSamples(stats.frames_in_flight_left_count);
+  EXPECT_EQ(frames_in_flight_sizes.back().value, 0)
+      << ToString(frames_in_flight_sizes);
+
+  FrameCounters frame_counters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(frame_counters.captured, 1);
+  EXPECT_EQ(frame_counters.rendered, 2);
+}
+
 }  // namespace
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc
