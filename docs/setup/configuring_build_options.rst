@@ -196,7 +196,7 @@ There are many options recognized by the configure script which are
 special-purpose options intended for embedders or other special
 situations, and should not be used to build the full suite/XUL
 applications. The full list of options can be obtained by running
-``./configure --help``.
+``./mach configure -- --help``.
 
 .. warning::
 
