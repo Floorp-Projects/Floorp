@@ -114,6 +114,8 @@ class MockVideoSendStream : public webrtc::VideoSendStream {
 
   void Stop() override {}
 
+  bool started() override { return false; }
+
   void SetSource(
       rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
       const webrtc::DegradationPreference& degradation_preference) override {}
