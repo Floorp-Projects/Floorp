@@ -109,6 +109,6 @@ if CONFIG["ENABLE_TESTS"]:
     DIRS += ["tests/gtest"]
 
 with Files("**"):
-    BUG_COMPONENT = ("Firefox", "Installer")
+    BUG_COMPONENT = ("Toolkit", "Default Browser Agent")
 
 REQUIRES_UNIFIED_BUILD = True
