@@ -198,7 +198,14 @@ def _ReadGitilesContent(url):
 
 
 def ReadRemoteCrFile(path_below_src, revision):
-    """Reads a remote Chromium file of a specific revision. Returns a string."""
+    """Reads a remote Chromium file of a specific revision.
+
+    Args:
+      path_below_src: A path to the target file relative to src dir.
+      revision: Revision to read.
+    Returns:
+      A string with file content.
+    """
     return _ReadGitilesContent(CHROMIUM_FILE_TEMPLATE %
                                (revision, path_below_src))
 
@@ -209,7 +216,13 @@ def ReadRemoteCrCommit(revision):
 
 
 def ReadUrlContent(url):
-    """Connect to a remote host and read the contents. Returns a list of lines."""
+    """Connect to a remote host and read the contents.
+
+    Args:
+      url: URL to connect to.
+    Returns:
+      A list of lines.
+    """
     conn = urllib2.urlopen(url)
     try:
         return conn.readlines()
@@ -245,7 +258,7 @@ def GetMatchingDepsEntries(depsentry_dict, dir_path):
 
 
 def BuildDepsentryDict(deps_dict):
-    """Builds a dict of paths to DepsEntry objects from a raw parsed deps dict."""
+    """Builds a dict of paths to DepsEntry objects from a raw deps dict."""
     result = {}
 
     def AddDepsEntries(deps_subdict):
@@ -287,7 +300,7 @@ def _FindChangedCipdPackages(path, old_pkgs, new_pkgs):
 
 
 def _FindNewDeps(old, new):
-    """ Gather dependencies only in |new| and return corresponding paths. """
+    """ Gather dependencies only in `new` and return corresponding paths. """
     old_entries = set(BuildDepsentryDict(old))
     new_entries = set(BuildDepsentryDict(new))
     return [
@@ -304,7 +317,7 @@ def FindAddedDeps(webrtc_deps, new_cr_deps):
   but transitively used in WebRTC.
 
   Since it's hard to compute, we restrict ourselves to a well defined subset:
-  deps sitting in |ANDROID_DEPS_PATH|.
+  deps sitting in `ANDROID_DEPS_PATH`.
   Otherwise, assumes that's a Chromium-only dependency.
 
   Args:
@@ -315,7 +328,7 @@ def FindAddedDeps(webrtc_deps, new_cr_deps):
 
   Returns:
     A tuple consisting of:
-      A list of paths added dependencies sitting in |ANDROID_DEPS_PATH|.
+      A list of paths added dependencies sitting in `ANDROID_DEPS_PATH`.
       A list of paths for other added dependencies.
   """
     all_added_deps = _FindNewDeps(webrtc_deps, new_cr_deps)
@@ -337,7 +350,7 @@ def FindRemovedDeps(webrtc_deps, new_cr_deps):
 
   Since it's hard to compute:
    1/ We restrict ourselves to a well defined subset:
-      deps sitting in |ANDROID_DEPS_PATH|.
+      deps sitting in `ANDROID_DEPS_PATH`.
    2/ We rely on existing behavior of CalculateChangeDeps.
       I.e. Assumes non-CIPD dependencies are WebRTC-only, don't remove them.
 
@@ -349,7 +362,7 @@ def FindRemovedDeps(webrtc_deps, new_cr_deps):
 
   Returns:
     A tuple consisting of:
-      A list of paths of dependencies removed from |ANDROID_DEPS_PATH|.
+      A list of paths of dependencies removed from `ANDROID_DEPS_PATH`.
       A list of paths of unexpected disappearing dependencies.
   """
     all_removed_deps = _FindNewDeps(new_cr_deps, webrtc_deps)
@@ -398,7 +411,7 @@ def CalculateChangedDeps(webrtc_deps, new_cr_deps):
             # Use the revision from Chromium's DEPS file.
             new_rev = cr_deps_entry.revision
             assert webrtc_deps_entry.url == cr_deps_entry.url, (
-                'WebRTC DEPS entry %s has a different URL (%s) than Chromium (%s).'
+                'WebRTC DEPS entry %s has a different URL %s than Chromium %s.'
                 % (path, webrtc_deps_entry.url, cr_deps_entry.url))
         else:
             if isinstance(webrtc_deps_entry, DepsEntry):
