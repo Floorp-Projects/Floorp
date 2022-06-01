@@ -54,7 +54,7 @@ class RtpPacketHistory {
   // Maximum number of packets we ever allow in the history.
   static constexpr size_t kMaxCapacity = 9600;
   // Maximum number of entries in prioritized queue of padding packets.
-  static constexpr size_t kMaxPaddingtHistory = 63;
+  static constexpr size_t kMaxPaddingHistory = 63;
   // Don't remove packets within max(1000ms, 3x RTT).
   static constexpr int64_t kMinPacketDurationMs = 1000;
   static constexpr int kMinPacketDurationRtt = 3;

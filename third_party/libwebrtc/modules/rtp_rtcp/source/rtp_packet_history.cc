@@ -24,7 +24,7 @@
 namespace webrtc {
 
 constexpr size_t RtpPacketHistory::kMaxCapacity;
-constexpr size_t RtpPacketHistory::kMaxPaddingtHistory;
+constexpr size_t RtpPacketHistory::kMaxPaddingHistory;
 constexpr int64_t RtpPacketHistory::kMinPacketDurationMs;
 constexpr int RtpPacketHistory::kMinPacketDurationRtt;
 constexpr int RtpPacketHistory::kPacketCullingDelayFactor;
@@ -160,7 +160,7 @@ void RtpPacketHistory::PutRtpPacket(std::unique_ptr<RtpPacketToSend> packet,
       StoredPacket(std::move(packet), send_time_ms, packets_inserted_++);
 
   if (enable_padding_prio_) {
-    if (padding_priority_.size() >= kMaxPaddingtHistory - 1) {
+    if (padding_priority_.size() >= kMaxPaddingHistory - 1) {
       padding_priority_.erase(std::prev(padding_priority_.end()));
     }
     auto prio_it = padding_priority_.insert(&packet_history_[packet_index]);
