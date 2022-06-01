@@ -455,7 +455,7 @@ void VideoStreamEncoderResourceManager::OnEncodeCompleted(
     int64_t time_sent_in_us,
     absl::optional<int> encode_duration_us) {
   RTC_DCHECK_RUN_ON(encoder_queue_);
-  // Inform |encode_usage_resource_| of the encode completed event.
+  // Inform `encode_usage_resource_` of the encode completed event.
   uint32_t timestamp = encoded_image.Timestamp();
   int64_t capture_time_us =
       encoded_image.capture_time_ms_ * rtc::kNumMicrosecsPerMillisec;

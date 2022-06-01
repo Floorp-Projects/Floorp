@@ -871,7 +871,7 @@ void SendStatisticsProxy::UpdateEncoderFallbackStats(
       return;
     }
     if (is_active && (pixels > *fallback_max_pixels_)) {
-      // Pixels should not be above |fallback_max_pixels_|. If above skip to
+      // Pixels should not be above `fallback_max_pixels_`. If above skip to
       // avoid fallbacks due to failure.
       fallback_info->is_possible = false;
       return;
@@ -882,7 +882,7 @@ void SendStatisticsProxy::UpdateEncoderFallbackStats(
 
   if (fallback_info->last_update_ms) {
     int64_t diff_ms = now_ms - *(fallback_info->last_update_ms);
-    // If the time diff since last update is greater than |max_frame_diff_ms|,
+    // If the time diff since last update is greater than `max_frame_diff_ms`,
     // video is considered paused/muted and the change is not included.
     if (diff_ms < fallback_info->max_frame_diff_ms) {
       uma_container_->fallback_active_counter_.Add(fallback_info->is_active,
@@ -1229,7 +1229,7 @@ void SendStatisticsProxy::OnBitrateAllocationUpdated(
 }
 
 // Informes observer if an internal encoder scaler has reduced video
-// resolution or not. |is_scaled| is a flag indicating if the video is scaled
+// resolution or not. `is_scaled` is a flag indicating if the video is scaled
 // down.
 void SendStatisticsProxy::OnEncoderInternalScalerUpdate(bool is_scaled) {
   MutexLock lock(&mutex_);

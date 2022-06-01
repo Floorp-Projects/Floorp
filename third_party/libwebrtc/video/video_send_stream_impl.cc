@@ -102,7 +102,7 @@ int CalculateMaxPadBitrateBps(const std::vector<VideoStream>& streams,
       if (is_svc) {
         // For SVC, since there is only one "stream", the padding bitrate
         // needed to enable the top spatial layer is stored in the
-        // |target_bitrate_bps| field.
+        // `target_bitrate_bps` field.
         // TODO(sprang): This behavior needs to die.
         pad_up_to_bitrate_bps = static_cast<int>(
             hysteresis_factor * active_streams[0].target_bitrate_bps + 0.5);

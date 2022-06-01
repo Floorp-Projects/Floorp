@@ -877,7 +877,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     encoder_reset_required = true;
   }
 
-  // Possibly adjusts scale_resolution_down_by in |encoder_config_| to limit the
+  // Possibly adjusts scale_resolution_down_by in `encoder_config_` to limit the
   // alignment value.
   AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
       encoder_->GetEncoderInfo(), &encoder_config_, absl::nullopt);
@@ -1437,7 +1437,7 @@ void VideoStreamEncoder::SetEncoderRates(
     return;
   }
 
-  // |bitrate_allocation| is 0 it means that the network is down or the send
+  // `bitrate_allocation` is 0 it means that the network is down or the send
   // pacer is full. We currently only report this if the encoder has an internal
   // source. If the encoder does not have an internal source, higher levels
   // are expected to not call AddVideoFrame. We do this since it is unclear
@@ -1524,7 +1524,7 @@ void VideoStreamEncoder::MaybeEncodeVideoFrame(const VideoFrame& video_frame,
     if (last_encoder_rate_settings_) {
       // Clone rate settings before update, so that SetEncoderRates() will
       // actually detect the change between the input and
-      // |last_encoder_rate_setings_|, triggering the call to SetRate() on the
+      // `last_encoder_rate_setings_`, triggering the call to SetRate() on the
       // encoder.
       EncoderRateSettings new_rate_settings = *last_encoder_rate_settings_;
       new_rate_settings.rate_control.framerate_fps =
@@ -1869,7 +1869,7 @@ EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
   // Currently internal quality scaler is used for VP9 instead of webrtc qp
   // scaler (in no-svc case or if only a single spatial layer is encoded).
   // It has to be explicitly detected and reported to adaptation metrics.
-  // Post a task because |send_codec_| requires |encoder_queue_| lock.
+  // Post a task because `send_codec_` requires `encoder_queue_` lock.
   unsigned int image_width = image_copy._encodedWidth;
   unsigned int image_height = image_copy._encodedHeight;
   encoder_queue_.PostTask([this, codec_type, image_width, image_height] {
