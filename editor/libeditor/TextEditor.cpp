@@ -643,7 +643,10 @@ void TextEditor::ReinitializeSelection(Element& aElement) {
     return;
   }
 
-  OnFocus(aElement);
+  // We don't need to flush pending notifications here and we don't need to
+  // handle spellcheck at first focus.  Therefore, we don't need to call
+  // `TextEditor::OnFocus` here.
+  EditorBase::OnFocus(aElement);
 
   // If previous focused editor turn on spellcheck and this editor doesn't
   // turn on it, spellcheck state is mismatched.  So we need to re-sync it.

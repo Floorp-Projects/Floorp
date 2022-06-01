@@ -1205,7 +1205,8 @@ void BrowserParent::Deactivate(bool aWindowLowering, uint64_t aActionId) {
 
 #ifdef ACCESSIBILITY
 a11y::PDocAccessibleParent* BrowserParent::AllocPDocAccessibleParent(
-    PDocAccessibleParent* aParent, const uint64_t&, const uint32_t&,
+    PDocAccessibleParent* aParent, const uint64_t&,
+    const MaybeDiscardedBrowsingContext&, const uint32_t&,
     const IAccessibleHolder&) {
   // Reference freed in DeallocPDocAccessibleParent.
   return do_AddRef(new a11y::DocAccessibleParent()).take();
@@ -1219,8 +1220,9 @@ bool BrowserParent::DeallocPDocAccessibleParent(PDocAccessibleParent* aParent) {
 
 mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     PDocAccessibleParent* aDoc, PDocAccessibleParent* aParentDoc,
-    const uint64_t& aParentID, const uint32_t& aMsaaID,
-    const IAccessibleHolder& aDocCOMProxy) {
+    const uint64_t& aParentID,
+    const MaybeDiscardedBrowsingContext& aBrowsingContext,
+    const uint32_t& aMsaaID, const IAccessibleHolder& aDocCOMProxy) {
 #  if defined(ANDROID)
   MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
 #  endif
@@ -1231,6 +1233,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
   if (mIsDestroyed) {
     doc->MarkAsShutdown();
     return IPC_OK();
+  }
+
+  if (aBrowsingContext) {
+    doc->SetBrowsingContext(aBrowsingContext.get_canonical());
   }
 
   if (aParentDoc) {

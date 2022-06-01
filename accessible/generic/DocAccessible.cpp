@@ -1549,8 +1549,9 @@ void DocAccessible::DoInitialUpdate() {
 #else
           int32_t holder = 0, childID = 0;
 #endif
-          browserChild->SendPDocAccessibleConstructor(ipcDoc, nullptr, 0,
-                                                      childID, holder);
+          browserChild->SendPDocAccessibleConstructor(
+              ipcDoc, nullptr, 0, mDocumentNode->GetBrowsingContext(), childID,
+              holder);
 #if !defined(XP_WIN)
           ipcDoc->SendPDocAccessiblePlatformExtConstructor();
 #endif

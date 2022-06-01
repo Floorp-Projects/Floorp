@@ -11,6 +11,7 @@
 #include "DocAccessible.h"
 #include "nsMai.h"
 #include "RemoteAccessible.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/Likely.h"
 
 using namespace mozilla::a11y;
@@ -111,6 +112,7 @@ const gchar* getDocumentAttributeValueCB(AtkDocument* aDocument,
     if (!proxy) {
       return nullptr;
     }
+    MOZ_ASSERT(proxy->IsDoc());
   }
 
   nsAutoString attrValue;
@@ -124,7 +126,7 @@ const gchar* getDocumentAttributeValueCB(AtkDocument* aDocument,
     if (document) {
       document->URL(attrValue);
     } else {
-      proxy->URL(attrValue);
+      proxy->AsDoc()->URL(attrValue);
     }
   } else if (!strcasecmp(aAttrName, kMimeTypeName)) {
     if (document) {

@@ -1774,7 +1774,16 @@ nsresult mozInlineSpellChecker::RemoveRange(Selection* aSpellCheckSelection,
   RefPtr<nsRange> range{aRange};
   RefPtr<Selection> selection{aSpellCheckSelection};
   selection->RemoveRangeAndUnselectFramesAndNotifyListeners(*range, rv);
-  if (!rv.Failed() && mNumWordsInSpellSelection) mNumWordsInSpellSelection--;
+  if (!rv.Failed()) {
+    if (mNumWordsInSpellSelection) {
+      mNumWordsInSpellSelection--;
+    }
+#ifdef ACCESSIBILITY
+    if (nsAccessibilityService* accService = GetAccService()) {
+      accService->SpellCheckRangeChanged(*aRange);
+    }
+#endif
+  }
 
   return rv.StealNSResult();
 }
@@ -1884,7 +1893,7 @@ nsresult mozInlineSpellChecker::AddRange(Selection* aSpellCheckSelection,
       mNumWordsInSpellSelection++;
 #ifdef ACCESSIBILITY
       if (nsAccessibilityService* accService = GetAccService()) {
-        accService->SpellCheckRangeAdded(*aRange);
+        accService->SpellCheckRangeChanged(*aRange);
       }
 #endif
     }
