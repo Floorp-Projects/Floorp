@@ -142,18 +142,14 @@ Please see [Getting Started][getting-started-link] and
 Yes, each Contributor must sign and return the
 [Contributor License Agreement][cla-link]
 
-### How can I become a WebRTC committer?
-
-After 10-20 non-trivial patches you can apply for commit rights. If you are
-writing a lot of patches you can also apply for try job access before then.
-To apply, open a bug on https://bugs.chromium.org/p/webrtc/ specifying the
-e-mail you will use to commit code to WebRTC and list all the relevant CLs to
-show your previous contributions (even in case you are only requiring try job
-access since it is still required a certain number of contributions for that
-as well).
-
 [cla-link]: https://developers.google.com/open-source/cla/individual?hl=en
 
+### How can I become a WebRTC committer?
+
+The process of becoming a committer is documented in a
+[separate page][become-a-committer].
+
+[become-a-committer]: https://webrtc.googlesource.com/src/+/refs/heads/main/g3doc/become_a_committer.md
 
 ### Do I have to be a programmer to use WebRTC?
 
