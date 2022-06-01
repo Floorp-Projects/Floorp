@@ -31,7 +31,7 @@
   RTC_OBJC_TYPE(RTCSessionDescription) *description =
       [[RTC_OBJC_TYPE(RTCSessionDescription) alloc] initWithType:RTCSdpTypeAnswer sdp:[self sdp]];
 
-  webrtc::SessionDescriptionInterface *nativeDescription =
+  std::unique_ptr<webrtc::SessionDescriptionInterface> nativeDescription =
       description.nativeDescription;
 
   EXPECT_EQ(RTCSdpTypeAnswer,

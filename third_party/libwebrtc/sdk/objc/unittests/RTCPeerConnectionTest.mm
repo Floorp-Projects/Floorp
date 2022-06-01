@@ -23,11 +23,13 @@
 #import "api/peerconnection/RTCPeerConnection.h"
 #import "api/peerconnection/RTCPeerConnectionFactory+Native.h"
 #import "api/peerconnection/RTCPeerConnectionFactory.h"
+#import "api/peerconnection/RTCSessionDescription.h"
 #import "helpers/NSString+StdString.h"
 
 @interface RTCPeerConnectionTest : NSObject
 - (void)testConfigurationGetter;
 - (void)testWithDependencies;
+- (void)testWithInvalidSDP;
 @end
 
 @implementation RTCPeerConnectionTest
@@ -137,6 +139,35 @@
   }
 }
 
+- (void)testWithInvalidSDP {
+  RTC_OBJC_TYPE(RTCPeerConnectionFactory) *factory =
+      [[RTC_OBJC_TYPE(RTCPeerConnectionFactory) alloc] init];
+
+  RTC_OBJC_TYPE(RTCConfiguration) *config = [[RTC_OBJC_TYPE(RTCConfiguration) alloc] init];
+  RTC_OBJC_TYPE(RTCMediaConstraints) *contraints =
+      [[RTC_OBJC_TYPE(RTCMediaConstraints) alloc] initWithMandatoryConstraints:@{}
+                                                           optionalConstraints:nil];
+  RTC_OBJC_TYPE(RTCPeerConnection) *peerConnection =
+      [factory peerConnectionWithConfiguration:config constraints:contraints delegate:nil];
+
+  dispatch_semaphore_t negotiatedSem = dispatch_semaphore_create(0);
+  [peerConnection setRemoteDescription:[[RTC_OBJC_TYPE(RTCSessionDescription) alloc]
+                                           initWithType:RTCSdpTypeOffer
+                                                    sdp:@"invalid"]
+                     completionHandler:^(NSError *error) {
+                       ASSERT_NE(error, nil);
+                       if (error != nil) {
+                         dispatch_semaphore_signal(negotiatedSem);
+                       }
+                     }];
+
+  NSTimeInterval timeout = 5;
+  ASSERT_EQ(
+      0,
+      dispatch_semaphore_wait(negotiatedSem,
+                              dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC))));
+  [peerConnection close];
+}
 @end
 
 TEST(RTCPeerConnectionTest, ConfigurationGetterTest) {
@@ -150,5 +181,12 @@ TEST(RTCPeerConnectionTest, TestWithDependencies) {
   @autoreleasepool {
     RTCPeerConnectionTest *test = [[RTCPeerConnectionTest alloc] init];
     [test testWithDependencies];
+  }
+}
+
+TEST(RTCPeerConnectionTest, TestWithInvalidSDP) {
+  @autoreleasepool {
+    RTCPeerConnectionTest *test = [[RTCPeerConnectionTest alloc] init];
+    [test testWithInvalidSDP];
   }
 }
