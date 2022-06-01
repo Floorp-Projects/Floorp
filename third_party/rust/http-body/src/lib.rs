@@ -1,5 +1,10 @@
-#![doc(html_root_url = "https://docs.rs/http-body/0.3.1")]
-#![deny(missing_debug_implementations, missing_docs, unreachable_pub)]
+#![doc(html_root_url = "https://docs.rs/http-body/0.4.5")]
+#![deny(
+    missing_debug_implementations,
+    missing_docs,
+    unreachable_pub,
+    broken_intra_doc_links
+)]
 #![cfg_attr(test, deny(warnings))]
 
 //! Asynchronous HTTP request or response body.
@@ -8,14 +13,24 @@
 //!
 //! [`Body`]: trait.Body.html
 
+mod empty;
+mod full;
+mod limited;
 mod next;
 mod size_hint;
 
+pub mod combinators;
+
+pub use self::empty::Empty;
+pub use self::full::Full;
+pub use self::limited::{LengthLimitError, Limited};
 pub use self::next::{Data, Trailers};
 pub use self::size_hint::SizeHint;
 
-use bytes::Buf;
+use self::combinators::{BoxBody, MapData, MapErr, UnsyncBoxBody};
+use bytes::{Buf, Bytes};
 use http::HeaderMap;
+use std::convert::Infallible;
 use std::ops;
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -82,6 +97,41 @@ pub trait Body {
         Self: Unpin + Sized,
     {
         Trailers(self)
+    }
+
+    /// Maps this body's data value to a different value.
+    fn map_data<F, B>(self, f: F) -> MapData<Self, F>
+    where
+        Self: Sized,
+        F: FnMut(Self::Data) -> B,
+        B: Buf,
+    {
+        MapData::new(self, f)
+    }
+
+    /// Maps this body's error value to a different value.
+    fn map_err<F, E>(self, f: F) -> MapErr<Self, F>
+    where
+        Self: Sized,
+        F: FnMut(Self::Error) -> E,
+    {
+        MapErr::new(self, f)
+    }
+
+    /// Turn this body into a boxed trait object.
+    fn boxed(self) -> BoxBody<Self::Data, Self::Error>
+    where
+        Self: Sized + Send + Sync + 'static,
+    {
+        BoxBody::new(self)
+    }
+
+    /// Turn this body into a boxed trait object that is !Sync.
+    fn boxed_unsync(self) -> UnsyncBoxBody<Self::Data, Self::Error>
+    where
+        Self: Sized + Send + 'static,
+    {
+        UnsyncBoxBody::new(self)
     }
 }
 
@@ -233,6 +283,38 @@ impl<B: Body> Body for http::Response<B> {
 
     fn size_hint(&self) -> SizeHint {
         self.body().size_hint()
+    }
+}
+
+impl Body for String {
+    type Data = Bytes;
+    type Error = Infallible;
+
+    fn poll_data(
+        mut self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Option<Result<Self::Data, Self::Error>>> {
+        if !self.is_empty() {
+            let s = std::mem::take(&mut *self);
+            Poll::Ready(Some(Ok(s.into_bytes().into())))
+        } else {
+            Poll::Ready(None)
+        }
+    }
+
+    fn poll_trailers(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Result<Option<HeaderMap>, Self::Error>> {
+        Poll::Ready(Ok(None))
+    }
+
+    fn is_end_stream(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn size_hint(&self) -> SizeHint {
+        SizeHint::with_exact(self.len() as u64)
     }
 }
 

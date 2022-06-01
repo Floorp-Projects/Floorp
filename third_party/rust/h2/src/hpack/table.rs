@@ -597,7 +597,7 @@ impl Table {
                         }
 
                         assert!(dist <= their_dist,
-                                "could not find entry; actual={}; desired={};" +
+                                "could not find entry; actual={}; desired={}" +
                                 "probe={}, dist={}; their_dist={}; index={}; msg={}",
                                 actual, desired, probe, dist, their_dist,
                                 index.wrapping_sub(self.inserted), msg);
@@ -751,6 +751,7 @@ fn index_static(header: &Header) -> Option<(usize, bool)> {
             "/index.html" => Some((5, true)),
             _ => Some((4, false)),
         },
+        Header::Protocol(..) => None,
         Header::Status(ref v) => match u16::from(*v) {
             200 => Some((8, true)),
             204 => Some((9, true)),
