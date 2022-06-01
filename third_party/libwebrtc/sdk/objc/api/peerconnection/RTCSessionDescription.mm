@@ -46,13 +46,11 @@
 
 #pragma mark - Private
 
-- (webrtc::SessionDescriptionInterface *)nativeDescription {
+- (std::unique_ptr<webrtc::SessionDescriptionInterface>)nativeDescription {
   webrtc::SdpParseError error;
 
-  webrtc::SessionDescriptionInterface *description =
-      webrtc::CreateSessionDescription([[self class] stdStringForType:_type],
-                                       _sdp.stdString,
-                                       &error);
+  std::unique_ptr<webrtc::SessionDescriptionInterface> description(webrtc::CreateSessionDescription(
+      [[self class] stdStringForType:_type], _sdp.stdString, &error));
 
   if (!description) {
     RTCLogError(@"Failed to create session description: %s\nline: %s",
