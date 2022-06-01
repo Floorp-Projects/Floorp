@@ -8,6 +8,7 @@ from __future__ import absolute_import
 
 from gdbpp import GeckoPrettyPrinter
 
+
 @GeckoPrettyPrinter("nsTSubstring", "^nsTSubstring<.*>$")
 @GeckoPrettyPrinter("nsTAutoStringN", "^nsTAutoStringN<.*>$")
 @GeckoPrettyPrinter("nsString", "^nsTString<.*>$")

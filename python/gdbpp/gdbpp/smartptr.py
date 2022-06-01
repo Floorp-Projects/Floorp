@@ -37,7 +37,7 @@ class smartptr_printer(object):
         self.value = value["mRawPtr"]
 
     def children(self):
-        yield("mRawPtr", self.value)
+        yield ("mRawPtr", self.value)
 
     def to_string(self):
         if not self.value:
