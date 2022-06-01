@@ -346,7 +346,7 @@ Timestamp PacingController::NextSendTime() const {
   // If probing is active, that always takes priority.
   if (prober_.is_probing()) {
     Timestamp probe_time = prober_.NextProbeTime(now);
-    // |probe_time| == PlusInfinity indicates no probe scheduled.
+    // `probe_time` == PlusInfinity indicates no probe scheduled.
     if (probe_time != Timestamp::PlusInfinity() && !probing_send_failure_) {
       return probe_time;
     }
