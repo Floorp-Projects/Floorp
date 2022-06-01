@@ -610,13 +610,13 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
                                        std::string* error_desc) {
   // In the case of RIDs (where SSRCs are not negotiated), this method will
   // generate an SSRC for each layer in StreamParams. That representation will
-  // be stored internally in |local_streams_|.
-  // In subsequent offers, the same stream can appear in |streams| again
+  // be stored internally in `local_streams_`.
+  // In subsequent offers, the same stream can appear in `streams` again
   // (without the SSRCs), so it should be looked up using RIDs (if available)
   // and then by primary SSRC.
   // In both scenarios, it is safe to assume that the media channel will be
   // created with a StreamParams object with SSRCs. However, it is not safe to
-  // assume that |local_streams_| will always have SSRCs as there are scenarios
+  // assume that `local_streams_` will always have SSRCs as there are scenarios
   // in which niether SSRCs or RIDs are negotiated.
 
   // Check for streams that have been removed.

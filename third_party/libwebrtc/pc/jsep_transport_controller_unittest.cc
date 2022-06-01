@@ -349,7 +349,7 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
   int gathering_state_signal_count_ = 0;
   int candidates_signal_count_ = 0;
 
-  // |network_thread_| should be destroyed after |transport_controller_|
+  // `network_thread_` should be destroyed after `transport_controller_`
   std::unique_ptr<rtc::Thread> network_thread_;
   std::unique_ptr<FakeIceTransportFactory> fake_ice_transport_factory_;
   std::unique_ptr<FakeDtlsTransportFactory> fake_dtls_transport_factory_;
@@ -966,14 +966,14 @@ TEST_F(JsepTransportControllerTest, IceSignalingOccursOnNetworkThread) {
 }
 
 // Test that if the TransportController was created with the
-// |redetermine_role_on_ice_restart| parameter set to false, the role is *not*
+// `redetermine_role_on_ice_restart` parameter set to false, the role is *not*
 // redetermined on an ICE restart.
 TEST_F(JsepTransportControllerTest, IceRoleNotRedetermined) {
   JsepTransportController::Config config;
   config.redetermine_role_on_ice_restart = false;
 
   CreateJsepTransportController(config);
-  // Let the |transport_controller_| be the controlled side initially.
+  // Let the `transport_controller_` be the controlled side initially.
   auto remote_offer = std::make_unique<cricket::SessionDescription>();
   AddAudioSection(remote_offer.get(), kAudioMid1, kIceUfrag1, kIcePwd1,
                   cricket::ICEMODE_FULL, cricket::CONNECTIONROLE_ACTPASS,
@@ -2057,7 +2057,7 @@ TEST_F(JsepTransportControllerTest, BundleSubsetOfMediaSections) {
                   ->SetRemoteDescription(SdpType::kAnswer, remote_answer.get())
                   .ok());
 
-  // Verifiy that only |kAudio1| and |kVideo1| are bundled.
+  // Verifiy that only `kAudio1` and `kVideo1` are bundled.
   auto transport1 = transport_controller_->GetRtpTransport(kAudioMid1);
   auto transport2 = transport_controller_->GetRtpTransport(kAudioMid2);
   auto transport3 = transport_controller_->GetRtpTransport(kVideoMid1);
@@ -2231,7 +2231,7 @@ TEST_F(JsepTransportControllerTest, ChangeBundledMidNotSupported) {
   EXPECT_TRUE(bundle_group.RemoveContentName(kAudioMid1));
   bundle_group.AddContentName(kAudioMid1);
   // The answerer uses the new bundle group and now the bundle mid is changed to
-  // |kVideo1|.
+  // `kVideo1`.
   remote_answer->RemoveGroupByName(cricket::GROUP_TYPE_BUNDLE);
   remote_answer->AddGroup(bundle_group);
   EXPECT_TRUE(transport_controller_

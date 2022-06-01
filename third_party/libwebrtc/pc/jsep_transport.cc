@@ -111,7 +111,7 @@ JsepTransport::JsepTransport(
   TRACE_EVENT0("webrtc", "JsepTransport::JsepTransport");
   RTC_DCHECK(ice_transport_);
   RTC_DCHECK(rtp_dtls_transport_);
-  // |rtcp_ice_transport_| must be present iff |rtcp_dtls_transport_| is
+  // `rtcp_ice_transport_` must be present iff `rtcp_dtls_transport_` is
   // present.
   RTC_DCHECK_EQ((rtcp_ice_transport_ != nullptr),
                 (rtcp_dtls_transport_ != nullptr));
@@ -528,9 +528,9 @@ bool JsepTransport::SetSdes(const std::vector<CryptoParams>& cryptos,
     } else {
       RTC_LOG(LS_INFO) << "No crypto keys are provided for SDES.";
       if (type == SdpType::kAnswer) {
-        // Explicitly reset the |sdes_transport_| if no crypto param is
-        // provided in the answer. No need to call |ResetParams()| for
-        // |sdes_negotiator_| because it resets the params inside |SetAnswer|.
+        // Explicitly reset the `sdes_transport_` if no crypto param is
+        // provided in the answer. No need to call `ResetParams()` for
+        // `sdes_negotiator_` because it resets the params inside `SetAnswer`.
         sdes_transport_->ResetParams();
       }
     }

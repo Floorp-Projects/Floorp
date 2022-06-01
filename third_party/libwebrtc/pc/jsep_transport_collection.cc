@@ -94,7 +94,7 @@ void BundleManager::DeleteMid(const cricket::ContentGroup* bundle_group,
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   RTC_LOG(LS_VERBOSE) << "Deleting mid " << mid << " from bundle group "
                       << bundle_group->ToString();
-  // Remove the rejected content from the |bundle_group|.
+  // Remove the rejected content from the `bundle_group`.
   // The const pointer arg is used to identify the group, we verify
   // it before we use it to make a modification.
   auto bundle_group_it = std::find_if(

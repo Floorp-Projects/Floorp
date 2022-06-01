@@ -55,7 +55,7 @@ using ::testing::Return;
 
 namespace webrtc {
 
-// These are used by gtest code, such as if |EXPECT_EQ| fails.
+// These are used by gtest code, such as if `EXPECT_EQ` fails.
 void PrintTo(const RTCCertificateStats& stats, ::std::ostream* os) {
   *os << stats.ToJson();
 }
@@ -916,7 +916,7 @@ TEST_F(RTCStatsCollectorTest, MultipleCallbacks) {
 }
 
 TEST_F(RTCStatsCollectorTest, CachedStatsReports) {
-  // Caching should ensure |a| and |b| are the same report.
+  // Caching should ensure `a` and `b` are the same report.
   rtc::scoped_refptr<const RTCStatsReport> a = stats_->GetStatsReport();
   rtc::scoped_refptr<const RTCStatsReport> b = stats_->GetStatsReport();
   EXPECT_EQ(a.get(), b.get());
@@ -942,8 +942,8 @@ TEST_F(RTCStatsCollectorTest, MultipleCallbacksWithInvalidatedCacheInBetween) {
   EXPECT_TRUE_WAIT(b, kGetStatsReportTimeoutMs);
   EXPECT_TRUE_WAIT(c, kGetStatsReportTimeoutMs);
   EXPECT_EQ(a.get(), b.get());
-  // The act of doing |AdvanceTime| processes all messages. If this was not the
-  // case we might not require |c| to be fresher than |b|.
+  // The act of doing `AdvanceTime` processes all messages. If this was not the
+  // case we might not require `c` to be fresher than `b`.
   EXPECT_NE(c.get(), b.get());
 }
 
@@ -2807,7 +2807,7 @@ class RTCStatsCollectorTestWithParamKind
   }
 
   // Adds a sender and channel of the appropriate kind, creating a sender info
-  // with the report block's |source_ssrc| and report block data.
+  // with the report block's `source_ssrc` and report block data.
   void AddSenderInfoAndMediaChannel(
       std::string transport_name,
       const std::vector<ReportBlockData>& report_block_datas,
@@ -2881,7 +2881,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
   for (auto ssrc : ssrcs) {
     RTCPReportBlock report_block;
     // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
-    // |source_ssrc|, "SSRC of the RTP packet sender".
+    // `source_ssrc`, "SSRC of the RTP packet sender".
     report_block.source_ssrc = ssrc;
     report_block.packets_lost = 7;
     report_block.fraction_lost = kFractionLost;
@@ -2916,7 +2916,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
     expected_remote_inbound_rtp.total_round_trip_time =
         kRoundTripTimeSample1Seconds + kRoundTripTimeSample2Seconds;
     expected_remote_inbound_rtp.round_trip_time_measurements = 2;
-    // This test does not set up RTCCodecStats, so |codec_id| and |jitter| are
+    // This test does not set up RTCCodecStats, so `codec_id` and `jitter` are
     // expected to be missing. These are tested separately.
 
     ASSERT_TRUE(report->Get(expected_remote_inbound_rtp.id()));
@@ -2940,7 +2940,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
 
   RTCPReportBlock report_block;
   // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
-  // |source_ssrc|, "SSRC of the RTP packet sender".
+  // `source_ssrc`, "SSRC of the RTP packet sender".
   report_block.source_ssrc = 12;
   ReportBlockData report_block_data;
   report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
@@ -2972,7 +2972,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
 
   RTCPReportBlock report_block;
   // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
-  // |source_ssrc|, "SSRC of the RTP packet sender".
+  // `source_ssrc`, "SSRC of the RTP packet sender".
   report_block.source_ssrc = 12;
   report_block.jitter = 5000;
   ReportBlockData report_block_data;
@@ -3009,7 +3009,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
 
   RTCPReportBlock report_block;
   // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
-  // |source_ssrc|, "SSRC of the RTP packet sender".
+  // `source_ssrc`, "SSRC of the RTP packet sender".
   report_block.source_ssrc = 12;
   ReportBlockData report_block_data;
   report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
