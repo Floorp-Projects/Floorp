@@ -1978,7 +1978,9 @@ static bool intrinsic_ModuleTopLevelCapabilityResolve(JSContext* cx,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
   RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-  ModuleObject::topLevelCapabilityResolve(cx, module);
+  if (!ModuleObject::topLevelCapabilityResolve(cx, module)) {
+    return false;
+  }
   args.rval().setUndefined();
   return true;
 }
@@ -1989,7 +1991,9 @@ static bool intrinsic_ModuleTopLevelCapabilityReject(JSContext* cx,
   MOZ_ASSERT(args.length() == 2);
   RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
   HandleValue error = args[1];
-  ModuleObject::topLevelCapabilityReject(cx, module, error);
+  if (!ModuleObject::topLevelCapabilityReject(cx, module, error)) {
+    return false;
+  }
   args.rval().setUndefined();
   return true;
 }
