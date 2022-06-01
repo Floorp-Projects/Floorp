@@ -269,8 +269,12 @@ bool DataSocket::ParseContentLengthAndType(const char* headers, size_t length) {
 bool ListeningSocket::Listen(unsigned short port) {
   RTC_DCHECK(valid());
   int enabled = 1;
-  setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR,
-             reinterpret_cast<const char*>(&enabled), sizeof(enabled));
+  if (setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR,
+                 reinterpret_cast<const char*>(&enabled),
+                 sizeof(enabled)) != 0) {
+    printf("setsockopt failed\n");
+    return false;
+  }
   struct sockaddr_in addr = {0};
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
