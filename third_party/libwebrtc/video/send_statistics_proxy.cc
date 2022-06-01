@@ -1019,9 +1019,13 @@ void SendStatisticsProxy::OnSendEncodedImage(
   media_byte_rate_tracker_.AddSamples(encoded_image.size());
 
   if (uma_container_->InsertEncodedFrame(encoded_image, simulcast_idx)) {
-    encoded_frame_rate_trackers_[simulcast_idx]->AddSamples(1);
+    // First frame seen with this timestamp, track overall fps.
     encoded_frame_rate_tracker_.AddSamples(1);
   }
+  // is_top_spatial_layer pertains only to SVC, will always be true for
+  // simulcast.
+  if (is_top_spatial_layer)
+    encoded_frame_rate_trackers_[simulcast_idx]->AddSamples(1);
 
   absl::optional<int> downscales =
       adaptation_limitations_.MaskedQualityCounts().resolution_adaptations;

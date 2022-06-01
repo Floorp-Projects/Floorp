@@ -477,6 +477,57 @@ TEST_F(SendStatisticsProxyTest, EncodeFrameRateInSubStream) {
   EXPECT_EQ(stats.substreams[ssrc].encode_frame_rate, 10);
 }
 
+TEST_F(SendStatisticsProxyTest, EncodeFrameRateInSubStreamsVp8Simulcast) {
+  const int kInterframeDelayMs = 100;
+  rtc::ScopedFakeClock fake_global_clock;
+  EncodedImage encoded_image;
+  CodecSpecificInfo codec_info;
+  codec_info.codecType = kVideoCodecVP8;
+
+  for (int i = 0; i < 10; ++i) {
+    fake_clock_.AdvanceTimeMilliseconds(kInterframeDelayMs);
+    fake_global_clock.SetTime(
+        Timestamp::Millis(fake_clock_.TimeInMilliseconds()));
+    encoded_image.SetTimestamp(encoded_image.Timestamp() +
+                               90 * kInterframeDelayMs);
+    encoded_image.SetSpatialIndex(0);
+    statistics_proxy_->OnSendEncodedImage(encoded_image, &codec_info);
+    encoded_image.SetSpatialIndex(1);
+    statistics_proxy_->OnSendEncodedImage(encoded_image, &codec_info);
+  }
+
+  VideoSendStream::Stats stats = statistics_proxy_->GetStats();
+  EXPECT_EQ(2u, stats.substreams.size());
+  EXPECT_EQ(stats.substreams[config_.rtp.ssrcs[0]].encode_frame_rate, 10);
+  EXPECT_EQ(stats.substreams[config_.rtp.ssrcs[1]].encode_frame_rate, 10);
+}
+
+TEST_F(SendStatisticsProxyTest, EncodeFrameRateInSubStreamsVp9Svc) {
+  const int kInterframeDelayMs = 100;
+  rtc::ScopedFakeClock fake_global_clock;
+  EncodedImage encoded_image;
+  CodecSpecificInfo codec_info;
+  codec_info.codecType = kVideoCodecVP9;
+
+  for (int i = 0; i < 10; ++i) {
+    fake_clock_.AdvanceTimeMilliseconds(kInterframeDelayMs);
+    fake_global_clock.SetTime(
+        Timestamp::Millis(fake_clock_.TimeInMilliseconds()));
+    encoded_image.SetTimestamp(encoded_image.Timestamp() +
+                               90 * kInterframeDelayMs);
+    encoded_image.SetSpatialIndex(0);
+    codec_info.end_of_picture = false;
+    statistics_proxy_->OnSendEncodedImage(encoded_image, &codec_info);
+    encoded_image.SetSpatialIndex(1);
+    codec_info.end_of_picture = true;
+    statistics_proxy_->OnSendEncodedImage(encoded_image, &codec_info);
+  }
+
+  VideoSendStream::Stats stats = statistics_proxy_->GetStats();
+  EXPECT_EQ(1u, stats.substreams.size());
+  EXPECT_EQ(stats.substreams[config_.rtp.ssrcs[0]].encode_frame_rate, 10);
+}
+
 TEST_F(SendStatisticsProxyTest, GetCpuAdaptationStats) {
   VideoAdaptationCounters cpu_counts;
   VideoAdaptationCounters quality_counts;
