@@ -11,30 +11,60 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "cookie"
-version = "0.12.0"
-authors = ["Alex Crichton <alex@alexcrichton.com>", "Sergio Benitez <sb@sergio.bz>"]
-description = "Crate for parsing HTTP cookie headers and managing a cookie jar. Supports signed\nand private (encrypted + signed) jars.\n"
+version = "0.16.0"
+authors = ["Sergio Benitez <sb@sergio.bz>", "Alex Crichton <alex@alexcrichton.com>"]
+build = "build.rs"
+description = "HTTP cookie parsing and cookie jar management. Supports signed and private\n(encrypted, authenticated) jars.\n"
 documentation = "https://docs.rs/cookie"
-license = "MIT/Apache-2.0"
-repository = "https://github.com/alexcrichton/cookie-rs"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/SergioBenitez/cookie-rs"
 [package.metadata.docs.rs]
 all-features = true
+[dependencies.aes-gcm]
+version = "0.9.0"
+optional = true
+
 [dependencies.base64]
+version = "0.13"
+optional = true
+
+[dependencies.hkdf]
+version = "0.12.0"
+optional = true
+
+[dependencies.hmac]
+version = "0.12.0"
+optional = true
+
+[dependencies.percent-encoding]
+version = "2.0"
+optional = true
+
+[dependencies.rand]
+version = "0.8"
+optional = true
+
+[dependencies.sha2]
 version = "0.10.0"
 optional = true
 
-[dependencies.ring]
-version = "0.14.0"
+[dependencies.subtle]
+version = "2.3"
 optional = true
 
 [dependencies.time]
-version = "0.1"
-
-[dependencies.url]
-version = "1.0"
-optional = true
+version = "0.3"
+features = ["std", "parsing", "formatting", "macros"]
+default-features = false
+[build-dependencies.version_check]
+version = "0.9"
 
 [features]
-percent-encode = ["url"]
-secure = ["ring", "base64"]
+key-expansion = ["sha2", "hkdf"]
+percent-encode = ["percent-encoding"]
+private = ["aes-gcm", "base64", "rand", "subtle"]
+secure = ["private", "signed", "key-expansion"]
+signed = ["hmac", "sha2", "base64", "rand", "subtle"]
