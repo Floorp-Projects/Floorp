@@ -73,10 +73,10 @@ struct SslCipherMapEntry {
 
 // This isn't elegant, but it's better than an external reference
 constexpr SrtpCipherMapEntry kSrtpCipherMap[] = {
-    {"SRTP_AES128_CM_SHA1_80", SRTP_AES128_CM_SHA1_80},
-    {"SRTP_AES128_CM_SHA1_32", SRTP_AES128_CM_SHA1_32},
-    {"SRTP_AEAD_AES_128_GCM", SRTP_AEAD_AES_128_GCM},
-    {"SRTP_AEAD_AES_256_GCM", SRTP_AEAD_AES_256_GCM}};
+    {"SRTP_AES128_CM_SHA1_80", kSrtpAes128CmSha1_80},
+    {"SRTP_AES128_CM_SHA1_32", kSrtpAes128CmSha1_32},
+    {"SRTP_AEAD_AES_128_GCM", kSrtpAeadAes128Gcm},
+    {"SRTP_AEAD_AES_256_GCM", kSrtpAeadAes256Gcm}};
 
 #ifndef OPENSSL_IS_BORINGSSL
 // The "SSL_CIPHER_standard_name" function is only available in OpenSSL when

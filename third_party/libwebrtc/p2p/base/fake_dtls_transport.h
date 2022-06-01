@@ -293,7 +293,7 @@ class FakeDtlsTransport : public DtlsTransportInternal {
   rtc::SSLProtocolVersion ssl_max_version_ = rtc::SSL_PROTOCOL_DTLS_12;
   rtc::SSLFingerprint dtls_fingerprint_;
   absl::optional<rtc::SSLRole> dtls_role_;
-  int crypto_suite_ = rtc::SRTP_AES128_CM_SHA1_80;
+  int crypto_suite_ = rtc::kSrtpAes128CmSha1_80;
   absl::optional<int> ssl_cipher_suite_;
 
   webrtc::DtlsTransportState dtls_state_ = webrtc::DtlsTransportState::kNew;

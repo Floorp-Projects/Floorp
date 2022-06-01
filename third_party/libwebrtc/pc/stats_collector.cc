@@ -977,14 +977,14 @@ void StatsCollector::ExtractSessionInfo_s(SessionStats& session_stats) {
                               remote_cert_report_id);
       }
       int srtp_crypto_suite = channel_iter.srtp_crypto_suite;
-      if (srtp_crypto_suite != rtc::SRTP_INVALID_CRYPTO_SUITE &&
+      if (srtp_crypto_suite != rtc::kSrtpInvalidCryptoSuite &&
           rtc::SrtpCryptoSuiteToName(srtp_crypto_suite).length()) {
         channel_report->AddString(
             StatsReport::kStatsValueNameSrtpCipher,
             rtc::SrtpCryptoSuiteToName(srtp_crypto_suite));
       }
       int ssl_cipher_suite = channel_iter.ssl_cipher_suite;
-      if (ssl_cipher_suite != rtc::TLS_NULL_WITH_NULL_NULL &&
+      if (ssl_cipher_suite != rtc::kTlsNullWithNullNull &&
           rtc::SSLStreamAdapter::SslCipherSuiteToName(ssl_cipher_suite)
               .length()) {
         channel_report->AddString(

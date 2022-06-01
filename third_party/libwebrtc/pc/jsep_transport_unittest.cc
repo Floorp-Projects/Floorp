@@ -924,8 +924,8 @@ TEST_F(JsepTransport2Test, SdesNegotiation) {
 
   JsepTransportDescription offer_desc;
   offer_desc.cryptos.push_back(cricket::CryptoParams(
-      1, rtc::CS_AES_CM_128_HMAC_SHA1_32,
-      "inline:" + rtc::CreateRandomString(40), std::string()));
+      1, rtc::kCsAesCm128HmacSha1_32, "inline:" + rtc::CreateRandomString(40),
+      std::string()));
   ASSERT_TRUE(
       jsep_transport_
           ->SetLocalJsepTransportDescription(offer_desc, SdpType::kOffer)
@@ -933,8 +933,8 @@ TEST_F(JsepTransport2Test, SdesNegotiation) {
 
   JsepTransportDescription answer_desc;
   answer_desc.cryptos.push_back(cricket::CryptoParams(
-      1, rtc::CS_AES_CM_128_HMAC_SHA1_32,
-      "inline:" + rtc::CreateRandomString(40), std::string()));
+      1, rtc::kCsAesCm128HmacSha1_32, "inline:" + rtc::CreateRandomString(40),
+      std::string()));
   ASSERT_TRUE(
       jsep_transport_
           ->SetRemoteJsepTransportDescription(answer_desc, SdpType::kAnswer)
@@ -950,8 +950,8 @@ TEST_F(JsepTransport2Test, SdesNegotiationWithEmptyCryptosInAnswer) {
 
   JsepTransportDescription offer_desc;
   offer_desc.cryptos.push_back(cricket::CryptoParams(
-      1, rtc::CS_AES_CM_128_HMAC_SHA1_32,
-      "inline:" + rtc::CreateRandomString(40), std::string()));
+      1, rtc::kCsAesCm128HmacSha1_32, "inline:" + rtc::CreateRandomString(40),
+      std::string()));
   ASSERT_TRUE(
       jsep_transport_
           ->SetLocalJsepTransportDescription(offer_desc, SdpType::kOffer)
@@ -974,8 +974,8 @@ TEST_F(JsepTransport2Test, SdesNegotiationWithMismatchedCryptos) {
 
   JsepTransportDescription offer_desc;
   offer_desc.cryptos.push_back(cricket::CryptoParams(
-      1, rtc::CS_AES_CM_128_HMAC_SHA1_32,
-      "inline:" + rtc::CreateRandomString(40), std::string()));
+      1, rtc::kCsAesCm128HmacSha1_32, "inline:" + rtc::CreateRandomString(40),
+      std::string()));
   ASSERT_TRUE(
       jsep_transport_
           ->SetLocalJsepTransportDescription(offer_desc, SdpType::kOffer)
@@ -983,8 +983,8 @@ TEST_F(JsepTransport2Test, SdesNegotiationWithMismatchedCryptos) {
 
   JsepTransportDescription answer_desc;
   answer_desc.cryptos.push_back(cricket::CryptoParams(
-      1, rtc::CS_AES_CM_128_HMAC_SHA1_80,
-      "inline:" + rtc::CreateRandomString(40), std::string()));
+      1, rtc::kCsAesCm128HmacSha1_80, "inline:" + rtc::CreateRandomString(40),
+      std::string()));
   // Expected to fail because the crypto parameters don't match.
   ASSERT_FALSE(
       jsep_transport_
@@ -1148,7 +1148,7 @@ TEST_P(JsepTransport2HeaderExtensionTest, EncryptedHeaderExtensionNegotiation) {
   recv_encrypted_headers1_.push_back(kHeaderExtensionIDs[0]);
   recv_encrypted_headers2_.push_back(kHeaderExtensionIDs[1]);
 
-  cricket::CryptoParams sdes_param(1, rtc::CS_AES_CM_128_HMAC_SHA1_80,
+  cricket::CryptoParams sdes_param(1, rtc::kCsAesCm128HmacSha1_80,
                                    "inline:" + rtc::CreateRandomString(40),
                                    std::string());
   if (use_gcm) {
@@ -1157,8 +1157,8 @@ TEST_P(JsepTransport2HeaderExtensionTest, EncryptedHeaderExtensionNegotiation) {
     auto fake_dtls2 =
         static_cast<FakeDtlsTransport*>(jsep_transport2_->rtp_dtls_transport());
 
-    fake_dtls1->SetSrtpCryptoSuite(rtc::SRTP_AEAD_AES_256_GCM);
-    fake_dtls2->SetSrtpCryptoSuite(rtc::SRTP_AEAD_AES_256_GCM);
+    fake_dtls1->SetSrtpCryptoSuite(rtc::kSrtpAeadAes256Gcm);
+    fake_dtls2->SetSrtpCryptoSuite(rtc::kSrtpAeadAes256Gcm);
   }
 
   if (scenario == Scenario::kDtlsBeforeCallerSendOffer) {
