@@ -283,11 +283,18 @@ def BuildDepsentryDict(deps_dict):
 
 
 def _FindChangedCipdPackages(path, old_pkgs, new_pkgs):
-    pkgs_equal = ({p['package'] for p in old_pkgs
-                  } == {p['package'] for p in new_pkgs})
+    old_pkgs_names = {p['package'] for p in old_pkgs}
+    new_pkgs_names = {p['package'] for p in new_pkgs}
+    pkgs_equal = (old_pkgs_names == new_pkgs_names)
+    added_pkgs = [p for p in new_pkgs_names if p not in old_pkgs_names]
+    removed_pkgs = [p for p in old_pkgs_names if p not in new_pkgs_names]
+
     assert pkgs_equal, ('Old: %s\n New: %s.\nYou need to do a manual roll '
                         'and remove/add entries in DEPS so the old and new '
-                        'list match.' % (old_pkgs, new_pkgs))
+                        'list match.\nMost likely, you should add \"%s\" and '
+                        'remove \"%s\"' %
+                        (old_pkgs, new_pkgs, added_pkgs, removed_pkgs))
+
     for old_pkg in old_pkgs:
         for new_pkg in new_pkgs:
             old_version = old_pkg['version']
