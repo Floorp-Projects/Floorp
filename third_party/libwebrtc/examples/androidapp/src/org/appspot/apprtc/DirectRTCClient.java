@@ -320,7 +320,7 @@ public class DirectRTCClient implements AppRTCClient, TCPChannelClient.TCPChanne
     });
   }
 
-  // Put a |key|->|value| mapping in |json|.
+  // Put a `key`->`value` mapping in `json`.
   private static void jsonPut(JSONObject json, String key, Object value) {
     try {
       json.put(key, value);
