@@ -459,8 +459,8 @@
       'gn_args': 'is_clang=true',
     },
 
-    'dcheck_always_on': {
-      'gn_args': 'dcheck_always_on=true',
+    'rtc_dcheck_always_on': {
+      'gn_args': 'rtc_dcheck_always_on=true',
     },
 
     'debug': {
@@ -548,11 +548,11 @@
     },
 
     'release_bot': {
-      'mixins': ['pure_release_bot', 'dcheck_always_on'],
+      'mixins': ['pure_release_bot', 'rtc_dcheck_always_on'],
     },
 
     'release_bot_no_goma': {
-      'mixins': ['release', 'no_goma', 'dcheck_always_on'],
+      'mixins': ['release', 'no_goma', 'rtc_dcheck_always_on'],
     },
 
     'tsan': {

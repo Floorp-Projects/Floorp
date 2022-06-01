@@ -14,7 +14,7 @@
 // If you for some reson need to know if DCHECKs are on, test the value of
 // RTC_DCHECK_IS_ON. (Test its value, not if it's defined; it'll always be
 // defined, to either a true or a false value.)
-#if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
+#if !defined(NDEBUG) || defined(RTC_DCHECK_ALWAYS_ON)
 #define RTC_DCHECK_IS_ON 1
 #else
 #define RTC_DCHECK_IS_ON 0

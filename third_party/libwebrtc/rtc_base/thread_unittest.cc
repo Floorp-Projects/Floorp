@@ -366,7 +366,7 @@ TEST(ThreadTest, Wrap) {
   ThreadManager::Instance()->SetCurrentThread(current_thread);
 }
 
-#if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
+#if (!defined(NDEBUG) || defined(RTC_DCHECK_ALWAYS_ON))
 TEST(ThreadTest, InvokeToThreadAllowedReturnsTrueWithoutPolicies) {
   // Create and start the thread.
   auto thread1 = Thread::CreateWithSocketServer();
@@ -410,7 +410,7 @@ TEST(ThreadTest, InvokesDisallowedWhenDisallowAllInvokes) {
   Thread* th_main = Thread::Current();
   th_main->ProcessMessages(100);
 }
-#endif  // (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
+#endif  // (!defined(NDEBUG) || defined(RTC_DCHECK_ALWAYS_ON))
 
 TEST(ThreadTest, InvokesAllowedByDefault) {
   // Create and start the thread.
