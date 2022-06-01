@@ -602,18 +602,8 @@ void RunTestsRDD(SandboxTestingChild* child) {
   child->ErrnoTest("socket_inet"_ns, false,
                    [] { return socket(AF_INET, SOCK_STREAM, 0); });
 
-  {
-    UniqueFileHandle fd(socket(AF_UNIX, SOCK_STREAM, 0));
-    child->ErrnoTest("socket_unix"_ns, true, [&] { return fd.get(); });
-
-    struct sockaddr_un sun {};
-    sun.sun_family = AF_UNIX;
-    strncpy(sun.sun_path, "/tmp/forbidden-sock", sizeof(sun.sun_path));
-
-    child->ErrnoValueTest("socket_unix_bind"_ns, ENOSYS, [&] {
-      return bind(fd.get(), (struct sockaddr*)&sun, sizeof(sun));
-    });
-  }
+  child->ErrnoTest("socket_unix"_ns, false,
+                   [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
 
   child->ErrnoTest("uname"_ns, true, [] {
     struct utsname uts;

@@ -1790,7 +1790,6 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
   explicit RDDSandboxPolicy(SandboxBrokerClient* aBroker) {
     mBroker = aBroker;
     mMayCreateShmem = true;
-    mBrokeredConnect = true;
   }
 
 #ifndef ANDROID
