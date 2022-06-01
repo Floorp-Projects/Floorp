@@ -446,7 +446,7 @@ TEST(ThreadTest, Invoke) {
 // not deadlock but crash.
 #if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
 TEST(ThreadTest, TwoThreadsInvokeDeathTest) {
-  ::testing::GTEST_FLAG(death_test_style) = "threadsafe";
+  GTEST_FLAG_SET(death_test_style, "threadsafe");
   AutoThread thread;
   Thread* main_thread = Thread::Current();
   auto other_thread = Thread::CreateWithSocketServer();
@@ -457,7 +457,7 @@ TEST(ThreadTest, TwoThreadsInvokeDeathTest) {
 }
 
 TEST(ThreadTest, ThreeThreadsInvokeDeathTest) {
-  ::testing::GTEST_FLAG(death_test_style) = "threadsafe";
+  GTEST_FLAG_SET(death_test_style, "threadsafe");
   AutoThread thread;
   Thread* first = Thread::Current();
 
