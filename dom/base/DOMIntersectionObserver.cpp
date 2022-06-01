@@ -499,7 +499,14 @@ static Maybe<OopIframeMetrics> GetOopIframeMetrics(
   if (!browserChild) {
     return Some(OopIframeMetrics{});
   }
-  MOZ_DIAGNOSTIC_ASSERT(!browserChild->IsTopLevel());
+
+  if (MOZ_UNLIKELY(browserChild->IsTopLevel())) {
+    // FIXME(bug 1772083): This can be hit, but it's unclear how... When can we
+    // have a top-level BrowserChild for a document that isn't a top-level
+    // content document?
+    MOZ_ASSERT_UNREACHABLE("Top level BrowserChild w/ non-top level Document?");
+    return Nothing();
+  }
 
   nsRect inProcessRootRect;
   if (nsIScrollableFrame* scrollFrame =
