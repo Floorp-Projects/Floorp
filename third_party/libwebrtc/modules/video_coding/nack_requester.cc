@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/nack_module2.h"
+#include "modules/video_coding/nack_requester.h"
 
 #include <algorithm>
 #include <limits>
@@ -52,7 +52,7 @@ NackPeriodicProcessor::NackPeriodicProcessor(TimeDelta update_interval)
 
 NackPeriodicProcessor::~NackPeriodicProcessor() {}
 
-void NackPeriodicProcessor::RegisterNackModule(NackModuleBase* module) {
+void NackPeriodicProcessor::RegisterNackModule(NackRequesterBase* module) {
   RTC_DCHECK_RUN_ON(&sequence_);
   modules_.push_back(module);
   if (modules_.size() != 1)
@@ -65,7 +65,7 @@ void NackPeriodicProcessor::RegisterNackModule(NackModuleBase* module) {
       });
 }
 
-void NackPeriodicProcessor::UnregisterNackModule(NackModuleBase* module) {
+void NackPeriodicProcessor::UnregisterNackModule(NackRequesterBase* module) {
   RTC_DCHECK_RUN_ON(&sequence_);
   auto it = std::find(modules_.begin(), modules_.end(), module);
   RTC_DCHECK(it != modules_.end());
@@ -76,12 +76,12 @@ void NackPeriodicProcessor::UnregisterNackModule(NackModuleBase* module) {
 
 // RTC_RUN_ON(sequence_)
 void NackPeriodicProcessor::ProcessNackModules() {
-  for (NackModuleBase* module : modules_)
+  for (NackRequesterBase* module : modules_)
     module->ProcessNacks();
 }
 
 ScopedNackPeriodicProcessorRegistration::
-    ScopedNackPeriodicProcessorRegistration(NackModuleBase* module,
+    ScopedNackPeriodicProcessorRegistration(NackRequesterBase* module,
                                             NackPeriodicProcessor* processor)
     : module_(module), processor_(processor) {
   processor_->RegisterNackModule(module_);
@@ -92,25 +92,25 @@ ScopedNackPeriodicProcessorRegistration::
   processor_->UnregisterNackModule(module_);
 }
 
-NackModule2::NackInfo::NackInfo()
+NackRequester::NackInfo::NackInfo()
     : seq_num(0), send_at_seq_num(0), sent_at_time(-1), retries(0) {}
 
-NackModule2::NackInfo::NackInfo(uint16_t seq_num,
-                                uint16_t send_at_seq_num,
-                                int64_t created_at_time)
+NackRequester::NackInfo::NackInfo(uint16_t seq_num,
+                                  uint16_t send_at_seq_num,
+                                  int64_t created_at_time)
     : seq_num(seq_num),
       send_at_seq_num(send_at_seq_num),
       created_at_time(created_at_time),
       sent_at_time(-1),
       retries(0) {}
 
-NackModule2::BackoffSettings::BackoffSettings(TimeDelta min_retry,
-                                              TimeDelta max_rtt,
-                                              double base)
+NackRequester::BackoffSettings::BackoffSettings(TimeDelta min_retry,
+                                                TimeDelta max_rtt,
+                                                double base)
     : min_retry_interval(min_retry), max_rtt(max_rtt), base(base) {}
 
-absl::optional<NackModule2::BackoffSettings>
-NackModule2::BackoffSettings::ParseFromFieldTrials() {
+absl::optional<NackRequester::BackoffSettings>
+NackRequester::BackoffSettings::ParseFromFieldTrials() {
   // Matches magic number in RTPSender::OnReceivedNack().
   const TimeDelta kDefaultMinRetryInterval = TimeDelta::Millis(5);
   // Upper bound on link-delay considered for exponential backoff.
@@ -129,17 +129,17 @@ NackModule2::BackoffSettings::ParseFromFieldTrials() {
                   field_trial::FindFullName("WebRTC-ExponentialNackBackoff"));
 
   if (enabled) {
-    return NackModule2::BackoffSettings(min_retry.Get(), max_rtt.Get(),
-                                        base.Get());
+    return NackRequester::BackoffSettings(min_retry.Get(), max_rtt.Get(),
+                                          base.Get());
   }
   return absl::nullopt;
 }
 
-NackModule2::NackModule2(TaskQueueBase* current_queue,
-                         NackPeriodicProcessor* periodic_processor,
-                         Clock* clock,
-                         NackSender* nack_sender,
-                         KeyFrameRequestSender* keyframe_request_sender)
+NackRequester::NackRequester(TaskQueueBase* current_queue,
+                             NackPeriodicProcessor* periodic_processor,
+                             Clock* clock,
+                             NackSender* nack_sender,
+                             KeyFrameRequestSender* keyframe_request_sender)
     : worker_thread_(current_queue),
       clock_(clock),
       nack_sender_(nack_sender),
@@ -158,11 +158,11 @@ NackModule2::NackModule2(TaskQueueBase* current_queue,
   RTC_DCHECK(worker_thread_->IsCurrent());
 }
 
-NackModule2::~NackModule2() {
+NackRequester::~NackRequester() {
   RTC_DCHECK_RUN_ON(worker_thread_);
 }
 
-void NackModule2::ProcessNacks() {
+void NackRequester::ProcessNacks() {
   RTC_DCHECK_RUN_ON(worker_thread_);
   std::vector<uint16_t> nack_batch = GetNackBatch(kTimeOnly);
   if (!nack_batch.empty()) {
@@ -172,14 +172,14 @@ void NackModule2::ProcessNacks() {
   }
 }
 
-int NackModule2::OnReceivedPacket(uint16_t seq_num, bool is_keyframe) {
+int NackRequester::OnReceivedPacket(uint16_t seq_num, bool is_keyframe) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   return OnReceivedPacket(seq_num, is_keyframe, false);
 }
 
-int NackModule2::OnReceivedPacket(uint16_t seq_num,
-                                  bool is_keyframe,
-                                  bool is_recovered) {
+int NackRequester::OnReceivedPacket(uint16_t seq_num,
+                                    bool is_keyframe,
+                                    bool is_recovered) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   // TODO(philipel): When the packet includes information whether it is
   //                 retransmitted or not, use that value instead. For
@@ -248,7 +248,7 @@ int NackModule2::OnReceivedPacket(uint16_t seq_num,
   return 0;
 }
 
-void NackModule2::ClearUpTo(uint16_t seq_num) {
+void NackRequester::ClearUpTo(uint16_t seq_num) {
   // Called via RtpVideoStreamReceiver2::FrameContinuous on the network thread.
   worker_thread_->PostTask(ToQueuedTask(task_safety_, [seq_num, this]() {
     RTC_DCHECK_RUN_ON(worker_thread_);
@@ -260,12 +260,12 @@ void NackModule2::ClearUpTo(uint16_t seq_num) {
   }));
 }
 
-void NackModule2::UpdateRtt(int64_t rtt_ms) {
+void NackRequester::UpdateRtt(int64_t rtt_ms) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   rtt_ms_ = rtt_ms;
 }
 
-bool NackModule2::RemovePacketsUntilKeyFrame() {
+bool NackRequester::RemovePacketsUntilKeyFrame() {
   // Called on worker_thread_.
   while (!keyframe_list_.empty()) {
     auto it = nack_list_.lower_bound(*keyframe_list_.begin());
@@ -284,8 +284,8 @@ bool NackModule2::RemovePacketsUntilKeyFrame() {
   return false;
 }
 
-void NackModule2::AddPacketsToNack(uint16_t seq_num_start,
-                                   uint16_t seq_num_end) {
+void NackRequester::AddPacketsToNack(uint16_t seq_num_start,
+                                     uint16_t seq_num_end) {
   // Called on worker_thread_.
   // Remove old packets.
   auto it = nack_list_.lower_bound(seq_num_end - kMaxPacketAge);
@@ -320,7 +320,7 @@ void NackModule2::AddPacketsToNack(uint16_t seq_num_start,
   }
 }
 
-std::vector<uint16_t> NackModule2::GetNackBatch(NackFilterOptions options) {
+std::vector<uint16_t> NackRequester::GetNackBatch(NackFilterOptions options) {
   // Called on worker_thread_.
 
   bool consider_seq_num = options != kTimeOnly;
@@ -367,14 +367,14 @@ std::vector<uint16_t> NackModule2::GetNackBatch(NackFilterOptions options) {
   return nack_batch;
 }
 
-void NackModule2::UpdateReorderingStatistics(uint16_t seq_num) {
+void NackRequester::UpdateReorderingStatistics(uint16_t seq_num) {
   // Running on worker_thread_.
   RTC_DCHECK(AheadOf(newest_seq_num_, seq_num));
   uint16_t diff = ReverseDiff(newest_seq_num_, seq_num);
   reordering_histogram_.Add(diff);
 }
 
-int NackModule2::WaitNumberOfPackets(float probability) const {
+int NackRequester::WaitNumberOfPackets(float probability) const {
   // Called on worker_thread_;
   if (reordering_histogram_.NumValues() == 0)
     return 0;

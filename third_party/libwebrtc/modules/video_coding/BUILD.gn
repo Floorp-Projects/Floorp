@@ -71,12 +71,12 @@ rtc_library("frame_dependencies_calculator") {
   ]
 }
 
-rtc_library("nack_module") {
+rtc_library("nack_requester") {
   sources = [
     "histogram.cc",
     "histogram.h",
-    "nack_module2.cc",
-    "nack_module2.h",
+    "nack_requester.cc",
+    "nack_requester.h",
   ]
 
   deps = [
@@ -989,8 +989,8 @@ if (rtc_include_tests) {
       "jitter_buffer_unittest.cc",
       "jitter_estimator_tests.cc",
       "loss_notification_controller_unittest.cc",
-      "nack_module2_unittest.cc",
       "nack_module_unittest.cc",
+      "nack_requester_unittest.cc",
       "packet_buffer_unittest.cc",
       "receiver_unittest.cc",
       "rtp_frame_reference_finder_unittest.cc",
@@ -1026,7 +1026,7 @@ if (rtc_include_tests) {
       ":codec_globals_headers",
       ":encoded_frame",
       ":frame_dependencies_calculator",
-      ":nack_module",
+      ":nack_requester",
       ":simulcast_test_fixture_impl",
       ":video_codec_interface",
       ":video_codecs_test_framework",

@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_NACK_MODULE2_H_
-#define MODULES_VIDEO_CODING_NACK_MODULE2_H_
+#ifndef MODULES_VIDEO_CODING_NACK_REQUESTER_H_
+#define MODULES_VIDEO_CODING_NACK_REQUESTER_H_
 
 #include <stdint.h>
 
@@ -30,9 +30,9 @@
 
 namespace webrtc {
 
-class NackModuleBase {
+class NackRequesterBase {
  public:
-  virtual ~NackModuleBase() = default;
+  virtual ~NackRequesterBase() = default;
   virtual void ProcessNacks() = 0;
 };
 
@@ -41,40 +41,37 @@ class NackPeriodicProcessor {
   static constexpr TimeDelta kUpdateInterval = TimeDelta::Millis(20);
   explicit NackPeriodicProcessor(TimeDelta update_interval = kUpdateInterval);
   ~NackPeriodicProcessor();
-  void RegisterNackModule(NackModuleBase* module);
-  void UnregisterNackModule(NackModuleBase* module);
+  void RegisterNackModule(NackRequesterBase* module);
+  void UnregisterNackModule(NackRequesterBase* module);
 
  private:
   void ProcessNackModules() RTC_RUN_ON(sequence_);
 
   const TimeDelta update_interval_;
   RepeatingTaskHandle repeating_task_ RTC_GUARDED_BY(sequence_);
-  std::vector<NackModuleBase*> modules_ RTC_GUARDED_BY(sequence_);
+  std::vector<NackRequesterBase*> modules_ RTC_GUARDED_BY(sequence_);
   RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_;
 };
 
 class ScopedNackPeriodicProcessorRegistration {
  public:
-  ScopedNackPeriodicProcessorRegistration(NackModuleBase* module,
+  ScopedNackPeriodicProcessorRegistration(NackRequesterBase* module,
                                           NackPeriodicProcessor* processor);
   ~ScopedNackPeriodicProcessorRegistration();
 
  private:
-  NackModuleBase* const module_;
+  NackRequesterBase* const module_;
   NackPeriodicProcessor* const processor_;
 };
 
-// TODO(bugs.webrtc.org/11594): This class no longer implements the Module
-// interface and therefore "NackModule" may not be a descriptive name anymore.
-// Consider renaming to e.g. NackTracker or NackRequester.
-class NackModule2 final : public NackModuleBase {
+class NackRequester final : public NackRequesterBase {
  public:
-  NackModule2(TaskQueueBase* current_queue,
-              NackPeriodicProcessor* periodic_processor,
-              Clock* clock,
-              NackSender* nack_sender,
-              KeyFrameRequestSender* keyframe_request_sender);
-  ~NackModule2();
+  NackRequester(TaskQueueBase* current_queue,
+                NackPeriodicProcessor* periodic_processor,
+                Clock* clock,
+                NackSender* nack_sender,
+                KeyFrameRequestSender* keyframe_request_sender);
+  ~NackRequester();
 
   void ProcessNacks() override;
 
@@ -168,4 +165,4 @@ class NackModule2 final : public NackModuleBase {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_NACK_MODULE2_H_
+#endif  // MODULES_VIDEO_CODING_NACK_REQUESTER_H_
