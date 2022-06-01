@@ -276,7 +276,7 @@ bool DtlsEnabled(const PeerConnectionInterface::RTCConfiguration& configuration,
   bool default_enabled =
       (dependencies.cert_generator || !configuration.certificates.empty());
 
-  // The `configuration` can override the default value.
+  // The |configuration| can override the default value.
   return configuration.enable_dtls_srtp.value_or(default_enabled);
 }
 
@@ -499,7 +499,7 @@ PeerConnection::PeerConnection(
       call_ptr_(call_.get()),
       // RFC 3264: The numeric value of the session id and version in the
       // o line MUST be representable with a "64 bit signed integer".
-      // Due to this constraint session id `session_id_` is max limited to
+      // Due to this constraint session id |session_id_| is max limited to
       // LLONG_MAX.
       session_id_(rtc::ToString(rtc::CreateRandomId64() & LLONG_MAX)),
       dtls_enabled_(dtls_enabled),
@@ -1195,7 +1195,7 @@ void PeerConnection::GetStats(
         break;
     }
   }
-  // If there is no `internal_sender` then `selector` is either null or does not
+  // If there is no |internal_sender| then |selector| is either null or does not
   // belong to the PeerConnection (in Plan B, senders can be removed from the
   // PeerConnection). This means that "all the stats objects representing the
   // selector" is an empty set. Invoking GetStatsReport() with a null selector
@@ -1225,7 +1225,7 @@ void PeerConnection::GetStats(
         break;
     }
   }
-  // If there is no `internal_receiver` then `selector` is either null or does
+  // If there is no |internal_receiver| then |selector| is either null or does
   // not belong to the PeerConnection (in Plan B, receivers can be removed from
   // the PeerConnection). This means that "all the stats objects representing
   // the selector" is an empty set. Invoking GetStatsReport() with a null
@@ -2418,7 +2418,7 @@ bool PeerConnection::SetupDataChannelTransport_n(const std::string& mid) {
 
 void PeerConnection::TeardownDataChannelTransport_n() {
   if (sctp_mid_n_) {
-    // `sctp_mid_` may still be active through an SCTP transport.  If not, unset
+    // |sctp_mid_| may still be active through an SCTP transport.  If not, unset
     // it.
     RTC_LOG(LS_INFO) << "Tearing down data channel transport for mid="
                      << *sctp_mid_n_;

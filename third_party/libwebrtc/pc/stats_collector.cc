@@ -552,7 +552,7 @@ double StatsCollector::GetTimeNow() {
   return static_cast<double>(rtc::TimeUTCMillis());
 }
 
-// Adds a MediaStream with tracks that can be used as a `selector` in a call
+// Adds a MediaStream with tracks that can be used as a |selector| in a call
 // to GetStats.
 void StatsCollector::AddStream(MediaStreamInterface* stream) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());

@@ -38,8 +38,8 @@ class DtmfProviderInterface {
   // Returns true if the audio sender is capable of sending DTMF. Otherwise
   // returns false.
   virtual bool CanInsertDtmf() = 0;
-  // Sends DTMF `code`.
-  // The `duration` indicates the length of the DTMF tone in ms.
+  // Sends DTMF |code|.
+  // The |duration| indicates the length of the DTMF tone in ms.
   // Returns true on success and false on failure.
   virtual bool InsertDtmf(int code, int duration) = 0;
   // Returns a |sigslot::signal0<>| signal. The signal should fire before

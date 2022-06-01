@@ -233,7 +233,7 @@ class PeerConnectionIceBaseTest : public ::testing::Test {
   }
 
   // Returns a list of (ufrag, pwd) pairs in the order that they appear in
-  // `description`, or the empty list if `description` is null.
+  // |description|, or the empty list if |description| is null.
   std::vector<std::pair<std::string, std::string>> GetIceCredentials(
       const SessionDescriptionInterface* description) {
     std::vector<std::pair<std::string, std::string>> ice_credentials;
@@ -589,7 +589,7 @@ TEST_P(PeerConnectionIceTest,
   ASSERT_TRUE(
       caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
 
-  // Add one candidate via `AddIceCandidate`.
+  // Add one candidate via |AddIceCandidate|.
   cricket::Candidate candidate1 = CreateLocalUdpCandidate(kCallerAddress1);
   ASSERT_TRUE(callee->AddIceCandidate(&candidate1));
 
@@ -1005,7 +1005,7 @@ TEST_P(PeerConnectionIceTest,
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
   auto initial_ice_credentials =
       GetIceCredentials(caller->pc()->local_description());
-  // ICE restart becomes needed while an O/A is pending and `caller` is the
+  // ICE restart becomes needed while an O/A is pending and |caller| is the
   // offerer.
   caller->pc()->RestartIce();
   ASSERT_TRUE(
@@ -1025,7 +1025,7 @@ TEST_P(PeerConnectionIceTest,
   auto initial_ice_credentials =
       GetIceCredentials(caller->pc()->local_description());
   ASSERT_TRUE(caller->SetRemoteDescription(callee->CreateOfferAndSetAsLocal()));
-  // ICE restart becomes needed while an O/A is pending and `caller` is the
+  // ICE restart becomes needed while an O/A is pending and |caller| is the
   // answerer.
   caller->pc()->RestartIce();
   ASSERT_TRUE(
@@ -1044,7 +1044,7 @@ TEST_P(PeerConnectionIceTest, RestartIceTriggeredByRemoteSide) {
   auto initial_ice_credentials =
       GetIceCredentials(caller->pc()->local_description());
 
-  // Remote restart and O/A exchange with `caller` as the answerer should
+  // Remote restart and O/A exchange with |caller| as the answerer should
   // restart ICE locally as well.
   callee->pc()->RestartIce();
   ASSERT_TRUE(callee->ExchangeOfferAnswerWith(caller.get()));
@@ -1082,7 +1082,7 @@ TEST_F(PeerConnectionIceTestUnifiedPlan,
   auto callee = CreatePeerConnectionWithAudioVideo();
 
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
-  // ICE restart becomes needed while an O/A is pending and `caller` is the
+  // ICE restart becomes needed while an O/A is pending and |caller| is the
   // offerer.
   caller->observer()->clear_legacy_renegotiation_needed();
   caller->observer()->clear_latest_negotiation_needed_event();
@@ -1105,7 +1105,7 @@ TEST_F(PeerConnectionIceTestUnifiedPlan,
   // Establish initial credentials as the caller.
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
   ASSERT_TRUE(caller->SetRemoteDescription(callee->CreateOfferAndSetAsLocal()));
-  // ICE restart becomes needed while an O/A is pending and `caller` is the
+  // ICE restart becomes needed while an O/A is pending and |caller| is the
   // answerer.
   caller->observer()->clear_legacy_renegotiation_needed();
   caller->observer()->clear_latest_negotiation_needed_event();
@@ -1130,7 +1130,7 @@ TEST_F(PeerConnectionIceTestUnifiedPlan,
   caller->pc()->RestartIce();
   caller->observer()->clear_legacy_renegotiation_needed();
   caller->observer()->clear_latest_negotiation_needed_event();
-  // Remote restart and O/A exchange with `caller` as the answerer should
+  // Remote restart and O/A exchange with |caller| as the answerer should
   // restart ICE locally as well.
   callee->pc()->RestartIce();
   ASSERT_TRUE(callee->ExchangeOfferAnswerWith(caller.get()));

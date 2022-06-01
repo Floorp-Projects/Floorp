@@ -42,7 +42,7 @@ void DtlsSrtpTransport::SetDtlsTransports(
   // When using DTLS-SRTP, we must reset the SrtpTransport every time the
   // DtlsTransport changes and wait until the DTLS handshake is complete to set
   // the newly negotiated parameters.
-  // If `active_reset_srtp_params_` is true, intentionally reset the SRTP
+  // If |active_reset_srtp_params_| is true, intentionally reset the SRTP
   // parameter even though the DtlsTransport may not change.
   if (IsSrtpActive() && (rtp_dtls_transport != rtp_dtls_transport_ ||
                          active_reset_srtp_params_)) {
