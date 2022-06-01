@@ -15786,7 +15786,7 @@ void FactoryOp::DirectoryLockAcquired(DirectoryLock* aLock) {
   MOZ_ASSERT(mDirectoryLock->Id() >= 0);
   mDirectoryLockId = mDirectoryLock->Id();
 
-  QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID, [this](const nsresult rv) {
+  QM_WARNONLY_TRY(MOZ_TO_RESULT(DirectoryOpen()), [this](const nsresult rv) {
     SetFailureCodeIfUnset(rv);
 
     // The caller holds a strong reference to us, no need for a self reference
