@@ -162,7 +162,7 @@ class VideoAnalyzer : public PacketReceiver,
                          const rtc::VideoSinkWants& wants)
         RTC_LOCKS_EXCLUDED(lock_) override;
 
-    // Called by |send_stream_| when |send_stream_.SetSource()| is called.
+    // Called by `send_stream_` when |send_stream_.SetSource()| is called.
     void RemoveSink(rtc::VideoSinkInterface<VideoFrame>* sink)
         RTC_LOCKS_EXCLUDED(lock_) override;
 

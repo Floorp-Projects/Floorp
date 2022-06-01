@@ -401,7 +401,7 @@ void VideoReceiveStream2::Start() {
       new VideoStreamDecoder(&video_receiver_, &stats_proxy_, renderer));
 
   // Make sure we register as a stats observer *after* we've prepared the
-  // |video_stream_decoder_|.
+  // `video_stream_decoder_`.
   call_stats_->RegisterStatsObserver(this);
 
   // Start decoding on task queue.
@@ -750,7 +750,7 @@ void VideoReceiveStream2::StartNextDecode() {
 
 void VideoReceiveStream2::HandleEncodedFrame(
     std::unique_ptr<EncodedFrame> frame) {
-  // Running on |decode_queue_|.
+  // Running on `decode_queue_`.
   int64_t now_ms = clock_->TimeInMilliseconds();
 
   // Current OnPreDecode only cares about QP for VP8.
@@ -821,7 +821,7 @@ int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(
     std::unique_ptr<EncodedFrame> frame) {
   // Running on decode_queue_.
 
-  // If |buffered_encoded_frames_| grows out of control (=60 queued frames),
+  // If `buffered_encoded_frames_` grows out of control (=60 queued frames),
   // maybe due to a stuck decoder, we just halt the process here and log the
   // error.
   const bool encoded_frame_output_enabled =
@@ -852,7 +852,7 @@ int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(
     absl::optional<RecordableEncodedFrame::EncodedResolution>
         pending_resolution;
     {
-      // Fish out |pending_resolution_| to avoid taking the mutex on every lap
+      // Fish out `pending_resolution_` to avoid taking the mutex on every lap
       // or dispatching under the mutex in the flush loop.
       webrtc::MutexLock lock(&pending_resolution_mutex_);
       if (pending_resolution_.has_value())

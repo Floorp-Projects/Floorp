@@ -25,7 +25,7 @@
 
 namespace webrtc {
 namespace {
-// Periodic time interval for processing samples for |freq_offset_counter_|.
+// Periodic time interval for processing samples for `freq_offset_counter_`.
 const int64_t kFreqOffsetProcessIntervalMs = 40000;
 
 // Configuration for bad call detection.
@@ -129,7 +129,7 @@ void ReceiveStatisticsProxy::UpdateHistograms(
     const StreamDataCounters* rtx_stats) {
   // Not actually running on the decoder thread, but must be called after
   // DecoderThreadStopped, which detaches the thread checker. It is therefore
-  // safe to access |qp_counters_|, which were updated on the decode thread
+  // safe to access `qp_counters_`, which were updated on the decode thread
   // earlier.
   RTC_DCHECK_RUN_ON(&decode_thread_);
 

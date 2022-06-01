@@ -5698,7 +5698,7 @@ TEST_F(VideoStreamEncoderTest, InitialFrameDropActivatesWhenSVCLayersChange) {
   video_encoder_config.max_bitrate_bps = kSimulcastTargetBitrateBps;
   video_encoder_config.content_type =
       VideoEncoderConfig::ContentType::kRealtimeVideo;
-  // Currently simulcast layers |active| flags are used to inidicate
+  // Currently simulcast layers `active` flags are used to inidicate
   // which SVC layers are active.
   video_encoder_config.simulcast_layers.resize(3);
 
@@ -6167,7 +6167,7 @@ TEST_F(VideoStreamEncoderTest, RampsUpInQualityWhenBwIsHigh) {
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       max_bitrate, max_bitrate, max_bitrate, 0, 0, 0);
 
-  // Insert frames and advance |min_duration_ms|.
+  // Insert frames and advance `min_duration_ms`.
   for (size_t i = 1; i <= 10; i++) {
     timestamp_ms += kFrameIntervalMs;
     source.IncomingCapturedFrame(CreateFrame(timestamp_ms, kWidth, kHeight));
@@ -7649,8 +7649,8 @@ TEST_F(VideoStreamEncoderTest, EncoderSelectorCurrentEncoderIsSignaled) {
 
   // The encoders produces by the VideoEncoderProxyFactory have a pointer back
   // to it's factory, so in order for the encoder instance in the
-  // |video_stream_encoder_| to be destroyed before the |encoder_factory| we
-  // reset the |video_stream_encoder_| here.
+  // `video_stream_encoder_` to be destroyed before the `encoder_factory` we
+  // reset the `video_stream_encoder_` here.
   video_stream_encoder_.reset();
 }
 
@@ -7736,8 +7736,8 @@ TEST_F(VideoStreamEncoderTest, EncoderSelectorBrokenEncoderSwitch) {
 
   // The encoders produces by the VideoEncoderProxyFactory have a pointer back
   // to it's factory, so in order for the encoder instance in the
-  // |video_stream_encoder_| to be destroyed before the |encoder_factory| we
-  // reset the |video_stream_encoder_| here.
+  // `video_stream_encoder_` to be destroyed before the `encoder_factory` we
+  // reset the `video_stream_encoder_` here.
   video_stream_encoder_.reset();
 }
 
@@ -8020,7 +8020,7 @@ TEST_F(VideoStreamEncoderTest, EncoderResolutionsExposedInSinglecast) {
 TEST_F(VideoStreamEncoderTest, EncoderResolutionsExposedInSimulcast) {
   // Pick downscale factors such that we never encode at full resolution - this
   // is an interesting use case. The frame resolution influences the encoder
-  // resolutions, but if no layer has |scale_resolution_down_by| == 1 then the
+  // resolutions, but if no layer has `scale_resolution_down_by` == 1 then the
   // encoder should not ask for the frame resolution. This allows video frames
   // to have the appearence of one resolution but optimize its internal buffers
   // for what is actually encoded.
@@ -8268,8 +8268,8 @@ class VideoStreamEncoderWithRealEncoderTest
 
   void TearDown() override {
     video_stream_encoder_->Stop();
-    // Ensure |video_stream_encoder_| is destroyed before
-    // |encoder_proxy_factory_|.
+    // Ensure `video_stream_encoder_` is destroyed before
+    // `encoder_proxy_factory_`.
     video_stream_encoder_.reset();
     VideoStreamEncoderTest::TearDown();
   }

@@ -248,8 +248,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       complete_frame_callback_(complete_frame_callback),
       keyframe_request_sender_(keyframe_request_sender),
       keyframe_request_method_(config_.rtp.keyframe_method),
-      // TODO(bugs.webrtc.org/10336): Let |rtcp_feedback_buffer_| communicate
-      // directly with |rtp_rtcp_|.
+      // TODO(bugs.webrtc.org/10336): Let `rtcp_feedback_buffer_` communicate
+      // directly with `rtp_rtcp_`.
       rtcp_feedback_buffer_(this, nack_sender, this),
       nack_module_(MaybeConstructNackModule(current_queue,
                                             nack_periodic_processor,
@@ -825,7 +825,7 @@ void RtpVideoStreamReceiver2::OnAssembledFrame(
   // In that case, request a key frame ASAP.
   if (!has_received_frame_) {
     if (frame->FrameType() != VideoFrameType::kVideoFrameKey) {
-      // |loss_notification_controller_|, if present, would have already
+      // `loss_notification_controller_`, if present, would have already
       // requested a key frame when the first packet for the non-key frame
       // had arrived, so no need to replicate the request.
       if (!loss_notification_controller_) {
@@ -835,16 +835,16 @@ void RtpVideoStreamReceiver2::OnAssembledFrame(
     has_received_frame_ = true;
   }
 
-  // Reset |reference_finder_| if |frame| is new and the codec have changed.
+  // Reset `reference_finder_` if `frame` is new and the codec have changed.
   if (current_codec_) {
     bool frame_is_newer =
         AheadOf(frame->Timestamp(), last_assembled_frame_rtp_timestamp_);
 
     if (frame->codec_type() != current_codec_) {
       if (frame_is_newer) {
-        // When we reset the |reference_finder_| we don't want new picture ids
+        // When we reset the `reference_finder_` we don't want new picture ids
         // to overlap with old picture ids. To ensure that doesn't happen we
-        // start from the |last_completed_picture_id_| and add an offset in case
+        // start from the `last_completed_picture_id_` and add an offset in case
         // of reordering.
         reference_finder_ = std::make_unique<RtpFrameReferenceFinder>(
             last_completed_picture_id_ + std::numeric_limits<uint16_t>::max());

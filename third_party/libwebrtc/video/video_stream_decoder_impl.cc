@@ -185,7 +185,7 @@ void VideoStreamDecoderImpl::OnNextFrameCallback(
     }
     case video_coding::FrameBuffer::kTimeout: {
       callbacks_->OnNonDecodableState();
-      // The |frame_buffer_| requires the frame callback function to complete
+      // The `frame_buffer_` requires the frame callback function to complete
       // before NextFrame is called again. For this reason we call
       // StartNextDecode in a later task to allow this task to complete first.
       bookkeeping_queue_.PostTask([this]() {

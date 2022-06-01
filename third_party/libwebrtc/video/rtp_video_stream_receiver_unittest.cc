@@ -797,8 +797,8 @@ TEST_F(RtpVideoStreamReceiverTest,
 
 TEST_F(RtpVideoStreamReceiverTest,
        SecondariesOfNonStartedStreamGetNoNotifications) {
-  // Explicitly showing that the stream is not in the |started| state,
-  // regardless of whether streams start out |started| or |stopped|.
+  // Explicitly showing that the stream is not in the `started` state,
+  // regardless of whether streams start out `started` or `stopped`.
   rtp_video_stream_receiver_->StopReceive();
 
   MockRtpPacketSink secondary_sink;
@@ -836,7 +836,7 @@ TEST_F(RtpVideoStreamReceiverTest, ParseGenericDescriptorOnePacket) {
 
   uint8_t* payload = rtp_packet.SetPayloadSize(data.size());
   memcpy(payload, data.data(), data.size());
-  // The first byte is the header, so we ignore the first byte of |data|.
+  // The first byte is the header, so we ignore the first byte of `data`.
   mock_on_complete_frame_callback_.AppendExpectedBitstream(data.data() + 1,
                                                            data.size() - 1);
 
@@ -877,7 +877,7 @@ TEST_F(RtpVideoStreamReceiverTest, ParseGenericDescriptorTwoPackets) {
 
   uint8_t* first_packet_payload = first_packet.SetPayloadSize(data.size());
   memcpy(first_packet_payload, data.data(), data.size());
-  // The first byte is the header, so we ignore the first byte of |data|.
+  // The first byte is the header, so we ignore the first byte of `data`.
   mock_on_complete_frame_callback_.AppendExpectedBitstream(data.data() + 1,
                                                            data.size() - 1);
 
@@ -898,7 +898,7 @@ TEST_F(RtpVideoStreamReceiverTest, ParseGenericDescriptorTwoPackets) {
 
   uint8_t* second_packet_payload = second_packet.SetPayloadSize(data.size());
   memcpy(second_packet_payload, data.data(), data.size());
-  // The first byte is the header, so we ignore the first byte of |data|.
+  // The first byte is the header, so we ignore the first byte of `data`.
   mock_on_complete_frame_callback_.AppendExpectedBitstream(data.data() + 1,
                                                            data.size() - 1);
 

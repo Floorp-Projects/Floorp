@@ -141,7 +141,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
 
   Clock* const clock_;
   // Ownership of this object lies with the owner of the ReceiveStatisticsProxy
-  // instance.  Lifetime is guaranteed to outlive |this|.
+  // instance.  Lifetime is guaranteed to outlive `this`.
   // TODO(tommi): In practice the config_ reference is only used for accessing
   // config_.rtp.ulpfec.ulpfec_payload_type.  Instead of holding a pointer back,
   // we could just store the value of ulpfec_payload_type and change the

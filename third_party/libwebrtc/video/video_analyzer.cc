@@ -458,10 +458,10 @@ bool VideoAnalyzer::IsInSelectedSpatialAndTemporalLayer(
 }
 
 void VideoAnalyzer::PollStats() {
-  // Do not grab |comparison_lock_|, before |GetStats()| completes.
+  // Do not grab `comparison_lock_`, before `GetStats()` completes.
   // Otherwise a deadlock may occur:
-  // 1) |comparison_lock_| is acquired after |lock_|
-  // 2) |lock_| is acquired after internal pacer lock in SendRtp()
+  // 1) `comparison_lock_` is acquired after `lock_`
+  // 2) `lock_` is acquired after internal pacer lock in SendRtp()
   // 3) internal pacer lock is acquired by GetStats().
   Call::Stats call_stats = call_->GetStats();
 
@@ -490,8 +490,8 @@ void VideoAnalyzer::PollStats() {
 
   if (receive_stream_ != nullptr) {
     VideoReceiveStream::Stats receive_stats = receive_stream_->GetStats();
-    // |total_decode_time_ms| gives a good estimate of the mean decode time,
-    // |decode_ms| is used to keep track of the standard deviation.
+    // `total_decode_time_ms` gives a good estimate of the mean decode time,
+    // `decode_ms` is used to keep track of the standard deviation.
     if (receive_stats.frames_decoded > 0)
       mean_decode_time_ms_ =
           static_cast<double>(receive_stats.total_decode_time_ms) /
@@ -504,8 +504,8 @@ void VideoAnalyzer::PollStats() {
       pixels_.AddSample(receive_stats.width * receive_stats.height);
     }
 
-    // |frames_decoded| and |frames_rendered| are used because they are more
-    // accurate than |decode_frame_rate| and |render_frame_rate|.
+    // `frames_decoded` and `frames_rendered` are used because they are more
+    // accurate than `decode_frame_rate` and `render_frame_rate`.
     // The latter two are calculated on a momentary basis.
     const double total_frames_duration_sec_double =
         static_cast<double>(receive_stats.total_frames_duration_ms) / 1000.0;

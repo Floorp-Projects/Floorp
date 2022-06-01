@@ -319,7 +319,7 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
       RTC_RUN_ON(worker_task_checker_);
 
   Clock* const clock_;
-  // Ownership of this object lies with VideoReceiveStream, which owns |this|.
+  // Ownership of this object lies with VideoReceiveStream, which owns `this`.
   const VideoReceiveStream::Config& config_;
   PacketRouter* const packet_router_;
   ProcessThread* const process_thread_;

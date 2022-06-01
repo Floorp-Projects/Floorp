@@ -30,7 +30,7 @@
 namespace webrtc {
 namespace internal {
 namespace {
-// Periodic time interval for processing samples for |freq_offset_counter_|.
+// Periodic time interval for processing samples for `freq_offset_counter_`.
 const int64_t kFreqOffsetProcessIntervalMs = 40000;
 
 // Configuration for bad call detection.
@@ -677,7 +677,7 @@ VideoReceiveStream::Stats ReceiveStatisticsProxy::GetStats() const {
         interframe_delay_max_moving_.Max(*last_decoded_frame_time_ms_)
             .value_or(-1);
   } else {
-    // We're paused. Avoid changing the state of |interframe_delay_max_moving_|.
+    // We're paused. Avoid changing the state of `interframe_delay_max_moving_`.
     stats_.interframe_delay_max_ms = -1;
   }
 
@@ -791,8 +791,8 @@ void ReceiveStatisticsProxy::RtcpPacketTypesCounterUpdated(
     // [main] worker thread.
     // So until the sender implementation has been updated, we work around this
     // here by posting the update to the expected thread. We make a by value
-    // copy of the |task_safety_| to handle the case if the queued task
-    // runs after the |ReceiveStatisticsProxy| has been deleted. In such a
+    // copy of the `task_safety_` to handle the case if the queued task
+    // runs after the `ReceiveStatisticsProxy` has been deleted. In such a
     // case the packet_counter update won't be recorded.
     worker_thread_->PostTask(
         ToQueuedTask(task_safety_, [ssrc, packet_counter, this]() {
