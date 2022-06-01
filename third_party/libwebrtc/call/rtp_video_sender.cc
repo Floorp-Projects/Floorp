@@ -367,9 +367,9 @@ RtpVideoSender::RtpVideoSender(
           field_trials_.Lookup("WebRTC-Video-UseFrameRateForOverhead"),
           "Enabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
-      simulate_vp9_structure_(!absl::StartsWith(
+      simulate_vp9_structure_(absl::StartsWith(
           field_trials_.Lookup("WebRTC-Vp9DependencyDescriptor"),
-          "Disabled")),
+          "Enabled")),
       active_(false),
       suspended_ssrcs_(std::move(suspended_ssrcs)),
       fec_controller_(std::move(fec_controller)),

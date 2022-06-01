@@ -463,9 +463,17 @@ TEST_F(RtpPayloadParamsVp8ToGenericTest, FrameIdGaps) {
   ConvertAndCheck(1, 20, VideoFrameType::kVideoFrameDelta, kNoSync, {10, 15});
 }
 
-TEST(RtpPayloadParamsVp9ToGenericTest, NoScalability) {
-  RtpPayloadState state;
-  RtpPayloadParams params(/*ssrc=*/123, &state, FieldTrialBasedConfig());
+class RtpPayloadParamsVp9ToGenericTest : public ::testing::Test {
+ protected:
+  RtpPayloadParamsVp9ToGenericTest()
+      : field_trials_("WebRTC-Vp9DependencyDescriptor/Enabled/") {}
+
+  test::ExplicitKeyValueConfig field_trials_;
+  RtpPayloadState state_;
+};
+
+TEST_F(RtpPayloadParamsVp9ToGenericTest, NoScalability) {
+  RtpPayloadParams params(/*ssrc=*/123, &state_, field_trials_);
 
   EncodedImage encoded_image;
   CodecSpecificInfo codec_info;
@@ -512,13 +520,12 @@ TEST(RtpPayloadParamsVp9ToGenericTest, NoScalability) {
   EXPECT_THAT(header.generic->chain_diffs, ElementsAre(3 - 1));
 }
 
-TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
+TEST_F(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
   // Test with 2 temporal layers structure that is not used by webrtc:
   //    1---3   5
   //   /   /   /   ...
   //  0---2---4---
-  RtpPayloadState state;
-  RtpPayloadParams params(/*ssrc=*/123, &state, FieldTrialBasedConfig());
+  RtpPayloadParams params(/*ssrc=*/123, &state_, field_trials_);
 
   EncodedImage image;
   CodecSpecificInfo info;
@@ -617,11 +624,10 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
   EXPECT_THAT(headers[5].generic->chain_diffs, ElementsAre(2));
 }
 
-TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith3Layers) {
+TEST_F(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith3Layers) {
   // Test with 3 temporal layers structure that is not used by webrtc, but used
   // by chromium: https://imgur.com/pURAGvp
-  RtpPayloadState state;
-  RtpPayloadParams params(/*ssrc=*/123, &state, FieldTrialBasedConfig());
+  RtpPayloadParams params(/*ssrc=*/123, &state_, field_trials_);
 
   EncodedImage image;
   CodecSpecificInfo info;
@@ -762,12 +768,11 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith3Layers) {
   EXPECT_THAT(headers[8].generic->chain_diffs, ElementsAre(8));
 }
 
-TEST(RtpPayloadParamsVp9ToGenericTest, SpatialScalabilityKSvc) {
+TEST_F(RtpPayloadParamsVp9ToGenericTest, SpatialScalabilityKSvc) {
   //  1---3--
   //  |     ...
   //  0---2--
-  RtpPayloadState state;
-  RtpPayloadParams params(/*ssrc=*/123, &state, FieldTrialBasedConfig());
+  RtpPayloadParams params(/*ssrc=*/123, &state_, field_trials_);
 
   EncodedImage image;
   CodecSpecificInfo info;
