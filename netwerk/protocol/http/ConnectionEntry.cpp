@@ -424,6 +424,8 @@ void ConnectionEntry::ClosePersistentConnections() {
   for (int32_t i = 0; i < activeCount; i++) {
     mActiveConns[i]->DontReuse();
   }
+
+  mCoalescingKeys.Clear();
 }
 
 uint32_t ConnectionEntry::PruneDeadConnections() {
