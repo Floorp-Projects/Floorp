@@ -265,8 +265,8 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvGetTLSClientCert(
     const nsCString& aHostName, const OriginAttributes& aOriginAttributes,
     const int32_t& aPort, const uint32_t& aProviderFlags,
     const uint32_t& aProviderTlsFlags, const ByteArray& aServerCert,
-    Maybe<ByteArray>&& aClientCert, nsTArray<ByteArray>&& aCollectedCANames,
-    bool* aSucceeded, ByteArray* aOutCert, nsTArray<ByteArray>* aBuiltChain) {
+    nsTArray<ByteArray>&& aCollectedCANames, bool* aSucceeded,
+    ByteArray* aOutCert, nsTArray<ByteArray>* aBuiltChain) {
   *aSucceeded = false;
 
   SECItem serverCertItem = {
@@ -278,13 +278,8 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvGetTLSClientCert(
     return IPC_OK();
   }
 
-  RefPtr<nsIX509Cert> clientCert;
-  if (aClientCert) {
-    clientCert = new nsNSSCertificate(std::move(aClientCert->data()));
-  }
-
   ClientAuthInfo info(aHostName, aOriginAttributes, aPort, aProviderFlags,
-                      aProviderTlsFlags, clientCert);
+                      aProviderTlsFlags);
   nsTArray<nsTArray<uint8_t>> collectedCANames;
   for (auto& name : aCollectedCANames) {
     collectedCANames.AppendElement(std::move(name.data()));
