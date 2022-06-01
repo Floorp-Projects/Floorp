@@ -195,6 +195,9 @@ std::string VideoEncoder::EncoderInfo::ToString() const {
 #endif
   }
   oss << "]";
+  if (is_qp_trusted.has_value()) {
+    oss << ", is_qp_trusted = " << is_qp_trusted.value();
+  }
   oss << "}";
   return oss.str();
 }

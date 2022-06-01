@@ -145,6 +145,8 @@ class VideoEncoderSoftwareFallbackWrapperTestBase : public ::testing::Test {
       info.scaling_settings = ScalingSettings(kLowThreshold, kHighThreshold);
       info.supports_native_handle = supports_native_handle_;
       info.implementation_name = implementation_name_;
+      if (is_qp_trusted_)
+        info.is_qp_trusted = is_qp_trusted_;
       return info;
     }
 
@@ -156,6 +158,7 @@ class VideoEncoderSoftwareFallbackWrapperTestBase : public ::testing::Test {
     int release_count_ = 0;
     mutable int supports_native_handle_count_ = 0;
     bool supports_native_handle_ = false;
+    bool is_qp_trusted_ = false;
     std::string implementation_name_ = "fake-encoder";
     absl::optional<VideoFrame> last_video_frame_;
   };
@@ -416,6 +419,16 @@ TEST_F(VideoEncoderSoftwareFallbackWrapperTest, ReportsImplementationName) {
   fallback_wrapper_->InitEncode(&codec_, kSettings);
   EncodeFrame();
   CheckLastEncoderName("fake-encoder");
+}
+
+TEST_F(VideoEncoderSoftwareFallbackWrapperTest,
+       IsQpTrustedNotForwardedDuringFallback) {
+  // Fake encoder signals trusted QP, default (libvpx) does not.
+  fake_encoder_->is_qp_trusted_ = true;
+  EXPECT_TRUE(fake_encoder_->GetEncoderInfo().is_qp_trusted.value_or(false));
+  UtilizeFallbackEncoder();
+  EXPECT_FALSE(fallback_wrapper_->GetEncoderInfo().is_qp_trusted.has_value());
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, fallback_wrapper_->Release());
 }
 
 TEST_F(VideoEncoderSoftwareFallbackWrapperTest,
