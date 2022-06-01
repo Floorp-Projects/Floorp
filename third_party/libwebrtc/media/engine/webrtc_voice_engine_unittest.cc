@@ -395,10 +395,10 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
   }
 
   // Test that send bandwidth is set correctly.
-  // |codec| is the codec under test.
-  // |max_bitrate| is a parameter to set to SetMaxSendBandwidth().
-  // |expected_result| is the expected result from SetMaxSendBandwidth().
-  // |expected_bitrate| is the expected audio bitrate afterward.
+  // `codec` is the codec under test.
+  // `max_bitrate` is a parameter to set to SetMaxSendBandwidth().
+  // `expected_result` is the expected result from SetMaxSendBandwidth().
+  // `expected_bitrate` is the expected audio bitrate afterward.
   void TestMaxSendBandwidth(const cricket::AudioCodec& codec,
                             int max_bitrate,
                             bool expected_result,
@@ -1470,7 +1470,7 @@ TEST_P(WebRtcVoiceEngineTestFake, GetRtpReceiveParametersWithUnsignaledSsrc) {
   // Receive PCMU packet (SSRC=1).
   DeliverPacket(kPcmuFrame, sizeof(kPcmuFrame));
 
-  // The |ssrc| member should still be unset.
+  // The `ssrc` member should still be unset.
   rtp_parameters = channel_->GetDefaultRtpReceiveParameters();
   ASSERT_EQ(1u, rtp_parameters.encodings.size());
   EXPECT_FALSE(rtp_parameters.encodings[0].ssrc);
@@ -3611,11 +3611,11 @@ TEST_P(WebRtcVoiceEngineTestFake, PreservePlayoutWhenRecreateRecvStream) {
 // Tests when GetSources is called with non-existing ssrc, it will return an
 // empty list of RtpSource without crashing.
 TEST_P(WebRtcVoiceEngineTestFake, GetSourcesWithNonExistingSsrc) {
-  // Setup an recv stream with |kSsrcX|.
+  // Setup an recv stream with `kSsrcX`.
   SetupRecvStream();
   cricket::WebRtcVoiceMediaChannel* media_channel =
       static_cast<cricket::WebRtcVoiceMediaChannel*>(channel_);
-  // Call GetSources with |kSsrcY| which doesn't exist.
+  // Call GetSources with `kSsrcY` which doesn't exist.
   std::vector<webrtc::RtpSource> sources = media_channel->GetSources(kSsrcY);
   EXPECT_EQ(0u, sources.size());
 }

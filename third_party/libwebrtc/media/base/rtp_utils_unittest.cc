@@ -67,9 +67,9 @@ static uint8_t kRtpMsgWithTwoByteAbsSendTimeExtension[] = {
 };
 
 // Index of AbsSendTimeExtn data in message
-// |kRtpMsgWithOneByteAbsSendTimeExtension|.
+// `kRtpMsgWithOneByteAbsSendTimeExtension`.
 static const int kAstIndexInOneByteRtpMsg = 21;
-// and in message |kRtpMsgWithTwoByteAbsSendTimeExtension|.
+// and in message `kRtpMsgWithTwoByteAbsSendTimeExtension`.
 static const int kAstIndexInTwoByteRtpMsg = 21;
 
 static const rtc::ArrayView<const char> kPcmuFrameArrayView =

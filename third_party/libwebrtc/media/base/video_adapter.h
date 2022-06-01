@@ -33,7 +33,7 @@ class RTC_EXPORT VideoAdapter {
  public:
   VideoAdapter();
   // The source requests output frames whose width and height are divisible
-  // by |source_resolution_alignment|.
+  // by `source_resolution_alignment`.
   explicit VideoAdapter(int source_resolution_alignment);
   virtual ~VideoAdapter();
 
@@ -52,7 +52,7 @@ class RTC_EXPORT VideoAdapter {
   // DEPRECATED. Please use OnOutputFormatRequest below.
   // TODO(asapersson): Remove this once it is no longer used.
   // Requests the output frame size and frame interval from
-  // |AdaptFrameResolution| to not be larger than |format|. Also, the input
+  // `AdaptFrameResolution` to not be larger than `format`. Also, the input
   // frame size will be cropped to match the requested aspect ratio. The
   // requested aspect ratio is orientation agnostic and will be adjusted to
   // maintain the input orientation, so it doesn't matter if e.g. 1280x720 or
@@ -61,13 +61,13 @@ class RTC_EXPORT VideoAdapter {
   void OnOutputFormatRequest(const absl::optional<VideoFormat>& format)
       RTC_LOCKS_EXCLUDED(mutex_);
 
-  // Requests output frame size and frame interval from |AdaptFrameResolution|.
-  // |target_aspect_ratio|: The input frame size will be cropped to match the
+  // Requests output frame size and frame interval from `AdaptFrameResolution`.
+  // `target_aspect_ratio`: The input frame size will be cropped to match the
   // requested aspect ratio. The aspect ratio is orientation agnostic and will
   // be adjusted to maintain the input orientation (i.e. it doesn't matter if
   // e.g. <1280,720> or <720,1280> is requested).
-  // |max_pixel_count|: The maximum output frame size.
-  // |max_fps|: The maximum output framerate.
+  // `max_pixel_count`: The maximum output frame size.
+  // `max_fps`: The maximum output framerate.
   // Note: Should be called from the source only.
   void OnOutputFormatRequest(
       const absl::optional<std::pair<int, int>>& target_aspect_ratio,
@@ -85,7 +85,7 @@ class RTC_EXPORT VideoAdapter {
       const absl::optional<int>& max_portrait_pixel_count,
       const absl::optional<int>& max_fps) RTC_LOCKS_EXCLUDED(mutex_);
 
-  // Requests the output frame size from |AdaptFrameResolution| to have as close
+  // Requests the output frame size from `AdaptFrameResolution` to have as close
   // as possible to |sink_wants.target_pixel_count| pixels (if set)
   // but no more than |sink_wants.max_pixel_count|.
   // |sink_wants.max_framerate_fps| is essentially analogous to
@@ -127,7 +127,7 @@ class RTC_EXPORT VideoAdapter {
   // The fixed source resolution alignment requirement.
   const int source_resolution_alignment_;
   // The currently applied resolution alignment, as given by the requirements:
-  //  - the fixed |source_resolution_alignment_|; and
+  //  - the fixed `source_resolution_alignment_`; and
   //  - the latest |sink_wants.resolution_alignment|.
   int resolution_alignment_ RTC_GUARDED_BY(mutex_);
 

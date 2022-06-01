@@ -218,7 +218,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
   std::vector<webrtc::RtpSource> GetSources(uint32_t ssrc) const override;
 
-  // Take the buffered packets for |ssrcs| and feed them into DeliverPacket.
+  // Take the buffered packets for `ssrcs` and feed them into DeliverPacket.
   // This method does nothing unless unknown_ssrc_packet_buffer_ is configured.
   void BackfillBufferedPackets(rtc::ArrayView<const uint32_t> ssrcs);
 
@@ -258,12 +258,12 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     VideoCodecSettings();
 
     // Checks if all members of |*this| are equal to the corresponding members
-    // of |other|.
+    // of `other`.
     bool operator==(const VideoCodecSettings& other) const;
     bool operator!=(const VideoCodecSettings& other) const;
 
-    // Checks if all members of |a|, except |flexfec_payload_type|, are equal
-    // to the corresponding members of |b|.
+    // Checks if all members of `a`, except `flexfec_payload_type`, are equal
+    // to the corresponding members of `b`.
     static bool EqualsDisregardingFlexfec(const VideoCodecSettings& a,
                                           const VideoCodecSettings& b);
 
@@ -290,7 +290,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // These optionals are unset if not changed.
     absl::optional<std::vector<VideoCodecSettings>> codec_settings;
     absl::optional<std::vector<webrtc::RtpExtension>> rtp_header_extensions;
-    // Keep track of the FlexFEC payload type separately from |codec_settings|.
+    // Keep track of the FlexFEC payload type separately from `codec_settings`.
     // This allows us to recreate the FlexfecReceiveStream separately from the
     // VideoReceiveStream when the FlexFEC payload type is changed.
     absl::optional<int> flexfec_payload_type;
@@ -389,8 +389,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
         const VideoCodec& codec) const;
     void ReconfigureEncoder();
 
-    // Calls Start or Stop according to whether or not |sending_| is true,
-    // and whether or not the encoding in |rtp_parameters_| is active.
+    // Calls Start or Stop according to whether or not `sending_` is true,
+    // and whether or not the encoding in `rtp_parameters_` is active.
     void UpdateSendState();
 
     webrtc::DegradationPreference GetDegradationPreference() const
@@ -494,7 +494,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     webrtc::Call* const call_;
     const StreamParams stream_params_;
 
-    // Both |stream_| and |flexfec_stream_| are managed by |this|. They are
+    // Both `stream_` and `flexfec_stream_` are managed by `this`. They are
     // destroyed by calling call_->DestroyVideoReceiveStream and
     // call_->DestroyFlexfecReceiveStream, respectively.
     webrtc::VideoReceiveStream* stream_;
@@ -577,8 +577,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   // criteria because the streams live on the worker thread and the demuxer
   // lives on the network thread. Because packets are posted from the network
   // thread to the worker thread, they can still be in-flight when streams are
-  // reconfgured. This can happen when |demuxer_criteria_id_| and
-  // |demuxer_criteria_completed_id_| don't match. During this time, we do not
+  // reconfgured. This can happen when `demuxer_criteria_id_` and
+  // `demuxer_criteria_completed_id_` don't match. During this time, we do not
   // want to create unsignalled receive streams and should instead drop the
   // packets. E.g:
   // * If RemoveRecvStream(old_ssrc) was recently called, there may be packets

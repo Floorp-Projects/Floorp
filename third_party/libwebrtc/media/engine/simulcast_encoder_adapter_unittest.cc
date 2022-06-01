@@ -186,7 +186,7 @@ class MockVideoEncoderFactory : public VideoEncoderFactory {
   int32_t init_encode_return_value_ = 0;
   std::vector<MockVideoEncoder*> encoders_;
   std::vector<const char*> encoder_names_;
-  // Keep number of entries in sync with |kMaxSimulcastStreams|.
+  // Keep number of entries in sync with `kMaxSimulcastStreams`.
   std::vector<int> requested_resolution_alignments_ = {1, 1, 1};
   bool supports_simulcast_ = false;
 };
@@ -387,7 +387,7 @@ class TestSimulcastEncoderAdapterFakeHelper {
         video_format_(video_format) {}
 
   // Can only be called once as the SimulcastEncoderAdapter will take the
-  // ownership of |factory_|.
+  // ownership of `factory_`.
   VideoEncoder* CreateMockEncoderAdapter() {
     return new SimulcastEncoderAdapter(primary_factory_.get(),
                                        fallback_factory_.get(), video_format_);
@@ -433,8 +433,8 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
   void ReSetUp() {
     if (adapter_) {
       adapter_->Release();
-      // |helper_| owns factories which |adapter_| needs to destroy encoders.
-      // Release |adapter_| before |helper_| (released in SetUp()).
+      // `helper_` owns factories which `adapter_` needs to destroy encoders.
+      // Release `adapter_` before `helper_` (released in SetUp()).
       adapter_.reset();
     }
     SetUp();
@@ -755,7 +755,7 @@ TEST_F(TestSimulcastEncoderAdapterFake, DoesNotLeakEncoders) {
   EXPECT_EQ(3u, helper_->factory()->encoders().size());
 
   // The adapter should destroy all encoders it has allocated. Since
-  // |helper_->factory()| is owned by |adapter_|, however, we need to rely on
+  // |helper_->factory()| is owned by `adapter_`, however, we need to rely on
   // lsan to find leaks here.
   EXPECT_EQ(0, adapter_->Release());
   adapter_.reset();

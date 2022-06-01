@@ -304,7 +304,7 @@ class UsrsctpTransportMap {
     return map_.erase(id) > 0;
   }
 
-  // Posts |action| to the network thread of the transport identified by |id|
+  // Posts `action` to the network thread of the transport identified by `id`
   // and returns true if found, all while holding a lock to protect against the
   // transport being simultaneously deleted/deregistered, or returns false if
   // not found.

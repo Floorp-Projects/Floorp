@@ -69,7 +69,7 @@ void UpdateAbsSendTimeExtensionValue(uint8_t* extension_data,
   extension_data[2] = static_cast<uint8_t>(send_time);
 }
 
-// Assumes |length| is actual packet length + tag length. Updates HMAC at end of
+// Assumes `length` is actual packet length + tag length. Updates HMAC at end of
 // the RTP packet.
 void UpdateRtpAuthTag(uint8_t* rtp,
                       size_t length,
@@ -359,7 +359,7 @@ bool ApplyPacketOptions(uint8_t* data,
   RTC_DCHECK(data);
   RTC_DCHECK(length);
 
-  // if there is no valid |rtp_sendtime_extension_id| and |srtp_auth_key| in
+  // if there is no valid `rtp_sendtime_extension_id` and `srtp_auth_key` in
   // PacketOptions, nothing to be updated in this packet.
   if (packet_time_params.rtp_sendtime_extension_id == -1 &&
       packet_time_params.srtp_auth_key.empty()) {

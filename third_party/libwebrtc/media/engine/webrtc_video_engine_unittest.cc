@@ -127,8 +127,8 @@ void VerifyCodecHasDefaultFeedbackParams(const cricket::VideoCodec& codec,
       cricket::kRtcpFbParamCcm, cricket::kRtcpFbCcmParamFir)));
 }
 
-// Return true if any codec in |codecs| is an RTX codec with associated payload
-// type |payload_type|.
+// Return true if any codec in `codecs` is an RTX codec with associated payload
+// type `payload_type`.
 bool HasRtxCodec(const std::vector<cricket::VideoCodec>& codecs,
                  int payload_type) {
   for (const cricket::VideoCodec& codec : codecs) {
@@ -1102,7 +1102,7 @@ TEST_F(WebRtcVideoEngineTest, RegisterH264DecoderIfSupported) {
 // Tests when GetSources is called with non-existing ssrc, it will return an
 // empty list of RtpSource without crashing.
 TEST_F(WebRtcVideoEngineTest, GetSourcesWithNonExistingSsrc) {
-  // Setup an recv stream with |kSsrc|.
+  // Setup an recv stream with `kSsrc`.
   AddSupportedVideoCodecType("VP8");
   cricket::VideoRecvParameters parameters;
   parameters.codecs.push_back(GetEngineCodec("VP8"));
@@ -1128,7 +1128,7 @@ TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, NullFactories) {
 }
 
 TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, EmptyFactories) {
-  // |engine| take ownership of the factories.
+  // `engine` take ownership of the factories.
   webrtc::MockVideoEncoderFactory* encoder_factory =
       new webrtc::MockVideoEncoderFactory();
   webrtc::MockVideoDecoderFactory* decoder_factory =
@@ -1151,7 +1151,7 @@ TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, EmptyFactories) {
 // from the engine and that we will create a Vp8 encoder and decoder using the
 // new factories.
 TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, Vp8) {
-  // |engine| take ownership of the factories.
+  // `engine` take ownership of the factories.
   webrtc::MockVideoEncoderFactory* encoder_factory =
       new webrtc::MockVideoEncoderFactory();
   webrtc::MockVideoDecoderFactory* decoder_factory =
@@ -1207,7 +1207,7 @@ TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, Vp8) {
   VerifyCodecHasDefaultFeedbackParams(engine_codecs.at(0),
                                       /*lntf_expected=*/false);
 
-  // Mock encoder creation. |engine| take ownership of the encoder.
+  // Mock encoder creation. `engine` take ownership of the encoder.
   webrtc::VideoEncoderFactory::CodecInfo codec_info;
   codec_info.has_internal_source = false;
   const webrtc::SdpVideoFormat format("VP8");
@@ -1219,7 +1219,7 @@ TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, Vp8) {
     return std::make_unique<FakeWebRtcVideoEncoder>(nullptr);
   });
 
-  // Mock decoder creation. |engine| take ownership of the decoder.
+  // Mock decoder creation. `engine` take ownership of the decoder.
   EXPECT_CALL(*decoder_factory, CreateVideoDecoder(format)).WillOnce([] {
     return std::make_unique<FakeWebRtcVideoDecoder>(nullptr);
   });
@@ -1276,7 +1276,7 @@ TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, Vp8) {
 
 // Test behavior when decoder factory fails to create a decoder (returns null).
 TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, NullDecoder) {
-  // |engine| take ownership of the factories.
+  // `engine` take ownership of the factories.
   webrtc::MockVideoEncoderFactory* encoder_factory =
       new webrtc::MockVideoEncoderFactory();
   webrtc::MockVideoDecoderFactory* decoder_factory =
@@ -1373,7 +1373,7 @@ TEST_F(WebRtcVideoEngineTest, DISABLED_RecreatesEncoderOnContentTypeChange) {
   options.video_noise_reduction.emplace(false);
   EXPECT_TRUE(channel->SetVideoSend(kSsrc, &options, &frame_forwarder));
   // Change back to regular video content, update encoder. Also change
-  // a non |is_screencast| option just to verify it doesn't affect recreation.
+  // a non `is_screencast` option just to verify it doesn't affect recreation.
   frame_forwarder.IncomingCapturedFrame(frame_source.GetFrame());
   ASSERT_TRUE(encoder_factory_->WaitForCreatedVideoEncoders(3));
   EXPECT_EQ(webrtc::VideoCodecMode::kRealtimeVideo,
@@ -3573,7 +3573,7 @@ TEST_F(WebRtcVideoChannelTest, SetIdenticalOptionsDoesntReconfigureEncoder) {
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, &options, &frame_forwarder));
   EXPECT_EQ(1, send_stream->num_encoder_reconfigurations());
 
-  // Change |options| and expect 2 reconfigurations.
+  // Change `options` and expect 2 reconfigurations.
   options.video_noise_reduction = true;
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, &options, &frame_forwarder));
   EXPECT_EQ(2, send_stream->num_encoder_reconfigurations());
@@ -4367,7 +4367,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetRecvCodecsWithFec) {
   EXPECT_EQ(video_stream_config.rtp.rtcp_mode, flexfec_stream_config.rtcp_mode);
   EXPECT_EQ(video_stream_config.rtcp_send_transport,
             flexfec_stream_config.rtcp_send_transport);
-  // TODO(brandtr): Update this EXPECT when we set |transport_cc| in a
+  // TODO(brandtr): Update this EXPECT when we set `transport_cc` in a
   // spec-compliant way.
   EXPECT_EQ(video_stream_config.rtp.transport_cc,
             flexfec_stream_config.rtp.transport_cc);
@@ -7476,7 +7476,7 @@ TEST_F(WebRtcVideoChannelTest,
                                      &frame_forwarder));
   channel_->SetSend(true);
 
-  // Set |scale_resolution_down_by|'s.
+  // Set `scale_resolution_down_by`'s.
   auto rtp_parameters = channel_->GetRtpSendParameters(last_ssrc_);
   ASSERT_EQ(rtp_parameters.encodings.size(), 3u);
   rtp_parameters.encodings[0].scale_resolution_down_by = 1.0;
@@ -7632,7 +7632,7 @@ TEST_F(WebRtcVideoChannelTest,
                                      &frame_forwarder));
   channel_->SetSend(true);
 
-  // Set |scale_resolution_down_by|'s.
+  // Set `scale_resolution_down_by`'s.
   auto rtp_parameters = channel_->GetRtpSendParameters(last_ssrc_);
   ASSERT_EQ(rtp_parameters.encodings.size(), 3u);
   rtp_parameters.encodings[0].scale_resolution_down_by = 1.0;
@@ -7868,7 +7868,7 @@ TEST_F(WebRtcVideoChannelTest,
 
   // FakeVideoSendStream calls CreateEncoderStreams, test that the vector of
   // VideoStreams are created appropriately for the simulcast case.
-  // The maximum |max_framerate| is used, kDefaultVideoMaxFramerate: 60.
+  // The maximum `max_framerate` is used, kDefaultVideoMaxFramerate: 60.
   EXPECT_EQ(kNumSimulcastStreams, stream->GetVideoStreams().size());
   EXPECT_EQ(15, stream->GetVideoStreams()[0].max_framerate);
   EXPECT_EQ(kDefaultVideoMaxFramerate,
@@ -8640,7 +8640,7 @@ TEST_F(WebRtcVideoChannelTest,
   rtp_packet.SetSsrc(kIncomingUnsignalledSsrc);
   ReceivePacketAndAdvanceTime(rtp_packet.Buffer(), /* packet_time_us */ -1);
 
-  // The |ssrc| member should still be unset.
+  // The `ssrc` member should still be unset.
   rtp_parameters = channel_->GetDefaultRtpReceiveParameters();
   ASSERT_EQ(1u, rtp_parameters.encodings.size());
   EXPECT_FALSE(rtp_parameters.encodings[0].ssrc);

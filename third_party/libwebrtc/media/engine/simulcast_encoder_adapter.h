@@ -43,8 +43,8 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
   // TODO(bugs.webrtc.org/11000): Remove when downstream usage is gone.
   SimulcastEncoderAdapter(VideoEncoderFactory* primarty_factory,
                           const SdpVideoFormat& format);
-  // |primary_factory| produces the first-choice encoders to use.
-  // |fallback_factory|, if non-null, is used to create fallback encoder that
+  // `primary_factory` produces the first-choice encoders to use.
+  // `fallback_factory`, if non-null, is used to create fallback encoder that
   // will be used if InitEncode() fails for the primary encoder.
   SimulcastEncoderAdapter(VideoEncoderFactory* primary_factory,
                           VideoEncoderFactory* fallback_factory,
@@ -147,7 +147,7 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
   void DestroyStoredEncoders();
 
   // This method creates encoder. May reuse previously created encoders from
-  // |cached_encoder_contexts_|. It's const because it's used from
+  // `cached_encoder_contexts_`. It's const because it's used from
   // const GetEncoderInfo().
   std::unique_ptr<EncoderContext> FetchOrCreateEncoderContext(
       bool is_lowest_quality_stream) const;
@@ -182,7 +182,7 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
 
   // Store previously created and released encoders , so they don't have to be
   // recreated. Remaining encoders are destroyed by the destructor.
-  // Marked as |mutable| becuase we may need to temporarily create encoder in
+  // Marked as `mutable` becuase we may need to temporarily create encoder in
   // GetEncoderInfo(), which is const.
   mutable std::list<std::unique_ptr<EncoderContext>> cached_encoder_contexts_;
 
