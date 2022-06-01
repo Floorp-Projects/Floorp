@@ -345,15 +345,29 @@ class MOZ_STACK_CLASS AutoRangeArray final {
    */
   void EnsureRangesInTextNode(const dom::Text& aTextNode);
 
-  static bool IsEditableRange(const dom::AbstractRange& aRange,
-                              const dom::Element& aEditingHost);
+  /**
+   * Check whether the range is in aEditingHost and both containers of start and
+   * end boundaries of the range are editable.
+   */
+  [[nodiscard]] static bool IsEditableRange(const dom::AbstractRange& aRange,
+                                            const dom::Element& aEditingHost);
+
+  /**
+   * Check whether the first range is in aEditingHost and both containers of
+   * start and end boundaries of the first range are editable.
+   */
+  [[nodiscard]] bool IsFirstRangeEditable(
+      const dom::Element& aEditingHost) const {
+    return IsEditableRange(FirstRangeRef(), aEditingHost);
+  }
 
   /**
    * IsAtLeastOneContainerOfRangeBoundariesInclusiveDescendantOf() returns true
    * if at least one of the containers of the range boundaries is an inclusive
    * descendant of aContent.
    */
-  bool IsAtLeastOneContainerOfRangeBoundariesInclusiveDescendantOf(
+  [[nodiscard]] bool
+  IsAtLeastOneContainerOfRangeBoundariesInclusiveDescendantOf(
       const nsIContent& aContent) const {
     for (const OwningNonNull<nsRange>& range : mRanges) {
       nsINode* startContainer = range->GetStartContainer();
@@ -372,13 +386,15 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     return false;
   }
 
-  auto& Ranges() { return mRanges; }
-  const auto& Ranges() const { return mRanges; }
-  auto& FirstRangeRef() { return mRanges[0]; }
-  const auto& FirstRangeRef() const { return mRanges[0]; }
+  [[nodiscard]] auto& Ranges() { return mRanges; }
+  [[nodiscard]] const auto& Ranges() const { return mRanges; }
+  [[nodiscard]] OwningNonNull<nsRange>& FirstRangeRef() { return mRanges[0]; }
+  [[nodiscard]] const OwningNonNull<nsRange>& FirstRangeRef() const {
+    return mRanges[0];
+  }
 
   template <template <typename> typename StrongPtrType>
-  AutoTArray<StrongPtrType<nsRange>, 8> CloneRanges() const {
+  [[nodiscard]] AutoTArray<StrongPtrType<nsRange>, 8> CloneRanges() const {
     AutoTArray<StrongPtrType<nsRange>, 8> ranges;
     for (const auto& range : mRanges) {
       ranges.AppendElement(range->CloneRange());
@@ -387,14 +403,14 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   }
 
   template <typename EditorDOMPointType>
-  EditorDOMPointType GetFirstRangeStartPoint() const {
+  [[nodiscard]] EditorDOMPointType GetFirstRangeStartPoint() const {
     if (mRanges.IsEmpty() || !mRanges[0]->IsPositioned()) {
       return EditorDOMPointType();
     }
     return EditorDOMPointType(mRanges[0]->StartRef());
   }
   template <typename EditorDOMPointType>
-  EditorDOMPointType GetFirstRangeEndPoint() const {
+  [[nodiscard]] EditorDOMPointType GetFirstRangeEndPoint() const {
     if (mRanges.IsEmpty() || !mRanges[0]->IsPositioned()) {
       return EditorDOMPointType();
     }
@@ -451,7 +467,7 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   /**
    * The following methods are same as `Selection`'s methods.
    */
-  bool IsCollapsed() const {
+  [[nodiscard]] bool IsCollapsed() const {
     return mRanges.IsEmpty() ||
            (mRanges.Length() == 1 && mRanges[0]->Collapsed());
   }
@@ -499,10 +515,12 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     mRanges.AppendElement(*mAnchorFocusRange);
     return NS_OK;
   }
-  const nsRange* GetAnchorFocusRange() const { return mAnchorFocusRange; }
-  nsDirection GetDirection() const { return mDirection; }
+  [[nodiscard]] const nsRange* GetAnchorFocusRange() const {
+    return mAnchorFocusRange;
+  }
+  [[nodiscard]] nsDirection GetDirection() const { return mDirection; }
 
-  const RangeBoundary& AnchorRef() const {
+  [[nodiscard]] const RangeBoundary& AnchorRef() const {
     if (!mAnchorFocusRange) {
       static RangeBoundary sEmptyRangeBoundary;
       return sEmptyRangeBoundary;
@@ -510,21 +528,21 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     return mDirection == nsDirection::eDirNext ? mAnchorFocusRange->StartRef()
                                                : mAnchorFocusRange->EndRef();
   }
-  nsINode* GetAnchorNode() const {
+  [[nodiscard]] nsINode* GetAnchorNode() const {
     return AnchorRef().IsSet() ? AnchorRef().Container() : nullptr;
   }
-  uint32_t GetAnchorOffset() const {
+  [[nodiscard]] uint32_t GetAnchorOffset() const {
     return AnchorRef().IsSet()
                ? AnchorRef()
                      .Offset(RangeBoundary::OffsetFilter::kValidOffsets)
                      .valueOr(0)
                : 0;
   }
-  nsIContent* GetChildAtAnchorOffset() const {
+  [[nodiscard]] nsIContent* GetChildAtAnchorOffset() const {
     return AnchorRef().IsSet() ? AnchorRef().GetChildAtOffset() : nullptr;
   }
 
-  const RangeBoundary& FocusRef() const {
+  [[nodiscard]] const RangeBoundary& FocusRef() const {
     if (!mAnchorFocusRange) {
       static RangeBoundary sEmptyRangeBoundary;
       return sEmptyRangeBoundary;
@@ -532,17 +550,17 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     return mDirection == nsDirection::eDirNext ? mAnchorFocusRange->EndRef()
                                                : mAnchorFocusRange->StartRef();
   }
-  nsINode* GetFocusNode() const {
+  [[nodiscard]] nsINode* GetFocusNode() const {
     return FocusRef().IsSet() ? FocusRef().Container() : nullptr;
   }
-  uint32_t FocusOffset() const {
+  [[nodiscard]] uint32_t FocusOffset() const {
     return FocusRef().IsSet()
                ? FocusRef()
                      .Offset(RangeBoundary::OffsetFilter::kValidOffsets)
                      .valueOr(0)
                : 0;
   }
-  nsIContent* GetChildAtFocusOffset() const {
+  [[nodiscard]] nsIContent* GetChildAtFocusOffset() const {
     return FocusRef().IsSet() ? FocusRef().GetChildAtOffset() : nullptr;
   }
 

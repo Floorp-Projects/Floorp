@@ -92,7 +92,7 @@ bool AutoRangeArray::IsEditableRange(const dom::AbstractRange& aRange,
     return false;
   }
 
-  if (!aRange.Collapsed()) {
+  if (aRange.GetStartContainer() != aRange.GetEndContainer()) {
     EditorRawDOMPoint atEnd(aRange.EndRef());
     const bool isEndEditable =
         atEnd.IsInContentNode() &&
