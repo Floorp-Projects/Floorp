@@ -400,17 +400,15 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
 
   // Allows invoke to specified |thread|. Thread never will be dereferenced and
   // will be used only for reference-based comparison, so instance can be safely
-  // deleted. If NDEBUG is defined and RTC_DCHECK_ALWAYS_ON is undefined do
-  // nothing.
+  // deleted. If NDEBUG is defined and DCHECK_ALWAYS_ON is undefined do nothing.
   void AllowInvokesToThread(Thread* thread);
 
-  // If NDEBUG is defined and RTC_DCHECK_ALWAYS_ON is undefined do nothing.
+  // If NDEBUG is defined and DCHECK_ALWAYS_ON is undefined do nothing.
   void DisallowAllInvokes();
   // Returns true if |target| was allowed by AllowInvokesToThread() or if no
   // calls were made to AllowInvokesToThread and DisallowAllInvokes. Otherwise
   // returns false.
-  // If NDEBUG is defined and RTC_DCHECK_ALWAYS_ON is undefined always returns
-  // true.
+  // If NDEBUG is defined and DCHECK_ALWAYS_ON is undefined always returns true.
   bool IsInvokeToThreadAllowed(rtc::Thread* target);
 
   // Posts a task to invoke the functor on |this| thread asynchronously, i.e.
