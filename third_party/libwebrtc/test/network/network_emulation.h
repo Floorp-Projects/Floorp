@@ -456,10 +456,10 @@ class NetworkRouterNode : public EmulatedNetworkReceiverInterface {
 // NetworkBehaviorInterface that is provided on construction.
 class EmulatedNetworkNode : public EmulatedNetworkReceiverInterface {
  public:
-  // Creates node based on |network_behavior|. The specified |packet_overhead|
+  // Creates node based on `network_behavior`. The specified `packet_overhead`
   // is added to the size of each packet in the information provided to
-  // |network_behavior|.
-  // |task_queue| is used to process packets and to forward the packets when
+  // `network_behavior`.
+  // `task_queue` is used to process packets and to forward the packets when
   // they are ready.
   EmulatedNetworkNode(
       Clock* clock,

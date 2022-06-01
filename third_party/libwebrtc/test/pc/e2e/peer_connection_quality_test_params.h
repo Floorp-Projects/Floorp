@@ -103,14 +103,14 @@ struct InjectableComponents {
 struct Params {
   // Peer name. If empty - default one will be set by the fixture.
   absl::optional<std::string> name;
-  // If |video_configs| is empty - no video should be added to the test call.
+  // If `video_configs` is empty - no video should be added to the test call.
   std::vector<PeerConnectionE2EQualityTestFixture::VideoConfig> video_configs;
-  // If |audio_config| is set audio stream will be configured
+  // If `audio_config` is set audio stream will be configured
   absl::optional<PeerConnectionE2EQualityTestFixture::AudioConfig> audio_config;
-  // If |rtc_event_log_path| is set, an RTCEventLog will be saved in that
+  // If `rtc_event_log_path` is set, an RTCEventLog will be saved in that
   // location and it will be available for further analysis.
   absl::optional<std::string> rtc_event_log_path;
-  // If |aec_dump_path| is set, an AEC dump will be saved in that location and
+  // If `aec_dump_path` is set, an AEC dump will be saved in that location and
   // it will be available for further analysis.
   absl::optional<std::string> aec_dump_path;
 

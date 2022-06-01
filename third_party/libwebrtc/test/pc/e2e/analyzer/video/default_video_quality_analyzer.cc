@@ -161,7 +161,7 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     absl::string_view peer_name,
     const std::string& stream_label,
     const webrtc::VideoFrame& frame) {
-  // |next_frame_id| is atomic, so we needn't lock here.
+  // `next_frame_id` is atomic, so we needn't lock here.
   uint16_t frame_id = next_frame_id_++;
   Timestamp start_time = Timestamp::MinusInfinity();
   size_t peer_index = -1;
@@ -169,8 +169,8 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
   size_t stream_index;
   {
     MutexLock lock(&lock_);
-    // Create a local copy of |start_time_|, peer's index and total peers count
-    // to access it under |comparison_lock_| without holding a |lock_|
+    // Create a local copy of `start_time_`, peer's index and total peers count
+    // to access it under `comparison_lock_` without holding a `lock_`
     start_time = start_time_;
     peer_index = peers_->index(peer_name);
     peers_count = peers_->size();
@@ -191,10 +191,10 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
         // between freezes.
         stream_last_freeze_end_time_.insert({stats_key, start_time});
       } else {
-        // When we see some |stream_label| for the first time we need to create
+        // When we see some `stream_label` for the first time we need to create
         // stream stats object for it and set up some states, but we need to do
         // it only once and for all receivers, so on the next frame on the same
-        // |stream_label| we can be sure, that it's already done and we needn't
+        // `stream_label` we can be sure, that it's already done and we needn't
         // to scan though all peers again.
         break;
       }
@@ -427,9 +427,9 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
          state->Front(peer_index) != frame.id()) {
     dropped_count++;
     uint16_t dropped_frame_id = state->PopFront(peer_index);
-    // Frame with id |dropped_frame_id| was dropped. We need:
+    // Frame with id `dropped_frame_id` was dropped. We need:
     // 1. Update global and stream frame counters
-    // 2. Extract corresponding frame from |captured_frames_in_flight_|
+    // 2. Extract corresponding frame from `captured_frames_in_flight_`
     // 3. Send extracted frame to comparison with dropped=true
     // 4. Cleanup dropped frame
     frame_counters_.dropped++;
@@ -566,7 +566,7 @@ void DefaultVideoQualityAnalyzer::Stop() {
 
         // If there are no freezes in the call we have to report
         // time_between_freezes_ms as call duration and in such case
-        // |stream_last_freeze_end_time_| for this stream will be |start_time_|.
+        // `stream_last_freeze_end_time_` for this stream will be `start_time_`.
         // If there is freeze, then we need add time from last rendered frame
         // to last freeze end as time between freezes.
         if (stream_state.last_rendered_frame_time(i)) {
@@ -1185,7 +1185,7 @@ size_t DefaultVideoQualityAnalyzer::NamesCollection::AddIfAbsent(
   if (old_capacity == new_capacity) {
     index_.emplace(names_[out], out);
   } else {
-    // Reallocation happened in the vector, so we need to rebuild |index_|
+    // Reallocation happened in the vector, so we need to rebuild `index_`
     index_.clear();
     for (size_t i = 0; i < names_.size(); ++i) {
       index_.emplace(names_[i], i);

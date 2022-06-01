@@ -28,7 +28,7 @@ namespace webrtc_pc_e2e {
 template <typename T>
 class MultiHeadQueue {
  public:
-  // Creates queue with exactly |readers_count| readers.
+  // Creates queue with exactly `readers_count` readers.
   explicit MultiHeadQueue(size_t readers_count) {
     for (size_t i = 0; i < readers_count; ++i) {
       queues_.push_back(std::deque<T>());

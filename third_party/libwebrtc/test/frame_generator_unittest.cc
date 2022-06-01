@@ -179,7 +179,7 @@ TEST_F(FrameGeneratorTest, SlideGenerator) {
   for (int i = 0; i < kGenCount; ++i) {
     hashes[i] = Hash(generator->NextFrame());
   }
-  // Check that the buffer changes only every |kRepeatCount| frames.
+  // Check that the buffer changes only every `kRepeatCount` frames.
   for (int i = 1; i < kGenCount; ++i) {
     if (i % kRepeatCount == 0) {
       EXPECT_NE(hashes[i - 1], hashes[i]);

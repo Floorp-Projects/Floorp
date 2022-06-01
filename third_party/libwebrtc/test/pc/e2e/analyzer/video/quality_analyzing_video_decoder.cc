@@ -85,8 +85,8 @@ int32_t QualityAnalyzingVideoDecoder::Decode(const EncodedImage& input_image,
     origin_image = &(
         decoding_images_.insert({out.id, std::move(out.image)}).first->second);
   }
-  // We can safely dereference |origin_image|, because it can be removed from
-  // the map only after |delegate_| Decode method will be invoked. Image will be
+  // We can safely dereference `origin_image`, because it can be removed from
+  // the map only after `delegate_` Decode method will be invoked. Image will be
   // removed inside DecodedImageCallback, which can be done on separate thread.
   analyzer_->OnFramePreDecode(peer_name_, out.id, *origin_image);
   int32_t result =
@@ -143,8 +143,8 @@ void QualityAnalyzingVideoDecoder::DecoderCallback::SetDelegateCallback(
 }
 
 // We have to implement all next 3 methods because we don't know which one
-// exactly is implemented in |delegate_callback_|, so we need to call the same
-// method on |delegate_callback_|, as was called on |this| callback.
+// exactly is implemented in `delegate_callback_`, so we need to call the same
+// method on `delegate_callback_`, as was called on `this` callback.
 int32_t QualityAnalyzingVideoDecoder::DecoderCallback::Decoded(
     VideoFrame& decodedImage) {
   decoder_->OnFrameDecoded(&decodedImage, /*decode_time_ms=*/absl::nullopt,

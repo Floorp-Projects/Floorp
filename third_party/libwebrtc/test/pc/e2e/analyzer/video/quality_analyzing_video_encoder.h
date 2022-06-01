@@ -139,8 +139,8 @@ class QualityAnalyzingVideoEncoder : public VideoEncoder,
   const double bitrate_multiplier_;
   // Contains mapping from stream label to optional spatial index.
   // If we have stream label "Foo" and mapping contains
-  // 1. |absl::nullopt| means "Foo" isn't simulcast/SVC stream
-  // 2. |kAnalyzeAnySpatialStream| means all simulcast/SVC streams are required
+  // 1. `absl::nullopt` means "Foo" isn't simulcast/SVC stream
+  // 2. `kAnalyzeAnySpatialStream` means all simulcast/SVC streams are required
   // 3. Concrete value means that particular simulcast/SVC stream have to be
   //    analyzed.
   std::map<std::string, absl::optional<int>> stream_required_spatial_index_;

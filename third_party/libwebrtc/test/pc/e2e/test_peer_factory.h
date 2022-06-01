@@ -46,13 +46,13 @@ struct RemotePeerAudioConfig {
 class TestPeerFactory {
  public:
   // Creates a test peer factory.
-  // |signaling_thread| will be used as a signaling thread for all peers created
+  // `signaling_thread` will be used as a signaling thread for all peers created
   // by this factory.
-  // |time_controller| will be used to create required threads, task queue
+  // `time_controller` will be used to create required threads, task queue
   // factories and call factory.
-  // |video_analyzer_helper| will be used to setup video quality analysis for
+  // `video_analyzer_helper` will be used to setup video quality analysis for
   // created peers.
-  // |task_queue| will be used for AEC dump if it is requested.
+  // `task_queue` will be used for AEC dump if it is requested.
   TestPeerFactory(rtc::Thread* signaling_thread,
                   TimeController& time_controller,
                   VideoQualityAnalyzerInjectionHelper* video_analyzer_helper,

@@ -35,7 +35,7 @@ namespace test {
 
 // The RtpReplayer is a utility for fuzzing the RTP/RTCP receiver stack in
 // WebRTC. It achieves this by accepting a set of Receiver configurations and
-// an RtpDump (consisting of both RTP and RTCP packets). The |rtp_dump| is
+// an RtpDump (consisting of both RTP and RTCP packets). The `rtp_dump` is
 // passed in as a buffer to allow simple mutation fuzzing directly on the dump.
 class RtpReplayer final {
  public:

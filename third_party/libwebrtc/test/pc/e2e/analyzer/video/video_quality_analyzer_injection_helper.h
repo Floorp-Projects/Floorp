@@ -68,13 +68,13 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
 
   // Creates VideoFrame preprocessor, that will allow video quality analyzer to
   // get access to the captured frames. If provided config also specifies
-  // |input_dump_file_name|, video will be written into that file.
+  // `input_dump_file_name`, video will be written into that file.
   std::unique_ptr<test::TestVideoCapturer::FramePreprocessor>
   CreateFramePreprocessor(absl::string_view peer_name,
                           const VideoConfig& config);
   // Creates sink, that will allow video quality analyzer to get access to
   // the rendered frames. If corresponding video track has
-  // |output_dump_file_name| in its VideoConfig, which was used for
+  // `output_dump_file_name` in its VideoConfig, which was used for
   // CreateFramePreprocessor(...), then video also will be written
   // into that file.
   std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>> CreateVideoSink(
@@ -84,8 +84,8 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
              rtc::ArrayView<const std::string> peer_names,
              int max_threads_count = 1);
 
-  // Forwards |stats_reports| for Peer Connection |pc_label| to
-  // |analyzer_|.
+  // Forwards `stats_reports` for Peer Connection `pc_label` to
+  // `analyzer_`.
   void OnStatsReports(
       absl::string_view pc_label,
       const rtc::scoped_refptr<const RTCStatsReport>& report) override;

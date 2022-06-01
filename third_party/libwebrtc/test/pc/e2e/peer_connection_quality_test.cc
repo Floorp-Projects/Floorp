@@ -66,9 +66,9 @@ constexpr char kFlexFecEnabledFieldTrials[] =
 
 class FixturePeerConnectionObserver : public MockPeerConnectionObserver {
  public:
-  // |on_track_callback| will be called when any new track will be added to peer
+  // `on_track_callback` will be called when any new track will be added to peer
   // connection.
-  // |on_connected_callback| will be called when peer connection will come to
+  // `on_connected_callback` will be called when peer connection will come to
   // either connected or completed state. Client should notice that in the case
   // of reconnect this callback can be called again, so it should be tolerant
   // to such behavior.
@@ -197,7 +197,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
       video_quality_analyzer_injection_helper_.get(), task_queue_factory_.get(),
       time_controller_.GetClock());
 
-  // Create a |task_queue_|.
+  // Create a `task_queue_`.
   task_queue_ = std::make_unique<webrtc::TaskQueueForTest>(
       time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
           "pc_e2e_quality_test", webrtc::TaskQueueFactory::Priority::NORMAL));
@@ -350,7 +350,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
         stats_poller.PollStatsAndNotifyObservers();
       },
       RTC_FROM_HERE);
-  // We need to detach AEC dumping from peers, because dump uses |task_queue_|
+  // We need to detach AEC dumping from peers, because dump uses `task_queue_`
   // inside.
   alice_->DetachAecDump();
   bob_->DetachAecDump();
@@ -372,7 +372,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
     reporter->StopAndReportResults();
   }
 
-  // Reset |task_queue_| after test to cleanup.
+  // Reset `task_queue_` after test to cleanup.
   task_queue_.reset();
 
   alice_ = nullptr;
