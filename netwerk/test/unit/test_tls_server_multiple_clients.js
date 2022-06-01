@@ -11,12 +11,29 @@ Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
+const certService = Cc["@mozilla.org/security/local-cert-service;1"].getService(
+  Ci.nsILocalCertService
+);
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
 const socketTransportService = Cc[
   "@mozilla.org/network/socket-transport-service;1"
 ].getService(Ci.nsISocketTransportService);
+
+function getCert() {
+  return new Promise((resolve, reject) => {
+    certService.getOrCreateCert("tls-test", {
+      handleCert(c, rv) {
+        if (rv) {
+          reject(rv);
+          return;
+        }
+        resolve(c);
+      },
+    });
+  });
+}
 
 function startServer(cert) {
   let tlsServer = Cc["@mozilla.org/network/tls-server-socket;1"].createInstance(
@@ -64,7 +81,6 @@ function startServer(cert) {
 function storeCertOverride(port, cert) {
   let overrideBits =
     Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-    Ci.nsICertOverrideService.ERROR_TIME |
     Ci.nsICertOverrideService.ERROR_MISMATCH;
   certOverrideService.rememberValidityOverride(
     "127.0.0.1",
@@ -129,7 +145,7 @@ function startClient(port) {
 }
 
 add_task(async function() {
-  let cert = getTestServerCertificate();
+  let cert = await getCert();
   ok(!!cert, "Got self-signed cert");
   let port = startServer(cert);
   storeCertOverride(port, cert);

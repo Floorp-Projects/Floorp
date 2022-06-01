@@ -127,6 +127,13 @@ interface nsISSLSocketControl : nsISupports {
     [notxpcom, nostdcall] attribute boolean denyClientCert;
 
     /**
+     * If set before the server requests a client cert (assuming it does so at
+     * all), then this cert will be presented to the server, instead of asking
+     * the user or searching the set of rememebered user cert decisions.
+     */
+    attribute nsIX509Cert clientCert;
+
+    /**
      * True iff a client cert has been sent to the server - i.e. this
      * socket has been client-cert authenticated.
      */

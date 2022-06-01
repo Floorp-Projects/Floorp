@@ -422,18 +422,3 @@ async function loadBadCertPage(url) {
   });
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 }
-
-// nsITLSServerSocket needs a certificate with a corresponding private key
-// available. In mochitests, the certificate with the common name "Mochitest
-// client" has such a key.
-function getTestServerCertificate() {
-  const certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  for (const cert of certDB.getCerts()) {
-    if (cert.commonName == "Mochitest client") {
-      return cert;
-    }
-  }
-  return null;
-}

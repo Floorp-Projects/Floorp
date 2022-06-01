@@ -121,12 +121,24 @@ add_task(async function() {
     // This test fails on some platforms if we leave IPv6 enabled.
     set: [["network.dns.disableIPv6", true]],
   });
-
+  let certService = Cc["@mozilla.org/security/local-cert-service;1"].getService(
+    Ci.nsILocalCertService
+  );
   let certOverrideService = Cc[
     "@mozilla.org/security/certoverride;1"
   ].getService(Ci.nsICertOverrideService);
 
-  let cert = getTestServerCertificate();
+  let cert = await new Promise((resolve, reject) => {
+    certService.getOrCreateCert("broken-tls-server", {
+      handleCert(c, rv) {
+        if (!Components.isSuccessCode(rv)) {
+          reject(rv);
+          return;
+        }
+        resolve(c);
+      },
+    });
+  });
   // Start a server and trust its certificate.
   let server = startServer(cert);
   let overrideBits =

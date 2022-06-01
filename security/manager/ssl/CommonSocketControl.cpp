@@ -290,6 +290,16 @@ bool CommonSocketControl::GetDenyClientCert() { return true; }
 void CommonSocketControl::SetDenyClientCert(bool aDenyClientCert) {}
 
 NS_IMETHODIMP
+CommonSocketControl::GetClientCert(nsIX509Cert** aClientCert) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CommonSocketControl::SetClientCert(nsIX509Cert* aClientCert) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 CommonSocketControl::GetClientCertSent(bool* arg) {
   *arg = mSentClientCert;
   return NS_OK;

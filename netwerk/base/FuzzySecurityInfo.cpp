@@ -225,6 +225,19 @@ FuzzySecurityInfo::GetMACAlgorithmUsed(int16_t* aMac) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FuzzySecurityInfo::GetClientCert(nsIX509Cert** aClientCert) {
+  NS_ENSURE_ARG_POINTER(aClientCert);
+  *aClientCert = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FuzzySecurityInfo::SetClientCert(nsIX509Cert* aClientCert) {
+  MOZ_CRASH("Unused");
+  return NS_OK;
+}
+
 bool FuzzySecurityInfo::GetDenyClientCert() { return false; }
 
 void FuzzySecurityInfo::SetDenyClientCert(bool aDenyClientCert) {

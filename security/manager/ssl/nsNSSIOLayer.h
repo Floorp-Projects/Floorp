@@ -68,6 +68,8 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   NS_IMETHOD GetMACAlgorithmUsed(int16_t* aMACAlgorithmUsed) override;
   bool GetDenyClientCert() override;
   void SetDenyClientCert(bool aDenyClientCert) override;
+  NS_IMETHOD GetClientCert(nsIX509Cert** aClientCert) override;
+  NS_IMETHOD SetClientCert(nsIX509Cert* aClientCert) override;
   NS_IMETHOD GetEsniTxt(nsACString& aEsniTxt) override;
   NS_IMETHOD SetEsniTxt(const nsACString& aEsniTxt) override;
   NS_IMETHOD GetEchConfig(nsACString& aEchConfig) override;
@@ -225,6 +227,7 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   mozilla::TimeStamp mSocketCreationTimestamp;
   uint64_t mPlaintextBytesRead;
 
+  nsCOMPtr<nsIX509Cert> mClientCert;
   // Regarding the client certificate message in the TLS handshake, RFC 5246
   // (TLS 1.2) says:
   //   If the certificate_authorities list in the certificate request
@@ -254,13 +257,14 @@ class ClientAuthInfo final {
   explicit ClientAuthInfo(const nsACString& hostName,
                           const OriginAttributes& originAttributes,
                           int32_t port, uint32_t providerFlags,
-                          uint32_t providerTlsFlags);
+                          uint32_t providerTlsFlags, nsIX509Cert* clientCert);
   ~ClientAuthInfo() = default;
   ClientAuthInfo(ClientAuthInfo&& aOther) noexcept;
 
   const nsACString& HostName() const;
   const OriginAttributes& OriginAttributesRef() const;
   int32_t Port() const;
+  already_AddRefed<nsIX509Cert> GetClientCert() const;
   uint32_t ProviderFlags() const;
   uint32_t ProviderTlsFlags() const;
 
@@ -273,6 +277,7 @@ class ClientAuthInfo final {
   int32_t mPort;
   uint32_t mProviderFlags;
   uint32_t mProviderTlsFlags;
+  nsCOMPtr<nsIX509Cert> mClientCert;
 };
 
 class nsSSLIOLayerHelpers {
