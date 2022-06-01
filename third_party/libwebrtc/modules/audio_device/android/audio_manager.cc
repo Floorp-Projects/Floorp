@@ -98,7 +98,7 @@ void AudioManager::SetActiveAudioLayer(
   // The delay estimate can take one of two fixed values depending on if the
   // device supports low-latency output or not. However, it is also possible
   // that the user explicitly selects the high-latency audio path, hence we use
-  // the selected |audio_layer| here to set the delay estimate.
+  // the selected `audio_layer` here to set the delay estimate.
   delay_estimate_in_milliseconds_ =
       (audio_layer == AudioDeviceModule::kAndroidJavaAudio)
           ? kHighLatencyModeDelayEstimateInMilliseconds

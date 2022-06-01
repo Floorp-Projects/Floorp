@@ -184,7 +184,7 @@ aaudio_data_callback_result_t AAudioPlayer::OnDataCallback(void* audio_data,
   }
 
   // Read audio data from the WebRTC source using the FineAudioBuffer object
-  // and write that data into |audio_data| to be played out by AAudio.
+  // and write that data into `audio_data` to be played out by AAudio.
   // Prime output with zeros during a short initial phase to avoid distortion.
   // TODO(henrika): do more work to figure out of if the initial forced silence
   // period is really needed.
