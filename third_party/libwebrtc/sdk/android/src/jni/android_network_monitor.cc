@@ -267,8 +267,8 @@ void AndroidNetworkMonitor::Stop() {
   started_ = false;
   find_network_handle_without_ipv6_temporary_part_ = false;
 
-  // Cancel any pending tasks. We should not call SignalNetworksChanged when the
-  // monitor is stopped.
+  // Cancel any pending tasks. We should not call
+  // `InvokeNetworksChangedCallback()` when the monitor is stopped.
   safety_flag_->SetNotAlive();
 
   JNIEnv* env = AttachCurrentThreadIfNeeded();
@@ -411,7 +411,7 @@ void AndroidNetworkMonitor::OnNetworkConnected_n(
   for (const rtc::IPAddress& address : network_info.ip_addresses) {
     network_handle_by_address_[address] = network_info.handle;
   }
-  SignalNetworksChanged();
+  InvokeNetworksChangedCallback();
 }
 
 absl::optional<NetworkHandle>
@@ -479,7 +479,7 @@ void AndroidNetworkMonitor::OnNetworkPreference_n(
                    << rtc::NetworkPreferenceToString(preference);
   auto adapter_type = AdapterTypeFromNetworkType(type, surface_cellular_types_);
   network_preference_by_adapter_type_[adapter_type] = preference;
-  SignalNetworksChanged();
+  InvokeNetworksChangedCallback();
 }
 
 void AndroidNetworkMonitor::SetNetworkInfos(
@@ -586,7 +586,7 @@ void AndroidNetworkMonitor::NotifyConnectionTypeChanged(
   network_thread_->PostTask(ToQueuedTask(safety_flag_, [this] {
     RTC_LOG(LS_INFO)
         << "Android network monitor detected connection type change.";
-    SignalNetworksChanged();
+    InvokeNetworksChangedCallback();
   }));
 }
 

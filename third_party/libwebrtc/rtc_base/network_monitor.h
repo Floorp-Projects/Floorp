@@ -11,8 +11,10 @@
 #ifndef RTC_BASE_NETWORK_MONITOR_H_
 #define RTC_BASE_NETWORK_MONITOR_H_
 
+#include <functional>
+#include <utility>
+
 #include "rtc_base/network_constants.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace rtc {
 
@@ -73,8 +75,6 @@ class NetworkMonitorInterface {
   NetworkMonitorInterface();
   virtual ~NetworkMonitorInterface();
 
-  sigslot::signal0<> SignalNetworksChanged;
-
   virtual void Start() = 0;
   virtual void Stop() = 0;
 
@@ -110,6 +110,20 @@ class NetworkMonitorInterface {
   virtual bool IsAdapterAvailable(const std::string& interface_name) {
     return true;
   }
+
+  void SetNetworksChangedCallback(std::function<void()> callback) {
+    networks_changed_callback_ = std::move(callback);
+  }
+
+ protected:
+  void InvokeNetworksChangedCallback() {
+    if (networks_changed_callback_) {
+      networks_changed_callback_();
+    }
+  }
+
+ private:
+  std::function<void()> networks_changed_callback_;
 };
 
 }  // namespace rtc
