@@ -71,8 +71,8 @@ uint64_t MaxUnsignedValueOfBitWidth(uint64_t bit_width) {
                            : ((static_cast<uint64_t>(1) << bit_width) - 1);
 }
 
-// Computes the delta between |previous| and |current|, under the assumption
-// that wrap-around occurs after |width| is exceeded.
+// Computes the delta between `previous` and `current`, under the assumption
+// that wrap-around occurs after `width` is exceeded.
 uint64_t UnsignedDelta(uint64_t previous, uint64_t current, uint64_t bit_mask) {
   return (current - previous) & bit_mask;
 }
@@ -258,7 +258,7 @@ class FixedLengthDeltaEncoder final {
   // released by it before it returns. They're mostly a convenient way to
   // avoid having to pass a lot of state between different functions.
   // Therefore, it was deemed acceptable to let them have a reference to
-  // |values|, whose lifetime must exceed the lifetime of |this|.
+  // `values`, whose lifetime must exceed the lifetime of `this`.
   FixedLengthDeltaEncoder(const FixedLengthEncodingParameters& params,
                           absl::optional<uint64_t> base,
                           const std::vector<absl::optional<uint64_t>>& values,
@@ -287,7 +287,7 @@ class FixedLengthDeltaEncoder final {
 
   // The encoding scheme assumes that at least one value is transmitted OOB,
   // so that the first value can be encoded as a delta from that OOB value,
-  // which is |base_|.
+  // which is `base_`.
   const absl::optional<uint64_t> base_;
 
   // The values to be encoded.
@@ -606,10 +606,10 @@ class FixedLengthDeltaDecoder final {
   // will fail to decode this input, though.
   static bool IsSuitableDecoderFor(const std::string& input);
 
-  // Assuming that |input| is the result of fixed-size delta-encoding
-  // that took place with the same value to |base| and over |num_of_deltas|
+  // Assuming that `input` is the result of fixed-size delta-encoding
+  // that took place with the same value to `base` and over `num_of_deltas`
   // original values, this will return the sequence of original values.
-  // If an error occurs (can happen if |input| is corrupt), an empty
+  // If an error occurs (can happen if `input` is corrupt), an empty
   // vector will be returned.
   static std::vector<absl::optional<uint64_t>> DecodeDeltas(
       const std::string& input,
@@ -617,9 +617,9 @@ class FixedLengthDeltaDecoder final {
       size_t num_of_deltas);
 
  private:
-  // Reads the encoding header in |input| and returns a FixedLengthDeltaDecoder
+  // Reads the encoding header in `input` and returns a FixedLengthDeltaDecoder
   // with the corresponding configuration, that can be used to decode the
-  // values in |input|.
+  // values in `input`.
   // If the encoding header is corrupt (contains an illegal configuration),
   // nullptr will be returned.
   // When a valid FixedLengthDeltaDecoder is returned, this does not mean that
@@ -633,9 +633,9 @@ class FixedLengthDeltaDecoder final {
   // FixedLengthDeltaDecoder objects are to be created by DecodeDeltas() and
   // released by it before it returns. They're mostly a convenient way to
   // avoid having to pass a lot of state between different functions.
-  // Therefore, it was deemed acceptable that |reader| does not own the buffer
-  // it reads, meaning the lifetime of |this| must not exceed the lifetime
-  // of |reader|'s underlying buffer.
+  // Therefore, it was deemed acceptable that `reader` does not own the buffer
+  // it reads, meaning the lifetime of `this` must not exceed the lifetime
+  // of `reader`'s underlying buffer.
   FixedLengthDeltaDecoder(std::unique_ptr<rtc::BitBuffer> reader,
                           const FixedLengthEncodingParameters& params,
                           absl::optional<uint64_t> base,
@@ -644,17 +644,17 @@ class FixedLengthDeltaDecoder final {
   // Perform the decoding using the parameters given to the ctor.
   std::vector<absl::optional<uint64_t>> Decode();
 
-  // Decode a varint and write it to |output|. Return value indicates success
+  // Decode a varint and write it to `output`. Return value indicates success
   // or failure. In case of failure, no guarantees are made about the contents
-  // of |output| or the results of additional reads.
+  // of `output` or the results of additional reads.
   bool ParseVarInt(uint64_t* output);
 
   // Attempt to parse a delta from the input reader.
   // Returns true/false for success/failure.
-  // Writes the delta into |delta| if successful.
+  // Writes the delta into `delta` if successful.
   bool ParseDelta(uint64_t* delta);
 
-  // Add |delta| to |base| to produce the next value in a sequence.
+  // Add `delta` to `base` to produce the next value in a sequence.
   // The delta is applied as signed/unsigned depending on the parameters
   // given to the ctor. Wrap-around is taken into account according to the
   // values' width, as specified by the aforementioned encoding parameters.
@@ -674,7 +674,7 @@ class FixedLengthDeltaDecoder final {
 
   // The encoding scheme assumes that at least one value is transmitted OOB,
   // so that the first value can be encoded as a delta from that OOB value,
-  // which is |base_|.
+  // which is `base_`.
   const absl::optional<uint64_t> base_;
 
   // The number of values to be known to be decoded.

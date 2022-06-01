@@ -2095,7 +2095,7 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
       // RTX streams don't have a unique clock offset and frequency, so
       // the RTP timstamps can't be unwrapped.
 
-      // Add an offset to avoid |capture_ticks| to become negative in the case
+      // Add an offset to avoid `capture_ticks` to become negative in the case
       // of reordering.
       constexpr int64_t kStartingCaptureTimeTicks = 90 * 48 * 10000;
       int64_t capture_ticks =
@@ -3059,7 +3059,7 @@ ParsedRtcEventLog::StoreAudioNetworkAdaptationEvent(
       runtime_config.enable_dtx = proto.enable_dtx();
     }
     if (proto.has_num_channels()) {
-      // Note: Encoding N as N-1 only done for |num_channels_deltas|.
+      // Note: Encoding N as N-1 only done for `num_channels_deltas`.
       runtime_config.num_channels = proto.num_channels();
     }
     audio_network_adaptation_events_.emplace_back(

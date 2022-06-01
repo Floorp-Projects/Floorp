@@ -174,7 +174,7 @@ void RtcEventLogEncoderTest::TestRtpPackets() {
     extension_map = gen_.NewRtpHeaderExtensionMap(true);
   }
 
-  // Simulate |event_count_| RTP packets, with SSRCs assigned randomly
+  // Simulate `event_count_` RTP packets, with SSRCs assigned randomly
   // out of the small pool above.
   std::map<uint32_t, std::vector<std::unique_ptr<EventType>>> events_by_ssrc;
   for (size_t i = 0; i < event_count_; ++i) {
