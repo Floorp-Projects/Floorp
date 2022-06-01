@@ -638,7 +638,7 @@ void GatherCertificateTransparencyTelemetry(
 static void CollectCertTelemetry(
     mozilla::pkix::Result aCertVerificationResult, EVStatus aEVStatus,
     CertVerifier::OCSPStaplingStatus aOcspStaplingStatus,
-    KeySizeStatus aKeySizeStatus, SHA1ModeResult aSha1ModeResult,
+    KeySizeStatus aKeySizeStatus,
     const PinningTelemetryInfo& aPinningTelemetryInfo,
     const nsTArray<nsTArray<uint8_t>>& aBuiltCertChain,
     const CertificateTransparencyInfo& aCertificateTransparencyInfo) {
@@ -654,11 +654,6 @@ static void CollectCertTelemetry(
   if (aKeySizeStatus != KeySizeStatus::NeverChecked) {
     Telemetry::Accumulate(Telemetry::CERT_CHAIN_KEY_SIZE_STATUS,
                           static_cast<uint32_t>(aKeySizeStatus));
-  }
-
-  if (aSha1ModeResult != SHA1ModeResult::NeverChecked) {
-    Telemetry::Accumulate(Telemetry::CERT_CHAIN_SHA1_POLICY_STATUS,
-                          static_cast<uint32_t>(aSha1ModeResult));
   }
 
   if (aPinningTelemetryInfo.accumulateForRoot) {
@@ -699,7 +694,6 @@ Result AuthCertificate(
   CertVerifier::OCSPStaplingStatus ocspStaplingStatus =
       CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
-  SHA1ModeResult sha1ModeResult = SHA1ModeResult::NeverChecked;
   PinningTelemetryInfo pinningTelemetryInfo;
 
   nsTArray<nsTArray<uint8_t>> peerCertsBytes;
@@ -715,12 +709,11 @@ Result AuthCertificate(
       certBytes, time, aPinArg, aHostName, builtCertChain, certVerifierFlags,
       Some(std::move(peerCertsBytes)), stapledOCSPResponse,
       sctsFromTLSExtension, dcInfo, aOriginAttributes, &evStatus,
-      &ocspStaplingStatus, &keySizeStatus, &sha1ModeResult,
-      &pinningTelemetryInfo, &certificateTransparencyInfo,
-      &aIsBuiltCertChainRootBuiltInRoot);
+      &ocspStaplingStatus, &keySizeStatus, &pinningTelemetryInfo,
+      &certificateTransparencyInfo, &aIsBuiltCertChainRootBuiltInRoot);
 
   CollectCertTelemetry(rv, evStatus, ocspStaplingStatus, keySizeStatus,
-                       sha1ModeResult, pinningTelemetryInfo, builtCertChain,
+                       pinningTelemetryInfo, builtCertChain,
                        certificateTransparencyInfo);
 
   return rv;
