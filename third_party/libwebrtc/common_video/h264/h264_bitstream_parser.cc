@@ -152,7 +152,7 @@ H264BitstreamParser::Result H264BitstreamParser::ParseNonParameterSetNalu(
   // else
   {
     // ref_pic_list_modification():
-    // |slice_type| checks here don't use named constants as they aren't named
+    // `slice_type` checks here don't use named constants as they aren't named
     // in the spec for this segment. Keeping them consistent makes it easier to
     // verify that they are both the same.
     if (slice_type % 5 != 2 && slice_type % 5 != 4) {
