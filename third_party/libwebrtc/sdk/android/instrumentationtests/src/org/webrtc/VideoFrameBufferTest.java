@@ -19,7 +19,7 @@ import android.graphics.Matrix;
 import android.opengl.GLES20;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;

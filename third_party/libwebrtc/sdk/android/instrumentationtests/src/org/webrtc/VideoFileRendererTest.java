@@ -13,7 +13,7 @@ package org.webrtc;
 import static org.junit.Assert.assertEquals;
 
 import android.os.Environment;
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
