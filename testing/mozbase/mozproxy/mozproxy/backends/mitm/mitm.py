@@ -302,8 +302,6 @@ class Mitmproxy(Playback):
                             "--set",
                             "websocket=false",
                             "--set",
-                            "upstream_cert=false",
-                            "--set",
                             "connection_strategy=lazy",
                             "--set",
                             "alt_server_replay_nopop=true",
