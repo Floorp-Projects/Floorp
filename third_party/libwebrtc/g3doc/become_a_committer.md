@@ -34,9 +34,8 @@ recommended to apply for WebRTC committer rights obtaining process.
     *   [Chromium style guide][2]
     *   [WebRTC style guide][3]
 
-2.  Create a ticket to obtain WebRTC committers rights in Monorail.
-
-    TODO: add link to the template.
+2.  Create a ticket to obtain WebRTC committers rights in Monorail. Please use
+    [this template][6] of it.
 
 3.  Pick a mentor among WebRTC committers, who will review your CLs. For C++
     authors, the mentor will also look for C++ readability skills. It's
@@ -62,3 +61,4 @@ recommended to apply for WebRTC committer rights obtaining process.
 [3]: https://webrtc.googlesource.com/src/+/refs/heads/main/g3doc/style-guide.md
 [4]: https://developers.google.com/open-source/cla/individual?hl=en
 [5]: https://google.github.io/styleguide/cppguide.html
+[6]: https://bugs.chromium.org/p/webrtc/issues/entry?template=Become+WebRTC+committer
