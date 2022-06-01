@@ -70,4 +70,11 @@ bool RepeatingTaskHandle::Running() const {
   return repeating_task_ != nullptr;
 }
 
+namespace webrtc_repeating_task_impl {
+// These methods are empty, but can be externally equipped with actions using
+// dtrace.
+void RepeatingTaskHandleDTraceProbeStart() {}
+void RepeatingTaskHandleDTraceProbeDelayedStart() {}
+void RepeatingTaskImplDTraceProbeRun() {}
+}  // namespace webrtc_repeating_task_impl
 }  // namespace webrtc
