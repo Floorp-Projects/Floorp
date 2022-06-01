@@ -14,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

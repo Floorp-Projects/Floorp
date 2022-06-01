@@ -216,6 +216,7 @@ if (is_android) {
       "../sdk/android:video_api_java",
       "../sdk/android:video_java",
       "//third_party/android_support_test_runner:runner_java",
+      "//third_party/androidx:androidx_test_runner_java",
       "//third_party/junit",
     ]
   }

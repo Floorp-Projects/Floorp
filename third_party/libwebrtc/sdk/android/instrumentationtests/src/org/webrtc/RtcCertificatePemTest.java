@@ -12,7 +12,7 @@ package org.webrtc;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.junit.Before;
 import org.junit.Test;

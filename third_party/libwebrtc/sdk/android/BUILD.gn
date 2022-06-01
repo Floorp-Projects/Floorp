@@ -1456,6 +1456,7 @@ if (is_android) {
         "//third_party/android_deps:guava_android_java",
         "//third_party/android_support_test_runner:rules_java",
         "//third_party/android_support_test_runner:runner_java",
+        "//third_party/androidx:androidx_test_runner_java",
         "//third_party/google-truth:google_truth_java",
         "//third_party/hamcrest:hamcrest_java",
         "//third_party/hamcrest:hamcrest_library_java",
@@ -1587,6 +1588,7 @@ if (is_android) {
       ":video_java",
       "../../rtc_base:base_java",
       "//third_party/android_support_test_runner:runner_java",
+      "//third_party/androidx:androidx_test_runner_java",
     ]
   }
 
