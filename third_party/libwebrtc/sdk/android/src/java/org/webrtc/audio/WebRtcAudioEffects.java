@@ -22,7 +22,7 @@ import org.webrtc.Logging;
 // This class wraps control of three different platform effects. Supported
 // effects are: AcousticEchoCanceler (AEC) and NoiseSuppressor (NS).
 // Calling enable() will active all effects that are
-// supported by the device if the corresponding |shouldEnableXXX| member is set.
+// supported by the device if the corresponding `shouldEnableXXX` member is set.
 class WebRtcAudioEffects {
   private static final boolean DEBUG = false;
 
@@ -71,7 +71,7 @@ class WebRtcAudioEffects {
   }
 
   // Call this method to enable or disable the platform AEC. It modifies
-  // |shouldEnableAec| which is used in enable() where the actual state
+  // `shouldEnableAec` which is used in enable() where the actual state
   // of the AEC effect is modified. Returns true if HW AEC is supported and
   // false otherwise.
   public boolean setAEC(boolean enable) {
@@ -90,7 +90,7 @@ class WebRtcAudioEffects {
   }
 
   // Call this method to enable or disable the platform NS. It modifies
-  // |shouldEnableNs| which is used in enable() where the actual state
+  // `shouldEnableNs` which is used in enable() where the actual state
   // of the NS effect is modified. Returns true if HW NS is supported and
   // false otherwise.
   public boolean setNS(boolean enable) {
@@ -180,7 +180,7 @@ class WebRtcAudioEffects {
     }
   }
 
-  // Returns true for effect types in |type| that are of "VoIP" types:
+  // Returns true for effect types in `type` that are of "VoIP" types:
   // Acoustic Echo Canceler (AEC) or Automatic Gain Control (AGC) or
   // Noise Suppressor (NS). Note that, an extra check for support is needed
   // in each comparison since some devices includes effects in the
@@ -217,7 +217,7 @@ class WebRtcAudioEffects {
   }
 
   // Returns true if an effect of the specified type is available. Functionally
-  // equivalent to (NoiseSuppressor|AutomaticGainControl|...).isAvailable(), but
+  // equivalent to (NoiseSuppressor`AutomaticGainControl`...).isAvailable(), but
   // faster as it avoids the expensive OS call to enumerate effects.
   private static boolean isEffectTypeAvailable(UUID effectType, UUID blockListedUuid) {
     Descriptor[] effects = getAvailableEffects();

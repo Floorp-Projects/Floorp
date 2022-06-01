@@ -76,7 +76,7 @@ class WebRtcAudioTrack {
   private @Nullable AudioTrackThread audioThread;
   private final VolumeLogger volumeLogger;
 
-  // Samples to be played are replaced by zeros if |speakerMute| is set to true.
+  // Samples to be played are replaced by zeros if `speakerMute` is set to true.
   // Can be used to ensure that the speaker is fully muted.
   private volatile boolean speakerMute;
   private byte[] emptyBytes;
@@ -218,9 +218,9 @@ class WebRtcAudioTrack {
     Logging.d(TAG, "minBufferSizeInBytes: " + minBufferSizeInBytes);
     // For the streaming mode, data must be written to the audio sink in
     // chunks of size (given by byteBuffer.capacity()) less than or equal
-    // to the total buffer size |minBufferSizeInBytes|. But, we have seen
+    // to the total buffer size `minBufferSizeInBytes`. But, we have seen
     // reports of "getMinBufferSize(): error querying hardware". Hence, it
-    // can happen that |minBufferSizeInBytes| contains an invalid value.
+    // can happen that `minBufferSizeInBytes` contains an invalid value.
     if (minBufferSizeInBytes < byteBuffer.capacity()) {
       reportWebRtcAudioTrackInitError("AudioTrack.getMinBufferSize returns an invalid value.");
       return -1;
@@ -559,7 +559,7 @@ class WebRtcAudioTrack {
       long nativeAudioTrackJni, ByteBuffer byteBuffer);
   private static native void nativeGetPlayoutData(long nativeAudioTrackJni, int bytes);
 
-  // Sets all samples to be played out to zero if |mute| is true, i.e.,
+  // Sets all samples to be played out to zero if `mute` is true, i.e.,
   // ensures that the speaker is muted.
   public void setSpeakerMute(boolean mute) {
     Logging.w(TAG, "setSpeakerMute(" + mute + ")");

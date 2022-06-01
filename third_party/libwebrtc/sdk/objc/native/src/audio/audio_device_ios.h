@@ -164,7 +164,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   bool IsInterrupted();
 
  private:
-  // Called by the relevant AudioSessionObserver methods on |thread_|.
+  // Called by the relevant AudioSessionObserver methods on `thread_`.
   void HandleInterruptionBegin();
   void HandleInterruptionEnd();
   void HandleValidRouteChange();
@@ -173,7 +173,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   void HandlePlayoutGlitchDetected();
   void HandleOutputVolumeChange();
 
-  // Uses current |playout_parameters_| and |record_parameters_| to inform the
+  // Uses current `playout_parameters_` and `record_parameters_` to inform the
   // audio device buffer (ADB) about our internal audio parameters.
   void UpdateAudioDeviceBuffer();
 
@@ -181,7 +181,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   // values may be different once the AVAudioSession has been activated.
   // This method asks for the current hardware parameters and takes actions
   // if they should differ from what we have asked for initially. It also
-  // defines |playout_parameters_| and |record_parameters_|.
+  // defines `playout_parameters_` and `record_parameters_`.
   void SetupAudioBuffersForActiveAudioSession();
 
   // Creates the audio unit.

@@ -386,7 +386,7 @@ OSStatus AudioDeviceIOS::OnDeliverRecordedData(AudioUnitRenderActionFlags* flags
   // Allocate AudioBuffers to be used as storage for the received audio.
   // The AudioBufferList structure works as a placeholder for the
   // AudioBuffer structure, which holds a pointer to the actual data buffer
-  // in |record_audio_buffer_|. Recorded audio will be rendered into this memory
+  // in `record_audio_buffer_`. Recorded audio will be rendered into this memory
   // at each input callback when calling AudioUnitRender().
   AudioBufferList audio_buffer_list;
   audio_buffer_list.mNumberBuffers = 1;
@@ -397,7 +397,7 @@ OSStatus AudioDeviceIOS::OnDeliverRecordedData(AudioUnitRenderActionFlags* flags
   audio_buffer->mData = reinterpret_cast<int8_t*>(record_audio_buffer_.data());
 
   // Obtain the recorded audio samples by initiating a rendering cycle.
-  // Since it happens on the input bus, the |io_data| parameter is a reference
+  // Since it happens on the input bus, the `io_data` parameter is a reference
   // to the preallocated audio buffer list that the audio unit renders into.
   // We can make the audio unit provide a buffer instead in io_data, but we
   // currently just use our own.
@@ -467,7 +467,7 @@ OSStatus AudioDeviceIOS::OnGetPlayoutData(AudioUnitRenderActionFlags* flags,
 
   // Read decoded 16-bit PCM samples from WebRTC (using a size that matches
   // the native I/O audio unit) and copy the result to the audio buffer in the
-  // |io_data| destination.
+  // `io_data` destination.
   fine_audio_buffer_->GetPlayoutData(
       rtc::ArrayView<int16_t>(static_cast<int16_t*>(audio_buffer->mData), num_frames),
       kFixedPlayoutDelayEstimate);

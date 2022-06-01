@@ -84,7 +84,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, nullable) RTC_OBJC_TYPE(RTCCertificate) * certificate;
 
 /** Which candidates the ICE agent is allowed to use. The W3C calls it
- * |iceTransportPolicy|, while in C++ it is called |type|. */
+ * `iceTransportPolicy`, while in C++ it is called `type`. */
 @property(nonatomic, assign) RTCIceTransportPolicy iceTransportPolicy;
 
 /** The media-bundling policy to use when gathering ICE candidates. */
@@ -144,7 +144,7 @@ RTC_OBJC_EXPORT
  */
 @property(nonatomic, assign) BOOL shouldPresumeWritableWhenFullyRelayed;
 
-/* This flag is only effective when |continualGatheringPolicy| is
+/* This flag is only effective when `continualGatheringPolicy` is
  * RTCContinualGatheringPolicyGatherContinually.
  *
  * If YES, after the ICE transport type is changed such that new types of

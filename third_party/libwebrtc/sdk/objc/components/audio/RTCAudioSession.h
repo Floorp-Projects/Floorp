@@ -209,9 +209,9 @@ RTC_OBJC_EXPORT
 /** Relinquishes exclusive access to the audio session. */
 - (void)unlockForConfiguration;
 
-/** If |active|, activates the audio session if it isn't already active.
+/** If `active`, activates the audio session if it isn't already active.
  *  Successful calls must be balanced with a setActive:NO when activation is no
- *  longer required. If not |active|, deactivates the audio session if one is
+ *  longer required. If not `active`, deactivates the audio session if one is
  *  active and this is the last balanced call. When deactivating, the
  *  AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation option is passed to
  *  AVAudioSession.
@@ -219,7 +219,7 @@ RTC_OBJC_EXPORT
 - (BOOL)setActive:(BOOL)active error:(NSError **)outError;
 
 // The following methods are proxies for the associated methods on
-// AVAudioSession. |lockForConfiguration| must be called before using them
+// AVAudioSession. `lockForConfiguration` must be called before using them
 // otherwise they will fail with kRTCAudioSessionErrorLockRequired.
 
 - (BOOL)setCategory:(NSString *)category
@@ -245,13 +245,13 @@ RTC_OBJC_EXPORT
     /** Applies the configuration to the current session. Attempts to set all
      *  properties even if previous ones fail. Only the last error will be
      *  returned.
-     *  |lockForConfiguration| must be called first.
+     *  `lockForConfiguration` must be called first.
      */
     - (BOOL)setConfiguration : (RTC_OBJC_TYPE(RTCAudioSessionConfiguration) *)configuration error
     : (NSError **)outError;
 
 /** Convenience method that calls both setConfiguration and setActive.
- *  |lockForConfiguration| must be called first.
+ *  `lockForConfiguration` must be called first.
  */
 - (BOOL)setConfiguration:(RTC_OBJC_TYPE(RTCAudioSessionConfiguration) *)configuration
                   active:(BOOL)active

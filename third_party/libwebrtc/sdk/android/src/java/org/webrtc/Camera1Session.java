@@ -133,7 +133,7 @@ class Camera1Session implements CameraSession {
 
   private static CaptureFormat findClosestCaptureFormat(
       android.hardware.Camera.Parameters parameters, int width, int height, int framerate) {
-    // Find closest supported format for |width| x |height| @ |framerate|.
+    // Find closest supported format for `width` x `height` @ `framerate`.
     final List<CaptureFormat.FramerateRange> supportedFramerates =
         Camera1Enumerator.convertFramerates(parameters.getSupportedPreviewFpsRange());
     Logging.d(TAG, "Available fps ranges: " + supportedFramerates);

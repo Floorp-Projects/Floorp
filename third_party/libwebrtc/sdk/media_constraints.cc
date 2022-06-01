@@ -17,8 +17,8 @@ namespace webrtc {
 namespace {
 
 // Find the highest-priority instance of the T-valued constraint named by
-// |key| and return its value as |value|. |constraints| can be null.
-// If |mandatory_constraints| is non-null, it is incremented if the key appears
+// `key` and return its value as `value`. `constraints` can be null.
+// If `mandatory_constraints` is non-null, it is incremented if the key appears
 // among the mandatory constraints.
 // Returns true if the key was found and has a valid value for type T.
 // If the key appears multiple times as an optional constraint, appearances
@@ -135,8 +135,8 @@ const char MediaConstraints::kRawPacketizationForVideoEnabled[] =
 
 const char MediaConstraints::kNumSimulcastLayers[] = "googNumSimulcastLayers";
 
-// Set |value| to the value associated with the first appearance of |key|, or
-// return false if |key| is not found.
+// Set `value` to the value associated with the first appearance of `key`, or
+// return false if `key` is not found.
 bool MediaConstraints::Constraints::FindFirst(const std::string& key,
                                               std::string* value) const {
   for (Constraints::const_iterator iter = begin(); iter != end(); ++iter) {
@@ -209,7 +209,7 @@ void CopyConstraintsIntoAudioOptions(const MediaConstraints* constraints,
   ConstraintToOptional<std::string>(
       constraints, MediaConstraints::kAudioNetworkAdaptorConfig,
       &options->audio_network_adaptor_config);
-  // When |kAudioNetworkAdaptorConfig| is defined, it both means that audio
+  // When `kAudioNetworkAdaptorConfig` is defined, it both means that audio
   // network adaptor is desired, and provides the config string.
   if (options->audio_network_adaptor_config) {
     options->audio_network_adaptor = true;

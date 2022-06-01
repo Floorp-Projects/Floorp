@@ -123,8 +123,8 @@ public class SurfaceTextureHelperTest {
     surfaceTextureHelper.startListening(listener);
     surfaceTextureHelper.setTextureSize(width, height);
 
-    // Create resources for stubbing an OES texture producer. |eglOesBase| has the SurfaceTexture in
-    // |surfaceTextureHelper| as the target EGLSurface.
+    // Create resources for stubbing an OES texture producer. `eglOesBase` has the SurfaceTexture in
+    // `surfaceTextureHelper` as the target EGLSurface.
     final EglBase eglOesBase = EglBase.create(eglBase.getEglBaseContext(), EglBase.CONFIG_PLAIN);
     eglOesBase.createSurface(surfaceTextureHelper.getSurfaceTexture());
     assertEquals(eglOesBase.surfaceWidth(), width);
@@ -191,8 +191,8 @@ public class SurfaceTextureHelperTest {
     surfaceTextureHelper.startListening(listener);
     surfaceTextureHelper.setTextureSize(width, height);
 
-    // Create resources for stubbing an OES texture producer. |eglOesBase| has the SurfaceTexture in
-    // |surfaceTextureHelper| as the target EGLSurface.
+    // Create resources for stubbing an OES texture producer. `eglOesBase` has the SurfaceTexture in
+    // `surfaceTextureHelper` as the target EGLSurface.
     final EglBase eglOesBase = EglBase.create(eglBase.getEglBaseContext(), EglBase.CONFIG_PLAIN);
     eglOesBase.createSurface(surfaceTextureHelper.getSurfaceTexture());
     assertEquals(eglOesBase.surfaceWidth(), width);
@@ -410,7 +410,7 @@ public class SurfaceTextureHelperTest {
     eglBase.swapBuffers();
     listener1.waitForTextureBuffer().release();
 
-    // Stop listening - |listener1| should not receive any textures after this.
+    // Stop listening - `listener1` should not receive any textures after this.
     surfaceTextureHelper.stopListening();
 
     // Connect different listener.
@@ -423,7 +423,7 @@ public class SurfaceTextureHelperTest {
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
     eglBase.swapBuffers();
 
-    // Check that |listener2| received the frame, and not |listener1|.
+    // Check that `listener2` received the frame, and not `listener1`.
     listener2.waitForTextureBuffer().release();
     listener1.assertNoFrameIsDelivered(/* waitPeriodMs= */ 1);
 
@@ -446,8 +446,8 @@ public class SurfaceTextureHelperTest {
     surfaceTextureHelper.startListening(listener);
     surfaceTextureHelper.setTextureSize(width, height);
 
-    // Create resources for stubbing an OES texture producer. |eglBase| has the SurfaceTexture in
-    // |surfaceTextureHelper| as the target EGLSurface.
+    // Create resources for stubbing an OES texture producer. `eglBase` has the SurfaceTexture in
+    // `surfaceTextureHelper` as the target EGLSurface.
 
     eglBase.createSurface(surfaceTextureHelper.getSurfaceTexture());
     assertEquals(eglBase.surfaceWidth(), width);

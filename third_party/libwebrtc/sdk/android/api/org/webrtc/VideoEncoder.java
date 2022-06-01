@@ -238,7 +238,7 @@ public interface VideoEncoder {
 
   public interface Callback {
     /**
-     * Old encoders assume that the byte buffer held by |frame| is not accessed after the call to
+     * Old encoders assume that the byte buffer held by `frame` is not accessed after the call to
      * this method returns. If the pipeline downstream needs to hold on to the buffer, it then has
      * to make its own copy. We want to move to a model where no copying is needed, and instead use
      * retain()/release() to signal to the encoder when it is safe to reuse the buffer.

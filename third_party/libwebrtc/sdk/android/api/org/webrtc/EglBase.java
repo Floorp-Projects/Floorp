@@ -146,8 +146,8 @@ public interface EglBase {
   }
 
   /**
-   * Create a new context with the specified config attributes, sharing data with |sharedContext|.
-   * If |sharedContext| is null, a root context is created. This function will try to create an EGL
+   * Create a new context with the specified config attributes, sharing data with `sharedContext`.
+   * If `sharedContext` is null, a root context is created. This function will try to create an EGL
    * 1.4 context if possible, and an EGL 1.0 context otherwise.
    */
   public static EglBase create(@Nullable Context sharedContext, int[] configAttributes) {
@@ -171,7 +171,7 @@ public interface EglBase {
   }
 
   /**
-   * Helper function for creating a plain context, sharing data with |sharedContext|. This function
+   * Helper function for creating a plain context, sharing data with `sharedContext`. This function
    * will try to create an EGL 1.4 context if possible, and an EGL 1.0 context otherwise.
    */
   public static EglBase create(Context sharedContext) {

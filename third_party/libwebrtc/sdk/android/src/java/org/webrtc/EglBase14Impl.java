@@ -68,7 +68,7 @@ class EglBase14Impl implements EglBase14 {
   }
 
   // Create a new context with the specified config type, sharing data with sharedContext.
-  // |sharedContext| may be null.
+  // `sharedContext` may be null.
   public EglBase14Impl(EGLContext sharedContext, int[] configAttributes) {
     eglDisplay = getEglDisplay();
     eglConfig = getEglConfig(eglDisplay, configAttributes);

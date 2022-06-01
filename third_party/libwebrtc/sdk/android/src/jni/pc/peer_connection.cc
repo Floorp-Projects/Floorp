@@ -499,7 +499,7 @@ static ScopedJavaLocalRef<jobject> JNI_PeerConnection_GetLocalDescription(
     const JavaParamRef<jobject>& j_pc) {
   PeerConnectionInterface* pc = ExtractNativePC(jni, j_pc);
   // It's only safe to operate on SessionDescriptionInterface on the
-  // signaling thread, but |jni| may only be used on the current thread, so we
+  // signaling thread, but `jni` may only be used on the current thread, so we
   // must do this odd dance.
   std::string sdp;
   std::string type;
@@ -518,7 +518,7 @@ static ScopedJavaLocalRef<jobject> JNI_PeerConnection_GetRemoteDescription(
     const JavaParamRef<jobject>& j_pc) {
   PeerConnectionInterface* pc = ExtractNativePC(jni, j_pc);
   // It's only safe to operate on SessionDescriptionInterface on the
-  // signaling thread, but |jni| may only be used on the current thread, so we
+  // signaling thread, but `jni` may only be used on the current thread, so we
   // must do this odd dance.
   std::string sdp;
   std::string type;
