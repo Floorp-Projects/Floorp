@@ -302,7 +302,15 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
     const EncoderStats& stats) {
   MutexLock lock(&lock_);
   auto it = captured_frames_in_flight_.find(frame_id);
-  RTC_DCHECK(it != captured_frames_in_flight_.end());
+  if (it == captured_frames_in_flight_.end()) {
+    RTC_LOG(WARNING)
+        << "The encoding of video frame with id [" << frame_id << "] for peer ["
+        << peer_name << "] finished after all receivers rendered this frame. "
+        << "It can be OK for simulcast/SVC if higher quality stream is not "
+        << "required, but it may indicate an ERROR for singlecast or if it "
+        << "happens often.";
+    return;
+  }
   // For SVC we can receive multiple encoded images for one frame, so to cover
   // all cases we have to pick the last encode time.
   if (!it->second.HasEncodedTime()) {

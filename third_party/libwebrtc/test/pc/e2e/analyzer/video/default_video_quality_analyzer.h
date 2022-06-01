@@ -526,13 +526,17 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // Mapping from stream label to unique size_t value to use in stats and avoid
   // extra string copying.
   NamesCollection streams_ RTC_GUARDED_BY(lock_);
-  // Frames that were captured by all streams and still aren't rendered by any
-  // stream or deemed dropped. Frame with id X can be removed from this map if:
-  // 1. The frame with id X was received in OnFrameRendered
-  // 2. The frame with id Y > X was received in OnFrameRendered
+  // Frames that were captured by all streams and still aren't rendered on
+  // receviers or deemed dropped. Frame with id X can be removed from this map
+  // if:
+  // 1. The frame with id X was received in OnFrameRendered by all expected
+  //    receivers.
+  // 2. The frame with id Y > X was received in OnFrameRendered by all expected
+  //    receivers.
   // 3. Next available frame id for newly captured frame is X
   // 4. There too many frames in flight for current video stream and X is the
-  //    oldest frame id in this stream.
+  //    oldest frame id in this stream. In such case only the frame content
+  //    will be removed, but the map entry will be preserved.
   std::map<uint16_t, FrameInFlight> captured_frames_in_flight_
       RTC_GUARDED_BY(lock_);
   // Global frames count for all video streams.
