@@ -2070,6 +2070,7 @@ def ubsan(options):
         "bool",
         "bounds",
         "enum",
+        "function",
         "integer-divide-by-zero",
         "object-size",
         "pointer-overflow",
