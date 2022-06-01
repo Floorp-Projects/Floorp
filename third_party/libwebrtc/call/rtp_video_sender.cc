@@ -231,6 +231,8 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
       crypto_options.sframe.require_frame_encryption;
   configuration.extmap_allow_mixed = rtp_config.extmap_allow_mixed;
   configuration.rtcp_report_interval_ms = rtcp_report_interval_ms;
+  configuration.use_deferred_sequencing = !absl::StartsWith(
+      trials.Lookup("WebRTC-Video-DeferredSequencing"), "Disabled");
   configuration.field_trials = &trials;
 
   std::vector<RtpStreamSender> rtp_streams;
