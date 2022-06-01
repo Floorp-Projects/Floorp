@@ -190,7 +190,7 @@ class HyperTextAccessible : public AccessibleWrap,
    * Get/set caret offset, if no caret then -1.
    */
   virtual int32_t CaretOffset() const override;
-  void SetCaretOffset(int32_t aOffset);
+  virtual void SetCaretOffset(int32_t aOffset) override;
 
   /**
    * Provide the line number for the caret.

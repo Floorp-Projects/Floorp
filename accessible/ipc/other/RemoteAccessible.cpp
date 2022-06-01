@@ -177,10 +177,6 @@ int32_t RemoteAccessible::CaretOffset() const {
   return offset;
 }
 
-void RemoteAccessible::SetCaretOffset(int32_t aOffset) {
-  Unused << mDoc->SendSetCaretOffset(mID, aOffset);
-}
-
 uint32_t RemoteAccessible::CharacterCount() const {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::CharacterCount();

@@ -271,21 +271,17 @@ static gchar* getTextBeforeOffsetCB(AtkText* aText, gint aOffset,
 }
 
 static gint getCaretOffsetCB(AtkText* aText) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
-      return -1;
-    }
-
-    return static_cast<gint>(text->CaretOffset());
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc) {
+    return -1;
   }
 
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    return static_cast<gint>(proxy->CaretOffset());
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text || !acc->IsTextRole()) {
+    return -1;
   }
 
-  return -1;
+  return static_cast<gint>(text->CaretOffset());
 }
 
 static AtkAttributeSet* getRunAttributesCB(AtkText* aText, gint aOffset,
@@ -540,23 +536,18 @@ static gboolean setTextSelectionCB(AtkText* aText, gint aSelectionNum,
 }
 
 static gboolean setCaretOffsetCB(AtkText* aText, gint aOffset) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole() || !text->IsValidOffset(aOffset)) {
-      return FALSE;
-    }
-
-    text->SetCaretOffset(aOffset);
-    return TRUE;
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc) {
+    return FALSE;
   }
 
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    proxy->SetCaretOffset(aOffset);
-    return TRUE;
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text || !acc->IsTextRole()) {
+    return FALSE;
   }
 
-  return FALSE;
+  text->SetCaretOffset(aOffset);
+  return TRUE;
 }
 
 static gboolean scrollSubstringToCB(AtkText* aText, gint aStartOffset,

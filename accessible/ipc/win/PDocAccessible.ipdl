@@ -140,6 +140,8 @@ child:
 
   async DoActionAsync(uint64_t aID, uint8_t aIndex);
 
+  async SetCaretOffset(uint64_t aID, int32_t aOffset);
+
   async __delete__();
 };
 
