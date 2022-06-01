@@ -42,11 +42,6 @@ enum class RtpPacketType {
   kUnknown,
 };
 
-bool GetRtpPayloadType(const void* data, size_t len, int* value);
-bool GetRtpSeqNum(const void* data, size_t len, int* value);
-bool GetRtpTimestamp(const void* data, size_t len, uint32_t* value);
-bool GetRtpSsrc(const void* data, size_t len, uint32_t* value);
-
 bool GetRtcpType(const void* data, size_t len, int* value);
 bool GetRtcpSsrc(const void* data, size_t len, uint32_t* value);
 

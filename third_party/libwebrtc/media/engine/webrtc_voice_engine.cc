@@ -35,6 +35,7 @@
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "modules/audio_processing/aec_dump/aec_dump_factory.h"
 #include "modules/audio_processing/include/audio_processing.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/byte_order.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -65,6 +66,8 @@ RTC_POP_IGNORING_WUNDEF()
 
 namespace cricket {
 namespace {
+
+using ::webrtc::ParseRtpSsrc;
 
 constexpr size_t kMaxUnsignaledRecvStreams = 4;
 
@@ -2179,10 +2182,7 @@ void WebRtcVoiceMediaChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
     // Create an unsignaled receive stream for this previously not received
     // ssrc. If there already is N unsignaled receive streams, delete the
     // oldest. See: https://bugs.chromium.org/p/webrtc/issues/detail?id=5208
-    uint32_t ssrc = 0;
-    if (!GetRtpSsrc(packet.cdata(), packet.size(), &ssrc)) {
-      return;
-    }
+    uint32_t ssrc = ParseRtpSsrc(packet);
     RTC_DCHECK(!absl::c_linear_search(unsignaled_recv_ssrcs_, ssrc));
 
     // Add new stream.

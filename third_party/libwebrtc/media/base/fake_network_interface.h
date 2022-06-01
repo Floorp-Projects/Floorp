@@ -17,6 +17,7 @@
 
 #include "media/base/media_channel.h"
 #include "media/base/rtp_utils.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/byte_order.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
@@ -116,13 +117,12 @@ class FakeNetworkInterface : public MediaChannel::NetworkInterface,
   virtual bool SendPacket(rtc::CopyOnWriteBuffer* packet,
                           const rtc::PacketOptions& options)
       RTC_LOCKS_EXCLUDED(mutex_) {
-    webrtc::MutexLock lock(&mutex_);
-
-    uint32_t cur_ssrc = 0;
-    if (!GetRtpSsrc(packet->data(), packet->size(), &cur_ssrc)) {
+    if (!webrtc::IsRtpPacket(*packet)) {
       return false;
     }
-    sent_ssrcs_[cur_ssrc]++;
+
+    webrtc::MutexLock lock(&mutex_);
+    sent_ssrcs_[webrtc::ParseRtpSsrc(*packet)]++;
     options_ = options;
 
     rtp_packets_.push_back(*packet);
@@ -192,13 +192,8 @@ class FakeNetworkInterface : public MediaChannel::NetworkInterface,
     if (packets) {
       *packets = 0;
     }
-    uint32_t cur_ssrc = 0;
     for (size_t i = 0; i < rtp_packets_.size(); ++i) {
-      if (!GetRtpSsrc(rtp_packets_[i].data(), rtp_packets_[i].size(),
-                      &cur_ssrc)) {
-        return;
-      }
-      if (ssrc == cur_ssrc) {
+      if (ssrc == webrtc::ParseRtpSsrc(rtp_packets_[i])) {
         if (bytes) {
           *bytes += static_cast<int>(rtp_packets_[i].size());
         }

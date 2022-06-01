@@ -31,6 +31,7 @@
 #include "media/engine/simulcast.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "media/engine/webrtc_voice_engine.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/experiments/field_trial_units.h"
@@ -45,6 +46,9 @@
 namespace cricket {
 
 namespace {
+
+using ::webrtc::ParseRtpPayloadType;
+using ::webrtc::ParseRtpSsrc;
 
 const int kMinLayerSize = 16;
 constexpr int64_t kUnsignaledSsrcCooldownMs = rtc::kNumMillisecsPerSec / 2;
@@ -1727,10 +1731,7 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
             break;
         }
 
-        uint32_t ssrc = 0;
-        if (!GetRtpSsrc(packet.cdata(), packet.size(), &ssrc)) {
-          return;
-        }
+        uint32_t ssrc = ParseRtpSsrc(packet);
 
         if (unknown_ssrc_packet_buffer_) {
           unknown_ssrc_packet_buffer_->AddPacket(ssrc, packet_time_us, packet);
@@ -1741,10 +1742,7 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
           return;
         }
 
-        int payload_type = 0;
-        if (!GetRtpPayloadType(packet.cdata(), packet.size(), &payload_type)) {
-          return;
-        }
+        int payload_type = ParseRtpPayloadType(packet);
 
         // See if this payload_type is registered as one that usually gets its
         // own SSRC (RTX) or at least is safe to drop either way (FEC). If it
