@@ -4,6 +4,7 @@ use slab;
 
 use indexmap::{self, IndexMap};
 
+use std::convert::Infallible;
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops;
@@ -128,7 +129,20 @@ impl Store {
         }
     }
 
-    pub fn for_each<F, E>(&mut self, mut f: F) -> Result<(), E>
+    pub(crate) fn for_each<F>(&mut self, mut f: F)
+    where
+        F: FnMut(Ptr),
+    {
+        match self.try_for_each(|ptr| {
+            f(ptr);
+            Ok::<_, Infallible>(())
+        }) {
+            Ok(()) => (),
+            Err(infallible) => match infallible {},
+        }
+    }
+
+    pub fn try_for_each<F, E>(&mut self, mut f: F) -> Result<(), E>
     where
         F: FnMut(Ptr) -> Result<(), E>,
     {
@@ -244,10 +258,10 @@ where
     ///
     /// If the stream is already contained by the list, return `false`.
     pub fn push(&mut self, stream: &mut store::Ptr) -> bool {
-        log::trace!("Queue::push");
+        tracing::trace!("Queue::push");
 
         if N::is_queued(stream) {
-            log::trace!(" -> already queued");
+            tracing::trace!(" -> already queued");
             return false;
         }
 
@@ -259,7 +273,7 @@ where
         // Queue the stream
         match self.indices {
             Some(ref mut idxs) => {
-                log::trace!(" -> existing entries");
+                tracing::trace!(" -> existing entries");
 
                 // Update the current tail node to point to `stream`
                 let key = stream.key();
@@ -269,7 +283,7 @@ where
                 idxs.tail = stream.key();
             }
             None => {
-                log::trace!(" -> first entry");
+                tracing::trace!(" -> first entry");
                 self.indices = Some(store::Indices {
                     head: stream.key(),
                     tail: stream.key(),
@@ -302,6 +316,10 @@ where
         }
 
         None
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.indices.is_none()
     }
 
     pub fn pop_if<'a, R, F>(&mut self, store: &'a mut R, f: F) -> Option<store::Ptr<'a>>

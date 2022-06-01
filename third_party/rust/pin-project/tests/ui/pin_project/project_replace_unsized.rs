@@ -2,7 +2,7 @@ use pin_project::pin_project;
 
 #[pin_project(project_replace)] //~ ERROR E0277
 struct Struct<T: ?Sized> {
-    x: T,
+    f: T,
 }
 
 #[pin_project(project_replace)] //~ ERROR E0277

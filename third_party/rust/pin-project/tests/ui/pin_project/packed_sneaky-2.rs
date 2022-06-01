@@ -5,7 +5,7 @@ hidden_repr_macro! { //~ ERROR may not be used on #[repr(packed)] types
     #[pin_project]
     struct B {
         #[pin]
-        field: u32,
+        f: u32,
     }
 }
 
