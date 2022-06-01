@@ -341,7 +341,7 @@ nsContentList::nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
       mFunc(nullptr),
       mDestroyFunc(nullptr),
       mData(nullptr),
-      mState(LIST_DIRTY),
+      mState(State::Dirty),
       mDeep(aDeep),
       mFuncMayDependOnAttr(false),
       mIsHTMLDocument(aRootNode->OwnerDoc()->IsHTMLDocument()),
@@ -380,7 +380,7 @@ nsContentList::nsContentList(nsINode* aRootNode, nsContentListMatchFunc aFunc,
       mFunc(aFunc),
       mDestroyFunc(aDestroyFunc),
       mData(aData),
-      mState(LIST_DIRTY),
+      mState(State::Dirty),
       mMatchAll(false),
       mDeep(aDeep),
       mFuncMayDependOnAttr(aFuncMayDependOnAttr),
@@ -436,11 +436,12 @@ nsIContent* nsContentList::Item(uint32_t aIndex, bool aDoFlush) {
     }
   }
 
-  if (mState != LIST_UP_TO_DATE)
+  if (mState != State::UpToDate) {
     PopulateSelf(std::min(aIndex, UINT32_MAX - 1) + 1);
+  }
 
   ASSERT_IN_SYNC;
-  NS_ASSERTION(!mRootNode || mState != LIST_DIRTY,
+  NS_ASSERTION(!mRootNode || mState != State::Dirty,
                "PopulateSelf left the list in a dirty (useless) state!");
 
   return mElements.SafeElementAt(aIndex);
@@ -563,7 +564,7 @@ void nsContentList::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                      const nsAttrValue* aOldValue) {
   MOZ_ASSERT(aElement, "Must have a content node to work with");
 
-  if (!mFunc || !mFuncMayDependOnAttr || mState == LIST_DIRTY ||
+  if (!mFunc || !mFuncMayDependOnAttr || mState == State::Dirty ||
       !MayContainRelevantNodes(aElement->GetParentNode()) ||
       !nsContentUtils::IsInSameAnonymousTree(mRootNode, aElement)) {
     // Either we're already dirty or this notification doesn't affect
@@ -592,7 +593,7 @@ void nsContentList::ContentAppended(nsIContent* aFirstNewContent) {
   MOZ_ASSERT(container, "Can't get at the new content if no container!");
 
   /*
-   * If the state is LIST_DIRTY then we have no useful information in our list
+   * If the state is State::Dirty then we have no useful information in our list
    * and we want to put off doing work as much as possible.
    *
    * Also, if container is anonymous from our point of view, we know that we
@@ -601,7 +602,7 @@ void nsContentList::ContentAppended(nsIContent* aFirstNewContent) {
    * Optimize out also the common case when just one new node is appended and
    * it doesn't match us.
    */
-  if (mState == LIST_DIRTY ||
+  if (mState == State::Dirty ||
       !nsContentUtils::IsInSameAnonymousTree(mRootNode, container) ||
       !MayContainRelevantNodes(container) ||
       (!aFirstNewContent->HasChildren() &&
@@ -612,7 +613,7 @@ void nsContentList::ContentAppended(nsIContent* aFirstNewContent) {
   /*
    * We want to handle the case of ContentAppended by sometimes
    * appending the content to our list, not just setting state to
-   * LIST_DIRTY, since most of our ContentAppended notifications
+   * State::Dirty, since most of our ContentAppended notifications
    * should come during pageload and be at the end of the document.
    * Do a bit of work to see whether we could just append to what we
    * already have.
@@ -652,7 +653,7 @@ void nsContentList::ContentAppended(nsIContent* aFirstNewContent) {
    * content that we never picked up due to being lazy.  Further, we
    * may never get asked for this content... so don't grab it yet.
    */
-  if (mState == LIST_LAZY) {
+  if (mState == State::Lazy) {
     return;
   }
 
@@ -682,7 +683,7 @@ void nsContentList::ContentInserted(nsIContent* aChild) {
   // Note that aChild->GetParentNode() can be null here if we are inserting into
   // the document itself; any attempted optimizations to this method should deal
   // with that.
-  if (mState != LIST_DIRTY &&
+  if (mState != State::Dirty &&
       MayContainRelevantNodes(aChild->GetParentNode()) &&
       nsContentUtils::IsInSameAnonymousTree(mRootNode, aChild) &&
       MatchSelf(aChild)) {
@@ -694,7 +695,7 @@ void nsContentList::ContentInserted(nsIContent* aChild) {
 
 void nsContentList::ContentRemoved(nsIContent* aChild,
                                    nsIContent* aPreviousSibling) {
-  if (mState != LIST_DIRTY &&
+  if (mState != State::Dirty &&
       MayContainRelevantNodes(aChild->GetParentNode()) &&
       nsContentUtils::IsInSameAnonymousTree(mRootNode, aChild) &&
       MatchSelf(aChild)) {
@@ -768,8 +769,8 @@ void nsContentList::PopulateSelf(uint32_t aNeededLength,
   ASSERT_IN_SYNC;
 
   uint32_t count = mElements.Length();
-  NS_ASSERTION(mState != LIST_DIRTY || count == aExpectedElementsIfDirty,
-               "Reset() not called when setting state to LIST_DIRTY?");
+  NS_ASSERTION(mState != State::Dirty || count == aExpectedElementsIfDirty,
+               "Reset() not called when setting state to State::Dirty?");
 
   if (count >= aNeededLength)  // We're all set
     return;
@@ -808,10 +809,11 @@ void nsContentList::PopulateSelf(uint32_t aNeededLength,
   NS_ASSERTION(elementsToAppend + mElements.Length() == invariant,
                "Something is awry!");
 
-  if (elementsToAppend != 0)
-    mState = LIST_UP_TO_DATE;
-  else
-    mState = LIST_LAZY;
+  if (elementsToAppend != 0) {
+    mState = State::UpToDate;
+  } else {
+    mState = State::Lazy;
+  }
 
   ASSERT_IN_SYNC;
 }
@@ -846,10 +848,12 @@ void nsContentList::BringSelfUpToDate(bool aDoFlush) {
     }
   }
 
-  if (mState != LIST_UP_TO_DATE) PopulateSelf(uint32_t(-1));
+  if (mState != State::UpToDate) {
+    PopulateSelf(uint32_t(-1));
+  }
 
   ASSERT_IN_SYNC;
-  NS_ASSERTION(!mRootNode || mState == LIST_UP_TO_DATE,
+  NS_ASSERTION(!mRootNode || mState == State::UpToDate,
                "PopulateSelf dod not bring content list up to date!");
 }
 
@@ -873,12 +877,12 @@ void nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable() {
 
 #ifdef DEBUG_CONTENT_LIST
 void nsContentList::AssertInSync() {
-  if (mState == LIST_DIRTY) {
+  if (mState == State::Dirty) {
     return;
   }
 
   if (!mRootNode) {
-    NS_ASSERTION(mElements.Length() == 0 && mState == LIST_DIRTY,
+    NS_ASSERTION(mElements.Length() == 0 && mState == State::Dirty,
                  "Empty iterator isn't quite empty?");
     return;
   }
@@ -897,7 +901,7 @@ void nsContentList::AssertInSync() {
 
   uint32_t cnt = 0, index = 0;
   while (true) {
-    if (cnt == mElements.Length() && mState == LIST_LAZY) {
+    if (cnt == mElements.Length() && mState == State::Lazy) {
       break;
     }
 
@@ -963,7 +967,7 @@ void nsLabelsNodeList::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                         nsAtom* aAttribute, int32_t aModType,
                                         const nsAttrValue* aOldValue) {
   MOZ_ASSERT(aElement, "Must have a content node to work with");
-  if (mState == LIST_DIRTY ||
+  if (mState == State::Dirty ||
       !nsContentUtils::IsInSameAnonymousTree(mRootNode, aElement)) {
     return;
   }
@@ -981,7 +985,7 @@ void nsLabelsNodeList::ContentAppended(nsIContent* aFirstNewContent) {
   // If a labelable element is moved to outside or inside of
   // nested associated labels, we're gonna have to modify
   // the content list.
-  if (mState != LIST_DIRTY ||
+  if (mState != State::Dirty ||
       nsContentUtils::IsInSameAnonymousTree(mRootNode, container)) {
     SetDirty();
     return;
@@ -992,7 +996,7 @@ void nsLabelsNodeList::ContentInserted(nsIContent* aChild) {
   // If a labelable element is moved to outside or inside of
   // nested associated labels, we're gonna have to modify
   // the content list.
-  if (mState != LIST_DIRTY ||
+  if (mState != State::Dirty ||
       nsContentUtils::IsInSameAnonymousTree(mRootNode, aChild)) {
     SetDirty();
     return;
@@ -1003,7 +1007,7 @@ void nsLabelsNodeList::ContentRemoved(nsIContent* aChild,
                                       nsIContent* aPreviousSibling) {
   // If a labelable element is removed, we're gonna have to clean
   // the content list.
-  if (mState != LIST_DIRTY ||
+  if (mState != State::Dirty ||
       nsContentUtils::IsInSameAnonymousTree(mRootNode, aChild)) {
     SetDirty();
     return;
