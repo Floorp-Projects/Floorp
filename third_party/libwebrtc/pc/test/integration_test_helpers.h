@@ -150,8 +150,8 @@ static const char kDataChannelLabel[] = "data_channel";
 
 // SRTP cipher name negotiated by the tests. This must be updated if the
 // default changes.
-static const int kDefaultSrtpCryptoSuite = rtc::SRTP_AES128_CM_SHA1_80;
-static const int kDefaultSrtpCryptoSuiteGcm = rtc::SRTP_AEAD_AES_256_GCM;
+static const int kDefaultSrtpCryptoSuite = rtc::kSrtpAes128CmSha1_80;
+static const int kDefaultSrtpCryptoSuiteGcm = rtc::kSrtpAeadAes256Gcm;
 
 static const SocketAddress kDefaultLocalAddress("192.168.1.1", 0);
 

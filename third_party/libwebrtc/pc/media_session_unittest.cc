@@ -80,10 +80,10 @@ using cricket::TransportDescriptionFactory;
 using cricket::TransportInfo;
 using cricket::VideoCodec;
 using cricket::VideoContentDescription;
-using rtc::CS_AEAD_AES_128_GCM;
-using rtc::CS_AEAD_AES_256_GCM;
-using rtc::CS_AES_CM_128_HMAC_SHA1_32;
-using rtc::CS_AES_CM_128_HMAC_SHA1_80;
+using rtc::kCsAeadAes128Gcm;
+using rtc::kCsAeadAes256Gcm;
+using rtc::kCsAesCm128HmacSha1_32;
+using rtc::kCsAesCm128HmacSha1_80;
 using rtc::UniqueRandomIdGenerator;
 using ::testing::Contains;
 using ::testing::Each;
@@ -267,8 +267,8 @@ static const char* kMediaProtocolsDtls[] = {
 
 // SRTP cipher name negotiated by the tests. This must be updated if the
 // default changes.
-static const char* kDefaultSrtpCryptoSuite = CS_AES_CM_128_HMAC_SHA1_80;
-static const char* kDefaultSrtpCryptoSuiteGcm = CS_AEAD_AES_256_GCM;
+static const char* kDefaultSrtpCryptoSuite = kCsAesCm128HmacSha1_80;
+static const char* kDefaultSrtpCryptoSuiteGcm = kCsAeadAes256Gcm;
 
 // These constants are used to make the code using "AddMediaDescriptionOptions"
 // more readable.
@@ -408,8 +408,8 @@ void PreferGcmCryptoParameters(CryptoParamsVec* cryptos) {
   cryptos->erase(
       std::remove_if(cryptos->begin(), cryptos->end(),
                      [](const cricket::CryptoParams& crypto) {
-                       return crypto.cipher_suite != CS_AEAD_AES_256_GCM &&
-                              crypto.cipher_suite != CS_AEAD_AES_128_GCM;
+                       return crypto.cipher_suite != kCsAeadAes256Gcm &&
+                              crypto.cipher_suite != kCsAeadAes128Gcm;
                      }),
       cryptos->end());
 }

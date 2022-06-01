@@ -674,7 +674,7 @@ class StatsCollectorTest : public ::testing::Test {
     // Fake stats to process.
     TransportChannelStats channel_stats;
     channel_stats.component = 1;
-    channel_stats.srtp_crypto_suite = rtc::SRTP_AES128_CM_SHA1_80;
+    channel_stats.srtp_crypto_suite = rtc::kSrtpAes128CmSha1_80;
     channel_stats.ssl_cipher_suite =
         internal::TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA;
     pc->SetTransportStats(kTransportName, channel_stats);
@@ -729,7 +729,7 @@ class StatsCollectorTest : public ::testing::Test {
     std::string srtp_crypto_suite =
         ExtractStatsValue(StatsReport::kStatsReportTypeComponent, reports,
                           StatsReport::kStatsValueNameSrtpCipher);
-    EXPECT_EQ(rtc::SrtpCryptoSuiteToName(rtc::SRTP_AES128_CM_SHA1_80),
+    EXPECT_EQ(rtc::SrtpCryptoSuiteToName(rtc::kSrtpAes128CmSha1_80),
               srtp_crypto_suite);
   }
 };

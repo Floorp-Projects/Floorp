@@ -338,14 +338,14 @@ class DtlsTransportTestBase {
 
     if (use_dtls_) {
       // Check that we negotiated the right ciphers. Since GCM ciphers are not
-      // negotiated by default, we should end up with SRTP_AES128_CM_SHA1_80.
-      client1_.CheckSrtp(rtc::SRTP_AES128_CM_SHA1_80);
-      client2_.CheckSrtp(rtc::SRTP_AES128_CM_SHA1_80);
+      // negotiated by default, we should end up with kSrtpAes128CmSha1_80.
+      client1_.CheckSrtp(rtc::kSrtpAes128CmSha1_80);
+      client2_.CheckSrtp(rtc::kSrtpAes128CmSha1_80);
     } else {
       // If DTLS isn't actually being used, GetSrtpCryptoSuite should return
       // false.
-      client1_.CheckSrtp(rtc::SRTP_INVALID_CRYPTO_SUITE);
-      client2_.CheckSrtp(rtc::SRTP_INVALID_CRYPTO_SUITE);
+      client1_.CheckSrtp(rtc::kSrtpInvalidCryptoSuite);
+      client2_.CheckSrtp(rtc::kSrtpInvalidCryptoSuite);
     }
 
     client1_.CheckSsl();

@@ -50,7 +50,7 @@ RTCError SrtpTransport::SetSrtpSendKey(const cricket::CryptoParams& params) {
   }
 
   send_cipher_suite_ = rtc::SrtpCryptoSuiteFromName(params.cipher_suite);
-  if (*send_cipher_suite_ == rtc::SRTP_INVALID_CRYPTO_SUITE) {
+  if (*send_cipher_suite_ == rtc::kSrtpInvalidCryptoSuite) {
     return RTCError(RTCErrorType::INVALID_PARAMETER,
                     "Invalid SRTP crypto suite");
   }
@@ -90,7 +90,7 @@ RTCError SrtpTransport::SetSrtpReceiveKey(const cricket::CryptoParams& params) {
   }
 
   recv_cipher_suite_ = rtc::SrtpCryptoSuiteFromName(params.cipher_suite);
-  if (*recv_cipher_suite_ == rtc::SRTP_INVALID_CRYPTO_SUITE) {
+  if (*recv_cipher_suite_ == rtc::kSrtpInvalidCryptoSuite) {
     return RTCError(RTCErrorType::INVALID_PARAMETER,
                     "Invalid SRTP crypto suite");
   }

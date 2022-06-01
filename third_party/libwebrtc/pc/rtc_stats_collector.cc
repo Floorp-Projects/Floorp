@@ -2036,7 +2036,7 @@ void RTCStatsCollector::ProduceTransportStats_n(
         snprintf(bytes, sizeof(bytes), "%04X", channel_stats.ssl_version_bytes);
         transport_stats->tls_version = bytes;
       }
-      if (channel_stats.ssl_cipher_suite != rtc::TLS_NULL_WITH_NULL_NULL &&
+      if (channel_stats.ssl_cipher_suite != rtc::kTlsNullWithNullNull &&
           rtc::SSLStreamAdapter::SslCipherSuiteToName(
               channel_stats.ssl_cipher_suite)
               .length()) {
@@ -2044,7 +2044,7 @@ void RTCStatsCollector::ProduceTransportStats_n(
             rtc::SSLStreamAdapter::SslCipherSuiteToName(
                 channel_stats.ssl_cipher_suite);
       }
-      if (channel_stats.srtp_crypto_suite != rtc::SRTP_INVALID_CRYPTO_SUITE &&
+      if (channel_stats.srtp_crypto_suite != rtc::kSrtpInvalidCryptoSuite &&
           rtc::SrtpCryptoSuiteToName(channel_stats.srtp_crypto_suite)
               .length()) {
         transport_stats->srtp_cipher =
