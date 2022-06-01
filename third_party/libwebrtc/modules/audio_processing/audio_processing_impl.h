@@ -143,6 +143,11 @@ class AudioProcessingImpl : public AudioProcessing {
   // Overridden in a mock.
   virtual void InitializeLocked()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_render_, mutex_capture_);
+  void AssertLockedForTest()
+      RTC_ASSERT_EXCLUSIVE_LOCK(mutex_render_, mutex_capture_) {
+    mutex_render_.AssertHeld();
+    mutex_capture_.AssertHeld();
+  }
 
  private:
   // TODO(peah): These friend classes should be removed as soon as the new
