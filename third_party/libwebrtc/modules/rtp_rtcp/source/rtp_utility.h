@@ -37,7 +37,6 @@ class RtpHeaderParser {
 
   ABSL_DEPRECATED("Use IsRtpPacket or IsRtcpPacket")
   bool RTCP() const;
-  bool ParseRtcp(RTPHeader* header) const;
   bool Parse(RTPHeader* parsedPacket,
              const RtpHeaderExtensionMap* ptrExtensionMap = nullptr,
              bool header_only = false, bool secured = false) const;
