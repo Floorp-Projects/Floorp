@@ -13,23 +13,6 @@
 do_get_profile();
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
-function getCert() {
-  return new Promise((resolve, reject) => {
-    let certService = Cc[
-      "@mozilla.org/security/local-cert-service;1"
-    ].getService(Ci.nsILocalCertService);
-    certService.getOrCreateCert("beConservative-test", {
-      handleCert(c, rv) {
-        if (rv) {
-          reject(rv);
-          return;
-        }
-        resolve(c);
-      },
-    });
-  });
-}
-
 class InputStreamCallback {
   constructor(output) {
     this.output = output;
@@ -162,6 +145,7 @@ function storeCertOverride(port, cert) {
   ].getService(Ci.nsICertOverrideService);
   let overrideBits =
     Ci.nsICertOverrideService.ERROR_UNTRUSTED |
+    Ci.nsICertOverrideService.ERROR_TIME |
     Ci.nsICertOverrideService.ERROR_MISMATCH;
   certOverrideService.rememberValidityOverride(
     hostname,
@@ -202,7 +186,7 @@ function startClient(port, beConservative, expectSuccess) {
 add_task(async function() {
   Services.prefs.setIntPref("security.tls.version.max", 4);
   Services.prefs.setCharPref("network.dns.localDomains", hostname);
-  let cert = await getCert();
+  let cert = getTestServerCertificate();
 
   // First run a server that accepts TLS 1.2 and 1.3. A conservative client
   // should succeed in connecting.

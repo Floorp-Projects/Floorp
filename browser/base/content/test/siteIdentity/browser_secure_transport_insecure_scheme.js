@@ -127,24 +127,11 @@ add_task(async function() {
     set: [["network.dns.disableIPv6", true]],
   });
 
-  let certService = Cc["@mozilla.org/security/local-cert-service;1"].getService(
-    Ci.nsILocalCertService
-  );
   let certOverrideService = Cc[
     "@mozilla.org/security/certoverride;1"
   ].getService(Ci.nsICertOverrideService);
 
-  let cert = await new Promise((resolve, reject) => {
-    certService.getOrCreateCert("http-over-https-proxy", {
-      handleCert(c, rv) {
-        if (!Components.isSuccessCode(rv)) {
-          reject(rv);
-          return;
-        }
-        resolve(c);
-      },
-    });
-  });
+  let cert = getTestServerCertificate();
   // Start the proxy and configure Firefox to trust its certificate.
   let server = startServer(cert);
   let overrideBits =
