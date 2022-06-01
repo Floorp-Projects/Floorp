@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '0549de0c2dd89c4f2e1a8adc826aa1276ceff25f',
+  'chromium_revision': 'cb675cfb24d38080326158ef5635239ad0d2863e',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,9 +20,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@fe7fd7b2be73196d6381a6a841617b844da0c6ba',
+    'https://chromium.googlesource.com/chromium/src/base@5cf481469664d057951a04e9a372e3631dffbc5b',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@8aa210e09b1f2638c84756347dd0bea7160246dd',
+    'https://chromium.googlesource.com/chromium/src/build@1ae483ee7f2dd41ceab462a058c8852cb2f0d3c3',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@37dc929ecb351687006a61744b116cda601753d7',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -31,13 +31,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@dafd1d1517acf010fa979e6bca21cd80e0fbe13c',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@e900e8f81d77dad805a7a8809f93046fcfac5cec',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@45ed21d9c9f5819a8db6c95fd2292cc4256b5541',
+    'https://chromium.googlesource.com/chromium/src/testing@9ffe36175a7aba310d461a99eefe1f95c6447eb2',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@be994fedb5a5e2ed41e8c3f3e59b85f85d33d311',
+    'https://chromium.googlesource.com/chromium/src/third_party@0d0bcd5510794eea324f87484f40d63da33df326',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -214,7 +214,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@9edd589321cb98c899339f07f9ec386a6a37a2d0',
+    'https://android.googlesource.com/platform/external/perfetto.git@5d5769f0b54a2a505a62194493f1047dc3b686d1',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@977e77006ee175f23beb231d0de2968f5c9d17b0',
   'src/third_party/libyuv':
@@ -271,7 +271,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@f7be2d25c78f2386215ea6a5d1a789190b962843',
+    'https://chromium.googlesource.com/chromium/src/tools@a883907ef675b330fe1e48f479f6b0ba43a969d5',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
@@ -372,7 +372,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'HHo3GgWHTJyTdX1eY15wQ40-pIfmMojudjRzMFoE8JoC',
+          'version': 'lGQ7_eRaQp4RwWp-lERInZIdaOXoBZ5624uaGoWzsIcC',
       },
     ],
     'condition': 'checkout_android',
@@ -477,15 +477,15 @@ deps = {
       'packages': [
         {
           'package': 'infra/tools/luci/isolate/${{platform}}',
-          'version': 'git_revision:63874080a20260642c8df82d4f4885ff30b33fb6',
+          'version': 'git_revision:db421da12bad8e57f97ee45b24147e34ec882007',
         },
         {
           'package': 'infra/tools/luci/isolated/${{platform}}',
-          'version': 'git_revision:63874080a20260642c8df82d4f4885ff30b33fb6',
+          'version': 'git_revision:db421da12bad8e57f97ee45b24147e34ec882007',
         },
         {
           'package': 'infra/tools/luci/swarming/${{platform}}',
-          'version': 'git_revision:63874080a20260642c8df82d4f4885ff30b33fb6',
+          'version': 'git_revision:db421da12bad8e57f97ee45b24147e34ec882007',
         },
       ],
       'dep_type': 'cipd',
