@@ -488,7 +488,7 @@ ArrayObject& ModuleNamespaceObject::exports() {
 
 IndirectBindingMap& ModuleNamespaceObject::bindings() {
   Value value = GetProxyReservedSlot(this, BindingsSlot);
-  auto bindings = static_cast<IndirectBindingMap*>(value.toPrivate());
+  auto* bindings = static_cast<IndirectBindingMap*>(value.toPrivate());
   MOZ_ASSERT(bindings);
   return *bindings;
 }
@@ -1269,8 +1269,8 @@ ModuleNamespaceObject* ModuleObject::createNamespace(JSContext* cx,
     return nullptr;
   }
 
-  auto ns = ModuleNamespaceObject::create(cx, self, exports.as<ArrayObject>(),
-                                          std::move(bindings));
+  auto* ns = ModuleNamespaceObject::create(cx, self, exports.as<ArrayObject>(),
+                                           std::move(bindings));
   if (!ns) {
     return nullptr;
   }
