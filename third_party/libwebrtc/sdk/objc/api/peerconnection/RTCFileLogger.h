@@ -43,7 +43,7 @@ RTC_OBJC_EXPORT
 // kRTCFileLoggerTypeCall.
 @property(nonatomic, readonly) RTCFileLoggerRotationType rotationType;
 
-// Disables buffering disk writes. Should be set before |start|. Buffering
+// Disables buffering disk writes. Should be set before `start`. Buffering
 // is enabled by default for performance.
 @property(nonatomic, assign) BOOL shouldDisableBuffering;
 

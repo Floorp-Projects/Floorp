@@ -14,7 +14,7 @@
 
 @interface RTCNetworkMonitor ()
 
-/** |observer| is a raw pointer and should be kept alive
+/** `observer` is a raw pointer and should be kept alive
  *  for this object's lifetime.
  */
 - (instancetype)initWithObserver:(webrtc::NetworkMonitorObserver *)observer

@@ -36,7 +36,7 @@ const char kRTCVertexShaderSource[] =
   "    v_texcoord = texcoord;\n"
   "}\n";
 
-// Compiles a shader of the given |type| with GLSL source |source| and returns
+// Compiles a shader of the given `type` with GLSL source `source` and returns
 // the shader handle or 0 on error.
 GLuint RTCCreateShader(GLenum type, const GLchar *source) {
   GLuint shader = glCreateShader(type);

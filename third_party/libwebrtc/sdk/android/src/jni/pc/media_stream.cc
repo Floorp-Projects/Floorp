@@ -49,7 +49,7 @@ JavaMediaStream::JavaMediaStream(
   observer_->SignalVideoTrackAdded.connect(
       this, &JavaMediaStream::OnVideoTrackAddedToStream);
 
-  // |j_media_stream| holds one reference. Corresponding Release() is in
+  // `j_media_stream` holds one reference. Corresponding Release() is in
   // MediaStream_free, triggered by MediaStream.dispose().
   media_stream.release();
 }

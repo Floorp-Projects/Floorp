@@ -31,11 +31,11 @@
 // the method that will trigger the binding of the render
 // buffer. Because the standard behaviour of -[UIView setNeedsDisplay]
 // is disabled for the reasons above, the RTC_OBJC_TYPE(RTCEAGLVideoView) maintains
-// its own |isDirty| flag.
+// its own `isDirty` flag.
 
 @interface RTC_OBJC_TYPE (RTCEAGLVideoView)
 ()<GLKViewDelegate>
-    // |videoFrame| is set when we receive a frame from a worker thread and is read
+    // `videoFrame` is set when we receive a frame from a worker thread and is read
     // from the display link callback so atomicity is required.
     @property(atomic, strong) RTC_OBJC_TYPE(RTCVideoFrame) * videoFrame;
 @property(nonatomic, readonly) GLKView *glkView;
@@ -183,7 +183,7 @@
 // redrawn. This occurs on main thread.
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
   // The renderer will draw the frame to the framebuffer corresponding to the
-  // one used by |view|.
+  // one used by `view`.
   RTC_OBJC_TYPE(RTCVideoFrame) *frame = self.videoFrame;
   if (!frame || frame.timeStampNs == _lastDrawnFrameTimeStampNs) {
     return;

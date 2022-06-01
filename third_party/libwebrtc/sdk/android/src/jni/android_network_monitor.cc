@@ -376,7 +376,7 @@ rtc::NetworkBindingResult AndroidNetworkMonitor::BindSocketToNetwork(
     rv = lollipopSetNetworkForSocket(*network_handle, socket_fd);
   }
 
-  // If |network| has since disconnected, |rv| will be ENONET. Surface this as
+  // If `network` has since disconnected, `rv` will be ENONET. Surface this as
   // ERR_NETWORK_CHANGED, rather than MapSystemError(ENONET) which gives back
   // the less descriptive ERR_FAILED.
   if (rv == 0) {

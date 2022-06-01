@@ -23,7 +23,7 @@ class AudioSessionObserver;
 
 - (instancetype)init NS_UNAVAILABLE;
 
-/** |observer| is a raw pointer and should be kept alive
+/** `observer` is a raw pointer and should be kept alive
  *  for this object's lifetime.
  */
 - (instancetype)initWithObserver:(webrtc::AudioSessionObserver *)observer NS_DESIGNATED_INITIALIZER;

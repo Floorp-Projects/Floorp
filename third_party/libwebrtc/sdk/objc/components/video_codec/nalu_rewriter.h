@@ -26,7 +26,7 @@ namespace webrtc {
 
 // Converts a sample buffer emitted from the VideoToolbox encoder into a buffer
 // suitable for RTP. The sample buffer is in avcc format whereas the rtp buffer
-// needs to be in Annex B format. Data is written directly to |annexb_buffer|.
+// needs to be in Annex B format. Data is written directly to `annexb_buffer`.
 bool H264CMSampleBufferToAnnexBBuffer(CMSampleBufferRef avcc_sample_buffer,
                                       bool is_keyframe,
                                       rtc::Buffer* annexb_buffer);
@@ -34,8 +34,8 @@ bool H264CMSampleBufferToAnnexBBuffer(CMSampleBufferRef avcc_sample_buffer,
 // Converts a buffer received from RTP into a sample buffer suitable for the
 // VideoToolbox decoder. The RTP buffer is in annex b format whereas the sample
 // buffer is in avcc format.
-// If |is_keyframe| is true then |video_format| is ignored since the format will
-// be read from the buffer. Otherwise |video_format| must be provided.
+// If `is_keyframe` is true then `video_format` is ignored since the format will
+// be read from the buffer. Otherwise `video_format` must be provided.
 // Caller is responsible for releasing the created sample buffer.
 bool H264AnnexBBufferToCMSampleBuffer(const uint8_t* annexb_buffer,
                                       size_t annexb_buffer_size,

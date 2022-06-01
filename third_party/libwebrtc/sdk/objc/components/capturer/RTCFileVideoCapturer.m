@@ -165,7 +165,7 @@ typedef NS_ENUM(NSInteger, RTCFileVideoCapturerStatus) {
   int64_t presentationDifferenceRound = lroundf(presentationDifference * NSEC_PER_SEC);
 
   __block dispatch_source_t timer = [self createStrictTimer];
-  // Strict timer that will fire |presentationDifferenceRound| ns from now and never again.
+  // Strict timer that will fire `presentationDifferenceRound` ns from now and never again.
   dispatch_source_set_timer(timer,
                             dispatch_time(DISPATCH_TIME_NOW, presentationDifferenceRound),
                             DISPATCH_TIME_FOREVER,

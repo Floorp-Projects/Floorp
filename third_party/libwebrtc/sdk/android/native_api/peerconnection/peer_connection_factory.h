@@ -20,7 +20,7 @@
 
 namespace webrtc {
 
-// Creates java PeerConnectionFactory with specified |pcf|.
+// Creates java PeerConnectionFactory with specified `pcf`.
 jobject NativeToJavaPeerConnectionFactory(
     JNIEnv* jni,
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcf,

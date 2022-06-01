@@ -145,7 +145,7 @@ public class PeerConnectionTest {
   // TODO(fischman) MOAR test ideas:
   // - Test that PC.removeStream() works; requires a second
   //   createOffer/createAnswer dance.
-  // - audit each place that uses |constraints| for specifying non-trivial
+  // - audit each place that uses `constraints` for specifying non-trivial
   //   constraints (and ensure they're honored).
   // - test error cases
   // - ensure reasonable coverage of jni code is achieved.  Coverage is

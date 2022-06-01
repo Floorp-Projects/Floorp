@@ -63,7 +63,7 @@ public class DataChannel {
     public final ByteBuffer data;
 
     /**
-     * Indicates whether |data| contains UTF-8 text or "binary data"
+     * Indicates whether `data` contains UTF-8 text or "binary data"
      * (i.e. anything else).
      */
     public final boolean binary;
@@ -110,7 +110,7 @@ public class DataChannel {
     this.nativeDataChannel = nativeDataChannel;
   }
 
-  /** Register |observer|, replacing any previously-registered observer. */
+  /** Register `observer`, replacing any previously-registered observer. */
   public void registerObserver(Observer observer) {
     checkDataChannelExists();
     if (nativeObserver != 0) {
@@ -157,7 +157,7 @@ public class DataChannel {
     nativeClose();
   }
 
-  /** Send |data| to the remote peer; return success. */
+  /** Send `data` to the remote peer; return success. */
   public boolean send(Buffer buffer) {
     checkDataChannelExists();
     // TODO(fischman): this could be cleverer about avoiding copies if the

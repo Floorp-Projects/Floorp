@@ -242,9 +242,9 @@ static void JNI_PeerConnectionFactory_ShutdownInternalTracer(JNIEnv* jni) {
 }
 
 // Following parameters are optional:
-// |audio_device_module|, |jencoder_factory|, |jdecoder_factory|,
-// |audio_processor|, |fec_controller_factory|,
-// |network_state_predictor_factory|, |neteq_factory|.
+// `audio_device_module`, `jencoder_factory`, `jdecoder_factory`,
+// `audio_processor`, `fec_controller_factory`,
+// `network_state_predictor_factory`, `neteq_factory`.
 ScopedJavaLocalRef<jobject> CreatePeerConnectionFactoryForJava(
     JNIEnv* jni,
     const JavaParamRef<jobject>& jcontext,

@@ -24,7 +24,7 @@ class NetworkMonitorObserver {
  public:
   // Called when a path update occurs, on network monitor dispatch queue.
   //
-  // |adapter_type_by_name| is a map from interface name (i.e. "pdp_ip0") to
+  // `adapter_type_by_name` is a map from interface name (i.e. "pdp_ip0") to
   // adapter type, for all available interfaces on the current path. If an
   // interface name isn't present it can be assumed to be unavailable.
   virtual void OnPathUpdate(

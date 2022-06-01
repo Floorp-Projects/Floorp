@@ -267,7 +267,7 @@ void VideoEncoderWrapper::OnEncodedFrame(
     frame_extra_infos_.pop_front();
   }
 
-  // This is a bit subtle. The |frame| variable from the lambda capture is
+  // This is a bit subtle. The `frame` variable from the lambda capture is
   // const. Which implies that (i) we need to make a copy to be able to
   // write to the metadata, and (ii) we should avoid using the .data()
   // method (including implicit conversion to ArrayView) on the non-const

@@ -111,7 +111,7 @@ bool H264CMSampleBufferToAnnexBBuffer(CMSampleBufferRef avcc_sample_buffer,
   }
   size_t bytes_remaining = block_buffer_size;
   while (bytes_remaining > 0) {
-    // The size type here must match |nalu_header_size|, we expect 4 bytes.
+    // The size type here must match `nalu_header_size`, we expect 4 bytes.
     // Read the length of the next packet of data. Must convert from big endian
     // to host endian.
     RTC_DCHECK_GE(bytes_remaining, (size_t)nalu_header_size);

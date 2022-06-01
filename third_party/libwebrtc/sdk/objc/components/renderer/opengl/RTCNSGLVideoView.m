@@ -25,7 +25,7 @@
 
 @interface RTC_OBJC_TYPE (RTCNSGLVideoView)
 ()
-    // |videoFrame| is set when we receive a frame from a worker thread and is read
+    // `videoFrame` is set when we receive a frame from a worker thread and is read
     // from the display link callback so atomicity is required.
     @property(atomic, strong) RTC_OBJC_TYPE(RTCVideoFrame) *
     videoFrame;

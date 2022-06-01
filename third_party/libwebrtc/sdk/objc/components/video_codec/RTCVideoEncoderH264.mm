@@ -273,7 +273,7 @@ CFStringRef ExtractProfile(const webrtc::H264ProfileLevelId &profile_level_id) {
 }
 
 // The function returns the max allowed sample rate (pixels per second) that
-// can be processed by given encoder with |profile_level_id|.
+// can be processed by given encoder with `profile_level_id`.
 // See https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-H.264-201610-S!!PDF-E&type=items
 // for details.
 NSUInteger GetMaxSampleRate(const webrtc::H264ProfileLevelId &profile_level_id) {
@@ -723,7 +723,7 @@ NSUInteger GetMaxSampleRate(const webrtc::H264ProfileLevelId &profile_level_id) 
   if (_compressionSession) {
     SetVTSessionProperty(_compressionSession, kVTCompressionPropertyKey_AverageBitRate, bitrateBps);
 
-    // With zero |_maxAllowedFrameRate|, we fall back to automatic frame rate detection.
+    // With zero `_maxAllowedFrameRate`, we fall back to automatic frame rate detection.
     if (_maxAllowedFrameRate > 0) {
       SetVTSessionProperty(
           _compressionSession, kVTCompressionPropertyKey_ExpectedFrameRate, frameRate);

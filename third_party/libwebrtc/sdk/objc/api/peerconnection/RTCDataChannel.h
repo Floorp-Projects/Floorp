@@ -21,13 +21,13 @@ RTC_OBJC_EXPORT
 /** NSData representation of the underlying buffer. */
 @property(nonatomic, readonly) NSData *data;
 
-/** Indicates whether |data| contains UTF-8 or binary data. */
+/** Indicates whether `data` contains UTF-8 or binary data. */
 @property(nonatomic, readonly) BOOL isBinary;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 /**
- * Initialize an RTCDataBuffer from NSData. |isBinary| indicates whether |data|
+ * Initialize an RTCDataBuffer from NSData. `isBinary` indicates whether `data`
  * contains UTF-8 or binary data.
  */
 - (instancetype)initWithData:(NSData *)data isBinary:(BOOL)isBinary;
@@ -47,7 +47,7 @@ RTC_OBJC_EXPORT
     didReceiveMessageWithBuffer:(RTC_OBJC_TYPE(RTCDataBuffer) *)buffer;
 
 @optional
-/** The data channel's |bufferedAmount| changed. */
+/** The data channel's `bufferedAmount` changed. */
 - (void)dataChannel:(RTC_OBJC_TYPE(RTCDataChannel) *)dataChannel
     didChangeBufferedAmount:(uint64_t)amount;
 
@@ -124,7 +124,7 @@ RTC_OBJC_EXPORT
 /** Closes the data channel. */
 - (void)close;
 
-/** Attempt to send |data| on this data channel's underlying data transport. */
+/** Attempt to send `data` on this data channel's underlying data transport. */
 - (BOOL)sendData:(RTC_OBJC_TYPE(RTCDataBuffer) *)data;
 
 @end

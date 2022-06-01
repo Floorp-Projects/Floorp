@@ -237,7 +237,7 @@ class WebRtcAudioRecord {
 
   // Returns true if verifyAudioConfig() succeeds. This value is set after a specific delay when
   // startRecording() has been called. Hence, should preferably be called in combination with
-  // stopRecording() to ensure that it has been set properly. |isAudioConfigVerified| is
+  // stopRecording() to ensure that it has been set properly. `isAudioConfigVerified` is
   // enabled in WebRtcAudioRecord to ensure that the returned value is valid.
   @CalledByNative
   boolean isAudioSourceMatchingRecordingSession() {
@@ -491,7 +491,7 @@ class WebRtcAudioRecord {
       long nativeAudioRecordJni, ByteBuffer byteBuffer);
   private native void nativeDataIsRecorded(long nativeAudioRecordJni, int bytes);
 
-  // Sets all recorded samples to zero if |mute| is true, i.e., ensures that
+  // Sets all recorded samples to zero if `mute` is true, i.e., ensures that
   // the microphone is muted.
   public void setMicrophoneMute(boolean mute) {
     Logging.w(TAG, "setMicrophoneMute(" + mute + ")");

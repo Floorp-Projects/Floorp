@@ -118,7 +118,7 @@ static const NSUInteger kNumCallbacksPerSecond = 100;
 // Play out a test file during this time (unit is in seconds).
 static const NSUInteger kFilePlayTimeInSec = 15;
 // Run the full-duplex test during this time (unit is in seconds).
-// Note that first |kNumIgnoreFirstCallbacks| are ignored.
+// Note that first `kNumIgnoreFirstCallbacks` are ignored.
 static const NSUInteger kFullDuplexTimeInSec = 10;
 // Wait for the callback sequence to stabilize by ignoring this amount of the
 // initial callbacks (avoids initial FIFO access).
