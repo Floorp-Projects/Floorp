@@ -176,7 +176,7 @@ void DataChannelController::SetupDataChannelTransport_n() {
   RTC_DCHECK_RUN_ON(network_thread());
 
   // There's a new data channel transport.  This needs to be signaled to the
-  // |sctp_data_channels_| so that they can reopen and reconnect.  This is
+  // `sctp_data_channels_` so that they can reopen and reconnect.  This is
   // necessary when bundling is applied.
   NotifyDataChannelsOfTransportCreated();
 }
@@ -194,7 +194,7 @@ void DataChannelController::OnTransportChanged(
   RTC_DCHECK_RUN_ON(network_thread());
   if (data_channel_transport() &&
       data_channel_transport() != new_data_channel_transport) {
-    // Changed which data channel transport is used for |sctp_mid_| (eg. now
+    // Changed which data channel transport is used for `sctp_mid_` (eg. now
     // it's bundled).
     data_channel_transport()->SetDataSink(nullptr);
     set_data_channel_transport(new_data_channel_transport);
@@ -202,7 +202,7 @@ void DataChannelController::OnTransportChanged(
       new_data_channel_transport->SetDataSink(this);
 
       // There's a new data channel transport.  This needs to be signaled to the
-      // |sctp_data_channels_| so that they can reopen and reconnect.  This is
+      // `sctp_data_channels_` so that they can reopen and reconnect.  This is
       // necessary when bundling is applied.
       NotifyDataChannelsOfTransportCreated();
     }

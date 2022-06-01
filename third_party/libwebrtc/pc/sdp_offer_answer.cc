@@ -181,7 +181,7 @@ std::map<std::string, const cricket::ContentGroup*> GetBundleGroupsByMid(
   return bundle_groups_by_mid;
 }
 
-// Returns true if |new_desc| requests an ICE restart (i.e., new ufrag/pwd).
+// Returns true if `new_desc` requests an ICE restart (i.e., new ufrag/pwd).
 bool CheckForRemoteIceRestart(const SessionDescriptionInterface* old_desc,
                               const SessionDescriptionInterface* new_desc,
                               const std::string& content_name) {
@@ -284,7 +284,7 @@ std::vector<cricket::StreamParams> GetActiveStreams(
 
 // Logic to decide if an m= section can be recycled. This means that the new
 // m= section is not rejected, but the old local or remote m= section is
-// rejected. |old_content_one| and |old_content_two| refer to the m= section
+// rejected. `old_content_one` and `old_content_two` refer to the m= section
 // of the old remote and old local descriptions in no particular order.
 // We need to check both the old local and remote because either
 // could be the most current from the latest negotation.
@@ -297,15 +297,15 @@ bool IsMediaSectionBeingRecycled(SdpType type,
           (old_content_two && old_content_two->rejected));
 }
 
-// Verify that the order of media sections in |new_desc| matches
-// |current_desc|. The number of m= sections in |new_desc| should be no
-// less than |current_desc|. In the case of checking an answer's
-// |new_desc|, the |current_desc| is the last offer that was set as the
-// local or remote. In the case of checking an offer's |new_desc| we
+// Verify that the order of media sections in `new_desc` matches
+// `current_desc`. The number of m= sections in `new_desc` should be no
+// less than `current_desc`. In the case of checking an answer's
+// `new_desc`, the `current_desc` is the last offer that was set as the
+// local or remote. In the case of checking an offer's `new_desc` we
 // check against the local and remote descriptions stored from the last
 // negotiation, because either of these could be the most up to date for
-// possible rejected m sections. These are the |current_desc| and
-// |secondary_current_desc|.
+// possible rejected m sections. These are the `current_desc` and
+// `secondary_current_desc`.
 bool MediaSectionsInSameOrder(const SessionDescription& current_desc,
                               const SessionDescription* secondary_current_desc,
                               const SessionDescription& new_desc,
@@ -350,7 +350,7 @@ bool MediaSectionsHaveSameCount(const SessionDescription& desc1,
 // BUNDLE-tag section (first media section/description in the BUNDLE group)
 // needs a ufrag and pwd. Mismatches, such as replying with a DTLS fingerprint
 // to SDES keys, will be caught in JsepTransport negotiation, and backstopped
-// by Channel's |srtp_required| check.
+// by Channel's `srtp_required` check.
 RTCError VerifyCrypto(const SessionDescription* desc,
                       bool dtls_enabled,
                       const std::map<std::string, const cricket::ContentGroup*>&
@@ -595,7 +595,7 @@ absl::string_view GetDefaultMidForPlanB(cricket::MediaType media_type) {
   return "";
 }
 
-// Add options to |[audio/video]_media_description_options| from |senders|.
+// Add options to |[audio/video]_media_description_options| from `senders`.
 void AddPlanBRtpSenderOptions(
     const std::vector<rtc::scoped_refptr<
         RtpSenderProxyWithInternal<RtpSenderInternal>>>& senders,
@@ -682,7 +682,7 @@ cricket::MediaDescriptionOptions GetMediaDescriptionOptionsForTransceiver(
   return media_description_options;
 }
 
-// Returns the ContentInfo at mline index |i|, or null if none exists.
+// Returns the ContentInfo at mline index `i`, or null if none exists.
 const ContentInfo* GetContentByIndex(const SessionDescriptionInterface* sdesc,
                                      size_t i) {
   if (!sdesc) {
@@ -692,7 +692,7 @@ const ContentInfo* GetContentByIndex(const SessionDescriptionInterface* sdesc,
   return (i < contents.size() ? &contents[i] : nullptr);
 }
 
-// From |rtc_options|, fill parts of |session_options| shared by all generated
+// From `rtc_options`, fill parts of `session_options` shared by all generated
 // m= sectionss (in other words, nothing that involves a map/array).
 void ExtractSharedMediaSessionOptions(
     const PeerConnectionInterface::RTCOfferAnswerOptions& rtc_options,
@@ -713,7 +713,7 @@ std::string GenerateRtcpCname() {
   return cname;
 }
 
-// Check if we can send |new_stream| on a PeerConnection.
+// Check if we can send `new_stream` on a PeerConnection.
 bool CanAddLocalMediaStream(webrtc::StreamCollectionInterface* current_streams,
                             webrtc::MediaStreamInterface* new_stream) {
   if (!new_stream || !current_streams) {
@@ -784,13 +784,13 @@ class SdpOfferAnswerHandler::ImplicitCreateSessionDescriptionObserver
     std::unique_ptr<SessionDescriptionInterface> desc(desc_ptr);
     was_called_ = true;
 
-    // Abort early if |pc_| is no longer valid.
+    // Abort early if `pc_` is no longer valid.
     if (!sdp_handler_) {
       operation_complete_callback_();
       return;
     }
     // DoSetLocalDescription() is a synchronous operation that invokes
-    // |set_local_description_observer_| with the result.
+    // `set_local_description_observer_` with the result.
     sdp_handler_->DoSetLocalDescription(
         std::move(desc), std::move(set_local_description_observer_));
     operation_complete_callback_();
@@ -926,7 +926,7 @@ class SdpOfferAnswerHandler::LocalIceCredentialsToReplace {
   // Returns true if we have ICE credentials that need restarting.
   bool HasIceCredentials() const { return !ice_credentials_.empty(); }
 
-  // Returns true if |local_description| shares no ICE credentials with the
+  // Returns true if `local_description` shares no ICE credentials with the
   // ICE credentials that need restarting.
   bool SatisfiesIceRestart(
       const SessionDescriptionInterface& local_description) const {
@@ -1116,7 +1116,7 @@ void SdpOfferAnswerHandler::CreateOffer(
        observer_refptr =
            rtc::scoped_refptr<CreateSessionDescriptionObserver>(observer),
        options](std::function<void()> operations_chain_callback) {
-        // Abort early if |this_weak_ptr| is no longer valid.
+        // Abort early if `this_weak_ptr` is no longer valid.
         if (!this_weak_ptr) {
           observer_refptr->OnFailure(
               RTCError(RTCErrorType::INTERNAL_ERROR,
@@ -1147,16 +1147,16 @@ void SdpOfferAnswerHandler::SetLocalDescription(
            rtc::scoped_refptr<SetSessionDescriptionObserver>(observer),
        desc = std::unique_ptr<SessionDescriptionInterface>(desc_ptr)](
           std::function<void()> operations_chain_callback) mutable {
-        // Abort early if |this_weak_ptr| is no longer valid.
+        // Abort early if `this_weak_ptr` is no longer valid.
         if (!this_weak_ptr) {
           // For consistency with SetSessionDescriptionObserverAdapter whose
           // posted messages doesn't get processed when the PC is destroyed, we
-          // do not inform |observer_refptr| that the operation failed.
+          // do not inform `observer_refptr` that the operation failed.
           operations_chain_callback();
           return;
         }
         // SetSessionDescriptionObserverAdapter takes care of making sure the
-        // |observer_refptr| is invoked in a posted message.
+        // `observer_refptr` is invoked in a posted message.
         this_weak_ptr->DoSetLocalDescription(
             std::move(desc),
             rtc::scoped_refptr<SetLocalDescriptionObserverInterface>(
@@ -1182,7 +1182,7 @@ void SdpOfferAnswerHandler::SetLocalDescription(
       [this_weak_ptr = weak_ptr_factory_.GetWeakPtr(), observer,
        desc = std::move(desc)](
           std::function<void()> operations_chain_callback) mutable {
-        // Abort early if |this_weak_ptr| is no longer valid.
+        // Abort early if `this_weak_ptr` is no longer valid.
         if (!this_weak_ptr) {
           observer->OnSetLocalDescriptionComplete(RTCError(
               RTCErrorType::INTERNAL_ERROR,
@@ -1192,7 +1192,7 @@ void SdpOfferAnswerHandler::SetLocalDescription(
         }
         this_weak_ptr->DoSetLocalDescription(std::move(desc), observer);
         // DoSetLocalDescription() is implemented as a synchronous operation.
-        // The |observer| will already have been informed that it completed, and
+        // The `observer` will already have been informed that it completed, and
         // we can mark this operation as complete without any loose ends.
         operations_chain_callback();
       });
@@ -1209,7 +1209,7 @@ void SdpOfferAnswerHandler::SetLocalDescription(
 void SdpOfferAnswerHandler::SetLocalDescription(
     rtc::scoped_refptr<SetLocalDescriptionObserverInterface> observer) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  // The |create_sdp_observer| handles performing DoSetLocalDescription() with
+  // The `create_sdp_observer` handles performing DoSetLocalDescription() with
   // the resulting description as well as completing the operation.
   rtc::scoped_refptr<ImplicitCreateSessionDescriptionObserver>
       create_sdp_observer(
@@ -1221,11 +1221,11 @@ void SdpOfferAnswerHandler::SetLocalDescription(
   operations_chain_->ChainOperation(
       [this_weak_ptr = weak_ptr_factory_.GetWeakPtr(),
        create_sdp_observer](std::function<void()> operations_chain_callback) {
-        // The |create_sdp_observer| is responsible for completing the
+        // The `create_sdp_observer` is responsible for completing the
         // operation.
         create_sdp_observer->SetOperationCompleteCallback(
             std::move(operations_chain_callback));
-        // Abort early if |this_weak_ptr| is no longer valid. This triggers the
+        // Abort early if `this_weak_ptr` is no longer valid. This triggers the
         // same code path as if DoCreateOffer() or DoCreateAnswer() failed.
         if (!this_weak_ptr) {
           create_sdp_observer->OnFailure(RTCError(
@@ -1277,7 +1277,7 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
   // Take a reference to the old local description since it's used below to
   // compare against the new local description. When setting the new local
   // description, grab ownership of the replaced session description in case it
-  // is the same as |old_local_description|, to keep it alive for the duration
+  // is the same as `old_local_description`, to keep it alive for the duration
   // of the method.
   const SessionDescriptionInterface* old_local_description =
       local_description();
@@ -1295,7 +1295,7 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
     pending_local_description_ = std::move(desc);
   }
   // The session description to apply now must be accessed by
-  // |local_description()|.
+  // `local_description()`.
   RTC_DCHECK(local_description());
 
   // Report statistics about any use of simulcast.
@@ -1500,16 +1500,16 @@ void SdpOfferAnswerHandler::SetRemoteDescription(
            rtc::scoped_refptr<SetSessionDescriptionObserver>(observer),
        desc = std::unique_ptr<SessionDescriptionInterface>(desc_ptr)](
           std::function<void()> operations_chain_callback) mutable {
-        // Abort early if |this_weak_ptr| is no longer valid.
+        // Abort early if `this_weak_ptr` is no longer valid.
         if (!this_weak_ptr) {
           // For consistency with SetSessionDescriptionObserverAdapter whose
           // posted messages doesn't get processed when the PC is destroyed, we
-          // do not inform |observer_refptr| that the operation failed.
+          // do not inform `observer_refptr` that the operation failed.
           operations_chain_callback();
           return;
         }
         // SetSessionDescriptionObserverAdapter takes care of making sure the
-        // |observer_refptr| is invoked in a posted message.
+        // `observer_refptr` is invoked in a posted message.
         this_weak_ptr->DoSetRemoteDescription(
             std::move(desc),
             rtc::scoped_refptr<SetRemoteDescriptionObserverInterface>(
@@ -1535,7 +1535,7 @@ void SdpOfferAnswerHandler::SetRemoteDescription(
       [this_weak_ptr = weak_ptr_factory_.GetWeakPtr(), observer,
        desc = std::move(desc)](
           std::function<void()> operations_chain_callback) mutable {
-        // Abort early if |this_weak_ptr| is no longer valid.
+        // Abort early if `this_weak_ptr` is no longer valid.
         if (!this_weak_ptr) {
           observer->OnSetRemoteDescriptionComplete(RTCError(
               RTCErrorType::INTERNAL_ERROR,
@@ -1546,7 +1546,7 @@ void SdpOfferAnswerHandler::SetRemoteDescription(
         this_weak_ptr->DoSetRemoteDescription(std::move(desc),
                                               std::move(observer));
         // DoSetRemoteDescription() is implemented as a synchronous operation.
-        // The |observer| will already have been informed that it completed, and
+        // The `observer` will already have been informed that it completed, and
         // we can mark this operation as complete without any loose ends.
         operations_chain_callback();
       });
@@ -1567,7 +1567,7 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
   // Take a reference to the old remote description since it's used below to
   // compare against the new remote description. When setting the new remote
   // description, grab ownership of the replaced session description in case it
-  // is the same as |old_remote_description|, to keep it alive for the duration
+  // is the same as `old_remote_description`, to keep it alive for the duration
   // of the method.
   const SessionDescriptionInterface* old_remote_description =
       remote_description();
@@ -1585,7 +1585,7 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
     pending_remote_description_ = std::move(desc);
   }
   // The session description to apply now must be accessed by
-  // |remote_description()|.
+  // `remote_description()`.
   RTC_DCHECK(remote_description());
 
   // Report statistics about any use of simulcast.
@@ -1934,7 +1934,7 @@ void SdpOfferAnswerHandler::DoSetLocalDescription(
   const SdpType type = desc->GetType();
 
   error = ApplyLocalDescription(std::move(desc), bundle_groups_by_mid);
-  // |desc| may be destroyed at this point.
+  // `desc` may be destroyed at this point.
 
   if (!error.ok()) {
     // If ApplyLocalDescription fails, the PeerConnection could be in an
@@ -2052,7 +2052,7 @@ void SdpOfferAnswerHandler::CreateAnswer(
        observer_refptr =
            rtc::scoped_refptr<CreateSessionDescriptionObserver>(observer),
        options](std::function<void()> operations_chain_callback) {
-        // Abort early if |this_weak_ptr| is no longer valid.
+        // Abort early if `this_weak_ptr` is no longer valid.
         if (!this_weak_ptr) {
           observer_refptr->OnFailure(RTCError(
               RTCErrorType::INTERNAL_ERROR,
@@ -2198,7 +2198,7 @@ void SdpOfferAnswerHandler::DoSetRemoteDescription(
   const SdpType type = desc->GetType();
 
   error = ApplyRemoteDescription(std::move(desc), bundle_groups_by_mid);
-  // |desc| may be destroyed at this point.
+  // `desc` may be destroyed at this point.
 
   if (!error.ok()) {
     // If ApplyRemoteDescription fails, the PeerConnection could be in an
@@ -2545,7 +2545,7 @@ bool SdpOfferAnswerHandler::ShouldFireNegotiationNeededEvent(
     // Since we just suppressed an event that would have been fired, if
     // negotiation is still needed by the time the chain becomes empty again, we
     // must make sure to generate another event if negotiation is needed then.
-    // This happens when |is_negotiation_needed_| goes from false to true, so we
+    // This happens when `is_negotiation_needed_` goes from false to true, so we
     // set it to false until UpdateNegotiationNeeded() is called.
     is_negotiation_needed_ = false;
     update_negotiation_needed_on_empty_chain_ = true;
@@ -3556,8 +3556,8 @@ void SdpOfferAnswerHandler::GetOptionsForOffer(
       pc_->configuration()->offer_extmap_allow_mixed;
 
   // Allow fallback for using obsolete SCTP syntax.
-  // Note that the default in |session_options| is true, while
-  // the default in |options| is false.
+  // Note that the default in `session_options` is true, while
+  // the default in `options` is false.
   session_options->use_obsolete_sctp_sdp =
       offer_answer_options.use_obsolete_sctp_sdp;
 }
@@ -3671,7 +3671,7 @@ void SdpOfferAnswerHandler::GetOptionsForUnifiedPlanOffer(
   // default, rejected media section here that can be later overwritten.
   for (size_t i = 0;
        i < std::max(local_contents.size(), remote_contents.size()); ++i) {
-    // Either |local_content| or |remote_content| is non-null.
+    // Either `local_content` or `remote_content` is non-null.
     const ContentInfo* local_content =
         (i < local_contents.size() ? &local_contents[i] : nullptr);
     const ContentInfo* current_local_content =
@@ -4604,8 +4604,8 @@ cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
   RtpTransportInternal* rtp_transport = pc_->GetRtpTransport(mid);
 
   // TODO(bugs.webrtc.org/11992): CreateVoiceChannel internally switches to the
-  // worker thread. We shouldn't be using the |call_ptr_| hack here but simply
-  // be on the worker thread and use |call_| (update upstream code).
+  // worker thread. We shouldn't be using the `call_ptr_` hack here but simply
+  // be on the worker thread and use `call_` (update upstream code).
   return channel_manager()->CreateVoiceChannel(
       pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
       signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),
@@ -4624,8 +4624,8 @@ cricket::VideoChannel* SdpOfferAnswerHandler::CreateVideoChannel(
   RtpTransportInternal* rtp_transport = pc_->GetRtpTransport(mid);
 
   // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to the
-  // worker thread. We shouldn't be using the |call_ptr_| hack here but simply
-  // be on the worker thread and use |call_| (update upstream code).
+  // worker thread. We shouldn't be using the `call_ptr_` hack here but simply
+  // be on the worker thread and use `call_` (update upstream code).
   return channel_manager()->CreateVideoChannel(
       pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
       signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),

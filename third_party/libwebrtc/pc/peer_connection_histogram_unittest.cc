@@ -651,7 +651,7 @@ TEST_F(PeerConnectionUsageHistogramTest,
   EXPECT_TRUE(caller->observer()->candidate_gathered());
   // Get the current offer that contains candidates and pass it to the callee.
   //
-  // Note that we cannot use CloneSessionDescription on |cur_offer| to obtain an
+  // Note that we cannot use CloneSessionDescription on `cur_offer` to obtain an
   // SDP with candidates. The method above does not strictly copy everything, in
   // particular, not copying the ICE candidates.
   // TODO(qingsi): Technically, this is a bug. Fix it.

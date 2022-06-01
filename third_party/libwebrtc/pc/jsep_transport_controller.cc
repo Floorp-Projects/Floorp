@@ -57,7 +57,7 @@ JsepTransportController::JsepTransportController(
       config_(config),
       active_reset_srtp_params_(config.active_reset_srtp_params),
       bundles_(config.bundle_policy) {
-  // The |transport_observer| is assumed to be non-null.
+  // The `transport_observer` is assumed to be non-null.
   RTC_DCHECK(config_.transport_observer);
   RTC_DCHECK(config_.rtcp_handler);
   RTC_DCHECK(config_.ice_transport_factory);
@@ -657,7 +657,7 @@ RTCError JsepTransportController::ValidateAndMaybeUpdateBundleGroups(
 
   std::vector<const cricket::ContentGroup*> new_bundle_groups =
       description->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
-  // Verify |new_bundle_groups|.
+  // Verify `new_bundle_groups`.
   std::map<std::string, const cricket::ContentGroup*> new_bundle_groups_by_mid;
   for (const cricket::ContentGroup* new_bundle_group : new_bundle_groups) {
     for (const std::string& content_name : new_bundle_group->content_names()) {
@@ -812,7 +812,7 @@ RTCError JsepTransportController::ValidateAndMaybeUpdateBundleGroups(
           "An m= section associated with the BUNDLE-tag doesn't exist.");
     }
 
-    // If the |bundled_content| is rejected, other contents in the bundle group
+    // If the `bundled_content` is rejected, other contents in the bundle group
     // must also be rejected.
     if (bundled_content->rejected) {
       for (const auto& content_name : bundle_group->content_names()) {
@@ -861,7 +861,7 @@ void JsepTransportController::HandleRejectedContent(
   } else {
     transports_.RemoveTransportForMid(content_info.name);
     if (bundle_group) {
-      // Remove the rejected content from the |bundle_group|.
+      // Remove the rejected content from the `bundle_group`.
       bundles_.DeleteMid(bundle_group, content_info.name);
     }
   }
