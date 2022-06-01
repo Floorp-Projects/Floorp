@@ -931,12 +931,12 @@ TEST_F(AcmReceiverBitExactnessOldApi, 8kHzOutput) {
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "405a50f0bcb8827e20aa944299fc59f6"
                              : "0ed5830930f5527a01bbec0ba11f8541";
-  Run(8000,
-      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
-                       "b892ed69c38b21b16c132ec2ce03aa7b",
-                       "4598140b5e4f7ee66c5adad609e65a3e",
-                       "5fec8d770778ef7969ec98c56d9eb10f",
-                       "636efe6d0a148f22c5383f356da3deac"));
+  Run(8000, PlatformChecksum(
+                others_checksum_reference, win64_checksum_reference,
+                /*android_arm32=*/"b892ed69c38b21b16c132ec2ce03aa7b",
+                /*android_arm64=*/"4598140b5e4f7ee66c5adad609e65a3e",
+                /*android_arm64_clang=*/"5fec8d770778ef7969ec98c56d9eb10f",
+                /*mac_arm64=*/"636efe6d0a148f22c5383f356da3deac"));
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 16kHzOutput) {
@@ -953,12 +953,12 @@ TEST_F(AcmReceiverBitExactnessOldApi, 16kHzOutput) {
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "58fd62a5c49ee513f9fa6fe7dbf62c97"
                              : "0509cf0672f543efb4b050e8cffefb1d";
-  Run(16000,
-      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
-                       "3cea9abbeabbdea9a79719941b241af5",
-                       "f2aad418af974a3b1694d5ae5cc2c3c7",
-                       "9d4b92c31c00e321a4cff29ad002d6a2",
-                       "1e2d1b482fdc924f79a838503ee7ead5"));
+  Run(16000, PlatformChecksum(
+                 others_checksum_reference, win64_checksum_reference,
+                 /*android_arm32=*/"3cea9abbeabbdea9a79719941b241af5",
+                 /*android_arm64=*/"f2aad418af974a3b1694d5ae5cc2c3c7",
+                 /*android_arm64_clang=*/"9d4b92c31c00e321a4cff29ad002d6a2",
+                 /*mac_arm64=*/"1e2d1b482fdc924f79a838503ee7ead5"));
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 32kHzOutput) {
@@ -974,12 +974,12 @@ TEST_F(AcmReceiverBitExactnessOldApi, 32kHzOutput) {
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "04ce6a1dac5ffdd8438d804623d0132f"
                              : "39a4a7a1c455b35baeffb9fd193d7858";
-  Run(32000,
-      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
-                       "4df55b3b62bcbf4328786d474ae87f61",
-                       "100869c8dcde51346c2073e52a272d98",
-                       "ff58d3153d2780a3df6bc2068844cb2d",
-                       "51788e9784a10ae14a030f075a039205"));
+  Run(32000, PlatformChecksum(
+                 others_checksum_reference, win64_checksum_reference,
+                 /*android_arm32=*/"4df55b3b62bcbf4328786d474ae87f61",
+                 /*android_arm64=*/"100869c8dcde51346c2073e52a272d98",
+                 /*android_arm64_clang=*/"ff58d3153d2780a3df6bc2068844cb2d",
+                 /*mac_arm64=*/"51788e9784a10ae14a030f075a039205"));
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutput) {
@@ -995,12 +995,12 @@ TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutput) {
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "f59833d9b0924f4b0704707dd3589f80"
                              : "74cbe7345e2b6b45c1e455a5d1e921ca";
-  Run(48000,
-      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
-                       "f52bc7bf0f499c9da25932fdf176c4ec",
-                       "bd44bf97e7899186532f91235cef444d",
-                       "364d403dae55d73cd69e6dbd6b723a4d",
-                       "71bc5c15a151400517c2119d1602ee9f"));
+  Run(48000, PlatformChecksum(
+                 others_checksum_reference, win64_checksum_reference,
+                 /*android_arm32=*/"f52bc7bf0f499c9da25932fdf176c4ec",
+                 /*android_arm64=*/"bd44bf97e7899186532f91235cef444d",
+                 /*android_arm64_clang=*/"364d403dae55d73cd69e6dbd6b723a4d",
+                 /*mac_arm64=*/"71bc5c15a151400517c2119d1602ee9f"));
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutputExternalDecoder) {
@@ -1091,11 +1091,12 @@ TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutputExternalDecoder) {
       GetCPUInfo(kAVX2) != 0 ? "f59833d9b0924f4b0704707dd3589f80"
                              : "74cbe7345e2b6b45c1e455a5d1e921ca";
   Run(48000,
-      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
-                       "f52bc7bf0f499c9da25932fdf176c4ec",
-                       "bd44bf97e7899186532f91235cef444d",
-                       "364d403dae55d73cd69e6dbd6b723a4d",
-                       "71bc5c15a151400517c2119d1602ee9f"),
+      PlatformChecksum(
+          others_checksum_reference, win64_checksum_reference,
+          /*android_arm32=*/"f52bc7bf0f499c9da25932fdf176c4ec",
+          /*android_arm64=*/"bd44bf97e7899186532f91235cef444d",
+          /*android_arm64_clang=*/"364d403dae55d73cd69e6dbd6b723a4d",
+          /*mac_arm64=*/"71bc5c15a151400517c2119d1602ee9f"),
       factory, [](AudioCodingModule* acm) {
         acm->SetReceiveCodecs({{0, {"MockPCMu", 8000, 1}},
                                {103, {"ISAC", 16000, 1}},
@@ -1308,47 +1309,69 @@ class AcmSenderBitExactnessOldApi : public ::testing::Test,
 
 class AcmSenderBitExactnessNewApi : public AcmSenderBitExactnessOldApi {};
 
-#if defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)
+#if (defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)) && \
+    !(defined(WEBRTC_LINUX) && defined(WEBRTC_ARCH_X86) && !defined(NDEBUG))
 TEST_F(AcmSenderBitExactnessOldApi, IsacWb30ms) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("ISAC", 16000, 1, 103, 480, 480));
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "2c9cb15d4ed55b5a0cadd04883bc73b0",
-          "9336a9b993cbd8a751f0e8958e66c89c",
-          "5c2eb46199994506236f68b2c8e51b0d",
-          "343f1f42be0607c61e6516aece424609",
-          "2c9cb15d4ed55b5a0cadd04883bc73b0",
-          "2c9cb15d4ed55b5a0cadd04883bc73b0"),
+#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
+    defined(WEBRTC_ARCH_X86)
+          /*others=*/"2c9cb15d4ed55b5a0cadd04883bc73b0",
+#else
+          /*others=*/"6f7f227f4e2ace7027257eecb7b17e08",
+#endif
+          /*win64=*/"9336a9b993cbd8a751f0e8958e66c89c",
+          /*android_arm32=*/"5c2eb46199994506236f68b2c8e51b0d",
+          /*android_arm64=*/"343f1f42be0607c61e6516aece424609",
+          /*android_arm64_clang=*/"2c9cb15d4ed55b5a0cadd04883bc73b0",
+          /*mac_arm64=*/"2c9cb15d4ed55b5a0cadd04883bc73b0"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "3c79f16f34218271f3dca4e2b1dfe1bb",
-          "d42cb5195463da26c8129bbfe73a22e6",
-          "83de248aea9c3c2bd680b6952401b4ca",
-          "3c79f16f34218271f3dca4e2b1dfe1bb",
-          "3c79f16f34218271f3dca4e2b1dfe1bb",
-          "3c79f16f34218271f3dca4e2b1dfe1bb"),
+#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
+    defined(WEBRTC_ARCH_X86)
+          /*others=*/"3c79f16f34218271f3dca4e2b1dfe1bb",
+#else
+          /*others=*/"3fbb620556a08bcb88d9134e846bbb8e",
+#endif
+          /*win64=*/"d42cb5195463da26c8129bbfe73a22e6",
+          /*android_arm32=*/"83de248aea9c3c2bd680b6952401b4ca",
+          /*android_arm64=*/"3c79f16f34218271f3dca4e2b1dfe1bb",
+          /*android_arm64_clang=*/"3c79f16f34218271f3dca4e2b1dfe1bb",
+          /*mac_arm64=*/"3c79f16f34218271f3dca4e2b1dfe1bb"),
       33, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 
 TEST_F(AcmSenderBitExactnessOldApi, IsacWb60ms) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("ISAC", 16000, 1, 103, 960, 960));
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "1ad29139a04782a33daad8c2b9b35875",
-          "14d63c5f08127d280e722e3191b73bdd",
-          "9a81e467eb1485f84aca796f8ea65011",
-          "ef75e900e6f375e3061163c53fd09a63",
-          "1ad29139a04782a33daad8c2b9b35875",
-          "1ad29139a04782a33daad8c2b9b35875"),
+#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
+    defined(WEBRTC_ARCH_X86)
+          /*others=*/"1ad29139a04782a33daad8c2b9b35875",
+#else
+          /*others=*/"8b4377f3048d946d69b771c1e5fa8839",
+#endif
+          /*win64=*/"14d63c5f08127d280e722e3191b73bdd",
+          /*android_arm32=*/"9a81e467eb1485f84aca796f8ea65011",
+          /*android_arm64=*/"ef75e900e6f375e3061163c53fd09a63",
+          /*android_arm64_clang=*/"1ad29139a04782a33daad8c2b9b35875",
+          /*mac_arm64=*/"1ad29139a04782a33daad8c2b9b35875"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "9e0a0ab743ad987b55b8e14802769c56",
-          "ebe04a819d3a9d83a83a17f271e1139a",
-          "97aeef98553b5a4b5a68f8b716e8eaf0",
-          "9e0a0ab743ad987b55b8e14802769c56",
-          "9e0a0ab743ad987b55b8e14802769c56",
-          "9e0a0ab743ad987b55b8e14802769c56"),
+#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
+    defined(WEBRTC_ARCH_X86)
+          /*others=*/"9e0a0ab743ad987b55b8e14802769c56",
+#else
+          /*others=*/"080f341c0d498e7a60522084bf8264ae",
+#endif
+          /*win64=*/"ebe04a819d3a9d83a83a17f271e1139a",
+          /*android_arm32=*/"97aeef98553b5a4b5a68f8b716e8eaf0",
+          /*android_arm64=*/"9e0a0ab743ad987b55b8e14802769c56",
+          /*android_arm64_clang=*/"9e0a0ab743ad987b55b8e14802769c56",
+          /*mac_arm64=*/"9e0a0ab743ad987b55b8e14802769c56"),
       16, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 #endif
 
-#if defined(WEBRTC_ANDROID)
+#if defined(WEBRTC_ANDROID) || \
+    (defined(WEBRTC_LINUX) && defined(WEBRTC_ARCH_X86) && !defined(NDEBUG))
 #define MAYBE_IsacSwb30ms DISABLED_IsacSwb30ms
 #else
 #define MAYBE_IsacSwb30ms IsacSwb30ms
@@ -1359,19 +1382,27 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_IsacSwb30ms) {
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
 // TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
 // checksum.
-#if defined(WEBRTC_LINUX) && defined(NDEBUG) && defined(WEBRTC_ARCH_X86)
-          "13d4d2a4c9e8e94a4b74a176e4bf7cc4",
+#if defined(WEBRTC_LINUX) && defined(WEBRTC_ARCH_X86) && defined(NDEBUG)
+          /*others=*/"521a04159bb991fa2f32f550d5184f60",
+#elif defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
+    defined(WEBRTC_ARCH_X86)
+          /*others=*/"5683b58da0fbf2063c7adc2e6bfb3fb8",
 #else
-          "5683b58da0fbf2063c7adc2e6bfb3fb8",
+          /*others=*/"c1858ba5d734df6fe52e715eb1b25f31",
 #endif
-          "2b3c387d06f00b7b7aad4c9be56fb83d", "android_arm32_audio",
+          /*win64=*/"2b3c387d06f00b7b7aad4c9be56fb83d", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
-          "5683b58da0fbf2063c7adc2e6bfb3fb8"),
+          /*mac_arm64=*/"5683b58da0fbf2063c7adc2e6bfb3fb8"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "ce86106a93419aefb063097108ec94ab",
-          "bcc2041e7744c7ebd9f701866856849c", "android_arm32_payload",
+#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
+    defined(WEBRTC_ARCH_X86)
+          /*others=*/"ce86106a93419aefb063097108ec94ab",
+#else
+          /*others=*/"127e24a1005ac80394b1f88d0cbc72a8",
+#endif
+          /*win64=*/"bcc2041e7744c7ebd9f701866856849c", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
-          "ce86106a93419aefb063097108ec94ab"),
+          /*mac_arm64=*/"ce86106a93419aefb063097108ec94ab"),
       33, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 #endif
@@ -1445,15 +1476,15 @@ TEST_F(AcmSenderBitExactnessOldApi, Pcma_stereo_20ms) {
 TEST_F(AcmSenderBitExactnessOldApi, MAYBE_Ilbc_30ms) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("ILBC", 8000, 1, 102, 240, 240));
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "7b6ec10910debd9af08011d3ed5249f7",
-          "7b6ec10910debd9af08011d3ed5249f7", "android_arm32_audio",
+          /*others=*/"7b6ec10910debd9af08011d3ed5249f7",
+          /*win64=*/"7b6ec10910debd9af08011d3ed5249f7", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
-          "7b6ec10910debd9af08011d3ed5249f7"),
+          /*mac_arm64=*/"7b6ec10910debd9af08011d3ed5249f7"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "cfae2e9f6aba96e145f2bcdd5050ce78",
-          "cfae2e9f6aba96e145f2bcdd5050ce78", "android_arm32_payload",
+          /*others=*/"cfae2e9f6aba96e145f2bcdd5050ce78",
+          /*win64=*/"cfae2e9f6aba96e145f2bcdd5050ce78", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
-          "cfae2e9f6aba96e145f2bcdd5050ce78"),
+          /*mac_arm64=*/"cfae2e9f6aba96e145f2bcdd5050ce78"),
       33, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 #endif
@@ -1466,15 +1497,15 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_Ilbc_30ms) {
 TEST_F(AcmSenderBitExactnessOldApi, MAYBE_G722_20ms) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("G722", 16000, 1, 9, 320, 160));
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "e99c89be49a46325d03c0d990c292d68",
-          "e99c89be49a46325d03c0d990c292d68", "android_arm32_audio",
+          /*others=*/"e99c89be49a46325d03c0d990c292d68",
+          /*win64=*/"e99c89be49a46325d03c0d990c292d68", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
-          "e99c89be49a46325d03c0d990c292d68"),
+          /*mac_arm64=*/"e99c89be49a46325d03c0d990c292d68"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "fc68a87e1380614e658087cb35d5ca10",
-          "fc68a87e1380614e658087cb35d5ca10", "android_arm32_payload",
+          /*others=*/"fc68a87e1380614e658087cb35d5ca10",
+          /*win64=*/"fc68a87e1380614e658087cb35d5ca10", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
-          "fc68a87e1380614e658087cb35d5ca10"),
+          /*mac_arm64=*/"fc68a87e1380614e658087cb35d5ca10"),
       50, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 
@@ -1486,15 +1517,15 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_G722_20ms) {
 TEST_F(AcmSenderBitExactnessOldApi, MAYBE_G722_stereo_20ms) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("G722", 16000, 2, 119, 320, 160));
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "e280aed283e499d37091b481ca094807",
-          "e280aed283e499d37091b481ca094807", "android_arm32_audio",
+          /*others=*/"e280aed283e499d37091b481ca094807",
+          /*win64=*/"e280aed283e499d37091b481ca094807", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
-          "e280aed283e499d37091b481ca094807"),
+          /*mac_arm64=*/"e280aed283e499d37091b481ca094807"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          "66516152eeaa1e650ad94ff85f668dac",
-          "66516152eeaa1e650ad94ff85f668dac", "android_arm32_payload",
+          /*others=*/"66516152eeaa1e650ad94ff85f668dac",
+          /*win64=*/"66516152eeaa1e650ad94ff85f668dac", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
-          "66516152eeaa1e650ad94ff85f668dac"),
+          /*mac_arm64=*/"66516152eeaa1e650ad94ff85f668dac"),
       50, test::AcmReceiveTestOldApi::kStereoOutput);
 }
 
@@ -1509,19 +1540,19 @@ const std::string payload_maybe_sse =
 // Common checksums.
 const std::string audio_checksum =
     AcmReceiverBitExactnessOldApi::PlatformChecksum(
-        audio_maybe_sse,
-        audio_maybe_sse,
-        "6fcceb83acf427730570bc13eeac920c",
-        "fd96f15d547c4e155daeeef4253b174e",
-        "fd96f15d547c4e155daeeef4253b174e",
+        /*others=*/audio_maybe_sse,
+        /*win64=*/audio_maybe_sse,
+        /*android_arm32=*/"6fcceb83acf427730570bc13eeac920c",
+        /*android_arm64=*/"fd96f15d547c4e155daeeef4253b174e",
+        /*android_arm64_clang=*/"fd96f15d547c4e155daeeef4253b174e",
         "Mac_arm64_checksum_placeholder");
 const std::string payload_checksum =
     AcmReceiverBitExactnessOldApi::PlatformChecksum(
-        payload_maybe_sse,
-        payload_maybe_sse,
-        "4bd846d0aa5656ecd5dfd85701a1b78c",
-        "7efbfc9f8e3b4b2933ae2d01ab919028",
-        "7efbfc9f8e3b4b2933ae2d01ab919028",
+        /*others=*/payload_maybe_sse,
+        /*win64=*/payload_maybe_sse,
+        /*android_arm32=*/"4bd846d0aa5656ecd5dfd85701a1b78c",
+        /*android_arm64=*/"7efbfc9f8e3b4b2933ae2d01ab919028",
+        /*android_arm64_clang=*/"7efbfc9f8e3b4b2933ae2d01ab919028",
         "Mac_arm64_checksum_placeholder");
 }  // namespace
 
@@ -1579,16 +1610,22 @@ TEST_F(AcmSenderBitExactnessNewApi, DISABLED_OpusManyChannels) {
 
   // Set up an EXTERNAL DECODER to parse 4 channels.
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(  // audio checksum
-          "audio checksum check downstream|8051617907766bec5f4e4a4f7c6d5291",
-          "8051617907766bec5f4e4a4f7c6d5291",
-          "6183752a62dc1368f959eb3a8c93b846", "android arm64 audio checksum",
-          "48bf1f3ca0b72f3c9cdfbe79956122b1", "Mac_arm64_checksum_placeholder"),
+          /*others=*/"audio checksum check "
+                     "downstream|8051617907766bec5f4e4a4f7c6d5291",
+          /*win64=*/"8051617907766bec5f4e4a4f7c6d5291",
+          /*android_arm32=*/"6183752a62dc1368f959eb3a8c93b846",
+          "android arm64 audio checksum",
+          /*android_arm64_clang=*/"48bf1f3ca0b72f3c9cdfbe79956122b1",
+          "Mac_arm64_checksum_placeholder"),
       // payload_checksum,
       AcmReceiverBitExactnessOldApi::PlatformChecksum(  // payload checksum
-          "payload checksum check downstream|b09c52e44b2bdd9a0809e3a5b1623a76",
-          "b09c52e44b2bdd9a0809e3a5b1623a76",
-          "2ea535ef60f7d0c9d89e3002d4c2124f", "android arm64 payload checksum",
-          "e87995a80f50a0a735a230ca8b04a67d", "Mac_arm64_checksum_placeholder"),
+          /*others=*/"payload checksum check "
+                     "downstream|b09c52e44b2bdd9a0809e3a5b1623a76",
+          /*win64=*/"b09c52e44b2bdd9a0809e3a5b1623a76",
+          /*android_arm32=*/"2ea535ef60f7d0c9d89e3002d4c2124f",
+          "android arm64 payload checksum",
+          /*android_arm64_clang=*/"e87995a80f50a0a735a230ca8b04a67d",
+          "Mac_arm64_checksum_placeholder"),
       50, test::AcmReceiveTestOldApi::kQuadOutput, decoder_factory);
 }
 
@@ -1609,14 +1646,19 @@ TEST_F(AcmSenderBitExactnessNewApi, DISABLED_OpusFromFormat_stereo_20ms_voip) {
       "b38b5584cfa7b6999b2e8e996c950c88"
       "|eb0752ce1b6f2436fefc2e19bd084fb5";
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          audio_maybe_sse, audio_maybe_sse, "f1cefe107ffdced7694d7f735342adf3",
-          "3b1bfe5dd8ed16ee5b04b93a5b5e7e48",
-          "3b1bfe5dd8ed16ee5b04b93a5b5e7e48", "Mac_arm64_checksum_placeholder"),
+          /*others=*/audio_maybe_sse,
+          /*win64=*/audio_maybe_sse,
+          /*android_arm32=*/"f1cefe107ffdced7694d7f735342adf3",
+          /*android_arm64=*/"3b1bfe5dd8ed16ee5b04b93a5b5e7e48",
+          /*android_arm64_clang=*/"3b1bfe5dd8ed16ee5b04b93a5b5e7e48",
+          "Mac_arm64_checksum_placeholder"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-          payload_maybe_sse, payload_maybe_sse,
-          "5e79a2f51c633fe145b6c10ae198d1aa",
-          "e730050cb304d54d853fd285ab0424fa",
-          "e730050cb304d54d853fd285ab0424fa", "Mac_arm64_checksum_placeholder"),
+          /*others=*/payload_maybe_sse,
+          /*win64=*/payload_maybe_sse,
+          /*android_arm32=*/"5e79a2f51c633fe145b6c10ae198d1aa",
+          /*android_arm64=*/"e730050cb304d54d853fd285ab0424fa",
+          /*android_arm64_clang=*/"e730050cb304d54d853fd285ab0424fa",
+          "Mac_arm64_checksum_placeholder"),
       50, test::AcmReceiveTestOldApi::kStereoOutput);
 }
 
