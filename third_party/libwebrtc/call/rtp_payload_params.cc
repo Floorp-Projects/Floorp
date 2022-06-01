@@ -138,6 +138,7 @@ RtpPayloadParams::RtpPayloadParams(const uint32_t ssrc,
   for (auto& spatial_layer : last_shared_frame_id_)
     spatial_layer.fill(-1);
 
+  chain_last_frame_id_.fill(-1);
   buffer_id_to_frame_id_.fill(-1);
 
   Random random(rtc::TimeMicros());
