@@ -194,32 +194,28 @@ struct nsContentListKey {
 };
 
 /**
- * LIST_UP_TO_DATE means that the list is up to date and need not do
- * any walking to be able to answer any questions anyone may have.
- */
-#define LIST_UP_TO_DATE 0
-/**
- * LIST_DIRTY means that the list contains no useful information and
- * if anyone asks it anything it will have to populate itself before
- * answering.
- */
-#define LIST_DIRTY 1
-/**
- * LIST_LAZY means that the list has populated itself to a certain
- * extent and that that part of the list is still valid.  Requests for
- * things outside that part of the list will require walking the tree
- * some more.  When a list is in this state, the last thing in
- * mElements is the last node in the tree that the list looked at.
- */
-#define LIST_LAZY 2
-
-/**
  * Class that implements a possibly live NodeList that matches Elements
  * in the tree based on some criterion.
  */
 class nsContentList : public nsBaseContentList,
                       public nsIHTMLCollection,
                       public nsStubMutationObserver {
+ protected:
+  enum class State : uint8_t {
+    // The list is up to date and need not do any walking to be able to answer
+    // any questions anyone may have.
+    UpToDate = 0,
+    // The list contains no useful information and if anyone asks it anything it
+    // will have to populate itself before answering.
+    Dirty,
+    // The list has populated itself to a certain extent and that that part of
+    // the list is still valid.  Requests for things outside that part of the
+    // list will require walking the tree some more.  When a list is in this
+    // state, the last thing in mElements is the last node in the tree that the
+    // list looked at.
+    Lazy,
+  };
+
  public:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -348,7 +344,7 @@ class nsContentList : public nsBaseContentList,
    * @note This is the only acceptable way to set state to LIST_DIRTY.
    */
   void SetDirty() {
-    mState = LIST_DIRTY;
+    mState = State::Dirty;
     Reset();
   }
 
@@ -432,45 +428,38 @@ class nsContentList : public nsBaseContentList,
    * Closure data to pass to mFunc when we call it
    */
   void* mData;
-  /**
-   * The current state of the list (possible values are:
-   * LIST_UP_TO_DATE, LIST_LAZY, LIST_DIRTY
-   */
-  uint8_t mState;
 
-  // The booleans have to use uint8_t to pack with mState, because MSVC won't
-  // pack different typedefs together.  Once we no longer have to worry about
-  // flushes in XML documents, we can go back to using bool for the
-  // booleans.
+  // The current state of the list.
+  State mState;
 
   /**
    * True if we are looking for elements named "*"
    */
-  uint8_t mMatchAll : 1;
+  bool mMatchAll : 1;
   /**
    * Whether to actually descend the tree.  If this is false, we won't
    * consider grandkids of mRootNode.
    */
-  uint8_t mDeep : 1;
+  bool mDeep : 1;
   /**
    * Whether the return value of mFunc could depend on the values of
    * attributes.
    */
-  uint8_t mFuncMayDependOnAttr : 1;
+  bool mFuncMayDependOnAttr : 1;
   /**
    * Whether we actually need to flush to get our state correct.
    */
-  uint8_t mFlushesNeeded : 1;
+  bool mFlushesNeeded : 1;
   /**
    * Whether the ownerDocument of our root node at list creation time was an
    * HTML document.  Only needed when we're doing a namespace/atom match, not
    * when doing function matching, always false otherwise.
    */
-  uint8_t mIsHTMLDocument : 1;
+  bool mIsHTMLDocument : 1;
   /**
    * Whether the list observes mutations to the DOM tree.
    */
-  const uint8_t mIsLiveList : 1;
+  const bool mIsLiveList : 1;
 
 #ifdef DEBUG_CONTENT_LIST
   void AssertInSync();
