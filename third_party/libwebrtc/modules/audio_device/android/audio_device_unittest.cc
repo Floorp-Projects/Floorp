@@ -68,7 +68,7 @@ static const int kFilePlayTimeInSec = 5;
 static const size_t kBitsPerSample = 16;
 static const size_t kBytesPerSample = kBitsPerSample / 8;
 // Run the full-duplex test during this time (unit is in seconds).
-// Note that first |kNumIgnoreFirstCallbacks| are ignored.
+// Note that first `kNumIgnoreFirstCallbacks` are ignored.
 static const int kFullDuplexTimeInSec = 5;
 // Wait for the callback sequence to stabilize by ignoring this amount of the
 // initial callbacks (avoids initial FIFO access).
@@ -127,7 +127,7 @@ class FileAudioStream : public AudioStreamInterface {
   void Write(const void* source, size_t num_frames) override {}
 
   // Read samples from file stored in memory (at construction) and copy
-  // |num_frames| (<=> 10ms) to the |destination| byte buffer.
+  // `num_frames` (<=> 10ms) to the `destination` byte buffer.
   void Read(void* destination, size_t num_frames) override {
     memcpy(destination, static_cast<int16_t*>(&file_[file_pos_]),
            num_frames * sizeof(int16_t));
@@ -171,7 +171,7 @@ class FifoAudioStream : public AudioStreamInterface {
 
   ~FifoAudioStream() { Flush(); }
 
-  // Allocate new memory, copy |num_frames| samples from |source| into memory
+  // Allocate new memory, copy `num_frames` samples from `source` into memory
   // and add pointer to the memory location to end of the list.
   // Increases the size of the FIFO by one element.
   void Write(const void* source, size_t num_frames) override {
@@ -192,8 +192,8 @@ class FifoAudioStream : public AudioStreamInterface {
     total_written_elements_ += size;
   }
 
-  // Read pointer to data buffer from front of list, copy |num_frames| of stored
-  // data into |destination| and delete the utilized memory allocation.
+  // Read pointer to data buffer from front of list, copy `num_frames` of stored
+  // data into `destination` and delete the utilized memory allocation.
   // Decreases the size of the FIFO by one element.
   void Read(void* destination, size_t num_frames) override {
     ASSERT_EQ(num_frames, frames_per_buffer_);
@@ -251,7 +251,7 @@ class LatencyMeasuringAudioStream : public AudioStreamInterface {
         rec_count_(0),
         pulse_time_(0) {}
 
-  // Insert periodic impulses in first two samples of |destination|.
+  // Insert periodic impulses in first two samples of `destination`.
   void Read(void* destination, size_t num_frames) override {
     ASSERT_EQ(num_frames, frames_per_buffer_);
     if (play_count_ == 0) {
@@ -272,14 +272,14 @@ class LatencyMeasuringAudioStream : public AudioStreamInterface {
     }
   }
 
-  // Detect received impulses in |source|, derive time between transmission and
+  // Detect received impulses in `source`, derive time between transmission and
   // detection and add the calculated delay to list of latencies.
   void Write(const void* source, size_t num_frames) override {
     ASSERT_EQ(num_frames, frames_per_buffer_);
     rec_count_++;
     if (pulse_time_ == 0) {
       // Avoid detection of new impulse response until a new impulse has
-      // been transmitted (sets |pulse_time_| to value larger than zero).
+      // been transmitted (sets `pulse_time_` to value larger than zero).
       return;
     }
     const int16_t* ptr16 = static_cast<const int16_t*>(source);
@@ -298,7 +298,7 @@ class LatencyMeasuringAudioStream : public AudioStreamInterface {
       // Total latency is the difference between transmit time and detection
       // tome plus the extra delay within the buffer in which we detected the
       // received impulse. It is transmitted at sample 0 but can be received
-      // at sample N where N > 0. The term |extra_delay| accounts for N and it
+      // at sample N where N > 0. The term `extra_delay` accounts for N and it
       // is a value between 0 and 10ms.
       latencies_.push_back(now_time - pulse_time_ + extra_delay);
       pulse_time_ = 0;

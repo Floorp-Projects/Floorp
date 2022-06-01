@@ -270,8 +270,8 @@ void AudioRecordJni::OnDataIsRecorded(int length) {
   audio_device_buffer_->SetRecordedBuffer(direct_buffer_address_,
                                           frames_per_buffer_);
   // We provide one (combined) fixed delay estimate for the APM and use the
-  // |playDelayMs| parameter only. Components like the AEC only sees the sum
-  // of |playDelayMs| and |recDelayMs|, hence the distributions does not matter.
+  // `playDelayMs` parameter only. Components like the AEC only sees the sum
+  // of `playDelayMs` and `recDelayMs`, hence the distributions does not matter.
   audio_device_buffer_->SetVQEData(total_delay_in_milliseconds_, 0);
   if (audio_device_buffer_->DeliverRecordedData() == -1) {
     RTC_LOG(INFO) << "AudioDeviceBuffer::DeliverRecordedData failed";
