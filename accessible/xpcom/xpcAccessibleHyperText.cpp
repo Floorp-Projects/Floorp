@@ -277,11 +277,7 @@ xpcAccessibleHyperText::GetCaretOffset(int32_t* aCaretOffset) {
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    *aCaretOffset = IntlLocal()->CaretOffset();
-  } else {
-    *aCaretOffset = mIntl->AsRemote()->CaretOffset();
-  }
+  *aCaretOffset = Intl()->CaretOffset();
   return NS_OK;
 }
 
@@ -289,11 +285,7 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::SetCaretOffset(int32_t aCaretOffset) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    IntlLocal()->SetCaretOffset(aCaretOffset);
-  } else {
-    mIntl->AsRemote()->SetCaretOffset(aCaretOffset);
-  }
+  Intl()->SetCaretOffset(aCaretOffset);
   return NS_OK;
 }
 
