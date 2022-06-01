@@ -572,6 +572,60 @@ TEST_P(RtpSenderVideoTest, SendsDependencyDescriptorWhenVideoStructureIsSet) {
               ElementsAre(1, 501));
 }
 
+TEST_P(RtpSenderVideoTest,
+       SkipsDependencyDescriptorOnDeltaFrameWhenFailedToAttachToKeyFrame) {
+  const int64_t kFrameId = 100000;
+  uint8_t kFrame[100];
+  rtp_module_->RegisterRtpHeaderExtension(
+      RtpDependencyDescriptorExtension::kUri, kDependencyDescriptorId);
+  rtp_module_->SetExtmapAllowMixed(false);
+  FrameDependencyStructure video_structure;
+  video_structure.num_decode_targets = 2;
+  // Use many templates so that key dependency descriptor would be too large
+  // to fit into 16 bytes (max size of one byte header rtp header extension)
+  video_structure.templates = {
+      FrameDependencyTemplate().S(0).T(0).Dtis("SS"),
+      FrameDependencyTemplate().S(1).T(0).Dtis("-S"),
+      FrameDependencyTemplate().S(1).T(1).Dtis("-D").FrameDiffs({1, 2, 3, 4}),
+      FrameDependencyTemplate().S(1).T(1).Dtis("-D").FrameDiffs({2, 3, 4, 5}),
+      FrameDependencyTemplate().S(1).T(1).Dtis("-D").FrameDiffs({3, 4, 5, 6}),
+      FrameDependencyTemplate().S(1).T(1).Dtis("-D").FrameDiffs({4, 5, 6, 7}),
+  };
+  rtp_sender_video_->SetVideoStructure(&video_structure);
+
+  // Send key frame.
+  RTPVideoHeader hdr;
+  RTPVideoHeader::GenericDescriptorInfo& generic = hdr.generic.emplace();
+  generic.frame_id = kFrameId;
+  generic.temporal_index = 0;
+  generic.spatial_index = 0;
+  generic.decode_target_indications = {DecodeTargetIndication::kSwitch,
+                                       DecodeTargetIndication::kSwitch};
+  hdr.frame_type = VideoFrameType::kVideoFrameKey;
+  rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp, 0, kFrame, hdr,
+                               kDefaultExpectedRetransmissionTimeMs);
+
+  ASSERT_EQ(transport_.packets_sent(), 1);
+  DependencyDescriptor descriptor_key;
+  ASSERT_FALSE(transport_.last_sent_packet()
+                   .HasExtension<RtpDependencyDescriptorExtension>());
+
+  // Send delta frame.
+  generic.frame_id = kFrameId + 1;
+  generic.temporal_index = 1;
+  generic.spatial_index = 1;
+  generic.dependencies = {kFrameId, kFrameId - 500};
+  generic.decode_target_indications = {DecodeTargetIndication::kNotPresent,
+                                       DecodeTargetIndication::kRequired};
+  hdr.frame_type = VideoFrameType::kVideoFrameDelta;
+  rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp, 0, kFrame, hdr,
+                               kDefaultExpectedRetransmissionTimeMs);
+
+  EXPECT_EQ(transport_.packets_sent(), 2);
+  EXPECT_FALSE(transport_.last_sent_packet()
+                   .HasExtension<RtpDependencyDescriptorExtension>());
+}
+
 TEST_P(RtpSenderVideoTest, PropagatesChainDiffsIntoDependencyDescriptor) {
   const int64_t kFrameId = 100000;
   uint8_t kFrame[100];

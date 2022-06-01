@@ -539,6 +539,18 @@ bool RTPSenderVideo::SendVideo(
   AddRtpHeaderExtensions(video_header, absolute_capture_time,
                          /*first_packet=*/true, /*last_packet=*/true,
                          single_packet.get());
+  if (video_structure_ != nullptr &&
+      single_packet->IsRegistered<RtpDependencyDescriptorExtension>() &&
+      !single_packet->HasExtension<RtpDependencyDescriptorExtension>()) {
+    RTC_DCHECK_EQ(video_header.frame_type, VideoFrameType::kVideoFrameKey);
+    // Disable attaching dependency descriptor to delta packets (including
+    // non-first packet of a key frame) when it wasn't attached to a key frame,
+    // as dependency descriptor can't be usable in such case.
+    RTC_LOG(LS_WARNING) << "Disable dependency descriptor because failed to "
+                           "attach it to a key frame.";
+    video_structure_ = nullptr;
+  }
+
   AddRtpHeaderExtensions(video_header, absolute_capture_time,
                          /*first_packet=*/true, /*last_packet=*/false,
                          first_packet.get());
