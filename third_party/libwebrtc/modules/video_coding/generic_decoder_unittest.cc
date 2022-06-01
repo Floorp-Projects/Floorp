@@ -10,6 +10,7 @@
 
 #include "modules/video_coding/generic_decoder.h"
 
+#include <memory>
 #include <vector>
 
 #include "absl/types/optional.h"
@@ -68,7 +69,7 @@ class GenericDecoderTest : public ::testing::Test {
         task_queue_factory_(CreateDefaultTaskQueueFactory()),
         decoder_(task_queue_factory_.get()),
         vcm_callback_(&timing_, &clock_),
-        generic_decoder_(&decoder_, /*isExternal=*/true) {}
+        generic_decoder_(&decoder_) {}
 
   void SetUp() override {
     generic_decoder_.RegisterDecodeCompleteCallback(&vcm_callback_);

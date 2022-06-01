@@ -71,7 +71,7 @@ void VideoReceiver2::RegisterExternalDecoder(VideoDecoder* externalDecoder,
     codecDataBase_.DeregisterExternalDecoder(payloadType);
     return;
   }
-  codecDataBase_.RegisterExternalDecoder(externalDecoder, payloadType);
+  codecDataBase_.RegisterExternalDecoder(payloadType, externalDecoder);
 }
 
 bool VideoReceiver2::IsExternalDecoderRegistered(uint8_t payloadType) const {
@@ -118,7 +118,7 @@ int32_t VideoReceiver2::RegisterReceiveCodec(uint8_t payload_type,
   if (receiveCodec == nullptr) {
     return VCM_PARAMETER_ERROR;
   }
-  if (!codecDataBase_.RegisterReceiveCodec(payload_type, receiveCodec,
+  if (!codecDataBase_.RegisterReceiveCodec(payload_type, *receiveCodec,
                                            numberOfCores)) {
     return -1;
   }
