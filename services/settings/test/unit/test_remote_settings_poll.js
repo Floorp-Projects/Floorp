@@ -901,7 +901,6 @@ add_task(
     let notificationObserved = false;
     const observer = {
       observe(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(this, "remote-settings:broken-sync-error");
         notificationObserved = true;
       },
     };
@@ -958,6 +957,13 @@ add_task(
     const failingSync = c.maybeSync;
     c.maybeSync = () => {};
     await RemoteSettings.pollChanges();
+
+    const { history } = await RemoteSettings.inspect();
+    Assert.equal(
+      history[TELEMETRY_SOURCE_SYNC][0].status,
+      UptakeTelemetry.STATUS.SUCCESS,
+      "Last sync is success"
+    );
     Assert.ok(!notificationObserved, "Not notified after success");
 
     // Now fail again. Broken sync isn't notified, we need several in a row.
@@ -966,6 +972,7 @@ add_task(
       await RemoteSettings.pollChanges();
     } catch (e) {}
     Assert.ok(!notificationObserved, "Not notified on single error");
+    Services.obs.removeObserver(observer, "remote-settings:broken-sync-error");
   }
 );
 add_task(clear_state);
