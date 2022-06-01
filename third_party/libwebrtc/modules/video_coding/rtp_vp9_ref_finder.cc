@@ -77,8 +77,21 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
   }
 
   GofInfo* info;
-  int64_t unwrapped_tl0 =
-      tl0_unwrapper_.Unwrap(codec_header.tl0_pic_idx & 0xFF);
+
+  // The VP9 `tl0_pic_idx` is 8 bits and therefor wraps often. In the case of
+  // packet loss the next received frame could have a `tl0_pic_idx` that looks
+  // older than the previously received frame. Always wrap forward if |frame| is
+  // newer in RTP packet sequence number order.
+  int64_t unwrapped_tl0;
+  auto tl0_it = gof_info_.rbegin();
+  if (tl0_it != gof_info_.rend() &&
+      AheadOf(frame->last_seq_num(), tl0_it->second.last_seq_num)) {
+    unwrapped_tl0 =
+        tl0_unwrapper_.UnwrapForward(codec_header.tl0_pic_idx & 0xFF);
+  } else {
+    unwrapped_tl0 = tl0_unwrapper_.Unwrap(codec_header.tl0_pic_idx & 0xFF);
+  }
+
   if (codec_header.ss_data_available) {
     if (codec_header.temporal_idx != 0) {
       RTC_LOG(LS_WARNING) << "Received scalability structure on a non base "
@@ -104,9 +117,9 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
       current_ss_idx_ = Add<kMaxGofSaved>(current_ss_idx_, 1);
       scalability_structures_[current_ss_idx_] = gof;
       scalability_structures_[current_ss_idx_].pid_start = frame->Id();
-      gof_info_.emplace(
-          unwrapped_tl0,
-          GofInfo(&scalability_structures_[current_ss_idx_], frame->Id()));
+      gof_info_.emplace(unwrapped_tl0,
+                        GofInfo(&scalability_structures_[current_ss_idx_],
+                                frame->Id(), frame->last_seq_num()));
     }
 
     const auto gof_info_it = gof_info_.find(unwrapped_tl0);
@@ -147,7 +160,8 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     if (codec_header.temporal_idx == 0) {
       gof_info_it = gof_info_
                         .emplace(unwrapped_tl0,
-                                 GofInfo(gof_info_it->second.gof, frame->Id()))
+                                 GofInfo(gof_info_it->second.gof, frame->Id(),
+                                         frame->last_seq_num()))
                         .first;
     }
 
