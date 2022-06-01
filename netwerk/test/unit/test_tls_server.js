@@ -11,9 +11,6 @@ Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
-const certService = Cc["@mozilla.org/security/local-cert-service;1"].getService(
-  Ci.nsILocalCertService
-);
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
@@ -22,20 +19,6 @@ const socketTransportService = Cc[
 ].getService(Ci.nsISocketTransportService);
 
 const prefs = Services.prefs;
-
-function getCert() {
-  return new Promise((resolve, reject) => {
-    certService.getOrCreateCert("tls-test", {
-      handleCert(c, rv) {
-        if (rv) {
-          reject(rv);
-          return;
-        }
-        resolve(c);
-      },
-    });
-  });
-}
 
 function areCertsEqual(certA, certB) {
   let derA = certA.getRawDER();
@@ -97,7 +80,7 @@ function startServer(
       if (expectedVersion >= 772) {
         expectedCipher = "TLS_AES_128_GCM_SHA256";
       } else {
-        expectedCipher = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256";
+        expectedCipher = "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256";
       }
       equal(status.cipherName, expectedCipher, "Using expected cipher");
       equal(status.keyLength, 128, "Using 128-bit key");
@@ -132,6 +115,7 @@ function startServer(
 function storeCertOverride(port, cert) {
   let overrideBits =
     Ci.nsICertOverrideService.ERROR_UNTRUSTED |
+    Ci.nsICertOverrideService.ERROR_TIME |
     Ci.nsICertOverrideService.ERROR_MISMATCH;
   certOverrideService.rememberValidityOverride(
     "127.0.0.1",
@@ -289,7 +273,7 @@ const versions = [
 ];
 
 add_task(async function() {
-  let cert = await getCert();
+  let cert = getTestServerCertificate();
   ok(!!cert, "Got self-signed cert");
   for (let v of versions) {
     prefs.setIntPref("security.tls.version.max", v.prefValue);
