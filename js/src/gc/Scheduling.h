@@ -327,7 +327,6 @@ namespace js {
 
 class AutoLockGC;
 class ZoneAllocator;
-class ZoneAllocPolicy;
 
 namespace gc {
 
@@ -759,8 +758,8 @@ class HeapSize {
       parent_->addBytes(nbytes);
     }
   }
-  void removeBytes(size_t nbytes, bool wasSwept) {
-    if (wasSwept) {
+  void removeBytes(size_t nbytes, bool updateRetainedSize) {
+    if (updateRetainedSize) {
       // TODO: We would like to assert that retainedBytes_ >= nbytes is here but
       // we can't do that yet, so clamp the result to zero.
       retainedBytes_ = nbytes <= retainedBytes_ ? retainedBytes_ - nbytes : 0;
@@ -768,7 +767,7 @@ class HeapSize {
     MOZ_ASSERT(bytes_ >= nbytes);
     bytes_ -= nbytes;
     if (parent_) {
-      parent_->removeBytes(nbytes, wasSwept);
+      parent_->removeBytes(nbytes, updateRetainedSize);
     }
   }
 };

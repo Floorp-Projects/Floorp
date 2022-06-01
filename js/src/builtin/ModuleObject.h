@@ -16,7 +16,7 @@
 #include "builtin/SelfHostingDefines.h"  // MODULE_OBJECT_*
 #include "gc/Barrier.h"                  // HeapPtr, PreBarrieredId
 #include "gc/Rooting.h"                  // HandleAtom, HandleArrayObject
-#include "gc/ZoneAllocator.h"            // ZoneAllocPolicy
+#include "gc/ZoneAllocator.h"            // CellAllocPolicy
 #include "js/Class.h"                    // JSClass, ObjectOpResult
 #include "js/GCVector.h"                 // GCVector
 #include "js/Id.h"                       // jsid
@@ -185,7 +185,7 @@ class IndirectBindingMap {
 
   using Map =
       mozilla::HashMap<PreBarrieredId, Binding,
-                       mozilla::DefaultHasher<PreBarrieredId>, ZoneAllocPolicy>;
+                       mozilla::DefaultHasher<PreBarrieredId>, CellAllocPolicy>;
 
   mozilla::Maybe<Map> map_;
 };

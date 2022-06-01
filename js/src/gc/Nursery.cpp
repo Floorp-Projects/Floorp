@@ -1449,6 +1449,11 @@ bool js::Nursery::registerMallocedBuffer(void* buffer, size_t nbytes) {
 }
 
 void js::Nursery::sweep() {
+  // It's important that the context's GCUse is not Finalizing at this point,
+  // otherwise we will miscount memory attached to nursery objects with
+  // CellAllocPolicy.
+  AutoSetThreadIsSweeping setThreadSweeping(runtime()->gcContext());
+
   MinorSweepingTracer trc(runtime());
 
   // Sweep unique IDs first before we sweep any tables that may be keyed based
