@@ -11,7 +11,6 @@
 #ifndef MODULES_VIDEO_CODING_GENERIC_DECODER_H_
 #define MODULES_VIDEO_CODING_GENERIC_DECODER_H_
 
-#include <memory>
 #include <string>
 
 #include "api/sequence_checker.h"
@@ -77,8 +76,7 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
 
 class VCMGenericDecoder {
  public:
-  explicit VCMGenericDecoder(std::unique_ptr<VideoDecoder> decoder);
-  explicit VCMGenericDecoder(VideoDecoder* decoder, bool isExternal = false);
+  explicit VCMGenericDecoder(VideoDecoder* decoder);
   ~VCMGenericDecoder();
 
   /**
@@ -99,14 +97,12 @@ class VCMGenericDecoder {
   int32_t RegisterDecodeCompleteCallback(VCMDecodedFrameCallback* callback);
 
   bool IsSameDecoder(VideoDecoder* decoder) const {
-    return decoder_.get() == decoder;
+    return decoder_ == decoder;
   }
 
  private:
-  VCMDecodedFrameCallback* _callback;
-  std::unique_ptr<VideoDecoder> decoder_;
-  VideoCodecType _codecType;
-  const bool _isExternal;
+  VCMDecodedFrameCallback* _callback = nullptr;
+  VideoDecoder* const decoder_;
   VideoContentType _last_keyframe_content_type;
   VideoDecoder::DecoderInfo decoder_info_;
 };

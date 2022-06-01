@@ -141,7 +141,7 @@ void VideoReceiver::RegisterExternalDecoder(VideoDecoder* externalDecoder,
     RTC_CHECK(_codecDataBase.DeregisterExternalDecoder(payloadType));
     return;
   }
-  _codecDataBase.RegisterExternalDecoder(externalDecoder, payloadType);
+  _codecDataBase.RegisterExternalDecoder(payloadType, externalDecoder);
 }
 
 // Register a frame type request callback.
@@ -253,7 +253,7 @@ int32_t VideoReceiver::RegisterReceiveCodec(uint8_t payload_type,
   if (receiveCodec == nullptr) {
     return VCM_PARAMETER_ERROR;
   }
-  if (!_codecDataBase.RegisterReceiveCodec(payload_type, receiveCodec,
+  if (!_codecDataBase.RegisterReceiveCodec(payload_type, *receiveCodec,
                                            numberOfCores)) {
     return -1;
   }
