@@ -2286,6 +2286,8 @@ void nsHttpConnectionMgr::OnMsgDoShiftReloadConnectionCleanup(int32_t,
   LOG(("nsHttpConnectionMgr::OnMsgDoShiftReloadConnectionCleanup\n"));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+  mCoalescingHash.Clear();
+
   nsHttpConnectionInfo* ci = static_cast<nsHttpConnectionInfo*>(param);
 
   for (const auto& entry : mCT.Values()) {
