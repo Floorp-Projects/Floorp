@@ -1222,7 +1222,7 @@ void js::Nursery::printDeduplicationData(js::StringStats& prev,
 js::Nursery::CollectionResult js::Nursery::doCollection(JS::GCReason reason) {
   JSRuntime* rt = runtime();
   AutoGCSession session(gc, JS::HeapState::MinorCollecting);
-  AutoSetThreadIsPerformingGC performingGC;
+  AutoSetThreadIsPerformingGC performingGC(rt->gcContext());
   AutoStopVerifyingBarriers av(rt, false);
   AutoDisableProxyCheck disableStrictProxyChecking;
   mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
