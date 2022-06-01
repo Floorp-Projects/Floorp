@@ -46,7 +46,14 @@ class RTPSender {
  public:
   RTPSender(const RtpRtcpInterface::Configuration& config,
             RtpPacketHistory* packet_history,
-            RtpPacketSender* packet_sender);
+            RtpPacketSender* packet_sender,
+            PacketSequencer* packet_sequencer);
+
+  // TODO(bugs.webrtc.org/11340): Remove when downstream usage is gone.
+  RTPSender(const RtpRtcpInterface::Configuration& config,
+            RtpPacketHistory* packet_history,
+            RtpPacketSender* packet_sender)
+      ABSL_DEPRECATED("bugs.webrtc.org/11340");
 
   RTPSender() = delete;
   RTPSender(const RTPSender&) = delete;
@@ -95,7 +102,11 @@ class RTPSender {
 
   std::vector<std::unique_ptr<RtpPacketToSend>> GeneratePadding(
       size_t target_size_bytes,
-      bool media_has_been_sent) RTC_LOCKS_EXCLUDED(send_mutex_);
+      bool media_has_been_sent,
+      // TODO(bugs.webrtc.org/11340): Remove default value when downstream usage
+      // is fixed.
+      bool can_send_padding_on_media_ssrc = false)
+      RTC_LOCKS_EXCLUDED(send_mutex_);
 
   // NACK.
   void OnReceivedNack(const std::vector<uint16_t>& nack_sequence_numbers,
@@ -212,7 +223,9 @@ class RTPSender {
 
   // RTP variables
   uint32_t timestamp_offset_ RTC_GUARDED_BY(send_mutex_);
-  PacketSequencer sequencer_ RTC_GUARDED_BY(send_mutex_);
+  // TODO(bugs.webrtc.org/11340): Remove when downstream usage is gone.
+  std::unique_ptr<PacketSequencer> owned_sequencer_ RTC_GUARDED_BY(send_mutex_);
+  PacketSequencer* const sequencer_ RTC_GUARDED_BY(send_mutex_);
   // RID value to send in the RID or RepairedRID header extension.
   std::string rid_ RTC_GUARDED_BY(send_mutex_);
   // MID value to send in the MID header extension.
