@@ -40,6 +40,9 @@ if (is_android) {
   import("//build/config/android/rules.gni")
 }
 
+# This declare_args is separated from the next one because args declared
+# in this one, can be read from the next one (args defined in the same
+# declare_args cannot be referenced in that scope).
 declare_args() {
   # Enable to use the Mozilla internal settings.
   build_with_mozilla = true
@@ -49,6 +52,15 @@ declare_args() {
   # Setting this to true will make RTC_EXPORT (see rtc_base/system/rtc_export.h)
   # expand to code that will manage symbols visibility.
   rtc_enable_symbol_export = false
+}
+
+declare_args() {
+  # Setting this to true will make RTC_OBJC_EXPORT expand to code that will
+  # manage symbols visibility. By default, Obj-C/Obj-C++ symbols are exported
+  # if C++ symbols are but setting this arg to true while keeping
+  # rtc_enable_symbol_export=false will only export RTC_OBJC_EXPORT
+  # annotated symbols.
+  rtc_enable_objc_symbol_export = rtc_enable_symbol_export
 
   # Setting this to true will define WEBRTC_EXCLUDE_FIELD_TRIAL_DEFAULT which
   # will tell the pre-processor to remove the default definition of symbols
@@ -328,9 +340,7 @@ webrtc_root = get_path_info(".", "abspath")
 # It sets defines, include paths and compilation warnings accordingly,
 # both for WebRTC stand-alone builds and for the scenario when WebRTC
 # native code is built as part of Chromium.
-rtc_common_configs = [
-  webrtc_root + ":common_config",
-]
+rtc_common_configs = [ webrtc_root + ":common_config" ]
 
 if (is_mac || is_ios) {
   rtc_common_configs += [ "//build/config/compiler:enable_arc" ]

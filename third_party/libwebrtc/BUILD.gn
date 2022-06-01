@@ -121,6 +121,9 @@ config("common_inherited_config") {
   if (rtc_enable_symbol_export || is_component_build) {
     defines = [ "WEBRTC_ENABLE_SYMBOL_EXPORT" ]
   }
+  if (rtc_enable_objc_symbol_export) {
+    defines = [ "WEBRTC_ENABLE_OBJC_SYMBOL_EXPORT" ]
+  }
 
   if (build_with_mozilla) {
     defines += [ "WEBRTC_MOZILLA_BUILD" ]
