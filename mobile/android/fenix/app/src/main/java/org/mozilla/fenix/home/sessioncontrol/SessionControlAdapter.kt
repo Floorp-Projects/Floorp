@@ -222,6 +222,11 @@ class SessionControlAdapter(
                 viewLifecycleOwner = viewLifecycleOwner,
                 interactor = interactor
             )
+            MessageCardViewHolder.LAYOUT_ID -> return MessageCardViewHolder(
+                composeView = ComposeView(parent.context),
+                viewLifecycleOwner = viewLifecycleOwner,
+                interactor = interactor
+            )
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> return PrivateBrowsingDescriptionViewHolder(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner = viewLifecycleOwner,
@@ -319,7 +324,6 @@ class SessionControlAdapter(
             OnboardingToolbarPositionPickerViewHolder.LAYOUT_ID -> OnboardingToolbarPositionPickerViewHolder(
                 view
             )
-            MessageCardViewHolder.LAYOUT_ID -> MessageCardViewHolder(view, interactor)
             BottomSpacerViewHolder.LAYOUT_ID -> BottomSpacerViewHolder(view)
             else -> throw IllegalStateException()
         }
@@ -346,6 +350,11 @@ class SessionControlAdapter(
                 // The composition will live until the ViewTreeLifecycleOwner to which it's attached to is destroyed.
             }
             is CollectionViewHolder -> {
+                // Dispose the underlying composition immediately.
+                // This ViewHolder can be removed / re-added and we need it to show a fresh new composition.
+                holder.composeView.disposeComposition()
+            }
+            is MessageCardViewHolder -> {
                 // Dispose the underlying composition immediately.
                 // This ViewHolder can be removed / re-added and we need it to show a fresh new composition.
                 holder.composeView.disposeComposition()

@@ -63,7 +63,7 @@ private val EXPECTED_RUNBLOCKING_RANGE = 0..1 // CI has +1 counts compared to lo
  * If the view hierarchy uses Jetpack Compose, switching to that is also an option.
  */
 private val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN =
-    4..5 // The messaging framework is not deterministic and could add a +1 to the count
+    3..4 // The messaging framework is not deterministic and could add a +1 to the count
 
 /**
  * The number of layouts we inflate during this start up scenario. Incrementing the expected value
@@ -76,7 +76,7 @@ private val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN =
  * such that there is one inflation that includes all of the views needed on start up.
  */
 private val EXPECTED_NUMBER_OF_INFLATION =
-    14..15 // The messaging framework is not deterministic and could add a +1 to the count
+    13..14 // The messaging framework is not deterministic and could add a +1 to the count
 
 private val failureMsgStrictMode = getErrorMessage("StrictMode suppression")
 private val failureMsgRunBlocking = getErrorMessage("runBlockingIncrement")

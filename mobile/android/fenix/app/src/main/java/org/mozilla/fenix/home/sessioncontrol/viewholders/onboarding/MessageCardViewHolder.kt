@@ -5,52 +5,53 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
-import androidx.core.view.isVisible
-import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.LifecycleOwner
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.NimbusMessageCardBinding
-import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.compose.ComposeViewHolder
+import org.mozilla.fenix.compose.MessageCard
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
+/**
+ * View holder for the Nimbus Message Card.
+ *
+ * @property interactor [SessionControlInteractor] which will have delegated to all user
+ * interactions.
+ */
 class MessageCardViewHolder(
-    view: View,
-    private val interactor: SessionControlInteractor
-) : RecyclerView.ViewHolder(view) {
-
-    fun bind(message: Message) {
-        val binding = NimbusMessageCardBinding.bind(itemView)
-
-        if (message.data.title.isNullOrBlank()) {
-            binding.titleText.isVisible = false
-        } else {
-            binding.titleText.text = message.data.title
-        }
-
-        binding.descriptionText.text = message.data.text
-
-        if (message.data.buttonLabel.isNullOrBlank()) {
-            binding.messageButton.isVisible = false
-            binding.experimentCard.setOnClickListener {
-                interactor.onMessageClicked(message)
-            }
-        } else {
-            binding.messageButton.text = message.data.buttonLabel
-            binding.messageButton.setOnClickListener {
-                interactor.onMessageClicked(message)
-            }
-        }
-
-        binding.close.apply {
-            increaseTapArea(CLOSE_BUTTON_EXTRA_DPS)
-            setOnClickListener {
-                interactor.onMessageClosedClicked(message)
-            }
-        }
-    }
+    composeView: ComposeView,
+    viewLifecycleOwner: LifecycleOwner,
+    private val interactor: SessionControlInteractor,
+) : ComposeViewHolder(composeView, viewLifecycleOwner) {
+    private lateinit var messageGlobal: Message
 
     companion object {
-        internal const val LAYOUT_ID = R.layout.nimbus_message_card
-        private const val CLOSE_BUTTON_EXTRA_DPS = 38
+        internal val LAYOUT_ID = View.generateViewId()
+    }
+
+    init {
+        val horizontalPadding =
+            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
+        composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+    }
+
+    fun bind(message: Message) {
+        messageGlobal = message
+    }
+
+    @Composable
+    override fun Content() {
+        val message by remember { mutableStateOf(messageGlobal) }
+
+        MessageCard(
+            message = message,
+            onClick = { interactor.onMessageClicked(message) },
+            onCloseButtonClick = { interactor.onMessageClosedClicked(message) }
+        )
     }
 }
