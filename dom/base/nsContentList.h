@@ -38,6 +38,9 @@ class Element;
 }  // namespace mozilla::dom
 
 class nsBaseContentList : public nsINodeList {
+ protected:
+  using Element = mozilla::dom::Element;
+
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -149,9 +152,8 @@ class nsEmptyContentList final : public nsBaseContentList,
 
   uint32_t Length() final { return 0; }
   nsIContent* Item(uint32_t aIndex) override;
-  mozilla::dom::Element* GetElementAt(uint32_t index) override;
-  mozilla::dom::Element* GetFirstNamedElement(const nsAString& aName,
-                                              bool& aFound) override;
+  Element* GetElementAt(uint32_t index) override;
+  Element* GetFirstNamedElement(const nsAString& aName, bool& aFound) override;
   void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
  protected:
@@ -288,10 +290,9 @@ class nsContentList : public nsBaseContentList,
 
   uint32_t Length() final { return Length(true); }
   nsIContent* Item(uint32_t aIndex) final;
-  mozilla::dom::Element* GetElementAt(uint32_t index) override;
-  mozilla::dom::Element* GetFirstNamedElement(const nsAString& aName,
-                                              bool& aFound) override {
-    mozilla::dom::Element* item = NamedItem(aName, true);
+  Element* GetElementAt(uint32_t index) override;
+  Element* GetFirstNamedElement(const nsAString& aName, bool& aFound) override {
+    Element* item = NamedItem(aName, true);
     aFound = !!item;
     return item;
   }
@@ -300,7 +301,7 @@ class nsContentList : public nsBaseContentList,
   // nsContentList public methods
   uint32_t Length(bool aDoFlush);
   nsIContent* Item(uint32_t aIndex, bool aDoFlush);
-  mozilla::dom::Element* NamedItem(const nsAString& aName, bool aDoFlush);
+  Element* NamedItem(const nsAString& aName, bool aDoFlush);
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -355,7 +356,7 @@ class nsContentList : public nsBaseContentList,
    * @param  aElement the element to attempt to match
    * @return whether we match
    */
-  bool Match(mozilla::dom::Element* aElement);
+  bool Match(Element* aElement);
   /**
    * See if anything in the subtree rooted at aContent, including
    * aContent itself, matches our criterion.
@@ -417,15 +418,15 @@ class nsContentList : public nsBaseContentList,
    * Function to use to determine whether a piece of content matches
    * our criterion
    */
-  nsContentListMatchFunc mFunc;
+  nsContentListMatchFunc mFunc = nullptr;
   /**
    * Cleanup closure data with this.
    */
-  nsContentListDestroyFunc mDestroyFunc;
+  nsContentListDestroyFunc mDestroyFunc = nullptr;
   /**
    * Closure data to pass to mFunc when we call it
    */
-  void* mData;
+  void* mData = nullptr;
 
   // The current state of the list.
   State mState;
