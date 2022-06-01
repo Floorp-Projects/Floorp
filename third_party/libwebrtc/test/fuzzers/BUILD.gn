@@ -42,6 +42,7 @@ rtc_library("fuzz_data_helper") {
 }
 
 set_defaults("webrtc_fuzzer_test") {
+  configs = rtc_add_configs
   absl_deps = []
 }
 
@@ -52,6 +53,7 @@ template("webrtc_fuzzer_test") {
       ":fuzz_data_helper",
       ":webrtc_fuzzer_main",
     ]
+    configs += invoker.configs
 
     # If absl_deps is [], no action is needed. If not [], then it needs to be
     # converted to //third_party/abseil-cpp:absl when build_with_chromium=true
