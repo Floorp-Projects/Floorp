@@ -88,10 +88,10 @@ double AbsSendTimeToMicroseconds(int64_t abs_send_time) {
   return abs_send_time * kTimestampToMicroSec;
 }
 
-// Computes the difference |later| - |earlier| where |later| and |earlier|
-// are counters that wrap at |modulus|. The difference is chosen to have the
-// least absolute value. For example if |modulus| is 8, then the difference will
-// be chosen in the range [-3, 4]. If |modulus| is 9, then the difference will
+// Computes the difference `later` - `earlier` where `later` and `earlier`
+// are counters that wrap at `modulus`. The difference is chosen to have the
+// least absolute value. For example if `modulus` is 8, then the difference will
+// be chosen in the range [-3, 4]. If `modulus` is 9, then the difference will
 // be in [-4, 4].
 int64_t WrappingDifference(uint32_t later, uint32_t earlier, int64_t modulus) {
   RTC_DCHECK_LE(1, modulus);
