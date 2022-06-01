@@ -54,7 +54,7 @@ class RTC_EXPORT RtpReceiverInterface : public rtc::RefCountInterface {
   // TODO(https://bugs.webrtc.org/907849) remove default implementation
   virtual rtc::scoped_refptr<DtlsTransportInterface> dtls_transport() const;
 
-  // The list of streams that |track| is associated with. This is the same as
+  // The list of streams that `track` is associated with. This is the same as
   // the [[AssociatedRemoteMediaStreams]] internal slot in the spec.
   // https://w3c.github.io/webrtc-pc/#dfn-associatedremotemediastreams
   // TODO(hbos): Make pure virtual as soon as Chromium's mock implements this.
@@ -84,8 +84,8 @@ class RTC_EXPORT RtpReceiverInterface : public rtc::RefCountInterface {
   virtual void SetObserver(RtpReceiverObserverInterface* observer) = 0;
 
   // Sets the jitter buffer minimum delay until media playout. Actual observed
-  // delay may differ depending on the congestion control. |delay_seconds| is a
-  // positive value including 0.0 measured in seconds. |nullopt| means default
+  // delay may differ depending on the congestion control. `delay_seconds` is a
+  // positive value including 0.0 measured in seconds. `nullopt` means default
   // value must be used.
   virtual void SetJitterBufferMinimumDelay(
       absl::optional<double> delay_seconds) = 0;

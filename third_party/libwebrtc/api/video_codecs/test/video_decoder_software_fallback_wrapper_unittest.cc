@@ -75,7 +75,7 @@ class VideoDecoderSoftwareFallbackWrapperTest : public ::testing::Test {
     int reset_count_ = 0;
   };
   test::ScopedFieldTrials override_field_trials_;
-  // |fake_decoder_| is owned and released by |fallback_wrapper_|.
+  // `fake_decoder_` is owned and released by `fallback_wrapper_`.
   CountingFakeDecoder* fake_decoder_;
   std::unique_ptr<VideoDecoder> fallback_wrapper_;
 };

@@ -172,7 +172,7 @@ class VideoEncoderSoftwareFallbackWrapperTestBase : public ::testing::Test {
 
   test::ScopedFieldTrials override_field_trials_;
   FakeEncodedImageCallback callback_;
-  // |fake_encoder_| is owned and released by |fallback_wrapper_|.
+  // `fake_encoder_` is owned and released by `fallback_wrapper_`.
   CountingFakeEncoder* fake_encoder_;
   CountingFakeEncoder* fake_sw_encoder_;
   bool wrapper_initialized_;

@@ -40,7 +40,7 @@ class RTC_EXPORT VideoDecoderFactory {
   // power efficient, which is currently interpreted as if there is support for
   // hardware acceleration.
   // See https://w3c.github.io/webrtc-svc/#scalabilitymodes* for a specification
-  // of valid values for |scalability_mode|.
+  // of valid values for `scalability_mode`.
   // NOTE: QueryCodecSupport is currently an experimental feature that is
   // subject to change without notice.
   virtual CodecSupport QueryCodecSupport(

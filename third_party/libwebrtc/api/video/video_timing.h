@@ -55,7 +55,7 @@ struct TimingFrameInfo {
   // synchronized, -1 otherwise.
   int64_t EndToEndDelay() const;
 
-  // Returns true if current frame took longer to process than |other| frame.
+  // Returns true if current frame took longer to process than `other` frame.
   // If other frame's clocks are not synchronized, current frame is always
   // preferred.
   bool IsLongerThan(const TimingFrameInfo& other) const;

@@ -35,7 +35,7 @@ class RTCStatsMemberInterface;
 //   static const char kType[];
 // It is used as a unique class identifier and a string representation of the
 // class type, see https://w3c.github.io/webrtc-stats/#rtcstatstype-str*.
-// Use the |WEBRTC_RTCSTATS_IMPL| macro when implementing subclasses, see macro
+// Use the `WEBRTC_RTCSTATS_IMPL` macro when implementing subclasses, see macro
 // for details.
 //
 // Derived classes list their dictionary members, RTCStatsMember<T>, as public
@@ -47,7 +47,7 @@ class RTCStatsMemberInterface;
 // foo.baz->push_back("hello world");
 // uint32_t x = *foo.bar;
 //
-// Pointers to all the members are available with |Members|, allowing iteration:
+// Pointers to all the members are available with `Members`, allowing iteration:
 //
 // for (const RTCStatsMemberInterface* member : foo.Members()) {
 //   printf("%s = %s\n", member->name(), member->ValueToString().c_str());
@@ -65,11 +65,11 @@ class RTC_EXPORT RTCStats {
   const std::string& id() const { return id_; }
   // Time relative to the UNIX epoch (Jan 1, 1970, UTC), in microseconds.
   int64_t timestamp_us() const { return timestamp_us_; }
-  // Returns the static member variable |kType| of the implementing class.
+  // Returns the static member variable `kType` of the implementing class.
   virtual const char* type() const = 0;
-  // Returns a vector of pointers to all the |RTCStatsMemberInterface| members
+  // Returns a vector of pointers to all the `RTCStatsMemberInterface` members
   // of this class. This allows for iteration of members. For a given class,
-  // |Members| always returns the same members in the same order.
+  // `Members` always returns the same members in the same order.
   std::vector<const RTCStatsMemberInterface*> Members() const;
   // Checks if the two stats objects are of the same type and have the same
   // member values. Timestamps are not compared. These operators are exposed for
@@ -81,8 +81,8 @@ class RTC_EXPORT RTCStats {
   // object, listing all of its members (names and values).
   std::string ToJson() const;
 
-  // Downcasts the stats object to an |RTCStats| subclass |T|. DCHECKs that the
-  // object is of type |T|.
+  // Downcasts the stats object to an `RTCStats` subclass `T`. DCHECKs that the
+  // object is of type `T`.
   template <typename T>
   const T& cast_to() const {
     RTC_DCHECK_EQ(type(), T::kType);
@@ -90,8 +90,8 @@ class RTC_EXPORT RTCStats {
   }
 
  protected:
-  // Gets a vector of all members of this |RTCStats| object, including members
-  // derived from parent classes. |additional_capacity| is how many more members
+  // Gets a vector of all members of this `RTCStats` object, including members
+  // derived from parent classes. `additional_capacity` is how many more members
   // shall be reserved in the vector (so that subclasses can allocate a vector
   // with room for both parent and child members without it having to resize).
   virtual std::vector<const RTCStatsMemberInterface*>
@@ -101,21 +101,21 @@ class RTC_EXPORT RTCStats {
   int64_t timestamp_us_;
 };
 
-// All |RTCStats| classes should use these macros.
-// |WEBRTC_RTCSTATS_DECL| is placed in a public section of the class definition.
-// |WEBRTC_RTCSTATS_IMPL| is placed outside the class definition (in a .cc).
+// All `RTCStats` classes should use these macros.
+// `WEBRTC_RTCSTATS_DECL` is placed in a public section of the class definition.
+// `WEBRTC_RTCSTATS_IMPL` is placed outside the class definition (in a .cc).
 //
-// These macros declare (in _DECL) and define (in _IMPL) the static |kType| and
-// overrides methods as required by subclasses of |RTCStats|: |copy|, |type| and
-// |MembersOfThisObjectAndAncestors|. The |...| argument is a list of addresses
+// These macros declare (in _DECL) and define (in _IMPL) the static `kType` and
+// overrides methods as required by subclasses of `RTCStats`: `copy`, `type` and
+// `MembersOfThisObjectAndAncestors`. The |...| argument is a list of addresses
 // to each member defined in the implementing class. The list must have at least
 // one member.
 //
 // (Since class names need to be known to implement these methods this cannot be
-// part of the base |RTCStats|. While these methods could be implemented using
+// part of the base `RTCStats`. While these methods could be implemented using
 // templates, that would only work for immediate subclasses. Subclasses of
 // subclasses also have to override these methods, resulting in boilerplate
-// code. Using a macro avoids this and works for any |RTCStats| class, including
+// code. Using a macro avoids this and works for any `RTCStats` class, including
 // grandchildren.)
 //
 // Sample usage:
@@ -215,10 +215,10 @@ enum class NonStandardGroupId {
   kRtcStatsRelativePacketArrivalDelay,
 };
 
-// Interface for |RTCStats| members, which have a name and a value of a type
-// defined in a subclass. Only the types listed in |Type| are supported, these
+// Interface for `RTCStats` members, which have a name and a value of a type
+// defined in a subclass. Only the types listed in `Type` are supported, these
 // are implemented by |RTCStatsMember<T>|. The value of a member may be
-// undefined, the value can only be read if |is_defined|.
+// undefined, the value can only be read if `is_defined`.
 class RTCStatsMemberInterface {
  public:
   // Member value types.
@@ -284,7 +284,7 @@ class RTCStatsMemberInterface {
   bool is_defined_;
 };
 
-// Template implementation of |RTCStatsMemberInterface|.
+// Template implementation of `RTCStatsMemberInterface`.
 // The supported types are the ones described by
 // |RTCStatsMemberInterface::Type|.
 template <typename T>

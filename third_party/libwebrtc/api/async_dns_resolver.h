@@ -41,10 +41,10 @@ namespace webrtc {
 class AsyncDnsResolverResult {
  public:
   virtual ~AsyncDnsResolverResult() = default;
-  // Returns true iff the address from |Start| was successfully resolved.
-  // If the address was successfully resolved, sets |addr| to a copy of the
-  // address from |Start| with the IP address set to the top most resolved
-  // address of |family| (|addr| will have both hostname and the resolved ip).
+  // Returns true iff the address from `Start` was successfully resolved.
+  // If the address was successfully resolved, sets `addr` to a copy of the
+  // address from `Start` with the IP address set to the top most resolved
+  // address of `family` (`addr` will have both hostname and the resolved ip).
   virtual bool GetResolvedAddress(int family,
                                   rtc::SocketAddress* addr) const = 0;
   // Returns error from resolver.
@@ -55,7 +55,7 @@ class RTC_EXPORT AsyncDnsResolverInterface {
  public:
   virtual ~AsyncDnsResolverInterface() = default;
 
-  // Start address resolution of the hostname in |addr|.
+  // Start address resolution of the hostname in `addr`.
   virtual void Start(const rtc::SocketAddress& addr,
                      std::function<void()> callback) = 0;
   virtual const AsyncDnsResolverResult& result() const = 0;
