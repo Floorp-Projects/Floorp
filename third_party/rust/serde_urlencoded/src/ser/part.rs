@@ -1,6 +1,4 @@
-use dtoa;
-use itoa;
-use ser::Error;
+use crate::ser::Error;
 use serde::ser;
 use std::str;
 
@@ -10,7 +8,7 @@ pub struct PartSerializer<S> {
 
 impl<S: Sink> PartSerializer<S> {
     pub fn new(sink: S) -> Self {
-        PartSerializer { sink: sink }
+        PartSerializer { sink }
     }
 }
 
@@ -82,6 +80,14 @@ impl<S: Sink> ser::Serializer for PartSerializer<S> {
         self.serialize_integer(v)
     }
 
+    fn serialize_u128(self, v: u128) -> Result<S::Ok, Error> {
+        self.serialize_integer(v)
+    }
+
+    fn serialize_i128(self, v: i128) -> Result<S::Ok, Error> {
+        self.serialize_integer(v)
+    }
+
     fn serialize_f32(self, v: f32) -> Result<S::Ok, Error> {
         self.serialize_floating(v)
     }
@@ -110,7 +116,7 @@ impl<S: Sink> ser::Serializer for PartSerializer<S> {
     }
 
     fn serialize_unit_struct(self, name: &'static str) -> Result<S::Ok, Error> {
-        self.sink.serialize_static_str(name.into())
+        self.sink.serialize_static_str(name)
     }
 
     fn serialize_unit_variant(
@@ -119,7 +125,7 @@ impl<S: Sink> ser::Serializer for PartSerializer<S> {
         _variant_index: u32,
         variant: &'static str,
     ) -> Result<S::Ok, Error> {
-        self.sink.serialize_static_str(variant.into())
+        self.sink.serialize_static_str(variant)
     }
 
     fn serialize_newtype_struct<T: ?Sized + ser::Serialize>(
@@ -214,19 +220,17 @@ impl<S: Sink> PartSerializer<S> {
     where
         I: itoa::Integer,
     {
-        let mut buf = [b'\0'; 20];
-        let len = itoa::write(&mut buf[..], value).unwrap();
-        let part = unsafe { str::from_utf8_unchecked(&buf[0..len]) };
+        let mut buf = itoa::Buffer::new();
+        let part = buf.format(value);
         ser::Serializer::serialize_str(self, part)
     }
 
     fn serialize_floating<F>(self, value: F) -> Result<S::Ok, Error>
     where
-        F: dtoa::Floating,
+        F: ryu::Float,
     {
-        let mut buf = [b'\0'; 24];
-        let len = dtoa::write(&mut buf[..], value).unwrap();
-        let part = unsafe { str::from_utf8_unchecked(&buf[0..len]) };
+        let mut buf = ryu::Buffer::new();
+        let part = buf.format(value);
         ser::Serializer::serialize_str(self, part)
     }
 }

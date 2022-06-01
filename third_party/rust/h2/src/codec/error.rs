@@ -1,26 +1,12 @@
-use crate::frame::{Reason, StreamId};
+use crate::proto::Error;
 
 use std::{error, fmt, io};
-
-/// Errors that are received
-#[derive(Debug)]
-pub enum RecvError {
-    Connection(Reason),
-    Stream { id: StreamId, reason: Reason },
-    Io(io::Error),
-}
 
 /// Errors caused by sending a message
 #[derive(Debug)]
 pub enum SendError {
-    /// User error
+    Connection(Error),
     User(UserError),
-
-    /// Connection error prevents sending.
-    Connection(Reason),
-
-    /// I/O error
-    Io(io::Error),
 }
 
 /// Errors caused by users of the library
@@ -34,9 +20,6 @@ pub enum UserError {
 
     /// The payload size is too big
     PayloadTooBig,
-
-    /// A header size is too big
-    HeaderTooBig,
 
     /// The application attempted to initiate too many streams to remote.
     Rejected,
@@ -63,28 +46,9 @@ pub enum UserError {
 
     /// Tries to update local SETTINGS while ACK has not been received.
     SendSettingsWhilePending,
-}
 
-// ===== impl RecvError =====
-
-impl From<io::Error> for RecvError {
-    fn from(src: io::Error) -> Self {
-        RecvError::Io(src)
-    }
-}
-
-impl error::Error for RecvError {}
-
-impl fmt::Display for RecvError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        use self::RecvError::*;
-
-        match *self {
-            Connection(ref reason) => reason.fmt(fmt),
-            Stream { ref reason, .. } => reason.fmt(fmt),
-            Io(ref e) => e.fmt(fmt),
-        }
-    }
+    /// Tries to send push promise to peer who has disabled server push
+    PeerDisabledServerPush,
 }
 
 // ===== impl SendError =====
@@ -93,19 +57,16 @@ impl error::Error for SendError {}
 
 impl fmt::Display for SendError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        use self::SendError::*;
-
         match *self {
-            User(ref e) => e.fmt(fmt),
-            Connection(ref reason) => reason.fmt(fmt),
-            Io(ref e) => e.fmt(fmt),
+            Self::Connection(ref e) => e.fmt(fmt),
+            Self::User(ref e) => e.fmt(fmt),
         }
     }
 }
 
 impl From<io::Error> for SendError {
     fn from(src: io::Error) -> Self {
-        SendError::Io(src)
+        Self::Connection(src.into())
     }
 }
 
@@ -127,7 +88,6 @@ impl fmt::Display for UserError {
             InactiveStreamId => "inactive stream",
             UnexpectedFrameType => "unexpected frame type",
             PayloadTooBig => "payload too big",
-            HeaderTooBig => "header too big",
             Rejected => "rejected",
             ReleaseCapacityTooBig => "release capacity too big",
             OverflowedStreamId => "stream ID overflowed",
@@ -136,6 +96,7 @@ impl fmt::Display for UserError {
             PollResetAfterSendResponse => "poll_reset after send_response is illegal",
             SendPingWhilePending => "send_ping before received previous pong",
             SendSettingsWhilePending => "sending SETTINGS before received previous ACK",
+            PeerDisabledServerPush => "sending PUSH_PROMISE to peer who disabled server push",
         })
     }
 }

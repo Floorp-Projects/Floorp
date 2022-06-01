@@ -64,7 +64,7 @@ macro_rules! standard_headers {
     (
         $(
             $(#[$docs:meta])*
-            ($konst:ident, $upcase:ident, $name:expr);
+            ($konst:ident, $upcase:ident, $name_bytes:literal);
         )+
     ) => {
         #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -85,52 +85,60 @@ macro_rules! standard_headers {
             #[inline]
             fn as_str(&self) -> &'static str {
                 match *self {
+                    // Safety: test_parse_standard_headers ensures these &[u8]s are &str-safe.
                     $(
-                    StandardHeader::$konst => $name,
+                    StandardHeader::$konst => unsafe { std::str::from_utf8_unchecked( $name_bytes ) },
                     )+
+                }
+            }
+
+            const fn from_bytes(name_bytes: &[u8]) -> Option<StandardHeader> {
+                match name_bytes {
+                    $(
+                        $name_bytes => Some(StandardHeader::$konst),
+                    )+
+                    _ => None,
                 }
             }
         }
 
         #[cfg(test)]
-        const TEST_HEADERS: &'static [(StandardHeader, &'static str)] = &[
+        const TEST_HEADERS: &'static [(StandardHeader, &'static [u8])] = &[
             $(
-            (StandardHeader::$konst, $name),
+            (StandardHeader::$konst, $name_bytes),
             )+
         ];
 
         #[test]
         fn test_parse_standard_headers() {
-            for &(std, name) in TEST_HEADERS {
+            for &(std, name_bytes) in TEST_HEADERS {
                 // Test lower case
-                assert_eq!(HeaderName::from_bytes(name.as_bytes()).unwrap(), HeaderName::from(std));
+                assert_eq!(HeaderName::from_bytes(name_bytes).unwrap(), HeaderName::from(std));
 
                 // Test upper case
-                let upper = name.to_uppercase().to_string();
+                let upper = std::str::from_utf8(name_bytes).expect("byte string constants are all utf-8").to_uppercase();
                 assert_eq!(HeaderName::from_bytes(upper.as_bytes()).unwrap(), HeaderName::from(std));
             }
         }
 
         #[test]
         fn test_standard_headers_into_bytes() {
-            for &(std, name) in TEST_HEADERS {
+            for &(std, name_bytes) in TEST_HEADERS {
+                let name = std::str::from_utf8(name_bytes).unwrap();
                 let std = HeaderName::from(std);
                 // Test lower case
-                let name_bytes = name.as_bytes();
                 let bytes: Bytes =
                     HeaderName::from_bytes(name_bytes).unwrap().inner.into();
-                assert_eq!(bytes, name_bytes);
+                assert_eq!(bytes, name);
                 assert_eq!(HeaderName::from_bytes(name_bytes).unwrap(), std);
 
                 // Test upper case
-                let upper = name.to_uppercase().to_string();
+                let upper = name.to_uppercase();
                 let bytes: Bytes =
                     HeaderName::from_bytes(upper.as_bytes()).unwrap().inner.into();
-                assert_eq!(bytes, name.as_bytes());
+                assert_eq!(bytes, name_bytes);
                 assert_eq!(HeaderName::from_bytes(upper.as_bytes()).unwrap(),
                            std);
-
-
             }
 
         }
@@ -154,7 +162,7 @@ standard_headers! {
     /// where the request is done: when fetching a CSS stylesheet a different
     /// value is set for the request than when fetching an image, video or a
     /// script.
-    (Accept, ACCEPT, "accept");
+    (Accept, ACCEPT, b"accept");
 
     /// Advertises which character set the client is able to understand.
     ///
@@ -169,7 +177,7 @@ standard_headers! {
     /// theoretically send back a 406 (Not Acceptable) error code. But, for a
     /// better user experience, this is rarely done and the more common way is
     /// to ignore the Accept-Charset header in this case.
-    (AcceptCharset, ACCEPT_CHARSET, "accept-charset");
+    (AcceptCharset, ACCEPT_CHARSET, b"accept-charset");
 
     /// Advertises which content encoding the client is able to understand.
     ///
@@ -197,7 +205,7 @@ standard_headers! {
     /// forbidden, by an identity;q=0 or a *;q=0 without another explicitly set
     /// value for identity, the server must never send back a 406 Not Acceptable
     /// error.
-    (AcceptEncoding, ACCEPT_ENCODING, "accept-encoding");
+    (AcceptEncoding, ACCEPT_ENCODING, b"accept-encoding");
 
     /// Advertises which languages the client is able to understand.
     ///
@@ -222,7 +230,7 @@ standard_headers! {
     /// send back a 406 (Not Acceptable) error code. But, for a better user
     /// experience, this is rarely done and more common way is to ignore the
     /// Accept-Language header in this case.
-    (AcceptLanguage, ACCEPT_LANGUAGE, "accept-language");
+    (AcceptLanguage, ACCEPT_LANGUAGE, b"accept-language");
 
     /// Marker used by the server to advertise partial request support.
     ///
@@ -232,7 +240,7 @@ standard_headers! {
     ///
     /// In presence of an Accept-Ranges header, the browser may try to resume an
     /// interrupted download, rather than to start it from the start again.
-    (AcceptRanges, ACCEPT_RANGES, "accept-ranges");
+    (AcceptRanges, ACCEPT_RANGES, b"accept-ranges");
 
     /// Preflight response indicating if the response to the request can be
     /// exposed to the page.
@@ -257,7 +265,7 @@ standard_headers! {
     /// be set on both sides (the Access-Control-Allow-Credentials header and in
     /// the XHR or Fetch request) in order for the CORS request with credentials
     /// to succeed.
-    (AccessControlAllowCredentials, ACCESS_CONTROL_ALLOW_CREDENTIALS, "access-control-allow-credentials");
+    (AccessControlAllowCredentials, ACCESS_CONTROL_ALLOW_CREDENTIALS, b"access-control-allow-credentials");
 
     /// Preflight response indicating permitted HTTP headers.
     ///
@@ -273,33 +281,33 @@ standard_headers! {
     ///
     /// This header is required if the request has an
     /// Access-Control-Request-Headers header.
-    (AccessControlAllowHeaders, ACCESS_CONTROL_ALLOW_HEADERS, "access-control-allow-headers");
+    (AccessControlAllowHeaders, ACCESS_CONTROL_ALLOW_HEADERS, b"access-control-allow-headers");
 
     /// Preflight header response indicating permitted access methods.
     ///
     /// The Access-Control-Allow-Methods response header specifies the method or
     /// methods allowed when accessing the resource in response to a preflight
     /// request.
-    (AccessControlAllowMethods, ACCESS_CONTROL_ALLOW_METHODS, "access-control-allow-methods");
+    (AccessControlAllowMethods, ACCESS_CONTROL_ALLOW_METHODS, b"access-control-allow-methods");
 
     /// Indicates whether the response can be shared with resources with the
     /// given origin.
-    (AccessControlAllowOrigin, ACCESS_CONTROL_ALLOW_ORIGIN, "access-control-allow-origin");
+    (AccessControlAllowOrigin, ACCESS_CONTROL_ALLOW_ORIGIN, b"access-control-allow-origin");
 
     /// Indicates which headers can be exposed as part of the response by
     /// listing their names.
-    (AccessControlExposeHeaders, ACCESS_CONTROL_EXPOSE_HEADERS, "access-control-expose-headers");
+    (AccessControlExposeHeaders, ACCESS_CONTROL_EXPOSE_HEADERS, b"access-control-expose-headers");
 
     /// Indicates how long the results of a preflight request can be cached.
-    (AccessControlMaxAge, ACCESS_CONTROL_MAX_AGE, "access-control-max-age");
+    (AccessControlMaxAge, ACCESS_CONTROL_MAX_AGE, b"access-control-max-age");
 
     /// Informs the server which HTTP headers will be used when an actual
     /// request is made.
-    (AccessControlRequestHeaders, ACCESS_CONTROL_REQUEST_HEADERS, "access-control-request-headers");
+    (AccessControlRequestHeaders, ACCESS_CONTROL_REQUEST_HEADERS, b"access-control-request-headers");
 
     /// Informs the server know which HTTP method will be used when the actual
     /// request is made.
-    (AccessControlRequestMethod, ACCESS_CONTROL_REQUEST_METHOD, "access-control-request-method");
+    (AccessControlRequestMethod, ACCESS_CONTROL_REQUEST_METHOD, b"access-control-request-method");
 
     /// Indicates the time in seconds the object has been in a proxy cache.
     ///
@@ -307,7 +315,7 @@ standard_headers! {
     /// probably just fetched from the origin server; otherwise It is usually
     /// calculated as a difference between the proxy's current date and the Date
     /// general header included in the HTTP response.
-    (Age, AGE, "age");
+    (Age, AGE, b"age");
 
     /// Lists the set of methods support by a resource.
     ///
@@ -316,16 +324,16 @@ standard_headers! {
     /// empty Allow header indicates that the resource allows no request
     /// methods, which might occur temporarily for a given resource, for
     /// example.
-    (Allow, ALLOW, "allow");
+    (Allow, ALLOW, b"allow");
 
     /// Advertises the availability of alternate services to clients.
-    (AltSvc, ALT_SVC, "alt-svc");
+    (AltSvc, ALT_SVC, b"alt-svc");
 
     /// Contains the credentials to authenticate a user agent with a server.
     ///
     /// Usually this header is included after the server has responded with a
     /// 401 Unauthorized status and the WWW-Authenticate header.
-    (Authorization, AUTHORIZATION, "authorization");
+    (Authorization, AUTHORIZATION, b"authorization");
 
     /// Specifies directives for caching mechanisms in both requests and
     /// responses.
@@ -333,7 +341,7 @@ standard_headers! {
     /// Caching directives are unidirectional, meaning that a given directive in
     /// a request is not implying that the same directive is to be given in the
     /// response.
-    (CacheControl, CACHE_CONTROL, "cache-control");
+    (CacheControl, CACHE_CONTROL, b"cache-control");
 
     /// Controls whether or not the network connection stays open after the
     /// current transaction finishes.
@@ -348,7 +356,7 @@ standard_headers! {
     /// to consume them and not to forward them further. Standard hop-by-hop
     /// headers can be listed too (it is often the case of Keep-Alive, but this
     /// is not mandatory.
-    (Connection, CONNECTION, "connection");
+    (Connection, CONNECTION, b"connection");
 
     /// Indicates if the content is expected to be displayed inline.
     ///
@@ -368,7 +376,7 @@ standard_headers! {
     /// to HTTP forms and POST requests. Only the value form-data, as well as
     /// the optional directive name and filename, can be used in the HTTP
     /// context.
-    (ContentDisposition, CONTENT_DISPOSITION, "content-disposition");
+    (ContentDisposition, CONTENT_DISPOSITION, b"content-disposition");
 
     /// Used to compress the media-type.
     ///
@@ -380,7 +388,7 @@ standard_headers! {
     /// use this field, but some types of resources, like jpeg images, are
     /// already compressed.  Sometimes using additional compression doesn't
     /// reduce payload size and can even make the payload longer.
-    (ContentEncoding, CONTENT_ENCODING, "content-encoding");
+    (ContentEncoding, CONTENT_ENCODING, b"content-encoding");
 
     /// Used to describe the languages intended for the audience.
     ///
@@ -395,13 +403,13 @@ standard_headers! {
     /// intended for all language audiences. Multiple language tags are also
     /// possible, as well as applying the Content-Language header to various
     /// media types and not only to textual documents.
-    (ContentLanguage, CONTENT_LANGUAGE, "content-language");
+    (ContentLanguage, CONTENT_LANGUAGE, b"content-language");
 
     /// Indicates the size of the entity-body.
     ///
     /// The header value must be a decimal indicating the number of octets sent
     /// to the recipient.
-    (ContentLength, CONTENT_LENGTH, "content-length");
+    (ContentLength, CONTENT_LENGTH, b"content-length");
 
     /// Indicates an alternate location for the returned data.
     ///
@@ -414,10 +422,10 @@ standard_headers! {
     /// without the need of further content negotiation. Location is a header
     /// associated with the response, while Content-Location is associated with
     /// the entity returned.
-    (ContentLocation, CONTENT_LOCATION, "content-location");
+    (ContentLocation, CONTENT_LOCATION, b"content-location");
 
     /// Indicates where in a full body message a partial message belongs.
-    (ContentRange, CONTENT_RANGE, "content-range");
+    (ContentRange, CONTENT_RANGE, b"content-range");
 
     /// Allows controlling resources the user agent is allowed to load for a
     /// given page.
@@ -425,7 +433,7 @@ standard_headers! {
     /// With a few exceptions, policies mostly involve specifying server origins
     /// and script endpoints. This helps guard against cross-site scripting
     /// attacks (XSS).
-    (ContentSecurityPolicy, CONTENT_SECURITY_POLICY, "content-security-policy");
+    (ContentSecurityPolicy, CONTENT_SECURITY_POLICY, b"content-security-policy");
 
     /// Allows experimenting with policies by monitoring their effects.
     ///
@@ -433,7 +441,7 @@ standard_headers! {
     /// developers to experiment with policies by monitoring (but not enforcing)
     /// their effects. These violation reports consist of JSON documents sent
     /// via an HTTP POST request to the specified URI.
-    (ContentSecurityPolicyReportOnly, CONTENT_SECURITY_POLICY_REPORT_ONLY, "content-security-policy-report-only");
+    (ContentSecurityPolicyReportOnly, CONTENT_SECURITY_POLICY_REPORT_ONLY, b"content-security-policy-report-only");
 
     /// Used to indicate the media type of the resource.
     ///
@@ -445,23 +453,23 @@ standard_headers! {
     ///
     /// In requests, (such as POST or PUT), the client tells the server what
     /// type of data is actually sent.
-    (ContentType, CONTENT_TYPE, "content-type");
+    (ContentType, CONTENT_TYPE, b"content-type");
 
     /// Contains stored HTTP cookies previously sent by the server with the
     /// Set-Cookie header.
     ///
     /// The Cookie header might be omitted entirely, if the privacy setting of
     /// the browser are set to block them, for example.
-    (Cookie, COOKIE, "cookie");
+    (Cookie, COOKIE, b"cookie");
 
     /// Indicates the client's tracking preference.
     ///
     /// This header lets users indicate whether they would prefer privacy rather
     /// than personalized content.
-    (Dnt, DNT, "dnt");
+    (Dnt, DNT, b"dnt");
 
     /// Contains the date and time at which the message was originated.
-    (Date, DATE, "date");
+    (Date, DATE, b"date");
 
     /// Identifier for a specific version of a resource.
     ///
@@ -477,7 +485,7 @@ standard_headers! {
     /// to quickly determine whether two representations of a resource are the
     /// same, but they might also be set to persist indefinitely by a tracking
     /// server.
-    (Etag, ETAG, "etag");
+    (Etag, ETAG, b"etag");
 
     /// Indicates expectations that need to be fulfilled by the server in order
     /// to properly handle the request.
@@ -496,7 +504,7 @@ standard_headers! {
     ///
     /// No common browsers send the Expect header, but some other clients such
     /// as cURL do so by default.
-    (Expect, EXPECT, "expect");
+    (Expect, EXPECT, b"expect");
 
     /// Contains the date/time after which the response is considered stale.
     ///
@@ -505,7 +513,7 @@ standard_headers! {
     ///
     /// If there is a Cache-Control header with the "max-age" or "s-max-age"
     /// directive in the response, the Expires header is ignored.
-    (Expires, EXPIRES, "expires");
+    (Expires, EXPIRES, b"expires");
 
     /// Contains information from the client-facing side of proxy servers that
     /// is altered or lost when a proxy is involved in the path of the request.
@@ -517,7 +525,7 @@ standard_headers! {
     /// location-dependent content and by design it exposes privacy sensitive
     /// information, such as the IP address of the client. Therefore the user's
     /// privacy must be kept in mind when deploying this header.
-    (Forwarded, FORWARDED, "forwarded");
+    (Forwarded, FORWARDED, b"forwarded");
 
     /// Contains an Internet email address for a human user who controls the
     /// requesting user agent.
@@ -526,7 +534,7 @@ standard_headers! {
     /// header should be sent, so you can be contacted if problems occur on
     /// servers, such as if the robot is sending excessive, unwanted, or invalid
     /// requests.
-    (From, FROM, "from");
+    (From, FROM, b"from");
 
     /// Specifies the domain name of the server and (optionally) the TCP port
     /// number on which the server is listening.
@@ -537,7 +545,7 @@ standard_headers! {
     /// A Host header field must be sent in all HTTP/1.1 request messages. A 400
     /// (Bad Request) status code will be sent to any HTTP/1.1 request message
     /// that lacks a Host header field or contains more than one.
-    (Host, HOST, "host");
+    (Host, HOST, b"host");
 
     /// Makes a request conditional based on the E-Tag.
     ///
@@ -562,7 +570,7 @@ standard_headers! {
     /// that has been done since the original resource was fetched. If the
     /// request cannot be fulfilled, the 412 (Precondition Failed) response is
     /// returned.
-    (IfMatch, IF_MATCH, "if-match");
+    (IfMatch, IF_MATCH, b"if-match");
 
     /// Makes a request conditional based on the modification date.
     ///
@@ -579,7 +587,7 @@ standard_headers! {
     ///
     /// The most common use case is to update a cached entity that has no
     /// associated ETag.
-    (IfModifiedSince, IF_MODIFIED_SINCE, "if-modified-since");
+    (IfModifiedSince, IF_MODIFIED_SINCE, b"if-modified-since");
 
     /// Makes a request conditional based on the E-Tag.
     ///
@@ -615,7 +623,7 @@ standard_headers! {
     /// guaranteeing that another upload didn't happen before, losing the data
     /// of the previous put; this problems is the variation of the lost update
     /// problem.
-    (IfNoneMatch, IF_NONE_MATCH, "if-none-match");
+    (IfNoneMatch, IF_NONE_MATCH, b"if-none-match");
 
     /// Makes a request conditional based on range.
     ///
@@ -631,7 +639,7 @@ standard_headers! {
     /// The most common use case is to resume a download, to guarantee that the
     /// stored resource has not been modified since the last fragment has been
     /// received.
-    (IfRange, IF_RANGE, "if-range");
+    (IfRange, IF_RANGE, b"if-range");
 
     /// Makes the request conditional based on the last modification date.
     ///
@@ -652,14 +660,14 @@ standard_headers! {
     /// * In conjunction with a range request with a If-Range header, it can be
     /// used to ensure that the new fragment requested comes from an unmodified
     /// document.
-    (IfUnmodifiedSince, IF_UNMODIFIED_SINCE, "if-unmodified-since");
+    (IfUnmodifiedSince, IF_UNMODIFIED_SINCE, b"if-unmodified-since");
 
     /// Content-Types that are acceptable for the response.
-    (LastModified, LAST_MODIFIED, "last-modified");
+    (LastModified, LAST_MODIFIED, b"last-modified");
 
     /// Allows the server to point an interested client to another resource
     /// containing metadata about the requested resource.
-    (Link, LINK, "link");
+    (Link, LINK, b"link");
 
     /// Indicates the URL to redirect a page to.
     ///
@@ -690,11 +698,11 @@ standard_headers! {
     /// when content negotiation happened, without the need of further content
     /// negotiation. Location is a header associated with the response, while
     /// Content-Location is associated with the entity returned.
-    (Location, LOCATION, "location");
+    (Location, LOCATION, b"location");
 
     /// Indicates the max number of intermediaries the request should be sent
     /// through.
-    (MaxForwards, MAX_FORWARDS, "max-forwards");
+    (MaxForwards, MAX_FORWARDS, b"max-forwards");
 
     /// Indicates where a fetch originates from.
     ///
@@ -702,7 +710,7 @@ standard_headers! {
     /// sent with CORS requests, as well as with POST requests. It is similar to
     /// the Referer header, but, unlike this header, it doesn't disclose the
     /// whole path.
-    (Origin, ORIGIN, "origin");
+    (Origin, ORIGIN, b"origin");
 
     /// HTTP/1.0 header usually used for backwards compatibility.
     ///
@@ -710,7 +718,7 @@ standard_headers! {
     /// that may have various effects along the request-response chain. It is
     /// used for backwards compatibility with HTTP/1.0 caches where the
     /// Cache-Control HTTP/1.1 header is not yet present.
-    (Pragma, PRAGMA, "pragma");
+    (Pragma, PRAGMA, b"pragma");
 
     /// Defines the authentication method that should be used to gain access to
     /// a proxy.
@@ -728,14 +736,14 @@ standard_headers! {
     ///
     /// The `proxy-authenticate` header is sent along with a `407 Proxy
     /// Authentication Required`.
-    (ProxyAuthenticate, PROXY_AUTHENTICATE, "proxy-authenticate");
+    (ProxyAuthenticate, PROXY_AUTHENTICATE, b"proxy-authenticate");
 
     /// Contains the credentials to authenticate a user agent to a proxy server.
     ///
     /// This header is usually included after the server has responded with a
     /// 407 Proxy Authentication Required status and the Proxy-Authenticate
     /// header.
-    (ProxyAuthorization, PROXY_AUTHORIZATION, "proxy-authorization");
+    (ProxyAuthorization, PROXY_AUTHORIZATION, b"proxy-authorization");
 
     /// Associates a specific cryptographic public key with a certain server.
     ///
@@ -743,14 +751,14 @@ standard_headers! {
     /// or several keys are pinned and none of them are used by the server, the
     /// browser will not accept the response as legitimate, and will not display
     /// it.
-    (PublicKeyPins, PUBLIC_KEY_PINS, "public-key-pins");
+    (PublicKeyPins, PUBLIC_KEY_PINS, b"public-key-pins");
 
     /// Sends reports of pinning violation to the report-uri specified in the
     /// header.
     ///
     /// Unlike `Public-Key-Pins`, this header still allows browsers to connect
     /// to the server if the pinning is violated.
-    (PublicKeyPinsReportOnly, PUBLIC_KEY_PINS_REPORT_ONLY, "public-key-pins-report-only");
+    (PublicKeyPinsReportOnly, PUBLIC_KEY_PINS_REPORT_ONLY, b"public-key-pins-report-only");
 
     /// Indicates the part of a document that the server should return.
     ///
@@ -760,7 +768,7 @@ standard_headers! {
     /// the ranges are invalid, the server returns the 416 Range Not Satisfiable
     /// error. The server can also ignore the Range header and return the whole
     /// document with a 200 status code.
-    (Range, RANGE, "range");
+    (Range, RANGE, b"range");
 
     /// Contains the address of the previous web page from which a link to the
     /// currently requested page was followed.
@@ -768,15 +776,15 @@ standard_headers! {
     /// The Referer header allows servers to identify where people are visiting
     /// them from and may use that data for analytics, logging, or optimized
     /// caching, for example.
-    (Referer, REFERER, "referer");
+    (Referer, REFERER, b"referer");
 
     /// Governs which referrer information should be included with requests
     /// made.
-    (ReferrerPolicy, REFERRER_POLICY, "referrer-policy");
+    (ReferrerPolicy, REFERRER_POLICY, b"referrer-policy");
 
     /// Informs the web browser that the current page or frame should be
     /// refreshed.
-    (Refresh, REFRESH, "refresh");
+    (Refresh, REFRESH, b"refresh");
 
     /// The Retry-After response HTTP header indicates how long the user agent
     /// should wait before making a follow-up request. There are two main cases
@@ -788,20 +796,20 @@ standard_headers! {
     /// * When sent with a redirect response, such as 301 (Moved Permanently),
     /// it indicates the minimum time that the user agent is asked to wait
     /// before issuing the redirected request.
-    (RetryAfter, RETRY_AFTER, "retry-after");
+    (RetryAfter, RETRY_AFTER, b"retry-after");
 
     /// The |Sec-WebSocket-Accept| header field is used in the WebSocket
     /// opening handshake. It is sent from the server to the client to
     /// confirm that the server is willing to initiate the WebSocket
     /// connection.
-    (SecWebSocketAccept, SEC_WEBSOCKET_ACCEPT, "sec-websocket-accept");
+    (SecWebSocketAccept, SEC_WEBSOCKET_ACCEPT, b"sec-websocket-accept");
 
     /// The |Sec-WebSocket-Extensions| header field is used in the WebSocket
     /// opening handshake. It is initially sent from the client to the
     /// server, and then subsequently sent from the server to the client, to
     /// agree on a set of protocol-level extensions to use for the duration
     /// of the connection.
-    (SecWebSocketExtensions, SEC_WEBSOCKET_EXTENSIONS, "sec-websocket-extensions");
+    (SecWebSocketExtensions, SEC_WEBSOCKET_EXTENSIONS, b"sec-websocket-extensions");
 
     /// The |Sec-WebSocket-Key| header field is used in the WebSocket opening
     /// handshake. It is sent from the client to the server to provide part
@@ -810,14 +818,14 @@ standard_headers! {
     /// does not accept connections from non-WebSocket clients (e.g., HTTP
     /// clients) that are being abused to send data to unsuspecting WebSocket
     /// servers.
-    (SecWebSocketKey, SEC_WEBSOCKET_KEY, "sec-websocket-key");
+    (SecWebSocketKey, SEC_WEBSOCKET_KEY, b"sec-websocket-key");
 
     /// The |Sec-WebSocket-Protocol| header field is used in the WebSocket
     /// opening handshake. It is sent from the client to the server and back
     /// from the server to the client to confirm the subprotocol of the
     /// connection.  This enables scripts to both select a subprotocol and be
     /// sure that the server agreed to serve that subprotocol.
-    (SecWebSocketProtocol, SEC_WEBSOCKET_PROTOCOL, "sec-websocket-protocol");
+    (SecWebSocketProtocol, SEC_WEBSOCKET_PROTOCOL, b"sec-websocket-protocol");
 
     /// The |Sec-WebSocket-Version| header field is used in the WebSocket
     /// opening handshake.  It is sent from the client to the server to
@@ -825,7 +833,7 @@ standard_headers! {
     /// servers to correctly interpret the opening handshake and subsequent
     /// data being sent from the data, and close the connection if the server
     /// cannot interpret that data in a safe manner.
-    (SecWebSocketVersion, SEC_WEBSOCKET_VERSION, "sec-websocket-version");
+    (SecWebSocketVersion, SEC_WEBSOCKET_VERSION, b"sec-websocket-version");
 
     /// Contains information about the software used by the origin server to
     /// handle the request.
@@ -834,13 +842,13 @@ standard_headers! {
     /// potentially reveal internal implementation details that might make it
     /// (slightly) easier for attackers to find and exploit known security
     /// holes.
-    (Server, SERVER, "server");
+    (Server, SERVER, b"server");
 
     /// Used to send cookies from the server to the user agent.
-    (SetCookie, SET_COOKIE, "set-cookie");
+    (SetCookie, SET_COOKIE, b"set-cookie");
 
     /// Tells the client to communicate with HTTPS instead of using HTTP.
-    (StrictTransportSecurity, STRICT_TRANSPORT_SECURITY, "strict-transport-security");
+    (StrictTransportSecurity, STRICT_TRANSPORT_SECURITY, b"strict-transport-security");
 
     /// Informs the server of transfer encodings willing to be accepted as part
     /// of the response.
@@ -850,11 +858,11 @@ standard_headers! {
     /// recipients and you that don't have to specify "chunked" using the TE
     /// header. However, it is useful for setting if the client is accepting
     /// trailer fields in a chunked transfer coding using the "trailers" value.
-    (Te, TE, "te");
+    (Te, TE, b"te");
 
     /// Allows the sender to include additional fields at the end of chunked
     /// messages.
-    (Trailer, TRAILER, "trailer");
+    (Trailer, TRAILER, b"trailer");
 
     /// Specifies the form of encoding used to safely transfer the entity to the
     /// client.
@@ -868,18 +876,18 @@ standard_headers! {
     /// When present on a response to a `HEAD` request that has no body, it
     /// indicates the value that would have applied to the corresponding `GET`
     /// message.
-    (TransferEncoding, TRANSFER_ENCODING, "transfer-encoding");
+    (TransferEncoding, TRANSFER_ENCODING, b"transfer-encoding");
 
     /// Contains a string that allows identifying the requesting client's
     /// software.
-    (UserAgent, USER_AGENT, "user-agent");
+    (UserAgent, USER_AGENT, b"user-agent");
 
     /// Used as part of the exchange to upgrade the protocol.
-    (Upgrade, UPGRADE, "upgrade");
+    (Upgrade, UPGRADE, b"upgrade");
 
     /// Sends a signal to the server expressing the client’s preference for an
     /// encrypted and authenticated response.
-    (UpgradeInsecureRequests, UPGRADE_INSECURE_REQUESTS, "upgrade-insecure-requests");
+    (UpgradeInsecureRequests, UPGRADE_INSECURE_REQUESTS, b"upgrade-insecure-requests");
 
     /// Determines how to match future requests with cached responses.
     ///
@@ -891,7 +899,7 @@ standard_headers! {
     ///
     /// The `vary` header should be set on a 304 Not Modified response exactly
     /// like it would have been set on an equivalent 200 OK response.
-    (Vary, VARY, "vary");
+    (Vary, VARY, b"vary");
 
     /// Added by proxies to track routing.
     ///
@@ -900,7 +908,7 @@ standard_headers! {
     /// It is used for tracking message forwards, avoiding request loops, and
     /// identifying the protocol capabilities of senders along the
     /// request/response chain.
-    (Via, VIA, "via");
+    (Via, VIA, b"via");
 
     /// General HTTP header contains information about possible problems with
     /// the status of the message.
@@ -908,11 +916,11 @@ standard_headers! {
     /// More than one `warning` header may appear in a response. Warning header
     /// fields can in general be applied to any message, however some warn-codes
     /// are specific to caches and can only be applied to response messages.
-    (Warning, WARNING, "warning");
+    (Warning, WARNING, b"warning");
 
     /// Defines the authentication method that should be used to gain access to
     /// a resource.
-    (WwwAuthenticate, WWW_AUTHENTICATE, "www-authenticate");
+    (WwwAuthenticate, WWW_AUTHENTICATE, b"www-authenticate");
 
     /// Marker used by the server to indicate that the MIME types advertised in
     /// the `content-type` headers should not be changed and be followed.
@@ -927,7 +935,7 @@ standard_headers! {
     /// less aggressive.
     ///
     /// Site security testers usually expect this header to be set.
-    (XContentTypeOptions, X_CONTENT_TYPE_OPTIONS, "x-content-type-options");
+    (XContentTypeOptions, X_CONTENT_TYPE_OPTIONS, b"x-content-type-options");
 
     /// Controls DNS prefetching.
     ///
@@ -940,7 +948,7 @@ standard_headers! {
     /// This prefetching is performed in the background, so that the DNS is
     /// likely to have been resolved by the time the referenced items are
     /// needed. This reduces latency when the user clicks a link.
-    (XDnsPrefetchControl, X_DNS_PREFETCH_CONTROL, "x-dns-prefetch-control");
+    (XDnsPrefetchControl, X_DNS_PREFETCH_CONTROL, b"x-dns-prefetch-control");
 
     /// Indicates whether or not a browser should be allowed to render a page in
     /// a frame.
@@ -950,7 +958,7 @@ standard_headers! {
     ///
     /// The added security is only provided if the user accessing the document
     /// is using a browser supporting `x-frame-options`.
-    (XFrameOptions, X_FRAME_OPTIONS, "x-frame-options");
+    (XFrameOptions, X_FRAME_OPTIONS, b"x-frame-options");
 
     /// Stop pages from loading when an XSS attack is detected.
     ///
@@ -961,7 +969,7 @@ standard_headers! {
     /// implement a strong Content-Security-Policy that disables the use of
     /// inline JavaScript ('unsafe-inline'), they can still provide protections
     /// for users of older web browsers that don't yet support CSP.
-    (XXssProtection, X_XSS_PROTECTION, "x-xss-protection");
+    (XXssProtection, X_XSS_PROTECTION, b"x-xss-protection");
 }
 
 /// Valid header name characters
@@ -1039,602 +1047,30 @@ const HEADER_CHARS_H2: [u8; 256] = [
         0,     0,     0,     0,     0,     0                              // 25x
 ];
 
-#[cfg(any(not(debug_assertions), not(target_arch = "wasm32")))]
-macro_rules! eq {
-    (($($cmp:expr,)*) $v:ident[$n:expr] ==) => {
-        $($cmp) && *
-    };
-    (($($cmp:expr,)*) $v:ident[$n:expr] == $a:tt $($rest:tt)*) => {
-        eq!(($($cmp,)* $v[$n] == $a,) $v[$n+1] == $($rest)*)
-    };
-    ($v:ident == $($rest:tt)+) => {
-        eq!(() $v[0] == $($rest)+)
-    };
-    ($v:ident[$n:expr] == $($rest:tt)+) => {
-        eq!(() $v[$n] == $($rest)+)
-    };
-}
-
-#[cfg(any(not(debug_assertions), not(target_arch = "wasm32")))]
-/// This version is best under optimized mode, however in a wasm debug compile,
-/// the `eq` macro expands to 1 + 1 + 1 + 1... and wasm explodes when this chain gets too long
-/// See https://github.com/DenisKolodin/yew/issues/478
 fn parse_hdr<'a>(
     data: &'a [u8],
     b: &'a mut [u8; 64],
     table: &[u8; 256],
 ) -> Result<HdrName<'a>, InvalidHeaderName> {
-    use self::StandardHeader::*;
-
-    let len = data.len();
-
-    let validate = |buf: &'a [u8], len: usize| {
-        let buf = &buf[..len];
-        if buf.iter().any(|&b| b == 0) {
-            Err(InvalidHeaderName::new())
-        } else {
-            Ok(HdrName::custom(buf, true))
-        }
-    };
-
-
-    macro_rules! to_lower {
-        ($d:ident, $src:ident, 1) => { $d[0] = table[$src[0] as usize]; };
-        ($d:ident, $src:ident, 2) => { to_lower!($d, $src, 1); $d[1] = table[$src[1] as usize]; };
-        ($d:ident, $src:ident, 3) => { to_lower!($d, $src, 2); $d[2] = table[$src[2] as usize]; };
-        ($d:ident, $src:ident, 4) => { to_lower!($d, $src, 3); $d[3] = table[$src[3] as usize]; };
-        ($d:ident, $src:ident, 5) => { to_lower!($d, $src, 4); $d[4] = table[$src[4] as usize]; };
-        ($d:ident, $src:ident, 6) => { to_lower!($d, $src, 5); $d[5] = table[$src[5] as usize]; };
-        ($d:ident, $src:ident, 7) => { to_lower!($d, $src, 6); $d[6] = table[$src[6] as usize]; };
-        ($d:ident, $src:ident, 8) => { to_lower!($d, $src, 7); $d[7] = table[$src[7] as usize]; };
-        ($d:ident, $src:ident, 9) => { to_lower!($d, $src, 8); $d[8] = table[$src[8] as usize]; };
-        ($d:ident, $src:ident, 10) => { to_lower!($d, $src, 9); $d[9] = table[$src[9] as usize]; };
-        ($d:ident, $src:ident, 11) => { to_lower!($d, $src, 10); $d[10] = table[$src[10] as usize]; };
-        ($d:ident, $src:ident, 12) => { to_lower!($d, $src, 11); $d[11] = table[$src[11] as usize]; };
-        ($d:ident, $src:ident, 13) => { to_lower!($d, $src, 12); $d[12] = table[$src[12] as usize]; };
-        ($d:ident, $src:ident, 14) => { to_lower!($d, $src, 13); $d[13] = table[$src[13] as usize]; };
-        ($d:ident, $src:ident, 15) => { to_lower!($d, $src, 14); $d[14] = table[$src[14] as usize]; };
-        ($d:ident, $src:ident, 16) => { to_lower!($d, $src, 15); $d[15] = table[$src[15] as usize]; };
-        ($d:ident, $src:ident, 17) => { to_lower!($d, $src, 16); $d[16] = table[$src[16] as usize]; };
-        ($d:ident, $src:ident, 18) => { to_lower!($d, $src, 17); $d[17] = table[$src[17] as usize]; };
-        ($d:ident, $src:ident, 19) => { to_lower!($d, $src, 18); $d[18] = table[$src[18] as usize]; };
-        ($d:ident, $src:ident, 20) => { to_lower!($d, $src, 19); $d[19] = table[$src[19] as usize]; };
-        ($d:ident, $src:ident, 21) => { to_lower!($d, $src, 20); $d[20] = table[$src[20] as usize]; };
-        ($d:ident, $src:ident, 22) => { to_lower!($d, $src, 21); $d[21] = table[$src[21] as usize]; };
-        ($d:ident, $src:ident, 23) => { to_lower!($d, $src, 22); $d[22] = table[$src[22] as usize]; };
-        ($d:ident, $src:ident, 24) => { to_lower!($d, $src, 23); $d[23] = table[$src[23] as usize]; };
-        ($d:ident, $src:ident, 25) => { to_lower!($d, $src, 24); $d[24] = table[$src[24] as usize]; };
-        ($d:ident, $src:ident, 26) => { to_lower!($d, $src, 25); $d[25] = table[$src[25] as usize]; };
-        ($d:ident, $src:ident, 27) => { to_lower!($d, $src, 26); $d[26] = table[$src[26] as usize]; };
-        ($d:ident, $src:ident, 28) => { to_lower!($d, $src, 27); $d[27] = table[$src[27] as usize]; };
-        ($d:ident, $src:ident, 29) => { to_lower!($d, $src, 28); $d[28] = table[$src[28] as usize]; };
-        ($d:ident, $src:ident, 30) => { to_lower!($d, $src, 29); $d[29] = table[$src[29] as usize]; };
-        ($d:ident, $src:ident, 31) => { to_lower!($d, $src, 30); $d[30] = table[$src[30] as usize]; };
-        ($d:ident, $src:ident, 32) => { to_lower!($d, $src, 31); $d[31] = table[$src[31] as usize]; };
-        ($d:ident, $src:ident, 33) => { to_lower!($d, $src, 32); $d[32] = table[$src[32] as usize]; };
-        ($d:ident, $src:ident, 34) => { to_lower!($d, $src, 33); $d[33] = table[$src[33] as usize]; };
-        ($d:ident, $src:ident, 35) => { to_lower!($d, $src, 34); $d[34] = table[$src[34] as usize]; };
-    }
-
-    match len {
+    match data.len() {
         0 => Err(InvalidHeaderName::new()),
-        2 => {
-            to_lower!(b, data, 2);
-
-            if eq!(b == b't' b'e') {
-                Ok(Te.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        3 => {
-            to_lower!(b, data, 3);
-
-            if eq!(b == b'a' b'g' b'e') {
-                Ok(Age.into())
-            } else if eq!(b == b'v' b'i' b'a') {
-                Ok(Via.into())
-            } else if eq!(b == b'd' b'n' b't') {
-                Ok(Dnt.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        4 => {
-            to_lower!(b, data, 4);
-
-            if eq!(b == b'd' b'a' b't' b'e') {
-                Ok(Date.into())
-            } else if eq!(b == b'e' b't' b'a' b'g') {
-                Ok(Etag.into())
-            } else if eq!(b == b'f' b'r' b'o' b'm') {
-                Ok(From.into())
-            } else if eq!(b == b'h' b'o' b's' b't') {
-                Ok(Host.into())
-            } else if eq!(b == b'l' b'i' b'n' b'k') {
-                Ok(Link.into())
-            } else if eq!(b == b'v' b'a' b'r' b'y') {
-                Ok(Vary.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        5 => {
-            to_lower!(b, data, 5);
-
-            if eq!(b == b'a' b'l' b'l' b'o' b'w') {
-                Ok(Allow.into())
-            } else if eq!(b == b'r' b'a' b'n' b'g' b'e') {
-                Ok(Range.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        6 => {
-            to_lower!(b, data, 6);
-
-            if eq!(b == b'a' b'c' b'c' b'e' b'p' b't') {
-                return Ok(Accept.into());
-            } else if eq!(b == b'c' b'o' b'o' b'k' b'i' b'e') {
-                return Ok(Cookie.into());
-            } else if eq!(b == b'e' b'x' b'p' b'e' b'c' b't') {
-                return Ok(Expect.into());
-            } else if eq!(b == b'o' b'r' b'i' b'g' b'i' b'n') {
-                return Ok(Origin.into());
-            } else if eq!(b == b'p' b'r' b'a' b'g' b'm' b'a') {
-                return Ok(Pragma.into());
-            } else if b[0] == b's' {
-                if eq!(b[1] == b'e' b'r' b'v' b'e' b'r') {
-                    return Ok(Server.into());
-                }
-            }
-
-            validate(b, len)
-        }
-        7 => {
-            to_lower!(b, data, 7);
-
-            if eq!(b == b'a' b'l' b't' b'-' b's' b'v' b'c') {
-                Ok(AltSvc.into())
-            } else if eq!(b == b'e' b'x' b'p' b'i' b'r' b'e' b's') {
-                Ok(Expires.into())
-            } else if eq!(b == b'r' b'e' b'f' b'e' b'r' b'e' b'r') {
-                Ok(Referer.into())
-            } else if eq!(b == b'r' b'e' b'f' b'r' b'e' b's' b'h') {
-                Ok(Refresh.into())
-            } else if eq!(b == b't' b'r' b'a' b'i' b'l' b'e' b'r') {
-                Ok(Trailer.into())
-            } else if eq!(b == b'u' b'p' b'g' b'r' b'a' b'd' b'e') {
-                Ok(Upgrade.into())
-            } else if eq!(b == b'w' b'a' b'r' b'n' b'i' b'n' b'g') {
-                Ok(Warning.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        8 => {
-            to_lower!(b, data, 8);
-
-            if eq!(b == b'i' b'f' b'-') {
-                if eq!(b[3] == b'm' b'a' b't' b'c' b'h') {
-                    return Ok(IfMatch.into());
-                } else if eq!(b[3] == b'r' b'a' b'n' b'g' b'e') {
-                    return Ok(IfRange.into());
-                }
-            } else if eq!(b == b'l' b'o' b'c' b'a' b't' b'i' b'o' b'n') {
-                return Ok(Location.into());
-            }
-
-            validate(b, len)
-        }
-        9 => {
-            to_lower!(b, data, 9);
-
-            if eq!(b == b'f' b'o' b'r' b'w' b'a' b'r' b'd' b'e' b'd') {
-                Ok(Forwarded.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        10 => {
-            to_lower!(b, data, 10);
-
-            if eq!(b == b'c' b'o' b'n' b'n' b'e' b'c' b't' b'i' b'o' b'n') {
-                Ok(Connection.into())
-            } else if eq!(b == b's' b'e' b't' b'-' b'c' b'o' b'o' b'k' b'i' b'e') {
-                Ok(SetCookie.into())
-            } else if eq!(b == b'u' b's' b'e' b'r' b'-' b'a' b'g' b'e' b'n' b't') {
-                Ok(UserAgent.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        11 => {
-            to_lower!(b, data, 11);
-
-            if eq!(b == b'r' b'e' b't' b'r' b'y' b'-' b'a' b'f' b't' b'e' b'r') {
-                Ok(RetryAfter.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        12 => {
-            to_lower!(b, data, 12);
-
-            if eq!(b == b'c' b'o' b'n' b't' b'e' b'n' b't' b'-' b't' b'y' b'p' b'e') {
-                Ok(ContentType.into())
-            } else if eq!(b == b'm' b'a' b'x' b'-' b'f' b'o' b'r' b'w' b'a' b'r' b'd' b's') {
-                Ok(MaxForwards.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        13 => {
-            to_lower!(b, data, 13);
-
-            if b[0] == b'a' {
-                if eq!(b[1] == b'c' b'c' b'e' b'p' b't' b'-' b'r' b'a' b'n' b'g' b'e' b's') {
-                    return Ok(AcceptRanges.into());
-                } else if eq!(b[1] == b'u' b't' b'h' b'o' b'r' b'i' b'z' b'a' b't' b'i' b'o' b'n') {
-                    return Ok(Authorization.into());
-                }
-            } else if b[0] == b'c' {
-                if eq!(b[1] == b'a' b'c' b'h' b'e' b'-' b'c' b'o' b'n' b't' b'r' b'o' b'l') {
-                    return Ok(CacheControl.into());
-                } else if eq!(b[1] == b'o' b'n' b't' b'e' b'n' b't' b'-' b'r' b'a' b'n' b'g' b'e' )
-                {
-                    return Ok(ContentRange.into());
-                }
-            } else if eq!(b == b'i' b'f' b'-' b'n' b'o' b'n' b'e' b'-' b'm' b'a' b't' b'c' b'h') {
-                return Ok(IfNoneMatch.into());
-            } else if eq!(b == b'l' b'a' b's' b't' b'-' b'm' b'o' b'd' b'i' b'f' b'i' b'e' b'd') {
-                return Ok(LastModified.into());
-            }
-
-            validate(b, len)
-        }
-        14 => {
-            to_lower!(b, data, 14);
-
-            if eq!(b == b'a' b'c' b'c' b'e' b'p' b't' b'-' b'c' b'h' b'a' b'r' b's' b'e' b't') {
-                Ok(AcceptCharset.into())
-            } else if eq!(b == b'c' b'o' b'n' b't' b'e' b'n' b't' b'-' b'l' b'e' b'n' b'g' b't' b'h')
-            {
-                Ok(ContentLength.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        15 => {
-            to_lower!(b, data, 15);
-
-            if eq!(b == b'a' b'c' b'c' b'e' b'p' b't' b'-') { // accept-
-                if eq!(b[7] == b'e' b'n' b'c' b'o' b'd' b'i' b'n' b'g') {
-                    return Ok(AcceptEncoding.into())
-                } else if eq!(b[7] == b'l' b'a' b'n' b'g' b'u' b'a' b'g' b'e') {
-                    return Ok(AcceptLanguage.into())
-                }
-            } else if eq!(b == b'p' b'u' b'b' b'l' b'i' b'c' b'-' b'k' b'e' b'y' b'-' b'p' b'i' b'n' b's') {
-                return Ok(PublicKeyPins.into())
-            } else if eq!(b == b'x' b'-' b'f' b'r' b'a' b'm' b'e' b'-' b'o' b'p' b't' b'i' b'o' b'n' b's') {
-                return Ok(XFrameOptions.into())
-            }
-            else if eq!(b == b'r' b'e' b'f' b'e' b'r' b'r' b'e' b'r' b'-' b'p' b'o' b'l' b'i' b'c' b'y') {
-                return Ok(ReferrerPolicy.into())
-            }
-
-            validate(b, len)
-        }
-        16 => {
-            to_lower!(b, data, 16);
-
-            if eq!(b == b'c' b'o' b'n' b't' b'e' b'n' b't' b'-') {
-                if eq!(b[8] == b'l' b'a' b'n' b'g' b'u' b'a' b'g' b'e') {
-                    return Ok(ContentLanguage.into())
-                } else if eq!(b[8] == b'l' b'o' b'c' b'a' b't' b'i' b'o' b'n') {
-                    return Ok(ContentLocation.into())
-                } else if eq!(b[8] == b'e' b'n' b'c' b'o' b'd' b'i' b'n' b'g') {
-                    return Ok(ContentEncoding.into())
-                }
-            } else if eq!(b == b'w' b'w' b'w' b'-' b'a' b'u' b't' b'h' b'e' b'n' b't' b'i' b'c' b'a' b't' b'e') {
-                return Ok(WwwAuthenticate.into())
-            } else if eq!(b == b'x' b'-' b'x' b's' b's' b'-' b'p' b'r' b'o' b't' b'e' b'c' b't' b'i' b'o' b'n') {
-                return Ok(XXssProtection.into())
-            }
-
-            validate(b, len)
-        }
-        17 => {
-            to_lower!(b, data, 17);
-
-            if eq!(b == b't' b'r' b'a' b'n' b's' b'f' b'e' b'r' b'-' b'e' b'n' b'c' b'o' b'd' b'i' b'n' b'g') {
-                Ok(TransferEncoding.into())
-            } else if eq!(b == b'i' b'f' b'-' b'm' b'o' b'd' b'i' b'f' b'i' b'e' b'd' b'-' b's' b'i' b'n' b'c' b'e') {
-                Ok(IfModifiedSince.into())
-            } else if eq!(b == b's' b'e' b'c' b'-' b'w' b'e' b'b' b's' b'o' b'c' b'k' b'e' b't' b'-' b'k' b'e' b'y') {
-                Ok(SecWebSocketKey.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        18 => {
-            to_lower!(b, data, 18);
-
-            if eq!(b == b'p' b'r' b'o' b'x' b'y' b'-' b'a' b'u' b't' b'h' b'e' b'n' b't' b'i' b'c' b'a' b't' b'e') {
-                Ok(ProxyAuthenticate.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        19 => {
-            to_lower!(b, data, 19);
-
-            if eq!(b == b'c' b'o' b'n' b't' b'e' b'n' b't' b'-' b'd' b'i' b's' b'p' b'o' b's' b'i' b't' b'i' b'o' b'n') {
-                Ok(ContentDisposition.into())
-            } else if eq!(b == b'i' b'f' b'-' b'u' b'n' b'm' b'o' b'd' b'i' b'f' b'i' b'e' b'd' b'-' b's' b'i' b'n' b'c' b'e') {
-                Ok(IfUnmodifiedSince.into())
-            } else if eq!(b == b'p' b'r' b'o' b'x' b'y' b'-' b'a' b'u' b't' b'h' b'o' b'r' b'i' b'z' b'a' b't' b'i' b'o' b'n') {
-                Ok(ProxyAuthorization.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        20 => {
-            to_lower!(b, data, 20);
-
-            if eq!(b == b's' b'e' b'c' b'-' b'w' b'e' b'b' b's' b'o' b'c' b'k' b'e' b't' b'-' b'a' b'c' b'c' b'e' b'p' b't') {
-                Ok(SecWebSocketAccept.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        21 => {
-            to_lower!(b, data, 21);
-
-            if eq!(b == b's' b'e' b'c' b'-' b'w' b'e' b'b' b's' b'o' b'c' b'k' b'e' b't' b'-' b'v' b'e' b'r' b's' b'i' b'o' b'n') {
-                Ok(SecWebSocketVersion.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        22 => {
-            to_lower!(b, data, 22);
-
-            if eq!(b == b'a' b'c' b'c' b'e' b's' b's' b'-' b'c' b'o' b'n' b't' b'r' b'o' b'l' b'-' b'm' b'a' b'x' b'-' b'a' b'g' b'e') {
-                Ok(AccessControlMaxAge.into())
-            } else if eq!(b == b'x' b'-' b'c' b'o' b'n' b't' b'e' b'n' b't' b'-' b't' b'y' b'p' b'e' b'-' b'o' b'p' b't' b'i' b'o' b'n' b's') {
-                Ok(XContentTypeOptions.into())
-            } else if eq!(b == b'x' b'-' b'd' b'n' b's' b'-' b'p' b'r' b'e' b'f' b'e' b't' b'c' b'h' b'-' b'c' b'o' b'n' b't' b'r' b'o' b'l') {
-                Ok(XDnsPrefetchControl.into())
-            } else if eq!(b == b's' b'e' b'c' b'-' b'w' b'e' b'b' b's' b'o' b'c' b'k' b'e' b't' b'-' b'p' b'r' b'o' b't' b'o' b'c' b'o' b'l') {
-                Ok(SecWebSocketProtocol.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        23 => {
-            to_lower!(b, data, 23);
-
-            if eq!(b == b'c' b'o' b'n' b't' b'e' b'n' b't' b'-' b's' b'e' b'c' b'u' b'r' b'i' b't' b'y' b'-' b'p' b'o' b'l' b'i' b'c' b'y') {
-                Ok(ContentSecurityPolicy.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        24 => {
-            to_lower!(b, data, 24);
-
-            if eq!(b == b's' b'e' b'c' b'-' b'w' b'e' b'b' b's' b'o' b'c' b'k' b'e' b't' b'-' b'e' b'x' b't' b'e' b'n' b's' b'i' b'o' b'n' b's') {
-                Ok(SecWebSocketExtensions.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        25 => {
-            to_lower!(b, data, 25);
-
-            if eq!(b == b's' b't' b'r' b'i' b'c' b't' b'-' b't' b'r' b'a' b'n' b's' b'p' b'o' b'r' b't' b'-' b's' b'e' b'c' b'u' b'r' b'i' b't' b'y') {
-                Ok(StrictTransportSecurity.into())
-            } else if eq!(b == b'u' b'p' b'g' b'r' b'a' b'd' b'e' b'-' b'i' b'n' b's' b'e' b'c' b'u' b'r' b'e' b'-' b'r' b'e' b'q' b'u' b'e' b's' b't' b's') {
-                Ok(UpgradeInsecureRequests.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        27 => {
-            to_lower!(b, data, 27);
-
-            if eq!(b == b'a' b'c' b'c' b'e' b's' b's' b'-' b'c' b'o' b'n' b't' b'r' b'o' b'l' b'-' b'a' b'l' b'l' b'o' b'w' b'-' b'o' b'r' b'i' b'g' b'i' b'n') {
-                Ok(AccessControlAllowOrigin.into())
-            } else if eq!(b == b'p' b'u' b'b' b'l' b'i' b'c' b'-' b'k' b'e' b'y' b'-' b'p' b'i' b'n' b's' b'-' b'r' b'e' b'p' b'o' b'r' b't' b'-' b'o' b'n' b'l' b'y') {
-                Ok(PublicKeyPinsReportOnly.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        28 => {
-            to_lower!(b, data, 28);
-
-            if eq!(b == b'a' b'c' b'c' b'e' b's' b's' b'-' b'c' b'o' b'n' b't' b'r' b'o' b'l' b'-' b'a' b'l' b'l' b'o' b'w' b'-') {
-                if eq!(b[21] == b'h' b'e' b'a' b'd' b'e' b'r' b's') {
-                    return Ok(AccessControlAllowHeaders.into())
-                } else if eq!(b[21] == b'm' b'e' b't' b'h' b'o' b'd' b's') {
-                    return Ok(AccessControlAllowMethods.into())
-                }
-            }
-
-            validate(b, len)
-        }
-        29 => {
-            to_lower!(b, data, 29);
-
-            if eq!(b == b'a' b'c' b'c' b'e' b's' b's' b'-' b'c' b'o' b'n' b't' b'r' b'o' b'l' b'-') {
-                if eq!(b[15] == b'e' b'x' b'p' b'o' b's' b'e' b'-' b'h' b'e' b'a' b'd' b'e' b'r' b's') {
-                    return Ok(AccessControlExposeHeaders.into())
-                } else if eq!(b[15] == b'r' b'e' b'q' b'u' b'e' b's' b't' b'-' b'm' b'e' b't' b'h' b'o' b'd') {
-                    return Ok(AccessControlRequestMethod.into())
-                }
-            }
-
-            validate(b, len)
-        }
-        30 => {
-            to_lower!(b, data, 30);
-
-            if eq!(b == b'a' b'c' b'c' b'e' b's' b's' b'-' b'c' b'o' b'n' b't' b'r' b'o' b'l' b'-' b'r' b'e' b'q' b'u' b'e' b's' b't' b'-' b'h' b'e' b'a' b'd' b'e' b'r' b's') {
-                Ok(AccessControlRequestHeaders.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        32 => {
-            to_lower!(b, data, 32);
-
-            if eq!(b == b'a' b'c' b'c' b'e' b's' b's' b'-' b'c' b'o' b'n' b't' b'r' b'o' b'l' b'-' b'a' b'l' b'l' b'o' b'w' b'-' b'c' b'r' b'e' b'd' b'e' b'n' b't' b'i' b'a' b'l' b's') {
-                Ok(AccessControlAllowCredentials.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        35 => {
-            to_lower!(b, data, 35);
-
-            if eq!(b == b'c' b'o' b'n' b't' b'e' b'n' b't' b'-' b's' b'e' b'c' b'u' b'r' b'i' b't' b'y' b'-' b'p' b'o' b'l' b'i' b'c' b'y' b'-' b'r' b'e' b'p' b'o' b'r' b't' b'-' b'o' b'n' b'l' b'y') {
-                Ok(ContentSecurityPolicyReportOnly.into())
-            } else {
-                validate(b, len)
-            }
-        }
-        len if len < 64 => {
-            for i in 0..len {
-                b[i] = table[data[i] as usize];
-            }
-            validate(b, len)
-        }
-        len if len <= super::MAX_HEADER_NAME_LEN => {
-            Ok(HdrName::custom(data, false))
-        }
-        _ => Err(InvalidHeaderName::new()),
-    }
-}
-
-#[cfg(all(debug_assertions, target_arch = "wasm32"))]
-/// This version works best in debug mode in wasm
-fn parse_hdr<'a>(
-    data: &'a [u8],
-    b: &'a mut [u8; 64],
-    table: &[u8; 256],
-) -> Result<HdrName<'a>, InvalidHeaderName> {
-    use self::StandardHeader::*;
-
-    let len = data.len();
-
-    let validate = |buf: &'a [u8], len: usize| {
-        let buf = &buf[..len];
-        if buf.iter().any(|&b| b == 0) {
-            Err(InvalidHeaderName::new())
-        } else {
-            Ok(HdrName::custom(buf, true))
-        }
-    };
-
-    assert!(
-        len < super::MAX_HEADER_NAME_LEN,
-        "header name too long -- max length is {}",
-        super::MAX_HEADER_NAME_LEN
-    );
-
-    match len {
-        0 => Err(InvalidHeaderName::new()),
-        len if len > 64 => Ok(HdrName::custom(data, false)),
-        len => {
+        len @ 1..=64 => {
             // Read from data into the buffer - transforming using `table` as we go
             data.iter().zip(b.iter_mut()).for_each(|(index, out)| *out = table[*index as usize]);
-            match &b[0..len] {
-                b"te" => Ok(Te.into()),
-                b"age" => Ok(Age.into()),
-                b"via" => Ok(Via.into()),
-                b"dnt" => Ok(Dnt.into()),
-                b"date" => Ok(Date.into()),
-                b"etag" => Ok(Etag.into()),
-                b"from" => Ok(From.into()),
-                b"host" => Ok(Host.into()),
-                b"link" => Ok(Link.into()),
-                b"vary" => Ok(Vary.into()),
-                b"allow" => Ok(Allow.into()),
-                b"range" => Ok(Range.into()),
-                b"accept" => Ok(Accept.into()),
-                b"cookie" => Ok(Cookie.into()),
-                b"expect" => Ok(Expect.into()),
-                b"origin" => Ok(Origin.into()),
-                b"pragma" => Ok(Pragma.into()),
-                b"server" => Ok(Server.into()),
-                b"alt-svc" => Ok(AltSvc.into()),
-                b"expires" => Ok(Expires.into()),
-                b"referer" => Ok(Referer.into()),
-                b"refresh" => Ok(Refresh.into()),
-                b"trailer" => Ok(Trailer.into()),
-                b"upgrade" => Ok(Upgrade.into()),
-                b"warning" => Ok(Warning.into()),
-                b"if-match" => Ok(IfMatch.into()),
-                b"if-range" => Ok(IfRange.into()),
-                b"location" => Ok(Location.into()),
-                b"forwarded" => Ok(Forwarded.into()),
-                b"connection" => Ok(Connection.into()),
-                b"set-cookie" => Ok(SetCookie.into()),
-                b"user-agent" => Ok(UserAgent.into()),
-                b"retry-after" => Ok(RetryAfter.into()),
-                b"content-type" => Ok(ContentType.into()),
-                b"max-forwards" => Ok(MaxForwards.into()),
-                b"accept-ranges" => Ok(AcceptRanges.into()),
-                b"authorization" => Ok(Authorization.into()),
-                b"cache-control" => Ok(CacheControl.into()),
-                b"content-range" => Ok(ContentRange.into()),
-                b"if-none-match" => Ok(IfNoneMatch.into()),
-                b"last-modified" => Ok(LastModified.into()),
-                b"accept-charset" => Ok(AcceptCharset.into()),
-                b"content-length" => Ok(ContentLength.into()),
-                b"accept-encoding" => Ok(AcceptEncoding.into()),
-                b"accept-language" => Ok(AcceptLanguage.into()),
-                b"public-key-pins" => Ok(PublicKeyPins.into()),
-                b"x-frame-options" => Ok(XFrameOptions.into()),
-                b"referrer-policy" => Ok(ReferrerPolicy.into()),
-                b"content-language" => Ok(ContentLanguage.into()),
-                b"content-location" => Ok(ContentLocation.into()),
-                b"content-encoding" => Ok(ContentEncoding.into()),
-                b"www-authenticate" => Ok(WwwAuthenticate.into()),
-                b"x-xss-protection" => Ok(XXssProtection.into()),
-                b"transfer-encoding" => Ok(TransferEncoding.into()),
-                b"if-modified-since" => Ok(IfModifiedSince.into()),
-                b"sec-websocket-key" => Ok(SecWebSocketKey.into()),
-                b"proxy-authenticate" => Ok(ProxyAuthenticate.into()),
-                b"content-disposition" => Ok(ContentDisposition.into()),
-                b"if-unmodified-since" => Ok(IfUnmodifiedSince.into()),
-                b"proxy-authorization" => Ok(ProxyAuthorization.into()),
-                b"sec-websocket-accept" => Ok(SecWebSocketAccept.into()),
-                b"sec-websocket-version" => Ok(SecWebSocketVersion.into()),
-                b"access-control-max-age" => Ok(AccessControlMaxAge.into()),
-                b"x-content-type-options" => Ok(XContentTypeOptions.into()),
-                b"x-dns-prefetch-control" => Ok(XDnsPrefetchControl.into()),
-                b"sec-websocket-protocol" => Ok(SecWebSocketProtocol.into()),
-                b"content-security-policy" => Ok(ContentSecurityPolicy.into()),
-                b"sec-websocket-extensions" => Ok(SecWebSocketExtensions.into()),
-                b"strict-transport-security" => Ok(StrictTransportSecurity.into()),
-                b"upgrade-insecure-requests" => Ok(UpgradeInsecureRequests.into()),
-                b"access-control-allow-origin" => Ok(AccessControlAllowOrigin.into()),
-                b"public-key-pins-report-only" => Ok(PublicKeyPinsReportOnly.into()),
-                b"access-control-allow-headers" => Ok(AccessControlAllowHeaders.into()),
-                b"access-control-allow-methods" => Ok(AccessControlAllowMethods.into()),
-                b"access-control-expose-headers" => Ok(AccessControlExposeHeaders.into()),
-                b"access-control-request-method" => Ok(AccessControlRequestMethod.into()),
-                b"access-control-request-headers" => Ok(AccessControlRequestHeaders.into()),
-                b"access-control-allow-credentials" => Ok(AccessControlAllowCredentials.into()),
-                b"content-security-policy-report-only" => {
-                    Ok(ContentSecurityPolicyReportOnly.into())
+            let name = &b[0..len];
+            match StandardHeader::from_bytes(name) {
+                Some(sh) => Ok(sh.into()),
+                None => {
+                    if name.contains(&0) {
+                        Err(InvalidHeaderName::new())
+                    } else {
+                        Ok(HdrName::custom(name, true))
+                    }
                 }
-                other => validate(other, len),
             }
         }
+        65..=super::MAX_HEADER_NAME_LEN => Ok(HdrName::custom(data, false)),
+        _ => Err(InvalidHeaderName::new()),
     }
 }
 
@@ -1727,12 +1163,34 @@ impl HeaderName {
 
     /// Converts a static string to a HTTP header name.
     ///
-    /// This function panics when the static string is a invalid header.
-    ///
     /// This function requires the static string to only contain lowercase
     /// characters, numerals and symbols, as per the HTTP/2.0 specification
     /// and header names internal representation within this library.
     ///
+    /// # Panics
+    ///
+    /// This function panics when the static string is a invalid header.
+    ///
+    /// Until [Allow panicking in constants](https://github.com/rust-lang/rfcs/pull/2345)
+    /// makes its way into stable, the panic message at compile-time is
+    /// going to look cryptic, but should at least point at your header value:
+    ///
+    /// ```text
+    /// error: any use of this value will cause an error
+    ///     --> http/src/header/name.rs:1241:13
+    ///      |
+    /// 1241 |             ([] as [u8; 0])[0]; // Invalid header name
+    ///      |             ^^^^^^^^^^^^^^^^^^
+    ///      |             |
+    ///      |             index out of bounds: the length is 0 but the index is 0
+    ///      |             inside `http::HeaderName::from_static` at http/src/header/name.rs:1241:13
+    ///      |             inside `INVALID_NAME` at src/main.rs:3:34
+    ///      |
+    ///     ::: src/main.rs:3:1
+    ///      |
+    /// 3    | const INVALID_NAME: HeaderName = HeaderName::from_static("Capitalized");
+    ///      | ------------------------------------------------------------------------
+    /// ```
     ///
     /// # Examples
     ///
@@ -1760,33 +1218,31 @@ impl HeaderName {
     /// let a = HeaderName::from_static("foobar");
     /// let b = HeaderName::from_static("FOOBAR"); // This line panics!
     /// ```
-    #[allow(deprecated)]
-    pub fn from_static(src: &'static str) -> HeaderName {
-        let bytes = src.as_bytes();
-        #[allow(deprecated)]
-        let mut buf = unsafe { mem::uninitialized() };
-        match parse_hdr(bytes, &mut buf, &HEADER_CHARS_H2) {
-            Ok(hdr_name) => match hdr_name.inner {
-                Repr::Standard(std) => std.into(),
-                Repr::Custom(MaybeLower { buf: _, lower: true }) => {
-                    let val = ByteStr::from_static(src);
-                    Custom(val).into()
-                },
-                Repr::Custom(MaybeLower { buf: _, lower: false }) => {
-                    // With lower false, the string is left unchecked by
-                    // parse_hdr and must be validated manually.
-                    for &b in bytes.iter() {
-                        if HEADER_CHARS_H2[b as usize] == 0 {
-                            panic!("invalid header name")
-                        }
-                    }
+    #[allow(unconditional_panic)] // required for the panic circumvention
+    pub const fn from_static(src: &'static str) -> HeaderName {
+        let name_bytes = src.as_bytes();
+        if let Some(standard) = StandardHeader::from_bytes(name_bytes) {
+            return HeaderName{
+                inner: Repr::Standard(standard),
+            };
+        }
 
-                    let val = ByteStr::from_static(src);
-                    Custom(val).into()
+        if name_bytes.len() == 0 || name_bytes.len() > super::MAX_HEADER_NAME_LEN || {
+            let mut i = 0;
+            loop {
+                if i >= name_bytes.len() {
+                    break false;
+                } else if HEADER_CHARS_H2[name_bytes[i] as usize] == 0 {
+                    break true;
                 }
-            },
+                i += 1;
+            }
+        } {
+            ([] as [u8; 0])[0]; // Invalid header name
+        }
 
-            Err(_) => panic!("invalid header name")
+        HeaderName {
+            inner: Repr::Custom(Custom(ByteStr::from_static(src)))
         }
     }
 
@@ -2169,22 +1625,34 @@ mod tests {
         }
     }
 
+    const ONE_TOO_LONG: &[u8] = &[b'a'; super::super::MAX_HEADER_NAME_LEN+1];
+
     #[test]
     fn test_invalid_name_lengths() {
         assert!(
             HeaderName::from_bytes(&[]).is_err(),
             "zero-length header name is an error",
         );
-        let mut long = vec![b'a'; super::super::MAX_HEADER_NAME_LEN];
+
+        let long = &ONE_TOO_LONG[0..super::super::MAX_HEADER_NAME_LEN];
+
+        let long_str = std::str::from_utf8(long).unwrap();
+        assert_eq!(HeaderName::from_static(long_str), long_str); // shouldn't panic!
+
         assert!(
-            HeaderName::from_bytes(long.as_slice()).is_ok(),
+            HeaderName::from_bytes(long).is_ok(),
             "max header name length is ok",
         );
-        long.push(b'a');
         assert!(
-            HeaderName::from_bytes(long.as_slice()).is_err(),
+            HeaderName::from_bytes(ONE_TOO_LONG).is_err(),
             "longer than max header name length is an error",
         );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_static_invalid_name_lengths() {
+        let _ = HeaderName::from_static(unsafe { std::str::from_utf8_unchecked(ONE_TOO_LONG) });
     }
 
     #[test]

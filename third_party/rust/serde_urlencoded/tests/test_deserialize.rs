@@ -1,6 +1,4 @@
-extern crate serde_urlencoded;
-#[macro_use]
-extern crate serde_derive;
+use serde_derive::Deserialize;
 
 #[derive(Deserialize, Debug, PartialEq)]
 struct NewType<T>(T);
@@ -82,4 +80,9 @@ fn deserialize_unit_enum() {
         serde_urlencoded::from_str("one=A&two=B&three=C"),
         Ok(result)
     );
+}
+
+#[test]
+fn deserialize_unit_type() {
+    assert_eq!(serde_urlencoded::from_str(""), Ok(()));
 }
