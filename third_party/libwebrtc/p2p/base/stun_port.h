@@ -112,7 +112,7 @@ class UDPPort : public Port {
   void set_stun_keepalive_lifetime(int lifetime) {
     stun_keepalive_lifetime_ = lifetime;
   }
-  // Returns true if there is a pending request with type |msg_type|.
+  // Returns true if there is a pending request with type `msg_type`.
   bool HasPendingRequest(int msg_type) {
     return requests_.HasRequest(msg_type);
   }
@@ -170,8 +170,8 @@ class UDPPort : public Port {
 
   void SendStunBindingRequests();
 
-  // Helper function which will set |addr|'s IP to the default local address if
-  // |addr| is the "any" address and |emit_local_for_anyaddress_| is true. When
+  // Helper function which will set `addr`'s IP to the default local address if
+  // `addr` is the "any" address and `emit_local_for_anyaddress_` is true. When
   // returning false, it indicates that the operation has failed and the
   // address shouldn't be used by any candidate.
   bool MaybeSetDefaultLocalAddress(rtc::SocketAddress* addr) const;

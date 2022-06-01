@@ -37,9 +37,9 @@ inline bool IsStunMessage(uint16_t msg_type) {
 }
 
 // AsyncStunTCPSocket
-// Binds and connects |socket| and creates AsyncTCPSocket for
-// it. Takes ownership of |socket|. Returns NULL if bind() or
-// connect() fail (|socket| is destroyed in that case).
+// Binds and connects `socket` and creates AsyncTCPSocket for
+// it. Takes ownership of `socket`. Returns NULL if bind() or
+// connect() fail (`socket` is destroyed in that case).
 AsyncStunTCPSocket* AsyncStunTCPSocket::Create(
     rtc::AsyncSocket* socket,
     const rtc::SocketAddress& bind_address,

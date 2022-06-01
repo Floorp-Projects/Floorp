@@ -513,7 +513,7 @@ void Connection::OnReadPacket(const char* data,
         break;
 
       // Remote end point sent an STUN indication instead of regular binding
-      // request. In this case |last_ping_received_| will be updated but no
+      // request. In this case `last_ping_received_` will be updated but no
       // response will be sent.
       case STUN_BINDING_INDICATION:
         ReceivedPing(msg->transaction_id());
@@ -928,7 +928,7 @@ bool Connection::dead(int64_t now) const {
     // working. This also allows a remote peer to continue pinging over a
     // locally inactive (pruned) connection. This also allows the local agent to
     // ping with longer interval than 30s as long as it shorter than
-    // |dead_connection_timeout_ms|.
+    // `dead_connection_timeout_ms`.
     if (now <= (last_received() + DEAD_CONNECTION_RECEIVE_TIMEOUT)) {
       // Not dead since we have received the last 30s.
       return false;

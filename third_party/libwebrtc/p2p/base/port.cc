@@ -655,7 +655,7 @@ bool Port::MaybeIceRoleConflict(const rtc::SocketAddress& addr,
     remote_tiebreaker = stun_attr->value();
   }
 
-  // If |remote_ufrag| is same as port local username fragment and
+  // If `remote_ufrag` is same as port local username fragment and
   // tie breaker value received in the ping message matches port
   // tiebreaker value this must be a loopback call.
   // We will treat this as valid scenario.

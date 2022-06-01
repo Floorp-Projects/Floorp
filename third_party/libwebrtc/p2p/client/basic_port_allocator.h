@@ -255,7 +255,7 @@ class RTC_EXPORT BasicPortAllocatorSession : public PortAllocatorSession {
   void PrunePortsAndRemoveCandidates(
       const std::vector<PortData*>& port_data_list);
   // Gets filtered and sanitized candidates generated from a port and
-  // append to |candidates|.
+  // append to `candidates`.
   void GetCandidatesFromPort(const PortData& data,
                              std::vector<Candidate>* candidates) const;
   Port* GetBestTurnPortForNetwork(const std::string& network_name) const;
@@ -287,7 +287,7 @@ class RTC_EXPORT BasicPortAllocatorSession : public PortAllocatorSession {
 // Records configuration information useful in creating ports.
 // TODO(deadbeef): Rename "relay" to "turn_server" in this struct.
 struct RTC_EXPORT PortConfiguration {
-  // TODO(jiayl): remove |stun_address| when Chrome is updated.
+  // TODO(jiayl): remove `stun_address` when Chrome is updated.
   rtc::SocketAddress stun_address;
   ServerAddresses stun_servers;
   std::string username;
@@ -338,7 +338,7 @@ class AllocationSequence : public sigslot::has_slots<> {
 
     // kInit --> kRunning --> {kCompleted|kStopped}
   };
-  // |port_allocation_complete_callback| is called when AllocationSequence is
+  // `port_allocation_complete_callback` is called when AllocationSequence is
   // done with allocating ports. This signal is useful when port allocation
   // fails which doesn't result in any candidates. Using this signal
   // BasicPortAllocatorSession can send its candidate discovery conclusion
@@ -409,7 +409,7 @@ class AllocationSequence : public sigslot::has_slots<> {
   int phase_;
   std::function<void()> port_allocation_complete_callback_;
   // This counter is sampled and passed together with tasks when tasks are
-  // posted. If the sampled counter doesn't match |epoch_| on reception, the
+  // posted. If the sampled counter doesn't match `epoch_` on reception, the
   // posted task is ignored.
   int epoch_ = 0;
   webrtc::ScopedTaskSafety safety_;

@@ -18,10 +18,10 @@
  *    before stun binding completed will trigger IPC socket layer to shutdown
  *    the connection.
  *
- *  - PendingTCP: |connection_pending_| indicates whether there is an
+ *  - PendingTCP: `connection_pending_` indicates whether there is an
  *    outstanding TCP connection in progress.
  *
- *  - PretendWri: Tracked by |pretending_to_be_writable_|. Marking connection as
+ *  - PretendWri: Tracked by `pretending_to_be_writable_`. Marking connection as
  *    WRITE_TIMEOUT will cause the connection be deleted. Instead, we're
  *    "pretending" we're still writable for a period of time such that reconnect
  *    could work.
@@ -342,8 +342,8 @@ void TCPPort::OnAddressReady(rtc::AsyncPacketSocket* socket,
              0, "", true);
 }
 
-// TODO(qingsi): |CONNECTION_WRITE_CONNECT_TIMEOUT| is overriden by
-// |ice_unwritable_timeout| in IceConfig when determining the writability state.
+// TODO(qingsi): `CONNECTION_WRITE_CONNECT_TIMEOUT` is overriden by
+// `ice_unwritable_timeout` in IceConfig when determining the writability state.
 // Replace this constant with the config parameter assuming the default value if
 // we decide it is also applicable here.
 TCPConnection::TCPConnection(TCPPort* port,
@@ -506,7 +506,7 @@ void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
                                   MSG_TCPCONNECTION_DELAYED_ONCLOSE);
   } else if (!pretending_to_be_writable_) {
     // OnClose could be called when the underneath socket times out during the
-    // initial connect() (i.e. |pretending_to_be_writable_| is false) . We have
+    // initial connect() (i.e. `pretending_to_be_writable_` is false) . We have
     // to manually destroy here as this connection, as never connected, will not
     // be scheduled for ping to trigger destroy.
     Destroy();

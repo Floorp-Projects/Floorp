@@ -94,13 +94,13 @@ class StreamInterfaceChannel : public rtc::StreamInterface {
 // as the constructor.
 class DtlsTransport : public DtlsTransportInternal {
  public:
-  // |ice_transport| is the ICE transport this DTLS transport is wrapping.  It
+  // `ice_transport` is the ICE transport this DTLS transport is wrapping.  It
   // must outlive this DTLS transport.
   //
-  // |crypto_options| are the options used for the DTLS handshake. This affects
+  // `crypto_options` are the options used for the DTLS handshake. This affects
   // whether GCM crypto suites are negotiated.
   //
-  // |event_log| is an optional RtcEventLog for logging state changes. It should
+  // `event_log` is an optional RtcEventLog for logging state changes. It should
   // outlive the DtlsTransport.
   DtlsTransport(
       IceTransportInternal* ice_transport,

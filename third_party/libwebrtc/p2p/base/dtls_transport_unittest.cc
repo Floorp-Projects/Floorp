@@ -44,7 +44,7 @@ static bool IsRtpLeadByte(uint8_t b) {
   return ((b & 0xC0) == 0x80);
 }
 
-// |modify_digest| is used to set modified fingerprints that are meant to fail
+// `modify_digest` is used to set modified fingerprints that are meant to fail
 // validation.
 void SetRemoteFingerprintFromCert(
     DtlsTransport* transport,
@@ -298,7 +298,7 @@ class DtlsTestClient : public sigslot::has_slots<> {
 // Base class for DtlsTransportTest and DtlsEventOrderingTest, which
 // inherit from different variants of ::testing::Test.
 //
-// Note that this test always uses a FakeClock, due to the |fake_clock_| member
+// Note that this test always uses a FakeClock, due to the `fake_clock_` member
 // variable.
 class DtlsTransportTestBase {
  public:
@@ -618,7 +618,7 @@ class DtlsEventOrderingTest
       public ::testing::TestWithParam<
           ::testing::tuple<std::vector<DtlsTransportEvent>, bool>> {
  protected:
-  // If |valid_fingerprint| is false, the caller will receive a fingerprint
+  // If `valid_fingerprint` is false, the caller will receive a fingerprint
   // that doesn't match the callee's certificate, so the handshake should fail.
   void TestEventOrdering(const std::vector<DtlsTransportEvent>& events,
                          bool valid_fingerprint) {

@@ -817,7 +817,7 @@ void TurnPort::OnResolveResult(rtc::AsyncResolverInterface* resolver) {
     return;
   }
 
-  // Copy the original server address in |resolved_address|. For TLS based
+  // Copy the original server address in `resolved_address`. For TLS based
   // sockets we need hostname along with resolved address.
   rtc::SocketAddress resolved_address = server_address_.address;
   if (resolver_->GetError() != 0 ||
@@ -831,7 +831,7 @@ void TurnPort::OnResolveResult(rtc::AsyncResolverInterface* resolver) {
     return;
   }
   // Signal needs both resolved and unresolved address. After signal is sent
-  // we can copy resolved address back into |server_address_|.
+  // we can copy resolved address back into `server_address_`.
   SignalResolvedServerAddress(this, server_address_.address, resolved_address);
   server_address_.address = resolved_address;
   PrepareAddress();
@@ -1070,7 +1070,7 @@ void TurnPort::HandleChannelData(int channel_id,
                         << len;
     return;
   }
-  // Allowing messages larger than |len|, as ChannelData can be padded.
+  // Allowing messages larger than `len`, as ChannelData can be padded.
 
   TurnEntry* entry = FindEntry(channel_id);
   if (!entry) {
@@ -1786,7 +1786,7 @@ TurnEntry::TurnEntry(TurnPort* port,
       ext_addr_(ext_addr),
       state_(STATE_UNBOUND),
       remote_ufrag_(remote_ufrag) {
-  // Creating permission for |ext_addr_|.
+  // Creating permission for `ext_addr_`.
   SendCreatePermissionRequest(0);
 }
 
@@ -1846,7 +1846,7 @@ void TurnEntry::OnCreatePermissionSuccess() {
   port_->SignalCreatePermissionResult(port_, ext_addr_,
                                       TURN_SUCCESS_RESULT_CODE);
 
-  // If |state_| is STATE_BOUND, the permission will be refreshed
+  // If `state_` is STATE_BOUND, the permission will be refreshed
   // by ChannelBindRequest.
   if (state_ != STATE_BOUND) {
     // Refresh the permission request about 1 minute before the permission

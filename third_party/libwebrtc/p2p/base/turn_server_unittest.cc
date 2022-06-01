@@ -41,7 +41,7 @@ class TurnServerConnectionTest : public ::testing::Test {
  protected:
   rtc::VirtualSocketServer vss_;
   rtc::AutoSocketServerThread thread_;
-  // Since this is constructed after |thread_|, it will pick up |threads_|'s
+  // Since this is constructed after `thread_`, it will pick up `threads_`'s
   // socket server.
   rtc::BasicPacketSocketFactory socket_factory_;
 };
