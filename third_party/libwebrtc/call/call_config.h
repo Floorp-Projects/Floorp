@@ -28,7 +28,7 @@ class AudioProcessing;
 class RtcEventLog;
 
 struct CallConfig {
-  // If |network_task_queue| is set to nullptr, Call will assume that network
+  // If `network_task_queue` is set to nullptr, Call will assume that network
   // related callbacks will be made on the same TQ as the Call instance was
   // constructed on.
   explicit CallConfig(RtcEventLog* event_log,

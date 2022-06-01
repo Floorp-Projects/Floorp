@@ -411,7 +411,7 @@ class Call final : public webrtc::Call,
   std::map<uint32_t, VideoSendStream*> video_send_ssrcs_
       RTC_GUARDED_BY(worker_thread_);
   std::set<VideoSendStream*> video_send_streams_ RTC_GUARDED_BY(worker_thread_);
-  // True if |video_send_streams_| is empty, false if not. The atomic variable
+  // True if `video_send_streams_` is empty, false if not. The atomic variable
   // is used to decide UMA send statistics behavior and enables avoiding a
   // PostTask().
   std::atomic<bool> video_send_streams_empty_{true};
@@ -434,7 +434,7 @@ class Call final : public webrtc::Call,
   // thread.
   ReceiveStats receive_stats_ RTC_GUARDED_BY(worker_thread_);
   SendStats send_stats_ RTC_GUARDED_BY(send_transport_sequence_checker_);
-  // |last_bandwidth_bps_| and |configured_max_padding_bitrate_bps_| being
+  // `last_bandwidth_bps_` and `configured_max_padding_bitrate_bps_` being
   // atomic avoids a PostTask. The variables are used for stats gathering.
   std::atomic<uint32_t> last_bandwidth_bps_{0};
   std::atomic<uint32_t> configured_max_padding_bitrate_bps_{0};
@@ -446,8 +446,8 @@ class Call final : public webrtc::Call,
   const std::unique_ptr<SendDelayStats> video_send_delay_stats_;
   const Timestamp start_of_call_;
 
-  // Note that |task_safety_| needs to be at a greater scope than the task queue
-  // owned by |transport_send_| since calls might arrive on the network thread
+  // Note that `task_safety_` needs to be at a greater scope than the task queue
+  // owned by `transport_send_` since calls might arrive on the network thread
   // while Call is being deleted and the task queue is being torn down.
   const ScopedTaskSafety task_safety_;
 
@@ -543,7 +543,7 @@ class SharedModuleThread::Impl {
 
     if (ref_count_ == 1 && on_one_ref_remaining_) {
       auto moved_fn = std::move(on_one_ref_remaining_);
-      // NOTE: after this function returns, chances are that |this| has been
+      // NOTE: after this function returns, chances are that `this` has been
       // deleted - do not touch any member variables.
       // If the owner of the last reference implements a lambda that releases
       // that last reference inside of the callback (which is legal according
@@ -770,8 +770,8 @@ Call::Call(Clock* clock,
     : clock_(clock),
       task_queue_factory_(task_queue_factory),
       worker_thread_(GetCurrentTaskQueueOrThread()),
-      // If |network_task_queue_| was set to nullptr, network related calls
-      // must be made on |worker_thread_| (i.e. they're one and the same).
+      // If `network_task_queue_` was set to nullptr, network related calls
+      // must be made on `worker_thread_` (i.e. they're one and the same).
       network_thread_(config.network_task_queue_ ? config.network_task_queue_
                                                  : worker_thread_),
       num_cpu_cores_(CpuInfo::DetectNumberOfCores()),
@@ -989,7 +989,7 @@ void Call::DestroyAudioReceiveStream(
   receive_rtp_config_.erase(ssrc);
 
   UpdateAggregateNetworkState();
-  // TODO(bugs.webrtc.org/11993): Consider if deleting |audio_receive_stream|
+  // TODO(bugs.webrtc.org/11993): Consider if deleting `audio_receive_stream`
   // on the network thread would be better or if we'd need to tear down the
   // state in two phases.
   delete audio_receive_stream;
@@ -1014,7 +1014,7 @@ webrtc::VideoSendStream* Call::CreateVideoSendStream(
 
   // TODO(mflodman): Base the start bitrate on a current bandwidth estimate, if
   // the call has already started.
-  // Copy ssrcs from |config| since |config| is moved.
+  // Copy ssrcs from `config` since `config` is moved.
   std::vector<uint32_t> ssrcs = config.rtp.ssrcs;
 
   VideoSendStream* send_stream = new VideoSendStream(
@@ -1109,10 +1109,10 @@ webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
 
   EnsureStarted();
 
-  // TODO(bugs.webrtc.org/11993): Move the registration between |receive_stream|
-  // and |video_receiver_controller_| out of VideoReceiveStream2 construction
+  // TODO(bugs.webrtc.org/11993): Move the registration between `receive_stream`
+  // and `video_receiver_controller_` out of VideoReceiveStream2 construction
   // and set it up asynchronously on the network thread (the registration and
-  // |video_receiver_controller_| need to live on the network thread).
+  // `video_receiver_controller_` need to live on the network thread).
   VideoReceiveStream2* receive_stream = new VideoReceiveStream2(
       task_queue_factory_, this, num_cpu_cores_,
       transport_send_->packet_router(), std::move(configuration),
@@ -1179,7 +1179,7 @@ FlexfecReceiveStream* Call::CreateFlexfecReceiveStream(
   FlexfecReceiveStreamImpl* receive_stream;
 
   // Unlike the video and audio receive streams, FlexfecReceiveStream implements
-  // RtpPacketSinkInterface itself, and hence its constructor passes its |this|
+  // RtpPacketSinkInterface itself, and hence its constructor passes its `this`
   // pointer to video_receiver_controller_->CreateStream(). Calling the
   // constructor while on the worker thread ensures that we don't call
   // OnRtpPacket until the constructor is finished and the object is
@@ -1396,9 +1396,9 @@ void Call::OnTargetTransferRate(TargetTransferRate msg) {
 
   // Ignore updates if bitrate is zero (the aggregate network state is
   // down) or if we're not sending video.
-  // Using |video_send_streams_empty_| is racy but as the caller can't
-  // reasonably expect synchronize with changes in |video_send_streams_| (being
-  // on |send_transport_sequence_checker|), we can avoid a PostTask this way.
+  // Using `video_send_streams_empty_` is racy but as the caller can't
+  // reasonably expect synchronize with changes in `video_send_streams_` (being
+  // on `send_transport_sequence_checker`), we can avoid a PostTask this way.
   if (target_bitrate_bps == 0 ||
       video_send_streams_empty_.load(std::memory_order_relaxed)) {
     send_stats_.PauseSendAndPacerBitrateCounters();
@@ -1556,8 +1556,8 @@ PacketReceiver::DeliveryStatus Call::DeliverRtp(MediaType media_type,
     RTC_LOG(LS_ERROR) << "receive_rtp_config_ lookup failed for ssrc "
                       << parsed_packet.Ssrc();
     // Destruction of the receive stream, including deregistering from the
-    // RtpDemuxer, is not protected by the |worker_thread_|.
-    // But deregistering in the |receive_rtp_config_| map is. So by not passing
+    // RtpDemuxer, is not protected by the `worker_thread_`.
+    // But deregistering in the `receive_rtp_config_` map is. So by not passing
     // the packet on to demuxing in this case, we prevent incoming packets to be
     // passed on via the demuxer to a receive stream which is being torned down.
     return DELIVERY_UNKNOWN_SSRC;
@@ -1608,7 +1608,7 @@ PacketReceiver::DeliveryStatus Call::DeliverPacket(
 
 void Call::OnRecoveredPacket(const uint8_t* packet, size_t length) {
   // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
-  // This method is called synchronously via |OnRtpPacket()| (see DeliverRtp)
+  // This method is called synchronously via `OnRtpPacket()` (see DeliverRtp)
   // on the same thread.
   RTC_DCHECK_RUN_ON(worker_thread_);
   RtpPacketReceived parsed_packet;
@@ -1622,8 +1622,8 @@ void Call::OnRecoveredPacket(const uint8_t* packet, size_t length) {
     RTC_LOG(LS_ERROR) << "receive_rtp_config_ lookup failed for ssrc "
                       << parsed_packet.Ssrc();
     // Destruction of the receive stream, including deregistering from the
-    // RtpDemuxer, is not protected by the |worker_thread_|.
-    // But deregistering in the |receive_rtp_config_| map is.
+    // RtpDemuxer, is not protected by the `worker_thread_`.
+    // But deregistering in the `receive_rtp_config_` map is.
     // So by not passing the packet on to demuxing in this case, we prevent
     // incoming packets to be passed on via the demuxer to a receive stream
     // which is being torn down.

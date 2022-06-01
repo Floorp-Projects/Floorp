@@ -640,7 +640,7 @@ VideoStreamAdapter::GetAdaptDownResolutionStepForBalanced(
     return first_step;
   }
   // We didn't decrease resolution so force it; amend a resolution resuction
-  // to the existing framerate reduction in |first_restrictions|.
+  // to the existing framerate reduction in `first_restrictions`.
   auto second_step = DecreaseResolution(input_state, first_restrictions);
   if (absl::holds_alternative<RestrictionsWithCounters>(second_step)) {
     return second_step;

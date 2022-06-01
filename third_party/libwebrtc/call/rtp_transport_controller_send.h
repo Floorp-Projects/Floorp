@@ -201,8 +201,8 @@ class RtpTransportControllerSend final
   // Protected by internal locks.
   RateLimiter retransmission_rate_limiter_;
 
-  // TODO(perkj): |task_queue_| is supposed to replace |process_thread_|.
-  // |task_queue_| is defined last to ensure all pending tasks are cancelled
+  // TODO(perkj): `task_queue_` is supposed to replace `process_thread_`.
+  // `task_queue_` is defined last to ensure all pending tasks are cancelled
   // and deleted before any other members.
   rtc::TaskQueue task_queue_;
   RTC_DISALLOW_COPY_AND_ASSIGN(RtpTransportControllerSend);

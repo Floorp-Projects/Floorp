@@ -86,7 +86,7 @@ rtc_source_set("audio_sender_interface") {
 }
 
 # TODO(nisse): These RTP targets should be moved elsewhere
-# when interfaces have stabilized. See also TODO for |mock_rtp_interfaces|.
+# when interfaces have stabilized. See also TODO for `mock_rtp_interfaces`.
 rtc_library("rtp_interfaces") {
   # Client code SHOULD NOT USE THIS TARGET, but for now it needs to be public
   # because there exists client code that uses it.
@@ -558,7 +558,7 @@ if (rtc_include_tests) {
     }
   }
 
-  # TODO(eladalon): This should be moved, as with the TODO for |rtp_interfaces|.
+  # TODO(eladalon): This should be moved, as with the TODO for `rtp_interfaces`.
   rtc_source_set("mock_rtp_interfaces") {
     testonly = true
 

@@ -375,7 +375,7 @@ TEST(CallTest, AddAdaptationResourceAfterCreatingVideoSendStream) {
   // Add a fake resource.
   auto fake_resource = FakeResource::Create("FakeResource");
   call->AddAdaptationResource(fake_resource);
-  // An adapter resource mirroring the |fake_resource| should now be present on
+  // An adapter resource mirroring the `fake_resource` should now be present on
   // both streams.
   auto injected_resource1 = FindResourceWhoseNameContains(
       stream1->GetAdaptationResources(), fake_resource->Name());
@@ -437,7 +437,7 @@ TEST(CallTest, AddAdaptationResourceBeforeCreatingVideoSendStream) {
   VideoSendStream* stream2 =
       call->CreateVideoSendStream(config.Copy(), encoder_config.Copy());
   EXPECT_NE(stream2, nullptr);
-  // An adapter resource mirroring the |fake_resource| should be present on both
+  // An adapter resource mirroring the `fake_resource` should be present on both
   // streams.
   auto injected_resource1 = FindResourceWhoseNameContains(
       stream1->GetAdaptationResources(), fake_resource->Name());
@@ -506,7 +506,7 @@ TEST(CallTest, SharedModuleThread) {
   };
 
   // Create our test instance and pass a lambda to it that gets executed when
-  // the reference count goes back to 1 - meaning |shared| again is the only
+  // the reference count goes back to 1 - meaning `shared` again is the only
   // reference, which means we can free the variable and deallocate the thread.
   rtc::scoped_refptr<SharedModuleThread> shared;
   shared =
