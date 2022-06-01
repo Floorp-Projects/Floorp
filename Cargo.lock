@@ -3845,22 +3845,16 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "0.1.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45ca20c77d80be666aef2b45486da86238fabe33e38306bd3118fe4af33fa880"
+version = "0.1.999"
 dependencies = [
- "paste-impl",
- "proc-macro-hack",
+ "paste 1.0.7",
 ]
 
 [[package]]
-name = "paste-impl"
-version = "0.1.18"
+name = "paste"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d95a7db200b97ef370c8e6de0088252f7e0dfff7d047a28528e47456c0fc98b6"
-dependencies = [
- "proc-macro-hack",
-]
+checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
 
 [[package]]
 name = "peek-poke"
@@ -4341,7 +4335,7 @@ dependencies = [
  "lmdb-rkv",
  "log",
  "ordered-float",
- "paste",
+ "paste 0.1.999",
  "serde",
  "serde_derive",
  "thiserror",
