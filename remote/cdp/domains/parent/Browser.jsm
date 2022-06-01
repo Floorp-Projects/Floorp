@@ -12,7 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
-
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
 });
 
@@ -27,7 +26,7 @@ class Browser extends Domain {
     return {
       protocolVersion: "1.3",
       product: (isHeadless ? "Headless " : "") + Services.appinfo.name,
-      revision: "1",
+      revision: Services.appinfo.sourceURL.split("/").pop(),
       userAgent,
       jsVersion: "1.8.5",
     };
