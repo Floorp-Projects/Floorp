@@ -5,15 +5,15 @@ mod pair;
 mod part;
 mod value;
 
-use form_urlencoded::Serializer as UrlEncodedSerializer;
-use form_urlencoded::Target as UrlEncodedTarget;
 use serde::ser;
 use std::borrow::Cow;
 use std::error;
 use std::fmt;
 use std::str;
+use url::form_urlencoded::Serializer as UrlEncodedSerializer;
+use url::form_urlencoded::Target as UrlEncodedTarget;
 
-/// Serializes a value into a `application/x-www-form-urlencoded` `String` buffer.
+/// Serializes a value into a `application/x-wwww-url-encoded` `String` buffer.
 ///
 /// ```
 /// let meal = &[
@@ -42,18 +42,16 @@ pub fn to_string<T: ser::Serialize>(input: T) -> Result<String, Error> {
 ///   unit structs and unit variants.
 ///
 /// * Newtype structs defer to their inner values.
-pub struct Serializer<'input, 'output, Target: UrlEncodedTarget> {
+pub struct Serializer<'input, 'output, Target: 'output + UrlEncodedTarget> {
     urlencoder: &'output mut UrlEncodedSerializer<'input, Target>,
 }
 
-impl<'input, 'output, Target: 'output + UrlEncodedTarget>
-    Serializer<'input, 'output, Target>
-{
+impl<'input, 'output, Target: 'output + UrlEncodedTarget> Serializer<'input, 'output, Target> {
     /// Returns a new `Serializer`.
-    pub fn new(
-        urlencoder: &'output mut UrlEncodedSerializer<'input, Target>,
-    ) -> Self {
-        Serializer { urlencoder }
+    pub fn new(urlencoder: &'output mut UrlEncodedSerializer<'input, Target>) -> Self {
+        Serializer {
+            urlencoder: urlencoder,
+        }
     }
 }
 
@@ -65,7 +63,7 @@ pub enum Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::Custom(ref msg) => msg.fmt(f),
             Error::Utf8(ref err) => write!(f, "invalid UTF-8: {}", err),
@@ -82,15 +80,7 @@ impl error::Error for Error {
     }
 
     /// The lower-level cause of this error, in the case of a `Utf8` error.
-    fn cause(&self) -> Option<&dyn error::Error> {
-        match *self {
-            Error::Custom(_) => None,
-            Error::Utf8(ref err) => Some(err),
-        }
-    }
-
-    /// The lower-level source of this error, in the case of a `Utf8` error.
-    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+    fn cause(&self) -> Option<&error::Error> {
         match *self {
             Error::Custom(_) => None,
             Error::Utf8(ref err) => Some(err),
@@ -105,51 +95,50 @@ impl ser::Error for Error {
 }
 
 /// Sequence serializer.
-pub struct SeqSerializer<'input, 'output, Target: UrlEncodedTarget> {
+pub struct SeqSerializer<'input, 'output, Target: 'output + UrlEncodedTarget> {
     urlencoder: &'output mut UrlEncodedSerializer<'input, Target>,
 }
 
 /// Tuple serializer.
 ///
 /// Mostly used for arrays.
-pub struct TupleSerializer<'input, 'output, Target: UrlEncodedTarget> {
+pub struct TupleSerializer<'input, 'output, Target: 'output + UrlEncodedTarget> {
     urlencoder: &'output mut UrlEncodedSerializer<'input, Target>,
 }
 
 /// Tuple struct serializer.
 ///
 /// Never instantiated, tuple structs are not supported.
-pub struct TupleStructSerializer<'input, 'output, T: UrlEncodedTarget> {
+pub struct TupleStructSerializer<'input, 'output, T: 'output + UrlEncodedTarget> {
     inner: ser::Impossible<&'output mut UrlEncodedSerializer<'input, T>, Error>,
 }
 
 /// Tuple variant serializer.
 ///
 /// Never instantiated, tuple variants are not supported.
-pub struct TupleVariantSerializer<'input, 'output, T: UrlEncodedTarget> {
+pub struct TupleVariantSerializer<'input, 'output, T: 'output + UrlEncodedTarget> {
     inner: ser::Impossible<&'output mut UrlEncodedSerializer<'input, T>, Error>,
 }
 
 /// Map serializer.
-pub struct MapSerializer<'input, 'output, Target: UrlEncodedTarget> {
+pub struct MapSerializer<'input, 'output, Target: 'output + UrlEncodedTarget> {
     urlencoder: &'output mut UrlEncodedSerializer<'input, Target>,
     key: Option<Cow<'static, str>>,
 }
 
 /// Struct serializer.
-pub struct StructSerializer<'input, 'output, Target: UrlEncodedTarget> {
+pub struct StructSerializer<'input, 'output, Target: 'output + UrlEncodedTarget> {
     urlencoder: &'output mut UrlEncodedSerializer<'input, Target>,
 }
 
 /// Struct variant serializer.
 ///
 /// Never instantiated, struct variants are not supported.
-pub struct StructVariantSerializer<'input, 'output, T: UrlEncodedTarget> {
+pub struct StructVariantSerializer<'input, 'output, T: 'output + UrlEncodedTarget> {
     inner: ser::Impossible<&'output mut UrlEncodedSerializer<'input, T>, Error>,
 }
 
-impl<'input, 'output, Target> ser::Serializer
-    for Serializer<'input, 'output, Target>
+impl<'input, 'output, Target> ser::Serializer for Serializer<'input, 'output, Target>
 where
     Target: 'output + UrlEncodedTarget,
 {
@@ -158,12 +147,10 @@ where
     type SerializeSeq = SeqSerializer<'input, 'output, Target>;
     type SerializeTuple = TupleSerializer<'input, 'output, Target>;
     type SerializeTupleStruct = TupleStructSerializer<'input, 'output, Target>;
-    type SerializeTupleVariant =
-        TupleVariantSerializer<'input, 'output, Target>;
+    type SerializeTupleVariant = TupleVariantSerializer<'input, 'output, Target>;
     type SerializeMap = MapSerializer<'input, 'output, Target>;
     type SerializeStruct = StructSerializer<'input, 'output, Target>;
-    type SerializeStructVariant =
-        StructVariantSerializer<'input, 'output, Target>;
+    type SerializeStructVariant = StructVariantSerializer<'input, 'output, Target>;
 
     /// Returns an error.
     fn serialize_bool(self, _v: bool) -> Result<Self::Ok, Error> {
@@ -235,9 +222,9 @@ where
         Err(Error::top_level())
     }
 
-    /// Returns `Ok`.
+    /// Returns an error.
     fn serialize_unit(self) -> Result<Self::Ok, Error> {
-        Ok(self.urlencoder)
+        Err(Error::top_level())
     }
 
     /// Returns `Ok`.
@@ -365,8 +352,7 @@ where
     }
 }
 
-impl<'input, 'output, Target> ser::SerializeSeq
-    for SeqSerializer<'input, 'output, Target>
+impl<'input, 'output, Target> ser::SerializeSeq for SeqSerializer<'input, 'output, Target>
 where
     Target: 'output + UrlEncodedTarget,
 {
@@ -385,8 +371,7 @@ where
     }
 }
 
-impl<'input, 'output, Target> ser::SerializeTuple
-    for TupleSerializer<'input, 'output, Target>
+impl<'input, 'output, Target> ser::SerializeTuple for TupleSerializer<'input, 'output, Target>
 where
     Target: 'output + UrlEncodedTarget,
 {
@@ -445,8 +430,7 @@ where
     }
 }
 
-impl<'input, 'output, Target> ser::SerializeMap
-    for MapSerializer<'input, 'output, Target>
+impl<'input, 'output, Target> ser::SerializeMap for MapSerializer<'input, 'output, Target>
 where
     Target: 'output + UrlEncodedTarget,
 {
@@ -486,7 +470,7 @@ where
         value: &T,
     ) -> Result<(), Error> {
         {
-            let key = self.key.as_ref().ok_or_else(Error::no_key)?;
+            let key = self.key.as_ref().ok_or_else(|| Error::no_key())?;
             let value_sink = value::ValueSink::new(self.urlencoder, &key);
             value.serialize(part::PartSerializer::new(value_sink))?;
         }
@@ -499,8 +483,7 @@ where
     }
 }
 
-impl<'input, 'output, Target> ser::SerializeStruct
-    for StructSerializer<'input, 'output, Target>
+impl<'input, 'output, Target> ser::SerializeStruct for StructSerializer<'input, 'output, Target>
 where
     Target: 'output + UrlEncodedTarget,
 {

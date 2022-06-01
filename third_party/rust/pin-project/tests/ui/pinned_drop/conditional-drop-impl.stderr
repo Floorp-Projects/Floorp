@@ -1,30 +1,30 @@
 error[E0367]: `Drop` impl requires `T: Unpin` but the struct it is implemented for does not
-  --> tests/ui/pinned_drop/conditional-drop-impl.rs:11:9
+  --> tests/ui/pinned_drop/conditional-drop-impl.rs:10:9
    |
-11 | impl<T: Unpin> Drop for DropImpl<T> {
+10 | impl<T: Unpin> Drop for DropImpl<T> {
    |         ^^^^^
    |
 note: the implementor must specify the same requirement
-  --> tests/ui/pinned_drop/conditional-drop-impl.rs:7:1
+  --> tests/ui/pinned_drop/conditional-drop-impl.rs:6:1
    |
-7  | / struct DropImpl<T> {
-8  | |     f: T,
-9  | | }
+6  | / struct DropImpl<T> {
+7  | |     field: T,
+8  | | }
    | |_^
 
 error[E0277]: `T` cannot be unpinned
-  --> tests/ui/pinned_drop/conditional-drop-impl.rs:16:15
+  --> tests/ui/pinned_drop/conditional-drop-impl.rs:15:15
    |
-16 | #[pin_project(PinnedDrop)] //~ ERROR E0277
+15 | #[pin_project(PinnedDrop)] //~ ERROR E0277
    |               ^^^^^^^^^^ the trait `Unpin` is not implemented for `T`
    |
    = note: consider using `Box::pin`
 note: required because of the requirements on the impl of `PinnedDrop` for `PinnedDropImpl<T>`
-  --> tests/ui/pinned_drop/conditional-drop-impl.rs:23:16
+  --> tests/ui/pinned_drop/conditional-drop-impl.rs:22:16
    |
-23 | impl<T: Unpin> PinnedDrop for PinnedDropImpl<T> {
+22 | impl<T: Unpin> PinnedDrop for PinnedDropImpl<T> {
    |                ^^^^^^^^^^     ^^^^^^^^^^^^^^^^^
 help: consider restricting type parameter `T`
    |
-17 | struct PinnedDropImpl<T: std::marker::Unpin> {
+16 | struct PinnedDropImpl<T: std::marker::Unpin> {
    |                        ++++++++++++++++++++

@@ -13,7 +13,6 @@ pub struct Settings {
     initial_window_size: Option<u32>,
     max_frame_size: Option<u32>,
     max_header_list_size: Option<u32>,
-    enable_connect_protocol: Option<u32>,
 }
 
 /// An enum that lists all valid settings that can be sent in a SETTINGS
@@ -28,7 +27,6 @@ pub enum Setting {
     InitialWindowSize(u32),
     MaxFrameSize(u32),
     MaxHeaderListSize(u32),
-    EnableConnectProtocol(u32),
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Default)]
@@ -101,20 +99,12 @@ impl Settings {
         self.max_header_list_size = size;
     }
 
-    pub fn is_push_enabled(&self) -> Option<bool> {
-        self.enable_push.map(|val| val != 0)
+    pub fn is_push_enabled(&self) -> bool {
+        self.enable_push.unwrap_or(1) != 0
     }
 
     pub fn set_enable_push(&mut self, enable: bool) {
         self.enable_push = Some(enable as u32);
-    }
-
-    pub fn is_extended_connect_protocol_enabled(&self) -> Option<bool> {
-        self.enable_connect_protocol.map(|val| val != 0)
-    }
-
-    pub fn set_enable_connect_protocol(&mut self, val: Option<u32>) {
-        self.enable_connect_protocol = val;
     }
 
     pub fn header_table_size(&self) -> Option<u32> {
@@ -151,7 +141,7 @@ impl Settings {
 
         // Ensure the payload length is correct, each setting is 6 bytes long.
         if payload.len() % 6 != 0 {
-            tracing::debug!("invalid settings payload length; len={:?}", payload.len());
+            log::debug!("invalid settings payload length; len={:?}", payload.len());
             return Err(Error::InvalidPayloadAckSettings);
         }
 
@@ -191,14 +181,6 @@ impl Settings {
                 Some(MaxHeaderListSize(val)) => {
                     settings.max_header_list_size = Some(val);
                 }
-                Some(EnableConnectProtocol(val)) => match val {
-                    0 | 1 => {
-                        settings.enable_connect_protocol = Some(val);
-                    }
-                    _ => {
-                        return Err(Error::InvalidSettingValue);
-                    }
-                },
                 None => {}
             }
         }
@@ -217,13 +199,13 @@ impl Settings {
         let head = Head::new(Kind::Settings, self.flags.into(), StreamId::zero());
         let payload_len = self.payload_len();
 
-        tracing::trace!("encoding SETTINGS; len={}", payload_len);
+        log::trace!("encoding SETTINGS; len={}", payload_len);
 
         head.encode(payload_len, dst);
 
         // Encode the settings
         self.for_each(|setting| {
-            tracing::trace!("encoding setting; val={:?}", setting);
+            log::trace!("encoding setting; val={:?}", setting);
             setting.encode(dst)
         });
     }
@@ -253,10 +235,6 @@ impl Settings {
 
         if let Some(v) = self.max_header_list_size {
             f(MaxHeaderListSize(v));
-        }
-
-        if let Some(v) = self.enable_connect_protocol {
-            f(EnableConnectProtocol(v));
         }
     }
 }
@@ -291,9 +269,6 @@ impl fmt::Debug for Settings {
             Setting::MaxHeaderListSize(v) => {
                 builder.field("max_header_list_size", &v);
             }
-            Setting::EnableConnectProtocol(v) => {
-                builder.field("enable_connect_protocol", &v);
-            }
         });
 
         builder.finish()
@@ -316,7 +291,6 @@ impl Setting {
             4 => Some(InitialWindowSize(val)),
             5 => Some(MaxFrameSize(val)),
             6 => Some(MaxHeaderListSize(val)),
-            8 => Some(EnableConnectProtocol(val)),
             _ => None,
         }
     }
@@ -348,7 +322,6 @@ impl Setting {
             InitialWindowSize(v) => (4, v),
             MaxFrameSize(v) => (5, v),
             MaxHeaderListSize(v) => (6, v),
-            EnableConnectProtocol(v) => (8, v),
         };
 
         dst.put_u16(kind);

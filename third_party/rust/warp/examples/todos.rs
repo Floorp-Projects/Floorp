@@ -241,7 +241,11 @@ mod tests {
         let resp = request()
             .method("POST")
             .path("/todos")
-            .json(&todo1())
+            .json(&Todo {
+                id: 1,
+                text: "test 1".into(),
+                completed: false,
+            })
             .reply(&api)
             .await;
 

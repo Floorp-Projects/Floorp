@@ -3,26 +3,19 @@ use std::marker::Unpin;
 #[cfg(feature = "runtime")]
 use std::time::Duration;
 
-use bytes::Bytes;
 use h2::server::{Connection, Handshake, SendResponse};
-use h2::{Reason, RecvStream};
-use http::{Method, Request};
-use pin_project_lite::pin_project;
+use h2::Reason;
+use pin_project::{pin_project, project};
 use tokio::io::{AsyncRead, AsyncWrite};
-use tracing::{debug, trace, warn};
 
-use super::{ping, PipeToSendStream, SendBuf};
+use super::{decode_content_length, ping, PipeToSendStream, SendBuf};
 use crate::body::HttpBody;
-use crate::common::exec::ConnStreamExec;
-use crate::common::{date, task, Future, Pin, Poll};
-use crate::ext::Protocol;
+use crate::common::exec::H2Exec;
+use crate::common::{task, Future, Pin, Poll};
 use crate::headers;
-use crate::proto::h2::ping::Recorder;
-use crate::proto::h2::{H2Upgraded, UpgradedSendStream};
 use crate::proto::Dispatched;
 use crate::service::HttpService;
 
-use crate::upgrade::{OnUpgrade, Pending, Upgraded};
 use crate::{Body, Response};
 
 // Our defaults are chosen for the "majority" case, which usually are not
@@ -34,7 +27,6 @@ use crate::{Body, Response};
 const DEFAULT_CONN_WINDOW: u32 = 1024 * 1024; // 1mb
 const DEFAULT_STREAM_WINDOW: u32 = 1024 * 1024; // 1mb
 const DEFAULT_MAX_FRAME_SIZE: u32 = 1024 * 16; // 16kb
-const DEFAULT_MAX_SEND_BUF_SIZE: usize = 1024 * 400; // 400kb
 
 #[derive(Clone, Debug)]
 pub(crate) struct Config {
@@ -42,13 +34,11 @@ pub(crate) struct Config {
     pub(crate) initial_conn_window_size: u32,
     pub(crate) initial_stream_window_size: u32,
     pub(crate) max_frame_size: u32,
-    pub(crate) enable_connect_protocol: bool,
     pub(crate) max_concurrent_streams: Option<u32>,
     #[cfg(feature = "runtime")]
     pub(crate) keep_alive_interval: Option<Duration>,
     #[cfg(feature = "runtime")]
     pub(crate) keep_alive_timeout: Duration,
-    pub(crate) max_send_buffer_size: usize,
 }
 
 impl Default for Config {
@@ -58,27 +48,24 @@ impl Default for Config {
             initial_conn_window_size: DEFAULT_CONN_WINDOW,
             initial_stream_window_size: DEFAULT_STREAM_WINDOW,
             max_frame_size: DEFAULT_MAX_FRAME_SIZE,
-            enable_connect_protocol: false,
             max_concurrent_streams: None,
             #[cfg(feature = "runtime")]
             keep_alive_interval: None,
             #[cfg(feature = "runtime")]
             keep_alive_timeout: Duration::from_secs(20),
-            max_send_buffer_size: DEFAULT_MAX_SEND_BUF_SIZE,
         }
     }
 }
 
-pin_project! {
-    pub(crate) struct Server<T, S, B, E>
-    where
-        S: HttpService<Body>,
-        B: HttpBody,
-    {
-        exec: E,
-        service: S,
-        state: State<T, B>,
-    }
+#[pin_project]
+pub(crate) struct Server<T, S, B, E>
+where
+    S: HttpService<Body>,
+    B: HttpBody,
+{
+    exec: E,
+    service: S,
+    state: State<T, B>,
 }
 
 enum State<T, B>
@@ -108,20 +95,16 @@ where
     S: HttpService<Body, ResBody = B>,
     S::Error: Into<Box<dyn StdError + Send + Sync>>,
     B: HttpBody + 'static,
-    E: ConnStreamExec<S::Future, B>,
+    E: H2Exec<S::Future, B>,
 {
     pub(crate) fn new(io: T, service: S, config: &Config, exec: E) -> Server<T, S, B, E> {
         let mut builder = h2::server::Builder::default();
         builder
             .initial_window_size(config.initial_stream_window_size)
             .initial_connection_window_size(config.initial_conn_window_size)
-            .max_frame_size(config.max_frame_size)
-            .max_send_buffer_size(config.max_send_buffer_size);
+            .max_frame_size(config.max_frame_size);
         if let Some(max) = config.max_concurrent_streams {
             builder.max_concurrent_streams(max);
-        }
-        if config.enable_connect_protocol {
-            builder.enable_connect_protocol();
         }
         let handshake = builder.handshake(io);
 
@@ -153,7 +136,7 @@ where
         }
     }
 
-    pub(crate) fn graceful_shutdown(&mut self) {
+    pub fn graceful_shutdown(&mut self) {
         trace!("graceful_shutdown");
         match self.state {
             State::Handshaking { .. } => {
@@ -179,7 +162,7 @@ where
     S: HttpService<Body, ResBody = B>,
     S::Error: Into<Box<dyn StdError + Send + Sync>>,
     B: HttpBody + 'static,
-    E: ConnStreamExec<S::Future, B>,
+    E: H2Exec<S::Future, B>,
 {
     type Output = crate::Result<Dispatched>;
 
@@ -233,7 +216,7 @@ where
     where
         S: HttpService<Body, ResBody = B>,
         S::Error: Into<Box<dyn StdError + Send + Sync>>,
-        E: ConnStreamExec<S::Future, B>,
+        E: H2Exec<S::Future, B>,
     {
         if self.closing.is_none() {
             loop {
@@ -272,9 +255,9 @@ where
 
                 // When the service is ready, accepts an incoming request.
                 match ready!(self.conn.poll_accept(cx)) {
-                    Some(Ok((req, mut respond))) => {
+                    Some(Ok((req, respond))) => {
                         trace!("incoming request");
-                        let content_length = headers::content_length_parse_all(req.headers());
+                        let content_length = decode_content_length(req.headers());
                         let ping = self
                             .ping
                             .as_ref()
@@ -284,40 +267,8 @@ where
                         // Record the headers received
                         ping.record_non_data();
 
-                        let is_connect = req.method() == Method::CONNECT;
-                        let (mut parts, stream) = req.into_parts();
-                        let (mut req, connect_parts) = if !is_connect {
-                            (
-                                Request::from_parts(
-                                    parts,
-                                    crate::Body::h2(stream, content_length.into(), ping),
-                                ),
-                                None,
-                            )
-                        } else {
-                            if content_length.map_or(false, |len| len != 0) {
-                                warn!("h2 connect request with non-zero body not supported");
-                                respond.send_reset(h2::Reason::INTERNAL_ERROR);
-                                return Poll::Ready(Ok(()));
-                            }
-                            let (pending, upgrade) = crate::upgrade::pending();
-                            debug_assert!(parts.extensions.get::<OnUpgrade>().is_none());
-                            parts.extensions.insert(upgrade);
-                            (
-                                Request::from_parts(parts, crate::Body::empty()),
-                                Some(ConnectParts {
-                                    pending,
-                                    ping,
-                                    recv_stream: stream,
-                                }),
-                            )
-                        };
-
-                        if let Some(protocol) = req.extensions_mut().remove::<h2::ext::Protocol>() {
-                            req.extensions_mut().insert(Protocol::from_inner(protocol));
-                        }
-
-                        let fut = H2Stream::new(service.call(req), connect_parts, respond);
+                        let req = req.map(|stream| crate::Body::h2(stream, content_length, ping));
+                        let fut = H2Stream::new(service.call(req), respond);
                         exec.execute_h2stream(fut);
                     }
                     Some(Err(e)) => {
@@ -364,54 +315,34 @@ where
     }
 }
 
-pin_project! {
-    #[allow(missing_debug_implementations)]
-    pub struct H2Stream<F, B>
-    where
-        B: HttpBody,
-    {
-        reply: SendResponse<SendBuf<B::Data>>,
-        #[pin]
-        state: H2StreamState<F, B>,
-    }
+#[allow(missing_debug_implementations)]
+#[pin_project]
+pub struct H2Stream<F, B>
+where
+    B: HttpBody,
+{
+    reply: SendResponse<SendBuf<B::Data>>,
+    #[pin]
+    state: H2StreamState<F, B>,
 }
 
-pin_project! {
-    #[project = H2StreamStateProj]
-    enum H2StreamState<F, B>
-    where
-        B: HttpBody,
-    {
-        Service {
-            #[pin]
-            fut: F,
-            connect_parts: Option<ConnectParts>,
-        },
-        Body {
-            #[pin]
-            pipe: PipeToSendStream<B>,
-        },
-    }
-}
-
-struct ConnectParts {
-    pending: Pending,
-    ping: Recorder,
-    recv_stream: RecvStream,
+#[pin_project]
+enum H2StreamState<F, B>
+where
+    B: HttpBody,
+{
+    Service(#[pin] F),
+    Body(#[pin] PipeToSendStream<B>),
 }
 
 impl<F, B> H2Stream<F, B>
 where
     B: HttpBody,
 {
-    fn new(
-        fut: F,
-        connect_parts: Option<ConnectParts>,
-        respond: SendResponse<SendBuf<B::Data>>,
-    ) -> H2Stream<F, B> {
+    fn new(fut: F, respond: SendResponse<SendBuf<B::Data>>) -> H2Stream<F, B> {
         H2Stream {
             reply: respond,
-            state: H2StreamState::Service { fut, connect_parts },
+            state: H2StreamState::Service(fut),
         }
     }
 }
@@ -433,18 +364,16 @@ impl<F, B, E> H2Stream<F, B>
 where
     F: Future<Output = Result<Response<B>, E>>,
     B: HttpBody,
-    B::Data: 'static,
     B::Error: Into<Box<dyn StdError + Send + Sync>>,
     E: Into<Box<dyn StdError + Send + Sync>>,
 {
+    #[project]
     fn poll2(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<crate::Result<()>> {
         let mut me = self.project();
         loop {
+            #[project]
             let next = match me.state.as_mut().project() {
-                H2StreamStateProj::Service {
-                    fut: h,
-                    connect_parts,
-                } => {
+                H2StreamState::Service(h) => {
                     let res = match h.poll(cx) {
                         Poll::Ready(Ok(r)) => r,
                         Poll::Pending => {
@@ -473,48 +402,22 @@ where
                     // set Date header if it isn't already set...
                     res.headers_mut()
                         .entry(::http::header::DATE)
-                        .or_insert_with(date::update_and_header_value);
+                        .or_insert_with(crate::proto::h1::date::update_and_header_value);
 
-                    if let Some(connect_parts) = connect_parts.take() {
-                        if res.status().is_success() {
-                            if headers::content_length_parse_all(res.headers())
-                                .map_or(false, |len| len != 0)
-                            {
-                                warn!("h2 successful response to CONNECT request with body not supported");
-                                me.reply.send_reset(h2::Reason::INTERNAL_ERROR);
-                                return Poll::Ready(Err(crate::Error::new_user_header()));
-                            }
-                            let send_stream = reply!(me, res, false);
-                            connect_parts.pending.fulfill(Upgraded::new(
-                                H2Upgraded {
-                                    ping: connect_parts.ping,
-                                    recv_stream: connect_parts.recv_stream,
-                                    send_stream: unsafe { UpgradedSendStream::new(send_stream) },
-                                    buf: Bytes::new(),
-                                },
-                                Bytes::new(),
-                            ));
-                            return Poll::Ready(Ok(()));
-                        }
+                    // automatically set Content-Length from body...
+                    if let Some(len) = body.size_hint().exact() {
+                        headers::set_content_length_if_missing(res.headers_mut(), len);
                     }
 
-
                     if !body.is_end_stream() {
-                        // automatically set Content-Length from body...
-                        if let Some(len) = body.size_hint().exact() {
-                            headers::set_content_length_if_missing(res.headers_mut(), len);
-                        }
-
                         let body_tx = reply!(me, res, false);
-                        H2StreamState::Body {
-                            pipe: PipeToSendStream::new(body, body_tx),
-                        }
+                        H2StreamState::Body(PipeToSendStream::new(body, body_tx))
                     } else {
                         reply!(me, res, true);
                         return Poll::Ready(Ok(()));
                     }
                 }
-                H2StreamStateProj::Body { pipe } => {
+                H2StreamState::Body(pipe) => {
                     return pipe.poll(cx);
                 }
             };
@@ -527,7 +430,6 @@ impl<F, B, E> Future for H2Stream<F, B>
 where
     F: Future<Output = Result<Response<B>, E>>,
     B: HttpBody,
-    B::Data: 'static,
     B::Error: Into<Box<dyn StdError + Send + Sync>>,
     E: Into<Box<dyn StdError + Send + Sync>>,
 {

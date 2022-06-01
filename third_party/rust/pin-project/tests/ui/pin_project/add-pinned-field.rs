@@ -7,14 +7,14 @@ fn is_unpin<T: Unpin>() {}
 #[add_pinned_field]
 struct Foo {
     #[pin]
-    f: u32,
+    field: u32,
 }
 
 #[add_pinned_field]
 #[pin_project]
 struct Bar {
     #[pin]
-    f: u32,
+    field: u32,
 }
 
 fn main() {

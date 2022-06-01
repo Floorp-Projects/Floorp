@@ -8,8 +8,6 @@
 
 #[cfg(feature = "stream")]
 use futures_core::Stream;
-#[cfg(feature = "stream")]
-use pin_project_lite::pin_project;
 
 use crate::common::{
     task::{self, Poll},
@@ -55,9 +53,6 @@ where
 {
     struct PollFn<F>(F);
 
-    // The closure `F` is never pinned
-    impl<F> Unpin for PollFn<F> {}
-
     impl<F, IO, E> Accept for PollFn<F>
     where
         F: FnMut(&mut task::Context<'_>) -> Poll<Option<Result<IO, E>>>,
@@ -68,7 +63,7 @@ where
             self: Pin<&mut Self>,
             cx: &mut task::Context<'_>,
         ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
-            (self.get_mut().0)(cx)
+            unsafe { (self.get_unchecked_mut().0)(cx) }
         }
     }
 
@@ -86,12 +81,7 @@ pub fn from_stream<S, IO, E>(stream: S) -> impl Accept<Conn = IO, Error = E>
 where
     S: Stream<Item = Result<IO, E>>,
 {
-    pin_project! {
-        struct FromStream<S> {
-            #[pin]
-            stream: S,
-        }
-    }
+    struct FromStream<S>(S);
 
     impl<S, IO, E> Accept for FromStream<S>
     where
@@ -103,9 +93,9 @@ where
             self: Pin<&mut Self>,
             cx: &mut task::Context<'_>,
         ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
-            self.project().stream.poll_next(cx)
+            unsafe { Pin::new_unchecked(&mut self.get_unchecked_mut().0).poll_next(cx) }
         }
     }
 
-    FromStream { stream }
+    FromStream(stream)
 }

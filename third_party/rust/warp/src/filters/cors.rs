@@ -3,7 +3,6 @@
 use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::error::Error as StdError;
-use std::fmt;
 use std::sync::Arc;
 
 use headers::{
@@ -117,8 +116,6 @@ impl Builder {
 
     /// Adds a header to the list of allowed request headers.
     ///
-    /// **Note**: These should match the values the browser sends via `Access-Control-Request-Headers`, e.g. `content-type`.
-    ///
     /// # Panics
     ///
     /// Panics if the provided argument is not a valid `http::header::HeaderName`.
@@ -135,8 +132,6 @@ impl Builder {
     }
 
     /// Adds multiple headers to the list of allowed request headers.
-    ///
-    /// **Note**: These should match the values the browser sends via `Access-Control-Request-Headers`, e.g.`content-type`.
     ///
     /// # Panics
     ///
@@ -193,7 +188,7 @@ impl Builder {
     ///
     /// # Warning
     ///
-    /// This can allow websites you didn't intend to access this resource,
+    /// This can allow websites you didn't instead to access this resource,
     /// it is usually better to set an explicit list.
     pub fn allow_any_origin(mut self) -> Self {
         self.origins = None;
@@ -321,14 +316,14 @@ enum Forbidden {
     HeaderNotAllowed,
 }
 
-impl fmt::Debug for CorsForbidden {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl ::std::fmt::Debug for CorsForbidden {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_tuple("CorsForbidden").field(&self.kind).finish()
     }
 }
 
-impl fmt::Display for CorsForbidden {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl ::std::fmt::Display for CorsForbidden {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         let detail = match self.kind {
             Forbidden::OriginNotAllowed => "origin not allowed",
             Forbidden::MethodNotAllowed => "request-method not allowed",
@@ -373,9 +368,7 @@ impl Configured {
                         return Err(Forbidden::MethodNotAllowed);
                     }
                 } else {
-                    tracing::trace!(
-                        "preflight request missing access-control-request-method header"
-                    );
+                    log::trace!("preflight request missing access-control-request-method header");
                     return Err(Forbidden::MethodNotAllowed);
                 }
 
@@ -384,7 +377,7 @@ impl Configured {
                         .to_str()
                         .map_err(|_| Forbidden::HeaderNotAllowed)?;
                     for header in headers.split(',') {
-                        if !self.is_header_allowed(header.trim()) {
+                        if !self.is_header_allowed(header) {
                             return Err(Forbidden::HeaderNotAllowed);
                         }
                     }
@@ -395,7 +388,7 @@ impl Configured {
             (Some(origin), _) => {
                 // Any other method, simply check for a valid origin...
 
-                tracing::trace!("origin header: {:?}", origin);
+                log::trace!("origin header: {:?}", origin);
                 if self.is_origin_allowed(origin) {
                     Ok(Validated::Simple(origin.clone()))
                 } else {
@@ -459,7 +452,7 @@ mod internal {
     use std::sync::Arc;
     use std::task::{Context, Poll};
 
-    use futures_util::{future, ready, TryFuture};
+    use futures::{future, ready, TryFuture};
     use headers::Origin;
     use http::header;
     use pin_project::pin_project;
@@ -573,7 +566,7 @@ mod internal {
             <F::Error as CombineRejection<Rejection>>::One,
         >;
 
-        fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
             let pin = self.project();
             match ready!(pin.inner.try_poll(cx)) {
                 Ok(inner) => {

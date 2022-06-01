@@ -1,10 +1,9 @@
 #![deny(warnings)]
 
 use std::convert::Infallible;
-use std::error::Error;
 use std::num::NonZeroU16;
 
-use serde_derive::{Deserialize, Serialize};
+use serde_derive::Serialize;
 use warp::http::StatusCode;
 use warp::{reject, Filter, Rejection, Reply};
 
@@ -12,9 +11,7 @@ use warp::{reject, Filter, Rejection, Reply};
 /// the request, but a different filter *could* process it.
 #[tokio::main]
 async fn main() {
-    let math = warp::path!("math" / u16);
-    let div_with_header = math
-        .and(warp::get())
+    let math = warp::path!("math" / u16)
         .and(div_by())
         .map(|num: u16, denom: NonZeroU16| {
             warp::reply::json(&Math {
@@ -23,17 +20,7 @@ async fn main() {
             })
         });
 
-    let div_with_body =
-        math.and(warp::post())
-            .and(warp::body::json())
-            .map(|num: u16, body: DenomRequest| {
-                warp::reply::json(&Math {
-                    op: format!("{} / {}", num, body.denom),
-                    output: num / body.denom.get(),
-                })
-            });
-
-    let routes = div_with_header.or(div_with_body).recover(handle_rejection);
+    let routes = warp::get().and(math).recover(handle_rejection);
 
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 }
@@ -47,11 +34,6 @@ fn div_by() -> impl Filter<Extract = (NonZeroU16,), Error = Rejection> + Copy {
             Err(reject::custom(DivideByZero))
         }
     })
-}
-
-#[derive(Deserialize)]
-struct DenomRequest {
-    pub denom: NonZeroU16,
 }
 
 #[derive(Debug)]
@@ -87,20 +69,6 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
     } else if let Some(DivideByZero) = err.find() {
         code = StatusCode::BAD_REQUEST;
         message = "DIVIDE_BY_ZERO";
-    } else if let Some(e) = err.find::<warp::filters::body::BodyDeserializeError>() {
-        // This error happens if the body could not be deserialized correctly
-        // We can use the cause to analyze the error and customize the error message
-        message = match e.source() {
-            Some(cause) => {
-                if cause.to_string().contains("denom") {
-                    "FIELD_ERROR: denom"
-                } else {
-                    "BAD_REQUEST"
-                }
-            }
-            None => "BAD_REQUEST",
-        };
-        code = StatusCode::BAD_REQUEST;
     } else if let Some(_) = err.find::<warp::reject::MethodNotAllowed>() {
         // We can handle a specific error, here METHOD_NOT_ALLOWED,
         // and render it however we want

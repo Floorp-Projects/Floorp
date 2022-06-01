@@ -5,9 +5,8 @@ use std::sync::{
     Arc,
 };
 
-use futures_util::{SinkExt, StreamExt, TryFutureExt};
-use tokio::sync::{mpsc, RwLock};
-use tokio_stream::wrappers::UnboundedReceiverStream;
+use futures::{FutureExt, StreamExt};
+use tokio::sync::{mpsc, Mutex};
 use warp::ws::{Message, WebSocket};
 use warp::Filter;
 
@@ -18,7 +17,7 @@ static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 ///
 /// - Key is their id
 /// - Value is a sender of `warp::ws::Message`
-type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Message>>>>;
+type Users = Arc<Mutex<HashMap<usize, mpsc::UnboundedSender<Result<Message, warp::Error>>>>>;
 
 #[tokio::main]
 async fn main() {
@@ -26,7 +25,7 @@ async fn main() {
 
     // Keep track of all connected users, key is usize, value
     // is a websocket sender.
-    let users = Users::default();
+    let users = Arc::new(Mutex::new(HashMap::new()));
     // Turn our "state" into a new Filter...
     let users = warp::any().map(move || users.clone());
 
@@ -55,29 +54,25 @@ async fn user_connected(ws: WebSocket, users: Users) {
     eprintln!("new chat user: {}", my_id);
 
     // Split the socket into a sender and receive of messages.
-    let (mut user_ws_tx, mut user_ws_rx) = ws.split();
+    let (user_ws_tx, mut user_ws_rx) = ws.split();
 
     // Use an unbounded channel to handle buffering and flushing of messages
     // to the websocket...
     let (tx, rx) = mpsc::unbounded_channel();
-    let mut rx = UnboundedReceiverStream::new(rx);
-
-    tokio::task::spawn(async move {
-        while let Some(message) = rx.next().await {
-            user_ws_tx
-                .send(message)
-                .unwrap_or_else(|e| {
-                    eprintln!("websocket send error: {}", e);
-                })
-                .await;
+    tokio::task::spawn(rx.forward(user_ws_tx).map(|result| {
+        if let Err(e) = result {
+            eprintln!("websocket send error: {}", e);
         }
-    });
+    }));
 
     // Save the sender in our list of connected users.
-    users.write().await.insert(my_id, tx);
+    users.lock().await.insert(my_id, tx);
 
     // Return a `Future` that is basically a state machine managing
     // this specific user's connection.
+
+    // Make an extra clone to give to our disconnection handler...
+    let users2 = users.clone();
 
     // Every time the user sends a message, broadcast it to
     // all other users...
@@ -94,7 +89,7 @@ async fn user_connected(ws: WebSocket, users: Users) {
 
     // user_ws_rx stream will keep processing as long as the user stays
     // connected. Once they disconnect, then...
-    user_disconnected(my_id, &users).await;
+    user_disconnected(my_id, &users2).await;
 }
 
 async fn user_message(my_id: usize, msg: Message, users: &Users) {
@@ -108,9 +103,12 @@ async fn user_message(my_id: usize, msg: Message, users: &Users) {
     let new_msg = format!("<User#{}>: {}", my_id, msg);
 
     // New message from this user, send it to everyone else (except same uid)...
-    for (&uid, tx) in users.read().await.iter() {
+    //
+    // We use `retain` instead of a for loop so that we can reap any user that
+    // appears to have disconnected.
+    for (&uid, tx) in users.lock().await.iter_mut() {
         if my_id != uid {
-            if let Err(_disconnected) = tx.send(Message::text(new_msg.clone())) {
+            if let Err(_disconnected) = tx.send(Ok(Message::text(new_msg.clone()))) {
                 // The tx is disconnected, our `user_disconnected` code
                 // should be happening in another task, nothing more to
                 // do here.
@@ -123,47 +121,42 @@ async fn user_disconnected(my_id: usize, users: &Users) {
     eprintln!("good bye user: {}", my_id);
 
     // Stream closed up, so remove from the user list
-    users.write().await.remove(&my_id);
+    users.lock().await.remove(&my_id);
 }
 
-static INDEX_HTML: &str = r#"<!DOCTYPE html>
-<html lang="en">
+static INDEX_HTML: &str = r#"
+<!DOCTYPE html>
+<html>
     <head>
         <title>Warp Chat</title>
     </head>
     <body>
-        <h1>Warp chat</h1>
+        <h1>warp chat</h1>
         <div id="chat">
             <p><em>Connecting...</em></p>
         </div>
         <input type="text" id="text" />
         <button type="button" id="send">Send</button>
         <script type="text/javascript">
-        const chat = document.getElementById('chat');
-        const text = document.getElementById('text');
-        const uri = 'ws://' + location.host + '/chat';
-        const ws = new WebSocket(uri);
+        var uri = 'ws://' + location.host + '/chat';
+        var ws = new WebSocket(uri);
 
         function message(data) {
-            const line = document.createElement('p');
+            var line = document.createElement('p');
             line.innerText = data;
             chat.appendChild(line);
         }
 
         ws.onopen = function() {
-            chat.innerHTML = '<p><em>Connected!</em></p>';
-        };
+            chat.innerHTML = "<p><em>Connected!</em></p>";
+        }
 
         ws.onmessage = function(msg) {
             message(msg.data);
         };
 
-        ws.onclose = function() {
-            chat.getElementsByTagName('em')[0].innerText = 'Disconnected!';
-        };
-
         send.onclick = function() {
-            const msg = text.value;
+            var msg = text.value;
             ws.send(msg);
             text.value = '';
 

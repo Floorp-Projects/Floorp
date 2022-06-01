@@ -1,7 +1,7 @@
 use std::{iter::FromIterator, mem};
 
 use proc_macro2::{Group, Spacing, Span, TokenStream, TokenTree};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{format_ident, quote, quote_spanned, ToTokens};
 use syn::{
     parse::{Parse, ParseBuffer, ParseStream},
     parse_quote,
@@ -15,18 +15,12 @@ use syn::{
 
 pub(crate) type Variants = Punctuated<Variant, Token![,]>;
 
-macro_rules! format_err {
-    ($span:expr, $msg:expr $(,)?) => {
-        syn::Error::new_spanned(&$span as &dyn quote::ToTokens, &$msg as &dyn std::fmt::Display)
+macro_rules! error {
+    ($span:expr, $msg:expr) => {
+        syn::Error::new_spanned(&$span, $msg)
     };
     ($span:expr, $($tt:tt)*) => {
-        format_err!($span, format!($($tt)*))
-    };
-}
-
-macro_rules! bail {
-    ($($tt:tt)*) => {
-        return Err(format_err!($($tt)*))
+        error!($span, format!($($tt)*))
     };
 }
 
@@ -34,6 +28,36 @@ macro_rules! parse_quote_spanned {
     ($span:expr => $($tt:tt)*) => {
         syn::parse2(quote::quote_spanned!($span => $($tt)*)).unwrap_or_else(|e| panic!("{}", e))
     };
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(crate) enum ProjKind {
+    Mutable,
+    Immutable,
+    Owned,
+}
+
+impl ProjKind {
+    pub(crate) const ALL: [Self; 3] = [ProjKind::Mutable, ProjKind::Immutable, ProjKind::Owned];
+
+    /// Returns the name of the projection method.
+    pub(crate) fn method_name(self) -> &'static str {
+        match self {
+            ProjKind::Mutable => "project",
+            ProjKind::Immutable => "project_ref",
+            ProjKind::Owned => "project_replace",
+        }
+    }
+
+    /// Creates the ident of the projected type from the ident of the original
+    /// type.
+    pub(crate) fn proj_ident(self, ident: &Ident) -> Ident {
+        match self {
+            ProjKind::Mutable => format_ident!("__{}Projection", ident),
+            ProjKind::Immutable => format_ident!("__{}ProjectionRef", ident),
+            ProjKind::Owned => format_ident!("__{}ProjectionOwned", ident),
+        }
+    }
 }
 
 /// Determines the lifetime names. Ensure it doesn't overlap with any existing
@@ -87,10 +111,7 @@ pub(crate) fn insert_lifetime(generics: &mut Generics, lifetime: Lifetime) {
     generics.params.insert(0, LifetimeDef::new(lifetime).into());
 }
 
-/// Determines the visibility of the projected types and projection methods.
-///
-/// If given visibility is `pub`, returned visibility is `pub(crate)`.
-/// Otherwise, returned visibility is the same as given visibility.
+/// Determines the visibility of the projected type and projection method.
 pub(crate) fn determine_visibility(vis: &Visibility) -> Visibility {
     if let Visibility::Public(token) = vis {
         parse_quote_spanned!(token.pub_token.span => pub(crate))
@@ -99,16 +120,11 @@ pub(crate) fn determine_visibility(vis: &Visibility) -> Visibility {
     }
 }
 
-/// Checks if `tokens` is an empty `TokenStream`.
-///
+/// Check if `tokens` is an empty `TokenStream`.
 /// This is almost equivalent to `syn::parse2::<Nothing>()`, but produces
 /// a better error message and does not require ownership of `tokens`.
 pub(crate) fn parse_as_empty(tokens: &TokenStream) -> Result<()> {
-    if tokens.is_empty() {
-        Ok(())
-    } else {
-        bail!(tokens, "unexpected token: `{}`", tokens)
-    }
+    if tokens.is_empty() { Ok(()) } else { Err(error!(tokens, "unexpected token: {}", tokens)) }
 }
 
 pub(crate) fn respan<T>(node: &T, span: Span) -> T
@@ -138,17 +154,17 @@ pub(crate) trait SliceExt {
     fn find(&self, ident: &str) -> Option<&Attribute>;
 }
 
+pub(crate) trait VecExt {
+    fn find_remove(&mut self, ident: &str) -> Result<Option<Attribute>>;
+}
+
 impl SliceExt for [Attribute] {
-    /// # Errors
-    ///
-    /// - There are multiple specified attributes.
-    /// - The `Attribute::tokens` field of the specified attribute is not empty.
     fn position_exact(&self, ident: &str) -> Result<Option<usize>> {
         self.iter()
             .try_fold((0, None), |(i, mut prev), attr| {
                 if attr.path.is_ident(ident) {
                     if prev.replace(i).is_some() {
-                        bail!(attr, "duplicate #[{}] attribute", ident);
+                        return Err(error!(attr, "duplicate #[{}] attribute", ident));
                     }
                     parse_as_empty(&attr.tokens)?;
                 }
@@ -158,7 +174,13 @@ impl SliceExt for [Attribute] {
     }
 
     fn find(&self, ident: &str) -> Option<&Attribute> {
-        self.iter().position(|attr| attr.path.is_ident(ident)).map(|i| &self[i])
+        self.iter().position(|attr| attr.path.is_ident(ident)).and_then(|i| self.get(i))
+    }
+}
+
+impl VecExt for Vec<Attribute> {
+    fn find_remove(&mut self, ident: &str) -> Result<Option<Attribute>> {
+        self.position_exact(ident).map(|pos| pos.map(|i| self.remove(i)))
     }
 }
 
@@ -186,9 +208,7 @@ impl<'a> ParseBufferExt<'a> for ParseBuffer<'a> {
 // visitors
 
 // Replace `self`/`Self` with `__self`/`self_ty`.
-// Based on:
-// - https://github.com/dtolnay/async-trait/blob/0.1.35/src/receiver.rs
-// - https://github.com/dtolnay/async-trait/commit/6029cbf375c562ca98fa5748e9d950a8ff93b0e7
+// Based on https://github.com/dtolnay/async-trait/blob/0.1.35/src/receiver.rs
 
 pub(crate) struct ReplaceReceiver<'a>(pub(crate) &'a TypePath);
 
@@ -271,7 +291,7 @@ impl ReplaceReceiver<'_> {
                                 match iter.peek() {
                                     Some(TokenTree::Punct(p)) if p.as_char() == ':' => {
                                         let span = ident.span();
-                                        out.extend(quote_spanned!(span=> <#self_ty>));
+                                        out.extend(quote_spanned!(span=> <#self_ty>))
                                     }
                                     _ => out.extend(quote!(#self_ty)),
                                 }
@@ -325,6 +345,7 @@ impl VisitMut for ReplaceReceiver<'_> {
     // `Self::method` -> `<Receiver>::method`
     fn visit_expr_path_mut(&mut self, expr: &mut ExprPath) {
         if expr.qself.is_none() {
+            prepend_underscore_to_self(&mut expr.path.segments[0].ident);
             self.self_to_qself(&mut expr.qself, &mut expr.path);
         }
         visit_mut::visit_expr_path_mut(self, expr);
@@ -352,21 +373,11 @@ impl VisitMut for ReplaceReceiver<'_> {
         visit_mut::visit_pat_tuple_struct_mut(self, pat);
     }
 
-    fn visit_path_mut(&mut self, path: &mut Path) {
-        if path.segments.len() == 1 {
-            // Replace `self`, but not `self::function`.
-            prepend_underscore_to_self(&mut path.segments[0].ident);
-        }
-        for segment in &mut path.segments {
-            self.visit_path_arguments_mut(&mut segment.arguments);
-        }
-    }
-
     fn visit_item_mut(&mut self, item: &mut Item) {
         match item {
             // Visit `macro_rules!` because locally defined macros can refer to `self`.
             Item::Macro(item) if item.mac.path.is_ident("macro_rules") => {
-                self.visit_macro_mut(&mut item.mac);
+                self.visit_macro_mut(&mut item.mac)
             }
             // Otherwise, do not recurse into nested items.
             _ => {}

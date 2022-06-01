@@ -1,19 +1,22 @@
 #![warn(rust_2018_idioms, single_use_lifetimes)]
 #![allow(dead_code)]
 
-// Refs: https://doc.rust-lang.org/reference/attributes.html
-
-#[macro_use]
-mod auxiliary;
+// Refs: https://doc.rust-lang.org/nightly/reference/attributes.html
 
 use std::{marker::PhantomPinned, pin::Pin};
 
 use pin_project::pin_project;
 
-struct Always;
+fn is_unpin<T: Unpin>() {}
+
+#[cfg(target_os = "linux")]
+struct Linux;
+#[cfg(not(target_os = "linux"))]
+struct Other;
 
 // Use this type to check that `cfg(any())` is working properly.
-struct Never(PhantomPinned);
+// If `cfg(any())` is not working properly, `is_unpin` will fail.
+struct Any(PhantomPinned);
 
 #[test]
 fn cfg() {
@@ -21,151 +24,207 @@ fn cfg() {
 
     #[pin_project(project_replace)]
     struct SameName {
-        #[cfg(not(any()))]
+        #[cfg(target_os = "linux")]
         #[pin]
-        inner: Always,
+        inner: Linux,
+        #[cfg(not(target_os = "linux"))]
+        #[pin]
+        inner: Other,
         #[cfg(any())]
         #[pin]
-        inner: Never,
+        any: Any,
     }
 
-    assert_unpin!(SameName);
+    is_unpin::<SameName>();
 
-    let _ = SameName { inner: Always };
+    #[cfg(target_os = "linux")]
+    let _x = SameName { inner: Linux };
+    #[cfg(not(target_os = "linux"))]
+    let _x = SameName { inner: Other };
 
     #[pin_project(project_replace)]
     struct DifferentName {
-        #[cfg(not(any()))]
+        #[cfg(target_os = "linux")]
         #[pin]
-        a: Always,
+        l: Linux,
+        #[cfg(not(target_os = "linux"))]
+        #[pin]
+        o: Other,
         #[cfg(any())]
         #[pin]
-        n: Never,
+        a: Any,
     }
 
-    assert_unpin!(DifferentName);
+    is_unpin::<DifferentName>();
 
-    let _ = DifferentName { a: Always };
+    #[cfg(target_os = "linux")]
+    let _x = DifferentName { l: Linux };
+    #[cfg(not(target_os = "linux"))]
+    let _x = DifferentName { o: Other };
 
     #[pin_project(project_replace)]
     struct TupleStruct(
-        #[cfg(not(any()))]
+        #[cfg(target_os = "linux")]
         #[pin]
-        Always,
+        Linux,
+        #[cfg(not(target_os = "linux"))]
+        #[pin]
+        Other,
         #[cfg(any())]
         #[pin]
-        Never,
+        Any,
     );
 
-    assert_unpin!(TupleStruct);
+    is_unpin::<TupleStruct>();
 
-    let _ = TupleStruct(Always);
+    #[cfg(target_os = "linux")]
+    let _x = TupleStruct(Linux);
+    #[cfg(not(target_os = "linux"))]
+    let _x = TupleStruct(Other);
 
     // enums
 
-    #[pin_project(
-        project = VariantProj,
-        project_ref = VariantProjRef,
-        project_replace = VariantProjOwn,
-    )]
+    #[pin_project(project_replace)]
     enum Variant {
-        #[cfg(not(any()))]
-        Inner(#[pin] Always),
-        #[cfg(any())]
-        Inner(#[pin] Never),
+        #[cfg(target_os = "linux")]
+        Inner(#[pin] Linux),
+        #[cfg(not(target_os = "linux"))]
+        Inner(#[pin] Other),
 
-        #[cfg(not(any()))]
-        A(#[pin] Always),
+        #[cfg(target_os = "linux")]
+        Linux(#[pin] Linux),
+        #[cfg(not(target_os = "linux"))]
+        Other(#[pin] Other),
         #[cfg(any())]
-        N(#[pin] Never),
+        Any(#[pin] Any),
     }
 
-    assert_unpin!(Variant);
+    is_unpin::<Variant>();
 
-    let _ = Variant::Inner(Always);
-    let _ = Variant::A(Always);
+    #[cfg(target_os = "linux")]
+    let _x = Variant::Inner(Linux);
+    #[cfg(not(target_os = "linux"))]
+    let _x = Variant::Inner(Other);
 
-    #[pin_project(
-        project = FieldProj,
-        project_ref = FieldProjRef,
-        project_replace = FieldProjOwn,
-    )]
+    #[cfg(target_os = "linux")]
+    let _x = Variant::Linux(Linux);
+    #[cfg(not(target_os = "linux"))]
+    let _x = Variant::Other(Other);
+
+    #[pin_project(project_replace)]
     enum Field {
         SameName {
-            #[cfg(not(any()))]
+            #[cfg(target_os = "linux")]
             #[pin]
-            inner: Always,
+            inner: Linux,
+            #[cfg(not(target_os = "linux"))]
+            #[pin]
+            inner: Other,
             #[cfg(any())]
             #[pin]
-            inner: Never,
+            any: Any,
         },
         DifferentName {
-            #[cfg(not(any()))]
+            #[cfg(target_os = "linux")]
             #[pin]
-            a: Always,
+            l: Linux,
+            #[cfg(not(target_os = "linux"))]
+            #[pin]
+            w: Other,
             #[cfg(any())]
             #[pin]
-            n: Never,
+            any: Any,
         },
         TupleVariant(
-            #[cfg(not(any()))]
+            #[cfg(target_os = "linux")]
             #[pin]
-            Always,
+            Linux,
+            #[cfg(not(target_os = "linux"))]
+            #[pin]
+            Other,
             #[cfg(any())]
             #[pin]
-            Never,
+            Any,
         ),
     }
 
-    assert_unpin!(Field);
+    is_unpin::<Field>();
 
-    let _ = Field::SameName { inner: Always };
-    let _ = Field::DifferentName { a: Always };
-    let _ = Field::TupleVariant(Always);
+    #[cfg(target_os = "linux")]
+    let _x = Field::SameName { inner: Linux };
+    #[cfg(not(target_os = "linux"))]
+    let _x = Field::SameName { inner: Other };
+
+    #[cfg(target_os = "linux")]
+    let _x = Field::DifferentName { l: Linux };
+    #[cfg(not(target_os = "linux"))]
+    let _x = Field::DifferentName { w: Other };
+
+    #[cfg(target_os = "linux")]
+    let _x = Field::TupleVariant(Linux);
+    #[cfg(not(target_os = "linux"))]
+    let _x = Field::TupleVariant(Other);
 }
 
 #[test]
 fn cfg_attr() {
     #[pin_project(project_replace)]
     struct SameCfg {
-        #[cfg(not(any()))]
-        #[cfg_attr(not(any()), pin)]
-        inner: Always,
+        #[cfg(target_os = "linux")]
+        #[cfg_attr(target_os = "linux", pin)]
+        inner: Linux,
+        #[cfg(not(target_os = "linux"))]
+        #[cfg_attr(not(target_os = "linux"), pin)]
+        inner: Other,
         #[cfg(any())]
         #[cfg_attr(any(), pin)]
-        inner: Never,
+        any: Any,
     }
 
-    assert_unpin!(SameCfg);
+    is_unpin::<SameCfg>();
 
-    let mut x = SameCfg { inner: Always };
+    #[cfg(target_os = "linux")]
+    let mut x = SameCfg { inner: Linux };
+    #[cfg(not(target_os = "linux"))]
+    let mut x = SameCfg { inner: Other };
+
     let x = Pin::new(&mut x).project();
-    let _: Pin<&mut Always> = x.inner;
+    #[cfg(target_os = "linux")]
+    let _: Pin<&mut Linux> = x.inner;
+    #[cfg(not(target_os = "linux"))]
+    let _: Pin<&mut Other> = x.inner;
 
     #[pin_project(project_replace)]
     struct DifferentCfg {
-        #[cfg(not(any()))]
-        #[cfg_attr(any(), pin)]
-        inner: Always,
+        #[cfg(target_os = "linux")]
+        #[cfg_attr(target_os = "linux", pin)]
+        inner: Linux,
+        #[cfg(not(target_os = "linux"))]
+        #[cfg_attr(target_os = "linux", pin)]
+        inner: Other,
         #[cfg(any())]
-        #[cfg_attr(not(any()), pin)]
-        inner: Never,
+        #[cfg_attr(any(), pin)]
+        any: Any,
     }
 
-    assert_unpin!(DifferentCfg);
+    is_unpin::<DifferentCfg>();
 
-    let mut x = DifferentCfg { inner: Always };
+    #[cfg(target_os = "linux")]
+    let mut x = DifferentCfg { inner: Linux };
+    #[cfg(not(target_os = "linux"))]
+    let mut x = DifferentCfg { inner: Other };
+
     let x = Pin::new(&mut x).project();
-    let _: &mut Always = x.inner;
+    #[cfg(target_os = "linux")]
+    let _: Pin<&mut Linux> = x.inner;
+    #[cfg(not(target_os = "linux"))]
+    let _: &mut Other = x.inner;
 
     #[cfg_attr(not(any()), pin_project)]
     struct Foo<T> {
         #[cfg_attr(not(any()), pin)]
         inner: T,
     }
-
-    assert_unpin!(Foo<()>);
-    assert_not_unpin!(Foo<PhantomPinned>);
 
     let mut x = Foo { inner: 0_u8 };
     let x = Pin::new(&mut x).project();
@@ -179,6 +238,6 @@ fn cfg_attr_any_packed() {
     #[cfg_attr(any(), repr(packed))]
     struct Struct {
         #[pin]
-        f: u32,
+        field: u32,
     }
 }

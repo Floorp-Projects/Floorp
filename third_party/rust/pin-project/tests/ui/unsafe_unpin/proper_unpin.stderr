@@ -1,0 +1,127 @@
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:33:5
+   |
+33 |     is_unpin::<Blah<PhantomPinned, ()>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: consider using `Box::pin`
+note: required because of the requirements on the impl of `UnsafeUnpin` for `Blah<PhantomPinned, ()>`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:13:26
+   |
+13 | unsafe impl<T: Unpin, U> UnsafeUnpin for Blah<T, U> {}
+   |                          ^^^^^^^^^^^     ^^^^^^^^^^
+   = note: 1 redundant requirement hidden
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, Blah<PhantomPinned, ()>>`
+note: required because of the requirements on the impl of `Unpin` for `Blah<PhantomPinned, ()>`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:6:15
+   |
+6  | #[pin_project(UnsafeUnpin)]
+   |               ^^^^^^^^^^^
+7  | struct Blah<T, U> {
+   |        ^^^^^^^^^^
+note: required by a bound in `is_unpin`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:4:16
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ^^^^^ required by this bound in `is_unpin`
+
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:35:5
+   |
+35 |     is_unpin::<Blah<PhantomPinned, PhantomPinned>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: consider using `Box::pin`
+note: required because of the requirements on the impl of `UnsafeUnpin` for `Blah<PhantomPinned, PhantomPinned>`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:13:26
+   |
+13 | unsafe impl<T: Unpin, U> UnsafeUnpin for Blah<T, U> {}
+   |                          ^^^^^^^^^^^     ^^^^^^^^^^
+   = note: 1 redundant requirement hidden
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, Blah<PhantomPinned, PhantomPinned>>`
+note: required because of the requirements on the impl of `Unpin` for `Blah<PhantomPinned, PhantomPinned>`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:6:15
+   |
+6  | #[pin_project(UnsafeUnpin)]
+   |               ^^^^^^^^^^^
+7  | struct Blah<T, U> {
+   |        ^^^^^^^^^^
+note: required by a bound in `is_unpin`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:4:16
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ^^^^^ required by this bound in `is_unpin`
+
+error[E0277]: the trait bound `TrivialBounds: UnsafeUnpin` is not satisfied
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:37:16
+   |
+37 |     is_unpin::<TrivialBounds>(); //~ ERROR E0277
+   |                ^^^^^^^^^^^^^ the trait `UnsafeUnpin` is not implemented for `TrivialBounds`
+   |
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, TrivialBounds>`
+note: required because of the requirements on the impl of `Unpin` for `TrivialBounds`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:15:15
+   |
+15 | #[pin_project(UnsafeUnpin)]
+   |               ^^^^^^^^^^^
+16 | struct TrivialBounds {
+   |        ^^^^^^^^^^^^^
+note: required by a bound in `is_unpin`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:4:16
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ^^^^^ required by this bound in `is_unpin`
+
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:39:5
+   |
+39 |     is_unpin::<OverlappingLifetimeNames<'_, PhantomPinned, ()>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: consider using `Box::pin`
+note: required because of the requirements on the impl of `UnsafeUnpin` for `OverlappingLifetimeNames<'_, PhantomPinned, ()>`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:30:33
+   |
+30 | unsafe impl<T: Unpin, U: Unpin> UnsafeUnpin for OverlappingLifetimeNames<'_, T, U> {}
+   |                                 ^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: 1 redundant requirement hidden
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, OverlappingLifetimeNames<'_, PhantomPinned, ()>>`
+note: required because of the requirements on the impl of `Unpin` for `OverlappingLifetimeNames<'_, PhantomPinned, ()>`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:21:15
+   |
+21 | #[pin_project(UnsafeUnpin)]
+   |               ^^^^^^^^^^^
+22 | struct OverlappingLifetimeNames<'pin, T, U> {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `is_unpin`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:4:16
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ^^^^^ required by this bound in `is_unpin`
+
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:40:5
+   |
+40 |     is_unpin::<OverlappingLifetimeNames<'_, (), PhantomPinned>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: consider using `Box::pin`
+note: required because of the requirements on the impl of `UnsafeUnpin` for `OverlappingLifetimeNames<'_, (), PhantomPinned>`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:30:33
+   |
+30 | unsafe impl<T: Unpin, U: Unpin> UnsafeUnpin for OverlappingLifetimeNames<'_, T, U> {}
+   |                                 ^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: 1 redundant requirement hidden
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, OverlappingLifetimeNames<'_, (), PhantomPinned>>`
+note: required because of the requirements on the impl of `Unpin` for `OverlappingLifetimeNames<'_, (), PhantomPinned>`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:21:15
+   |
+21 | #[pin_project(UnsafeUnpin)]
+   |               ^^^^^^^^^^^
+22 | struct OverlappingLifetimeNames<'pin, T, U> {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `is_unpin`
+  --> tests/ui/unsafe_unpin/proper_unpin.rs:4:16
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ^^^^^ required by this bound in `is_unpin`

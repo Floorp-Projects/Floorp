@@ -2,9 +2,8 @@ use super::{
     store, Buffer, Codec, Config, Counts, Frame, Prioritize, Prioritized, Store, Stream, StreamId,
     StreamIdOverflow, WindowSize,
 };
-use crate::codec::UserError;
+use crate::codec::{RecvError, UserError};
 use crate::frame::{self, Reason};
-use crate::proto::{Error, Initiator};
 
 use bytes::Buf;
 use http;
@@ -33,11 +32,6 @@ pub(super) struct Send {
 
     /// Prioritization layer
     prioritize: Prioritize,
-
-    is_push_enabled: bool,
-
-    /// If extended connect protocol is enabled.
-    is_extended_connect_protocol_enabled: bool,
 }
 
 /// A value to detect which public API has called `poll_reset`.
@@ -55,8 +49,6 @@ impl Send {
             max_stream_id: StreamId::MAX,
             next_stream_id: Ok(config.local_next_stream_id),
             prioritize: Prioritize::new(config),
-            is_push_enabled: true,
-            is_extended_connect_protocol_enabled: false,
         }
     }
 
@@ -85,11 +77,11 @@ impl Send {
             || fields.contains_key("keep-alive")
             || fields.contains_key("proxy-connection")
         {
-            tracing::debug!("illegal connection-specific headers found");
+            log::debug!("illegal connection-specific headers found");
             return Err(UserError::MalformedHeaders);
         } else if let Some(te) = fields.get(http::header::TE) {
             if te != "trailers" {
-                tracing::debug!("illegal connection-specific headers found");
+                log::debug!("illegal connection-specific headers found");
                 return Err(UserError::MalformedHeaders);
             }
         }
@@ -103,11 +95,7 @@ impl Send {
         stream: &mut store::Ptr,
         task: &mut Option<Waker>,
     ) -> Result<(), UserError> {
-        if !self.is_push_enabled {
-            return Err(UserError::PeerDisabledServerPush);
-        }
-
-        tracing::trace!(
+        log::trace!(
             "send_push_promise; frame={:?}; init_window={:?}",
             frame,
             self.init_window_sz
@@ -130,13 +118,17 @@ impl Send {
         counts: &mut Counts,
         task: &mut Option<Waker>,
     ) -> Result<(), UserError> {
-        tracing::trace!(
+        log::trace!(
             "send_headers; frame={:?}; init_window={:?}",
             frame,
             self.init_window_sz
         );
 
         Self::check_headers(frame.fields())?;
+
+        if frame.has_too_big_field() {
+            return Err(UserError::HeaderTooBig);
+        }
 
         let end_stream = frame.is_end_stream();
 
@@ -166,7 +158,6 @@ impl Send {
     pub fn send_reset<B>(
         &mut self,
         reason: Reason,
-        initiator: Initiator,
         buffer: &mut Buffer<Frame<B>>,
         stream: &mut store::Ptr,
         counts: &mut Counts,
@@ -175,16 +166,14 @@ impl Send {
         let is_reset = stream.state.is_reset();
         let is_closed = stream.state.is_closed();
         let is_empty = stream.pending_send.is_empty();
-        let stream_id = stream.id;
 
-        tracing::trace!(
-            "send_reset(..., reason={:?}, initiator={:?}, stream={:?}, ..., \
+        log::trace!(
+            "send_reset(..., reason={:?}, stream={:?}, ..., \
              is_reset={:?}; is_closed={:?}; pending_send.is_empty={:?}; \
              state={:?} \
              ",
             reason,
-            initiator,
-            stream_id,
+            stream.id,
             is_reset,
             is_closed,
             is_empty,
@@ -193,23 +182,23 @@ impl Send {
 
         if is_reset {
             // Don't double reset
-            tracing::trace!(
+            log::trace!(
                 " -> not sending RST_STREAM ({:?} is already reset)",
-                stream_id
+                stream.id
             );
             return;
         }
 
         // Transition the state to reset no matter what.
-        stream.state.set_reset(stream_id, reason, initiator);
+        stream.state.set_reset(reason);
 
         // If closed AND the send queue is flushed, then the stream cannot be
         // reset explicitly, either. Implicit resets can still be queued.
         if is_closed && is_empty {
-            tracing::trace!(
+            log::trace!(
                 " -> not sending explicit RST_STREAM ({:?} was closed \
                  and send queue was flushed)",
-                stream_id
+                stream.id
             );
             return;
         }
@@ -222,7 +211,7 @@ impl Send {
 
         let frame = frame::Reset::new(stream.id, reason);
 
-        tracing::trace!("send_reset -- queueing; frame={:?}", frame);
+        log::trace!("send_reset -- queueing; frame={:?}", frame);
         self.prioritize
             .queue_frame(frame.into(), buffer, stream, task);
         self.prioritize.reclaim_all_capacity(stream, counts);
@@ -274,9 +263,13 @@ impl Send {
             return Err(UserError::UnexpectedFrameType);
         }
 
+        if frame.has_too_big_field() {
+            return Err(UserError::HeaderTooBig);
+        }
+
         stream.state.send_close();
 
-        tracing::trace!("send_trailers -- queuing; frame={:?}", frame);
+        log::trace!("send_trailers -- queuing; frame={:?}", frame);
         self.prioritize
             .queue_frame(frame.into(), buffer, stream, task);
 
@@ -333,12 +326,14 @@ impl Send {
 
     /// Current available stream send capacity
     pub fn capacity(&self, stream: &mut store::Ptr) -> WindowSize {
-        let available = stream.send_flow.available().as_size() as usize;
+        let available = stream.send_flow.available().as_size();
         let buffered = stream.buffered_send_data;
 
-        available
-            .min(self.prioritize.max_buffer_size())
-            .saturating_sub(buffered) as WindowSize
+        if available <= buffered {
+            0
+        } else {
+            available - buffered
+        }
     }
 
     pub fn poll_reset(
@@ -375,16 +370,9 @@ impl Send {
         task: &mut Option<Waker>,
     ) -> Result<(), Reason> {
         if let Err(e) = self.prioritize.recv_stream_window_update(sz, stream) {
-            tracing::debug!("recv_stream_window_update !!; err={:?}", e);
+            log::debug!("recv_stream_window_update !!; err={:?}", e);
 
-            self.send_reset(
-                Reason::FLOW_CONTROL_ERROR,
-                Initiator::Library,
-                buffer,
-                stream,
-                counts,
-                task,
-            );
+            self.send_reset(Reason::FLOW_CONTROL_ERROR, buffer, stream, counts, task);
 
             return Err(e);
         }
@@ -392,7 +380,7 @@ impl Send {
         Ok(())
     }
 
-    pub(super) fn recv_go_away(&mut self, last_stream_id: StreamId) -> Result<(), Error> {
+    pub(super) fn recv_go_away(&mut self, last_stream_id: StreamId) -> Result<(), RecvError> {
         if last_stream_id > self.max_stream_id {
             // The remote endpoint sent a `GOAWAY` frame indicating a stream
             // that we never sent, or that we have already terminated on account
@@ -405,14 +393,14 @@ impl Send {
                 "recv_go_away: last_stream_id ({:?}) > max_stream_id ({:?})",
                 last_stream_id, self.max_stream_id,
             );
-            return Err(Error::library_go_away(Reason::PROTOCOL_ERROR));
+            return Err(RecvError::Connection(Reason::PROTOCOL_ERROR));
         }
 
         self.max_stream_id = last_stream_id;
         Ok(())
     }
 
-    pub fn handle_error<B>(
+    pub fn recv_err<B>(
         &mut self,
         buffer: &mut Buffer<Frame<B>>,
         stream: &mut store::Ptr,
@@ -430,11 +418,7 @@ impl Send {
         store: &mut Store,
         counts: &mut Counts,
         task: &mut Option<Waker>,
-    ) -> Result<(), Error> {
-        if let Some(val) = settings.is_extended_connect_protocol_enabled() {
-            self.is_extended_connect_protocol_enabled = val;
-        }
-
+    ) -> Result<(), RecvError> {
         // Applies an update to the remote endpoint's initial window size.
         //
         // Per RFC 7540 §6.9.2:
@@ -459,7 +443,7 @@ impl Send {
             if val < old_val {
                 // We must decrease the (remote) window on every open stream.
                 let dec = old_val - val;
-                tracing::trace!("decrementing all windows; dec={}", dec);
+                log::trace!("decrementing all windows; dec={}", dec);
 
                 let mut total_reclaimed = 0;
                 store.for_each(|mut stream| {
@@ -485,7 +469,7 @@ impl Send {
                         0
                     };
 
-                    tracing::trace!(
+                    log::trace!(
                         "decremented stream window; id={:?}; decr={}; reclaimed={}; flow={:?}",
                         stream.id,
                         dec,
@@ -496,22 +480,20 @@ impl Send {
                     // TODO: Should this notify the producer when the capacity
                     // of a stream is reduced? Maybe it should if the capacity
                     // is reduced to zero, allowing the producer to stop work.
-                });
+
+                    Ok::<_, RecvError>(())
+                })?;
 
                 self.prioritize
                     .assign_connection_capacity(total_reclaimed, store, counts);
             } else if val > old_val {
                 let inc = val - old_val;
 
-                store.try_for_each(|mut stream| {
+                store.for_each(|mut stream| {
                     self.recv_stream_window_update(inc, buffer, &mut stream, counts, task)
-                        .map_err(Error::library_go_away)
+                        .map_err(RecvError::Connection)
                 })?;
             }
-        }
-
-        if let Some(val) = settings.is_push_enabled() {
-            self.is_push_enabled = val
         }
 
         Ok(())
@@ -547,19 +529,5 @@ impl Send {
         } else {
             true
         }
-    }
-
-    pub(super) fn maybe_reset_next_stream_id(&mut self, id: StreamId) {
-        if let Ok(next_id) = self.next_stream_id {
-            // Peer::is_local_init should have been called beforehand
-            debug_assert_eq!(id.is_server_initiated(), next_id.is_server_initiated());
-            if id >= next_id {
-                self.next_stream_id = id.next_id();
-            }
-        }
-    }
-
-    pub(crate) fn is_extended_connect_protocol_enabled(&self) -> bool {
-        self.is_extended_connect_protocol_enabled
     }
 }

@@ -1,4 +1,4 @@
-// Note: If you change this test, change 'trivial_bounds.rs' at the same time.
+// NB: If you change this test, change 'trivial_bounds.rs' at the same time.
 
 mod phantom_pinned {
     use std::marker::{PhantomData, PhantomPinned};
@@ -21,7 +21,8 @@ mod phantom_pinned {
 
     struct C(PhantomPinned);
 
-    impl<'a> Unpin for C where WrapperWithLifetime<'a, PhantomPinned>: Unpin {} // Ok
+    impl<'a> Unpin for C where WrapperWithLifetime<'a, PhantomPinned>: Unpin {}
+    // Ok
 }
 
 mod inner {

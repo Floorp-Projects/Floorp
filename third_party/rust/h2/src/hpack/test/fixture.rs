@@ -1,6 +1,6 @@
 use crate::hpack::{Decoder, Encoder, Header};
 
-use bytes::BytesMut;
+use bytes::{buf::BufMutExt, BytesMut};
 use hex::FromHex;
 use serde_json::Value;
 
@@ -107,7 +107,11 @@ fn test_story(story: Value) {
                 })
                 .collect();
 
-            encoder.encode(&mut input.clone().into_iter(), &mut buf);
+            encoder.encode(
+                None,
+                &mut input.clone().into_iter(),
+                &mut (&mut buf).limit(limit),
+            );
 
             decoder
                 .decode(&mut Cursor::new(&mut buf), |e| {
@@ -134,7 +138,6 @@ fn key_str(e: &Header) -> &str {
         Header::Method(..) => ":method",
         Header::Scheme(..) => ":scheme",
         Header::Path(..) => ":path",
-        Header::Protocol(..) => ":protocol",
         Header::Status(..) => ":status",
     }
 }
@@ -146,7 +149,6 @@ fn value_str(e: &Header) -> &str {
         Header::Method(ref m) => m.as_str(),
         Header::Scheme(ref v) => &**v,
         Header::Path(ref v) => &**v,
-        Header::Protocol(ref v) => v.as_str(),
         Header::Status(ref v) => v.as_str(),
     }
 }
