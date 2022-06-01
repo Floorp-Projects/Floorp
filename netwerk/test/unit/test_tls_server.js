@@ -8,6 +8,9 @@ do_get_profile();
 // Ensure PSM is initialized
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -127,7 +130,8 @@ function storeCertOverride(port, cert) {
   );
 }
 
-function startClient(port, cert, expectingAlert, tlsVersion) {
+function startClient(port, sendClientCert, expectingAlert, tlsVersion) {
+  gClientAuthDialogs.selectCertificate = sendClientCert;
   let SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
   let SSL_ERROR_BAD_CERT_ALERT = SSL_ERROR_BASE + 17;
   let SSL_ERROR_RX_CERTIFICATE_REQUIRED_ALERT = SSL_ERROR_BASE + 181;
@@ -189,13 +193,6 @@ function startClient(port, cert, expectingAlert, tlsVersion) {
 
     onOutputStreamReady(output) {
       try {
-        // Set the client certificate as appropriate.
-        if (cert) {
-          let clientSecInfo = transport.securityInfo;
-          let tlsControl = clientSecInfo.QueryInterface(Ci.nsISSLSocketControl);
-          tlsControl.clientCert = cert;
-        }
-
         output.write("HELLO", 5);
         info("Output to server written");
         outputDeferred.resolve();
@@ -218,7 +215,56 @@ function startClient(port, cert, expectingAlert, tlsVersion) {
 }
 
 // Replace the UI dialog that prompts the user to pick a client certificate.
-do_load_manifest("client_cert_chooser.manifest");
+const gClientAuthDialogs = {
+  _selectCertificate: false,
+
+  set selectCertificate(value) {
+    this._selectCertificate = value;
+  },
+
+  chooseCertificate(
+    hostname,
+    port,
+    organization,
+    issuerOrg,
+    certList,
+    selectedIndex,
+    rememberClientAuthCertificate
+  ) {
+    rememberClientAuthCertificate.value = false;
+    if (this._selectCertificate) {
+      selectedIndex.value = 0;
+      return true;
+    }
+    return false;
+  },
+
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIClientAuthDialogs]),
+};
+
+const ClientAuthDialogsContractID = "@mozilla.org/nsClientAuthDialogs;1";
+// On all platforms but Android, this component already exists, so this replaces
+// it. On Android, the component does not exist, so this registers it.
+if (AppConstants.platform != "android") {
+  MockRegistrar.register(ClientAuthDialogsContractID, gClientAuthDialogs);
+} else {
+  const factory = {
+    createInstance(iid) {
+      return gClientAuthDialogs.QueryInterface(iid);
+    },
+
+    QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
+  };
+  const Cm = Components.manager;
+  const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+  const cid = Services.uuid.generateUUID();
+  registrar.registerFactory(
+    cid,
+    "A Mock for " + ClientAuthDialogsContractID,
+    ClientAuthDialogsContractID,
+    factory
+  );
+}
 
 const tests = [
   {
@@ -288,7 +334,7 @@ add_task(async function() {
       storeCertOverride(server.port, cert);
       await startClient(
         server.port,
-        t.sendClientCert ? cert : null,
+        t.sendClientCert,
         t.expectingAlert,
         v.version
       );
