@@ -382,7 +382,8 @@ static void AddGLDependencies(SandboxBroker::Policy* policy) {
   // cache, because the details can vary by process type, including
   // whether caching is enabled.
 
-  AddX11Dependencies(policy);
+  // This also doesn't include permissions for connecting to a display
+  // server, because headless GL (e.g., Mesa GBM) may not need it.
 }
 
 void SandboxBrokerPolicyFactory::InitContentPolicy() {
@@ -399,6 +400,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
 
   if (!headless) {
     AddGLDependencies(policy);
+    AddX11Dependencies(policy);
   }
 
   // Read permissions
@@ -855,7 +857,8 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
     }
   }
 
-  // VA-API needs GPU access and GL context creation
+  // VA-API needs GPU access and GL context creation (but not display
+  // server access, as of bug 1769499).
   AddGLDependencies(policy.get());
 
   // FFmpeg and GPU drivers may need general-case library loading
