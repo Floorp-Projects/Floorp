@@ -110,6 +110,8 @@ void FrameBuffer::StartWaitForNextFrameOnQueue() {
           if (!frames_to_decode_.empty()) {
             // We have frames, deliver!
             frame = absl::WrapUnique(GetNextFrame());
+            timing_->SetLastDecodeScheduledTimestamp(
+                clock_->TimeInMilliseconds());
           } else if (clock_->TimeInMilliseconds() < latest_return_time_ms_) {
             // If there's no frames to decode and there is still time left, it
             // means that the frame buffer was cleared between creation and

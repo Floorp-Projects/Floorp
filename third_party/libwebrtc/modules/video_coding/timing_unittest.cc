@@ -169,21 +169,26 @@ TEST(ReceiverTimingTest, MaxWaitingTimeZeroDelayPacingExperiment) {
     clock.AdvanceTimeMilliseconds(kTimeDeltaMs);
     int64_t now_ms = clock.TimeInMilliseconds();
     EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTimeMs, now_ms), 0);
+    timing.SetLastDecodeScheduledTimestamp(now_ms);
   }
   // Another frame submitted at the same time is paced according to the field
   // trial setting.
   int64_t now_ms = clock.TimeInMilliseconds();
   EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTimeMs, now_ms), kMinPacingMs);
-  // If there's a burst of frames, the min pacing interval is summed.
-  EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTimeMs, now_ms), 2 * kMinPacingMs);
-  EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTimeMs, now_ms), 3 * kMinPacingMs);
-  EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTimeMs, now_ms), 4 * kMinPacingMs);
+  // If there's a burst of frames, the wait time is calculated based on next
+  // decode time.
+  EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTimeMs, now_ms), kMinPacingMs);
+  EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTimeMs, now_ms), kMinPacingMs);
   // Allow a few ms to pass, this should be subtracted from the MaxWaitingTime.
   constexpr int64_t kTwoMs = 2;
   clock.AdvanceTimeMilliseconds(kTwoMs);
   now_ms = clock.TimeInMilliseconds();
   EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTimeMs, now_ms),
-            5 * kMinPacingMs - kTwoMs);
+            kMinPacingMs - kTwoMs);
+  // A frame is decoded at the current time, the wait time should be restored to
+  // pacing delay.
+  timing.SetLastDecodeScheduledTimestamp(now_ms);
+  EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTimeMs, now_ms), kMinPacingMs);
 }
 
 TEST(ReceiverTimingTest, DefaultMaxWaitingTimeUnaffectedByPacingExperiment) {

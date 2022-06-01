@@ -83,7 +83,7 @@ class VCMTiming {
 
   // Returns the maximum time in ms that we can wait for a frame to become
   // complete before we must pass it to the decoder.
-  virtual int64_t MaxWaitingTime(int64_t render_time_ms, int64_t now_ms);
+  virtual int64_t MaxWaitingTime(int64_t render_time_ms, int64_t now_ms) const;
 
   // Returns the current target delay which is required delay + decode time +
   // render delay.
@@ -104,6 +104,9 @@ class VCMTiming {
   void SetMaxCompositionDelayInFrames(
       absl::optional<int> max_composition_delay_in_frames);
   absl::optional<int> MaxCompositionDelayInFrames() const;
+
+  // Updates the last time a frame was scheduled for decoding.
+  void SetLastDecodeScheduledTimestamp(int64_t last_decode_scheduled_ts);
 
   enum { kDefaultRenderDelayMs = 10 };
   enum { kDelayMaxChangeMsPerS = 100 };
@@ -145,10 +148,10 @@ class VCMTiming {
   // used when min playout delay=0 and max playout delay>=0.
   FieldTrialParameter<TimeDelta> zero_playout_delay_min_pacing_
       RTC_GUARDED_BY(mutex_);
-  // An estimate of when the last frame is scheduled to be sent to the decoder.
+  // Timestamp at which the last frame was scheduled to be sent to the decoder.
   // Used only when the RTP header extension playout delay is set to min=0 ms
   // which is indicated by a render time set to 0.
-  int64_t earliest_next_decode_start_time_ RTC_GUARDED_BY(mutex_);
+  int64_t last_decode_scheduled_ts_ RTC_GUARDED_BY(mutex_);
 };
 }  // namespace webrtc
 
