@@ -23,10 +23,10 @@ WebRTC audio coding module can handle both audio sending and receiving. Folder
     Audio decoders are provided by an audio decoder factory. Decoded audio
     samples should be queried by calling [`PlayoutData10Ms()`][PlayoutData10Ms].
 
-[acm2]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/audio_coding/acm2/;drc=854d59f7501aac9e9bccfa7b4d1f7f4db7842719
-[Add10MsData]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/audio_coding/include/audio_coding_module.h;l=136;drc=d82a02c837d33cdfd75121e40dcccd32515e42d6
-[codecs]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/audio_coding/codecs/;drc=883fea1548d58e0080f98d66fab2e0c744dfb556
-[ANA]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/audio_coding/audio_network_adaptor/;drc=1f99551775cd876c116d1d90cba94c8a4670d184
-[IncomingPacket]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/audio_coding/include/audio_coding_module.h;l=192;drc=d82a02c837d33cdfd75121e40dcccd32515e42d6
-[NetEq]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/audio_coding/neteq/;drc=213dc2cfc5f1b360b1c6fc51d393491f5de49d3d
-[PlayoutData10Ms]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/audio_coding/include/audio_coding_module.h;l=216;drc=d82a02c837d33cdfd75121e40dcccd32515e42d6
+[acm2]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/audio_coding/acm2/;drc=854d59f7501aac9e9bccfa7b4d1f7f4db7842719
+[Add10MsData]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/audio_coding/include/audio_coding_module.h;l=136;drc=d82a02c837d33cdfd75121e40dcccd32515e42d6
+[codecs]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/audio_coding/codecs/;drc=883fea1548d58e0080f98d66fab2e0c744dfb556
+[ANA]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/audio_coding/audio_network_adaptor/;drc=1f99551775cd876c116d1d90cba94c8a4670d184
+[IncomingPacket]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/audio_coding/include/audio_coding_module.h;l=192;drc=d82a02c837d33cdfd75121e40dcccd32515e42d6
+[NetEq]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/audio_coding/neteq/;drc=213dc2cfc5f1b360b1c6fc51d393491f5de49d3d
+[PlayoutData10Ms]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/audio_coding/include/audio_coding_module.h;l=216;drc=d82a02c837d33cdfd75121e40dcccd32515e42d6

@@ -108,7 +108,7 @@ In other words, rename the existing function, and provide an inline wrapper
 using the original name that calls it. That way, callers who are willing to
 call it using the `DEPRECATED_`-prefixed name don't get the warning.
 
-[ABSL_DEPRECATED]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/abseil-cpp/absl/base/attributes.h?q=ABSL_DEPRECATED
+[ABSL_DEPRECATED]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/abseil-cpp/absl/base/attributes.h?q=ABSL_DEPRECATED
 
 ### ArrayView
 

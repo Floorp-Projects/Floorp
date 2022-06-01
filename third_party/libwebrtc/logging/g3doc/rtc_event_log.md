@@ -25,7 +25,7 @@ The contents include:
 No guarantees are made on the wire format, and the format may change without
 prior notice. To maintain compatibility with past and future formats, analysis
 tools should be built on top of the provided
-[rtc_event_log_parser.h](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/logging/rtc_event_log/rtc_event_log_parser.h)
+[rtc_event_log_parser.h](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/logging/rtc_event_log/rtc_event_log_parser.h)
 
 In particular, an analysis tool should *not* read the log as a protobuf.
 

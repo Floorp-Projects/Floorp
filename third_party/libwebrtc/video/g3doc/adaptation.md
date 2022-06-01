@@ -99,16 +99,16 @@ The `VideoSinkWants` can be applied by any video source, or one may use the
 [AdaptedVideoTraceSource][adapted_video_track_source.h] which is a base class
 for sources that need video adaptation.
 
-[RtpParameters]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/rtp_parameters.h?q=%22RTC_EXPORT%20RtpParameters%22
-[resource.h]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/adaptation/resource.h
-[Call::AddAdaptationResource]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/call/call.h?q=Call::AddAdaptationResource
-[quality_scaler.h]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/video_coding/utility/quality_scaler.h
-[VideoEncoder::QpThresholds]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/video_codecs/video_encoder.h?q=VideoEncoder::QpThresholds
-[EncoderInfo]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/video_codecs/video_encoder.h?q=VideoEncoder::EncoderInfo
-[encode_usage_resource.h]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/video/adaptation/encode_usage_resource.h
-[VideoStreamAdapter]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/call/adaptation/video_stream_adapter.h
-[adaptation_constraint.h]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/call/adaptation/adaptation_constraint.h
-[bitrate_constraint.h]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/video/adaptation/bitrate_constraint.h
-[AddOrUpdateSink]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/video/video_source_interface.h?q=AddOrUpdateSink
-[VideoSinkWants]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/video/video_source_interface.h?q=%22RTC_EXPORT%20VideoSinkWants%22
-[adapted_video_track_source.h]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/media/base/adapted_video_track_source.h
+[RtpParameters]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/rtp_parameters.h?q=%22RTC_EXPORT%20RtpParameters%22
+[resource.h]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/adaptation/resource.h
+[Call::AddAdaptationResource]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/call.h?q=Call::AddAdaptationResource
+[quality_scaler.h]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/video_coding/utility/quality_scaler.h
+[VideoEncoder::QpThresholds]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/video_codecs/video_encoder.h?q=VideoEncoder::QpThresholds
+[EncoderInfo]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/video_codecs/video_encoder.h?q=VideoEncoder::EncoderInfo
+[encode_usage_resource.h]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/video/adaptation/encode_usage_resource.h
+[VideoStreamAdapter]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/adaptation/video_stream_adapter.h
+[adaptation_constraint.h]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/adaptation/adaptation_constraint.h
+[bitrate_constraint.h]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/video/adaptation/bitrate_constraint.h
+[AddOrUpdateSink]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/video/video_source_interface.h?q=AddOrUpdateSink
+[VideoSinkWants]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/video/video_source_interface.h?q=%22RTC_EXPORT%20VideoSinkWants%22
+[adapted_video_track_source.h]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/media/base/adapted_video_track_source.h

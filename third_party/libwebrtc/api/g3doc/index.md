@@ -15,7 +15,7 @@ some basic concepts, such as:
 ## Using WebRTC through the PeerConnection class
 
 The
-[PeerConnectionInterface](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/peer_connection_interface.h?q=webrtc::PeerConnectionInterface)
+[PeerConnectionInterface](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/peer_connection_interface.h?q=webrtc::PeerConnectionInterface)
 class is the recommended way to use the WebRTC library.
 
 It is closely modeled after the Javascript API documented in the [WebRTC
