@@ -35,7 +35,7 @@ namespace webrtc_pc_e2e {
 class StatsBasedNetworkQualityMetricsReporter
     : public PeerConnectionE2EQualityTestFixture::QualityMetricsReporter {
  public:
-  // |networks| map peer name to network to report network layer stability stats
+  // `networks` map peer name to network to report network layer stability stats
   // and to log network layer metrics.
   StatsBasedNetworkQualityMetricsReporter(
       std::map<std::string, std::vector<EmulatedEndpoint*>> peer_endpoints,

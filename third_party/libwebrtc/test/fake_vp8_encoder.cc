@@ -24,7 +24,7 @@
 namespace {
 
 // Write width and height to the payload the same way as the real encoder does.
-// It requires that |payload| has a size of at least kMinPayLoadHeaderLength.
+// It requires that `payload` has a size of at least kMinPayLoadHeaderLength.
 void WriteFakeVp8(unsigned char* payload,
                   int width,
                   int height,

@@ -44,7 +44,7 @@ class SingleProcessEncodedImageDataInjector : public EncodedImageDataInjector,
   ~SingleProcessEncodedImageDataInjector() override;
 
   // Id and discard flag will be injected into EncodedImage buffer directly.
-  // This buffer won't be fully copied, so |source| image buffer will be also
+  // This buffer won't be fully copied, so `source` image buffer will be also
   // changed.
   EncodedImage InjectData(uint16_t id,
                           bool discard,

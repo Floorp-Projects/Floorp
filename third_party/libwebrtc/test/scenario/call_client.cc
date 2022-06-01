@@ -258,7 +258,7 @@ ColumnPrinter CallClient::StatsPrinter() {
 }
 
 Call::Stats CallClient::GetStats() {
-  // This call needs to be made on the thread that |call_| was constructed on.
+  // This call needs to be made on the thread that `call_` was constructed on.
   Call::Stats stats;
   SendTask([this, &stats] { stats = call_->GetStats(); });
   return stats;

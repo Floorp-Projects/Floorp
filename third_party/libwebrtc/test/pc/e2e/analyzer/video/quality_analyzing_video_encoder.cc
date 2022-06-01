@@ -245,7 +245,7 @@ EncodedImageCallback::Result QualityAnalyzingVideoEncoder::OnEncodedImage(
       timestamp_to_frame_id_list_.pop_front();
     }
 
-    // After the loop the first element should point to current |encoded_image|
+    // After the loop the first element should point to current `encoded_image`
     // frame id. We don't remove it from the list, because there may be
     // multiple spatial layers for this frame, so encoder can produce more
     // encoded images with this timestamp. The first element will be removed

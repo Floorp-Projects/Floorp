@@ -83,8 +83,8 @@ class FakeEncoder : public VideoEncoder {
                       int framerate) RTC_LOCKS_EXCLUDED(mutex_);
 
   // Called before the frame is passed to callback_->OnEncodedImage, to let
-  // subclasses fill out CodecSpecificInfo, possibly modify |encoded_image| or
-  // |buffer|.
+  // subclasses fill out CodecSpecificInfo, possibly modify `encoded_image` or
+  // `buffer`.
   virtual CodecSpecificInfo EncodeHook(
       EncodedImage& encoded_image,
       rtc::scoped_refptr<EncodedImageBuffer> buffer);
@@ -139,7 +139,7 @@ class DelayedEncoder : public test::FakeEncoder {
 };
 
 // This class implements a multi-threaded fake encoder by posting
-// FakeH264Encoder::Encode(.) tasks to |queue1_| and |queue2_|, in an
+// FakeH264Encoder::Encode(.) tasks to `queue1_` and `queue2_`, in an
 // alternating fashion. The class itself does not need to be thread safe,
 // as it is called from the task queue in VideoStreamEncoder.
 class MultithreadedFakeH264Encoder : public test::FakeH264Encoder {

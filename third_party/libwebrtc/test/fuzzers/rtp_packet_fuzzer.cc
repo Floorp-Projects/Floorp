@@ -20,7 +20,7 @@
 
 namespace webrtc {
 // We decide which header extensions to register by reading four bytes
-// from the beginning of |data| and interpreting it as a bitmask over
+// from the beginning of `data` and interpreting it as a bitmask over
 // the RTPExtensionType enum. This assert ensures four bytes are enough.
 static_assert(kRtpExtensionNumberOfExtensions <= 32,
               "Insufficient bits read to configure all header extensions. Add "

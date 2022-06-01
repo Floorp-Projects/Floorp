@@ -59,7 +59,7 @@ IvfVideoFrameGenerator::~IvfVideoFrameGenerator() {
   }
   file_reader_->Close();
   file_reader_.reset();
-  // Reset decoder to prevent it from async access to |this|.
+  // Reset decoder to prevent it from async access to `this`.
   video_decoder_.reset();
   {
     MutexLock frame_lock(&frame_decode_lock_);

@@ -79,7 +79,7 @@ class PacketSocketFactoryWrapper : public rtc::PacketSocketFactory {
   ~PacketSocketFactoryWrapper() override {}
 
   // This method is called from TurnServer when making a TURN ALLOCATION.
-  // It will create a socket on the |peer_| endpoint.
+  // It will create a socket on the `peer_` endpoint.
   rtc::AsyncPacketSocket* CreateUdpSocket(const rtc::SocketAddress& address,
                                           uint16_t min_port,
                                           uint16_t max_port) override {

@@ -274,11 +274,11 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
   // Represents comparison between two VideoFrames. Contains video frames itself
   // and stats. Can be one of two types:
-  //   1. Normal - in this case |captured| is presented and either |rendered| is
-  //      presented and |dropped| is false, either |rendered| is omitted and
-  //      |dropped| is true.
-  //   2. Overloaded - in this case both |captured| and |rendered| are omitted
-  //      because there were too many comparisons in the queue. |dropped| can be
+  //   1. Normal - in this case `captured` is presented and either `rendered` is
+  //      presented and `dropped` is false, either `rendered` is omitted and
+  //      `dropped` is true.
+  //   2. Overloaded - in this case both `captured` and `rendered` are omitted
+  //      because there were too many comparisons in the queue. `dropped` can be
   //      true or false showing was frame dropped or not.
   struct FrameComparison {
     FrameComparison(InternalStatsKey stats_key,
@@ -294,7 +294,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     absl::optional<VideoFrame> captured;
     absl::optional<VideoFrame> rendered;
     // If true frame was dropped somewhere from capturing to rendering and
-    // wasn't rendered on remote peer side. If |dropped| is true, |rendered|
+    // wasn't rendered on remote peer side. If `dropped` is true, `rendered`
     // will be |absl::nullopt|.
     bool dropped;
     FrameStats frame_stats;
@@ -329,7 +329,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     absl::optional<Timestamp> last_rendered_frame_time(size_t peer) const;
 
    private:
-    // Index of the owner. Owner's queue in |frame_ids_| will keep alive frames.
+    // Index of the owner. Owner's queue in `frame_ids_` will keep alive frames.
     const size_t owner_;
     // To correctly determine dropped frames we have to know sequence of frames
     // in each stream so we will keep a list of frame ids inside the stream.
@@ -342,10 +342,10 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     //
     // If we received frame with id frame_id3, then we will pop frame_id1 and
     // frame_id2 and consider that frames as dropped and then compare received
-    // frame with the one from |captured_frames_in_flight_| with id frame_id3.
+    // frame with the one from `captured_frames_in_flight_` with id frame_id3.
     //
     // To track alive frames (frames that contains frame's payload in
-    // |captured_frames_in_flight_|) the head which corresponds to |owner_| will
+    // `captured_frames_in_flight_`) the head which corresponds to `owner_` will
     // be used. So that head will point to the first alive frame in frames list.
     MultiHeadQueue<uint16_t> frame_ids_;
     std::map<size_t, Timestamp> last_rendered_frame_time_;
@@ -418,7 +418,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
     bool HasRenderedTime(size_t peer) const;
 
-    // Crash if rendered time is not set for specified |peer|.
+    // Crash if rendered time is not set for specified `peer`.
     webrtc::Timestamp rendered_time(size_t peer) const {
       return receiver_stats_.at(peer).rendered_time;
     }
@@ -466,8 +466,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
       return index_.find(name) != index_.end();
     }
 
-    // Add specified |name| to the collection if it isn't presented.
-    // Returns index which corresponds to specified |name|.
+    // Add specified `name` to the collection if it isn't presented.
+    // Returns index which corresponds to specified `name`.
     size_t AddIfAbsent(absl::string_view name);
 
    private:
@@ -540,12 +540,12 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // Frame counters per each stream per each receiver.
   std::map<InternalStatsKey, FrameCounters> stream_frame_counters_
       RTC_GUARDED_BY(lock_);
-  // Map from stream index in |streams_| to its StreamState.
+  // Map from stream index in `streams_` to its StreamState.
   std::map<size_t, StreamState> stream_states_ RTC_GUARDED_BY(lock_);
-  // Map from stream index in |streams_| to sender peer index in |peers_|.
+  // Map from stream index in `streams_` to sender peer index in `peers_`.
   std::map<size_t, size_t> stream_to_sender_ RTC_GUARDED_BY(lock_);
 
-  // Stores history mapping between stream index in |streams_| and frame ids.
+  // Stores history mapping between stream index in `streams_` and frame ids.
   // Updated when frame id overlap. It required to properly return stream label
   // after 1st frame from simulcast streams was already rendered and last is
   // still encoding.

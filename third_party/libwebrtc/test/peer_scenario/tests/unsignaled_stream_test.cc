@@ -210,7 +210,7 @@ TEST_P(UnsignaledStreamTest, ReplacesUnsignaledStreamOnCompletedSignaling) {
               case MidTestConfiguration::kMidNegotiatedAndPresentInPackets:
                 EXPECT_TRUE(parsed_packet.HasExtension<RtpMid>());
                 // The simulated second m= section would have a different MID.
-                // If we don't modify it here then |second_ssrc| would end up
+                // If we don't modify it here then `second_ssrc` would end up
                 // being mapped to the first m= section which would cause SSRC
                 // conflicts if we later add the same SSRC to a second m=
                 // section. Hidden assumption: first m= section does not use

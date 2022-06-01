@@ -185,7 +185,7 @@ int FakeNetworkSocket::Recv(void* pv, size_t cb, int64_t* timestamp) {
   return RecvFrom(pv, cb, &paddr, timestamp);
 }
 
-// Reads 1 packet from internal queue. Reads up to |cb| bytes into |pv|
+// Reads 1 packet from internal queue. Reads up to `cb` bytes into `pv`
 // and returns the length of received packet.
 int FakeNetworkSocket::RecvFrom(void* pv,
                                 size_t cb,

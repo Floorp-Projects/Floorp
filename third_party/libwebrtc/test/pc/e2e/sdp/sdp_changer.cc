@@ -110,7 +110,7 @@ std::vector<RtpCodecCapability> FilterVideoCodecCapabilities(
 // If offer has no simulcast video sections - do nothing.
 //
 // If offer has simulcast video sections - for each section creates
-// SimulcastSectionInfo and put it into |context_|.
+// SimulcastSectionInfo and put it into `context_`.
 void SignalingInterceptor::FillSimulcastContext(
     SessionDescriptionInterface* offer) {
   for (auto& content : offer->description()->contents()) {
@@ -227,7 +227,7 @@ LocalAndRemoteSdp SignalingInterceptor::PatchVp8Offer(
 
     // Remove simulcast video section from offer.
     RTC_CHECK(desc->RemoveContentByName(simulcast_content->mid()));
-    // Clear |simulcast_content|, because now it is pointing to removed object.
+    // Clear `simulcast_content`, because now it is pointing to removed object.
     simulcast_content = nullptr;
 
     // Swap mid and rid extensions, so remote peer will understand rid as mid.
@@ -410,7 +410,7 @@ LocalAndRemoteSdp SignalingInterceptor::PatchVp8Answer(
     // Get media description, which will be converted to simulcast answer.
     std::unique_ptr<cricket::MediaContentDescription> media_desc =
         simulcast_content->media_description()->Clone();
-    // Set |simulcast_content| to nullptr, because then it will be removed, so
+    // Set `simulcast_content` to nullptr, because then it will be removed, so
     // it will point to deleted object.
     simulcast_content = nullptr;
 
@@ -419,7 +419,7 @@ LocalAndRemoteSdp SignalingInterceptor::PatchVp8Answer(
       RTC_CHECK(desc->RemoveContentByName(rid));
     }
 
-    // Patch |media_desc| to make it simulcast answer description.
+    // Patch `media_desc` to make it simulcast answer description.
     // Restore mid/rid rtp header extensions
     std::vector<webrtc::RtpExtension> extensions =
         media_desc->rtp_header_extensions();

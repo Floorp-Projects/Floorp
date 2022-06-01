@@ -37,7 +37,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
 
     // Fuzz non-POD member of the packet.
     packet->video_payload.SetSize(helper.ReadOrDefaultValue<uint8_t>(0));
-    // TODO(danilchap): Fuzz other non-POD members of the |packet|.
+    // TODO(danilchap): Fuzz other non-POD members of the `packet`.
 
     IgnoreResult(packet_buffer.InsertPacket(std::move(packet)));
   }

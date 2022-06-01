@@ -116,7 +116,7 @@ class TestPeer final {
     }
   }
 
-  // Adds provided |candidates| to the owned peer connection.
+  // Adds provided `candidates` to the owned peer connection.
   bool AddIceCandidates(
       std::vector<std::unique_ptr<IceCandidateInterface>> candidates);
 
@@ -135,7 +135,7 @@ class TestPeer final {
            std::unique_ptr<rtc::Thread> worker_thread);
 
  private:
-  // Keeps ownership of worker thread. It has to be destroyed after |wrapper_|.
+  // Keeps ownership of worker thread. It has to be destroyed after `wrapper_`.
   std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<PeerConnectionWrapper> wrapper_;
   std::unique_ptr<Params> params_;

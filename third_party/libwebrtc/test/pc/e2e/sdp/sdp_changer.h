@@ -30,15 +30,15 @@ namespace webrtc_pc_e2e {
 
 // Creates list of capabilities, which can be set on RtpTransceiverInterface via
 // RtpTransceiverInterface::SetCodecPreferences(...) to negotiate use of codecs
-// from list of |supported_codecs| which will match |video_codecs|. If flags
-// |ulpfec| or |flexfec| set to true corresponding FEC codec will be added.
+// from list of `supported_codecs` which will match `video_codecs`. If flags
+// `ulpfec` or `flexfec` set to true corresponding FEC codec will be added.
 // FEC and RTX codecs will be added after required codecs.
 //
 // All codecs will be added only if they exists in the list of
-// |supported_codecs|. If multiple codecs from this list will match
-// |video_codecs|, then all of them will be added to the output
+// `supported_codecs`. If multiple codecs from this list will match
+// `video_codecs`, then all of them will be added to the output
 // vector and they will be added in the same order, as they were in
-// |supported_codecs|.
+// `supported_codecs`.
 std::vector<RtpCodecCapability> FilterVideoCodecCapabilities(
     rtc::ArrayView<const PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
         video_codecs,

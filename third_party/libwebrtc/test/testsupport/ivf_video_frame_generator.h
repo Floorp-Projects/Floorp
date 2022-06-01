@@ -73,7 +73,7 @@ class IvfVideoFrameGenerator : public FrameGeneratorInterface {
   // thread comparing to the one from which frames were read.
   Mutex lock_;
   // This lock is used to sync between sending and receiving frame from decoder.
-  // We can't reuse |lock_| because then generator can be destroyed between
+  // We can't reuse `lock_` because then generator can be destroyed between
   // frame was sent to decoder and decoder callback was invoked.
   Mutex frame_decode_lock_;
 

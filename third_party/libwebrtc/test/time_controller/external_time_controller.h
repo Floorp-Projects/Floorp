@@ -53,7 +53,7 @@ class ExternalTimeController : public TimeController, public TaskQueueFactory {
   class TaskQueueWrapper;
 
   // Executes any tasks scheduled at or before the current time.  May call
-  // |ScheduleNext| to schedule the next call to |Run|.
+  // `ScheduleNext` to schedule the next call to `Run`.
   void Run();
 
   void UpdateTime();
