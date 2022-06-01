@@ -2071,6 +2071,15 @@ void nsDisplayListBuilder::ReuseDisplayItem(nsDisplayItem* aItem) {
   aItem->SetReusedItem();
 }
 
+void nsDisplayListSet::CopyTo(const nsDisplayListSet& aDestination) const {
+  for (size_t i = 0; i < mLists.size(); ++i) {
+    auto* from = mLists[i];
+    auto* to = aDestination.mLists[i];
+
+    from->CopyTo(to);
+  }
+}
+
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const {
   aDestination.BorderBackground()->AppendToTop(BorderBackground());
   aDestination.BlockBorderBackgrounds()->AppendToTop(BlockBorderBackgrounds());

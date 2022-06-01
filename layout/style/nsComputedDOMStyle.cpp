@@ -590,14 +590,10 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(const Element* aElement,
   if (inDocWithShell && aStyleType == StyleType::All &&
       !aElement->IsHTMLElement(nsGkAtoms::area)) {
     if (const Element* element = GetRenderedElement(aElement, aPseudo)) {
-      if (nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(element)) {
-        ComputedStyle* result = styleFrame->Style();
-        // Don't use the style if it was influenced by pseudo-elements,
-        // since then it's not the primary style for this element / pseudo.
-        if (!MustReresolveStyle(result)) {
-          RefPtr<ComputedStyle> ret = result;
-          return ret.forget();
-        }
+      if (element->HasServoData()) {
+        const ComputedStyle* result =
+            Servo_Element_GetMaybeOutOfDateStyle(element);
+        return do_AddRef(result);
       }
     }
   }
@@ -1101,9 +1097,8 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
 
   mComputedStyle = nullptr;
 
-  // XXX the !mElement->IsHTMLElement(nsGkAtoms::area)
-  // check is needed due to bug 135040 (to avoid using
-  // mPrimaryFrame). Remove it once that's fixed.
+  // XXX the !mElement->IsHTMLElement(nsGkAtoms::area) check is needed due to
+  // bug 135040 (to avoid using mPrimaryFrame). Remove it once that's fixed.
   if (mStyleType == StyleType::All &&
       !mElement->IsHTMLElement(nsGkAtoms::area)) {
     mOuterFrame = GetOuterFrame();

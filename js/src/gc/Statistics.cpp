@@ -1555,7 +1555,7 @@ void Statistics::printProfileHeader() {
   fprintf(
       file,
       "MajorGC: PID     Runtime        Timestamp  Reason               States "
-      "FSNR   budget total  bgwrk  ");
+      "FSNR   SizeKB budget total  bgwrk  ");
 #define PRINT_PROFILE_HEADER(name, text, phase) fprintf(file, " %-6.6s", text);
   FOR_EACH_GC_PROFILE_TIME(PRINT_PROFILE_HEADER)
 #undef PRINT_PROFILE_HEADER
@@ -1590,13 +1590,15 @@ void Statistics::printSliceProfile() {
   bool reset = slice.resetReason != GCAbortReason::None;
   bool nonIncremental = nonincrementalReason_ != GCAbortReason::None;
   bool full = zoneStats.isFullCollection();
+  size_t sizeKB = gc->heapSize.bytes() / 1024;
 
   FILE* file = profileFile();
-  fprintf(file, "MajorGC: %7zu %14p %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s  ",
+  fprintf(file,
+          "MajorGC: %7zu %14p %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s   %6zu",
           size_t(getpid()), gc->rt, ts.ToSeconds(),
           ExplainGCReason(slice.reason), int(slice.initialState),
           int(slice.finalState), full ? "F" : "", shrinking ? "S" : "",
-          nonIncremental ? "N" : "", reset ? "R" : "");
+          nonIncremental ? "N" : "", reset ? "R" : "", sizeKB);
 
   if (!nonIncremental && !slice.budget.isUnlimited() &&
       slice.budget.isTimeBudget()) {
@@ -1629,7 +1631,7 @@ void Statistics::printTotalProfileTimes() {
   FILE* file = profileFile();
   fprintf(file,
           "MajorGC: %7zu %14p TOTALS: %7" PRIu64
-          " slices:                             ",
+          " slices:                                    ",
           size_t(getpid()), gc->rt, sliceCount_);
   printProfileTimes(totalTimes_);
 }

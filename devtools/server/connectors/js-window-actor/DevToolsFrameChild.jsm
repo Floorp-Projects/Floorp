@@ -52,7 +52,6 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // - actor: the WindowGlobalTargetActor instance
     this._connections = new Map();
 
-    this._onConnectionChange = this._onConnectionChange.bind(this);
     EventEmitter.decorate(this);
 
     // Set the following preference on the constructor, so that we can easily
@@ -314,12 +313,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
   _createConnectionAndActor(forwardingPrefix, sessionData) {
     this.useCustomLoader = this.document.nodePrincipal.isSystemPrincipal;
 
-    // When debugging chrome pages, use a new dedicated loader, using a distinct chrome compartment.
     if (!this.loader) {
+      // When debugging chrome pages, use a new dedicated loader, using a distinct chrome compartment.
       this.loader = this.useCustomLoader
-        ? new Loader.DevToolsLoader({
-            invisibleToDebugger: true,
-          })
+        ? Loader.useDistinctSystemPrincipalLoader(this)
         : Loader;
     }
     const { DevToolsServer } = this.loader.require(
@@ -332,11 +329,14 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
     DevToolsServer.init();
 
+    // Ask DevToolsServer to automatically destroy itself once the last
+    // connection is closed.
+    DevToolsServer.autoDestroy = true;
+
     // We want a special server without any root actor and only target-scoped actors.
     // We are going to spawn a WindowGlobalTargetActor instance in the next few lines,
     // it is going to act like a root actor without being one.
     DevToolsServer.registerActors({ target: true });
-    DevToolsServer.on("connectionchange", this._onConnectionChange);
 
     const connection = DevToolsServer.connectToParentWindowActor(
       this,
@@ -368,30 +368,6 @@ class DevToolsFrameChild extends JSWindowActorChild {
     targetActor.createdFromJsWindowActor = true;
 
     return { connection, targetActor };
-  }
-
-  /**
-   * Destroy the server once its last connection closes. Note that multiple
-   * frame scripts may be running in parallel and reuse the same server.
-   */
-  _onConnectionChange() {
-    const { DevToolsServer } = this.loader.require(
-      "devtools/server/devtools-server"
-    );
-
-    // Only destroy the server if there is no more connections to it. It may be
-    // used to debug another tab running in the same process.
-    if (DevToolsServer.hasConnection() || DevToolsServer.keepAlive) {
-      return;
-    }
-
-    if (this._destroyed) {
-      return;
-    }
-    this._destroyed = true;
-
-    DevToolsServer.off("connectionchange", this._onConnectionChange);
-    DevToolsServer.destroy();
   }
 
   /**
@@ -706,23 +682,12 @@ class DevToolsFrameChild extends JSWindowActorChild {
       connectionInfo.connection.close();
     }
     this._connections.clear();
-    // If we spawned a loader, we bootstrap a server, from which we should
-    // unregister the listener in order to prevent leaking the JSWindow Actor.
-    if (this.loader) {
-      const { DevToolsServer } = this.loader.require(
-        "devtools/server/devtools-server"
-      );
-      DevToolsServer.off("connectionchange", this._onConnectionChange);
 
-      // The connections closed just before may emit "connectionchange"
-      // only on following events loops. So that we may avoid destroying the DevToolsServer
-      // when all connections are closed.
-      // So, force checking for the number of connections right away.
-      // browser_debugger_server.js used to track this edgecase.
-      this._onConnectionChange();
-    }
-    if (this.useCustomLoader) {
-      this.loader.destroy();
+    if (this.loader) {
+      if (this.useCustomLoader) {
+        Loader.releaseDistinctSystemPrincipalLoader(this);
+      }
+      this.loader = null;
     }
   }
 }

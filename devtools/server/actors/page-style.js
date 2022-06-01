@@ -16,7 +16,6 @@ const {
   style: { ELEMENT_STYLE },
 } = require("devtools/shared/constants");
 
-const { TYPES } = require("devtools/server/actors/resources/index");
 const {
   hasStyleSheetWatcherSupportForTarget,
 } = require("devtools/server/actors/utils/stylesheets-manager");
@@ -118,10 +117,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     );
 
     if (this.hasStyleSheetWatcherSupport) {
-      this.onResourceUpdated = this.onResourceUpdated.bind(this);
-      this.inspector.targetActor.on(
-        "resource-updated-form",
-        this.onResourceUpdated
+      this._onStylesheetUpdated = this._onStylesheetUpdated.bind(this);
+      this.styleSheetsManager.on(
+        "stylesheet-updated",
+        this._onStylesheetUpdated
       );
     }
   },
@@ -1090,39 +1089,26 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     }
   },
 
-  onResourceUpdated(resources) {
-    const kinds = new Set();
-
-    for (const resource of resources) {
-      if (resource.resourceType !== TYPES.STYLESHEET) {
+  _onStylesheetUpdated({ resourceId, updateKind, updates = {} }) {
+    if (updateKind != "style-applied") {
+      return;
+    }
+    const kind = updates.event.kind;
+    // Duplicate refMap content before looping as onStyleApplied may mutate it
+    for (const styleActor of [...this.refMap.values()]) {
+      // Ignore StyleRuleActor that don't have a parent stylesheet.
+      // i.e. actor whose type is ELEMENT_STYLE.
+      if (!styleActor._parentSheet) {
         continue;
       }
-
-      if (resource.updateType !== "style-applied") {
-        continue;
-      }
-
-      const kind = resource.event.kind;
-      kinds.add(kind);
-
-      for (const styleActor of [...this.refMap.values()]) {
-        // Ignore StyleRuleActor that don't have a parent stylesheet.
-        // i.e. actor whose type is ELEMENT_STYLE.
-        if (!styleActor._parentSheet) {
-          continue;
-        }
-        const resourceId = this.styleSheetsManager.getStyleSheetResourceId(
-          styleActor._parentSheet
-        );
-        if (resource.resourceId === resourceId) {
-          styleActor._onStyleApplied(kind);
-        }
+      const resId = this.styleSheetsManager.getStyleSheetResourceId(
+        styleActor._parentSheet
+      );
+      if (resId === resourceId) {
+        styleActor._onStyleApplied(kind);
       }
     }
-
-    for (const kind of kinds) {
-      this._styleApplied(kind);
-    }
+    this._styleApplied(kind);
   },
 
   /**
