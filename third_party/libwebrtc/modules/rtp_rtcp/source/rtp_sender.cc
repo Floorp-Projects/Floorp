@@ -16,7 +16,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "api/array_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
@@ -196,20 +195,6 @@ RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
 
   RTC_DCHECK(paced_sender_);
   RTC_DCHECK(packet_history_);
-}
-
-RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
-                     RtpPacketHistory* packet_history,
-                     RtpPacketSender* packet_sender)
-    : RTPSender(config,
-                packet_history,
-                packet_sender,
-                new PacketSequencer(
-                    config.local_media_ssrc,
-                    config.rtx_send_ssrc,
-                    /*require_marker_before_media_padding_=*/!config.audio,
-                    config.clock)) {
-  owned_sequencer_ = absl::WrapUnique(sequencer_);
 }
 
 RTPSender::~RTPSender() {

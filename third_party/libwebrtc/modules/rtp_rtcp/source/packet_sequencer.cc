@@ -39,9 +39,10 @@ PacketSequencer::PacketSequencer(uint32_t media_ssrc,
       last_timestamp_time_ms_(0),
       last_packet_marker_bit_(false) {
   Random random(clock_->TimeInMicroseconds());
-  // TODO(bugs.webrtc.org/11340): Check if we can allow the full range of
-  // [0, 2^16[ to be used instead.
-  // Random start, 16 bits. Can't be 0.
+  // Random start, 16 bits. Upper half of range is avoided in order to prevent
+  // wraparound issues during startup. Sequence number 0 is avoided for
+  // historical reasons, presumably to avoid debugability or test usage
+  // conflicts.
   constexpr uint16_t kMaxInitRtpSeqNumber = 0x7fff;  // 2^15 - 1.
   media_sequence_number_ = random.Rand(1, kMaxInitRtpSeqNumber);
   rtx_sequence_number_ = random.Rand(1, kMaxInitRtpSeqNumber);
