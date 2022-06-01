@@ -11,6 +11,7 @@
 #ifndef P2P_BASE_STUN_PORT_H_
 #define P2P_BASE_STUN_PORT_H_
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -19,8 +20,6 @@
 #include "p2p/base/port.h"
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
-
-// TODO(mallinath) - Rename stunport.cc|h to udpport.cc|h.
 
 namespace cricket {
 
@@ -183,18 +182,15 @@ class UDPPort : public Port {
   // resolve one address per instance.
   class AddressResolver : public sigslot::has_slots<> {
    public:
-    explicit AddressResolver(rtc::PacketSocketFactory* factory);
+    explicit AddressResolver(
+        rtc::PacketSocketFactory* factory,
+        std::function<void(const rtc::SocketAddress&, int)> done_callback);
     ~AddressResolver() override;
 
     void Resolve(const rtc::SocketAddress& address);
     bool GetResolvedAddress(const rtc::SocketAddress& input,
                             int family,
                             rtc::SocketAddress* output) const;
-
-    // The signal is sent when resolving the specified address is finished. The
-    // first argument is the input address, the second argument is the error
-    // or 0 if it succeeded.
-    sigslot::signal2<const rtc::SocketAddress&, int> SignalDone;
 
    private:
     typedef std::map<rtc::SocketAddress, rtc::AsyncResolverInterface*>
@@ -204,6 +200,10 @@ class UDPPort : public Port {
 
     rtc::PacketSocketFactory* socket_factory_;
     ResolverMap resolvers_;
+    // The function is called when resolving the specified address is finished.
+    // The first argument is the input address, the second argument is the error
+    // or 0 if it succeeded.
+    std::function<void(const rtc::SocketAddress&, int)> done_;
   };
 
   // DNS resolution of the STUN server.

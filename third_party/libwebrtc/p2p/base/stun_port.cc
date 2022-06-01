@@ -115,8 +115,10 @@ class StunBindingRequest : public StunRequest {
   int64_t start_time_;
 };
 
-UDPPort::AddressResolver::AddressResolver(rtc::PacketSocketFactory* factory)
-    : socket_factory_(factory) {}
+UDPPort::AddressResolver::AddressResolver(
+    rtc::PacketSocketFactory* factory,
+    std::function<void(const rtc::SocketAddress&, int)> done_callback)
+    : socket_factory_(factory), done_(std::move(done_callback)) {}
 
 UDPPort::AddressResolver::~AddressResolver() {
   for (ResolverMap::iterator it = resolvers_.begin(); it != resolvers_.end();
@@ -159,7 +161,7 @@ void UDPPort::AddressResolver::OnResolveResult(
   for (ResolverMap::iterator it = resolvers_.begin(); it != resolvers_.end();
        ++it) {
     if (it->second == resolver) {
-      SignalDone(it->first, resolver->GetError());
+      done_(it->first, resolver->GetError());
       return;
     }
   }
@@ -434,8 +436,10 @@ void UDPPort::SendStunBindingRequests() {
 
 void UDPPort::ResolveStunAddress(const rtc::SocketAddress& stun_addr) {
   if (!resolver_) {
-    resolver_.reset(new AddressResolver(socket_factory()));
-    resolver_->SignalDone.connect(this, &UDPPort::OnResolveResult);
+    resolver_.reset(new AddressResolver(
+        socket_factory(), [&](const rtc::SocketAddress& input, int error) {
+          OnResolveResult(input, error);
+        }));
   }
 
   RTC_LOG(LS_INFO) << ToString() << ": Starting STUN host lookup for "
