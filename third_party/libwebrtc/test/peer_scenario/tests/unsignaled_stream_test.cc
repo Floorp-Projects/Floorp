@@ -17,7 +17,6 @@
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/peer_scenario/peer_scenario.h"
-#include "test/rtp_header_parser.h"
 
 namespace webrtc {
 namespace test {
