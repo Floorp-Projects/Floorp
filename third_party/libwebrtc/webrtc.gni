@@ -162,9 +162,9 @@ declare_args() {
 
   # Enable this to build OpenH264 encoder/FFmpeg decoder. This is supported on
   # all platforms except Android and iOS. Because FFmpeg can be built
-  # with/without H.264 support, |ffmpeg_branding| has to separately be set to a
+  # with/without H.264 support, `ffmpeg_branding` has to separately be set to a
   # value that includes H.264, for example "Chrome". If FFmpeg is built without
-  # H.264, compilation succeeds but |H264DecoderImpl| fails to initialize.
+  # H.264, compilation succeeds but `H264DecoderImpl` fails to initialize.
   # CHECK THE OPENH264, FFMPEG AND H.264 LICENSES/PATENTS BEFORE BUILDING.
   # http://www.openh264.org, https://www.ffmpeg.org/
   #
