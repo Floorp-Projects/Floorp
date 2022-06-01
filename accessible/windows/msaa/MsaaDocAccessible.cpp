@@ -8,6 +8,7 @@
 
 #include "DocAccessibleChild.h"
 #include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccUtils.h"
 #include "nsWinUtils.h"
 #include "Role.h"
 
@@ -156,21 +157,15 @@ MsaaDocAccessible::get_accValue(VARIANT aVarChild, BSTR __RPC_FAR* aValue) {
   // MsaaAccessible::get_accValue should have failed (and thus we should have
   // returned early) if the Accessible is dead.
   MOZ_ASSERT(mAcc);
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;
-  }
-  DocAccessible* docAcc = DocAcc();
-  // This is not remote, so it must be a local DocAccessible.
-  MOZ_ASSERT(docAcc);
   // If document is being used to create a widget, don't use the URL hack
-  roles::Role role = docAcc->Role();
+  roles::Role role = mAcc->Role();
   if (role != roles::DOCUMENT && role != roles::APPLICATION &&
       role != roles::DIALOG && role != roles::ALERT &&
       role != roles::NON_NATIVE_DOCUMENT)
     return hr;
 
   nsAutoString url;
-  docAcc->URL(url);
+  nsAccUtils::DocumentURL(mAcc, url);
   if (url.IsEmpty()) return S_FALSE;
 
   *aValue = ::SysAllocStringLen(url.get(), url.Length());

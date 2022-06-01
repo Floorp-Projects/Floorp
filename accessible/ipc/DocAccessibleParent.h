@@ -316,6 +316,8 @@ class DocAccessibleParent : public RemoteAccessible,
 
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
+  void URL(nsAString& aURL) const;
+
  private:
   ~DocAccessibleParent();
 

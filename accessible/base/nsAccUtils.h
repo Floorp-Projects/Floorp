@@ -251,6 +251,13 @@ class nsAccUtils {
    * If aDoc is nul, null will be returned.
    */
   static Accessible* GetAccessibleByID(Accessible* aDoc, uint64_t aID);
+
+  /**
+   * Get the URL for a given document.
+   * This function is needed because there is no unified base class for local
+   * and remote documents.
+   */
+  static void DocumentURL(Accessible* aDoc, nsAString& aURL);
 };
 
 }  // namespace a11y
