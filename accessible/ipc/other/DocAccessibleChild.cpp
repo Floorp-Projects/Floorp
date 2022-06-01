@@ -1520,16 +1520,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvTitle(const uint64_t& aID,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvURL(const uint64_t& aID,
-                                                    nsString* aURL) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc && acc->IsDoc()) {
-    acc->AsDoc()->URL(*aURL);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvMimeType(const uint64_t& aID,
                                                          nsString* aMime) {
   LocalAccessible* acc = IdToAccessible(aID);
