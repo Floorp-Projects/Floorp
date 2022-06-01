@@ -73,6 +73,12 @@ rtc_library("video_frame") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+if (is_android) {
+  java_cpp_enum("video_frame_enums") {
+    sources = [ "video_frame_buffer.h" ]
+  }
+}
+
 rtc_library("video_frame_i010") {
   visibility = [ "*" ]
   sources = [

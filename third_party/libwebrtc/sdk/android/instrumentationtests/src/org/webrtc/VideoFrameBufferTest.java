@@ -32,6 +32,7 @@ import org.chromium.base.test.params.ParameterizedRunner;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.webrtc.VideoFrame;
 
 /**
  * Test VideoFrame buffers of different kind of formats: I420, RGB, OES, NV12, NV21, and verify
@@ -45,7 +46,7 @@ public class VideoFrameBufferTest {
   /**
    * These tests are parameterized on this enum which represents the different VideoFrame.Buffers.
    */
-  private static enum BufferType { I420, RGB_TEXTURE, OES_TEXTURE, NV21, NV12 }
+  private static enum BufferType { I420_JAVA, I420_NATIVE, RGB_TEXTURE, OES_TEXTURE, NV21, NV12 }
 
   @ClassParameter private static List<ParameterSet> CLASS_PARAMS = new ArrayList<>();
 
@@ -75,17 +76,39 @@ public class VideoFrameBufferTest {
    */
   private static VideoFrame.Buffer createBufferWithType(
       BufferType bufferType, VideoFrame.I420Buffer i420Buffer) {
+    VideoFrame.Buffer buffer;
     switch (bufferType) {
-      case I420:
-        return i420Buffer.toI420();
+      case I420_JAVA:
+        buffer = i420Buffer;
+        buffer.retain();
+        assertEquals(VideoFrameBufferType.I420, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.I420, nativeGetBufferType(buffer));
+        return buffer;
+      case I420_NATIVE:
+        buffer = nativeGetNativeI420Buffer(i420Buffer);
+        assertEquals(VideoFrameBufferType.I420, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.I420, nativeGetBufferType(buffer));
+        return buffer;
       case RGB_TEXTURE:
-        return createRgbTextureBuffer(/* eglContext= */ null, i420Buffer);
+        buffer = createRgbTextureBuffer(/* eglContext= */ null, i420Buffer);
+        assertEquals(VideoFrameBufferType.NATIVE, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.NATIVE, nativeGetBufferType(buffer));
+        return buffer;
       case OES_TEXTURE:
-        return createOesTextureBuffer(/* eglContext= */ null, i420Buffer);
+        buffer = createOesTextureBuffer(/* eglContext= */ null, i420Buffer);
+        assertEquals(VideoFrameBufferType.NATIVE, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.NATIVE, nativeGetBufferType(buffer));
+        return buffer;
       case NV21:
-        return createNV21Buffer(i420Buffer);
+        buffer = createNV21Buffer(i420Buffer);
+        assertEquals(VideoFrameBufferType.NATIVE, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.NATIVE, nativeGetBufferType(buffer));
+        return buffer;
       case NV12:
-        return createNV12Buffer(i420Buffer);
+        buffer = createNV12Buffer(i420Buffer);
+        assertEquals(VideoFrameBufferType.NATIVE, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.NATIVE, nativeGetBufferType(buffer));
+        return buffer;
       default:
         throw new IllegalArgumentException("Unknown buffer type: " + bufferType);
     }
@@ -452,6 +475,7 @@ public class VideoFrameBufferTest {
     final VideoFrame.I420Buffer outputI420Buffer = bufferToTest.toI420();
     bufferToTest.release();
 
+    assertEquals(VideoFrameBufferType.I420, nativeGetBufferType(outputI420Buffer));
     assertAlmostEqualI420Buffers(referenceI420Buffer, outputI420Buffer);
     referenceI420Buffer.release();
     outputI420Buffer.release();
@@ -504,4 +528,10 @@ public class VideoFrameBufferTest {
     testCropAndScale(4 /* cropX= */, 4 /* cropY= */, /* cropWidth= */ 12, /* cropHeight= */ 12,
         /* scaleWidth= */ 8, /* scaleHeight= */ 8);
   }
+
+  @VideoFrameBufferType private static native int nativeGetBufferType(VideoFrame.Buffer buffer);
+
+  /** Returns the copy of I420Buffer using WrappedNativeI420Buffer. */
+  private static native VideoFrame.Buffer nativeGetNativeI420Buffer(
+      VideoFrame.I420Buffer i420Buffer);
 }

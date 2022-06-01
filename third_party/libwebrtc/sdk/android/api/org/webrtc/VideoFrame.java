@@ -35,6 +35,15 @@ public class VideoFrame implements RefCounted {
    */
   public interface Buffer extends RefCounted {
     /**
+     * Representation of the underlying buffer. Currently, only NATIVE and I420 are supported.
+     */
+    @CalledByNative("Buffer")
+    @VideoFrameBufferType
+    default int getBufferType() {
+      return VideoFrameBufferType.NATIVE;
+    }
+
+    /**
      * Resolution of the buffer in pixels.
      */
     @CalledByNative("Buffer") int getWidth();
@@ -63,6 +72,11 @@ public class VideoFrame implements RefCounted {
    * Interface for I420 buffers.
    */
   public interface I420Buffer extends Buffer {
+    @Override
+    default int getBufferType() {
+      return VideoFrameBufferType.I420;
+    }
+
     /**
      * Returns a direct ByteBuffer containing Y-plane data. The buffer capacity is at least
      * getStrideY() * getHeight() bytes. The position of the returned buffer is ignored and must

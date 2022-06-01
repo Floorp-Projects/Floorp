@@ -70,6 +70,13 @@ class AndroidVideoBuffer : public VideoFrameBuffer {
 
 class AndroidVideoI420Buffer : public I420BufferInterface {
  public:
+  // Creates a native VideoFrameBuffer from a Java VideoFrame.I420Buffer.
+  static rtc::scoped_refptr<AndroidVideoI420Buffer> Create(
+      JNIEnv* jni,
+      int width,
+      int height,
+      const JavaRef<jobject>& j_video_frame_buffer);
+
   // Adopts and takes ownership of the Java VideoFrame.Buffer. I.e. retain()
   // will not be called, but release() will be called when the returned
   // AndroidVideoBuffer is destroyed.
@@ -113,11 +120,24 @@ class AndroidVideoI420Buffer : public I420BufferInterface {
   int stride_v_;
 };
 
+rtc::scoped_refptr<AndroidVideoI420Buffer> AndroidVideoI420Buffer::Create(
+    JNIEnv* jni,
+    int width,
+    int height,
+    const JavaRef<jobject>& j_video_frame_buffer) {
+  Java_Buffer_retain(jni, j_video_frame_buffer);
+  return AndroidVideoI420Buffer::Adopt(jni, width, height,
+                                       j_video_frame_buffer);
+}
+
 rtc::scoped_refptr<AndroidVideoI420Buffer> AndroidVideoI420Buffer::Adopt(
     JNIEnv* jni,
     int width,
     int height,
     const JavaRef<jobject>& j_video_frame_buffer) {
+  RTC_DCHECK_EQ(
+      static_cast<Type>(Java_Buffer_getBufferType(jni, j_video_frame_buffer)),
+      Type::kI420);
   return rtc::make_ref_counted<AndroidVideoI420Buffer>(jni, width, height,
                                                        j_video_frame_buffer);
 }
@@ -164,6 +184,9 @@ int64_t GetJavaVideoFrameTimestampNs(JNIEnv* jni,
 rtc::scoped_refptr<AndroidVideoBuffer> AndroidVideoBuffer::Adopt(
     JNIEnv* jni,
     const JavaRef<jobject>& j_video_frame_buffer) {
+  RTC_DCHECK_EQ(
+      static_cast<Type>(Java_Buffer_getBufferType(jni, j_video_frame_buffer)),
+      Type::kNative);
   return rtc::make_ref_counted<AndroidVideoBuffer>(jni, j_video_frame_buffer);
 }
 
@@ -233,7 +256,20 @@ rtc::scoped_refptr<I420BufferInterface> AndroidVideoBuffer::ToI420() {
 rtc::scoped_refptr<VideoFrameBuffer> JavaToNativeFrameBuffer(
     JNIEnv* jni,
     const JavaRef<jobject>& j_video_frame_buffer) {
-  return AndroidVideoBuffer::Create(jni, j_video_frame_buffer);
+  VideoFrameBuffer::Type type = static_cast<VideoFrameBuffer::Type>(
+      Java_Buffer_getBufferType(jni, j_video_frame_buffer));
+  switch (type) {
+    case VideoFrameBuffer::Type::kI420: {
+      const int width = Java_Buffer_getWidth(jni, j_video_frame_buffer);
+      const int height = Java_Buffer_getHeight(jni, j_video_frame_buffer);
+      return AndroidVideoI420Buffer::Create(jni, width, height,
+                                            j_video_frame_buffer);
+    }
+    case VideoFrameBuffer::Type::kNative:
+      return AndroidVideoBuffer::Create(jni, j_video_frame_buffer);
+    default:
+      RTC_CHECK_NOTREACHED();
+  }
 }
 
 VideoFrame JavaToNativeFrame(JNIEnv* jni,
@@ -243,8 +279,8 @@ VideoFrame JavaToNativeFrame(JNIEnv* jni,
       Java_VideoFrame_getBuffer(jni, j_video_frame);
   int rotation = Java_VideoFrame_getRotation(jni, j_video_frame);
   int64_t timestamp_ns = Java_VideoFrame_getTimestampNs(jni, j_video_frame);
-  rtc::scoped_refptr<AndroidVideoBuffer> buffer =
-      AndroidVideoBuffer::Create(jni, j_video_frame_buffer);
+  rtc::scoped_refptr<VideoFrameBuffer> buffer =
+      JavaToNativeFrameBuffer(jni, j_video_frame_buffer);
   return VideoFrame::Builder()
       .set_video_frame_buffer(buffer)
       .set_timestamp_rtp(timestamp_rtp)
