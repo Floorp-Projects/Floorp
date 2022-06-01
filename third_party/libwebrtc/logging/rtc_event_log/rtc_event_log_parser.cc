@@ -1311,12 +1311,17 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternal(
     }
 
     if (message_length > s.size()) {
-      RTC_LOG(LS_WARNING) << "Protobuf message length is too large.";
+      RTC_LOG(LS_WARNING) << "Protobuf message length is larger than the "
+                             "remaining bytes in the proto.";
       RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(allow_incomplete_logs_,
                                            kIncompleteLogError);
-      RTC_PARSE_CHECK_OR_RETURN_LE(message_length, kMaxEventSize);
+      return ParseStatus::Error(
+          "Incomplete message: the length of the next message is larger than "
+          "the remaining bytes in the proto",
+          __FILE__, __LINE__);
     }
 
+    RTC_PARSE_CHECK_OR_RETURN_LE(message_length, kMaxEventSize);
     // Skip forward to the start of the next event.
     s = s.substr(message_length);
     size_t total_event_size = event_start.size() - s.size();
