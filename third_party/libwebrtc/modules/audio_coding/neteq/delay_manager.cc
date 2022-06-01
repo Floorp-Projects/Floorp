@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/neteq/delay_manager.h"
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 

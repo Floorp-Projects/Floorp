@@ -10,7 +10,6 @@
 
 #include "modules/video_coding/codecs/vp8/libvpx_vp8_encoder.h"
 
-#include <assert.h>
 #include <string.h>
 
 #include <algorithm>

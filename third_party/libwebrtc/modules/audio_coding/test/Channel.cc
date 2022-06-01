@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/test/Channel.h"
 
-#include <assert.h>
 
 #include <iostream>
 

@@ -16,7 +16,6 @@
 
 #include "rtc_base/third_party/base64/base64.h"
 
-#include <assert.h>
 #include <string.h>
 
 #include "rtc_base/checks.h"

@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/acm2/acm_resampler.h"
 
-#include <assert.h>
 #include <string.h>
 
 #include "rtc_base/logging.h"

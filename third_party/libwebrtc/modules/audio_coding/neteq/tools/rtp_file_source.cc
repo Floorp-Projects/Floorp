@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/neteq/tools/rtp_file_source.h"
 
-#include <assert.h>
 #include <string.h>
 #ifndef WIN32
 #include <netinet/in.h>

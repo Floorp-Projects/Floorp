@@ -10,7 +10,6 @@
 
 #include "modules/video_coding/frame_buffer.h"
 
-#include <assert.h>
 #include <string.h>
 
 #include "api/video/encoded_image.h"

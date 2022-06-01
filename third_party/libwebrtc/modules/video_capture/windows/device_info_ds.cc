@@ -10,7 +10,6 @@
 
 #include "modules/video_capture/windows/device_info_ds.h"
 
-#include <assert.h>
 #include <dvdmedia.h>
 
 #include "modules/video_capture/video_capture_config.h"

@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/include/audio_coding_module.h"
 
-#include <assert.h>
 #include <algorithm>
 #include <cstdint>
 

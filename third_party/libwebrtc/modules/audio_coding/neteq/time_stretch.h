@@ -11,7 +11,6 @@
 #ifndef MODULES_AUDIO_CODING_NETEQ_TIME_STRETCH_H_
 #define MODULES_AUDIO_CODING_NETEQ_TIME_STRETCH_H_
 
-#include <assert.h>
 #include <string.h>  // memset, size_t
 
 #include "modules/audio_coding/neteq/audio_multi_vector.h"

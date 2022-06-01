@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/neteq/comfort_noise.h"
 
-#include <assert.h>
 
 #include <cstdint>
 #include <memory>

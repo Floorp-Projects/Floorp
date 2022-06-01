@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/neteq/decision_logic.h"
 
-#include <assert.h>
 #include <stdio.h>
 
 #include <string>

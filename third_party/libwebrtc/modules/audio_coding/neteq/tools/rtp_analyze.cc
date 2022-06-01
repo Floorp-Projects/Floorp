@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <assert.h>
 #include <stdio.h>
 
 #include <memory>

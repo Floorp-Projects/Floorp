@@ -10,7 +10,6 @@
 
 #include "modules/video_coding/session_info.h"
 
-#include <assert.h>
 #include <string.h>
 
 #include <vector>
