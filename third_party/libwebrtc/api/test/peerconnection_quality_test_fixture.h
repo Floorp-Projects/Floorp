@@ -179,6 +179,14 @@ class PeerConnectionE2EQualityTestFixture {
   struct VideoConfig {
     VideoConfig(size_t width, size_t height, int32_t fps)
         : width(width), height(height), fps(fps) {}
+    VideoConfig(std::string stream_label,
+                size_t width,
+                size_t height,
+                int32_t fps)
+        : width(width),
+          height(height),
+          fps(fps),
+          stream_label(std::move(stream_label)) {}
 
     // Video stream width.
     const size_t width;
@@ -247,6 +255,11 @@ class PeerConnectionE2EQualityTestFixture {
       kGenerated,
       kFile,
     };
+
+    AudioConfig() = default;
+    explicit AudioConfig(std::string stream_label)
+        : stream_label(std::move(stream_label)) {}
+
     // Have to be unique among all specified configs for all peers in the call.
     // Will be auto generated if omitted.
     absl::optional<std::string> stream_label;
