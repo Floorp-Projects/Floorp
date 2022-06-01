@@ -6,8 +6,10 @@ function UrlClassifierExceptionListService() {}
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
@@ -94,7 +96,7 @@ UrlClassifierExceptionListService.prototype = {
       return;
     }
 
-    let rs = RemoteSettings(COLLECTION_NAME);
+    let rs = lazy.RemoteSettings(COLLECTION_NAME);
     rs.on("sync", event => {
       let {
         data: { current },

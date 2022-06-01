@@ -323,7 +323,7 @@ class ModuleObject : public NativeObject {
   void initImportExportData(HandleArrayObject requestedModules,
                             HandleArrayObject importEntries,
                             HandleArrayObject localExportEntries,
-                            HandleArrayObject indiretExportEntries,
+                            HandleArrayObject indirectExportEntries,
                             HandleArrayObject starExportEntries);
   static bool Freeze(JSContext* cx, HandleModuleObject self);
 #ifdef DEBUG
@@ -370,10 +370,11 @@ class ModuleObject : public NativeObject {
   static bool appendAsyncParentModule(JSContext* cx, HandleModuleObject self,
                                       HandleModuleObject parent);
 
-  static bool topLevelCapabilityResolve(JSContext* cx,
-                                        HandleModuleObject module);
-  static bool topLevelCapabilityReject(JSContext* cx, HandleModuleObject module,
-                                       HandleValue error);
+  [[nodiscard]] static bool topLevelCapabilityResolve(
+      JSContext* cx, HandleModuleObject module);
+  [[nodiscard]] static bool topLevelCapabilityReject(JSContext* cx,
+                                                     HandleModuleObject module,
+                                                     HandleValue error);
 
   static bool Instantiate(JSContext* cx, HandleModuleObject self);
 

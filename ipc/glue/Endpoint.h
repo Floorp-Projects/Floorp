@@ -98,11 +98,16 @@ class Endpoint {
 
   // This method binds aActor to this endpoint. After this call, the actor can
   // be used to send and receive messages. The endpoint becomes invalid.
-  bool Bind(PFooSide* aActor) {
+  //
+  // If specified, aEventTarget is the target the actor will be bound to, and
+  // must be on the current thread. Otherwise, GetCurrentSerialEventTarget() is
+  // used.
+  bool Bind(PFooSide* aActor, nsISerialEventTarget* aEventTarget = nullptr) {
     MOZ_RELEASE_ASSERT(IsValid());
     MOZ_RELEASE_ASSERT(mMyPid == base::kInvalidProcessId ||
                        mMyPid == base::GetCurrentProcId());
-    return aActor->Open(std::move(mPort), mOtherPid);
+    MOZ_RELEASE_ASSERT(!aEventTarget || aEventTarget->IsOnCurrentThread());
+    return aActor->Open(std::move(mPort), mOtherPid, aEventTarget);
   }
 
   bool IsValid() const { return mPort.IsValid(); }

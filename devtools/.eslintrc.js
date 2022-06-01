@@ -393,6 +393,10 @@ module.exports = {
     // require assignment operator shorthand where possible or prohibit it
     // entirely
     "operator-assignment": "off",
+    // This rule will match any function starting with `use` which aren't
+    // necessarily in a React component. Also DevTools aren't using React hooks
+    // so this sounds unecessary.
+    "react-hooks/rules-of-hooks": "off",
   },
   settings: {
     react: {
