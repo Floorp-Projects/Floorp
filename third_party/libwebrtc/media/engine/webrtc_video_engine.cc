@@ -3161,7 +3161,7 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::GetVideoReceiverInfo(
       stats.rtp_stats.packet_counter.padding_bytes;
   info.packets_rcvd = stats.rtp_stats.packet_counter.packets;
   info.packets_lost = stats.rtp_stats.packets_lost;
-  info.jitter_ms = stats.rtp_stats.jitter;
+  info.jitter_ms = stats.rtp_stats.jitter / (kVideoCodecClockrate / 1000);
 
   info.framerate_rcvd = stats.network_frame_rate;
   info.framerate_decoded = stats.decode_frame_rate;
