@@ -68,6 +68,8 @@ this.ui = (function() {
     el.style.margin = "0";
     el.scrolling = "no";
     el.style.clip = "auto";
+    el.style.backgroundColor = "transparent";
+    el.style.colorScheme = "light";
     return el;
   }
 
@@ -89,7 +91,6 @@ this.ui = (function() {
           this.element.id = "firefox-screenshots-selection-iframe";
           this.element.style.display = "none";
           this.element.style.setProperty("position", "absolute", "important");
-          this.element.style.setProperty("background-color", "transparent");
           this.element.setAttribute("role", "dialog");
           this.updateElementSize();
           this.element.addEventListener(
@@ -101,7 +102,6 @@ this.ui = (function() {
               // eslint-disable-next-line no-unsanitized/property
               this.document.documentElement.innerHTML = `
                <head>
-                <meta name="color-scheme" content="light dark">
                 <style>${substitutedCss}</style>
                 <title></title>
                </head>
@@ -242,7 +242,6 @@ this.ui = (function() {
           this.element = initializeIframe();
           this.element.id = "firefox-screenshots-preselection-iframe";
           this.element.style.setProperty("position", "fixed", "important");
-          this.element.style.setProperty("background-color", "transparent");
           this.element.style.width = "100%";
           this.element.style.height = "100%";
           this.element.setAttribute("role", "dialog");
@@ -256,7 +255,6 @@ this.ui = (function() {
               this.document.documentElement.innerHTML = `
                <head>
                 <link rel="localization" href="browser/screenshots.ftl">
-                <meta name="color-scheme" content="light dark">
                 <style>${substitutedCss}</style>
                 <title></title>
                </head>
@@ -386,7 +384,6 @@ this.ui = (function() {
           this.element.id = "firefox-screenshots-preview-iframe";
           this.element.style.display = "none";
           this.element.style.setProperty("position", "fixed", "important");
-          this.element.style.setProperty("background-color", "transparent");
           this.element.style.height = "100%";
           this.element.style.width = "100%";
           this.element.setAttribute("role", "dialog");
@@ -399,7 +396,6 @@ this.ui = (function() {
               this.document.documentElement.innerHTML = `
                 <head>
                   <link rel="localization" href="browser/screenshots.ftl">
-                  <meta name="color-scheme" content="light dark">
                   <style>${substitutedCss}</style>
                   <title></title>
                 </head>
