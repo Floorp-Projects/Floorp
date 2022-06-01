@@ -54,10 +54,10 @@ class VideoSendStream {
       // references to this media stream's SSRC.
       kMedia,
       // RTX streams are streams dedicated to retransmissions. They have a
-      // dependency on a single kMedia stream: |referenced_media_ssrc|.
+      // dependency on a single kMedia stream: `referenced_media_ssrc`.
       kRtx,
       // FlexFEC streams are streams dedicated to FlexFEC. They have a
-      // dependency on a single kMedia stream: |referenced_media_ssrc|.
+      // dependency on a single kMedia stream: `referenced_media_ssrc`.
       kFlexfec,
     };
 
@@ -67,9 +67,9 @@ class VideoSendStream {
     std::string ToString() const;
 
     StreamType type = StreamType::kMedia;
-    // If |type| is kRtx or kFlexfec this value is present. The referenced SSRC
+    // If `type` is kRtx or kFlexfec this value is present. The referenced SSRC
     // is the kMedia stream that this stream is performing retransmissions or
-    // FEC for. If |type| is kMedia, this value is null.
+    // FEC for. If `type` is kMedia, this value is null.
     absl::optional<uint32_t> referenced_media_ssrc;
     FrameCounts frame_counts;
     int width = 0;
@@ -170,7 +170,7 @@ class VideoSendStream {
 
     // Expected delay needed by the renderer, i.e. the frame will be delivered
     // this many milliseconds, if possible, earlier than expected render time.
-    // Only valid if |local_renderer| is set.
+    // Only valid if `local_renderer` is set.
     int render_delay_ms = 0;
 
     // Target delay in milliseconds. A positive value indicates this stream is
