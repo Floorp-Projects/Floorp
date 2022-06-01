@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/test/mock_video_decoder.h"
 #include "api/test/video/function_video_decoder_factory.h"
 #include "api/video_codecs/video_decoder.h"
 #include "call/rtp_stream_receiver_controller.h"
@@ -31,6 +32,7 @@
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/mock_transport.h"
 #include "test/time_controller/simulated_time_controller.h"
 #include "test/video_decoder_proxy_factory.h"
 #include "video/call_stats.h"
@@ -45,36 +47,6 @@ using ::testing::IsEmpty;
 using ::testing::SizeIs;
 
 constexpr int kDefaultTimeOutMs = 50;
-
-class MockTransport : public Transport {
- public:
-  MOCK_METHOD(bool,
-              SendRtp,
-              (const uint8_t*, size_t length, const PacketOptions& options),
-              (override));
-  MOCK_METHOD(bool, SendRtcp, (const uint8_t*, size_t length), (override));
-};
-
-class MockVideoDecoder : public VideoDecoder {
- public:
-  MOCK_METHOD(int32_t,
-              InitDecode,
-              (const VideoCodec*, int32_t number_of_cores),
-              (override));
-  MOCK_METHOD(int32_t,
-              Decode,
-              (const EncodedImage& input,
-               bool missing_frames,
-               int64_t render_time_ms),
-              (override));
-  MOCK_METHOD(int32_t,
-              RegisterDecodeCompleteCallback,
-              (DecodedImageCallback*),
-              (override));
-  MOCK_METHOD(int32_t, Release, (), (override));
-  MOCK_METHOD(VideoDecoder::DecoderInfo, GetDetcoderInfo, (), (const override));
-  const char* ImplementationName() const { return "MockVideoDecoder"; }
-};
 
 class FrameObjectFake : public EncodedFrame {
  public:

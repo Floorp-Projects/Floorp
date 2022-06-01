@@ -16,6 +16,7 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/video_codec_type.h"
 #include "api/video/video_frame_type.h"
+#include "call/test/mock_rtp_packet_sink_interface.h"
 #include "common_video/h264/h264_common.h"
 #include "media/base/media_constants.h"
 #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
@@ -38,6 +39,7 @@
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_frame_transformer.h"
+#include "test/mock_transport.h"
 #include "test/time_controller/simulated_task_queue.h"
 #include "test/time_controller/simulated_time_controller.h"
 
@@ -72,15 +74,6 @@ RTPVideoHeader GetGenericVideoHeader(VideoFrameType frame_type) {
   video_header.frame_type = frame_type;
   return video_header;
 }
-
-class MockTransport : public Transport {
- public:
-  MOCK_METHOD(bool,
-              SendRtp,
-              (const uint8_t*, size_t length, const PacketOptions& options),
-              (override));
-  MOCK_METHOD(bool, SendRtcp, (const uint8_t*, size_t length), (override));
-};
 
 class MockNackSender : public NackSender {
  public:
@@ -128,11 +121,6 @@ class MockOnCompleteFrameCallback
     buffer_.WriteBytes(reinterpret_cast<const char*>(data), size_in_bytes);
   }
   rtc::ByteBufferWriter buffer_;
-};
-
-class MockRtpPacketSink : public RtpPacketSinkInterface {
- public:
-  MOCK_METHOD(void, OnRtpPacket, (const RtpPacketReceived&), (override));
 };
 
 constexpr uint32_t kSsrc = 111;
