@@ -23,11 +23,11 @@
 //
 // Input & Output:
 //      - filter_state  : Current filter states of the two all-pass filters. The
-//                        |filter_state| is updated after all samples have been
+//                        `filter_state` is updated after all samples have been
 //                        processed.
 //
 // Output:
-//      - signal_out    : Downsampled signal (of length |in_length| / 2).
+//      - signal_out    : Downsampled signal (of length `in_length` / 2).
 void WebRtcVad_Downsampling(const int16_t* signal_in,
                             int16_t* signal_out,
                             int32_t* filter_state,
