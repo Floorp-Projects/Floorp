@@ -29,8 +29,6 @@ loader.lazyRequireGetter(
 // Services.prefs.setBoolPref("devtools.debugger.log.verbose", true);
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
-// Fast timeout for TLS tests
-Services.prefs.setIntPref("devtools.remote.tls-handshake-timeout", 1000);
 
 // Convert an nsIScriptError 'logLevel' value into an appropriate string.
 function scriptErrorLogLevel(message) {

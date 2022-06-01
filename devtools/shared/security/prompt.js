@@ -34,8 +34,6 @@ var Server = (exports.Server = {});
  *        The host name or IP address of the devtools server.
  * @param port number
  *        The port number of the devtools server.
- * @param cert object (optional)
- *        The server's cert details.
  * @param authResult AuthenticationResult
  *        Authentication result sent from the server.
  * @param oob object (optional)
