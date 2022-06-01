@@ -1546,6 +1546,11 @@
     <string name="preferences_addresses_add_address">Adres ekle</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Adresleri yönet</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Adresleri kaydedip otomatik doldur</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Numaralar, e-posta ve gönderim adresleri gibi bilgileri dahil et</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kart ekle</string>
     <!-- Title of the "Edit card" screen -->
@@ -1882,6 +1887,9 @@
     <string name="pocket_stories_feature_caption">Firefox ailesinden. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Daha fazla bilgi al</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Sponsorlu</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Veri göndermek için telemetriyi etkinleştirin.</string>
