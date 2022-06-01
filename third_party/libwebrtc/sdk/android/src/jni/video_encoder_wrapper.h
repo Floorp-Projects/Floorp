@@ -74,10 +74,9 @@ class VideoEncoderWrapper : public VideoEncoder {
   ScopedJavaLocalRef<jobject> ToJavaBitrateAllocation(
       JNIEnv* jni,
       const VideoBitrateAllocation& allocation);
-  std::string GetImplementationName(JNIEnv* jni) const;
 
+  void UpdateEncoderInfo(JNIEnv* jni);
   ScalingSettings GetScalingSettingsInternal(JNIEnv* jni) const;
-
   std::vector<ResolutionBitrateLimits> GetResolutionBitrateLimits(
       JNIEnv* jni) const;
 
