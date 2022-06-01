@@ -61,6 +61,7 @@ void ZoneAllocator::fixupAfterMovingGC() {
 void js::ZoneAllocator::updateMemoryCountersOnGCStart() {
   gcHeapSize.updateOnGCStart();
   mallocHeapSize.updateOnGCStart();
+  jitHeapSize.updateOnGCStart();
 }
 
 void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc,
