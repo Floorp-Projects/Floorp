@@ -249,5 +249,12 @@ TEST(RtpVideoLayersAllocationExtension,
       RtpVideoLayersAllocationExtension::Write(buffer, written_allocation));
 }
 
+TEST(RtpVideoLayersAllocationExtension, DiscardsOverLargeDataRate) {
+  constexpr uint8_t buffer[] = {0x4b, 0xf6, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                0xff, 0xcb, 0x78, 0xeb, 0x8d, 0xb5, 0x31};
+  VideoLayersAllocation allocation;
+  EXPECT_FALSE(RtpVideoLayersAllocationExtension::Parse(buffer, &allocation));
+}
+
 }  // namespace
 }  // namespace webrtc
