@@ -89,7 +89,7 @@ def GetGNArgs(is_simulator):
     target_cpu = 'x64' if is_simulator else 'arm64'
     return ([] + ['target_os="ios"'] + ['target_cpu="%s"' % target_cpu] +
             ['use_clang_coverage=true'] + ['is_component_build=false'] +
-            ['rtc_dcheck_always_on=true'])
+            ['dcheck_always_on=true'])
 
 
 def GenerateIOSSimulatorCommand():
@@ -103,7 +103,7 @@ def GenerateIOSSimulatorCommand():
                     [FormatIossimTest(t, is_xctest=True) for t in XC_TESTS] +
                     [FormatIossimTest(t, is_xctest=False) for t in TESTS])
 
-    print 'To get code coverage using iOS sim just run following commands:'
+    print 'To get code coverage using iOS simulator just run following commands:'
     print ''
     print ' '.join(gn_cmd)
     print ''

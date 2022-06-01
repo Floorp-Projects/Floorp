@@ -248,8 +248,8 @@ For example, if you had:
   }
   'mixins': {
     'bot': {
-      'gyp_defines': 'use_goma=1 rtc_dcheck_always_on=0',
-      'gn_args': 'use_goma=true rtc_dcheck_always_on=false',
+      'gyp_defines': 'use_goma=1 dcheck_always_on=0',
+      'gn_args': 'use_goma=true dcheck_always_on=false',
     },
     'debug': {
       'gn_args': 'is_debug=true',
@@ -267,8 +267,8 @@ For example, if you had:
       'gyp_defines': 'component=shared_library',
     },
     'trybot': {
-      'gyp_defines': 'rtc_dcheck_always_on=1',
-      'gn_args': 'rtc_dcheck_always_on=true',
+      'gyp_defines': 'dcheck_always_on=1',
+      'gn_args': 'dcheck_always_on=true',
     }
   }
 }
@@ -276,7 +276,7 @@ For example, if you had:
 
 and you ran `mb gen -c linux_release_trybot //out/Release`, it would
 translate into a call to `gyp_chromium -G Release` with `GYP_DEFINES` set to
-`"use_goma=true rtc_dcheck_always_on=false rtc_dcheck_always_on=true"`.
+`"use_goma=true dcheck_always_on=false dcheck_always_on=true"`.
 
 (From that you can see that mb is intentionally dumb and does not
 attempt to de-dup the flags, it lets gyp do that).
