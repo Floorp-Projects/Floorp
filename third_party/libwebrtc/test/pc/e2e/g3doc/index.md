@@ -210,14 +210,14 @@ are several options how you can do this:
     desired_graphs)` to print plottable metrics to stdout. Then as in previous
     option you need to pipe result into plotter script.
 
-[1]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/test/peerconnection_quality_test_fixture.h;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
-[2]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/test/create_peerconnection_quality_test_fixture.h;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
-[3]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/test/pc/e2e/peer_connection_e2e_smoke_test.cc;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
-[4]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/video/pc_full_stack_tests.cc;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
-[5]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/numerics/samples_stats_counter.h;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
-[6]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/test/testsupport/perf_test.h;l=86;drc=0710b401b1e5b500b8e84946fb657656ba1b58b7
-[7]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/test/test_main_lib.h;l=23;drc=bcb42f1e4be136c390986a40d9d5cb3ad0de260b
-[8]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/test/test_main.cc;drc=bcb42f1e4be136c390986a40d9d5cb3ad0de260b
-[9]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/rtc_tools/metrics_plotter.py;drc=8cc6695652307929edfc877cd64b75cd9ec2d615
-[10]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/test/testsupport/perf_test.h;l=105;drc=0710b401b1e5b500b8e84946fb657656ba1b58b7
-[11]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/test/peerconnection_quality_test_fixture.h;l=272;drc=484acf27231d931dbc99aedce85bc27e06486b96
+[1]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/test/peerconnection_quality_test_fixture.h;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
+[2]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/test/create_peerconnection_quality_test_fixture.h;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
+[3]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/test/pc/e2e/peer_connection_e2e_smoke_test.cc;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
+[4]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/video/pc_full_stack_tests.cc;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
+[5]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/numerics/samples_stats_counter.h;drc=cbe6e8a2589a925d4c91a2ac2c69201f03de9c39
+[6]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/test/testsupport/perf_test.h;l=86;drc=0710b401b1e5b500b8e84946fb657656ba1b58b7
+[7]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/test/test_main_lib.h;l=23;drc=bcb42f1e4be136c390986a40d9d5cb3ad0de260b
+[8]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/test/test_main.cc;drc=bcb42f1e4be136c390986a40d9d5cb3ad0de260b
+[9]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/rtc_tools/metrics_plotter.py;drc=8cc6695652307929edfc877cd64b75cd9ec2d615
+[10]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/test/testsupport/perf_test.h;l=105;drc=0710b401b1e5b500b8e84946fb657656ba1b58b7
+[11]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/test/peerconnection_quality_test_fixture.h;l=272;drc=484acf27231d931dbc99aedce85bc27e06486b96

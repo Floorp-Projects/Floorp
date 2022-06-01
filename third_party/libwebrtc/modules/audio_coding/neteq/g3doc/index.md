@@ -13,13 +13,13 @@ time keep the delay as low as possible.
 ## API
 
 At a high level, the NetEq API has two main functions:
-[`InsertPacket`](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/neteq/neteq.h;l=198;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72)
+[`InsertPacket`](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/neteq/neteq.h;l=198;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72)
 and
-[`GetAudio`](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/neteq/neteq.h;l=219;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72).
+[`GetAudio`](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/neteq/neteq.h;l=219;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72).
 
 ### InsertPacket
 
-[`InsertPacket`](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/neteq/neteq.h;l=198;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72)
+[`InsertPacket`](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/neteq/neteq.h;l=198;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72)
 delivers an RTP packet from the network to NetEq where the following happens:
 
 1.  The packet is discarded if it is too late for playout (for example if it was
@@ -33,7 +33,7 @@ delivers an RTP packet from the network to NetEq where the following happens:
 
 ### GetAudio
 
-[`GetAudio`](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/neteq/neteq.h;l=219;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72)
+[`GetAudio`](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/neteq/neteq.h;l=219;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72)
 pulls 10 ms of audio from NetEq for playout. A much simplified decision logic is
 as follows:
 
@@ -68,23 +68,23 @@ There are a number of functions that can be used to query the internal state of
 NetEq, statistics about the type of audio output and latency metrics such as how
 long time packets have waited in the buffer.
 
-*   [`NetworkStatistics`](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/neteq/neteq.h;l=273;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72):
+*   [`NetworkStatistics`](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/neteq/neteq.h;l=273;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72):
     instantaneous values or stats averaged over the duration since last call to
     this function.
-*   [`GetLifetimeStatistics`](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/neteq/neteq.h;l=280;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72):
+*   [`GetLifetimeStatistics`](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/neteq/neteq.h;l=280;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72):
     cumulative stats that persist over the lifetime of the class.
-*   [`GetOperationsAndState`](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/api/neteq/neteq.h;l=284;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72):
+*   [`GetOperationsAndState`](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/neteq/neteq.h;l=284;drc=4461f059d180fe8c2886d422ebd1cb55b5c83e72):
     information about the internal state of NetEq (is only inteded to be used
     for testing and debugging).
 
 ## Tests and tools
 
-*   [`neteq_rtpplay`](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/audio_coding/neteq/tools/neteq_rtpplay.cc;drc=cee751abff598fc19506f77de08bea7c61b9dcca):
+*   [`neteq_rtpplay`](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/audio_coding/neteq/tools/neteq_rtpplay.cc;drc=cee751abff598fc19506f77de08bea7c61b9dcca):
     Simulate NetEq behavior based on either an RTP dump, a PCAP file or an RTC
     event log. A replacement audio file can also be used instead of the original
     payload. Outputs aggregated statistics and optionally an audio file to
     listen to.
-*   [`neteq_speed_test`](https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/modules/audio_coding/neteq/test/neteq_speed_test.cc;drc=2ab97f6f8e27b47c0d9beeb8b6ca5387bda9f55c):
+*   [`neteq_speed_test`](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/audio_coding/neteq/test/neteq_speed_test.cc;drc=2ab97f6f8e27b47c0d9beeb8b6ca5387bda9f55c):
     Measure performance of NetEq, used on perf bots.
 *   Unit tests including bit exactness tests where RTP file is used as an input
     to NetEq, the output is concatenated and a checksum is calculated and

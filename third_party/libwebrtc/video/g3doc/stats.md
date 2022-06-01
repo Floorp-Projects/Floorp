@@ -173,10 +173,10 @@ Updated when a RTCP packet is sent, `RTCPSender::ComputeCompoundRTCPPacket`.
 *   `rtcp_packet_type_counts` - total number of sent NACK/FIR/PLI packets [rtcinboundrtpstreamstats-[nackcount], [fircount], [plicount]].
 
 
-[VideoSendStream]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/call/video_send_stream.h
-[VideoSendStream::Stats]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/call/video_send_stream.h?q=VideoSendStream::Stats
-[StreamStats]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/call/video_send_stream.h?q=VideoSendStream::StreamStats
-[SendStatisticsProxy]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/video/send_statistics_proxy.h
+[VideoSendStream]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/video_send_stream.h
+[VideoSendStream::Stats]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/video_send_stream.h?q=VideoSendStream::Stats
+[StreamStats]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/video_send_stream.h?q=VideoSendStream::StreamStats
+[SendStatisticsProxy]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/video/send_statistics_proxy.h
 [rtcoutboundrtpstreamstats-framewidth]: https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-framewidth
 [rtcoutboundrtpstreamstats-frameheight]: https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-frameheight
 [rtcoutboundrtpstreamstats-qpsum]: https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-qpsum
@@ -195,9 +195,9 @@ Updated when a RTCP packet is sent, `RTCPSender::ComputeCompoundRTCPPacket`.
 [rtcoutboundrtpstreamstats-qualitylimitationdurations]: https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-qualitylimitationdurations
 [rtcoutboundrtpstreamstats-qualitylimitationresolutionchanges]: https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-qualitylimitationresolutionchanges
 
-[VideoReceiveStream]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/call/video_receive_stream.h
-[VideoReceiveStream::Stats]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/call/video_receive_stream.h?q=VideoReceiveStream::Stats
-[ReceiveStatisticsProxy]: https://source.chromium.org/chromium/chromium/src/+/master:third_party/webrtc/video/receive_statistics_proxy2.h
+[VideoReceiveStream]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/video_receive_stream.h
+[VideoReceiveStream::Stats]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/video_receive_stream.h?q=VideoReceiveStream::Stats
+[ReceiveStatisticsProxy]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/video/receive_statistics_proxy2.h
 [rtcinboundrtpstreamstats-keyframesdecoded]: https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-keyframesdecoded
 [rtcinboundrtpstreamstats-jitterbufferdelay]: https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferdelay
 [rtcinboundrtpstreamstats-jitterbufferemittedcount]: https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferemittedcount

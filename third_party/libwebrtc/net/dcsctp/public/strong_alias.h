@@ -17,7 +17,7 @@
 namespace dcsctp {
 
 // This is a copy of
-// https://source.chromium.org/chromium/chromium/src/+/master:base/types/strong_alias.h
+// https://source.chromium.org/chromium/chromium/src/+/main:base/types/strong_alias.h
 // as the API (and internals) are using type-safe integral identifiers, but this
 // library can't depend on that file. The ostream operator has been removed
 // per WebRTC library conventions, and the underlying type is exposed.

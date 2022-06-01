@@ -189,6 +189,6 @@ For instructions on how to do this see [here][strip-arch].
 [webrtc-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/development/index.md
 [framework-script]: https://webrtc.googlesource.com/src/+/main/tools_webrtc/ios/build_ios_libs.py
 [ninja]: https://ninja-build.org/
-[gn]: https://gn.googlesource.com/gn/+/master/README.md
+[gn]: https://gn.googlesource.com/gn/+/main/README.md
 [ios-deploy]: https://github.com/phonegap/ios-deploy
 [strip-arch]: http://ikennd.ac/blog/2015/02/stripping-unwanted-architectures-from-dynamic-libraries-in-xcode/
