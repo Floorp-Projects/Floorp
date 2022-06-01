@@ -2166,8 +2166,7 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
           if (packet.received()) {
             receive_timestamp += TimeDelta::Micros(packet.delta_us());
             if (sent->reported_recv_time.IsInfinite()) {
-              sent->reported_recv_time =
-                  Timestamp::Millis(receive_timestamp.ms());
+              sent->reported_recv_time = receive_timestamp;
               sent->log_feedback_time = log_feedback_time;
             }
           } else {
