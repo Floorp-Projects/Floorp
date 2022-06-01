@@ -109,16 +109,13 @@ class SelectionManager : public nsISelectionListener {
   }
 
   /**
-   * Called by mozInlineSpellChecker when a spell check range is added.
+   * Called by mozInlineSpellChecker when a spell check range is added/removed.
    * nsISelectionListener isn't sufficient for spelling errors, since it only
    * tells us that there was a change, not which range changed. We don't want
    * to unnecessarily push a cache update for all Accessibles in the entire
    * selection.
-   * We don't need an equivalent notification for removals because a spelling
-   * error correction is triggered by a text change and text changes trigger a
-   * cache update already.
    */
-  void SpellCheckRangeAdded(const nsRange& aRange);
+  void SpellCheckRangeChanged(const nsRange& aRange);
 
   ~SelectionManager();
 
