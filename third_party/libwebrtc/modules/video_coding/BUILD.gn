@@ -567,7 +567,6 @@ rtc_library("webrtc_vp9_helpers") {
   sources = [
     "codecs/vp9/svc_config.cc",
     "codecs/vp9/svc_config.h",
-    "codecs/vp9/svc_rate_allocator.h",
   ]
 
   deps = [
@@ -581,7 +580,6 @@ rtc_library("webrtc_vp9_helpers") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base/experiments:stable_target_rate_experiment",
-    "svc:svc_rate_allocator",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/container:inlined_vector" ]
 }
@@ -626,6 +624,7 @@ rtc_library("webrtc_vp9") {
     "../rtp_rtcp:rtp_rtcp_format",
     "svc:scalability_structures",
     "svc:scalable_video_controller",
+    "svc:svc_rate_allocator",
     #"//third_party/libyuv",
   ]
   absl_deps = [
