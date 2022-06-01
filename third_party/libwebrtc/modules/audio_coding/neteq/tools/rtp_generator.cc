@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/neteq/tools/rtp_generator.h"
 
-#include <assert.h>
 
 namespace webrtc {
 namespace test {

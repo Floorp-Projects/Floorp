@@ -10,7 +10,6 @@
 
 #include "modules/rtp_rtcp/source/rtp_utility.h"
 
-#include <assert.h>
 #include <stddef.h>
 
 #include <string>

@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/neteq/expand.h"
 
-#include <assert.h>
 #include <string.h>  // memset
 
 #include <algorithm>  // min, max

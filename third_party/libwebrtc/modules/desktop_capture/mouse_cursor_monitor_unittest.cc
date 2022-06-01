@@ -10,7 +10,6 @@
 
 #include "modules/desktop_capture/mouse_cursor_monitor.h"
 
-#include <assert.h>
 #include <stddef.h>
 
 #include <memory>

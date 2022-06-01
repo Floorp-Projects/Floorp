@@ -10,7 +10,6 @@
 
 #include "modules/video_capture/device_info_impl.h"
 
-#include <assert.h>
 #include <stdlib.h>
 
 #include "absl/strings/match.h"

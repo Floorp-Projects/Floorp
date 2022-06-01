@@ -9,7 +9,6 @@
  */
 #include "modules/video_coding/jitter_buffer.h"
 
-#include <assert.h>
 
 #include <algorithm>
 #include <limits>

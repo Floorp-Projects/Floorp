@@ -10,7 +10,6 @@
 
 #include "modules/remote_bitrate_estimator/overuse_estimator.h"
 
-#include <assert.h>
 #include <math.h>
 #include <string.h>
 

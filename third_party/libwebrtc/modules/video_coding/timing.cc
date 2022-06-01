@@ -10,7 +10,6 @@
 
 #include "modules/video_coding/timing.h"
 
-#include <assert.h>
 
 #include <algorithm>
 

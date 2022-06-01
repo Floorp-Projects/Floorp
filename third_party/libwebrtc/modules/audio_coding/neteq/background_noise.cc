@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/neteq/background_noise.h"
 
-#include <assert.h>
 #include <string.h>  // memcpy
 
 #include <algorithm>  // min, max

@@ -25,7 +25,6 @@
 
 #include "modules/audio_device/win/audio_device_core_win.h"
 
-#include <assert.h>
 #include <string.h>
 
 #include <comdef.h>

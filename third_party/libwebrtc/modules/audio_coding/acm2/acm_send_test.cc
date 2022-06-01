@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/acm2/acm_send_test.h"
 
-#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 

@@ -10,7 +10,6 @@
 
 #include "modules/video_coding/media_opt_util.h"
 
-#include <assert.h>
 #include <math.h>
 
 #include <algorithm>

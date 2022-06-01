@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/neteq/nack_tracker.h"
 
-#include <assert.h>
 
 #include <cstdint>
 #include <utility>

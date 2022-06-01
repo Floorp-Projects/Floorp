@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/neteq/dsp_helper.h"
 
-#include <assert.h>
 #include <string.h>  // Access to memset.
 
 #include <algorithm>  // Access to min, max.
