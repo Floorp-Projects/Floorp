@@ -164,6 +164,7 @@ class nsLayoutUtils {
   typedef mozilla::gfx::Size Size;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::gfx::Matrix4x4Flagged Matrix4x4Flagged;
+  typedef mozilla::gfx::MatrixScales MatrixScales;
   typedef mozilla::gfx::MatrixScalesDouble MatrixScalesDouble;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
@@ -2420,9 +2421,9 @@ class nsLayoutUtils {
    * @param aVisibleSize is the size of the area we want to paint
    * @param aDisplaySize is the size of the display area of the pres context
    */
-  static Size ComputeSuitableScaleForAnimation(const nsIFrame* aFrame,
-                                               const nsSize& aVisibleSize,
-                                               const nsSize& aDisplaySize);
+  static MatrixScales ComputeSuitableScaleForAnimation(
+      const nsIFrame* aFrame, const nsSize& aVisibleSize,
+      const nsSize& aDisplaySize);
 
   /**
    * Checks whether we want to use the GPU to scale images when

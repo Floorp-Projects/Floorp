@@ -67,9 +67,8 @@ MatrixScales ChooseScale(nsIFrame* aContainerFrame,
       // to account
       nsSize scaledVisibleSize = nsSize(aVisibleRect.Width() * aXScale,
                                         aVisibleRect.Height() * aYScale);
-      Size size = nsLayoutUtils::ComputeSuitableScaleForAnimation(
+      scale = nsLayoutUtils::ComputeSuitableScaleForAnimation(
           aContainerFrame, scaledVisibleSize, displaySize);
-      scale = MatrixScales(size.width, size.height);
       // multiply by the scale inherited from ancestors--we use a uniform
       // scale factor to prevent blurring when the layer is rotated.
       float incomingScale = std::max(aXScale, aYScale);
