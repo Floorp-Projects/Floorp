@@ -32,6 +32,12 @@ add_task(async function({ CDP }) {
       : Services.appinfo.name;
     is(version.product, expectedProduct, "Browser.getVersion works");
 
+    is(
+      version.revision,
+      Services.appinfo.sourceURL.split("/").pop(),
+      "Browser.getVersion().revision is correct"
+    );
+
     const { webSocketDebuggerUrl } = await CDP.Version();
     is(
       webSocketDebuggerUrl,
