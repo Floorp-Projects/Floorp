@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/nack_module2.h"
+#include "modules/video_coding/nack_requester.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -24,11 +24,11 @@ namespace webrtc {
 // TODO(bugs.webrtc.org/11594): Use the use the GlobalSimulatedTimeController
 // instead of RunLoop. At the moment we mix use of the Clock and the underlying
 // implementation of RunLoop, which is realtime.
-class TestNackModule2 : public ::testing::TestWithParam<bool>,
-                        public NackSender,
-                        public KeyFrameRequestSender {
+class TestNackRequester : public ::testing::TestWithParam<bool>,
+                          public NackSender,
+                          public KeyFrameRequestSender {
  protected:
-  TestNackModule2()
+  TestNackRequester()
       : clock_(new SimulatedClock(0)),
         field_trial_(GetParam()
                          ? "WebRTC-ExponentialNackBackoff/enabled:true/"
@@ -79,14 +79,14 @@ class TestNackModule2 : public ::testing::TestWithParam<bool>,
     return true;
   }
 
-  NackModule2& CreateNackModule(
+  NackRequester& CreateNackModule(
       TimeDelta interval = NackPeriodicProcessor::kUpdateInterval) {
     RTC_DCHECK(!nack_module_.get());
     nack_periodic_processor_ =
         std::make_unique<NackPeriodicProcessor>(interval);
-    nack_module_ = std::make_unique<NackModule2>(TaskQueueBase::Current(),
-                                                 nack_periodic_processor_.get(),
-                                                 clock_.get(), this, this);
+    nack_module_ = std::make_unique<NackRequester>(
+        TaskQueueBase::Current(), nack_periodic_processor_.get(), clock_.get(),
+        this, this);
     nack_module_->UpdateRtt(kDefaultRttMs);
     return *nack_module_.get();
   }
@@ -96,23 +96,23 @@ class TestNackModule2 : public ::testing::TestWithParam<bool>,
   std::unique_ptr<SimulatedClock> clock_;
   test::ScopedFieldTrials field_trial_;
   std::unique_ptr<NackPeriodicProcessor> nack_periodic_processor_;
-  std::unique_ptr<NackModule2> nack_module_;
+  std::unique_ptr<NackRequester> nack_module_;
   std::vector<uint16_t> sent_nacks_;
   int keyframes_requested_;
   bool waiting_for_send_nack_ = false;
   bool timed_out_ = false;
 };
 
-TEST_P(TestNackModule2, NackOnePacket) {
-  NackModule2& nack_module = CreateNackModule();
+TEST_P(TestNackRequester, NackOnePacket) {
+  NackRequester& nack_module = CreateNackModule();
   nack_module.OnReceivedPacket(1, false, false);
   nack_module.OnReceivedPacket(3, false, false);
   ASSERT_EQ(1u, sent_nacks_.size());
   EXPECT_EQ(2, sent_nacks_[0]);
 }
 
-TEST_P(TestNackModule2, WrappingSeqNum) {
-  NackModule2& nack_module = CreateNackModule();
+TEST_P(TestNackRequester, WrappingSeqNum) {
+  NackRequester& nack_module = CreateNackModule();
   nack_module.OnReceivedPacket(0xfffe, false, false);
   nack_module.OnReceivedPacket(1, false, false);
   ASSERT_EQ(2u, sent_nacks_.size());
@@ -120,8 +120,8 @@ TEST_P(TestNackModule2, WrappingSeqNum) {
   EXPECT_EQ(0, sent_nacks_[1]);
 }
 
-TEST_P(TestNackModule2, WrappingSeqNumClearToKeyframe) {
-  NackModule2& nack_module = CreateNackModule(TimeDelta::Millis(10));
+TEST_P(TestNackRequester, WrappingSeqNumClearToKeyframe) {
+  NackRequester& nack_module = CreateNackModule(TimeDelta::Millis(10));
   nack_module.OnReceivedPacket(0xfffe, false, false);
   nack_module.OnReceivedPacket(1, false, false);
   ASSERT_EQ(2u, sent_nacks_.size());
@@ -185,8 +185,8 @@ TEST_P(TestNackModule2, WrappingSeqNumClearToKeyframe) {
   EXPECT_EQ(1006, sent_nacks_[502]);
 }
 
-TEST_P(TestNackModule2, ResendNack) {
-  NackModule2& nack_module = CreateNackModule(TimeDelta::Millis(1));
+TEST_P(TestNackRequester, ResendNack) {
+  NackRequester& nack_module = CreateNackModule(TimeDelta::Millis(1));
   nack_module.OnReceivedPacket(1, false, false);
   nack_module.OnReceivedPacket(3, false, false);
   size_t expected_nacks_sent = 1;
@@ -239,8 +239,8 @@ TEST_P(TestNackModule2, ResendNack) {
   EXPECT_EQ(expected_nacks_sent, sent_nacks_.size());
 }
 
-TEST_P(TestNackModule2, ResendPacketMaxRetries) {
-  NackModule2& nack_module = CreateNackModule(TimeDelta::Millis(1));
+TEST_P(TestNackRequester, ResendPacketMaxRetries) {
+  NackRequester& nack_module = CreateNackModule(TimeDelta::Millis(1));
   nack_module.OnReceivedPacket(1, false, false);
   nack_module.OnReceivedPacket(3, false, false);
   ASSERT_EQ(1u, sent_nacks_.size());
@@ -260,8 +260,8 @@ TEST_P(TestNackModule2, ResendPacketMaxRetries) {
   EXPECT_EQ(10u, sent_nacks_.size());
 }
 
-TEST_P(TestNackModule2, TooLargeNackList) {
-  NackModule2& nack_module = CreateNackModule();
+TEST_P(TestNackRequester, TooLargeNackList) {
+  NackRequester& nack_module = CreateNackModule();
   nack_module.OnReceivedPacket(0, false, false);
   nack_module.OnReceivedPacket(1001, false, false);
   EXPECT_EQ(1000u, sent_nacks_.size());
@@ -274,8 +274,8 @@ TEST_P(TestNackModule2, TooLargeNackList) {
   EXPECT_EQ(1, keyframes_requested_);
 }
 
-TEST_P(TestNackModule2, TooLargeNackListWithKeyFrame) {
-  NackModule2& nack_module = CreateNackModule();
+TEST_P(TestNackRequester, TooLargeNackListWithKeyFrame) {
+  NackRequester& nack_module = CreateNackModule();
   nack_module.OnReceivedPacket(0, false, false);
   nack_module.OnReceivedPacket(1, true, false);
   nack_module.OnReceivedPacket(1001, false, false);
@@ -289,8 +289,8 @@ TEST_P(TestNackModule2, TooLargeNackListWithKeyFrame) {
   EXPECT_EQ(1, keyframes_requested_);
 }
 
-TEST_P(TestNackModule2, ClearUpTo) {
-  NackModule2& nack_module = CreateNackModule(TimeDelta::Millis(1));
+TEST_P(TestNackRequester, ClearUpTo) {
+  NackRequester& nack_module = CreateNackModule(TimeDelta::Millis(1));
   nack_module.OnReceivedPacket(0, false, false);
   nack_module.OnReceivedPacket(100, false, false);
   EXPECT_EQ(99u, sent_nacks_.size());
@@ -303,8 +303,8 @@ TEST_P(TestNackModule2, ClearUpTo) {
   EXPECT_EQ(50, sent_nacks_[0]);
 }
 
-TEST_P(TestNackModule2, ClearUpToWrap) {
-  NackModule2& nack_module = CreateNackModule();
+TEST_P(TestNackRequester, ClearUpToWrap) {
+  NackRequester& nack_module = CreateNackModule();
   nack_module.OnReceivedPacket(0xfff0, false, false);
   nack_module.OnReceivedPacket(0xf, false, false);
   EXPECT_EQ(30u, sent_nacks_.size());
@@ -317,8 +317,8 @@ TEST_P(TestNackModule2, ClearUpToWrap) {
   EXPECT_EQ(0, sent_nacks_[0]);
 }
 
-TEST_P(TestNackModule2, PacketNackCount) {
-  NackModule2& nack_module = CreateNackModule(TimeDelta::Millis(1));
+TEST_P(TestNackRequester, PacketNackCount) {
+  NackRequester& nack_module = CreateNackModule(TimeDelta::Millis(1));
   EXPECT_EQ(0, nack_module.OnReceivedPacket(0, false, false));
   EXPECT_EQ(0, nack_module.OnReceivedPacket(2, false, false));
   EXPECT_EQ(1, nack_module.OnReceivedPacket(1, false, false));
@@ -340,8 +340,8 @@ TEST_P(TestNackModule2, PacketNackCount) {
   EXPECT_EQ(0, nack_module.OnReceivedPacket(4, false, false));
 }
 
-TEST_P(TestNackModule2, NackListFullAndNoOverlapWithKeyframes) {
-  NackModule2& nack_module = CreateNackModule();
+TEST_P(TestNackRequester, NackListFullAndNoOverlapWithKeyframes) {
+  NackRequester& nack_module = CreateNackModule();
   const int kMaxNackPackets = 1000;
   const unsigned int kFirstGap = kMaxNackPackets - 20;
   const unsigned int kSecondGap = 200;
@@ -356,8 +356,8 @@ TEST_P(TestNackModule2, NackListFullAndNoOverlapWithKeyframes) {
   EXPECT_EQ(kSecondGap, sent_nacks_.size());
 }
 
-TEST_P(TestNackModule2, HandleFecRecoveredPacket) {
-  NackModule2& nack_module = CreateNackModule();
+TEST_P(TestNackRequester, HandleFecRecoveredPacket) {
+  NackRequester& nack_module = CreateNackModule();
   nack_module.OnReceivedPacket(1, false, false);
   nack_module.OnReceivedPacket(4, false, true);
   EXPECT_EQ(0u, sent_nacks_.size());
@@ -365,22 +365,22 @@ TEST_P(TestNackModule2, HandleFecRecoveredPacket) {
   EXPECT_EQ(2u, sent_nacks_.size());
 }
 
-TEST_P(TestNackModule2, SendNackWithoutDelay) {
-  NackModule2& nack_module = CreateNackModule();
+TEST_P(TestNackRequester, SendNackWithoutDelay) {
+  NackRequester& nack_module = CreateNackModule();
   nack_module.OnReceivedPacket(0, false, false);
   nack_module.OnReceivedPacket(100, false, false);
   EXPECT_EQ(99u, sent_nacks_.size());
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutBackoff,
-                         TestNackModule2,
+                         TestNackRequester,
                          ::testing::Values(true, false));
 
-class TestNackModule2WithFieldTrial : public ::testing::Test,
-                                      public NackSender,
-                                      public KeyFrameRequestSender {
+class TestNackRequesterWithFieldTrial : public ::testing::Test,
+                                        public NackSender,
+                                        public KeyFrameRequestSender {
  protected:
-  TestNackModule2WithFieldTrial()
+  TestNackRequesterWithFieldTrial()
       : nack_delay_field_trial_("WebRTC-SendNackDelayMs/10/"),
         clock_(new SimulatedClock(0)),
         nack_module_(TaskQueueBase::Current(),
@@ -401,12 +401,12 @@ class TestNackModule2WithFieldTrial : public ::testing::Test,
   test::ScopedFieldTrials nack_delay_field_trial_;
   std::unique_ptr<SimulatedClock> clock_;
   NackPeriodicProcessor nack_periodic_processor_;
-  NackModule2 nack_module_;
+  NackRequester nack_module_;
   std::vector<uint16_t> sent_nacks_;
   int keyframes_requested_;
 };
 
-TEST_F(TestNackModule2WithFieldTrial, SendNackWithDelay) {
+TEST_F(TestNackRequesterWithFieldTrial, SendNackWithDelay) {
   nack_module_.OnReceivedPacket(0, false, false);
   nack_module_.OnReceivedPacket(100, false, false);
   EXPECT_EQ(0u, sent_nacks_.size());

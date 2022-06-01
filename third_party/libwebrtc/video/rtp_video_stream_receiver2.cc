@@ -39,7 +39,7 @@
 #include "modules/video_coding/frame_object.h"
 #include "modules/video_coding/h264_sprop_parameter_sets.h"
 #include "modules/video_coding/h264_sps_pps_tracker.h"
-#include "modules/video_coding/nack_module2.h"
+#include "modules/video_coding/nack_requester.h"
 #include "modules/video_coding/packet_buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
@@ -106,7 +106,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
   return rtp_rtcp;
 }
 
-std::unique_ptr<NackModule2> MaybeConstructNackModule(
+std::unique_ptr<NackRequester> MaybeConstructNackModule(
     TaskQueueBase* current_queue,
     NackPeriodicProcessor* nack_periodic_processor,
     const VideoReceiveStream::Config& config,
@@ -117,9 +117,9 @@ std::unique_ptr<NackModule2> MaybeConstructNackModule(
     return nullptr;
 
   // TODO(bugs.webrtc.org/12420): pass rtp_history_ms to the nack module.
-  return std::make_unique<NackModule2>(current_queue, nack_periodic_processor,
-                                       clock, nack_sender,
-                                       keyframe_request_sender);
+  return std::make_unique<NackRequester>(current_queue, nack_periodic_processor,
+                                         clock, nack_sender,
+                                         keyframe_request_sender);
 }
 
 static const int kPacketLogIntervalMs = 10000;
