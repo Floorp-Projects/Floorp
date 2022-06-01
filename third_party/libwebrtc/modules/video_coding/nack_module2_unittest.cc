@@ -80,10 +80,13 @@ class TestNackModule2 : public ::testing::TestWithParam<bool>,
   }
 
   NackModule2& CreateNackModule(
-      TimeDelta interval = NackModule2::kUpdateInterval) {
+      TimeDelta interval = NackPeriodicProcessor::kUpdateInterval) {
     RTC_DCHECK(!nack_module_.get());
-    nack_module_ = std::make_unique<NackModule2>(
-        TaskQueueBase::Current(), clock_.get(), this, this, interval);
+    nack_periodic_processor_ =
+        std::make_unique<NackPeriodicProcessor>(interval);
+    nack_module_ = std::make_unique<NackModule2>(TaskQueueBase::Current(),
+                                                 nack_periodic_processor_.get(),
+                                                 clock_.get(), this, this);
     nack_module_->UpdateRtt(kDefaultRttMs);
     return *nack_module_.get();
   }
@@ -92,6 +95,7 @@ class TestNackModule2 : public ::testing::TestWithParam<bool>,
   test::RunLoop loop_;
   std::unique_ptr<SimulatedClock> clock_;
   test::ScopedFieldTrials field_trial_;
+  std::unique_ptr<NackPeriodicProcessor> nack_periodic_processor_;
   std::unique_ptr<NackModule2> nack_module_;
   std::vector<uint16_t> sent_nacks_;
   int keyframes_requested_;
@@ -379,7 +383,11 @@ class TestNackModule2WithFieldTrial : public ::testing::Test,
   TestNackModule2WithFieldTrial()
       : nack_delay_field_trial_("WebRTC-SendNackDelayMs/10/"),
         clock_(new SimulatedClock(0)),
-        nack_module_(TaskQueueBase::Current(), clock_.get(), this, this),
+        nack_module_(TaskQueueBase::Current(),
+                     &nack_periodic_processor_,
+                     clock_.get(),
+                     this,
+                     this),
         keyframes_requested_(0) {}
 
   void SendNack(const std::vector<uint16_t>& sequence_numbers,
@@ -392,6 +400,7 @@ class TestNackModule2WithFieldTrial : public ::testing::Test,
 
   test::ScopedFieldTrials nack_delay_field_trial_;
   std::unique_ptr<SimulatedClock> clock_;
+  NackPeriodicProcessor nack_periodic_processor_;
   NackModule2 nack_module_;
   std::vector<uint16_t> sent_nacks_;
   int keyframes_requested_;

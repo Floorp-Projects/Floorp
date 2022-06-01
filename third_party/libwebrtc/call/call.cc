@@ -376,6 +376,9 @@ class Call final : public webrtc::Call,
   // network thread.
   bool aggregate_network_up_ RTC_GUARDED_BY(worker_thread_);
 
+  // Schedules nack periodic processing on behalf of all streams.
+  NackPeriodicProcessor nack_periodic_processor_;
+
   // Audio, Video, and FlexFEC receive streams are owned by the client that
   // creates them.
   // TODO(bugs.webrtc.org/11993): Move audio_receive_streams_,
@@ -1113,7 +1116,8 @@ webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
   VideoReceiveStream2* receive_stream = new VideoReceiveStream2(
       task_queue_factory_, this, num_cpu_cores_,
       transport_send_->packet_router(), std::move(configuration),
-      call_stats_.get(), clock_, new VCMTiming(clock_));
+      call_stats_.get(), clock_, new VCMTiming(clock_),
+      &nack_periodic_processor_);
   // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
   // thread.
   receive_stream->RegisterWithTransport(&video_receiver_controller_);

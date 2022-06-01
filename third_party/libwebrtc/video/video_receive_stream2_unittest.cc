@@ -137,7 +137,8 @@ class VideoReceiveStream2Test : public ::testing::Test {
     video_receive_stream_ =
         std::make_unique<webrtc::internal::VideoReceiveStream2>(
             task_queue_factory_.get(), &fake_call_, kDefaultNumCpuCores,
-            &packet_router_, config_.Copy(), &call_stats_, clock_, timing_);
+            &packet_router_, config_.Copy(), &call_stats_, clock_, timing_,
+            &nack_periodic_processor_);
     video_receive_stream_->RegisterWithTransport(
         &rtp_stream_receiver_controller_);
   }
@@ -146,6 +147,7 @@ class VideoReceiveStream2Test : public ::testing::Test {
   test::RunLoop loop_;
   const std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   test::VideoDecoderProxyFactory h264_decoder_factory_;
+  NackPeriodicProcessor nack_periodic_processor_;
   VideoReceiveStream::Config config_;
   internal::CallStats call_stats_;
   MockVideoDecoder mock_h264_video_decoder_;
@@ -316,7 +318,8 @@ class VideoReceiveStream2TestWithFakeDecoder : public ::testing::Test {
     timing_ = new VCMTiming(clock_);
     video_receive_stream_.reset(new webrtc::internal::VideoReceiveStream2(
         task_queue_factory_.get(), &fake_call_, kDefaultNumCpuCores,
-        &packet_router_, config_.Copy(), &call_stats_, clock_, timing_));
+        &packet_router_, config_.Copy(), &call_stats_, clock_, timing_,
+        &nack_periodic_processor_));
     video_receive_stream_->RegisterWithTransport(
         &rtp_stream_receiver_controller_);
     video_receive_stream_->SetAndGetRecordingState(std::move(state), false);
@@ -326,6 +329,7 @@ class VideoReceiveStream2TestWithFakeDecoder : public ::testing::Test {
   test::RunLoop loop_;
   test::FunctionVideoDecoderFactory fake_decoder_factory_;
   const std::unique_ptr<TaskQueueFactory> task_queue_factory_;
+  NackPeriodicProcessor nack_periodic_processor_;
   VideoReceiveStream::Config config_;
   internal::CallStats call_stats_;
   cricket::FakeVideoRenderer fake_renderer_;
@@ -581,7 +585,8 @@ class VideoReceiveStream2TestWithSimulatedClock
                               config_.Copy(),
                               &call_stats_,
                               time_controller_.GetClock(),
-                              new VCMTiming(time_controller_.GetClock())) {
+                              new VCMTiming(time_controller_.GetClock()),
+                              &nack_periodic_processor_) {
     video_receive_stream_.RegisterWithTransport(
         &rtp_stream_receiver_controller_);
     video_receive_stream_.Start();
@@ -608,6 +613,7 @@ class VideoReceiveStream2TestWithSimulatedClock
   MockTransport mock_transport_;
   FakeRenderer fake_renderer_;
   cricket::FakeCall fake_call_;
+  NackPeriodicProcessor nack_periodic_processor_;
   VideoReceiveStream::Config config_;
   internal::CallStats call_stats_;
   PacketRouter packet_router_;
@@ -749,7 +755,8 @@ class VideoReceiveStream2TestWithLazyDecoderCreation : public ::testing::Test {
     video_receive_stream_ =
         std::make_unique<webrtc::internal::VideoReceiveStream2>(
             task_queue_factory_.get(), &fake_call_, kDefaultNumCpuCores,
-            &packet_router_, config_.Copy(), &call_stats_, clock_, timing_);
+            &packet_router_, config_.Copy(), &call_stats_, clock_, timing_,
+            &nack_periodic_processor_);
     video_receive_stream_->RegisterWithTransport(
         &rtp_stream_receiver_controller_);
   }
@@ -758,6 +765,7 @@ class VideoReceiveStream2TestWithLazyDecoderCreation : public ::testing::Test {
   test::RunLoop loop_;
   const std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   MockVideoDecoderFactory mock_h264_decoder_factory_;
+  NackPeriodicProcessor nack_periodic_processor_;
   VideoReceiveStream::Config config_;
   internal::CallStats call_stats_;
   MockVideoDecoder mock_h264_video_decoder_;

@@ -211,14 +211,16 @@ int DetermineMaxWaitForFrame(const VideoReceiveStream::Config& config,
                      : kMaxWaitForFrameMs;
 }
 
-VideoReceiveStream2::VideoReceiveStream2(TaskQueueFactory* task_queue_factory,
-                                         Call* call,
-                                         int num_cpu_cores,
-                                         PacketRouter* packet_router,
-                                         VideoReceiveStream::Config config,
-                                         CallStats* call_stats,
-                                         Clock* clock,
-                                         VCMTiming* timing)
+VideoReceiveStream2::VideoReceiveStream2(
+    TaskQueueFactory* task_queue_factory,
+    Call* call,
+    int num_cpu_cores,
+    PacketRouter* packet_router,
+    VideoReceiveStream::Config config,
+    CallStats* call_stats,
+    Clock* clock,
+    VCMTiming* timing,
+    NackPeriodicProcessor* nack_periodic_processor)
     : task_queue_factory_(task_queue_factory),
       transport_adapter_(config.rtcp_send_transport),
       config_(std::move(config)),
@@ -240,6 +242,7 @@ VideoReceiveStream2::VideoReceiveStream2(TaskQueueFactory* task_queue_factory,
                                  rtp_receive_statistics_.get(),
                                  &stats_proxy_,
                                  &stats_proxy_,
+                                 nack_periodic_processor,
                                  &stats_proxy_,
                                  this,     // NackSender
                                  nullptr,  // Use default KeyFrameRequestSender

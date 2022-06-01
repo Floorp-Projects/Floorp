@@ -82,6 +82,7 @@ rtc_library("nack_module") {
   deps = [
     "..:module_api",
     "../../api:sequence_checker",
+    "../../api/task_queue",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
     "../../rtc_base:checks",

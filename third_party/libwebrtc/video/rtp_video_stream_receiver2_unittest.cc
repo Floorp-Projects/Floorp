@@ -172,8 +172,9 @@ class RtpVideoStreamReceiver2Test : public ::testing::Test,
     rtp_video_stream_receiver_ = std::make_unique<RtpVideoStreamReceiver2>(
         TaskQueueBase::Current(), Clock::GetRealTimeClock(), &mock_transport_,
         nullptr, nullptr, &config_, rtp_receive_statistics_.get(), nullptr,
-        nullptr, &mock_nack_sender_, &mock_key_frame_request_sender_,
-        &mock_on_complete_frame_callback_, nullptr, nullptr);
+        nullptr, &nack_periodic_processor_, &mock_nack_sender_,
+        &mock_key_frame_request_sender_, &mock_on_complete_frame_callback_,
+        nullptr, nullptr);
     VideoCodec codec;
     codec.codecType = kVideoCodecGeneric;
     rtp_video_stream_receiver_->AddReceiveCodec(kPayloadType, codec, {},
@@ -244,6 +245,7 @@ class RtpVideoStreamReceiver2Test : public ::testing::Test,
 
   const webrtc::test::ScopedFieldTrials override_field_trials_;
   VideoReceiveStream::Config config_;
+  NackPeriodicProcessor nack_periodic_processor_;
   MockNackSender mock_nack_sender_;
   MockKeyFrameRequestSender mock_key_frame_request_sender_;
   MockTransport mock_transport_;
@@ -1132,8 +1134,8 @@ TEST_F(RtpVideoStreamReceiver2Test, TransformFrame) {
   auto receiver = std::make_unique<RtpVideoStreamReceiver2>(
       TaskQueueBase::Current(), Clock::GetRealTimeClock(), &mock_transport_,
       nullptr, nullptr, &config_, rtp_receive_statistics_.get(), nullptr,
-      nullptr, &mock_nack_sender_, nullptr, &mock_on_complete_frame_callback_,
-      nullptr, mock_frame_transformer);
+      nullptr, &nack_periodic_processor_, &mock_nack_sender_, nullptr,
+      &mock_on_complete_frame_callback_, nullptr, mock_frame_transformer);
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecGeneric;
   receiver->AddReceiveCodec(kPayloadType, video_codec, {},

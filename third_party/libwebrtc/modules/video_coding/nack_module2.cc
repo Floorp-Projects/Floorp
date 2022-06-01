@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <limits>
 
+#include "api/sequence_checker.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -43,7 +45,52 @@ int64_t GetSendNackDelay() {
 }
 }  // namespace
 
-constexpr TimeDelta NackModule2::kUpdateInterval;
+constexpr TimeDelta NackPeriodicProcessor::kUpdateInterval;
+
+NackPeriodicProcessor::NackPeriodicProcessor(TimeDelta update_interval)
+    : update_interval_(update_interval) {}
+
+NackPeriodicProcessor::~NackPeriodicProcessor() {}
+
+void NackPeriodicProcessor::RegisterNackModule(NackModuleBase* module) {
+  RTC_DCHECK_RUN_ON(&sequence_);
+  modules_.push_back(module);
+  if (modules_.size() != 1)
+    return;
+  repeating_task_ = RepeatingTaskHandle::DelayedStart(
+      TaskQueueBase::Current(), update_interval_, [this] {
+        RTC_DCHECK_RUN_ON(&sequence_);
+        ProcessNackModules();
+        return update_interval_;
+      });
+}
+
+void NackPeriodicProcessor::UnregisterNackModule(NackModuleBase* module) {
+  RTC_DCHECK_RUN_ON(&sequence_);
+  auto it = std::find(modules_.begin(), modules_.end(), module);
+  RTC_DCHECK(it != modules_.end());
+  modules_.erase(it);
+  if (modules_.empty())
+    repeating_task_.Stop();
+}
+
+// RTC_RUN_ON(sequence_)
+void NackPeriodicProcessor::ProcessNackModules() {
+  for (NackModuleBase* module : modules_)
+    module->ProcessNacks();
+}
+
+ScopedNackPeriodicProcessorRegistration::
+    ScopedNackPeriodicProcessorRegistration(NackModuleBase* module,
+                                            NackPeriodicProcessor* processor)
+    : module_(module), processor_(processor) {
+  processor_->RegisterNackModule(module_);
+}
+
+ScopedNackPeriodicProcessorRegistration::
+    ~ScopedNackPeriodicProcessorRegistration() {
+  processor_->UnregisterNackModule(module_);
+}
 
 NackModule2::NackInfo::NackInfo()
     : seq_num(0), send_at_seq_num(0), sent_at_time(-1), retries(0) {}
@@ -89,12 +136,11 @@ NackModule2::BackoffSettings::ParseFromFieldTrials() {
 }
 
 NackModule2::NackModule2(TaskQueueBase* current_queue,
+                         NackPeriodicProcessor* periodic_processor,
                          Clock* clock,
                          NackSender* nack_sender,
-                         KeyFrameRequestSender* keyframe_request_sender,
-                         TimeDelta update_interval /*= kUpdateInterval*/)
+                         KeyFrameRequestSender* keyframe_request_sender)
     : worker_thread_(current_queue),
-      update_interval_(update_interval),
       clock_(clock),
       nack_sender_(nack_sender),
       keyframe_request_sender_(keyframe_request_sender),
@@ -103,32 +149,27 @@ NackModule2::NackModule2(TaskQueueBase* current_queue,
       rtt_ms_(kDefaultRttMs),
       newest_seq_num_(0),
       send_nack_delay_ms_(GetSendNackDelay()),
-      backoff_settings_(BackoffSettings::ParseFromFieldTrials()) {
+      backoff_settings_(BackoffSettings::ParseFromFieldTrials()),
+      processor_registration_(this, periodic_processor) {
   RTC_DCHECK(clock_);
   RTC_DCHECK(nack_sender_);
   RTC_DCHECK(keyframe_request_sender_);
-  RTC_DCHECK_GT(update_interval.ms(), 0);
   RTC_DCHECK(worker_thread_);
   RTC_DCHECK(worker_thread_->IsCurrent());
-
-  repeating_task_ = RepeatingTaskHandle::DelayedStart(
-      TaskQueueBase::Current(), update_interval_,
-      [this]() {
-        RTC_DCHECK_RUN_ON(worker_thread_);
-        std::vector<uint16_t> nack_batch = GetNackBatch(kTimeOnly);
-        if (!nack_batch.empty()) {
-          // This batch of NACKs is triggered externally; there is no external
-          // initiator who can batch them with other feedback messages.
-          nack_sender_->SendNack(nack_batch, /*buffering_allowed=*/false);
-        }
-        return update_interval_;
-      },
-      clock_);
 }
 
 NackModule2::~NackModule2() {
   RTC_DCHECK_RUN_ON(worker_thread_);
-  repeating_task_.Stop();
+}
+
+void NackModule2::ProcessNacks() {
+  RTC_DCHECK_RUN_ON(worker_thread_);
+  std::vector<uint16_t> nack_batch = GetNackBatch(kTimeOnly);
+  if (!nack_batch.empty()) {
+    // This batch of NACKs is triggered externally; there is no external
+    // initiator who can batch them with other feedback messages.
+    nack_sender_->SendNack(nack_batch, /*buffering_allowed=*/false);
+  }
 }
 
 int NackModule2::OnReceivedPacket(uint16_t seq_num, bool is_keyframe) {
