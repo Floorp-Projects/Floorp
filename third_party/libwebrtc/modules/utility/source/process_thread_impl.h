@@ -73,11 +73,11 @@ class ProcessThreadImpl : public ProcessThread {
     }
 
     int64_t run_at_ms;
-    // DelayedTask owns the |task|, but some delayed tasks must be removed from
+    // DelayedTask owns the `task`, but some delayed tasks must be removed from
     // the std::priority_queue, but mustn't be deleted. std::priority_queue does
     // not give non-const access to the values, so storing unique_ptr would
     // delete the task as soon as it is remove from the priority queue.
-    // Thus lifetime of the |task| is managed manually.
+    // Thus lifetime of the `task` is managed manually.
     QueuedTask* task;
   };
   typedef std::list<ModuleCallback> ModuleList;
