@@ -476,6 +476,9 @@ bool RTPSenderVideo::SendVideo(
 
   if (payload.empty())
     return false;
+  if (!rtp_sender_->SendingMedia()) {
+    return false;
+  }
 
   int32_t retransmission_settings = retransmission_settings_;
   if (codec_type == VideoCodecType::kVideoCodecH264) {
@@ -705,7 +708,8 @@ bool RTPSenderVideo::SendVideo(
     }
   }
 
-  if (!rtp_sender_->AssignSequenceNumbersAndStoreLastPacketState(rtp_packets)) {
+  if (!rtp_sender_->deferred_sequence_numbering() &&
+      !rtp_sender_->AssignSequenceNumbersAndStoreLastPacketState(rtp_packets)) {
     // Media not being sent.
     return false;
   }

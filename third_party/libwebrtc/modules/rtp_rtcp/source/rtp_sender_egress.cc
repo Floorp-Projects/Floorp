@@ -41,8 +41,10 @@ bool IsTrialSetTo(const WebRtcKeyValueConfig* field_trials,
 
 RtpSenderEgress::NonPacedPacketSender::NonPacedPacketSender(
     RtpSenderEgress* sender,
-    SequenceNumberAssigner* sequence_number_assigner)
-    : transport_sequence_number_(0),
+    SequenceNumberAssigner* sequence_number_assigner,
+    bool deferred_sequencing)
+    : deferred_sequencing_(deferred_sequencing),
+      transport_sequence_number_(0),
       sender_(sender),
       sequence_number_assigner_(sequence_number_assigner) {
   RTC_DCHECK(sequence_number_assigner_);
@@ -57,22 +59,21 @@ void RtpSenderEgress::NonPacedPacketSender::EnqueuePackets(
   }
   auto fec_packets = sender_->FetchFecPackets();
   if (!fec_packets.empty()) {
-    // Don't generate sequence numbers for flexfec, they are already running on
-    // an internally maintained sequence.
-    const bool generate_sequence_numbers = !sender_->FlexFecSsrc().has_value();
-
-    for (auto& packet : fec_packets) {
-      if (generate_sequence_numbers) {
-        sequence_number_assigner_->AssignSequenceNumber(packet.get());
-      }
-      PrepareForSend(packet.get());
-    }
     EnqueuePackets(std::move(fec_packets));
   }
 }
 
 void RtpSenderEgress::NonPacedPacketSender::PrepareForSend(
     RtpPacketToSend* packet) {
+  // Assign sequence numbers if deferred sequencing is used, but don't generate
+  // sequence numbers for flexfec, which is already running on an internally
+  // maintained sequence number series.
+  const bool is_flexfec = packet->Ssrc() == sender_->FlexFecSsrc();
+  if ((deferred_sequencing_ ||
+       packet->packet_type() == RtpPacketMediaType::kForwardErrorCorrection) &&
+      !is_flexfec) {
+    sequence_number_assigner_->AssignSequenceNumber(packet);
+  }
   if (!packet->SetExtension<TransportSequenceNumber>(
           ++transport_sequence_number_)) {
     --transport_sequence_number_;
@@ -93,6 +94,7 @@ RtpSenderEgress::RtpSenderEgress(const RtpRtcpInterface::Configuration& config,
           !IsTrialSetTo(config.field_trials,
                         "WebRTC-SendSideBwe-WithOverhead",
                         "Disabled")),
+      deferred_sequencing_(config.use_deferred_sequencing),
       clock_(config.clock),
       packet_history_(packet_history),
       transport_(config.outgoing_transport),
@@ -139,6 +141,25 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
                                  const PacedPacketInfo& pacing_info) {
   RTC_DCHECK_RUN_ON(&pacer_checker_);
   RTC_DCHECK(packet);
+
+  if (deferred_sequencing_) {
+    // Strict increasing of sequence numbers can only be guaranteed with
+    // deferred sequencing due to raciness with the pacer.
+    if (packet->Ssrc() == ssrc_ &&
+        packet->packet_type() != RtpPacketMediaType::kRetransmission) {
+      if (last_sent_seq_.has_value()) {
+        RTC_DCHECK_EQ(static_cast<uint16_t>(*last_sent_seq_ + 1),
+                      packet->SequenceNumber());
+      }
+      last_sent_seq_ = packet->SequenceNumber();
+    } else if (packet->Ssrc() == rtx_ssrc_) {
+      if (last_sent_rtx_seq_.has_value()) {
+        RTC_DCHECK_EQ(static_cast<uint16_t>(*last_sent_rtx_seq_ + 1),
+                      packet->SequenceNumber());
+      }
+      last_sent_rtx_seq_ = packet->SequenceNumber();
+    }
+  }
 
   RTC_DCHECK(packet->packet_type().has_value());
   RTC_DCHECK(HasCorrectSsrc(*packet));

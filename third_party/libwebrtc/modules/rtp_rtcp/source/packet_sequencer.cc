@@ -77,7 +77,7 @@ void PacketSequencer::SetRtpState(const RtpState& state) {
   last_timestamp_time_ms_ = state.last_timestamp_time_ms;
 }
 
-void PacketSequencer::PupulateRtpState(RtpState& state) const {
+void PacketSequencer::PopulateRtpState(RtpState& state) const {
   state.sequence_number = media_sequence_number_;
   state.timestamp = last_rtp_timestamp_;
   state.capture_time_ms = last_capture_time_ms_;
