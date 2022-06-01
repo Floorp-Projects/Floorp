@@ -17,23 +17,45 @@
 
 @implementation RTC_OBJC_TYPE (RTCSessionDescription)
 
+@synthesize nativeDescription = _nativeDescription;
 @synthesize type = _type;
 @synthesize sdp = _sdp;
 
 + (NSString *)stringForType:(RTCSdpType)type {
-  std::string string = [[self class] stdStringForType:type];
+  std::string string = [self stdStringForType:type];
   return [NSString stringForStdString:string];
 }
 
 + (RTCSdpType)typeForString:(NSString *)string {
   std::string typeString = string.stdString;
-  return [[self class] typeForStdString:typeString];
+  return [self typeForStdString:typeString];
 }
 
-- (instancetype)initWithType:(RTCSdpType)type sdp:(NSString *)sdp {
++ (webrtc::SessionDescriptionInterface *)nativeDescriptionForString:(NSString *)sdp
+                                                               type:(RTCSdpType)type {
+  webrtc::SdpParseError error;
+
+  webrtc::SessionDescriptionInterface *description =
+      webrtc::CreateSessionDescription([self stdStringForType:type], sdp.stdString, &error);
+
+  if (!description) {
+    RTCLogError(@"Failed to create session description: %s\nline: %s",
+                error.description.c_str(),
+                error.line.c_str());
+  }
+
+  return description;
+}
+
+- (nullable instancetype)initWithType:(RTCSdpType)type sdp:(NSString *)sdp {
   if (self = [super init]) {
     _type = type;
     _sdp = [sdp copy];
+    _nativeDescription = [[self class] nativeDescriptionForString:_sdp type:_type];
+
+    if (_nativeDescription == nil) {
+      return nil;
+    }
   }
   return self;
 }
@@ -45,23 +67,6 @@
 }
 
 #pragma mark - Private
-
-- (webrtc::SessionDescriptionInterface *)nativeDescription {
-  webrtc::SdpParseError error;
-
-  webrtc::SessionDescriptionInterface *description =
-      webrtc::CreateSessionDescription([[self class] stdStringForType:_type],
-                                       _sdp.stdString,
-                                       &error);
-
-  if (!description) {
-    RTCLogError(@"Failed to create session description: %s\nline: %s",
-                error.description.c_str(),
-                error.line.c_str());
-  }
-
-  return description;
-}
 
 - (instancetype)initWithNativeDescription:
     (const webrtc::SessionDescriptionInterface *)nativeDescription {

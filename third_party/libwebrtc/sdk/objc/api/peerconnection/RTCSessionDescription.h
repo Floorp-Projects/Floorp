@@ -36,8 +36,10 @@ RTC_OBJC_EXPORT
 
 - (instancetype)init NS_UNAVAILABLE;
 
-/** Initialize a session description with a type and SDP string. */
-- (instancetype)initWithType:(RTCSdpType)type sdp:(NSString *)sdp NS_DESIGNATED_INITIALIZER;
+/** Initialize a session description with a type and SDP string. Returns nil if the sdp is invalid.
+ */
+- (nullable instancetype)initWithType:(RTCSdpType)type
+                                  sdp:(NSString *)sdp NS_DESIGNATED_INITIALIZER;
 
 + (NSString *)stringForType:(RTCSdpType)type;
 
