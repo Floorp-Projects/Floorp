@@ -10,6 +10,7 @@ import {
 import { getDefaultOptions } from "lib/ActivityStreamStorage.jsm";
 import injector from "inject!lib/TopSitesFeed.jsm";
 import { Screenshots } from "lib/Screenshots.jsm";
+import { LinksCache } from "lib/LinksCache.jsm";
 
 const FAKE_FAVICON = "data987";
 const FAKE_FAVICON_SIZE = 128;
@@ -112,10 +113,15 @@ describe("Top Sites Feed", () => {
         off: sinon.stub(),
       },
     };
-    globals.set("PageThumbs", fakePageThumbs);
-    globals.set("NewTabUtils", fakeNewTabUtils);
-    globals.set("gFilterAdultEnabled", false);
-    globals.set("NimbusFeatures", fakeNimbusFeatures);
+    globals.set({
+      PageThumbs: fakePageThumbs,
+      NewTabUtils: fakeNewTabUtils,
+      gFilterAdultEnabled: false,
+      NimbusFeatures: fakeNimbusFeatures,
+      LinksCache,
+      FilterAdult: filterAdultStub,
+      Screenshots: fakeScreenshot,
+    });
     sandbox.spy(global.XPCOMUtils, "defineLazyGetter");
     FakePrefs.prototype.prefs["default.sites"] = "https://foo.com/";
     ({ TopSitesFeed, DEFAULT_TOP_SITES } = injector({
