@@ -26,6 +26,7 @@
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "modules/congestion_controller/goog_cc/loss_based_bandwidth_estimation.h"
+#include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 
 namespace webrtc {
@@ -149,6 +150,12 @@ class SendSideBandwidthEstimation {
   // should be cleaned up.
   void ApplyTargetLimits(Timestamp at_time);
 
+  bool LossBasedBandwidthEstimatorV1Enabled() const;
+  bool LossBasedBandwidthEstimatorV2Enabled() const;
+
+  bool LossBasedBandwidthEstimatorV1ReadyForUse() const;
+  bool LossBasedBandwidthEstimatorV2ReadyForUse() const;
+
   RttBasedBackoff rtt_backoff_;
   LinkCapacityTracker link_capacity_;
 
@@ -189,7 +196,8 @@ class SendSideBandwidthEstimation {
   float low_loss_threshold_;
   float high_loss_threshold_;
   DataRate bitrate_threshold_;
-  LossBasedBandwidthEstimation loss_based_bandwidth_estimation_;
+  LossBasedBandwidthEstimation loss_based_bandwidth_estimator_v1_;
+  LossBasedBweV2 loss_based_bandwidth_estimator_v2_;
   FieldTrialFlag receiver_limit_caps_only_;
 };
 }  // namespace webrtc
