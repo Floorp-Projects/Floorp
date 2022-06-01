@@ -39,7 +39,8 @@ class MockInitialize : public AudioProcessingImpl {
       : AudioProcessingImpl(config) {}
 
   MOCK_METHOD(void, InitializeLocked, (), (override));
-  void RealInitializeLocked() RTC_NO_THREAD_SAFETY_ANALYSIS {
+  void RealInitializeLocked() {
+    AssertLockedForTest();
     AudioProcessingImpl::InitializeLocked();
   }
 
