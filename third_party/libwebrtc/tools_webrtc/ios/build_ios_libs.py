@@ -13,7 +13,6 @@ By default, the library is created in out_ios_libs/. (Change with -o.)
 """
 
 import argparse
-import distutils.dir_util
 import logging
 import os
 import shutil
@@ -34,12 +33,17 @@ SDK_XCFRAMEWORK_NAME = 'WebRTC.xcframework'
 
 ENABLED_ARCHS = [
     'device:arm64', 'simulator:arm64', 'simulator:x64',
+    'catalyst:arm64', 'catalyst:x64',
     'arm64', 'x64'
 ]
 DEFAULT_ARCHS = [
     'device:arm64', 'simulator:arm64', 'simulator:x64'
 ]
-IOS_DEPLOYMENT_TARGET = '12.0'
+IOS_DEPLOYMENT_TARGET = {
+    'device': '12.0',
+    'simulator': '12.0',
+    'catalyst': '14.0'
+}
 LIBVPX_BUILD_VP9 = False
 
 sys.path.append(os.path.join(SCRIPT_DIR, '..', 'libs'))
@@ -240,20 +244,26 @@ def main():
             lib_path = os.path.join(framework_path, arch + '_libs')
             lib_paths.append(lib_path)
             BuildWebRTC(lib_path, environment, arch, args.build_config,
-                        gn_target_name, IOS_DEPLOYMENT_TARGET,
+                        gn_target_name, IOS_DEPLOYMENT_TARGET[environment],
                         LIBVPX_BUILD_VP9, args.bitcode, args.use_goma, gn_args)
         all_lib_paths.extend(lib_paths)
 
         # Combine the slices.
         dylib_path = os.path.join(SDK_FRAMEWORK_NAME, 'WebRTC')
         # Dylibs will be combined, all other files are the same across archs.
-        # Use distutils instead of shutil to support merging folders.
-        distutils.dir_util.copy_tree(
+        shutil.rmtree(
+            os.path.join(framework_path, SDK_FRAMEWORK_NAME),
+            ignore_errors=True)
+        shutil.copytree(
             os.path.join(lib_paths[0], SDK_FRAMEWORK_NAME),
-            os.path.join(framework_path, SDK_FRAMEWORK_NAME))
+            os.path.join(framework_path, SDK_FRAMEWORK_NAME),
+            symlinks=True)
         logging.info('Merging framework slices for %s.', environment)
         dylib_paths = [os.path.join(path, dylib_path) for path in lib_paths]
         out_dylib_path = os.path.join(framework_path, dylib_path)
+        if os.path.islink(out_dylib_path):
+            out_dylib_path = os.path.join(os.path.dirname(out_dylib_path),
+                                          os.readlink(out_dylib_path))
         try:
             os.remove(out_dylib_path)
         except OSError:
@@ -264,7 +274,10 @@ def main():
         # Merge the dSYM slices.
         lib_dsym_dir_path = os.path.join(lib_paths[0], SDK_DSYM_NAME)
         if os.path.isdir(lib_dsym_dir_path):
-            distutils.dir_util.copy_tree(
+            shutil.rmtree(
+                os.path.join(framework_path, SDK_DSYM_NAME),
+                ignore_errors=True)
+            shutil.copytree(
                 lib_dsym_dir_path, os.path.join(framework_path, SDK_DSYM_NAME))
             logging.info('Merging dSYM slices.')
             dsym_path = os.path.join(SDK_DSYM_NAME, 'Contents', 'Resources',
@@ -281,12 +294,18 @@ def main():
                    ] + lib_dsym_paths + ['-create', '-output', out_dsym_path]
             _RunCommand(cmd)
 
+            # Check for Mac-style WebRTC.framework/Resources/ (for Catalyst)...
+            resources_dir = os.path.join(framework_path, SDK_FRAMEWORK_NAME,
+                                        'Resources')
+            if not os.path.exists(resources_dir):
+                # ...then fall back to iOS-style WebRTC.framework/
+                resources_dir = os.path.dirname(resources_dir)
+
             # Modify the version number.
             # Format should be <Branch cut MXX>.<Hotfix #>.<Rev #>.
             # e.g. 55.0.14986 means
             # branch cut 55, no hotfixes, and revision 14986.
-            infoplist_path = os.path.join(framework_path, SDK_FRAMEWORK_NAME,
-                                          'Info.plist')
+            infoplist_path = os.path.join(resources_dir, 'Info.plist')
             cmd = [
                 'PlistBuddy', '-c', 'Print :CFBundleShortVersionString',
                 infoplist_path
