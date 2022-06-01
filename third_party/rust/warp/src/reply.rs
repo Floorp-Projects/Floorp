@@ -8,7 +8,7 @@
 //! Besides them, you can return a type that implements [`Reply`](./trait.Reply.html). This
 //! could be any of the following:
 //!
-//! - [`http::Response<impl Into<hyper::Body>>`](https://docs.rs/http)
+//! - [`http::Response<impl Into<hyper::Body>`](https://docs.rs/http)
 //! - `String`
 //! - `&'static str`
 //! - `http::StatusCode`
@@ -105,7 +105,7 @@ where
 {
     Json {
         inner: serde_json::to_vec(val).map_err(|err| {
-            tracing::error!("reply::json error: {}", err);
+            log::error!("reply::json error: {}", err);
         }),
     }
 }
@@ -135,7 +135,7 @@ impl Reply for Json {
 pub(crate) struct ReplyJsonError;
 
 impl fmt::Display for ReplyJsonError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("warp::reply::json() failed")
     }
 }
@@ -155,17 +155,17 @@ impl StdError for ReplyJsonError {}
 ///         <title>HTML with warp!</title>
 ///     </head>
 ///     <body>
-///         <h1>warp + HTML = &hearts;</h1>
+///         <h1>warp + HTML = :heart:</h1>
 ///     </body>
 /// </html>
 /// "#;
 ///
 /// let route = warp::any()
-///     .map(move || {
+///     .map(|| {
 ///         warp::reply::html(body)
 ///     });
 /// ```
-pub fn html<T>(body: T) -> Html<T>
+pub fn html<T>(body: T) -> impl Reply
 where
     Body: From<T>,
     T: Send,
@@ -173,9 +173,8 @@ where
     Html { body }
 }
 
-/// An HTML reply.
 #[allow(missing_debug_implementations)]
-pub struct Html<T> {
+struct Html<T> {
     body: T,
 }
 
@@ -275,13 +274,13 @@ pub trait Reply: BoxedReply + Send {
                     Reply_(res)
                 },
                 Err(err) => {
-                    tracing::error!("with_header value error: {}", err.into());
+                    log::error!("with_header value error: {}", err.into());
                     Reply_(::reject::server_error()
                         .into_response())
                 }
             },
             Err(err) => {
-                tracing::error!("with_header name error: {}", err.into());
+                log::error!("with_header name error: {}", err.into());
                 Reply_(::reject::server_error()
                     .into_response())
             }
@@ -358,14 +357,12 @@ where
         Ok(name) => match <HeaderValue as TryFrom<V>>::try_from(value) {
             Ok(value) => Some((name, value)),
             Err(err) => {
-                let err = err.into();
-                tracing::error!("with_header value error: {}", err);
+                log::error!("with_header value error: {}", err.into());
                 None
             }
         },
         Err(err) => {
-            let err = err.into();
-            tracing::error!("with_header name error: {}", err);
+            log::error!("with_header name error: {}", err.into());
             None
         }
     };
@@ -420,7 +417,7 @@ where
         match self {
             Ok(t) => t.into_response(),
             Err(e) => {
-                tracing::error!("reply error: {:?}", e);
+                log::error!("reply error: {:?}", e);
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
             }
         }

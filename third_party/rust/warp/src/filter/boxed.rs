@@ -3,7 +3,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use futures_util::TryFutureExt;
+use futures::TryFutureExt;
 
 use super::{Filter, FilterBase, Internal, Tuple};
 use crate::reject::Rejection;
@@ -61,7 +61,7 @@ impl<T: Tuple> Clone for BoxedFilter<T> {
 }
 
 impl<T: Tuple> fmt::Debug for BoxedFilter<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("BoxedFilter").finish()
     }
 }

@@ -412,7 +412,7 @@ impl MDNSService {
         let mdns_addr = std::net::Ipv4Addr::new(224, 0, 0, 251);
         let port = 5353;
 
-        let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
+        let socket = Socket::new(Domain::ipv4(), Type::dgram(), None)?;
         socket.set_reuse_address(true)?;
 
         #[cfg(not(target_os = "windows"))]
@@ -422,7 +422,7 @@ impl MDNSService {
             port,
         ))))?;
 
-        let socket = std::net::UdpSocket::from(socket);
+        let socket = socket.into_udp_socket();
         socket.set_multicast_loop_v4(true)?;
         socket.set_read_timeout(Some(time::Duration::from_millis(1)))?;
         socket.set_write_timeout(Some(time::Duration::from_millis(1)))?;
@@ -658,7 +658,7 @@ mod tests {
     fn listen_until(addr: &std::net::Ipv4Addr, stop: u64) -> thread::JoinHandle<Vec<String>> {
         let port = 5353;
 
-        let socket = Socket::new(Domain::IPV4, Type::DGRAM, None).unwrap();
+        let socket = Socket::new(Domain::ipv4(), Type::dgram(), None).unwrap();
         socket.set_reuse_address(true).unwrap();
 
         #[cfg(not(target_os = "windows"))]
@@ -670,7 +670,7 @@ mod tests {
             ))))
             .unwrap();
 
-        let socket = std::net::UdpSocket::from(socket);
+        let socket = socket.into_udp_socket();
         socket.set_multicast_loop_v4(true).unwrap();
         socket
             .set_read_timeout(Some(time::Duration::from_millis(10)))

@@ -1,23 +1,17 @@
-error: #[repr(packed)] attribute should not be name-value pair
-  --> tests/ui/pin_project/packed-name-value.rs:16:8
-   |
-16 | #[repr(packed = "")] //~ ERROR attribute should not be name-value pair
-   |        ^^^^^^^^^^^
-
-error: #[repr(packed)] attribute should not be name-value pair
-  --> tests/ui/pin_project/packed-name-value.rs:21:8
-   |
-21 | #[repr(packed = "")] //~ ERROR attribute should not be name-value pair
-   |        ^^^^^^^^^^^
+error[E0693]: incorrect `repr(packed)` attribute format
+ --> tests/ui/pin_project/packed-name-value.rs:3:8
+  |
+3 | #[repr(packed = "")] //~ ERROR E0552
+  |        ^^^^^^^^^^^ help: use parentheses instead: `packed()`
 
 error[E0693]: incorrect `repr(packed)` attribute format
-  --> tests/ui/pin_project/packed-name-value.rs:16:8
-   |
-16 | #[repr(packed = "")] //~ ERROR attribute should not be name-value pair
-   |        ^^^^^^^^^^^ help: use parentheses instead: `packed()`
+ --> tests/ui/pin_project/packed-name-value.rs:9:8
+  |
+9 | #[repr(packed = "")] //~ ERROR E0552
+  |        ^^^^^^^^^^^ help: use parentheses instead: `packed()`
 
 error[E0693]: incorrect `repr(packed)` attribute format
-  --> tests/ui/pin_project/packed-name-value.rs:21:8
+  --> tests/ui/pin_project/packed-name-value.rs:14:8
    |
-21 | #[repr(packed = "")] //~ ERROR attribute should not be name-value pair
+14 | #[repr(packed = "")] //~ ERROR E0552
    |        ^^^^^^^^^^^ help: use parentheses instead: `packed()`

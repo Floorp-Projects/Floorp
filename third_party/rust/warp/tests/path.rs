@@ -2,7 +2,7 @@
 #[macro_use]
 extern crate warp;
 
-use futures_util::future;
+use futures::future;
 use warp::Filter;
 
 #[tokio::test]
@@ -151,13 +151,6 @@ async fn tail() {
 
     let m = tail.and(warp::path::end());
     assert!(warp::test::request().path("/foo/bar").matches(&m).await);
-
-    let ex = warp::test::request()
-        .path("localhost")
-        .filter(&tail)
-        .await
-        .unwrap();
-    assert_eq!(ex.as_str(), "/");
 }
 
 #[tokio::test]
@@ -246,16 +239,6 @@ async fn path_macro() {
     let req = warp::test::request().path("/foo/bar/baz");
     let p = path!("foo" / "bar" / ..).and(warp::path!("baz"));
     assert!(req.matches(&p).await);
-
-    // Empty
-
-    let req = warp::test::request().path("/");
-    let p = path!();
-    assert!(req.matches(&p).await);
-
-    let req = warp::test::request().path("/foo");
-    let p = path!();
-    assert!(!req.matches(&p).await);
 }
 
 #[tokio::test]

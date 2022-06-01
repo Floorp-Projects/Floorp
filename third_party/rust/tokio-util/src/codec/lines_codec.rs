@@ -133,7 +133,7 @@ impl Decoder for LinesCodec {
                     buf.advance(read_to);
                     self.next_index = 0;
                     if buf.is_empty() {
-                        return Ok(None);
+                        return Err(LinesCodecError::MaxLineLengthExceeded);
                     }
                 }
                 (false, Some(offset)) => {
@@ -203,12 +203,12 @@ impl Default for LinesCodec {
     }
 }
 
-/// An error occurred while encoding or decoding a line.
+/// An error occured while encoding or decoding a line.
 #[derive(Debug)]
 pub enum LinesCodecError {
     /// The maximum line length was exceeded.
     MaxLineLengthExceeded,
-    /// An IO error occurred.
+    /// An IO error occured.
     Io(io::Error),
 }
 

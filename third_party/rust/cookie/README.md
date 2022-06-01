@@ -1,10 +1,9 @@
-# Cookie
+# cookie-rs
 
-[![CI Status](https://github.com/SergioBenitez/cookie-rs/workflows/CI/badge.svg)](https://github.com/SergioBenitez/cookie-rs/actions)
+[![Build Status](https://travis-ci.com/SergioBenitez/cookie-rs.svg?branch=master)](https://travis-ci.com/SergioBenitez/cookie-rs)
 [![Current Crates.io Version](https://img.shields.io/crates/v/cookie.svg)](https://crates.io/crates/cookie)
-[![Documentation](https://docs.rs/cookie/badge.svg)](https://docs.rs/cookie)
 
-A Rust library for parsing HTTP cookies and managing cookie jars.
+A library for parsing HTTP cookies and managing cookie jars.
 
 # Usage
 
@@ -12,16 +11,10 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cookie = "0.16"
+cookie = "0.12"
 ```
 
 See the [documentation](http://docs.rs/cookie) for detailed usage information.
-
-# MSRV
-
-khe minimum supported `rustc` version for cookie `0.16` is `1.53`.
-
-The minimum supported `rustc` version for cookie `0.15` is `1.41`.
 
 # License
 

@@ -142,12 +142,6 @@ struct Table {
     max_size: usize,
 }
 
-struct StringMarker {
-    offset: usize,
-    len: usize,
-    string: Option<Bytes>,
-}
-
 // ===== impl Decoder =====
 
 impl Decoder {
@@ -189,10 +183,7 @@ impl Decoder {
             self.last_max_update = size;
         }
 
-        let span = tracing::trace_span!("hpack::decode");
-        let _e = span.enter();
-
-        tracing::trace!("decode");
+        log::trace!("decode");
 
         while let Some(ty) = peek_u8(src) {
             // At this point we are always at the beginning of the next block
@@ -200,14 +191,14 @@ impl Decoder {
             // determined from the first byte.
             match Representation::load(ty)? {
                 Indexed => {
-                    tracing::trace!(rem = src.remaining(), kind = %"Indexed");
+                    log::trace!("    Indexed; rem={:?}", src.remaining());
                     can_resize = false;
                     let entry = self.decode_indexed(src)?;
                     consume(src);
                     f(entry);
                 }
                 LiteralWithIndexing => {
-                    tracing::trace!(rem = src.remaining(), kind = %"LiteralWithIndexing");
+                    log::trace!("    LiteralWithIndexing; rem={:?}", src.remaining());
                     can_resize = false;
                     let entry = self.decode_literal(src, true)?;
 
@@ -218,14 +209,14 @@ impl Decoder {
                     f(entry);
                 }
                 LiteralWithoutIndexing => {
-                    tracing::trace!(rem = src.remaining(), kind = %"LiteralWithoutIndexing");
+                    log::trace!("    LiteralWithoutIndexing; rem={:?}", src.remaining());
                     can_resize = false;
                     let entry = self.decode_literal(src, false)?;
                     consume(src);
                     f(entry);
                 }
                 LiteralNeverIndexed => {
-                    tracing::trace!(rem = src.remaining(), kind = %"LiteralNeverIndexed");
+                    log::trace!("    LiteralNeverIndexed; rem={:?}", src.remaining());
                     can_resize = false;
                     let entry = self.decode_literal(src, false)?;
                     consume(src);
@@ -235,7 +226,7 @@ impl Decoder {
                     f(entry);
                 }
                 SizeUpdate => {
-                    tracing::trace!(rem = src.remaining(), kind = %"SizeUpdate");
+                    log::trace!("    SizeUpdate; rem={:?}", src.remaining());
                     if !can_resize {
                         return Err(DecoderError::InvalidMaxDynamicSize);
                     }
@@ -257,10 +248,10 @@ impl Decoder {
             return Err(DecoderError::InvalidMaxDynamicSize);
         }
 
-        tracing::debug!(
-            from = self.table.size(),
-            to = new_size,
-            "Decoder changed max table size"
+        log::debug!(
+            "Decoder changed max table size from {} to {}",
+            self.table.size(),
+            new_size
         );
 
         self.table.set_max_size(new_size);
@@ -285,13 +276,10 @@ impl Decoder {
 
         // First, read the header name
         if table_idx == 0 {
-            let old_pos = buf.position();
-            let name_marker = self.try_decode_string(buf)?;
-            let value_marker = self.try_decode_string(buf)?;
-            buf.set_position(old_pos);
             // Read the name as a literal
-            let name = name_marker.consume(buf);
-            let value = value_marker.consume(buf);
+            let name = self.decode_string(buf)?;
+            let value = self.decode_string(buf)?;
+
             Header::new(name, value)
         } else {
             let e = self.table.get(table_idx)?;
@@ -301,11 +289,7 @@ impl Decoder {
         }
     }
 
-    fn try_decode_string(
-        &mut self,
-        buf: &mut Cursor<&mut BytesMut>,
-    ) -> Result<StringMarker, DecoderError> {
-        let old_pos = buf.position();
+    fn decode_string(&mut self, buf: &mut Cursor<&mut BytesMut>) -> Result<Bytes, DecoderError> {
         const HUFF_FLAG: u8 = 0b1000_0000;
 
         // The first bit in the first byte contains the huffman encoded flag.
@@ -318,38 +302,25 @@ impl Decoder {
         let len = decode_int(buf, 7)?;
 
         if len > buf.remaining() {
-            tracing::trace!(len, remaining = buf.remaining(), "decode_string underflow",);
+            log::trace!(
+                "decode_string underflow; len={}; remaining={}",
+                len,
+                buf.remaining()
+            );
             return Err(DecoderError::NeedMore(NeedMore::StringUnderflow));
         }
 
-        let offset = (buf.position() - old_pos) as usize;
         if huff {
             let ret = {
-                let raw = &buf.chunk()[..len];
-                huffman::decode(raw, &mut self.buffer).map(|buf| StringMarker {
-                    offset,
-                    len,
-                    string: Some(BytesMut::freeze(buf)),
-                })
+                let raw = &buf.bytes()[..len];
+                huffman::decode(raw, &mut self.buffer).map(BytesMut::freeze)
             };
 
             buf.advance(len);
-            ret
-        } else {
-            buf.advance(len);
-            Ok(StringMarker {
-                offset,
-                len,
-                string: None,
-            })
+            return ret;
         }
-    }
 
-    fn decode_string(&mut self, buf: &mut Cursor<&mut BytesMut>) -> Result<Bytes, DecoderError> {
-        let old_pos = buf.position();
-        let marker = self.try_decode_string(buf)?;
-        buf.set_position(old_pos);
-        Ok(marker.consume(buf))
+        Ok(take(buf, len))
     }
 }
 
@@ -449,7 +420,7 @@ fn decode_int<B: Buf>(buf: &mut B, prefix_size: u8) -> Result<usize, DecoderErro
 
 fn peek_u8<B: Buf>(buf: &mut B) -> Option<u8> {
     if buf.has_remaining() {
-        Some(buf.chunk()[0])
+        Some(buf.bytes()[0])
     } else {
         None
     }
@@ -461,19 +432,6 @@ fn take(buf: &mut Cursor<&mut BytesMut>, n: usize) -> Bytes {
     buf.set_position(0);
     head.advance(pos);
     head.freeze()
-}
-
-impl StringMarker {
-    fn consume(self, buf: &mut Cursor<&mut BytesMut>) -> Bytes {
-        buf.advance(self.offset);
-        match self.string {
-            Some(string) => {
-                buf.advance(self.len);
-                string
-            }
-            None => take(buf, self.len),
-        }
-    }
 }
 
 fn consume(buf: &mut Cursor<&mut BytesMut>) {
@@ -620,13 +578,13 @@ pub fn get_static(idx: usize) -> Header {
     use http::header::HeaderValue;
 
     match idx {
-        1 => Header::Authority(BytesStr::from_static("")),
+        1 => Header::Authority(from_static("")),
         2 => Header::Method(Method::GET),
         3 => Header::Method(Method::POST),
-        4 => Header::Path(BytesStr::from_static("/")),
-        5 => Header::Path(BytesStr::from_static("/index.html")),
-        6 => Header::Scheme(BytesStr::from_static("http")),
-        7 => Header::Scheme(BytesStr::from_static("https")),
+        4 => Header::Path(from_static("/")),
+        5 => Header::Path(from_static("/index.html")),
+        6 => Header::Scheme(from_static("http")),
+        7 => Header::Scheme(from_static("https")),
         8 => Header::Status(StatusCode::OK),
         9 => Header::Status(StatusCode::NO_CONTENT),
         10 => Header::Status(StatusCode::PARTIAL_CONTENT),
@@ -826,6 +784,10 @@ pub fn get_static(idx: usize) -> Header {
     }
 }
 
+fn from_static(s: &'static str) -> BytesStr {
+    unsafe { BytesStr::from_utf8_unchecked(Bytes::from_static(s.as_bytes())) }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -890,51 +852,7 @@ mod test {
 
     fn huff_encode(src: &[u8]) -> BytesMut {
         let mut buf = BytesMut::new();
-        huffman::encode(src, &mut buf);
+        huffman::encode(src, &mut buf).unwrap();
         buf
-    }
-
-    #[test]
-    fn test_decode_continuation_header_with_non_huff_encoded_name() {
-        let mut de = Decoder::new(0);
-        let value = huff_encode(b"bar");
-        let mut buf = BytesMut::new();
-        // header name is non_huff encoded
-        buf.extend(&[0b01000000, 0x00 | 3]);
-        buf.extend(b"foo");
-        // header value is partial
-        buf.extend(&[0x80 | 3]);
-        buf.extend(&value[0..1]);
-
-        let mut res = vec![];
-        let e = de
-            .decode(&mut Cursor::new(&mut buf), |h| {
-                res.push(h);
-            })
-            .unwrap_err();
-        // decode error because the header value is partial
-        assert_eq!(e, DecoderError::NeedMore(NeedMore::StringUnderflow));
-
-        // extend buf with the remaining header value
-        buf.extend(&value[1..]);
-        let _ = de
-            .decode(&mut Cursor::new(&mut buf), |h| {
-                res.push(h);
-            })
-            .unwrap();
-
-        assert_eq!(res.len(), 1);
-        assert_eq!(de.table.size(), 0);
-
-        match res[0] {
-            Header::Field {
-                ref name,
-                ref value,
-            } => {
-                assert_eq!(name, "foo");
-                assert_eq!(value, "bar");
-            }
-            _ => panic!(),
-        }
     }
 }

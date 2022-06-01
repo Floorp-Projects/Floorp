@@ -1,0 +1,11 @@
+error: #[project] attribute may not be used on renamed imports
+  --> tests/ui/project/use.rs:14:16
+   |
+14 |     use crate::A as B; //~ ERROR #[project] attribute may not be used on renamed imports
+   |                ^^^^^^
+
+error: #[project] attribute may not be used on glob imports
+  --> tests/ui/project/use.rs:16:16
+   |
+16 |     use crate::*; //~ ERROR #[project] attribute may not be used on glob imports
+   |                ^

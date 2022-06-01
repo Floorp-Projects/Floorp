@@ -16,7 +16,7 @@ use std::task::{Context, Poll};
 /// # Overview
 ///
 /// A `SendStream` is provided by [`SendRequest`] and [`SendResponse`] once the
-/// HTTP/2 message header has been sent sent. It is used to stream the message
+/// HTTP/2.0 message header has been sent sent. It is used to stream the message
 /// body and send the message trailers. See method level documentation for more
 /// details.
 ///
@@ -35,7 +35,7 @@ use std::task::{Context, Poll};
 ///
 /// # Flow control
 ///
-/// In HTTP/2, data cannot be sent to the remote peer unless there is
+/// In HTTP/2.0, data cannot be sent to the remote peer unless there is
 /// available window capacity on both the stream and the connection. When a data
 /// frame is sent, both the stream window and the connection window are
 /// decremented. When the stream level window reaches zero, no further data can
@@ -44,7 +44,7 @@ use std::task::{Context, Poll};
 ///
 /// When the remote peer is ready to receive more data, it sends `WINDOW_UPDATE`
 /// frames. These frames increment the windows. See the [specification] for more
-/// details on the principles of HTTP/2 flow control.
+/// details on the principles of HTTP/2.0 flow control.
 ///
 /// The implications for sending data are that the caller **should** ensure that
 /// both the stream and the connection has available window capacity before
@@ -115,7 +115,7 @@ pub struct StreamId(u32);
 /// Receives the body stream and trailers from the remote peer.
 ///
 /// A `RecvStream` is provided by [`client::ResponseFuture`] and
-/// [`server::Connection`] with the received HTTP/2 message head (the response
+/// [`server::Connection`] with the received HTTP/2.0 message head (the response
 /// and request head respectively).
 ///
 /// A `RecvStream` instance is used to receive the streaming message body and
@@ -124,6 +124,11 @@ pub struct StreamId(u32);
 ///
 /// See method level documentation for more details on receiving data. See
 /// [`FlowControl`] for more details on inbound flow control.
+///
+/// Note that this type implements [`Stream`], yielding the received data frames.
+/// When this implementation is used, the capacity is immediately released when
+/// the data is yielded. It is recommended to only use this API when the data
+/// will not be retained in memory for extended periods of time.
 ///
 /// [`client::ResponseFuture`]: client/struct.ResponseFuture.html
 /// [`server::Connection`]: server/struct.Connection.html
@@ -168,12 +173,12 @@ pub struct RecvStream {
 ///
 /// # Scenarios
 ///
-/// Following is a basic scenario with an HTTP/2 connection containing a
+/// Following is a basic scenario with an HTTP/2.0 connection containing a
 /// single active stream.
 ///
 /// * A new stream is activated. The receive window is initialized to 1024 (the
 ///   value of the initial window size for this connection).
-/// * A `DATA` frame is received containing a payload of 600 bytes.
+/// * A `DATA` frame is received containing a payload of 400 bytes.
 /// * The receive window size is reduced to 424 bytes.
 /// * [`release_capacity`] is called with 200.
 /// * The receive window size is now 624 bytes. The peer may send no more than
@@ -401,7 +406,7 @@ impl RecvStream {
         futures_util::future::poll_fn(move |cx| self.poll_trailers(cx)).await
     }
 
-    /// Poll for the next data frame.
+    #[doc(hidden)]
     pub fn poll_data(&mut self, cx: &mut Context<'_>) -> Poll<Option<Result<Bytes, crate::Error>>> {
         self.inner.inner.poll_data(cx).map_err_(Into::into)
     }

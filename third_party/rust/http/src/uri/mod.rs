@@ -201,40 +201,7 @@ impl Uri {
         Builder::new()
     }
 
-    /// Attempt to convert a `Parts` into a `Uri`.
-    ///
-    /// # Examples
-    ///
-    /// Relative URI
-    ///
-    /// ```
-    /// # use http::uri::*;
-    /// let mut parts = Parts::default();
-    /// parts.path_and_query = Some("/foo".parse().unwrap());
-    ///
-    /// let uri = Uri::from_parts(parts).unwrap();
-    ///
-    /// assert_eq!(uri.path(), "/foo");
-    ///
-    /// assert!(uri.scheme().is_none());
-    /// assert!(uri.authority().is_none());
-    /// ```
-    ///
-    /// Absolute URI
-    ///
-    /// ```
-    /// # use http::uri::*;
-    /// let mut parts = Parts::default();
-    /// parts.scheme = Some("http".parse().unwrap());
-    /// parts.authority = Some("foo.com".parse().unwrap());
-    /// parts.path_and_query = Some("/foo".parse().unwrap());
-    ///
-    /// let uri = Uri::from_parts(parts).unwrap();
-    ///
-    /// assert_eq!(uri.scheme().unwrap().as_str(), "http");
-    /// assert_eq!(uri.authority().unwrap(), "foo.com");
-    /// assert_eq!(uri.path(), "/foo");
-    /// ```
+    /// Attempt to convert a `Uri` from `Parts`
     pub fn from_parts(src: Parts) -> Result<Uri, InvalidUriParts> {
         if src.scheme.is_some() {
             if src.authority.is_none() {
@@ -524,6 +491,8 @@ impl Uri {
     ///                 authority
     /// ```
     ///
+    /// This function will be renamed to `authority` in the next semver release.
+    ///
     /// # Examples
     ///
     /// Absolute URI
@@ -769,29 +738,40 @@ impl<'a> TryFrom<&'a Uri> for Uri {
     }
 }
 
-/// Convert an `Authority` into a `Uri`.
-impl From<Authority> for Uri {
-    fn from(authority: Authority) -> Self {
-        Self {
-            scheme: Scheme::empty(),
-            authority,
-            path_and_query: PathAndQuery::empty(),
-        }
-    }
-}
-
-/// Convert a `PathAndQuery` into a `Uri`.
-impl From<PathAndQuery> for Uri {
-    fn from(path_and_query: PathAndQuery) -> Self {
-        Self {
-            scheme: Scheme::empty(),
-            authority: Authority::empty(),
-            path_and_query,
-        }
-    }
-}
-
-/// Convert a `Uri` into `Parts`
+/// Convert a `Uri` from parts
+///
+/// # Examples
+///
+/// Relative URI
+///
+/// ```
+/// # use http::uri::*;
+/// let mut parts = Parts::default();
+/// parts.path_and_query = Some("/foo".parse().unwrap());
+///
+/// let uri = Uri::from_parts(parts).unwrap();
+///
+/// assert_eq!(uri.path(), "/foo");
+///
+/// assert!(uri.scheme().is_none());
+/// assert!(uri.authority().is_none());
+/// ```
+///
+/// Absolute URI
+///
+/// ```
+/// # use http::uri::*;
+/// let mut parts = Parts::default();
+/// parts.scheme = Some("http".parse().unwrap());
+/// parts.authority = Some("foo.com".parse().unwrap());
+/// parts.path_and_query = Some("/foo".parse().unwrap());
+///
+/// let uri = Uri::from_parts(parts).unwrap();
+///
+/// assert_eq!(uri.scheme().unwrap().as_str(), "http");
+/// assert_eq!(uri.authority().unwrap(), "foo.com");
+/// assert_eq!(uri.path(), "/foo");
+/// ```
 impl From<Uri> for Parts {
     fn from(src: Uri) -> Self {
         let path_and_query = if src.has_path() {

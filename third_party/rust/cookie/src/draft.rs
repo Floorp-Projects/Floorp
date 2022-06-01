@@ -10,28 +10,18 @@ use std::fmt;
 /// attribute is "Strict", then the cookie is never sent in cross-site requests.
 /// If the `SameSite` attribute is "Lax", the cookie is only sent in cross-site
 /// requests with "safe" HTTP methods, i.e, `GET`, `HEAD`, `OPTIONS`, `TRACE`.
-/// If the `SameSite` attribute is "None", the cookie is sent in all cross-site
-/// requests if the "Secure" flag is also set, otherwise the cookie is ignored.
-/// This library automatically sets the "Secure" flag on cookies when
-/// `same_site` is set to `SameSite::None` as long as `secure` is not explicitly
-/// set to `false`.
+/// If the `SameSite` attribute is not present (made explicit via the
+/// `SameSite::None` variant), then the cookie will be sent as normal.
 ///
-/// If the `SameSite` attribute is not present (by not setting `SameSite`
-/// initally or passing `None` to [`Cookie::set_same_site()`]), then the cookie
-/// will be sent as normal.
-///
-/// **Note:** This cookie attribute is an [HTTP draft]! Its meaning and
-/// definition are subject to change.
-///
-/// [`Cookie::set_same_site()`]: crate::Cookie::set_same_site()
-/// [HTTP draft]: https://tools.ietf.org/html/draft-west-cookie-incrementalism-00
+/// **Note:** This cookie attribute is an HTTP draft! Its meaning and definition
+/// are subject to change.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SameSite {
     /// The "Strict" `SameSite` attribute.
     Strict,
     /// The "Lax" `SameSite` attribute.
     Lax,
-    /// The "None" `SameSite` attribute.
+    /// No `SameSite` attribute.
     None
 }
 
@@ -102,7 +92,7 @@ impl fmt::Display for SameSite {
         match *self {
             SameSite::Strict => write!(f, "Strict"),
             SameSite::Lax => write!(f, "Lax"),
-            SameSite::None => write!(f, "None"),
+            SameSite::None => Ok(()),
         }
     }
 }

@@ -1,0 +1,43 @@
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> tests/ui/cfg/cfg_attr-unpin.rs:18:5
+   |
+18 |     is_unpin::<Foo<PhantomPinned>>(); // ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ within `Foo<PhantomPinned>`, the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: consider using `Box::pin`
+note: required because it appears within the type `Foo<PhantomPinned>`
+  --> tests/ui/cfg/cfg_attr-unpin.rs:5:8
+   |
+5  | struct Foo<T> {
+   |        ^^^
+note: required by a bound in `is_unpin`
+  --> tests/ui/cfg/cfg_attr-unpin.rs:15:16
+   |
+15 | fn is_unpin<T: Unpin>() {}
+   |                ^^^^^ required by this bound in `is_unpin`
+
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> tests/ui/cfg/cfg_attr-unpin.rs:20:5
+   |
+20 |     is_unpin::<Bar<PhantomPinned>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ within `__Bar<'_, PhantomPinned>`, the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: consider using `Box::pin`
+note: required because it appears within the type `__Bar<'_, PhantomPinned>`
+  --> tests/ui/cfg/cfg_attr-unpin.rs:10:8
+   |
+10 | struct Bar<T> {
+   |        ^^^
+note: required because of the requirements on the impl of `Unpin` for `Bar<PhantomPinned>`
+  --> tests/ui/cfg/cfg_attr-unpin.rs:9:24
+   |
+9  | #[cfg_attr(not(any()), pin_project)]
+   |                        ^^^^^^^^^^^
+10 | struct Bar<T> {
+   |        ^^^^^^
+note: required by a bound in `is_unpin`
+  --> tests/ui/cfg/cfg_attr-unpin.rs:15:16
+   |
+15 | fn is_unpin<T: Unpin>() {}
+   |                ^^^^^ required by this bound in `is_unpin`
+   = note: this error originates in the derive macro `::pin_project::__private::__PinProjectInternalDerive` (in Nightly builds, run with -Z macro-backtrace for more info)

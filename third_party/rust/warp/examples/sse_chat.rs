@@ -1,12 +1,11 @@
-use futures_util::{Stream, StreamExt};
+use futures::{Stream, StreamExt};
 use std::collections::HashMap;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex,
 };
 use tokio::sync::mpsc;
-use tokio_stream::wrappers::UnboundedReceiverStream;
-use warp::{sse::Event, Filter};
+use warp::{sse::ServerSentEvent, Filter};
 
 #[tokio::main]
 async fn main() {
@@ -75,7 +74,10 @@ impl warp::reject::Reject for NotUtf8 {}
 /// - Value is a sender of `Message`
 type Users = Arc<Mutex<HashMap<usize, mpsc::UnboundedSender<Message>>>>;
 
-fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>> + Send + 'static {
+fn user_connected(
+    users: Users,
+) -> impl Stream<Item = Result<impl ServerSentEvent + Send + 'static, warp::Error>> + Send + 'static
+{
     // Use a counter to assign a new unique ID for this user.
     let my_id = NEXT_USER_ID.fetch_add(1, Ordering::Relaxed);
 
@@ -84,7 +86,6 @@ fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>
     // Use an unbounded channel to handle buffering and flushing of messages
     // to the event source...
     let (tx, rx) = mpsc::unbounded_channel();
-    let rx = UnboundedReceiverStream::new(rx);
 
     tx.send(Message::UserId(my_id))
         // rx is right above, so this cannot fail
@@ -95,8 +96,8 @@ fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>
 
     // Convert messages into Server-Sent Events and return resulting stream.
     rx.map(|msg| match msg {
-        Message::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
-        Message::Reply(reply) => Ok(Event::default().data(reply)),
+        Message::UserId(my_id) => Ok((warp::sse::event("user"), warp::sse::data(my_id)).into_a()),
+        Message::Reply(reply) => Ok(warp::sse::data(reply).into_b()),
     })
 }
 

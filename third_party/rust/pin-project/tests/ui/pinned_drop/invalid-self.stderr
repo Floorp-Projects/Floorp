@@ -13,13 +13,13 @@ error: expected identifier, found keyword `self`
 error: expected parameter name, found `@`
   --> tests/ui/pinned_drop/invalid-self.rs:11:25
    |
-11 |     fn self_subpat(self @ S {}: Self) {} //~ ERROR expected one of `)`, `,`, or `:`, found `@`
+11 |     fn self_subpat(self @ Struct {}: Self) {} //~ ERROR expected one of `)`, `,`, or `:`, found `@`
    |                         ^ expected parameter name
 
 error: expected one of `)`, `,`, or `:`, found `@`
   --> tests/ui/pinned_drop/invalid-self.rs:11:25
    |
-11 |     fn self_subpat(self @ S {}: Self) {} //~ ERROR expected one of `)`, `,`, or `:`, found `@`
+11 |     fn self_subpat(self @ Struct {}: Self) {} //~ ERROR expected one of `)`, `,`, or `:`, found `@`
    |                        -^ expected one of `)`, `,`, or `:`
    |                        |
    |                        help: missing `,`

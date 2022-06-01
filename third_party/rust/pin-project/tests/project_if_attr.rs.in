@@ -1,0 +1,45 @@
+#[test]
+#[project]
+fn project_if_let() {
+    #[pin_project]
+    enum Foo<A, B> {
+        Variant1(#[pin] A),
+        Variant2(u8),
+        Variant3 {
+            #[pin]
+            field: B,
+        },
+    }
+
+    let mut x: Foo<bool, f32> = Foo::Variant1(true);
+    let x = Pin::new(&mut x).project();
+
+    #[project]
+    if let Foo::Variant1(a) = x {
+        let a: Pin<&mut bool> = a;
+        assert_eq!(*a, true);
+    } else if let Foo::Variant2(_) = x {
+        unreachable!();
+    } else if let Foo::Variant3 { .. } = x {
+        unreachable!();
+    }
+}
+
+#[allow(clippy::unnecessary_operation, clippy::unit_arg)]
+#[test]
+#[project]
+fn non_stmt_expr_if_let() {
+    #[pin_project]
+    enum Enum<A> {
+        Variant(#[pin] A),
+    }
+
+    let mut x = Enum::Variant(1);
+    let x = Pin::new(&mut x).project();
+
+    #[allow(irrefutable_let_patterns)]
+    Some(
+        #[project]
+        if let Enum::Variant(_x) = x {},
+    );
+}
