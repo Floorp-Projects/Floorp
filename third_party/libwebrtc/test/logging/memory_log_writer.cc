@@ -35,11 +35,11 @@ class MemoryLogWriter final : public RtcEventLogOutput {
   std::string buffer_;
 };
 
-class MemoryLogWriterFactory : public LogWriterFactoryInterface {
+class MemoryLogWriterFactory final : public LogWriterFactoryInterface {
  public:
   explicit MemoryLogWriterFactory(std::map<std::string, std::string>* target)
       : target_(target) {}
-  ~MemoryLogWriterFactory() final {}
+  ~MemoryLogWriterFactory() override {}
   std::unique_ptr<RtcEventLogOutput> Create(std::string filename) override {
     return std::make_unique<MemoryLogWriter>(target_, filename);
   }
