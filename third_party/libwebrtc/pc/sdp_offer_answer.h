@@ -237,7 +237,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
           bundle_groups_by_mid);
 
   // Implementation of the offer/answer exchange operations. These are chained
-  // onto the |operations_chain_| when the public CreateOffer(), CreateAnswer(),
+  // onto the `operations_chain_` when the public CreateOffer(), CreateAnswer(),
   // SetLocalDescription() and SetRemoteDescription() methods are invoked.
   void DoCreateOffer(
       const PeerConnectionInterface::RTCOfferAnswerOptions& options,
@@ -361,7 +361,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
   FindAvailableTransceiverToReceive(cricket::MediaType media_type) const;
 
-  // Returns a MediaSessionOptions struct with options decided by |options|,
+  // Returns a MediaSessionOptions struct with options decided by `options`,
   // the local MediaStreams and DataChannels.
   void GetOptionsForOffer(const PeerConnectionInterface::RTCOfferAnswerOptions&
                               offer_answer_options,
@@ -378,7 +378,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
       RTC_RUN_ON(signaling_thread());
 
   // Returns a MediaSessionOptions struct with options decided by
-  // |constraints|, the local MediaStreams and DataChannels.
+  // `constraints`, the local MediaStreams and DataChannels.
   void GetOptionsForAnswer(const PeerConnectionInterface::RTCOfferAnswerOptions&
                                offer_answer_options,
                            cricket::MediaSessionOptions* session_options);
@@ -416,9 +416,9 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // Runs the algorithm specified in
   // https://w3c.github.io/webrtc-pc/#process-remote-track-removal
   // This method will update the following lists:
-  // |remove_list| is the list of transceivers for which the receiving track is
+  // `remove_list` is the list of transceivers for which the receiving track is
   //     being removed.
-  // |removed_streams| is the list of streams which no longer have a receiving
+  // `removed_streams` is the list of streams which no longer have a receiving
   //     track so should be removed.
   void ProcessRemovalOfRemoteTrack(
       const rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
@@ -431,23 +431,23 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
           remote_streams,
       std::vector<rtc::scoped_refptr<MediaStreamInterface>>* removed_streams);
 
-  // Remove all local and remote senders of type |media_type|.
+  // Remove all local and remote senders of type `media_type`.
   // Called when a media type is rejected (m-line set to port 0).
   void RemoveSenders(cricket::MediaType media_type);
 
-  // Loops through the vector of |streams| and finds added and removed
+  // Loops through the vector of `streams` and finds added and removed
   // StreamParams since last time this method was called.
   // For each new or removed StreamParam, OnLocalSenderSeen or
   // OnLocalSenderRemoved is invoked.
   void UpdateLocalSenders(const std::vector<cricket::StreamParams>& streams,
                           cricket::MediaType media_type);
 
-  // Makes sure a MediaStreamTrack is created for each StreamParam in |streams|,
+  // Makes sure a MediaStreamTrack is created for each StreamParam in `streams`,
   // and existing MediaStreamTracks are removed if there is no corresponding
-  // StreamParam. If |default_track_needed| is true, a default MediaStreamTrack
+  // StreamParam. If `default_track_needed` is true, a default MediaStreamTrack
   // is created if it doesn't exist; if false, it's removed if it exists.
-  // |media_type| is the type of the |streams| and can be either audio or video.
-  // If a new MediaStream is created it is added to |new_streams|.
+  // `media_type` is the type of the `streams` and can be either audio or video.
+  // If a new MediaStream is created it is added to `new_streams`.
   void UpdateRemoteSendersList(
       const std::vector<cricket::StreamParams>& streams,
       bool default_track_needed,
@@ -469,8 +469,8 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
                                         SdpType type);
   // Helper function to remove stopped transceivers.
   void RemoveStoppedTransceivers();
-  // Deletes the corresponding channel of contents that don't exist in |desc|.
-  // |desc| can be null. This means that all channels are deleted.
+  // Deletes the corresponding channel of contents that don't exist in `desc`.
+  // `desc` can be null. This means that all channels are deleted.
   void RemoveUnusedChannels(const cricket::SessionDescription* desc);
 
   // Report inferred negotiated SDP semantics from a local/remote answer to the
@@ -478,18 +478,18 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   void ReportNegotiatedSdpSemantics(const SessionDescriptionInterface& answer);
 
   // Finds remote MediaStreams without any tracks and removes them from
-  // |remote_streams_| and notifies the observer that the MediaStreams no longer
+  // `remote_streams_` and notifies the observer that the MediaStreams no longer
   // exist.
   void UpdateEndedRemoteMediaStreams();
 
-  // Uses all remote candidates in |remote_desc| in this session.
+  // Uses all remote candidates in `remote_desc` in this session.
   bool UseCandidatesInSessionDescription(
       const SessionDescriptionInterface* remote_desc);
-  // Uses |candidate| in this session.
+  // Uses `candidate` in this session.
   bool UseCandidate(const IceCandidateInterface* candidate);
   // Returns true if we are ready to push down the remote candidate.
-  // |remote_desc| is the new remote description, or NULL if the current remote
-  // description should be used. Output |valid| is true if the candidate media
+  // `remote_desc` is the new remote description, or NULL if the current remote
+  // description should be used. Output `valid` is true if the candidate media
   // index is valid.
   bool ReadyToUseRemoteCandidate(const IceCandidateInterface* candidate,
                                  const SessionDescriptionInterface* remote_desc,
@@ -503,7 +503,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // Note that cricket code uses the term "channel" for what other code
   // refers to as "transport".
 
-  // Allocates media channels based on the |desc|. If |desc| doesn't have
+  // Allocates media channels based on the `desc`. If `desc` doesn't have
   // the BUNDLE option, this method will disable BUNDLE in PortAllocator.
   // This method will also delete any existing media channels before creating.
   RTCError CreateChannels(const cricket::SessionDescription& desc);
@@ -526,7 +526,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // Destroys the given ChannelInterface.
   // The channel cannot be accessed after this method is called.
   void DestroyChannelInterface(cricket::ChannelInterface* channel);
-  // Generates MediaDescriptionOptions for the |session_opts| based on existing
+  // Generates MediaDescriptionOptions for the `session_opts` based on existing
   // local description or remote description.
 
   void GenerateMediaDescriptionOptions(

@@ -59,7 +59,7 @@ static_assert(INVALID == arraysize(kValidIceServiceTypes),
               "kValidIceServiceTypes must have as many strings as ServiceType "
               "has values.");
 
-// |in_str| should follow of RFC 7064/7065 syntax, but with an optional
+// `in_str` should follow of RFC 7064/7065 syntax, but with an optional
 // "?transport=" already stripped. I.e.,
 // stunURI       = scheme ":" host [ ":" port ]
 // scheme        = "stun" / "stuns" / "turn" / "turns"
@@ -105,7 +105,7 @@ static bool ParsePort(const std::string& in_str, int* port) {
 // standard hostname:port format.
 // Consider following formats as correct.
 // |hostname:port|, |[IPV6 address]:port|, |IPv4 address|:port,
-// |hostname|, |[IPv6 address]|, |IPv4 address|.
+// `hostname`, |[IPv6 address]|, |IPv4 address|.
 static bool ParseHostnameAndPortFromString(const std::string& in_str,
                                            std::string* host,
                                            int* port) {
@@ -145,7 +145,7 @@ static bool ParseHostnameAndPortFromString(const std::string& in_str,
 }
 
 // Adds a STUN or TURN server to the appropriate list,
-// by parsing |url| and using the username/password in |server|.
+// by parsing `url` and using the username/password in `server`.
 static RTCErrorType ParseIceServerUrl(
     const PeerConnectionInterface::IceServer& server,
     const std::string& url,

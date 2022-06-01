@@ -112,7 +112,7 @@ class TrackMediaInfoMapTest : public ::testing::Test {
 
   ~TrackMediaInfoMapTest() {
     // If we have a map the ownership has been passed to the map, only delete if
-    // |CreateMap| has not been called.
+    // `CreateMap` has not been called.
     if (!map_) {
       delete voice_media_info_;
       delete video_media_info_;

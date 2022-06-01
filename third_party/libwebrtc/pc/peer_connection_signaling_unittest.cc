@@ -208,7 +208,7 @@ TEST_P(PeerConnectionSignalingTest, FailToSetNullRemoteDescription) {
 // methods on PeerConnection will succeed/fail depending on what is the
 // PeerConnection's signaling state. Note that the test tries many different
 // forms of SignalingState::kClosed by arriving at a valid state then calling
-// |Close()|. This is intended to catch cases where the PeerConnection signaling
+// `Close()`. This is intended to catch cases where the PeerConnection signaling
 // method ignores the closed flag but may work/not work because of the single
 // state the PeerConnection was created in before it was closed.
 

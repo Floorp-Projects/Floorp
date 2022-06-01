@@ -145,8 +145,8 @@ ConnectionContext::~ConnectionContext() {
   worker_thread_->Invoke<void>(RTC_FROM_HERE,
                                [&]() { channel_manager_.reset(nullptr); });
 
-  // Make sure |worker_thread()| and |signaling_thread()| outlive
-  // |default_socket_factory_| and |default_network_manager_|.
+  // Make sure `worker_thread()` and `signaling_thread()` outlive
+  // `default_socket_factory_` and `default_network_manager_`.
   default_socket_factory_ = nullptr;
   default_network_manager_ = nullptr;
 

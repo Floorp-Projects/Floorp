@@ -34,7 +34,7 @@ class DtlsSrtpTransport : public SrtpTransport {
   explicit DtlsSrtpTransport(bool rtcp_mux_enabled);
 
   // Set P2P layer RTP/RTCP DtlsTransports. When using RTCP-muxing,
-  // |rtcp_dtls_transport| is null.
+  // `rtcp_dtls_transport` is null.
   void SetDtlsTransports(cricket::DtlsTransportInternal* rtp_dtls_transport,
                          cricket::DtlsTransportInternal* rtcp_dtls_transport);
 
@@ -58,7 +58,7 @@ class DtlsSrtpTransport : public SrtpTransport {
                     "Set SRTP keys for DTLS-SRTP is not supported.");
   }
 
-  // If |active_reset_srtp_params_| is set to be true, the SRTP parameters will
+  // If `active_reset_srtp_params_` is set to be true, the SRTP parameters will
   // be reset whenever the DtlsTransports are reset.
   void SetActiveResetSrtpParams(bool active_reset_srtp_params) {
     active_reset_srtp_params_ = active_reset_srtp_params;

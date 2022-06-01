@@ -642,7 +642,7 @@ void VideoRtpSender::ClearSend() {
     RTC_LOG(LS_WARNING) << "SetVideoSend: No video channel exists.";
     return;
   }
-  // Allow SetVideoSend to fail since |enable| is false and |source| is null.
+  // Allow SetVideoSend to fail since `enable` is false and `source` is null.
   // This the normal case when the underlying media channel has already been
   // deleted.
   worker_thread_->Invoke<bool>(RTC_FROM_HERE, [&] {

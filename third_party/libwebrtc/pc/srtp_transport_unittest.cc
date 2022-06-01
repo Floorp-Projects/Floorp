@@ -133,7 +133,7 @@ class SrtpTransportTest : public ::testing::Test, public sigslot::has_slots<> {
     memcpy(original_rtp_data, rtp_packet_data, rtp_len);
 
     rtc::PacketOptions options;
-    // Send a packet from |srtp_transport1_| to |srtp_transport2_| and verify
+    // Send a packet from `srtp_transport1_` to `srtp_transport2_` and verify
     // that the packet can be successfully received and decrypted.
     ASSERT_TRUE(srtp_transport1_->SendRtpPacket(&rtp_packet1to2, options,
                                                 cricket::PF_SRTP_BYPASS));
@@ -181,7 +181,7 @@ class SrtpTransportTest : public ::testing::Test, public sigslot::has_slots<> {
                                            packet_size);
 
     rtc::PacketOptions options;
-    // Send a packet from |srtp_transport1_| to |srtp_transport2_| and verify
+    // Send a packet from `srtp_transport1_` to `srtp_transport2_` and verify
     // that the packet can be successfully received and decrypted.
     ASSERT_TRUE(srtp_transport1_->SendRtcpPacket(&rtcp_packet1to2, options,
                                                  cricket::PF_SRTP_BYPASS));
@@ -263,7 +263,7 @@ class SrtpTransportTest : public ::testing::Test, public sigslot::has_slots<> {
     memcpy(original_rtp_data, rtp_packet_data, rtp_len);
 
     rtc::PacketOptions options;
-    // Send a packet from |srtp_transport1_| to |srtp_transport2_| and verify
+    // Send a packet from `srtp_transport1_` to `srtp_transport2_` and verify
     // that the packet can be successfully received and decrypted.
     ASSERT_TRUE(srtp_transport1_->SendRtpPacket(&rtp_packet1to2, options,
                                                 cricket::PF_SRTP_BYPASS));
