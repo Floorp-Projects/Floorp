@@ -315,10 +315,6 @@ class GlobalObject : public NativeObject {
   }
 
   static bool skipDeselectedConstructor(JSContext* cx, JSProtoKey key);
-  static bool initBuiltinConstructor(JSContext* cx,
-                                     Handle<GlobalObject*> global,
-                                     JSProtoKey key, HandleObject ctor,
-                                     HandleObject proto);
 
  private:
   enum class IfClassIsDisabled { DoNothing, Throw };

@@ -460,29 +460,6 @@ JSObject* GlobalObject::createBuiltinProto(JSContext* cx,
   return &global->getBuiltinProto(kind);
 }
 
-/* static */
-bool GlobalObject::initBuiltinConstructor(JSContext* cx,
-                                          Handle<GlobalObject*> global,
-                                          JSProtoKey key, HandleObject ctor,
-                                          HandleObject proto) {
-  MOZ_ASSERT(!global->empty());  // reserved slots already allocated
-  MOZ_ASSERT(key != JSProto_Null);
-  MOZ_ASSERT(ctor);
-  MOZ_ASSERT(proto);
-
-  RootedId id(cx, NameToId(ClassName(key, cx)));
-  MOZ_ASSERT(!global->lookup(cx, id));
-
-  RootedValue ctorValue(cx, ObjectValue(*ctor));
-  if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING)) {
-    return false;
-  }
-
-  global->setConstructor(key, ctor);
-  global->setPrototype(key, proto);
-  return true;
-}
-
 static bool ThrowTypeError(JSContext* cx, unsigned argc, Value* vp) {
   ThrowTypeErrorBehavior(cx);
   return false;
