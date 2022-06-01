@@ -38,17 +38,6 @@ enum {
   kRtpMinParseLength = 12
 };
 
-/*
- * Misc utility routines
- */
-
-size_t Word32Align(size_t size) {
-  uint32_t remainder = size % 4;
-  if (remainder != 0)
-    return size + 4 - remainder;
-  return size;
-}
-
 RtpHeaderParser::RtpHeaderParser(const uint8_t* rtpData,
                                  const size_t rtpDataLength)
     : _ptrRTPDataBegin(rtpData),

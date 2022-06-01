@@ -22,13 +22,7 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 namespace webrtc {
-
-const uint8_t kRtpMarkerBitMask = 0x80;
-
 namespace RtpUtility {
-
-// Round up to the nearest size that is a multiple of 4.
-size_t Word32Align(size_t size);
 
 class RtpHeaderParser {
  public:
