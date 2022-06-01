@@ -55,8 +55,7 @@ JsepTransportController::JsepTransportController(
             UpdateAggregateStates_n();
           }),
       config_(config),
-      active_reset_srtp_params_(config.active_reset_srtp_params),
-      bundles_(config.bundle_policy) {
+      active_reset_srtp_params_(config.active_reset_srtp_params) {
   // The `transport_observer` is assumed to be non-null.
   RTC_DCHECK(config_.transport_observer);
   RTC_DCHECK(config_.rtcp_handler);
@@ -375,18 +374,13 @@ void JsepTransportController::SetActiveResetSrtpParams(
   }
 }
 
-RTCError JsepTransportController::RollbackTransports() {
+void JsepTransportController::RollbackTransports() {
   if (!network_thread_->IsCurrent()) {
-    return network_thread_->Invoke<RTCError>(
-        RTC_FROM_HERE, [=] { return RollbackTransports(); });
+    network_thread_->Invoke<void>(RTC_FROM_HERE, [=] { RollbackTransports(); });
+    return;
   }
   RTC_DCHECK_RUN_ON(network_thread_);
-  bundles_.Rollback();
-  if (!transports_.RollbackTransports()) {
-    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
-                         "Failed to roll back transport state.");
-  }
-  return RTCError::OK();
+  transports_.RollbackTransports();
 }
 
 rtc::scoped_refptr<webrtc::IceTransportInterface>
@@ -531,23 +525,6 @@ JsepTransportController::GetDtlsTransports() {
   return dtls_transports;
 }
 
-std::vector<cricket::DtlsTransportInternal*>
-JsepTransportController::GetActiveDtlsTransports() {
-  RTC_DCHECK_RUN_ON(network_thread_);
-  std::vector<cricket::DtlsTransportInternal*> dtls_transports;
-  for (auto jsep_transport : transports_.ActiveTransports()) {
-    RTC_DCHECK(jsep_transport);
-    if (jsep_transport->rtp_dtls_transport()) {
-      dtls_transports.push_back(jsep_transport->rtp_dtls_transport());
-    }
-
-    if (jsep_transport->rtcp_dtls_transport()) {
-      dtls_transports.push_back(jsep_transport->rtcp_dtls_transport());
-    }
-  }
-  return dtls_transports;
-}
-
 RTCError JsepTransportController::ApplyDescription_n(
     bool local,
     SdpType type,
@@ -574,6 +551,17 @@ RTCError JsepTransportController::ApplyDescription_n(
         MergeEncryptedHeaderExtensionIdsForBundles(description);
   }
 
+  // Because the creation of transports depends on whether
+  // certain mids are present, we have to process rejection
+  // before we try to create transports.
+  for (size_t i = 0; i < description->contents().size(); ++i) {
+    const cricket::ContentInfo& content_info = description->contents()[i];
+    if (content_info.rejected) {
+      // This may cause groups to be removed from `bundles_.bundle_groups()`.
+      HandleRejectedContent(content_info);
+    }
+  }
+
   for (const cricket::ContentInfo& content_info : description->contents()) {
     // Don't create transports for rejected m-lines and bundled m-lines.
     if (content_info.rejected ||
@@ -594,8 +582,6 @@ RTCError JsepTransportController::ApplyDescription_n(
         description->transport_infos()[i];
 
     if (content_info.rejected) {
-      // This may cause groups to be removed from |bundles_.bundle_groups()|.
-      HandleRejectedContent(content_info);
       continue;
     }
 
@@ -661,7 +647,6 @@ RTCError JsepTransportController::ApplyDescription_n(
   }
   if (type == SdpType::kAnswer) {
     transports_.CommitTransports();
-    bundles_.Commit();
   }
   return RTCError::OK();
 }
@@ -697,44 +682,7 @@ RTCError JsepTransportController::ValidateAndMaybeUpdateBundleGroups(
     }
   }
 
-  if (type == SdpType::kOffer) {
-    // For an offer, we need to verify that there is not a conflicting mapping
-    // between existing and new bundle groups. For example, if the existing
-    // groups are [[1,2],[3,4]] and new are [[1,3],[2,4]] or [[1,2,3,4]], or
-    // vice versa. Switching things around like this requires a separate offer
-    // that removes the relevant sections from their group, as per RFC 8843,
-    // section 7.5.2.
-    std::map<const cricket::ContentGroup*, const cricket::ContentGroup*>
-        new_bundle_groups_by_existing_bundle_groups;
-    std::map<const cricket::ContentGroup*, const cricket::ContentGroup*>
-        existing_bundle_groups_by_new_bundle_groups;
-    for (const cricket::ContentGroup* new_bundle_group : new_bundle_groups) {
-      for (const std::string& mid : new_bundle_group->content_names()) {
-        cricket::ContentGroup* existing_bundle_group =
-            bundles_.LookupGroupByMid(mid);
-        if (!existing_bundle_group) {
-          continue;
-        }
-        auto it = new_bundle_groups_by_existing_bundle_groups.find(
-            existing_bundle_group);
-        if (it != new_bundle_groups_by_existing_bundle_groups.end() &&
-            it->second != new_bundle_group) {
-          return RTCError(RTCErrorType::INVALID_PARAMETER,
-                          "MID " + mid + " in the offer has changed group.");
-        }
-        new_bundle_groups_by_existing_bundle_groups.insert(
-            std::make_pair(existing_bundle_group, new_bundle_group));
-        it = existing_bundle_groups_by_new_bundle_groups.find(new_bundle_group);
-        if (it != existing_bundle_groups_by_new_bundle_groups.end() &&
-            it->second != existing_bundle_group) {
-          return RTCError(RTCErrorType::INVALID_PARAMETER,
-                          "MID " + mid + " in the offer has changed group.");
-        }
-        existing_bundle_groups_by_new_bundle_groups.insert(
-            std::make_pair(new_bundle_group, existing_bundle_group));
-      }
-    }
-  } else if (type == SdpType::kAnswer) {
+  if (type == SdpType::kAnswer) {
     std::vector<const cricket::ContentGroup*> offered_bundle_groups =
         local ? remote_desc_->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE)
               : local_desc_->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
@@ -814,7 +762,9 @@ RTCError JsepTransportController::ValidateAndMaybeUpdateBundleGroups(
                     "max-bundle is used but no bundle group found.");
   }
 
-  bundles_.Update(description, type);
+  if (ShouldUpdateBundleGroup(type, description)) {
+    bundles_.Update(description);
+  }
 
   for (const auto& bundle_group : bundles_.bundle_groups()) {
     if (!bundle_group->FirstContentName())
@@ -922,6 +872,26 @@ JsepTransportController::CreateJsepTransportDescription(
       rtp_abs_sendtime_extn_id, transport_info.description);
 }
 
+bool JsepTransportController::ShouldUpdateBundleGroup(
+    SdpType type,
+    const cricket::SessionDescription* description) {
+  if (config_.bundle_policy ==
+      PeerConnectionInterface::kBundlePolicyMaxBundle) {
+    return true;
+  }
+
+  if (type != SdpType::kAnswer) {
+    return false;
+  }
+
+  RTC_DCHECK(local_desc_ && remote_desc_);
+  std::vector<const cricket::ContentGroup*> local_bundles =
+      local_desc_->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
+  std::vector<const cricket::ContentGroup*> remote_bundles =
+      remote_desc_->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
+  return !local_bundles.empty() && !remote_bundles.empty();
+}
+
 std::vector<int> JsepTransportController::GetEncryptedHeaderExtensionIds(
     const cricket::ContentInfo& content_info) {
   const cricket::MediaContentDescription* content_desc =
@@ -1016,6 +986,21 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
   cricket::JsepTransport* transport = GetJsepTransportByName(content_info.name);
   if (transport) {
     return RTCError::OK();
+  }
+  // If we have agreed to a bundle, the new mid will be added to the bundle
+  // according to JSEP, and the responder can't move it out of the group
+  // according to BUNDLE. So don't create a transport.
+  // The MID will be added to the bundle elsewhere in the code.
+  if (bundles_.bundle_groups().size() > 0) {
+    const auto& default_bundle_group = bundles_.bundle_groups()[0];
+    if (default_bundle_group->content_names().size() > 0) {
+      auto bundle_transport =
+          GetJsepTransportByName(default_bundle_group->content_names()[0]);
+      if (bundle_transport) {
+        transports_.SetTransportForMid(content_info.name, bundle_transport);
+        return RTCError::OK();
+      }
+    }
   }
   const cricket::MediaContentDescription* content_desc =
       content_info.media_description();
@@ -1216,7 +1201,7 @@ void JsepTransportController::OnTransportStateChanged_n(
 
 void JsepTransportController::UpdateAggregateStates_n() {
   TRACE_EVENT0("webrtc", "JsepTransportController::UpdateAggregateStates_n");
-  auto dtls_transports = GetActiveDtlsTransports();
+  auto dtls_transports = GetDtlsTransports();
   cricket::IceConnectionState new_connection_state =
       cricket::kIceConnectionConnecting;
   PeerConnectionInterface::IceConnectionState new_ice_connection_state =
