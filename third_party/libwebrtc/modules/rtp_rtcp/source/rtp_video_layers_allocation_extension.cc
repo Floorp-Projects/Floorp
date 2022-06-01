@@ -354,10 +354,13 @@ bool RtpVideoLayersAllocationExtension::Parse(
   // Target bitrates.
   for (auto& layer : allocation->active_spatial_layers) {
     for (DataRate& rate : layer.target_bitrate_per_temporal_layer) {
-      rate = DataRate::KilobitsPerSec(ReadLeb128(read_at, end));
-      if (read_at == nullptr) {
+      uint64_t bitrate_kbps = ReadLeb128(read_at, end);
+      // bitrate_kbps might represent larger values than DataRate type,
+      // discard unreasonably large values.
+      if (read_at == nullptr || bitrate_kbps > 1'000'000) {
         return false;
       }
+      rate = DataRate::KilobitsPerSec(bitrate_kbps);
     }
   }
 
