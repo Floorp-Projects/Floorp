@@ -260,6 +260,10 @@ class RTC_EXPORT VideoEncoder {
     // preferred pixel format. The order of the formats does not matter.
     absl::InlinedVector<VideoFrameBuffer::Type, kMaxPreferredPixelFormats>
         preferred_pixel_formats;
+
+    // Indicates whether or not QP value encoder writes into frame/slice/tile
+    // header can be interpreted as average frame/slice/tile QP.
+    absl::optional<bool> is_qp_trusted;
   };
 
   struct RTC_EXPORT RateControlParameters {

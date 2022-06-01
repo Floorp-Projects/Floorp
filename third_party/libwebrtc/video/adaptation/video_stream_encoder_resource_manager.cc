@@ -527,7 +527,8 @@ void VideoStreamEncoderResourceManager::ConfigureQualityScaler(
       IsResolutionScalingEnabled(degradation_preference_) &&
       (scaling_settings.thresholds.has_value() ||
        (encoder_settings_.has_value() &&
-        encoder_settings_->encoder_config().is_quality_scaling_allowed));
+        encoder_settings_->encoder_config().is_quality_scaling_allowed)) &&
+      encoder_info.is_qp_trusted.value_or(true);
 
   // TODO(https://crbug.com/webrtc/11222): Should this move to
   // QualityScalerResource?
