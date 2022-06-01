@@ -71,11 +71,6 @@ class ContentBlocking final {
   static bool ShouldAllowAccessFor(nsIPrincipal* aPrincipal,
                                    nsICookieJarSettings* aCookieJarSettings);
 
-  typedef MozPromise<nsresult, uint32_t, true> AsyncShouldAllowAccessForPromise;
-  [[nodiscard]] static RefPtr<AsyncShouldAllowAccessForPromise>
-  AsyncShouldAllowAccessFor(dom::BrowsingContext* aBrowsingContext,
-                            nsIPrincipal* aPrincipal);
-
   enum StorageAccessPromptChoices { eAllow, eAllowAutoGrant };
 
   // Grant the permission for aOrigin to have access to the first party storage.
@@ -135,6 +130,13 @@ class ContentBlocking final {
   //   None if it is not clear from permission alone what to do
   static Maybe<bool> CheckCookiesPermittedDecidesStorageAccessAPI(
       nsICookieJarSettings* aCookieJarSettings,
+      nsIPrincipal* aRequestingPrincipal);
+
+  // Calls CheckCookiesPermittedDecidesStorageAccessAPI in the Content Parent
+  // using aBrowsingContext's Top's Window Global's CookieJarSettings.
+  static RefPtr<MozPromise<Maybe<bool>, nsresult, true>>
+  AsyncCheckCookiesPermittedDecidesStorageAccessAPI(
+      dom::BrowsingContext* aBrowsingContext,
       nsIPrincipal* aRequestingPrincipal);
 
   // This function checks if the browser settings give explicit permission
