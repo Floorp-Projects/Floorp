@@ -1,5 +1,3 @@
-//|jit-test| skip-if: isLcovEnabled()
-
 let source = `
   function foo() {
     return "foo";
@@ -11,9 +9,9 @@ let source = `
 `;
 
 const options = {
-    fileName: "inner-00.js",
+    fileName: "inner-03.js",
     lineNumber: 1,
-    eagerDelazificationStrategy: "OnDemandOnly",
+    eagerDelazificationStrategy: "ParseEverythingEagerly",
     newContext: true,
 };
 evaluate(source, options);
