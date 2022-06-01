@@ -398,9 +398,12 @@ bool ModuleRtpRtcpImpl2::SupportsRtxPayloadPadding() const {
 std::vector<std::unique_ptr<RtpPacketToSend>>
 ModuleRtpRtcpImpl2::GeneratePadding(size_t target_size_bytes) {
   RTC_DCHECK(rtp_sender_);
+  // `can_send_padding_on_media_ssrc` set to false but is ignored at this
+  // point, RTPSender will internally query `sequencer_` while holding the
+  // send lock.
   return rtp_sender_->packet_generator.GeneratePadding(
       target_size_bytes, rtp_sender_->packet_sender.MediaHasBeenSent(),
-      rtp_sender_->sequencer_.CanSendPaddingOnMediaSsrc());
+      /*can_send_padding_on_media_ssrc=*/false);
 }
 
 std::vector<RtpSequenceNumberMap::Info>
