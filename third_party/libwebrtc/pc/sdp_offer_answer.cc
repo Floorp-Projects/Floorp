@@ -2737,10 +2737,7 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
     transceiver->internal()->set_mid(state.mid());
     transceiver->internal()->set_mline_index(state.mline_index());
   }
-  RTCError e = transport_controller()->RollbackTransports();
-  if (!e.ok()) {
-    return e;
-  }
+  transport_controller()->RollbackTransports();
   transceivers()->DiscardStableStates();
   pending_local_description_.reset();
   pending_remote_description_.reset();
