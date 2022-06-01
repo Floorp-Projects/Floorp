@@ -11,6 +11,7 @@
 #include "modules/rtp_rtcp/source/packet_sequencer.h"
 
 #include "rtc_base/checks.h"
+#include "rtc_base/random.h"
 
 namespace webrtc {
 
@@ -36,7 +37,15 @@ PacketSequencer::PacketSequencer(uint32_t media_ssrc,
       last_rtp_timestamp_(0),
       last_capture_time_ms_(0),
       last_timestamp_time_ms_(0),
-      last_packet_marker_bit_(false) {}
+      last_packet_marker_bit_(false) {
+  Random random(clock_->TimeInMicroseconds());
+  // TODO(bugs.webrtc.org/11340): Check if we can allow the full range of
+  // [0, 2^16[ to be used instead.
+  // Random start, 16 bits. Can't be 0.
+  constexpr uint16_t kMaxInitRtpSeqNumber = 0x7fff;  // 2^15 - 1.
+  media_sequence_number_ = random.Rand(1, kMaxInitRtpSeqNumber);
+  rtx_sequence_number_ = random.Rand(1, kMaxInitRtpSeqNumber);
+}
 
 void PacketSequencer::Sequence(RtpPacketToSend& packet) {
   if (packet.Ssrc() == media_ssrc_) {

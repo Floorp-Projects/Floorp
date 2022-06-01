@@ -63,12 +63,17 @@ int DelayMillisForDuration(TimeDelta duration) {
 ModuleRtpRtcpImpl2::RtpSenderContext::RtpSenderContext(
     const RtpRtcpInterface::Configuration& config)
     : packet_history(config.clock, config.enable_rtx_padding_prioritization),
+      sequencer_(config.local_media_ssrc,
+                 config.rtx_send_ssrc,
+                 /*require_marker_before_media_padding=*/!config.audio,
+                 config.clock),
       packet_sender(config, &packet_history),
       non_paced_sender(&packet_sender, this),
       packet_generator(
           config,
           &packet_history,
-          config.paced_sender ? config.paced_sender : &non_paced_sender) {}
+          config.paced_sender ? config.paced_sender : &non_paced_sender,
+          &sequencer_) {}
 void ModuleRtpRtcpImpl2::RtpSenderContext::AssignSequenceNumber(
     RtpPacketToSend* packet) {
   packet_generator.AssignSequenceNumber(packet);
@@ -394,7 +399,8 @@ std::vector<std::unique_ptr<RtpPacketToSend>>
 ModuleRtpRtcpImpl2::GeneratePadding(size_t target_size_bytes) {
   RTC_DCHECK(rtp_sender_);
   return rtp_sender_->packet_generator.GeneratePadding(
-      target_size_bytes, rtp_sender_->packet_sender.MediaHasBeenSent());
+      target_size_bytes, rtp_sender_->packet_sender.MediaHasBeenSent(),
+      rtp_sender_->sequencer_.CanSendPaddingOnMediaSsrc());
 }
 
 std::vector<RtpSequenceNumberMap::Info>
