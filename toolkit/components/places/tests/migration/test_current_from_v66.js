@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function setup() {
-  const path = await setupPlacesDatabase("places_v67.sqlite");
+  const path = await setupPlacesDatabase("places_v66.sqlite");
 
   const db = await Sqlite.openConnection({ path });
   await db.execute(`

@@ -179,6 +179,13 @@ const Snapshots = new (class Snapshots {
     PINNED: 2,
   };
 
+  REMOVED_REASON = {
+    DISMISS: 0,
+    NOT_RELEVANT: 1,
+    PERSONAL: 2,
+    EXPIRED: 3,
+  };
+
   constructor() {
     // TODO: we should update the pagedata periodically. We first need a way to
     // track when the last update happened, we may add an updated_at column to
@@ -445,17 +452,24 @@ const Snapshots = new (class Snapshots {
 
   /**
    * Deletes one or more snapshots.
-   * By default this creates a tombstone rather than removing the entry, so that
-   * heuristics can take into account user removed snapshots.
+   * Unless EXPIRED is passed as reason, this creates a tombstone rather than
+   * removing the entry, so that heuristics can take into account user removed
+   * snapshots.
    * Note, the caller is expected to take account of the userPersisted value
    * for a Snapshot when appropriate.
    *
    * @param {string|Array<string>} urls
    *   The url of the snapshot to delete, or an Array of urls.
-   * @param {boolean} removeFromStore
-   *   Whether the snapshot should actually be removed rather than tombston-ed.
+   * @param {integer} reason
+   *  One value from REMOVED_REASON.*. This is tracked in the data store.
    */
-  async delete(urls, removeFromStore = false) {
+  async delete(urls, reason = 0) {
+    if (
+      typeof reason != "number" ||
+      !Object.values(this.REMOVED_REASON).includes(reason)
+    ) {
+      throw new TypeError("Invalid value for 'reason'");
+    }
     if (!Array.isArray(urls)) {
       urls = [urls];
     }
@@ -468,20 +482,21 @@ const Snapshots = new (class Snapshots {
       "hash(",
       ")"
     )}) AND url IN (${PlacesUtils.sqlBindPlaceholders(urls)})`;
-    let queryArgs = removeFromStore
-      ? [
-          `DELETE FROM moz_places_metadata_snapshots
+    let queryArgs =
+      reason == this.REMOVED_REASON.EXPIRED
+        ? [
+            `DELETE FROM moz_places_metadata_snapshots
          WHERE place_id IN (${placeIdsSQLFragment})
          RETURNING place_id`,
-          [...urls, ...urls],
-        ]
-      : [
-          `UPDATE moz_places_metadata_snapshots
-         SET removed_at = ?
+            [...urls, ...urls],
+          ]
+        : [
+            `UPDATE moz_places_metadata_snapshots
+         SET removed_at = ?, removed_reason = ?
          WHERE place_id IN (${placeIdsSQLFragment})
          RETURNING place_id`,
-          [Date.now(), ...urls, ...urls],
-        ];
+            [Date.now(), reason, ...urls, ...urls],
+          ];
 
     await PlacesUtils.withConnectionWrapper("Snapshots: delete", async db => {
       let placeIds = (await db.executeCached(...queryArgs)).map(r =>

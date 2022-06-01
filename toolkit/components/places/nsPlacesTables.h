@@ -312,6 +312,7 @@
       "  place_id INTEGER PRIMARY KEY, "                                      \
       "  created_at INTEGER NOT NULL, "                                       \
       "  removed_at INTEGER, "                                                \
+      "  removed_reason INTEGER, "                                            \
       "  first_interaction_at INTEGER NOT NULL, "                             \
       "  last_interaction_at INTEGER NOT NULL, "                              \
       "  document_type INTEGER NOT NULL DEFAULT 0, "                          \

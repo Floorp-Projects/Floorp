@@ -226,3 +226,28 @@ add_task(async function test_update_untitled_snapshot() {
     "Title should revert to the history one"
   );
 });
+
+add_task(async function test_removed_reason() {
+  let reasons = Object.keys(Snapshots.REMOVED_REASON);
+  for (let reason of reasons) {
+    let expectedReason = Snapshots.REMOVED_REASON[reason];
+    info(`Testing removed reason ${reason} (${expectedReason})`);
+    Assert.equal(typeof expectedReason, "number");
+    await Snapshots.reset();
+    await Snapshots.add({ url: TEST_URL1 });
+    await assertUrlNotification(TOPIC_DELETED, [TEST_URL1], () =>
+      Snapshots.delete(TEST_URL1, expectedReason)
+    );
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute(
+      "SELECT removed_at, removed_reason FROM moz_places_metadata_snapshots"
+    );
+    if (reason == "EXPIRED") {
+      Assert.equal(rows.length, 0);
+    } else {
+      Assert.equal(rows.length, 1);
+      Assert.greater(rows[0].getResultByName("removed_at"), 0);
+      Assert.equal(rows[0].getResultByName("removed_reason"), expectedReason);
+    }
+  }
+});
