@@ -30,7 +30,6 @@
 #include "modules/audio_coding/codecs/pcm16b/audio_decoder_pcm16b.h"
 #include "modules/audio_coding/codecs/pcm16b/audio_encoder_pcm16b.h"
 #include "modules/audio_coding/neteq/tools/resample_input_audio_file.h"
-#include "rtc_base/system/arch.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
 
@@ -591,14 +590,8 @@ TEST_F(AudioDecoderIsacFixTest, EncodeDecode) {
   static const int kEncodedBytes = 673;
 #elif defined(WEBRTC_MAC) && defined(WEBRTC_ARCH_ARM64)  // M1 Mac
   static const int kEncodedBytes = 673;
-#elif defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__)
-  static const int kEncodedBytes = 671;
-#elif defined(WEBRTC_IOS) && defined(WEBRTC_ARCH_X86_64)
-  static const int kEncodedBytes = 671;
-#elif defined(WEBRTC_LINUX) && defined(WEBRTC_ARCH_X86) && !defined(NDEBUG)
-  static const int kEncodedBytes = 671;
 #else
-  static const int kEncodedBytes = 687;
+  static const int kEncodedBytes = 671;
 #endif
   EncodeDecodeTest(kEncodedBytes, tolerance, mse, delay);
   ReInitTest();
