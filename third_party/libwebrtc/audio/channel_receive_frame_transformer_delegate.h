@@ -23,7 +23,7 @@ namespace webrtc {
 
 // Delegates calls to FrameTransformerInterface to transform frames, and to
 // ChannelReceive to receive the transformed frames using the
-// |receive_frame_callback_| on the |channel_receive_thread_|.
+// `receive_frame_callback_` on the `channel_receive_thread_`.
 class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
  public:
   using ReceiveFrameCallback =
@@ -34,12 +34,12 @@ class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
       TaskQueueBase* channel_receive_thread);
 
-  // Registers |this| as callback for |frame_transformer_|, to get the
+  // Registers `this` as callback for `frame_transformer_`, to get the
   // transformed frames.
   void Init();
 
-  // Unregisters and releases the |frame_transformer_| reference, and resets
-  // |receive_frame_callback_| on |channel_receive_thread_|. Called from
+  // Unregisters and releases the `frame_transformer_` reference, and resets
+  // `receive_frame_callback_` on `channel_receive_thread_`. Called from
   // ChannelReceive destructor to prevent running the callback on a dangling
   // channel.
   void Reset();
@@ -55,7 +55,7 @@ class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
       std::unique_ptr<TransformableFrameInterface> frame) override;
 
   // Delegates the call to ChannelReceive::OnReceivedPayloadData on the
-  // |channel_receive_thread_|, by calling |receive_frame_callback_|.
+  // `channel_receive_thread_`, by calling `receive_frame_callback_`.
   void ReceiveFrame(std::unique_ptr<TransformableFrameInterface> frame) const;
 
  protected:

@@ -55,7 +55,7 @@ VoipCore::VoipCore(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
 }
 
 bool VoipCore::InitializeIfNeeded() {
-  // |audio_device_module_| internally owns a lock and the whole logic here
+  // `audio_device_module_` internally owns a lock and the whole logic here
   // needs to be executed atomically once using another lock in VoipCore.
   // Further changes in this method will need to make sure that no deadlock is
   // introduced in the future.
@@ -178,7 +178,7 @@ VoipResult VoipCore::ReleaseChannel(ChannelId channel_id) {
   }
 
   if (no_channels_after_release) {
-    // TODO(bugs.webrtc.org/11581): unclear if we still need to clear |channel|
+    // TODO(bugs.webrtc.org/11581): unclear if we still need to clear `channel`
     // here.
     channel = nullptr;
 
