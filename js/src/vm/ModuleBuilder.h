@@ -86,7 +86,7 @@ class MOZ_STACK_CLASS ModuleBuilder {
   frontend::StencilModuleEntry* importEntryFor(
       frontend::TaggedParserAtomIndex localName) const;
 
-  bool processExportBinding(frontend::ParseNode* pn);
+  bool processExportBinding(frontend::ParseNode* binding);
   bool processExportArrayBinding(frontend::ListNode* array);
   bool processExportObjectBinding(frontend::ListNode* obj);
 

@@ -323,7 +323,7 @@ class ModuleObject : public NativeObject {
   void initImportExportData(HandleArrayObject requestedModules,
                             HandleArrayObject importEntries,
                             HandleArrayObject localExportEntries,
-                            HandleArrayObject indiretExportEntries,
+                            HandleArrayObject indirectExportEntries,
                             HandleArrayObject starExportEntries);
   static bool Freeze(JSContext* cx, HandleModuleObject self);
 #ifdef DEBUG

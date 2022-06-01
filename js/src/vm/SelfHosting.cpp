@@ -121,8 +121,6 @@
 using namespace js;
 using namespace js::selfhosted;
 
-using JS::AutoCheckCannotGC;
-using JS::AutoStableStringChars;
 using JS::CompileOptions;
 using mozilla::Maybe;
 
