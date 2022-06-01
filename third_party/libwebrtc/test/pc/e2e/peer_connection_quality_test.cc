@@ -118,12 +118,13 @@ PeerConnectionE2EQualityTest::PeerConnectionE2EQualityTest(
     video_quality_analyzer = std::make_unique<DefaultVideoQualityAnalyzer>(
         time_controller_.GetClock());
   }
-  encoded_image_id_controller_ =
+  encoded_image_data_propagator_ =
       std::make_unique<SingleProcessEncodedImageDataInjector>();
   video_quality_analyzer_injection_helper_ =
       std::make_unique<VideoQualityAnalyzerInjectionHelper>(
-          std::move(video_quality_analyzer), encoded_image_id_controller_.get(),
-          encoded_image_id_controller_.get());
+          std::move(video_quality_analyzer),
+          encoded_image_data_propagator_.get(),
+          encoded_image_data_propagator_.get());
 
   if (audio_quality_analyzer == nullptr) {
     audio_quality_analyzer = std::make_unique<DefaultAudioQualityAnalyzer>();

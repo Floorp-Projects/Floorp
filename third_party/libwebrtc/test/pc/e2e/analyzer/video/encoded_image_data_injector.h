@@ -62,6 +62,12 @@ class EncodedImageDataExtractor {
       const EncodedImage& source) = 0;
 };
 
+class EncodedImageDataPropagator : public EncodedImageDataInjector,
+                                   public EncodedImageDataExtractor {
+ public:
+  ~EncodedImageDataPropagator() override = default;
+};
+
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc
 
