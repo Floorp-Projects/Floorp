@@ -71,7 +71,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":column_printer",
       "../:fake_video_codecs",
       "../:fileutils",
-      "../:rtp_test_utils",
       "../:test_common",
       "../:test_support",
       "../:video_test_common",

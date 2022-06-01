@@ -548,7 +548,6 @@ if (rtc_include_tests) {
         "../test:fileutils",
         "../test:null_transport",
         "../test:perf_test",
-        "../test:rtp_test_utils",
         "../test:test_common",
         "../test:test_support",
         "../test:video_test_common",

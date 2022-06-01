@@ -618,11 +618,6 @@ webrtc_fuzzer_test("dcsctp_socket_fuzzer") {
   ]
 }
 
-webrtc_fuzzer_test("rtp_header_parser_fuzzer") {
-  sources = [ "rtp_header_parser_fuzzer.cc" ]
-  deps = [ "../:rtp_test_utils" ]
-}
-
 webrtc_fuzzer_test("ssl_certificate_fuzzer") {
   sources = [ "ssl_certificate_fuzzer.cc" ]
   deps = [

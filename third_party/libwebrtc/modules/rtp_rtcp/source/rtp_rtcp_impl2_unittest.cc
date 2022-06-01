@@ -31,7 +31,6 @@
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/rtcp_packet_parser.h"
-#include "test/rtp_header_parser.h"
 #include "test/run_loop.h"
 #include "test/time_controller/simulated_time_controller.h"
 

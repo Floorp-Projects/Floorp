@@ -43,7 +43,6 @@
 #include "test/frame_generator_capturer.h"
 #include "test/gtest.h"
 #include "test/null_transport.h"
-#include "test/rtp_header_parser.h"
 #include "test/rtp_rtcp_observer.h"
 #include "test/testsupport/file_utils.h"
 #include "test/testsupport/perf_test.h"
