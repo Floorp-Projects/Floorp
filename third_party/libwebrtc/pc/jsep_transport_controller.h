@@ -224,9 +224,7 @@ class JsepTransportController : public sigslot::has_slots<> {
 
   void SetActiveResetSrtpParams(bool active_reset_srtp_params);
 
-  // For now the rollback only removes mid to transport mappings
-  // and deletes unused transports, but doesn't consider anything more complex.
-  void RollbackTransports();
+  RTCError RollbackTransports();
 
   // F: void(const std::string&, const std::vector<cricket::Candidate>&)
   template <typename F>
@@ -341,9 +339,6 @@ class JsepTransportController : public sigslot::has_slots<> {
       const cricket::TransportInfo& transport_info,
       const std::vector<int>& encrypted_extension_ids,
       int rtp_abs_sendtime_extn_id);
-
-  bool ShouldUpdateBundleGroup(SdpType type,
-                               const cricket::SessionDescription* description);
 
   std::map<const cricket::ContentGroup*, std::vector<int>>
   MergeEncryptedHeaderExtensionIdsForBundles(
