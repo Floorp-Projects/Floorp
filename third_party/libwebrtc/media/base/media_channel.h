@@ -278,7 +278,7 @@ class MediaChannel {
   bool DscpEnabled() const;
 
   // This is the DSCP value used for both RTP and RTCP channels if DSCP is
-  // enabled. It can be changed at any time via |SetPreferredDscp|.
+  // enabled. It can be changed at any time via `SetPreferredDscp`.
   rtc::DiffServCodePoint PreferredDscp() const;
   void SetPreferredDscp(rtc::DiffServCodePoint new_dscp);
 
@@ -655,7 +655,7 @@ struct BandwidthEstimationInfo {
   int64_t bucket_delay = 0;
 };
 
-// Maps from payload type to |RtpCodecParameters|.
+// Maps from payload type to `RtpCodecParameters`.
 typedef std::map<int, webrtc::RtpCodecParameters> RtpCodecParametersMap;
 
 struct VoiceMediaInfo {
@@ -778,7 +778,7 @@ class VoiceMediaChannel : public MediaChannel, public Delayable {
   cricket::MediaType media_type() const override;
   virtual bool SetSendParameters(const AudioSendParameters& params) = 0;
   virtual bool SetRecvParameters(const AudioRecvParameters& params) = 0;
-  // Get the receive parameters for the incoming stream identified by |ssrc|.
+  // Get the receive parameters for the incoming stream identified by `ssrc`.
   virtual webrtc::RtpParameters GetRtpReceiveParameters(
       uint32_t ssrc) const = 0;
   // Retrieve the receive parameters for the default receive
@@ -799,9 +799,9 @@ class VoiceMediaChannel : public MediaChannel, public Delayable {
   virtual bool SetDefaultOutputVolume(double volume) = 0;
   // Returns if the telephone-event has been negotiated.
   virtual bool CanInsertDtmf() = 0;
-  // Send a DTMF |event|. The DTMF out-of-band signal will be used.
-  // The |ssrc| should be either 0 or a valid send stream ssrc.
-  // The valid value for the |event| are 0 to 15 which corresponding to
+  // Send a DTMF `event`. The DTMF out-of-band signal will be used.
+  // The `ssrc` should be either 0 or a valid send stream ssrc.
+  // The valid value for the `event` are 0 to 15 which corresponding to
   // DTMF event 0-9, *, #, A-D.
   virtual bool InsertDtmf(uint32_t ssrc, int event, int duration) = 0;
   // Gets quality stats for the channel.
@@ -850,7 +850,7 @@ class VideoMediaChannel : public MediaChannel, public Delayable {
   cricket::MediaType media_type() const override;
   virtual bool SetSendParameters(const VideoSendParameters& params) = 0;
   virtual bool SetRecvParameters(const VideoRecvParameters& params) = 0;
-  // Get the receive parameters for the incoming stream identified by |ssrc|.
+  // Get the receive parameters for the incoming stream identified by `ssrc`.
   virtual webrtc::RtpParameters GetRtpReceiveParameters(
       uint32_t ssrc) const = 0;
   // Retrieve the receive parameters for the default receive
@@ -861,7 +861,7 @@ class VideoMediaChannel : public MediaChannel, public Delayable {
   // Starts or stops transmission (and potentially capture) of local video.
   virtual bool SetSend(bool send) = 0;
   // Configure stream for sending and register a source.
-  // The |ssrc| must correspond to a registered send stream.
+  // The `ssrc` must correspond to a registered send stream.
   virtual bool SetVideoSend(
       uint32_t ssrc,
       const VideoOptions* options,
@@ -883,13 +883,13 @@ class VideoMediaChannel : public MediaChannel, public Delayable {
   virtual void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) = 0;
   // Gets quality stats for the channel.
   virtual bool GetStats(VideoMediaInfo* info) = 0;
-  // Set recordable encoded frame callback for |ssrc|
+  // Set recordable encoded frame callback for `ssrc`
   virtual void SetRecordableEncodedFrameCallback(
       uint32_t ssrc,
       std::function<void(const webrtc::RecordableEncodedFrame&)> callback) = 0;
-  // Clear recordable encoded frame callback for |ssrc|
+  // Clear recordable encoded frame callback for `ssrc`
   virtual void ClearRecordableEncodedFrameCallback(uint32_t ssrc) = 0;
-  // Cause generation of a keyframe for |ssrc|
+  // Cause generation of a keyframe for `ssrc`
   virtual void GenerateKeyFrame(uint32_t ssrc) = 0;
 
   virtual std::vector<webrtc::RtpSource> GetSources(uint32_t ssrc) const = 0;

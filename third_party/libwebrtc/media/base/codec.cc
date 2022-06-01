@@ -81,7 +81,7 @@ void FeedbackParams::Add(const FeedbackParam& param) {
     return;
   }
   if (Has(param)) {
-    // Param already in |this|.
+    // Param already in `this`.
     return;
   }
   params_.push_back(param);

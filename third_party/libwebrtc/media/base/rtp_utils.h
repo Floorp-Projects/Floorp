@@ -50,10 +50,10 @@ RtpPacketType InferRtpPacketType(rtc::ArrayView<const char> packet);
 // True if |payload type| is 0-127.
 bool IsValidRtpPayloadType(int payload_type);
 
-// True if |size| is appropriate for the indicated packet type.
+// True if `size` is appropriate for the indicated packet type.
 bool IsValidRtpPacketSize(RtpPacketType packet_type, size_t size);
 
-// Returns "RTCP", "RTP" or "Unknown" according to |packet_type|.
+// Returns "RTCP", "RTP" or "Unknown" according to `packet_type`.
 absl::string_view RtpPacketTypeToString(RtpPacketType packet_type);
 
 // Verifies that a packet has a valid RTP header.
@@ -67,7 +67,7 @@ bool UpdateRtpAbsSendTimeExtension(uint8_t* rtp,
                                    int extension_id,
                                    uint64_t time_us);
 
-// Applies specified |options| to the packet. It updates the absolute send time
+// Applies specified `options` to the packet. It updates the absolute send time
 // extension header if it is present present then updates HMAC.
 bool RTC_EXPORT
 ApplyPacketOptions(uint8_t* data,

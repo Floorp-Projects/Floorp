@@ -67,7 +67,7 @@ extern const char kCodecParamMaxPlaybackRate[];
 
 extern const char kParamValueTrue[];
 // Parameters are stored as parameter/value pairs. For parameters who do not
-// have a value, |kParamValueEmpty| should be used as value.
+// have a value, `kParamValueEmpty` should be used as value.
 extern const char kParamValueEmpty[];
 
 // opus parameters.

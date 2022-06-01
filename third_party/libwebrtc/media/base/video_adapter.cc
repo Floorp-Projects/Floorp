@@ -36,14 +36,14 @@ struct Fraction {
   }
 
   // Determines number of output pixels if both width and height of an input of
-  // |input_pixels| pixels is scaled with the fraction numerator / denominator.
+  // `input_pixels` pixels is scaled with the fraction numerator / denominator.
   int scale_pixel_count(int input_pixels) {
     return (numerator * numerator * input_pixels) / (denominator * denominator);
   }
 };
 
-// Round |value_to_round| to a multiple of |multiple|. Prefer rounding upwards,
-// but never more than |max_value|.
+// Round `value_to_round` to a multiple of `multiple`. Prefer rounding upwards,
+// but never more than `max_value`.
 int roundUp(int value_to_round, int multiple, int max_value) {
   const int rounded_value =
       (value_to_round + multiple - 1) / multiple * multiple;
@@ -51,8 +51,8 @@ int roundUp(int value_to_round, int multiple, int max_value) {
                                     : (max_value / multiple * multiple);
 }
 
-// Generates a scale factor that makes |input_pixels| close to |target_pixels|,
-// but no higher than |max_pixels|.
+// Generates a scale factor that makes `input_pixels` close to `target_pixels`,
+// but no higher than `max_pixels`.
 Fraction FindScale(int input_width,
                    int input_height,
                    int target_pixels,
@@ -73,7 +73,7 @@ Fraction FindScale(int input_width,
   Fraction best_scale = Fraction{1, 1};
 
   if (variable_start_scale_factor) {
-    // Start scaling down by 2/3 depending on |input_width| and |input_height|.
+    // Start scaling down by 2/3 depending on `input_width` and `input_height`.
     if (input_width % 3 == 0 && input_height % 3 == 0) {
       // 2/3 (then alternates 3/4, 2/3, 3/4,...).
       current_scale = Fraction{6, 6};
@@ -152,7 +152,7 @@ bool VideoAdapter::KeepFrame(int64_t in_timestamp_ns) {
   if (max_fps <= 0)
     return false;
 
-  // If |max_framerate_request_| is not set, it will default to maxint, which
+  // If `max_framerate_request_` is not set, it will default to maxint, which
   // will lead to a frame_interval_ns rounded to 0.
   int64_t frame_interval_ns = rtc::kNumNanosecsPerSec / max_fps;
   if (frame_interval_ns <= 0) {
@@ -366,7 +366,7 @@ int VideoAdapter::GetTargetPixels() const {
 
 float VideoAdapter::GetMaxFramerate() const {
   webrtc::MutexLock lock(&mutex_);
-  // Minimum of |max_fps_| and |max_framerate_request_| is used to throttle
+  // Minimum of `max_fps_` and `max_framerate_request_` is used to throttle
   // frame-rate.
   int framerate = std::min(max_framerate_request_,
                            max_fps_.value_or(max_framerate_request_));
