@@ -101,7 +101,8 @@ class GCContext {
     return runtime_;
   }
 
-  bool isCollecting() const { return gcUse_ != js::gc::GCUse::None; }
+  js::gc::GCUse gcUse() const { return gcUse_; }
+  bool isCollecting() const { return gcUse() != js::gc::GCUse::None; }
   bool isFinalizing() const { return gcUse_ == js::gc::GCUse::Finalizing; }
 
 #ifdef DEBUG
@@ -109,7 +110,6 @@ class GCContext {
     return js::CurrentThreadCanAccessRuntime(runtime_);
   }
 
-  js::gc::GCUse gcUse() const { return gcUse_; }
   Zone* gcSweepZone() const { return gcSweepZone_; }
   bool isTouchingGrayThings() const { return isTouchingGrayThings_; }
 #endif

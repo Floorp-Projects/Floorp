@@ -308,16 +308,18 @@ inline void AddCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
 // follow a call to AddCellMemory with the same size and use.
 
 inline void RemoveCellMemory(gc::TenuredCell* cell, size_t nbytes,
-                             MemoryUse use, bool wasSwept = false) {
+                             MemoryUse use) {
+  MOZ_ASSERT(!CurrentThreadIsGCFinalizing(),
+             "Use GCContext methods to remove associated memory in finalizers");
+
   if (nbytes) {
     auto zoneBase = ZoneAllocator::from(cell->zoneFromAnyThread());
-    zoneBase->removeCellMemory(cell, nbytes, use, wasSwept);
+    zoneBase->removeCellMemory(cell, nbytes, use, false);
   }
 }
-inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use,
-                             bool wasSwept = false) {
+inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
   if (cell->isTenured()) {
-    RemoveCellMemory(&cell->asTenured(), nbytes, use, wasSwept);
+    RemoveCellMemory(&cell->asTenured(), nbytes, use);
   }
 }
 
