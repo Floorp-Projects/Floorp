@@ -42,8 +42,8 @@ class nsBaseContentList : public nsINodeList {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsINodeList
-  virtual int32_t IndexOf(nsIContent* aContent) override;
-  virtual nsIContent* Item(uint32_t aIndex) override;
+  int32_t IndexOf(nsIContent* aContent) override;
+  nsIContent* Item(uint32_t aIndex) override;
 
   uint32_t Length() override { return mElements.Length(); }
 
@@ -78,8 +78,8 @@ class nsBaseContentList : public nsINodeList {
 
   virtual int32_t IndexOf(nsIContent* aContent, bool aDoFlush);
 
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> aGivenProto) override = 0;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override = 0;
 
   void SetCapacity(uint32_t aCapacity) { mElements.SetCapacity(aCapacity); }
 
@@ -111,9 +111,9 @@ class nsSimpleContentList : public nsBaseContentList {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSimpleContentList,
                                            nsBaseContentList)
 
-  virtual nsINode* GetParentObject() override { return mRoot; }
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  nsINode* GetParentObject() override { return mRoot; }
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   virtual ~nsSimpleContentList() = default;
@@ -135,25 +135,24 @@ class nsEmptyContentList final : public nsBaseContentList,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsEmptyContentList,
                                            nsBaseContentList)
 
-  virtual nsINode* GetParentObject() override { return mRoot; }
+  nsINode* GetParentObject() override { return mRoot; }
 
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual JSObject* GetWrapperPreserveColorInternal() override {
+  JSObject* GetWrapperPreserveColorInternal() override {
     return nsWrapperCache::GetWrapperPreserveColor();
   }
-  virtual void PreserveWrapperInternal(
-      nsISupports* aScriptObjectHolder) override {
+  void PreserveWrapperInternal(nsISupports* aScriptObjectHolder) override {
     nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
   }
 
   uint32_t Length() final { return 0; }
-  virtual nsIContent* Item(uint32_t aIndex) override;
-  virtual mozilla::dom::Element* GetElementAt(uint32_t index) override;
-  virtual mozilla::dom::Element* GetFirstNamedElement(const nsAString& aName,
-                                                      bool& aFound) override;
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
+  nsIContent* Item(uint32_t aIndex) override;
+  mozilla::dom::Element* GetElementAt(uint32_t index) override;
+  mozilla::dom::Element* GetFirstNamedElement(const nsAString& aName,
+                                              bool& aFound) override;
+  void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
  protected:
   virtual ~nsEmptyContentList() = default;
@@ -268,36 +267,35 @@ class nsContentList : public nsBaseContentList,
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
   using nsWrapperCache::PreserveWrapper;
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   virtual ~nsContentList();
 
-  virtual JSObject* GetWrapperPreserveColorInternal() override {
+  JSObject* GetWrapperPreserveColorInternal() override {
     return nsWrapperCache::GetWrapperPreserveColor();
   }
-  virtual void PreserveWrapperInternal(
-      nsISupports* aScriptObjectHolder) override {
+  void PreserveWrapperInternal(nsISupports* aScriptObjectHolder) override {
     nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
   }
 
  public:
   // nsBaseContentList overrides
-  virtual int32_t IndexOf(nsIContent* aContent, bool aDoFlush) override;
-  virtual int32_t IndexOf(nsIContent* aContent) override;
-  virtual nsINode* GetParentObject() override { return mRootNode; }
+  int32_t IndexOf(nsIContent* aContent, bool aDoFlush) override;
+  int32_t IndexOf(nsIContent* aContent) override;
+  nsINode* GetParentObject() override { return mRootNode; }
 
   uint32_t Length() final { return Length(true); }
   nsIContent* Item(uint32_t aIndex) final;
-  virtual mozilla::dom::Element* GetElementAt(uint32_t index) override;
-  virtual mozilla::dom::Element* GetFirstNamedElement(const nsAString& aName,
-                                                      bool& aFound) override {
+  mozilla::dom::Element* GetElementAt(uint32_t index) override;
+  mozilla::dom::Element* GetFirstNamedElement(const nsAString& aName,
+                                              bool& aFound) override {
     mozilla::dom::Element* item = NamedItem(aName, true);
     aFound = !!item;
     return item;
   }
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
+  void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
   // nsContentList public methods
   uint32_t Length(bool aDoFlush);
@@ -348,7 +346,7 @@ class nsContentList : public nsBaseContentList,
     Reset();
   }
 
-  virtual void LastRelease() override;
+  void LastRelease() override;
 
  protected:
   /**
@@ -408,7 +406,7 @@ class nsContentList : public nsBaseContentList,
    * Needed because if subclasses want to have cache behavior they can't just
    * override RemoveFromHashtable(), since we call that in our destructor.
    */
-  virtual void RemoveFromCaches() override { RemoveFromHashtable(); }
+  void RemoveFromCaches() override { RemoveFromHashtable(); }
 
   nsINode* mRootNode;  // Weak ref
   int32_t mMatchNameSpaceId;
@@ -522,7 +520,7 @@ class nsCacheableFuncStringContentList : public nsContentList {
     MOZ_ASSERT(mData);
   }
 
-  virtual void RemoveFromCaches() override { RemoveFromFuncStringHashtable(); }
+  void RemoveFromCaches() override { RemoveFromFuncStringHashtable(); }
   void RemoveFromFuncStringHashtable();
 
   nsString mString;
@@ -541,8 +539,8 @@ class nsCachableElementsByNameNodeList
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
 #ifdef DEBUG
   static const ContentListType sType;
@@ -561,8 +559,8 @@ class nsCacheableFuncStringHTMLCollection
                                          aDataAllocator, aString,
                                          eHTMLCollection) {}
 
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
 #ifdef DEBUG
   static const ContentListType sType;
@@ -580,8 +578,8 @@ class nsLabelsNodeList final : public nsContentList {
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   /**
    * Reset root, mutation observer, and clear content list
