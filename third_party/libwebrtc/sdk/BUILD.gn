@@ -1398,6 +1398,7 @@ if (is_ios || is_mac) {
           "objc/api/peerconnection/RTCRtpTransceiver.h",
           "objc/api/peerconnection/RTCSSLAdapter.h",
           "objc/api/peerconnection/RTCSessionDescription.h",
+          "objc/api/peerconnection/RTCStatisticsReport.h",
           "objc/api/peerconnection/RTCTracing.h",
           "objc/api/peerconnection/RTCVideoSource.h",
           "objc/api/peerconnection/RTCVideoTrack.h",
