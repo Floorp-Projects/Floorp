@@ -607,7 +607,7 @@ dependencies = [
  "storage_variant",
  "tempfile",
  "thin-vec",
- "time",
+ "time 0.1.43",
  "wr_malloc_size_of",
  "xpcom",
 ]
@@ -675,7 +675,7 @@ dependencies = [
  "num-integer",
  "num-traits",
  "serde",
- "time",
+ "time 0.1.43",
  "winapi",
 ]
 
@@ -745,11 +745,12 @@ dependencies = [
 
 [[package]]
 name = "cookie"
-version = "0.12.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "888604f00b3db336d2af898ec3c1d5d0ddf5e6d462220f2ededc33a87ac4bbd5"
+checksum = "94d4706de1b0fa5b132270cddffa8585166037822e260a944fe161acd137ca05"
 dependencies = [
- "time",
+ "time 0.3.9",
+ "version_check",
 ]
 
 [[package]]
@@ -2125,7 +2126,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "time",
+ "time 0.1.43",
  "uuid",
  "whatsys",
 ]
@@ -2145,7 +2146,7 @@ dependencies = [
  "rkv",
  "serde",
  "serde_json",
- "time",
+ "time 0.1.43",
  "uuid",
  "zeitstempel",
 ]
@@ -2467,7 +2468,7 @@ dependencies = [
  "log",
  "pin-project",
  "socket2",
- "time",
+ "time 0.1.43",
  "tokio 0.2.25",
  "tower-service",
  "want",
@@ -3425,7 +3426,7 @@ version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aad9dfe950c057b1bfe9c1f2aa51583a8468ef2a5baba2ebbe06d775efeb7729"
 dependencies = [
- "time",
+ "time 0.1.43",
  "winapi",
 ]
 
@@ -3682,6 +3683,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19e64526ebdee182341572e50e9ad03965aa510cd94427a4549448f285e957a1"
 dependencies = [
  "hermit-abi",
+ "libc",
+]
+
+[[package]]
+name = "num_threads"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2819ce041d2ee131036f4fc9d6ae7ae125a3a40e97ba64d04fe799ad9dabbb44"
+dependencies = [
  "libc",
 ]
 
@@ -4871,7 +4881,7 @@ dependencies = [
  "static_prefs",
  "style_derive",
  "style_traits",
- "time",
+ "time 0.1.43",
  "to_shmem",
  "to_shmem_derive",
  "toml",
@@ -5073,6 +5083,24 @@ dependencies = [
  "libc",
  "winapi",
 ]
+
+[[package]]
+name = "time"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2702e08a7a860f005826c6815dcac101b19b5eb330c27fe4a5928fec1d20ddd"
+dependencies = [
+ "itoa 1.0.2",
+ "libc",
+ "num_threads",
+ "time-macros",
+]
+
+[[package]]
+name = "time-macros"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42657b1a6f4d817cda8e7a0ace261fe0cc946cf3a80314390b22cc61ae080792"
 
 [[package]]
 name = "tinystr"
@@ -5675,7 +5703,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "time",
+ "time 0.3.9",
  "tokio 0.2.25",
  "unicode-segmentation",
  "url",
@@ -5758,7 +5786,7 @@ dependencies = [
  "smallvec",
  "svg_fmt",
  "swgl",
- "time",
+ "time 0.1.43",
  "topological-sort",
  "tracy-rs",
  "webrender_api",
@@ -5781,7 +5809,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_derive",
- "time",
+ "time 0.1.43",
  "wr_malloc_size_of",
 ]
 
@@ -6090,5 +6118,5 @@ dependencies = [
  "flate2",
  "msdos_time",
  "podio",
- "time",
+ "time 0.1.43",
 ]
