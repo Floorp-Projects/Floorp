@@ -6,6 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 import("//build/config/arm.gni")
+import("//build/config/dcheck_always_on.gni")
 import("//build/config/features.gni")
 import("//build/config/mips.gni")
 import("//build/config/sanitizers/sanitizers.gni")
@@ -46,6 +47,11 @@ declare_args() {
 }
 
 declare_args() {
+  # Separate control for dchecks in V8. Defaults to Chromium's behavior if
+  # built with Chromium.
+  # When set to true, it will enable RTC_DCHECK() also in Release builds.
+  rtc_dcheck_always_on = build_with_chromium && dcheck_always_on
+
   # Setting this to true will make RTC_EXPORT (see rtc_base/system/rtc_export.h)
   # expand to code that will manage symbols visibility.
   rtc_enable_symbol_export = false

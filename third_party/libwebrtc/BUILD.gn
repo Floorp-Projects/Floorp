@@ -255,6 +255,10 @@ config("common_config") {
   cflags_objc = []
   defines = []
 
+  if (rtc_dcheck_always_on) {
+    defines += [ "RTC_DCHECK_ALWAYS_ON" ]
+  }
+
   if (rtc_enable_protobuf) {
     defines += [ "WEBRTC_ENABLE_PROTOBUF=1" ]
   } else {
