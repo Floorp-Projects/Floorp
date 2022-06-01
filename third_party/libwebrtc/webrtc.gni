@@ -330,7 +330,6 @@ webrtc_root = get_path_info(".", "abspath")
 # native code is built as part of Chromium.
 rtc_common_configs = [
   webrtc_root + ":common_config",
-  "//build/config/compiler:no_size_t_to_int_warning",
 ]
 
 if (is_mac || is_ios) {
