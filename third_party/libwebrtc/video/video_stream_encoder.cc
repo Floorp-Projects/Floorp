@@ -1827,6 +1827,9 @@ EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
     const CodecSpecificInfo* codec_specific_info) {
   TRACE_EVENT_INSTANT1("webrtc", "VCMEncodedFrameCallback::Encoded",
                        "timestamp", encoded_image.Timestamp());
+
+  // TODO(bugs.webrtc.org/10520): Signal the simulcast id explicitly.
+
   const size_t spatial_idx = encoded_image.SpatialIndex().value_or(0);
   EncodedImage image_copy(encoded_image);
 
@@ -1895,18 +1898,6 @@ EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
   // on. In the case of hardware encoders, there might be several encoders
   // running in parallel on different threads.
   encoder_stats_observer_->OnSendEncodedImage(image_copy, codec_specific_info);
-
-  // The simulcast id is signaled in the SpatialIndex. This makes it impossible
-  // to do simulcast for codecs that actually support spatial layers since we
-  // can't distinguish between an actual spatial layer and a simulcast stream.
-  // TODO(bugs.webrtc.org/10520): Signal the simulcast id explicitly.
-  int simulcast_id = 0;
-  if (codec_specific_info &&
-      (codec_specific_info->codecType == kVideoCodecVP8 ||
-       codec_specific_info->codecType == kVideoCodecH264 ||
-       codec_specific_info->codecType == kVideoCodecGeneric)) {
-    simulcast_id = encoded_image.SpatialIndex().value_or(0);
-  }
 
   EncodedImageCallback::Result result =
       sink_->OnEncodedImage(image_copy, codec_specific_info);

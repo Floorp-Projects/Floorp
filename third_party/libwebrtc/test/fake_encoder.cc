@@ -95,7 +95,6 @@ int32_t FakeEncoder::Encode(const VideoFrame& input_image,
   SpatialLayer simulcast_streams[kMaxSimulcastStreams];
   EncodedImageCallback* callback;
   RateControlParameters rates;
-  VideoCodecMode mode;
   bool keyframe;
   uint32_t counter;
   absl::optional<int> qp;
@@ -108,7 +107,6 @@ int32_t FakeEncoder::Encode(const VideoFrame& input_image,
     }
     callback = callback_;
     rates = current_rate_settings_;
-    mode = config_.mode;
     if (rates.framerate_fps <= 0.0) {
       rates.framerate_fps = max_framerate;
     }

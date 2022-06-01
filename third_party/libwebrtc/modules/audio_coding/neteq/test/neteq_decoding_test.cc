@@ -222,7 +222,6 @@ void NetEqDecodingTest::WrapTest(uint16_t start_seq_no,
   const int kSamples = kBlockSize16kHz * kBlocksPerFrame;
   const size_t kPayloadBytes = kSamples * sizeof(int16_t);
   double next_input_time_ms = 0.0;
-  uint32_t receive_timestamp = 0;
 
   // Insert speech for 2 seconds.
   const int kSpeechDurationMs = 2000;
@@ -260,7 +259,6 @@ void NetEqDecodingTest::WrapTest(uint16_t start_seq_no,
 
       ++seq_no;
       timestamp += kSamples;
-      receive_timestamp += kSamples;
       next_input_time_ms += static_cast<double>(kFrameSizeMs);
 
       seq_no_wrapped |= seq_no < last_seq_no;
