@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1216483
+-->
+<meta charset="utf-8">
+<title>Test for Bug 1216483</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1216483">Mozilla Bug 1216483</a>
+<style>
+  .container {
+    border: 1px solid black;
+    margin-bottom: 1em;
+  }
+
+  .with-before {
+    counter-reset: cnt;
+  }
+
+  .with-before .container {
+    counter-increment: cnt;
+  }
+
+  td {
+    width: 100px;
+  }
+
+  .with-before td {
+    counter-increment: cnt;
+  }
+
+  .with-before .container::before {
+    content: counter(cnt) ")";
+    margin: 0 8px;
+    color: grey;
+  }
+
+  .with-before td::before {
+    content: counter(cnt) ")";
+    margin: 0 8px;
+    color: grey;
+  }
+
+  .block .container { display: block; }
+  .flex .container { display: flex; }
+  .grid .container { display: grid; }
+</style>
+
+<h1>Only editable content</h1>
+<h2>display: block</h2>
+<div class="editor block" contenteditable>
+  <div class="container">
+    <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  </div>
+  <div class="container">
+    <div class="second">a<br>b<br>c</div>
+  </div>
+</div>
+
+<h2>display: flex</h2>
+<div class="editor flex" contenteditable>
+  <div class="container">
+    <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  </div>
+  <div class="container">
+    <div class="second">a<br>b<br>c</div>
+  </div>
+</div>
+
+<h2>display: grid</h2>
+<div class="editor grid" contenteditable>
+  <div class="container">
+    <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  </div>
+  <div class="container">
+    <div class="second">a<br>b<br>c</div>
+  </div>
+</div>
+
+<h2>Table</h2>
+<div class="editor table" contenteditable>
+  <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  <table border="1">
+    <tr><td class="second">a<br>b<br>c</td><td>d</td></tr>
+    <tr><td>k<br>l<br>m</td><td>n</td></tr>
+  </table>
+</div>
+
+<h2>Table with element inside</h2>
+<div class="editor table" contenteditable>
+  <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  <table border="1">
+    <tr><td><span class="second">a<br>b<br>c</span></td><td><span>d</span></td></tr>
+    <tr><td><span>k<br>l<br>m</span></td><td><span>n</span></td></tr>
+  </table>
+</div>
+
+<h2>Table in a flex container</h2>
+<div class="editor flex table" contenteditable>
+  <div class="container">
+    <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  </div>
+  <div class="container">
+    <table border="1">
+      <tr><td><span class="second">a<br>b<br>c</span></td><td><span>d</span></td></tr>
+      <tr><td><span>k<br>l<br>m</span></td><td><span>n</span></td></tr>
+    </table>
+  </div>
+</div>
+
+<h1>Some non-editable content involved and skipped</h1>
+
+<h2>display: block</h2>
+<div class="editor block with-before" contenteditable>
+  <div class="container">
+    <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  </div>
+  <div class="container">
+    <div class="second">a<br>b<br>c</div>
+  </div>
+</div>
+
+<h2>display: flex</h2>
+<div class="editor flex with-before" contenteditable>
+  <div class="container">
+    <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  </div>
+  <div class="container">
+    <div class="second">a<br>b<br>c</div>
+  </div>
+</div>
+
+<h2>Flex with contenteditable="false"</h2>
+<div class="editor flex" contenteditable>
+  <div class="container">
+    <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  </div>
+  <div class="container">
+    <div contenteditable="false">X</div>
+    <div class="second">a<br>b<br>c</div>
+  </div>
+</div>
+
+<h2>display: grid</h2>
+<div class="editor grid with-before" contenteditable>
+  <div class="container">
+    <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  </div>
+  <div class="container">
+    <div class="second">a<br>b<br>c</div>
+  </div>
+</div>
+
+<h2>Table</h2>
+<div class="editor table" contenteditable>
+  <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  <table border="1">
+    <tr><td class="second">a<br>b<br>c</td><td>d</td></tr>
+    <tr><td>k<br>l<br>m</td><td>n</td></tr>
+  </table>
+</div>
+
+<h2>Table with element inside</h2>
+<div class="editor table with-before" contenteditable>
+  <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  <table border="1">
+    <tr><td><span class="second">a<br>b<br>c</span></td><td><span>d</span></td></tr>
+    <tr><td><span>k<br>l<br>m</span></td><td><span>n</span></td></tr>
+  </table>
+</div>
+
+<h2>Table in a flex container</h2>
+<div class="editor flex table with-before" contenteditable>
+  <div class="container">
+    <div class="first">PLACE CURSOR HERE, THEN PRESS DOWNARROW.</div>
+  </div>
+  <div class="container">
+    <table border="1">
+      <tr><td><span class="second">a<br>b<br>c</span></td><td><span>d</span></td></tr>
+      <tr><td><span>k<br>l<br>m</span></td><td><span>n</span></td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+  const editors = document.querySelectorAll('.editor')
+  editors.forEach(function (editor) {
+    add_task(function() {
+      editor.focus();
+      const first = editor.querySelector('.first');
+      const second = editor.querySelector('.second')
+
+      document.getSelection().collapse(first.childNodes[0], 5);
+
+      sendKey('DOWN');
+
+      const sel = document.getSelection();
+      is(sel.anchorNode, second, editor.className + ': Caret not at the right node in second block')
+      is(sel.anchorOffset, 1, editor.className + ': Caret not at the expected offset')
+    });
+  });
+</script>
