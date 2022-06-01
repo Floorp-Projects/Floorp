@@ -220,7 +220,9 @@ std::unique_ptr<SessionDescriptionInterface> JsepSessionDescription::Clone()
   auto new_description = std::make_unique<JsepSessionDescription>(type_);
   new_description->session_id_ = session_id_;
   new_description->session_version_ = session_version_;
-  new_description->description_ = description_->Clone();
+  if (description_) {
+    new_description->description_ = description_->Clone();
+  }
   for (const auto& collection : candidate_collection_) {
     new_description->candidate_collection_.push_back(collection.Clone());
   }
