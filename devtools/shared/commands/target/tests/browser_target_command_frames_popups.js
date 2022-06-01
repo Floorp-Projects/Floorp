@@ -132,11 +132,7 @@ add_task(async function() {
 
   info("Select the original tab and reload it");
   gBrowser.selectedTab = tab;
-  const onBrowserLoaded = BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser
-  );
-  gBrowser.reloadTab(tab);
-  await onBrowserLoaded;
+  await BrowserTestUtils.reloadTab(tab);
 
   await waitFor(() => targets.length === 5);
   is(targets[4], targetCommand.targetFront, "We get a new top level target");

@@ -59,9 +59,7 @@ add_task(async function() {
   );
 
   info("Check the resources after reloading");
-  const onReloaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.reloadTab(tab);
-  await onReloaded;
+  await BrowserTestUtils.reloadTab(tab);
   assertResources(
     resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE),
     []

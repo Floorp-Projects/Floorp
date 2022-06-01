@@ -29,9 +29,7 @@ add_task(async function() {
   });
 
   info("Reload the current tab to create new message handlers and modules");
-  const finished = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  gBrowser.reloadTab(tab);
-  await finished;
+  await BrowserTestUtils.reloadTab(tab);
 
   info(
     "Check if the command module was created by the MessageHandler constructor"

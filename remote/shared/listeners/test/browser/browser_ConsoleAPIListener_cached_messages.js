@@ -63,9 +63,7 @@ add_task(async function test_cached_messages() {
   });
 
   info("Reload the current tab and check only new messages are emitted");
-  const finished = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.reloadTab(gBrowser.selectedTab);
-  await finished;
+  await BrowserTestUtils.reloadTab(gBrowser.selectedTab);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     const innerWindowId = content.windowGlobalChild.innerWindowId;

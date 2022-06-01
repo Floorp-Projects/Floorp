@@ -49,12 +49,7 @@ add_task(async function() {
   );
 
   info("Reload the page");
-  let onPageLoaded = BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    true
-  );
-  gBrowser.reloadTab(tab);
-  await onPageLoaded;
+  await BrowserTestUtils.reloadTab(tab, /* includeSubFrames */ true);
 
   is(
     await getTopLevelDocumentUserAgentAtStartup(),
@@ -92,7 +87,10 @@ add_task(async function() {
     "Check that navigating to a page that forces the creation of a new browsing context keep the simulation enabled"
   );
 
-  onPageLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, true);
+  const onPageLoaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    /* includeSubFrames */ true
+  );
   BrowserTestUtils.loadURI(
     gBrowser.selectedBrowser,
     URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
@@ -180,9 +178,7 @@ add_task(async function() {
     "The custom user agent is still set on the page after destroying the first commands instance. Bug 1705326 will fix that and make it equal to `initialUserAgent`"
   );
 
-  onPageLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, true);
-  gBrowser.reloadTab(tab);
-  await onPageLoaded;
+  await BrowserTestUtils.reloadTab(tab, /* includeSubFrames */ true);
   is(
     await getTopLevelUserAgent(),
     initialUserAgent,
