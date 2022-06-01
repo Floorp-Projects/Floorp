@@ -83,6 +83,10 @@ TOLERATED_DUPES = {
     "memoffset": 2,
     "mio": 2,
     "pin-project-lite": 2,
+    # Transition from time 0.1 to 0.3 underway, but chrono is stuck on 0.1
+    # and hasn't been updated in 1.5 years (an hypothetical update is
+    # expected to remove the dependency on time altogether).
+    "time": 2,
     "tokio": 3,
 }
 
