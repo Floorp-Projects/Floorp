@@ -63,7 +63,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9ed09b18365ed295d722d0b5ed59c01b79a826ff2d2a8f73d5ecca8e6fb2f66"
 dependencies = [
  "android_log-sys",
- "env_logger",
+ "env_logger 0.8.999",
  "lazy_static",
  "log",
 ]
@@ -340,7 +340,7 @@ dependencies = [
  "bindgen 0.59.2",
  "cranelift-codegen",
  "cranelift-wasm",
- "env_logger",
+ "env_logger 0.8.999",
  "log",
  "mozbuild",
  "smallvec",
@@ -1452,9 +1452,16 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.8.4"
+version = "0.8.999"
+dependencies = [
+ "env_logger 0.9.0",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
+checksum = "0b2cf0344971ee6c64c31be0d530793fba457d322dfec2810c453d0ef228f9c3"
 dependencies = [
  "atty",
  "humantime",
@@ -1912,7 +1919,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "app_services_logger",
- "env_logger",
+ "env_logger 0.8.999",
  "lazy_static",
  "log",
 ]
@@ -2162,7 +2169,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ed48dd0ba3a92d6bdf9efe7950664658daf346e72f0970868893643de25be26"
 dependencies = [
  "android_logger",
- "env_logger",
+ "env_logger 0.8.999",
  "ffi-support",
  "glean-core",
  "libc",
@@ -3402,7 +3409,7 @@ source = "git+https://github.com/mozilla/mp4parse-rust?rev=3bfc47d9a571d08426760
 dependencies = [
  "bitreader",
  "byteorder",
- "env_logger",
+ "env_logger 0.8.999",
  "fallible_collections",
  "log",
  "num-traits",
@@ -3467,7 +3474,7 @@ version = "0.5.7"
 source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
  "chrono",
- "env_logger",
+ "env_logger 0.8.999",
  "lazy_static",
  "log",
  "qlog",
@@ -3772,7 +3779,7 @@ version = "0.1.4"
 dependencies = [
  "byteorder",
  "core-foundation",
- "env_logger",
+ "env_logger 0.8.999",
  "lazy_static",
  "libloading 0.5.2",
  "log",
@@ -4749,7 +4756,7 @@ name = "smoosh"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "env_logger",
+ "env_logger 0.8.999",
  "jsparagus",
  "log",
 ]
