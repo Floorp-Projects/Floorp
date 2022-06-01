@@ -1902,21 +1902,17 @@ LibvpxVp9Encoder::ParsePerformanceFlagsFromTrials(
 LibvpxVp9Encoder::PerformanceFlags
 LibvpxVp9Encoder::GetDefaultPerformanceFlags() {
   PerformanceFlags flags;
-  flags.use_per_layer_speed = true;
+  flags.use_per_layer_speed = false;
 #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || defined(ANDROID)
   // Speed 8 on all layers for all resolutions.
   flags.settings_by_resolution[0] = {8, 8, 0};
 #else
-  // For smaller resolutions, use lower speed setting for the temporal base
-  // layer (get some coding gain at the cost of increased encoding complexity).
-  // Set encoder Speed 5 for TL0, encoder Speed 8 for upper temporal layers, and
-  // disable deblocking for upper-most temporal layers.
-  flags.settings_by_resolution[0] = {5, 8, 1};
+  // For smaller resolutions, use lower speed setting (get some coding gain at
+  // the cost of increased encoding complexity).
+  flags.settings_by_resolution[0] = {5, 5, 0};
 
   // Use speed 7 for QCIF and above.
-  // Set encoder Speed 7 for TL0, encoder Speed 8 for upper temporal layers, and
-  // enable deblocking for all temporal layers.
-  flags.settings_by_resolution[352 * 288] = {7, 8, 0};
+  flags.settings_by_resolution[352 * 288] = {7, 7, 0};
 #endif
   return flags;
 }
