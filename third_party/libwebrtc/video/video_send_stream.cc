@@ -186,10 +186,16 @@ void VideoSendStream::UpdateActiveSimulcastLayers(
     const std::vector<bool> active_layers) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
 
+  // Keep our `running_` flag expected state in sync with active layers since
+  // the `send_stream_` will be implicitly stopped/started depending on the
+  // state of the layers.
+  bool running = false;
+
   rtc::StringBuilder active_layers_string;
   active_layers_string << "{";
   for (size_t i = 0; i < active_layers.size(); ++i) {
     if (active_layers[i]) {
+      running = true;
       active_layers_string << "1";
     } else {
       active_layers_string << "0";
@@ -202,10 +208,17 @@ void VideoSendStream::UpdateActiveSimulcastLayers(
   RTC_LOG(LS_INFO) << "UpdateActiveSimulcastLayers: "
                    << active_layers_string.str();
 
-  rtp_transport_queue_->PostTask(
-      ToQueuedTask(transport_queue_safety_, [this, active_layers] {
+  rtp_transport_queue_->PostTask(ToQueuedTask(
+      transport_queue_safety_, [this, active_layers, was_running = running_] {
         send_stream_.UpdateActiveSimulcastLayers(active_layers);
+        const bool running = rtp_video_sender_->IsActive();
+        if (was_running != running) {
+          running ? transport_queue_safety_->SetAlive()
+                  : transport_queue_safety_->SetNotAlive();
+        }
       }));
+
+  running_ = running;
 }
 
 void VideoSendStream::Start() {
@@ -239,6 +252,11 @@ void VideoSendStream::Stop() {
     transport_queue_safety_->SetNotAlive();
     send_stream_.Stop();
   }));
+}
+
+bool VideoSendStream::started() {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  return running_;
 }
 
 void VideoSendStream::AddAdaptationResource(

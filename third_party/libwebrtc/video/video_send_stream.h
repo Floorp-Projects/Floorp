@@ -77,6 +77,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
       const std::vector<bool> active_layers) override;
   void Start() override;
   void Stop() override;
+  bool started() override;
 
   void AddAdaptationResource(rtc::scoped_refptr<Resource> resource) override;
   std::vector<rtc::scoped_refptr<Resource>> GetAdaptationResources() override;
@@ -93,8 +94,6 @@ class VideoSendStream : public webrtc::VideoSendStream {
  private:
   friend class test::VideoSendStreamPeer;
 
-  class ConstructionTask;
-
   absl::optional<float> GetPacingFactorOverride() const;
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker thread_checker_;
@@ -109,7 +108,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
   const VideoEncoderConfig::ContentType content_type_;
   std::unique_ptr<VideoStreamEncoderInterface> video_stream_encoder_;
   EncoderRtcpFeedback encoder_feedback_;
-  RtpVideoSenderInterface* const rtp_video_sender_ = nullptr;
+  RtpVideoSenderInterface* const rtp_video_sender_;
   VideoSendStreamImpl send_stream_;
   bool running_ RTC_GUARDED_BY(thread_checker_) = false;
 };
