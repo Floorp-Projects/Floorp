@@ -131,6 +131,7 @@
 #include "mozpkix/pkix.h"
 #include "mozpkix/pkixcheck.h"
 #include "mozpkix/pkixnss.h"
+#include "mozpkix/pkixutil.h"
 #include "secerr.h"
 #include "secport.h"
 #include "ssl.h"
