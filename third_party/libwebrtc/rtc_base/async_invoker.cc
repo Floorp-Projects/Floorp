@@ -42,7 +42,7 @@ void DEPRECATED_AsyncInvoker::OnMessage(Message* msg) {
   ScopedMessageData<AsyncClosure>* data =
       static_cast<ScopedMessageData<AsyncClosure>*>(msg->pdata);
   // Execute the closure and trigger the return message if needed.
-  data->inner_data().Execute();
+  data->data().Execute();
   delete data;
 }
 
