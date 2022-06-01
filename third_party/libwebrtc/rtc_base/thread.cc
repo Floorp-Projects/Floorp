@@ -1032,7 +1032,7 @@ void Thread::ClearCurrentTaskQueue() {
 void Thread::QueuedTaskHandler::OnMessage(Message* msg) {
   RTC_DCHECK(msg);
   auto* data = static_cast<ScopedMessageData<webrtc::QueuedTask>*>(msg->pdata);
-  std::unique_ptr<webrtc::QueuedTask> task = std::move(data->data());
+  std::unique_ptr<webrtc::QueuedTask> task(data->Release());
   // Thread expects handler to own Message::pdata when OnMessage is called
   // Since MessageData is no longer needed, delete it.
   delete data;
