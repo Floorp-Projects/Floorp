@@ -169,8 +169,8 @@ class MOZ_RAII AutoRunParallelTask : public GCParallelTask {
 
  public:
   AutoRunParallelTask(GCRuntime* gc, TaskFunc func, gcstats::PhaseKind phase,
-                      AutoLockHelperThreadState& lock)
-      : GCParallelTask(gc, phase), func_(func), lock_(lock) {
+                      GCUse use, AutoLockHelperThreadState& lock)
+      : GCParallelTask(gc, phase, use), func_(func), lock_(lock) {
     gc->startTask(*this, lock_);
   }
 
@@ -240,66 +240,60 @@ class MOZ_RAII AutoPoisonFreedJitCode {
   ~AutoPoisonFreedJitCode() { gcx->poisonJitCode(); }
 };
 
-// Set/restore the performing GC flag for the current thread.
-class MOZ_RAII AutoSetThreadIsPerformingGC {
-  JS::GCContext* gcx;
-  bool prev;
-
- public:
-  AutoSetThreadIsPerformingGC()
-      : gcx(TlsGCContext.get()), prev(gcx->isCollecting_) {
-    gcx->isCollecting_ = true;
-  }
-
-  ~AutoSetThreadIsPerformingGC() { gcx->isCollecting_ = prev; }
-};
+// Set/restore the GCContext GC use flag for the current thread.
 
 class MOZ_RAII AutoSetThreadGCUse {
- protected:
-#ifndef DEBUG
-  explicit AutoSetThreadGCUse(GCUse use, JS::Zone* sweepZone = nullptr) {}
-#else
-  explicit AutoSetThreadGCUse(GCUse use, JS::Zone* sweepZone = nullptr)
-      : gcx(TlsGCContext.get()),
-        prevUse(gcx->gcUse_),
-        prevZone(gcx->gcSweepZone_) {
-    MOZ_ASSERT(gcx->isCollecting());
-    MOZ_ASSERT_IF(sweepZone, use == GCUse::Sweeping);
+ public:
+  AutoSetThreadGCUse(JS::GCContext* gcx, GCUse use)
+      : gcx(gcx), prevUse(gcx->gcUse_) {
     gcx->gcUse_ = use;
-    gcx->gcSweepZone_ = sweepZone;
   }
+  explicit AutoSetThreadGCUse(GCUse use)
+      : AutoSetThreadGCUse(TlsGCContext.get(), use) {}
 
-  ~AutoSetThreadGCUse() {
-    gcx->gcUse_ = prevUse;
+  ~AutoSetThreadGCUse() { gcx->gcUse_ = prevUse; }
+
+ protected:
+  JS::GCContext* gcx;
+  GCUse prevUse;
+};
+
+template <GCUse Use>
+class AutoSetThreadGCUseT : public AutoSetThreadGCUse {
+ public:
+  explicit AutoSetThreadGCUseT(JS::GCContext* gcx)
+      : AutoSetThreadGCUse(gcx, Use) {}
+  AutoSetThreadGCUseT() : AutoSetThreadGCUseT(TlsGCContext.get()) {}
+};
+
+using AutoSetThreadIsPerformingGC = AutoSetThreadGCUseT<GCUse::Unspecified>;
+using AutoSetThreadIsMarking = AutoSetThreadGCUseT<GCUse::Marking>;
+using AutoSetThreadIsFinalizing = AutoSetThreadGCUseT<GCUse::Finalizing>;
+
+class AutoSetThreadIsSweeping : public AutoSetThreadGCUseT<GCUse::Sweeping> {
+ public:
+  explicit AutoSetThreadIsSweeping(JS::GCContext* gcx,
+                                   JS::Zone* sweepZone = nullptr)
+      : AutoSetThreadGCUseT(gcx) {
+#ifdef DEBUG
+    prevZone = gcx->gcSweepZone_;
+    gcx->gcSweepZone_ = sweepZone;
+#endif
+  }
+  explicit AutoSetThreadIsSweeping(JS::Zone* sweepZone = nullptr)
+      : AutoSetThreadIsSweeping(TlsGCContext.get(), sweepZone) {}
+
+  ~AutoSetThreadIsSweeping() {
+#ifdef DEBUG
+    MOZ_ASSERT_IF(prevUse == GCUse::None, !prevZone);
     gcx->gcSweepZone_ = prevZone;
-    MOZ_ASSERT_IF(gcx->gcUse() == GCUse::None, !gcx->gcSweepZone());
+#endif
   }
 
  private:
-  JS::GCContext* gcx;
-  GCUse prevUse;
+#ifdef DEBUG
   JS::Zone* prevZone;
 #endif
-};
-
-// In debug builds, update the context state to indicate that the current thread
-// is being used for GC marking.
-struct MOZ_RAII AutoSetThreadIsMarking : public AutoSetThreadGCUse {
-  explicit AutoSetThreadIsMarking() : AutoSetThreadGCUse(GCUse::Marking) {}
-};
-
-// In debug builds, update the context state to indicate that the current thread
-// is being used for GC sweeping.
-struct MOZ_RAII AutoSetThreadIsSweeping : public AutoSetThreadGCUse {
-  explicit AutoSetThreadIsSweeping(JS::Zone* zone = nullptr)
-      : AutoSetThreadGCUse(GCUse::Sweeping, zone) {}
-};
-
-// In debug builds, update the context state to indicate that the current thread
-// is being used for GC finalization.
-struct MOZ_RAII AutoSetThreadIsFinalizing : public AutoSetThreadGCUse {
-  explicit AutoSetThreadIsFinalizing()
-      : AutoSetThreadGCUse(GCUse::Finalizing) {}
 };
 
 #ifdef JSGC_HASH_TABLE_CHECKS

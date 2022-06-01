@@ -679,7 +679,8 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds) {
 
   AutoRunParallelWork bgTasks(this, UpdateArenaListSegmentPointers,
                               gcstats::PhaseKind::COMPACT_UPDATE_CELLS,
-                              bgArenas, SliceBudget::unlimited(), lock);
+                              GCUse::Unspecified, bgArenas,
+                              SliceBudget::unlimited(), lock);
 
   AutoUnlockHelperThreadState unlock(lock);
 

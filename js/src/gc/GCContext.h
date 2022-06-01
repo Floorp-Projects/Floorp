@@ -27,11 +27,14 @@ class AutoTouchingGrayThings;
 namespace gc {
 
 class AutoSetThreadGCUse;
-class AutoSetThreadIsPerformingGC;
+class AutoSetThreadIsSweeping;
 
 enum class GCUse {
   // This thread is not running in the garbage collector.
   None,
+
+  // This thread is currently collecting. Used when no finer detail is known.
+  Unspecified,
 
   // This thread is currently marking GC things. This thread could be the main
   // thread or a helper thread doing sweep-marking.
@@ -71,20 +74,17 @@ class GCContext {
 
   js::jit::JitPoisonRangeVector jitPoisonRanges;
 
-  bool isCollecting_ = false;
-  friend class js::gc::AutoSetThreadIsPerformingGC;
-
-#ifdef DEBUG
   // Which part of the garbage collector this context is running at the moment.
   js::gc::GCUse gcUse_ = js::gc::GCUse::None;
+  friend class js::gc::AutoSetThreadGCUse;
+  friend class js::gc::AutoSetThreadIsSweeping;
 
+#ifdef DEBUG
   // The specific zone currently being swept, if any.
   Zone* gcSweepZone_ = nullptr;
 
   // Whether this thread is currently manipulating possibly-gray GC things.
   size_t isTouchingGrayThings_ = false;
-
-  friend class js::gc::AutoSetThreadGCUse;
   friend class js::AutoTouchingGrayThings;
 #endif
 
@@ -101,7 +101,8 @@ class GCContext {
     return runtime_;
   }
 
-  bool isCollecting() const { return isCollecting_; }
+  bool isCollecting() const { return gcUse_ != js::gc::GCUse::None; }
+  bool isFinalizing() const { return gcUse_ == js::gc::GCUse::Finalizing; }
 
 #ifdef DEBUG
   bool onMainThread() const {

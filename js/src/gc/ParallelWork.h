@@ -37,10 +37,10 @@ class ParallelWorker : public GCParallelTask {
  public:
   using WorkFunc = ParallelWorkFunc<WorkItem>;
 
-  ParallelWorker(GCRuntime* gc, gcstats::PhaseKind phaseKind, WorkFunc func,
-                 WorkItemIterator& work, const SliceBudget& budget,
-                 AutoLockHelperThreadState& lock)
-      : GCParallelTask(gc, phaseKind),
+  ParallelWorker(GCRuntime* gc, gcstats::PhaseKind phaseKind, GCUse use,
+                 WorkFunc func, WorkItemIterator& work,
+                 const SliceBudget& budget, AutoLockHelperThreadState& lock)
+      : GCParallelTask(gc, phaseKind, use),
         func_(func),
         work_(work),
         budget_(budget),
@@ -99,8 +99,8 @@ class MOZ_RAII AutoRunParallelWork {
   using WorkFunc = ParallelWorkFunc<WorkItem>;
 
   AutoRunParallelWork(GCRuntime* gc, WorkFunc func,
-                      gcstats::PhaseKind phaseKind, WorkItemIterator& work,
-                      const SliceBudget& budget,
+                      gcstats::PhaseKind phaseKind, GCUse use,
+                      WorkItemIterator& work, const SliceBudget& budget,
                       AutoLockHelperThreadState& lock)
       : gc(gc), phaseKind(phaseKind), lock(lock), tasksStarted(0) {
     size_t workerCount = gc->parallelWorkerCount();
@@ -108,7 +108,7 @@ class MOZ_RAII AutoRunParallelWork {
     MOZ_ASSERT_IF(workerCount == 0, work.done());
 
     for (size_t i = 0; i < workerCount && !work.done(); i++) {
-      tasks[i].emplace(gc, phaseKind, func, work, budget, lock);
+      tasks[i].emplace(gc, phaseKind, use, func, work, budget, lock);
       gc->startTask(*tasks[i], lock);
       tasksStarted++;
     }

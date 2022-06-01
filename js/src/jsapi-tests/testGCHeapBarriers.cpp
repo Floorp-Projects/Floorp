@@ -254,7 +254,6 @@ bool TestHeapPostBarrierConstruction() {
 
     // Disable the check that GCPtrs are only destroyed by the GC. What happens
     // on destruction isn't relevant to the test.
-    gc::AutoSetThreadIsPerformingGC performingGC;
     gc::AutoSetThreadIsFinalizing threadIsFinalizing;
 
     js_delete(testStruct);
@@ -298,7 +297,6 @@ bool TestHeapPostBarrierUpdate() {
 
     // Disable the check that GCPtrs are only destroyed by the GC. What happens
     // on destruction isn't relevant to the test.
-    gc::AutoSetThreadIsPerformingGC performingGC;
     gc::AutoSetThreadIsFinalizing threadIsFinalizing;
 
     js_delete(testStruct);
@@ -782,7 +780,6 @@ bool TestGCPtrCopyConstruction(JSObject* obj) {
 
   {
     // Let us destroy GCPtrs ourselves for testing purposes.
-    gc::AutoSetThreadIsPerformingGC performingGC;
     gc::AutoSetThreadIsFinalizing threadIsFinalizing;
 
     GCPtrObject wrapper1(obj);
@@ -804,7 +801,6 @@ bool TestGCPtrAssignment(JSObject* obj1, JSObject* obj2) {
 
   {
     // Let us destroy GCPtrs ourselves for testing purposes.
-    gc::AutoSetThreadIsPerformingGC performingGC;
     gc::AutoSetThreadIsFinalizing threadIsFinalizing;
 
     GCPtrObject wrapper1(obj1);
