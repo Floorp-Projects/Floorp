@@ -1,5 +1,26 @@
 import { CONTENT_MESSAGE_TYPE } from "common/Actions.jsm";
 import { ActivityStream, PREFS_CONFIG } from "lib/ActivityStream.jsm";
+import { GlobalOverrider } from "test/unit/utils";
+
+import { DEFAULT_SITES } from "lib/DefaultSites.jsm";
+import { AboutPreferences } from "lib/AboutPreferences.jsm";
+import { DefaultPrefs } from "lib/ActivityStreamPrefs.jsm";
+import { NewTabInit } from "lib/NewTabInit.jsm";
+import { SectionsFeed } from "lib/SectionsManager.jsm";
+import { RecommendationProvider } from "lib/RecommendationProvider.jsm";
+import { PlacesFeed } from "lib/PlacesFeed.jsm";
+import { PrefsFeed } from "lib/PrefsFeed.jsm";
+import { SystemTickFeed } from "lib/SystemTickFeed.jsm";
+import { TelemetryFeed } from "lib/TelemetryFeed.jsm";
+import { FaviconFeed } from "lib/FaviconFeed.jsm";
+import { TopSitesFeed } from "lib/TopSitesFeed.jsm";
+import { TopStoriesFeed } from "lib/TopStoriesFeed.jsm";
+import { HighlightsFeed } from "lib/HighlightsFeed.jsm";
+import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.jsm";
+
+import { LinksCache } from "lib/LinksCache.jsm";
+import { PersistentCache } from "lib/PersistentCache.jsm";
+import { DownloadsManager } from "lib/DownloadsManager.jsm";
 
 describe("ActivityStream", () => {
   let sandbox;
@@ -8,9 +29,34 @@ describe("ActivityStream", () => {
     return { init: () => {}, uninit: () => {}, feeds: { get: () => {} } };
   }
 
+  let globals;
   beforeEach(() => {
+    globals = new GlobalOverrider();
+    globals.set({
+      Store: FakeStore,
+
+      DEFAULT_SITES,
+      AboutPreferences,
+      DefaultPrefs,
+      NewTabInit,
+      SectionsFeed,
+      RecommendationProvider,
+      PlacesFeed,
+      PrefsFeed,
+      SystemTickFeed,
+      TelemetryFeed,
+      FaviconFeed,
+      TopSitesFeed,
+      TopStoriesFeed,
+      HighlightsFeed,
+      DiscoveryStreamFeed,
+
+      LinksCache,
+      PersistentCache,
+      DownloadsManager,
+    });
+
     as = new ActivityStream();
-    as.store = new FakeStore();
     sandbox = sinon.createSandbox();
     sandbox.stub(as.store, "init");
     sandbox.stub(as.store, "uninit");
@@ -18,7 +64,10 @@ describe("ActivityStream", () => {
     PREFS_CONFIG.get("feeds.system.topstories").value = undefined;
   });
 
-  afterEach(() => sandbox.restore());
+  afterEach(() => {
+    sandbox.restore();
+    globals.restore();
+  });
 
   it("should exist", () => {
     assert.ok(ActivityStream);
