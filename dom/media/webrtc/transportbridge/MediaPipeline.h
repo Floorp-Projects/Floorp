@@ -318,6 +318,8 @@ class MediaPipelineTransmit
   Watchable<RefPtr<dom::MediaStreamTrack>> mDomTrack;
   // Input port connecting mDomTrack's MediaTrack to mSendTrack.
   RefPtr<MediaInputPort> mSendPort;
+  // The source track of the mSendTrack. Main thread only.
+  RefPtr<ProcessedMediaTrack> mSendPortSource;
   // True if a parameter affecting mDescription has changed. To avoid updating
   // the description unnecessarily. Main thread only.
   bool mDescriptionInvalidated = true;
