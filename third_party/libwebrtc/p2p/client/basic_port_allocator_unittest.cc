@@ -184,7 +184,7 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
   // different from the route to the STUN server (the default route).
   void AddInterfaceAsDefaultRoute(const SocketAddress& addr) {
     AddInterface(addr);
-    // When a binding comes from the any address, the |addr| will be used as the
+    // When a binding comes from the any address, the `addr` will be used as the
     // srflx address.
     vss_->SetDefaultRoute(addr.ipaddr());
   }
@@ -285,7 +285,7 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
     return session;
   }
 
-  // Return true if the addresses are the same, or the port is 0 in |pattern|
+  // Return true if the addresses are the same, or the port is 0 in `pattern`
   // (acting as a wildcard) and the IPs are the same.
   // Even with a wildcard port, the port of the address should be nonzero if
   // the IP is nonzero.
@@ -377,8 +377,8 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
     EXPECT_TRUE(session->CandidatesAllocationDone());
   }
 
-  // Check if all ports allocated have send-buffer size |expected|. If
-  // |expected| == -1, check if GetOptions returns SOCKET_ERROR.
+  // Check if all ports allocated have send-buffer size `expected`. If
+  // `expected` == -1, check if GetOptions returns SOCKET_ERROR.
   void CheckSendBufferSizesOfAllPorts(int expected) {
     std::vector<PortInterface*>::iterator it;
     for (it = ports_.begin(); it < ports_.end(); ++it) {
@@ -511,8 +511,8 @@ class BasicPortAllocatorTest : public FakeClockBase,
                                public BasicPortAllocatorTestBase {
  public:
   // This function starts the port/address gathering and check the existence of
-  // candidates as specified. When |expect_stun_candidate| is true,
-  // |stun_candidate_addr| carries the expected reflective address, which is
+  // candidates as specified. When `expect_stun_candidate` is true,
+  // `stun_candidate_addr` carries the expected reflective address, which is
   // also the related address for TURN candidate if it is expected. Otherwise,
   // it should be ignore.
   void CheckDisableAdapterEnumeration(
@@ -600,7 +600,7 @@ class BasicPortAllocatorTest : public FakeClockBase,
     EXPECT_EQ(0, CountPorts(ports_, "relay", PROTO_UDP, kClientAddr));
 
     // Now that we remove candidates when a TURN port is pruned, there will be
-    // exactly 3 candidates in both |candidates_| and |ready_candidates|.
+    // exactly 3 candidates in both `candidates_` and `ready_candidates`.
     EXPECT_EQ(3U, candidates_.size());
     const std::vector<Candidate>& ready_candidates =
         session_->ReadyCandidates();
@@ -631,9 +631,9 @@ class BasicPortAllocatorTest : public FakeClockBase,
                                kDefaultAllocationTimeout, fake_clock);
     // Only 2 ports (one STUN and one TURN) are actually being used.
     EXPECT_EQ(2U, session_->ReadyPorts().size());
-    // We have verified that each port, when it is added to |ports_|, it is
-    // found in |ready_ports|, and when it is pruned, it is not found in
-    // |ready_ports|, so we only need to verify the content in one of them.
+    // We have verified that each port, when it is added to `ports_`, it is
+    // found in `ready_ports`, and when it is pruned, it is not found in
+    // `ready_ports`, so we only need to verify the content in one of them.
     EXPECT_EQ(2U, ports_.size());
     EXPECT_EQ(1, CountPorts(ports_, "local", PROTO_UDP, kClientAddr));
     int num_udp_ports = tcp_pruned ? 1 : 0;
@@ -642,11 +642,11 @@ class BasicPortAllocatorTest : public FakeClockBase,
     EXPECT_EQ(1 - num_udp_ports,
               CountPorts(ports_, "relay", PROTO_TCP, kClientAddr));
 
-    // Now that we remove candidates when a TURN port is pruned, |candidates_|
+    // Now that we remove candidates when a TURN port is pruned, `candidates_`
     // should only contains two candidates regardless whether the TCP TURN port
     // is created before or after the UDP turn port.
     EXPECT_EQ(2U, candidates_.size());
-    // There will only be 2 candidates in |ready_candidates| because it only
+    // There will only be 2 candidates in `ready_candidates` because it only
     // includes the candidates in the ready ports.
     const std::vector<Candidate>& ready_candidates =
         session_->ReadyCandidates();
@@ -700,7 +700,7 @@ class BasicPortAllocatorTest : public FakeClockBase,
     EXPECT_EQ(1, CountPorts(ports_, "relay", PROTO_UDP, kClientIPv6Addr2));
 
     // Now that we remove candidates when TURN ports are pruned, there will be
-    // exactly 10 candidates in |candidates_|.
+    // exactly 10 candidates in `candidates_`.
     EXPECT_EQ(10U, candidates_.size());
     const std::vector<Candidate>& ready_candidates =
         session_->ReadyCandidates();

@@ -830,7 +830,7 @@ void BasicPortAllocatorSession::OnNetworksChanged() {
   std::vector<rtc::Network*> failed_networks;
   for (AllocationSequence* sequence : sequences_) {
     // Mark the sequence as "network failed" if its network is not in
-    // |networks|.
+    // `networks`.
     if (!sequence->network_failed() &&
         !absl::c_linear_search(networks, sequence->network())) {
       sequence->OnNetworkFailed();
@@ -1026,7 +1026,7 @@ bool BasicPortAllocatorSession::PruneTurnPorts(Port* newly_pairable_turn_port) {
   // are considered the same network here.
   const std::string& network_name = newly_pairable_turn_port->Network()->name();
   Port* best_turn_port = GetBestTurnPortForNetwork(network_name);
-  // |port| is already in the list of ports, so the best port cannot be nullptr.
+  // `port` is already in the list of ports, so the best port cannot be nullptr.
   RTC_CHECK(best_turn_port != nullptr);
 
   bool pruned = false;
@@ -1241,7 +1241,7 @@ void AllocationSequence::Init() {
       udp_socket_->SignalReadPacket.connect(this,
                                             &AllocationSequence::OnReadPacket);
     }
-    // Continuing if |udp_socket_| is NULL, as local TCP and RelayPort using TCP
+    // Continuing if `udp_socket_` is NULL, as local TCP and RelayPort using TCP
     // are next available options to setup a communication channel.
   }
 }
@@ -1457,7 +1457,7 @@ void AllocationSequence::CreateTCPPorts() {
       session_->allocator()->allow_tcp_listen());
   if (port) {
     session_->AddAllocatedPort(port.release(), this, true);
-    // Since TCPPort is not created using shared socket, |port| will not be
+    // Since TCPPort is not created using shared socket, `port` will not be
     // added to the dequeue.
   }
 }
@@ -1486,7 +1486,7 @@ void AllocationSequence::CreateStunPorts() {
       session_->allocator()->stun_candidate_keepalive_interval());
   if (port) {
     session_->AddAllocatedPort(port.release(), this, true);
-    // Since StunPort is not created using shared socket, |port| will not be
+    // Since StunPort is not created using shared socket, `port` will not be
     // added to the dequeue.
   }
 }

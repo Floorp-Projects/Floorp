@@ -549,7 +549,7 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   // taken via TakePooledSession.
   //
   // A change in the candidate filter also fires a signal
-  // |SignalCandidateFilterChanged|, so that objects subscribed to this signal
+  // `SignalCandidateFilterChanged`, so that objects subscribed to this signal
   // can, for example, update the candidate filter for sessions created by this
   // allocator and already taken by the object.
   //
@@ -599,7 +599,7 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   // Return IceParameters of the pooled sessions.
   std::vector<IceParameters> GetPooledIceCredentials();
 
-  // Fired when |candidate_filter_| changes.
+  // Fired when `candidate_filter_` changes.
   sigslot::signal2<uint32_t /* prev_filter */, uint32_t /* cur_filter */>
       SignalCandidateFilterChanged;
 

@@ -69,7 +69,7 @@ class TransportDescriptionFactoryTest : public ::testing::Test {
   // This test ice restart by doing two offer answer exchanges. On the second
   // exchange ice is restarted. The test verifies that the ufrag and password
   // in the offer and answer is changed.
-  // If |dtls| is true, the test verifies that the finger print is not changed.
+  // If `dtls` is true, the test verifies that the finger print is not changed.
   void TestIceRestart(bool dtls) {
     SetDtls(dtls);
     cricket::TransportOptions options;

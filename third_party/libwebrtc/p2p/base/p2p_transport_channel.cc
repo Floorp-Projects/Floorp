@@ -1739,7 +1739,7 @@ void P2PTransportChannel::SortConnectionsAndUpdateState(
   // Any changes after this point will require a re-sort.
   sort_dirty_ = false;
 
-  // If necessary, switch to the new choice. Note that |top_connection| doesn't
+  // If necessary, switch to the new choice. Note that `top_connection` doesn't
   // have to be writable to become the selected connection although it will
   // have higher priority if it is writable.
   MaybeSwitchSelectedConnection(
@@ -1795,7 +1795,7 @@ void P2PTransportChannel::PruneConnections() {
 void P2PTransportChannel::SwitchSelectedConnection(Connection* conn,
                                                    IceControllerEvent reason) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  // Note: if conn is NULL, the previous |selected_connection_| has been
+  // Note: if conn is NULL, the previous `selected_connection_` has been
   // destroyed, so don't use it.
   Connection* old_selected_connection = selected_connection_;
   selected_connection_ = conn;
@@ -2040,9 +2040,9 @@ void P2PTransportChannel::MarkConnectionPinged(Connection* conn) {
   ice_controller_->MarkConnectionPinged(conn);
 }
 
-// Apart from sending ping from |conn| this method also updates
-// |use_candidate_attr| and |nomination| flags. One of the flags is set to
-// nominate |conn| if this channel is in CONTROLLING.
+// Apart from sending ping from `conn` this method also updates
+// `use_candidate_attr` and `nomination` flags. One of the flags is set to
+// nominate `conn` if this channel is in CONTROLLING.
 void P2PTransportChannel::PingConnection(Connection* conn) {
   RTC_DCHECK_RUN_ON(network_thread_);
   bool use_candidate_attr = false;

@@ -816,7 +816,7 @@ class P2PTransportChannelTestBase : public ::testing::Test,
   }
 
   void OnNetworkRouteChanged(absl::optional<rtc::NetworkRoute> network_route) {
-    // If the |network_route| is unset, don't count. This is used in the case
+    // If the `network_route` is unset, don't count. This is used in the case
     // when the network on remote side is down, the signal will be fired with an
     // unset network route and it shouldn't trigger a connection switch.
     if (network_route) {
@@ -2276,7 +2276,7 @@ TEST_F(P2PTransportChannelTest, SignalReadyToSendWithPresumedWritable) {
   int len = static_cast<int>(strlen(data));
   EXPECT_EQ(-1, SendData(ep1_ch1(), data, len));
 
-  // Reset |ready_to_send_| flag, which is set to true if the event fires as it
+  // Reset `ready_to_send_` flag, which is set to true if the event fires as it
   // should.
   GetEndpoint(0)->ready_to_send_ = false;
   virtual_socket_server()->SetSendingBlocked(false);
@@ -2671,7 +2671,7 @@ TEST_F(P2PTransportChannelMultihomedTest, TestIceRenomination) {
   Connection* selected_connection2 =
       const_cast<Connection*>(ep2_ch1()->selected_connection());
   uint32_t remote_nomination2 = selected_connection2->remote_nomination();
-  // |selected_connection2| should not be nominated any more since the previous
+  // `selected_connection2` should not be nominated any more since the previous
   // nomination has been acknowledged.
   ConnectSignalNominated(selected_connection2);
   SIMULATED_WAIT(nominated(), kMediumTimeout, clock);
@@ -2804,7 +2804,7 @@ TEST_F(P2PTransportChannelMultihomedTest,
 // side to switch connections and networks.
 TEST_F(P2PTransportChannelMultihomedTest, TestRemoteFailover) {
   rtc::ScopedFakeClock clock;
-  // The interface names are chosen so that |cellular| would have higher
+  // The interface names are chosen so that `cellular` would have higher
   // candidate priority and higher cost.
   auto& wifi = kPublicAddrs;
   auto& cellular = kAlternateAddrs;
@@ -2850,7 +2850,7 @@ TEST_F(P2PTransportChannelMultihomedTest, TestRemoteFailover) {
 
 // Tests that a Wifi-Wifi connection has the highest precedence.
 TEST_F(P2PTransportChannelMultihomedTest, TestPreferWifiToWifiConnection) {
-  // The interface names are chosen so that |cellular| would have higher
+  // The interface names are chosen so that `cellular` would have higher
   // candidate priority if it is not for the network type.
   auto& wifi = kAlternateAddrs;
   auto& cellular = kPublicAddrs;
@@ -2877,7 +2877,7 @@ TEST_F(P2PTransportChannelMultihomedTest, TestPreferWifiToWifiConnection) {
 // Tests that a Wifi-Cellular connection has higher precedence than
 // a Cellular-Cellular connection.
 TEST_F(P2PTransportChannelMultihomedTest, TestPreferWifiOverCellularNetwork) {
-  // The interface names are chosen so that |cellular| would have higher
+  // The interface names are chosen so that `cellular` would have higher
   // candidate priority if it is not for the network type.
   auto& wifi = kAlternateAddrs;
   auto& cellular = kPublicAddrs;
@@ -2902,7 +2902,7 @@ TEST_F(P2PTransportChannelMultihomedTest, TestPreferWifiOverCellularNetwork) {
 // what was configured.
 TEST_F(P2PTransportChannelMultihomedTest, TestPingBackupConnectionRate) {
   AddAddress(0, kPublicAddrs[0]);
-  // Adding alternate address will make sure |kPublicAddrs| has the higher
+  // Adding alternate address will make sure `kPublicAddrs` has the higher
   // priority than others. This is due to FakeNetwork::AddInterface method.
   AddAddress(1, kAlternateAddrs[1]);
   AddAddress(1, kPublicAddrs[1]);
@@ -2918,7 +2918,7 @@ TEST_F(P2PTransportChannelMultihomedTest, TestPingBackupConnectionRate) {
   ep2_ch1()->SetIceConfig(
       CreateIceConfig(2000, GATHER_ONCE, backup_ping_interval));
   // After the state becomes COMPLETED, the backup connection will be pinged
-  // once every |backup_ping_interval| milliseconds.
+  // once every `backup_ping_interval` milliseconds.
   ASSERT_TRUE_WAIT(ep2_ch1()->GetState() == IceTransportState::STATE_COMPLETED,
                    1000);
   auto connections = ep2_ch1()->connections();
@@ -2941,7 +2941,7 @@ TEST_F(P2PTransportChannelMultihomedTest, TestPingBackupConnectionRate) {
 // what was configured when stable and writable.
 TEST_F(P2PTransportChannelMultihomedTest, TestStableWritableRate) {
   AddAddress(0, kPublicAddrs[0]);
-  // Adding alternate address will make sure |kPublicAddrs| has the higher
+  // Adding alternate address will make sure `kPublicAddrs` has the higher
   // priority than others. This is due to FakeNetwork::AddInterface method.
   AddAddress(1, kAlternateAddrs[1]);
   AddAddress(1, kPublicAddrs[1]);
@@ -2959,7 +2959,7 @@ TEST_F(P2PTransportChannelMultihomedTest, TestStableWritableRate) {
   config.stable_writable_connection_ping_interval = ping_interval_ms;
   ep2_ch1()->SetIceConfig(config);
   // After the state becomes COMPLETED and is stable and writable, the
-  // connection will be pinged once every |ping_interval_ms| milliseconds.
+  // connection will be pinged once every `ping_interval_ms` milliseconds.
   ASSERT_TRUE_WAIT(ep2_ch1()->GetState() == IceTransportState::STATE_COMPLETED,
                    1000);
   auto connections = ep2_ch1()->connections();
@@ -3337,7 +3337,7 @@ class P2PTransportChannelPingTest : public ::testing::Test,
     return switches;
   }
 
-  // Return true if the |pair| matches the last network route.
+  // Return true if the `pair` matches the last network route.
   bool CandidatePairMatchesNetworkRoute(CandidatePairInterface* pair) {
     if (!pair) {
       return !last_network_route_.has_value();
@@ -3643,7 +3643,7 @@ TEST_F(P2PTransportChannelPingTest, TestAddRemoteCandidateWithVariousUfrags) {
   EXPECT_TRUE(FindNextPingableConnectionAndPingIt(&ch) == nullptr);
 
   // Set the remote ICE parameters with the "future" ufrag.
-  // This should set the ICE pwd in the remote candidate of |conn1|, making
+  // This should set the ICE pwd in the remote candidate of `conn1`, making
   // it pingable.
   ch.SetRemoteIceParameters(kIceParams[2]);
   EXPECT_EQ(kIceUfrag[2], candidate.username());
@@ -4465,7 +4465,7 @@ TEST_F(P2PTransportChannelPingTest, TestGetState) {
   // No connections are writable yet, so we should still be in the kChecking
   // state.
   EXPECT_EQ(webrtc::IceTransportState::kChecking, ch.GetIceTransportState());
-  // |conn1| becomes writable and receiving; it then should prune |conn2|.
+  // `conn1` becomes writable and receiving; it then should prune `conn2`.
   conn1->ReceivedPingResponse(LOW_RTT, "id");
   EXPECT_TRUE_SIMULATED_WAIT(conn2->pruned(), kShortTimeout, clock);
   EXPECT_EQ(IceTransportState::STATE_COMPLETED, ch.GetState());
@@ -4498,18 +4498,18 @@ TEST_F(P2PTransportChannelPingTest, TestConnectionPrunedAgain) {
   EXPECT_EQ_SIMULATED_WAIT(conn1, ch.selected_connection(), kDefaultTimeout,
                            clock);
 
-  // Add a low-priority connection |conn2|, which will be pruned, but it will
+  // Add a low-priority connection `conn2`, which will be pruned, but it will
   // not be deleted right away. Once the current selected connection becomes not
-  // receiving, |conn2| will start to ping and upon receiving the ping response,
+  // receiving, `conn2` will start to ping and upon receiving the ping response,
   // it will become the selected connection.
   ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 1));
   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2, &clock);
   ASSERT_TRUE(conn2 != nullptr);
   EXPECT_TRUE_SIMULATED_WAIT(!conn2->active(), kDefaultTimeout, clock);
-  // |conn2| should not send a ping yet.
+  // `conn2` should not send a ping yet.
   EXPECT_EQ(IceCandidatePairState::WAITING, conn2->state());
   EXPECT_EQ(IceTransportState::STATE_COMPLETED, ch.GetState());
-  // Wait for |conn1| becoming not receiving.
+  // Wait for `conn1` becoming not receiving.
   EXPECT_TRUE_SIMULATED_WAIT(!conn1->receiving(), kMediumTimeout, clock);
   // Make sure conn2 is not deleted.
   conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2, &clock);
@@ -4521,7 +4521,7 @@ TEST_F(P2PTransportChannelPingTest, TestConnectionPrunedAgain) {
                            clock);
   EXPECT_EQ(IceTransportState::STATE_CONNECTING, ch.GetState());
 
-  // When |conn1| comes back again, |conn2| will be pruned again.
+  // When `conn1` comes back again, `conn2` will be pruned again.
   conn1->ReceivedPingResponse(LOW_RTT, "id");
   EXPECT_EQ_SIMULATED_WAIT(conn1, ch.selected_connection(), kDefaultTimeout,
                            clock);
@@ -4796,11 +4796,11 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest,
   the flakiness. The following test becomes flaky because we now ping the
   connections with fast rates until every connection is pinged at least three
   times. The selected connection may have been pinged before
-  |max_strong_interval|, so it may not be the next connection to be pinged as
+  `max_strong_interval`, so it may not be the next connection to be pinged as
   expected in the test.
 
   // Verify that conn3 will be the "selected connection" since it is readable
-  // and writable. After |MAX_CURRENT_STRONG_INTERVAL|, it should be the next
+  // and writable. After `MAX_CURRENT_STRONG_INTERVAL`, it should be the next
   // pingable connection.
   EXPECT_TRUE_WAIT(conn3 == ch.selected_connection(), kDefaultTimeout);
   WAIT(false, max_strong_interval + 100);
@@ -5585,7 +5585,7 @@ TEST_F(P2PTransportChannelTest,
 // This is the complement to
 // SurfaceHostCandidateOnCandidateFilterChangeFromRelayToAll, and instead of
 // gathering continually we only gather once, which makes the config
-// |surface_ice_candidates_on_ice_transport_type_changed| ineffective after the
+// `surface_ice_candidates_on_ice_transport_type_changed` ineffective after the
 // gathering stopped.
 TEST_F(P2PTransportChannelTest,
        CannotSurfaceTheNewlyAllowedOnFilterChangeIfNotGatheringContinually) {

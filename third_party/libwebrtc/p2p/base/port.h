@@ -292,7 +292,7 @@ class Port : public PortInterface,
   sigslot::signal2<Port*, Connection*> SignalConnectionCreated;
 
   // In a shared socket mode each port which shares the socket will decide
-  // to accept the packet based on the |remote_addr|. Currently only UDP
+  // to accept the packet based on the `remote_addr`. Currently only UDP
   // port implemented this method.
   // TODO(mallinath) - Make it pure virtual.
   virtual bool HandleIncomingPacket(rtc::AsyncPacketSocket* socket,
@@ -301,7 +301,7 @@ class Port : public PortInterface,
                                     const rtc::SocketAddress& remote_addr,
                                     int64_t packet_time_us);
 
-  // Shall the port handle packet from this |remote_addr|.
+  // Shall the port handle packet from this `remote_addr`.
   // This method is overridden by TurnPort.
   virtual bool CanHandleIncomingPacketsFrom(
       const rtc::SocketAddress& remote_addr) const;
@@ -467,7 +467,7 @@ class Port : public PortInterface,
   // PortAllocatorSession will provide these username_fragment and password.
   //
   // Note: we should always use username_fragment() instead of using
-  // |ice_username_fragment_| directly. For the details see the comment on
+  // `ice_username_fragment_` directly. For the details see the comment on
   // username_fragment().
   std::string ice_username_fragment_;
   std::string password_;
