@@ -627,25 +627,12 @@ class ParsedRtcEventLog {
   template <typename T>
   void StoreFirstAndLastTimestamp(const std::vector<T>& v);
 
-  // Reads the header, direction, header length and packet length from the RTP
-  // event at |index|, and stores the values in the corresponding output
-  // parameters. Each output parameter can be set to nullptr if that value
-  // isn't needed.
-  // NB: The header must have space for at least IP_PACKET_SIZE bytes.
-  ParseStatus GetRtpHeader(const rtclog::Event& event,
-                           PacketDirection* incoming,
-                           uint8_t* header,
-                           size_t* header_length,
-                           size_t* total_length,
-                           int* probe_cluster_id) const;
-
   // Returns: a pointer to a header extensions map acquired from parsing
   // corresponding Audio/Video Sender/Receiver config events.
   // Warning: if the same SSRC is reused by both video and audio streams during
   // call, extensions maps may be incorrect (the last one would be returned).
-  const RtpHeaderExtensionMap* GetRtpHeaderExtensionMap(
-      PacketDirection direction,
-      uint32_t ssrc);
+  const RtpHeaderExtensionMap* GetRtpHeaderExtensionMap(bool incoming,
+                                                        uint32_t ssrc);
 
   // Reads packet, direction and packet length from the RTCP event at |index|,
   // and stores the values in the corresponding output parameters.
