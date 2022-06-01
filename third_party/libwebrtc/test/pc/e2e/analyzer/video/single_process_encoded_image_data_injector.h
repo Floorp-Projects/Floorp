@@ -37,8 +37,8 @@ namespace webrtc_pc_e2e {
 // This injector won't add any extra overhead into EncodedImage payload and
 // support frames with any size of payload. Also assumes that every EncodedImage
 // payload size is greater or equals to 3 bytes
-class SingleProcessEncodedImageDataInjector : public EncodedImageDataInjector,
-                                              public EncodedImageDataExtractor {
+class SingleProcessEncodedImageDataInjector
+    : public EncodedImageDataPropagator {
  public:
   SingleProcessEncodedImageDataInjector();
   ~SingleProcessEncodedImageDataInjector() override;

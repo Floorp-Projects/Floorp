@@ -110,8 +110,7 @@ class PeerConnectionE2EQualityTest
   std::unique_ptr<VideoQualityAnalyzerInjectionHelper>
       video_quality_analyzer_injection_helper_;
   std::unique_ptr<MediaHelper> media_helper_;
-  std::unique_ptr<SingleProcessEncodedImageDataInjector>
-      encoded_image_id_controller_;
+  std::unique_ptr<EncodedImageDataPropagator> encoded_image_data_propagator_;
   std::unique_ptr<AudioQualityAnalyzerInterface> audio_quality_analyzer_;
   std::unique_ptr<TestActivitiesExecutor> executor_;
 
