@@ -139,7 +139,8 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
       mMACAlgorithmUsed(nsISSLSocketControl::SSL_MAC_UNKNOWN),
       mProviderTlsFlags(providerTlsFlags),
       mSocketCreationTimestamp(TimeStamp::Now()),
-      mPlaintextBytesRead(0) {
+      mPlaintextBytesRead(0),
+      mClientCert(nullptr) {
   mTLSVersionRange.min = 0;
   mTLSVersionRange.max = 0;
 }
@@ -176,6 +177,20 @@ nsNSSSocketInfo::GetSSLVersionOffered(int16_t* aSSLVersionOffered) {
 NS_IMETHODIMP
 nsNSSSocketInfo::GetMACAlgorithmUsed(int16_t* aMac) {
   *aMac = mMACAlgorithmUsed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetClientCert(nsIX509Cert** aClientCert) {
+  NS_ENSURE_ARG_POINTER(aClientCert);
+  *aClientCert = mClientCert;
+  NS_IF_ADDREF(*aClientCert);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::SetClientCert(nsIX509Cert* aClientCert) {
+  mClientCert = aClientCert;
   return NS_OK;
 }
 
@@ -1774,19 +1789,22 @@ static bool hasExplicitKeyUsageNonRepudiation(CERTCertificate* cert) {
 ClientAuthInfo::ClientAuthInfo(const nsACString& hostName,
                                const OriginAttributes& originAttributes,
                                int32_t port, uint32_t providerFlags,
-                               uint32_t providerTlsFlags)
+                               uint32_t providerTlsFlags,
+                               nsIX509Cert* clientCert)
     : mHostName(hostName),
       mOriginAttributes(originAttributes),
       mPort(port),
       mProviderFlags(providerFlags),
-      mProviderTlsFlags(providerTlsFlags) {}
+      mProviderTlsFlags(providerTlsFlags),
+      mClientCert(clientCert) {}
 
 ClientAuthInfo::ClientAuthInfo(ClientAuthInfo&& aOther) noexcept
     : mHostName(std::move(aOther.mHostName)),
       mOriginAttributes(std::move(aOther.mOriginAttributes)),
       mPort(aOther.mPort),
       mProviderFlags(aOther.mProviderFlags),
-      mProviderTlsFlags(aOther.mProviderTlsFlags) {}
+      mProviderTlsFlags(aOther.mProviderTlsFlags),
+      mClientCert(std::move(aOther.mClientCert)) {}
 
 const nsACString& ClientAuthInfo::HostName() const { return mHostName; }
 
@@ -1799,6 +1817,11 @@ int32_t ClientAuthInfo::Port() const { return mPort; }
 uint32_t ClientAuthInfo::ProviderFlags() const { return mProviderFlags; }
 
 uint32_t ClientAuthInfo::ProviderTlsFlags() const { return mProviderTlsFlags; }
+
+already_AddRefed<nsIX509Cert> ClientAuthInfo::GetClientCert() const {
+  nsCOMPtr<nsIX509Cert> cert = mClientCert;
+  return cert.forget();
+}
 
 class ClientAuthDataRunnable : public SyncRunnableBase {
  public:
@@ -1914,9 +1937,11 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     return SECSuccess;
   }
 
+  nsCOMPtr<nsIX509Cert> socketClientCert;
+  info->GetClientCert(getter_AddRefs(socketClientCert));
   ClientAuthInfo authInfo(info->GetHostName(), info->GetOriginAttributes(),
                           info->GetPort(), info->GetProviderFlags(),
-                          info->GetProviderTlsFlags());
+                          info->GetProviderTlsFlags(), socketClientCert);
   nsTArray<nsTArray<uint8_t>> collectedCANames(CollectCANames(caNames));
 
   UniqueCERTCertificate selectedCertificate;
@@ -2311,6 +2336,17 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
     return;
   }
 
+  // If a client cert preference was set on the socket info, use that and skip
+  // the client cert UI and/or search of the user's past cert decisions.
+  nsCOMPtr<nsIX509Cert> socketClientCert = mInfo.GetClientCert();
+  if (socketClientCert) {
+    mSelectedCertificate.reset(socketClientCert->GetCert());
+    if (NS_WARN_IF(!mSelectedCertificate)) {
+      return;
+    }
+    return;
+  }
+
   UniqueCERTCertList certList(FindClientCertificatesWithPrivateKeys());
   if (!certList) {
     return;
@@ -2519,6 +2555,17 @@ void RemoteClientAuthDataRunnable::RunOnTargetThread() {
   const ByteArray serverCertSerialized = CopyableTArray<uint8_t>{
       mServerCert->derCert.data, mServerCert->derCert.len};
 
+  // Note that client cert is NULL in socket process until bug 1632809 is done.
+  Maybe<ByteArray> clientCertSerialized;
+  nsCOMPtr<nsIX509Cert> socketClientCert = mInfo.GetClientCert();
+  if (socketClientCert) {
+    nsTArray<uint8_t> certBytes;
+    if (NS_FAILED(socketClientCert->GetRawDER(certBytes))) {
+      return;
+    }
+    clientCertSerialized.emplace(std::move(certBytes));
+  }
+
   nsTArray<ByteArray> collectedCANames;
   for (auto& name : mCollectedCANames) {
     collectedCANames.AppendElement(std::move(name));
@@ -2529,7 +2576,7 @@ void RemoteClientAuthDataRunnable::RunOnTargetThread() {
   mozilla::net::SocketProcessChild::GetSingleton()->SendGetTLSClientCert(
       nsCString(mInfo.HostName()), mInfo.OriginAttributesRef(), mInfo.Port(),
       mInfo.ProviderFlags(), mInfo.ProviderTlsFlags(), serverCertSerialized,
-      collectedCANames, &succeeded, &cert, &mBuiltChain);
+      clientCertSerialized, collectedCANames, &succeeded, &cert, &mBuiltChain);
 
   if (!succeeded) {
     return;

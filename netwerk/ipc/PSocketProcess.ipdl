@@ -128,6 +128,7 @@ parent:
                         uint32_t aProviderFlags,
                         uint32_t aProviderTlsFlags,
                         ByteArray aServerCert,
+                        ByteArray? aClientCert,
                         ByteArray[] aCollectedCANames)
     returns (bool aSucceeded, ByteArray aOutCert, ByteArray[] aBuiltChain);
   async PProxyConfigLookup(nsIURI aUri, uint32_t aFlags);

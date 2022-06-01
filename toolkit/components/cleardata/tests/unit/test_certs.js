@@ -3,6 +3,9 @@
 
 "use strict";
 
+const certService = Cc["@mozilla.org/security/local-cert-service;1"].getService(
+  Ci.nsILocalCertService
+);
 const overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(
   Ci.nsICertOverrideService
 );
