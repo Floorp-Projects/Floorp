@@ -25,8 +25,8 @@
  * Post-filtering:
  *   y(z) = x(z) - damper(z) * gain * (x(z) + y(z)) * z ^ (-lag);
  *
- * Note that |lag| is a floating number so we perform an interpolation to
- * obtain the correct |lag|.
+ * Note that `lag` is a floating number so we perform an interpolation to
+ * obtain the correct `lag`.
  *
  */
 
@@ -86,7 +86,7 @@ typedef enum {
  * buffer           : a buffer where the sum of previous inputs and outputs
  *                    are stored.
  * damper_state     : the state of the damping filter. The filter is defined by
- *                    |kDampFilter|.
+ *                    `kDampFilter`.
  * interpol_coeff   : pointer to a set of coefficient which are used to utilize
  *                    fractional pitch by interpolation.
  * gain             : pitch-gain to be applied to the current segment of input.
@@ -353,7 +353,7 @@ static void FilterFrame(const double* in_data, PitchFiltstr* filter_state,
 
   if ((mode == kPitchFilterPreGain) || (mode == kPitchFilterPreLa)) {
     /* Filter the lookahead segment, this is treated as the last sub-frame. So
-     * set |pf_param| to last sub-frame. */
+     * set `pf_param` to last sub-frame. */
     filter_parameters.sub_frame = PITCH_SUBFRAMES - 1;
     filter_parameters.num_samples = QLOOKAHEAD;
     FilterSegment(in_data, &filter_parameters, out_data, out_dg);

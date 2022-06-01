@@ -149,13 +149,13 @@ size_t Merge::Process(int16_t* input,
     (*output)[channel].OverwriteAt(temp_data_.data(), output_length, 0);
   }
 
-  // Copy back the first part of the data to |sync_buffer_| and remove it from
-  // |output|.
+  // Copy back the first part of the data to `sync_buffer_` and remove it from
+  // `output`.
   sync_buffer_->ReplaceAtIndex(*output, old_length, sync_buffer_->next_index());
   output->PopFront(old_length);
 
-  // Return new added length. |old_length| samples were borrowed from
-  // |sync_buffer_|.
+  // Return new added length. `old_length` samples were borrowed from
+  // `sync_buffer_`.
   RTC_DCHECK_GE(output_length, old_length);
   return output_length - old_length;
 }
@@ -200,7 +200,7 @@ size_t Merge::GetExpandedSignal(size_t* old_length, size_t* expand_period) {
       // Append one more pitch period each time.
       expanded_.PushBack(expanded_temp);
     }
-    // Trim the length to exactly |required_length|.
+    // Trim the length to exactly `required_length`.
     expanded_.PopBack(expanded_.Size() - required_length);
   }
   RTC_DCHECK_GE(expanded_.Size(), required_length);
@@ -246,17 +246,17 @@ int16_t Merge::SignalScaling(const int16_t* input,
   // Calculate muting factor to use for new frame.
   int16_t mute_factor;
   if (energy_input > energy_expanded) {
-    // Normalize |energy_input| to 14 bits.
+    // Normalize `energy_input` to 14 bits.
     int16_t temp_shift = WebRtcSpl_NormW32(energy_input) - 17;
     energy_input = WEBRTC_SPL_SHIFT_W32(energy_input, temp_shift);
-    // Put |energy_expanded| in a domain 14 higher, so that
+    // Put `energy_expanded` in a domain 14 higher, so that
     // energy_expanded / energy_input is in Q14.
     energy_expanded = WEBRTC_SPL_SHIFT_W32(energy_expanded, temp_shift + 14);
     // Calculate sqrt(energy_expanded / energy_input) in Q14.
     mute_factor = static_cast<int16_t>(
         WebRtcSpl_SqrtFloor((energy_expanded / energy_input) << 14));
   } else {
-    // Set to 1 (in Q14) when |expanded| has higher energy than |input|.
+    // Set to 1 (in Q14) when `expanded` has higher energy than `input`.
     mute_factor = 16384;
   }
 
@@ -301,7 +301,7 @@ void Merge::Downsample(const int16_t* input,
     // there is not much we can do.
     const size_t temp_len =
         input_length > signal_offset ? input_length - signal_offset : 0;
-    // TODO(hlundin): Should |downsamp_temp_len| be corrected for round-off
+    // TODO(hlundin): Should `downsamp_temp_len` be corrected for round-off
     // errors? I.e., (temp_len + decimation_factor - 1) / decimation_factor?
     size_t downsamp_temp_len = temp_len / decimation_factor;
     if (downsamp_temp_len > 0) {
@@ -357,8 +357,8 @@ size_t Merge::CorrelateAndPeakSearch(size_t start_position,
   // Downscale starting index to 4kHz domain. (fs_mult_ * 2 = fs_hz_ / 4000.)
   size_t start_index_downsamp = start_index / (fs_mult_ * 2);
 
-  // Calculate a modified |stop_position_downsamp| to account for the increased
-  // start index |start_index_downsamp| and the effective array length.
+  // Calculate a modified `stop_position_downsamp` to account for the increased
+  // start index `start_index_downsamp` and the effective array length.
   size_t modified_stop_pos =
       std::min(stop_position_downsamp,
                kMaxCorrelationLength + pad_length - start_index_downsamp);

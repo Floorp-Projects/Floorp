@@ -309,8 +309,8 @@ NetEq::Operation DecisionLogic::ExpectedPacketAvailable(NetEq::Mode prev_mode,
         std::max(target_level_samples * 3 / 4,
                  target_level_samples -
                      kDecelerationTargetLevelOffsetMs * samples_per_ms);
-    // |higher_limit| is equal to |target_level|, but should at
-    // least be 20 ms higher than |lower_limit|.
+    // `higher_limit` is equal to `target_level`, but should at
+    // least be 20 ms higher than `lower_limit`.
     const int high_limit =
         std::max(target_level_samples, low_limit + 20 * samples_per_ms);
 

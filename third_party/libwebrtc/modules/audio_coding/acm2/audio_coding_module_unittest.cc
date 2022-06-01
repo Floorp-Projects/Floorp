@@ -342,7 +342,7 @@ TEST_F(AudioCodingModuleTestOldApi, TimestampSeriesContinuesWhenCodecChanges) {
 
 // Introduce this class to set different expectations on the number of encoded
 // bytes. This class expects all encoded packets to be 9 bytes (matching one
-// CNG SID frame) or 0 bytes. This test depends on |input_frame_| containing
+// CNG SID frame) or 0 bytes. This test depends on `input_frame_` containing
 // (near-)zero values. It also introduces a way to register comfort noise with
 // a custom payload type.
 class AudioCodingModuleTestWithComfortNoiseOldApi
@@ -593,7 +593,7 @@ class AcmIsacMtTestOldApi : public AudioCodingModuleMtTestOldApi {
       InsertAudio();
       ASSERT_LT(loop_counter++, 10);
     }
-    // Set |last_packet_number_| to one less that |num_calls| so that the packet
+    // Set `last_packet_number_` to one less that `num_calls` so that the packet
     // will be fetched in the next InsertPacket() call.
     last_packet_number_ = packet_cb_.num_calls() - 1;
 
@@ -617,7 +617,7 @@ class AcmIsacMtTestOldApi : public AudioCodingModuleMtTestOldApi {
     if (num_calls > last_packet_number_) {
       // Get the new payload out from the callback handler.
       // Note that since we swap buffers here instead of directly inserting
-      // a pointer to the data in |packet_cb_|, we avoid locking the callback
+      // a pointer to the data in `packet_cb_`, we avoid locking the callback
       // for the duration of the IncomingPacket() call.
       packet_cb_.SwapBuffers(&last_payload_vec_);
       ASSERT_GT(last_payload_vec_.size(), 0u);
@@ -1140,8 +1140,8 @@ class AcmSenderBitExactnessOldApi : public ::testing::Test,
   // Sets up the test::AcmSendTest object. Returns true on success, otherwise
   // false.
   bool SetUpSender(std::string input_file_name, int source_rate) {
-    // Note that |audio_source_| will loop forever. The test duration is set
-    // explicitly by |kTestDurationMs|.
+    // Note that `audio_source_` will loop forever. The test duration is set
+    // explicitly by `kTestDurationMs`.
     audio_source_.reset(new test::InputAudioFile(input_file_name));
     send_test_.reset(new test::AcmSendTestOldApi(audio_source_.get(),
                                                  source_rate, kTestDurationMs));
@@ -1243,7 +1243,7 @@ class AcmSenderBitExactnessOldApi : public ::testing::Test,
     VerifyPacket(packet.get());
     // TODO(henrik.lundin) Save the packet to file as well.
 
-    // Pass it on to the caller. The caller becomes the owner of |packet|.
+    // Pass it on to the caller. The caller becomes the owner of `packet`.
     return packet;
   }
 
@@ -1631,8 +1631,8 @@ class AcmSetBitRateTest : public ::testing::Test {
   bool SetUpSender() {
     const std::string input_file_name =
         webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
-    // Note that |audio_source_| will loop forever. The test duration is set
-    // explicitly by |kTestDurationMs|.
+    // Note that `audio_source_` will loop forever. The test duration is set
+    // explicitly by `kTestDurationMs`.
     audio_source_.reset(new test::InputAudioFile(input_file_name));
     static const int kSourceRateHz = 32000;
     send_test_.reset(new test::AcmSendTestOldApi(
@@ -1859,7 +1859,7 @@ TEST_F(AcmSenderBitExactnessOldApi, External_Pcmu_20ms) {
 
 // This test fixture is implemented to run ACM and change the desired output
 // frequency during the call. The input packets are simply PCM16b-wb encoded
-// payloads with a constant value of |kSampleValue|. The test fixture itself
+// payloads with a constant value of `kSampleValue`. The test fixture itself
 // acts as PacketSource in between the receive test class and the constant-
 // payload packet source class. The output is both written to file, and analyzed
 // in this test fixture.

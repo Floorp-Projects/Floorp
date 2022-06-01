@@ -339,7 +339,7 @@ void StatisticsCalculator::GetNetworkStatistics(size_t samples_per_packet,
   } else {
     std::sort(waiting_times_.begin(), waiting_times_.end());
     // Find mid-point elements. If the size is odd, the two values
-    // |middle_left| and |middle_right| will both be the one middle element; if
+    // `middle_left` and `middle_right` will both be the one middle element; if
     // the size is even, they will be the the two neighboring elements at the
     // middle of the list.
     const int middle_left = waiting_times_[(waiting_times_.size() - 1) / 2];

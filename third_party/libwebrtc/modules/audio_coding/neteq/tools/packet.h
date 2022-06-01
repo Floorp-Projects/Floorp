@@ -55,12 +55,12 @@ class Packet {
   virtual ~Packet();
 
   // Parses the first bytes of the RTP payload, interpreting them as RED headers
-  // according to RFC 2198. The headers will be inserted into |headers|. The
+  // according to RFC 2198. The headers will be inserted into `headers`. The
   // caller of the method assumes ownership of the objects in the list, and
   // must delete them properly.
   bool ExtractRedHeaders(std::list<RTPHeader*>* headers) const;
 
-  // Deletes all RTPHeader objects in |headers|, but does not delete |headers|
+  // Deletes all RTPHeader objects in `headers`, but does not delete `headers`
   // itself.
   static void DeleteRedHeaders(std::list<RTPHeader*>* headers);
 

@@ -108,8 +108,8 @@ bool BackgroundNoise::Update(const AudioMultiVector& input,
       if ((sample_energy > 0) &&
           (int64_t{5} * residual_energy >= int64_t{16} * sample_energy)) {
         // Spectrum is flat enough; save filter parameters.
-        // |temp_signal| + |kVecLen| - |kMaxLpcOrder| points at the first of the
-        // |kMaxLpcOrder| samples in the residual signal, which will form the
+        // `temp_signal` + `kVecLen` - `kMaxLpcOrder` points at the first of the
+        // `kMaxLpcOrder` samples in the residual signal, which will form the
         // filter state for the next noise generation.
         SaveParameters(channel_ix, lpc_coefficients,
                        temp_signal + kVecLen - kMaxLpcOrder, sample_energy,
@@ -117,7 +117,7 @@ bool BackgroundNoise::Update(const AudioMultiVector& input,
         filter_params_saved = true;
       }
     } else {
-      // Will only happen if post-decode VAD is disabled and |sample_energy| is
+      // Will only happen if post-decode VAD is disabled and `sample_energy` is
       // not low enough. Increase the threshold for update so that it increases
       // by a factor 4 in 4 seconds.
       IncrementEnergyThreshold(channel_ix, sample_energy);
@@ -264,8 +264,8 @@ void BackgroundNoise::IncrementEnergyThreshold(size_t channel,
     parameters.max_energy = sample_energy;
   }
 
-  // Set |energy_update_threshold| to no less than 60 dB lower than
-  // |max_energy_|. Adding 524288 assures proper rounding.
+  // Set `energy_update_threshold` to no less than 60 dB lower than
+  // `max_energy_`. Adding 524288 assures proper rounding.
   int32_t energy_update_threshold = (parameters.max_energy + 524288) >> 20;
   if (energy_update_threshold > parameters.energy_update_threshold) {
     parameters.energy_update_threshold = energy_update_threshold;
@@ -297,9 +297,9 @@ void BackgroundNoise::SaveParameters(size_t channel,
 
   // Calculate scale and shift factor.
   parameters.scale = static_cast<int16_t>(WebRtcSpl_SqrtFloor(residual_energy));
-  // Add 13 to the |scale_shift_|, since the random numbers table is in
+  // Add 13 to the `scale_shift_`, since the random numbers table is in
   // Q13.
-  // TODO(hlundin): Move the "13" to where the |scale_shift_| is used?
+  // TODO(hlundin): Move the "13" to where the `scale_shift_` is used?
   parameters.scale_shift =
       static_cast<int16_t>(13 + ((kLogResidualLength + norm_shift) / 2));
 
