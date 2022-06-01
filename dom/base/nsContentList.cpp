@@ -839,10 +839,9 @@ void nsContentList::RemoveFromHashtable() {
 }
 
 void nsContentList::BringSelfUpToDate(bool aDoFlush) {
-  if (mRootNode && aDoFlush && mFlushesNeeded) {
+  if (mFlushesNeeded && mRootNode && aDoFlush) {
     // XXX sXBL/XBL2 issue
-    Document* doc = mRootNode->GetUncomposedDoc();
-    if (doc) {
+    if (Document* doc = mRootNode->GetUncomposedDoc()) {
       // Flush pending content changes Bug 4891.
       doc->FlushPendingNotifications(FlushType::ContentAndNotify);
     }
