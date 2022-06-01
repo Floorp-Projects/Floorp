@@ -14,6 +14,8 @@
 #include <cstdint>
 
 #include "api/array_view.h"
+#include "modules/rtp_rtcp/source/byte_io.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 namespace {
@@ -41,6 +43,21 @@ bool IsRtpPacket(rtc::ArrayView<const uint8_t> packet) {
 bool IsRtcpPacket(rtc::ArrayView<const uint8_t> packet) {
   return packet.size() >= kMinRtcpPacketLen && HasCorrectRtpVersion(packet) &&
          PayloadTypeIsReservedForRtcp(packet[1] & 0x7F);
+}
+
+int ParseRtpPayloadType(rtc::ArrayView<const uint8_t> rtp_packet) {
+  RTC_DCHECK(IsRtpPacket(rtp_packet));
+  return rtp_packet[1] & 0x7F;
+}
+
+uint16_t ParseRtpSequenceNumber(rtc::ArrayView<const uint8_t> rtp_packet) {
+  RTC_DCHECK(IsRtpPacket(rtp_packet));
+  return ByteReader<uint16_t>::ReadBigEndian(rtp_packet.data() + 2);
+}
+
+uint32_t ParseRtpSsrc(rtc::ArrayView<const uint8_t> rtp_packet) {
+  RTC_DCHECK(IsRtpPacket(rtp_packet));
+  return ByteReader<uint32_t>::ReadBigEndian(rtp_packet.data() + 8);
 }
 
 }  // namespace webrtc

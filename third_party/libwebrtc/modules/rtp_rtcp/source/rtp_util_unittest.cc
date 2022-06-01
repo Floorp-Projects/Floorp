@@ -15,7 +15,7 @@
 namespace webrtc {
 namespace {
 
-TEST(RtpUtil, IsRtpPacket) {
+TEST(RtpUtilTest, IsRtpPacket) {
   constexpr uint8_t kMinimalisticRtpPacket[] = {0x80, 97, 0, 0,  //
                                                 0,    0,  0, 0,  //
                                                 0,    0,  0, 0};
@@ -39,7 +39,7 @@ TEST(RtpUtil, IsRtpPacket) {
   EXPECT_FALSE(IsRtpPacket({}));
 }
 
-TEST(RtpUtil, IsRtcpPacket) {
+TEST(RtpUtilTest, IsRtcpPacket) {
   constexpr uint8_t kMinimalisticRtcpPacket[] = {0x80, 202, 0, 0};
   EXPECT_TRUE(IsRtcpPacket(kMinimalisticRtcpPacket));
 
@@ -53,6 +53,33 @@ TEST(RtpUtil, IsRtcpPacket) {
   EXPECT_FALSE(IsRtcpPacket(kTooSmallRtcpPacket));
 
   EXPECT_FALSE(IsRtcpPacket({}));
+}
+
+TEST(RtpUtilTest, ParseRtpPayloadType) {
+  constexpr uint8_t kMinimalisticRtpPacket[] = {0x80, 97,   0,    0,  //
+                                                0,    0,    0,    0,  //
+                                                0x12, 0x34, 0x56, 0x78};
+  EXPECT_EQ(ParseRtpPayloadType(kMinimalisticRtpPacket), 97);
+
+  constexpr uint8_t kMinimalisticRtpPacketWithMarker[] = {
+      0x80, 0x80 | 97, 0,    0,  //
+      0,    0,         0,    0,  //
+      0x12, 0x34,      0x56, 0x78};
+  EXPECT_EQ(ParseRtpPayloadType(kMinimalisticRtpPacketWithMarker), 97);
+}
+
+TEST(RtpUtilTest, ParseRtpSequenceNumber) {
+  constexpr uint8_t kMinimalisticRtpPacket[] = {0x80, 97, 0x12, 0x34,  //
+                                                0,    0,  0,    0,     //
+                                                0,    0,  0,    0};
+  EXPECT_EQ(ParseRtpSequenceNumber(kMinimalisticRtpPacket), 0x1234);
+}
+
+TEST(RtpUtilTest, ParseRtpSsrc) {
+  constexpr uint8_t kMinimalisticRtpPacket[] = {0x80, 97,   0,    0,  //
+                                                0,    0,    0,    0,  //
+                                                0x12, 0x34, 0x56, 0x78};
+  EXPECT_EQ(ParseRtpSsrc(kMinimalisticRtpPacket), 0x12345678u);
 }
 
 }  // namespace

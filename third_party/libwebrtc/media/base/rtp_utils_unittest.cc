@@ -21,8 +21,6 @@
 
 namespace cricket {
 
-static const uint8_t kRtpPacketWithMarker[] = {
-    0x80, 0x80, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
 static const uint8_t kInvalidPacket[] = {0x80, 0x00};
 
 // PT = 206, FMT = 1, Sender SSRC  = 0x1111, Media SSRC = 0x1111
@@ -83,32 +81,6 @@ static const rtc::ArrayView<const char> kRtcpReportArrayView =
 static const rtc::ArrayView<const char> kInvalidPacketArrayView =
     rtc::MakeArrayView(reinterpret_cast<const char*>(kInvalidPacket),
                        sizeof(kInvalidPacket));
-
-TEST(RtpUtilsTest, GetRtp) {
-  int pt;
-  EXPECT_TRUE(GetRtpPayloadType(kPcmuFrame, sizeof(kPcmuFrame), &pt));
-  EXPECT_EQ(0, pt);
-  EXPECT_TRUE(GetRtpPayloadType(kRtpPacketWithMarker,
-                                sizeof(kRtpPacketWithMarker), &pt));
-  EXPECT_EQ(0, pt);
-
-  int seq_num;
-  EXPECT_TRUE(GetRtpSeqNum(kPcmuFrame, sizeof(kPcmuFrame), &seq_num));
-  EXPECT_EQ(1, seq_num);
-
-  uint32_t ts;
-  EXPECT_TRUE(GetRtpTimestamp(kPcmuFrame, sizeof(kPcmuFrame), &ts));
-  EXPECT_EQ(0u, ts);
-
-  uint32_t ssrc;
-  EXPECT_TRUE(GetRtpSsrc(kPcmuFrame, sizeof(kPcmuFrame), &ssrc));
-  EXPECT_EQ(1u, ssrc);
-
-  EXPECT_FALSE(GetRtpPayloadType(kInvalidPacket, sizeof(kInvalidPacket), &pt));
-  EXPECT_FALSE(GetRtpSeqNum(kInvalidPacket, sizeof(kInvalidPacket), &seq_num));
-  EXPECT_FALSE(GetRtpTimestamp(kInvalidPacket, sizeof(kInvalidPacket), &ts));
-  EXPECT_FALSE(GetRtpSsrc(kInvalidPacket, sizeof(kInvalidPacket), &ssrc));
-}
 
 TEST(RtpUtilsTest, GetRtcp) {
   int pt;
