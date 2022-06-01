@@ -180,7 +180,7 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     // Ensure stats for this stream exists.
     MutexLock lock(&comparison_lock_);
     for (size_t i = 0; i < peers_count; ++i) {
-      if (i == peer_index) {
+      if (i == peer_index && !options_.enable_receive_own_stream) {
         continue;
       }
       InternalStatsKey stats_key(stream_index, peer_index, i);
@@ -205,7 +205,7 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     stream_to_sender_[stream_index] = peer_index;
     frame_counters_.captured++;
     for (size_t i = 0; i < peers_->size(); ++i) {
-      if (i != peer_index) {
+      if (i != peer_index || options_.enable_receive_own_stream) {
         InternalStatsKey key(stream_index, peer_index, i);
         stream_frame_counters_[key].captured++;
       }
@@ -214,7 +214,8 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     auto state_it = stream_states_.find(stream_index);
     if (state_it == stream_states_.end()) {
       stream_states_.emplace(stream_index,
-                             StreamState(peer_index, peers_->size()));
+                             StreamState(peer_index, peers_->size(),
+                                         options_.enable_receive_own_stream));
     }
     StreamState* state = &stream_states_.at(stream_index);
     state->PushBack(frame_id);
@@ -225,7 +226,7 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
       // still in flight, it means that this stream wasn't rendered for long
       // time and we need to process existing frame as dropped.
       for (size_t i = 0; i < peers_->size(); ++i) {
-        if (i == peer_index) {
+        if (i == peer_index && !options_.enable_receive_own_stream) {
           continue;
         }
 
@@ -248,7 +249,8 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     captured_frames_in_flight_.emplace(
         frame_id,
         FrameInFlight(stream_index, frame,
-                      /*captured_time=*/Now(), peer_index, peers_->size()));
+                      /*captured_time=*/Now(), peer_index, peers_->size(),
+                      options_.enable_receive_own_stream));
     // Set frame id on local copy of the frame
     captured_frames_in_flight_.at(frame_id).SetFrameId(frame_id);
 
@@ -287,7 +289,7 @@ void DefaultVideoQualityAnalyzer::OnFramePreEncode(
   frame_counters_.pre_encoded++;
   size_t peer_index = peers_->index(peer_name);
   for (size_t i = 0; i < peers_->size(); ++i) {
-    if (i != peer_index) {
+    if (i != peer_index || options_.enable_receive_own_stream) {
       InternalStatsKey key(it->second.stream(), peer_index, i);
       stream_frame_counters_.at(key).pre_encoded++;
     }
@@ -318,7 +320,7 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
     frame_counters_.encoded++;
     size_t peer_index = peers_->index(peer_name);
     for (size_t i = 0; i < peers_->size(); ++i) {
-      if (i != peer_index) {
+      if (i != peer_index || options_.enable_receive_own_stream) {
         InternalStatsKey key(it->second.stream(), peer_index, i);
         stream_frame_counters_.at(key).encoded++;
       }
@@ -965,7 +967,7 @@ StatsKey DefaultVideoQualityAnalyzer::ToStatsKey(
 
 std::string DefaultVideoQualityAnalyzer::StatsKeyToMetricName(
     const StatsKey& key) const {
-  if (peers_->size() <= 2) {
+  if (peers_->size() <= 2 && key.sender != key.receiver) {
     return key.stream_label;
   }
   return key.ToString();
@@ -1026,7 +1028,12 @@ uint16_t DefaultVideoQualityAnalyzer::StreamState::PopFront(size_t peer) {
       other_size = cur_size;
     }
   }
-  if (owner_size > other_size) {
+  // Pops frame from owner queue if owner's queue is the longest and one of
+  // next conditions is true:
+  // 1. If `enable_receive_own_stream_` and `peer` == `owner_`
+  // 2. If !`enable_receive_own_stream_`
+  if (owner_size > other_size &&
+      (!enable_receive_own_stream_ || peer == owner_)) {
     absl::optional<uint16_t> alive_frame_id = frame_ids_.PopFront(owner_);
     RTC_DCHECK(alive_frame_id.has_value());
     RTC_DCHECK_EQ(frame_id.value(), alive_frame_id.value());
@@ -1077,8 +1084,11 @@ DefaultVideoQualityAnalyzer::FrameInFlight::GetPeersWhichDidntReceive() const {
   std::vector<size_t> out;
   for (size_t i = 0; i < peers_count_; ++i) {
     auto it = receiver_stats_.find(i);
-    if (i != owner_ && it != receiver_stats_.end() &&
-        it->second.rendered_time.IsInfinite()) {
+    bool should_current_peer_receive =
+        i != owner_ || enable_receive_own_stream_;
+    if (should_current_peer_receive &&
+        (it == receiver_stats_.end() ||
+         it->second.rendered_time.IsInfinite())) {
       out.push_back(i);
     }
   }
@@ -1087,7 +1097,8 @@ DefaultVideoQualityAnalyzer::FrameInFlight::GetPeersWhichDidntReceive() const {
 
 bool DefaultVideoQualityAnalyzer::FrameInFlight::HaveAllPeersReceived() const {
   for (size_t i = 0; i < peers_count_; ++i) {
-    if (i == owner_) {
+    // Skip `owner_` only if peer can't receive its own stream.
+    if (i == owner_ && !enable_receive_own_stream_) {
       continue;
     }
 

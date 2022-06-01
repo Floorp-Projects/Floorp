@@ -963,6 +963,92 @@ TEST(DefaultVideoQualityAnalyzerTest,
   EXPECT_EQ(frame_counters.rendered, 2);
 }
 
+TEST(DefaultVideoQualityAnalyzerTest, FrameCanBeReceivedBySender) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  options.enable_receive_own_stream = true;
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case",
+                 std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame = NextFrame(frame_generator.get(), 1);
+
+  frame.set_id(analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
+  analyzer.OnFramePreEncode(kSenderPeerName, frame);
+  analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  // Receive by 2nd peer.
+  VideoFrame received_frame = DeepCopy(frame);
+  analyzer.OnFramePreDecode(kReceiverPeerName, received_frame.id(),
+                            FakeEncode(received_frame));
+  analyzer.OnFrameDecoded(kReceiverPeerName, received_frame,
+                          VideoQualityAnalyzerInterface::DecoderStats());
+  analyzer.OnFrameRendered(kReceiverPeerName, received_frame);
+
+  // Check that we still have that frame in flight.
+  AnalyzerStats analyzer_stats = analyzer.GetAnalyzerStats();
+  std::vector<StatsSample> frames_in_flight_sizes =
+      GetSortedSamples(analyzer_stats.frames_in_flight_left_count);
+  EXPECT_EQ(frames_in_flight_sizes.back().value, 1)
+      << "Expected that frame is still in flight, "
+      << "because it wasn't received by sender"
+      << ToString(frames_in_flight_sizes);
+
+  // Receive by sender
+  received_frame = DeepCopy(frame);
+  analyzer.OnFramePreDecode(kSenderPeerName, received_frame.id(),
+                            FakeEncode(received_frame));
+  analyzer.OnFrameDecoded(kSenderPeerName, received_frame,
+                          VideoQualityAnalyzerInterface::DecoderStats());
+  analyzer.OnFrameRendered(kSenderPeerName, received_frame);
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  analyzer_stats = analyzer.GetAnalyzerStats();
+  EXPECT_EQ(analyzer_stats.comparisons_done, 2);
+
+  frames_in_flight_sizes =
+      GetSortedSamples(analyzer_stats.frames_in_flight_left_count);
+  EXPECT_EQ(frames_in_flight_sizes.back().value, 0)
+      << ToString(frames_in_flight_sizes);
+
+  FrameCounters frame_counters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(frame_counters.captured, 1);
+  EXPECT_EQ(frame_counters.rendered, 2);
+
+  EXPECT_EQ(analyzer.GetStats().size(), 2lu);
+  {
+    FrameCounters stream_conters = analyzer.GetPerStreamCounters().at(
+        StatsKey(kStreamLabel, kSenderPeerName, kReceiverPeerName));
+    EXPECT_EQ(stream_conters.captured, 1);
+    EXPECT_EQ(stream_conters.pre_encoded, 1);
+    EXPECT_EQ(stream_conters.encoded, 1);
+    EXPECT_EQ(stream_conters.received, 1);
+    EXPECT_EQ(stream_conters.decoded, 1);
+    EXPECT_EQ(stream_conters.rendered, 1);
+  }
+  {
+    FrameCounters stream_conters = analyzer.GetPerStreamCounters().at(
+        StatsKey(kStreamLabel, kSenderPeerName, kSenderPeerName));
+    EXPECT_EQ(stream_conters.captured, 1);
+    EXPECT_EQ(stream_conters.pre_encoded, 1);
+    EXPECT_EQ(stream_conters.encoded, 1);
+    EXPECT_EQ(stream_conters.received, 1);
+    EXPECT_EQ(stream_conters.decoded, 1);
+    EXPECT_EQ(stream_conters.rendered, 1);
+  }
+}
+
 }  // namespace
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc

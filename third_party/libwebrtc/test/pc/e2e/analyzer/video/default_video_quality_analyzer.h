@@ -183,6 +183,8 @@ struct DefaultVideoQualityAnalyzerOptions {
   // receivers per stream.
   size_t max_frames_in_flight_per_stream_count =
       kDefaultMaxFramesInFlightPerStream;
+  // If true, the analyzer will expect peers to receive their own video streams.
+  bool enable_receive_own_stream = false;
 };
 
 class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
@@ -304,8 +306,12 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // Represents a current state of video stream.
   class StreamState {
    public:
-    StreamState(size_t owner, size_t peers_count)
-        : owner_(owner), frame_ids_(peers_count) {}
+    StreamState(size_t owner,
+                size_t peers_count,
+                bool enable_receive_own_stream)
+        : owner_(owner),
+          enable_receive_own_stream_(enable_receive_own_stream),
+          frame_ids_(peers_count) {}
 
     size_t owner() const { return owner_; }
 
@@ -331,6 +337,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
    private:
     // Index of the owner. Owner's queue in `frame_ids_` will keep alive frames.
     const size_t owner_;
+    const bool enable_receive_own_stream_;
     // To correctly determine dropped frames we have to know sequence of frames
     // in each stream so we will keep a list of frame ids inside the stream.
     // This list is represented by multi head queue of frame ids with separate
@@ -373,10 +380,12 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
                   VideoFrame frame,
                   Timestamp captured_time,
                   size_t owner,
-                  size_t peers_count)
+                  size_t peers_count,
+                  bool enable_receive_own_stream)
         : stream_(stream),
           owner_(owner),
           peers_count_(peers_count),
+          enable_receive_own_stream_(enable_receive_own_stream),
           frame_(std::move(frame)),
           captured_time_(captured_time) {}
 
@@ -435,6 +444,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     const size_t stream_;
     const size_t owner_;
     size_t peers_count_;
+    const bool enable_receive_own_stream_;
     absl::optional<VideoFrame> frame_;
 
     // Frame events timestamp.
