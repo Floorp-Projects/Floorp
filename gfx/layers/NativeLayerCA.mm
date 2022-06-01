@@ -156,11 +156,6 @@ already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayerForExternalTexture(b
   return layer.forget();
 }
 
-already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayerForColor(gfx::DeviceColor aColor) {
-  RefPtr<NativeLayer> layer = new NativeLayerCA(aColor);
-  return layer.forget();
-}
-
 void NativeLayerRootCA::AppendLayer(NativeLayer* aLayer) {
   MutexAutoLock lock(mMutex);
 
@@ -756,36 +751,6 @@ NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque,
 NativeLayerCA::NativeLayerCA(bool aIsOpaque)
     : mMutex("NativeLayerCA"), mSurfacePoolHandle(nullptr), mIsOpaque(aIsOpaque) {}
 
-CGColorRef CGColorCreateForDeviceColor(gfx::DeviceColor aColor) {
-  if (StaticPrefs::gfx_color_management_native_srgb()) {
-    // Use CGColorCreateSRGB if it's available, otherwise use older macOS API methods,
-    // which unfortunately allocate additional memory for the colorSpace object.
-    if (@available(macOS 10.15, iOS 13.0, *)) {
-      // Even if it is available, we have to address the function dynamically, to keep
-      // compiler happy when building with earlier versions of the SDK.
-      static auto CGColorCreateSRGBPtr = (CGColorRef(*)(CGFloat, CGFloat, CGFloat, CGFloat))dlsym(
-          RTLD_DEFAULT, "CGColorCreateSRGB");
-      if (CGColorCreateSRGBPtr) {
-        return CGColorCreateSRGBPtr(aColor.r, aColor.g, aColor.b, aColor.a);
-      }
-    }
-
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
-    CGFloat components[] = {aColor.r, aColor.g, aColor.b, aColor.a};
-    CGColorRef color = CGColorCreate(colorSpace, components);
-    CFRelease(colorSpace);
-    return color;
-  }
-
-  return CGColorCreateGenericRGB(aColor.r, aColor.g, aColor.b, aColor.a);
-}
-
-NativeLayerCA::NativeLayerCA(gfx::DeviceColor aColor)
-    : mMutex("NativeLayerCA"), mSurfacePoolHandle(nullptr), mIsOpaque(aColor.a >= 1.0f) {
-  MOZ_ASSERT(aColor.a > 0.0f, "Can't handle a fully transparent backdrop.");
-  mColor.AssignUnderCreateRule(CGColorCreateForDeviceColor(aColor));
-}
-
 NativeLayerCA::~NativeLayerCA() {
   if (mInProgressLockedIOSurface) {
     mInProgressLockedIOSurface->Unlock(false);
@@ -1023,16 +988,6 @@ void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
     aOutputStream << "height: " << wrappingDivSize.height << "px; ";
   }
 
-  if (mColor) {
-    const CGFloat* components = CGColorGetComponents(mColor.get());
-    aOutputStream << "background: rgb(" << components[0] * 255.0f << " " << components[1] * 255.0f
-                  << " " << components[2] * 255.0f << "); opacity: " << components[3] << "; ";
-
-    // That's all we need for color layers. We don't need to specify an image.
-    aOutputStream << "\"/></div>\n";
-    return;
-  }
-
   Matrix4x4 transform = mTransform;
   transform.PreTranslate(mPosition.x, mPosition.y, 0);
   transform.PostTranslate(clipToLayerOffset.x, clipToLayerOffset.y, 0);
@@ -1079,11 +1034,9 @@ void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
   aOutputStream << "src=\"";
 
   if (surface) {
-    // Attempt to render the surface as a PNG. Skia can do this for RGB surfaces.
     RefPtr<MacIOSurface> surf = new MacIOSurface(surface);
     surf->Lock(true);
-    SurfaceFormat format = surf->GetFormat();
-    if (format == SurfaceFormat::B8G8R8A8 || format == SurfaceFormat::B8G8R8X8) {
+    {
       RefPtr<gfx::DrawTarget> dt = surf->GetAsDrawTargetLocked(gfx::BackendType::SKIA);
       if (dt) {
         RefPtr<gfx::SourceSurface> sourceSurf = dt->Snapshot();
@@ -1327,8 +1280,7 @@ bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
   }
   return GetRepresentation(aRepresentation)
       .ApplyChanges(aUpdate, mSize, mIsOpaque, mPosition, mTransform, mDisplayRect, mClipRect,
-                    mBackingScale, mSurfaceIsFlipped, mSamplingFilter, mSpecializeVideo, surface,
-                    mColor);
+                    mBackingScale, mSurfaceIsFlipped, mSamplingFilter, mSpecializeVideo, surface);
 }
 
 CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
@@ -1479,7 +1431,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
     const IntPoint& aPosition, const Matrix4x4& aTransform, const IntRect& aDisplayRect,
     const Maybe<IntRect>& aClipRect, float aBackingScale, bool aSurfaceIsFlipped,
     gfx::SamplingFilter aSamplingFilter, bool aSpecializeVideo,
-    CFTypeRefPtr<IOSurfaceRef> aFrontSurface, CFTypeRefPtr<CGColorRef> aColor) {
+    CFTypeRefPtr<IOSurfaceRef> aFrontSurface) {
   // If we have an OnlyVideo update, handle it and early exit.
   if (aUpdate == UpdateType::OnlyVideo) {
     // If we don't have any updates to do, exit early with success. This is
@@ -1509,11 +1461,9 @@ bool NativeLayerCA::Representation::ApplyChanges(
 
   if (mWrappingCALayer && mMutatedSpecializeVideo) {
     // Since specialize video changes the way we construct our wrapping and content layers,
-    // we have to scrap them if this value has changed.
+    // we have to scrap them if this value has changed. We can leave mOpaquenessTintLayer alone.
     [mContentCALayer release];
     mContentCALayer = nil;
-    [mOpaquenessTintLayer release];
-    mOpaquenessTintLayer = nil;
     [mWrappingCALayer removeFromSuperlayer];
     [mWrappingCALayer release];
     mWrappingCALayer = nil;
@@ -1528,36 +1478,29 @@ bool NativeLayerCA::Representation::ApplyChanges(
     mWrappingCALayer.anchorPoint = NSZeroPoint;
     mWrappingCALayer.contentsGravity = kCAGravityTopLeft;
     mWrappingCALayer.edgeAntialiasingMask = 0;
-
-    if (aColor) {
-      // Color layers set a color on the wrapping layer and don't get a content layer.
-      mWrappingCALayer.backgroundColor = aColor.get();
+    if (aSpecializeVideo) {
+      mContentCALayer = [[AVSampleBufferDisplayLayer layer] retain];
+      CMTimebaseRef timebase;
+      CMTimebaseCreateWithMasterClock(kCFAllocatorDefault, CMClockGetHostTimeClock(), &timebase);
+      CMTimebaseSetRate(timebase, 1.0f);
+      [(AVSampleBufferDisplayLayer*)mContentCALayer setControlTimebase:timebase];
+      CFRelease(timebase);
     } else {
-      if (aSpecializeVideo) {
-        mContentCALayer = [[AVSampleBufferDisplayLayer layer] retain];
-        CMTimebaseRef timebase;
-        CMTimebaseCreateWithMasterClock(kCFAllocatorDefault, CMClockGetHostTimeClock(), &timebase);
-        CMTimebaseSetRate(timebase, 1.0f);
-        [(AVSampleBufferDisplayLayer*)mContentCALayer setControlTimebase:timebase];
-        CFRelease(timebase);
-      } else {
-        mContentCALayer = [[CALayer layer] retain];
-      }
-      mContentCALayer.position = NSZeroPoint;
-      mContentCALayer.anchorPoint = NSZeroPoint;
-      mContentCALayer.contentsGravity = kCAGravityTopLeft;
-      mContentCALayer.contentsScale = 1;
-      mContentCALayer.bounds = CGRectMake(0, 0, aSize.width, aSize.height);
-      mContentCALayer.edgeAntialiasingMask = 0;
-      mContentCALayer.opaque = aIsOpaque;
-      if ([mContentCALayer respondsToSelector:@selector(setContentsOpaque:)]) {
-        // The opaque property seems to not be enough when using IOSurface contents.
-        // Additionally, call the private method setContentsOpaque.
-        [mContentCALayer setContentsOpaque:aIsOpaque];
-      }
-
-      [mWrappingCALayer addSublayer:mContentCALayer];
+      mContentCALayer = [[CALayer layer] retain];
     }
+    mContentCALayer.position = NSZeroPoint;
+    mContentCALayer.anchorPoint = NSZeroPoint;
+    mContentCALayer.contentsGravity = kCAGravityTopLeft;
+    mContentCALayer.contentsScale = 1;
+    mContentCALayer.bounds = CGRectMake(0, 0, aSize.width, aSize.height);
+    mContentCALayer.edgeAntialiasingMask = 0;
+    mContentCALayer.opaque = aIsOpaque;
+    if ([mContentCALayer respondsToSelector:@selector(setContentsOpaque:)]) {
+      // The opaque property seems to not be enough when using IOSurface contents.
+      // Additionally, call the private method setContentsOpaque.
+      [mContentCALayer setContentsOpaque:aIsOpaque];
+    }
+    [mWrappingCALayer addSublayer:mContentCALayer];
   }
 
   bool shouldTintOpaqueness = StaticPrefs::gfx_core_animation_tint_opaque();
@@ -1591,7 +1534,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
   //  Important: Always use integral numbers for the width and height of your layer.
   // We hope that this refers to integral physical pixels, and not to integral logical coordinates.
 
-  if (mContentCALayer && (mMutatedBackingScale || mMutatedSize || layerNeedsInitialization)) {
+  if (mMutatedBackingScale || mMutatedSize || layerNeedsInitialization) {
     mContentCALayer.bounds =
         CGRectMake(0, 0, aSize.width / aBackingScale, aSize.height / aBackingScale);
     if (mOpaquenessTintLayer) {
@@ -1628,35 +1571,33 @@ bool NativeLayerCA::Representation::ApplyChanges(
       mWrappingCALayer.masksToBounds = NO;
     }
 
-    if (mContentCALayer) {
-      Matrix4x4 transform = aTransform;
-      transform.PreTranslate(aPosition.x, aPosition.y, 0);
-      transform.PostTranslate(clipToLayerOffset.x, clipToLayerOffset.y, 0);
+    Matrix4x4 transform = aTransform;
+    transform.PreTranslate(aPosition.x, aPosition.y, 0);
+    transform.PostTranslate(clipToLayerOffset.x, clipToLayerOffset.y, 0);
 
-      if (aSurfaceIsFlipped) {
-        transform.PreTranslate(0, aSize.height, 0).PreScale(1, -1, 1);
-      }
+    if (aSurfaceIsFlipped) {
+      transform.PreTranslate(0, aSize.height, 0).PreScale(1, -1, 1);
+    }
 
-      CATransform3D transformCA{transform._11,
-                                transform._12,
-                                transform._13,
-                                transform._14,
-                                transform._21,
-                                transform._22,
-                                transform._23,
-                                transform._24,
-                                transform._31,
-                                transform._32,
-                                transform._33,
-                                transform._34,
-                                transform._41 / aBackingScale,
-                                transform._42 / aBackingScale,
-                                transform._43,
-                                transform._44};
-      mContentCALayer.transform = transformCA;
-      if (mOpaquenessTintLayer) {
-        mOpaquenessTintLayer.transform = mContentCALayer.transform;
-      }
+    CATransform3D transformCA{transform._11,
+                              transform._12,
+                              transform._13,
+                              transform._14,
+                              transform._21,
+                              transform._22,
+                              transform._23,
+                              transform._24,
+                              transform._31,
+                              transform._32,
+                              transform._33,
+                              transform._34,
+                              transform._41 / aBackingScale,
+                              transform._42 / aBackingScale,
+                              transform._43,
+                              transform._44};
+    mContentCALayer.transform = transformCA;
+    if (mOpaquenessTintLayer) {
+      mOpaquenessTintLayer.transform = mContentCALayer.transform;
     }
   }
 
@@ -1673,7 +1614,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
     }
   }
 
-  if (mContentCALayer && (mMutatedSamplingFilter || layerNeedsInitialization)) {
+  if (mMutatedSamplingFilter || layerNeedsInitialization) {
     if (aSamplingFilter == gfx::SamplingFilter::POINT) {
       mContentCALayer.minificationFilter = kCAFilterNearest;
       mContentCALayer.magnificationFilter = kCAFilterNearest;

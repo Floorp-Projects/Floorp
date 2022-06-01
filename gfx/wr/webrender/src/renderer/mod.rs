@@ -2187,7 +2187,7 @@ impl Renderer {
             self.unbind_debug_overlay();
         }
 
-        if device_size.is_some() {
+        if device_size.is_some() { 
             // Inform the client that we are finished this composition transaction if native
             // compositing is enabled. This must be called after any debug / profiling compositor
             // surfaces have been drawn and added to the visual tree.
@@ -4677,14 +4677,6 @@ impl Renderer {
                             compositor.create_external_surface(
                                 id,
                                 is_opaque,
-                            );
-                        }
-                        NativeSurfaceOperationDetails::CreateBackdropSurface { id, color } => {
-                            let _inserted = self.allocated_native_surfaces.insert(id);
-                            debug_assert!(_inserted, "bug: creating existing surface");
-                            compositor.create_backdrop_surface(
-                                id,
-                                color,
                             );
                         }
                         NativeSurfaceOperationDetails::DestroySurface { id } => {
