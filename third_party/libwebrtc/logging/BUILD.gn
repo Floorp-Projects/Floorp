@@ -347,7 +347,6 @@ if (rtc_enable_protobuf) {
       "../call:video_stream_api",
       "../modules:module_api_public",
       "../modules/audio_coding:audio_network_adaptor",
-      "../modules/rtp_rtcp",
       "../modules/rtp_rtcp:rtp_rtcp_format",
       "../rtc_base:checks",
       "../rtc_base:ignore_wundef",
