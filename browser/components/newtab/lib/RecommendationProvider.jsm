@@ -2,11 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
-ChromeUtils.defineModuleGetter(
-  this,
-  "PersonalityProvider",
-  "resource://activity-stream/lib/PersonalityProvider/PersonalityProvider.jsm"
+
+// Use XPCOMUtils.defineLazyModuleGetters to make the test harness keeps working
+// after bug 1608279.
+//
+// The test harness's workaround for "lazy getter on a plain object" is to
+// set the `lazy` object's prototype to the global object, inside the lazy
+// getter API.
+//
+// ChromeUtils.defineModuleGetter is converted into a static import declaration
+// by babel-plugin-jsm-to-esmodules, and it doesn't work for the following
+// 2 reasons:
+//
+//   * There's no other lazy getter API call in this file, and the workaround
+//     above stops working
+//   * babel-plugin-jsm-to-esmodules ignores the first parameter of the lazy
+//     getter API, and the result is wrong
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PersonalityProvider:
+    "resource://activity-stream/lib/PersonalityProvider/PersonalityProvider.jsm",
+});
+
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
