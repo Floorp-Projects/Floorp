@@ -100,6 +100,10 @@ class FakeNetworkMonitor : public NetworkMonitorInterface {
 
   void set_adapters(std::vector<std::string> adapters) { adapters_ = adapters; }
 
+  void InovkeNetworksChangedCallbackForTesting() {
+    InvokeNetworksChangedCallback();
+  }
+
  private:
   bool started_ = false;
   std::vector<std::string> adapters_;
@@ -1128,7 +1132,7 @@ TEST_F(NetworkTest, TestNetworkMonitoring) {
   ClearNetworks(manager);
   // Network manager is started, so the callback is called when the network
   // monitor fires the network-change event.
-  network_monitor->SignalNetworksChanged();
+  network_monitor->InovkeNetworksChangedCallbackForTesting();
   EXPECT_TRUE_WAIT(callback_called_, 1000);
 
   // Network manager is stopped.
