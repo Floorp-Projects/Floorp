@@ -89,7 +89,7 @@ def GetGNArgs(is_simulator):
     target_cpu = 'x64' if is_simulator else 'arm64'
     return ([] + ['target_os="ios"'] + ['target_cpu="%s"' % target_cpu] +
             ['use_clang_coverage=true'] + ['is_component_build=false'] +
-            ['rtc_dcheck_always_on=true'])
+            ['dcheck_always_on=true'])
 
 
 def GenerateIOSSimulatorCommand():

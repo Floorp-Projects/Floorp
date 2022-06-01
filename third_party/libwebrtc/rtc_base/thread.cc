@@ -1044,7 +1044,7 @@ void Thread::QueuedTaskHandler::OnMessage(Message* msg) {
 }
 
 void Thread::AllowInvokesToThread(Thread* thread) {
-#if (!defined(NDEBUG) || defined(RTC_DCHECK_ALWAYS_ON))
+#if (!defined(NDEBUG) || RTC_DCHECK_IS_ON)
   if (!IsCurrent()) {
     PostTask(webrtc::ToQueuedTask(
         [thread, this]() { AllowInvokesToThread(thread); }));
@@ -1057,7 +1057,7 @@ void Thread::AllowInvokesToThread(Thread* thread) {
 }
 
 void Thread::DisallowAllInvokes() {
-#if (!defined(NDEBUG) || defined(RTC_DCHECK_ALWAYS_ON))
+#if (!defined(NDEBUG) || RTC_DCHECK_IS_ON)
   if (!IsCurrent()) {
     PostTask(webrtc::ToQueuedTask([this]() { DisallowAllInvokes(); }));
     return;
@@ -1082,7 +1082,7 @@ uint32_t Thread::GetCouldBeBlockingCallCount() const {
 // Returns true if no policies added or if there is at least one policy
 // that permits invocation to `target` thread.
 bool Thread::IsInvokeToThreadAllowed(rtc::Thread* target) {
-#if (!defined(NDEBUG) || defined(RTC_DCHECK_ALWAYS_ON))
+#if (!defined(NDEBUG) || RTC_DCHECK_IS_ON)
   RTC_DCHECK_RUN_ON(this);
   if (!invoke_policy_enabled_) {
     return true;
