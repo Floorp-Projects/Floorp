@@ -37,6 +37,8 @@ class SocketBase {
  public:
   SocketBase() : socket_(INVALID_SOCKET) {}
   explicit SocketBase(NativeSocket socket) : socket_(socket) {}
+  SocketBase(SocketBase& other) = delete;
+  SocketBase& operator=(const SocketBase& other) = delete;
   ~SocketBase() { Close(); }
 
   NativeSocket socket() const { return socket_; }
