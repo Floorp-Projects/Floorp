@@ -6,7 +6,10 @@
 #include "TextUpdater.h"
 
 #include "LocalAccessible-inl.h"
+#include "CacheConstants.h"
 #include "DocAccessible-inl.h"
+#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "TextLeafAccessible.h"
 #include <algorithm>
 
@@ -30,6 +33,10 @@ void TextUpdater::Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
   if (skipStart != minLen || oldLen != newLen) {
     TextUpdater updater(aDocument, aTextLeaf);
     updater.DoUpdate(aNewText, oldText, skipStart);
+    if (IPCAccessibilityActive() &&
+        StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      aDocument->QueueCacheUpdate(aTextLeaf, CacheDomain::Text);
+    }
   }
 }
 

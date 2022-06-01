@@ -5,7 +5,6 @@
 
 #include "NotificationController.h"
 
-#include "CacheConstants.h"
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
 #include "nsEventShell.h"
@@ -745,10 +744,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 #endif
 
       TextUpdater::Run(mDocument, textAcc->AsTextLeaf(), text.mString);
-      if (IPCAccessibilityActive() &&
-          StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-        mDocument->QueueCacheUpdate(textAcc, CacheDomain::Text);
-      }
       continue;
     }
 
