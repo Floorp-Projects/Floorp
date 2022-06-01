@@ -22,6 +22,7 @@
 #include "mozilla/XREAppData.h"
 #include "mozilla/dom/GeolocationPosition.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
+#include "MLSFallback.h"
 #include "nsAppRunner.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMGeoPosition.h"
@@ -32,7 +33,7 @@
 
 namespace mozilla::dom {
 
-static mozilla::LazyLogModule gGCLocationLog("GeoclueLocation");
+static LazyLogModule gGCLocationLog("GeoclueLocation");
 
 #define GCL_LOG(level, ...) \
   MOZ_LOG(gGCLocationLog, mozilla::LogLevel::level, (__VA_ARGS__))
@@ -253,6 +254,9 @@ class GCLocProviderPriv final : public nsIGeolocationProvider,
   void DoShutdown(bool aDeleteClient, bool aDeleteManager);
   void DoShutdownClearCallback(bool aDestroying);
 
+  nsresult FallbackToMLS();
+  void StopMLSFallback();
+
   void WatchStart();
 
   Accuracy mAccuracyWanted = Accuracy::Unset;
@@ -264,6 +268,7 @@ class GCLocProviderPriv final : public nsIGeolocationProvider,
   ClientState mClientState = ClientState::Uninit;
   RefPtr<nsIDOMGeoPosition> mLastPosition;
   RefPtr<nsITimer> mLocationTimer;
+  RefPtr<MLSFallback> mMLSFallback;
 };
 
 //
@@ -310,12 +315,40 @@ void GCLocProviderPriv::UpdateLastPosition() {
   Update(mLastPosition);
 }
 
+nsresult GCLocProviderPriv::FallbackToMLS() {
+  GCL_LOG(Debug, "trying to fall back to MLS");
+  StopMLSFallback();
+
+  RefPtr fallback = new MLSFallback(0);
+  MOZ_TRY(fallback->Startup(mCallback));
+
+  GCL_LOG(Debug, "Started up MLS fallback");
+  mMLSFallback = std::move(fallback);
+  return NS_OK;
+}
+
+void GCLocProviderPriv::StopMLSFallback() {
+  if (!mMLSFallback) {
+    return;
+  }
+  GCL_LOG(Debug, "Clearing MLS fallback");
+  if (mMLSFallback) {
+    mMLSFallback->Shutdown();
+    mMLSFallback = nullptr;
+  }
+}
+
 void GCLocProviderPriv::NotifyError(int aError) {
   if (!mCallback) {
     return;
   }
 
-  nsCOMPtr<nsIGeolocationUpdate> callback(mCallback);
+  // We errored out, try to fall back to MLS.
+  if (NS_SUCCEEDED(FallbackToMLS())) {
+    return;
+  }
+
+  nsCOMPtr callback = mCallback;
   callback->NotifyError(aError);
 }
 
@@ -871,6 +904,7 @@ void GCLocProviderPriv::DoShutdown(bool aDeleteClient, bool aDeleteManager) {
 
 void GCLocProviderPriv::DoShutdownClearCallback(bool aDestroying) {
   mCallback = nullptr;
+  StopMLSFallback();
   DoShutdown(aDestroying, aDestroying);
 }
 
@@ -948,8 +982,11 @@ GCLocProviderPriv::Watch(nsIGeolocationUpdate* aCallback) {
   }
 
   if (!mProxyManager) {
-    return NS_ERROR_FAILURE;
+    GCL_LOG(Debug, "watch request falling back to MLS");
+    return FallbackToMLS();
   }
+
+  StopMLSFallback();
 
   GCLP_SETSTATE(this, Initing);
   g_dbus_proxy_call(mProxyManager, "GetClient", nullptr, G_DBUS_CALL_FLAGS_NONE,
