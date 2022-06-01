@@ -119,8 +119,8 @@ int ComfortNoise::Generate(size_t requested_length, AudioMultiVector* output) {
       muting_window += muting_window_increment;
       unmuting_window += unmuting_window_increment;
     }
-    // Remove |overlap_length_| samples from the front of |output| since they
-    // were mixed into |sync_buffer_| above.
+    // Remove `overlap_length_` samples from the front of `output` since they
+    // were mixed into `sync_buffer_` above.
     output->PopFront(overlap_length_);
   }
   first_call_ = false;

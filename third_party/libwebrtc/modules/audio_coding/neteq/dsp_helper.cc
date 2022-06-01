@@ -94,7 +94,7 @@ int DspHelper::RampSignal(AudioMultiVector* signal,
     return factor;
   }
   int end_factor = 0;
-  // Loop over the channels, starting at the same |factor| each time.
+  // Loop over the channels, starting at the same `factor` each time.
   for (size_t channel = 0; channel < signal->Channels(); ++channel) {
     end_factor =
         RampSignal(&(*signal)[channel], start_index, length, factor, increment);
@@ -116,7 +116,7 @@ void DspHelper::PeakDetection(int16_t* data,
       // Single peak.  The parabola fit assumes that an extra point is
       // available; worst case it gets a zero on the high end of the signal.
       // TODO(hlundin): This can potentially get much worse. It breaks the
-      // API contract, that the length of |data| is |data_length|.
+      // API contract, that the length of `data` is `data_length`.
       data_length++;
     }
 

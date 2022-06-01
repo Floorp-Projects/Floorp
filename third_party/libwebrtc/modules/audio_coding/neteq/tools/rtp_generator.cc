@@ -50,7 +50,7 @@ uint32_t TimestampJumpRtpGenerator::GetRtpHeader(uint8_t payload_type,
   if (timestamp_ - static_cast<uint32_t>(payload_length_samples) <=
           jump_from_timestamp_ &&
       timestamp_ > jump_from_timestamp_) {
-    // We just moved across the |jump_from_timestamp_| timestamp. Do the jump.
+    // We just moved across the `jump_from_timestamp_` timestamp. Do the jump.
     timestamp_ = jump_to_timestamp_;
   }
   return ret;

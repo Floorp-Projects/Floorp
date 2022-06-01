@@ -608,7 +608,7 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
 
   // Reinitialize NetEq if it's needed (changed SSRC or first call).
   if (update_sample_rate_and_channels) {
-    // Note: |first_packet_| will be cleared further down in this method, once
+    // Note: `first_packet_` will be cleared further down in this method, once
     // the packet has been successfully inserted into the packet buffer.
 
     // Flush the packet buffer and DTMF buffer.
@@ -784,8 +784,8 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
   }
 
   if (update_sample_rate_and_channels && !packet_buffer_->Empty()) {
-    // We do not use |current_rtp_payload_type_| to |set payload_type|, but
-    // get the next RTP header from |packet_buffer_| to obtain the payload type.
+    // We do not use `current_rtp_payload_type_` to |set payload_type|, but
+    // get the next RTP header from `packet_buffer_` to obtain the payload type.
     // The reason for it is the following corner case. If NetEq receives a
     // CNG packet with a sample rate different than the current CNG then it
     // flushes its buffer, assuming send codec must have been changed. However,
@@ -978,18 +978,18 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
     comfort_noise_->Reset();
   }
 
-  // We treat it as if all packets referenced to by |last_decoded_packet_infos_|
-  // were mashed together when creating the samples in |algorithm_buffer_|.
+  // We treat it as if all packets referenced to by `last_decoded_packet_infos_`
+  // were mashed together when creating the samples in `algorithm_buffer_`.
   RtpPacketInfos packet_infos(last_decoded_packet_infos_);
 
-  // Copy samples from |algorithm_buffer_| to |sync_buffer_|.
+  // Copy samples from `algorithm_buffer_` to `sync_buffer_`.
   //
   // TODO(bugs.webrtc.org/10757):
-  //   We would in the future also like to pass |packet_infos| so that we can do
-  //   sample-perfect tracking of that information across |sync_buffer_|.
+  //   We would in the future also like to pass `packet_infos` so that we can do
+  //   sample-perfect tracking of that information across `sync_buffer_`.
   sync_buffer_->PushBack(*algorithm_buffer_);
 
-  // Extract data from |sync_buffer_| to |output|.
+  // Extract data from `sync_buffer_` to `output`.
   size_t num_output_samples_per_channel = output_size_samples_;
   size_t num_output_samples = output_size_samples_ * sync_buffer_->Channels();
   if (num_output_samples > AudioFrame::kMaxDataSizeSamples) {
@@ -1006,14 +1006,14 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
   audio_frame->sample_rate_hz_ = fs_hz_;
   // TODO(bugs.webrtc.org/10757):
   //   We don't have the ability to properly track individual packets once their
-  //   audio samples have entered |sync_buffer_|. So for now, treat it as if
-  //   |packet_infos| from packets decoded by the current |GetAudioInternal()|
+  //   audio samples have entered `sync_buffer_`. So for now, treat it as if
+  //   `packet_infos` from packets decoded by the current `GetAudioInternal()`
   //   call were all consumed assembling the current audio frame and the current
   //   audio frame only.
   audio_frame->packet_infos_ = std::move(packet_infos);
   if (sync_buffer_->FutureLength() < expand_->overlap_length()) {
-    // The sync buffer should always contain |overlap_length| samples, but now
-    // too many samples have been extracted. Reinstall the |overlap_length|
+    // The sync buffer should always contain `overlap_length` samples, but now
+    // too many samples have been extracted. Reinstall the `overlap_length`
     // lookahead by moving the index.
     const size_t missing_lookahead_samples =
         expand_->overlap_length() - sync_buffer_->FutureLength();
@@ -1031,7 +1031,7 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
     return kSampleUnderrun;
   }
 
-  // Should always have overlap samples left in the |sync_buffer_|.
+  // Should always have overlap samples left in the `sync_buffer_`.
   RTC_DCHECK_GE(sync_buffer_->FutureLength(), expand_->overlap_length());
 
   // TODO(yujo): For muted frames, this can be a copy rather than an addition.
@@ -1041,7 +1041,7 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
   }
 
   // Update the background noise parameters if last operation wrote data
-  // straight from the decoder to the |sync_buffer_|. That is, none of the
+  // straight from the decoder to the `sync_buffer_`. That is, none of the
   // operations that modify the signal can be followed by a parameter update.
   if ((last_mode_ == Mode::kNormal) || (last_mode_ == Mode::kAccelerateFail) ||
       (last_mode_ == Mode::kPreemptiveExpandFail) ||
@@ -1051,14 +1051,14 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
   }
 
   if (operation == Operation::kDtmf) {
-    // DTMF data was written the end of |sync_buffer_|.
-    // Update index to end of DTMF data in |sync_buffer_|.
+    // DTMF data was written the end of `sync_buffer_`.
+    // Update index to end of DTMF data in `sync_buffer_`.
     sync_buffer_->set_dtmf_index(sync_buffer_->Size());
   }
 
   if (last_mode_ != Mode::kExpand && last_mode_ != Mode::kCodecPlc) {
-    // If last operation was not expand, calculate the |playout_timestamp_| from
-    // the |sync_buffer_|. However, do not update the |playout_timestamp_| if it
+    // If last operation was not expand, calculate the `playout_timestamp_` from
+    // the `sync_buffer_`. However, do not update the `playout_timestamp_` if it
     // would be moved "backwards".
     uint32_t temp_timestamp =
         sync_buffer_->end_timestamp() -
@@ -1067,7 +1067,7 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
       playout_timestamp_ = temp_timestamp;
     }
   } else {
-    // Use dead reckoning to estimate the |playout_timestamp_|.
+    // Use dead reckoning to estimate the `playout_timestamp_`.
     playout_timestamp_ += static_cast<uint32_t>(output_size_samples_);
   }
   // Set the timestamp in the audio frame to zero before the first packet has
@@ -1206,7 +1206,7 @@ int NetEqImpl::GetDecision(Operation* operation,
     // Use the provided action instead of the decision NetEq decided on.
     *operation = *action_override;
   }
-  // Check if we already have enough samples in the |sync_buffer_|. If so,
+  // Check if we already have enough samples in the `sync_buffer_`. If so,
   // change decision to normal, unless the decision was merge, accelerate, or
   // preemptive expand.
   if (samples_left >= rtc::dchecked_cast<int>(output_size_samples_) &&
@@ -1245,7 +1245,7 @@ int NetEqImpl::GetDecision(Operation* operation,
         *operation = Operation::kNormal;
       }
     }
-    // Adjust |sync_buffer_| timestamp before setting |end_timestamp| to the
+    // Adjust `sync_buffer_` timestamp before setting `end_timestamp` to the
     // new value.
     sync_buffer_->IncreaseEndTimestamp(timestamp_ - end_timestamp);
     end_timestamp = timestamp_;
@@ -1535,7 +1535,7 @@ int NetEqImpl::DecodeLoop(PacketList* packet_list,
   while (!packet_list->empty() && !decoder_database_->IsComfortNoise(
                                       packet_list->front().payload_type)) {
     RTC_DCHECK(decoder);  // At this point, we must have a decoder object.
-    // The number of channels in the |sync_buffer_| should be the same as the
+    // The number of channels in the `sync_buffer_` should be the same as the
     // number decoder channels.
     RTC_DCHECK_EQ(sync_buffer_->Channels(), decoder->Channels());
     RTC_DCHECK_GE(decoded_buffer_length_, kMaxFrameSize * decoder->Channels());
@@ -1557,7 +1557,7 @@ int NetEqImpl::DecodeLoop(PacketList* packet_list,
       *speech_type = result.speech_type;
       if (result.num_decoded_samples > 0) {
         *decoded_length += rtc::dchecked_cast<int>(result.num_decoded_samples);
-        // Update |decoder_frame_length_| with number of samples per channel.
+        // Update `decoder_frame_length_` with number of samples per channel.
         decoder_frame_length_ =
             result.num_decoded_samples / decoder->Channels();
       }
@@ -1733,7 +1733,7 @@ int NetEqImpl::DoAccelerate(int16_t* decoded_buffer,
   size_t num_channels = algorithm_buffer_->Channels();
   size_t decoded_length_per_channel = decoded_length / num_channels;
   if (decoded_length_per_channel < required_samples) {
-    // Must move data from the |sync_buffer_| in order to get 30 ms.
+    // Must move data from the `sync_buffer_` in order to get 30 ms.
     borrowed_samples_per_channel =
         static_cast<int>(required_samples - decoded_length_per_channel);
     memmove(&decoded_buffer[borrowed_samples_per_channel * num_channels],
@@ -1765,7 +1765,7 @@ int NetEqImpl::DoAccelerate(int16_t* decoded_buffer,
   }
 
   if (borrowed_samples_per_channel > 0) {
-    // Copy borrowed samples back to the |sync_buffer_|.
+    // Copy borrowed samples back to the `sync_buffer_`.
     size_t length = algorithm_buffer_->Size();
     if (length < borrowed_samples_per_channel) {
       // This destroys the beginning of the buffer, but will not cause any
@@ -1806,7 +1806,7 @@ int NetEqImpl::DoPreemptiveExpand(int16_t* decoded_buffer,
   size_t old_borrowed_samples_per_channel = 0;
   size_t decoded_length_per_channel = decoded_length / num_channels;
   if (decoded_length_per_channel < required_samples) {
-    // Must move data from the |sync_buffer_| in order to get 30 ms.
+    // Must move data from the `sync_buffer_` in order to get 30 ms.
     borrowed_samples_per_channel =
         required_samples - decoded_length_per_channel;
     // Calculate how many of these were already played out.
@@ -1843,7 +1843,7 @@ int NetEqImpl::DoPreemptiveExpand(int16_t* decoded_buffer,
   }
 
   if (borrowed_samples_per_channel > 0) {
-    // Copy borrowed samples back to the |sync_buffer_|.
+    // Copy borrowed samples back to the `sync_buffer_`.
     sync_buffer_->ReplaceAtIndex(
         *algorithm_buffer_, borrowed_samples_per_channel,
         sync_buffer_->Size() - borrowed_samples_per_channel);
@@ -1903,10 +1903,10 @@ void NetEqImpl::DoCodecInternalCng(const int16_t* decoded_buffer,
 }
 
 int NetEqImpl::DoDtmf(const DtmfEvent& dtmf_event, bool* play_dtmf) {
-  // This block of the code and the block further down, handling |dtmf_switch|
+  // This block of the code and the block further down, handling `dtmf_switch`
   // are commented out. Otherwise playing out-of-band DTMF would fail in VoE
   // test, DtmfTest.ManualSuccessfullySendsOutOfBandTelephoneEvents. This is
-  // equivalent to |dtmf_switch| always be false.
+  // equivalent to `dtmf_switch` always be false.
   //
   // See http://webrtc-codereview.appspot.com/1195004/ for discussion
   // On this issue. This change might cause some glitches at the point of
@@ -1916,7 +1916,7 @@ int NetEqImpl::DoDtmf(const DtmfEvent& dtmf_event, bool* play_dtmf) {
   //  if ((last_mode_ != Modes::kDtmf) &&
   //      dtmf_tone_generator_->initialized()) {
   //    // Special case; see below.
-  //    // We must catch this before calling Generate, since |initialized| is
+  //    // We must catch this before calling Generate, since `initialized` is
   //    // modified in that call.
   //    dtmf_switch = true;
   //  }
@@ -1948,7 +1948,7 @@ int NetEqImpl::DoDtmf(const DtmfEvent& dtmf_event, bool* play_dtmf) {
   //    // TODO(hlundin): This code seems incorrect. (Legacy.) Write test and
   //    // verify correct operation.
   //    RTC_NOTREACHED();
-  //    // Must generate enough data to replace all of the |sync_buffer_|
+  //    // Must generate enough data to replace all of the `sync_buffer_`
   //    // "future".
   //    int required_length = sync_buffer_->FutureLength();
   //    RTC_DCHECK(dtmf_tone_generator_->initialized());
@@ -2033,7 +2033,7 @@ int NetEqImpl::ExtractPackets(size_t required_samples,
   do {
     timestamp_ = next_packet->timestamp;
     absl::optional<Packet> packet = packet_buffer_->GetNextPacket();
-    // |next_packet| may be invalid after the |packet_buffer_| operation.
+    // `next_packet` may be invalid after the `packet_buffer_` operation.
     next_packet = nullptr;
     if (!packet) {
       RTC_LOG(LS_ERROR) << "Should always be able to extract a packet here";
@@ -2180,7 +2180,7 @@ void NetEqImpl::SetSampleRateAndChannels(int fs_hz, size_t channels) {
   comfort_noise_.reset(
       new ComfortNoise(fs_hz, decoder_database_.get(), sync_buffer_.get()));
 
-  // Verify that |decoded_buffer_| is long enough.
+  // Verify that `decoded_buffer_` is long enough.
   if (decoded_buffer_length_ < kMaxFrameSize * channels) {
     // Reallocate to larger size.
     decoded_buffer_length_ = kMaxFrameSize * channels;

@@ -77,8 +77,8 @@ void AudioMultiVector::PushBackInterleaved(
   size_t length_per_channel = append_this.size() / num_channels_;
   int16_t* temp_array = new int16_t[length_per_channel];  // Temporary storage.
   for (size_t channel = 0; channel < num_channels_; ++channel) {
-    // Copy elements to |temp_array|.
-    // Set |source_ptr| to first element of this channel.
+    // Copy elements to `temp_array`.
+    // Set `source_ptr` to first element of this channel.
     const int16_t* source_ptr = &append_this[channel];
     for (size_t i = 0; i < length_per_channel; ++i) {
       temp_array[i] = *source_ptr;
@@ -132,7 +132,7 @@ size_t AudioMultiVector::ReadInterleavedFromIndex(size_t start_index,
                                                   size_t length,
                                                   int16_t* destination) const {
   RTC_DCHECK(destination);
-  size_t index = 0;  // Number of elements written to |destination| so far.
+  size_t index = 0;  // Number of elements written to `destination` so far.
   RTC_DCHECK_LE(start_index, Size());
   start_index = std::min(start_index, Size());
   if (length + start_index > Size()) {
@@ -162,7 +162,7 @@ void AudioMultiVector::OverwriteAt(const AudioMultiVector& insert_this,
                                    size_t length,
                                    size_t position) {
   RTC_DCHECK_EQ(num_channels_, insert_this.num_channels_);
-  // Cap |length| at the length of |insert_this|.
+  // Cap `length` at the length of `insert_this`.
   RTC_DCHECK_LE(length, insert_this.Size());
   length = std::min(length, insert_this.Size());
   if (num_channels_ == insert_this.num_channels_) {

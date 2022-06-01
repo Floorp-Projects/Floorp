@@ -305,7 +305,7 @@ TEST_F(NetEqDecodingTest, MAYBE_DecoderError) {
   PopulateRtpInfo(0, 0, &rtp_info);
   rtp_info.payloadType = 103;  // iSAC, but the payload is invalid.
   EXPECT_EQ(0, neteq_->InsertPacket(rtp_info, payload));
-  // Set all of |out_data_| to 1, and verify that it was set to 0 by the call
+  // Set all of `out_data_` to 1, and verify that it was set to 0 by the call
   // to GetAudio.
   int16_t* out_frame_data = out_frame_.mutable_data();
   for (size_t i = 0; i < AudioFrame::kMaxDataSizeSamples; ++i) {
@@ -327,7 +327,7 @@ TEST_F(NetEqDecodingTest, MAYBE_DecoderError) {
 }
 
 TEST_F(NetEqDecodingTest, GetAudioBeforeInsertPacket) {
-  // Set all of |out_data_| to 1, and verify that it was set to 0 by the call
+  // Set all of `out_data_` to 1, and verify that it was set to 0 by the call
   // to GetAudio.
   int16_t* out_frame_data = out_frame_.mutable_data();
   for (size_t i = 0; i < AudioFrame::kMaxDataSizeSamples; ++i) {
@@ -371,7 +371,7 @@ class NetEqBgnTest : public NetEqDecodingTest {
     AudioFrame output;
     test::AudioLoop input;
     // We are using the same 32 kHz input file for all tests, regardless of
-    // |sampling_rate_hz|. The output may sound weird, but the test is still
+    // `sampling_rate_hz`. The output may sound weird, but the test is still
     // valid.
     ASSERT_TRUE(input.Init(
         webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm"),
@@ -534,7 +534,7 @@ TEST_F(NetEqDecodingTest, DiscardDuplicateCng) {
   ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, rtc::ArrayView<const uint8_t>(
                                                   payload, payload_len)));
 
-  // Pull audio until we have played |kCngPeriodMs| of CNG. Start at 10 ms since
+  // Pull audio until we have played `kCngPeriodMs` of CNG. Start at 10 ms since
   // we have already pulled out CNG once.
   for (int cng_time_ms = 10; cng_time_ms < kCngPeriodMs; cng_time_ms += 10) {
     ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));

@@ -207,8 +207,8 @@ class NetEqImplTest : public ::testing::Test {
     EXPECT_EQ(1u, output.num_channels_);
     EXPECT_EQ(AudioFrame::kNormalSpeech, output.speech_type_);
 
-    // DTMF packets are immediately consumed by |InsertPacket()| and won't be
-    // returned by |GetAudio()|.
+    // DTMF packets are immediately consumed by `InsertPacket()` and won't be
+    // returned by `GetAudio()`.
     EXPECT_THAT(output.packet_infos_, IsEmpty());
 
     // Verify first 64 samples of actual output.
@@ -461,7 +461,7 @@ TEST_F(NetEqImplTest, VerifyTimestampPropagation) {
    public:
     CountingSamplesDecoder() : next_value_(1) {}
 
-    // Produce as many samples as input bytes (|encoded_len|).
+    // Produce as many samples as input bytes (`encoded_len`).
     int DecodeInternal(const uint8_t* encoded,
                        size_t encoded_len,
                        int /* sample_rate_hz */,
@@ -578,7 +578,7 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
       .WillRepeatedly(Return(rtc::checked_cast<int>(kPayloadLengthSamples)));
   int16_t dummy_output[kPayloadLengthSamples] = {0};
   // The below expectation will make the mock decoder write
-  // |kPayloadLengthSamples| zeros to the output array, and mark it as speech.
+  // `kPayloadLengthSamples` zeros to the output array, and mark it as speech.
   EXPECT_CALL(mock_decoder, DecodeInternal(Pointee(0), kPayloadLengthBytes,
                                            kSampleRateHz, _, _))
       .WillOnce(DoAll(SetArrayArgument<3>(dummy_output,
@@ -1284,7 +1284,7 @@ TEST_F(NetEqImplTest, DecodedPayloadTooShort) {
       .WillRepeatedly(Return(rtc::checked_cast<int>(kPayloadLengthSamples)));
   int16_t dummy_output[kPayloadLengthSamples] = {0};
   // The below expectation will make the mock decoder write
-  // |kPayloadLengthSamples| - 5 zeros to the output array, and mark it as
+  // `kPayloadLengthSamples` - 5 zeros to the output array, and mark it as
   // speech. That is, the decoded length is 5 samples shorter than the expected.
   EXPECT_CALL(mock_decoder,
               DecodeInternal(_, kPayloadLengthBytes, kSampleRateHz, _, _))

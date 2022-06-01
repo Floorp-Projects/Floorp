@@ -167,7 +167,7 @@ int Expand::Process(AudioMultiVector* output) {
     }
 
     // Smooth the expanded if it has not been muted to a low amplitude and
-    // |current_voice_mix_factor| is larger than 0.5.
+    // `current_voice_mix_factor` is larger than 0.5.
     if ((parameters.mute_factor > 819) &&
         (parameters.current_voice_mix_factor > 8192)) {
       size_t start_ix = sync_buffer_->Size() - overlap_length_;
@@ -197,7 +197,7 @@ int Expand::Process(AudioMultiVector* output) {
     }
 
     // Unvoiced part.
-    // Filter |scaled_random_vector| through |ar_filter_|.
+    // Filter `scaled_random_vector` through `ar_filter_`.
     memcpy(unvoiced_vector - kUnvoicedLpcOrder, parameters.ar_filter_state,
            sizeof(int16_t) * kUnvoicedLpcOrder);
     int32_t add_constant = 0;
@@ -402,7 +402,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
 
   // Calculate correlation in downsampled domain (4 kHz sample rate).
   size_t correlation_length = 51;  // TODO(hlundin): Legacy bit-exactness.
-  // If it is decided to break bit-exactness |correlation_length| should be
+  // If it is decided to break bit-exactness `correlation_length` should be
   // initialized to the return value of Correlation().
   Correlation(audio_history.get(), signal_length, correlation_vector);
 
@@ -417,7 +417,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
   best_correlation_index[1] += fs_mult_20;
   best_correlation_index[2] += fs_mult_20;
 
-  // Calculate distortion around the |kNumCorrelationCandidates| best lags.
+  // Calculate distortion around the `kNumCorrelationCandidates` best lags.
   int distortion_scale = 0;
   for (size_t i = 0; i < kNumCorrelationCandidates; i++) {
     size_t min_index =
@@ -434,7 +434,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
   WebRtcSpl_VectorBitShiftW32ToW16(best_distortion, kNumCorrelationCandidates,
                                    best_distortion_w32, distortion_scale);
 
-  // Find the maximizing index |i| of the cost function
+  // Find the maximizing index `i` of the cost function
   // f[i] = best_correlation[i] / best_distortion[i].
   int32_t best_ratio = std::numeric_limits<int32_t>::min();
   size_t best_index = std::numeric_limits<size_t>::max();
@@ -458,7 +458,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
   max_lag_ = std::max(distortion_lag, correlation_lag);
 
   // Calculate the exact best correlation in the range between
-  // |correlation_lag| and |distortion_lag|.
+  // `correlation_lag` and `distortion_lag`.
   correlation_length = std::max(std::min(distortion_lag + 10, fs_mult_120),
                                 static_cast<size_t>(60 * fs_mult));
 
@@ -487,7 +487,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
         (31 - WebRtcSpl_NormW32(static_cast<int32_t>(correlation_length))) - 31;
     correlation_scale = std::max(0, correlation_scale);
 
-    // Calculate the correlation, store in |correlation_vector2|.
+    // Calculate the correlation, store in `correlation_vector2`.
     WebRtcSpl_CrossCorrelation(
         correlation_vector2,
         &(audio_history[signal_length - correlation_length]),
@@ -537,7 +537,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
     }
 
     // Extract the two vectors expand_vector0 and expand_vector1 from
-    // |audio_history|.
+    // `audio_history`.
     size_t expansion_length = max_lag_ + overlap_length_;
     const int16_t* vector1 = &(audio_history[signal_length - expansion_length]);
     const int16_t* vector2 = vector1 - distortion_lag;
@@ -594,13 +594,13 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
       expand_lags_[1] = distortion_lag;
       expand_lags_[2] = distortion_lag;
     } else {
-      // |distortion_lag| and |correlation_lag| are not equal; use different
+      // `distortion_lag` and `correlation_lag` are not equal; use different
       // combinations of the two.
-      // First lag is |distortion_lag| only.
+      // First lag is `distortion_lag` only.
       expand_lags_[0] = distortion_lag;
       // Second lag is the average of the two.
       expand_lags_[1] = (distortion_lag + correlation_lag) / 2;
-      // Third lag is the average again, but rounding towards |correlation_lag|.
+      // Third lag is the average again, but rounding towards `correlation_lag`.
       if (distortion_lag > correlation_lag) {
         expand_lags_[2] = (distortion_lag + correlation_lag - 1) / 2;
       } else {
@@ -638,7 +638,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
       if (stability != 1) {
         // Set first coefficient to 4096 (1.0 in Q12).
         parameters.ar_filter[0] = 4096;
-        // Set remaining |kUnvoicedLpcOrder| coefficients to zero.
+        // Set remaining `kUnvoicedLpcOrder` coefficients to zero.
         WebRtcSpl_MemSetW16(parameters.ar_filter + 1, 0, kUnvoicedLpcOrder);
       }
     }
@@ -656,7 +656,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
                sizeof(int16_t) * noise_length);
       } else {
         // Only applies to SWB where length could be larger than
-        // |kRandomTableSize|.
+        // `kRandomTableSize`.
         memcpy(random_vector, RandomVector::kRandomTable,
                sizeof(int16_t) * RandomVector::kRandomTableSize);
         RTC_DCHECK_LE(noise_length, kMaxSampleRate / 8000 * 120 + 30);
@@ -694,7 +694,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
     int32_t unvoiced_energy = WebRtcSpl_DotProductWithScale(
         unvoiced_vector, unvoiced_vector, 128, unvoiced_prescale);
 
-    // Normalize |unvoiced_energy| to 28 or 29 bits to preserve sqrt() accuracy.
+    // Normalize `unvoiced_energy` to 28 or 29 bits to preserve sqrt() accuracy.
     int16_t unvoiced_scale = WebRtcSpl_NormW32(unvoiced_energy) - 3;
     // Make sure we do an odd number of shifts since we already have 7 shifts
     // from dividing with 128 earlier. This will make the total scale factor
@@ -715,7 +715,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
     //   voice_mix_factor = 0;
     if (corr_coefficient > 7875) {
       int16_t x1, x2, x3;
-      // |corr_coefficient| is in Q14.
+      // `corr_coefficient` is in Q14.
       x1 = static_cast<int16_t>(corr_coefficient);
       x2 = (x1 * x1) >> 14;  // Shift 14 to keep result in Q14.
       x3 = (x1 * x2) >> 14;
@@ -733,13 +733,13 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
     }
 
     // Calculate muting slope. Reuse value from earlier scaling of
-    // |expand_vector0| and |expand_vector1|.
+    // `expand_vector0` and `expand_vector1`.
     int16_t slope = amplitude_ratio;
     if (slope > 12288) {
       // slope > 1.5.
       // Calculate (1 - (1 / slope)) / distortion_lag =
       // (slope - 1) / (distortion_lag * slope).
-      // |slope| is in Q13, so 1 corresponds to 8192. Shift up to Q25 before
+      // `slope` is in Q13, so 1 corresponds to 8192. Shift up to Q25 before
       // the division.
       // Shift the denominator from Q13 to Q5 before the division. The result of
       // the division will then be in Q20.
@@ -757,7 +757,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
       parameters.onset = true;
     } else {
       // Calculate (1 - slope) / distortion_lag.
-      // Shift |slope| by 7 to Q20 before the division. The result is in Q20.
+      // Shift `slope` by 7 to Q20 before the division. The result is in Q20.
       parameters.mute_slope = WebRtcSpl_DivW32W16(
           (8192 - slope) * 128, static_cast<int16_t>(distortion_lag));
       if (parameters.voice_mix_factor <= 13107) {
@@ -826,7 +826,7 @@ void Expand::Correlation(const int16_t* input,
       kDownsampledLength, filter_coefficients, num_coefficients,
       downsampling_factor, kFilterDelay);
 
-  // Normalize |downsampled_input| to using all 16 bits.
+  // Normalize `downsampled_input` to using all 16 bits.
   int16_t max_value =
       WebRtcSpl_MaxAbsValueW16(downsampled_input, kDownsampledLength);
   int16_t norm_shift = 16 - WebRtcSpl_NormW32(max_value);

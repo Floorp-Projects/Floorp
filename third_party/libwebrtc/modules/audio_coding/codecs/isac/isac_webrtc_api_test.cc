@@ -203,7 +203,7 @@ TEST_P(EncoderTest, DoNotOvershootTargetBitrate) {
       e->Encode(/*rtp_timestamp=*/0, AudioFrameToView(in), &encoded);
       num_bytes += encoded.size();
     }
-    // Inverse of the duration of |kNumFrames| 10 ms frames (unit: seconds^-1).
+    // Inverse of the duration of `kNumFrames` 10 ms frames (unit: seconds^-1).
     constexpr float kAudioDurationInv = 100.f / kNumFrames;
     const int measured_bitrate_bps = 8 * num_bytes * kAudioDurationInv;
     EXPECT_LT(measured_bitrate_bps, bitrate_bps + 2000);  // Max 2 kbps extra.

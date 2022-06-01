@@ -123,7 +123,7 @@ void NackTracker::AddToList(uint16_t sequence_number_current_received_rtp) {
              IsNewerSequenceNumber(sequence_number_current_received_rtp,
                                    sequence_num_last_decoded_rtp_));
 
-  // Packets with sequence numbers older than |upper_bound_missing| are
+  // Packets with sequence numbers older than `upper_bound_missing` are
   // considered missing, and the rest are considered late.
   uint16_t upper_bound_missing =
       sequence_number_current_received_rtp - nack_threshold_packets_;

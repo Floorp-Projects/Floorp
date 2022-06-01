@@ -145,7 +145,7 @@ AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
     info.redundant.push_back(it->first);
   }
 
-  // |info| will be implicitly cast to an EncodedInfoLeaf struct, effectively
+  // `info` will be implicitly cast to an EncodedInfoLeaf struct, effectively
   // discarding the (empty) vector of redundant information. This is
   // intentional.
   if (header_length_bytes > 0) {

@@ -34,9 +34,9 @@ class DelayManager {
                std::unique_ptr<Histogram> histogram);
 
   // Create a DelayManager object. Notify the delay manager that the packet
-  // buffer can hold no more than |max_packets_in_buffer| packets (i.e., this
+  // buffer can hold no more than `max_packets_in_buffer` packets (i.e., this
   // is the number of packet slots in the buffer) and that the target delay
-  // should be greater than or equal to |base_minimum_delay_ms|. Supply a
+  // should be greater than or equal to `base_minimum_delay_ms`. Supply a
   // PeakDetector object to the DelayManager.
   static std::unique_ptr<DelayManager> Create(int max_packets_in_buffer,
                                               int base_minimum_delay_ms,
@@ -44,10 +44,10 @@ class DelayManager {
 
   virtual ~DelayManager();
 
-  // Updates the delay manager with a new incoming packet, with |timestamp| from
+  // Updates the delay manager with a new incoming packet, with `timestamp` from
   // the RTP header. This updates the statistics and a new target buffer level
   // is calculated. Returns the relative delay if it can be calculated. If
-  // |reset| is true, restarts the relative arrival delay calculation from this
+  // `reset` is true, restarts the relative arrival delay calculation from this
   // packet.
   virtual absl::optional<int> Update(uint32_t timestamp,
                                      int sample_rate_hz,
@@ -63,7 +63,7 @@ class DelayManager {
   virtual int SetPacketAudioLength(int length_ms);
 
   // Accessors and mutators.
-  // Assuming |delay| is in valid range.
+  // Assuming `delay` is in valid range.
   virtual bool SetMinimumDelay(int delay_ms);
   virtual bool SetMaximumDelay(int delay_ms);
   virtual bool SetBaseMinimumDelay(int delay_ms);
@@ -78,25 +78,25 @@ class DelayManager {
 
  private:
   // Provides value which minimum delay can't exceed based on current buffer
-  // size and given |maximum_delay_ms_|. Lower bound is a constant 0.
+  // size and given `maximum_delay_ms_`. Lower bound is a constant 0.
   int MinimumDelayUpperBound() const;
 
-  // Updates |delay_history_|.
+  // Updates `delay_history_`.
   void UpdateDelayHistory(int iat_delay_ms,
                           uint32_t timestamp,
                           int sample_rate_hz);
 
-  // Calculate relative packet arrival delay from |delay_history_|.
+  // Calculate relative packet arrival delay from `delay_history_`.
   int CalculateRelativePacketArrivalDelay() const;
 
-  // Updates |effective_minimum_delay_ms_| delay based on current
-  // |minimum_delay_ms_|, |base_minimum_delay_ms_| and |maximum_delay_ms_|
+  // Updates `effective_minimum_delay_ms_` delay based on current
+  // `minimum_delay_ms_`, `base_minimum_delay_ms_` and `maximum_delay_ms_`
   // and buffer size.
   void UpdateEffectiveMinimumDelay();
 
-  // Makes sure that |delay_ms| is less than maximum delay, if any maximum
-  // is set. Also, if possible check |delay_ms| to be less than 75% of
-  // |max_packets_in_buffer_|.
+  // Makes sure that `delay_ms` is less than maximum delay, if any maximum
+  // is set. Also, if possible check `delay_ms` to be less than 75% of
+  // `max_packets_in_buffer_`.
   bool IsValidMinimumDelay(int delay_ms) const;
 
   bool IsValidBaseMinimumDelay(int delay_ms) const;

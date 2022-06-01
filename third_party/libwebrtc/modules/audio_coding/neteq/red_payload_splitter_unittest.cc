@@ -70,9 +70,9 @@ void CreateOpusFecPayload(uint8_t* payload,
 //   |0|   Block PT  |
 //   +-+-+-+-+-+-+-+-+
 
-// Creates a RED packet, with |num_payloads| payloads, with payload types given
-// by the values in array |payload_types| (which must be of length
-// |num_payloads|). Each redundant payload is |timestamp_offset| samples
+// Creates a RED packet, with `num_payloads` payloads, with payload types given
+// by the values in array `payload_types` (which must be of length
+// `num_payloads`). Each redundant payload is `timestamp_offset` samples
 // "behind" the the previous payload.
 Packet CreateRedPayload(size_t num_payloads,
                         uint8_t* payload_types,
@@ -109,7 +109,7 @@ Packet CreateRedPayload(size_t num_payloads,
     ++payload_ptr;
   }
   for (size_t i = 0; i < num_payloads; ++i) {
-    // Write |i| to all bytes in each payload.
+    // Write `i` to all bytes in each payload.
     if (embed_opus_fec) {
       CreateOpusFecPayload(payload_ptr, kPayloadLength,
                            static_cast<uint8_t>(i));
@@ -121,7 +121,7 @@ Packet CreateRedPayload(size_t num_payloads,
   return packet;
 }
 
-// Create a packet with all payload bytes set to |payload_value|.
+// Create a packet with all payload bytes set to `payload_value`.
 Packet CreatePacket(uint8_t payload_type,
                     size_t payload_length,
                     uint8_t payload_value,
@@ -140,7 +140,7 @@ Packet CreatePacket(uint8_t payload_type,
   return packet;
 }
 
-// Checks that |packet| has the attributes given in the remaining parameters.
+// Checks that `packet` has the attributes given in the remaining parameters.
 void VerifyPacket(const Packet& packet,
                   size_t payload_length,
                   uint8_t payload_type,
@@ -289,7 +289,7 @@ TEST(RedPayloadSplitter, TwoPacketsThreePayloads) {
 TEST(RedPayloadSplitter, CheckRedPayloads) {
   PacketList packet_list;
   for (uint8_t i = 0; i <= 3; ++i) {
-    // Create packet with payload type |i|, payload length 10 bytes, all 0.
+    // Create packet with payload type `i`, payload length 10 bytes, all 0.
     packet_list.push_back(CreatePacket(i, 10, 0));
   }
 

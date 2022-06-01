@@ -124,17 +124,17 @@ TEST(TestPacket, DummyPaddingPacket) {
 }
 
 namespace {
-// Writes one RED block header starting at |rtp_data|, according to RFC 2198.
+// Writes one RED block header starting at `rtp_data`, according to RFC 2198.
 // returns the number of bytes written (1 or 4).
 //
-// Format if |last_payoad| is false:
+// Format if `last_payoad` is false:
 // 0                   1                    2                   3
 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3  4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |1|   block PT  |  timestamp offset         |   block length    |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
-// Format if |last_payoad| is true:
+// Format if `last_payoad` is true:
 // 0 1 2 3 4 5 6 7
 // +-+-+-+-+-+-+-+-+
 // |0|   Block PT  |
@@ -183,7 +183,7 @@ TEST(TestPacket, RED) {
                                  last_block, payload_ptr);
   }
   const double kPacketTime = 1.0;
-  // Hand over ownership of |packet_memory| to |packet|.
+  // Hand over ownership of `packet_memory` to `packet`.
   Packet packet(packet_memory, kPacketLengthBytes, kPacketTime);
   ASSERT_TRUE(packet.valid_header());
   EXPECT_EQ(kRedPayloadType, packet.header().payloadType);

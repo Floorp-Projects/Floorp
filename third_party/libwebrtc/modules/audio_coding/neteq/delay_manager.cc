@@ -191,7 +191,7 @@ absl::optional<int> DelayManager::Update(uint32_t timestamp,
     }
   }
 
-  // Calculate new |target_level_ms_| based on updated statistics.
+  // Calculate new `target_level_ms_` based on updated statistics.
   int bucket_index = histogram_->Quantile(histogram_quantile_);
   target_level_ms_ = (1 + bucket_index) * kBucketSizeMs;
   target_level_ms_ = std::max(target_level_ms_, effective_minimum_delay_ms_);
@@ -293,7 +293,7 @@ bool DelayManager::SetMinimumDelay(int delay_ms) {
 }
 
 bool DelayManager::SetMaximumDelay(int delay_ms) {
-  // If |delay_ms| is zero then it unsets the maximum delay and target level is
+  // If `delay_ms` is zero then it unsets the maximum delay and target level is
   // unconstrained by maximum delay.
   if (delay_ms != 0 &&
       (delay_ms < minimum_delay_ms_ || delay_ms < packet_len_ms_)) {
@@ -321,7 +321,7 @@ int DelayManager::GetBaseMinimumDelay() const {
 }
 
 void DelayManager::UpdateEffectiveMinimumDelay() {
-  // Clamp |base_minimum_delay_ms_| into the range which can be effectively
+  // Clamp `base_minimum_delay_ms_` into the range which can be effectively
   // used.
   const int base_minimum_delay_ms =
       rtc::SafeClamp(base_minimum_delay_ms_, 0, MinimumDelayUpperBound());

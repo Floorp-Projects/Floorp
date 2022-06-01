@@ -63,9 +63,9 @@ class NackTracker {
 
   // Set a maximum for the size of the NACK list. If the last received packet
   // has sequence number of N, then NACK list will not contain any element
-  // with sequence number earlier than N - |max_nack_list_size|.
+  // with sequence number earlier than N - `max_nack_list_size`.
   //
-  // The largest maximum size is defined by |kNackListSizeLimit|
+  // The largest maximum size is defined by `kNackListSizeLimit`
   void SetMaxNackListSize(size_t max_nack_list_size);
 
   // Set the sampling rate.
@@ -90,7 +90,7 @@ class NackTracker {
   std::vector<uint16_t> GetNackList(int64_t round_trip_time_ms) const;
 
   // Reset to default values. The NACK list is cleared.
-  // |nack_threshold_packets_| & |max_nack_list_size_| preserve their values.
+  // `nack_threshold_packets_` & `max_nack_list_size_` preserve their values.
   void Reset();
 
  private:
@@ -110,7 +110,7 @@ class NackTracker {
     int64_t time_to_play_ms;
 
     // A guess about the timestamp of the missing packet, it is used for
-    // estimation of |time_to_play_ms|. The estimate might be slightly wrong if
+    // estimation of `time_to_play_ms`. The estimate might be slightly wrong if
     // there has been frame-size change since the last received packet and the
     // missing packet. However, the risk of this is low, and in case of such
     // errors, there will be a minor misestimation in time-to-play of missing
@@ -139,7 +139,7 @@ class NackTracker {
   // computed correctly.
   NackList GetNackList() const;
 
-  // Given the |sequence_number_current_received_rtp| of currently received RTP,
+  // Given the `sequence_number_current_received_rtp` of currently received RTP,
   // recognize packets which are not arrive and add to the list.
   void AddToList(uint16_t sequence_number_current_received_rtp);
 
@@ -147,23 +147,23 @@ class NackTracker {
   // This is called when 10 ms elapsed with no new RTP packet decoded.
   void UpdateEstimatedPlayoutTimeBy10ms();
 
-  // Given the |sequence_number_current_received_rtp| and
-  // |timestamp_current_received_rtp| of currently received RTP update number
+  // Given the `sequence_number_current_received_rtp` and
+  // `timestamp_current_received_rtp` of currently received RTP update number
   // of samples per packet.
   void UpdateSamplesPerPacket(uint16_t sequence_number_current_received_rtp,
                               uint32_t timestamp_current_received_rtp);
 
-  // Given the |sequence_number_current_received_rtp| of currently received RTP
+  // Given the `sequence_number_current_received_rtp` of currently received RTP
   // update the list. That is; some packets will change from late to missing,
   // some packets are inserted as missing and some inserted as late.
   void UpdateList(uint16_t sequence_number_current_received_rtp);
 
   // Packets which are considered late for too long (according to
-  // |nack_threshold_packets_|) are flagged as missing.
+  // `nack_threshold_packets_`) are flagged as missing.
   void ChangeFromLateToMissing(uint16_t sequence_number_current_received_rtp);
 
   // Packets which have sequence number older that
-  // |sequence_num_last_received_rtp_| - |max_nack_list_size_| are removed
+  // `sequence_num_last_received_rtp_` - `max_nack_list_size_` are removed
   // from the NACK list.
   void LimitNackListSize();
 
@@ -173,9 +173,9 @@ class NackTracker {
   // Compute time-to-play given a timestamp.
   int64_t TimeToPlay(uint32_t timestamp) const;
 
-  // If packet N is arrived, any packet prior to N - |nack_threshold_packets_|
+  // If packet N is arrived, any packet prior to N - `nack_threshold_packets_`
   // which is not arrived is considered missing, and should be in NACK list.
-  // Also any packet in the range of N-1 and N - |nack_threshold_packets_|,
+  // Also any packet in the range of N-1 and N - `nack_threshold_packets_`,
   // exclusive, which is not arrived is considered late, and should should be
   // in the list of late packets.
   const int nack_threshold_packets_;
@@ -202,7 +202,7 @@ class NackTracker {
   NackList nack_list_;
 
   // NACK list will not keep track of missing packets prior to
-  // |sequence_num_last_received_rtp_| - |max_nack_list_size_|.
+  // `sequence_num_last_received_rtp_` - `max_nack_list_size_`.
   size_t max_nack_list_size_;
 };
 

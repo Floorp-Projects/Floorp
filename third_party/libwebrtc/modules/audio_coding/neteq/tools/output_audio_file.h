@@ -23,7 +23,7 @@ namespace test {
 
 class OutputAudioFile : public AudioSink {
  public:
-  // Creates an OutputAudioFile, opening a file named |file_name| for writing.
+  // Creates an OutputAudioFile, opening a file named `file_name` for writing.
   // The file format is 16-bit signed host-endian PCM.
   explicit OutputAudioFile(const std::string& file_name) {
     out_file_ = fopen(file_name.c_str(), "wb");
