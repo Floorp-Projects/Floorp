@@ -93,8 +93,8 @@ class RealTimeClock : public Clock {
   }
 
   NtpTime ConvertTimestampToNtpTime(Timestamp timestamp) override {
-    // This method does not check |use_system_independent_ntp_time_| because
-    // all callers never used the old behavior of |CurrentNtpTime|.
+    // This method does not check `use_system_independent_ntp_time_` because
+    // all callers never used the old behavior of `CurrentNtpTime`.
     return TimeMicrosToNtp(timestamp.us());
   }
 
