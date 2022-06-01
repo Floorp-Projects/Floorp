@@ -157,7 +157,7 @@ class JsepTransport2Test : public ::testing::Test, public sigslot::has_slots<> {
 
   std::unique_ptr<JsepTransport> jsep_transport_;
   bool signal_rtcp_mux_active_received_ = false;
-  // The SrtpTransport is owned by |jsep_transport_|. Keep a raw pointer here
+  // The SrtpTransport is owned by `jsep_transport_`. Keep a raw pointer here
   // for testing.
   webrtc::SrtpTransport* sdes_transport_ = nullptr;
 };
