@@ -113,7 +113,7 @@ class GlobalObjectData {
   // Names are only removed from this list by a |delete IdentifierReference|
   // that successfully removes that global property.
   using VarNamesSet =
-      GCHashSet<HeapPtr<JSAtom*>, DefaultHasher<JSAtom*>, ZoneAllocPolicy>;
+      GCHashSet<HeapPtr<JSAtom*>, DefaultHasher<JSAtom*>, CellAllocPolicy>;
   VarNamesSet varNames;
 
   // The original values for built-in constructors (with their prototype
