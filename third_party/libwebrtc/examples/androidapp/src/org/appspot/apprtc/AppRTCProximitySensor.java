@@ -34,8 +34,8 @@ public class AppRTCProximitySensor implements SensorEventListener {
   private static final String TAG = "AppRTCProximitySensor";
 
   // This class should be created, started and stopped on one thread
-  // (e.g. the main thread). We use |nonThreadSafe| to ensure that this is
-  // the case. Only active when |DEBUG| is set to true.
+  // (e.g. the main thread). We use `nonThreadSafe` to ensure that this is
+  // the case. Only active when `DEBUG` is set to true.
   private final ThreadUtils.ThreadChecker threadChecker = new ThreadUtils.ThreadChecker();
 
   private final Runnable onSensorStateListener;

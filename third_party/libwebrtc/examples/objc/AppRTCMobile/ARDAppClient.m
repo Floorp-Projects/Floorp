@@ -64,7 +64,7 @@ static int64_t const kARDAppClientRtcEventLogMaxSizeInBytes = 5e6;  // 5 MB.
 static int const kKbpsMultiplier = 1000;
 
 // We need a proxy to NSTimer because it causes a strong retain cycle. When
-// using the proxy, |invalidate| must be called before it properly deallocs.
+// using the proxy, `invalidate` must be called before it properly deallocs.
 @interface ARDTimerProxy : NSObject
 
 - (instancetype)initWithInterval:(NSTimeInterval)interval

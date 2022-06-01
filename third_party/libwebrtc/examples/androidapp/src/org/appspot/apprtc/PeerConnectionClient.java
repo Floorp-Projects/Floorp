@@ -322,7 +322,7 @@ public class PeerConnectionClient {
 
   /**
    * Create a PeerConnectionClient with the specified parameters. PeerConnectionClient takes
-   * ownership of |eglBase|.
+   * ownership of `eglBase`.
    */
   public PeerConnectionClient(Context appContext, EglBase eglBase,
       PeerConnectionParameters peerConnectionParameters, PeerConnectionEvents events) {
@@ -620,7 +620,7 @@ public class PeerConnectionClient {
     isInitiator = false;
 
     // Set INFO libjingle logging.
-    // NOTE: this _must_ happen while |factory| is alive!
+    // NOTE: this _must_ happen while `factory` is alive!
     Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO);
 
     List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
@@ -1115,7 +1115,7 @@ public class PeerConnectionClient {
     final List<String> unpreferredPayloadTypes =
         new ArrayList<>(origLineParts.subList(3, origLineParts.size()));
     unpreferredPayloadTypes.removeAll(preferredPayloadTypes);
-    // Reconstruct the line with |preferredPayloadTypes| moved to the beginning of the payload
+    // Reconstruct the line with `preferredPayloadTypes` moved to the beginning of the payload
     // types.
     final List<String> newLineParts = new ArrayList<>();
     newLineParts.addAll(header);
@@ -1131,7 +1131,7 @@ public class PeerConnectionClient {
       Log.w(TAG, "No mediaDescription line, so can't prefer " + codec);
       return sdp;
     }
-    // A list with all the payload types with name |codec|. The payload types are integers in the
+    // A list with all the payload types with name `codec`. The payload types are integers in the
     // range 96-127, but they are stored as strings here.
     final List<String> codecPayloadTypes = new ArrayList<>();
     // a=rtpmap:<payload type> <encoding name>/<clock rate> [/<encoding parameters>]
