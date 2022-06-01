@@ -133,8 +133,8 @@ RtpPayloadParams::RtpPayloadParams(const uint32_t ssrc,
           absl::StartsWith(trials.Lookup("WebRTC-GenericPictureId"),
                            "Enabled")),
       simulate_generic_vp9_(
-          !absl::StartsWith(trials.Lookup("WebRTC-Vp9DependencyDescriptor"),
-                            "Disabled")) {
+          absl::StartsWith(trials.Lookup("WebRTC-Vp9DependencyDescriptor"),
+                           "Enabled")) {
   for (auto& spatial_layer : last_shared_frame_id_)
     spatial_layer.fill(-1);
 
