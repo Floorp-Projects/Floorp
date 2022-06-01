@@ -39,6 +39,7 @@
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer.h"
 #include "modules/video_coding/h264_sps_pps_tracker.h"
 #include "modules/video_coding/loss_notification_controller.h"
+#include "modules/video_coding/nack_module2.h"
 #include "modules/video_coding/packet_buffer.h"
 #include "modules/video_coding/rtp_frame_reference_finder.h"
 #include "modules/video_coding/unique_timestamp_counter.h"
@@ -89,6 +90,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
       ReceiveStatistics* rtp_receive_statistics,
       RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
       RtcpCnameCallback* rtcp_cname_callback,
+      NackPeriodicProcessor* nack_periodic_processor,
       VCMReceiveStatisticsCallback* vcm_receive_statistics,
       NackSender* nack_sender,
       // The KeyFrameRequestSender is optional; if not provided, key frame

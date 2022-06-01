@@ -108,6 +108,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
 
 std::unique_ptr<NackModule2> MaybeConstructNackModule(
     TaskQueueBase* current_queue,
+    NackPeriodicProcessor* nack_periodic_processor,
     const VideoReceiveStream::Config& config,
     Clock* clock,
     NackSender* nack_sender,
@@ -116,7 +117,8 @@ std::unique_ptr<NackModule2> MaybeConstructNackModule(
     return nullptr;
 
   // TODO(bugs.webrtc.org/12420): pass rtp_history_ms to the nack module.
-  return std::make_unique<NackModule2>(current_queue, clock, nack_sender,
+  return std::make_unique<NackModule2>(current_queue, nack_periodic_processor,
+                                       clock, nack_sender,
                                        keyframe_request_sender);
 }
 
@@ -213,6 +215,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
     ReceiveStatistics* rtp_receive_statistics,
     RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
     RtcpCnameCallback* rtcp_cname_callback,
+    NackPeriodicProcessor* nack_periodic_processor,
     VCMReceiveStatisticsCallback* vcm_receive_statistics,
     NackSender* nack_sender,
     KeyFrameRequestSender* keyframe_request_sender,
@@ -249,6 +252,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       // directly with |rtp_rtcp_|.
       rtcp_feedback_buffer_(this, nack_sender, this),
       nack_module_(MaybeConstructNackModule(current_queue,
+                                            nack_periodic_processor,
                                             config_,
                                             clock_,
                                             &rtcp_feedback_buffer_,

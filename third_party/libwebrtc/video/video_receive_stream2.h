@@ -25,6 +25,7 @@
 #include "modules/rtp_rtcp/include/flexfec_receiver.h"
 #include "modules/rtp_rtcp/source/source_tracker.h"
 #include "modules/video_coding/frame_buffer2.h"
+#include "modules/video_coding/nack_module2.h"
 #include "modules/video_coding/video_receiver2.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
@@ -97,7 +98,8 @@ class VideoReceiveStream2
                       VideoReceiveStream::Config config,
                       CallStats* call_stats,
                       Clock* clock,
-                      VCMTiming* timing);
+                      VCMTiming* timing,
+                      NackPeriodicProcessor* nack_periodic_processor);
   // Destruction happens on the worker thread. Prior to destruction the caller
   // must ensure that a registration with the transport has been cleared. See
   // `RegisterWithTransport` for details.

@@ -30,19 +30,53 @@
 
 namespace webrtc {
 
+class NackModuleBase {
+ public:
+  virtual ~NackModuleBase() = default;
+  virtual void ProcessNacks() = 0;
+};
+
+class NackPeriodicProcessor {
+ public:
+  static constexpr TimeDelta kUpdateInterval = TimeDelta::Millis(20);
+  explicit NackPeriodicProcessor(TimeDelta update_interval = kUpdateInterval);
+  ~NackPeriodicProcessor();
+  void RegisterNackModule(NackModuleBase* module);
+  void UnregisterNackModule(NackModuleBase* module);
+
+ private:
+  void ProcessNackModules() RTC_RUN_ON(sequence_);
+
+  const TimeDelta update_interval_;
+  RepeatingTaskHandle repeating_task_ RTC_GUARDED_BY(sequence_);
+  std::vector<NackModuleBase*> modules_ RTC_GUARDED_BY(sequence_);
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_;
+};
+
+class ScopedNackPeriodicProcessorRegistration {
+ public:
+  ScopedNackPeriodicProcessorRegistration(NackModuleBase* module,
+                                          NackPeriodicProcessor* processor);
+  ~ScopedNackPeriodicProcessorRegistration();
+
+ private:
+  NackModuleBase* const module_;
+  NackPeriodicProcessor* const processor_;
+};
+
 // TODO(bugs.webrtc.org/11594): This class no longer implements the Module
 // interface and therefore "NackModule" may not be a descriptive name anymore.
 // Consider renaming to e.g. NackTracker or NackRequester.
-class NackModule2 final {
+class NackModule2 final : public NackModuleBase {
  public:
-  static constexpr TimeDelta kUpdateInterval = TimeDelta::Millis(20);
-
   NackModule2(TaskQueueBase* current_queue,
+              NackPeriodicProcessor* periodic_processor,
               Clock* clock,
               NackSender* nack_sender,
-              KeyFrameRequestSender* keyframe_request_sender,
-              TimeDelta update_interval = kUpdateInterval);
+              KeyFrameRequestSender* keyframe_request_sender);
   ~NackModule2();
+
+  void ProcessNacks() override;
 
   int OnReceivedPacket(uint16_t seq_num, bool is_keyframe);
   int OnReceivedPacket(uint16_t seq_num, bool is_keyframe, bool is_recovered);
@@ -103,11 +137,6 @@ class NackModule2 final {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(worker_thread_);
 
   TaskQueueBase* const worker_thread_;
-
-  // Used to regularly call SendNack if needed.
-  RepeatingTaskHandle repeating_task_ RTC_GUARDED_BY(worker_thread_);
-  const TimeDelta update_interval_;
-
   Clock* const clock_;
   NackSender* const nack_sender_;
   KeyFrameRequestSender* const keyframe_request_sender_;
@@ -130,6 +159,8 @@ class NackModule2 final {
   const int64_t send_nack_delay_ms_;
 
   const absl::optional<BackoffSettings> backoff_settings_;
+
+  ScopedNackPeriodicProcessorRegistration processor_registration_;
 
   // Used to signal destruction to potentially pending tasks.
   ScopedTaskSafety task_safety_;
