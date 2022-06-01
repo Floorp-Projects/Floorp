@@ -10,6 +10,7 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/AppShutdown.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Poison.h"
 #include "mozilla/SharedThreadPool.h"
@@ -610,14 +611,12 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     mozilla::AppShutdown::AdvanceShutdownPhase(
         mozilla::ShutdownPhase::XPCOMWillShutdown);
 
+    // We want the service manager to be the subject of notifications
     nsCOMPtr<nsIServiceManager> mgr;
     rv = NS_GetServiceManager(getter_AddRefs(mgr));
-    if (NS_SUCCEEDED(rv)) {
-      // We want the service manager to be the subject of notifications
-      mozilla::AppShutdown::AdvanceShutdownPhase(
-          mozilla::ShutdownPhase::XPCOMShutdown, nullptr,
-          do_QueryInterface(mgr));
-    }
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Service manager not present!");
+    mozilla::AppShutdown::AdvanceShutdownPhase(
+        mozilla::ShutdownPhase::XPCOMShutdown, nullptr, do_QueryInterface(mgr));
 
     // This must happen after the shutdown of media and widgets, which
     // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
