@@ -14,6 +14,10 @@
 #include "mozilla/mscom/Ptr.h"
 
 namespace mozilla {
+namespace dom {
+class BrowsingContext;
+}
+
 namespace a11y {
 
 /*
@@ -309,10 +313,13 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   struct SerializedChildDocConstructor final : public DeferredEvent {
     SerializedChildDocConstructor(DocAccessibleChild* aIPCDoc,
                                   DocAccessibleChild* aParentIPCDoc,
-                                  uint64_t aUniqueID, uint32_t aMsaaID)
+                                  uint64_t aUniqueID,
+                                  dom::BrowsingContext* aBrowsingContext,
+                                  uint32_t aMsaaID)
         : DeferredEvent(aParentIPCDoc),
           mIPCDoc(aIPCDoc),
           mUniqueID(aUniqueID),
+          mBrowsingContext(aBrowsingContext),
           mMsaaID(aMsaaID) {}
 
     void Dispatch(DocAccessibleChild* aParentIPCDoc) override {
@@ -320,12 +327,14 @@ class DocAccessibleChild : public DocAccessibleChildBase {
           static_cast<dom::BrowserChild*>(aParentIPCDoc->Manager());
       MOZ_ASSERT(browserChild);
       Unused << browserChild->SendPDocAccessibleConstructor(
-          mIPCDoc, aParentIPCDoc, mUniqueID, mMsaaID, IAccessibleHolder());
+          mIPCDoc, aParentIPCDoc, mUniqueID, mBrowsingContext, mMsaaID,
+          IAccessibleHolder());
       mIPCDoc->SetConstructedInParentProcess();
     }
 
     DocAccessibleChild* mIPCDoc;
     uint64_t mUniqueID;
+    dom::BrowsingContext* mBrowsingContext;
     uint32_t mMsaaID;
   };
 

@@ -511,3 +511,11 @@ Accessible* nsAccUtils::GetAccessibleByID(Accessible* aDoc, uint64_t aID) {
   }
   return nullptr;
 }
+
+void nsAccUtils::DocumentURL(Accessible* aDoc, nsAString& aURL) {
+  MOZ_ASSERT(aDoc && aDoc->IsDoc());
+  if (LocalAccessible* localAcc = aDoc->AsLocal()) {
+    return localAcc->AsDoc()->URL(aURL);
+  }
+  return aDoc->AsRemote()->AsDoc()->URL(aURL);
+}
