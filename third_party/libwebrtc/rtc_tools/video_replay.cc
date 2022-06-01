@@ -126,6 +126,10 @@ ABSL_FLAG(uint32_t,
           "RTP stop timestamp, packets with larger timestamp will be ignored "
           "(no wraparound)");
 
+// Flags for render window width and height
+ABSL_FLAG(uint32_t, render_width, 640, "Width of render window");
+ABSL_FLAG(uint32_t, render_height, 480, "Height of render window");
+
 namespace {
 
 static bool ValidatePayloadType(int32_t payload_type) {
@@ -202,6 +206,14 @@ static std::string IVFFilename() {
 
 static std::string Codec() {
   return absl::GetFlag(FLAGS_codec);
+}
+
+static uint32_t RenderWidth() {
+  return absl::GetFlag(FLAGS_render_width);
+}
+
+static uint32_t RenderHeight() {
+  return absl::GetFlag(FLAGS_render_height);
 }
 
 }  // namespace
@@ -415,8 +427,8 @@ class RtpReplayer final {
       // Create a window for this config.
       std::stringstream window_title;
       window_title << "Playback Video (" << config_count++ << ")";
-      stream_state->sinks.emplace_back(
-          test::VideoRenderer::Create(window_title.str().c_str(), 640, 480));
+      stream_state->sinks.emplace_back(test::VideoRenderer::Create(
+          window_title.str().c_str(), RenderWidth(), RenderHeight()));
       // Create a receive stream for this config.
       receive_config.renderer = stream_state->sinks.back().get();
       receive_config.decoder_factory = stream_state->decoder_factory.get();
@@ -436,7 +448,8 @@ class RtpReplayer final {
     std::stringstream window_title;
     window_title << "Playback Video (" << rtp_dump_path << ")";
     std::unique_ptr<test::VideoRenderer> playback_video(
-        test::VideoRenderer::Create(window_title.str().c_str(), 640, 480));
+        test::VideoRenderer::Create(window_title.str().c_str(), RenderWidth(),
+                                    RenderHeight()));
     auto file_passthrough = std::make_unique<FileRenderPassthrough>(
         OutBase(), playback_video.get());
     stream_state->sinks.push_back(std::move(playback_video));
