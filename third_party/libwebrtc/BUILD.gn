@@ -122,10 +122,6 @@ config("common_inherited_config") {
     defines = [ "WEBRTC_ENABLE_SYMBOL_EXPORT" ]
   }
 
-  if (rtc_dcheck_always_on) {
-    defines += [ "RTC_DCHECK_ALWAYS_ON" ]
-  }
-
   if (build_with_mozilla) {
     defines += [ "WEBRTC_MOZILLA_BUILD" ]
   }
