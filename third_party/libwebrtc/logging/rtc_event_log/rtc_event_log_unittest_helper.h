@@ -98,7 +98,7 @@ class EventGenerator {
   rtcp::TransportFeedback NewTransportFeedback();
   rtcp::LossNotification NewLossNotification();
 
-  // |all_configured_exts| determines whether the RTP packet exhibits all
+  // `all_configured_exts` determines whether the RTP packet exhibits all
   // configured extensions, or a random subset thereof.
   void RandomizeRtpPacket(size_t payload_size,
                           size_t padding_size,
@@ -107,21 +107,21 @@ class EventGenerator {
                           RtpPacket* rtp_packet,
                           bool all_configured_exts);
 
-  // |all_configured_exts| determines whether the RTP packet exhibits all
+  // `all_configured_exts` determines whether the RTP packet exhibits all
   // configured extensions, or a random subset thereof.
   std::unique_ptr<RtcEventRtpPacketIncoming> NewRtpPacketIncoming(
       uint32_t ssrc,
       const RtpHeaderExtensionMap& extension_map,
       bool all_configured_exts = true);
 
-  // |all_configured_exts| determines whether the RTP packet exhibits all
+  // `all_configured_exts` determines whether the RTP packet exhibits all
   // configured extensions, or a random subset thereof.
   std::unique_ptr<RtcEventRtpPacketOutgoing> NewRtpPacketOutgoing(
       uint32_t ssrc,
       const RtpHeaderExtensionMap& extension_map,
       bool all_configured_exts = true);
 
-  // |configure_all| determines whether all supported extensions are configured,
+  // `configure_all` determines whether all supported extensions are configured,
   // or a random subset.
   RtpHeaderExtensionMap NewRtpHeaderExtensionMap(bool configure_all = false);
 

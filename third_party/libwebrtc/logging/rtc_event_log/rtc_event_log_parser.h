@@ -634,7 +634,7 @@ class ParsedRtcEventLog {
   const RtpHeaderExtensionMap* GetRtpHeaderExtensionMap(bool incoming,
                                                         uint32_t ssrc);
 
-  // Reads packet, direction and packet length from the RTCP event at |index|,
+  // Reads packet, direction and packet length from the RTCP event at `index`,
   // and stores the values in the corresponding output parameters.
   // Each output parameter can be set to nullptr if that value isn't needed.
   // NB: The packet must have space for at least IP_PACKET_SIZE bytes.
