@@ -18,7 +18,6 @@
 #include <utility>
 #include <vector>
 
-#include "api/peer_connection_interface.h"
 #include "api/sequence_checker.h"
 #include "pc/jsep_transport.h"
 #include "pc/session_description.h"
@@ -42,8 +41,7 @@ namespace webrtc {
 // 6) Change the logic to do what's right.
 class BundleManager {
  public:
-  explicit BundleManager(PeerConnectionInterface::BundlePolicy bundle_policy)
-      : bundle_policy_(bundle_policy) {
+  BundleManager() {
     // Allow constructor to be called on a different thread.
     sequence_checker_.Detach();
   }
@@ -60,26 +58,16 @@ class BundleManager {
   bool IsFirstMidInGroup(const std::string& mid) const;
   // Update the groups description. This completely replaces the group
   // description with the one from the SessionDescription.
-  void Update(const cricket::SessionDescription* description, SdpType type);
+  void Update(const cricket::SessionDescription* description);
   // Delete a MID from the group that contains it.
   void DeleteMid(const cricket::ContentGroup* bundle_group,
                  const std::string& mid);
   // Delete a group.
   void DeleteGroup(const cricket::ContentGroup* bundle_group);
-  // Roll back to previous stable state.
-  void Rollback();
-  // Commit current bundle groups.
-  void Commit();
 
  private:
-  // Recalculate established_bundle_groups_by_mid_ from bundle_groups_.
-  void RefreshEstablishedBundleGroupsByMid() RTC_RUN_ON(sequence_checker_);
-
   RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
-  PeerConnectionInterface::BundlePolicy bundle_policy_;
   std::vector<std::unique_ptr<cricket::ContentGroup>> bundle_groups_
-      RTC_GUARDED_BY(sequence_checker_);
-  std::vector<std::unique_ptr<cricket::ContentGroup>> stable_bundle_groups_
       RTC_GUARDED_BY(sequence_checker_);
   std::map<std::string, cricket::ContentGroup*>
       established_bundle_groups_by_mid_;
@@ -103,11 +91,7 @@ class JsepTransportCollection {
 
   void RegisterTransport(const std::string& mid,
                          std::unique_ptr<cricket::JsepTransport> transport);
-  // Returns all transports, including those not currently mapped to any MID
-  // because they're being kept alive in case of rollback.
   std::vector<cricket::JsepTransport*> Transports();
-  // Only returns transports currently mapped to a MID.
-  std::vector<cricket::JsepTransport*> ActiveTransports();
   void DestroyAllTransports();
   // Lookup a JsepTransport by the MID that was used to register it.
   cricket::JsepTransport* GetTransportByName(const std::string& mid);
@@ -124,27 +108,16 @@ class JsepTransportCollection {
   // Remove a transport for a MID. This may destroy a transport if it is
   // no longer in use.
   void RemoveTransportForMid(const std::string& mid);
-  // Roll back to previous stable mid-to-transport mappings.
-  bool RollbackTransports();
-  // Commit pending mid-transport mappings (rollback is no longer possible),
-  // and destroy unused transports because we know now we'll never need them
-  // again.
+  // Roll back pending mid-to-transport mappings.
+  void RollbackTransports();
+  // Commit pending mid-transport mappings (rollback is no longer possible).
   void CommitTransports();
-
- private:
   // Returns true if any mid currently maps to this transport.
   bool TransportInUse(cricket::JsepTransport* jsep_transport) const;
 
-  // Returns true if any mid in the last stable mapping maps to this transport,
-  // meaning it should be kept alive in case of rollback.
-  bool TransportNeededForRollback(cricket::JsepTransport* jsep_transport) const;
-
-  // Destroy a transport if it's no longer in use. This includes whether it
-  // will be needed in case of rollback.
+ private:
+  // Destroy a transport if it's no longer in use.
   void MaybeDestroyJsepTransport(cricket::JsepTransport* transport);
-
-  // Destroys all transports that are no longer in use.
-  void DestroyUnusedTransports();
 
   bool IsConsistent();  // For testing only: Verify internal structure.
 
@@ -157,10 +130,8 @@ class JsepTransportCollection {
   // (BaseChannel/SctpTransport) and the JsepTransport underneath.
   std::map<std::string, cricket::JsepTransport*> mid_to_transport_
       RTC_GUARDED_BY(sequence_checker_);
-  // A snapshot of mid_to_transport_ at the last stable state. Used for
-  // rollback.
-  std::map<std::string, cricket::JsepTransport*> stable_mid_to_transport_
-      RTC_GUARDED_BY(sequence_checker_);
+  // Keep track of mids that have been mapped to transports. Used for rollback.
+  std::vector<std::string> pending_mids_ RTC_GUARDED_BY(sequence_checker_);
   // Callback used to inform subscribers of altered transports.
   const std::function<bool(const std::string& mid,
                            cricket::JsepTransport* transport)>
