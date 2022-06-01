@@ -23,7 +23,14 @@
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
+
 namespace webrtc_repeating_task_impl {
+
+// Methods simplifying external tracing of RepeatingTaskHandle operations.
+void RepeatingTaskHandleDTraceProbeStart();
+void RepeatingTaskHandleDTraceProbeDelayedStart();
+void RepeatingTaskImplDTraceProbeRun();
+
 class RepeatingTaskBase : public QueuedTask {
  public:
   RepeatingTaskBase(TaskQueueBase* task_queue,
@@ -67,7 +74,10 @@ class RepeatingTaskImpl final : public RepeatingTaskBase {
   }
 
  private:
-  TimeDelta RunClosure() override { return closure_(); }
+  TimeDelta RunClosure() override {
+    RepeatingTaskImplDTraceProbeRun();
+    return closure_();
+  }
 
   typename std::remove_const<
       typename std::remove_reference<Closure>::type>::type closure_;
@@ -98,6 +108,7 @@ class RepeatingTaskHandle {
                                    Closure&& closure,
                                    Clock* clock = Clock::GetRealTimeClockRaw()) {
     auto alive_flag = PendingTaskSafetyFlag::CreateDetached();
+    webrtc_repeating_task_impl::RepeatingTaskHandleDTraceProbeStart();
     task_queue->PostTask(
         std::make_unique<
             webrtc_repeating_task_impl::RepeatingTaskImpl<Closure>>(
@@ -115,6 +126,7 @@ class RepeatingTaskHandle {
       Closure&& closure,
       Clock* clock = Clock::GetRealTimeClockRaw()) {
     auto alive_flag = PendingTaskSafetyFlag::CreateDetached();
+    webrtc_repeating_task_impl::RepeatingTaskHandleDTraceProbeDelayedStart();
     task_queue->PostDelayedTask(
         std::make_unique<
             webrtc_repeating_task_impl::RepeatingTaskImpl<Closure>>(
