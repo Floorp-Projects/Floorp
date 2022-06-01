@@ -75,7 +75,7 @@ class OpenSSLAdapter final : public SSLAdapter,
   ConnState GetState() const override;
   bool IsResumedSession() override;
   // Creates a new SSL_CTX object, configured for client-to-server usage
-  // with SSLMode |mode|, and if |enable_cache| is true, with support for
+  // with SSLMode `mode`, and if `enable_cache` is true, with support for
   // storing successful sessions so that they can be later resumed.
   // OpenSSLAdapterFactory will call this method to create its own internal
   // SSL_CTX, and OpenSSLAdapter will also call this when used without a
@@ -114,7 +114,7 @@ class OpenSSLAdapter final : public SSLAdapter,
   void Error(const char* context, int err, bool signal = true);
   void Cleanup();
 
-  // Return value and arguments have the same meanings as for Send; |error| is
+  // Return value and arguments have the same meanings as for Send; `error` is
   // an output parameter filled with the result of SSL_get_error.
   int DoSslWrite(const void* pv, size_t cb, int* error);
   void OnMessage(Message* msg) override;
@@ -136,7 +136,7 @@ class OpenSSLAdapter final : public SSLAdapter,
 #endif
   friend class OpenSSLStreamAdapter;  // for custom_verify_callback_;
 
-  // If the SSL_CTX was created with |enable_cache| set to true, this callback
+  // If the SSL_CTX was created with `enable_cache` set to true, this callback
   // will be called when a SSL session has been successfully established,
   // to allow its SSL_SESSION* to be cached for later resumption.
   static int NewSSLSessionCallback(SSL* ssl, SSL_SESSION* session);

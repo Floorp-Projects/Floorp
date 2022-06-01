@@ -432,14 +432,14 @@ class flat_tree {
   template <class... Args>
   iterator unsafe_emplace(const_iterator position, Args&&... args);
 
-  // Attempts to emplace a new element with key |key|. Only if |key| is not yet
-  // present, construct value_type from |args| and insert it. Returns an
-  // iterator to the element with key |key| and a bool indicating whether an
+  // Attempts to emplace a new element with key `key`. Only if `key` is not yet
+  // present, construct value_type from `args` and insert it. Returns an
+  // iterator to the element with key `key` and a bool indicating whether an
   // insertion happened.
   template <class K, class... Args>
   std::pair<iterator, bool> emplace_key_args(const K& key, Args&&... args);
 
-  // Similar to |emplace_key_args|, but checks |hint| first as a possible
+  // Similar to `emplace_key_args`, but checks `hint` first as a possible
   // insertion position.
   template <class K, class... Args>
   std::pair<iterator, bool> emplace_hint_key_args(const_iterator hint,
@@ -553,7 +553,7 @@ class flat_tree {
   // have to store an instance of Compare. Since Compare commonly is stateless,
   // we use the RTC_NO_UNIQUE_ADDRESS attribute to save space.
   RTC_NO_UNIQUE_ADDRESS key_compare comp_;
-  // Declare after |key_compare_comp_| to workaround GCC ICE. For details
+  // Declare after `key_compare_comp_` to workaround GCC ICE. For details
   // see https://crbug.com/1156268
   container_type body_;
 

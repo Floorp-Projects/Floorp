@@ -378,7 +378,7 @@ class SSLStreamAdapterTestBase : public ::testing::Test,
   virtual void CreateStreams() = 0;
 
   // Recreate the client/server identities with the specified validity period.
-  // |not_before| and |not_after| are offsets from the current time in number
+  // `not_before` and `not_after` are offsets from the current time in number
   // of seconds.
   void ResetIdentitiesWithValidity(int not_before, int not_after) {
     CreateStreams();

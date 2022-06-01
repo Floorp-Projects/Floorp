@@ -41,7 +41,7 @@ size_t hex_decode(char* buffer,
 
 // hex_decode, assuming that there is a delimiter between every byte
 // pair.
-// |delimiter| == 0 means no delimiter
+// `delimiter` == 0 means no delimiter
 // If the buffer is too short or the data is invalid, we return 0.
 size_t hex_decode_with_delimiter(char* buffer,
                                  size_t buflen,

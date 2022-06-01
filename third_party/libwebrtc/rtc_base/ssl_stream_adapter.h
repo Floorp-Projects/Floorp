@@ -200,7 +200,7 @@ class SSLStreamAdapter : public StreamInterface, public sigslot::has_slots<> {
   // certificate, not just a CA. SSLStream makes a copy of the digest value.
   //
   // Returns true if successful.
-  // |error| is optional and provides more information about the failure.
+  // `error` is optional and provides more information about the failure.
   virtual bool SetPeerCertificateDigest(
       const std::string& digest_alg,
       const unsigned char* digest_val,

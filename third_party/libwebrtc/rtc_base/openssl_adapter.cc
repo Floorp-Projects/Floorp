@@ -294,7 +294,7 @@ int OpenSSLAdapter::BeginSSL() {
 
   // First set up the context. We should either have a factory, with its own
   // pre-existing context, or be running standalone, in which case we will
-  // need to create one, and specify |false| to disable session caching.
+  // need to create one, and specify `false` to disable session caching.
   if (ssl_session_cache_ == nullptr) {
     RTC_DCHECK(!ssl_ctx_);
     ssl_ctx_ = CreateContext(ssl_mode_, false);
@@ -370,7 +370,7 @@ int OpenSSLAdapter::BeginSSL() {
     SSL_set1_curves_list(ssl_, rtc::join(elliptic_curves_, ':').c_str());
   }
 
-  // Now that the initial config is done, transfer ownership of |bio| to the
+  // Now that the initial config is done, transfer ownership of `bio` to the
   // SSL object. If ContinueSSL() fails, the bio will be freed in Cleanup().
   SSL_set_bio(ssl_, bio.get(), bio.get());
   bio.release();

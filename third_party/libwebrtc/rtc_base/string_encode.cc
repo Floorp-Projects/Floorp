@@ -49,7 +49,7 @@ size_t hex_encode_output_length(size_t srclen, char delimiter) {
 }
 
 // hex_encode shows the hex representation of binary data in ascii, with
-// |delimiter| between bytes, or none if |delimiter| == 0.
+// `delimiter` between bytes, or none if `delimiter` == 0.
 void hex_encode_with_delimiter(char* buffer,
                                const char* csource,
                                size_t srclen,

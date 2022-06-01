@@ -34,7 +34,7 @@ class FifoBuffer final : public StreamInterface {
   // Resizes the buffer to the specified capacity. Fails if data_length_ > size
   bool SetCapacity(size_t length);
 
-  // Read into |buffer| with an offset from the current read position, offset
+  // Read into `buffer` with an offset from the current read position, offset
   // is specified in number of bytes.
   // This method doesn't adjust read position nor the number of available
   // bytes, user has to call ConsumeReadData() to do this.
@@ -43,7 +43,7 @@ class FifoBuffer final : public StreamInterface {
                           size_t offset,
                           size_t* bytes_read);
 
-  // Write |buffer| with an offset from the current write position, offset is
+  // Write `buffer` with an offset from the current write position, offset is
   // specified in number of bytes.
   // This method doesn't adjust the number of buffered bytes, user has to call
   // ConsumeWriteBuffer() to do this.

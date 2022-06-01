@@ -17,13 +17,13 @@
 
 namespace {
 
-// Returns the lowest (right-most) |bit_count| bits in |byte|.
+// Returns the lowest (right-most) `bit_count` bits in `byte`.
 uint8_t LowestBits(uint8_t byte, size_t bit_count) {
   RTC_DCHECK_LE(bit_count, 8);
   return byte & ((1 << bit_count) - 1);
 }
 
-// Returns the highest (left-most) |bit_count| bits in |byte|, shifted to the
+// Returns the highest (left-most) `bit_count` bits in `byte`, shifted to the
 // lowest bits (to the right).
 uint8_t HighestBits(uint8_t byte, size_t bit_count) {
   RTC_DCHECK_LE(bit_count, 8);
@@ -32,14 +32,14 @@ uint8_t HighestBits(uint8_t byte, size_t bit_count) {
   return (byte & mask) >> shift;
 }
 
-// Returns the highest byte of |val| in a uint8_t.
+// Returns the highest byte of `val` in a uint8_t.
 uint8_t HighestByte(uint64_t val) {
   return static_cast<uint8_t>(val >> 56);
 }
 
-// Returns the result of writing partial data from |source|, of
-// |source_bit_count| size in the highest bits, to |target| at
-// |target_bit_offset| from the highest bit.
+// Returns the result of writing partial data from `source`, of
+// `source_bit_count` size in the highest bits, to `target` at
+// `target_bit_offset` from the highest bit.
 uint8_t WritePartialByte(uint8_t source,
                          size_t source_bit_count,
                          uint8_t target,

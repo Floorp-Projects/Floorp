@@ -1080,7 +1080,7 @@ uint32_t Thread::GetCouldBeBlockingCallCount() const {
 #endif
 
 // Returns true if no policies added or if there is at least one policy
-// that permits invocation to |target| thread.
+// that permits invocation to `target` thread.
 bool Thread::IsInvokeToThreadAllowed(rtc::Thread* target) {
 #if (!defined(NDEBUG) || defined(RTC_DCHECK_ALWAYS_ON))
   RTC_DCHECK_RUN_ON(this);

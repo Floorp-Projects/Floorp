@@ -44,7 +44,7 @@ static const size_t kMinimumRecvSize = 128;
 
 static const int kListenBacklog = 5;
 
-// Binds and connects |socket|
+// Binds and connects `socket`
 AsyncSocket* AsyncTCPSocketBase::ConnectSocket(
     rtc::AsyncSocket* socket,
     const rtc::SocketAddress& bind_address,
@@ -276,9 +276,9 @@ void AsyncTCPSocketBase::OnCloseEvent(AsyncSocket* socket, int error) {
 }
 
 // AsyncTCPSocket
-// Binds and connects |socket| and creates AsyncTCPSocket for
-// it. Takes ownership of |socket|. Returns null if bind() or
-// connect() fail (|socket| is destroyed in that case).
+// Binds and connects `socket` and creates AsyncTCPSocket for
+// it. Takes ownership of `socket`. Returns null if bind() or
+// connect() fail (`socket` is destroyed in that case).
 AsyncTCPSocket* AsyncTCPSocket::Create(AsyncSocket* socket,
                                        const SocketAddress& bind_address,
                                        const SocketAddress& remote_address) {

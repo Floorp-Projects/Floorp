@@ -42,8 +42,8 @@ const char* NetworkPreferenceToString(NetworkPreference preference);
 // where only the ip address is known at the time of binding.
 class NetworkBinderInterface {
  public:
-  // Binds a socket to the network that is attached to |address| so that all
-  // packets on the socket |socket_fd| will be sent via that network.
+  // Binds a socket to the network that is attached to `address` so that all
+  // packets on the socket `socket_fd` will be sent via that network.
   // This is needed because some operating systems (like Android) require a
   // special bind call to put packets on a non-default network interface.
   virtual NetworkBindingResult BindSocketToNetwork(
@@ -53,7 +53,7 @@ class NetworkBinderInterface {
 };
 
 /*
- * Receives network-change events via |OnNetworksChanged| and signals the
+ * Receives network-change events via `OnNetworksChanged` and signals the
  * networks changed event.
  *
  * Threading consideration:
@@ -85,7 +85,7 @@ class NetworkMonitorInterface {
   virtual NetworkPreference GetNetworkPreference(
       const std::string& interface_name) = 0;
 
-  // Does |this| NetworkMonitorInterface implement BindSocketToNetwork?
+  // Does `this` NetworkMonitorInterface implement BindSocketToNetwork?
   // Only Android returns true.
   virtual bool SupportsBindSocketToNetwork() const { return false; }
 

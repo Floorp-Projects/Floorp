@@ -631,7 +631,7 @@ bool VirtualSocketServer::Wait(int cmsWait, bool process_io) {
   if (stop_on_idle_ && Thread::Current()->empty()) {
     return false;
   }
-  // Note: we don't need to do anything with |process_io| since we don't have
+  // Note: we don't need to do anything with `process_io` since we don't have
   // any real I/O. Received packets come in the form of queued messages, so
   // Thread will ensure WakeUp is called if another thread sends a
   // packet.
@@ -713,7 +713,7 @@ int VirtualSocketServer::Bind(VirtualSocket* socket, SocketAddress* addr) {
     RTC_NOTREACHED();
   }
 
-  // If the IP appears in |alternative_address_mapping_|, meaning the test has
+  // If the IP appears in `alternative_address_mapping_`, meaning the test has
   // configured sockets bound to this IP to actually use another IP, replace
   // the IP here.
   auto alternative = alternative_address_mapping_.find(addr->ipaddr());

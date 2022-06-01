@@ -249,7 +249,7 @@ TEST(FifoBufferTest, WriteOffsetAndReadOffset) {
   // Write 14 bytes.
   EXPECT_EQ(SR_SUCCESS, buf.Write(in, 14, nullptr, nullptr));
 
-  // Make sure data is in |buf|.
+  // Make sure data is in `buf`.
   size_t buffered;
   EXPECT_TRUE(buf.GetBuffered(&buffered));
   EXPECT_EQ(14u, buffered);

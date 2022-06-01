@@ -69,7 +69,7 @@ class SSLAdapter : public AsyncSocketAdapter {
   virtual void SetCertVerifier(SSLCertificateVerifier* ssl_cert_verifier) = 0;
 
   // Set the certificate this socket will present to incoming clients.
-  // Takes ownership of |identity|.
+  // Takes ownership of `identity`.
   virtual void SetIdentity(std::unique_ptr<SSLIdentity> identity) = 0;
 
   // Choose whether the socket acts as a server socket or client socket.
@@ -88,8 +88,8 @@ class SSLAdapter : public AsyncSocketAdapter {
   virtual bool IsResumedSession() = 0;
 
   // Create the default SSL adapter for this platform. On failure, returns null
-  // and deletes |socket|. Otherwise, the returned SSLAdapter takes ownership
-  // of |socket|.
+  // and deletes `socket`. Otherwise, the returned SSLAdapter takes ownership
+  // of `socket`.
   static SSLAdapter* Create(AsyncSocket* socket);
 };
 

@@ -511,7 +511,7 @@ TEST(ThreadTest, ThreeThreadsInvoke) {
       thread->Invoke<void>(RTC_FROM_HERE, [out] { Set(out); });
     }
 
-    // Set |out| true and call InvokeSet on |thread|.
+    // Set `out` true and call InvokeSet on `thread`.
     static void SetAndInvokeSet(LockedBool* out,
                                 Thread* thread,
                                 LockedBool* out_inner) {
@@ -519,8 +519,8 @@ TEST(ThreadTest, ThreeThreadsInvoke) {
       InvokeSet(thread, out_inner);
     }
 
-    // Asynchronously invoke SetAndInvokeSet on |thread1| and wait until
-    // |thread1| starts the call.
+    // Asynchronously invoke SetAndInvokeSet on `thread1` and wait until
+    // `thread1` starts the call.
     static void AsyncInvokeSetAndWait(DEPRECATED_AsyncInvoker* invoker,
                                       Thread* thread1,
                                       Thread* thread2,
@@ -842,8 +842,8 @@ TEST_F(AsyncInvokeTest, KillInvokerDuringExecuteWithReentrantInvoke) {
       Thread::Current()->SleepMs(kWaitTimeout);
       invoker.AsyncInvoke<void>(RTC_FROM_HERE, main, reentrant_functor);
     };
-    // This queues a task on |thread| to sleep for |kWaitTimeout| then queue a
-    // task on |main|. But this second queued task should never run, since the
+    // This queues a task on `thread` to sleep for `kWaitTimeout` then queue a
+    // task on `main`. But this second queued task should never run, since the
     // destructor will be entered before it's even invoked.
     invoker.AsyncInvoke<void>(RTC_FROM_HERE, &thread, functor);
     functor_started.Wait(Event::kForever);

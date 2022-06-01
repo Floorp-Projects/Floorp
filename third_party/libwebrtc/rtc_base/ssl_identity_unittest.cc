@@ -298,7 +298,7 @@ class SSLIdentityTest : public ::testing::Test {
   }
 
   void TestCloningIdentity(const SSLIdentity& identity) {
-    // Convert |identity| to PEM strings and create a new identity by converting
+    // Convert `identity` to PEM strings and create a new identity by converting
     // back from the string format.
     std::string priv_pem = identity.PrivateKeyToPEMString();
     std::string publ_pem = identity.PublicKeyToPEMString();

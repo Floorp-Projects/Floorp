@@ -103,7 +103,7 @@ class NATSocket : public AsyncSocket, public sigslot::has_slots<> {
 
   int Connect(const SocketAddress& addr) override {
     int result = 0;
-    // If we're not already bound (meaning |socket_| is null), bind to ANY
+    // If we're not already bound (meaning `socket_` is null), bind to ANY
     // address.
     if (!socket_) {
       result = BindInternal(SocketAddress(GetAnyIP(family_), 0));

@@ -27,8 +27,8 @@ namespace rtc {
 // buffered since it is acceptable to drop packets under high load.
 class AsyncUDPSocket : public AsyncPacketSocket {
  public:
-  // Binds |socket| and creates AsyncUDPSocket for it. Takes ownership
-  // of |socket|. Returns null if bind() fails (|socket| is destroyed
+  // Binds `socket` and creates AsyncUDPSocket for it. Takes ownership
+  // of `socket`. Returns null if bind() fails (`socket` is destroyed
   // in that case).
   static AsyncUDPSocket* Create(AsyncSocket* socket,
                                 const SocketAddress& bind_address);
