@@ -272,7 +272,10 @@ const SnapshotMonitor = new (class SnapshotMonitor {
       return;
     }
 
-    await Snapshots.delete([...new Set(urls)], true);
+    await Snapshots.delete(
+      [...new Set(urls)],
+      Snapshots.REMOVED_REASON.EXPIRED
+    );
   }
 
   /**

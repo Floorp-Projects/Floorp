@@ -1266,7 +1266,12 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 103 uses schema version 67
+      if (currentSchemaVersion < 68) {
+        rv = MigrateV68Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 103 uses schema version 68
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -2538,6 +2543,29 @@ nsresult Database::MigrateV67Up() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(
       "DELETE FROM moz_inputhistory WHERE LOWER(input) <> input"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult Database::MigrateV68Up() {
+  // Add removed_reason column to snapshots table if necessary.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT removed_reason FROM moz_places_metadata_snapshots"_ns,
+      getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_places_metadata_snapshots "
+        "ADD COLUMN removed_reason INTEGER"_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Update any entry that has removed_at but not a removed_reason to the
+  // default 0 value, since we don't have better info about the actual reason.
+  rv = mMainConn->ExecuteSimpleSQL(
+      "UPDATE moz_places_metadata_snapshots SET removed_reason = 0 "
+      "WHERE removed_at IS NOT NULL AND removed_reason IS NULL"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

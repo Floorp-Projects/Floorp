@@ -468,28 +468,34 @@ var PlacesTestUtils = Object.freeze({
    *        The table name.
    */
   async dumpTable(db, table) {
-    let rows = await db.execute(`SELECT * FROM ${table}`);
-    dump(`Table ${table} contains ${rows.length} rows\n`);
+    let columns = (await db.execute(`PRAGMA table_info('${table}')`)).map(r =>
+      r.getResultByName("name")
+    );
+    let results = [columns.join("\t")];
 
-    let results = [];
+    let rows = await db.execute(`SELECT * FROM ${table}`);
+    dump(`>> Table ${table} contains ${rows.length} rows\n`);
+
     for (let row of rows) {
       let numColumns = row.numEntries;
       let rowValues = [];
       for (let i = 0; i < numColumns; ++i) {
+        let value = "N/A";
         switch (row.getTypeOfIndex(i)) {
           case Ci.mozIStorageValueArray.VALUE_TYPE_NULL:
-            rowValues.push("NULL");
+            value = "NULL";
             break;
           case Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER:
-            rowValues.push(row.getInt64(i));
+            value = row.getInt64(i);
             break;
           case Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT:
-            rowValues.push(row.getDouble(i));
+            value = row.getDouble(i);
             break;
           case Ci.mozIStorageValueArray.VALUE_TYPE_TEXT:
-            rowValues.push(JSON.stringify(row.getString(i)));
+            value = JSON.stringify(row.getString(i));
             break;
         }
+        rowValues.push(value.toString().padStart(columns[i].length, " "));
       }
       results.push(rowValues.join("\t"));
     }
