@@ -4,9 +4,9 @@ use pin_project::pin_project;
 // `#[hidden_repr_cfg_not_any(packed)]` generates `#[cfg_attr(not(any()), repr(packed))]`.
 #[pin_project]
 #[hidden_repr_cfg_not_any(packed)] //~ ERROR may not be used on #[repr(packed)] types
-struct Foo {
+struct S {
     #[pin]
-    field: u32,
+    f: u32,
 }
 
 fn main() {}

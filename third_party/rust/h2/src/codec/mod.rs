@@ -2,12 +2,13 @@ mod error;
 mod framed_read;
 mod framed_write;
 
-pub use self::error::{RecvError, SendError, UserError};
+pub use self::error::{SendError, UserError};
 
 use self::framed_read::FramedRead;
 use self::framed_write::FramedWrite;
 
 use crate::frame::{self, Data, Frame};
+use crate::proto::Error;
 
 use bytes::Buf;
 use futures_core::Stream;
@@ -155,7 +156,7 @@ impl<T, B> Stream for Codec<T, B>
 where
     T: AsyncRead + Unpin,
 {
-    type Item = Result<Frame, RecvError>;
+    type Item = Result<Frame, Error>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         Pin::new(&mut self.inner).poll_next(cx)

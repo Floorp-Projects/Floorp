@@ -16,45 +16,33 @@
 // ```
 
 #![allow(dead_code, unused_imports, unused_parens, unknown_lints, renamed_and_removed_lints)]
-#![allow(clippy::no_effect, clippy::needless_lifetimes)]
+#![allow(clippy::needless_lifetimes)]
 
 use pin_project::pin_project;
 
+// #[pin_project]
 struct Struct<T, U> {
     // #[pin]
     pinned: T,
     unpinned: U,
 }
 
-#[doc(hidden)]
-#[allow(dead_code)]
-#[allow(single_use_lifetimes)]
-#[allow(clippy::mut_mut)]
-#[allow(clippy::type_repetition_in_bounds)]
-struct __StructProjection<'pin, T, U>
-where
-    Struct<T, U>: 'pin,
-{
-    pinned: ::pin_project::__private::Pin<&'pin mut (T)>,
-    unpinned: &'pin mut (U),
-}
-#[doc(hidden)]
-#[allow(dead_code)]
-#[allow(single_use_lifetimes)]
-#[allow(clippy::type_repetition_in_bounds)]
-struct __StructProjectionRef<'pin, T, U>
-where
-    Struct<T, U>: 'pin,
-{
-    pinned: ::pin_project::__private::Pin<&'pin (T)>,
-    unpinned: &'pin (U),
-}
-
-#[doc(hidden)]
-#[allow(non_upper_case_globals)]
-#[allow(single_use_lifetimes)]
-#[allow(clippy::used_underscore_binding)]
 const _: () = {
+    struct __StructProjection<'pin, T, U>
+    where
+        Struct<T, U>: 'pin,
+    {
+        pinned: ::pin_project::__private::Pin<&'pin mut (T)>,
+        unpinned: &'pin mut (U),
+    }
+    struct __StructProjectionRef<'pin, T, U>
+    where
+        Struct<T, U>: 'pin,
+    {
+        pinned: ::pin_project::__private::Pin<&'pin (T)>,
+        unpinned: &'pin (U),
+    }
+
     impl<T, U> Struct<T, U> {
         fn project<'pin>(
             self: ::pin_project::__private::Pin<&'pin mut Self>,
@@ -78,6 +66,24 @@ const _: () = {
                 }
             }
         }
+    }
+
+    // Ensure that it's impossible to use pin projections on a #[repr(packed)]
+    // struct.
+    //
+    // Taking a reference to a packed field is UB, and applying
+    // `#[forbid(unaligned_references)]` makes sure that doing this is a hard error.
+    //
+    // If the struct ends up having #[repr(packed)] applied somehow,
+    // this will generate an (unfriendly) error message. Under all reasonable
+    // circumstances, we'll detect the #[repr(packed)] attribute, and generate
+    // a much nicer error above.
+    //
+    // See https://github.com/taiki-e/pin-project/pull/34 for more details.
+    #[forbid(unaligned_references, safe_packed_borrows)]
+    fn __assert_not_repr_packed<T, U>(this: &Struct<T, U>) {
+        let _ = &this.pinned;
+        let _ = &this.unpinned;
     }
 
     // Automatically create the appropriate conditional `Unpin` implementation.
@@ -123,7 +129,11 @@ const _: () = {
     // impls, we emit one ourselves. If the user ends up writing an `UnsafeUnpin`
     // impl, they'll get a "conflicting implementations of trait" error when
     // coherence checks are run.
-    unsafe impl<T, U> ::pin_project::UnsafeUnpin for Struct<T, U> {}
+    #[doc(hidden)]
+    unsafe impl<'pin, T, U> ::pin_project::UnsafeUnpin for Struct<T, U> where
+        __Struct<'pin, T, U>: ::pin_project::__private::Unpin
+    {
+    }
 
     // Ensure that struct does not implement `Drop`.
     //
@@ -136,26 +146,9 @@ const _: () = {
     impl<T, U> StructMustNotImplDrop for Struct<T, U> {}
     // A dummy impl of `PinnedDrop`, to ensure that users don't accidentally
     // write a non-functional `PinnedDrop` impls.
+    #[doc(hidden)]
     impl<T, U> ::pin_project::__private::PinnedDrop for Struct<T, U> {
         unsafe fn drop(self: ::pin_project::__private::Pin<&mut Self>) {}
-    }
-
-    // Ensure that it's impossible to use pin projections on a #[repr(packed)]
-    // struct.
-    //
-    // Taking a reference to a packed field is UB, and applying
-    // `#[forbid(unaligned_references)]` makes sure that doing this is a hard error.
-    //
-    // If the struct ends up having #[repr(packed)] applied somehow,
-    // this will generate an (unfriendly) error message. Under all reasonable
-    // circumstances, we'll detect the #[repr(packed)] attribute, and generate
-    // a much nicer error above.
-    //
-    // See https://github.com/taiki-e/pin-project/pull/34 for more details.
-    #[forbid(unaligned_references, safe_packed_borrows)]
-    fn __assert_not_repr_packed<T, U>(this: &Struct<T, U>) {
-        let _ = &this.pinned;
-        let _ = &this.unpinned;
     }
 };
 

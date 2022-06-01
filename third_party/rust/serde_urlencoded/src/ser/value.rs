@@ -1,13 +1,13 @@
-use ser::part::{PartSerializer, Sink};
-use ser::Error;
+use crate::ser::part::{PartSerializer, Sink};
+use crate::ser::Error;
+use form_urlencoded::Serializer as UrlEncodedSerializer;
+use form_urlencoded::Target as UrlEncodedTarget;
 use serde::ser::Serialize;
 use std::str;
-use url::form_urlencoded::Serializer as UrlEncodedSerializer;
-use url::form_urlencoded::Target as UrlEncodedTarget;
 
 pub struct ValueSink<'input, 'key, 'target, Target>
 where
-    Target: 'target + UrlEncodedTarget,
+    Target: UrlEncodedTarget,
 {
     urlencoder: &'target mut UrlEncodedSerializer<'input, Target>,
     key: &'key str,
@@ -21,14 +21,12 @@ where
         urlencoder: &'target mut UrlEncodedSerializer<'input, Target>,
         key: &'key str,
     ) -> Self {
-        ValueSink {
-            urlencoder: urlencoder,
-            key: key,
-        }
+        ValueSink { urlencoder, key }
     }
 }
 
-impl<'input, 'key, 'target, Target> Sink for ValueSink<'input, 'key, 'target, Target>
+impl<'input, 'key, 'target, Target> Sink
+    for ValueSink<'input, 'key, 'target, Target>
 where
     Target: 'target + UrlEncodedTarget,
 {

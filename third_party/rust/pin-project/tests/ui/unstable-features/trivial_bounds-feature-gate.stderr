@@ -24,36 +24,36 @@ note: required because of the requirements on the impl of `Unpin` for `phantom_p
    = help: add `#![feature(trivial_bounds)]` to the crate attributes to enable
 
 error[E0277]: `PhantomPinned` cannot be unpinned
-  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:35:28
+  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:34:28
    |
-35 |     impl Unpin for A where Inner: Unpin {} //~ ERROR E0277
+34 |     impl Unpin for A where Inner: Unpin {} //~ ERROR E0277
    |                            ^^^^^^^^^^^^ within `Inner`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
    = note: consider using `Box::pin`
 note: required because it appears within the type `Inner`
-  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:31:12
+  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:30:12
    |
-31 |     struct Inner(PhantomPinned);
+30 |     struct Inner(PhantomPinned);
    |            ^^^^^
    = help: see issue #48214
    = help: add `#![feature(trivial_bounds)]` to the crate attributes to enable
 
 error[E0277]: `PhantomPinned` cannot be unpinned
-  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:43:28
+  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:42:28
    |
-43 |     impl Unpin for B where Wrapper<Inner>: Unpin {} //~ ERROR E0277
+42 |     impl Unpin for B where Wrapper<Inner>: Unpin {} //~ ERROR E0277
    |                            ^^^^^^^^^^^^^^^^^^^^^ within `Inner`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
    = note: consider using `Box::pin`
 note: required because it appears within the type `Inner`
-  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:31:12
+  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:30:12
    |
-31 |     struct Inner(PhantomPinned);
+30 |     struct Inner(PhantomPinned);
    |            ^^^^^
 note: required because of the requirements on the impl of `Unpin` for `inner::Wrapper<Inner>`
-  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:39:13
+  --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:38:13
    |
-39 |     impl<T> Unpin for Wrapper<T> where T: Unpin {}
+38 |     impl<T> Unpin for Wrapper<T> where T: Unpin {}
    |             ^^^^^     ^^^^^^^^^^
    = help: see issue #48214
    = help: add `#![feature(trivial_bounds)]` to the crate attributes to enable

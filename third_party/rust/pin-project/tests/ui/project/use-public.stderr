@@ -1,7 +1,0 @@
-error[E0365]: `__AProjection` is only public within the crate, and cannot be re-exported outside
-  --> tests/ui/project/use-public.rs:14:13
-   |
-14 |     pub use crate::A; //~ ERROR E0365
-   |             ^^^^^^^^ re-export of crate public `__AProjection`
-   |
-   = note: consider declaring type or module `__AProjection` with `pub`

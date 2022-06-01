@@ -28,46 +28,71 @@
 //!
 //! [*code like this will be generated*][struct-default-expanded]
 //!
+//! To use `#[pin_project]` on enums, you need to name the projection type
+//! returned from the method.
+//!
+//! ```rust
+//! use std::pin::Pin;
+//!
+//! use pin_project::pin_project;
+//!
+//! #[pin_project(project = EnumProj)]
+//! enum Enum<T, U> {
+//!     Pinned(#[pin] T),
+//!     Unpinned(U),
+//! }
+//!
+//! impl<T, U> Enum<T, U> {
+//!     fn method(self: Pin<&mut Self>) {
+//!         match self.project() {
+//!             EnumProj::Pinned(x) => {
+//!                 let _: Pin<&mut T> = x;
+//!             }
+//!             EnumProj::Unpinned(y) => {
+//!                 let _: &mut U = y;
+//!             }
+//!         }
+//!     }
+//! }
+//! ```
+//!
+//! [*code like this will be generated*][enum-default-expanded]
+//!
 //! See [`#[pin_project]`][`pin_project`] attribute for more details, and
 //! see [examples] directory for more examples and generated code.
 //!
-//! [`pin_project`]: attr.pin_project.html
-//! [examples]: https://github.com/taiki-e/pin-project/blob/master/examples/README.md
-//! [pin-projection]: https://doc.rust-lang.org/nightly/std/pin/index.html#projections-and-structural-pinning
-//! [struct-default-expanded]: https://github.com/taiki-e/pin-project/blob/master/examples/struct-default-expanded.rs
+//! [examples]: https://github.com/taiki-e/pin-project/blob/HEAD/examples/README.md
+//! [enum-default-expanded]: https://github.com/taiki-e/pin-project/blob/HEAD/examples/enum-default-expanded.rs
+//! [pin-projection]: core::pin#projections-and-structural-pinning
+//! [struct-default-expanded]: https://github.com/taiki-e/pin-project/blob/HEAD/examples/struct-default-expanded.rs
 
 #![no_std]
 #![doc(test(
     no_crate_inject,
-    attr(deny(warnings, rust_2018_idioms, single_use_lifetimes), allow(dead_code))
+    attr(
+        deny(warnings, rust_2018_idioms, single_use_lifetimes),
+        allow(dead_code, unused_variables)
+    )
 ))]
 #![warn(missing_docs, rust_2018_idioms, single_use_lifetimes, unreachable_pub)]
 #![warn(clippy::default_trait_access, clippy::wildcard_imports)]
-// mem::take and #[non_exhaustive] requires Rust 1.40
-#![allow(clippy::mem_replace_with_default, clippy::manual_non_exhaustive)]
 #![allow(clippy::needless_doctest_main)]
 
 #[doc(inline)]
 pub use pin_project_internal::pin_project;
 #[doc(inline)]
 pub use pin_project_internal::pinned_drop;
-#[allow(deprecated)]
-#[doc(inline)]
-pub use pin_project_internal::project;
-#[allow(deprecated)]
-#[doc(inline)]
-pub use pin_project_internal::project_ref;
-#[allow(deprecated)]
-#[doc(inline)]
-pub use pin_project_internal::project_replace;
 
 /// A trait used for custom implementations of [`Unpin`].
-/// This trait is used in conjunction with the `UnsafeUnpin`
-/// argument to [`#[pin_project]`][`pin_project`]
+///
+/// This trait is used in conjunction with the `UnsafeUnpin` argument to
+/// the [`#[pin_project]`][macro@pin_project] attribute.
+///
+/// # Safety
 ///
 /// The Rust [`Unpin`] trait is safe to implement - by itself,
-/// implementing it cannot lead to undefined behavior. Undefined
-/// behavior can only occur when other unsafe code is used.
+/// implementing it cannot lead to [undefined behavior][undefined-behavior].
+/// Undefined behavior can only occur when other unsafe code is used.
 ///
 /// It turns out that using pin projections, which requires unsafe code,
 /// imposes additional requirements on an [`Unpin`] impl. Normally, all of this
@@ -105,28 +130,28 @@ pub use pin_project_internal::project_replace;
 /// use pin_project::{pin_project, UnsafeUnpin};
 ///
 /// #[pin_project(UnsafeUnpin)]
-/// struct Foo<K, V> {
+/// struct Struct<K, V> {
 ///     #[pin]
 ///     field_1: K,
 ///     field_2: V,
 /// }
 ///
-/// unsafe impl<K, V> UnsafeUnpin for Foo<K, V> where K: Unpin + Clone {}
+/// unsafe impl<K, V> UnsafeUnpin for Struct<K, V> where K: Unpin + Clone {}
 /// ```
 ///
 /// [`PhantomPinned`]: core::marker::PhantomPinned
-/// [`pin_project`]: attr.pin_project.html
-/// [pin-projection]: https://doc.rust-lang.org/nightly/std/pin/index.html#projections-and-structural-pinning
 /// [cargo-geiger]: https://github.com/rust-secure-code/cargo-geiger
+/// [pin-projection]: core::pin#projections-and-structural-pinning
+/// [undefined-behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
 pub unsafe trait UnsafeUnpin {}
 
 // Not public API.
 #[doc(hidden)]
 pub mod __private {
+    use core::mem::ManuallyDrop;
     #[doc(hidden)]
     pub use core::{
         marker::{PhantomData, PhantomPinned, Unpin},
-        mem::ManuallyDrop,
         ops::Drop,
         pin::Pin,
         ptr,
@@ -137,18 +162,26 @@ pub mod __private {
 
     use super::UnsafeUnpin;
 
+    // An internal trait used for custom implementations of [`Drop`].
+    //
+    // **Do not call or implement this trait directly.**
+    //
+    // # Why this trait is private and `#[pinned_drop]` attribute is needed?
+    //
     // Implementing `PinnedDrop::drop` is safe, but calling it is not safe.
     // This is because destructors can be called multiple times in safe code and
-    // [double dropping is unsound](https://github.com/rust-lang/rust/pull/62360).
+    // [double dropping is unsound][rust-lang/rust#62360].
     //
     // Ideally, it would be desirable to be able to forbid manual calls in
     // the same way as [`Drop::drop`], but the library cannot do it. So, by using
-    // macros and replacing them with private traits, we prevent users from
-    // calling `PinnedDrop::drop`.
+    // macros and replacing them with private traits,
+    // this crate prevent users from calling `PinnedDrop::drop` in safe code.
     //
-    // Users can implement [`Drop`] safely using `#[pinned_drop]` and can drop a
-    // type that implements `PinnedDrop` using the [`drop`] function safely.
-    // **Do not call or implement this trait directly.**
+    // This allows implementing [`Drop`] safely using `#[pinned_drop]`.
+    // Also by using the [`drop`] function just like dropping a type that directly
+    // implements [`Drop`], can drop safely a type that implements `PinnedDrop`.
+    //
+    // [rust-lang/rust#62360]: https://github.com/rust-lang/rust/pull/62360
     #[doc(hidden)]
     pub trait PinnedDrop {
         #[doc(hidden)]
@@ -222,7 +255,14 @@ pub mod __private {
 
     // This is an internal helper used to ensure a value is dropped.
     #[doc(hidden)]
-    pub struct UnsafeDropInPlaceGuard<T: ?Sized>(pub *mut T);
+    pub struct UnsafeDropInPlaceGuard<T: ?Sized>(*mut T);
+
+    impl<T: ?Sized> UnsafeDropInPlaceGuard<T> {
+        #[doc(hidden)]
+        pub unsafe fn new(ptr: *mut T) -> Self {
+            Self(ptr)
+        }
+    }
 
     impl<T: ?Sized> Drop for UnsafeDropInPlaceGuard<T> {
         fn drop(&mut self) {
@@ -236,8 +276,15 @@ pub mod __private {
     // its destructor being called.
     #[doc(hidden)]
     pub struct UnsafeOverwriteGuard<T> {
-        pub value: ManuallyDrop<T>,
-        pub target: *mut T,
+        target: *mut T,
+        value: ManuallyDrop<T>,
+    }
+
+    impl<T> UnsafeOverwriteGuard<T> {
+        #[doc(hidden)]
+        pub unsafe fn new(target: *mut T, value: T) -> Self {
+            Self { target, value: ManuallyDrop::new(value) }
+        }
     }
 
     impl<T> Drop for UnsafeOverwriteGuard<T> {
