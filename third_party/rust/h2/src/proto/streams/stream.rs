@@ -45,7 +45,7 @@ pub(super) struct Stream {
 
     /// Amount of data buffered at the prioritization layer.
     /// TODO: Technically this could be greater than the window size...
-    pub buffered_send_data: usize,
+    pub buffered_send_data: WindowSize,
 
     /// Task tracking additional send capacity (i.e. window updates).
     send_task: Option<Waker>,
@@ -260,31 +260,21 @@ impl Stream {
         self.ref_count == 0 && !self.state.is_closed()
     }
 
-    pub fn assign_capacity(&mut self, capacity: WindowSize, max_buffer_size: usize) {
+    pub fn assign_capacity(&mut self, capacity: WindowSize) {
         debug_assert!(capacity > 0);
+        self.send_capacity_inc = true;
         self.send_flow.assign_capacity(capacity);
 
-        tracing::trace!(
-            "  assigned capacity to stream; available={}; buffered={}; id={:?}; max_buffer_size={}",
+        log::trace!(
+            "  assigned capacity to stream; available={}; buffered={}; id={:?}",
             self.send_flow.available(),
             self.buffered_send_data,
-            self.id,
-            max_buffer_size
+            self.id
         );
 
-        self.notify_if_can_buffer_more(max_buffer_size);
-    }
-
-    /// If the capacity was limited because of the max_send_buffer_size,
-    /// then consider waking the send task again...
-    pub fn notify_if_can_buffer_more(&mut self, max_buffer_size: usize) {
-        let available = self.send_flow.available().as_size() as usize;
-        let buffered = self.buffered_send_data;
-
         // Only notify if the capacity exceeds the amount of buffered data
-        if available.min(max_buffer_size) > buffered {
-            self.send_capacity_inc = true;
-            tracing::trace!("  notifying task");
+        if self.send_flow.available() > self.buffered_send_data {
+            log::trace!("  notifying task");
             self.notify_send();
         }
     }
@@ -296,11 +286,7 @@ impl Stream {
                 Some(val) => *rem = val,
                 None => return Err(()),
             },
-            ContentLength::Head => {
-                if len != 0 {
-                    return Err(());
-                }
-            }
+            ContentLength::Head => return Err(()),
             _ => {}
         }
 

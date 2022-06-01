@@ -17,29 +17,32 @@ including using pasted identifiers to define new items.
 
 ```toml
 [dependencies]
-paste = "1.0"
+paste = "0.1"
 ```
 
-This approach works with any Rust compiler 1.31+.
+This approach works with any stable or nightly Rust compiler 1.30+.
 
 <br>
 
 ## Pasting identifiers
 
-Within the `paste!` macro, identifiers inside `[<`...`>]` are pasted together to
-form a single identifier.
+There are two entry points, `paste::expr!` for macros in expression position and
+`paste::item!` for macros in item position.
+
+Within either one, identifiers inside `[<`...`>]` are pasted together to form a
+single identifier.
 
 ```rust
-use paste::paste;
-
-paste! {
+// Macro in item position: at module scope or inside of an impl block.
+paste::item! {
     // Defines a const called `QRST`.
     const [<Q R S T>]: &str = "success!";
 }
 
 fn main() {
+    // Macro in expression position: inside a function body.
     assert_eq!(
-        paste! { [<Q R S T>].len() },
+        paste::expr! { [<Q R S T>].len() },
         8,
     );
 }
@@ -47,15 +50,34 @@ fn main() {
 
 <br>
 
-## More elaborate example
+## More elaborate examples
 
-The next example shows a macro that generates accessor methods for some struct
-fields. It demonstrates how you might find it useful to bundle a paste
-invocation inside of a macro\_rules macro.
+This program demonstrates how you may want to bundle a paste invocation inside
+of a more convenient user-facing macro of your own. Here the `routes!(A, B)`
+macro expands to a vector containing `ROUTE_A` and `ROUTE_B`.
 
 ```rust
-use paste::paste;
+const ROUTE_A: &str = "/a";
+const ROUTE_B: &str = "/b";
 
+macro_rules! routes {
+    ($($route:ident),*) => {{
+        paste::expr! {
+            vec![$( [<ROUTE_ $route>] ),*]
+        }
+    }}
+}
+
+fn main() {
+    let routes = routes!(A, B);
+    assert_eq!(routes, vec!["/a", "/b"]);
+}
+```
+
+The next example shows a macro that generates accessor methods for some struct
+fields.
+
+```rust
 macro_rules! make_a_struct_and_getters {
     ($name:ident { $($field:ident),* }) => {
         // Define a struct. This expands to:
@@ -78,7 +100,7 @@ macro_rules! make_a_struct_and_getters {
         //         pub fn get_b(&self) -> &str { &self.b }
         //         pub fn get_c(&self) -> &str { &self.c }
         //     }
-        paste! {
+        paste::item! {
             impl $name {
                 $(
                     pub fn [<get_ $field>](&self) -> &str {
@@ -114,30 +136,6 @@ The precise Unicode conversions are as defined by [`str::to_lowercase`] and
 
 [`str::to_lowercase`]: https://doc.rust-lang.org/std/primitive.str.html#method.to_lowercase
 [`str::to_uppercase`]: https://doc.rust-lang.org/std/primitive.str.html#method.to_uppercase
-
-<br>
-
-## Pasting documentation strings
-
-Within the `paste!` macro, arguments to a #\[doc ...\] attribute are implicitly
-concatenated together to form a coherent documentation string.
-
-```rust
-use paste::paste;
-
-macro_rules! method_new {
-    ($ret:ident) => {
-        paste! {
-            #[doc = "Create a new `" $ret "` object."]
-            pub fn new() -> $ret { todo!() }
-        }
-    };
-}
-
-pub struct Paste {}
-
-method_new!(Paste);  // expands to #[doc = "Create a new `Paste` object"]
-```
 
 <br>
 

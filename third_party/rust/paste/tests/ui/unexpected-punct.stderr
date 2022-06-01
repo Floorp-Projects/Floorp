@@ -1,5 +1,5 @@
 error: unexpected punct
- --> tests/ui/unexpected-punct.rs:4:12
+ --> $DIR/unexpected-punct.rs:2:12
   |
-4 |     fn [<a + b>]() {}
+2 |     fn [<a + b>]() {}
   |            ^

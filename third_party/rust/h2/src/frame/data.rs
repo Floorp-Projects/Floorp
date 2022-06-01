@@ -36,7 +36,7 @@ impl<T> Data<T> {
         }
     }
 
-    /// Returns the stream identifier that this frame is associated with.
+    /// Returns the stream identifer that this frame is associated with.
     ///
     /// This cannot be a zero stream identifier.
     pub fn stream_id(&self) -> StreamId {
@@ -63,7 +63,7 @@ impl<T> Data<T> {
         }
     }
 
-    /// Returns whether the `PADDED` flag is set on this frame.
+    /// Returns whther the `PADDED` flag is set on this frame.
     #[cfg(feature = "unstable")]
     pub fn is_padded(&self) -> bool {
         self.flags.is_padded()

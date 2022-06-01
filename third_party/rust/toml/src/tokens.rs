@@ -38,11 +38,7 @@ pub enum Token<'a> {
     RightBracket,
 
     Keylike(&'a str),
-    String {
-        src: &'a str,
-        val: Cow<'a, str>,
-        multiline: bool,
-    },
+    String { src: &'a str, val: Cow<'a, str>, multiline: bool },
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -56,11 +52,8 @@ pub enum Error {
     UnterminatedString(usize),
     NewlineInTableKey(usize),
     MultilineStringKey(usize),
-    Wanted {
-        at: usize,
-        expected: &'static str,
-        found: &'static str,
-    },
+    EmptyTableKey(usize),
+    Wanted { at: usize, expected: &'static str, found: &'static str },
 }
 
 #[derive(Clone)]
@@ -83,7 +76,7 @@ enum MaybeString {
 impl<'a> Tokenizer<'a> {
     pub fn new(input: &'a str) -> Tokenizer<'a> {
         let mut t = Tokenizer {
-            input,
+            input: input,
             chars: CrlfFold {
                 chars: input.char_indices(),
             },
@@ -108,16 +101,10 @@ impl<'a> Tokenizer<'a> {
             Some((start, '}')) => (start, RightBrace),
             Some((start, '[')) => (start, LeftBracket),
             Some((start, ']')) => (start, RightBracket),
-            Some((start, '\'')) => {
-                return self
-                    .literal_string(start)
-                    .map(|t| Some((self.step_span(start), t)))
-            }
-            Some((start, '"')) => {
-                return self
-                    .basic_string(start)
-                    .map(|t| Some((self.step_span(start), t)))
-            }
+            Some((start, '\'')) => return self.literal_string(start)
+                .map(|t| Some((self.step_span(start), t))),
+            Some((start, '"')) => return self.basic_string(start)
+                .map(|t| Some((self.step_span(start), t))),
             Some((start, ch)) if is_keylike(ch) => (start, self.keylike(start)),
 
             Some((start, ch)) => return Err(Error::Unexpected(start, ch)),
@@ -169,11 +156,13 @@ impl<'a> Tokenizer<'a> {
                     })
                 }
             }
-            None => Err(Error::Wanted {
-                at: self.input.len(),
-                expected: expected.describe(),
-                found: "eof",
-            }),
+            None => {
+                Err(Error::Wanted {
+                    at: self.input.len(),
+                    expected: expected.describe(),
+                    found: "eof",
+                })
+            }
         }
     }
 
@@ -181,33 +170,33 @@ impl<'a> Tokenizer<'a> {
         let current = self.current();
         match self.next()? {
             Some((span, Token::Keylike(k))) => Ok((span, k.into())),
-            Some((
-                span,
-                Token::String {
-                    src,
-                    val,
-                    multiline,
-                },
-            )) => {
+            Some((span, Token::String { src, val, multiline })) => {
                 let offset = self.substr_offset(src);
                 if multiline {
-                    return Err(Error::MultilineStringKey(offset));
+                    return Err(Error::MultilineStringKey(offset))
+                }
+                if val == "" {
+                    return Err(Error::EmptyTableKey(offset))
                 }
                 match src.find('\n') {
                     None => Ok((span, val)),
                     Some(i) => Err(Error::NewlineInTableKey(offset + i)),
                 }
             }
-            Some((_, other)) => Err(Error::Wanted {
-                at: current,
-                expected: "a table key",
-                found: other.describe(),
-            }),
-            None => Err(Error::Wanted {
-                at: self.input.len(),
-                expected: "a table key",
-                found: "eof",
-            }),
+            Some((_, other)) => {
+                Err(Error::Wanted {
+                    at: current,
+                    expected: "a table key",
+                    found: other.describe(),
+                })
+            }
+            None => {
+                Err(Error::Wanted {
+                    at: self.input.len(),
+                    expected: "a table key",
+                    found: "eof",
+                })
+            }
         }
     }
 
@@ -220,7 +209,7 @@ impl<'a> Tokenizer<'a> {
 
     pub fn eat_comment(&mut self) -> Result<bool, Error> {
         if !self.eatc('#') {
-            return Ok(false);
+            return Ok(false)
         }
         drop(self.comment_token(0));
         self.eat_newline_or_eof().map(|()| true)
@@ -229,19 +218,23 @@ impl<'a> Tokenizer<'a> {
     pub fn eat_newline_or_eof(&mut self) -> Result<(), Error> {
         let current = self.current();
         match self.next()? {
-            None | Some((_, Token::Newline)) => Ok(()),
-            Some((_, other)) => Err(Error::Wanted {
-                at: current,
-                expected: "newline",
-                found: other.describe(),
-            }),
+            None |
+            Some((_, Token::Newline)) => Ok(()),
+            Some((_, other)) => {
+                Err(Error::Wanted {
+                    at: current,
+                    expected: "newline",
+                    found: other.describe(),
+                })
+            }
         }
     }
 
     pub fn skip_to_newline(&mut self) {
         loop {
             match self.one() {
-                Some((_, '\n')) | None => break,
+                Some((_, '\n')) |
+                None => break,
                 _ => {}
             }
         }
@@ -258,11 +251,7 @@ impl<'a> Tokenizer<'a> {
     }
 
     pub fn current(&mut self) -> usize {
-        self.chars
-            .clone()
-            .next()
-            .map(|i| i.0)
-            .unwrap_or_else(|| self.input.len())
+        self.chars.clone().next().map(|i| i.0).unwrap_or(self.input.len())
     }
 
     pub fn input(&self) -> &'a str {
@@ -279,35 +268,30 @@ impl<'a> Tokenizer<'a> {
     fn comment_token(&mut self, start: usize) -> Token<'a> {
         while let Some((_, ch)) = self.chars.clone().next() {
             if ch != '\t' && (ch < '\u{20}' || ch > '\u{10ffff}') {
-                break;
+                break
             }
             self.one();
         }
         Comment(&self.input[start..self.current()])
     }
 
-    fn read_string(
-        &mut self,
-        delim: char,
-        start: usize,
-        new_ch: &mut dyn FnMut(
-            &mut Tokenizer<'_>,
-            &mut MaybeString,
-            bool,
-            usize,
-            char,
-        ) -> Result<(), Error>,
-    ) -> Result<Token<'a>, Error> {
+    fn read_string(&mut self,
+                   delim: char,
+                   start: usize,
+                   new_ch: &mut FnMut(&mut Tokenizer, &mut MaybeString,
+                                      bool, usize, char)
+                                     -> Result<(), Error>)
+                   -> Result<Token<'a>, Error> {
         let mut multiline = false;
         if self.eatc(delim) {
             if self.eatc(delim) {
                 multiline = true;
             } else {
                 return Ok(String {
-                    src: &self.input[start..start + 2],
+                    src: &self.input[start..start+2],
                     val: Cow::Borrowed(""),
                     multiline: false,
-                });
+                })
             }
         }
         let mut val = MaybeString::NotEscaped(self.current());
@@ -325,39 +309,28 @@ impl<'a> Tokenizer<'a> {
                         } else {
                             val.push('\n');
                         }
-                        continue;
+                        continue
                     } else {
-                        return Err(Error::NewlineInString(i));
+                        return Err(Error::NewlineInString(i))
                     }
                 }
-                Some((mut i, ch)) if ch == delim => {
+                Some((i, ch)) if ch == delim => {
                     if multiline {
-                        if !self.eatc(delim) {
-                            val.push(delim);
-                            continue 'outer;
-                        }
-                        if !self.eatc(delim) {
-                            val.push(delim);
-                            val.push(delim);
-                            continue 'outer;
-                        }
-                        if self.eatc(delim) {
-                            val.push(delim);
-                            i += 1;
-                        }
-                        if self.eatc(delim) {
-                            val.push(delim);
-                            i += 1;
+                        for _ in 0..2 {
+                            if !self.eatc(delim) {
+                                val.push(delim);
+                                continue 'outer
+                            }
                         }
                     }
                     return Ok(String {
                         src: &self.input[start..self.current()],
                         val: val.into_cow(&self.input[..i]),
-                        multiline,
-                    });
+                        multiline: multiline,
+                    })
                 }
                 Some((i, c)) => new_ch(self, &mut val, multiline, i, c)?,
-                None => return Err(Error::UnterminatedString(start)),
+                None => return Err(Error::UnterminatedString(start))
             }
         }
     }
@@ -374,56 +347,61 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn basic_string(&mut self, start: usize) -> Result<Token<'a>, Error> {
-        self.read_string('"', start, &mut |me, val, multi, i, ch| match ch {
-            '\\' => {
-                val.to_owned(&me.input[..i]);
-                match me.chars.next() {
-                    Some((_, '"')) => val.push('"'),
-                    Some((_, '\\')) => val.push('\\'),
-                    Some((_, 'b')) => val.push('\u{8}'),
-                    Some((_, 'f')) => val.push('\u{c}'),
-                    Some((_, 'n')) => val.push('\n'),
-                    Some((_, 'r')) => val.push('\r'),
-                    Some((_, 't')) => val.push('\t'),
-                    Some((i, c @ 'u')) | Some((i, c @ 'U')) => {
-                        let len = if c == 'u' { 4 } else { 8 };
-                        val.push(me.hex(start, i, len)?);
-                    }
-                    Some((i, c @ ' ')) | Some((i, c @ '\t')) | Some((i, c @ '\n')) if multi => {
-                        if c != '\n' {
+        self.read_string('"', start, &mut |me, val, multi, i, ch| {
+            match ch {
+                '\\' => {
+                    val.to_owned(&me.input[..i]);
+                    match me.chars.next() {
+                        Some((_, '"')) => val.push('"'),
+                        Some((_, '\\')) => val.push('\\'),
+                        Some((_, 'b')) => val.push('\u{8}'),
+                        Some((_, 'f')) => val.push('\u{c}'),
+                        Some((_, 'n')) => val.push('\n'),
+                        Some((_, 'r')) => val.push('\r'),
+                        Some((_, 't')) => val.push('\t'),
+                        Some((i, c @ 'u')) |
+                        Some((i, c @ 'U')) => {
+                            let len = if c == 'u' {4} else {8};
+                            val.push(me.hex(start, i, len)?);
+                        }
+                        Some((i, c @ ' ')) |
+                        Some((i, c @ '\t')) |
+                        Some((i, c @ '\n')) if multi => {
+                            if c != '\n' {
+                                while let Some((_, ch)) = me.chars.clone().next() {
+                                    match ch {
+                                        ' ' | '\t' => {
+                                            me.chars.next();
+                                            continue
+                                        },
+                                        '\n' => {
+                                            me.chars.next();
+                                            break
+                                        },
+                                        _ => return Err(Error::InvalidEscape(i, c)),
+                                    }
+                                }
+                            }
                             while let Some((_, ch)) = me.chars.clone().next() {
                                 match ch {
-                                    ' ' | '\t' => {
+                                    ' ' | '\t' | '\n' => {
                                         me.chars.next();
-                                        continue;
                                     }
-                                    '\n' => {
-                                        me.chars.next();
-                                        break;
-                                    }
-                                    _ => return Err(Error::InvalidEscape(i, c)),
+                                    _ => break,
                                 }
                             }
                         }
-                        while let Some((_, ch)) = me.chars.clone().next() {
-                            match ch {
-                                ' ' | '\t' | '\n' => {
-                                    me.chars.next();
-                                }
-                                _ => break,
-                            }
-                        }
+                        Some((i, c)) => return Err(Error::InvalidEscape(i, c)),
+                        None => return Err(Error::UnterminatedString(start)),
                     }
-                    Some((i, c)) => return Err(Error::InvalidEscape(i, c)),
-                    None => return Err(Error::UnterminatedString(start)),
+                    Ok(())
                 }
-                Ok(())
+                ch if '\u{20}' <= ch && ch <= '\u{10ffff}' && ch != '\u{7f}' => {
+                    val.push(ch);
+                    Ok(())
+                }
+                _ => Err(Error::InvalidCharInString(i, ch))
             }
-            ch if ch == '\u{09}' || ('\u{20}' <= ch && ch <= '\u{10ffff}' && ch != '\u{7f}') => {
-                val.push(ch);
-                Ok(())
-            }
-            _ => Err(Error::InvalidCharInString(i, ch)),
         })
     }
 
@@ -446,7 +424,7 @@ impl<'a> Tokenizer<'a> {
     fn keylike(&mut self, start: usize) -> Token<'a> {
         while let Some((_, ch)) = self.peek_one() {
             if !is_keylike(ch) {
-                break;
+                break
             }
             self.one();
         }
@@ -463,11 +441,8 @@ impl<'a> Tokenizer<'a> {
 
     /// Calculate the span of a single character.
     fn step_span(&mut self, start: usize) -> Span {
-        let end = self
-            .peek_one()
-            .map(|t| t.0)
-            .unwrap_or_else(|| self.input.len());
-        Span { start, end }
+        let end = self.peek_one().map(|t| t.0).unwrap_or_else(|| self.input.len());
+        Span { start: start, end: end }
     }
 
     /// Peek one char without consuming it.
@@ -490,7 +465,7 @@ impl<'a> Iterator for CrlfFold<'a> {
                 let mut attempt = self.chars.clone();
                 if let Some((_, '\n')) = attempt.next() {
                     self.chars = attempt;
-                    return (i, '\n');
+                    return (i, '\n')
                 }
             }
             (i, c)
@@ -515,7 +490,7 @@ impl MaybeString {
         }
     }
 
-    fn into_cow(self, input: &str) -> Cow<'_, str> {
+    fn into_cow(self, input: &str) -> Cow<str> {
         match self {
             MaybeString::NotEscaped(start) => Cow::Borrowed(&input[start..]),
             MaybeString::Owned(s) => Cow::Owned(s),
@@ -524,11 +499,11 @@ impl MaybeString {
 }
 
 fn is_keylike(ch: char) -> bool {
-    ('A' <= ch && ch <= 'Z')
-        || ('a' <= ch && ch <= 'z')
-        || ('0' <= ch && ch <= '9')
-        || ch == '-'
-        || ch == '_'
+    ('A' <= ch && ch <= 'Z') ||
+        ('a' <= ch && ch <= 'z') ||
+        ('0' <= ch && ch <= '9') ||
+        ch == '-' ||
+        ch == '_'
 }
 
 impl<'a> Token<'a> {
@@ -545,13 +520,7 @@ impl<'a> Token<'a> {
             Token::LeftBrace => "a left brace",
             Token::RightBracket => "a right bracket",
             Token::LeftBracket => "a left bracket",
-            Token::String { multiline, .. } => {
-                if multiline {
-                    "a multiline string"
-                } else {
-                    "a string"
-                }
-            }
+            Token::String { multiline, .. } => if multiline { "a multiline string" } else { "a string" },
             Token::Colon => "a colon",
             Token::Plus => "a plus",
         }
@@ -560,8 +529,8 @@ impl<'a> Token<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Error, Token, Tokenizer};
     use std::borrow::Cow;
+    use super::{Tokenizer, Token, Error};
 
     fn err(input: &str, err: Error) {
         let mut t = Tokenizer::new(input);
@@ -575,14 +544,11 @@ mod tests {
         fn t(input: &str, val: &str, multiline: bool) {
             let mut t = Tokenizer::new(input);
             let (_, token) = t.next().unwrap().unwrap();
-            assert_eq!(
-                token,
-                Token::String {
-                    src: input,
-                    val: Cow::Borrowed(val),
-                    multiline: multiline,
-                }
-            );
+            assert_eq!(token, Token::String {
+                src: input,
+                val: Cow::Borrowed(val),
+                multiline: multiline,
+            });
             assert!(t.next().unwrap().is_none());
         }
 
@@ -601,14 +567,11 @@ mod tests {
         fn t(input: &str, val: &str, multiline: bool) {
             let mut t = Tokenizer::new(input);
             let (_, token) = t.next().unwrap().unwrap();
-            assert_eq!(
-                token,
-                Token::String {
-                    src: input,
-                    val: Cow::Borrowed(val),
-                    multiline: multiline,
-                }
-            );
+            assert_eq!(token, Token::String {
+                src: input,
+                val: Cow::Borrowed(val),
+                multiline: multiline,
+            });
             assert!(t.next().unwrap().is_none());
         }
 
@@ -621,14 +584,8 @@ mod tests {
         t(r#""\U00000000""#, "\0", false);
         t(r#""\U000A0000""#, "\u{A0000}", false);
         t(r#""\\t""#, "\\t", false);
-        t("\"\t\"", "\t", false);
-        t("\"\"\"\n\t\"\"\"", "\t", true);
         t("\"\"\"\\\n\"\"\"", "", true);
-        t(
-            "\"\"\"\\\n     \t   \t  \\\r\n  \t \n  \t \r\n\"\"\"",
-            "",
-            true,
-        );
+        t("\"\"\"\\\n     \t   \t  \\\r\n  \t \n  \t \r\n\"\"\"", "", true);
         t(r#""\r""#, "\r", false);
         t(r#""\n""#, "\n", false);
         t(r#""\b""#, "\u{8}", false);
@@ -636,7 +593,6 @@ mod tests {
         t(r#""\"a""#, "\"a", false);
         t("\"\"\"\na\"\"\"", "a", true);
         t("\"\"\"\n\"\"\"", "", true);
-        t(r#""""a\"""b""""#, "a\"\"\"b", true);
         err(r#""\a"#, Error::InvalidEscape(2, 'a'));
         err("\"\\\n", Error::InvalidEscape(2, '\n'));
         err("\"\\\r\n", Error::InvalidEscape(2, '\n'));
@@ -645,7 +601,7 @@ mod tests {
         err(r#""\U00""#, Error::InvalidHexEscape(5, '"'));
         err(r#""\U00"#, Error::UnterminatedString(0));
         err(r#""\uD800"#, Error::InvalidEscapeValue(2, 0xd800));
-        err(r#""\UFFFFFFFF"#, Error::InvalidEscapeValue(2, 0xffff_ffff));
+        err(r#""\UFFFFFFFF"#, Error::InvalidEscapeValue(2, 0xffffffff));
     }
 
     #[test]
@@ -668,9 +624,9 @@ mod tests {
 
     #[test]
     fn all() {
-        fn t(input: &str, expected: &[((usize, usize), Token<'_>, &str)]) {
+        fn t(input: &str, expected: &[((usize, usize), Token, &str)]) {
             let mut tokens = Tokenizer::new(input);
-            let mut actual: Vec<((usize, usize), Token<'_>, &str)> = Vec::new();
+            let mut actual: Vec<((usize, usize), Token, &str)> = Vec::new();
             while let Some((span, token)) = tokens.next().unwrap() {
                 actual.push((span.into(), token, &input[span.start..span.end]));
             }
@@ -680,45 +636,39 @@ mod tests {
             assert_eq!(actual.len(), expected.len());
         }
 
-        t(
-            " a ",
-            &[
-                ((0, 1), Token::Whitespace(" "), " "),
-                ((1, 2), Token::Keylike("a"), "a"),
-                ((2, 3), Token::Whitespace(" "), " "),
-            ],
-        );
+        t(" a ", &[
+            ((0, 1), Token::Whitespace(" "), " "),
+            ((1, 2), Token::Keylike("a"), "a"),
+            ((2, 3), Token::Whitespace(" "), " "),
+        ]);
 
-        t(
-            " a\t [[]] \t [] {} , . =\n# foo \r\n#foo \n ",
-            &[
-                ((0, 1), Token::Whitespace(" "), " "),
-                ((1, 2), Token::Keylike("a"), "a"),
-                ((2, 4), Token::Whitespace("\t "), "\t "),
-                ((4, 5), Token::LeftBracket, "["),
-                ((5, 6), Token::LeftBracket, "["),
-                ((6, 7), Token::RightBracket, "]"),
-                ((7, 8), Token::RightBracket, "]"),
-                ((8, 11), Token::Whitespace(" \t "), " \t "),
-                ((11, 12), Token::LeftBracket, "["),
-                ((12, 13), Token::RightBracket, "]"),
-                ((13, 14), Token::Whitespace(" "), " "),
-                ((14, 15), Token::LeftBrace, "{"),
-                ((15, 16), Token::RightBrace, "}"),
-                ((16, 17), Token::Whitespace(" "), " "),
-                ((17, 18), Token::Comma, ","),
-                ((18, 19), Token::Whitespace(" "), " "),
-                ((19, 20), Token::Period, "."),
-                ((20, 21), Token::Whitespace(" "), " "),
-                ((21, 22), Token::Equals, "="),
-                ((22, 23), Token::Newline, "\n"),
-                ((23, 29), Token::Comment("# foo "), "# foo "),
-                ((29, 31), Token::Newline, "\r\n"),
-                ((31, 36), Token::Comment("#foo "), "#foo "),
-                ((36, 37), Token::Newline, "\n"),
-                ((37, 38), Token::Whitespace(" "), " "),
-            ],
-        );
+        t(" a\t [[]] \t [] {} , . =\n# foo \r\n#foo \n ", &[
+            ((0, 1), Token::Whitespace(" "), " "),
+            ((1, 2), Token::Keylike("a"), "a"),
+            ((2, 4), Token::Whitespace("\t "), "\t "),
+            ((4, 5), Token::LeftBracket, "["),
+            ((5, 6), Token::LeftBracket, "["),
+            ((6, 7), Token::RightBracket, "]"),
+            ((7, 8), Token::RightBracket, "]"),
+            ((8, 11), Token::Whitespace(" \t "), " \t "),
+            ((11, 12), Token::LeftBracket, "["),
+            ((12, 13), Token::RightBracket, "]"),
+            ((13, 14), Token::Whitespace(" "), " "),
+            ((14, 15), Token::LeftBrace, "{"),
+            ((15, 16), Token::RightBrace, "}"),
+            ((16, 17), Token::Whitespace(" "), " "),
+            ((17, 18), Token::Comma, ","),
+            ((18, 19), Token::Whitespace(" "), " "),
+            ((19, 20), Token::Period, "."),
+            ((20, 21), Token::Whitespace(" "), " "),
+            ((21, 22), Token::Equals, "="),
+            ((22, 23), Token::Newline, "\n"),
+            ((23, 29), Token::Comment("# foo "), "# foo "),
+            ((29, 31), Token::Newline, "\r\n"),
+            ((31, 36), Token::Comment("#foo "), "#foo "),
+            ((36, 37), Token::Newline, "\n"),
+            ((37, 38), Token::Whitespace(" "), " "),
+        ]);
     }
 
     #[test]

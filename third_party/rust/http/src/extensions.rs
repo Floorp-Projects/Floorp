@@ -188,39 +188,6 @@ impl Extensions {
             .as_ref()
             .map_or(0, |map| map.len())
     }
-
-    /// Extends `self` with another `Extensions`.
-    ///
-    /// If an instance of a specific type exists in both, the one in `self` is overwritten with the
-    /// one from `other`.
-    /// 
-    /// # Example
-    /// 
-    /// ```
-    /// # use http::Extensions;
-    /// let mut ext_a = Extensions::new();
-    /// ext_a.insert(8u8);
-    /// ext_a.insert(16u16);
-    /// 
-    /// let mut ext_b = Extensions::new();
-    /// ext_b.insert(4u8);
-    /// ext_b.insert("hello");
-    /// 
-    /// ext_a.extend(ext_b);
-    /// assert_eq!(ext_a.len(), 3);
-    /// assert_eq!(ext_a.get::<u8>(), Some(&4u8));
-    /// assert_eq!(ext_a.get::<u16>(), Some(&16u16));
-    /// assert_eq!(ext_a.get::<&'static str>().copied(), Some("hello"));
-    /// ```
-    pub fn extend(&mut self, other: Self) {
-        if let Some(other) = other.map {
-            if let Some(map) = &mut self.map {
-                map.extend(*other);
-            } else {
-                self.map = Some(other);
-            }
-        }
-    }
 }
 
 impl fmt::Debug for Extensions {

@@ -1,22 +1,17 @@
-#[cfg(feature = "http1")]
 use bytes::BytesMut;
-use http::header::CONTENT_LENGTH;
-use http::header::{HeaderValue, ValueIter};
+use http::header::{HeaderValue, OccupiedEntry, ValueIter};
+use http::header::{CONTENT_LENGTH, TRANSFER_ENCODING};
+use http::method::Method;
 use http::HeaderMap;
-#[cfg(all(feature = "http2", feature = "client"))]
-use http::Method;
 
-#[cfg(feature = "http1")]
-pub(super) fn connection_keep_alive(value: &HeaderValue) -> bool {
+pub fn connection_keep_alive(value: &HeaderValue) -> bool {
     connection_has(value, "keep-alive")
 }
 
-#[cfg(feature = "http1")]
-pub(super) fn connection_close(value: &HeaderValue) -> bool {
+pub fn connection_close(value: &HeaderValue) -> bool {
     connection_has(value, "close")
 }
 
-#[cfg(feature = "http1")]
 fn connection_has(value: &HeaderValue, needle: &str) -> bool {
     if let Ok(s) = value.to_str() {
         for val in s.split(',') {
@@ -28,91 +23,59 @@ fn connection_has(value: &HeaderValue, needle: &str) -> bool {
     false
 }
 
-#[cfg(all(feature = "http1", feature = "server"))]
-pub(super) fn content_length_parse(value: &HeaderValue) -> Option<u64> {
-    from_digits(value.as_bytes())
+pub fn content_length_parse(value: &HeaderValue) -> Option<u64> {
+    value.to_str().ok().and_then(|s| s.parse().ok())
 }
 
-pub(super) fn content_length_parse_all(headers: &HeaderMap) -> Option<u64> {
+pub fn content_length_parse_all(headers: &HeaderMap) -> Option<u64> {
     content_length_parse_all_values(headers.get_all(CONTENT_LENGTH).into_iter())
 }
 
-pub(super) fn content_length_parse_all_values(values: ValueIter<'_, HeaderValue>) -> Option<u64> {
+pub fn content_length_parse_all_values(values: ValueIter<'_, HeaderValue>) -> Option<u64> {
     // If multiple Content-Length headers were sent, everything can still
     // be alright if they all contain the same value, and all parse
     // correctly. If not, then it's an error.
 
-    let mut content_length: Option<u64> = None;
-    for h in values {
-        if let Ok(line) = h.to_str() {
-            for v in line.split(',') {
-                if let Some(n) = from_digits(v.trim().as_bytes()) {
-                    if content_length.is_none() {
-                        content_length = Some(n)
-                    } else if content_length != Some(n) {
-                        return None;
-                    }
-                } else {
-                    return None
-                }
-            }
-        } else {
-            return None
-        }
-    }
+    let folded = values.fold(None, |prev, line| match prev {
+        Some(Ok(prev)) => Some(
+            line.to_str()
+                .map_err(|_| ())
+                .and_then(|s| s.parse().map_err(|_| ()))
+                .and_then(|n| if prev == n { Ok(n) } else { Err(()) }),
+        ),
+        None => Some(
+            line.to_str()
+                .map_err(|_| ())
+                .and_then(|s| s.parse().map_err(|_| ())),
+        ),
+        Some(Err(())) => Some(Err(())),
+    });
 
-    return content_length
+    if let Some(Ok(n)) = folded {
+        Some(n)
+    } else {
+        None
+    }
 }
 
-fn from_digits(bytes: &[u8]) -> Option<u64> {
-    // cannot use FromStr for u64, since it allows a signed prefix
-    let mut result = 0u64;
-    const RADIX: u64 = 10;
-
-    if bytes.is_empty() {
-        return None;
-    }
-
-    for &b in bytes {
-        // can't use char::to_digit, since we haven't verified these bytes
-        // are utf-8.
-        match b {
-            b'0'..=b'9' => {
-                result = result.checked_mul(RADIX)?;
-                result = result.checked_add((b - b'0') as u64)?;
-            },
-            _ => {
-                // not a DIGIT, get outta here!
-                return None;
-            }
-        }
-    }
-
-    Some(result)
-}
-
-#[cfg(all(feature = "http2", feature = "client"))]
-pub(super) fn method_has_defined_payload_semantics(method: &Method) -> bool {
+pub fn method_has_defined_payload_semantics(method: &Method) -> bool {
     match *method {
         Method::GET | Method::HEAD | Method::DELETE | Method::CONNECT => false,
         _ => true,
     }
 }
 
-#[cfg(feature = "http2")]
-pub(super) fn set_content_length_if_missing(headers: &mut HeaderMap, len: u64) {
+pub fn set_content_length_if_missing(headers: &mut HeaderMap, len: u64) {
     headers
         .entry(CONTENT_LENGTH)
         .or_insert_with(|| HeaderValue::from(len));
 }
 
-#[cfg(feature = "http1")]
-pub(super) fn transfer_encoding_is_chunked(headers: &HeaderMap) -> bool {
-    is_chunked(headers.get_all(http::header::TRANSFER_ENCODING).into_iter())
+pub fn transfer_encoding_is_chunked(headers: &HeaderMap) -> bool {
+    is_chunked(headers.get_all(TRANSFER_ENCODING).into_iter())
 }
 
-#[cfg(feature = "http1")]
-pub(super) fn is_chunked(mut encodings: ValueIter<'_, HeaderValue>) -> bool {
+pub fn is_chunked(mut encodings: ValueIter<'_, HeaderValue>) -> bool {
     // chunked must always be the last encoding, according to spec
     if let Some(line) = encodings.next_back() {
         return is_chunked_(line);
@@ -121,8 +84,7 @@ pub(super) fn is_chunked(mut encodings: ValueIter<'_, HeaderValue>) -> bool {
     false
 }
 
-#[cfg(feature = "http1")]
-pub(super) fn is_chunked_(value: &HeaderValue) -> bool {
+pub fn is_chunked_(value: &HeaderValue) -> bool {
     // chunked must always be the last encoding, according to spec
     if let Ok(s) = value.to_str() {
         if let Some(encoding) = s.rsplit(',').next() {
@@ -133,17 +95,16 @@ pub(super) fn is_chunked_(value: &HeaderValue) -> bool {
     false
 }
 
-#[cfg(feature = "http1")]
-pub(super) fn add_chunked(mut entry: http::header::OccupiedEntry<'_, HeaderValue>) {
+pub fn add_chunked(mut entry: OccupiedEntry<'_, HeaderValue>) {
     const CHUNKED: &str = "chunked";
 
     if let Some(line) = entry.iter_mut().next_back() {
         // + 2 for ", "
         let new_cap = line.as_bytes().len() + CHUNKED.len() + 2;
         let mut buf = BytesMut::with_capacity(new_cap);
-        buf.extend_from_slice(line.as_bytes());
-        buf.extend_from_slice(b", ");
-        buf.extend_from_slice(CHUNKED.as_bytes());
+        buf.copy_from_slice(line.as_bytes());
+        buf.copy_from_slice(b", ");
+        buf.copy_from_slice(CHUNKED.as_bytes());
 
         *line = HeaderValue::from_maybe_shared(buf.freeze())
             .expect("original header value plus ascii is valid");

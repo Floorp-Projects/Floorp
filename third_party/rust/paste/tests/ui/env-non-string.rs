@@ -1,6 +1,4 @@
-use paste::paste;
-
-paste! {
+paste::item! {
     fn [<env!(1.31)>]() {}
 }
 

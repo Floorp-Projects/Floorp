@@ -1,4 +1,4 @@
-use pin_project_lite::pin_project;
+use std::mem;
 
 use super::{task, Future, Pin, Poll};
 
@@ -12,38 +12,31 @@ where
     R: Future + Unpin,
 {
     Lazy {
-        inner: Inner::Init { func },
+        inner: Inner::Init(func),
     }
 }
 
 // FIXME: allow() required due to `impl Trait` leaking types to this lint
-pin_project! {
-    #[allow(missing_debug_implementations)]
-    pub(crate) struct Lazy<F, R> {
-        #[pin]
-        inner: Inner<F, R>,
-    }
+#[allow(missing_debug_implementations)]
+pub(crate) struct Lazy<F, R> {
+    inner: Inner<F, R>,
 }
 
-pin_project! {
-    #[project = InnerProj]
-    #[project_replace = InnerProjReplace]
-    enum Inner<F, R> {
-        Init { func: F },
-        Fut { #[pin] fut: R },
-        Empty,
-    }
+enum Inner<F, R> {
+    Init(F),
+    Fut(R),
+    Empty,
 }
 
 impl<F, R> Started for Lazy<F, R>
 where
     F: FnOnce() -> R,
-    R: Future,
+    R: Future + Unpin,
 {
     fn started(&self) -> bool {
         match self.inner {
-            Inner::Init { .. } => false,
-            Inner::Fut { .. } | Inner::Empty => true,
+            Inner::Init(_) => false,
+            Inner::Fut(_) | Inner::Empty => true,
         }
     }
 }
@@ -51,26 +44,26 @@ where
 impl<F, R> Future for Lazy<F, R>
 where
     F: FnOnce() -> R,
-    R: Future,
+    R: Future + Unpin,
 {
     type Output = R::Output;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
-        let mut this = self.project();
-
-        if let InnerProj::Fut { fut } = this.inner.as_mut().project() {
-            return fut.poll(cx);
+    fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
+        if let Inner::Fut(ref mut f) = self.inner {
+            return Pin::new(f).poll(cx);
         }
 
-        match this.inner.as_mut().project_replace(Inner::Empty) {
-            InnerProjReplace::Init { func } => {
-                this.inner.set(Inner::Fut { fut: func() });
-                if let InnerProj::Fut { fut } = this.inner.project() {
-                    return fut.poll(cx);
-                }
-                unreachable!()
+        match mem::replace(&mut self.inner, Inner::Empty) {
+            Inner::Init(func) => {
+                let mut fut = func();
+                let ret = Pin::new(&mut fut).poll(cx);
+                self.inner = Inner::Fut(fut);
+                ret
             }
             _ => unreachable!("lazy state wrong"),
         }
     }
 }
+
+// The closure `F` is never pinned
+impl<F, R: Unpin> Unpin for Lazy<F, R> {}

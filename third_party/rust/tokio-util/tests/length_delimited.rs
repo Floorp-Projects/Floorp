@@ -1,6 +1,6 @@
 #![warn(rust_2018_idioms)]
 
-use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_test::task;
 use tokio_test::{
     assert_err, assert_ok, assert_pending, assert_ready, assert_ready_err, assert_ready_ok,
@@ -373,25 +373,6 @@ fn read_single_multi_frame_one_packet_skip_none_adjusted() {
 }
 
 #[test]
-fn read_single_frame_length_adjusted() {
-    let mut d: Vec<u8> = vec![];
-    d.extend_from_slice(b"\x00\x00\x0b\x0cHello world");
-
-    let io = length_delimited::Builder::new()
-        .length_field_offset(0)
-        .length_field_length(3)
-        .length_adjustment(0)
-        .num_skip(4)
-        .new_read(mock! {
-            data(&d),
-        });
-    pin_mut!(io);
-
-    assert_next_eq!(io, b"Hello world");
-    assert_done!(io);
-}
-
-#[test]
 fn read_single_multi_frame_one_packet_length_includes_head() {
     let mut d: Vec<u8> = vec![];
     d.extend_from_slice(b"\x00\x0babcdefghi");
@@ -707,18 +688,18 @@ impl AsyncRead for Mock {
     fn poll_read(
         mut self: Pin<&mut Self>,
         _cx: &mut Context<'_>,
-        dst: &mut ReadBuf<'_>,
-    ) -> Poll<io::Result<()>> {
+        dst: &mut [u8],
+    ) -> Poll<io::Result<usize>> {
         match self.calls.pop_front() {
             Some(Ready(Ok(Op::Data(data)))) => {
-                debug_assert!(dst.remaining() >= data.len());
-                dst.put_slice(&data);
-                Ready(Ok(()))
+                debug_assert!(dst.len() >= data.len());
+                dst[..data.len()].copy_from_slice(&data[..]);
+                Ready(Ok(data.len()))
             }
             Some(Ready(Ok(_))) => panic!(),
             Some(Ready(Err(e))) => Ready(Err(e)),
             Some(Pending) => Pending,
-            None => Ready(Ok(())),
+            None => Ready(Ok(0)),
         }
     }
 }

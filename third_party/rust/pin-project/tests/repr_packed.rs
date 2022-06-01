@@ -25,15 +25,15 @@ fn weird_repr_packed() {
     }
 
     #[repr(packed)]
-    struct Struct {
+    struct Foo {
         field: u8,
     }
 
-    impl Drop for Struct {
+    impl Drop for Foo {
         fn drop(&mut self) {
             FIELD_ADDR.with(|f| {
                 f.set(&self.field as *const u8 as usize);
-            });
+            })
         }
     }
 
@@ -44,9 +44,9 @@ fn weird_repr_packed() {
         // Calling drop(foo) causes 'foo' to be moved
         // into the 'drop' function, resulting in a different
         // address.
-        let x = Struct { field: 27 };
+        let x = Foo { field: 27 };
         let field_addr = &x.field as *const u8 as usize;
         field_addr
     };
-    assert_eq!(field_addr, FIELD_ADDR.with(Cell::get));
+    assert_eq!(field_addr, FIELD_ADDR.with(|f| f.get()));
 }

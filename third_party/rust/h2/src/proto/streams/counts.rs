@@ -133,7 +133,7 @@ impl Counts {
 
     // TODO: move this to macro?
     pub fn transition_after(&mut self, mut stream: store::Ptr, is_reset_counted: bool) {
-        tracing::trace!(
+        log::trace!(
             "transition_after; stream={:?}; state={:?}; is_closed={:?}; \
              pending_send_empty={:?}; buffered_send_data={}; \
              num_recv={}; num_send={}",
@@ -155,7 +155,7 @@ impl Counts {
             }
 
             if stream.is_counted {
-                tracing::trace!("dec_num_streams; stream={:?}", stream.id);
+                log::trace!("dec_num_streams; stream={:?}", stream.id);
                 // Decrement the number of active streams.
                 self.dec_num_streams(&mut stream);
             }
@@ -165,18 +165,6 @@ impl Counts {
         if stream.is_released() {
             stream.remove();
         }
-    }
-
-    /// Returns the maximum number of streams that can be initiated by this
-    /// peer.
-    pub(crate) fn max_send_streams(&self) -> usize {
-        self.max_send_streams
-    }
-
-    /// Returns the maximum number of streams that can be initiated by the
-    /// remote peer.
-    pub(crate) fn max_recv_streams(&self) -> usize {
-        self.max_recv_streams
     }
 
     fn dec_num_streams(&mut self, stream: &mut store::Ptr) {

@@ -1,18 +1,17 @@
 //! Deserialization support for the `application/x-www-form-urlencoded` format.
 
-use form_urlencoded::parse;
-use form_urlencoded::Parse as UrlEncodedParse;
 use serde::de::value::MapDeserializer;
 use serde::de::Error as de_Error;
 use serde::de::{self, IntoDeserializer};
-use serde::forward_to_deserialize_any;
 use std::borrow::Cow;
 use std::io::Read;
+use url::form_urlencoded::parse;
+use url::form_urlencoded::Parse as UrlEncodedParse;
 
 #[doc(inline)]
 pub use serde::de::value::Error;
 
-/// Deserializes a `application/x-www-form-urlencoded` value from a `&[u8]`.
+/// Deserializes a `application/x-wwww-url-encoded` value from a `&[u8]`.
 ///
 /// ```
 /// let meal = vec![
@@ -34,7 +33,7 @@ where
     T::deserialize(Deserializer::new(parse(input)))
 }
 
-/// Deserializes a `application/x-www-form-urlencoded` value from a `&str`.
+/// Deserializes a `application/x-wwww-url-encoded` value from a `&str`.
 ///
 /// ```
 /// let meal = vec![

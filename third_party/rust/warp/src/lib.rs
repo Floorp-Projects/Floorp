@@ -1,7 +1,6 @@
-#![doc(html_root_url = "https://docs.rs/warp/0.3.2")]
+#![doc(html_root_url = "https://docs.rs/warp/0.2.3")]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
-#![deny(rust_2018_idioms)]
 #![cfg_attr(test, deny(warnings))]
 
 //! # warp
@@ -81,7 +80,7 @@
 //! ## Testing
 //!
 //! Testing your web services easily is extremely important, and warp provides
-//! a [`test`](self::test) module to help send mocked requests through your service.
+//! a [`test`](test) module to help send mocked requests through your service.
 //!
 //! [Filter]: trait.Filter.html
 //! [reject]: reject/index.html
@@ -133,7 +132,6 @@ pub use self::filters::{
     header,
     // header() function
     header::header,
-    host,
     log,
     // log() function
     log::log,
@@ -145,12 +143,8 @@ pub use self::filters::{
     // query() function
     query::query,
     sse,
-    trace,
-    // trace() function
-    trace::trace,
 };
 // ws() function
-pub use self::filter::wrap_fn;
 #[cfg(feature = "websocket")]
 #[doc(hidden)]
 pub use self::filters::ws::ws;
@@ -173,7 +167,7 @@ pub use hyper;
 #[doc(hidden)]
 pub use bytes::Buf;
 #[doc(hidden)]
-pub use futures_util::{Future, Sink, Stream};
+pub use futures::{Future, Sink, Stream};
 #[doc(hidden)]
 
 pub(crate) type Request = http::Request<hyper::Body>;

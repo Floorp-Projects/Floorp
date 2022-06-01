@@ -1,39 +1,79 @@
-error[E0365]: `DProj` is only public within the crate, and cannot be re-exported outside
-  --> tests/ui/pin_project/visibility.rs:15:13
+error[E0365]: `__DefaultProjection` is only public within the crate, and cannot be re-exported outside
+  --> tests/ui/pin_project/visibility.rs:12:13
    |
-15 |     pub use crate::pub_::DProj; //~ ERROR E0365
-   |             ^^^^^^^^^^^^^^^^^^ re-export of crate public `DProj`
+12 |     pub use crate::pub_::__DefaultProjection; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `__DefaultProjection`
+   |
+   = note: consider declaring type or module `__DefaultProjection` with `pub`
+
+error[E0365]: `__DefaultProjectionRef` is only public within the crate, and cannot be re-exported outside
+  --> tests/ui/pin_project/visibility.rs:14:13
+   |
+14 |     pub use crate::pub_::__DefaultProjectionRef; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `__DefaultProjectionRef`
+   |
+   = note: consider declaring type or module `__DefaultProjectionRef` with `pub`
+
+error[E0365]: `__ReplaceProjection` is only public within the crate, and cannot be re-exported outside
+  --> tests/ui/pin_project/visibility.rs:16:13
+   |
+16 |     pub use crate::pub_::__ReplaceProjection; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `__ReplaceProjection`
+   |
+   = note: consider declaring type or module `__ReplaceProjection` with `pub`
+
+error[E0365]: `__ReplaceProjectionOwned` is only public within the crate, and cannot be re-exported outside
+  --> tests/ui/pin_project/visibility.rs:18:13
+   |
+18 |     pub use crate::pub_::__ReplaceProjectionOwned; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `__ReplaceProjectionOwned`
+   |
+   = note: consider declaring type or module `__ReplaceProjectionOwned` with `pub`
+
+error[E0365]: `__ReplaceProjectionRef` is only public within the crate, and cannot be re-exported outside
+  --> tests/ui/pin_project/visibility.rs:20:13
+   |
+20 |     pub use crate::pub_::__ReplaceProjectionRef; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `__ReplaceProjectionRef`
+   |
+   = note: consider declaring type or module `__ReplaceProjectionRef` with `pub`
+
+error[E0365]: `DProj` is only public within the crate, and cannot be re-exported outside
+  --> tests/ui/pin_project/visibility.rs:63:13
+   |
+63 |     pub use crate::pub_renamed::DProj; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `DProj`
    |
    = note: consider declaring type or module `DProj` with `pub`
 
 error[E0365]: `DProjRef` is only public within the crate, and cannot be re-exported outside
-  --> tests/ui/pin_project/visibility.rs:17:13
+  --> tests/ui/pin_project/visibility.rs:65:13
    |
-17 |     pub use crate::pub_::DProjRef; //~ ERROR E0365
-   |             ^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `DProjRef`
+65 |     pub use crate::pub_renamed::DProjRef; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `DProjRef`
    |
    = note: consider declaring type or module `DProjRef` with `pub`
 
 error[E0365]: `RProj` is only public within the crate, and cannot be re-exported outside
-  --> tests/ui/pin_project/visibility.rs:19:13
+  --> tests/ui/pin_project/visibility.rs:67:13
    |
-19 |     pub use crate::pub_::RProj; //~ ERROR E0365
-   |             ^^^^^^^^^^^^^^^^^^ re-export of crate public `RProj`
+67 |     pub use crate::pub_renamed::RProj; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `RProj`
    |
    = note: consider declaring type or module `RProj` with `pub`
 
 error[E0365]: `RProjOwn` is only public within the crate, and cannot be re-exported outside
-  --> tests/ui/pin_project/visibility.rs:21:13
+  --> tests/ui/pin_project/visibility.rs:69:13
    |
-21 |     pub use crate::pub_::RProjOwn; //~ ERROR E0365
-   |             ^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `RProjOwn`
+69 |     pub use crate::pub_renamed::RProjOwn; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `RProjOwn`
    |
    = note: consider declaring type or module `RProjOwn` with `pub`
 
 error[E0365]: `RProjRef` is only public within the crate, and cannot be re-exported outside
-  --> tests/ui/pin_project/visibility.rs:23:13
+  --> tests/ui/pin_project/visibility.rs:71:13
    |
-23 |     pub use crate::pub_::RProjRef; //~ ERROR E0365
-   |             ^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `RProjRef`
+71 |     pub use crate::pub_renamed::RProjRef; //~ ERROR E0365
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ re-export of crate public `RProjRef`
    |
    = note: consider declaring type or module `RProjRef` with `pub`

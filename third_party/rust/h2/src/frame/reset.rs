@@ -2,7 +2,7 @@ use crate::frame::{self, Error, Head, Kind, Reason, StreamId};
 
 use bytes::BufMut;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Reset {
     stream_id: StreamId,
     error_code: Reason,
@@ -38,7 +38,7 @@ impl Reset {
     }
 
     pub fn encode<B: BufMut>(&self, dst: &mut B) {
-        tracing::trace!(
+        log::trace!(
             "encoding RESET; id={:?} code={:?}",
             self.stream_id,
             self.error_code

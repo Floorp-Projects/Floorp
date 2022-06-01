@@ -3,8 +3,8 @@ use pin_project::{pin_project, UnsafeUnpin};
 #[pin_project(!Unpin)] //~ ERROR E0119
 struct Foo<T, U> {
     #[pin]
-    f1: T,
-    f2: U,
+    future: T,
+    field: U,
 }
 
 unsafe impl<T, U> UnsafeUnpin for Foo<T, U> where T: Unpin {}
@@ -12,8 +12,8 @@ unsafe impl<T, U> UnsafeUnpin for Foo<T, U> where T: Unpin {}
 #[pin_project(!Unpin)] //~ ERROR E0119
 struct Bar<T, U> {
     #[pin]
-    f1: T,
-    f2: U,
+    future: T,
+    field: U,
 }
 
 unsafe impl<T, U> UnsafeUnpin for Bar<T, U> {}
@@ -21,8 +21,8 @@ unsafe impl<T, U> UnsafeUnpin for Bar<T, U> {}
 #[pin_project(!Unpin)] //~ ERROR E0119
 struct Baz<T, U> {
     #[pin]
-    f1: T,
-    f2: U,
+    future: T,
+    field: U,
 }
 
 unsafe impl<T: Unpin, U: Unpin> UnsafeUnpin for Baz<T, U> {}

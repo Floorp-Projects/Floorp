@@ -1,5 +1,5 @@
 error: unexpected token in env! macro
- --> tests/ui/env-unexpected.rs:4:21
+ --> $DIR/env-unexpected.rs:2:21
   |
-4 |     fn [<env!("VAR" "VAR")>]() {}
+2 |     fn [<env!("VAR" "VAR")>]() {}
   |                     ^^^^^

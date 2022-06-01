@@ -2,8 +2,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use futures_util::{ready, TryFuture};
-use pin_project::pin_project;
+use futures::{ready, TryFuture};
+use pin_project::{pin_project, project};
 
 use super::{Filter, FilterBase, Func, Internal};
 use crate::reject::IsReject;
@@ -48,7 +48,7 @@ where
     original_path_index: PathIndex,
 }
 
-#[pin_project(project = StateProj)]
+#[pin_project]
 enum State<T, F>
 where
     T: Filter,
@@ -77,15 +77,17 @@ where
 {
     type Output = Result<<F::Output as TryFuture>::Ok, <F::Output as TryFuture>::Error>;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    #[project]
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         loop {
             let pin = self.as_mut().project();
+            #[project]
             let (err, second) = match pin.state.project() {
-                StateProj::First(first, second) => match ready!(first.try_poll(cx)) {
+                State::First(first, second) => match ready!(first.try_poll(cx)) {
                     Ok(ex) => return Poll::Ready(Ok(ex)),
                     Err(err) => (err, second),
                 },
-                StateProj::Second(second) => {
+                State::Second(second) => {
                     let ex2 = ready!(second.try_poll(cx));
                     self.set(OrElseFuture {
                         state: State::Done,
@@ -93,7 +95,7 @@ where
                     });
                     return Poll::Ready(ex2);
                 }
-                StateProj::Done => panic!("polled after complete"),
+                State::Done => panic!("polled after complete"),
             };
 
             pin.original_path_index.reset_path();

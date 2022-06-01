@@ -2,7 +2,6 @@
 
 // Don't copy this `cfg`, it's only needed because this file is within
 // the warp repository.
-// Instead, specify the "tls" feature in your warp dependency declaration.
 #[cfg(feature = "tls")]
 #[tokio::main]
 async fn main() {

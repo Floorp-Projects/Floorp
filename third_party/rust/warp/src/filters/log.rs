@@ -30,8 +30,8 @@ use self::internal::WithLog;
 ///     .map(warp::reply)
 ///     .with(log);
 /// ```
-pub fn log(name: &'static str) -> Log<impl Fn(Info<'_>) + Copy> {
-    let func = move |info: Info<'_>| {
+pub fn log(name: &'static str) -> Log<impl Fn(Info) + Copy> {
+    let func = move |info: Info| {
         // TODO?
         // - response content length?
         log::info!(
@@ -72,7 +72,7 @@ pub fn log(name: &'static str) -> Log<impl Fn(Info<'_>) + Copy> {
 /// ```
 pub fn custom<F>(func: F) -> Log<F>
 where
-    F: Fn(Info<'_>),
+    F: Fn(Info),
 {
     Log { func }
 }
@@ -93,7 +93,7 @@ pub struct Info<'a> {
 
 impl<FN, F> WrapSealed<F> for Log<FN>
 where
-    FN: Fn(Info<'_>) + Clone + Send,
+    FN: Fn(Info) + Clone + Send,
     F: Filter + Clone + Send,
     F::Extract: Reply,
     F::Error: IsReject,
@@ -172,7 +172,7 @@ impl<'a> Info<'a> {
 struct OptFmt<T>(Option<T>);
 
 impl<T: fmt::Display> fmt::Display for OptFmt<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(ref t) = self.0 {
             fmt::Display::fmt(t, f)
         } else {
@@ -187,7 +187,7 @@ mod internal {
     use std::task::{Context, Poll};
     use std::time::Instant;
 
-    use futures_util::{ready, TryFuture};
+    use futures::{ready, TryFuture};
     use pin_project::pin_project;
 
     use super::{Info, Log};
@@ -215,7 +215,7 @@ mod internal {
 
     impl<FN, F> FilterBase for WithLog<FN, F>
     where
-        FN: Fn(Info<'_>) + Clone + Send,
+        FN: Fn(Info) + Clone + Send,
         F: Filter + Clone + Send,
         F::Extract: Reply,
         F::Error: IsReject,
@@ -245,14 +245,14 @@ mod internal {
 
     impl<FN, F> Future for WithLogFuture<FN, F>
     where
-        FN: Fn(Info<'_>),
+        FN: Fn(Info),
         F: TryFuture,
         F::Ok: Reply,
         F::Error: IsReject,
     {
         type Output = Result<(Logged,), F::Error>;
 
-        fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
             let pin = self.as_mut().project();
             let (result, status) = match ready!(pin.future.try_poll(cx)) {
                 Ok(reply) => {

@@ -1,6 +1,6 @@
 #![warn(rust_2018_idioms)]
 
-use tokio::io::{AsyncRead, ReadBuf};
+use tokio::io::AsyncRead;
 use tokio_test::assert_ready;
 use tokio_test::task;
 use tokio_util::codec::{Decoder, FramedRead};
@@ -50,22 +50,6 @@ impl Decoder for U32Decoder {
     }
 }
 
-struct U64Decoder;
-
-impl Decoder for U64Decoder {
-    type Item = u64;
-    type Error = io::Error;
-
-    fn decode(&mut self, buf: &mut BytesMut) -> io::Result<Option<u64>> {
-        if buf.len() < 8 {
-            return Ok(None);
-        }
-
-        let n = buf.split_to(8).get_u64();
-        Ok(Some(n))
-    }
-}
-
 #[test]
 fn read_multi_frame_in_packet() {
     let mut task = task::spawn(());
@@ -96,24 +80,6 @@ fn read_multi_frame_across_packets() {
         assert_read!(pin!(framed).poll_next(cx), 0);
         assert_read!(pin!(framed).poll_next(cx), 1);
         assert_read!(pin!(framed).poll_next(cx), 2);
-        assert!(assert_ready!(pin!(framed).poll_next(cx)).is_none());
-    });
-}
-
-#[test]
-fn read_multi_frame_in_packet_after_codec_changed() {
-    let mut task = task::spawn(());
-    let mock = mock! {
-        Ok(b"\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x08".to_vec()),
-    };
-    let mut framed = FramedRead::new(mock, U32Decoder);
-
-    task.enter(|cx, _| {
-        assert_read!(pin!(framed).poll_next(cx), 0x04);
-
-        let mut framed = framed.map_decoder(|_| U64Decoder);
-        assert_read!(pin!(framed).poll_next(cx), 0x08);
-
         assert!(assert_ready!(pin!(framed).poll_next(cx)).is_none());
     });
 }
@@ -219,8 +185,8 @@ fn read_partial_would_block_then_err() {
 #[test]
 fn huge_size() {
     let mut task = task::spawn(());
-    let data = &[0; 32 * 1024][..];
-    let mut framed = FramedRead::new(data, BigDecoder);
+    let data = [0; 32 * 1024];
+    let mut framed = FramedRead::new(Slice(&data[..]), BigDecoder);
 
     task.enter(|cx, _| {
         assert_read!(pin!(framed).poll_next(cx), 0);
@@ -246,7 +212,7 @@ fn huge_size() {
 #[test]
 fn data_remaining_is_error() {
     let mut task = task::spawn(());
-    let slice = &[0; 5][..];
+    let slice = Slice(&[0; 5]);
     let mut framed = FramedRead::new(slice, U32Decoder);
 
     task.enter(|cx, _| {
@@ -288,29 +254,6 @@ fn multi_frames_on_eof() {
     });
 }
 
-#[test]
-fn read_eof_then_resume() {
-    let mut task = task::spawn(());
-    let mock = mock! {
-        Ok(b"\x00\x00\x00\x01".to_vec()),
-        Ok(b"".to_vec()),
-        Ok(b"\x00\x00\x00\x02".to_vec()),
-        Ok(b"".to_vec()),
-        Ok(b"\x00\x00\x00\x03".to_vec()),
-    };
-    let mut framed = FramedRead::new(mock, U32Decoder);
-
-    task.enter(|cx, _| {
-        assert_read!(pin!(framed).poll_next(cx), 1);
-        assert!(assert_ready!(pin!(framed).poll_next(cx)).is_none());
-        assert_read!(pin!(framed).poll_next(cx), 2);
-        assert!(assert_ready!(pin!(framed).poll_next(cx)).is_none());
-        assert_read!(pin!(framed).poll_next(cx), 3);
-        assert!(assert_ready!(pin!(framed).poll_next(cx)).is_none());
-        assert!(assert_ready!(pin!(framed).poll_next(cx)).is_none());
-    });
-}
-
 // ===== Mock ======
 
 struct Mock {
@@ -321,19 +264,32 @@ impl AsyncRead for Mock {
     fn poll_read(
         mut self: Pin<&mut Self>,
         _cx: &mut Context<'_>,
-        buf: &mut ReadBuf<'_>,
-    ) -> Poll<io::Result<()>> {
+        buf: &mut [u8],
+    ) -> Poll<io::Result<usize>> {
         use io::ErrorKind::WouldBlock;
 
         match self.calls.pop_front() {
             Some(Ok(data)) => {
-                debug_assert!(buf.remaining() >= data.len());
-                buf.put_slice(&data);
-                Ready(Ok(()))
+                debug_assert!(buf.len() >= data.len());
+                buf[..data.len()].copy_from_slice(&data[..]);
+                Ready(Ok(data.len()))
             }
             Some(Err(ref e)) if e.kind() == WouldBlock => Pending,
             Some(Err(e)) => Ready(Err(e)),
-            None => Ready(Ok(())),
+            None => Ready(Ok(0)),
         }
+    }
+}
+
+// TODO this newtype is necessary because `&[u8]` does not currently implement `AsyncRead`
+struct Slice<'a>(&'a [u8]);
+
+impl AsyncRead for Slice<'_> {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut [u8],
+    ) -> Poll<io::Result<usize>> {
+        Pin::new(&mut self.0).poll_read(cx, buf)
     }
 }

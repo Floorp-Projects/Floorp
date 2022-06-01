@@ -1,6 +1,6 @@
 # tokio-util
 
-Utilities for working with Tokio.
+Utilities for encoding and decoding frames.
 
 ## License
 

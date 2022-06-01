@@ -12,7 +12,6 @@ version = "0.59"
 default-features = false
 
 [features]
-default = ["bindgen/default"]
 logging = ["bindgen/logging"]
 runtime = ["bindgen/runtime"]
 static = ["bindgen/static"]

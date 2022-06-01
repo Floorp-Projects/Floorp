@@ -1,12 +1,17 @@
 //! `x-www-form-urlencoded` meets Serde
 
 #![warn(unused_extern_crates)]
-#![forbid(unsafe_code)]
+
+extern crate dtoa;
+extern crate itoa;
+#[macro_use]
+extern crate serde;
+extern crate url;
 
 pub mod de;
 pub mod ser;
 
 #[doc(inline)]
-pub use crate::de::{from_bytes, from_reader, from_str, Deserializer};
+pub use de::{from_bytes, from_reader, from_str, Deserializer};
 #[doc(inline)]
-pub use crate::ser::{to_string, Serializer};
+pub use ser::{to_string, Serializer};

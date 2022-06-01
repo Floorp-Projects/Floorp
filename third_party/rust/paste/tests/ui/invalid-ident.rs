@@ -1,15 +1,5 @@
-use paste::paste;
-
-paste! {
+paste::item! {
     fn [<0 f>]() {}
-}
-
-paste! {
-    fn [<f '"'>]() {}
-}
-
-paste! {
-    fn [<f "'">]() {}
 }
 
 fn main() {}

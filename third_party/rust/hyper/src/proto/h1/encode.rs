@@ -1,9 +1,8 @@
 use std::fmt;
 use std::io::IoSlice;
 
-use bytes::buf::{Chain, Take};
+use bytes::buf::ext::{BufExt, Chain, Take};
 use bytes::Buf;
-use tracing::trace;
 
 use super::io::WriteBuf;
 
@@ -11,18 +10,18 @@ type StaticBuf = &'static [u8];
 
 /// Encoders to handle different Transfer-Encodings.
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Encoder {
+pub struct Encoder {
     kind: Kind,
     is_last: bool,
 }
 
 #[derive(Debug)]
-pub(crate) struct EncodedBuf<B> {
+pub struct EncodedBuf<B> {
     kind: BufKind<B>,
 }
 
 #[derive(Debug)]
-pub(crate) struct NotEof(u64);
+pub struct NotEof;
 
 #[derive(Debug, PartialEq, Clone)]
 enum Kind {
@@ -36,7 +35,6 @@ enum Kind {
     ///
     /// This is mostly only used with HTTP/1.0 with a length. This kind requires
     /// the connection to be closed when the body is finished.
-    #[cfg(feature = "server")]
     CloseDelimited,
 }
 
@@ -55,54 +53,45 @@ impl Encoder {
             is_last: false,
         }
     }
-    pub(crate) fn chunked() -> Encoder {
+    pub fn chunked() -> Encoder {
         Encoder::new(Kind::Chunked)
     }
 
-    pub(crate) fn length(len: u64) -> Encoder {
+    pub fn length(len: u64) -> Encoder {
         Encoder::new(Kind::Length(len))
     }
 
-    #[cfg(feature = "server")]
-    pub(crate) fn close_delimited() -> Encoder {
+    pub fn close_delimited() -> Encoder {
         Encoder::new(Kind::CloseDelimited)
     }
 
-    pub(crate) fn is_eof(&self) -> bool {
-        matches!(self.kind, Kind::Length(0))
-    }
-
-    #[cfg(feature = "server")]
-    pub(crate) fn set_last(mut self, is_last: bool) -> Self {
-        self.is_last = is_last;
-        self
-    }
-
-    pub(crate) fn is_last(&self) -> bool {
-        self.is_last
-    }
-
-    pub(crate) fn is_close_delimited(&self) -> bool {
+    pub fn is_eof(&self) -> bool {
         match self.kind {
-            #[cfg(feature = "server")]
-            Kind::CloseDelimited => true,
+            Kind::Length(0) => true,
             _ => false,
         }
     }
 
-    pub(crate) fn end<B>(&self) -> Result<Option<EncodedBuf<B>>, NotEof> {
+    pub fn set_last(mut self, is_last: bool) -> Self {
+        self.is_last = is_last;
+        self
+    }
+
+    pub fn is_last(&self) -> bool {
+        self.is_last
+    }
+
+    pub fn end<B>(&self) -> Result<Option<EncodedBuf<B>>, NotEof> {
         match self.kind {
             Kind::Length(0) => Ok(None),
             Kind::Chunked => Ok(Some(EncodedBuf {
                 kind: BufKind::ChunkedEnd(b"0\r\n\r\n"),
             })),
-            #[cfg(feature = "server")]
-            Kind::CloseDelimited => Ok(None),
-            Kind::Length(n) => Err(NotEof(n)),
+            _ => Err(NotEof),
         }
     }
 
-    pub(crate) fn encode<B>(&mut self, msg: B) -> EncodedBuf<B>
+    pub fn encode<B>(&mut self, msg: B) -> EncodedBuf<B>
     where
         B: Buf,
     {
@@ -128,7 +117,6 @@ impl Encoder {
                     BufKind::Exact(msg)
                 }
             }
-            #[cfg(feature = "server")]
             Kind::CloseDelimited => {
                 trace!("close delimited write {}B", len);
                 BufKind::Exact(msg)
@@ -172,7 +160,6 @@ impl Encoder {
                     }
                 }
             }
-            #[cfg(feature = "server")]
             Kind::CloseDelimited => {
                 trace!("close delimited write {}B", len);
                 dst.buffer(msg);
@@ -230,12 +217,12 @@ where
     }
 
     #[inline]
-    fn chunk(&self) -> &[u8] {
+    fn bytes(&self) -> &[u8] {
         match self.kind {
-            BufKind::Exact(ref b) => b.chunk(),
-            BufKind::Limited(ref b) => b.chunk(),
-            BufKind::Chunked(ref b) => b.chunk(),
-            BufKind::ChunkedEnd(ref b) => b.chunk(),
+            BufKind::Exact(ref b) => b.bytes(),
+            BufKind::Limited(ref b) => b.bytes(),
+            BufKind::Chunked(ref b) => b.bytes(),
+            BufKind::ChunkedEnd(ref b) => b.bytes(),
         }
     }
 
@@ -250,12 +237,12 @@ where
     }
 
     #[inline]
-    fn chunks_vectored<'t>(&'t self, dst: &mut [IoSlice<'t>]) -> usize {
+    fn bytes_vectored<'t>(&'t self, dst: &mut [IoSlice<'t>]) -> usize {
         match self.kind {
-            BufKind::Exact(ref b) => b.chunks_vectored(dst),
-            BufKind::Limited(ref b) => b.chunks_vectored(dst),
-            BufKind::Chunked(ref b) => b.chunks_vectored(dst),
-            BufKind::ChunkedEnd(ref b) => b.chunks_vectored(dst),
+            BufKind::Exact(ref b) => b.bytes_vectored(dst),
+            BufKind::Limited(ref b) => b.bytes_vectored(dst),
+            BufKind::Chunked(ref b) => b.bytes_vectored(dst),
+            BufKind::ChunkedEnd(ref b) => b.bytes_vectored(dst),
         }
     }
 }
@@ -296,7 +283,7 @@ impl Buf for ChunkSize {
     }
 
     #[inline]
-    fn chunk(&self) -> &[u8] {
+    fn bytes(&self) -> &[u8] {
         &self.bytes[self.pos.into()..self.len.into()]
     }
 
@@ -350,14 +337,6 @@ impl<B: Buf> From<Chain<Chain<ChunkSize, B>, StaticBuf>> for EncodedBuf<B> {
         }
     }
 }
-
-impl fmt::Display for NotEof {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "early end, expected {} more bytes", self.0)
-    }
-}
-
-impl std::error::Error for NotEof {}
 
 #[cfg(test)]
 mod tests {
@@ -426,7 +405,7 @@ mod tests {
 
         assert_eq!(dst, b"foo bar");
         assert!(!encoder.is_eof());
-        encoder.end::<()>().unwrap();
+        encoder.end::<()>().unwrap_err();
 
         let msg2 = b"baz".as_ref();
         let buf2 = encoder.encode(msg2);
@@ -434,6 +413,6 @@ mod tests {
 
         assert_eq!(dst, b"foo barbaz");
         assert!(!encoder.is_eof());
-        encoder.end::<()>().unwrap();
+        encoder.end::<()>().unwrap_err();
     }
 }

@@ -7,9 +7,8 @@ license = "MPL-2.0"
 [lib]
 path = "lib.rs"
 
-[dependencies.rand]
-version = "0.8"
-default-features = false
+[dependencies]
+rand = "0.8"
 
 [features]
 alloc = ["rand/alloc"]

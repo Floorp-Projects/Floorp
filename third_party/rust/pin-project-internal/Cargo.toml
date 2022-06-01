@@ -11,8 +11,9 @@
 
 [package]
 edition = "2018"
+rust-version = "1.34"
 name = "pin-project-internal"
-version = "1.0.10"
+version = "0.4.29"
 description = "Implementation detail of the `pin-project` crate.\n"
 keywords = ["pin", "macros", "attribute"]
 categories = ["no-std", "rust-patterns"]
@@ -30,7 +31,7 @@ version = "1"
 version = "1"
 
 [dependencies.syn]
-version = "1.0.56"
+version = "1.0.44"
 features = ["full", "visit-mut"]
-
-[dev-dependencies]
+[dev-dependencies.rustversion]
+version = "1"

@@ -1,7 +1,6 @@
 mod argument {
-    use std::pin::Pin;
-
     use pin_project::{pin_project, pinned_drop};
+    use std::pin::Pin;
 
     #[pin_project(PinnedDrop)]
     struct UnexpectedArg1(());
@@ -49,7 +48,7 @@ mod item {
     impl InherentImpl {} //~ ERROR may only be used on implementation for the `PinnedDrop` trait
 
     #[pinned_drop]
-    fn func(_: Pin<&mut ()>) {} //~ ERROR expected `impl`
+    fn drop(_: Pin<&mut ()>) {} //~ ERROR expected `impl`
 }
 
 mod unsafety {
@@ -129,9 +128,8 @@ mod assoc_item {
 }
 
 mod method {
-    use std::pin::Pin;
-
     use pin_project::{pin_project, pinned_drop};
+    use std::pin::Pin;
 
     #[pin_project(PinnedDrop)]
     struct RetUnit(());
@@ -202,7 +200,7 @@ mod method {
 
     #[pinned_drop]
     impl PinnedDrop for InvalidName {
-        fn pinned_drop(self: Pin<&mut Self>) {} //~ ERROR method `pinned_drop` is not a member of trait `PinnedDrop
+        fn pinned_drop(&mut self) {} //~ ERROR method `pinned_drop` is not a member of trait `PinnedDrop
     }
 }
 
