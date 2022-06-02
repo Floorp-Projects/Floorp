@@ -48,8 +48,11 @@ MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline) {
 
   // If the idle period is too small, then just return a null time
   // to indicate we are busy. Otherwise return the actual deadline.
-  TimeDuration minIdlePeriod =
-      TimeDuration::FromMilliseconds(StaticPrefs::idle_period_min());
+  //
+  // If we're in high frequency rate mode, idle.period.min isn't used but limit
+  // is 1.
+  TimeDuration minIdlePeriod = TimeDuration::FromMilliseconds(
+      nsRefreshDriver::IsInHighRateMode() ? 1 : StaticPrefs::idle_period_min());
   bool busySoon = currentGuess.IsNull() ||
                   (now >= (currentGuess - minIdlePeriod)) ||
                   currentGuess < mLastIdleDeadline;
