@@ -38,29 +38,6 @@ CodeGeneratorX86::CodeGeneratorX86(MIRGenerator* gen, LIRGraph* graph,
                                    MacroAssembler* masm)
     : CodeGeneratorX86Shared(gen, graph, masm) {}
 
-static const uint32_t FrameSizes[] = {128, 256, 512, 1024};
-
-FrameSizeClass FrameSizeClass::FromDepth(uint32_t frameDepth) {
-  for (uint32_t i = 0; i < std::size(FrameSizes); i++) {
-    if (frameDepth < FrameSizes[i]) {
-      return FrameSizeClass(i);
-    }
-  }
-
-  return FrameSizeClass::None();
-}
-
-FrameSizeClass FrameSizeClass::ClassLimit() {
-  return FrameSizeClass(std::size(FrameSizes));
-}
-
-uint32_t FrameSizeClass::frameSize() const {
-  MOZ_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
-  MOZ_ASSERT(class_ < std::size(FrameSizes));
-
-  return FrameSizes[class_];
-}
-
 ValueOperand CodeGeneratorX86::ToValue(LInstruction* ins, size_t pos) {
   Register typeReg = ToRegister(ins->getOperand(pos + TYPE_INDEX));
   Register payloadReg = ToRegister(ins->getOperand(pos + PAYLOAD_INDEX));

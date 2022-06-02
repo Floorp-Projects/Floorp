@@ -572,27 +572,22 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   masm.ret();
 }
 
-static void PushBailoutFrame(MacroAssembler& masm, uint32_t frameClass,
-                             Register spArg) {
+static void PushBailoutFrame(MacroAssembler& masm, Register spArg) {
   // Push registers such that we can access them from [base + code].
   DumpAllRegs(masm);
-
-  // Push the bailout table number.
-  masm.push(Imm32(frameClass));
 
   // The current stack pointer is the first argument to jit::Bailout.
   masm.movl(esp, spArg);
 }
 
-static void GenerateBailoutThunk(MacroAssembler& masm, uint32_t frameClass,
-                                 Label* bailoutTail) {
-  PushBailoutFrame(masm, frameClass, eax);
+static void GenerateBailoutThunk(MacroAssembler& masm, Label* bailoutTail) {
+  PushBailoutFrame(masm, eax);
 
-  // Make space for Bailout's baioutInfo outparam.
+  // Make space for Bailout's bailoutInfo outparam.
   masm.reserveStack(sizeof(void*));
   masm.movl(esp, ebx);
 
-  // Call the bailout function. This will correct the size of the bailout.
+  // Call the bailout function.
   using Fn = bool (*)(BailoutStack * sp, BaselineBailoutInfo * *info);
   masm.setupUnalignedABICall(ecx);
   masm.passABIArg(eax);
@@ -600,52 +595,22 @@ static void GenerateBailoutThunk(MacroAssembler& masm, uint32_t frameClass,
   masm.callWithABI<Fn, Bailout>(MoveOp::GENERAL,
                                 CheckUnsafeCallWithABI::DontCheckOther);
 
-  masm.pop(ecx);  // Get bailoutInfo outparam.
+  masm.pop(ecx);  // Get the bailoutInfo outparam.
 
-  // Common size of stuff we've pushed.
-  static const uint32_t BailoutDataSize = 0 + sizeof(void*)  // frameClass
-                                          + sizeof(RegisterDump);
-
+  // Stack is:
+  //    [frame]
+  //    snapshotOffset
+  //    frameSize
+  //    [bailoutFrame]
+  //
   // Remove both the bailout frame and the topmost Ion frame's stack.
-  if (frameClass == NO_FRAME_SIZE_CLASS_ID) {
-    // We want the frameSize. Stack is:
-    //    ... frame ...
-    //    snapshotOffset
-    //    frameSize
-    //    ... bailoutFrame ...
-    masm.addl(Imm32(BailoutDataSize), esp);
-    masm.pop(ebx);
-    masm.addl(Imm32(sizeof(uint32_t)), esp);
-    masm.addl(ebx, esp);
-  } else {
-    // Stack is:
-    //    ... frame ...
-    //    bailoutId
-    //    ... bailoutFrame ...
-    uint32_t frameSize = FrameSizeClass::FromClass(frameClass).frameSize();
-    masm.addl(Imm32(BailoutDataSize + sizeof(void*) + frameSize), esp);
-  }
+  static constexpr uint32_t BailoutDataSize = sizeof(RegisterDump);
+  masm.addl(Imm32(BailoutDataSize), esp);
+  masm.pop(ebx);  // frameSize
+  masm.lea(Operand(esp, ebx, TimesOne, sizeof(void*)), esp);
 
   // Jump to shared bailout tail. The BailoutInfo pointer has to be in ecx.
   masm.jmp(bailoutTail);
-}
-
-JitRuntime::BailoutTable JitRuntime::generateBailoutTable(MacroAssembler& masm,
-                                                          Label* bailoutTail,
-                                                          uint32_t frameClass) {
-  AutoCreatedBy acb(masm, "JitRuntime::generateBailoutTable");
-
-  uint32_t offset = startTrampolineCode(masm);
-
-  Label bailout;
-  for (size_t i = 0; i < BAILOUT_TABLE_SIZE; i++) {
-    masm.call(&bailout);
-  }
-  masm.bind(&bailout);
-
-  GenerateBailoutThunk(masm, frameClass, bailoutTail);
-
-  return BailoutTable(offset, masm.currentOffset() - offset);
 }
 
 void JitRuntime::generateBailoutHandler(MacroAssembler& masm,
@@ -654,7 +619,7 @@ void JitRuntime::generateBailoutHandler(MacroAssembler& masm,
 
   bailoutHandlerOffset_ = startTrampolineCode(masm);
 
-  GenerateBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID, bailoutTail);
+  GenerateBailoutThunk(masm, bailoutTail);
 }
 
 bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
