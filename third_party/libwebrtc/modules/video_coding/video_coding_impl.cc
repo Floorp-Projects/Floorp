@@ -62,21 +62,6 @@ class VideoCodingModuleImpl : public VideoCodingModule {
     receiver_.RegisterReceiveCodec(payload_type, decoder_settings);
   }
 
-  int32_t RegisterReceiveCodec(uint8_t payload_type,
-                               const VideoCodec* receive_codec,
-                               int32_t number_of_cores) override {
-    VideoDecoder::Settings decoder_settings;
-    if (receive_codec != nullptr) {
-      decoder_settings.set_codec_type(receive_codec->codecType);
-      decoder_settings.set_max_render_resolution(
-          {receive_codec->width, receive_codec->height});
-      decoder_settings.set_buffer_pool_size(receive_codec->buffer_pool_size);
-    }
-    decoder_settings.set_number_of_cores(number_of_cores);
-    receiver_.RegisterReceiveCodec(payload_type, decoder_settings);
-    return 0;
-  }
-
   void RegisterExternalDecoder(VideoDecoder* externalDecoder,
                                uint8_t payloadType) override {
     receiver_.RegisterExternalDecoder(externalDecoder, payloadType);

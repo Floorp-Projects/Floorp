@@ -12,7 +12,6 @@
 #define MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODING_H_
 
 #include "api/video/video_frame.h"
-#include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_decoder.h"
 #include "modules/include/module.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
@@ -48,10 +47,6 @@ class VideoCodingModule : public Module {
   //
   virtual void RegisterReceiveCodec(uint8_t payload_type,
                                     const VideoDecoder::Settings& settings) = 0;
-  ABSL_DEPRECATED("Use RegisterReceiveCodec above")
-  virtual int32_t RegisterReceiveCodec(uint8_t payload_type,
-                                       const VideoCodec* receiveCodec,
-                                       int32_t numberOfCores) = 0;
 
   // Register an external decoder object.
   //
