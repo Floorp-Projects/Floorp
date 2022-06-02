@@ -303,7 +303,7 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  // We don't expect reordering. Decoded frame tamestamp should match
+  // We don't expect reordering. Decoded frame timestamp should match
   // the input one.
   RTC_DCHECK_EQ(av_frame_->reordered_opaque, frame_timestamp_us);
 
