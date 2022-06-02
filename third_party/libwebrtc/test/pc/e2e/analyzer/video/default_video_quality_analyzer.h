@@ -75,7 +75,28 @@ struct FrameCounters {
   int64_t dropped = 0;
 };
 
+// Contains information about the codec that was used for encoding or decoding
+// the stream.
+struct StreamCodecInfo {
+  // Codec implementation name.
+  std::string codec_name;
+  // Id of the first frame for which this codec was used.
+  uint16_t first_frame_id;
+  // Id of the last frame for which this codec was used.
+  uint16_t last_frame_id;
+  // Timestamp when the first frame was handled by the encode/decoder.
+  Timestamp switched_on_at = Timestamp::PlusInfinity();
+  // Timestamp when this codec was used last time.
+  Timestamp switched_from_at = Timestamp::PlusInfinity();
+};
+
 struct StreamStats {
+  explicit StreamStats(Timestamp stream_started_time)
+      : stream_started_time(stream_started_time) {}
+
+  // The time when the first frame of this stream was captured.
+  Timestamp stream_started_time;
+
   SamplesStatsCounter psnr;
   SamplesStatsCounter ssim;
   // Time from frame encoded (time point on exit from encoder) to the
@@ -108,6 +129,11 @@ struct StreamStats {
   int64_t total_encoded_images_payload = 0;
   int64_t dropped_by_encoder = 0;
   int64_t dropped_before_encoder = 0;
+
+  // Vector of encoders used for this stream by sending client.
+  std::vector<StreamCodecInfo> encoders;
+  // Vectors of decoders used for this stream by receiving client.
+  std::vector<StreamCodecInfo> decoders;
 };
 
 struct AnalyzerStats {
@@ -243,6 +269,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   double GetCpuUsagePercent();
 
  private:
+  // Final stats computed for frame after it went through the whole video
+  // pipeline from capturing to rendering or dropping.
   struct FrameStats {
     FrameStats(Timestamp captured_time) : captured_time(captured_time) {}
 
@@ -262,6 +290,11 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
     absl::optional<int> rendered_frame_width = absl::nullopt;
     absl::optional<int> rendered_frame_height = absl::nullopt;
+
+    // Can be not set if frame was dropped by encoder.
+    absl::optional<StreamCodecInfo> used_encoder = absl::nullopt;
+    // Can be not set if frame was dropped in the network.
+    absl::optional<StreamCodecInfo> used_decoder = absl::nullopt;
   };
 
   // Describes why comparison was done in overloaded mode (without calculating
@@ -308,12 +341,15 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
    public:
     StreamState(size_t owner,
                 size_t peers_count,
-                bool enable_receive_own_stream)
+                bool enable_receive_own_stream,
+                Timestamp stream_started_time)
         : owner_(owner),
           enable_receive_own_stream_(enable_receive_own_stream),
+          stream_started_time_(stream_started_time),
           frame_ids_(peers_count) {}
 
     size_t owner() const { return owner_; }
+    Timestamp stream_started_time() const { return stream_started_time_; }
 
     void PushBack(uint16_t frame_id) { frame_ids_.PushBack(frame_id); }
     // Crash if state is empty. Guarantees that there can be no alive frames
@@ -338,6 +374,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     // Index of the owner. Owner's queue in `frame_ids_` will keep alive frames.
     const size_t owner_;
     const bool enable_receive_own_stream_;
+    const Timestamp stream_started_time_;
     // To correctly determine dropped frames we have to know sequence of frames
     // in each stream so we will keep a list of frame ids inside the stream.
     // This list is represented by multi head queue of frame ids with separate
@@ -370,6 +407,9 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
     absl::optional<int> rendered_frame_width = absl::nullopt;
     absl::optional<int> rendered_frame_height = absl::nullopt;
+
+    // Can be not set if frame was dropped in the network.
+    absl::optional<StreamCodecInfo> used_decoder = absl::nullopt;
 
     bool dropped = false;
   };
@@ -404,7 +444,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
     void OnFrameEncoded(webrtc::Timestamp time,
                         int64_t encoded_image_size,
-                        uint32_t target_encode_bitrate);
+                        uint32_t target_encode_bitrate,
+                        StreamCodecInfo used_encoder);
 
     bool HasEncodedTime() const { return encoded_time_.IsFinite(); }
 
@@ -414,9 +455,9 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
     bool HasReceivedTime(size_t peer) const;
 
-    void SetDecodeEndTime(size_t peer, webrtc::Timestamp time) {
-      receiver_stats_[peer].decode_end_time = time;
-    }
+    void OnFrameDecoded(size_t peer,
+                        webrtc::Timestamp time,
+                        StreamCodecInfo used_decoder);
 
     bool HasDecodeEndTime(size_t peer) const;
 
@@ -453,6 +494,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     Timestamp encoded_time_ = Timestamp::MinusInfinity();
     int64_t encoded_image_size_ = 0;
     uint32_t target_encode_bitrate_ = 0;
+    // Can be not set if frame was dropped by encoder.
+    absl::optional<StreamCodecInfo> used_encoder_ = absl::nullopt;
     std::map<size_t, ReceiverFrameStats> receiver_stats_;
   };
 
