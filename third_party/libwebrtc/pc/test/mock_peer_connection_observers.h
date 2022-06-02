@@ -116,8 +116,6 @@ class MockPeerConnectionObserver : public PeerConnectionObserver {
   }
   void OnIceCandidate(const IceCandidateInterface* candidate) override {
     RTC_DCHECK(pc_);
-    RTC_DCHECK(PeerConnectionInterface::kIceGatheringNew !=
-               pc_->ice_gathering_state());
     candidates_.push_back(std::make_unique<JsepIceCandidate>(
         candidate->sdp_mid(), candidate->sdp_mline_index(),
         candidate->candidate()));

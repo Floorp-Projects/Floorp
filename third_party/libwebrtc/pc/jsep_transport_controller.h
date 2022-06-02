@@ -224,9 +224,7 @@ class JsepTransportController : public sigslot::has_slots<> {
 
   void SetActiveResetSrtpParams(bool active_reset_srtp_params);
 
-  // For now the rollback only removes mid to transport mappings
-  // and deletes unused transports, but doesn't consider anything more complex.
-  void RollbackTransports();
+  RTCError RollbackTransports();
 
   // F: void(const std::string&, const std::vector<cricket::Candidate>&)
   template <typename F>
@@ -342,9 +340,6 @@ class JsepTransportController : public sigslot::has_slots<> {
       const std::vector<int>& encrypted_extension_ids,
       int rtp_abs_sendtime_extn_id);
 
-  bool ShouldUpdateBundleGroup(SdpType type,
-                               const cricket::SessionDescription* description);
-
   std::map<const cricket::ContentGroup*, std::vector<int>>
   MergeEncryptedHeaderExtensionIdsForBundles(
       const cricket::SessionDescription* description);
@@ -411,9 +406,13 @@ class JsepTransportController : public sigslot::has_slots<> {
       cricket::DtlsTransportInternal* rtcp_dtls_transport);
 
   // Collect all the DtlsTransports, including RTP and RTCP, from the
-  // JsepTransports. JsepTransportController can iterate all the DtlsTransports
-  // and update the aggregate states.
+  // JsepTransports, including those not mapped to a MID because they are being
+  // kept alive in case of rollback.
   std::vector<cricket::DtlsTransportInternal*> GetDtlsTransports();
+  // Same as the above, but doesn't include rollback transports.
+  // JsepTransportController can iterate all the DtlsTransports and update the
+  // aggregate states.
+  std::vector<cricket::DtlsTransportInternal*> GetActiveDtlsTransports();
 
   // Handlers for signals from Transport.
   void OnTransportWritableState_n(rtc::PacketTransportInternal* transport)
