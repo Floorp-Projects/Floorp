@@ -507,9 +507,6 @@ class nsChildView final : public nsBaseWidget {
   // Called by nsCocoaWindow when the window's fullscreen state changes.
   void UpdateFullscreen(bool aFullscreen);
 
-  // Called by nsCocoaWindow when a mouse move has occurred.
-  void NoteMouseMoveAtTime(const mozilla::TimeStamp& aTime);
-
  protected:
   virtual ~nsChildView();
 

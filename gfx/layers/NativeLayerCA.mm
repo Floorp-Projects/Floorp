@@ -135,9 +135,7 @@ static CALayer* MakeOffscreenRootCALayer() {
 NativeLayerRootCA::NativeLayerRootCA(CALayer* aLayer)
     : mMutex("NativeLayerRootCA"),
       mOnscreenRepresentation(aLayer),
-      mOffscreenRepresentation(MakeOffscreenRootCALayer()) {
-  mLastMouseMoveTime = TimeStamp::NowLoRes();
-}
+      mOffscreenRepresentation(MakeOffscreenRootCALayer()) {}
 
 NativeLayerRootCA::~NativeLayerRootCA() {
   MOZ_RELEASE_ASSERT(mSublayers.IsEmpty(),
@@ -246,9 +244,7 @@ bool NativeLayerRootCA::CommitToScreen() {
       return false;
     }
 
-    UpdateMouseMovedRecently(lock);
-    mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers, mWindowIsFullscreen,
-                                   mMouseMovedRecently);
+    mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers, mWindowIsFullscreen);
 
     mCommitPending = false;
   }
@@ -296,8 +292,7 @@ void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
 
 void NativeLayerRootCA::CommitOffscreen() {
   MutexAutoLock lock(mMutex);
-  mOffscreenRepresentation.Commit(WhichRepresentation::OFFSCREEN, mSublayers, mWindowIsFullscreen,
-                                  false);
+  mOffscreenRepresentation.Commit(WhichRepresentation::OFFSCREEN, mSublayers, mWindowIsFullscreen);
 }
 
 template <typename F>
@@ -322,10 +317,8 @@ NativeLayerRootCA::Representation::~Representation() {
 
 void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentation,
                                                const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
-                                               bool aWindowIsFullscreen, bool aMouseMovedRecently) {
-  bool mightIsolate = (aRepresentation == WhichRepresentation::ONSCREEN &&
-                       StaticPrefs::gfx_core_animation_specialize_video());
-  bool mustRebuild = (mMutatedLayerStructure || (mightIsolate && mMutatedMouseMovedRecently));
+                                               bool aWindowIsFullscreen) {
+  bool mustRebuild = mMutatedLayerStructure;
   if (!mustRebuild) {
     // Check which type of update we need to do, if any.
     NativeLayerCA::UpdateType updateRequired = NativeLayerCA::UpdateType::None;
@@ -383,157 +376,15 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
   }
 
   if (mustRebuild) {
-    // Bug 1731821 should eliminate this most of this logic and allow us to unconditionally
-    // accept sublayersWithExtent.
-
-    // We're going to check for an opportunity to isolate the topmost video layer. We'll avoid
-    // modifying mRootCALayer.sublayers unless we absolutely must, which will avoid flickering
-    // in the CATranscation. We check aSublayers with 3 possible outcomes.
-    // 1) We can't isolate video, so accept the provided sublayers.
-    // 2) We can isolate video, and we weren't isolating that video before, so create our own
-    //    sublayers with the proper structure.
-    // 3) We can isolate video, and we were already doing that. The sublayers underneath the
-    //    video might have changed in some way that doesn't prevent isolation, so ignore them.
-    //    Leave our sublayers unchanged.
-
     uint32_t sublayersCount = sublayersWithExtent.Length();
-
-    // Define a block we'll use to accept the provided sublayers if we must. In the different
-    // cases, we'll call this at different times.
-    auto acceptProvidedSublayers = [&]() {
-      NSMutableArray<CALayer*>* sublayers = [NSMutableArray arrayWithCapacity:sublayersCount];
-      for (auto layer : sublayersWithExtent) {
-        [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
-      }
-      mRootCALayer.sublayers = sublayers;
-    };
-
-    // See if the top layer is already rooted in our mRootCALayer. If it is, then we can check
-    // for isolation without first disrupting our sublayers.
-    bool topLayerIsRooted =
-        sublayersCount &&
-        (sublayersWithExtent.LastElement()->UnderlyingCALayer(aRepresentation).superlayer ==
-         mRootCALayer);
-
-    if (!topLayerIsRooted) {
-      // We have to accept the provided sublayers. We may still isolate, but it's because the
-      // new topmost layer was not already isolated. This is an acceptable time to potentially
-      // flicker as the sublayers are changed.
-      acceptProvidedSublayers();
+    NSMutableArray<CALayer*>* sublayers = [NSMutableArray arrayWithCapacity:sublayersCount];
+    for (auto layer : sublayersWithExtent) {
+      [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
     }
-
-    // Now that we've confirmed these layer relationships, we check to see if we should break
-    // them and isolate a single video layer. It's important that the topmost layer is a
-    // child of mRootCALayer for this logic to work.
-    MOZ_DIAGNOSTIC_ASSERT(
-        !sublayersCount ||
-            (sublayersWithExtent.LastElement()->UnderlyingCALayer(aRepresentation).superlayer ==
-             mRootCALayer),
-        "The topmost layer must be a child of mRootCALayer.");
-
-    bool didIsolate = false;
-    if (mightIsolate && aWindowIsFullscreen && !aMouseMovedRecently) {
-      CALayer* isolatedLayer = FindVideoLayerToIsolate(aRepresentation, sublayersWithExtent);
-      if (isolatedLayer) {
-        // No matter what happens next, we did choose to isolate.
-        didIsolate = true;
-
-        // We only need to change our sublayers if we weren't already isolating, or
-        // if the isolatedLayer does not match our current top layer.
-        if (!mIsIsolatingVideo || isolatedLayer != mRootCALayer.sublayers.lastObject) {
-          // Create a full coverage black layer behind the isolated layer.
-          CGFloat rootWidth = mRootCALayer.bounds.size.width;
-          CGFloat rootHeight = mRootCALayer.bounds.size.height;
-
-          // Reaching the low-power mode requires that there is a single black layer
-          // covering the entire window behind the video layer. Create that layer.
-          CALayer* blackLayer = [CALayer layer];
-          blackLayer.position = NSZeroPoint;
-          blackLayer.anchorPoint = NSZeroPoint;
-          blackLayer.bounds = CGRectMake(0, 0, rootWidth, rootHeight);
-          blackLayer.backgroundColor = [[NSColor blackColor] CGColor];
-
-          mRootCALayer.sublayers = @[ blackLayer, isolatedLayer ];
-        }
-      }
-    }
-
-    // If we didn't accept the sublayers earlier, and we decided we couldn't isolate,
-    // accept them now.
-    if (topLayerIsRooted && !didIsolate) {
-      acceptProvidedSublayers();
-    }
-
-    mIsIsolatingVideo = didIsolate;
+    mRootCALayer.sublayers = sublayers;
   }
 
   mMutatedLayerStructure = false;
-  mMutatedMouseMovedRecently = false;
-}
-
-CALayer* NativeLayerRootCA::Representation::FindVideoLayerToIsolate(
-    WhichRepresentation aRepresentation, const nsTArray<NativeLayerCA*>& aSublayers) {
-  // Run a heuristic to determine if any one of aSublayers is a video layer that should be
-  // isolated. These layers are ordered back-to-front. This function will return a candidate
-  // CALayer if all of the following are true:
-  // 1) The candidate layer is the topmost layer, and is a video layer.
-  // 2) The candidate layer bounds covers at least 80% of the bounds of the root layer.
-  // 3) The candidate layer center is "near" the center of the root layer.
-  // 4) There are no other video layers other than the candidate layer.
-  // Notably, this heuristic doesn't check the contents or bounds of layers that appear
-  // before the candidate layer. This means that video layers on top of other content
-  // may be selected for isolation and that other content will be replaced with a black
-  // background.
-  // Bug 1731136 will make this heuristic simpler, or completely unnecessary.
-
-  auto topLayer = aSublayers.LastElement();
-  if (!topLayer || !topLayer->IsVideo()) {
-    // FAIL Step 1: the topmost layer is not video.
-    return nil;
-  }
-
-  CALayer* candidateLayer = topLayer->UnderlyingCALayer(aRepresentation);
-  MOZ_ASSERT(candidateLayer);
-
-  // Check coverage of the candidate layer's bounds. We need the size of the root
-  // layer to do this.
-  CGFloat rootWidth = mRootCALayer.bounds.size.width;
-  CGFloat rootHeight = mRootCALayer.bounds.size.height;
-  CGFloat rootArea = rootWidth * rootHeight;
-  CGFloat minimumRootArea = rootArea * 0.8;
-
-  // Translate the candidate layer bounds into root layer space.
-  CGRect candidateBoundsInRoot = [mRootCALayer convertRect:candidateLayer.bounds
-                                                 fromLayer:candidateLayer];
-  CGFloat candidateArea = candidateBoundsInRoot.size.width * candidateBoundsInRoot.size.height;
-  if (candidateArea < minimumRootArea) {
-    // FAIL Step 2: the candidate layer is not big enough.
-    return nil;
-  }
-
-  // Check center of the candidate layer, relative to the root layer's center.
-  CGFloat centerZoneWidth = rootWidth * 0.05;
-  CGFloat centerZoneHeight = rootHeight * 0.05;
-  CGRect centerZone =
-      CGRectMake((rootWidth * 0.5) - (centerZoneWidth * 0.5),
-                 (rootHeight * 0.5) - (centerZoneHeight * 0.5), centerZoneWidth, centerZoneHeight);
-  CGPoint candidateCenterInRoot =
-      CGPointMake(candidateBoundsInRoot.origin.x + (candidateBoundsInRoot.size.width * 0.5),
-                  candidateBoundsInRoot.origin.y + (candidateBoundsInRoot.size.height * 0.5));
-  if (!CGRectContainsPoint(centerZone, candidateCenterInRoot)) {
-    // FAIL Step 3: the candidate layer is off-center.
-    return nil;
-  }
-
-  // See if there are any other video layers behind the candidate layer.
-  for (auto layer : aSublayers) {
-    if (layer->IsVideo() && layer != topLayer) {
-      // FAIL Step 4: there are multiple video layers.
-      return nil;
-    }
-  }
-
-  return candidateLayer;
 }
 
 /* static */ UniquePtr<NativeLayerRootSnapshotterCA> NativeLayerRootSnapshotterCA::Create(
@@ -588,27 +439,6 @@ void NativeLayerRootCA::SetWindowIsFullscreen(bool aFullscreen) {
     for (auto layer : mSublayers) {
       layer->SetRootWindowIsFullscreen(mWindowIsFullscreen);
     }
-  }
-
-  // Treat this as a mouse move, for purposes of resetting our timer.
-  mLastMouseMoveTime = TimeStamp::NowLoRes();
-}
-
-void NativeLayerRootCA::NoteMouseMoveAtTime(const TimeStamp& aTime) {
-  MutexAutoLock lock(mMutex);
-  mLastMouseMoveTime = aTime;
-}
-
-void NativeLayerRootCA::UpdateMouseMovedRecently(const MutexAutoLock& aProofOfLock) {
-  static const double SECONDS_TO_WAIT = 2.0;
-
-  bool newMouseMovedRecently =
-      ((TimeStamp::NowLoRes() - mLastMouseMoveTime).ToSeconds() < SECONDS_TO_WAIT);
-
-  if (newMouseMovedRecently != mMouseMovedRecently) {
-    mMouseMovedRecently = newMouseMovedRecently;
-
-    ForAllRepresentations([&](Representation& r) { r.mMutatedMouseMovedRecently = true; });
   }
 }
 

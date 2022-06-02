@@ -845,12 +845,6 @@ void nsChildView::UpdateFullscreen(bool aFullscreen) {
   }
 }
 
-void nsChildView::NoteMouseMoveAtTime(const mozilla::TimeStamp& aTime) {
-  if (mNativeLayerRoot) {
-    mNativeLayerRoot->NoteMouseMoveAtTime(aTime);
-  }
-}
-
 nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                                int32_t aNativeKeyCode, uint32_t aModifierFlags,
                                                const nsAString& aCharacters,
@@ -2903,7 +2897,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   WidgetMouseEvent geckoEvent(true, eMouseMove, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
-  mGeckoChild->NoteMouseMoveAtTime(geckoEvent.mTimeStamp);
   mGeckoChild->DispatchInputEvent(&geckoEvent);
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
