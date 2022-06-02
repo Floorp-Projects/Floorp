@@ -412,6 +412,7 @@ if (rtc_build_dcsctp) {
       "../p2p:rtc_p2p",
       "../rtc_base:checks",
       "../rtc_base:rtc_base_approved",
+      "../rtc_base:socket",
       "../rtc_base:threading",
       "../rtc_base/task_utils:pending_task_safety_flag",
       "../rtc_base/task_utils:to_queued_task",

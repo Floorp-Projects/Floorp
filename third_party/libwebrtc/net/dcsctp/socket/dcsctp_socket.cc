@@ -858,7 +858,7 @@ void DcSctpSocket::SendPacket(SctpPacket::Builder& builder) {
     packet_observer_->OnSentPacket(callbacks_.TimeMillis(), payload);
   }
   ++metrics_.tx_packets_count;
-  callbacks_.SendPacket(payload);
+  callbacks_.SendPacketWithStatus(payload);
 }
 
 bool DcSctpSocket::ValidateHasTCB() {

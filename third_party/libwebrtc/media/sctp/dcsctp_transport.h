@@ -59,7 +59,8 @@ class DcSctpTransport : public cricket::SctpTransportInternal,
 
  private:
   // dcsctp::DcSctpSocketCallbacks
-  void SendPacket(rtc::ArrayView<const uint8_t> data) override;
+  dcsctp::SendPacketStatus SendPacketWithStatus(
+      rtc::ArrayView<const uint8_t> data) override;
   std::unique_ptr<dcsctp::Timeout> CreateTimeout() override;
   dcsctp::TimeMs TimeMillis() override;
   uint32_t GetRandomInt(uint32_t low, uint32_t high) override;
