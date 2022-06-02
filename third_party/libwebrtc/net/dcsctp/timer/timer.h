@@ -14,9 +14,9 @@
 
 #include <algorithm>
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 
 #include "absl/strings/string_view.h"
@@ -176,7 +176,7 @@ class TimerManager {
 
  private:
   const std::function<std::unique_ptr<Timeout>()> create_timeout_;
-  std::unordered_map<TimerID, Timer*, TimerID::Hasher> timers_;
+  std::map<TimerID, Timer*> timers_;
   TimerID next_id_ = TimerID(0);
 };
 

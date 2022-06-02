@@ -38,13 +38,5 @@ using VerificationTag = StrongAlias<class VerificationTagTag, uint32_t>;
 // Tie Tag, used as a nonce when connecting.
 using TieTag = StrongAlias<class TieTagTag, uint64_t>;
 
-// Hasher for separated ordered/unordered stream identifiers.
-struct UnorderedStreamHash {
-  size_t operator()(const std::pair<IsUnordered, StreamID>& p) const {
-    return std::hash<IsUnordered::UnderlyingType>{}(*p.first) ^
-           (std::hash<StreamID::UnderlyingType>{}(*p.second) << 1);
-  }
-};
-
 }  // namespace dcsctp
 #endif  // NET_DCSCTP_COMMON_INTERNAL_TYPES_H_

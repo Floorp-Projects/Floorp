@@ -14,7 +14,6 @@
 
 #include <map>
 #include <string>
-#include <unordered_map>
 
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
@@ -108,10 +107,8 @@ class TraditionalReassemblyStreams : public ReassemblyStreams {
   const OnAssembledMessage on_assembled_message_;
 
   // All unordered and ordered streams, managing not-yet-assembled data.
-  std::unordered_map<StreamID, UnorderedStream, StreamID::Hasher>
-      unordered_streams_;
-  std::unordered_map<StreamID, OrderedStream, StreamID::Hasher>
-      ordered_streams_;
+  std::map<StreamID, UnorderedStream> unordered_streams_;
+  std::map<StreamID, OrderedStream> ordered_streams_;
 };
 
 }  // namespace dcsctp
