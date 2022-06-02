@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <limits>
 
+#include "absl/numeric/bits.h"
 #include "rtc_base/checks.h"
 
 namespace {
@@ -57,16 +58,6 @@ uint8_t WritePartialByte(uint8_t source,
   // We want the target, with the bits we'll overwrite masked off, or'ed with
   // the bits from the source we want.
   return (target & ~mask) | (source >> target_bit_offset);
-}
-
-// Counts the number of bits used in the binary representation of val.
-size_t CountBits(uint64_t val) {
-  size_t bit_count = 0;
-  while (val != 0) {
-    bit_count++;
-    val >>= 1;
-  }
-  return bit_count;
 }
 
 }  // namespace
@@ -206,7 +197,7 @@ bool BitBuffer::ReadNonSymmetric(uint32_t num_values, uint32_t& val) {
     val = 0;
     return true;
   }
-  size_t count_bits = CountBits(num_values);
+  size_t count_bits = absl::bit_width(num_values);
   uint32_t num_min_bits_values = (uint32_t{1} << count_bits) - num_values;
 
   if (!ReadBits(count_bits - 1, val)) {
@@ -354,7 +345,7 @@ bool BitBufferWriter::WriteNonSymmetric(uint32_t val, uint32_t num_values) {
     // But WriteBits doesn't support writing zero bits.
     return true;
   }
-  size_t count_bits = CountBits(num_values);
+  size_t count_bits = absl::bit_width(num_values);
   uint32_t num_min_bits_values = (uint32_t{1} << count_bits) - num_values;
 
   return val < num_min_bits_values
@@ -366,7 +357,7 @@ size_t BitBufferWriter::SizeNonSymmetricBits(uint32_t val,
                                              uint32_t num_values) {
   RTC_DCHECK_LT(val, num_values);
   RTC_DCHECK_LE(num_values, uint32_t{1} << 31);
-  size_t count_bits = CountBits(num_values);
+  size_t count_bits = absl::bit_width(num_values);
   uint32_t num_min_bits_values = (uint32_t{1} << count_bits) - num_values;
 
   return val < num_min_bits_values ? (count_bits - 1) : count_bits;
@@ -380,10 +371,10 @@ bool BitBufferWriter::WriteExponentialGolomb(uint32_t val) {
   }
   uint64_t val_to_encode = static_cast<uint64_t>(val) + 1;
 
-  // We need to write CountBits(val+1) 0s and then val+1. Since val (as a
+  // We need to write bit_width(val+1) 0s and then val+1. Since val (as a
   // uint64_t) has leading zeros, we can just write the total golomb encoded
   // size worth of bits, knowing the value will appear last.
-  return WriteBits(val_to_encode, CountBits(val_to_encode) * 2 - 1);
+  return WriteBits(val_to_encode, absl::bit_width(val_to_encode) * 2 - 1);
 }
 
 bool BitBufferWriter::WriteSignedExponentialGolomb(int32_t val) {

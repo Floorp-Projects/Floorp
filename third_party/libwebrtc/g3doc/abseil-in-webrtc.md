@@ -41,6 +41,7 @@ will generate a shared library.
 * `absl/base/const_init.h` for mutex initialization.
 * The macros in `absl/base/attributes.h`, `absl/base/config.h` and
   `absl/base/macros.h`.
+* `absl/numeric/bits.h`
 
 
 ## **Disallowed**
