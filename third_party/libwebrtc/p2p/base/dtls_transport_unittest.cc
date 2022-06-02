@@ -421,16 +421,6 @@ TEST_F(DtlsTransportTest, TestTransferDtls) {
   TestTransfer(1000, 100, /*srtp=*/false);
 }
 
-// Connect with DTLS, and fail to write, to ensure errors are propagated.
-TEST_F(DtlsTransportTest, TestWriteFailsOverDtls) {
-  PrepareDtls(rtc::KT_DEFAULT);
-  ASSERT_TRUE(Connect());
-  client1_.fake_ice_transport()->SetError(EAGAIN);
-  int res = client1_.dtls_transport()->SendPacket("hello", 5,
-                                                  rtc::PacketOptions(), 0);
-  EXPECT_EQ(res, -1);
-}
-
 // Connect with DTLS, combine multiple DTLS records into one packet.
 // Our DTLS implementation doesn't do this, but other implementations may;
 // see https://tools.ietf.org/html/rfc6347#section-4.1.1.
