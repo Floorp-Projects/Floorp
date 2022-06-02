@@ -883,9 +883,9 @@ TEST(DefaultVideoQualityAnalyzerTest, RuntimeParticipantsAdding) {
   {
     FrameCounters stream_conters =
         analyzer.GetPerStreamCounters().at(kAliceCharlieStats);
-    EXPECT_EQ(stream_conters.captured, kTwoThirdFrames);
-    EXPECT_EQ(stream_conters.pre_encoded, kTwoThirdFrames);
-    EXPECT_EQ(stream_conters.encoded, kTwoThirdFrames);
+    EXPECT_EQ(stream_conters.captured, kFramesCount);
+    EXPECT_EQ(stream_conters.pre_encoded, kFramesCount);
+    EXPECT_EQ(stream_conters.encoded, kFramesCount);
     EXPECT_EQ(stream_conters.received, kTwoThirdFrames);
     EXPECT_EQ(stream_conters.decoded, kTwoThirdFrames);
     EXPECT_EQ(stream_conters.rendered, kTwoThirdFrames);
@@ -893,9 +893,9 @@ TEST(DefaultVideoQualityAnalyzerTest, RuntimeParticipantsAdding) {
   {
     FrameCounters stream_conters =
         analyzer.GetPerStreamCounters().at(kAliceKatieStats);
-    EXPECT_EQ(stream_conters.captured, kTwoThirdFrames);
-    EXPECT_EQ(stream_conters.pre_encoded, kTwoThirdFrames);
-    EXPECT_EQ(stream_conters.encoded, kTwoThirdFrames);
+    EXPECT_EQ(stream_conters.captured, kFramesCount);
+    EXPECT_EQ(stream_conters.pre_encoded, kFramesCount);
+    EXPECT_EQ(stream_conters.encoded, kFramesCount);
     EXPECT_EQ(stream_conters.received, kOneThirdFrames);
     EXPECT_EQ(stream_conters.decoded, kOneThirdFrames);
     EXPECT_EQ(stream_conters.rendered, kOneThirdFrames);
