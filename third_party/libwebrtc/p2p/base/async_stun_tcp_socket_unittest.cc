@@ -17,8 +17,8 @@
 #include <memory>
 #include <string>
 
-#include "rtc_base/async_socket.h"
 #include "rtc_base/network/sent_packet.h"
+#include "rtc_base/socket.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/virtual_socket_server.h"
@@ -67,15 +67,13 @@ class AsyncStunTCPSocketTest : public ::testing::Test,
   virtual void SetUp() { CreateSockets(); }
 
   void CreateSockets() {
-    rtc::AsyncSocket* server =
-        vss_->CreateAsyncSocket(kServerAddr.family(), SOCK_STREAM);
+    rtc::Socket* server = vss_->CreateSocket(kServerAddr.family(), SOCK_STREAM);
     server->Bind(kServerAddr);
     recv_socket_.reset(new AsyncStunTCPSocket(server, true));
     recv_socket_->SignalNewConnection.connect(
         this, &AsyncStunTCPSocketTest::OnNewConnection);
 
-    rtc::AsyncSocket* client =
-        vss_->CreateAsyncSocket(kClientAddr.family(), SOCK_STREAM);
+    rtc::Socket* client = vss_->CreateSocket(kClientAddr.family(), SOCK_STREAM);
     send_socket_.reset(AsyncStunTCPSocket::Create(
         client, kClientAddr, recv_socket_->GetLocalAddress()));
     send_socket_->SignalSentPacket.connect(

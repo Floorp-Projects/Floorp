@@ -15,11 +15,7 @@
 
 namespace rtc {
 
-AsyncSocket::AsyncSocket() {}
-
-AsyncSocket::~AsyncSocket() {}
-
-AsyncSocketAdapter::AsyncSocketAdapter(AsyncSocket* socket)
+AsyncSocketAdapter::AsyncSocketAdapter(Socket* socket)
     : socket_(absl::WrapUnique(socket)) {
   RTC_DCHECK(socket_);
   socket_->SignalConnectEvent.connect(this,
@@ -70,7 +66,7 @@ int AsyncSocketAdapter::Listen(int backlog) {
   return socket_->Listen(backlog);
 }
 
-AsyncSocket* AsyncSocketAdapter::Accept(SocketAddress* paddr) {
+Socket* AsyncSocketAdapter::Accept(SocketAddress* paddr) {
   return socket_->Accept(paddr);
 }
 
@@ -86,7 +82,7 @@ void AsyncSocketAdapter::SetError(int error) {
   return socket_->SetError(error);
 }
 
-AsyncSocket::ConnState AsyncSocketAdapter::GetState() const {
+Socket::ConnState AsyncSocketAdapter::GetState() const {
   return socket_->GetState();
 }
 
@@ -98,19 +94,19 @@ int AsyncSocketAdapter::SetOption(Option opt, int value) {
   return socket_->SetOption(opt, value);
 }
 
-void AsyncSocketAdapter::OnConnectEvent(AsyncSocket* socket) {
+void AsyncSocketAdapter::OnConnectEvent(Socket* socket) {
   SignalConnectEvent(this);
 }
 
-void AsyncSocketAdapter::OnReadEvent(AsyncSocket* socket) {
+void AsyncSocketAdapter::OnReadEvent(Socket* socket) {
   SignalReadEvent(this);
 }
 
-void AsyncSocketAdapter::OnWriteEvent(AsyncSocket* socket) {
+void AsyncSocketAdapter::OnWriteEvent(Socket* socket) {
   SignalWriteEvent(this);
 }
 
-void AsyncSocketAdapter::OnCloseEvent(AsyncSocket* socket, int err) {
+void AsyncSocketAdapter::OnCloseEvent(Socket* socket, int err) {
   SignalCloseEvent(this, err);
 }
 

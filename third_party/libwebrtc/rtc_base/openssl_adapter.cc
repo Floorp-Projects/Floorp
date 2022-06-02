@@ -70,7 +70,7 @@ static BIO_METHOD* BIO_socket_method() {
   return methods;
 }
 
-static BIO* BIO_new_socket(rtc::AsyncSocket* socket) {
+static BIO* BIO_new_socket(rtc::Socket* socket) {
   BIO* ret = BIO_new(BIO_socket_method());
   if (ret == nullptr) {
     return nullptr;
@@ -95,7 +95,7 @@ static int socket_free(BIO* b) {
 static int socket_read(BIO* b, char* out, int outl) {
   if (!out)
     return -1;
-  rtc::AsyncSocket* socket = static_cast<rtc::AsyncSocket*>(BIO_get_data(b));
+  rtc::Socket* socket = static_cast<rtc::Socket*>(BIO_get_data(b));
   BIO_clear_retry_flags(b);
   int result = socket->Recv(out, outl, nullptr);
   if (result > 0) {
@@ -109,7 +109,7 @@ static int socket_read(BIO* b, char* out, int outl) {
 static int socket_write(BIO* b, const char* in, int inl) {
   if (!in)
     return -1;
-  rtc::AsyncSocket* socket = static_cast<rtc::AsyncSocket*>(BIO_get_data(b));
+  rtc::Socket* socket = static_cast<rtc::Socket*>(BIO_get_data(b));
   BIO_clear_retry_flags(b);
   int result = socket->Send(in, inl);
   if (result > 0) {
@@ -129,9 +129,9 @@ static long socket_ctrl(BIO* b, int cmd, long num, void* ptr) {  // NOLINT
     case BIO_CTRL_RESET:
       return 0;
     case BIO_CTRL_EOF: {
-      rtc::AsyncSocket* socket = static_cast<rtc::AsyncSocket*>(ptr);
+      rtc::Socket* socket = static_cast<rtc::Socket*>(ptr);
       // 1 means socket closed.
-      return (socket->GetState() == rtc::AsyncSocket::CS_CLOSED) ? 1 : 0;
+      return (socket->GetState() == rtc::Socket::CS_CLOSED) ? 1 : 0;
     }
     case BIO_CTRL_WPENDING:
     case BIO_CTRL_PENDING:
@@ -181,7 +181,7 @@ bool OpenSSLAdapter::CleanupSSL() {
   return true;
 }
 
-OpenSSLAdapter::OpenSSLAdapter(AsyncSocket* socket,
+OpenSSLAdapter::OpenSSLAdapter(Socket* socket,
                                OpenSSLSessionCache* ssl_session_cache,
                                SSLCertificateVerifier* ssl_cert_verifier)
     : SSLAdapter(socket),
@@ -250,9 +250,9 @@ void OpenSSLAdapter::SetRole(SSLRole role) {
   role_ = role;
 }
 
-AsyncSocket* OpenSSLAdapter::Accept(SocketAddress* paddr) {
+Socket* OpenSSLAdapter::Accept(SocketAddress* paddr) {
   RTC_DCHECK(role_ == SSL_SERVER);
-  AsyncSocket* socket = SSLAdapter::Accept(paddr);
+  Socket* socket = SSLAdapter::Accept(paddr);
   if (!socket) {
     return nullptr;
   }
@@ -508,7 +508,7 @@ int OpenSSLAdapter::DoSslWrite(const void* pv, size_t cb, int* error) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// AsyncSocket Implementation
+// Socket Implementation
 ///////////////////////////////////////////////////////////////////////////////
 
 int OpenSSLAdapter::Send(const void* pv, size_t cb) {
@@ -677,7 +677,7 @@ void OpenSSLAdapter::OnMessage(Message* msg) {
   }
 }
 
-void OpenSSLAdapter::OnConnectEvent(AsyncSocket* socket) {
+void OpenSSLAdapter::OnConnectEvent(Socket* socket) {
   RTC_LOG(LS_INFO) << "OpenSSLAdapter::OnConnectEvent";
   if (state_ != SSL_WAIT) {
     RTC_DCHECK(state_ == SSL_NONE);
@@ -691,7 +691,7 @@ void OpenSSLAdapter::OnConnectEvent(AsyncSocket* socket) {
   }
 }
 
-void OpenSSLAdapter::OnReadEvent(AsyncSocket* socket) {
+void OpenSSLAdapter::OnReadEvent(Socket* socket) {
   if (state_ == SSL_NONE) {
     AsyncSocketAdapter::OnReadEvent(socket);
     return;
@@ -717,7 +717,7 @@ void OpenSSLAdapter::OnReadEvent(AsyncSocket* socket) {
   AsyncSocketAdapter::OnReadEvent(socket);
 }
 
-void OpenSSLAdapter::OnWriteEvent(AsyncSocket* socket) {
+void OpenSSLAdapter::OnWriteEvent(Socket* socket) {
   if (state_ == SSL_NONE) {
     AsyncSocketAdapter::OnWriteEvent(socket);
     return;
@@ -754,7 +754,7 @@ void OpenSSLAdapter::OnWriteEvent(AsyncSocket* socket) {
   AsyncSocketAdapter::OnWriteEvent(socket);
 }
 
-void OpenSSLAdapter::OnCloseEvent(AsyncSocket* socket, int err) {
+void OpenSSLAdapter::OnCloseEvent(Socket* socket, int err) {
   RTC_LOG(LS_INFO) << "OpenSSLAdapter::OnCloseEvent(" << err << ")";
   AsyncSocketAdapter::OnCloseEvent(socket, err);
 }
@@ -1032,7 +1032,7 @@ void OpenSSLAdapterFactory::SetCertVerifier(
   ssl_cert_verifier_ = ssl_cert_verifier;
 }
 
-OpenSSLAdapter* OpenSSLAdapterFactory::CreateAdapter(AsyncSocket* socket) {
+OpenSSLAdapter* OpenSSLAdapterFactory::CreateAdapter(Socket* socket) {
   if (ssl_session_cache_ == nullptr) {
     SSL_CTX* ssl_ctx = OpenSSLAdapter::CreateContext(ssl_mode_, true);
     if (ssl_ctx == nullptr) {

@@ -61,11 +61,6 @@ rtc::Socket* RunLoop::FakeSocketServer::CreateSocket(int family, int type) {
   return nullptr;
 }
 
-rtc::AsyncSocket* RunLoop::FakeSocketServer::CreateAsyncSocket(int family,
-                                                               int type) {
-  return nullptr;
-}
-
 RunLoop::WorkerThread::WorkerThread(rtc::SocketServer* ss)
     : rtc::Thread(ss), tq_setter_(this) {}
 

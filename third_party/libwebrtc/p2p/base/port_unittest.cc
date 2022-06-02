@@ -40,7 +40,6 @@
 #include "p2p/client/relay_port_factory_interface.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/async_packet_socket.h"
-#include "rtc_base/async_socket.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/checks.h"
@@ -1217,8 +1216,8 @@ TEST_F(PortTest, TestTcpNeverConnect) {
   ch1.Start();
   ASSERT_EQ_WAIT(1, ch1.complete_count(), kDefaultTimeout);
 
-  std::unique_ptr<rtc::AsyncSocket> server(
-      vss()->CreateAsyncSocket(kLocalAddr2.family(), SOCK_STREAM));
+  std::unique_ptr<rtc::Socket> server(
+      vss()->CreateSocket(kLocalAddr2.family(), SOCK_STREAM));
   // Bind but not listen.
   EXPECT_EQ(0, server->Bind(kLocalAddr2));
 

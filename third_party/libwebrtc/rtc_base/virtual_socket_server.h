@@ -116,7 +116,6 @@ class VirtualSocketServer : public SocketServer {
 
   // SocketFactory:
   Socket* CreateSocket(int family, int type) override;
-  AsyncSocket* CreateAsyncSocket(int family, int type) override;
 
   // SocketServer:
   void SetMessageQueue(Thread* queue) override;
@@ -326,7 +325,7 @@ class VirtualSocketServer : public SocketServer {
 
 // Implements the socket interface using the virtual network.  Packets are
 // passed as messages using the message queue of the socket server.
-class VirtualSocket : public AsyncSocket,
+class VirtualSocket : public Socket,
                       public MessageHandler,
                       public sigslot::has_slots<> {
  public:
