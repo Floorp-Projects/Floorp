@@ -10,11 +10,6 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 
 async function testColorScheme(aPref, aExpectation) {
-  // Enable this preference so we can test the new behavior for the color scheme.
-  await SpecialPowers.pushPrefEnv({
-    set: [["reader.improvements_H12022.enabled", true]],
-  });
-
   // Set the browser content theme to light or dark.
   Services.prefs.setIntPref("browser.theme.content-theme", aPref);
 
