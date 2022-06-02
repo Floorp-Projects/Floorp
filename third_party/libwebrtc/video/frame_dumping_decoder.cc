@@ -24,7 +24,8 @@ class FrameDumpingDecoder : public VideoDecoder {
   FrameDumpingDecoder(std::unique_ptr<VideoDecoder> decoder, FileWrapper file);
   ~FrameDumpingDecoder() override;
 
-  bool Configure(const Settings& settings) override;
+  int32_t InitDecode(const VideoCodec* codec_settings,
+                     int32_t number_of_cores) override;
   int32_t Decode(const EncodedImage& input_image,
                  bool missing_frames,
                  int64_t render_time_ms) override;
@@ -48,9 +49,10 @@ FrameDumpingDecoder::FrameDumpingDecoder(std::unique_ptr<VideoDecoder> decoder,
 
 FrameDumpingDecoder::~FrameDumpingDecoder() = default;
 
-bool FrameDumpingDecoder::Configure(const Settings& settings) {
-  codec_type_ = settings.codec_type();
-  return decoder_->Configure(settings);
+int32_t FrameDumpingDecoder::InitDecode(const VideoCodec* codec_settings,
+                                        int32_t number_of_cores) {
+  codec_type_ = codec_settings->codecType;
+  return decoder_->InitDecode(codec_settings, number_of_cores);
 }
 
 int32_t FrameDumpingDecoder::Decode(const EncodedImage& input_image,
