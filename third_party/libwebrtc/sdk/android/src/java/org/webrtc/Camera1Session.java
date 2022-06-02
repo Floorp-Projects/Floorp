@@ -52,11 +52,19 @@ class Camera1Session implements CameraSession {
   @SuppressWarnings("ByteBufferBackingArray")
   public static void create(final CreateSessionCallback callback, final Events events,
       final boolean captureToTexture, final Context applicationContext,
-      final SurfaceTextureHelper surfaceTextureHelper, final int cameraId, final int width,
-      final int height, final int framerate) {
+      final SurfaceTextureHelper surfaceTextureHelper, final String cameraName,
+      final int width, final int height, final int framerate) {
     final long constructionTimeNs = System.nanoTime();
-    Logging.d(TAG, "Open camera " + cameraId);
+    Logging.d(TAG, "Open camera " + cameraName);
     events.onCameraOpening();
+
+    final int cameraId;
+    try {
+      cameraId = Camera1Enumerator.getCameraIndex(cameraName);
+    } catch (IllegalArgumentException e) {
+      callback.onFailure(FailureType.ERROR, e.getMessage());
+      return;
+    }
 
     final android.hardware.Camera camera;
     try {
