@@ -50,7 +50,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PContent.h"  // For TextRecognitionResult
 #include "mozilla/dom/HTMLImageElement.h"
-#include "mozilla/dom/ImageTextBinding.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -1240,32 +1239,12 @@ already_AddRefed<Promise> nsImageLoadingContent::RecognizeCurrentImageText(
           domPromise->MaybeRejectWithInvalidStateError("Request not current");
           return;
         }
-        auto& textRecognitionResult = aValue.ResolveValue();
         Element* el = ilc->AsContent()->AsElement();
-        el->AttachAndSetUAShadowRoot(Element::NotifyUAWidgetSetup::Yes);
+        el->AttachAndSetUAShadowRoot(Element::NotifyUAWidgetSetup::No);
         TextRecognition::FillShadow(*el->GetShadowRoot(),
-                                    textRecognitionResult);
-        el->NotifyUAWidgetSetupOrChange();
-
-        nsTArray<ImageText> imageTexts(textRecognitionResult.quads().Length());
-        nsIGlobalObject* global = el->OwnerDoc()->GetOwnerGlobal();
-
-        for (const auto& quad : textRecognitionResult.quads()) {
-          NotNull<ImageText*> imageText = imageTexts.AppendElement();
-
-          // Note: These points are not actually CSSPixels, but a DOMQuad is
-          // a conveniently similar structure that can store these values.
-          CSSPoint points[4];
-          points[0] = CSSPoint(quad.points()[0].x, quad.points()[0].y);
-          points[1] = CSSPoint(quad.points()[1].x, quad.points()[1].y);
-          points[2] = CSSPoint(quad.points()[2].x, quad.points()[2].y);
-          points[3] = CSSPoint(quad.points()[3].x, quad.points()[3].y);
-
-          imageText->mQuad = new DOMQuad(global, points);
-          imageText->mConfidence = quad.confidence();
-          imageText->mString = quad.string();
-        }
-        domPromise->MaybeResolve(std::move(imageTexts));
+                                    aValue.ResolveValue());
+        // TODO: Maybe resolve with the recognition results?
+        domPromise->MaybeResolveWithUndefined();
       });
   return domPromise.forget();
 }

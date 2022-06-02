@@ -77,7 +77,6 @@ UNIFIED_SOURCES += [
     "OSXNotificationCenter.mm",
     "ScreenHelperCocoa.mm",
     "TextInputHandler.mm",
-    "TextRecognition.mm",
     "VibrancyManager.mm",
     "ViewRegion.mm",
     "WidgetTraceEvent.mm",
@@ -176,7 +175,6 @@ RESOURCE_FILES.__setattr__(
 
 OS_LIBS += [
     "-framework IOSurface",
-    "-framework Vision",
 ]
 
 SPHINX_TREES["/widget/cocoa"] = "docs"
