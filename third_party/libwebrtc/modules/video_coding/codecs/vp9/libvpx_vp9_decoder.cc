@@ -120,10 +120,9 @@ LibvpxVp9Decoder::~LibvpxVp9Decoder() {
   }
 }
 
-int LibvpxVp9Decoder::InitDecode(const VideoCodec* inst, int number_of_cores) {
-  int ret_val = Release();
-  if (ret_val < 0) {
-    return ret_val;
+bool LibvpxVp9Decoder::Configure(const Settings& settings) {
+  if (Release() < 0) {
+    return false;
   }
 
   if (decoder_ == nullptr) {
@@ -140,9 +139,9 @@ int LibvpxVp9Decoder::InitDecode(const VideoCodec* inst, int number_of_cores) {
   //  - Make peak CPU usage under control (not depending on input)
   cfg.threads = 1;
 #else
-  if (!inst) {
-    // No config provided - don't know resolution to decode yet.
-    // Set thread count to one in the meantime.
+  const RenderResolution& resolution = settings.max_render_resolution();
+  if (!resolution.Valid()) {
+    // Postpone configuring number of threads until resolution is known.
     cfg.threads = 1;
   } else {
     // We want to use multithreading when decoding high resolution videos. But
@@ -156,31 +155,30 @@ int LibvpxVp9Decoder::InitDecode(const VideoCodec* inst, int number_of_cores) {
     // 4 for 1080p
     // 8 for 1440p
     // 18 for 4K
-    int num_threads =
-        std::max(1, 2 * (inst->width * inst->height) / (1280 * 720));
-    cfg.threads = std::min(number_of_cores, num_threads);
-    current_codec_ = *inst;
+    int num_threads = std::max(
+        1, 2 * resolution.Width() * resolution.Height() / (1280 * 720));
+    cfg.threads = std::min(settings.number_of_cores(), num_threads);
   }
 #endif
 
-  num_cores_ = number_of_cores;
+  current_settings_ = settings;
 
   vpx_codec_flags_t flags = 0;
   if (vpx_codec_dec_init(decoder_, vpx_codec_vp9_dx(), &cfg, flags)) {
-    return WEBRTC_VIDEO_CODEC_MEMORY;
+    return false;
   }
 
   if (!libvpx_buffer_pool_.InitializeVpxUsePool(decoder_)) {
-    return WEBRTC_VIDEO_CODEC_MEMORY;
+    return false;
   }
 
   inited_ = true;
   // Always start with a complete key frame.
   key_frame_required_ = true;
-  if (inst && inst->buffer_pool_size) {
-    if (!libvpx_buffer_pool_.Resize(*inst->buffer_pool_size) ||
-        !output_buffer_pool_.Resize(*inst->buffer_pool_size)) {
-      return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+  if (absl::optional<int> buffer_pool_size = settings.buffer_pool_size()) {
+    if (!libvpx_buffer_pool_.Resize(*buffer_pool_size) ||
+        !output_buffer_pool_.Resize(*buffer_pool_size)) {
+      return false;
     }
   }
 
@@ -189,10 +187,10 @@ int LibvpxVp9Decoder::InitDecode(const VideoCodec* inst, int number_of_cores) {
   if (status != VPX_CODEC_OK) {
     RTC_LOG(LS_ERROR) << "Failed to enable VP9D_SET_LOOP_FILTER_OPT. "
                       << vpx_codec_error(decoder_);
-    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+    return false;
   }
 
-  return WEBRTC_VIDEO_CODEC_OK;
+  return true;
 }
 
 int LibvpxVp9Decoder::Decode(const EncodedImage& input_image,
@@ -209,17 +207,16 @@ int LibvpxVp9Decoder::Decode(const EncodedImage& input_image,
     absl::optional<vp9::FrameInfo> frame_info =
         vp9::ParseIntraFrameInfo(input_image.data(), input_image.size());
     if (frame_info) {
-      if (frame_info->frame_width != current_codec_.width ||
-          frame_info->frame_height != current_codec_.height) {
+      RenderResolution frame_resolution(frame_info->frame_width,
+                                        frame_info->frame_height);
+      if (frame_resolution != current_settings_.max_render_resolution()) {
         // Resolution has changed, tear down and re-init a new decoder in
         // order to get correct sizing.
         Release();
-        current_codec_.width = frame_info->frame_width;
-        current_codec_.height = frame_info->frame_height;
-        int reinit_status = InitDecode(&current_codec_, num_cores_);
-        if (reinit_status != WEBRTC_VIDEO_CODEC_OK) {
+        current_settings_.set_max_render_resolution(frame_resolution);
+        if (!Configure(current_settings_)) {
           RTC_LOG(LS_WARNING) << "Failed to re-init decoder.";
-          return reinit_status;
+          return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
         }
       }
     } else {
