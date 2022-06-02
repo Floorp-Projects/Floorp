@@ -25,6 +25,7 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_tools/frame_analyzer/video_geometry_aligner.h"
+#include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -103,66 +104,6 @@ SamplesStatsCounter::StatsSample StatsSample(double value,
 }
 
 }  // namespace
-
-void RateCounter::AddEvent(Timestamp event_time) {
-  if (event_first_time_.IsMinusInfinity()) {
-    event_first_time_ = event_time;
-  }
-  event_last_time_ = event_time;
-  event_count_++;
-}
-
-double RateCounter::GetEventsPerSecond() const {
-  RTC_DCHECK(!IsEmpty());
-  // Divide on us and multiply on kMicrosPerSecond to correctly process cases
-  // where there were too small amount of events, so difference is less then 1
-  // sec. We can use us here, because Timestamp has us resolution.
-  return static_cast<double>(event_count_) /
-         (event_last_time_ - event_first_time_).us() * kMicrosPerSecond;
-}
-
-std::string StatsKey::ToString() const {
-  rtc::StringBuilder out;
-  out << stream_label << "_" << sender << "_" << receiver;
-  return out.str();
-}
-
-bool operator<(const StatsKey& a, const StatsKey& b) {
-  if (a.stream_label != b.stream_label) {
-    return a.stream_label < b.stream_label;
-  }
-  if (a.sender != b.sender) {
-    return a.sender < b.sender;
-  }
-  return a.receiver < b.receiver;
-}
-
-bool operator==(const StatsKey& a, const StatsKey& b) {
-  return a.stream_label == b.stream_label && a.sender == b.sender &&
-         a.receiver == b.receiver;
-}
-
-std::string InternalStatsKey::ToString() const {
-  rtc::StringBuilder out;
-  out << "stream=" << stream << "_sender=" << sender
-      << "_receiver=" << receiver;
-  return out.str();
-}
-
-bool operator<(const InternalStatsKey& a, const InternalStatsKey& b) {
-  if (a.stream != b.stream) {
-    return a.stream < b.stream;
-  }
-  if (a.sender != b.sender) {
-    return a.sender < b.sender;
-  }
-  return a.receiver < b.receiver;
-}
-
-bool operator==(const InternalStatsKey& a, const InternalStatsKey& b) {
-  return a.stream == b.stream && a.sender == b.sender &&
-         a.receiver == b.receiver;
-}
 
 DefaultVideoQualityAnalyzer::DefaultVideoQualityAnalyzer(
     webrtc::Clock* clock,
@@ -523,13 +464,9 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
   state->SetLastRenderedFrameTime(peer_index,
                                   frame_in_flight->rendered_time(peer_index));
   {
-    MutexLock cr(&comparison_lock_);
+    MutexLock lock(&comparison_lock_);
     stream_stats_.at(stats_key).skipped_between_rendered.AddSample(
         StatsSample(dropped_count, Now()));
-  }
-
-  {
-    MutexLock lock(&comparison_lock_);
     analyzer_stats_.frames_in_flight_left_count.AddSample(
         StatsSample(captured_frames_in_flight_.size(), Now()));
     AddComparison(stats_key, captured_frame, frame, false,

@@ -617,6 +617,8 @@ if (!build_with_chromium) {
     sources = [
       "analyzer/video/default_video_quality_analyzer.cc",
       "analyzer/video/default_video_quality_analyzer.h",
+      "analyzer/video/default_video_quality_analyzer_shared_objects.cc",
+      "analyzer/video/default_video_quality_analyzer_shared_objects.h",
     ]
 
     deps = [
@@ -631,6 +633,7 @@ if (!build_with_chromium) {
       "../../../api/video:video_frame",
       "../../../api/video:video_rtp_headers",
       "../../../common_video",
+      "../../../rtc_base:checks",
       "../../../rtc_base:criticalsection",
       "../../../rtc_base:logging",
       "../../../rtc_base:rtc_base_approved",
