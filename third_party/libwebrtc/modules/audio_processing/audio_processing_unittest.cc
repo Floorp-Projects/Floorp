@@ -415,7 +415,7 @@ class ApmTest : public ::testing::Test {
 
   const std::string output_path_;
   const std::string ref_filename_;
-  std::unique_ptr<AudioProcessing> apm_;
+  rtc::scoped_refptr<AudioProcessing> apm_;
   Int16FrameData frame_;
   Int16FrameData revframe_;
   std::unique_ptr<ChannelBuffer<float> > float_cb_;
@@ -435,7 +435,7 @@ ApmTest::ApmTest()
       far_file_(NULL),
       near_file_(NULL),
       out_file_(NULL) {
-  apm_.reset(AudioProcessingBuilderForTesting().Create());
+  apm_ = AudioProcessingBuilderForTesting().Create();
   AudioProcessing::Config apm_config = apm_->GetConfig();
   apm_config.gain_controller1.analog_gain_controller.enabled = false;
   apm_config.pipeline.maximum_internal_processing_rate = 48000;
@@ -1312,7 +1312,7 @@ TEST_F(ApmTest, NoProcessingWhenAllComponentsDisabledFloat) {
   auto src_channels = &src[0];
   auto dest_channels = &dest[0];
 
-  apm_.reset(AudioProcessingBuilderForTesting().Create());
+  apm_ = AudioProcessingBuilderForTesting().Create();
   EXPECT_NOERR(apm_->ProcessStream(&src_channels, StreamConfig(sample_rate, 1),
                                    StreamConfig(sample_rate, 1),
                                    &dest_channels));
@@ -1773,7 +1773,7 @@ TEST_F(ApmTest, Process) {
     if (test->num_input_channels() != test->num_output_channels())
       continue;
 
-    apm_.reset(AudioProcessingBuilderForTesting().Create());
+    apm_ = AudioProcessingBuilderForTesting().Create();
     AudioProcessing::Config apm_config = apm_->GetConfig();
     apm_config.gain_controller1.analog_gain_controller.enabled = false;
     apm_->ApplyConfig(apm_config);
@@ -1942,8 +1942,8 @@ TEST_F(ApmTest, NoErrorsWithKeyboardChannel) {
       {AudioProcessing::kStereoAndKeyboard, AudioProcessing::kStereo},
   };
 
-  std::unique_ptr<AudioProcessing> ap(
-      AudioProcessingBuilderForTesting().Create());
+  rtc::scoped_refptr<AudioProcessing> ap =
+      AudioProcessingBuilderForTesting().Create();
   // Enable one component just to ensure some processing takes place.
   AudioProcessing::Config config;
   config.noise_suppression.enabled = true;
@@ -2069,8 +2069,8 @@ class AudioProcessingTest
                             size_t num_reverse_input_channels,
                             size_t num_reverse_output_channels,
                             const std::string& output_file_prefix) {
-    std::unique_ptr<AudioProcessing> ap(
-        AudioProcessingBuilderForTesting().Create());
+    rtc::scoped_refptr<AudioProcessing> ap =
+        AudioProcessingBuilderForTesting().Create();
     AudioProcessing::Config apm_config = ap->GetConfig();
     apm_config.gain_controller1.analog_gain_controller.enabled = false;
     ap->ApplyConfig(apm_config);
@@ -2454,8 +2454,8 @@ void RunApmRateAndChannelTest(
     rtc::ArrayView<const int> sample_rates_hz,
     rtc::ArrayView<const int> render_channel_counts,
     rtc::ArrayView<const int> capture_channel_counts) {
-  std::unique_ptr<AudioProcessing> apm(
-      AudioProcessingBuilderForTesting().Create());
+  rtc::scoped_refptr<AudioProcessing> apm =
+      AudioProcessingBuilderForTesting().Create();
   webrtc::AudioProcessing::Config apm_config;
   apm_config.echo_canceller.enabled = true;
   apm->ApplyConfig(apm_config);
@@ -2699,10 +2699,10 @@ TEST(ApmConfiguration, EchoControlInjection) {
                      audio.data.data());
 }
 
-std::unique_ptr<AudioProcessing> CreateApm(bool mobile_aec) {
+rtc::scoped_refptr<AudioProcessing> CreateApm(bool mobile_aec) {
   Config old_config;
-  std::unique_ptr<AudioProcessing> apm(
-      AudioProcessingBuilderForTesting().Create(old_config));
+  rtc::scoped_refptr<AudioProcessing> apm =
+      AudioProcessingBuilderForTesting().Create(old_config);
   if (!apm) {
     return apm;
   }
@@ -2737,7 +2737,7 @@ std::unique_ptr<AudioProcessing> CreateApm(bool mobile_aec) {
 
 TEST(MAYBE_ApmStatistics, AECEnabledTest) {
   // Set up APM with AEC3 and process some audio.
-  std::unique_ptr<AudioProcessing> apm = CreateApm(false);
+  rtc::scoped_refptr<AudioProcessing> apm = CreateApm(false);
   ASSERT_TRUE(apm);
   AudioProcessing::Config apm_config;
   apm_config.echo_canceller.enabled = true;
@@ -2788,7 +2788,7 @@ TEST(MAYBE_ApmStatistics, AECEnabledTest) {
 
 TEST(MAYBE_ApmStatistics, AECMEnabledTest) {
   // Set up APM with AECM and process some audio.
-  std::unique_ptr<AudioProcessing> apm = CreateApm(true);
+  rtc::scoped_refptr<AudioProcessing> apm = CreateApm(true);
   ASSERT_TRUE(apm);
 
   // Set up an audioframe.
@@ -2853,8 +2853,8 @@ TEST(ApmStatistics, ReportOutputRmsDbfs) {
     ptr[i] = 10000 * ((i % 3) - 1);
   }
 
-  std::unique_ptr<AudioProcessing> apm(
-      AudioProcessingBuilderForTesting().Create());
+  rtc::scoped_refptr<AudioProcessing> apm =
+      AudioProcessingBuilderForTesting().Create();
   apm->Initialize(processing_config);
 
   // If not enabled, no metric should be reported.
@@ -2907,8 +2907,8 @@ TEST(ApmStatistics, ReportHasVoice) {
     ptr[i] = 10000 * ((i % 3) - 1);
   }
 
-  std::unique_ptr<AudioProcessing> apm(
-      AudioProcessingBuilderForTesting().Create());
+  rtc::scoped_refptr<AudioProcessing> apm =
+      AudioProcessingBuilderForTesting().Create();
   apm->Initialize(processing_config);
 
   // If not enabled, no metric should be reported.

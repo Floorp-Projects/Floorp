@@ -62,8 +62,8 @@ class AudioProcessingBuilderForTesting {
   // This creates an APM instance using the previously set components. Calling
   // the Create function resets the AudioProcessingBuilderForTesting to its
   // initial state.
-  AudioProcessing* Create();
-  AudioProcessing* Create(const webrtc::Config& config);
+  rtc::scoped_refptr<AudioProcessing> Create();
+  rtc::scoped_refptr<AudioProcessing> Create(const webrtc::Config& config);
 
  private:
   // Transfers the ownership to a non-testing builder.

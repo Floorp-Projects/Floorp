@@ -20,12 +20,13 @@ namespace webrtc {
 AudioProcessingBuilder::AudioProcessingBuilder() = default;
 AudioProcessingBuilder::~AudioProcessingBuilder() = default;
 
-AudioProcessing* AudioProcessingBuilder::Create() {
+rtc::scoped_refptr<AudioProcessing> AudioProcessingBuilder::Create() {
   webrtc::Config config;
   return Create(config);
 }
 
-AudioProcessing* AudioProcessingBuilder::Create(const webrtc::Config& config) {
+rtc::scoped_refptr<AudioProcessing> AudioProcessingBuilder::Create(
+    const webrtc::Config& config) {
 #ifdef WEBRTC_EXCLUDE_AUDIO_PROCESSING_MODULE
 
   // Implementation returning a null pointer for using when the APM is excluded
@@ -35,7 +36,7 @@ AudioProcessing* AudioProcessingBuilder::Create(const webrtc::Config& config) {
 #else
 
   // Standard implementation.
-  return new rtc::RefCountedObject<AudioProcessingImpl>(
+  return rtc::make_ref_counted<AudioProcessingImpl>(
       config, std::move(capture_post_processing_),
       std::move(render_pre_processing_), std::move(echo_control_factory_),
       std::move(echo_detector_), std::move(capture_analyzer_));

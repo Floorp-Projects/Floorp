@@ -815,8 +815,8 @@ class RTC_EXPORT AudioProcessingBuilder {
   }
   // This creates an APM instance using the previously set components. Calling
   // the Create function resets the AudioProcessingBuilder to its initial state.
-  AudioProcessing* Create();
-  AudioProcessing* Create(const webrtc::Config& config);
+  rtc::scoped_refptr<AudioProcessing> Create();
+  rtc::scoped_refptr<AudioProcessing> Create(const webrtc::Config& config);
 
  private:
   std::unique_ptr<EchoControlFactory> echo_control_factory_;

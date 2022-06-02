@@ -34,9 +34,9 @@ const std::string kFieldTrialNames[] = {
     "WebRTC-Aec3ShortHeadroomKillSwitch",
 };
 
-std::unique_ptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
-                                           std::string* field_trial_string,
-                                           rtc::TaskQueue* worker_queue) {
+rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
+                                              std::string* field_trial_string,
+                                              rtc::TaskQueue* worker_queue) {
   // Parse boolean values for optionally enabling different
   // configurable public components of APM.
   bool exp_agc = fuzz_data->ReadOrDefaultValue(true);
@@ -108,10 +108,10 @@ std::unique_ptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
   config.Set<ExperimentalAgc>(new ExperimentalAgc(exp_agc));
   config.Set<ExperimentalNs>(new ExperimentalNs(exp_ns));
 
-  std::unique_ptr<AudioProcessing> apm(
+  rtc::scoped_refptr<AudioProcessing> apm =
       AudioProcessingBuilderForTesting()
           .SetEchoControlFactory(std::move(echo_control_factory))
-          .Create(config));
+          .Create(config);
 
 #ifdef WEBRTC_LINUX
   apm->AttachAecDump(AecDumpFactory::Create("/dev/null", -1, worker_queue));
