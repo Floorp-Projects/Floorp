@@ -761,17 +761,43 @@ void Theme::PaintMenulist(PaintBackendData& aDrawTarget,
 void Theme::PaintMenulistArrowButton(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                                      const LayoutDeviceRect& aRect,
                                      const EventStates& aState) {
-  const float kPolygonX[] = {-4.0f, -0.5f, 0.5f, 4.0f,  4.0f,
-                             3.0f,  0.0f,  0.0f, -3.0f, -4.0f};
-  const float kPolygonY[] = {-1,    3.0f, 3.0f, -1.0f, -2.0f,
-                             -2.0f, 1.5f, 1.5f, -2.0f, -2.0f};
+  // not const: these may be negated in-place below
+  float polygonX[] = {-4.0f, -0.5f, 0.5f, 4.0f,  4.0f,
+                      3.0f,  0.0f,  0.0f, -3.0f, -4.0f};
+  float polygonY[] = {-1,    3.0f, 3.0f, -1.0f, -2.0f,
+                      -2.0f, 1.5f, 1.5f, -2.0f, -2.0f};
 
   const float kPolygonSize = kMinimumDropdownArrowButtonWidth;
 
+  auto const [xs, ys] = [&] {
+    using Pair = std::pair<const float*, const float*>;
+    switch (aFrame->GetWritingMode().GetBlockDir()) {
+      case WritingMode::BlockDir::eBlockRL:
+        // rotate 90°: [[0,1],[-1,0]]
+        for (float& f : polygonY) {
+          f = -f;
+        }
+        return Pair(polygonY, polygonX);
+
+      case WritingMode::BlockDir::eBlockLR:
+        // rotate 270°: [[0,-1],[1,0]]
+        for (float& f : polygonX) {
+          f = -f;
+        }
+        return Pair(polygonY, polygonX);
+
+      case WritingMode::BlockDir::eBlockTB:
+        // rotate 0°: [[1,0],[0,1]]
+        return Pair(polygonX, polygonY);
+    }
+    MOZ_ASSERT_UNREACHABLE("unhandled BlockDir");
+    return Pair(polygonX, polygonY);
+  }();
+
   const auto arrowColor = sRGBColor::FromABGR(
       nsLayoutUtils::GetColor(aFrame, &nsStyleText::mWebkitTextFillColor));
-  ThemeDrawing::PaintArrow(aDrawTarget, aRect, kPolygonX, kPolygonY,
-                           kPolygonSize, ArrayLength(kPolygonX), arrowColor);
+  ThemeDrawing::PaintArrow(aDrawTarget, aRect, xs, ys, kPolygonSize,
+                           ArrayLength(polygonX), arrowColor);
 }
 
 void Theme::PaintSpinnerButton(nsIFrame* aFrame, DrawTarget& aDrawTarget,
