@@ -50,6 +50,7 @@ class Connector {
     this.updatePersist = this.updatePersist.bind(this);
 
     this.networkFront = null;
+    this.listenForNetworkEvents = true;
   }
 
   get currentTarget() {
@@ -98,12 +99,28 @@ class Connector {
     });
 
     const { TYPES } = this.toolbox.resourceCommand;
+    const targetResources = [
+      TYPES.DOCUMENT_EVENT,
+      TYPES.NETWORK_EVENT,
+      TYPES.NETWORK_EVENT_STACKTRACE,
+    ];
 
-    await this.toolbox.resourceCommand.watchResources([TYPES.DOCUMENT_EVENT], {
+    if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
+      targetResources.push(TYPES.WEBSOCKET);
+    }
+
+    if (
+      Services.prefs.getBoolPref(
+        "devtools.netmonitor.features.serverSentEvents"
+      )
+    ) {
+      targetResources.push(TYPES.SERVER_SENT_EVENT);
+    }
+
+    await this.toolbox.resourceCommand.watchResources(targetResources, {
       onAvailable: this.onResourceAvailable,
+      onUpdated: this.onResourceUpdated,
     });
-
-    await this.resume(false);
 
     // Server side persistance of the data across reload is disabled by default.
     // Ensure enabling it, if the related frontend pref is true.
@@ -130,11 +147,19 @@ class Connector {
     });
 
     const { TYPES } = this.toolbox.resourceCommand;
-    this.toolbox.resourceCommand.unwatchResources([TYPES.DOCUMENT_EVENT], {
-      onAvailable: this.onResourceAvailable,
-    });
-
-    this.pause();
+    this.toolbox.resourceCommand.unwatchResources(
+      [
+        TYPES.DOCUMENT_EVENT,
+        TYPES.NETWORK_EVENT,
+        TYPES.NETWORK_EVENT_STACKTRACE,
+        TYPES.WEBSOCKET,
+        TYPES.SERVER_SENT_EVENT,
+      ],
+      {
+        onAvailable: this.onResourceAvailable,
+        onUpdated: this.onResourceUpdated,
+      }
+    );
 
     Services.prefs.removeObserver(
       DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
@@ -151,38 +176,12 @@ class Connector {
     this.dataProvider = null;
   }
 
-  pause() {
-    const { resourceCommand } = this.toolbox;
-    return resourceCommand.unwatchResources(
-      [
-        resourceCommand.TYPES.NETWORK_EVENT,
-        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-        resourceCommand.TYPES.WEBSOCKET,
-        resourceCommand.TYPES.SERVER_SENT_EVENT,
-      ],
-      {
-        onAvailable: this.onResourceAvailable,
-        onUpdated: this.onResourceUpdated,
-      }
-    );
+  async pause() {
+    this.listenForNetworkEvents = false;
   }
 
-  resume(ignoreExistingResources = true) {
-    const { resourceCommand } = this.toolbox;
-
-    return resourceCommand.watchResources(
-      [
-        resourceCommand.TYPES.NETWORK_EVENT,
-        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-        resourceCommand.TYPES.WEBSOCKET,
-        resourceCommand.TYPES.SERVER_SENT_EVENT,
-      ],
-      {
-        onAvailable: this.onResourceAvailable,
-        onUpdated: this.onResourceUpdated,
-        ignoreExistingResources,
-      }
-    );
+  async resume() {
+    this.listenForNetworkEvents = true;
   }
 
   async onTargetAvailable({ targetFront, isTargetSwitching }) {
@@ -205,6 +204,10 @@ class Connector {
 
       if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
         this.onDocEvent(resource, { areExistingResources });
+        continue;
+      }
+
+      if (!this.listenForNetworkEvents) {
         continue;
       }
 
@@ -276,7 +279,13 @@ class Connector {
 
   async onResourceUpdated(updates) {
     for (const { resource, update } of updates) {
-      this.dataProvider.onNetworkResourceUpdated(resource, update);
+      if (
+        resource.resourceType ===
+          this.toolbox.resourceCommand.TYPES.NETWORK_EVENT &&
+        this.listenForNetworkEvents
+      ) {
+        this.dataProvider.onNetworkResourceUpdated(resource, update);
+      }
     }
   }
 

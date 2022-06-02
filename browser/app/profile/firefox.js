@@ -2447,8 +2447,13 @@ pref("devtools.netmonitor.har.forceExport", false);
 pref("devtools.netmonitor.har.pageLoadedTimeout", 1500);
 pref("devtools.netmonitor.har.enableAutoExportToFile", false);
 
+pref("devtools.netmonitor.features.webSockets", true);
+
 // netmonitor audit
 pref("devtools.netmonitor.audits.slow", 500);
+
+// Enable the EventSource Inspector
+pref("devtools.netmonitor.features.serverSentEvents", true);
 
 // Enable the new Edit and Resend panel
   pref("devtools.netmonitor.features.newEditAndResend", true);
@@ -2543,9 +2548,6 @@ pref("devtools.webconsole.groupWarningMessages", true);
 
 // Saved state of the Display content messages checkbox in the browser console.
 pref("devtools.browserconsole.contentMessages", false);
-
-// Enable network monitoring the browser toolbox console/browser console.
-pref("devtools.browserconsole.enableNetworkMonitoring", false);
 
 // Enable client-side mapping service for source maps
 pref("devtools.source-map.client-service.enabled", true);
