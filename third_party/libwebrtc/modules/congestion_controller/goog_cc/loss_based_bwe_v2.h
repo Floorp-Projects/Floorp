@@ -48,7 +48,8 @@ class LossBasedBweV2 {
   void SetBandwidthEstimate(DataRate bandwidth_estimate);
 
   void UpdateBandwidthEstimate(
-      rtc::ArrayView<const PacketResult> packet_results);
+      rtc::ArrayView<const PacketResult> packet_results,
+      DataRate delay_based_estimate);
 
  private:
   struct ChannelParameters {
@@ -60,6 +61,7 @@ class LossBasedBweV2 {
     double bandwidth_rampup_upper_bound_factor = 0.0;
     std::vector<double> candidate_factors;
     double higher_bandwidth_bias_factor = 0.0;
+    double higher_log_bandwidth_bias_factor = 0.0;
     double inherent_loss_lower_bound = 0.0;
     DataRate inherent_loss_upper_bound_bandwidth_balance =
         DataRate::MinusInfinity();
@@ -67,6 +69,8 @@ class LossBasedBweV2 {
     double initial_inherent_loss_estimate = 0.0;
     int newton_iterations = 0;
     double newton_step_size = 0.0;
+    bool append_acknowledged_rate_candidate = true;
+    bool append_delay_based_estimate_candidate = false;
     TimeDelta observation_duration_lower_bound = TimeDelta::Zero();
     int observation_window_size = 0;
     double sending_rate_smoothing_factor = 0.0;
@@ -104,14 +108,17 @@ class LossBasedBweV2 {
 
   // Returns `0.0` if not enough loss statistics have been received.
   double GetAverageReportedLossRatio() const;
-  std::vector<ChannelParameters> GetCandidates() const;
+  std::vector<ChannelParameters> GetCandidates(
+      DataRate delay_based_estimate) const;
   Derivatives GetDerivatives(const ChannelParameters& channel_parameters) const;
   double GetFeasibleInherentLoss(
       const ChannelParameters& channel_parameters) const;
   double GetInherentLossUpperBound(DataRate bandwidth) const;
+  double GetHighBandwidthBias(DataRate bandwidth) const;
   double GetObjective(const ChannelParameters& channel_parameters) const;
   DataRate GetSendingRate(DataRate instantaneous_sending_rate) const;
   DataRate GetTcpFairnessBandwidthUpperBound() const;
+  void CalculateTcpFairnessBandwidthUpperBound();
 
   void CalculateTemporalWeights();
   void NewtonsMethodUpdate(ChannelParameters& channel_parameters) const;
@@ -126,6 +133,7 @@ class LossBasedBweV2 {
   std::vector<Observation> observations_;
   PartialObservation partial_observation_;
   Timestamp last_send_time_most_recent_observation_ = Timestamp::PlusInfinity();
+  absl::optional<DataRate> cached_tcp_fairness_limit_;
   std::vector<double> tcp_fairness_temporal_weights_;
   std::vector<double> temporal_weights_;
 };
