@@ -17,14 +17,8 @@ var doubletap_prefs = [
   ["apz.mac.enable_double_tap_zoom_touchpad_gesture", true],
 ];
 
-var visualviewport_and_doubletap_prefs = [
+var longeranimation_doubletap_prefs = [
   ...doubletap_prefs,
-  ["dom.visualviewport.enabled", true],
-];
-
-var longeranimation_visualviewport_and_doubletap_prefs = [
-  ...doubletap_prefs,
-  ["dom.visualviewport.enabled", true],
   ["apz.zoom_animation_duration_ms", 1000],
 ];
 
@@ -44,7 +38,7 @@ var meta_viewport_and_doubletap_prefs = [
 ];
 
 var subtests = [
-  {"file": "helper_doubletap_zoom_smooth.html", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_smooth.html", "prefs": longeranimation_doubletap_prefs},
   {"file": "helper_doubletap_zoom_fixedpos_overflow.html", "prefs": logging_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_hscrollable.html", "prefs": disable_default_zoomin_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_scrolled_overflowhidden.html", "prefs": doubletap_prefs},
@@ -53,8 +47,8 @@ var subtests = [
   {"file": "helper_doubletap_zoom_gencon.html", "prefs": doubletap_prefs},
   {"file": "helper_doubletap_zoom_hscrollable2.html", "prefs": doubletap_prefs},
   {"file": "helper_doubletap_zoom_nothing.html", "prefs": doubletap_prefs},
-  {"file": "helper_doubletap_zoom_noscroll.html", "prefs": visualviewport_and_doubletap_prefs},
-  {"file": "helper_doubletap_zoom_square.html", "prefs": visualviewport_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_noscroll.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_square.html", "prefs": doubletap_prefs},
   {"file": "helper_doubletap_zoom_oopif.html", "prefs": doubletap_prefs},
   {"file": "helper_disallow_doubletap_zoom_inside_oopif.html", "prefs": meta_viewport_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_nothing_listener.html", "prefs": doubletap_prefs},
@@ -62,7 +56,7 @@ var subtests = [
 
 if (getPlatform() == "mac") {
   subtests.push(
-    {"file": "helper_doubletap_zoom_smooth.html?touchpad", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_smooth.html?touchpad", "prefs": longeranimation_doubletap_prefs},
     {"file": "helper_doubletap_zoom_fixedpos_overflow.html?touchpad", "prefs": logging_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_hscrollable.html?touchpad", "prefs": disable_default_zoomin_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_scrolled_overflowhidden.html?touchpad", "prefs": doubletap_prefs},
@@ -71,8 +65,8 @@ if (getPlatform() == "mac") {
     {"file": "helper_doubletap_zoom_gencon.html?touchpad", "prefs": doubletap_prefs},
     {"file": "helper_doubletap_zoom_hscrollable2.html?touchpad", "prefs": doubletap_prefs},
     {"file": "helper_doubletap_zoom_nothing.html?touchpad", "prefs": doubletap_prefs},
-    {"file": "helper_doubletap_zoom_noscroll.html?touchpad", "prefs": visualviewport_and_doubletap_prefs},
-    {"file": "helper_doubletap_zoom_square.html?touchpad", "prefs": visualviewport_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_noscroll.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_square.html?touchpad", "prefs": doubletap_prefs},
     {"file": "helper_doubletap_zoom_oopif.html?touchpad", "prefs": doubletap_prefs},
     {"file": "helper_disallow_doubletap_zoom_inside_oopif.html?touchpad", "prefs": meta_viewport_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_nothing_listener.html?touchpad", "prefs": doubletap_prefs},
