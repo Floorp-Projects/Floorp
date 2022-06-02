@@ -471,7 +471,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
   dst_width = std::max(2, dst_width);
   dst_height = std::max(2, dst_height);
 
-  std::function<void()> callback_unused;
+  std::function<void()> callback_unused = []() {};
   rtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
       webrtc::WrapI420Buffer(
           aProps.width(), aProps.height(), aBuffer, aProps.yStride(),
