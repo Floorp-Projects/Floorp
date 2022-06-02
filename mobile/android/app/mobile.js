@@ -514,9 +514,6 @@ pref("media.plugins.enabled", true);
 // 16 = Force hardware decoding
 pref("media.stagefright.omxcodec.flags", 0);
 
-// Enable the dynamic toolbar
-pref("browser.chrome.dynamictoolbar", true);
-
 // Location Bar AutoComplete.
 pref("browser.urlbar.autocomplete.enabled", true);
 
