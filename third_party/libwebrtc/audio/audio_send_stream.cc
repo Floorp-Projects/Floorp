@@ -702,7 +702,9 @@ bool AudioSendStream::ReconfigureSendCodec(const Config& new_config) {
       new_config.send_codec_spec->format !=
           old_config.send_codec_spec->format ||
       new_config.send_codec_spec->payload_type !=
-          old_config.send_codec_spec->payload_type) {
+          old_config.send_codec_spec->payload_type ||
+      new_config.send_codec_spec->red_payload_type !=
+          old_config.send_codec_spec->red_payload_type) {
     return SetupSendCodec(new_config);
   }
 
