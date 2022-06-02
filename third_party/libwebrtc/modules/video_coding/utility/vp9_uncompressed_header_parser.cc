@@ -250,7 +250,8 @@ bool Vp9ReadRenderSize(BitstreamReader* br, Vp9UncompressedHeader* frame_info) {
   // render_and_frame_size_different
   return br->IfNextBoolean(
       [&] {
-        auto& pos = frame_info->render_size_position.emplace();
+        auto& pos = frame_info->render_size_position.emplace(
+            Vp9UncompressedHeader::BitstreamPosition());
         br->GetPosition(&pos.byte_offset, &pos.bit_offset);
         // 16 bits: render (width|height) - 1.
         READ_OR_RETURN(br->ReadUnsigned<uint16_t>(),
