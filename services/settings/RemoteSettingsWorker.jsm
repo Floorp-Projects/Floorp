@@ -16,21 +16,23 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
 
 var EXPORTED_SYMBOLS = ["RemoteSettingsWorker"];
 
+const lazy = {};
+
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gMaxIdleMilliseconds",
   "services.settings.worker_idle_max_milliseconds",
   30 * 1000 // Default of 30 seconds.
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SharedUtils",
   "resource://services-settings/SharedUtils.jsm"
 );
@@ -128,7 +130,7 @@ class Worker {
       } else {
         this.idleTimeoutId = setTimeout(() => {
           this.stop();
-        }, gMaxIdleMilliseconds);
+        }, lazy.gMaxIdleMilliseconds);
       }
     }
   }
@@ -187,7 +189,7 @@ class Worker {
   async checkContentHash(buffer, size, hash) {
     // The implementation does little work on the current thread, so run the
     // task on the current thread instead of the worker thread.
-    return SharedUtils.checkContentHash(buffer, size, hash);
+    return lazy.SharedUtils.checkContentHash(buffer, size, hash);
   }
 }
 
@@ -198,7 +200,7 @@ class Worker {
 // fine. If we ever start creating more than one Worker instance, this
 // code will need adjusting to deal with that.
 try {
-  AsyncShutdown.profileBeforeChange.addBlocker(
+  lazy.AsyncShutdown.profileBeforeChange.addBlocker(
     "Remote Settings profile-before-change",
     async () => {
       // First, indicate we've shut down.

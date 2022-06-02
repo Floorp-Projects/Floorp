@@ -7,12 +7,13 @@ var EXPORTED_SYMBOLS = ["Downloader"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
   Utils: "resource://services-settings/Utils.jsm",
 });
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 class DownloadError extends Error {
   constructor(url, resp) {
@@ -304,13 +305,13 @@ class Downloader {
     const {
       attachment: { filename, size, hash },
     } = record;
-    const localFilePath = OS.Path.join(
-      OS.Constants.Path.localProfileDir,
+    const localFilePath = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.localProfileDir,
       ...this.folders,
       filename
     );
     const localFileUrl = `file://${[
-      ...OS.Path.split(OS.Constants.Path.localProfileDir).components,
+      ...lazy.OS.Path.split(lazy.OS.Constants.Path.localProfileDir).components,
       ...this.folders,
       filename,
     ].join("/")}`;
@@ -319,7 +320,9 @@ class Downloader {
 
     let retried = 0;
     while (true) {
-      if (await RemoteSettingsWorker.checkFileHash(localFileUrl, size, hash)) {
+      if (
+        await lazy.RemoteSettingsWorker.checkFileHash(localFileUrl, size, hash)
+      ) {
         return localFileUrl;
       }
       // File does not exist or is corrupted.
@@ -370,7 +373,9 @@ class Downloader {
         if (!checkHash) {
           return buffer;
         }
-        if (await RemoteSettingsWorker.checkContentHash(buffer, size, hash)) {
+        if (
+          await lazy.RemoteSettingsWorker.checkContentHash(buffer, size, hash)
+        ) {
           return buffer;
         }
         // Content is corrupted.
@@ -400,8 +405,8 @@ class Downloader {
     const {
       attachment: { filename },
     } = record;
-    const path = OS.Path.join(
-      OS.Constants.Path.localProfileDir,
+    const path = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.localProfileDir,
       ...this.folders,
       filename
     );
@@ -411,7 +416,7 @@ class Downloader {
 
   async _baseAttachmentsURL() {
     if (!this._cdnURL) {
-      const resp = await Utils.fetch(`${Utils.SERVER_URL}/`);
+      const resp = await lazy.Utils.fetch(`${lazy.Utils.SERVER_URL}/`);
       let serverInfo;
       try {
         serverInfo = await resp.json();
@@ -433,7 +438,7 @@ class Downloader {
   async _fetchAttachment(url) {
     const headers = new Headers();
     headers.set("Accept-Encoding", "gzip");
-    const resp = await Utils.fetch(url, { headers });
+    const resp = await lazy.Utils.fetch(url, { headers });
     if (!resp.ok) {
       throw new Downloader.DownloadError(url, resp);
     }
@@ -450,7 +455,9 @@ class Downloader {
       async readBuffer() {
         const buffer = await cached.blob.arrayBuffer();
         const { size, hash } = cached.record.attachment;
-        if (await RemoteSettingsWorker.checkContentHash(buffer, size, hash)) {
+        if (
+          await lazy.RemoteSettingsWorker.checkContentHash(buffer, size, hash)
+        ) {
           return buffer;
         }
         // Really unexpected, could indicate corruption in IndexedDB.
@@ -462,7 +469,7 @@ class Downloader {
   async _readAttachmentDump(attachmentId) {
     async function fetchResource(resourceUrl) {
       try {
-        return await fetch(resourceUrl);
+        return await lazy.fetch(resourceUrl);
       } catch (e) {
         throw new Downloader.DownloadError(resourceUrl);
       }
@@ -484,8 +491,8 @@ class Downloader {
   static _RESOURCE_BASE_URL = "resource://app/defaults";
 
   async _makeDirs() {
-    const dirPath = OS.Path.join(
-      OS.Constants.Path.localProfileDir,
+    const dirPath = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.localProfileDir,
       ...this.folders
     );
     await IOUtils.makeDirectory(dirPath, { createAncestors: true });
@@ -493,8 +500,8 @@ class Downloader {
 
   async _rmDirs() {
     for (let i = this.folders.length; i > 0; i--) {
-      const dirPath = OS.Path.join(
-        OS.Constants.Path.localProfileDir,
+      const dirPath = lazy.OS.Path.join(
+        lazy.OS.Constants.Path.localProfileDir,
         ...this.folders.slice(0, i)
       );
       try {

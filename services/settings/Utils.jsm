@@ -12,29 +12,31 @@ const { ServiceRequest } = ChromeUtils.import(
   "resource://gre/modules/ServiceRequest.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   SharedUtils: "resource://services-settings/SharedUtils.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "CaptivePortalService",
   "@mozilla.org/network/captive-portal-service;1",
   "nsICaptivePortalService"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gNetworkLinkService",
   "@mozilla.org/network/network-link-service;1",
   "nsINetworkLinkService"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 // See LOG_LEVELS in Console.jsm. Common examples: "all", "debug", "info", "warn", "error".
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   const { ConsoleAPI } = ChromeUtils.import(
     "resource://gre/modules/Console.jsm"
   );
@@ -45,7 +47,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-XPCOMUtils.defineLazyGetter(this, "isRunningTests", () => {
+XPCOMUtils.defineLazyGetter(lazy, "isRunningTests", () => {
   const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
@@ -59,13 +61,13 @@ XPCOMUtils.defineLazyGetter(this, "isRunningTests", () => {
 
 // Overriding the server URL is normally disabled on Beta and Release channels,
 // except under some conditions.
-XPCOMUtils.defineLazyGetter(this, "allowServerURLOverride", () => {
-  if (!AppConstants.RELEASE_OR_BETA) {
+XPCOMUtils.defineLazyGetter(lazy, "allowServerURLOverride", () => {
+  if (!lazy.AppConstants.RELEASE_OR_BETA) {
     // Always allow to override the server URL on Nightly/DevEdition.
     return true;
   }
 
-  if (isRunningTests) {
+  if (lazy.isRunningTests) {
     return true;
   }
 
@@ -82,14 +84,14 @@ XPCOMUtils.defineLazyGetter(this, "allowServerURLOverride", () => {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gServerURL",
   "services.settings.server",
-  AppConstants.REMOTE_SETTINGS_SERVER_URL
+  lazy.AppConstants.REMOTE_SETTINGS_SERVER_URL
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gPreviewEnabled",
   "services.settings.preview_enabled",
   false
@@ -101,9 +103,9 @@ function _isUndefined(value) {
 
 var Utils = {
   get SERVER_URL() {
-    return allowServerURLOverride
-      ? gServerURL
-      : AppConstants.REMOTE_SETTINGS_SERVER_URL;
+    return lazy.allowServerURLOverride
+      ? lazy.gServerURL
+      : lazy.AppConstants.REMOTE_SETTINGS_SERVER_URL;
   },
 
   CHANGES_PATH: "/buckets/monitor/collections/changes/changeset",
@@ -111,21 +113,21 @@ var Utils = {
   /**
    * Logger instance.
    */
-  log,
+  log: lazy.log,
 
   get LOAD_DUMPS() {
     // Load dumps only if pulling data from the production server, or in tests.
     return (
-      this.SERVER_URL == AppConstants.REMOTE_SETTINGS_SERVER_URL ||
-      isRunningTests
+      this.SERVER_URL == lazy.AppConstants.REMOTE_SETTINGS_SERVER_URL ||
+      lazy.isRunningTests
     );
   },
 
   get PREVIEW_MODE() {
     // We want to offer the ability to set preview mode via a preference
     // for consumers who want to pull from the preview bucket on startup.
-    if (_isUndefined(this._previewModeEnabled) && allowServerURLOverride) {
-      return gPreviewEnabled;
+    if (_isUndefined(this._previewModeEnabled) && lazy.allowServerURLOverride) {
+      return lazy.gPreviewEnabled;
     }
     return !!this._previewModeEnabled;
   },
@@ -176,11 +178,12 @@ var Utils = {
     try {
       return (
         Services.io.offline ||
-        CaptivePortalService.state == CaptivePortalService.LOCKED_PORTAL ||
-        !gNetworkLinkService.isLinkUp
+        lazy.CaptivePortalService.state ==
+          lazy.CaptivePortalService.LOCKED_PORTAL ||
+        !lazy.gNetworkLinkService.isLinkUp
       );
     } catch (ex) {
-      log.warn("Could not determine network status.", ex);
+      lazy.log.warn("Could not determine network status.", ex);
     }
     return false;
   },
@@ -279,7 +282,7 @@ var Utils = {
    */
   async hasLocalDump(bucket, collection) {
     try {
-      await fetch(
+      await lazy.fetch(
         `resource://app/defaults/settings/${bucket}/${collection}.json`,
         {
           method: "HEAD",
@@ -303,12 +306,12 @@ var Utils = {
       if (!this._dumpStatsInitPromise) {
         this._dumpStatsInitPromise = (async () => {
           try {
-            let res = await fetch(
+            let res = await lazy.fetch(
               "resource://app/defaults/settings/last_modified.json"
             );
             this._dumpStats = await res.json();
           } catch (e) {
-            log.warn(`Failed to load last_modified.json: ${e}`);
+            lazy.log.warn(`Failed to load last_modified.json: ${e}`);
             this._dumpStats = {};
           }
           delete this._dumpStatsInitPromise;
@@ -319,7 +322,7 @@ var Utils = {
     const identifier = `${bucket}/${collection}`;
     let lastModified = this._dumpStats[identifier];
     if (lastModified === undefined) {
-      const { timestamp: dumpTimestamp } = await SharedUtils.loadJSONDump(
+      const { timestamp: dumpTimestamp } = await lazy.SharedUtils.loadJSONDump(
         bucket,
         collection
       );
