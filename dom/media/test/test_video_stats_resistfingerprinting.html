@@ -22,11 +22,12 @@ https://trac.torproject.org/projects/tor/ticket/15757
   var manager = new MediaTestManager;
   const SPOOFED_FRAMES_PER_SECOND = 30;
   const SPOOFED_DROPPED_RATIO = 0.05;
+  const MS_PER_TIME_ATOM = 100; // Not the default anymore, but what we test here.
   // Push the setting of 'privacy.resistFingerprinting' into gTestPrefs, which
   // will be set during MediaTestManager.runTests().
   gTestPrefs.push(
     ["privacy.resistFingerprinting", true],
-    ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 100000],
+    ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", MS_PER_TIME_ATOM * 1000],
     ["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false],
     // We use 240p as the target resoultion since 480p is greater than every video
     // source in our test suite, so we need to use 240p here for allowing us to
@@ -41,7 +42,9 @@ https://trac.torproject.org/projects/tor/ticket/15757
 
   function checkStats(v, shouldDrop) {
     // Rounding the current time to 100ms.
-    let currentTime = Math.floor(v.currentTime * 10) / 10;
+    const secondsPerAtom = MS_PER_TIME_ATOM / 1000;
+    const currentTimeAtoms = Math.floor(v.currentTime / secondsPerAtom);
+    const currentTime = currentTimeAtoms * secondsPerAtom;
     let dropRate = 0;
 
     if (shouldDrop) {
