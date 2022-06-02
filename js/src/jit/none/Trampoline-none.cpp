@@ -47,13 +47,3 @@ bool JitRuntime::generateVMWrapper(JSContext*, MacroAssembler&,
                                    const VMFunctionData&, DynFn, uint32_t*) {
   MOZ_CRASH();
 }
-
-BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& iter,
-                                   BailoutStack* bailout) {
-  MOZ_CRASH();
-}
-
-BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& iter,
-                                   InvalidationBailoutStack* bailout) {
-  MOZ_CRASH();
-}
