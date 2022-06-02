@@ -240,7 +240,7 @@ int LibvpxVp9Decoder::Decode(const EncodedImage& input_image,
     buffer = nullptr;  // Triggers full frame concealment.
   }
   // During decode libvpx may get and release buffers from
-  // |libvpx_buffer_pool_|. In practice libvpx keeps a few (~3-4) buffers alive
+  // `libvpx_buffer_pool_`. In practice libvpx keeps a few (~3-4) buffers alive
   // at a time.
   if (vpx_codec_decode(decoder_, buffer,
                        static_cast<unsigned int>(input_image.size()), 0,
@@ -273,7 +273,7 @@ int LibvpxVp9Decoder::ReturnFrame(
     return WEBRTC_VIDEO_CODEC_NO_OUTPUT;
   }
 
-  // This buffer contains all of |img|'s image data, a reference counted
+  // This buffer contains all of `img`'s image data, a reference counted
   // Vp9FrameBuffer. (libvpx is done with the buffers after a few
   // vpx_codec_decode calls or vpx_codec_destroy).
   rtc::scoped_refptr<Vp9FrameBufferPool::Vp9FrameBuffer> img_buffer =
@@ -310,7 +310,7 @@ int LibvpxVp9Decoder::ReturnFrame(
               img->stride[VPX_PLANE_V],
               // WrappedI420Buffer's mechanism for allowing the release of its
               // frame buffer is through a callback function. This is where we
-              // should release |img_buffer|.
+              // should release `img_buffer`.
               [img_buffer] {});
         }
       } else if (img->fmt == VPX_IMG_FMT_I444) {
@@ -321,7 +321,7 @@ int LibvpxVp9Decoder::ReturnFrame(
             img->stride[VPX_PLANE_V],
             // WrappedI444Buffer's mechanism for allowing the release of its
             // frame buffer is through a callback function. This is where we
-            // should release |img_buffer|.
+            // should release `img_buffer`.
             [img_buffer] {});
       } else {
         RTC_LOG(LS_ERROR)
@@ -373,7 +373,7 @@ int LibvpxVp9Decoder::Release() {
   if (decoder_ != nullptr) {
     if (inited_) {
       // When a codec is destroyed libvpx will release any buffers of
-      // |libvpx_buffer_pool_| it is currently using.
+      // `libvpx_buffer_pool_` it is currently using.
       if (vpx_codec_destroy(decoder_)) {
         ret_val = WEBRTC_VIDEO_CODEC_MEMORY;
       }

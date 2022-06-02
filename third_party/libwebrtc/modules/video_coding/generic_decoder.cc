@@ -214,7 +214,7 @@ void VCMDecodedFrameCallback::Map(uint32_t timestamp,
     MutexLock lock(&lock_);
     int initial_size = _timestampMap.Size();
     _timestampMap.Add(timestamp, frameInfo);
-    // If no frame is dropped, the new size should be |initial_size| + 1
+    // If no frame is dropped, the new size should be `initial_size` + 1
     dropped_frames = (initial_size + 1) - _timestampMap.Size();
   }
   if (dropped_frames > 0) {

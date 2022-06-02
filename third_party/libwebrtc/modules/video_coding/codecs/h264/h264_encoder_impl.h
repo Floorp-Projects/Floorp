@@ -58,7 +58,7 @@ class H264EncoderImpl : public H264Encoder {
   ~H264EncoderImpl() override;
 
   // |settings.max_payload_size| is ignored.
-  // The following members of |codec_settings| are used. The rest are ignored.
+  // The following members of `codec_settings` are used. The rest are ignored.
   // - codecType (must be kVideoCodecH264)
   // - targetBitrate
   // - maxFramerate

@@ -538,7 +538,7 @@ TEST(Vp9ImplTest, EnableDisableSpatialLayersWithSvcController) {
         bitrate_allocation, codec_settings.maxFramerate));
 
     frames = producer.SetNumInputFrames(num_frames_to_encode).Encode();
-    // With |sl_idx| spatial layer disabled, there are |sl_idx| spatial layers
+    // With `sl_idx` spatial layer disabled, there are `sl_idx` spatial layers
     // left.
     ASSERT_THAT(frames, SizeIs(num_frames_to_encode * sl_idx));
     for (size_t i = 0; i < frames.size(); ++i) {

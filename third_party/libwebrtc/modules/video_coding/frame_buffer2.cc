@@ -133,7 +133,7 @@ int64_t FrameBuffer::FindNextFrame(int64_t now_ms) {
   int64_t wait_ms = latest_return_time_ms_ - now_ms;
   frames_to_decode_.clear();
 
-  // |last_continuous_frame_| may be empty below, but nullopt is smaller
+  // `last_continuous_frame_` may be empty below, but nullopt is smaller
   // than everything else and loop will immediately terminate as expected.
   for (auto frame_it = frames_.begin();
        frame_it != frames_.end() && frame_it->first <= last_continuous_frame_;
@@ -232,7 +232,7 @@ int64_t FrameBuffer::FindNextFrame(int64_t now_ms) {
 EncodedFrame* FrameBuffer::GetNextFrame() {
   RTC_DCHECK_RUN_ON(&callback_checker_);
   int64_t now_ms = clock_->TimeInMilliseconds();
-  // TODO(ilnik): remove |frames_out| use frames_to_decode_ directly.
+  // TODO(ilnik): remove `frames_out` use frames_to_decode_ directly.
   std::vector<EncodedFrame*> frames_out;
 
   RTC_DCHECK(!frames_to_decode_.empty());
@@ -603,13 +603,13 @@ bool FrameBuffer::UpdateFrameInfoWithIncomingFrame(const EncodedFrame& frame,
   auto last_decoded_frame = decoded_frames_history_.GetLastDecodedFrameId();
   RTC_DCHECK(!last_decoded_frame || *last_decoded_frame < info->first);
 
-  // In this function we determine how many missing dependencies this |frame|
-  // has to become continuous/decodable. If a frame that this |frame| depend
+  // In this function we determine how many missing dependencies this `frame`
+  // has to become continuous/decodable. If a frame that this `frame` depend
   // on has already been decoded then we can ignore that dependency since it has
   // already been fulfilled.
   //
-  // For all other frames we will register a backwards reference to this |frame|
-  // so that |num_missing_continuous| and |num_missing_decodable| can be
+  // For all other frames we will register a backwards reference to this `frame`
+  // so that `num_missing_continuous` and `num_missing_decodable` can be
   // decremented as frames become continuous/are decoded.
   struct Dependency {
     int64_t frame_id;
@@ -619,9 +619,9 @@ bool FrameBuffer::UpdateFrameInfoWithIncomingFrame(const EncodedFrame& frame,
 
   // Find all dependencies that have not yet been fulfilled.
   for (size_t i = 0; i < frame.num_references; ++i) {
-    // Does |frame| depend on a frame earlier than the last decoded one?
+    // Does `frame` depend on a frame earlier than the last decoded one?
     if (last_decoded_frame && frame.references[i] <= *last_decoded_frame) {
-      // Was that frame decoded? If not, this |frame| will never become
+      // Was that frame decoded? If not, this `frame` will never become
       // decodable.
       if (!decoded_frames_history_.WasDecoded(frame.references[i])) {
         int64_t now_ms = clock_->TimeInMilliseconds();

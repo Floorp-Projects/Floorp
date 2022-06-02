@@ -195,8 +195,8 @@ int64_t VCMTiming::RenderTimeMsInternal(uint32_t frame_timestamp,
     estimated_complete_time_ms = now_ms;
   }
 
-  // Make sure the actual delay stays in the range of |min_playout_delay_ms_|
-  // and |max_playout_delay_ms_|.
+  // Make sure the actual delay stays in the range of `min_playout_delay_ms_`
+  // and `max_playout_delay_ms_`.
   int actual_delay = std::max(current_delay_ms_, min_playout_delay_ms_);
   actual_delay = std::min(actual_delay, max_playout_delay_ms_);
   return estimated_complete_time_ms + actual_delay;
@@ -213,10 +213,10 @@ int64_t VCMTiming::MaxWaitingTime(int64_t render_time_ms,
   MutexLock lock(&mutex_);
 
   if (render_time_ms == 0 && zero_playout_delay_min_pacing_->us() > 0) {
-    // |render_time_ms| == 0 indicates that the frame should be decoded and
+    // `render_time_ms` == 0 indicates that the frame should be decoded and
     // rendered as soon as possible. However, the decoder can be choked if too
     // many frames are sent at ones. Therefore, limit the interframe delay to
-    // |zero_playout_delay_min_pacing_|.
+    // `zero_playout_delay_min_pacing_`.
     int64_t earliest_next_decode_start_time =
         last_decode_scheduled_ts_ + zero_playout_delay_min_pacing_->ms();
     int64_t max_wait_time_ms = now_ms >= earliest_next_decode_start_time

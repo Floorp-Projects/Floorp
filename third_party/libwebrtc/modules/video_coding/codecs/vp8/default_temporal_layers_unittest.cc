@@ -653,8 +653,8 @@ TEST_F(TemporalLayersTest, KeyFrame) {
 
   uint32_t timestamp = 0;
   for (int i = 0; i < 7; ++i) {
-    // Temporal pattern starts from 0 after key frame. Let the first |i| - 1
-    // frames be delta frames, and the |i|th one key frame.
+    // Temporal pattern starts from 0 after key frame. Let the first `i` - 1
+    // frames be delta frames, and the `i`th one key frame.
     for (int j = 1; j <= i; ++j) {
       // Since last frame was always a keyframe and thus index 0 in the pattern,
       // this loop starts at index 1.
@@ -780,7 +780,7 @@ TEST_P(TemporalLayersReferenceTest, ValidFrameConfigs) {
   // of the buffer state; which buffers references which temporal layers (if
   // (any). If a given buffer is never updated, it is legal to reference it
   // even for sync frames. In order to be general, don't assume TL0 always
-  // updates |last|.
+  // updates `last`.
   std::vector<Vp8FrameConfig> tl_configs(kMaxPatternLength);
   for (int i = 0; i < kMaxPatternLength; ++i) {
     Vp8FrameConfig tl_config = tl.NextFrameConfig(0, timestamp_);

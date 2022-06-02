@@ -106,9 +106,9 @@ class TestRtpFrameReferenceFinder : public ::testing::Test {
     OnCompleteFrames(reference_finder_->PaddingReceived(seq_num));
   }
 
-  // Check if a frame with picture id |pid| and spatial index |sidx| has been
+  // Check if a frame with picture id `pid` and spatial index `sidx` has been
   // delivered from the packet buffer, and if so, if it has the references
-  // specified by |refs|.
+  // specified by `refs`.
   template <typename... T>
   void CheckReferences(int64_t picture_id_offset,
                        uint16_t sidx,

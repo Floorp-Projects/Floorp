@@ -43,7 +43,7 @@ class VideoReceiver2 {
 
   // Notification methods that are used to check our internal state and validate
   // threading assumptions. These are called by VideoReceiveStream.
-  // See |IsDecoderThreadRunning()| for more details.
+  // See `IsDecoderThreadRunning()` for more details.
   void DecoderThreadStarting();
   void DecoderThreadStopped();
 
@@ -62,7 +62,7 @@ class VideoReceiver2 {
   VCMDecodedFrameCallback decodedFrameCallback_;
 
   // Callbacks are set before the decoder thread starts.
-  // Once the decoder thread has been started, usage of |_codecDataBase| moves
+  // Once the decoder thread has been started, usage of `_codecDataBase` moves
   // over to the decoder thread.
   VCMDecoderDataBase codecDataBase_;
 

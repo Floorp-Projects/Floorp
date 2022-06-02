@@ -69,9 +69,9 @@ ScopedAVPacket MakeScopedAVPacket() {
 int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
                                   AVFrame* av_frame,
                                   int flags) {
-  // Set in |InitDecode|.
+  // Set in `InitDecode`.
   H264DecoderImpl* decoder = static_cast<H264DecoderImpl*>(context->opaque);
-  // DCHECK values set in |InitDecode|.
+  // DCHECK values set in `InitDecode`.
   RTC_DCHECK(decoder);
   // Necessary capability to be allowed to provide our own buffers.
   RTC_DCHECK(context->codec->capabilities | AV_CODEC_CAP_DR1);
@@ -85,12 +85,12 @@ int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
   // |context->coded_width| due to reordering.
   int width = av_frame->width;
   int height = av_frame->height;
-  // See |lowres|, if used the decoder scales the image by 1/2^(lowres). This
+  // See `lowres`, if used the decoder scales the image by 1/2^(lowres). This
   // has implications on which resolutions are valid, but we don't use it.
   RTC_CHECK_EQ(context->lowres, 0);
-  // Adjust the |width| and |height| to values acceptable by the decoder.
-  // Without this, FFmpeg may overflow the buffer. If modified, |width| and/or
-  // |height| are larger than the actual image and the image has to be cropped
+  // Adjust the `width` and `height` to values acceptable by the decoder.
+  // Without this, FFmpeg may overflow the buffer. If modified, `width` and/or
+  // `height` are larger than the actual image and the image has to be cropped
   // (top-left corner) after decoding to avoid visible borders to the right and
   // bottom of the actual image.
   avcodec_align_dimensions(context, &width, &height);
@@ -105,8 +105,8 @@ int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
     return ret;
   }
 
-  // The video frame is stored in |frame_buffer|. |av_frame| is FFmpeg's version
-  // of a video frame and will be set up to reference |frame_buffer|'s data.
+  // The video frame is stored in `frame_buffer`. `av_frame` is FFmpeg's version
+  // of a video frame and will be set up to reference `frame_buffer`'s data.
 
   // FFmpeg expects the initial allocation to be zero-initialized according to
   // http://crbug.com/390941. Our pool is set up to zero-initialize new buffers.
@@ -125,7 +125,7 @@ int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
   av_frame->format = context->pix_fmt;
   av_frame->reordered_opaque = context->reordered_opaque;
 
-  // Set |av_frame| members as required by FFmpeg.
+  // Set `av_frame` members as required by FFmpeg.
   av_frame->data[kYPlaneIndex] = frame_buffer->MutableDataY();
   av_frame->linesize[kYPlaneIndex] = frame_buffer->StrideY();
   av_frame->data[kUPlaneIndex] = frame_buffer->MutableDataU();
@@ -152,8 +152,8 @@ int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
 }
 
 void H264DecoderImpl::AVFreeBuffer2(void* opaque, uint8_t* data) {
-  // The buffer pool recycles the buffer used by |video_frame| when there are no
-  // more references to it. |video_frame| is a thin buffer holder and is not
+  // The buffer pool recycles the buffer used by `video_frame` when there are no
+  // more references to it. `video_frame` is a thin buffer holder and is not
   // recycled.
   VideoFrame* video_frame = static_cast<VideoFrame*>(opaque);
   delete video_frame;
@@ -208,8 +208,8 @@ int32_t H264DecoderImpl::InitDecode(const VideoCodec* codec_settings,
 
   // Function used by FFmpeg to get buffers to store decoded frames in.
   av_context_->get_buffer2 = AVGetBuffer2;
-  // |get_buffer2| is called with the context, there |opaque| can be used to get
-  // a pointer |this|.
+  // `get_buffer2` is called with the context, there `opaque` can be used to get
+  // a pointer `this`.
   av_context_->opaque = this;
 
   const AVCodec* codec = avcodec_find_decoder(av_context_->codec_id);
@@ -311,7 +311,7 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
   h264_bitstream_parser_.ParseBitstream(input_image);
   absl::optional<int> qp = h264_bitstream_parser_.GetLastSliceQp();
 
-  // Obtain the |video_frame| containing the decoded image.
+  // Obtain the `video_frame` containing the decoded image.
   VideoFrame* input_frame =
       static_cast<VideoFrame*>(av_buffer_get_opaque(av_frame_->buf[0]));
   RTC_DCHECK(input_frame);
@@ -377,7 +377,7 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
   // interface to pass a VideoFrameBuffer instead of a VideoFrame?
   decoded_image_callback_->Decoded(decoded_frame, absl::nullopt, qp);
 
-  // Stop referencing it, possibly freeing |input_frame|.
+  // Stop referencing it, possibly freeing `input_frame`.
   av_frame_unref(av_frame_.get());
   input_frame = nullptr;
 

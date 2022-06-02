@@ -134,10 +134,10 @@ class VideoCodingModule : public Module {
 
   // Sets the maximum number of sequence numbers that we are allowed to NACK
   // and the oldest sequence number that we will consider to NACK. If a
-  // sequence number older than |max_packet_age_to_nack| is missing
+  // sequence number older than `max_packet_age_to_nack` is missing
   // a key frame will be requested. A key frame will also be requested if the
   // time of incomplete or non-continuous frames in the jitter buffer is above
-  // |max_incomplete_time_ms|.
+  // `max_incomplete_time_ms`.
   virtual void SetNackSettings(size_t max_nack_list_size,
                                int max_packet_age_to_nack,
                                int max_incomplete_time_ms) = 0;
