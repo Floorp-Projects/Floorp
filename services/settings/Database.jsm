@@ -7,14 +7,16 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   IDBHelpers: "resource://services-settings/IDBHelpers.jsm",
   Utils: "resource://services-settings/Utils.jsm",
   CommonUtils: "resource://services-common/utils.js",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
-XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
+XPCOMUtils.defineLazyGetter(lazy, "console", () => lazy.Utils.log);
 
 var EXPORTED_SYMBOLS = ["Database"];
 
@@ -37,7 +39,7 @@ class Database {
         "records",
         (store, rejectTransaction) => {
           // Fast-path the (very common) no-filters case
-          if (ObjectUtils.isEmpty(filters)) {
+          if (lazy.ObjectUtils.isEmpty(filters)) {
             const range = IDBKeyRange.only(this.identifier);
             const request = store.index("cid").getAll(range);
             request.onsuccess = e => {
@@ -54,7 +56,7 @@ class Database {
               const cursor = event.target.result;
               if (cursor) {
                 const { value } = cursor;
-                if (Utils.filterObject(objFilters, value)) {
+                if (lazy.Utils.filterObject(objFilters, value)) {
                   results.push(value);
                 }
                 cursor.continue();
@@ -67,13 +69,13 @@ class Database {
         { mode: "readonly" }
       );
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(e, "list()", this.identifier);
+      throw new lazy.IDBHelpers.IndexedDBError(e, "list()", this.identifier);
     }
     // Remove IDB key field from results.
     for (const result of results) {
       delete result._cid;
     }
-    return order ? Utils.sortObjects(order, results) : results;
+    return order ? lazy.Utils.sortObjects(order, results) : results;
   }
 
   async importChanges(metadata, timestamp, records = [], options = {}) {
@@ -129,17 +131,17 @@ class Database {
           // Separate tombstones from creations/updates.
           const toDelete = records.filter(r => r.deleted);
           const toInsert = records.filter(r => !r.deleted);
-          console.debug(
+          lazy.console.debug(
             `${_cid} ${toDelete.length} to delete, ${toInsert.length} to insert`
           );
           // Delete local records for each tombstone.
-          IDBHelpers.bulkOperationHelper(
+          lazy.IDBHelpers.bulkOperationHelper(
             storeRecords,
             {
               reject: rejectTransaction,
               completion() {
                 // Overwrite all other data.
-                IDBHelpers.bulkOperationHelper(
+                lazy.IDBHelpers.bulkOperationHelper(
                   storeRecords,
                   {
                     reject: rejectTransaction,
@@ -156,7 +158,7 @@ class Database {
         { desc: "importChanges() in " + _cid }
       );
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(e, "importChanges()", _cid);
+      throw new lazy.IDBHelpers.IndexedDBError(e, "importChanges()", _cid);
     }
   }
 
@@ -171,7 +173,7 @@ class Database {
         { mode: "readonly" }
       );
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(
+      throw new lazy.IDBHelpers.IndexedDBError(
         e,
         "getLastModified()",
         this.identifier
@@ -184,7 +186,7 @@ class Database {
     // contain timestamps for last_modified. Work around this here, and return
     // the timestamp as zero, so that the entries should get updated.
     if (isNaN(entry.value)) {
-      console.warn(`Local timestamp is NaN for ${this.identifier}`);
+      lazy.console.warn(`Local timestamp is NaN for ${this.identifier}`);
       return 0;
     }
     return entry.value;
@@ -201,7 +203,11 @@ class Database {
         { mode: "readonly" }
       );
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(e, "getMetadata()", this.identifier);
+      throw new lazy.IDBHelpers.IndexedDBError(
+        e,
+        "getMetadata()",
+        this.identifier
+      );
     }
     return entry ? entry.metadata : null;
   }
@@ -219,7 +225,7 @@ class Database {
         { mode: "readonly" }
       );
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(
+      throw new lazy.IDBHelpers.IndexedDBError(
         e,
         "getAttachment()",
         this.identifier
@@ -242,7 +248,7 @@ class Database {
         { desc: "saveAttachment(" + attachmentId + ") in " + this.identifier }
       );
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(
+      throw new lazy.IDBHelpers.IndexedDBError(
         e,
         "saveAttachment()",
         this.identifier
@@ -254,7 +260,7 @@ class Database {
     try {
       await this.importChanges(null, null, [], { clear: true });
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(e, "clear()", this.identifier);
+      throw new lazy.IDBHelpers.IndexedDBError(e, "clear()", this.identifier);
     }
   }
 
@@ -264,7 +270,7 @@ class Database {
 
   async create(record) {
     if (!("id" in record)) {
-      record = { ...record, id: CommonUtils.generateUUID() };
+      record = { ...record, id: lazy.CommonUtils.generateUUID() };
     }
     try {
       await executeIDB(
@@ -275,7 +281,7 @@ class Database {
         { desc: "create() in " + this.identifier }
       );
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(e, "create()", this.identifier);
+      throw new lazy.IDBHelpers.IndexedDBError(e, "create()", this.identifier);
     }
     return record;
   }
@@ -290,7 +296,7 @@ class Database {
         { desc: "update() in " + this.identifier }
       );
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(e, "update()", this.identifier);
+      throw new lazy.IDBHelpers.IndexedDBError(e, "update()", this.identifier);
     }
   }
 
@@ -304,7 +310,7 @@ class Database {
         { desc: "delete() in " + this.identifier }
       );
     } catch (e) {
-      throw new IDBHelpers.IndexedDBError(e, "delete()", this.identifier);
+      throw new lazy.IDBHelpers.IndexedDBError(e, "delete()", this.identifier);
     }
   }
 }
@@ -324,7 +330,7 @@ async function openIDB() {
   // IndexedDB work more than once.
   if (!gDBPromise) {
     // Open and initialize/upgrade if needed.
-    gDBPromise = IDBHelpers.openIDB();
+    gDBPromise = lazy.IDBHelpers.openIDB();
   }
   let db = await gDBPromise;
   if (!gDB) {
@@ -351,7 +357,7 @@ async function executeIDB(storeNames, callback, options = {}) {
     // both that and a bool we set ourselves when `profile-before-change`
     // starts.
     if (gShutdownStarted || Services.startup.shuttingDown) {
-      throw new IDBHelpers.ShutdownError(
+      throw new lazy.IDBHelpers.ShutdownError(
         "The application is shutting down",
         "execute()"
       );
@@ -365,7 +371,7 @@ async function executeIDB(storeNames, callback, options = {}) {
 
   // Check for shutdown again as we've await'd something...
   if (!gDB && (gShutdownStarted || Services.startup.shuttingDown)) {
-    throw new IDBHelpers.ShutdownError(
+    throw new lazy.IDBHelpers.ShutdownError(
       "The application is shutting down",
       "execute()"
     );
@@ -373,7 +379,7 @@ async function executeIDB(storeNames, callback, options = {}) {
 
   // Start the actual transaction:
   const { mode = "readwrite", desc = "" } = options;
-  let { promise, transaction } = IDBHelpers.executeIDB(
+  let { promise, transaction } = lazy.IDBHelpers.executeIDB(
     gDB,
     storeNames,
     mode,
@@ -469,7 +475,7 @@ function ensureShutdownBlocker() {
     return;
   }
   gShutdownBlocker = true;
-  AsyncShutdown.profileBeforeChange.addBlocker(
+  lazy.AsyncShutdown.profileBeforeChange.addBlocker(
     "RemoteSettingsClient - finish IDB access.",
     Database._shutdownHandler,
     {
