@@ -85,6 +85,7 @@ rtc_library("rtc_media_base") {
     #"../api/transport:stun_types",
     "../api/transport:webrtc_key_value_config",
     "../api/transport/rtp:rtp_source",
+    "../api/units:time_delta",
     "../api/video:video_bitrate_allocation",
     "../api/video:video_bitrate_allocator_factory",
     "../api/video:video_frame",

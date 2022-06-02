@@ -75,6 +75,9 @@ struct CallReceiveStatistics {
   uint32_t sender_reports_packets_sent = 0;
   uint64_t sender_reports_bytes_sent = 0;
   uint64_t sender_reports_reports_count = 0;
+  absl::optional<TimeDelta> round_trip_time;
+  TimeDelta total_round_trip_time = TimeDelta::Zero();
+  int round_trip_time_measurements;
 };
 
 namespace voe {
@@ -139,6 +142,7 @@ class ChannelReceiveInterface : public RtpPacketSinkInterface {
 
   virtual CallReceiveStatistics GetRTCPStatistics() const = 0;
   virtual void SetNACKStatus(bool enable, int max_packets) = 0;
+  virtual void SetNonSenderRttMeasurement(bool enabled) = 0;
 
   virtual AudioMixer::Source::AudioFrameInfo GetAudioFrameWithInfo(
       int sample_rate_hz,
@@ -180,6 +184,7 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
     bool jitter_buffer_fast_playout,
     int jitter_buffer_min_delay_ms,
     bool jitter_buffer_enable_rtx_handling,
+    bool enable_non_sender_rtt,
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
     absl::optional<AudioCodecPairId> codec_pair_id,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
