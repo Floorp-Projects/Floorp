@@ -7,7 +7,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AndroidLog: "resource://gre/modules/AndroidLog.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Log: "resource://gre/modules/Log.jsm",
@@ -20,7 +22,7 @@ var EXPORTED_SYMBOLS = ["GeckoViewUtils"];
  * A formatter that does not prepend time/name/level information to messages,
  * because those fields are logged separately when using the Android logger.
  */
-class AndroidFormatter extends Log.BasicFormatter {
+class AndroidFormatter extends lazy.Log.BasicFormatter {
   format(message) {
     return this.formatText(message);
   }
@@ -30,20 +32,20 @@ class AndroidFormatter extends Log.BasicFormatter {
  * AndroidAppender
  * Logs to Android logcat using AndroidLog.jsm
  */
-class AndroidAppender extends Log.Appender {
+class AndroidAppender extends lazy.Log.Appender {
   constructor(aFormatter) {
     super(aFormatter || new AndroidFormatter());
     this._name = "AndroidAppender";
 
     // Map log level to AndroidLog.foo method.
     this._mapping = {
-      [Log.Level.Fatal]: "e",
-      [Log.Level.Error]: "e",
-      [Log.Level.Warn]: "w",
-      [Log.Level.Info]: "i",
-      [Log.Level.Config]: "d",
-      [Log.Level.Debug]: "d",
-      [Log.Level.Trace]: "v",
+      [lazy.Log.Level.Fatal]: "e",
+      [lazy.Log.Level.Error]: "e",
+      [lazy.Log.Level.Warn]: "w",
+      [lazy.Log.Level.Info]: "i",
+      [lazy.Log.Level.Config]: "d",
+      [lazy.Log.Level.Debug]: "d",
+      [lazy.Log.Level.Trace]: "v",
     };
   }
 
@@ -56,7 +58,7 @@ class AndroidAppender extends Log.Appender {
     // leading "Gecko" here. Also strip dots to save space.
     const tag = aMessage.loggerName.replace(/^Gecko|\./g, "");
     const msg = this._formatter.format(aMessage);
-    AndroidLog[this._mapping[aMessage.level]](tag, msg);
+    lazy.AndroidLog[this._mapping[aMessage.level]](tag, msg);
   }
 }
 
@@ -109,13 +111,15 @@ var GeckoViewUtils = {
 
     if (observers) {
       const observer = (subject, topic, data) => {
-        Services.obs.removeObserver(observer, topic);
+        lazy.Services.obs.removeObserver(observer, topic);
         if (!once) {
-          Services.obs.addObserver(scope[name], topic);
+          lazy.Services.obs.addObserver(scope[name], topic);
         }
         scope[name].observe(subject, topic, data); // Explicitly notify new observer
       };
-      observers.forEach(topic => Services.obs.addObserver(observer, topic));
+      observers.forEach(topic =>
+        lazy.Services.obs.addObserver(observer, topic)
+      );
     }
 
     if (!this.IS_PARENT_PROCESS) {
@@ -134,21 +138,21 @@ var GeckoViewUtils = {
       names.forEach(msg => target.addMessageListener(msg, listener));
     };
     if (ppmm) {
-      addMMListener(Services.ppmm, ppmm);
+      addMMListener(lazy.Services.ppmm, ppmm);
     }
     if (mm) {
-      addMMListener(Services.mm, mm);
+      addMMListener(lazy.Services.mm, mm);
     }
 
     if (ged) {
       const listener = (event, data, callback) => {
-        EventDispatcher.instance.unregisterListener(listener, event);
+        lazy.EventDispatcher.instance.unregisterListener(listener, event);
         if (!once) {
-          EventDispatcher.instance.registerListener(scope[name], event);
+          lazy.EventDispatcher.instance.registerListener(scope[name], event);
         }
         scope[name].onEvent(event, data, callback);
       };
-      EventDispatcher.instance.registerListener(listener, ged);
+      lazy.EventDispatcher.instance.registerListener(listener, ged);
     }
   },
 
@@ -234,7 +238,9 @@ var GeckoViewUtils = {
       scope,
       name,
       (prefs, observer) => {
-        prefs.forEach(pref => Services.prefs.addObserver(pref.name, observer));
+        prefs.forEach(pref =>
+          lazy.Services.prefs.addObserver(pref.name, observer)
+        );
         prefs.forEach(pref => {
           if (pref.default === undefined) {
             return;
@@ -242,26 +248,26 @@ var GeckoViewUtils = {
           let value;
           switch (typeof pref.default) {
             case "string":
-              value = Services.prefs.getCharPref(pref.name, pref.default);
+              value = lazy.Services.prefs.getCharPref(pref.name, pref.default);
               break;
             case "number":
-              value = Services.prefs.getIntPref(pref.name, pref.default);
+              value = lazy.Services.prefs.getIntPref(pref.name, pref.default);
               break;
             case "boolean":
-              value = Services.prefs.getBoolPref(pref.name, pref.default);
+              value = lazy.Services.prefs.getBoolPref(pref.name, pref.default);
               break;
           }
           if (pref.default !== value) {
             // Notify observer if value already changed from default.
-            observer(Services.prefs, "nsPref:changed", pref.name);
+            observer(lazy.Services.prefs, "nsPref:changed", pref.name);
           }
         });
       },
       (handlers, observer, args) => {
         if (!once) {
-          Services.prefs.removeObserver(args[2], observer);
+          lazy.Services.prefs.removeObserver(args[2], observer);
           handlers.forEach(handler =>
-            Services.prefs.addObserver(args[2], observer)
+            lazy.Services.prefs.addObserver(args[2], observer)
           );
         }
         handlers.forEach(handler => handler.observe(...args));
@@ -314,11 +320,11 @@ var GeckoViewUtils = {
     try {
       if (!this.IS_PARENT_PROCESS) {
         const mm = this.getContentFrameMessageManager(aWin.top || aWin);
-        return mm && EventDispatcher.forMessageManager(mm);
+        return mm && lazy.EventDispatcher.forMessageManager(mm);
       }
       const win = this.getChromeWindow(aWin.top || aWin);
       if (!win.closed) {
-        return win.WindowEventDispatcher || EventDispatcher.for(win);
+        return win.WindowEventDispatcher || lazy.EventDispatcher.for(win);
       }
     } catch (e) {}
     return null;
@@ -356,7 +362,7 @@ var GeckoViewUtils = {
         this._log(log.logger, level, strings, exprs);
 
       XPCOMUtils.defineLazyGetter(log, "logger", _ => {
-        const logger = Log.repository.getLogger(tag);
+        const logger = lazy.Log.repository.getLogger(tag);
         logger.parent = this.rootLogger;
         return logger;
       });
@@ -370,7 +376,7 @@ var GeckoViewUtils = {
 
   get rootLogger() {
     if (!this._rootLogger) {
-      this._rootLogger = Log.repository.getLogger("GeckoView");
+      this._rootLogger = lazy.Log.repository.getLogger("GeckoView");
       this._rootLogger.addAppender(new AndroidAppender());
       this._rootLogger.manageLevelFromPref("geckoview.logging");
     }
@@ -387,7 +393,7 @@ var GeckoViewUtils = {
       );
     }
 
-    if (aLogger.level > Log.Level.Numbers[aLevel]) {
+    if (aLogger.level > lazy.Log.Level.Numbers[aLevel]) {
       // Log disabled.
       return;
     }
@@ -432,5 +438,7 @@ var GeckoViewUtils = {
 XPCOMUtils.defineLazyGetter(
   GeckoViewUtils,
   "IS_PARENT_PROCESS",
-  _ => Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
+  _ =>
+    lazy.Services.appinfo.processType ==
+    lazy.Services.appinfo.PROCESS_TYPE_DEFAULT
 );
