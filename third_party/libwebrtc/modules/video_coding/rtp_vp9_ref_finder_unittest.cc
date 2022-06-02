@@ -23,7 +23,6 @@ using ::testing::Matches;
 using ::testing::MatchResultListener;
 using ::testing::Pointee;
 using ::testing::Property;
-using ::testing::SizeIs;
 using ::testing::UnorderedElementsAreArray;
 
 namespace webrtc {
@@ -660,24 +659,6 @@ TEST_F(RtpVp9RefFinderTest, GofTl0Jump) {
              .NotAsInterPic()
              .Gof(&ss));
   Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(0).Gof(&ss));
-}
-
-TEST_F(RtpVp9RefFinderTest, DontDiscardNewerFramesWithWrappedTl0) {
-  GofInfoVP9 ss;
-  ss.SetGofInfoVP9(kTemporalStructureMode1);
-
-  Insert(
-      Frame().Pid(0).SidAndTid(0, 0).Tl0(0).SeqNum(0, 0).AsKeyFrame().Gof(&ss));
-  // ... 254 frames are lost ...
-  Insert(Frame()
-             .Pid(255)
-             .SidAndTid(0, 0)
-             .Tl0(255)
-             .SeqNum(255, 255)
-             .AsKeyFrame()
-             .Gof(&ss));
-
-  EXPECT_THAT(frames_, SizeIs(2));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTidTooHigh) {
