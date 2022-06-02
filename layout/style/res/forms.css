@@ -132,10 +132,6 @@ input, textarea, select, button, ::file-selector-button {
   /* Note that line-height is also reset for all these, via the font shorthand */
 }
 
-textarea > scrollbar {
-  cursor: default;
-}
-
 ::placeholder,
 ::-moz-text-control-editing-root,
 ::-moz-text-control-preview {
