@@ -54,6 +54,8 @@ class ScaledFontMac : public ScaledFontBase {
 
   bool CanSerialize() override { return true; }
 
+  bool MayUseBitmaps() override { return mHasColorGlyphs; }
+
   DeviceColor FontSmoothingBackgroundColor() {
     return mFontSmoothingBackgroundColor;
   }

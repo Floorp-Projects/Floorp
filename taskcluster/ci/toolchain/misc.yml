@@ -204,7 +204,6 @@ linux64-wine:
         tier: 1
     worker:
         max-run-time: 10800
-    run-on-projects: [trunk]
     run:
         script: build-wine.sh
         toolchain-artifact: public/build/wine.tar.zst
@@ -239,7 +238,6 @@ win64-pdbstr:
             - name: project/gecko/pdbstr/pdbstr.tar.zst
               path: pdbstr.tar.zst
               type: file
-    run-on-projects: [trunk]
     run:
         script: exfiltrate-pdbstr.sh
         arguments: ['x64']
@@ -251,7 +249,6 @@ linux64-winchecksec:
         local-toolchain: true
     treeherder:
         symbol: TL(winchecksec)
-    run-on-projects: [trunk]
     run:
         script: build-winchecksec.sh
         arguments: ['x86_64-unknown-linux-gnu']
@@ -267,7 +264,6 @@ win64-winchecksec:
         local-toolchain: true
     treeherder:
         symbol: TW64(winchecksec)
-    run-on-projects: [trunk]
     run:
         script: build-winchecksec.sh
         arguments: ['x86_64-pc-windows-msvc']
@@ -301,7 +297,6 @@ win64-mozmake:
     treeherder:
         symbol: TW64(mozmake)
     worker-type: b-win2012
-    run-on-projects: [trunk]
     run:
         script: build-mozmake.sh
         toolchain-artifact: public/build/mozmake.tar.zst
@@ -318,7 +313,6 @@ nsis:
         local-toolchain: true
     treeherder:
         symbol: TL(nsis)
-    run-on-projects: [trunk]
     run:
         script: build-nsis.sh
         toolchain-artifact: public/build/nsis.tar.zst

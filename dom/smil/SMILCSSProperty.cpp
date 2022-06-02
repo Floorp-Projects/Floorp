@@ -23,7 +23,7 @@ namespace mozilla {
 // Class Methods
 SMILCSSProperty::SMILCSSProperty(nsCSSPropertyID aPropID,
                                  dom::Element* aElement,
-                                 ComputedStyle* aBaseComputedStyle)
+                                 const ComputedStyle* aBaseComputedStyle)
     : mPropID(aPropID),
       mElement(aElement),
       mBaseComputedStyle(aBaseComputedStyle) {

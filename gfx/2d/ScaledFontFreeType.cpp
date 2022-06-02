@@ -46,6 +46,10 @@ void ScaledFontFreeType::SetupSkFontDrawOptions(SkFont& aFont) {
   aFont.setEmbeddedBitmaps(true);
 }
 
+bool ScaledFontFreeType::MayUseBitmaps() {
+  return !FT_IS_SCALABLE(mFace->GetFace());
+}
+
 cairo_font_face_t* ScaledFontFreeType::CreateCairoFontFace(
     cairo_font_options_t* aFontOptions) {
   cairo_font_options_set_hint_metrics(aFontOptions, CAIRO_HINT_METRICS_OFF);

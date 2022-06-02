@@ -75,6 +75,8 @@ bool UsedNameTracker::noteUse(JSContext* cx, TaggedParserAtomIndex name,
                               uint32_t scopeId,
                               mozilla::Maybe<TokenPos> tokenPosition) {
   if (UsedNameMap::AddPtr p = map_.lookupForAdd(name)) {
+    p->value().maybeUpdatePos(tokenPosition);
+
     if (!p->value().noteUsedInScope(scriptId, scopeId)) {
       return false;
     }

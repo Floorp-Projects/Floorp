@@ -2124,7 +2124,7 @@ nsDOMWindowUtils::GetNodeObservedByIMEContentObserver(nsINode** aNode) {
     *aNode = nullptr;
     return NS_OK;
   }
-  *aNode = do_AddRef(observer->GetObservingElement()).take();
+  *aNode = do_AddRef(observer->GetObservingContent()).take();
   return NS_OK;
 }
 
@@ -3194,7 +3194,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
   if (!pseudo) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<const ComputedStyle> computedStyle =
       nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(aElement, *pseudo);
   if (!computedStyle) {
     return NS_ERROR_FAILURE;

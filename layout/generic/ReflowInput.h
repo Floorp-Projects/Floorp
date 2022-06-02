@@ -724,7 +724,7 @@ struct ReflowInput : public SizeComputationInput {
    *                           calculation.
    */
   static nscoord CalcLineHeight(nsIContent* aContent,
-                                ComputedStyle* aComputedStyle,
+                                const ComputedStyle* aComputedStyle,
                                 nsPresContext* aPresContext,
                                 nscoord aBlockBSize, float aFontSizeInflation);
 

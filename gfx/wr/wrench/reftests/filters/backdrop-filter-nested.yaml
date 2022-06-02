@@ -1,0 +1,29 @@
+# Verify that when there are sibling backdrop-filters on the same backdrop
+# root, but they are separated by a filter / clip chain, the dependencies
+# are correctly set to ensure that the constrints for Existing render task
+# locations are met (that the existing task is scheduled prior to the
+# existing task, even if it's not needed for rendering order).
+---
+root:
+  items:
+    - type: clip
+      bounds: [0, 0, 100, 100]
+      id: 2
+      image-mask:
+          image: solid-color(255,255,255,255,100,100)
+          rect: [0, 0, 100, 100]
+          repeat: false
+    - type: stacking-context
+      filters: [identity]
+      wraps-backdrop-filter: true
+      items:
+        - type: backdrop-filter
+          bounds: 0 0 100 100
+          filters: identity
+        - type: stacking-context
+          wraps-backdrop-filter: true
+          clip-node: 2
+          items:
+          - type: backdrop-filter
+            bounds: 0 0 100 100
+            filters: identity

@@ -160,7 +160,7 @@ bool HTMLEditUtils::IsInlineStyle(nsINode* aNode) {
 }
 
 bool HTMLEditUtils::IsDisplayOutsideInline(const Element& aElement) {
-  RefPtr<ComputedStyle> elementStyle =
+  RefPtr<const ComputedStyle> elementStyle =
       nsComputedDOMStyle::GetComputedStyleNoFlush(&aElement);
   if (!elementStyle) {
     return false;

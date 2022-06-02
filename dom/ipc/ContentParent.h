@@ -1260,10 +1260,10 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvStoreUserInteractionAsPermission(
       const Principal& aPrincipal);
 
-  mozilla::ipc::IPCResult RecvTestCookiePermissionDecided(
-      const MaybeDiscarded<BrowsingContext>& aContext,
+  mozilla::ipc::IPCResult RecvAsyncShouldAllowAccessFor(
+      const MaybeDiscarded<BrowsingContext>& aTopContext,
       const Principal& aPrincipal,
-      const TestCookiePermissionDecidedResolver&& aResolver);
+      const AsyncShouldAllowAccessForResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvNotifyMediaPlaybackChanged(
       const MaybeDiscarded<BrowsingContext>& aContext,

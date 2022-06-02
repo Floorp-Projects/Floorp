@@ -775,6 +775,78 @@ APZ has information about these transforms in its HitTestingTree. With
 Fission, APZ periodically sends content processes information about these
 transforms so that they are kept relatively up to date.
 
+Testing
+-------
+
+APZ makes use of several test frameworks to verify the expected behavior
+is seen.
+
+Mochitest
+~~~~~~~~~
+
+The APZ specific mochitests are useful when specific gestures or events need to be tested
+with specific content. The APZ mochitests are located in `gfx/layers/apz/test/mochitest`_.
+To run all of the APZ mochitests, run something like the following:
+
+::
+
+    ./mach mochitest ./gfx/layers/apz/test/mochitest
+
+The APZ mochitests are often organized as subtests that run in a group. For example,
+the `test_group_hittest-2.html`_ contains >20 subtests like
+`helper_hittest_overscroll.html`_. When working on a specific subtest, it is often
+helpful to use the `apz.subtest` preference to filter the subtests run to just the
+tests you are working on. For example, the following would only run the
+`helper_hittest_overscroll.html`_ subtest of the `test_group_hittest-2.html`_ group.
+
+::
+
+    ./mach mochitest --setpref apz.subtest=helper_hittest_overscroll.html \
+        ./gfx/layers/apz/test/mochitest/test_group_hittest-2.html
+
+For more information on mochitest, see the `Mochitest Documentation`_.
+
+.. _gfx/layers/apz/test/mochitest: https://searchfox.org/mozilla-central/source/gfx/layers/apz/test/mochitest
+.. _test_group_hittest-2.html: https://searchfox.org/mozilla-central/source/gfx/layers/apz/test/mochitest/test_group_hittest-2.html
+.. _helper_hittest_overscroll.html: https://searchfox.org/mozilla-central/source/gfx/layers/apz/test/mochitest/helper_hittest_overscroll.html
+.. _Mochitest Documentation: /testing/mochitest-plain/index.html
+
+GTest
+~~~~~
+
+The APZ specific GTests can be found in `gfx/layers/apz/test/gtest/`_. To run
+these tests, run something like the following:
+
+::
+
+    ./mach gtest "APZ*"
+
+For more information, see the `GTest Documentation`_.
+
+.. _GTest Documentation: /gtest/index.html
+.. _gfx/layers/apz/test/gtest/: https://searchfox.org/mozilla-central/source/gfx/layers/apz/test/gtest/
+
+Reftests
+~~~~~~~~
+
+The APZ reftests can be found in `layout/reftests/async-scrolling/`_ and
+`gfx/layers/apz/test/reftest`_. To run the relevant reftests for APZ, run
+a large portion of the APZ reftests, run something like the following:
+
+::
+
+    ./mach reftest ./layout/reftests/async-scrolling/
+
+Useful information about the reftests can be found in the `README.txt`_.
+
+There is no defined process for choosing which directory the APZ reftests
+should be placed in, but in general reftests should exist where other
+similar tests do.
+
+.. _layout/reftests/async-scrolling/: https://searchfox.org/mozilla-central/source/layout/reftests/async-scrolling/
+.. _gfx/layers/apz/test/reftest: https://searchfox.org/mozilla-central/source/gfx/layers/apz/test/reftest/
+.. _README.txt: https://searchfox.org/mozilla-central/source/layout/tools/reftest/README.txt
+
 Threading / Locking Overview
 ----------------------------
 

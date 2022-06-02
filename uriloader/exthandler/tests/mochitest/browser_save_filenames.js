@@ -25,6 +25,7 @@ let types = {
   gook: "application/x-gook",
   zip: "application/zip",
   json: "application/json",
+  tar: "application/x-tar",
 };
 
 const PNG_DATA = atob(
@@ -200,7 +201,15 @@ function getItems(parentid) {
           elem.localName == "img" && elem.dataset.nodrag != "true";
         let unknown = elem.dataset.unknown;
         let noattach = elem.dataset.noattach;
-        elements.push({ draggable, unknown, filename, url, noattach });
+        let winexeext = elem.dataset.winexeext;
+        elements.push({
+          draggable,
+          unknown,
+          filename,
+          url,
+          noattach,
+          winexeext,
+        });
         elem = elem.nextElementSibling;
       }
       return elements;
@@ -575,15 +584,12 @@ add_task(async function save_links() {
 
     let expectedFilename = expectedItems[idx].filename;
     if (AppConstants.platform == "win") {
-      // On Windows, .txt is added when saving as an attachment
-      // to avoid this looking like an executable. This
-      // is done in validateLeafName in HelperAppDlg.jsm.
+      // On Windows, an extension is added to executable files when saving as
+      // an attachment to avoid the file looking like an executable. This is
+      // done in validateLeafName in HelperAppDlg.jsm.
       // XXXndeakin should we do this for all save mechanisms?
-      if (idx == 54) {
-        expectedFilename += ".txt";
-      } else if (idx == 68) {
-        // jar files are considered to be executable.
-        expectedFilename += ".zip";
+      if (expectedItems[idx].winexeext) {
+        expectedFilename += "." + expectedItems[idx].winexeext;
       }
     }
 

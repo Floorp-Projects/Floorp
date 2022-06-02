@@ -286,11 +286,11 @@ class nsFocusManager final : public nsIFocusManager,
   static InputContextAction::Cause GetFocusMoveActionCause(uint32_t aFlags);
 
   /**
-   * Notify of re-focus to same element.
+   * Notify of re-focus to same content.
    *
-   * aElement is focused element.
+   * aContent is focused content.
    */
-  MOZ_CAN_RUN_SCRIPT void NotifyOfReFocus(mozilla::dom::Element& aElement);
+  MOZ_CAN_RUN_SCRIPT void NotifyOfReFocus(nsIContent& aContent);
 
   static void MarkUncollectableForCCGeneration(uint32_t aGeneration);
 

@@ -28,11 +28,12 @@ import showContextMenu from "./BreakpointHeadingsContextMenu";
 class BreakpointHeading extends PureComponent {
   static get propTypes() {
     return {
-      cx: PropTypes.object,
-      sources: PropTypes.array,
-      hasSiblingOfSameName: PropTypes.bool,
+      cx: PropTypes.object.isRequired,
+      sources: PropTypes.array.isRequired,
+      source: PropTypes.object.isRequired,
+      hasSiblingOfSameName: PropTypes.bool.isRequired,
       selectSource: PropTypes.func.isRequired,
-      thread: PropTypes.object,
+      thread: PropTypes.object.isRequired,
     };
   }
   onContextMenu = e => {

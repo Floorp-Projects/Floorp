@@ -221,6 +221,12 @@ class WebRenderLayerScrollData final {
   Maybe<uint64_t> mStickyPositionAnimationId;
   Maybe<uint64_t> mZoomAnimationId;
   Maybe<ViewID> mAsyncZoomContainerId;
+
+#if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
+  // The display item for which this layer was built.
+  // This is only set on the content side.
+  nsDisplayItem* mInitializedFrom = nullptr;
+#endif
 };
 
 // Data needed by APZ, for the whole layer tree. One instance of this class

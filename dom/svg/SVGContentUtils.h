@@ -167,7 +167,7 @@ class SVGContentUtils {
    */
   static float GetFontSize(mozilla::dom::Element* aElement);
   static float GetFontSize(nsIFrame* aFrame);
-  static float GetFontSize(ComputedStyle*, nsPresContext*);
+  static float GetFontSize(const ComputedStyle*, nsPresContext*);
   /*
    * Get the number of CSS px (user units) per ex (i.e. the x-height in user
    * units) for an nsIContent
@@ -177,7 +177,7 @@ class SVGContentUtils {
    */
   static float GetFontXHeight(mozilla::dom::Element* aElement);
   static float GetFontXHeight(nsIFrame* aFrame);
-  static float GetFontXHeight(ComputedStyle*, nsPresContext*);
+  static float GetFontXHeight(const ComputedStyle*, nsPresContext*);
 
   /*
    * Report a localized error message to the error console.

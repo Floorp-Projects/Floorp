@@ -952,7 +952,7 @@ bool APZCTreeManager::AdvanceAnimationsInternal(
 }
 
 void APZCTreeManager::PrintLayerInfo(const ScrollNode& aLayer) {
-  if (aLayer.Dump(mApzcTreeLog) > 0) {
+  if (StaticPrefs::apz_printtree() && aLayer.Dump(mApzcTreeLog) > 0) {
     mApzcTreeLog << "\n";
   }
 }

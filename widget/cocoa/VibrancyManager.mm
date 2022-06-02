@@ -99,12 +99,10 @@ static NSVisualEffectMaterial VisualEffectMaterialForVibrancyType(VibrancyType a
 }
 
 static BOOL HasVibrantForeground(VibrancyType aType) {
-  switch (aType) {
-    case VibrancyType::MENU:
-      return YES;
-    default:
-      return NO;
+  if (@available(macOS 10.14, *)) {
+    return NO;
   }
+  return aType == VibrancyType::MENU;
 }
 
 @implementation MOZVibrantView

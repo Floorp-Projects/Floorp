@@ -2229,7 +2229,7 @@ var Policies = {
 
   StartDownloadsInTempDirectory: {
     onBeforeAddons(manager, param) {
-      setAndLockPref("browser.downloads.start_downloads_in_tmp_dir", param);
+      setAndLockPref("browser.download.start_downloads_in_tmp_dir", param);
     },
   },
 
@@ -2283,6 +2283,12 @@ var Policies = {
           locked
         );
       }
+    },
+  },
+
+  UseSystemPrintDialog: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("print.prefer_system_dialog", param);
     },
   },
 

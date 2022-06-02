@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>optional permissions and preloaded processes</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.webextOptionalPermissionPrompts", false]],
+  });
+});
+
+// This test case verifies that newly granted optional permissions are
+// propagated to all processes, especially preloaded processes.
+add_task(async function test_optional_permissions_should_be_propagated() {
+  let anOptionalPermission = "*://example.org/*";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "scripting",
+        "*://example.com/*",
+      ],
+      optional_permissions: [anOptionalPermission],
+    },
+    async background() {
+      browser.test.onMessage.addListener(async (msg, value) => {
+        browser.test.assertEq("grant-permission", msg, "expected message");
+
+        let granted = await new Promise(resolve => {
+          browser.test.withHandlingUserInput(() => {
+            resolve(browser.permissions.request(value));
+          });
+        });
+        browser.test.assertTrue(granted, "permission request succeeded");
+        browser.test.sendMessage("permission-granted");
+      });
+
+      await browser.scripting.registerContentScripts([
+        {
+          id: "script",
+          js: ["script.js"],
+          matches: ["*://example.com/*", "*://example.org/*"],
+          persistAcrossSessions: false,
+        },
+      ]);
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script.js": () => {
+        browser.test.sendMessage("script-ran", window.location.host);
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "http://example.com/",
+    true
+  );
+  let host = await extension.awaitMessage("script-ran");
+  is(host, "example.com", "expected host: example.com");
+  await AppTestDelegate.removeTab(window, tab);
+
+  extension.sendMessage("grant-permission", {
+    origins: ["*://example.org/*"],
+  });
+  await extension.awaitMessage("permission-granted");
+
+  tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://example.org/",
+    true
+  );
+  host = await extension.awaitMessage("script-ran");
+  is(host, "example.org", "expected host: example.org");
+  await AppTestDelegate.removeTab(window, tab);
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

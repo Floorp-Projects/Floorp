@@ -1274,7 +1274,7 @@ bool DMABufSurfaceYUV::VerifyTextureCreation() {
     nsCString discardFailureId;
     sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
     if (!sSnapshotContext) {
-      NS_WARNING("Failed to create snapshot GLContext");
+      LOGDMABUF(("  failed to create snapshot GLContext"));
       return false;
     }
   }
@@ -1283,10 +1283,12 @@ bool DMABufSurfaceYUV::VerifyTextureCreation() {
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
     if (!CreateEGLImage(sSnapshotContext, i)) {
+      LOGDMABUF(("  failed to create EGL image!"));
       return false;
     }
   }
 
+  LOGDMABUF(("  success"));
   return true;
 }
 

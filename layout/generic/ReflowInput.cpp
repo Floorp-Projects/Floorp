@@ -2740,7 +2740,7 @@ static nscoord GetNormalLineHeight(nsFontMetrics* aFontMetrics) {
   return normalLineHeight;
 }
 
-static inline nscoord ComputeLineHeight(ComputedStyle* aComputedStyle,
+static inline nscoord ComputeLineHeight(const ComputedStyle* aComputedStyle,
                                         nsPresContext* aPresContext,
                                         nscoord aBlockBSize,
                                         float aFontSizeInflation) {
@@ -2800,7 +2800,7 @@ void ReflowInput::SetLineHeight(nscoord aLineHeight) {
 
 /* static */
 nscoord ReflowInput::CalcLineHeight(nsIContent* aContent,
-                                    ComputedStyle* aComputedStyle,
+                                    const ComputedStyle* aComputedStyle,
                                     nsPresContext* aPresContext,
                                     nscoord aBlockBSize,
                                     float aFontSizeInflation) {

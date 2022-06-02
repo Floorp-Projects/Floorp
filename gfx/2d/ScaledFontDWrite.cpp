@@ -194,6 +194,10 @@ void ScaledFontDWrite::SetupSkFontDrawOptions(SkFont& aFont) {
   }
 }
 
+bool ScaledFontDWrite::MayUseBitmaps() {
+  return ForceGDIMode() || UseEmbeddedBitmaps();
+}
+
 void ScaledFontDWrite::CopyGlyphsToBuilder(const GlyphBuffer& aBuffer,
                                            PathBuilder* aBuilder,
                                            const Matrix* aTransformHint) {

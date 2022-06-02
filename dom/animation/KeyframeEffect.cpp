@@ -145,7 +145,8 @@ void KeyframeEffect::SetComposite(const CompositeOperation& aComposite) {
   }
 
   if (mTarget) {
-    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle(Flush::None);
+    RefPtr<const ComputedStyle> computedStyle =
+        GetTargetComputedStyle(Flush::None);
     if (computedStyle) {
       UpdateProperties(computedStyle);
     }
@@ -241,7 +242,7 @@ void KeyframeEffect::SetKeyframes(JSContext* aContext,
     return;
   }
 
-  RefPtr<ComputedStyle> style = GetTargetComputedStyle(Flush::None);
+  RefPtr<const ComputedStyle> style = GetTargetComputedStyle(Flush::None);
   SetKeyframes(std::move(keyframes), style);
 }
 
@@ -525,7 +526,7 @@ void KeyframeEffect::EnsureBaseStyles(
              " we should have also failed to calculate the computed values"
              " passed-in as aProperties");
 
-  RefPtr<ComputedStyle> baseComputedStyle;
+  RefPtr<const ComputedStyle> baseComputedStyle;
   for (const AnimationProperty& property : aProperties) {
     EnsureBaseStyle(property, presContext, aComputedValues, baseComputedStyle);
   }
@@ -543,7 +544,7 @@ void KeyframeEffect::EnsureBaseStyles(
 void KeyframeEffect::EnsureBaseStyle(
     const AnimationProperty& aProperty, nsPresContext* aPresContext,
     const ComputedStyle* aComputedStyle,
-    RefPtr<ComputedStyle>& aBaseComputedStyle) {
+    RefPtr<const ComputedStyle>& aBaseComputedStyle) {
   bool hasAdditiveValues = false;
 
   for (const AnimationPropertySegment& segment : aProperty.mSegments) {
@@ -919,7 +920,8 @@ void KeyframeEffect::UpdateTarget(Element* aElement,
 
   if (mTarget) {
     UpdateTargetRegistration();
-    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle(Flush::None);
+    RefPtr<const ComputedStyle> computedStyle =
+        GetTargetComputedStyle(Flush::None);
     if (computedStyle) {
       UpdateProperties(computedStyle);
     }
@@ -1005,7 +1007,7 @@ void KeyframeEffect::RequestRestyle(
   }
 }
 
-already_AddRefed<ComputedStyle> KeyframeEffect::GetTargetComputedStyle(
+already_AddRefed<const ComputedStyle> KeyframeEffect::GetTargetComputedStyle(
     Flush aFlushType) const {
   if (!GetRenderedDocument()) {
     return nullptr;
@@ -1230,7 +1232,7 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
   // be consistent with Gecko, we just expand the variables (assuming we have
   // enough context to do so). For that we need to grab the ComputedStyle so we
   // know what custom property values to provide.
-  RefPtr<ComputedStyle> computedStyle;
+  RefPtr<const ComputedStyle> computedStyle;
   if (isCSSAnimation) {
     // The following will flush style but that's ok since if you update
     // a variable's computed value, you expect to see that updated value in the
@@ -1756,7 +1758,7 @@ void KeyframeEffect::SetPerformanceWarning(
   }
 }
 
-already_AddRefed<ComputedStyle>
+already_AddRefed<const ComputedStyle>
 KeyframeEffect::CreateComputedStyleForAnimationValue(
     nsCSSPropertyID aProperty, const AnimationValue& aValue,
     nsPresContext* aPresContext, const ComputedStyle* aBaseComputedStyle) {
@@ -1827,16 +1829,20 @@ void KeyframeEffect::CalculateCumulativeChangeHint(
         continue;
       }
 
-      RefPtr<ComputedStyle> fromContext = CreateComputedStyleForAnimationValue(
-          property.mProperty, segment.mFromValue, presContext, aComputedStyle);
+      RefPtr<const ComputedStyle> fromContext =
+          CreateComputedStyleForAnimationValue(property.mProperty,
+                                               segment.mFromValue, presContext,
+                                               aComputedStyle);
       if (!fromContext) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
         mNeedsStyleData = true;
         return;
       }
 
-      RefPtr<ComputedStyle> toContext = CreateComputedStyleForAnimationValue(
-          property.mProperty, segment.mToValue, presContext, aComputedStyle);
+      RefPtr<const ComputedStyle> toContext =
+          CreateComputedStyleForAnimationValue(property.mProperty,
+                                               segment.mToValue, presContext,
+                                               aComputedStyle);
       if (!toContext) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
         mNeedsStyleData = true;
