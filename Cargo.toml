@@ -123,6 +123,9 @@ tokio-util = { path = "build/rust/tokio-util" }
 # Patch env_logger 0.8 to 0.9
 env_logger = { path = "build/rust/env_logger" }
 
+# Patch paste 0.1 to 1.0
+paste = { path = "build/rust/paste" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 

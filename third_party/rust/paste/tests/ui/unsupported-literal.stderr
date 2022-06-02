@@ -1,5 +1,23 @@
 error: unsupported literal
- --> $DIR/unsupported-literal.rs:2:10
+ --> tests/ui/unsupported-literal.rs:4:12
   |
-2 |     fn [<1e+100>]() {}
-  |          ^^^^^^
+4 |     fn [<x 1e+100 z>]() {}
+  |            ^^^^^^
+
+error: unsupported literal
+  --> tests/ui/unsupported-literal.rs:10:12
+   |
+10 |     fn [<x b'y' z>]() {}
+   |            ^^^^
+
+error: unsupported literal
+  --> tests/ui/unsupported-literal.rs:14:12
+   |
+14 |     fn [<x b"y" z>]() {}
+   |            ^^^^
+
+error: unsupported literal
+  --> tests/ui/unsupported-literal.rs:18:12
+   |
+18 |     fn [<x br"y" z>]() {}
+   |            ^^^^^
