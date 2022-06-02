@@ -62,7 +62,8 @@ using ::testing::SizeIs;
 
 constexpr SendOptions kSendOptions;
 constexpr size_t kLargeMessageSize = DcSctpOptions::kMaxSafeMTUSize * 20;
-static constexpr size_t kSmallMessageSize = 10;
+constexpr size_t kSmallMessageSize = 10;
+constexpr int kMaxBurstPackets = 4;
 
 MATCHER_P(HasDataChunkWithStreamId, stream_id, "") {
   absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
@@ -235,6 +236,7 @@ DcSctpOptions MakeOptionsForTest(bool enable_message_interleaving) {
   // To make the interval more predictable in tests.
   options.heartbeat_interval_include_rtt = false;
   options.enable_message_interleaving = enable_message_interleaving;
+  options.max_burst = kMaxBurstPackets;
   return options;
 }
 
@@ -1711,6 +1713,22 @@ TEST_F(DcSctpSocketTest, UnackDataAlsoIncludesSendQueue) {
 
   EXPECT_LE(sock_a_.GetMetrics().unack_data_count,
             expected_sent_packets + expected_queued_packets + 2);
+}
+
+TEST_F(DcSctpSocketTest, DoesntSendMoreThanMaxBurstPackets) {
+  ConnectSockets();
+
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53),
+                             std::vector<uint8_t>(kLargeMessageSize)),
+               kSendOptions);
+
+  for (int i = 0; i < kMaxBurstPackets; ++i) {
+    std::vector<uint8_t> packet = cb_a_.ConsumeSentPacket();
+    EXPECT_THAT(packet, Not(IsEmpty()));
+    sock_z_.ReceivePacket(std::move(packet));  // DATA
+  }
+
+  EXPECT_THAT(cb_a_.ConsumeSentPacket(), IsEmpty());
 }
 
 }  // namespace

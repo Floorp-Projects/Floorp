@@ -132,6 +132,14 @@ struct DcSctpOptions {
   // See https://tools.ietf.org/html/rfc4960#section-7.2.3.
   size_t cwnd_mtus_min = 4;
 
+  // The number of packets that may be sent at once. This is limited to avoid
+  // bursts that too quickly fill the send buffer. Typically in a a socket in
+  // its "slow start" phase (when it sends as much as it can), it will send
+  // up to three packets for every SACK received, so the default limit is set
+  // just above that, and then mostly applicable for (but not limited to) fast
+  // retransmission scenarios.
+  int max_burst = 4;
+
   // Maximum Data Retransmit Attempts (per DATA chunk).
   int max_retransmissions = 10;
 
