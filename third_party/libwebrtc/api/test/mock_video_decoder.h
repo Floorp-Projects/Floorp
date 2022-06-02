@@ -37,6 +37,12 @@ class MockDecodedImageCallback : public DecodedImageCallback {
 
 class MockVideoDecoder : public VideoDecoder {
  public:
+  MockVideoDecoder() {
+    // Make `Configure` succeed by default, so that individual tests that
+    // verify other methods wouldn't need to stub `Configure`.
+    ON_CALL(*this, Configure).WillByDefault(testing::Return(true));
+  }
+
   MOCK_METHOD(bool, Configure, (const Settings& settings), (override));
   MOCK_METHOD(int32_t,
               InitDecode,

@@ -113,43 +113,17 @@ class WebRtcRecordableEncodedFrame : public RecordableEncodedFrame {
   absl::optional<webrtc::ColorSpace> color_space_;
 };
 
-VideoCodec CreateDecoderVideoCodec(const VideoReceiveStream::Decoder& decoder) {
-  VideoCodec codec;
-  codec.codecType = PayloadStringToCodecType(decoder.video_format.name);
-
-  if (codec.codecType == kVideoCodecVP8) {
-    *(codec.VP8()) = VideoEncoder::GetDefaultVp8Settings();
-  } else if (codec.codecType == kVideoCodecVP9) {
-    *(codec.VP9()) = VideoEncoder::GetDefaultVp9Settings();
-  } else if (codec.codecType == kVideoCodecH264) {
-    *(codec.H264()) = VideoEncoder::GetDefaultH264Settings();
-  } else if (codec.codecType == kVideoCodecMultiplex) {
-    VideoReceiveStream::Decoder associated_decoder = decoder;
-    associated_decoder.video_format =
-        SdpVideoFormat(CodecTypeToPayloadString(kVideoCodecVP9));
-    VideoCodec associated_codec = CreateDecoderVideoCodec(associated_decoder);
-    associated_codec.codecType = kVideoCodecMultiplex;
-    return associated_codec;
-  }
-
+RenderResolution InitialDecoderResolution() {
   FieldTrialOptional<int> width("w");
   FieldTrialOptional<int> height("h");
   ParseFieldTrial(
       {&width, &height},
       field_trial::FindFullName("WebRTC-Video-InitialDecoderResolution"));
   if (width && height) {
-    codec.width = width.Value();
-    codec.height = height.Value();
-  } else {
-    codec.width = 320;
-    codec.height = 180;
+    return RenderResolution(width.Value(), height.Value());
   }
 
-  const int kDefaultStartBitrate = 300;
-  codec.startBitrate = codec.minBitrate = codec.maxBitrate =
-      kDefaultStartBitrate;
-
-  return codec;
+  return RenderResolution(320, 180);
 }
 
 // Video decoder class to be used for unknown codecs. Doesn't support decoding
@@ -381,7 +355,11 @@ void VideoReceiveStream2::Start() {
       ++decoders_count;
     }
 
-    VideoCodec codec = CreateDecoderVideoCodec(decoder);
+    VideoDecoder::Settings settings;
+    settings.set_codec_type(
+        PayloadStringToCodecType(decoder.video_format.name));
+    settings.set_max_render_resolution(InitialDecoderResolution());
+    settings.set_number_of_cores(num_cpu_cores_);
 
     const bool raw_payload =
         config_.rtp.raw_payload_types.count(decoder.payload_type) > 0;
@@ -389,11 +367,11 @@ void VideoReceiveStream2::Start() {
       // TODO(bugs.webrtc.org/11993): Make this call on the network thread.
       RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
       rtp_video_stream_receiver_.AddReceiveCodec(
-          decoder.payload_type, codec.codecType,
+          decoder.payload_type, settings.codec_type(),
           decoder.video_format.parameters, raw_payload);
     }
-    RTC_CHECK_EQ(VCM_OK, video_receiver_.RegisterReceiveCodec(
-                             decoder.payload_type, &codec, num_cpu_cores_));
+    RTC_CHECK(
+        video_receiver_.RegisterReceiveCodec(decoder.payload_type, settings));
   }
 
   RTC_DCHECK(renderer != nullptr);

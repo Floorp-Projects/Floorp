@@ -110,19 +110,12 @@ int32_t VideoReceiver2::Decode(const VCMEncodedFrame* frame) {
 }
 
 // Register possible receive codecs, can be called multiple times
-int32_t VideoReceiver2::RegisterReceiveCodec(uint8_t payload_type,
-                                             const VideoCodec* receiveCodec,
-                                             int32_t numberOfCores) {
+bool VideoReceiver2::RegisterReceiveCodec(
+    uint8_t payload_type,
+    const VideoDecoder::Settings& settings) {
   RTC_DCHECK_RUN_ON(&construction_sequence_checker_);
   RTC_DCHECK(!IsDecoderThreadRunning());
-  if (receiveCodec == nullptr) {
-    return VCM_PARAMETER_ERROR;
-  }
-  if (!codecDataBase_.RegisterReceiveCodec(payload_type, *receiveCodec,
-                                           numberOfCores)) {
-    return -1;
-  }
-  return 0;
+  return codecDataBase_.RegisterReceiveCodec(payload_type, settings);
 }
 
 bool VideoReceiver2::IsDecoderThreadRunning() {

@@ -111,34 +111,6 @@ class WebRtcRecordableEncodedFrame : public RecordableEncodedFrame {
   absl::optional<webrtc::ColorSpace> color_space_;
 };
 
-VideoCodec CreateDecoderVideoCodec(const VideoReceiveStream::Decoder& decoder) {
-  VideoCodec codec;
-  codec.codecType = PayloadStringToCodecType(decoder.video_format.name);
-
-  if (codec.codecType == kVideoCodecVP8) {
-    *(codec.VP8()) = VideoEncoder::GetDefaultVp8Settings();
-  } else if (codec.codecType == kVideoCodecVP9) {
-    *(codec.VP9()) = VideoEncoder::GetDefaultVp9Settings();
-  } else if (codec.codecType == kVideoCodecH264) {
-    *(codec.H264()) = VideoEncoder::GetDefaultH264Settings();
-  } else if (codec.codecType == kVideoCodecMultiplex) {
-    VideoReceiveStream::Decoder associated_decoder = decoder;
-    associated_decoder.video_format =
-        SdpVideoFormat(CodecTypeToPayloadString(kVideoCodecVP9));
-    VideoCodec associated_codec = CreateDecoderVideoCodec(associated_decoder);
-    associated_codec.codecType = kVideoCodecMultiplex;
-    return associated_codec;
-  }
-
-  codec.width = 320;
-  codec.height = 180;
-  const int kDefaultStartBitrate = 300;
-  codec.startBitrate = codec.minBitrate = codec.maxBitrate =
-      kDefaultStartBitrate;
-
-  return codec;
-}
-
 // Video decoder class to be used for unknown codecs. Doesn't support decoding
 // but logs messages to LS_ERROR.
 class NullVideoDecoder : public webrtc::VideoDecoder {
@@ -364,15 +336,19 @@ void VideoReceiveStream::Start() {
 
     video_receiver_.RegisterExternalDecoder(video_decoders_.back().get(),
                                             decoder.payload_type);
-    VideoCodec codec = CreateDecoderVideoCodec(decoder);
+    VideoDecoder::Settings settings;
+    settings.set_codec_type(
+        PayloadStringToCodecType(decoder.video_format.name));
+    settings.set_max_render_resolution({320, 180});
+    settings.set_number_of_cores(num_cpu_cores_);
 
     const bool raw_payload =
         config_.rtp.raw_payload_types.count(decoder.payload_type) > 0;
     rtp_video_stream_receiver_.AddReceiveCodec(
-        decoder.payload_type, codec.codecType, decoder.video_format.parameters,
-        raw_payload);
-    RTC_CHECK_EQ(VCM_OK, video_receiver_.RegisterReceiveCodec(
-                             decoder.payload_type, &codec, num_cpu_cores_));
+        decoder.payload_type, settings.codec_type(),
+        decoder.video_format.parameters, raw_payload);
+    RTC_CHECK(
+        video_receiver_.RegisterReceiveCodec(decoder.payload_type, settings));
   }
 
   RTC_DCHECK(renderer != nullptr);

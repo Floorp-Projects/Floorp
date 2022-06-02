@@ -245,18 +245,17 @@ VCMGenericDecoder::~VCMGenericDecoder() {
   decoder_->Release();
 }
 
-int32_t VCMGenericDecoder::InitDecode(const VideoCodec* settings,
-                                      int32_t numberOfCores) {
-  TRACE_EVENT0("webrtc", "VCMGenericDecoder::InitDecode");
+bool VCMGenericDecoder::Configure(const VideoDecoder::Settings& settings) {
+  TRACE_EVENT0("webrtc", "VCMGenericDecoder::Configure");
 
-  int err = decoder_->InitDecode(settings, numberOfCores);
+  bool ok = decoder_->Configure(settings);
   decoder_info_ = decoder_->GetDecoderInfo();
   RTC_LOG(LS_INFO) << "Decoder implementation: " << decoder_info_.ToString();
   if (_callback) {
     _callback->OnDecoderImplementationName(
         decoder_info_.implementation_name.c_str());
   }
-  return err;
+  return ok;
 }
 
 int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, Timestamp now) {

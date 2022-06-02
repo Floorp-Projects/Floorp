@@ -12,6 +12,7 @@
 #define MODULES_VIDEO_CODING_VIDEO_RECEIVER2_H_
 
 #include "api/sequence_checker.h"
+#include "api/video_codecs/video_decoder.h"
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/generic_decoder.h"
@@ -30,9 +31,8 @@ class VideoReceiver2 {
   VideoReceiver2(Clock* clock, VCMTiming* timing);
   ~VideoReceiver2();
 
-  int32_t RegisterReceiveCodec(uint8_t payload_type,
-                               const VideoCodec* receiveCodec,
-                               int32_t numberOfCores);
+  bool RegisterReceiveCodec(uint8_t payload_type,
+                            const VideoDecoder::Settings& decoder_settings);
 
   void RegisterExternalDecoder(VideoDecoder* externalDecoder,
                                uint8_t payloadType);
