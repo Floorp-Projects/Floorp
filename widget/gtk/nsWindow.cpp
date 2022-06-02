@@ -4367,8 +4367,7 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
 
   LayoutDeviceIntPoint refPoint =
       GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
-  if ((mIsWaylandPanelWindow ||
-       mDraggableRegion.Contains(refPoint.x, refPoint.y)) &&
+  if ((mIsWaylandPanelWindow || mDraggableRegion.Contains(refPoint)) &&
       domButton == MouseButton::ePrimary &&
       eventStatus.mContentStatus != nsEventStatus_eConsumeNoDefault) {
     mWindowShouldStartDragging = true;
@@ -4421,13 +4420,13 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
 
   nsIWidget::ContentAndAPZEventStatus eventStatus = DispatchInputEvent(&event);
 
-  bool defaultPrevented =
-      (eventStatus.mContentStatus == nsEventStatus_eConsumeNoDefault);
+  const bool defaultPrevented =
+      eventStatus.mContentStatus == nsEventStatus_eConsumeNoDefault;
   // Check if mouse position in titlebar and doubleclick happened to
   // trigger restore/maximize.
   if (!defaultPrevented && mDrawInTitlebar &&
       event.mButton == MouseButton::ePrimary && event.mClickCount == 2 &&
-      mDraggableRegion.Contains(pos.x, pos.y)) {
+      mDraggableRegion.Contains(pos)) {
     if (mSizeState == nsSizeMode_Maximized) {
       SetSizeMode(nsSizeMode_Normal);
     } else {
@@ -5145,7 +5144,7 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
   // by something on it.
   LayoutDeviceIntPoint refPoint =
       GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
-  if (msg == eTouchStart && mDraggableRegion.Contains(refPoint.x, refPoint.y) &&
+  if (msg == eTouchStart && mDraggableRegion.Contains(refPoint) &&
       eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
     mWindowShouldStartDragging = true;
   }
