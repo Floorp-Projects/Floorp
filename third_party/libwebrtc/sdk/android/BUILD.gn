@@ -657,6 +657,7 @@ if (current_os == "linux" || is_android) {
       "../../api:media_stream_interface",
       "../../api/task_queue",
       "../../api/video:encoded_image",
+      "../../api/video:render_resolution",
       "../../api/video:video_frame",
       "../../api/video:video_frame_type",
       "../../api/video:video_rtp_headers",
