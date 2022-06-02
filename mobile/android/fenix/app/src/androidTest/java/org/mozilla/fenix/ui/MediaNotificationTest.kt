@@ -59,7 +59,7 @@ class MediaNotificationTest {
         mockWebServer.shutdown()
     }
 
-    @Ignore("Still failing, due to https://github.com/mozilla-mobile/android-components/issues/9748")
+    @Ignore("Failing with ANR: https://github.com/mozilla-mobile/fenix/issues/15754")
     @Test
     fun videoPlaybackSystemNotificationTest() {
         val videoTestPage = TestAssetHelper.getVideoPageAsset(mockWebServer)
