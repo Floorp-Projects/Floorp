@@ -112,7 +112,7 @@ class DebugDumpGenerator {
   bool enable_pre_amplifier_;
 
   TaskQueueForTest worker_queue_;
-  std::unique_ptr<AudioProcessing> apm_;
+  rtc::scoped_refptr<AudioProcessing> apm_;
 
   const std::string dump_file_name_;
 };
@@ -143,7 +143,7 @@ DebugDumpGenerator::DebugDumpGenerator(const std::string& input_file_name,
       worker_queue_("debug_dump_generator_worker_queue"),
       dump_file_name_(dump_file_name) {
   AudioProcessingBuilderForTesting apm_builder;
-  apm_.reset(apm_builder.Create(config));
+  apm_ = apm_builder.Create(config);
 }
 
 DebugDumpGenerator::DebugDumpGenerator(
