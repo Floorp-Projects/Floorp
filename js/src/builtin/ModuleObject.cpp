@@ -2269,9 +2269,13 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
 
   RootedArrayObject sortedList(cx);
   if (!ModuleObject::GatherAsyncParentCompletions(cx, module, &sortedList)) {
-    // We have OOM'd -- all bets are off, reject the promise. Not much more we
-    // can do.
-    MOZ_ASSERT(cx->isExceptionPending());
+    // We have been interrupted or have OOM'd -- all bets are off, reject the
+    // promise. Not much more we can do.
+    if (!cx->isExceptionPending()) {
+      AsyncModuleExecutionRejected(cx, module, UndefinedHandleValue);
+      return;
+    }
+
     RootedValue exception(cx);
     if (!cx->getPendingException(&exception)) {
       return;
