@@ -1022,11 +1022,8 @@ TEST_P(WebRtcVoiceEngineTestFake, ChangeRecvCodecPayloadType) {
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 }
 
-// Test that we set Opus/Red under the field trial.
-TEST_P(WebRtcVoiceEngineTestFake, RecvRed) {
-  webrtc::test::ScopedFieldTrials override_field_trials(
-      "WebRTC-Audio-Red-For-Opus/Enabled/");
-
+// Test that we do allow setting Opus/Red by default.
+TEST_P(WebRtcVoiceEngineTestFake, RecvRedDefault) {
   EXPECT_TRUE(SetupRecvStream());
   cricket::AudioRecvParameters parameters;
   parameters.codecs.push_back(kOpusCodec);
@@ -1037,8 +1034,11 @@ TEST_P(WebRtcVoiceEngineTestFake, RecvRed) {
                   {{111, {"opus", 48000, 2}}, {112, {"red", 48000, 2}}})));
 }
 
-// Test that we do not allow setting Opus/Red by default.
-TEST_P(WebRtcVoiceEngineTestFake, RecvRedDefault) {
+// Test that we disable Opus/Red with the kill switch.
+TEST_P(WebRtcVoiceEngineTestFake, RecvRed) {
+  webrtc::test::ScopedFieldTrials override_field_trials(
+      "WebRTC-Audio-Red-For-Opus/Disabled/");
+
   EXPECT_TRUE(SetupRecvStream());
   cricket::AudioRecvParameters parameters;
   parameters.codecs.push_back(kOpusCodec);
