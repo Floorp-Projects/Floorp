@@ -60,6 +60,13 @@ RTC_OBJC_EXPORT
  */
 - (RTC_OBJC_TYPE(RTCVideoSource) *)videoSource;
 
+/** Initialize a generic RTCVideoSource with he posibility of marking
+ * it as usable for screen sharing. The RTCVideoSource should be
+ * passed to a RTCVideoCapturer implementation, e.g.
+ * RTCCameraVideoCapturer, in order to produce frames.
+ */
+- (RTC_OBJC_TYPE(RTCVideoSource) *)videoSourceForScreenCast:(BOOL)forScreenCast;
+
 /** Initialize an RTCVideoTrack with a source and an id. */
 - (RTC_OBJC_TYPE(RTCVideoTrack) *)videoTrackWithSource:(RTC_OBJC_TYPE(RTCVideoSource) *)source
                                                trackId:(NSString *)trackId;

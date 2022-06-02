@@ -34,15 +34,18 @@
 
 namespace webrtc {
 
-ObjCVideoTrackSource::ObjCVideoTrackSource()
-    : AdaptedVideoTrackSource(/* required resolution alignment */ 2) {}
+ObjCVideoTrackSource::ObjCVideoTrackSource() : ObjCVideoTrackSource(false) {}
+
+ObjCVideoTrackSource::ObjCVideoTrackSource(bool is_screencast)
+    : AdaptedVideoTrackSource(/* required resolution alignment */ 2),
+      is_screencast_(is_screencast) {}
 
 ObjCVideoTrackSource::ObjCVideoTrackSource(RTCObjCVideoSourceAdapter *adapter) : adapter_(adapter) {
   adapter_.objCVideoTrackSource = this;
 }
 
 bool ObjCVideoTrackSource::is_screencast() const {
-  return false;
+  return is_screencast_;
 }
 
 absl::optional<bool> ObjCVideoTrackSource::needs_denoising() const {
