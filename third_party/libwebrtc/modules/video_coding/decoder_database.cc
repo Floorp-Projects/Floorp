@@ -48,18 +48,14 @@ bool VCMDecoderDataBase::IsExternalDecoderRegistered(
          decoders_.find(payload_type) != decoders_.end();
 }
 
-bool VCMDecoderDataBase::RegisterReceiveCodec(
+void VCMDecoderDataBase::RegisterReceiveCodec(
     uint8_t payload_type,
     const VideoDecoder::Settings& settings) {
-  if (settings.number_of_cores() < 0) {
-    return false;
-  }
   // If payload value already exists, erase old and insert new.
   if (payload_type == current_payload_type_) {
     current_payload_type_ = absl::nullopt;
   }
   decoder_settings_[payload_type] = settings;
-  return true;
 }
 
 bool VCMDecoderDataBase::DeregisterReceiveCodec(uint8_t payload_type) {

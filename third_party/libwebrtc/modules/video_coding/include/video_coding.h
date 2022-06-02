@@ -46,9 +46,7 @@ class VideoCodingModule : public Module {
   //      - payload_type      : RTP payload type
   //      - settings          : Settings for the decoder to be registered.
   //
-  // Return value      : true,  on success.
-  //                     false, on error.
-  virtual bool RegisterReceiveCodec(uint8_t payload_type,
+  virtual void RegisterReceiveCodec(uint8_t payload_type,
                                     const VideoDecoder::Settings& settings) = 0;
   ABSL_DEPRECATED("Use RegisterReceiveCodec above")
   virtual int32_t RegisterReceiveCodec(uint8_t payload_type,

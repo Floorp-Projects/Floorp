@@ -246,11 +246,11 @@ int32_t VideoReceiver::Decode(const VCMEncodedFrame& frame) {
 }
 
 // Register possible receive codecs, can be called multiple times
-bool VideoReceiver::RegisterReceiveCodec(
+void VideoReceiver::RegisterReceiveCodec(
     uint8_t payload_type,
     const VideoDecoder::Settings& settings) {
   RTC_DCHECK_RUN_ON(&construction_thread_checker_);
-  return _codecDataBase.RegisterReceiveCodec(payload_type, settings);
+  _codecDataBase.RegisterReceiveCodec(payload_type, settings);
 }
 
 // Incoming packet from network parsed and ready for decode, non blocking.

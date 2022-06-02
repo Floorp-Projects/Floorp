@@ -56,10 +56,10 @@ class VideoCodingModuleImpl : public VideoCodingModule {
 
   void Process() override { receiver_.Process(); }
 
-  bool RegisterReceiveCodec(
+  void RegisterReceiveCodec(
       uint8_t payload_type,
       const VideoDecoder::Settings& decoder_settings) override {
-    return receiver_.RegisterReceiveCodec(payload_type, decoder_settings);
+    receiver_.RegisterReceiveCodec(payload_type, decoder_settings);
   }
 
   int32_t RegisterReceiveCodec(uint8_t payload_type,
@@ -73,8 +73,8 @@ class VideoCodingModuleImpl : public VideoCodingModule {
       decoder_settings.set_buffer_pool_size(receive_codec->buffer_pool_size);
     }
     decoder_settings.set_number_of_cores(number_of_cores);
-    return receiver_.RegisterReceiveCodec(payload_type, decoder_settings) ? 0
-                                                                          : -1;
+    receiver_.RegisterReceiveCodec(payload_type, decoder_settings);
+    return 0;
   }
 
   void RegisterExternalDecoder(VideoDecoder* externalDecoder,
