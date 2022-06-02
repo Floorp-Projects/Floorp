@@ -179,6 +179,20 @@ class LogModule extends Module {
     this.emitProtocolEvent("log.entryAdded", entry);
   };
 
+  #subscribeEvent(event) {
+    if (event === "log.entryAdded") {
+      this.#consoleAPIListener.startListening();
+      this.#consoleMessageListener.startListening();
+    }
+  }
+
+  #unsubscribeEvent(event) {
+    if (event === "log.entryAdded") {
+      this.#consoleAPIListener.stopListening();
+      this.#consoleMessageListener.stopListening();
+    }
+  }
+
   /**
    * Internal commands
    */
@@ -189,25 +203,11 @@ class LogModule extends Module {
     const { category, added = [], removed = [] } = params;
     if (category === "event") {
       for (const event of added) {
-        this._subscribeEvent(event);
+        this.#subscribeEvent(event);
       }
       for (const event of removed) {
-        this._unsubscribeEvent(event);
+        this.#unsubscribeEvent(event);
       }
-    }
-  }
-
-  _subscribeEvent(event) {
-    if (event === "log.entryAdded") {
-      this.#consoleAPIListener.startListening();
-      this.#consoleMessageListener.startListening();
-    }
-  }
-
-  _unsubscribeEvent(event) {
-    if (event === "log.entryAdded") {
-      this.#consoleAPIListener.stopListening();
-      this.#consoleMessageListener.stopListening();
     }
   }
 }
