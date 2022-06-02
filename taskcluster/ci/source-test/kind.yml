@@ -30,6 +30,7 @@ jobs-from:
     - remote.yml
     - shadow-scheduler.yml
     - taskgraph.yml
+    - vendor.yml
     - webidl.yml
     - webcompat.yml
     - wpt-manifest.yml
