@@ -405,6 +405,21 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
     stats->ssim.AddSample(StatsSample(ssim, frame_stats.received_time));
   }
 
+  // Compute dropped phase for dropped frame
+  if (comparison.type == FrameComparisonType::kDroppedFrame) {
+    webrtc_pc_e2e::FrameDropPhase dropped_phase;
+    if (frame_stats.decode_end_time.IsFinite()) {
+      dropped_phase = webrtc_pc_e2e::FrameDropPhase::kAfterDecoder;
+    } else if (frame_stats.encoded_time.IsFinite()) {
+      dropped_phase = webrtc_pc_e2e::FrameDropPhase::kTransport;
+    } else if (frame_stats.pre_encode_time.IsFinite()) {
+      dropped_phase = webrtc_pc_e2e::FrameDropPhase::kByEncoder;
+    } else {
+      dropped_phase = webrtc_pc_e2e::FrameDropPhase::kBeforeEncoder;
+    }
+    stats->dropped_by_phase[dropped_phase]++;
+  }
+
   if (frame_stats.encoded_time.IsFinite()) {
     stats->encode_time_ms.AddSample(StatsSample(
         (frame_stats.encoded_time - frame_stats.pre_encode_time).ms(),
