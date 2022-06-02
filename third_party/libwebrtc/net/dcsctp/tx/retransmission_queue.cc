@@ -144,10 +144,11 @@ void RetransmissionQueue::AckChunk(
     AckInfo& ack_info,
     std::map<UnwrappedTSN, TxData>::iterator iter) {
   if (!iter->second.is_acked()) {
-    ack_info.bytes_acked += iter->second.data().size();
+    size_t serialized_size = GetSerializedChunkSize(iter->second.data());
+    ack_info.bytes_acked += serialized_size;
     ack_info.acked_tsns.push_back(iter->first.Wrap());
     if (iter->second.is_outstanding()) {
-      outstanding_bytes_ -= GetSerializedChunkSize(iter->second.data());
+      outstanding_bytes_ -= serialized_size;
       --outstanding_items_;
     }
     if (iter->second.should_be_retransmitted()) {
