@@ -291,6 +291,14 @@ def create_parser(mach_interface=False):
         help="Disable Fission (site isolation) in Gecko.",
     )
     add_arg(
+        "--enable-fission-mobile",
+        dest="fission_mobile",
+        action="store_true",
+        default=False,
+        help="Temporary work-around to enable fission on mobile as it is enabled "
+        "by default for desktop now but not mobile.",
+    )
+    add_arg(
         "--setpref",
         dest="extra_prefs",
         action="append",
@@ -511,6 +519,21 @@ def verify_options(parser, args):
                 "Memory test is only supported when running Raptor on Firefox Android "
                 "browsers!"
             )
+
+    if args.fission:
+        if args.app not in DESKTOP_APPS and not args.fission_mobile:
+            print(
+                "Fission is currently disabled by default in mobile, "
+                "use --enable-fission-mobile to enable it"
+            )
+            args.fission = False
+            args.extra_prefs.append("fission.autostart=false")
+        else:
+            print("Fission enabled through browser preferences")
+            args.extra_prefs.append("fission.autostart=true")
+    else:
+        print("Fission disabled through browser preferences")
+        args.extra_prefs.append("fission.autostart=false")
 
     # if running on geckoview/refbrow/fenix, we need an activity and intent
     if args.app in ["geckoview", "refbrow", "fenix"]:

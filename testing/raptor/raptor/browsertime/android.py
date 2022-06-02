@@ -49,6 +49,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         super(BrowsertimeAndroid, self).__init__(
             app, binary, profile_class="firefox", **kwargs
         )
+
         self.config.update({"activity": activity, "intent": intent})
         self.remote_profile = None
 

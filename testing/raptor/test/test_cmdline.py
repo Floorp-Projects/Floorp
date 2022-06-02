@@ -30,6 +30,9 @@ def test_verify_options(filedir):
         chimera=False,
         browsertime_video=False,
         browsertime_visualmetrics=False,
+        fission=True,
+        fission_mobile=False,
+        extra_prefs=[],
     )
     parser = ArgumentParser()
 
@@ -53,6 +56,9 @@ def test_verify_options(filedir):
         chimera=False,
         browsertime_video=False,
         browsertime_visualmetrics=False,
+        fission=True,
+        fission_mobile=False,
+        extra_prefs=[],
     )
     verify_options(parser, args)  # assert no exception
 
@@ -70,6 +76,9 @@ def test_verify_options(filedir):
         chimera=False,
         browsertime_video=False,
         browsertime_visualmetrics=False,
+        fission=True,
+        fission_mobile=False,
+        extra_prefs=[],
     )
     verify_options(parser, args)  # assert no exception
 
@@ -87,6 +96,9 @@ def test_verify_options(filedir):
         chimera=False,
         browsertime_video=False,
         browsertime_visualmetrics=False,
+        fission=True,
+        fission_mobile=False,
+        extra_prefs=[],
     )
     verify_options(parser, args)  # assert no exception
 
@@ -104,6 +116,9 @@ def test_verify_options(filedir):
         chimera=False,
         browsertime_video=False,
         browsertime_visualmetrics=False,
+        fission=True,
+        fission_mobile=False,
+        extra_prefs=[],
     )
     verify_options(parser, args)  # assert no exception
 
@@ -121,6 +136,9 @@ def test_verify_options(filedir):
         chimera=False,
         browsertime_video=False,
         browsertime_visualmetrics=False,
+        fission=True,
+        fission_mobile=False,
+        extra_prefs=[],
     )
     parser = ArgumentParser()
 
