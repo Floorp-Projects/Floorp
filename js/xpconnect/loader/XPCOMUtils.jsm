@@ -6,6 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["XPCOMUtils"];
 
+const { Services } = ChromeUtils.import(
+  "resource://gre/modules/Services.jsm"
+);
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -579,6 +583,3 @@ class LazyProxyHandler {
 }
 
 var XPCU_lazyPreferenceObserverQI = ChromeUtils.generateQI(["nsIObserver", "nsISupportsWeakReference"]);
-
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
