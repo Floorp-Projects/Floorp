@@ -38,6 +38,14 @@ double RateCounter::GetEventsPerSecond() const {
          (event_last_time_ - event_first_time_).us() * kMicrosPerSecond;
 }
 
+StreamStats::StreamStats(Timestamp stream_started_time)
+    : stream_started_time(stream_started_time) {
+  for (int i = static_cast<int>(FrameDropPhase::kBeforeEncoder);
+       i < static_cast<int>(FrameDropPhase::kLastValue); ++i) {
+    dropped_by_phase.emplace(static_cast<FrameDropPhase>(i), 0);
+  }
+}
+
 std::string StatsKey::ToString() const {
   rtc::StringBuilder out;
   out << stream_label << "_" << sender << "_" << receiver;
