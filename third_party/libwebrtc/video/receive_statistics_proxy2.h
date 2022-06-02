@@ -48,7 +48,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
                                public RtcpCnameCallback,
                                public RtcpPacketTypeCounterObserver {
  public:
-  ReceiveStatisticsProxy(const VideoReceiveStream::Config* config,
+  ReceiveStatisticsProxy(uint32_t remote_ssrc,
                          Clock* clock,
                          TaskQueueBase* worker_thread);
   ~ReceiveStatisticsProxy() override;
