@@ -2129,8 +2129,6 @@ bool nsContentUtils::IsCallerChromeOrErrorPage(JSContext* aCx,
   return doc && IsErrorPage(doc->GetDocumentURI());
 }
 
-// Older Should RFP Functions ----------------------------------
-
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting() {
   return StaticPrefs::privacy_resistFingerprinting();
@@ -2145,19 +2143,8 @@ bool nsContentUtils::ShouldResistFingerprinting(
   return aGlobalObject->ShouldResistFingerprinting();
 }
 
-// Newer Should RFP Functions ----------------------------------
-
-/* static */
-bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification) {
-  // See comment in header file for information about usage
-  return ShouldResistFingerprinting();
-}
-
 bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
   if (!aDocShell) {
-    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-            ("Called nsContentUtils::ShouldResistFingerprinting(const "
-             "nsIDocShell* aDocShell) with NULL docshell"));
     return ShouldResistFingerprinting();
   }
   return ShouldResistFingerprinting(aDocShell->GetDocument());
@@ -2176,6 +2163,21 @@ bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
     return false;
   }
   return ShouldResistFingerprinting(aDoc->GetChannel());
+}
+
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
+  if (!aPrincipal) {
+    return ShouldResistFingerprinting();
+  }
+  bool isChrome = aPrincipal->IsSystemPrincipal();
+  return !isChrome && ShouldResistFingerprinting();
+}
+
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification) {
+  // See comment in header file for information about usage
+  return ShouldResistFingerprinting();
 }
 
 inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
@@ -2268,22 +2270,22 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
   }
 
   // Case 2: Subresource Load
-  MOZ_ASSERT(BasePrincipal::Cast(loadInfo->GetLoadingPrincipal())->OriginAttributesRef() == loadInfo->GetOriginAttributes());
-  return ShouldResistFingerprinting(loadInfo->GetLoadingPrincipal());
+  return ShouldResistFingerprinting(loadInfo->GetLoadingPrincipal(),
+                                    loadInfo->GetOriginAttributes());
 }
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
+bool nsContentUtils::ShouldResistFingerprinting(
+    nsIPrincipal* aPrincipal,
+    const mozilla::OriginAttributes& aOriginAttributes) {
   if (!ShouldResistFingerprinting("Legacy quick-check")) {
     return false;
   }
 
-  auto originAttributes = BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
-
   if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
       sNonPBMExemptMask) {
     // if non-PBM exempt mask is true, exempt non-PBM channels.
-    if (originAttributes.mPrivateBrowsingId == 0) {
+    if (aOriginAttributes.mPrivateBrowsingId == 0) {
       return false;
     }
   }
@@ -6989,7 +6991,8 @@ void nsContentUtils::FireMutationEventsForDirectParsing(
 }
 
 /* static */
-const Document* nsContentUtils::GetInProcessSubtreeRootDocument(const Document* aDoc) {
+const Document* nsContentUtils::GetInProcessSubtreeRootDocument(
+    const Document* aDoc) {
   if (!aDoc) {
     return nullptr;
   }
