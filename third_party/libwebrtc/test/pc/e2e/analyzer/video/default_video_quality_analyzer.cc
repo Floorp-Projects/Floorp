@@ -790,26 +790,25 @@ double DefaultVideoQualityAnalyzer::GetCpuUsagePercent() {
 }
 
 uint16_t DefaultVideoQualityAnalyzer::StreamState::PopFront(size_t peer) {
-  absl::optional<uint16_t> frame_id = frame_ids_.PopFront(peer);
+  size_t peer_queue = GetPeerQueueIndex(peer);
+  size_t alive_frames_queue = GetAliveFramesQueueIndex();
+  absl::optional<uint16_t> frame_id = frame_ids_.PopFront(peer_queue);
   RTC_DCHECK(frame_id.has_value());
 
   // If alive's frame queue is longer than all others, than also pop frame from
   // it, because that frame is received by all receivers.
-  size_t owner_size = frame_ids_.size(owner_);
+  size_t alive_size = frame_ids_.size(alive_frames_queue);
   size_t other_size = 0;
   for (size_t i = 0; i < frame_ids_.readers_count(); ++i) {
     size_t cur_size = frame_ids_.size(i);
-    if (i != owner_ && cur_size > other_size) {
+    if (i != alive_frames_queue && cur_size > other_size) {
       other_size = cur_size;
     }
   }
-  // Pops frame from owner queue if owner's queue is the longest and one of
-  // next conditions is true:
-  // 1. If `enable_receive_own_stream_` and `peer` == `owner_`
-  // 2. If !`enable_receive_own_stream_`
-  if (owner_size > other_size &&
-      (!enable_receive_own_stream_ || peer == owner_)) {
-    absl::optional<uint16_t> alive_frame_id = frame_ids_.PopFront(owner_);
+  // Pops frame from alive queue if alive's queue is the longest one.
+  if (alive_size > other_size) {
+    absl::optional<uint16_t> alive_frame_id =
+        frame_ids_.PopFront(alive_frames_queue);
     RTC_DCHECK(alive_frame_id.has_value());
     RTC_DCHECK_EQ(frame_id.value(), alive_frame_id.value());
   }
@@ -818,7 +817,8 @@ uint16_t DefaultVideoQualityAnalyzer::StreamState::PopFront(size_t peer) {
 }
 
 uint16_t DefaultVideoQualityAnalyzer::StreamState::MarkNextAliveFrameAsDead() {
-  absl::optional<uint16_t> frame_id = frame_ids_.PopFront(owner_);
+  absl::optional<uint16_t> frame_id =
+      frame_ids_.PopFront(GetAliveFramesQueueIndex());
   RTC_DCHECK(frame_id.has_value());
   return frame_id.value();
 }
@@ -838,6 +838,31 @@ absl::optional<Timestamp>
 DefaultVideoQualityAnalyzer::StreamState::last_rendered_frame_time(
     size_t peer) const {
   return MaybeGetValue(last_rendered_frame_time_, peer);
+}
+
+size_t DefaultVideoQualityAnalyzer::StreamState::GetPeerQueueIndex(
+    size_t peer_index) const {
+  // When sender isn't expecting to receive its own stream we will use their
+  // queue for tracking alive frames. Otherwise we will use the queue #0 to
+  // track alive frames and will shift all other queues for peers on 1.
+  // It means when `enable_receive_own_stream_` is true peer's queue will have
+  // index equal to `peer_index` + 1 and when `enable_receive_own_stream_` is
+  // false peer's queue will have index equal to `peer_index`.
+  if (!enable_receive_own_stream_) {
+    return peer_index;
+  }
+  return peer_index + 1;
+}
+
+size_t DefaultVideoQualityAnalyzer::StreamState::GetAliveFramesQueueIndex()
+    const {
+  // When sender isn't expecting to receive its own stream we will use their
+  // queue for tracking alive frames. Otherwise we will use the queue #0 to
+  // track alive frames and will shift all other queues for peers on 1.
+  if (!enable_receive_own_stream_) {
+    return owner_;
+  }
+  return 0;
 }
 
 bool DefaultVideoQualityAnalyzer::FrameInFlight::RemoveFrame() {
