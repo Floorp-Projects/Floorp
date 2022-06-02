@@ -222,7 +222,7 @@
 - name: accessibility.cache.enabled
   type: bool
 #ifdef ANDROID
-  value: true
+  value: @IS_NOT_RELEASE_OR_BETA@
 #else
   value: false
 #endif
