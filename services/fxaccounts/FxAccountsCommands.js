@@ -10,8 +10,9 @@ const {
   SCOPE_OLD_SYNC,
   log,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PushCrypto",
   "resource://gre/modules/PushCrypto.jsm"
 );
@@ -23,7 +24,7 @@ const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BulkKeyBundle: "resource://services-sync/keys.js",
   CommonUtils: "resource://services-common/utils.js",
   CryptoUtils: "resource://services-crypto/utils.js",
@@ -31,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "INVALID_SHAREABLE_SCHEMES",
   "services.sync.engine.tabs.filteredSchemes",
   "",
@@ -214,7 +215,7 @@ class FxAccountsCommands {
             // scheme filter list, but we have this here in the case other platforms
             // haven't caught up and/or trying to send invalid uris using older versions
             const scheme = Services.io.newURI(uri).scheme;
-            if (INVALID_SHAREABLE_SCHEMES.has(scheme)) {
+            if (lazy.INVALID_SHAREABLE_SCHEMES.has(scheme)) {
               throw new Error("Invalid scheme found for received URI.");
             }
             tabsReceived.push({ title, uri, sender });
@@ -351,14 +352,14 @@ class SendTab {
       throw new Error("Target Send Tab key ID is different from ours");
     }
     const json = JSON.parse(bundle);
-    const wrapper = new CryptoWrapper();
+    const wrapper = new lazy.CryptoWrapper();
     wrapper.deserialize({ payload: json });
-    const syncKeyBundle = BulkKeyBundle.fromJWK(oldsyncKey);
+    const syncKeyBundle = lazy.BulkKeyBundle.fromJWK(oldsyncKey);
     let { publicKey, authSecret } = await wrapper.decrypt(syncKeyBundle);
     authSecret = urlsafeBase64Decode(authSecret);
     publicKey = urlsafeBase64Decode(publicKey);
 
-    const { ciphertext: encrypted } = await PushCrypto.encrypt(
+    const { ciphertext: encrypted } = await lazy.PushCrypto.encrypt(
       bytes,
       publicKey,
       authSecret
@@ -380,7 +381,7 @@ class SendTab {
     publicKey = urlsafeBase64Decode(publicKey);
     authSecret = urlsafeBase64Decode(authSecret);
     ciphertext = new Uint8Array(urlsafeBase64Decode(ciphertext));
-    return PushCrypto.decrypt(
+    return lazy.PushCrypto.decrypt(
       privateKey,
       publicKey,
       authSecret,
@@ -391,9 +392,9 @@ class SendTab {
   }
 
   async _generateAndPersistSendTabKeys() {
-    let [publicKey, privateKey] = await PushCrypto.generateKeys();
+    let [publicKey, privateKey] = await lazy.PushCrypto.generateKeys();
     publicKey = urlsafeBase64Encode(publicKey);
-    let authSecret = PushCrypto.generateAuthenticationSecret();
+    let authSecret = lazy.PushCrypto.generateAuthenticationSecret();
     authSecret = urlsafeBase64Encode(authSecret);
     const sendTabKeys = {
       publicKey,
@@ -441,9 +442,9 @@ class SendTab {
       log.warn("Failed to fetch keys, so unable to determine sendtab keys", ex);
       return null;
     }
-    const wrapper = new CryptoWrapper();
+    const wrapper = new lazy.CryptoWrapper();
     wrapper.cleartext = keyToEncrypt;
-    const keyBundle = BulkKeyBundle.fromJWK(oldsyncKey);
+    const keyBundle = lazy.BulkKeyBundle.fromJWK(oldsyncKey);
     await wrapper.encrypt(keyBundle);
     const encryptedSendTabKeys = JSON.stringify({
       // Older clients expect this to be hex, due to pre-JWK sync key ids :-(
