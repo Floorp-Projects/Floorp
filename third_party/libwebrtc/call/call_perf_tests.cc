@@ -31,6 +31,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue_for_test.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/metrics.h"
@@ -668,12 +669,13 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
                                       : (kMaxEncodeBitrateKbps +
                                          kAcceptableBitrateErrorMargin / 2)),
           num_bitrate_observations_in_range_(0),
-          task_queue_(task_queue) {}
+          task_queue_(task_queue),
+          task_safety_flag_(PendingTaskSafetyFlag::CreateDetached()) {}
 
    private:
     // TODO(holmer): Run this with a timer instead of once per packet.
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
-      task_queue_->PostTask(ToQueuedTask([this]() {
+      task_queue_->PostTask(ToQueuedTask(task_safety_flag_, [this]() {
         VideoSendStream::Stats stats = send_stream_->GetStats();
 
         if (!stats.substreams.empty()) {
@@ -700,6 +702,8 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
         const std::vector<VideoReceiveStream*>& receive_streams) override {
       send_stream_ = send_stream;
     }
+
+    void OnStreamsStopped() override { task_safety_flag_->SetNotAlive(); }
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
@@ -729,6 +733,7 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
     int num_bitrate_observations_in_range_;
     std::vector<double> bitrate_kbps_list_;
     TaskQueueBase* task_queue_;
+    rtc::scoped_refptr<PendingTaskSafetyFlag> task_safety_flag_;
   } test(pad_to_min_bitrate, task_queue());
 
   fake_encoder_max_bitrate_ = kMaxEncodeBitrateKbps;
