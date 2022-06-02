@@ -39,7 +39,7 @@ class RateCounter {
  private:
   Timestamp event_first_time_ = Timestamp::MinusInfinity();
   Timestamp event_last_time_ = Timestamp::MinusInfinity();
-  int64_t event_count_ = 0;
+  int64_t events_count_ = 0;
 };
 
 struct FrameCounters {
@@ -164,6 +164,27 @@ struct StatsKey {
 // Required to use StatsKey as std::map key.
 bool operator<(const StatsKey& a, const StatsKey& b);
 bool operator==(const StatsKey& a, const StatsKey& b);
+
+struct DefaultVideoQualityAnalyzerOptions {
+  // Tells DefaultVideoQualityAnalyzer if heavy metrics like PSNR and SSIM have
+  // to be computed or not.
+  bool heavy_metrics_computation_enabled = true;
+  // If true DefaultVideoQualityAnalyzer will try to adjust frames before
+  // computing PSNR and SSIM for them. In some cases picture may be shifted by
+  // a few pixels after the encode/decode step. Those difference is invisible
+  // for a human eye, but it affects the metrics. So the adjustment is used to
+  // get metrics that are closer to how human perceive the video. This feature
+  // significantly slows down the comparison, so turn it on only when it is
+  // needed.
+  bool adjust_cropping_before_comparing_frames = false;
+  // Amount of frames that are queued in the DefaultVideoQualityAnalyzer from
+  // the point they were captured to the point they were rendered on all
+  // receivers per stream.
+  size_t max_frames_in_flight_per_stream_count =
+      kDefaultMaxFramesInFlightPerStream;
+  // If true, the analyzer will expect peers to receive their own video streams.
+  bool enable_receive_own_stream = false;
+};
 
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc
