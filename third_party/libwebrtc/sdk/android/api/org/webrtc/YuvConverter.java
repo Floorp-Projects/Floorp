@@ -13,7 +13,7 @@ package org.webrtc;
 import android.graphics.Matrix;
 import android.opengl.GLES20;
 import android.opengl.GLException;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import java.nio.ByteBuffer;
 import org.webrtc.VideoFrame.I420Buffer;
 import org.webrtc.VideoFrame.TextureBuffer;
