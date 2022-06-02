@@ -56,9 +56,6 @@ class PeerConnectionE2EQualityTestSmokeTest : public ::testing::Test {
         testing::UnitTest::GetInstance()->current_test_info()->name(),
         *network_emulation_->time_controller(),
         /*audio_quality_analyzer=*/nullptr, std::move(video_quality_analyzer));
-    test::ScopedFieldTrials field_trials(
-        std::string(field_trial::GetFieldTrialString()) +
-        "WebRTC-UseStandardBytesStats/Enabled/");
   }
 
   std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
