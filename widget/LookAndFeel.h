@@ -75,8 +75,6 @@ class LookAndFeel {
 
     // position of scroll arrows in a scrollbar
     ScrollArrowStyle,
-    // is scroll thumb proportional or fixed?
-    ScrollSliderStyle,
 
     // each button can take one of four values:
     ScrollButtonLeftMouseButtonAction,
@@ -367,8 +365,6 @@ class LookAndFeel {
     eScrollArrowStyle_BothAtTop =
         eScrollArrow_StartBackward | eScrollArrow_StartForward
   };
-
-  enum { eScrollThumbStyle_Normal, eScrollThumbStyle_Proportional };
 
   // When modifying this list, also modify nsXPLookAndFeel::sFloatPrefs
   // in widget/nsXPLookAndFeel.cpp.
