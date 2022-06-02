@@ -748,6 +748,14 @@ VideoSendStream::Stats SendStatisticsProxy::GetStats() {
   stats_.media_bitrate_bps = media_byte_rate_tracker_.ComputeRate() * 8;
   stats_.quality_limitation_durations_ms =
       quality_limitation_reason_tracker_.DurationsMs();
+
+  for (auto& substream : stats_.substreams) {
+    uint32_t ssrc = substream.first;
+    if (encoded_frame_rate_trackers_.count(ssrc) > 0) {
+      substream.second.encode_frame_rate =
+          encoded_frame_rate_trackers_[ssrc]->ComputeRate();
+    }
+  }
   return stats_;
 }
 
@@ -963,12 +971,12 @@ void SendStatisticsProxy::OnSendEncodedImage(
   VideoSendStream::StreamStats* stats = GetStatsEntry(ssrc);
   if (!stats)
     return;
-  if (encoded_frame_rate_trackers_.count(simulcast_idx) == 0) {
-    encoded_frame_rate_trackers_[simulcast_idx] =
+
+  if (encoded_frame_rate_trackers_.count(ssrc) == 0) {
+    encoded_frame_rate_trackers_[ssrc] =
         std::make_unique<rtc::RateTracker>(kBucketSizeMs, kBucketCount);
   }
-  stats->encode_frame_rate =
-      encoded_frame_rate_trackers_[simulcast_idx]->ComputeRate();
+
   stats->frames_encoded++;
   stats->total_encode_time_ms += encoded_image.timing_.encode_finish_ms -
                                  encoded_image.timing_.encode_start_ms;
@@ -1025,7 +1033,7 @@ void SendStatisticsProxy::OnSendEncodedImage(
   // is_top_spatial_layer pertains only to SVC, will always be true for
   // simulcast.
   if (is_top_spatial_layer)
-    encoded_frame_rate_trackers_[simulcast_idx]->AddSamples(1);
+    encoded_frame_rate_trackers_[ssrc]->AddSamples(1);
 
   absl::optional<int> downscales =
       adaptation_limitations_.MaskedQualityCounts().resolution_adaptations;
