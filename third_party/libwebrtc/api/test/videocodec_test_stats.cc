@@ -91,6 +91,9 @@ std::map<std::string, std::string> VideoCodecTestStats::VideoStatistics::ToMap()
   map["max_delta_frame_delay_sec"] = std::to_string(max_delta_frame_delay_sec);
   map["time_to_reach_target_bitrate_sec"] =
       std::to_string(time_to_reach_target_bitrate_sec);
+  map["avg_bitrate_mismatch_pct"] = std::to_string(avg_bitrate_mismatch_pct);
+  map["avg_framerate_mismatch_pct"] =
+      std::to_string(avg_framerate_mismatch_pct);
   map["avg_key_frame_size_bytes"] = std::to_string(avg_key_frame_size_bytes);
   map["avg_delta_frame_size_bytes"] =
       std::to_string(avg_delta_frame_size_bytes);
