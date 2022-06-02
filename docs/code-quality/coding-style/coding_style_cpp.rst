@@ -1143,3 +1143,9 @@ been replaced with ``mozilla::Abs`` calls, in `bug
 code in ``Firefox/core/toolkit`` needs to ``#include "nsAlgorithm.h"`` and
 use the ``NS_foo`` variants instead of ``PR_foo``, or
 ``#include "mozilla/MathAlgorithms.h"`` for ``mozilla::Abs``.
+
+Use of SpiderMonkey rooting typedefs
+------------------------------------
+The rooting typedefs in ``js/public/TypeDecls.h``, such as ``HandleObject`` and
+``RootedObject``, are deprecated both in and outside of SpiderMonkey. They will
+eventually be removed and should not be used in new code.
