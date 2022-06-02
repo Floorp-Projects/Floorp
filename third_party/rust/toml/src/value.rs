@@ -1,18 +1,21 @@
 //! Definition of a TOML value
 
 use std::collections::{BTreeMap, HashMap};
-use std::hash::Hash;
 use std::fmt;
+use std::hash::Hash;
+use std::mem::discriminant;
 use std::ops;
 use std::str::FromStr;
 use std::vec;
 
-use serde::ser;
 use serde::de;
 use serde::de::IntoDeserializer;
+use serde::ser;
 
-pub use datetime::{Datetime, DatetimeParseError};
-use datetime::{self, DatetimeFromString};
+use crate::datetime::{self, DatetimeFromString};
+pub use crate::datetime::{Date, Datetime, DatetimeParseError, Offset, Time};
+
+pub use crate::map::{Entry, Map};
 
 /// Representation of a TOML value.
 #[derive(PartialEq, Clone, Debug)]
@@ -36,8 +39,10 @@ pub enum Value {
 /// Type representing a TOML array, payload of the `Value::Array` variant
 pub type Array = Vec<Value>;
 
-/// Type representing a TOML table, payload of the `Value::Table` variant
-pub type Table = BTreeMap<String, Value>;
+/// Type representing a TOML table, payload of the `Value::Table` variant.
+/// By default it is backed by a BTreeMap, enable the `preserve_order` feature
+/// to use a LinkedHashMap instead.
+pub type Table = Map<String, Value>;
 
 impl Value {
     /// Convert a `T` into `toml::Value` which is an enum that can represent
@@ -45,8 +50,9 @@ impl Value {
     ///
     /// This conversion can fail if `T`'s implementation of `Serialize` decides to
     /// fail, or if `T` contains a map with non-string keys.
-    pub fn try_from<T>(value: T) -> Result<Value, ::ser::Error>
-        where T: ser::Serialize,
+    pub fn try_from<T>(value: T) -> Result<Value, crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         value.serialize(Serializer)
     }
@@ -60,8 +66,9 @@ impl Value {
     /// something is wrong with the data, for example required struct fields are
     /// missing from the TOML map or some number is too big to fit in the expected
     /// primitive type.
-    pub fn try_into<'de, T>(self) -> Result<T, ::de::Error>
-        where T: de::Deserialize<'de>,
+    pub fn try_into<'de, T>(self) -> Result<T, crate::de::Error>
+    where
+        T: de::Deserialize<'de>,
     {
         de::Deserialize::deserialize(self)
     }
@@ -92,7 +99,10 @@ impl Value {
 
     /// Extracts the integer value if it is an integer.
     pub fn as_integer(&self) -> Option<i64> {
-        match *self { Value::Integer(i) => Some(i), _ => None }
+        match *self {
+            Value::Integer(i) => Some(i),
+            _ => None,
+        }
     }
 
     /// Tests whether this value is an integer.
@@ -102,7 +112,10 @@ impl Value {
 
     /// Extracts the float value if it is a float.
     pub fn as_float(&self) -> Option<f64> {
-        match *self { Value::Float(f) => Some(f), _ => None }
+        match *self {
+            Value::Float(f) => Some(f),
+            _ => None,
+        }
     }
 
     /// Tests whether this value is a float.
@@ -112,7 +125,10 @@ impl Value {
 
     /// Extracts the boolean value if it is a boolean.
     pub fn as_bool(&self) -> Option<bool> {
-        match *self { Value::Boolean(b) => Some(b), _ => None }
+        match *self {
+            Value::Boolean(b) => Some(b),
+            _ => None,
+        }
     }
 
     /// Tests whether this value is a boolean.
@@ -122,7 +138,10 @@ impl Value {
 
     /// Extracts the string of this value if it is a string.
     pub fn as_str(&self) -> Option<&str> {
-        match *self { Value::String(ref s) => Some(&**s), _ => None }
+        match *self {
+            Value::String(ref s) => Some(&**s),
+            _ => None,
+        }
     }
 
     /// Tests if this value is a string.
@@ -139,7 +158,10 @@ impl Value {
     /// 1979-05-27T07:32:00Z
     /// ```
     pub fn as_datetime(&self) -> Option<&Datetime> {
-        match *self { Value::Datetime(ref s) => Some(s), _ => None }
+        match *self {
+            Value::Datetime(ref s) => Some(s),
+            _ => None,
+        }
     }
 
     /// Tests whether this value is a datetime.
@@ -149,12 +171,18 @@ impl Value {
 
     /// Extracts the array value if it is an array.
     pub fn as_array(&self) -> Option<&Vec<Value>> {
-        match *self { Value::Array(ref s) => Some(s), _ => None }
+        match *self {
+            Value::Array(ref s) => Some(s),
+            _ => None,
+        }
     }
 
     /// Extracts the array value if it is an array.
     pub fn as_array_mut(&mut self) -> Option<&mut Vec<Value>> {
-        match *self { Value::Array(ref mut s) => Some(s), _ => None }
+        match *self {
+            Value::Array(ref mut s) => Some(s),
+            _ => None,
+        }
     }
 
     /// Tests whether this value is an array.
@@ -164,12 +192,18 @@ impl Value {
 
     /// Extracts the table value if it is a table.
     pub fn as_table(&self) -> Option<&Table> {
-        match *self { Value::Table(ref s) => Some(s), _ => None }
+        match *self {
+            Value::Table(ref s) => Some(s),
+            _ => None,
+        }
     }
 
     /// Extracts the table value if it is a table.
     pub fn as_table_mut(&mut self) -> Option<&mut Table> {
-        match *self { Value::Table(ref mut s) => Some(s), _ => None }
+        match *self {
+            Value::Table(ref mut s) => Some(s),
+            _ => None,
+        }
     }
 
     /// Tests whether this value is a table.
@@ -179,17 +213,7 @@ impl Value {
 
     /// Tests whether this and another value have the same type.
     pub fn same_type(&self, other: &Value) -> bool {
-        match (self, other) {
-            (&Value::String(..), &Value::String(..)) |
-            (&Value::Integer(..), &Value::Integer(..)) |
-            (&Value::Float(..), &Value::Float(..)) |
-            (&Value::Boolean(..), &Value::Boolean(..)) |
-            (&Value::Datetime(..), &Value::Datetime(..)) |
-            (&Value::Array(..), &Value::Array(..)) |
-            (&Value::Table(..), &Value::Table(..)) => true,
-
-            _ => false,
-        }
+        discriminant(self) == discriminant(other)
     }
 
     /// Returns a human-readable representation of the type of this value.
@@ -206,7 +230,10 @@ impl Value {
     }
 }
 
-impl<I> ops::Index<I> for Value where I: Index {
+impl<I> ops::Index<I> for Value
+where
+    I: Index,
+{
     type Output = Value;
 
     fn index(&self, index: I) -> &Value {
@@ -214,7 +241,10 @@ impl<I> ops::Index<I> for Value where I: Index {
     }
 }
 
-impl<I> ops::IndexMut<I> for Value where I: Index {
+impl<I> ops::IndexMut<I> for Value
+where
+    I: Index,
+{
     fn index_mut(&mut self, index: I) -> &mut Value {
         self.get_mut(index).expect("index not found")
     }
@@ -235,9 +265,7 @@ impl<V: Into<Value>> From<Vec<V>> for Value {
 
 impl<S: Into<String>, V: Into<Value>> From<BTreeMap<S, V>> for Value {
     fn from(val: BTreeMap<S, V>) -> Value {
-        let table = val.into_iter()
-            .map(|(s, v)| (s.into(), v.into()))
-            .collect();
+        let table = val.into_iter().map(|(s, v)| (s.into(), v.into())).collect();
 
         Value::Table(table)
     }
@@ -245,9 +273,7 @@ impl<S: Into<String>, V: Into<Value>> From<BTreeMap<S, V>> for Value {
 
 impl<S: Into<String> + Hash + Eq, V: Into<Value>> From<HashMap<S, V>> for Value {
     fn from(val: HashMap<S, V>) -> Value {
-        let table = val.into_iter()
-            .map(|(s, v)| (s.into(), v.into()))
-            .collect();
+        let table = val.into_iter().map(|(s, v)| (s.into(), v.into())).collect();
 
         Value::Table(table)
     }
@@ -261,7 +287,7 @@ macro_rules! impl_into_value {
                 Value::$variant(val.into())
             }
         }
-    }
+    };
 }
 
 impl_into_value!(String: String);
@@ -274,6 +300,7 @@ impl_into_value!(Float: f64);
 impl_into_value!(Float: f32);
 impl_into_value!(Boolean: bool);
 impl_into_value!(Datetime: Datetime);
+impl_into_value!(Table: Table);
 
 /// Types that can be used to index a `toml::Value`
 ///
@@ -340,7 +367,10 @@ impl Index for String {
     }
 }
 
-impl<'s, T: ?Sized> Index for &'s T where T: Index {
+impl<'s, T: ?Sized> Index for &'s T
+where
+    T: Index,
+{
     fn index<'a>(&self, val: &'a Value) -> Option<&'a Value> {
         (**self).index(val)
     }
@@ -351,21 +381,24 @@ impl<'s, T: ?Sized> Index for &'s T where T: Index {
 }
 
 impl fmt::Display for Value {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        ::ser::to_string(self).expect("Unable to represent value as string").fmt(f)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        crate::ser::to_string(self)
+            .expect("Unable to represent value as string")
+            .fmt(f)
     }
 }
 
 impl FromStr for Value {
-    type Err = ::de::Error;
+    type Err = crate::de::Error;
     fn from_str(s: &str) -> Result<Value, Self::Err> {
-        ::from_str(s)
+        crate::from_str(s)
     }
 }
 
 impl ser::Serialize for Value {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: ser::Serializer
+    where
+        S: ser::Serializer,
     {
         use serde::ser::SerializeMap;
 
@@ -381,13 +414,20 @@ impl ser::Serialize for Value {
                 // Be sure to visit non-tables first (and also non
                 // array-of-tables) as all keys must be emitted first.
                 for (k, v) in t {
-                    if !v.is_table() && !v.is_array() ||
-                       (v.as_array().map(|a| !a.iter().any(|v| v.is_table())).unwrap_or(false)) {
+                    if !v.is_table() && !v.is_array()
+                        || (v
+                            .as_array()
+                            .map(|a| !a.iter().any(|v| v.is_table()))
+                            .unwrap_or(false))
+                    {
                         map.serialize_entry(k, v)?;
                     }
                 }
                 for (k, v) in t {
-                    if v.as_array().map(|a| a.iter().any(|v| v.is_table())).unwrap_or(false) {
+                    if v.as_array()
+                        .map(|a| a.iter().any(|v| v.is_table()))
+                        .unwrap_or(false)
+                    {
                         map.serialize_entry(k, v)?;
                     }
                 }
@@ -404,14 +444,15 @@ impl ser::Serialize for Value {
 
 impl<'de> de::Deserialize<'de> for Value {
     fn deserialize<D>(deserializer: D) -> Result<Value, D::Error>
-        where D: de::Deserializer<'de>,
+    where
+        D: de::Deserializer<'de>,
     {
         struct ValueVisitor;
 
         impl<'de> de::Visitor<'de> for ValueVisitor {
             type Value = Value;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("any valid TOML value")
             }
 
@@ -452,13 +493,15 @@ impl<'de> de::Deserialize<'de> for Value {
             }
 
             fn visit_some<D>(self, deserializer: D) -> Result<Value, D::Error>
-                where D: de::Deserializer<'de>,
+            where
+                D: de::Deserializer<'de>,
             {
                 de::Deserialize::deserialize(deserializer)
             }
 
             fn visit_seq<V>(self, mut visitor: V) -> Result<Value, V::Error>
-                where V: de::SeqAccess<'de>,
+            where
+                V: de::SeqAccess<'de>,
             {
                 let mut vec = Vec::new();
                 while let Some(elem) = visitor.next_element()? {
@@ -468,28 +511,28 @@ impl<'de> de::Deserialize<'de> for Value {
             }
 
             fn visit_map<V>(self, mut visitor: V) -> Result<Value, V::Error>
-                where V: de::MapAccess<'de>,
+            where
+                V: de::MapAccess<'de>,
             {
                 let mut key = String::new();
-                let datetime = visitor.next_key_seed(DatetimeOrTable {
-                    key: &mut key,
-                })?;
+                let datetime = visitor.next_key_seed(DatetimeOrTable { key: &mut key })?;
                 match datetime {
                     Some(true) => {
                         let date: DatetimeFromString = visitor.next_value()?;
-                        return Ok(Value::Datetime(date.value))
+                        return Ok(Value::Datetime(date.value));
                     }
-                    None => return Ok(Value::Table(BTreeMap::new())),
+                    None => return Ok(Value::Table(Map::new())),
                     Some(false) => {}
                 }
-                let mut map = BTreeMap::new();
+                let mut map = Map::new();
                 map.insert(key, visitor.next_value()?);
-                while let Some(key) = visitor.next_key()? {
-                    if map.contains_key(&key) {
+                while let Some(key) = visitor.next_key::<String>()? {
+                    if let Entry::Vacant(vacant) = map.entry(&key) {
+                        vacant.insert(visitor.next_value()?);
+                    } else {
                         let msg = format!("duplicate key: `{}`", key);
-                        return Err(de::Error::custom(msg))
+                        return Err(de::Error::custom(msg));
                     }
-                    map.insert(key, visitor.next_value()?);
                 }
                 Ok(Value::Table(map))
             }
@@ -500,10 +543,11 @@ impl<'de> de::Deserialize<'de> for Value {
 }
 
 impl<'de> de::Deserializer<'de> for Value {
-    type Error = ::de::Error;
+    type Error = crate::de::Error;
 
-    fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, ::de::Error>
-        where V: de::Visitor<'de>,
+    fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, crate::de::Error>
+    where
+        V: de::Visitor<'de>,
     {
         match self {
             Value::Boolean(v) => visitor.visit_bool(v),
@@ -542,20 +586,24 @@ impl<'de> de::Deserializer<'de> for Value {
         _name: &str,
         _variants: &'static [&'static str],
         visitor: V,
-    ) -> Result<V::Value, ::de::Error>
+    ) -> Result<V::Value, crate::de::Error>
     where
         V: de::Visitor<'de>,
     {
         match self {
             Value::String(variant) => visitor.visit_enum(variant.into_deserializer()),
-            _ => Err(de::Error::invalid_type(de::Unexpected::UnitVariant, &"string only")),
+            _ => Err(de::Error::invalid_type(
+                de::Unexpected::UnitVariant,
+                &"string only",
+            )),
         }
     }
 
     // `None` is interpreted as a missing field so be sure to implement `Some`
     // as a present field.
-    fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, ::de::Error>
-        where V: de::Visitor<'de>,
+    fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, crate::de::Error>
+    where
+        V: de::Visitor<'de>,
     {
         visitor.visit_some(self)
     }
@@ -563,14 +611,15 @@ impl<'de> de::Deserializer<'de> for Value {
     fn deserialize_newtype_struct<V>(
         self,
         _name: &'static str,
-        visitor: V
-    ) -> Result<V::Value, ::de::Error>
-        where V: de::Visitor<'de>
+        visitor: V,
+    ) -> Result<V::Value, crate::de::Error>
+    where
+        V: de::Visitor<'de>,
     {
         visitor.visit_newtype_struct(self)
     }
 
-    forward_to_deserialize_any! {
+    serde::forward_to_deserialize_any! {
         bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char str string unit seq
         bytes byte_buf map unit_struct tuple_struct struct
         tuple ignored_any identifier
@@ -590,11 +639,11 @@ impl SeqDeserializer {
 }
 
 impl<'de> de::SeqAccess<'de> for SeqDeserializer {
-    type Error = ::de::Error;
+    type Error = crate::de::Error;
 
-    fn next_element_seed<T>(&mut self, seed: T)
-                            -> Result<Option<T::Value>, ::de::Error>
-        where T: de::DeserializeSeed<'de>,
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, crate::de::Error>
+    where
+        T: de::DeserializeSeed<'de>,
     {
         match self.iter.next() {
             Some(value) => seed.deserialize(value).map(Some),
@@ -611,12 +660,12 @@ impl<'de> de::SeqAccess<'de> for SeqDeserializer {
 }
 
 struct MapDeserializer {
-    iter: <BTreeMap<String, Value> as IntoIterator>::IntoIter,
+    iter: <Map<String, Value> as IntoIterator>::IntoIter,
     value: Option<(String, Value)>,
 }
 
 impl MapDeserializer {
-    fn new(map: BTreeMap<String, Value>) -> Self {
+    fn new(map: Map<String, Value>) -> Self {
         MapDeserializer {
             iter: map.into_iter(),
             value: None,
@@ -625,10 +674,11 @@ impl MapDeserializer {
 }
 
 impl<'de> de::MapAccess<'de> for MapDeserializer {
-    type Error = ::de::Error;
+    type Error = crate::de::Error;
 
-    fn next_key_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, ::de::Error>
-        where T: de::DeserializeSeed<'de>,
+    fn next_key_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, crate::de::Error>
+    where
+        T: de::DeserializeSeed<'de>,
     {
         match self.iter.next() {
             Some((key, value)) => {
@@ -639,8 +689,9 @@ impl<'de> de::MapAccess<'de> for MapDeserializer {
         }
     }
 
-    fn next_value_seed<T>(&mut self, seed: T) -> Result<T::Value, ::de::Error>
-        where T: de::DeserializeSeed<'de>,
+    fn next_value_seed<T>(&mut self, seed: T) -> Result<T::Value, crate::de::Error>
+    where
+        T: de::DeserializeSeed<'de>,
     {
         let (key, res) = match self.value.take() {
             Some((key, value)) => (key, seed.deserialize(value)),
@@ -660,7 +711,7 @@ impl<'de> de::MapAccess<'de> for MapDeserializer {
     }
 }
 
-impl<'de> de::IntoDeserializer<'de, ::de::Error> for Value {
+impl<'de> de::IntoDeserializer<'de, crate::de::Error> for Value {
     type Deserializer = Self;
 
     fn into_deserializer(self) -> Self {
@@ -672,7 +723,7 @@ struct Serializer;
 
 impl ser::Serializer for Serializer {
     type Ok = Value;
-    type Error = ::ser::Error;
+    type Error = crate::ser::Error;
 
     type SerializeSeq = SerializeVec;
     type SerializeTuple = SerializeVec;
@@ -680,41 +731,41 @@ impl ser::Serializer for Serializer {
     type SerializeTupleVariant = SerializeVec;
     type SerializeMap = SerializeMap;
     type SerializeStruct = SerializeMap;
-    type SerializeStructVariant = ser::Impossible<Value, ::ser::Error>;
+    type SerializeStructVariant = ser::Impossible<Value, crate::ser::Error>;
 
-    fn serialize_bool(self, value: bool) -> Result<Value, ::ser::Error> {
+    fn serialize_bool(self, value: bool) -> Result<Value, crate::ser::Error> {
         Ok(Value::Boolean(value))
     }
 
-    fn serialize_i8(self, value: i8) -> Result<Value, ::ser::Error> {
+    fn serialize_i8(self, value: i8) -> Result<Value, crate::ser::Error> {
         self.serialize_i64(value.into())
     }
 
-    fn serialize_i16(self, value: i16) -> Result<Value, ::ser::Error> {
+    fn serialize_i16(self, value: i16) -> Result<Value, crate::ser::Error> {
         self.serialize_i64(value.into())
     }
 
-    fn serialize_i32(self, value: i32) -> Result<Value, ::ser::Error> {
+    fn serialize_i32(self, value: i32) -> Result<Value, crate::ser::Error> {
         self.serialize_i64(value.into())
     }
 
-    fn serialize_i64(self, value: i64) -> Result<Value, ::ser::Error> {
-        Ok(Value::Integer(value.into()))
+    fn serialize_i64(self, value: i64) -> Result<Value, crate::ser::Error> {
+        Ok(Value::Integer(value))
     }
 
-    fn serialize_u8(self, value: u8) -> Result<Value, ::ser::Error> {
+    fn serialize_u8(self, value: u8) -> Result<Value, crate::ser::Error> {
         self.serialize_i64(value.into())
     }
 
-    fn serialize_u16(self, value: u16) -> Result<Value, ::ser::Error> {
+    fn serialize_u16(self, value: u16) -> Result<Value, crate::ser::Error> {
         self.serialize_i64(value.into())
     }
 
-    fn serialize_u32(self, value: u32) -> Result<Value, ::ser::Error> {
+    fn serialize_u32(self, value: u32) -> Result<Value, crate::ser::Error> {
         self.serialize_i64(value.into())
     }
 
-    fn serialize_u64(self, value: u64) -> Result<Value, ::ser::Error> {
+    fn serialize_u64(self, value: u64) -> Result<Value, crate::ser::Error> {
         if value <= i64::max_value() as u64 {
             self.serialize_i64(value as i64)
         } else {
@@ -722,125 +773,132 @@ impl ser::Serializer for Serializer {
         }
     }
 
-    fn serialize_f32(self, value: f32) -> Result<Value, ::ser::Error> {
+    fn serialize_f32(self, value: f32) -> Result<Value, crate::ser::Error> {
         self.serialize_f64(value.into())
     }
 
-    fn serialize_f64(self, value: f64) -> Result<Value, ::ser::Error> {
+    fn serialize_f64(self, value: f64) -> Result<Value, crate::ser::Error> {
         Ok(Value::Float(value))
     }
 
-    fn serialize_char(self, value: char) -> Result<Value, ::ser::Error> {
+    fn serialize_char(self, value: char) -> Result<Value, crate::ser::Error> {
         let mut s = String::new();
         s.push(value);
         self.serialize_str(&s)
     }
 
-    fn serialize_str(self, value: &str) -> Result<Value, ::ser::Error> {
+    fn serialize_str(self, value: &str) -> Result<Value, crate::ser::Error> {
         Ok(Value::String(value.to_owned()))
     }
 
-    fn serialize_bytes(self, value: &[u8]) -> Result<Value, ::ser::Error> {
+    fn serialize_bytes(self, value: &[u8]) -> Result<Value, crate::ser::Error> {
         let vec = value.iter().map(|&b| Value::Integer(b.into())).collect();
         Ok(Value::Array(vec))
     }
 
-    fn serialize_unit(self) -> Result<Value, ::ser::Error> {
-        Err(::ser::Error::UnsupportedType)
+    fn serialize_unit(self) -> Result<Value, crate::ser::Error> {
+        Err(crate::ser::Error::UnsupportedType)
     }
 
-    fn serialize_unit_struct(self, _name: &'static str)
-                             -> Result<Value, ::ser::Error> {
-        Err(::ser::Error::UnsupportedType)
+    fn serialize_unit_struct(self, _name: &'static str) -> Result<Value, crate::ser::Error> {
+        Err(crate::ser::Error::UnsupportedType)
     }
 
-    fn serialize_unit_variant(self,
-                              _name: &'static str,
-                              _variant_index: u32,
-                              _variant: &'static str)
-                              -> Result<Value, ::ser::Error> {
+    fn serialize_unit_variant(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+    ) -> Result<Value, crate::ser::Error> {
         self.serialize_str(_variant)
     }
 
-    fn serialize_newtype_struct<T: ?Sized>(self,
-                                           _name: &'static str,
-                                           value: &T)
-                                           -> Result<Value, ::ser::Error>
-        where T: ser::Serialize,
+    fn serialize_newtype_struct<T: ?Sized>(
+        self,
+        _name: &'static str,
+        value: &T,
+    ) -> Result<Value, crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         value.serialize(self)
     }
 
-    fn serialize_newtype_variant<T: ?Sized>(self,
-                                            _name: &'static str,
-                                            _variant_index: u32,
-                                            _variant: &'static str,
-                                            _value: &T)
-                                            -> Result<Value, ::ser::Error>
-        where T: ser::Serialize,
+    fn serialize_newtype_variant<T: ?Sized>(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _value: &T,
+    ) -> Result<Value, crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
-        Err(::ser::Error::UnsupportedType)
+        Err(crate::ser::Error::UnsupportedType)
     }
 
-    fn serialize_none(self) -> Result<Value, ::ser::Error> {
-        Err(::ser::Error::UnsupportedNone)
+    fn serialize_none(self) -> Result<Value, crate::ser::Error> {
+        Err(crate::ser::Error::UnsupportedNone)
     }
 
-    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Value, ::ser::Error>
-        where T: ser::Serialize,
+    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Value, crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         value.serialize(self)
     }
 
-    fn serialize_seq(self, len: Option<usize>)
-                     -> Result<Self::SerializeSeq, ::ser::Error>
-    {
+    fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, crate::ser::Error> {
         Ok(SerializeVec {
-            vec: Vec::with_capacity(len.unwrap_or(0))
+            vec: Vec::with_capacity(len.unwrap_or(0)),
         })
     }
 
-    fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, ::ser::Error> {
+    fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, crate::ser::Error> {
         self.serialize_seq(Some(len))
     }
 
-    fn serialize_tuple_struct(self, _name: &'static str, len: usize)
-                              -> Result<Self::SerializeTupleStruct, ::ser::Error> {
+    fn serialize_tuple_struct(
+        self,
+        _name: &'static str,
+        len: usize,
+    ) -> Result<Self::SerializeTupleStruct, crate::ser::Error> {
         self.serialize_seq(Some(len))
     }
 
-    fn serialize_tuple_variant(self,
-                               _name: &'static str,
-                               _variant_index: u32,
-                               _variant: &'static str,
-                               len: usize)
-                               -> Result<Self::SerializeTupleVariant, ::ser::Error>
-    {
+    fn serialize_tuple_variant(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        len: usize,
+    ) -> Result<Self::SerializeTupleVariant, crate::ser::Error> {
         self.serialize_seq(Some(len))
     }
 
-    fn serialize_map(self, _len: Option<usize>)
-                     -> Result<Self::SerializeMap, ::ser::Error>
-    {
+    fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, crate::ser::Error> {
         Ok(SerializeMap {
-            map: BTreeMap::new(),
+            map: Map::new(),
             next_key: None,
         })
     }
 
-    fn serialize_struct(self, _name: &'static str, len: usize)
-                        -> Result<Self::SerializeStruct, ::ser::Error> {
+    fn serialize_struct(
+        self,
+        _name: &'static str,
+        len: usize,
+    ) -> Result<Self::SerializeStruct, crate::ser::Error> {
         self.serialize_map(Some(len))
     }
 
-    fn serialize_struct_variant(self,
-                                _name: &'static str,
-                                _variant_index: u32,
-                                _variant: &'static str,
-                                _len: usize)
-                                -> Result<Self::SerializeStructVariant, ::ser::Error>
-    {
-        Err(::ser::Error::UnsupportedType)
+    fn serialize_struct_variant(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _len: usize,
+    ) -> Result<Self::SerializeStructVariant, crate::ser::Error> {
+        Err(crate::ser::Error::UnsupportedType)
     }
 }
 
@@ -849,115 +907,128 @@ struct SerializeVec {
 }
 
 struct SerializeMap {
-    map: BTreeMap<String, Value>,
+    map: Map<String, Value>,
     next_key: Option<String>,
 }
 
 impl ser::SerializeSeq for SerializeVec {
     type Ok = Value;
-    type Error = ::ser::Error;
+    type Error = crate::ser::Error;
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), ::ser::Error>
-        where T: ser::Serialize
+    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         self.vec.push(Value::try_from(value)?);
         Ok(())
     }
 
-    fn end(self) -> Result<Value, ::ser::Error> {
+    fn end(self) -> Result<Value, crate::ser::Error> {
         Ok(Value::Array(self.vec))
     }
 }
 
 impl ser::SerializeTuple for SerializeVec {
     type Ok = Value;
-    type Error = ::ser::Error;
+    type Error = crate::ser::Error;
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), ::ser::Error>
-        where T: ser::Serialize
+    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
 
-    fn end(self) -> Result<Value, ::ser::Error> {
+    fn end(self) -> Result<Value, crate::ser::Error> {
         ser::SerializeSeq::end(self)
     }
 }
 
 impl ser::SerializeTupleStruct for SerializeVec {
     type Ok = Value;
-    type Error = ::ser::Error;
+    type Error = crate::ser::Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), ::ser::Error>
-        where T: ser::Serialize
+    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
 
-    fn end(self) -> Result<Value, ::ser::Error> {
+    fn end(self) -> Result<Value, crate::ser::Error> {
         ser::SerializeSeq::end(self)
     }
 }
 
 impl ser::SerializeTupleVariant for SerializeVec {
     type Ok = Value;
-    type Error = ::ser::Error;
+    type Error = crate::ser::Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), ::ser::Error>
-        where T: ser::Serialize
+    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
 
-    fn end(self) -> Result<Value, ::ser::Error> {
+    fn end(self) -> Result<Value, crate::ser::Error> {
         ser::SerializeSeq::end(self)
     }
 }
 
 impl ser::SerializeMap for SerializeMap {
     type Ok = Value;
-    type Error = ::ser::Error;
+    type Error = crate::ser::Error;
 
-    fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<(), ::ser::Error>
-        where T: ser::Serialize
+    fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<(), crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         match Value::try_from(key)? {
             Value::String(s) => self.next_key = Some(s),
-            _ => return Err(::ser::Error::KeyNotString),
+            _ => return Err(crate::ser::Error::KeyNotString),
         };
         Ok(())
     }
 
-    fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<(), ::ser::Error>
-        where T: ser::Serialize
+    fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<(), crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         let key = self.next_key.take();
         let key = key.expect("serialize_value called before serialize_key");
         match Value::try_from(value) {
-            Ok(value) => { self.map.insert(key, value); }
-            Err(::ser::Error::UnsupportedNone) => {}
+            Ok(value) => {
+                self.map.insert(key, value);
+            }
+            Err(crate::ser::Error::UnsupportedNone) => {}
             Err(e) => return Err(e),
         }
         Ok(())
     }
 
-    fn end(self) -> Result<Value, ::ser::Error> {
+    fn end(self) -> Result<Value, crate::ser::Error> {
         Ok(Value::Table(self.map))
     }
 }
 
 impl ser::SerializeStruct for SerializeMap {
     type Ok = Value;
-    type Error = ::ser::Error;
+    type Error = crate::ser::Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, key: &'static str, value: &T) -> Result<(), ::ser::Error>
-        where T: ser::Serialize
+    fn serialize_field<T: ?Sized>(
+        &mut self,
+        key: &'static str,
+        value: &T,
+    ) -> Result<(), crate::ser::Error>
+    where
+        T: ser::Serialize,
     {
         ser::SerializeMap::serialize_key(self, key)?;
         ser::SerializeMap::serialize_value(self, value)
     }
 
-    fn end(self) -> Result<Value, ::ser::Error> {
+    fn end(self) -> Result<Value, crate::ser::Error> {
         ser::SerializeMap::end(self)
     }
 }
@@ -970,7 +1041,8 @@ impl<'a, 'de> de::DeserializeSeed<'de> for DatetimeOrTable<'a> {
     type Value = bool;
 
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         deserializer.deserialize_any(self)
     }
@@ -979,12 +1051,13 @@ impl<'a, 'de> de::DeserializeSeed<'de> for DatetimeOrTable<'a> {
 impl<'a, 'de> de::Visitor<'de> for DatetimeOrTable<'a> {
     type Value = bool;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a string key")
     }
 
     fn visit_str<E>(self, s: &str) -> Result<bool, E>
-        where E: de::Error,
+    where
+        E: de::Error,
     {
         if s == datetime::FIELD {
             Ok(true)
@@ -995,7 +1068,8 @@ impl<'a, 'de> de::Visitor<'de> for DatetimeOrTable<'a> {
     }
 
     fn visit_string<E>(self, s: String) -> Result<bool, E>
-        where E: de::Error,
+    where
+        E: de::Error,
     {
         if s == datetime::FIELD {
             Ok(true)
