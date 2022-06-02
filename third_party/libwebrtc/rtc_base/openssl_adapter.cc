@@ -976,9 +976,9 @@ SSL_CTX* OpenSSLAdapter::CreateContext(SSLMode mode, bool enable_cache) {
   // Use defaults, but disable HMAC-SHA256 and HMAC-SHA384 ciphers
   // (note that SHA256 and SHA384 only select legacy CBC ciphers).
   // Additionally disable HMAC-SHA1 ciphers in ECDSA. These are the remaining
-  // CBC-mode ECDSA ciphers.
+  // CBC-mode ECDSA ciphers. Finally, disable 3DES.
   SSL_CTX_set_cipher_list(
-      ctx, "ALL:!SHA256:!SHA384:!aPSK:!ECDSA+SHA1:!ADH:!LOW:!EXP:!MD5");
+      ctx, "ALL:!SHA256:!SHA384:!aPSK:!ECDSA+SHA1:!ADH:!LOW:!EXP:!MD5:!3DES");
 
   if (mode == SSL_MODE_DTLS) {
     SSL_CTX_set_read_ahead(ctx, 1);
