@@ -490,86 +490,30 @@ class UsrsctpTransport::UsrSctpWrapper {
                                  void* ulp_info) {
     AutoFreedPointer owned_data(data);
 
-    absl::optional<uintptr_t> id = GetTransportIdFromSocket(sock);
-    if (!id) {
-      RTC_LOG(LS_ERROR)
-          << "OnSctpInboundPacket: Failed to get transport ID from socket "
-          << sock;
-      return kSctpErrorReturn;
-    }
-
     if (!g_transport_map_) {
       RTC_LOG(LS_ERROR)
           << "OnSctpInboundPacket called after usrsctp uninitialized?";
       return kSctpErrorReturn;
     }
+
+    uintptr_t id = reinterpret_cast<uintptr_t>(ulp_info);
+
     // PostsToTransportThread protects against the transport being
     // simultaneously deregistered/deleted, since this callback may come from
     // the SCTP timer thread and thus race with the network thread.
     bool found = g_transport_map_->PostToTransportThread(
-        *id, [owned_data{std::move(owned_data)}, length, rcv,
-              flags](UsrsctpTransport* transport) {
+        id, [owned_data{std::move(owned_data)}, length, rcv,
+             flags](UsrsctpTransport* transport) {
           transport->OnDataOrNotificationFromSctp(owned_data.get(), length, rcv,
                                                   flags);
         });
     if (!found) {
       RTC_LOG(LS_ERROR)
-          << "OnSctpInboundPacket: Failed to get transport for socket ID "
-          << *id << "; possibly was already destroyed.";
+          << "OnSctpInboundPacket: Failed to get transport for socket ID " << id
+          << "; possibly was already destroyed.";
       return kSctpErrorReturn;
     }
     return kSctpSuccessReturn;
-  }
-
-  static absl::optional<uintptr_t> GetTransportIdFromSocket(
-      struct socket* sock) {
-    absl::optional<uintptr_t> ret;
-    struct sockaddr* addrs = nullptr;
-    int naddrs = usrsctp_getladdrs(sock, 0, &addrs);
-    if (naddrs <= 0 || addrs[0].sa_family != AF_CONN) {
-      return ret;
-    }
-    // usrsctp_getladdrs() returns the addresses bound to this socket, which
-    // contains the UsrsctpTransport id as sconn_addr.  Read the id,
-    // then free the list of addresses once we have the pointer.  We only open
-    // AF_CONN sockets, and they should all have the sconn_addr set to the
-    // id of the transport that created them, so [0] is as good as any other.
-    struct sockaddr_conn* sconn =
-        reinterpret_cast<struct sockaddr_conn*>(&addrs[0]);
-    ret = reinterpret_cast<uintptr_t>(sconn->sconn_addr);
-    usrsctp_freeladdrs(addrs);
-
-    return ret;
-  }
-
-  // TODO(crbug.com/webrtc/11899): This is a legacy callback signature, remove
-  // when usrsctp is updated.
-  static int SendThresholdCallback(struct socket* sock, uint32_t sb_free) {
-    // Fired on our I/O thread. UsrsctpTransport::OnPacketReceived() gets
-    // a packet containing acknowledgments, which goes into usrsctp_conninput,
-    // and then back here.
-    absl::optional<uintptr_t> id = GetTransportIdFromSocket(sock);
-    if (!id) {
-      RTC_LOG(LS_ERROR)
-          << "SendThresholdCallback: Failed to get transport ID from socket "
-          << sock;
-      return 0;
-    }
-    if (!g_transport_map_) {
-      RTC_LOG(LS_ERROR)
-          << "SendThresholdCallback called after usrsctp uninitialized?";
-      return 0;
-    }
-    bool found = g_transport_map_->PostToTransportThread(
-        *id, [](UsrsctpTransport* transport) {
-          transport->OnSendThresholdCallback();
-        });
-    if (!found) {
-      RTC_LOG(LS_ERROR)
-          << "SendThresholdCallback: Failed to get transport for socket ID "
-          << *id << "; possibly was already destroyed.";
-    }
-    return 0;
   }
 
   static int SendThresholdCallback(struct socket* sock,
@@ -578,26 +522,22 @@ class UsrsctpTransport::UsrSctpWrapper {
     // Fired on our I/O thread. UsrsctpTransport::OnPacketReceived() gets
     // a packet containing acknowledgments, which goes into usrsctp_conninput,
     // and then back here.
-    absl::optional<uintptr_t> id = GetTransportIdFromSocket(sock);
-    if (!id) {
-      RTC_LOG(LS_ERROR)
-          << "SendThresholdCallback: Failed to get transport ID from socket "
-          << sock;
-      return 0;
-    }
     if (!g_transport_map_) {
       RTC_LOG(LS_ERROR)
           << "SendThresholdCallback called after usrsctp uninitialized?";
       return 0;
     }
+
+    uintptr_t id = reinterpret_cast<uintptr_t>(ulp_info);
+
     bool found = g_transport_map_->PostToTransportThread(
-        *id, [](UsrsctpTransport* transport) {
+        id, [](UsrsctpTransport* transport) {
           transport->OnSendThresholdCallback();
         });
     if (!found) {
       RTC_LOG(LS_ERROR)
           << "SendThresholdCallback: Failed to get transport for socket ID "
-          << *id << "; possibly was already destroyed.";
+          << id << "; possibly was already destroyed.";
     }
     return 0;
   }
@@ -977,7 +917,7 @@ bool UsrsctpTransport::OpenSctpSocket() {
 
   sock_ = usrsctp_socket(
       AF_CONN, SOCK_STREAM, IPPROTO_SCTP, &UsrSctpWrapper::OnSctpInboundPacket,
-      &UsrSctpWrapper::SendThresholdCallback, kSendThreshold, this);
+      &UsrSctpWrapper::SendThresholdCallback, kSendThreshold, nullptr);
   if (!sock_) {
     RTC_LOG_ERRNO(LS_ERROR) << debug_name_
                             << "->OpenSctpSocket(): "
@@ -993,6 +933,7 @@ bool UsrsctpTransport::OpenSctpSocket() {
     return false;
   }
   id_ = g_transport_map_->Register(this);
+  usrsctp_set_ulpinfo(sock_, reinterpret_cast<void*>(id_));
   // Register our id as an address for usrsctp. This is used by SCTP to
   // direct the packets received (by the created socket) to this class.
   usrsctp_register_address(reinterpret_cast<void*>(id_));
