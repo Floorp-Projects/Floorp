@@ -363,7 +363,7 @@ class HtmlExport(object):
     @classmethod
     def _SliceDataForScoreStatsTableCell(cls, scores, capture, render,
                                          echo_simulator):
-        """Slices |scores| to extract the data for a tab."""
+        """Slices `scores` to extract the data for a tab."""
         masks = []
 
         masks.append(scores.capture == capture)
@@ -378,7 +378,7 @@ class HtmlExport(object):
 
     @classmethod
     def _FindUniqueTuples(cls, data_frame, fields):
-        """Slices |data_frame| to a list of fields and finds unique tuples."""
+        """Slices `data_frame` to a list of fields and finds unique tuples."""
         return data_frame[fields].drop_duplicates().values.tolist()
 
     @classmethod

@@ -54,18 +54,18 @@ int GetPitchPseudoInterpolationOffset(float prev_auto_correlation,
                                       float next_auto_correlation) {
   if ((next_auto_correlation - prev_auto_correlation) >
       0.7f * (curr_auto_correlation - prev_auto_correlation)) {
-    return 1;  // |next_auto_correlation| is the largest auto-correlation
+    return 1;  // `next_auto_correlation` is the largest auto-correlation
                // coefficient.
   } else if ((prev_auto_correlation - next_auto_correlation) >
              0.7f * (curr_auto_correlation - next_auto_correlation)) {
-    return -1;  // |prev_auto_correlation| is the largest auto-correlation
+    return -1;  // `prev_auto_correlation` is the largest auto-correlation
                 // coefficient.
   }
   return 0;
 }
 
-// Refines a pitch period |lag| encoded as lag with pseudo-interpolation. The
-// output sample rate is twice as that of |lag|.
+// Refines a pitch period `lag` encoded as lag with pseudo-interpolation. The
+// output sample rate is twice as that of `lag`.
 int PitchPseudoInterpolationLagPitchBuf(
     int lag,
     rtc::ArrayView<const float, kBufSize24kHz> pitch_buffer,
@@ -217,8 +217,8 @@ int ComputePitchPeriod48kHz(
       auto_correlation[best_inverted_lag + 1],
       auto_correlation[best_inverted_lag],
       auto_correlation[best_inverted_lag - 1]);
-  // TODO(bugs.webrtc.org/9076): When retraining, check if |offset| below should
-  // be subtracted since |inverted_lag| is an inverted lag but offset is a lag.
+  // TODO(bugs.webrtc.org/9076): When retraining, check if `offset` below should
+  // be subtracted since `inverted_lag` is an inverted lag but offset is a lag.
   return 2 * best_inverted_lag + offset;
 }
 
@@ -359,7 +359,7 @@ CandidatePitchPeriods ComputePitchPeriod12kHz(
         }
       }
     }
-    // Update |squared_energy_y| for the next inverted lag.
+    // Update `squared_energy_y` for the next inverted lag.
     const float y_old = pitch_buffer[inverted_lag];
     const float y_new = pitch_buffer[inverted_lag + kFrameSize20ms12kHz];
     denominator -= y_old * y_old;
@@ -458,8 +458,8 @@ PitchInfo ComputeExtendedPitchPeriod48kHz(
         initial_pitch.period, /*multiplier=*/1, period_divisor);
     RTC_DCHECK_GE(alternative_pitch.period, kMinPitch24kHz);
     // When looking at |alternative_pitch.period|, we also look at one of its
-    // sub-harmonics. |kSubHarmonicMultipliers| is used to know where to look.
-    // |period_divisor| == 2 is a special case since |dual_alternative_period|
+    // sub-harmonics. `kSubHarmonicMultipliers` is used to know where to look.
+    // `period_divisor` == 2 is a special case since `dual_alternative_period`
     // might be greater than the maximum pitch period.
     int dual_alternative_period = GetAlternativePitchPeriod(
         initial_pitch.period, kSubHarmonicMultipliers[period_divisor - 2],
@@ -473,7 +473,7 @@ PitchInfo ComputeExtendedPitchPeriod48kHz(
            "coincide.";
     // Compute an auto-correlation score for the primary pitch candidate
     // |alternative_pitch.period| by also looking at its possible sub-harmonic
-    // |dual_alternative_period|.
+    // `dual_alternative_period`.
     const float xy_primary_period = ComputeAutoCorrelation(
         kMaxPitch24kHz - alternative_pitch.period, pitch_buffer, vector_math);
     // TODO(webrtc:10480): Copy `xy_primary_period` if the secondary period is

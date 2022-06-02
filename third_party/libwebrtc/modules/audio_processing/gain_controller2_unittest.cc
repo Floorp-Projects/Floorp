@@ -27,7 +27,7 @@ namespace test {
 namespace {
 
 void SetAudioBufferSamples(float value, AudioBuffer* ab) {
-  // Sets all the samples in |ab| to |value|.
+  // Sets all the samples in `ab` to `value`.
   for (size_t k = 0; k < ab->num_channels(); ++k) {
     std::fill(ab->channels()[k], ab->channels()[k] + ab->num_frames(), value);
   }

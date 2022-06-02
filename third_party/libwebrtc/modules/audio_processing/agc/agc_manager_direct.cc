@@ -280,7 +280,7 @@ void MonoAgc::SetLevel(int new_level) {
 void MonoAgc::SetMaxLevel(int level) {
   RTC_DCHECK_GE(level, clipped_level_min_);
   max_level_ = level;
-  // Scale the |kSurplusCompressionGain| linearly across the restricted
+  // Scale the `kSurplusCompressionGain` linearly across the restricted
   // level range.
   max_compression_gain_ =
       kMaxCompressionGain + std::floor((1.f * kMaxMicLevel - max_level_) /
@@ -307,7 +307,7 @@ int MonoAgc::CheckVolumeAndReset() {
   int level = stream_analog_level_;
   // Reasons for taking action at startup:
   // 1) A person starting a call is expected to be heard.
-  // 2) Independent of interpretation of |level| == 0 we should raise it so the
+  // 2) Independent of interpretation of `level` == 0 we should raise it so the
   // AGC can do its job properly.
   if (level == 0 && !startup_) {
     RTC_DLOG(LS_INFO)

@@ -321,10 +321,10 @@ void OpenFileAndReadMessage(const std::string& filename, MessageLite* msg) {
 
 // Reads a 10 ms chunk of int16 interleaved audio from the given (assumed
 // stereo) file, converts to deinterleaved float (optionally downmixing) and
-// returns the result in |cb|. Returns false if the file ended (or on error) and
+// returns the result in `cb`. Returns false if the file ended (or on error) and
 // true otherwise.
 //
-// |int_data| and |float_data| are just temporary space that must be
+// `int_data` and `float_data` are just temporary space that must be
 // sufficiently large to hold the 10 ms chunk.
 bool ReadChunk(FILE* file,
                int16_t* int_data,
@@ -596,7 +596,7 @@ void ApmTest::ProcessDelayVerificationTest(int delay_ms,
                                            int system_delay_ms,
                                            int delay_min,
                                            int delay_max) {
-  // The |revframe_| and |frame_| should include the proper frame information,
+  // The `revframe_` and `frame_` should include the proper frame information,
   // hence can be used for extracting information.
   Int16FrameData tmp_frame;
   std::queue<Int16FrameData*> frame_queue;
@@ -606,7 +606,7 @@ void ApmTest::ProcessDelayVerificationTest(int delay_ms,
   SetFrameTo(&tmp_frame, 0);
 
   EXPECT_EQ(apm_->kNoError, apm_->Initialize());
-  // Initialize the |frame_queue| with empty frames.
+  // Initialize the `frame_queue` with empty frames.
   int frame_delay = delay_ms / 10;
   while (frame_delay < 0) {
     Int16FrameData* frame = new Int16FrameData();
@@ -1884,7 +1884,7 @@ TEST_F(ApmTest, Process) {
     if (!absl::GetFlag(FLAGS_write_apm_ref_data)) {
       const int kIntNear = 1;
       // When running the test on a N7 we get a {2, 6} difference of
-      // |has_voice_count| and |max_output_average| is up to 18 higher.
+      // `has_voice_count` and `max_output_average` is up to 18 higher.
       // All numbers being consistently higher on N7 compare to ref_data.
       // TODO(bjornv): If we start getting more of these offsets on Android we
       // should consider a different approach. Either using one slack for all,
@@ -2058,7 +2058,7 @@ class AudioProcessingTest
   static void TearDownTestSuite() { ClearTempFiles(); }
 
   // Runs a process pass on files with the given parameters and dumps the output
-  // to a file specified with |output_file_prefix|. Both forward and reverse
+  // to a file specified with `output_file_prefix`. Both forward and reverse
   // output streams are dumped.
   static void ProcessFormat(int input_rate,
                             int output_rate,
@@ -2277,7 +2277,7 @@ TEST_P(AudioProcessingTest, Formats) {
           out_ptr = cmp_data.get();
         }
 
-        // Update the |sq_error| and |variance| accumulators with the highest
+        // Update the `sq_error` and `variance` accumulators with the highest
         // SNR of reference vs output.
         UpdateBestSNR(ref_data.get(), out_ptr, ref_length, expected_delay,
                       &variance, &sq_error);
