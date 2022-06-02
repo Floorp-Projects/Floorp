@@ -1185,7 +1185,31 @@ TEST_F(RetransmissionQueueTest, AbandonsRtxLimit2WhenNackedNineTimes) {
                           Pair(TSN(19), State::kAcked)));
 
   EXPECT_TRUE(queue.ShouldSendForwardTsn(now_));
-}  // namespace
+}
+
+TEST_F(RetransmissionQueueTest, CwndRecoversWhenAcking) {
+  RetransmissionQueue queue = CreateQueue();
+  static constexpr size_t kCwnd = 1200;
+  queue.set_cwnd(kCwnd);
+  EXPECT_EQ(queue.cwnd(), kCwnd);
+
+  std::vector<uint8_t> payload(1000);
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce([this, payload](TimeMs, size_t) {
+        return SendQueue::DataToSend(gen_.Ordered(payload, "BE"));
+      })
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+
+  std::vector<std::pair<TSN, Data>> chunks_to_send =
+      queue.GetChunksToSend(now_, 1500);
+  EXPECT_THAT(chunks_to_send, ElementsAre(Pair(TSN(10), _)));
+  size_t serialized_size = payload.size() + DataChunk::kHeaderSize;
+  EXPECT_EQ(queue.outstanding_bytes(), serialized_size);
+
+  queue.HandleSack(now_, SackChunk(TSN(10), kArwnd, {}, {}));
+
+  EXPECT_EQ(queue.cwnd(), kCwnd + serialized_size);
+}
 
 }  // namespace
 }  // namespace dcsctp
