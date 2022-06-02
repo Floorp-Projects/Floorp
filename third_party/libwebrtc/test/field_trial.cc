@@ -21,7 +21,6 @@
 
 namespace webrtc {
 namespace test {
-void ValidateFieldTrialsStringOrDie(const std::string&) {}
 
 ScopedFieldTrials::ScopedFieldTrials(const std::string& config)
     : previous_field_trials_(webrtc::field_trial::GetFieldTrialString()) {
