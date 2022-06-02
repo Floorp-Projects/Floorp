@@ -113,15 +113,8 @@ void RetransmissionQueue::RemoveAcked(UnwrappedTSN cumulative_tsn_ack,
                                       AckInfo& ack_info) {
   auto first_unacked = outstanding_data_.upper_bound(cumulative_tsn_ack);
 
-  for (auto it = outstanding_data_.begin(); it != first_unacked; ++it) {
-    ack_info.bytes_acked_by_cumulative_tsn_ack += it->second.data().size();
-    ack_info.acked_tsns.push_back(it->first.Wrap());
-    if (it->second.is_outstanding()) {
-      outstanding_bytes_ -= GetSerializedChunkSize(it->second.data());
-      --outstanding_items_;
-    } else if (it->second.should_be_retransmitted()) {
-      to_be_retransmitted_.erase(it->first);
-    }
+  for (auto iter = outstanding_data_.begin(); iter != first_unacked; ++iter) {
+    AckChunk(ack_info, iter);
   }
 
   outstanding_data_.erase(outstanding_data_.begin(), first_unacked);
@@ -142,22 +135,27 @@ void RetransmissionQueue::AckGapBlocks(
     auto end = outstanding_data_.upper_bound(
         UnwrappedTSN::AddTo(cumulative_tsn_ack, block.end));
     for (auto iter = start; iter != end; ++iter) {
-      if (!iter->second.is_acked()) {
-        ack_info.bytes_acked_by_new_gap_ack_blocks +=
-            iter->second.data().size();
-        if (iter->second.is_outstanding()) {
-          outstanding_bytes_ -= GetSerializedChunkSize(iter->second.data());
-          --outstanding_items_;
-        }
-        if (iter->second.should_be_retransmitted()) {
-          to_be_retransmitted_.erase(iter->first);
-        }
-        iter->second.Ack();
-        ack_info.highest_tsn_acked =
-            std::max(ack_info.highest_tsn_acked, iter->first);
-        ack_info.acked_tsns.push_back(iter->first.Wrap());
-      }
+      AckChunk(ack_info, iter);
     }
+  }
+}
+
+void RetransmissionQueue::AckChunk(
+    AckInfo& ack_info,
+    std::map<UnwrappedTSN, TxData>::iterator iter) {
+  if (!iter->second.is_acked()) {
+    ack_info.bytes_acked += iter->second.data().size();
+    ack_info.acked_tsns.push_back(iter->first.Wrap());
+    if (iter->second.is_outstanding()) {
+      outstanding_bytes_ -= GetSerializedChunkSize(iter->second.data());
+      --outstanding_items_;
+    }
+    if (iter->second.should_be_retransmitted()) {
+      to_be_retransmitted_.erase(iter->first);
+    }
+    iter->second.Ack();
+    ack_info.highest_tsn_acked =
+        std::max(ack_info.highest_tsn_acked, iter->first);
   }
 }
 
@@ -421,9 +419,8 @@ bool RetransmissionQueue::HandleSack(TimeMs now, const SackChunk& sack) {
     // Note: It may be started again in a bit further down.
     t3_rtx_.Stop();
 
-    HandleIncreasedCumulativeTsnAck(
-        old_outstanding_bytes, ack_info.bytes_acked_by_cumulative_tsn_ack +
-                                   ack_info.bytes_acked_by_new_gap_ack_blocks);
+    HandleIncreasedCumulativeTsnAck(old_outstanding_bytes,
+                                    ack_info.bytes_acked);
   }
 
   if (ack_info.has_packet_loss) {
@@ -434,8 +431,7 @@ bool RetransmissionQueue::HandleSack(TimeMs now, const SackChunk& sack) {
   // https://tools.ietf.org/html/rfc4960#section-8.2
   // "When an outstanding TSN is acknowledged [...] the endpoint shall clear
   // the error counter ..."
-  if (ack_info.bytes_acked_by_cumulative_tsn_ack > 0 ||
-      ack_info.bytes_acked_by_new_gap_ack_blocks > 0) {
+  if (ack_info.bytes_acked > 0) {
     on_clear_retransmission_counter_();
   }
 
