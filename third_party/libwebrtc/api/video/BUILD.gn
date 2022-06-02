@@ -120,6 +120,11 @@ rtc_source_set("video_frame_type") {
   sources = [ "video_frame_type.h" ]
 }
 
+rtc_source_set("render_resolution") {
+  visibility = [ "*" ]
+  public = [ "render_resolution.h" ]
+}
+
 rtc_library("encoded_image") {
   visibility = [ "*" ]
   sources = [

@@ -10,6 +10,9 @@
 
 #include "api/video_codecs/video_decoder.h"
 
+#include "absl/types/optional.h"
+#include "api/video/render_resolution.h"
+#include "api/video/video_codec_type.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
@@ -51,6 +54,31 @@ std::string VideoDecoder::DecoderInfo::ToString() const {
 bool VideoDecoder::DecoderInfo::operator==(const DecoderInfo& rhs) const {
   return is_hardware_accelerated == rhs.is_hardware_accelerated &&
          implementation_name == rhs.implementation_name;
+}
+
+bool VideoDecoder::Configure(const Settings& settings) {
+  VideoCodec codec_settings = {};
+  codec_settings.buffer_pool_size = settings.buffer_pool_size();
+  RenderResolution max_resolution = settings.max_render_resolution();
+  if (max_resolution.Valid()) {
+    codec_settings.width = max_resolution.Width();
+    codec_settings.height = max_resolution.Height();
+  }
+  codec_settings.codecType = settings.codec_type();
+  return InitDecode(&codec_settings, settings.number_of_cores()) >= 0;
+}
+
+int32_t VideoDecoder::InitDecode(const VideoCodec* codec_settings,
+                                 int32_t number_of_cores) {
+  Settings settings;
+  if (codec_settings != nullptr) {
+    settings.set_buffer_pool_size(codec_settings->buffer_pool_size);
+    settings.set_max_render_resolution(
+        {codec_settings->width, codec_settings->height});
+    settings.set_codec_type(codec_settings->codecType);
+  }
+  settings.set_number_of_cores(number_of_cores);
+  return Configure(settings) ? 0 : -1;
 }
 
 }  // namespace webrtc
