@@ -409,8 +409,7 @@ nsUnknownContentTypeDialog.prototype = {
               }
             }
           }
-          // Don't pop up the downloads panel redundantly.
-          aLauncher.saveDestinationAvailable(result, true);
+          aLauncher.saveDestinationAvailable(result);
         });
       });
     })().catch(Cu.reportError);
