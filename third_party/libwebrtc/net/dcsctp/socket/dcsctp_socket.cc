@@ -775,7 +775,7 @@ bool DcSctpSocket::HandleUnrecognizedChunk(
 absl::optional<DurationMs> DcSctpSocket::OnInitTimerExpiry() {
   RTC_DLOG(LS_VERBOSE) << log_prefix() << "Timer " << t1_init_->name()
                        << " has expired: " << t1_init_->expiration_count()
-                       << "/" << t1_init_->options().max_restarts;
+                       << "/" << t1_init_->options().max_restarts.value_or(-1);
   RTC_DCHECK(state_ == State::kCookieWait);
 
   if (t1_init_->is_running()) {
@@ -796,7 +796,8 @@ absl::optional<DurationMs> DcSctpSocket::OnCookieTimerExpiry() {
   // user."
   RTC_DLOG(LS_VERBOSE) << log_prefix() << "Timer " << t1_cookie_->name()
                        << " has expired: " << t1_cookie_->expiration_count()
-                       << "/" << t1_cookie_->options().max_restarts;
+                       << "/"
+                       << t1_cookie_->options().max_restarts.value_or(-1);
 
   RTC_DCHECK(state_ == State::kCookieEchoed);
 
@@ -813,7 +814,8 @@ absl::optional<DurationMs> DcSctpSocket::OnCookieTimerExpiry() {
 absl::optional<DurationMs> DcSctpSocket::OnShutdownTimerExpiry() {
   RTC_DLOG(LS_VERBOSE) << log_prefix() << "Timer " << t2_shutdown_->name()
                        << " has expired: " << t2_shutdown_->expiration_count()
-                       << "/" << t2_shutdown_->options().max_restarts;
+                       << "/"
+                       << t2_shutdown_->options().max_restarts.value_or(-1);
 
   if (!t2_shutdown_->is_running()) {
     // https://tools.ietf.org/html/rfc4960#section-9.2

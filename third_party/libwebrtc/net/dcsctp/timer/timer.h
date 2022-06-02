@@ -42,10 +42,10 @@ struct TimerOptions {
   explicit TimerOptions(DurationMs duration)
       : TimerOptions(duration, TimerBackoffAlgorithm::kExponential) {}
   TimerOptions(DurationMs duration, TimerBackoffAlgorithm backoff_algorithm)
-      : TimerOptions(duration, backoff_algorithm, -1) {}
+      : TimerOptions(duration, backoff_algorithm, absl::nullopt) {}
   TimerOptions(DurationMs duration,
                TimerBackoffAlgorithm backoff_algorithm,
-               int max_restarts)
+               absl::optional<int> max_restarts)
       : duration(duration),
         backoff_algorithm(backoff_algorithm),
         max_restarts(max_restarts) {}
@@ -55,8 +55,9 @@ struct TimerOptions {
   // If the duration should be increased (using exponential backoff) when it is
   // restarted. If not set, the same duration will be used.
   const TimerBackoffAlgorithm backoff_algorithm;
-  // The maximum number of times that the timer will be automatically restarted.
-  const int max_restarts;
+  // The maximum number of times that the timer will be automatically restarted,
+  // or absl::nullopt if there is no limit.
+  const absl::optional<int> max_restarts;
 };
 
 // A high-level timer (in contrast to the low-level `Timeout` class).

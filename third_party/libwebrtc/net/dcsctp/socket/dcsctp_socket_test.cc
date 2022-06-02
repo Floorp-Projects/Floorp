@@ -487,7 +487,7 @@ TEST_F(DcSctpSocketTest, ResendingInitTooManyTimesAborts) {
                               SctpPacket::Parse(cb_a_.ConsumeSentPacket()));
   EXPECT_EQ(init_packet.descriptors()[0].type, InitChunk::kType);
 
-  for (int i = 0; i < options_.max_init_retransmits; ++i) {
+  for (int i = 0; i < *options_.max_init_retransmits; ++i) {
     AdvanceTime(options_.t1_init_timeout * (1 << i));
     RunTimers();
 
@@ -498,7 +498,7 @@ TEST_F(DcSctpSocketTest, ResendingInitTooManyTimesAborts) {
   }
 
   // Another timeout, after the max init retransmits.
-  AdvanceTime(options_.t1_init_timeout * (1 << options_.max_init_retransmits));
+  AdvanceTime(options_.t1_init_timeout * (1 << *options_.max_init_retransmits));
   EXPECT_CALL(cb_a_, OnAborted).Times(1);
   RunTimers();
 
@@ -543,7 +543,7 @@ TEST_F(DcSctpSocketTest, ResendingCookieEchoTooManyTimesAborts) {
                               SctpPacket::Parse(cb_a_.ConsumeSentPacket()));
   EXPECT_EQ(init_packet.descriptors()[0].type, CookieEchoChunk::kType);
 
-  for (int i = 0; i < options_.max_init_retransmits; ++i) {
+  for (int i = 0; i < *options_.max_init_retransmits; ++i) {
     AdvanceTime(options_.t1_cookie_timeout * (1 << i));
     RunTimers();
 
@@ -555,7 +555,7 @@ TEST_F(DcSctpSocketTest, ResendingCookieEchoTooManyTimesAborts) {
 
   // Another timeout, after the max init retransmits.
   AdvanceTime(options_.t1_cookie_timeout *
-              (1 << options_.max_init_retransmits));
+              (1 << *options_.max_init_retransmits));
   EXPECT_CALL(cb_a_, OnAborted).Times(1);
   RunTimers();
 
@@ -647,7 +647,7 @@ TEST_F(DcSctpSocketTest, ShutdownTimerExpiresTooManyTimeClosesConnection) {
 
   EXPECT_EQ(sock_a_.state(), SocketState::kShuttingDown);
 
-  for (int i = 0; i < options_.max_retransmissions; ++i) {
+  for (int i = 0; i < *options_.max_retransmissions; ++i) {
     AdvanceTime(DurationMs(options_.rto_initial * (1 << i)));
     RunTimers();
 
@@ -658,7 +658,7 @@ TEST_F(DcSctpSocketTest, ShutdownTimerExpiresTooManyTimeClosesConnection) {
     EXPECT_TRUE(cb_a_.ConsumeSentPacket().empty());
   }
   // The last expiry, makes it abort the connection.
-  AdvanceTime(options_.rto_initial * (1 << options_.max_retransmissions));
+  AdvanceTime(options_.rto_initial * (1 << *options_.max_retransmissions));
   EXPECT_CALL(cb_a_, OnAborted).Times(1);
   RunTimers();
 
@@ -795,7 +795,7 @@ TEST_F(DcSctpSocketTest, CloseConnectionAfterTooManyLostHeartbeats) {
 
   DurationMs time_to_next_hearbeat = options_.heartbeat_interval;
 
-  for (int i = 0; i < options_.max_retransmissions; ++i) {
+  for (int i = 0; i < *options_.max_retransmissions; ++i) {
     RTC_LOG(LS_INFO) << "Letting HEARTBEAT interval timer expire - sending...";
     AdvanceTime(time_to_next_hearbeat);
     RunTimers();
@@ -834,7 +834,7 @@ TEST_F(DcSctpSocketTest, RecoversAfterASuccessfulAck) {
 
   DurationMs time_to_next_hearbeat = options_.heartbeat_interval;
 
-  for (int i = 0; i < options_.max_retransmissions; ++i) {
+  for (int i = 0; i < *options_.max_retransmissions; ++i) {
     AdvanceTime(time_to_next_hearbeat);
     RunTimers();
 
