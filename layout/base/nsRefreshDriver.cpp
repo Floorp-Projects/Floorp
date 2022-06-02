@@ -155,6 +155,8 @@ class AutoRecordPhase {
 
 namespace mozilla {
 
+static TimeStamp sMostRecentHighRateVsync;
+
 /*
  * The base class for all global refresh driver timers.  It takes care
  * of managing the list of refresh drivers attached to them and
@@ -780,6 +782,12 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
     TimeStamp tickStart = TimeStamp::Now();
 
+    TimeDuration rate = GetTimerRate();
+    if (TimeDuration::FromMilliseconds(nsRefreshDriver::DefaultInterval() / 2) >
+        rate) {
+      sMostRecentHighRateVsync = tickStart;
+    }
+
     // On 32-bit Windows we sometimes get times where TimeStamp::Now() is not
     // monotonic because the underlying system apis produce non-monontonic
     // results. (bug 1306896)
@@ -812,7 +820,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     // (aVsyncTimestamp) and the next tick needs to be at least the amount of
     // work normal tasks and RefreshDrivers did together (minus short grace
     // period).
-    TimeDuration rate = GetTimerRate();
     TimeDuration gracePeriod = rate / int64_t(100);
 
     if (shouldGiveNonVSyncTasksMoreTime) {
@@ -1185,6 +1192,23 @@ void nsRefreshDriver::Shutdown() {
 /* static */
 int32_t nsRefreshDriver::DefaultInterval() {
   return NSToIntRound(1000.0 / gfxPlatform::GetDefaultFrameRate());
+}
+
+/* static */
+bool nsRefreshDriver::IsInHighRateMode() {
+  // We're in high rate mode if we've gotten a fast rate during the last
+  // DefaultInterval().
+  bool inHighRateMode =
+      !gfxPlatform::IsInLayoutAsapMode() &&
+      StaticPrefs::layout_expose_high_rate_mode_from_refreshdriver() &&
+      !sMostRecentHighRateVsync.IsNull() &&
+      (sMostRecentHighRateVsync +
+       TimeDuration::FromMilliseconds(DefaultInterval())) > TimeStamp::Now();
+  if (!inHighRateMode) {
+    // Clear the timestamp so that the next call is faster.
+    sMostRecentHighRateVsync = TimeStamp();
+  }
+  return inHighRateMode;
 }
 
 // Compute the interval to use for the refresh driver timer, in milliseconds.

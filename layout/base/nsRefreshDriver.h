@@ -322,6 +322,12 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    */
   static int32_t DefaultInterval();
 
+  /**
+   * Returns true if a recent vsync interval has been less than a half of
+   * DefaultInterval.
+   */
+  static bool IsInHighRateMode();
+
   bool IsInRefresh() { return mInRefresh; }
 
   void SetIsResizeSuppressed() { mResizeSuppressed = true; }
