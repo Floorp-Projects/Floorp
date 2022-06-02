@@ -1028,12 +1028,10 @@ TEST_P(WebRtcVoiceEngineTestFake, RecvRedDefault) {
   cricket::AudioRecvParameters parameters;
   parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kRed48000Codec);
-  parameters.codecs[1].params[""] = "111/111";
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   EXPECT_THAT(GetRecvStreamConfig(kSsrcX).decoder_map,
               (ContainerEq<std::map<int, webrtc::SdpAudioFormat>>(
-                  {{111, {"opus", 48000, 2}},
-                   {112, {"red", 48000, 2, {{"", "111/111"}}}}})));
+                  {{111, {"opus", 48000, 2}}, {112, {"red", 48000, 2}}})));
 }
 
 // Test that we disable Opus/Red with the kill switch.
@@ -1497,13 +1495,15 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecs) {
   EXPECT_FALSE(channel_->CanInsertDtmf());
 }
 
-// Test that we use Opus/Red by default when it is
-// listed as the first codec and there is an fmtp line.
+// Test that we use Opus/Red under the field trial when it is
+// listed as the first codec.
 TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsRed) {
+  webrtc::test::ScopedFieldTrials override_field_trials(
+      "WebRTC-Audio-Red-For-Opus/Enabled/");
+
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
   parameters.codecs.push_back(kRed48000Codec);
-  parameters.codecs[0].params[""] = "111/111";
   parameters.codecs.push_back(kOpusCodec);
   SetSendParameters(parameters);
   const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
@@ -1512,74 +1512,20 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsRed) {
   EXPECT_EQ(112, send_codec_spec.red_payload_type);
 }
 
-// Test that we do not use Opus/Red by default when it is
-// listed as the first codec but there is no fmtp line.
-TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsRedNoFmtp) {
-  EXPECT_TRUE(SetupSendStream());
-  cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kRed48000Codec);
-  parameters.codecs.push_back(kOpusCodec);
-  SetSendParameters(parameters);
-  const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-  EXPECT_EQ(111, send_codec_spec.payload_type);
-  EXPECT_STRCASEEQ("opus", send_codec_spec.format.name.c_str());
-  EXPECT_EQ(absl::nullopt, send_codec_spec.red_payload_type);
-}
-
-// Test that we do not use Opus/Red by default.
+// Test that we do not use Opus/Red under the field trial by default.
 TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsRedDefault) {
-  EXPECT_TRUE(SetupSendStream());
-  cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kOpusCodec);
-  parameters.codecs.push_back(kRed48000Codec);
-  parameters.codecs[1].params[""] = "111/111";
-  SetSendParameters(parameters);
-  const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-  EXPECT_EQ(111, send_codec_spec.payload_type);
-  EXPECT_STRCASEEQ("opus", send_codec_spec.format.name.c_str());
-  EXPECT_EQ(absl::nullopt, send_codec_spec.red_payload_type);
-}
+  webrtc::test::ScopedFieldTrials override_field_trials(
+      "WebRTC-Audio-Red-For-Opus/Enabled/");
 
-// Test that the RED fmtp line must match the payload type.
-TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsRedFmtpMismatch) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kRed48000Codec);
-  parameters.codecs[0].params[""] = "8/8";
   parameters.codecs.push_back(kOpusCodec);
+  parameters.codecs.push_back(kRed48000Codec);
   SetSendParameters(parameters);
   const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
   EXPECT_EQ(111, send_codec_spec.payload_type);
   EXPECT_STRCASEEQ("opus", send_codec_spec.format.name.c_str());
   EXPECT_EQ(absl::nullopt, send_codec_spec.red_payload_type);
-}
-
-// Test that the RED fmtp line must show 2..32 payloads.
-TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsRedFmtpAmountOfRedundancy) {
-  EXPECT_TRUE(SetupSendStream());
-  cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kRed48000Codec);
-  parameters.codecs[0].params[""] = "111";
-  parameters.codecs.push_back(kOpusCodec);
-  SetSendParameters(parameters);
-  const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-  EXPECT_EQ(111, send_codec_spec.payload_type);
-  EXPECT_STRCASEEQ("opus", send_codec_spec.format.name.c_str());
-  EXPECT_EQ(absl::nullopt, send_codec_spec.red_payload_type);
-  for (int i = 1; i < 32; i++) {
-    parameters.codecs[0].params[""] += "/111";
-    SetSendParameters(parameters);
-    const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-    EXPECT_EQ(111, send_codec_spec.payload_type);
-    EXPECT_STRCASEEQ("opus", send_codec_spec.format.name.c_str());
-    EXPECT_EQ(112, send_codec_spec.red_payload_type);
-  }
-  parameters.codecs[0].params[""] += "/111";
-  SetSendParameters(parameters);
-  const auto& send_codec_spec2 = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-  EXPECT_EQ(111, send_codec_spec2.payload_type);
-  EXPECT_STRCASEEQ("opus", send_codec_spec2.format.name.c_str());
-  EXPECT_EQ(absl::nullopt, send_codec_spec2.red_payload_type);
 }
 
 // Test that WebRtcVoiceEngine reconfigures, rather than recreates its
