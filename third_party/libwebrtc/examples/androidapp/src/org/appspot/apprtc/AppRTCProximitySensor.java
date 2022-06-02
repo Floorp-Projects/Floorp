@@ -16,8 +16,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
-import android.support.annotation.Nullable;
 import android.util.Log;
+import androidx.annotation.Nullable;
 import org.appspot.apprtc.util.AppRTCUtils;
 import org.webrtc.ThreadUtils;
 
