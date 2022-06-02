@@ -400,12 +400,12 @@ TEST_F(DelayManagerTest, RelativeArrivalDelay) {
   EXPECT_CALL(*mock_histogram_, Add(1));  // 20ms delayed.
   dm_->Update(ts_, kFs);
 
+  EXPECT_CALL(*mock_histogram_, Add(3));  // Reordered, 60ms delayed.
+  dm_->Update(ts_ - 2 * kTsIncrement, kFs);
+
   IncreaseTime(2 * kFrameSizeMs);
   EXPECT_CALL(*mock_histogram_, Add(2));  // 40ms delayed.
   dm_->Update(ts_ + kTsIncrement, kFs);
-
-  EXPECT_CALL(*mock_histogram_, Add(1));  // Reordered, 20ms delayed.
-  dm_->Update(ts_, kFs);
 }
 
 TEST_F(DelayManagerTest, ReorderedPackets) {

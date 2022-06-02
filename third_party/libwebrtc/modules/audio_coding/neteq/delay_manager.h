@@ -101,7 +101,6 @@ class DelayManager {
 
   bool IsValidBaseMinimumDelay(int delay_ms) const;
 
-  bool first_packet_received_;
   // TODO(jakobi): set maximum buffer delay instead of number of packets.
   const int max_packets_in_buffer_;
   std::unique_ptr<Histogram> histogram_;
@@ -119,8 +118,8 @@ class DelayManager {
   std::unique_ptr<TickTimer::Stopwatch>
       packet_iat_stopwatch_;  // Time elapsed since last packet.
   int target_level_ms_;       // Currently preferred buffer level.
-  uint32_t last_timestamp_;   // Timestamp for the last received packet.
-  int num_reordered_packets_ = 0;
+  absl::optional<uint32_t>
+      last_timestamp_;  // Timestamp for the last received packet.
   int max_delay_in_interval_ms_ = 0;
   std::unique_ptr<TickTimer::Stopwatch> resample_stopwatch_;
 
