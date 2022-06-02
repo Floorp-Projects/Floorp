@@ -2773,10 +2773,10 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       aReflowInput.reflowInput.ComputedSizeAsContainerIfConstrained();
 
   nsPresContext* presContext = PresContext();
-  // XXXldb Should we be checking constrained height instead?
-  // tables are not able to pull back children from its next inflow, so even
-  // under paginated contexts tables are should not paginate if they are inside
-  // column set
+  // nsTableFrame is not able to pull back children from its next-in-flow, per
+  // bug 1772383.  So even under paginated contexts, tables should not fragment
+  // if they are inside of (i.e. potentially being fragmented by) a column-set
+  // frame.  (This is indicated by the "mTableIsSplittable" flag.)
   bool isPaginated = presContext->IsPaginated() &&
                      NS_UNCONSTRAINEDSIZE != aReflowInput.availSize.BSize(wm) &&
                      aReflowInput.reflowInput.mFlags.mTableIsSplittable;
