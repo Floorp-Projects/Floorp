@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/bind_front.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
@@ -77,7 +78,7 @@ class StreamResetHandler {
         retransmission_queue_(retransmission_queue),
         reconfig_timer_(timer_manager->CreateTimer(
             "re-config",
-            [this]() { return OnReconfigTimerExpiry(); },
+            absl::bind_front(&StreamResetHandler::OnReconfigTimerExpiry, this),
             TimerOptions(DurationMs(0)))),
         next_outgoing_req_seq_nbr_(ReconfigRequestSN(*ctx_->my_initial_tsn())),
         last_processed_req_seq_nbr_(

@@ -39,6 +39,7 @@ rtc_library("heartbeat_handler") {
     "heartbeat_handler.h",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:bind_front",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -69,6 +70,7 @@ rtc_library("stream_reset_handler") {
     "stream_reset_handler.h",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:bind_front",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -102,6 +104,7 @@ rtc_library("transmission_control_block") {
     "transmission_control_block.h",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:bind_front",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -147,6 +150,7 @@ rtc_library("dcsctp_socket") {
     "state_cookie.h",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:bind_front",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
