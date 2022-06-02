@@ -169,7 +169,7 @@ class AudioProcessingImpl : public AudioProcessing {
       const ApmSubmoduleCreationOverrides& overrides);
 
   // Class providing thread-safe message pipe functionality for
-  // |runtime_settings_|.
+  // `runtime_settings_`.
   class RuntimeSettingEnqueuer {
    public:
     explicit RuntimeSettingEnqueuer(
@@ -320,8 +320,8 @@ class AudioProcessingImpl : public AudioProcessing {
 
   // Collects configuration settings from public and private
   // submodules to be saved as an audioproc::Config message on the
-  // AecDump if it is attached.  If not |forced|, only writes the current
-  // config if it is different from the last saved one; if |forced|,
+  // AecDump if it is attached.  If not `forced`, only writes the current
+  // config if it is different from the last saved one; if `forced`,
   // writes the config regardless of the last saved.
   void WriteAecDumpConfigMessage(bool forced)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);

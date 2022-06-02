@@ -184,9 +184,9 @@ int32_t WebRtcAgc_CalculateGainTable(int32_t* gainTable,       // Q16
     numFIX -= (int32_t)logApprox * diffGain;       // Q14
 
     // Calculate ratio
-    // Shift |numFIX| as much as possible.
-    // Ensure we avoid wrap-around in |den| as well.
-    if (numFIX > (den >> 8) || -numFIX > (den >> 8)) {  // |den| is Q8.
+    // Shift `numFIX` as much as possible.
+    // Ensure we avoid wrap-around in `den` as well.
+    if (numFIX > (den >> 8) || -numFIX > (den >> 8)) {  // `den` is Q8.
       zeros = WebRtcSpl_NormW32(numFIX);
     } else {
       zeros = WebRtcSpl_NormW32(den) + 8;

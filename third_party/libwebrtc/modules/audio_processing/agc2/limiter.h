@@ -31,7 +31,7 @@ class Limiter {
   Limiter& operator=(const Limiter& limiter) = delete;
   ~Limiter();
 
-  // Applies limiter and hard-clipping to |signal|.
+  // Applies limiter and hard-clipping to `signal`.
   void Process(AudioFrameView<float> signal);
   InterpolatedGainCurve::Stats GetGainCurveStats() const;
 

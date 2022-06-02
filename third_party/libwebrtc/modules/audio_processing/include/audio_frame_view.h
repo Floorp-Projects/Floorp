@@ -19,8 +19,8 @@ namespace webrtc {
 template <class T>
 class AudioFrameView {
  public:
-  // |num_channels| and |channel_size| describe the T**
-  // |audio_samples|. |audio_samples| is assumed to point to a
+  // `num_channels` and `channel_size` describe the T**
+  // `audio_samples`. `audio_samples` is assumed to point to a
   // two-dimensional |num_channels * channel_size| array of floats.
   AudioFrameView(T* const* audio_samples,
                  size_t num_channels,

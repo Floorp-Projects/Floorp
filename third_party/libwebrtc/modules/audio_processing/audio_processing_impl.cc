@@ -1325,7 +1325,7 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
           capture_.key_pressed);
     }
 
-    // Experimental APM sub-module that analyzes |capture_buffer|.
+    // Experimental APM sub-module that analyzes `capture_buffer`.
     if (submodules_.capture_analyzer) {
       submodules_.capture_analyzer->Analyze(capture_buffer);
     }

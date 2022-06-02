@@ -112,7 +112,7 @@ class AgcManagerDirect final {
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
                            EnableClippingPredictorLowersVolume);
 
-  // Dependency injection for testing. Don't delete |agc| as the memory is owned
+  // Dependency injection for testing. Don't delete `agc` as the memory is owned
   // by the manager.
   AgcManagerDirect(
       Agc* agc,
@@ -196,7 +196,7 @@ class MonoAgc {
 
   // Set the maximum level the AGC is allowed to apply. Also updates the
   // maximum compression gain to compensate. The level must be at least
-  // |kClippedLevelMin|.
+  // `kClippedLevelMin`.
   void SetMaxLevel(int level);
 
   int CheckVolumeAndReset();
