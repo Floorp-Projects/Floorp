@@ -37,6 +37,7 @@ class MockDecodedImageCallback : public DecodedImageCallback {
 
 class MockVideoDecoder : public VideoDecoder {
  public:
+  MOCK_METHOD(bool, Configure, (const Settings& settings), (override));
   MOCK_METHOD(int32_t,
               InitDecode,
               (const VideoCodec* codec_settings, int32_t number_of_cores),
