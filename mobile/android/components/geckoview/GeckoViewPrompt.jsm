@@ -226,6 +226,24 @@ class PromptFactory {
 
   _handleDateTime(aElement) {
     const prompt = new GeckoViewPrompter(aElement.ownerGlobal);
+
+    const chromeEventHandler = aElement.ownerGlobal.docShell.chromeEventHandler;
+    const dismissPrompt = () => prompt.dismiss();
+    // Some controls don't have UA widget (bug 888320)
+    if (
+      ["month", "week"].includes(aElement.type) &&
+      !aElement.openOrClosedShadowRoot
+    ) {
+      aElement.addEventListener("blur", dismissPrompt, {
+        mozSystemGroup: true,
+      });
+    } else {
+      chromeEventHandler.addEventListener(
+        "MozCloseDateTimePicker",
+        dismissPrompt
+      );
+    }
+
     prompt.asyncShowPrompt(
       {
         type: "datetime",
@@ -236,6 +254,21 @@ class PromptFactory {
         step: aElement.step,
       },
       result => {
+        // Some controls don't have UA widget (bug 888320)
+        if (
+          ["month", "week"].includes(aElement.type) &&
+          !aElement.openOrClosedShadowRoot
+        ) {
+          aElement.removeEventListener("blur", dismissPrompt, {
+            mozSystemGroup: true,
+          });
+        } else {
+          chromeEventHandler.removeEventListener(
+            "MozCloseDateTimePicker",
+            dismissPrompt
+          );
+        }
+
         // OK: result
         // Cancel: !result
         if (
