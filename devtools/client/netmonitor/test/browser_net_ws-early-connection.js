@@ -9,10 +9,6 @@
  * Messages side panel.
  */
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["devtools.netmonitor.features.webSockets", true]],
-  });
-
   const { monitor } = await initNetMonitor(SIMPLE_URL, { requestCount: 1 });
 
   info("Starting test... ");

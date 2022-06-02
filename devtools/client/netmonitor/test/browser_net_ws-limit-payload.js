@@ -8,8 +8,6 @@
  */
 
 add_task(async function() {
-  await pushPref("devtools.netmonitor.features.webSockets", true);
-
   // Set WS message payload limit to a lower value for testing
   await pushPref("devtools.netmonitor.msg.messageDataLimit", 100);
 
