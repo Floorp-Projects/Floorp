@@ -4705,13 +4705,13 @@
 # If true, do not send blocklisted preference values to the subprocess
 - name: fission.omitBlocklistedPrefsInSubprocesses
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # If true, crash when a blocklisted preference is accessed in a subprocess
 - name: fission.enforceBlocklistedPrefsInSubprocesses
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
