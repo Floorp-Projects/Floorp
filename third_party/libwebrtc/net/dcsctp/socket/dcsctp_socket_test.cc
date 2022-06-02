@@ -1246,7 +1246,9 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
   // Create a new association, z2 - and don't use z anymore.
   testing::NiceMock<MockDcSctpSocketCallbacks> cb_z2("Z2");
   DcSctpOptions options = options_;
-  options.max_receiver_window_buffer_size = 100;
+  constexpr size_t kReceiveWindowBufferSize = 2000;
+  options.max_receiver_window_buffer_size = kReceiveWindowBufferSize;
+  options.mtu = 3000;
   DcSctpSocket sock_z2("Z2", cb_z2, nullptr, options);
 
   EXPECT_CALL(cb_z2, OnClosed).Times(0);
@@ -1265,15 +1267,17 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
   sock_a_.ReceivePacket(cb_z2.ConsumeSentPacket());
 
   // Fill up Z2 to the high watermark limit.
+  constexpr size_t kWatermarkLimit =
+      kReceiveWindowBufferSize * ReassemblyQueue::kHighWatermarkLimit;
+  constexpr size_t kRemainingSize = kReceiveWindowBufferSize - kWatermarkLimit;
+
   TSN tsn = init_chunk.initial_tsn();
   AnyDataChunk::Options opts;
   opts.is_beginning = Data::IsBeginning(true);
   sock_z2.ReceivePacket(
       SctpPacket::Builder(sock_z2.verification_tag(), options)
           .Add(DataChunk(tsn, StreamID(1), SSN(0), PPID(53),
-                         std::vector<uint8_t>(
-                             100 * ReassemblyQueue::kHighWatermarkLimit + 1),
-                         opts))
+                         std::vector<uint8_t>(kWatermarkLimit + 1), opts))
           .Build());
 
   // First DATA will always trigger a SACK. It's not interesting.
@@ -1323,7 +1327,7 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
   sock_z2.ReceivePacket(
       SctpPacket::Builder(sock_z2.verification_tag(), options)
           .Add(DataChunk(AddTo(tsn, 2), StreamID(1), SSN(0), PPID(53),
-                         std::vector<uint8_t>(kSmallMessageSize),
+                         std::vector<uint8_t>(kRemainingSize),
                          /*options=*/{}))
           .Build());
 
@@ -1552,27 +1556,13 @@ TEST_F(DcSctpSocketTest, TriggersOnBufferedAmountLowOnlyWhenCrossingThreshold) {
 
   // Add a few messages to fill up the congestion window. When that is full,
   // messages will start to be fully buffered.
-  while (sock_a_.buffered_amount(StreamID(1)) == 0) {
+  while (sock_a_.buffered_amount(StreamID(1)) <= kBufferedAmountLowThreshold) {
     sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53),
                                std::vector<uint8_t>(kMessageSize)),
                  kSendOptions);
   }
   size_t initial_buffered = sock_a_.buffered_amount(StreamID(1));
-  ASSERT_GE(initial_buffered, 0u);
-  ASSERT_LT(initial_buffered, kMessageSize);
-
-  // Up to kMessageSize (which is below the threshold)
-  sock_a_.Send(
-      DcSctpMessage(StreamID(1), PPID(53),
-                    std::vector<uint8_t>(kMessageSize - initial_buffered)),
-      kSendOptions);
-  EXPECT_EQ(sock_a_.buffered_amount(StreamID(1)), kMessageSize);
-
-  // Up to 2*kMessageSize (which is above the threshold)
-  sock_a_.Send(
-      DcSctpMessage(StreamID(1), PPID(53), std::vector<uint8_t>(kMessageSize)),
-      kSendOptions);
-  EXPECT_EQ(sock_a_.buffered_amount(StreamID(1)), 2 * kMessageSize);
+  ASSERT_GT(initial_buffered, kBufferedAmountLowThreshold);
 
   // Start ACKing packets, which will empty the send queue, and trigger the
   // callback.
@@ -1729,6 +1719,49 @@ TEST_F(DcSctpSocketTest, DoesntSendMoreThanMaxBurstPackets) {
   }
 
   EXPECT_THAT(cb_a_.ConsumeSentPacket(), IsEmpty());
+}
+
+TEST_F(DcSctpSocketTest, SendsOnlyLargePackets) {
+  ConnectSockets();
+
+  // A really large message, to ensure that the congestion window is often full.
+  constexpr size_t kMessageSize = 100000;
+  sock_a_.Send(
+      DcSctpMessage(StreamID(1), PPID(53), std::vector<uint8_t>(kMessageSize)),
+      kSendOptions);
+
+  bool delivered_packet = false;
+  std::vector<size_t> data_packet_sizes;
+  do {
+    delivered_packet = false;
+    std::vector<uint8_t> packet_from_a = cb_a_.ConsumeSentPacket();
+    if (!packet_from_a.empty()) {
+      data_packet_sizes.push_back(packet_from_a.size());
+      delivered_packet = true;
+      sock_z_.ReceivePacket(std::move(packet_from_a));
+    }
+    std::vector<uint8_t> packet_from_z = cb_z_.ConsumeSentPacket();
+    if (!packet_from_z.empty()) {
+      delivered_packet = true;
+      sock_a_.ReceivePacket(std::move(packet_from_z));
+    }
+  } while (delivered_packet);
+
+  size_t packet_payload_bytes =
+      options_.mtu - SctpPacket::kHeaderSize - DataChunk::kHeaderSize;
+  // +1 accounts for padding, and rounding up.
+  size_t expected_packets =
+      (kMessageSize + packet_payload_bytes - 1) / packet_payload_bytes + 1;
+  EXPECT_THAT(data_packet_sizes, SizeIs(expected_packets));
+
+  // Remove the last size - it will be the remainder. But all other sizes should
+  // be large.
+  data_packet_sizes.pop_back();
+
+  for (size_t size : data_packet_sizes) {
+    // The 4 is for padding/alignment.
+    EXPECT_GE(size, options_.mtu - 4);
+  }
 }
 
 }  // namespace

@@ -118,6 +118,9 @@ class RetransmissionQueue {
   // Returns the number of DATA chunks that are in-flight.
   size_t outstanding_items() const { return outstanding_items_; }
 
+  // Indicates if the congestion control algorithm allows data to be sent.
+  bool can_send_data() const;
+
   // Given the current time `now`, it will evaluate if there are chunks that
   // have expired and that need to be discarded. It returns true if a
   // FORWARD-TSN should be sent.
@@ -343,7 +346,14 @@ class RetransmissionQueue {
                : CongestionAlgorithmPhase::kCongestionAvoidance;
   }
 
+  // Returns the number of bytes that may be sent in a single packet according
+  // to the congestion control algorithm.
+  size_t max_bytes_to_send() const;
+
   const DcSctpOptions options_;
+  // The minimum bytes required to be available in the congestion window to
+  // allow packets to be sent - to avoid sending too small packets.
+  const size_t min_bytes_required_to_send_;
   // If the peer supports RFC3758 - SCTP Partial Reliability Extension.
   const bool partial_reliability_;
   const std::string log_prefix_;

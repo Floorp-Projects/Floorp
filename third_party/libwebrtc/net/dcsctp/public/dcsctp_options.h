@@ -128,9 +128,19 @@ struct DcSctpOptions {
   // segments.
   size_t cwnd_mtus_initial = 10;
 
-  // The minimum congestion window size, in number of MTUs.
-  // See https://tools.ietf.org/html/rfc4960#section-7.2.3.
+  // The minimum congestion window size, in number of MTUs, upon detection of
+  // packet loss by SACK. Note that if the retransmission timer expires, the
+  // congestion window will be as small as one MTU. See
+  // https://tools.ietf.org/html/rfc4960#section-7.2.3.
   size_t cwnd_mtus_min = 4;
+
+  // When the congestion window is at or above this number of MTUs, the
+  // congestion control algorithm will avoid filling the congestion window
+  // fully, if that results in fragmenting large messages into quite small
+  // packets. When the congestion window is smaller than this option, it will
+  // aim to fill the congestion window as much as it can, even if it results in
+  // creating small fragmented packets.
+  size_t avoid_fragmentation_cwnd_mtus = 6;
 
   // The number of packets that may be sent at once. This is limited to avoid
   // bursts that too quickly fill the send buffer. Typically in a a socket in
