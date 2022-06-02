@@ -244,7 +244,10 @@ void VideoSendStream::Stop() {
   RTC_DLOG(LS_INFO) << "VideoSendStream::Stop";
   running_ = false;
   rtp_transport_queue_->PostTask(ToQueuedTask(transport_queue_safety_, [this] {
-    transport_queue_safety_->SetNotAlive();
+    // As the stream can get re-used and implicitly restarted via changing
+    // the state of the active layers, we do not mark the
+    // `transport_queue_safety_` flag with `SetNotAlive()` here. That's only
+    // done when we stop permanently via `StopPermanentlyAndGetRtpStates()`.
     send_stream_.Stop();
   }));
 }
