@@ -78,9 +78,14 @@ void SourceSurfaceWebgl::Unmap() {
 // framebuffer, and so this snapshot must be copied into a new texture, if
 // possible, or read back into data, if necessary, to preserve this particular
 // version of the framebuffer.
-void SourceSurfaceWebgl::DrawTargetWillChange() {
+void SourceSurfaceWebgl::DrawTargetWillChange(bool aNeedHandle) {
   MOZ_ASSERT(mDT);
-  if (!mData && !mHandle) {
+  // Only try to copy into a new texture handle if we don't already have data.
+  // However, we still might need to immediately draw this snapshot to a WebGL
+  // target, which would require a subsequent upload, so also copy into a new
+  // handle even if we already have data in that case since it is faster than
+  // uploading.
+  if ((!mData || aNeedHandle) && !mHandle) {
     // Prefer copying the framebuffer to a texture if possible.
     mHandle = mDT->CopySnapshot();
     if (mHandle) {
@@ -113,7 +118,12 @@ void SourceSurfaceWebgl::OnUnlinkTexture(
   // If we get here, then we must have copied a snapshot, which only happens
   // if the target changed.
   MOZ_ASSERT(!mDT);
-  MOZ_ASSERT(mHandle);
+  // If the snapshot was mapped before the target changed, we may have read
+  // data instead of holding a copied texture handle. If subsequently we then
+  // try to draw with this snapshot, we might have allocated an external texture
+  // handle in the texture cache that still links to this snapshot and can cause
+  // us to end up here inside OnUnlinkTexture.
+  MOZ_ASSERT(mHandle || mData);
   if (!mData) {
     mData = aContext->ReadSnapshot(mHandle);
   }
