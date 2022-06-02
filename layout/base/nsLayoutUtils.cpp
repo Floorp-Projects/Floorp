@@ -7120,7 +7120,8 @@ static RefPtr<SourceSurface> ScaleSourceSurface(SourceSurface& aSurface,
 }
 
 SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
-    nsIImageLoadingContent* aElement, uint32_t aSurfaceFlags,
+    nsIImageLoadingContent* aElement, const Maybe<int32_t>& aResizeWidth,
+    const Maybe<int32_t>& aResizeHeight, uint32_t aSurfaceFlags,
     RefPtr<DrawTarget>& aTarget) {
   SurfaceFromElementResult result;
   nsresult rv;
@@ -7199,10 +7200,22 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     imgWidth = MOZ_KnownLive(element)->Width();
     imgHeight = MOZ_KnownLive(element)->Height();
   } else {
+    auto res = imgContainer->GetResolution();
     rv = imgContainer->GetWidth(&imgWidth);
+    if (NS_SUCCEEDED(rv)) {
+      res.ApplyXTo(imgWidth);
+    } else if (aResizeWidth.isSome()) {
+      imgWidth = *aResizeWidth;
+      rv = NS_OK;
+    }
     nsresult rv2 = imgContainer->GetHeight(&imgHeight);
+    if (NS_SUCCEEDED(rv2)) {
+      res.ApplyYTo(imgHeight);
+    } else if (aResizeHeight.isSome()) {
+      imgHeight = *aResizeHeight;
+      rv2 = NS_OK;
+    }
     if (NS_FAILED(rv) || NS_FAILED(rv2)) return result;
-    imgContainer->GetResolution().ApplyTo(imgWidth, imgHeight);
   }
   result.mSize = result.mIntrinsicSize = IntSize(imgWidth, imgHeight);
 
@@ -7266,7 +7279,7 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     HTMLImageElement* aElement, uint32_t aSurfaceFlags,
     RefPtr<DrawTarget>& aTarget) {
   return SurfaceFromElement(static_cast<nsIImageLoadingContent*>(aElement),
-                            aSurfaceFlags, aTarget);
+                            Nothing(), Nothing(), aSurfaceFlags, aTarget);
 }
 
 SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
@@ -7373,7 +7386,8 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
 }
 
 SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
-    dom::Element* aElement, uint32_t aSurfaceFlags,
+    dom::Element* aElement, const Maybe<int32_t>& aResizeWidth,
+    const Maybe<int32_t>& aResizeHeight, uint32_t aSurfaceFlags,
     RefPtr<DrawTarget>& aTarget) {
   // If it's a <canvas>, we may be able to just grab its internal surface
   if (HTMLCanvasElement* canvas = HTMLCanvasElement::FromNodeOrNull(aElement)) {
@@ -7392,7 +7406,8 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     return SurfaceFromElementResult();
   }
 
-  return SurfaceFromElement(imageLoader, aSurfaceFlags, aTarget);
+  return SurfaceFromElement(imageLoader, aResizeWidth, aResizeHeight,
+                            aSurfaceFlags, aTarget);
 }
 
 /* static */
