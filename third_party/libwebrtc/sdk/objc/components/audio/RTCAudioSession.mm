@@ -794,6 +794,18 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
   }
 }
 
+- (void)notifyAudioUnitStartFailedWithError:(OSStatus)error {
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSession:audioUnitStartFailedWithError:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSession:self
+          audioUnitStartFailedWithError:[NSError errorWithDomain:kRTCAudioSessionErrorDomain
+                                                            code:error
+                                                        userInfo:nil]];
+    }
+  }
+}
+
 - (void)notifyDidBeginInterruption {
   for (auto delegate : self.delegates) {
     SEL sel = @selector(audioSessionDidBeginInterruption:);
