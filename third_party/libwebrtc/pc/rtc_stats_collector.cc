@@ -436,6 +436,14 @@ CreateRemoteOutboundAudioStreamStats(
   stats->remote_timestamp = static_cast<double>(
       voice_receiver_info.last_sender_report_remote_timestamp_ms.value());
   stats->reports_sent = voice_receiver_info.sender_reports_reports_count;
+  if (voice_receiver_info.round_trip_time) {
+    stats->round_trip_time =
+        voice_receiver_info.round_trip_time->seconds<double>();
+  }
+  stats->round_trip_time_measurements =
+      voice_receiver_info.round_trip_time_measurements;
+  stats->total_round_trip_time =
+      voice_receiver_info.total_round_trip_time.seconds<double>();
 
   return stats;
 }

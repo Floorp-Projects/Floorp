@@ -83,10 +83,10 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
       config.rtcp_send_transport, event_log, config.rtp.local_ssrc,
       config.rtp.remote_ssrc, config.jitter_buffer_max_packets,
       config.jitter_buffer_fast_accelerate, config.jitter_buffer_min_delay_ms,
-      config.jitter_buffer_enable_rtx_handling, config.decoder_factory,
-      config.codec_pair_id, std::move(config.frame_decryptor),
-      config.crypto_options, std::move(config.frame_transformer),
-      config.rtp.rtcp_event_observer);
+      config.jitter_buffer_enable_rtx_handling, config.enable_non_sender_rtt,
+      config.decoder_factory, config.codec_pair_id,
+      std::move(config.frame_decryptor), config.crypto_options,
+      std::move(config.frame_transformer), config.rtp.rtcp_event_observer);
 }
 }  // namespace
 
@@ -245,6 +245,12 @@ void AudioReceiveStream::SetUseTransportCcAndNackHistory(bool use_transport_cc,
   }
 }
 
+void AudioReceiveStream::SetNonSenderRttMeasurement(bool enabled) {
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  config_.enable_non_sender_rtt = enabled;
+  channel_receive_->SetNonSenderRttMeasurement(enabled);
+}
+
 void AudioReceiveStream::SetFrameDecryptor(
     rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor) {
   // TODO(bugs.webrtc.org/11993): This is called via WebRtcAudioReceiveStream,
@@ -350,6 +356,9 @@ webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats(
   stats.sender_reports_packets_sent = call_stats.sender_reports_packets_sent;
   stats.sender_reports_bytes_sent = call_stats.sender_reports_bytes_sent;
   stats.sender_reports_reports_count = call_stats.sender_reports_reports_count;
+  stats.round_trip_time = call_stats.round_trip_time;
+  stats.round_trip_time_measurements = call_stats.round_trip_time_measurements;
+  stats.total_round_trip_time = call_stats.total_round_trip_time;
 
   return stats;
 }
