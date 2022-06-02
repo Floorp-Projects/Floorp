@@ -70,8 +70,9 @@ class FakeThunderbirdJob(ThunderbirdMixin, FakeArtifactJob):
 
 
 class TestThunderbirdMixin(TestCase):
-    def _assert_candidate_trees(self, version_display, expected_trees):
+    def _assert_candidate_trees(self, version_display, source_repo, expected_trees):
         buildconfig.substs["MOZ_APP_VERSION_DISPLAY"] = version_display
+        buildconfig.substs["MOZ_SOURCE_REPO"] = source_repo
 
         job = FakeThunderbirdJob()
         self.assertGreater(len(job.candidate_trees), 0)
@@ -80,18 +81,21 @@ class TestThunderbirdMixin(TestCase):
     def test_candidate_trees_with_beta_version(self):
         self._assert_candidate_trees(
             version_display="92.1b2",
+            source_repo="https://hg.mozilla.org/releases/comm-beta",
             expected_trees=ThunderbirdMixin.beta_candidate_trees,
         )
 
     def test_candidate_trees_with_esr_version(self):
         self._assert_candidate_trees(
-            version_display="91.3.0esr",
+            version_display="91.3.0",
+            source_repo="https://hg.mozilla.org/releases/comm-esr91",
             expected_trees=ThunderbirdMixin.esr_candidate_trees,
         )
 
     def test_candidate_trees_with_nightly_version(self):
         self._assert_candidate_trees(
             version_display="95.0a1",
+            source_repo="https://hg.mozilla.org/comm-central",
             expected_trees=ThunderbirdMixin.nightly_candidate_trees,
         )
 
