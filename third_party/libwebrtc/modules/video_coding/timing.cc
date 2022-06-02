@@ -213,7 +213,8 @@ int64_t VCMTiming::MaxWaitingTime(int64_t render_time_ms,
                                   bool too_many_frames_queued) const {
   MutexLock lock(&mutex_);
 
-  if (render_time_ms == 0 && zero_playout_delay_min_pacing_->us() > 0) {
+  if (render_time_ms == 0 && zero_playout_delay_min_pacing_->us() > 0 &&
+      min_playout_delay_ms_ == 0 && max_playout_delay_ms_ > 0) {
     // `render_time_ms` == 0 indicates that the frame should be decoded and
     // rendered as soon as possible. However, the decoder can be choked if too
     // many frames are sent at once. Therefore, limit the interframe delay to
