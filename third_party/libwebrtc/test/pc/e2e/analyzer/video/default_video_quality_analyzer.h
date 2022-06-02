@@ -37,7 +37,6 @@
 #include "test/testsupport/perf_test.h"
 
 namespace webrtc {
-namespace webrtc_pc_e2e {
 
 class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
  public:
@@ -368,6 +367,11 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   DefaultVideoQualityAnalyzerCpuMeasurer cpu_measurer_;
   DefaultVideoQualityAnalyzerFramesComparator frames_comparator_;
 };
+
+namespace webrtc_pc_e2e {
+
+// Temporary alias to make downstream projects able to migrate.
+using DefaultVideoQualityAnalyzer = ::webrtc::DefaultVideoQualityAnalyzer;
 
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc

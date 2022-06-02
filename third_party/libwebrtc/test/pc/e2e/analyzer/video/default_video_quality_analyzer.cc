@@ -29,7 +29,6 @@
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 
 namespace webrtc {
-namespace webrtc_pc_e2e {
 namespace {
 
 constexpr int kMicrosPerSecond = 1000000;
@@ -1082,5 +1081,4 @@ size_t DefaultVideoQualityAnalyzer::NamesCollection::AddIfAbsent(
   return out;
 }
 
-}  // namespace webrtc_pc_e2e
 }  // namespace webrtc

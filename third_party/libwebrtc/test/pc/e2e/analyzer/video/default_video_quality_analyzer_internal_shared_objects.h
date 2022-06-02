@@ -60,9 +60,9 @@ struct FrameStats {
   absl::optional<int> rendered_frame_height = absl::nullopt;
 
   // Can be not set if frame was dropped by encoder.
-  absl::optional<webrtc_pc_e2e::StreamCodecInfo> used_encoder = absl::nullopt;
+  absl::optional<StreamCodecInfo> used_encoder = absl::nullopt;
   // Can be not set if frame was dropped in the network.
-  absl::optional<webrtc_pc_e2e::StreamCodecInfo> used_decoder = absl::nullopt;
+  absl::optional<StreamCodecInfo> used_decoder = absl::nullopt;
 };
 
 // Describes why comparison was done in overloaded mode (without calculating

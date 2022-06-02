@@ -13,7 +13,6 @@
 #include "test/gtest.h"
 
 namespace webrtc {
-namespace webrtc_pc_e2e {
 namespace {
 
 TEST(MultiHeadQueueTest, GetOnEmpty) {
@@ -118,5 +117,4 @@ TEST(MultiHeadQueueTest, HeadCopy) {
 }
 
 }  // namespace
-}  // namespace webrtc_pc_e2e
 }  // namespace webrtc

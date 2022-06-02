@@ -55,7 +55,7 @@ class DefaultVideoQualityAnalyzerFramesComparator {
   DefaultVideoQualityAnalyzerFramesComparator(
       webrtc::Clock* clock,
       DefaultVideoQualityAnalyzerCpuMeasurer& cpu_measurer,
-      webrtc_pc_e2e::DefaultVideoQualityAnalyzerOptions options = {})
+      DefaultVideoQualityAnalyzerOptions options = {})
       : options_(options), clock_(clock), cpu_measurer_(cpu_measurer) {}
   ~DefaultVideoQualityAnalyzerFramesComparator() { Stop({}); }
 
@@ -114,7 +114,7 @@ class DefaultVideoQualityAnalyzerFramesComparator {
                      FrameComparisonType type,
                      FrameStats frame_stats);
 
-  std::map<InternalStatsKey, webrtc_pc_e2e::StreamStats> stream_stats() const {
+  std::map<InternalStatsKey, StreamStats> stream_stats() const {
     MutexLock lock(&mutex_);
     return stream_stats_;
   }
@@ -136,14 +136,13 @@ class DefaultVideoQualityAnalyzerFramesComparator {
   void ProcessComparison(const FrameComparison& comparison);
   Timestamp Now();
 
-  const webrtc_pc_e2e::DefaultVideoQualityAnalyzerOptions options_;
+  const DefaultVideoQualityAnalyzerOptions options_;
   webrtc::Clock* const clock_;
   DefaultVideoQualityAnalyzerCpuMeasurer& cpu_measurer_;
 
   mutable Mutex mutex_;
   State state_ RTC_GUARDED_BY(mutex_) = State::kNew;
-  std::map<InternalStatsKey, webrtc_pc_e2e::StreamStats> stream_stats_
-      RTC_GUARDED_BY(mutex_);
+  std::map<InternalStatsKey, StreamStats> stream_stats_ RTC_GUARDED_BY(mutex_);
   std::map<InternalStatsKey, Timestamp> stream_last_freeze_end_time_
       RTC_GUARDED_BY(mutex_);
   std::deque<FrameComparison> comparisons_ RTC_GUARDED_BY(mutex_);

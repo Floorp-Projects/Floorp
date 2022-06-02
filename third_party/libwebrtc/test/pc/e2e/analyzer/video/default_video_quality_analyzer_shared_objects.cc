@@ -14,14 +14,13 @@
 #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
-namespace webrtc_pc_e2e {
 namespace {
 
 constexpr int kMicrosPerSecond = 1000000;
 
 }  // namespace
 
-void RateCounter::AddEvent(Timestamp event_time) {
+void SamplesRateCounter::AddEvent(Timestamp event_time) {
   if (event_first_time_.IsMinusInfinity()) {
     event_first_time_ = event_time;
   }
@@ -29,7 +28,7 @@ void RateCounter::AddEvent(Timestamp event_time) {
   events_count_++;
 }
 
-double RateCounter::GetEventsPerSecond() const {
+double SamplesRateCounter::GetEventsPerSecond() const {
   RTC_DCHECK(!IsEmpty());
   // Divide on us and multiply on kMicrosPerSecond to correctly process cases
   // where there were too small amount of events, so difference is less then 1
@@ -67,5 +66,4 @@ bool operator==(const StatsKey& a, const StatsKey& b) {
          a.receiver == b.receiver;
 }
 
-}  // namespace webrtc_pc_e2e
 }  // namespace webrtc
