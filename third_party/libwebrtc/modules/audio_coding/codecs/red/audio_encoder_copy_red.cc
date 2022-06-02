@@ -122,7 +122,12 @@ AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
     header_length_bytes += kRedHeaderLength;
   }
 
-  // Allocate room for RFC 2198 header.
+  // Allocate room for RFC 2198 header if there is redundant data.
+  // Otherwise this will send the primary payload type without
+  // wrapping in RED.
+  if (header_length_bytes == kRedLastHeaderLength) {
+    header_length_bytes = 0;
+  }
   encoded->SetSize(header_length_bytes);
 
   // Iterate backwards and append the data.
@@ -143,15 +148,17 @@ AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
   // `info` will be implicitly cast to an EncodedInfoLeaf struct, effectively
   // discarding the (empty) vector of redundant information. This is
   // intentional.
-  if (header_length_bytes > kRedHeaderLength) {
+  if (header_length_bytes > 0) {
     info.redundant.push_back(info);
     RTC_DCHECK_EQ(info.speech,
                   info.redundant[info.redundant.size() - 1].speech);
   }
 
   encoded->AppendData(primary_encoded_);
-  RTC_DCHECK_EQ(header_offset, header_length_bytes - 1);
-  encoded->data()[header_offset] = info.payload_type;
+  if (header_length_bytes > 0) {
+    RTC_DCHECK_EQ(header_offset, header_length_bytes - 1);
+    encoded->data()[header_offset] = info.payload_type;
+  }
 
   // Shift the redundant encodings.
   auto rit = redundant_encodings_.rbegin();
@@ -165,7 +172,9 @@ AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
   it->second.SetData(primary_encoded_);
 
   // Update main EncodedInfo.
-  info.payload_type = red_payload_type_;
+  if (header_length_bytes > 0) {
+    info.payload_type = red_payload_type_;
+  }
   info.encoded_bytes = encoded->size();
   return info;
 }
