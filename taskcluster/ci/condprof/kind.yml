@@ -180,7 +180,7 @@ jobs:
             product: firefox
             job-name: condprof-g5-fenix
         dependencies:
-            build: build-linux64-shippable/opt
+            build: build-android-arm-shippable/opt
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz
@@ -214,7 +214,7 @@ jobs:
             platform: android-hw-a51-11-0-arm7/opt
         index:
             product: firefox
-            job-name: condprof-a51-geckoview_example
+            job-name: condprof-a51-arm7-geckoview_example
         dependencies:
             build: build-android-arm-shippable/opt
         fetches:
@@ -250,9 +250,81 @@ jobs:
             platform: android-hw-a51-11-0-arm7/opt
         index:
             product: firefox
-            job-name: condprof-a51-fenix
+            job-name: condprof-a51-arm7-fenix
         dependencies:
-            build: build-linux64-shippable/opt
+            build: build-android-arm-shippable/opt
+        fetches:
+            build:
+                - artifact: target.condprof.tests.tar.gz
+            toolchain:
+                - linux64-geckodriver
+        run:
+            run-as-root: true
+            command: >-
+                curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/mobile.v2.fenix.nightly.latest.armeabi-v7a/artifacts/public/build/armeabi-v7a/target.apk &&
+                adb install -r target.apk &&
+                rm -rf target.apk &&
+                python3 virtualenv/virtualenv.py . &&
+                bin/python3 condprof/main.py
+                --force-new
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --device-name a51
+                --firefox org.mozilla.fenix
+                --scenario settled
+                ../../archive
+        worker:
+            artifacts:
+                - name: public/condprof
+                  path: archive
+                  type: directory
+    android-hw-a51-11-0-aarch64-geckoview:
+        worker-type: t-bitbar-gw-perf-a51
+        description: Creates or update conditioned profiles on GeckoView+A51
+        run-on-projects: []  # bug 1765348
+        treeherder:
+            symbol: condprof(geckoview)
+            platform: android-hw-a51-11-0-aarch64/opt
+        index:
+            product: firefox
+            job-name: condprof-a51-aarch64-geckoview_example
+        dependencies:
+            build: build-android-aarch64-shippable/opt
+        fetches:
+            build:
+                - artifact: en-US/target.condprof.tests.tar.gz
+                - artifact: geckoview_example.apk
+                  extract: false
+            toolchain:
+                - linux64-geckodriver
+        run:
+            run-as-root: true
+            command: >-
+                adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
+                python3 virtualenv/virtualenv.py . &&
+                bin/python3 condprof/main.py
+                --force-new
+                --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --device-name a51
+                --firefox org.mozilla.geckoview_example
+                --scenario settled
+                ../../archive
+        worker:
+            artifacts:
+                - name: public/condprof
+                  path: archive
+                  type: directory
+    android-hw-a51-11-0-aarch64-fenix:
+        worker-type: t-bitbar-gw-perf-a51
+        description: Creates or update conditioned profiles on Fenix+A51
+        run-on-projects: []  # bug 1765348
+        treeherder:
+            symbol: condprof(fenix)
+            platform: android-hw-a51-11-0-aarch64/opt
+        index:
+            product: firefox
+            job-name: condprof-a51-aarch64-fenix
+        dependencies:
+            build: build-android-aarch64-shippable/opt
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz

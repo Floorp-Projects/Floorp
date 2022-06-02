@@ -318,7 +318,10 @@ browsertime-unity-webgl-mobile:
                 by-test-platform:
                     android-hw-p2-.*aarch64-shippable-qr.*: [mozilla-central, mozilla-release]
                     default: []
-    max-run-time: 900
+    max-run-time:
+        by-test-platform:
+            anrdroid-hw-a51.*: 1500
+            default: 900
     mozharness:
         extra-options:
             - --test=unity-webgl
