@@ -183,6 +183,7 @@ void AsyncSSLSocket::OnConnectEvent(Socket* socket) {
   // TODO: we could buffer output too...
   const int res = DirectSend(kSslClientHello, sizeof(kSslClientHello));
   if (res != sizeof(kSslClientHello)) {
+    RTC_LOG(LS_ERROR) << "Sending fake SSL ClientHello message failed.";
     Close();
     SignalCloseEvent(this, 0);
   }
@@ -193,6 +194,7 @@ void AsyncSSLSocket::ProcessInput(char* data, size_t* len) {
     return;
 
   if (memcmp(kSslServerHello, data, sizeof(kSslServerHello)) != 0) {
+    RTC_LOG(LS_ERROR) << "Received non-matching fake SSL ServerHello message.";
     Close();
     SignalCloseEvent(this, 0);  // TODO: error code?
     return;
