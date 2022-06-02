@@ -63,8 +63,6 @@ mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
 nsClipboard::nsClipboard() : nsBaseClipboard(), mCachedClipboard(-1), mChangeCount(0) {}
 
 nsClipboard::~nsClipboard() {
-  EmptyClipboard(kGlobalClipboard);
-  EmptyClipboard(kFindClipboard);
   ClearSelectionCache();
 }
 
