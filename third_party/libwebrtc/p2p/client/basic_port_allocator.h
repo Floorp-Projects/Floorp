@@ -227,9 +227,7 @@ class RTC_EXPORT BasicPortAllocatorSession : public PortAllocatorSession {
   void DisableEquivalentPhases(rtc::Network* network,
                                PortConfiguration* config,
                                uint32_t* flags);
-  void AddAllocatedPort(Port* port,
-                        AllocationSequence* seq,
-                        bool prepare_address);
+  void AddAllocatedPort(Port* port, AllocationSequence* seq);
   void OnCandidateReady(Port* port, const Candidate& c);
   void OnCandidateError(Port* port, const IceCandidateErrorEvent& event);
   void OnPortComplete(Port* port);
