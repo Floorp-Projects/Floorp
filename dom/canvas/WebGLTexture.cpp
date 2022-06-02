@@ -316,6 +316,14 @@ Maybe<const webgl::SampleableInfo> WebGLTexture::CalcSampleableInfo(
     // In short, depth formats are not filterable, but shadow-samplers are.
     if (ret->isDepthTexCompare) {
       isFilterable = true;
+
+      if (mContext->mWarnOnce_DepthTexCompareFilterable) {
+        mContext->mWarnOnce_DepthTexCompareFilterable = false;
+        mContext->GenerateWarning(
+            "Depth texture comparison requests (e.g. `LINEAR`) Filtering, but"
+            " behavior is implementation-defined, and so on some systems will"
+            " sometimes behave as `NEAREST`. (warns once)");
+      }
     }
 
     // "* The effective internal format specified for the texture arrays is a
