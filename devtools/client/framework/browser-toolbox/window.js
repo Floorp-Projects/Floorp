@@ -258,6 +258,10 @@ async function bindToolboxHandlers() {
   gToolbox.once("destroyed", quitApp);
   window.addEventListener("unload", onUnload);
 
+  // If the remote connection drops, firefox was closed
+  // In such case, force closing the browser toolbox
+  gClient.once("closed", quitApp);
+
   if (Services.appinfo.OS == "Darwin") {
     // Badge the dock icon to differentiate this process from the main application
     // process.
