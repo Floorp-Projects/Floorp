@@ -93,12 +93,17 @@ rtc::StreamResult StreamInterfaceChannel::Write(const void* data,
                                                 size_t* written,
                                                 int* error) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  // Always succeeds, since this is an unreliable transport anyway.
-  // TODO(zhihuang): Should this block if ice_transport_'s temporarily
-  // unwritable?
   rtc::PacketOptions packet_options;
-  ice_transport_->SendPacket(static_cast<const char*>(data), data_len,
-                             packet_options);
+  int sent = ice_transport_->SendPacket(static_cast<const char*>(data),
+                                        data_len, packet_options);
+  if (sent < 0) {
+    if (written) {
+      *written = 0;
+    }
+    return rtc::IsBlockingError(ice_transport_->GetError()) ? rtc::SR_BLOCK
+                                                            : rtc::SR_ERROR;
+  }
+
   if (written) {
     *written = data_len;
   }
