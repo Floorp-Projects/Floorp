@@ -243,7 +243,14 @@
       </button-group>
       <named-deck id="details-deck">
         <section name="details">
-          <div class="addon-detail-description"></div>
+          <div class="addon-detail-description-wrapper">
+            <div class="addon-detail-description"></div>
+            <button
+              class="button-link addon-detail-description-toggle"
+              data-l10n-id="addon-detail-description-expand"
+              hidden>
+            </button>
+          </div>
           <div class="addon-detail-contribute">
             <label data-l10n-id="detail-contributions-description"></label>
             <button

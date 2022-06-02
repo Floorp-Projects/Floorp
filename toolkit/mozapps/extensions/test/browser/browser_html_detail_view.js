@@ -163,6 +163,20 @@ add_task(async function enableHtmlViews() {
       type: "extension",
     },
     {
+      id: "addon3@mochi.test",
+      name: "Test add-on 3",
+      creator: { name: "Look a super long description" },
+      description: "Short description",
+      fullDescription: "Mozilla\n".repeat(100),
+      userPermissions: {
+        origins: [],
+        permissions: ["alarms", "contextMenus"],
+      },
+      type: "extension",
+      contributionURL: "http://example.com/contribute",
+      updateDate: new Date("2022-03-07T01:00:00"),
+    },
+    {
       id: "sitepermission@mochi.test",
       name: "Test site permission add-on",
       creator: { name: "you got it" },
@@ -519,6 +533,10 @@ add_task(async function testFullDetails() {
     "AddonSitePermissionsList should be hidden for this addon type"
   );
 
+  // Check the show more button is not there
+  const showMoreBtn = card.querySelector(".addon-detail-description-toggle");
+  ok(showMoreBtn.hidden, "The show more button is not visible");
+
   let contrib = details.querySelector(".addon-detail-contribute");
   ok(contrib, "The contribution section is visible");
 
@@ -654,6 +672,42 @@ add_task(async function testFullDetails() {
       { type: "extension", addonId: id, action: "contribute", view: "detail" },
     ],
   ]);
+});
+
+add_task(async function testFullDetailsShowMoreButton() {
+  Services.telemetry.clearEvents();
+  const id = "addon3@mochi.test";
+  const win = await loadInitialView("extension");
+
+  // The list card.
+  let card = getAddonCard(win, id);
+  const loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  // This is now the detail card.
+  card = getAddonCard(win, id);
+
+  // Check the show more button is there
+  const showMoreBtn = card.querySelector(".addon-detail-description-toggle");
+  ok(!showMoreBtn.hidden, "The show more button is visible");
+
+  const descriptionWrapper = card.querySelector(
+    ".addon-detail-description-wrapper"
+  );
+  ok(
+    descriptionWrapper.classList.contains("addon-detail-description-collapse"),
+    "The long description is collapsed"
+  );
+
+  // After click the description should be expanded
+  showMoreBtn.click();
+  ok(
+    !descriptionWrapper.classList.contains("addon-detail-description-collapse"),
+    "The long description is expanded"
+  );
+
+  await closeView(win);
 });
 
 add_task(async function testMinimalExtension() {
