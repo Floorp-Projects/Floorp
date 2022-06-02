@@ -49,7 +49,6 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/format_macros.h"
 #include "rtc_base/logging.h"

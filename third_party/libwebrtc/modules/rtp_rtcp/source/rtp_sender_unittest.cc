@@ -30,7 +30,6 @@
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "modules/rtp_rtcp/source/rtp_sender_video.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
 #include "modules/rtp_rtcp/source/video_fec_generator.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/logging.h"
