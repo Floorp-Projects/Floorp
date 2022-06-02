@@ -315,8 +315,7 @@ inline SECItem* CreateECParamsForCurve(const nsAString& aNamedCurve,
 
 // Implemented in CryptoKey.cpp
 UniqueSECKEYPublicKey CreateECPublicKey(const SECItem* aKeyData,
-                                        const nsAString& aNamedCurve,
-                                        bool aVerifyValid = true);
+                                        const nsAString& aNamedCurve);
 
 }  // namespace mozilla::dom
 
