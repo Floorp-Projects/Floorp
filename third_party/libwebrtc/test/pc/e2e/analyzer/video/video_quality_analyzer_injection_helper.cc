@@ -16,6 +16,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
+#include "rtc_base/strings/string_builder.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_decoder.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/pc/e2e/analyzer/video/simulcast_dummy_buffer_helper.h"
@@ -134,7 +135,7 @@ VideoQualityAnalyzerInjectionHelper::CreateFramePreprocessor(
                                     config.width, config.height)));
   }
   {
-    MutexLock lock(&lock_);
+    MutexLock lock(&mutex_);
     known_video_configs_.insert({*config.stream_label, config});
   }
   return std::make_unique<AnalyzingFramePreprocessor>(
@@ -154,6 +155,16 @@ void VideoQualityAnalyzerInjectionHelper::Start(
     int max_threads_count) {
   analyzer_->Start(std::move(test_case_name), peer_names, max_threads_count);
   extractor_->Start(peer_names.size());
+  MutexLock lock(&mutex_);
+  peers_count_ = peer_names.size();
+}
+
+void VideoQualityAnalyzerInjectionHelper::RegisterParticipantInCall(
+    absl::string_view peer_name) {
+  analyzer_->RegisterParticipantInCall(peer_name);
+  extractor_->AddParticipantInCall();
+  MutexLock lock(&mutex_);
+  peers_count_++;
 }
 
 void VideoQualityAnalyzerInjectionHelper::OnStatsReports(
@@ -203,7 +214,7 @@ void VideoQualityAnalyzerInjectionHelper::OnFrame(absl::string_view peer_name,
 
   std::string stream_label = analyzer_->GetStreamLabel(frame.id());
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>* sinks =
-      PopulateSinks(stream_label);
+      PopulateSinks(ReceiverStream(peer_name, stream_label));
   if (sinks == nullptr) {
     return;
   }
@@ -214,20 +225,27 @@ void VideoQualityAnalyzerInjectionHelper::OnFrame(absl::string_view peer_name,
 
 std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>*
 VideoQualityAnalyzerInjectionHelper::PopulateSinks(
-    const std::string& stream_label) {
-  MutexLock lock(&lock_);
-  auto sinks_it = sinks_.find(stream_label);
+    const ReceiverStream& receiver_stream) {
+  MutexLock lock(&mutex_);
+  auto sinks_it = sinks_.find(receiver_stream);
   if (sinks_it != sinks_.end()) {
     return &sinks_it->second;
   }
-  auto it = known_video_configs_.find(stream_label);
+  auto it = known_video_configs_.find(receiver_stream.stream_label);
   RTC_DCHECK(it != known_video_configs_.end())
-      << "No video config for stream " << stream_label;
+      << "No video config for stream " << receiver_stream.stream_label;
   const VideoConfig& config = it->second;
 
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
+  absl::optional<std::string> output_dump_file_name =
+      config.output_dump_file_name;
+  if (output_dump_file_name.has_value() && peers_count_ > 2) {
+    rtc::StringBuilder builder(*output_dump_file_name);
+    builder << "." << receiver_stream.peer_name;
+    output_dump_file_name = builder.str();
+  }
   test::VideoFrameWriter* writer =
-      MaybeCreateVideoWriter(config.output_dump_file_name, config);
+      MaybeCreateVideoWriter(output_dump_file_name, config);
   if (writer) {
     sinks.push_back(std::make_unique<VideoWriter>(
         writer, config.output_dump_sampling_modulo));
@@ -237,8 +255,8 @@ VideoQualityAnalyzerInjectionHelper::PopulateSinks(
         test::VideoRenderer::Create((*config.stream_label + "-render").c_str(),
                                     config.width, config.height)));
   }
-  sinks_.insert({stream_label, std::move(sinks)});
-  return &(sinks_.find(stream_label)->second);
+  sinks_.insert({receiver_stream, std::move(sinks)});
+  return &(sinks_.find(receiver_stream)->second);
 }
 
 }  // namespace webrtc_pc_e2e

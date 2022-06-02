@@ -187,6 +187,7 @@ if (!build_with_chromium) {
         "../../../api/video:video_rtp_headers",
         "../../../api/video_codecs:video_codecs_api",
         "../../../rtc_base:criticalsection",
+        "../../../rtc_base:stringutils",
         "../../../rtc_base/synchronization:mutex",
         "../../../test:video_test_common",
         "../../../test:video_test_support",
