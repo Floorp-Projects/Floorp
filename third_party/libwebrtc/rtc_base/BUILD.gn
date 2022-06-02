@@ -837,6 +837,7 @@ rtc_library("async_socket") {
     ":socket_address",
     "third_party/sigslot",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
 
 rtc_library("socket") {

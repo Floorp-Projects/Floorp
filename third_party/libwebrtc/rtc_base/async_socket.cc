@@ -10,6 +10,7 @@
 
 #include "rtc_base/async_socket.h"
 
+#include "absl/memory/memory.h"
 #include "rtc_base/checks.h"
 
 namespace rtc {
@@ -18,24 +19,14 @@ AsyncSocket::AsyncSocket() {}
 
 AsyncSocket::~AsyncSocket() {}
 
-AsyncSocketAdapter::AsyncSocketAdapter(AsyncSocket* socket) : socket_(nullptr) {
-  Attach(socket);
-}
-
-AsyncSocketAdapter::~AsyncSocketAdapter() {
-  delete socket_;
-}
-
-void AsyncSocketAdapter::Attach(AsyncSocket* socket) {
-  RTC_DCHECK(!socket_);
-  socket_ = socket;
-  if (socket_) {
-    socket_->SignalConnectEvent.connect(this,
-                                        &AsyncSocketAdapter::OnConnectEvent);
-    socket_->SignalReadEvent.connect(this, &AsyncSocketAdapter::OnReadEvent);
-    socket_->SignalWriteEvent.connect(this, &AsyncSocketAdapter::OnWriteEvent);
-    socket_->SignalCloseEvent.connect(this, &AsyncSocketAdapter::OnCloseEvent);
-  }
+AsyncSocketAdapter::AsyncSocketAdapter(AsyncSocket* socket)
+    : socket_(absl::WrapUnique(socket)) {
+  RTC_DCHECK(socket_);
+  socket_->SignalConnectEvent.connect(this,
+                                      &AsyncSocketAdapter::OnConnectEvent);
+  socket_->SignalReadEvent.connect(this, &AsyncSocketAdapter::OnReadEvent);
+  socket_->SignalWriteEvent.connect(this, &AsyncSocketAdapter::OnWriteEvent);
+  socket_->SignalCloseEvent.connect(this, &AsyncSocketAdapter::OnCloseEvent);
 }
 
 SocketAddress AsyncSocketAdapter::GetLocalAddress() const {
