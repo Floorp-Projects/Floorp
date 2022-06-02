@@ -1124,6 +1124,10 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
     }
 
     void VerifyStats() const {
+      double input_fps = 0.0;
+      for (const auto& configured_framerate : configured_framerates_) {
+        input_fps = std::max(configured_framerate.second, input_fps);
+      }
       for (const auto& encode_frame_rate_list : encode_frame_rate_lists_) {
         const std::vector<double>& values = encode_frame_rate_list.second;
         test::PrintResultList("substream", "", "encode_frame_rate", values,
@@ -1132,7 +1136,8 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
             std::accumulate(values.begin(), values.end(), 0.0) / values.size();
         uint32_t ssrc = encode_frame_rate_list.first;
         double expected_fps = configured_framerates_.find(ssrc)->second;
-        EXPECT_NEAR(expected_fps, average_fps, kAllowedFpsDiff);
+        if (expected_fps != input_fps)
+          EXPECT_NEAR(expected_fps, average_fps, kAllowedFpsDiff);
       }
     }
 
