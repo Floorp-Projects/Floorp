@@ -149,10 +149,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // https://tools.ietf.org/html/rfc3611#section-4.4 and #section-4.5
     bool non_sender_rtt_measurement = false;
 
-    // If true, sequence numbers are not assigned until after the pacer stage,
-    // in RtpSenderEgress.
-    bool use_deferred_sequencing = false;
-
    private:
     RTC_DISALLOW_COPY_AND_ASSIGN(Configuration);
   };
