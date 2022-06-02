@@ -33,8 +33,9 @@ class TransformableAudioFrame : public TransformableAudioFrameInterface {
     payload_.SetData(data.data(), data.size());
   }
 
-  uint32_t GetTimestamp() const override { return header_.timestamp; }
+  uint8_t GetPayloadType() const override { return header_.payloadType; }
   uint32_t GetSsrc() const override { return ssrc_; }
+  uint32_t GetTimestamp() const override { return header_.timestamp; }
   const RTPHeader& GetHeader() const override { return header_; }
 
  private:

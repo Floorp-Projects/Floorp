@@ -41,8 +41,9 @@ class TransformableVideoReceiverFrame
         EncodedImageBuffer::Create(data.data(), data.size()));
   }
 
-  uint32_t GetTimestamp() const override { return frame_->Timestamp(); }
+  uint8_t GetPayloadType() const override { return frame_->PayloadType(); }
   uint32_t GetSsrc() const override { return ssrc_; }
+  uint32_t GetTimestamp() const override { return frame_->Timestamp(); }
 
   bool IsKeyFrame() const override {
     return frame_->FrameType() == VideoFrameType::kVideoFrameKey;

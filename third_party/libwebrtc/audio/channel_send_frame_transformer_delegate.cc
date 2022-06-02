@@ -44,7 +44,7 @@ class TransformableAudioFrame : public TransformableFrameInterface {
   uint32_t GetSsrc() const override { return ssrc_; }
 
   AudioFrameType GetFrameType() const { return frame_type_; }
-  uint8_t GetPayloadType() const { return payload_type_; }
+  uint8_t GetPayloadType() const override { return payload_type_; }
   int64_t GetAbsoluteCaptureTimestampMs() const {
     return absolute_capture_timestamp_ms_;
   }
