@@ -482,8 +482,38 @@ addon-details {
   color: var(--in-content-deemphasized-text);
 }
 
-.addon-detail-description {
+.addon-detail-description-wrapper {
   margin: 16px 0;
+}
+
+.addon-detail-description-collapse .addon-detail-description {
+  max-height: 20rem;
+  overflow: hidden;
+}
+
+/* Include button to beat out .button-link which is below this */
+button.addon-detail-description-toggle {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  font-weight: normal;
+  gap: 4px;
+}
+
+.addon-detail-description-toggle::after {
+  content: "";
+  display: block;
+  background-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 12px;
+  height: 12px;
+}
+
+.addon-detail-description-collapse .addon-detail-description-toggle::after {
+  transform: scaleY(-1);
 }
 
 .addon-detail-contribute {
