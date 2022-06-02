@@ -27,6 +27,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -140,12 +141,12 @@ private fun assertDownloadPrompt(fileName: String) {
             assertTrue(
                 "Download prompt button not visible",
                 mDevice.findObject(UiSelector().resourceId("$packageName:id/download_button"))
-                    .waitForExists(waitingTime)
+                    .waitForExists(waitingTimeLong)
             )
             assertTrue(
                 "$fileName title doesn't match",
                 mDevice.findObject(UiSelector().text(fileName))
-                    .waitForExists(waitingTime)
+                    .waitForExists(waitingTimeLong)
             )
 
             break

@@ -5,9 +5,9 @@
 package org.mozilla.fenix.helpers
 
 import android.net.Uri
-import java.util.concurrent.TimeUnit
 import okhttp3.mockwebserver.MockWebServer
 import org.mozilla.fenix.helpers.ext.toUri
+import java.util.concurrent.TimeUnit
 
 /**
  * Helper for hosting web pages locally for testing purposes.

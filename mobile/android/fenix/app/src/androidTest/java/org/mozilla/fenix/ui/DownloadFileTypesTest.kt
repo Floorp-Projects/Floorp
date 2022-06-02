@@ -14,7 +14,6 @@ import org.junit.runners.Parameterized
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
@@ -32,10 +31,6 @@ class DownloadFileTypesTest(fileName: String) {
 
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule()
-
-    @Rule
-    @JvmField
-    val retryTestRule = RetryTestRule(3)
 
     companion object {
         // Creating test data. The test will take each file name as a parameter and run it individually.
