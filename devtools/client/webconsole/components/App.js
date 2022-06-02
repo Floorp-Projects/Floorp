@@ -102,8 +102,6 @@ class App extends Component {
       reverseSearchInitialValue: PropTypes.string,
       editorMode: PropTypes.bool,
       editorWidth: PropTypes.number,
-      hidePersistLogsCheckbox: PropTypes.bool,
-      hideShowContentMessagesCheckbox: PropTypes.bool,
       inputEnabled: PropTypes.bool,
       sidebarVisible: PropTypes.bool.isRequired,
       eagerEvaluationEnabled: PropTypes.bool.isRequired,
@@ -271,15 +269,11 @@ class App extends Component {
     const {
       closeSplitConsole,
       filterBarDisplayMode,
-      hidePersistLogsCheckbox,
-      hideShowContentMessagesCheckbox,
       webConsoleUI,
     } = this.props;
 
     return FilterBar({
       key: "filterbar",
-      hidePersistLogsCheckbox,
-      hideShowContentMessagesCheckbox,
       closeSplitConsole,
       displayMode: filterBarDisplayMode,
       webConsoleUI,

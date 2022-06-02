@@ -116,12 +116,6 @@ class WebConsoleWrapper {
           webConsoleUI,
           onFirstMeaningfulPaint: resolve,
           closeSplitConsole: this.closeSplitConsole.bind(this),
-          hidePersistLogsCheckbox:
-            webConsoleUI.isBrowserConsole ||
-            webConsoleUI.isBrowserToolboxConsole,
-          hideShowContentMessagesCheckbox:
-            !webConsoleUI.isBrowserConsole &&
-            !webConsoleUI.isBrowserToolboxConsole,
           inputEnabled:
             !webConsoleUI.isBrowserConsole ||
             Services.prefs.getBoolPref("devtools.chrome.enabled"),
