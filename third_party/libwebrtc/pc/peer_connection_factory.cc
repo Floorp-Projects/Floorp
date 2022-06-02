@@ -231,6 +231,7 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
   }
 
   dependencies.allocator->SetNetworkIgnoreMask(options().network_ignore_mask);
+  dependencies.allocator->SetVpnList(configuration.vpn_list);
 
   std::unique_ptr<RtcEventLog> event_log =
       worker_thread()->Invoke<std::unique_ptr<RtcEventLog>>(

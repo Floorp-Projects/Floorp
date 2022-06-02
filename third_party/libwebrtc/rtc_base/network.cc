@@ -541,6 +541,7 @@ void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
       continue;
     }
     // Convert to InterfaceAddress.
+    // TODO(webrtc:13114): Convert ConvertIfAddrs to use rtc::Netmask.
     if (!ifaddrs_converter->ConvertIfAddrsToIPAddress(cursor, &ip, &mask)) {
       continue;
     }
@@ -576,8 +577,16 @@ void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
       vpn_underlying_adapter_type =
           network_monitor_->GetVpnUnderlyingAdapterType(cursor->ifa_name);
     }
+
     int prefix_length = CountIPMaskBits(mask);
     prefix = TruncateIP(ip, prefix_length);
+
+    if (adapter_type != ADAPTER_TYPE_VPN &&
+        IsConfiguredVpn(prefix, prefix_length)) {
+      vpn_underlying_adapter_type = adapter_type;
+      adapter_type = ADAPTER_TYPE_VPN;
+    }
+
     std::string key =
         MakeNetworkKey(std::string(cursor->ifa_name), prefix, prefix_length);
     auto iter = current_networks.find(key);
@@ -766,8 +775,15 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
               adapter_type = ADAPTER_TYPE_UNKNOWN;
               break;
           }
+          auto vpn_underlying_adapter_type = ADAPTER_TYPE_UNKNOWN;
+          if (adapter_type != ADAPTER_TYPE_VPN &&
+              IsConfiguredVpn(prefix, prefix_length)) {
+            vpn_underlying_adapter_type = adapter_type;
+            adapter_type = ADAPTER_TYPE_VPN;
+          }
           std::unique_ptr<Network> network(new Network(
               name, description, prefix, prefix_length, adapter_type));
+          network->set_underlying_type_for_vpn(vpn_underlying_adapter_type);
           network->set_default_local_address_provider(this);
           network->set_mdns_responder_provider(this);
           network->set_scope_id(scope_id);
@@ -1116,6 +1132,28 @@ std::string Network::ToString() const {
   }
   ss << ":id=" << id_ << "]";
   return ss.Release();
+}
+
+void BasicNetworkManager::set_vpn_list(const std::vector<NetworkMask>& vpn) {
+  if (thread_ == nullptr) {
+    vpn_ = vpn;
+  } else {
+    thread_->Invoke<void>(RTC_FROM_HERE, [this, vpn] { vpn_ = vpn; });
+  }
+}
+
+bool BasicNetworkManager::IsConfiguredVpn(IPAddress prefix,
+                                          int prefix_length) const {
+  RTC_DCHECK_RUN_ON(thread_);
+  for (const auto& vpn : vpn_) {
+    if (prefix_length >= vpn.prefix_length()) {
+      auto copy = TruncateIP(prefix, vpn.prefix_length());
+      if (copy == vpn.address()) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 }  // namespace rtc

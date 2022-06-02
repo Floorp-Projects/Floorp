@@ -337,6 +337,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     absl::optional<int> report_usage_pattern_delay_ms;
     absl::optional<int> stable_writable_connection_ping_interval_ms;
     webrtc::VpnPreference vpn_preference;
+    std::vector<rtc::NetworkMask> vpn_list;
   };
   static_assert(sizeof(stuff_being_tested_for_equality) == sizeof(*this),
                 "Did you add something to RTCConfiguration and forget to "
@@ -399,7 +400,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          report_usage_pattern_delay_ms == o.report_usage_pattern_delay_ms &&
          stable_writable_connection_ping_interval_ms ==
              o.stable_writable_connection_ping_interval_ms &&
-         vpn_preference == o.vpn_preference;
+         vpn_preference == o.vpn_preference && vpn_list == o.vpn_list;
 }
 
 bool PeerConnectionInterface::RTCConfiguration::operator!=(

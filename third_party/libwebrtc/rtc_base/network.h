@@ -79,6 +79,25 @@ class MdnsResponderProvider {
   virtual webrtc::MdnsResponderInterface* GetMdnsResponder() const = 0;
 };
 
+// Network/mask in CIDR representation.
+class NetworkMask {
+ public:
+  NetworkMask(const IPAddress& addr, int prefix_length)
+      : address_(addr), prefix_length_(prefix_length) {}
+
+  const IPAddress& address() const { return address_; }
+  int prefix_length() const { return prefix_length_; }
+
+  bool operator==(const NetworkMask& o) const {
+    return address_ == o.address_ && prefix_length_ == o.prefix_length_;
+  }
+
+ private:
+  IPAddress address_;
+  // Length of valid bits in address_ (for ipv4 valid range is 0-32)
+  int prefix_length_;
+};
+
 // Generic network manager interface. It provides list of local
 // networks.
 //
@@ -158,6 +177,8 @@ class RTC_EXPORT NetworkManager : public DefaultLocalAddressProvider,
 
   // MdnsResponderProvider interface.
   webrtc::MdnsResponderInterface* GetMdnsResponder() const override;
+
+  virtual void set_vpn_list(const std::vector<NetworkMask>& vpn) {}
 };
 
 // Base class for NetworkManager implementations.
@@ -249,6 +270,12 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
     network_ignore_list_ = list;
   }
 
+  // Set a list of manually configured VPN's.
+  void set_vpn_list(const std::vector<NetworkMask>& vpn) override;
+
+  // Check if |prefix| is configured as VPN.
+  bool IsConfiguredVpn(IPAddress prefix, int prefix_length) const;
+
   // Bind a socket to interface that ip address belong to.
   // Implementation look up interface name and calls
   // BindSocketToNetwork on NetworkMonitor.
@@ -305,6 +332,8 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
       RTC_GUARDED_BY(thread_);
   bool allow_mac_based_ipv6_ RTC_GUARDED_BY(thread_) = false;
   bool bind_using_ifname_ RTC_GUARDED_BY(thread_) = false;
+
+  std::vector<NetworkMask> vpn_;
 };
 
 // Represents a Unix-type network interface, with a name and single address.

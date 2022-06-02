@@ -74,6 +74,8 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
     return relay_port_factory_;
   }
 
+  void SetVpnList(const std::vector<rtc::NetworkMask>& vpn_list) override;
+
  private:
   void OnIceRegathering(PortAllocatorSession* session,
                         IceRegatheringReason reason);
