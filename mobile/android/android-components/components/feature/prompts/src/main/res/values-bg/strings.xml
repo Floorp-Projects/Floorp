@@ -20,6 +20,8 @@
     <string name="mozac_feature_prompt_dont_save">Без запазване</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Без запазване</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">Не сега</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Запазване</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -103,6 +105,6 @@
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Разгъва предложения списък с банкови карти</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Сгъва предложения списък с банкови карти</string>
-    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Управление на банкови карти</string>
-</resources>
+    </resources>
