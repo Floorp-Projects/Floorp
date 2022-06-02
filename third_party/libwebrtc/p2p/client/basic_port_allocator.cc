@@ -1228,6 +1228,11 @@ void BasicPortAllocatorSession::PrunePortsAndRemoveCandidates(
   }
 }
 
+void BasicPortAllocator::SetVpnList(
+    const std::vector<rtc::NetworkMask>& vpn_list) {
+  network_manager_->set_vpn_list(vpn_list);
+}
+
 // AllocationSequence
 
 AllocationSequence::AllocationSequence(

@@ -44,6 +44,12 @@ namespace rtc {
 
 namespace {
 
+IPAddress IPFromString(const std::string& str) {
+  IPAddress ip;
+  RTC_CHECK(IPFromString(str, &ip));
+  return ip;
+}
+
 class FakeNetworkMonitor : public NetworkMonitorInterface {
  public:
   void Start() override { started_ = true; }
@@ -1384,5 +1390,48 @@ TEST_F(NetworkTest, NetworkCostVpn_VpnMoreExpensive) {
   delete net1;
   delete net2;
 }
+
+TEST_F(NetworkTest, VpnList) {
+  {
+    BasicNetworkManager manager;
+    manager.set_vpn_list({NetworkMask(IPFromString("192.168.0.0"), 16)});
+    manager.StartUpdating();
+    EXPECT_TRUE(manager.IsConfiguredVpn(IPFromString("192.168.1.1"), 32));
+    EXPECT_TRUE(manager.IsConfiguredVpn(IPFromString("192.168.12.1"), 24));
+    EXPECT_TRUE(manager.IsConfiguredVpn(IPFromString("192.168.0.0"), 16));
+    EXPECT_TRUE(manager.IsConfiguredVpn(IPFromString("192.168.0.0"), 24));
+    EXPECT_FALSE(manager.IsConfiguredVpn(IPFromString("192.133.1.1"), 32));
+    EXPECT_FALSE(manager.IsConfiguredVpn(IPFromString("192.133.0.0"), 16));
+    EXPECT_FALSE(manager.IsConfiguredVpn(IPFromString("192.168.0.0"), 15));
+  }
+  {
+    BasicNetworkManager manager;
+    manager.set_vpn_list({NetworkMask(IPFromString("192.168.0.0"), 24)});
+    manager.StartUpdating();
+    EXPECT_FALSE(manager.IsConfiguredVpn(IPFromString("192.168.1.1"), 32));
+    EXPECT_TRUE(manager.IsConfiguredVpn(IPFromString("192.168.0.1"), 32));
+  }
+}
+
+#if defined(WEBRTC_POSIX)
+// TODO(webrtc:13114): Implement the InstallIpv4Network for windows.
+TEST_F(NetworkTest, VpnListOverrideAdapterType) {
+  BasicNetworkManager manager;
+  manager.set_vpn_list({NetworkMask(IPFromString("192.168.0.0"), 16)});
+  manager.StartUpdating();
+
+  char if_name[20] = "eth0";
+  auto addr_list =
+      InstallIpv4Network(if_name, "192.168.1.23", "255.255.255.255", manager);
+
+  BasicNetworkManager::NetworkList list;
+  manager.GetNetworks(&list);
+  ASSERT_EQ(1u, list.size());
+  EXPECT_EQ(ADAPTER_TYPE_VPN, list[0]->type());
+  EXPECT_EQ(ADAPTER_TYPE_ETHERNET, list[0]->underlying_type_for_vpn());
+  ClearNetworks(manager);
+  ReleaseIfAddrs(addr_list);
+}
+#endif  // defined(WEBRTC_POSIX)
 
 }  // namespace rtc

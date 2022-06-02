@@ -661,6 +661,10 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     // perfect, adherence to this preference cannot be guaranteed.
     VpnPreference vpn_preference = VpnPreference::kDefault;
 
+    // List of address/length subnets that should be treated like
+    // VPN (in case webrtc fails to auto detect them).
+    std::vector<rtc::NetworkMask> vpn_list;
+
     //
     // Don't forget to update operator== if adding something.
     //
