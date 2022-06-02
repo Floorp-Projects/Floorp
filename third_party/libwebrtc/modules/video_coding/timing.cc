@@ -209,14 +209,19 @@ int VCMTiming::RequiredDecodeTimeMs() const {
 }
 
 int64_t VCMTiming::MaxWaitingTime(int64_t render_time_ms,
-                                  int64_t now_ms) const {
+                                  int64_t now_ms,
+                                  bool too_many_frames_queued) const {
   MutexLock lock(&mutex_);
 
   if (render_time_ms == 0 && zero_playout_delay_min_pacing_->us() > 0) {
     // `render_time_ms` == 0 indicates that the frame should be decoded and
     // rendered as soon as possible. However, the decoder can be choked if too
-    // many frames are sent at ones. Therefore, limit the interframe delay to
-    // `zero_playout_delay_min_pacing_`.
+    // many frames are sent at once. Therefore, limit the interframe delay to
+    // |zero_playout_delay_min_pacing_| unless too many frames are queued in
+    // which case the frames are sent to the decoder at once.
+    if (too_many_frames_queued) {
+      return 0;
+    }
     int64_t earliest_next_decode_start_time =
         last_decode_scheduled_ts_ + zero_playout_delay_min_pacing_->ms();
     int64_t max_wait_time_ms = now_ms >= earliest_next_decode_start_time

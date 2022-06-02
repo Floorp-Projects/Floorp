@@ -82,8 +82,15 @@ class VCMTiming {
   virtual int64_t RenderTimeMs(uint32_t frame_timestamp, int64_t now_ms) const;
 
   // Returns the maximum time in ms that we can wait for a frame to become
-  // complete before we must pass it to the decoder.
-  virtual int64_t MaxWaitingTime(int64_t render_time_ms, int64_t now_ms) const;
+  // complete before we must pass it to the decoder. render_time_ms==0 indicates
+  // that the frames should be processed as quickly as possible, with possibly
+  // only a small delay added to make sure that the decoder is not overloaded.
+  // In this case, the parameter too_many_frames_queued is used to signal that
+  // the decode queue is full and that the frame should be decoded as soon as
+  // possible.
+  virtual int64_t MaxWaitingTime(int64_t render_time_ms,
+                                 int64_t now_ms,
+                                 bool too_many_frames_queued) const;
 
   // Returns the current target delay which is required delay + decode time +
   // render delay.
