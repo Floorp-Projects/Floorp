@@ -22,7 +22,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   });
 
   ok(
-    !!(await OS.File.stat(snapshotFilePath)),
+    !!(await IOUtils.stat(snapshotFilePath)),
     "Should have the heap snapshot file"
   );
 

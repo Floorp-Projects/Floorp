@@ -7,8 +7,6 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,";
 
-const { OS } = require("resource://gre/modules/osfile.jsm");
-
 addRDMTask(TEST_URL, async function({ ui }) {
   const { toolWindow } = ui;
   const { store, document } = toolWindow;
@@ -21,7 +19,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   const filePath = await whenScreenshotSucceeded;
   const image = new Image();
-  image.src = OS.Path.toFileURI(filePath);
+  image.src = PathUtils.toFileURI(filePath);
 
   await once(image, "load");
 
@@ -41,5 +39,5 @@ addRDMTask(TEST_URL, async function({ ui }) {
     "screenshot width has the expected height"
   );
 
-  await OS.File.remove(filePath);
+  await IOUtils.remove(filePath);
 });

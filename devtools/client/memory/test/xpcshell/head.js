@@ -137,7 +137,7 @@ async function createTempFile() {
   const file = FileUtils.getFile("TmpD", ["tmp.fxsnapshot"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   const destPath = file.path;
-  const stat = await OS.File.stat(destPath);
+  const stat = await IOUtils.stat(destPath);
   ok(stat.size === 0, "new file is 0 bytes at start");
   return destPath;
 }

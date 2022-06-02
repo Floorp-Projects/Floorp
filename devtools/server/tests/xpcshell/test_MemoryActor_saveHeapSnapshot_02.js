@@ -6,8 +6,6 @@
 // Test that we can properly stream heap snapshot files over the RDP as bulk
 // data.
 
-const { OS } = require("resource://gre/modules/osfile.jsm");
-
 add_task(async () => {
   const { memoryFront } = await createTabMemoryFront();
 
@@ -15,7 +13,7 @@ add_task(async () => {
     forceCopy: true,
   });
   ok(
-    !!(await OS.File.stat(snapshotFilePath)),
+    !!(await IOUtils.stat(snapshotFilePath)),
     "Should have the heap snapshot file"
   );
   const snapshot = ChromeUtils.readHeapSnapshot(snapshotFilePath);

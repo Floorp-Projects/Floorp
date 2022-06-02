@@ -6,14 +6,12 @@
 // Test that we can save full runtime heap snapshots when attached to the
 // ParentProcessTargetActor or a ContentProcessTargetActor.
 
-const { OS } = require("resource://gre/modules/osfile.jsm");
-
 add_task(async () => {
   const { memoryFront } = await createMainProcessMemoryFront();
 
   const snapshotFilePath = await memoryFront.saveHeapSnapshot();
   ok(
-    !!(await OS.File.stat(snapshotFilePath)),
+    !!(await IOUtils.stat(snapshotFilePath)),
     "Should have the heap snapshot file"
   );
   const snapshot = ChromeUtils.readHeapSnapshot(snapshotFilePath);

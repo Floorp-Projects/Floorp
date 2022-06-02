@@ -56,8 +56,8 @@ add_task(async function() {
     [isMacOS ? "metaKey" : "ctrlKey"]: true,
   });
 
-  await waitFor(() => OS.File.exists(nsiFile.path));
-  const buffer = await OS.File.read(nsiFile.path);
+  await waitFor(() => IOUtils.exists(nsiFile.path));
+  const buffer = await IOUtils.read(nsiFile.path);
   const fileContent = new TextDecoder().decode(buffer);
   is(
     fileContent,

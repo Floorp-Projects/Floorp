@@ -1580,11 +1580,11 @@ async function takeNodeScreenshot(inspector) {
   info("Create an image using the downloaded fileas source");
   const image = new Image();
   const onImageLoad = once(image, "load");
-  image.src = OS.Path.toFileURI(filePath);
+  image.src = PathUtils.toFileURI(filePath);
   await onImageLoad;
 
   info("Remove the downloaded screenshot file");
-  await OS.File.remove(filePath);
+  await IOUtils.remove(filePath);
 
   // See intermittent Bug 1508435. Even after removing the file, tests still manage to
   // reuse files from the previous test if they have the same name. Since our file name

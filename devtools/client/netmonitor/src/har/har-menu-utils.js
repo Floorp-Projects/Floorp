@@ -4,7 +4,6 @@
 
 "use strict";
 
-const ChromeUtils = require("ChromeUtils");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
 loader.lazyRequireGetter(
@@ -94,8 +93,7 @@ var HarMenuUtils = {
 
 function readFile(file) {
   return new Promise(resolve => {
-    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-    OS.File.read(file.path).then(data => {
+    IOUtils.read(file.path).then(data => {
       const decoder = new TextDecoder();
       resolve(decoder.decode(data));
     });

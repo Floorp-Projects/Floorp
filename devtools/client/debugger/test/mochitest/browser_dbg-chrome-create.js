@@ -53,7 +53,7 @@ add_task(async function() {
 
   is(
     gProcess._dbgProfilePath,
-    OS.Path.join(OS.Constants.Path.profileDir, "chrome_debugger_profile"),
+    PathUtils.join(PathUtils.profileDir, "chrome_debugger_profile"),
     "The remote debugger profile isn't where we expect it!"
   );
 

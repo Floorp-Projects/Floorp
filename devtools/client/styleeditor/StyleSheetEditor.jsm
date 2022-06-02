@@ -30,7 +30,6 @@ loader.lazyRequireGetter(
   "resource://gre/modules/NetUtil.jsm",
   true
 );
-loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
 
 const {
   getString,
@@ -263,8 +262,8 @@ StyleSheetEditor.prototype = {
     this.linkedCSSFileError = null;
 
     // save last file change time so we can compare when we check for changes.
-    OS.File.stat(path).then(info => {
-      this._fileModDate = info.lastModificationDate.getTime();
+    IOUtils.stat(path).then(info => {
+      this._fileModDate = info.lastModified;
     }, this.markLinkedFileBroken);
 
     this.emit("linked-css-file");
@@ -777,7 +776,9 @@ StyleSheetEditor.prototype = {
 
     let defaultName;
     if (this._friendlyName) {
-      defaultName = OS.Path.basename(this._friendlyName);
+      defaultName = PathUtils.isAbsolute(this._friendlyName)
+        ? PathUtils.filename(this._friendlyName)
+        : this._friendlyName;
     }
     showFilePicker(
       file || this._styleSheetFilePath,
@@ -818,8 +819,8 @@ StyleSheetEditor.prototype = {
    * if so, update the live style sheet.
    */
   checkLinkedFileForChanges: function() {
-    OS.File.stat(this.linkedCSSFile).then(info => {
-      const lastChange = info.lastModificationDate.getTime();
+    IOUtils.stat(this.linkedCSSFile).then(info => {
+      const lastChange = info.lastModified;
 
       if (this._fileModDate && lastChange != this._fileModDate) {
         this._fileModDate = lastChange;
@@ -866,7 +867,7 @@ StyleSheetEditor.prototype = {
    * file from disk and live update the stylesheet object with the contents.
    */
   updateLinkedStyleSheet: function() {
-    OS.File.read(this.linkedCSSFile).then(async array => {
+    IOUtils.read(this.linkedCSSFile).then(async array => {
       const decoder = new TextDecoder();
       const text = decoder.decode(array);
 
@@ -957,7 +958,7 @@ function findLinkedFilePath(uri, origUri, file) {
   const project = findProjectPath(file, origBranch);
 
   const parts = project.concat(branch);
-  const path = OS.Path.join.apply(this, parts);
+  const path = PathUtils.join.apply(this, parts);
 
   return path;
 }
@@ -976,7 +977,7 @@ function findLinkedFilePath(uri, origUri, file) {
  *        array of path parts
  */
 function findProjectPath(file, branch) {
-  const path = OS.Path.split(file.path).components;
+  const path = PathUtils.split(file.path);
 
   for (let i = 2; i <= branch.length; i++) {
     // work backwards until we find a differing directory name
@@ -1002,8 +1003,8 @@ function findProjectPath(file, branch) {
  *         object with 'branch' and 'origBranch' array of path parts for branch
  */
 function findUnsharedBranches(origUri, uri) {
-  origUri = OS.Path.split(origUri.pathQueryRef).components;
-  uri = OS.Path.split(uri.pathQueryRef).components;
+  origUri = PathUtils.split(origUri.pathQueryRef);
+  uri = PathUtils.split(uri.pathQueryRef);
 
   for (let i = 0; i < uri.length - 1; i++) {
     if (uri[i] != origUri[i]) {

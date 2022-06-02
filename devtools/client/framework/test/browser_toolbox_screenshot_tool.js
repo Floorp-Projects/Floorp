@@ -40,7 +40,7 @@ add_task(async function() {
   info("Create an image using the downloaded file as source");
   const image = new Image();
   const onImageLoad = once(image, "load");
-  image.src = OS.Path.toFileURI(filePath);
+  image.src = PathUtils.toFileURI(filePath);
   await onImageLoad;
 
   const dpr = await SpecialPowers.spawn(
@@ -79,6 +79,6 @@ add_task(async function() {
   );
 
   //Remove the downloaded screenshot file
-  await OS.File.remove(filePath);
+  await IOUtils.remove(filePath);
   await resetDownloads();
 });

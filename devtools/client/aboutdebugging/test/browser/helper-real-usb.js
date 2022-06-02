@@ -17,7 +17,7 @@ async function getExpectedRuntimeAll() {
   const currentPath = env.get("PWD");
   const path = `${currentPath}/${runtimesPath}`;
   info(`Load ${path}`);
-  const buffer = await OS.File.read(path);
+  const buffer = await IOUtils.read(path);
   const data = new TextDecoder().decode(buffer);
   return JSON.parse(data);
 }

@@ -16,7 +16,6 @@ loader.lazyRequireGetter(
   "DevToolsUtils",
   "devtools/shared/DevToolsUtils"
 );
-loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
 loader.lazyRequireGetter(
   this,
   "HeapSnapshotFileUtils",
@@ -64,7 +63,7 @@ exports.HeapSnapshotFileActor = protocol.ActorClassWithSpec(
 
       const streamPromise = DevToolsUtils.openFileStream(snapshotFilePath);
 
-      const { size } = await OS.File.stat(snapshotFilePath);
+      const { size } = await IOUtils.stat(snapshotFilePath);
       const bulkPromise = this.conn.startBulkSend({
         actor: this.actorID,
         type: "heap-snapshot",

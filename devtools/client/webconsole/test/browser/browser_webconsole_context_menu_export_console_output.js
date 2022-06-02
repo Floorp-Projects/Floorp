@@ -161,8 +161,8 @@ async function exportAllToFile(hud, message) {
   menuPopup.hidePopup();
 
   // The file may not be ready yet.
-  await waitFor(() => OS.File.exists(nsiFile.path));
-  const buffer = await OS.File.read(nsiFile.path);
+  await waitFor(() => IOUtils.exists(nsiFile.path));
+  const buffer = await IOUtils.read(nsiFile.path);
   return new TextDecoder().decode(buffer);
 }
 

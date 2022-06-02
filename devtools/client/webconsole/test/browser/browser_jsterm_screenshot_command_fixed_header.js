@@ -40,7 +40,7 @@ add_task(async function() {
 
   info("Create an image using the downloaded file as source");
   const image = new Image();
-  image.src = OS.Path.toFileURI(actualFilePath);
+  image.src = PathUtils.toFileURI(actualFilePath);
   await once(image, "load");
 
   info("Check that the fixed element is rendered at the expected position");
@@ -67,6 +67,6 @@ add_task(async function() {
   );
 
   info("Remove the downloaded screenshot file and cleanup downloads");
-  await OS.File.remove(actualFilePath);
+  await IOUtils.remove(actualFilePath);
   await resetDownloads();
 });

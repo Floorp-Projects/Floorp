@@ -51,8 +51,6 @@ loader.lazyRequireGetter(
   "resource://gre/modules/NetUtil.jsm",
   true
 );
-loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
-
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
@@ -1239,7 +1237,7 @@ class StyleEditorUI extends EventEmitter {
 
     let linkedCSSSource = "";
     if (editor.linkedCSSFile) {
-      linkedCSSSource = OS.Path.basename(editor.linkedCSSFile);
+      linkedCSSSource = PathUtils.filename(editor.linkedCSSFile);
     } else if (editor.styleSheet.relatedEditorName) {
       linkedCSSSource = editor.styleSheet.relatedEditorName;
     }

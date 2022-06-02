@@ -493,10 +493,6 @@ DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
   return require("resource://gre/modules/NetUtil.jsm").NetUtil;
 });
 
-DevToolsUtils.defineLazyGetter(this, "OS", () => {
-  return require("resource://gre/modules/osfile.jsm").OS;
-});
-
 DevToolsUtils.defineLazyGetter(this, "NetworkHelper", () => {
   return require("devtools/shared/webconsole/network-helper");
 });
@@ -669,12 +665,12 @@ function mainThreadFetch(
           ex.name === "NS_BASE_STREAM_CLOSED" &&
           uri instanceof Ci.nsIFileURL
         ) {
-          // Empty files cause NS_BASE_STREAM_CLOSED exception. Use OS.File to
+          // Empty files cause NS_BASE_STREAM_CLOSED exception. Use IOUtils to
           // differentiate between empty files and other errors (bug 1170864).
           // This can be removed when bug 982654 is fixed.
 
           uri.QueryInterface(Ci.nsIFileURL);
-          const result = OS.File.read(uri.file.path).then(bytes => {
+          const result = IOUtils.read(uri.file.path).then(bytes => {
             // Convert the bytearray to a String.
             const decoder = new TextDecoder();
             const content = decoder.decode(bytes);
@@ -846,7 +842,7 @@ exports.saveAs = async function(
     return;
   }
 
-  await OS.File.writeAtomic(returnFile.path, dataArray, {
+  await IOUtils.write(returnFile.path, dataArray, {
     tmpPath: returnFile.path + ".tmp",
   });
 };
