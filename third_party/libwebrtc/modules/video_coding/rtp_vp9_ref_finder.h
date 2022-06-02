@@ -42,13 +42,10 @@ class RtpVp9RefFinder {
   enum FrameDecision { kStash, kHandOff, kDrop };
 
   struct GofInfo {
-    GofInfo(GofInfoVP9* gof, uint16_t last_picture_id, uint16_t last_seq_num)
-        : gof(gof),
-          last_picture_id(last_picture_id),
-          last_seq_num(last_seq_num) {}
+    GofInfo(GofInfoVP9* gof, uint16_t last_picture_id)
+        : gof(gof), last_picture_id(last_picture_id) {}
     GofInfoVP9* gof;
     uint16_t last_picture_id;
-    uint16_t last_seq_num;
   };
 
   FrameDecision ManageFrameInternal(RtpFrameObject* frame);
