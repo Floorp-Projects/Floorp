@@ -168,6 +168,8 @@ DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
           TimerOptions(options.t2_shutdown_timeout,
                        TimerBackoffAlgorithm::kExponential,
                        options.max_retransmissions))),
+      packet_sender_(callbacks_,
+                     absl::bind_front(&DcSctpSocket::OnSentPacket, this)),
       send_queue_(
           log_prefix_,
           options_.max_send_buffer_size,
@@ -251,7 +253,7 @@ void DcSctpSocket::SendInit() {
                  connect_params_.initial_tsn, params_builder.Build());
   SctpPacket::Builder b(VerificationTag(0), options_);
   b.Add(init);
-  SendPacket(b);
+  packet_sender_.Send(b);
 }
 
 void DcSctpSocket::MakeConnectionParameters() {
@@ -316,7 +318,7 @@ void DcSctpSocket::Close() {
                        Parameters::Builder()
                            .Add(UserInitiatedAbortCause("Close called"))
                            .Build()));
-      SendPacket(b);
+      packet_sender_.Send(b);
     }
     InternalClose(ErrorKind::kNoError, "");
   } else {
@@ -327,7 +329,7 @@ void DcSctpSocket::Close() {
 }
 
 void DcSctpSocket::CloseConnectionBecauseOfTooManyTransmissionErrors() {
-  SendPacket(tcb_->PacketBuilder().Add(AbortChunk(
+  packet_sender_.Send(tcb_->PacketBuilder().Add(AbortChunk(
       true, Parameters::Builder()
                 .Add(UserInitiatedAbortCause("Too many retransmissions"))
                 .Build())));
@@ -412,7 +414,7 @@ ResetStreamsStatus DcSctpSocket::ResetStreams(
   if (reconfig.has_value()) {
     SctpPacket::Builder builder = tcb_->PacketBuilder();
     builder.Add(*reconfig);
-    SendPacket(builder);
+    packet_sender_.Send(builder);
   }
 
   RTC_DCHECK(IsConsistent());
@@ -751,7 +753,7 @@ bool DcSctpSocket::HandleUnrecognizedChunk(
     // cause."
     if (tcb_ != nullptr) {
       // Need TCB - this chunk must be sent with a correct verification tag.
-      SendPacket(tcb_->PacketBuilder().Add(
+      packet_sender_.Send(tcb_->PacketBuilder().Add(
           ErrorChunk(Parameters::Builder()
                          .Add(UnrecognizedChunkTypeCause(std::vector<uint8_t>(
                              descriptor.data.begin(), descriptor.data.end())))
@@ -819,7 +821,7 @@ absl::optional<DurationMs> DcSctpSocket::OnShutdownTimerExpiry() {
     // chunk to the protocol parameter 'Association.Max.Retrans'. If this
     // threshold is exceeded, the endpoint should destroy the TCB..."
 
-    SendPacket(tcb_->PacketBuilder().Add(
+    packet_sender_.Send(tcb_->PacketBuilder().Add(
         AbortChunk(true, Parameters::Builder()
                              .Add(UserInitiatedAbortCause(
                                  "Too many retransmissions of SHUTDOWN"))
@@ -838,28 +840,27 @@ absl::optional<DurationMs> DcSctpSocket::OnShutdownTimerExpiry() {
   return tcb_->current_rto();
 }
 
-void DcSctpSocket::SendPacket(SctpPacket::Builder& builder) {
-  if (builder.empty()) {
-    return;
-  }
-
-  std::vector<uint8_t> payload = builder.Build();
-
-  if (RTC_DLOG_IS_ON) {
-    DebugPrintOutgoing(payload);
-  }
-
-  // The heartbeat interval timer is restarted for every sent packet, to
-  // fire when the outgoing channel is inactive.
-  if (tcb_ != nullptr) {
-    tcb_->heartbeat_handler().RestartTimer();
-  }
-
+void DcSctpSocket::OnSentPacket(rtc::ArrayView<const uint8_t> packet,
+                                SendPacketStatus status) {
+  // The packet observer is invoked even if the packet was failed to be sent, to
+  // indicate an attempt was made.
   if (packet_observer_ != nullptr) {
-    packet_observer_->OnSentPacket(callbacks_.TimeMillis(), payload);
+    packet_observer_->OnSentPacket(callbacks_.TimeMillis(), packet);
   }
-  ++metrics_.tx_packets_count;
-  callbacks_.SendPacketWithStatus(payload);
+
+  if (status == SendPacketStatus::kSuccess) {
+    if (RTC_DLOG_IS_ON) {
+      DebugPrintOutgoing(packet);
+    }
+
+    // The heartbeat interval timer is restarted for every sent packet, to
+    // fire when the outgoing channel is inactive.
+    if (tcb_ != nullptr) {
+      tcb_->heartbeat_handler().RestartTimer();
+    }
+
+    ++metrics_.tx_packets_count;
+  }
 }
 
 bool DcSctpSocket::ValidateHasTCB() {
@@ -902,7 +903,7 @@ void DcSctpSocket::HandleDataCommon(AnyDataChunk& chunk) {
 
   if (data.payload.empty()) {
     // Empty DATA chunks are illegal.
-    SendPacket(tcb_->PacketBuilder().Add(
+    packet_sender_.Send(tcb_->PacketBuilder().Add(
         ErrorChunk(Parameters::Builder().Add(NoUserDataCause(tsn)).Build())));
     callbacks_.OnError(ErrorKind::kProtocolViolation,
                        "Received DATA chunk with no user data");
@@ -922,7 +923,7 @@ void DcSctpSocket::HandleDataCommon(AnyDataChunk& chunk) {
     // specification only allows dropping gap-ack-blocks, and that's not
     // likely to help as the socket has been trying to fill gaps since the
     // watermark was reached.
-    SendPacket(tcb_->PacketBuilder().Add(AbortChunk(
+    packet_sender_.Send(tcb_->PacketBuilder().Add(AbortChunk(
         true, Parameters::Builder().Add(OutOfResourceErrorCause()).Build())));
     InternalClose(ErrorKind::kResourceExhaustion,
                   "Reassembly Queue is exhausted");
@@ -975,12 +976,13 @@ void DcSctpSocket::HandleInit(const CommonHeader& header,
     // "A receiver of an INIT with the MIS value of 0 SHOULD abort the
     // association."
 
-    SendPacket(SctpPacket::Builder(VerificationTag(0), options_)
-                   .Add(AbortChunk(
-                       /*filled_in_verification_tag=*/false,
-                       Parameters::Builder()
-                           .Add(ProtocolViolationCause("INIT malformed"))
-                           .Build())));
+    packet_sender_.Send(
+        SctpPacket::Builder(VerificationTag(0), options_)
+            .Add(AbortChunk(
+                /*filled_in_verification_tag=*/false,
+                Parameters::Builder()
+                    .Add(ProtocolViolationCause("INIT malformed"))
+                    .Build())));
     InternalClose(ErrorKind::kProtocolViolation, "Received invalid INIT");
     return;
   }
@@ -1069,7 +1071,7 @@ void DcSctpSocket::HandleInit(const CommonHeader& header,
                         options_.announced_maximum_incoming_streams,
                         connect_params_.initial_tsn, params_builder.Build());
   b.Add(init_ack);
-  SendPacket(b);
+  packet_sender_.Send(b);
 }
 
 void DcSctpSocket::HandleInitAck(
@@ -1091,12 +1093,13 @@ void DcSctpSocket::HandleInitAck(
 
   auto cookie = chunk->parameters().get<StateCookieParameter>();
   if (!cookie.has_value()) {
-    SendPacket(SctpPacket::Builder(connect_params_.verification_tag, options_)
-                   .Add(AbortChunk(
-                       /*filled_in_verification_tag=*/false,
-                       Parameters::Builder()
-                           .Add(ProtocolViolationCause("INIT-ACK malformed"))
-                           .Build())));
+    packet_sender_.Send(
+        SctpPacket::Builder(connect_params_.verification_tag, options_)
+            .Add(AbortChunk(
+                /*filled_in_verification_tag=*/false,
+                Parameters::Builder()
+                    .Add(ProtocolViolationCause("INIT-ACK malformed"))
+                    .Build())));
     InternalClose(ErrorKind::kProtocolViolation,
                   "InitAck chunk doesn't contain a cookie");
     return;
@@ -1108,9 +1111,8 @@ void DcSctpSocket::HandleInitAck(
       timer_manager_, log_prefix_, options_, capabilities, callbacks_,
       send_queue_, connect_params_.verification_tag,
       connect_params_.initial_tsn, chunk->initiate_tag(), chunk->initial_tsn(),
-      chunk->a_rwnd(), MakeTieTag(callbacks_),
-      [this]() { return state_ == State::kEstablished; },
-      absl::bind_front(&DcSctpSocket::SendPacket, this));
+      chunk->a_rwnd(), MakeTieTag(callbacks_), packet_sender_,
+      [this]() { return state_ == State::kEstablished; });
   RTC_DLOG(LS_VERBOSE) << log_prefix()
                        << "Created peer TCB: " << tcb_->ToString();
 
@@ -1171,8 +1173,7 @@ void DcSctpSocket::HandleCookieEcho(
         callbacks_, send_queue_, connect_params_.verification_tag,
         connect_params_.initial_tsn, cookie->initiate_tag(),
         cookie->initial_tsn(), cookie->a_rwnd(), MakeTieTag(callbacks_),
-        [this]() { return state_ == State::kEstablished; },
-        absl::bind_front(&DcSctpSocket::SendPacket, this));
+        packet_sender_, [this]() { return state_ == State::kEstablished; });
     RTC_DLOG(LS_VERBOSE) << log_prefix()
                          << "Created peer TCB: " << tcb_->ToString();
   }
@@ -1213,7 +1214,7 @@ bool DcSctpSocket::HandleCookieEchoWithTCB(const CommonHeader& header,
       b.Add(ErrorChunk(Parameters::Builder()
                            .Add(CookieReceivedWhileShuttingDownCause())
                            .Build()));
-      SendPacket(b);
+      packet_sender_.Send(b);
       callbacks_.OnError(ErrorKind::kWrongSequence,
                          "Received COOKIE-ECHO while shutting down");
       return false;
@@ -1445,7 +1446,7 @@ void DcSctpSocket::HandleShutdownAck(
 
     SctpPacket::Builder b = tcb_->PacketBuilder();
     b.Add(ShutdownCompleteChunk(/*tag_reflected=*/false));
-    SendPacket(b);
+    packet_sender_.Send(b);
     InternalClose(ErrorKind::kNoError, "");
   } else {
     // https://tools.ietf.org/html/rfc4960#section-8.5.1
@@ -1464,7 +1465,7 @@ void DcSctpSocket::HandleShutdownAck(
 
     SctpPacket::Builder b(header.verification_tag, options_);
     b.Add(ShutdownCompleteChunk(/*tag_reflected=*/true));
-    SendPacket(b);
+    packet_sender_.Send(b);
   }
 }
 
@@ -1516,7 +1517,7 @@ void DcSctpSocket::HandleForwardTsnCommon(const AnyForwardTsnChunk& chunk) {
                              "I-FORWARD-TSN received, but not indicated "
                              "during connection establishment"))
                          .Build()));
-    SendPacket(b);
+    packet_sender_.Send(b);
 
     callbacks_.OnError(ErrorKind::kProtocolViolation,
                        "Received a FORWARD_TSN without announced peer support");
@@ -1564,11 +1565,11 @@ void DcSctpSocket::MaybeSendShutdownOrAck() {
 void DcSctpSocket::SendShutdown() {
   SctpPacket::Builder b = tcb_->PacketBuilder();
   b.Add(ShutdownChunk(tcb_->data_tracker().last_cumulative_acked_tsn()));
-  SendPacket(b);
+  packet_sender_.Send(b);
 }
 
 void DcSctpSocket::SendShutdownAck() {
-  SendPacket(tcb_->PacketBuilder().Add(ShutdownAckChunk()));
+  packet_sender_.Send(tcb_->PacketBuilder().Add(ShutdownAckChunk()));
   t2_shutdown_->set_duration(tcb_->current_rto());
   t2_shutdown_->Start();
 }
