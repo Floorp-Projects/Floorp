@@ -1109,6 +1109,9 @@ webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
 
   EnsureStarted();
 
+  event_log_->Log(std::make_unique<RtcEventVideoReceiveStreamConfig>(
+      CreateRtcLogStreamConfig(configuration)));
+
   // TODO(bugs.webrtc.org/11993): Move the registration between `receive_stream`
   // and `video_receiver_controller_` out of VideoReceiveStream2 construction
   // and set it up asynchronously on the network thread (the registration and
@@ -1122,22 +1125,21 @@ webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
   // thread.
   receive_stream->RegisterWithTransport(&video_receiver_controller_);
 
-  const webrtc::VideoReceiveStream::Config& config = receive_stream->config();
-  if (config.rtp.rtx_ssrc) {
+  const webrtc::VideoReceiveStream::Config::Rtp& rtp = receive_stream->rtp();
+  if (rtp.rtx_ssrc) {
     // We record identical config for the rtx stream as for the main
     // stream. Since the transport_send_cc negotiation is per payload
     // type, we may get an incorrect value for the rtx stream, but
     // that is unlikely to matter in practice.
-    receive_rtp_config_.emplace(config.rtp.rtx_ssrc, receive_stream);
+    receive_rtp_config_.emplace(rtp.rtx_ssrc, receive_stream);
   }
-  receive_rtp_config_.emplace(config.rtp.remote_ssrc, receive_stream);
+  receive_rtp_config_.emplace(rtp.remote_ssrc, receive_stream);
   video_receive_streams_.insert(receive_stream);
-  ConfigureSync(config.sync_group);
+
+  ConfigureSync(receive_stream->sync_group());
 
   receive_stream->SignalNetworkState(video_network_state_);
   UpdateAggregateNetworkState();
-  event_log_->Log(std::make_unique<RtcEventVideoReceiveStreamConfig>(
-      CreateRtcLogStreamConfig(config)));
   return receive_stream;
 }
 
@@ -1151,19 +1153,20 @@ void Call::DestroyVideoReceiveStream(
   // TODO(bugs.webrtc.org/11993): Unregister on the network thread.
   receive_stream_impl->UnregisterFromTransport();
 
-  const VideoReceiveStream::Config& config = receive_stream_impl->config();
+  const webrtc::VideoReceiveStream::Config::Rtp& rtp =
+      receive_stream_impl->rtp();
 
   // Remove all ssrcs pointing to a receive stream. As RTX retransmits on a
   // separate SSRC there can be either one or two.
-  receive_rtp_config_.erase(config.rtp.remote_ssrc);
-  if (config.rtp.rtx_ssrc) {
-    receive_rtp_config_.erase(config.rtp.rtx_ssrc);
+  receive_rtp_config_.erase(rtp.remote_ssrc);
+  if (rtp.rtx_ssrc) {
+    receive_rtp_config_.erase(rtp.rtx_ssrc);
   }
   video_receive_streams_.erase(receive_stream_impl);
-  ConfigureSync(config.sync_group);
+  ConfigureSync(receive_stream_impl->sync_group());
 
-  receive_side_cc_.GetRemoteBitrateEstimator(UseSendSideBwe(config.rtp))
-      ->RemoveStream(config.rtp.remote_ssrc);
+  receive_side_cc_.GetRemoteBitrateEstimator(UseSendSideBwe(rtp))
+      ->RemoveStream(rtp.remote_ssrc);
 
   UpdateAggregateNetworkState();
   delete receive_stream_impl;
@@ -1447,7 +1450,7 @@ void Call::ConfigureSync(const std::string& sync_group) {
     sync_stream_mapping_[sync_group] = sync_audio_stream;
   size_t num_synced_streams = 0;
   for (VideoReceiveStream2* video_stream : video_receive_streams_) {
-    if (video_stream->config().sync_group != sync_group)
+    if (video_stream->sync_group() != sync_group)
       continue;
     ++num_synced_streams;
     if (num_synced_streams > 1) {
