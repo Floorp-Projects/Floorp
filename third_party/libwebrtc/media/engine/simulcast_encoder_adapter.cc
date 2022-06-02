@@ -167,7 +167,7 @@ void SimulcastEncoderAdapter::EncoderContext::Release() {
 SimulcastEncoderAdapter::StreamContext::StreamContext(
     SimulcastEncoderAdapter* parent,
     std::unique_ptr<EncoderContext> encoder_context,
-    std::unique_ptr<FramerateControllerDeprecated> framerate_controller,
+    std::unique_ptr<FramerateController> framerate_controller,
     int stream_idx,
     uint16_t width,
     uint16_t height,
@@ -214,7 +214,7 @@ SimulcastEncoderAdapter::StreamContext::ReleaseEncoderContext() && {
 void SimulcastEncoderAdapter::StreamContext::OnKeyframe(Timestamp timestamp) {
   is_keyframe_needed_ = false;
   if (framerate_controller_) {
-    framerate_controller_->AddFrame(timestamp.ms());
+    framerate_controller_->KeepFrame(timestamp.us() * 1000);
   }
 }
 
@@ -223,12 +223,7 @@ bool SimulcastEncoderAdapter::StreamContext::ShouldDropFrame(
   if (!framerate_controller_) {
     return false;
   }
-
-  if (framerate_controller_->DropFrame(timestamp.ms())) {
-    return true;
-  }
-  framerate_controller_->AddFrame(timestamp.ms());
-  return false;
+  return framerate_controller_->ShouldDropFrame(timestamp.us() * 1000);
 }
 
 EncodedImageCallback::Result
@@ -422,8 +417,7 @@ int SimulcastEncoderAdapter::InitEncode(
     bool is_paused = stream_start_bitrate_kbps[stream_idx] == 0;
     stream_contexts_.emplace_back(
         parent, std::move(encoder_context),
-        std::make_unique<FramerateControllerDeprecated>(
-            stream_codec.maxFramerate),
+        std::make_unique<FramerateController>(stream_codec.maxFramerate),
         stream_idx, stream_codec.width, stream_codec.height, is_paused);
   }
 

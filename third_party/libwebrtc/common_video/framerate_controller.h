@@ -22,15 +22,19 @@ namespace webrtc {
 class FramerateController {
  public:
   FramerateController();
+  explicit FramerateController(double max_framerate);
   ~FramerateController();
 
   // Sets max framerate (default is maxdouble).
   void SetMaxFramerate(double max_framerate);
+  double GetMaxFramerate() const;
 
   // Returns true if the frame should be dropped, false otherwise.
   bool ShouldDropFrame(int64_t in_timestamp_ns);
 
   void Reset();
+
+  void KeepFrame(int64_t in_timestamp_ns);
 
  private:
   double max_framerate_;

@@ -20,12 +20,19 @@ constexpr double kMinFramerate = 0.5;
 }  // namespace
 
 FramerateController::FramerateController()
-    : max_framerate_(std::numeric_limits<double>::max()) {}
+    : FramerateController(std::numeric_limits<double>::max()) {}
+
+FramerateController::FramerateController(double max_framerate)
+    : max_framerate_(max_framerate) {}
 
 FramerateController::~FramerateController() {}
 
 void FramerateController::SetMaxFramerate(double max_framerate) {
   max_framerate_ = max_framerate;
+}
+
+double FramerateController::GetMaxFramerate() const {
+  return max_framerate_;
 }
 
 bool FramerateController::ShouldDropFrame(int64_t in_timestamp_ns) {
@@ -65,6 +72,17 @@ bool FramerateController::ShouldDropFrame(int64_t in_timestamp_ns) {
 void FramerateController::Reset() {
   max_framerate_ = std::numeric_limits<double>::max();
   next_frame_timestamp_ns_ = absl::nullopt;
+}
+
+void FramerateController::KeepFrame(int64_t in_timestamp_ns) {
+  if (ShouldDropFrame(in_timestamp_ns)) {
+    if (max_framerate_ < kMinFramerate)
+      return;
+
+    int64_t frame_interval_ns = rtc::kNumNanosecsPerSec / max_framerate_;
+    if (next_frame_timestamp_ns_)
+      *next_frame_timestamp_ns_ += frame_interval_ns;
+  }
 }
 
 }  // namespace webrtc

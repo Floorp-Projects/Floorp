@@ -25,8 +25,8 @@
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
+#include "common_video/framerate_controller.h"
 #include "modules/video_coding/include/video_codec_interface.h"
-#include "modules/video_coding/utility/framerate_controller_deprecated.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/experiments/encoder_info_settings.h"
 #include "rtc_base/system/no_unique_address.h"
@@ -93,14 +93,13 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
 
   class StreamContext : public EncodedImageCallback {
    public:
-    StreamContext(
-        SimulcastEncoderAdapter* parent,
-        std::unique_ptr<EncoderContext> encoder_context,
-        std::unique_ptr<FramerateControllerDeprecated> framerate_controller,
-        int stream_idx,
-        uint16_t width,
-        uint16_t height,
-        bool send_stream);
+    StreamContext(SimulcastEncoderAdapter* parent,
+                  std::unique_ptr<EncoderContext> encoder_context,
+                  std::unique_ptr<FramerateController> framerate_controller,
+                  int stream_idx,
+                  uint16_t width,
+                  uint16_t height,
+                  bool send_stream);
     StreamContext(StreamContext&& rhs);
     StreamContext& operator=(StreamContext&&) = delete;
     ~StreamContext() override;
@@ -121,11 +120,11 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
     void set_is_keyframe_needed() { is_keyframe_needed_ = true; }
     bool is_paused() const { return is_paused_; }
     void set_is_paused(bool is_paused) { is_paused_ = is_paused; }
-    absl::optional<float> target_fps() const {
+    absl::optional<double> target_fps() const {
       return framerate_controller_ == nullptr
                  ? absl::nullopt
-                 : absl::optional<float>(
-                       framerate_controller_->GetTargetRate());
+                 : absl::optional<double>(
+                       framerate_controller_->GetMaxFramerate());
     }
 
     std::unique_ptr<EncoderContext> ReleaseEncoderContext() &&;
@@ -135,7 +134,7 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
    private:
     SimulcastEncoderAdapter* const parent_;
     std::unique_ptr<EncoderContext> encoder_context_;
-    std::unique_ptr<FramerateControllerDeprecated> framerate_controller_;
+    std::unique_ptr<FramerateController> framerate_controller_;
     const int stream_idx_;
     const uint16_t width_;
     const uint16_t height_;
