@@ -30,6 +30,7 @@
 #include "rtc_base/strings/string_builder.h"
 #include "system_wrappers/include/cpu_info.h"
 #include "system_wrappers/include/field_trial.h"
+#include "test/field_trial.h"
 #include "test/pc/e2e/analyzer/audio/default_audio_quality_analyzer.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer.h"
 #include "test/pc/e2e/analyzer/video/video_quality_metrics_reporter.h"
@@ -180,7 +181,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
         << "Only simulcast stream from first peer is supported";
   }
 
-  SetupRequiredFieldTrials(run_params);
+  test::ScopedFieldTrials field_trials(GetFieldTrials(run_params));
 
   // Print test summary
   RTC_LOG(INFO) << "Media quality test: " << *alice_configurer->params()->name
@@ -387,22 +388,19 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   RTC_CHECK(bob_video_sources_.empty());
 }
 
-void PeerConnectionE2EQualityTest::SetupRequiredFieldTrials(
+std::string PeerConnectionE2EQualityTest::GetFieldTrials(
     const RunParams& run_params) {
   std::vector<absl::string_view> default_field_trials = {
       kUseStandardsBytesStats};
   if (run_params.use_flex_fec) {
     default_field_trials.push_back(kFlexFecEnabledFieldTrials);
   }
-  if (!default_field_trials.empty()) {
-    rtc::StringBuilder sb;
-    sb << field_trial::GetFieldTrialString();
-    for (const absl::string_view& field_trial : default_field_trials) {
-      sb << field_trial;
-    }
-    override_field_trials_ =
-        std::make_unique<test::ScopedFieldTrials>(sb.Release());
+  rtc::StringBuilder sb;
+  sb << field_trial::GetFieldTrialString();
+  for (const absl::string_view& field_trial : default_field_trials) {
+    sb << field_trial;
   }
+  return sb.Release();
 }
 
 void PeerConnectionE2EQualityTest::OnTrackCallback(

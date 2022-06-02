@@ -27,7 +27,6 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
-#include "test/field_trial.h"
 #include "test/pc/e2e/analyzer/video/single_process_encoded_image_data_injector.h"
 #include "test/pc/e2e/analyzer/video/video_quality_analyzer_injection_helper.h"
 #include "test/pc/e2e/analyzer_helper.h"
@@ -81,9 +80,9 @@ class PeerConnectionE2EQualityTest
   }
 
  private:
-  // For some functionality some field trials have to be enabled, so we will
-  // enable them here.
-  void SetupRequiredFieldTrials(const RunParams& run_params);
+  // For some functionality some field trials have to be enabled, they will be
+  // enabled in Run().
+  std::string GetFieldTrials(const RunParams& run_params);
   void OnTrackCallback(absl::string_view peer_name,
                        rtc::scoped_refptr<RtpTransceiverInterface> transceiver,
                        std::vector<VideoConfig> remote_video_configs);
@@ -115,8 +114,6 @@ class PeerConnectionE2EQualityTest
   std::unique_ptr<TestActivitiesExecutor> executor_;
 
   std::vector<std::unique_ptr<PeerConfigurerImpl>> peer_configurations_;
-
-  std::unique_ptr<test::ScopedFieldTrials> override_field_trials_ = nullptr;
 
   std::unique_ptr<TestPeer> alice_;
   std::unique_ptr<TestPeer> bob_;
