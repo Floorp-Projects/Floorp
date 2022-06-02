@@ -242,21 +242,26 @@ class RefreshDriverTimer {
     TimeStamp mostRecentRefresh = MostRecentRefresh();
     TimeDuration refreshPeriod = GetTimerRate();
     TimeStamp idleEnd = mostRecentRefresh + refreshPeriod;
+    bool inHighRateMode = nsRefreshDriver::IsInHighRateMode();
 
     // If we haven't painted for some time, then guess that we won't paint
     // again for a while, so the refresh driver is not a good way to predict
     // idle time.
-    if (idleEnd +
-            refreshPeriod *
-                StaticPrefs::layout_idle_period_required_quiescent_frames() <
-        TimeStamp::Now()) {
+    if (!inHighRateMode &&
+        (idleEnd +
+             refreshPeriod *
+                 StaticPrefs::layout_idle_period_required_quiescent_frames() <
+         TimeStamp::Now())) {
       return aDefault;
     }
 
     // End the predicted idle time a little early, the amount controlled by a
     // pref, to prevent overrunning the idle time and delaying a frame.
-    idleEnd = idleEnd - TimeDuration::FromMilliseconds(
-                            StaticPrefs::layout_idle_period_time_limit());
+    // But do that only if we aren't in high rate mode.
+    idleEnd =
+        idleEnd -
+        TimeDuration::FromMilliseconds(
+            inHighRateMode ? 0 : StaticPrefs::layout_idle_period_time_limit());
     return idleEnd < aDefault ? idleEnd : aDefault;
   }
 
@@ -3099,22 +3104,11 @@ TimeStamp nsRefreshDriver::GetIdleDeadlineHint(TimeStamp aDefault,
     }
   }
 
-  // The following calculation is only used on platform using per-BrowserChild
-  // Vsync. This is hard to properly map on static calls such as this -
-  // optimally we'd only want to query the timers that are relevant for the
-  // caller, not all in this process. Further more, in this scenario we often
-  // hit cases where timers would return their fallback value that is aDefault,
-  // giving us a much higher value than intended.
-  // For now we use a somewhat simplistic approach that in many situations
-  // gives us similar behaviour to what we would get using sRegularRateTimer:
-  // use the highest result that is still lower than the aDefault fallback.
-  // XXXsmaug None of this makes much sense. We should always return the
-  // lowest result, not highest.
   TimeStamp hint = TimeStamp();
   if (sRegularRateTimerList) {
     for (RefreshDriverTimer* timer : *sRegularRateTimerList) {
       TimeStamp newHint = timer->GetIdleDeadlineHint(aDefault);
-      if (newHint < aDefault && (hint.IsNull() || newHint > hint)) {
+      if (newHint < aDefault && (hint.IsNull() || newHint < hint)) {
         hint = newHint;
       }
     }
