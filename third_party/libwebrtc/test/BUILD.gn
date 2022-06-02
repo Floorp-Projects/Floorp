@@ -223,7 +223,10 @@ rtc_library("field_trial") {
     "field_trial.h",
   ]
 
-  deps = [ "../system_wrappers:field_trial" ]
+  deps = [
+    "../rtc_base:checks",
+    "../system_wrappers:field_trial",
+  ]
 }
 
 rtc_library("explicit_key_value_config") {
