@@ -210,6 +210,11 @@ bool IsEnabled(const webrtc::WebRtcKeyValueConfig& config,
   return absl::StartsWith(config.Lookup(trial), "Enabled");
 }
 
+bool IsDisabled(const webrtc::WebRtcKeyValueConfig& config,
+                absl::string_view trial) {
+  return absl::StartsWith(config.Lookup(trial), "Disabled");
+}
+
 struct AdaptivePtimeConfig {
   bool enabled = false;
   webrtc::DataRate min_payload_bitrate = webrtc::DataRate::KilobitsPerSec(16);
@@ -304,8 +309,8 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
       audio_mixer_(audio_mixer),
       apm_(audio_processing),
       audio_frame_processor_(audio_frame_processor),
-      audio_red_for_opus_trial_enabled_(
-          IsEnabled(trials, "WebRTC-Audio-Red-For-Opus")),
+      audio_red_for_opus_enabled_(
+          !IsDisabled(trials, "WebRTC-Audio-Red-For-Opus")),
       minimized_remsampling_on_mobile_trial_enabled_(
           IsEnabled(trials, "WebRTC-Audio-MinimizeResamplingOnMobile")) {
   // This may be called from any thread, so detach thread checkers.
@@ -769,7 +774,7 @@ std::vector<AudioCodec> WebRtcVoiceEngine::CollectCodecs(
 
       out.push_back(codec);
 
-      if (codec.name == kOpusCodecName && audio_red_for_opus_trial_enabled_) {
+      if (codec.name == kOpusCodecName && audio_red_for_opus_enabled_) {
         map_format({kRedCodecName, 48000, 2}, &out);
       }
     }
@@ -1336,8 +1341,8 @@ WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel(
       call_(call),
       audio_config_(config.audio),
       crypto_options_(crypto_options),
-      audio_red_for_opus_trial_enabled_(
-          IsEnabled(call->trials(), "WebRTC-Audio-Red-For-Opus")) {
+      audio_red_for_opus_enabled_(
+          !IsDisabled(call->trials(), "WebRTC-Audio-Red-For-Opus")) {
   network_thread_checker_.Detach();
   RTC_LOG(LS_VERBOSE) << "WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel";
   RTC_DCHECK(call);
@@ -1598,8 +1603,7 @@ bool WebRtcVoiceMediaChannel::SetRecvCodecs(
     }
     auto format = AudioCodecToSdpAudioFormat(codec);
     if (!IsCodec(codec, kCnCodecName) && !IsCodec(codec, kDtmfCodecName) &&
-        (!audio_red_for_opus_trial_enabled_ ||
-         !IsCodec(codec, kRedCodecName)) &&
+        (!audio_red_for_opus_enabled_ || !IsCodec(codec, kRedCodecName)) &&
         !engine()->decoder_factory_->IsSupportedDecoder(format)) {
       RTC_LOG(LS_ERROR) << "Unsupported codec: " << rtc::ToString(format);
       return false;
@@ -1753,7 +1757,7 @@ bool WebRtcVoiceMediaChannel::SetSendCodecs(
     }
   }
 
-  if (audio_red_for_opus_trial_enabled_) {
+  if (audio_red_for_opus_enabled_) {
     // Loop through the codecs to find the RED codec that matches opus
     // with respect to clockrate and number of channels.
     size_t red_codec_position = 0;
