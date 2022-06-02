@@ -181,7 +181,7 @@ void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t now_ms) {
         it->second->last_packet_time_ms;
     if (time_of_last_received_packet >= 0 &&
         now_ms - time_of_last_received_packet > kStreamTimeOutMs) {
-      // This over-use detector hasn't received packets for |kStreamTimeOutMs|
+      // This over-use detector hasn't received packets for `kStreamTimeOutMs`
       // milliseconds and is considered stale.
       delete it->second;
       overuse_detectors_.erase(it++);
