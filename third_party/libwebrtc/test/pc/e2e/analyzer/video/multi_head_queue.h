@@ -19,7 +19,6 @@
 #include "rtc_base/checks.h"
 
 namespace webrtc {
-namespace webrtc_pc_e2e {
 
 // A queue that allows more than one reader. Readers are independent, and all
 // readers will see all elements; an inserted element stays in the queue until
@@ -98,7 +97,6 @@ class MultiHeadQueue {
   std::vector<std::deque<T>> queues_;
 };
 
-}  // namespace webrtc_pc_e2e
 }  // namespace webrtc
 
 #endif  // TEST_PC_E2E_ANALYZER_VIDEO_MULTI_HEAD_QUEUE_H_

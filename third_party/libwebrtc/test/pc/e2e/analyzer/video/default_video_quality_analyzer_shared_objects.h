@@ -22,14 +22,13 @@
 #include "api/units/timestamp.h"
 
 namespace webrtc {
-namespace webrtc_pc_e2e {
 
 // WebRTC will request a key frame after 3 seconds if no frames were received.
 // We assume max frame rate ~60 fps, so 270 frames will cover max freeze without
 // key frame request.
 constexpr size_t kDefaultMaxFramesInFlightPerStream = 270;
 
-class RateCounter {
+class SamplesRateCounter {
  public:
   void AddEvent(Timestamp event_time);
 
@@ -106,7 +105,7 @@ struct StreamStats {
   SamplesStatsCounter total_delay_incl_transport_ms;
   // Time between frames out from renderer.
   SamplesStatsCounter time_between_rendered_frames_ms;
-  RateCounter encode_frame_rate;
+  SamplesRateCounter encode_frame_rate;
   SamplesStatsCounter encode_time_ms;
   SamplesStatsCounter decode_time_ms;
   // Time from last packet of frame is received until it's sent to the renderer.
@@ -198,6 +197,17 @@ struct DefaultVideoQualityAnalyzerOptions {
   // If true, the analyzer will expect peers to receive their own video streams.
   bool enable_receive_own_stream = false;
 };
+
+namespace webrtc_pc_e2e {
+
+// Temporary alias to make downstream projects able to migrate.
+using FrameCounters = ::webrtc::FrameCounters;
+using StreamCodecInfo = ::webrtc::StreamCodecInfo;
+using StreamStats = ::webrtc::StreamStats;
+using AnalyzerStats = ::webrtc::AnalyzerStats;
+using StatsKey = ::webrtc::StatsKey;
+using DefaultVideoQualityAnalyzerOptions =
+    ::webrtc::DefaultVideoQualityAnalyzerOptions;
 
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc

@@ -235,8 +235,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::EnsureStatsForStream(
     }
     InternalStatsKey stats_key(stream_index, sender_peer_index, i);
     if (stream_stats_.find(stats_key) == stream_stats_.end()) {
-      stream_stats_.insert(
-          {stats_key, webrtc_pc_e2e::StreamStats(captured_time)});
+      stream_stats_.insert({stats_key, StreamStats(captured_time)});
       // Assume that the first freeze was before first stream frame captured.
       // This way time before the first freeze would be counted as time
       // between freezes.
@@ -261,7 +260,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::RegisterParticipantInCall(
 
   for (const std::pair<InternalStatsKey, Timestamp>& pair :
        stream_started_time) {
-    stream_stats_.insert({pair.first, webrtc_pc_e2e::StreamStats(pair.second)});
+    stream_stats_.insert({pair.first, StreamStats(pair.second)});
     stream_last_freeze_end_time_.insert({pair.first, start_time});
   }
 }
@@ -389,7 +388,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
   MutexLock lock(&mutex_);
   auto stats_it = stream_stats_.find(comparison.stats_key);
   RTC_CHECK(stats_it != stream_stats_.end()) << comparison.stats_key.ToString();
-  webrtc_pc_e2e::StreamStats* stats = &stats_it->second;
+  StreamStats* stats = &stats_it->second;
 
   frames_comparator_stats_.comparisons_done++;
   if (comparison.overload_reason == OverloadReason::kCpu) {
@@ -407,15 +406,15 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
 
   // Compute dropped phase for dropped frame
   if (comparison.type == FrameComparisonType::kDroppedFrame) {
-    webrtc_pc_e2e::FrameDropPhase dropped_phase;
+    FrameDropPhase dropped_phase;
     if (frame_stats.decode_end_time.IsFinite()) {
-      dropped_phase = webrtc_pc_e2e::FrameDropPhase::kAfterDecoder;
+      dropped_phase = FrameDropPhase::kAfterDecoder;
     } else if (frame_stats.encoded_time.IsFinite()) {
-      dropped_phase = webrtc_pc_e2e::FrameDropPhase::kTransport;
+      dropped_phase = FrameDropPhase::kTransport;
     } else if (frame_stats.pre_encode_time.IsFinite()) {
-      dropped_phase = webrtc_pc_e2e::FrameDropPhase::kByEncoder;
+      dropped_phase = FrameDropPhase::kByEncoder;
     } else {
-      dropped_phase = webrtc_pc_e2e::FrameDropPhase::kBeforeEncoder;
+      dropped_phase = FrameDropPhase::kBeforeEncoder;
     }
     stats->dropped_by_phase[dropped_phase]++;
   }

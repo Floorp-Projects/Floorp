@@ -29,17 +29,16 @@ using StatsSample = ::webrtc::SamplesStatsCounter::StatsSample;
 
 constexpr int kMaxFramesInFlightPerStream = 10;
 
-webrtc_pc_e2e::DefaultVideoQualityAnalyzerOptions AnalyzerOptionsForTest() {
-  webrtc_pc_e2e::DefaultVideoQualityAnalyzerOptions options;
+DefaultVideoQualityAnalyzerOptions AnalyzerOptionsForTest() {
+  DefaultVideoQualityAnalyzerOptions options;
   options.heavy_metrics_computation_enabled = false;
   options.adjust_cropping_before_comparing_frames = false;
   options.max_frames_in_flight_per_stream_count = kMaxFramesInFlightPerStream;
   return options;
 }
 
-webrtc_pc_e2e::StreamCodecInfo Vp8CodecForOneFrame(uint16_t frame_id,
-                                                   Timestamp time) {
-  webrtc_pc_e2e::StreamCodecInfo info;
+StreamCodecInfo Vp8CodecForOneFrame(uint16_t frame_id, Timestamp time) {
+  StreamCodecInfo info;
   info.codec_name = "VP8";
   info.first_frame_id = frame_id;
   info.last_frame_id = frame_id;
@@ -120,8 +119,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
                            FrameComparisonType::kRegular, frame_stats);
   comparator.Stop({});
 
-  std::map<InternalStatsKey, webrtc_pc_e2e::StreamStats> stats =
-      comparator.stream_stats();
+  std::map<InternalStatsKey, StreamStats> stats = comparator.stream_stats();
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.at(stats_key).transport_time_ms), 20.0);
   EXPECT_DOUBLE_EQ(
       GetFirstOrDie(stats.at(stats_key).total_delay_incl_transport_ms), 60.0);
@@ -165,8 +163,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
                            FrameComparisonType::kRegular, frame_stats2);
   comparator.Stop({});
 
-  std::map<InternalStatsKey, webrtc_pc_e2e::StreamStats> stats =
-      comparator.stream_stats();
+  std::map<InternalStatsKey, StreamStats> stats = comparator.stream_stats();
   EXPECT_DOUBLE_EQ(
       GetFirstOrDie(stats.at(stats_key).time_between_rendered_frames_ms), 15.0);
   EXPECT_DOUBLE_EQ(stats.at(stats_key).encode_frame_rate.GetEventsPerSecond(),
@@ -250,8 +247,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   comparator.Stop({});
 
   EXPECT_EQ(comparator.stream_stats().size(), 1lu);
-  webrtc_pc_e2e::StreamStats result_stats =
-      comparator.stream_stats().at(stats_key);
+  StreamStats result_stats = comparator.stream_stats().at(stats_key);
 
   EXPECT_DOUBLE_EQ(result_stats.transport_time_ms.GetAverage(), 20.0)
       << ToString(result_stats.transport_time_ms);
