@@ -120,6 +120,9 @@ hashbrown = { path = "build/rust/hashbrown" }
 # Patch tokio-util 0.6 to 0.7
 tokio-util = { path = "build/rust/tokio-util" }
 
+# Patch env_logger 0.8 to 0.9
+env_logger = { path = "build/rust/env_logger" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
