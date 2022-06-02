@@ -2287,6 +2287,19 @@ TEST_F(VideoSendStreamTest, VideoSendStreamUpdateActiveSimulcastLayers) {
   });
   EXPECT_TRUE(encoder.WaitBitrateChanged(false));
 
+  // Re-activating a layer should resume sending and trigger a bitrate change.
+  GetVideoEncoderConfig()->simulcast_layers[0].active = true;
+  SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+    GetVideoSendStream()->UpdateActiveSimulcastLayers({true, false});
+    EXPECT_TRUE(GetVideoSendStream()->started());
+  });
+  EXPECT_TRUE(encoder.WaitBitrateChanged(true));
+
+  // Stop and clean up.
+  SendTask(RTC_FROM_HERE, task_queue(),
+           [this]() { GetVideoSendStream()->Stop(); });
+  EXPECT_TRUE(encoder.WaitBitrateChanged(false));
+
   SendTask(RTC_FROM_HERE, task_queue(), [this]() {
     DestroyStreams();
     DestroyCalls();
