@@ -77,17 +77,29 @@ class RtcpTransceiverImpl {
   struct RemoteSenderState;
 
   void HandleReceivedPacket(const rtcp::CommonHeader& rtcp_packet_header,
-                            Timestamp now);
+                            Timestamp now,
+                            std::vector<rtcp::ReportBlock>& report_blocks);
   // Individual rtcp packet handlers.
   void HandleBye(const rtcp::CommonHeader& rtcp_packet_header);
   void HandleSenderReport(const rtcp::CommonHeader& rtcp_packet_header,
-                          Timestamp now);
+                          Timestamp now,
+                          std::vector<rtcp::ReportBlock>& report_blocks);
+  void HandleReceiverReport(const rtcp::CommonHeader& rtcp_packet_header,
+                            std::vector<rtcp::ReportBlock>& report_blocks);
+  void HandlePayloadSpecificFeedback(
+      const rtcp::CommonHeader& rtcp_packet_header,
+      Timestamp now);
+  void HandleRtpFeedback(const rtcp::CommonHeader& rtcp_packet_header,
+                         Timestamp now);
   void HandleExtendedReports(const rtcp::CommonHeader& rtcp_packet_header,
                              Timestamp now);
   // Extended Reports blocks handlers.
   void HandleDlrr(const rtcp::Dlrr& dlrr, Timestamp now);
   void HandleTargetBitrate(const rtcp::TargetBitrate& target_bitrate,
                            uint32_t remote_ssrc);
+  void ProcessReportBlocks(
+      Timestamp now,
+      rtc::ArrayView<const rtcp::ReportBlock> report_blocks);
 
   void ReschedulePeriodicCompoundPackets();
   void SchedulePeriodicCompoundPackets(int64_t delay_ms);
