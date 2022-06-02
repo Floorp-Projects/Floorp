@@ -322,10 +322,13 @@ struct BaseEventFlags {
   inline void ResetCrossProcessDispatchingState() {
     MOZ_ASSERT(!IsCrossProcessForwardingStopped());
     mPostedToRemoteProcess = false;
-    // Ignore propagation state in the different process if it's marked as
+    // Ignore propagation state in the remote process if it's marked as
     // "waiting reply from remote process" because the process needs to
     // stop propagation in the process until receiving a reply event.
-    if (IsWaitingReplyFromRemoteProcess()) {
+    // Note that the propagation stopped flag is important for the reply event
+    // handler in the main process because it's used for making whether it's
+    // ignored by the remote process or not.
+    if (!XRE_IsParentProcess() && IsWaitingReplyFromRemoteProcess()) {
       mPropagationStopped = mImmediatePropagationStopped = false;
     }
     // mDispatchedAtLeastOnce indicates the state in current process.
