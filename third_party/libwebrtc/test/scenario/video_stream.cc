@@ -73,7 +73,6 @@ VideoEncoderConfig::ContentType ConvertContentType(
   switch (content_type) {
     case VideoStreamConfig::Encoder::ContentType::kVideo:
       return VideoEncoderConfig::ContentType::kRealtimeVideo;
-      break;
     case VideoStreamConfig::Encoder::ContentType::kScreen:
       return VideoEncoderConfig::ContentType::kScreen;
   }
