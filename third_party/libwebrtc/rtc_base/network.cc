@@ -87,29 +87,36 @@ bool SortNetworks(const Network* a, const Network* b) {
 }
 
 uint16_t ComputeNetworkCostByType(int type,
-                                  bool use_differentiated_cellular_costs) {
+                                  bool is_vpn,
+                                  bool use_differentiated_cellular_costs,
+                                  bool add_network_cost_to_vpn) {
   // TODO(jonaso) : Rollout support for cellular network cost using A/B
   // experiment to make sure it does not introduce regressions.
+  int vpnCost = (is_vpn && add_network_cost_to_vpn) ? kNetworkCostVpn : 0;
   switch (type) {
     case rtc::ADAPTER_TYPE_ETHERNET:
     case rtc::ADAPTER_TYPE_LOOPBACK:
-      return kNetworkCostMin;
+      return kNetworkCostMin + vpnCost;
     case rtc::ADAPTER_TYPE_WIFI:
-      return kNetworkCostLow;
+      return kNetworkCostLow + vpnCost;
     case rtc::ADAPTER_TYPE_CELLULAR:
-      return kNetworkCostCellular;
+      return kNetworkCostCellular + vpnCost;
     case rtc::ADAPTER_TYPE_CELLULAR_2G:
-      return use_differentiated_cellular_costs ? kNetworkCostCellular2G
-                                               : kNetworkCostCellular;
+      return (use_differentiated_cellular_costs ? kNetworkCostCellular2G
+                                                : kNetworkCostCellular) +
+             vpnCost;
     case rtc::ADAPTER_TYPE_CELLULAR_3G:
-      return use_differentiated_cellular_costs ? kNetworkCostCellular3G
-                                               : kNetworkCostCellular;
+      return (use_differentiated_cellular_costs ? kNetworkCostCellular3G
+                                                : kNetworkCostCellular) +
+             vpnCost;
     case rtc::ADAPTER_TYPE_CELLULAR_4G:
-      return use_differentiated_cellular_costs ? kNetworkCostCellular4G
-                                               : kNetworkCostCellular;
+      return (use_differentiated_cellular_costs ? kNetworkCostCellular4G
+                                                : kNetworkCostCellular) +
+             vpnCost;
     case rtc::ADAPTER_TYPE_CELLULAR_5G:
-      return use_differentiated_cellular_costs ? kNetworkCostCellular5G
-                                               : kNetworkCostCellular;
+      return (use_differentiated_cellular_costs ? kNetworkCostCellular5G
+                                                : kNetworkCostCellular) +
+             vpnCost;
     case rtc::ADAPTER_TYPE_ANY:
       // Candidates gathered from the any-address/wildcard ports, as backups,
       // are given the maximum cost so that if there are other candidates with
@@ -120,13 +127,13 @@ uint16_t ComputeNetworkCostByType(int type,
       // ADAPTER_TYPE_CELLULAR would then have a higher cost. See
       // P2PTransportChannel::SortConnectionsAndUpdateState for how we rank and
       // select candidate pairs, where the network cost is among the criteria.
-      return kNetworkCostMax;
+      return kNetworkCostMax + vpnCost;
     case rtc::ADAPTER_TYPE_VPN:
       // The cost of a VPN should be computed using its underlying network type.
       RTC_NOTREACHED();
       return kNetworkCostUnknown;
     default:
-      return kNetworkCostUnknown;
+      return kNetworkCostUnknown + vpnCost;
   }
 }
 
@@ -999,7 +1006,9 @@ Network::Network(const std::string& name,
       type_(ADAPTER_TYPE_UNKNOWN),
       preference_(0),
       use_differentiated_cellular_costs_(webrtc::field_trial::IsEnabled(
-          "WebRTC-UseDifferentiatedCellularCosts")) {}
+          "WebRTC-UseDifferentiatedCellularCosts")),
+      add_network_cost_to_vpn_(
+          webrtc::field_trial::IsEnabled("WebRTC-AddNetworkCostToVpn")) {}
 
 Network::Network(const std::string& name,
                  const std::string& desc,
@@ -1016,7 +1025,9 @@ Network::Network(const std::string& name,
       type_(type),
       preference_(0),
       use_differentiated_cellular_costs_(webrtc::field_trial::IsEnabled(
-          "WebRTC-UseDifferentiatedCellularCosts")) {}
+          "WebRTC-UseDifferentiatedCellularCosts")),
+      add_network_cost_to_vpn_(
+          webrtc::field_trial::IsEnabled("WebRTC-AddNetworkCostToVpn")) {}
 
 Network::Network(const Network&) = default;
 
@@ -1088,7 +1099,9 @@ webrtc::MdnsResponderInterface* Network::GetMdnsResponder() const {
 
 uint16_t Network::GetCost() const {
   AdapterType type = IsVpn() ? underlying_type_for_vpn_ : type_;
-  return ComputeNetworkCostByType(type, use_differentiated_cellular_costs_);
+  return ComputeNetworkCostByType(type, IsVpn(),
+                                  use_differentiated_cellular_costs_,
+                                  add_network_cost_to_vpn_);
 }
 
 std::string Network::ToString() const {

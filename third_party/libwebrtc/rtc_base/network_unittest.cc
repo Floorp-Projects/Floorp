@@ -1350,4 +1350,39 @@ TEST_F(NetworkTest, WebRTC_BindUsingInterfaceName) {
 }
 #endif
 
+TEST_F(NetworkTest, NetworkCostVpn_Default) {
+  IPAddress ip1;
+  EXPECT_TRUE(IPFromString("2400:4030:1:2c00:be30:0:0:1", &ip1));
+
+  Network* net1 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
+  net1->set_type(ADAPTER_TYPE_VPN);
+  net1->set_underlying_type_for_vpn(ADAPTER_TYPE_ETHERNET);
+
+  Network* net2 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
+  net2->set_type(ADAPTER_TYPE_ETHERNET);
+
+  EXPECT_EQ(net1->GetCost(), net2->GetCost());
+  delete net1;
+  delete net2;
+}
+
+TEST_F(NetworkTest, NetworkCostVpn_VpnMoreExpensive) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-AddNetworkCostToVpn/Enabled/");
+
+  IPAddress ip1;
+  EXPECT_TRUE(IPFromString("2400:4030:1:2c00:be30:0:0:1", &ip1));
+
+  Network* net1 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
+  net1->set_type(ADAPTER_TYPE_VPN);
+  net1->set_underlying_type_for_vpn(ADAPTER_TYPE_ETHERNET);
+
+  Network* net2 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
+  net2->set_type(ADAPTER_TYPE_ETHERNET);
+
+  EXPECT_GT(net1->GetCost(), net2->GetCost());
+  delete net1;
+  delete net2;
+}
+
 }  // namespace rtc
