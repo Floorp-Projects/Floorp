@@ -75,6 +75,9 @@ object FirefoxTheme {
     val colors: FirefoxColors
         @Composable
         get() = localFirefoxColors.current
+
+    val typography: FenixTypography
+        get() = defaultTypography
 }
 
 private val privateColorPalette = FirefoxColors(
