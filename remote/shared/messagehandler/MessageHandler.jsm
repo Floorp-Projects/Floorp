@@ -181,6 +181,10 @@ class MessageHandler extends EventEmitter {
    *     Optional command parameters.
    * @property {CommandDestination} destination
    *     The destination describing a debuggable context.
+   * @property {boolean=} retryOnAbort
+   *     Optional. When true, commands will be retried upon AbortError, which
+   *     can occur when the underlying JSWindowActor pair is destroyed.
+   *     Defaults to `false`.
    */
 
   /**

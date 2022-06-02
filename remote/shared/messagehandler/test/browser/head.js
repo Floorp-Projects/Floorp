@@ -114,6 +114,14 @@ function createTestMarkupWithFrames() {
   )}`;
 }
 
+const hasPromiseResolved = async function(promise) {
+  let resolved = false;
+  promise.finally(() => (resolved = true));
+  // Make sure microtasks have time to run.
+  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
+  return resolved;
+};
+
 /**
  * Install a sidebar extension.
  *
