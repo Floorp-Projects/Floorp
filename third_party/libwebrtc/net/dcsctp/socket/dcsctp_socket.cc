@@ -381,6 +381,7 @@ SendStatus DcSctpSocket::Send(DcSctpMessage message,
   }
 
   TimeMs now = callbacks_.TimeMillis();
+  ++metrics_.tx_messages_count;
   send_queue_.Add(now, std::move(message), send_options);
   if (tcb_ != nullptr) {
     tcb_->SendBufferedPackets(now);
@@ -454,6 +455,26 @@ size_t DcSctpSocket::buffered_amount_low_threshold(StreamID stream_id) const {
 void DcSctpSocket::SetBufferedAmountLowThreshold(StreamID stream_id,
                                                  size_t bytes) {
   send_queue_.SetBufferedAmountLowThreshold(stream_id, bytes);
+}
+
+Metrics DcSctpSocket::GetMetrics() const {
+  Metrics metrics = metrics_;
+
+  if (tcb_ != nullptr) {
+    // Update the metrics with some stats that are extracted from
+    // sub-components.
+    metrics.cwnd_bytes = tcb_->cwnd();
+    metrics.srtt_ms = tcb_->current_srtt().value();
+    size_t packet_payload_size =
+        options_.mtu - SctpPacket::kHeaderSize - DataChunk::kHeaderSize;
+    metrics.unack_data_count =
+        tcb_->retransmission_queue().outstanding_items() +
+        (send_queue_.total_buffered_amount() + packet_payload_size - 1) /
+            packet_payload_size;
+    metrics.peer_rwnd_bytes = tcb_->retransmission_queue().rwnd();
+  }
+
+  return metrics;
 }
 
 void DcSctpSocket::MaybeSendShutdownOnPacketReceived(const SctpPacket& packet) {
@@ -588,6 +609,8 @@ void DcSctpSocket::HandleTimeout(TimeoutID timeout_id) {
 }
 
 void DcSctpSocket::ReceivePacket(rtc::ArrayView<const uint8_t> data) {
+  ++metrics_.rx_packets_count;
+
   if (packet_observer_ != nullptr) {
     packet_observer_->OnReceivedPacket(callbacks_.TimeMillis(), data);
   }
@@ -834,6 +857,7 @@ void DcSctpSocket::SendPacket(SctpPacket::Builder& builder) {
   if (packet_observer_ != nullptr) {
     packet_observer_->OnSentPacket(callbacks_.TimeMillis(), payload);
   }
+  ++metrics_.tx_packets_count;
   callbacks_.SendPacket(payload);
 }
 
@@ -1267,6 +1291,7 @@ void DcSctpSocket::HandleCookieAck(
 void DcSctpSocket::DeliverReassembledMessages() {
   if (tcb_->reassembly_queue().HasMessages()) {
     for (auto& message : tcb_->reassembly_queue().FlushMessages()) {
+      ++metrics_.rx_messages_count;
       callbacks_.OnMessageReceived(std::move(message));
     }
   }

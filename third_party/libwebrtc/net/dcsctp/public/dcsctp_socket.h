@@ -155,6 +155,43 @@ inline constexpr absl::string_view ToString(ResetStreamsStatus error) {
   }
 }
 
+// Tracked metrics, which is the return value of GetMetrics. Optional members
+// will be unset when they are not yet known.
+struct Metrics {
+  // Transmission stats and metrics.
+
+  // Number of packets sent.
+  size_t tx_packets_count = 0;
+
+  // Number of messages requested to be sent.
+  size_t tx_messages_count = 0;
+
+  // The current congestion window (cwnd) in bytes, corresponding to spinfo_cwnd
+  // defined in RFC6458.
+  absl::optional<size_t> cwnd_bytes = absl::nullopt;
+
+  // Smoothed round trip time, corresponding to spinfo_srtt defined in RFC6458.
+  absl::optional<int> srtt_ms = absl::nullopt;
+
+  // Number of data items in the retransmission queue that haven’t been
+  // acked/nacked yet and are in-flight. Corresponding to sstat_unackdata
+  // defined in RFC6458. This may be an approximation when there are messages in
+  // the send queue that haven't been fragmented/packetized yet.
+  size_t unack_data_count = 0;
+
+  // Receive stats and metrics.
+
+  // Number of packets received.
+  size_t rx_packets_count = 0;
+
+  // Number of messages received.
+  size_t rx_messages_count = 0;
+
+  // The peer’s last announced receiver window size, corresponding to
+  // sstat_rwnd defined in RFC6458.
+  absl::optional<uint32_t> peer_rwnd_bytes = absl::nullopt;
+};
+
 // Callbacks that the DcSctpSocket will be done synchronously to the owning
 // client. It is allowed to call back into the library from callbacks that start
 // with "On". It has been explicitly documented when it's not allowed to call
@@ -350,6 +387,9 @@ class DcSctpSocketInterface {
   // OnBufferedAmountLow event. The default value is zero (0).
   virtual void SetBufferedAmountLowThreshold(StreamID stream_id,
                                              size_t bytes) = 0;
+
+  // Retrieves the latest metrics.
+  virtual Metrics GetMetrics() const = 0;
 };
 }  // namespace dcsctp
 

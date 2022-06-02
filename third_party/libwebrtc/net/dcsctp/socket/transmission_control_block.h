@@ -130,6 +130,8 @@ class TransmissionControlBlock : public Context {
   RetransmissionQueue& retransmission_queue() { return retransmission_queue_; }
   StreamResetHandler& stream_reset_handler() { return stream_reset_handler_; }
   HeartbeatHandler& heartbeat_handler() { return heartbeat_handler_; }
+  size_t cwnd() const { return retransmission_queue_.cwnd(); }
+  DurationMs current_srtt() const { return rto_.srtt(); }
 
   // Returns this socket's verification tag, set in all packet headers.
   VerificationTag my_verification_tag() const { return my_verification_tag_; }

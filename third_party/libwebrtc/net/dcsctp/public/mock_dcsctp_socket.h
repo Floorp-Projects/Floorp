@@ -57,6 +57,8 @@ class MockDcSctpSocket : public DcSctpSocketInterface {
               SetBufferedAmountLowThreshold,
               (StreamID stream_id, size_t bytes),
               (override));
+
+  MOCK_METHOD(Metrics, GetMetrics, (), (const, override));
 };
 
 }  // namespace dcsctp
