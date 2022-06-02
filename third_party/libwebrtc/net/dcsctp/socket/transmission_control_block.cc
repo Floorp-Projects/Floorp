@@ -82,8 +82,31 @@ void TransmissionControlBlock::MaybeSendSack() {
   }
 }
 
+void TransmissionControlBlock::MaybeSendForwardTsn(SctpPacket::Builder& builder,
+                                                   TimeMs now) {
+  if (now >= limit_forward_tsn_until_ &&
+      retransmission_queue_.ShouldSendForwardTsn(now)) {
+    if (capabilities_.message_interleaving) {
+      builder.Add(retransmission_queue_.CreateIForwardTsn());
+    } else {
+      builder.Add(retransmission_queue_.CreateForwardTsn());
+    }
+    packet_sender_.Send(builder);
+    // https://datatracker.ietf.org/doc/html/rfc3758
+    // "IMPLEMENTATION NOTE: An implementation may wish to limit the number of
+    // duplicate FORWARD TSN chunks it sends by ... waiting a full RTT before
+    // sending a duplicate FORWARD TSN."
+    // "Any delay applied to the sending of FORWARD TSN chunk SHOULD NOT exceed
+    // 200ms and MUST NOT exceed 500ms".
+    limit_forward_tsn_until_ = now + std::min(DurationMs(200), rto_.srtt());
+  }
+}
+
 void TransmissionControlBlock::SendBufferedPackets(SctpPacket::Builder& builder,
                                                    TimeMs now) {
+  // FORWARD-TSNs are sent as separate packets to avoid bugs.webrtc.org/12961.
+  MaybeSendForwardTsn(builder, now);
+
   for (int packet_idx = 0;
        packet_idx < options_.max_burst && retransmission_queue_.can_send_data();
        ++packet_idx) {
@@ -107,13 +130,6 @@ void TransmissionControlBlock::SendBufferedPackets(SctpPacket::Builder& builder,
       if (data_tracker_.ShouldSendAck(/*also_if_delayed=*/true)) {
         builder.Add(data_tracker_.CreateSelectiveAck(
             reassembly_queue_.remaining_bytes()));
-      }
-      if (retransmission_queue_.ShouldSendForwardTsn(now)) {
-        if (capabilities_.message_interleaving) {
-          builder.Add(retransmission_queue_.CreateIForwardTsn());
-        } else {
-          builder.Add(retransmission_queue_.CreateForwardTsn());
-        }
       }
       absl::optional<ReConfigChunk> reconfig =
           stream_reset_handler_.MakeStreamResetRequest();
