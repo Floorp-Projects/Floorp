@@ -12996,7 +12996,7 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   }
   uint32_t triggeringSandboxFlags = 0;
   if (mBrowsingContext) {
-    triggeringSandboxFlags = mBrowsingContext->GetSandboxFlags();
+    triggeringSandboxFlags = aContent->OwnerDoc()->GetSandboxFlags();
   }
 
   uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
