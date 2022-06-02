@@ -141,25 +141,6 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting bailout tail stub");
   generateBailoutTailStub(masm, &bailoutTail);
 
-  {
-    JitSpew(JitSpew_Codegen, "# Emitting bailout tables");
-
-    BailoutTableVector& bailoutTables = bailoutTables_.writeRef();
-    if (!bailoutTables.reserve(FrameSizeClass::ClassLimit().classId())) {
-      return false;
-    }
-
-    for (uint32_t id = 0;; id++) {
-      FrameSizeClass class_ = FrameSizeClass::FromClass(id);
-      if (class_ == FrameSizeClass::ClassLimit()) {
-        break;
-      }
-      JitSpew(JitSpew_Codegen, "# Bailout table");
-      bailoutTables.infallibleAppend(
-          generateBailoutTable(masm, &bailoutTail, id));
-    }
-  }
-
   JitSpew(JitSpew_Codegen, "# Emitting bailout handler");
   generateBailoutHandler(masm, &bailoutTail);
 
@@ -553,18 +534,6 @@ void JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
       optimizedStubSpace_.sizeOfExcludingThis(mallocSizeOf);
 }
 
-TrampolinePtr JitRuntime::getBailoutTable(
-    const FrameSizeClass& frameClass) const {
-  MOZ_ASSERT(frameClass != FrameSizeClass::None());
-  return trampolineCode(bailoutTables_.ref()[frameClass.classId()].startOffset);
-}
-
-uint32_t JitRuntime::getBailoutTableSize(
-    const FrameSizeClass& frameClass) const {
-  MOZ_ASSERT(frameClass != FrameSizeClass::None());
-  return bailoutTables_.ref()[frameClass.classId()].size;
-}
-
 void JitCodeHeader::init(JitCode* jitCode) {
   // As long as JitCode isn't moveable, we can avoid tracing this and
   // mutating executable data.
@@ -683,12 +652,11 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
                           uint32_t frameSlots, uint32_t argumentSlots,
                           uint32_t frameSize, size_t snapshotsListSize,
                           size_t snapshotsRVATableSize, size_t recoversSize,
-                          size_t bailoutEntries, size_t constants,
-                          size_t nurseryObjects, size_t safepointIndices,
-                          size_t osiIndices, size_t icEntries,
-                          size_t runtimeSize, size_t safepointsSize) {
-  if (snapshotsListSize >= MAX_BUFFER_SIZE ||
-      (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t))) {
+                          size_t constants, size_t nurseryObjects,
+                          size_t safepointIndices, size_t osiIndices,
+                          size_t icEntries, size_t runtimeSize,
+                          size_t safepointsSize) {
+  if (snapshotsListSize >= MAX_BUFFER_SIZE) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -698,8 +666,6 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
                 "IonScript has wrong size for OsiIndex");
   static_assert(SizeOf_SafepointIndex == sizeof(SafepointIndex),
                 "IonScript has wrong size for SafepointIndex");
-  static_assert(SizeOf_SnapshotOffset == sizeof(SnapshotOffset),
-                "IonScript has wrong size for SnapshotOffset");
 
   CheckedInt<Offset> allocSize = sizeof(IonScript);
   allocSize += CheckedInt<Offset>(constants) * sizeof(Value);
@@ -707,7 +673,6 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   allocSize += CheckedInt<Offset>(nurseryObjects) * sizeof(HeapPtrObject);
   allocSize += CheckedInt<Offset>(osiIndices) * sizeof(OsiIndex);
   allocSize += CheckedInt<Offset>(safepointIndices) * sizeof(SafepointIndex);
-  allocSize += CheckedInt<Offset>(bailoutEntries) * sizeof(SnapshotOffset);
   allocSize += CheckedInt<Offset>(icEntries) * sizeof(uint32_t);
   allocSize += CheckedInt<Offset>(safepointsSize);
   allocSize += CheckedInt<Offset>(snapshotsListSize);
@@ -750,10 +715,6 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   script->safepointIndexOffset_ = offsetCursor;
   offsetCursor += safepointIndices * sizeof(SafepointIndex);
 
-  MOZ_ASSERT(offsetCursor % alignof(SnapshotOffset) == 0);
-  script->bailoutTableOffset_ = offsetCursor;
-  offsetCursor += bailoutEntries * sizeof(SnapshotOffset);
-
   MOZ_ASSERT(offsetCursor % alignof(uint32_t) == 0);
   script->icIndexOffset_ = offsetCursor;
   offsetCursor += icEntries * sizeof(uint32_t);
@@ -777,7 +738,6 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   MOZ_ASSERT(script->numNurseryObjects() == nurseryObjects);
   MOZ_ASSERT(script->numOsiIndices() == osiIndices);
   MOZ_ASSERT(script->numSafepointIndices() == safepointIndices);
-  MOZ_ASSERT(script->numBailoutEntries() == bailoutEntries);
   MOZ_ASSERT(script->numICs() == icEntries);
   MOZ_ASSERT(script->safepointsSize() == safepointsSize);
   MOZ_ASSERT(script->snapshotsListSize() == snapshotsListSize);
@@ -833,10 +793,6 @@ void IonScript::copySafepoints(const SafepointWriter* writer) {
   MOZ_ASSERT(writer->size() == safepointsSize());
   memcpy(offsetToPointer<uint8_t>(safepointsOffset()), writer->buffer(),
          safepointsSize());
-}
-
-void IonScript::copyBailoutTable(const SnapshotOffset* table) {
-  memcpy(bailoutTable(), table, numBailoutEntries() * sizeof(SnapshotOffset));
 }
 
 void IonScript::copyConstants(const Value* vp) {

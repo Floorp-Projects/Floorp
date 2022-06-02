@@ -648,8 +648,7 @@ static void PushBailoutFrame(MacroAssembler& masm, Register spArg) {
   masm.movq(rsp, spArg);
 }
 
-static void GenerateBailoutThunk(MacroAssembler& masm, uint32_t frameClass,
-                                 Label* bailoutTail) {
+static void GenerateBailoutThunk(MacroAssembler& masm, Label* bailoutTail) {
   PushBailoutFrame(masm, r8);
 
   // Make space for Bailout's bailoutInfo outparam.
@@ -673,19 +672,13 @@ static void GenerateBailoutThunk(MacroAssembler& masm, uint32_t frameClass,
   //     [bailoutFrame]
   //
   // Remove both the bailout frame and the topmost Ion frame's stack.
-  static const uint32_t BailoutDataSize = sizeof(RegisterDump);
+  static constexpr uint32_t BailoutDataSize = sizeof(RegisterDump);
   masm.addq(Imm32(BailoutDataSize), rsp);
-  masm.pop(rcx);
+  masm.pop(rcx);  // frameSize
   masm.lea(Operand(rsp, rcx, TimesOne, sizeof(void*)), rsp);
 
   // Jump to shared bailout tail. The BailoutInfo pointer has to be in r9.
   masm.jmp(bailoutTail);
-}
-
-JitRuntime::BailoutTable JitRuntime::generateBailoutTable(MacroAssembler& masm,
-                                                          Label* bailoutTail,
-                                                          uint32_t frameClass) {
-  MOZ_CRASH("x64 does not use bailout tables");
 }
 
 void JitRuntime::generateBailoutHandler(MacroAssembler& masm,
@@ -694,7 +687,7 @@ void JitRuntime::generateBailoutHandler(MacroAssembler& masm,
 
   bailoutHandlerOffset_ = startTrampolineCode(masm);
 
-  GenerateBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID, bailoutTail);
+  GenerateBailoutThunk(masm, bailoutTail);
 }
 
 bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,

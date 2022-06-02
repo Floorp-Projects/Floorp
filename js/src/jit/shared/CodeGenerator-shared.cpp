@@ -55,7 +55,6 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
       current(nullptr),
       snapshots_(),
       recovers_(),
-      deoptTable_(),
 #ifdef DEBUG
       pushedArgs_(0),
 #endif
@@ -72,8 +71,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
 #ifdef CHECK_OSIPOINT_REGISTERS
       checkOsiPointRegisters(JitOptions.checkOsiPointRegisters),
 #endif
-      frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()),
-      frameClass_(FrameSizeClass::None()) {
+      frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()) {
   if (gen->isProfilerInstrumentationEnabled()) {
     masm.enableProfilingInstrumentation();
   }
@@ -102,12 +100,6 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
       frameDepth_ += ComputeByteAlignment(sizeof(wasm::Frame) + frameDepth_,
                                           WasmStackAlignment);
     }
-
-    // FrameSizeClass is only used for bailing, which cannot happen in
-    // wasm code.
-    MOZ_ASSERT(frameClass_ == FrameSizeClass::None());
-  } else {
-    frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
   }
 }
 
@@ -581,32 +573,6 @@ void CodeGeneratorShared::encode(LSnapshot* snapshot) {
   snapshots_.endSnapshot();
   snapshot->setSnapshotOffset(offset);
   masm.propagateOOM(!snapshots_.oom());
-}
-
-bool CodeGeneratorShared::assignBailoutId(LSnapshot* snapshot) {
-  MOZ_ASSERT(snapshot->snapshotOffset() != INVALID_SNAPSHOT_OFFSET);
-
-  // Can we not use bailout tables at all?
-  if (!deoptTable_) {
-    return false;
-  }
-
-  MOZ_ASSERT(frameClass_ != FrameSizeClass::None());
-
-  if (snapshot->bailoutId() != INVALID_BAILOUT_ID) {
-    return true;
-  }
-
-  // Is the bailout table full?
-  if (bailouts_.length() >= BAILOUT_TABLE_SIZE) {
-    return false;
-  }
-
-  unsigned bailoutId = bailouts_.length();
-  snapshot->setBailoutId(bailoutId);
-  JitSpew(JitSpew_IonSnapshots, "Assigned snapshot bailout id %u", bailoutId);
-  masm.propagateOOM(bailouts_.append(snapshot->snapshotOffset()));
-  return true;
 }
 
 bool CodeGeneratorShared::encodeSafepoints() {

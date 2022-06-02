@@ -28,9 +28,6 @@ namespace jit {
 // components of a js::Value.
 static const int32_t NUNBOX32_TYPE_OFFSET = 4;
 static const int32_t NUNBOX32_PAYLOAD_OFFSET = 0;
-
-// Size of each bailout table entry. On x86 this is a 5-byte relative call.
-static const uint32_t BAILOUT_TABLE_ENTRY_SIZE = 5;
 #endif
 
 #if defined(JS_CODEGEN_X64) && defined(_WIN64)

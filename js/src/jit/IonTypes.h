@@ -44,7 +44,6 @@ namespace jit {
 
 using RecoverOffset = uint32_t;
 using SnapshotOffset = uint32_t;
-using BailoutId = uint32_t;
 
 // The maximum size of any buffer associated with an assembler or code object.
 // This is chosen to not overflow a signed integer, leaving room for an extra
