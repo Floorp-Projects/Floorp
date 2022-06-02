@@ -498,8 +498,6 @@ struct RTC_EXPORT RtpEncodingParameters {
 
   // Specifies the number of temporal layers for video (if the feature is
   // supported by the codec implementation).
-  // TODO(asapersson): Different number of temporal layers are not supported
-  // per simulcast layer.
   // Screencast support is experimental.
   absl::optional<int> num_temporal_layers;
 

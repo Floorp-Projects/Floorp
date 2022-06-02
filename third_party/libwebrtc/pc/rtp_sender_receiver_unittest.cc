@@ -1260,6 +1260,30 @@ TEST_F(RtpSenderReceiverTest, VideoSenderDetectInvalidScaleResolutionDownBy) {
   DestroyVideoRtpSender();
 }
 
+TEST_F(RtpSenderReceiverTest, VideoSenderCanSetNumTemporalLayers) {
+  CreateVideoRtpSender();
+
+  RtpParameters params = video_rtp_sender_->GetParameters();
+  params.encodings[0].num_temporal_layers = 2;
+
+  EXPECT_TRUE(video_rtp_sender_->SetParameters(params).ok());
+  params = video_rtp_sender_->GetParameters();
+  EXPECT_EQ(2, params.encodings[0].num_temporal_layers);
+
+  DestroyVideoRtpSender();
+}
+
+TEST_F(RtpSenderReceiverTest, VideoSenderDetectInvalidNumTemporalLayers) {
+  CreateVideoRtpSender();
+
+  RtpParameters params = video_rtp_sender_->GetParameters();
+  params.encodings[0].num_temporal_layers = webrtc::kMaxTemporalStreams + 1;
+  RTCError result = video_rtp_sender_->SetParameters(params);
+  EXPECT_EQ(RTCErrorType::INVALID_RANGE, result.type());
+
+  DestroyVideoRtpSender();
+}
+
 TEST_F(RtpSenderReceiverTest, VideoSenderCanSetMaxFramerate) {
   CreateVideoRtpSender();
 
