@@ -187,6 +187,8 @@ class AudioProcessingImpl : public AudioProcessing {
   static int instance_count_;
   const bool use_setup_specific_default_aec3_config_;
 
+  const bool use_denormal_disabler_;
+
   SwapQueue<RuntimeSetting> capture_runtime_settings_;
   SwapQueue<RuntimeSetting> render_runtime_settings_;
 
