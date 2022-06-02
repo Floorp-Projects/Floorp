@@ -247,6 +247,13 @@
                                                    workerThread:_workerThread.get()];
 }
 
+- (RTC_OBJC_TYPE(RTCVideoSource) *)videoSourceForScreenCast:(BOOL)forScreenCast {
+  return [[RTC_OBJC_TYPE(RTCVideoSource) alloc] initWithFactory:self
+                                                signalingThread:_signalingThread.get()
+                                                   workerThread:_workerThread.get()
+                                                   isScreenCast:forScreenCast];
+}
+
 - (RTC_OBJC_TYPE(RTCVideoTrack) *)videoTrackWithSource:(RTC_OBJC_TYPE(RTCVideoSource) *)source
                                                trackId:(NSString *)trackId {
   return [[RTC_OBJC_TYPE(RTCVideoTrack) alloc] initWithFactory:self source:source trackId:trackId];

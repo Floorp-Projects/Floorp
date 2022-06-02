@@ -41,6 +41,11 @@ NS_ASSUME_NONNULL_BEGIN
                 signalingThread:(rtc::Thread *)signalingThread
                    workerThread:(rtc::Thread *)workerThread;
 
+- (instancetype)initWithFactory:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
+                signalingThread:(rtc::Thread *)signalingThread
+                   workerThread:(rtc::Thread *)workerThread
+                   isScreenCast:(BOOL)isScreenCast;
+
 @end
 
 NS_ASSUME_NONNULL_END
