@@ -27,6 +27,7 @@
 #include "pc/test/mock_peer_connection_observers.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/numerics/safe_conversions.h"
+#include "rtc_base/strings/string_builder.h"
 #include "system_wrappers/include/cpu_info.h"
 #include "system_wrappers/include/field_trial.h"
 #include "test/pc/e2e/analyzer/audio/default_audio_quality_analyzer.h"
@@ -63,6 +64,8 @@ constexpr TimeDelta kQuickTestModeRunDuration = TimeDelta::Millis(100);
 // Field trials to enable Flex FEC advertising and receiving.
 constexpr char kFlexFecEnabledFieldTrials[] =
     "WebRTC-FlexFEC-03-Advertised/Enabled/WebRTC-FlexFEC-03/Enabled/";
+constexpr char kUseStandardsBytesStats[] =
+    "WebRTC-UseStandardBytesStats/Enabled/";
 
 class FixturePeerConnectionObserver : public MockPeerConnectionObserver {
  public:
@@ -386,13 +389,19 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
 
 void PeerConnectionE2EQualityTest::SetupRequiredFieldTrials(
     const RunParams& run_params) {
-  std::string field_trials = "";
+  std::vector<absl::string_view> default_field_trials = {
+      kUseStandardsBytesStats};
   if (run_params.use_flex_fec) {
-    field_trials += kFlexFecEnabledFieldTrials;
+    default_field_trials.push_back(kFlexFecEnabledFieldTrials);
   }
-  if (!field_trials.empty()) {
-    override_field_trials_ = std::make_unique<test::ScopedFieldTrials>(
-        field_trial::GetFieldTrialString() + field_trials);
+  if (!default_field_trials.empty()) {
+    rtc::StringBuilder sb;
+    sb << field_trial::GetFieldTrialString();
+    for (const absl::string_view& field_trial : default_field_trials) {
+      sb << field_trial;
+    }
+    override_field_trials_ =
+        std::make_unique<test::ScopedFieldTrials>(sb.Release());
   }
 }
 
