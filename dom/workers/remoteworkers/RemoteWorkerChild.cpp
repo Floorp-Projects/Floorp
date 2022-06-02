@@ -371,7 +371,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
   info.mShouldResistFingerprinting = nsContentUtils::ShouldResistFingerprinting(
-      principal);
+      info.mPrincipal, info.mOriginAttributes);
   net::CookieJarSettings::Deserialize(aData.cookieJarSettings(),
                                       getter_AddRefs(info.mCookieJarSettings));
 
