@@ -75,6 +75,18 @@ enum class OverloadReason {
   kMemory
 };
 
+enum class FrameComparisonType {
+  // Comparison for captured and rendered frame.
+  kRegular,
+  // Comparison for captured frame that is known to be dropped somewhere in
+  // video pipeline.
+  kDroppedFrame,
+  // Comparison for captured frame that was still in the video pipeline when
+  // test was stopped. It's unknown is this frame dropped or would it be
+  // delivered if test continue.
+  kFrameInFlight
+};
+
 // Represents comparison between two VideoFrames. Contains video frames itself
 // and stats. Can be one of two types:
 //   1. Normal - in this case `captured` is presented and either `rendered` is
@@ -87,7 +99,7 @@ struct FrameComparison {
   FrameComparison(InternalStatsKey stats_key,
                   absl::optional<VideoFrame> captured,
                   absl::optional<VideoFrame> rendered,
-                  bool dropped,
+                  FrameComparisonType type,
                   FrameStats frame_stats,
                   OverloadReason overload_reason);
 
@@ -96,10 +108,7 @@ struct FrameComparison {
   // queue.
   absl::optional<VideoFrame> captured;
   absl::optional<VideoFrame> rendered;
-  // If true frame was dropped somewhere from capturing to rendering and
-  // wasn't rendered on remote peer side. If `dropped` is true, `rendered`
-  // will be `absl::nullopt`.
-  bool dropped;
+  FrameComparisonType type;
   FrameStats frame_stats;
   OverloadReason overload_reason;
 };

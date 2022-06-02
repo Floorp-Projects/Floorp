@@ -92,10 +92,18 @@ class DefaultVideoQualityAnalyzerFramesComparator {
           stream_started_time,
       Timestamp start_time);
 
+  // `captured` - video frame captured by sender to use for PSNR/SSIM
+  //     computation. If `type` is `FrameComparisonType::kRegular` and
+  //     `captured` is `absl::nullopt` comparison is assumed to be overloaded
+  //     due to memory constraints.
+  // `rendered` - video frame rendered by receiver to use for PSNR/SSIM
+  //     computation. Required only if `type` is
+  //     `FrameComparisonType::kRegular`, but can still be omitted if
+  //     `captured` is `absl::nullopt`.
   void AddComparison(InternalStatsKey stats_key,
                      absl::optional<VideoFrame> captured,
                      absl::optional<VideoFrame> rendered,
-                     bool dropped,
+                     FrameComparisonType type,
                      FrameStats frame_stats);
   // `skipped_between_rendered` - amount of frames dropped on this stream before
   //     last received frame and current frame.
@@ -103,7 +111,7 @@ class DefaultVideoQualityAnalyzerFramesComparator {
                      int skipped_between_rendered,
                      absl::optional<VideoFrame> captured,
                      absl::optional<VideoFrame> rendered,
-                     bool dropped,
+                     FrameComparisonType type,
                      FrameStats frame_stats);
 
   std::map<InternalStatsKey, webrtc_pc_e2e::StreamStats> stream_stats() const {
@@ -121,7 +129,7 @@ class DefaultVideoQualityAnalyzerFramesComparator {
   void AddComparisonInternal(InternalStatsKey stats_key,
                              absl::optional<VideoFrame> captured,
                              absl::optional<VideoFrame> rendered,
-                             bool dropped,
+                             FrameComparisonType type,
                              FrameStats frame_stats)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void ProcessComparisons();
