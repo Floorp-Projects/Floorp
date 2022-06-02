@@ -304,8 +304,10 @@ bool RTPSenderAudio::SendAudio(AudioFrameType frame_type,
     return false;
   memcpy(payload, payload_data, payload_size);
 
-  if (!rtp_sender_->AssignSequenceNumber(packet.get()))
+  if (!rtp_sender_->deferred_sequence_numbering() &&
+      !rtp_sender_->AssignSequenceNumber(packet.get())) {
     return false;
+  }
 
   {
     MutexLock lock(&send_audio_mutex_);
@@ -374,8 +376,10 @@ bool RTPSenderAudio::SendTelephoneEventPacket(bool ended,
     packet->SetSsrc(rtp_sender_->SSRC());
     packet->SetTimestamp(dtmf_timestamp);
     packet->set_capture_time_ms(clock_->TimeInMilliseconds());
-    if (!rtp_sender_->AssignSequenceNumber(packet.get()))
+    if (!rtp_sender_->deferred_sequence_numbering() &&
+        !rtp_sender_->AssignSequenceNumber(packet.get())) {
       return false;
+    }
 
     // Create DTMF data.
     uint8_t* dtmfbuffer = packet->AllocatePayload(kDtmfSize);

@@ -532,6 +532,8 @@ ChannelSend::ChannelSend(
   configuration.rtcp_packet_type_counter_observer = this;
 
   configuration.local_media_ssrc = ssrc;
+  configuration.use_deferred_sequencing =
+      !field_trial::IsDisabled("WebRTC-Audio-DeferredSequencing");
 
   rtp_rtcp_ = ModuleRtpRtcpImpl2::Create(configuration);
   rtp_rtcp_->SetSendingMediaStatus(false);
