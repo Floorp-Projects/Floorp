@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/bind_front.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
@@ -95,11 +96,11 @@ HeartbeatHandler::HeartbeatHandler(absl::string_view log_prefix,
           options.heartbeat_interval_include_rtt),
       interval_timer_(timer_manager_->CreateTimer(
           "heartbeat-interval",
-          [this]() { return OnIntervalTimerExpiry(); },
+          absl::bind_front(&HeartbeatHandler::OnIntervalTimerExpiry, this),
           TimerOptions(interval_duration_, TimerBackoffAlgorithm::kFixed))),
       timeout_timer_(timer_manager_->CreateTimer(
           "heartbeat-timeout",
-          [this]() { return OnTimeoutTimerExpiry(); },
+          absl::bind_front(&HeartbeatHandler::OnTimeoutTimerExpiry, this),
           TimerOptions(options.rto_initial,
                        TimerBackoffAlgorithm::kExponential,
                        /*max_restarts=*/0))) {

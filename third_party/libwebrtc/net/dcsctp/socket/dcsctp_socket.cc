@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/bind_front.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -151,19 +152,19 @@ DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
       timer_manager_([this]() { return callbacks_.CreateTimeout(); }),
       t1_init_(timer_manager_.CreateTimer(
           "t1-init",
-          [this]() { return OnInitTimerExpiry(); },
+          absl::bind_front(&DcSctpSocket::OnInitTimerExpiry, this),
           TimerOptions(options.t1_init_timeout,
                        TimerBackoffAlgorithm::kExponential,
                        options.max_init_retransmits))),
       t1_cookie_(timer_manager_.CreateTimer(
           "t1-cookie",
-          [this]() { return OnCookieTimerExpiry(); },
+          absl::bind_front(&DcSctpSocket::OnCookieTimerExpiry, this),
           TimerOptions(options.t1_cookie_timeout,
                        TimerBackoffAlgorithm::kExponential,
                        options.max_init_retransmits))),
       t2_shutdown_(timer_manager_.CreateTimer(
           "t2-shutdown",
-          [this]() { return OnShutdownTimerExpiry(); },
+          absl::bind_front(&DcSctpSocket::OnShutdownTimerExpiry, this),
           TimerOptions(options.t2_shutdown_timeout,
                        TimerBackoffAlgorithm::kExponential,
                        options.max_retransmissions))),
@@ -1109,7 +1110,7 @@ void DcSctpSocket::HandleInitAck(
       connect_params_.initial_tsn, chunk->initiate_tag(), chunk->initial_tsn(),
       chunk->a_rwnd(), MakeTieTag(callbacks_),
       [this]() { return state_ == State::kEstablished; },
-      [this](SctpPacket::Builder& builder) { return SendPacket(builder); });
+      absl::bind_front(&DcSctpSocket::SendPacket, this));
   RTC_DLOG(LS_VERBOSE) << log_prefix()
                        << "Created peer TCB: " << tcb_->ToString();
 
@@ -1171,7 +1172,7 @@ void DcSctpSocket::HandleCookieEcho(
         connect_params_.initial_tsn, cookie->initiate_tag(),
         cookie->initial_tsn(), cookie->a_rwnd(), MakeTieTag(callbacks_),
         [this]() { return state_ == State::kEstablished; },
-        [this](SctpPacket::Builder& builder) { return SendPacket(builder); });
+        absl::bind_front(&DcSctpSocket::SendPacket, this));
     RTC_DLOG(LS_VERBOSE) << log_prefix()
                          << "Created peer TCB: " << tcb_->ToString();
   }

@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/bind_front.h"
 #include "absl/strings/string_view.h"
 #include "net/dcsctp/common/sequence_numbers.h"
 #include "net/dcsctp/packet/chunk/cookie_echo_chunk.h"
@@ -63,11 +64,12 @@ class TransmissionControlBlock : public Context {
         callbacks_(callbacks),
         t3_rtx_(timer_manager_.CreateTimer(
             "t3-rtx",
-            [this]() { return OnRtxTimerExpiry(); },
+            absl::bind_front(&TransmissionControlBlock::OnRtxTimerExpiry, this),
             TimerOptions(options.rto_initial))),
         delayed_ack_timer_(timer_manager_.CreateTimer(
             "delayed-ack",
-            [this]() { return OnDelayedAckTimerExpiry(); },
+            absl::bind_front(&TransmissionControlBlock::OnDelayedAckTimerExpiry,
+                             this),
             TimerOptions(options.delayed_ack_max_timeout,
                          TimerBackoffAlgorithm::kExponential,
                          /*max_restarts=*/0))),
@@ -89,7 +91,7 @@ class TransmissionControlBlock : public Context {
             my_initial_tsn,
             a_rwnd,
             send_queue,
-            [this](DurationMs rtt) { return ObserveRTT(rtt); },
+            absl::bind_front(&TransmissionControlBlock::ObserveRTT, this),
             [this]() { tx_error_counter_.Clear(); },
             *t3_rtx_,
             options,
