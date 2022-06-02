@@ -217,8 +217,10 @@ int64_t FrameBuffer::FindNextFrame(int64_t now_ms) {
       frame->SetRenderTime(timing_->RenderTimeMs(frame->Timestamp(), now_ms));
     }
     bool too_many_frames_queued =
-        frames_.size() > zero_playout_delay_max_decode_queue_size_ ? true
-                                                                   : false;
+        frames_.size() > static_cast<unsigned int>(
+                             zero_playout_delay_max_decode_queue_size_)
+            ? true
+            : false;
     wait_ms = timing_->MaxWaitingTime(frame->RenderTime(), now_ms,
                                       too_many_frames_queued);
 
