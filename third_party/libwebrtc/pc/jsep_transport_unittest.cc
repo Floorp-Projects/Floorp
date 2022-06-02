@@ -42,6 +42,20 @@ struct NegotiateRoleParams {
   SdpType remote_type;
 };
 
+std::ostream& operator<<(std::ostream& os, const ConnectionRole& role) {
+  std::string str = "invalid";
+  ConnectionRoleToString(role, &str);
+  os << str;
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const NegotiateRoleParams& param) {
+  os << "[Local role " << param.local_role << " Remote role "
+     << param.remote_role << " LocalType " << SdpTypeToString(param.local_type)
+     << " RemoteType " << SdpTypeToString(param.remote_type) << "]";
+  return os;
+}
+
 rtc::scoped_refptr<webrtc::IceTransportInterface> CreateIceTransport(
     std::unique_ptr<FakeIceTransport> internal) {
   if (!internal) {
@@ -445,7 +459,13 @@ TEST_P(JsepTransport2WithRtcpMux, ValidDtlsRoleNegotiation) {
       {CONNECTIONROLE_ACTPASS, CONNECTIONROLE_PASSIVE, SdpType::kOffer,
        SdpType::kAnswer},
       {CONNECTIONROLE_ACTPASS, CONNECTIONROLE_PASSIVE, SdpType::kOffer,
-       SdpType::kPrAnswer}};
+       SdpType::kPrAnswer},
+      // Combinations permitted by RFC 8842 section 5.3
+      {CONNECTIONROLE_ACTIVE, CONNECTIONROLE_PASSIVE, SdpType::kAnswer,
+       SdpType::kOffer},
+      {CONNECTIONROLE_ACTIVE, CONNECTIONROLE_PASSIVE, SdpType::kPrAnswer,
+       SdpType::kOffer},
+  };
 
   for (auto& param : valid_client_params) {
     jsep_transport_ =
@@ -487,7 +507,11 @@ TEST_P(JsepTransport2WithRtcpMux, ValidDtlsRoleNegotiation) {
       {CONNECTIONROLE_ACTPASS, CONNECTIONROLE_ACTIVE, SdpType::kOffer,
        SdpType::kAnswer},
       {CONNECTIONROLE_ACTPASS, CONNECTIONROLE_ACTIVE, SdpType::kOffer,
-       SdpType::kPrAnswer}};
+       SdpType::kPrAnswer},
+      // Combinations permitted by RFC 8842 section 5.3
+      {CONNECTIONROLE_PASSIVE, CONNECTIONROLE_ACTIVE, SdpType::kPrAnswer,
+       SdpType::kOffer},
+  };
 
   for (auto& param : valid_server_params) {
     jsep_transport_ =
@@ -590,20 +614,15 @@ TEST_P(JsepTransport2WithRtcpMux, InvalidDtlsRoleNegotiation) {
     }
   }
 
-  // Invalid parameters due to the offerer not using ACTPASS.
+  // Invalid parameters due to the offerer not using a role consistent with the
+  // state
   NegotiateRoleParams offerer_without_actpass_params[] = {
-      {CONNECTIONROLE_ACTIVE, CONNECTIONROLE_PASSIVE, SdpType::kAnswer,
-       SdpType::kOffer},
-      {CONNECTIONROLE_PASSIVE, CONNECTIONROLE_ACTIVE, SdpType::kAnswer,
-       SdpType::kOffer},
+      // Cannot use ACTPASS in an answer
       {CONNECTIONROLE_ACTPASS, CONNECTIONROLE_PASSIVE, SdpType::kAnswer,
-       SdpType::kOffer},
-      {CONNECTIONROLE_ACTIVE, CONNECTIONROLE_PASSIVE, SdpType::kPrAnswer,
-       SdpType::kOffer},
-      {CONNECTIONROLE_PASSIVE, CONNECTIONROLE_ACTIVE, SdpType::kPrAnswer,
        SdpType::kOffer},
       {CONNECTIONROLE_ACTPASS, CONNECTIONROLE_PASSIVE, SdpType::kPrAnswer,
        SdpType::kOffer},
+      // Cannot send ACTIVE or PASSIVE in an offer (must handle, must not send)
       {CONNECTIONROLE_ACTIVE, CONNECTIONROLE_PASSIVE, SdpType::kOffer,
        SdpType::kAnswer},
       {CONNECTIONROLE_PASSIVE, CONNECTIONROLE_ACTIVE, SdpType::kOffer,
@@ -629,20 +648,24 @@ TEST_P(JsepTransport2WithRtcpMux, InvalidDtlsRoleNegotiation) {
       EXPECT_TRUE(jsep_transport_
                       ->SetLocalJsepTransportDescription(local_description,
                                                          param.local_type)
-                      .ok());
+                      .ok())
+          << param;
       EXPECT_FALSE(jsep_transport_
                        ->SetRemoteJsepTransportDescription(remote_description,
                                                            param.remote_type)
-                       .ok());
+                       .ok())
+          << param;
     } else {
       EXPECT_TRUE(jsep_transport_
                       ->SetRemoteJsepTransportDescription(remote_description,
                                                           param.remote_type)
-                      .ok());
+                      .ok())
+          << param;
       EXPECT_FALSE(jsep_transport_
                        ->SetLocalJsepTransportDescription(local_description,
                                                           param.local_type)
-                       .ok());
+                       .ok())
+          << param;
     }
   }
 }

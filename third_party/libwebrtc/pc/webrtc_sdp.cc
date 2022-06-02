@@ -2264,7 +2264,6 @@ bool ParseSessionDescription(const std::string& message,
       session_extmaps->push_back(extmap);
     }
   }
-
   return true;
 }
 

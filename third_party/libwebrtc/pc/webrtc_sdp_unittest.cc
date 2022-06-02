@@ -3675,7 +3675,7 @@ TEST_F(WebRtcSdpTest, SerializeDtlsSetupAttribute) {
   EXPECT_EQ(sdp_with_dtlssetup, message);
 }
 
-TEST_F(WebRtcSdpTest, DeserializeDtlsSetupAttribute) {
+TEST_F(WebRtcSdpTest, DeserializeDtlsSetupAttributeActpass) {
   JsepSessionDescription jdesc_with_dtlssetup(kDummyType);
   std::string sdp_with_dtlssetup = kSdpFullString;
   InjectAfter(kSessionTime, "a=setup:actpass\r\n", &sdp_with_dtlssetup);
@@ -3688,6 +3688,37 @@ TEST_F(WebRtcSdpTest, DeserializeDtlsSetupAttribute) {
   const cricket::TransportInfo* vtinfo =
       desc->GetTransportInfoByName("video_content_name");
   EXPECT_EQ(cricket::CONNECTIONROLE_ACTPASS,
+            vtinfo->description.connection_role);
+}
+
+TEST_F(WebRtcSdpTest, DeserializeDtlsSetupAttributeActive) {
+  JsepSessionDescription jdesc_with_dtlssetup(kDummyType);
+  std::string sdp_with_dtlssetup = kSdpFullString;
+  InjectAfter(kSessionTime, "a=setup:active\r\n", &sdp_with_dtlssetup);
+  EXPECT_TRUE(SdpDeserialize(sdp_with_dtlssetup, &jdesc_with_dtlssetup));
+  cricket::SessionDescription* desc = jdesc_with_dtlssetup.description();
+  const cricket::TransportInfo* atinfo =
+      desc->GetTransportInfoByName("audio_content_name");
+  EXPECT_EQ(cricket::CONNECTIONROLE_ACTIVE,
+            atinfo->description.connection_role);
+  const cricket::TransportInfo* vtinfo =
+      desc->GetTransportInfoByName("video_content_name");
+  EXPECT_EQ(cricket::CONNECTIONROLE_ACTIVE,
+            vtinfo->description.connection_role);
+}
+TEST_F(WebRtcSdpTest, DeserializeDtlsSetupAttributePassive) {
+  JsepSessionDescription jdesc_with_dtlssetup(kDummyType);
+  std::string sdp_with_dtlssetup = kSdpFullString;
+  InjectAfter(kSessionTime, "a=setup:passive\r\n", &sdp_with_dtlssetup);
+  EXPECT_TRUE(SdpDeserialize(sdp_with_dtlssetup, &jdesc_with_dtlssetup));
+  cricket::SessionDescription* desc = jdesc_with_dtlssetup.description();
+  const cricket::TransportInfo* atinfo =
+      desc->GetTransportInfoByName("audio_content_name");
+  EXPECT_EQ(cricket::CONNECTIONROLE_PASSIVE,
+            atinfo->description.connection_role);
+  const cricket::TransportInfo* vtinfo =
+      desc->GetTransportInfoByName("video_content_name");
+  EXPECT_EQ(cricket::CONNECTIONROLE_PASSIVE,
             vtinfo->description.connection_role);
 }
 
