@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: t-linux-xlarge-source
+    attributes:
+        code-review: true
+    worker:
+        docker-image: {in-tree: static-analysis-build}
+        max-run-time: 600
+        artifacts:
+            - type: file
+              name: public/code-review/issues.json
+              path: /builds/worker/issues.json
+    treeherder:
+        kind: test
+        tier: 1
+    platform: lint/opt
+    run:
+        using: run-task
+
+rust:
+    description: Rust vendoring validation
+    treeherder:
+        symbol: rust(vendor)
+    run:
+        cwd: '{checkout}'
+        command: >-
+            ./mach vendor rust --issues-json /builds/worker/issues.json
+    fetches:
+        toolchain:
+            - linux64-rust
+    when:
+        files-changed:
+            - 'Cargo.lock'
+            - '**/Cargo.toml'
+            - 'python/mozbuild/mozbuild/vendor/vendor_rust.py'
+            - 'third_party/rust/**'

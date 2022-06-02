@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import errno
 import hashlib
 import io
+import json
 import logging
 import os
 import re
@@ -91,10 +92,41 @@ TOLERATED_DUPES = {
 
 
 class VendorRust(MozbuildObject):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._issues = []
+
+    def serialize_issues_json(self):
+        return json.dumps(
+            {
+                "Cargo.lock": [
+                    {
+                        "path": "Cargo.lock",
+                        "column": None,
+                        "line": None,
+                        "level": "error",
+                        "message": msg,
+                    }
+                    for msg in self._issues
+                ]
+            }
+        )
+
+    def log(self, level, action, params, format_str):
+        if level >= logging.ERROR:
+            self._issues.append(format_str.format(**params))
+        super().log(level, action, params, format_str)
+
     def get_cargo_path(self):
         try:
             return self.substs["CARGO"]
         except (BuildEnvironmentNotFoundException, KeyError):
+            if "MOZ_AUTOMATION" in os.environ:
+                cargo = os.path.join(
+                    os.environ["MOZ_FETCHES_DIR"], "rustc", "bin", "cargo"
+                )
+                assert os.path.exists(cargo)
+                return cargo
             # Default if this tree isn't configured.
             from mozfile import which
 
