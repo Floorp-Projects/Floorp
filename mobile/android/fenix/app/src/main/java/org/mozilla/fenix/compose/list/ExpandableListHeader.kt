@@ -15,17 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
@@ -64,10 +61,10 @@ fun ExpandableListHeader(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            PrimaryText(
+            Text(
                 text = headerText,
-                fontSize = 14.sp,
-                fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
+                color = FirefoxTheme.colors.textPrimary,
+                style = FirefoxTheme.typography.headline8,
                 maxLines = 1,
             )
 

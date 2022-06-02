@@ -11,10 +11,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import java.util.Locale
@@ -40,13 +37,8 @@ fun TextButton(
     ) {
         Text(
             text = text.uppercase(Locale.getDefault()),
-            style = TextStyle(
-                color = textColor,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.25.sp,
-                lineHeight = 14.sp,
-            ),
+            color = textColor,
+            style = FirefoxTheme.typography.button,
             maxLines = 1,
         )
     }

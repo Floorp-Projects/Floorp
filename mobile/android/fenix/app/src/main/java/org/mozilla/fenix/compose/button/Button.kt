@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -70,8 +69,7 @@ fun Button(
         Text(
             text = text,
             color = textColor,
-            fontSize = 14.sp,
-            letterSpacing = 0.25.sp,
+            style = FirefoxTheme.typography.button,
             maxLines = 1,
         )
     }

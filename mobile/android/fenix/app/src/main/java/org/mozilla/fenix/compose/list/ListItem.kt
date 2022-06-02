@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,11 +24,8 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Favicon
-import org.mozilla.fenix.compose.PrimaryText
-import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
@@ -228,16 +226,18 @@ private fun ListItem(
                 .padding(horizontal = 16.dp, vertical = 6.dp)
                 .weight(1f),
         ) {
-            PrimaryText(
+            Text(
                 text = label,
-                fontSize = 16.sp,
+                color = FirefoxTheme.colors.textPrimary,
+                style = FirefoxTheme.typography.subtitle1,
                 maxLines = 1,
             )
 
             description?.let {
-                SecondaryText(
+                Text(
                     text = description,
-                    fontSize = 14.sp,
+                    color = FirefoxTheme.colors.textSecondary,
+                    style = FirefoxTheme.typography.body2,
                     maxLines = maxDescriptionLines,
                 )
             }
