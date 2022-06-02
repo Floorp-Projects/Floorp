@@ -17,7 +17,6 @@ const {
   openFilePicker,
   createSnapshot,
 } = require("devtools/client/memory/utils");
-const { OS } = require("resource://gre/modules/osfile.jsm");
 const {
   selectSnapshot,
   computeSnapshotData,
@@ -29,7 +28,7 @@ exports.pickFileAndExportSnapshot = function(snapshot) {
   return async function({ dispatch, getState }) {
     const outputFile = await openFilePicker({
       title: L10N.getFormatStr("snapshot.io.save.window"),
-      defaultName: OS.Path.basename(snapshot.path),
+      defaultName: PathUtils.filename(snapshot.path),
       filters: [[L10N.getFormatStr("snapshot.io.filter"), "*.fxsnapshot"]],
       mode: "save",
     });
@@ -52,7 +51,7 @@ const exportSnapshot = (exports.exportSnapshot = function(snapshot, dest) {
     );
 
     try {
-      await OS.File.copy(snapshot.path, dest);
+      await IOUtils.copy(snapshot.path, dest);
     } catch (error) {
       reportException("exportSnapshot", error);
       dispatch({ type: actions.EXPORT_SNAPSHOT_ERROR, snapshot, error });

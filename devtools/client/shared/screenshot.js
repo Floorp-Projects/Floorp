@@ -9,7 +9,6 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const Services = require("Services");
 
 loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
-loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 
 const STRINGS_URI = "devtools/shared/locales/screenshot.properties";
@@ -347,11 +346,13 @@ async function saveToFile(image) {
   }
 
   const downloadsDir = await Downloads.getPreferredDownloadsDirectory();
-  const downloadsDirExists = await OS.File.exists(downloadsDir);
+  const downloadsDirExists = await IOUtils.exists(downloadsDir);
   if (downloadsDirExists) {
     // If filename is absolute, it will override the downloads directory and
     // still be applied as expected.
-    filename = OS.Path.join(downloadsDir, filename);
+    filename = PathUtils.isAbsolute(filename)
+      ? filename
+      : PathUtils.joinRelative(downloadsDir, filename);
   }
 
   const sourceURI = Services.io.newURI(image.data);

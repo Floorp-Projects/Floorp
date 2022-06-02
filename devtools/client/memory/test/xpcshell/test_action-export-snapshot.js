@@ -31,7 +31,7 @@ add_task(async function() {
   dispatch(exportSnapshot(getState().snapshots[0], destPath));
   await exportEvents;
 
-  const stat = await OS.File.stat(destPath);
+  const stat = await IOUtils.stat(destPath);
   info(stat.size);
   ok(stat.size > 0, "destination file is more than 0 bytes");
 

@@ -10,7 +10,6 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/client/locales/memory.properties";
 const L10N = (exports.L10N = new LocalizationHelper(STRINGS_URI));
 
-const { OS } = require("resource://gre/modules/osfile.jsm");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 const CUSTOM_CENSUS_DISPLAY_PREF = "devtools.memory.custom-census-displays";
@@ -43,7 +42,7 @@ exports.getSnapshotTitle = function(snapshot) {
 
   if (snapshot.imported) {
     // Strip out the extension if it's the expected ".fxsnapshot"
-    return OS.Path.basename(snapshot.path.replace(/\.fxsnapshot$/, ""));
+    return PathUtils.filename(snapshot.path.replace(/\.fxsnapshot$/, ""));
   }
 
   const date = new Date(snapshot.creationTime / 1000);

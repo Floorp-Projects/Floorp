@@ -49,7 +49,6 @@ const SAFE_HOSTS_PREFIXES_REGEX = /^(about\+|https?\+|file\+|moz-extension\+)/;
 // devtools/server/tests/browser/head.js
 const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
 
-loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "Sqlite", "resource://gre/modules/Sqlite.jsm");
 
 // We give this a funny name to avoid confusion with the global
@@ -2900,17 +2899,26 @@ var indexedDBHelpers = {
    * the browser.
    */
   async getInternalHosts() {
-    const profileDir = OS.Constants.Path.profileDir;
-    const storagePath = OS.Path.join(profileDir, "storage", "permanent");
-    const iterator = new OS.File.DirectoryIterator(storagePath);
+    const profileDir = PathUtils.profileDir;
+    const storagePath = PathUtils.join(profileDir, "storage", "permanent");
+    const children = await IOUtils.getChildren(storagePath);
     const hosts = [];
 
-    await iterator.forEach(entry => {
-      if (entry.isDir && !SAFE_HOSTS_PREFIXES_REGEX.test(entry.name)) {
-        hosts.push(entry.name);
+    for (const path of children) {
+      const exists = await IOUtils.exists(path);
+      if (!exists) {
+        continue;
       }
-    });
-    iterator.close();
+
+      const stats = await IOUtils.stat(path);
+      if (
+        stats.type === "directory" &&
+        !SAFE_HOSTS_PREFIXES_REGEX.test(stats.path)
+      ) {
+        const basename = PathUtils.filename(path);
+        hosts.push(basename);
+      }
+    }
 
     return this.backToChild("getInternalHosts", hosts);
   },
@@ -3034,10 +3042,10 @@ var indexedDBHelpers = {
    */
   async getDBNamesForHost(host, principal) {
     const sanitizedHost = this.getSanitizedHost(host) + principal.originSuffix;
-    const profileDir = OS.Constants.Path.profileDir;
+    const profileDir = PathUtils.profileDir;
+    const storagePath = PathUtils.join(profileDir, "storage");
     const files = [];
     const names = [];
-    const storagePath = OS.Path.join(profileDir, "storage");
 
     // We expect sqlite DB paths to look something like this:
     // - PathToProfileDir/storage/default/http+++www.example.com/
@@ -3057,7 +3065,7 @@ var indexedDBHelpers = {
     );
 
     for (const file of sqliteFiles) {
-      const splitPath = OS.Path.split(file).components;
+      const splitPath = PathUtils.split(file);
       const idbIndex = splitPath.indexOf("idb");
       const storage = splitPath[idbIndex - 2];
       const relative = file.substr(profileDir.length + 1);
@@ -3091,13 +3099,19 @@ var indexedDBHelpers = {
     const sqlitePaths = [];
     const idbPaths = await this.findIDBPathsForHost(storagePath, sanitizedHost);
     for (const idbPath of idbPaths) {
-      const iterator = new OS.File.DirectoryIterator(idbPath);
-      await iterator.forEach(entry => {
-        if (!entry.isDir && entry.path.endsWith(".sqlite")) {
-          sqlitePaths.push(entry.path);
+      const children = await IOUtils.getChildren(idbPath);
+
+      for (const path of children) {
+        const exists = await IOUtils.exists(path);
+        if (!exists) {
+          continue;
         }
-      });
-      iterator.close();
+
+        const stats = await IOUtils.stat(path);
+        if (stats.type !== "directory" && stats.path.endsWith(".sqlite")) {
+          sqlitePaths.push(path);
+        }
+      }
     }
     return sqlitePaths;
   },
@@ -3110,8 +3124,8 @@ var indexedDBHelpers = {
     const idbPaths = [];
     const typePaths = await this.findStorageTypePaths(storagePath);
     for (const typePath of typePaths) {
-      const idbPath = OS.Path.join(typePath, sanitizedHost, "idb");
-      if (await OS.File.exists(idbPath)) {
+      const idbPath = PathUtils.join(typePath, sanitizedHost, "idb");
+      if (await IOUtils.exists(idbPath)) {
         idbPaths.push(idbPath);
       }
     }
@@ -3124,14 +3138,21 @@ var indexedDBHelpers = {
    * types that currently exist in the profile.
    */
   async findStorageTypePaths(storagePath) {
-    const iterator = new OS.File.DirectoryIterator(storagePath);
+    const children = await IOUtils.getChildren(storagePath);
     const typePaths = [];
-    await iterator.forEach(entry => {
-      if (entry.isDir) {
-        typePaths.push(entry.path);
+
+    for (const path of children) {
+      const exists = await IOUtils.exists(path);
+      if (!exists) {
+        continue;
       }
-    });
-    iterator.close();
+
+      const stats = await IOUtils.stat(path);
+      if (stats.type === "directory") {
+        typePaths.push(path);
+      }
+    }
+
     return typePaths;
   },
 

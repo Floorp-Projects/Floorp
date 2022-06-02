@@ -7,7 +7,6 @@
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const TEST_CONTENT = "aéd";
 
@@ -26,7 +25,7 @@ add_task(async function test_arrow_urls() {
   const { path } = createTemporaryFile(".js");
   const url = "resource://gre/modules/XPIProvider.jsm -> file://" + path;
 
-  await OS.File.writeAtomic(path, TEST_CONTENT, { encoding: "utf-8" });
+  await IOUtils.writeUTF8(path, TEST_CONTENT);
   const { content } = await DevToolsUtils.fetch(url);
 
   deepEqual(content, TEST_CONTENT, "The file contents were correctly read.");
@@ -46,7 +45,7 @@ add_task(async function test_empty() {
  */
 add_task(async function test_encoding_utf8() {
   const { path } = createTemporaryFile();
-  await OS.File.writeAtomic(path, UTF8_TEST_BUFFER);
+  await IOUtils.write(path, UTF8_TEST_BUFFER);
 
   const { content } = await DevToolsUtils.fetch(path);
   deepEqual(
@@ -61,7 +60,7 @@ add_task(async function test_encoding_utf8() {
  */
 add_task(async function test_encoding_iso_8859_1() {
   const { path } = createTemporaryFile();
-  await OS.File.writeAtomic(path, ISO_8859_1_BUFFER);
+  await IOUtils.write(path, ISO_8859_1_BUFFER);
 
   const { content } = await DevToolsUtils.fetch(path);
   deepEqual(
@@ -92,7 +91,7 @@ add_task(async function test_missing() {
 add_task(async function test_schemeless_files() {
   const { path } = createTemporaryFile();
 
-  await OS.File.writeAtomic(path, TEST_CONTENT, { encoding: "utf-8" });
+  await IOUtils.writeUTF8(path, TEST_CONTENT);
 
   const { content } = await DevToolsUtils.fetch(path);
   deepEqual(content, TEST_CONTENT, "The content was correct.");

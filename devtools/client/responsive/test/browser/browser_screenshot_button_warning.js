@@ -52,7 +52,7 @@ addRDMTask(
     );
 
     //Remove the downloaded screenshot file
-    await OS.File.remove(filePath);
+    await IOUtils.remove(filePath);
     await resetDownloads();
   },
   { waitForDeviceList: true }

@@ -6,14 +6,12 @@
 // Test that we can tell the memory actor to take a heap snapshot over the RDP
 // and then create a HeapSnapshot instance from the resulting file.
 
-const { OS } = require("resource://gre/modules/osfile.jsm");
-
 add_task(async () => {
   const { memoryFront } = await createTabMemoryFront();
 
   const snapshotFilePath = await memoryFront.saveHeapSnapshot();
   ok(
-    !!(await OS.File.stat(snapshotFilePath)),
+    !!(await IOUtils.stat(snapshotFilePath)),
     "Should have the heap snapshot file"
   );
   const snapshot = ChromeUtils.readHeapSnapshot(snapshotFilePath);

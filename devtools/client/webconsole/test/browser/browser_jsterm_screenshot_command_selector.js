@@ -52,7 +52,7 @@ add_task(async function() {
 
   info("Create an image using the downloaded file as source");
   let image = new Image();
-  image.src = OS.Path.toFileURI(sameOriginIframeScreenshotFile.path);
+  image.src = PathUtils.toFileURI(sameOriginIframeScreenshotFile.path);
   await once(image, "load");
 
   info("Check that the node was rendered as expected in the screenshot");
@@ -65,7 +65,7 @@ add_task(async function() {
   });
 
   // Remove the downloaded screenshot file and cleanup downloads
-  await OS.File.remove(sameOriginIframeScreenshotFile.path);
+  await IOUtils.remove(sameOriginIframeScreenshotFile.path);
   await resetDownloads();
 
   info("Check using :screenshot --selector in a remote-iframe context");
@@ -114,7 +114,7 @@ add_task(async function() {
 
   info("Create an image using the downloaded file as source");
   image = new Image();
-  image.src = OS.Path.toFileURI(remoteIframeSpanScreenshot.path);
+  image.src = PathUtils.toFileURI(remoteIframeSpanScreenshot.path);
   await once(image, "load");
 
   info("Check that the node was rendered as expected in the screenshot");
@@ -141,6 +141,6 @@ add_task(async function() {
   );
 
   // Remove the downloaded screenshot file and cleanup downloads
-  await OS.File.remove(remoteIframeSpanScreenshot.path);
+  await IOUtils.remove(remoteIframeSpanScreenshot.path);
   await resetDownloads();
 });

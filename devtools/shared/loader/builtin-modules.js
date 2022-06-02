@@ -32,10 +32,12 @@ const {
   DOMQuad,
   DOMRect,
   HeapSnapshot,
+  IOUtils,
   L10nRegistry,
   Localization,
   NamedNodeMap,
   NodeFilter,
+  PathUtils,
   StructuredCloneHolder,
   TelemetryStopwatch,
 } = Cu.getGlobalForObject(jsmScope);
@@ -275,6 +277,7 @@ exports.globals = {
   Element,
   FileReader,
   FormData,
+  IOUtils,
   isWorker: false,
   L10nRegistry,
   loader: {
@@ -287,6 +290,7 @@ exports.globals = {
   },
   Localization,
   Node,
+  PathUtils,
   reportError: Cu.reportError,
   StructuredCloneHolder,
   TextDecoder,

@@ -6,7 +6,6 @@
 
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 
-loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(
   this,
   "ExtensionParent",
@@ -26,13 +25,13 @@ loader.lazyRequireGetter(
   true
 );
 loader.lazyGetter(this, "UNPACKED_ROOT_PATH", () => {
-  return OS.Path.join(OS.Constants.Path.localProfileDir, "adb");
+  return PathUtils.join(PathUtils.localProfileDir, "adb");
 });
 loader.lazyGetter(this, "EXTENSION_ID", () => {
   return Services.prefs.getCharPref("devtools.remote.adb.extensionID");
 });
 loader.lazyGetter(this, "ADB_BINARY_PATH", () => {
-  let adbBinaryPath = OS.Path.join(UNPACKED_ROOT_PATH, "adb");
+  let adbBinaryPath = PathUtils.join(UNPACKED_ROOT_PATH, "adb");
   if (Services.appinfo.OS === "WINNT") {
     adbBinaryPath += ".exe";
   }
@@ -83,7 +82,7 @@ async function unpackFile(file) {
 
   // Assumes that destination dir already exists.
   const basePath = file.substring(file.lastIndexOf("/") + 1);
-  const filePath = OS.Path.join(UNPACKED_ROOT_PATH, basePath);
+  const filePath = PathUtils.join(UNPACKED_ROOT_PATH, basePath);
   await new Promise((resolve, reject) => {
     NetUtil.asyncFetch(
       {
@@ -93,7 +92,7 @@ async function unpackFile(file) {
       input => {
         try {
           // Since we have to use NetUtil to read, probably it's okay to use for
-          // writing, rather than bouncing to OS.File...?
+          // writing, rather than bouncing to IOUtils...?
           const outputFile = new FileUtils.File(filePath);
           const output = FileUtils.openAtomicFileOutputStream(outputFile);
           NetUtil.asyncCopy(input, output, resolve);
@@ -105,7 +104,7 @@ async function unpackFile(file) {
     );
   });
   // Mark binaries as executable.
-  await OS.File.setPermissions(filePath, { unixMode: 0o744 });
+  await IOUtils.setPermissions(filePath, 0o744);
 }
 
 /**
@@ -154,7 +153,7 @@ async function extractFiles() {
   // comparison
   filesForAdb.push(MANIFEST);
 
-  await OS.File.makeDir(UNPACKED_ROOT_PATH);
+  await IOUtils.makeDirectory(UNPACKED_ROOT_PATH);
 
   for (const file of filesForAdb) {
     try {
@@ -185,21 +184,21 @@ async function getManifestFromExtension() {
  * Returns whether manifest.json has already been unpacked.
  */
 async function isManifestUnpacked() {
-  const manifestPath = OS.Path.join(UNPACKED_ROOT_PATH, MANIFEST);
-  return OS.File.exists(manifestPath);
+  const manifestPath = PathUtils.join(UNPACKED_ROOT_PATH, MANIFEST);
+  return IOUtils.exists(manifestPath);
 }
 
 /**
  * Read the manifest from the unpacked binary directory.
- * Uses OS.File since this is a local file.
+ * Uses IOUtils since this is a local file.
  */
 async function getManifestFromUnpacked() {
   if (!(await isManifestUnpacked())) {
     throw new Error("Manifest doesn't exist at unpacked path");
   }
 
-  const manifestPath = OS.Path.join(UNPACKED_ROOT_PATH, MANIFEST);
-  const binary = await OS.File.read(manifestPath);
+  const manifestPath = PathUtils.join(UNPACKED_ROOT_PATH, MANIFEST);
+  const binary = await IOUtils.read(manifestPath);
   const json = new TextDecoder().decode(binary);
   let data;
   try {

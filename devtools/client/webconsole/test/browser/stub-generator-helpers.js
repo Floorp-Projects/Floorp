@@ -3,9 +3,6 @@
 
 "use strict";
 
-const ChromeUtils = require("ChromeUtils");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const {
   getAdHocFrontOrPrimitiveGrip,
 } = require("devtools/client/fronts/object");
@@ -305,7 +302,7 @@ module.exports = {
 };
 `;
 
-  await OS.File.writeAtomic(filePath, fileContent);
+  await IOUtils.write(filePath, fileContent);
 }
 
 function getStubFile(fileName) {
