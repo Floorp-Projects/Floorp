@@ -1608,5 +1608,110 @@ TEST_F(DcSctpSocketTest, TriggersOnTotalBufferAmountLowWhenCrossingThreshold) {
   ExchangeMessages(sock_a_, cb_a_, sock_z_, cb_z_);
 }
 
+TEST_F(DcSctpSocketTest, InitialMetricsAreZeroed) {
+  Metrics metrics = sock_a_.GetMetrics();
+  EXPECT_EQ(metrics.tx_packets_count, 0u);
+  EXPECT_EQ(metrics.tx_messages_count, 0u);
+  EXPECT_EQ(metrics.cwnd_bytes.has_value(), false);
+  EXPECT_EQ(metrics.srtt_ms.has_value(), false);
+  EXPECT_EQ(metrics.unack_data_count, 0u);
+  EXPECT_EQ(metrics.rx_packets_count, 0u);
+  EXPECT_EQ(metrics.rx_messages_count, 0u);
+  EXPECT_EQ(metrics.peer_rwnd_bytes.has_value(), false);
+}
+
+TEST_F(DcSctpSocketTest, RxAndTxPacketMetricsIncrease) {
+  ConnectSockets();
+
+  const size_t initial_a_rwnd = options_.max_receiver_window_buffer_size *
+                                ReassemblyQueue::kHighWatermarkLimit;
+
+  EXPECT_EQ(sock_a_.GetMetrics().tx_packets_count, 2u);
+  EXPECT_EQ(sock_a_.GetMetrics().rx_packets_count, 2u);
+  EXPECT_EQ(sock_a_.GetMetrics().tx_messages_count, 0u);
+  EXPECT_EQ(*sock_a_.GetMetrics().cwnd_bytes,
+            options_.cwnd_mtus_initial * options_.mtu);
+  EXPECT_EQ(sock_a_.GetMetrics().unack_data_count, 0u);
+
+  EXPECT_EQ(sock_z_.GetMetrics().rx_packets_count, 2u);
+  EXPECT_EQ(sock_z_.GetMetrics().rx_messages_count, 0u);
+
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53), {1, 2}), kSendOptions);
+  EXPECT_EQ(sock_a_.GetMetrics().unack_data_count, 1u);
+
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());  // DATA
+  sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());  // SACK
+  EXPECT_EQ(*sock_a_.GetMetrics().peer_rwnd_bytes, initial_a_rwnd);
+  EXPECT_EQ(sock_a_.GetMetrics().unack_data_count, 0u);
+
+  EXPECT_TRUE(cb_z_.ConsumeReceivedMessage().has_value());
+
+  EXPECT_EQ(sock_a_.GetMetrics().tx_packets_count, 3u);
+  EXPECT_EQ(sock_a_.GetMetrics().rx_packets_count, 3u);
+  EXPECT_EQ(sock_a_.GetMetrics().tx_messages_count, 1u);
+
+  EXPECT_EQ(sock_z_.GetMetrics().rx_packets_count, 3u);
+  EXPECT_EQ(sock_z_.GetMetrics().rx_messages_count, 1u);
+
+  // Send one more (large - fragmented), and receive the delayed SACK.
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53),
+                             std::vector<uint8_t>(options_.mtu * 2 + 1)),
+               kSendOptions);
+  EXPECT_EQ(sock_a_.GetMetrics().unack_data_count, 3u);
+
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());  // DATA
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());  // DATA
+
+  sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());  // SACK
+  EXPECT_EQ(sock_a_.GetMetrics().unack_data_count, 1u);
+  EXPECT_GT(*sock_a_.GetMetrics().peer_rwnd_bytes, 0u);
+  EXPECT_LT(*sock_a_.GetMetrics().peer_rwnd_bytes, initial_a_rwnd);
+
+  sock_z_.ReceivePacket(cb_a_.ConsumeSentPacket());  // DATA
+
+  EXPECT_TRUE(cb_z_.ConsumeReceivedMessage().has_value());
+
+  EXPECT_EQ(sock_a_.GetMetrics().tx_packets_count, 6u);
+  EXPECT_EQ(sock_a_.GetMetrics().rx_packets_count, 4u);
+  EXPECT_EQ(sock_a_.GetMetrics().tx_messages_count, 2u);
+
+  EXPECT_EQ(sock_z_.GetMetrics().rx_packets_count, 6u);
+  EXPECT_EQ(sock_z_.GetMetrics().rx_messages_count, 2u);
+
+  // Delayed sack
+  AdvanceTime(options_.delayed_ack_max_timeout);
+  RunTimers();
+
+  sock_a_.ReceivePacket(cb_z_.ConsumeSentPacket());  // SACK
+  EXPECT_EQ(sock_a_.GetMetrics().unack_data_count, 0u);
+  EXPECT_EQ(sock_a_.GetMetrics().rx_packets_count, 5u);
+  EXPECT_EQ(*sock_a_.GetMetrics().peer_rwnd_bytes, initial_a_rwnd);
+}
+
+TEST_F(DcSctpSocketTest, UnackDataAlsoIncludesSendQueue) {
+  ConnectSockets();
+
+  sock_a_.Send(DcSctpMessage(StreamID(1), PPID(53),
+                             std::vector<uint8_t>(kLargeMessageSize)),
+               kSendOptions);
+  size_t payload_bytes =
+      options_.mtu - SctpPacket::kHeaderSize - DataChunk::kHeaderSize;
+
+  size_t expected_sent_packets = options_.cwnd_mtus_initial;
+
+  size_t expected_queued_bytes =
+      kLargeMessageSize - expected_sent_packets * payload_bytes;
+
+  size_t expected_queued_packets = expected_queued_bytes / payload_bytes;
+
+  // Due to alignment, padding etc, it's hard to calculate the exact number, but
+  // it should be in this range.
+  EXPECT_GE(sock_a_.GetMetrics().unack_data_count,
+            expected_sent_packets + expected_queued_packets);
+
+  EXPECT_LE(sock_a_.GetMetrics().unack_data_count,
+            expected_sent_packets + expected_queued_packets + 2);
+}
+
 }  // namespace
 }  // namespace dcsctp

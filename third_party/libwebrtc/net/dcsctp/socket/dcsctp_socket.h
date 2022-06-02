@@ -96,6 +96,8 @@ class DcSctpSocket : public DcSctpSocketInterface {
   size_t buffered_amount(StreamID stream_id) const override;
   size_t buffered_amount_low_threshold(StreamID stream_id) const override;
   void SetBufferedAmountLowThreshold(StreamID stream_id, size_t bytes) override;
+  Metrics GetMetrics() const override;
+
   // Returns this socket's verification tag, or zero if not yet connected.
   VerificationTag verification_tag() const {
     return tcb_ != nullptr ? tcb_->my_verification_tag() : VerificationTag(0);
@@ -245,6 +247,7 @@ class DcSctpSocket : public DcSctpSocketInterface {
 
   const std::string log_prefix_;
   const std::unique_ptr<PacketObserver> packet_observer_;
+  Metrics metrics_;
   DcSctpOptions options_;
 
   // Enqueues callbacks and dispatches them just before returning to the caller.
