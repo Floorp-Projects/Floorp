@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.w3.org/1999/xhtml");
+
+.textrecognition {
+  position: absolute;
+  overflow: clip;
+
+  /* Prevent unwanted style inheritance. */
+  font: normal normal normal 100%/normal sans-serif;
+  text-align: left;
+  white-space: normal;
+}
+
+canvas {
+  position: absolute;
+  user-select: none;
+  inset: 0;
+}
+
+span {
+  position: absolute;
+  transform-origin: 0 0;
+  color: transparent;
+}
