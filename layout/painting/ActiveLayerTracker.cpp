@@ -105,7 +105,7 @@ class LayerActivity {
   nsExpirationState mState;
 
   // Previous scale due to the CSS transform property.
-  Maybe<Size> mPreviousTransformScale;
+  Maybe<MatrixScales> mPreviousTransformScale;
 
   // Number of restyle operations detected
   uint8_t mRestyleCounts[ACTIVITY_COUNT];
@@ -244,7 +244,7 @@ static void IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame,
     return;
   }
 
-  Size scale = transform2D.ScaleFactors().ToSize();
+  MatrixScales scale = transform2D.ScaleFactors();
   if (aActivity->mPreviousTransformScale == Some(scale)) {
     return;  // Nothing changed.
   }
