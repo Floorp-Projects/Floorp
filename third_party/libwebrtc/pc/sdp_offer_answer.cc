@@ -1126,11 +1126,9 @@ void SdpOfferAnswerHandler::CreateOffer(
           return;
         }
         // The operation completes asynchronously when the wrapper is invoked.
-        rtc::scoped_refptr<CreateSessionDescriptionObserverOperationWrapper>
-            observer_wrapper(new rtc::RefCountedObject<
-                             CreateSessionDescriptionObserverOperationWrapper>(
-                std::move(observer_refptr),
-                std::move(operations_chain_callback)));
+        auto observer_wrapper = rtc::make_ref_counted<
+            CreateSessionDescriptionObserverOperationWrapper>(
+            std::move(observer_refptr), std::move(operations_chain_callback));
         this_weak_ptr->DoCreateOffer(options, observer_wrapper);
       });
 }
@@ -1160,9 +1158,8 @@ void SdpOfferAnswerHandler::SetLocalDescription(
         // `observer_refptr` is invoked in a posted message.
         this_weak_ptr->DoSetLocalDescription(
             std::move(desc),
-            rtc::scoped_refptr<SetLocalDescriptionObserverInterface>(
-                new rtc::RefCountedObject<SetSessionDescriptionObserverAdapter>(
-                    this_weak_ptr, observer_refptr)));
+            rtc::make_ref_counted<SetSessionDescriptionObserverAdapter>(
+                this_weak_ptr, observer_refptr));
         // For backwards-compatability reasons, we declare the operation as
         // completed here (rather than in a post), so that the operation chain
         // is not blocked by this operation when the observer is invoked. This
@@ -1203,7 +1200,7 @@ void SdpOfferAnswerHandler::SetLocalDescription(
     SetSessionDescriptionObserver* observer) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   SetLocalDescription(
-      new rtc::RefCountedObject<SetSessionDescriptionObserverAdapter>(
+      rtc::make_ref_counted<SetSessionDescriptionObserverAdapter>(
           weak_ptr_factory_.GetWeakPtr(), observer));
 }
 
@@ -1212,10 +1209,9 @@ void SdpOfferAnswerHandler::SetLocalDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   // The `create_sdp_observer` handles performing DoSetLocalDescription() with
   // the resulting description as well as completing the operation.
-  rtc::scoped_refptr<ImplicitCreateSessionDescriptionObserver>
-      create_sdp_observer(
-          new rtc::RefCountedObject<ImplicitCreateSessionDescriptionObserver>(
-              weak_ptr_factory_.GetWeakPtr(), observer));
+  auto create_sdp_observer =
+      rtc::make_ref_counted<ImplicitCreateSessionDescriptionObserver>(
+          weak_ptr_factory_.GetWeakPtr(), observer);
   // Chain this operation. If asynchronous operations are pending on the chain,
   // this operation will be queued to be invoked, otherwise the contents of the
   // lambda will execute immediately.
@@ -1513,9 +1509,8 @@ void SdpOfferAnswerHandler::SetRemoteDescription(
         // `observer_refptr` is invoked in a posted message.
         this_weak_ptr->DoSetRemoteDescription(
             std::move(desc),
-            rtc::scoped_refptr<SetRemoteDescriptionObserverInterface>(
-                new rtc::RefCountedObject<SetSessionDescriptionObserverAdapter>(
-                    this_weak_ptr, observer_refptr)));
+            rtc::make_ref_counted<SetSessionDescriptionObserverAdapter>(
+                this_weak_ptr, observer_refptr));
         // For backwards-compatability reasons, we declare the operation as
         // completed here (rather than in a post), so that the operation chain
         // is not blocked by this operation when the observer is invoked. This
@@ -2062,11 +2057,9 @@ void SdpOfferAnswerHandler::CreateAnswer(
           return;
         }
         // The operation completes asynchronously when the wrapper is invoked.
-        rtc::scoped_refptr<CreateSessionDescriptionObserverOperationWrapper>
-            observer_wrapper(new rtc::RefCountedObject<
-                             CreateSessionDescriptionObserverOperationWrapper>(
-                std::move(observer_refptr),
-                std::move(operations_chain_callback)));
+        auto observer_wrapper = rtc::make_ref_counted<
+            CreateSessionDescriptionObserverOperationWrapper>(
+            std::move(observer_refptr), std::move(operations_chain_callback));
         this_weak_ptr->DoCreateAnswer(options, observer_wrapper);
       });
 }
