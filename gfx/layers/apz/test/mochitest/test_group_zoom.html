@@ -23,9 +23,6 @@ var prefs = [
   // test takes too long the displayport can expire before we read the value
   // out of the test. So we disable displayport expiry for these tests.
   ["apz.displayport_expiry_ms", 0],
-  // Prevent the dynamic toolbar from interfering with main-thread scroll
-  // offset values.
-  ["browser.chrome.dynamictoolbar", false],
   // Explicitly enable pinch-zooming, so this test can run on desktop
   // even though zooming isn't enabled by default on desktop yet.
   ["apz.allow_zooming", true],
