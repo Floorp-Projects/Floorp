@@ -450,7 +450,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   bool ReadInto(uint8_t* aDstData, int32_t aDstStride);
   already_AddRefed<DataSourceSurface> ReadSnapshot();
   already_AddRefed<TextureHandle> CopySnapshot();
-  void ClearSnapshot(bool aCopyOnWrite = true);
+  void ClearSnapshot(bool aCopyOnWrite = true, bool aNeedHandle = false);
 
   bool CreateFramebuffer();
 

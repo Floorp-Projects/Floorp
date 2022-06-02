@@ -44,7 +44,7 @@ class SourceSurfaceWebgl : public DataSourceSurface {
 
   bool EnsureData();
 
-  void DrawTargetWillChange();
+  void DrawTargetWillChange(bool aNeedHandle);
 
   void GiveTexture(RefPtr<TextureHandle> aHandle);
 

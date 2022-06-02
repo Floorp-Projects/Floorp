@@ -190,7 +190,7 @@ inline void DrawTargetWebgl::SharedContext::ClearLastTexture() {
 // this target, then it should simply be destroyed. If it is a WebGL surface in
 // use by something else, then special cleanup such as reusing the texture or
 // copy-on-write may be possible.
-void DrawTargetWebgl::ClearSnapshot(bool aCopyOnWrite) {
+void DrawTargetWebgl::ClearSnapshot(bool aCopyOnWrite, bool aNeedHandle) {
   if (!mSnapshot) {
     return;
   }
@@ -204,7 +204,7 @@ void DrawTargetWebgl::ClearSnapshot(bool aCopyOnWrite) {
   if (aCopyOnWrite) {
     // WebGL snapshots must be notified that the framebuffer contents will be
     // changing so that it can copy the data.
-    snapshot->DrawTargetWillChange();
+    snapshot->DrawTargetWillChange(aNeedHandle);
   } else {
     // If not copying, then give the backing texture to the surface for reuse.
     snapshot->GiveTexture(
@@ -769,7 +769,8 @@ void DrawTargetWebgl::DetachAllSnapshots() {
 // framebuffer.
 bool DrawTargetWebgl::MarkChanged() {
   if (mSnapshot) {
-    ClearSnapshot();
+    // Try to copy the target into a new texture if possible.
+    ClearSnapshot(true, true);
   }
   if (!mWebglValid && !FlushFromSkia()) {
     return false;
