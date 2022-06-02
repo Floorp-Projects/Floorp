@@ -30,20 +30,20 @@ LazyLogModule sOriginTrialsLog("OriginTrials");
 // prod.pub is the EcdsaP256 public key from the production key managed in
 // Google Cloud. See:
 //
-//   https://github.com/emilio/origin-trial-token/blob/main/tools/README.md#get-the-public-key
+//   https://github.com/mozilla/origin-trial-token/blob/main/tools/README.md#get-the-public-key
 //
 // for how to get the public key.
 //
 // See also:
 //
-//   https://github.com/emilio/origin-trial-token/blob/main/tools/README.md#sign-a-token-using-gcloud
+//   https://github.com/mozilla/origin-trial-token/blob/main/tools/README.md#sign-a-token-using-gcloud
 //
 // for how to sign using this key.
 //
 // test.pub is the EcdsaP256 public key from this key pair:
 //
-//  * https://github.com/emilio/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pkcs8
-//  * https://github.com/emilio/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pub
+//  * https://github.com/mozilla/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pkcs8
+//  * https://github.com/mozilla/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pub
 //
 #include "keys.inc"
 

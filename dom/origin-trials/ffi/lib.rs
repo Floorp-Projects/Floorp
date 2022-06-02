@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use origin_trial_token::{Token, TokenValidationError, Usage};
+use origin_trial_token::{RawToken, Token, TokenValidationError, Usage};
 use std::ffi::c_void;
 
 #[repr(u8)]
@@ -37,6 +37,26 @@ pub enum OriginTrialResult {
     ExpiredToken,
     UnknownTrial,
     OriginMismatch,
+}
+
+impl OriginTrialResult {
+    fn from_error(e: TokenValidationError) -> Self {
+        match e {
+            TokenValidationError::BufferTooSmall => OriginTrialResult::BufferTooSmall,
+            TokenValidationError::MismatchedPayloadSize { expected, actual } => {
+                OriginTrialResult::MismatchedPayloadSize { expected, actual }
+            }
+            TokenValidationError::InvalidSignature => OriginTrialResult::InvalidSignature,
+            TokenValidationError::UnknownVersion => OriginTrialResult::UnknownVersion,
+            TokenValidationError::UnsupportedThirdPartyToken => {
+                OriginTrialResult::UnsupportedThirdPartyToken
+            }
+            TokenValidationError::UnexpectedUsageInNonThirdPartyToken => {
+                OriginTrialResult::UnexpectedUsageInNonThirdPartyToken
+            }
+            TokenValidationError::MalformedPayload(..) => OriginTrialResult::MalformedPayload,
+        }
+    }
 }
 
 /// A struct that allows you to configure how validation on works, and pass
@@ -76,35 +96,15 @@ pub unsafe extern "C" fn origin_trials_parse_and_validate_token(
     params: &OriginTrialValidationParams,
 ) -> OriginTrialResult {
     let slice = std::slice::from_raw_parts(bytes, len);
-    let token = Token::from_buffer(slice, |signature, data| {
-        (params.verify_signature)(
-            signature.as_ptr(),
-            signature.len(),
-            data.as_ptr(),
-            data.len(),
-            params.user_data,
-        )
-    });
-
-    let token = match token {
+    let raw_token = match RawToken::from_buffer(slice) {
         Ok(token) => token,
-        Err(e) => {
-            return match e {
-                TokenValidationError::BufferTooSmall => OriginTrialResult::BufferTooSmall,
-                TokenValidationError::MismatchedPayloadSize { expected, actual } => {
-                    OriginTrialResult::MismatchedPayloadSize { expected, actual }
-                }
-                TokenValidationError::InvalidSignature => OriginTrialResult::InvalidSignature,
-                TokenValidationError::UnknownVersion => OriginTrialResult::UnknownVersion,
-                TokenValidationError::UnsupportedThirdPartyToken => {
-                    OriginTrialResult::UnsupportedThirdPartyToken
-                }
-                TokenValidationError::UnexpectedUsageInNonThirdPartyToken => {
-                    OriginTrialResult::UnexpectedUsageInNonThirdPartyToken
-                }
-                TokenValidationError::MalformedPayload(..) => OriginTrialResult::MalformedPayload,
-            }
-        }
+        Err(e) => return OriginTrialResult::from_error(e),
+    };
+
+    // Verifying the token is usually more expensive than the early-outs here.
+    let token = match Token::from_raw_token_unverified(raw_token) {
+        Ok(token) => token,
+        Err(e) => return OriginTrialResult::from_error(e),
     };
 
     if token.is_expired() {
@@ -130,6 +130,20 @@ pub unsafe extern "C" fn origin_trials_parse_and_validate_token(
         params.user_data,
     ) {
         return OriginTrialResult::OriginMismatch;
+    }
+
+    let valid_signature = raw_token.verify(|signature, data| {
+        (params.verify_signature)(
+            signature.as_ptr(),
+            signature.len(),
+            data.as_ptr(),
+            data.len(),
+            params.user_data,
+        )
+    });
+
+    if !valid_signature {
+        return OriginTrialResult::InvalidSignature;
     }
 
     OriginTrialResult::Ok { trial }
