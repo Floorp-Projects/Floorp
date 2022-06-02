@@ -25,13 +25,12 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.annotation.UiThreadTest;
-import android.support.test.rule.UiThreadTestRule;
 import androidx.annotation.Nullable;
 import androidx.test.filters.MediumTest;
 import androidx.test.filters.SmallTest;
 import java.util.List;
 import org.chromium.base.test.BaseJUnit4ClassRunner;
+import org.chromium.base.test.UiThreadTest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,8 +50,6 @@ import org.webrtc.NetworkMonitorAutoDetect.NetworkState;
 @SuppressLint("NewApi")
 @RunWith(BaseJUnit4ClassRunner.class)
 public class NetworkMonitorTest {
-  @Rule public UiThreadTestRule uiThreadTestRule = new UiThreadTestRule();
-
   private static final long INVALID_NET_ID = -1;
   private NetworkChangeDetector detector;
 
@@ -164,22 +161,9 @@ public class NetworkMonitorTest {
     }
   }
 
-  private static final Object lock = new Object();
-  private static @Nullable Handler uiThreadHandler;
-
   private NetworkMonitorAutoDetect receiver;
   private MockConnectivityManagerDelegate connectivityDelegate;
   private MockWifiManagerDelegate wifiDelegate;
-
-  private static Handler getUiThreadHandler() {
-    synchronized (lock) {
-      Handler handler = uiThreadHandler;
-      if (handler != null) {
-        return handler;
-      }
-      return uiThreadHandler = new Handler(Looper.getMainLooper());
-    }
-  }
 
   /**
    * Helper method to create a network monitor and delegates for testing.
