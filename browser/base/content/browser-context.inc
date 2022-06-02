@@ -351,7 +351,7 @@
           <menuitem id="context-take-frame-screenshot"
                     data-l10n-id="main-context-menu-take-frame-screenshot"
                     oncommand="gContextMenu.takeScreenshot();"/>
-          <menuseparator/>
+          <menuseparator id="context-sep-frame-screenshot"/>
           <menuitem id="context-viewframesource"
                     data-l10n-id="main-context-menu-frame-view-source"
                     oncommand="gContextMenu.viewFrameSource();"/>
