@@ -332,19 +332,19 @@ bool VoiceProcessingAudioUnit::Initialize(Float64 sample_rate) {
   return true;
 }
 
-bool VoiceProcessingAudioUnit::Start() {
+OSStatus VoiceProcessingAudioUnit::Start() {
   RTC_DCHECK_GE(state_, kUninitialized);
   RTCLog(@"Starting audio unit.");
 
   OSStatus result = AudioOutputUnitStart(vpio_unit_);
   if (result != noErr) {
     RTCLogError(@"Failed to start audio unit. Error=%ld", (long)result);
-    return false;
+    return result;
   } else {
     RTCLog(@"Started audio unit");
   }
   state_ = kStarted;
-  return true;
+  return noErr;
 }
 
 bool VoiceProcessingAudioUnit::Stop() {
