@@ -93,9 +93,7 @@ function test_getUnanimatedComputedStyle() {
 }
 
 function test_setDynamicToolbarMaxHeight() {
-  SpecialPowers.pushPrefEnv({
-    set: [["dom.visualviewport.enabled", true]]
-  }).then(() => window.open("file_domwindowutils_dynamic_toolbar.html"));
+  window.open("file_domwindowutils_dynamic_toolbar.html");
 }
 
 var tests = [
