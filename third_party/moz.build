@@ -13,6 +13,9 @@ with Files('cups/**'):
 with Files('dav1d/**'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 
+with Files('function2/**'):
+    BUG_COMPONENT = ('Core', 'MFBT')
+
 with Files('googletest/**'):
     BUG_COMPONENT = ('Testing', 'GTest')
 

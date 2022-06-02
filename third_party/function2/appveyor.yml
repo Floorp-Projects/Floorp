@@ -1,0 +1,44 @@
+image:
+  - Visual Studio 2017
+  - Visual Studio 2019
+
+environment:
+  matrix:
+    - FU2_WITH_NO_EXCEPTIONS: OFF
+      FU2_WITH_CPP_LATEST: OFF
+    - FU2_WITH_NO_EXCEPTIONS: ON
+      FU2_WITH_CPP_LATEST: OFF
+    - FU2_WITH_NO_EXCEPTIONS: OFF
+      FU2_WITH_CPP_LATEST: ON
+    - FU2_WITH_NO_EXCEPTIONS: ON
+      FU2_WITH_CPP_LATEST: ON
+
+platform:
+  - x64
+
+clone_script:
+  - cmd: git clone -q --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: git checkout -qf %APPVEYOR_REPO_COMMIT%
+  - cmd: git submodule update --init --recursive
+
+before_build:
+  - cmd: >
+         cmake -H. -Bbuild -A%PLATFORM%
+         -DFU2_WITH_NO_EXCEPTIONS=%FU2_WITH_NO_EXCEPTIONS%
+         -DFU2_WITH_CPP_LATEST=%FU2_WITH_CPP_LATEST%
+
+build_script:
+  - cmd: >
+         cmake --build build --config Debug --target ALL_BUILD
+         -- /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+         /verbosity:minimal /maxcpucount:2 /nologo
+  - cmd: >
+         cmake --build build --config Release --target ALL_BUILD
+         -- /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+         /verbosity:minimal /maxcpucount:2 /nologo
+
+test_script:
+  - cmd: cd build
+  - cmd: ctest -C Debug -V .
+  - cmd: ctest -C Release -V .
