@@ -280,7 +280,8 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
     // Storage of packets, for retransmissions and padding, if applicable.
     RtpPacketHistory packet_history;
     // Handles sequence number assignment and padding timestamp generation.
-    PacketSequencer sequencer_;
+    mutable Mutex sequencer_mutex;
+    PacketSequencer sequencer_ RTC_GUARDED_BY(sequencer_mutex);
     // Handles final time timestamping/stats/etc and handover to Transport.
     DEPRECATED_RtpSenderEgress packet_sender;
     // If no paced sender configured, this class will be used to pass packets

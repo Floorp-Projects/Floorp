@@ -49,12 +49,12 @@ ModuleRtpRtcpImpl::RtpSenderContext::RtpSenderContext(
                  /*require_marker_before_media_padding=*/!config.audio,
                  config.clock),
       packet_sender(config, &packet_history),
-      non_paced_sender(&packet_sender),
+      non_paced_sender(&packet_sender, &sequencer_),
       packet_generator(
           config,
           &packet_history,
           config.paced_sender ? config.paced_sender : &non_paced_sender,
-          &sequencer_) {}
+          /*packet_sequencer=*/nullptr) {}
 
 std::unique_ptr<RtpRtcp> RtpRtcp::DEPRECATED_Create(
     const Configuration& configuration) {
@@ -255,30 +255,41 @@ void ModuleRtpRtcpImpl::SetStartTimestamp(const uint32_t timestamp) {
 }
 
 uint16_t ModuleRtpRtcpImpl::SequenceNumber() const {
-  return rtp_sender_->packet_generator.SequenceNumber();
+  MutexLock lock(&rtp_sender_->sequencer_mutex);
+  return rtp_sender_->sequencer_.media_sequence_number();
 }
 
 // Set SequenceNumber, default is a random number.
 void ModuleRtpRtcpImpl::SetSequenceNumber(const uint16_t seq_num) {
-  rtp_sender_->packet_generator.SetSequenceNumber(seq_num);
+  MutexLock lock(&rtp_sender_->sequencer_mutex);
+  rtp_sender_->sequencer_.set_media_sequence_number(seq_num);
 }
 
 void ModuleRtpRtcpImpl::SetRtpState(const RtpState& rtp_state) {
+  MutexLock lock(&rtp_sender_->sequencer_mutex);
   rtp_sender_->packet_generator.SetRtpState(rtp_state);
+  rtp_sender_->sequencer_.SetRtpState(rtp_state);
   rtcp_sender_.SetTimestampOffset(rtp_state.start_timestamp);
 }
 
 void ModuleRtpRtcpImpl::SetRtxState(const RtpState& rtp_state) {
+  MutexLock lock(&rtp_sender_->sequencer_mutex);
   rtp_sender_->packet_generator.SetRtxRtpState(rtp_state);
+  rtp_sender_->sequencer_.set_rtx_sequence_number(rtp_state.sequence_number);
 }
 
 RtpState ModuleRtpRtcpImpl::GetRtpState() const {
+  MutexLock lock(&rtp_sender_->sequencer_mutex);
   RtpState state = rtp_sender_->packet_generator.GetRtpState();
+  rtp_sender_->sequencer_.PopulateRtpState(state);
   return state;
 }
 
 RtpState ModuleRtpRtcpImpl::GetRtxState() const {
-  return rtp_sender_->packet_generator.GetRtxRtpState();
+  MutexLock lock(&rtp_sender_->sequencer_mutex);
+  RtpState state = rtp_sender_->packet_generator.GetRtxRtpState();
+  state.sequence_number = rtp_sender_->sequencer_.rtx_sequence_number();
+  return state;
 }
 
 void ModuleRtpRtcpImpl::SetRid(const std::string& rid) {
@@ -410,6 +421,21 @@ bool ModuleRtpRtcpImpl::TrySendPacket(RtpPacketToSend* packet,
   if (!rtp_sender_->packet_generator.SendingMedia()) {
     return false;
   }
+  {
+    MutexLock lock(&rtp_sender_->sequencer_mutex);
+    if (packet->packet_type() == RtpPacketMediaType::kPadding &&
+        packet->Ssrc() == rtp_sender_->packet_generator.SSRC() &&
+        !rtp_sender_->sequencer_.CanSendPaddingOnMediaSsrc()) {
+      // New media packet preempted this generated padding packet, discard it.
+      return false;
+    }
+    bool is_flexfec =
+        packet->packet_type() == RtpPacketMediaType::kForwardErrorCorrection &&
+        packet->Ssrc() == rtp_sender_->packet_generator.FlexfecSsrc();
+    if (!is_flexfec) {
+      rtp_sender_->sequencer_.Sequence(*packet);
+    }
+  }
   rtp_sender_->packet_sender.SendPacket(packet, pacing_info);
   return true;
 }
@@ -444,12 +470,10 @@ bool ModuleRtpRtcpImpl::SupportsRtxPayloadPadding() const {
 std::vector<std::unique_ptr<RtpPacketToSend>>
 ModuleRtpRtcpImpl::GeneratePadding(size_t target_size_bytes) {
   RTC_DCHECK(rtp_sender_);
-  // `can_send_padding_on_media_ssrc` set to false but is ignored at this
-  // point, RTPSender will internally query `sequencer_` while holding the
-  // send lock.
+  MutexLock lock(&rtp_sender_->sequencer_mutex);
   return rtp_sender_->packet_generator.GeneratePadding(
       target_size_bytes, rtp_sender_->packet_sender.MediaHasBeenSent(),
-      /*can_send_padding_on_media_ssrc=*/false);
+      rtp_sender_->sequencer_.CanSendPaddingOnMediaSsrc());
 }
 
 std::vector<RtpSequenceNumberMap::Info>
