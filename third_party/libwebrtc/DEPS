@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'fcc47647934603cb4cd9821f236abc9fb4191403',
+  'chromium_revision': 'cce6e710fdd39b2609a6614a7db35a4b265bcde4',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,24 +20,24 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@d5da9fc322dbd18c229dc8cf4d4c1937b0c0a64d',
+    'https://chromium.googlesource.com/chromium/src/base@d6b10338ba4190c3438af8e6097dc50540c1215d',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@4d07fd6ad54418724e632519dd08851a4077d5b6',
+    'https://chromium.googlesource.com/chromium/src/build@3fdcec6e56607102c420fa0d0fe36696870475db',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@37dc929ecb351687006a61744b116cda601753d7',
+    'https://chromium.googlesource.com/chromium/src/buildtools@f063da141cdc8ede023a866b0fdebf996cfdc06a',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@4ca2b0232a942b5735f6eb5c7e5e3ca1932854e0',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@508797fd5451e5010571dfe2c2030ba773888010',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@7a163851ecd66053d582d18a4d0ad7737d75ac92',
+    'https://chromium.googlesource.com/chromium/src/testing@c5ff879f92771384a6ab49d4076b18dd89998672',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@755005b7cb646776bb6ff4b69f224fb7069c8e14',
+    'https://chromium.googlesource.com/chromium/src/third_party@b9f1426982ddb8aee90e827a0a8949a4ac8171f3',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -230,7 +230,7 @@ deps = {
 
   # Used by boringssl.
   'src/third_party/nasm': {
-      'url': 'https://chromium.googlesource.com/chromium/deps/nasm.git@e9be5fd6d723a435ca2da162f9e0ffcb688747c1'
+      'url': 'https://chromium.googlesource.com/chromium/deps/nasm.git@4e6fe9d1549e4ffb6c804494573e404849dfe7de'
   },
 
   'src/third_party/openh264/src':
@@ -271,7 +271,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@58a626d71543a0b187d7889d3268984f2462dcd6',
+    'https://chromium.googlesource.com/chromium/src/tools@69b0efcff6300b788522950e9eb5411d50c7ed25',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
@@ -372,7 +372,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'JO4WtrFSgv4hKbrR0kNn-c6rw1p6XQZuWfufbsEhuD4C',
+          'version': 'o74JoE-kByyfp7IZNkn3v09A4ryAISjuilobCBzv6PAC',
       },
     ],
     'condition': 'checkout_android',
