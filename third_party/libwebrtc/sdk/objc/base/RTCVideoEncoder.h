@@ -50,6 +50,10 @@ RTC_OBJC_EXPORT
     scaled, all resolutions comply with 'resolutionAlignment'. */
 @property(nonatomic, readonly) BOOL applyAlignmentToAllSimulcastLayers;
 
+/** If YES, the reciever is expected to resample/scale the source texture to the expected output
+    size. */
+@property(nonatomic, readonly) BOOL supportsNativeHandle;
+
 @end
 
 NS_ASSUME_NONNULL_END
