@@ -26,6 +26,7 @@
 #include "p2p/base/packet_transport_internal.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/socket.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/trace_event.h"
@@ -34,6 +35,7 @@
 namespace webrtc {
 
 namespace {
+using ::dcsctp::SendPacketStatus;
 
 enum class WebrtcPPID : dcsctp::PPID::UnderlyingType {
   // https://www.rfc-editor.org/rfc/rfc8832.html#section-8.1
@@ -308,7 +310,8 @@ void DcSctpTransport::set_debug_name_for_testing(const char* debug_name) {
   debug_name_ = debug_name;
 }
 
-void DcSctpTransport::SendPacket(rtc::ArrayView<const uint8_t> data) {
+SendPacketStatus DcSctpTransport::SendPacketWithStatus(
+    rtc::ArrayView<const uint8_t> data) {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK(socket_);
 
@@ -318,12 +321,12 @@ void DcSctpTransport::SendPacket(rtc::ArrayView<const uint8_t> data) {
                          "SCTP seems to have made a packet that is bigger "
                          "than its official MTU: "
                       << data.size() << " vs max of " << socket_->options().mtu;
-    return;
+    return SendPacketStatus::kError;
   }
   TRACE_EVENT0("webrtc", "DcSctpTransport::SendPacket");
 
   if (!transport_ || !transport_->writable())
-    return;
+    return SendPacketStatus::kError;
 
   RTC_LOG(LS_VERBOSE) << debug_name_ << "->SendPacket(length=" << data.size()
                       << ")";
@@ -336,7 +339,13 @@ void DcSctpTransport::SendPacket(rtc::ArrayView<const uint8_t> data) {
     RTC_LOG(LS_WARNING) << debug_name_ << "->SendPacket(length=" << data.size()
                         << ") failed with error: " << transport_->GetError()
                         << ".";
+
+    if (rtc::IsBlockingError(transport_->GetError())) {
+      return SendPacketStatus::kTemporaryFailure;
+    }
+    return SendPacketStatus::kError;
   }
+  return SendPacketStatus::kSuccess;
 }
 
 std::unique_ptr<dcsctp::Timeout> DcSctpTransport::CreateTimeout() {

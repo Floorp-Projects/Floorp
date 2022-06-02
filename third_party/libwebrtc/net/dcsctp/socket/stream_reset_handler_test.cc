@@ -183,7 +183,7 @@ class StreamResetHandlerTest : public testing::Test {
 };
 
 TEST_F(StreamResetHandlerTest, ChunkWithNoParametersReturnsError) {
-  EXPECT_CALL(callbacks_, SendPacket).Times(0);
+  EXPECT_CALL(callbacks_, SendPacketWithStatus).Times(0);
   EXPECT_CALL(callbacks_, OnError).Times(1);
   handler_.HandleReConfig(ReConfigChunk(Parameters()));
 }
@@ -198,7 +198,7 @@ TEST_F(StreamResetHandlerTest, ChunkWithInvalidParametersReturnsError) {
                                                ReconfigRequestSN(10),
                                                kPeerInitialTsn, {StreamID(2)}));
 
-  EXPECT_CALL(callbacks_, SendPacket).Times(0);
+  EXPECT_CALL(callbacks_, SendPacketWithStatus).Times(0);
   EXPECT_CALL(callbacks_, OnError).Times(1);
   handler_.HandleReConfig(ReConfigChunk(builder.Build()));
 }
@@ -375,7 +375,7 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResettingOnPositiveResponse) {
 
   // Processing a response shouldn't result in sending anything.
   EXPECT_CALL(callbacks_, OnError).Times(0);
-  EXPECT_CALL(callbacks_, SendPacket).Times(0);
+  EXPECT_CALL(callbacks_, SendPacketWithStatus).Times(0);
   handler_.HandleReConfig(std::move(response_reconfig));
 }
 
@@ -401,7 +401,7 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResetRollbackOnError) {
 
   // Only requests should result in sending responses.
   EXPECT_CALL(callbacks_, OnError).Times(0);
-  EXPECT_CALL(callbacks_, SendPacket).Times(0);
+  EXPECT_CALL(callbacks_, SendPacketWithStatus).Times(0);
   handler_.HandleReConfig(std::move(response_reconfig));
 }
 
@@ -430,12 +430,12 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResetRetransmitOnInProgress) {
 
   // Processing a response shouldn't result in sending anything.
   EXPECT_CALL(callbacks_, OnError).Times(0);
-  EXPECT_CALL(callbacks_, SendPacket).Times(0);
+  EXPECT_CALL(callbacks_, SendPacketWithStatus).Times(0);
   handler_.HandleReConfig(std::move(response_reconfig));
 
   // Let some time pass, so that the reconfig timer expires, and retries the
   // same request.
-  EXPECT_CALL(callbacks_, SendPacket).Times(1);
+  EXPECT_CALL(callbacks_, SendPacketWithStatus).Times(1);
   AdvanceTime(kRto);
 
   std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
@@ -486,7 +486,7 @@ TEST_F(StreamResetHandlerTest, ResetWhileRequestIsSentWillQueue) {
 
   // Processing a response shouldn't result in sending anything.
   EXPECT_CALL(callbacks_, OnError).Times(0);
-  EXPECT_CALL(callbacks_, SendPacket).Times(0);
+  EXPECT_CALL(callbacks_, SendPacketWithStatus).Times(0);
   handler_.HandleReConfig(std::move(response_reconfig));
 
   // Response has been processed. A new request can be sent.

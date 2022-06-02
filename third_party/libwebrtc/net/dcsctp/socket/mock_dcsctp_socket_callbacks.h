@@ -56,10 +56,11 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
       : log_prefix_(name.empty() ? "" : std::string(name) + ": "),
         random_(internal::GetUniqueSeed()),
         timeout_manager_([this]() { return now_; }) {
-    ON_CALL(*this, SendPacket)
+    ON_CALL(*this, SendPacketWithStatus)
         .WillByDefault([this](rtc::ArrayView<const uint8_t> data) {
           sent_packets_.emplace_back(
               std::vector<uint8_t>(data.begin(), data.end()));
+          return SendPacketStatus::kSuccess;
         });
     ON_CALL(*this, OnMessageReceived)
         .WillByDefault([this](DcSctpMessage message) {
@@ -80,8 +81,9 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
         });
     ON_CALL(*this, TimeMillis).WillByDefault([this]() { return now_; });
   }
-  MOCK_METHOD(void,
-              SendPacket,
+
+  MOCK_METHOD(SendPacketStatus,
+              SendPacketWithStatus,
               (rtc::ArrayView<const uint8_t> data),
               (override));
 

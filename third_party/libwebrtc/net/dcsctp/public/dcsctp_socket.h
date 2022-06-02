@@ -155,6 +155,19 @@ inline constexpr absl::string_view ToString(ResetStreamsStatus error) {
   }
 }
 
+// Return value of DcSctpSocketCallbacks::SendPacketWithStatus.
+enum class SendPacketStatus {
+  // Indicates that the packet was successfully sent. As sending is unreliable,
+  // there are no guarantees that the packet was actually delivered.
+  kSuccess,
+  // The packet was not sent due to a temporary failure, such as the local send
+  // buffer becoming exhausted. This return value indicates that the socket will
+  // recover and sending that packet can be retried at a later time.
+  kTemporaryFailure,
+  // The packet was not sent due to other reasons.
+  kError,
+};
+
 // Tracked metrics, which is the return value of GetMetrics. Optional members
 // will be unset when they are not yet known.
 struct Metrics {
@@ -205,9 +218,22 @@ class DcSctpSocketCallbacks {
 
   // Called when the library wants the packet serialized as `data` to be sent.
   //
+  // TODO(bugs.webrtc.org/12943): This method is deprecated, see
+  // `SendPacketWithStatus`.
+  //
   // Note that it's NOT ALLOWED to call into this library from within this
   // callback.
-  virtual void SendPacket(rtc::ArrayView<const uint8_t> data) = 0;
+  virtual void SendPacket(rtc::ArrayView<const uint8_t> data) {}
+
+  // Called when the library wants the packet serialized as `data` to be sent.
+  //
+  // Note that it's NOT ALLOWED to call into this library from within this
+  // callback.
+  virtual SendPacketStatus SendPacketWithStatus(
+      rtc::ArrayView<const uint8_t> data) {
+    SendPacket(data);
+    return SendPacketStatus::kSuccess;
+  }
 
   // Called when the library wants to create a Timeout. The callback must return
   // an object that implements that interface.
