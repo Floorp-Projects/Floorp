@@ -2111,13 +2111,21 @@ void BrowserParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
   } else {
     aEvent.PreventNativeKeyBindings();
   }
-  DebugOnly<bool> ret =
+  SentKeyEventData sendKeyEventData{
+      aEvent.mKeyCode,      aEvent.mCharCode,      aEvent.mPseudoCharCode,
+      aEvent.mKeyNameIndex, aEvent.mCodeNameIndex, aEvent.mModifiers,
+      nsID::GenerateUUID()};
+  const bool ok =
       Manager()->IsInputPriorityEventEnabled()
-          ? PBrowserParent::SendRealKeyEvent(aEvent)
-          : PBrowserParent::SendNormalPriorityRealKeyEvent(aEvent);
+          ? PBrowserParent::SendRealKeyEvent(aEvent, sendKeyEventData.mUUID)
+          : PBrowserParent::SendNormalPriorityRealKeyEvent(
+                aEvent, sendKeyEventData.mUUID);
 
-  NS_WARNING_ASSERTION(ret, "PBrowserParent::SendRealKeyEvent() failed");
-  MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
+  NS_WARNING_ASSERTION(ok, "PBrowserParent::SendRealKeyEvent() failed");
+  MOZ_ASSERT(!ok || aEvent.HasBeenPostedToRemoteProcess());
+  if (ok && aEvent.IsWaitingReplyFromRemoteProcess()) {
+    mWaitingReplyKeyboardEvents.AppendElement(sendKeyEventData);
+  }
 }
 
 void BrowserParent::SendRealTouchEvent(WidgetTouchEvent& aEvent) {
@@ -2732,8 +2740,45 @@ void BrowserParent::StopIMEStateManagement() {
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvReplyKeyEvent(
-    const WidgetKeyboardEvent& aEvent) {
+    const WidgetKeyboardEvent& aEvent, const nsID& aUUID) {
   NS_ENSURE_TRUE(mFrameElement, IPC_OK());
+
+  // First, verify aEvent is what we've sent to a remote process.
+  Maybe<size_t> index = [&]() -> Maybe<size_t> {
+    for (const size_t i : IntegerRange(mWaitingReplyKeyboardEvents.Length())) {
+      const SentKeyEventData& data = mWaitingReplyKeyboardEvents[i];
+      if (data.mUUID.Equals(aUUID)) {
+        if (NS_WARN_IF(data.mKeyCode != aEvent.mKeyCode) ||
+            NS_WARN_IF(data.mCharCode != aEvent.mCharCode) ||
+            NS_WARN_IF(data.mPseudoCharCode != aEvent.mPseudoCharCode) ||
+            NS_WARN_IF(data.mKeyNameIndex != aEvent.mKeyNameIndex) ||
+            NS_WARN_IF(data.mCodeNameIndex != aEvent.mCodeNameIndex) ||
+            NS_WARN_IF(data.mModifiers != aEvent.mModifiers)) {
+          // Got different event data from what we stored before dispatching an
+          // event with the ID.
+          return Nothing();
+        }
+        return Some(i);
+      }
+    }
+    // No entry found.
+    return Nothing();
+  }();
+  if (MOZ_UNLIKELY(index.isNothing())) {
+    return IPC_FAIL(this, "Bogus reply keyboard event");
+  }
+  // Don't discard the older keyboard events because the order may be changed if
+  // the remote process has a event listener which takes too long time and while
+  // the freezing, user may switch the tab, or if the remote process sends
+  // synchronous XMLHttpRequest.
+  mWaitingReplyKeyboardEvents.RemoveElementAt(*index);
+
+  // If the event propagation was stopped by the child, it means that the event
+  // was ignored in the child.  In the case, we should ignore it too because the
+  // focused web app didn't have a chance to prevent its default.
+  if (aEvent.PropagationStopped()) {
+    return IPC_OK();
+  }
 
   WidgetKeyboardEvent localEvent(aEvent);
   localEvent.MarkAsHandledInRemoteProcess();
