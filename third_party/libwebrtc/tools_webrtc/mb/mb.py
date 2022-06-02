@@ -364,12 +364,7 @@ class MetaBuildWrapper(object):
       if out:
         self.Print(out, end='')
       if err:
-        # The swarming client will return an exit code of 2 (via
-        # argparse.ArgumentParser.error()) and print a message to indicate
-        # that auth failed, so we have to parse the message to check.
-        if (ret == 2 and 'Please login to' in err):
-          err = err.replace(' auth.py', ' tools/swarming_client/auth.py')
-          self.Print(err, end='', file=sys.stderr)
+        self.Print(err, end='', file=sys.stderr)
 
       return ret
 
