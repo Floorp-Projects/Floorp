@@ -131,10 +131,10 @@ void TransmissionControlBlock::SendBufferedPackets(SctpPacket::Builder& builder,
         builder.Add(DataChunk(tsn, std::move(data), false));
       }
     }
-    if (builder.empty()) {
+
+    if (!packet_sender_.Send(builder)) {
       break;
     }
-    Send(builder);
 
     if (cookie_echo_chunk_.has_value()) {
       // https://tools.ietf.org/html/rfc4960#section-5.1

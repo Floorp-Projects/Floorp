@@ -46,6 +46,7 @@
 #include "net/dcsctp/rx/data_tracker.h"
 #include "net/dcsctp/rx/reassembly_queue.h"
 #include "net/dcsctp/socket/callback_deferrer.h"
+#include "net/dcsctp/socket/packet_sender.h"
 #include "net/dcsctp/socket/state_cookie.h"
 #include "net/dcsctp/socket/transmission_control_block.h"
 #include "net/dcsctp/timer/timer.h"
@@ -141,8 +142,8 @@ class DcSctpSocket : public DcSctpSocketInterface {
   absl::optional<DurationMs> OnInitTimerExpiry();
   absl::optional<DurationMs> OnCookieTimerExpiry();
   absl::optional<DurationMs> OnShutdownTimerExpiry();
-  // Builds the packet from `builder` and sends it (through callbacks).
-  void SendPacket(SctpPacket::Builder& builder);
+  void OnSentPacket(rtc::ArrayView<const uint8_t> packet,
+                    SendPacketStatus status);
   // Sends SHUTDOWN or SHUTDOWN-ACK if the socket is shutting down and if all
   // outstanding data has been acknowledged.
   void MaybeSendShutdownOrAck();
@@ -257,6 +258,9 @@ class DcSctpSocket : public DcSctpSocketInterface {
   const std::unique_ptr<Timer> t1_init_;
   const std::unique_ptr<Timer> t1_cookie_;
   const std::unique_ptr<Timer> t2_shutdown_;
+
+  // Packets that failed to be sent, but should be retried.
+  PacketSender packet_sender_;
 
   // The actual SendQueue implementation. As data can be sent on a socket before
   // the connection is established, this component is not in the TCB.
