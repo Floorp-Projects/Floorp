@@ -45,6 +45,7 @@ using ::testing::ElementsAreArray;
 using ::testing::Invoke;
 using ::testing::IsEmpty;
 using ::testing::SizeIs;
+using ::testing::WithoutArgs;
 
 constexpr int kDefaultTimeOutMs = 50;
 
@@ -120,13 +121,11 @@ TEST_F(VideoReceiveStreamTest, CreateFrameFromH264FmtpSpropAndIdr) {
   rtppacket.SetPayloadType(99);
   rtppacket.SetSequenceNumber(1);
   rtppacket.SetTimestamp(0);
-  rtc::Event init_decode_event_;
-  EXPECT_CALL(mock_h264_video_decoder_, InitDecode(_, _))
-      .WillOnce(Invoke([&init_decode_event_](const VideoCodec* config,
-                                             int32_t number_of_cores) {
-        init_decode_event_.Set();
-        return 0;
-      }));
+  rtc::Event init_decode_event;
+  EXPECT_CALL(mock_h264_video_decoder_, Configure).WillOnce(WithoutArgs([&] {
+    init_decode_event.Set();
+    return true;
+  }));
   EXPECT_CALL(mock_h264_video_decoder_, RegisterDecodeCompleteCallback(_));
   video_receive_stream_->Start();
   EXPECT_CALL(mock_h264_video_decoder_, Decode(_, false, _));
@@ -135,7 +134,7 @@ TEST_F(VideoReceiveStreamTest, CreateFrameFromH264FmtpSpropAndIdr) {
   rtp_stream_receiver_controller_.OnRtpPacket(parsed_packet);
   EXPECT_CALL(mock_h264_video_decoder_, Release());
   // Make sure the decoder thread had a chance to run.
-  init_decode_event_.Wait(kDefaultTimeOutMs);
+  init_decode_event.Wait(kDefaultTimeOutMs);
 }
 
 TEST_F(VideoReceiveStreamTest, PlayoutDelay) {

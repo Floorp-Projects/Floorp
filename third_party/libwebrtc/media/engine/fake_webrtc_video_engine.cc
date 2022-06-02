@@ -51,8 +51,8 @@ FakeWebRtcVideoDecoder::~FakeWebRtcVideoDecoder() {
   }
 }
 
-int32_t FakeWebRtcVideoDecoder::InitDecode(const webrtc::VideoCodec*, int32_t) {
-  return WEBRTC_VIDEO_CODEC_OK;
+bool FakeWebRtcVideoDecoder::Configure(const Settings& settings) {
+  return true;
 }
 
 int32_t FakeWebRtcVideoDecoder::Decode(const webrtc::EncodedImage&,

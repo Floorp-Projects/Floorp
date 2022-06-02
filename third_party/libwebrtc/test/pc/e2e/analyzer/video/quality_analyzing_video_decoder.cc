@@ -40,16 +40,13 @@ QualityAnalyzingVideoDecoder::QualityAnalyzingVideoDecoder(
 }
 QualityAnalyzingVideoDecoder::~QualityAnalyzingVideoDecoder() = default;
 
-int32_t QualityAnalyzingVideoDecoder::InitDecode(
-    const VideoCodec* codec_settings,
-    int32_t number_of_cores) {
+bool QualityAnalyzingVideoDecoder::Configure(const Settings& settings) {
   {
     MutexLock lock(&mutex_);
-    codec_name_ =
-        std::string(CodecTypeToPayloadString(codec_settings->codecType)) + "_" +
-        delegate_->GetDecoderInfo().implementation_name;
+    codec_name_ = std::string(CodecTypeToPayloadString(settings.codec_type())) +
+                  "_" + delegate_->GetDecoderInfo().implementation_name;
   }
-  return delegate_->InitDecode(codec_settings, number_of_cores);
+  return delegate_->Configure(settings);
 }
 
 int32_t QualityAnalyzingVideoDecoder::Decode(const EncodedImage& input_image,
