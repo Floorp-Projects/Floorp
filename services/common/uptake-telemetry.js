@@ -9,23 +9,24 @@ var EXPORTED_SYMBOLS = ["UptakeTelemetry", "Policy"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ClientID",
   "resource://gre/modules/ClientID.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Services",
   "resource://gre/modules/Services.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
+XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return Components.Constructor(
     "@mozilla.org/security/hash;1",
     "nsICryptoHash",
@@ -34,7 +35,7 @@ XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gSampleRate",
   "services.common.uptake.sampleRate"
 );
@@ -52,7 +53,7 @@ var Policy = {
   _clientIDHash: null,
 
   getClientID() {
-    return ClientID.getClientID();
+    return lazy.ClientID.getClientID();
   },
 
   /**
@@ -72,7 +73,7 @@ var Policy = {
   async _doComputeClientIDHash() {
     const clientID = await this.getClientID();
     let byteArr = new TextEncoder().encode(clientID);
-    let hash = new CryptoHash("sha256");
+    let hash = new lazy.CryptoHash("sha256");
     hash.update(byteArr, byteArr.length);
     const bytes = hash.finish(false);
     let rem = 0;
@@ -83,7 +84,7 @@ var Policy = {
   },
 
   getChannel() {
-    return AppConstants.MOZ_UPDATE_CHANNEL;
+    return lazy.AppConstants.MOZ_UPDATE_CHANNEL;
   },
 };
 
@@ -185,21 +186,24 @@ class UptakeTelemetry {
     // Contrary to histograms, Telemetry Events are not enabled by default.
     // Enable them on first call to `report()`.
     if (!this._eventsEnabled) {
-      Services.telemetry.setEventRecordingEnabled(TELEMETRY_EVENTS_ID, true);
+      lazy.Services.telemetry.setEventRecordingEnabled(
+        TELEMETRY_EVENTS_ID,
+        true
+      );
       this._eventsEnabled = true;
     }
 
     const hash = await UptakeTelemetry.Policy.getClientIDHash();
     const channel = UptakeTelemetry.Policy.getChannel();
     const shouldSendEvent =
-      !["release", "esr"].includes(channel) || hash < gSampleRate;
+      !["release", "esr"].includes(channel) || hash < lazy.gSampleRate;
     if (shouldSendEvent) {
       // The Event API requires `extra` values to be of type string. Force it!
       const extraStr = Object.keys(extra).reduce((acc, k) => {
         acc[k] = extra[k].toString();
         return acc;
       }, {});
-      Services.telemetry.recordEvent(
+      lazy.Services.telemetry.recordEvent(
         TELEMETRY_EVENTS_ID,
         "uptake",
         component,

@@ -3,20 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict;";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Services",
   "resource://gre/modules/Services.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CommonUtils",
   "resource://services-common/utils.js"
 );
@@ -63,7 +65,7 @@ const PR_UINT32_MAX = 0xffffffff;
  * during logging. Instead, one can periodically consume the input stream and
  * e.g. write it to disk asynchronously.
  */
-class StorageStreamAppender extends Log.Appender {
+class StorageStreamAppender extends lazy.Log.Appender {
   constructor(formatter) {
     super(formatter);
     this._name = "StorageStreamAppender";
@@ -150,7 +152,7 @@ class FlushableStorageAppender extends StorageStreamAppender {
   }
 
   append(message) {
-    if (message.level >= Log.Level.Error) {
+    if (message.level >= lazy.Log.Level.Error) {
       this.sawError = true;
     }
     StorageStreamAppender.prototype.append.call(this, message);
@@ -199,16 +201,16 @@ class FlushableStorageAppender extends StorageStreamAppender {
     );
     binaryStream.setInputStream(inputStream);
 
-    let outputDirectory = OS.Path.join(
-      OS.Constants.Path.profileDir,
+    let outputDirectory = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
       ...subdirArray
     );
-    await OS.File.makeDir(outputDirectory, {
+    await lazy.OS.File.makeDir(outputDirectory, {
       ignoreExisting: true,
-      from: OS.Constants.Path.profileDir,
+      from: lazy.OS.Constants.Path.profileDir,
     });
-    let fullOutputFileName = OS.Path.join(outputDirectory, outputFileName);
-    let output = await OS.File.open(fullOutputFileName, { write: true });
+    let fullOutputFileName = lazy.OS.Path.join(outputDirectory, outputFileName);
+    let output = await lazy.OS.File.open(fullOutputFileName, { write: true });
     try {
       while (true) {
         let available = binaryStream.available();
@@ -253,9 +255,9 @@ LogManager.prototype = {
     this.logFilePrefix = logFilePrefix;
     if (!formatter) {
       // Create a formatter and various appenders to attach to the logs.
-      formatter = new Log.BasicFormatter();
-      consoleAppender = new Log.ConsoleAppender(formatter);
-      dumpAppender = new Log.DumpAppender(formatter);
+      formatter = new lazy.Log.BasicFormatter();
+      consoleAppender = new lazy.Log.ConsoleAppender(formatter);
+      dumpAppender = new lazy.Log.DumpAppender(formatter);
     }
 
     allBranches.add(this._prefs._branchStr);
@@ -268,7 +270,7 @@ LogManager.prototype = {
       findSmallest = false
     ) => {
       let observer = newVal => {
-        let level = Log.Level[newVal] || defaultLevel;
+        let level = lazy.Log.Level[newVal] || defaultLevel;
         if (findSmallest) {
           // As some of our appenders have global impact (ie, there is only one
           // place 'dump' goes to), we need to find the smallest value from all
@@ -277,7 +279,7 @@ LogManager.prototype = {
           // dump=Error, we need to keep dump=Debug so consumerA is respected.
           for (let branch of allBranches) {
             let lookPrefBranch = new Preferences(branch);
-            let lookVal = Log.Level[lookPrefBranch.get(prefName)];
+            let lookVal = lazy.Log.Level[lookPrefBranch.get(prefName)];
             if (lookVal && lookVal < level) {
               level = lookVal;
             }
@@ -295,13 +297,13 @@ LogManager.prototype = {
     this._observeConsolePref = setupAppender(
       consoleAppender,
       "log.appender.console",
-      Log.Level.Fatal,
+      lazy.Log.Level.Fatal,
       true
     );
     this._observeDumpPref = setupAppender(
       dumpAppender,
       "log.appender.dump",
-      Log.Level.Error,
+      lazy.Log.Level.Error,
       true
     );
 
@@ -312,18 +314,18 @@ LogManager.prototype = {
     this._observeStreamPref = setupAppender(
       fapp,
       "log.appender.file.level",
-      Log.Level.Debug
+      lazy.Log.Level.Debug
     );
 
     // now attach the appenders to all our logs.
     for (let logName of logNames) {
-      let log = Log.repository.getLogger(logName);
+      let log = lazy.Log.repository.getLogger(logName);
       for (let appender of [fapp, dumpAppender, consoleAppender]) {
         log.addAppender(appender);
       }
     }
     // and use the first specified log as a "root" for our log.
-    this._log = Log.repository.getLogger(logNames[0] + ".LogManager");
+    this._log = lazy.Log.repository.getLogger(logNames[0] + ".LogManager");
   },
 
   /**
@@ -443,8 +445,11 @@ LogManager.prototype = {
   // determine if that file should be removed.
   async _deleteLogFiles(cbShouldDelete) {
     this._cleaningUpFileLogs = true;
-    let logDir = FileUtils.getDir("ProfD", this._logFileSubDirectoryEntries);
-    let iterator = new OS.File.DirectoryIterator(logDir.path);
+    let logDir = lazy.FileUtils.getDir(
+      "ProfD",
+      this._logFileSubDirectoryEntries
+    );
+    let iterator = new lazy.OS.File.DirectoryIterator(logDir.path);
 
     await iterator.forEach(async entry => {
       // Note that we don't check this.logFilePrefix is in the name - we cleanup
@@ -458,7 +463,7 @@ LogManager.prototype = {
       }
       try {
         // need to call .stat() as the enumerator doesn't give that to us on *nix.
-        let info = await OS.File.stat(entry.path);
+        let info = await lazy.OS.File.stat(entry.path);
         if (!cbShouldDelete(info)) {
           return;
         }
@@ -469,7 +474,7 @@ LogManager.prototype = {
             info.lastModificationDate.getTime() +
             ")"
         );
-        await OS.File.remove(entry.path);
+        await lazy.OS.File.remove(entry.path);
         this._log.trace("Deleted " + entry.name);
       } catch (ex) {
         this._log.debug(
@@ -488,7 +493,7 @@ LogManager.prototype = {
     this._cleaningUpFileLogs = false;
     this._log.debug("Done deleting files.");
     // This notification is used only for tests.
-    Services.obs.notifyObservers(
+    lazy.Services.obs.notifyObservers(
       null,
       "services-tests:common:log-manager:cleanup-logs"
     );
