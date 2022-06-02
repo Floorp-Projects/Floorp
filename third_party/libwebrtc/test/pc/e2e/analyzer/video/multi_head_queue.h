@@ -36,6 +36,8 @@ class MultiHeadQueue {
   }
 
   // Creates a copy of an existing head. Complexity O(MultiHeadQueue::size()).
+  // `copy_index` - index of the queue that will be used as a source for
+  //     copying.
   void AddHead(size_t copy_index) { queues_.push_back(queues_[copy_index]); }
 
   // Add value to the end of the queue. Complexity O(readers_count).
