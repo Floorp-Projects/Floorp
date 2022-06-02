@@ -510,20 +510,34 @@ void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(
   MutexLock lock1(&lock_);
   MutexLock lock2(&comparison_lock_);
   RTC_CHECK(!peers_->HasName(peer_name));
-  peers_->AddIfAbsent(peer_name);
+  size_t new_peer_index = peers_->AddIfAbsent(peer_name);
 
   // Ensure stats for receiving (for frames from other peers to this one)
   // streams exists. Since in flight frames will be sent to the new peer
   // as well. Sending stats (from this peer to others) will be added by
   // DefaultVideoQualityAnalyzer::OnFrameCaptured.
   for (auto& key_val : stream_to_sender_) {
-    InternalStatsKey key(key_val.first, key_val.second,
-                         peers_->index(peer_name));
-    const int64_t frames_count = captured_frames_in_flight_.size();
+    size_t stream_index = key_val.first;
+    size_t sender_peer_index = key_val.second;
+    InternalStatsKey key(stream_index, sender_peer_index, new_peer_index);
+
+    // To initiate `FrameCounters` for the stream we should pick frame
+    // counters with the same stream index and the same sender's peer index
+    // and any receiver's peer index and copy from its sender side
+    // counters.
     FrameCounters counters;
-    counters.captured = frames_count;
-    counters.pre_encoded = frames_count;
-    counters.encoded = frames_count;
+    for (size_t i = 0; i < peers_->size(); ++i) {
+      InternalStatsKey prototype_key(stream_index, sender_peer_index, i);
+      auto it = stream_frame_counters_.find(prototype_key);
+      if (it != stream_frame_counters_.end()) {
+        counters.captured = it->second.captured;
+        counters.pre_encoded = it->second.pre_encoded;
+        counters.encoded = it->second.encoded;
+        break;
+      }
+    }
+    // It may happen if we had only one peer before this method was invoked,
+    // then `counters` will be empty. In such case empty `counters` are ok.
     stream_frame_counters_.insert({key, std::move(counters)});
 
     stream_stats_.insert({key, StreamStats()});
