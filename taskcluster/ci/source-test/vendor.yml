@@ -30,10 +30,12 @@ rust:
             ./mach vendor rust --issues-json /builds/worker/issues.json
     fetches:
         toolchain:
+            - linux64-cargo-vet
             - linux64-rust
     when:
         files-changed:
             - 'Cargo.lock'
             - '**/Cargo.toml'
             - 'python/mozbuild/mozbuild/vendor/vendor_rust.py'
+            - 'supply-chain/**'
             - 'third_party/rust/**'
