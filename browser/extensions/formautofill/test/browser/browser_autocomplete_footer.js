@@ -1,7 +1,6 @@
 "use strict";
 
 const URL = BASE_URL + "autocomplete_basic.html";
-const PRIVACY_PREF_URL = "about:preferences#privacy";
 
 add_task(async function setup_storage() {
   await setStorage(
