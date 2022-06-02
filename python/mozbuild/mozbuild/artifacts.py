@@ -402,9 +402,10 @@ class ArtifactJob(object):
         return self._candidate_trees
 
     def select_candidate_trees(self):
+        source_repo = buildconfig.substs.get("MOZ_SOURCE_REPO", "")
         version_display = buildconfig.substs.get("MOZ_APP_VERSION_DISPLAY")
 
-        if "esr" in version_display:
+        if "esr" in version_display or "esr" in source_repo:
             return self.esr_candidate_trees
         elif re.search("a\d+$", version_display):
             return self.nightly_candidate_trees
