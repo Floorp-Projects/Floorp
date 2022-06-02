@@ -250,24 +250,24 @@ bool IsAlternativePitchStrongerThanInitial(PitchInfo last,
   RTC_DCHECK_GE(initial.period, 0);
   RTC_DCHECK_GE(alternative.period, 0);
   RTC_DCHECK_GE(period_divisor, 2);
-  // Compute a term that lowers the threshold when |alternative.period| is close
-  // to the last estimated period |last.period| - i.e., pitch tracking.
+  // Compute a term that lowers the threshold when `alternative.period` is close
+  // to the last estimated period `last.period` - i.e., pitch tracking.
   float lower_threshold_term = 0.f;
   if (std::abs(alternative.period - last.period) <= 1) {
     // The candidate pitch period is within 1 sample from the last one.
-    // Make the candidate at |alternative.period| very easy to be accepted.
+    // Make the candidate at `alternative.period` very easy to be accepted.
     lower_threshold_term = last.strength;
   } else if (std::abs(alternative.period - last.period) == 2 &&
              initial.period >
                  kInitialPitchPeriodThresholds[period_divisor - 2]) {
     // The candidate pitch period is 2 samples far from the last one and the
-    // period |initial.period| (from which |alternative.period| has been
-    // derived) is greater than a threshold. Make |alternative.period| easy to
+    // period `initial.period` (from which `alternative.period` has been
+    // derived) is greater than a threshold. Make `alternative.period` easy to
     // be accepted.
     lower_threshold_term = 0.5f * last.strength;
   }
   // Set the threshold based on the strength of the initial estimate
-  // |initial.period|. Also reduce the chance of false positives caused by a
+  // `initial.period`. Also reduce the chance of false positives caused by a
   // bias towards high frequencies (originating from short-term correlations).
   float threshold =
       std::max(0.3f, 0.7f * initial.strength - lower_threshold_term);
@@ -457,7 +457,7 @@ PitchInfo ComputeExtendedPitchPeriod48kHz(
     alternative_pitch.period = GetAlternativePitchPeriod(
         initial_pitch.period, /*multiplier=*/1, period_divisor);
     RTC_DCHECK_GE(alternative_pitch.period, kMinPitch24kHz);
-    // When looking at |alternative_pitch.period|, we also look at one of its
+    // When looking at `alternative_pitch.period`, we also look at one of its
     // sub-harmonics. `kSubHarmonicMultipliers` is used to know where to look.
     // `period_divisor` == 2 is a special case since `dual_alternative_period`
     // might be greater than the maximum pitch period.
@@ -472,7 +472,7 @@ PitchInfo ComputeExtendedPitchPeriod48kHz(
         << "The lower pitch period and the additional sub-harmonic must not "
            "coincide.";
     // Compute an auto-correlation score for the primary pitch candidate
-    // |alternative_pitch.period| by also looking at its possible sub-harmonic
+    // `alternative_pitch.period` by also looking at its possible sub-harmonic
     // `dual_alternative_period`.
     const float xy_primary_period = ComputeAutoCorrelation(
         kMaxPitch24kHz - alternative_pitch.period, pitch_buffer, vector_math);

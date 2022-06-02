@@ -548,7 +548,7 @@ TEST_P(PeerConnectionIceTest,
   ASSERT_TRUE(
       caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
 
-  // |candidate.transport_name()| is empty.
+  // `candidate.transport_name()` is empty.
   cricket::Candidate candidate = CreateLocalUdpCandidate(kCalleeAddress);
   auto* audio_content = cricket::GetFirstAudioContent(
       caller->pc()->local_description()->description());
@@ -1492,7 +1492,7 @@ TEST_P(PeerConnectionIceTest, PrefersMidOverMLineIndex) {
   ASSERT_TRUE(
       caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
 
-  // |candidate.transport_name()| is empty.
+  // `candidate.transport_name()` is empty.
   cricket::Candidate candidate = CreateLocalUdpCandidate(kCalleeAddress);
   auto* audio_content = cricket::GetFirstAudioContent(
       caller->pc()->local_description()->description());

@@ -82,7 +82,7 @@ public class DataChannel {
     /** The data channel state has changed. */
     @CalledByNative("Observer") public void onStateChange();
     /**
-     * A data buffer was successfully received.  NOTE: |buffer.data| will be
+     * A data buffer was successfully received.  NOTE: `buffer.data` will be
      * freed once this function returns so callers who want to use the data
      * asynchronously must make sure to copy it first.
      */

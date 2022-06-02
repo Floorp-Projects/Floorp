@@ -65,7 +65,7 @@ inline bool operator!=(const NtpTime& n1, const NtpTime& n2) {
 // Converts `int64_t` milliseconds to Q32.32-formatted fixed-point seconds.
 // Performs clamping if the result overflows or underflows.
 inline int64_t Int64MsToQ32x32(int64_t milliseconds) {
-  // TODO(bugs.webrtc.org/10893): Change to use |rtc::saturated_cast| once the
+  // TODO(bugs.webrtc.org/10893): Change to use `rtc::saturated_cast` once the
   // bug has been fixed.
   double result =
       std::round(milliseconds * (NtpTime::kFractionsPerSecond / 1000.0));
@@ -88,7 +88,7 @@ inline int64_t Int64MsToQ32x32(int64_t milliseconds) {
 // Converts `int64_t` milliseconds to UQ32.32-formatted fixed-point seconds.
 // Performs clamping if the result overflows or underflows.
 inline uint64_t Int64MsToUQ32x32(int64_t milliseconds) {
-  // TODO(bugs.webrtc.org/10893): Change to use |rtc::saturated_cast| once the
+  // TODO(bugs.webrtc.org/10893): Change to use `rtc::saturated_cast` once the
   // bug has been fixed.
   double result =
       std::round(milliseconds * (NtpTime::kFractionsPerSecond / 1000.0));

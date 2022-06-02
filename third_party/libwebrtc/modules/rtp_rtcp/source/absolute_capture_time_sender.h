@@ -50,7 +50,7 @@ class AbsoluteCaptureTimeSender {
   static uint32_t GetSource(uint32_t ssrc,
                             rtc::ArrayView<const uint32_t> csrcs);
 
-  // Returns a header extension to be sent, or |absl::nullopt| if the header
+  // Returns a header extension to be sent, or `absl::nullopt` if the header
   // extension shouldn't be sent.
   absl::optional<AbsoluteCaptureTime> OnSendPacket(
       uint32_t source,

@@ -183,7 +183,7 @@ class AcmReceiver {
   // of NACK list are in the range of [N - `max_nack_list_size`, N).
   //
   // `max_nack_list_size` should be positive (none zero) and less than or
-  // equal to |Nack::kNackListSizeLimit|. Otherwise, No change is applied and -1
+  // equal to `Nack::kNackListSizeLimit`. Otherwise, No change is applied and -1
   // is returned. 0 is returned at success.
   //
   int EnableNack(size_t max_nack_list_size);

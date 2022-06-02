@@ -25,7 +25,7 @@ struct make_void {
 
 // webrtc::void_t is an implementation of std::void_t from C++17.
 //
-// We use |webrtc::void_t_internal::make_void| as a helper struct to avoid a
+// We use `webrtc::void_t_internal::make_void` as a helper struct to avoid a
 // C++14 defect:
 //   http://en.cppreference.com/w/cpp/types/void_t
 //   http://open-std.org/JTC1/SC22/WG21/docs/cwg_defects.html#1558

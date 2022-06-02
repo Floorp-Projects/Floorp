@@ -185,7 +185,7 @@ LocalAndRemoteSdp SignalingInterceptor::PatchOffer(
   }
 
   if (!params_.stream_label_to_simulcast_streams_count.empty()) {
-    // Because simulcast enabled |params_.video_codecs| has only 1 element.
+    // Because simulcast enabled `params_.video_codecs` has only 1 element.
     if (first_codec.name == cricket::kVp8CodecName) {
       return PatchVp8Offer(std::move(offer));
     }
@@ -378,7 +378,7 @@ LocalAndRemoteSdp SignalingInterceptor::PatchAnswer(
   }
 
   if (!params_.stream_label_to_simulcast_streams_count.empty()) {
-    // Because simulcast enabled |params_.video_codecs| has only 1 element.
+    // Because simulcast enabled `params_.video_codecs` has only 1 element.
     if (first_codec.name == cricket::kVp8CodecName) {
       return PatchVp8Answer(std::move(answer));
     }

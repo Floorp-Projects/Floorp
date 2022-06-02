@@ -448,7 +448,7 @@ bool CoreAudioBase::Init() {
   // - HDAudio driver
   // - kEnableLowLatencyIfSupported changed from false (default) to true.
   // TODO(henrika): IsLowLatencySupported() returns AUDCLNT_E_UNSUPPORTED_FORMAT
-  // when |sample_rate_.has_value()| returns true if rate conversion is
+  // when `sample_rate_.has_value()` returns true if rate conversion is
   // actually required (i.e., client asks for other than the default rate).
   bool low_latency_support = false;
   uint32_t min_period_in_frames = 0;

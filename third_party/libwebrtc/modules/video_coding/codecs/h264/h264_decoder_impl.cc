@@ -80,9 +80,9 @@ int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
   RTC_CHECK(context->pix_fmt == kPixelFormatDefault ||
             context->pix_fmt == kPixelFormatFullRange);
 
-  // |av_frame->width| and |av_frame->height| are set by FFmpeg. These are the
-  // actual image's dimensions and may be different from |context->width| and
-  // |context->coded_width| due to reordering.
+  // `av_frame->width` and `av_frame->height` are set by FFmpeg. These are the
+  // actual image's dimensions and may be different from `context->width` and
+  // `context->coded_width` due to reordering.
   int width = av_frame->width;
   int height = av_frame->height;
   // See `lowres`, if used the decoder scales the image by 1/2^(lowres). This
@@ -201,7 +201,7 @@ int32_t H264DecoderImpl::InitDecode(const VideoCodec* codec_settings,
   av_context_->extradata = nullptr;
   av_context_->extradata_size = 0;
 
-  // If this is ever increased, look at |av_context_->thread_safe_callbacks| and
+  // If this is ever increased, look at `av_context_->thread_safe_callbacks` and
   // make it possible to disable the thread checker in the frame buffer pool.
   av_context_->thread_count = 1;
   av_context_->thread_type = FF_THREAD_SLICE;

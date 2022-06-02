@@ -83,7 +83,7 @@ class UlpfecGenerator : public VideoFecGenerator {
   // Returns true if the excess overhead (actual - target) for the FEC is below
   // the amount `kMaxExcessOverhead`. This effects the lower protection level
   // cases and low number of media packets/frame. The target overhead is given
-  // by |params_.fec_rate|, and is only achievable in the limit of large number
+  // by `params_.fec_rate`, and is only achievable in the limit of large number
   // of media packets.
   bool ExcessOverheadBelowMax() const;
 

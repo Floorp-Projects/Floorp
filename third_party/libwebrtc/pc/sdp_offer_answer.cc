@@ -4091,7 +4091,7 @@ void SdpOfferAnswerHandler::UpdateLocalSenders(
 
   // Find new and active senders.
   for (const cricket::StreamParams& params : streams) {
-    // The sync_label is the MediaStream label and the |stream.id| is the
+    // The sync_label is the MediaStream label and the `stream.id` is the
     // sender id.
     const std::string& stream_id = params.first_stream_id();
     const std::string& sender_id = params.id;
@@ -4154,8 +4154,8 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
       break;
     }
 
-    // |params.id| is the sender id and the stream id uses the first of
-    // |params.stream_ids|. The remote description could come from a Unified
+    // `params.id` is the sender id and the stream id uses the first of
+    // `params.stream_ids`. The remote description could come from a Unified
     // Plan endpoint, with multiple or no stream_ids() signaled. Since this is
     // not supported in Plan B, we just take the first here and create the
     // default stream ID if none is specified.

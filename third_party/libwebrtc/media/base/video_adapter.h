@@ -86,24 +86,24 @@ class RTC_EXPORT VideoAdapter {
       const absl::optional<int>& max_fps) RTC_LOCKS_EXCLUDED(mutex_);
 
   // Requests the output frame size from `AdaptFrameResolution` to have as close
-  // as possible to |sink_wants.target_pixel_count| pixels (if set)
-  // but no more than |sink_wants.max_pixel_count|.
-  // |sink_wants.max_framerate_fps| is essentially analogous to
-  // |sink_wants.max_pixel_count|, but for framerate rather than resolution.
-  // Set |sink_wants.max_pixel_count| and/or |sink_wants.max_framerate_fps| to
+  // as possible to `sink_wants.target_pixel_count` pixels (if set)
+  // but no more than `sink_wants.max_pixel_count`.
+  // `sink_wants.max_framerate_fps` is essentially analogous to
+  // `sink_wants.max_pixel_count`, but for framerate rather than resolution.
+  // Set `sink_wants.max_pixel_count` and/or `sink_wants.max_framerate_fps` to
   // std::numeric_limit<int>::max() if no upper limit is desired.
   // The sink resolution alignment requirement is given by
-  // |sink_wants.resolution_alignment|.
+  // `sink_wants.resolution_alignment`.
   // Note: Should be called from the sink only.
   void OnSinkWants(const rtc::VideoSinkWants& sink_wants)
       RTC_LOCKS_EXCLUDED(mutex_);
 
   // Returns maximum image area, which shouldn't impose any adaptations.
-  // Can return |numeric_limits<int>::max()| if no limit is set.
+  // Can return `numeric_limits<int>::max()` if no limit is set.
   int GetTargetPixels() const;
 
   // Returns current frame-rate limit.
-  // Can return |numeric_limits<float>::infinity()| if no limit is set.
+  // Can return `numeric_limits<float>::infinity()` if no limit is set.
   float GetMaxFramerate() const;
 
   // Requests the output frame size from |AdaptFrameResolution| be scaled
@@ -128,7 +128,7 @@ class RTC_EXPORT VideoAdapter {
   const int source_resolution_alignment_;
   // The currently applied resolution alignment, as given by the requirements:
   //  - the fixed `source_resolution_alignment_`; and
-  //  - the latest |sink_wants.resolution_alignment|.
+  //  - the latest `sink_wants.resolution_alignment`.
   int resolution_alignment_ RTC_GUARDED_BY(mutex_);
 
   // The target timestamp for the next frame based on requested format.

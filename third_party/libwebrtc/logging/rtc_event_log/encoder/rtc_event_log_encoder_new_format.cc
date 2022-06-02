@@ -288,7 +288,7 @@ rtclog2::IceCandidatePairEvent::IceCandidatePairEventType ConvertToProtoFormat(
 }
 
 // Copies all RTCP blocks except APP, SDES and unknown from `packet` to
-// `buffer`. `buffer` must have space for at least |packet.size()| bytes.
+// `buffer`. `buffer` must have space for at least `packet.size()` bytes.
 size_t RemoveNonAllowlistedRtcpBlocks(const rtc::Buffer& packet,
                                       uint8_t* buffer) {
   RTC_DCHECK(buffer != nullptr);

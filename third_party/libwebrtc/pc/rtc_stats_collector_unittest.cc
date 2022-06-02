@@ -1466,9 +1466,9 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_pair.responses_received = 4321;
   expected_pair.responses_sent = 1000;
   expected_pair.consent_requests_sent = (2020 - 2000);
-  // |expected_pair.current_round_trip_time| should be undefined because the
+  // `expected_pair.current_round_trip_time` should be undefined because the
   // current RTT is not set.
-  // |expected_pair.available_[outgoing/incoming]_bitrate| should be undefined
+  // `expected_pair.available_[outgoing/incoming]_bitrate` should be undefined
   // because is is not the current pair.
 
   ASSERT_TRUE(report->Get(expected_pair.id()));
@@ -1768,7 +1768,7 @@ TEST_F(RTCStatsCollectorTest,
       IdForType<RTCMediaStreamTrackStats>(report), report->timestamp_us(),
       RTCMediaStreamTrackKind::kAudio);
   expected_remote_audio_track.track_identifier = remote_audio_track->id();
-  // |expected_remote_audio_track.media_source_id| should be undefined
+  // `expected_remote_audio_track.media_source_id` should be undefined
   // because the track is remote.
   expected_remote_audio_track.remote_source = true;
   expected_remote_audio_track.ended = false;
@@ -1920,7 +1920,7 @@ TEST_F(RTCStatsCollectorTest,
       RTCMediaStreamTrackKind::kVideo);
   expected_remote_video_track_ssrc3.track_identifier =
       remote_video_track_ssrc3->id();
-  // |expected_remote_video_track_ssrc3.media_source_id| should be undefined
+  // `expected_remote_video_track_ssrc3.media_source_id` should be undefined
   // because the track is remote.
   expected_remote_video_track_ssrc3.remote_source = true;
   expected_remote_video_track_ssrc3.ended = true;
@@ -2011,7 +2011,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   expected_audio.header_bytes_received = 4;
   expected_audio.packets_lost = -1;
   expected_audio.packets_discarded = 7788;
-  // |expected_audio.last_packet_received_timestamp| should be undefined.
+  // `expected_audio.last_packet_received_timestamp` should be undefined.
   expected_audio.jitter = 4.5;
   expected_audio.jitter_buffer_delay = 1.0;
   expected_audio.jitter_buffer_emitted_count = 2;
@@ -2116,16 +2116,16 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   expected_video.frames_decoded = 9;
   expected_video.key_frames_decoded = 3;
   expected_video.frames_dropped = 13;
-  // |expected_video.qp_sum| should be undefined.
+  // `expected_video.qp_sum` should be undefined.
   expected_video.total_decode_time = 9.0;
   expected_video.total_inter_frame_delay = 0.123;
   expected_video.total_squared_inter_frame_delay = 0.00456;
   expected_video.jitter = 1.199;
   expected_video.jitter_buffer_delay = 3.456;
   expected_video.jitter_buffer_emitted_count = 13;
-  // |expected_video.last_packet_received_timestamp| should be undefined.
-  // |expected_video.content_type| should be undefined.
-  // |expected_video.decoder_implementation| should be undefined.
+  // `expected_video.last_packet_received_timestamp` should be undefined.
+  // `expected_video.content_type` should be undefined.
+  // `expected_video.decoder_implementation` should be undefined.
 
   ASSERT_TRUE(report->Get(expected_video.id()));
   EXPECT_EQ(
@@ -2189,7 +2189,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Audio) {
   RTCOutboundRTPStreamStats expected_audio("RTCOutboundRTPAudioStream_1",
                                            report->timestamp_us());
   expected_audio.media_source_id = "RTCAudioSource_50";
-  // |expected_audio.remote_id| should be undefined.
+  // `expected_audio.remote_id` should be undefined.
   expected_audio.ssrc = 1;
   expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
@@ -2275,7 +2275,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Video) {
   RTCOutboundRTPStreamStats expected_video(stats_of_my_type[0]->id(),
                                            report->timestamp_us());
   expected_video.media_source_id = "RTCVideoSource_50";
-  // |expected_video.remote_id| should be undefined.
+  // `expected_video.remote_id` should be undefined.
   expected_video.ssrc = 1;
   expected_video.media_type = "video";
   expected_video.kind = "video";
@@ -2305,9 +2305,9 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Video) {
   expected_video.frames_per_second = 10.0;
   expected_video.frames_sent = 5;
   expected_video.huge_frames_sent = 2;
-  // |expected_video.content_type| should be undefined.
-  // |expected_video.qp_sum| should be undefined.
-  // |expected_video.encoder_implementation| should be undefined.
+  // `expected_video.content_type` should be undefined.
+  // `expected_video.qp_sum` should be undefined.
+  // `expected_video.encoder_implementation` should be undefined.
   ASSERT_TRUE(report->Get(expected_video.id()));
 
   EXPECT_EQ(
@@ -2889,7 +2889,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
     report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
     report_block_data.AddRoundTripTimeSample(kRoundTripTimeSample1Ms);
     // Only the last sample should be exposed as the
-    // |RTCRemoteInboundRtpStreamStats::round_trip_time|.
+    // `RTCRemoteInboundRtpStreamStats::round_trip_time`.
     report_block_data.AddRoundTripTimeSample(kRoundTripTimeSample2Ms);
     report_block_datas.push_back(report_block_data);
   }

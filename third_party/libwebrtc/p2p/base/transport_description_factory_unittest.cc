@@ -291,25 +291,25 @@ TEST_F(TransportDescriptionFactoryTest, TestAnswerDtlsToDtls) {
 }
 
 // Test that ice ufrag and password is changed in an updated offer and answer
-// if |TransportDescriptionOptions::ice_restart| is true.
+// if `TransportDescriptionOptions::ice_restart` is true.
 TEST_F(TransportDescriptionFactoryTest, TestIceRestart) {
   TestIceRestart(false);
 }
 
 // Test that ice ufrag and password is changed in an updated offer and answer
-// if |TransportDescriptionOptions::ice_restart| is true and DTLS is enabled.
+// if `TransportDescriptionOptions::ice_restart` is true and DTLS is enabled.
 TEST_F(TransportDescriptionFactoryTest, TestIceRestartWithDtls) {
   TestIceRestart(true);
 }
 
 // Test that ice renomination is set in an updated offer and answer
-// if |TransportDescriptionOptions::enable_ice_renomination| is true.
+// if `TransportDescriptionOptions::enable_ice_renomination` is true.
 TEST_F(TransportDescriptionFactoryTest, TestIceRenomination) {
   TestIceRenomination(false);
 }
 
 // Test that ice renomination is set in an updated offer and answer
-// if |TransportDescriptionOptions::enable_ice_renomination| is true and DTLS
+// if `TransportDescriptionOptions::enable_ice_renomination` is true and DTLS
 // is enabled.
 TEST_F(TransportDescriptionFactoryTest, TestIceRenominationWithDtls) {
   TestIceRenomination(true);

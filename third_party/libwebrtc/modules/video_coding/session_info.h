@@ -79,7 +79,7 @@ class VCMSessionInfo {
   void InformOfEmptyPacket(uint16_t seq_num);
 
   // Finds the packet of the beginning of the next VP8 partition. If
-  // none is found the returned iterator points to |packets_.end()|.
+  // none is found the returned iterator points to `packets_.end()`.
   // `it` is expected to point to the last packet of the previous partition,
   // or to the first packet of the frame. `packets_skipped` is incremented
   // for each packet found which doesn't have the beginning bit set.

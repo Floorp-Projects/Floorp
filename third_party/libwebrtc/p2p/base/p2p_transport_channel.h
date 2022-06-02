@@ -378,7 +378,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   void SetReceiving(bool receiving);
   // Clears the address and the related address fields of a local candidate to
   // avoid IP leakage. This is applicable in several scenarios as commented in
-  // |PortAllocator::SanitizeCandidate|.
+  // `PortAllocator::SanitizeCandidate`.
   Candidate SanitizeLocalCandidate(const Candidate& c) const;
   // Clears the address field of a remote candidate to avoid IP leakage. This is
   // applicable in the following scenarios:

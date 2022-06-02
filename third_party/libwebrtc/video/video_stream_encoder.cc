@@ -1038,7 +1038,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
 
   // The resolutions that we're actually encoding with.
   std::vector<rtc::VideoSinkWants::FrameSize> encoder_resolutions;
-  // TODO(hbos): For the case of SVC, also make use of |codec.spatialLayers|.
+  // TODO(hbos): For the case of SVC, also make use of `codec.spatialLayers`.
   // For now, SVC layers are handled by the VP9 encoder.
   for (const auto& simulcastStream : codec.simulcastStream) {
     if (!simulcastStream.active)
@@ -1344,7 +1344,7 @@ bool VideoStreamEncoder::EncoderPaused() const {
   // Pause video if paused by caller or as long as the network is down or the
   // pacer queue has grown too large in buffered mode.
   // If the pacer queue has grown too large or the network is down,
-  // |last_encoder_rate_settings_->encoder_target| will be 0.
+  // `last_encoder_rate_settings_->encoder_target` will be 0.
   return !last_encoder_rate_settings_ ||
          last_encoder_rate_settings_->encoder_target == DataRate::Zero();
 }

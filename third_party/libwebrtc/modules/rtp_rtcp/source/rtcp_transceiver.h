@@ -47,7 +47,7 @@ class RtcpTransceiver : public RtcpFeedbackSenderInterface {
   void Stop(std::function<void()> on_destroyed);
 
   // Registers observer to be notified about incoming rtcp packets.
-  // Calls to observer will be done on the |config.task_queue|.
+  // Calls to observer will be done on the `config.task_queue`.
   void AddMediaReceiverRtcpObserver(uint32_t remote_ssrc,
                                     MediaReceiverRtcpObserver* observer);
   // Deregisters the observer. Might return before observer is deregistered.

@@ -298,8 +298,8 @@ static int16_t GmmProbability(VadInstT* self, int16_t* features,
         nmk2 = nmk;
         if (!vadflag) {
           // deltaN = (x-mu)/sigma^2
-          // ngprvec[k] = |noise_probability[k]| /
-          //   (|noise_probability[0]| + |noise_probability[1]|)
+          // ngprvec[k] = `noise_probability[k]` /
+          //   (`noise_probability[0]` + `noise_probability[1]`)
 
           // (Q14 * Q11 >> 11) = Q14.
           delt = (int16_t)((ngprvec[gaussian] * deltaN[gaussian]) >> 11);
@@ -327,8 +327,8 @@ static int16_t GmmProbability(VadInstT* self, int16_t* features,
         if (vadflag) {
           // Update speech mean vector:
           // `deltaS` = (x-mu)/sigma^2
-          // sgprvec[k] = |speech_probability[k]| /
-          //   (|speech_probability[0]| + |speech_probability[1]|)
+          // sgprvec[k] = `speech_probability[k]` /
+          //   (`speech_probability[0]` + `speech_probability[1]`)
 
           // (Q14 * Q11) >> 11 = Q14.
           delt = (int16_t)((sgprvec[gaussian] * deltaS[gaussian]) >> 11);
@@ -430,14 +430,14 @@ static int16_t GmmProbability(VadInstT* self, int16_t* features,
         tmp2_s16 = (int16_t)((3 * tmp_s16) >> 2);
 
         // Move Gaussian means for speech model by `tmp1_s16` and update
-        // `speech_global_mean`. Note that |self->speech_means[channel]| is
+        // `speech_global_mean`. Note that `self->speech_means[channel]` is
         // changed after the call.
         speech_global_mean = WeightedAverage(&self->speech_means[channel],
                                              tmp1_s16,
                                              &kSpeechDataWeights[channel]);
 
         // Move Gaussian means for noise model by -`tmp2_s16` and update
-        // `noise_global_mean`. Note that |self->noise_means[channel]| is
+        // `noise_global_mean`. Note that `self->noise_means[channel]` is
         // changed after the call.
         noise_global_mean = WeightedAverage(&self->noise_means[channel],
                                             -tmp2_s16,

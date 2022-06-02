@@ -20,7 +20,7 @@ namespace webrtc {
 
 namespace {
 
-// Produces "[a,b,c]". Works for non-vector |RTCStatsMemberInterface::Type|
+// Produces "[a,b,c]". Works for non-vector `RTCStatsMemberInterface::Type`
 // types.
 template <typename T>
 std::string VectorToString(const std::vector<T>& vector) {

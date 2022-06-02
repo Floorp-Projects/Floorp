@@ -431,7 +431,7 @@ std::vector<rtcp::ReportBlock> RtcpTransceiverImpl::CreateReportBlocks(
   if (!config_.receive_statistics)
     return {};
   // TODO(danilchap): Support sending more than
-  // |ReceiverReport::kMaxNumberOfReportBlocks| per compound rtcp packet.
+  // `ReceiverReport::kMaxNumberOfReportBlocks` per compound rtcp packet.
   std::vector<rtcp::ReportBlock> report_blocks =
       config_.receive_statistics->RtcpReportBlocks(
           rtcp::ReceiverReport::kMaxNumberOfReportBlocks);

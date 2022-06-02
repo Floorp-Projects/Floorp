@@ -287,7 +287,7 @@ class RTC_EXPORT VideoEncoder {
     // the last InitEncode() call.
     double framerate_fps;
     // The network bandwidth available for video. This is at least
-    // |bitrate.get_sum_bps()|, but may be higher if the application is not
+    // `bitrate.get_sum_bps()`, but may be higher if the application is not
     // network constrained.
     DataRate bandwidth_allocation;
 

@@ -612,7 +612,7 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   //
   // We can calc RTT if we send a send report and get a report block back.
 
-  // |report_block.source_ssrc()| is the SSRC identifier of the source to
+  // `report_block.source_ssrc()` is the SSRC identifier of the source to
   // which the information in this reception report block pertains.
 
   // Filter out all report blocks that are not for us.
@@ -980,7 +980,7 @@ void RTCPReceiver::HandleTmmbr(const CommonHeader& rtcp_block,
     entry->tmmbr_item = rtcp::TmmbItem(sender_ssrc, request.bitrate_bps(),
                                        request.packet_overhead());
     // FindOrCreateTmmbrInfo always sets `last_time_received_ms` to
-    // |clock_->TimeInMilliseconds()|.
+    // `clock_->TimeInMilliseconds()`.
     entry->last_updated_ms = tmmbr_info->last_time_received_ms;
 
     packet_information->packet_type_flags |= kRtcpTmmbr;

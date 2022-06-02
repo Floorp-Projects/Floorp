@@ -113,7 +113,7 @@ class RTC_EXPORT RtpPacketInfo {
   // capture clock offset defined in the Absolute Capture Time header extension.
   absl::optional<int64_t> local_capture_clock_offset_;
 
-  // Local |webrtc::Clock|-based timestamp of when the packet was received.
+  // Local `webrtc::Clock`-based timestamp of when the packet was received.
   Timestamp receive_time_;
 };
 

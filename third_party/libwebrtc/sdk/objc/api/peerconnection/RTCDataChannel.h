@@ -112,7 +112,7 @@ RTC_OBJC_EXPORT
 
 /**
  * The number of bytes of application data that have been queued using
- * |sendData:| but that have not yet been transmitted to the network.
+ * `sendData:` but that have not yet been transmitted to the network.
  */
 @property(nonatomic, readonly) uint64_t bufferedAmount;
 

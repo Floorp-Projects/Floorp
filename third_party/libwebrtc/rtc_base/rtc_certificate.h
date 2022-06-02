@@ -31,7 +31,7 @@ class SSLIdentity;
 // certificate and acts as a text representation of RTCCertificate. Certificates
 // can be serialized and deserialized to and from this format, which allows for
 // cloning and storing of certificates to disk. The PEM format is that of
-// |SSLIdentity::PrivateKeyToPEMString| and |SSLCertificate::ToPEMString|, e.g.
+// `SSLIdentity::PrivateKeyToPEMString` and `SSLCertificate::ToPEMString`, e.g.
 // the string representations used by OpenSSL.
 class RTCCertificatePEM {
  public:

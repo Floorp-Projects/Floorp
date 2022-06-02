@@ -89,13 +89,13 @@ VideoFrameType ConvertToVideoFrameType(EVideoFrameType type) {
 
 // Helper method used by H264EncoderImpl::Encode.
 // Copies the encoded bytes from `info` to `encoded_image`. The
-// |encoded_image->_buffer| may be deleted and reallocated if a bigger buffer is
+// `encoded_image->_buffer` may be deleted and reallocated if a bigger buffer is
 // required.
 //
 // After OpenH264 encoding, the encoded bytes are stored in `info` spread out
 // over a number of layers and "NAL units". Each NAL unit is a fragment starting
 // with the four-byte start code {0,0,0,1}. All of this data (including the
-// start codes) is copied to the |encoded_image->_buffer|.
+// start codes) is copied to the `encoded_image->_buffer`.
 static void RtpFragmentize(EncodedImage* encoded_image, SFrameBSInfo* info) {
   // Calculate minimum buffer size required to hold encoded data.
   size_t required_capacity = 0;
@@ -115,7 +115,7 @@ static void RtpFragmentize(EncodedImage* encoded_image, SFrameBSInfo* info) {
   encoded_image->SetEncodedData(buffer);
 
   // Iterate layers and NAL units, note each NAL unit as a fragment and copy
-  // the data to |encoded_image->_buffer|.
+  // the data to `encoded_image->_buffer`.
   const uint8_t start_code[4] = {0, 0, 0, 1};
   size_t frag = 0;
   encoded_image->set_size(0);
@@ -489,7 +489,7 @@ int32_t H264EncoderImpl::Encode(
     RtpFragmentize(&encoded_images_[i], &info);
 
     // Encoder can skip frames to save bandwidth in which case
-    // |encoded_images_[i]._length| == 0.
+    // `encoded_images_[i]._length` == 0.
     if (encoded_images_[i].size() > 0) {
       // Parse QP.
       h264_bitstream_parser_.ParseBitstream(encoded_images_[i]);

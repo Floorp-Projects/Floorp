@@ -30,12 +30,12 @@ namespace {
 constexpr size_t kRedForFecHeaderLength = 1;
 
 // This controls the maximum amount of excess overhead (actual - target)
-// allowed in order to trigger EncodeFec(), before |params_.max_fec_frames|
+// allowed in order to trigger EncodeFec(), before `params_.max_fec_frames`
 // is reached. Overhead here is defined as relative to number of media packets.
 constexpr int kMaxExcessOverhead = 50;  // Q8.
 
 // This is the minimum number of media packets required (above some protection
-// level) in order to trigger EncodeFec(), before |params_.max_fec_frames| is
+// level) in order to trigger EncodeFec(), before `params_.max_fec_frames` is
 // reached.
 constexpr size_t kMinMediaPackets = 4;
 
@@ -146,7 +146,7 @@ void UlpfecGenerator::AddPacketAndGenerateFec(const RtpPacketToSend& packet) {
 
   auto params = CurrentParams();
 
-  // Produce FEC over at most |params_.max_fec_frames| frames, or as soon as:
+  // Produce FEC over at most `params_.max_fec_frames` frames, or as soon as:
   // (1) the excess overhead (actual overhead - requested/target overhead) is
   // less than `kMaxExcessOverhead`, and
   // (2) at least `min_num_media_packets_` media packets is reached.

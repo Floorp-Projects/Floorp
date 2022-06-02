@@ -119,7 +119,7 @@ class SctpTransportInternal {
   // Send data down this channel (will be wrapped as SCTP packets then given to
   // usrsctp that will then post the network interface).
   // Returns true iff successful data somewhere on the send-queue/network.
-  // Uses |params.ssrc| as the SCTP sid.
+  // Uses `params.ssrc` as the SCTP sid.
   virtual bool SendData(int sid,
                         const webrtc::SendDataParams& params,
                         const rtc::CopyOnWriteBuffer& payload,

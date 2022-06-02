@@ -569,8 +569,8 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   // The int16 interfaces require:
   //   - only `NativeRate`s be used
   //   - that the input, output and reverse rates must match
-  //   - that |processing_config.output_stream()| matches
-  //     |processing_config.input_stream()|.
+  //   - that `processing_config.output_stream()` matches
+  //     `processing_config.input_stream()`.
   //
   // The float interfaces accept arbitrary rates and support differing input and
   // output layouts, but the output must have either one channel or the same

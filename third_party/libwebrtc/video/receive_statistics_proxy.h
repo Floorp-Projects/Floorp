@@ -159,7 +159,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   rtc::SampleCounter qp_sample_ RTC_GUARDED_BY(mutex_);
   int num_bad_states_ RTC_GUARDED_BY(mutex_);
   int num_certain_states_ RTC_GUARDED_BY(mutex_);
-  // Note: The |stats_.rtp_stats| member is not used or populated by this class.
+  // Note: The `stats_.rtp_stats` member is not used or populated by this class.
   mutable VideoReceiveStream::Stats stats_ RTC_GUARDED_BY(mutex_);
   RateStatistics decode_fps_estimator_ RTC_GUARDED_BY(mutex_);
   RateStatistics renders_fps_estimator_ RTC_GUARDED_BY(mutex_);

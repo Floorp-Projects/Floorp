@@ -61,7 +61,7 @@ class H264DecoderImpl : public H264Decoder {
   ~H264DecoderImpl() override;
 
   // If `codec_settings` is NULL it is ignored. If it is not NULL,
-  // |codec_settings->codecType| must be `kVideoCodecH264`.
+  // `codec_settings->codecType` must be `kVideoCodecH264`.
   int32_t InitDecode(const VideoCodec* codec_settings,
                      int32_t number_of_cores) override;
   int32_t Release() override;

@@ -1295,8 +1295,8 @@ class PeerConnectionObserver {
   // This is called when signaling indicates a transceiver will be receiving
   // media from the remote endpoint. This is fired during a call to
   // SetRemoteDescription. The receiving track can be accessed by:
-  // |transceiver->receiver()->track()| and its associated streams by
-  // |transceiver->receiver()->streams()|.
+  // `transceiver->receiver()->track()` and its associated streams by
+  // `transceiver->receiver()->streams()`.
   // Note: This will only be called if Unified Plan semantics are specified.
   // This behavior is specified in section 2.2.8.2.5 of the "Set the
   // RTCSessionDescription" algorithm:

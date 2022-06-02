@@ -91,7 +91,7 @@ void DesktopRegion::AddRect(const DesktopRect& rect) {
     return;
 
   // Top of the part of the `rect` that hasn't been inserted yet. Increased as
-  // we iterate over the rows until it reaches |rect.bottom()|.
+  // we iterate over the rows until it reaches `rect.bottom()`.
   int top = rect.top();
 
   // Iterate over all rows that may intersect with `rect` and add new rows when
@@ -456,7 +456,7 @@ void DesktopRegion::AddSpanToRow(Row* row, int left, int right) {
 
 // static
 bool DesktopRegion::IsSpanInRow(const Row& row, const RowSpan& span) {
-  // Find the first span that starts at or after |span.left| and then check if
+  // Find the first span that starts at or after `span.left` and then check if
   // it's the same span.
   RowSpanSet::const_iterator it = std::lower_bound(
       row.spans.begin(), row.spans.end(), span.left, CompareSpanLeft);

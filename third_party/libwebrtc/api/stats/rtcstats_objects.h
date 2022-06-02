@@ -57,7 +57,7 @@ struct RTCDtlsTransportState {
   static const char* const kFailed;
 };
 
-// |RTCMediaStreamTrackStats::kind| is not an enum in the spec but the only
+// `RTCMediaStreamTrackStats::kind` is not an enum in the spec but the only
 // valid values are "audio" and "video".
 // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-kind
 struct RTCMediaStreamTrackKind {

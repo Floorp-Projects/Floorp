@@ -140,9 +140,9 @@ static void FilterSegment(const double* in_data, PitchFilterParam* parameters,
   int j;
   double sum;
   double sum2;
-  /* Index of |parameters->buffer| where the output is written to. */
+  /* Index of `parameters->buffer` where the output is written to. */
   int pos = parameters->index + PITCH_BUFFSIZE;
-  /* Index of |parameters->buffer| where samples are read for fractional-lag
+  /* Index of `parameters->buffer` where samples are read for fractional-lag
    * computation. */
   int pos_lag = pos - parameters->lag_offset;
 
@@ -174,9 +174,9 @@ static void FilterSegment(const double* in_data, PitchFilterParam* parameters,
         /* Filter for fractional pitch. */
         sum2 = 0.0;
         for (m = PITCH_FRACORDER-1; m >= m_tmp; --m) {
-          /* |lag_index + m| is always larger than or equal to zero, see how
+          /* `lag_index + m` is always larger than or equal to zero, see how
            * m_tmp is computed. This is equivalent to assume samples outside
-           * |out_dg[j]| are zero. */
+           * `out_dg[j]` are zero. */
           sum2 += out_dg[j][lag_index + m] * parameters->interpol_coeff[m];
         }
         /* Add the contribution of differential gain change. */

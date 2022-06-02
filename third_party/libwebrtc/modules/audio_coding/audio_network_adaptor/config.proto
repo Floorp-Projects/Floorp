@@ -169,7 +169,7 @@ message Controller {
   // Shorter distance means higher significance. The significances of
   // controllers determine their order in the processing pipeline. Controllers
   // without `scoring_point` follow their default order in
-  // |ControllerManager::controllers|.
+  // `ControllerManager::controllers`.
   optional ScoringPoint scoring_point = 1;
 
   oneof controller {
