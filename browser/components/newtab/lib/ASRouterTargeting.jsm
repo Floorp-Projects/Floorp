@@ -736,6 +736,11 @@ const ASRouterTargeting = {
    * @returns
    */
   async checkMessageTargeting(message, targetingContext, onError, shouldCache) {
+    ASRouterPreferences.console.debug(
+      "in checkMessageTargeting, arguments = ",
+      Array.from(arguments) // eslint-disable-line prefer-rest-params
+    );
+
     // If no targeting is specified,
     if (!message.targeting) {
       return true;
@@ -814,6 +819,10 @@ const ASRouterTargeting = {
     returnAll = false,
   }) {
     const sortedMessages = getSortedMessages(messages, { ordered });
+    ASRouterPreferences.console.debug(
+      "in findMatchingMessage, sortedMessages = ",
+      sortedMessages
+    );
     const matching = returnAll ? [] : null;
     const targetingContext = new TargetingContext(
       TargetingContext.combineContexts(
