@@ -57,22 +57,6 @@ class RTC_EXPORT VideoDecoderFactory {
     return codec_support;
   }
 
-  // TODO(kron): This function is deprecated and will be removed ASAP once
-  // downstream projects are updated to use `reference_scaling` instead of
-  // `scalability_mode`.
-  virtual CodecSupport QueryCodecSupport(
-      const SdpVideoFormat& format,
-      absl::optional<std::string> scalability_mode) const {
-    // Default implementation, query for supported formats and check if the
-    // specified format is supported. Returns false if scalability_mode is
-    // specified.
-    CodecSupport codec_support;
-    if (!scalability_mode) {
-      codec_support.is_supported = format.IsCodecInList(GetSupportedFormats());
-    }
-    return codec_support;
-  }
-
   // Creates a VideoDecoder for the specified format.
   virtual std::unique_ptr<VideoDecoder> CreateVideoDecoder(
       const SdpVideoFormat& format) = 0;
