@@ -304,6 +304,16 @@ void VideoReceiveStream2::UnregisterFromTransport() {
   rtx_receiver_.reset();
 }
 
+const VideoReceiveStream2::Config::Rtp& VideoReceiveStream2::rtp() const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  return config_.rtp;
+}
+
+const std::string& VideoReceiveStream2::sync_group() const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  return config_.sync_group;
+}
+
 void VideoReceiveStream2::SignalNetworkState(NetworkState state) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   rtp_video_stream_receiver_.SignalNetworkState(state);

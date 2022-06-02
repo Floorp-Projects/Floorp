@@ -12,6 +12,7 @@
 #define VIDEO_VIDEO_RECEIVE_STREAM2_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "api/sequence_checker.h"
@@ -116,7 +117,13 @@ class VideoReceiveStream2
   // network thread.
   void UnregisterFromTransport();
 
-  const Config& config() const { return config_; }
+  // Convenience getters for parts of the receive stream's config.
+  // The accessors must be called on the packet delivery thread in accordance
+  // to documentation for RtpConfig (see receive_stream.h), the returned
+  // values should not be cached and should just be used within the calling
+  // context as some values might change.
+  const Config::Rtp& rtp() const;
+  const std::string& sync_group() const;
 
   void SignalNetworkState(NetworkState state);
   bool DeliverRtcp(const uint8_t* packet, size_t length);
