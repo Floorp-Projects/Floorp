@@ -1,10 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-browser.jar:
-%  content browser %content/browser/ contentaccessible=yes
 
-# userScript (今後ここに追加)
+browser.jar:
+% content userchromejs %content/userchromejs/ contentaccessible=yes
+
+# userScript (今後ここに追加) chrome://branding/content/firefox-wordmark.svg
 
    content/userchromejs/deepl.uc.js                 (deepl.uc.js)
    content/userchromejs/multitab.uc.js              (multitab.uc.js)
