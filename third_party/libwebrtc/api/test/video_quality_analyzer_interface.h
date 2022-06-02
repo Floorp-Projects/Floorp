@@ -57,16 +57,18 @@ class VideoQualityAnalyzerInterface : public StatsObserverInterface {
  public:
   // Contains extra statistic provided by video encoder.
   struct EncoderStats {
+    std::string encoder_name = "unknown";
     // TODO(hbos) https://crbug.com/webrtc/9547,
     // https://crbug.com/webrtc/11443: improve stats API to make available
     // there.
-    uint32_t target_encode_bitrate;
+    uint32_t target_encode_bitrate = 0;
   };
   // Contains extra statistic provided by video decoder.
   struct DecoderStats {
+    std::string decoder_name = "unknown";
     // Decode time provided by decoder itself. If decoder doesn’t produce such
     // information can be omitted.
-    absl::optional<int32_t> decode_time_ms;
+    absl::optional<int32_t> decode_time_ms = absl::nullopt;
   };
 
   ~VideoQualityAnalyzerInterface() override = default;

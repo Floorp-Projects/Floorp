@@ -132,7 +132,7 @@ class QualityAnalyzingVideoEncoder : public VideoEncoder,
   };
 
   bool ShouldDiscard(uint16_t frame_id, const EncodedImage& encoded_image)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_);
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   const std::string peer_name_;
   std::unique_ptr<VideoEncoder> delegate_;
@@ -150,14 +150,14 @@ class QualityAnalyzingVideoEncoder : public VideoEncoder,
   // VideoEncoder interface assumes async delivery of encoded images.
   // This lock is used to protect shared state, that have to be propagated
   // from received VideoFrame to resulted EncodedImage.
-  Mutex lock_;
+  Mutex mutex_;
 
-  VideoCodec codec_settings_;
-  SimulcastMode mode_ RTC_GUARDED_BY(lock_);
-  EncodedImageCallback* delegate_callback_ RTC_GUARDED_BY(lock_);
+  VideoCodec codec_settings_ RTC_GUARDED_BY(mutex_);
+  SimulcastMode mode_ RTC_GUARDED_BY(mutex_);
+  EncodedImageCallback* delegate_callback_ RTC_GUARDED_BY(mutex_);
   std::list<std::pair<uint32_t, uint16_t>> timestamp_to_frame_id_list_
-      RTC_GUARDED_BY(lock_);
-  VideoBitrateAllocation bitrate_allocation_ RTC_GUARDED_BY(lock_);
+      RTC_GUARDED_BY(mutex_);
+  VideoBitrateAllocation bitrate_allocation_ RTC_GUARDED_BY(mutex_);
 };
 
 // Produces QualityAnalyzingVideoEncoder, which hold decoders, produced by
