@@ -658,3 +658,10 @@ aflplusplus-4.0:
         type: git
         repo: https://github.com/AFLplusplus/AFLplusplus
         revision: ba3c7bfe40f9b17a691958e3525828385127ad25
+
+cargo-vet:
+    description: cargo-vet source
+    fetch:
+        type: git
+        repo: https://github.com/bholley/cargo-vet
+        revision: 1d5cd771cd1df8921a57b346a0626e8b8f8694f6
