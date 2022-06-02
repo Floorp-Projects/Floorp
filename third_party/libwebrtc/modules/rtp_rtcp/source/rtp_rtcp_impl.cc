@@ -53,8 +53,7 @@ ModuleRtpRtcpImpl::RtpSenderContext::RtpSenderContext(
       packet_generator(
           config,
           &packet_history,
-          config.paced_sender ? config.paced_sender : &non_paced_sender,
-          /*packet_sequencer=*/nullptr) {}
+          config.paced_sender ? config.paced_sender : &non_paced_sender) {}
 
 std::unique_ptr<RtpRtcp> RtpRtcp::DEPRECATED_Create(
     const Configuration& configuration) {

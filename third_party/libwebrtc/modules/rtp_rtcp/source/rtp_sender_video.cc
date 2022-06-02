@@ -708,12 +708,6 @@ bool RTPSenderVideo::SendVideo(
     }
   }
 
-  if (!rtp_sender_->deferred_sequence_numbering() &&
-      !rtp_sender_->AssignSequenceNumbersAndStoreLastPacketState(rtp_packets)) {
-    // Media not being sent.
-    return false;
-  }
-
   LogAndSendToNetwork(std::move(rtp_packets), payload.size());
 
   // Update details about the last sent frame.

@@ -152,12 +152,9 @@ class SendTransport : public Transport,
 };
 
 struct TestConfig {
-  explicit TestConfig(bool with_overhead, bool with_deferred_sequencing)
-      : with_overhead(with_overhead),
-        with_deferred_sequencing(with_deferred_sequencing) {}
+  explicit TestConfig(bool with_overhead) : with_overhead(with_overhead) {}
 
   bool with_overhead = false;
-  bool with_deferred_sequencing = false;
 };
 
 class FieldTrialConfig : public WebRtcKeyValueConfig {
@@ -204,12 +201,10 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
 
   RtpRtcpModule(GlobalSimulatedTimeController* time_controller,
                 bool is_sender,
-                const FieldTrialConfig& trials,
-                bool deferred_sequencing)
+                const FieldTrialConfig& trials)
       : time_controller_(time_controller),
         is_sender_(is_sender),
         trials_(trials),
-        deferred_sequencing_(deferred_sequencing),
         receive_statistics_(
             ReceiveStatistics::Create(time_controller->GetClock())),
         transport_(kOneWayNetworkDelay, time_controller) {
@@ -219,7 +214,6 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
   TimeController* const time_controller_;
   const bool is_sender_;
   const FieldTrialConfig& trials_;
-  const bool deferred_sequencing_;
   RtcpPacketTypeCounter packets_sent_;
   RtcpPacketTypeCounter packets_received_;
   std::unique_ptr<ReceiveStatistics> receive_statistics_;
@@ -289,7 +283,6 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
     config.field_trials = &trials_;
     config.send_packet_observer = this;
     config.fec_generator = fec_generator_;
-    config.use_deferred_sequencing = deferred_sequencing_;
     impl_.reset(new ModuleRtpRtcpImpl2(config));
     impl_->SetRemoteSSRC(is_sender_ ? kReceiverSsrc : kSenderSsrc);
     impl_->SetRTCPStatus(RtcpMode::kCompound);
@@ -310,12 +303,10 @@ class RtpRtcpImpl2Test : public ::testing::TestWithParam<TestConfig> {
         field_trials_(FieldTrialConfig::GetFromTestConfig(GetParam())),
         sender_(&time_controller_,
                 /*is_sender=*/true,
-                field_trials_,
-                GetParam().with_deferred_sequencing),
+                field_trials_),
         receiver_(&time_controller_,
                   /*is_sender=*/false,
-                  field_trials_,
-                  GetParam().with_deferred_sequencing) {}
+                  field_trials_) {}
 
   void SetUp() override {
     // Send module.
@@ -416,12 +407,6 @@ class RtpRtcpImpl2Test : public ::testing::TestWithParam<TestConfig> {
     nack.SetPacketIds(list, kListLength);
     rtc::Buffer packet = nack.Build();
     module->impl_->IncomingRtcpPacket(packet.data(), packet.size());
-  }
-
-  void MaybeAssignSequenceNumber(RtpPacketToSend* packet) {
-    if (!GetParam().with_deferred_sequencing) {
-      sender_.impl_->RtpSender()->AssignSequenceNumber(packet);
-    }
   }
 };
 
@@ -753,7 +738,6 @@ TEST_P(RtpRtcpImpl2Test, StoresPacketInfoForSentPackets) {
 
   // Single-packet frame.
   packet.SetTimestamp(1);
-  MaybeAssignSequenceNumber(&packet);
   packet.set_first_packet_of_frame(true);
   packet.SetMarker(true);
   sender_.impl_->TrySendPacket(&packet, pacing_info);
@@ -769,16 +753,13 @@ TEST_P(RtpRtcpImpl2Test, StoresPacketInfoForSentPackets) {
 
   // Three-packet frame.
   packet.SetTimestamp(2);
-  MaybeAssignSequenceNumber(&packet);
   packet.set_first_packet_of_frame(true);
   packet.SetMarker(false);
   sender_.impl_->TrySendPacket(&packet, pacing_info);
 
-  MaybeAssignSequenceNumber(&packet);
   packet.set_first_packet_of_frame(false);
   sender_.impl_->TrySendPacket(&packet, pacing_info);
 
-  MaybeAssignSequenceNumber(&packet);
   packet.SetMarker(true);
   sender_.impl_->TrySendPacket(&packet, pacing_info);
 
@@ -937,7 +918,6 @@ TEST_P(RtpRtcpImpl2Test, PaddingNotAllowedInMiddleOfFrame) {
   packet->set_packet_type(RtpPacketToSend::Type::kVideo);
   packet->set_first_packet_of_frame(true);
   packet->SetMarker(false);  // Marker false - not last packet of frame.
-  MaybeAssignSequenceNumber(packet.get());
 
   EXPECT_TRUE(sender_.impl_->TrySendPacket(packet.get(), pacing_info));
 
@@ -948,7 +928,6 @@ TEST_P(RtpRtcpImpl2Test, PaddingNotAllowedInMiddleOfFrame) {
   packet->set_packet_type(RtpPacketToSend::Type::kVideo);
   packet->set_first_packet_of_frame(true);
   packet->SetMarker(true);
-  MaybeAssignSequenceNumber(packet.get());
 
   EXPECT_TRUE(sender_.impl_->TrySendPacket(packet.get(), pacing_info));
 
@@ -1187,11 +1166,9 @@ TEST_P(RtpRtcpImpl2Test, RtxRtpStateReflectsCurrentState) {
   EXPECT_EQ(rtx_state.sequence_number, rtx_packet.SequenceNumber() + 1);
 }
 
-INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverheadAndDeferredSequencing,
+INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
                          RtpRtcpImpl2Test,
-                         ::testing::Values(TestConfig{false, false},
-                                           TestConfig{false, true},
-                                           TestConfig{true, false},
-                                           TestConfig{true, true}));
+                         ::testing::Values(TestConfig{false},
+                                           TestConfig{true}));
 
 }  // namespace webrtc
