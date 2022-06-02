@@ -143,4 +143,20 @@ TEST_F(FramerateControllerTest, NoFramesDroppedAfterReset) {
     EXPECT_FALSE(controller_.ShouldDropFrame(GetNextTimestampNs()));
 }
 
+TEST_F(FramerateControllerTest, TestKeepFrame) {
+  FramerateController controller(kInputFps / 2);
+
+  EXPECT_FALSE(controller.ShouldDropFrame(GetNextTimestampNs()));
+  EXPECT_TRUE(controller.ShouldDropFrame(GetNextTimestampNs()));
+  EXPECT_FALSE(controller.ShouldDropFrame(GetNextTimestampNs()));
+  EXPECT_TRUE(controller.ShouldDropFrame(GetNextTimestampNs()));
+  EXPECT_FALSE(controller.ShouldDropFrame(GetNextTimestampNs()));
+
+  // Next frame should be dropped.
+  // Keep this frame (e.g. in case of a key frame).
+  controller.KeepFrame(GetNextTimestampNs());
+  // Expect next frame to be dropped instead.
+  EXPECT_TRUE(controller.ShouldDropFrame(GetNextTimestampNs()));
+}
+
 }  // namespace webrtc
