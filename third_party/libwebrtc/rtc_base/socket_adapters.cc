@@ -182,7 +182,10 @@ void AsyncSSLSocket::OnConnectEvent(Socket* socket) {
   RTC_DCHECK(socket == GetSocket());
   // TODO: we could buffer output too...
   const int res = DirectSend(kSslClientHello, sizeof(kSslClientHello));
-  RTC_DCHECK_EQ(sizeof(kSslClientHello), res);
+  if (res != sizeof(kSslClientHello)) {
+    Close();
+    SignalCloseEvent(this, 0);
+  }
 }
 
 void AsyncSSLSocket::ProcessInput(char* data, size_t* len) {
