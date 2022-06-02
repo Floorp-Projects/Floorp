@@ -669,21 +669,22 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         }
 
     def _label_video_folder(self, result_data, base_dir, kind="warm"):
-        for idx, data in enumerate(result_data["files"]["video"]):
-            parts = list(pathlib.Path(data).parts)
-            lable_idx = parts.index("data")
-            if "query-" in parts[lable_idx - 1]:
-                lable_idx -= 1
+        for filetype in result_data["files"]:
+            for idx, data in enumerate(result_data["files"][filetype]):
+                parts = list(pathlib.Path(data).parts)
+                lable_idx = parts.index("data")
+                if "query-" in parts[lable_idx - 1]:
+                    lable_idx -= 1
 
-            src_dir = pathlib.Path(base_dir).joinpath(*parts[: lable_idx + 1])
-            parts.insert(lable_idx, kind)
-            dst_dir = pathlib.Path(base_dir).joinpath(*parts[: lable_idx + 1])
+                src_dir = pathlib.Path(base_dir).joinpath(*parts[: lable_idx + 1])
+                parts.insert(lable_idx, kind)
+                dst_dir = pathlib.Path(base_dir).joinpath(*parts[: lable_idx + 1])
 
-            if src_dir.exists():
-                pathlib.Path(dst_dir).mkdir(parents=True, exist_ok=True)
-                shutil.move(str(src_dir), str(dst_dir))
+                if src_dir.exists() and not dst_dir.exists():
+                    pathlib.Path(dst_dir).mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(src_dir), str(dst_dir))
 
-            result_data["files"]["video"][idx] = str(pathlib.Path(*parts[:]))
+                result_data["files"][filetype][idx] = str(pathlib.Path(*parts[:]))
 
     def summarize_and_output(self, test_config, tests, test_names):
         """
@@ -757,6 +758,20 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     json.dump([cold_data], f)
                 with open(warm_path, "w") as f:
                     json.dump([warm_data], f)
+
+                raw_btresults[0] = cold_data
+                raw_btresults[1] = warm_data
+
+                # Overwrite the contents of the browertime.json file
+                # to update it with the new file paths
+                try:
+                    with open(bt_res_json, "w", encoding="utf8") as f:
+                        json.dump(raw_btresults, f)
+                except Exception as e:
+                    LOG.error("Exception reading %s" % bt_res_json)
+                    # XXX this should be replaced by a traceback call
+                    LOG.error("Exception: %s %s" % (type(e).__name__, str(e)))
+                    raise
 
             if not run_local:
                 extra_options = self.build_extra_options()
