@@ -132,8 +132,8 @@ TEST(DenormalDisabler, ZeroDenormalsNested) {
 // compiler are not supported.
 TEST(DenormalDisabler, DoNotZeroDenormalsIfUnsupported) {
   if (DenormalDisabler::IsSupported()) {
-    // TODO(bugs.webrtc.org/13057): Use GTEST_SKIP() once fixed.
-    return;
+    GTEST_SKIP() << "This test should only run on platforms without support "
+                    "for DenormalDisabler.";
   }
   DenormalDisabler denormal_disabler(/*enabled=*/true);
   for (float x : kDenormalDivisors) {
