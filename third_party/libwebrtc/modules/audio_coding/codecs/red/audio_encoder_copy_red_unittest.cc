@@ -34,8 +34,6 @@ namespace webrtc {
 
 namespace {
 static const size_t kMaxNumSamples = 48 * 10 * 2;  // 10 ms @ 48 kHz stereo.
-static const size_t kRedLastHeaderLength =
-    1;  // 1 byte RED header for the last element.
 }
 
 class AudioEncoderCopyRedTest : public ::testing::Test {
@@ -156,7 +154,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckNoOutput) {
   // First call is a special case, since it does not include a secondary
   // payload.
   EXPECT_EQ(0u, encoded_info_.redundant.size());
-  EXPECT_EQ(kEncodedSize + kRedLastHeaderLength, encoded_info_.encoded_bytes);
+  EXPECT_EQ(kEncodedSize, encoded_info_.encoded_bytes);
 
   // Next call to the speech encoder will not produce any output.
   Encode();
@@ -219,7 +217,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloadSizes) {
   // payload.
   Encode();
   EXPECT_EQ(0u, encoded_info_.redundant.size());
-  EXPECT_EQ(kRedLastHeaderLength + 1u, encoded_info_.encoded_bytes);
+  EXPECT_EQ(1u, encoded_info_.encoded_bytes);
 
   // Second call is also special since it does not include a tertiary
   // payload.
@@ -331,10 +329,9 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloads) {
   // First call is a special case, since it does not include a secondary
   // payload.
   Encode();
-  EXPECT_EQ(kRedLastHeaderLength + kPayloadLenBytes,
-            encoded_info_.encoded_bytes);
+  EXPECT_EQ(kPayloadLenBytes, encoded_info_.encoded_bytes);
   for (size_t i = 0; i < kPayloadLenBytes; ++i) {
-    EXPECT_EQ(i, encoded_.data()[kRedLastHeaderLength + i]);
+    EXPECT_EQ(i, encoded_.data()[i]);
   }
 
   for (int j = 0; j < 1; ++j) {
