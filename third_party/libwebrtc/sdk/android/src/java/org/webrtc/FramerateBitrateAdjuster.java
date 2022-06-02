@@ -18,9 +18,9 @@ class FramerateBitrateAdjuster extends BaseBitrateAdjuster {
   private static final int DEFAULT_FRAMERATE_FPS = 30;
 
   @Override
-  public void setTargets(int targetBitrateBps, int targetFramerateFps) {
+  public void setTargets(int targetBitrateBps, double targetFramerateFps) {
     // Keep frame rate unchanged and adjust bit rate.
     this.targetFramerateFps = DEFAULT_FRAMERATE_FPS;
-    this.targetBitrateBps = targetBitrateBps * DEFAULT_FRAMERATE_FPS / targetFramerateFps;
+    this.targetBitrateBps = (int) (targetBitrateBps * DEFAULT_FRAMERATE_FPS / targetFramerateFps);
   }
 }

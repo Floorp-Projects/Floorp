@@ -46,7 +46,7 @@ class VideoEncoderWrapper : public VideoEncoder {
   int32_t Encode(const VideoFrame& frame,
                  const std::vector<VideoFrameType>* frame_types) override;
 
-  void SetRates(const RateControlParameters& parameters) override;
+  void SetRates(const RateControlParameters& rc_parameters) override;
 
   EncoderInfo GetEncoderInfo() const override;
 
@@ -70,12 +70,19 @@ class VideoEncoderWrapper : public VideoEncoder {
                            const char* method_name);
 
   int ParseQp(rtc::ArrayView<const uint8_t> buffer);
+
   CodecSpecificInfo ParseCodecSpecificInfo(const EncodedImage& frame);
+
   ScopedJavaLocalRef<jobject> ToJavaBitrateAllocation(
       JNIEnv* jni,
       const VideoBitrateAllocation& allocation);
 
+  ScopedJavaLocalRef<jobject> ToJavaRateControlParameters(
+      JNIEnv* jni,
+      const VideoEncoder::RateControlParameters& rc_parameters);
+
   void UpdateEncoderInfo(JNIEnv* jni);
+
   ScalingSettings GetScalingSettingsInternal(JNIEnv* jni) const;
   std::vector<ResolutionBitrateLimits> GetResolutionBitrateLimits(
       JNIEnv* jni) const;

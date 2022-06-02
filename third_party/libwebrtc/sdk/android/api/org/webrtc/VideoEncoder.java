@@ -236,6 +236,28 @@ public interface VideoEncoder {
     }
   }
 
+  /** Rate control parameters. */
+  public class RateControlParameters {
+    /**
+     * Adjusted target bitrate, per spatial/temporal layer. May be lower or higher than the target
+     * depending on encoder behaviour.
+     */
+    public final BitrateAllocation bitrate;
+
+    /**
+     * Target framerate, in fps. A value <= 0.0 is invalid and should be interpreted as framerate
+     * target not available. In this case the encoder should fall back to the max framerate
+     * specified in `codec_settings` of the last InitEncode() call.
+     */
+    public final double framerateFps;
+
+    @CalledByNative("RateControlParameters")
+    public RateControlParameters(BitrateAllocation bitrate, double framerateFps) {
+      this.bitrate = bitrate;
+      this.framerateFps = framerateFps;
+    }
+  }
+
   public interface Callback {
     /**
      * Old encoders assume that the byte buffer held by `frame` is not accessed after the call to
@@ -296,7 +318,14 @@ public interface VideoEncoder {
   @CalledByNative VideoCodecStatus encode(VideoFrame frame, EncodeInfo info);
 
   /** Sets the bitrate allocation and the target framerate for the encoder. */
-  @CalledByNative VideoCodecStatus setRateAllocation(BitrateAllocation allocation, int framerate);
+  VideoCodecStatus setRateAllocation(BitrateAllocation allocation, int framerate);
+
+  /** Sets the bitrate allocation and the target framerate for the encoder. */
+  default @CalledByNative VideoCodecStatus setRates(RateControlParameters rcParameters) {
+    // Round frame rate up to avoid overshoots.
+    int framerateFps = (int) Math.ceil(rcParameters.framerateFps);
+    return setRateAllocation(rcParameters.bitrate, framerateFps);
+  }
 
   /** Any encoder that wants to use WebRTC provided quality scaler must implement this method. */
   @CalledByNative ScalingSettings getScalingSettings();

@@ -241,7 +241,8 @@ class HardwareVideoEncoder implements VideoEncoder {
       format.setInteger(MediaFormat.KEY_BIT_RATE, adjustedBitrate);
       format.setInteger(KEY_BITRATE_MODE, VIDEO_ControlRateConstant);
       format.setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat);
-      format.setInteger(MediaFormat.KEY_FRAME_RATE, bitrateAdjuster.getAdjustedFramerateFps());
+      format.setFloat(
+          MediaFormat.KEY_FRAME_RATE, (float) bitrateAdjuster.getAdjustedFramerateFps());
       format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, keyFrameIntervalSec);
       if (codecType == VideoCodecMimeType.H264) {
         String profileLevelId = params.get(VideoCodecInfo.H264_FMTP_PROFILE_LEVEL_ID);
@@ -465,6 +466,13 @@ class HardwareVideoEncoder implements VideoEncoder {
       framerate = MAX_VIDEO_FRAMERATE;
     }
     bitrateAdjuster.setTargets(bitrateAllocation.getSum(), framerate);
+    return VideoCodecStatus.OK;
+  }
+
+  @Override
+  public VideoCodecStatus setRates(RateControlParameters rcParameters) {
+    encodeThreadChecker.checkIsOnValidThread();
+    bitrateAdjuster.setTargets(rcParameters.bitrate.getSum(), rcParameters.framerateFps);
     return VideoCodecStatus.OK;
   }
 
