@@ -1335,7 +1335,7 @@ TEST(RtcpReceiverTest,
   const int64_t kUtcNowUs = 42;
 
   // The "report_block_timestamp_utc_us" is obtained from the global UTC clock
-  // (not the simulcated |mocks.clock|) and requires a scoped fake clock.
+  // (not the simulcated `mocks.clock`) and requires a scoped fake clock.
   rtc::ScopedFakeClock fake_clock;
   fake_clock.SetTime(Timestamp::Micros(kUtcNowUs));
 

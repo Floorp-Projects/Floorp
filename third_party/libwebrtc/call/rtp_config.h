@@ -81,7 +81,7 @@ struct RtpConfig {
   // If rids are specified, they should correspond to the `ssrcs` vector.
   // This means that:
   // 1. rids.size() == 0 || rids.size() == ssrcs.size().
-  // 2. If rids is not empty, then |rids[i]| should use |ssrcs[i]|.
+  // 2. If rids is not empty, then `rids[i]` should use `ssrcs[i]`.
   std::vector<std::string> rids;
 
   // The value to send in the MID RTP header extension if the extension is

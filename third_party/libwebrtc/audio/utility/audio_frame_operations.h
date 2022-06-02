@@ -33,13 +33,13 @@ class AudioFrameOperations {
   // `result_frame` is empty.
   static void Add(const AudioFrame& frame_to_add, AudioFrame* result_frame);
 
-  // |frame.num_channels_| will be updated. This version checks for sufficient
+  // `frame.num_channels_` will be updated. This version checks for sufficient
   // buffer size and that `num_channels_` is mono. Use UpmixChannels
   // instead. TODO(bugs.webrtc.org/8649): remove.
   ABSL_DEPRECATED("bugs.webrtc.org/8649")
   static int MonoToStereo(AudioFrame* frame);
 
-  // |frame.num_channels_| will be updated. This version checks that
+  // `frame.num_channels_` will be updated. This version checks that
   // `num_channels_` is stereo. Use DownmixChannels
   // instead. TODO(bugs.webrtc.org/8649): remove.
   ABSL_DEPRECATED("bugs.webrtc.org/8649")
@@ -52,7 +52,7 @@ class AudioFrameOperations {
                            size_t samples_per_channel,
                            int16_t* dst_audio);
 
-  // |frame.num_channels_| will be updated. This version checks that
+  // `frame.num_channels_` will be updated. This version checks that
   // `num_channels_` is 4 channels.
   static int QuadToStereo(AudioFrame* frame);
 
@@ -66,12 +66,12 @@ class AudioFrameOperations {
                               size_t dst_channels,
                               int16_t* dst_audio);
 
-  // |frame.num_channels_| will be updated. This version checks that
+  // `frame.num_channels_` will be updated. This version checks that
   // `num_channels_` and `dst_channels` are valid and performs relevant downmix.
   // Supported channel combinations are N channels to Mono, and Quad to Stereo.
   static void DownmixChannels(size_t dst_channels, AudioFrame* frame);
 
-  // |frame.num_channels_| will be updated. This version checks that
+  // `frame.num_channels_` will be updated. This version checks that
   // `num_channels_` and `dst_channels` are valid and performs relevant
   // downmix. Supported channel combinations are Mono to N
   // channels. The single channel is replicated.

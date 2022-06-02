@@ -1755,7 +1755,7 @@ MediaSessionDescriptionFactory::CreateAnswer(
     ContentInfo& added = answer->contents().back();
     if (!added.rejected && session_options.bundle_enabled &&
         bundle_index.has_value()) {
-      // The `bundle_index` is for |media_description_options.mid|.
+      // The `bundle_index` is for `media_description_options.mid`.
       RTC_DCHECK_EQ(media_description_options.mid, added.name);
       answer_bundles[bundle_index.value()].AddContentName(added.name);
       bundle_transports[bundle_index.value()].reset(

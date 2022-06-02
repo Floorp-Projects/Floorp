@@ -129,7 +129,7 @@ class Vp8FrameBufferController {
   // Called by the encoder before encoding a frame. Returns a set of overrides
   // the controller wishes to enact in the encoder's configuration.
   // If a value is not overridden, previous overrides are still in effect.
-  // However, if |Vp8EncoderConfig::reset_previous_configuration_overrides|
+  // However, if `Vp8EncoderConfig::reset_previous_configuration_overrides`
   // is set to `true`, all previous overrides are reset.
   virtual Vp8EncoderConfig UpdateConfiguration(size_t stream_index) = 0;
 

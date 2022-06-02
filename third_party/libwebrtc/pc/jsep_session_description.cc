@@ -104,7 +104,7 @@ void UpdateConnectionAddress(
     // Combining the above considerations, we use 0.0.0.0 with port 9 to
     // populate the c= and the m= lines. See `BuildMediaDescription` in
     // webrtc_sdp.cc for the SDP generation with
-    // |media_desc->connection_address()|.
+    // `media_desc->connection_address()`.
     connection_addr = rtc::SocketAddress(kDummyAddress, kDummyPort);
   }
   media_desc->set_connection_address(connection_addr);

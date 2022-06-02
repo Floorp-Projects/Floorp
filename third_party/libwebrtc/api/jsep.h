@@ -166,8 +166,8 @@ class RTC_EXPORT SessionDescriptionInterface {
   // Ownership is not transferred.
   //
   // Returns false if the session description does not have a media section
-  // that corresponds to |candidate.sdp_mid()| or
-  // |candidate.sdp_mline_index()|.
+  // that corresponds to `candidate.sdp_mid()` or
+  // `candidate.sdp_mline_index()`.
   virtual bool AddCandidate(const IceCandidateInterface* candidate) = 0;
 
   // Removes the candidates from the description, if found.

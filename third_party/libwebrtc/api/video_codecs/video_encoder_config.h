@@ -129,7 +129,7 @@ class VideoEncoderConfig {
     // An implementation should return a std::vector<VideoStream> with the
     // wanted VideoStream settings for the given video resolution.
     // The size of the vector may not be larger than
-    // |encoder_config.number_of_streams|.
+    // `encoder_config.number_of_streams`.
     virtual std::vector<VideoStream> CreateEncoderStreams(
         int width,
         int height,

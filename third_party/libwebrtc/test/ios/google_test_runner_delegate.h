@@ -17,7 +17,7 @@
 @protocol GoogleTestRunnerDelegate
 
 // Returns YES if this delegate supports running GoogleTests via a call to
-// |runGoogleTests|.
+// `runGoogleTests`.
 @property(nonatomic, readonly, assign) BOOL supportsRunningGoogleTests;
 
 // Runs GoogleTests and returns the final exit code.

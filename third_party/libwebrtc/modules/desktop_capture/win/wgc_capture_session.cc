@@ -286,7 +286,7 @@ HRESULT WgcCaptureSession::GetFrame(
   int image_width = std::min(previous_size_.Width, new_size.Width);
   int row_data_length = image_width * DesktopFrame::kBytesPerPixel;
 
-  // Make a copy of the data pointed to by |map_info.pData| so we are free to
+  // Make a copy of the data pointed to by `map_info.pData` so we are free to
   // unmap our texture.
   uint8_t* src_data = static_cast<uint8_t*>(map_info.pData);
   std::vector<uint8_t> image_data;

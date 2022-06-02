@@ -122,7 +122,7 @@ RTC_OBJC_EXPORT
  *  WebRTC and the application layer are avoided.
  *
  *  RTCAudioSession also coordinates activation so that the audio session is
- *  activated only once. See |setActive:error:|.
+ *  activated only once. See `setActive:error:`.
  */
 RTC_OBJC_EXPORT
 @interface RTC_OBJC_TYPE (RTCAudioSession) : NSObject <RTC_OBJC_TYPE(RTCAudioSessionActivationDelegate)>

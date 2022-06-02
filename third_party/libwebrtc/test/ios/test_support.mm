@@ -72,8 +72,8 @@ static absl::optional<std::vector<std::string>> g_metrics_to_plot;
   [_window setRootViewController:[[UIViewController alloc] init]];
 
   if (!rtc::test::ShouldRunIOSUnittestsWithXCTest()) {
-    // When running in XCTest mode, XCTest will invoke |runGoogleTest| directly.
-    // Otherwise, schedule a call to |runTests|.
+    // When running in XCTest mode, XCTest will invoke `runGoogleTest` directly.
+    // Otherwise, schedule a call to `runTests`.
     [self performSelector:@selector(runTests) withObject:nil afterDelay:0.1];
   }
 

@@ -138,7 +138,7 @@ class FeedbackTester {
 };
 
 // The following tests use FeedbackTester that simulates received packets as
-// specified by the parameters |received_seq[]| and |received_ts[]| (optional).
+// specified by the parameters `received_seq[]` and `received_ts[]` (optional).
 // The following is verified in these tests:
 // - Expected size of serialized packet.
 // - Expected sequence numbers and receive deltas.

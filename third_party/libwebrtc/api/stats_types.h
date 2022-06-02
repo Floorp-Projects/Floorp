@@ -232,7 +232,7 @@ class RTC_EXPORT StatsReport {
     kStatsValueNameSrtpCipher,
     kStatsValueNameTargetDelayMs,
     kStatsValueNameTargetEncBitrate,
-    kStatsValueNameTimingFrameInfo,  // Result of |TimingFrameInfo::ToString|
+    kStatsValueNameTimingFrameInfo,  // Result of `TimingFrameInfo::ToString`
     kStatsValueNameTrackId,
     kStatsValueNameTransmitBitrate,
     kStatsValueNameTransportType,

@@ -297,7 +297,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     absl::optional<VideoFrame> rendered;
     // If true frame was dropped somewhere from capturing to rendering and
     // wasn't rendered on remote peer side. If `dropped` is true, `rendered`
-    // will be |absl::nullopt|.
+    // will be `absl::nullopt`.
     bool dropped;
     FrameStats frame_stats;
     OverloadReason overload_reason;

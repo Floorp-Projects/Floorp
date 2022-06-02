@@ -42,7 +42,7 @@ class DtmfProviderInterface {
   // The `duration` indicates the length of the DTMF tone in ms.
   // Returns true on success and false on failure.
   virtual bool InsertDtmf(int code, int duration) = 0;
-  // Returns a |sigslot::signal0<>| signal. The signal should fire before
+  // Returns a `sigslot::signal0<>` signal. The signal should fire before
   // the provider is destroyed.
   virtual sigslot::signal0<>* GetOnDestroyedSignal() = 0;
 

@@ -42,8 +42,8 @@ class FineAudioBuffer {
   bool IsReadyForPlayout() const;
   bool IsReadyForRecord() const;
 
-  // Copies audio samples into `audio_buffer` where number of requested
-  // elements is specified by |audio_buffer.size()|. The producer will always
+  // Copies audio samples into `audio_buffer` where number of requested
+  // elements is specified by `audio_buffer.size()`. The producer will always
   // fill up the audio buffer and if no audio exists, the buffer will contain
   // silence instead. The provided delay estimate in `playout_delay_ms` should
   // contain an estimate of the latency between when an audio frame is read from

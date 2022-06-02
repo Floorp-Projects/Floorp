@@ -49,15 +49,15 @@ SSLCertificateStats::~SSLCertificateStats() {}
 
 std::unique_ptr<SSLCertificateStats> SSLCertificate::GetStats() const {
   // TODO(bemasc): Move this computation to a helper class that caches these
-  // values to reduce CPU use in |StatsCollector::GetStats|. This will require
-  // adding a fast |SSLCertificate::Equals| to detect certificate changes.
+  // values to reduce CPU use in `StatsCollector::GetStats`. This will require
+  // adding a fast `SSLCertificate::Equals` to detect certificate changes.
   std::string digest_algorithm;
   if (!GetSignatureDigestAlgorithm(&digest_algorithm))
     return nullptr;
 
-  // |SSLFingerprint::Create| can fail if the algorithm returned by
-  // |SSLCertificate::GetSignatureDigestAlgorithm| is not supported by the
-  // implementation of |SSLCertificate::ComputeDigest|. This currently happens
+  // `SSLFingerprint::Create` can fail if the algorithm returned by
+  // `SSLCertificate::GetSignatureDigestAlgorithm` is not supported by the
+  // implementation of `SSLCertificate::ComputeDigest`. This currently happens
   // with MD5- and SHA-224-signed certificates when linked to libNSS.
   std::unique_ptr<SSLFingerprint> ssl_fingerprint =
       SSLFingerprint::Create(digest_algorithm, *this);

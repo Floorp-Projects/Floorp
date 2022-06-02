@@ -116,7 +116,7 @@ class OpusTest
   void TestCbrEffect(bool dtx, int block_length_ms);
 
   // Prepare `speech_data_` for encoding, read from a hard-coded file.
-  // After preparation, |speech_data_.GetNextBlock()| returns a pointer to a
+  // After preparation, `speech_data_.GetNextBlock()` returns a pointer to a
   // block of `block_length_ms` milliseconds. The data is looped every
   // `loop_length_ms` milliseconds.
   void PrepareSpeechData(int block_length_ms, int loop_length_ms);

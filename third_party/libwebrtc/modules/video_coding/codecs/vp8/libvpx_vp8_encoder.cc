@@ -1049,7 +1049,7 @@ int LibvpxVp8Encoder::Encode(const VideoFrame& frame,
           error == WEBRTC_VIDEO_CODEC_TARGET_BITRATE_OVERSHOOT)) {
     ++num_tries;
     // Note we must pass 0 for `flags` field in encode call below since they are
-    // set above in |libvpx_interface_->vpx_codec_control_| function for each
+    // set above in `libvpx_interface_->vpx_codec_control_` function for each
     // encoder/spatial layer.
     error = libvpx_->codec_encode(&encoders_[0], &raw_images_[0], timestamp_,
                                   duration, 0, VPX_DL_REALTIME);

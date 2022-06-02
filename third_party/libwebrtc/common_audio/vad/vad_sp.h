@@ -35,7 +35,7 @@ void WebRtcVad_Downsampling(const int16_t* signal_in,
 
 // Updates and returns the smoothed feature minimum. As minimum we use the
 // median of the five smallest feature values in a 100 frames long window.
-// As long as |handle->frame_counter| is zero, that is, we haven't received any
+// As long as `handle->frame_counter` is zero, that is, we haven't received any
 // "valid" data, FindMinimum() outputs the default value of 1600.
 //
 // Inputs:

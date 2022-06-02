@@ -349,7 +349,7 @@ class HtmlExport(object):
 
     def _SliceDataForScoreTableCell(self, score_name, apm_config,
                                     test_data_gen, test_data_gen_params):
-        """Slices |self._scores_data_frame| to extract the data for a tab."""
+        """Slices `self._scores_data_frame` to extract the data for a tab."""
         masks = []
         masks.append(self._scores_data_frame.eval_score_name == score_name)
         masks.append(self._scores_data_frame.apm_config == apm_config)

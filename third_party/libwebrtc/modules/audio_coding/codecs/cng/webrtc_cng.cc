@@ -195,7 +195,7 @@ bool ComfortNoiseDecoder::Generate(rtc::ArrayView<int16_t> out_data,
 
   /* `lpPoly` - Coefficients in Q12.
    * `excitation` - Speech samples.
-   * |nst->dec_filtstate| - State preservation.
+   * `nst->dec_filtstate` - State preservation.
    * `out_data` - Filtered speech samples. */
   WebRtcSpl_FilterAR(lpPoly, WEBRTC_CNG_MAX_LPC_ORDER + 1, excitation,
                      num_samples, dec_filtstate_, WEBRTC_CNG_MAX_LPC_ORDER,

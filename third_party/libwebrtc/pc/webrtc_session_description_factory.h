@@ -41,7 +41,7 @@ namespace webrtc {
 class WebRtcCertificateGeneratorCallback
     : public rtc::RTCCertificateGeneratorCallback {
  public:
-  // |rtc::RTCCertificateGeneratorCallback| overrides.
+  // `rtc::RTCCertificateGeneratorCallback` overrides.
   void OnSuccess(
       const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) override;
   void OnFailure() override;

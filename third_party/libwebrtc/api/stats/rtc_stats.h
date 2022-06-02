@@ -217,7 +217,7 @@ enum class NonStandardGroupId {
 
 // Interface for `RTCStats` members, which have a name and a value of a type
 // defined in a subclass. Only the types listed in `Type` are supported, these
-// are implemented by |RTCStatsMember<T>|. The value of a member may be
+// are implemented by `RTCStatsMember<T>`. The value of a member may be
 // undefined, the value can only be read if `is_defined`.
 class RTCStatsMemberInterface {
  public:
@@ -286,7 +286,7 @@ class RTCStatsMemberInterface {
 
 // Template implementation of `RTCStatsMemberInterface`.
 // The supported types are the ones described by
-// |RTCStatsMemberInterface::Type|.
+// `RTCStatsMemberInterface::Type`.
 template <typename T>
 class RTCStatsMember : public RTCStatsMemberInterface {
  public:

@@ -951,7 +951,7 @@ void SendStatisticsProxy::OnSendEncodedImage(
     encode_frame_rate = 1.0;
   double target_frame_size_bytes =
       stats_.target_media_bitrate_bps / (8.0 * encode_frame_rate);
-  // |stats_.target_media_bitrate_bps| is set in
+  // `stats_.target_media_bitrate_bps` is set in
   // SendStatisticsProxy::OnSetEncoderTargetRate.
   stats_.total_encoded_bytes_target += round(target_frame_size_bytes);
   if (codec_info) {
@@ -1196,7 +1196,7 @@ void SendStatisticsProxy::UpdateAdaptationStats() {
   stats_.quality_limitation_reason =
       quality_limitation_reason_tracker_.current_reason();
 
-  // |stats_.quality_limitation_durations_ms| depends on the current time
+  // `stats_.quality_limitation_durations_ms` depends on the current time
   // when it is polled; it is updated in SendStatisticsProxy::GetStats().
 }
 

@@ -158,7 +158,7 @@ TEST(TimestampAlignerTest, ClipToMonotonous) {
 
   // Non-monotonic translated timestamps can happen when only for
   // translated timestamps in the future. Which is tolerated if
-  // |timestamp_aligner.clip_bias_us| is large enough. Instead of
+  // `timestamp_aligner.clip_bias_us` is large enough. Instead of
   // changing that private member for this test, just add the bias to
   // `kSystemTimeUs` when calling ClipTimestamp.
   const int64_t kClipBiasUs = 100000;

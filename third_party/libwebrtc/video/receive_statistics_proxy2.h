@@ -164,7 +164,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   rtc::SampleCounter qp_sample_ RTC_GUARDED_BY(main_thread_);
   int num_bad_states_ RTC_GUARDED_BY(main_thread_);
   int num_certain_states_ RTC_GUARDED_BY(main_thread_);
-  // Note: The |stats_.rtp_stats| member is not used or populated by this class.
+  // Note: The `stats_.rtp_stats` member is not used or populated by this class.
   mutable VideoReceiveStream::Stats stats_ RTC_GUARDED_BY(main_thread_);
   // Same as stats_.ssrc, but const (no lock required).
   const uint32_t remote_ssrc_;

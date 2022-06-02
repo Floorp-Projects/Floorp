@@ -323,7 +323,7 @@ class JsepTransport {
       RTC_GUARDED_BY(network_thread_);
 
   // This is invoked when RTCP-mux becomes active and
-  // |rtcp_dtls_transport_| is destroyed. The JsepTransportController will
+  // `rtcp_dtls_transport_` is destroyed. The JsepTransportController will
   // receive the callback and update the aggregate transport states.
   std::function<void()> rtcp_mux_active_callback_;
 

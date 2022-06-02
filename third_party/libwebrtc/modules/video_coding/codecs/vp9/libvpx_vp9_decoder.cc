@@ -247,7 +247,7 @@ int LibvpxVp9Decoder::Decode(const EncodedImage& input_image,
                        VPX_DL_REALTIME)) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  // |img->fb_priv| contains the image data, a reference counted Vp9FrameBuffer.
+  // `img->fb_priv` contains the image data, a reference counted Vp9FrameBuffer.
   // It may be released by libvpx during future vpx_codec_decode or
   // vpx_codec_destroy calls.
   img = vpx_codec_get_frame(decoder_, &iter);

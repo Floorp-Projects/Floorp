@@ -101,7 +101,7 @@ void UpdateNetworkMetrics(FecControllerPlrBasedTestStates* states,
 }
 
 // Checks that the FEC decision and `uplink_packet_loss_fraction` given by
-// |states->controller->MakeDecision| matches `expected_enable_fec` and
+// `states->controller->MakeDecision` matches `expected_enable_fec` and
 // `expected_uplink_packet_loss_fraction`, respectively.
 void CheckDecision(FecControllerPlrBasedTestStates* states,
                    bool expected_enable_fec,

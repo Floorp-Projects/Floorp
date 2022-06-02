@@ -113,7 +113,7 @@ class UlpfecPacketGenerator : public AugmentedPacketGenerator {
   // Creates a new RtpPacket with FEC payload and RED header. Does this by
   // creating a new fake media AugmentedPacket, clears the marker bit and adds a
   // RED header. Finally replaces the payload with the content of
-  // |packet->data|.
+  // `packet->data`.
   RtpPacketReceived BuildUlpfecRedPacket(
       const ForwardErrorCorrection::Packet& packet);
 };

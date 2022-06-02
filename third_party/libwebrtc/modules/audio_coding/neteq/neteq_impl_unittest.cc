@@ -510,7 +510,7 @@ TEST_F(NetEqImplTest, VerifyTimestampPropagation) {
   EXPECT_EQ(1u, output.num_channels_);
   EXPECT_EQ(AudioFrame::kNormalSpeech, output.speech_type_);
 
-  // Verify |output.packet_infos_|.
+  // Verify `output.packet_infos_`.
   ASSERT_THAT(output.packet_infos_, SizeIs(1));
   {
     const auto& packet_info = output.packet_infos_[0];
@@ -602,7 +602,7 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
   EXPECT_EQ(1u, output.num_channels_);
   EXPECT_EQ(AudioFrame::kNormalSpeech, output.speech_type_);
 
-  // Verify |output.packet_infos_|.
+  // Verify `output.packet_infos_`.
   ASSERT_THAT(output.packet_infos_, SizeIs(1));
   {
     const auto& packet_info = output.packet_infos_[0];
@@ -648,7 +648,7 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
   // out-of-order packet should have been discarded.
   EXPECT_TRUE(packet_buffer_->Empty());
 
-  // Verify |output.packet_infos_|. Expect to only see the second packet.
+  // Verify `output.packet_infos_`. Expect to only see the second packet.
   ASSERT_THAT(output.packet_infos_, SizeIs(1));
   {
     const auto& packet_info = output.packet_infos_[0];

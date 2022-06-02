@@ -231,7 +231,7 @@ int32_t AudioCodingModuleImpl::Encode(
     const InputData& input_data,
     absl::optional<int64_t> absolute_capture_timestamp_ms) {
   // TODO(bugs.webrtc.org/10739): add dcheck that
-  // |audio_frame.absolute_capture_timestamp_ms()| always has a value.
+  // `audio_frame.absolute_capture_timestamp_ms()` always has a value.
   AudioEncoder::EncodedInfo encoded_info;
   uint8_t previous_pltype;
 
@@ -335,7 +335,7 @@ int AudioCodingModuleImpl::Add10MsData(const AudioFrame& audio_frame) {
   MutexLock lock(&acm_mutex_);
   int r = Add10MsDataInternal(audio_frame, &input_data_);
   // TODO(bugs.webrtc.org/10739): add dcheck that
-  // |audio_frame.absolute_capture_timestamp_ms()| always has a value.
+  // `audio_frame.absolute_capture_timestamp_ms()` always has a value.
   return r < 0
              ? r
              : Encode(input_data_, audio_frame.absolute_capture_timestamp_ms());

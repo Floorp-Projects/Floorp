@@ -65,12 +65,12 @@ const unsigned char kTestCertSha512[] = {
     0x35, 0xce, 0x26, 0x58, 0x4a, 0x33, 0x6d, 0xbc, 0xb6};
 
 // These PEM strings were created by generating an identity with
-// |SSLIdentity::Create| and invoking |identity->PrivateKeyToPEMString()|,
-// |identity->PublicKeyToPEMString()| and
-// |identity->certificate().ToPEMString()|. If the crypto library is updated,
+// `SSLIdentity::Create` and invoking `identity->PrivateKeyToPEMString()`,
+// `identity->PublicKeyToPEMString()` and
+// `identity->certificate().ToPEMString()`. If the crypto library is updated,
 // and the update changes the string form of the keys, these will have to be
 // updated too.  The fingerprint, fingerprint algorithm and base64 certificate
-// were created by calling |identity->certificate().GetStats()|.
+// were created by calling `identity->certificate().GetStats()`.
 static const char kRSA_PRIVATE_KEY_PEM[] =
     "-----BEGIN PRIVATE KEY-----\n"
     "MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAMQPqDStRlYeDpkX\n"

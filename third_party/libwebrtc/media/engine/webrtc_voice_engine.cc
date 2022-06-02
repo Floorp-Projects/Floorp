@@ -152,8 +152,8 @@ absl::optional<std::string> GetAudioNetworkAdaptorConfig(
     const AudioOptions& options) {
   if (options.audio_network_adaptor && *options.audio_network_adaptor &&
       options.audio_network_adaptor_config) {
-    // Turn on audio network adaptor only when |options_.audio_network_adaptor|
-    // equals true and |options_.audio_network_adaptor_config| has a value.
+    // Turn on audio network adaptor only when `options_.audio_network_adaptor`
+    // equals true and `options_.audio_network_adaptor_config` has a value.
     return options.audio_network_adaptor_config;
   }
   return absl::nullopt;
@@ -1495,10 +1495,10 @@ webrtc::RTCError WebRtcVoiceMediaChannel::SetRtpSendParameters(
   }
 
   // TODO(minyue): The following legacy actions go into
-  // |WebRtcAudioSendStream::SetRtpParameters()| which is called at the end,
+  // `WebRtcAudioSendStream::SetRtpParameters()` which is called at the end,
   // though there are two difference:
-  // 1. |WebRtcVoiceMediaChannel::SetChannelSendParameters()| only calls
-  // `SetSendCodec` while |WebRtcAudioSendStream::SetRtpParameters()| calls
+  // 1. `WebRtcVoiceMediaChannel::SetChannelSendParameters()` only calls
+  // `SetSendCodec` while `WebRtcAudioSendStream::SetRtpParameters()` calls
   // `SetSendCodecs`. The outcome should be the same.
   // 2. AudioSendStream can be recreated.
 

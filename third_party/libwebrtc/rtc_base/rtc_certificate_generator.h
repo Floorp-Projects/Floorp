@@ -23,7 +23,7 @@
 
 namespace rtc {
 
-// See |RTCCertificateGeneratorInterface::GenerateCertificateAsync|.
+// See `RTCCertificateGeneratorInterface::GenerateCertificateAsync`.
 class RTCCertificateGeneratorCallback : public RefCountInterface {
  public:
   virtual void OnSuccess(const scoped_refptr<RTCCertificate>& certificate) = 0;

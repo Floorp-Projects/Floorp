@@ -230,7 +230,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
   // Performance flags, ordered by `min_pixel_count`.
   const PerformanceFlags performance_flags_;
   // Caching of of `speed_configs_`, where index i maps to the resolution as
-  // specified in |codec_.spatialLayer[i]|.
+  // specified in `codec_.spatialLayer[i]`.
   std::vector<PerformanceFlags::ParameterSet>
       performance_flags_by_spatial_index_;
   void UpdatePerformanceFlags();

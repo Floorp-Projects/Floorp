@@ -104,7 +104,7 @@ static bool ParsePort(const std::string& in_str, int* port) {
 // This method parses IPv6 and IPv4 literal strings, along with hostnames in
 // standard hostname:port format.
 // Consider following formats as correct.
-// |hostname:port|, |[IPV6 address]:port|, |IPv4 address|:port,
+// `hostname:port`, |[IPV6 address]:port|, |IPv4 address|:port,
 // `hostname`, |[IPv6 address]|, |IPv4 address|.
 static bool ParseHostnameAndPortFromString(const std::string& in_str,
                                            std::string* host,

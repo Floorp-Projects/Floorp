@@ -701,7 +701,7 @@ static void CopyHeaderAndExtensionsToRtxPacket(const RtpPacketToSend& packet,
       continue;
     }
 
-    // Empty extensions should be supported, so not checking |source.empty()|.
+    // Empty extensions should be supported, so not checking `source.empty()`.
     if (!packet.HasExtension(extension)) {
       continue;
     }

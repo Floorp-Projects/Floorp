@@ -574,7 +574,7 @@ void VideoReceiveStream2::OnFrame(const VideoFrame& video_frame) {
   VideoFrameMetaData frame_meta(video_frame, clock_->CurrentTime());
 
   // TODO(bugs.webrtc.org/10739): we should set local capture clock offset for
-  // |video_frame.packet_infos|. But VideoFrame is const qualified here.
+  // `video_frame.packet_infos`. But VideoFrame is const qualified here.
 
   call_->worker_thread()->PostTask(
       ToQueuedTask(task_safety_, [frame_meta, this]() {

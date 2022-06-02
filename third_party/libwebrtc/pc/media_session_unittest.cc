@@ -2719,7 +2719,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   // offer/answer exchange plus the audio codecs only `f2_` offer, sorted in
   // preference order.
   // TODO(wu): `updated_offer` should not include the codec
-  // (i.e. |kAudioCodecs2[0]|) the other side doesn't support.
+  // (i.e. `kAudioCodecs2[0]`) the other side doesn't support.
   const AudioCodec kUpdatedAudioCodecOffer[] = {
       kAudioCodecsAnswer[0],
       kAudioCodecsAnswer[1],

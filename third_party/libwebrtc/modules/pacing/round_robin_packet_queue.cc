@@ -175,7 +175,7 @@ std::unique_ptr<RtpPacketToSend> RoundRobinPacketQueue::Pop() {
 
   // Calculate the total amount of time spent by this packet in the queue
   // while in a non-paused state. Note that the `pause_time_sum_ms_` was
-  // subtracted from |packet.enqueue_time_ms| when the packet was pushed, and
+  // subtracted from `packet.enqueue_time_ms` when the packet was pushed, and
   // by subtracting it now we effectively remove the time spent in in the
   // queue while in a paused state.
   TimeDelta time_in_non_paused_state =

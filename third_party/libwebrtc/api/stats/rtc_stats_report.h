@@ -90,7 +90,7 @@ class RTC_EXPORT RTCStatsReport final
   // Takes ownership of all the stats in `other`, leaving it empty.
   void TakeMembersFrom(rtc::scoped_refptr<RTCStatsReport> other);
 
-  // Stats iterators. Stats are ordered lexicographically on |RTCStats::id|.
+  // Stats iterators. Stats are ordered lexicographically on `RTCStats::id`.
   ConstIterator begin() const;
   ConstIterator end() const;
 
