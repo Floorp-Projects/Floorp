@@ -281,8 +281,9 @@ class VirtualSocketServer : public SocketServer {
   // socket server. Intended to be used for test assertions.
   uint32_t sent_packets() const { return sent_packets_; }
 
-  // Binds the given socket to addr, assigning and IP and Port if necessary
-  int Bind(VirtualSocket* socket, SocketAddress* addr);
+  // Assign IP and Port if application's address is unspecified. Also apply
+  // `alternative_address_mapping_`.
+  SocketAddress AssignBindAddress(const SocketAddress& app_addr);
 
   // Binds the given socket to the given (fully-defined) address.
   int Bind(VirtualSocket* socket, const SocketAddress& addr);

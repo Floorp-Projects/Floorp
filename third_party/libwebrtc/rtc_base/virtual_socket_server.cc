@@ -133,8 +133,8 @@ int VirtualSocket::Bind(const SocketAddress& addr) {
     error_ = EINVAL;
     return -1;
   }
-  local_addr_ = addr;
-  int result = server_->Bind(this, &local_addr_);
+  local_addr_ = server_->AssignBindAddress(addr);
+  int result = server_->Bind(this, local_addr_);
   if (result != 0) {
     local_addr_.Clear();
     error_ = EADDRINUSE;
@@ -431,8 +431,9 @@ int VirtualSocket::SendUdp(const void* pv,
                            const SocketAddress& addr) {
   // If we have not been assigned a local port, then get one.
   if (local_addr_.IsNil()) {
-    local_addr_ = EmptySocketAddressWithFamily(addr.ipaddr().family());
-    int result = server_->Bind(this, &local_addr_);
+    local_addr_ = server_->AssignBindAddress(
+        EmptySocketAddressWithFamily(addr.ipaddr().family()));
+    int result = server_->Bind(this, local_addr_);
     if (result != 0) {
       local_addr_.Clear();
       error_ = EADDRINUSE;
@@ -684,35 +685,35 @@ int VirtualSocketServer::Bind(VirtualSocket* socket,
   return bindings_->insert(entry).second ? 0 : -1;
 }
 
-int VirtualSocketServer::Bind(VirtualSocket* socket, SocketAddress* addr) {
-  RTC_DCHECK(nullptr != socket);
+SocketAddress VirtualSocketServer::AssignBindAddress(
+    const SocketAddress& app_addr) {
+  RTC_DCHECK(!IPIsUnspec(app_addr.ipaddr()));
 
   // Normalize the IP.
-  if (!IPIsUnspec(addr->ipaddr())) {
-    addr->SetIP(addr->ipaddr().Normalized());
-  } else {
-    RTC_NOTREACHED();
-  }
+  SocketAddress addr;
+  addr.SetIP(app_addr.ipaddr().Normalized());
 
   // If the IP appears in `alternative_address_mapping_`, meaning the test has
   // configured sockets bound to this IP to actually use another IP, replace
   // the IP here.
-  auto alternative = alternative_address_mapping_.find(addr->ipaddr());
+  auto alternative = alternative_address_mapping_.find(addr.ipaddr());
   if (alternative != alternative_address_mapping_.end()) {
-    addr->SetIP(alternative->second);
+    addr.SetIP(alternative->second);
   }
 
-  // Assign a port if not assigned.
-  if (addr->port() == 0) {
+  if (app_addr.port() != 0) {
+    addr.SetPort(app_addr.port());
+  } else {
+    // Assign a port.
     for (int i = 0; i < kEphemeralPortCount; ++i) {
-      addr->SetPort(GetNextPort());
-      if (bindings_->find(*addr) == bindings_->end()) {
+      addr.SetPort(GetNextPort());
+      if (bindings_->find(addr) == bindings_->end()) {
         break;
       }
     }
   }
 
-  return Bind(socket, *addr);
+  return addr;
 }
 
 VirtualSocket* VirtualSocketServer::LookupBinding(const SocketAddress& addr) {
