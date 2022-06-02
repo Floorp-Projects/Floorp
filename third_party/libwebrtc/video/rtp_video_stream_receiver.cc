@@ -361,7 +361,7 @@ RtpVideoStreamReceiver::~RtpVideoStreamReceiver() {
 
 void RtpVideoStreamReceiver::AddReceiveCodec(
     uint8_t payload_type,
-    const VideoCodec& video_codec,
+    VideoCodecType codec_type,
     const std::map<std::string, std::string>& codec_params,
     bool raw_payload) {
   if (codec_params.count(cricket::kH264FmtpSpsPpsIdrInKeyframe) ||
@@ -370,9 +370,8 @@ void RtpVideoStreamReceiver::AddReceiveCodec(
     packet_buffer_.ForceSpsPpsIdrIsH264Keyframe();
   }
   payload_type_map_.emplace(
-      payload_type, raw_payload
-                        ? std::make_unique<VideoRtpDepacketizerRaw>()
-                        : CreateVideoRtpDepacketizer(video_codec.codecType));
+      payload_type, raw_payload ? std::make_unique<VideoRtpDepacketizerRaw>()
+                                : CreateVideoRtpDepacketizer(codec_type));
   pt_codec_params_.emplace(payload_type, codec_params);
 }
 
