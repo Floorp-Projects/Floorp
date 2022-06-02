@@ -104,7 +104,13 @@ class Camera1Session implements CameraSession {
     }
 
     // Calculate orientation manually and send it as CVO insted.
-    camera.setDisplayOrientation(0 /* degrees */);
+    try {
+      camera.setDisplayOrientation(0 /* degrees */);
+    } catch (RuntimeException e) {
+      camera.release();
+      callback.onFailure(FailureType.ERROR, e.getMessage());
+      return;
+    }
 
     callback.onDone(new Camera1Session(events, captureToTexture, applicationContext,
         surfaceTextureHelper, cameraId, camera, info, captureFormat, constructionTimeNs));
