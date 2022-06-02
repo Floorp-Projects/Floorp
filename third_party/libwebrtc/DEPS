@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '6ce9efed5297a903aea61a2ee590798ed3fdc616',
+  'chromium_revision': 'fc6bee4515d5ba414fa86aeef82e6a41e193ea27',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,9 +20,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@8f4dbc27d7a19efd35181ddd533523ae6371a03d',
+    'https://chromium.googlesource.com/chromium/src/base@b12754566fb08234e5b2df0b57fa804c0a13a329',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@8e6db3edf0eaa17992cc35b4ccf5257bd363668e',
+    'https://chromium.googlesource.com/chromium/src/build@fec3cbb4cf0c7a7d8fd9f5005e46603a041175fd',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@37dc929ecb351687006a61744b116cda601753d7',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -31,13 +31,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@b88f2d84ca8f98fea87c41dd7e017cf1284eb7ca',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@155154d8a2ad1384ad84b31233e149e8e2e1bbfd',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@750eacd8402782cba17da5b6909e14f46893f0e2',
+    'https://chromium.googlesource.com/chromium/src/testing@3b5dec3ed10eb18da786c3c4cf3e39e05a19d7d0',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@6a751ad8ddfba4b220b15c5e75c0213c6f5c8dbd',
+    'https://chromium.googlesource.com/chromium/src/third_party@0e2e49c6bfe90b9b0f845c52e1f9d39fcd66003e',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -214,7 +214,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@02c4020f875f43cefcad9222d2354c49b5b20a90',
+    'https://android.googlesource.com/platform/external/perfetto.git@bb09784511ef291082ade44a2d3d05dd3e45d30d',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@15a75b45304248f746634b43763c496322bf8968',
   'src/third_party/libyuv':
@@ -264,14 +264,14 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/third_party/usrsctp/usrsctplib':
-    'https://chromium.googlesource.com/external/github.com/sctplab/usrsctp@1ade45cbadfd19298d2c47dc538962d4425ad2dd',
+    'https://chromium.googlesource.com/external/github.com/sctplab/usrsctp@978003f36a3bc1e9fdeafae26dbfe825684b0a25',
   # Dependency used by libjpeg-turbo.
   'src/third_party/yasm/binaries': {
     'url': 'https://chromium.googlesource.com/chromium/deps/yasm/binaries.git@52f9b3f4b0aa06da24ef8b123058bb61ee468881',
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@17ce438192e10409f4dd04808cccf7826ff32f9e',
+    'https://chromium.googlesource.com/chromium/src/tools@7d1294d67ccca5234fea0eeb532befe313027846',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
@@ -372,7 +372,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'W_Ao-8V07thIs3GBTCZUN5L80ogZiewh6X1WkE3y4qEC',
+          'version': 'eX56cS56N9qCnvqydGMdLomSzdAsiZCC3_miMAh-K_wC',
       },
     ],
     'condition': 'checkout_android',
