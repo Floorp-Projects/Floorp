@@ -862,7 +862,8 @@ nsresult CryptoKey::PrivateKeyToJwk(SECKEYPrivateKey* aPrivKey,
 }
 
 UniqueSECKEYPublicKey CreateECPublicKey(const SECItem* aKeyData,
-                                        const nsAString& aNamedCurve) {
+                                        const nsAString& aNamedCurve,
+                                        bool aVerifyValid) {
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
     return nullptr;
@@ -893,9 +894,10 @@ UniqueSECKEYPublicKey CreateECPublicKey(const SECItem* aKeyData,
   key->u.ec.publicValue = *aKeyData;
 
   // Ensure the given point is on the curve.
-  if (!CryptoKey::PublicKeyValid(key.get())) {
+  if (aVerifyValid && !CryptoKey::PublicKeyValid(key.get())) {
     return nullptr;
   }
+  MOZ_ASSERT(aVerifyValid || CryptoKey::PublicKeyValid(key.get()));
 
   return UniqueSECKEYPublicKey(SECKEY_CopyPublicKey(key.get()));
 }
