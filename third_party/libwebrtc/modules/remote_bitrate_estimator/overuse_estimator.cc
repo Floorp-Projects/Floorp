@@ -145,13 +145,13 @@ void OveruseEstimator::UpdateNoiseEstimate(double residual,
     return;
   }
   // Faster filter during startup to faster adapt to the jitter level
-  // of the network. |alpha| is tuned for 30 frames per second, but is scaled
-  // according to |ts_delta|.
+  // of the network. `alpha` is tuned for 30 frames per second, but is scaled
+  // according to `ts_delta`.
   double alpha = 0.01;
   if (num_of_deltas_ > 10 * 30) {
     alpha = 0.002;
   }
-  // Only update the noise estimate if we're not over-using. |beta| is a
+  // Only update the noise estimate if we're not over-using. `beta` is a
   // function of alpha and the time delta since the previous update.
   const double beta = pow(1 - alpha, ts_delta * 30.0 / 1000.0);
   avg_noise_ = beta * avg_noise_ + (1 - beta) * residual;
