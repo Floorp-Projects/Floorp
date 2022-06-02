@@ -2051,7 +2051,6 @@ TEST_F(JsepTransportControllerTest, ChangeTaggedMediaSectionMaxBundle) {
   EXPECT_TRUE(transport_controller_
                   ->SetLocalDescription(SdpType::kOffer, local_reoffer.get())
                   .ok());
-
   std::unique_ptr<cricket::SessionDescription> remote_reanswer(
       local_reoffer->Clone());
   EXPECT_TRUE(

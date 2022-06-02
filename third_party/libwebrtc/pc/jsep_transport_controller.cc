@@ -551,6 +551,17 @@ RTCError JsepTransportController::ApplyDescription_n(
         MergeEncryptedHeaderExtensionIdsForBundles(description);
   }
 
+  // Because the creation of transports depends on whether
+  // certain mids are present, we have to process rejection
+  // before we try to create transports.
+  for (size_t i = 0; i < description->contents().size(); ++i) {
+    const cricket::ContentInfo& content_info = description->contents()[i];
+    if (content_info.rejected) {
+      // This may cause groups to be removed from `bundles_.bundle_groups()`.
+      HandleRejectedContent(content_info);
+    }
+  }
+
   for (const cricket::ContentInfo& content_info : description->contents()) {
     // Don't create transports for rejected m-lines and bundled m-lines.
     if (content_info.rejected ||
@@ -569,9 +580,8 @@ RTCError JsepTransportController::ApplyDescription_n(
     const cricket::ContentInfo& content_info = description->contents()[i];
     const cricket::TransportInfo& transport_info =
         description->transport_infos()[i];
+
     if (content_info.rejected) {
-      // This may cause groups to be removed from `bundles_.bundle_groups()`.
-      HandleRejectedContent(content_info);
       continue;
     }
 
@@ -977,7 +987,21 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
   if (transport) {
     return RTCError::OK();
   }
-
+  // If we have agreed to a bundle, the new mid will be added to the bundle
+  // according to JSEP, and the responder can't move it out of the group
+  // according to BUNDLE. So don't create a transport.
+  // The MID will be added to the bundle elsewhere in the code.
+  if (bundles_.bundle_groups().size() > 0) {
+    const auto& default_bundle_group = bundles_.bundle_groups()[0];
+    if (default_bundle_group->content_names().size() > 0) {
+      auto bundle_transport =
+          GetJsepTransportByName(default_bundle_group->content_names()[0]);
+      if (bundle_transport) {
+        transports_.SetTransportForMid(content_info.name, bundle_transport);
+        return RTCError::OK();
+      }
+    }
+  }
   const cricket::MediaContentDescription* content_desc =
       content_info.media_description();
   if (certificate_ && !content_desc->cryptos().empty()) {
