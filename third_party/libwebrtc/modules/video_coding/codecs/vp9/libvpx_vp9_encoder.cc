@@ -497,8 +497,8 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
   if (use_svc_controller_) {
     svc_controller_ = CreateVp9ScalabilityStructure(*inst);
   }
-  framerate_controller_ = std::vector<FramerateController>(
-      num_spatial_layers_, FramerateController(codec_.maxFramerate));
+  framerate_controller_ = std::vector<FramerateControllerDeprecated>(
+      num_spatial_layers_, FramerateControllerDeprecated(codec_.maxFramerate));
 
   is_svc_ = (num_spatial_layers_ > 1 || num_temporal_layers_ > 1);
 

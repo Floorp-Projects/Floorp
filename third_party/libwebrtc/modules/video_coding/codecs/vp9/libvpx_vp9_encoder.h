@@ -27,7 +27,7 @@
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "modules/video_coding/codecs/vp9/vp9_frame_buffer_pool.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
-#include "modules/video_coding/utility/framerate_controller.h"
+#include "modules/video_coding/utility/framerate_controller_deprecated.h"
 #include "rtc_base/experiments/encoder_info_settings.h"
 #include "vpx/vp8cx.h"
 
@@ -151,7 +151,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
   uint8_t num_cores_;
 
   std::unique_ptr<ScalableVideoController> svc_controller_;
-  std::vector<FramerateController> framerate_controller_;
+  std::vector<FramerateControllerDeprecated> framerate_controller_;
 
   // Used for flexible mode.
   bool is_flexible_mode_;
@@ -192,7 +192,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
   } variable_framerate_experiment_;
   static VariableFramerateExperiment ParseVariableFramerateConfig(
       const WebRtcKeyValueConfig& trials);
-  FramerateController variable_framerate_controller_;
+  FramerateControllerDeprecated variable_framerate_controller_;
 
   const struct QualityScalerExperiment {
     int low_qp;

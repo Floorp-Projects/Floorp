@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/utility/framerate_controller.h"
+#include "modules/video_coding/utility/framerate_controller_deprecated.h"
 
 #include <stddef.h>
 
@@ -16,14 +16,14 @@
 
 namespace webrtc {
 
-TEST(FramerateController, KeepTargetFramerate) {
+TEST(FramerateControllerDeprecated, KeepTargetFramerate) {
   const float input_framerate_fps = 20;
   const float target_framerate_fps = 5;
   const float max_abs_framerate_error_fps = target_framerate_fps * 0.1f;
   const size_t input_duration_secs = 3;
   const size_t num_input_frames = input_duration_secs * input_framerate_fps;
 
-  FramerateController framerate_controller(target_framerate_fps);
+  FramerateControllerDeprecated framerate_controller(target_framerate_fps);
   size_t num_dropped_frames = 0;
   for (size_t frame_num = 0; frame_num < num_input_frames; ++frame_num) {
     const uint32_t timestamp_ms =
@@ -42,12 +42,12 @@ TEST(FramerateController, KeepTargetFramerate) {
               max_abs_framerate_error_fps);
 }
 
-TEST(FramerateController, DoNotDropAnyFramesIfTargerEqualsInput) {
+TEST(FramerateControllerDeprecated, DoNotDropAnyFramesIfTargerEqualsInput) {
   const float input_framerate_fps = 30;
   const size_t input_duration_secs = 3;
   const size_t num_input_frames = input_duration_secs * input_framerate_fps;
 
-  FramerateController framerate_controller(input_framerate_fps);
+  FramerateControllerDeprecated framerate_controller(input_framerate_fps);
   size_t num_dropped_frames = 0;
   for (size_t frame_num = 0; frame_num < num_input_frames; ++frame_num) {
     const uint32_t timestamp_ms =
@@ -62,26 +62,26 @@ TEST(FramerateController, DoNotDropAnyFramesIfTargerEqualsInput) {
   EXPECT_EQ(num_dropped_frames, 0U);
 }
 
-TEST(FramerateController, DoNotDropFrameWhenTimestampJumpsBackward) {
-  FramerateController framerate_controller(30);
+TEST(FramerateControllerDeprecated, DoNotDropFrameWhenTimestampJumpsBackward) {
+  FramerateControllerDeprecated framerate_controller(30);
   ASSERT_FALSE(framerate_controller.DropFrame(66));
   framerate_controller.AddFrame(66);
   EXPECT_FALSE(framerate_controller.DropFrame(33));
 }
 
-TEST(FramerateController, DropFrameIfItIsTooCloseToPreviousFrame) {
-  FramerateController framerate_controller(30);
+TEST(FramerateControllerDeprecated, DropFrameIfItIsTooCloseToPreviousFrame) {
+  FramerateControllerDeprecated framerate_controller(30);
   ASSERT_FALSE(framerate_controller.DropFrame(33));
   framerate_controller.AddFrame(33);
   EXPECT_TRUE(framerate_controller.DropFrame(34));
 }
 
-TEST(FramerateController, FrameDroppingStartsFromSecondInputFrame) {
+TEST(FramerateControllerDeprecated, FrameDroppingStartsFromSecondInputFrame) {
   const float input_framerate_fps = 23;
   const float target_framerate_fps = 19;
   const uint32_t input_frame_duration_ms =
       static_cast<uint32_t>(1000 / input_framerate_fps);
-  FramerateController framerate_controller(target_framerate_fps);
+  FramerateControllerDeprecated framerate_controller(target_framerate_fps);
   ASSERT_FALSE(framerate_controller.DropFrame(1 * input_frame_duration_ms));
   framerate_controller.AddFrame(1 * input_frame_duration_ms);
   EXPECT_TRUE(framerate_controller.DropFrame(2 * input_frame_duration_ms));
