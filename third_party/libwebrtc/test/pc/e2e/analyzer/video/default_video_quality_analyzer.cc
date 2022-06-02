@@ -66,10 +66,6 @@ void LogStreamInternalStats(const std::string& name,
     RTC_LOG(INFO) << "[" << name << "] Dropped at " << ToString(entry.first)
                   << ": " << entry.second;
   }
-  RTC_LOG(INFO) << "[" << name
-                << "] Dropped by encoder     : " << stats.dropped_by_encoder;
-  RTC_LOG(INFO) << "[" << name << "] Dropped before encoder : "
-                << stats.dropped_before_encoder;
   Timestamp first_encoded_frame_time = Timestamp::PlusInfinity();
   for (const StreamCodecInfo& encoder : stats.encoders) {
     RTC_DCHECK(encoder.switched_on_at.IsFinite());
