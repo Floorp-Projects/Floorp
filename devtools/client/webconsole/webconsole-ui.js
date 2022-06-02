@@ -20,6 +20,8 @@ const {
   getAdHocFrontOrPrimitiveGrip,
 } = require("devtools/client/fronts/object");
 
+const { PREFS } = require("devtools/client/webconsole/constants");
+
 const FirefoxDataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
 
 loader.lazyRequireGetter(
@@ -77,7 +79,7 @@ class WebConsoleUI {
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
-    this._onResourceUpdated = this._onResourceUpdated.bind(this);
+    this._onNetworkResourceUpdated = this._onNetworkResourceUpdated.bind(this);
 
     EventEmitter.decorate(this);
   }
@@ -220,19 +222,16 @@ class WebConsoleUI {
         resourceCommand.TYPES.CONSOLE_MESSAGE,
         resourceCommand.TYPES.ERROR_MESSAGE,
         resourceCommand.TYPES.PLATFORM_MESSAGE,
-        resourceCommand.TYPES.NETWORK_EVENT,
-        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
         resourceCommand.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
         resourceCommand.TYPES.DOCUMENT_EVENT,
       ],
-      {
-        onAvailable: this._onResourceAvailable,
-        onUpdated: this._onResourceUpdated,
-      }
+      { onAvailable: this._onResourceAvailable }
     );
     resourceCommand.unwatchResources([resourceCommand.TYPES.CSS_MESSAGE], {
       onAvailable: this._onResourceAvailable,
     });
+
+    this.stopWatchingNetworkResources();
 
     for (const proxy of this.getAllProxies()) {
       proxy.disconnect();
@@ -328,7 +327,7 @@ class WebConsoleUI {
   async _attachTargets() {
     this.additionalProxies = new Map();
 
-    const { commands } = this.hud;
+    const { commands, resourceCommand } = this.hud;
     this.networkDataProvider = new FirefoxDataProvider({
       commands,
       actions: {
@@ -350,20 +349,42 @@ class WebConsoleUI {
       onDestroyed: this._onTargetDestroy,
     });
 
-    const resourceCommand = commands.resourceCommand;
     await resourceCommand.watchResources(
       [
         resourceCommand.TYPES.CONSOLE_MESSAGE,
         resourceCommand.TYPES.ERROR_MESSAGE,
         resourceCommand.TYPES.PLATFORM_MESSAGE,
-        resourceCommand.TYPES.NETWORK_EVENT,
-        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
         resourceCommand.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
         resourceCommand.TYPES.DOCUMENT_EVENT,
       ],
+      { onAvailable: this._onResourceAvailable }
+    );
+
+    if (this.isBrowserConsole || this.isBrowserToolboxConsole) {
+      const shouldEnableNetworkMonitoring = Services.prefs.getBoolPref(
+        PREFS.UI.ENABLE_NETWORK_MONITORING
+      );
+      if (shouldEnableNetworkMonitoring) {
+        await this.startWatchingNetworkResources();
+      } else {
+        await this.stopWatchingNetworkResources();
+      }
+    } else {
+      // We should always watch for network resources in the webconsole
+      await this.startWatchingNetworkResources();
+    }
+  }
+
+  async startWatchingNetworkResources() {
+    const { commands, resourceCommand } = this.hud;
+    await resourceCommand.watchResources(
+      [
+        resourceCommand.TYPES.NETWORK_EVENT,
+        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+      ],
       {
         onAvailable: this._onResourceAvailable,
-        onUpdated: this._onResourceUpdated,
+        onUpdated: this._onNetworkResourceUpdated,
       }
     );
 
@@ -385,6 +406,19 @@ class WebConsoleUI {
         );
       await networkFront.setSaveRequestAndResponseBodies(saveBodies);
     }
+  }
+
+  async stopWatchingNetworkResources() {
+    await this.hud.resourceCommand.unwatchResources(
+      [
+        this.hud.resourceCommand.TYPES.NETWORK_EVENT,
+        this.hud.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+      ],
+      {
+        onAvailable: this._onResourceAvailable,
+        onUpdated: this._onNetworkResourceUpdated,
+      }
+    );
   }
 
   handleDocumentEvent(resource) {
@@ -486,16 +520,16 @@ class WebConsoleUI {
     this.wrapper.dispatchMessagesAdd(messages);
   }
 
-  _onResourceUpdated(updates) {
-    const messageUpdates = updates
-      .filter(
-        ({ resource }) =>
-          resource.resourceType == this.hud.resourceCommand.TYPES.NETWORK_EVENT
-      )
-      .map(({ resource }) => {
+  _onNetworkResourceUpdated(updates) {
+    const messageUpdates = [];
+    for (const { resource } of updates) {
+      if (
+        resource.resourceType == this.hud.resourceCommand.TYPES.NETWORK_EVENT
+      ) {
         this.networkDataProvider?.onNetworkResourceUpdated(resource);
-        return resource;
-      });
+        messageUpdates.push(resource);
+      }
+    }
     this.wrapper.dispatchMessagesUpdate(messageUpdates);
   }
 

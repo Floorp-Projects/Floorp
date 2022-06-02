@@ -13,6 +13,7 @@ const actionTypes = {
   AUTOCOMPLETE_TOGGLE: "AUTOCOMPLETE_TOGGLE",
   BATCH_ACTIONS: "BATCH_ACTIONS",
   CLEAR_HISTORY: "CLEAR_HISTORY",
+  ENABLE_NETWORK_MONITORING: "ENABLE_NETWORK_MONITORING",
   EDITOR_TOGGLE: "EDITOR_TOGGLE",
   EDITOR_ONBOARDING_DISMISS: "EDITOR_ONBOARDING_DISMISS",
   EDITOR_PRETTY_PRINT: "EDITOR_PRETTY_PRINT",
@@ -86,6 +87,9 @@ const prefs = {
       EDITOR_ONBOARDING: "devtools.webconsole.input.editorOnboarding",
       // Show the Input Context the selector
       CONTEXT_SELECTOR: "devtools.webconsole.input.context",
+      // Persist the "enable network monitoring" option
+      ENABLE_NETWORK_MONITORING:
+        "devtools.browserconsole.enableNetworkMonitoring",
     },
     FEATURES: {
       // We use the same pref to enable the sidebar on webconsole and browser console.

@@ -26,6 +26,7 @@ const {
   EDITOR_ONBOARDING_DISMISS,
   EAGER_EVALUATION_TOGGLE,
   AUTOCOMPLETE_TOGGLE,
+  ENABLE_NETWORK_MONITORING,
 } = require("devtools/client/webconsole/constants");
 
 function openLink(url, e) {
@@ -54,6 +55,24 @@ function contentMessagesToggle() {
       PREFS.UI.CONTENT_MESSAGES,
       uiState.showContentMessages
     );
+  };
+}
+
+function networkMonitoringToggle() {
+  return ({ dispatch, getState, prefsService, webConsoleUI }) => {
+    dispatch({ type: ENABLE_NETWORK_MONITORING });
+    const uiState = getAllUi(getState());
+
+    prefsService.setBoolPref(
+      PREFS.UI.ENABLE_NETWORK_MONITORING,
+      uiState.enableNetworkMonitoring
+    );
+
+    if (uiState.enableNetworkMonitoring) {
+      webConsoleUI.startWatchingNetworkResources();
+    } else {
+      webConsoleUI.stopWatchingNetworkResources();
+    }
   };
 }
 
@@ -229,6 +248,7 @@ module.exports = {
   sidebarClose,
   splitConsoleCloseButtonToggle,
   timestampsToggle,
+  networkMonitoringToggle,
   warningGroupsToggle,
   openLink,
   openSidebar,
