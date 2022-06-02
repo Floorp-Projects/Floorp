@@ -205,7 +205,7 @@ struct Metrics {
   absl::optional<uint32_t> peer_rwnd_bytes = absl::nullopt;
 };
 
-// Callbacks that the DcSctpSocket will be done synchronously to the owning
+// Callbacks that the DcSctpSocket will call synchronously to the owning
 // client. It is allowed to call back into the library from callbacks that start
 // with "On". It has been explicitly documented when it's not allowed to call
 // back into this library from within a callback.
@@ -339,6 +339,7 @@ class DcSctpSocketCallbacks {
 };
 
 // The DcSctpSocket implementation implements the following interface.
+// This class is thread-compatible.
 class DcSctpSocketInterface {
  public:
   virtual ~DcSctpSocketInterface() = default;
