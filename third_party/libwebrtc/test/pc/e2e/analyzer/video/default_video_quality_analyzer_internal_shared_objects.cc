@@ -39,13 +39,13 @@ bool operator==(const InternalStatsKey& a, const InternalStatsKey& b) {
 FrameComparison::FrameComparison(InternalStatsKey stats_key,
                                  absl::optional<VideoFrame> captured,
                                  absl::optional<VideoFrame> rendered,
-                                 bool dropped,
+                                 FrameComparisonType type,
                                  FrameStats frame_stats,
                                  OverloadReason overload_reason)
     : stats_key(std::move(stats_key)),
       captured(std::move(captured)),
       rendered(std::move(rendered)),
-      dropped(dropped),
+      type(type),
       frame_stats(std::move(frame_stats)),
       overload_reason(overload_reason) {}
 

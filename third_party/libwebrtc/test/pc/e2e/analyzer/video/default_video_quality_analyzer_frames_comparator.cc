@@ -37,6 +37,132 @@ SamplesStatsCounter::StatsSample StatsSample(double value,
   return SamplesStatsCounter::StatsSample{value, sampling_time};
 }
 
+FrameComparison ValidateFrameComparison(FrameComparison comparison) {
+  RTC_DCHECK(comparison.frame_stats.captured_time.IsFinite())
+      << "Any comparison has to have finite captured_time";
+  switch (comparison.type) {
+    case FrameComparisonType::kRegular:
+      // Regular comparison has to have all FrameStats filled in.
+      RTC_DCHECK(comparison.captured.has_value() ||
+                 comparison.overload_reason != OverloadReason::kNone)
+          << "Regular comparison has to have captured frame if it's not "
+          << "overloaded comparison";
+      RTC_DCHECK(comparison.rendered.has_value() ||
+                 comparison.overload_reason != OverloadReason::kNone)
+          << "rendered frame has to be presented if it's not overloaded "
+          << "comparison";
+      RTC_DCHECK(comparison.frame_stats.pre_encode_time.IsFinite())
+          << "Regular comparison has to have finite pre_encode_time";
+      RTC_DCHECK(comparison.frame_stats.encoded_time.IsFinite())
+          << "Regular comparison has to have finite encoded_time";
+      RTC_DCHECK(comparison.frame_stats.received_time.IsFinite())
+          << "Regular comparison has to have finite received_time";
+      RTC_DCHECK(comparison.frame_stats.decode_start_time.IsFinite())
+          << "Regular comparison has to have finite decode_start_time";
+      RTC_DCHECK(comparison.frame_stats.decode_end_time.IsFinite())
+          << "Regular comparison has to have finite decode_end_time";
+      RTC_DCHECK(comparison.frame_stats.rendered_time.IsFinite())
+          << "Regular comparison has to have finite rendered_time";
+      RTC_DCHECK(comparison.frame_stats.rendered_frame_width.has_value())
+          << "Regular comparison has to have rendered_frame_width";
+      RTC_DCHECK(comparison.frame_stats.rendered_frame_height.has_value())
+          << "Regular comparison has to have rendered_frame_height";
+      RTC_DCHECK(comparison.frame_stats.used_encoder.has_value())
+          << "Regular comparison has to have used_encoder";
+      RTC_DCHECK(comparison.frame_stats.used_decoder.has_value())
+          << "Regular comparison has to have used_decoder";
+      break;
+    case FrameComparisonType::kDroppedFrame:
+      // Frame can be dropped before encoder, by encoder, inside network or
+      // after decoder.
+      RTC_DCHECK(!comparison.captured.has_value())
+          << "Dropped frame comparison can't have captured frame";
+      RTC_DCHECK(!comparison.rendered.has_value())
+          << "Dropped frame comparison can't have rendered frame";
+
+      if (comparison.frame_stats.encoded_time.IsFinite()) {
+        RTC_DCHECK(comparison.frame_stats.used_encoder.has_value())
+            << "Dropped frame comparison has to have used_encoder when "
+            << "encoded_time is set";
+        RTC_DCHECK(comparison.frame_stats.pre_encode_time.IsFinite())
+            << "Dropped frame comparison has to have finite pre_encode_time "
+            << "when encoded_time is finite.";
+      }
+
+      if (comparison.frame_stats.decode_end_time.IsFinite()) {
+        RTC_DCHECK(comparison.frame_stats.received_time.IsFinite())
+            << "Dropped frame comparison has to have received_time when "
+            << "decode_end_time is set";
+        RTC_DCHECK(comparison.frame_stats.decode_start_time.IsFinite())
+            << "Dropped frame comparison has to have decode_start_time when "
+            << "decode_end_time is set";
+        RTC_DCHECK(comparison.frame_stats.used_decoder.has_value())
+            << "Dropped frame comparison has to have used_decoder when "
+            << "decode_end_time is set";
+      } else {
+        RTC_DCHECK(!comparison.frame_stats.received_time.IsFinite())
+            << "Dropped frame comparison can't have received_time when "
+            << "decode_end_time is not set";
+        RTC_DCHECK(!comparison.frame_stats.decode_start_time.IsFinite())
+            << "Dropped frame comparison can't have decode_start_time when "
+            << "decode_end_time is not set";
+        RTC_DCHECK(!comparison.frame_stats.used_decoder.has_value())
+            << "Dropped frame comparison can't have used_decoder when "
+            << "decode_end_time is not set";
+      }
+      RTC_DCHECK(!comparison.frame_stats.rendered_time.IsFinite())
+          << "Dropped frame comparison can't have rendered_time";
+      RTC_DCHECK(!comparison.frame_stats.rendered_frame_width.has_value())
+          << "Dropped frame comparison can't have rendered_frame_width";
+      RTC_DCHECK(!comparison.frame_stats.rendered_frame_height.has_value())
+          << "Dropped frame comparison can't have rendered_frame_height";
+      break;
+    case FrameComparisonType::kFrameInFlight:
+      // Frame in flight comparison may miss almost any FrameStats, but if
+      // stats for stage X are set, then stats for stage X - 1 also has to be
+      // set. Also these frames were never rendered.
+      RTC_DCHECK(!comparison.captured.has_value())
+          << "Frame in flight comparison can't have captured frame";
+      RTC_DCHECK(!comparison.rendered.has_value())
+          << "Frame in flight comparison can't have rendered frame";
+      RTC_DCHECK(!comparison.frame_stats.rendered_time.IsFinite())
+          << "Frame in flight comparison can't have rendered_time";
+      RTC_DCHECK(!comparison.frame_stats.rendered_frame_width.has_value())
+          << "Frame in flight comparison can't have rendered_frame_width";
+      RTC_DCHECK(!comparison.frame_stats.rendered_frame_height.has_value())
+          << "Frame in flight comparison can't have rendered_frame_height";
+
+      if (comparison.frame_stats.decode_end_time.IsFinite()) {
+        RTC_DCHECK(comparison.frame_stats.used_decoder.has_value())
+            << "Frame in flight comparison has to have used_decoder when "
+            << "decode_end_time is set";
+        RTC_DCHECK(comparison.frame_stats.decode_start_time.IsFinite())
+            << "Frame in flight comparison has to have finite "
+            << "decode_start_time when decode_end_time is finite.";
+      }
+      if (comparison.frame_stats.decode_start_time.IsFinite()) {
+        RTC_DCHECK(comparison.frame_stats.received_time.IsFinite())
+            << "Frame in flight comparison has to have finite received_time "
+            << "when decode_start_time is finite.";
+      }
+      if (comparison.frame_stats.received_time.IsFinite()) {
+        RTC_DCHECK(comparison.frame_stats.encoded_time.IsFinite())
+            << "Frame in flight comparison has to have finite encoded_time "
+            << "when received_time is finite.";
+      }
+      if (comparison.frame_stats.encoded_time.IsFinite()) {
+        RTC_DCHECK(comparison.frame_stats.used_encoder.has_value())
+            << "Frame in flight comparison has to have used_encoder when "
+            << "encoded_time is set";
+        RTC_DCHECK(comparison.frame_stats.pre_encode_time.IsFinite())
+            << "Frame in flight comparison has to have finite pre_encode_time "
+            << "when encoded_time is finite.";
+      }
+      break;
+  }
+  return comparison;
+}
+
 }  // namespace
 
 void DefaultVideoQualityAnalyzerFramesComparator::Start(int max_threads_count) {
@@ -144,13 +270,13 @@ void DefaultVideoQualityAnalyzerFramesComparator::AddComparison(
     InternalStatsKey stats_key,
     absl::optional<VideoFrame> captured,
     absl::optional<VideoFrame> rendered,
-    bool dropped,
+    FrameComparisonType type,
     FrameStats frame_stats) {
   MutexLock lock(&mutex_);
   RTC_CHECK_EQ(state_, State::kActive)
       << "Frames comparator has to be started before it will be used";
   AddComparisonInternal(std::move(stats_key), std::move(captured),
-                        std::move(rendered), dropped, std::move(frame_stats));
+                        std::move(rendered), type, std::move(frame_stats));
 }
 
 void DefaultVideoQualityAnalyzerFramesComparator::AddComparison(
@@ -158,7 +284,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::AddComparison(
     int skipped_between_rendered,
     absl::optional<VideoFrame> captured,
     absl::optional<VideoFrame> rendered,
-    bool dropped,
+    FrameComparisonType type,
     FrameStats frame_stats) {
   MutexLock lock(&mutex_);
   RTC_CHECK_EQ(state_, State::kActive)
@@ -166,14 +292,14 @@ void DefaultVideoQualityAnalyzerFramesComparator::AddComparison(
   stream_stats_.at(stats_key).skipped_between_rendered.AddSample(
       StatsSample(skipped_between_rendered, Now()));
   AddComparisonInternal(std::move(stats_key), std::move(captured),
-                        std::move(rendered), dropped, std::move(frame_stats));
+                        std::move(rendered), type, std::move(frame_stats));
 }
 
 void DefaultVideoQualityAnalyzerFramesComparator::AddComparisonInternal(
     InternalStatsKey stats_key,
     absl::optional<VideoFrame> captured,
     absl::optional<VideoFrame> rendered,
-    bool dropped,
+    FrameComparisonType type,
     FrameStats frame_stats) {
   cpu_measurer_.StartExcludingCpuThreadTime();
   frames_comparator_stats_.comparisons_queue_size.AddSample(
@@ -181,17 +307,18 @@ void DefaultVideoQualityAnalyzerFramesComparator::AddComparisonInternal(
   // If there too many computations waiting in the queue, we won't provide
   // frames itself to make future computations lighter.
   if (comparisons_.size() >= kMaxActiveComparisons) {
-    comparisons_.emplace_back(std::move(stats_key), absl::nullopt,
-                              absl::nullopt, dropped, std::move(frame_stats),
-                              OverloadReason::kCpu);
+    comparisons_.emplace_back(ValidateFrameComparison(
+        FrameComparison(std::move(stats_key), /*captured=*/absl::nullopt,
+                        /*rendered=*/absl::nullopt, type,
+                        std::move(frame_stats), OverloadReason::kCpu)));
   } else {
     OverloadReason overload_reason = OverloadReason::kNone;
-    if (!captured && !dropped) {
+    if (!captured && type == FrameComparisonType::kRegular) {
       overload_reason = OverloadReason::kMemory;
     }
-    comparisons_.emplace_back(std::move(stats_key), std::move(captured),
-                              std::move(rendered), dropped,
-                              std::move(frame_stats), overload_reason);
+    comparisons_.emplace_back(ValidateFrameComparison(FrameComparison(
+        std::move(stats_key), std::move(captured), std::move(rendered), type,
+        std::move(frame_stats), overload_reason)));
   }
   comparison_available_event_.Set();
   cpu_measurer_.StopExcludingCpuThreadTime();
@@ -235,11 +362,14 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparisons() {
 
 void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
     const FrameComparison& comparison) {
+  // Comparison is checked to be valid before adding, so we can use this
+  // assumptions during computations.
+
   // Perform expensive psnr and ssim calculations while not holding lock.
   double psnr = -1.0;
   double ssim = -1.0;
-  if (options_.heavy_metrics_computation_enabled && comparison.captured &&
-      !comparison.dropped) {
+  if (options_.heavy_metrics_computation_enabled &&
+      comparison.captured.has_value() && comparison.rendered.has_value()) {
     rtc::scoped_refptr<I420BufferInterface> reference_buffer =
         comparison.captured->video_frame_buffer()->ToI420();
     rtc::scoped_refptr<I420BufferInterface> test_buffer =
@@ -260,18 +390,21 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
   auto stats_it = stream_stats_.find(comparison.stats_key);
   RTC_CHECK(stats_it != stream_stats_.end()) << comparison.stats_key.ToString();
   webrtc_pc_e2e::StreamStats* stats = &stats_it->second;
+
   frames_comparator_stats_.comparisons_done++;
   if (comparison.overload_reason == OverloadReason::kCpu) {
     frames_comparator_stats_.cpu_overloaded_comparisons_done++;
   } else if (comparison.overload_reason == OverloadReason::kMemory) {
     frames_comparator_stats_.memory_overloaded_comparisons_done++;
   }
+
   if (psnr > 0) {
     stats->psnr.AddSample(StatsSample(psnr, frame_stats.rendered_time));
   }
   if (ssim > 0) {
     stats->ssim.AddSample(StatsSample(ssim, frame_stats.received_time));
   }
+
   if (frame_stats.encoded_time.IsFinite()) {
     stats->encode_time_ms.AddSample(StatsSample(
         (frame_stats.encoded_time - frame_stats.pre_encode_time).ms(),
@@ -288,25 +421,32 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
     }
   }
   // Next stats can be calculated only if frame was received on remote side.
-  if (!comparison.dropped) {
-    stats->resolution_of_rendered_frame.AddSample(
-        StatsSample(*comparison.frame_stats.rendered_frame_width *
-                        *comparison.frame_stats.rendered_frame_height,
-                    frame_stats.rendered_time));
-    stats->transport_time_ms.AddSample(StatsSample(
-        (frame_stats.decode_start_time - frame_stats.encoded_time).ms(),
-        frame_stats.received_time));
-    stats->total_delay_incl_transport_ms.AddSample(StatsSample(
-        (frame_stats.rendered_time - frame_stats.captured_time).ms(),
-        frame_stats.received_time));
-    stats->decode_time_ms.AddSample(StatsSample(
-        (frame_stats.decode_end_time - frame_stats.decode_start_time).ms(),
-        frame_stats.decode_end_time));
-    stats->receive_to_render_time_ms.AddSample(StatsSample(
-        (frame_stats.rendered_time - frame_stats.received_time).ms(),
-        frame_stats.rendered_time));
+  if (comparison.type != FrameComparisonType::kDroppedFrame) {
+    if (frame_stats.rendered_time.IsFinite()) {
+      stats->resolution_of_rendered_frame.AddSample(
+          StatsSample(*comparison.frame_stats.rendered_frame_width *
+                          *comparison.frame_stats.rendered_frame_height,
+                      frame_stats.rendered_time));
+      stats->total_delay_incl_transport_ms.AddSample(StatsSample(
+          (frame_stats.rendered_time - frame_stats.captured_time).ms(),
+          frame_stats.received_time));
+      stats->receive_to_render_time_ms.AddSample(StatsSample(
+          (frame_stats.rendered_time - frame_stats.received_time).ms(),
+          frame_stats.rendered_time));
+    }
+    if (frame_stats.decode_start_time.IsFinite()) {
+      stats->transport_time_ms.AddSample(StatsSample(
+          (frame_stats.decode_start_time - frame_stats.encoded_time).ms(),
+          frame_stats.decode_start_time));
+    }
+    if (frame_stats.decode_end_time.IsFinite()) {
+      stats->decode_time_ms.AddSample(StatsSample(
+          (frame_stats.decode_end_time - frame_stats.decode_start_time).ms(),
+          frame_stats.decode_end_time));
+    }
 
-    if (frame_stats.prev_frame_rendered_time.IsFinite()) {
+    if (frame_stats.prev_frame_rendered_time.IsFinite() &&
+        frame_stats.rendered_time.IsFinite()) {
       TimeDelta time_between_rendered_frames =
           frame_stats.rendered_time - frame_stats.prev_frame_rendered_time;
       stats->time_between_rendered_frames_ms.AddSample(StatsSample(

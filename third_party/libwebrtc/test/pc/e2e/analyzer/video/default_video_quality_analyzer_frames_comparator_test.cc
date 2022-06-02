@@ -11,9 +11,11 @@
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_frames_comparator.h"
 
 #include <map>
+#include <vector>
 
 #include "api/test/create_frame_generator.h"
 #include "api/units/timestamp.h"
+#include "rtc_base/strings/string_builder.h"
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/sleep.h"
 #include "test/gtest.h"
@@ -56,16 +58,41 @@ FrameStats FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(
   frame_stats.decode_end_time = captured_time + TimeDelta::Millis(50);
   frame_stats.rendered_time = captured_time + TimeDelta::Millis(60);
   frame_stats.used_encoder = Vp8CodecForOneFrame(1, frame_stats.encoded_time);
-  frame_stats.used_encoder =
+  frame_stats.used_decoder =
       Vp8CodecForOneFrame(1, frame_stats.decode_end_time);
   frame_stats.rendered_frame_width = 10;
   frame_stats.rendered_frame_height = 10;
   return frame_stats;
 }
 
+FrameStats ShiftStatsOn(const FrameStats& stats, TimeDelta delta) {
+  FrameStats frame_stats(stats.captured_time + delta);
+  frame_stats.pre_encode_time = stats.pre_encode_time + delta;
+  frame_stats.encoded_time = stats.encoded_time + delta;
+  frame_stats.received_time = stats.received_time + delta;
+  frame_stats.decode_start_time = stats.decode_start_time + delta;
+  frame_stats.decode_end_time = stats.decode_end_time + delta;
+  frame_stats.rendered_time = stats.rendered_time + delta;
+
+  frame_stats.used_encoder = stats.used_encoder;
+  frame_stats.used_decoder = stats.used_decoder;
+  frame_stats.rendered_frame_width = stats.rendered_frame_width;
+  frame_stats.rendered_frame_height = stats.rendered_frame_height;
+
+  return frame_stats;
+}
+
 double GetFirstOrDie(const SamplesStatsCounter& counter) {
   EXPECT_TRUE(!counter.IsEmpty()) << "Counter has to be not empty";
   return counter.GetSamples()[0];
+}
+
+std::string ToString(const SamplesStatsCounter& counter) {
+  rtc::StringBuilder out;
+  for (const StatsSample& s : counter.GetTimedSamples()) {
+    out << "{ time_ms=" << s.time.ms() << "; value=" << s.value << "}, ";
+  }
+  return out.str();
 }
 
 TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
@@ -89,8 +116,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
                                   stream_start_time, stream_start_time);
   comparator.AddComparison(stats_key,
                            /*captured=*/absl::nullopt,
-                           /*rendered=*/absl::nullopt, /*dropped=*/false,
-                           frame_stats);
+                           /*rendered=*/absl::nullopt,
+                           FrameComparisonType::kRegular, frame_stats);
   comparator.Stop({});
 
   std::map<InternalStatsKey, webrtc_pc_e2e::StreamStats> stats =
@@ -130,12 +157,12 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
                                   stream_start_time, stream_start_time);
   comparator.AddComparison(stats_key,
                            /*captured=*/absl::nullopt,
-                           /*rendered=*/absl::nullopt, /*dropped=*/false,
-                           frame_stats1);
+                           /*rendered=*/absl::nullopt,
+                           FrameComparisonType::kRegular, frame_stats1);
   comparator.AddComparison(stats_key,
                            /*captured=*/absl::nullopt,
-                           /*rendered=*/absl::nullopt, /*dropped=*/false,
-                           frame_stats2);
+                           /*rendered=*/absl::nullopt,
+                           FrameComparisonType::kRegular, frame_stats2);
   comparator.Stop({});
 
   std::map<InternalStatsKey, webrtc_pc_e2e::StreamStats> stats =
@@ -143,7 +170,117 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   EXPECT_DOUBLE_EQ(
       GetFirstOrDie(stats.at(stats_key).time_between_rendered_frames_ms), 15.0);
   EXPECT_DOUBLE_EQ(stats.at(stats_key).encode_frame_rate.GetEventsPerSecond(),
-                   2.0 / 15 * 1000);
+                   2.0 / 15 * 1000)
+      << "There should be 2 events with interval of 15 ms";
+  ;
+}
+
+TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
+     FrameInFlightStatsAreHandledCorrectly) {
+  DefaultVideoQualityAnalyzerCpuMeasurer cpu_measurer;
+  DefaultVideoQualityAnalyzerFramesComparator comparator(
+      Clock::GetRealTimeClock(), cpu_measurer, AnalyzerOptionsForTest());
+
+  Timestamp stream_start_time = Clock::GetRealTimeClock()->CurrentTime();
+  size_t stream = 0;
+  size_t sender = 0;
+  size_t receiver = 1;
+  size_t peers_count = 2;
+  InternalStatsKey stats_key(stream, sender, receiver);
+
+  // There are 7 different timings inside frame stats: captured, pre_encode,
+  // encoded, received, decode_start, decode_end, rendered. captured is always
+  // set and received is set together with decode_start. So we create 6
+  // different frame stats with interval of 15 ms, where for each stat next
+  // timings will be set
+  //   * 1st - captured
+  //   * 2nd - captured, pre_encode
+  //   * 3rd - captured, pre_encode, encoded
+  //   * 4th - captured, pre_encode, encoded, received, decode_start
+  //   * 5th - captured, pre_encode, encoded, received, decode_start, decode_end
+  //   * 6th - all of them set
+  std::vector<FrameStats> stats;
+  // 1st stat
+  FrameStats frame_stats(stream_start_time);
+  stats.push_back(frame_stats);
+  // 2nd stat
+  frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.pre_encode_time =
+      frame_stats.captured_time + TimeDelta::Millis(10);
+  stats.push_back(frame_stats);
+  // 3rd stat
+  frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.encoded_time = frame_stats.captured_time + TimeDelta::Millis(20);
+  frame_stats.used_encoder = Vp8CodecForOneFrame(1, frame_stats.encoded_time);
+  stats.push_back(frame_stats);
+  // 4th stat
+  frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.received_time = frame_stats.captured_time + TimeDelta::Millis(30);
+  frame_stats.decode_start_time =
+      frame_stats.captured_time + TimeDelta::Millis(40);
+  stats.push_back(frame_stats);
+  // 5th stat
+  frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.decode_end_time =
+      frame_stats.captured_time + TimeDelta::Millis(50);
+  frame_stats.used_decoder =
+      Vp8CodecForOneFrame(1, frame_stats.decode_end_time);
+  stats.push_back(frame_stats);
+  // 6th stat
+  frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.rendered_time = frame_stats.captured_time + TimeDelta::Millis(60);
+  frame_stats.rendered_frame_width = 10;
+  frame_stats.rendered_frame_height = 10;
+  stats.push_back(frame_stats);
+
+  comparator.Start(1);
+  comparator.EnsureStatsForStream(stream, sender, peers_count,
+                                  stream_start_time, stream_start_time);
+  for (size_t i = 0; i < stats.size() - 1; ++i) {
+    comparator.AddComparison(stats_key,
+                             /*captured=*/absl::nullopt,
+                             /*rendered=*/absl::nullopt,
+                             FrameComparisonType::kFrameInFlight, stats[i]);
+  }
+  comparator.AddComparison(stats_key,
+                           /*captured=*/absl::nullopt,
+                           /*rendered=*/absl::nullopt,
+                           FrameComparisonType::kRegular,
+                           stats[stats.size() - 1]);
+  comparator.Stop({});
+
+  EXPECT_EQ(comparator.stream_stats().size(), 1lu);
+  webrtc_pc_e2e::StreamStats result_stats =
+      comparator.stream_stats().at(stats_key);
+
+  EXPECT_DOUBLE_EQ(result_stats.transport_time_ms.GetAverage(), 20.0)
+      << ToString(result_stats.transport_time_ms);
+  EXPECT_EQ(result_stats.transport_time_ms.NumSamples(), 3);
+
+  EXPECT_DOUBLE_EQ(result_stats.total_delay_incl_transport_ms.GetAverage(),
+                   60.0)
+      << ToString(result_stats.total_delay_incl_transport_ms);
+  EXPECT_EQ(result_stats.total_delay_incl_transport_ms.NumSamples(), 1);
+
+  EXPECT_DOUBLE_EQ(result_stats.encode_time_ms.GetAverage(), 10)
+      << ToString(result_stats.encode_time_ms);
+  EXPECT_EQ(result_stats.encode_time_ms.NumSamples(), 4);
+
+  EXPECT_DOUBLE_EQ(result_stats.decode_time_ms.GetAverage(), 10)
+      << ToString(result_stats.decode_time_ms);
+  EXPECT_EQ(result_stats.decode_time_ms.NumSamples(), 2);
+
+  EXPECT_DOUBLE_EQ(result_stats.receive_to_render_time_ms.GetAverage(), 30)
+      << ToString(result_stats.receive_to_render_time_ms);
+  EXPECT_EQ(result_stats.receive_to_render_time_ms.NumSamples(), 1);
+
+  EXPECT_DOUBLE_EQ(result_stats.resolution_of_rendered_frame.GetAverage(), 100)
+      << ToString(result_stats.resolution_of_rendered_frame);
+  EXPECT_EQ(result_stats.resolution_of_rendered_frame.NumSamples(), 1);
+
+  EXPECT_DOUBLE_EQ(result_stats.encode_frame_rate.GetEventsPerSecond(),
+                   4.0 / 45 * 1000)
+      << "There should be 4 events with interval of 15 ms";
 }
 
 }  // namespace

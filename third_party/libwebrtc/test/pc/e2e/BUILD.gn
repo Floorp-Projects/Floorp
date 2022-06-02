@@ -527,6 +527,7 @@ if (!build_with_chromium) {
         "../..:test_support",
         "../../../api:create_frame_generator",
         "../../../api/units:timestamp",
+        "../../../rtc_base:stringutils",
         "../../../system_wrappers",
       ]
     }
