@@ -550,6 +550,7 @@ TEST_F(NetEqImplTest, VerifyTimestampPropagation) {
 
 TEST_F(NetEqImplTest, ReorderedPacket) {
   UseNoMocks();
+
   // Create a mock decoder object.
   MockAudioDecoder mock_decoder;
 
@@ -647,6 +648,9 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
   // Now check the packet buffer, and make sure it is empty, since the
   // out-of-order packet should have been discarded.
   EXPECT_TRUE(packet_buffer_->Empty());
+
+  // NetEq `discarded_primary_packets` should capture this packet discard.
+  EXPECT_EQ(1u, neteq_->GetOperationsAndState().discarded_primary_packets);
 
   // Verify `output.packet_infos_`. Expect to only see the second packet.
   ASSERT_THAT(output.packet_infos_, SizeIs(1));
