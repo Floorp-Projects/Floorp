@@ -504,6 +504,7 @@ class RTC_EXPORT Network {
   bool active_ = true;
   uint16_t id_ = 0;
   bool use_differentiated_cellular_costs_ = false;
+  bool add_network_cost_to_vpn_ = false;
   NetworkPreference network_preference_ = NetworkPreference::NEUTRAL;
 
   friend class NetworkManager;
