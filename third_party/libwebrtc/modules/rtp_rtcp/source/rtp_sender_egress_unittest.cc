@@ -587,6 +587,7 @@ TEST_P(RtpSenderEgressTest, StreamDataCountersCallbacks) {
   // Send a media packet.
   std::unique_ptr<RtpPacketToSend> media_packet = BuildRtpPacket();
   media_packet->SetPayloadSize(6);
+  media_packet->SetSequenceNumber(kStartSequenceNumber);
   expected_transmitted_counter.packets += 1;
   expected_transmitted_counter.payload_bytes += media_packet->payload_size();
   expected_transmitted_counter.header_bytes += media_packet->headers_size();
@@ -606,8 +607,9 @@ TEST_P(RtpSenderEgressTest, StreamDataCountersCallbacks) {
   // and retransmitted packet statistics.
   std::unique_ptr<RtpPacketToSend> retransmission_packet = BuildRtpPacket();
   retransmission_packet->set_packet_type(RtpPacketMediaType::kRetransmission);
+  retransmission_packet->SetSequenceNumber(kStartSequenceNumber);
   retransmission_packet->set_retransmitted_sequence_number(
-      retransmission_packet->SequenceNumber());
+      kStartSequenceNumber);
   media_packet->SetPayloadSize(7);
   expected_transmitted_counter.packets += 1;
   expected_transmitted_counter.payload_bytes +=
@@ -636,6 +638,7 @@ TEST_P(RtpSenderEgressTest, StreamDataCountersCallbacks) {
   std::unique_ptr<RtpPacketToSend> padding_packet = BuildRtpPacket();
   padding_packet->set_packet_type(RtpPacketMediaType::kPadding);
   padding_packet->SetPadding(224);
+  padding_packet->SetSequenceNumber(kStartSequenceNumber + 1);
   expected_transmitted_counter.packets += 1;
   expected_transmitted_counter.padding_bytes += padding_packet->padding_size();
   expected_transmitted_counter.header_bytes += padding_packet->headers_size();
