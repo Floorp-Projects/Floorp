@@ -14,6 +14,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <memory>
+
 #include "rtc_base/socket.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -45,13 +47,10 @@ class AsyncSocket : public Socket {
 
 class AsyncSocketAdapter : public AsyncSocket, public sigslot::has_slots<> {
  public:
-  // The adapted socket may explicitly be null, and later assigned using Attach.
-  // However, subclasses which support detached mode must override any methods
-  // that will be called during the detached period (usually GetState()), to
-  // avoid dereferencing a null pointer.
+  // Takes ownership of the passed in socket.
+  // TODO(bugs.webrtc.org/6424): Change to unique_ptr here and in callers.
   explicit AsyncSocketAdapter(AsyncSocket* socket);
-  ~AsyncSocketAdapter() override;
-  void Attach(AsyncSocket* socket);
+
   SocketAddress GetLocalAddress() const override;
   SocketAddress GetRemoteAddress() const override;
   int Bind(const SocketAddress& addr) override;
@@ -78,7 +77,10 @@ class AsyncSocketAdapter : public AsyncSocket, public sigslot::has_slots<> {
   virtual void OnWriteEvent(AsyncSocket* socket);
   virtual void OnCloseEvent(AsyncSocket* socket, int err);
 
-  AsyncSocket* socket_;
+  AsyncSocket* GetSocket() const { return socket_.get(); }
+
+ private:
+  const std::unique_ptr<AsyncSocket> socket_;
 };
 
 }  // namespace rtc
