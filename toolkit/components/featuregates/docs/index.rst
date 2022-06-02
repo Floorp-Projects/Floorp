@@ -52,14 +52,14 @@ but be disabled otherwise. That would look like this:
 
 .. code-block:: toml
 
-   default-value: {default = false, nightly = true}
+   default-value: {default: false, nightly: true}
 
 Values can depend on multiple conditions. For example, to enable a feature
 only on Nightly running on Windows:
 
 .. code-block:: toml
 
-   default-value: {default = false, "nightly,win" = true}
+   default-value: {default: false, "nightly,win": true}
 
 Multiple sets of conditions can be specified, however use caution here: if
 multiple sets could match (except ``default``), the set chosen is undefined.
@@ -67,7 +67,7 @@ An example of safely using multiple conditions:
 
 .. code-block:: toml
 
-   default-value: {default = false, nightly = true, "beta,win" = true}
+   default-value: {default: false, nightly: true, "beta,win": true}
 
 The ``default`` condition is required. It is used as a fallback in case no
 more-specific case matches. The conditions allowed are

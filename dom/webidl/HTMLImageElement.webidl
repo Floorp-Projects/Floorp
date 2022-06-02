@@ -49,7 +49,7 @@ interface HTMLImageElement : HTMLElement {
            [NewObject]
            Promise<void> decode();
            [NewObject, ChromeOnly]
-           Promise<sequence<ImageText>> recognizeCurrentImageText();
+           Promise<void> recognizeCurrentImageText();
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis

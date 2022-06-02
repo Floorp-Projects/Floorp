@@ -105,9 +105,6 @@ class UAWidgetsChild extends JSWindowActorChild {
         uri = "chrome://global/content/elements/marquee.js";
         widgetName = "MarqueeWidget";
         break;
-      case "img":
-        uri = "chrome://global/content/elements/textrecognition.js";
-        widgetName = "TextRecognitionWidget";
     }
 
     if (!uri || !widgetName) {
