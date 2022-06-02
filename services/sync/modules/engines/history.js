@@ -25,14 +25,16 @@ const { CryptoWrapper } = ChromeUtils.import(
 );
 const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesSyncUtils",
   "resource://gre/modules/PlacesSyncUtils.jsm"
 );
@@ -61,7 +63,7 @@ HistoryEngine.prototype = {
   syncPriority: 7,
 
   async getSyncID() {
-    return PlacesSyncUtils.history.getSyncId();
+    return lazy.PlacesSyncUtils.history.getSyncId();
   },
 
   async ensureCurrentSyncID(newSyncID) {
@@ -69,7 +71,7 @@ HistoryEngine.prototype = {
       "Checking if server sync ID ${newSyncID} matches existing",
       { newSyncID }
     );
-    await PlacesSyncUtils.history.ensureCurrentSyncId(newSyncID);
+    await lazy.PlacesSyncUtils.history.ensureCurrentSyncId(newSyncID);
     return newSyncID;
   },
 
@@ -83,18 +85,18 @@ HistoryEngine.prototype = {
   },
 
   async resetLocalSyncID() {
-    let newSyncID = await PlacesSyncUtils.history.resetSyncId();
+    let newSyncID = await lazy.PlacesSyncUtils.history.resetSyncId();
     this._log.debug("Assigned new sync ID ${newSyncID}", { newSyncID });
     return newSyncID;
   },
 
   async getLastSync() {
-    let lastSync = await PlacesSyncUtils.history.getLastSync();
+    let lastSync = await lazy.PlacesSyncUtils.history.getLastSync();
     return lastSync;
   },
 
   async setLastSync(lastSync) {
-    await PlacesSyncUtils.history.setLastSync(lastSync);
+    await lazy.PlacesSyncUtils.history.setLastSync(lastSync);
   },
 
   shouldSyncURL(url) {
@@ -108,7 +110,7 @@ HistoryEngine.prototype = {
       return {};
     }
 
-    let guidsToRemove = await PlacesSyncUtils.history.determineNonSyncableGuids(
+    let guidsToRemove = await lazy.PlacesSyncUtils.history.determineNonSyncableGuids(
       modifiedGUIDs
     );
     await this._tracker.removeChangedID(...guidsToRemove);
@@ -117,7 +119,7 @@ HistoryEngine.prototype = {
 
   async _resetClient() {
     await super._resetClient();
-    await PlacesSyncUtils.history.reset();
+    await lazy.PlacesSyncUtils.history.reset();
   },
 };
 
@@ -138,7 +140,7 @@ HistoryStore.prototype = {
     }
 
     try {
-      await PlacesSyncUtils.history.changeGuid(uri, guid);
+      await lazy.PlacesSyncUtils.history.changeGuid(uri, guid);
     } catch (e) {
       this._log.error("Error setting GUID ${guid} for URI ${uri}", guid, uri);
     }
@@ -150,7 +152,7 @@ HistoryStore.prototype = {
     // Use the existing GUID if it exists
     let guid;
     try {
-      guid = await PlacesSyncUtils.history.fetchGuidForURL(uri);
+      guid = await lazy.PlacesSyncUtils.history.fetchGuidForURL(uri);
     } catch (e) {
       this._log.error("Error fetching GUID for URL ${uri}", uri);
     }
@@ -170,7 +172,7 @@ HistoryStore.prototype = {
   },
 
   async changeItemID(oldID, newID) {
-    let info = await PlacesSyncUtils.history.fetchURLInfoForGuid(oldID);
+    let info = await lazy.PlacesSyncUtils.history.fetchURLInfoForGuid(oldID);
     if (!info) {
       throw new Error(`Can't change ID for nonexistent history entry ${oldID}`);
     }
@@ -178,7 +180,7 @@ HistoryStore.prototype = {
   },
 
   async getAllIDs() {
-    let urls = await PlacesSyncUtils.history.getAllURLs({
+    let urls = await lazy.PlacesSyncUtils.history.getAllURLs({
       since: new Date(Date.now() - THIRTY_DAYS_IN_MS),
       limit: MAX_HISTORY_UPLOAD,
     });
@@ -244,14 +246,18 @@ HistoryStore.prototype = {
         // and log the exceptions seen there as they are likely to be
         // informative, but we still never abort the sync based on them.
         try {
-          await PlacesUtils.history.insertMany(chunk, null, failedVisit => {
-            this._log.info(
-              "Failed to insert a history record",
-              failedVisit.guid
-            );
-            this._log.trace("The record that failed", failedVisit);
-            failed.push(failedVisit.guid);
-          });
+          await lazy.PlacesUtils.history.insertMany(
+            chunk,
+            null,
+            failedVisit => {
+              this._log.info(
+                "Failed to insert a history record",
+                failedVisit.guid
+              );
+              this._log.trace("The record that failed", failedVisit);
+              failed.push(failedVisit.guid);
+            }
+          );
         } catch (ex) {
           this._log.info("Failed to insert history records", ex);
         }
@@ -300,7 +306,7 @@ HistoryStore.prototype = {
      Exists primarily so tests can override it.
    */
   _canAddURI(uri) {
-    return PlacesUtils.history.canAddURI(uri);
+    return lazy.PlacesUtils.history.canAddURI(uri);
   },
 
   /**
@@ -312,7 +318,7 @@ HistoryStore.prototype = {
    */
   async _recordToPlaceInfo(record) {
     // Sort out invalid URIs and ones Places just simply doesn't want.
-    record.url = PlacesUtils.normalizeToURLOrGUID(record.histUri);
+    record.url = lazy.PlacesUtils.normalizeToURLOrGUID(record.histUri);
     record.uri = CommonUtils.makeURI(record.histUri);
 
     if (!Utils.checkGUID(record.id)) {
@@ -342,7 +348,7 @@ HistoryStore.prototype = {
     let curVisitsAsArray = [];
     let curVisits = new Set();
     try {
-      curVisitsAsArray = await PlacesSyncUtils.history.fetchVisitsForURL(
+      curVisitsAsArray = await lazy.PlacesSyncUtils.history.fetchVisitsForURL(
         record.histUri
       );
     } catch (e) {
@@ -351,11 +357,12 @@ HistoryStore.prototype = {
         record.histUri
       );
     }
-    let oldestAllowed = PlacesSyncUtils.bookmarks.EARLIEST_BOOKMARK_TIMESTAMP;
+    let oldestAllowed =
+      lazy.PlacesSyncUtils.bookmarks.EARLIEST_BOOKMARK_TIMESTAMP;
     if (curVisitsAsArray.length == 20) {
       let oldestVisit = curVisitsAsArray[curVisitsAsArray.length - 1];
-      oldestAllowed = PlacesSyncUtils.history.clampVisitDate(
-        PlacesUtils.toDate(oldestVisit.date).getTime()
+      oldestAllowed = lazy.PlacesSyncUtils.history.clampVisitDate(
+        lazy.PlacesUtils.toDate(oldestVisit.date).getTime()
       );
     }
 
@@ -363,8 +370,10 @@ HistoryStore.prototype = {
     for (i = 0; i < curVisitsAsArray.length; i++) {
       // Same logic as used in the loop below to generate visitKey.
       let { date, type } = curVisitsAsArray[i];
-      let dateObj = PlacesUtils.toDate(date);
-      let millis = PlacesSyncUtils.history.clampVisitDate(dateObj).getTime();
+      let dateObj = lazy.PlacesUtils.toDate(date);
+      let millis = lazy.PlacesSyncUtils.history
+        .clampVisitDate(dateObj)
+        .getTime();
       curVisits.add(`${millis},${type}`);
     }
 
@@ -386,7 +395,9 @@ HistoryStore.prototype = {
 
       if (
         !visit.type ||
-        !Object.values(PlacesUtils.history.TRANSITIONS).includes(visit.type)
+        !Object.values(lazy.PlacesUtils.history.TRANSITIONS).includes(
+          visit.type
+        )
       ) {
         this._log.warn(
           "Encountered record with invalid visit type: " +
@@ -398,8 +409,10 @@ HistoryStore.prototype = {
 
       // Dates need to be integers. Future and far past dates are clamped to the
       // current date and earliest sensible date, respectively.
-      let originalVisitDate = PlacesUtils.toDate(Math.round(visit.date));
-      visit.date = PlacesSyncUtils.history.clampVisitDate(originalVisitDate);
+      let originalVisitDate = lazy.PlacesUtils.toDate(Math.round(visit.date));
+      visit.date = lazy.PlacesSyncUtils.history.clampVisitDate(
+        originalVisitDate
+      );
 
       if (visit.date.getTime() < oldestAllowed) {
         // Visit is older than the oldest visit we have, and we have so many
@@ -452,7 +465,7 @@ HistoryStore.prototype = {
 
   async remove(record) {
     this._log.trace("Removing page: " + record.id);
-    let removed = await PlacesUtils.history.remove(record.id);
+    let removed = await lazy.PlacesUtils.history.remove(record.id);
     if (removed) {
       this._log.trace("Removed page: " + record.id);
     } else {
@@ -461,18 +474,18 @@ HistoryStore.prototype = {
   },
 
   async itemExists(id) {
-    return !!(await PlacesSyncUtils.history.fetchURLInfoForGuid(id));
+    return !!(await lazy.PlacesSyncUtils.history.fetchURLInfoForGuid(id));
   },
 
   async createRecord(id, collection) {
-    let foo = await PlacesSyncUtils.history.fetchURLInfoForGuid(id);
+    let foo = await lazy.PlacesSyncUtils.history.fetchURLInfoForGuid(id);
     let record = new HistoryRec(collection, id);
     if (foo) {
       record.histUri = foo.url;
       record.title = foo.title;
       record.sortindex = foo.frecency;
       try {
-        record.visits = await PlacesSyncUtils.history.fetchVisitsForURL(
+        record.visits = await lazy.PlacesSyncUtils.history.fetchVisitsForURL(
           record.histUri
         );
       } catch (e) {
@@ -490,7 +503,7 @@ HistoryStore.prototype = {
   },
 
   async wipe() {
-    return PlacesSyncUtils.history.wipe();
+    return lazy.PlacesSyncUtils.history.wipe();
   },
 };
 

@@ -2224,7 +2224,6 @@ STATIC_ATOMS = [
     Atom("_moz_scrollbar_start_forward", "-moz-scrollbar-start-forward"),
     Atom("_moz_scrollbar_end_backward", "-moz-scrollbar-end-backward"),
     Atom("_moz_scrollbar_end_forward", "-moz-scrollbar-end-forward"),
-    Atom("_moz_scrollbar_thumb_proportional", "-moz-scrollbar-thumb-proportional"),
     Atom("_moz_overlay_scrollbars", "-moz-overlay-scrollbars"),
     Atom("_moz_windows_accent_color_in_titlebar", "-moz-windows-accent-color-in-titlebar"),
     Atom("_moz_windows_default_theme", "-moz-windows-default-theme"),

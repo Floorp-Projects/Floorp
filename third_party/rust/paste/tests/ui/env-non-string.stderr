@@ -1,5 +1,5 @@
 error: expected string literal
- --> $DIR/env-non-string.rs:2:15
+ --> tests/ui/env-non-string.rs:4:15
   |
-2 |     fn [<env!(1.31)>]() {}
+4 |     fn [<env!(1.31)>]() {}
   |               ^^^^

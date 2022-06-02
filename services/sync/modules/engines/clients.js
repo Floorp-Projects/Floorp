@@ -43,7 +43,10 @@ const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(
     "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
@@ -108,7 +111,7 @@ Utils.deferGetSet(ClientsRec, "cleartext", [
 function ClientEngine(service) {
   SyncEngine.call(this, "Clients", service);
 
-  this.fxAccounts = fxAccounts;
+  this.fxAccounts = lazy.fxAccounts;
   this.addClientCommandQueue = Async.asyncQueueCaller(this._log);
   Utils.defineLazyIDProperty(this, "localID", "services.sync.client.GUID");
 }
@@ -377,7 +380,7 @@ ClientEngine.prototype = {
     this._log.debug("Updating the known stale clients");
     // _fetchFxADevices side effect updates this._knownStaleFxADeviceIds.
     await this._fetchFxADevices();
-    let localFxADeviceId = await fxAccounts.device.getLocalId();
+    let localFxADeviceId = await lazy.fxAccounts.device.getLocalId();
     // Process newer records first, so that if we hit a record with a device ID
     // we've seen before, we can mark it stale immediately.
     let clientList = Object.values(this._store._remoteClients).sort(
@@ -462,7 +465,7 @@ ClientEngine.prototype = {
           await this._removeRemoteClient(id);
         }
       }
-      let localFxADeviceId = await fxAccounts.device.getLocalId();
+      let localFxADeviceId = await lazy.fxAccounts.device.getLocalId();
       // Bug 1264498: Mobile clients don't remove themselves from the clients
       // collection when the user disconnects Sync, so we mark as stale clients
       // with the same name that haven't synced in over a week.
@@ -632,7 +635,7 @@ ClientEngine.prototype = {
     };
     let excludedIds = null;
     if (!ids) {
-      const localFxADeviceId = await fxAccounts.device.getLocalId();
+      const localFxADeviceId = await lazy.fxAccounts.device.getLocalId();
       excludedIds = [localFxADeviceId];
     }
     try {

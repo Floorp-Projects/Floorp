@@ -12,33 +12,6 @@
 
 namespace mozilla::dom::cache {
 
-namespace {
-// XXX Move this to mfbt, or do we already have something like this? Or remove
-// the need for that by changing StrongWorkerRef/IPCWorkerRef?
-
-template <class T>
-class FakeCopyable {
- public:
-  explicit FakeCopyable(T&& aTarget) : mTarget(std::forward<T>(aTarget)) {}
-
-  FakeCopyable(FakeCopyable&&) = default;
-
-  FakeCopyable(const FakeCopyable& aOther)
-      : mTarget(std::move(const_cast<FakeCopyable&>(aOther).mTarget)) {
-    MOZ_CRASH("Do not copy.");
-  }
-
-  template <typename... Args>
-  auto operator()(Args&&... aArgs) {
-    return mTarget(std::forward<Args>(aArgs)...);
-  }
-
- private:
-  T mTarget;
-};
-
-}  // namespace
-
 // static
 SafeRefPtr<CacheWorkerRef> CacheWorkerRef::Create(WorkerPrivate* aWorkerPrivate,
                                                   Behavior aBehavior) {
@@ -48,8 +21,7 @@ SafeRefPtr<CacheWorkerRef> CacheWorkerRef::Create(WorkerPrivate* aWorkerPrivate,
   // of CacheWorkerRef, since we can now use SafeRefPtrFromThis in the ctor
   auto workerRef =
       MakeSafeRefPtr<CacheWorkerRef>(aBehavior, ConstructorGuard{});
-  auto notify =
-      FakeCopyable([workerRef = workerRef.clonePtr()] { workerRef->Notify(); });
+  auto notify = [workerRef = workerRef.clonePtr()] { workerRef->Notify(); };
   if (aBehavior == eStrongWorkerRef) {
     workerRef->mStrongWorkerRef = StrongWorkerRef::Create(
         aWorkerPrivate, "CacheWorkerRef-Strong", std::move(notify));

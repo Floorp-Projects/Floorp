@@ -877,27 +877,32 @@ UniqueSECKEYPublicKey CreateECPublicKey(const SECItem* aKeyData,
     return nullptr;
   }
 
-  key->arena = nullptr;  // key doesn't own the arena; it won't get double-freed
+  // Transfer arena ownership to the key.
+  key->arena = arena.release();
   key->keyType = ecKey;
   key->pkcs11Slot = nullptr;
   key->pkcs11ID = CK_INVALID_HANDLE;
 
   // Create curve parameters.
-  SECItem* params = CreateECParamsForCurve(aNamedCurve, arena.get());
+  SECItem* params = CreateECParamsForCurve(aNamedCurve, key->arena);
   if (!params) {
     return nullptr;
   }
   key->u.ec.DEREncodedParams = *params;
 
   // Set public point.
-  key->u.ec.publicValue = *aKeyData;
+  SECStatus ret =
+      SECITEM_CopyItem(key->arena, &key->u.ec.publicValue, aKeyData);
+  if (NS_WARN_IF(ret != SECSuccess)) {
+    return nullptr;
+  }
 
   // Ensure the given point is on the curve.
   if (!CryptoKey::PublicKeyValid(key.get())) {
     return nullptr;
   }
 
-  return UniqueSECKEYPublicKey(SECKEY_CopyPublicKey(key.get()));
+  return key;
 }
 
 UniqueSECKEYPublicKey CryptoKey::PublicKeyFromJwk(const JsonWebKey& aJwk) {
@@ -1056,12 +1061,7 @@ bool CryptoKey::PublicKeyValid(SECKEYPublicKey* aPubKey) {
   // it is imported into a PKCS#11 module, and returns CK_INVALID_HANDLE
   // if it is invalid.
   CK_OBJECT_HANDLE id = PK11_ImportPublicKey(slot.get(), aPubKey, PR_FALSE);
-  if (id == CK_INVALID_HANDLE) {
-    return false;
-  }
-
-  SECStatus rv = PK11_DestroyObject(slot.get(), id);
-  return (rv == SECSuccess);
+  return id != CK_INVALID_HANDLE;
 }
 
 bool CryptoKey::WriteStructuredClone(JSContext* aCX,

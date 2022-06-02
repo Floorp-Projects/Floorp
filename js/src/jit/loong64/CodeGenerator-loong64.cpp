@@ -78,16 +78,6 @@ void CodeGeneratorLOONG64::branchToBlock(Assembler::FloatFormat fmt,
   }
 }
 
-FrameSizeClass FrameSizeClass::FromDepth(uint32_t frameDepth) {
-  return FrameSizeClass::None();
-}
-
-FrameSizeClass FrameSizeClass::ClassLimit() { return FrameSizeClass(0); }
-
-uint32_t FrameSizeClass::frameSize() const {
-  MOZ_CRASH("LA does not use frame size classes");
-}
-
 void OutOfLineBailout::accept(CodeGeneratorLOONG64* codegen) {
   codegen->visitOutOfLineBailout(this);
 }
@@ -113,13 +103,6 @@ void CodeGeneratorLOONG64::bailoutFrom(Label* label, LSnapshot* snapshot) {
 
   encode(snapshot);
 
-  // Though the assembler doesn't track all frame pushes, at least make sure
-  // the known value makes sense. We can't use bailout tables if the stack
-  // isn't properly aligned to the static frame size.
-  MOZ_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
-                frameClass_.frameSize() == masm.framePushed());
-
-  // We don't use table bailouts because retargeting is easier this way.
   InlineScriptTree* tree = snapshot->mir()->block()->trackedTree();
   OutOfLineBailout* ool = new (alloc()) OutOfLineBailout(snapshot);
   addOutOfLineCode(ool,

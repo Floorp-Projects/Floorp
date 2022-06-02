@@ -7,8 +7,9 @@ license = "MPL-2.0"
 [lib]
 path = "lib.rs"
 
-[dependencies]
-tokio-util = "0.7"
+[dependencies.tokio-util]
+version = "0.7"
+default-features = false
 
 [features]
 __docs_rs = ["tokio-util/__docs_rs"]

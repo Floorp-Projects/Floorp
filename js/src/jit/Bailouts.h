@@ -87,7 +87,7 @@ namespace jit {
 // and 3 above are therefore implemented by a shared per-Runtime trampoline,
 // rt->jitRuntime()->getGenericBailoutHandler().
 //
-// Naively, we could implement step 1 like:
+// We implement step 1 like this:
 //
 //     _bailout_ID_1:
 //       push 1
@@ -99,39 +99,6 @@ namespace jit {
 //     _deopt:
 //       push imm(FrameSize)
 //       call _global_bailout_handler
-//
-// This takes about 10 extra bytes per guard. On some platforms, we can reduce
-// this overhead to 4 bytes by creating a global jump table, shared again in
-// the compartment:
-//
-//       call _global_bailout_handler
-//       call _global_bailout_handler
-//       call _global_bailout_handler
-//       call _global_bailout_handler
-//       ...
-//     _global_bailout_handler:
-//
-// In the bailout handler, we can recompute which entry in the table was
-// selected by subtracting the return addressed pushed by the call, from the
-// start of the table, and then dividing by the size of a (call X) entry in the
-// table. This gives us a number in [0, TableSize), which we call a
-// "BailoutId".
-//
-// Then, we can provide a per-script mapping from BailoutIds to snapshots,
-// which takes only four bytes per entry.
-//
-// This strategy does not work as given, because the bailout handler has no way
-// to compute the location of an IonScript. Currently, we do not use frame
-// pointers. To account for this we segregate frames into a limited set of
-// "frame sizes", and create a table for each frame size. We also have the
-// option of not using bailout tables, for platforms or situations where the
-// 10 byte cost is more optimal than a bailout table. See JitFrames.h for more
-// detail.
-
-static const BailoutId INVALID_BAILOUT_ID = BailoutId(-1);
-
-// Keep this arbitrarily small for now, for testing.
-static const uint32_t BAILOUT_TABLE_SIZE = 16;
 
 // BailoutStack is an architecture specific pointer to the stack, given by the
 // bailout handler.

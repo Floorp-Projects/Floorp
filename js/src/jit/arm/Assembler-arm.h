@@ -1878,8 +1878,6 @@ class Assembler : public AssemblerShared {
   static void ToggleToJmp(CodeLocationLabel inst_);
   static void ToggleToCmp(CodeLocationLabel inst_);
 
-  static uint8_t* BailoutTableStart(uint8_t* code);
-
   static size_t ToggledCallSize(uint8_t* code);
   static void ToggleCall(CodeLocationLabel inst_, bool enabled);
 

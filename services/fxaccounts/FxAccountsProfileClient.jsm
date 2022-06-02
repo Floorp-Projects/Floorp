@@ -36,7 +36,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+const lazy = {};
+
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["URL"]);
 
 /**
  * Create a new FxAccountsProfileClient to be able to fetch Firefox Account profile information.
@@ -57,7 +59,7 @@ var FxAccountsProfileClient = function(options) {
   this.fxai = options.fxai || fxAccounts._internal;
 
   try {
-    this.serverURL = new URL(options.serverURL);
+    this.serverURL = new lazy.URL(options.serverURL);
   } catch (e) {
     throw new Error("Invalid 'serverURL'");
   }

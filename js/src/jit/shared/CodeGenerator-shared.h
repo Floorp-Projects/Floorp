@@ -54,7 +54,6 @@ class CodeGeneratorShared : public LElementVisitor {
   LBlock* current;
   SnapshotWriter snapshots_;
   RecoverWriter recovers_;
-  mozilla::Maybe<TrampolinePtr> deoptTable_;
 #ifdef DEBUG
   uint32_t pushedArgs_;
 #endif
@@ -68,9 +67,6 @@ class CodeGeneratorShared : public LElementVisitor {
 
   js::Vector<CodegenSafepointIndex, 0, SystemAllocPolicy> safepointIndices_;
   js::Vector<OsiIndex, 0, SystemAllocPolicy> osiIndices_;
-
-  // Mapping from bailout table ID to an offset in the snapshot buffer.
-  js::Vector<SnapshotOffset, 0, SystemAllocPolicy> bailouts_;
 
   // Allocated data space needed at runtime.
   js::Vector<uint8_t, 0, SystemAllocPolicy> runtimeData_;
@@ -143,9 +139,6 @@ class CodeGeneratorShared : public LElementVisitor {
   // spills.
   int32_t frameDepth_;
 
-  // Frame class this frame's size falls into (see IonFrame.h).
-  FrameSizeClass frameClass_;
-
   // For arguments to the current function.
   inline int32_t ArgToStackOffset(int32_t slot) const;
 
@@ -170,10 +163,7 @@ class CodeGeneratorShared : public LElementVisitor {
   inline int32_t ToFramePointerOffset(LAllocation a) const;
   inline int32_t ToFramePointerOffset(const LAllocation* a) const;
 
-  uint32_t frameSize() const {
-    return frameClass_ == FrameSizeClass::None() ? frameDepth_
-                                                 : frameClass_.frameSize();
-  }
+  uint32_t frameSize() const { return frameDepth_; }
 
  protected:
   bool addNativeToBytecodeEntry(const BytecodeSite* site);
@@ -236,11 +226,6 @@ class CodeGeneratorShared : public LElementVisitor {
   void encode(LSnapshot* snapshot);
   void encodeAllocation(LSnapshot* snapshot, MDefinition* def,
                         uint32_t* startIndex);
-
-  // Attempts to assign a BailoutId to a snapshot, if one isn't already set.
-  // If the bailout table is full, this returns false, which is not a fatal
-  // error (the code generator may use a slower bailout mechanism).
-  bool assignBailoutId(LSnapshot* snapshot);
 
   // Encode all encountered safepoints in CG-order, and resolve |indices| for
   // safepoint offsets.

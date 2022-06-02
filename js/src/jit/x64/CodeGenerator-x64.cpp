@@ -39,16 +39,6 @@ Operand CodeGeneratorX64::ToOperand64(const LInt64Allocation& a64) {
   return Operand(ToAddress(a));
 }
 
-FrameSizeClass FrameSizeClass::FromDepth(uint32_t frameDepth) {
-  return FrameSizeClass::None();
-}
-
-FrameSizeClass FrameSizeClass::ClassLimit() { return FrameSizeClass(0); }
-
-uint32_t FrameSizeClass::frameSize() const {
-  MOZ_CRASH("x64 does not use frame size classes");
-}
-
 void CodeGenerator::visitValue(LValue* value) {
   ValueOperand result = ToOutValue(value);
   masm.moveValue(value->value(), result);

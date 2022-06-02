@@ -11,8 +11,10 @@ const { GeckoViewUtils } = ChromeUtils.import(
 
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPush");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "EventDispatcher",
   "resource://gre/modules/Messaging.jsm"
 );
@@ -73,15 +75,17 @@ class PushService {
 
   async subscribeWithKey(scope, principal, appServerKey, callback) {
     try {
-      const response = await EventDispatcher.instance.sendRequestForResult({
-        type: "GeckoView:PushSubscribe",
-        scope: scopeWithAttrs(scope, principal.originAttributes),
-        appServerKey: appServerKey
-          ? ChromeUtils.base64URLEncode(new Uint8Array(appServerKey), {
-              pad: true,
-            })
-          : null,
-      });
+      const response = await lazy.EventDispatcher.instance.sendRequestForResult(
+        {
+          type: "GeckoView:PushSubscribe",
+          scope: scopeWithAttrs(scope, principal.originAttributes),
+          appServerKey: appServerKey
+            ? ChromeUtils.base64URLEncode(new Uint8Array(appServerKey), {
+                pad: true,
+              })
+            : null,
+        }
+      );
 
       let subscription = null;
       if (response) {
@@ -101,7 +105,7 @@ class PushService {
 
   async unsubscribe(scope, principal, callback) {
     try {
-      await EventDispatcher.instance.sendRequestForResult({
+      await lazy.EventDispatcher.instance.sendRequestForResult({
         type: "GeckoView:PushUnsubscribe",
         scope: scopeWithAttrs(scope, principal.originAttributes),
       });
@@ -114,10 +118,12 @@ class PushService {
 
   async getSubscription(scope, principal, callback) {
     try {
-      const response = await EventDispatcher.instance.sendRequestForResult({
-        type: "GeckoView:PushGetSubscription",
-        scope: scopeWithAttrs(scope, principal.originAttributes),
-      });
+      const response = await lazy.EventDispatcher.instance.sendRequestForResult(
+        {
+          type: "GeckoView:PushGetSubscription",
+          scope: scopeWithAttrs(scope, principal.originAttributes),
+        }
+      );
 
       let subscription = null;
       if (response) {

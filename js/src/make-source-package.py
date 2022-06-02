@@ -176,6 +176,7 @@ rsync_filter_list = """
 
 + /.cargo/config.in
 
++ /third_party/function2/**
 - /third_party/python/gyp
 + /third_party/python/**
 + /third_party/rust/**

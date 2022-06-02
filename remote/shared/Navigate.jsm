@@ -189,7 +189,12 @@ class ProgressListener {
     }
 
     if (isStop && this.#seenStartFlag) {
-      if (!Components.isSuccessCode(status)) {
+      // Treat NS_ERROR_PARSED_DATA_CACHED as a success code
+      // since navigation happened and content has been loaded.
+      if (
+        !Components.isSuccessCode(status) &&
+        status != Cr.NS_ERROR_PARSED_DATA_CACHED
+      ) {
         // Ignore if the current navigation to the initial document is stopped
         // because the real document will be loaded instead.
         if (

@@ -688,6 +688,25 @@ add_test(
   }
 );
 
+add_test(async function test_ProgressListener_ignoreCacheError() {
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+
+  const progressListener = new ProgressListener(webProgress);
+  const navigated = progressListener.start();
+
+  ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved");
+
+  await webProgress.sendStartState();
+  await webProgress.sendStopState({
+    errorFlag: Cr.NS_ERROR_PARSED_DATA_CACHED,
+  });
+
+  ok(await hasPromiseResolved(navigated), "Listener has resolved");
+
+  run_next_test();
+});
+
 add_test(async function test_ProgressListener_navigationRejectedOnErrorPage() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;

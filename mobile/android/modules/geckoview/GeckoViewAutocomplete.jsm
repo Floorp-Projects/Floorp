@@ -20,12 +20,14 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "LoginInfo", () =>
+XPCOMUtils.defineLazyGetter(lazy, "LoginInfo", () =>
   Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1",
     "nsILoginInfo",
@@ -62,7 +64,7 @@ class LoginEntry {
   }
 
   toLoginInfo() {
-    const info = new LoginInfo(
+    const info = new lazy.LoginInfo(
       this.origin,
       this.formActionOrigin,
       this.httpRealm,
@@ -325,7 +327,7 @@ const GeckoViewAutocomplete = {
   fetchLogins(aDomain = null) {
     debug`fetchLogins for ${aDomain ?? "All domains"}`;
 
-    return EventDispatcher.instance.sendRequestForResult({
+    return lazy.EventDispatcher.instance.sendRequestForResult({
       type: "GeckoView:Autocomplete:Fetch:Login",
       domain: aDomain,
     });
@@ -344,7 +346,7 @@ const GeckoViewAutocomplete = {
   fetchCreditCards() {
     debug`fetchCreditCards`;
 
-    return EventDispatcher.instance.sendRequestForResult({
+    return lazy.EventDispatcher.instance.sendRequestForResult({
       type: "GeckoView:Autocomplete:Fetch:CreditCard",
     });
   },
@@ -364,7 +366,7 @@ const GeckoViewAutocomplete = {
   fetchAddresses() {
     debug`fetchAddresses`;
 
-    return EventDispatcher.instance.sendRequestForResult({
+    return lazy.EventDispatcher.instance.sendRequestForResult({
       type: "GeckoView:Autocomplete:Fetch:Address",
     });
   },
@@ -378,7 +380,7 @@ const GeckoViewAutocomplete = {
   onCreditCardSave(aCreditCard) {
     debug`onCreditCardSave ${aCreditCard}`;
 
-    EventDispatcher.instance.sendRequest({
+    lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:Autocomplete:Save:CreditCard",
       creditCard: aCreditCard,
     });
@@ -393,7 +395,7 @@ const GeckoViewAutocomplete = {
   onAddressSave(aAddress) {
     debug`onAddressSave ${aAddress}`;
 
-    EventDispatcher.instance.sendRequest({
+    lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:Autocomplete:Save:Address",
       address: aAddress,
     });
@@ -409,7 +411,7 @@ const GeckoViewAutocomplete = {
   onLoginSave(aLogin) {
     debug`onLoginSave ${aLogin}`;
 
-    EventDispatcher.instance.sendRequest({
+    lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:Autocomplete:Save:Login",
       login: aLogin,
     });
@@ -426,7 +428,7 @@ const GeckoViewAutocomplete = {
   onLoginPasswordUsed(aLogin) {
     debug`onLoginUsed ${aLogin}`;
 
-    EventDispatcher.instance.sendRequest({
+    lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:Autocomplete:Used:Login",
       usedFields: UsedField.PASSWORD,
       login: aLogin,
@@ -453,7 +455,7 @@ const GeckoViewAutocomplete = {
         return;
       }
 
-      const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
+      const prompt = new lazy.GeckoViewPrompter(aBrowser.ownerGlobal);
       prompt.asyncShowPrompt(
         {
           type: "Autocomplete:Select:Login",
@@ -493,7 +495,7 @@ const GeckoViewAutocomplete = {
         return;
       }
 
-      const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
+      const prompt = new lazy.GeckoViewPrompter(aBrowser.ownerGlobal);
       prompt.asyncShowPrompt(
         {
           type: "Autocomplete:Select:CreditCard",
@@ -533,7 +535,7 @@ const GeckoViewAutocomplete = {
         return;
       }
 
-      const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
+      const prompt = new lazy.GeckoViewPrompter(aBrowser.ownerGlobal);
       prompt.asyncShowPrompt(
         {
           type: "Autocomplete:Select:Address",

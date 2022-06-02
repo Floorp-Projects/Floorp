@@ -56,7 +56,6 @@ var suppressed_toggles = [
   "-moz-scrollbar-end-forward",
   "-moz-scrollbar-start-backward",
   "-moz-scrollbar-start-forward",
-  "-moz-scrollbar-thumb-proportional",
   "-moz-windows-compositor",
   "-moz-windows-default-theme",
   "-moz-windows-glass",

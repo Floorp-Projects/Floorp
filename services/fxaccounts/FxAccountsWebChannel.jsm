@@ -43,59 +43,61 @@ const {
   logPII,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Services",
   "resource://gre/modules/Services.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "WebChannel",
   "resource://gre/modules/WebChannel.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(
     "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsStorageManagerCanStoreField",
   "resource://gre/modules/FxAccountsStorage.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Weave",
   "resource://services-sync/main.js"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CryptoUtils",
   "resource://services-crypto/utils.js"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsPairingFlow",
   "resource://gre/modules/FxAccountsPairing.jsm"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "pairingEnabled",
   "identity.fxaccounts.pairing.enabled"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "separatePrivilegedMozillaWebContentProcess",
   "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "separatedMozillaDomains",
   "browser.tabs.remote.separatedMozillaDomains",
   "",
@@ -103,12 +105,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   val => val.split(",")
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "accountServer",
   "identity.fxaccounts.remote.root",
   null,
   false,
-  val => Services.io.newURI(val)
+  val => lazy.Services.io.newURI(val)
 );
 
 // These engines were added years after Sync had been introduced, they need
@@ -212,7 +214,7 @@ FxAccountsWebChannel.prototype = {
   _setupChannel() {
     // if this.contentUri is present but not a valid URI, then this will throw an error.
     try {
-      this._webChannelOrigin = Services.io.newURI(this._contentUri);
+      this._webChannelOrigin = lazy.Services.io.newURI(this._contentUri);
       this._registerChannel();
     } catch (e) {
       log.error(e);
@@ -224,11 +226,11 @@ FxAccountsWebChannel.prototype = {
     const { command, data } = message;
 
     let shouldCheckRemoteType =
-      separatePrivilegedMozillaWebContentProcess &&
-      separatedMozillaDomains.some(function(val) {
+      lazy.separatePrivilegedMozillaWebContentProcess &&
+      lazy.separatedMozillaDomains.some(function(val) {
         return (
-          accountServer.asciiHost == val ||
-          accountServer.asciiHost.endsWith("." + val)
+          lazy.accountServer.asciiHost == val ||
+          lazy.accountServer.asciiHost.endsWith("." + val)
         );
       });
     let { currentRemoteType } = sendingContext.browsingContext;
@@ -242,7 +244,7 @@ FxAccountsWebChannel.prototype = {
     let browser = sendingContext.browsingContext.top.embedderElement;
     switch (command) {
       case COMMAND_PROFILE_CHANGE:
-        Services.obs.notifyObservers(
+        lazy.Services.obs.notifyObservers(
           null,
           ON_PROFILE_CHANGE_NOTIFICATION,
           data.uid
@@ -275,9 +277,9 @@ FxAccountsWebChannel.prototype = {
         this._helpers.openSyncPreferences(browser, data.entryPoint);
         break;
       case COMMAND_PAIR_PREFERENCES:
-        if (pairingEnabled) {
+        if (lazy.pairingEnabled) {
           browser.loadURI("about:preferences?action=pair#sync", {
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal: lazy.Services.scriptSecurityManager.getSystemPrincipal(),
           });
         }
         break;
@@ -312,7 +314,7 @@ FxAccountsWebChannel.prototype = {
         log.debug(`Pairing command ${command} received`);
         const { channel_id: channelId } = data;
         delete data.channel_id;
-        const flow = FxAccountsPairingFlow.get(channelId);
+        const flow = lazy.FxAccountsPairingFlow.get(channelId);
         if (!flow) {
           log.warn(`Could not find a pairing flow for ${channelId}`);
           return;
@@ -331,7 +333,7 @@ FxAccountsWebChannel.prototype = {
       default:
         log.warn("Unrecognized FxAccountsWebChannel command", command);
         // As a safety measure we also terminate any pending FxA pairing flow.
-        FxAccountsPairingFlow.finalizeAll();
+        lazy.FxAccountsPairingFlow.finalizeAll();
         break;
     }
   },
@@ -389,7 +391,10 @@ FxAccountsWebChannel.prototype = {
     };
 
     this._channelCallback = listener;
-    this._channel = new WebChannel(this._webChannelId, this._webChannelOrigin);
+    this._channel = new lazy.WebChannel(
+      this._webChannelId,
+      this._webChannelOrigin
+    );
     this._channel.listen(listener);
     log.debug(
       "FxAccountsWebChannel registered: " +
@@ -403,10 +408,10 @@ FxAccountsWebChannel.prototype = {
 function FxAccountsWebChannelHelpers(options) {
   options = options || {};
 
-  this._fxAccounts = options.fxAccounts || fxAccounts;
+  this._fxAccounts = options.fxAccounts || lazy.fxAccounts;
   this._weaveXPCOM = options.weaveXPCOM || null;
   this._privateBrowsingUtils =
-    options.privateBrowsingUtils || PrivateBrowsingUtils;
+    options.privateBrowsingUtils || lazy.PrivateBrowsingUtils;
 }
 
 FxAccountsWebChannelHelpers.prototype = {
@@ -472,16 +477,19 @@ FxAccountsWebChannelHelpers.prototype = {
               !declinedEngines.includes(engine)
             ) {
               // These extra engines are disabled by default.
-              Services.prefs.setBoolPref(
+              lazy.Services.prefs.setBoolPref(
                 `services.sync.engine.${engine}`,
                 true
               );
             }
           });
           log.debug("Received declined engines", declinedEngines);
-          Weave.Service.engineManager.setDeclined(declinedEngines);
+          lazy.Weave.Service.engineManager.setDeclined(declinedEngines);
           declinedEngines.forEach(engine => {
-            Services.prefs.setBoolPref(`services.sync.engine.${engine}`, false);
+            lazy.Services.prefs.setBoolPref(
+              `services.sync.engine.${engine}`,
+              false
+            );
           });
         }
         log.debug("Webchannel is enabling sync");
@@ -584,7 +592,7 @@ FxAccountsWebChannelHelpers.prototype = {
       clientId: FX_OAUTH_CLIENT_ID,
       capabilities: {
         multiService: true,
-        pairing: pairingEnabled,
+        pairing: lazy.pairingEnabled,
         engines: this._getAvailableExtraEngines(),
       },
     };
@@ -593,7 +601,7 @@ FxAccountsWebChannelHelpers.prototype = {
   _getAvailableExtraEngines() {
     return EXTRA_ENGINES.filter(engineName => {
       try {
-        return Services.prefs.getBoolPref(
+        return lazy.Services.prefs.getBoolPref(
           `services.sync.engine.${engineName}.available`
         );
       } catch (e) {
@@ -621,7 +629,7 @@ FxAccountsWebChannelHelpers.prototype = {
       if (
         name == "email" ||
         name == "uid" ||
-        FxAccountsStorageManagerCanStoreField(name)
+        lazy.FxAccountsStorageManagerCanStoreField(name)
       ) {
         newCredentials[name] = credentials[name];
       } else {
@@ -637,7 +645,7 @@ FxAccountsWebChannelHelpers.prototype = {
    */
   getPreviousAccountNameHashPref() {
     try {
-      return Services.prefs.getStringPref(PREF_LAST_FXA_USER);
+      return lazy.Services.prefs.getStringPref(PREF_LAST_FXA_USER);
     } catch (_) {
       return "";
     }
@@ -649,9 +657,9 @@ FxAccountsWebChannelHelpers.prototype = {
    * @param acctName the account name of the user's account.
    */
   setPreviousAccountNameHashPref(acctName) {
-    Services.prefs.setStringPref(
+    lazy.Services.prefs.setStringPref(
       PREF_LAST_FXA_USER,
-      CryptoUtils.sha256Base64(acctName)
+      lazy.CryptoUtils.sha256Base64(acctName)
     );
   },
 
@@ -669,7 +677,7 @@ FxAccountsWebChannelHelpers.prototype = {
     uri += "#sync";
 
     browser.loadURI(uri, {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      triggeringPrincipal: lazy.Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
 
@@ -682,7 +690,9 @@ FxAccountsWebChannelHelpers.prototype = {
    */
   _needRelinkWarning(acctName) {
     let prevAcctHash = this.getPreviousAccountNameHashPref();
-    return prevAcctHash && prevAcctHash != CryptoUtils.sha256Base64(acctName);
+    return (
+      prevAcctHash && prevAcctHash != lazy.CryptoUtils.sha256Base64(acctName)
+    );
   },
 
   /**
@@ -692,7 +702,7 @@ FxAccountsWebChannelHelpers.prototype = {
    * @private
    */
   _promptForRelink(acctName) {
-    let sb = Services.strings.createBundle(
+    let sb = lazy.Services.strings.createBundle(
       "chrome://browser/locale/syncSetup.properties"
     );
     let continueLabel = sb.GetStringFromName("continue.label");
@@ -702,14 +712,14 @@ FxAccountsWebChannelHelpers.prototype = {
     ]);
     let body =
       sb.GetStringFromName("relinkVerify.heading") + "\n\n" + description;
-    let ps = Services.prompt;
+    let ps = lazy.Services.prompt;
     let buttonFlags =
       ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING +
       ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL +
       ps.BUTTON_POS_1_DEFAULT;
 
     // If running in context of the browser chrome, window does not exist.
-    let pressed = Services.prompt.confirmEx(
+    let pressed = lazy.Services.prompt.confirmEx(
       null,
       title,
       body,
@@ -731,7 +741,7 @@ var singleton;
 // things) and allowing multiple channels would cause such notifications to be
 // sent multiple times.
 var EnsureFxAccountsWebChannel = () => {
-  let contentUri = Services.urlFormatter.formatURLPref(
+  let contentUri = lazy.Services.urlFormatter.formatURLPref(
     "identity.fxaccounts.remote.root"
   );
   if (singleton && singleton._contentUri !== contentUri) {

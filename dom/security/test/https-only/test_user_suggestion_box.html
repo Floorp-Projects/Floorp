@@ -22,10 +22,9 @@
 SimpleTest.requestFlakyTimeout("We need to wait for the HTTPS-Only error page to appear and for the additional 'www' request to provide a suggestion.");
 SimpleTest.requestLongerTimeout(10);
 
-// path to test servers
-const SJS_PATH = "/tests/dom/security/test/https-only/file_user_suggestion_box.sjs";
-const KICK_OFF_REQUEST_WITH_SUGGESTION = "http://suggestion-example.com" + SJS_PATH;
-const KICK_OFF_REQUEST_WITHOUT_SUGGESTION = "http://no-suggestion-example.com" + SJS_PATH;
+// urls of server locations with bad cert -> https-only should display error page
+const KICK_OFF_REQUEST_WITH_SUGGESTION = "http://suggestion-example.com";
+const KICK_OFF_REQUEST_WITHOUT_SUGGESTION = "http://no-suggestion-example.com";
 
 // l10n ids to compare html to
 const ERROR_PAGE_L10N_ID = "about-httpsonly-title-alert";

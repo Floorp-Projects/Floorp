@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
 });
 
@@ -24,7 +26,7 @@ class PromptCollection {
     const msg = {
       type: "repost",
     };
-    const prompter = new GeckoViewPrompter(browsingContext);
+    const prompter = new lazy.GeckoViewPrompter(browsingContext);
     const result = prompter.showPrompt(msg);
     return !!result?.allow;
   }
@@ -34,7 +36,7 @@ class PromptCollection {
       const msg = {
         type: "beforeUnload",
       };
-      const prompter = new GeckoViewPrompter(browsingContext);
+      const prompter = new lazy.GeckoViewPrompter(browsingContext);
       prompter.asyncShowPrompt(msg, resolve);
     }).then(result => !!result?.allow);
   }

@@ -343,7 +343,10 @@ def test_compute_process_timeout(
 )
 def test_android_reverse_ports(host, playback, benchmark):
     raptor = WebExtensionAndroid(
-        "geckoview", "org.mozilla.geckoview_example", host=host
+        "geckoview",
+        "org.mozilla.geckoview_example",
+        host=host,
+        extra_prefs={},
     )
     if benchmark:
         benchmark_mock = mock.patch("raptor.raptor.benchmark.Benchmark")
@@ -370,7 +373,10 @@ def test_android_reverse_ports(host, playback, benchmark):
 
 def test_android_reverse_ports_non_local_host():
     raptor = WebExtensionAndroid(
-        "geckoview", "org.mozilla.geckoview_example", host="192.168.100.10"
+        "geckoview",
+        "org.mozilla.geckoview_example",
+        host="192.168.100.10",
+        extra_prefs={},
     )
 
     raptor.set_reverse_port = Mock()

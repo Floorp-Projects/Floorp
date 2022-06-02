@@ -100,7 +100,7 @@ const BuiltInThemeConfig = new Map([
     "lush-soft-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/lush/soft/",
+      path: "resource://builtin-themes/monochromatic/2021lush/soft/",
       collection: "life-in-color",
     },
   ],
@@ -108,7 +108,7 @@ const BuiltInThemeConfig = new Map([
     "lush-balanced-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/lush/balanced/",
+      path: "resource://builtin-themes/monochromatic/2021lush/balanced/",
       collection: "life-in-color",
     },
   ],
@@ -116,7 +116,7 @@ const BuiltInThemeConfig = new Map([
     "lush-bold-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/lush/bold/",
+      path: "resource://builtin-themes/monochromatic/2021lush/bold/",
       collection: "life-in-color",
     },
   ],
@@ -124,7 +124,7 @@ const BuiltInThemeConfig = new Map([
     "abstract-soft-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/abstract/soft/",
+      path: "resource://builtin-themes/monochromatic/2021abstract/soft/",
       collection: "life-in-color",
     },
   ],
@@ -132,7 +132,7 @@ const BuiltInThemeConfig = new Map([
     "abstract-balanced-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/abstract/balanced/",
+      path: "resource://builtin-themes/monochromatic/2021abstract/balanced/",
       collection: "life-in-color",
     },
   ],
@@ -140,7 +140,7 @@ const BuiltInThemeConfig = new Map([
     "abstract-bold-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/abstract/bold/",
+      path: "resource://builtin-themes/monochromatic/2021abstract/bold/",
       collection: "life-in-color",
     },
   ],
@@ -148,7 +148,7 @@ const BuiltInThemeConfig = new Map([
     "elemental-soft-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/elemental/soft/",
+      path: "resource://builtin-themes/monochromatic/2021elemental/soft/",
       collection: "life-in-color",
     },
   ],
@@ -156,7 +156,7 @@ const BuiltInThemeConfig = new Map([
     "elemental-balanced-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/elemental/balanced/",
+      path: "resource://builtin-themes/monochromatic/2021elemental/balanced/",
       collection: "life-in-color",
     },
   ],
@@ -164,7 +164,7 @@ const BuiltInThemeConfig = new Map([
     "elemental-bold-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/elemental/bold/",
+      path: "resource://builtin-themes/monochromatic/2021elemental/bold/",
       collection: "life-in-color",
     },
   ],
@@ -172,7 +172,7 @@ const BuiltInThemeConfig = new Map([
     "cheers-soft-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/cheers/soft/",
+      path: "resource://builtin-themes/monochromatic/2021cheers/soft/",
       collection: "life-in-color",
     },
   ],
@@ -180,7 +180,7 @@ const BuiltInThemeConfig = new Map([
     "cheers-balanced-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/cheers/balanced/",
+      path: "resource://builtin-themes/monochromatic/2021cheers/balanced/",
       collection: "life-in-color",
     },
   ],
@@ -188,7 +188,7 @@ const BuiltInThemeConfig = new Map([
     "cheers-bold-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/cheers/bold/",
+      path: "resource://builtin-themes/monochromatic/2021cheers/bold/",
       collection: "life-in-color",
     },
   ],
@@ -196,7 +196,7 @@ const BuiltInThemeConfig = new Map([
     "graffiti-soft-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/graffiti/soft/",
+      path: "resource://builtin-themes/monochromatic/2021graffiti/soft/",
       collection: "life-in-color",
     },
   ],
@@ -204,7 +204,7 @@ const BuiltInThemeConfig = new Map([
     "graffiti-balanced-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/graffiti/balanced/",
+      path: "resource://builtin-themes/monochromatic/2021graffiti/balanced/",
       collection: "life-in-color",
     },
   ],
@@ -212,7 +212,7 @@ const BuiltInThemeConfig = new Map([
     "graffiti-bold-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/graffiti/bold/",
+      path: "resource://builtin-themes/monochromatic/2021graffiti/bold/",
       collection: "life-in-color",
     },
   ],
@@ -220,7 +220,7 @@ const BuiltInThemeConfig = new Map([
     "foto-soft-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/foto/soft/",
+      path: "resource://builtin-themes/monochromatic/2021foto/soft/",
       collection: "life-in-color",
     },
   ],
@@ -228,7 +228,7 @@ const BuiltInThemeConfig = new Map([
     "foto-balanced-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/foto/balanced/",
+      path: "resource://builtin-themes/monochromatic/2021foto/balanced/",
       collection: "life-in-color",
     },
   ],
@@ -236,7 +236,7 @@ const BuiltInThemeConfig = new Map([
     "foto-bold-colorway@mozilla.org",
     {
       version: "1.0",
-      path: "resource://builtin-themes/monochromatic/foto/bold/",
+      path: "resource://builtin-themes/monochromatic/2021foto/bold/",
       collection: "life-in-color",
     },
   ],

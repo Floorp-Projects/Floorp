@@ -23,8 +23,10 @@ const { getFxAccountsSingleton } = ChromeUtils.import(
 );
 const fxAccounts = getFxAccountsSingleton();
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsProfileClient",
   "resource://gre/modules/FxAccountsProfileClient.jsm"
 );
@@ -36,7 +38,7 @@ var FxAccountsProfile = function(options = {}) {
   this.fxai = options.fxai || fxAccounts._internal;
   this.client =
     options.profileClient ||
-    new FxAccountsProfileClient({
+    new lazy.FxAccountsProfileClient({
       fxai: this.fxai,
       serverURL: options.profileServerUrl,
     });

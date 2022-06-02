@@ -2638,13 +2638,6 @@ size_t Assembler::ToggledCallSize(uint8_t* code) {
   return uintptr_t(iter.cur()) + 4 - uintptr_t(code);
 }
 
-uint8_t* Assembler::BailoutTableStart(uint8_t* code) {
-  // The iterator skips over any automatically-inserted instructions.
-  InstructionIterator iter(reinterpret_cast<Instruction*>(code));
-  MOZ_ASSERT(iter.cur()->is<InstBLImm>());
-  return reinterpret_cast<uint8_t*>(iter.cur());
-}
-
 uint32_t Assembler::NopFill = 0;
 
 uint32_t Assembler::GetNopFill() {

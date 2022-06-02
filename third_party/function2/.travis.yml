@@ -1,0 +1,93 @@
+sudo: true
+dist: trusty
+language: cpp
+cache: apt
+
+git:
+  depth: 1
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+            - valgrind
+            - ninja-build
+      env:
+        - COMPILER=g++-5
+        - NO_EXCEPTIONS=OFF
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - valgrind
+            - ninja-build
+      env:
+        - COMPILER=g++-6
+        - NO_EXCEPTIONS=OFF
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - valgrind
+            - ninja-build
+      env:
+        - COMPILER=g++-6
+        - NO_EXCEPTIONS=ON
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - g++-6
+            - clang-5.0
+            - ninja-build
+      env:
+        - COMPILER=clang++-5.0
+        - NO_EXCEPTIONS=OFF
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - g++-6
+            - clang-5.0
+            - ninja-build
+      env:
+        - COMPILER=clang++-5.0
+        - NO_EXCEPTIONS=ON
+
+
+install:
+  - export CXX=$COMPILER
+  - $CXX --version
+  - chmod +x tools/travis-ci.sh
+
+script:
+  - ./tools/travis-ci.sh
+
+notifications:
+  email: false

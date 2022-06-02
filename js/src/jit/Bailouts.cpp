@@ -15,10 +15,12 @@
 #include "jit/JitSpewer.h"
 #include "jit/JSJitFrameIter.h"
 #include "jit/SafepointIndex.h"
+#include "jit/ScriptFromCalleeToken.h"
 #include "vm/JSContext.h"
 #include "vm/Stack.h"
 #include "vm/TraceLogging.h"
 
+#include "vm/JSScript-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
 
@@ -26,6 +28,73 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::IsInRange;
+
+#if defined(_WIN32)
+#  pragma pack(push, 1)
+#endif
+class js::jit::BailoutStack {
+  RegisterDump::FPUArray fpregs_;
+  RegisterDump::GPRArray regs_;
+  uintptr_t frameSize_;
+  uintptr_t snapshotOffset_;
+
+ public:
+  MachineState machineState() {
+    return MachineState::FromBailout(regs_, fpregs_);
+  }
+  uint32_t snapshotOffset() const { return snapshotOffset_; }
+  uint32_t frameSize() const { return frameSize_; }
+  uint8_t* parentStackPointer() {
+    return (uint8_t*)this + sizeof(BailoutStack);
+  }
+};
+#if defined(_WIN32)
+#  pragma pack(pop)
+#endif
+
+// Make sure the compiler doesn't add extra padding on 32-bit platforms.
+static_assert((sizeof(BailoutStack) % 8) == 0,
+              "BailoutStack should be 8-byte aligned.");
+
+BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
+                                   BailoutStack* bailout)
+    : machine_(bailout->machineState()), activation_(nullptr) {
+  uint8_t* sp = bailout->parentStackPointer();
+  framePointer_ = sp + bailout->frameSize();
+  topFrameSize_ = framePointer_ - sp;
+
+  JSScript* script =
+      ScriptFromCalleeToken(((JitFrameLayout*)framePointer_)->calleeToken());
+  topIonScript_ = script->ionScript();
+
+  attachOnJitActivation(activations);
+  snapshotOffset_ = bailout->snapshotOffset();
+}
+
+BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
+                                   InvalidationBailoutStack* bailout)
+    : machine_(bailout->machine()), activation_(nullptr) {
+  framePointer_ = (uint8_t*)bailout->fp();
+  topFrameSize_ = framePointer_ - bailout->sp();
+  topIonScript_ = bailout->ionScript();
+  attachOnJitActivation(activations);
+
+  uint8_t* returnAddressToFp_ = bailout->osiPointReturnAddress();
+  const OsiIndex* osiIndex = topIonScript_->getOsiIndex(returnAddressToFp_);
+  snapshotOffset_ = osiIndex->snapshotOffset();
+}
+
+BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
+                                   const JSJitFrameIter& frame)
+    : machine_(frame.machineState()) {
+  framePointer_ = (uint8_t*)frame.fp();
+  topFrameSize_ = frame.frameSize();
+  topIonScript_ = frame.ionScript();
+  attachOnJitActivation(activations);
+
+  const OsiIndex* osiIndex = frame.osiIndex();
+  snapshotOffset_ = osiIndex->snapshotOffset();
+}
 
 // This address is a magic number made to cause crashes while indicating that we
 // are making an attempt to mark the stack during a bailout.
@@ -185,18 +254,6 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
   }
 
   return success;
-}
-
-BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
-                                   const JSJitFrameIter& frame)
-    : machine_(frame.machineState()) {
-  framePointer_ = (uint8_t*)frame.fp();
-  topFrameSize_ = frame.frameSize();
-  topIonScript_ = frame.ionScript();
-  attachOnJitActivation(activations);
-
-  const OsiIndex* osiIndex = frame.osiIndex();
-  snapshotOffset_ = osiIndex->snapshotOffset();
 }
 
 bool jit::ExceptionHandlerBailout(JSContext* cx,

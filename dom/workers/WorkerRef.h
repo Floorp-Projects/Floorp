@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_workers_WorkerRef_h
 #define mozilla_dom_workers_WorkerRef_h
 
-#include <functional>
 #include "mozilla/dom/WorkerStatus.h"
+#include "mozilla/MoveOnlyFunction.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupports.h"
 
@@ -123,7 +123,7 @@ class WorkerRef {
 
   WorkerPrivate* mWorkerPrivate;
 
-  std::function<void()> mCallback;
+  MoveOnlyFunction<void()> mCallback;
   const char* const mName;
   const bool mIsPreventingShutdown;
 
@@ -135,7 +135,7 @@ class WeakWorkerRef final : public WorkerRef {
  public:
   static already_AddRefed<WeakWorkerRef> Create(
       WorkerPrivate* aWorkerPrivate,
-      std::function<void()>&& aCallback = nullptr);
+      MoveOnlyFunction<void()>&& aCallback = nullptr);
 
   WorkerPrivate* GetPrivate() const;
 
@@ -154,7 +154,7 @@ class StrongWorkerRef final : public WorkerRef {
  public:
   static already_AddRefed<StrongWorkerRef> Create(
       WorkerPrivate* aWorkerPrivate, const char* aName,
-      std::function<void()>&& aCallback = nullptr);
+      MoveOnlyFunction<void()>&& aCallback = nullptr);
 
   // This function creates a StrongWorkerRef even when in the Canceling state of
   // the worker's lifecycle. It's intended to be used by system code, e.g. code
@@ -205,7 +205,7 @@ class IPCWorkerRef final : public WorkerRef {
  public:
   static already_AddRefed<IPCWorkerRef> Create(
       WorkerPrivate* aWorkerPrivate, const char* aName,
-      std::function<void()>&& aCallback = nullptr);
+      MoveOnlyFunction<void()>&& aCallback = nullptr);
 
   WorkerPrivate* Private() const;
 

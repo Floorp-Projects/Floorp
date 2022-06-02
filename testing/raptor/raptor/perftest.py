@@ -103,6 +103,7 @@ class Perftest(object):
         project="mozilla-central",
         verbose=False,
         python=None,
+        fission=True,
         **kwargs
     ):
         self._remote_test_root = None
@@ -138,7 +139,7 @@ class Perftest(object):
             "enable_control_server_wait": memory_test or cpu_test,
             "e10s": e10s,
             "device_name": device_name,
-            "fission": extra_prefs.get("fission.autostart", True),
+            "fission": fission,
             "disable_perf_tuning": disable_perf_tuning,
             "conditioned_profile": conditioned_profile,
             "chimera": chimera,
@@ -206,6 +207,9 @@ class Perftest(object):
 
         LOG.info("Post startup delay set to %d ms" % self.post_startup_delay)
         LOG.info("main raptor init, config is: %s" % str(self.config))
+
+        # TODO: Move this outside of the perftest initialization, it contains
+        # platform-specific code
         self.build_browser_profile()
 
         # Crashes counter
@@ -393,14 +397,7 @@ class Perftest(object):
             LOG.info("Merging profile: {}".format(path))
             self.profile.merge(path)
 
-        if self.config["extra_prefs"].get("fission.autostart", True):
-            self.config["extra_prefs"].update(
-                {
-                    "fission.autostart": True,
-                }
-            )
-            LOG.info("Enabling fission via browser preferences")
-            LOG.info("Browser preferences: {}".format(self.config["extra_prefs"]))
+        LOG.info("Browser preferences: {}".format(self.config["extra_prefs"]))
         self.profile.set_preferences(self.config["extra_prefs"])
 
         # share the profile dir with the config and the control server

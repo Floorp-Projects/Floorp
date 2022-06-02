@@ -1328,7 +1328,6 @@ class LSnapshot : public TempObject {
   LRecoverInfo* recoverInfo_;
   SnapshotOffset snapshotOffset_;
   uint32_t numSlots_;
-  BailoutId bailoutId_;
   BailoutKind bailoutKind_;
 
   LSnapshot(LRecoverInfo* recover, BailoutKind kind);
@@ -1363,14 +1362,9 @@ class LSnapshot : public TempObject {
   LRecoverInfo* recoverInfo() const { return recoverInfo_; }
   MResumePoint* mir() const { return recoverInfo()->mir(); }
   SnapshotOffset snapshotOffset() const { return snapshotOffset_; }
-  BailoutId bailoutId() const { return bailoutId_; }
   void setSnapshotOffset(SnapshotOffset offset) {
     MOZ_ASSERT(snapshotOffset_ == INVALID_SNAPSHOT_OFFSET);
     snapshotOffset_ = offset;
-  }
-  void setBailoutId(BailoutId id) {
-    MOZ_ASSERT(bailoutId_ == INVALID_BAILOUT_ID);
-    bailoutId_ = id;
   }
   BailoutKind bailoutKind() const { return bailoutKind_; }
   void rewriteRecoveredInput(LUse input);

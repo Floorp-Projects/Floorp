@@ -400,9 +400,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::ScrollArrowStyle:
       aResult = eScrollArrow_None;
       break;
-    case IntID::ScrollSliderStyle:
-      aResult = eScrollThumbStyle_Proportional;
-      break;
     case IntID::UseOverlayScrollbars:
     case IntID::AllowOverlayScrollbarsOverlap:
       aResult = NSScroller.preferredScrollerStyle == NSScrollerStyleOverlay;

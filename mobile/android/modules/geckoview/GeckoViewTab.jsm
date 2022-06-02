@@ -18,7 +18,9 @@ const { ExtensionUtils } = ChromeUtils.import(
 
 const { ExtensionError } = ExtensionUtils;
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Services: "resource://gre/modules/Services.jsm",
   mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
@@ -86,7 +88,7 @@ const GeckoViewTabBridge = {
     debug`openOptionsPage for extensionId ${extensionId}`;
 
     try {
-      await EventDispatcher.instance.sendRequestForResult({
+      await lazy.EventDispatcher.instance.sendRequestForResult({
         type: "GeckoView:WebExtension:OpenOptionsPage",
         extensionId,
       });
@@ -115,7 +117,7 @@ const GeckoViewTabBridge = {
   async createNewTab({ extensionId, createProperties } = {}) {
     debug`createNewTab`;
 
-    const newSessionId = Services.uuid
+    const newSessionId = lazy.Services.uuid
       .generateUUID()
       .toString()
       .slice(1, -1)
@@ -130,22 +132,27 @@ const GeckoViewTabBridge = {
             aTopic === "geckoview-window-created" &&
             aSubject.name === newSessionId
           ) {
-            Services.obs.removeObserver(handler, "geckoview-window-created");
+            lazy.Services.obs.removeObserver(
+              handler,
+              "geckoview-window-created"
+            );
             resolve(aSubject);
           }
         },
       };
-      Services.obs.addObserver(handler, "geckoview-window-created");
+      lazy.Services.obs.addObserver(handler, "geckoview-window-created");
     });
 
     let didOpenSession = false;
     try {
-      didOpenSession = await EventDispatcher.instance.sendRequestForResult({
-        type: "GeckoView:WebExtension:NewTab",
-        extensionId,
-        createProperties,
-        newSessionId,
-      });
+      didOpenSession = await lazy.EventDispatcher.instance.sendRequestForResult(
+        {
+          type: "GeckoView:WebExtension:NewTab",
+          extensionId,
+          createProperties,
+          newSessionId,
+        }
+      );
     } catch (errorMessage) {
       // The error message coming from GeckoView is about :NewTab not being
       // registered so we need to have one that's extension friendly here.
@@ -216,7 +223,7 @@ class GeckoViewTab extends GeckoViewModule {
     switch (aEvent) {
       case "GeckoView:WebExtension:SetTabActive": {
         const { active } = aData;
-        mobileWindowTracker.setTabActive(this.window, active);
+        lazy.mobileWindowTracker.setTabActive(this.window, active);
         break;
       }
     }

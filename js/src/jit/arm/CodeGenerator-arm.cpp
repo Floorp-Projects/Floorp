@@ -131,7 +131,7 @@ bool CodeGeneratorARM::generateOutOfLineCode() {
     masm.bind(&deoptLabel_);
 
     // Push the frame size, so the handler can recover the IonScript.
-    masm.ma_mov(Imm32(frameSize()), lr);
+    masm.push(Imm32(frameSize()));
 
     TrampolinePtr handler = gen->jitRuntime()->getGenericBailoutHandler();
     masm.jump(handler);
@@ -144,23 +144,6 @@ void CodeGeneratorARM::bailoutIf(Assembler::Condition condition,
                                  LSnapshot* snapshot) {
   encode(snapshot);
 
-  // Though the assembler doesn't track all frame pushes, at least make sure
-  // the known value makes sense. We can't use bailout tables if the stack
-  // isn't properly aligned to the static frame size.
-  MOZ_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
-                frameClass_.frameSize() == masm.framePushed());
-
-  if (assignBailoutId(snapshot)) {
-    uint8_t* bailoutTable = Assembler::BailoutTableStart(deoptTable_->value);
-    uint8_t* code =
-        bailoutTable + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
-    masm.ma_b(code, condition);
-    return;
-  }
-
-  // We could not use a jump table, either because all bailout IDs were
-  // reserved, or a jump table is not optimal for this frame size or
-  // platform. Whatever, we will generate a lazy bailout.
   InlineScriptTree* tree = snapshot->mir()->block()->trackedTree();
   OutOfLineBailout* ool =
       new (alloc()) OutOfLineBailout(snapshot, masm.framePushed());
@@ -179,13 +162,6 @@ void CodeGeneratorARM::bailoutFrom(Label* label, LSnapshot* snapshot) {
 
   encode(snapshot);
 
-  // Though the assembler doesn't track all frame pushes, at least make sure
-  // the known value makes sense. We can't use bailout tables if the stack
-  // isn't properly aligned to the static frame size.
-  MOZ_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
-                frameClass_.frameSize() == masm.framePushed());
-
-  // On ARM we don't use a bailout table.
   InlineScriptTree* tree = snapshot->mir()->block()->trackedTree();
   OutOfLineBailout* ool =
       new (alloc()) OutOfLineBailout(snapshot, masm.framePushed());
@@ -205,10 +181,7 @@ void CodeGeneratorARM::bailout(LSnapshot* snapshot) {
 }
 
 void CodeGeneratorARM::visitOutOfLineBailout(OutOfLineBailout* ool) {
-  ScratchRegisterScope scratch(masm);
-  masm.ma_mov(Imm32(ool->snapshot()->snapshotOffset()), scratch);
-  masm.ma_push(scratch);  // BailoutStack::padding_
-  masm.ma_push(scratch);  // BailoutStack::snapshotOffset_
+  masm.push(Imm32(ool->snapshot()->snapshotOffset()));
   masm.ma_b(&deoptLabel_);
 }
 
@@ -1301,29 +1274,6 @@ void CodeGenerator::visitWasmBuiltinTruncateFToInt32(
     LWasmBuiltinTruncateFToInt32* ins) {
   emitTruncateFloat32(ToFloatRegister(ins->getOperand(0)),
                       ToRegister(ins->getDef(0)), ins->mir());
-}
-
-static const uint32_t FrameSizes[] = {128, 256, 512, 1024};
-
-FrameSizeClass FrameSizeClass::FromDepth(uint32_t frameDepth) {
-  for (uint32_t i = 0; i < std::size(FrameSizes); i++) {
-    if (frameDepth < FrameSizes[i]) {
-      return FrameSizeClass(i);
-    }
-  }
-
-  return FrameSizeClass::None();
-}
-
-FrameSizeClass FrameSizeClass::ClassLimit() {
-  return FrameSizeClass(std::size(FrameSizes));
-}
-
-uint32_t FrameSizeClass::frameSize() const {
-  MOZ_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
-  MOZ_ASSERT(class_ < std::size(FrameSizes));
-
-  return FrameSizes[class_];
 }
 
 ValueOperand CodeGeneratorARM::ToValue(LInstruction* ins, size_t pos) {

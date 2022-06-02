@@ -24,15 +24,17 @@ const { DEVICE_TYPE_DESKTOP } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CommonUtils",
   "resource://services-common/utils.js"
 );
 
 const PREF_LOCAL_DEVICE_NAME = PREF_ACCOUNT_ROOT + "device.name";
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "pref_localDeviceName",
   PREF_LOCAL_DEVICE_NAME,
   ""
@@ -160,7 +162,7 @@ class FxAccountsDevice {
       Services.prefs.setStringPref(PREF_LOCAL_DEVICE_NAME, deprecated_value);
       Services.prefs.clearUserPref(PREF_DEPRECATED_DEVICE_NAME);
     }
-    let name = pref_localDeviceName;
+    let name = lazy.pref_localDeviceName;
     if (!name) {
       name = this.getDefaultLocalName();
       Services.prefs.setStringPref(PREF_LOCAL_DEVICE_NAME, name);
@@ -359,7 +361,7 @@ class FxAccountsDevice {
       !device.registrationVersion ||
       device.registrationVersion < this.DEVICE_REGISTRATION_VERSION ||
       !device.registeredCommandsKeys ||
-      !CommonUtils.arrayEqual(
+      !lazy.CommonUtils.arrayEqual(
         device.registeredCommandsKeys,
         availableCommandsKeys
       )
@@ -379,7 +381,7 @@ class FxAccountsDevice {
     ).sort();
 
     if (
-      !CommonUtils.arrayEqual(
+      !lazy.CommonUtils.arrayEqual(
         localAvailableCommandsKeys,
         remoteAvailableCommandsKeys
       )

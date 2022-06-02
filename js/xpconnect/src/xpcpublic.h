@@ -110,17 +110,17 @@ class Scriptability {
   bool mScriptBlockedByPolicy;
 };
 
-JSObject* TransplantObject(JSContext* cx, JS::HandleObject origobj,
-                           JS::HandleObject target);
+JSObject* TransplantObject(JSContext* cx, JS::Handle<JSObject*> origobj,
+                           JS::Handle<JSObject*> target);
 
 JSObject* TransplantObjectRetainingXrayExpandos(JSContext* cx,
-                                                JS::HandleObject origobj,
-                                                JS::HandleObject target);
+                                                JS::Handle<JSObject*> origobj,
+                                                JS::Handle<JSObject*> target);
 
 // If origObj has an xray waiver, nuke it before transplant.
 JSObject* TransplantObjectNukingXrayWaiver(JSContext* cx,
-                                           JS::HandleObject origObj,
-                                           JS::HandleObject target);
+                                           JS::Handle<JSObject*> origObj,
+                                           JS::Handle<JSObject*> target);
 
 bool IsUAWidgetCompartment(JS::Compartment* compartment);
 bool IsUAWidgetScope(JS::Realm* realm);
@@ -177,12 +177,10 @@ void TraceXPCGlobal(JSTracer* trc, JSObject* obj);
  *               global object wants.
  * @param aOptions JSAPI-specific options for the new compartment.
  */
-nsresult InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
-                                         nsISupports* aCOMObj,
-                                         nsIPrincipal* aPrincipal,
-                                         uint32_t aFlags,
-                                         JS::RealmOptions& aOptions,
-                                         JS::MutableHandleObject aNewGlobal);
+nsresult InitClassesWithNewWrappedGlobal(
+    JSContext* aJSContext, nsISupports* aCOMObj, nsIPrincipal* aPrincipal,
+    uint32_t aFlags, JS::RealmOptions& aOptions,
+    JS::MutableHandle<JSObject*> aNewGlobal);
 
 enum InitClassesFlag {
   INIT_JS_STANDARD_CLASSES = 1 << 0,
@@ -211,7 +209,7 @@ static_assert(JSCLASS_GLOBAL_APPLICATION_SLOTS > 0,
 #define XPCONNECT_GLOBAL_FLAGS XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(0)
 
 inline JSObject* xpc_FastGetCachedWrapper(JSContext* cx, nsWrapperCache* cache,
-                                          JS::MutableHandleValue vp) {
+                                          JS::MutableHandle<JS::Value> vp) {
   if (cache) {
     JSObject* wrapper = cache->GetWrapper();
     if (wrapper &&
@@ -245,14 +243,12 @@ class XPCStringConvert {
   // assigned.
   static bool ReadableToJSVal(JSContext* cx, const nsAString& readable,
                               nsStringBuffer** sharedBuffer,
-                              JS::MutableHandleValue vp);
+                              JS::MutableHandle<JS::Value> vp);
 
   // Convert the given stringbuffer/length pair to a jsval
-  static MOZ_ALWAYS_INLINE bool StringBufferToJSVal(JSContext* cx,
-                                                    nsStringBuffer* buf,
-                                                    uint32_t length,
-                                                    JS::MutableHandleValue rval,
-                                                    bool* sharedBuffer) {
+  static MOZ_ALWAYS_INLINE bool StringBufferToJSVal(
+      JSContext* cx, nsStringBuffer* buf, uint32_t length,
+      JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
     JSString* str = JS_NewMaybeExternalString(
         cx, static_cast<char16_t*>(buf->Data()), length,
         &sDOMStringExternalString, sharedBuffer);
@@ -266,7 +262,7 @@ class XPCStringConvert {
   static inline bool StringLiteralToJSVal(JSContext* cx,
                                           const char16_t* literal,
                                           uint32_t length,
-                                          JS::MutableHandleValue rval) {
+                                          JS::MutableHandle<JS::Value> rval) {
     bool ignored;
     JSString* str = JS_NewMaybeExternalString(
         cx, literal, length, &sLiteralExternalString, &ignored);
@@ -278,7 +274,7 @@ class XPCStringConvert {
   }
 
   static inline bool DynamicAtomToJSVal(JSContext* cx, nsDynamicAtom* atom,
-                                        JS::MutableHandleValue rval) {
+                                        JS::MutableHandle<JS::Value> rval) {
     bool sharedAtom;
     JSString* str =
         JS_NewMaybeExternalString(cx, atom->GetUTF16String(), atom->GetLength(),
@@ -343,10 +339,10 @@ class XPCStringConvert {
 namespace xpc {
 
 // If these functions return false, then an exception will be set on cx.
-bool Base64Encode(JSContext* cx, JS::HandleValue val,
-                  JS::MutableHandleValue out);
-bool Base64Decode(JSContext* cx, JS::HandleValue val,
-                  JS::MutableHandleValue out);
+bool Base64Encode(JSContext* cx, JS::Handle<JS::Value> val,
+                  JS::MutableHandle<JS::Value> out);
+bool Base64Decode(JSContext* cx, JS::Handle<JS::Value> val,
+                  JS::MutableHandle<JS::Value> out);
 
 /**
  * Convert an nsString to jsval, returning true on success.
@@ -354,9 +350,9 @@ bool Base64Decode(JSContext* cx, JS::HandleValue val,
  * If that happens, str will point to an empty string after this call.
  */
 bool NonVoidStringToJsval(JSContext* cx, nsAString& str,
-                          JS::MutableHandleValue rval);
+                          JS::MutableHandle<JS::Value> rval);
 inline bool StringToJsval(JSContext* cx, nsAString& str,
-                          JS::MutableHandleValue rval) {
+                          JS::MutableHandle<JS::Value> rval) {
   // From the T_ASTRING case in XPCConvert::NativeData2JS.
   if (str.IsVoid()) {
     rval.setNull();
@@ -366,7 +362,7 @@ inline bool StringToJsval(JSContext* cx, nsAString& str,
 }
 
 inline bool NonVoidStringToJsval(JSContext* cx, const nsAString& str,
-                                 JS::MutableHandleValue rval) {
+                                 JS::MutableHandle<JS::Value> rval) {
   nsString mutableCopy;
   if (!mutableCopy.Assign(str, mozilla::fallible)) {
     JS_ReportOutOfMemory(cx);
@@ -376,7 +372,7 @@ inline bool NonVoidStringToJsval(JSContext* cx, const nsAString& str,
 }
 
 inline bool StringToJsval(JSContext* cx, const nsAString& str,
-                          JS::MutableHandleValue rval) {
+                          JS::MutableHandle<JS::Value> rval) {
   nsString mutableCopy;
   if (!mutableCopy.Assign(str, mozilla::fallible)) {
     JS_ReportOutOfMemory(cx);
@@ -389,7 +385,7 @@ inline bool StringToJsval(JSContext* cx, const nsAString& str,
  * As above, but for mozilla::dom::DOMString.
  */
 inline bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
-                                 JS::MutableHandleValue rval) {
+                                 JS::MutableHandle<JS::Value> rval) {
   if (str.IsEmpty()) {
     rval.set(JS_GetEmptyStringValue(cx));
     return true;
@@ -425,7 +421,7 @@ inline bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 
 MOZ_ALWAYS_INLINE
 bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
-                   JS::MutableHandleValue rval) {
+                   JS::MutableHandle<JS::Value> rval) {
   if (str.IsNull()) {
     rval.setNull();
     return true;
@@ -650,8 +646,8 @@ class ErrorReport : public ErrorBase {
   // CCW.
   void LogToConsoleWithStack(nsGlobalWindowInner* aWin,
                              JS::Handle<mozilla::Maybe<JS::Value>> aException,
-                             JS::HandleObject aStack,
-                             JS::HandleObject aStackGlobal);
+                             JS::Handle<JSObject*> aStack,
+                             JS::Handle<JSObject*> aStackGlobal);
 
   // Produce an error event message string from the given JSErrorReport.  Note
   // that this may produce an empty string if aReport doesn't have a
@@ -691,11 +687,10 @@ void DispatchScriptErrorEvent(nsPIDOMWindowInner* win,
 // either the JS exception object's global or the global of the SavedFrame we
 // got from a DOM or XPConnect exception. In all cases, stackGlobal is an
 // unwrapped global object and is same-compartment with stackObj.
-void FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
-                                        JS::HandleValue exceptionValue,
-                                        JS::HandleObject exceptionStack,
-                                        JS::MutableHandleObject stackObj,
-                                        JS::MutableHandleObject stackGlobal);
+void FindExceptionStackForConsoleReport(
+    nsPIDOMWindowInner* win, JS::Handle<JS::Value> exceptionValue,
+    JS::Handle<JSObject*> exceptionStack, JS::MutableHandle<JSObject*> stackObj,
+    JS::MutableHandle<JSObject*> stackGlobal);
 
 // Return a name for the realm.
 // This function makes reasonable efforts to make this name both mostly
@@ -754,12 +749,13 @@ void InitializeJSContext();
  *
  * Returns 'Nothing()' if 'aVal' does is not one of the supported ID types.
  */
-mozilla::Maybe<nsID> JSValue2ID(JSContext* aCx, JS::HandleValue aVal);
+mozilla::Maybe<nsID> JSValue2ID(JSContext* aCx, JS::Handle<JS::Value> aVal);
 
 /**
  * Reflect an ID into JS
  */
-bool ID2JSValue(JSContext* aCx, const nsID& aId, JS::MutableHandleValue aVal);
+bool ID2JSValue(JSContext* aCx, const nsID& aId,
+                JS::MutableHandle<JS::Value> aVal);
 
 /**
  * Reflect an IfaceID into JS
@@ -770,7 +766,7 @@ bool ID2JSValue(JSContext* aCx, const nsID& aId, JS::MutableHandleValue aVal);
  * Use 'xpc::JSValue2ID' to unwrap JS::Values created with this function.
  */
 bool IfaceID2JSValue(JSContext* aCx, const nsXPTInterfaceInfo& aInfo,
-                     JS::MutableHandleValue aVal);
+                     JS::MutableHandle<JS::Value> aVal);
 
 /**
  * Reflect a ContractID into JS
@@ -781,7 +777,7 @@ bool IfaceID2JSValue(JSContext* aCx, const nsXPTInterfaceInfo& aInfo,
  * Use 'xpc::JSValue2ID' to unwrap JS::Values created with this function.
  */
 bool ContractID2JSValue(JSContext* aCx, JSString* aContract,
-                        JS::MutableHandleValue aVal);
+                        JS::MutableHandle<JS::Value> aVal);
 
 class JSStackFrameBase {
  public:
@@ -795,12 +791,13 @@ void NukeJSStackFrames(JS::Realm* aRealm);
 // Check whether the given jsid is a property name (string or symbol) whose
 // value can be gotten cross-origin.  Cross-origin gets always return undefined
 // as the value, unless the Xray actually provides a different value.
-bool IsCrossOriginWhitelistedProp(JSContext* cx, JS::HandleId id);
+bool IsCrossOriginWhitelistedProp(JSContext* cx,
+                                  JS::Handle<JS::PropertyKey> id);
 
 // Appends to props the jsids for property names (strings or symbols) whose
 // value can be gotten cross-origin.
-bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
-                                           JS::MutableHandleIdVector props);
+bool AppendCrossOriginWhitelistedPropNames(
+    JSContext* cx, JS::MutableHandle<JS::StackGCVector<JS::PropertyKey>> props);
 }  // namespace xpc
 
 namespace mozilla {

@@ -1,7 +1,5 @@
 # toml-rs
 
-[![Build Status](https://travis-ci.org/alexcrichton/toml-rs.svg?branch=master)](https://travis-ci.org/alexcrichton/toml-rs)
-[![Coverage Status](https://coveralls.io/repos/alexcrichton/toml-rs/badge.svg?branch=master&service=github)](https://coveralls.io/github/alexcrichton/toml-rs?branch=master)
 [![Latest Version](https://img.shields.io/crates/v/toml.svg)](https://crates.io/crates/toml)
 [![Documentation](https://docs.rs/toml/badge.svg)](https://docs.rs/toml)
 
@@ -14,7 +12,7 @@ up to date with the TOML specification as changes happen.
 ```toml
 # Cargo.toml
 [dependencies]
-toml = "0.4"
+toml = "0.5"
 ```
 
 This crate also supports serialization/deserialization through the
