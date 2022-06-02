@@ -152,6 +152,9 @@ class TransmissionControlBlock : public Context {
   // Sends a SACK, if there is a need to.
   void MaybeSendSack();
 
+  // Sends a FORWARD-TSN, if it is needed and allowed (rate-limited).
+  void MaybeSendForwardTsn(SctpPacket::Builder& builder, TimeMs now);
+
   // Will be set while the socket is in kCookieEcho state. In this state, there
   // can only be a single packet outstanding, and it must contain the COOKIE
   // ECHO chunk as the first chunk in that packet, until the COOKIE ACK has been
@@ -206,6 +209,8 @@ class TransmissionControlBlock : public Context {
   const TieTag tie_tag_;
   const std::function<bool()> is_connection_established_;
   PacketSender& packet_sender_;
+  // Rate limiting of FORWARD-TSN. Next can be sent at or after this timestamp.
+  TimeMs limit_forward_tsn_until_ = TimeMs(0);
 
   RetransmissionTimeout rto_;
   RetransmissionErrorCounter tx_error_counter_;
