@@ -15,9 +15,9 @@
 #include <memory>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 
+#include "rtc_base/containers/flat_map.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"
 
@@ -280,9 +280,9 @@ TEST(StrongAliasTest, CanWrapComplexStructures) {
   // namespace. So we can't print ComplexAlias.
 }
 
-TYPED_TEST(StrongAliasTest, CanBeKeysInStdUnorderedMap) {
+TYPED_TEST(StrongAliasTest, CanBeKeysInFlatMap) {
   using FooAlias = StrongAlias<class FooTag, TypeParam>;
-  std::unordered_map<FooAlias, std::string, typename FooAlias::Hasher> map;
+  webrtc::flat_map<FooAlias, std::string> map;
 
   FooAlias k1(GetExampleValue<TypeParam>(0));
   FooAlias k2(GetExampleValue<TypeParam>(1));

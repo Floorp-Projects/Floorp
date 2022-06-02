@@ -16,7 +16,6 @@
 #include <map>
 #include <set>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -25,7 +24,6 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "net/dcsctp/common/math.h"
-#include "net/dcsctp/common/pair_hash.h"
 #include "net/dcsctp/common/sequence_numbers.h"
 #include "net/dcsctp/common/str_join.h"
 #include "net/dcsctp/packet/chunk/data_chunk.h"
@@ -846,8 +844,7 @@ size_t RetransmissionQueue::max_bytes_to_send() const {
 }
 
 ForwardTsnChunk RetransmissionQueue::CreateForwardTsn() const {
-  std::unordered_map<StreamID, SSN, StreamID::Hasher>
-      skipped_per_ordered_stream;
+  std::map<StreamID, SSN> skipped_per_ordered_stream;
   UnwrappedTSN new_cumulative_ack = last_cumulative_tsn_ack_;
 
   for (const auto& elem : outstanding_data_) {
@@ -873,8 +870,7 @@ ForwardTsnChunk RetransmissionQueue::CreateForwardTsn() const {
 }
 
 IForwardTsnChunk RetransmissionQueue::CreateIForwardTsn() const {
-  std::unordered_map<std::pair<IsUnordered, StreamID>, MID, UnorderedStreamHash>
-      skipped_per_stream;
+  std::map<std::pair<IsUnordered, StreamID>, MID> skipped_per_stream;
   UnwrappedTSN new_cumulative_ack = last_cumulative_tsn_ack_;
 
   for (const auto& elem : outstanding_data_) {

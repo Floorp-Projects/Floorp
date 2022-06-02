@@ -67,15 +67,6 @@ class StrongAlias {
     return value_ >= other.value_;
   }
 
-  // Hasher to use in std::unordered_map, std::unordered_set, etc.
-  struct Hasher {
-    using argument_type = StrongAlias;
-    using result_type = std::size_t;
-    result_type operator()(const argument_type& id) const {
-      return std::hash<UnderlyingType>()(id.value());
-    }
-  };
-
  protected:
   UnderlyingType value_;
 };
