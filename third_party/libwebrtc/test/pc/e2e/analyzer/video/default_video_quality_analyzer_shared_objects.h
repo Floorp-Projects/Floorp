@@ -198,18 +198,6 @@ struct DefaultVideoQualityAnalyzerOptions {
   bool enable_receive_own_stream = false;
 };
 
-namespace webrtc_pc_e2e {
-
-// Temporary alias to make downstream projects able to migrate.
-using FrameCounters = ::webrtc::FrameCounters;
-using StreamCodecInfo = ::webrtc::StreamCodecInfo;
-using StreamStats = ::webrtc::StreamStats;
-using AnalyzerStats = ::webrtc::AnalyzerStats;
-using StatsKey = ::webrtc::StatsKey;
-using DefaultVideoQualityAnalyzerOptions =
-    ::webrtc::DefaultVideoQualityAnalyzerOptions;
-
-}  // namespace webrtc_pc_e2e
 }  // namespace webrtc
 
 #endif  // TEST_PC_E2E_ANALYZER_VIDEO_DEFAULT_VIDEO_QUALITY_ANALYZER_SHARED_OBJECTS_H_
