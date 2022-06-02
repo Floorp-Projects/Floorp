@@ -85,11 +85,13 @@ RetransmissionQueue::RetransmissionQueue(
 
 bool RetransmissionQueue::IsConsistent() const {
   size_t actual_outstanding_bytes = 0;
+  size_t actual_outstanding_items = 0;
 
   std::set<UnwrappedTSN> actual_to_be_retransmitted;
   for (const auto& elem : outstanding_data_) {
     if (elem.second.is_outstanding()) {
       actual_outstanding_bytes += GetSerializedChunkSize(elem.second.data());
+      ++actual_outstanding_items;
     }
 
     if (elem.second.should_be_retransmitted()) {
@@ -98,6 +100,7 @@ bool RetransmissionQueue::IsConsistent() const {
   }
 
   return actual_outstanding_bytes == outstanding_bytes_ &&
+         actual_outstanding_items == outstanding_items_ &&
          actual_to_be_retransmitted == to_be_retransmitted_;
 }
 
@@ -115,6 +118,7 @@ void RetransmissionQueue::RemoveAcked(UnwrappedTSN cumulative_tsn_ack,
     ack_info.acked_tsns.push_back(it->first.Wrap());
     if (it->second.is_outstanding()) {
       outstanding_bytes_ -= GetSerializedChunkSize(it->second.data());
+      --outstanding_items_;
     } else if (it->second.should_be_retransmitted()) {
       to_be_retransmitted_.erase(it->first);
     }
@@ -143,6 +147,7 @@ void RetransmissionQueue::AckGapBlocks(
             iter->second.data().size();
         if (iter->second.is_outstanding()) {
           outstanding_bytes_ -= GetSerializedChunkSize(iter->second.data());
+          --outstanding_items_;
         }
         if (iter->second.should_be_retransmitted()) {
           to_be_retransmitted_.erase(iter->first);
@@ -517,6 +522,7 @@ bool RetransmissionQueue::NackItem(UnwrappedTSN tsn,
                                    bool retransmit_now) {
   if (item.is_outstanding()) {
     outstanding_bytes_ -= GetSerializedChunkSize(item.data());
+    --outstanding_items_;
   }
 
   switch (item.Nack(retransmit_now)) {
@@ -555,6 +561,7 @@ RetransmissionQueue::GetChunksToBeRetransmitted(size_t max_size) {
       result.emplace_back(tsn.Wrap(), item.data().Clone());
       max_size -= serialized_size;
       outstanding_bytes_ += serialized_size;
+      ++outstanding_items_;
       it = to_be_retransmitted_.erase(it);
     } else {
       ++it;
@@ -624,6 +631,7 @@ std::vector<std::pair<TSN, Data>> RetransmissionQueue::GetChunksToSend(
       size_t chunk_size = GetSerializedChunkSize(chunk_opt->data);
       max_bytes -= chunk_size;
       outstanding_bytes_ += chunk_size;
+      ++outstanding_items_;
       rwnd_ -= chunk_size;
       auto item_it =
           outstanding_data_

@@ -115,6 +115,9 @@ class RetransmissionQueue {
   // Returns the number of bytes of packets that are in-flight.
   size_t outstanding_bytes() const { return outstanding_bytes_; }
 
+  // Returns the number of DATA chunks that are in-flight.
+  size_t outstanding_items() const { return outstanding_items_; }
+
   // Given the current time `now`, it will evaluate if there are chunks that
   // have expired and that need to be discarded. It returns true if a
   // FORWARD-TSN should be sent.
@@ -381,6 +384,9 @@ class RetransmissionQueue {
   std::set<UnwrappedTSN> to_be_retransmitted_;
   // The number of bytes that are in-flight (sent but not yet acked or nacked).
   size_t outstanding_bytes_ = 0;
+  // The number of DATA chunks that are in-flight (sent but not yet acked or
+  // nacked).
+  size_t outstanding_items_ = 0;
 };
 }  // namespace dcsctp
 
