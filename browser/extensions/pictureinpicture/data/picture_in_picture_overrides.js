@@ -58,6 +58,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    hbomax: {
+      "https://play.hbomax.com/feature/*": {
+        videoWrapperScriptPath: "video-wrappers/hbomax.js",
+      },
+    },
+
     hotstar: {
       "https://*.hotstar.com/*": {
         videoWrapperScriptPath: "video-wrappers/hotstar.js",
