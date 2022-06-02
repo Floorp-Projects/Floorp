@@ -37,6 +37,8 @@
 #include "nsTHashSet.h"
 #include "WebRenderCanvasRenderer.h"
 
+#include <cstdint>
+
 namespace mozilla {
 namespace layers {
 
@@ -54,6 +56,12 @@ static void GP(const char* fmt, ...) {
     vprintf(fmt, args);
 #endif
   va_end(args);
+}
+
+bool FitsInt32(const float aVal) {
+  const int64_t v = static_cast<int64_t>(aVal);
+  return std::numeric_limits<int32_t>::max() > v &&
+         v > std::numeric_limits<int32_t>::min();
 }
 
 // XXX: problems:
@@ -2439,6 +2447,12 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
   auto trans =
       ViewAs<LayerPixel>(aSc.GetSnappingSurfaceTransform().GetTranslation());
+
+  if (!FitsInt32(trans.X()) || !FitsInt32(trans.Y())) {
+    // The translation overflowed int32_t.
+    return nullptr;
+  }
+
   auto snappedTrans = LayerIntPoint::Floor(trans);
   LayerPoint residualOffset = trans - snappedTrans;
 
