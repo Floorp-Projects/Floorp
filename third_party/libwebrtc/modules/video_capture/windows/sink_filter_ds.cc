@@ -176,7 +176,7 @@ void GetSampleProperties(IMediaSample* sample, AM_SAMPLE2_PROPERTIES* props) {
 }
 
 // Returns true if the media type is supported, false otherwise.
-// For supported types, the |capability| will be populated accordingly.
+// For supported types, the `capability` will be populated accordingly.
 bool TranslateMediaTypeToVideoCaptureCapability(
     const AM_MEDIA_TYPE* media_type,
     VideoCaptureCapability* capability) {
