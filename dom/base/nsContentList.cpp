@@ -342,6 +342,7 @@ nsContentList::nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
       mDeep(aDeep),
       mFuncMayDependOnAttr(false),
       mIsHTMLDocument(aRootNode->OwnerDoc()->IsHTMLDocument()),
+      mNamedItemsCacheValid(false),
       mIsLiveList(aLiveList) {
   NS_ASSERTION(mRootNode, "Must have root");
   if (nsGkAtoms::_asterisk == mHTMLMatchAtom) {
@@ -382,6 +383,7 @@ nsContentList::nsContentList(nsINode* aRootNode, nsContentListMatchFunc aFunc,
       mDeep(aDeep),
       mFuncMayDependOnAttr(aFuncMayDependOnAttr),
       mIsHTMLDocument(false),
+      mNamedItemsCacheValid(false),
       mIsLiveList(aLiveList) {
   NS_ASSERTION(mRootNode, "Must have root");
   if (mIsLiveList) {
@@ -444,14 +446,93 @@ nsIContent* nsContentList::Item(uint32_t aIndex, bool aDoFlush) {
   return mElements.SafeElementAt(aIndex);
 }
 
+inline void nsContentList::InsertElementInNamedItemsCache(
+    nsIContent& aContent) {
+  const bool hasName = aContent.HasName();
+  const bool hasId = aContent.HasID();
+  if (!hasName && !hasId) {
+    return;
+  }
+
+  Element* el = aContent.AsElement();
+  MOZ_ASSERT_IF(hasName, el->IsHTMLElement());
+
+  uint32_t i = 0;
+  while (BorrowedAttrInfo info = el->GetAttrInfoAt(i++)) {
+    const bool valid = (info.mName->Equals(nsGkAtoms::name) && hasName) ||
+                       (info.mName->Equals(nsGkAtoms::id) && hasId);
+    if (!valid) {
+      continue;
+    }
+
+    if (!mNamedItemsCache) {
+      mNamedItemsCache = MakeUnique<NamedItemsCache>();
+    }
+
+    nsAtom* name = info.mValue->GetAtomValue();
+    // NOTE: LookupOrInsert makes sure we keep the first element we find for a
+    // given name.
+    mNamedItemsCache->LookupOrInsert(name, el);
+  }
+}
+
+inline void nsContentList::InvalidateNamedItemsCacheForAttributeChange(
+    int32_t aNamespaceID, nsAtom* aAttribute) {
+  if (!mNamedItemsCacheValid) {
+    return;
+  }
+  if ((aAttribute == nsGkAtoms::id || aAttribute == nsGkAtoms::name) &&
+      aNamespaceID == kNameSpaceID_None) {
+    InvalidateNamedItemsCache();
+  }
+}
+
+inline void nsContentList::InvalidateNamedItemsCacheForInsertion(
+    Element& aElement) {
+  if (!mNamedItemsCacheValid) {
+    return;
+  }
+
+  InsertElementInNamedItemsCache(aElement);
+}
+
+inline void nsContentList::InvalidateNamedItemsCacheForDeletion(
+    Element& aElement) {
+  if (!mNamedItemsCacheValid) {
+    return;
+  }
+  if (aElement.HasName() || aElement.HasID()) {
+    InvalidateNamedItemsCache();
+  }
+}
+
+void nsContentList::EnsureNamedItemsCacheValid(bool aDoFlush) {
+  BringSelfUpToDate(aDoFlush);
+
+  if (mNamedItemsCacheValid) {
+    return;
+  }
+
+  MOZ_ASSERT(!mNamedItemsCache);
+
+  // https://dom.spec.whatwg.org/#dom-htmlcollection-nameditem-key
+  // XXX: Blink/WebKit don't follow the spec here, and searches first-by-id,
+  // then by name.
+  for (const nsCOMPtr<nsIContent>& content : mElements) {
+    InsertElementInNamedItemsCache(*content);
+  }
+
+  mNamedItemsCacheValid = true;
+}
+
 Element* nsContentList::NamedItem(const nsAString& aName, bool aDoFlush) {
   if (aName.IsEmpty()) {
     return nullptr;
   }
 
-  BringSelfUpToDate(aDoFlush);
+  EnsureNamedItemsCacheValid(aDoFlush);
 
-  if (mElements.IsEmpty()) {
+  if (!mNamedItemsCache) {
     return nullptr;
   }
 
@@ -459,25 +540,7 @@ Element* nsContentList::NamedItem(const nsAString& aName, bool aDoFlush) {
   RefPtr<nsAtom> name = NS_Atomize(aName);
   NS_ENSURE_TRUE(name, nullptr);
 
-  for (const nsCOMPtr<nsIContent>& content : mElements) {
-    if (!content->HasName() && !content->HasID()) {
-      continue;
-    }
-
-    Element* el = content->AsElement();
-    uint32_t i = 0;
-    while (BorrowedAttrInfo info = el->GetAttrInfoAt(i++)) {
-      if ((info.mName->Equals(nsGkAtoms::name) && el->IsHTMLElement()) ||
-          info.mName->Equals(nsGkAtoms::id)) {
-        // XXX should this pass eIgnoreCase?
-        if (info.mValue->Equals(name, eCaseMatters)) {
-          return el;
-        }
-      }
-    }
-  }
-
-  return nullptr;
+  return mNamedItemsCache->Get(name);
 }
 
 void nsContentList::GetSupportedNames(nsTArray<nsString>& aNames) {
@@ -561,11 +624,18 @@ void nsContentList::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                      const nsAttrValue* aOldValue) {
   MOZ_ASSERT(aElement, "Must have a content node to work with");
 
-  if (!mFunc || !mFuncMayDependOnAttr || mState == State::Dirty ||
+  if (mState == State::Dirty ||
       !MayContainRelevantNodes(aElement->GetParentNode()) ||
       !nsContentUtils::IsInSameAnonymousTree(mRootNode, aElement)) {
-    // Either we're already dirty or this notification doesn't affect
-    // whether we might match aElement.
+    // Either we're already dirty or aElement will never match us.
+    return;
+  }
+
+  InvalidateNamedItemsCacheForAttributeChange(aNameSpaceID, aAttribute);
+
+  if (!mFunc || !mFuncMayDependOnAttr) {
+    // aElement might be relevant but the attribute change doesn't affect
+    // whether we match it.
     return;
   }
 
@@ -581,7 +651,9 @@ void nsContentList::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
     // already not there, this is a no-op (though a potentially
     // expensive one).  Either way, no change of mState is required
     // here.
-    mElements.RemoveElement(aElement);
+    if (mElements.RemoveElement(aElement)) {
+      InvalidateNamedItemsCacheForDeletion(*aElement);
+    }
   }
 }
 
@@ -663,12 +735,14 @@ void nsContentList::ContentAppended(nsIContent* aFirstNewContent) {
          cur = cur->GetNextNode(container)) {
       if (cur->IsElement() && Match(cur->AsElement())) {
         mElements.AppendElement(cur);
+        InvalidateNamedItemsCacheForInsertion(*cur->AsElement());
       }
     }
   } else {
     for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
       if (cur->IsElement() && Match(cur->AsElement())) {
         mElements.AppendElement(cur);
+        InvalidateNamedItemsCacheForInsertion(*cur->AsElement());
       }
     }
   }
@@ -936,6 +1010,7 @@ void nsCachableElementsByNameNodeList::AttributeChanged(
   // No need to rebuild the list if the changed attribute is not the name
   // attribute.
   if (aAttribute != nsGkAtoms::name) {
+    InvalidateNamedItemsCacheForAttributeChange(aNameSpaceID, aAttribute);
     return;
   }
 
@@ -967,6 +1042,8 @@ void nsLabelsNodeList::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
       !nsContentUtils::IsInSameAnonymousTree(mRootNode, aElement)) {
     return;
   }
+
+  InvalidateNamedItemsCacheForAttributeChange(aNameSpaceID, aAttribute);
 
   // We need to handle input type changes to or from "hidden".
   if (aElement->IsHTMLElement(nsGkAtoms::input) &&

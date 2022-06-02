@@ -220,6 +220,15 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvDoActionAsync(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvSetCaretOffset(
+    const uint64_t& aID, const int32_t& aOffset) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole() && acc->IsValidOffset(aOffset)) {
+    acc->SetCaretOffset(aOffset);
+  }
+  return IPC_OK();
+}
+
 LocalAccessible* DocAccessibleChildBase::IdToAccessible(
     const uint64_t& aID) const {
   if (!aID) return mDoc;
@@ -227,6 +236,12 @@ LocalAccessible* DocAccessibleChildBase::IdToAccessible(
   if (!mDoc) return nullptr;
 
   return mDoc->GetAccessibleByUniqueID(reinterpret_cast<void*>(aID));
+}
+
+HyperTextAccessible* DocAccessibleChildBase::IdToHyperTextAccessible(
+    const uint64_t& aID) const {
+  LocalAccessible* acc = IdToAccessible(aID);
+  return acc && acc->IsHyperText() ? acc->AsHyperText() : nullptr;
 }
 
 }  // namespace a11y

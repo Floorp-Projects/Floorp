@@ -4,8 +4,10 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -112,7 +114,7 @@ nsWebHandlerApp.prototype = {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
 
     // If this is an extension handler, check private browsing access.
-    if (!privateAllowed && PrivateBrowsingUtils.isWindowPrivate(win)) {
+    if (!privateAllowed && lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
       throw Components.Exception(
         "Extension not allowed in private windows.",
         Cr.NS_ERROR_FILE_NOT_FOUND

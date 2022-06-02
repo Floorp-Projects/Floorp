@@ -311,7 +311,7 @@ class WasmInstanceObject : public NativeObject {
   // objects on demand (instead up-front for all table elements) while
   // correctly preserving observable function object identity.
   using ExportMap = GCHashMap<uint32_t, HeapPtr<JSFunction*>,
-                              DefaultHasher<uint32_t>, ZoneAllocPolicy>;
+                              DefaultHasher<uint32_t>, CellAllocPolicy>;
   ExportMap& exports() const;
 
   // See the definition inside WasmJS.cpp.
@@ -357,7 +357,7 @@ class WasmInstanceObject : public NativeObject {
       JSContext* cx, HandleWasmInstanceObject instanceObj, uint32_t funcIndex);
 
   using GlobalObjectVector =
-      GCVector<HeapPtr<WasmGlobalObject*>, 0, ZoneAllocPolicy>;
+      GCVector<HeapPtr<WasmGlobalObject*>, 0, CellAllocPolicy>;
   GlobalObjectVector& indirectGlobals() const;
 };
 
@@ -382,7 +382,7 @@ class WasmMemoryObject : public NativeObject {
   using InstanceSet =
       JS::WeakCache<GCHashSet<WeakHeapPtrWasmInstanceObject,
                               MovableCellHasher<WeakHeapPtrWasmInstanceObject>,
-                              ZoneAllocPolicy>>;
+                              CellAllocPolicy>>;
   bool hasObservers() const;
   InstanceSet& observers() const;
   InstanceSet* getOrCreateObservers(JSContext* cx);

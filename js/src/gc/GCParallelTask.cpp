@@ -149,7 +149,7 @@ void js::GCParallelTask::runFromMainThread() {
   assertIdle();
   MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(gc->rt));
   AutoLockHelperThreadState lock;
-  runTask(lock);
+  runTask(gc->rt->gcContext(), lock);
 }
 
 class MOZ_RAII AutoGCContext {
@@ -168,6 +168,8 @@ class MOZ_RAII AutoGCContext {
     MOZ_ASSERT(TlsGCContext.get() == &context);
     TlsGCContext.set(nullptr);
   }
+
+  JS::GCContext* get() { return &context; }
 };
 
 void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
@@ -178,15 +180,16 @@ void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
 
   AutoGCContext gcContext(gc->rt);
 
-  runTask(lock);
+  runTask(gcContext.get(), lock);
 
   setFinished(lock);
 }
 
-void GCParallelTask::runTask(AutoLockHelperThreadState& lock) {
+void GCParallelTask::runTask(JS::GCContext* gcx,
+                             AutoLockHelperThreadState& lock) {
   // Run the task from either the main thread or a helper thread.
 
-  gc::AutoSetThreadIsPerformingGC performingGC;
+  AutoSetThreadGCUse setUse(gcx, use);
 
   // The hazard analysis can't tell what the call to func_ will do but it's not
   // allowed to GC.

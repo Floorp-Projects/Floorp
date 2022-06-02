@@ -683,6 +683,10 @@ int32_t RemoteAccessible::CaretOffset() const {
 }
 
 void RemoteAccessible::SetCaretOffset(int32_t aOffset) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::SetCaretOffset(aOffset);
+  }
+
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;

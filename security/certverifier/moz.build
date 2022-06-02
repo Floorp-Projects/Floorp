@@ -16,7 +16,6 @@ UNIFIED_SOURCES += [
     "CertVerifier.cpp",
     "NSSCertDBTrustDomain.cpp",
     "OCSPCache.cpp",
-    "OCSPVerificationTrustDomain.cpp",
 ]
 
 if not CONFIG["NSS_NO_EV_CERTS"]:

@@ -120,7 +120,7 @@ impl FlowControl {
             return Err(Reason::FLOW_CONTROL_ERROR);
         }
 
-        log::trace!(
+        tracing::trace!(
             "inc_window; sz={}; old={}; new={}",
             sz,
             self.window_size,
@@ -136,7 +136,7 @@ impl FlowControl {
     /// This is called after receiving a SETTINGS frame with a lower
     /// INITIAL_WINDOW_SIZE value.
     pub fn dec_send_window(&mut self, sz: WindowSize) {
-        log::trace!(
+        tracing::trace!(
             "dec_window; sz={}; window={}, available={}",
             sz,
             self.window_size,
@@ -151,7 +151,7 @@ impl FlowControl {
     /// This is called after receiving a SETTINGS ACK frame with a lower
     /// INITIAL_WINDOW_SIZE value.
     pub fn dec_recv_window(&mut self, sz: WindowSize) {
-        log::trace!(
+        tracing::trace!(
             "dec_recv_window; sz={}; window={}, available={}",
             sz,
             self.window_size,
@@ -165,7 +165,7 @@ impl FlowControl {
     /// Decrements the window reflecting data has actually been sent. The caller
     /// must ensure that the window has capacity.
     pub fn send_data(&mut self, sz: WindowSize) {
-        log::trace!(
+        tracing::trace!(
             "send_data; sz={}; window={}; available={}",
             sz,
             self.window_size,
@@ -173,7 +173,7 @@ impl FlowControl {
         );
 
         // Ensure that the argument is correct
-        assert!(sz <= self.window_size);
+        assert!(self.window_size >= sz as usize);
 
         // Update values
         self.window_size -= sz;
@@ -206,38 +206,22 @@ impl Window {
     }
 }
 
-impl PartialEq<WindowSize> for Window {
-    fn eq(&self, other: &WindowSize) -> bool {
+impl PartialEq<usize> for Window {
+    fn eq(&self, other: &usize) -> bool {
         if self.0 < 0 {
             false
         } else {
-            (self.0 as WindowSize).eq(other)
+            (self.0 as usize).eq(other)
         }
     }
 }
 
-impl PartialEq<Window> for WindowSize {
-    fn eq(&self, other: &Window) -> bool {
-        other.eq(self)
-    }
-}
-
-impl PartialOrd<WindowSize> for Window {
-    fn partial_cmp(&self, other: &WindowSize) -> Option<::std::cmp::Ordering> {
+impl PartialOrd<usize> for Window {
+    fn partial_cmp(&self, other: &usize) -> Option<::std::cmp::Ordering> {
         if self.0 < 0 {
             Some(::std::cmp::Ordering::Less)
         } else {
-            (self.0 as WindowSize).partial_cmp(other)
-        }
-    }
-}
-
-impl PartialOrd<Window> for WindowSize {
-    fn partial_cmp(&self, other: &Window) -> Option<::std::cmp::Ordering> {
-        if other.0 < 0 {
-            Some(::std::cmp::Ordering::Greater)
-        } else {
-            self.partial_cmp(&(other.0 as WindowSize))
+            (self.0 as usize).partial_cmp(other)
         }
     }
 }

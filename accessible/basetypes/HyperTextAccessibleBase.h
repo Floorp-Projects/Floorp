@@ -79,9 +79,10 @@ class HyperTextAccessibleBase {
   virtual uint32_t CharacterCount() const;
 
   /**
-   * Get caret offset, if no caret then -1.
+   * Get/set caret offset, if no caret then -1.
    */
   virtual int32_t CaretOffset() const;
+  virtual void SetCaretOffset(int32_t aOffset) = 0;
 
   /**
    * Transform magic offset into text offset.

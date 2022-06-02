@@ -78,12 +78,12 @@ class ZoneAllocator : public JS::shadow::Zone,
   }
 
   void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use,
-                        bool wasSwept = false) {
+                        bool updateRetainedSize = false) {
     MOZ_ASSERT(cell);
     MOZ_ASSERT(nbytes);
-    MOZ_ASSERT_IF(CurrentThreadIsGCFinalizing(), wasSwept);
+    MOZ_ASSERT_IF(CurrentThreadIsGCFinalizing(), updateRetainedSize);
 
-    mallocHeapSize.removeBytes(nbytes, wasSwept);
+    mallocHeapSize.removeBytes(nbytes, updateRetainedSize);
 
 #ifdef DEBUG
     mallocTracker.untrackGCMemory(cell, nbytes, use);
@@ -122,11 +122,11 @@ class ZoneAllocator : public JS::shadow::Zone,
 
     maybeTriggerGCOnMalloc();
   }
-  void decNonGCMemory(void* mem, size_t nbytes, MemoryUse use, bool wasSwept) {
+  void decNonGCMemory(void* mem, size_t nbytes, MemoryUse use,
+                      bool updateRetainedSize) {
     MOZ_ASSERT(nbytes);
-    MOZ_ASSERT_IF(CurrentThreadIsGCFinalizing(), wasSwept);
 
-    mallocHeapSize.removeBytes(nbytes, wasSwept);
+    mallocHeapSize.removeBytes(nbytes, updateRetainedSize);
 
 #ifdef DEBUG
     mallocTracker.decNonGCMemory(mem, nbytes, use);
@@ -199,8 +199,12 @@ class ZoneAllocator : public JS::shadow::Zone,
   friend class gc::GCRuntime;
 };
 
+// Whether memory is associated with a single cell or whether it is associated
+// with the zone as a whole (for memory used by the system).
+enum class TrackingKind { Cell, Zone };
+
 /*
- * Allocation policy that performs precise memory tracking on the zone. This
+ * Allocation policy that performs memory tracking for malloced memory. This
  * should be used for all containers associated with a GC thing or a zone.
  *
  * Since it doesn't hold a JSContext (those may not live long enough), it can't
@@ -209,7 +213,8 @@ class ZoneAllocator : public JS::shadow::Zone,
  *
  * FIXME bug 647103 - replace these *AllocPolicy names.
  */
-class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
+template <TrackingKind kind>
+class TrackedAllocPolicy : public MallocProvider<TrackedAllocPolicy<kind>> {
   ZoneAllocator* zone_;
 
 #ifdef DEBUG
@@ -217,33 +222,34 @@ class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
 #endif
 
  public:
-  MOZ_IMPLICIT ZoneAllocPolicy(ZoneAllocator* z) : zone_(z) {
-    zone()->registerNonGCMemory(this, MemoryUse::ZoneAllocPolicy);
+  MOZ_IMPLICIT TrackedAllocPolicy(ZoneAllocator* z) : zone_(z) {
+    zone()->registerNonGCMemory(this, MemoryUse::TrackedAllocPolicy);
   }
-  MOZ_IMPLICIT ZoneAllocPolicy(JS::Zone* z)
-      : ZoneAllocPolicy(ZoneAllocator::from(z)) {}
-  ZoneAllocPolicy(ZoneAllocPolicy& other) : ZoneAllocPolicy(other.zone_) {}
-  ZoneAllocPolicy(ZoneAllocPolicy&& other) : zone_(other.zone_) {
-    zone()->moveOtherMemory(this, &other, MemoryUse::ZoneAllocPolicy);
+  MOZ_IMPLICIT TrackedAllocPolicy(JS::Zone* z)
+      : TrackedAllocPolicy(ZoneAllocator::from(z)) {}
+  TrackedAllocPolicy(TrackedAllocPolicy& other)
+      : TrackedAllocPolicy(other.zone_) {}
+  TrackedAllocPolicy(TrackedAllocPolicy&& other) : zone_(other.zone_) {
+    zone()->moveOtherMemory(this, &other, MemoryUse::TrackedAllocPolicy);
     other.zone_ = nullptr;
   }
-  ~ZoneAllocPolicy() {
+  ~TrackedAllocPolicy() {
     if (zone_) {
-      zone_->unregisterNonGCMemory(this, MemoryUse::ZoneAllocPolicy);
+      zone_->unregisterNonGCMemory(this, MemoryUse::TrackedAllocPolicy);
     }
   }
 
-  ZoneAllocPolicy& operator=(const ZoneAllocPolicy& other) {
-    zone()->unregisterNonGCMemory(this, MemoryUse::ZoneAllocPolicy);
+  TrackedAllocPolicy& operator=(const TrackedAllocPolicy& other) {
+    zone()->unregisterNonGCMemory(this, MemoryUse::TrackedAllocPolicy);
     zone_ = other.zone();
-    zone()->registerNonGCMemory(this, MemoryUse::ZoneAllocPolicy);
+    zone()->registerNonGCMemory(this, MemoryUse::TrackedAllocPolicy);
     return *this;
   }
-  ZoneAllocPolicy& operator=(ZoneAllocPolicy&& other) {
+  TrackedAllocPolicy& operator=(TrackedAllocPolicy&& other) {
     MOZ_ASSERT(this != &other);
-    zone()->unregisterNonGCMemory(this, MemoryUse::ZoneAllocPolicy);
+    zone()->unregisterNonGCMemory(this, MemoryUse::TrackedAllocPolicy);
     zone_ = other.zone();
-    zone()->moveOtherMemory(this, &other, MemoryUse::ZoneAllocPolicy);
+    zone()->moveOtherMemory(this, &other, MemoryUse::TrackedAllocPolicy);
     other.zone_ = nullptr;
     return *this;
   }
@@ -273,7 +279,7 @@ class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
   }
   void reportAllocationOverflow() const { zone()->reportAllocationOverflow(); }
   void updateMallocCounter(size_t nbytes) {
-    zone()->incNonGCMemory(this, nbytes, MemoryUse::ZoneAllocPolicy);
+    zone()->incNonGCMemory(this, nbytes, MemoryUse::TrackedAllocPolicy);
   }
 
  private:
@@ -283,6 +289,9 @@ class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
   }
   void decMemory(size_t nbytes);
 };
+
+using ZoneAllocPolicy = TrackedAllocPolicy<TrackingKind::Zone>;
+using CellAllocPolicy = TrackedAllocPolicy<TrackingKind::Cell>;
 
 // Functions for memory accounting on the zone.
 
@@ -308,16 +317,18 @@ inline void AddCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
 // follow a call to AddCellMemory with the same size and use.
 
 inline void RemoveCellMemory(gc::TenuredCell* cell, size_t nbytes,
-                             MemoryUse use, bool wasSwept = false) {
+                             MemoryUse use) {
+  MOZ_ASSERT(!CurrentThreadIsGCFinalizing(),
+             "Use GCContext methods to remove associated memory in finalizers");
+
   if (nbytes) {
     auto zoneBase = ZoneAllocator::from(cell->zoneFromAnyThread());
-    zoneBase->removeCellMemory(cell, nbytes, use, wasSwept);
+    zoneBase->removeCellMemory(cell, nbytes, use, false);
   }
 }
-inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use,
-                             bool wasSwept = false) {
+inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
   if (cell->isTenured()) {
-    RemoveCellMemory(&cell->asTenured(), nbytes, use, wasSwept);
+    RemoveCellMemory(&cell->asTenured(), nbytes, use);
   }
 }
 

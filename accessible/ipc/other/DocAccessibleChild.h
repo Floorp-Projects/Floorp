@@ -104,8 +104,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       const uint64_t& aID, int32_t* aLineNumber) override;
   virtual mozilla::ipc::IPCResult RecvCaretOffset(const uint64_t& aID,
                                                   int32_t* aOffset) override;
-  virtual mozilla::ipc::IPCResult RecvSetCaretOffset(
-      const uint64_t& aID, const int32_t& aOffset) override;
 
   virtual mozilla::ipc::IPCResult RecvCharacterCount(const uint64_t& aID,
                                                      int32_t* aCount) override;
@@ -465,7 +463,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
  private:
   LocalAccessible* IdToAccessibleLink(const uint64_t& aID) const;
   LocalAccessible* IdToAccessibleSelect(const uint64_t& aID) const;
-  HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID) const;
   TextLeafAccessible* IdToTextLeafAccessible(const uint64_t& aID) const;
   ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
   TableCellAccessible* IdToTableCellAccessible(const uint64_t& aID) const;

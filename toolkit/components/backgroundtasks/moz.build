@@ -3,8 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    # TODO: House this somewhere more specific?
-    BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
+    BUG_COMPONENT = ("Toolkit", "Background Tasks")
 
 SPHINX_TREES["/toolkit/components/backgroundtasks"] = "docs"
 

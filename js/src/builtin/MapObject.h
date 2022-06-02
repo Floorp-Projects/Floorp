@@ -85,10 +85,10 @@ template <class T, class OrderedHashPolicy, class AllocPolicy>
 class OrderedHashSet;
 
 typedef OrderedHashMap<HashableValue, HeapPtr<Value>, HashableValue::Hasher,
-                       ZoneAllocPolicy>
+                       CellAllocPolicy>
     ValueMap;
 
-typedef OrderedHashSet<HashableValue, HashableValue::Hasher, ZoneAllocPolicy>
+typedef OrderedHashSet<HashableValue, HashableValue::Hasher, CellAllocPolicy>
     ValueSet;
 
 template <typename ObjectT>
@@ -140,7 +140,7 @@ class MapObject : public NativeObject {
                                      HandleObject obj, MutableHandleValue iter);
 
   using UnbarrieredTable =
-      OrderedHashMap<Value, Value, UnbarrieredHashPolicy, ZoneAllocPolicy>;
+      OrderedHashMap<Value, Value, UnbarrieredHashPolicy, CellAllocPolicy>;
   friend class OrderedHashTableRef<MapObject>;
 
   static void sweepAfterMinorGC(JS::GCContext* gcx, MapObject* mapobj);
@@ -273,7 +273,7 @@ class SetObject : public NativeObject {
                                     HandleValue key, bool* rval);
 
   using UnbarrieredTable =
-      OrderedHashSet<Value, UnbarrieredHashPolicy, ZoneAllocPolicy>;
+      OrderedHashSet<Value, UnbarrieredHashPolicy, CellAllocPolicy>;
   friend class OrderedHashTableRef<SetObject>;
 
   static void sweepAfterMinorGC(JS::GCContext* gcx, SetObject* setobj);

@@ -61,6 +61,7 @@ void ZoneAllocator::fixupAfterMovingGC() {
 void js::ZoneAllocator::updateMemoryCountersOnGCStart() {
   gcHeapSize.updateOnGCStart();
   mallocHeapSize.updateOnGCStart();
+  jitHeapSize.updateOnGCStart();
 }
 
 void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc,
@@ -135,14 +136,24 @@ void ZoneAllocator::removeSharedMemory(void* mem, size_t nbytes,
   }
 }
 
-void ZoneAllocPolicy::decMemory(size_t nbytes) {
-  // Unfortunately we don't have enough context here to know whether we're being
-  // called on behalf of the collector so we have to do a TLS lookup to find
-  // out.
-  JS::GCContext* gcx = TlsGCContext.get();
-  zone_->decNonGCMemory(this, nbytes, MemoryUse::ZoneAllocPolicy,
-                        gcx->isCollecting());
+template <TrackingKind kind>
+void js::TrackedAllocPolicy<kind>::decMemory(size_t nbytes) {
+  bool updateRetainedSize = false;
+  if constexpr (kind == TrackingKind::Cell) {
+    // Only subtract freed cell memory from retained size for cell associations
+    // during sweeping.
+    JS::GCContext* gcx = TlsGCContext.get();
+    updateRetainedSize = gcx->isFinalizing();
+  }
+
+  zone_->decNonGCMemory(this, nbytes, MemoryUse::TrackedAllocPolicy,
+                        updateRetainedSize);
 }
+
+namespace js {
+template class TrackedAllocPolicy<TrackingKind::Zone>;
+template class TrackedAllocPolicy<TrackingKind::Cell>;
+}  // namespace js
 
 JS::Zone::Zone(JSRuntime* rt, Kind kind)
     : ZoneAllocator(rt, kind),

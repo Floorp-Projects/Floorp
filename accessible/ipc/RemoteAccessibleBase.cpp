@@ -1080,6 +1080,11 @@ RemoteAccessibleBase<Derived>::GetCachedHyperTextOffsets() const {
   return *mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::offset);
 }
 
+template <class Derived>
+void RemoteAccessibleBase<Derived>::SetCaretOffset(int32_t aOffset) {
+  Unused << mDoc->SendSetCaretOffset(mID, aOffset);
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y

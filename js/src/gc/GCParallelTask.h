@@ -13,6 +13,7 @@
 
 #include <utility>
 
+#include "gc/GCContext.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "threading/ProtectedData.h"
@@ -47,6 +48,8 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
   // This can be PhaseKind::NONE for tasks that take place outside a GC.
   const gcstats::PhaseKind phaseKind;
 
+  gc::GCUse use;
+
  private:
   // The state of the parallel computation.
   enum class State {
@@ -78,15 +81,18 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
   mozilla::Atomic<bool, mozilla::MemoryOrdering::ReleaseAcquire> cancel_;
 
  public:
-  explicit GCParallelTask(gc::GCRuntime* gc, gcstats::PhaseKind phaseKind)
+  explicit GCParallelTask(gc::GCRuntime* gc, gcstats::PhaseKind phaseKind,
+                          gc::GCUse use = gc::GCUse::Unspecified)
       : gc(gc),
         phaseKind(phaseKind),
+        use(use),
         state_(State::Idle),
         duration_(nullptr),
         cancel_(false) {}
   GCParallelTask(GCParallelTask&& other)
       : gc(other.gc),
         phaseKind(other.phaseKind),
+        use(other.use),
         state_(other.state_),
         duration_(nullptr),
         cancel_(false) {}
@@ -179,7 +185,7 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
     state_ = State::Idle;
   }
 
-  void runTask(AutoLockHelperThreadState& lock);
+  void runTask(JS::GCContext* gcx, AutoLockHelperThreadState& lock);
 
   // Implement the HelperThreadTask interface.
   ThreadType threadType() override {

@@ -1,4 +1,4 @@
-match_block_trailing_comma = true
+match_block_trailing_comma = false
 max_width = 80
 newline_style = "Unix"
 reorder_imports = true

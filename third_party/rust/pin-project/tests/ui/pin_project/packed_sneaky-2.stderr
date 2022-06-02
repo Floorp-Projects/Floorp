@@ -5,7 +5,7 @@ error: #[pin_project] attribute may not be used on #[repr(packed)] types
 5  | |     #[pin_project]
 6  | |     struct B {
 7  | |         #[pin]
-8  | |         field: u32,
+8  | |         f: u32,
 9  | |     }
 10 | | }
    | |_^

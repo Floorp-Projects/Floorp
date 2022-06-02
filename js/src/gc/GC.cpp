@@ -373,6 +373,7 @@ inline void GCRuntime::prepareToFreeChunk(TenuredChunkInfo& info) {
 void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
   MOZ_ASSERT(arena->allocated());
   MOZ_ASSERT(!arena->onDelayedMarkingList());
+  MOZ_ASSERT(TlsGCContext.get()->isFinalizing());
 
   arena->zone->gcHeapSize.removeGCArena();
   arena->release(lock);
@@ -884,9 +885,8 @@ void GCRuntime::finish() {
 
   // Delete all remaining zones.
   if (rt->gcInitialized) {
-    AutoSetThreadIsPerformingGC performingGC;
     for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-      AutoSetThreadIsSweeping threadIsSweeping(zone);
+      AutoSetThreadIsSweeping threadIsSweeping(rt->gcContext(), zone);
       for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
         for (RealmsInCompartmentIter realm(comp); !realm.done(); realm.next()) {
           js_delete(realm.get());
@@ -2580,7 +2580,7 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
     /* Clear mark state for WeakMaps in parallel with other work. */
     AutoRunParallelTask unmarkWeakMaps(this, &GCRuntime::unmarkWeakMaps,
                                        gcstats::PhaseKind::UNMARK_WEAKMAPS,
-                                       helperLock);
+                                       GCUse::Unspecified, helperLock);
 
     AutoUnlockHelperThreadState unlock(helperLock);
 
@@ -3115,7 +3115,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
                                  bool budgetWasIncreased) {
   MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental);
 
-  AutoSetThreadIsPerformingGC performingGC;
+  AutoSetThreadIsPerformingGC performingGC(rt->gcContext());
 
   AutoGCSession session(this, JS::HeapState::MajorCollecting);
 

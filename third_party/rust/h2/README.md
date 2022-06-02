@@ -1,6 +1,6 @@
 # H2
 
-A Tokio aware, HTTP/2.0 client & server implementation for Rust.
+A Tokio aware, HTTP/2 client & server implementation for Rust.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Crates.io](https://img.shields.io/crates/v/h2.svg)](https://crates.io/crates/h2)
@@ -12,24 +12,23 @@ More information about this crate can be found in the [crate documentation][dox]
 
 ## Features
 
-* Client and server HTTP/2.0 implementation.
-* Implements the full HTTP/2.0 specification.
+* Client and server HTTP/2 implementation.
+* Implements the full HTTP/2 specification.
 * Passes [h2spec](https://github.com/summerwind/h2spec).
 * Focus on performance and correctness.
 * Built on [Tokio](https://tokio.rs).
 
 ## Non goals
 
-This crate is intended to only be an implementation of the HTTP/2.0
+This crate is intended to only be an implementation of the HTTP/2
 specification. It does not handle:
 
 * Managing TCP connections
 * HTTP 1.0 upgrade
 * TLS
-* Any feature not described by the HTTP/2.0 specification.
+* Any feature not described by the HTTP/2 specification.
 
-The intent is that this crate will eventually be used by
-[hyper](https://github.com/hyperium/hyper), which will provide all of these features.
+This crate is now used by [hyper](https://github.com/hyperium/hyper), which will provide all of these features.
 
 ## Usage
 
@@ -37,7 +36,7 @@ To use `h2`, first add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-h2 = "0.2"
+h2 = "0.3"
 ```
 
 Next, add this to your crate:
@@ -56,7 +55,7 @@ fn main() {
 
 **How does h2 compare to [solicit] or [rust-http2]?**
 
-The h2 library has implemented more of the details of the HTTP/2.0 specification
+The h2 library has implemented more of the details of the HTTP/2 specification
 than any other Rust library. It also passes the [h2spec] set of tests. The h2
 library is rapidly approaching "production ready" quality.
 

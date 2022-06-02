@@ -1,19 +1,15 @@
 use crate::codec::decoder::Decoder;
 use crate::codec::encoder::Encoder;
-use crate::codec::framed_read::{framed_read2, framed_read2_with_buffer, FramedRead2};
-use crate::codec::framed_write::{framed_write2, framed_write2_with_buffer, FramedWrite2};
+use crate::codec::framed_impl::{FramedImpl, RWFrames, ReadFrame, WriteFrame};
 
-use tokio::{
-    io::{AsyncBufRead, AsyncRead, AsyncWrite},
-    stream::Stream,
-};
+use futures_core::Stream;
+use tokio::io::{AsyncRead, AsyncWrite};
 
 use bytes::BytesMut;
 use futures_sink::Sink;
 use pin_project_lite::pin_project;
 use std::fmt;
-use std::io::{self, BufRead, Read, Write};
-use std::mem::MaybeUninit;
+use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
@@ -24,43 +20,13 @@ pin_project! {
     /// You can create a `Framed` instance by using the [`Decoder::framed`] adapter, or
     /// by using the `new` function seen below.
     ///
-    /// [`Stream`]: tokio::stream::Stream
+    /// [`Stream`]: futures_core::Stream
     /// [`Sink`]: futures_sink::Sink
     /// [`AsyncRead`]: tokio::io::AsyncRead
     /// [`Decoder::framed`]: crate::codec::Decoder::framed()
     pub struct Framed<T, U> {
         #[pin]
-        inner: FramedRead2<FramedWrite2<Fuse<T, U>>>,
-    }
-}
-
-pin_project! {
-    pub(crate) struct Fuse<T, U> {
-        #[pin]
-        pub(crate) io: T,
-        pub(crate) codec: U,
-    }
-}
-
-/// Abstracts over `FramedRead2` being either `FramedRead2<FramedWrite2<Fuse<T, U>>>` or
-/// `FramedRead2<Fuse<T, U>>` and lets the io and codec parts be extracted in either case.
-pub(crate) trait ProjectFuse {
-    type Io;
-    type Codec;
-
-    fn project(self: Pin<&mut Self>) -> Fuse<Pin<&mut Self::Io>, &mut Self::Codec>;
-}
-
-impl<T, U> ProjectFuse for Fuse<T, U> {
-    type Io = T;
-    type Codec = U;
-
-    fn project(self: Pin<&mut Self>) -> Fuse<Pin<&mut Self::Io>, &mut Self::Codec> {
-        let self_ = self.project();
-        Fuse {
-            io: self_.io,
-            codec: self_.codec,
-        }
+        inner: FramedImpl<T, U, RWFrames>
     }
 }
 
@@ -86,14 +52,23 @@ where
     /// calling [`split`] on the `Framed` returned by this method, which will
     /// break them into separate objects, allowing them to interact more easily.
     ///
-    /// [`Stream`]: tokio::stream::Stream
+    /// Note that, for some byte sources, the stream can be resumed after an EOF
+    /// by reading from it, even after it has returned `None`. Repeated attempts
+    /// to do so, without new data available, continue to return `None` without
+    /// creating more (closing) frames.
+    ///
+    /// [`Stream`]: futures_core::Stream
     /// [`Sink`]: futures_sink::Sink
     /// [`Decode`]: crate::codec::Decoder
     /// [`Encoder`]: crate::codec::Encoder
     /// [`split`]: https://docs.rs/futures/0.3/futures/stream/trait.StreamExt.html#method.split
     pub fn new(inner: T, codec: U) -> Framed<T, U> {
         Framed {
-            inner: framed_read2(framed_write2(Fuse { io: inner, codec })),
+            inner: FramedImpl {
+                inner,
+                codec,
+                state: Default::default(),
+            },
         }
     }
 
@@ -116,17 +91,26 @@ where
     /// calling [`split`] on the `Framed` returned by this method, which will
     /// break them into separate objects, allowing them to interact more easily.
     ///
-    /// [`Stream`]: tokio::stream::Stream
+    /// [`Stream`]: futures_core::Stream
     /// [`Sink`]: futures_sink::Sink
     /// [`Decode`]: crate::codec::Decoder
     /// [`Encoder`]: crate::codec::Encoder
     /// [`split`]: https://docs.rs/futures/0.3/futures/stream/trait.StreamExt.html#method.split
     pub fn with_capacity(inner: T, codec: U, capacity: usize) -> Framed<T, U> {
         Framed {
-            inner: framed_read2_with_buffer(
-                framed_write2(Fuse { io: inner, codec }),
-                BytesMut::with_capacity(capacity),
-            ),
+            inner: FramedImpl {
+                inner,
+                codec,
+                state: RWFrames {
+                    read: ReadFrame {
+                        eof: false,
+                        is_readable: false,
+                        buffer: BytesMut::with_capacity(capacity),
+                        has_errored: false,
+                    },
+                    write: WriteFrame::default(),
+                },
+            },
         }
     }
 }
@@ -153,7 +137,7 @@ impl<T, U> Framed<T, U> {
     /// calling [`split`] on the `Framed` returned by this method, which will
     /// break them into separate objects, allowing them to interact more easily.
     ///
-    /// [`Stream`]: tokio::stream::Stream
+    /// [`Stream`]: futures_core::Stream
     /// [`Sink`]: futures_sink::Sink
     /// [`Decoder`]: crate::codec::Decoder
     /// [`Encoder`]: crate::codec::Encoder
@@ -161,16 +145,14 @@ impl<T, U> Framed<T, U> {
     /// [`split`]: https://docs.rs/futures/0.3/futures/stream/trait.StreamExt.html#method.split
     pub fn from_parts(parts: FramedParts<T, U>) -> Framed<T, U> {
         Framed {
-            inner: framed_read2_with_buffer(
-                framed_write2_with_buffer(
-                    Fuse {
-                        io: parts.io,
-                        codec: parts.codec,
-                    },
-                    parts.write_buf,
-                ),
-                parts.read_buf,
-            ),
+            inner: FramedImpl {
+                inner: parts.io,
+                codec: parts.codec,
+                state: RWFrames {
+                    read: parts.read_buf.into(),
+                    write: parts.write_buf.into(),
+                },
+            },
         }
     }
 
@@ -181,7 +163,7 @@ impl<T, U> Framed<T, U> {
     /// of data coming in as it may corrupt the stream of frames otherwise
     /// being worked with.
     pub fn get_ref(&self) -> &T {
-        &self.inner.get_ref().get_ref().io
+        &self.inner.inner
     }
 
     /// Returns a mutable reference to the underlying I/O stream wrapped by
@@ -191,7 +173,17 @@ impl<T, U> Framed<T, U> {
     /// of data coming in as it may corrupt the stream of frames otherwise
     /// being worked with.
     pub fn get_mut(&mut self) -> &mut T {
-        &mut self.inner.get_mut().get_mut().io
+        &mut self.inner.inner
+    }
+
+    /// Returns a pinned mutable reference to the underlying I/O stream wrapped by
+    /// `Framed`.
+    ///
+    /// Note that care should be taken to not tamper with the underlying stream
+    /// of data coming in as it may corrupt the stream of frames otherwise
+    /// being worked with.
+    pub fn get_pin_mut(self: Pin<&mut Self>) -> Pin<&mut T> {
+        self.project().inner.project().inner
     }
 
     /// Returns a reference to the underlying codec wrapped by
@@ -200,7 +192,7 @@ impl<T, U> Framed<T, U> {
     /// Note that care should be taken to not tamper with the underlying codec
     /// as it may corrupt the stream of frames otherwise being worked with.
     pub fn codec(&self) -> &U {
-        &self.inner.get_ref().get_ref().codec
+        &self.inner.codec
     }
 
     /// Returns a mutable reference to the underlying codec wrapped by
@@ -209,12 +201,56 @@ impl<T, U> Framed<T, U> {
     /// Note that care should be taken to not tamper with the underlying codec
     /// as it may corrupt the stream of frames otherwise being worked with.
     pub fn codec_mut(&mut self) -> &mut U {
-        &mut self.inner.get_mut().get_mut().codec
+        &mut self.inner.codec
+    }
+
+    /// Maps the codec `U` to `C`, preserving the read and write buffers
+    /// wrapped by `Framed`.
+    ///
+    /// Note that care should be taken to not tamper with the underlying codec
+    /// as it may corrupt the stream of frames otherwise being worked with.
+    pub fn map_codec<C, F>(self, map: F) -> Framed<T, C>
+    where
+        F: FnOnce(U) -> C,
+    {
+        // This could be potentially simplified once rust-lang/rust#86555 hits stable
+        let parts = self.into_parts();
+        Framed::from_parts(FramedParts {
+            io: parts.io,
+            codec: map(parts.codec),
+            read_buf: parts.read_buf,
+            write_buf: parts.write_buf,
+            _priv: (),
+        })
+    }
+
+    /// Returns a mutable reference to the underlying codec wrapped by
+    /// `Framed`.
+    ///
+    /// Note that care should be taken to not tamper with the underlying codec
+    /// as it may corrupt the stream of frames otherwise being worked with.
+    pub fn codec_pin_mut(self: Pin<&mut Self>) -> &mut U {
+        self.project().inner.project().codec
     }
 
     /// Returns a reference to the read buffer.
     pub fn read_buffer(&self) -> &BytesMut {
-        self.inner.buffer()
+        &self.inner.state.read.buffer
+    }
+
+    /// Returns a mutable reference to the read buffer.
+    pub fn read_buffer_mut(&mut self) -> &mut BytesMut {
+        &mut self.inner.state.read.buffer
+    }
+
+    /// Returns a reference to the write buffer.
+    pub fn write_buffer(&self) -> &BytesMut {
+        &self.inner.state.write.buffer
+    }
+
+    /// Returns a mutable reference to the write buffer.
+    pub fn write_buffer_mut(&mut self) -> &mut BytesMut {
+        &mut self.inner.state.write.buffer
     }
 
     /// Consumes the `Framed`, returning its underlying I/O stream.
@@ -223,7 +259,7 @@ impl<T, U> Framed<T, U> {
     /// of data coming in as it may corrupt the stream of frames otherwise
     /// being worked with.
     pub fn into_inner(self) -> T {
-        self.inner.into_inner().into_inner().io
+        self.inner.inner
     }
 
     /// Consumes the `Framed`, returning its underlying I/O stream, the buffer
@@ -233,19 +269,17 @@ impl<T, U> Framed<T, U> {
     /// of data coming in as it may corrupt the stream of frames otherwise
     /// being worked with.
     pub fn into_parts(self) -> FramedParts<T, U> {
-        let (inner, read_buf) = self.inner.into_parts();
-        let (inner, write_buf) = inner.into_parts();
-
         FramedParts {
-            io: inner.io,
-            codec: inner.codec,
-            read_buf,
-            write_buf,
+            io: self.inner.inner,
+            codec: self.inner.codec,
+            read_buf: self.inner.state.read.buffer,
+            write_buf: self.inner.state.write.buffer,
             _priv: (),
         }
     }
 }
 
+// This impl just defers to the underlying FramedImpl
 impl<T, U> Stream for Framed<T, U>
 where
     T: AsyncRead,
@@ -258,6 +292,7 @@ where
     }
 }
 
+// This impl just defers to the underlying FramedImpl
 impl<T, I, U> Sink<I> for Framed<T, U>
 where
     T: AsyncWrite,
@@ -267,19 +302,19 @@ where
     type Error = U::Error;
 
     fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.project().inner.get_pin_mut().poll_ready(cx)
+        self.project().inner.poll_ready(cx)
     }
 
     fn start_send(self: Pin<&mut Self>, item: I) -> Result<(), Self::Error> {
-        self.project().inner.get_pin_mut().start_send(item)
+        self.project().inner.start_send(item)
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.project().inner.get_pin_mut().poll_flush(cx)
+        self.project().inner.poll_flush(cx)
     }
 
     fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.project().inner.get_pin_mut().poll_close(cx)
+        self.project().inner.poll_close(cx)
     }
 }
 
@@ -290,100 +325,9 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Framed")
-            .field("io", &self.inner.get_ref().get_ref().io)
-            .field("codec", &self.inner.get_ref().get_ref().codec)
+            .field("io", self.get_ref())
+            .field("codec", self.codec())
             .finish()
-    }
-}
-
-// ===== impl Fuse =====
-
-impl<T: Read, U> Read for Fuse<T, U> {
-    fn read(&mut self, dst: &mut [u8]) -> io::Result<usize> {
-        self.io.read(dst)
-    }
-}
-
-impl<T: BufRead, U> BufRead for Fuse<T, U> {
-    fn fill_buf(&mut self) -> io::Result<&[u8]> {
-        self.io.fill_buf()
-    }
-
-    fn consume(&mut self, amt: usize) {
-        self.io.consume(amt)
-    }
-}
-
-impl<T: AsyncRead, U> AsyncRead for Fuse<T, U> {
-    unsafe fn prepare_uninitialized_buffer(&self, buf: &mut [MaybeUninit<u8>]) -> bool {
-        self.io.prepare_uninitialized_buffer(buf)
-    }
-
-    fn poll_read(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<Result<usize, io::Error>> {
-        self.project().io.poll_read(cx, buf)
-    }
-}
-
-impl<T: AsyncBufRead, U> AsyncBufRead for Fuse<T, U> {
-    fn poll_fill_buf(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<&[u8]>> {
-        self.project().io.poll_fill_buf(cx)
-    }
-
-    fn consume(self: Pin<&mut Self>, amt: usize) {
-        self.project().io.consume(amt)
-    }
-}
-
-impl<T: Write, U> Write for Fuse<T, U> {
-    fn write(&mut self, src: &[u8]) -> io::Result<usize> {
-        self.io.write(src)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        self.io.flush()
-    }
-}
-
-impl<T: AsyncWrite, U> AsyncWrite for Fuse<T, U> {
-    fn poll_write(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &[u8],
-    ) -> Poll<Result<usize, io::Error>> {
-        self.project().io.poll_write(cx, buf)
-    }
-
-    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
-        self.project().io.poll_flush(cx)
-    }
-
-    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
-        self.project().io.poll_shutdown(cx)
-    }
-}
-
-impl<T, U: Decoder> Decoder for Fuse<T, U> {
-    type Item = U::Item;
-    type Error = U::Error;
-
-    fn decode(&mut self, buffer: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        self.codec.decode(buffer)
-    }
-
-    fn decode_eof(&mut self, buffer: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        self.codec.decode_eof(buffer)
-    }
-}
-
-impl<T, I, U: Encoder<I>> Encoder<I> for Fuse<T, U> {
-    type Error = U::Error;
-
-    fn encode(&mut self, item: I, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        self.codec.encode(item, dst)
     }
 }
 
@@ -393,6 +337,7 @@ impl<T, I, U: Encoder<I>> Encoder<I> for Fuse<T, U> {
 ///
 /// [`Framed`]: crate::codec::Framed
 #[derive(Debug)]
+#[allow(clippy::manual_non_exhaustive)]
 pub struct FramedParts<T, U> {
     /// The inner transport used to read bytes to and write bytes to
     pub io: T,

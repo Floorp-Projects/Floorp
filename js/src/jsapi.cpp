@@ -1270,8 +1270,8 @@ JS_PUBLIC_API void JS::RemoveAssociatedMemory(JSObject* obj, size_t nbytes,
     return;
   }
 
-  JSRuntime* rt = obj->runtimeFromAnyThread();
-  rt->gcContext()->removeCellMemory(obj, nbytes, js::MemoryUse(use));
+  GCContext* gcx = obj->runtimeFromMainThread()->gcContext();
+  gcx->removeCellMemory(obj, nbytes, js::MemoryUse(use));
 }
 
 #undef JS_AddRoot
