@@ -126,6 +126,9 @@ env_logger = { path = "build/rust/env_logger" }
 # Patch paste 0.1 to 1.0
 paste = { path = "build/rust/paste" }
 
+# Patch paste 0.1 to 1.0
+toml = { path = "build/rust/toml" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 

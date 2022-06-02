@@ -2,10 +2,9 @@
 //! TOML into a Rust `struct`, with enums.
 
 #![deny(warnings)]
+#![allow(dead_code)]
 
-extern crate toml;
-#[macro_use]
-extern crate serde_derive;
+use serde_derive::Deserialize;
 
 /// This is what we're going to decode into.
 #[derive(Debug, Deserialize)]
