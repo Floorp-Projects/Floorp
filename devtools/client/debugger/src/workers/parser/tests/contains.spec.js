@@ -73,6 +73,7 @@ function testContainsPosition(pos, bool) {
 
 describe("containsPosition", () => {
   describe("location and postion both with the column criteria", () => {
+    /* eslint-disable jest/expect-expect */
     it("should contain position within the location range", () =>
       testContains(startPos(1, 1), true));
 
@@ -94,14 +95,17 @@ describe("containsPosition", () => {
     // eslint-disable-next-line max-len
     it("should contain position on the same end line and within the end column", () =>
       testContains(endPos(0, -1), true));
+    /* eslint-enable jest/expect-expect */
   });
 
   describe("position without the column criterion", () => {
+    /* eslint-disable jest/expect-expect */
     it("should contain position on the same start line", () =>
       testContains(startLine(0), true));
 
     it("should contain position on the same end line", () =>
       testContains(endLine(0), true));
+    /* eslint-enable jest/expect-expect */
   });
 
   describe("location without the column criterion", () => {
@@ -256,6 +260,7 @@ describe("containsLocation", () => {
 
 describe("nodeContainsPosition", () => {
   describe("node and position both with the column criteria", () => {
+    /* eslint-disable jest/expect-expect */
     it("should contian position within the range", () =>
       testContainsPosition(startPos(1, 1), true));
 
@@ -278,6 +283,7 @@ describe("nodeContainsPosition", () => {
     it(`should contain position on the same end line and
         within the end column`, () =>
       testContainsPosition(endPos(0, -1), true));
+    /* eslint-enable jest/expect-expect */
   });
 
   describe("node without the column criterion", () => {
@@ -297,11 +303,13 @@ describe("nodeContainsPosition", () => {
   });
 
   describe("position without the column criterion", () => {
+    /* eslint-disable jest/expect-expect */
     it("should contain position on the same start line", () =>
       testContainsPosition(startLine(), true));
 
     it("should contain position on the same end line", () =>
       testContainsPosition(endLine(), true));
+    /* eslint-enable jest/expect-expect */
   });
 
   describe("node and position both without the column criteria", () => {
