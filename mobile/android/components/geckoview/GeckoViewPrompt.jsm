@@ -13,13 +13,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm"
 );
@@ -135,10 +137,10 @@ class PromptFactory {
       aElement.openInParentProcess = true;
     }
 
-    const prompt = new GeckoViewPrompter(win);
+    const prompt = new lazy.GeckoViewPrompter(win);
 
     // Something changed the <select> while it was open.
-    const deferredUpdate = new DeferredTask(() => {
+    const deferredUpdate = new lazy.DeferredTask(() => {
       // Inner contents in choice prompt are updated.
       const [newItems] = this._generateSelectItems(aElement);
       prompt.update({
@@ -225,7 +227,7 @@ class PromptFactory {
   }
 
   _handleDateTime(aElement) {
-    const prompt = new GeckoViewPrompter(aElement.ownerGlobal);
+    const prompt = new lazy.GeckoViewPrompter(aElement.ownerGlobal);
 
     const chromeEventHandler = aElement.ownerGlobal.docShell.chromeEventHandler;
     const dismissPrompt = () => prompt.dismiss();
@@ -397,7 +399,7 @@ class PromptFactory {
     menu.sendShowEvent();
     menu.build(builder);
 
-    const prompt = new GeckoViewPrompter(target.ownerGlobal);
+    const prompt = new lazy.GeckoViewPrompter(target.ownerGlobal);
     prompt.asyncShowPrompt(
       {
         type: "choice",
@@ -422,7 +424,7 @@ class PromptFactory {
       ? aEvent.popupWindowURI.displaySpec
       : "about:blank";
 
-    const prompt = new GeckoViewPrompter(aEvent.requestingWindow);
+    const prompt = new lazy.GeckoViewPrompter(aEvent.requestingWindow);
     prompt.asyncShowPrompt(
       {
         type: "popup",
@@ -551,7 +553,7 @@ PromptFactory.prototype.QueryInterface = ChromeUtils.generateQI([
 
 class PromptDelegate {
   constructor(aParent) {
-    this._prompter = new GeckoViewPrompter(aParent);
+    this._prompter = new lazy.GeckoViewPrompter(aParent);
   }
 
   BUTTON_TYPE_POSITIVE = 0;
@@ -864,7 +866,7 @@ class PromptDelegate {
       realm = realm.substring(0, 50) + "\u2026";
     }
 
-    const bundle = Services.strings.createBundle(
+    const bundle = lazy.Services.strings.createBundle(
       "chrome://global/locale/commonDialogs.properties"
     );
     let text;

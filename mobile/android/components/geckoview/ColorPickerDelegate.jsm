@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
 });
 
@@ -21,7 +23,7 @@ const { debug, warn } = GeckoViewUtils.initLogging("ColorPickerDelegate");
 
 class ColorPickerDelegate {
   init(aParent, aTitle, aInitialColor) {
-    this._prompt = new GeckoViewPrompter(aParent);
+    this._prompt = new lazy.GeckoViewPrompter(aParent);
     this._msg = {
       type: "color",
       title: aTitle,
