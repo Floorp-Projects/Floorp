@@ -1240,9 +1240,10 @@ already_AddRefed<Promise> nsImageLoadingContent::RecognizeCurrentImageText(
           return;
         }
         Element* el = ilc->AsContent()->AsElement();
-        el->AttachAndSetUAShadowRoot(Element::NotifyUAWidgetSetup::No);
+        el->AttachAndSetUAShadowRoot(Element::NotifyUAWidgetSetup::Yes);
         TextRecognition::FillShadow(*el->GetShadowRoot(),
                                     aValue.ResolveValue());
+        el->NotifyUAWidgetSetupOrChange();
         // TODO: Maybe resolve with the recognition results?
         domPromise->MaybeResolveWithUndefined();
       });
