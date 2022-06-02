@@ -2,14 +2,24 @@ import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { RecommendationProvider } from "lib/RecommendationProvider.jsm";
 import { combineReducers, createStore } from "redux";
 import { reducers } from "common/Reducers.jsm";
+import { GlobalOverrider } from "test/unit/utils";
+
+import { PersonalityProvider } from "lib/PersonalityProvider/PersonalityProvider.jsm";
+
 const PREF_PERSONALIZATION_ENABLED = "discoverystream.personalization.enabled";
 const PREF_PERSONALIZATION_MODEL_KEYS =
   "discoverystream.personalization.modelKeys";
 describe("RecommendationProvider", () => {
   let feed;
   let sandbox;
+  let globals;
 
   beforeEach(() => {
+    globals = new GlobalOverrider();
+    globals.set({
+      PersonalityProvider,
+    });
+
     sandbox = sinon.createSandbox();
     feed = new RecommendationProvider();
     feed.store = createStore(combineReducers(reducers), {});
@@ -17,6 +27,7 @@ describe("RecommendationProvider", () => {
 
   afterEach(() => {
     sandbox.restore();
+    globals.restore();
   });
 
   describe("#setProvider", () => {

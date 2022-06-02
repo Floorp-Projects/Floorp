@@ -1,9 +1,10 @@
-use pin_project::{pin_project, pinned_drop};
 use std::pin::Pin;
+
+use pin_project::{pin_project, pinned_drop};
 
 #[pin_project(PinnedDrop)]
 struct Struct {
-    dropped: bool,
+    f: bool,
 }
 
 #[pinned_drop]

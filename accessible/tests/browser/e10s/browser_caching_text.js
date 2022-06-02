@@ -827,6 +827,63 @@ addAccessibleTask(
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
 
+/**
+ * Test setting the caret.
+ */
+addAccessibleTask(
+  `
+<textarea id="textarea">ab\nc</textarea>
+<div id="editable" contenteditable>
+  <p id="p">a<a id="link" href="https://example.com/">b</a></p>
+</div>
+  `,
+  async function(browser, docAcc) {
+    const textarea = findAccessibleChildByID(docAcc, "textarea", [
+      nsIAccessibleText,
+    ]);
+    info("textarea: Set caret offset to 0");
+    let focused = waitForEvent(EVENT_FOCUS, textarea);
+    let caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    textarea.caretOffset = 0;
+    await focused;
+    await caretMoved;
+    is(textarea.caretOffset, 0, "textarea caret correct");
+    // Test setting caret to another line.
+    info("textarea: Set caret offset to 3");
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    textarea.caretOffset = 3;
+    await caretMoved;
+    is(textarea.caretOffset, 3, "textarea caret correct");
+    // Test setting caret to the end.
+    info("textarea: Set caret offset to 4 (end)");
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    textarea.caretOffset = 4;
+    await caretMoved;
+    is(textarea.caretOffset, 4, "textarea caret correct");
+
+    const editable = findAccessibleChildByID(docAcc, "editable", [
+      nsIAccessibleText,
+    ]);
+    focused = waitForEvent(EVENT_FOCUS, editable);
+    editable.takeFocus();
+    await focused;
+    const p = findAccessibleChildByID(docAcc, "p", [nsIAccessibleText]);
+    info("p: Set caret offset to 0");
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, p);
+    p.caretOffset = 0;
+    await focused;
+    await caretMoved;
+    is(p.caretOffset, 0, "p caret correct");
+    const link = findAccessibleChildByID(docAcc, "link", [nsIAccessibleText]);
+    info("link: Set caret offset to 0");
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, link);
+    link.caretOffset = 0;
+    await caretMoved;
+    is(link.caretOffset, 0, "link caret correct");
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
+
 function waitForSelectionChange(selectionAcc, caretAcc) {
   if (!caretAcc) {
     caretAcc = selectionAcc;

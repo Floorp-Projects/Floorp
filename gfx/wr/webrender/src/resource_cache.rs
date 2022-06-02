@@ -6,7 +6,7 @@ use api::{BlobImageRequest, RasterizedBlobImage, ImageFormat};
 use api::{DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType, ExternalImageId, BlobImageResult};
 use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
-use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
+use api::{ColorF, ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
 use api::{BlobImageHandler, BlobImageKey, VoidPtrToSizeFn};
 use api::units::*;
 use crate::{render_api::{ClearCache, AddFont, ResourceUpdate, MemoryReport}, util::WeakTable};
@@ -1402,6 +1402,24 @@ impl ResourceCache {
                 );
             }
         }
+    }
+
+    pub fn create_compositor_backdrop_surface(
+        &mut self,
+        color: ColorF
+    ) -> NativeSurfaceId {
+        let id = NativeSurfaceId(NEXT_NATIVE_SURFACE_ID.fetch_add(1, Ordering::Relaxed) as u64);
+
+        self.pending_native_surface_updates.push(
+            NativeSurfaceOperation {
+                details: NativeSurfaceOperationDetails::CreateBackdropSurface {
+                    id,
+                    color,
+                },
+            }
+        );
+
+        id
     }
 
     /// Queue up allocation of a new OS native compositor surface with the

@@ -654,7 +654,7 @@ inline bool MemoryTracker::isGCMemoryUse(MemoryUse use) {
 
 /* static */
 inline bool MemoryTracker::isNonGCMemoryUse(MemoryUse use) {
-  return use == MemoryUse::ZoneAllocPolicy;
+  return use == MemoryUse::TrackedAllocPolicy;
 }
 
 /* static */

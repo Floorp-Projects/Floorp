@@ -63,12 +63,14 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "OS", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "OS", function() {
     const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
     return OS;
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   proxyService: [
     "@mozilla.org/network/protocol-proxy-service;1",
     "nsIProtocolProxyService",
@@ -364,7 +366,7 @@ function StartHTTPServer()
     g.server.identity.add("https", "example.org", "443");
 
     const proxyFilter = {
-        proxyInfo: proxyService.newProxyInfo(
+        proxyInfo: lazy.proxyService.newProxyInfo(
             "http", // type of proxy
             "localhost", //proxy host
             g.server.identity.primaryPort, // proxy host port
@@ -384,7 +386,7 @@ function StartHTTPServer()
         },
     };
 
-    proxyService.registerChannelFilter(proxyFilter, 0);
+    lazy.proxyService.registerChannelFilter(proxyFilter, 0);
 
     g.httpServerPort = g.server.identity.primaryPort;
 }
@@ -436,7 +438,7 @@ function ReadTests() {
 
         if (testList) {
             logger.debug("Reading test objects from: " + testList);
-            let promise = OS.File.read(testList).then(function onSuccess(array) {
+            let promise = lazy.OS.File.read(testList).then(function onSuccess(array) {
                 let decoder = new TextDecoder();
                 g.urls = JSON.parse(decoder.decode(array)).map(CreateUrls);
                 StartTests();
@@ -487,7 +489,7 @@ function ReadTests() {
                 logger.debug("Dumping test objects to file: " + dumpTests);
                 let encoder = new TextEncoder();
                 let tests = encoder.encode(JSON.stringify(g.urls));
-                OS.File.writeAtomic(dumpTests, tests, {flush: true}).then(
+                lazy.OS.File.writeAtomic(dumpTests, tests, {flush: true}).then(
                   function onSuccess() {
                     DoneTests();
                   },
@@ -1900,7 +1902,7 @@ function pdfjsHasLoadedPromise() {
 }
 
 function readPdf(path, callback) {
-    OS.File.open(path, { read: true }).then(function (file) {
+    lazy.OS.File.open(path, { read: true }).then(function (file) {
         file.read().then(function (data) {
             pdfjsLib.GlobalWorkerOptions.workerSrc = "resource://pdf.js/build/pdf.worker.js";
             pdfjsLib.getDocument({

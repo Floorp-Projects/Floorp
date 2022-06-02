@@ -1,0 +1,9 @@
+# All entries in this file are to suppress issues reported by function.
+# Blacklists for other reasons should go in separate blacklist files.
+
+[function]
+
+# bug 1751818
+fun:*gfxFontEntry*GrGetTable*
+fun:*gfxFontEntry*GrReleaseTable*
+fun:*gfxGraphiteShaper*GrGetAdvance*

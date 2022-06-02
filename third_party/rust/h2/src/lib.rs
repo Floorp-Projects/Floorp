@@ -1,6 +1,6 @@
-//! An asynchronous, HTTP/2.0 server and client implementation.
+//! An asynchronous, HTTP/2 server and client implementation.
 //!
-//! This library implements the [HTTP/2.0] specification. The implementation is
+//! This library implements the [HTTP/2] specification. The implementation is
 //! asynchronous, using [futures] as the basis for the API. The implementation
 //! is also decoupled from TCP or TLS details. The user must handle ALPN and
 //! HTTP/1.1 upgrades themselves.
@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! h2 = "0.2"
+//! h2 = "0.3"
 //! ```
 //!
 //! # Layout
@@ -24,19 +24,19 @@
 //! # Handshake
 //!
 //! Both the client and the server require a connection to already be in a state
-//! ready to start the HTTP/2.0 handshake. This library does not provide
+//! ready to start the HTTP/2 handshake. This library does not provide
 //! facilities to do this.
 //!
-//! There are three ways to reach an appropriate state to start the HTTP/2.0
+//! There are three ways to reach an appropriate state to start the HTTP/2
 //! handshake.
 //!
 //! * Opening an HTTP/1.1 connection and performing an [upgrade].
 //! * Opening a connection with TLS and use ALPN to negotiate the protocol.
 //! * Open a connection with prior knowledge, i.e. both the client and the
 //!   server assume that the connection is immediately ready to start the
-//!   HTTP/2.0 handshake once opened.
+//!   HTTP/2 handshake once opened.
 //!
-//! Once the connection is ready to start the HTTP/2.0 handshake, it can be
+//! Once the connection is ready to start the HTTP/2 handshake, it can be
 //! passed to [`server::handshake`] or [`client::handshake`]. At this point, the
 //! library will start the handshake process, which consists of:
 //!
@@ -48,10 +48,10 @@
 //!
 //! # Flow control
 //!
-//! [Flow control] is a fundamental feature of HTTP/2.0. The `h2` library
+//! [Flow control] is a fundamental feature of HTTP/2. The `h2` library
 //! exposes flow control to the user.
 //!
-//! An HTTP/2.0 client or server may not send unlimited data to the peer. When a
+//! An HTTP/2 client or server may not send unlimited data to the peer. When a
 //! stream is initiated, both the client and the server are provided with an
 //! initial window size for that stream.  A window size is the number of bytes
 //! the endpoint can send to the peer. At any point in time, the peer may
@@ -66,7 +66,7 @@
 //! Managing flow control for outbound data is done through [`SendStream`]. See
 //! the struct level documentation for those two types for more details.
 //!
-//! [HTTP/2.0]: https://http2.github.io/
+//! [HTTP/2]: https://http2.github.io/
 //! [futures]: https://docs.rs/futures/
 //! [`client`]: client/index.html
 //! [`server`]: server/index.html
@@ -78,16 +78,16 @@
 //! [`server::handshake`]: server/fn.handshake.html
 //! [`client::handshake`]: client/fn.handshake.html
 
-#![doc(html_root_url = "https://docs.rs/h2/0.2.5")]
+#![doc(html_root_url = "https://docs.rs/h2/0.3.13")]
 #![deny(missing_debug_implementations, missing_docs)]
 #![cfg_attr(test, deny(warnings))]
 
 macro_rules! proto_err {
     (conn: $($msg:tt)+) => {
-        log::debug!("connection error PROTOCOL_ERROR -- {};", format_args!($($msg)+))
+        tracing::debug!("connection error PROTOCOL_ERROR -- {};", format_args!($($msg)+))
     };
     (stream: $($msg:tt)+) => {
-        log::debug!("stream error PROTOCOL_ERROR -- {};", format_args!($($msg)+))
+        tracing::debug!("stream error PROTOCOL_ERROR -- {};", format_args!($($msg)+))
     };
 }
 
@@ -104,7 +104,13 @@ macro_rules! ready {
 mod codec;
 mod error;
 mod hpack;
+
+#[cfg(not(feature = "unstable"))]
 mod proto;
+
+#[cfg(feature = "unstable")]
+#[allow(missing_docs)]
+pub mod proto;
 
 #[cfg(not(feature = "unstable"))]
 mod frame;
@@ -114,19 +120,24 @@ mod frame;
 pub mod frame;
 
 pub mod client;
+pub mod ext;
 pub mod server;
 mod share;
+
+#[cfg(fuzzing)]
+#[cfg_attr(feature = "unstable", allow(missing_docs))]
+pub mod fuzz_bridge;
 
 pub use crate::error::{Error, Reason};
 pub use crate::share::{FlowControl, Ping, PingPong, Pong, RecvStream, SendStream, StreamId};
 
 #[cfg(feature = "unstable")]
-pub use codec::{Codec, RecvError, SendError, UserError};
+pub use codec::{Codec, SendError, UserError};
 
 use std::task::Poll;
 
 // TODO: Get rid of this trait once https://github.com/rust-lang/rust/pull/63512
-// is stablized.
+// is stabilized.
 trait PollExt<T, E> {
     /// Changes the success value of this `Poll` with the closure provided.
     fn map_ok_<U, F>(self, f: F) -> Poll<Option<Result<U, E>>>

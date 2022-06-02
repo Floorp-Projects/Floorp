@@ -233,14 +233,13 @@ void gfxPlatformGtk::InitDmabufConfig() {
 void gfxPlatformGtk::InitVAAPIConfig() {
   FeatureState& feature = gfxConfig::GetFeature(Feature::VAAPI);
 #ifdef MOZ_WAYLAND
+#  ifdef NIGHTLY_BUILD
+  feature.EnableByDefault();
+#  else
   feature.DisableByDefault(FeatureStatus::Disabled,
                            "VAAPI is disabled by default",
                            "FEATURE_VAAPI_DISABLED"_ns);
-
-  if (StaticPrefs::media_ffmpeg_vaapi_enabled()) {
-    feature.UserForceEnable("Force enabled by pref");
-  }
-
+#  endif
   nsCString failureId;
   int32_t status;
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -251,6 +250,10 @@ void gfxPlatformGtk::InitVAAPIConfig() {
   } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
     feature.Disable(FeatureStatus::Blocklisted, "Blocklisted by gfxInfo",
                     failureId);
+  }
+
+  if (StaticPrefs::media_ffmpeg_vaapi_enabled()) {
+    feature.UserForceEnable("Force enabled by pref");
   }
 
   if (!gfxVars::UseEGL()) {

@@ -1,3 +1,37 @@
+# Unreleased
+
+None.
+
+# 0.4.5 (May 20, 2022)
+
+- Add `String` impl for `Body`.
+- Add `Limited` body implementation.
+
+# 0.4.4 (October 22, 2021)
+
+- Add `UnsyncBoxBody` and `Body::boxed_unsync`.
+
+# 0.4.3 (August 8, 2021)
+
+- Implement `Default` for `BoxBody`.
+
+# 0.4.2 (May 8, 2021)
+
+- Correctly override `Body::size_hint` and `Body::is_end_stream` for `Empty`.
+- Add `Full` which is a body that consists of a single chunk.
+
+# 0.4.1 (March 18, 2021)
+
+- Add combinators to `Body`:
+  - `map_data`: Change the `Data` chunks produced by the body.
+  - `map_err`: Change the `Error`s produced by the body.
+  - `boxed`: Convert the `Body` into a boxed trait object.
+- Add `Empty`.
+
+# 0.4.0 (December 23, 2020)
+
+- Update `bytes` to v1.0.
+
 # 0.3.1 (December 13, 2019)
 
 - Implement `Body` for `http::Request<impl Body>` and `http::Response<impl Body>`.

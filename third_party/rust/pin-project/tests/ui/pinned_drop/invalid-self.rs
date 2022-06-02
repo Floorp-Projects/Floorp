@@ -2,13 +2,13 @@
 
 use std::pin::Pin;
 
-struct Struct {}
+struct S {}
 
-impl Struct {
+impl S {
     fn take_ref_self(ref self: Pin<&mut Self>) {} //~ ERROR expected identifier, found keyword `self`
     fn take_ref_mut_self(ref mut self: Pin<&mut Self>) {} //~ ERROR expected identifier, found keyword `self`
 
-    fn self_subpat(self @ Struct {}: Self) {} //~ ERROR expected one of `)`, `,`, or `:`, found `@`
+    fn self_subpat(self @ S {}: Self) {} //~ ERROR expected one of `)`, `,`, or `:`, found `@`
 }
 
 fn main() {}

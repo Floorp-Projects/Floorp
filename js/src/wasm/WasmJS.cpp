@@ -1945,7 +1945,7 @@ bool WasmInstanceObject::isNewborn() const {
 // WasmJS.h and Scope.h.
 using WasmFunctionScopeMap =
     JS::WeakCache<GCHashMap<uint32_t, WeakHeapPtr<WasmFunctionScope*>,
-                            DefaultHasher<uint32_t>, ZoneAllocPolicy>>;
+                            DefaultHasher<uint32_t>, CellAllocPolicy>>;
 class WasmInstanceObject::UnspecifiedScopeMap {
  public:
   WasmFunctionScopeMap& asWasmFunctionScopeMap() {

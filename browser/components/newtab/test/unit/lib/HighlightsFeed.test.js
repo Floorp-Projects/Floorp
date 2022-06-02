@@ -5,6 +5,7 @@ import { Dedupe } from "common/Dedupe.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 import injector from "inject!lib/HighlightsFeed.jsm";
 import { Screenshots } from "lib/Screenshots.jsm";
+import { LinksCache } from "lib/LinksCache.jsm";
 
 const FAKE_LINKS = new Array(20)
   .fill(null)
@@ -71,9 +72,15 @@ describe("Highlights Feed", () => {
       removeExpirationFilter: sinon.stub(),
     };
 
-    globals.set("NewTabUtils", fakeNewTabUtils);
-    globals.set("PageThumbs", fakePageThumbs);
-    globals.set("gFilterAdultEnabled", false);
+    globals.set({
+      NewTabUtils: fakeNewTabUtils,
+      PageThumbs: fakePageThumbs,
+      gFilterAdultEnabled: false,
+      LinksCache,
+      DownloadsManager: downloadsManagerStub,
+      FilterAdult: filterAdultStub,
+      Screenshots: fakeScreenshot,
+    });
     ({
       HighlightsFeed,
       SECTION_ID,

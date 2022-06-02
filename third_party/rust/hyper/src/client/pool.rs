@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::error::Error as StdError;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex, Weak};
@@ -9,9 +10,10 @@ use std::time::{Duration, Instant};
 use futures_channel::oneshot;
 #[cfg(feature = "runtime")]
 use tokio::time::{Duration, Instant, Interval};
+use tracing::{debug, trace};
 
-use super::Ver;
-use crate::common::{task, Exec, Future, Pin, Poll, Unpin};
+use super::client::Ver;
+use crate::common::{exec::Exec, task, Future, Pin, Poll, Unpin};
 
 // FIXME: allow() required due to `impl Trait` leaking types to this lint
 #[allow(missing_debug_implementations)]
@@ -45,6 +47,7 @@ pub(super) enum Reservation<T> {
     /// This connection could be used multiple times, the first one will be
     /// reinserted into the `idle` pool, and the second will be given to
     /// the `Checkout`.
+    #[cfg(feature = "http2")]
     Shared(T, T),
     /// This connection requires unique access. It will be returned after
     /// use is complete.
@@ -99,7 +102,7 @@ impl Config {
 }
 
 impl<T> Pool<T> {
-    pub fn new(config: Config, __exec: &Exec) -> Pool<T> {
+    pub(super) fn new(config: Config, __exec: &Exec) -> Pool<T> {
         let inner = if config.is_enabled() {
             Some(Arc::new(Mutex::new(PoolInner {
                 connecting: HashSet::new(),
@@ -139,7 +142,7 @@ impl<T> Pool<T> {
 impl<T: Poolable> Pool<T> {
     /// Returns a `Checkout` which is a future that resolves if an idle
     /// connection becomes available.
-    pub fn checkout(&self, key: Key) -> Checkout<T> {
+    pub(super) fn checkout(&self, key: Key) -> Checkout<T> {
         Checkout {
             key,
             pool: self.clone(),
@@ -199,9 +202,14 @@ impl<T: Poolable> Pool<T> {
     }
     */
 
-    pub(super) fn pooled(&self, mut connecting: Connecting<T>, value: T) -> Pooled<T> {
+    pub(super) fn pooled(
+        &self,
+        #[cfg_attr(not(feature = "http2"), allow(unused_mut))] mut connecting: Connecting<T>,
+        value: T,
+    ) -> Pooled<T> {
         let (value, pool_ref) = if let Some(ref enabled) = self.inner {
             match value.reserve() {
+                #[cfg(feature = "http2")]
                 Reservation::Shared(to_insert, to_return) => {
                     let mut inner = enabled.lock().unwrap();
                     inner.put(connecting.key.clone(), to_insert, enabled);
@@ -291,6 +299,7 @@ impl<'a, T: Poolable + 'a> IdlePopper<'a, T> {
             }
 
             let value = match entry.value.reserve() {
+                #[cfg(feature = "http2")]
                 Reservation::Shared(to_reinsert, to_checkout) => {
                     self.list.push(Idle {
                         idle_at: Instant::now(),
@@ -325,6 +334,7 @@ impl<T: Poolable> PoolInner<T> {
                 if !tx.is_canceled() {
                     let reserved = value.take().expect("value already sent");
                     let reserved = match reserved.reserve() {
+                        #[cfg(feature = "http2")]
                         Reservation::Shared(to_keep, to_send) => {
                             value = Some(to_keep);
                             to_send
@@ -448,7 +458,9 @@ impl<T: Poolable> PoolInner<T> {
                     trace!("idle interval evicting closed for {:?}", key);
                     return false;
                 }
-                if now - entry.idle_at > dur {
+
+                // Avoid `Instant::sub` to avoid issues like rust-lang/rust#86470.
+                if now.saturating_duration_since(entry.idle_at) > dur {
                     trace!("idle interval evicting expired for {:?}", key);
                     return false;
                 }
@@ -481,11 +493,11 @@ pub(super) struct Pooled<T: Poolable> {
 }
 
 impl<T: Poolable> Pooled<T> {
-    pub fn is_reused(&self) -> bool {
+    pub(super) fn is_reused(&self) -> bool {
         self.is_reused
     }
 
-    pub fn is_pool_enabled(&self) -> bool {
+    pub(super) fn is_pool_enabled(&self) -> bool {
         self.pool.0.is_some()
     }
 
@@ -552,28 +564,40 @@ pub(super) struct Checkout<T> {
     waiter: Option<oneshot::Receiver<T>>,
 }
 
+#[derive(Debug)]
+pub(super) struct CheckoutIsClosedError;
+
+impl StdError for CheckoutIsClosedError {}
+
+impl fmt::Display for CheckoutIsClosedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("checked out connection was closed")
+    }
+}
+
 impl<T: Poolable> Checkout<T> {
     fn poll_waiter(
         &mut self,
         cx: &mut task::Context<'_>,
     ) -> Poll<Option<crate::Result<Pooled<T>>>> {
-        static CANCELED: &str = "pool checkout failed";
         if let Some(mut rx) = self.waiter.take() {
             match Pin::new(&mut rx).poll(cx) {
                 Poll::Ready(Ok(value)) => {
                     if value.is_open() {
                         Poll::Ready(Some(Ok(self.pool.reuse(&self.key, value))))
                     } else {
-                        Poll::Ready(Some(Err(crate::Error::new_canceled().with(CANCELED))))
+                        Poll::Ready(Some(Err(
+                            crate::Error::new_canceled().with(CheckoutIsClosedError)
+                        )))
                     }
                 }
                 Poll::Pending => {
                     self.waiter = Some(rx);
                     Poll::Pending
                 }
-                Poll::Ready(Err(_canceled)) => {
-                    Poll::Ready(Some(Err(crate::Error::new_canceled().with(CANCELED))))
-                }
+                Poll::Ready(Err(_canceled)) => Poll::Ready(Some(Err(
+                    crate::Error::new_canceled().with("request has been canceled")
+                ))),
             }
         } else {
             Poll::Ready(None)
@@ -699,29 +723,35 @@ impl Expiration {
 
     fn expires(&self, instant: Instant) -> bool {
         match self.0 {
-            Some(timeout) => instant.elapsed() > timeout,
+            // Avoid `Instant::elapsed` to avoid issues like rust-lang/rust#86470.
+            Some(timeout) => Instant::now().saturating_duration_since(instant) > timeout,
             None => false,
         }
     }
 }
 
 #[cfg(feature = "runtime")]
-struct IdleTask<T> {
-    interval: Interval,
-    pool: WeakOpt<Mutex<PoolInner<T>>>,
-    // This allows the IdleTask to be notified as soon as the entire
-    // Pool is fully dropped, and shutdown. This channel is never sent on,
-    // but Err(Canceled) will be received when the Pool is dropped.
-    pool_drop_notifier: oneshot::Receiver<crate::common::Never>,
+pin_project_lite::pin_project! {
+    struct IdleTask<T> {
+        #[pin]
+        interval: Interval,
+        pool: WeakOpt<Mutex<PoolInner<T>>>,
+        // This allows the IdleTask to be notified as soon as the entire
+        // Pool is fully dropped, and shutdown. This channel is never sent on,
+        // but Err(Canceled) will be received when the Pool is dropped.
+        #[pin]
+        pool_drop_notifier: oneshot::Receiver<crate::common::Never>,
+    }
 }
 
 #[cfg(feature = "runtime")]
 impl<T: Poolable + 'static> Future for IdleTask<T> {
     type Output = ();
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
+    fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
+        let mut this = self.project();
         loop {
-            match Pin::new(&mut self.pool_drop_notifier).poll(cx) {
+            match this.pool_drop_notifier.as_mut().poll(cx) {
                 Poll::Ready(Ok(n)) => match n {},
                 Poll::Pending => (),
                 Poll::Ready(Err(_canceled)) => {
@@ -730,9 +760,9 @@ impl<T: Poolable + 'static> Future for IdleTask<T> {
                 }
             }
 
-            ready!(self.interval.poll_tick(cx));
+            ready!(this.interval.as_mut().poll_tick(cx));
 
-            if let Some(inner) = self.pool.upgrade() {
+            if let Some(inner) = this.pool.upgrade() {
                 if let Ok(mut inner) = inner.lock() {
                     trace!("idle interval checking for expired");
                     inner.clear_expired();
@@ -764,7 +794,7 @@ mod tests {
     use std::time::Duration;
 
     use super::{Connecting, Key, Pool, Poolable, Reservation, WeakOpt};
-    use crate::common::{task, Exec, Future, Pin};
+    use crate::common::{exec::Exec, task, Future, Pin};
 
     /// Test unique reservations.
     #[derive(Debug, PartialEq, Eq)]
@@ -850,7 +880,7 @@ mod tests {
         let pooled = pool.pooled(c(key.clone()), Uniq(41));
 
         drop(pooled);
-        tokio::time::delay_for(pool.locked().timeout.unwrap()).await;
+        tokio::time::sleep(pool.locked().timeout.unwrap()).await;
         let mut checkout = pool.checkout(key);
         let poll_once = PollOnce(&mut checkout);
         let is_not_ready = poll_once.await.is_none();
@@ -871,7 +901,7 @@ mod tests {
             pool.locked().idle.get(&key).map(|entries| entries.len()),
             Some(3)
         );
-        tokio::time::delay_for(pool.locked().timeout.unwrap()).await;
+        tokio::time::sleep(pool.locked().timeout.unwrap()).await;
 
         let mut checkout = pool.checkout(key.clone());
         let poll_once = PollOnce(&mut checkout);
@@ -978,6 +1008,7 @@ mod tests {
 
     #[derive(Debug)]
     struct CanClose {
+        #[allow(unused)]
         val: i32,
         closed: bool,
     }

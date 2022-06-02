@@ -17,6 +17,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use tokio::net::TcpListener;
+use tokio_stream::wrappers::TcpListenerStream;
 use url::{Host, Url};
 use warp::{self, Buf, Filter, Rejection};
 
@@ -213,19 +214,17 @@ where
     U: 'static + WebDriverExtensionRoute + Send + Sync,
 {
     let listener = StdTcpListener::bind(address)?;
+    listener.set_nonblocking(true)?;
     let addr = listener.local_addr()?;
     let (msg_send, msg_recv) = channel();
 
     let builder = thread::Builder::new().name("webdriver server".to_string());
     let handle = builder.spawn(move || {
-        let mut rt = tokio::runtime::Builder::new()
-            .basic_scheduler()
+        let rt = tokio::runtime::Builder::new_current_thread()
             .enable_io()
             .build()
             .unwrap();
-        let mut listener = rt
-            .handle()
-            .enter(|| TcpListener::from_std(listener).unwrap());
+        let listener = rt.block_on(async { TcpListener::from_std(listener).unwrap() });
         let wroutes = build_warp_routes(
             address,
             allow_hosts,
@@ -233,7 +232,7 @@ where
             &extension_routes,
             msg_send.clone(),
         );
-        let fut = warp::serve(wroutes).run_incoming(listener.incoming());
+        let fut = warp::serve(wroutes).run_incoming(TcpListenerStream::new(listener));
         rt.block_on(fut);
     })?;
 
@@ -498,7 +497,7 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
                         Some(_) | None => {}
                     }
                 }
-                let body = String::from_utf8(body.bytes().to_vec());
+                let body = String::from_utf8(body.chunk().to_vec());
                 if body.is_err() {
                     let err = WebDriverError::new(
                         ErrorStatus::UnknownError,

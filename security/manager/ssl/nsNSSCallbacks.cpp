@@ -1098,7 +1098,6 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
       &evStatus,
       nullptr,  // OCSP stapling telemetry
       nullptr,  // key size telemetry
-      nullptr,  // SHA-1 telemetry
       nullptr,  // pinning telemetry
       &certificateTransparencyInfo, &isBuiltCertChainRootBuiltInRoot);
 

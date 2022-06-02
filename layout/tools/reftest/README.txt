@@ -719,3 +719,13 @@ to push a layer-tree update to the compositor before taking the snapshot.
 Setting the "reftest-no-sync-layers" attribute on the root element skips this
 step, enabling testing that layer-tree updates are being correctly generated.
 However the test must manually wait for a MozAfterPaint event before ending.
+
+Debugging Failures
+==================
+
+The Reftest Analyzer has been created to make debugging reftests a bit easier.
+If a reftest is failing, upload the log to the Reftest Analyzer to view the
+differences between the expected result and the actual outcome of the reftest.
+The Reftest Analyzer can be found at the following url:
+
+https://hg.mozilla.org/mozilla-central/raw-file/tip/layout/tools/reftest/reftest-analyzer.xhtml

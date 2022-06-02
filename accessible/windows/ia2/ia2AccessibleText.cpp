@@ -340,9 +340,9 @@ ia2AccessibleText::removeSelection(long aSelectionIndex) {
 
 STDMETHODIMP
 ia2AccessibleText::setCaretOffset(long aOffset) {
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   if (!textAcc->IsValidOffset(aOffset)) return E_INVALIDARG;

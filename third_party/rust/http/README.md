@@ -23,8 +23,6 @@ http = "0.2"
 Next, add this to your crate:
 
 ```rust
-extern crate http;
-
 use http::{Request, Response};
 
 fn main() {
@@ -37,8 +35,6 @@ fn main() {
 Create an HTTP request:
 
 ```rust
-extern crate http;
-
 use http::Request;
 
 fn main() {
@@ -53,8 +49,6 @@ fn main() {
 Create an HTTP response:
 
 ```rust
-extern crate http;
-
 use http::{Response, StatusCode};
 
 fn main() {
@@ -70,8 +64,8 @@ fn main() {
 
 Licensed under either of
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or https://apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or https://opensource.org/licenses/MIT)
 
 # Contribution
 

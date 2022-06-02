@@ -3,29 +3,35 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
+rust-version = "1.49"
 name = "tokio-util"
-version = "0.3.1"
+version = "0.7.2"
 authors = ["Tokio Contributors <team@tokio.rs>"]
-description = "Additional utilities for working with Tokio.\n"
+description = """
+Additional utilities for working with Tokio.
+"""
 homepage = "https://tokio.rs"
-documentation = "https://docs.rs/tokio-util/0.3.1/tokio_util"
 categories = ["asynchronous"]
 license = "MIT"
 repository = "https://github.com/tokio-rs/tokio"
+
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
+
 [dependencies.bytes]
-version = "0.5.0"
+version = "1.0.0"
 
 [dependencies.futures-core]
 version = "0.3.0"
@@ -37,27 +43,70 @@ optional = true
 [dependencies.futures-sink]
 version = "0.3.0"
 
-[dependencies.log]
-version = "0.4"
+[dependencies.futures-util]
+version = "0.3.0"
+optional = true
 
 [dependencies.pin-project-lite]
-version = "0.1.4"
+version = "0.2.0"
+
+[dependencies.slab]
+version = "0.4.4"
+optional = true
 
 [dependencies.tokio]
-version = "0.2.5"
+version = "1.7.0"
+features = ["sync"]
+
+[dependencies.tracing]
+version = "0.1.25"
+optional = true
+
+[dev-dependencies.async-stream]
+version = "0.3.0"
+
 [dev-dependencies.futures]
 version = "0.3.0"
 
+[dev-dependencies.futures-test]
+version = "0.3.5"
+
 [dev-dependencies.tokio]
-version = "0.2.0"
+version = "1.0.0"
 features = ["full"]
 
+[dev-dependencies.tokio-stream]
+version = "0.1"
+
 [dev-dependencies.tokio-test]
-version = "0.2.0"
+version = "0.4.0"
 
 [features]
-codec = ["tokio/stream"]
+__docs_rs = ["futures-util"]
+codec = ["tracing"]
 compat = ["futures-io"]
 default = []
-full = ["codec", "udp", "compat"]
-udp = ["tokio/udp"]
+full = [
+    "codec",
+    "compat",
+    "io-util",
+    "time",
+    "net",
+    "rt",
+]
+io = []
+io-util = [
+    "io",
+    "tokio/rt",
+    "tokio/io-util",
+]
+net = ["tokio/net"]
+rt = [
+    "tokio/rt",
+    "tokio/sync",
+    "futures-util",
+]
+time = [
+    "tokio/time",
+    "slab",
+]
