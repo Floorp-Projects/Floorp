@@ -28,7 +28,6 @@
 #include "p2p/base/transport_description.h"
 #include "p2p/base/turn_port.h"
 #include "p2p/base/turn_server.h"
-#include "rtc_base/async_socket.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/checks.h"
@@ -37,6 +36,7 @@
 #include "rtc_base/location.h"
 #include "rtc_base/message_handler.h"
 #include "rtc_base/net_helper.h"
+#include "rtc_base/socket.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
@@ -242,8 +242,8 @@ class TurnPortTest : public ::testing::Test,
   void OnTurnPortClosed(TurnPort* port) { turn_port_closed_ = true; }
   void OnTurnPortDestroyed(PortInterface* port) { turn_port_destroyed_ = true; }
 
-  rtc::AsyncSocket* CreateServerSocket(const SocketAddress addr) {
-    rtc::AsyncSocket* socket = ss_->CreateAsyncSocket(AF_INET, SOCK_STREAM);
+  rtc::Socket* CreateServerSocket(const SocketAddress addr) {
+    rtc::Socket* socket = ss_->CreateSocket(AF_INET, SOCK_STREAM);
     EXPECT_GE(socket->Bind(addr), 0);
     EXPECT_GE(socket->Listen(5), 0);
     return socket;

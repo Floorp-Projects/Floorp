@@ -26,7 +26,7 @@
 
 namespace rtc {
 
-BufferedReadAdapter::BufferedReadAdapter(AsyncSocket* socket, size_t size)
+BufferedReadAdapter::BufferedReadAdapter(Socket* socket, size_t size)
     : AsyncSocketAdapter(socket),
       buffer_size_(size),
       data_len_(0),
@@ -87,7 +87,7 @@ void BufferedReadAdapter::BufferInput(bool on) {
   buffering_ = on;
 }
 
-void BufferedReadAdapter::OnReadEvent(AsyncSocket* socket) {
+void BufferedReadAdapter::OnReadEvent(Socket* socket) {
   RTC_DCHECK(socket == GetSocket());
 
   if (!buffering_) {
@@ -168,7 +168,7 @@ ArrayView<const uint8_t> AsyncSSLSocket::SslServerHello() {
   return {kSslServerHello, sizeof(kSslServerHello)};
 }
 
-AsyncSSLSocket::AsyncSSLSocket(AsyncSocket* socket)
+AsyncSSLSocket::AsyncSSLSocket(Socket* socket)
     : BufferedReadAdapter(socket, 1024) {}
 
 int AsyncSSLSocket::Connect(const SocketAddress& addr) {
@@ -178,7 +178,7 @@ int AsyncSSLSocket::Connect(const SocketAddress& addr) {
   return BufferedReadAdapter::Connect(addr);
 }
 
-void AsyncSSLSocket::OnConnectEvent(AsyncSocket* socket) {
+void AsyncSSLSocket::OnConnectEvent(Socket* socket) {
   RTC_DCHECK(socket == GetSocket());
   // TODO: we could buffer output too...
   const int res = DirectSend(kSslClientHello, sizeof(kSslClientHello));
@@ -211,7 +211,7 @@ void AsyncSSLSocket::ProcessInput(char* data, size_t* len) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-AsyncHttpsProxySocket::AsyncHttpsProxySocket(AsyncSocket* socket,
+AsyncHttpsProxySocket::AsyncHttpsProxySocket(Socket* socket,
                                              const std::string& user_agent,
                                              const SocketAddress& proxy,
                                              const std::string& username,
@@ -266,7 +266,7 @@ Socket::ConnState AsyncHttpsProxySocket::GetState() const {
   }
 }
 
-void AsyncHttpsProxySocket::OnConnectEvent(AsyncSocket* socket) {
+void AsyncHttpsProxySocket::OnConnectEvent(Socket* socket) {
   RTC_LOG(LS_VERBOSE) << "AsyncHttpsProxySocket::OnConnectEvent";
   if (!ShouldIssueConnect()) {
     state_ = PS_TUNNEL;
@@ -276,7 +276,7 @@ void AsyncHttpsProxySocket::OnConnectEvent(AsyncSocket* socket) {
   SendRequest();
 }
 
-void AsyncHttpsProxySocket::OnCloseEvent(AsyncSocket* socket, int err) {
+void AsyncHttpsProxySocket::OnCloseEvent(Socket* socket, int err) {
   RTC_LOG(LS_VERBOSE) << "AsyncHttpsProxySocket::OnCloseEvent(" << err << ")";
   if ((state_ == PS_WAIT_CLOSE) && (err == 0)) {
     state_ = PS_ERROR;
@@ -463,7 +463,7 @@ void AsyncHttpsProxySocket::Error(int error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-AsyncSocksProxySocket::AsyncSocksProxySocket(AsyncSocket* socket,
+AsyncSocksProxySocket::AsyncSocksProxySocket(Socket* socket,
                                              const SocketAddress& proxy,
                                              const std::string& username,
                                              const CryptString& password)
@@ -505,7 +505,7 @@ Socket::ConnState AsyncSocksProxySocket::GetState() const {
   }
 }
 
-void AsyncSocksProxySocket::OnConnectEvent(AsyncSocket* socket) {
+void AsyncSocksProxySocket::OnConnectEvent(Socket* socket) {
   SendHello();
 }
 

@@ -739,7 +739,6 @@ rtc_library("null_socket_server") {
     "null_socket_server.h",
   ]
   deps = [
-    ":async_socket",
     ":checks",
     ":rtc_event",
     ":socket",
@@ -820,10 +819,7 @@ rtc_library("threading") {
 
 rtc_source_set("socket_factory") {
   sources = [ "socket_factory.h" ]
-  deps = [
-    ":async_socket",
-    ":socket",
-  ]
+  deps = [ ":socket" ]
 }
 
 rtc_library("async_socket") {
@@ -848,7 +844,9 @@ rtc_library("socket") {
   deps = [
     ":macromagic",
     ":socket_address",
+    "third_party/sigslot",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
   if (is_win) {
     deps += [ ":win32" ]
   }
@@ -1298,7 +1296,6 @@ if (rtc_include_tests) {
         "socket_unittest.h",
       ]
       deps = [
-        ":async_socket",
         ":checks",
         ":gunit_helpers",
         ":ip_address",
@@ -1373,7 +1370,6 @@ if (rtc_include_tests) {
         sources += [ "win/windows_version_unittest.cc" ]
       }
       deps = [
-        ":async_socket",
         ":bounded_inline_vector",
         ":checks",
         ":criticalsection",
@@ -1509,13 +1505,13 @@ if (rtc_include_tests) {
         "unique_id_generator_unittest.cc",
       ]
       deps = [
-        ":async_socket",
         ":checks",
         ":gunit_helpers",
         ":ip_address",
         ":net_helpers",
         ":null_socket_server",
         ":rtc_base_tests_utils",
+        ":socket",
         ":socket_address",
         ":socket_factory",
         ":socket_server",

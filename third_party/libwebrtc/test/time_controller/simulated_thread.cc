@@ -26,10 +26,6 @@ class DummySocketServer : public rtc::SocketServer {
     RTC_NOTREACHED();
     return nullptr;
   }
-  rtc::AsyncSocket* CreateAsyncSocket(int family, int type) override {
-    RTC_NOTREACHED();
-    return nullptr;
-  }
   bool Wait(int cms, bool process_io) override {
     RTC_CHECK_EQ(cms, 0);
     return true;

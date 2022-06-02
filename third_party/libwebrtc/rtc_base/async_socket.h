@@ -22,34 +22,11 @@
 
 namespace rtc {
 
-// TODO: Remove Socket and rename AsyncSocket to Socket.
-
-// Provides the ability to perform socket I/O asynchronously.
-class AsyncSocket : public Socket {
- public:
-  AsyncSocket();
-  ~AsyncSocket() override;
-
-  AsyncSocket* Accept(SocketAddress* paddr) override = 0;
-
-  // SignalReadEvent and SignalWriteEvent use multi_threaded_local to allow
-  // access concurrently from different thread.
-  // For example SignalReadEvent::connect will be called in AsyncUDPSocket ctor
-  // but at the same time the SocketDispatcher maybe signaling the read event.
-  // ready to read
-  sigslot::signal1<AsyncSocket*, sigslot::multi_threaded_local> SignalReadEvent;
-  // ready to write
-  sigslot::signal1<AsyncSocket*, sigslot::multi_threaded_local>
-      SignalWriteEvent;
-  sigslot::signal1<AsyncSocket*> SignalConnectEvent;     // connected
-  sigslot::signal2<AsyncSocket*, int> SignalCloseEvent;  // closed
-};
-
-class AsyncSocketAdapter : public AsyncSocket, public sigslot::has_slots<> {
+class AsyncSocketAdapter : public Socket, public sigslot::has_slots<> {
  public:
   // Takes ownership of the passed in socket.
   // TODO(bugs.webrtc.org/6424): Change to unique_ptr here and in callers.
-  explicit AsyncSocketAdapter(AsyncSocket* socket);
+  explicit AsyncSocketAdapter(Socket* socket);
 
   SocketAddress GetLocalAddress() const override;
   SocketAddress GetRemoteAddress() const override;
@@ -63,7 +40,7 @@ class AsyncSocketAdapter : public AsyncSocket, public sigslot::has_slots<> {
                SocketAddress* paddr,
                int64_t* timestamp) override;
   int Listen(int backlog) override;
-  AsyncSocket* Accept(SocketAddress* paddr) override;
+  Socket* Accept(SocketAddress* paddr) override;
   int Close() override;
   int GetError() const override;
   void SetError(int error) override;
@@ -72,15 +49,15 @@ class AsyncSocketAdapter : public AsyncSocket, public sigslot::has_slots<> {
   int SetOption(Option opt, int value) override;
 
  protected:
-  virtual void OnConnectEvent(AsyncSocket* socket);
-  virtual void OnReadEvent(AsyncSocket* socket);
-  virtual void OnWriteEvent(AsyncSocket* socket);
-  virtual void OnCloseEvent(AsyncSocket* socket, int err);
+  virtual void OnConnectEvent(Socket* socket);
+  virtual void OnReadEvent(Socket* socket);
+  virtual void OnWriteEvent(Socket* socket);
+  virtual void OnCloseEvent(Socket* socket, int err);
 
-  AsyncSocket* GetSocket() const { return socket_.get(); }
+  Socket* GetSocket() const { return socket_.get(); }
 
  private:
-  const std::unique_ptr<AsyncSocket> socket_;
+  const std::unique_ptr<Socket> socket_;
 };
 
 }  // namespace rtc

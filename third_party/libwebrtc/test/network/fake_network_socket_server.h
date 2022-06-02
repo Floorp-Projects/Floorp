@@ -15,8 +15,8 @@
 #include <vector>
 
 #include "api/units/timestamp.h"
-#include "rtc_base/async_socket.h"
 #include "rtc_base/event.h"
+#include "rtc_base/socket.h"
 #include "rtc_base/socket_server.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/clock.h"
@@ -35,7 +35,6 @@ class FakeNetworkSocketServer : public rtc::SocketServer {
 
   // rtc::SocketFactory methods:
   rtc::Socket* CreateSocket(int family, int type) override;
-  rtc::AsyncSocket* CreateAsyncSocket(int family, int type) override;
 
   // rtc::SocketServer methods:
   // Called by the network thread when this server is installed, kicking off the

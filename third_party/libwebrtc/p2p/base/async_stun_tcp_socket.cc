@@ -41,7 +41,7 @@ inline bool IsStunMessage(uint16_t msg_type) {
 // it. Takes ownership of `socket`. Returns NULL if bind() or
 // connect() fail (`socket` is destroyed in that case).
 AsyncStunTCPSocket* AsyncStunTCPSocket::Create(
-    rtc::AsyncSocket* socket,
+    rtc::Socket* socket,
     const rtc::SocketAddress& bind_address,
     const rtc::SocketAddress& remote_address) {
   return new AsyncStunTCPSocket(
@@ -49,7 +49,7 @@ AsyncStunTCPSocket* AsyncStunTCPSocket::Create(
       false);
 }
 
-AsyncStunTCPSocket::AsyncStunTCPSocket(rtc::AsyncSocket* socket, bool listen)
+AsyncStunTCPSocket::AsyncStunTCPSocket(rtc::Socket* socket, bool listen)
     : rtc::AsyncTCPSocketBase(socket, listen, kBufSize) {}
 
 int AsyncStunTCPSocket::Send(const void* pv,
@@ -126,7 +126,7 @@ void AsyncStunTCPSocket::ProcessInput(char* data, size_t* len) {
   }
 }
 
-void AsyncStunTCPSocket::HandleIncomingConnection(rtc::AsyncSocket* socket) {
+void AsyncStunTCPSocket::HandleIncomingConnection(rtc::Socket* socket) {
   SignalNewConnection(this, new AsyncStunTCPSocket(socket, false));
 }
 

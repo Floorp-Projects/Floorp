@@ -46,8 +46,7 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateUdpSocket(
     uint16_t min_port,
     uint16_t max_port) {
   // UDP sockets are simple.
-  AsyncSocket* socket =
-      socket_factory()->CreateAsyncSocket(address.family(), SOCK_DGRAM);
+  Socket* socket = socket_factory()->CreateSocket(address.family(), SOCK_DGRAM);
   if (!socket) {
     return NULL;
   }
@@ -70,8 +69,8 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateServerTcpSocket(
     return NULL;
   }
 
-  AsyncSocket* socket =
-      socket_factory()->CreateAsyncSocket(local_address.family(), SOCK_STREAM);
+  Socket* socket =
+      socket_factory()->CreateSocket(local_address.family(), SOCK_STREAM);
   if (!socket) {
     return NULL;
   }
@@ -108,8 +107,8 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateClientTcpSocket(
     const ProxyInfo& proxy_info,
     const std::string& user_agent,
     const PacketSocketTcpOptions& tcp_options) {
-  AsyncSocket* socket =
-      socket_factory()->CreateAsyncSocket(local_address.family(), SOCK_STREAM);
+  Socket* socket =
+      socket_factory()->CreateSocket(local_address.family(), SOCK_STREAM);
   if (!socket) {
     return NULL;
   }
@@ -203,7 +202,7 @@ AsyncResolverInterface* BasicPacketSocketFactory::CreateAsyncResolver() {
   return new AsyncResolver();
 }
 
-int BasicPacketSocketFactory::BindSocket(AsyncSocket* socket,
+int BasicPacketSocketFactory::BindSocket(Socket* socket,
                                          const SocketAddress& local_address,
                                          uint16_t min_port,
                                          uint16_t max_port) {

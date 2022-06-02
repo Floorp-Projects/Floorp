@@ -286,7 +286,7 @@ void PhysicalSocket::SetError(int error) {
   error_ = error;
 }
 
-AsyncSocket::ConnState PhysicalSocket::GetState() const {
+Socket::ConnState PhysicalSocket::GetState() const {
   return state_;
 }
 
@@ -463,7 +463,7 @@ int PhysicalSocket::Listen(int backlog) {
   return err;
 }
 
-AsyncSocket* PhysicalSocket::Accept(SocketAddress* out_addr) {
+Socket* PhysicalSocket::Accept(SocketAddress* out_addr) {
   // Always re-subscribe DE_ACCEPT to make sure new incoming connections will
   // trigger an event even if DoAccept returns an error here.
   EnableEvents(DE_ACCEPT);
@@ -1086,16 +1086,6 @@ void PhysicalSocketServer::WakeUp() {
 }
 
 Socket* PhysicalSocketServer::CreateSocket(int family, int type) {
-  PhysicalSocket* socket = new PhysicalSocket(this);
-  if (socket->Create(family, type)) {
-    return socket;
-  } else {
-    delete socket;
-    return nullptr;
-  }
-}
-
-AsyncSocket* PhysicalSocketServer::CreateAsyncSocket(int family, int type) {
   SocketDispatcher* dispatcher = new SocketDispatcher(this);
   if (dispatcher->Create(family, type)) {
     return dispatcher;
@@ -1105,7 +1095,7 @@ AsyncSocket* PhysicalSocketServer::CreateAsyncSocket(int family, int type) {
   }
 }
 
-AsyncSocket* PhysicalSocketServer::WrapSocket(SOCKET s) {
+Socket* PhysicalSocketServer::WrapSocket(SOCKET s) {
   SocketDispatcher* dispatcher = new SocketDispatcher(s, this);
   if (dispatcher->Initialize()) {
     return dispatcher;
