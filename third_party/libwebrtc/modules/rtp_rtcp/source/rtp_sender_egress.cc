@@ -447,7 +447,7 @@ void RtpSenderEgress::AddPacketToTransportFeedback(
         break;
       case RtpPacketMediaType::kRetransmission:
         // For retransmissions, we're want to remove the original media packet
-        // if the rentrasmit arrives - so populate that in the packet info.
+        // if the retransmit arrives - so populate that in the packet info.
         packet_info.media_ssrc = ssrc_;
         packet_info.rtp_sequence_number =
             *packet.retransmitted_sequence_number();

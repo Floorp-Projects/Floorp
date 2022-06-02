@@ -256,7 +256,7 @@ void TransportFeedback::LastChunk::DecodeRunLength(uint16_t chunk,
   DeltaSize delta_size = (chunk >> 13) & 0x03;
   has_large_delta_ = delta_size >= kLarge;
   all_same_ = true;
-  // To make it consistent with Add function, populate delta_sizes_ beyound 1st.
+  // To make it consistent with Add function, populate delta_sizes_ beyond 1st.
   for (size_t i = 0; i < std::min<size_t>(size_, kMaxVectorCapacity); ++i)
     delta_sizes_[i] = delta_size;
 }

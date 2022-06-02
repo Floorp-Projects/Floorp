@@ -1113,8 +1113,8 @@ bool TurnPort::ScheduleRefresh(uint32_t lifetime) {
                         << lifetime << " seconds.";
     delay = (lifetime * 1000) / 2;
   } else if (lifetime > max_lifetime) {
-    // Make 1 hour largest delay, and then sce
-    // we schedule a refresh for one minute less than max lifetime.
+    // Make 1 hour largest delay, and then we schedule a refresh for one minute
+    // less than max lifetime.
     RTC_LOG(LS_WARNING) << ToString()
                         << ": Received response with long lifetime: "
                         << lifetime << " seconds.";
