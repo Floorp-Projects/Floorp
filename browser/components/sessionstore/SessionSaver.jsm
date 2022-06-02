@@ -185,16 +185,8 @@ var SessionSaverInternal = {
     // Schedule a state save.
     this._wasIdle = this._isIdle;
     this._timeoutID = setTimeout(() => {
-      // Execute _saveStateAsync when we have enough idle time. Otherwise,
-      // another idle request is made to schedule _saveStateAsync again.
-      let saveStateAsyncWhenIdle = deadline => {
-        // When looking at the telemetry data, the time it takes to execute
-        // _saveStateAsync is around 5.9ms (median). Therefore,
-        // we'll not execute the function when the idle time is less than 5ms.
-        if (deadline.timeRemaining() < 5) {
-          this._idleCallbackID = requestIdleCallback(saveStateAsyncWhenIdle);
-          return;
-        }
+      // Execute _saveStateAsync when we have idle time.
+      let saveStateAsyncWhenIdle = () => {
         this._saveStateAsync();
       };
 
