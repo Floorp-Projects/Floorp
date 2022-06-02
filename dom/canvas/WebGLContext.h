@@ -302,6 +302,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   const uint32_t mMaxPerfWarnings;
   mutable uint64_t mNumPerfWarnings = 0;
   const uint32_t mMaxAcceptableFBStatusInvals;
+  bool mWarnOnce_DepthTexCompareFilterable = true;
 
   uint64_t mNextFenceId = 1;
   uint64_t mCompletedFenceId = 0;
