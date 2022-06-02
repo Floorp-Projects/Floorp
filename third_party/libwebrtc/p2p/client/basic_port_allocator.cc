@@ -872,8 +872,7 @@ void BasicPortAllocatorSession::DisableEquivalentPhases(
 }
 
 void BasicPortAllocatorSession::AddAllocatedPort(Port* port,
-                                                 AllocationSequence* seq,
-                                                 bool prepare_address) {
+                                                 AllocationSequence* seq) {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (!port)
     return;
@@ -902,8 +901,7 @@ void BasicPortAllocatorSession::AddAllocatedPort(Port* port,
   port->SignalPortError.connect(this, &BasicPortAllocatorSession::OnPortError);
   RTC_LOG(LS_INFO) << port->ToString() << ": Added port to allocator";
 
-  if (prepare_address)
-    port->PrepareAddress();
+  port->PrepareAddress();
 }
 
 void BasicPortAllocatorSession::OnAllocationSequenceObjectsCreated() {
@@ -1440,7 +1438,7 @@ void AllocationSequence::CreateUDPPorts() {
       }
     }
 
-    session_->AddAllocatedPort(port.release(), this, true);
+    session_->AddAllocatedPort(port.release(), this);
   }
 }
 
@@ -1456,7 +1454,7 @@ void AllocationSequence::CreateTCPPorts() {
       session_->username(), session_->password(),
       session_->allocator()->allow_tcp_listen());
   if (port) {
-    session_->AddAllocatedPort(port.release(), this, true);
+    session_->AddAllocatedPort(port.release(), this);
     // Since TCPPort is not created using shared socket, `port` will not be
     // added to the dequeue.
   }
@@ -1485,7 +1483,7 @@ void AllocationSequence::CreateStunPorts() {
       session_->allocator()->origin(),
       session_->allocator()->stun_candidate_keepalive_interval());
   if (port) {
-    session_->AddAllocatedPort(port.release(), this, true);
+    session_->AddAllocatedPort(port.release(), this);
     // Since StunPort is not created using shared socket, `port` will not be
     // added to the dequeue.
   }
@@ -1581,7 +1579,7 @@ void AllocationSequence::CreateTurnPort(const RelayServerConfig& config) {
       }
     }
     RTC_DCHECK(port != NULL);
-    session_->AddAllocatedPort(port.release(), this, true);
+    session_->AddAllocatedPort(port.release(), this);
   }
 }
 
