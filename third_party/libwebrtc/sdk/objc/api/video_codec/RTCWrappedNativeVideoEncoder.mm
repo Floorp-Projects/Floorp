@@ -79,4 +79,8 @@
   return NO;
 }
 
+- (BOOL)supportsNativeHandle {
+  RTC_NOTREACHED();
+  return NO;
+}
 @end
