@@ -384,7 +384,9 @@ bool ModuleRtpRtcpImpl2::TrySendPacket(RtpPacketToSend* packet,
   RTC_DCHECK(rtp_sender_);
   RTC_DCHECK_RUN_ON(&pacer_thread_checker_);
   if (rtp_sender_->deferred_sequencing_) {
-    RTC_DCHECK(rtp_sender_->packet_generator.SendingMedia());
+    if (!rtp_sender_->packet_generator.SendingMedia()) {
+      return false;
+    }
     if (packet->packet_type() == RtpPacketMediaType::kPadding &&
         packet->Ssrc() == rtp_sender_->packet_generator.SSRC() &&
         !rtp_sender_->sequencer_.CanSendPaddingOnMediaSsrc()) {
