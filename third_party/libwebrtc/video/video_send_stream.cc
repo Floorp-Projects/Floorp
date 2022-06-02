@@ -208,14 +208,9 @@ void VideoSendStream::UpdateActiveSimulcastLayers(
   RTC_LOG(LS_INFO) << "UpdateActiveSimulcastLayers: "
                    << active_layers_string.str();
 
-  rtp_transport_queue_->PostTask(ToQueuedTask(
-      transport_queue_safety_, [this, active_layers, was_running = running_] {
+  rtp_transport_queue_->PostTask(
+      ToQueuedTask(transport_queue_safety_, [this, active_layers] {
         send_stream_.UpdateActiveSimulcastLayers(active_layers);
-        const bool running = rtp_video_sender_->IsActive();
-        if (was_running != running) {
-          running ? transport_queue_safety_->SetAlive()
-                  : transport_queue_safety_->SetNotAlive();
-        }
       }));
 
   running_ = running;
