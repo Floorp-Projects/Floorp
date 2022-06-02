@@ -31,6 +31,11 @@ void CSSClipPathInstance::ApplyBasicShapeOrPathClip(
   RefPtr<Path> path =
       CreateClipPathForFrame(aContext.GetDrawTarget(), aFrame, aTransform);
   if (!path) {
+    // This behavior matches |SVGClipPathFrame::ApplyClipPath()|.
+    // https://www.w3.org/TR/css-masking-1/#ClipPathElement:
+    // "An empty clipping path will completely clip away the element that had
+    // the clip-path property applied."
+    aContext.Clip(Rect());
     return;
   }
   aContext.Clip(path);
