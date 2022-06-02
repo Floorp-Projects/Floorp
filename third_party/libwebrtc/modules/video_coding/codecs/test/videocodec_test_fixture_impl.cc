@@ -168,7 +168,7 @@ void VideoCodecTestFixtureImpl::Config::SetCodecSettings(
   VideoCodecType codec_type = PayloadStringToCodecType(codec_name);
   webrtc::test::CodecSettings(codec_type, &codec_settings);
 
-  // TODO(brandtr): Move the setting of |width| and |height| to the tests, and
+  // TODO(brandtr): Move the setting of `width` and `height` to the tests, and
   // DCHECK that they are set before initializing the codec instead.
   codec_settings.width = static_cast<uint16_t>(width);
   codec_settings.height = static_cast<uint16_t>(height);

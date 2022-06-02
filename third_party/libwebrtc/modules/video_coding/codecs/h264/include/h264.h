@@ -32,7 +32,7 @@ CreateH264Format(H264Profile profile,
                  const std::string& packetization_mode);
 
 // Set to disable the H.264 encoder/decoder implementations that are provided if
-// |rtc_use_h264| build flag is true (if false, this function does nothing).
+// `rtc_use_h264` build flag is true (if false, this function does nothing).
 // This function should only be called before or during WebRTC initialization
 // and is not thread-safe.
 RTC_EXPORT void DisableRtcUseH264();

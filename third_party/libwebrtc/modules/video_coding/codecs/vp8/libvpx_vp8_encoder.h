@@ -83,7 +83,7 @@ class LibvpxVp8Encoder : public VideoEncoder {
   int GetEncodedPartitions(const VideoFrame& input_image,
                            bool retransmission_allowed);
 
-  // Set the stream state for stream |stream_idx|.
+  // Set the stream state for stream `stream_idx`.
   void SetStreamState(bool send_stream, int stream_idx);
 
   uint32_t MaxIntraTarget(uint32_t optimal_buffer_size);
@@ -95,8 +95,8 @@ class LibvpxVp8Encoder : public VideoEncoder {
   bool UpdateVpxConfiguration(size_t stream_index);
 
   void MaybeUpdatePixelFormat(vpx_img_fmt fmt);
-  // Prepares |raw_image_| to reference image data of |buffer|, or of mapped or
-  // scaled versions of |buffer|. Returns a list of buffers that got referenced
+  // Prepares `raw_image_` to reference image data of `buffer`, or of mapped or
+  // scaled versions of `buffer`. Returns a list of buffers that got referenced
   // as a result, allowing the caller to keep references to them until after
   // encoding has finished. On failure to convert the buffer, an empty list is
   // returned.

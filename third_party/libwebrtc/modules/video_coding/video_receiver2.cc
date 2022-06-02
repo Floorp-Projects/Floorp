@@ -54,7 +54,7 @@ int32_t VideoReceiver2::RegisterReceiveCallback(
 
 // Register an externally defined decoder object. This may be called on either
 // the construction sequence or the decoder sequence to allow for lazy creation
-// of video decoders. If called on the decoder sequence |externalDecoder| cannot
+// of video decoders. If called on the decoder sequence `externalDecoder` cannot
 // be a nullptr. It's the responsibility of the caller to make sure that the
 // access from the two sequences are mutually exclusive.
 void VideoReceiver2::RegisterExternalDecoder(VideoDecoder* externalDecoder,

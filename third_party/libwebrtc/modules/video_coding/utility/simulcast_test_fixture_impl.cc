@@ -169,7 +169,7 @@ void SetPlane(uint8_t* data, uint8_t value, int width, int height, int stride) {
   }
 }
 
-// Fills in an I420Buffer from |plane_colors|.
+// Fills in an I420Buffer from `plane_colors`.
 void CreateImage(const rtc::scoped_refptr<I420Buffer>& buffer,
                  int plane_colors[kNumOfPlanes]) {
   SetPlane(buffer->MutableDataY(), plane_colors[0], buffer->width(),
@@ -465,7 +465,7 @@ void SimulcastTestFixtureImpl::TestPaddingTwoStreams() {
 
 void SimulcastTestFixtureImpl::TestPaddingTwoStreamsOneMaxedOut() {
   // We are just below limit of sending second stream, so we should get
-  // the first stream maxed out (at |maxBitrate|), and padding for two.
+  // the first stream maxed out (at `maxBitrate`), and padding for two.
   SetRates(kTargetBitrates[0] + kMinBitrates[1] - 1, 30);
   std::vector<VideoFrameType> frame_types(kNumberOfSimulcastStreams,
                                           VideoFrameType::kVideoFrameDelta);
@@ -492,7 +492,7 @@ void SimulcastTestFixtureImpl::TestPaddingOneStream() {
 
 void SimulcastTestFixtureImpl::TestPaddingOneStreamTwoMaxedOut() {
   // We are just below limit of sending third stream, so we should get
-  // first stream's rate maxed out at |targetBitrate|, second at |maxBitrate|.
+  // first stream's rate maxed out at `targetBitrate`, second at `maxBitrate`.
   SetRates(kTargetBitrates[0] + kTargetBitrates[1] + kMinBitrates[2] - 1, 30);
   std::vector<VideoFrameType> frame_types(kNumberOfSimulcastStreams,
                                           VideoFrameType::kVideoFrameDelta);
@@ -649,7 +649,7 @@ void SimulcastTestFixtureImpl::SwitchingToOneStream(int width, int height) {
   EXPECT_EQ(0, encoder_->InitEncode(&settings_, kSettings));
   SetRates(settings_.startBitrate, 30);
   ExpectStreams(VideoFrameType::kVideoFrameKey, 1);
-  // Resize |input_frame_| to the new resolution.
+  // Resize `input_frame_` to the new resolution.
   input_buffer_ = I420Buffer::Create(settings_.width, settings_.height);
   input_buffer_->InitializeData();
   input_frame_ = std::make_unique<webrtc::VideoFrame>(

@@ -80,7 +80,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
 
   // The VP9 `tl0_pic_idx` is 8 bits and therefor wraps often. In the case of
   // packet loss the next received frame could have a `tl0_pic_idx` that looks
-  // older than the previously received frame. Always wrap forward if |frame| is
+  // older than the previously received frame. Always wrap forward if `frame` is
   // newer in RTP packet sequence number order.
   int64_t unwrapped_tl0;
   auto tl0_it = gof_info_.rbegin();
@@ -233,7 +233,7 @@ bool RtpVp9RefFinder::MissingRequiredFrameVp9(uint16_t picture_id,
   }
 
   // For every reference this frame has, check if there is a frame missing in
-  // the interval (|ref_pid|, |picture_id|) in any of the lower temporal
+  // the interval (`ref_pid`, `picture_id`) in any of the lower temporal
   // layers. If so, we are missing a required frame.
   uint8_t num_references = info.gof->num_ref_pics[gof_idx];
   for (size_t i = 0; i < num_references; ++i) {

@@ -202,7 +202,7 @@ VideoStatistics VideoCodecTestStatsImpl::SliceAndCalcVideoStatistic(
   const size_t target_bitrate_kbps =
       CalcLayerTargetBitrateKbps(first_frame_num, last_frame_num, spatial_idx,
                                  temporal_idx, aggregate_independent_layers);
-  RTC_CHECK_GT(target_bitrate_kbps, 0);  // We divide by |target_bitrate_kbps|.
+  RTC_CHECK_GT(target_bitrate_kbps, 0);  // We divide by `target_bitrate_kbps`.
 
   for (size_t frame_num = first_frame_num; frame_num <= last_frame_num;
        ++frame_num) {

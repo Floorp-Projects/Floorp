@@ -77,8 +77,8 @@ class VCMTiming {
   void IncomingTimestamp(uint32_t time_stamp, int64_t last_packet_time_ms);
 
   // Returns the receiver system time when the frame with timestamp
-  // |frame_timestamp| should be rendered, assuming that the system time
-  // currently is |now_ms|.
+  // `frame_timestamp` should be rendered, assuming that the system time
+  // currently is `now_ms`.
   virtual int64_t RenderTimeMs(uint32_t frame_timestamp, int64_t now_ms) const;
 
   // Returns the maximum time in ms that we can wait for a frame to become
@@ -126,8 +126,8 @@ class VCMTiming {
       RTC_PT_GUARDED_BY(mutex_);
   int render_delay_ms_ RTC_GUARDED_BY(mutex_);
   // Best-effort playout delay range for frames from capture to render.
-  // The receiver tries to keep the delay between |min_playout_delay_ms_|
-  // and |max_playout_delay_ms_| taking the network jitter into account.
+  // The receiver tries to keep the delay between `min_playout_delay_ms_`
+  // and `max_playout_delay_ms_` taking the network jitter into account.
   // A special case is where min_playout_delay_ms_ = max_playout_delay_ms_ = 0,
   // in which case the receiver tries to play the frames as they arrive.
   int min_playout_delay_ms_ RTC_GUARDED_BY(mutex_);

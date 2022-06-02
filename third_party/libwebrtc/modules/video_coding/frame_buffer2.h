@@ -61,7 +61,7 @@ class FrameBuffer {
   int64_t InsertFrame(std::unique_ptr<EncodedFrame> frame);
 
   // Get the next frame for decoding. Will return at latest after
-  // |max_wait_time_ms|.
+  // `max_wait_time_ms`.
   void NextFrame(
       int64_t max_wait_time_ms,
       bool keyframe_required,
@@ -120,7 +120,7 @@ class FrameBuffer {
 
   using FrameMap = std::map<int64_t, FrameInfo>;
 
-  // Check that the references of |frame| are valid.
+  // Check that the references of `frame` are valid.
   bool ValidReferences(const EncodedFrame& frame) const;
 
   int64_t FindNextFrame(int64_t now_ms) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
@@ -138,9 +138,9 @@ class FrameBuffer {
   void PropagateDecodability(const FrameInfo& info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  // Update the corresponding FrameInfo of |frame| and all FrameInfos that
-  // |frame| references.
-  // Return false if |frame| will never be decodable, true otherwise.
+  // Update the corresponding FrameInfo of `frame` and all FrameInfos that
+  // `frame` references.
+  // Return false if `frame` will never be decodable, true otherwise.
   bool UpdateFrameInfoWithIncomingFrame(const EncodedFrame& frame,
                                         FrameMap::iterator info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);

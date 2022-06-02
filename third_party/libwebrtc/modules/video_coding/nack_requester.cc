@@ -195,7 +195,7 @@ int NackRequester::OnReceivedPacket(uint16_t seq_num,
     return 0;
   }
 
-  // Since the |newest_seq_num_| is a packet we have actually received we know
+  // Since the `newest_seq_num_` is a packet we have actually received we know
   // that packet has never been Nacked.
   if (seq_num == newest_seq_num_)
     return 0;

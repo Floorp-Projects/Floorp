@@ -31,7 +31,7 @@ class RtpFrameReferenceFinder {
   // The RtpFrameReferenceFinder will hold onto the frame until:
   //  - the required information to determine its references has been received,
   //    in which case it (and possibly other) frames are returned, or
-  //  - There are too many stashed frames (determined by |kMaxStashedFrames|),
+  //  - There are too many stashed frames (determined by `kMaxStashedFrames`),
   //    in which case it gets dropped, or
   //  - It gets cleared by ClearTo, in which case its dropped.
   //  - The frame is old, in which case it also gets dropped.
@@ -41,7 +41,7 @@ class RtpFrameReferenceFinder {
   // might need to calculate the references of a frame.
   ReturnVector PaddingReceived(uint16_t seq_num);
 
-  // Clear all stashed frames that include packets older than |seq_num|.
+  // Clear all stashed frames that include packets older than `seq_num`.
   void ClearTo(uint16_t seq_num);
 
  private:
@@ -49,7 +49,7 @@ class RtpFrameReferenceFinder {
 
   // How far frames have been cleared out of the buffer by RTP sequence number.
   // A frame will be cleared if it contains a packet with a sequence number
-  // older than |cleared_to_seq_num_|.
+  // older than `cleared_to_seq_num_`.
   int cleared_to_seq_num_ = -1;
   const int64_t picture_id_offset_;
   std::unique_ptr<internal::RtpFrameReferenceFinderImpl> impl_;

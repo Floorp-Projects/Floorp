@@ -40,7 +40,7 @@ class VCMDecoderDataBase {
   bool DeregisterReceiveCodec(uint8_t payload_type);
 
   // Returns a decoder specified by frame.PayloadType. The decoded frame
-  // callback of the decoder is set to |decoded_frame_callback|. If no such
+  // callback of the decoder is set to `decoded_frame_callback`. If no such
   // decoder already exists an instance will be created and initialized.
   // nullptr is returned if no decoder with the specified payload type was found
   // and the function failed to create one.

@@ -72,7 +72,7 @@ class BitstreamReader {
   // Reads a bit from the input stream and returns:
   // * false if bit cannot be read
   // * true if bit matches expected_val
-  // * false if bit does not match expected_val - in which case |error_msg| is
+  // * false if bit does not match expected_val - in which case `error_msg` is
   //   logged as warning, if provided.
   bool VerifyNextBooleanIs(bool expected_val, absl::string_view error_msg) {
     uint32_t val;
@@ -88,7 +88,7 @@ class BitstreamReader {
     return true;
   }
 
-  // Reads |bits| bits from the bitstream and interprets them as an unsigned
+  // Reads `bits` bits from the bitstream and interprets them as an unsigned
   // integer that gets cast to the type T before returning.
   // Returns nullopt if all bits cannot be read.
   // If number of bits matches size of data type, the bits parameter may be
@@ -106,11 +106,11 @@ class BitstreamReader {
     return (static_cast<T>(val));
   }
 
-  // Helper method that reads |num_bits| from the bitstream, returns:
+  // Helper method that reads `num_bits` from the bitstream, returns:
   // * false if bits cannot be read.
-  // * true if |expected_val| matches the read bits
-  // * false if |expected_val| does not match the read bits, and logs
-  //   |error_msg| as a warning (if provided).
+  // * true if `expected_val` matches the read bits
+  // * false if `expected_val` does not match the read bits, and logs
+  //   `error_msg` as a warning (if provided).
   bool VerifyNextUnsignedIs(int num_bits,
                             uint32_t expected_val,
                             absl::string_view error_msg) {
@@ -128,7 +128,7 @@ class BitstreamReader {
   }
 
   // Basically the same as ReadUnsigned() - but for signed integers.
-  // Here |bits| indicates the size of the value - number of bits read from the
+  // Here `bits` indicates the size of the value - number of bits read from the
   // bit buffer is one higher (the sign bit). This is made to matche the spec in
   // which eg s(4) = f(1) sign-bit, plus an f(4).
   template <typename T>
@@ -148,7 +148,7 @@ class BitstreamReader {
     return {static_cast<T>(sign_val)};
   }
 
-  // Reads |bits| from the bitstream, disregarding their value.
+  // Reads `bits` from the bitstream, disregarding their value.
   // Returns true if full number of bits were read, false otherwise.
   bool ConsumeBits(int bits) { return buffer_->ConsumeBits(bits); }
 

@@ -1050,7 +1050,7 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
   // doing this.
   input_image_ = &input_image;
 
-  // In case we need to map the buffer, |mapped_buffer| is used to keep it alive
+  // In case we need to map the buffer, `mapped_buffer` is used to keep it alive
   // through reference counting until after encoding has finished.
   rtc::scoped_refptr<const VideoFrameBuffer> mapped_buffer;
   const I010BufferInterface* i010_buffer;
@@ -1939,7 +1939,7 @@ rtc::scoped_refptr<VideoFrameBuffer> LibvpxVp9Encoder::PrepareBufferForProfile0(
 
   rtc::scoped_refptr<VideoFrameBuffer> mapped_buffer;
   if (buffer->type() != VideoFrameBuffer::Type::kNative) {
-    // |buffer| is already mapped.
+    // `buffer` is already mapped.
     mapped_buffer = buffer;
   } else {
     // Attempt to map to one of the supported formats.
@@ -1961,11 +1961,11 @@ rtc::scoped_refptr<VideoFrameBuffer> LibvpxVp9Encoder::PrepareBufferForProfile0(
     RTC_CHECK(converted_buffer->type() == VideoFrameBuffer::Type::kI420 ||
               converted_buffer->type() == VideoFrameBuffer::Type::kI420A);
 
-    // Because |buffer| had to be converted, use |converted_buffer| instead.
+    // Because `buffer` had to be converted, use `converted_buffer` instead.
     buffer = mapped_buffer = converted_buffer;
   }
 
-  // Prepare |raw_| from |mapped_buffer|.
+  // Prepare `raw_` from `mapped_buffer`.
   switch (mapped_buffer->type()) {
     case VideoFrameBuffer::Type::kI420:
     case VideoFrameBuffer::Type::kI420A: {

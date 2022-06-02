@@ -106,8 +106,8 @@ class LibvpxVp9Encoder : public VP9Encoder {
   size_t SteadyStateSize(int sid, int tid);
 
   void MaybeRewrapRawWithFormat(const vpx_img_fmt fmt);
-  // Prepares |raw_| to reference image data of |buffer|, or of mapped or scaled
-  // versions of |buffer|. Returns the buffer that got referenced as a result,
+  // Prepares `raw_` to reference image data of `buffer`, or of mapped or scaled
+  // versions of `buffer`. Returns the buffer that got referenced as a result,
   // allowing the caller to keep a reference to it until after encoding has
   // finished. On failure to convert the buffer, null is returned.
   rtc::scoped_refptr<VideoFrameBuffer> PrepareBufferForProfile0(
@@ -206,9 +206,9 @@ class LibvpxVp9Encoder : public VP9Encoder {
   // Flags that can affect speed vs quality tradeoff, and are configureable per
   // resolution ranges.
   struct PerformanceFlags {
-    // If false, a lookup will be made in |settings_by_resolution| base on the
+    // If false, a lookup will be made in `settings_by_resolution` base on the
     // highest currently active resolution, and the overall speed then set to
-    // to the |base_layer_speed| matching that entry.
+    // to the `base_layer_speed` matching that entry.
     // If true, each active resolution will have it's speed and deblock_mode set
     // based on it resolution, and the high layer speed configured for non
     // base temporal layer frames.
@@ -227,9 +227,9 @@ class LibvpxVp9Encoder : public VP9Encoder {
     // setting B at wvga and above, you'd use map {{0, A}, {230400, B}}.
     std::map<int, ParameterSet> settings_by_resolution;
   };
-  // Performance flags, ordered by |min_pixel_count|.
+  // Performance flags, ordered by `min_pixel_count`.
   const PerformanceFlags performance_flags_;
-  // Caching of of |speed_configs_|, where index i maps to the resolution as
+  // Caching of of `speed_configs_`, where index i maps to the resolution as
   // specified in |codec_.spatialLayer[i]|.
   std::vector<PerformanceFlags::ParameterSet>
       performance_flags_by_spatial_index_;
