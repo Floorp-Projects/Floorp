@@ -96,7 +96,8 @@
 
         <activity
             android:name=".activity.CrashListActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar"/>
 
         <activity android:name=".activity.CustomTabActivity"
             android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
