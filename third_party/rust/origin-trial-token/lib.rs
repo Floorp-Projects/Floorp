@@ -96,6 +96,12 @@ impl RawToken {
         data.extend(payload);
         data
     }
+
+    /// Verify the signature of this raw token.
+    pub fn verify(&self, verify_signature: impl FnOnce(&[u8; 64], &[u8]) -> bool) -> bool {
+        let signature_data = self.signature_data();
+        verify_signature(&self.signature, &signature_data)
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Eq, PartialEq)]
@@ -180,10 +186,14 @@ impl Token {
         token: &RawToken,
         verify_signature: impl FnOnce(&[u8; 64], &[u8]) -> bool,
     ) -> Result<Self, TokenValidationError> {
-        let signature_data = token.signature_data();
-        if !verify_signature(&token.signature, &signature_data) {
+        if !token.verify(verify_signature) {
             return Err(TokenValidationError::InvalidSignature);
         }
+        Self::from_raw_token_unverified(token)
+    }
+
+    /// Converts the token from a raw token, without verifying first.
+    pub fn from_raw_token_unverified(token: &RawToken) -> Result<Self, TokenValidationError> {
         Self::from_payload(token.version, token.payload())
     }
 
