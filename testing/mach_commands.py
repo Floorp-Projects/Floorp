@@ -582,6 +582,7 @@ def executable_name(name):
     "jstests",
     category="testing",
     description="Run SpiderMonkey JS tests in the JS shell.",
+    ok_if_tests_disabled=True,
 )
 @CommandArgument("--shell", help="The shell to be used")
 @CommandArgument(
