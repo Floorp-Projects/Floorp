@@ -243,6 +243,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     }
 
     void MarkDropped(size_t peer) { receiver_stats_[peer].dropped = true; }
+    bool IsDropped(size_t peer) const;
 
     void SetPrevFrameRenderedTime(size_t peer, webrtc::Timestamp time) {
       receiver_stats_[peer].prev_frame_rendered_time = time;

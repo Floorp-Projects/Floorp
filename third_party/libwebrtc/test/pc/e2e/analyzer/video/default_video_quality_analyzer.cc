@@ -33,6 +33,10 @@ namespace {
 
 constexpr int kMicrosPerSecond = 1000000;
 constexpr int kBitsInByte = 8;
+constexpr absl::string_view kSkipRenderedFrameReasonProcessed = "processed";
+constexpr absl::string_view kSkipRenderedFrameReasonRendered = "rendered";
+constexpr absl::string_view kSkipRenderedFrameReasonDropped =
+    "considered dropped";
 
 void LogFrameCounters(const std::string& name, const FrameCounters& counters) {
   RTC_LOG(INFO) << "[" << name << "] Captured    : " << counters.captured;
@@ -387,12 +391,25 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
 
   auto frame_it = captured_frames_in_flight_.find(frame.id());
   if (frame_it == captured_frames_in_flight_.end() ||
-      frame_it->second.HasRenderedTime(peer_index)) {
-    // It means this frame was rendered before, so we can skip it. It may happen
-    // when we have multiple simulcast streams in one track and received
-    // the same picture from two different streams because SFU can't reliably
-    // correlate two simulcast streams and started relaying the second stream
-    // from the same frame it has relayed right before for the first stream.
+      frame_it->second.HasRenderedTime(peer_index) ||
+      frame_it->second.IsDropped(peer_index)) {
+    // It means this frame was rendered or dropped before, so we can skip it.
+    // It may happen when we have multiple simulcast streams in one track and
+    // received the same frame from two different streams because SFU can't
+    // reliably correlate two simulcast streams and started relaying the second
+    // stream from the same frame it has relayed right before for the first
+    // stream.
+    absl::string_view reason = kSkipRenderedFrameReasonProcessed;
+    if (frame_it != captured_frames_in_flight_.end()) {
+      if (frame_it->second.HasRenderedTime(peer_index)) {
+        reason = kSkipRenderedFrameReasonRendered;
+      } else if (frame_it->second.IsDropped(peer_index)) {
+        reason = kSkipRenderedFrameReasonDropped;
+      }
+    }
+    RTC_LOG(WARNING) << "Peer " << peer_name
+                     << "; Received frame out of order: received frame with id "
+                     << frame.id() << " which was " << reason << " before";
     return;
   }
 
@@ -1028,6 +1045,14 @@ bool DefaultVideoQualityAnalyzer::FrameInFlight::HasRenderedTime(
     return false;
   }
   return it->second.rendered_time.IsFinite();
+}
+
+bool DefaultVideoQualityAnalyzer::FrameInFlight::IsDropped(size_t peer) const {
+  auto it = receiver_stats_.find(peer);
+  if (it == receiver_stats_.end()) {
+    return false;
+  }
+  return it->second.dropped;
 }
 
 FrameStats DefaultVideoQualityAnalyzer::FrameInFlight::GetStatsForPeer(
