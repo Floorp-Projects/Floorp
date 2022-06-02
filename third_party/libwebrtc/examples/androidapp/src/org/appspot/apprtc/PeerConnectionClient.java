@@ -54,6 +54,8 @@ import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnection.IceConnectionState;
 import org.webrtc.PeerConnection.PeerConnectionState;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RTCStatsCollectorCallback;
+import org.webrtc.RTCStatsReport;
 import org.webrtc.RtpParameters;
 import org.webrtc.RtpReceiver;
 import org.webrtc.RtpSender;
@@ -62,8 +64,6 @@ import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 import org.webrtc.SoftwareVideoDecoderFactory;
 import org.webrtc.SoftwareVideoEncoderFactory;
-import org.webrtc.StatsObserver;
-import org.webrtc.StatsReport;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
@@ -312,7 +312,7 @@ public class PeerConnectionClient {
     /**
      * Callback fired once peer connection statistics is ready.
      */
-    void onPeerConnectionStatsReady(final StatsReport[] reports);
+    void onPeerConnectionStatsReady(final RTCStatsReport report);
 
     /**
      * Callback fired once peer connection error happened.
@@ -747,20 +747,16 @@ public class PeerConnectionClient {
     return isVideoCallEnabled() && videoWidth * videoHeight >= 1280 * 720;
   }
 
-  @SuppressWarnings("deprecation") // TODO(sakal): getStats is deprecated.
   private void getStats() {
     if (peerConnection == null || isError) {
       return;
     }
-    boolean success = peerConnection.getStats(new StatsObserver() {
+    peerConnection.getStats(new RTCStatsCollectorCallback() {
       @Override
-      public void onComplete(final StatsReport[] reports) {
-        events.onPeerConnectionStatsReady(reports);
+      public void onStatsDelivered(RTCStatsReport report) {
+        events.onPeerConnectionStatsReady(report);
       }
-    }, null);
-    if (!success) {
-      Log.e(TAG, "getStats() returns false!");
-    }
+    });
   }
 
   public void enableStatsEvents(boolean enable, int periodMs) {

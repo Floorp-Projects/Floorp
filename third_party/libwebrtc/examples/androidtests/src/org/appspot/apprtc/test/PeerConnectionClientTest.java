@@ -39,8 +39,8 @@ import org.webrtc.EglBase;
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RTCStatsReport;
 import org.webrtc.SessionDescription;
-import org.webrtc.StatsReport;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
@@ -208,7 +208,7 @@ public class PeerConnectionClientTest implements PeerConnectionEvents {
   }
 
   @Override
-  public void onPeerConnectionStatsReady(StatsReport[] reports) {}
+  public void onPeerConnectionStatsReady(final RTCStatsReport report) {}
 
   // Helper wait functions.
   private boolean waitForLocalDescription(int timeoutMs) throws InterruptedException {
