@@ -1,5 +1,5 @@
 error: unsupported modifier
- --> $DIR/unsupported-modifier.rs:2:11
+ --> tests/ui/unsupported-modifier.rs:4:11
   |
-2 |     fn [<a:pillow>]() {}
+4 |     fn [<a:pillow>]() {}
   |           ^^^^^^^

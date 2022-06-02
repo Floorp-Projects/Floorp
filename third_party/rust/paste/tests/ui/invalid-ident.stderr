@@ -1,5 +1,17 @@
 error: `"0f"` is not a valid identifier
- --> $DIR/invalid-ident.rs:2:8
+ --> tests/ui/invalid-ident.rs:4:8
   |
-2 |     fn [<0 f>]() {}
+4 |     fn [<0 f>]() {}
   |        ^^^^^^^
+
+error: `"f\""` is not a valid identifier
+ --> tests/ui/invalid-ident.rs:8:8
+  |
+8 |     fn [<f '"'>]() {}
+  |        ^^^^^^^^^
+
+error: `"f'"` is not a valid identifier
+  --> tests/ui/invalid-ident.rs:12:8
+   |
+12 |     fn [<f "'">]() {}
+   |        ^^^^^^^^^
