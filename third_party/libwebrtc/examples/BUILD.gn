@@ -239,11 +239,6 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
 
   config("apprtc_signaling_config") {
     include_dirs = [ "objc/AppRTCMobile" ]
-    cflags_objc = [
-      # TODO(bugs.webrtc.org/10837): Remove this when usage of
-      # archivedDataWithRootObject will be removed.
-      "-Wno-unguarded-availability",
-    ]
   }
 
   rtc_library("apprtc_signaling") {
