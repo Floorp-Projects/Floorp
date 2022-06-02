@@ -9,7 +9,7 @@ import os
 import sys
 
 from pathlib import Path, PurePosixPath
-from typing import Optional
+from typing import Optional, Union
 
 
 class UserError(Exception):
@@ -41,7 +41,9 @@ def setenv(key, value):
     os.environ[key] = value
 
 
-def get_state_dir(specific_to_topsrcdir=False, topsrcdir=None):
+def get_state_dir(
+    specific_to_topsrcdir=False, topsrcdir: Optional[Union[str, Path]] = None
+):
     """Obtain path to a directory to hold state.
 
     Args:
@@ -51,41 +53,39 @@ def get_state_dir(specific_to_topsrcdir=False, topsrcdir=None):
     Returns:
         A path to the state dir (str)
     """
-    state_dir = os.environ.get("MOZBUILD_STATE_PATH", os.path.expanduser("~/.mozbuild"))
+    state_dir = Path(os.environ.get("MOZBUILD_STATE_PATH", Path.home() / ".mozbuild"))
     if not specific_to_topsrcdir:
-        return state_dir
+        return str(state_dir)
 
     if not topsrcdir:
         # Only import MozbuildObject if topsrcdir isn't provided. This is to cover
         # the Mach initialization stage, where "mozbuild" isn't in the import scope.
         from mozbuild.base import MozbuildObject
 
-        topsrcdir = os.path.abspath(
-            MozbuildObject.from_environment(cwd=os.path.dirname(__file__)).topsrcdir
+        topsrcdir = Path(
+            MozbuildObject.from_environment(cwd=str(Path(__file__).parent)).topsrcdir
         )
 
     # Ensure that the topsrcdir is a consistent string before hashing it.
-    topsrcdir = os.path.normcase(os.path.normpath(topsrcdir))
+    topsrcdir = Path(topsrcdir).resolve()
 
     # Shortening to 12 characters makes these directories a bit more manageable
     # in a terminal and is more than good enough for this purpose.
-    srcdir_hash = hashlib.sha256(topsrcdir.encode("utf-8")).hexdigest()[:12]
+    srcdir_hash = hashlib.sha256(str(topsrcdir).encode("utf-8")).hexdigest()[:12]
 
-    state_dir = os.path.join(
-        state_dir, "srcdirs", "{}-{}".format(os.path.basename(topsrcdir), srcdir_hash)
-    )
+    state_dir = state_dir / "srcdirs" / f"{topsrcdir.name}-{srcdir_hash}"
 
-    if not os.path.isdir(state_dir):
+    if not state_dir.is_dir():
         # We create the srcdir here rather than 'mach_initialize.py' so direct
         # consumers of this function don't create the directory inconsistently.
-        print("Creating local state directory: %s" % state_dir)
-        os.makedirs(state_dir, mode=0o770)
+        print(f"Creating local state directory: {state_dir}")
+        state_dir.mkdir(mode=0o770, parents=True)
         # Save the topsrcdir that this state dir corresponds to so we can clean
         # it up in the event its srcdir was deleted.
-        with open(os.path.join(state_dir, "topsrcdir.txt"), "w") as fh:
-            fh.write(topsrcdir)
+        with (state_dir / "topsrcdir.txt").open(mode="w") as fh:
+            fh.write(str(topsrcdir))
 
-    return state_dir
+    return str(state_dir)
 
 
 def win_to_msys_path(path: Path):
