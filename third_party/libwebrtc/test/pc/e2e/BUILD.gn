@@ -639,10 +639,8 @@ if (!build_with_chromium) {
       "../../../rtc_base:criticalsection",
       "../../../rtc_base:logging",
       "../../../rtc_base:rtc_base_approved",
-      "../../../rtc_base:rtc_base_tests_utils",
       "../../../rtc_base:rtc_event",
       "../../../rtc_base:rtc_numerics",
-      "../../../rtc_base:timeutils",
       "../../../rtc_base/synchronization:mutex",
       "../../../rtc_tools:video_quality_analysis",
       "../../../system_wrappers",
@@ -657,6 +655,8 @@ if (!build_with_chromium) {
 
     testonly = true
     sources = [
+      "analyzer/video/default_video_quality_analyzer_cpu_measurer.cc",
+      "analyzer/video/default_video_quality_analyzer_cpu_measurer.h",
       "analyzer/video/default_video_quality_analyzer_internal_shared_objects.cc",
       "analyzer/video/default_video_quality_analyzer_internal_shared_objects.h",
     ]
@@ -666,7 +666,10 @@ if (!build_with_chromium) {
       "../../../api/numerics:numerics",
       "../../../api/units:timestamp",
       "../../../api/video:video_frame",
+      "../../../rtc_base:rtc_base_tests_utils",
       "../../../rtc_base:stringutils",
+      "../../../rtc_base:timeutils",
+      "../../../rtc_base/synchronization:mutex",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
