@@ -64,9 +64,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Не, благодаря</string>
 
-    <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Може да настроите Firefox автоматично да отваря препратки в приложения</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Към настройки</string>
     <!-- Text for the negative action button -->
@@ -92,8 +89,6 @@
     <string name="tab_tray_inactive_onboarding_button_text">Изключване в настройките</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Автоматично затваряне след един месец?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox може да затваря разделите, които не са преглеждани през последния месец.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s може да затваря разделите, които не са преглеждани през последния месец.</string>
@@ -231,13 +226,8 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Търсете директно от адресната лента</string>
 
-    <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Какво е новото във Firefox</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Вече е по-лесно да продължите откъдето сте спрели.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Персонализирана начална страница на Firefox</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Към отворените раздели, отметки и история на разглеждане.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -253,9 +243,6 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Персонализираната начална страница на Firefox вече ви улеснява да продължите от там, където сте спрели. Намерете последните си раздели, отметки и резултати от търсене.</string>
 
-    <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Отваряне на раздел във Firefox</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Търсене</string>
 
@@ -302,6 +289,8 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Ако е включено, поверителните раздели ще са видими от отворените приложения</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Добавяне на икона за поверителен режим</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Научете повече</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Достъпност</string>
     <!-- Preference to override the Firefox Account server -->
@@ -609,8 +598,6 @@
     <string name="studies_remove">Премахване</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Активни</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox може, от време на време, да инсталира и извършва проучвания.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Научете повече</string>
     <!-- Dialog message shown after removing a study -->
@@ -1123,8 +1110,6 @@
     <string name="onboarding_firefox_account_sync_is_on">Синхронизирането е включено</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Постоянна поверителност</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox автоматично предотвратява тайното проследяване от различни компании докато разглеждате в мрежата.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартна (подразбиране)</string>
     <!-- text for standard blocking option button description -->
@@ -1429,7 +1414,6 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню за сортиране на регистрации</string>
 
-    <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Банкови карти</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1444,6 +1428,7 @@
     <string name="preferences_credit_cards_add_credit_card">Добавяне на карта</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Управление на карти</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Добавяне на карта</string>
     <!-- Title of the "Edit card" screen -->
@@ -1666,24 +1651,6 @@
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">АВТОМАТИЧНО ЗАТВАРЯНЕ</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Автоматичното затваряне е включено</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Помогнете ни да подобрим Firefox</string>
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Защо изключихте неактивните раздели?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Не разбирам как работи</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Нека аз затварям старите раздели</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Периодът от две седмици е твърде дълъг</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Периодът от две седмици е твърде кратък</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Изпращане</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Затваряне</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Задайте Firefox като стандартно приложение за отваряне на страници, електронна поща и съобщения.</string>
