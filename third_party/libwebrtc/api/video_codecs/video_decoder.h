@@ -78,8 +78,9 @@ class RTC_EXPORT VideoDecoder {
     void set_max_render_resolution(RenderResolution value);
 
     // Maximum number of cpu cores the decoder is allowed to use in parallel.
+    // Must be positive.
     int number_of_cores() const { return number_of_cores_; }
-    void set_number_of_cores(int value) { number_of_cores_ = value; }
+    void set_number_of_cores(int value);
 
     // Codec of encoded images user of the VideoDecoder interface will `Decode`.
     VideoCodecType codec_type() const { return codec_type_; }

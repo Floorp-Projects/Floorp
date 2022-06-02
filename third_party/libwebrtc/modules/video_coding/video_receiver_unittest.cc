@@ -58,7 +58,7 @@ class TestVideoReceiver : public ::testing::Test {
     receiver_.RegisterExternalDecoder(&decoder_, kUnusedPayloadType);
     VideoDecoder::Settings settings;
     settings.set_codec_type(kVideoCodecVP8);
-    EXPECT_TRUE(receiver_.RegisterReceiveCodec(kUnusedPayloadType, settings));
+    receiver_.RegisterReceiveCodec(kUnusedPayloadType, settings);
 
     // Set protection mode.
     const size_t kMaxNackListSize = 250;

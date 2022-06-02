@@ -31,7 +31,7 @@ class VideoReceiver2 {
   VideoReceiver2(Clock* clock, VCMTiming* timing);
   ~VideoReceiver2();
 
-  bool RegisterReceiveCodec(uint8_t payload_type,
+  void RegisterReceiveCodec(uint8_t payload_type,
                             const VideoDecoder::Settings& decoder_settings);
 
   void RegisterExternalDecoder(VideoDecoder* externalDecoder,
