@@ -15,6 +15,8 @@ rtc_library("common_video") {
     "bitrate_adjuster.cc",
     "frame_rate_estimator.cc",
     "frame_rate_estimator.h",
+    "framerate_controller.cc",
+    "framerate_controller.h",
     "h264/h264_bitstream_parser.cc",
     "h264/h264_bitstream_parser.h",
     "h264/h264_common.cc",
@@ -91,6 +93,7 @@ if (rtc_include_tests && !build_with_chromium) {
     sources = [
       "bitrate_adjuster_unittest.cc",
       "frame_rate_estimator_unittest.cc",
+      "framerate_controller_unittest.cc",
       "h264/h264_bitstream_parser_unittest.cc",
       "h264/pps_parser_unittest.cc",
       "h264/sps_parser_unittest.cc",

@@ -24,7 +24,7 @@
 #include "modules/video_coding/codecs/interface/libvpx_interface.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/include/video_codec_interface.h"
-#include "modules/video_coding/utility/framerate_controller.h"
+#include "modules/video_coding/utility/framerate_controller_deprecated.h"
 #include "rtc_base/experiments/cpu_speed_experiment.h"
 #include "rtc_base/experiments/encoder_info_settings.h"
 #include "rtc_base/experiments/rate_control_settings.h"
@@ -145,7 +145,7 @@ class LibvpxVp8Encoder : public VideoEncoder {
   } variable_framerate_experiment_;
   static VariableFramerateExperiment ParseVariableFramerateConfig(
       std::string group_name);
-  FramerateController framerate_controller_;
+  FramerateControllerDeprecated framerate_controller_;
   int num_steady_state_frames_ = 0;
 
   FecControllerOverride* fec_controller_override_ = nullptr;

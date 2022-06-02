@@ -17,6 +17,7 @@
 
 #include "absl/types/optional.h"
 #include "api/video/video_source_interface.h"
+#include "common_video/framerate_controller.h"
 #include "media/base/video_common.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -112,7 +113,7 @@ class RTC_EXPORT VideoAdapter {
 
  private:
   // Determine if frame should be dropped based on input fps and requested fps.
-  bool KeepFrame(int64_t in_timestamp_ns) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  bool DropFrame(int64_t in_timestamp_ns) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   int frames_in_ RTC_GUARDED_BY(mutex_);      // Number of input frames.
   int frames_out_ RTC_GUARDED_BY(mutex_);     // Number of output frames.
@@ -131,9 +132,6 @@ class RTC_EXPORT VideoAdapter {
   //  - the latest `sink_wants.resolution_alignment`.
   int resolution_alignment_ RTC_GUARDED_BY(mutex_);
 
-  // The target timestamp for the next frame based on requested format.
-  absl::optional<int64_t> next_frame_timestamp_ns_ RTC_GUARDED_BY(mutex_);
-
   // Max number of pixels/fps requested via calls to OnOutputFormatRequest,
   // OnResolutionFramerateRequest respectively.
   // The adapted output format is the minimum of these.
@@ -149,6 +147,8 @@ class RTC_EXPORT VideoAdapter {
   int max_framerate_request_ RTC_GUARDED_BY(mutex_);
   float scale_resolution_by_ RTC_GUARDED_BY(mutex_);
   bool scale_ RTC_GUARDED_BY(mutex_);
+
+  webrtc::FramerateController framerate_controller_ RTC_GUARDED_BY(mutex_);
 
   // The critical section to protect the above variables.
   mutable webrtc::Mutex mutex_;

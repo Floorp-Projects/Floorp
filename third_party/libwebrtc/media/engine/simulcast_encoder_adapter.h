@@ -26,7 +26,7 @@
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "modules/video_coding/include/video_codec_interface.h"
-#include "modules/video_coding/utility/framerate_controller.h"
+#include "modules/video_coding/utility/framerate_controller_deprecated.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/experiments/encoder_info_settings.h"
 #include "rtc_base/system/no_unique_address.h"
@@ -93,13 +93,14 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
 
   class StreamContext : public EncodedImageCallback {
    public:
-    StreamContext(SimulcastEncoderAdapter* parent,
-                  std::unique_ptr<EncoderContext> encoder_context,
-                  std::unique_ptr<FramerateController> framerate_controller,
-                  int stream_idx,
-                  uint16_t width,
-                  uint16_t height,
-                  bool send_stream);
+    StreamContext(
+        SimulcastEncoderAdapter* parent,
+        std::unique_ptr<EncoderContext> encoder_context,
+        std::unique_ptr<FramerateControllerDeprecated> framerate_controller,
+        int stream_idx,
+        uint16_t width,
+        uint16_t height,
+        bool send_stream);
     StreamContext(StreamContext&& rhs);
     StreamContext& operator=(StreamContext&&) = delete;
     ~StreamContext() override;
@@ -134,7 +135,7 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
    private:
     SimulcastEncoderAdapter* const parent_;
     std::unique_ptr<EncoderContext> encoder_context_;
-    std::unique_ptr<FramerateController> framerate_controller_;
+    std::unique_ptr<FramerateControllerDeprecated> framerate_controller_;
     const int stream_idx_;
     const uint16_t width_;
     const uint16_t height_;

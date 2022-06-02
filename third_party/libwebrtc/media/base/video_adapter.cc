@@ -144,43 +144,13 @@ VideoAdapter::VideoAdapter() : VideoAdapter(1) {}
 
 VideoAdapter::~VideoAdapter() {}
 
-bool VideoAdapter::KeepFrame(int64_t in_timestamp_ns) {
+bool VideoAdapter::DropFrame(int64_t in_timestamp_ns) {
   int max_fps = max_framerate_request_;
   if (max_fps_)
     max_fps = std::min(max_fps, *max_fps_);
 
-  if (max_fps <= 0)
-    return false;
-
-  // If `max_framerate_request_` is not set, it will default to maxint, which
-  // will lead to a frame_interval_ns rounded to 0.
-  int64_t frame_interval_ns = rtc::kNumNanosecsPerSec / max_fps;
-  if (frame_interval_ns <= 0) {
-    // Frame rate throttling not enabled.
-    return true;
-  }
-
-  if (next_frame_timestamp_ns_) {
-    // Time until next frame should be outputted.
-    const int64_t time_until_next_frame_ns =
-        (*next_frame_timestamp_ns_ - in_timestamp_ns);
-
-    // Continue if timestamp is within expected range.
-    if (std::abs(time_until_next_frame_ns) < 2 * frame_interval_ns) {
-      // Drop if a frame shouldn't be outputted yet.
-      if (time_until_next_frame_ns > 0)
-        return false;
-      // Time to output new frame.
-      *next_frame_timestamp_ns_ += frame_interval_ns;
-      return true;
-    }
-  }
-
-  // First timestamp received or timestamp is way outside expected range, so
-  // reset. Set first timestamp target to just half the interval to prefer
-  // keeping frames in case of jitter.
-  next_frame_timestamp_ns_ = in_timestamp_ns + frame_interval_ns / 2;
-  return true;
+  framerate_controller_.SetMaxFramerate(max_fps);
+  return framerate_controller_.ShouldDropFrame(in_timestamp_ns);
 }
 
 bool VideoAdapter::AdaptFrameResolution(int in_width,
@@ -224,7 +194,7 @@ bool VideoAdapter::AdaptFrameResolution(int in_width,
       std::min(resolution_request_target_pixel_count_, max_pixel_count);
 
   // Drop the input frame if necessary.
-  if (max_pixel_count <= 0 || !KeepFrame(in_timestamp_ns)) {
+  if (max_pixel_count <= 0 || DropFrame(in_timestamp_ns)) {
     // Show VAdapt log every 90 frames dropped. (3 seconds)
     if ((frames_in_ - frames_out_) % 90 == 0) {
       // TODO(fbarchard): Reduce to LS_VERBOSE when adapter info is not needed
@@ -345,7 +315,7 @@ void VideoAdapter::OnOutputFormatRequest(
   target_portrait_aspect_ratio_ = target_portrait_aspect_ratio;
   max_portrait_pixel_count_ = max_portrait_pixel_count;
   max_fps_ = max_fps;
-  next_frame_timestamp_ns_ = absl::nullopt;
+  framerate_controller_.Reset();
 }
 
 void VideoAdapter::OnSinkWants(const rtc::VideoSinkWants& sink_wants) {
