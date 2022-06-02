@@ -540,13 +540,17 @@ void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
     return;
   }
 
+  TimeDuration minimumBudget = nsRefreshDriver::IsInHighRateMode()
+                                   ? TimeDuration::FromMilliseconds(1)
+                                   : mActiveIntersliceGCBudget;
+
   // Wait at most the interslice GC delay before forcing a run.
   mGCRunner = IdleTaskRunner::Create(
       [this](TimeStamp aDeadline) { return GCRunnerFired(aDeadline); },
       "CCGCScheduler::EnsureGCRunner", aDelay,
       TimeDuration::FromMilliseconds(
           StaticPrefs::javascript_options_gc_delay_interslice()),
-      mActiveIntersliceGCBudget, true, [this] { return mDidShutdown; },
+      minimumBudget, true, [this] { return mDidShutdown; },
       [this](uint32_t) {
         PROFILER_MARKER_UNTYPED("GC Interrupt", GCCC);
         mInterruptRequested = true;
@@ -601,12 +605,16 @@ void CCGCScheduler::KillGCRunner() {
 void CCGCScheduler::EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget) {
   MOZ_ASSERT(!mDidShutdown);
 
+  TimeDuration minimumBudget = nsRefreshDriver::IsInHighRateMode()
+                                   ? TimeDuration::FromMilliseconds(1)
+                                   : aBudget;
+
   if (!mCCRunner) {
     mCCRunner = IdleTaskRunner::Create(
-        CCRunnerFired, "EnsureCCRunner::CCRunnerFired", 0, aDelay, aBudget,
-        true, [this] { return mDidShutdown; });
+        CCRunnerFired, "EnsureCCRunner::CCRunnerFired", 0, aDelay,
+        minimumBudget, true, [this] { return mDidShutdown; });
   } else {
-    mCCRunner->SetMinimumUsefulBudget(aBudget.ToMilliseconds());
+    mCCRunner->SetMinimumUsefulBudget(minimumBudget.ToMilliseconds());
     nsIEventTarget* target = mozilla::GetCurrentEventTarget();
     if (target) {
       mCCRunner->SetTimer(aDelay, target);
