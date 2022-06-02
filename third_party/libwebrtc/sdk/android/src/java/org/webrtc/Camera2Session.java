@@ -303,7 +303,7 @@ class Camera2Session implements CameraSession {
 
     try {
       cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
-    } catch (final CameraAccessException e) {
+    } catch (CameraAccessException | IllegalArgumentException e) {
       reportError("getCameraCharacteristics(): " + e.getMessage());
       return;
     }
