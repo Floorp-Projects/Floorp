@@ -125,8 +125,6 @@ struct StreamStats {
   SamplesStatsCounter target_encode_bitrate;
 
   int64_t total_encoded_images_payload = 0;
-  int64_t dropped_by_encoder = 0;
-  int64_t dropped_before_encoder = 0;
   // Counters on which phase how many frames were dropped.
   std::map<FrameDropPhase, int64_t> dropped_by_phase;
 
