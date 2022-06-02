@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
 });
 
@@ -31,12 +33,12 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
     // TODO: Remove workaround after Bug 1619798
     if (
       WebExtensionPolicy.useRemoteWebExtensions &&
-      E10SUtils.getRemoteTypeForURIObject(
+      lazy.E10SUtils.getRemoteTypeForURIObject(
         aUri,
         /* aMultiProcess */ true,
         /* aRemoteSubframes */ false,
         Services.appinfo.remoteType
-      ) == E10SUtils.EXTENSION_REMOTE_TYPE
+      ) == lazy.E10SUtils.EXTENSION_REMOTE_TYPE
     ) {
       debug`Bypassing load delegate in the Extension process.`;
       return false;

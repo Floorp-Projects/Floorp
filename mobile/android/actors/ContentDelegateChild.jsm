@@ -12,9 +12,11 @@ var { XPCOMUtils } = ChromeUtils.import(
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["URL"]);
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ManifestObtainer: "resource://gre/modules/ManifestObtainer.jsm",
 });
 
@@ -81,7 +83,7 @@ class ContentDelegateChild extends GeckoViewActorChild {
         let elementSrc = (isImage || isMedia) && (node.currentSrc || node.src);
         if (elementSrc) {
           const isBlob = elementSrc.startsWith("blob:");
-          if (isBlob && !URL.isValidURL(elementSrc)) {
+          if (isBlob && !lazy.URL.isValidURL(elementSrc)) {
             elementSrc = null;
           }
         }
@@ -139,7 +141,7 @@ class ContentDelegateChild extends GeckoViewActorChild {
           return;
         }
         this.contentWindow.requestIdleCallback(async () => {
-          const manifest = await ManifestObtainer.contentObtainManifest(
+          const manifest = await lazy.ManifestObtainer.contentObtainManifest(
             this.contentWindow
           );
           if (manifest) {
