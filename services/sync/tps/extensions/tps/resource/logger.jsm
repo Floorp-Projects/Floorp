@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -30,9 +32,9 @@ var Logger = {
     }
 
     if (path) {
-      Services.prefs.setCharPref("tps.logfile", path);
+      lazy.Services.prefs.setCharPref("tps.logfile", path);
     } else {
-      path = Services.prefs.getCharPref("tps.logfile");
+      path = lazy.Services.prefs.getCharPref("tps.logfile");
     }
 
     this._file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
@@ -86,7 +88,7 @@ var Logger = {
   },
 
   AssertEqual(got, expected, msg) {
-    if (!ObjectUtils.deepEqual(got, expected)) {
+    if (!lazy.ObjectUtils.deepEqual(got, expected)) {
       throw new Error(
         "ASSERTION FAILED! " +
           msg +

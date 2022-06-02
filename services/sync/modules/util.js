@@ -28,20 +28,21 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+const lazy = {};
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 const FxAccountsCommon = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "cryptoSDR",
   "@mozilla.org/login-manager/crypto/SDR;1",
   "nsILoginManagerCrypto"
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "localDeviceType",
   "services.sync.client.type",
   DEVICE_TYPE_DESKTOP
@@ -105,7 +106,7 @@ var Utils = {
         "."; // Build.
       /* eslint-enable no-multi-spaces */
     }
-    return this._userAgent + localDeviceType;
+    return this._userAgent + lazy.localDeviceType;
   },
 
   /**
@@ -377,7 +378,7 @@ var Utils = {
     try {
       return await CommonUtils.readJSON(path);
     } catch (e) {
-      if (!(e instanceof OS.File.Error && e.becauseNoSuchFile)) {
+      if (!(e instanceof lazy.OS.File.Error && e.becauseNoSuchFile)) {
         if (that._log) {
           that._log.debug("Failed to load json", e);
         }
@@ -402,14 +403,16 @@ var Utils = {
    *        Promise resolved when the write has been performed.
    */
   async jsonSave(filePath, that, obj) {
-    let path = OS.Path.join(
-      OS.Constants.Path.profileDir,
+    let path = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
       "weave",
       ...(filePath + ".json").split("/")
     );
-    let dir = OS.Path.dirname(path);
+    let dir = lazy.OS.Path.dirname(path);
 
-    await OS.File.makeDir(dir, { from: OS.Constants.Path.profileDir });
+    await lazy.OS.File.makeDir(dir, {
+      from: lazy.OS.Constants.Path.profileDir,
+    });
 
     if (that._log) {
       that._log.trace("Saving json to disk: " + path);
@@ -472,20 +475,20 @@ var Utils = {
    *        Object to use for logging
    */
   jsonMove(aFrom, aTo, that) {
-    let pathFrom = OS.Path.join(
-      OS.Constants.Path.profileDir,
+    let pathFrom = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
       "weave",
       ...(aFrom + ".json").split("/")
     );
-    let pathTo = OS.Path.join(
-      OS.Constants.Path.profileDir,
+    let pathTo = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
       "weave",
       ...(aTo + ".json").split("/")
     );
     if (that._log) {
       that._log.trace("Moving " + pathFrom + " to " + pathTo);
     }
-    return OS.File.move(pathFrom, pathTo, { noOverwrite: true });
+    return lazy.OS.File.move(pathFrom, pathTo, { noOverwrite: true });
   },
 
   /**
@@ -500,15 +503,15 @@ var Utils = {
    *        Object to use for logging
    */
   jsonRemove(filePath, that) {
-    let path = OS.Path.join(
-      OS.Constants.Path.profileDir,
+    let path = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
       "weave",
       ...(filePath + ".json").split("/")
     );
     if (that._log) {
       that._log.trace("Deleting " + path);
     }
-    return OS.File.remove(path, { ignoreAbsent: true });
+    return lazy.OS.File.remove(path, { ignoreAbsent: true });
   },
 
   /**
@@ -636,17 +639,17 @@ var Utils = {
    * Is there a master password configured and currently locked?
    */
   mpLocked() {
-    return !cryptoSDR.isLoggedIn;
+    return !lazy.cryptoSDR.isLoggedIn;
   },
 
   // If Master Password is enabled and locked, present a dialog to unlock it.
   // Return whether the system is unlocked.
   ensureMPUnlocked() {
-    if (cryptoSDR.uiBusy) {
+    if (lazy.cryptoSDR.uiBusy) {
       return false;
     }
     try {
-      cryptoSDR.encrypt("bacon");
+      lazy.cryptoSDR.encrypt("bacon");
       return true;
     } catch (e) {}
     return false;
@@ -729,7 +732,7 @@ var Utils = {
   },
 
   getDeviceType() {
-    return localDeviceType;
+    return lazy.localDeviceType;
   },
 
   formatTimestamp(date) {

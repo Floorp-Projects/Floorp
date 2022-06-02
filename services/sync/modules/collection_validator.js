@@ -4,8 +4,10 @@
 
 "use strict";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Async",
   "resource://services-common/async.js"
 );
@@ -82,7 +84,7 @@ class CollectionValidator {
     }
     let cleartexts = [];
 
-    await Async.yieldingForEach(result.records, async record => {
+    await lazy.Async.yieldingForEach(result.records, async record => {
       await record.decrypt(collectionKey);
       cleartexts.push(record.cleartext);
     });
@@ -148,11 +150,11 @@ class CollectionValidator {
   //   records: Normalized server records,
   //   deletedRecords: Array of ids that were marked as deleted by the server.
   async compareClientWithServer(clientItems, serverItems) {
-    const yieldState = Async.yieldState();
+    const yieldState = lazy.Async.yieldState();
 
     const clientRecords = [];
 
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       clientItems,
       item => {
         clientRecords.push(this.normalizeClientItem(item));
@@ -161,7 +163,7 @@ class CollectionValidator {
     );
 
     const serverRecords = [];
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       serverItems,
       async item => {
         serverRecords.push(await this.normalizeServerItem(item));

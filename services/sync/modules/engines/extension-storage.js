@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BridgedEngine: "resource://services-sync/bridged_engine.js",
   LogAdapter: "resource://services-sync/bridged_engine.js",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
@@ -26,14 +28,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetter(
-  this,
+  lazy,
   "extensionStorageSyncKinto",
   "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
   "extensionStorageSync"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "StorageSyncService",
   "@mozilla.org/extensions/storage/sync;1",
   "nsIInterfaceRequestor"
@@ -50,11 +52,11 @@ function getEngineEnabled() {
   // However, we also respect engine.extension-storage.force, which
   // can be set to true or false, if a power user wants to customize
   // the behavior despite the lack of UI.
-  const forced = Svc.Prefs.get(PREF_FORCE_ENABLE, undefined);
+  const forced = lazy.Svc.Prefs.get(PREF_FORCE_ENABLE, undefined);
   if (forced !== undefined) {
     return forced;
   }
-  return Svc.Prefs.get("engine.addons", false);
+  return lazy.Svc.Prefs.get("engine.addons", false);
 }
 
 function setEngineEnabled(enabled) {
@@ -65,25 +67,25 @@ function setEngineEnabled(enabled) {
   // preference. So if that pref exists, we set it to this value. If that pref
   // doesn't exist, we just ignore it and hope that the 'addons' engine is also
   // going to be set to the same state.
-  if (Svc.Prefs.has(PREF_FORCE_ENABLE)) {
-    Svc.Prefs.set(PREF_FORCE_ENABLE, enabled);
+  if (lazy.Svc.Prefs.has(PREF_FORCE_ENABLE)) {
+    lazy.Svc.Prefs.set(PREF_FORCE_ENABLE, enabled);
   }
 }
 
 // A "bridged engine" to our webext-storage component.
 function ExtensionStorageEngineBridge(service) {
-  let bridge = StorageSyncService.getInterface(Ci.mozIBridgedSyncEngine);
-  BridgedEngine.call(this, bridge, "Extension-Storage", service);
+  let bridge = lazy.StorageSyncService.getInterface(Ci.mozIBridgedSyncEngine);
+  lazy.BridgedEngine.call(this, bridge, "Extension-Storage", service);
 
   let app_services_logger = Cc["@mozilla.org/appservices/logger;1"].getService(
     Ci.mozIAppServicesLogger
   );
   let logger_target = "app-services:webext_storage:sync";
-  app_services_logger.register(logger_target, new LogAdapter(this._log));
+  app_services_logger.register(logger_target, new lazy.LogAdapter(this._log));
 }
 
 ExtensionStorageEngineBridge.prototype = {
-  __proto__: BridgedEngine.prototype,
+  __proto__: lazy.BridgedEngine.prototype,
   syncPriority: 10,
 
   // Used to override the engine name in telemetry, so that we can distinguish .
@@ -100,7 +102,10 @@ ExtensionStorageEngineBridge.prototype = {
           ]),
           onChanged: (extId, json) => {
             try {
-              extensionStorageSync.notifyListeners(extId, JSON.parse(json));
+              lazy.extensionStorageSync.notifyListeners(
+                extId,
+                JSON.parse(json)
+              );
             } catch (ex) {
               this._log.warn(
                 `Error notifying change listeners for ${extId}`,
@@ -151,7 +156,11 @@ ExtensionStorageEngineBridge.prototype = {
     let result = await super._syncStartup();
     let info = await this._takeMigrationInfo();
     if (info) {
-      Observers.notify("weave:telemetry:migration", info, "webext-storage");
+      lazy.Observers.notify(
+        "weave:telemetry:migration",
+        info,
+        "webext-storage"
+      );
     }
     return result;
   },
@@ -192,7 +201,7 @@ ExtensionStorageEngineBridge.prototype = {
  * framework, so this is something of a stub.
  */
 function ExtensionStorageEngineKinto(service) {
-  SyncEngine.call(this, "Extension-Storage", service);
+  lazy.SyncEngine.call(this, "Extension-Storage", service);
   XPCOMUtils.defineLazyPreferenceGetter(
     this,
     "_skipPercentageChance",
@@ -201,7 +210,7 @@ function ExtensionStorageEngineKinto(service) {
   );
 }
 ExtensionStorageEngineKinto.prototype = {
-  __proto__: SyncEngine.prototype,
+  __proto__: lazy.SyncEngine.prototype,
   _trackerObj: ExtensionStorageTracker,
   // we don't need these since we implement our own sync logic
   _storeObj: undefined,
@@ -211,7 +220,7 @@ ExtensionStorageEngineKinto.prototype = {
   allowSkippedRecord: false,
 
   async _sync() {
-    return extensionStorageSyncKinto.syncAll();
+    return lazy.extensionStorageSyncKinto.syncAll();
   },
 
   get enabled() {
@@ -225,7 +234,7 @@ ExtensionStorageEngineKinto.prototype = {
   },
 
   _wipeClient() {
-    return extensionStorageSyncKinto.clearAll();
+    return lazy.extensionStorageSyncKinto.clearAll();
   },
 
   shouldSkipSync(syncReason) {
@@ -237,7 +246,7 @@ ExtensionStorageEngineKinto.prototype = {
       return false;
     }
     // Ensure this wouldn't cause a resync...
-    if (this._tracker.score >= MULTI_DEVICE_THRESHOLD) {
+    if (this._tracker.score >= lazy.MULTI_DEVICE_THRESHOLD) {
       this._log.info(
         "Not skipping extension storage sync: Would trigger resync anyway"
       );
@@ -257,11 +266,11 @@ ExtensionStorageEngineKinto.prototype = {
 };
 
 function ExtensionStorageTracker(name, engine) {
-  Tracker.call(this, name, engine);
+  lazy.Tracker.call(this, name, engine);
   this._ignoreAll = false;
 }
 ExtensionStorageTracker.prototype = {
-  __proto__: Tracker.prototype,
+  __proto__: lazy.Tracker.prototype,
 
   get ignoreAll() {
     return this._ignoreAll;
@@ -272,11 +281,11 @@ ExtensionStorageTracker.prototype = {
   },
 
   onStart() {
-    Svc.Obs.add("ext.storage.sync-changed", this.asyncObserver);
+    lazy.Svc.Obs.add("ext.storage.sync-changed", this.asyncObserver);
   },
 
   onStop() {
-    Svc.Obs.remove("ext.storage.sync-changed", this.asyncObserver);
+    lazy.Svc.Obs.remove("ext.storage.sync-changed", this.asyncObserver);
   },
 
   async observe(subject, topic, data) {
@@ -290,6 +299,6 @@ ExtensionStorageTracker.prototype = {
 
     // Single adds, removes and changes are not so important on their
     // own, so let's just increment score a bit.
-    this.score += SCORE_INCREMENT_MEDIUM;
+    this.score += lazy.SCORE_INCREMENT_MEDIUM;
   },
 };

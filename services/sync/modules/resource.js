@@ -18,7 +18,8 @@ const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "Headers", "Request"]);
+const lazy = {};
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch", "Headers", "Request"]);
 /* global AbortController */
 
 /*
@@ -103,7 +104,7 @@ Resource.prototype = {
    * @returns {Headers}
    */
   async _buildHeaders(method) {
-    const headers = new Headers(this._headers);
+    const headers = new lazy.Headers(this._headers);
 
     if (Resource.SEND_VERSION_INFO) {
       headers.append("user-agent", Utils.userAgent);
@@ -167,7 +168,7 @@ Resource.prototype = {
       this._log.trace(`${method} Body: ${data}`);
       init.body = data;
     }
-    return new Request(this.uri.spec, init);
+    return new lazy.Request(this.uri.spec, init);
   },
 
   /**
@@ -178,7 +179,7 @@ Resource.prototype = {
   async _doRequest(method, data = null) {
     const controller = new AbortController();
     const request = await this._createRequest(method, data, controller.signal);
-    const responsePromise = fetch(request); // Rejects on network failure.
+    const responsePromise = lazy.fetch(request); // Rejects on network failure.
     let didTimeout = false;
     const timeoutId = setTimeout(() => {
       didTimeout = true;
