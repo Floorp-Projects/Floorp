@@ -19,8 +19,9 @@ const { CollectionProblemData, CollectionValidator } = ChromeUtils.import(
 );
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FormHistory",
   "resource://gre/modules/FormHistory.jsm"
 );
@@ -55,12 +56,12 @@ var FormWrapper = {
           resolve(results);
         },
       };
-      FormHistory.search(terms, searchData, callbacks);
+      lazy.FormHistory.search(terms, searchData, callbacks);
     });
   },
 
   async _update(changes) {
-    if (!FormHistory.enabled) {
+    if (!lazy.FormHistory.enabled) {
       return; // update isn't going to do anything.
     }
     await new Promise(resolve => {
@@ -69,7 +70,7 @@ var FormWrapper = {
           resolve();
         },
       };
-      FormHistory.update(changes, callbacks);
+      lazy.FormHistory.update(changes, callbacks);
     });
   },
 

@@ -23,7 +23,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Async: "resource://services-common/async.js",
   AuthenticationError: "resource://services-sync/sync_auth.js",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -41,7 +43,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Weave: "resource://services-sync/main.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(
     "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
@@ -50,11 +52,11 @@ XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
 let constants = ChromeUtils.import("resource://services-sync/constants.js");
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "WeaveService",
   () => Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
 );
-const log = Log.repository.getLogger("Sync.Telemetry");
+const log = lazy.Log.repository.getLogger("Sync.Telemetry");
 
 const TOPICS = [
   // For tracking change to account/device identifiers.
@@ -107,7 +109,7 @@ const ENGINES = new Set([
 
 function tryGetMonotonicTimestamp() {
   try {
-    return Services.telemetry.msSinceProcessStart();
+    return lazy.Services.telemetry.msSinceProcessStart();
   } catch (e) {
     log.warn("Unable to get a monotonic timestamp!");
     return -1;
@@ -152,7 +154,7 @@ function normalizeExtraTelemetryFields(extra) {
       );
     }
   }
-  return ObjectUtils.isEmpty(result) ? undefined : result;
+  return lazy.ObjectUtils.isEmpty(result) ? undefined : result;
 }
 
 // The `ErrorSanitizer` has 2 main jobs:
@@ -220,7 +222,7 @@ class ErrorSanitizer {
   // This escaping function is from:
   // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
   static reProfileDir = new RegExp(
-    OS.Constants.Path.profileDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    lazy.OS.Constants.Path.profileDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
     "gi"
   );
 
@@ -303,7 +305,7 @@ class EngineRecord {
 
     // This allows cases like bookmarks-buffered to have a separate name from
     // the bookmarks engine.
-    let engineImpl = Weave.Service.engineManager.get(name);
+    let engineImpl = lazy.Weave.Service.engineManager.get(name);
     if (engineImpl && engineImpl.overrideTelemetryName) {
       this.overrideTelemetryName = engineImpl.overrideTelemetryName;
     }
@@ -480,12 +482,12 @@ class SyncRecord {
       this.failureReason = SyncTelemetry.transformError(error);
     }
 
-    this.syncNodeType = Weave.Service.identity.telemetryNodeType;
+    this.syncNodeType = lazy.Weave.Service.identity.telemetryNodeType;
 
     // Check for engine statuses. -- We do this now, and not in engine.finished
     // to make sure any statuses that get set "late" are recorded
     for (let engine of this.engines) {
-      let status = Status.engines[engine.name];
+      let status = lazy.Status.engines[engine.name];
       if (status && status !== constants.ENGINE_SUCCEEDED) {
         engine.status = status;
       }
@@ -493,12 +495,12 @@ class SyncRecord {
 
     let statusObject = {};
 
-    let serviceStatus = Status.service;
+    let serviceStatus = lazy.Status.service;
     if (serviceStatus && serviceStatus !== constants.STATUS_OK) {
       statusObject.service = serviceStatus;
       this.status = statusObject;
     }
-    let syncStatus = Status.sync;
+    let syncStatus = lazy.Status.sync;
     if (syncStatus && syncStatus !== constants.SYNC_SUCCEEDED) {
       statusObject.sync = syncStatus;
       this.status = statusObject;
@@ -635,11 +637,11 @@ class SyncTelemetryImpl {
     this.events = [];
     this.histograms = {};
     this.migrations = [];
-    this.maxEventsCount = Svc.Prefs.get("telemetry.maxEventsCount", 1000);
-    this.maxPayloadCount = Svc.Prefs.get("telemetry.maxPayloadCount");
+    this.maxEventsCount = lazy.Svc.Prefs.get("telemetry.maxEventsCount", 1000);
+    this.maxPayloadCount = lazy.Svc.Prefs.get("telemetry.maxPayloadCount");
     this.submissionInterval =
-      Svc.Prefs.get("telemetry.submissionInterval") * 1000;
-    this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
+      lazy.Svc.Prefs.get("telemetry.submissionInterval") * 1000;
+    this.lastSubmissionTime = lazy.Services.telemetry.msSinceProcessStart();
     this.lastUID = EMPTY_UID;
     this.lastSyncNodeType = null;
     this.currentSyncNodeType = null;
@@ -649,14 +651,14 @@ class SyncTelemetryImpl {
     // but that's OK for now - if it's a problem we'd need to change the
     // telemetry modules to expose what it thinks the sessionStartDate is.
     let sessionStartDate = new Date();
-    this.sessionStartDate = TelemetryUtils.toLocalTimeISOString(
-      TelemetryUtils.truncateToHours(sessionStartDate)
+    this.sessionStartDate = lazy.TelemetryUtils.toLocalTimeISOString(
+      lazy.TelemetryUtils.truncateToHours(sessionStartDate)
     );
-    TelemetryController.registerSyncPingShutdown(() => this.shutdown());
+    lazy.TelemetryController.registerSyncPingShutdown(() => this.shutdown());
   }
 
   sanitizeFxaDeviceId(deviceId) {
-    return fxAccounts.telemetry.sanitizeDeviceId(deviceId);
+    return lazy.fxAccounts.telemetry.sanitizeDeviceId(deviceId);
   }
 
   prepareFxaDevices(devices) {
@@ -694,7 +696,7 @@ class SyncTelemetryImpl {
   }
 
   syncIsEnabled() {
-    return WeaveService.enabled && WeaveService.ready;
+    return lazy.WeaveService.enabled && lazy.WeaveService.ready;
   }
 
   // Separate for testing.
@@ -702,7 +704,7 @@ class SyncTelemetryImpl {
     if (!this.syncIsEnabled()) {
       throw new Error("Bug: syncIsEnabled() must be true, check it first");
     }
-    return Weave.Service.clientsEngine.remoteClients;
+    return lazy.Weave.Service.clientsEngine.remoteClients;
   }
 
   updateFxaDevices(devices) {
@@ -716,13 +718,13 @@ class SyncTelemetryImpl {
   }
 
   getFxaDevices() {
-    return fxAccounts.device.recentDeviceList;
+    return lazy.fxAccounts.device.recentDeviceList;
   }
 
   getPingJSON(reason) {
     let { devices, deviceID } = this.updateFxaDevices(this.getFxaDevices());
     return {
-      os: TelemetryEnvironment.currentEnvironment.system.os,
+      os: lazy.TelemetryEnvironment.currentEnvironment.system.os,
       why: reason,
       devices,
       discarded: this.discarded || undefined,
@@ -772,14 +774,14 @@ class SyncTelemetryImpl {
 
   setupObservers() {
     for (let topic of TOPICS) {
-      Observers.add(topic, this, this);
+      lazy.Observers.add(topic, this, this);
     }
   }
 
   shutdown() {
     this.finish("shutdown");
     for (let topic of TOPICS) {
-      Observers.remove(topic, this, this);
+      lazy.Observers.remove(topic, this, this);
     }
   }
 
@@ -796,7 +798,7 @@ class SyncTelemetryImpl {
         `submitting ${record.syncs.length} sync record(s) and ` +
           `${numEvents} event(s) to telemetry`
       );
-      TelemetryController.submitExternalPing("sync", record, {
+      lazy.TelemetryController.submitExternalPing("sync", record, {
         usePingSender: true,
       }).catch(err => {
         log.error("failed to submit ping", err);
@@ -812,8 +814,8 @@ class SyncTelemetryImpl {
     // need to consider - fxa doesn't consider that as if that's the only
     // pref set, they *are* running a production fxa, just not production sync.
     if (
-      !FxAccounts.config.isProductionConfig() ||
-      Services.prefs.prefHasUserValue("services.sync.tokenServerURI")
+      !lazy.FxAccounts.config.isProductionConfig() ||
+      lazy.Services.prefs.prefHasUserValue("services.sync.tokenServerURI")
     ) {
       log.trace(`Not sending telemetry ping for self-hosted Sync user`);
       return false;
@@ -845,10 +847,12 @@ class SyncTelemetryImpl {
     // Awkwardly async, but no need to await. If the user's account state changes while
     // this promise is in flight, it will reject and we won't record any data in the ping.
     // (And a new notification will trigger us to try again with the new state).
-    fxAccounts.device
+    lazy.fxAccounts.device
       .getLocalId()
       .then(deviceId => {
-        let sanitizedDeviceId = fxAccounts.telemetry.sanitizeDeviceId(deviceId);
+        let sanitizedDeviceId = lazy.fxAccounts.telemetry.sanitizeDeviceId(
+          deviceId
+        );
         // In the past we did not persist the FxA metrics identifiers to disk,
         // so this might be missing until we can fetch it from the server for the
         // first time. There will be a fresh notification tirggered when it's available.
@@ -857,7 +861,7 @@ class SyncTelemetryImpl {
           // The first 32 chars are sufficient to uniquely identify the device, so just send those.
           // It's hard to change the sync ping itself to only send 32 chars, to b/w compat reasons.
           sanitizedDeviceId = sanitizedDeviceId.substr(0, 32);
-          Services.telemetry.scalarSet(
+          lazy.Services.telemetry.scalarSet(
             "deletion.request.sync_device_id",
             sanitizedDeviceId
           );
@@ -873,7 +877,7 @@ class SyncTelemetryImpl {
   // This keeps the `deletion-request` ping up-to-date when the user signs out,
   // clearing the now-nonexistent sync device id.
   onAccountLogout() {
-    Services.telemetry.scalarSet("deletion.request.sync_device_id", "");
+    lazy.Services.telemetry.scalarSet("deletion.request.sync_device_id", "");
   }
 
   _checkCurrent(topic) {
@@ -887,7 +891,7 @@ class SyncTelemetryImpl {
   }
 
   _shouldSubmitForDataChange() {
-    let newID = fxAccounts.telemetry.getSanitizedUID() || EMPTY_UID;
+    let newID = lazy.fxAccounts.telemetry.getSanitizedUID() || EMPTY_UID;
     let oldID = this.lastUID;
     if (
       newID != EMPTY_UID &&
@@ -923,11 +927,11 @@ class SyncTelemetryImpl {
         "Early submission of sync telemetry due to changed IDs/NodeType"
       );
       this.finish("idchange"); // this actually submits.
-      this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
+      this.lastSubmissionTime = lazy.Services.telemetry.msSinceProcessStart();
     }
 
     // Only update the last UIDs if we actually know them.
-    let current_uid = fxAccounts.telemetry.getSanitizedUID();
+    let current_uid = lazy.fxAccounts.telemetry.getSanitizedUID();
     if (current_uid) {
       this.lastUID = current_uid;
     }
@@ -942,11 +946,11 @@ class SyncTelemetryImpl {
     // the sync and the events caused by it in different pings.
     if (
       this.current == null &&
-      Services.telemetry.msSinceProcessStart() - this.lastSubmissionTime >
+      lazy.Services.telemetry.msSinceProcessStart() - this.lastSubmissionTime >
         this.submissionInterval
     ) {
       this.finish("schedule");
-      this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
+      this.lastSubmissionTime = lazy.Services.telemetry.msSinceProcessStart();
     }
   }
 
@@ -973,7 +977,7 @@ class SyncTelemetryImpl {
   }
 
   _addHistogram(hist) {
-    let histogram = Services.telemetry.getHistogramById(hist);
+    let histogram = lazy.Services.telemetry.getHistogramById(hist);
     let s = histogram.snapshot();
     this.histograms[hist] = s;
   }
@@ -998,8 +1002,8 @@ class SyncTelemetryImpl {
     }
     log.debug("recording event", eventDetails);
 
-    if (extra && Resource.serverTime && !extra.serverTime) {
-      extra.serverTime = String(Resource.serverTime);
+    if (extra && lazy.Resource.serverTime && !extra.serverTime) {
+      extra.serverTime = String(lazy.Resource.serverTime);
     }
     let category = "sync";
     let ts = Math.floor(tryGetMonotonicTimestamp());
@@ -1130,7 +1134,7 @@ class SyncTelemetryImpl {
     if (typeof error == "object" && error.code && error.cause) {
       error = error.cause;
     }
-    if (Async.isShutdownException(error)) {
+    if (lazy.Async.isShutdownException(error)) {
       return { name: "shutdownerror" };
     }
 
@@ -1143,7 +1147,7 @@ class SyncTelemetryImpl {
       return { name: "unexpectederror", error };
     }
 
-    if (error instanceof AuthenticationError) {
+    if (error instanceof lazy.AuthenticationError) {
       return { name: "autherror", from: error.source };
     }
 

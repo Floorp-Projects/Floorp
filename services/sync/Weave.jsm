@@ -6,14 +6,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "syncUsername",
   "services.sync.username"
 );
@@ -140,7 +141,7 @@ WeaveService.prototype = {
    */
   get enabled() {
     return (
-      !!syncUsername &&
+      !!lazy.syncUsername &&
       Services.prefs.getBoolPref("identity.fxaccounts.enabled")
     );
   },
@@ -160,7 +161,7 @@ AboutWeaveLog.prototype = {
   },
 
   newChannel(aURI, aLoadInfo) {
-    let dir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
+    let dir = lazy.FileUtils.getDir("ProfD", ["weave", "logs"], true);
     let uri = Services.io.newFileURI(dir);
     let channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
 

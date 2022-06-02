@@ -12,25 +12,27 @@ const { CommonUtils } = ChromeUtils.import(
 );
 const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Async",
   "resource://services-common/async.js"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesSyncUtils",
   "resource://gre/modules/PlacesSyncUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URLSearchParams"]);
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["URLSearchParams"]);
 
 var EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
@@ -46,12 +48,12 @@ function areURLsEqual(a, b) {
   // Tag queries are special because we rewrite them to point to the
   // local tag folder ID. It's expected that the folders won't match,
   // but all other params should.
-  let aParams = new URLSearchParams(a.slice(QUERY_PROTOCOL.length));
+  let aParams = new lazy.URLSearchParams(a.slice(QUERY_PROTOCOL.length));
   let aType = +aParams.get("type");
   if (aType != Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
     return false;
   }
-  let bParams = new URLSearchParams(b.slice(QUERY_PROTOCOL.length));
+  let bParams = new lazy.URLSearchParams(b.slice(QUERY_PROTOCOL.length));
   let bType = +bParams.get("type");
   if (bType != Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
     return false;
@@ -234,28 +236,28 @@ class BookmarkProblemData {
 }
 
 // Defined lazily to avoid initializing PlacesUtils.bookmarks too soon.
-XPCOMUtils.defineLazyGetter(this, "SYNCED_ROOTS", () => [
-  PlacesUtils.bookmarks.menuGuid,
-  PlacesUtils.bookmarks.toolbarGuid,
-  PlacesUtils.bookmarks.unfiledGuid,
-  PlacesUtils.bookmarks.mobileGuid,
+XPCOMUtils.defineLazyGetter(lazy, "SYNCED_ROOTS", () => [
+  lazy.PlacesUtils.bookmarks.menuGuid,
+  lazy.PlacesUtils.bookmarks.toolbarGuid,
+  lazy.PlacesUtils.bookmarks.unfiledGuid,
+  lazy.PlacesUtils.bookmarks.mobileGuid,
 ]);
 
 // Maps root GUIDs to their query folder names from
 // toolkit/components/places/nsNavHistoryQuery.cpp. We follow queries that
 // reference existing folders in the client tree, and detect cycles where a
 // query references its containing folder.
-XPCOMUtils.defineLazyGetter(this, "ROOT_GUID_TO_QUERY_FOLDER_NAME", () => ({
-  [PlacesUtils.bookmarks.rootGuid]: "PLACES_ROOT",
-  [PlacesUtils.bookmarks.menuGuid]: "BOOKMARKS_MENU",
+XPCOMUtils.defineLazyGetter(lazy, "ROOT_GUID_TO_QUERY_FOLDER_NAME", () => ({
+  [lazy.PlacesUtils.bookmarks.rootGuid]: "PLACES_ROOT",
+  [lazy.PlacesUtils.bookmarks.menuGuid]: "BOOKMARKS_MENU",
 
   // Tags should never show up in our client tree, and never form cycles, but we
   // report them just in case.
-  [PlacesUtils.bookmarks.tagsGuid]: "TAGS",
+  [lazy.PlacesUtils.bookmarks.tagsGuid]: "TAGS",
 
-  [PlacesUtils.bookmarks.unfiledGuid]: "UNFILED_BOOKMARKS",
-  [PlacesUtils.bookmarks.toolbarGuid]: "TOOLBAR",
-  [PlacesUtils.bookmarks.mobileGuid]: "MOBILE_BOOKMARKS",
+  [lazy.PlacesUtils.bookmarks.unfiledGuid]: "UNFILED_BOOKMARKS",
+  [lazy.PlacesUtils.bookmarks.toolbarGuid]: "TOOLBAR",
+  [lazy.PlacesUtils.bookmarks.mobileGuid]: "MOBILE_BOOKMARKS",
 }));
 
 async function detectCycles(records) {
@@ -266,7 +268,7 @@ async function detectCycles(records) {
   let currentPath = [];
   let cycles = [];
   let seenEver = new Set();
-  const yieldState = Async.yieldState();
+  const yieldState = lazy.Async.yieldState();
 
   const traverse = async node => {
     if (pathLookup.has(node)) {
@@ -287,13 +289,13 @@ async function detectCycles(records) {
     if (children.length) {
       pathLookup.add(node);
       currentPath.push(node);
-      await Async.yieldingForEach(children, traverse, yieldState);
+      await lazy.Async.yieldingForEach(children, traverse, yieldState);
       currentPath.pop();
       pathLookup.delete(node);
     }
   };
 
-  await Async.yieldingForEach(
+  await lazy.Async.yieldingForEach(
     records,
     async record => {
       if (!seenEver.has(record)) {
@@ -326,7 +328,7 @@ class ServerRecordInspection {
     this._orphans = new Map();
     this._multipleParents = new Map();
 
-    this.yieldState = Async.yieldState();
+    this.yieldState = lazy.Async.yieldState();
   }
 
   static async create(records) {
@@ -381,7 +383,7 @@ class ServerRecordInspection {
     this.serverRecords = records;
     let rootChildren = [];
 
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       this.serverRecords,
       async record => {
         if (!record.id) {
@@ -445,7 +447,7 @@ class ServerRecordInspection {
         // The last two are left alone until later `this._linkChildren`, however.
         record.childGUIDs = record.children;
 
-        await Async.yieldingForEach(
+        await lazy.Async.yieldingForEach(
           record.childGUIDs,
           id => {
             this.noteParent(id, record.id);
@@ -494,7 +496,7 @@ class ServerRecordInspection {
 
   // Adds `parent` to all records it can that have `parentid`
   async _linkParentIDs() {
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       this.idToRecord,
       ([id, record]) => {
         if (record == this.root || record.deleted) {
@@ -543,7 +545,7 @@ class ServerRecordInspection {
   // objects, not ids)
   async _linkChildren() {
     // Check that we aren't missing any children.
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       this.folders,
       async folder => {
         folder.children = [];
@@ -551,7 +553,7 @@ class ServerRecordInspection {
 
         let idsThisFolder = new Set();
 
-        await Async.yieldingForEach(
+        await lazy.Async.yieldingForEach(
           folder.childGUIDs,
           childID => {
             let child = this.idToRecord.get(childID);
@@ -597,7 +599,7 @@ class ServerRecordInspection {
   async _findOrphans() {
     let seen = new Set([this.root.id]);
 
-    const inCycle = await Async.yieldingForEach(
+    const inCycle = await lazy.Async.yieldingForEach(
       Utils.walkTree(this.root),
       ([node]) => {
         if (seen.has(node.id)) {
@@ -616,7 +618,7 @@ class ServerRecordInspection {
       return;
     }
 
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       this.liveRecords,
       (record, i) => {
         if (!seen.has(record.id)) {
@@ -629,7 +631,7 @@ class ServerRecordInspection {
       this.yieldState
     );
 
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       this._orphans,
       ([id, parent]) => {
         this.problemData.orphans.push({ id, parent });
@@ -664,15 +666,15 @@ class ServerRecordInspection {
 
 class BookmarkValidator {
   constructor() {
-    this.yieldState = Async.yieldState();
+    this.yieldState = lazy.Async.yieldState();
   }
 
   async canValidate() {
-    return !(await PlacesSyncUtils.bookmarks.havePendingChanges());
+    return !(await lazy.PlacesSyncUtils.bookmarks.havePendingChanges());
   }
 
   async _followQueries(recordsByQueryId) {
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       recordsByQueryId.values(),
       entry => {
         if (
@@ -681,7 +683,7 @@ class BookmarkValidator {
         ) {
           return;
         }
-        let params = new URLSearchParams(
+        let params = new lazy.URLSearchParams(
           entry.bmkUri.slice(QUERY_PROTOCOL.length)
         );
         // Queries with `excludeQueries` won't form cycles because they'll
@@ -714,33 +716,33 @@ class BookmarkValidator {
     // still use local IDs. We use this mapping to parse `place:` queries that
     // refer to folders via their local IDs.
     let recordsByQueryId = new Map();
-    let syncedRoots = SYNCED_ROOTS;
+    let syncedRoots = lazy.SYNCED_ROOTS;
 
     const traverse = async (treeNode, synced) => {
       if (!synced) {
         synced = syncedRoots.includes(treeNode.guid);
       }
       let localId = treeNode.id;
-      let guid = PlacesSyncUtils.bookmarks.guidToRecordId(treeNode.guid);
+      let guid = lazy.PlacesSyncUtils.bookmarks.guidToRecordId(treeNode.guid);
       let itemType = "item";
       treeNode.ignored = !synced;
       treeNode.id = guid;
       switch (treeNode.type) {
-        case PlacesUtils.TYPE_X_MOZ_PLACE:
+        case lazy.PlacesUtils.TYPE_X_MOZ_PLACE:
           if (treeNode.uri.startsWith(QUERY_PROTOCOL)) {
             itemType = "query";
           } else {
             itemType = "bookmark";
           }
           break;
-        case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
+        case lazy.PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
           let isLivemark = false;
           if (treeNode.annos) {
             for (let anno of treeNode.annos) {
-              if (anno.name === PlacesUtils.LMANNO_FEEDURI) {
+              if (anno.name === lazy.PlacesUtils.LMANNO_FEEDURI) {
                 isLivemark = true;
                 treeNode.feedUri = anno.value;
-              } else if (anno.name === PlacesUtils.LMANNO_SITEURI) {
+              } else if (anno.name === lazy.PlacesUtils.LMANNO_SITEURI) {
                 isLivemark = true;
                 treeNode.siteUri = anno.value;
               }
@@ -748,7 +750,7 @@ class BookmarkValidator {
           }
           itemType = isLivemark ? "livemark" : "folder";
           break;
-        case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
+        case lazy.PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
           itemType = "separator";
           break;
       }
@@ -762,8 +764,8 @@ class BookmarkValidator {
       treeNode.pos = treeNode.index;
       treeNode.bmkUri = treeNode.uri;
       records.push(treeNode);
-      if (treeNode.guid in ROOT_GUID_TO_QUERY_FOLDER_NAME) {
-        let queryId = ROOT_GUID_TO_QUERY_FOLDER_NAME[treeNode.guid];
+      if (treeNode.guid in lazy.ROOT_GUID_TO_QUERY_FOLDER_NAME) {
+        let queryId = lazy.ROOT_GUID_TO_QUERY_FOLDER_NAME[treeNode.guid];
         recordsByQueryId.set(queryId, treeNode);
       }
       if (localId) {
@@ -779,7 +781,7 @@ class BookmarkValidator {
           treeNode.children = [];
         }
 
-        await Async.yieldingForEach(
+        await lazy.Async.yieldingForEach(
           treeNode.children,
           async child => {
             await traverse(child, synced);
@@ -837,7 +839,7 @@ class BookmarkValidator {
   // Perform client-side sanity checking that doesn't involve server data
   async _validateClient(problemData, clientRecords) {
     problemData.clientCycles = await detectCycles(clientRecords);
-    for (let rootGUID of SYNCED_ROOTS) {
+    for (let rootGUID of lazy.SYNCED_ROOTS) {
       let record = clientRecords.find(record => record.guid === rootGUID);
       if (!record || record.parentid !== "places") {
         problemData.badClientRoots.push(rootGUID);
@@ -847,7 +849,7 @@ class BookmarkValidator {
 
   async _computeUnifiedRecordMap(serverRecords, clientRecords) {
     let allRecords = new Map();
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       serverRecords,
       sr => {
         if (sr.fake) {
@@ -858,7 +860,7 @@ class BookmarkValidator {
       this.yieldState
     );
 
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       clientRecords,
       cr => {
         let unified = allRecords.get(cr.id);
@@ -895,7 +897,7 @@ class BookmarkValidator {
     // "Mobile Bookmarks", but the server thinks it's "mobile".
     // TODO: We probably should be handing other localized bookmarks (e.g.
     // default bookmarks) here as well, see bug 1316041.
-    if (!SYNCED_ROOTS.includes(client.guid)) {
+    if (!lazy.SYNCED_ROOTS.includes(client.guid)) {
       // We want to treat undefined, null and an empty string as identical
       if ((client.title || "") !== (server.title || "")) {
         differences.push("title");
@@ -997,7 +999,7 @@ class BookmarkValidator {
 
     let serverDeleted = new Set(inspectionInfo.deletedRecords.map(r => r.id));
 
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       allRecords,
       ([id, { client, server }]) => {
         if (!client || !server) {
@@ -1039,7 +1041,7 @@ class BookmarkValidator {
       throw result.response;
     }
     let cleartexts = [];
-    await Async.yieldingForEach(
+    await lazy.Async.yieldingForEach(
       result.records,
       async record => {
         await record.decrypt(collectionKey);
@@ -1052,7 +1054,7 @@ class BookmarkValidator {
 
   async validate(engine) {
     let start = Date.now();
-    let clientTree = await PlacesUtils.promiseBookmarksTree("", {
+    let clientTree = await lazy.PlacesUtils.promiseBookmarksTree("", {
       includeItemIds: true,
     });
     let serverState = await this._getServerState(engine);
