@@ -26,7 +26,6 @@ add_task(async function() {
   // Needed for the execute() call in `testMessages`.
   await pushPref("security.allow_parent_unrestricted_js_loads", true);
   await pushPref("devtools.browserconsole.contentMessages", true);
-  await pushPref("devtools.browserconsole.enableNetworkMonitoring", true);
   const tab = await addTab(TEST_URI);
 
   info(

@@ -35,7 +35,6 @@ pref("devtools.webconsole.input.editor", false);
 pref("devtools.webconsole.input.autocomplete", true);
 pref("devtools.webconsole.input.eagerEvaluation", true);
 pref("devtools.browserconsole.contentMessages", true);
-pref("devtools.browserconsole.enableNetworkMonitoring", false);
 pref("devtools.webconsole.input.editorWidth", 800);
 pref("devtools.webconsole.input.editorOnboarding", true);
 pref("devtools.webconsole.input.context", false);

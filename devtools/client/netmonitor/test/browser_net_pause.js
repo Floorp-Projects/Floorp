@@ -22,7 +22,7 @@ add_task(async function() {
   assertRequestCount(store, 0);
 
   // Load one request and assert it shows up in the list.
-  await performRequestAndWait(tab, monitor, SIMPLE_SJS + "?id=1");
+  await performRequestAndWait(tab, monitor);
   assertRequestCount(store, 1);
 
   let noRequest = true;
@@ -36,68 +36,26 @@ add_task(async function() {
 
   // Click pause, load second request and make sure they don't show up.
   EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
-  await waitForPauseButtonToChange(document, true);
-
   await performPausedRequest(tab, monitor, toolbox);
-
   ok(noRequest, "There should be no activity when paused.");
   assertRequestCount(store, 1);
 
   // Click pause again to resume monitoring. Load a third request
   // and make sure they will show up.
   EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
-  await waitForPauseButtonToChange(document, false);
-
-  await performRequestAndWait(tab, monitor, SIMPLE_SJS + "?id=2");
-
-  ok(!noRequest, "There should be activity when resumed.");
+  await performRequestAndWait(tab, monitor);
   assertRequestCount(store, 2);
 
   // Click pause, reload the page and check that there are
-  // some requests.
+  // some requests. Page reload should auto-resume.
   EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
-  await waitForPauseButtonToChange(document, true);
-
-  // Page reload should auto-resume
+  const networkEvents = waitForNetworkEvents(monitor, 1);
   await reloadBrowser();
-  await waitForPauseButtonToChange(document, false);
-  await performRequestAndWait(tab, monitor, SIMPLE_SJS + "?id=3");
-
-  ok(!noRequest, "There should be activity when resumed.");
+  await networkEvents;
+  assertRequestCount(store, 1);
 
   return teardown(monitor);
 });
-
-/**
- * Wait until a request is visible in the request list
- */
-function waitForRequest(doc, url) {
-  return waitUntil(() =>
-    [
-      ...doc.querySelectorAll(".request-list-item .requests-list-file"),
-    ].some(columns => columns.title.includes(url))
-  );
-}
-
-/**
- * Waits for the state of the paused/resume button to change.
- */
-async function waitForPauseButtonToChange(doc, isPaused) {
-  await waitUntil(
-    () =>
-      !!doc.querySelector(
-        `.requests-list-pause-button.devtools-${
-          isPaused ? "play" : "pause"
-        }-icon`
-      )
-  );
-  ok(
-    true,
-    `The pause button is correctly in the ${
-      isPaused ? "paused" : "resumed"
-    } state`
-  );
-}
 
 /**
  * Asserts the number of requests in the network monitor.
@@ -113,9 +71,9 @@ function assertRequestCount(store, count) {
 /**
  * Execute simple GET request and wait till it's done.
  */
-async function performRequestAndWait(tab, monitor, requestURL) {
-  const wait = waitForRequest(monitor.panelWin.document, requestURL);
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestURL], async function(
+async function performRequestAndWait(tab, monitor) {
+  const wait = waitForNetworkEvents(monitor, 1);
+  await SpecialPowers.spawn(tab.linkedBrowser, [SIMPLE_SJS], async function(
     url
   ) {
     await content.wrappedJSObject.performRequests(url);
@@ -124,8 +82,7 @@ async function performRequestAndWait(tab, monitor, requestURL) {
 }
 
 /**
- * Execute simple GET request, and uses a one time listener to
- * know when the resource is available.
+ * Execute simple GET request
  */
 async function performPausedRequest(tab, monitor, toolbox) {
   const {

@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {
   Component,
   createFactory,
@@ -115,8 +116,15 @@ class TabboxPanel extends Component {
       return null;
     }
 
-    const isWs = request.cause.type === "websocket";
-    const isSse = request.isEventStream;
+    const isWs =
+      request.cause.type === "websocket" &&
+      Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets");
+
+    const isSse =
+      request.isEventStream &&
+      Services.prefs.getBoolPref(
+        "devtools.netmonitor.features.serverSentEvents"
+      );
 
     const showMessagesView = (isWs || isSse) && this.props.showMessagesView;
 

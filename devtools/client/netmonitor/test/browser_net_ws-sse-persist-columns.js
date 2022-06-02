@@ -47,6 +47,13 @@ function shallowEqual(obj1, obj2) {
 }
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["devtools.netmonitor.features.serverSentEvents", true],
+      ["devtools.netmonitor.features.webSockets", true],
+    ],
+  });
+
   const { tab, monitor } = await initNetMonitor(
     "http://mochi.test:8888/browser/devtools/client/netmonitor/test/html_ws-sse-test-page.html",
     {
