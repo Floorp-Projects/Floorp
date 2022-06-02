@@ -70,11 +70,7 @@ SECKEYPublicKey* StaticCachedPublicKey::Get(const RawKeyRef aRawKey) {
     const SECItem item{siBuffer, const_cast<unsigned char*>(aRawKey.data()),
                        unsigned(aRawKey.Length())};
     MOZ_RELEASE_ASSERT(item.data[0] == EC_POINT_FORM_UNCOMPRESSED);
-
-    // Key verification takes a lot of time when verifying tokens, and it is
-    // unnecessary work since the keys are trusted.
-    const bool kVerifyValid = false;
-    mKey = dom::CreateECPublicKey(&item, kEcAlgorithm, kVerifyValid).release();
+    mKey = dom::CreateECPublicKey(&item, kEcAlgorithm);
     if (mKey) {
       // It's fine to capture [this] by pointer because we are always static.
       if (NS_IsMainThread()) {
