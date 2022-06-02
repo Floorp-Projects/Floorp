@@ -4,11 +4,16 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const PROVIDER_PREF_BRANCH =
   "browser.newtabpage.activity-stream.asrouter.providers.";
 const DEVTOOLS_PREF =
   "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
+const DEBUG_PREF = "browser.newtabpage.activity-stream.asrouter.debugLogLevel";
+
 const FXA_USERNAME_PREF = "services.sync.username";
 
 const DEFAULT_STATE = {
@@ -49,6 +54,21 @@ class _ASRouterPreferences {
   constructor() {
     Object.assign(this, DEFAULT_STATE);
     this._callbacks = new Set();
+
+    XPCOMUtils.defineLazyGetter(this, "console", () => {
+      let { ConsoleAPI } = ChromeUtils.import(
+        "resource://gre/modules/Console.jsm"
+      );
+      let consoleOptions = {
+        // tip: set maxLogLevel to "debug" and use `ASRouterPreferences.console.debug()`
+        // to create detailed messages during development. See LOG_LEVELS in Console.jsm
+        // for details:
+        maxLogLevel: "error",
+        maxLogLevelPref: DEBUG_PREF,
+        prefix: "ASRouter",
+      };
+      return new ConsoleAPI(consoleOptions);
+    });
   }
 
   _transformPersonalizedCfrScores(value) {
