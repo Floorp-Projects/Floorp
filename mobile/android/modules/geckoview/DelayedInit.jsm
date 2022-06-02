@@ -11,8 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "MessageLoop",
   "@mozilla.org/message-loop;1",
   "nsIMessageLoop"
@@ -96,7 +98,7 @@ var Impl = {
 
     if (nextDue !== undefined) {
       // Schedule the next idle, if we still have pending inits.
-      MessageLoop.postIdleTask(
+      lazy.MessageLoop.postIdleTask(
         () => this.onIdle(),
         Math.max(0, nextDue - time)
       );
@@ -121,7 +123,7 @@ var Impl = {
 
     if (!this.pendingInits.length) {
       // Schedule for the first idle.
-      MessageLoop.postIdleTask(() => this.onIdle(), wait);
+      lazy.MessageLoop.postIdleTask(() => this.onIdle(), wait);
     }
     this.pendingInits.push(init);
     return init;
