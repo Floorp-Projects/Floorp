@@ -63,7 +63,11 @@ FrameBuffer::FrameBuffer(Clock* clock,
       last_log_non_decoded_ms_(-kLogNonDecodedIntervalMs),
       add_rtt_to_playout_delay_(
           webrtc::field_trial::IsEnabled("WebRTC-AddRttToPlayoutDelay")),
-      rtt_mult_settings_(RttMultExperiment::GetRttMultValue()) {
+      rtt_mult_settings_(RttMultExperiment::GetRttMultValue()),
+      zero_playout_delay_max_decode_queue_size_("max_decode_queue_size",
+                                                kMaxFramesBuffered) {
+  ParseFieldTrial({&zero_playout_delay_max_decode_queue_size_},
+                  field_trial::FindFullName("WebRTC-ZeroPlayoutDelay"));
   callback_checker_.Detach();
 }
 
@@ -212,7 +216,11 @@ int64_t FrameBuffer::FindNextFrame(int64_t now_ms) {
     if (frame->RenderTime() == -1) {
       frame->SetRenderTime(timing_->RenderTimeMs(frame->Timestamp(), now_ms));
     }
-    wait_ms = timing_->MaxWaitingTime(frame->RenderTime(), now_ms);
+    bool too_many_frames_queued =
+        frames_.size() > zero_playout_delay_max_decode_queue_size_ ? true
+                                                                   : false;
+    wait_ms = timing_->MaxWaitingTime(frame->RenderTime(), now_ms,
+                                      too_many_frames_queued);
 
     // This will cause the frame buffer to prefer high framerate rather
     // than high resolution in the case of the decoder not decoding fast
