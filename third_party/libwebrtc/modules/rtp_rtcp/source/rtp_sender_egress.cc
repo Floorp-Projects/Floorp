@@ -295,7 +295,7 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
   }
 
   if (send_success) {
-    // |media_has_been_sent_| is used by RTPSender to figure out if it can send
+    // `media_has_been_sent_` is used by RTPSender to figure out if it can send
     // padding in the absence of transport-cc or abs-send-time.
     // In those cases media must be sent first to set a reference timestamp.
     media_has_been_sent_ = true;

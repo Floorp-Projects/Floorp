@@ -168,7 +168,7 @@ class RTPSender {
     return flexfec_ssrc_;
   }
 
-  // Sends packet to |transport_| or to the pacer, depending on configuration.
+  // Sends packet to `transport_` or to the pacer, depending on configuration.
   // TODO(bugs.webrtc.org/XXX): Remove in favor of EnqueuePackets().
   bool SendToNetwork(std::unique_ptr<RtpPacketToSend> packet)
       RTC_LOCKS_EXCLUDED(send_mutex_);
@@ -204,7 +204,7 @@ class RTPSender {
   const absl::optional<uint32_t> rtx_ssrc_;
   const absl::optional<uint32_t> flexfec_ssrc_;
   // Limits GeneratePadding() outcome to <=
-  //  |max_padding_size_factor_| * |target_size_bytes|
+  //  `max_padding_size_factor_` * `target_size_bytes`
   const double max_padding_size_factor_;
 
   RtpPacketHistory* const packet_history_;

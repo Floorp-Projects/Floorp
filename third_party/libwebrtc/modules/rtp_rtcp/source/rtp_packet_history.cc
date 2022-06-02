@@ -54,7 +54,7 @@ RtpPacketHistory::StoredPacket::~StoredPacket() = default;
 void RtpPacketHistory::StoredPacket::IncrementTimesRetransmitted(
     PacketPrioritySet* priority_set) {
   // Check if this StoredPacket is in the priority set. If so, we need to remove
-  // it before updating |times_retransmitted_| since that is used in sorting,
+  // it before updating `times_retransmitted_` since that is used in sorting,
   // and then add it back.
   const bool in_priority_set = priority_set && priority_set->erase(this) > 0;
   ++times_retransmitted_;

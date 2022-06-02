@@ -128,9 +128,9 @@ void ModuleRtpRtcpImpl::Process() {
   bool process_rtt = now >= last_rtt_process_time_ + kRtpRtcpRttProcessTimeMs;
   if (rtcp_sender_.Sending()) {
     // Process RTT if we have received a report block and we haven't
-    // processed RTT for at least |kRtpRtcpRttProcessTimeMs| milliseconds.
+    // processed RTT for at least `kRtpRtcpRttProcessTimeMs` milliseconds.
     // Note that LastReceivedReportBlockMs() grabs a lock, so check
-    // |process_rtt| first.
+    // `process_rtt` first.
     if (process_rtt && rtt_stats_ != nullptr &&
         rtcp_receiver_.LastReceivedReportBlockMs() > last_rtt_process_time_) {
       int64_t max_rtt_ms = 0;
@@ -530,7 +530,7 @@ int64_t ModuleRtpRtcpImpl::ExpectedRetransmissionTimeMs() const {
   if (expected_retransmission_time_ms > 0) {
     return expected_retransmission_time_ms;
   }
-  // No rtt available (|kRtpRtcpRttProcessTimeMs| not yet passed?), so try to
+  // No rtt available (`kRtpRtcpRttProcessTimeMs` not yet passed?), so try to
   // poll avg_rtt_ms directly from rtcp receiver.
   if (rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), nullptr,
                          &expected_retransmission_time_ms, nullptr,
@@ -673,7 +673,7 @@ bool ModuleRtpRtcpImpl::TimeToSendFullNackList(int64_t now) const {
     wait_time = kStartUpRttMs;
   }
 
-  // Send a full NACK list once within every |wait_time|.
+  // Send a full NACK list once within every `wait_time`.
   return now - nack_last_time_sent_full_ms_ > wait_time;
 }
 

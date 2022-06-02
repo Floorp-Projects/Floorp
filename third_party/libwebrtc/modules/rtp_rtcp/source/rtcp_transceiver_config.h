@@ -86,7 +86,7 @@ struct RtcpTransceiverConfig {
   //
   // Tuning parameters.
   //
-  // Initial state if |outgoing_transport| ready to accept packets.
+  // Initial state if `outgoing_transport` ready to accept packets.
   bool initial_ready_to_send = true;
   // Delay before 1st periodic compound packet.
   int initial_report_delay_ms = 500;

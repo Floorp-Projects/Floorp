@@ -22,7 +22,7 @@
 namespace webrtc {
 
 //
-// Helper class for interpolating the |AbsoluteCaptureTime| header extension.
+// Helper class for interpolating the `AbsoluteCaptureTime` header extension.
 //
 // Supports the "timestamp interpolation" optimization:
 //   A receiver SHOULD memorize the capture system (i.e. CSRC/SSRC), capture

@@ -53,7 +53,7 @@ RTCPSender::Configuration AddRtcpSendEvaluationCallback(
 
 int DelayMillisForDuration(TimeDelta duration) {
   // TimeDelta::ms() rounds downwards sometimes which leads to too little time
-  // slept. Account for this, unless |duration| is exactly representable in
+  // slept. Account for this, unless `duration` is exactly representable in
   // millisecs.
   return (duration.us() + rtc::kNumMillisecsPerSec - 1) /
          rtc::kNumMicrosecsPerMillisec;
@@ -528,9 +528,9 @@ int32_t ModuleRtpRtcpImpl2::RemoteNTP(uint32_t* received_ntpsecs,
              : -1;
 }
 
-// TODO(tommi): Check if |avg_rtt_ms|, |min_rtt_ms|, |max_rtt_ms| params are
+// TODO(tommi): Check if `avg_rtt_ms`, `min_rtt_ms`, `max_rtt_ms` params are
 // actually used in practice (some callers ask for it but don't use it). It
-// could be that only |rtt| is needed and if so, then the fast path could be to
+// could be that only `rtt` is needed and if so, then the fast path could be to
 // just call rtt_ms() and rely on the calculation being done periodically.
 int32_t ModuleRtpRtcpImpl2::RTT(const uint32_t remote_ssrc,
                                 int64_t* rtt,
@@ -550,7 +550,7 @@ int64_t ModuleRtpRtcpImpl2::ExpectedRetransmissionTimeMs() const {
   if (expected_retransmission_time_ms > 0) {
     return expected_retransmission_time_ms;
   }
-  // No rtt available (|kRttUpdateInterval| not yet passed?), so try to
+  // No rtt available (`kRttUpdateInterval` not yet passed?), so try to
   // poll avg_rtt_ms directly from rtcp receiver.
   if (rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), nullptr,
                          &expected_retransmission_time_ms, nullptr,
@@ -693,7 +693,7 @@ bool ModuleRtpRtcpImpl2::TimeToSendFullNackList(int64_t now) const {
     wait_time = kStartUpRttMs;
   }
 
-  // Send a full NACK list once within every |wait_time|.
+  // Send a full NACK list once within every `wait_time`.
   return now - nack_last_time_sent_full_ms_ > wait_time;
 }
 
@@ -872,7 +872,7 @@ void ModuleRtpRtcpImpl2::ScheduleMaybeSendRtcpAtOrAfterTimestamp(
     TimeDelta duration) {
   // We end up here under various sequences including the worker queue, and
   // the RTCPSender lock is held.
-  // See note in ScheduleRtcpSendEvaluation about why |worker_queue_| can be
+  // See note in ScheduleRtcpSendEvaluation about why `worker_queue_` can be
   // accessed.
   worker_queue_->PostDelayedTask(
       ToQueuedTask(task_safety_,

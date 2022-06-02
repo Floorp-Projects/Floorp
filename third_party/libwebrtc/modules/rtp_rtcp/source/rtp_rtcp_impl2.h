@@ -279,7 +279,7 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
     // Handles final time timestamping/stats/etc and handover to Transport.
     RtpSenderEgress packet_sender;
     // If no paced sender configured, this class will be used to pass packets
-    // from |packet_generator_| to |packet_sender_|.
+    // from `packet_generator_` to `packet_sender_`.
     RtpSenderEgress::NonPacedPacketSender non_paced_sender;
     // Handles creation of RTP packets to be sent.
     RTPSender packet_generator;
@@ -300,7 +300,7 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   // Used from RtcpSenderMediator to maybe send rtcp.
   void MaybeSendRtcp() RTC_RUN_ON(worker_queue_);
 
-  // Called when |rtcp_sender_| informs of the next RTCP instant. The method may
+  // Called when `rtcp_sender_` informs of the next RTCP instant. The method may
   // be called on various sequences, and is called under a RTCPSenderLock.
   void ScheduleRtcpSendEvaluation(TimeDelta duration);
 
@@ -310,7 +310,7 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   void MaybeSendRtcpAtOrAfterTimestamp(Timestamp execution_time)
       RTC_RUN_ON(worker_queue_);
 
-  // Schedules a call to MaybeSendRtcpAtOrAfterTimestamp delayed by |duration|.
+  // Schedules a call to MaybeSendRtcpAtOrAfterTimestamp delayed by `duration`.
   void ScheduleMaybeSendRtcpAtOrAfterTimestamp(Timestamp execution_time,
                                                TimeDelta duration);
 
