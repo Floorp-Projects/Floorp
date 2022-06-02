@@ -276,7 +276,10 @@ void SimulcastTestFixtureImpl::SetUpCodec(const int* temporal_layer_profile) {
   DefaultSettings(&settings_, temporal_layer_profile, codec_type_);
   SetUpRateAllocator();
   EXPECT_EQ(0, encoder_->InitEncode(&settings_, kSettings));
-  EXPECT_EQ(0, decoder_->InitDecode(&settings_, 1));
+  VideoDecoder::Settings decoder_settings;
+  decoder_settings.set_max_render_resolution({kDefaultWidth, kDefaultHeight});
+  decoder_settings.set_codec_type(codec_type_);
+  EXPECT_TRUE(decoder_->Configure(decoder_settings));
   input_buffer_ = I420Buffer::Create(kDefaultWidth, kDefaultHeight);
   input_buffer_->InitializeData();
   input_frame_ = std::make_unique<webrtc::VideoFrame>(
