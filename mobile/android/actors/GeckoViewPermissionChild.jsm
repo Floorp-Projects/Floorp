@@ -13,7 +13,9 @@ const { GeckoViewActorChild } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
 });
 
@@ -73,7 +75,7 @@ class GeckoViewPermissionChild extends GeckoViewActorChild {
         type: "GeckoView:ContentPermission",
         uri: principal.URI.displaySpec,
         thirdPartyOrigin: aRequest.principal.origin,
-        principal: E10SUtils.serializePrincipal(principal),
+        principal: lazy.E10SUtils.serializePrincipal(principal),
         perm: perm.type,
         value: perm.capability,
         contextId: principal.originAttributes.geckoViewSessionContextId ?? null,

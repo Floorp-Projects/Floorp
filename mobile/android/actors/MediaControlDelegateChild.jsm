@@ -12,7 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   MediaUtils: "resource://gre/modules/MediaUtils.jsm",
 });
 
@@ -34,7 +36,7 @@ class MediaControlDelegateChild extends GeckoViewActorChild {
     debug`handleFullscreenChanged`;
 
     const element = this.document.fullscreenElement;
-    const mediaElement = MediaUtils.findMediaElement(element);
+    const mediaElement = lazy.MediaUtils.findMediaElement(element);
 
     if (element && !mediaElement) {
       // Non-media element fullscreen.
@@ -43,7 +45,7 @@ class MediaControlDelegateChild extends GeckoViewActorChild {
 
     this.eventDispatcher.sendRequest({
       type: "GeckoView:MediaSession:Fullscreen",
-      metadata: MediaUtils.getMetadata(mediaElement) ?? {},
+      metadata: lazy.MediaUtils.getMetadata(mediaElement) ?? {},
       enabled: !!element,
     });
   }

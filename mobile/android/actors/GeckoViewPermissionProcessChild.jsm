@@ -16,8 +16,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "MediaManagerService",
   "@mozilla.org/mediaManagerService;1",
   "nsIMediaManagerService"
@@ -78,10 +80,10 @@ class GeckoViewPermissionProcessChild extends JSProcessActorChild {
 
     const getStatusString = function(activityStatus) {
       switch (activityStatus) {
-        case MediaManagerService.STATE_CAPTURE_ENABLED:
-        case MediaManagerService.STATE_CAPTURE_DISABLED:
+        case lazy.MediaManagerService.STATE_CAPTURE_ENABLED:
+        case lazy.MediaManagerService.STATE_CAPTURE_DISABLED:
           return STATUS_RECORDING;
-        case MediaManagerService.STATE_NOCAPTURE:
+        case lazy.MediaManagerService.STATE_NOCAPTURE:
           return STATUS_INACTIVE;
         default:
           throw new Error("Unexpected activityStatus value");
@@ -94,7 +96,7 @@ class GeckoViewPermissionProcessChild extends JSProcessActorChild {
     const window = {};
     const browser = {};
     const mediaDevices = {};
-    MediaManagerService.mediaCaptureWindowState(
+    lazy.MediaManagerService.mediaCaptureWindowState(
       contentWindow,
       hasCamera,
       hasMicrophone,
@@ -105,13 +107,13 @@ class GeckoViewPermissionProcessChild extends JSProcessActorChild {
     );
     var cameraStatus = getStatusString(hasCamera.value);
     var microphoneStatus = getStatusString(hasMicrophone.value);
-    if (hasCamera.value != MediaManagerService.STATE_NOCAPTURE) {
+    if (hasCamera.value != lazy.MediaManagerService.STATE_NOCAPTURE) {
       devices.push({
         type: TYPE_CAMERA,
         status: cameraStatus,
       });
     }
-    if (hasMicrophone.value != MediaManagerService.STATE_NOCAPTURE) {
+    if (hasMicrophone.value != lazy.MediaManagerService.STATE_NOCAPTURE) {
       devices.push({
         type: TYPE_MICROPHONE,
         status: microphoneStatus,
