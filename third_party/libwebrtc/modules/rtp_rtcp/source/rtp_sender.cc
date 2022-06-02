@@ -401,7 +401,7 @@ std::vector<std::unique_ptr<RtpPacketToSend>> RTPSender::GeneratePadding(
           packet_history_->GetPayloadPaddingPacket(
               [&](const RtpPacketToSend& packet)
                   -> std::unique_ptr<RtpPacketToSend> {
-                // Limit overshoot, generate <= |max_padding_size_factor_| *
+                // Limit overshoot, generate <= `max_padding_size_factor_` *
                 // target_size_bytes.
                 const size_t max_overshoot_bytes = static_cast<size_t>(
                     ((max_padding_size_factor_ - 1.0) * target_size_bytes) +
@@ -563,7 +563,7 @@ std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
   // sender can reduce overhead by omitting these header extensions once it
   // knows that the receiver has "bound" the SSRC.
   // This optimization can be configured by setting
-  // |always_send_mid_and_rid_| appropriately.
+  // `always_send_mid_and_rid_` appropriately.
   //
   // The algorithm here is fairly simple: Always attach a MID and/or RID (if
   // configured) to the outgoing packets until an RTCP receiver report comes

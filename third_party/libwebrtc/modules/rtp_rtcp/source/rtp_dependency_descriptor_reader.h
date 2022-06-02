@@ -34,7 +34,7 @@ class RtpDependencyDescriptorReader {
   bool ParseSuccessful() { return !parsing_failed_; }
 
  private:
-  // Reads bits from |buffer_|. If it fails, returns 0 and marks parsing as
+  // Reads bits from `buffer_`. If it fails, returns 0 and marks parsing as
   // failed, but doesn't stop the parsing.
   uint32_t ReadBits(size_t bit_count);
   uint32_t ReadNonSymmetric(size_t num_values);

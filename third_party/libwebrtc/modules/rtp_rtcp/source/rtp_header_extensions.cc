@@ -317,9 +317,9 @@ bool TransportSequenceNumber::Write(rtc::ArrayView<uint8_t> data,
 //  |seq count cont.|
 //  +-+-+-+-+-+-+-+-+
 //
-// The bit |T| determines whether the feedback should include timing information
-// or not and |seq_count| determines how many packets the feedback packet should
-// cover including the current packet. If |seq_count| is zero no feedback is
+// The bit `T` determines whether the feedback should include timing information
+// or not and `seq_count` determines how many packets the feedback packet should
+// cover including the current packet. If `seq_count` is zero no feedback is
 // requested.
 constexpr RTPExtensionType TransportSequenceNumberV2::kId;
 constexpr uint8_t TransportSequenceNumberV2::kValueSizeBytes;
@@ -346,7 +346,7 @@ bool TransportSequenceNumberV2::Parse(
         (feedback_request_raw & kIncludeTimestampsBit) != 0;
     uint16_t sequence_count = feedback_request_raw & ~kIncludeTimestampsBit;
 
-    // If |sequence_count| is zero no feedback is requested.
+    // If `sequence_count` is zero no feedback is requested.
     if (sequence_count != 0) {
       *feedback_request = {include_timestamps, sequence_count};
     }
@@ -530,7 +530,7 @@ bool VideoContentTypeExtension::Write(rtc::ArrayView<uint8_t> data,
 // Video Timing.
 // 6 timestamps in milliseconds counted from capture time stored in rtp header:
 // encode start/finish, packetization complete, pacer exit and reserved for
-// modification by the network modification. |flags| is a bitmask and has the
+// modification by the network modification. `flags` is a bitmask and has the
 // following allowed values:
 // 0 = Valid data, but no flags available (backwards compatibility)
 // 1 = Frame marked as timing frame due to cyclic timer.
@@ -847,7 +847,7 @@ bool BaseRtpStringExtension::Parse(rtc::ArrayView<const uint8_t> data,
   if (data.empty() || data[0] == 0)  // Valid string extension can't be empty.
     return false;
   const char* cstr = reinterpret_cast<const char*>(data.data());
-  // If there is a \0 character in the middle of the |data|, treat it as end
+  // If there is a \0 character in the middle of the `data`, treat it as end
   // of the string. Well-formed string extensions shouldn't contain it.
   str->assign(cstr, strnlen(cstr, data.size()));
   RTC_DCHECK(!str->empty());

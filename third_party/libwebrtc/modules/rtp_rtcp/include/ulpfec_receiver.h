@@ -42,7 +42,7 @@ class UlpfecReceiver {
   // Takes a RED packet, strips the RED header, and adds the resulting
   // "virtual" RTP packet(s) into the internal buffer.
   //
-  // TODO(brandtr): Set |ulpfec_payload_type| during constructor call,
+  // TODO(brandtr): Set `ulpfec_payload_type` during constructor call,
   // rather than as a parameter here.
   virtual bool AddReceivedRedPacket(const RtpPacketReceived& rtp_packet,
                                     uint8_t ulpfec_payload_type) = 0;

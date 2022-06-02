@@ -129,7 +129,7 @@ uint16_t TransportFeedback::LastChunk::Emit() {
   }
   RTC_DCHECK_GE(size_, kMaxTwoBitCapacity);
   uint16_t chunk = EncodeTwoBit(kMaxTwoBitCapacity);
-  // Remove |kMaxTwoBitCapacity| encoded delta sizes:
+  // Remove `kMaxTwoBitCapacity` encoded delta sizes:
   // Shift remaining delta sizes and recalculate all_same_ && has_large_delta_.
   size_ -= kMaxTwoBitCapacity;
   all_same_ = true;
@@ -153,7 +153,7 @@ uint16_t TransportFeedback::LastChunk::EncodeLast() const {
   return EncodeOneBit();
 }
 
-// Appends content of the Lastchunk to |deltas|.
+// Appends content of the Lastchunk to `deltas`.
 void TransportFeedback::LastChunk::AppendTo(
     std::vector<DeltaSize>* deltas) const {
   if (all_same_) {
@@ -441,7 +441,7 @@ bool TransportFeedback::Parse(const CommonHeader& packet) {
     last_chunk_.Decode(chunk, status_count - delta_sizes.size());
     last_chunk_.AppendTo(&delta_sizes);
   }
-  // Last chunk is stored in the |last_chunk_|.
+  // Last chunk is stored in the `last_chunk_`.
   encoded_chunks_.pop_back();
   RTC_DCHECK_EQ(delta_sizes.size(), status_count);
   num_seq_no_ = status_count;

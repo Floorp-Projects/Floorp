@@ -22,7 +22,7 @@
 namespace webrtc {
 
 //
-// Helper class for sending the |AbsoluteCaptureTime| header extension.
+// Helper class for sending the `AbsoluteCaptureTime` header extension.
 //
 // Supports the "timestamp interpolation" optimization:
 //   A sender SHOULD save bandwidth by not sending abs-capture-time with every

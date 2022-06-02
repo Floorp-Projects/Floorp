@@ -68,7 +68,7 @@ const size_t kMaxNumberOfStoredRrtrs = 300;
 constexpr TimeDelta kDefaultVideoReportInterval = TimeDelta::Seconds(1);
 constexpr TimeDelta kDefaultAudioReportInterval = TimeDelta::Seconds(5);
 
-// Returns true if the |timestamp| has exceeded the |interval *
+// Returns true if the `timestamp` has exceeded the |interval *
 // kRrTimeoutIntervals| period and was reset (set to PlusInfinity()). Returns
 // false if the timer was either already reset or if it has not expired.
 bool ResetTimestampIfExpired(const Timestamp now,
@@ -127,7 +127,7 @@ struct RTCPReceiver::PacketInformation {
 
   uint32_t remote_ssrc = 0;
   std::vector<uint16_t> nack_sequence_numbers;
-  // TODO(hbos): Remove |report_blocks| in favor of |report_block_datas|.
+  // TODO(hbos): Remove `report_blocks` in favor of `report_block_datas`.
   ReportBlockList report_blocks;
   std::vector<ReportBlockData> report_block_datas;
   int64_t rtt_ms = 0;
@@ -655,7 +655,7 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   // Receiver rtp_rtcp module is not expected to calculate rtt using
   // Sender Reports even if it accidentally can.
 
-  // TODO(nisse): Use this way to determine the RTT only when |receiver_only_|
+  // TODO(nisse): Use this way to determine the RTT only when `receiver_only_`
   // is false. However, that currently breaks the tests of the
   // googCaptureStartNtpTimeMs stat for audio receive streams. To fix, either
   // delete all dependencies on RTT measurements for audio receive streams, or
@@ -979,7 +979,7 @@ void RTCPReceiver::HandleTmmbr(const CommonHeader& rtcp_block,
     auto* entry = &tmmbr_info->tmmbr[sender_ssrc];
     entry->tmmbr_item = rtcp::TmmbItem(sender_ssrc, request.bitrate_bps(),
                                        request.packet_overhead());
-    // FindOrCreateTmmbrInfo always sets |last_time_received_ms| to
+    // FindOrCreateTmmbrInfo always sets `last_time_received_ms` to
     // |clock_->TimeInMilliseconds()|.
     entry->last_updated_ms = tmmbr_info->last_time_received_ms;
 

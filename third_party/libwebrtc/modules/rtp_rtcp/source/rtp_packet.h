@@ -26,9 +26,9 @@ class RtpPacket {
   using ExtensionType = RTPExtensionType;
   using ExtensionManager = RtpHeaderExtensionMap;
 
-  // |extensions| required for SetExtension/ReserveExtension functions during
+  // `extensions` required for SetExtension/ReserveExtension functions during
   // packet creating and used if available in Parse function.
-  // Adding and getting extensions will fail until |extensions| is
+  // Adding and getting extensions will fail until `extensions` is
   // provided via constructor or IdentifyExtensions function.
   // |*extensions| is only accessed during construction; the pointer is not
   // stored.
@@ -99,7 +99,7 @@ class RtpPacket {
   // which are modified after FEC protection is generated.
   void ZeroMutableExtensions();
 
-  // Removes extension of given |type|, returns false is extension was not
+  // Removes extension of given `type`, returns false is extension was not
   // registered in packet's extension map or not present in the packet. Only
   // extension that should be removed must be registered, other extensions may
   // not be registered and will be preserved as is.
@@ -136,11 +136,11 @@ class RtpPacket {
   template <typename Extension>
   bool ReserveExtension();
 
-  // Find or allocate an extension |type|. Returns view of size |length|
+  // Find or allocate an extension `type`. Returns view of size `length`
   // to write raw extension to or an empty view on failure.
   rtc::ArrayView<uint8_t> AllocateExtension(ExtensionType type, size_t length);
 
-  // Find an extension |type|.
+  // Find an extension `type`.
   // Returns view of the raw extension or empty view on failure.
   rtc::ArrayView<const uint8_t> FindExtension(ExtensionType type) const;
 
