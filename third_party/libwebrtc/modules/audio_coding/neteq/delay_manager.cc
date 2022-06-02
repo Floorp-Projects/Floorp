@@ -35,7 +35,6 @@ constexpr int kMaxBaseMinimumDelayMs = 10000;
 constexpr int kDelayBuckets = 100;
 constexpr int kBucketSizeMs = 20;
 constexpr int kStartDelayMs = 80;
-constexpr int kMaxNumReorderedPackets = 5;
 
 struct DelayManagerConfig {
   double quantile = 0.97;
@@ -101,8 +100,7 @@ DelayManager::DelayManager(int max_packets_in_buffer,
                            int max_history_ms,
                            const TickTimer* tick_timer,
                            std::unique_ptr<Histogram> histogram)
-    : first_packet_received_(false),
-      max_packets_in_buffer_(max_packets_in_buffer),
+    : max_packets_in_buffer_(max_packets_in_buffer),
       histogram_(std::move(histogram)),
       histogram_quantile_(histogram_quantile),
       tick_timer_(tick_timer),
@@ -112,8 +110,7 @@ DelayManager::DelayManager(int max_packets_in_buffer,
       effective_minimum_delay_ms_(base_minimum_delay_ms),
       minimum_delay_ms_(0),
       maximum_delay_ms_(0),
-      target_level_ms_(kStartDelayMs),
-      last_timestamp_(0) {
+      target_level_ms_(kStartDelayMs) {
   RTC_CHECK(histogram_);
   RTC_DCHECK_GE(base_minimum_delay_ms_, 0);
 
@@ -144,31 +141,23 @@ absl::optional<int> DelayManager::Update(uint32_t timestamp,
     return absl::nullopt;
   }
 
-  if (!first_packet_received_ || reset) {
+  if (!last_timestamp_ || reset) {
     // Restart relative delay esimation from this packet.
     delay_history_.clear();
     packet_iat_stopwatch_ = tick_timer_->GetNewStopwatch();
     last_timestamp_ = timestamp;
-    first_packet_received_ = true;
-    num_reordered_packets_ = 0;
     resample_stopwatch_ = tick_timer_->GetNewStopwatch();
     max_delay_in_interval_ms_ = 0;
     return absl::nullopt;
   }
 
   const int expected_iat_ms =
-      1000ll * static_cast<int32_t>(timestamp - last_timestamp_) /
+      1000ll * static_cast<int32_t>(timestamp - *last_timestamp_) /
       sample_rate_hz;
   const int iat_ms = packet_iat_stopwatch_->ElapsedMs();
   const int iat_delay_ms = iat_ms - expected_iat_ms;
-  int relative_delay;
-  bool reordered = !IsNewerTimestamp(timestamp, last_timestamp_);
-  if (reordered) {
-    relative_delay = std::max(iat_delay_ms, 0);
-  } else {
-    UpdateDelayHistory(iat_delay_ms, timestamp, sample_rate_hz);
-    relative_delay = CalculateRelativePacketArrivalDelay();
-  }
+  UpdateDelayHistory(iat_delay_ms, timestamp, sample_rate_hz);
+  int relative_delay = CalculateRelativePacketArrivalDelay();
 
   absl::optional<int> histogram_update;
   if (resample_interval_ms_) {
@@ -207,16 +196,6 @@ absl::optional<int> DelayManager::Update(uint32_t timestamp,
   }
 
   // Prepare for next packet arrival.
-  if (reordered) {
-    // Allow a small number of reordered packets before resetting the delay
-    // estimation.
-    if (num_reordered_packets_ < kMaxNumReorderedPackets) {
-      ++num_reordered_packets_;
-      return relative_delay;
-    }
-    delay_history_.clear();
-  }
-  num_reordered_packets_ = 0;
   packet_iat_stopwatch_ = tick_timer_->GetNewStopwatch();
   last_timestamp_ = timestamp;
   return relative_delay;
@@ -229,8 +208,8 @@ void DelayManager::UpdateDelayHistory(int iat_delay_ms,
   delay.iat_delay_ms = iat_delay_ms;
   delay.timestamp = timestamp;
   delay_history_.push_back(delay);
-  while (timestamp - delay_history_.front().timestamp >
-         static_cast<uint32_t>(max_history_ms_ * sample_rate_hz / 1000)) {
+  while (static_cast<int32_t>(timestamp - delay_history_.front().timestamp) >
+         max_history_ms_ * sample_rate_hz / 1000) {
     delay_history_.pop_front();
   }
 }
@@ -263,8 +242,7 @@ void DelayManager::Reset() {
   delay_history_.clear();
   target_level_ms_ = kStartDelayMs;
   packet_iat_stopwatch_ = tick_timer_->GetNewStopwatch();
-  first_packet_received_ = false;
-  num_reordered_packets_ = 0;
+  last_timestamp_ = absl::nullopt;
   resample_stopwatch_ = tick_timer_->GetNewStopwatch();
   max_delay_in_interval_ms_ = 0;
 }
