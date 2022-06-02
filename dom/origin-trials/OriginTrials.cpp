@@ -56,15 +56,20 @@ bool VerifySignature(const uint8_t* aSignature, uintptr_t aSignatureLen,
   MOZ_RELEASE_ASSERT(aSignatureLen == 64);
   LOG("VerifySignature()\n");
 
-  const unsigned char* key = StaticPrefs::dom_origin_trials_test_key_enabled()
-                                 ? kTestKey
-                                 : kProdKey;
+  const unsigned char* key =
+      StaticPrefs::dom_origin_trials_test_key_enabled() ? kTestKey : kProdKey;
 
   static_assert(sizeof(kTestKey) == sizeof(kProdKey));
   const SECItem rawKey{siBuffer, const_cast<unsigned char*>(key),
                        sizeof(kProdKey)};
   MOZ_RELEASE_ASSERT(rawKey.data[0] == EC_POINT_FORM_UNCOMPRESSED);
-  UniqueSECKEYPublicKey pubKey = dom::CreateECPublicKey(&rawKey, kEcAlgorithm);
+
+  // Key verification takes a lot of time when verifying tokens, and it is
+  // unnecessary work since the keys are trusted.
+  const bool kVerifyValid = false;
+
+  UniqueSECKEYPublicKey pubKey =
+      dom::CreateECPublicKey(&rawKey, kEcAlgorithm, kVerifyValid);
   if (NS_WARN_IF(!pubKey)) {
     LOG("  Failed to create public key?");
     return false;
