@@ -110,8 +110,21 @@ class FormAutofillChild extends JSWindowActorChild {
     });
   }
 
+  shouldIgnoreFormAutofillEvent(event) {
+    let nodePrincipal = event.target.nodePrincipal;
+    return (
+      nodePrincipal.isSystemPrincipal ||
+      nodePrincipal.isNullPrincipal ||
+      nodePrincipal.schemeIs("about")
+    );
+  }
+
   handleEvent(evt) {
     if (!evt.isTrusted) {
+      return;
+    }
+
+    if (this.shouldIgnoreFormAutofillEvent(evt)) {
       return;
     }
 

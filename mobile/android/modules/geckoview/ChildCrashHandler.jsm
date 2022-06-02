@@ -13,26 +13,28 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 const { debug, warn } = GeckoViewUtils.initLogging("ChildCrashHandler");
 
 function getDir(name) {
-  const uAppDataPath = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
-  return OS.Path.join(uAppDataPath, "Crash Reports", name);
+  const uAppDataPath = lazy.Services.dirsvc.get("UAppData", Ci.nsIFile).path;
+  return lazy.OS.Path.join(uAppDataPath, "Crash Reports", name);
 }
 
 function getPendingMinidump(id) {
   const pendingDir = getDir("pending");
 
   return [".dmp", ".extra"].map(suffix => {
-    return OS.Path.join(pendingDir, `${id}${suffix}`);
+    return lazy.OS.Path.join(pendingDir, `${id}${suffix}`);
   });
 }
 
@@ -54,7 +56,7 @@ var ChildCrashHandler = {
 
     if (
       !aSubject.get("abnormal") ||
-      !AppConstants.MOZ_CRASHREPORTER ||
+      !lazy.AppConstants.MOZ_CRASHREPORTER ||
       disableReporting
     ) {
       return;
@@ -64,7 +66,7 @@ var ChildCrashHandler = {
     // to report the crash.
     const dumpID = aSubject.get("dumpID");
     if (!dumpID) {
-      Services.telemetry
+      lazy.Services.telemetry
         .getHistogramById("FX_CONTENT_CRASH_DUMP_UNAVAILABLE")
         .add(1);
       return;
@@ -79,7 +81,7 @@ var ChildCrashHandler = {
         ? "BACKGROUND_CHILD"
         : "FOREGROUND_CHILD";
 
-    EventDispatcher.instance.sendRequest({
+    lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:ChildCrashReport",
       minidumpPath,
       extrasPath,

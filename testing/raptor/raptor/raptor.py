@@ -54,19 +54,6 @@ def main(args=sys.argv[1:]):
             }
         )
 
-    # if fission.autostart not specified by --setpref, update pref to match
-    # args.fission
-    if args.extra_prefs and "fission.autostart" not in args.extra_prefs:
-        args.extra_prefs.update(
-            {
-                "fission.autostart": args.fission,
-            }
-        )
-
-    # if fission.autostart=False then make sure fission disabled
-    if args.extra_prefs and not args.extra_prefs.get("fission.autostart", True):
-        args.fission = False
-
     args.environment = dict(parse_key_value(args.environment or [], context="--setenv"))
 
     commandline.setup_logging("raptor", args, {"tbpl": sys.stdout})
@@ -150,6 +137,7 @@ def main(args=sys.argv[1:]):
             chimera=args.chimera,
             project=args.project,
             verbose=args.verbose,
+            fission=args.fission,
         )
     except Exception:
         traceback.print_exc()

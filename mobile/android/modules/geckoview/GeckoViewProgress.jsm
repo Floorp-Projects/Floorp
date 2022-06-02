@@ -14,21 +14,23 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "OverrideService",
   "@mozilla.org/security/certoverride;1",
   "nsICertOverrideService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "IDNService",
   "@mozilla.org/network/idn-service;1",
   "nsIIDNService"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.jsm",
   HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
 });
@@ -140,7 +142,7 @@ var IdentityHandler = {
     } catch (e) {}
 
     try {
-      result.host = IDNService.convertToDisplayIDN(uri.host, {});
+      result.host = lazy.IDNService.convertToDisplayIDN(uri.host, {});
     } catch (e) {
       result.host = uri.host;
     }
@@ -150,7 +152,7 @@ var IdentityHandler = {
     result.certificate = aBrowser.securityUI.secInfo.serverCert.getBase64DERString();
 
     try {
-      result.securityException = OverrideService.hasMatchingOverride(
+      result.securityException = lazy.OverrideService.hasMatchingOverride(
         uri.host,
         uri.port,
         {},
@@ -188,9 +190,12 @@ class ProgressTracker extends Tracker {
   constructor(aModule) {
     super(aModule);
     const window = aModule.browser.ownerGlobal;
-    this.pageLoadProbe = new HistogramStopwatch("GV_PAGE_LOAD_MS", window);
-    this.pageReloadProbe = new HistogramStopwatch("GV_PAGE_RELOAD_MS", window);
-    this.pageLoadProgressProbe = new HistogramStopwatch(
+    this.pageLoadProbe = new lazy.HistogramStopwatch("GV_PAGE_LOAD_MS", window);
+    this.pageReloadProbe = new lazy.HistogramStopwatch(
+      "GV_PAGE_RELOAD_MS",
+      window
+    );
+    this.pageLoadProgressProbe = new lazy.HistogramStopwatch(
       "GV_PAGE_LOAD_PROGRESS_MS",
       window
     );
@@ -440,7 +445,7 @@ class StateTracker extends Tracker {
       success: aIsSuccess,
     });
 
-    BrowserTelemetryUtils.recordSiteOriginTelemetry(
+    lazy.BrowserTelemetryUtils.recordSiteOriginTelemetry(
       Services.wm.getEnumerator("navigator:geckoview"),
       true
     );

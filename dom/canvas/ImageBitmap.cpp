@@ -595,8 +595,23 @@ static already_AddRefed<SourceSurface> GetSurfaceFromElement(
     flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
   }
 
-  SurfaceFromElementResult res =
-      nsLayoutUtils::SurfaceFromElement(&aElement, flags);
+  Maybe<int32_t> resizeWidth, resizeHeight;
+  if (aOptions.mResizeWidth.WasPassed()) {
+    if (!CheckedInt32(aOptions.mResizeWidth.Value()).isValid()) {
+      aRv.ThrowInvalidStateError("resizeWidth is too large");
+      return nullptr;
+    }
+    resizeWidth.emplace(aOptions.mResizeWidth.Value());
+  }
+  if (aOptions.mResizeHeight.WasPassed()) {
+    if (!CheckedInt32(aOptions.mResizeHeight.Value()).isValid()) {
+      aRv.ThrowInvalidStateError("resizeHeight is too large");
+      return nullptr;
+    }
+    resizeHeight.emplace(aOptions.mResizeHeight.Value());
+  }
+  SurfaceFromElementResult res = nsLayoutUtils::SurfaceFromElement(
+      &aElement, resizeWidth, resizeHeight, flags);
 
   RefPtr<SourceSurface> surface = res.GetSourceSurface();
   if (NS_WARN_IF(!surface)) {

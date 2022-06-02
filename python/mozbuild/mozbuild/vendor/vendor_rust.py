@@ -7,9 +7,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 import errno
 import hashlib
 import io
+import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 from collections import defaultdict, OrderedDict
 from distutils.version import LooseVersion
@@ -91,10 +93,41 @@ TOLERATED_DUPES = {
 
 
 class VendorRust(MozbuildObject):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._issues = []
+
+    def serialize_issues_json(self):
+        return json.dumps(
+            {
+                "Cargo.lock": [
+                    {
+                        "path": "Cargo.lock",
+                        "column": None,
+                        "line": None,
+                        "level": "error" if level == logging.ERROR else "warning",
+                        "message": msg,
+                    }
+                    for (level, msg) in self._issues
+                ]
+            }
+        )
+
+    def log(self, level, action, params, format_str):
+        if level >= logging.WARNING:
+            self._issues.append((level, format_str.format(**params)))
+        super().log(level, action, params, format_str)
+
     def get_cargo_path(self):
         try:
             return self.substs["CARGO"]
         except (BuildEnvironmentNotFoundException, KeyError):
+            if "MOZ_AUTOMATION" in os.environ:
+                cargo = os.path.join(
+                    os.environ["MOZ_FETCHES_DIR"], "rustc", "bin", "cargo"
+                )
+                assert os.path.exists(cargo)
+                return cargo
             # Default if this tree isn't configured.
             from mozfile import which
 
@@ -519,12 +552,8 @@ license file's hash.
             self.log(logging.ERROR, "cargo_update_failed", {}, "Cargo update failed.")
             return False
 
-        with open(os.path.join(self.topsrcdir, "Cargo.lock")) as fh, open(
-            os.path.join(self.topsrcdir, "Cargo.toml")
-        ) as toml_fh:
+        with open(os.path.join(self.topsrcdir, "Cargo.lock")) as fh:
             cargo_lock = pytoml.load(fh)
-            cargo_toml = pytoml.load(toml_fh)
-            patches = cargo_toml.get("patch", {}).get("crates-io", {})
             failed = False
             for package in cargo_lock.get("patch", {}).get("unused", []):
                 self.log(
@@ -556,12 +585,14 @@ license file's hash.
                 grouped[package["name"]].append(package)
 
             for name, packages in grouped.items():
-                num = len(packages)
-                # Allow to have crates in build/rust that provide older versions
-                # of crates based on newer ones, implying there are at least two
-                # crates with the same name, one of them being under build/rust.
-                if patches.get(name, {}).get("path", "").startswith("build/rust"):
-                    num -= 1
+                # Allow to have crates of the same name when one depends on the other.
+                num = len(
+                    [
+                        p
+                        for p in packages
+                        if all(d.split()[0] != name for d in p.get("dependencies", []))
+                    ]
+                )
                 expected = TOLERATED_DUPES.get(name, 1)
                 if num > expected:
                     self.log(
@@ -633,8 +664,44 @@ license file's hash.
                     )
                     failed = True
 
-            if failed:
-                return False
+        # Only run cargo-vet on automation for now, and only emit warnings.
+        if "MOZ_AUTOMATION" in os.environ:
+            env = os.environ.copy()
+            env["PATH"] = os.pathsep.join(
+                (
+                    os.path.join(os.environ["MOZ_FETCHES_DIR"], "cargo-vet"),
+                    os.path.join(os.environ["MOZ_FETCHES_DIR"], "rustc", "bin"),
+                    os.environ["PATH"],
+                )
+            )
+            # The use of --locked requires .cargo/config to exist, but other things,
+            # like cargo update, don't want it there, so remove it after cargo vet.
+            topsrcdir = Path(self.topsrcdir)
+            shutil.copyfile(
+                topsrcdir / ".cargo" / "config.in", topsrcdir / ".cargo" / "config"
+            )
+            try:
+                res = subprocess.run(
+                    [cargo, "vet", "--output-format=json", "--locked"],
+                    cwd=self.topsrcdir,
+                    stdout=subprocess.PIPE,
+                    env=env,
+                )
+                if res.returncode:
+                    vet = json.loads(res.stdout)
+                    for failure in vet.get("failures", []):
+                        failure["crate"] = failure.pop("name")
+                        self.log(
+                            logging.WARNING,
+                            "cargo_vet_failed",
+                            failure,
+                            "Vetting missing for {crate}:{version} {missing_criteria}",
+                        )
+            finally:
+                os.unlink(topsrcdir / ".cargo" / "config")
+
+        if failed:
+            return False
 
         res = subprocess.run(
             [cargo, "vendor", vendor_dir], cwd=self.topsrcdir, stdout=subprocess.PIPE

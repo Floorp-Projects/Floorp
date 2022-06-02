@@ -15,30 +15,32 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(
     "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "EnsureFxAccountsWebChannel",
   "resource://gre/modules/FxAccountsWebChannel.jsm"
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "ROOT_URL",
   "identity.fxaccounts.remote.root"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "CONTEXT_PARAM",
   "identity.fxaccounts.contextParam"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "REQUIRES_HTTPS",
   "identity.fxaccounts.allowHttp",
   false,
@@ -131,7 +133,7 @@ var FxAccountsConfig = {
   },
 
   get defaultParams() {
-    return { context: CONTEXT_PARAM };
+    return { context: lazy.CONTEXT_PARAM };
   },
 
   /**
@@ -149,8 +151,8 @@ var FxAccountsConfig = {
     }
   ) {
     await this.ensureConfigured();
-    const url = new URL(path, ROOT_URL);
-    if (REQUIRES_HTTPS && url.protocol != "https:") {
+    const url = new URL(path, lazy.ROOT_URL);
+    if (lazy.REQUIRES_HTTPS && url.protocol != "https:") {
       throw new Error("Firefox Accounts server must use HTTPS");
     }
     const params = {
@@ -190,7 +192,7 @@ var FxAccountsConfig = {
       Services.prefs.clearUserPref(pref);
     }
     // Reset the webchannel.
-    EnsureFxAccountsWebChannel();
+    lazy.EnsureFxAccountsWebChannel();
   },
 
   getAutoConfigURL() {
@@ -285,7 +287,7 @@ var FxAccountsConfig = {
       Services.prefs.setCharPref("identity.fxaccounts.remote.root", rootURL);
 
       // Ensure the webchannel is pointed at the correct uri
-      EnsureFxAccountsWebChannel();
+      lazy.EnsureFxAccountsWebChannel();
     } catch (e) {
       log.error(
         "Failed to initialize configuration preferences from autoconfig object",
@@ -299,7 +301,7 @@ var FxAccountsConfig = {
   // (or from the provided rootURL, if present) and return it as an object.
   async fetchConfigDocument(rootURL = null) {
     if (!rootURL) {
-      rootURL = ROOT_URL;
+      rootURL = lazy.ROOT_URL;
     }
     let configURL = rootURL + "/.well-known/fxa-client-configuration";
     let request = new RESTRequest(configURL);
@@ -335,6 +337,6 @@ var FxAccountsConfig = {
 
   // For test purposes, returns a Promise.
   getSignedInUser() {
-    return fxAccounts.getSignedInUser();
+    return lazy.fxAccounts.getSignedInUser();
   },
 };

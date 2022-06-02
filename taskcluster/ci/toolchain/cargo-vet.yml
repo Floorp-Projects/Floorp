@@ -1,0 +1,64 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "cargo-vet toolchain build"
+    attributes:
+        local-toolchain: true
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        script: build-cargo-vet.sh
+        toolchain-artifact: public/build/cargo-vet.tar.zst
+    fetches:
+        fetch:
+            - cargo-vet
+
+linux64-cargo-vet:
+    treeherder:
+        symbol: TL(cargo-vet)
+    run:
+        arguments: ['x86_64-unknown-linux-gnu']
+    fetches:
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-rust-1.61
+            - sysroot-x86_64-linux-gnu
+
+macosx64-cargo-vet:
+    treeherder:
+        symbol: TM(cargo-vet)
+    run:
+        arguments: ['x86_64-apple-darwin']
+        toolchain-alias: macosx64-aarch64-cargo-vet
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-toolchain
+            - linux64-rust-macos-1.61
+            - macosx64-sdk-11.0
+
+macosx64-aarch64-cargo-vet:
+    treeherder:
+        symbol: TM(cargo-vet-arm64)
+    run:
+        arguments: ['aarch64-apple-darwin']
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-toolchain
+            - linux64-rust-macos-1.61
+            - macosx64-sdk-11.0
+
+win64-cargo-vet:
+    treeherder:
+        symbol: TW64(cargo-vet)
+    run:
+        arguments: ['x86_64-pc-windows-msvc']
+    fetches:
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-rust-windows-1.61
+            - win64-vs2017

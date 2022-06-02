@@ -6,7 +6,6 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-scrollbar-start-forward",
   "-moz-scrollbar-end-backward",
   "-moz-scrollbar-end-forward",
-  "-moz-scrollbar-thumb-proportional",
   "-moz-overlay-scrollbars",
   "-moz-windows-classic",
   "-moz-windows-compositor",

@@ -12,7 +12,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-span-element
-[Exposed=Window, ProbablyShortLivingWrapper]
+[Exposed=Window]
 interface HTMLSpanElement : HTMLElement {
   [HTMLConstructor] constructor();
 };

@@ -188,11 +188,19 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     ),
     default=False,
 )
+@CommandArgument(
+    "--issues-json",
+    help="Path to a code-review issues.json file to write out",
+)
 def vendor_rust(command_context, **kwargs):
     from mozbuild.vendor.vendor_rust import VendorRust
 
     vendor_command = command_context._spawn(VendorRust)
+    issues_json = kwargs.pop("issues_json", None)
     ok = vendor_command.vendor(**kwargs)
+    if issues_json:
+        with open(issues_json, "w") as fh:
+            fh.write(vendor_command.serialize_issues_json())
     sys.exit(0 if ok else 1)
 
 

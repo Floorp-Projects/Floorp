@@ -64,9 +64,9 @@ Here are the Rust versions for each Firefox version.
 | Firefox 98 | Rust 1.58.0 | 1.57.0 | 2022 January 13 | 2022 February 2 | 2022 March 8
 | Firefox 99 | Rust 1.59.0 | 1.57.0 | 2022 February 24 | 2022 March 3 | 2022 April 5
 | Firefox 100 | Rust 1.59.0 | 1.57.0 | 2022 February 24 | 2022 March 31 | 2022 May 3
-| **Estimated** |
 | Firefox 101 | Rust 1.60.0 | 1.59.0 | 2022 April 7 | 2022 April 28 | 2022 May 31
-| Firefox 102 | Rust 1.61.0 | ? | 2022 May 19 | 2022 May 26 | 2022 June 28
+| Firefox 102 | Rust 1.60.0 | 1.59.0 | 2022 April 7 | 2022 May 26 | 2022 June 28
+| **Estimated** |
 | Firefox 103 | Rust 1.61.0 | ? | 2022 May 19 | 2022 June 23 | 2022 July 27
 | Firefox 104 | Rust 1.62.0 | ? | 2022 June 30 | 2022 July 21 | 2022 August 23
 | Firefox 105 | Rust 1.63.0 | ? | 2022 August 11 | 2022 August 18 | 2022 September 20

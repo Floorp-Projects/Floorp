@@ -26,33 +26,35 @@ const { SCORE_INCREMENT_SMALL, URI_LENGTH_MAX } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExperimentAPI",
   "resource://nimbus/ExperimentAPI.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "TABS_FILTERED_SCHEMES",
   "services.sync.engine.tabs.filteredSchemes",
   "",
@@ -155,11 +157,11 @@ TabStore.prototype = {
   },
 
   shouldSkipWindow(win) {
-    return win.closed || PrivateBrowsingUtils.isWindowPrivate(win);
+    return win.closed || lazy.PrivateBrowsingUtils.isWindowPrivate(win);
   },
 
   getTabState(tab) {
-    return JSON.parse(SessionStore.getTabState(tab));
+    return JSON.parse(lazy.SessionStore.getTabState(tab));
   },
 
   async getAllTabs(filter) {
@@ -190,7 +192,8 @@ TabStore.prototype = {
         let acceptable = !filter
           ? url => url
           : url =>
-              url && !TABS_FILTERED_SCHEMES.has(Services.io.extractScheme(url));
+              url &&
+              !lazy.TABS_FILTERED_SCHEMES.has(Services.io.extractScheme(url));
 
         let entries = tabState.entries;
         let index = tabState.index;
@@ -226,7 +229,7 @@ TabStore.prototype = {
         // tabState has .image, but it's a large data: url. So we ask the favicon service for the url.
         let icon = "";
         try {
-          let iconData = await PlacesUtils.promiseFaviconData(urls[0]);
+          let iconData = await lazy.PlacesUtils.promiseFaviconData(urls[0]);
           icon = iconData.uri.spec;
         } catch (ex) {
           this._log.trace(`Failed to fetch favicon for ${urls[0]}`, ex);
@@ -276,7 +279,7 @@ TabStore.prototype = {
     let ids = {};
     let allWindowsArePrivate = false;
     for (let win of Services.wm.getEnumerator("navigator:browser")) {
-      if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+      if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
         // Ensure that at least there is a private window.
         allWindowsArePrivate = true;
       } else {
@@ -288,7 +291,7 @@ TabStore.prototype = {
 
     if (
       allWindowsArePrivate &&
-      !PrivateBrowsingUtils.permanentPrivateBrowsing
+      !lazy.PrivateBrowsingUtils.permanentPrivateBrowsing
     ) {
       return ids;
     }
@@ -391,8 +394,8 @@ TabTracker.prototype = {
     if (event.originalTarget.linkedBrowser) {
       let browser = event.originalTarget.linkedBrowser;
       if (
-        PrivateBrowsingUtils.isBrowserPrivate(browser) &&
-        !PrivateBrowsingUtils.permanentPrivateBrowsing
+        lazy.PrivateBrowsingUtils.isBrowserPrivate(browser) &&
+        !lazy.PrivateBrowsingUtils.permanentPrivateBrowsing
       ) {
         this._log.trace("Ignoring tab event from private browsing.");
         return;
@@ -417,7 +420,7 @@ TabTracker.prototype = {
 
     // Synced tabs do not sync certain urls, we should ignore scheduling a sync
     // if we have navigate to one of those urls
-    if (TABS_FILTERED_SCHEMES.has(locationURI.scheme)) {
+    if (lazy.TABS_FILTERED_SCHEMES.has(locationURI.scheme)) {
       return;
     }
 
@@ -427,7 +430,7 @@ TabTracker.prototype = {
   callScheduleSync(scoreIncrement) {
     this.modified = true;
 
-    const delayInMs = NimbusFeatures.syncAfterTabChange.getVariable(
+    const delayInMs = lazy.NimbusFeatures.syncAfterTabChange.getVariable(
       "syncDelayAfterTabChange"
     );
 

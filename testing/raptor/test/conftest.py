@@ -24,6 +24,7 @@ def options(request):
         "app": "firefox",
         "binary": "path/to/dummy/browser",
         "browsertime_visualmetrics": False,
+        "extra_prefs": {},
     }
 
     if hasattr(request.module, "OPTIONS"):

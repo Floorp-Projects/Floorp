@@ -22,18 +22,19 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
 ChromeUtils.import("resource://services-common/utils.js");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Weave",
   "resource://services-sync/main.js"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "jwcrypto",
   "resource://services-crypto/jwcrypto.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsPairingChannel",
   "resource://gre/modules/FxAccountsPairingChannel.js"
 );
@@ -190,13 +191,14 @@ class FxAccountsPairingFlow {
     const { emitter } = options;
     const fxaConfig = options.fxaConfig || FxAccounts.config;
     const fxa = options.fxAccounts || fxAccounts;
-    const weave = options.weave || Weave;
+    const weave = options.weave || lazy.Weave;
     const flowTimeout = options.flowTimeout || FLOW_TIMEOUT_MS;
 
     const contentPairingURI = await fxaConfig.promisePairingURI();
     const wsUri = Services.urlFormatter.formatURLPref(PREF_REMOTE_PAIRING_URI);
     const pairingChannel =
-      options.pairingChannel || (await FxAccountsPairingChannel.create(wsUri));
+      options.pairingChannel ||
+      (await lazy.FxAccountsPairingChannel.create(wsUri));
     const { channelId, channelKey } = pairingChannel;
     const channelKeyB64 = ChromeUtils.base64URLEncode(channelKey, {
       pad: false,
@@ -513,7 +515,7 @@ class FxAccountsPairingFlow {
       }
       scopedKeys[scope] = key;
     }
-    return jwcrypto.generateJWE(
+    return lazy.jwcrypto.generateJWE(
       jwk,
       new TextEncoder().encode(JSON.stringify(scopedKeys))
     );

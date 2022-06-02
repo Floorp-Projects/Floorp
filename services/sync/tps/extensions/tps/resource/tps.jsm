@@ -27,7 +27,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Authentication: "resource://tps/auth/fxaccounts.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   Async: "resource://services-common/async.js",
@@ -77,17 +79,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PasswordValidator: "resource://services-sync/engines/passwords.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "fileProtocolHandler", () => {
-  let fileHandler = Services.io.getProtocolHandler("file");
+XPCOMUtils.defineLazyGetter(lazy, "fileProtocolHandler", () => {
+  let fileHandler = lazy.Services.io.getProtocolHandler("file");
   return fileHandler.QueryInterface(Ci.nsIFileProtocolHandler);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
+XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", () => {
   return new TextDecoder();
 });
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
@@ -162,22 +164,22 @@ var TPS = {
   shouldValidateBookmarks: false,
   shouldValidatePasswords: false,
   shouldValidateForms: false,
-  _placesInitDeferred: PromiseUtils.defer(),
+  _placesInitDeferred: lazy.PromiseUtils.defer(),
 
   _init: function TPS__init() {
     this.delayAutoSync();
 
     OBSERVER_TOPICS.forEach(function(aTopic) {
-      Services.obs.addObserver(this, aTopic, true);
+      lazy.Services.obs.addObserver(this, aTopic, true);
     }, this);
 
     // Some engines bump their score during their sync, which then causes
     // another sync immediately (notably, prefs and addons). We don't want
     // this to happen, and there's no obvious preference to kill it - so
     // we do this nasty hack to ensure the global score is always zero.
-    Services.prefs.addObserver("services.sync.globalScore", () => {
-      if (Weave.Service.scheduler.globalScore != 0) {
-        Weave.Service.scheduler.globalScore = 0;
+    lazy.Services.prefs.addObserver("services.sync.globalScore", () => {
+      if (lazy.Weave.Service.scheduler.globalScore != 0) {
+        lazy.Weave.Service.scheduler.globalScore = 0;
       }
     });
   },
@@ -186,12 +188,12 @@ var TPS = {
     this._errors++;
     let errInfo;
     if (exc) {
-      errInfo = Log.exceptionStr(exc); // includes details and stack-trace.
+      errInfo = lazy.Log.exceptionStr(exc); // includes details and stack-trace.
     } else {
       // always write a stack even if no error passed.
-      errInfo = Log.stackTrace(new Error());
+      errInfo = lazy.Log.stackTrace(new Error());
     }
-    Logger.logError(`[phase ${this._currentPhase}] ${msg} - ${errInfo}`);
+    lazy.Logger.logError(`[phase ${this._currentPhase}] ${msg} - ${errInfo}`);
     this.quit();
   },
 
@@ -202,15 +204,15 @@ var TPS = {
 
   observe: function TPS__observe(subject, topic, data) {
     try {
-      Logger.logInfo("----------event observed: " + topic);
+      lazy.Logger.logInfo("----------event observed: " + topic);
 
       switch (topic) {
         case "profile-before-change":
           OBSERVER_TOPICS.forEach(function(topic) {
-            Services.obs.removeObserver(this, topic);
+            lazy.Services.obs.removeObserver(this, topic);
           }, this);
 
-          Logger.close();
+          lazy.Logger.close();
 
           break;
 
@@ -222,7 +224,7 @@ var TPS = {
           this._setupComplete = true;
 
           if (this._syncWipeAction) {
-            Weave.Svc.Prefs.set("firstSync", this._syncWipeAction);
+            lazy.Weave.Svc.Prefs.set("firstSync", this._syncWipeAction);
             this._syncWipeAction = null;
           }
 
@@ -235,9 +237,9 @@ var TPS = {
 
           // If this is the first sync error, retry...
           if (this._syncErrors === 0) {
-            Logger.logInfo("Sync error; retrying...");
+            lazy.Logger.logInfo("Sync error; retrying...");
             this._syncErrors++;
-            CommonUtils.nextTick(() => {
+            lazy.CommonUtils.nextTick(() => {
               this.RunNextTestAction().catch(err => {
                 this.DumpError("RunNextTestActionFailed", err);
               });
@@ -280,13 +282,13 @@ var TPS = {
         case "fxaccounts:onlogin":
           // A user signed in - for TPS that always means sync - so configure
           // that.
-          Weave.Service.configure().catch(e => {
+          lazy.Weave.Service.configure().catch(e => {
             this.DumpError("Configuring sync failed.", e);
           });
           break;
 
         default:
-          Logger.logInfo(`unhandled event: ${topic}`);
+          lazy.Logger.logInfo(`unhandled event: ${topic}`);
       }
     } catch (e) {
       this.DumpError("Observer failed", e);
@@ -299,20 +301,20 @@ var TPS = {
    * directly called via TPS.Sync()!
    */
   delayAutoSync: function TPS_delayAutoSync() {
-    Weave.Svc.Prefs.set("scheduler.immediateInterval", 7200);
-    Weave.Svc.Prefs.set("scheduler.idleInterval", 7200);
-    Weave.Svc.Prefs.set("scheduler.activeInterval", 7200);
-    Weave.Svc.Prefs.set("syncThreshold", 10000000);
+    lazy.Weave.Svc.Prefs.set("scheduler.immediateInterval", 7200);
+    lazy.Weave.Svc.Prefs.set("scheduler.idleInterval", 7200);
+    lazy.Weave.Svc.Prefs.set("scheduler.activeInterval", 7200);
+    lazy.Weave.Svc.Prefs.set("syncThreshold", 10000000);
   },
 
   quit: function TPS__quit() {
-    Logger.logInfo("quitting");
+    lazy.Logger.logInfo("quitting");
     this._requestedQuit = true;
     this.goQuitApplication();
   },
 
   async HandleWindows(aWindow, action) {
-    Logger.logInfo(
+    lazy.Logger.logInfo(
       "executing action " +
         action.toUpperCase() +
         " on window " +
@@ -320,15 +322,17 @@ var TPS = {
     );
     switch (action) {
       case ACTION_ADD:
-        await BrowserWindows.Add(aWindow.private);
+        await lazy.BrowserWindows.Add(aWindow.private);
         break;
     }
-    Logger.logPass("executing action " + action.toUpperCase() + " on windows");
+    lazy.Logger.logPass(
+      "executing action " + action.toUpperCase() + " on windows"
+    );
   },
 
   async HandleTabs(tabs, action) {
     for (let tab of tabs) {
-      Logger.logInfo(
+      lazy.Logger.logInfo(
         "executing action " +
           action.toUpperCase() +
           " on tab " +
@@ -336,44 +340,46 @@ var TPS = {
       );
       switch (action) {
         case ACTION_ADD:
-          await BrowserTabs.Add(tab.uri);
+          await lazy.BrowserTabs.Add(tab.uri);
           break;
         case ACTION_VERIFY:
-          Logger.AssertTrue(
+          lazy.Logger.AssertTrue(
             typeof tab.profile != "undefined",
             "profile must be defined when verifying tabs"
           );
-          Logger.AssertTrue(
-            BrowserTabs.Find(tab.uri, tab.title, tab.profile),
+          lazy.Logger.AssertTrue(
+            lazy.BrowserTabs.Find(tab.uri, tab.title, tab.profile),
             "error locating tab"
           );
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertTrue(
+          lazy.Logger.AssertTrue(
             typeof tab.profile != "undefined",
             "profile must be defined when verifying tabs"
           );
-          Logger.AssertTrue(
-            !BrowserTabs.Find(tab.uri, tab.title, tab.profile),
+          lazy.Logger.AssertTrue(
+            !lazy.BrowserTabs.Find(tab.uri, tab.title, tab.profile),
             "tab found which was expected to be absent"
           );
           break;
         default:
-          Logger.AssertTrue(false, "invalid action: " + action);
+          lazy.Logger.AssertTrue(false, "invalid action: " + action);
       }
     }
-    Logger.logPass("executing action " + action.toUpperCase() + " on tabs");
+    lazy.Logger.logPass(
+      "executing action " + action.toUpperCase() + " on tabs"
+    );
   },
 
   async HandlePrefs(prefs, action) {
     for (let pref of prefs) {
-      Logger.logInfo(
+      lazy.Logger.logInfo(
         "executing action " +
           action.toUpperCase() +
           " on pref " +
           JSON.stringify(pref)
       );
-      let preference = new Preference(pref);
+      let preference = new lazy.Preference(pref);
       switch (action) {
         case ACTION_MODIFY:
           preference.Modify();
@@ -382,22 +388,24 @@ var TPS = {
           preference.Find();
           break;
         default:
-          Logger.AssertTrue(false, "invalid action: " + action);
+          lazy.Logger.AssertTrue(false, "invalid action: " + action);
       }
     }
-    Logger.logPass("executing action " + action.toUpperCase() + " on pref");
+    lazy.Logger.logPass(
+      "executing action " + action.toUpperCase() + " on pref"
+    );
   },
 
   async HandleForms(data, action) {
     this.shouldValidateForms = true;
     for (let datum of data) {
-      Logger.logInfo(
+      lazy.Logger.logInfo(
         "executing action " +
           action.toUpperCase() +
           " on form entry " +
           JSON.stringify(datum)
       );
-      let formdata = new FormData(datum, this._msSinceEpoch);
+      let formdata = new lazy.FormData(datum, this._msSinceEpoch);
       switch (action) {
         case ACTION_ADD:
           await formdata.Create();
@@ -406,26 +414,28 @@ var TPS = {
           await formdata.Remove();
           break;
         case ACTION_VERIFY:
-          Logger.AssertTrue(await formdata.Find(), "form data not found");
+          lazy.Logger.AssertTrue(await formdata.Find(), "form data not found");
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertTrue(
+          lazy.Logger.AssertTrue(
             !(await formdata.Find()),
             "form data found, but it shouldn't be present"
           );
           break;
         default:
-          Logger.AssertTrue(false, "invalid action: " + action);
+          lazy.Logger.AssertTrue(false, "invalid action: " + action);
       }
     }
-    Logger.logPass("executing action " + action.toUpperCase() + " on formdata");
+    lazy.Logger.logPass(
+      "executing action " + action.toUpperCase() + " on formdata"
+    );
   },
 
   async HandleHistory(entries, action) {
     try {
       for (let entry of entries) {
         const entryString = JSON.stringify(entry);
-        Logger.logInfo(
+        lazy.Logger.logInfo(
           "executing action " +
             action.toUpperCase() +
             " on history entry " +
@@ -433,33 +443,33 @@ var TPS = {
         );
         switch (action) {
           case ACTION_ADD:
-            await HistoryEntry.Add(entry, this._msSinceEpoch);
+            await lazy.HistoryEntry.Add(entry, this._msSinceEpoch);
             break;
           case ACTION_DELETE:
-            await HistoryEntry.Delete(entry, this._msSinceEpoch);
+            await lazy.HistoryEntry.Delete(entry, this._msSinceEpoch);
             break;
           case ACTION_VERIFY:
-            Logger.AssertTrue(
-              await HistoryEntry.Find(entry, this._msSinceEpoch),
+            lazy.Logger.AssertTrue(
+              await lazy.HistoryEntry.Find(entry, this._msSinceEpoch),
               "Uri visits not found in history database: " + entryString
             );
             break;
           case ACTION_VERIFY_NOT:
-            Logger.AssertTrue(
-              !(await HistoryEntry.Find(entry, this._msSinceEpoch)),
+            lazy.Logger.AssertTrue(
+              !(await lazy.HistoryEntry.Find(entry, this._msSinceEpoch)),
               "Uri visits found in history database, but they shouldn't be: " +
                 entryString
             );
             break;
           default:
-            Logger.AssertTrue(false, "invalid action: " + action);
+            lazy.Logger.AssertTrue(false, "invalid action: " + action);
         }
       }
-      Logger.logPass(
+      lazy.Logger.logPass(
         "executing action " + action.toUpperCase() + " on history"
       );
     } catch (e) {
-      await DumpHistory();
+      await lazy.DumpHistory();
       throw e;
     }
   },
@@ -468,48 +478,57 @@ var TPS = {
     this.shouldValidatePasswords = true;
     try {
       for (let password of passwords) {
-        Logger.logInfo(
+        lazy.Logger.logInfo(
           "executing action " +
             action.toUpperCase() +
             " on password " +
             JSON.stringify(password)
         );
-        let passwordOb = new Password(password);
+        let passwordOb = new lazy.Password(password);
         switch (action) {
           case ACTION_ADD:
-            Logger.AssertTrue(
+            lazy.Logger.AssertTrue(
               passwordOb.Create() > -1,
               "error adding password"
             );
             break;
           case ACTION_VERIFY:
-            Logger.AssertTrue(passwordOb.Find() != -1, "password not found");
+            lazy.Logger.AssertTrue(
+              passwordOb.Find() != -1,
+              "password not found"
+            );
             break;
           case ACTION_VERIFY_NOT:
-            Logger.AssertTrue(
+            lazy.Logger.AssertTrue(
               passwordOb.Find() == -1,
               "password found, but it shouldn't exist"
             );
             break;
           case ACTION_DELETE:
-            Logger.AssertTrue(passwordOb.Find() != -1, "password not found");
+            lazy.Logger.AssertTrue(
+              passwordOb.Find() != -1,
+              "password not found"
+            );
             passwordOb.Remove();
             break;
           case ACTION_MODIFY:
             if (passwordOb.updateProps != null) {
-              Logger.AssertTrue(passwordOb.Find() != -1, "password not found");
+              lazy.Logger.AssertTrue(
+                passwordOb.Find() != -1,
+                "password not found"
+              );
               passwordOb.Update();
             }
             break;
           default:
-            Logger.AssertTrue(false, "invalid action: " + action);
+            lazy.Logger.AssertTrue(false, "invalid action: " + action);
         }
       }
-      Logger.logPass(
+      lazy.Logger.logPass(
         "executing action " + action.toUpperCase() + " on passwords"
       );
     } catch (e) {
-      DumpPasswords();
+      lazy.DumpPasswords();
       throw e;
     }
   },
@@ -517,13 +536,13 @@ var TPS = {
   async HandleAddons(addons, action, state) {
     this.shouldValidateAddons = true;
     for (let entry of addons) {
-      Logger.logInfo(
+      lazy.Logger.logInfo(
         "executing action " +
           action.toUpperCase() +
           " on addon " +
           JSON.stringify(entry)
       );
-      let addon = new Addon(this, entry);
+      let addon = new lazy.Addon(this, entry);
       switch (action) {
         case ACTION_ADD:
           await addon.install();
@@ -532,19 +551,19 @@ var TPS = {
           await addon.uninstall();
           break;
         case ACTION_VERIFY:
-          Logger.AssertTrue(
+          lazy.Logger.AssertTrue(
             await addon.find(state),
             "addon " + addon.id + " not found"
           );
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertFalse(
+          lazy.Logger.AssertFalse(
             await addon.find(state),
             "addon " + addon.id + " is present, but it shouldn't be"
           );
           break;
         case ACTION_SET_ENABLED:
-          Logger.AssertTrue(
+          lazy.Logger.AssertTrue(
             await addon.setEnabled(state),
             "addon " + addon.id + " not found"
           );
@@ -553,7 +572,9 @@ var TPS = {
           throw new Error("Unknown action for add-on: " + action);
       }
     }
-    Logger.logPass("executing action " + action.toUpperCase() + " on addons");
+    lazy.Logger.logPass(
+      "executing action " + action.toUpperCase() + " on addons"
+    );
   },
 
   async HandleBookmarks(bookmarks, action) {
@@ -565,7 +586,7 @@ var TPS = {
       for (let folder in bookmarks) {
         let last_item_pos = -1;
         for (let bookmark of bookmarks[folder]) {
-          Logger.clearPotentialError();
+          lazy.Logger.clearPotentialError();
           let placesItem;
           bookmark.location = folder;
 
@@ -575,7 +596,7 @@ var TPS = {
           let itemGuid = null;
 
           if (action != ACTION_MODIFY && action != ACTION_DELETE) {
-            Logger.logInfo(
+            lazy.Logger.logInfo(
               "executing action " +
                 action.toUpperCase() +
                 " on bookmark " +
@@ -584,13 +605,13 @@ var TPS = {
           }
 
           if ("uri" in bookmark) {
-            placesItem = new Bookmark(bookmark);
+            placesItem = new lazy.Bookmark(bookmark);
           } else if ("folder" in bookmark) {
-            placesItem = new BookmarkFolder(bookmark);
+            placesItem = new lazy.BookmarkFolder(bookmark);
           } else if ("livemark" in bookmark) {
-            placesItem = new Livemark(bookmark);
+            placesItem = new lazy.Livemark(bookmark);
           } else if ("separator" in bookmark) {
-            placesItem = new Separator(bookmark);
+            placesItem = new lazy.Separator(bookmark);
           }
 
           if (action == ACTION_ADD) {
@@ -598,13 +619,13 @@ var TPS = {
           } else {
             itemGuid = await placesItem.Find();
             if (action == ACTION_VERIFY_NOT) {
-              Logger.AssertTrue(
+              lazy.Logger.AssertTrue(
                 itemGuid == null,
                 "places item exists but it shouldn't: " +
                   JSON.stringify(bookmark)
               );
             } else {
-              Logger.AssertTrue(itemGuid, "places item not found", true);
+              lazy.Logger.AssertTrue(itemGuid, "places item not found", true);
             }
           }
 
@@ -615,7 +636,7 @@ var TPS = {
 
       if (action == ACTION_DELETE || action == ACTION_MODIFY) {
         for (let item of items) {
-          Logger.logInfo(
+          lazy.Logger.logInfo(
             "executing action " +
               action.toUpperCase() +
               " on bookmark " +
@@ -634,11 +655,11 @@ var TPS = {
         }
       }
 
-      Logger.logPass(
+      lazy.Logger.logPass(
         "executing action " + action.toUpperCase() + " on bookmarks"
       );
     } catch (e) {
-      await DumpBookmarks();
+      await lazy.DumpBookmarks();
       throw e;
     }
   },
@@ -646,13 +667,13 @@ var TPS = {
   async HandleAddresses(addresses, action) {
     try {
       for (let address of addresses) {
-        Logger.logInfo(
+        lazy.Logger.logInfo(
           "executing action " +
             action.toUpperCase() +
             " on address " +
             JSON.stringify(address)
         );
-        let addressOb = new Address(address);
+        let addressOb = new lazy.Address(address);
         switch (action) {
           case ACTION_ADD:
             await addressOb.Create();
@@ -661,27 +682,27 @@ var TPS = {
             await addressOb.Update();
             break;
           case ACTION_VERIFY:
-            Logger.AssertTrue(await addressOb.Find(), "address not found");
+            lazy.Logger.AssertTrue(await addressOb.Find(), "address not found");
             break;
           case ACTION_VERIFY_NOT:
-            Logger.AssertTrue(
+            lazy.Logger.AssertTrue(
               !(await addressOb.Find()),
               "address found, but it shouldn't exist"
             );
             break;
           case ACTION_DELETE:
-            Logger.AssertTrue(await addressOb.Find(), "address not found");
+            lazy.Logger.AssertTrue(await addressOb.Find(), "address not found");
             await addressOb.Remove();
             break;
           default:
-            Logger.AssertTrue(false, "invalid action: " + action);
+            lazy.Logger.AssertTrue(false, "invalid action: " + action);
         }
       }
-      Logger.logPass(
+      lazy.Logger.logPass(
         "executing action " + action.toUpperCase() + " on addresses"
       );
     } catch (e) {
-      await DumpAddresses();
+      await lazy.DumpAddresses();
       throw e;
     }
   },
@@ -689,13 +710,13 @@ var TPS = {
   async HandleCreditCards(creditCards, action) {
     try {
       for (let creditCard of creditCards) {
-        Logger.logInfo(
+        lazy.Logger.logInfo(
           "executing action " +
             action.toUpperCase() +
             " on creditCard " +
             JSON.stringify(creditCard)
         );
-        let creditCardOb = new CreditCard(creditCard);
+        let creditCardOb = new lazy.CreditCard(creditCard);
         switch (action) {
           case ACTION_ADD:
             await creditCardOb.Create();
@@ -704,33 +725,33 @@ var TPS = {
             await creditCardOb.Update();
             break;
           case ACTION_VERIFY:
-            Logger.AssertTrue(
+            lazy.Logger.AssertTrue(
               await creditCardOb.Find(),
               "creditCard not found"
             );
             break;
           case ACTION_VERIFY_NOT:
-            Logger.AssertTrue(
+            lazy.Logger.AssertTrue(
               !(await creditCardOb.Find()),
               "creditCard found, but it shouldn't exist"
             );
             break;
           case ACTION_DELETE:
-            Logger.AssertTrue(
+            lazy.Logger.AssertTrue(
               await creditCardOb.Find(),
               "creditCard not found"
             );
             await creditCardOb.Remove();
             break;
           default:
-            Logger.AssertTrue(false, "invalid action: " + action);
+            lazy.Logger.AssertTrue(false, "invalid action: " + action);
         }
       }
-      Logger.logPass(
+      lazy.Logger.logPass(
         "executing action " + action.toUpperCase() + " on creditCards"
       );
     } catch (e) {
-      await DumpCreditCards();
+      await lazy.DumpCreditCards();
       throw e;
     }
   },
@@ -739,20 +760,22 @@ var TPS = {
     try {
       await this.WipeServer();
     } catch (ex) {
-      Logger.logError("Failed to wipe server: " + Log.exceptionStr(ex));
+      lazy.Logger.logError(
+        "Failed to wipe server: " + lazy.Log.exceptionStr(ex)
+      );
     }
     try {
-      if (await Authentication.isLoggedIn()) {
+      if (await lazy.Authentication.isLoggedIn()) {
         // signout and wait for Sync to completely reset itself.
-        Logger.logInfo("signing out");
+        lazy.Logger.logInfo("signing out");
         let waiter = this.promiseObserver("weave:service:start-over:finish");
-        await Authentication.signOut();
+        await lazy.Authentication.signOut();
         await waiter;
-        Logger.logInfo("signout complete");
+        lazy.Logger.logInfo("signout complete");
       }
-      await Authentication.deleteEmail(this.config.fx_account.username);
+      await lazy.Authentication.deleteEmail(this.config.fx_account.username);
     } catch (e) {
-      Logger.logError("Failed to sign out: " + Log.exceptionStr(e));
+      lazy.Logger.logError("Failed to sign out: " + lazy.Log.exceptionStr(e));
     }
   },
 
@@ -761,7 +784,7 @@ var TPS = {
    */
   async ValidateBookmarks() {
     let getServerBookmarkState = async () => {
-      let bookmarkEngine = Weave.Service.engineManager.get("bookmarks");
+      let bookmarkEngine = lazy.Weave.Service.engineManager.get("bookmarks");
       let collection = bookmarkEngine.itemSource();
       let collectionKey = bookmarkEngine.service.collectionKeys.keyForCollection(
         bookmarkEngine.name
@@ -779,15 +802,15 @@ var TPS = {
     };
     let serverRecordDumpStr;
     try {
-      Logger.logInfo("About to perform bookmark validation");
-      let clientTree = await PlacesUtils.promiseBookmarksTree("", {
+      lazy.Logger.logInfo("About to perform bookmark validation");
+      let clientTree = await lazy.PlacesUtils.promiseBookmarksTree("", {
         includeItemIds: true,
       });
       let serverRecords = await getServerBookmarkState();
       // We can't wait until catch to stringify this, since at that point it will have cycles.
       serverRecordDumpStr = JSON.stringify(serverRecords);
 
-      let validator = new BookmarkValidator();
+      let validator = new lazy.BookmarkValidator();
       let { problemData } = await validator.compareServerWithClient(
         serverRecords,
         clientTree
@@ -805,13 +828,13 @@ var TPS = {
         if (count) {
           // Log this out before we assert. This is useful in the context of TPS logs, since we
           // can see the IDs in the test files.
-          Logger.logInfo(
+          lazy.Logger.logInfo(
             `Validation problem: "${name}": ${JSON.stringify(
               problemData[name]
             )}`
           );
         }
-        Logger.AssertEqual(
+        lazy.Logger.AssertEqual(
           count,
           0,
           `Bookmark validation error of type ${name}`
@@ -819,24 +842,24 @@ var TPS = {
       }
     } catch (e) {
       // Dump the client records (should always be doable)
-      DumpBookmarks();
+      lazy.DumpBookmarks();
       // Dump the server records if gotten them already.
       if (serverRecordDumpStr) {
-        Logger.logInfo(
+        lazy.Logger.logInfo(
           "Server bookmark records:\n" + serverRecordDumpStr + "\n"
         );
       }
       this.DumpError("Bookmark validation failed", e);
     }
-    Logger.logInfo("Bookmark validation finished");
+    lazy.Logger.logInfo("Bookmark validation finished");
   },
 
   async ValidateCollection(engineName, ValidatorType) {
     let serverRecordDumpStr;
     let clientRecordDumpStr;
     try {
-      Logger.logInfo(`About to perform validation for "${engineName}"`);
-      let engine = Weave.Service.engineManager.get(engineName);
+      lazy.Logger.logInfo(`About to perform validation for "${engineName}"`);
+      let engine = lazy.Weave.Service.engineManager.get(engineName);
       let validator = new ValidatorType(engine);
       let serverRecords = await validator.getServerItems(engine);
       let clientRecords = await validator.getClientItems();
@@ -866,13 +889,13 @@ var TPS = {
       );
       for (let { name, count } of problemData.getSummary()) {
         if (count) {
-          Logger.logInfo(
+          lazy.Logger.logInfo(
             `Validation problem: "${name}": ${JSON.stringify(
               problemData[name]
             )}`
           );
         }
-        Logger.AssertEqual(
+        lazy.Logger.AssertEqual(
           count,
           0,
           `Validation error for "${engineName}" of type "${name}"`
@@ -881,39 +904,39 @@ var TPS = {
     } catch (e) {
       // Dump the client records if possible
       if (clientRecordDumpStr) {
-        Logger.logInfo(
+        lazy.Logger.logInfo(
           `Client state for ${engineName}:\n${clientRecordDumpStr}\n`
         );
       }
       // Dump the server records if gotten them already.
       if (serverRecordDumpStr) {
-        Logger.logInfo(
+        lazy.Logger.logInfo(
           `Server state for ${engineName}:\n${serverRecordDumpStr}\n`
         );
       }
       this.DumpError(`Validation failed for ${engineName}`, e);
     }
-    Logger.logInfo(`Validation finished for ${engineName}`);
+    lazy.Logger.logInfo(`Validation finished for ${engineName}`);
   },
 
   ValidatePasswords() {
-    return this.ValidateCollection("passwords", PasswordValidator);
+    return this.ValidateCollection("passwords", lazy.PasswordValidator);
   },
 
   ValidateForms() {
-    return this.ValidateCollection("forms", FormValidator);
+    return this.ValidateCollection("forms", lazy.FormValidator);
   },
 
   ValidateAddons() {
-    return this.ValidateCollection("addons", AddonValidator);
+    return this.ValidateCollection("addons", lazy.AddonValidator);
   },
 
   async RunNextTestAction() {
-    Logger.logInfo("Running next test action");
+    lazy.Logger.logInfo("Running next test action");
     try {
       if (this._currentAction >= this._phaselist[this._currentPhase].length) {
         // Run necessary validations and then finish up
-        Logger.logInfo("No more actions - running validations...");
+        lazy.Logger.logInfo("No more actions - running validations...");
         if (this.shouldValidateBookmarks) {
           await this.ValidateBookmarks();
         }
@@ -929,9 +952,9 @@ var TPS = {
         // Force this early so that we run the validation and detect missing pings
         // *before* we start shutting down, since if we do it after, the python
         // code won't notice the failure.
-        SyncTelemetry.shutdown();
+        lazy.SyncTelemetry.shutdown();
         // we're all done
-        Logger.logInfo(
+        lazy.Logger.logInfo(
           "test phase " +
             this._currentPhase +
             ": " +
@@ -941,7 +964,7 @@ var TPS = {
         this.quit();
         return;
       }
-      this.seconds_since_epoch = Services.prefs.getIntPref(
+      this.seconds_since_epoch = lazy.Services.prefs.getIntPref(
         "tps.seconds_since_epoch"
       );
       if (this.seconds_since_epoch) {
@@ -956,14 +979,14 @@ var TPS = {
 
       let phase = this._phaselist[this._currentPhase];
       let action = phase[this._currentAction];
-      Logger.logInfo("starting action: " + action[0].name);
+      lazy.Logger.logInfo("starting action: " + action[0].name);
       await action[0].apply(this, action.slice(1));
 
       this._currentAction++;
     } catch (e) {
-      if (Async.isShutdownException(e)) {
+      if (lazy.Async.isShutdownException(e)) {
         if (this._requestedQuit) {
-          Logger.logInfo("Sync aborted due to requested shutdown");
+          lazy.Logger.logInfo("Sync aborted due to requested shutdown");
         } else {
           this.DumpError(
             "Sync aborted due to shutdown, but we didn't request it"
@@ -978,9 +1001,9 @@ var TPS = {
   },
 
   _getFileRelativeToSourceRoot(testFileURL, relativePath) {
-    let file = fileProtocolHandler.getFileFromURLSpec(testFileURL);
+    let file = lazy.fileProtocolHandler.getFileFromURLSpec(testFileURL);
     let root = file.parent.parent.parent.parent.parent; // <root>/services/sync/tests/tps/test_foo.js // <root>/services/sync/tests/tps // <root>/services/sync/tests // <root>/services/sync // <root>/services // <root>
-    root.appendRelativePath(OS.Path.normalize(relativePath));
+    root.appendRelativePath(lazy.OS.Path.normalize(relativePath));
     return root;
   },
 
@@ -993,7 +1016,7 @@ var TPS = {
       ? this._pingValidator
       : {
           validate() {
-            Logger.logInfo(
+            lazy.Logger.logInfo(
               "Not validating ping -- disabled by pref or failure to load schema"
             );
             return { valid: true, errors: [] };
@@ -1005,7 +1028,9 @@ var TPS = {
   // based on the source of the tps file. Assumes that it's at "../unit/sync_ping_schema.json"
   // relative to the directory the tps test file (testFile) is contained in.
   _tryLoadPingSchema(testFile) {
-    if (Services.prefs.getBoolPref("testing.tps.skipPingValidation", false)) {
+    if (
+      lazy.Services.prefs.getBoolPref("testing.tps.skipPingValidation", false)
+    ) {
       return;
     }
     try {
@@ -1018,13 +1043,18 @@ var TPS = {
         "@mozilla.org/network/file-input-stream;1"
       ].createInstance(Ci.nsIFileInputStream);
 
-      stream.init(schemaFile, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+      stream.init(
+        schemaFile,
+        lazy.FileUtils.MODE_RDONLY,
+        lazy.FileUtils.PERMS_FILE,
+        0
+      );
 
-      let bytes = NetUtil.readInputStream(stream, stream.available());
-      let schema = JSON.parse(gTextDecoder.decode(bytes));
-      Logger.logInfo("Successfully loaded schema");
+      let bytes = lazy.NetUtil.readInputStream(stream, stream.available());
+      let schema = JSON.parse(lazy.gTextDecoder.decode(bytes));
+      lazy.Logger.logInfo("Successfully loaded schema");
 
-      this._pingValidator = new JsonSchema.Validator(schema);
+      this._pingValidator = new lazy.JsonSchema.Validator(schema);
     } catch (e) {
       this.DumpError(
         `Failed to load ping schema relative to "${testFile}".`,
@@ -1062,28 +1092,30 @@ var TPS = {
     try {
       let settings = options || {};
 
-      Logger.init(logpath);
-      Logger.logInfo("Sync version: " + WEAVE_VERSION);
-      Logger.logInfo("Firefox buildid: " + Services.appinfo.appBuildID);
-      Logger.logInfo("Firefox version: " + Services.appinfo.version);
-      Logger.logInfo(
-        "Firefox source revision: " +
-          (AppConstants.SOURCE_REVISION_URL || "unknown")
+      lazy.Logger.init(logpath);
+      lazy.Logger.logInfo("Sync version: " + lazy.WEAVE_VERSION);
+      lazy.Logger.logInfo(
+        "Firefox buildid: " + lazy.Services.appinfo.appBuildID
       );
-      Logger.logInfo("Firefox platform: " + AppConstants.platform);
+      lazy.Logger.logInfo("Firefox version: " + lazy.Services.appinfo.version);
+      lazy.Logger.logInfo(
+        "Firefox source revision: " +
+          (lazy.AppConstants.SOURCE_REVISION_URL || "unknown")
+      );
+      lazy.Logger.logInfo("Firefox platform: " + lazy.AppConstants.platform);
 
       // do some sync housekeeping
-      if (Weave.Service.isLoggedIn) {
+      if (lazy.Weave.Service.isLoggedIn) {
         this.DumpError("Sync logged in on startup...profile may be dirty");
         return;
       }
 
       // Wait for Sync service to become ready.
-      if (!Weave.Status.ready) {
+      if (!lazy.Weave.Status.ready) {
         this.waitForEvent("weave:service:ready");
       }
 
-      await Weave.Service.promiseInitialized;
+      await lazy.Weave.Service.promiseInitialized;
 
       // We only want to do this if we modified the bookmarks this phase.
       this.shouldValidateBookmarks = false;
@@ -1091,7 +1123,7 @@ var TPS = {
       // Always give Sync an extra tick to initialize. If we waited for the
       // service:ready event, this is required to ensure all handlers have
       // executed.
-      await Async.promiseYield();
+      await lazy.Async.promiseYield();
       await this._executeTestPhase(file, phase, settings);
     } catch (e) {
       this.DumpError("RunTestPhase failed", e);
@@ -1105,9 +1137,9 @@ var TPS = {
    */
   async _executeTestPhase(file, phase, settings) {
     try {
-      this.config = JSON.parse(Services.prefs.getCharPref("tps.config"));
+      this.config = JSON.parse(lazy.Services.prefs.getCharPref("tps.config"));
       // parse the test file
-      Services.scriptloader.loadSubScript(file, this);
+      lazy.Services.scriptloader.loadSubScript(file, this);
       this._currentPhase = phase;
       // cleanup phases are in the format `cleanup-${profileName}`.
       if (this._currentPhase.startsWith("cleanup-")) {
@@ -1137,25 +1169,25 @@ var TPS = {
         for (let name of this._enabledEngines) {
           names[name] = true;
         }
-        for (let engine of Weave.Service.engineManager.getEnabled()) {
+        for (let engine of lazy.Weave.Service.engineManager.getEnabled()) {
           if (!(engine.name in names)) {
-            Logger.logInfo("Unregistering unused engine: " + engine.name);
-            await Weave.Service.engineManager.unregister(engine);
+            lazy.Logger.logInfo("Unregistering unused engine: " + engine.name);
+            await lazy.Weave.Service.engineManager.unregister(engine);
           }
         }
       }
-      Logger.logInfo("Starting phase " + this._currentPhase);
+      lazy.Logger.logInfo("Starting phase " + this._currentPhase);
 
-      Logger.logInfo(
+      lazy.Logger.logInfo(
         "setting client.name to " + this.phases[this._currentPhase]
       );
-      Weave.Svc.Prefs.set("client.name", this.phases[this._currentPhase]);
+      lazy.Weave.Svc.Prefs.set("client.name", this.phases[this._currentPhase]);
 
       this._interceptSyncTelemetry();
 
       // start processing the test actions
       this._currentAction = 0;
-      await SessionStore.promiseAllWindowsRestored;
+      await lazy.SessionStore.promiseAllWindowsRestored;
       await this.RunNextTestAction();
     } catch (e) {
       this.DumpError("_executeTestPhase failed", e);
@@ -1167,23 +1199,23 @@ var TPS = {
    * the sync ping, and count how many pings we report.
    */
   _interceptSyncTelemetry() {
-    let originalObserve = SyncTelemetry.observe;
+    let originalObserve = lazy.SyncTelemetry.observe;
     let self = this;
-    SyncTelemetry.observe = function() {
+    lazy.SyncTelemetry.observe = function() {
       try {
         originalObserve.apply(this, arguments);
       } catch (e) {
         self.DumpError("Error when generating sync telemetry", e);
       }
     };
-    SyncTelemetry.submit = record => {
-      Logger.logInfo(
+    lazy.SyncTelemetry.submit = record => {
+      lazy.Logger.logInfo(
         "Intercepted sync telemetry submission: " + JSON.stringify(record)
       );
       this._syncsReportedViaTelemetry +=
         record.syncs.length + (record.discarded || 0);
       if (record.discarded) {
-        if (record.syncs.length != SyncTelemetry.maxPayloadCount) {
+        if (record.syncs.length != lazy.SyncTelemetry.maxPayloadCount) {
           this.DumpError(
             "Syncs discarded from ping before maximum payload count reached"
           );
@@ -1283,13 +1315,13 @@ var TPS = {
    */
   promiseObserver(aEventName) {
     return new Promise(resolve => {
-      Logger.logInfo("Setting up wait for " + aEventName + "...");
+      lazy.Logger.logInfo("Setting up wait for " + aEventName + "...");
       let handler = () => {
-        Logger.logInfo("Observed " + aEventName);
-        Svc.Obs.remove(aEventName, handler);
+        lazy.Logger.logInfo("Observed " + aEventName);
+        lazy.Svc.Obs.remove(aEventName, handler);
         resolve();
       };
-      Svc.Obs.add(aEventName, handler);
+      lazy.Svc.Obs.add(aEventName, handler);
     });
   },
 
@@ -1320,7 +1352,7 @@ var TPS = {
    * Waits for Sync to be finished before returning
    */
   async waitForSyncFinished() {
-    if (Weave.Service.locked) {
+    if (lazy.Weave.Service.locked) {
       await this.waitForEvent("weave:service:resyncs-finished");
     }
   },
@@ -1338,16 +1370,16 @@ var TPS = {
    * Login on the server
    */
   async Login() {
-    if (await Authentication.isReady()) {
+    if (await lazy.Authentication.isReady()) {
       return;
     }
 
-    Logger.logInfo("Setting client credentials and login.");
-    await Authentication.signIn(this.config.fx_account);
+    lazy.Logger.logInfo("Setting client credentials and login.");
+    await lazy.Authentication.signIn(this.config.fx_account);
     await this.waitForSetupComplete();
-    Logger.AssertEqual(
-      Weave.Status.service,
-      Weave.STATUS_OK,
+    lazy.Logger.AssertEqual(
+      lazy.Weave.Status.service,
+      lazy.Weave.STATUS_OK,
       "Weave status OK"
     );
     await this.waitForTracking();
@@ -1365,40 +1397,44 @@ var TPS = {
       this.DumpError("Sync currently active which should be impossible");
       return;
     }
-    Logger.logInfo("Executing Sync" + (wipeAction ? ": " + wipeAction : ""));
+    lazy.Logger.logInfo(
+      "Executing Sync" + (wipeAction ? ": " + wipeAction : "")
+    );
 
     // Force a wipe action if requested. In case of an initial sync the pref
     // will be overwritten by Sync itself (see bug 992198), so ensure that we
     // also handle it via the "weave:service:setup-complete" notification.
     if (wipeAction) {
       this._syncWipeAction = wipeAction;
-      Weave.Svc.Prefs.set("firstSync", wipeAction);
+      lazy.Weave.Svc.Prefs.set("firstSync", wipeAction);
     } else {
-      Weave.Svc.Prefs.reset("firstSync");
+      lazy.Weave.Svc.Prefs.reset("firstSync");
     }
-    if (!(await Weave.Service.login())) {
+    if (!(await lazy.Weave.Service.login())) {
       // We need to complete verification.
-      Logger.logInfo("Logging in before performing sync");
+      lazy.Logger.logInfo("Logging in before performing sync");
       await this.Login();
     }
     ++this._syncCount;
 
-    Logger.logInfo("Executing Sync" + (wipeAction ? ": " + wipeAction : ""));
+    lazy.Logger.logInfo(
+      "Executing Sync" + (wipeAction ? ": " + wipeAction : "")
+    );
     this._triggeredSync = true;
-    await Weave.Service.sync();
-    Logger.logInfo("Sync is complete");
+    await lazy.Weave.Service.sync();
+    lazy.Logger.logInfo("Sync is complete");
     // wait a second for things to settle...
     await new Promise(resolve => {
-      CommonUtils.namedTimer(resolve, 1000, this, "postsync");
+      lazy.CommonUtils.namedTimer(resolve, 1000, this, "postsync");
     });
   },
 
   async WipeServer() {
-    Logger.logInfo("Wiping data from server.");
+    lazy.Logger.logInfo("Wiping data from server.");
 
     await this.Login();
-    await Weave.Service.login();
-    await Weave.Service.wipeServer();
+    await lazy.Weave.Service.login();
+    await lazy.Weave.Service.wipeServer();
   },
 
   /**
@@ -1571,12 +1607,12 @@ var Windows = {
 // eslint-disable-next-line no-unused-vars
 var ExtStorage = {
   async set(id, data) {
-    Logger.logInfo(`setting data for '${id}': ${data}`);
-    await extensionStorageSync.set({ id }, data);
+    lazy.Logger.logInfo(`setting data for '${id}': ${data}`);
+    await lazy.extensionStorageSync.set({ id }, data);
   },
   async verify(id, keys, data) {
-    let got = await extensionStorageSync.get({ id }, keys);
-    Logger.AssertEqual(got, data, `data for '${id}'/${keys}`);
+    let got = await lazy.extensionStorageSync.get({ id }, keys);
+    lazy.Logger.AssertEqual(got, data, `data for '${id}'/${keys}`);
   },
 };
 

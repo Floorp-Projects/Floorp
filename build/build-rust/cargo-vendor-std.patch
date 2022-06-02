@@ -12,7 +12,7 @@ diff --git a/src/cargo/core/compiler/standard_lib.rs b/src/cargo/core/compiler/s
 index 0b14df805..7bc5151a4 100644
 --- a/src/cargo/core/compiler/standard_lib.rs
 +++ b/src/cargo/core/compiler/standard_lib.rs
-@@ -10,6 +10,7 @@ use crate::ops::{self, Packages};
+@@ -11,6 +11,7 @@ use crate::ops::{self, Packages};
  use crate::util::errors::CargoResult;
  use std::collections::{HashMap, HashSet};
  use std::env;
@@ -20,7 +20,7 @@ index 0b14df805..7bc5151a4 100644
  use std::path::PathBuf;
  
  /// Parse the `-Zbuild-std` flag.
-@@ -38,28 +39,46 @@ pub fn resolve_std<'cfg>(
+@@ -39,27 +40,45 @@ pub fn resolve_std<'cfg>(
      crates: &[String],
  ) -> CargoResult<(PackageSet<'cfg>, Resolve, ResolvedFeatures)> {
      let src_path = detect_sysroot_src_path(target_data)?;
@@ -72,8 +72,7 @@ index 0b14df805..7bc5151a4 100644
          .collect::<CargoResult<Vec<_>>>()?;
 +
      let crates_io_url = crate::sources::CRATES_IO_INDEX.parse().unwrap();
-     let mut patch = HashMap::new();
-     patch.insert(crates_io_url, patches);
+     let patch = HashMap::from([(crates_io_url, patches)]);
 -    let members = vec![
 -        String::from("library/std"),
 -        String::from("library/core"),

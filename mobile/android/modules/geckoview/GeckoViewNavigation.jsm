@@ -13,13 +13,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
+XPCOMUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
   Components.Constructor(
     "@mozilla.org/referrer-info;1",
     "nsIReferrerInfo",
@@ -45,10 +47,10 @@ const HEADER_FILTER_UNRESTRICTED_UNSAFE = 2;
 const createReferrerInfo = aReferrer => {
   let referrerUri;
   try {
-    referrerUri = Services.io.newURI(aReferrer);
+    referrerUri = lazy.Services.io.newURI(aReferrer);
   } catch (ignored) {}
 
-  return new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, referrerUri);
+  return new lazy.ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, referrerUri);
 };
 
 function convertFlags(aFlags) {
@@ -109,7 +111,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     // There may be a GeckoViewNavigation module in another window waiting for
     // us to create a browser so it can set openWindowInfo, so allow them to do
     // that now.
-    Services.obs.notifyObservers(this.window, "geckoview-window-created");
+    lazy.Services.obs.notifyObservers(this.window, "geckoview-window-created");
   }
 
   onInit() {
@@ -185,7 +187,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
         let triggeringPrincipal, referrerInfo, csp;
         if (referrerSessionId) {
-          const referrerWindow = Services.ww.getWindowByName(
+          const referrerWindow = lazy.Services.ww.getWindowByName(
             referrerSessionId,
             this.window
           );
@@ -196,7 +198,7 @@ class GeckoViewNavigation extends GeckoViewModule {
             ? referrerWindow.browser.referrerInfo.referrerPolicy
             : Ci.nsIReferrerInfo.EMPTY;
 
-          referrerInfo = new ReferrerInfo(
+          referrerInfo = new lazy.ReferrerInfo(
             referrerPolicy,
             true,
             referrerWindow.browser.documentURI
@@ -212,12 +214,12 @@ class GeckoViewNavigation extends GeckoViewModule {
             // Always use the system principal as the triggering principal
             // for user-initiated (ie. no referrer session and not external)
             // loads. See discussion in bug 1573860.
-            triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+            triggeringPrincipal = lazy.Services.scriptSecurityManager.getSystemPrincipal();
           }
         }
 
         if (!triggeringPrincipal) {
-          triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal(
+          triggeringPrincipal = lazy.Services.scriptSecurityManager.createNullPrincipal(
             {}
           );
         }
@@ -235,7 +237,9 @@ class GeckoViewNavigation extends GeckoViewModule {
           }
 
           if (additionalHeaders != "") {
-            additionalHeaders = E10SUtils.makeInputStream(additionalHeaders);
+            additionalHeaders = lazy.E10SUtils.makeInputStream(
+              additionalHeaders
+            );
           } else {
             additionalHeaders = null;
           }
@@ -310,14 +314,17 @@ class GeckoViewNavigation extends GeckoViewModule {
               aSubject.browser.setAttribute("remote", "false");
               aSubject.browser.removeAttribute("remoteType");
             }
-            Services.obs.removeObserver(handler, "geckoview-window-created");
+            lazy.Services.obs.removeObserver(
+              handler,
+              "geckoview-window-created"
+            );
             resolve(aSubject);
           }
         },
       };
 
       // This event is emitted from createBrowser() in geckoview.js
-      Services.obs.addObserver(handler, "geckoview-window-created");
+      lazy.Services.obs.addObserver(handler, "geckoview-window-created");
     });
   }
 
@@ -329,7 +336,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       return null;
     }
 
-    const newSessionId = Services.uuid
+    const newSessionId = lazy.Services.uuid
       .generateUUID()
       .toString()
       .slice(1, -1)
@@ -368,7 +375,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       );
 
     // Wait indefinitely for app to respond with a browser or null
-    Services.tm.spinEventLoopUntil(
+    lazy.Services.tm.spinEventLoopUntil(
       "GeckoViewNavigation.jsm:handleNewSession",
       () => this.window.closed || browser !== undefined
     );
@@ -388,7 +395,7 @@ class GeckoViewNavigation extends GeckoViewModule {
                                 where=${aWhere} flags=${aFlags}`;
 
     if (
-      LoadURIDelegate.load(
+      lazy.LoadURIDelegate.load(
         this.window,
         this.eventDispatcher,
         aUri,
@@ -428,7 +435,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     }
 
     if (
-      LoadURIDelegate.load(
+      lazy.LoadURIDelegate.load(
         this.window,
         this.eventDispatcher,
         aUri,
@@ -471,7 +478,7 @@ class GeckoViewNavigation extends GeckoViewModule {
                           where=${where} flags=${flags}`;
 
     if (
-      LoadURIDelegate.load(
+      lazy.LoadURIDelegate.load(
         this.window,
         this.eventDispatcher,
         uri,
@@ -564,8 +571,8 @@ class GeckoViewNavigation extends GeckoViewModule {
   serializePermission({ type, capability, principal }) {
     const { URI, originAttributes, privateBrowsingId } = principal;
     return {
-      uri: Services.io.createExposableURI(URI).displaySpec,
-      principal: E10SUtils.serializePrincipal(principal),
+      uri: lazy.Services.io.createExposableURI(URI).displaySpec,
+      principal: lazy.E10SUtils.serializePrincipal(principal),
       perm: type,
       value: capability,
       contextId: originAttributes.geckoViewSessionContextId,
@@ -580,7 +587,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     let fixedURI = aLocationURI;
 
     try {
-      fixedURI = Services.io.createExposableURI(aLocationURI);
+      fixedURI = lazy.Services.io.createExposableURI(aLocationURI);
     } catch (ex) {}
 
     // We manually fire the initial about:blank messages to make sure that we
@@ -595,7 +602,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     const { contentPrincipal } = this.browser;
     let permissions;
     if (contentPrincipal) {
-      const rawPerms = Services.perms.getAllForPrincipal(contentPrincipal);
+      const rawPerms = lazy.Services.perms.getAllForPrincipal(contentPrincipal);
       permissions = rawPerms.map(this.serializePermission);
 
       // The only way for apps to set permissions is to get hold of an existing

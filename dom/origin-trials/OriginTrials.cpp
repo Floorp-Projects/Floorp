@@ -6,6 +6,7 @@
 
 #include "OriginTrials.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Span.h"
 #include "nsString.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
@@ -15,12 +16,14 @@
 #include "jsapi.h"
 #include "js/Wrapper.h"
 #include "nsGlobalWindowInner.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkletThread.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "ScopedNSSTypes.h"
+#include <mutex>
 
 namespace mozilla {
 
@@ -30,41 +33,70 @@ LazyLogModule sOriginTrialsLog("OriginTrials");
 // prod.pub is the EcdsaP256 public key from the production key managed in
 // Google Cloud. See:
 //
-//   https://github.com/emilio/origin-trial-token/blob/main/tools/README.md#get-the-public-key
+//   https://github.com/mozilla/origin-trial-token/blob/main/tools/README.md#get-the-public-key
 //
 // for how to get the public key.
 //
 // See also:
 //
-//   https://github.com/emilio/origin-trial-token/blob/main/tools/README.md#sign-a-token-using-gcloud
+//   https://github.com/mozilla/origin-trial-token/blob/main/tools/README.md#sign-a-token-using-gcloud
 //
 // for how to sign using this key.
 //
 // test.pub is the EcdsaP256 public key from this key pair:
 //
-//  * https://github.com/emilio/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pkcs8
-//  * https://github.com/emilio/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pub
+//  * https://github.com/mozilla/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pkcs8
+//  * https://github.com/mozilla/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pub
 //
 #include "keys.inc"
 
 constexpr auto kEcAlgorithm =
     NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_NAMED_CURVE_P256);
 
+using RawKeyRef = Span<const unsigned char, sizeof(kProdKey)>;
+
+struct StaticCachedPublicKey {
+  constexpr StaticCachedPublicKey() = default;
+
+  SECKEYPublicKey* Get(const RawKeyRef aRawKey);
+
+ private:
+  std::once_flag mFlag;
+  UniqueSECKEYPublicKey mKey;
+};
+
+SECKEYPublicKey* StaticCachedPublicKey::Get(const RawKeyRef aRawKey) {
+  std::call_once(mFlag, [&] {
+    const SECItem item{siBuffer, const_cast<unsigned char*>(aRawKey.data()),
+                       unsigned(aRawKey.Length())};
+    MOZ_RELEASE_ASSERT(item.data[0] == EC_POINT_FORM_UNCOMPRESSED);
+    mKey = dom::CreateECPublicKey(&item, kEcAlgorithm);
+    if (mKey) {
+      // It's fine to capture [this] by pointer because we are always static.
+      if (NS_IsMainThread()) {
+        RunOnShutdown([this] { mKey = nullptr; });
+      } else {
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "ClearStaticCachedPublicKey",
+            [this] { RunOnShutdown([this] { mKey = nullptr; }); }));
+      }
+    }
+  });
+  return mKey.get();
+}
+
 bool VerifySignature(const uint8_t* aSignature, uintptr_t aSignatureLen,
                      const uint8_t* aData, uintptr_t aDataLen,
                      void* aUserData) {
   MOZ_RELEASE_ASSERT(aSignatureLen == 64);
+  static StaticCachedPublicKey sTestKey;
+  static StaticCachedPublicKey sProdKey;
+
   LOG("VerifySignature()\n");
 
-  const unsigned char* key = StaticPrefs::dom_origin_trials_test_key_enabled()
-                                 ? kTestKey
-                                 : kProdKey;
-
-  static_assert(sizeof(kTestKey) == sizeof(kProdKey));
-  const SECItem rawKey{siBuffer, const_cast<unsigned char*>(key),
-                       sizeof(kProdKey)};
-  MOZ_RELEASE_ASSERT(rawKey.data[0] == EC_POINT_FORM_UNCOMPRESSED);
-  UniqueSECKEYPublicKey pubKey = dom::CreateECPublicKey(&rawKey, kEcAlgorithm);
+  SECKEYPublicKey* pubKey = StaticPrefs::dom_origin_trials_test_key_enabled()
+                                ? sTestKey.Get(Span(kTestKey))
+                                : sProdKey.Get(Span(kProdKey));
   if (NS_WARN_IF(!pubKey)) {
     LOG("  Failed to create public key?");
     return false;
@@ -82,7 +114,7 @@ bool VerifySignature(const uint8_t* aSignature, uintptr_t aSignatureLen,
 
   // SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE
   const SECStatus result = PK11_VerifyWithMechanism(
-      pubKey.get(), CKM_ECDSA_SHA256, nullptr, &signature, &data, nullptr);
+      pubKey, CKM_ECDSA_SHA256, nullptr, &signature, &data, nullptr);
   if (NS_WARN_IF(result != SECSuccess)) {
     LOG("  Failed to verify data.");
     return false;

@@ -238,7 +238,7 @@ impl Builder {
             });
         } else {
             // Consume map of directives.
-            let directives_map = mem::replace(&mut self.directives, HashMap::new());
+            let directives_map = mem::take(&mut self.directives);
             directives = directives_map
                 .into_iter()
                 .map(|(name, level)| Directive { name, level })
@@ -253,7 +253,7 @@ impl Builder {
         }
 
         Filter {
-            directives: mem::replace(&mut directives, Vec::new()),
+            directives: mem::take(&mut directives),
             filter: mem::replace(&mut self.filter, None),
         }
     }

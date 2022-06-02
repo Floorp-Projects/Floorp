@@ -111,7 +111,6 @@ elif CONFIG["JS_CODEGEN_X86"] or CONFIG["JS_CODEGEN_X64"]:
     if CONFIG["JS_CODEGEN_X64"]:
         UNIFIED_SOURCES += [
             "x64/Assembler-x64.cpp",
-            "x64/Bailouts-x64.cpp",
             "x64/CodeGenerator-x64.cpp",
             "x64/Lowering-x64.cpp",
             "x64/MacroAssembler-x64.cpp",
@@ -120,7 +119,6 @@ elif CONFIG["JS_CODEGEN_X86"] or CONFIG["JS_CODEGEN_X64"]:
     else:
         UNIFIED_SOURCES += [
             "x86/Assembler-x86.cpp",
-            "x86/Bailouts-x86.cpp",
             "x86/CodeGenerator-x86.cpp",
             "x86/Lowering-x86.cpp",
             "x86/MacroAssembler-x86.cpp",
@@ -130,7 +128,6 @@ elif CONFIG["JS_CODEGEN_ARM"]:
     UNIFIED_SOURCES += [
         "arm/Architecture-arm.cpp",
         "arm/Assembler-arm.cpp",
-        "arm/Bailouts-arm.cpp",
         "arm/CodeGenerator-arm.cpp",
         "arm/disasm/Constants-arm.cpp",
         "arm/disasm/Disasm-arm.cpp",
@@ -150,7 +147,6 @@ elif CONFIG["JS_CODEGEN_ARM64"]:
     UNIFIED_SOURCES += [
         "arm64/Architecture-arm64.cpp",
         "arm64/Assembler-arm64.cpp",
-        "arm64/Bailouts-arm64.cpp",
         "arm64/CodeGenerator-arm64.cpp",
         "arm64/Lowering-arm64.cpp",
         "arm64/MacroAssembler-arm64.cpp",
@@ -186,7 +182,6 @@ elif CONFIG["JS_CODEGEN_MIPS32"] or CONFIG["JS_CODEGEN_MIPS64"]:
     UNIFIED_SOURCES += [
         "mips-shared/Architecture-mips-shared.cpp",
         "mips-shared/Assembler-mips-shared.cpp",
-        "mips-shared/Bailouts-mips-shared.cpp",
         "mips-shared/CodeGenerator-mips-shared.cpp",
         "mips-shared/Lowering-mips-shared.cpp",
         "mips-shared/MacroAssembler-mips-shared.cpp",
@@ -196,7 +191,6 @@ elif CONFIG["JS_CODEGEN_MIPS32"] or CONFIG["JS_CODEGEN_MIPS64"]:
         UNIFIED_SOURCES += [
             "mips32/Architecture-mips32.cpp",
             "mips32/Assembler-mips32.cpp",
-            "mips32/Bailouts-mips32.cpp",
             "mips32/CodeGenerator-mips32.cpp",
             "mips32/Lowering-mips32.cpp",
             "mips32/MacroAssembler-mips32.cpp",
@@ -209,7 +203,6 @@ elif CONFIG["JS_CODEGEN_MIPS32"] or CONFIG["JS_CODEGEN_MIPS64"]:
         UNIFIED_SOURCES += [
             "mips64/Architecture-mips64.cpp",
             "mips64/Assembler-mips64.cpp",
-            "mips64/Bailouts-mips64.cpp",
             "mips64/CodeGenerator-mips64.cpp",
             "mips64/Lowering-mips64.cpp",
             "mips64/MacroAssembler-mips64.cpp",
@@ -222,7 +215,6 @@ elif CONFIG["JS_CODEGEN_LOONG64"]:
     UNIFIED_SOURCES += [
         "loong64/Architecture-loong64.cpp",
         "loong64/Assembler-loong64.cpp",
-        "loong64/Bailouts-loong64.cpp",
         "loong64/CodeGenerator-loong64.cpp",
         "loong64/Lowering-loong64.cpp",
         "loong64/MacroAssembler-loong64.cpp",

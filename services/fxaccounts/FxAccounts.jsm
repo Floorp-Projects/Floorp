@@ -46,54 +46,56 @@ const {
   logManager,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsClient",
   "resource://gre/modules/FxAccountsClient.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsConfig",
   "resource://gre/modules/FxAccountsConfig.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsCommands",
   "resource://gre/modules/FxAccountsCommands.js"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsDevice",
   "resource://gre/modules/FxAccountsDevice.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsKeys",
   "resource://gre/modules/FxAccountsKeys.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsProfile",
   "resource://gre/modules/FxAccountsProfile.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FxAccountsTelemetry",
   "resource://gre/modules/FxAccountsTelemetry.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "FXA_ENABLED",
   "identity.fxaccounts.enabled",
   true
@@ -406,7 +408,7 @@ class FxAccounts {
   }
 
   static get config() {
-    return FxAccountsConfig;
+    return lazy.FxAccountsConfig;
   }
 
   get device() {
@@ -542,7 +544,7 @@ class FxAccounts {
       if (!data) {
         return null;
       }
-      if (!FXA_ENABLED) {
+      if (!lazy.FXA_ENABLED) {
         await this.signOut();
         return null;
       }
@@ -724,7 +726,7 @@ FxAccountsInternal.prototype = {
       ).wrappedJSObject;
     });
 
-    this.keys = new FxAccountsKeys(this);
+    this.keys = new lazy.FxAccountsKeys(this);
 
     if (!this.observerPreloads) {
       // A registry of promise-returning functions that `notifyObservers` should
@@ -805,7 +807,7 @@ FxAccountsInternal.prototype = {
 
   get fxAccountsClient() {
     if (!this._fxAccountsClient) {
-      this._fxAccountsClient = new FxAccountsClient();
+      this._fxAccountsClient = new lazy.FxAccountsClient();
     }
     return this._fxAccountsClient;
   },
@@ -817,7 +819,7 @@ FxAccountsInternal.prototype = {
       let profileServerUrl = Services.urlFormatter.formatURLPref(
         "identity.fxaccounts.remote.profile.uri"
       );
-      this._profile = new FxAccountsProfile({
+      this._profile = new lazy.FxAccountsProfile({
         fxa: this,
         profileServerUrl,
       });
@@ -828,7 +830,7 @@ FxAccountsInternal.prototype = {
   _commands: null,
   get commands() {
     if (!this._commands) {
-      this._commands = new FxAccountsCommands(this);
+      this._commands = new lazy.FxAccountsCommands(this);
     }
     return this._commands;
   },
@@ -836,7 +838,7 @@ FxAccountsInternal.prototype = {
   _device: null,
   get device() {
     if (!this._device) {
-      this._device = new FxAccountsDevice(this);
+      this._device = new lazy.FxAccountsDevice(this);
     }
     return this._device;
   },
@@ -844,7 +846,7 @@ FxAccountsInternal.prototype = {
   _telemetry: null,
   get telemetry() {
     if (!this._telemetry) {
-      this._telemetry = new FxAccountsTelemetry(this);
+      this._telemetry = new lazy.FxAccountsTelemetry(this);
     }
     return this._telemetry;
   },
@@ -939,10 +941,10 @@ FxAccountsInternal.prototype = {
    *         successfully and is rejected on error.
    */
   async setSignedInUser(credentials) {
-    if (!FXA_ENABLED) {
+    if (!lazy.FXA_ENABLED) {
       throw new Error("Cannot call setSignedInUser when FxA is disabled.");
     }
-    Preferences.resetBranch(PREF_ACCOUNT_ROOT);
+    lazy.Preferences.resetBranch(PREF_ACCOUNT_ROOT);
     log.debug("setSignedInUser - aborting any existing flows");
     const signedInUser = await this.currentAccountState.getUserAccountData();
     if (signedInUser) {
@@ -1069,19 +1071,19 @@ FxAccountsInternal.prototype = {
       // block the local sign out.
       Services.tm.dispatchToMainThread(async () => {
         await this._signOutServer(sessionToken, tokensToRevoke);
-        FxAccountsConfig.resetConfigURLs();
+        lazy.FxAccountsConfig.resetConfigURLs();
         this.notifyObservers("testhelper-fxa-signout-complete");
       });
     } else {
       // We want to do this either way -- but if we're signing out remotely we
       // need to wait until we destroy the oauth tokens if we want that to succeed.
-      FxAccountsConfig.resetConfigURLs();
+      lazy.FxAccountsConfig.resetConfigURLs();
     }
     return this.notifyObservers(ONLOGOUT_NOTIFICATION);
   },
 
   async _signOutLocal() {
-    Preferences.resetBranch(PREF_ACCOUNT_ROOT);
+    lazy.Preferences.resetBranch(PREF_ACCOUNT_ROOT);
     await this.currentAccountState.signOut();
     // this "aborts" this.currentAccountState but doesn't make a new one.
     await this.abortExistingFlow();

@@ -125,7 +125,6 @@ static const char sIntPrefs[][45] = {
     "ui.dragThresholdY",
     "ui.useAccessibilityTheme",
     "ui.scrollArrowStyle",
-    "ui.scrollSliderStyle",
     "ui.scrollButtonLeftMouseButtonAction",
     "ui.scrollButtonMiddleMouseButtonAction",
     "ui.scrollButtonRightMouseButtonAction",

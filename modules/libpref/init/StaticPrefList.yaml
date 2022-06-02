@@ -8382,6 +8382,12 @@
   value: true
   mirror: always
 
+# Controls whether nsRefreshDriver::IsInHighRateMode() may ever return true.
+- name: layout.expose_high_rate_mode_from_refreshdriver
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------

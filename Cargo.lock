@@ -63,7 +63,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9ed09b18365ed295d722d0b5ed59c01b79a826ff2d2a8f73d5ecca8e6fb2f66"
 dependencies = [
  "android_log-sys",
- "env_logger",
+ "env_logger 0.8.999",
  "lazy_static",
  "log",
 ]
@@ -340,7 +340,7 @@ dependencies = [
  "bindgen 0.59.2",
  "cranelift-codegen",
  "cranelift-wasm",
- "env_logger",
+ "env_logger 0.8.999",
  "log",
  "mozbuild",
  "smallvec",
@@ -1452,9 +1452,16 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.8.4"
+version = "0.8.999"
+dependencies = [
+ "env_logger 0.9.0",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
+checksum = "0b2cf0344971ee6c64c31be0d530793fba457d322dfec2810c453d0ef228f9c3"
 dependencies = [
  "atty",
  "humantime",
@@ -1912,7 +1919,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "app_services_logger",
- "env_logger",
+ "env_logger 0.8.999",
  "lazy_static",
  "log",
 ]
@@ -2162,7 +2169,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ed48dd0ba3a92d6bdf9efe7950664658daf346e72f0970868893643de25be26"
 dependencies = [
  "android_logger",
- "env_logger",
+ "env_logger 0.8.999",
  "ffi-support",
  "glean-core",
  "libc",
@@ -3402,7 +3409,7 @@ source = "git+https://github.com/mozilla/mp4parse-rust?rev=3bfc47d9a571d08426760
 dependencies = [
  "bitreader",
  "byteorder",
- "env_logger",
+ "env_logger 0.8.999",
  "fallible_collections",
  "log",
  "num-traits",
@@ -3467,7 +3474,7 @@ version = "0.5.7"
 source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
  "chrono",
- "env_logger",
+ "env_logger 0.8.999",
  "lazy_static",
  "log",
  "qlog",
@@ -3485,7 +3492,7 @@ dependencies = [
  "neqo-common",
  "serde",
  "serde_derive",
- "toml",
+ "toml 0.4.999",
 ]
 
 [[package]]
@@ -3745,9 +3752,9 @@ dependencies = [
 
 [[package]]
 name = "origin-trial-token"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a4bbc9a3f0da0355296ec1884b80c3730be9c4013b736840cb460b698012a4d"
+checksum = "94cb60fca11d2efd72ab0e0ad0298089307a15b14313178416a96476dbea4550"
 dependencies = [
  "serde",
  "serde_json",
@@ -3772,7 +3779,7 @@ version = "0.1.4"
 dependencies = [
  "byteorder",
  "core-foundation",
- "env_logger",
+ "env_logger 0.8.999",
  "lazy_static",
  "libloading 0.5.2",
  "log",
@@ -3838,22 +3845,16 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "0.1.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45ca20c77d80be666aef2b45486da86238fabe33e38306bd3118fe4af33fa880"
+version = "0.1.999"
 dependencies = [
- "paste-impl",
- "proc-macro-hack",
+ "paste 1.0.7",
 ]
 
 [[package]]
-name = "paste-impl"
-version = "0.1.18"
+name = "paste"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d95a7db200b97ef370c8e6de0088252f7e0dfff7d047a28528e47456c0fc98b6"
-dependencies = [
- "proc-macro-hack",
-]
+checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
 
 [[package]]
 name = "peek-poke"
@@ -4334,7 +4335,7 @@ dependencies = [
  "lmdb-rkv",
  "log",
  "ordered-float",
- "paste",
+ "paste 0.1.999",
  "serde",
  "serde_derive",
  "thiserror",
@@ -4749,7 +4750,7 @@ name = "smoosh"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "env_logger",
+ "env_logger 0.8.999",
  "jsparagus",
  "log",
 ]
@@ -4882,7 +4883,7 @@ dependencies = [
  "time 0.1.43",
  "to_shmem",
  "to_shmem_derive",
- "toml",
+ "toml 0.4.999",
  "uluru",
  "unicode-bidi",
  "unicode-segmentation",
@@ -5356,9 +5357,16 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.4.10"
+version = "0.4.999"
+dependencies = [
+ "toml 0.5.9",
+]
+
+[[package]]
+name = "toml"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "758664fc71a3a69038656bee8b6be6477d2a6c315a6b81f7081f591bffa4111f"
+checksum = "8d82e1a7758622a465f8cee077614c73484dac5b836c02ff6a40d5d1010324d7"
 dependencies = [
  "serde",
 ]

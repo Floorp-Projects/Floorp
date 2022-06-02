@@ -4033,9 +4033,6 @@ pref("reader.has_used_toolbar", false);
 // Whether to use a vertical or horizontal toolbar.
 pref("reader.toolbar.vertical", true);
 
-// Whether or not we display additional UI (such as the full screen, reset to default, and browser theme buttons).
-pref("reader.improvements_H12022.enabled", false);
-
 #if !defined(ANDROID)
   pref("narrate.enabled", true);
 #else

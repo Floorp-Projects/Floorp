@@ -43,6 +43,7 @@ class PerftestResultsHandler(object):
         conditioned_profile=None,
         cold=False,
         chimera=False,
+        fission=True,
         **kwargs
     ):
         self.gecko_profile = gecko_profile
@@ -56,7 +57,7 @@ class PerftestResultsHandler(object):
         self.page_timeout_list = []
         self.images = []
         self.supporting_data = None
-        self.fission_enabled = kwargs.get("fission", True)
+        self.fission_enabled = fission
         self.browser_version = None
         self.browser_name = None
         self.cold = cold
@@ -107,8 +108,10 @@ class PerftestResultsHandler(object):
             "chromium",
         ):
             # Bug 1770225: Make this more dynamic, this will fail us again in the future
-            extra_options.remove("webrender")
-            extra_options.remove("fission")
+            if "webrender" in extra_options:
+                extra_options.remove("webrender")
+            if "fission" in extra_options:
+                extra_options.remove("fission")
 
         return extra_options
 

@@ -176,6 +176,7 @@ resizer[dir="topright"] {
 /********** scrollbar **********/
 
 thumb {
+  -moz-box-flex: 1;
   display: -moz-box !important;
 }
 
@@ -221,11 +222,5 @@ scrollbar[value="hidden"] {
 @media (-moz-scrollbar-end-forward: 0) {
   scrollbarbutton[sbattr="scrollbar-down-bottom"] {
     display: none;
-  }
-}
-
-@media (-moz-scrollbar-thumb-proportional) {
-  thumb {
-    -moz-box-flex: 1;
   }
 }

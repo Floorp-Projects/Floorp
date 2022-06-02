@@ -1,7 +1,6 @@
 "use strict";
 
 const IFRAME_URL_PATH = BASE_URL + "autocomplete_iframe.html";
-const PRIVACY_PREF_URL = "about:preferences#privacy";
 
 // Start by adding a few addresses to storage.
 add_task(async function setup_storage() {

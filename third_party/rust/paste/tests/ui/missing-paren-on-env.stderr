@@ -1,5 +1,5 @@
 error: expected `(`
- --> $DIR/missing-paren-on-env.rs:2:15
+ --> tests/ui/missing-paren-on-env.rs:4:15
   |
-2 |     fn [<env! huh>]() {}
+4 |     fn [<env! huh>]() {}
   |               ^^^

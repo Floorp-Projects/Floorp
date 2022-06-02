@@ -176,23 +176,6 @@ var AboutReader = function(
   });
   let colorScheme = Services.prefs.getCharPref("reader.color_scheme");
 
-  // If the UI improvements are not enabled, we will filter "Auto" from
-  // the list of color schemes available and ensure the current preference isn't set to
-  // "Auto"
-  this.readerImprovementsEnabled = Services.prefs.getBoolPref(
-    "reader.improvements_H12022.enabled",
-    false
-  );
-  if (!this.readerImprovementsEnabled) {
-    colorSchemeOptions = colorSchemeOptions.filter(function(value) {
-      return value.name !== "Auto";
-    });
-
-    if (Services.prefs.getCharPref("reader.color_scheme") === "auto") {
-      colorScheme = "light";
-    }
-  }
-
   this._setupSegmentedButton(
     "color-scheme-buttons",
     colorSchemeOptions,

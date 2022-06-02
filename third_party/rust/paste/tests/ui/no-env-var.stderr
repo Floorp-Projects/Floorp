@@ -1,5 +1,5 @@
 error: no such env var: "PASTE_UNKNOWN"
- --> $DIR/no-env-var.rs:2:17
+ --> tests/ui/no-env-var.rs:4:17
   |
-2 |     fn [<a env!("PASTE_UNKNOWN") b>]() {}
+4 |     fn [<a env!("PASTE_UNKNOWN") b>]() {}
   |                 ^^^^^^^^^^^^^^^

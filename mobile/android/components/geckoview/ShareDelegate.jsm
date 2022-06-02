@@ -13,12 +13,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
-const domBundle = Services.strings.createBundle(
+const domBundle = lazy.Services.strings.createBundle(
   "chrome://global/locale/dom/dom.properties"
 );
 
@@ -44,7 +46,7 @@ class ShareDelegate {
       text: aText,
       uri: aUri ? aUri.displaySpec : null,
     };
-    const prompt = new GeckoViewPrompter(this._openerWindow);
+    const prompt = new lazy.GeckoViewPrompter(this._openerWindow);
     const result = await new Promise(resolve => {
       prompt.asyncShowPrompt(msg, resolve);
     });

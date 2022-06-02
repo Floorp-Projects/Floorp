@@ -25,6 +25,7 @@ job-defaults:
 
 jobs-from:
     - android.yml
+    - cargo-vet.yml
     - cbindgen.yml
     - clang-tidy.yml
     - clang.yml

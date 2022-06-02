@@ -60,13 +60,15 @@ const { CollectionValidator } = ChromeUtils.import(
   "resource://services-sync/collection_validator.js"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonRepository",
   "resource://gre/modules/addons/AddonRepository.jsm"
 );
@@ -419,7 +421,7 @@ AddonsStore.prototype = {
     //
     // We wouldn't get here if the incoming record was for a deletion. So,
     // check for pending uninstall and cancel if necessary.
-    if (addon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
+    if (addon.pendingOperations & lazy.AddonManager.PENDING_UNINSTALL) {
       addon.cancelUninstall();
 
       // We continue with processing because there could be state or ID change.
@@ -559,7 +561,7 @@ AddonsStore.prototype = {
    * @return Addon or undefined if not found
    */
   async getAddonByID(id) {
-    return AddonManager.getAddonByID(id);
+    return lazy.AddonManager.getAddonByID(id);
   },
 
   /**
@@ -570,7 +572,7 @@ AddonsStore.prototype = {
    * @return DBAddonInternal or null
    */
   async getAddonByGUID(guid) {
-    return AddonManager.getAddonBySyncGUID(guid);
+    return lazy.AddonManager.getAddonBySyncGUID(guid);
   },
 
   /**
@@ -609,7 +611,7 @@ AddonsStore.prototype = {
       return false;
     }
 
-    if (!(addon.scope & AddonManager.SCOPE_PROFILE)) {
+    if (!(addon.scope & lazy.AddonManager.SCOPE_PROFILE)) {
       this._log.debug(addon.id + " not syncable: not installed in profile.");
       return false;
     }
@@ -633,12 +635,12 @@ AddonsStore.prototype = {
     // in tests), getCachedAddonByID always returns null - so skip the check
     // in that case. We also provide a way to specifically opt-out of the check
     // even if the cache is enabled, which is used by the validators.
-    if (ignoreRepoCheck || !AddonRepository.cacheEnabled) {
+    if (ignoreRepoCheck || !lazy.AddonRepository.cacheEnabled) {
       return true;
     }
 
     let result = await new Promise(res => {
-      AddonRepository.getCachedAddonByID(addon.id, res);
+      lazy.AddonRepository.getCachedAddonByID(addon.id, res);
     });
 
     if (!result) {
@@ -788,14 +790,14 @@ class AddonValidator extends CollectionValidator {
   }
 
   async getClientItems() {
-    return AddonManager.getAllAddons();
+    return lazy.AddonManager.getAllAddons();
   }
 
   normalizeClientItem(item) {
     let enabled = !item.userDisabled;
-    if (item.pendingOperations & AddonManager.PENDING_ENABLE) {
+    if (item.pendingOperations & lazy.AddonManager.PENDING_ENABLE) {
       enabled = true;
-    } else if (item.pendingOperations & AddonManager.PENDING_DISABLE) {
+    } else if (item.pendingOperations & lazy.AddonManager.PENDING_DISABLE) {
       enabled = false;
     }
     return {
@@ -824,7 +826,9 @@ class AddonValidator extends CollectionValidator {
     return (
       !item.original.hidden &&
       !item.original.isSystem &&
-      !(item.original.pendingOperations & AddonManager.PENDING_UNINSTALL) &&
+      !(
+        item.original.pendingOperations & lazy.AddonManager.PENDING_UNINSTALL
+      ) &&
       // No need to await the returned promise explicitely:
       // |expr1 && expr2| evaluates to expr2 if expr1 is true.
       this.engine.isAddonSyncable(item.original, true)

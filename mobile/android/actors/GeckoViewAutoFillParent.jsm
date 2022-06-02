@@ -13,7 +13,9 @@ const { GeckoViewActorParent } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewActorParent.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   gAutofillManager: "resource://gre/modules/GeckoViewAutofill.jsm",
 });
 
@@ -33,12 +35,12 @@ class GeckoViewAutoFillParent extends GeckoViewActorParent {
   }
 
   get autofill() {
-    return gAutofillManager.get(this.sessionId);
+    return lazy.gAutofillManager.get(this.sessionId);
   }
 
   add(node) {
     // We will start a new session if the current one does not exist.
-    const autofill = gAutofillManager.ensure(
+    const autofill = lazy.gAutofillManager.ensure(
       this.sessionId,
       this.eventDispatcher
     );
@@ -58,7 +60,7 @@ class GeckoViewAutoFillParent extends GeckoViewActorParent {
   }
 
   clear() {
-    gAutofillManager.delete(this.sessionId);
+    lazy.gAutofillManager.delete(this.sessionId);
   }
 
   async receiveMessage(aMessage) {

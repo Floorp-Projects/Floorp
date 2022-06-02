@@ -13,24 +13,26 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "require", () => {
+XPCOMUtils.defineLazyGetter(lazy, "require", () => {
   const { require } = ChromeUtils.import(
     "resource://devtools/shared/loader/Loader.jsm"
   );
   return require;
 });
 
-XPCOMUtils.defineLazyGetter(this, "DevToolsServer", () => {
-  const { DevToolsServer } = require("devtools/server/devtools-server");
+XPCOMUtils.defineLazyGetter(lazy, "DevToolsServer", () => {
+  const { DevToolsServer } = lazy.require("devtools/server/devtools-server");
   return DevToolsServer;
 });
 
-XPCOMUtils.defineLazyGetter(this, "SocketListener", () => {
-  const { SocketListener } = require("devtools/shared/security/socket");
+XPCOMUtils.defineLazyGetter(lazy, "SocketListener", () => {
+  const { SocketListener } = lazy.require("devtools/shared/security/socket");
   return SocketListener;
 });
 
@@ -42,7 +44,7 @@ var GeckoViewRemoteDebugger = {
       return;
     }
 
-    if (Services.prefs.getBoolPref(aData, false)) {
+    if (lazy.Services.prefs.getBoolPref(aData, false)) {
       this.onEnable();
     } else {
       this.onDisable();
@@ -61,16 +63,16 @@ var GeckoViewRemoteDebugger = {
     }
 
     debug`onEnable`;
-    DevToolsServer.init();
-    DevToolsServer.registerAllActors();
-    const {
-      createRootActor,
-    } = require("resource://gre/modules/dbg-browser-actors.js");
-    DevToolsServer.setRootActor(createRootActor);
-    DevToolsServer.allowChromeProcess = true;
-    DevToolsServer.chromeWindowType = "navigator:geckoview";
+    lazy.DevToolsServer.init();
+    lazy.DevToolsServer.registerAllActors();
+    const { createRootActor } = lazy.require(
+      "resource://gre/modules/dbg-browser-actors.js"
+    );
+    lazy.DevToolsServer.setRootActor(createRootActor);
+    lazy.DevToolsServer.allowChromeProcess = true;
+    lazy.DevToolsServer.chromeWindowType = "navigator:geckoview";
     // Force the Server to stay alive even if there are no connections at the moment.
-    DevToolsServer.keepAlive = true;
+    lazy.DevToolsServer.keepAlive = true;
 
     // Socket address for USB remote debugger expects
     // @ANDROID_PACKAGE_NAME/firefox-debugger-socket.
@@ -110,14 +112,19 @@ var GeckoViewRemoteDebugger = {
 class USBRemoteDebugger {
   start(aPortOrPath) {
     try {
-      const AuthenticatorType = DevToolsServer.Authenticators.get("PROMPT");
+      const AuthenticatorType = lazy.DevToolsServer.Authenticators.get(
+        "PROMPT"
+      );
       const authenticator = new AuthenticatorType.Server();
       authenticator.allowConnection = this.allowConnection.bind(this);
       const socketOptions = {
         authenticator,
         portOrPath: aPortOrPath,
       };
-      this._listener = new SocketListener(DevToolsServer, socketOptions);
+      this._listener = new lazy.SocketListener(
+        lazy.DevToolsServer,
+        socketOptions
+      );
       this._listener.open();
       debug`USB remote debugger - listening on ${aPortOrPath}`;
     } catch (e) {
@@ -140,12 +147,12 @@ class USBRemoteDebugger {
 
   allowConnection(aSession) {
     if (!this._listener) {
-      return DevToolsServer.AuthenticationResult.DENY;
+      return lazy.DevToolsServer.AuthenticationResult.DENY;
     }
 
     if (aSession.server.port) {
-      return DevToolsServer.AuthenticationResult.DENY;
+      return lazy.DevToolsServer.AuthenticationResult.DENY;
     }
-    return DevToolsServer.AuthenticationResult.ALLOW;
+    return lazy.DevToolsServer.AuthenticationResult.ALLOW;
   }
 }

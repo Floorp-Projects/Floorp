@@ -54,6 +54,7 @@ dom/webauthn/tests/pkijs/
 editor/libeditor/tests/browserscope/lib/richtext/
 editor/libeditor/tests/browserscope/lib/richtext2/
 extensions/spellcheck/hunspell/src/
+function2/
 gfx/angle/checkout/
 gfx/cairo/
 gfx/graphite2/

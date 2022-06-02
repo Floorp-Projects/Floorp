@@ -1,4 +1,6 @@
-paste::item! {
+use paste::paste;
+
+paste! {
     fn [<env!("VAR" "VAR")>]() {}
 }
 

@@ -250,4 +250,5 @@ XPC_MSG_DEF(NS_ERROR_SOCIALTRACKING_URI               , "The URI is social track
 XPC_MSG_DEF(NS_ERROR_DATABASE_CHANGED                 , "Flushing the profiles to disk would have overwritten changes made elsewhere.")
 
 /* Codes related to URILoader */
-XPC_MSG_DEF(NS_BINDING_CANCELLED_OLD_LOAD           , "The async request has been cancelled by another async request")
+XPC_MSG_DEF(NS_ERROR_PARSED_DATA_CACHED               , "The data from a channel has already been parsed and cached so it doesn't need to be reparsed from the original source.")
+XPC_MSG_DEF(NS_BINDING_CANCELLED_OLD_LOAD             , "The async request has been cancelled by another async request")

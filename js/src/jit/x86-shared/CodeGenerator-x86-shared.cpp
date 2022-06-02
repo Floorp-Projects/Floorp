@@ -577,27 +577,6 @@ template <typename T>
 void CodeGeneratorX86Shared::bailout(const T& binder, LSnapshot* snapshot) {
   encode(snapshot);
 
-  // Though the assembler doesn't track all frame pushes, at least make sure
-  // the known value makes sense. We can't use bailout tables if the stack
-  // isn't properly aligned to the static frame size.
-  MOZ_ASSERT_IF(frameClass_ != FrameSizeClass::None() && deoptTable_,
-                frameClass_.frameSize() == masm.framePushed());
-
-#ifdef JS_CODEGEN_X86
-  // On x64, bailout tables are pointless, because 16 extra bytes are
-  // reserved per external jump, whereas it takes only 10 bytes to encode a
-  // a non-table based bailout.
-  if (assignBailoutId(snapshot)) {
-    binder(masm, deoptTable_->value +
-                     snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE);
-    return;
-  }
-#endif
-
-  // We could not use a jump table, either because all bailout IDs were
-  // reserved, or a jump table is not optimal for this frame size or
-  // platform. Whatever, we will generate a lazy bailout.
-  //
   // All bailout code is associated with the bytecodeSite of the block we are
   // bailing out from.
   InlineScriptTree* tree = snapshot->mir()->block()->trackedTree();
