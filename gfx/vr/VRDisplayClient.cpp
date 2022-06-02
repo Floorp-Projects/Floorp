@@ -336,7 +336,8 @@ void VRDisplayClient::GamepadMappingForWebVR(
       aControllerState.numButtons = 6;
       aControllerState.numAxes = 2;
       break;
-    case VRControllerType::OculusTouch2: {
+    case VRControllerType::OculusTouch2:
+    case VRControllerType::OculusTouch3: {
       aControllerState.buttonPressed =
           ShiftButtonBitForNewSlot(0, 3) | ShiftButtonBitForNewSlot(1, 0) |
           ShiftButtonBitForNewSlot(2, 1) | ShiftButtonBitForNewSlot(3, 4) |
@@ -352,13 +353,13 @@ void VRDisplayClient::GamepadMappingForWebVR(
       aControllerState.numButtons = 6;
       aControllerState.numAxes = 2;
 
-      static Matrix4x4 touch2Transform;
+      static Matrix4x4 touchTransform;
       Matrix4x4 originalMtx;
 
-      if (touch2Transform.IsIdentity()) {
-        touch2Transform.RotateX(-0.77f);
-        touch2Transform.PostTranslate(0.0f, 0.0f, -0.025f);
-        touch2Transform.Inverse();
+      if (touchTransform.IsIdentity()) {
+        touchTransform.RotateX(-0.77f);
+        touchTransform.PostTranslate(0.0f, 0.0f, -0.025f);
+        touchTransform.Inverse();
       }
       gfx::Quaternion quat(aControllerState.pose.orientation[0],
                            aControllerState.pose.orientation[1],
@@ -368,7 +369,7 @@ void VRDisplayClient::GamepadMappingForWebVR(
       originalMtx._41 = aControllerState.pose.position[0];
       originalMtx._42 = aControllerState.pose.position[1];
       originalMtx._43 = aControllerState.pose.position[2];
-      originalMtx = touch2Transform * originalMtx;
+      originalMtx = touchTransform * originalMtx;
 
       gfx::Point3D pos, scale;
       originalMtx.Decompose(pos, quat, scale);

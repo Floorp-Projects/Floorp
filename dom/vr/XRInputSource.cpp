@@ -84,6 +84,16 @@ nsTArray<nsString> GetInputSourceProfile(gfx::VRControllerType aType) {
       id.AssignLiteral("generic-trigger-squeeze-thumbstick");
       profile.AppendElement(id);
       break;
+    case gfx::VRControllerType::OculusTouch3:
+      id.AssignLiteral("oculus-touch-v3");
+      profile.AppendElement(id);
+      id.AssignLiteral("oculus-touch-v2");
+      profile.AppendElement(id);
+      id.AssignLiteral("oculus-touch");
+      profile.AppendElement(id);
+      id.AssignLiteral("generic-trigger-squeeze-thumbstick");
+      profile.AppendElement(id);
+      break;
     case gfx::VRControllerType::PicoGaze:
       id.AssignLiteral("pico-gaze");
       profile.AppendElement(id);
