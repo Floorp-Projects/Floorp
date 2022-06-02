@@ -351,13 +351,10 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting();
   static bool ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject);
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
-  static bool ShouldResistFingerprinting(nsIPrincipal* aPrincipal);
   // These functions are the new, nuanced functions
   static bool ShouldResistFingerprinting(const Document* aDoc);
   static bool ShouldResistFingerprinting(nsIChannel* aChannel);
-  static bool ShouldResistFingerprinting(
-      nsIPrincipal* aPrincipal,
-      const mozilla::OriginAttributes& aOriginAttributes);
+  static bool ShouldResistFingerprinting(nsIPrincipal* aPrincipal);
 
   /**
    * Implement a RFP function that only checks the pref, and does not take
