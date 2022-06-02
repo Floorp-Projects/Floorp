@@ -161,11 +161,11 @@ AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
   }
 
   // Shift the redundant encodings.
-  it = redundant_encodings_.begin();
-  for (auto next = std::next(it); next != redundant_encodings_.end();
-       it++, next = std::next(it)) {
-    next->first = it->first;
-    next->second.SetData(it->second);
+  auto rit = redundant_encodings_.rbegin();
+  for (auto next = std::next(rit); next != redundant_encodings_.rend();
+       rit++, next = std::next(rit)) {
+    rit->first = next->first;
+    rit->second.SetData(next->second);
   }
   it = redundant_encodings_.begin();
   it->first = info;
