@@ -230,19 +230,19 @@ WindowCapturerWinGdi::CaptureResults WindowCapturerWinGdi::CaptureFrame(
 
   DesktopSize window_dc_size;
   if (GetDcSize(window_dc, &window_dc_size)) {
-    // The |window_dc_size| is used to detect the scaling of the original
+    // The `window_dc_size` is used to detect the scaling of the original
     // window. If the application does not support high-DPI settings, it will
     // be scaled by Windows according to the scaling setting.
     // https://www.google.com/search?q=windows+scaling+settings&ie=UTF-8
-    // So the size of the |window_dc|, i.e. the bitmap we can retrieve from
+    // So the size of the `window_dc`, i.e. the bitmap we can retrieve from
     // PrintWindow() or BitBlt() function, will be smaller than
-    // |original_rect| and |cropped_rect|. Part of the captured desktop frame
+    // `original_rect` and `cropped_rect`. Part of the captured desktop frame
     // will be black. See
     // bug https://bugs.chromium.org/p/webrtc/issues/detail?id=8112 for
     // details.
 
-    // If |window_dc_size| is smaller than |window_rect|, let's resize both
-    // |original_rect| and |cropped_rect| according to the scaling factor.
+    // If `window_dc_size` is smaller than `window_rect`, let's resize both
+    // `original_rect` and `cropped_rect` according to the scaling factor.
     // This will adjust the width and height of the two rects.
     horizontal_scale =
         static_cast<double>(window_dc_size.width()) / original_rect.width();
@@ -251,8 +251,8 @@ WindowCapturerWinGdi::CaptureResults WindowCapturerWinGdi::CaptureFrame(
     original_rect.Scale(horizontal_scale, vertical_scale);
     cropped_rect.Scale(horizontal_scale, vertical_scale);
 
-    // Translate |cropped_rect| to the left so that its position within
-    // |original_rect| remains accurate after scaling.
+    // Translate `cropped_rect` to the left so that its position within
+    // `original_rect` remains accurate after scaling.
     // See crbug.com/1083527 for more info.
     int translate_left = static_cast<int>(std::round(
         (cropped_rect.left() - original_rect.left()) * (horizontal_scale - 1)));

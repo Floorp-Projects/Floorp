@@ -47,17 +47,17 @@ class WgcCaptureSession final {
   }
 
  private:
-  // Initializes |mapped_texture_| with the properties of the |src_texture|,
+  // Initializes `mapped_texture_` with the properties of the `src_texture`,
   // overrides the values of some necessary properties like the
   // D3D11_CPU_ACCESS_READ flag. Also has optional parameters for what size
-  // |mapped_texture_| should be, if they aren't provided we will use the size
-  // of |src_texture|.
+  // `mapped_texture_` should be, if they aren't provided we will use the size
+  // of `src_texture`.
   HRESULT CreateMappedTexture(
       Microsoft::WRL::ComPtr<ID3D11Texture2D> src_texture,
       UINT width = 0,
       UINT height = 0);
 
-  // Event handler for |item_|'s Closed event.
+  // Event handler for `item_`'s Closed event.
   HRESULT OnItemClosed(
       ABI::Windows::Graphics::Capture::IGraphicsCaptureItem* sender,
       IInspectable* event_args);

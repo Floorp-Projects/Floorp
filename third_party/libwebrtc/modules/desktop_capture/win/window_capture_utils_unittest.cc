@@ -11,6 +11,7 @@
 #include "modules/desktop_capture/win/window_capture_utils.h"
 
 #include <winuser.h>
+
 #include <algorithm>
 #include <memory>
 #include <mutex>

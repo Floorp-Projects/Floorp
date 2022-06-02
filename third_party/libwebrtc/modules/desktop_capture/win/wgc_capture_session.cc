@@ -256,7 +256,7 @@ HRESULT WgcCaptureSession::GetFrame(
     }
   }
 
-  // We need to copy |texture_2D| into |mapped_texture_| as the latter has the
+  // We need to copy `texture_2D` into `mapped_texture_` as the latter has the
   // D3D11_CPU_ACCESS_READ flag set, which lets us access the image data.
   // Otherwise it would only be readable by the GPU.
   ComPtr<ID3D11DeviceContext> d3d_context;
@@ -298,7 +298,7 @@ HRESULT WgcCaptureSession::GetFrame(
     src_data += map_info.RowPitch;
   }
 
-  // Transfer ownership of |image_data| to the output_frame.
+  // Transfer ownership of `image_data` to the output_frame.
   DesktopSize size(image_width, image_height);
   *output_frame = std::make_unique<WgcDesktopFrame>(size, row_data_length,
                                                     std::move(image_data));

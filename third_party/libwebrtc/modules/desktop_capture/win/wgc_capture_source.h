@@ -128,7 +128,7 @@ class WgcScreenSource final : public WgcCaptureSource {
   // To maintain compatibility with other capturers, this class accepts a
   // device index as it's SourceId. However, WGC requires we use an HMONITOR to
   // describe which screen to capture. So, we internally convert the supplied
-  // device index into an HMONITOR when |IsCapturable()| is called.
+  // device index into an HMONITOR when `IsCapturable()` is called.
   absl::optional<HMONITOR> hmonitor_;
 };
 

@@ -75,7 +75,7 @@ class ScreenEnumerator final : public SourceEnumerator {
 // A capturer that uses the Window.Graphics.Capture APIs. It is suitable for
 // both window and screen capture (but only one type per instance). Consumers
 // should not instantiate this class directly, instead they should use
-// |CreateRawWindowCapturer()| or |CreateRawScreenCapturer()| to receive a
+// `CreateRawWindowCapturer()` or `CreateRawScreenCapturer()` to receive a
 // capturer appropriate for the type of source they want to capture.
 class WgcCapturerWin : public DesktopCapturer {
  public:

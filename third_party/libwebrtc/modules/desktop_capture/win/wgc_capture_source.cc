@@ -123,7 +123,7 @@ HRESULT WgcWindowSource::CreateCaptureItem(
 WgcScreenSource::WgcScreenSource(DesktopCapturer::SourceId source_id)
     : WgcCaptureSource(source_id) {
   // Getting the HMONITOR could fail if the source_id is invalid. In that case,
-  // we leave hmonitor_ uninitialized and |IsCapturable()| will fail.
+  // we leave hmonitor_ uninitialized and `IsCapturable()` will fail.
   HMONITOR hmon;
   if (GetHmonitorFromDeviceIndex(GetSourceId(), &hmon))
     hmonitor_ = hmon;
