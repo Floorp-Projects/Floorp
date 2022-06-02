@@ -729,6 +729,18 @@ class nsContextMenu {
       let frameOsPid = this.actor.manager.browsingContext.currentWindowGlobal
         .osPid;
       this.setItemAttr("context-frameOsPid", "label", "PID: " + frameOsPid);
+
+      // We need to check if "Take Screenshot" should be displayed in the "This Frame"
+      // context menu
+      let shouldShowTakeScreenshotFrame = this.shouldShowTakeScreenshot();
+      this.showItem(
+        "context-take-frame-screenshot",
+        shouldShowTakeScreenshotFrame
+      );
+      this.showItem(
+        "context-sep-frame-screenshot",
+        shouldShowTakeScreenshotFrame
+      );
     }
 
     this.showAndFormatSearchContextItem();
@@ -1197,7 +1209,7 @@ class nsContextMenu {
     }
   }
 
-  initScreenshotItem() {
+  shouldShowTakeScreenshot() {
     // About pages other than about:reader are not currently supported by
     // screenshots (see Bug 1620992)
     let uri = this.contentData?.documentURIObject;
@@ -1212,8 +1224,13 @@ class nsContextMenu {
       !this.onVideo &&
       !this.onAudio &&
       !this.onEditable &&
-      !this.onPassword &&
-      !this.inFrame;
+      !this.onPassword;
+
+    return shouldShow;
+  }
+
+  initScreenshotItem() {
+    let shouldShow = this.shouldShowTakeScreenshot() && !this.inFrame;
 
     this.showItem("context-sep-screenshots", shouldShow);
     this.showItem("context-take-screenshot", shouldShow);
