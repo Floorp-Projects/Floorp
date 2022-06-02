@@ -183,8 +183,8 @@ TEST_P(EncoderTest, TestDynamicBitrateChange) {
     }
   }
   // kHighBps / kLowBps == 1.25, so require the high-bitrate run to produce at
-  // least 1.2 times the number of bytes.
-  EXPECT_LT(1.2 * num_bytes[kLowBps], num_bytes[kHighBps]);
+  // least 1.195 times the number of bytes.
+  EXPECT_LT(1.195 * num_bytes[kLowBps], num_bytes[kHighBps]);
 }
 
 // Checks that, given a target bitrate, the encoder does not overshoot too much.
