@@ -25,7 +25,7 @@ std::unique_ptr<DesktopFrame> CreateTestFrame() {
 
 TEST(CroppedDesktopFrameTest, DoNotCreateWrapperIfSizeIsNotChanged) {
   std::unique_ptr<DesktopFrame> original = CreateTestFrame();
-  // owned by |original| and CroppedDesktopFrame.
+  // owned by `original` and CroppedDesktopFrame.
   DesktopFrame* raw_original = original.get();
   std::unique_ptr<DesktopFrame> cropped = CreateCroppedDesktopFrame(
       std::move(original), DesktopRect::MakeWH(10, 20));

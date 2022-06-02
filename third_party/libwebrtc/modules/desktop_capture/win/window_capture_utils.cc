@@ -83,7 +83,7 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
   GetWindowThreadProcessId(hwnd, &pid);
   window.pid = static_cast<pid_t>(pid);
 
-  // GetWindowText* are potentially blocking operations if |hwnd| is
+  // GetWindowText* are potentially blocking operations if `hwnd` is
   // owned by the current process. The APIs will send messages to the window's
   // message loop, and if the message loop is waiting on this operation we will
   // enter a deadlock.
@@ -232,7 +232,7 @@ bool GetWindowContentRect(HWND window, DesktopRect* result) {
     // - We assume a window has same border width in each side.
     // So we shrink half of the width difference from all four sides.
     const int shrink = ((width - result->width()) / 2);
-    // When |shrink| is negative, DesktopRect::Extend() shrinks itself.
+    // When `shrink` is negative, DesktopRect::Extend() shrinks itself.
     result->Extend(shrink, 0, shrink, 0);
     // Usually this should not happen, just in case we have received a strange
     // window, which has only left and right borders.
@@ -368,7 +368,7 @@ bool WindowCaptureHelperWin::IsWindowChromeNotification(HWND hwnd) {
   return false;
 }
 
-// |content_rect| is preferred because,
+// `content_rect` is preferred because,
 // 1. WindowCapturerWinGdi is using GDI capturer, which cannot capture DX
 // output.
 //    So ScreenCapturer should be used as much as possible to avoid

@@ -238,7 +238,7 @@ class WgcCapturerWinTest : public ::testing::TestWithParam<CaptureType>,
   }
 
   // DesktopCapturer::Callback interface
-  // The capturer synchronously invokes this method before |CaptureFrame()|
+  // The capturer synchronously invokes this method before `CaptureFrame()`
   // returns.
   void OnCaptureResult(DesktopCapturer::Result result,
                        std::unique_ptr<DesktopFrame> frame) override {

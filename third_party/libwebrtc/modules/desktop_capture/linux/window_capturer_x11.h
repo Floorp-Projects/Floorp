@@ -53,7 +53,7 @@ class WindowCapturerX11 : public DesktopCapturer,
  private:
   Display* display() { return x_display_->display(); }
 
-  // Returns window title for the specified X |window|.
+  // Returns window title for the specified X `window`.
   bool GetWindowTitle(::Window window, std::string* title);
 
   // Returns the id of the owning process.

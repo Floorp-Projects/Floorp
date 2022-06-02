@@ -58,14 +58,14 @@ void ScreenCapturerHelper::set_size_most_recent(const DesktopSize& size) {
   size_most_recent_ = size;
 }
 
-// Returns the largest multiple of |n| that is <= |x|.
-// |n| must be a power of 2. |nMask| is ~(|n| - 1).
+// Returns the largest multiple of `n` that is <= `x`.
+// `n` must be a power of 2. `nMask` is ~(`n` - 1).
 static int DownToMultiple(int x, int nMask) {
   return (x & nMask);
 }
 
-// Returns the smallest multiple of |n| that is >= |x|.
-// |n| must be a power of 2. |nMask| is ~(|n| - 1).
+// Returns the smallest multiple of `n` that is >= `x`.
+// `n` must be a power of 2. `nMask` is ~(`n` - 1).
 static int UpToMultiple(int x, int n, int nMask) {
   return ((x + n - 1) & nMask);
 }

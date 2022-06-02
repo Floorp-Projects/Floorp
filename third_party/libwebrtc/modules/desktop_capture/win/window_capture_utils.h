@@ -28,13 +28,13 @@ bool GetWindowRect(HWND window, DesktopRect* result);
 
 // Outputs the window rect, with the left/right/bottom frame border cropped if
 // the window is maximized or has a transparent resize border.
-// |avoid_cropping_border| may be set to true to avoid cropping the visible
+// `avoid_cropping_border` may be set to true to avoid cropping the visible
 // border when cropping any resize border.
-// |cropped_rect| is the cropped rect relative to the
-// desktop. |original_rect| is the original rect returned from GetWindowRect.
+// `cropped_rect` is the cropped rect relative to the
+// desktop. `original_rect` is the original rect returned from GetWindowRect.
 // Returns true if all API calls succeeded. The returned DesktopRect is in
 // system coordinates, i.e. the primary monitor on the system always starts from
-// (0, 0). |original_rect| can be nullptr.
+// (0, 0). `original_rect` can be nullptr.
 //
 // TODO(zijiehe): Move this function to CroppingWindowCapturerWin after it has
 // been removed from MouseCursorMonitorWin.
@@ -48,22 +48,22 @@ bool GetCroppedWindowRect(HWND window,
                           DesktopRect* cropped_rect,
                           DesktopRect* original_rect);
 
-// Retrieves the rectangle of the content area of |window|. Usually it contains
+// Retrieves the rectangle of the content area of `window`. Usually it contains
 // title bar and window client area, but borders or shadow are excluded. The
 // returned DesktopRect is in system coordinates, i.e. the primary monitor on
 // the system always starts from (0, 0). This function returns false if native
 // APIs fail.
 bool GetWindowContentRect(HWND window, DesktopRect* result);
 
-// Returns the region type of the |window| and fill |rect| with the region of
-// |window| if region type is SIMPLEREGION.
+// Returns the region type of the `window` and fill `rect` with the region of
+// `window` if region type is SIMPLEREGION.
 int GetWindowRegionTypeWithBoundary(HWND window, DesktopRect* result);
 
-// Retrieves the size of the |hdc|. This function returns false if native APIs
+// Retrieves the size of the `hdc`. This function returns false if native APIs
 // fail.
 bool GetDcSize(HDC hdc, DesktopSize* size);
 
-// Retrieves whether the |window| is maximized and stores in |result|. This
+// Retrieves whether the `window` is maximized and stores in `result`. This
 // function returns false if native APIs fail.
 bool IsWindowMaximized(HWND window, bool* result);
 
@@ -88,7 +88,7 @@ enum GetWindowListFlags {
 // - [with kIgnoreUntitled] windows with no title.
 // - [with kIgnoreUnresponsive] windows that are unresponsive.
 // - [with kIgnoreCurrentProcessWindows] windows owned by the current process.
-// - Any windows with extended styles that match |ex_style_filters|.
+// - Any windows with extended styles that match `ex_style_filters`.
 // Returns false if native APIs failed.
 bool GetWindowList(int flags,
                    DesktopCapturer::SourceList* windows,
@@ -113,9 +113,9 @@ class WindowCaptureHelperWin {
   bool IsWindowVisibleOnCurrentDesktop(HWND hwnd);
   bool IsWindowCloaked(HWND hwnd);
 
-  // The optional |ex_style_filters| parameter allows callers to provide
+  // The optional `ex_style_filters` parameter allows callers to provide
   // extended window styles (e.g. WS_EX_TOOLWINDOW) and prevent windows that
-  // match from being included in |results|.
+  // match from being included in `results`.
   bool EnumerateCapturableWindows(DesktopCapturer::SourceList* results,
                                   bool enumerate_current_process_windows,
                                   LONG ex_style_filters = 0);

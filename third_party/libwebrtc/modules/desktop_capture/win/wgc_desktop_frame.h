@@ -26,7 +26,7 @@ namespace webrtc {
 // Windows.Graphics.Capture API.
 class WgcDesktopFrame final : public DesktopFrame {
  public:
-  // WgcDesktopFrame receives an rvalue reference to the |image_data| vector
+  // WgcDesktopFrame receives an rvalue reference to the `image_data` vector
   // so that it can take ownership of it (and avoid a copy).
   WgcDesktopFrame(DesktopSize size,
                   int stride,
