@@ -389,8 +389,8 @@ void VideoReceiveStream2::Start() {
       // TODO(bugs.webrtc.org/11993): Make this call on the network thread.
       RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
       rtp_video_stream_receiver_.AddReceiveCodec(
-          decoder.payload_type, codec, decoder.video_format.parameters,
-          raw_payload);
+          decoder.payload_type, codec.codecType,
+          decoder.video_format.parameters, raw_payload);
     }
     RTC_CHECK_EQ(VCM_OK, video_receiver_.RegisterReceiveCodec(
                              decoder.payload_type, &codec, num_cpu_cores_));
