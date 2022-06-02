@@ -6,7 +6,6 @@ package org.mozilla.focus.activity
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.R
@@ -49,7 +48,6 @@ class SafeBrowsingTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
-    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/7113")
     @SmokeTest
     @Test
     fun blockMalwarePageTest() {
@@ -62,7 +60,6 @@ class SafeBrowsingTest {
         }
     }
 
-    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/7113")
     @SmokeTest
     @Test
     fun blockPhishingPageTest() {
@@ -75,7 +72,6 @@ class SafeBrowsingTest {
         }
     }
 
-    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/7113")
     @SmokeTest
     @Test
     fun blockUnwantedSoftwarePageTest() {
@@ -88,7 +84,6 @@ class SafeBrowsingTest {
         }
     }
 
-    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/7113")
     @SmokeTest
     @Test
     fun blockHarmfulPageTest() {
