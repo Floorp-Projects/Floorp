@@ -309,6 +309,7 @@ class BrowsingContextModule extends Module {
         type: WindowGlobalMessageHandler.type,
         id: context.id,
       },
+      retryOnAbort: true,
     });
 
     let targetURI;
