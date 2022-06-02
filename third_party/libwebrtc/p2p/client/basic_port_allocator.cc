@@ -213,6 +213,22 @@ void BasicPortAllocator::SetNetworkIgnoreMask(int network_ignore_mask) {
   network_ignore_mask_ = network_ignore_mask;
 }
 
+int BasicPortAllocator::GetNetworkIgnoreMask() const {
+  CheckRunOnValidThreadIfInitialized();
+  int mask = network_ignore_mask_;
+  switch (vpn_preference_) {
+    case webrtc::VpnPreference::kOnlyUseVpn:
+      mask |= ~static_cast<int>(rtc::ADAPTER_TYPE_VPN);
+      break;
+    case webrtc::VpnPreference::kNeverUseVpn:
+      mask |= static_cast<int>(rtc::ADAPTER_TYPE_VPN);
+      break;
+    default:
+      break;
+  }
+  return mask;
+}
+
 PortAllocatorSession* BasicPortAllocator::CreateSessionInternal(
     const std::string& content_name,
     int component,
@@ -708,7 +724,7 @@ std::vector<rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
   // costly networks" flag.
   NetworkFilter ignored_filter(
       [this](rtc::Network* network) {
-        return allocator_->network_ignore_mask() & network->type();
+        return allocator_->GetNetworkIgnoreMask() & network->type();
       },
       "ignored");
   FilterNetworks(&networks, ignored_filter);
@@ -731,6 +747,7 @@ std::vector<rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
         "costly");
     FilterNetworks(&networks, costly_filter);
   }
+
   // Lastly, if we have a limit for the number of IPv6 network interfaces (by
   // default, it's 5), remove networks to ensure that limit is satisfied.
   //

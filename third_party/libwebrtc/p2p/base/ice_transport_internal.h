@@ -175,6 +175,8 @@ struct IceConfig {
 
   absl::optional<rtc::AdapterType> network_preference;
 
+  webrtc::VpnPreference vpn_preference = webrtc::VpnPreference::kDefault;
+
   IceConfig();
   IceConfig(int receiving_timeout_ms,
             int backup_connection_ping_interval,
