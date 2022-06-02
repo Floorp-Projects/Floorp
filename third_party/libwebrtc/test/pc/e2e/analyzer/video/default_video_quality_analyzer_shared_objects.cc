@@ -59,27 +59,5 @@ bool operator==(const StatsKey& a, const StatsKey& b) {
          a.receiver == b.receiver;
 }
 
-std::string InternalStatsKey::ToString() const {
-  rtc::StringBuilder out;
-  out << "stream=" << stream << "_sender=" << sender
-      << "_receiver=" << receiver;
-  return out.str();
-}
-
-bool operator<(const InternalStatsKey& a, const InternalStatsKey& b) {
-  if (a.stream != b.stream) {
-    return a.stream < b.stream;
-  }
-  if (a.sender != b.sender) {
-    return a.sender < b.sender;
-  }
-  return a.receiver < b.receiver;
-}
-
-bool operator==(const InternalStatsKey& a, const InternalStatsKey& b) {
-  return a.stream == b.stream && a.sender == b.sender &&
-         a.receiver == b.receiver;
-}
-
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc

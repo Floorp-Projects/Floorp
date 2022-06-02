@@ -25,6 +25,7 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_tools/frame_analyzer/video_geometry_aligner.h"
+#include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_internal_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 
 namespace webrtc {
@@ -1027,20 +1028,6 @@ double DefaultVideoQualityAnalyzer::GetCpuUsagePercent() {
   return static_cast<double>(cpu_time_) / wallclock_time_ * 100.0;
 }
 
-DefaultVideoQualityAnalyzer::FrameComparison::FrameComparison(
-    InternalStatsKey stats_key,
-    absl::optional<VideoFrame> captured,
-    absl::optional<VideoFrame> rendered,
-    bool dropped,
-    FrameStats frame_stats,
-    OverloadReason overload_reason)
-    : stats_key(std::move(stats_key)),
-      captured(std::move(captured)),
-      rendered(std::move(rendered)),
-      dropped(dropped),
-      frame_stats(std::move(frame_stats)),
-      overload_reason(overload_reason) {}
-
 uint16_t DefaultVideoQualityAnalyzer::StreamState::PopFront(size_t peer) {
   absl::optional<uint16_t> frame_id = frame_ids_.PopFront(peer);
   RTC_DCHECK(frame_id.has_value());
@@ -1217,8 +1204,8 @@ bool DefaultVideoQualityAnalyzer::FrameInFlight::HasRenderedTime(
   return it->second.rendered_time.IsFinite();
 }
 
-DefaultVideoQualityAnalyzer::FrameStats
-DefaultVideoQualityAnalyzer::FrameInFlight::GetStatsForPeer(size_t peer) const {
+FrameStats DefaultVideoQualityAnalyzer::FrameInFlight::GetStatsForPeer(
+    size_t peer) const {
   FrameStats stats(captured_time_);
   stats.pre_encode_time = pre_encode_time_;
   stats.encoded_time = encoded_time_;
