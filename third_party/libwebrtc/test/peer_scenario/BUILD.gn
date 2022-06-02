@@ -18,8 +18,6 @@ if (rtc_include_tests) {
       "peer_scenario_client.h",
       "scenario_connection.cc",
       "scenario_connection.h",
-      "sdp_callbacks.cc",
-      "sdp_callbacks.h",
       "signaling_route.cc",
       "signaling_route.h",
     ]
