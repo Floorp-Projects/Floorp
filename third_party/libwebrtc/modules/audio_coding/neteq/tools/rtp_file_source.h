@@ -19,7 +19,6 @@
 #include "absl/types/optional.h"
 #include "modules/audio_coding/neteq/tools/packet_source.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
 #include "rtc_base/constructor_magic.h"
 
 namespace webrtc {

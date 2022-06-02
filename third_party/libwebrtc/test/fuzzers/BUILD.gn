@@ -231,14 +231,6 @@ webrtc_fuzzer_test("rtp_packetizer_av1_fuzzer") {
   ]
 }
 
-webrtc_fuzzer_test("rtp_header_fuzzer") {
-  sources = [ "rtp_header_fuzzer.cc" ]
-  deps = [
-    "../../modules/rtp_rtcp",
-    "../../modules/rtp_rtcp:rtp_rtcp_format",
-  ]
-}
-
 webrtc_fuzzer_test("congestion_controller_feedback_fuzzer") {
   sources = [ "congestion_controller_feedback_fuzzer.cc" ]
   deps = [
