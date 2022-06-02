@@ -25,7 +25,6 @@
 #include "rtc_base/win32.h"
 #endif
 
-#include "absl/base/attributes.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -143,10 +142,6 @@ class Socket {
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(Socket);
 };
-
-// TODO(bugs.webrtc.org/13065): Old alias, delete ASAP, when downstream code is
-// updated.
-using AsyncSocket ABSL_DEPRECATED("bugs.webrtc.org/13065") = Socket;
 
 }  // namespace rtc
 

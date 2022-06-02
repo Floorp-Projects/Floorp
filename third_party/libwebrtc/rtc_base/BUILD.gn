@@ -846,7 +846,6 @@ rtc_library("socket") {
     ":socket_address",
     "third_party/sigslot",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
   if (is_win) {
     deps += [ ":win32" ]
   }
