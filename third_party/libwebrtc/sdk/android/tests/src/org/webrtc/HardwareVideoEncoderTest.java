@@ -298,7 +298,7 @@ public class HardwareVideoEncoderTest {
         mockEncoderCallback);
 
     MediaFormat mediaFormat = fakeMediaCodecWrapper.getConfiguredFormat();
-    assertThat(mediaFormat.getInteger(MediaFormat.KEY_FRAME_RATE)).isEqualTo(30);
+    assertThat(mediaFormat.getFloat(MediaFormat.KEY_FRAME_RATE)).isEqualTo(30.0f);
   }
 
   @Test

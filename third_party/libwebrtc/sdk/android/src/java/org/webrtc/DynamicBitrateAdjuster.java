@@ -31,7 +31,7 @@ class DynamicBitrateAdjuster extends BaseBitrateAdjuster {
   private int bitrateAdjustmentScaleExp;
 
   @Override
-  public void setTargets(int targetBitrateBps, int targetFramerateFps) {
+  public void setTargets(int targetBitrateBps, double targetFramerateFps) {
     if (this.targetBitrateBps > 0 && targetBitrateBps < this.targetBitrateBps) {
       // Rescale the accumulator level if the accumulator max decreases
       deviationBytes = deviationBytes * targetBitrateBps / this.targetBitrateBps;

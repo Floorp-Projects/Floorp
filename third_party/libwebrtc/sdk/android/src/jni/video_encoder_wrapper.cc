@@ -167,15 +167,14 @@ int32_t VideoEncoderWrapper::Encode(
   return HandleReturnCode(jni, ret, "encode");
 }
 
-void VideoEncoderWrapper::SetRates(const RateControlParameters& parameters) {
+void VideoEncoderWrapper::SetRates(const RateControlParameters& rc_parameters) {
   JNIEnv* jni = AttachCurrentThreadIfNeeded();
 
-  ScopedJavaLocalRef<jobject> j_bitrate_allocation =
-      ToJavaBitrateAllocation(jni, parameters.bitrate);
-  ScopedJavaLocalRef<jobject> ret = Java_VideoEncoder_setRateAllocation(
-      jni, encoder_, j_bitrate_allocation,
-      (jint)(parameters.framerate_fps + 0.5));
-  HandleReturnCode(jni, ret, "setRateAllocation");
+  ScopedJavaLocalRef<jobject> j_rc_parameters =
+      ToJavaRateControlParameters(jni, rc_parameters);
+  ScopedJavaLocalRef<jobject> ret =
+      Java_VideoEncoder_setRates(jni, encoder_, j_rc_parameters);
+  HandleReturnCode(jni, ret, "setRates");
 }
 
 VideoEncoder::EncoderInfo VideoEncoderWrapper::GetEncoderInfo() const {
@@ -408,6 +407,16 @@ ScopedJavaLocalRef<jobject> VideoEncoderWrapper::ToJavaBitrateAllocation(
                                j_array_spatial_layer.obj());
   }
   return Java_BitrateAllocation_Constructor(jni, j_allocation_array);
+}
+
+ScopedJavaLocalRef<jobject> VideoEncoderWrapper::ToJavaRateControlParameters(
+    JNIEnv* jni,
+    const VideoEncoder::RateControlParameters& rc_parameters) {
+  ScopedJavaLocalRef<jobject> j_bitrate_allocation =
+      ToJavaBitrateAllocation(jni, rc_parameters.bitrate);
+
+  return Java_RateControlParameters_Constructor(jni, j_bitrate_allocation,
+                                                rc_parameters.framerate_fps);
 }
 
 std::unique_ptr<VideoEncoder> JavaToNativeVideoEncoder(
