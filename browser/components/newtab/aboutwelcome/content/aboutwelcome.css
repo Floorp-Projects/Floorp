@@ -395,37 +395,37 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://browser/skin/upgradeDialog/default.png");
 }
 .onboardingContainer .colorway-variations.abstract .variations-disc, .onboardingContainer .colorway-variations[next=abstract]::after {
-  background-image: url("resource://builtin-themes/monochromatic/abstract/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021abstract/balanced/icon.svg");
 }
 .onboardingContainer .colorway-variations.abstract::before {
   background-image: url("chrome://browser/skin/upgradeDialog/abstract.png");
 }
 .onboardingContainer .colorway-variations.cheers .variations-disc, .onboardingContainer .colorway-variations[next=cheers]::after {
-  background-image: url("resource://builtin-themes/monochromatic/cheers/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021cheers/balanced/icon.svg");
 }
 .onboardingContainer .colorway-variations.cheers::before {
   background-image: url("chrome://browser/skin/upgradeDialog/cheers.png");
 }
 .onboardingContainer .colorway-variations.elemental .variations-disc, .onboardingContainer .colorway-variations[next=elemental]::after {
-  background-image: url("resource://builtin-themes/monochromatic/elemental/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021elemental/balanced/icon.svg");
 }
 .onboardingContainer .colorway-variations.elemental::before {
   background-image: url("chrome://browser/skin/upgradeDialog/elemental.png");
 }
 .onboardingContainer .colorway-variations.foto .variations-disc, .onboardingContainer .colorway-variations[next=foto]::after {
-  background-image: url("resource://builtin-themes/monochromatic/foto/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021foto/balanced/icon.svg");
 }
 .onboardingContainer .colorway-variations.foto::before {
   background-image: url("chrome://browser/skin/upgradeDialog/foto.png");
 }
 .onboardingContainer .colorway-variations.graffiti .variations-disc, .onboardingContainer .colorway-variations[next=graffiti]::after {
-  background-image: url("resource://builtin-themes/monochromatic/graffiti/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021graffiti/balanced/icon.svg");
 }
 .onboardingContainer .colorway-variations.graffiti::before {
   background-image: url("chrome://browser/skin/upgradeDialog/graffiti.png");
 }
 .onboardingContainer .colorway-variations.lush .variations-disc, .onboardingContainer .colorway-variations[next=lush]::after {
-  background-image: url("resource://builtin-themes/monochromatic/lush/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021lush/balanced/icon.svg");
 }
 .onboardingContainer .colorway-variations.lush::before {
   background-image: url("chrome://browser/skin/upgradeDialog/lush.png");
@@ -564,22 +564,22 @@ body[lwt-newtab-brighttext] {
   background-image: url("resource://default-theme/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .icon.abstract {
-  background-image: url("resource://builtin-themes/monochromatic/abstract/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021abstract/balanced/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .icon.cheers {
-  background-image: url("resource://builtin-themes/monochromatic/cheers/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021cheers/balanced/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .icon.elemental {
-  background-image: url("resource://builtin-themes/monochromatic/elemental/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021elemental/balanced/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .icon.foto {
-  background-image: url("resource://builtin-themes/monochromatic/foto/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021foto/balanced/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .icon.graffiti {
-  background-image: url("resource://builtin-themes/monochromatic/graffiti/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021graffiti/balanced/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .icon.lush {
-  background-image: url("resource://builtin-themes/monochromatic/lush/balanced/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/2021lush/balanced/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .text {
   display: flex;
