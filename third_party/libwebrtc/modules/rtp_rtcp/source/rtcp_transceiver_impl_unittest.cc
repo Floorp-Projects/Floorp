@@ -16,6 +16,7 @@
 
 #include "absl/memory/memory.h"
 #include "api/rtp_headers.h"
+#include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_bitrate_allocation.h"
@@ -34,6 +35,7 @@
 #include "test/mock_transport.h"
 #include "test/rtcp_packet_parser.h"
 
+namespace webrtc {
 namespace {
 
 using ::testing::_;
@@ -42,37 +44,46 @@ using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::StrictMock;
-using ::webrtc::CompactNtp;
-using ::webrtc::CompactNtpRttToMs;
-using ::webrtc::MockRtcpRttStats;
-using ::webrtc::MockTransport;
-using ::webrtc::NtpTime;
-using ::webrtc::RtcpTransceiverConfig;
-using ::webrtc::RtcpTransceiverImpl;
-using ::webrtc::SaturatedUsToCompactNtp;
-using ::webrtc::SimulatedClock;
-using ::webrtc::TaskQueueForTest;
-using ::webrtc::TimeDelta;
-using ::webrtc::Timestamp;
-using ::webrtc::VideoBitrateAllocation;
+using ::testing::WithArg;
 using ::webrtc::rtcp::Bye;
 using ::webrtc::rtcp::CompoundPacket;
 using ::webrtc::rtcp::ReportBlock;
 using ::webrtc::rtcp::SenderReport;
 using ::webrtc::test::RtcpPacketParser;
 
-class MockReceiveStatisticsProvider : public webrtc::ReceiveStatisticsProvider {
+class MockReceiveStatisticsProvider : public ReceiveStatisticsProvider {
  public:
   MOCK_METHOD(std::vector<ReportBlock>, RtcpReportBlocks, (size_t), (override));
 };
 
-class MockMediaReceiverRtcpObserver : public webrtc::MediaReceiverRtcpObserver {
+class MockMediaReceiverRtcpObserver : public MediaReceiverRtcpObserver {
  public:
   MOCK_METHOD(void, OnSenderReport, (uint32_t, NtpTime, uint32_t), (override));
   MOCK_METHOD(void, OnBye, (uint32_t), (override));
   MOCK_METHOD(void,
               OnBitrateAllocation,
               (uint32_t, const VideoBitrateAllocation&),
+              (override));
+};
+
+class MockNetworkLinkRtcpObserver : public NetworkLinkRtcpObserver {
+ public:
+  MOCK_METHOD(void,
+              OnRttUpdate,
+              (Timestamp receive_time, TimeDelta rtt),
+              (override));
+  MOCK_METHOD(void,
+              OnTransportFeedback,
+              (Timestamp receive_time, const rtcp::TransportFeedback& feedback),
+              (override));
+  MOCK_METHOD(void,
+              OnReceiverEstimatedMaxBitrate,
+              (Timestamp receive_time, DataRate bitrate),
+              (override));
+  MOCK_METHOD(void,
+              OnReportBlocks,
+              (Timestamp receive_time,
+               rtc::ArrayView<const rtcp::ReportBlock> report_blocks),
               (override));
 };
 
@@ -139,7 +150,9 @@ RtcpTransceiverConfig DefaultTestConfig() {
   // Test doesn't need to support all key features: Default test config returns
   // valid config with all features turned off.
   static MockTransport null_transport;
+  static SimulatedClock null_clock(0);
   RtcpTransceiverConfig config;
+  config.clock = &null_clock;
   config.outgoing_transport = &null_transport;
   config.schedule_periodic_compound_packets = false;
   config.initial_report_delay_ms = 10;
@@ -1169,6 +1182,53 @@ TEST(RtcpTransceiverImplTest, CalculatesRoundTripTimeOnDlrr) {
   rtcp_transceiver.ReceivePacket(raw_packet, time + TimeDelta::Millis(110));
 }
 
+TEST(RtcpTransceiverImplTest, PassRttFromDlrrToLinkObserver) {
+  const uint32_t kSenderSsrc = 4321;
+  MockNetworkLinkRtcpObserver link_observer;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.feedback_ssrc = kSenderSsrc;
+  config.network_link_observer = &link_observer;
+  config.non_sender_rtt_measurement = true;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  Timestamp send_time = Timestamp::Seconds(5678);
+  Timestamp receive_time = send_time + TimeDelta::Millis(110);
+  rtcp::ReceiveTimeInfo rti;
+  rti.ssrc = kSenderSsrc;
+  rti.last_rr = CompactNtp(config.clock->ConvertTimestampToNtpTime(send_time));
+  rti.delay_since_last_rr = SaturatedUsToCompactNtp(10'000);  // 10ms
+  rtcp::ExtendedReports xr;
+  xr.AddDlrrItem(rti);
+
+  EXPECT_CALL(link_observer, OnRttUpdate(receive_time, TimeDelta::Millis(100)));
+  rtcp_transceiver.ReceivePacket(xr.Build(), receive_time);
+}
+
+TEST(RtcpTransceiverImplTest, CalculatesRoundTripTimeFromReportBlocks) {
+  MockNetworkLinkRtcpObserver link_observer;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.network_link_observer = &link_observer;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  TimeDelta rtt = TimeDelta::Millis(100);
+  Timestamp send_time = Timestamp::Seconds(5678);
+  Timestamp receive_time = send_time + TimeDelta::Millis(110);
+  rtcp::ReceiverReport rr;
+  rtcp::ReportBlock rb1;
+  rb1.SetLastSr(CompactNtp(config.clock->ConvertTimestampToNtpTime(
+      receive_time - rtt - TimeDelta::Millis(10))));
+  rb1.SetDelayLastSr(SaturatedUsToCompactNtp(10'000));  // 10ms
+  rr.AddReportBlock(rb1);
+  rtcp::ReportBlock rb2;
+  rb2.SetLastSr(CompactNtp(config.clock->ConvertTimestampToNtpTime(
+      receive_time - rtt - TimeDelta::Millis(20))));
+  rb2.SetDelayLastSr(SaturatedUsToCompactNtp(20'000));  // 20ms
+  rr.AddReportBlock(rb2);
+
+  EXPECT_CALL(link_observer, OnRttUpdate(receive_time, rtt));
+  rtcp_transceiver.ReceivePacket(rr.Build(), receive_time);
+}
+
 TEST(RtcpTransceiverImplTest, IgnoresUnknownSsrcInDlrr) {
   const uint32_t kSenderSsrc = 4321;
   const uint32_t kUnknownSsrc = 4322;
@@ -1196,4 +1256,67 @@ TEST(RtcpTransceiverImplTest, IgnoresUnknownSsrcInDlrr) {
   rtcp_transceiver.ReceivePacket(raw_packet, time + TimeDelta::Millis(100));
 }
 
+TEST(RtcpTransceiverImplTest, ParsesTransportFeedback) {
+  MockNetworkLinkRtcpObserver link_observer;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.network_link_observer = &link_observer;
+  Timestamp receive_time = Timestamp::Seconds(5678);
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  EXPECT_CALL(link_observer, OnTransportFeedback(receive_time, _))
+      .WillOnce(WithArg<1>([](const rtcp::TransportFeedback& message) {
+        EXPECT_EQ(message.GetBaseSequence(), 321);
+        EXPECT_THAT(message.GetReceivedPackets(), SizeIs(2));
+      }));
+
+  rtcp::TransportFeedback tb;
+  tb.SetBase(/*base_sequence=*/321, /*ref_timestamp_us=*/15);
+  tb.AddReceivedPacket(/*base_sequence=*/321, /*timestamp_us=*/15);
+  tb.AddReceivedPacket(/*base_sequence=*/322, /*timestamp_us=*/17);
+  rtcp_transceiver.ReceivePacket(tb.Build(), receive_time);
+}
+
+TEST(RtcpTransceiverImplTest, ParsesRemb) {
+  MockNetworkLinkRtcpObserver link_observer;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.network_link_observer = &link_observer;
+  Timestamp receive_time = Timestamp::Seconds(5678);
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  EXPECT_CALL(link_observer,
+              OnReceiverEstimatedMaxBitrate(receive_time,
+                                            DataRate::BitsPerSec(1'234'000)));
+
+  rtcp::Remb remb;
+  remb.SetBitrateBps(1'234'000);
+  rtcp_transceiver.ReceivePacket(remb.Build(), receive_time);
+}
+
+TEST(RtcpTransceiverImplTest,
+     CombinesReportBlocksFromSenderAndRecieverReports) {
+  MockNetworkLinkRtcpObserver link_observer;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.network_link_observer = &link_observer;
+  Timestamp receive_time = Timestamp::Seconds(5678);
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  // Assemble compound packet with multiple rtcp packets in it.
+  rtcp::CompoundPacket packet;
+  auto sr = std::make_unique<rtcp::SenderReport>();
+  sr->SetSenderSsrc(1234);
+  sr->SetReportBlocks(std::vector<ReportBlock>(31));
+  packet.Append(std::move(sr));
+  auto rr1 = std::make_unique<rtcp::ReceiverReport>();
+  rr1->SetReportBlocks(std::vector<ReportBlock>(31));
+  packet.Append(std::move(rr1));
+  auto rr2 = std::make_unique<rtcp::ReceiverReport>();
+  rr2->SetReportBlocks(std::vector<ReportBlock>(2));
+  packet.Append(std::move(rr2));
+
+  EXPECT_CALL(link_observer, OnReportBlocks(receive_time, SizeIs(64)));
+
+  rtcp_transceiver.ReceivePacket(packet.Build(), receive_time);
+}
+
 }  // namespace
+}  // namespace webrtc
