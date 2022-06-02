@@ -352,3 +352,50 @@ TEST_F(TransportDescriptionFactoryTest, CreateAnswerIceCredentialsIterator) {
   EXPECT_EQ(answer->GetIceParameters().ufrag, credentials[0].ufrag);
   EXPECT_EQ(answer->GetIceParameters().pwd, credentials[0].pwd);
 }
+
+TEST_F(TransportDescriptionFactoryTest, CreateAnswerToDtlsActpassOffer) {
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
+
+  f2_.set_secure(cricket::SEC_ENABLED);
+  f2_.set_certificate(cert2_);
+  cricket::TransportOptions options;
+  std::unique_ptr<TransportDescription> offer =
+      f1_.CreateOffer(options, nullptr, &ice_credentials_);
+
+  std::unique_ptr<TransportDescription> answer =
+      f2_.CreateAnswer(offer.get(), options, false, nullptr, &ice_credentials_);
+  EXPECT_EQ(answer->connection_role, cricket::CONNECTIONROLE_ACTIVE);
+}
+
+TEST_F(TransportDescriptionFactoryTest, CreateAnswerToDtlsActiveOffer) {
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
+
+  f2_.set_secure(cricket::SEC_ENABLED);
+  f2_.set_certificate(cert2_);
+  cricket::TransportOptions options;
+  std::unique_ptr<TransportDescription> offer =
+      f1_.CreateOffer(options, nullptr, &ice_credentials_);
+  offer->connection_role = cricket::CONNECTIONROLE_ACTIVE;
+
+  std::unique_ptr<TransportDescription> answer =
+      f2_.CreateAnswer(offer.get(), options, false, nullptr, &ice_credentials_);
+  EXPECT_EQ(answer->connection_role, cricket::CONNECTIONROLE_PASSIVE);
+}
+
+TEST_F(TransportDescriptionFactoryTest, CreateAnswerToDtlsPassiveOffer) {
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
+
+  f2_.set_secure(cricket::SEC_ENABLED);
+  f2_.set_certificate(cert2_);
+  cricket::TransportOptions options;
+  std::unique_ptr<TransportDescription> offer =
+      f1_.CreateOffer(options, nullptr, &ice_credentials_);
+  offer->connection_role = cricket::CONNECTIONROLE_PASSIVE;
+
+  std::unique_ptr<TransportDescription> answer =
+      f2_.CreateAnswer(offer.get(), options, false, nullptr, &ice_credentials_);
+  EXPECT_EQ(answer->connection_role, cricket::CONNECTIONROLE_ACTIVE);
+}
