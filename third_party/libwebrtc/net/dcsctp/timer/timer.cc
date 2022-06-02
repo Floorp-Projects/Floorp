@@ -93,8 +93,8 @@ void Timer::Trigger(TimerGeneration generation) {
   if (is_running_ && generation == generation_) {
     ++expiration_count_;
     is_running_ = false;
-    if (options_.max_restarts < 0 ||
-        expiration_count_ <= options_.max_restarts) {
+    if (!options_.max_restarts.has_value() ||
+        expiration_count_ <= *options_.max_restarts) {
       // The timer should still be running after this triggers. Start a new
       // timer. Note that it might be very quickly restarted again, if the
       // `on_expired_` callback returns a new duration.

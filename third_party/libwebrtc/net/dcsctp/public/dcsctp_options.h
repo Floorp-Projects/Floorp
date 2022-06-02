@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "absl/types/optional.h"
 #include "net/dcsctp/public/types.h"
 
 namespace dcsctp {
@@ -150,11 +151,13 @@ struct DcSctpOptions {
   // retransmission scenarios.
   int max_burst = 4;
 
-  // Maximum Data Retransmit Attempts (per DATA chunk).
-  int max_retransmissions = 10;
+  // Maximum Data Retransmit Attempts (per DATA chunk). Set to absl::nullopt for
+  // no limit.
+  absl::optional<int> max_retransmissions = 10;
 
-  // Max.Init.Retransmits (https://tools.ietf.org/html/rfc4960#section-15)
-  int max_init_retransmits = 8;
+  // Max.Init.Retransmits (https://tools.ietf.org/html/rfc4960#section-15). Set
+  // to absl::nullopt for no limit.
+  absl::optional<int> max_init_retransmits = 8;
 
   // RFC3758 Partial Reliability Extension
   bool enable_partial_reliability = true;
