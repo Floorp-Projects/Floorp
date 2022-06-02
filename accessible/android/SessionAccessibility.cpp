@@ -263,15 +263,11 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
   MOZ_ASSERT(NS_IsMainThread());
   PresShell* presShell = nullptr;
   if (LocalAccessible* localAcc = aAccessible->AsLocal()) {
-    DocAccessible* docAcc = localAcc->Document();
-    // If the accessible is being shutdown from the doc's shutdown
-    // the doc accessible won't have a ref to a presshell anymore,
-    // but we should have a ref to the DOM document node, and the DOM doc
-    // has a ref to the presshell.
-    dom::Document* doc = docAcc ? docAcc->DocumentNode() : nullptr;
-    if (doc && doc->IsContentDocument()) {
+    DocAccessible* doc = localAcc->Document();
+    if (doc && !doc->HasShutdown() &&
+        doc->DocumentNode()->IsContentDocument()) {
       // Only content accessibles should have an associated SessionAccessible.
-      presShell = doc->GetPresShell();
+      presShell = doc->PresShellPtr();
     }
   } else {
     dom::CanonicalBrowsingContext* cbc =
