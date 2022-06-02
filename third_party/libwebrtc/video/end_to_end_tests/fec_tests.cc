@@ -406,7 +406,6 @@ TEST_F(FecEndToEndTest, ReceivedUlpfecPacketsNotNacked) {
             return DROP_PACKET;
           state_ = kPassOneMediaPacket;
           return DROP_PACKET;
-          break;
         case kPassOneMediaPacket:
           if (ulpfec_packet)
             return DROP_PACKET;
