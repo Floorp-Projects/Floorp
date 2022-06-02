@@ -350,6 +350,15 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // when we expect to send them).
   virtual size_t ExpectedPerPacketOverhead() const = 0;
 
+  // Access to packet state (e.g. sequence numbering) must only be access by
+  // one thread at a time. It may be only one thread, or a construction thread
+  // that calls SetRtpState() - handing over to a pacer thread that calls
+  // TrySendPacket() - and at teardown ownership is handed to a destruciton
+  // thread that calls GetRtpState().
+  // This method is used to signal that "ownership" of the rtp state is being
+  // transferred to another thread.
+  virtual void OnPacketSendingThreadSwitched() = 0;
+
   // **************************************************************************
   // RTCP
   // **************************************************************************
