@@ -452,6 +452,10 @@ android-hw-browsertime-a51:
     - browsertime-unity-webgl-mobile
     # not live, or tp6 proper
 
+android-hw-browsertime-g5:
+    - browsertime-tp6m
+    - browsertime-tp6m-live
+
 android-hw-browsertime:
     - browsertime-tp6m
     - browsertime-tp6m-essential
