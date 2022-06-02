@@ -105,7 +105,8 @@ TEST(LossBasedBweV2Test, BandwidthEstimateGivenInitializationAndThenFeedback) {
 
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
-  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(enough_feedback);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback, DataRate::PlusInfinity());
 
   EXPECT_TRUE(loss_based_bandwidth_estimator.IsReady());
   EXPECT_TRUE(loss_based_bandwidth_estimator.GetBandwidthEstimate().IsFinite());
@@ -127,7 +128,8 @@ TEST(LossBasedBweV2Test, NoBandwidthEstimateGivenNoInitialization) {
       Config(/*enabled=*/true, /*valid=*/true));
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
 
-  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(enough_feedback);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback, DataRate::PlusInfinity());
 
   EXPECT_FALSE(loss_based_bandwidth_estimator.IsReady());
   EXPECT_TRUE(
@@ -159,7 +161,8 @@ TEST(LossBasedBweV2Test, NoBandwidthEstimateGivenNotEnoughFeedback) {
   EXPECT_TRUE(
       loss_based_bandwidth_estimator.GetBandwidthEstimate().IsPlusInfinity());
 
-  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(not_enough_feedback);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      not_enough_feedback, DataRate::PlusInfinity());
 
   EXPECT_FALSE(loss_based_bandwidth_estimator.IsReady());
   EXPECT_TRUE(
@@ -196,7 +199,8 @@ TEST(LossBasedBweV2Test,
 
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
-  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(enough_feedback_1);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_1, DataRate::PlusInfinity());
 
   EXPECT_NE(loss_based_bandwidth_estimator.GetBandwidthEstimate(),
             DataRate::KilobitsPerSec(600));
@@ -207,7 +211,8 @@ TEST(LossBasedBweV2Test,
   EXPECT_EQ(loss_based_bandwidth_estimator.GetBandwidthEstimate(),
             DataRate::KilobitsPerSec(600));
 
-  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(enough_feedback_2);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_2, DataRate::PlusInfinity());
 
   EXPECT_NE(loss_based_bandwidth_estimator.GetBandwidthEstimate(),
             DataRate::KilobitsPerSec(600));
@@ -246,8 +251,10 @@ TEST(LossBasedBweV2Test,
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator_2.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
-  loss_based_bandwidth_estimator_1.UpdateBandwidthEstimate(enough_feedback_1);
-  loss_based_bandwidth_estimator_2.UpdateBandwidthEstimate(enough_feedback_1);
+  loss_based_bandwidth_estimator_1.UpdateBandwidthEstimate(
+      enough_feedback_1, DataRate::PlusInfinity());
+  loss_based_bandwidth_estimator_2.UpdateBandwidthEstimate(
+      enough_feedback_1, DataRate::PlusInfinity());
 
   EXPECT_EQ(loss_based_bandwidth_estimator_1.GetBandwidthEstimate(),
             DataRate::KilobitsPerSec(660));
@@ -258,8 +265,10 @@ TEST(LossBasedBweV2Test,
   EXPECT_EQ(loss_based_bandwidth_estimator_1.GetBandwidthEstimate(),
             DataRate::KilobitsPerSec(660));
 
-  loss_based_bandwidth_estimator_1.UpdateBandwidthEstimate(enough_feedback_2);
-  loss_based_bandwidth_estimator_2.UpdateBandwidthEstimate(enough_feedback_2);
+  loss_based_bandwidth_estimator_1.UpdateBandwidthEstimate(
+      enough_feedback_2, DataRate::PlusInfinity());
+  loss_based_bandwidth_estimator_2.UpdateBandwidthEstimate(
+      enough_feedback_2, DataRate::PlusInfinity());
 
   EXPECT_NE(loss_based_bandwidth_estimator_1.GetBandwidthEstimate(),
             loss_based_bandwidth_estimator_2.GetBandwidthEstimate());
@@ -288,7 +297,7 @@ TEST(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_no_received_packets);
+      enough_feedback_no_received_packets, DataRate::PlusInfinity());
 
   EXPECT_EQ(loss_based_bandwidth_estimator.GetBandwidthEstimate(),
             DataRate::KilobitsPerSec(100));

@@ -178,7 +178,8 @@ void LossBasedBweV2::SetBandwidthEstimate(DataRate bandwidth_estimate) {
 }
 
 void LossBasedBweV2::UpdateBandwidthEstimate(
-    rtc::ArrayView<const PacketResult> packet_results) {
+    rtc::ArrayView<const PacketResult> packet_results,
+    DataRate delay_based_estimate) {
   if (!IsEnabled()) {
     RTC_LOG(LS_WARNING)
         << "The estimator must be enabled before it can be used.";
@@ -202,7 +203,7 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
 
   ChannelParameters best_candidate = current_estimate_;
   double objective_max = std::numeric_limits<double>::lowest();
-  for (ChannelParameters candidate : GetCandidates()) {
+  for (ChannelParameters candidate : GetCandidates(delay_based_estimate)) {
     NewtonsMethodUpdate(candidate);
 
     const double candidate_objective = GetObjective(candidate);
@@ -226,6 +227,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                                            {1.05, 1.0, 0.95});
   FieldTrialParameter<double> higher_bandwidth_bias_factor("HigherBwBiasFactor",
                                                            0.00001);
+  FieldTrialParameter<double> higher_log_bandwidth_bias_factor(
+      "HigherLogBwBiasFactor", 0.001);
   FieldTrialParameter<double> inherent_loss_lower_bound(
       "InherentLossLowerBound", 1.0e-3);
   FieldTrialParameter<DataRate> inherent_loss_upper_bound_bandwidth_balance(
@@ -236,6 +239,10 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       "InitialInherentLossEstimate", 0.01);
   FieldTrialParameter<int> newton_iterations("NewtonIterations", 1);
   FieldTrialParameter<double> newton_step_size("NewtonStepSize", 0.5);
+  FieldTrialParameter<bool> append_acknowledged_rate_candidate(
+      "AckedRateCandidate", true);
+  FieldTrialParameter<bool> append_delay_based_estimate_candidate(
+      "DelayBasedCandidate", false);
   FieldTrialParameter<TimeDelta> observation_duration_lower_bound(
       "ObservationDurationLowerBound", TimeDelta::Seconds(1));
   FieldTrialParameter<int> observation_window_size("ObservationWindowSize", 20);
@@ -251,17 +258,27 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                                                      0.99);
 
   if (key_value_config) {
-    ParseFieldTrial(
-        {&enabled, &bandwidth_rampup_upper_bound_factor, &candidate_factors,
-         &higher_bandwidth_bias_factor, &inherent_loss_lower_bound,
-         &inherent_loss_upper_bound_bandwidth_balance,
-         &inherent_loss_upper_bound_offset, &initial_inherent_loss_estimate,
-         &newton_iterations, &newton_step_size,
-         &observation_duration_lower_bound, &observation_window_size,
-         &sending_rate_smoothing_factor, &tcp_fairness_temporal_weight_factor,
-         &tcp_fairness_upper_bound_bandwidth_balance,
-         &tcp_fairness_upper_bound_loss_offset, &temporal_weight_factor},
-        key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
+    ParseFieldTrial({&enabled,
+                     &bandwidth_rampup_upper_bound_factor,
+                     &candidate_factors,
+                     &higher_bandwidth_bias_factor,
+                     &higher_log_bandwidth_bias_factor,
+                     &inherent_loss_lower_bound,
+                     &inherent_loss_upper_bound_bandwidth_balance,
+                     &inherent_loss_upper_bound_offset,
+                     &initial_inherent_loss_estimate,
+                     &newton_iterations,
+                     &newton_step_size,
+                     &append_acknowledged_rate_candidate,
+                     &append_delay_based_estimate_candidate,
+                     &observation_duration_lower_bound,
+                     &observation_window_size,
+                     &sending_rate_smoothing_factor,
+                     &tcp_fairness_temporal_weight_factor,
+                     &tcp_fairness_upper_bound_bandwidth_balance,
+                     &tcp_fairness_upper_bound_loss_offset,
+                     &temporal_weight_factor},
+                    key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
   absl::optional<Config> config;
@@ -273,6 +290,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       bandwidth_rampup_upper_bound_factor.Get();
   config->candidate_factors = candidate_factors.Get();
   config->higher_bandwidth_bias_factor = higher_bandwidth_bias_factor.Get();
+  config->higher_log_bandwidth_bias_factor =
+      higher_log_bandwidth_bias_factor.Get();
   config->inherent_loss_lower_bound = inherent_loss_lower_bound.Get();
   config->inherent_loss_upper_bound_bandwidth_balance =
       inherent_loss_upper_bound_bandwidth_balance.Get();
@@ -281,6 +300,10 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->initial_inherent_loss_estimate = initial_inherent_loss_estimate.Get();
   config->newton_iterations = newton_iterations.Get();
   config->newton_step_size = newton_step_size.Get();
+  config->append_acknowledged_rate_candidate =
+      append_acknowledged_rate_candidate.Get();
+  config->append_delay_based_estimate_candidate =
+      append_delay_based_estimate_candidate.Get();
   config->observation_duration_lower_bound =
       observation_duration_lower_bound.Get();
   config->observation_window_size = observation_window_size.Get();
@@ -427,19 +450,23 @@ double LossBasedBweV2::GetAverageReportedLossRatio() const {
   return static_cast<double>(num_lost_packets) / num_packets;
 }
 
-std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates()
-    const {
+std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
+    DataRate delay_based_estimate) const {
   std::vector<DataRate> bandwidths;
   for (double candidate_factor : config_->candidate_factors) {
-    bandwidths.emplace_back(candidate_factor *
-                            current_estimate_.loss_limited_bandwidth);
+    bandwidths.push_back(candidate_factor *
+                         current_estimate_.loss_limited_bandwidth);
   }
 
-  if (acknowledged_bitrate_.has_value()) {
-    bandwidths.emplace_back(*acknowledged_bitrate_);
+  if (acknowledged_bitrate_.has_value() &&
+      config_->append_acknowledged_rate_candidate) {
+    bandwidths.push_back(*acknowledged_bitrate_);
   }
 
-  // TODO(crodbro): Consider adding the delay based estimate as a candidate.
+  if (IsValid(delay_based_estimate) &&
+      config_->append_delay_based_estimate_candidate) {
+    bandwidths.push_back(delay_based_estimate);
+  }
 
   const DataRate candidate_bandwidth_upper_bound =
       acknowledged_bitrate_.has_value()
@@ -516,9 +543,21 @@ double LossBasedBweV2::GetInherentLossUpperBound(DataRate bandwidth) const {
   return std::min(inherent_loss_upper_bound, 1.0);
 }
 
+double LossBasedBweV2::GetHighBandwidthBias(DataRate bandwidth) const {
+  if (IsValid(bandwidth)) {
+    return config_->higher_bandwidth_bias_factor * bandwidth.kbps() +
+           config_->higher_log_bandwidth_bias_factor *
+               std::log(1.0 + bandwidth.kbps());
+  }
+  return 0.0;
+}
+
 double LossBasedBweV2::GetObjective(
     const ChannelParameters& channel_parameters) const {
   double objective = 0.0;
+
+  const double high_bandwidth_bias =
+      GetHighBandwidthBias(channel_parameters.loss_limited_bandwidth);
 
   for (const Observation& observation : observations_) {
     if (!observation.IsInitialized()) {
@@ -537,9 +576,7 @@ double LossBasedBweV2::GetObjective(
         ((observation.num_lost_packets * std::log(loss_probability)) +
          (observation.num_received_packets * std::log(1.0 - loss_probability)));
     objective +=
-        temporal_weight * (config_->higher_bandwidth_bias_factor *
-                           channel_parameters.loss_limited_bandwidth.kbps() *
-                           observation.num_packets);
+        temporal_weight * high_bandwidth_bias * observation.num_packets;
   }
 
   return objective;
@@ -565,18 +602,19 @@ DataRate LossBasedBweV2::GetSendingRate(
 }
 
 DataRate LossBasedBweV2::GetTcpFairnessBandwidthUpperBound() const {
-  if (num_observations_ <= 0) {
-    return DataRate::PlusInfinity();
-  }
+  return cached_tcp_fairness_limit_.value_or(DataRate::PlusInfinity());
+}
 
+void LossBasedBweV2::CalculateTcpFairnessBandwidthUpperBound() {
+  DataRate tcp_fairness_limit = DataRate::PlusInfinity();
   const double average_reported_loss_ratio = GetAverageReportedLossRatio();
-  if (average_reported_loss_ratio <=
+  if (average_reported_loss_ratio >
       config_->tcp_fairness_upper_bound_loss_offset) {
-    return DataRate::PlusInfinity();
+    tcp_fairness_limit = config_->tcp_fairness_upper_bound_bandwidth_balance /
+                         (average_reported_loss_ratio -
+                          config_->tcp_fairness_upper_bound_loss_offset);
   }
-  return config_->tcp_fairness_upper_bound_bandwidth_balance /
-         (average_reported_loss_ratio -
-          config_->tcp_fairness_upper_bound_loss_offset);
+  cached_tcp_fairness_limit_ = tcp_fairness_limit;
 }
 
 void LossBasedBweV2::CalculateTemporalWeights() {
@@ -646,6 +684,7 @@ bool LossBasedBweV2::PushBackObservation(
 
   partial_observation_ = PartialObservation();
 
+  CalculateTcpFairnessBandwidthUpperBound();
   return true;
 }
 

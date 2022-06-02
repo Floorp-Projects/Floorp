@@ -364,7 +364,7 @@ void SendSideBandwidthEstimation::IncomingPacketFeedbackVector(
   }
   if (LossBasedBandwidthEstimatorV2Enabled()) {
     loss_based_bandwidth_estimator_v2_.UpdateBandwidthEstimate(
-        report.packet_feedbacks);
+        report.packet_feedbacks, delay_based_limit_);
   }
 }
 
