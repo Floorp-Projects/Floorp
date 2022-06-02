@@ -2355,7 +2355,7 @@ int32_t AudioDeviceWindowsCore::StartRecording() {
       }
     }
 
-    RTC_DCHECK(_hRecThread);
+    RTC_DCHECK(_hRecThread == NULL);
     _hRecThread = CreateThread(NULL, 0, lpStartAddress, this, 0, NULL);
     if (_hRecThread == NULL) {
       RTC_LOG(LS_ERROR) << "failed to create the recording thread";
@@ -2492,7 +2492,7 @@ int32_t AudioDeviceWindowsCore::StartPlayout() {
     MutexLock lockScoped(&mutex_);
 
     // Create thread which will drive the rendering.
-    RTC_DCHECK(_hPlayThread);
+    RTC_DCHECK(_hPlayThread == NULL);
     _hPlayThread = CreateThread(NULL, 0, WSAPIRenderThread, this, 0, NULL);
     if (_hPlayThread == NULL) {
       RTC_LOG(LS_ERROR) << "failed to create the playout thread";
