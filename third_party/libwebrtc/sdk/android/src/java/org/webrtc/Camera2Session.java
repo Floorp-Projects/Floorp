@@ -232,14 +232,16 @@ class Camera2Session implements CameraSession {
       // If no optical mode is available, try software.
       final int[] availableVideoStabilization = cameraCharacteristics.get(
           CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES);
-      for (int mode : availableVideoStabilization) {
-        if (mode == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON) {
-          captureRequestBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE,
-              CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON);
-          captureRequestBuilder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE,
-              CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_OFF);
-          Logging.d(TAG, "Using video stabilization.");
-          return;
+      if (availableVideoStabilization != null) {
+        for (int mode : availableVideoStabilization) {
+          if (mode == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON) {
+            captureRequestBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE,
+                CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON);
+            captureRequestBuilder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE,
+                CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_OFF);
+            Logging.d(TAG, "Using video stabilization.");
+            return;
+          }
         }
       }
       Logging.d(TAG, "Stabilization not available.");
