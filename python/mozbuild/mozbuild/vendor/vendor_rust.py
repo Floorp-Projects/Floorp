@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 from collections import defaultdict, OrderedDict
 from distutils.version import LooseVersion
@@ -104,17 +105,17 @@ class VendorRust(MozbuildObject):
                         "path": "Cargo.lock",
                         "column": None,
                         "line": None,
-                        "level": "error",
+                        "level": "error" if level == logging.ERROR else "warning",
                         "message": msg,
                     }
-                    for msg in self._issues
+                    for (level, msg) in self._issues
                 ]
             }
         )
 
     def log(self, level, action, params, format_str):
-        if level >= logging.ERROR:
-            self._issues.append(format_str.format(**params))
+        if level >= logging.WARNING:
+            self._issues.append((level, format_str.format(**params)))
         super().log(level, action, params, format_str)
 
     def get_cargo_path(self):
@@ -663,8 +664,44 @@ license file's hash.
                     )
                     failed = True
 
-            if failed:
-                return False
+        # Only run cargo-vet on automation for now, and only emit warnings.
+        if "MOZ_AUTOMATION" in os.environ:
+            env = os.environ.copy()
+            env["PATH"] = os.pathsep.join(
+                (
+                    os.path.join(os.environ["MOZ_FETCHES_DIR"], "cargo-vet"),
+                    os.path.join(os.environ["MOZ_FETCHES_DIR"], "rustc", "bin"),
+                    os.environ["PATH"],
+                )
+            )
+            # The use of --locked requires .cargo/config to exist, but other things,
+            # like cargo update, don't want it there, so remove it after cargo vet.
+            topsrcdir = Path(self.topsrcdir)
+            shutil.copyfile(
+                topsrcdir / ".cargo" / "config.in", topsrcdir / ".cargo" / "config"
+            )
+            try:
+                res = subprocess.run(
+                    [cargo, "vet", "--output-format=json", "--locked"],
+                    cwd=self.topsrcdir,
+                    stdout=subprocess.PIPE,
+                    env=env,
+                )
+                if res.returncode:
+                    vet = json.loads(res.stdout)
+                    for failure in vet.get("failures", []):
+                        failure["crate"] = failure.pop("name")
+                        self.log(
+                            logging.WARNING,
+                            "cargo_vet_failed",
+                            failure,
+                            "Vetting missing for {crate}:{version} {missing_criteria}",
+                        )
+            finally:
+                os.unlink(topsrcdir / ".cargo" / "config")
+
+        if failed:
+            return False
 
         res = subprocess.run(
             [cargo, "vendor", vendor_dir], cwd=self.topsrcdir, stdout=subprocess.PIPE
