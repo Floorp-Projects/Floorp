@@ -24,6 +24,7 @@
 #include "api/units/data_rate.h"
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/rtp_rtcp/source/packet_sequencer.h"
 #include "modules/rtp_rtcp/source/rtp_packet_history.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
@@ -43,9 +44,7 @@ class RtpSenderEgress {
   // without passing through an actual paced sender.
   class NonPacedPacketSender : public RtpPacketSender {
    public:
-    NonPacedPacketSender(RtpSenderEgress* sender,
-                         SequenceNumberAssigner* sequence_number_assigner,
-                         bool deferred_sequencing);
+    NonPacedPacketSender(RtpSenderEgress* sender, PacketSequencer* sequencer);
     virtual ~NonPacedPacketSender();
 
     void EnqueuePackets(
@@ -53,10 +52,9 @@ class RtpSenderEgress {
 
    private:
     void PrepareForSend(RtpPacketToSend* packet);
-    const bool deferred_sequencing_;
     uint16_t transport_sequence_number_;
     RtpSenderEgress* const sender_;
-    SequenceNumberAssigner* sequence_number_assigner_;
+    PacketSequencer* sequencer_;
   };
 
   RtpSenderEgress(const RtpRtcpInterface::Configuration& config,

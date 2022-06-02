@@ -63,27 +63,16 @@ int DelayMillisForDuration(TimeDelta duration) {
 ModuleRtpRtcpImpl2::RtpSenderContext::RtpSenderContext(
     const RtpRtcpInterface::Configuration& config)
     : packet_history(config.clock, config.enable_rtx_padding_prioritization),
-      deferred_sequencing_(config.use_deferred_sequencing),
       sequencer(config.local_media_ssrc,
                 config.rtx_send_ssrc,
                 /*require_marker_before_media_padding=*/!config.audio,
                 config.clock),
       packet_sender(config, &packet_history),
-      non_paced_sender(&packet_sender, this, config.use_deferred_sequencing),
+      non_paced_sender(&packet_sender, &sequencer),
       packet_generator(
           config,
           &packet_history,
-          config.paced_sender ? config.paced_sender : &non_paced_sender,
-          config.use_deferred_sequencing ? nullptr : &sequencer) {}
-void ModuleRtpRtcpImpl2::RtpSenderContext::AssignSequenceNumber(
-    RtpPacketToSend* packet) {
-  RTC_DCHECK_RUN_ON(&sequencing_checker);
-  if (deferred_sequencing_) {
-    sequencer.Sequence(*packet);
-  } else {
-    packet_generator.AssignSequenceNumber(packet);
-  }
-}
+          config.paced_sender ? config.paced_sender : &non_paced_sender) {}
 
 ModuleRtpRtcpImpl2::ModuleRtpRtcpImpl2(const Configuration& configuration)
     : worker_queue_(TaskQueueBase::Current()),
@@ -188,57 +177,42 @@ void ModuleRtpRtcpImpl2::SetStartTimestamp(const uint32_t timestamp) {
 
 uint16_t ModuleRtpRtcpImpl2::SequenceNumber() const {
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
-  if (rtp_sender_->deferred_sequencing_) {
-    return rtp_sender_->sequencer.media_sequence_number();
-  }
-  return rtp_sender_->packet_generator.SequenceNumber();
+  return rtp_sender_->sequencer.media_sequence_number();
 }
 
 // Set SequenceNumber, default is a random number.
 void ModuleRtpRtcpImpl2::SetSequenceNumber(const uint16_t seq_num) {
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
-  if (rtp_sender_->deferred_sequencing_) {
-    if (rtp_sender_->sequencer.media_sequence_number() != seq_num) {
-      rtp_sender_->sequencer.set_media_sequence_number(seq_num);
-      rtp_sender_->packet_history.Clear();
-    }
-  } else {
-    rtp_sender_->packet_generator.SetSequenceNumber(seq_num);
+  if (rtp_sender_->sequencer.media_sequence_number() != seq_num) {
+    rtp_sender_->sequencer.set_media_sequence_number(seq_num);
+    rtp_sender_->packet_history.Clear();
   }
 }
 
 void ModuleRtpRtcpImpl2::SetRtpState(const RtpState& rtp_state) {
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
   rtp_sender_->packet_generator.SetRtpState(rtp_state);
-  if (rtp_sender_->deferred_sequencing_) {
-    rtp_sender_->sequencer.SetRtpState(rtp_state);
-  }
+  rtp_sender_->sequencer.SetRtpState(rtp_state);
   rtcp_sender_.SetTimestampOffset(rtp_state.start_timestamp);
 }
 
 void ModuleRtpRtcpImpl2::SetRtxState(const RtpState& rtp_state) {
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
   rtp_sender_->packet_generator.SetRtxRtpState(rtp_state);
-  if (rtp_sender_->deferred_sequencing_) {
-    rtp_sender_->sequencer.set_rtx_sequence_number(rtp_state.sequence_number);
-  }
+  rtp_sender_->sequencer.set_rtx_sequence_number(rtp_state.sequence_number);
 }
 
 RtpState ModuleRtpRtcpImpl2::GetRtpState() const {
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
   RtpState state = rtp_sender_->packet_generator.GetRtpState();
-  if (rtp_sender_->deferred_sequencing_) {
-    rtp_sender_->sequencer.PopulateRtpState(state);
-  }
+  rtp_sender_->sequencer.PopulateRtpState(state);
   return state;
 }
 
 RtpState ModuleRtpRtcpImpl2::GetRtxState() const {
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
   RtpState state = rtp_sender_->packet_generator.GetRtxRtpState();
-  if (rtp_sender_->deferred_sequencing_) {
-    state.sequence_number = rtp_sender_->sequencer.rtx_sequence_number();
-  }
+  state.sequence_number = rtp_sender_->sequencer.rtx_sequence_number();
   return state;
 }
 
@@ -383,25 +357,22 @@ bool ModuleRtpRtcpImpl2::TrySendPacket(RtpPacketToSend* packet,
                                        const PacedPacketInfo& pacing_info) {
   RTC_DCHECK(rtp_sender_);
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
-  if (rtp_sender_->deferred_sequencing_) {
-    if (!rtp_sender_->packet_generator.SendingMedia()) {
-      return false;
-    }
-    if (packet->packet_type() == RtpPacketMediaType::kPadding &&
-        packet->Ssrc() == rtp_sender_->packet_generator.SSRC() &&
-        !rtp_sender_->sequencer.CanSendPaddingOnMediaSsrc()) {
-      // New media packet preempted this generated padding packet, discard it.
-      return false;
-    }
-    bool is_flexfec =
-        packet->packet_type() == RtpPacketMediaType::kForwardErrorCorrection &&
-        packet->Ssrc() == rtp_sender_->packet_generator.FlexfecSsrc();
-    if (!is_flexfec) {
-      rtp_sender_->sequencer.Sequence(*packet);
-    }
-  } else if (!rtp_sender_->packet_generator.SendingMedia()) {
+  if (!rtp_sender_->packet_generator.SendingMedia()) {
     return false;
   }
+  if (packet->packet_type() == RtpPacketMediaType::kPadding &&
+      packet->Ssrc() == rtp_sender_->packet_generator.SSRC() &&
+      !rtp_sender_->sequencer.CanSendPaddingOnMediaSsrc()) {
+    // New media packet preempted this generated padding packet, discard it.
+    return false;
+  }
+  bool is_flexfec =
+      packet->packet_type() == RtpPacketMediaType::kForwardErrorCorrection &&
+      packet->Ssrc() == rtp_sender_->packet_generator.FlexfecSsrc();
+  if (!is_flexfec) {
+    rtp_sender_->sequencer.Sequence(*packet);
+  }
+
   rtp_sender_->packet_sender.SendPacket(packet, pacing_info);
   return true;
 }
@@ -418,19 +389,7 @@ std::vector<std::unique_ptr<RtpPacketToSend>>
 ModuleRtpRtcpImpl2::FetchFecPackets() {
   RTC_DCHECK(rtp_sender_);
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
-  auto fec_packets = rtp_sender_->packet_sender.FetchFecPackets();
-  if (!fec_packets.empty() && !rtp_sender_->deferred_sequencing_) {
-    // Only assign sequence numbers for FEC packets in non-deferred mode, and
-    // never for FlexFEC which has as separate sequence number series.
-    const bool generate_sequence_numbers =
-        !rtp_sender_->packet_sender.FlexFecSsrc().has_value();
-    if (generate_sequence_numbers) {
-      for (auto& fec_packet : fec_packets) {
-        rtp_sender_->packet_generator.AssignSequenceNumber(fec_packet.get());
-      }
-    }
-  }
-  return fec_packets;
+  return rtp_sender_->packet_sender.FetchFecPackets();
 }
 
 void ModuleRtpRtcpImpl2::OnPacketsAcknowledged(
@@ -454,14 +413,9 @@ ModuleRtpRtcpImpl2::GeneratePadding(size_t target_size_bytes) {
   RTC_DCHECK(rtp_sender_);
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
 
-  // `can_send_padding_on_media_ssrc` set to false when deferred sequencing
-  // is off. It will be ignored in that case, RTPSender will internally query
-  // `sequencer` while holding the send lock instead.
   return rtp_sender_->packet_generator.GeneratePadding(
       target_size_bytes, rtp_sender_->packet_sender.MediaHasBeenSent(),
-      rtp_sender_->deferred_sequencing_
-          ? rtp_sender_->sequencer.CanSendPaddingOnMediaSsrc()
-          : false);
+      rtp_sender_->sequencer.CanSendPaddingOnMediaSsrc());
 }
 
 std::vector<RtpSequenceNumberMap::Info>

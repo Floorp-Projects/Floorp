@@ -46,6 +46,11 @@ class RTPSender {
  public:
   RTPSender(const RtpRtcpInterface::Configuration& config,
             RtpPacketHistory* packet_history,
+            RtpPacketSender* packet_sender);
+
+  ABSL_DEPRECATED("bugs.webrtc.org/11340")
+  RTPSender(const RtpRtcpInterface::Configuration& config,
+            RtpPacketHistory* packet_history,
             RtpPacketSender* packet_sender,
             PacketSequencer* packet_sequencer);
 
@@ -137,23 +142,6 @@ class RTPSender {
   // extensions RtpSender updates before sending.
   std::unique_ptr<RtpPacketToSend> AllocatePacket() const
       RTC_LOCKS_EXCLUDED(send_mutex_);
-  // Allocate sequence number for provided packet.
-  // Save packet's fields to generate padding that doesn't break media stream.
-  // Return false if sending was turned off.
-  bool AssignSequenceNumber(RtpPacketToSend* packet)
-      RTC_LOCKS_EXCLUDED(send_mutex_);
-  // Same as AssignSequenceNumber(), but applies sequence numbers atomically to
-  // a batch of packets.
-  bool AssignSequenceNumbersAndStoreLastPacketState(
-      rtc::ArrayView<std::unique_ptr<RtpPacketToSend>> packets)
-      RTC_LOCKS_EXCLUDED(send_mutex_);
-  // If true, packet sequence numbering is expected to happen outside this
-  // class: media packetizers should not call AssignSequenceNumber(), and any
-  // generated padding will not have assigned sequence numbers. If false,
-  // packetizers do need to ecplixitly sequence number the packets and
-  // GeneratePadding() will return sequence numbered packets.
-  // TODO(bugs.webrtc.org/11340): Remove when legacy behavior is gone.
-  bool deferred_sequence_numbering() const { return sequencer_ == nullptr; }
   // Maximum header overhead per fec/padding packet.
   size_t FecOrPaddingPacketMaxRtpHeaderLength() const
       RTC_LOCKS_EXCLUDED(send_mutex_);
@@ -221,7 +209,6 @@ class RTPSender {
 
   // RTP variables
   uint32_t timestamp_offset_ RTC_GUARDED_BY(send_mutex_);
-  PacketSequencer* const sequencer_ RTC_PT_GUARDED_BY(send_mutex_);
   // RID value to send in the RID or RepairedRID header extension.
   std::string rid_ RTC_GUARDED_BY(send_mutex_);
   // MID value to send in the MID header extension.
