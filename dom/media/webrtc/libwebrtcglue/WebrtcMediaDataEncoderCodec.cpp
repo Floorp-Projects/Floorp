@@ -13,8 +13,8 @@
 #include "mozilla/Span.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/media/MediaUtils.h"
+#include "api/video_codecs/h264_profile_level_id.h"
 #include "media/base/media_constants.h"
-#include "media/base/h264_profile_level_id.h"
 #include "system_wrappers/include/clock.h"
 #include "modules/video_coding/utility/vp8_header_parser.h"
 #include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
@@ -77,12 +77,12 @@ static const char* PacketModeStr(const webrtc::CodecSpecificInfo& aInfo) {
 
 static MediaDataEncoder::H264Specific::ProfileLevel ConvertProfileLevel(
     const webrtc::SdpVideoFormat::Parameters& aParameters) {
-  const absl::optional<webrtc::H264::ProfileLevelId> profileLevel =
-      webrtc::H264::ParseSdpProfileLevelId(aParameters);
+  const absl::optional<webrtc::H264ProfileLevelId> profileLevel =
+      webrtc::ParseSdpForH264ProfileLevelId(aParameters);
   if (profileLevel &&
-      (profileLevel->profile == webrtc::H264::Profile::kProfileBaseline ||
+      (profileLevel->profile == webrtc::H264Profile::kProfileBaseline ||
        profileLevel->profile ==
-           webrtc::H264::Profile::kProfileConstrainedBaseline)) {
+           webrtc::H264Profile::kProfileConstrainedBaseline)) {
     return MediaDataEncoder::H264Specific::ProfileLevel::BaselineAutoLevel;
   }
   return MediaDataEncoder::H264Specific::ProfileLevel::MainAutoLevel;
