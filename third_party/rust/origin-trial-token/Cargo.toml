@@ -12,20 +12,22 @@
 [package]
 edition = "2021"
 name = "origin-trial-token"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Emilio Cobos Álvarez <emilio@crisal.io>"]
 description = "An implementation of the Chrome Origin Trial token format"
 license = "MPL-2.0"
-repository = "https://github.com/emilio/origin-trial-token"
+repository = "https://github.com/mozilla/origin-trial-token"
 resolver = "2"
 
 [lib]
 path = "lib.rs"
+
 [dependencies.serde]
 version = "1.0"
 features = ["derive"]
 
 [dependencies.serde_json]
 version = "1.0"
+
 [dev-dependencies.base64]
 version = "0.13"
