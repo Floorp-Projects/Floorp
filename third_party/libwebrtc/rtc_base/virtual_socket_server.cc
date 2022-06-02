@@ -92,13 +92,9 @@ struct MessageAddress : public MessageData {
   SocketAddress addr;
 };
 
-VirtualSocket::VirtualSocket(VirtualSocketServer* server,
-                             int family,
-                             int type,
-                             bool async)
+VirtualSocket::VirtualSocket(VirtualSocketServer* server, int family, int type)
     : server_(server),
       type_(type),
-      async_(async),
       state_(CS_CLOSED),
       error_(0),
       listen_queue_(nullptr),
@@ -107,8 +103,6 @@ VirtualSocket::VirtualSocket(VirtualSocketServer* server,
       bound_(false),
       was_any_(false) {
   RTC_DCHECK((type_ == SOCK_DGRAM) || (type_ == SOCK_STREAM));
-  RTC_DCHECK(async_ ||
-             (type_ != SOCK_STREAM));  // We only support async streams
   server->SignalReadyToSend.connect(this,
                                     &VirtualSocket::OnSocketServerReadyToSend);
 }
@@ -235,13 +229,8 @@ int VirtualSocket::RecvFrom(void* pv,
   webrtc::MutexLock lock(&mutex_);
   // If we don't have a packet, then either error or wait for one to arrive.
   if (recv_buffer_.empty()) {
-    if (async_) {
-      error_ = EAGAIN;
-      return -1;
-    }
-    while (recv_buffer_.empty()) {
-      server_->ProcessOneMessage();
-    }
+    error_ = EAGAIN;
+    return -1;
   }
 
   // Return the packet at the front of the queue.
@@ -295,7 +284,7 @@ VirtualSocket* VirtualSocket::Accept(SocketAddress* paddr) {
     return nullptr;
   }
   while (!listen_queue_->empty()) {
-    VirtualSocket* socket = new VirtualSocket(server_, AF_INET, type_, async_);
+    VirtualSocket* socket = new VirtualSocket(server_, AF_INET, type_);
 
     // Set the new local address to the same as this server socket.
     socket->SetLocalAddress(local_addr_);
@@ -356,16 +345,16 @@ void VirtualSocket::OnMessage(Message* pmsg) {
       Packet* packet = static_cast<Packet*>(pmsg->pdata);
 
       recv_buffer_.push_back(packet);
-      signal_read_event = async_;
+      signal_read_event = true;
     } else if (pmsg->message_id == MSG_ID_CONNECT) {
       RTC_DCHECK(nullptr != pmsg->pdata);
       MessageAddress* data = static_cast<MessageAddress*>(pmsg->pdata);
       if (listen_queue_ != nullptr) {
         listen_queue_->push_back(data->addr);
-        signal_read_event = async_;
+        signal_read_event = true;
       } else if ((SOCK_STREAM == type_) && (CS_CONNECTING == state_)) {
         CompleteConnect(data->addr);
-        signal_connect_event = async_;
+        signal_connect_event = true;
       } else {
         RTC_LOG(LS_VERBOSE)
             << "Socket at " << local_addr_.ToString() << " is not listening";
@@ -378,7 +367,7 @@ void VirtualSocket::OnMessage(Message* pmsg) {
         error_to_signal = (CS_CONNECTING == state_) ? ECONNREFUSED : 0;
         state_ = CS_CLOSED;
         remote_addr_.Clear();
-        signal_close_event = async_;
+        signal_close_event = true;
       }
     } else if (pmsg->message_id == MSG_ID_SIGNALREADEVENT) {
       signal_read_event = !recv_buffer_.empty();
@@ -610,12 +599,8 @@ void VirtualSocketServer::SetSendingBlocked(bool blocked) {
   }
 }
 
-Socket* VirtualSocketServer::CreateSocket(int family, int type) {
-  return CreateSocketInternal(family, type);
-}
-
-VirtualSocket* VirtualSocketServer::CreateSocketInternal(int family, int type) {
-  return new VirtualSocket(this, family, type, true);
+VirtualSocket* VirtualSocketServer::CreateSocket(int family, int type) {
+  return new VirtualSocket(this, family, type);
 }
 
 void VirtualSocketServer::SetMessageQueue(Thread* msg_queue) {
@@ -881,12 +866,6 @@ void VirtualSocketServer::Clear(VirtualSocket* socket) {
   }
 }
 
-void VirtualSocketServer::ProcessOneMessage() {
-  Message msg;
-  msg_queue_->Get(&msg);
-  msg_queue_->Dispatch(&msg);
-}
-
 void VirtualSocketServer::PostSignalReadEvent(VirtualSocket* socket) {
   // Clear the message so it doesn't end up posted multiple times.
   msg_queue_->Clear(socket, MSG_ID_SIGNALREADEVENT);
@@ -928,7 +907,7 @@ int VirtualSocketServer::SendUdp(VirtualSocket* socket,
   if (!recipient) {
     // Make a fake recipient for address family checking.
     std::unique_ptr<VirtualSocket> dummy_socket(
-        CreateSocketInternal(AF_INET, SOCK_DGRAM));
+        CreateSocket(AF_INET, SOCK_DGRAM));
     dummy_socket->SetLocalAddress(remote_addr);
     if (!CanInteractWith(socket, dummy_socket.get())) {
       RTC_LOG(LS_VERBOSE) << "Incompatible address families: "
