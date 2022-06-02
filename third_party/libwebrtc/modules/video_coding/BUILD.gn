@@ -403,7 +403,6 @@ rtc_library("webrtc_h264") {
     "../../api/video:video_rtp_headers",
     "../../api/video_codecs:video_codecs_api",
     "../../common_video",
-    "../../media:rtc_h264_profile_id",
     "../../media:rtc_media_base",
     "../../rtc_base",
     "../../rtc_base:checks",

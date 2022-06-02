@@ -23,28 +23,9 @@ config("rtc_media_defines_config") {
   defines = [ "HAVE_WEBRTC_VIDEO" ]
 }
 
-# Remove once downstream projects stop depend on this.
-rtc_source_set("rtc_h264_profile_id") {
-  visibility = [ "*" ]
-  sources = [
-    "base/h264_profile_level_id.cc",
-    "base/h264_profile_level_id.h",
-  ]
-  public_deps =  # no-presubmit-check TODO(webrtc:8603)
-      [ "../api/video_codecs:video_codecs_api" ]
-}
-
 rtc_source_set("rtc_media_config") {
   visibility = [ "*" ]
   sources = [ "base/media_config.h" ]
-}
-
-# Remove once downstream projects stop depend on this.
-rtc_source_set("rtc_vp9_profile") {
-  visibility = [ "*" ]
-  sources = [ "base/vp9_profile.h" ]
-  public_deps =  # no-presubmit-check TODO(webrtc:8603)
-      [ "../api/video_codecs:video_codecs_api" ]
 }
 
 rtc_library("rtc_sdp_video_format_utils") {
