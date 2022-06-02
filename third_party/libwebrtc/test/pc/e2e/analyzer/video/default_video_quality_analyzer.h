@@ -29,6 +29,7 @@
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/clock.h"
+#include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_cpu_measurer.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_internal_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/multi_head_queue.h"
@@ -338,11 +339,6 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   std::string StatsKeyToMetricName(const StatsKey& key) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_);
 
-  void StartMeasuringCpuProcessTime();
-  void StopMeasuringCpuProcessTime();
-  void StartExcludingCpuThreadTime();
-  void StopExcludingCpuThreadTime();
-
   // TODO(titovartem) restore const when old constructor will be removed.
   DefaultVideoQualityAnalyzerOptions options_;
   webrtc::Clock* const clock_;
@@ -398,9 +394,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   std::vector<rtc::PlatformThread> thread_pool_;
   rtc::Event comparison_available_event_;
 
-  Mutex cpu_measurement_lock_;
-  int64_t cpu_time_ RTC_GUARDED_BY(cpu_measurement_lock_) = 0;
-  int64_t wallclock_time_ RTC_GUARDED_BY(cpu_measurement_lock_) = 0;
+  DefaultVideoQualityAnalyzerCpuMeasurer cpu_measurer_;
 };
 
 }  // namespace webrtc_pc_e2e

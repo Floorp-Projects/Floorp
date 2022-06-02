@@ -19,7 +19,6 @@
 #include "api/units/time_delta.h"
 #include "api/video/i420_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "rtc_base/cpu_time.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/strings/string_builder.h"
@@ -132,7 +131,7 @@ void DefaultVideoQualityAnalyzer::Start(
     state_ = State::kActive;
     start_time_ = Now();
   }
-  StartMeasuringCpuProcessTime();
+  cpu_measurer_.StartMeasuringCpuProcessTime();
 }
 
 uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
@@ -557,7 +556,7 @@ void DefaultVideoQualityAnalyzer::Stop() {
     }
     state_ = State::kStopped;
   }
-  StopMeasuringCpuProcessTime();
+  cpu_measurer_.StopMeasuringCpuProcessTime();
   comparison_available_event_.Set();
   thread_pool_.clear();
 
@@ -663,7 +662,7 @@ void DefaultVideoQualityAnalyzer::AddComparison(
     absl::optional<VideoFrame> rendered,
     bool dropped,
     FrameStats frame_stats) {
-  StartExcludingCpuThreadTime();
+  cpu_measurer_.StartExcludingCpuThreadTime();
   analyzer_stats_.comparisons_queue_size.AddSample(
       StatsSample(comparisons_.size(), Now()));
   // If there too many computations waiting in the queue, we won't provide
@@ -682,7 +681,7 @@ void DefaultVideoQualityAnalyzer::AddComparison(
                               std::move(frame_stats), overload_reason);
   }
   comparison_available_event_.Set();
-  StopExcludingCpuThreadTime();
+  cpu_measurer_.StopExcludingCpuThreadTime();
 }
 
 void DefaultVideoQualityAnalyzer::ProcessComparisons() {
@@ -715,9 +714,9 @@ void DefaultVideoQualityAnalyzer::ProcessComparisons() {
       continue;
     }
 
-    StartExcludingCpuThreadTime();
+    cpu_measurer_.StartExcludingCpuThreadTime();
     ProcessComparison(comparison.value());
-    StopExcludingCpuThreadTime();
+    cpu_measurer_.StopExcludingCpuThreadTime();
   }
 }
 
@@ -1001,31 +1000,8 @@ std::string DefaultVideoQualityAnalyzer::StatsKeyToMetricName(
   return key.ToString();
 }
 
-void DefaultVideoQualityAnalyzer::StartMeasuringCpuProcessTime() {
-  MutexLock lock(&cpu_measurement_lock_);
-  cpu_time_ -= rtc::GetProcessCpuTimeNanos();
-  wallclock_time_ -= rtc::SystemTimeNanos();
-}
-
-void DefaultVideoQualityAnalyzer::StopMeasuringCpuProcessTime() {
-  MutexLock lock(&cpu_measurement_lock_);
-  cpu_time_ += rtc::GetProcessCpuTimeNanos();
-  wallclock_time_ += rtc::SystemTimeNanos();
-}
-
-void DefaultVideoQualityAnalyzer::StartExcludingCpuThreadTime() {
-  MutexLock lock(&cpu_measurement_lock_);
-  cpu_time_ += rtc::GetThreadCpuTimeNanos();
-}
-
-void DefaultVideoQualityAnalyzer::StopExcludingCpuThreadTime() {
-  MutexLock lock(&cpu_measurement_lock_);
-  cpu_time_ -= rtc::GetThreadCpuTimeNanos();
-}
-
 double DefaultVideoQualityAnalyzer::GetCpuUsagePercent() {
-  MutexLock lock(&cpu_measurement_lock_);
-  return static_cast<double>(cpu_time_) / wallclock_time_ * 100.0;
+  return cpu_measurer_.GetCpuUsagePercent();
 }
 
 uint16_t DefaultVideoQualityAnalyzer::StreamState::PopFront(size_t peer) {
