@@ -115,9 +115,10 @@ class WebRtcRecordableEncodedFrame : public RecordableEncodedFrame {
 // but logs messages to LS_ERROR.
 class NullVideoDecoder : public webrtc::VideoDecoder {
  public:
-  bool Configure(const Settings& settings) override {
+  int32_t InitDecode(const webrtc::VideoCodec* codec_settings,
+                     int32_t number_of_cores) override {
     RTC_LOG(LS_ERROR) << "Can't initialize NullVideoDecoder.";
-    return true;
+    return WEBRTC_VIDEO_CODEC_OK;
   }
 
   int32_t Decode(const webrtc::EncodedImage& input_image,
