@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray.ext
 
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 
 fun TabSessionState.isActive(maxActiveTime: Long): Boolean {
     val lastActiveTime = maxOf(lastAccess, createdAt)
@@ -53,3 +54,8 @@ internal fun TabSessionState.isNormalTabInactive(maxActiveTime: Long): Boolean {
 internal fun TabSessionState.isNormalTab(): Boolean {
     return !content.private
 }
+
+/**
+ * Returns a [String] for displaying a [TabSessionState]'s title or its url when a title is not available.
+ */
+fun TabSessionState.toDisplayTitle(): String = content.title.ifEmpty { content.url.take(MAX_URI_LENGTH) }

@@ -6,6 +6,8 @@ package org.mozilla.fenix.tabstray.browser
 
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.TabSessionState
 import org.junit.Test
 
 class DefaultInactiveTabsInteractorTest {
@@ -38,5 +40,37 @@ class DefaultInactiveTabsInteractorTest {
         interactor.onEnabledAutoCloseClicked()
 
         verify { controller.enableAutoClosed() }
+    }
+
+    @Test
+    fun `WHEN an inactive tab is clicked THEN open the tab`() {
+        val controller: InactiveTabsController = mockk(relaxed = true)
+        val interactor = DefaultInactiveTabsInteractor(controller)
+        val tab = TabSessionState(
+            id = "tabId",
+            content = ContentState(
+                url = "www.mozilla.com",
+            )
+        )
+
+        interactor.onTabClicked(tab)
+
+        verify { controller.openInactiveTab(tab) }
+    }
+
+    @Test
+    fun `WHEN an inactive tab is clicked to be closed THEN close the tab`() {
+        val controller: InactiveTabsController = mockk(relaxed = true)
+        val interactor = DefaultInactiveTabsInteractor(controller)
+        val tab = TabSessionState(
+            id = "tabId",
+            content = ContentState(
+                url = "www.mozilla.com",
+            )
+        )
+
+        interactor.onTabClosed(tab)
+
+        verify { controller.closeInactiveTab(tab) }
     }
 }

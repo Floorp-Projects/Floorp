@@ -6,43 +6,50 @@ package org.mozilla.fenix.tabstray.viewholders
 
 import android.content.Context
 import android.view.View
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.selectedNormalTab
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.ext.maxActiveTime
+import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.browser.containsTabId
-import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.tabstray.ext.browserAdapter
 import org.mozilla.fenix.tabstray.ext.defaultBrowserLayoutColumns
 import org.mozilla.fenix.tabstray.ext.getNormalTrayTabs
-import org.mozilla.fenix.ext.potentialInactiveTabs
-import org.mozilla.fenix.tabstray.ext.titleHeaderAdapter
 import org.mozilla.fenix.tabstray.ext.inactiveTabsAdapter
 import org.mozilla.fenix.tabstray.ext.isNormalTabActiveWithSearchTerm
 import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
 import org.mozilla.fenix.tabstray.ext.observeFirstInsert
 import org.mozilla.fenix.tabstray.ext.tabGroupAdapter
+import org.mozilla.fenix.tabstray.ext.titleHeaderAdapter
 
 /**
  * View holder for the normal tabs tray list.
  */
 class NormalBrowserPageViewHolder(
     containerView: View,
+    private val lifecycleOwner: LifecycleOwner,
     private val tabsTrayStore: TabsTrayStore,
     private val browserStore: BrowserStore,
     private val appStore: AppStore,
     interactor: TabsTrayInteractor,
 ) : AbstractBrowserPageViewHolder(containerView, tabsTrayStore, interactor), SelectionHolder<TabSessionState> {
+
+    private var inactiveTabsSize = 0
 
     /**
      * Holds the list of selected tabs.
@@ -65,6 +72,8 @@ class NormalBrowserPageViewHolder(
         val manager = setupLayoutManager(containerView.context, concatAdapter)
         browserAdapter.selectionHolder = this
         tabGroupAdapter.selectionHolder = this
+
+        observeTabsTrayInactiveTabsState(adapter)
 
         super.bind(adapter, manager)
     }
@@ -98,11 +107,9 @@ class NormalBrowserPageViewHolder(
             appStore.dispatch(AppAction.UpdateInactiveExpanded(true))
 
             inactiveTabAdapter.observeFirstInsert {
-                inactiveTabsList.forEachIndexed { tabIndex, item ->
+                inactiveTabsList.forEach { item ->
                     if (item.id == selectedTab.id) {
-                        // Inactive Tabs are first + inactive header item.
-                        val indexToScrollTo = tabIndex + 1
-                        layoutManager.scrollToPosition(indexToScrollTo)
+                        containerView.post { layoutManager.scrollToPosition(0) }
 
                         return@observeFirstInsert
                     }
@@ -132,7 +139,7 @@ class NormalBrowserPageViewHolder(
 
                         // Index is based on tabs above (inactive) with our calculated index.
                         val indexToScrollTo = inactiveTabAdapter.itemCount + groupIndex
-                        layoutManager.scrollToPosition(indexToScrollTo)
+                        containerView.post { layoutManager.scrollToPosition(indexToScrollTo) }
 
                         if (focusGroupTabId != null) {
                             tabsTrayStore.dispatch(TabsTrayAction.ConsumeFocusGroupTabId)
@@ -158,12 +165,30 @@ class NormalBrowserPageViewHolder(
                             tabGroupAdapter.itemCount +
                             headerAdapter.itemCount + tabIndex
 
-                        layoutManager.scrollToPosition(indexToScrollTo)
+                        containerView.post { layoutManager.scrollToPosition(indexToScrollTo) }
 
                         return@observeFirstInsert
                     }
                 }
             }
+        }
+    }
+
+    // Temporary hack until https://github.com/mozilla-mobile/fenix/issues/21901 where the
+    // logic that shows/hides the "Your open tabs will be shown here." message will no longer be derived
+    // from adapters, view holders, and item counts.
+    override fun showTrayList(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>): Boolean {
+        return inactiveTabsSize > 0 || adapter.itemCount > 1 // InactiveTabsAdapter will always return 1
+    }
+
+    private fun observeTabsTrayInactiveTabsState(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>) {
+        tabsTrayStore.flowScoped(lifecycleOwner) { flow ->
+            flow.map { state -> state.inactiveTabs }
+                .ifChanged()
+                .collect { inactiveTabs ->
+                    inactiveTabsSize = inactiveTabs.size
+                    updateTrayVisibility(showTrayList(adapter))
+                }
         }
     }
 

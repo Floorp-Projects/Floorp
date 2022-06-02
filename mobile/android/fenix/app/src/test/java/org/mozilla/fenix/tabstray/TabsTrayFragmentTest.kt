@@ -213,6 +213,7 @@ class TabsTrayFragmentTest {
     @Test
     fun `WHEN setupPager is called THEN it sets the tray adapter and disables user initiated scrolling`() {
         val store: TabsTrayStore = mockk()
+        val lifecycleOwner = mockk<LifecycleOwner>(relaxed = true)
         val trayInteractor: TabsTrayInteractor = mockk()
         val browserInteractor: BrowserTrayInteractor = mockk()
         val navigationInteractor: NavigationInteractor = mockk()
@@ -220,13 +221,19 @@ class TabsTrayFragmentTest {
         every { context.components.core.store } returns browserStore
 
         fragment.setupPager(
-            context, store, trayInteractor, browserInteractor, navigationInteractor
+            context = context,
+            lifecycleOwner = lifecycleOwner,
+            store = store,
+            trayInteractor = trayInteractor,
+            browserInteractor = browserInteractor,
+            navigationInteractor = navigationInteractor,
         )
 
         val adapter = (tabsTrayBinding.tabsTray.adapter as TrayPagerAdapter)
         assertSame(context, adapter.context)
+        assertSame(lifecycleOwner, adapter.lifecycleOwner)
         assertSame(store, adapter.tabsTrayStore)
-        assertSame(trayInteractor, adapter.interactor)
+        assertSame(trayInteractor, adapter.tabsTrayInteractor)
         assertSame(browserInteractor, adapter.browserInteractor)
         assertSame(navigationInteractor, adapter.navInteractor)
         assertSame(browserStore, adapter.browserStore)

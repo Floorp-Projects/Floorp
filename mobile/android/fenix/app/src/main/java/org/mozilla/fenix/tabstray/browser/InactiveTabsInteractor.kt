@@ -4,16 +4,32 @@
 
 package org.mozilla.fenix.tabstray.browser
 
+import mozilla.components.browser.state.state.TabSessionState
+
 /**
  * Interactor for all things related to inactive tabs in the tabs tray.
  */
 interface InactiveTabsInteractor : InactiveTabsAutoCloseDialogInteractor {
     /**
-     * Invoked when the header is tapped on.
+     * Invoked when the header is clicked.
      *
      * @param activated true when the tap should expand the inactive section.
      */
     fun onHeaderClicked(activated: Boolean)
+
+    /**
+     * Invoked when an inactive tab is clicked.
+     *
+     * @param tab [TabSessionState] that was clicked.
+     */
+    fun onTabClicked(tab: TabSessionState)
+
+    /**
+     * Invoked when an inactive tab is closed.
+     *
+     * @param tab [TabSessionState] that was closed.
+     */
+    fun onTabClosed(tab: TabSessionState)
 }
 
 /**
@@ -55,5 +71,19 @@ class DefaultInactiveTabsInteractor(
      */
     override fun onEnabledAutoCloseClicked() {
         controller.enableAutoClosed()
+    }
+
+    /**
+     * See [InactiveTabsInteractor.onTabClicked].
+     */
+    override fun onTabClicked(tab: TabSessionState) {
+        controller.openInactiveTab(tab)
+    }
+
+    /**
+     * See [InactiveTabsInteractor.onTabClosed].
+     */
+    override fun onTabClosed(tab: TabSessionState) {
+        controller.closeInactiveTab(tab)
     }
 }

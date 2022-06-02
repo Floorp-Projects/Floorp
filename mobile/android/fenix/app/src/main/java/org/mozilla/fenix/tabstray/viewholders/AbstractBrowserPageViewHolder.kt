@@ -5,10 +5,9 @@
 package org.mozilla.fenix.tabstray.viewholders
 
 import android.view.View
-import android.view.View.GONE
-import android.view.View.VISIBLE
 import android.widget.TextView
 import androidx.annotation.CallSuper
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
@@ -72,11 +71,11 @@ abstract class AbstractBrowserPageViewHolder(
         adapterRef?.let { adapter ->
             adapterObserver = object : RecyclerView.AdapterDataObserver() {
                 override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                    updateTrayVisibility(adapter.itemCount)
+                    updateTrayVisibility(showTrayList(adapter))
                 }
 
                 override fun onItemRangeRemoved(positionstart: Int, itemcount: Int) {
-                    updateTrayVisibility(adapter.itemCount)
+                    updateTrayVisibility(showTrayList(adapter))
                 }
             }
             adapterObserver?.let {
@@ -97,14 +96,18 @@ abstract class AbstractBrowserPageViewHolder(
             adapterObserver = null
         }
     }
+    /**
+     * A way for an implementor of [AbstractBrowserPageViewHolder] to define their own behavior of
+     * when to show/hide the tray list and empty list UI.
+     */
+    open fun showTrayList(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>): Boolean =
+        adapter.itemCount > 0
 
-    private fun updateTrayVisibility(size: Int) {
-        if (size == 0) {
-            trayList.visibility = GONE
-            emptyList.visibility = VISIBLE
-        } else {
-            trayList.visibility = VISIBLE
-            emptyList.visibility = GONE
-        }
+    /**
+     * Helper function used to toggle the visibility of the tabs tray lists and the empty list message.
+     */
+    fun updateTrayVisibility(showTrayList: Boolean) {
+        trayList.isVisible = showTrayList
+        emptyList.isVisible = !showTrayList
     }
 }

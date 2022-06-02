@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -228,11 +229,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
         setupMenu(navigationInteractor)
         setupPager(
-            view.context,
-            tabsTrayStore,
-            tabsTrayInteractor,
-            browserTrayInteractor,
-            navigationInteractor
+            context = view.context,
+            lifecycleOwner = viewLifecycleOwner,
+            store = tabsTrayStore,
+            trayInteractor = tabsTrayInteractor,
+            browserInteractor = browserTrayInteractor,
+            navigationInteractor = navigationInteractor,
         )
 
         setupBackgroundDismissalListener {
@@ -467,8 +469,10 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     }
 
     @VisibleForTesting
+    @Suppress("LongParameterList")
     internal fun setupPager(
         context: Context,
+        lifecycleOwner: LifecycleOwner,
         store: TabsTrayStore,
         trayInteractor: TabsTrayInteractor,
         browserInteractor: BrowserTrayInteractor,
@@ -476,13 +480,14 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     ) {
         tabsTrayBinding.tabsTray.apply {
             adapter = TrayPagerAdapter(
-                context,
-                store,
-                browserInteractor,
-                navigationInteractor,
-                trayInteractor,
-                requireComponents.core.store,
-                requireComponents.appStore,
+                context = context,
+                lifecycleOwner = lifecycleOwner,
+                tabsTrayStore = store,
+                browserInteractor = browserInteractor,
+                navInteractor = navigationInteractor,
+                tabsTrayInteractor = trayInteractor,
+                browserStore = requireComponents.core.store,
+                appStore = requireComponents.appStore,
             )
             isUserInputEnabled = false
         }

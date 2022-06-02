@@ -4,31 +4,50 @@
 
 package org.mozilla.fenix.tabstray.browser
 
-import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.tabstray.TabsTray
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.GleanMetrics.TabsTray as TabsTrayMetrics
 import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.UpdateInactiveExpanded
-import org.mozilla.fenix.tabstray.TabsTrayStore
+import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.INACTIVE_TABS_FEATURE_NAME
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.GleanMetrics.TabsTray as TabsTrayMetrics
 
+/**
+ * Default behavior for handling all user interactions with the Inactive Tabs feature.
+ *
+ * @param appStore [AppStore] used to dispatch any [AppAction].
+ * @param settings [Settings] used to update any user preferences.
+ * @param browserInteractor [BrowserTrayInteractor] used to respond to interactions with specific inactive tabs.
+ */
 class InactiveTabsController(
-    private val tabsTrayStore: TabsTrayStore,
     private val appStore: AppStore,
-    private val tray: TabsTray,
-    private val settings: Settings
+    private val settings: Settings,
+    private val browserInteractor: BrowserTrayInteractor,
 ) {
+
+    /**
+     * Opens the given inactive tab.
+     */
+    fun openInactiveTab(tab: TabSessionState) {
+        TabsTrayMetrics.openInactiveTab.add()
+        browserInteractor.onTabSelected(tab, INACTIVE_TABS_FEATURE_NAME)
+    }
+
+    /**
+     * Closes the given inactive tab.
+     */
+    fun closeInactiveTab(tab: TabSessionState) {
+        TabsTrayMetrics.closeInactiveTab.add()
+        browserInteractor.onTabClosed(tab, INACTIVE_TABS_FEATURE_NAME)
+    }
+
     /**
      * Updates the inactive card to be expanded to display all the tabs, or collapsed with only
      * the title showing.
      */
     fun updateCardExpansion(isExpanded: Boolean) {
-        appStore.dispatch(UpdateInactiveExpanded(isExpanded)).invokeOnCompletion {
-            // To avoid racing, we read the list of inactive tabs only after we have updated
-            // the expanded state.
-            refreshInactiveTabsSection()
-        }
+        appStore.dispatch(UpdateInactiveExpanded(isExpanded))
 
         when (isExpanded) {
             true -> TabsTrayMetrics.inactiveTabsExpanded.record(NoExtras())
@@ -41,7 +60,6 @@ class InactiveTabsController(
      */
     fun close() {
         markDialogAsShown()
-        refreshInactiveTabsSection()
         TabsTrayMetrics.autoCloseDimissed.record(NoExtras())
     }
 
@@ -54,7 +72,6 @@ class InactiveTabsController(
         settings.closeTabsAfterOneWeek = false
         settings.closeTabsAfterOneDay = false
         settings.manuallyCloseTabs = false
-        refreshInactiveTabsSection()
         TabsTrayMetrics.autoCloseTurnOnClicked.record(NoExtras())
     }
 
@@ -63,11 +80,5 @@ class InactiveTabsController(
      */
     private fun markDialogAsShown() {
         settings.hasInactiveTabsAutoCloseDialogBeenDismissed = true
-    }
-
-    @VisibleForTesting
-    internal fun refreshInactiveTabsSection() {
-        val tabs = tabsTrayStore.state.inactiveTabs
-        tray.updateTabs(tabs, null, null)
     }
 }
