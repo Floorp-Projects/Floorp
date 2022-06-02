@@ -59,9 +59,8 @@ class VideoReceiver : public Module {
   VideoReceiver(Clock* clock, VCMTiming* timing);
   ~VideoReceiver() override;
 
-  int32_t RegisterReceiveCodec(uint8_t payload_type,
-                               const VideoCodec* receiveCodec,
-                               int32_t numberOfCores);
+  bool RegisterReceiveCodec(uint8_t payload_type,
+                            const VideoDecoder::Settings& settings);
 
   void RegisterExternalDecoder(VideoDecoder* externalDecoder,
                                uint8_t payloadType);

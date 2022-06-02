@@ -48,19 +48,17 @@ bool VCMDecoderDataBase::IsExternalDecoderRegistered(
          decoders_.find(payload_type) != decoders_.end();
 }
 
-bool VCMDecoderDataBase::RegisterReceiveCodec(uint8_t payload_type,
-                                              const VideoCodec& receive_codec,
-                                              int number_of_cores) {
-  if (number_of_cores < 0) {
+bool VCMDecoderDataBase::RegisterReceiveCodec(
+    uint8_t payload_type,
+    const VideoDecoder::Settings& settings) {
+  if (settings.number_of_cores() < 0) {
     return false;
   }
   // If payload value already exists, erase old and insert new.
   if (payload_type == current_payload_type_) {
     current_payload_type_ = absl::nullopt;
   }
-  auto& entry = decoder_settings_[payload_type];
-  entry.settings = receive_codec;
-  entry.number_of_cores = number_of_cores;
+  decoder_settings_[payload_type] = settings;
   return true;
 }
 
@@ -127,16 +125,14 @@ void VCMDecoderDataBase::CreateAndInitDecoder(const VCMEncodedFrame& frame) {
   // the first frame being of a different resolution than the database values.
   // This is best effort, since there's no guarantee that width/height have been
   // parsed yet (and may be zero).
-  if (frame.EncodedImage()._encodedWidth > 0 &&
-      frame.EncodedImage()._encodedHeight > 0) {
-    decoder_item->second.settings.width = frame.EncodedImage()._encodedWidth;
-    decoder_item->second.settings.height = frame.EncodedImage()._encodedHeight;
+  RenderResolution frame_resolution(frame.EncodedImage()._encodedWidth,
+                                    frame.EncodedImage()._encodedHeight);
+  if (frame_resolution.Valid()) {
+    decoder_item->second.set_max_render_resolution(frame_resolution);
   }
-  int err = current_decoder_->InitDecode(&decoder_item->second.settings,
-                                         decoder_item->second.number_of_cores);
-  if (err < 0) {
+  if (!current_decoder_->Configure(decoder_item->second)) {
     current_decoder_ = absl::nullopt;
-    RTC_LOG(LS_ERROR) << "Failed to initialize decoder. Error code: " << err;
+    RTC_LOG(LS_ERROR) << "Failed to initialize decoder.";
   }
 }
 
