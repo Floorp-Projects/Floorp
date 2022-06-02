@@ -796,6 +796,9 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
       config_.regather_on_failed_networks_interval_or_default();
   regathering_controller_->SetConfig(regathering_config);
 
+  config_.vpn_preference = config.vpn_preference;
+  allocator_->SetVpnPreference(config_.vpn_preference);
+
   ice_controller_->SetIceConfig(config_);
 
   RTC_DCHECK(ValidateIceConfig(config_).ok());

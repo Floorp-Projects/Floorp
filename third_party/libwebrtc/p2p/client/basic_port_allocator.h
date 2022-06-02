@@ -46,10 +46,7 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
 
   // Set to kDefaultNetworkIgnoreMask by default.
   void SetNetworkIgnoreMask(int network_ignore_mask) override;
-  int network_ignore_mask() const {
-    CheckRunOnValidThreadIfInitialized();
-    return network_ignore_mask_;
-  }
+  int GetNetworkIgnoreMask() const;
 
   rtc::NetworkManager* network_manager() const {
     CheckRunOnValidThreadIfInitialized();

@@ -400,6 +400,12 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   // loopback interfaces.
   virtual void SetNetworkIgnoreMask(int network_ignore_mask) = 0;
 
+  // Set whether VPN connections should be preferred, avoided, mandated or
+  // blocked.
+  virtual void SetVpnPreference(webrtc::VpnPreference preference) {
+    vpn_preference_ = preference;
+  }
+
   std::unique_ptr<PortAllocatorSession> CreateSession(
       const std::string& content_name,
       int component,
@@ -638,6 +644,7 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   uint32_t candidate_filter_;
   std::string origin_;
   webrtc::SequenceChecker thread_checker_;
+  webrtc::VpnPreference vpn_preference_ = webrtc::VpnPreference::kDefault;
 
  private:
   ServerAddresses stun_servers_;
