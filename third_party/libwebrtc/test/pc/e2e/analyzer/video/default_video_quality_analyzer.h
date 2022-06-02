@@ -29,6 +29,7 @@
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/clock.h"
+#include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_internal_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/multi_head_queue.h"
 #include "test/testsupport/perf_test.h"
@@ -113,73 +114,6 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   double GetCpuUsagePercent();
 
  private:
-  // Final stats computed for frame after it went through the whole video
-  // pipeline from capturing to rendering or dropping.
-  struct FrameStats {
-    FrameStats(Timestamp captured_time) : captured_time(captured_time) {}
-
-    // Frame events timestamp.
-    Timestamp captured_time;
-    Timestamp pre_encode_time = Timestamp::MinusInfinity();
-    Timestamp encoded_time = Timestamp::MinusInfinity();
-    // Time when last packet of a frame was received.
-    Timestamp received_time = Timestamp::MinusInfinity();
-    Timestamp decode_start_time = Timestamp::MinusInfinity();
-    Timestamp decode_end_time = Timestamp::MinusInfinity();
-    Timestamp rendered_time = Timestamp::MinusInfinity();
-    Timestamp prev_frame_rendered_time = Timestamp::MinusInfinity();
-
-    int64_t encoded_image_size = 0;
-    uint32_t target_encode_bitrate = 0;
-
-    absl::optional<int> rendered_frame_width = absl::nullopt;
-    absl::optional<int> rendered_frame_height = absl::nullopt;
-
-    // Can be not set if frame was dropped by encoder.
-    absl::optional<StreamCodecInfo> used_encoder = absl::nullopt;
-    // Can be not set if frame was dropped in the network.
-    absl::optional<StreamCodecInfo> used_decoder = absl::nullopt;
-  };
-
-  // Describes why comparison was done in overloaded mode (without calculating
-  // PSNR and SSIM).
-  enum class OverloadReason {
-    kNone,
-    // Not enough CPU to process all incoming comparisons.
-    kCpu,
-    // Not enough memory to store captured frames for all comparisons.
-    kMemory
-  };
-
-  // Represents comparison between two VideoFrames. Contains video frames itself
-  // and stats. Can be one of two types:
-  //   1. Normal - in this case `captured` is presented and either `rendered` is
-  //      presented and `dropped` is false, either `rendered` is omitted and
-  //      `dropped` is true.
-  //   2. Overloaded - in this case both `captured` and `rendered` are omitted
-  //      because there were too many comparisons in the queue. `dropped` can be
-  //      true or false showing was frame dropped or not.
-  struct FrameComparison {
-    FrameComparison(InternalStatsKey stats_key,
-                    absl::optional<VideoFrame> captured,
-                    absl::optional<VideoFrame> rendered,
-                    bool dropped,
-                    FrameStats frame_stats,
-                    OverloadReason overload_reason);
-
-    InternalStatsKey stats_key;
-    // Frames can be omitted if there too many computations waiting in the
-    // queue.
-    absl::optional<VideoFrame> captured;
-    absl::optional<VideoFrame> rendered;
-    // If true frame was dropped somewhere from capturing to rendering and
-    // wasn't rendered on remote peer side. If `dropped` is true, `rendered`
-    // will be `absl::nullopt`.
-    bool dropped;
-    FrameStats frame_stats;
-    OverloadReason overload_reason;
-  };
-
   // Represents a current state of video stream.
   class StreamState {
    public:

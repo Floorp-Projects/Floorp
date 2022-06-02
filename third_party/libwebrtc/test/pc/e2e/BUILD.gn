@@ -444,6 +444,7 @@ if (!build_with_chromium) {
       deps = [
         ":default_audio_quality_analyzer",
         ":default_video_quality_analyzer",
+        ":default_video_quality_analyzer_shared",
         ":network_quality_metrics_reporter",
         ":stats_based_network_quality_metrics_reporter",
         "../../../api:callfactory_api",
@@ -502,6 +503,7 @@ if (!build_with_chromium) {
       sources = [ "analyzer/video/default_video_quality_analyzer_test.cc" ]
       deps = [
         ":default_video_quality_analyzer",
+        ":default_video_quality_analyzer_shared",
         "../..:test_support",
         "../../../api:create_frame_generator",
         "../../../api:rtp_packet_info",
@@ -617,11 +619,11 @@ if (!build_with_chromium) {
     sources = [
       "analyzer/video/default_video_quality_analyzer.cc",
       "analyzer/video/default_video_quality_analyzer.h",
-      "analyzer/video/default_video_quality_analyzer_shared_objects.cc",
-      "analyzer/video/default_video_quality_analyzer_shared_objects.h",
     ]
 
     deps = [
+      ":default_video_quality_analyzer_internal",
+      ":default_video_quality_analyzer_shared",
       ":multi_head_queue",
       "../..:perf_test",
       "../../../api:array_view",
@@ -645,6 +647,46 @@ if (!build_with_chromium) {
       "../../../rtc_tools:video_quality_analysis",
       "../../../system_wrappers",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
+  # This target contains implementation details of DefaultVideoQualityAnalyzer,
+  # so headers exported by it shouldn't be used in other places.
+  rtc_library("default_video_quality_analyzer_internal") {
+    visibility = [ ":default_video_quality_analyzer" ]
+
+    testonly = true
+    sources = [
+      "analyzer/video/default_video_quality_analyzer_internal_shared_objects.cc",
+      "analyzer/video/default_video_quality_analyzer_internal_shared_objects.h",
+    ]
+
+    deps = [
+      ":default_video_quality_analyzer_shared",
+      "../../../api/numerics:numerics",
+      "../../../api/units:timestamp",
+      "../../../api/video:video_frame",
+      "../../../rtc_base:stringutils",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
+  rtc_library("default_video_quality_analyzer_shared") {
+    visibility = [ "*" ]
+
+    testonly = true
+    sources = [
+      "analyzer/video/default_video_quality_analyzer_shared_objects.cc",
+      "analyzer/video/default_video_quality_analyzer_shared_objects.h",
+    ]
+
+    deps = [
+      "../../../api/numerics:numerics",
+      "../../../api/units:timestamp",
+      "../../../rtc_base:checks",
+      "../../../rtc_base:stringutils",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 
   rtc_library("network_quality_metrics_reporter") {
