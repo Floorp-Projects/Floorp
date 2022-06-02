@@ -1348,6 +1348,32 @@ TEST_F(RtpSenderVideoWithFrameTransformerTest,
                                      kDefaultExpectedRetransmissionTimeMs);
 }
 
+#if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
+TEST_F(RtpSenderVideoWithFrameTransformerTest, ValidPayloadTypes) {
+  rtc::scoped_refptr<MockFrameTransformer> mock_frame_transformer =
+      new rtc::RefCountedObject<NiceMock<MockFrameTransformer>>();
+  std::unique_ptr<RTPSenderVideo> rtp_sender_video =
+      CreateSenderWithFrameTransformer(mock_frame_transformer);
+  auto encoded_image = CreateDefaultEncodedImage();
+  RTPVideoHeader video_header;
+
+  EXPECT_TRUE(rtp_sender_video->SendEncodedImage(
+      0, kType, kTimestamp, *encoded_image, video_header,
+      kDefaultExpectedRetransmissionTimeMs));
+  EXPECT_TRUE(rtp_sender_video->SendEncodedImage(
+      127, kType, kTimestamp, *encoded_image, video_header,
+      kDefaultExpectedRetransmissionTimeMs));
+  EXPECT_DEATH(rtp_sender_video->SendEncodedImage(
+                   -1, kType, kTimestamp, *encoded_image, video_header,
+                   kDefaultExpectedRetransmissionTimeMs),
+               "");
+  EXPECT_DEATH(rtp_sender_video->SendEncodedImage(
+                   128, kType, kTimestamp, *encoded_image, video_header,
+                   kDefaultExpectedRetransmissionTimeMs),
+               "");
+}
+#endif
+
 TEST_F(RtpSenderVideoWithFrameTransformerTest, OnTransformedFrameSendsVideo) {
   rtc::scoped_refptr<MockFrameTransformer> mock_frame_transformer =
       new rtc::RefCountedObject<NiceMock<MockFrameTransformer>>();
