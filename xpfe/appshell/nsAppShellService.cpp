@@ -654,7 +654,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
 #if defined(XP_WIN)
   if (widgetInitData.mWindowType == eWindowType_toplevel ||
       widgetInitData.mWindowType == eWindowType_dialog)
-    widgetInitData.clipChildren = true;
+    widgetInitData.mClipChildren = true;
 #endif
 
   // note default chrome overrides other OS chrome settings, but
