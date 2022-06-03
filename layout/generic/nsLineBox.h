@@ -1642,8 +1642,6 @@ class nsLineIterator final : public nsILineIterator {
     }
   }
 
-  void DisposeLineIterator() final {}
-
   int32_t GetNumLines() const final {
     if (mNumLines < 0) {
       mNumLines = int32_t(mLines.size());  // This is O(N) in number of lines!

@@ -7,6 +7,7 @@
 #define nsILineIterator_h___
 
 #include "nscore.h"
+#include "nsINode.h"
 #include "nsRect.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Result.h"
@@ -20,16 +21,16 @@ class nsIFrame;
  * the bottom line.
  *
  * Obtain this interface from frames via nsIFrame::GetLineIterator.
- * When you are finished using the iterator, call DisposeLineIterator()
- * to destroy the iterator if appropriate.
+ * This iterator belongs to the frame from which it was obtained, and should
+ * not be deleted by the caller.
+ * Note that any modification of the frame will invalidate the iterator!
+ * Users must get a new iterator any time the target may have been touched.
  */
 class nsILineIterator {
  protected:
   ~nsILineIterator() = default;
 
  public:
-  virtual void DisposeLineIterator() = 0;
-
   /**
    * The number of lines in the block
    */
@@ -89,31 +90,17 @@ class nsILineIterator {
                             nsIFrame** aLastVisual) = 0;
 };
 
-class nsAutoLineIterator {
+/**
+ * Helper intended to be used in a scope where we're using an nsILineIterator
+ * and want to verify that no DOM mutations (which would invalidate the
+ * iterator) occur while we're using it.
+ */
+class MOZ_STACK_CLASS AutoAssertNoDomMutations final {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  nsMutationGuard mGuard;
+#endif
  public:
-  nsAutoLineIterator() : mRawPtr(nullptr) {}
-  MOZ_IMPLICIT nsAutoLineIterator(nsILineIterator* i) : mRawPtr(i) {}
-
-  ~nsAutoLineIterator() {
-    if (mRawPtr) mRawPtr->DisposeLineIterator();
-  }
-
-  operator const nsILineIterator*() const { return mRawPtr; }
-  operator nsILineIterator*() { return mRawPtr; }
-  const nsILineIterator* operator->() const { return mRawPtr; }
-  nsILineIterator* operator->() { return mRawPtr; }
-
-  nsILineIterator* operator=(nsILineIterator* i) {
-    if (i == mRawPtr) return i;
-
-    if (mRawPtr) mRawPtr->DisposeLineIterator();
-
-    mRawPtr = i;
-    return i;
-  }
-
- private:
-  nsILineIterator* mRawPtr;
+  ~AutoAssertNoDomMutations() { MOZ_DIAGNOSTIC_ASSERT(!mGuard.Mutated(0)); }
 };
 
 #endif /* nsILineIterator_h___ */
