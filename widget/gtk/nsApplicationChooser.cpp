@@ -11,6 +11,7 @@
 #include "WidgetUtils.h"
 #include "nsIMIMEInfo.h"
 #include "nsIWidget.h"
+#include "nsIFile.h"
 #include "nsCExternalHandlerService.h"
 #include "nsComponentManagerUtils.h"
 #include "nsGtkUtils.h"

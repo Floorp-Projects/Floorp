@@ -8,10 +8,10 @@
 #include "mozilla/widget/PlatformWidgetTypes.h"
 
 #include "InProcessGtkCompositorWidget.h"
+#include "VsyncDispatcher.h"
 #include "nsWindow.h"
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 /* static */
 RefPtr<CompositorWidget> CompositorWidget::CreateLocal(
@@ -41,5 +41,4 @@ void InProcessGtkCompositorWidget::ObserveVsync(VsyncObserver* aObserver) {
   }
 }
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget
