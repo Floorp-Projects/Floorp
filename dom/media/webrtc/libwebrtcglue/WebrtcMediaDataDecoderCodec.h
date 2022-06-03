@@ -31,8 +31,7 @@ class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
  public:
   explicit WebrtcMediaDataDecoder(nsACString& aCodecMimeType);
 
-  int32_t InitDecode(const webrtc::VideoCodec* codecSettings,
-                     int32_t numberOfCores) override;
+  bool Configure(const webrtc::VideoDecoder::Settings& settings) override;
 
   int32_t Decode(const webrtc::EncodedImage& inputImage, bool missingFrames,
                  int64_t renderTimeMs = -1) override;
