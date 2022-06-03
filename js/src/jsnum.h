@@ -70,8 +70,7 @@ extern bool IsInteger(double d);
  * Convert an integer or double (contained in the given value) to a string and
  * append to the given buffer.
  */
-[[nodiscard]] extern bool NumberValueToStringBuffer(JSContext* cx,
-                                                    const Value& v,
+[[nodiscard]] extern bool NumberValueToStringBuffer(const Value& v,
                                                     StringBuffer& sb);
 
 extern JSLinearString* IndexToString(JSContext* cx, uint32_t index);
