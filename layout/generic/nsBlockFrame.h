@@ -206,6 +206,7 @@ class nsBlockFrame : public nsContainerFrame {
       ClearLineCursorForQuery();
       RemoveStateBits(NS_BLOCK_HAS_LINE_CURSOR);
     }
+    RemoveProperty(LineIteratorProperty());
   }
   void ClearLineCursorForDisplay() {
     RemoveProperty(LineCursorPropertyDisplay());
@@ -865,6 +866,8 @@ class nsBlockFrame : public nsContainerFrame {
                            ReflowOutput& aMetrics, nscoord aLineTop);
 
   //----------------------------------------
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(LineIteratorProperty, nsLineIterator);
 
   bool CanProvideLineIterator() const final { return true; }
   nsILineIterator* GetLineIterator() final;

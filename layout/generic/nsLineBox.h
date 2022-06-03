@@ -1641,9 +1641,8 @@ class nsLineIterator final : public nsILineIterator {
       mIndex = 0;
     }
   }
-  ~nsLineIterator() { MOZ_DIAGNOSTIC_ASSERT(!mMutationGuard.Mutated(0)); };
 
-  void DisposeLineIterator() final { delete this; }
+  void DisposeLineIterator() final {}
 
   int32_t GetNumLines() const final {
     if (mNumLines < 0) {
@@ -1675,13 +1674,32 @@ class nsLineIterator final : public nsILineIterator {
     MOZ_ASSERT(mIter != mLines.end(), "Already at end!");
     ++mIndex;
     ++mIter;
-    return mIter == mLines.end() ? nullptr : mIter.get();
+    if (mIter == mLines.end()) {
+      MOZ_ASSERT(mNumLines < 0 || mNumLines == mIndex);
+      mNumLines = mIndex;
+      return nullptr;
+    }
+    return mIter.get();
   }
 
-  // Note that this may update the iterator's current position!
+  // Note that this updates the iterator's current position to the given line.
   const nsLineBox* GetLineAt(int32_t aIndex) {
+    MOZ_ASSERT(mIndex >= 0);
     if (aIndex < 0 || (mNumLines >= 0 && aIndex >= mNumLines)) {
       return nullptr;
+    }
+    // Check if we should start counting lines from mIndex, or reset to the
+    // start or end of the list and count from there (if the requested index is
+    // closer to an end than to the current position).
+    if (aIndex < mIndex / 2) {
+      // Reset to the beginning and search from there.
+      mIter = mLines.begin();
+      mIndex = 0;
+    } else if (mNumLines > 0 && aIndex > (mNumLines + mIndex) / 2) {
+      // Jump to the end and search back from there.
+      mIter = mLines.end();
+      --mIter;
+      mIndex = mNumLines - 1;
     }
     while (mIndex > aIndex) {
       // This cannot run past the start of the list, because we checked that
@@ -1694,6 +1712,8 @@ class nsLineIterator final : public nsILineIterator {
       // range (if mNumLines was not initialized, so we couldn't range-check
       // aIndex on entry).
       if (mIter == mLines.end()) {
+        MOZ_ASSERT(mNumLines < 0 || mNumLines == mIndex);
+        mNumLines = mIndex;
         return nullptr;
       }
       ++mIter;
@@ -1707,9 +1727,6 @@ class nsLineIterator final : public nsILineIterator {
   int32_t mIndex = -1;
   mutable int32_t mNumLines = -1;
   const bool mRightToLeft;
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  nsMutationGuard mMutationGuard;
-#endif
 };
 
 #endif /* nsLineBox_h___ */
