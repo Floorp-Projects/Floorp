@@ -296,8 +296,11 @@
     <string name="preference_security_biometric">Paké sidik ramo pikeun muka konci app</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Sidik ramo anjeun bisa muka konci %1$s lamun aya URL nu geus dibuka dina appna. Nyiliwuri bakal dihurungkeun.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Sidik ramo anjeun bisa muka konci %1$s lamun aya URL nu geus dibuka dina appna. Nyiliwuri bakal dihurungkeun.</string>
+
+    <string name="preference_security_biometric_summary2">Buka konci maké sidik ramo upama anjeun geus nambahkeun Markah atawa upama hiji raramatloka geus muka di %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
