@@ -28,6 +28,7 @@
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ClassifierDummyChannelParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
+#include "mozilla/net/RemoteStreamGetter.h"
 #include "mozilla/net/RequestContextService.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/net/PSocketProcessBridgeParent.h"
@@ -860,15 +861,13 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetPageThumbStream(
 
   inputStreamPromise->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [aResolver](const nsCOMPtr<nsIInputStream>& aStream) {
-        aResolver(aStream);
-      },
+      [aResolver](const RemoteStreamInfo& aInfo) { aResolver(Some(aInfo)); },
       [aResolver](nsresult aRv) {
         // If NewStream failed, we send back an invalid stream to the child so
         // it can handle the error. MozPromise rejection is reserved for channel
         // errors/disconnects.
         Unused << NS_WARN_IF(NS_FAILED(aRv));
-        aResolver(nullptr);
+        aResolver(Nothing());
       });
 
   return IPC_OK();

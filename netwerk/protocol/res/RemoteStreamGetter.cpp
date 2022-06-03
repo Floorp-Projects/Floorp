@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemoteStreamGetter.h"
-
+#include "mozilla/MozPromise.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ResultExtensions.h"
@@ -25,8 +25,10 @@ RemoteStreamGetter::RemoteStreamGetter(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 
 // Request an input stream from the parent.
 RequestOrReason RemoteStreamGetter::GetAsync(nsIStreamListener* aListener,
-                                             nsIChannel* aChannel) {
+                                             nsIChannel* aChannel,
+                                             Method aMethod) {
   MOZ_ASSERT(IsNeckoChild());
+  MOZ_ASSERT(aMethod);
 
   mListener = aListener;
   mChannel = aChannel;
@@ -35,14 +37,11 @@ RequestOrReason RemoteStreamGetter::GetAsync(nsIStreamListener* aListener,
 
   RefPtr<RemoteStreamGetter> self = this;
 
-  // Request an input stream for this moz-page-thumb URI.
-  gNeckoChild->SendGetPageThumbStream(mURI)->Then(
+  (gNeckoChild->*aMethod)(mURI)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self](const RefPtr<nsIInputStream>& stream) {
-        self->OnStream(do_AddRef(stream));
-      },
+      [self](const Maybe<RemoteStreamInfo>& info) { self->OnStream(info); },
       [self](const mozilla::ipc::ResponseRejectReason) {
-        self->OnStream(nullptr);
+        self->OnStream(Nothing());
       });
   return RequestOrCancelable(WrapNotNull(cancelableRequest));
 }
@@ -77,17 +76,22 @@ void RemoteStreamGetter::CancelRequest(nsIStreamListener* aListener,
 }
 
 // Handle an input stream sent from the parent.
-void RemoteStreamGetter::OnStream(already_AddRefed<nsIInputStream> aStream) {
+void RemoteStreamGetter::OnStream(const Maybe<RemoteStreamInfo>& aStreamInfo) {
   MOZ_ASSERT(IsNeckoChild());
   MOZ_ASSERT(mChannel);
   MOZ_ASSERT(mListener);
 
-  nsCOMPtr<nsIInputStream> stream = std::move(aStream);
   nsCOMPtr<nsIChannel> channel = std::move(mChannel);
 
   // We must keep an owning reference to the listener until we pass it on
   // to AsyncRead.
   nsCOMPtr<nsIStreamListener> listener = mListener.forget();
+
+  if (aStreamInfo.isNothing()) {
+    // The parent didn't send us back a stream.
+    CancelRequest(listener, channel, NS_ERROR_FILE_ACCESS_DENIED);
+    return;
+  }
 
   if (mCanceled) {
     // The channel that has created this stream getter has been canceled.
@@ -95,9 +99,10 @@ void RemoteStreamGetter::OnStream(already_AddRefed<nsIInputStream> aStream) {
     return;
   }
 
+  nsCOMPtr<nsIInputStream> stream = std::move(aStreamInfo.ref().inputStream());
   if (!stream) {
-    // The parent didn't send us back a stream.
-    CancelRequest(listener, channel, NS_ERROR_FILE_ACCESS_DENIED);
+    // We somehow failed to get a stream, so just cancel the request.
+    CancelRequest(listener, channel, mStatus);
     return;
   }
 
@@ -109,6 +114,9 @@ void RemoteStreamGetter::OnStream(already_AddRefed<nsIInputStream> aStream) {
     CancelRequest(listener, channel, rv);
     return;
   }
+
+  channel->SetContentType(aStreamInfo.ref().contentType());
+  channel->SetContentLength(aStreamInfo.ref().contentLength());
 
   rv = pump->AsyncRead(listener);
   if (NS_FAILED(rv)) {
