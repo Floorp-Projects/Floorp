@@ -215,9 +215,8 @@ void JSONPrinter::floatProperty(const char* name, double value,
     return;
   }
 
-  // Note: NumberToCString does not use the |cx| argument for base 10.
   ToCStringBuf cbuf;
-  const char* str = NumberToCString(nullptr, &cbuf, value);
+  const char* str = NumberToCString(&cbuf, value);
   MOZ_ASSERT(str);
 
   property(name, str);

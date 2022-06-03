@@ -186,15 +186,12 @@ void NullaryNode::dumpImpl(ParserBase* parser, GenericPrinter& out,
 void NumericLiteral::dumpImpl(ParserBase* parser, GenericPrinter& out,
                               int indent) {
   ToCStringBuf cbuf;
-  const char* cstr = NumberToCString(nullptr, &cbuf, value());
+  const char* cstr = NumberToCString(&cbuf, value());
+  MOZ_ASSERT(cstr);
   if (!IsFinite(value())) {
     out.put("#");
   }
-  if (cstr) {
-    out.printf("%s", cstr);
-  } else {
-    out.printf("%g", value());
-  }
+  out.printf("%s", cstr);
 }
 
 void BigIntLiteral::dumpImpl(ParserBase* parser, GenericPrinter& out,

@@ -819,7 +819,7 @@ static bool AppendFunctionIndexName(uint32_t funcIndex, UTF8Bytes* bytes) {
   const char afterFuncIndex[] = "]";
 
   ToCStringBuf cbuf;
-  const char* funcIndexStr = NumberToCString(nullptr, &cbuf, funcIndex);
+  const char* funcIndexStr = NumberToCString(&cbuf, funcIndex);
   MOZ_ASSERT(funcIndexStr);
 
   return bytes->append(beforeFuncIndex, strlen(beforeFuncIndex)) &&
@@ -1159,7 +1159,7 @@ void Code::ensureProfilingLabels(bool profilingEnabled) const {
 
     ToCStringBuf cbuf;
     const char* bytecodeStr =
-        NumberToCString(nullptr, &cbuf, codeRange.funcLineOrBytecode());
+        NumberToCString(&cbuf, codeRange.funcLineOrBytecode());
     MOZ_ASSERT(bytecodeStr);
 
     UTF8Bytes name;
