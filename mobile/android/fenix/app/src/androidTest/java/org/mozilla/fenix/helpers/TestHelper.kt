@@ -14,6 +14,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import android.view.View
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.espresso.Espresso
@@ -36,6 +37,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import java.util.regex.Pattern
 import junit.framework.AssertionFailedError
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.ktx.android.content.appName
@@ -53,7 +55,6 @@ import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
 import org.mozilla.fenix.ui.robots.BrowserRobot
 import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.utils.IntentUtils
-import java.util.regex.Pattern
 
 object TestHelper {
 
@@ -232,6 +233,7 @@ object TestHelper {
                 intended(toPackage(appPackageName))
             } catch (e: AssertionFailedError) {
                 e.printStackTrace()
+                Log.e("TestLog", "intent to $appPackageName not sent or doesn't match")
             }
         } else {
             BrowserRobot().verifyUrl(url)

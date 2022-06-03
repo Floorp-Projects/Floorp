@@ -16,6 +16,7 @@ object Constants {
         const val PHONE_APP = "com.android.dialer"
     }
 
+    const val SPEECH_RECOGNITION = "android.speech.action.RECOGNIZE_SPEECH"
     const val LONG_CLICK_DURATION: Long = 5000
     const val LISTS_MAXSWIPES: Int = 3
 }
