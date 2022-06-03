@@ -1133,8 +1133,8 @@ bool PosixProcessLauncher::DoSetup() {
     nsCString new_dyld_lib_path(path.get());
     if (PR_GetEnv("MOZ_RUN_GTEST")) {
       new_dyld_lib_path = path + "/gtest:"_ns + new_dyld_lib_path;
+      mLaunchOptions->env_map["DYLD_LIBRARY_PATH"] = new_dyld_lib_path.get();
     }
-    mLaunchOptions->env_map["DYLD_LIBRARY_PATH"] = new_dyld_lib_path.get();
 
     // DYLD_INSERT_LIBRARIES is currently unused by default but we allow
     // it to be set by the external environment.
