@@ -713,7 +713,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             SearchSelectorToolbarAction(
                 store = store,
                 menu = searchSelectorMenu,
-                viewLifecycleOwner = viewLifecycleOwner
             )
         )
 

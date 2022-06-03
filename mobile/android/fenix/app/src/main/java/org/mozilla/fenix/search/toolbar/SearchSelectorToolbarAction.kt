@@ -9,21 +9,23 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.flow.collect
+import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.menu.Orientation
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import mozilla.components.support.ktx.android.view.toScope
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchDialogFragmentStore
-import java.lang.ref.WeakReference
 
 /**
  * A [Toolbar.Action] implementation that shows a [SearchSelector].
@@ -31,32 +33,17 @@ import java.lang.ref.WeakReference
  * @property store [SearchDialogFragmentStore] containing the complete state of the search dialog.
  * @property menu An instance of [SearchSelectorMenu] to display a popup menu for the search
  * selections.
- * @property viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
  */
 class SearchSelectorToolbarAction(
     private val store: SearchDialogFragmentStore,
     private val menu: SearchSelectorMenu,
-    private val viewLifecycleOwner: LifecycleOwner
 ) : Toolbar.Action {
-
-    private var reference = WeakReference<SearchSelector>(null)
+    private var updateIconJob: Job? = null
 
     override fun createView(parent: ViewGroup): View {
         val context = parent.context
 
-        store.flowScoped(viewLifecycleOwner) { flow ->
-            flow.map { state -> state.searchEngineSource.searchEngine }
-                .ifChanged()
-                .collect { searchEngine ->
-                    searchEngine?.let {
-                        updateIcon(context, it)
-                    }
-                }
-        }
-
         return SearchSelector(context).apply {
-            reference = WeakReference(this)
-
             setOnClickListener {
                 val orientation = if (context.settings().shouldUseBottomToolbar) {
                     Orientation.UP
@@ -74,19 +61,41 @@ class SearchSelectorToolbarAction(
         }
     }
 
-    override fun bind(view: View) = Unit
-
-    private fun updateIcon(context: Context, searchEngine: SearchEngine) {
-        val iconSize =
-            context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
-        val scaledIcon = Bitmap.createScaledBitmap(
-            searchEngine.icon,
-            iconSize,
-            iconSize,
-            true
-        )
-        val icon = BitmapDrawable(context.resources, scaledIcon)
-
-        reference.get()?.setIcon(icon, searchEngine.name)
+    override fun bind(view: View) {
+        // It may happen that this View is binded multiple times.
+        // Prevent launching new coroutines for every time this is binded and only update the icon once.
+        if (updateIconJob?.isActive != true) {
+            updateIconJob = (view as? SearchSelector)?.toScope()?.launch {
+                store.flow()
+                    .map { state -> state.searchEngineSource.searchEngine }
+                    .filterNotNull()
+                    .ifChanged()
+                    .collect { searchEngine ->
+                        view.setIcon(
+                            icon = searchEngine.getScaledIcon(view.context),
+                            contentDescription = searchEngine.name
+                        )
+                    }
+            }.also {
+                it?.start()
+            }
+        }
     }
+}
+
+/**
+ * Get the search engine icon appropriately scaled to be shown in the selector.
+ */
+@VisibleForTesting
+internal fun SearchEngine.getScaledIcon(context: Context): BitmapDrawable {
+    val iconSize =
+        context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
+    val scaledIcon = Bitmap.createScaledBitmap(
+        icon,
+        iconSize,
+        iconSize,
+        true
+    )
+
+    return BitmapDrawable(context.resources, scaledIcon)
 }
