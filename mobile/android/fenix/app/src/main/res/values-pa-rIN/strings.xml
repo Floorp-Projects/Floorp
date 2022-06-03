@@ -1564,6 +1564,11 @@
     <string name="preferences_addresses_add_address">ਸਿਰਨਾਵਾਂ ਜੋੜੋ</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">ਸਿਰਨਾਵਿਆਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">ਸਿਰਨਾਵੇਂ ਸੰਭਾਲੋ ਅਤੇ ਆਪਣੇ-ਆਪ ਭਰੋ</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">ਨੰਬਰ, ਈਮੇਲ ਅਤੇ ਭੇਜਣ ਵਾਲੇ ਸਿਰਨਾਵਿਆਂ ਸਮੇਤ ਜਾਣਕਾਰੀ</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">ਕਾਰਡ ਜੋੜੋ</string>
     <!-- Title of the "Edit card" screen -->
@@ -1899,6 +1904,9 @@
     <string name="pocket_stories_feature_caption">Firefox ਪਰਿਵਾਰ ਦਾ ਹਿੱਸਾ। %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">ਹੋਰ ਜਾਣੋ</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">ਸਪੌਂਸਰ ਕੀਤੇ</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">ਡਾਟਾ ਭੇਜਣ ਲਈ ਟੈਲੀਮੈਂਟਰੀ ਨੂੰ ਸਮਰੱਥ ਕਰੋ।</string>
