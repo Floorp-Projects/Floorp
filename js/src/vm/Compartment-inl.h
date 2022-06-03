@@ -279,13 +279,11 @@ template <class T>
   HandleValue val = args.get(argIndex);
   return UnwrapAndTypeCheckValue<T>(cx, val, [cx, val, methodName, argIndex] {
     ToCStringBuf cbuf;
-    if (char* numStr = NumberToCString(cx, &cbuf, argIndex + 1, 10)) {
-      JS_ReportErrorNumberLatin1(
-          cx, GetErrorMessage, nullptr, JSMSG_WRONG_TYPE_ARG, numStr,
-          methodName, detail::ClassName<T>(), InformalValueTypeName(val));
-    } else {
-      ReportOutOfMemory(cx);
-    }
+    char* numStr = NumberToCString(&cbuf, argIndex + 1);
+    MOZ_ASSERT(numStr);
+    JS_ReportErrorNumberLatin1(
+        cx, GetErrorMessage, nullptr, JSMSG_WRONG_TYPE_ARG, numStr, methodName,
+        detail::ClassName<T>(), InformalValueTypeName(val));
   });
 }
 

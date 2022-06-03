@@ -721,15 +721,6 @@ class HTMLEditor final : public EditorBase,
       EDirection aSelect = eNone);
 
   /**
-   * DeleteNodeWithTransaction() removes aContent from the DOM tree if it's
-   * modifiable.
-   *
-   * @param aContent    The node to be removed from the DOM tree.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteNodeWithTransaction(nsIContent& aContent) final;
-
-  /**
    * DeleteTextWithTransaction() removes text in the range from aTextNode if
    * it's modifiable.  Note that this not an override of same method of
    * EditorBase.
@@ -4680,7 +4671,7 @@ class HTMLEditor final : public EditorBase,
                                    // JoinNearestEditableNodesWithTransaction,
                                    // MoveChildrenWithTransaction,
                                    // MoveOneHardLineContentsWithTransaction,
-                                   // MoveToEndOfCOntainer,
+                                   // MoveToEndOfContainer,
                                    // SplitAncestorStyledInlineElementsAt,
                                    // TreatEmptyTextNodes
 };

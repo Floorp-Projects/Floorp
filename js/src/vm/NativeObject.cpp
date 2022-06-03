@@ -1443,14 +1443,9 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     }
   } else if (obj->is<TypedArrayObject>()) {
     // 9.4.5.3 step 3. Indexed properties of typed arrays are special.
-    Rooted<TypedArrayObject*> tobj(cx, &obj->as<TypedArrayObject>());
-    mozilla::Maybe<uint64_t> index;
-    if (!ToTypedArrayIndex(cx, id, &index)) {
-      return false;
-    }
-
-    if (index) {
+    if (mozilla::Maybe<uint64_t> index = ToTypedArrayIndex(id)) {
       MOZ_ASSERT(!cx->isHelperThreadContext());
+      Rooted<TypedArrayObject*> tobj(cx, &obj->as<TypedArrayObject>());
       return DefineTypedArrayElement(cx, tobj, index.value(), desc_, result);
     }
   } else if (obj->is<ArgumentsObject>()) {
@@ -1741,12 +1736,7 @@ static bool DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj,
     }
   } else if (obj->is<TypedArrayObject>()) {
     // 9.4.5.5 step 2. Indexed properties of typed arrays are special.
-    mozilla::Maybe<uint64_t> index;
-    if (!ToTypedArrayIndex(cx, id, &index)) {
-      return false;
-    }
-
-    if (index) {
+    if (mozilla::Maybe<uint64_t> index = ToTypedArrayIndex(id)) {
       // This method is only called for non-existent properties, which
       // means any absent indexed property must be out of range.
       MOZ_ASSERT(index.value() >= obj->as<TypedArrayObject>().length());

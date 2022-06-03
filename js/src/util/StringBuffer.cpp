@@ -175,7 +175,7 @@ bool js::ValueToStringBufferSlow(JSContext* cx, const Value& arg,
     return sb.append(v.toString());
   }
   if (v.isNumber()) {
-    return NumberValueToStringBuffer(cx, v, sb);
+    return NumberValueToStringBuffer(v, sb);
   }
   if (v.isBoolean()) {
     return BooleanToStringBuffer(v.toBoolean(), sb);

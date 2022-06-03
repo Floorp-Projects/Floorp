@@ -704,15 +704,7 @@ static MOZ_ALWAYS_INLINE bool NativeLookupOwnPropertyInline(
   // so that integer properties on the prototype are ignored even for out
   // of bounds accesses.
   if (obj->template is<TypedArrayObject>()) {
-    mozilla::Maybe<uint64_t> index;
-    if (!ToTypedArrayIndex(cx, id, &index)) {
-      if (!allowGC) {
-        cx->recoverFromOutOfMemory();
-      }
-      return false;
-    }
-
-    if (index.isSome()) {
+    if (mozilla::Maybe<uint64_t> index = ToTypedArrayIndex(id)) {
       uint64_t idx = index.value();
       if (idx < obj->template as<TypedArrayObject>().length()) {
         propp->setTypedArrayElement(idx);

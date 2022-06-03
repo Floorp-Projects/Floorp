@@ -1107,11 +1107,8 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
     // It's grabbed by splitResult.
     nsresult rv = DeleteNodeWithTransaction(
         MOZ_KnownLive(*splitResult.GetPreviousContent()));
-    if (NS_WARN_IF(Destroyed())) {
-      return EditResult(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return EditResult(rv);
     }
   }
@@ -1176,11 +1173,8 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
     // It's grabbed by splitResultAtStartOfNextNode.
     nsresult rv = DeleteNodeWithTransaction(
         MOZ_KnownLive(*splitResultAtStartOfNextNode.GetNextContent()));
-    if (NS_WARN_IF(Destroyed())) {
-      return EditResult(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return EditResult(rv);
     }
   }

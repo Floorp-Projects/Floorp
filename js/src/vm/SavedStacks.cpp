@@ -956,17 +956,16 @@ JS_PUBLIC_API SavedFrameResult GetSavedFrameParent(
   return SavedFrameResult::Ok;
 }
 
-static bool FormatStackFrameLine(JSContext* cx, js::StringBuffer& sb,
+static bool FormatStackFrameLine(js::StringBuffer& sb,
                                  js::HandleSavedFrame frame) {
   if (frame->isWasm()) {
     // See comment in WasmFrameIter::computeLine().
     return sb.append("wasm-function[") &&
-           NumberValueToStringBuffer(cx, NumberValue(frame->wasmFuncIndex()),
-                                     sb) &&
+           NumberValueToStringBuffer(NumberValue(frame->wasmFuncIndex()), sb) &&
            sb.append(']');
   }
 
-  return NumberValueToStringBuffer(cx, NumberValue(frame->getLine()), sb);
+  return NumberValueToStringBuffer(NumberValue(frame->getLine()), sb);
 }
 
 static bool FormatStackFrameColumn(JSContext* cx, js::StringBuffer& sb,
@@ -975,7 +974,7 @@ static bool FormatStackFrameColumn(JSContext* cx, js::StringBuffer& sb,
     // See comment in WasmFrameIter::computeLine().
     js::ToCStringBuf cbuf;
     const char* cstr =
-        NumberToCString(cx, &cbuf, frame->wasmBytecodeOffset(), 16);
+        NumberToCStringWithBase(cx, &cbuf, frame->wasmBytecodeOffset(), 16);
     if (!cstr) {
       return false;
     }
@@ -983,7 +982,7 @@ static bool FormatStackFrameColumn(JSContext* cx, js::StringBuffer& sb,
     return sb.append("0x") && sb.append(cstr, strlen(cstr));
   }
 
-  return NumberValueToStringBuffer(cx, NumberValue(frame->getColumn()), sb);
+  return NumberValueToStringBuffer(NumberValue(frame->getColumn()), sb);
 }
 
 static bool FormatSpiderMonkeyStackFrame(JSContext* cx, js::StringBuffer& sb,
@@ -999,7 +998,7 @@ static bool FormatSpiderMonkeyStackFrame(JSContext* cx, js::StringBuffer& sb,
          (!asyncCause || (sb.append(asyncCause) && sb.append('*'))) &&
          (!name || sb.append(name)) && sb.append('@') &&
          sb.append(frame->getSource()) && sb.append(':') &&
-         FormatStackFrameLine(cx, sb, frame) && sb.append(':') &&
+         FormatStackFrameLine(sb, frame) && sb.append(':') &&
          FormatStackFrameColumn(cx, sb, frame) && sb.append('\n');
 }
 
@@ -1011,7 +1010,7 @@ static bool FormatV8StackFrame(JSContext* cx, js::StringBuffer& sb,
          sb.append(' ') &&
          (!name || (sb.append(name) && sb.append(' ') && sb.append('('))) &&
          sb.append(frame->getSource()) && sb.append(':') &&
-         FormatStackFrameLine(cx, sb, frame) && sb.append(':') &&
+         FormatStackFrameLine(sb, frame) && sb.append(':') &&
          FormatStackFrameColumn(cx, sb, frame) && (!name || sb.append(')')) &&
          (lastFrame || sb.append('\n'));
 }
