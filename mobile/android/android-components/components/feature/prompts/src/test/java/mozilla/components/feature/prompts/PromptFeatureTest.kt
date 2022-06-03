@@ -2096,7 +2096,9 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = mock(),
             store = store,
-            fragmentManager = fragmentManager
+            fragmentManager = fragmentManager,
+            isCreditCardAutofillEnabled = { true },
+            creditCardValidationDelegate = mock()
         ) { }
         val creditCardEntry = CreditCardEntry(
             guid = "1",
