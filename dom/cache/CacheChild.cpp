@@ -15,7 +15,9 @@
 namespace mozilla::dom::cache {
 
 // Declared in ActorUtils.h
-PCacheChild* AllocPCacheChild() { return new CacheChild(); }
+already_AddRefed<PCacheChild> AllocPCacheChild() {
+  return MakeAndAddRef<CacheChild>();
+}
 
 // Declared in ActorUtils.h
 void DeallocPCacheChild(PCacheChild* aActor) { delete aActor; }

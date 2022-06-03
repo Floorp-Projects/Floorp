@@ -20,9 +20,10 @@ class CacheParent final : public PCacheParent {
 
  public:
   CacheParent(SafeRefPtr<cache::Manager> aManager, CacheId aCacheId);
-  virtual ~CacheParent();
 
  private:
+  virtual ~CacheParent();
+
   // PCacheParent methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
@@ -37,6 +38,8 @@ class CacheParent final : public PCacheParent {
 
   SafeRefPtr<cache::Manager> mManager;
   const CacheId mCacheId;
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheParent, override)
 };
 
 }  // namespace mozilla::dom::cache

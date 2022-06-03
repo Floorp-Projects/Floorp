@@ -28,7 +28,7 @@ class PCacheStorageParent;
 // Factory methods for use in ipc/glue methods.  Implemented in individual actor
 // cpp files.
 
-PCacheChild* AllocPCacheChild();
+already_AddRefed<PCacheChild> AllocPCacheChild();
 
 void DeallocPCacheChild(PCacheChild* aActor);
 
