@@ -7619,3 +7619,7 @@
     --menuitem-image: url("chrome://browser/skin/onion.svg");
   }
 }
+
+#usercssloader-menu {
+  --menuitem-image: url("chrome://browser/skin/lepton/window-dev-tools.svg");
+}

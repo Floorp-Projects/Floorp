@@ -2514,3 +2514,7 @@ video {
 :root:not([lwtheme-mozlightdark], [style*="--lwt-accent-color: rgb(28, 27, 34); --lwt-text-color: rgba(251, 251, 254);"]) #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
   box-shadow:none !important;
 }
+
+#usercssloader-menu {
+  --menuitem-image: url("chrome://browser/skin/lepton/window-dev-tools.svg");
+}

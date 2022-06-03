@@ -109,7 +109,7 @@ window.UCL = {
 		cssmenu.appendChild(menupopup);
 
 		let menu = $C("menu", {
-			label: "ﾒﾆｭ━━━(ﾟ∀ﾟ)━━━!!",
+			label: "メニュー",
 			accesskey: "C"
 		});
 		menupopup.appendChild(menu);
@@ -123,7 +123,7 @@ window.UCL = {
 		}));
 		mp.appendChild($C("menuseparator"));
 		mp.appendChild($C("menuitem", {
-			label: "新規作成",
+			label: "ブラウザー CSS ファイルを作成",
 			accesskey: "N",
 			oncommand: "UCL.create();"
 		}));
@@ -157,12 +157,6 @@ window.UCL = {
 			accesskey: "W",
 			oncommand: "UCL.styleTest();"
 		}));
-		mp.appendChild($C("menuitem", {
-			label: "userstyles.org でスタイルを検索",
-			accesskey: "S",
-			oncommand: "UCL.searchStyle();"
-		}));
-
 		menu = $C("menu", {
 			label: ".uc.css",
 			accesskey: "U",
@@ -317,13 +311,10 @@ window.UCL = {
 		});
 	},
 	searchStyle: function() {
-		let word;
-		try {
-			word = gBrowser.currentURI.host;
-		} catch {
-			word = gBrowser.currentURI.spec;
-		}
-		openLinkIn("https://userstyles.org/styles/search/" + word, "tab", {});
+		window.open("https://userstyles.org/styles/search/");
+	},
+	howtouse: function() {
+		window.open("https://blog.ablaze.one/wp-admin/post.php?post=1816&action=edit");
 	},
 	openFolder: function() {
 		this.FOLDER.launch();
@@ -335,7 +326,7 @@ window.UCL = {
 	},
 	edit: function(aFile) {
 		var editor = Services.prefs.getCharPref("view_source.editor.path");
-		if (!editor) return alert("エディタのパスが未設定です。\n view_source.editor.path を設定してください");
+		if (!editor) return alert("この操作にはエディタのパスが必要です。about:config で\n view_source.editor.path を設定してください");
 		try {
 			var UI = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
 			UI.charset = window.navigator.platform.toLowerCase().indexOf("win") >= 0? "Shift_JIS": "UTF-8";

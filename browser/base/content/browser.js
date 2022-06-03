@@ -10320,13 +10320,13 @@ document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
 
 /*--------------------------------------------------------userChrome.js(uc.js)のコーナー---------------------------------------------------------*/
 
+/*
 if (Services.prefs.getBoolPref("floorp.memory.free.button", false)) {
 var script = document.createElement('script');
 script.src = "chrome://userchromejs/content/memory-free.uc.js"; 
 document.head.appendChild(script); 
 }
 
-/*
 
 NOT AVIVALE TO USE
 
