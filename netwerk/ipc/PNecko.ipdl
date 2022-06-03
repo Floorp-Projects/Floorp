@@ -149,7 +149,7 @@ parent:
   /**
    * Page thumbnails remote resource loading
    */
-  async GetPageThumbStream(nsIURI uri) returns (RemoteStreamInfo? info);
+  async GetPageThumbStream(nsIURI uri, LoadInfoArgs? loadInfo) returns (RemoteStreamInfo? info);
 
 child:
   /* Predictor Methods */
