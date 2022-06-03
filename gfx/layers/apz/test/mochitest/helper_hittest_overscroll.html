@@ -21,11 +21,31 @@
       width: 4px;
       background: red;
     }
+    #fixedtarget {
+      left: 300px;
+      height: 20px;
+      width: 5px;
+      top: 2px;
+      background: green;
+      position: fixed;
+    }
+    #fixedtargetbutton {
+      height: 10px;
+      width: 5px;
+      padding: 0;
+      margin-top: 10;
+      margin-left: 0;
+      border: 0;
+    }
   </style>
 </head>
 <body>
  <div id="target"></div>
- <div class="spacer"></div>
+ <div id="fixedtarget">
+   <button id="fixedtargetbutton">
+   </button>
+ </div>
+ <div id="spacer" class="spacer"></div>
 </body>
 <script type="application/javascript">
 
@@ -148,9 +168,60 @@ async function test() {
     type: "click",
     target: window,
     offsetX: 102,
-    offsetY: 12
+    offsetY: 12,
   });
   await clickPromise;
+
+  // Test that mouse events targetting the fixed content are dispatched
+  // to the content.
+  async function clickFixed(yOffset, expectedTarget) {
+    let clickFixedPromise = new Promise(resolve => {
+      document.addEventListener("click", function(e) {
+        info("event clientX = " + e.clientX);
+        info("event clientY = " + e.clientY);
+        info("event target id: " + e.target.id);
+        is(e.target, expectedTarget, "Click while overscrolled hit intended target");
+        resolve();
+      }, { once: true });
+    });
+    await synthesizeNativeMouseEventWithAPZ({
+      type: "click",
+      target: window,
+      offsetX: 302,
+      offsetY: yOffset,
+    });
+    await clickFixedPromise;
+  }
+
+  // Perform various mouse events to ensure the fixed element has not moved
+  await clickFixed(10, fixedtarget, false);
+  await clickFixed(14, fixedtargetbutton, false);
+  await clickFixed(18, fixedtargetbutton, false);
+
+  let clickFixedPromise = new Promise(resolve => {
+    document.addEventListener("click", function(e) {
+      info("event clientX = " + e.clientX);
+      info("event clientY = " + e.clientY);
+      info("event target id: " + e.target.id);
+      // TODO(dlrobertson): What exists directly below the fixed element?
+      // Should there be a gutter below the fixed element? Or should events
+      // directed below the fixed element be dispatched normally. In the
+      // transform of the mouse event, the hit will not have any side bits
+      // set and we  will transform the hit result. As a result, 25 will be
+      // transformed to ~17, and the event will be dispatched to the fixed
+      // element.
+      todo(false,
+           "Click while overscrolled hit intended target below fixed content");
+      resolve();
+    }, { once: true });
+  });
+  await synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: window,
+    offsetX: 302,
+    offsetY: 25,
+  });
+  await clickFixedPromise;
 }
 
 waitUntilApzStable()

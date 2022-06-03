@@ -4803,11 +4803,31 @@ void AsyncPanZoomController::UnapplyAsyncTestAttributes(
   }
 }
 
-Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
+Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint(
+    const AsyncTransformComponents& aComponents) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
+  CSSPoint componentOffset;
 
-  LayerPoint scrollChange = (mLastContentPaintMetrics.GetLayoutScrollOffset() -
-                             mExpectedGeckoMetrics.GetVisualScrollOffset()) *
+  // The computation of the componentOffset should roughly be the negation
+  // of the translation in GetCurrentAsyncTransform() with the expected
+  // gecko metrics substituted for the effective scroll offsets.
+  if (aComponents.contains(AsyncTransformComponent::eVisual)) {
+    componentOffset += mExpectedGeckoMetrics.GetLayoutScrollOffset() -
+                       mExpectedGeckoMetrics.GetVisualScrollOffset();
+  }
+
+  if (aComponents.contains(AsyncTransformComponent::eLayout)) {
+    CSSPoint lastPaintLayoutOffset;
+
+    if (mLastContentPaintMetrics.IsScrollable()) {
+      lastPaintLayoutOffset = mLastContentPaintMetrics.GetLayoutScrollOffset();
+    }
+
+    componentOffset +=
+        lastPaintLayoutOffset - mExpectedGeckoMetrics.GetLayoutScrollOffset();
+  }
+
+  LayerPoint scrollChange = componentOffset *
                             mLastContentPaintMetrics.GetDevPixelsPerCSSPixel() *
                             mLastContentPaintMetrics.GetCumulativeResolution();
 
@@ -4821,7 +4841,8 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
       mExpectedGeckoMetrics.GetZoom() /
       mExpectedGeckoMetrics.GetDevPixelsPerCSSPixel();
   float zoomChange = 1.0;
-  if (lastDispatchedZoom != LayoutDeviceToParentLayerScale(0)) {
+  if (aComponents.contains(AsyncTransformComponent::eVisual) &&
+      lastDispatchedZoom != LayoutDeviceToParentLayerScale(0)) {
     zoomChange = lastContentZoom.scale / lastDispatchedZoom.scale;
   }
   return Matrix4x4::Translation(scrollChange.x, scrollChange.y, 0)

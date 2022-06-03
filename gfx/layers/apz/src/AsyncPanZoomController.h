@@ -299,7 +299,8 @@ class AsyncPanZoomController {
    * processed, this is needed to transform input events properly into a space
    * gecko will understand.
    */
-  Matrix4x4 GetTransformToLastDispatchedPaint() const;
+  Matrix4x4 GetTransformToLastDispatchedPaint(
+      const AsyncTransformComponents& aComponents = LayoutAndVisual) const;
 
   /**
    * Returns the number of CSS pixels of checkerboard according to the metrics

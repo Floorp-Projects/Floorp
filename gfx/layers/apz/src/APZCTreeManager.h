@@ -542,8 +542,11 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const MutexAutoLock& aProofOfMapLock) const;
   ScreenToParentLayerMatrix4x4 GetScreenToApzcTransform(
       const AsyncPanZoomController* aApzc) const;
+  ParentLayerToScreenMatrix4x4 GetApzcToGeckoTransformForHit(
+      HitTestResult& aHitResult) const;
   ParentLayerToScreenMatrix4x4 GetApzcToGeckoTransform(
-      const AsyncPanZoomController* aApzc) const;
+      const AsyncPanZoomController* aApzc,
+      const AsyncTransformComponents& aComponents) const;
   ScreenPoint GetCurrentMousePosition() const;
   void SetCurrentMousePosition(const ScreenPoint& aNewPos);
 
