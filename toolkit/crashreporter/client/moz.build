@@ -58,6 +58,7 @@ elif CONFIG["OS_ARCH"] == "Darwin":
     USE_LIBS += [
         "nss",
     ]
+    LDFLAGS += ["-Wl,-rpath,@executable_path/../../../"]
 elif CONFIG["OS_ARCH"] == "SunOS":
     SOURCES += [
         "crashreporter_linux.cpp",
