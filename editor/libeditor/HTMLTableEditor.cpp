@@ -1397,7 +1397,7 @@ nsresult HTMLEditor::DeleteTableCellWithTransaction(
       rv = DeleteNodeWithTransaction(*cell);
       // If we fail, don't try to delete any more cells???
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
       // Note that we don't refer column number in this loop.  So, it must
@@ -1530,7 +1530,7 @@ nsresult HTMLEditor::DeleteTableCellWithTransaction(
 
     nsresult rv = DeleteNodeWithTransaction(*selectedCellElement);
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return rv;
     }
 
@@ -1843,7 +1843,7 @@ nsresult HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
       // it.
       nsresult rv = DeleteNodeWithTransaction(*cellData.mElement);
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
       // Skip rows which the removed cell spanned.
@@ -3191,7 +3191,7 @@ NS_IMETHODIMP HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
       if (nodeToBeRemoved) {
         nsresult rv = DeleteNodeWithTransaction(*nodeToBeRemoved);
         if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
           return EditorBase::ToGenericNSResult(rv);
         }
       }
@@ -3364,7 +3364,7 @@ nsresult HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
       }
       nsresult rv = DeleteNodeWithTransaction(*cellChild);
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
       insertIndex = 0;
@@ -3381,7 +3381,7 @@ nsresult HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
       }
       nsresult rv = DeleteNodeWithTransaction(*cellChild);
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
       CreateContentResult insertChildContentResult = InsertNodeWithTransaction(
@@ -3415,7 +3415,7 @@ nsresult HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
   // Delete cells whose contents were moved.
   nsresult rv = DeleteNodeWithTransaction(*aCellToMerge);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::DeleteNodeWithTransaction() failed");
+                       "EditorBase::DeleteNodeWithTransaction() failed");
   return rv;
 }
 

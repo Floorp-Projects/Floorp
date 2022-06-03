@@ -678,15 +678,9 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
       if (mostDistantEmptyInlineAncestor) {
         nsresult rv =
             DeleteNodeWithTransaction(*mostDistantEmptyInlineAncestor);
-        if (Destroyed()) {
-          NS_WARNING(
-              "HTMLEditor::DeleteNodeWithTransaction() caused destroying the "
-              "editor at deleting empty inline ancestors");
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
         if (NS_FAILED(rv)) {
           NS_WARNING(
-              "HTMLEditor::DeleteNodeWithTransaction() failed at deleting "
+              "EditorBase::DeleteNodeWithTransaction() failed at deleting "
               "empty inline ancestors");
           return rv;
         }
@@ -958,11 +952,8 @@ nsresult HTMLEditor::EnsureNoPaddingBRElementForEmptyEditor() {
   RefPtr<HTMLBRElement> paddingBRElement(
       std::move(mPaddingBRElementForEmptyEditor));
   nsresult rv = DeleteNodeWithTransaction(*paddingBRElement);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::DeleteNodeWithTransaction() failed");
+                       "EditorBase::DeleteNodeWithTransaction() failed");
   return rv;
 }
 
@@ -2428,11 +2419,8 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
     // MOZ_KnownLive(leftCiteElement) because it's grabbed by
     // splitCiteElementResult.
     nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*leftCiteElement));
-    if (NS_WARN_IF(Destroyed())) {
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return Err(rv);
     }
   }
@@ -2441,11 +2429,8 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
     // MOZ_KnownLive(rightCiteElement) because it's grabbed by
     // splitCiteElementResult.
     nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*rightCiteElement));
-    if (NS_WARN_IF(Destroyed())) {
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return Err(rv);
     }
   }
@@ -3162,11 +3147,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
         // keep it alive.
         nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
-        if (NS_WARN_IF(Destroyed())) {
-          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-        }
         if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
           return EditActionResult(rv);
         }
       }
@@ -3293,11 +3275,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         (content->IsHTMLElement(nsGkAtoms::br) ||
          HTMLEditUtils::IsEmptyInlineContent(content))) {
       nsresult rv = DeleteNodeWithTransaction(*content);
-      if (NS_WARN_IF(Destroyed())) {
-        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-      }
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return EditActionResult(rv);
       }
       if (content->IsHTMLElement(nsGkAtoms::br)) {
@@ -3885,12 +3864,9 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
               editingHost)) {
         if (brContent && brContent->IsHTMLElement(nsGkAtoms::br)) {
           AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
-          rv = DeleteNodeWithTransaction(*brContent);
-          if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
+          nsresult rv = DeleteNodeWithTransaction(*brContent);
           if (NS_FAILED(rv)) {
-            NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+            NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
             return rv;
           }
         }
@@ -3930,12 +3906,9 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
             editingHost)) {
       if (maybeBRContent->IsHTMLElement(nsGkAtoms::br)) {
         AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
-        rv = DeleteNodeWithTransaction(*maybeBRContent);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
+        nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
         if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
           return rv;
         }
         // We don't need to act on this node any more
@@ -3970,12 +3943,9 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
       OwningNonNull<nsIContent>& content = arrayOfContents[0];
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
-      rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
+      nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
       arrayOfContents.RemoveElementAt(0);
@@ -4396,11 +4366,8 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
       nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
       arrayOfContents.RemoveElementAt(0);
@@ -4618,11 +4585,8 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
       nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
     }
@@ -5272,11 +5236,8 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
         // Delete any non-list items for now
         // XXX Chrome moves it from the list element.  We should follow it.
         nsresult rv = DeleteNodeWithTransaction(*lastChildContent);
-        if (NS_WARN_IF(Destroyed())) {
-          return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
-        }
         if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
           return SplitRangeOffFromNodeResult(rv);
         }
       }
@@ -7538,11 +7499,8 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
   // MOZ_KnownLive(rightHeadingElement) because it's grabbed by
   // splitHeadingResult.
   rv = DeleteNodeWithTransaction(MOZ_KnownLive(*rightHeadingElement));
-  if (NS_WARN_IF(Destroyed())) {
-    return Err(NS_ERROR_EDITOR_DESTROYED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
     return Err(rv);
   }
 
@@ -7921,11 +7879,8 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
   // prevent an empty p).
   if (aNextBRNode && HTMLEditUtils::IsVisibleBRElement(*aNextBRNode)) {
     nsresult rv = DeleteNodeWithTransaction(*aNextBRNode);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return rv;
     }
   }
@@ -8055,11 +8010,8 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
 
     // Otherwise, replace the empty aListItemElement with a new paragraph.
     nsresult rv = DeleteNodeWithTransaction(aListItemElement);
-    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return Err(rv);
     }
     nsStaticAtom& newParagraphTagName =
@@ -8224,11 +8176,8 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
       // MOZ_KnownLive(rightListItemElement) because it's grabbed by
       // splitListItemResult.
       rv = DeleteNodeWithTransaction(MOZ_KnownLive(rightListItemElement));
-      if (NS_WARN_IF(Destroyed())) {
-        return Err(NS_ERROR_EDITOR_DESTROYED);
-      }
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return Err(rv);
       }
       return EditorDOMPoint(newListItemElement, 0u);
@@ -8652,11 +8601,8 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
         // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it
         // alive.
         nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
         if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
           return rv;
         }
         continue;
@@ -8905,11 +8851,8 @@ HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
           if (!HTMLEditUtils::IsBlockElement(*nextEditableSibling)) {
             AutoEditorDOMPointChildInvalidator lockOffset(splitPoint);
             nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
-            if (NS_WARN_IF(Destroyed())) {
-              return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
-            }
             if (NS_FAILED(rv)) {
-              NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+              NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
               return CreateElementResult(rv);
             }
           }
@@ -9742,12 +9685,9 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
     if (HTMLEditUtils::IsSimplyEditableNode(emptyContent)) {
       // MOZ_KnownLive because 'arrayOfEmptyContents' is guaranteed to keep it
       // alive.
-      rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyContent));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
+      nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyContent));
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
     }
@@ -9777,12 +9717,9 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
       MOZ_ASSERT(insertBRElementResult.GetNewNode());
     }
     // MOZ_KnownLive because 'arrayOfEmptyCites' is guaranteed to keep it alive.
-    rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyCite));
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
+    nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyCite));
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return rv;
     }
   }
@@ -9985,11 +9922,8 @@ nsresult HTMLEditor::DestroyListStructureRecursively(Element& aListElement) {
     //     <script> and <template> and <dl> element to have <div> to group
     //     some <dt> and <dd> elements.  So, this may break valid children.
     nsresult rv = DeleteNodeWithTransaction(*child);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return rv;
     }
   }
@@ -10704,11 +10638,8 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     for (OwningNonNull<nsIContent>& curNode : arrayOfContents) {
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to keep it alive.
       nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*curNode));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return rv;
       }
     }

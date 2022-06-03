@@ -1531,7 +1531,7 @@ nsresult HTMLEditor::ReplaceHeadContentsWithSourceWithTransaction(
   while (nsCOMPtr<nsIContent> child = primaryHeadElement->GetFirstChild()) {
     nsresult rv = DeleteNodeWithTransaction(*child);
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return rv;
     }
   }
@@ -3464,20 +3464,6 @@ nsresult HTMLEditor::RemoveEmptyInclusiveAncestorInlineElements(
   }
 
   nsresult rv = DeleteNodeWithTransaction(content);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::DeleteNodeWithTransaction() failed");
-  return rv;
-}
-
-nsresult HTMLEditor::DeleteNodeWithTransaction(nsIContent& aContent) {
-  // Do nothing if the node is read-only.
-  if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(aContent))) {
-    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
-  }
-  nsresult rv = EditorBase::DeleteNodeWithTransaction(aContent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DeleteNodeWithTransaction() failed");
   return rv;
@@ -3500,7 +3486,7 @@ nsresult HTMLEditor::DeleteAllChildrenWithTransaction(Element& aElement) {
   while (nsCOMPtr<nsIContent> child = aElement.GetLastChild()) {
     nsresult rv = DeleteNodeWithTransaction(*child);
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return rv;
     }
   }
@@ -3522,7 +3508,7 @@ NS_IMETHODIMP HTMLEditor::DeleteNode(nsINode* aNode) {
 
   rv = DeleteNodeWithTransaction(MOZ_KnownLive(*aNode->AsContent()));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::DeleteNodeWithTransaction() failed");
+                       "EditorBase::DeleteNodeWithTransaction() failed");
   return rv;
 }
 
@@ -3823,7 +3809,7 @@ already_AddRefed<Element> HTMLEditor::InsertContainerWithTransactionInternal(
   // XXX Perhaps, we should not remove the container if it's not editable.
   nsresult rv = DeleteNodeWithTransaction(aContent);
   if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
     return nullptr;
   }
 
@@ -3929,13 +3915,8 @@ CreateElementResult HTMLEditor::ReplaceContainerWithTransactionInternal(
   // Delete aOldContainer from the DOM tree to make it not referred by
   // InsertNodeTransaction.
   nsresult rv = DeleteNodeWithTransaction(aOldContainer);
-  if (MOZ_UNLIKELY(Destroyed())) {
-    NS_WARNING(
-        "HTMLEditor::DeleteNodeWithTransaction() caused destroying the editor");
-    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
     return CreateElementResult(rv);
   }
 
@@ -4035,9 +4016,6 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveContainerWithTransaction(
                                : GetNextSiblingOf(arrayOfChildren, *parentNode);
 
   nsresult rv = DeleteNodeWithTransaction(aElement);
-  if (MOZ_UNLIKELY(Destroyed())) {
-    return Err(NS_ERROR_EDITOR_DESTROYED);
-  }
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::DeleteNodeTransaction() failed");
     return Err(rv);
@@ -5895,11 +5873,8 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
   for (const OwningNonNull<nsIContent>& child : newBlockChildren) {
     // MOZ_KNownLive(child) because of bug 1622253
     nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(child));
-    if (NS_WARN_IF(Destroyed())) {
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return Err(rv);
     }
   }
