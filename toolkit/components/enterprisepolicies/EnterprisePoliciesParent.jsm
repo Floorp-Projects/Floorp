@@ -437,7 +437,13 @@ EnterprisePoliciesManager.prototype = {
   },
 
   isExemptExecutableExtension(origin, extension) {
-    let hostname = new URL(origin)?.hostname;
+    let url;
+    try {
+      url = new URL(origin);
+    } catch (e) {
+      return false;
+    }
+    let { hostname } = url;
     let exemptArray = this.getActivePolicies()
       ?.ExemptDomainFileTypePairsFromFileTypeDownloadWarnings;
     if (!hostname || !extension || !exemptArray) {
