@@ -8,6 +8,7 @@
 
 #include "mozilla/Result.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/net/RemoteStreamGetter.h"
 #include "SubstitutingProtocolHandler.h"
 #include "nsIInputStream.h"
 #include "nsWeakReference.h"
@@ -15,10 +16,7 @@
 namespace mozilla {
 namespace net {
 
-using PageThumbStreamPromise =
-    mozilla::MozPromise<nsCOMPtr<nsIInputStream>, nsresult, false>;
-
-class PageThumbStreamGetter;
+class RemoteStreamGetter;
 
 class PageThumbProtocolHandler final
     : public nsISubstitutingProtocolHandler,
@@ -43,12 +41,12 @@ class PageThumbProtocolHandler final
    *        not a moz-page-thumb URI, the child is in an invalid state and
    *        should be terminated. This outparam will be set synchronously.
    *
-   * @return PageThumbStreamPromise
-   *        The PageThumbStreamPromise will resolve with an nsIInputStream on
+   * @return RemoteStreamPromise
+   *        The RemoteStreamPromise will resolve with an RemoteStreamInfo on
    *        success, and reject with an nsresult on failure.
    */
-  RefPtr<PageThumbStreamPromise> NewStream(nsIURI* aChildURI,
-                                           bool* aTerminateSender);
+  RefPtr<RemoteStreamPromise> NewStream(nsIURI* aChildURI,
+                                        bool* aTerminateSender);
 
  protected:
   ~PageThumbProtocolHandler() = default;
@@ -113,12 +111,9 @@ class PageThumbProtocolHandler final
   // handling moz-page-thumb requests from the child.
   static StaticRefPtr<PageThumbProtocolHandler> sSingleton;
 
-  // Set the channel's content type using the provided URI's type.
-  static void SetContentType(nsIURI* aURI, nsIChannel* aChannel);
-
   // Gets a SimpleChannel that wraps the provided channel.
   static void NewSimpleChannel(nsIURI* aURI, nsILoadInfo* aLoadinfo,
-                               PageThumbStreamGetter* aStreamGetter,
+                               RemoteStreamGetter* aStreamGetter,
                                nsIChannel** aRetVal);
 };
 

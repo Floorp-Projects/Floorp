@@ -1,13 +1,12 @@
 # Rusqlite
 
-[![Travis Build Status](https://api.travis-ci.org/rusqlite/rusqlite.svg?branch=master)](https://travis-ci.org/rusqlite/rusqlite)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/rusqlite/rusqlite?branch=master&svg=true)](https://ci.appveyor.com/project/rusqlite/rusqlite)
-[![Build Status](https://github.com/rusqlite/rusqlite/workflows/CI/badge.svg)](https://github.com/rusqlite/rusqlite/actions)
-[![dependency status](https://deps.rs/repo/github/rusqlite/rusqlite/status.svg)](https://deps.rs/repo/github/rusqlite/rusqlite)
 [![Latest Version](https://img.shields.io/crates/v/rusqlite.svg)](https://crates.io/crates/rusqlite)
-[![Gitter](https://badges.gitter.im/rusqlite.svg)](https://gitter.im/rusqlite/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-[![Docs](https://docs.rs/rusqlite/badge.svg)](https://docs.rs/rusqlite)
-[![codecov](https://codecov.io/gh/rusqlite/rusqlite/branch/master/graph/badge.svg)](https://codecov.io/gh/rusqlite/rusqlite)
+[![Documentation](https://docs.rs/rusqlite/badge.svg)](https://docs.rs/rusqlite)
+[![Build Status (GitHub)](https://github.com/rusqlite/rusqlite/workflows/CI/badge.svg)](https://github.com/rusqlite/rusqlite/actions)
+[![Build Status (AppVeyor)](https://ci.appveyor.com/api/projects/status/github/rusqlite/rusqlite?branch=master&svg=true)](https://ci.appveyor.com/project/rusqlite/rusqlite)
+[![Code Coverage](https://codecov.io/gh/rusqlite/rusqlite/branch/master/graph/badge.svg)](https://codecov.io/gh/rusqlite/rusqlite)
+[![Dependency Status](https://deps.rs/repo/github/rusqlite/rusqlite/status.svg)](https://deps.rs/repo/github/rusqlite/rusqlite)
+[![Discord Chat](https://img.shields.io/discord/927966344266256434.svg?logo=discord)](https://discord.gg/nFYfGPB8g4)
 
 Rusqlite is an ergonomic wrapper for using SQLite from Rust. It attempts to expose
 an interface similar to [rust-postgres](https://github.com/sfackler/rust-postgres).
@@ -31,7 +30,7 @@ fn main() -> Result<()> {
                   name            TEXT NOT NULL,
                   data            BLOB
                   )",
-        params![],
+        [],
     )?;
     let me = Person {
         id: 0,
@@ -44,7 +43,7 @@ fn main() -> Result<()> {
     )?;
 
     let mut stmt = conn.prepare("SELECT id, name, data FROM person")?;
-    let person_iter = stmt.query_map(params![], |row| {
+    let person_iter = stmt.query_map([], |row| {
         Ok(Person {
             id: row.get(0)?,
             name: row.get(1)?,
@@ -77,6 +76,7 @@ features](https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-s
 * [`functions`](https://docs.rs/rusqlite/~0/rusqlite/functions/index.html)
   allows you to load Rust closures into SQLite connections for use in queries.
   Note: This feature requires SQLite 3.7.3 or later.
+* `window` for [window function](https://www.sqlite.org/windowfunctions.html) support (`fun(...) OVER ...`). (Implies `functions`.)
 * [`trace`](https://docs.rs/rusqlite/~0/rusqlite/trace/index.html)
   allows hooks into SQLite's tracing and profiling APIs. Note: This feature
   requires SQLite 3.6.23 or later.
@@ -97,16 +97,24 @@ features](https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-s
 * `url` implements [`FromSql`](https://docs.rs/rusqlite/~0/rusqlite/types/trait.FromSql.html)
   and [`ToSql`](https://docs.rs/rusqlite/~0/rusqlite/types/trait.ToSql.html) for the
   `Url` type from the [`url` crate](https://crates.io/crates/url).
-* `bundled` uses a bundled version of sqlite3.  This is a good option for cases where linking to sqlite3 is complicated, such as Windows.
-* `sqlcipher` looks for the SQLCipher library to link against instead of SQLite. This feature is mutually exclusive with `bundled`.
+* `bundled` uses a bundled version of SQLite.  This is a good option for cases where linking to SQLite is complicated, such as Windows.
+* `sqlcipher` looks for the SQLCipher library to link against instead of SQLite. This feature overrides `bundled`.
+* `bundled-sqlcipher` uses a bundled version of SQLCipher. This searches for and links against a system-installed crypto library to provide the crypto implementation.
+* `bundled-sqlcipher-vendored-openssl` allows using bundled-sqlcipher with a vendored version of OpenSSL (via the `openssl-sys` crate) as the crypto provider.
+  - As the name implies this depends on the `bundled-sqlcipher` feature, and automatically turns it on.
+  - If turned on, this uses the [`openssl-sys`](https://crates.io/crates/openssl-sys) crate, with the `vendored` feature enabled in order to build and bundle the OpenSSL crypto library.
 * `hooks` for [Commit, Rollback](http://sqlite.org/c3ref/commit_hook.html) and [Data Change](http://sqlite.org/c3ref/update_hook.html) notification callbacks.
 * `unlock_notify` for [Unlock](https://sqlite.org/unlock_notify.html) notification.
 * `vtab` for [virtual table](https://sqlite.org/vtab.html) support (allows you to write virtual table implementations in Rust). Currently, only read-only virtual tables are supported.
-* [`csvtab`](https://sqlite.org/csv.html), CSV virtual table written in Rust.
-* [`array`](https://sqlite.org/carray.html), The `rarray()` Table-Valued Function.
+* `series` exposes [`generate_series(...)`](https://www.sqlite.org/series.html) Table-Valued Function. (Implies `vtab`.)
+* [`csvtab`](https://sqlite.org/csv.html), CSV virtual table written in Rust. (Implies `vtab`.)
+* [`array`](https://sqlite.org/carray.html), The `rarray()` Table-Valued Function. (Implies `vtab`.)
 * `i128_blob` allows storing values of type `i128` type in SQLite databases. Internally, the data is stored as a 16 byte big-endian blob, with the most significant bit flipped, which allows ordering and comparison between different blobs storing i128s to work as expected.
 * `uuid` allows storing and retrieving `Uuid` values from the [`uuid`](https://docs.rs/uuid/) crate using blobs.
-* [`session`](https://sqlite.org/sessionintro.html), Session module extension. Requires `buildtime_bindgen` feature.
+* [`session`](https://sqlite.org/sessionintro.html), Session module extension. Requires `buildtime_bindgen` feature. (Implies `hooks`.)
+* `extra_check` fail when a query passed to execute is readonly or has a column count > 0.
+* `column_decltype` provides `columns()` method for Statements and Rows; omit if linking to a version of SQLite/SQLCipher compiled with `-DSQLITE_OMIT_DECLTYPE`.
+* `collation` exposes [`sqlite3_create_collation_v2`](https://sqlite.org/c3ref/create_collation.html).
 
 ## Notes on building rusqlite and libsqlite3-sys
 
@@ -116,24 +124,29 @@ declarations for SQLite's C API. By default, `libsqlite3-sys` attempts to find a
 
 You can adjust this behavior in a number of ways:
 
-* If you use the `bundled` feature, `libsqlite3-sys` will use the
-  [cc](https://crates.io/crates/cc) crate to compile SQLite from source and
+* If you use the `bundled`, `bundled-sqlcipher`, or `bundled-sqlcipher-vendored-openssl` features, `libsqlite3-sys` will use the
+  [cc](https://crates.io/crates/cc) crate to compile SQLite or SQLCipher from source and
   link against that. This source is embedded in the `libsqlite3-sys` crate and
-  is currently SQLite 3.33.0 (as of `rusqlite` 0.24.1 / `libsqlite3-sys`
-  0.20.0).  This is probably the simplest solution to any build problems. You can enable this by adding the following in your `Cargo.toml` file:
+  is currently SQLite 3.38.0 (as of `rusqlite` 0.27.0 / `libsqlite3-sys`
+  0.24.0).  This is probably the simplest solution to any build problems. You can enable this by adding the following in your `Cargo.toml` file:
   ```toml
   [dependencies.rusqlite]
-  version = "0.24.2"
+  version = "0.27.0"
   features = ["bundled"]
   ```
-* You can set the `SQLITE3_LIB_DIR` to point to directory containing the SQLite
-  library.
+* When using any of the `bundled` features, the build script will honor `SQLITE_MAX_VARIABLE_NUMBER` and `SQLITE_MAX_EXPR_DEPTH` variables. It will also honor a `LIBSQLITE_FLAGS` variable, which can have a format like `"-USQLITE_ALPHA -DSQLITE_BETA SQLITE_GAMMA ..."`. That would disable the `SQLITE_ALPHA` flag, and set the `SQLITE_BETA` and `SQLITE_GAMMA` flags. (The initial `-D` can be omitted, as on the last one.)
+* When using `bundled-sqlcipher` (and not also using `bundled-sqlcipher-vendored-openssl`), `libsqlite3-sys` will need to
+  link against crypto libraries on the system. If the build script can find a `libcrypto` from OpenSSL or LibreSSL (it will consult `OPENSSL_LIB_DIR`/`OPENSSL_INCLUDE_DIR` and `OPENSSL_DIR` environment variables), it will use that. If building on and for Macs, and none of those variables are set, it will use the system's SecurityFramework instead.
+
+* When linking against a SQLite (or SQLCipher) library already on the system (so *not* using any of the `bundled` features), you can set the `SQLITE3_LIB_DIR` (or `SQLCIPHER_LIB_DIR`) environment variable to point to a directory containing the library. You can also set the `SQLITE3_INCLUDE_DIR` (or `SQLCIPHER_INCLUDE_DIR`) variable to point to the directory containing `sqlite3.h`.
 * Installing the sqlite3 development packages will usually be all that is required, but
   the build helpers for [pkg-config](https://github.com/alexcrichton/pkg-config-rs)
   and [vcpkg](https://github.com/mcgoo/vcpkg-rs) have some additional configuration
   options. The default when using vcpkg is to dynamically link,
   which must be enabled by setting `VCPKGRS_DYNAMIC=1` environment variable before build.
   `vcpkg install sqlite3:x64-windows` will install the required library.
+* When linking against a SQLite (or SQLCipher) library already on the system, you can set the `SQLITE3_STATIC` (or `SQLCIPHER_STATIC`) environment variable to 1 to request that the library be statically instead of dynamically linked.
+
 
 ### Binding generation
 
@@ -160,8 +173,8 @@ pregenerated bindings are chosen:
 * `min_sqlite_version_3_6_23` - SQLite 3.6.23 bindings
 * `min_sqlite_version_3_7_7` - SQLite 3.7.7 bindings
 
-If you use the `bundled` feature, you will get pregenerated bindings for the
-bundled version of SQLite. If you need other specific pregenerated binding
+If you use any of the `bundled` features, you will get pregenerated bindings for the
+bundled version of SQLite/SQLCipher. If you need other specific pregenerated binding
 versions, please file an issue. If you want to run `bindgen` at buildtime to
 produce your own bindings, use the `buildtime_bindgen` Cargo feature.
 
@@ -169,7 +182,7 @@ If you enable the `modern_sqlite` feature, we'll use the bindings we would have
 included with the bundled build. You generally should have `buildtime_bindgen`
 enabled if you turn this on, as otherwise you'll need to keep the version of
 SQLite you link with in sync with what rusqlite would have bundled, (usually the
-most recent release of sqlite). Failing to do this will cause a runtime error.
+most recent release of SQLite). Failing to do this will cause a runtime error.
 
 ## Contributing
 
@@ -177,7 +190,7 @@ Rusqlite has many features, and many of them impact the build configuration in
 incompatible ways. This is unfortunate, and makes testing changes hard.
 
 To help here: you generally should ensure that you run tests/lint for
-`--features bundled`, and `--features bundled-full session buildtime_bindgen`.
+`--features bundled`, and `--features "bundled-full session buildtime_bindgen"`.
 
 If running bindgen is problematic for you, `--features bundled-full` enables
 bundled and all features which don't require binding generation, and can be used
@@ -186,10 +199,10 @@ instead.
 ### Checklist
 
 - Run `cargo fmt` to ensure your Rust code is correctly formatted.
-- Ensure `cargo clippy --all-targets --workspace --features bundled` passes without warnings.
-- Ensure `cargo test --all-targets --workspace --features bundled-full session buildtime_bindgen` reports no failures.
-- Ensure `cargo test --all-targets --workspace --features bundled` reports no failures.
-- Ensure `cargo test --all-targets --workspace --features bundled-full session buildtime_bindgen` reports no failures.
+- Ensure `cargo clippy --workspace --features bundled` passes without warnings.
+- Ensure `cargo clippy --workspace --features "bundled-full session buildtime_bindgen"` passes without warnings.
+- Ensure `cargo test --workspace --features bundled` reports no failures.
+- Ensure `cargo test --workspace --features "bundled-full session buildtime_bindgen"` reports no failures.
 
 ## Author
 
@@ -198,8 +211,18 @@ here: https://github.com/rusqlite/rusqlite/graphs/contributors
 
 ## Community
 
-Currently there's a gitter channel set up for rusqlite [here](https://gitter.im/rusqlite/community).
+Feel free to join the [Rusqlite Discord Server](https://discord.gg/nFYfGPB8g4) to discuss or get help with `rusqlite` or `libsqlite3-sys`.
 
 ## License
 
-Rusqlite is available under the MIT license. See the LICENSE file for more info.
+Rusqlite and libsqlite3-sys are available under the MIT license. See the LICENSE file for more info.
+
+### Licenses of Bundled Software
+
+Depending on the set of enabled cargo `features`, rusqlite and libsqlite3-sys will also bundle other libraries, which have their own licensing terms:
+
+- If `--features=bundled-sqlcipher` is enabled, the vendored source of [SQLcipher](https://github.com/sqlcipher/sqlcipher) will be compiled and statically linked in. SQLcipher is distributed under a BSD-style license, as described [here](libsqlite3-sys/sqlcipher/LICENSE).
+
+- If `--features=bundled` is enabled, the vendored source of SQLite will be compiled and linked in. SQLite is in the public domain, as described [here](https://www.sqlite.org/copyright.html).
+
+Both of these are quite permissive, have no bearing on the license of the code in `rusqlite` or `libsqlite3-sys` themselves, and can be entirely ignored if you do not use the feature in question.

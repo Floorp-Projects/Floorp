@@ -3810,14 +3810,9 @@ void MediaTrackGraphImpl::PendingResumeOperation::Apply(
 
 void MediaTrackGraphImpl::PendingResumeOperation::Abort() {
   // The graph is shutting down before the operation completed.
-#ifdef DEBUG
-  {
-    MonitorAutoLock lock(mDestinationTrack->GraphImpl()->mMonitor);
-    MOZ_ASSERT(!mDestinationTrack->GraphImpl() ||
-               mDestinationTrack->GraphImpl()->mLifecycleState ==
-                   MediaTrackGraphImpl::LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN);
-  }
-#endif
+  MOZ_ASSERT(!mDestinationTrack->GraphImpl() ||
+             mDestinationTrack->GraphImpl()->LifecycleStateRef() ==
+                 MediaTrackGraphImpl::LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN);
   mHolder.Reject(false, __func__);
 }
 

@@ -1,13 +1,12 @@
 [package]
 name = "sql-support"
-edition = "2018"
+edition = "2021"
 version = "0.1.0"
 authors = ["Thom Chiovoloni <tchiovoloni@mozilla.com>"]
 license = "MPL-2.0"
 
 [features]
 default = []
-log_query_plans = []
 
 [dependencies]
 log = "0.4"
@@ -18,7 +17,7 @@ thiserror = "1.0"
 tempfile = "3.1.0"
 
 [dependencies.rusqlite]
-version = "0.24.2"
+version = "0.27.0"
 features = ["functions", "limits", "bundled", "unlock_notify"]
 
 [dev-dependencies]

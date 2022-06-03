@@ -1014,7 +1014,8 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
             return NS_OK;
           }
         }
-      } else if (targetScheme.EqualsLiteral("moz-page-thumb")) {
+      } else if (targetScheme.EqualsLiteral("moz-page-thumb") ||
+                 targetScheme.EqualsLiteral("page-icon")) {
         if (XRE_IsParentProcess()) {
           return NS_OK;
         }

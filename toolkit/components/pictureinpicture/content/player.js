@@ -293,6 +293,7 @@ let Player = {
           }
         });
         if (this.isFullscreen) {
+          window.focus();
           this.actor.sendAsyncMessage("PictureInPicture:EnterFullscreen", {
             isFullscreen: true,
             isVideoControlsShowing: null,

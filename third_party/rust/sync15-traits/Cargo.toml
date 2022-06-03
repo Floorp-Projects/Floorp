@@ -3,7 +3,7 @@ name = "sync15-traits"
 version = "0.1.0"
 authors = ["Thom Chiovoloni <tchiovoloni@mozilla.com>"]
 license = "MPL-2.0"
-edition = "2018"
+edition = "2021"
 
 [features]
 random-guid = ["sync-guid/random"]
@@ -14,5 +14,5 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 log = "0.4"
 ffi-support = "0.4"
-url = "2.1"
+url = "2.1" # mozilla-central can't yet take 2.2 (see bug 1734538)
 anyhow = "1.0"

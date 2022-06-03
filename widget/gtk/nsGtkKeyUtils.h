@@ -20,6 +20,7 @@
 #  include <gdk/gdkwayland.h>
 #  include <xkbcommon/xkbcommon.h>
 #endif
+#include "X11UndefineNone.h"
 
 class nsWindow;
 

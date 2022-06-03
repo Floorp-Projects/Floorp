@@ -327,6 +327,11 @@ declare namespace MockedExports {
   }
 }
 
+interface PathUtilsInterface {
+  split: (path: string) => string[];
+  isAbsolute: (path: string) => boolean;
+}
+
 declare module "devtools/client/shared/vendor/react" {
   import * as React from "react";
   export = React;
@@ -406,6 +411,8 @@ declare module "resource://devtools/shared/loader/Loader.jsm" {
 }
 
 declare var ChromeUtils: MockedExports.ChromeUtils;
+
+declare var PathUtils: PathUtilsInterface;
 
 // These global objects can be used directly in JSM files only.
 // In a CommonJS context you need to import them with `require("chrome")`.

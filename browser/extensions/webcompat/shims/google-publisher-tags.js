@@ -94,6 +94,13 @@ if (window.googletag?.apiReady === undefined) {
     return this;
   };
 
+  const removeEventListener = function(name, listener) {
+    if (eventCallbacks.has(name)) {
+      return eventCallbacks.get(name).delete(listener);
+    }
+    return false;
+  };
+
   const companionAdsService = {
     addEventListener,
     display,
@@ -112,6 +119,7 @@ if (window.googletag?.apiReady === undefined) {
     notifyUnfilledSlots() {},
     onImplementationLoaded() {},
     refreshAllSlots() {},
+    removeEventListener,
     set() {},
     setRefreshUnfilledSlots() {},
     setVideoSession() {},
@@ -121,6 +129,7 @@ if (window.googletag?.apiReady === undefined) {
   const contentService = {
     addEventListener,
     setContent() {},
+    removeEventListener,
   };
 
   const getTargetingValue = v => {
@@ -318,6 +327,7 @@ if (window.googletag?.apiReady === undefined) {
         }
       }
     },
+    removeEventListener,
     set(k, v) {
       gAttributes[k] = v;
       return this;

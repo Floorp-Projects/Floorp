@@ -84,7 +84,7 @@ impl Header {
     #[inline]
     fn set_value<V: AsRef<str>>(&mut self, s: V) -> Result<(), crate::Error> {
         let value = s.as_ref();
-        if !is_valid_header_value(&value) {
+        if !is_valid_header_value(value) {
             Err(crate::Error::RequestHeaderError(self.name.clone()))
         } else {
             self.value.clear();

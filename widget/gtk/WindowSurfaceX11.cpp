@@ -6,10 +6,8 @@
 
 #include "WindowSurfaceX11.h"
 #include "gfxPlatform.h"
-#include "X11UndefineNone.h"
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 WindowSurfaceX11::WindowSurfaceX11(Display* aDisplay, Window aWindow,
                                    Visual* aVisual, unsigned int aDepth)
@@ -46,5 +44,4 @@ gfx::SurfaceFormat WindowSurfaceX11::GetVisualFormat(const Visual* aVisual,
   return gfx::SurfaceFormat::UNKNOWN;
 }
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget

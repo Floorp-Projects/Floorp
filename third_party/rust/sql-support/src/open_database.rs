@@ -28,7 +28,9 @@
 ///  See the autofill DB code for an example.
 ///
 use crate::ConnExt;
-use rusqlite::{Connection, OpenFlags, Transaction, NO_PARAMS};
+use rusqlite::{
+    Connection, Error as RusqliteError, ErrorCode, OpenFlags, Transaction, TransactionBehavior,
+};
 use std::path::Path;
 use thiserror::Error;
 
@@ -38,6 +40,9 @@ pub enum Error {
     IncompatibleVersion(u32),
     #[error("Error executing SQL: {0}")]
     SqlError(#[from] rusqlite::Error),
+    // `.0` is the original `Error` in string form.
+    #[error("Failed to recover a corrupt database ('{0}') due to an error deleting the file: {1}")]
+    RecoveryError(String, std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -88,16 +93,29 @@ pub fn open_database_with_flags<CI: ConnectionInitializer, P: AsRef<Path>>(
     open_flags: OpenFlags,
     connection_initializer: &CI,
 ) -> Result<Connection> {
+    do_open_database_with_flags(&path, open_flags, connection_initializer).or_else(|e| {
+        // See if we can recover from the error and try a second time
+        try_handle_db_failure(&path, open_flags, connection_initializer, e)?;
+        do_open_database_with_flags(&path, open_flags, connection_initializer)
+    })
+}
+
+fn do_open_database_with_flags<CI: ConnectionInitializer, P: AsRef<Path>>(
+    path: P,
+    open_flags: OpenFlags,
+    connection_initializer: &CI,
+) -> Result<Connection> {
     // Try running the migration logic with an existing file
     log::debug!("{}: opening database", CI::NAME);
     let mut conn = Connection::open_with_flags(path, open_flags)?;
+    log::debug!("{}: checking if initialization is necessary", CI::NAME);
     let run_init = should_init(&conn)?;
 
     log::debug!("{}: preparing", CI::NAME);
     connection_initializer.prepare(&conn)?;
 
     if open_flags.contains(OpenFlags::SQLITE_OPEN_READ_WRITE) {
-        let tx = conn.transaction()?;
+        let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
         if run_init {
             log::debug!("{}: initializing new database", CI::NAME);
             connection_initializer.init(&tx)?;
@@ -142,12 +160,64 @@ pub fn open_memory_database_with_flags<CI: ConnectionInitializer>(
     open_database_with_flags(":memory:", flags, conn_initializer)
 }
 
+// Attempt to handle failure when opening the database.
+//
+// Returns:
+//   - Ok(()) the failure is potentially handled and we should make a second open attempt
+//   - Err(e) the failure couldn't be handled and we should return this error
+fn try_handle_db_failure<CI: ConnectionInitializer, P: AsRef<Path>>(
+    path: P,
+    open_flags: OpenFlags,
+    _connection_initializer: &CI,
+    err: Error,
+) -> Result<()> {
+    if !open_flags.contains(OpenFlags::SQLITE_OPEN_CREATE)
+        && matches!(err, Error::SqlError(rusqlite::Error::SqliteFailure(code, _)) if code.code == rusqlite::ErrorCode::CannotOpen)
+    {
+        log::info!(
+            "{}: database doesn't exist, but we weren't requested to create it",
+            CI::NAME
+        );
+        return Err(err);
+    }
+    log::warn!("{}: database operation failed: {}", CI::NAME, err);
+    if !open_flags.contains(OpenFlags::SQLITE_OPEN_READ_WRITE) {
+        log::warn!(
+            "{}: not attempting recovery as this is a read-only connection request",
+            CI::NAME
+        );
+        return Err(err);
+    }
+
+    let delete = match err {
+        Error::SqlError(RusqliteError::SqliteFailure(e, _)) => {
+            matches!(e.code, ErrorCode::DatabaseCorrupt | ErrorCode::NotADatabase)
+        }
+        _ => false,
+    };
+    if delete {
+        log::info!(
+            "{}: the database is fatally damaged; deleting and starting fresh",
+            CI::NAME
+        );
+        // Note we explicitly decline to move the path to, say ".corrupt", as it's difficult to
+        // identify any value there - actually getting our hands on the file from a mobile device
+        // is tricky and it would just take up disk space forever.
+        if let Err(io_err) = std::fs::remove_file(path) {
+            return Err(Error::RecoveryError(err.to_string(), io_err));
+        }
+        Ok(())
+    } else {
+        Err(err)
+    }
+}
+
 fn should_init(conn: &Connection) -> Result<bool> {
     Ok(conn.query_one::<u32>("SELECT COUNT(*) FROM sqlite_master")? == 0)
 }
 
 fn get_schema_version(conn: &Connection) -> Result<u32> {
-    let version = conn.query_row_and_then("PRAGMA user_version", NO_PARAMS, |row| row.get(0))?;
+    let version = conn.query_row_and_then("PRAGMA user_version", [], |row| row.get(0))?;
     Ok(version)
 }
 
@@ -230,6 +300,7 @@ mod test {
     use super::test_utils::MigratedDatabaseFile;
     use super::*;
     use std::cell::RefCell;
+    use std::io::Write;
 
     struct TestConnectionInitializer {
         pub calls: RefCell<Vec<&'static str>>,
@@ -343,10 +414,10 @@ mod test {
 
     fn check_final_data(conn: &Connection) {
         let value: String = conn
-            .query_row("SELECT col FROM my_table", NO_PARAMS, |r| r.get(0))
+            .query_row("SELECT col FROM my_table", [], |r| r.get(0))
             .unwrap();
         assert_eq!(value, "correct-value");
-        assert_eq!(get_schema_version(&conn).unwrap(), 4);
+        assert_eq!(get_schema_version(conn).unwrap(), 4);
     }
 
     #[test]
@@ -400,7 +471,7 @@ mod test {
             .open()
             .execute(
                 "INSERT INTO my_old_table_name(old_col) VALUES ('I should not be deleted')",
-                NO_PARAMS,
+                [],
             )
             .unwrap();
 
@@ -425,7 +496,7 @@ mod test {
             .open()
             .execute(
                 "INSERT INTO my_old_table_name(old_col) VALUES ('I should not be deleted')",
-                NO_PARAMS,
+                [],
             )
             .unwrap();
 
@@ -442,5 +513,24 @@ mod test {
                 .unwrap(),
             1
         );
+    }
+
+    #[test]
+    fn test_corrupt_db() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let path = tempdir.path().join(Path::new("corrupt-db.sql"));
+        let mut file = std::fs::File::create(path.clone()).unwrap();
+        // interestingly, sqlite seems to treat a 0-byte file as a missing one.
+        // Note that this will exercise the `ErrorCode::NotADatabase` error code. It's not clear
+        // how we could hit `ErrorCode::DatabaseCorrupt`, but even if we could, there's not much
+        // value as this test can't really observe which one it was.
+        file.write_all(b"not sql").unwrap();
+        let metadata = std::fs::metadata(path.clone()).unwrap();
+        assert_eq!(metadata.len(), 7);
+        drop(file);
+        open_database(path.clone(), &TestConnectionInitializer::new()).unwrap();
+        let metadata = std::fs::metadata(path).unwrap();
+        // just check the file is no longer what it was before.
+        assert_ne!(metadata.len(), 7);
     }
 }

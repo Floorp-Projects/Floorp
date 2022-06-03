@@ -24,16 +24,9 @@
   </style>
 </head>
 <body >
-  <!-- Test that an overscroll past one end of a viewport is rendered
-      as having the content create a gutter, and that
-      the overscroll is reduced by some factor such that 
-      a 100px scroll must produce a rendered translation of less than
-      100px.
-
-      Current overscroll physics mean that an instantaneous overscroll
-      by 200px produces an 8px gutter. This is governed by the logic in
-      Axis::ApplyResistance(); if that logic is changed, this test will
-      need to be modified to account for the new result.
+  <!-- Test that an overscroll past one end of a viewport does not
+       cause a position fixed element to be transformed if the position
+       fixed element's containing block is the current viewport.
   -->
   <div></div>
 </body>

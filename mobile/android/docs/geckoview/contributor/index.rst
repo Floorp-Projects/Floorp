@@ -4,9 +4,6 @@
 Contributing to GeckoView
 =========================
 
-Contributor Site
-================
-
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -17,6 +14,7 @@ Contributor Site
    contributing-to-mc
    native-debugging
    geckoview-architecture
+   junit
 
 If you want to run GeckoView from code, or start contributing back to
 the project, here you will find resources to help you do that.
@@ -34,6 +32,8 @@ the project, here you will find resources to help you do that.
    Set up Android Studio for debugging native code.
 -  `GeckoView Architecture <geckoview-architecture.html>`_: An overview of
    GeckoView's architecture.
+-  `Junit Test Framework <junit.html>`_: An overview of GeckoView's custom
+   Junit code.
 
 If there is documentation that you feel is missing, or an existing
 document doesn’t cover the aspect that you are looking for, please

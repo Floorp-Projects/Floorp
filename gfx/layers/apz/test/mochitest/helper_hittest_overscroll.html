@@ -21,11 +21,31 @@
       width: 4px;
       background: red;
     }
+    #fixedtarget {
+      left: 300px;
+      height: 20px;
+      width: 5px;
+      top: 2px;
+      background: green;
+      position: fixed;
+    }
+    #fixedtargetbutton {
+      height: 10px;
+      width: 5px;
+      padding: 0;
+      margin-top: 10;
+      margin-left: 0;
+      border: 0;
+    }
   </style>
 </head>
 <body>
  <div id="target"></div>
- <div class="spacer"></div>
+ <div id="fixedtarget">
+   <button id="fixedtargetbutton">
+   </button>
+ </div>
+ <div id="spacer" class="spacer"></div>
 </body>
 <script type="application/javascript">
 
@@ -106,31 +126,42 @@ async function test() {
   // on both the browser chrome window and the content window.
   // This makes sure we catch the case where the overscroll transform causes
   // the event to incorrectly target the browser chrome.
-  startListeningForClickEventsInChrome();
-  let contentReceivedClick = false;
-  let contentListener = function(e) {
-    contentReceivedClick = true;
-  };
-  document.addEventListener("click", contentListener);
-  await synthesizeNativeMouseEventWithAPZ({
-    type: "click",
-    target: window,
-    offsetX: 100,
-    offsetY: 4
-  });
-  // Wait 10 frames for the event to maybe arrive, and if it
-  // hasn't, assume it won't.
-  for (let i = 0; i < 10; i++) {
-    await promiseFrame();
+
+  //// Util function to perform mouse events in the gutter. Used to ensure these
+  //// events are not dispatched to the content.
+  async function clickInGutter(xOffset, yOffset) {
+    startListeningForClickEventsInChrome();
+    let contentReceivedClick = false;
+    let contentListener = function(e) {
+      info("event clientX = " + e.clientX);
+      info("event clientY = " + e.clientY);
+      info("event target id: " + e.target.id);
+      contentReceivedClick = true;
+    };
+    document.addEventListener("click", contentListener);
+    await synthesizeNativeMouseEventWithAPZ({
+      type: "click",
+      target: window,
+      offsetX: xOffset,
+      offsetY: yOffset,
+    });
+    // Wait 10 frames for the event to maybe arrive, and if it
+    // hasn't, assume it won't.
+    for (let i = 0; i < 10; i++) {
+      await promiseFrame();
+    }
+    info("Finished waiting around for click event");
+    let chromeReceivedClick = await didChromeReceiveClick();
+    ok(!chromeReceivedClick,
+       "Gecko received click event in browser chrome when it shouldn't have");
+    ok(!contentReceivedClick,
+       "Gecko received click event targeting web content when it shouldn't have");
+    stopListeningForClickEventsInChrome();
+    document.removeEventListener("click", contentListener);
   }
-  info("Finished waiting around for click event");
-  let chromeReceivedClick = await didChromeReceiveClick();
-  ok(!chromeReceivedClick,
-     "Gecko received click event in browser chrome when it shouldn't have");
-  ok(!contentReceivedClick,
-     "Gecko received click event targeting web content when it shouldn't have");
-  stopListeningForClickEventsInChrome();
-  document.removeEventListener("click", contentListener);
+
+  // Perform the test
+  await clickInGutter(100, 4);
 
   // Finally, while still overscrolled, perform a click not in the gutter.
   // This event should successfully go through to the web content, and
@@ -148,9 +179,69 @@ async function test() {
     type: "click",
     target: window,
     offsetX: 102,
-    offsetY: 12
+    offsetY: 12,
   });
   await clickPromise;
+
+  // Test that mouse events targetting the fixed content are dispatched
+  // to the content.
+  async function clickFixed(yOffset, expectedTarget) {
+    let clickFixedPromise = new Promise(resolve => {
+      document.addEventListener("click", function(e) {
+        info("event clientX = " + e.clientX);
+        info("event clientY = " + e.clientY);
+        info("event target id: " + e.target.id);
+        is(e.target, expectedTarget, "Click while overscrolled hit intended target");
+        resolve();
+      }, { once: true });
+    });
+    await synthesizeNativeMouseEventWithAPZ({
+      type: "click",
+      target: window,
+      offsetX: 302,
+      offsetY: yOffset,
+    });
+    await clickFixedPromise;
+  }
+
+  // This hit is technically in the gutter created by the overscroll, but we
+  // should still dispatch to gecko due to the fixed element extending into
+  // the gutter.
+  await clickFixed(4, fixedtarget, false);
+  // Perform various mouse events to ensure the fixed element has not moved
+  await clickFixed(10, fixedtarget, false);
+  await clickFixed(14, fixedtargetbutton, false);
+  await clickFixed(18, fixedtargetbutton, false);
+
+  let clickFixedPromise = new Promise(resolve => {
+    document.addEventListener("click", function(e) {
+      info("event clientX = " + e.clientX);
+      info("event clientY = " + e.clientY);
+      info("event target id: " + e.target.id);
+      // TODO(dlrobertson): What exists directly below the fixed element?
+      // Should there be a gutter below the fixed element? Or should events
+      // directed below the fixed element be dispatched normally. In the
+      // transform of the mouse event, the hit will not have any side bits
+      // set and we  will transform the hit result. As a result, 25 will be
+      // transformed to ~17, and the event will be dispatched to the fixed
+      // element.
+      todo(false,
+           "Click while overscrolled hit intended target below fixed content");
+      resolve();
+    }, { once: true });
+  });
+  await synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: window,
+    offsetX: 302,
+    offsetY: 25,
+  });
+  await clickFixedPromise;
+
+  // Click above the fixed element, but in the gutter.
+  await clickInGutter(302, 1);
+  // Click left of the the fixed element, but in the gutter.
+  await clickInGutter(298, 4);
 }
 
 waitUntilApzStable()

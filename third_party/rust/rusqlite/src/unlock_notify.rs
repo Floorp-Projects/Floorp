@@ -1,22 +1,17 @@
 //! [Unlock Notification](http://sqlite.org/unlock_notify.html)
 
 use std::os::raw::c_int;
-#[cfg(feature = "unlock_notify")]
 use std::os::raw::c_void;
-#[cfg(feature = "unlock_notify")]
 use std::panic::catch_unwind;
-#[cfg(feature = "unlock_notify")]
 use std::sync::{Condvar, Mutex};
 
 use crate::ffi;
 
-#[cfg(feature = "unlock_notify")]
 struct UnlockNotification {
     cond: Condvar,      // Condition variable to wait on
     mutex: Mutex<bool>, // Mutex to protect structure
 }
 
-#[cfg(feature = "unlock_notify")]
 #[allow(clippy::mutex_atomic)]
 impl UnlockNotification {
     fn new() -> UnlockNotification {
@@ -27,30 +22,33 @@ impl UnlockNotification {
     }
 
     fn fired(&self) {
-        let mut flag = self.mutex.lock().unwrap();
+        let mut flag = unpoison(self.mutex.lock());
         *flag = true;
         self.cond.notify_one();
     }
 
     fn wait(&self) {
-        let mut fired = self.mutex.lock().unwrap();
+        let mut fired = unpoison(self.mutex.lock());
         while !*fired {
-            fired = self.cond.wait(fired).unwrap();
+            fired = unpoison(self.cond.wait(fired));
         }
     }
 }
 
+#[inline]
+fn unpoison<T>(r: Result<T, std::sync::PoisonError<T>>) -> T {
+    r.unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 /// This function is an unlock-notify callback
-#[cfg(feature = "unlock_notify")]
 unsafe extern "C" fn unlock_notify_cb(ap_arg: *mut *mut c_void, n_arg: c_int) {
     use std::slice::from_raw_parts;
     let args = from_raw_parts(ap_arg as *const &UnlockNotification, n_arg as usize);
     for un in args {
-        let _ = catch_unwind(std::panic::AssertUnwindSafe(|| un.fired()));
+        drop(catch_unwind(std::panic::AssertUnwindSafe(|| un.fired())));
     }
 }
 
-#[cfg(feature = "unlock_notify")]
 pub unsafe fn is_locked(db: *mut ffi::sqlite3, rc: c_int) -> bool {
     rc == ffi::SQLITE_LOCKED_SHAREDCACHE
         || (rc & 0xFF) == ffi::SQLITE_LOCKED
@@ -87,30 +85,19 @@ pub unsafe fn wait_for_unlock_notify(db: *mut ffi::sqlite3) -> c_int {
     rc
 }
 
-#[cfg(not(feature = "unlock_notify"))]
-pub unsafe fn is_locked(_db: *mut ffi::sqlite3, _rc: c_int) -> bool {
-    unreachable!()
-}
-
-#[cfg(not(feature = "unlock_notify"))]
-pub unsafe fn wait_for_unlock_notify(_db: *mut ffi::sqlite3) -> c_int {
-    unreachable!()
-}
-
-#[cfg(feature = "unlock_notify")]
 #[cfg(test)]
 mod test {
-    use crate::{Connection, OpenFlags, Result, Transaction, TransactionBehavior, NO_PARAMS};
+    use crate::{Connection, OpenFlags, Result, Transaction, TransactionBehavior};
     use std::sync::mpsc::sync_channel;
     use std::thread;
     use std::time;
 
     #[test]
-    fn test_unlock_notify() {
+    fn test_unlock_notify() -> Result<()> {
         let url = "file::memory:?cache=shared";
         let flags = OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_URI;
-        let db1 = Connection::open_with_flags(url, flags).unwrap();
-        db1.execute_batch("CREATE TABLE foo (x)").unwrap();
+        let db1 = Connection::open_with_flags(url, flags)?;
+        db1.execute_batch("CREATE TABLE foo (x)")?;
         let (rx, tx) = sync_channel(0);
         let child = thread::spawn(move || {
             let mut db2 = Connection::open_with_flags(url, flags).unwrap();
@@ -122,8 +109,9 @@ mod test {
             tx2.commit().unwrap();
         });
         assert_eq!(tx.recv().unwrap(), 1);
-        let the_answer: Result<i64> = db1.query_row("SELECT x FROM foo", NO_PARAMS, |r| r.get(0));
-        assert_eq!(42i64, the_answer.unwrap());
+        let the_answer: Result<i64> = db1.query_row("SELECT x FROM foo", [], |r| r.get(0));
+        assert_eq!(42i64, the_answer?);
         child.join().unwrap();
+        Ok(())
     }
 }

@@ -20,7 +20,8 @@ class APZHitTestingTester : public APZCTreeManagerTester {
         manager->GetTargetAPZC(aPoint).mTargetApzc;
     if (hit) {
       transformToApzc = manager->GetScreenToApzcTransform(hit.get());
-      transformToGecko = manager->GetApzcToGeckoTransform(hit.get());
+      transformToGecko =
+          manager->GetApzcToGeckoTransform(hit.get(), LayoutAndVisual);
     }
     return hit.forget();
   }

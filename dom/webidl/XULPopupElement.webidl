@@ -42,6 +42,8 @@ interface XULPopupElement : XULElement
   /**
    * Open the popup relative to a specified node at a specific location.
    *
+   * If the popup is already open, calling this method has no effect.
+   *
    * The popup may be either anchored to another node or opened freely.
    * To anchor a popup to a node, supply an anchor node and set the position
    * to a string indicating the manner in which the popup should be anchored.
@@ -104,6 +106,8 @@ interface XULPopupElement : XULElement
    * similar to openPopup except that that rectangle of the anchor is supplied
    * rather than an element. The anchor rectangle arguments are screen
    * coordinates.
+   *
+   * If the popup is already open, calling this method has no effect.
    */
   void openPopupAtScreenRect(optional DOMString position = "",
                              optional long x = 0,

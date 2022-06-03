@@ -7,6 +7,7 @@
 #include "mozilla/Logging.h"
 #include "nsString.h"
 #include "prtime.h"
+#include "prenv.h"
 
 #include "IMContextWrapper.h"
 #include "nsGtkKeyUtils.h"

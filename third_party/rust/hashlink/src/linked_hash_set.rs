@@ -250,7 +250,7 @@ where
     }
 
     #[inline]
-    pub fn back(&mut self) -> Option<&T> {
+    pub fn back(&self) -> Option<&T> {
         self.map.back().map(|(k, _)| k)
     }
 
@@ -304,12 +304,8 @@ where
     S: BuildHasher,
 {
     #[inline]
-    fn eq(&self, other: &LinkedHashSet<T, S>) -> bool {
-        if self.len() != other.len() {
-            return false;
-        }
-
-        self.iter().all(|key| other.contains(key))
+    fn eq(&self, other: &Self) -> bool {
+        self.len() == other.len() && self.iter().eq(other)
     }
 }
 

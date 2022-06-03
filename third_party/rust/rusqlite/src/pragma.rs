@@ -5,7 +5,7 @@ use std::ops::Deref;
 use crate::error::Error;
 use crate::ffi;
 use crate::types::{ToSql, ToSqlOutput, ValueRef};
-use crate::{Connection, DatabaseName, Result, Row, NO_PARAMS};
+use crate::{Connection, DatabaseName, Result, Row};
 
 pub struct Sql {
     buf: String,
@@ -143,7 +143,7 @@ impl Sql {
             if ch == quote {
                 self.buf.push(ch);
             }
-            self.buf.push(ch)
+            self.buf.push(ch);
         }
         self.buf.push(quote);
     }
@@ -176,7 +176,7 @@ impl Connection {
     {
         let mut query = Sql::new();
         query.push_pragma(schema_name, pragma_name)?;
-        self.query_row(&query, NO_PARAMS, f)
+        self.query_row(&query, [], f)
     }
 
     /// Query the current rows/values of `pragma_name`.
@@ -195,10 +195,10 @@ impl Connection {
         let mut query = Sql::new();
         query.push_pragma(schema_name, pragma_name)?;
         let mut stmt = self.prepare(&query)?;
-        let mut rows = stmt.query(NO_PARAMS)?;
+        let mut rows = stmt.query([])?;
         while let Some(result_row) = rows.next()? {
             let row = result_row;
-            f(&row)?;
+            f(row)?;
         }
         Ok(())
     }
@@ -212,15 +212,16 @@ impl Connection {
     ///
     /// Prefer [PRAGMA function](https://sqlite.org/pragma.html#pragfunc) introduced in SQLite 3.20:
     /// `SELECT * FROM pragma_table_info(?);`
-    pub fn pragma<F>(
+    pub fn pragma<F, V>(
         &self,
         schema_name: Option<DatabaseName<'_>>,
         pragma_name: &str,
-        pragma_value: &dyn ToSql,
+        pragma_value: V,
         mut f: F,
     ) -> Result<()>
     where
         F: FnMut(&Row<'_>) -> Result<()>,
+        V: ToSql,
     {
         let mut sql = Sql::new();
         sql.push_pragma(schema_name, pragma_name)?;
@@ -228,13 +229,13 @@ impl Connection {
         // or it may be separated from the pragma name by an equal sign.
         // The two syntaxes yield identical results.
         sql.open_brace();
-        sql.push_value(pragma_value)?;
+        sql.push_value(&pragma_value)?;
         sql.close_brace();
         let mut stmt = self.prepare(&sql)?;
-        let mut rows = stmt.query(NO_PARAMS)?;
+        let mut rows = stmt.query([])?;
         while let Some(result_row) = rows.next()? {
             let row = result_row;
-            f(&row)?;
+            f(row)?;
         }
         Ok(())
     }
@@ -243,34 +244,14 @@ impl Connection {
     ///
     /// Some pragmas will return the updated value which cannot be retrieved
     /// with this method.
-    pub fn pragma_update(
+    pub fn pragma_update<V>(
         &self,
         schema_name: Option<DatabaseName<'_>>,
         pragma_name: &str,
-        pragma_value: &dyn ToSql,
-    ) -> Result<()> {
-        let mut sql = Sql::new();
-        sql.push_pragma(schema_name, pragma_name)?;
-        // The argument may be either in parentheses
-        // or it may be separated from the pragma name by an equal sign.
-        // The two syntaxes yield identical results.
-        sql.push_equal_sign();
-        sql.push_value(pragma_value)?;
-        self.execute_batch(&sql)
-    }
-
-    /// Set a new value to `pragma_name` and return the updated value.
-    ///
-    /// Only few pragmas automatically return the updated value.
-    pub fn pragma_update_and_check<F, T>(
-        &self,
-        schema_name: Option<DatabaseName<'_>>,
-        pragma_name: &str,
-        pragma_value: &dyn ToSql,
-        f: F,
-    ) -> Result<T>
+        pragma_value: V,
+    ) -> Result<()>
     where
-        F: FnOnce(&Row<'_>) -> Result<T>,
+        V: ToSql,
     {
         let mut sql = Sql::new();
         sql.push_pragma(schema_name, pragma_name)?;
@@ -278,8 +259,32 @@ impl Connection {
         // or it may be separated from the pragma name by an equal sign.
         // The two syntaxes yield identical results.
         sql.push_equal_sign();
-        sql.push_value(pragma_value)?;
-        self.query_row(&sql, NO_PARAMS, f)
+        sql.push_value(&pragma_value)?;
+        self.execute_batch(&sql)
+    }
+
+    /// Set a new value to `pragma_name` and return the updated value.
+    ///
+    /// Only few pragmas automatically return the updated value.
+    pub fn pragma_update_and_check<F, T, V>(
+        &self,
+        schema_name: Option<DatabaseName<'_>>,
+        pragma_name: &str,
+        pragma_value: V,
+        f: F,
+    ) -> Result<T>
+    where
+        F: FnOnce(&Row<'_>) -> Result<T>,
+        V: ToSql,
+    {
+        let mut sql = Sql::new();
+        sql.push_pragma(schema_name, pragma_name)?;
+        // The argument may be either in parentheses
+        // or it may be separated from the pragma name by an equal sign.
+        // The two syntaxes yield identical results.
+        sql.push_equal_sign();
+        sql.push_value(&pragma_value)?;
+        self.query_row(&sql, [], f)
     }
 }
 
@@ -298,15 +303,15 @@ fn is_identifier(s: &str) -> bool {
 }
 
 fn is_identifier_start(c: char) -> bool {
-    (c >= 'A' && c <= 'Z') || c == '_' || (c >= 'a' && c <= 'z') || c > '\x7F'
+    ('A'..='Z').contains(&c) || c == '_' || ('a'..='z').contains(&c) || c > '\x7F'
 }
 
 fn is_identifier_continue(c: char) -> bool {
     c == '$'
-        || (c >= '0' && c <= '9')
-        || (c >= 'A' && c <= 'Z')
+        || ('0'..='9').contains(&c)
+        || ('A'..='Z').contains(&c)
         || c == '_'
-        || (c >= 'a' && c <= 'z')
+        || ('a'..='z').contains(&c)
         || c > '\x7F'
 }
 
@@ -314,99 +319,106 @@ fn is_identifier_continue(c: char) -> bool {
 mod test {
     use super::Sql;
     use crate::pragma;
-    use crate::{Connection, DatabaseName};
+    use crate::{Connection, DatabaseName, Result};
 
     #[test]
-    fn pragma_query_value() {
-        let db = Connection::open_in_memory().unwrap();
-        let user_version: i32 = db
-            .pragma_query_value(None, "user_version", |row| row.get(0))
-            .unwrap();
+    fn pragma_query_value() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+        let user_version: i32 = db.pragma_query_value(None, "user_version", |row| row.get(0))?;
         assert_eq!(0, user_version);
+        Ok(())
     }
 
     #[test]
     #[cfg(feature = "modern_sqlite")]
-    fn pragma_func_query_value() {
-        use crate::NO_PARAMS;
-
-        let db = Connection::open_in_memory().unwrap();
-        let user_version: i32 = db
-            .query_row(
-                "SELECT user_version FROM pragma_user_version",
-                NO_PARAMS,
-                |row| row.get(0),
-            )
-            .unwrap();
+    fn pragma_func_query_value() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+        let user_version: i32 =
+            db.query_row("SELECT user_version FROM pragma_user_version", [], |row| {
+                row.get(0)
+            })?;
         assert_eq!(0, user_version);
+        Ok(())
     }
 
     #[test]
-    fn pragma_query_no_schema() {
-        let db = Connection::open_in_memory().unwrap();
+    fn pragma_query_no_schema() -> Result<()> {
+        let db = Connection::open_in_memory()?;
         let mut user_version = -1;
         db.pragma_query(None, "user_version", |row| {
             user_version = row.get(0)?;
             Ok(())
-        })
-        .unwrap();
+        })?;
         assert_eq!(0, user_version);
+        Ok(())
     }
 
     #[test]
-    fn pragma_query_with_schema() {
-        let db = Connection::open_in_memory().unwrap();
+    fn pragma_query_with_schema() -> Result<()> {
+        let db = Connection::open_in_memory()?;
         let mut user_version = -1;
         db.pragma_query(Some(DatabaseName::Main), "user_version", |row| {
             user_version = row.get(0)?;
             Ok(())
-        })
-        .unwrap();
+        })?;
         assert_eq!(0, user_version);
+        Ok(())
     }
 
     #[test]
-    fn pragma() {
-        let db = Connection::open_in_memory().unwrap();
+    fn pragma() -> Result<()> {
+        let db = Connection::open_in_memory()?;
         let mut columns = Vec::new();
         db.pragma(None, "table_info", &"sqlite_master", |row| {
             let column: String = row.get(1)?;
             columns.push(column);
             Ok(())
-        })
-        .unwrap();
+        })?;
         assert_eq!(5, columns.len());
+        Ok(())
     }
 
     #[test]
     #[cfg(feature = "modern_sqlite")]
-    fn pragma_func() {
-        let db = Connection::open_in_memory().unwrap();
-        let mut table_info = db.prepare("SELECT * FROM pragma_table_info(?)").unwrap();
+    fn pragma_func() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+        let mut table_info = db.prepare("SELECT * FROM pragma_table_info(?)")?;
         let mut columns = Vec::new();
-        let mut rows = table_info.query(&["sqlite_master"]).unwrap();
+        let mut rows = table_info.query(["sqlite_master"])?;
 
-        while let Some(row) = rows.next().unwrap() {
+        while let Some(row) = rows.next()? {
             let row = row;
-            let column: String = row.get(1).unwrap();
+            let column: String = row.get(1)?;
             columns.push(column);
         }
         assert_eq!(5, columns.len());
+        Ok(())
     }
 
     #[test]
-    fn pragma_update() {
-        let db = Connection::open_in_memory().unwrap();
-        db.pragma_update(None, "user_version", &1).unwrap();
+    fn pragma_update() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+        db.pragma_update(None, "user_version", 1)
     }
 
     #[test]
-    fn pragma_update_and_check() {
-        let db = Connection::open_in_memory().unwrap();
-        let journal_mode: String = db
-            .pragma_update_and_check(None, "journal_mode", &"OFF", |row| row.get(0))
-            .unwrap();
+    fn pragma_update_and_check() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+        let journal_mode: String =
+            db.pragma_update_and_check(None, "journal_mode", "OFF", |row| row.get(0))?;
         assert_eq!("off", &journal_mode);
+        // Sanity checks to ensure the move to a generic `ToSql` wasn't breaking
+        assert_eq!(
+            "off",
+            db.pragma_update_and_check(None, "journal_mode", &"OFF", |row| row
+                .get::<_, String>(0))?,
+        );
+        let param: &dyn crate::ToSql = &"OFF";
+        assert_eq!(
+            "off",
+            db.pragma_update_and_check(None, "journal_mode", param, |row| row.get::<_, String>(0))?,
+        );
+        Ok(())
     }
 
     #[test]
@@ -432,13 +444,14 @@ mod test {
     }
 
     #[test]
-    fn locking_mode() {
-        let db = Connection::open_in_memory().unwrap();
+    fn locking_mode() -> Result<()> {
+        let db = Connection::open_in_memory()?;
         let r = db.pragma_update(None, "locking_mode", &"exclusive");
         if cfg!(feature = "extra_check") {
             r.unwrap_err();
         } else {
-            r.unwrap();
+            r?;
         }
+        Ok(())
     }
 }

@@ -25,6 +25,7 @@ class ExpectedGeckoMetrics {
   void UpdateZoomFrom(const FrameMetrics& aMetrics);
 
   const CSSPoint& GetVisualScrollOffset() const { return mVisualScrollOffset; }
+  const CSSPoint& GetLayoutScrollOffset() const { return mLayoutScrollOffset; }
   const CSSToParentLayerScale& GetZoom() const { return mZoom; }
   const CSSToLayoutDeviceScale& GetDevPixelsPerCSSPixel() const {
     return mDevPixelsPerCSSPixel;
@@ -32,6 +33,7 @@ class ExpectedGeckoMetrics {
 
  private:
   CSSPoint mVisualScrollOffset;
+  CSSPoint mLayoutScrollOffset;
   CSSToParentLayerScale mZoom;
   CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
 };

@@ -4621,9 +4621,9 @@ AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
     std::size_t aSampleIndex) const {
   AsyncTransformComponentMatrix asyncTransform =
       GetCurrentAsyncTransform(aMode, aComponents, aSampleIndex);
-  // The overscroll transform is considered part of the visual component of
-  // the async transform, because it should apply to fixed content as well.
-  if (aComponents.contains(AsyncTransformComponent::eVisual)) {
+  // The overscroll transform is considered part of the layout component of
+  // the async transform, because it should not apply to fixed content.
+  if (aComponents.contains(AsyncTransformComponent::eLayout)) {
     return asyncTransform * GetOverscrollTransform(aMode);
   }
   return asyncTransform;
@@ -4662,11 +4662,15 @@ AsyncPanZoomController::GetSampledScrollOffsets() const {
   for (std::deque<SampledAPZCState>::size_type index = 0;
        index < mSampledState.size(); index++) {
     ParentLayerPoint layerTranslation =
-        GetCurrentAsyncTransformWithOverscroll(
-            AsyncPanZoomController::eForCompositing, asyncTransformComponents,
-            index)
-            .TransformPoint(ParentLayerPoint(0, 0));
+        GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
+                                 asyncTransformComponents, index)
+            .mTranslation;
 
+    // Include the overscroll transform here in scroll offsets transform
+    // to ensure that we do not overscroll fixed content.
+    layerTranslation =
+        GetOverscrollTransform(AsyncPanZoomController::eForCompositing)
+            .TransformPoint(layerTranslation);
     // The positive translation means the painted content is supposed to
     // move down (or to the right), and that corresponds to a reduction in
     // the scroll offset. Since we are effectively giving WR the async
@@ -4799,11 +4803,31 @@ void AsyncPanZoomController::UnapplyAsyncTestAttributes(
   }
 }
 
-Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
+Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint(
+    const AsyncTransformComponents& aComponents) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
+  CSSPoint componentOffset;
 
-  LayerPoint scrollChange = (mLastContentPaintMetrics.GetLayoutScrollOffset() -
-                             mExpectedGeckoMetrics.GetVisualScrollOffset()) *
+  // The computation of the componentOffset should roughly be the negation
+  // of the translation in GetCurrentAsyncTransform() with the expected
+  // gecko metrics substituted for the effective scroll offsets.
+  if (aComponents.contains(AsyncTransformComponent::eVisual)) {
+    componentOffset += mExpectedGeckoMetrics.GetLayoutScrollOffset() -
+                       mExpectedGeckoMetrics.GetVisualScrollOffset();
+  }
+
+  if (aComponents.contains(AsyncTransformComponent::eLayout)) {
+    CSSPoint lastPaintLayoutOffset;
+
+    if (mLastContentPaintMetrics.IsScrollable()) {
+      lastPaintLayoutOffset = mLastContentPaintMetrics.GetLayoutScrollOffset();
+    }
+
+    componentOffset +=
+        lastPaintLayoutOffset - mExpectedGeckoMetrics.GetLayoutScrollOffset();
+  }
+
+  LayerPoint scrollChange = componentOffset *
                             mLastContentPaintMetrics.GetDevPixelsPerCSSPixel() *
                             mLastContentPaintMetrics.GetCumulativeResolution();
 
@@ -4817,7 +4841,8 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
       mExpectedGeckoMetrics.GetZoom() /
       mExpectedGeckoMetrics.GetDevPixelsPerCSSPixel();
   float zoomChange = 1.0;
-  if (lastDispatchedZoom != LayoutDeviceToParentLayerScale(0)) {
+  if (aComponents.contains(AsyncTransformComponent::eVisual) &&
+      lastDispatchedZoom != LayoutDeviceToParentLayerScale(0)) {
     zoomChange = lastContentZoom.scale / lastDispatchedZoom.scale;
   }
   return Matrix4x4::Translation(scrollChange.x, scrollChange.y, 0)

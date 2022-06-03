@@ -4,9 +4,6 @@
 Using GeckoView
 ===============
 
-Usage Documentation
-===================
-
 .. toctree::
    :maxdepth: 1
    :hidden:
