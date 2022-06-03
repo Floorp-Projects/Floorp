@@ -195,7 +195,7 @@ class QSTestUtils {
 
     if (results) {
       UrlbarQuickSuggest._resultsByKeyword.clear();
-      UrlbarQuickSuggest._addResults(results);
+      await UrlbarQuickSuggest._addResults(results);
     }
     if (config) {
       this.setConfig(config);
