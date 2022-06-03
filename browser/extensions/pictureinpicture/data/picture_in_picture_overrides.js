@@ -84,6 +84,12 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://*.laracasts.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },
 
+    nebula: {
+      "https://*.nebula.app/*": {
+        videoWrapperScriptPath: "video-wrappers/nebula.js",
+      },
+    },
+
     netflix: {
       "https://*.netflix.com/*": {
         videoWrapperScriptPath: "video-wrappers/netflix.js",
