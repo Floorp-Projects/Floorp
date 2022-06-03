@@ -3677,10 +3677,10 @@ static MOZ_ALWAYS_INLINE bool ToCodePoint(JSContext* cx, HandleValue code,
   if (JS::ToInteger(nextCP) != nextCP || nextCP < 0 ||
       nextCP > unicode::NonBMPMax) {
     ToCStringBuf cbuf;
-    if (const char* numStr = NumberToCString(cx, &cbuf, nextCP)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_NOT_A_CODEPOINT, numStr);
-    }
+    const char* numStr = NumberToCString(&cbuf, nextCP);
+    MOZ_ASSERT(numStr);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_NOT_A_CODEPOINT, numStr);
     return false;
   }
 

@@ -292,10 +292,10 @@ static void ReportInvalidOptionError(JSContext* cx, const char* type,
 static void ReportInvalidOptionError(JSContext* cx, const char* type,
                                      double option) {
   ToCStringBuf cbuf;
-  if (const char* str = NumberToCString(cx, &cbuf, option)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_INVALID_DIGITS_VALUE, str);
-  }
+  const char* str = NumberToCString(&cbuf, option);
+  MOZ_ASSERT(str);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_INVALID_DIGITS_VALUE, str);
 }
 
 /**

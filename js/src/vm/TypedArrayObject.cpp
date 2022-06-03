@@ -2485,11 +2485,8 @@ static bool StringToTypedArrayIndexSlow(JSContext* cx,
 
   // Now convert it back to a string.
   ToCStringBuf cbuf;
-  const char* cstr = js::NumberToCString(cx, &cbuf, result);
-  if (!cstr) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
+  const char* cstr = js::NumberToCString(&cbuf, result);
+  MOZ_ASSERT(cstr);
 
   // Both strings must be equal for a canonical numeric index string.
   if (s.length() != strlen(cstr) ||
