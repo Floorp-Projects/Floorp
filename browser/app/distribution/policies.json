@@ -5,9 +5,11 @@
         "DisableFirefoxStudies": true,
         "DisableTelemetry": true,
         "NoDefaultBookmarks": true,
+        "OverridePostUpdatePage": "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/",
+        "OverrideFirstRunPage": " https://floorp.ablaze.one/welcome/ | https://blog.ablaze.one/category/ablaze/ablaze-project/floorp",
         "Extensions": {
             "Install": [
-               "https://addons.mozilla.org/firefox/downloads/file/3933192/ublock_origin-1.42.4.xpi"
+               "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
             ]
         }
     }

@@ -10209,6 +10209,115 @@ if (Services.prefs.getBoolPref("floorp.legacy.menu.mode", false)) {
 document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
 }
 
+var Tag = document.createElement('style');
+    
+    Tag.innerText = `
+    @charset "utf-8";
+    /*@version       2022/02/16 Bug 1747422 - Remove preprocessor variable use from downloads CSS*/
+    /*@version       2020/03/13 fix for 74, broken listitem orient due to Bug 1606130
+    /*@version       2019/12/11 fix for 73 Bug 1601094 - Rename remaining .xul files to .xhtml in browser */
+    /*@version        2019/10/20 12:30*/
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] { 
+      -moz-box-orient: horizontal; 
+      background-color: -moz-dialog !important;
+      padding: 0 !important; 
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] > stack:first-child {
+    }
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] #downloadsListBox { 
+      background-color: -moz-dialog !important; 
+      display:inline-block !important; 
+      overflow-y: auto !important; 
+      scrollbar-width: thin;
+      border: none !important; 
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] *|*:root
+    {
+      --downloads-item-height: 38px; 
+    }
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] richlistitem:not([hidden]) { 
+      min-width:200px !important;
+      max-width:200px !important;
+      font-size: 13px !important;
+      border-width: 0 1px 0 0 !important;
+      border-style: solid !important;
+      border-color: black !important;
+      height: 38px !important; 
+      display:-moz-inline-box !important; 
+    
+     } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] richlistitem vbox { 
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] .downloadTypeIcon { 
+      height:16px !important;
+      width: 16px !important;
+      -moz-margin-end: 1px !important;
+      -moz-margin-start: 1px !important;
+       padding-right: 1px !important;
+       padding-left: 1px !important;
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] .downloadTarget { 
+      margin-top:1px !important;
+      padding-bottom:16px !important;
+      max-width: calc(100% - 51px) !important; 
+      min-width: calc(100% - 51px) !important; 
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] .download-state[state="0"] * .downloadTarget,
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] .download-state[state="4"] * .downloadTarget { 
+      padding-bottom:0px !important;
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] .downloadTarget:-moz-system-metric(windows-default-theme) { 
+      margin-top:2px !important;
+      /*padding-bottom:10px;  windows7 ?*/
+    } 
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] *|*.downloadProgres { 
+      border: none !important;
+    } 
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] *|*.downloadProgress:not([paused])::-moz-progress-bar { 
+      background-color: lime !important;
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] .downloadDetails { 
+      margin-top:-12px !important;
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki]  .download-state:not(:-moz-any([state="-1"], [state="5"], [state="0"], [state="4"], [state="7"]))      .downloadDetails {
+       margin-top:-17px !important;
+    }
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] richlistitem[selected] .downloadDetails { 
+      opacity: 1 !important;
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] .downloadButton { 
+      padding: 0 !important;
+      margin: 0 !important;
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] button > .button-box { 
+      -moz-padding-start: 0px !important;
+      -moz-padding-end: 1px !important;
+      padding-right: 0 !important; 
+      padding-left: 0 !important; 
+    } 
+    
+    #contentAreaDownloadsView[ucjsDownloadsStatusModoki] #downloadFilter { 
+     width: 150px; 
+    } 
+    
+    `
+
+document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+
 /*--------------------------------------------------------userChrome.js(uc.js)のコーナー---------------------------------------------------------*/
 
 if (Services.prefs.getBoolPref("floorp.memory.free.button", false)) {
@@ -10217,14 +10326,27 @@ script.src = "chrome://userchromejs/content/memory-free.uc.js";
 document.head.appendChild(script); 
 }
 
+/*
+
+NOT AVIVALE TO USE
+
 if (Services.prefs.getBoolPref("floorp.entable.deepl.translate", false)) {
 var script = document.createElement('script');
 script.src = "chrome://userchromejs/content/deepl.uc.js"; 
 document.head.appendChild(script); 
 }
+*/
 
 if (Services.prefs.getBoolPref("floorp.multitab.bottommode", false)) {
 var firefox = document.createElement('script');
 firefox.src = "chrome://userchromejs/content/multitab.uc.js"; 
 document.head.appendChild(firefox); 
 }
+
+var firefox = document.createElement('script');
+firefox.src = "chrome://userchromejs/content/chromecss.uc.js"; 
+document.head.appendChild(firefox); 
+
+var firefox = document.createElement('script');
+firefox.src = "chrome://userchromejs/content/sidebarautohide.uc.js"; 
+document.head.appendChild(firefox); 

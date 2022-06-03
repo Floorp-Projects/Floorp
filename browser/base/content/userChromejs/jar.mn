@@ -5,12 +5,11 @@
 browser.jar:
 % content userchromejs %content/userchromejs/ contentaccessible=yes
 
-# userScript (今後ここに追加) chrome://branding/content/firefox-wordmark.svg
+# userScript (今後ここに追加)
 
-   content/userchromejs/deepl.uc.js                 (deepl.uc.js)
    content/userchromejs/multitab.uc.js              (multitab.uc.js)
-   content/userchromejs/memory-free.uc.js           (memory-free.uc.js)
-
+   content/userchromejs/chromecss.uc.js             (chromecss.uc.js)
+   content/userchromejs/sidebarautohide.uc.js       (sidebarautohide.uc.js)
 
 # Loader
    content/userchromejs/bootstraploader.jsm         (loader/bootstrapLoader.jsm)
