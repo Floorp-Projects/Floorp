@@ -367,8 +367,8 @@ class FilterInstance {
   /**
    * The scale factors between user space and filter space.
    */
-  gfxSize mUserSpaceToFilterSpaceScale;
-  gfxSize mFilterSpaceToUserSpaceScale;
+  gfx::MatrixScalesDouble mUserSpaceToFilterSpaceScale;
+  gfx::MatrixScalesDouble mFilterSpaceToUserSpaceScale;
 
   /**
    * Pre-filter paint bounds of the element that is being filtered, in filter
