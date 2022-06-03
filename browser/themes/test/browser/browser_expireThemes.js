@@ -30,7 +30,7 @@ add_task(async function retainExpiredActiveTheme() {
       kLushSoftID,
       {
         version: "1.0",
-        path: "resource://builtin-themes/monochromatic/2021lush/soft/",
+        path: "resource://builtin-themes/colorways/2021lush/soft/",
         expiry: tomorrow,
       },
     ],
@@ -38,7 +38,7 @@ add_task(async function retainExpiredActiveTheme() {
       kLushBoldID,
       {
         version: "1.0",
-        path: "resource://builtin-themes/monochromatic/2021lush/bold/",
+        path: "resource://builtin-themes/colorways/2021lush/bold/",
         expiry: tomorrow,
       },
     ],
