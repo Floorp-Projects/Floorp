@@ -664,4 +664,4 @@ cargo-vet:
     fetch:
         type: git
         repo: https://github.com/bholley/cargo-vet
-        revision: 1d5cd771cd1df8921a57b346a0626e8b8f8694f6
+        revision: 6327bc1ee12f73a4cf74c639e94cb7115a5282d5
