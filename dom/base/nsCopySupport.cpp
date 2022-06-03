@@ -99,7 +99,8 @@ static nsresult EncodeForTextUnicode(nsIDocumentEncoder& aEncoder,
   uint32_t flags = aAdditionalEncoderFlags |
                    nsIDocumentEncoder::OutputPreformatted |
                    nsIDocumentEncoder::OutputRaw |
-                   nsIDocumentEncoder::OutputForPlainTextClipboardCopy;
+                   nsIDocumentEncoder::OutputForPlainTextClipboardCopy |
+                   nsIDocumentEncoder::OutputPersistNBSP;
 
   nsresult rv = aEncoder.Init(&aDocument, mimeType, flags);
   NS_ENSURE_SUCCESS(rv, rv);
