@@ -468,13 +468,8 @@ bool BackgroundChildImpl::DeallocPCacheStorageChild(
   return true;
 }
 
-PCacheChild* BackgroundChildImpl::AllocPCacheChild() {
+already_AddRefed<PCacheChild> BackgroundChildImpl::AllocPCacheChild() {
   return dom::cache::AllocPCacheChild();
-}
-
-bool BackgroundChildImpl::DeallocPCacheChild(PCacheChild* aActor) {
-  dom::cache::DeallocPCacheChild(aActor);
-  return true;
 }
 
 already_AddRefed<PCacheStreamControlChild>

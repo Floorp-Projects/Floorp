@@ -944,23 +944,6 @@ bool BackgroundParentImpl::DeallocPCacheStorageParent(
   return true;
 }
 
-PCacheParent* BackgroundParentImpl::AllocPCacheParent() {
-  MOZ_CRASH("CacheParent actor must be provided to PBackground manager");
-  return nullptr;
-}
-
-bool BackgroundParentImpl::DeallocPCacheParent(PCacheParent* aActor) {
-  dom::cache::DeallocPCacheParent(aActor);
-  return true;
-}
-
-already_AddRefed<PCacheStreamControlParent>
-BackgroundParentImpl::AllocPCacheStreamControlParent() {
-  MOZ_CRASH(
-      "CacheStreamControlParent actor must be provided to PBackground manager");
-  return nullptr;
-}
-
 PMessagePortParent* BackgroundParentImpl::AllocPMessagePortParent(
     const nsID& aUUID, const nsID& aDestinationUUID,
     const uint32_t& aSequenceID) {

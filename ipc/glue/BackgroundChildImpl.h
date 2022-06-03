@@ -177,9 +177,7 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPCacheStorageChild(
       dom::cache::PCacheStorageChild* aActor) override;
 
-  virtual dom::cache::PCacheChild* AllocPCacheChild() override;
-
-  virtual bool DeallocPCacheChild(dom::cache::PCacheChild* aActor) override;
+  virtual already_AddRefed<dom::cache::PCacheChild> AllocPCacheChild() override;
 
   virtual already_AddRefed<dom::cache::PCacheStreamControlChild>
   AllocPCacheStreamControlChild() override;
