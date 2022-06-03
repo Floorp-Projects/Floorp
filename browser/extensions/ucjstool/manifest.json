@@ -1,0 +1,30 @@
+{
+    "manifest_version": 2,
+    "name": "bootstrap loader",
+    "version": "0.1.93.2021.09.30",
+    "description": "workaround bug 857456",
+    "author": "xiaoxiaoflood",
+
+    "applications": {
+        "gecko": {
+            "id": "bootstrap@xxf",
+            "strict_min_version": "65.0",
+            "update_url": "https://raw.githubusercontent.com/xiaoxiaoflood/firefox-scripts/master/extensions/bootstrapLoader/updates.json"
+        }
+    },
+
+    "background": {
+        "scripts": [ "bootstrap.js" ]
+    },
+
+    "experiment_apis": {
+        "legacy": {
+            "schema": "legacyHelper.json",
+            "parent": {
+                "scopes": [ "addon_parent" ],
+                "paths": [ [ "legacy" ] ],
+                "script": "legacyHelper.js"
+            }
+        }
+    }
+}

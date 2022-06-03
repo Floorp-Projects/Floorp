@@ -1,0 +1,13 @@
+[
+    {
+        "namespace": "legacy",
+        "functions": [
+            {
+                "name": "bootstrap",
+                "type": "function",
+                "async": true,
+                "parameters": []
+            }
+        ]
+    }
+]

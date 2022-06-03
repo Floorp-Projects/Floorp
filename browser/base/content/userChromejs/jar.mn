@@ -8,6 +8,7 @@ browser.jar:
 # userScript (今後ここに追加)
 
    content/userchromejs/multitab.uc.js              (multitab.uc.js)
+   content/userchromejs/historysubmenu.uc.js        (historysubmenu.uc.js)
    content/userchromejs/chromecss.uc.js             (chromecss.uc.js)
    content/userchromejs/sidebarautohide.uc.js       (sidebarautohide.uc.js)
 

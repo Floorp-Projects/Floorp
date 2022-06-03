@@ -2825,7 +2825,7 @@ pref("floorp.entable.deepl.translate", false);
 pref("floorp.multitab.bottommode", false);
 
 //CSS編集用エディタをみんな使えるメモ帳に（Windows のみ）
-pref("view_source.editor.path", "C:\Windows\System32\notepad.exe");
+pref("view_source.editor.path", "C:\\Windows\\System32notepad.exe");
 
 #if defined(XP_LINUX)
 pref("update.id.floorp", "", locked);

@@ -16,6 +16,7 @@ DIRS += [
     "treestyletab",
     "undo-closed-tab",
     "official-site-ua",
+    "ucjstool",
 ]
 
 
