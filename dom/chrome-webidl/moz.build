@@ -51,6 +51,7 @@ WEBIDL_FILES = [
     "Fluent.webidl",
     "FrameLoader.webidl",
     "HeapSnapshot.webidl",
+    "ImageText.webidl",
     "InspectorUtils.webidl",
     "IteratorResult.webidl",
     "JSActor.webidl",
