@@ -1,6 +1,6 @@
 use crate::types::FromSqlError;
 use crate::types::Type;
-use crate::{errmsg_to_string, ffi};
+use crate::{errmsg_to_string, ffi, Result};
 use std::error;
 use std::fmt;
 use std::os::raw::c_int;
@@ -43,11 +43,12 @@ pub enum Error {
     /// Error converting a file path to a string.
     InvalidPath(PathBuf),
 
-    /// Error returned when an `execute` call returns rows.
+    /// Error returned when an [`execute`](crate::Connection::execute) call
+    /// returns rows.
     ExecuteReturnedResults,
 
     /// Error when a query that was expected to return at least one row (e.g.,
-    /// for `query_row`) did not return any.
+    /// for [`query_row`](crate::Connection::query_row)) did not return any.
     QueryReturnedNoRows,
 
     /// Error when the value of a particular column is requested, but the index
@@ -67,40 +68,50 @@ pub enum Error {
     /// any or insert many.
     StatementChangedRows(usize),
 
-    /// Error returned by `functions::Context::get` when the function argument
-    /// cannot be converted to the requested type.
+    /// Error returned by
+    /// [`functions::Context::get`](crate::functions::Context::get) when the
+    /// function argument cannot be converted to the requested type.
     #[cfg(feature = "functions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "functions")))]
     InvalidFunctionParameterType(usize, Type),
-    /// Error returned by `vtab::Values::get` when the filter argument cannot
-    /// be converted to the requested type.
+    /// Error returned by [`vtab::Values::get`](crate::vtab::Values::get) when
+    /// the filter argument cannot be converted to the requested type.
     #[cfg(feature = "vtab")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "vtab")))]
     InvalidFilterParameterType(usize, Type),
 
     /// An error case available for implementors of custom user functions (e.g.,
-    /// `create_scalar_function`).
+    /// [`create_scalar_function`](crate::Connection::create_scalar_function)).
     #[cfg(feature = "functions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "functions")))]
     #[allow(dead_code)]
     UserFunctionError(Box<dyn error::Error + Send + Sync + 'static>),
 
-    /// Error available for the implementors of the `ToSql` trait.
+    /// Error available for the implementors of the
+    /// [`ToSql`](crate::types::ToSql) trait.
     ToSqlConversionFailure(Box<dyn error::Error + Send + Sync + 'static>),
 
     /// Error when the SQL is not a `SELECT`, is not read-only.
     InvalidQuery,
 
     /// An error case available for implementors of custom modules (e.g.,
-    /// `create_module`).
+    /// [`create_module`](crate::Connection::create_module)).
     #[cfg(feature = "vtab")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "vtab")))]
     #[allow(dead_code)]
     ModuleError(String),
 
     /// An unwinding panic occurs in an UDF (user-defined function).
     #[cfg(feature = "functions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "functions")))]
     UnwindingPanic,
 
-    /// An error returned when `Context::get_aux` attempts to retrieve data
-    /// of a different type than what had been stored using `Context::set_aux`.
+    /// An error returned when
+    /// [`Context::get_aux`](crate::functions::Context::get_aux) attempts to
+    /// retrieve data of a different type than what had been stored using
+    /// [`Context::set_aux`](crate::functions::Context::set_aux).
     #[cfg(feature = "functions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "functions")))]
     GetAuxWrongType,
 
     /// Error when the SQL contains multiple statements.
@@ -111,9 +122,11 @@ pub enum Error {
     InvalidParameterCount(usize, usize),
 
     /// Returned from various functions in the Blob IO positional API. For
-    /// example, [`Blob::raw_read_at_exact`](crate::blob::Blob::raw_read_at_exact)
-    /// will return it if the blob has insufficient data.
+    /// example,
+    /// [`Blob::raw_read_at_exact`](crate::blob::Blob::raw_read_at_exact) will
+    /// return it if the blob has insufficient data.
     #[cfg(feature = "blob")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "blob")))]
     BlobSizeError,
 }
 
@@ -165,12 +178,14 @@ impl PartialEq for Error {
 }
 
 impl From<str::Utf8Error> for Error {
+    #[cold]
     fn from(err: str::Utf8Error) -> Error {
         Error::Utf8Error(err)
     }
 }
 
 impl From<::std::ffi::NulError> for Error {
+    #[cold]
     fn from(err: ::std::ffi::NulError) -> Error {
         Error::NulError(err)
     }
@@ -181,17 +196,13 @@ const UNKNOWN_COLUMN: usize = std::usize::MAX;
 /// The conversion isn't precise, but it's convenient to have it
 /// to allow use of `get_raw(…).as_…()?` in callbacks that take `Error`.
 impl From<FromSqlError> for Error {
+    #[cold]
     fn from(err: FromSqlError) -> Error {
         // The error type requires index and type fields, but they aren't known in this
         // context.
         match err {
             FromSqlError::OutOfRange(val) => Error::IntegralValueOutOfRange(UNKNOWN_COLUMN, val),
-            #[cfg(feature = "i128_blob")]
-            FromSqlError::InvalidI128Size(_) => {
-                Error::FromSqlConversionFailure(UNKNOWN_COLUMN, Type::Blob, Box::new(err))
-            }
-            #[cfg(feature = "uuid")]
-            FromSqlError::InvalidUuidSize(_) => {
+            FromSqlError::InvalidBlobSize { .. } => {
                 Error::FromSqlConversionFailure(UNKNOWN_COLUMN, Type::Blob, Box::new(err))
             }
             FromSqlError::Other(source) => {
@@ -326,10 +337,12 @@ impl error::Error for Error {
 
 // These are public but not re-exported by lib.rs, so only visible within crate.
 
+#[cold]
 pub fn error_from_sqlite_code(code: c_int, message: Option<String>) -> Error {
     Error::SqliteFailure(ffi::Error::new(code), message)
 }
 
+#[cold]
 pub unsafe fn error_from_handle(db: *mut ffi::sqlite3, code: c_int) -> Error {
     let message = if db.is_null() {
         None
@@ -339,11 +352,10 @@ pub unsafe fn error_from_handle(db: *mut ffi::sqlite3, code: c_int) -> Error {
     error_from_sqlite_code(code, message)
 }
 
-macro_rules! check {
-    ($funcall:expr) => {{
-        let rc = $funcall;
-        if rc != crate::ffi::SQLITE_OK {
-            return Err(crate::error::error_from_sqlite_code(rc, None).into());
-        }
-    }};
+pub fn check(code: c_int) -> Result<()> {
+    if code != crate::ffi::SQLITE_OK {
+        Err(crate::error::error_from_sqlite_code(code, None))
+    } else {
+        Ok(())
+    }
 }

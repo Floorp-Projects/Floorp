@@ -6,12 +6,12 @@ use std::{
     fs::remove_file,
     mem,
     path::PathBuf,
-    sync::{Mutex, MutexGuard},
+    sync::{Arc, Mutex, MutexGuard},
 };
 
 use golden_gate::{ApplyResults, BridgedEngine, Guid, IncomingEnvelope};
 use once_cell::sync::OnceCell;
-use sql_support::SqlInterruptHandle;
+use interrupt_support::SqlInterruptHandle;
 use webext_storage::store::Store;
 
 use crate::error::{Error, Result};
@@ -43,7 +43,7 @@ pub struct LazyStore {
 /// doesn't require locking.
 struct InterruptStore {
     inner: Mutex<Store>,
-    handle: SqlInterruptHandle,
+    handle: Arc<SqlInterruptHandle>,
 }
 
 impl LazyStore {

@@ -7,6 +7,7 @@ use crate::{
     ServerTimestamp,
 };
 use anyhow::Result;
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CollSyncIds {
@@ -26,6 +27,66 @@ pub enum EngineSyncAssociation {
     Disconnected,
     /// Sync is connected, and has the following sync IDs.
     Connected(CollSyncIds),
+}
+
+/// The concrete `SyncEngine` implementations
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum SyncEngineId {
+    Passwords,
+    History,
+    Bookmarks,
+    Tabs,
+    Addresses,
+    CreditCards,
+}
+
+impl SyncEngineId {
+    // Iterate over all possible engines
+    pub fn iter() -> impl Iterator<Item = SyncEngineId> {
+        [
+            Self::Passwords,
+            Self::History,
+            Self::Bookmarks,
+            Self::Tabs,
+            Self::Addresses,
+            Self::CreditCards,
+        ]
+        .into_iter()
+    }
+
+    // Get the string identifier for this engine.  This must match the strings in SyncEngineSelection.
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::Passwords => "passwords",
+            Self::History => "history",
+            Self::Bookmarks => "bookmarks",
+            Self::Tabs => "tabs",
+            Self::Addresses => "addresses",
+            Self::CreditCards => "creditcards",
+        }
+    }
+}
+
+impl fmt::Display for SyncEngineId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name())
+    }
+}
+
+impl TryFrom<&str> for SyncEngineId {
+    type Error = String;
+
+    fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
+        match value {
+            "passwords" => Ok(Self::Passwords),
+            "history" => Ok(Self::History),
+            "bookmarks" => Ok(Self::Bookmarks),
+            "tabs" => Ok(Self::Tabs),
+            "addresses" => Ok(Self::Addresses),
+            "creditcards" => Ok(Self::CreditCards),
+            _ => Err(value.into()),
+        }
+    }
 }
 
 /// A "sync engine" is a thing that knows how to sync. It's often implemented

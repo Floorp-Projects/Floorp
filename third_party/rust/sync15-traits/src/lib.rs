@@ -25,7 +25,7 @@ pub mod telemetry;
 
 pub use bridged_engine::{ApplyResults, BridgedEngine, IncomingEnvelope, OutgoingEnvelope};
 pub use changeset::{IncomingChangeset, OutgoingChangeset, RecordChangeset};
-pub use engine::{CollSyncIds, EngineSyncAssociation, SyncEngine};
+pub use engine::{CollSyncIds, EngineSyncAssociation, SyncEngine, SyncEngineId};
 pub use payload::Payload;
 pub use request::{CollectionRequest, RequestOrder};
 pub use server_timestamp::ServerTimestamp;

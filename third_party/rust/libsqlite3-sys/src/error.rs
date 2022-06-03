@@ -23,7 +23,7 @@ pub enum ErrorCode {
     /// Operation terminated by sqlite3_interrupt()
     OperationInterrupted,
     /// Some kind of disk I/O error occurred
-    SystemIOFailure,
+    SystemIoFailure,
     /// The database disk image is malformed
     DatabaseCorrupt,
     /// Unknown opcode in sqlite3_file_control()
@@ -43,7 +43,7 @@ pub enum ErrorCode {
     /// Data type mismatch
     TypeMismatch,
     /// Library used incorrectly
-    APIMisuse,
+    ApiMisuse,
     /// Uses OS features not supported on host
     NoLargeFileSupport,
     /// Authorization denied
@@ -63,6 +63,7 @@ pub struct Error {
 }
 
 impl Error {
+    #[must_use]
     pub fn new(result_code: c_int) -> Error {
         let code = match result_code & 0xff {
             super::SQLITE_INTERNAL => ErrorCode::InternalMalfunction,
@@ -73,7 +74,7 @@ impl Error {
             super::SQLITE_NOMEM => ErrorCode::OutOfMemory,
             super::SQLITE_READONLY => ErrorCode::ReadOnly,
             super::SQLITE_INTERRUPT => ErrorCode::OperationInterrupted,
-            super::SQLITE_IOERR => ErrorCode::SystemIOFailure,
+            super::SQLITE_IOERR => ErrorCode::SystemIoFailure,
             super::SQLITE_CORRUPT => ErrorCode::DatabaseCorrupt,
             super::SQLITE_NOTFOUND => ErrorCode::NotFound,
             super::SQLITE_FULL => ErrorCode::DiskFull,
@@ -83,7 +84,7 @@ impl Error {
             super::SQLITE_TOOBIG => ErrorCode::TooBig,
             super::SQLITE_CONSTRAINT => ErrorCode::ConstraintViolation,
             super::SQLITE_MISMATCH => ErrorCode::TypeMismatch,
-            super::SQLITE_MISUSE => ErrorCode::APIMisuse,
+            super::SQLITE_MISUSE => ErrorCode::ApiMisuse,
             super::SQLITE_NOLFS => ErrorCode::NoLargeFileSupport,
             super::SQLITE_AUTH => ErrorCode::AuthorizationForStatementDenied,
             super::SQLITE_RANGE => ErrorCode::ParameterOutOfRange,
@@ -183,6 +184,7 @@ const SQLITE_CONSTRAINT_UNIQUE: c_int = super::SQLITE_CONSTRAINT | (8 << 8);
 const SQLITE_CONSTRAINT_VTAB: c_int = super::SQLITE_CONSTRAINT | (9 << 8);
 const SQLITE_CONSTRAINT_ROWID: c_int = super::SQLITE_CONSTRAINT | (10 << 8);
 const SQLITE_CONSTRAINT_PINNED: c_int = super::SQLITE_CONSTRAINT | (11 << 8);
+const SQLITE_CONSTRAINT_DATATYPE: c_int = super::SQLITE_CONSTRAINT | (12 << 8);
 
 const SQLITE_NOTICE_RECOVER_WAL: c_int = SQLITE_NOTICE | (1 << 8);
 const SQLITE_NOTICE_RECOVER_ROLLBACK: c_int = SQLITE_NOTICE | (2 << 8);
@@ -191,6 +193,7 @@ const SQLITE_WARNING_AUTOINDEX: c_int = SQLITE_WARNING | (1 << 8);
 
 const SQLITE_AUTH_USER: c_int = super::SQLITE_AUTH | (1 << 8);
 
+#[must_use]
 pub fn code_to_str(code: c_int) -> &'static str {
     match code {
         super::SQLITE_OK        => "Successful result",
@@ -299,6 +302,7 @@ pub fn code_to_str(code: c_int) -> &'static str {
         SQLITE_CONSTRAINT_VTAB         => "An application-defined virtual table error occurred",
         SQLITE_CONSTRAINT_ROWID        => "A non-unique rowid occurred",
         SQLITE_CONSTRAINT_PINNED        => "SQLITE_CONSTRAINT_PINNED",
+        SQLITE_CONSTRAINT_DATATYPE        => "SQLITE_CONSTRAINT_DATATYPE",
 
         SQLITE_NOTICE_RECOVER_WAL      => "A WAL mode database file was recovered",
         SQLITE_NOTICE_RECOVER_ROLLBACK => "Hot journal was rolled back",

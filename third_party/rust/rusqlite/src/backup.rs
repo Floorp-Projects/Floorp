@@ -1,13 +1,14 @@
-//! `feature = "backup"` Online SQLite backup API.
+//! Online SQLite backup API.
 //!
-//! To create a `Backup`, you must have two distinct `Connection`s - one
+//! To create a [`Backup`], you must have two distinct [`Connection`]s - one
 //! for the source (which can be used while the backup is running) and one for
-//! the destination (which cannot).  A `Backup` handle exposes three methods:
-//! `step` will attempt to back up a specified number of pages, `progress` gets
-//! the current progress of the backup as of the last call to `step`, and
-//! `run_to_completion` will attempt to back up the entire source database,
-//! allowing you to specify how many pages are backed up at a time and how long
-//! the thread should sleep between chunks of pages.
+//! the destination (which cannot).  A [`Backup`] handle exposes three methods:
+//! [`step`](Backup::step) will attempt to back up a specified number of pages,
+//! [`progress`](Backup::progress) gets the current progress of the backup as of
+//! the last call to [`step`](Backup::step), and
+//! [`run_to_completion`](Backup::run_to_completion) will attempt to back up the
+//! entire source database, allowing you to specify how many pages are backed up
+//! at a time and how long the thread should sleep between chunks of pages.
 //!
 //! The following example is equivalent to "Example 2: Online Backup of a
 //! Running Database" from [SQLite's Online Backup API
@@ -39,11 +40,11 @@ use std::time::Duration;
 
 use crate::ffi;
 
-use crate::error::{error_from_handle, error_from_sqlite_code};
+use crate::error::error_from_handle;
 use crate::{Connection, DatabaseName, Result};
 
 impl Connection {
-    /// `feature = "backup"` Back up the `name` database to the given
+    /// Back up the `name` database to the given
     /// destination path.
     ///
     /// If `progress` is not `None`, it will be called periodically
@@ -83,7 +84,7 @@ impl Connection {
         }
     }
 
-    /// `feature = "backup"` Restore the given source path into the
+    /// Restore the given source path into the
     /// `name` database. If `progress` is not `None`, it will be
     /// called periodically until the restore completes.
     ///
@@ -106,7 +107,7 @@ impl Connection {
         let restore = Backup::new_with_names(&src, DatabaseName::Main, self, name)?;
 
         let mut r = More;
-        let mut busy_count = 0i32;
+        let mut busy_count = 0_i32;
         'restore_loop: while r == More || r == Busy {
             r = restore.step(100)?;
             if let Some(ref f) = progress {
@@ -130,7 +131,8 @@ impl Connection {
     }
 }
 
-/// `feature = "backup"` Possible successful results of calling `Backup::step`.
+/// Possible successful results of calling
+/// [`Backup::step`].
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum StepResult {
@@ -141,7 +143,7 @@ pub enum StepResult {
     /// backed up.
     More,
 
-    /// The step failed because appropriate locks could not be aquired. This is
+    /// The step failed because appropriate locks could not be acquired. This is
     /// not a fatal error - the step can be retried.
     Busy,
 
@@ -150,11 +152,12 @@ pub enum StepResult {
     Locked,
 }
 
-/// `feature = "backup"` Struct specifying the progress of a backup. The
+/// Struct specifying the progress of a backup. The
 /// percentage completion can be calculated as `(pagecount - remaining) /
-/// pagecount`. The progress of a backup is as of the last call to `step` - if
-/// the source database is modified after a call to `step`, the progress value
-/// will become outdated and potentially incorrect.
+/// pagecount`. The progress of a backup is as of the last call to
+/// [`step`](Backup::step) - if the source database is modified after a call to
+/// [`step`](Backup::step), the progress value will become outdated and
+/// potentially incorrect.
 #[derive(Copy, Clone, Debug)]
 pub struct Progress {
     /// Number of pages in the source database that still need to be backed up.
@@ -163,10 +166,10 @@ pub struct Progress {
     pub pagecount: c_int,
 }
 
-/// `feature = "backup"` A handle to an online backup.
+/// A handle to an online backup.
 pub struct Backup<'a, 'b> {
     phantom_from: PhantomData<&'a Connection>,
-    phantom_to: PhantomData<&'b Connection>,
+    to: &'b Connection,
     b: *mut ffi::sqlite3_backup,
 }
 
@@ -180,6 +183,7 @@ impl Backup<'_, '_> {
     ///
     /// Will return `Err` if the underlying `sqlite3_backup_init` call returns
     /// `NULL`.
+    #[inline]
     pub fn new<'a, 'b>(from: &'a Connection, to: &'b mut Connection) -> Result<Backup<'a, 'b>> {
         Backup::new_with_names(from, DatabaseName::Main, to, DatabaseName::Main)
     }
@@ -199,8 +203,8 @@ impl Backup<'_, '_> {
         to: &'b mut Connection,
         to_name: DatabaseName<'_>,
     ) -> Result<Backup<'a, 'b>> {
-        let to_name = to_name.to_cstring()?;
-        let from_name = from_name.to_cstring()?;
+        let to_name = to_name.as_cstring()?;
+        let from_name = from_name.as_cstring()?;
 
         let to_db = to.db.borrow_mut().db;
 
@@ -219,12 +223,15 @@ impl Backup<'_, '_> {
 
         Ok(Backup {
             phantom_from: PhantomData,
-            phantom_to: PhantomData,
+            to,
             b,
         })
     }
 
-    /// Gets the progress of the backup as of the last call to `step`.
+    /// Gets the progress of the backup as of the last call to
+    /// [`step`](Backup::step).
+    #[inline]
+    #[must_use]
     pub fn progress(&self) -> Progress {
         unsafe {
             Progress {
@@ -238,7 +245,8 @@ impl Backup<'_, '_> {
     /// negative, will attempt to back up all remaining pages. This will hold a
     /// lock on the source database for the duration, so it is probably not
     /// what you want for databases that are currently active (see
-    /// `run_to_completion` for a better alternative).
+    /// [`run_to_completion`](Backup::run_to_completion) for a better
+    /// alternative).
     ///
     /// # Failure
     ///
@@ -246,6 +254,7 @@ impl Backup<'_, '_> {
     /// an error code other than `DONE`, `OK`, `BUSY`, or `LOCKED`. `BUSY` and
     /// `LOCKED` are transient errors and are therefore returned as possible
     /// `Ok` values.
+    #[inline]
     pub fn step(&self, num_pages: c_int) -> Result<StepResult> {
         use self::StepResult::{Busy, Done, Locked, More};
 
@@ -255,16 +264,16 @@ impl Backup<'_, '_> {
             ffi::SQLITE_OK => Ok(More),
             ffi::SQLITE_BUSY => Ok(Busy),
             ffi::SQLITE_LOCKED => Ok(Locked),
-            _ => Err(error_from_sqlite_code(rc, None)),
+            _ => self.to.decode_result(rc).map(|_| More),
         }
     }
 
-    /// Attempts to run the entire backup. Will call `step(pages_per_step)` as
-    /// many times as necessary, sleeping for `pause_between_pages` between
-    /// each call to give the source database time to process any pending
-    /// queries. This is a direct implementation of "Example 2: Online Backup
-    /// of a Running Database" from [SQLite's Online Backup API
-    /// documentation](https://www.sqlite.org/backup.html).
+    /// Attempts to run the entire backup. Will call
+    /// [`step(pages_per_step)`](Backup::step) as many times as necessary,
+    /// sleeping for `pause_between_pages` between each call to give the
+    /// source database time to process any pending queries. This is a
+    /// direct implementation of "Example 2: Online Backup of a Running
+    /// Database" from [SQLite's Online Backup API documentation](https://www.sqlite.org/backup.html).
     ///
     /// If `progress` is not `None`, it will be called after each step with the
     /// current progress of the backup. Note that is possible the progress may
@@ -273,7 +282,8 @@ impl Backup<'_, '_> {
     ///
     /// # Failure
     ///
-    /// Will return `Err` if any of the calls to `step` return `Err`.
+    /// Will return `Err` if any of the calls to [`step`](Backup::step) return
+    /// `Err`.
     pub fn run_to_completion(
         &self,
         pages_per_step: c_int,
@@ -287,7 +297,7 @@ impl Backup<'_, '_> {
         loop {
             let r = self.step(pages_per_step)?;
             if let Some(progress) = progress {
-                progress(self.progress())
+                progress(self.progress());
             }
             match r {
                 More | Busy | Locked => thread::sleep(pause_between_pages),
@@ -298,6 +308,7 @@ impl Backup<'_, '_> {
 }
 
 impl Drop for Backup<'_, '_> {
+    #[inline]
     fn drop(&mut self) {
         unsafe { ffi::sqlite3_backup_finish(self.b) };
     }
@@ -306,96 +317,84 @@ impl Drop for Backup<'_, '_> {
 #[cfg(test)]
 mod test {
     use super::Backup;
-    use crate::{Connection, DatabaseName, NO_PARAMS};
+    use crate::{Connection, DatabaseName, Result};
     use std::time::Duration;
 
     #[test]
-    fn test_backup() {
-        let src = Connection::open_in_memory().unwrap();
+    fn test_backup() -> Result<()> {
+        let src = Connection::open_in_memory()?;
         let sql = "BEGIN;
                    CREATE TABLE foo(x INTEGER);
                    INSERT INTO foo VALUES(42);
                    END;";
-        src.execute_batch(sql).unwrap();
+        src.execute_batch(sql)?;
 
-        let mut dst = Connection::open_in_memory().unwrap();
+        let mut dst = Connection::open_in_memory()?;
 
         {
-            let backup = Backup::new(&src, &mut dst).unwrap();
-            backup.step(-1).unwrap();
+            let backup = Backup::new(&src, &mut dst)?;
+            backup.step(-1)?;
         }
 
-        let the_answer: i64 = dst
-            .query_row("SELECT x FROM foo", NO_PARAMS, |r| r.get(0))
-            .unwrap();
+        let the_answer: i64 = dst.query_row("SELECT x FROM foo", [], |r| r.get(0))?;
         assert_eq!(42, the_answer);
 
-        src.execute_batch("INSERT INTO foo VALUES(43)").unwrap();
+        src.execute_batch("INSERT INTO foo VALUES(43)")?;
 
         {
-            let backup = Backup::new(&src, &mut dst).unwrap();
-            backup
-                .run_to_completion(5, Duration::from_millis(250), None)
-                .unwrap();
+            let backup = Backup::new(&src, &mut dst)?;
+            backup.run_to_completion(5, Duration::from_millis(250), None)?;
         }
 
-        let the_answer: i64 = dst
-            .query_row("SELECT SUM(x) FROM foo", NO_PARAMS, |r| r.get(0))
-            .unwrap();
+        let the_answer: i64 = dst.query_row("SELECT SUM(x) FROM foo", [], |r| r.get(0))?;
         assert_eq!(42 + 43, the_answer);
+        Ok(())
     }
 
     #[test]
-    fn test_backup_temp() {
-        let src = Connection::open_in_memory().unwrap();
+    fn test_backup_temp() -> Result<()> {
+        let src = Connection::open_in_memory()?;
         let sql = "BEGIN;
                    CREATE TEMPORARY TABLE foo(x INTEGER);
                    INSERT INTO foo VALUES(42);
                    END;";
-        src.execute_batch(sql).unwrap();
+        src.execute_batch(sql)?;
 
-        let mut dst = Connection::open_in_memory().unwrap();
+        let mut dst = Connection::open_in_memory()?;
 
         {
             let backup =
-                Backup::new_with_names(&src, DatabaseName::Temp, &mut dst, DatabaseName::Main)
-                    .unwrap();
-            backup.step(-1).unwrap();
+                Backup::new_with_names(&src, DatabaseName::Temp, &mut dst, DatabaseName::Main)?;
+            backup.step(-1)?;
         }
 
-        let the_answer: i64 = dst
-            .query_row("SELECT x FROM foo", NO_PARAMS, |r| r.get(0))
-            .unwrap();
+        let the_answer: i64 = dst.query_row("SELECT x FROM foo", [], |r| r.get(0))?;
         assert_eq!(42, the_answer);
 
-        src.execute_batch("INSERT INTO foo VALUES(43)").unwrap();
+        src.execute_batch("INSERT INTO foo VALUES(43)")?;
 
         {
             let backup =
-                Backup::new_with_names(&src, DatabaseName::Temp, &mut dst, DatabaseName::Main)
-                    .unwrap();
-            backup
-                .run_to_completion(5, Duration::from_millis(250), None)
-                .unwrap();
+                Backup::new_with_names(&src, DatabaseName::Temp, &mut dst, DatabaseName::Main)?;
+            backup.run_to_completion(5, Duration::from_millis(250), None)?;
         }
 
-        let the_answer: i64 = dst
-            .query_row("SELECT SUM(x) FROM foo", NO_PARAMS, |r| r.get(0))
-            .unwrap();
+        let the_answer: i64 = dst.query_row("SELECT SUM(x) FROM foo", [], |r| r.get(0))?;
         assert_eq!(42 + 43, the_answer);
+        Ok(())
     }
 
     #[test]
-    fn test_backup_attached() {
-        let src = Connection::open_in_memory().unwrap();
+    fn test_backup_attached() -> Result<()> {
+        let src = Connection::open_in_memory()?;
         let sql = "ATTACH DATABASE ':memory:' AS my_attached;
                    BEGIN;
                    CREATE TABLE my_attached.foo(x INTEGER);
                    INSERT INTO my_attached.foo VALUES(42);
                    END;";
-        src.execute_batch(sql).unwrap();
+        src.execute_batch(sql)?;
 
-        let mut dst = Connection::open_in_memory().unwrap();
+        let mut dst = Connection::open_in_memory()?;
 
         {
             let backup = Backup::new_with_names(
@@ -403,17 +402,14 @@ mod test {
                 DatabaseName::Attached("my_attached"),
                 &mut dst,
                 DatabaseName::Main,
-            )
-            .unwrap();
-            backup.step(-1).unwrap();
+            )?;
+            backup.step(-1)?;
         }
 
-        let the_answer: i64 = dst
-            .query_row("SELECT x FROM foo", NO_PARAMS, |r| r.get(0))
-            .unwrap();
+        let the_answer: i64 = dst.query_row("SELECT x FROM foo", [], |r| r.get(0))?;
         assert_eq!(42, the_answer);
 
-        src.execute_batch("INSERT INTO foo VALUES(43)").unwrap();
+        src.execute_batch("INSERT INTO foo VALUES(43)")?;
 
         {
             let backup = Backup::new_with_names(
@@ -421,16 +417,12 @@ mod test {
                 DatabaseName::Attached("my_attached"),
                 &mut dst,
                 DatabaseName::Main,
-            )
-            .unwrap();
-            backup
-                .run_to_completion(5, Duration::from_millis(250), None)
-                .unwrap();
+            )?;
+            backup.run_to_completion(5, Duration::from_millis(250), None)?;
         }
 
-        let the_answer: i64 = dst
-            .query_row("SELECT SUM(x) FROM foo", NO_PARAMS, |r| r.get(0))
-            .unwrap();
+        let the_answer: i64 = dst.query_row("SELECT SUM(x) FROM foo", [], |r| r.get(0))?;
         assert_eq!(42 + 43, the_answer);
+        Ok(())
     }
 }

@@ -41,6 +41,7 @@ sqlite3_commit_hook
 sqlite3_complete
 sqlite3_complete16
 sqlite3_config
+sqlite3_context_db_handle
 sqlite3_create_collation
 sqlite3_create_collation16
 sqlite3_create_function
@@ -49,6 +50,7 @@ sqlite3_create_function_v2
 sqlite3_create_module
 sqlite3_data_count
 sqlite3_database_file_object
+sqlite3_db_cacheflush
 sqlite3_db_config
 sqlite3_db_filename
 sqlite3_db_handle

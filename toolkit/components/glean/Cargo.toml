@@ -24,8 +24,8 @@ xpcom = { path = "../../../xpcom/rust/xpcom" }
 once_cell = "1.2.0"
 fog = { path = "./api" }
 cstr = "0.2"
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "c51b63595a27a6ef45161012323e0261475c10c9" } # Copied from toolkit/library/rust/shared/Cargo.toml
-url = "2.1" # Copied from viaduct's deps, see https://github.com/mozilla/application-services/issues/3062
+viaduct = "0.1"
+url = "2.1"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 
 [features]

@@ -44,15 +44,14 @@ impl<'conn> Blob<'conn> {
         //    losslessly converted to i32, since `len` came from an i32.
         // Sanity check the above.
         debug_assert!(i32::try_from(write_start).is_ok() && i32::try_from(buf.len()).is_ok());
-        unsafe {
-            check!(ffi::sqlite3_blob_write(
+        self.conn.decode_result(unsafe {
+            ffi::sqlite3_blob_write(
                 self.blob,
-                buf.as_ptr() as *const _,
+                buf.as_ptr().cast(),
                 buf.len() as i32,
                 write_start as i32,
-            ));
-        }
-        Ok(())
+            )
+        })
     }
 
     /// An alias for `write_at` provided for compatibility with the conceptually
@@ -85,7 +84,7 @@ impl<'conn> Blob<'conn> {
         // Safety: this is safe because `raw_read_at` never stores uninitialized
         // data into `as_uninit`.
         let as_uninit: &mut [MaybeUninit<u8>] =
-            unsafe { from_raw_parts_mut(buf.as_mut_ptr() as *mut _, buf.len()) };
+            unsafe { from_raw_parts_mut(buf.as_mut_ptr().cast(), buf.len()) };
         self.raw_read_at(as_uninit, read_start).map(|s| s.len())
     }
 
@@ -120,7 +119,7 @@ impl<'conn> Blob<'conn> {
             // We could return `Ok(&mut [])`, but it seems confusing that the
             // pointers don't match, so fabricate a empty slice of u8 with the
             // same base pointer as `buf`.
-            let empty = unsafe { from_raw_parts_mut(buf.as_mut_ptr() as *mut u8, 0) };
+            let empty = unsafe { from_raw_parts_mut(buf.as_mut_ptr().cast::<u8>(), 0) };
             return Ok(empty);
         }
 
@@ -151,14 +150,14 @@ impl<'conn> Blob<'conn> {
         debug_assert!(i32::try_from(read_len).is_ok());
 
         unsafe {
-            check!(ffi::sqlite3_blob_read(
+            self.conn.decode_result(ffi::sqlite3_blob_read(
                 self.blob,
-                buf.as_mut_ptr() as *mut _,
+                buf.as_mut_ptr().cast(),
                 read_len as i32,
                 read_start as i32,
-            ));
+            ))?;
 
-            Ok(from_raw_parts_mut(buf.as_mut_ptr() as *mut u8, read_len))
+            Ok(from_raw_parts_mut(buf.as_mut_ptr().cast::<u8>(), read_len))
         }
     }
 
@@ -194,25 +193,18 @@ impl<'conn> Blob<'conn> {
 
 #[cfg(test)]
 mod test {
-    use crate::{Connection, DatabaseName, NO_PARAMS};
+    use crate::{Connection, DatabaseName, Result};
     // to ensure we don't modify seek pos
     use std::io::Seek as _;
 
     #[test]
-    fn test_pos_io() {
-        let db = Connection::open_in_memory().unwrap();
-        db.execute_batch("CREATE TABLE test_table(content BLOB);")
-            .unwrap();
-        db.execute(
-            "INSERT INTO test_table(content) VALUES (ZEROBLOB(10))",
-            NO_PARAMS,
-        )
-        .unwrap();
+    fn test_pos_io() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+        db.execute_batch("CREATE TABLE test_table(content BLOB);")?;
+        db.execute("INSERT INTO test_table(content) VALUES (ZEROBLOB(10))", [])?;
 
         let rowid = db.last_insert_rowid();
-        let mut blob = db
-            .blob_open(DatabaseName::Main, "test_table", "content", rowid, false)
-            .unwrap();
+        let mut blob = db.blob_open(DatabaseName::Main, "test_table", "content", rowid, false)?;
         // modify the seek pos to ensure we aren't using it or modifying it.
         blob.seek(std::io::SeekFrom::Start(1)).unwrap();
 
@@ -277,5 +269,6 @@ mod test {
 
         let end_pos = blob.seek(std::io::SeekFrom::Current(0)).unwrap();
         assert_eq!(end_pos, 1);
+        Ok(())
     }
 }
