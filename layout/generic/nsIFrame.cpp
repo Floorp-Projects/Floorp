@@ -8322,7 +8322,8 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
   aPos->mAttach = aPos->mDirection == eDirNext ? CARET_ASSOCIATE_AFTER
                                                : CARET_ASSOCIATE_BEFORE;
 
-  nsAutoLineIterator it = aBlockFrame->GetLineIterator();
+  AutoAssertNoDomMutations guard;
+  nsILineIterator* it = aBlockFrame->GetLineIterator();
   if (!it) {
     return NS_ERROR_FAILURE;
   }
@@ -8929,6 +8930,7 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
 
   // outer loop
   // moving to a next block when no more blocks are available in a subtree
+  AutoAssertNoDomMutations guard;
   while (NS_FAILED(result)) {
     auto [newBlock, lineFrame] =
         blockFrame->GetContainingBlockForLine(aPos->mScrollViewStop);
@@ -8936,7 +8938,7 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
       return NS_ERROR_FAILURE;
     }
     blockFrame = newBlock;
-    nsAutoLineIterator iter = blockFrame->GetLineIterator();
+    nsILineIterator* iter = blockFrame->GetLineIterator();
     int32_t thisLine = iter->FindLineContaining(lineFrame);
     if (NS_WARN_IF(thisLine < 0)) {
       return NS_ERROR_FAILURE;
@@ -9034,7 +9036,8 @@ nsresult nsIFrame::PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos) {
   if (!blockFrame) {
     return NS_ERROR_FAILURE;
   }
-  nsAutoLineIterator it = blockFrame->GetLineIterator();
+  AutoAssertNoDomMutations guard;
+  nsILineIterator* it = blockFrame->GetLineIterator();
   int32_t thisLine = it->FindLineContaining(lineFrame);
   if (thisLine < 0) {
     return NS_ERROR_FAILURE;
@@ -9338,6 +9341,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
   // Find the prev/next selectable frame
   bool selectable = false;
   nsIFrame* traversedFrame = this;
+  AutoAssertNoDomMutations guard;
   while (!selectable) {
     auto [blockFrame, lineFrame] =
         traversedFrame->GetContainingBlockForLine(aScrollViewStop);
@@ -9345,7 +9349,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       return result;
     }
 
-    nsAutoLineIterator it = blockFrame->GetLineIterator();
+    nsILineIterator* it = blockFrame->GetLineIterator();
     int32_t thisLine = it->FindLineContaining(lineFrame);
     if (thisLine < 0) {
       return result;
@@ -10543,7 +10547,8 @@ nsIFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
     metrics->mBlockMinSize.height = 0;
     // ok we need the max ascent of the items on the line. So to do this
     // ask the block for its line iterator. Get the max ascent.
-    nsAutoLineIterator lines = GetLineIterator();
+    AutoAssertNoDomMutations guard;
+    nsILineIterator* lines = GetLineIterator();
     if (lines) {
       metrics->mBlockMinSize.height = 0;
       int32_t lineCount = lines->GetNumLines();
