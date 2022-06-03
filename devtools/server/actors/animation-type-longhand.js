@@ -412,7 +412,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "outline-offset",
       "outline-width",
       "overflow-clip-margin",
-      "-moz-window-input-region-margin",
     ]),
   ],
 ];

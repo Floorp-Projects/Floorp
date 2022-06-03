@@ -673,14 +673,13 @@ static bool IsMouseVanishKey(WPARAM aVirtKey) {
  * Hide/unhide the cursor if the correct Windows and Firefox settings are set.
  */
 static void MaybeHideCursor(bool aShouldHide) {
-  static bool sMouseExists =
-      []{
-        // Before the first call to ShowCursor, the visibility count is 0
-        // if there is a mouse installed and -1 if not.
-        int count = ::ShowCursor(FALSE);
-        ::ShowCursor(TRUE);
-        return count == -1;
-      }();
+  static bool sMouseExists = [] {
+    // Before the first call to ShowCursor, the visibility count is 0
+    // if there is a mouse installed and -1 if not.
+    int count = ::ShowCursor(FALSE);
+    ::ShowCursor(TRUE);
+    return count == -1;
+  }();
 
   if (!sMouseExists) {
     return;
@@ -1847,24 +1846,21 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
 
 /**************************************************************
  *
- * SECTION: nsIWidget::SetInputRegion
+ * SECTION: nsIWidget::SetWindowMouseTransparent
  *
  * Sets whether the window should ignore mouse events.
  *
  **************************************************************/
-void nsWindow::SetInputRegion(const InputRegion& aInputRegion) {
+void nsWindow::SetWindowMouseTransparent(bool aIsTransparent) {
   if (!mWnd) {
     return;
   }
 
-  // TODO: Implement the input margin on windows (probably handling
-  // WM_NCHITTEST)?
-  const bool transparent = aInputRegion.mFullyTransparent;
   LONG_PTR oldStyle = ::GetWindowLongPtrW(mWnd, GWL_EXSTYLE);
-  LONG_PTR newStyle = transparent ? (oldStyle | WS_EX_TRANSPARENT)
-                                  : (oldStyle & ~WS_EX_TRANSPARENT);
+  LONG_PTR newStyle = aIsTransparent ? (oldStyle | WS_EX_TRANSPARENT)
+                                     : (oldStyle & ~WS_EX_TRANSPARENT);
   ::SetWindowLongPtrW(mWnd, GWL_EXSTYLE, newStyle);
-  mMouseTransparent = transparent;
+  mMouseTransparent = aIsTransparent;
 }
 
 /**************************************************************
