@@ -2468,9 +2468,8 @@ static inline bool StringIsNaN(mozilla::Range<const CharT> s) {
 }
 
 template <typename CharT>
-static bool StringToTypedArrayIndexSlow(JSContext* cx,
-                                        mozilla::Range<const CharT> s,
-                                        mozilla::Maybe<uint64_t>* indexp) {
+static mozilla::Maybe<uint64_t> StringToTypedArrayIndexSlow(
+    mozilla::Range<const CharT> s) {
   const mozilla::RangedPtr<const CharT> start = s.begin();
   const mozilla::RangedPtr<const CharT> end = s.end();
 
@@ -2479,8 +2478,7 @@ static bool StringToTypedArrayIndexSlow(JSContext* cx,
 
   // The complete string must have been parsed.
   if (actualEnd != end.get()) {
-    MOZ_ASSERT(indexp->isNothing());
-    return true;
+    return mozilla::Nothing();
   }
 
   // Now convert it back to a string.
@@ -2491,8 +2489,7 @@ static bool StringToTypedArrayIndexSlow(JSContext* cx,
   // Both strings must be equal for a canonical numeric index string.
   if (s.length() != strlen(cstr) ||
       !EqualChars(start.get(), cstr, s.length())) {
-    MOZ_ASSERT(indexp->isNothing());
-    return true;
+    return mozilla::Nothing();
   }
 
   // Directly perform IsInteger() check and encode negative and non-integer
@@ -2502,25 +2499,22 @@ static bool StringToTypedArrayIndexSlow(JSContext* cx,
   // See 9.4.5.8 IntegerIndexedElementGet, steps 5 and 8.
   // See 9.4.5.9 IntegerIndexedElementSet, steps 6 and 9.
   if (result < 0 || !IsInteger(result)) {
-    indexp->emplace(UINT64_MAX);
-    return true;
+    return mozilla::Some(UINT64_MAX);
   }
 
   // Anything equals-or-larger than 2^53 is definitely OOB, encode it
   // accordingly so that the cast to uint64_t is well defined.
   if (result >= DOUBLE_INTEGRAL_PRECISION_LIMIT) {
-    indexp->emplace(UINT64_MAX);
-    return true;
+    return mozilla::Some(UINT64_MAX);
   }
 
   // The string is an actual canonical numeric index.
-  indexp->emplace(result);
-  return true;
+  return mozilla::Some(result);
 }
 
 template <typename CharT>
-bool js::StringToTypedArrayIndex(JSContext* cx, mozilla::Range<const CharT> s,
-                                 mozilla::Maybe<uint64_t>* indexp) {
+mozilla::Maybe<uint64_t> js::StringToTypedArrayIndex(
+    mozilla::Range<const CharT> s) {
   mozilla::RangedPtr<const CharT> cp = s.begin();
   const mozilla::RangedPtr<const CharT> end = s.end();
 
@@ -2530,8 +2524,7 @@ bool js::StringToTypedArrayIndex(JSContext* cx, mozilla::Range<const CharT> s,
   if (*cp == '-') {
     negative = true;
     if (++cp == end) {
-      MOZ_ASSERT(indexp->isNothing());
-      return true;
+      return mozilla::Nothing();
     }
   }
 
@@ -2539,11 +2532,9 @@ bool js::StringToTypedArrayIndex(JSContext* cx, mozilla::Range<const CharT> s,
     // Check for "NaN", "Infinity", or "-Infinity".
     if ((!negative && StringIsNaN<CharT>({cp, end})) ||
         StringIsInfinity<CharT>({cp, end})) {
-      indexp->emplace(UINT64_MAX);
-    } else {
-      MOZ_ASSERT(indexp->isNothing());
+      return mozilla::Some(UINT64_MAX);
     }
-    return true;
+    return mozilla::Nothing();
   }
 
   uint32_t digit = AsciiDigitToNumber(*cp++);
@@ -2553,10 +2544,9 @@ bool js::StringToTypedArrayIndex(JSContext* cx, mozilla::Range<const CharT> s,
     // The string may be of the form "0.xyz". The exponent form isn't possible
     // when the string starts with "0".
     if (*cp == '.') {
-      return StringToTypedArrayIndexSlow(cx, s, indexp);
+      return StringToTypedArrayIndexSlow(s);
     }
-    MOZ_ASSERT(indexp->isNothing());
-    return true;
+    return mozilla::Nothing();
   }
 
   uint64_t index = digit;
@@ -2565,10 +2555,9 @@ bool js::StringToTypedArrayIndex(JSContext* cx, mozilla::Range<const CharT> s,
     if (!IsAsciiDigit(*cp)) {
       // Take the slow path when the string has fractional parts or an exponent.
       if (*cp == '.' || *cp == 'e') {
-        return StringToTypedArrayIndexSlow(cx, s, indexp);
+        return StringToTypedArrayIndexSlow(s);
       }
-      MOZ_ASSERT(indexp->isNothing());
-      return true;
+      return mozilla::Nothing();
     }
 
     digit = AsciiDigitToNumber(*cp);
@@ -2581,25 +2570,21 @@ bool js::StringToTypedArrayIndex(JSContext* cx, mozilla::Range<const CharT> s,
 
     // Also take the slow path when the string is larger-or-equals 2^53.
     if (index >= uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT)) {
-      return StringToTypedArrayIndexSlow(cx, s, indexp);
+      return StringToTypedArrayIndexSlow(s);
     }
   }
 
   if (negative) {
-    indexp->emplace(UINT64_MAX);
-  } else {
-    indexp->emplace(index);
+    return mozilla::Some(UINT64_MAX);
   }
-  return true;
+  return mozilla::Some(index);
 }
 
-template bool js::StringToTypedArrayIndex(JSContext* cx,
-                                          mozilla::Range<const char16_t> s,
-                                          mozilla::Maybe<uint64_t>* indexOut);
+template mozilla::Maybe<uint64_t> js::StringToTypedArrayIndex(
+    mozilla::Range<const char16_t> s);
 
-template bool js::StringToTypedArrayIndex(JSContext* cx,
-                                          mozilla::Range<const Latin1Char> s,
-                                          mozilla::Maybe<uint64_t>* indexOut);
+template mozilla::Maybe<uint64_t> js::StringToTypedArrayIndex(
+    mozilla::Range<const Latin1Char> s);
 
 bool js::SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
                               uint64_t index, HandleValue v,
