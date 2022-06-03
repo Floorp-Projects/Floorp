@@ -100,6 +100,7 @@ void TextRecognition::FillShadow(ShadowRoot& aShadow,
   aShadow.AppendChildTo(div, true, IgnoreErrors());
 }
 
+#ifndef XP_MACOSX
 auto TextRecognition::DoFindText(gfx::DataSourceSurface&)
     -> RefPtr<NativePromise> {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess(),
@@ -107,5 +108,6 @@ auto TextRecognition::DoFindText(gfx::DataSourceSurface&)
   return NativePromise::CreateAndReject("Text recognition not available"_ns,
                                         __func__);
 }
+#endif
 
 }  // namespace mozilla::widget
