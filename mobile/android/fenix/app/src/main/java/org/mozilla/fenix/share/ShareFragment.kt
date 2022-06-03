@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.fragment.app.clearFragmentResult
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
@@ -128,6 +129,8 @@ class ShareFragment : AppCompatDialogFragment() {
 
     override fun onDestroy() {
         setFragmentResult(RESULT_KEY, Bundle())
+        // Clear the stored result in case there is no listener with the same key set.
+        clearFragmentResult(RESULT_KEY)
 
         super.onDestroy()
     }
