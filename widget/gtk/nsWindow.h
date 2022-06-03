@@ -236,6 +236,8 @@ class nsWindow final : public nsBaseWidget {
   gboolean OnTouchEvent(GdkEventTouch* aEvent);
   gboolean OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent);
 
+  gint GetInputRegionMarginInGdkCoords();
+
   void UpdateTopLevelOpaqueRegion();
 
   already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawingInRegion(
@@ -303,7 +305,7 @@ class nsWindow final : public nsBaseWidget {
 
   void SetTransparencyMode(nsTransparencyMode aMode) override;
   nsTransparencyMode GetTransparencyMode() override;
-  void SetWindowMouseTransparent(bool aIsTransparent) override;
+  void SetInputRegion(const InputRegion&) override;
   nsresult UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                 uint8_t* aAlphas,
                                                 int32_t aStride);
@@ -609,7 +611,6 @@ class nsWindow final : public nsBaseWidget {
   bool mIsChildWindow : 1;
   bool mAlwaysOnTop : 1;
   bool mNoAutoHide : 1;
-  bool mMouseTransparent : 1;
   bool mIsTransparent : 1;
   // We can't detect size state changes correctly so set this flag
   // to force update mBounds after a size state change from a configure
@@ -728,6 +729,8 @@ class nsWindow final : public nsBaseWidget {
   void InitDragEvent(mozilla::WidgetDragEvent& aEvent);
 
   float mLastMotionPressure = 0.0f;
+
+  InputRegion mInputRegion;
 
   // Remember the last sizemode so that we can restore it when
   // leaving fullscreen
