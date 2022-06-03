@@ -9,7 +9,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
@@ -25,8 +24,8 @@ class SiteSecurityInfoSheetRobot {
 
     fun verifySiteConnectionInfoIsSecure(isSecure: Boolean) {
         assertTrue(site_security_info.waitForExists(waitingTime))
-        site_identity_title.check(matches(isDisplayed()))
-        site_identity_Icon.check(matches(isDisplayed()))
+        assertTrue(site_identity_title.exists())
+        assertTrue(site_identity_Icon.exists())
         if (isSecure) {
             assertTrue(site_security_info.text.equals("Connection is secure"))
         } else {
@@ -61,9 +60,11 @@ class SiteSecurityInfoSheetRobot {
 
 private val site_security_info = mDevice.findObject(UiSelector().resourceId("$packageName:id/security_info"))
 
-private val site_identity_title = onView(withId(R.id.site_title))
+private val site_identity_title =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/site_title"))
 
-private val site_identity_Icon = onView(withId(R.id.site_favicon))
+private val site_identity_Icon =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/site_favicon"))
 
 private val trackingProtectionSwitch =
     onView(
