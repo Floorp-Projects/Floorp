@@ -16,6 +16,7 @@ class TestReftest(MarionetteTestCase):
 
         self.marionette.set_pref("marionette.log.truncate", False)
         self.marionette.set_pref("dom.send_after_paint_to_content", True)
+        self.marionette.set_pref("widget.gtk.overlay-scrollbars.enabled", False)
 
     def tearDown(self):
         try:
@@ -29,6 +30,7 @@ class TestReftest(MarionetteTestCase):
 
         self.marionette.clear_pref("dom.send_after_paint_to_content")
         self.marionette.clear_pref("marionette.log.truncate")
+        self.marionette.clear_pref("widget.gtk.overlay-scrollbars.enabled")
 
         super(TestReftest, self).tearDown()
 
