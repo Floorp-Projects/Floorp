@@ -830,7 +830,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvEnsureHSTSData(
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvGetPageThumbStream(
-    nsIURI* aURI, GetPageThumbStreamResolver&& aResolver) {
+    nsIURI* aURI, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
+    GetPageThumbStreamResolver&& aResolver) {
   // Only the privileged about content process is allowed to access
   // things over the moz-page-thumb protocol. Any other content process
   // that tries to send this should have been blocked via the

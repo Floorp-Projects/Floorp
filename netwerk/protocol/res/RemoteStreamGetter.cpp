@@ -36,13 +36,19 @@ RequestOrReason RemoteStreamGetter::GetAsync(nsIStreamListener* aListener,
   nsCOMPtr<nsICancelable> cancelableRequest(this);
 
   RefPtr<RemoteStreamGetter> self = this;
+  Maybe<LoadInfoArgs> loadInfoArgs;
+  nsresult rv = ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
+  if (NS_FAILED(rv)) {
+    return Err(rv);
+  }
 
-  (gNeckoChild->*aMethod)(mURI)->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [self](const Maybe<RemoteStreamInfo>& info) { self->OnStream(info); },
-      [self](const mozilla::ipc::ResponseRejectReason) {
-        self->OnStream(Nothing());
-      });
+  (gNeckoChild->*aMethod)(mURI, loadInfoArgs)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [self](const Maybe<RemoteStreamInfo>& info) { self->OnStream(info); },
+          [self](const mozilla::ipc::ResponseRejectReason) {
+            self->OnStream(Nothing());
+          });
   return RequestOrCancelable(WrapNotNull(cancelableRequest));
 }
 
