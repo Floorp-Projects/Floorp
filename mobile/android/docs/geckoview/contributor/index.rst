@@ -4,9 +4,6 @@
 Contributing to GeckoView
 =========================
 
-Contributor Site
-================
-
 .. toctree::
    :maxdepth: 1
    :hidden:
