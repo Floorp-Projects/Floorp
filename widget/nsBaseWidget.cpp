@@ -146,7 +146,6 @@ nsBaseWidget::nsBaseWidget(nsBorderStyle aBorderStyle)
       mPopupLevel(ePopupLevelTop),
       mPopupType(ePopupTypeAny),
       mHasRemoteContent(false),
-      mFissionWindow(false),
       mUpdateCursor(true),
       mUseAttachedEvents(false),
       mIMEHasFocus(false),
@@ -414,14 +413,12 @@ nsBaseWidget::~nsBaseWidget() {
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::BaseCreate(nsIWidget* aParent, nsWidgetInitData* aInitData) {
-  // keep a reference to the device context
-  if (nullptr != aInitData) {
+  if (aInitData) {
     mWindowType = aInitData->mWindowType;
     mBorderStyle = aInitData->mBorderStyle;
     mPopupLevel = aInitData->mPopupLevel;
     mPopupType = aInitData->mPopupHint;
     mHasRemoteContent = aInitData->mHasRemoteContent;
-    mFissionWindow = aInitData->mFissionWindow;
   }
 
   if (aParent) {

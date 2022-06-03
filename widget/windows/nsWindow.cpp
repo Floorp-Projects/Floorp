@@ -982,12 +982,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     style &= ~0x40000000;  // WS_CHILDWINDOW
   } else {
     // See if the caller wants to explictly set clip children and clip siblings
-    if (aInitData->clipChildren) {
+    if (aInitData->mClipChildren) {
       style |= WS_CLIPCHILDREN;
     } else {
       style &= ~WS_CLIPCHILDREN;
     }
-    if (aInitData->clipSiblings) {
+    if (aInitData->mClipSiblings) {
       style |= WS_CLIPSIBLINGS;
     }
   }
