@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Services = require("Services");
 const {
   processDescriptorSpec,
 } = require("devtools/shared/specs/descriptors/process");
@@ -80,6 +81,10 @@ class ProcessDescriptorFront extends DescriptorMixin(
     return this._isParent && !this._isWindowlessParent;
   }
 
+  get isBrowserToolboxFission() {
+    return Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false);
+  }
+
   get isParentProcessDescriptor() {
     return this._isParent;
   }
@@ -105,7 +110,9 @@ class ProcessDescriptorFront extends DescriptorMixin(
     this._targetFrontPromise = (async () => {
       let targetFront = null;
       try {
-        const targetForm = await super.getTarget();
+        const targetForm = await super.getTarget({
+          isBrowserToolboxFission: this.isBrowserToolboxFission,
+        });
         targetFront = await this._createProcessTargetFront(targetForm);
       } catch (e) {
         // This is likely to happen if we get a lot of events which drop previous
@@ -123,6 +130,12 @@ class ProcessDescriptorFront extends DescriptorMixin(
       return targetFront;
     })();
     return this._targetFrontPromise;
+  }
+
+  getWatcher() {
+    return super.getWatcher({
+      isBrowserToolboxFission: this.isBrowserToolboxFission,
+    });
   }
 
   destroy() {

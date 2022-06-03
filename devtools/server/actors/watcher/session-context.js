@@ -28,7 +28,6 @@
 //   An object keyed by resource type, whose value indicates if we have watcher support
 //   for the resource.
 
-const Services = require("Services");
 const Targets = require("devtools/server/actors/targets/index");
 const Resources = require("devtools/server/actors/resources/index");
 
@@ -48,16 +47,25 @@ const SESSION_TYPES = {
  * - all processes: parent and content,
  * - all privileges: privileged/chrome and content/web,
  * - all components/targets: HTML documents, processes, workers, add-ons,...
+ *
+ * @param {Object} config
+ *        An object with optional configuration. Only supports "isBrowserToolboxFission" attribute
+ *        which provides the value of the devtools.browsertoolbox.fission preference on the client.
  */
-function createBrowserSessionContext() {
+function createBrowserSessionContext(config) {
   const type = SESSION_TYPES.ALL;
+
   return {
     type,
     // For now, the top level target (ParentProcessTargetActor) is created via ProcessDescriptor.getTarget
     // and is never replaced by any other, nor is it created by the WatcherActor.
     isServerTargetSwitchingEnabled: false,
-    supportedTargets: getWatcherSupportedTargets(type),
-    supportedResources: getWatcherSupportedResources(type),
+    supportedTargets: getWatcherSupportedTargets(type, {
+      isBrowserToolboxFission: config.isBrowserToolboxFission,
+    }),
+    supportedResources: getWatcherSupportedResources(type, {
+      isBrowserToolboxFission: config.isBrowserToolboxFission,
+    }),
   };
 }
 
@@ -155,12 +163,9 @@ function createWorkerSessionContext() {
  * @param {String} type
  * @returns {Object}
  */
-function getWatcherSupportedTargets(type) {
+function getWatcherSupportedTargets(type, { isBrowserToolboxFission } = {}) {
   // We're completely bypassing the watcher for the non-multiprocess Browser Toolbox.
-  if (
-    type == SESSION_TYPES.ALL &&
-    !Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
-  ) {
+  if (type == SESSION_TYPES.ALL && !isBrowserToolboxFission) {
     return {};
   }
 
@@ -179,12 +184,9 @@ function getWatcherSupportedTargets(type) {
  * @param {String} type
  * @returns {Object}
  */
-function getWatcherSupportedResources(type) {
+function getWatcherSupportedResources(type, { isBrowserToolboxFission } = {}) {
   // We're completely bypassing the watcher for the non-multiprocess Browser Toolbox.
-  if (
-    type == SESSION_TYPES.ALL &&
-    !Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
-  ) {
+  if (type == SESSION_TYPES.ALL && !isBrowserToolboxFission) {
     return {};
   }
 
