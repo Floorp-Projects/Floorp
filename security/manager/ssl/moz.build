@@ -100,6 +100,8 @@ EXPORTS.ipc += [
 ]
 
 UNIFIED_SOURCES += [
+    "AppSignatureVerification.cpp",
+    "AppTrustDomain.cpp",
     "CertStorageMemoryReporting.cpp",
     "CommonSocketControl.cpp",
     "ContentSignatureVerifier.cpp",
@@ -197,15 +199,13 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
+    "!/dist/public/nss",
     "/dom/base",
     "/dom/crypto",
     "/netwerk/base",
     "/security/certverifier",
+    "/third_party/rust/cose-c/include",
     "/xpcom/build",
-]
-
-LOCAL_INCLUDES += [
-    "!/dist/public/nss",
 ]
 
 GeneratedFile(
@@ -239,5 +239,25 @@ if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [
         "-Wno-unused-parameter",
     ]
+
+headers_arrays_certs = [
+    (
+        "xpcshell.inc",
+        "xpcshellRoot",
+        "tests/unit/test_signed_apps/xpcshellTestRoot.der",
+    ),
+    ("addons-public.inc", "addonsPublicRoot", "addons-public.crt"),
+    (
+        "addons-public-intermediate.inc",
+        "addonsPublicIntermediate",
+        "addons-public-intermediate.crt",
+    ),
+    ("addons-stage.inc", "addonsStageRoot", "addons-stage.crt"),
+]
+
+for header, array_name, cert in headers_arrays_certs:
+    GeneratedFile(
+        header, script="gen_cert_header.py", entry_point=array_name, inputs=[cert]
+    )
 
 REQUIRES_UNIFIED_BUILD = True
