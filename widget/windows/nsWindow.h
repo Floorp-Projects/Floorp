@@ -182,7 +182,7 @@ class nsWindow final : public nsBaseWidget {
   void SetSizeConstraints(const SizeConstraints& aConstraints) override;
   void LockAspectRatio(bool aShouldLock) override;
   const SizeConstraints GetSizeConstraints() override;
-  void SetInputRegion(const InputRegion&) override;
+  void SetWindowMouseTransparent(bool aIsTransparent) override;
   void Move(double aX, double aY) override;
   void Resize(double aWidth, double aHeight, bool aRepaint) override;
   void Resize(double aX, double aY, double aWidth, double aHeight,

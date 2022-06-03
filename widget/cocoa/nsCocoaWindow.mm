@@ -2462,10 +2462,9 @@ void nsCocoaWindow::SetWindowTransform(const gfx::Matrix& aTransform) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-void nsCocoaWindow::SetInputRegion(const InputRegion& aInputRegion) {
+void nsCocoaWindow::SetWindowMouseTransparent(bool aIsTransparent) {
   MOZ_ASSERT(mWindowType == eWindowType_popup, "This should only be called on popup windows.");
-  // TODO: Somehow support aInputRegion.mMargin? Though maybe not.
-  if (aInputRegion.mFullyTransparent) {
+  if (aIsTransparent) {
     [mWindow setIgnoresMouseEvents:YES];
   } else {
     [mWindow setIgnoresMouseEvents:NO];

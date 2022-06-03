@@ -247,10 +247,12 @@ class nsMenuPopupFrame final : public nsBoxFrame,
            mPopupState == ePopupShowing;
   }
   bool IsNativeMenu() const { return mIsNativeMenu; }
-  bool IsMouseTransparent() const;
 
   // Return true if the popup is for a menulist.
   bool IsMenuList();
+
+  bool IsMouseTransparent(const ComputedStyle&) const;
+  bool IsMouseTransparent() const { return IsMouseTransparent(*Style()); }
 
   static nsIContent* GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame);
   void ClearTriggerContent() { mTriggerContent = nullptr; }

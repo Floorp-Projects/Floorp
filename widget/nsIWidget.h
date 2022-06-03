@@ -1073,17 +1073,11 @@ class nsIWidget : public nsISupports {
   virtual void SetColorScheme(const mozilla::Maybe<mozilla::ColorScheme>&) {}
 
   /**
-   * Set whether the window should ignore mouse events or not, and if it should
-   * not, what input margin should it use.
+   * Set whether the window should ignore mouse events or not.
    *
-   * This is only used on popup windows. The margin is only implemented on
-   * Linux.
+   * This is only used on popup windows.
    */
-  struct InputRegion {
-    bool mFullyTransparent = false;
-    mozilla::LayoutDeviceIntCoord mMargin = 0;
-  };
-  virtual void SetInputRegion(const InputRegion&) {}
+  virtual void SetWindowMouseTransparent(bool aIsTransparent) {}
 
   /*
    * On macOS, this method shows or hides the pill button in the titlebar
