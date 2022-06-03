@@ -4,6 +4,7 @@
 
 
 #include "nsISupports.idl"
+#include "nsIX509CertDB.idl"
 
 interface nsIContentSignatureReceiverCallback;
 
@@ -15,6 +16,10 @@ interface nsIContentSignatureReceiverCallback;
 [scriptable, uuid(45a5fe2f-c350-4b86-962d-02d5aaaa955a)]
 interface nsIContentSignatureVerifier : nsISupports
 {
+  const AppTrustedRoot ContentSignatureProdRoot = 1;
+  const AppTrustedRoot ContentSignatureStageRoot = 2;
+  const AppTrustedRoot ContentSignatureDevRoot = 3;
+  const AppTrustedRoot ContentSignatureLocalRoot = 4;
 
   /**
    * Verifies that the data matches the data that was used to generate the
@@ -26,7 +31,11 @@ interface nsIContentSignatureVerifier : nsISupports
    * @param aCertificateChain       The certificate chain to use for verification.
    *                                PEM encoded string.
    * @param aHostname               The hostname for which the end entity must
-                                    be valid.
+   *                                be valid.
+   * @param aTrustedRoot            The identifier corresponding to the
+   *                                expected root certificate of the
+   *                                certificate chain (note that the root need
+   *                                not actually be included in the chain).
    * @returns Promise that resolves with the value true if the signature
    *          matches the data and aCertificateChain is valid within aContext,
    *          and false if not. Rejects if another error occurred.
@@ -35,5 +44,6 @@ interface nsIContentSignatureVerifier : nsISupports
   Promise asyncVerifyContentSignature(in ACString aData,
                                       in ACString aContentSignatureHeader,
                                       in ACString aCertificateChain,
-                                      in ACString aHostname);
+                                      in ACString aHostname,
+                                      in AppTrustedRoot aTrustedRoot);
 };
