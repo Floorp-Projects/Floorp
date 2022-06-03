@@ -8,7 +8,7 @@ job-defaults:
         code-review: true
     worker:
         docker-image: {in-tree: static-analysis-build}
-        max-run-time: 600
+        max-run-time: 1200
         artifacts:
             - type: file
               name: public/code-review/issues.json
