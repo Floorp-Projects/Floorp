@@ -971,6 +971,8 @@ open class DummyEngineSession : EngineSession() {
 
     override fun loadData(data: String, mimeType: String, encoding: String) {}
 
+    override fun requestPdfToDownload() {}
+
     override fun stopLoading() {}
 
     override fun reload(flags: LoadUrlFlags) {}

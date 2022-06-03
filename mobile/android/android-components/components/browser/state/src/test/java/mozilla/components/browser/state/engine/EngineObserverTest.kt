@@ -79,6 +79,7 @@ class EngineObserverTest {
                 notifyObservers { onLoadingStateChange(true) }
                 notifyObservers { onNavigationStateChange(true, true) }
             }
+            override fun requestPdfToDownload() = Unit
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,
@@ -129,6 +130,7 @@ class EngineObserverTest {
             override fun exitFullScreenMode() {}
             override fun purgeHistory() {}
             override fun loadData(data: String, mimeType: String, encoding: String) {}
+            override fun requestPdfToDownload() = Unit
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,
@@ -181,6 +183,7 @@ class EngineObserverTest {
                 additionalHeaders: Map<String, String>?
             ) {}
             override fun loadData(data: String, mimeType: String, encoding: String) {}
+            override fun requestPdfToDownload() = Unit
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}

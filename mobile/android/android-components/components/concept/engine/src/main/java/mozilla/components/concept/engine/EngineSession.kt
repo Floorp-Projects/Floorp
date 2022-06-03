@@ -627,6 +627,13 @@ abstract class EngineSession(
     abstract fun loadData(data: String, mimeType: String = "text/html", encoding: String = "UTF-8")
 
     /**
+     * Requests the [EngineSession] to download the current session's contents as a PDF.
+     *
+     * A typical implementation would have the same flow that feeds into [EngineSession.Observer.onExternalResource].
+     */
+    abstract fun requestPdfToDownload()
+
+    /**
      * Stops loading the current session.
      */
     abstract fun stopLoading()

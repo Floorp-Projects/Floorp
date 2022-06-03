@@ -46,6 +46,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
+import mozilla.components.support.utils.DownloadUtils.RESPONSE_CODE_SUCCESS
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.test.ReflectionUtils
 import org.json.JSONObject
@@ -3357,6 +3358,73 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
 
         assertSame(GeckoEngineSession.BLOCKED_SCHEMES, engineSession.getBlockedSchemes())
+    }
+
+    @Test
+    fun `WHEN requestPdfToDownload THEN notify observers`() {
+        val engineSession = GeckoEngineSession(
+            runtime = mock(),
+            geckoSessionProvider = geckoSessionProvider
+        ).apply {
+            currentUrl = "https://mozilla.org"
+            currentTitle = "Mozilla"
+        }
+        engineSession.register(object : EngineSession.Observer {
+            override fun onExternalResource(
+                url: String,
+                fileName: String?,
+                contentLength: Long?,
+                contentType: String?,
+                cookie: String?,
+                userAgent: String?,
+                isPrivate: Boolean,
+                response: Response?
+            ) {
+                assertEquals("PDF response is always a success.", RESPONSE_CODE_SUCCESS, response!!.status)
+                assertEquals("Length should always be zero.", 0L, contentLength)
+                assertEquals("Filename is based on title, when available.", "Mozilla.pdf", fileName)
+                assertEquals("Content type is always static.", "application/pdf", contentType)
+            }
+        })
+
+        whenever(geckoSession.saveAsPdf()).thenReturn(GeckoResult.fromValue(mock()))
+
+        engineSession.requestPdfToDownload()
+        shadowOf(getMainLooper()).idle()
+    }
+
+    @Test
+    fun `WHEN requestPdfToDownload cannot return a result THEN do nothing`() {
+        val engineSession = GeckoEngineSession(
+            runtime = mock(),
+            geckoSessionProvider = geckoSessionProvider
+        )
+        engineSession.register(object : EngineSession.Observer {
+            override fun onExternalResource(
+                url: String,
+                fileName: String?,
+                contentLength: Long?,
+                contentType: String?,
+                cookie: String?,
+                userAgent: String?,
+                isPrivate: Boolean,
+                response: Response?
+            ) {
+                assert(false) { "We should not notify observers." }
+            }
+        })
+
+        whenever(geckoSession.saveAsPdf())
+            .thenReturn(GeckoResult.fromValue(null))
+            .thenReturn(GeckoResult.fromException(IllegalStateException()))
+
+        // When input stream in the GeckoResult is null.
+        engineSession.requestPdfToDownload()
+        shadowOf(getMainLooper()).idle()
+
+        // When we receive an exception from the GeckoResult.
+        engineSession.requestPdfToDownload()
+        shadowOf(getMainLooper()).idle()
     }
 
     private fun mockGeckoSession(): GeckoSession {

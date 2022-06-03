@@ -282,6 +282,9 @@ open class DefaultComponents(private val applicationContext: Context) {
             SimpleBrowserMenuItem("Find In Page") {
                 FindInPageIntegration.launch?.invoke()
             },
+            SimpleBrowserMenuItem("Save to PDF") {
+                sessionUseCases.saveToPdf.invoke()
+            },
             SimpleBrowserMenuItem("Restore after crash") {
                 sessionUseCases.crashRecovery.invoke()
             },

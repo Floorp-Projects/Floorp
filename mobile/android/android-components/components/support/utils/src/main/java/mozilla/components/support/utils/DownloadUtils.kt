@@ -140,6 +140,22 @@ object DownloadUtils {
     )
 
     /**
+     * Maximum number of characters for the title length.
+     *
+     * Android OS is Linux-based and therefore would have the limitations of the linux filesystem
+     * it uses under the hood. To the best of our knowledge, Android only supports EXT3, EXT4,
+     * exFAT, and EROFS filesystems. From these three, the maximum file name length is 255.
+     *
+     * @see <a href="https://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits"/>
+     */
+    private const val MAX_FILE_NAME_LENGTH = 255
+
+    /**
+     * The HTTP response code for a successful request.
+     */
+    const val RESPONSE_CODE_SUCCESS = 200
+
+    /**
      * Guess the name of the file that should be downloaded.
      *
      * This method is largely identical to [android.webkit.URLUtil.guessFileName]
@@ -210,6 +226,20 @@ object DownloadUtils {
         }
 
         return potentialFileName.name
+    }
+
+    /**
+     * Create a Content Disposition formatted string with the receiver used as the filename and
+     * file extension set as PDF.
+     *
+     * This is primarily useful for connecting the "Save to PDF" feature response to downloads.
+     */
+    fun makePdfContentDisposition(filename: String): String {
+        return filename
+            .take(MAX_FILE_NAME_LENGTH)
+            .run {
+                "attachment; filename=$this.pdf;"
+            }
     }
 
     private fun extractFileNameFromUrl(contentDisposition: String?, url: String?): String {

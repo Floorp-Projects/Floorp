@@ -55,6 +55,7 @@ internal object EngineStateReducer {
         is EngineAction.GoToHistoryIndexAction,
         is EngineAction.ToggleDesktopModeAction,
         is EngineAction.ExitFullScreenModeAction,
+        is EngineAction.SaveToPdfAction,
         is EngineAction.KillEngineSessionAction,
         is EngineAction.ClearDataAction -> {
             throw IllegalStateException("You need to add EngineMiddleware to your BrowserStore. ($action)")

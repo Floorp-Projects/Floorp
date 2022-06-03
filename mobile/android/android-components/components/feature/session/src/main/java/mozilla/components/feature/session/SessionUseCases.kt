@@ -404,6 +404,31 @@ class SessionUseCases(
         }
     }
 
+    /**
+     * A use case for requesting a given tab to generate a PDF from it's content.
+     */
+    class SaveToPdfUseCase internal constructor(
+        private val store: BrowserStore
+    ) {
+        /**
+         * Request a PDF to be generated from the given [tabId].
+         *
+         * If the tab is not loaded, [BrowserStore] will ensure the session has been created and
+         * loaded, however, this does not guarantee the page contents will be correctly painted
+         * into the PDF. Typically, a session is required to have been painted on the screen (by
+         * being the selected tab) for a PDF to be generated successfully.
+         */
+        operator fun invoke(
+            tabId: String? = store.state.selectedTabId
+        ) {
+            if (tabId == null) {
+                return
+            }
+
+            store.dispatch(EngineAction.SaveToPdfAction(tabId))
+        }
+    }
+
     val loadUrl: DefaultLoadUrlUseCase by lazy { DefaultLoadUrlUseCase(store, onNoTab) }
     val loadData: LoadDataUseCase by lazy { LoadDataUseCase(store, onNoTab) }
     val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(store) }
@@ -413,6 +438,7 @@ class SessionUseCases(
     val goToHistoryIndex: GoToHistoryIndexUseCase by lazy { GoToHistoryIndexUseCase(store) }
     val requestDesktopSite: RequestDesktopSiteUseCase by lazy { RequestDesktopSiteUseCase(store) }
     val exitFullscreen: ExitFullScreenUseCase by lazy { ExitFullScreenUseCase(store) }
+    val saveToPdf: SaveToPdfUseCase by lazy { SaveToPdfUseCase(store) }
     val crashRecovery: CrashRecoveryUseCase by lazy { CrashRecoveryUseCase(store) }
     val purgeHistory: PurgeHistoryUseCase by lazy { PurgeHistoryUseCase(store) }
     val updateLastAccess: UpdateLastAccessUseCase by lazy { UpdateLastAccessUseCase(store) }

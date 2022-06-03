@@ -92,6 +92,10 @@ class SystemEngineSession(
         webView.loadData(data, mimeType, encoding)
     }
 
+    override fun requestPdfToDownload() {
+        throw UnsupportedOperationException("PDF support is not available in this engine")
+    }
+
     /**
      * See [EngineSession.stopLoading]
      */

@@ -37,6 +37,8 @@ import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_DISPOSITION
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
+import mozilla.components.concept.fetch.MutableHeaders
+import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
@@ -52,6 +54,8 @@ import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.ktx.kotlin.sanitizeFileName
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.utils.DownloadUtils
+import mozilla.components.support.utils.DownloadUtils.RESPONSE_CODE_SUCCESS
+import mozilla.components.support.utils.DownloadUtils.makePdfContentDisposition
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
@@ -95,6 +99,7 @@ class GeckoEngineSession(
 
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
+    internal var currentTitle: String? = null
     internal var lastLoadRequestUri: String? = null
     internal var pageLoadingUrl: String? = null
     internal var appRedirectUrl: String? = null
@@ -195,6 +200,61 @@ class GeckoEngineSession(
             "base64" -> geckoSession.load(GeckoSession.Loader().data(data.toByteArray(), mimeType))
             else -> geckoSession.load(GeckoSession.Loader().data(data, mimeType))
         }
+    }
+
+    /**
+     * See [EngineSession.requestPdfToDownload]
+     */
+    override fun requestPdfToDownload() {
+        geckoSession.saveAsPdf().then(
+            { inputStream ->
+                if (inputStream == null) {
+                    logger.error("No input stream available for Save to PDF.")
+                    return@then GeckoResult<Void>()
+                }
+
+                val url = this.currentUrl ?: ""
+                val contentType = "application/pdf"
+                val disposition = currentTitle?.let { makePdfContentDisposition(it) }
+                // A successful status code suffices because the PDF is generated on device.
+                val responseStatus = RESPONSE_CODE_SUCCESS
+                // We do not know the size at this point; send 0 so consumers do not display it.
+                val contentLength = 0L
+                // NB: If the title is an empty string, there is a chance the PDF will not have a name.
+                // See https://github.com/mozilla-mobile/android-components/issues/12276
+                val fileName = DownloadUtils.guessFileName(
+                    disposition,
+                    destinationDirectory = null,
+                    url = url,
+                    mimeType = contentType
+                )
+
+                val response = Response(
+                    url = url,
+                    status = responseStatus,
+                    headers = MutableHeaders(),
+                    body = Response.Body(inputStream)
+                )
+
+                notifyObservers {
+                    onExternalResource(
+                        url = url,
+                        contentLength = contentLength,
+                        contentType = contentType,
+                        fileName = fileName,
+                        response = response,
+                        isPrivate = privateMode
+                    )
+                }
+
+                GeckoResult()
+            },
+            { throwable ->
+                // Log the error. There is nothing we can do otherwise.
+                logger.error("Save to PDF failed.", throwable)
+                GeckoResult()
+            }
+        )
     }
 
     /**
@@ -883,6 +943,7 @@ class GeckoEngineSession(
                         }
                     }
                 }
+                this@GeckoEngineSession.currentTitle = title
                 notifyObservers { onTitleChange(title ?: "") }
             }
         }

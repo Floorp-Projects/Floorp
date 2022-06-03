@@ -1008,6 +1008,13 @@ sealed class EngineAction : BrowserAction() {
     ) : EngineAction(), ActionWithTab
 
     /**
+     * Navigates back in the tab with the given [tabId].
+     */
+    data class SaveToPdfAction(
+        override val tabId: String,
+    ) : EngineAction(), ActionWithTab
+
+    /**
      * Clears browsing data for the tab with the given [tabId].
      */
     data class ClearDataAction(
