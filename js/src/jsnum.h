@@ -70,8 +70,7 @@ extern bool IsInteger(double d);
  * Convert an integer or double (contained in the given value) to a string and
  * append to the given buffer.
  */
-[[nodiscard]] extern bool NumberValueToStringBuffer(JSContext* cx,
-                                                    const Value& v,
+[[nodiscard]] extern bool NumberValueToStringBuffer(const Value& v,
                                                     StringBuffer& sb);
 
 extern JSLinearString* IndexToString(JSContext* cx, uint32_t index);
@@ -95,14 +94,16 @@ struct ToCStringBuf {
   ~ToCStringBuf();
 };
 
-/*
- * Convert a number to a C string.  When base==10, this function implements
- * ToString() as specified by ECMA-262-5 section 9.8.1.  It handles integral
- * values cheaply.  Return nullptr if we ran out of memory.  See also
- * NumberToCString().
- */
-extern char* NumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d,
-                             int base = 10);
+// Convert a number to a C string.  This function implements ToString() as
+// specified by ECMA-262-5 section 9.8.1.  It handles integral values cheaply.
+// Infallible: always returns a non-nullptr string.
+extern char* NumberToCString(ToCStringBuf* cbuf, double d);
+
+// Like NumberToCString, but can be used for bases other than 10. If base == 10,
+// this is equivalent to NumberToCString. Unlike NumberToCString, this function
+// is fallible and will return nullptr if we ran out of memory.
+extern char* NumberToCStringWithBase(JSContext* cx, ToCStringBuf* cbuf,
+                                     double d, int base);
 
 /*
  * The largest positive integer such that all positive integers less than it

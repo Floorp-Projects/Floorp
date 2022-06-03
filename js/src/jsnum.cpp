@@ -721,7 +721,7 @@ static bool num_toSource(JSContext* cx, unsigned argc, Value* vp) {
 
   JSStringBuilder sb(cx);
   if (!sb.append("(new Number(") ||
-      !NumberValueToStringBuffer(cx, NumberValue(d), sb) || !sb.append("))")) {
+      !NumberValueToStringBuffer(NumberValue(d), sb) || !sb.append("))")) {
     return false;
   }
 
@@ -859,8 +859,8 @@ frontend::TaggedParserAtomIndex js::Int32ToParserAtom(
 }
 
 /* Returns a non-nullptr pointer to inside cbuf.  */
-static char* Int32ToCString(ToCStringBuf* cbuf, int32_t i, size_t* len,
-                            int base = 10) {
+static char* Int32ToCStringWithBase(ToCStringBuf* cbuf, int32_t i, size_t* len,
+                                    int base) {
   uint32_t u = Abs(i);
 
   RangedPtr<char> cp(cbuf->sbuf + ToCStringBuf::sbufSize - 1, cbuf->sbuf,
@@ -1093,10 +1093,10 @@ static bool ComputePrecisionInRange(JSContext* cx, int minPrecision,
   }
 
   ToCStringBuf cbuf;
-  if (char* numStr = NumberToCString(cx, &cbuf, prec, 10)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_PRECISION_RANGE, numStr);
-  }
+  char* numStr = NumberToCString(&cbuf, prec);
+  MOZ_ASSERT(numStr);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_PRECISION_RANGE,
+                            numStr);
   return false;
 }
 
@@ -1509,8 +1509,7 @@ const ClassSpec NumberObject::classSpec_ = {
     nullptr,
     NumberClassFinish};
 
-static char* FracNumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d,
-                                 int base = 10) {
+static char* FracNumberToCString(ToCStringBuf* cbuf, double d) {
 #ifdef DEBUG
   {
     int32_t _;
@@ -1518,27 +1517,40 @@ static char* FracNumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d,
   }
 #endif
 
-  char* numStr;
+  /*
+   * This is V8's implementation of the algorithm described in the
+   * following paper:
+   *
+   *   Printing floating-point numbers quickly and accurately with integers.
+   *   Florian Loitsch, PLDI 2010.
+   */
+  const double_conversion::DoubleToStringConverter& converter =
+      double_conversion::DoubleToStringConverter::EcmaScriptConverter();
+  double_conversion::StringBuilder builder(cbuf->sbuf,
+                                           js::ToCStringBuf::sbufSize);
+  converter.ToShortest(d, &builder);
+  return builder.Finalize();
+}
+
+static char* FracNumberToCStringWithBase(JSContext* cx, ToCStringBuf* cbuf,
+                                         double d, int base) {
+  // We use a faster algorithm for base 10.
   if (base == 10) {
-    /*
-     * This is V8's implementation of the algorithm described in the
-     * following paper:
-     *
-     *   Printing floating-point numbers quickly and accurately with integers.
-     *   Florian Loitsch, PLDI 2010.
-     */
-    const double_conversion::DoubleToStringConverter& converter =
-        double_conversion::DoubleToStringConverter::EcmaScriptConverter();
-    double_conversion::StringBuilder builder(cbuf->sbuf,
-                                             js::ToCStringBuf::sbufSize);
-    converter.ToShortest(d, &builder);
-    numStr = builder.Finalize();
-  } else {
-    if (!EnsureDtoaState(cx)) {
-      return nullptr;
-    }
-    numStr = cbuf->dbuf = js_dtobasestr(cx->dtoaState, base, d);
+    return FracNumberToCString(cbuf, d);
   }
+
+#ifdef DEBUG
+  {
+    int32_t _;
+    MOZ_ASSERT(!NumberEqualsInt32(d, &_));
+  }
+#endif
+
+  if (!EnsureDtoaState(cx)) {
+    return nullptr;
+  }
+
+  char* numStr = cbuf->dbuf = js_dtobasestr(cx->dtoaState, base, d);
   return numStr;
 }
 
@@ -1547,7 +1559,7 @@ void JS::NumberToString(double d, char (&out)[MaximumNumberToStringLength]) {
   if (NumberEqualsInt32(d, &i)) {
     ToCStringBuf cbuf;
     size_t len;
-    char* loc = Int32ToCString(&cbuf, i, &len, 10);
+    char* loc = Int32ToCStringWithBase(&cbuf, i, &len, 10);
     memmove(out, loc, len);
     out[len] = '\0';
   } else {
@@ -1565,12 +1577,22 @@ void JS::NumberToString(double d, char (&out)[MaximumNumberToStringLength]) {
   }
 }
 
-char* js::NumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d,
-                          int base /* = 10*/) {
+char* js::NumberToCString(ToCStringBuf* cbuf, double d) {
   int32_t i;
   size_t len;
-  return NumberEqualsInt32(d, &i) ? Int32ToCString(cbuf, i, &len, base)
-                                  : FracNumberToCString(cx, cbuf, d, base);
+  char* s = NumberEqualsInt32(d, &i) ? Int32ToCStringWithBase(cbuf, i, &len, 10)
+                                     : FracNumberToCString(cbuf, d);
+  MOZ_ASSERT(s);
+  return s;
+}
+
+char* js::NumberToCStringWithBase(JSContext* cx, ToCStringBuf* cbuf, double d,
+                                  int base) {
+  int32_t i;
+  size_t len;
+  return NumberEqualsInt32(d, &i)
+             ? Int32ToCStringWithBase(cbuf, i, &len, base)
+             : FracNumberToCStringWithBase(cx, cbuf, d, base);
 }
 
 template <AllowGC allowGC>
@@ -1610,7 +1632,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
       return str;
     }
 
-    numStr = Int32ToCString(&cbuf, i, &numStrLen, base);
+    numStr = Int32ToCStringWithBase(&cbuf, i, &numStrLen, base);
     MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
                numStr < cbuf.sbuf + cbuf.sbufSize);
     MOZ_ASSERT(numStrLen == strlen(numStr));
@@ -1619,7 +1641,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
       return str;
     }
 
-    numStr = FracNumberToCString(cx, &cbuf, d, base);
+    numStr = FracNumberToCStringWithBase(cx, &cbuf, d, base);
     if (!numStr) {
       if constexpr (allowGC) {
         ReportOutOfMemory(cx);
@@ -1672,11 +1694,8 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
   }
 
   ToCStringBuf cbuf;
-  char* numStr = FracNumberToCString(cx, &cbuf, d);
-  if (!numStr) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
+  char* numStr = FracNumberToCString(&cbuf, d);
+  MOZ_ASSERT(numStr);
   MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
              numStr < cbuf.sbuf + cbuf.sbufSize);
 
@@ -1699,11 +1718,8 @@ frontend::TaggedParserAtomIndex js::NumberToParserAtom(
   }
 
   ToCStringBuf cbuf;
-  char* numStr = FracNumberToCString(cx, &cbuf, d);
-  if (!numStr) {
-    ReportOutOfMemory(cx);
-    return frontend::TaggedParserAtomIndex::null();
-  }
+  char* numStr = FracNumberToCString(&cbuf, d);
+  MOZ_ASSERT(numStr);
   MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
              numStr < cbuf.sbuf + cbuf.sbufSize);
 
@@ -1737,21 +1753,17 @@ JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {
   return str;
 }
 
-bool js::NumberValueToStringBuffer(JSContext* cx, const Value& v,
-                                   StringBuffer& sb) {
+bool js::NumberValueToStringBuffer(const Value& v, StringBuffer& sb) {
   /* Convert to C-string. */
   ToCStringBuf cbuf;
   const char* cstr;
   size_t cstrlen;
   if (v.isInt32()) {
-    cstr = Int32ToCString(&cbuf, v.toInt32(), &cstrlen);
+    cstr = Int32ToCStringWithBase(&cbuf, v.toInt32(), &cstrlen, 10);
     MOZ_ASSERT(cstrlen == strlen(cstr));
   } else {
-    cstr = NumberToCString(cx, &cbuf, v.toDouble());
-    if (!cstr) {
-      JS_ReportOutOfMemory(cx);
-      return false;
-    }
+    cstr = NumberToCString(&cbuf, v.toDouble());
+    MOZ_ASSERT(cstr);
     cstrlen = strlen(cstr);
   }
 

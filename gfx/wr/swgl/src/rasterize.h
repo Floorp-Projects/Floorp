@@ -1002,9 +1002,12 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint32_t z,
       fragment_shader->gl_FragCoord.y = y;
       {
         // Change in interpolants is difference between current right and left
-        // edges per the change in right and left X.
-        Interpolants step =
-            (right.interp - left.interp) * (1.0f / (right.x - left.x));
+        // edges per the change in right and left X. If the left and right X
+        // positions are extremely close together, then avoid stepping the
+        // interpolants.
+        float stepScale = 1.0f / (right.x - left.x);
+        if (!isfinite(stepScale)) stepScale = 0.0f;
+        Interpolants step = (right.interp - left.interp) * stepScale;
         // Advance current interpolants to X at start of span.
         Interpolants o = left.interp + step * (span.start + 0.5f - left.x);
         fragment_shader->init_span(&o, &step);
@@ -1229,8 +1232,11 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
       fragment_shader->gl_FragCoord.y = y;
       {
         // Calculate the fragment Z and W change per change in fragment X step.
-        vec2_scalar stepZW =
-            (right.zw() - left.zw()) * (1.0f / (right.x() - left.x()));
+        // If the left and right X positions are extremely close together, then
+        // avoid stepping.
+        float stepScale = 1.0f / (right.x() - left.x());
+        if (!isfinite(stepScale)) stepScale = 0.0f;
+        vec2_scalar stepZW = (right.zw() - left.zw()) * stepScale;
         // Calculate initial Z and W values for span start.
         vec2_scalar zw = left.zw() + stepZW * (span.start + 0.5f - left.x());
         // Set fragment shader's Z and W values so that it can use them to
@@ -1242,8 +1248,7 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
         // edges per the change in right and left X. The left and right
         // interpolant values were previously multipled by 1/w, so the step and
         // initial span values take this into account.
-        Interpolants step =
-            (right.interp - left.interp) * (1.0f / (right.x() - left.x()));
+        Interpolants step = (right.interp - left.interp) * stepScale;
         // Advance current interpolants to X at start of span.
         Interpolants o = left.interp + step * (span.start + 0.5f - left.x());
         fragment_shader->init_span<true>(&o, &step);
