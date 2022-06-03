@@ -752,7 +752,7 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
       }
     }
 
-    return NumberValueToStringBuffer(cx, v, scx->sb);
+    return NumberValueToStringBuffer(v, scx->sb);
   }
 
   /* Step 10 in the BigInt proposal. */

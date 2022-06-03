@@ -708,7 +708,7 @@ static JSAtom* GenerateWasmName(JSContext* cx,
   if (!sb.append(prefix)) {
     return nullptr;
   }
-  if (!NumberValueToStringBuffer(cx, Int32Value(index), sb)) {
+  if (!NumberValueToStringBuffer(NumberValue(index), sb)) {
     return nullptr;
   }
 

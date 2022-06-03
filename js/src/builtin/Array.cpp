@@ -1174,7 +1174,7 @@ static bool ArrayJoinDenseKernel(JSContext* cx, SeparatorOp sepOp,
         return false;
       }
     } else if (elem.isNumber()) {
-      if (!NumberValueToStringBuffer(cx, elem, sb)) {
+      if (!NumberValueToStringBuffer(elem, sb)) {
         return false;
       }
     } else if (elem.isBoolean()) {

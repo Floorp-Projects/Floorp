@@ -721,7 +721,7 @@ static bool num_toSource(JSContext* cx, unsigned argc, Value* vp) {
 
   JSStringBuilder sb(cx);
   if (!sb.append("(new Number(") ||
-      !NumberValueToStringBuffer(cx, NumberValue(d), sb) || !sb.append("))")) {
+      !NumberValueToStringBuffer(NumberValue(d), sb) || !sb.append("))")) {
     return false;
   }
 
@@ -1753,8 +1753,7 @@ JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {
   return str;
 }
 
-bool js::NumberValueToStringBuffer(JSContext* cx, const Value& v,
-                                   StringBuffer& sb) {
+bool js::NumberValueToStringBuffer(const Value& v, StringBuffer& sb) {
   /* Convert to C-string. */
   ToCStringBuf cbuf;
   const char* cstr;
