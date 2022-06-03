@@ -187,6 +187,5 @@ if CONFIG["MOZ_ENABLE_DBUS"]:
         "AsyncDBus.cpp",
     ]
     CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
-CXXFLAGS += ["-Werror=switch"]
 
-REQUIRES_UNIFIED_BUILD = True
+CXXFLAGS += ["-Werror=switch"]
