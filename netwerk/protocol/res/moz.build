@@ -14,6 +14,7 @@ XPIDL_MODULE = "necko_res"
 EXPORTS.mozilla.net += [
     "ExtensionProtocolHandler.h",
     "PageThumbProtocolHandler.h",
+    "RemoteStreamGetter.h",
     "SubstitutingJARURI.h",
     "SubstitutingProtocolHandler.h",
     "SubstitutingURL.h",
@@ -27,6 +28,7 @@ UNIFIED_SOURCES += [
     "ExtensionProtocolHandler.cpp",
     "nsResProtocolHandler.cpp",
     "PageThumbProtocolHandler.cpp",
+    "RemoteStreamGetter.cpp",
     "SubstitutingProtocolHandler.cpp",
 ]
 
