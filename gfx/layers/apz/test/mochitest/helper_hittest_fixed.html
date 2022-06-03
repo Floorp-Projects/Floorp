@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ hit-testing of fixed content when async-scrolled</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    html, body {
+      margin: 0;
+    }
+    #fixed {
+      position: fixed;
+      height: 300px;
+      width: 100%;
+      top: 0;
+      background: blue;
+    }
+    #target {
+      margin-top: 100px;
+      margin-left: 100px;
+      height: 20px;
+      width: 20px;
+      background: red;
+    }
+  </style>
+</head>
+<body>
+ <div id="fixed">
+   <div id="target"></div>
+ </div>
+ <div id="make_root_scrollable" style="height: 5000px"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // Async scroll the page by 50 pixels. The scroll does not move
+  // the fixed element.
+  utils.setAsyncScrollOffset(document.documentElement, 0, 50);
+  // Tick the refresh driver once to make sure the compositor has applied the
+  // async scroll offset (for WebRender hit-testing we need to make sure WR has
+  // the latest info).
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+
+  let clickPromise = new Promise(resolve => {
+    target.addEventListener("click", e => {
+      ok(true, "Target was hit");
+      e.stopPropagation();  // do not propagate event to |fixed| ancestor
+      resolve();
+    });
+    fixed.addEventListener("click", e => {
+      // Since target's listener calls stopPropagation(), if we get here
+      // then the coordinates of the click event did not correspond to
+      // |target|, but somewhere else on |fixed|.
+      ok(false, "Fixed ancestor should not be hit");
+      resolve();
+    });
+  });
+
+  // Synthesize a click at (110, 110), which should hit |target| (a
+  // descendant of |fixed|) regardless of the async scroll.
+  await synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: window,
+    offsetX: 110,
+    offsetY: 110
+  });
+
+  await clickPromise;
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
