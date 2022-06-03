@@ -36,6 +36,23 @@ rtc_source_set("protobuf_utils") {
   }
 }
 
+rtc_source_set("bitstream_reader") {
+  sources = [
+    "bitstream_reader.cc",
+    "bitstream_reader.h",
+  ]
+  deps = [
+    ":checks",
+    ":safe_conversions",
+    "../api:array_view",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/numeric:bits",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
+}
+
 rtc_source_set("compile_assert_c") {
   sources = [ "compile_assert_c.h" ]
 }
@@ -1327,6 +1344,7 @@ if (rtc_include_tests) {
         "atomic_ops_unittest.cc",
         "base64_unittest.cc",
         "bit_buffer_unittest.cc",
+        "bitstream_reader_unittest.cc",
         "bounded_inline_vector_unittest.cc",
         "buffer_queue_unittest.cc",
         "buffer_unittest.cc",
@@ -1370,6 +1388,7 @@ if (rtc_include_tests) {
         sources += [ "win/windows_version_unittest.cc" ]
       }
       deps = [
+        ":bitstream_reader",
         ":bounded_inline_vector",
         ":checks",
         ":criticalsection",
@@ -1410,6 +1429,7 @@ if (rtc_include_tests) {
       absl_deps = [
         "//third_party/abseil-cpp/absl/base:core_headers",
         "//third_party/abseil-cpp/absl/memory",
+        "//third_party/abseil-cpp/absl/numeric:bits",
         "//third_party/abseil-cpp/absl/types:optional",
       ]
     }
