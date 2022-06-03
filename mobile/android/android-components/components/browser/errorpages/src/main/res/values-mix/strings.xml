@@ -28,6 +28,12 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Ntyityí</string>
 
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Alguien podría estar intentando imitar el sitio y no deberías continuar. </label>
+        <br><br>
+        <label>Los sitios web prueban su identidad mediante certificados. %1$s no confía en <b>%2$s</b> porque el emisor del certificado es desconocido, el certificado está autofirmado o el servidor no envía los certificados intermedios correctos.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Ntyiko
 (recomendado)</string>
@@ -37,11 +43,42 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Ma ku kitsau</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>El navegador se conectó exitosamente, pero se interrumpió la conexión mientras se transfería la información. Vuelva a intentarlo.</p>
+	<ul>
+		<li>El sitio podría no estar disponible temporalmente o estar demasiado ocupado. Vuelva a intentarlo en unos minutos.</li>
+		<li>Si no puede cargar ninguna página, revise la conexión wifi o de datos de su dispositivo móvil.</li>
+	</ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Koo ña kunu kuntyeu</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>El sitio solicitado no respondió a una petición de conexión y el navegador ha dejado de esperar una respuesta.</p>
+	<ul>
+		<li>¿Podría estar experimentando el servidor una alta demanda o un corte temporal? Vuelva a intentarlo más tarde.</li>
+		<li>¿No puede navegar por otros sitios? Compruebe la conexión de red del equipo.</li>
+		<li>¿Su red o equipo está protegido por un firewall o un proxy? Una configuración incorrecta podría interferir con la navegación web.</li>
+		<li>¿Aun con problemas? Consulte con su administrador de red o proveedor de Internet para obtener asistencia técnica.</li>
+	</ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Kue ku tyitaiña</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+	<ul>
+		<li>El sitio podría no estar disponible temporalmente o estar demasiado ocupado. Vuelva a intentarlo en unos minutos.</li>
+		<li>Si no puede cargar ninguna página, revise la conexión wifi o de datos de su dispositivo móvil.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Respuesta inesperada del servidor, y el navegador no puede continuar</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+	<p>El sitio respondió a la solicitud de red de una forma inesperada y el navegador no puede continuar.</p>
+	]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Modo koo conexión</string>
@@ -54,6 +91,14 @@
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Tutu vaá</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+	<p>La página que está intentando ver no puede mostrarse porque se detectó un error en la transmisión de los datos.</p>
+	<ul>
+		<li>Póngase en contacto con los propietarios del sitio web para informarles de este problema.</li>
+	</ul>
+	]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Maku kuntyeu </string>
