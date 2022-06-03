@@ -333,8 +333,6 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
                                            nsGkAtoms::drag, eIgnoreCase)) {
       widgetData.mIsDragPopup = true;
     }
-
-    widgetData.mMouseTransparent = IsMouseTransparent();
   }
 
   nsAutoString title;
@@ -395,6 +393,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
 
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
+  widget->SetWindowMouseTransparent(IsMouseTransparent());
   widget->SetWindowShadowStyle(GetShadowStyle());
   widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
   widget->SetWindowTransform(ComputeWidgetTransform());

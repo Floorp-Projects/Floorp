@@ -105,9 +105,6 @@ struct nsWidgetInitData {
   bool mIsAnimationSuppressed = false;
   // true if the window should support an alpha channel, if available.
   bool mSupportTranslucency = false;
-  // true if the window should be transparent to mouse events. Currently this is
-  // only valid for eWindowType_popup widgets
-  bool mMouseTransparent = false;
   bool mHasRemoteContent = false;
   bool mAlwaysOnTop = false;
   // Is PictureInPicture window
