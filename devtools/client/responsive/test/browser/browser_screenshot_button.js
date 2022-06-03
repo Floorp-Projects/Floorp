@@ -42,4 +42,5 @@ addRDMTask(TEST_URL, async function({ ui }) {
   );
 
   await OS.File.remove(filePath);
+  await resetDownloads();
 });
