@@ -40,4 +40,5 @@ addRDMTask(TEST_URL, async function({ ui }) {
   );
 
   await IOUtils.remove(filePath);
+  await resetDownloads();
 });
