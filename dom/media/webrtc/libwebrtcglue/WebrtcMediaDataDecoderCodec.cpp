@@ -26,14 +26,15 @@ WebrtcMediaDataDecoder::WebrtcMediaDataDecoder(nsACString& aCodecMimeType)
 
 WebrtcMediaDataDecoder::~WebrtcMediaDataDecoder() {}
 
-int32_t WebrtcMediaDataDecoder::InitDecode(
-    const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores) {
+bool WebrtcMediaDataDecoder::Configure(
+    const webrtc::VideoDecoder::Settings& settings) {
   nsCString codec;
   mTrackType = TrackInfo::kVideoTrack;
-  mInfo = VideoInfo(aCodecSettings->width, aCodecSettings->height);
+  mInfo = VideoInfo(settings.max_render_resolution().Width(),
+                    settings.max_render_resolution().Height());
   mInfo.mMimeType = mCodecType;
 
-  return CreateDecoder();
+  return WEBRTC_VIDEO_CODEC_OK == CreateDecoder();
 }
 
 int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,

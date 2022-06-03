@@ -655,8 +655,8 @@ WebrtcGmpVideoDecoder::~WebrtcGmpVideoDecoder() {
   MOZ_ASSERT(!mGMP);
 }
 
-int32_t WebrtcGmpVideoDecoder::InitDecode(
-    const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores) {
+bool WebrtcGmpVideoDecoder::Configure(
+    const webrtc::VideoDecoder::Settings& settings) {
   if (!mMPS) {
     mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   }
@@ -664,23 +664,23 @@ int32_t WebrtcGmpVideoDecoder::InitDecode(
 
   if (!mGMPThread) {
     if (NS_WARN_IF(NS_FAILED(mMPS->GetThread(getter_AddRefs(mGMPThread))))) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      return false;
     }
   }
 
   RefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(mPCHandle));
-  mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoDecoder::InitDecode_g,
+  mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoDecoder::Configure_g,
                                       RefPtr<WebrtcGmpVideoDecoder>(this),
-                                      aCodecSettings, aNumberOfCores, initDone),
+                                      settings, initDone),
                        NS_DISPATCH_NORMAL);
 
-  return WEBRTC_VIDEO_CODEC_OK;
+  return true;
 }
 
 /* static */
-void WebrtcGmpVideoDecoder::InitDecode_g(
+void WebrtcGmpVideoDecoder::Configure_g(
     const RefPtr<WebrtcGmpVideoDecoder>& aThis,
-    const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
+    const webrtc::VideoDecoder::Settings& settings, // unused
     const RefPtr<GmpInitDoneRunnable>& aInitDone) {
   nsTArray<nsCString> tags;
   tags.AppendElement("h264"_ns);
