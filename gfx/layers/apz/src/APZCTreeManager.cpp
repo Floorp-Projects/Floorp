@@ -1889,8 +1889,9 @@ APZEventResult APZCTreeManager::InputHandlingState::Finish(
     mEvent.mLayersId = mHit.mLayersId;
   }
 
-  // If the event is over an overscroll gutter, do not dispatch it to Gecko.
-  if (mHit.mHitOverscrollGutter) {
+  // Absorb events that are in targetted at a position in the gutter,
+  // unless they are fixed position elements.
+  if (mHit.mHitOverscrollGutter && mHit.mFixedPosSides == SideBits::eNone) {
     mResult.SetStatusAsConsumeNoDefault();
   }
 
