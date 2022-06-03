@@ -4621,9 +4621,9 @@ AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
     std::size_t aSampleIndex) const {
   AsyncTransformComponentMatrix asyncTransform =
       GetCurrentAsyncTransform(aMode, aComponents, aSampleIndex);
-  // The overscroll transform is considered part of the visual component of
-  // the async transform, because it should apply to fixed content as well.
-  if (aComponents.contains(AsyncTransformComponent::eVisual)) {
+  // The overscroll transform is considered part of the layout component of
+  // the async transform, because it should not apply to fixed content.
+  if (aComponents.contains(AsyncTransformComponent::eLayout)) {
     return asyncTransform * GetOverscrollTransform(aMode);
   }
   return asyncTransform;
@@ -4662,11 +4662,15 @@ AsyncPanZoomController::GetSampledScrollOffsets() const {
   for (std::deque<SampledAPZCState>::size_type index = 0;
        index < mSampledState.size(); index++) {
     ParentLayerPoint layerTranslation =
-        GetCurrentAsyncTransformWithOverscroll(
-            AsyncPanZoomController::eForCompositing, asyncTransformComponents,
-            index)
-            .TransformPoint(ParentLayerPoint(0, 0));
+        GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
+                                 asyncTransformComponents, index)
+            .mTranslation;
 
+    // Include the overscroll transform here in scroll offsets transform
+    // to ensure that we do not overscroll fixed content.
+    layerTranslation =
+        GetOverscrollTransform(AsyncPanZoomController::eForCompositing)
+            .TransformPoint(layerTranslation);
     // The positive translation means the painted content is supposed to
     // move down (or to the right), and that corresponds to a reduction in
     // the scroll offset. Since we are effectively giving WR the async
