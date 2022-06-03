@@ -78,7 +78,7 @@ void TextRecognition::FillShadow(ShadowRoot& aShadow,
     // in JS.
     {
       nsAutoString points;
-      for (auto& point : quad.points()) {
+      for (const auto& point : quad.points()) {
         points.AppendFloat(point.x);
         points.Append(u',');
         points.AppendFloat(point.y);
