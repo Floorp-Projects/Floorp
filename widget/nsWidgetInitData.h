@@ -88,57 +88,33 @@ enum nsBorderStyle {
  */
 
 struct nsWidgetInitData {
-  nsWidgetInitData()
-      : mWindowType(eWindowType_child),
-        mBorderStyle(eBorderStyle_default),
-        mPopupHint(ePopupTypePanel),
-        mPopupLevel(ePopupLevelTop),
-        mScreenId(0),
-        clipChildren(false),
-        clipSiblings(false),
-        mDropShadow(false),
-        mRTL(false),
-        mNoAutoHide(false),
-        mIsDragPopup(false),
-        mIsAnimationSuppressed(false),
-        mSupportTranslucency(false),
-        mMouseTransparent(false),
-        mHasRemoteContent(false),
-        mAlwaysOnTop(false),
-        mPIPWindow(false),
-        mFissionWindow(false),
-        mResizable(false),
-        mIsPrivate(false) {}
+  nsWidgetInitData() = default;
 
-  nsWindowType mWindowType;
-  nsBorderStyle mBorderStyle;
-  nsPopupType mPopupHint;
-  nsPopupLevel mPopupLevel;
-  // B2G multi-screen support. Screen ID is for differentiating screens of
-  // windows, and due to the hardware limitation, it is platform-specific for
-  // now, which align with the value of display type defined in HWC.
-  uint32_t mScreenId;
+  nsWindowType mWindowType = eWindowType_child;
+  nsBorderStyle mBorderStyle = eBorderStyle_default;
+  nsPopupType mPopupHint = ePopupTypePanel;
+  nsPopupLevel mPopupLevel = ePopupLevelTop;
   // when painting exclude area occupied by child windows and sibling windows
-  bool clipChildren, clipSiblings, mDropShadow;
-  bool mRTL;
-  bool mNoAutoHide;   // true for noautohide panels
-  bool mIsDragPopup;  // true for drag feedback panels
+  bool mClipChildren = false;
+  bool mClipSiblings = false;
+  bool mDropShadow = false;
+  bool mRTL = false;
+  bool mNoAutoHide = false;   // true for noautohide panels
+  bool mIsDragPopup = false;  // true for drag feedback panels
   // true if window creation animation is suppressed, e.g. for session restore
-  bool mIsAnimationSuppressed;
+  bool mIsAnimationSuppressed = false;
   // true if the window should support an alpha channel, if available.
-  bool mSupportTranslucency;
+  bool mSupportTranslucency = false;
   // true if the window should be transparent to mouse events. Currently this is
   // only valid for eWindowType_popup widgets
-  bool mMouseTransparent;
-  bool mHasRemoteContent;
-  bool mAlwaysOnTop;
+  bool mMouseTransparent = false;
+  bool mHasRemoteContent = false;
+  bool mAlwaysOnTop = false;
   // Is PictureInPicture window
-  bool mPIPWindow;
-  // True if fission is enabled for this window
-  bool mFissionWindow;
+  bool mPIPWindow = false;
   // True if the window is user-resizable.
-  bool mResizable;
-  bool mIsPrivate;
+  bool mResizable = false;
+  bool mIsPrivate = false;
 };
 
 #endif  // nsWidgetInitData_h__

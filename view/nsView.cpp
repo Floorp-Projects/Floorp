@@ -517,8 +517,8 @@ static int32_t FindNonAutoZIndex(nsView* aView) {
 struct DefaultWidgetInitData : public nsWidgetInitData {
   DefaultWidgetInitData() : nsWidgetInitData() {
     mWindowType = eWindowType_child;
-    clipChildren = true;
-    clipSiblings = true;
+    mClipChildren = true;
+    mClipSiblings = true;
   }
 };
 

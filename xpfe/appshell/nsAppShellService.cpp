@@ -604,9 +604,6 @@ nsresult nsAppShellService::JustCreateTopWindow(
   if (aChromeMask & nsIWebBrowserChrome::CHROME_ALWAYS_ON_TOP)
     widgetInitData.mAlwaysOnTop = true;
 
-  if (aChromeMask & nsIWebBrowserChrome::CHROME_FISSION_WINDOW)
-    widgetInitData.mFissionWindow = true;
-
   if (aChromeMask & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW)
     widgetInitData.mHasRemoteContent = true;
 

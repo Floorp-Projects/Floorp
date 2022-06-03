@@ -714,7 +714,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   nsPopupType mPopupType;
   SizeConstraints mSizeConstraints;
   bool mHasRemoteContent;
-  bool mFissionWindow;
 
   bool mUpdateCursor;
   bool mUseAttachedEvents;
