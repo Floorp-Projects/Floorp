@@ -2175,6 +2175,11 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT_IF(IsTextEditor(), !aContent.IsText());
 
+  // Do nothing if the node is read-only.
+  if (IsHTMLEditor() && NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(aContent))) {
+    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+  }
+
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::ePrevious, ignoredError);
@@ -2218,7 +2223,7 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
     }
   }
 
-  return rv;
+  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : rv;
 }
 
 NS_IMETHODIMP EditorBase::NotifySelectionChanged(Document* aDocument,
@@ -3079,7 +3084,14 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   if (IsHTMLEditor() && isIMETransaction && mComposition) {
     RefPtr<Text> textNode = mComposition->GetContainerTextNode();
     if (textNode && !textNode->Length()) {
-      DeleteNodeWithTransaction(*textNode);
+      nsresult rv = DeleteNodeWithTransaction(*textNode);
+      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+        return rv;
+      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
       mComposition->OnTextNodeRemoved();
       static_cast<CompositionTransaction*>(transaction.get())->MarkFixed();
     }
