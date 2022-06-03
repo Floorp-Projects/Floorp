@@ -103,6 +103,7 @@ toolkit.jar:
    content/global/elements/stringbundle.js     (widgets/stringbundle.js)
    content/global/elements/tabbox.js           (widgets/tabbox.js)
    content/global/elements/text.js             (widgets/text.js)
+   content/global/elements/textrecognition.js  (widgets/textrecognition.js)
    content/global/elements/toolbarbutton.js    (widgets/toolbarbutton.js)
    content/global/elements/videocontrols.js    (widgets/videocontrols.js)
    content/global/elements/tree.js             (widgets/tree.js)
