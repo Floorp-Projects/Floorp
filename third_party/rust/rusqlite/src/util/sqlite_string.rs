@@ -38,7 +38,7 @@ pub(crate) struct SqliteMallocString {
 
 impl SqliteMallocString {
     /// SAFETY: Caller must be certain that `m` a nul-terminated c string
-    /// allocated by sqlite3_malloc, and that SQLite expects us to free it!
+    /// allocated by `sqlite3_malloc`, and that SQLite expects us to free it!
     #[inline]
     pub(crate) unsafe fn from_raw_nonnull(ptr: NonNull<c_char>) -> Self {
         Self {
@@ -48,7 +48,7 @@ impl SqliteMallocString {
     }
 
     /// SAFETY: Caller must be certain that `m` a nul-terminated c string
-    /// allocated by sqlite3_malloc, and that SQLite expects us to free it!
+    /// allocated by `sqlite3_malloc`, and that SQLite expects us to free it!
     #[inline]
     pub(crate) unsafe fn from_raw(ptr: *mut c_char) -> Option<Self> {
         NonNull::new(ptr).map(|p| Self::from_raw_nonnull(p))
@@ -95,13 +95,13 @@ impl SqliteMallocString {
     /// If `s` contains internal NULs, we'll replace them with
     /// `NUL_REPLACE_CHAR`.
     ///
-    /// Except for debug_asserts which may trigger during testing, this function
-    /// never panics. If we hit integer overflow or the allocation fails, we
-    /// call `handle_alloc_error` which aborts the program after calling a
-    /// global hook.
+    /// Except for `debug_assert`s which may trigger during testing, this
+    /// function never panics. If we hit integer overflow or the allocation
+    /// fails, we call `handle_alloc_error` which aborts the program after
+    /// calling a global hook.
     ///
     /// This means it's safe to use in extern "C" functions even outside of
-    /// catch_unwind.
+    /// `catch_unwind`.
     pub(crate) fn from_str(s: &str) -> Self {
         use std::convert::TryFrom;
         let s = if s.as_bytes().contains(&0) {
@@ -120,7 +120,7 @@ impl SqliteMallocString {
                     // `>` because we added 1.
                     debug_assert!(len_to_alloc > 0);
                     debug_assert_eq!((len_to_alloc - 1) as usize, src_len);
-                    NonNull::new(ffi::sqlite3_malloc(len_to_alloc) as *mut c_char)
+                    NonNull::new(ffi::sqlite3_malloc(len_to_alloc).cast::<c_char>())
                 })
                 .unwrap_or_else(|| {
                     use std::alloc::{handle_alloc_error, Layout};
@@ -130,14 +130,15 @@ impl SqliteMallocString {
                     // This is safe:
                     // - `align` is never 0
                     // - `align` is always a power of 2.
-                    // - `size` needs no realignment because it's guaranteed to be
-                    //   aligned (everything is aligned to 1)
-                    // - `size` is also never zero, although this function doesn't actually require it now.
+                    // - `size` needs no realignment because it's guaranteed to be aligned
+                    //   (everything is aligned to 1)
+                    // - `size` is also never zero, although this function doesn't actually require
+                    //   it now.
                     let layout = Layout::from_size_align_unchecked(s.len().saturating_add(1), 1);
                     // Note: This call does not return.
                     handle_alloc_error(layout);
                 });
-            let buf: *mut c_char = res_ptr.as_ptr() as *mut c_char;
+            let buf: *mut c_char = res_ptr.as_ptr().cast::<c_char>();
             src_ptr.copy_to_nonoverlapping(buf, src_len);
             buf.add(src_len).write(0);
             debug_assert_eq!(std::ffi::CStr::from_ptr(res_ptr.as_ptr()).to_bytes(), bytes);
@@ -154,6 +155,7 @@ fn make_nonnull(v: &str) -> String {
 }
 
 impl Drop for SqliteMallocString {
+    #[inline]
     fn drop(&mut self) {
         unsafe { ffi::sqlite3_free(self.ptr.as_ptr().cast()) };
     }

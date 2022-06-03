@@ -496,3 +496,18 @@ fn test_retain() {
     drop(map);
     assert!(c.get() == 4);
 }
+
+#[test]
+fn test_order_equality() {
+    let xs = [1, 2, 3, 4, 5, 6];
+    let mut map1: LinkedHashMap<String, i32> = xs.iter().map(|i| (i.to_string(), *i)).collect();
+    let mut map2: LinkedHashMap<String, i32> = xs.iter().map(|i| (i.to_string(), *i)).collect();
+
+    assert_eq!(map1, map2);
+
+    map1.to_front("4");
+    assert_ne!(map1, map2);
+
+    map2.to_front("4");
+    assert_eq!(map1, map2);
+}

@@ -2,6 +2,7 @@
 
 use std::os::raw::c_int;
 
+use crate::error::check;
 use crate::ffi;
 use crate::{Connection, Result};
 
@@ -10,6 +11,7 @@ use crate::{Connection, Result};
 #[repr(i32)]
 #[allow(non_snake_case, non_camel_case_types)]
 #[non_exhaustive]
+#[allow(clippy::upper_case_acronyms)]
 pub enum DbConfig {
     //SQLITE_DBCONFIG_MAINDBNAME = 1000, /* const char* */
     //SQLITE_DBCONFIG_LOOKASIDE = 1001,  /* void* int int */
@@ -29,7 +31,9 @@ pub enum DbConfig {
     /// Includes or excludes output for any operations performed by trigger
     /// programs from the output of EXPLAIN QUERY PLAN commands.
     SQLITE_DBCONFIG_TRIGGER_EQP = 1008, // 3.22.0
-    //SQLITE_DBCONFIG_RESET_DATABASE = 1009,
+    /// Activates or deactivates the "reset" flag for a database connection.
+    /// Run VACUUM with this flag set to reset the database.
+    SQLITE_DBCONFIG_RESET_DATABASE = 1009,
     /// Activates or deactivates the "defensive" flag for a database connection.
     SQLITE_DBCONFIG_DEFENSIVE = 1010, // 3.26.0
     /// Activates or deactivates the "writable_schema" flag.
@@ -62,56 +66,58 @@ pub enum DbConfig {
 impl Connection {
     /// Returns the current value of a `config`.
     ///
-    /// - SQLITE_DBCONFIG_ENABLE_FKEY: return `false` or `true` to indicate
+    /// - `SQLITE_DBCONFIG_ENABLE_FKEY`: return `false` or `true` to indicate
     ///   whether FK enforcement is off or on
-    /// - SQLITE_DBCONFIG_ENABLE_TRIGGER: return `false` or `true` to indicate
+    /// - `SQLITE_DBCONFIG_ENABLE_TRIGGER`: return `false` or `true` to indicate
     ///   whether triggers are disabled or enabled
-    /// - SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER: return `false` or `true` to
-    ///   indicate whether fts3_tokenizer are disabled or enabled
-    /// - SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE: return `false` to indicate
+    /// - `SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER`: return `false` or `true` to
+    ///   indicate whether `fts3_tokenizer` are disabled or enabled
+    /// - `SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE`: return `false` to indicate
     ///   checkpoints-on-close are not disabled or `true` if they are
-    /// - SQLITE_DBCONFIG_ENABLE_QPSG: return `false` or `true` to indicate
+    /// - `SQLITE_DBCONFIG_ENABLE_QPSG`: return `false` or `true` to indicate
     ///   whether the QPSG is disabled or enabled
-    /// - SQLITE_DBCONFIG_TRIGGER_EQP: return `false` to indicate
+    /// - `SQLITE_DBCONFIG_TRIGGER_EQP`: return `false` to indicate
     ///   output-for-trigger are not disabled or `true` if it is
+    #[inline]
     pub fn db_config(&self, config: DbConfig) -> Result<bool> {
         let c = self.db.borrow();
         unsafe {
             let mut val = 0;
-            check!(ffi::sqlite3_db_config(
+            check(ffi::sqlite3_db_config(
                 c.db(),
                 config as c_int,
                 -1,
-                &mut val
-            ));
+                &mut val,
+            ))?;
             Ok(val != 0)
         }
     }
 
     /// Make configuration changes to a database connection
     ///
-    /// - SQLITE_DBCONFIG_ENABLE_FKEY: `false` to disable FK enforcement, `true`
-    ///   to enable FK enforcement
-    /// - SQLITE_DBCONFIG_ENABLE_TRIGGER: `false` to disable triggers, `true` to
-    ///   enable triggers
-    /// - SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER: `false` to disable
-    ///   fts3_tokenizer(), `true` to enable fts3_tokenizer()
-    /// - SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE: `false` (the default) to enable
+    /// - `SQLITE_DBCONFIG_ENABLE_FKEY`: `false` to disable FK enforcement,
+    ///   `true` to enable FK enforcement
+    /// - `SQLITE_DBCONFIG_ENABLE_TRIGGER`: `false` to disable triggers, `true`
+    ///   to enable triggers
+    /// - `SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER`: `false` to disable
+    ///   `fts3_tokenizer()`, `true` to enable `fts3_tokenizer()`
+    /// - `SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE`: `false` (the default) to enable
     ///   checkpoints-on-close, `true` to disable them
-    /// - SQLITE_DBCONFIG_ENABLE_QPSG: `false` to disable the QPSG, `true` to
+    /// - `SQLITE_DBCONFIG_ENABLE_QPSG`: `false` to disable the QPSG, `true` to
     ///   enable QPSG
-    /// - SQLITE_DBCONFIG_TRIGGER_EQP: `false` to disable output for trigger
+    /// - `SQLITE_DBCONFIG_TRIGGER_EQP`: `false` to disable output for trigger
     ///   programs, `true` to enable it
+    #[inline]
     pub fn set_db_config(&self, config: DbConfig, new_val: bool) -> Result<bool> {
         let c = self.db.borrow_mut();
         unsafe {
             let mut val = 0;
-            check!(ffi::sqlite3_db_config(
+            check(ffi::sqlite3_db_config(
                 c.db(),
                 config as c_int,
                 if new_val { 1 } else { 0 },
-                &mut val
-            ));
+                &mut val,
+            ))?;
             Ok(val != 0)
         }
     }
@@ -120,13 +126,13 @@ impl Connection {
 #[cfg(test)]
 mod test {
     use super::DbConfig;
-    use crate::Connection;
+    use crate::{Connection, Result};
 
     #[test]
-    fn test_db_config() {
-        let db = Connection::open_in_memory().unwrap();
+    fn test_db_config() -> Result<()> {
+        let db = Connection::open_in_memory()?;
 
-        let opposite = !db.db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_FKEY).unwrap();
+        let opposite = !db.db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_FKEY)?;
         assert_eq!(
             db.set_db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_FKEY, opposite),
             Ok(opposite)
@@ -136,9 +142,7 @@ mod test {
             Ok(opposite)
         );
 
-        let opposite = !db
-            .db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_TRIGGER)
-            .unwrap();
+        let opposite = !db.db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_TRIGGER)?;
         assert_eq!(
             db.set_db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_TRIGGER, opposite),
             Ok(opposite)
@@ -147,5 +151,6 @@ mod test {
             db.db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_TRIGGER),
             Ok(opposite)
         );
+        Ok(())
     }
 }

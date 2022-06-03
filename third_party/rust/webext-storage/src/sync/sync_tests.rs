@@ -33,7 +33,7 @@ fn do_sync(tx: &Transaction<'_>, incoming_payloads: Vec<Payload>) -> Result<Vec<
         .map(|(item, state)| (item, plan_incoming(state)))
         .collect();
     log::debug!("do_sync applying {:?}", actions);
-    apply_actions(&tx, actions, &NeverInterrupts)?;
+    apply_actions(tx, actions, &NeverInterrupts)?;
     // So we've done incoming - do outgoing.
     stage_outgoing(tx)?;
     let outgoing = get_outgoing(tx, &NeverInterrupts)?;
@@ -54,7 +54,7 @@ fn do_sync(tx: &Transaction<'_>, incoming_payloads: Vec<Payload>) -> Result<Vec<
 
 // Check *both* the mirror and local API have ended up with the specified data.
 fn check_finished_with(conn: &Connection, ext_id: &str, val: serde_json::Value) -> Result<()> {
-    let local = get(conn, &ext_id, serde_json::Value::Null)?;
+    let local = get(conn, ext_id, serde_json::Value::Null)?;
     assert_eq!(local, val);
     let guid = get_mirror_guid(conn, ext_id)?;
     let mirror = get_mirror_data(conn, &guid);
@@ -62,7 +62,7 @@ fn check_finished_with(conn: &Connection, ext_id: &str, val: serde_json::Value) 
     // and there should be zero items with a change counter.
     let count = conn.query_row_and_then(
         "SELECT COUNT(*) FROM storage_sync_data WHERE sync_change_counter != 0;",
-        rusqlite::NO_PARAMS,
+        [],
         |row| row.get::<_, u32>(0),
     )?;
     assert_eq!(count, 0);
@@ -72,7 +72,7 @@ fn check_finished_with(conn: &Connection, ext_id: &str, val: serde_json::Value) 
 fn get_mirror_guid(conn: &Connection, extid: &str) -> Result<String> {
     let guid = conn.query_row_and_then(
         "SELECT m.guid FROM storage_sync_mirror m WHERE m.ext_id = ?;",
-        vec![extid],
+        [extid],
         |row| row.get::<_, String>(0),
     )?;
     Ok(guid)
@@ -99,7 +99,7 @@ fn _get(conn: &Connection, id_name: &str, expected_extid: &str, table: &str) -> 
     }
     let mut items = conn
         .conn()
-        .query_rows_and_then_named(&sql, &[], from_row)
+        .query_rows_and_then(&sql, [], from_row)
         .expect("should work");
     if items.is_empty() {
         DbData::NoRow
@@ -228,7 +228,7 @@ fn test_incoming_tombstone_not_exists() -> Result<()> {
     );
     // But we still keep the tombstone in the mirror.
     assert_eq!(get_local_data(&tx, "ext-id"), DbData::NoRow);
-    assert_eq!(get_mirror_data(&tx, &guid), DbData::NullRow);
+    assert_eq!(get_mirror_data(&tx, guid), DbData::NullRow);
     Ok(())
 }
 

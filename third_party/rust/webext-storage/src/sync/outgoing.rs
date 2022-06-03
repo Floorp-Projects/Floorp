@@ -74,7 +74,7 @@ pub fn get_outgoing(conn: &Connection, signal: &dyn Interruptee) -> Result<Vec<P
     let sql = "SELECT guid, ext_id, data FROM storage_sync_outgoing_staging";
     let elts = conn
         .conn()
-        .query_rows_and_then_named(sql, &[], |row| -> Result<_> {
+        .query_rows_and_then(sql, [], |row| -> Result<_> {
             signal.err_if_interrupted()?;
             outgoing_from_row(row)
         })?;
@@ -101,7 +101,7 @@ pub fn record_uploaded(
     // Updating the `was_uploaded` column fires the `record_uploaded` trigger,
     // which updates the local change counter and writes the uploaded record
     // data back to the mirror.
-    sql_support::each_chunk(&items, |chunk, _| -> Result<()> {
+    sql_support::each_chunk(items, |chunk, _| -> Result<()> {
         signal.err_if_interrupted()?;
         let sql = format!(
             "UPDATE storage_sync_outgoing_staging SET
@@ -109,7 +109,7 @@ pub fn record_uploaded(
              WHERE guid IN ({})",
             sql_support::repeat_sql_vars(chunk.len()),
         );
-        tx.execute(&sql, chunk)?;
+        tx.execute(&sql, rusqlite::params_from_iter(chunk))?;
         Ok(())
     })?;
 

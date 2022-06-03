@@ -65,7 +65,7 @@ origin-trials-ffi = { path = "../../../../dom/origin-trials/ffi" }
 # version less than or equal to what we link to. This isn't a problem because we
 # tend to keep this up to date, but it needs to be taken into consideration when
 # changing this version.
-rusqlite = { version = "0.24.1", features = ["modern_sqlite", "in_gecko"] }
+rusqlite = { version = "0.27.0", features = ["modern_sqlite", "in_gecko"] }
 
 fluent = { version = "0.16.0", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
@@ -78,7 +78,7 @@ processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "c51b63595a27a6ef45161012323e0261475c10c9"}
+viaduct = "0.1"
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
 [features]
