@@ -51,7 +51,7 @@ const BuiltInThemeConfig = new Map([
   [
     "2022red-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2022red/",
       collection: "true-colors",
     },
@@ -59,7 +59,7 @@ const BuiltInThemeConfig = new Map([
   [
     "2022orange-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2022orange/",
       collection: "true-colors",
     },
@@ -67,7 +67,7 @@ const BuiltInThemeConfig = new Map([
   [
     "2022green-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2022green/",
       collection: "true-colors",
     },
@@ -75,7 +75,7 @@ const BuiltInThemeConfig = new Map([
   [
     "2022yellow-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2022yellow/",
       collection: "true-colors",
     },
@@ -83,7 +83,7 @@ const BuiltInThemeConfig = new Map([
   [
     "2022purple-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2022purple/",
       collection: "true-colors",
     },
@@ -91,7 +91,7 @@ const BuiltInThemeConfig = new Map([
   [
     "2022blue-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2022blue/",
       collection: "true-colors",
     },
@@ -99,7 +99,7 @@ const BuiltInThemeConfig = new Map([
   [
     "lush-soft-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021lush/soft/",
       collection: "life-in-color",
     },
@@ -107,7 +107,7 @@ const BuiltInThemeConfig = new Map([
   [
     "lush-balanced-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021lush/balanced/",
       collection: "life-in-color",
     },
@@ -115,7 +115,7 @@ const BuiltInThemeConfig = new Map([
   [
     "lush-bold-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021lush/bold/",
       collection: "life-in-color",
     },
@@ -123,7 +123,7 @@ const BuiltInThemeConfig = new Map([
   [
     "abstract-soft-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021abstract/soft/",
       collection: "life-in-color",
     },
@@ -131,7 +131,7 @@ const BuiltInThemeConfig = new Map([
   [
     "abstract-balanced-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021abstract/balanced/",
       collection: "life-in-color",
     },
@@ -139,7 +139,7 @@ const BuiltInThemeConfig = new Map([
   [
     "abstract-bold-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021abstract/bold/",
       collection: "life-in-color",
     },
@@ -147,7 +147,7 @@ const BuiltInThemeConfig = new Map([
   [
     "elemental-soft-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021elemental/soft/",
       collection: "life-in-color",
     },
@@ -155,7 +155,7 @@ const BuiltInThemeConfig = new Map([
   [
     "elemental-balanced-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021elemental/balanced/",
       collection: "life-in-color",
     },
@@ -163,7 +163,7 @@ const BuiltInThemeConfig = new Map([
   [
     "elemental-bold-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021elemental/bold/",
       collection: "life-in-color",
     },
@@ -171,7 +171,7 @@ const BuiltInThemeConfig = new Map([
   [
     "cheers-soft-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021cheers/soft/",
       collection: "life-in-color",
     },
@@ -179,7 +179,7 @@ const BuiltInThemeConfig = new Map([
   [
     "cheers-balanced-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021cheers/balanced/",
       collection: "life-in-color",
     },
@@ -187,7 +187,7 @@ const BuiltInThemeConfig = new Map([
   [
     "cheers-bold-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021cheers/bold/",
       collection: "life-in-color",
     },
@@ -195,7 +195,7 @@ const BuiltInThemeConfig = new Map([
   [
     "graffiti-soft-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021graffiti/soft/",
       collection: "life-in-color",
     },
@@ -203,7 +203,7 @@ const BuiltInThemeConfig = new Map([
   [
     "graffiti-balanced-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021graffiti/balanced/",
       collection: "life-in-color",
     },
@@ -211,7 +211,7 @@ const BuiltInThemeConfig = new Map([
   [
     "graffiti-bold-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021graffiti/bold/",
       collection: "life-in-color",
     },
@@ -219,7 +219,7 @@ const BuiltInThemeConfig = new Map([
   [
     "foto-soft-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021foto/soft/",
       collection: "life-in-color",
     },
@@ -227,7 +227,7 @@ const BuiltInThemeConfig = new Map([
   [
     "foto-balanced-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021foto/balanced/",
       collection: "life-in-color",
     },
@@ -235,7 +235,7 @@ const BuiltInThemeConfig = new Map([
   [
     "foto-bold-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.0",
       path: "resource://builtin-themes/colorways/2021foto/bold/",
       collection: "life-in-color",
     },
