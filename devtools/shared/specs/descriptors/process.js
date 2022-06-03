@@ -14,13 +14,17 @@ const processDescriptorSpec = generateActorSpec({
 
   methods: {
     getTarget: {
-      request: {},
+      request: {
+        isBrowserToolboxFission: Option(0, "boolean"),
+      },
       response: {
         process: RetVal("json"),
       },
     },
     getWatcher: {
-      request: {},
+      request: {
+        isBrowserToolboxFission: Option(0, "boolean"),
+      },
       response: RetVal("watcher"),
     },
     reloadDescriptor: {
