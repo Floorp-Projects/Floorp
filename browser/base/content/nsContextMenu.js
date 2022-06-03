@@ -590,8 +590,11 @@ class nsContextMenu {
     // Copy image location depends on whether we're on an image.
     this.showItem("context-copyimage", this.onImage || showBGImage);
 
-    // Performing text recognition only works on images.
-    this.showItem("context-imagetext", this.onImage);
+    // Performing text recognition only works on images, and if the feature is enabled.
+    this.showItem(
+      "context-imagetext",
+      this.onImage && TEXT_RECOGNITION_ENABLED
+    );
 
     // Send media URL (but not for canvas, since it's a big data: URL)
     this.showItem("context-sendimage", this.onImage || showBGImage);
@@ -2376,5 +2379,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "REVEAL_PASSWORD_ENABLED",
   "layout.forms.reveal-password-context-menu.enabled",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "TEXT_RECOGNITION_ENABLED",
+  "dom.text-recognition.enabled",
   false
 );
