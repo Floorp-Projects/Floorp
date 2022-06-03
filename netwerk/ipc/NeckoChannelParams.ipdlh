@@ -564,5 +564,11 @@ union GIOChannelCreationArgs
   GIOChannelOpenArgs;      // For AsyncOpen: the common case.
   GIOChannelConnectArgs;   // Used for redirected-to channels
 };
+
+struct RemoteStreamInfo {
+  nsIInputStream inputStream;
+  nsCString contentType;
+  int64_t contentLength;
+};
 } // namespace net
 } // namespace mozilla
