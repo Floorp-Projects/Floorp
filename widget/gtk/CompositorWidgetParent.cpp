@@ -6,9 +6,9 @@
 #include "CompositorWidgetParent.h"
 #include "mozilla/Unused.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
+#include "nsWindow.h"
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 CompositorWidgetParent::CompositorWidgetParent(
     const CompositorWidgetInitData& aInitData,
@@ -51,5 +51,4 @@ mozilla::ipc::IPCResult CompositorWidgetParent::RecvEnableRendering(
   return IPC_OK();
 }
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget
