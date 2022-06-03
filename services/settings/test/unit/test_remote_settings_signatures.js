@@ -22,11 +22,7 @@ const SIGNER_NAME = "onecrl.content-signature.mozilla.org";
 const TELEMETRY_COMPONENT = "remotesettings";
 
 const CERT_DIR = "test_remote_settings_signatures/";
-const CHAIN_FILES = [
-  "collection_signing_ee.pem",
-  "collection_signing_int.pem",
-  "collection_signing_root.pem",
-];
+const CHAIN_FILES = ["collection_signing_ee.pem", "collection_signing_int.pem"];
 
 function getFileData(file) {
   const stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
@@ -36,21 +32,6 @@ function getFileData(file) {
   const data = NetUtil.readInputStreamToString(stream, stream.available());
   stream.close();
   return data;
-}
-
-function setRoot() {
-  const filename = CERT_DIR + CHAIN_FILES[0];
-
-  const certFile = do_get_file(filename, false);
-  const b64cert = getFileData(certFile)
-    .replace(/-----BEGIN CERTIFICATE-----/, "")
-    .replace(/-----END CERTIFICATE-----/, "")
-    .replace(/[\r\n]/g, "");
-  const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  const cert = certdb.constructX509FromBase64(b64cert);
-  Services.prefs.setCharPref(PREF_SIGNATURE_ROOT, cert.sha256Fingerprint);
 }
 
 function getCertChain() {
@@ -70,9 +51,6 @@ function run_test() {
   client = RemoteSettings("signed", { signerName: SIGNER_NAME });
 
   Services.prefs.setCharPref("services.settings.loglevel", "debug");
-
-  // set the content signing root to our test root
-  setRoot();
 
   // Set up an HTTP Server
   server = new HttpServer();
@@ -106,7 +84,8 @@ add_task(async function test_check_signatures() {
       emptyData,
       emptySignature,
       getCertChain(),
-      SIGNER_NAME
+      SIGNER_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )
   );
 
@@ -120,7 +99,8 @@ add_task(async function test_check_signatures() {
       collectionData,
       collectionSignature,
       getCertChain(),
-      SIGNER_NAME
+      SIGNER_NAME,
+      Ci.nsIX509CertDB.AppXPCShellRoot
     )
   );
 });

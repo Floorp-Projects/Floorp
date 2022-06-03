@@ -859,7 +859,8 @@ class RemoteSettingsClient extends EventEmitter {
         serialized,
         "p384ecdsa=" + signature,
         certChain,
-        this.signerName
+        this.signerName,
+        lazy.Utils.CERT_CHAIN_ROOT_IDENTIFIER
       ))
     ) {
       throw new InvalidSignatureError(this.identifier);
