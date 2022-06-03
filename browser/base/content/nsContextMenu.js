@@ -590,6 +590,9 @@ class nsContextMenu {
     // Copy image location depends on whether we're on an image.
     this.showItem("context-copyimage", this.onImage || showBGImage);
 
+    // Performing text recognition only works on images.
+    this.showItem("context-imagetext", this.onImage);
+
     // Send media URL (but not for canvas, since it's a big data: URL)
     this.showItem("context-sendimage", this.onImage || showBGImage);
 
@@ -2227,6 +2230,10 @@ class nsContextMenu {
       Ci.nsIClipboardHelper
     );
     clipboard.copyString(this.originalMediaURL);
+  }
+
+  getImageText() {
+    this.actor.getImageText(this.targetIdentifier);
   }
 
   drmLearnMore(aEvent) {
