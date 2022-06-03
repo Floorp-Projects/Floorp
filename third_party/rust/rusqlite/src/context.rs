@@ -12,6 +12,10 @@ use crate::types::{ToSqlOutput, ValueRef};
 #[cfg(feature = "array")]
 use crate::vtab::array::{free_array, ARRAY_TYPE};
 
+// This function is inline despite it's size because what's in the ToSqlOutput
+// is often known to the compiler, and thus const prop/DCE can substantially
+// simplify the function.
+#[inline]
 pub(super) unsafe fn set_result(ctx: *mut sqlite3_context, result: &ToSqlOutput<'_>) {
     let value = match *result {
         ToSqlOutput::Borrowed(v) => v,
@@ -54,11 +58,11 @@ pub(super) unsafe fn set_result(ctx: *mut sqlite3_context, result: &ToSqlOutput<
             if length > c_int::max_value() as usize {
                 ffi::sqlite3_result_error_toobig(ctx);
             } else if length == 0 {
-                ffi::sqlite3_result_zeroblob(ctx, 0)
+                ffi::sqlite3_result_zeroblob(ctx, 0);
             } else {
                 ffi::sqlite3_result_blob(
                     ctx,
-                    b.as_ptr() as *const c_void,
+                    b.as_ptr().cast::<c_void>(),
                     length as c_int,
                     ffi::SQLITE_TRANSIENT(),
                 );

@@ -172,6 +172,12 @@ class ContextMenuChild extends JSWindowActorChild {
         break;
       }
 
+      case "ContextMenu:GetImageText": {
+        let img = ContentDOMReference.resolve(message.data.targetIdentifier);
+        img.recognizeCurrentImageText();
+        break;
+      }
+
       case "ContextMenu:ToggleRevealPassword": {
         let target = ContentDOMReference.resolve(message.data.targetIdentifier);
         target.revealPassword = !target.revealPassword;

@@ -299,7 +299,8 @@ class AsyncPanZoomController {
    * processed, this is needed to transform input events properly into a space
    * gecko will understand.
    */
-  Matrix4x4 GetTransformToLastDispatchedPaint() const;
+  Matrix4x4 GetTransformToLastDispatchedPaint(
+      const AsyncTransformComponents& aComponents = LayoutAndVisual) const;
 
   /**
    * Returns the number of CSS pixels of checkerboard according to the metrics
@@ -1697,8 +1698,8 @@ class AsyncPanZoomController {
   // its composition bounds.
   bool Contains(const ScreenIntPoint& aPoint) const;
 
-  bool IsInOverscrollGutter(const ScreenPoint& aPoint) const;
-  bool IsInOverscrollGutter(const ParentLayerPoint& aPoint) const;
+  bool IsInOverscrollGutter(const ScreenPoint& aHitTestPoint) const;
+  bool IsInOverscrollGutter(const ParentLayerPoint& aHitTestPoint) const;
 
   bool IsOverscrolled() const;
 

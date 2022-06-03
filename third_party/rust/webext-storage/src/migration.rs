@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::error::*;
-use rusqlite::{named_params, Connection, OpenFlags, Transaction, NO_PARAMS};
+use rusqlite::{named_params, Connection, OpenFlags, Transaction};
 use serde_json::{Map, Value};
 use sql_support::ConnExt;
 use std::collections::HashSet;
@@ -173,7 +173,7 @@ fn read_rows(filename: &Path) -> (Vec<LegacyRow>, MigrationInfo) {
             return (Vec::new(), MigrationInfo::open_failure());
         }
     };
-    let rows = match stmt.query_and_then(NO_PARAMS, |row| -> Result<LegacyRow> {
+    let rows = match stmt.query_and_then([], |row| -> Result<LegacyRow> {
         Ok(LegacyRow {
             col_name: row.get(0)?,
             record: row.get(1)?,
@@ -213,7 +213,7 @@ fn do_insert(tx: &Transaction<'_>, ext_id: &str, vals: Vec<(String, Value)>) -> 
         map.insert(key, val);
     }
     let num_entries = map.len();
-    tx.execute_named_cached(
+    tx.execute_cached(
         "INSERT OR REPLACE INTO storage_sync_data(ext_id, data, sync_change_counter)
          VALUES (:ext_id, :data, 1)",
         rusqlite::named_params! {
@@ -262,7 +262,7 @@ impl MigrationInfo {
     /// Store `self` in the provided database under `Self::META_KEY`.
     pub(crate) fn store(&self, conn: &Connection) -> Result<()> {
         let json = serde_json::to_string(self)?;
-        conn.execute_named(
+        conn.execute(
             "INSERT OR REPLACE INTO meta(key, value) VALUES (:k, :v)",
             named_params! {
                 ":k": Self::META_KEY,
@@ -275,14 +275,14 @@ impl MigrationInfo {
     /// Get the MigrationInfo stored under `Self::META_KEY` (if any) out of the
     /// DB, and delete it.
     pub(crate) fn take(tx: &Transaction<'_>) -> Result<Option<Self>> {
-        let s = tx.try_query_one::<String>(
+        let s = tx.try_query_one::<String, _>(
             "SELECT value FROM meta WHERE key = :k",
             named_params! {
                 ":k": Self::META_KEY,
             },
             false,
         )?;
-        tx.execute_named(
+        tx.execute(
             "DELETE FROM meta WHERE key = :k",
             named_params! {
                 ":k": Self::META_KEY,

@@ -9,9 +9,6 @@
  */
 "use strict";
 
-// @ts-ignore
-const { OS } = require("resource://gre/modules/osfile.jsm");
-
 const UNITS = ["B", "kiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
 
 /**
@@ -288,48 +285,92 @@ function withCommonPathPrefixRemoved(pathArray) {
   if (pathArray.length === 0) {
     return [];
   }
-  const splitPaths = pathArray.map(path => OS.Path.split(path));
-  if (!splitPaths.every(sp => sp.absolute)) {
-    // We're expecting all paths to be absolute, so this is an unexpected case,
-    // return the original array.
-    return pathArray;
-  }
-  const [firstSplitPath, ...otherSplitPaths] = splitPaths;
-  if ("winDrive" in firstSplitPath) {
-    const winDrive = firstSplitPath.winDrive;
-    if (!otherSplitPaths.every(sp => sp.winDrive === winDrive)) {
+
+  const firstPath = pathArray[0];
+  const isWin = /^[A-Za-z]:/.test(firstPath);
+  const firstWinDrive = getWinDrive(firstPath);
+  for (const path of pathArray) {
+    const winDrive = getWinDrive(path);
+
+    if (!PathUtils.isAbsolute(path) || winDrive !== firstWinDrive) {
+      // We expect all paths to be absolute and on Windows we expect all
+      // paths to be on the same disk. If this is not the case return the
+      // original array.
       return pathArray;
     }
-  } else if (otherSplitPaths.some(sp => "winDrive" in sp)) {
-    // Inconsistent winDrive property presence, bail out.
-    return pathArray;
   }
+
   // At this point we're either not on Windows or all paths are on the same
-  // winDrive. And all paths are absolute.
+  // Windows disk and all paths are absolute.
   // Find the common prefix. Start by assuming the entire path except for the
   // last folder is shared.
-  const prefix = firstSplitPath.components.slice(0, -1);
+  const splitPaths = pathArray.map(path => PathUtils.split(path));
+  const [firstSplitPath, ...otherSplitPaths] = splitPaths;
+  const prefix = firstSplitPath.slice(0, -1);
   for (const sp of otherSplitPaths) {
-    prefix.length = Math.min(prefix.length, sp.components.length - 1);
+    prefix.length = Math.min(prefix.length, sp.length - 1);
     for (let i = 0; i < prefix.length; i++) {
-      if (prefix[i] !== sp.components[i]) {
+      if (prefix[i] !== sp[i]) {
         prefix.length = i;
         break;
       }
     }
   }
-  if (prefix.length === 0 || (prefix.length === 1 && prefix[0] === "")) {
+  if (
+    prefix.length === 0 ||
+    (prefix.length === 1 && (prefix[0] === firstWinDrive || prefix[0] === "/"))
+  ) {
     // There is no shared prefix.
-    // We treat a prefix of [""] as "no prefix", too: Absolute paths on
-    // non-Windows start with a slash, so OS.Path.split(path) always returns an
-    // array whose first element is the empty string on those platforms.
-    // Stripping off a prefix of [""] from the split paths would simply remove
+    // We treat a prefix of ["/"] as "no prefix", too: Absolute paths on
+    // non-Windows start with a slash, so PathUtils.split(path) always returns
+    // an array whose first element is "/" on those platforms.
+    // Stripping off a prefix of ["/"] from the split paths would simply remove
     // the leading slash from the un-split paths, which is not useful.
     return pathArray;
   }
-  return splitPaths.map(sp =>
-    OS.Path.join(...sp.components.slice(prefix.length))
-  );
+
+  // Strip the common prefix from all paths.
+  return splitPaths.map(sp => {
+    return sp.slice(prefix.length).join(isWin ? "\\" : "/");
+  });
+}
+
+/**
+ * This method has been copied from `ospath_win.jsm` as part of the migration
+ * from `OS.Path` to `PathUtils`.
+ *
+ * Return the windows drive name of a path, or |null| if the path does
+ * not contain a drive name.
+ *
+ * Drive name appear either as "DriveName:..." (the return drive
+ * name includes the ":") or "\\\\DriveName..." (the returned drive name
+ * includes "\\\\").
+ *
+ * @param {string} path The path from which we are to return the Windows drive name.
+ * @returns {?string} Windows drive name e.g. "C:" or null if path is not a Windows path.
+ */
+function getWinDrive(path) {
+  if (path == null) {
+    throw new TypeError("path is invalid");
+  }
+
+  if (path.startsWith("\\\\")) {
+    // UNC path
+    if (path.length == 2) {
+      return null;
+    }
+    const index = path.indexOf("\\", 2);
+    if (index == -1) {
+      return path;
+    }
+    return path.slice(0, index);
+  }
+  // Non-UNC path
+  const index = path.indexOf(":");
+  if (index <= 0) {
+    return null;
+  }
+  return path.slice(0, index + 1);
 }
 
 class UnhandledCaseError extends Error {

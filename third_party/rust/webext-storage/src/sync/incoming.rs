@@ -105,7 +105,7 @@ pub fn stage_incoming(
                     }
                 }
             }
-            tx.execute(&sql, &params)?;
+            tx.execute(&sql, rusqlite::params_from_iter(params))?;
             Ok(())
         },
     )?;
@@ -219,7 +219,7 @@ pub fn get_incoming(conn: &Connection) -> Result<Vec<(SyncGuid, IncomingState)>>
         Ok((guid, state))
     }
 
-    conn.conn().query_rows_and_then_named(sql, &[], from_row)
+    conn.conn().query_rows_and_then(sql, [], from_row)
 }
 
 /// This is the set of actions we know how to take *locally* for incoming
@@ -395,13 +395,13 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
 }
 
 fn insert_changes(tx: &Transaction<'_>, ext_id: &str, changes: &StorageChanges) -> Result<()> {
-    tx.execute_named_cached(
+    tx.execute_cached(
         "INSERT INTO temp.storage_sync_applied (ext_id, changes)
             VALUES (:ext_id, :changes)",
-        &[
-            (":ext_id", &ext_id),
-            (":changes", &serde_json::to_string(&changes)?),
-        ],
+        rusqlite::named_params! {
+            ":ext_id": ext_id,
+            ":changes": &serde_json::to_string(&changes)?,
+        },
     )?;
     Ok(())
 }
@@ -419,7 +419,7 @@ pub fn apply_actions(
         match action {
             IncomingAction::DeleteLocally { ext_id, changes } => {
                 // Can just nuke it entirely.
-                tx.execute_named_cached(
+                tx.execute_cached(
                     "DELETE FROM storage_sync_data WHERE ext_id = :ext_id",
                     &[(":ext_id", &ext_id)],
                 )?;
@@ -431,13 +431,13 @@ pub fn apply_actions(
                 data,
                 changes,
             } => {
-                tx.execute_named_cached(
+                tx.execute_cached(
                     "INSERT OR REPLACE INTO storage_sync_data(ext_id, data, sync_change_counter)
                         VALUES (:ext_id, :data, 0)",
-                    &[
-                        (":ext_id", &ext_id),
-                        (":data", &serde_json::Value::Object(data)),
-                    ],
+                    rusqlite::named_params! {
+                        ":ext_id": ext_id,
+                        ":data": serde_json::Value::Object(data),
+                    },
                 )?;
                 insert_changes(tx, &ext_id, &changes)?;
             }
@@ -449,12 +449,12 @@ pub fn apply_actions(
                 data,
                 changes,
             } => {
-                tx.execute_named_cached(
+                tx.execute_cached(
                     "UPDATE storage_sync_data SET data = :data, sync_change_counter = sync_change_counter + 1 WHERE ext_id = :ext_id",
-                    &[
-                        (":ext_id", &ext_id),
-                        (":data", &serde_json::Value::Object(data)),
-                    ]
+                    rusqlite::named_params! {
+                        ":ext_id": ext_id,
+                        ":data": serde_json::Value::Object(data),
+                    },
                 )?;
                 insert_changes(tx, &ext_id, &changes)?;
             }
@@ -462,7 +462,7 @@ pub fn apply_actions(
             // Both local and remote ended up the same - only need to nuke the
             // change counter.
             IncomingAction::Same { ext_id } => {
-                tx.execute_named_cached(
+                tx.execute_cached(
                     "UPDATE storage_sync_data SET sync_change_counter = 0 WHERE ext_id = :ext_id",
                     &[(":ext_id", &ext_id)],
                 )?;
@@ -481,13 +481,12 @@ mod tests {
     use super::*;
     use crate::api;
     use interrupt_support::NeverInterrupts;
-    use rusqlite::NO_PARAMS;
     use serde_json::{json, Value};
     use sync15_traits::Payload;
 
     // select simple int
     fn ssi(conn: &Connection, stmt: &str) -> u32 {
-        conn.try_query_one(stmt, &[], true)
+        conn.try_query_one(stmt, [], true)
             .expect("must work")
             .unwrap_or_default()
     }
@@ -520,7 +519,7 @@ mod tests {
                 key: $key.to_string(),
                 old_value: Some(json!($old)),
                 new_value: None,
-            };
+            }
         };
         ($key:literal, None, $new:tt) => {
             StorageValueChange {
@@ -534,7 +533,7 @@ mod tests {
                 key: $key.to_string(),
                 old_value: Some(json!($old)),
                 new_value: Some(json!($new)),
-            };
+            }
         };
     }
     macro_rules! changes {
@@ -582,7 +581,7 @@ mod tests {
             INSERT INTO temp.storage_sync_staging (guid, ext_id, data)
             VALUES ('guid', 'ext_id', '{"foo":"bar"}')
         "#,
-            NO_PARAMS,
+            [],
         )?;
 
         let incoming = get_incoming(&tx)?;
@@ -602,7 +601,7 @@ mod tests {
             INSERT INTO storage_sync_mirror (guid, ext_id, data)
             VALUES ('guid', 'ext_id', '{"foo":"new"}')
         "#,
-            NO_PARAMS,
+            [],
         )?;
         let incoming = get_incoming(&tx)?;
         assert_eq!(incoming.len(), 1);
@@ -643,7 +642,7 @@ mod tests {
             INSERT INTO temp.storage_sync_staging (guid, ext_id, data)
             VALUES ('guid', NULL, NULL)
         "#,
-            NO_PARAMS,
+            [],
         )?;
 
         let incoming = get_incoming(&tx)?;
@@ -657,7 +656,7 @@ mod tests {
             INSERT INTO storage_sync_mirror (guid, ext_id, data)
             VALUES ('guid', NULL, NULL)
         "#,
-            NO_PARAMS,
+            [],
         )?;
         let incoming = get_incoming(&tx)?;
         assert_eq!(incoming.len(), 1);
@@ -668,7 +667,7 @@ mod tests {
             INSERT INTO storage_sync_data (ext_id, data)
             VALUES ('ext_id', NULL)
         "#,
-            NO_PARAMS,
+            [],
         )?;
         let incoming = get_incoming(&tx)?;
         assert_eq!(incoming.len(), 1);
@@ -690,9 +689,9 @@ mod tests {
     }
 
     fn get_local_item(conn: &Connection) -> Option<LocalItem> {
-        conn.try_query_row::<_, Error, _>(
+        conn.try_query_row::<_, Error, _, _>(
             "SELECT data, sync_change_counter FROM storage_sync_data WHERE ext_id = 'ext_id'",
-            &[],
+            [],
             |row| {
                 let data = json_map_from_row(row, "data")?;
                 let sync_change_counter = row.get::<_, i32>(1)?;
@@ -709,9 +708,9 @@ mod tests {
     fn get_applied_item_changes(conn: &Connection) -> Option<StorageChanges> {
         // no custom deserialize for storagechanges and we only need it for
         // tests, so do it manually.
-        conn.try_query_row::<_, Error, _>(
+        conn.try_query_row::<_, Error, _, _>(
             "SELECT changes FROM temp.storage_sync_applied WHERE ext_id = 'ext_id'",
-            &[],
+            [],
             |row| Ok(serde_json::from_str(&row.get::<_, String>("changes")?)?),
             true,
         )

@@ -30,6 +30,7 @@ pub mod request {
         Connect = 5,
         Options = 6,
         Trace = 7,
+        Patch = 8,
     }
 }
 #[derive(Clone, PartialEq, ::prost::Message)]

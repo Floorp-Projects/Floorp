@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=359303
+-->
+<head>
+  <meta charset="utf-8" />
+  <title>Test for copying non-breaking spaces to the clipboard</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=359303">Mozilla Bug 359303</a>
+
+<p id="display"></p>
+
+<div id="content">
+<!-- In a plain-text editable control (such as a textarea or textinput), copying to clipboard should
+preserve non-breaking spaces. -->
+<input
+  id="input-with-non-breaking-spaces"
+  value="Input content: This town is 100&nbsp;km away / «&nbsp;Est-ce Paris&nbsp;?&nbsp;» / Consecutive non-breaking spaces: '&nbsp;&nbsp;'">
+<textarea id="textarea-with-non-breaking-spaces">
+Textarea content:
+- This town is 100&nbsp;km away.
+- «&nbsp;Est-ce Paris&nbsp;?&nbsp;»
+- Consecutive non-breaking spaces: "&nbsp;&nbsp;"
+</textarea>
+
+<!-- In a content-editable div, copying to clipboard should preserve non-breaking spaces.
+However, for compatibility with what other browsers currently do, the behavior of replacing non-breaking spaces by spaces is preserved for now.
+See https://bugzilla.mozilla.org/show_bug.cgi?id=359303#c145
+-->
+<div contenteditable="true" id="content-editable-with-non-breaking-spaces">
+Content-editable content:
+- This town is 100&nbsp;km away.
+- «&nbsp;Est-ce Paris&nbsp;?&nbsp;»
+- Consecutive non-breaking spaces: "&nbsp;&nbsp;"
+</div>
+
+<!-- In non-editable HTML nodes, like this paragraph, copying to clipboard should preserve non-breaking
+spaces.
+However, for compatibility with what other browsers currently do, the behavior of replacing non-breaking spaces by spaces is preserved for now.
+See https://bugzilla.mozilla.org/show_bug.cgi?id=359303#c145
+-->
+<p id="paragraph-with-non-breaking-spaces">
+Paragraph content:
+- This town is 100&nbsp;km away.
+- «&nbsp;Est-ce Paris&nbsp;?&nbsp;»
+- Consecutive non-breaking spaces: "&nbsp;&nbsp;"
+</p>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+// Helper: for the given element, select all its content, execute a "Copy" command,
+// and return the text put into the clipboard.
+async function clipboardTextForElementId(aDomId, aExpectedString) {
+  let textContainer = document.getElementById(aDomId);
+  let sel = window.getSelection();
+  sel.removeAllRanges();
+
+  if (textContainer.select) {
+    // Select the entire text in the input or textarea
+    textContainer.select();
+  } else {
+    // Select text node in element.
+    let r = document.createRange();
+    r.setStart(textContainer, 0);
+    r.setEnd(textContainer, 1);
+    sel.addRange(r);
+  }
+
+  let copiedText = await SimpleTest.promiseClipboardChange(
+    function compare(aValue) {
+      return aValue.includes(aExpectedString);
+    },
+    function setup() {
+      synthesizeKey("C", {accelKey: true});
+    },
+    "text/unicode");
+  return copiedText;
+}
+
+/** Test for Bug 359303 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async function() {
+  let iValue = await clipboardTextForElementId("input-with-non-breaking-spaces", "Input");
+  ok(iValue.includes("100 km"), "NBSP between two characters should be preserved");
+  ok(iValue.includes("« "),  "A single NBSP near a punctuation mark should be preserved");
+  ok(iValue.includes(" »"),  "A single NBSP near a punctuation mark should be preserved");
+  ok(iValue.includes(" ? "), "NBSPs before *and* after a character should be preserved");
+  ok(iValue.includes("  "), "Consecutive NBSPs should be preserved");
+
+  let tValue = await clipboardTextForElementId("textarea-with-non-breaking-spaces", "Textarea");
+  ok(tValue.includes("100 km"), "NBSP between two characters should be preserved");
+  ok(tValue.includes("« "),  "A single NBSP near a punctuation mark should be preserved");
+  ok(tValue.includes(" »"),  "A single NBSP near a punctuation mark should be preserved");
+  ok(tValue.includes(" ? "), "NBSPs before *and* after a character should be preserved");
+  ok(tValue.includes("  "), "Consecutive NBSPs should be preserved");
+
+  let cValue = await clipboardTextForElementId("content-editable-with-non-breaking-spaces", "Content-editable");
+  ok(cValue.includes("100 km"), "NBSP should be replaced by spaces, until brower compatibility issues are sorted out");
+
+  let pValue = await clipboardTextForElementId("paragraph-with-non-breaking-spaces", "Paragraph");
+  ok(pValue.includes("100 km"), "NBSP should be replaced by spaces, until brower compatibility issues are sorted out");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

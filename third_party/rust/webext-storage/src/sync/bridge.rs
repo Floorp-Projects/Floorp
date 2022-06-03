@@ -80,12 +80,12 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
     }
 
     fn sync_started(&self) -> Result<()> {
-        schema::create_empty_sync_temp_tables(&self.db)?;
+        schema::create_empty_sync_temp_tables(self.db)?;
         Ok(())
     }
 
     fn store_incoming(&self, incoming_envelopes: &[IncomingEnvelope]) -> Result<()> {
-        let signal = self.db.begin_interrupt_scope();
+        let signal = self.db.begin_interrupt_scope()?;
 
         let mut incoming_payloads = Vec::with_capacity(incoming_envelopes.len());
         for envelope in incoming_envelopes {
@@ -100,7 +100,7 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
     }
 
     fn apply(&self) -> Result<ApplyResults> {
-        let signal = self.db.begin_interrupt_scope();
+        let signal = self.db.begin_interrupt_scope()?;
 
         let tx = self.db.unchecked_transaction()?;
         let incoming = get_incoming(&tx)?;
@@ -112,7 +112,7 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
         stage_outgoing(&tx)?;
         tx.commit()?;
 
-        let outgoing = get_outgoing(&self.db, &signal)?
+        let outgoing = get_outgoing(self.db, &signal)?
             .into_iter()
             .map(OutgoingEnvelope::from)
             .collect::<Vec<_>>();
@@ -120,7 +120,7 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
     }
 
     fn set_uploaded(&self, _server_modified_millis: i64, ids: &[SyncGuid]) -> Result<()> {
-        let signal = self.db.begin_interrupt_scope();
+        let signal = self.db.begin_interrupt_scope()?;
         let tx = self.db.unchecked_transaction()?;
         record_uploaded(&tx, ids, &signal)?;
         tx.commit()?;
@@ -129,7 +129,7 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
     }
 
     fn sync_finished(&self) -> Result<()> {
-        schema::create_empty_sync_temp_tables(&self.db)?;
+        schema::create_empty_sync_temp_tables(self.db)?;
         Ok(())
     }
 
@@ -159,11 +159,9 @@ mod tests {
     use sync15_traits::bridged_engine::BridgedEngine;
 
     fn query_count(conn: &StorageDb, table: &str) -> u32 {
-        conn.query_row_and_then(
-            &format!("SELECT COUNT(*) FROM {};", table),
-            rusqlite::NO_PARAMS,
-            |row| row.get::<_, u32>(0),
-        )
+        conn.query_row_and_then(&format!("SELECT COUNT(*) FROM {};", table), [], |row| {
+            row.get::<_, u32>(0)
+        })
         .expect("should work")
     }
 
@@ -172,12 +170,12 @@ mod tests {
         engine.db.execute(
             "INSERT INTO storage_sync_data (ext_id, data, sync_change_counter)
                  VALUES ('ext-a', 'invalid-json', 2)",
-            rusqlite::NO_PARAMS,
+            [],
         )?;
         engine.db.execute(
             "INSERT INTO storage_sync_mirror (guid, ext_id, data)
                  VALUES ('guid', 'ext-a', '3')",
-            rusqlite::NO_PARAMS,
+            [],
         )?;
         engine.set_last_sync(1)?;
 
@@ -196,7 +194,7 @@ mod tests {
         // But did reset the change counter.
         let cc = engine.db.query_row_and_then(
             "SELECT sync_change_counter FROM storage_sync_data WHERE ext_id = 'ext-a';",
-            rusqlite::NO_PARAMS,
+            [],
             |row| row.get::<_, u32>(0),
         )?;
         assert_eq!(cc, 1);
@@ -212,7 +210,7 @@ mod tests {
         assert_eq!(query_count(engine.db, "storage_sync_data"), 1);
         let cc = engine.db.query_row_and_then(
             "SELECT sync_change_counter FROM storage_sync_data WHERE ext_id = 'ext-a';",
-            rusqlite::NO_PARAMS,
+            [],
             |row| row.get::<_, u32>(0),
         )?;
         assert_eq!(cc, 2);

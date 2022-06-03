@@ -28,6 +28,7 @@
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ClassifierDummyChannelParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
+#include "mozilla/net/RemoteStreamGetter.h"
 #include "mozilla/net/RequestContextService.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/net/PSocketProcessBridgeParent.h"
@@ -44,6 +45,9 @@
 #include "mozilla/dom/network/TCPServerSocketParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
+#ifdef MOZ_PLACES
+#  include "mozilla/places/PageIconProtocolHandler.h"
+#endif
 #include "mozilla/LoadContext.h"
 #include "mozilla/MozPromise.h"
 #include "nsPrintfCString.h"
@@ -73,6 +77,9 @@ using mozilla::ipc::PrincipalInfo;
 using mozilla::net::PTCPServerSocketParent;
 using mozilla::net::PTCPSocketParent;
 using mozilla::net::PUDPSocketParent;
+#ifdef MOZ_PLACES
+using mozilla::places::PageIconProtocolHandler;
+#endif
 
 namespace mozilla {
 namespace net {
@@ -829,7 +836,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvEnsureHSTSData(
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvGetPageThumbStream(
-    nsIURI* aURI, GetPageThumbStreamResolver&& aResolver) {
+    nsIURI* aURI, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
+    GetPageThumbStreamResolver&& aResolver) {
   // Only the privileged about content process is allowed to access
   // things over the moz-page-thumb protocol. Any other content process
   // that tries to send this should have been blocked via the
@@ -860,18 +868,70 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetPageThumbStream(
 
   inputStreamPromise->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [aResolver](const nsCOMPtr<nsIInputStream>& aStream) {
-        aResolver(aStream);
-      },
+      [aResolver](const RemoteStreamInfo& aInfo) { aResolver(Some(aInfo)); },
       [aResolver](nsresult aRv) {
         // If NewStream failed, we send back an invalid stream to the child so
         // it can handle the error. MozPromise rejection is reserved for channel
         // errors/disconnects.
         Unused << NS_WARN_IF(NS_FAILED(aRv));
-        aResolver(nullptr);
+        aResolver(Nothing());
       });
 
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult NeckoParent::RecvGetPageIconStream(
+    nsIURI* aURI, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
+    GetPageIconStreamResolver&& aResolver) {
+#ifdef MOZ_PLACES
+  // Only the privileged about content process is allowed to access
+  // things over the page-icon protocol. Any other content process
+  // that tries to send this should have been blocked via the
+  // ScriptSecurityManager, but if somehow the process has been tricked into
+  // sending this message, we send IPC_FAIL in order to crash that
+  // likely-compromised content process.
+  if (static_cast<ContentParent*>(Manager())->GetRemoteType() !=
+      PRIVILEGEDABOUT_REMOTE_TYPE) {
+    return IPC_FAIL(this, "Wrong process type");
+  }
+
+  if (aLoadInfoArgs.isNothing()) {
+    return IPC_FAIL(this, "Page-icon request must include loadInfo");
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
+                                                     getter_AddRefs(loadInfo));
+  if (NS_FAILED(rv)) {
+    return IPC_FAIL(this, "Page-icon request must include loadInfo");
+  }
+
+  RefPtr<PageIconProtocolHandler> ph(PageIconProtocolHandler::GetSingleton());
+  MOZ_ASSERT(ph);
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  bool terminateSender = true;
+  auto inputStreamPromise = ph->NewStream(aURI, loadInfo, &terminateSender);
+
+  if (terminateSender) {
+    return IPC_FAIL(this, "Malformed page-icon request");
+  }
+
+  inputStreamPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [aResolver](const RemoteStreamInfo& aInfo) { aResolver(Some(aInfo)); },
+      [aResolver](nsresult aRv) {
+        // If NewStream failed, we send back an invalid stream to the child so
+        // it can handle the error. MozPromise rejection is reserved for channel
+        // errors/disconnects.
+        Unused << NS_WARN_IF(NS_FAILED(aRv));
+        aResolver(Nothing());
+      });
+
+  return IPC_OK();
+#else
+  return IPC_FAIL(this, "page-icon: protocol unavailable");
+#endif
 }
 
 }  // namespace net

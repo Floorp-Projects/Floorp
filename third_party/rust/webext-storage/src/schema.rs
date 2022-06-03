@@ -28,7 +28,7 @@ impl MigrationLogic for WebExtMigrationLogin {
             PRAGMA foreign_keys = ON;
         ";
         conn.execute_batch(initial_pragmas)?;
-        define_functions(&conn)?;
+        define_functions(conn)?;
         conn.set_prepared_statement_cache_capacity(128);
         Ok(())
     }
@@ -85,22 +85,22 @@ pub fn create_empty_sync_temp_tables(db: &Connection) -> Result<()> {
 pub mod test {
     use prettytable::{Cell, Row};
     use rusqlite::Result as RusqliteResult;
-    use rusqlite::{types::Value, Connection, NO_PARAMS};
+    use rusqlite::{types::Value, Connection};
 
     // To help debugging tests etc.
     #[allow(unused)]
     pub fn print_table(conn: &Connection, table_name: &str) -> RusqliteResult<()> {
         let mut stmt = conn.prepare(&format!("SELECT * FROM {}", table_name))?;
-        let mut rows = stmt.query(NO_PARAMS)?;
+        let mut rows = stmt.query([])?;
         let mut table = prettytable::Table::new();
         let mut titles = Row::empty();
-        for col in rows.columns().expect("must have columns") {
+        for col in rows.as_ref().expect("must have statement").columns() {
             titles.add_cell(Cell::new(col.name()));
         }
         table.set_titles(titles);
         while let Some(sql_row) = rows.next()? {
             let mut table_row = Row::empty();
-            for i in 0..sql_row.column_count() {
+            for i in 0..sql_row.as_ref().column_count() {
                 let val = match sql_row.get::<_, Value>(i)? {
                     Value::Null => "null".to_string(),
                     Value::Integer(i) => i.to_string(),
@@ -148,7 +148,7 @@ mod tests {
         let count = db
             .query_row_and_then(
                 "SELECT COUNT(*) FROM temp.storage_sync_staging;",
-                rusqlite::NO_PARAMS,
+                [],
                 |row| row.get::<_, u32>(0),
             )
             .expect("query should work");
@@ -160,7 +160,7 @@ mod tests {
         let count = db
             .query_row_and_then(
                 "SELECT COUNT(*) FROM temp.storage_sync_staging;",
-                rusqlite::NO_PARAMS,
+                [],
                 |row| row.get::<_, u32>(0),
             )
             .expect("query should work");
@@ -175,7 +175,7 @@ mod tests {
 
         let get_id_data = |guid: &str| -> Result<(Option<String>, Option<String>)> {
             let (ext_id, data) = db
-                .try_query_row::<_, Error, _>(
+                .try_query_row::<_, Error, _, _>(
                     "SELECT ext_id, data FROM storage_sync_mirror WHERE guid = :guid",
                     &[(":guid", &guid.to_string())],
                     |row| Ok((row.get(0)?, row.get(1)?)),

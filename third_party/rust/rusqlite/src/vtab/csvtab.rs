@@ -1,7 +1,7 @@
-//! `feature = "csvtab"` CSV Virtual Table.
+//! CSV Virtual Table.
 //!
 //! Port of [csv](http://www.sqlite.org/cgi/src/finfo?name=ext/misc/csv.c) C
-//! extension: https://www.sqlite.org/csv.html
+//! extension: `https://www.sqlite.org/csv.html`
 //!
 //! # Example
 //!
@@ -35,7 +35,7 @@ use crate::vtab::{
 };
 use crate::{Connection, Error, Result};
 
-/// `feature = "csvtab"` Register the "csv" module.
+/// Register the "csv" module.
 /// ```sql
 /// CREATE VIRTUAL TABLE vtab USING csv(
 ///   filename=FILENAME -- Name of file containing CSV content
@@ -48,12 +48,12 @@ use crate::{Connection, Error, Result};
 /// ```
 pub fn load_module(conn: &Connection) -> Result<()> {
     let aux: Option<()> = None;
-    conn.create_module("csv", read_only_module::<CSVTab>(), aux)
+    conn.create_module("csv", read_only_module::<CsvTab>(), aux)
 }
 
 /// An instance of the CSV virtual table
 #[repr(C)]
-struct CSVTab {
+struct CsvTab {
     /// Base class. Must be first
     base: ffi::sqlite3_vtab,
     /// Name of the CSV file
@@ -65,7 +65,7 @@ struct CSVTab {
     offset_first_row: csv::Position,
 }
 
-impl CSVTab {
+impl CsvTab {
     fn reader(&self) -> Result<csv::Reader<File>, csv::Error> {
         csv::ReaderBuilder::new()
             .has_headers(self.has_headers)
@@ -96,20 +96,20 @@ impl CSVTab {
     }
 }
 
-unsafe impl<'vtab> VTab<'vtab> for CSVTab {
+unsafe impl<'vtab> VTab<'vtab> for CsvTab {
     type Aux = ();
-    type Cursor = CSVTabCursor<'vtab>;
+    type Cursor = CsvTabCursor<'vtab>;
 
     fn connect(
         _: &mut VTabConnection,
         _aux: Option<&()>,
         args: &[&[u8]],
-    ) -> Result<(String, CSVTab)> {
+    ) -> Result<(String, CsvTab)> {
         if args.len() < 4 {
             return Err(Error::ModuleError("no CSV file specified".to_owned()));
         }
 
-        let mut vtab = CSVTab {
+        let mut vtab = CsvTab {
             base: ffi::sqlite3_vtab::default(),
             filename: "".to_owned(),
             has_headers: false,
@@ -122,7 +122,7 @@ unsafe impl<'vtab> VTab<'vtab> for CSVTab {
 
         let args = &args[3..];
         for c_slice in args {
-            let (param, value) = CSVTab::parameter(c_slice)?;
+            let (param, value) = CsvTab::parameter(c_slice)?;
             match param {
                 "filename" => {
                     if !Path::new(value).exists() {
@@ -166,7 +166,7 @@ unsafe impl<'vtab> VTab<'vtab> for CSVTab {
                     }
                 }
                 "delimiter" => {
-                    if let Some(b) = CSVTab::parse_byte(value) {
+                    if let Some(b) = CsvTab::parse_byte(value) {
                         vtab.delimiter = b;
                     } else {
                         return Err(Error::ModuleError(format!(
@@ -176,7 +176,7 @@ unsafe impl<'vtab> VTab<'vtab> for CSVTab {
                     }
                 }
                 "quote" => {
-                    if let Some(b) = CSVTab::parse_byte(value) {
+                    if let Some(b) = CsvTab::parse_byte(value) {
                         if b == b'0' {
                             vtab.quote = 0;
                         } else {
@@ -212,7 +212,7 @@ unsafe impl<'vtab> VTab<'vtab> for CSVTab {
                     if n_col.is_none() && schema.is_none() {
                         cols = headers
                             .into_iter()
-                            .map(|header| escape_double_quote(&header).into_owned())
+                            .map(|header| escape_double_quote(header).into_owned())
                             .collect();
                     }
                 }
@@ -259,16 +259,16 @@ unsafe impl<'vtab> VTab<'vtab> for CSVTab {
         Ok(())
     }
 
-    fn open(&self) -> Result<CSVTabCursor<'_>> {
-        Ok(CSVTabCursor::new(self.reader()?))
+    fn open(&self) -> Result<CsvTabCursor<'_>> {
+        Ok(CsvTabCursor::new(self.reader()?))
     }
 }
 
-impl CreateVTab<'_> for CSVTab {}
+impl CreateVTab<'_> for CsvTab {}
 
 /// A cursor for the CSV virtual table
 #[repr(C)]
-struct CSVTabCursor<'vtab> {
+struct CsvTabCursor<'vtab> {
     /// Base class. Must be first
     base: ffi::sqlite3_vtab_cursor,
     /// The CSV reader object
@@ -278,12 +278,12 @@ struct CSVTabCursor<'vtab> {
     /// Values of the current row
     cols: csv::StringRecord,
     eof: bool,
-    phantom: PhantomData<&'vtab CSVTab>,
+    phantom: PhantomData<&'vtab CsvTab>,
 }
 
-impl CSVTabCursor<'_> {
-    fn new<'vtab>(reader: csv::Reader<File>) -> CSVTabCursor<'vtab> {
-        CSVTabCursor {
+impl CsvTabCursor<'_> {
+    fn new<'vtab>(reader: csv::Reader<File>) -> CsvTabCursor<'vtab> {
+        CsvTabCursor {
             base: ffi::sqlite3_vtab_cursor::default(),
             reader,
             row_number: 0,
@@ -294,12 +294,12 @@ impl CSVTabCursor<'_> {
     }
 
     /// Accessor to the associated virtual table.
-    fn vtab(&self) -> &CSVTab {
-        unsafe { &*(self.base.pVtab as *const CSVTab) }
+    fn vtab(&self) -> &CsvTab {
+        unsafe { &*(self.base.pVtab as *const CsvTab) }
     }
 }
 
-unsafe impl VTabCursor for CSVTabCursor<'_> {
+unsafe impl VTabCursor for CsvTabCursor<'_> {
     // Only a full table scan is supported.  So `filter` simply rewinds to
     // the beginning.
     fn filter(
@@ -354,6 +354,7 @@ unsafe impl VTabCursor for CSVTabCursor<'_> {
 }
 
 impl From<csv::Error> for Error {
+    #[cold]
     fn from(err: csv::Error) -> Error {
         Error::ModuleError(err.to_string())
     }
@@ -362,53 +363,45 @@ impl From<csv::Error> for Error {
 #[cfg(test)]
 mod test {
     use crate::vtab::csvtab;
-    use crate::{Connection, Result, NO_PARAMS};
+    use crate::{Connection, Result};
     use fallible_iterator::FallibleIterator;
 
     #[test]
-    fn test_csv_module() {
-        let db = Connection::open_in_memory().unwrap();
-        csvtab::load_module(&db).unwrap();
-        db.execute_batch("CREATE VIRTUAL TABLE vtab USING csv(filename='test.csv', header=yes)")
-            .unwrap();
+    fn test_csv_module() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+        csvtab::load_module(&db)?;
+        db.execute_batch("CREATE VIRTUAL TABLE vtab USING csv(filename='test.csv', header=yes)")?;
 
         {
-            let mut s = db.prepare("SELECT rowid, * FROM vtab").unwrap();
+            let mut s = db.prepare("SELECT rowid, * FROM vtab")?;
             {
                 let headers = s.column_names();
                 assert_eq!(vec!["rowid", "colA", "colB", "colC"], headers);
             }
 
-            let ids: Result<Vec<i32>> = s
-                .query(NO_PARAMS)
-                .unwrap()
-                .map(|row| row.get::<_, i32>(0))
-                .collect();
-            let sum = ids.unwrap().iter().sum::<i32>();
+            let ids: Result<Vec<i32>> = s.query([])?.map(|row| row.get::<_, i32>(0)).collect();
+            let sum = ids?.iter().sum::<i32>();
             assert_eq!(sum, 15);
         }
-        db.execute_batch("DROP TABLE vtab").unwrap();
+        db.execute_batch("DROP TABLE vtab")
     }
 
     #[test]
-    fn test_csv_cursor() {
-        let db = Connection::open_in_memory().unwrap();
-        csvtab::load_module(&db).unwrap();
-        db.execute_batch("CREATE VIRTUAL TABLE vtab USING csv(filename='test.csv', header=yes)")
-            .unwrap();
+    fn test_csv_cursor() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+        csvtab::load_module(&db)?;
+        db.execute_batch("CREATE VIRTUAL TABLE vtab USING csv(filename='test.csv', header=yes)")?;
 
         {
-            let mut s = db
-                .prepare(
-                    "SELECT v1.rowid, v1.* FROM vtab v1 NATURAL JOIN vtab v2 WHERE \
+            let mut s = db.prepare(
+                "SELECT v1.rowid, v1.* FROM vtab v1 NATURAL JOIN vtab v2 WHERE \
                      v1.rowid < v2.rowid",
-                )
-                .unwrap();
+            )?;
 
-            let mut rows = s.query(NO_PARAMS).unwrap();
-            let row = rows.next().unwrap().unwrap();
+            let mut rows = s.query([])?;
+            let row = rows.next()?.unwrap();
             assert_eq!(row.get_unwrap::<_, i32>(0), 2);
         }
-        db.execute_batch("DROP TABLE vtab").unwrap();
+        db.execute_batch("DROP TABLE vtab")
     }
 }

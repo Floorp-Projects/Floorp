@@ -1,3 +1,11 @@
+## [0.7.0
+- API incompatible change: depend on hashbrown 0.11, changes re-exported types.
+- Fix `LinkedHashSet::back` to take `&self` not `&mut self`.
+- API incompatible change: equality tests on `LinkedHashSet` are now *ordered*,
+  similar to `LinkedHashMap`.
+- Make the serde `Deserialize` implementations on `LinkedHashMap` and
+  `LinkedHashSet` generic on the `BuildHasher` type.
+
 ## [0.6.0]
 - API incompatible change: depend on hashbrown 0.9, re-export renamed
   hashbrown::TryReserveError type.

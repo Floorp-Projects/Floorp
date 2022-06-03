@@ -12,6 +12,7 @@ namespace layers {
 
 void ExpectedGeckoMetrics::UpdateFrom(const FrameMetrics& aMetrics) {
   mVisualScrollOffset = aMetrics.GetVisualScrollOffset();
+  mLayoutScrollOffset = aMetrics.GetLayoutScrollOffset();
   mZoom = aMetrics.GetZoom();
   mDevPixelsPerCSSPixel = aMetrics.GetDevPixelsPerCSSPixel();
 }

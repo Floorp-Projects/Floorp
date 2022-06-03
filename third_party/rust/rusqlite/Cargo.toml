@@ -3,34 +3,50 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "rusqlite"
-version = "0.24.2"
+version = "0.27.0"
 authors = ["The rusqlite developers"]
+exclude = [
+    "/.github/*",
+    "/.gitattributes",
+    "/appveyor.yml",
+    "/Changelog.md",
+    "/clippy.toml",
+    "/codecov.yml",
+]
 description = "Ergonomic wrapper for SQLite"
 documentation = "http://docs.rs/rusqlite/"
 readme = "README.md"
-keywords = ["sqlite", "database", "ffi"]
+keywords = [
+    "sqlite",
+    "database",
+    "ffi",
+]
 categories = ["database"]
 license = "MIT"
 repository = "https://github.com/rusqlite/rusqlite"
+
 [package.metadata.docs.rs]
+features = ["modern-full"]
 all-features = false
-default-target = "x86_64-unknown-linux-gnu"
-features = ["array", "backup", "blob", "chrono", "collation", "functions", "limits", "load_extension", "serde_json", "time", "trace", "url", "vtab", "window", "modern_sqlite", "column_decltype"]
 no-default-features = true
+default-target = "x86_64-unknown-linux-gnu"
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
 
 [package.metadata.playground]
-all-features = false
 features = ["bundled-full"]
+all-features = false
 
 [lib]
 name = "rusqlite"
@@ -52,17 +68,15 @@ harness = false
 [[bench]]
 name = "exec"
 harness = false
+
 [dependencies.bitflags]
 version = "1.2"
 
-[dependencies.byteorder]
-version = "1.3"
-features = ["i128"]
-optional = true
-
 [dependencies.chrono]
 version = "0.4"
+features = ["clock"]
 optional = true
+default-features = false
 
 [dependencies.csv]
 version = "1.1"
@@ -75,14 +89,14 @@ version = "0.2"
 version = "0.1"
 
 [dependencies.hashlink]
-version = "0.6"
+version = "0.7"
 
 [dependencies.lazy_static]
 version = "1.4"
 optional = true
 
 [dependencies.libsqlite3-sys]
-version = "0.20.1"
+version = "0.24.0"
 
 [dependencies.memchr]
 version = "2.3"
@@ -92,10 +106,15 @@ version = "1.0"
 optional = true
 
 [dependencies.smallvec]
-version = "1.0"
+version = "1.6.1"
 
 [dependencies.time]
-version = "0.2"
+version = "0.3.0"
+features = [
+    "formatting",
+    "macros",
+    "parsing",
+]
 optional = true
 
 [dependencies.url]
@@ -105,6 +124,7 @@ optional = true
 [dependencies.uuid]
 version = "0.8"
 optional = true
+
 [dev-dependencies.bencher]
 version = "0.1"
 
@@ -132,30 +152,79 @@ array = ["vtab"]
 backup = ["libsqlite3-sys/min_sqlite_version_3_6_23"]
 blob = ["libsqlite3-sys/min_sqlite_version_3_7_7"]
 buildtime_bindgen = ["libsqlite3-sys/buildtime_bindgen"]
-bundled = ["libsqlite3-sys/bundled", "modern_sqlite"]
-bundled-full = ["array", "backup", "blob", "bundled", "chrono", "collation", "column_decltype", "csvtab", "extra_check", "functions", "hooks", "i128_blob", "limits", "load_extension", "serde_json", "series", "trace", "unlock_notify", "url", "uuid", "vtab", "window"]
+bundled = [
+    "libsqlite3-sys/bundled",
+    "modern_sqlite",
+]
+bundled-full = [
+    "modern-full",
+    "bundled",
+]
+bundled-sqlcipher = [
+    "libsqlite3-sys/bundled-sqlcipher",
+    "bundled",
+]
+bundled-sqlcipher-vendored-openssl = [
+    "libsqlite3-sys/bundled-sqlcipher-vendored-openssl",
+    "bundled-sqlcipher",
+]
 bundled-windows = ["libsqlite3-sys/bundled-windows"]
 collation = []
 column_decltype = []
-csvtab = ["csv", "vtab"]
+csvtab = [
+    "csv",
+    "vtab",
+]
 extra_check = []
 functions = ["libsqlite3-sys/min_sqlite_version_3_7_7"]
 hooks = []
-i128_blob = ["byteorder"]
-in_gecko = ["modern_sqlite", "libsqlite3-sys/in_gecko"]
+i128_blob = []
+in_gecko = [
+    "modern_sqlite",
+    "libsqlite3-sys/in_gecko",
+]
 limits = []
 load_extension = []
+modern-full = [
+    "array",
+    "backup",
+    "blob",
+    "modern_sqlite",
+    "chrono",
+    "collation",
+    "column_decltype",
+    "csvtab",
+    "extra_check",
+    "functions",
+    "hooks",
+    "i128_blob",
+    "limits",
+    "load_extension",
+    "serde_json",
+    "series",
+    "time",
+    "trace",
+    "unlock_notify",
+    "url",
+    "uuid",
+    "vtab",
+    "window",
+]
 modern_sqlite = ["libsqlite3-sys/bundled_bindings"]
 series = ["vtab"]
-session = ["libsqlite3-sys/session", "hooks"]
+session = [
+    "libsqlite3-sys/session",
+    "hooks",
+]
 sqlcipher = ["libsqlite3-sys/sqlcipher"]
 trace = ["libsqlite3-sys/min_sqlite_version_3_6_23"]
 unlock_notify = ["libsqlite3-sys/unlock_notify"]
-vtab = ["libsqlite3-sys/min_sqlite_version_3_7_7", "lazy_static"]
+vtab = ["libsqlite3-sys/min_sqlite_version_3_7_7"]
 wasm32-wasi-vfs = ["libsqlite3-sys/wasm32-wasi-vfs"]
 window = ["functions"]
 winsqlite3 = ["libsqlite3-sys/winsqlite3"]
 with-asan = ["libsqlite3-sys/with-asan"]
+
 [badges.appveyor]
 repository = "rusqlite/rusqlite"
 
@@ -164,6 +233,3 @@ repository = "rusqlite/rusqlite"
 
 [badges.maintenance]
 status = "actively-developed"
-
-[badges.travis-ci]
-repository = "rusqlite/rusqlite"

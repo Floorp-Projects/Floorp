@@ -12,6 +12,7 @@
 
 #include "MPRISInterfaceDescription.h"
 #include "mozilla/dom/MediaControlUtils.h"
+#include "mozilla/GRefPtr.h"
 #include "mozilla/GUniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Maybe.h"
@@ -371,12 +372,14 @@ void MPRISServiceHandler::InitIdentity() {
 }
 
 const char* MPRISServiceHandler::Identity() const {
-  NS_WARNING_ASSERTION(mInitialized, "MPRISServiceHandler should have been initialized.");
+  NS_WARNING_ASSERTION(mInitialized,
+                       "MPRISServiceHandler should have been initialized.");
   return mIdentity.get();
 }
 
 const char* MPRISServiceHandler::DesktopEntry() const {
-  NS_WARNING_ASSERTION(mInitialized, "MPRISServiceHandler should have been initialized.");
+  NS_WARNING_ASSERTION(mInitialized,
+                       "MPRISServiceHandler should have been initialized.");
   return mDesktopEntry.get();
 }
 

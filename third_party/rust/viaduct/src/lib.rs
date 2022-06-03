@@ -36,6 +36,7 @@ pub enum Method {
     Connect,
     Options,
     Trace,
+    Patch,
 }
 
 impl Method {
@@ -49,6 +50,7 @@ impl Method {
             Method::Connect => "CONNECT",
             Method::Options => "OPTIONS",
             Method::Trace => "TRACE",
+            Method::Patch => "PATCH",
         }
     }
 }
@@ -87,6 +89,11 @@ impl Request {
     /// Alias for `Request::new(Method::Get, url)`, for convenience.
     pub fn get(url: Url) -> Self {
         Self::new(Method::Get, url)
+    }
+
+    /// Alias for `Request::new(Method::Patch, url)`, for convenience.
+    pub fn patch(url: Url) -> Self {
+        Self::new(Method::Patch, url)
     }
 
     /// Alias for `Request::new(Method::Post, url)`, for convenience.

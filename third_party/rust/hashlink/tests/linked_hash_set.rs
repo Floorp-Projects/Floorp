@@ -510,3 +510,18 @@ fn to_back_front_order() {
     set.to_front(&3);
     assert_eq!(set.front().copied(), Some(3));
 }
+
+#[test]
+fn test_order_equality() {
+    let xs = [1, 2, 3, 4, 5, 6];
+    let mut set1: LinkedHashSet<i32> = xs.iter().copied().collect();
+    let mut set2: LinkedHashSet<i32> = xs.iter().copied().collect();
+
+    assert_eq!(set1, set2);
+
+    set1.to_front(&4);
+    assert_ne!(set1, set2);
+
+    set2.to_front(&4);
+    assert_eq!(set1, set2);
+}

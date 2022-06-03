@@ -31,6 +31,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/GRefPtr.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/TimeStamp.h"

@@ -1,12 +1,11 @@
 [package]
 name = "webext-storage"
-edition = "2018"
+edition = "2021"
 version = "0.1.0"
 authors = ["sync-team@mozilla.com"]
 license = "MPL-2.0"
 
 [features]
-log_query_plans = ["sql-support/log_query_plans"]
 default = []
 
 [dependencies]
@@ -25,7 +24,7 @@ sync-guid = { path = "../support/guid", features = ["rusqlite_support", "random"
 url = { version = "2.1", features = ["serde"] }
 
 [dependencies.rusqlite]
-version = "0.24.2"
+version = "0.27.0"
 features = ["functions", "bundled", "serde_json", "unlock_notify", "column_decltype"]
 
 [dev-dependencies]
@@ -35,7 +34,7 @@ tempfile = "3"
 # A *direct* dep on the -sys crate is required for our build.rs
 # to see the DEP_SQLITE3_LINK_TARGET env var that cargo sets
 # on its behalf.
-libsqlite3-sys = "0.20.1"
+libsqlite3-sys = "0.24.1"
 
 [build-dependencies]
 nss_build_common = { path = "../support/rc_crypto/nss/nss_build_common" }

@@ -441,6 +441,40 @@ where
             }
         }
     }
+
+    /// If an entry with this key exists, move it to the front of the list and return a reference to
+    /// the value.
+    #[inline]
+    pub fn to_front<Q>(&mut self, k: &Q) -> Option<&mut V>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
+        match self.raw_entry_mut().from_key(k) {
+            RawEntryMut::Occupied(mut occupied) => {
+                occupied.to_front();
+                Some(occupied.into_mut())
+            }
+            RawEntryMut::Vacant(_) => None,
+        }
+    }
+
+    /// If an entry with this key exists, move it to the back of the list and return a reference to
+    /// the value.
+    #[inline]
+    pub fn to_back<Q>(&mut self, k: &Q) -> Option<&mut V>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
+        match self.raw_entry_mut().from_key(k) {
+            RawEntryMut::Occupied(mut occupied) => {
+                occupied.to_back();
+                Some(occupied.into_mut())
+            }
+            RawEntryMut::Vacant(_) => None,
+        }
+    }
 }
 
 impl<K, V, S> LinkedHashMap<K, V, S>

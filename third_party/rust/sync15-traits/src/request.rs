@@ -107,7 +107,7 @@ impl CollectionRequest {
             pairs.append_pair("ids", &buf);
         }
         if let Some(batch) = &self.batch {
-            pairs.append_pair("batch", &batch);
+            pairs.append_pair("batch", batch);
         }
         if self.commit {
             pairs.append_pair("commit", "true");
