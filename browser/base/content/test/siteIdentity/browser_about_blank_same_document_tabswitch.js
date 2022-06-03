@@ -40,6 +40,13 @@ add_task(async function test_identityBlock_inherited_blank() {
       () => popupBC.children[0]?.currentWindowGlobal
     );
 
+    info("Waiting for button to appear");
+    await SpecialPowers.spawn(popupBC.children[0], [], async () => {
+      await ContentTaskUtils.waitForCondition(() =>
+        content.document.querySelector("button")
+      );
+    });
+
     info("Got frame contents.");
 
     let otherTabPromise = BrowserTestUtils.waitForLocationChange(
