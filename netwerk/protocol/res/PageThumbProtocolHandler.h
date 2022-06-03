@@ -18,7 +18,7 @@ namespace net {
 using PageThumbStreamPromise =
     mozilla::MozPromise<nsCOMPtr<nsIInputStream>, nsresult, false>;
 
-class PageThumbStreamGetter;
+class RemoteStreamGetter;
 
 class PageThumbProtocolHandler final
     : public nsISubstitutingProtocolHandler,
@@ -118,7 +118,7 @@ class PageThumbProtocolHandler final
 
   // Gets a SimpleChannel that wraps the provided channel.
   static void NewSimpleChannel(nsIURI* aURI, nsILoadInfo* aLoadinfo,
-                               PageThumbStreamGetter* aStreamGetter,
+                               RemoteStreamGetter* aStreamGetter,
                                nsIChannel** aRetVal);
 };
 
