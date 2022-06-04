@@ -67,8 +67,6 @@
     <string name="cfr_neg_button_text">Ոչ, շնորհակալ եմ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Դուք կարող եք կայել Firefox-ը ինքնաշխատ բացել հղումները հավելվածներում:</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Դուք կարող եք կայել %1$s-ը ինքնաշխատ բացել հղումները հավելվածներում:</string>
     <!-- Text for the positive action button -->
@@ -97,8 +95,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Ինքնափակե՞լ մեկ ամսից:</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox-ը կարող է փակել ներդիրները, որոնք չեք դիտել վերջին ամսում:</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s-ը կարող է փակել ներդիրները, որոնք չեք դիտել վերջին ամսում:</string>
@@ -249,15 +245,14 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Որոնել ուղղակիրոեն հասցեագոտուց</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Որոնման կարգավորում</string>
+
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Ինչն է նոր Firefox-ում</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">Ինչն է նոր %1$s-ում</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Այժմ ավելի հեշտ է շարունակել այն տեղից, որտեղ կանգ եք առել:</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Անհատականացված Firefox-ի տնային էջ</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Անհատականացված %1$s գլխավոր էջ</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -275,8 +270,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ձեր անհատականացված Firefox-ի տնային էջը այժմ հեշտացնում է աշխատանքը շարունակելու այն կետից, որում կանգնել եք: Գտեք ձեր վերջին ներդիրները, էջանիշերը և որոնման արդյունքները:</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Բացել Firefox-ի նոր ներդիր</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Բացել նոր %1$s ներդիր</string>
     <!-- Text preview for smaller sized widgets -->
@@ -447,11 +440,7 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Տեսք</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Պաստառը փոխելու համար հպեք պատկերանշանին</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Փոխեք պաստառը՝ կտտացնելով Firefox-ի գլխավոր էջի պատկերանշանին</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Շրջեք և թարմացրեք պատկերը՝ առանց գլխավոր էջից դուրս գալու:</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -673,8 +662,6 @@
     <string name="studies_remove">Հեռացնել</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Գործուն</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox-ը կարող է ժամանակ առ ժամանակ տեղադրել և գործարկել ուսումնասիրություններ:</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s-ը կարող է ժամանակ առ ժամանակ տեղադրել և աշխատեցնել ուսումնասիրություններ:</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -761,8 +748,6 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Մուտքագրեք որոնվող բառը</string>
-    <!-- Text for the button to search all history -->
     <string name="history_search_1">Մուտքագրեք որոնվող բառը</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Ջնջել պատմությունը</string>
@@ -787,6 +772,11 @@
     <string name="history_older">Ավելի հին</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Այստեղ պատմություն չկա</string>
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Համաժամեցված այլ սարքից</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Այլ սարքերից</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1171,6 +1161,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Ջնջել դիտարկման տվյալները…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Սա կջնջի բոլոր տարրերը:</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Չեղարկել</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Ջնջել</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Խումբը ջնջված է</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview-ն այժմ Firefox Nightly-ն է</string>
@@ -1214,8 +1213,6 @@
     <string name="onboarding_firefox_account_sync_is_on">Համաժամեցումը միացված է</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Միշտ գաղտնիություն</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox-ը ինքնաշխատ կանգնեցնում է ընկերությունների՝ հետևելու Ձեզ առցանց:</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s-ը ինքնաշխատ կանգնեցնում է ընկերություններին՝ Ձեզ առցանց հետևելուց:</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1523,6 +1520,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Տեսակավորել մուտագրումների ցանկը</string>
 
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Ինքնալցում</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Հասցեներ</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Բանկային քարտեր</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1537,6 +1539,15 @@
     <string name="preferences_credit_cards_add_credit_card">Ավելացնել բանկային քարտ</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Կառավարել պահված քարտերը</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Ավելացնել հասցե</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Կառավարեք հասցեները</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Պահել և ինքնալրացնել քարտերը</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Ներառել տեղեկություններ, ինչպիսիք են համարները, էլ.փոստը և առաքման հասցեները</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Ավելացնել քարտ</string>
     <!-- Title of the "Edit card" screen -->
@@ -1588,6 +1599,51 @@
     <string name="credit_cards_biometric_prompt_message_pin">Ապակողպեք ձեր սարքը</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Ապակողպեք՝ օգտագործելու համար բանկային քարտերի պահված տեղեկությունները</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Ավելացնել հասցե</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">Խմբագրել հասցեն</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Կառավարեք հասցեները</string>
+    <!-- The header for the full name of an address -->
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Անուն, ազգանուն</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Անուն</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Հայրանուն</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Ազգանուն</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Փողոցի հասցե</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Քաղաք</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Վիճակը</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Փոստ</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Երկիր կամ տարածաշրջան</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Հեռախոս</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Էլ. փոստ</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Պահպանել</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Չեղարկել</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Ջնջել հասցեն</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">Ջնջե՞լ այս հասցեն:</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">Ջնջել</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">Չեղարկել</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">Պահպանել հասցեն</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">Ջնջել հասցեն</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ավելացնել որոնիչ</string>
@@ -1799,25 +1855,6 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Ինքնափակումը միացված է</string>
 
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Օգնեք բարելավել Firefox-ը</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Ինչու՞ եք անջատել անգործուն ներդիրները:</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Ես չեմ հասկանում, թե ինչպես է դա աշխատում</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Ես ինքս սիրում եմ մաքրել հին ներդիրները</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Երկշաբաթյա ժամկետը չափազանց երկար է</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Երկշաբաթյա ժամկետը չափազանց կարճ է</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Ուղարկել</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Փակել</string>
-
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Կայեք հղումներ կայքերից, էլ. նամակներից և հաղորդագրություններից, որոնք ինքնաբար կերպով կբացվեն Firefox-ում:</string>
 
@@ -1846,6 +1883,9 @@
     <string name="pocket_stories_feature_caption">Firefox ընտանիքի մի մասը: %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Իմանալ ավելին</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Հովանավորված</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Միացնել հեռաչափությունը՝ տվյալներ ուղարկելու համար:</string>
