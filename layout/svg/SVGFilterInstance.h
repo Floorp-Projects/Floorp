@@ -79,11 +79,11 @@ class SVGFilterInstance {
    * @param aTargetBBox The SVG bbox to use for the target frame, computed by
    *   the caller. The caller may decide to override the actual SVG bbox.
    */
-  SVGFilterInstance(const StyleFilter& aFilter, nsIFrame* aTargetFrame,
-                    nsIContent* aTargetContent,
-                    const UserSpaceMetrics& aMetrics,
-                    const gfxRect& aTargetBBox,
-                    const gfxSize& aUserSpaceToFilterSpaceScale);
+  SVGFilterInstance(
+      const StyleFilter& aFilter, nsIFrame* aTargetFrame,
+      nsIContent* aTargetContent, const UserSpaceMetrics& aMetrics,
+      const gfxRect& aTargetBBox,
+      const gfx::MatrixScalesDouble& aUserSpaceToFilterSpaceScale);
 
   /**
    * Returns true if the filter instance was created successfully.
@@ -233,7 +233,7 @@ class SVGFilterInstance {
   /**
    * The scale factors between user space and filter space.
    */
-  gfxSize mUserSpaceToFilterSpaceScale;
+  gfx::MatrixScalesDouble mUserSpaceToFilterSpaceScale;
 
   /**
    * The 'primitiveUnits' attribute value (objectBoundingBox or userSpaceOnUse).

@@ -511,9 +511,14 @@ void nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 /* virtual */
 nsILineIterator* nsBlockFrame::GetLineIterator() {
-  const nsStyleVisibility* visibility = StyleVisibility();
-  return new nsLineIterator(mLines,
-                            visibility->mDirection == StyleDirection::Rtl);
+  nsLineIterator* iter = GetProperty(LineIteratorProperty());
+  if (!iter) {
+    const nsStyleVisibility* visibility = StyleVisibility();
+    iter = new nsLineIterator(mLines,
+                              visibility->mDirection == StyleDirection::Rtl);
+    SetProperty(LineIteratorProperty(), iter);
+  }
+  return iter;
 }
 
 NS_QUERYFRAME_HEAD(nsBlockFrame)

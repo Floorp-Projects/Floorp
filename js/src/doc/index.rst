@@ -21,6 +21,8 @@ Specific documentation on a few topics is available at:
    test
    Debugger/index
    SavedFrame/index
+   feature_checklist
+
 
 Components of SpiderMonkey
 ##########################

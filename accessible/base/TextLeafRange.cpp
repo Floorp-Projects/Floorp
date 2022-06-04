@@ -206,7 +206,8 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
     // same line, so we're at the start.
     return !found || prevIt.GetLine() != thisIt.GetLine();
   }
-  nsAutoLineIterator it = prevBlock->GetLineIterator();
+  AutoAssertNoDomMutations guard;
+  nsILineIterator* it = prevBlock->GetLineIterator();
   MOZ_ASSERT(it, "GetLineIterator impl in line-container blocks is infallible");
   int32_t prevLineNum = it->FindLineContaining(prevLineFrame);
   if (prevLineNum < 0) {
