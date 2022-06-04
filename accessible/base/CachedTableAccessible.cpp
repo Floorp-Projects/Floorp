@@ -332,6 +332,7 @@ uint32_t CachedTableCellAccessible::ColExtent() const {
     if (remoteAcc->mCachedFields) {
       if (auto colSpan = remoteAcc->mCachedFields->GetAttribute<int32_t>(
               nsGkAtoms::colspan)) {
+        MOZ_ASSERT(*colSpan > 0);
         return *colSpan;
       }
     }
@@ -342,7 +343,11 @@ uint32_t CachedTableCellAccessible::ColExtent() const {
     // about thead, tbody, etc., which is info we don't have in the a11y tree.
     TableCellAccessible* cell = localAcc->AsTableCell();
     MOZ_ASSERT(cell);
-    return cell->ColExtent();
+    uint32_t colExtent = cell->ColExtent();
+    MOZ_ASSERT(colExtent > 0);
+    if (colExtent > 0) {
+      return colExtent;
+    }
   }
   return 1;
 }
@@ -352,6 +357,7 @@ uint32_t CachedTableCellAccessible::RowExtent() const {
     if (remoteAcc->mCachedFields) {
       if (auto rowSpan = remoteAcc->mCachedFields->GetAttribute<int32_t>(
               nsGkAtoms::rowspan)) {
+        MOZ_ASSERT(*rowSpan > 0);
         return *rowSpan;
       }
     }
@@ -362,7 +368,11 @@ uint32_t CachedTableCellAccessible::RowExtent() const {
     // about thead, tbody, etc., which is info we don't have in the a11y tree.
     TableCellAccessible* cell = localAcc->AsTableCell();
     MOZ_ASSERT(cell);
-    return cell->RowExtent();
+    uint32_t rowExtent = cell->RowExtent();
+    MOZ_ASSERT(rowExtent > 0);
+    if (rowExtent > 0) {
+      return rowExtent;
+    }
   }
   return 1;
 }
