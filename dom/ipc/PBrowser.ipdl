@@ -41,7 +41,6 @@ include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/ipc/TransportSecurityInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
 
-using struct nsID from "nsID.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
@@ -472,16 +471,7 @@ parent:
 
     async __delete__();
 
-    /**
-     * Send a reply of keyboard event to the parent.  Then, parent can consider
-     * whether the event should kick a shortcut key or ignore.
-     *
-     * @param aEvent    The event which was sent from the parent and handled
-     *                  in a remote process.
-     * @param aUUI      The UUID which was generated when aEvent was sent to
-     *                  a remote process.
-     */
-    async ReplyKeyEvent(WidgetKeyboardEvent aEvent, nsID aUUID);
+    async ReplyKeyEvent(WidgetKeyboardEvent event);
 
     /**
      * Retrieves edit commands for the key combination represented by aEvent.
@@ -794,17 +784,9 @@ child:
                                                       ScrollableLayerGuid aGuid,
                                                       uint64_t aInputBlockId);
 
-    /**
-     * Send a keyboard event which reporesents a user input to a remote process.
-     *
-     * @param aEvent    The event which user typed a key.
-     * @param aUUID     A UUID which is generated in the parent at sending it.
-     *                  This must be specified when the child sends a reply
-     *                  event to the parent.
-     */
     [Priority=input]
-    async RealKeyEvent(WidgetKeyboardEvent aEvent, nsID aUUID);
-    async NormalPriorityRealKeyEvent(WidgetKeyboardEvent aEvent, nsID aUUID);
+    async RealKeyEvent(WidgetKeyboardEvent event);
+    async NormalPriorityRealKeyEvent(WidgetKeyboardEvent event);
 
     [Priority=input]
     async MouseWheelEvent(WidgetWheelEvent event,
