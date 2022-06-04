@@ -1289,6 +1289,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
 }
 
 class PictureInPictureChild extends JSWindowActorChild {
+  #subtitlesEnabled = false;
   // A weak reference to this PiP window's video element
   weakVideo = null;
 
@@ -1468,6 +1469,10 @@ class PictureInPictureChild extends JSWindowActorChild {
 
     if (!textTrackCues) {
       return;
+    }
+
+    if (!this.isSubtitlesEnabled) {
+      this.isSubtitlesEnabled = true;
     }
 
     let allCuesArray = [...textTrackCues];
@@ -2237,6 +2242,26 @@ class PictureInPictureChild extends JSWindowActorChild {
       /* ignore any exception from setting video.currentTime */
     }
   }
+
+  get isSubtitlesEnabled() {
+    return this.#subtitlesEnabled;
+  }
+
+  set isSubtitlesEnabled(val) {
+    if (val) {
+      Services.telemetry.recordEvent(
+        "pictureinpicture",
+        "subtitles_shown",
+        "subtitles",
+        null,
+        {
+          webVTTSubtitles: (!!this.getWeakVideo().textTracks
+            ?.length).toString(),
+        }
+      );
+    }
+    this.#subtitlesEnabled = val;
+  }
 }
 
 /**
@@ -2400,6 +2425,9 @@ class PictureInPictureChildVideoWrapper {
    * @param text The captions to be shown on the PiP window
    */
   updatePiPTextTracks(text) {
+    if (!this.#PictureInPictureChild.isSubtitlesEnabled && text) {
+      this.#PictureInPictureChild.isSubtitlesEnabled = true;
+    }
     let pipWindowTracksContainer = this.#PictureInPictureChild.document.getElementById(
       "texttracks"
     );

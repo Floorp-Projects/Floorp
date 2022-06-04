@@ -2628,6 +2628,23 @@ pictureinpicture:
       - 1756703
     expiry_version: "never"
     release_channel_collection: opt-out
+  subtitles_shown:
+    objects: ["subtitles"]
+    description: >
+      Records if subtitles are shown in the Picture-in-Picture window.
+    extra_keys:
+      webVTTSubtitles: Will be true or false
+    notification_emails:
+      - mconley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "content"
+    bug_numbers:
+      - 1772546
+    expiry_version: "never"
+    release_channel_collection: opt-out
 
 pictureinpicture.settings:
   enable:
