@@ -19,6 +19,7 @@ panel {
   --panel-width: initial;
   /* To account for the box-shadow below */
   margin: -4px;
+  -moz-window-input-region-margin: 4px;
 }
 
 menupopup > menu > menupopup {
