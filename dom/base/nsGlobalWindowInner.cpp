@@ -7,7 +7,6 @@
 #include "nsGlobalWindowInner.h"
 
 #include <inttypes.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +17,6 @@
 #include "AudioChannelService.h"
 #include "AutoplayPolicy.h"
 #include "Crypto.h"
-#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "Navigator.h"
 #include "PaintWorkletImpl.h"
@@ -72,8 +70,6 @@
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/ScrollOrigin.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/Components.h"
 #include "mozilla/SizeOfState.h"
@@ -151,7 +147,6 @@
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/PrimitiveConversions.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ProxyHandlerUtils.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/WebTaskSchedulerMainThread.h"
 #include "mozilla/dom/ScriptLoader.h"
@@ -167,7 +162,6 @@
 #include "mozilla/dom/StorageNotifierService.h"
 #include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/TabMessageTypes.h"
-#include "mozilla/dom/TestUtils.h"
 #include "mozilla/dom/Timeout.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/TimeoutManager.h"
@@ -273,7 +267,6 @@
 #include "nsIThread.h"
 #include "nsITimedChannel.h"
 #include "nsIURI.h"
-#include "nsIVariant.h"
 #include "nsIWeakReference.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebNavigation.h"
@@ -292,7 +285,6 @@
 #include "nsPoint.h"
 #include "nsPresContext.h"
 #include "nsQueryObject.h"
-#include "nsRefPtrHashtable.h"
 #include "nsSandboxFlags.h"
 #include "nsScreen.h"
 #include "nsServiceManagerUtils.h"
@@ -317,11 +309,9 @@
 #include "xpcpublic.h"
 
 #include "nsIDOMXULControlElement.h"
-#include "nsMenuPopupFrame.h"
 
 #ifdef NS_PRINTING
 #  include "nsIPrintSettings.h"
-#  include "nsIPrintSettingsService.h"
 #endif
 
 #ifdef MOZ_WEBSPEECH
