@@ -243,9 +243,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
    public:
     ~GdkEventKeyQueue() { Clear(); }
 
-    void Clear() {
-      mEvents.Clear();
-    }
+    void Clear() { mEvents.Clear(); }
 
     /**
      * PutEvent() puts new event into the queue.
