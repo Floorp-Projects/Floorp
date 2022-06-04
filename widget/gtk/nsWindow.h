@@ -471,6 +471,8 @@ class nsWindow final : public nsBaseWidget {
   void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                               GdkEventButton* aEvent);
 
+  void TryToShowNativeWindowMenu(GdkEventButton* aEvent);
+
   void EnableRenderingToWindow();
   void DisableRenderingToWindow();
   void ResumeCompositorHiddenWindow();
