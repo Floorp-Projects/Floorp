@@ -136,6 +136,20 @@ nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
 
 nsMenuPopupFrame::~nsMenuPopupFrame() = default;
 
+static bool IsMouseTransparent(const ComputedStyle& aStyle) {
+  // If pointer-events: none; is set on the popup, then the widget should
+  // ignore mouse events, passing them through to the content behind.
+  return aStyle.PointerEvents() == StylePointerEvents::None;
+}
+
+static nsIWidget::InputRegion ComputeInputRegion(const ComputedStyle& aStyle,
+                                                 const nsPresContext& aPc) {
+  return {IsMouseTransparent(aStyle),
+          (aStyle.StyleUIReset()->mMozWindowInputRegionMargin.ToCSSPixels() *
+           aPc.CSSToDevPixelScale())
+              .Truncated()};
+}
+
 bool nsMenuPopupFrame::ShouldCreateWidgetUpfront() const {
   if (mPopupType != ePopupTypeMenu) {
     // Any panel with a type attribute, such as the autocomplete popup, is
@@ -234,12 +248,6 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 
   AddStateBits(NS_FRAME_IN_POPUP);
-}
-
-// If pointer-events: none; is set on the popup, then the widget should
-// ignore mouse events, passing them through to the content behind.
-bool nsMenuPopupFrame::IsMouseTransparent(const ComputedStyle& aStyle) const {
-  return aStyle.PointerEvents() == StylePointerEvents::None;
 }
 
 bool nsMenuPopupFrame::HasRemoteContent() const {
@@ -393,7 +401,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
 
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
-  widget->SetWindowMouseTransparent(IsMouseTransparent());
+  widget->SetInputRegion(ComputeInputRegion(*Style(), *PresContext()));
   widget->SetWindowShadowStyle(GetShadowStyle());
   widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
   widget->SetWindowTransform(ComputeWidgetTransform());
@@ -406,6 +414,10 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   }
 
   return NS_OK;
+}
+
+bool nsMenuPopupFrame::IsMouseTransparent() const {
+  return ::IsMouseTransparent(*Style());
 }
 
 StyleWindowShadow nsMenuPopupFrame::GetShadowStyle() {
@@ -428,7 +440,7 @@ void nsMenuPopupFrame::SetPopupState(nsPopupState aState) {
   // Work around https://gitlab.gnome.org/GNOME/gtk/-/issues/4166
   if (aState == ePopupShown && IS_WAYLAND_DISPLAY()) {
     if (nsIWidget* widget = GetWidget()) {
-      widget->SetWindowMouseTransparent(IsMouseTransparent());
+      widget->SetInputRegion(ComputeInputRegion(*Style(), *PresContext()));
     }
   }
 }
@@ -509,10 +521,12 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
     }
   }
 
-  bool newMouseTransparent = IsMouseTransparent();
-  if (newMouseTransparent != IsMouseTransparent(*aOldStyle)) {
+  auto oldRegion = ComputeInputRegion(*aOldStyle, *PresContext());
+  auto newRegion = ComputeInputRegion(*Style(), *PresContext());
+  if (oldRegion.mFullyTransparent != newRegion.mFullyTransparent ||
+      oldRegion.mMargin != newRegion.mMargin) {
     if (nsIWidget* widget = GetWidget()) {
-      widget->SetWindowMouseTransparent(newMouseTransparent);
+      widget->SetInputRegion(newRegion);
     }
   }
 }
