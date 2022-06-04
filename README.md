@@ -24,7 +24,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/Floorp-Projects/Floorp">
-    <img src="https://github.com/Floorp-Projects/Floorp/blob/master/browser/branding/official/default256.png" alt="Logo" width="150" height="150">
+    <img src="https://github.com/Floorp-Projects/Floorp/blob/beta/browser/branding/official/default256.png" alt="Logo" width="150" height="150">
   </a>
 
   <h3 align="center">Floorp Browser</h3>
