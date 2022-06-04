@@ -203,10 +203,8 @@ CachedTableAccessible::CachedTableAccessible(Accessible* aAcc) : mAcc(aAcc) {
 }
 
 void CachedTableAccessible::EnsureRow(uint32_t aRowIdx) {
-  for (uint32_t newRow = mRowColToCellIdx.Length(); newRow <= aRowIdx;
-       ++newRow) {
-    // The next row doesn't exist yet. Create it.
-    mRowColToCellIdx.AppendElement();
+  if (mRowColToCellIdx.Length() <= aRowIdx) {
+    mRowColToCellIdx.AppendElements(aRowIdx - mRowColToCellIdx.Length() + 1);
   }
   MOZ_ASSERT(mRowColToCellIdx.Length() > aRowIdx);
 }
@@ -214,14 +212,15 @@ void CachedTableAccessible::EnsureRow(uint32_t aRowIdx) {
 void CachedTableAccessible::EnsureRowCol(uint32_t aRowIdx, uint32_t aColIdx) {
   EnsureRow(aRowIdx);
   auto& row = mRowColToCellIdx[aRowIdx];
+  if (mColCount <= aColIdx) {
+    mColCount = aColIdx + 1;
+  }
+  row.SetCapacity(mColCount);
   for (uint32_t newCol = row.Length(); newCol <= aColIdx; ++newCol) {
     // An entry doesn't yet exist for this column in this row.
     row.AppendElement(kNoCellIdx);
   }
   MOZ_ASSERT(row.Length() > aColIdx);
-  if (mColCount <= aColIdx) {
-    ++mColCount;
-  }
 }
 
 Accessible* CachedTableAccessible::Caption() const {
