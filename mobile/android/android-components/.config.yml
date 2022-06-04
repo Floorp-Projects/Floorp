@@ -4,4 +4,4 @@ componentsGroupId: "org.mozilla.components"
 # Synchronized build configuration for all modules
 compileSdkVersion: 31
 minSdkVersion: 21
-targetSdkVersion: 30
+targetSdkVersion: 31
