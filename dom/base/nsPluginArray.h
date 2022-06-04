@@ -10,8 +10,9 @@
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsTArray.h"
-#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/Array.h"
 
 class nsPIDOMWindowInner;
 class nsPluginElement;

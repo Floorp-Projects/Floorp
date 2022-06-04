@@ -23,6 +23,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.hamcrest.Matchers.closeTo
 import org.hamcrest.Matchers.equalTo
+import org.junit.Assume.assumeThat
 
 private const val SCREEN_WIDTH = 100
 private const val SCREEN_HEIGHT = 200
@@ -437,6 +438,8 @@ class DynamicToolbarTest : BaseSessionTest() {
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
     fun noGapAppearsBetweenBodyAndElementFullyCoveringBody() {
+        // Bug 1764219 - disable the test to reduce intermittent failure rate
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
         sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
 

@@ -1846,21 +1846,24 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
 
 /**************************************************************
  *
- * SECTION: nsIWidget::SetWindowMouseTransparent
+ * SECTION: nsIWidget::SetInputRegion
  *
  * Sets whether the window should ignore mouse events.
  *
  **************************************************************/
-void nsWindow::SetWindowMouseTransparent(bool aIsTransparent) {
+void nsWindow::SetInputRegion(const InputRegion& aInputRegion) {
   if (!mWnd) {
     return;
   }
 
+  // TODO: Implement the input margin on windows (probably handling
+  // WM_NCHITTEST)?
+  const bool transparent = aInputRegion.mFullyTransparent;
   LONG_PTR oldStyle = ::GetWindowLongPtrW(mWnd, GWL_EXSTYLE);
-  LONG_PTR newStyle = aIsTransparent ? (oldStyle | WS_EX_TRANSPARENT)
-                                     : (oldStyle & ~WS_EX_TRANSPARENT);
+  LONG_PTR newStyle = transparent ? (oldStyle | WS_EX_TRANSPARENT)
+                                  : (oldStyle & ~WS_EX_TRANSPARENT);
   ::SetWindowLongPtrW(mWnd, GWL_EXSTYLE, newStyle);
-  mMouseTransparent = aIsTransparent;
+  mMouseTransparent = transparent;
 }
 
 /**************************************************************

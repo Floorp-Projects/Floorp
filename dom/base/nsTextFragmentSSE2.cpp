@@ -9,7 +9,6 @@
 
 #include <emmintrin.h>
 #include "nscore.h"
-#include "nsAlgorithm.h"
 #include "nsTextFragmentImpl.h"
 #include <algorithm>
 

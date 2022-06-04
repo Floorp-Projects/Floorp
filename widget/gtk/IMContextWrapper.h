@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/WritingModes.h"
+#include "mozilla/GUniquePtr.h"
 #include "mozilla/widget/IMEData.h"
 
 class nsWindow;
@@ -242,11 +243,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
    public:
     ~GdkEventKeyQueue() { Clear(); }
 
-    void Clear() {
-      if (!mEvents.IsEmpty()) {
-        RemoveEventsAt(0, mEvents.Length());
-      }
-    }
+    void Clear() { mEvents.Clear(); }
 
     /**
      * PutEvent() puts new event into the queue.
@@ -267,7 +264,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
       if (NS_WARN_IF(index == GdkEventKeyQueue::NoIndex())) {
         return;
       }
-      RemoveEventsAt(0, index + 1);
+      mEvents.RemoveElementAt(index);
     }
 
     /**
@@ -277,7 +274,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
       if (mEvents.IsEmpty()) {
         return nullptr;
       }
-      return mEvents[0];
+      return mEvents[0].get();
     }
 
     bool IsEmpty() const { return mEvents.IsEmpty(); }
@@ -290,7 +287,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
       static_assert(!(GDK_MODIFIER_MASK & (1 << 25)),
                     "We assumes 26th bit is used by some IM, but used by GDK");
       for (size_t i = 0; i < mEvents.Length(); i++) {
-        GdkEventKey* event = mEvents[i];
+        GdkEventKey* event = mEvents[i].get();
         // It must be enough to compare only type, time, keyval and
         // part of state.   Note that we cannot compaire two events
         // simply since IME may have changed unused bits of state.
@@ -307,14 +304,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
     }
 
    private:
-    nsTArray<GdkEventKey*> mEvents;
-
-    void RemoveEventsAt(size_t aStart, size_t aCount) {
-      for (size_t i = aStart; i < aStart + aCount; i++) {
-        gdk_event_free(reinterpret_cast<GdkEvent*>(mEvents[i]));
-      }
-      mEvents.RemoveElementsAt(aStart, aCount);
-    }
+    nsTArray<GUniquePtr<GdkEventKey>> mEvents;
   };
   // OnKeyEvent() append mPostingKeyEvents when it believes that a key event
   // is posted to other IME process.

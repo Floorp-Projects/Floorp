@@ -212,3 +212,35 @@ addAccessibleTask(
   },
   { iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test that the description is updated when the content of a hidden aria-describedby
+ * subtree changes.
+ */
+addAccessibleTask(
+  `
+<button id="button" aria-describedby="desc">
+<div id="desc" hidden>a</div>
+  `,
+  async function(browser, docAcc) {
+    const button = findAccessibleChildByID(docAcc, "button");
+    testDescr(button, "a");
+    info("Changing desc textContent");
+    let descChanged = waitForEvent(EVENT_DESCRIPTION_CHANGE, button);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("desc").textContent = "c";
+    });
+    await descChanged;
+    testDescr(button, "c");
+    info("Prepending text node to desc");
+    descChanged = waitForEvent(EVENT_DESCRIPTION_CHANGE, button);
+    await invokeContentTask(browser, [], () => {
+      content.document
+        .getElementById("desc")
+        .prepend(content.document.createTextNode("b"));
+    });
+    await descChanged;
+    testDescr(button, "bc");
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);

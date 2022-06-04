@@ -10,8 +10,6 @@
 #include "nsPIDOMWindow.h"
 
 #include "nsHashKeys.h"
-#include "nsRefPtrHashtable.h"
-#include "nsInterfaceHashtable.h"
 
 // Local Includes
 // Helper Classes
@@ -36,14 +34,10 @@
 #include "mozilla/dom/DebuggerNotificationManager.h"
 #include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/Location.h"
-#include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/StorageEvent.h"
-#include "mozilla/dom/StorageEventBinding.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/CallState.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/OwningNonNull.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/TimeStamp.h"
 #include "nsWrapperCacheInlines.h"
@@ -53,12 +47,10 @@
 #include "mozilla/glean/bindings/Glean.h"
 #include "mozilla/glean/bindings/GleanPings.h"
 #include "Units.h"
-#include "nsComponentManagerUtils.h"
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
-#include "nsRefreshObservers.h"
 #include "nsThreadUtils.h"
 
 class nsIArray;

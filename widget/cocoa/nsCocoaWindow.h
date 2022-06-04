@@ -309,7 +309,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void SetWindowShadowStyle(mozilla::StyleWindowShadow aStyle) override;
   virtual void SetWindowOpacity(float aOpacity) override;
   virtual void SetWindowTransform(const mozilla::gfx::Matrix& aTransform) override;
-  virtual void SetWindowMouseTransparent(bool aIsTransparent) override;
+  virtual void SetInputRegion(const InputRegion&) override;
   virtual void SetColorScheme(const mozilla::Maybe<mozilla::ColorScheme>&) override;
   virtual void SetShowsToolbarButton(bool aShow) override;
   virtual void SetSupportsNativeFullscreen(bool aShow) override;
