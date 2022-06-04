@@ -1434,7 +1434,7 @@ operation-settings = Browser Operation Settings
 Mouse-side-button = Browser optimized for mouse operation with side buttons
 
 None-mode = 
- .label= normal mode
+ .label= Normal mode
 
 hide-horizontality-tabs = 
  .label= Hide horizontality tabber
@@ -1446,7 +1446,7 @@ move-tabbar-position =
  .label = Move the tab bar position to below the bookmark
 
 enable-classic-menu = 
- .label = classic menu button (Not compatible with Linux Gnome UI)
+ .label = Classic menu button (Not compatible with Linux Gnome UI)
 
 treestyletabSettings-l10 = Tree Style vertical tab settings
 treestyletab-Settings = Expand when mouse focus
