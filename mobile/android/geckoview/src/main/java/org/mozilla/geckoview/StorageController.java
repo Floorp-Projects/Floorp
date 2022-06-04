@@ -297,7 +297,8 @@ public final class StorageController {
    * @param value The new value for the permission.
    */
   @AnyThread
-  @DeprecationSchedule(id = "setpermission-string", version = 93)
+  @Deprecated
+  @DeprecationSchedule(id = "setpermission-string", version = 106)
   public void setPermission(
       final @NonNull String uri, final int type, final @ContentPermission.Value int value) {
     setPermission(uri, null, false, type, value);
@@ -314,7 +315,8 @@ public final class StorageController {
    * @param value The new value for the permission.
    */
   @AnyThread
-  @DeprecationSchedule(id = "setpermission-string", version = 93)
+  @Deprecated
+  @DeprecationSchedule(id = "setpermission-string", version = 106)
   public void setPermission(
       final @NonNull String uri,
       final @Nullable String contextId,
