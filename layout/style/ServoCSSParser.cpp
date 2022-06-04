@@ -73,9 +73,8 @@ already_AddRefed<URLExtraData> ServoCSSParser::GetURLExtraData(
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       ReferrerInfo::CreateForInternalCSSResources(aDocument);
 
-  // FIXME this is using the wrong base uri (bug 1343919)
   RefPtr<URLExtraData> url = new URLExtraData(
-      aDocument->GetDocumentURI(), referrerInfo, aDocument->NodePrincipal());
+      aDocument->GetBaseURI(), referrerInfo, aDocument->NodePrincipal());
   return url.forget();
 }
 
