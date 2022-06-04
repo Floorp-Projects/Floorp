@@ -766,6 +766,14 @@ class DocAccessible : public HyperTextAccessibleWrap,
    */
   void TrackMovedAccessible(LocalAccessible* aAcc);
 
+  /**
+   * For hidden subtrees, fire a name/description change event if the subtree
+   * is a target of aria-labelledby/describedby.
+   * This does nothing if it is called on a node which is not part of a hidden
+   * aria-labelledby/describedby target.
+   */
+  void MaybeHandleChangeToHiddenNameOrDescription(nsIContent* aChild);
+
   PresShell* mPresShell;
 
   // Exclusively owned by IPDL so don't manually delete it!

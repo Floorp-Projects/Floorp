@@ -860,7 +860,9 @@ void DocAccessible::ARIAActiveDescendantChanged(LocalAccessible* aAccessible) {
   }
 }
 
-void DocAccessible::ContentAppended(nsIContent* aFirstNewContent) {}
+void DocAccessible::ContentAppended(nsIContent* aFirstNewContent) {
+  MaybeHandleChangeToHiddenNameOrDescription(aFirstNewContent);
+}
 
 void DocAccessible::ContentStateChanged(dom::Document* aDocument,
                                         nsIContent* aContent,
@@ -934,7 +936,9 @@ void DocAccessible::CharacterDataWillChange(nsIContent* aContent,
 void DocAccessible::CharacterDataChanged(nsIContent* aContent,
                                          const CharacterDataChangeInfo&) {}
 
-void DocAccessible::ContentInserted(nsIContent* aChild) {}
+void DocAccessible::ContentInserted(nsIContent* aChild) {
+  MaybeHandleChangeToHiddenNameOrDescription(aChild);
+}
 
 void DocAccessible::ContentRemoved(nsIContent* aChildNode,
                                    nsIContent* aPreviousSiblingNode) {
@@ -2642,5 +2646,42 @@ void DocAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   }
   if (HasPrimaryAction()) {
     aName.AssignLiteral("click");
+  }
+}
+
+void DocAccessible::MaybeHandleChangeToHiddenNameOrDescription(
+    nsIContent* aChild) {
+  if (!HasLoadState(eTreeConstructed)) {
+    return;
+  }
+  for (nsIContent* content = aChild; content; content = content->GetParent()) {
+    if (HasAccessible(content)) {
+      // This node isn't hidden. Events for name/description dependents will be
+      // fired elsewhere.
+      break;
+    }
+    nsAtom* id = content->GetID();
+    if (!id) {
+      continue;
+    }
+    auto* providers =
+        GetRelProviders(content->AsElement(), nsDependentAtomString(id));
+    if (!providers) {
+      continue;
+    }
+    for (auto& provider : *providers) {
+      if (provider->mRelAttr != nsGkAtoms::aria_labelledby &&
+          provider->mRelAttr != nsGkAtoms::aria_describedby) {
+        continue;
+      }
+      LocalAccessible* dependentAcc = GetAccessible(provider->mContent);
+      if (!dependentAcc) {
+        continue;
+      }
+      FireDelayedEvent(provider->mRelAttr == nsGkAtoms::aria_labelledby
+                           ? nsIAccessibleEvent::EVENT_NAME_CHANGE
+                           : nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE,
+                       dependentAcc);
+    }
   }
 }

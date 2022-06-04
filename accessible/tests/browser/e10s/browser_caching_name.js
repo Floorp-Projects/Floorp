@@ -519,3 +519,35 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test that the name is updated when the content of a hidden aria-labelledby
+ * subtree changes.
+ */
+addAccessibleTask(
+  `
+<button id="button" aria-labelledby="label">
+<div id="label" hidden>a</div>
+  `,
+  async function(browser, docAcc) {
+    const button = findAccessibleChildByID(docAcc, "button");
+    testName(button, "a");
+    info("Changing label textContent");
+    let nameChanged = waitForEvent(EVENT_NAME_CHANGE, button);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("label").textContent = "c";
+    });
+    await nameChanged;
+    testName(button, "c");
+    info("Prepending text node to label");
+    nameChanged = waitForEvent(EVENT_NAME_CHANGE, button);
+    await invokeContentTask(browser, [], () => {
+      content.document
+        .getElementById("label")
+        .prepend(content.document.createTextNode("b"));
+    });
+    await nameChanged;
+    testName(button, "bc");
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
