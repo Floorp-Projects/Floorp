@@ -3381,8 +3381,7 @@ static void AccumulateFrameBounds(nsIFrame* aContainerFrame, nsIFrame* aFrame,
                                   bool aUseWholeLineHeightForInlines,
                                   nsRect& aRect, bool& aHaveRect,
                                   nsIFrame*& aPrevBlock,
-                                  nsAutoLineIterator& aLines,
-                                  int32_t& aCurLine) {
+                                  nsILineIterator*& aLines, int32_t& aCurLine) {
   nsIFrame* frame = aFrame;
   nsRect frameBounds = nsRect(nsPoint(0, 0), aFrame->GetSize());
 
@@ -3712,10 +3711,11 @@ void PresShell::DoScrollContentIntoView() {
   bool useWholeLineHeightForInlines = data->mContentScrollVAxis.mWhenToScroll !=
                                       WhenToScroll::IfNotFullyVisible;
   {
+    AutoAssertNoDomMutations guard;  // Ensure use of nsILineIterators is safe.
     nsIFrame* prevBlock = nullptr;
     // Reuse the same line iterator across calls to AccumulateFrameBounds.
     // We set it every time we detect a new block (stored in prevBlock).
-    nsAutoLineIterator lines;
+    nsILineIterator* lines = nullptr;
     // The last line we found a continuation on in |lines|.  We assume that
     // later continuations cannot come on earlier lines.
     int32_t curLine = 0;

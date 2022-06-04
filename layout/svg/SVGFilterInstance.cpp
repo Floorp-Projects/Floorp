@@ -32,7 +32,8 @@ namespace mozilla {
 SVGFilterInstance::SVGFilterInstance(
     const StyleFilter& aFilter, nsIFrame* aTargetFrame,
     nsIContent* aTargetContent, const UserSpaceMetrics& aMetrics,
-    const gfxRect& aTargetBBox, const gfxSize& aUserSpaceToFilterSpaceScale)
+    const gfxRect& aTargetBBox,
+    const MatrixScalesDouble& aUserSpaceToFilterSpaceScale)
     : mFilter(aFilter),
       mTargetContent(aTargetContent),
       mMetrics(aMetrics),
@@ -178,14 +179,14 @@ float SVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType,
 
   switch (aCtxType) {
     case SVGContentUtils::X:
-      return value * mUserSpaceToFilterSpaceScale.width;
+      return value * static_cast<float>(mUserSpaceToFilterSpaceScale.xScale);
     case SVGContentUtils::Y:
-      return value * mUserSpaceToFilterSpaceScale.height;
+      return value * static_cast<float>(mUserSpaceToFilterSpaceScale.yScale);
     case SVGContentUtils::XY:
     default:
       return value * SVGContentUtils::ComputeNormalizedHypotenuse(
-                         mUserSpaceToFilterSpaceScale.width,
-                         mUserSpaceToFilterSpaceScale.height);
+                         mUserSpaceToFilterSpaceScale.xScale,
+                         mUserSpaceToFilterSpaceScale.yScale);
   }
 }
 
@@ -210,8 +211,7 @@ Point3D SVGFilterInstance::ConvertLocation(const Point3D& aPoint) const {
 gfxRect SVGFilterInstance::UserSpaceToFilterSpace(
     const gfxRect& aUserSpaceRect) const {
   gfxRect filterSpaceRect = aUserSpaceRect;
-  filterSpaceRect.Scale(mUserSpaceToFilterSpaceScale.width,
-                        mUserSpaceToFilterSpaceScale.height);
+  filterSpaceRect.Scale(mUserSpaceToFilterSpaceScale);
   return filterSpaceRect;
 }
 

@@ -21,9 +21,6 @@
 
 pref("security.tls.insecure_fallback_hosts", "");
 
-pref("security.content.signature.root_hash",
-     "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E");
-
 pref("security.default_personal_cert",   "Ask Every Time");
 pref("security.remember_cert_checkbox_default_setting", true);
 
