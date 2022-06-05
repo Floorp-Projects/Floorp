@@ -70,7 +70,7 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
   ipc::UnpackClonedMessageDataForChild(aData, data);
 
   /* Read original StructuredCloneData. */
-  JS::RootedValue scdContent(cx);
+  JS::Rooted<JS::Value> scdContent(cx);
   data.Read(cx, &scdContent, rv);
   if (rv.Failed()) {
     // In testing, the only reason this would fail was if there was no data in
@@ -81,7 +81,7 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
     return;
   }
 
-  JS::RootedString unevalObj(cx, JS_ValueToSource(cx, scdContent));
+  JS::Rooted<JSString*> unevalObj(cx, JS_ValueToSource(cx, scdContent));
   nsAutoJSString srcString;
   if (!srcString.init(cx, unevalObj)) return;
 

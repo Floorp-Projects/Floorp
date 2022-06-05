@@ -580,7 +580,8 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetExistingActor(
 }
 
 already_AddRefed<JSActor> WindowGlobalParent::InitJSActor(
-    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
+    JS::Handle<JSObject*> aMaybeActor, const nsACString& aName,
+    ErrorResult& aRv) {
   RefPtr<JSWindowActorParent> actor;
   if (aMaybeActor.get()) {
     aRv = UNWRAP_OBJECT(JSWindowActorParent, aMaybeActor.get(), actor);

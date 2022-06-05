@@ -671,7 +671,7 @@ static bool ThrowException(JSContext* aCx, unsigned errorNumber) {
 }
 
 // static
-bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
+bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::Handle<JSObject*> aObj,
                                    JS::MimeType aMimeType,
                                    JS::StreamConsumer* aConsumer,
                                    WorkerPrivate* aMaybeWorker) {

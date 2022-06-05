@@ -52,7 +52,7 @@ bool SharedMap::Has(const nsACString& aName) {
 }
 
 void SharedMap::Get(JSContext* aCx, const nsACString& aName,
-                    JS::MutableHandleValue aRetVal, ErrorResult& aRv) {
+                    JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv) {
   auto res = MaybeRebuild();
   if (res.isErr()) {
     aRv.Throw(res.unwrapErr());
@@ -68,7 +68,8 @@ void SharedMap::Get(JSContext* aCx, const nsACString& aName,
   entry->Read(aCx, aRetVal, aRv);
 }
 
-void SharedMap::Entry::Read(JSContext* aCx, JS::MutableHandleValue aRetVal,
+void SharedMap::Entry::Read(JSContext* aCx,
+                            JS::MutableHandle<JS::Value> aRetVal,
                             ErrorResult& aRv) {
   if (mData.is<StructuredCloneData>()) {
     // We have a temporary buffer for a key that was changed after the last
@@ -385,7 +386,7 @@ void WritableSharedMap::Delete(const nsACString& aName) {
 }
 
 void WritableSharedMap::Set(JSContext* aCx, const nsACString& aName,
-                            JS::HandleValue aValue, ErrorResult& aRv) {
+                            JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
   StructuredCloneData holder;
 
   holder.Write(aCx, aValue, aRv);
@@ -427,12 +428,13 @@ nsresult WritableSharedMap::KeyChanged(const nsACString& aName) {
   return NS_OK;
 }
 
-JSObject* SharedMap::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) {
+JSObject* SharedMap::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto) {
   return MozSharedMap_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 JSObject* WritableSharedMap::WrapObject(JSContext* aCx,
-                                        JS::HandleObject aGivenProto) {
+                                        JS::Handle<JSObject*> aGivenProto) {
   return MozWritableSharedMap_Binding::Wrap(aCx, this, aGivenProto);
 }
 
