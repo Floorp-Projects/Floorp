@@ -53,7 +53,7 @@ void Pose::SetFloat32Array(JSContext* aJSContext, nsWrapperCache* creator,
   } else {
     JS::AutoCheckCannotGC nogc;
     bool isShared = false;
-    JS::RootedObject obj(aJSContext, aObj.get());
+    JS::Rooted<JSObject*> obj(aJSContext, aObj.get());
     float* data = JS_GetFloat32ArrayData(obj, &isShared, nogc);
     if (data) {
       memcpy(data, aVal, aValLength * sizeof(float));

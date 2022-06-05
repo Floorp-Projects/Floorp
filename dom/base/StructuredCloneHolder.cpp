@@ -111,7 +111,7 @@ bool StructuredCloneCallbacksWrite(JSContext* aCx,
 bool StructuredCloneCallbacksReadTransfer(
     JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
     void* aContent, uint64_t aExtraData, void* aClosure,
-    JS::MutableHandleObject aReturnObject) {
+    JS::MutableHandle<JSObject*> aReturnObject) {
   StructuredCloneHolderBase* holder =
       static_cast<StructuredCloneHolderBase*>(aClosure);
   MOZ_ASSERT(holder);
@@ -300,7 +300,7 @@ bool StructuredCloneHolderBase::Read(
 bool StructuredCloneHolderBase::CustomReadTransferHandler(
     JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
     void* aContent, uint64_t aExtraData,
-    JS::MutableHandleObject aReturnObject) {
+    JS::MutableHandle<JSObject*> aReturnObject) {
   MOZ_CRASH("Nothing to read.");
   return false;
 }
@@ -444,7 +444,7 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
       return nullptr;
     }
 
-    JS::RootedValue result(aCx);
+    JS::Rooted<JS::Value> result(aCx);
     {
       // nsJSPrincipals::ReadKnownPrincipalType addrefs for us, but because of
       // the casting between JSPrincipals* and nsIPrincipal* we can't use
@@ -921,7 +921,7 @@ JSObject* ReadInputStream(JSContext* aCx, uint32_t aIndex,
   }
 #endif
   MOZ_ASSERT(aIndex < aHolder->InputStreams().Length());
-  JS::RootedValue result(aCx);
+  JS::Rooted<JS::Value> result(aCx);
   {
     nsCOMPtr<nsIInputStream> inputStream = aHolder->InputStreams()[aIndex];
 
@@ -980,7 +980,7 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
       CloneScope() == StructuredCloneScope::SameProcess) {
     // Get the current global object.
     // This can be null.
-    JS::RootedObject result(aCx);
+    JS::Rooted<JSObject*> result(aCx);
     {
       // aIndex is the index of the cloned image.
       result = ImageBitmap::ReadStructuredClone(aCx, aReader, mGlobal,
@@ -1143,7 +1143,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY bool
 StructuredCloneHolder::CustomReadTransferHandler(
     JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
     void* aContent, uint64_t aExtraData,
-    JS::MutableHandleObject aReturnObject) {
+    JS::MutableHandle<JSObject*> aReturnObject) {
   MOZ_ASSERT(mSupportsTransferring);
 
   if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {

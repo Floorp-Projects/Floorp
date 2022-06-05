@@ -40,7 +40,7 @@ StorageAccessPermissionRequest::Cancel() {
 }
 
 NS_IMETHODIMP
-StorageAccessPermissionRequest::Allow(JS::HandleValue aChoices) {
+StorageAccessPermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
   nsTArray<PermissionChoice> choices;
   nsresult rv = TranslateChoices(aChoices, mPermissionRequests, choices);
   if (NS_FAILED(rv)) {
