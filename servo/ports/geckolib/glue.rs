@@ -4259,6 +4259,7 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
     differing_properties.is_empty()
 }
 
+#[cfg(feature = "gecko_debug")]
 #[no_mangle]
 pub extern "C" fn Servo_ComputedValues_DumpMatchedRules(s: &ComputedValues) {
     dump_rules(s);
