@@ -1925,7 +1925,7 @@ nsresult nsXULPrototypeScript::Compile(
 }
 
 nsresult nsXULPrototypeScript::InstantiateScript(
-    JSContext* aCx, JS::MutableHandleScript aScript) {
+    JSContext* aCx, JS::MutableHandle<JSScript*> aScript) {
   MOZ_ASSERT(mStencil);
 
   JS::CompileOptions options(aCx);

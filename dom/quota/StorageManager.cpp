@@ -193,7 +193,7 @@ class PersistentStoragePermissionRequest final
 
   // nsIContentPermissionRequest
   NS_IMETHOD Cancel(void) override;
-  NS_IMETHOD Allow(JS::HandleValue choices) override;
+  NS_IMETHOD Allow(JS::Handle<JS::Value> choices) override;
 
  private:
   ~PersistentStoragePermissionRequest() = default;
@@ -695,7 +695,7 @@ PersistentStoragePermissionRequest::Cancel() {
 }
 
 NS_IMETHODIMP
-PersistentStoragePermissionRequest::Allow(JS::HandleValue aChoices) {
+PersistentStoragePermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<RequestResolver> resolver =

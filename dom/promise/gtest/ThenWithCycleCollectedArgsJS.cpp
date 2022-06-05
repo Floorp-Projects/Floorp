@@ -20,7 +20,7 @@ TEST(ThenWithCycleCollectedArgsJS, Empty)
 
   RefPtr<Promise> promise = Promise::Create(global, IgnoreErrors());
   auto result = promise->ThenWithCycleCollectedArgsJS(
-      [](JSContext*, JS::HandleValue, ErrorResult&) { return nullptr; },
+      [](JSContext*, JS::Handle<JS::Value>, ErrorResult&) { return nullptr; },
       std::make_tuple(), std::make_tuple());
 }
 
@@ -31,7 +31,7 @@ TEST(ThenWithCycleCollectedArgsJS, nsCOMPtr)
 
   RefPtr<Promise> promise = Promise::Create(global, IgnoreErrors());
   auto result = promise->ThenWithCycleCollectedArgsJS(
-      [](JSContext*, JS::HandleValue, ErrorResult&, nsIGlobalObject*) {
+      [](JSContext*, JS::Handle<JS::Value>, ErrorResult&, nsIGlobalObject*) {
         return nullptr;
       },
       std::make_tuple(global), std::make_tuple());
@@ -44,7 +44,7 @@ TEST(ThenWithCycleCollectedArgsJS, RefPtr)
 
   RefPtr<Promise> promise = Promise::Create(global, IgnoreErrors());
   auto result = promise->ThenWithCycleCollectedArgsJS(
-      [](JSContext*, JS::HandleValue, ErrorResult&, Promise*) {
+      [](JSContext*, JS::Handle<JS::Value>, ErrorResult&, Promise*) {
         return nullptr;
       },
       std::make_tuple(promise), std::make_tuple());
@@ -57,8 +57,8 @@ TEST(ThenWithCycleCollectedArgsJS, RefPtrAndJSHandle)
 
   RefPtr<Promise> promise = Promise::Create(global, IgnoreErrors());
   auto result = promise->ThenWithCycleCollectedArgsJS(
-      [](JSContext*, JS::HandleValue v, ErrorResult&, Promise*,
-         JS::HandleValue) { return nullptr; },
+      [](JSContext*, JS::Handle<JS::Value> v, ErrorResult&, Promise*,
+         JS::Handle<JS::Value>) { return nullptr; },
       std::make_tuple(promise), std::make_tuple(JS::UndefinedHandleValue));
 }
 
@@ -68,12 +68,13 @@ TEST(ThenWithCycleCollectedArgsJS, Mixed)
   MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
   JSContext* cx = jsapi.cx();
   nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(cx);
-  JS::RootedObject obj(cx, JS_NewPlainObject(cx));
+  JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
 
   RefPtr<Promise> promise = Promise::Create(global, IgnoreErrors());
   auto result = promise->ThenWithCycleCollectedArgsJS(
-      [](JSContext*, JS::HandleValue, ErrorResult&, nsIGlobalObject*, Promise*,
-         JS::HandleValue, JS::HandleObject) { return nullptr; },
+      [](JSContext*, JS::Handle<JS::Value>, ErrorResult&, nsIGlobalObject*,
+         Promise*, JS::Handle<JS::Value>,
+         JS::Handle<JSObject*>) { return nullptr; },
       std::make_tuple(global, promise),
       std::make_tuple(JS::UndefinedHandleValue, JS::HandleObject(obj)));
 }

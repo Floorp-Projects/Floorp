@@ -201,7 +201,7 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
 
     // let's inspect the recorded events
 
-    JS::RootedValue eventsSnapshot(cx.GetJSContext());
+    JS::Rooted<JS::Value> eventsSnapshot(cx.GetJSContext());
     GetEventSnapshot(cx.GetJSContext(), &eventsSnapshot);
 
     ASSERT_TRUE(EventPresent(cx.GetJSContext(), eventsSnapshot, category,
@@ -210,7 +210,7 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
 
     // Convert eventsSnapshot into array/object
     JSContext* aCx = cx.GetJSContext();
-    JS::RootedObject arrayObj(aCx, &eventsSnapshot.toObject());
+    JS::Rooted<JSObject*> arrayObj(aCx, &eventsSnapshot.toObject());
 
     JS::Rooted<JS::Value> eventRecord(aCx);
     ASSERT_TRUE(JS_GetElement(aCx, arrayObj, i++, &eventRecord))
@@ -219,7 +219,7 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
     ASSERT_TRUE(!eventRecord.isUndefined())
     << "eventRecord should not be undefined";
 
-    JS::RootedObject recordArray(aCx, &eventRecord.toObject());
+    JS::Rooted<JSObject*> recordArray(aCx, &eventRecord.toObject());
     uint32_t recordLength;
     ASSERT_TRUE(JS::GetArrayLength(aCx, recordArray, &recordLength))
     << "Event record array must have length.";
@@ -243,7 +243,7 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
     JS::Rooted<JS::Value> obj(aCx);
     ASSERT_TRUE(JS_GetElement(aCx, recordArray, 5, &obj))
     << "Must be able to get extra data";
-    JS::RootedObject extraObj(aCx, &obj.toObject());
+    JS::Rooted<JSObject*> extraObj(aCx, &obj.toObject());
     // looking at remotetype extra for content type
     JS::Rooted<JS::Value> extraValC(aCx);
     ASSERT_TRUE(

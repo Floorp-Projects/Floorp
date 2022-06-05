@@ -149,14 +149,14 @@ nsresult RegexEval(const nsAString& aPattern, const nsAString& aString,
   // evaluation does not interact with the execution global.
   JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
-  JS::RootedObject regexp(
+  JS::Rooted<JSObject*> regexp(
       cx, JS::NewUCRegExpObject(cx, aPattern.BeginReading(), aPattern.Length(),
                                 JS::RegExpFlag::Unicode));
   if (!regexp) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  JS::RootedValue regexResult(cx, JS::NullValue());
+  JS::Rooted<JS::Value> regexResult(cx, JS::NullValue());
 
   size_t index = 0;
   if (!JS::ExecuteRegExpNoStatics(cx, regexp, aString.BeginReading(),
@@ -182,14 +182,14 @@ nsresult RegexEval(const nsAString& aPattern, const nsAString& aString,
 
   // Now we know we have a result, and we need to extract it so we can read it.
   uint32_t length;
-  JS::RootedObject regexResultObj(cx, &regexResult.toObject());
+  JS::Rooted<JSObject*> regexResultObj(cx, &regexResult.toObject());
   if (!JS::GetArrayLength(cx, regexResultObj, &length)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   MOZ_LOG(sCSMLog, LogLevel::Verbose, ("Regex Matched %i strings", length));
 
   for (uint32_t i = 0; i < length; i++) {
-    JS::RootedValue element(cx);
+    JS::Rooted<JS::Value> element(cx);
     if (!JS_GetElement(cx, regexResultObj, i, &element)) {
       return NS_ERROR_NO_CONTENT;
     }

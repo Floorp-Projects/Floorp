@@ -1603,7 +1603,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   // Introduction script will actually be computed and set when the script is
   // collected from offthread
-  JS::RootedScript dummyIntroductionScript(cx);
+  JS::Rooted<JSScript*> dummyIntroductionScript(cx);
   nsresult rv = FillCompileOptionsForRequest(cx, aRequest, &options,
                                              &dummyIntroductionScript);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2353,10 +2353,10 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   // Create a ClassicScript object and associate it with the JSScript.
   RefPtr<ClassicScript> classicScript =
       new ClassicScript(aRequest->mFetchOptions, aRequest->mBaseURL);
-  JS::RootedValue classicScriptValue(cx, JS::PrivateValue(classicScript));
+  JS::Rooted<JS::Value> classicScriptValue(cx, JS::PrivateValue(classicScript));
 
   JS::CompileOptions options(cx);
-  JS::RootedScript introductionScript(cx);
+  JS::Rooted<JSScript*> introductionScript(cx);
   nsresult rv =
       FillCompileOptionsForRequest(cx, aRequest, &options, &introductionScript);
 
@@ -2541,7 +2541,7 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
     result =
         JS::FinishIncrementalEncoding(aCx, module, aRequest->mScriptBytecode);
   } else {
-    JS::RootedScript script(aCx, aRequest->mScriptForBytecodeEncoding);
+    JS::Rooted<JSScript*> script(aCx, aRequest->mScriptForBytecodeEncoding);
     result =
         JS::FinishIncrementalEncoding(aCx, script, aRequest->mScriptBytecode);
   }
@@ -2645,7 +2645,8 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
         result = JS::FinishIncrementalEncoding(aes->cx(), module,
                                                request->mScriptBytecode);
       } else {
-        JS::RootedScript script(aes->cx(), request->mScriptForBytecodeEncoding);
+        JS::Rooted<JSScript*> script(aes->cx(),
+                                     request->mScriptForBytecodeEncoding);
         result = JS::FinishIncrementalEncoding(aes->cx(), script,
                                                request->mScriptBytecode);
       }
