@@ -8,7 +8,6 @@
 
 #include "content_decryption_module.h"
 #include <string>
-#include "mozilla/Attributes.h"
 
 class FakeDecryptor : public cdm::ContentDecryptionModule_10 {
  public:

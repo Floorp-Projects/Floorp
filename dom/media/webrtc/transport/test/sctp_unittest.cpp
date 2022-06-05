@@ -8,16 +8,10 @@
 
 #include <iostream>
 #include <string>
-#include <map>
 
 #include "sigslot.h"
 
-#include "logging.h"
-#include "nsNetCID.h"
 #include "nsITimer.h"
-#include "nsComponentManagerUtils.h"
-#include "nsThreadUtils.h"
-#include "nsXPCOM.h"
 
 #include "transportflow.h"
 #include "transportlayer.h"

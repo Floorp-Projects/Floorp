@@ -9,7 +9,8 @@
 #include <string>
 #include <vector>
 #include <utility>
-#include "sdp/Sdp.h"
+#include "SdpEnum.h"
+#include "mozilla/UniquePtr.h"
 #include "sdp/RsdparsaSdpInc.h"
 
 namespace mozilla {

@@ -11,7 +11,6 @@
 
 #include <map>
 #include <string>
-#include "prio.h"
 #include "nsError.h"
 #include "mozilla/UniquePtr.h"
 

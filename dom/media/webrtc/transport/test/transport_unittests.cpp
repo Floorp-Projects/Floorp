@@ -8,7 +8,6 @@
 
 #include <iostream>
 #include <string>
-#include <map>
 #include <algorithm>
 #include <functional>
 
@@ -28,7 +27,6 @@
 #include "sslproto.h"
 
 #include "nsThreadUtils.h"
-#include "nsXPCOM.h"
 
 #include "mediapacket.h"
 #include "dtlsidentity.h"

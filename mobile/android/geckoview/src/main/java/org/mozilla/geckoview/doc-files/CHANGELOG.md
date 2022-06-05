@@ -15,6 +15,7 @@ exclude: true
 
 ## v103
 - Added [`GeckoSession.saveAsPdf`][103.1] that returns a `GeckoResult<InputStream>` that contains a PDF of the current session's page.
+- Added missing `@Deprecated` tag for `setPermission`, see deprecation note in [v90](#v90).
 
 [103.1]: {{javadoc_uri}}/GeckoSession.html#saveAsPdf()
 
@@ -1212,4 +1213,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 0eb75fc90870ef3fe0f213e9508d124e5b65fd4e
+[api-version]: d1b66534eb86e596b7acea2ccdc5a61707e9111a

@@ -8,7 +8,6 @@
 #define _RSDPARSA_SDP_H_
 
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Attributes.h"
 
 #include "sdp/Sdp.h"
 

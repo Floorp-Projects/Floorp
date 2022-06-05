@@ -8,7 +8,6 @@
 // non-native version will be less than optimal.
 
 #include "MurmurHash3.h"
-#include <stdlib.h>
 
 namespace {
 
