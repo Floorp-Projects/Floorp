@@ -4192,6 +4192,11 @@ fn dump_properties_and_rules(cv: &ComputedValues, properties: &LonghandIdSet) {
         cv.get_resolved_value(p, &mut v).unwrap();
         println_stderr!("    {:?}: {}", p, v);
     }
+    dump_rules(cv);
+}
+
+#[cfg(feature = "gecko_debug")]
+fn dump_rules(cv: &ComputedValues) {
     println_stderr!("  Rules:");
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -4252,6 +4257,11 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
     }
 
     differing_properties.is_empty()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ComputedValues_DumpMatchedRules(s: &ComputedValues) {
+    dump_rules(s);
 }
 
 #[no_mangle]
