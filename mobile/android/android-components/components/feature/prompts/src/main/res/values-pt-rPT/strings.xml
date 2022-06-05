@@ -113,4 +113,8 @@
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Atualizar a data de validade do cartão?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">O número do cartão será encriptado. O código de segurança não será guardado.</string>
-</resources>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address">Selecionar endereços</string>
+    </resources>
