@@ -70,7 +70,7 @@ class XRRequestSessionPermissionRequest final
 
   // nsIContentPermissionRequest
   NS_IMETHOD Cancel(void) override;
-  NS_IMETHOD Allow(JS::HandleValue choices) override;
+  NS_IMETHOD Allow(JS::Handle<JS::Value> choices) override;
 
   using AllowCallback = std::function<void()>;
   using AllowAnySiteCallback = std::function<void()>;

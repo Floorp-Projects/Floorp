@@ -45,7 +45,7 @@ XRPermissionRequest::Cancel() {
 }
 
 NS_IMETHODIMP
-XRPermissionRequest::Allow(JS::HandleValue aChoices) {
+XRPermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
   MOZ_ASSERT(aChoices.isUndefined());
   nsGlobalWindowInner* window =
       nsGlobalWindowInner::GetInnerWindowWithId(mWindowId);

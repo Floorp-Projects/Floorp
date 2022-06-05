@@ -68,7 +68,7 @@ void WebTask::RunAbortAlgorithm() {
       mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
     } else {
       JSContext* cx = jsapi.cx();
-      JS::RootedValue reason(cx);
+      JS::Rooted<JS::Value> reason(cx);
       Signal()->GetReason(cx, &reason);
       mPromise->MaybeReject(reason);
     }
@@ -187,7 +187,7 @@ already_AddRefed<Promise> WebTaskScheduler::PostTask(
       }
 
       JSContext* cx = jsapi.cx();
-      JS::RootedValue reason(cx);
+      JS::Rooted<JS::Value> reason(cx);
       signalValue.GetReason(cx, &reason);
       promise->MaybeReject(reason);
       return promise.forget();

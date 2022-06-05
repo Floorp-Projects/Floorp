@@ -292,7 +292,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PromiseNativeThenHandlerBase)
 
 Result<RefPtr<Promise>, nsresult> Promise::ThenWithoutCycleCollection(
     const std::function<already_AddRefed<Promise>(
-        JSContext* aCx, JS::HandleValue aValue, ErrorResult& aRv)>& aCallback) {
+        JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv)>&
+        aCallback) {
   return ThenWithCycleCollectedArgs(aCallback);
 }
 
@@ -576,7 +577,8 @@ void Promise::MaybeRejectWithUndefined() {
   MaybeSomething(JS::UndefinedHandleValue, &Promise::MaybeReject);
 }
 
-void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
+void Promise::ReportRejectedPromise(JSContext* aCx,
+                                    JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(!js::IsWrapper(aPromise));
 
   MOZ_ASSERT(JS::GetPromiseState(aPromise) == JS::PromiseState::Rejected);
@@ -933,7 +935,7 @@ bool Promise::SetSettledPromiseIsHandled() {
   AutoAllowLegacyScriptExecution exemption;
   AutoEntryScript aes(mGlobal, "Set settled promise handled");
   JSContext* cx = aes.cx();
-  JS::RootedObject promiseObj(cx, mPromiseObj);
+  JS::Rooted<JSObject*> promiseObj(cx, mPromiseObj);
   return JS::SetSettledPromiseIsHandled(cx, promiseObj);
 }
 
@@ -941,7 +943,7 @@ bool Promise::SetAnyPromiseIsHandled() {
   AutoAllowLegacyScriptExecution exemption;
   AutoEntryScript aes(mGlobal, "Set any promise handled");
   JSContext* cx = aes.cx();
-  JS::RootedObject promiseObj(cx, mPromiseObj);
+  JS::Rooted<JSObject*> promiseObj(cx, mPromiseObj);
   return JS::SetAnyPromiseIsHandled(cx, promiseObj);
 }
 

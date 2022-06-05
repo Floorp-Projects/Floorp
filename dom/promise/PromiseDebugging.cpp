@@ -211,7 +211,7 @@ bool PromiseDebugging::RemoveUncaughtRejectionObserver(
 }
 
 /* static */
-void PromiseDebugging::AddUncaughtRejection(JS::HandleObject aPromise) {
+void PromiseDebugging::AddUncaughtRejection(JS::Handle<JSObject*> aPromise) {
   // This might OOM, but won't set a pending exception, so we'll just ignore it.
   if (CycleCollectedJSContext::Get()->mUncaughtRejections.append(aPromise)) {
     FlushRejections::DispatchNeeded();
@@ -219,7 +219,7 @@ void PromiseDebugging::AddUncaughtRejection(JS::HandleObject aPromise) {
 }
 
 /* void */
-void PromiseDebugging::AddConsumedRejection(JS::HandleObject aPromise) {
+void PromiseDebugging::AddConsumedRejection(JS::Handle<JSObject*> aPromise) {
   // If the promise is in our list of uncaught rejections, we haven't yet
   // reported it as unhandled. In that case, just remove it from the list
   // and don't add it to the list of consumed rejections.
@@ -254,7 +254,7 @@ void PromiseDebugging::FlushUncaughtRejectionsInternal() {
   auto& observers = storage->mUncaughtRejectionObservers;
 
   for (size_t i = 0; i < uncaught.length(); i++) {
-    JS::RootedObject promise(cx, uncaught[i]);
+    JS::Rooted<JSObject*> promise(cx, uncaught[i]);
     // Filter out nullptrs which might've been added by
     // PromiseDebugging::AddConsumedRejection.
     if (!promise) {
@@ -281,7 +281,7 @@ void PromiseDebugging::FlushUncaughtRejectionsInternal() {
   // Notify observers of consumed Promise.
 
   for (size_t i = 0; i < consumed.length(); i++) {
-    JS::RootedObject promise(cx, consumed[i]);
+    JS::Rooted<JSObject*> promise(cx, consumed[i]);
 
     for (size_t j = 0; j < observers.Length(); ++j) {
       RefPtr<UncaughtRejectionObserver> obs =

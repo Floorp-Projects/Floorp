@@ -352,7 +352,7 @@ SDBConnection::Read(uint64_t aSize, nsISDBRequest** _retval) {
 }
 
 NS_IMETHODIMP
-SDBConnection::Write(JS::HandleValue aValue, JSContext* aCx,
+SDBConnection::Write(JS::Handle<JS::Value> aValue, JSContext* aCx,
                      nsISDBRequest** _retval) {
   AssertIsOnOwningThread();
 
