@@ -142,10 +142,9 @@
   background-image: var(--annotation-unfocused-field-background);
   border: 1px solid transparent;
   box-sizing: border-box;
-  font-size: 9px;
+  font: 9px sans-serif;
   height: 100%;
   margin: 0;
-  padding: 0 3px;
   vertical-align: top;
   width: 100%;
 }
@@ -159,8 +158,6 @@
 }
 
 .annotationLayer .textWidgetAnnotation textarea {
-  font: message-box;
-  font-size: 9px;
   resize: none;
 }
 
@@ -250,7 +247,6 @@
 .annotationLayer .buttonWidgetAnnotation.checkBox input,
 .annotationLayer .buttonWidgetAnnotation.radioButton input {
   appearance: none;
-  padding: 0;
 }
 
 .annotationLayer .popupWrapper {
@@ -783,13 +779,14 @@
   --sidebar-transition-timing-function: ease;
   --scale-select-container-width: 140px;
   --scale-select-overflow: 22px;
-  --loadingBar-end-offset: 0;
 
   --toolbar-icon-opacity: 0.7;
   --doorhanger-icon-opacity: 0.9;
 
   --main-color: rgba(12, 12, 13, 1);
   --body-bg-color: rgba(237, 237, 240, 1);
+  --progressBar-percent: 0%;
+  --progressBar-end-offset: 0;
   --progressBar-color: rgba(10, 132, 255, 1);
   --progressBar-indeterminate-bg-color: rgba(221, 221, 222, 1);
   --progressBar-indeterminate-blend-color: rgba(116, 177, 239, 1);
@@ -1096,7 +1093,7 @@ select {
 
 #loadingBar {
   position: absolute;
-  inset-inline: 0 var(--loadingBar-end-offset);
+  inset-inline: 0 var(--progressBar-end-offset);
   height: 4px;
   background-color: var(--body-bg-color);
   border-bottom: 1px solid var(--toolbar-border-color);
@@ -1113,23 +1110,26 @@ select {
   position: absolute;
   top: 0;
   left: 0;
-  width: 0%;
+  width: 100%;
+  transform: scaleX(var(--progressBar-percent));
+  transform-origin: 0 0;
   height: 100%;
   background-color: var(--progressBar-color);
   overflow: hidden;
-  transition: width 200ms;
+  transition: transform 200ms;
 }
 
 @keyframes progressIndeterminate {
   0% {
-    left: -142px;
+    transform: translateX(-142px);
   }
   100% {
-    left: 0;
+    transform: translateX(0);
   }
 }
 
 #loadingBar .progress.indeterminate {
+  transform: none;
   background-color: var(--progressBar-indeterminate-bg-color);
   transition: none;
 }
@@ -1572,7 +1572,6 @@ select {
   mask-image: var(--toolbarButton-print-icon);
 }
 
-
 #download::before,
 #secondaryDownload::before {
   mask-image: var(--toolbarButton-download-icon);
@@ -1920,7 +1919,6 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
 ::selection {
   background: rgba(0, 0, 255, 0.3);
 }
-
 
 .dialogButton {
   width: auto;
