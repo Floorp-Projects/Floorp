@@ -53,7 +53,7 @@ class SentryService(
     override fun createCrashReportUrl(identifier: String): String? {
         return sentryProjectUrl?.let {
             val id = identifier.replace("-", "")
-            return "$it/?query=$id"
+            return "$it&query=$id"
         }
     }
 
