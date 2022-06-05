@@ -15,7 +15,6 @@ extern "C" {
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
-#include "gtest_utils.h"
 
 #include <deque>
 #include <string>

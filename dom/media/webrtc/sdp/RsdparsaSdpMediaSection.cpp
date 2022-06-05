@@ -11,7 +11,6 @@
 #include "sdp/RsdparsaSdpInc.h"
 
 #include <ostream>
-#include "sdp/SdpParser.h"
 
 #ifdef CRLF
 #  undef CRLF

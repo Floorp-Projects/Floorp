@@ -8,8 +8,6 @@
 
 #include "ImageContainer.h"
 #include "Intervals.h"
-#include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 
 using namespace mozilla::layers;

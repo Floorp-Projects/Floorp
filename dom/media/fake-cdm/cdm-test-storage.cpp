@@ -6,8 +6,6 @@
 #include "cdm-test-storage.h"
 #include <vector>
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 
 using namespace cdm;
 

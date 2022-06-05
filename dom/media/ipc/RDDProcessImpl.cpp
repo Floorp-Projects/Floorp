@@ -15,8 +15,6 @@
 #  include "prlink.h"
 #endif
 
-#include "mozilla/ipc/ProcessUtils.h"
-
 namespace mozilla {
 
 using namespace ipc;

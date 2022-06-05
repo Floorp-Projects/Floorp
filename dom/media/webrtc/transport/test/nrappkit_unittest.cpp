@@ -8,9 +8,6 @@
 // Original author: ekr@rtfm.com
 #include <iostream>
 
-#include "nsThreadUtils.h"
-#include "nsXPCOM.h"
-
 // nrappkit includes
 extern "C" {
 #include "nr_api.h"

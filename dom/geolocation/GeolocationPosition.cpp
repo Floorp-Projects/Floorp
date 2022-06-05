@@ -9,7 +9,6 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/GeolocationPositionBinding.h"
-#include "mozilla/dom/GeolocationCoordinatesBinding.h"
 
 using mozilla::EqualOrBothNaN;
 using mozilla::IsNaN;

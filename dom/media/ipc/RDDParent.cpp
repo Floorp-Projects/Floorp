@@ -18,22 +18,17 @@
 #endif
 
 #include "PDMFactory.h"
-#include "chrome/common/ipc_channel.h"
 #include "gfxConfig.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/FOGIPC.h"
-#include "mozilla/HangDetails.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
-#include "mozilla/StaticPrefs_media.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"

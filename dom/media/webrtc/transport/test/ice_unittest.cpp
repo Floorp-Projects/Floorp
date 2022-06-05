@@ -47,7 +47,7 @@ extern "C" {
 #include "stunserver.h"
 #include "nr_socket_prsock.h"
 #include "test_nr_socket.h"
-#include "stun_socket_filter.h"
+#include "nsISocketFilter.h"
 #include "mozilla/net/DNS.h"
 
 #define GTEST_HAS_RTTI 0
