@@ -208,7 +208,7 @@ class NotificationPermissionRequest : public ContentPermissionRequestBase,
 
   // nsIContentPermissionRequest
   NS_IMETHOD Cancel(void) override;
-  NS_IMETHOD Allow(JS::HandleValue choices) override;
+  NS_IMETHOD Allow(JS::Handle<JS::Value> choices) override;
 
   NotificationPermissionRequest(nsIPrincipal* aPrincipal,
                                 nsPIDOMWindowInner* aWindow, Promise* aPromise,
@@ -556,7 +556,7 @@ NotificationPermissionRequest::Cancel() {
 }
 
 NS_IMETHODIMP
-NotificationPermissionRequest::Allow(JS::HandleValue aChoices) {
+NotificationPermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
   MOZ_ASSERT(aChoices.isUndefined());
 
   mPermission = NotificationPermission::Granted;

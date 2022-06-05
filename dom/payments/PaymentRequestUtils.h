@@ -12,17 +12,19 @@
 
 namespace mozilla::dom {
 
-nsresult SerializeFromJSObject(JSContext* aCx, JS::HandleObject aObject,
+nsresult SerializeFromJSObject(JSContext* aCx, JS::Handle<JSObject*> aObject,
                                nsAString& aSerializedObject);
 
-nsresult SerializeFromJSVal(JSContext* aCx, JS::HandleValue aValue,
+nsresult SerializeFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aValue,
                             nsAString& aSerializedValue);
 
 nsresult DeserializeToJSObject(const nsAString& aSerializedObject,
-                               JSContext* aCx, JS::MutableHandleObject aObject);
+                               JSContext* aCx,
+                               JS::MutableHandle<JSObject*> aObject);
 
 nsresult DeserializeToJSValue(const nsAString& aSerializedObject,
-                              JSContext* aCx, JS::MutableHandleValue aValue);
+                              JSContext* aCx,
+                              JS::MutableHandle<JS::Value> aValue);
 
 }  // namespace mozilla::dom
 

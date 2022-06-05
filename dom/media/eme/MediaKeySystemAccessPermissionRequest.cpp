@@ -75,7 +75,7 @@ nsresult MediaKeySystemAccessPermissionRequest::Start() {
 }
 
 NS_IMETHODIMP
-MediaKeySystemAccessPermissionRequest::Allow(JS::HandleValue aChoices) {
+MediaKeySystemAccessPermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
   AssertIsOnMainThread();
   mPromiseHolder.ResolveIfExists(true, __func__);
   return NS_OK;

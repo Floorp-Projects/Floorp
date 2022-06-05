@@ -41,7 +41,7 @@ bool BasicCardService::IsValidBasicCardRequest(JSContext* aCx, JSObject* aData,
   if (!aData) {
     return true;
   }
-  JS::RootedValue data(aCx, JS::ObjectValue(*aData));
+  JS::Rooted<JS::Value> data(aCx, JS::ObjectValue(*aData));
 
   BasicCardRequest request;
   if (!request.Init(aCx, data)) {
@@ -107,7 +107,7 @@ void BasicCardService::CheckForValidBasicCardErrors(JSContext* aCx,
                                                     JSObject* aData,
                                                     ErrorResult& aRv) {
   MOZ_ASSERT(aData, "Don't pass null data");
-  JS::RootedValue data(aCx, JS::ObjectValue(*aData));
+  JS::Rooted<JS::Value> data(aCx, JS::ObjectValue(*aData));
 
   // XXXbz Just because aData converts to BasicCardErrors right now doesn't mean
   // it will if someone tries again!  Should we be replacing aData with a

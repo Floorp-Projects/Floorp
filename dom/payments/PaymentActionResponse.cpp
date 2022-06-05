@@ -47,7 +47,7 @@ GeneralResponseData::GetData(nsAString& aData) {
 }
 
 NS_IMETHODIMP
-GeneralResponseData::InitData(JS::HandleValue aValue, JSContext* aCx) {
+GeneralResponseData::InitData(JS::Handle<JS::Value> aValue, JSContext* aCx) {
   if (aValue.isNullOrUndefined()) {
     return NS_ERROR_FAILURE;
   }
@@ -381,7 +381,8 @@ GeneralMethodChangeDetails::GetDetails(nsAString& aDetails) {
 }
 
 NS_IMETHODIMP
-GeneralMethodChangeDetails::InitData(JS::HandleValue aDetails, JSContext* aCx) {
+GeneralMethodChangeDetails::InitData(JS::Handle<JS::Value> aDetails,
+                                     JSContext* aCx) {
   if (aDetails.isNullOrUndefined()) {
     return NS_ERROR_FAILURE;
   }
