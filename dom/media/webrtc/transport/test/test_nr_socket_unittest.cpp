@@ -6,16 +6,11 @@
 
 // Original author: bcampen@mozilla.com
 
+#include <cstddef>
+
 extern "C" {
-#include "stun_msg.h"  // for NR_STUN_MAX_MESSAGE_SIZE
-#include "stun_util.h"
-#include "nr_api.h"
+#include "r_errors.h"
 #include "async_wait.h"
-#include "nr_socket.h"
-#include "nr_socket_local.h"
-#include "stun_hint.h"
-#include "local_addr.h"
-#include "registry.h"
 }
 
 #include "test_nr_socket.h"

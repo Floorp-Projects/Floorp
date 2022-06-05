@@ -14,7 +14,6 @@
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
-#include "gtest/Helpers.h"
 #include "gtest_utils.h"
 
 static const uint32_t kDefaultTestTimeout = 2000;

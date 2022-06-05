@@ -6,17 +6,14 @@
 
 // Original author: ekr@rtfm.com
 
-#include <iostream>
-
-#include "ssl.h"
-
 extern "C" {
 #include "nr_api.h"
 #include "nr_socket.h"
 #include "nr_socket_buffered_stun.h"
 #include "transport_addr.h"
-#include "stun.h"
 }
+
+#include "stun_msg.h"
 
 #include "dummysocket.h"
 

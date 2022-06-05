@@ -11,6 +11,7 @@
 #include "AudioDeviceInfo.h"
 #include "DeviceInputTrack.h"
 #include "MediaEngineWebRTC.h"
+#include "MediaEnginePrefs.h"
 #include "MediaTrackListener.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
