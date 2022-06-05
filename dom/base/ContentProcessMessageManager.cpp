@@ -98,7 +98,7 @@ JSObject* ContentProcessMessageManager::WrapObject(
 }
 
 JSObject* ContentProcessMessageManager::GetOrCreateWrapper() {
-  JS::RootedValue val(RootingCx());
+  JS::Rooted<JS::Value> val(RootingCx());
   {
     // Scope to run ~AutoJSAPI before working with a raw JSObject*.
     AutoJSAPI jsapi;
@@ -120,6 +120,6 @@ void ContentProcessMessageManager::LoadScript(const nsAString& aURL) {
 }
 
 void ContentProcessMessageManager::SetInitialProcessData(
-    JS::HandleValue aInitialData) {
+    JS::Handle<JS::Value> aInitialData) {
   mMessageManager->SetInitialProcessData(aInitialData);
 }

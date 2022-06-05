@@ -40,18 +40,18 @@ class StructuredCloneBlob final : public nsIMemoryReporter {
                             StructuredCloneHolder* aHolder);
 
   static already_AddRefed<StructuredCloneBlob> Constructor(
-      GlobalObject& aGlobal, JS::HandleValue aValue,
-      JS::HandleObject aTargetGlobal, ErrorResult& aRv);
+      GlobalObject& aGlobal, JS::Handle<JS::Value> aValue,
+      JS::Handle<JSObject*> aTargetGlobal, ErrorResult& aRv);
 
-  void Deserialize(JSContext* aCx, JS::HandleObject aTargetScope,
-                   bool aKeepData, JS::MutableHandleValue aResult,
+  void Deserialize(JSContext* aCx, JS::Handle<JSObject*> aTargetScope,
+                   bool aKeepData, JS::MutableHandle<JS::Value> aResult,
                    ErrorResult& aRv);
 
   nsISupports* GetParentObject() const { return nullptr; }
   JSObject* GetWrapper() const { return nullptr; }
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
-                  JS::MutableHandleObject aResult);
+                  JS::MutableHandle<JSObject*> aResult);
 
  protected:
   virtual ~StructuredCloneBlob();

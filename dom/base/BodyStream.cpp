@@ -390,7 +390,7 @@ void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
 
   // Create Chunk
   aRv.MightThrowJSException();
-  JS::RootedObject chunk(aCx, JS_NewUint8Array(aCx, ableToRead));
+  JS::Rooted<JSObject*> chunk(aCx, JS_NewUint8Array(aCx, ableToRead));
   if (!chunk) {
     aRv.StealExceptionFromJSContext(aCx);
     return;

@@ -86,7 +86,7 @@ nsresult nsJSUtils::UpdateFunctionDebugMetadata(
     return NS_ERROR_FAILURE;
   }
 
-  JS::RootedScript script(cx, JS_GetFunctionScript(cx, fun));
+  JS::Rooted<JSScript*> script(cx, JS_GetFunctionScript(cx, fun));
   if (!script) {
     return NS_OK;
   }
@@ -144,7 +144,7 @@ bool nsJSUtils::IsScriptable(JS::Handle<JSObject*> aEvaluationGlobal) {
 
 static bool AddScopeChainItem(JSContext* aCx, nsINode* aNode,
                               JS::MutableHandleVector<JSObject*> aScopeChain) {
-  JS::RootedValue val(aCx);
+  JS::Rooted<JS::Value> val(aCx);
   if (!GetOrCreateDOMReflector(aCx, aNode, &val)) {
     return false;
   }

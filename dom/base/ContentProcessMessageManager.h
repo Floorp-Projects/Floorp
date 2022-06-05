@@ -88,7 +88,7 @@ class ContentProcessMessageManager : public nsIMessageSender,
 
   bool IsProcessScoped() const override { return true; }
 
-  void SetInitialProcessData(JS::HandleValue aInitialData);
+  void SetInitialProcessData(JS::Handle<JS::Value> aInitialData);
 
  protected:
   virtual ~ContentProcessMessageManager();

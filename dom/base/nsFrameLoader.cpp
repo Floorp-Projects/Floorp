@@ -2158,7 +2158,7 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
   AutoJSAPI jsapi;
   jsapi.Init();
 
-  JS::RootedObject wrapper(jsapi.cx(), GetWrapper());
+  JS::Rooted<JSObject*> wrapper(jsapi.cx(), GetWrapper());
   if (wrapper) {
     JSAutoRealm ar(jsapi.cx(), wrapper);
     IgnoredErrorResult rv;
@@ -3703,7 +3703,7 @@ ProcessMessageManager* nsFrameLoader::GetProcessMessageManager() const {
 
 JSObject* nsFrameLoader::WrapObject(JSContext* cx,
                                     JS::Handle<JSObject*> aGivenProto) {
-  JS::RootedObject result(cx);
+  JS::Rooted<JSObject*> result(cx);
   FrameLoader_Binding::Wrap(cx, this, this, aGivenProto, &result);
   return result;
 }

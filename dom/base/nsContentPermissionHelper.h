@@ -95,7 +95,7 @@ class nsContentPermissionUtils {
 };
 
 nsresult TranslateChoices(
-    JS::HandleValue aChoices,
+    JS::Handle<JS::Value> aChoices,
     const nsTArray<PermissionRequest>& aPermissionRequests,
     nsTArray<PermissionChoice>& aTranslatedChoices);
 
@@ -229,7 +229,7 @@ class RemotePermissionRequest final
   virtual ~RemotePermissionRequest();
 
   MOZ_CAN_RUN_SCRIPT
-  void DoAllow(JS::HandleValue aChoices);
+  void DoAllow(JS::Handle<JS::Value> aChoices);
   MOZ_CAN_RUN_SCRIPT
   void DoCancel();
 
