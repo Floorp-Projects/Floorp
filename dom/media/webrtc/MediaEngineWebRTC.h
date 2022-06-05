@@ -6,35 +6,14 @@
 #ifndef MEDIAENGINEWEBRTC_H_
 #define MEDIAENGINEWEBRTC_H_
 
-#include "AudioDeviceInfo.h"
-#include "CubebUtils.h"
-#include "DOMMediaStream.h"
 #include "MediaEngine.h"
-#include "MediaEnginePrefs.h"
+#include "MediaEventSource.h"
 #include "MediaEngineSource.h"
-#include "MediaEngineWrapper.h"
-#include "MediaTrackGraph.h"
-#include "NullTransport.h"
-#include "VideoSegment.h"
-#include "VideoUtils.h"
+#include "nsTArray.h"
 #include "CubebDeviceEnumerator.h"
-#include "ipc/IPCMessageUtils.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/StaticMutex.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
-#include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsRefPtrHashtable.h"
-#include "nsThreadUtils.h"
-#include "prcvar.h"
-#include "prthread.h"
 
-// WebRTC library includes follow
-#include "modules/video_capture/video_capture_defines.h"
 
 namespace mozilla {
 

@@ -9,7 +9,6 @@
 #include "mozilla/UniquePtr.h"
 
 #include "sdp/Sdp.h"
-#include "sdp/SdpEnum.h"
 #include "sdp/RsdparsaSdp.h"
 #include "sdp/RsdparsaSdpParser.h"
 #include "sdp/RsdparsaSdpInc.h"

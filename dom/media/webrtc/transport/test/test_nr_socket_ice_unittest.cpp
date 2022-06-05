@@ -43,7 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "gtest_utils.h"
 
 extern "C" {
-#include "stun_msg.h"
 #include "ice_ctx.h"
 #include "ice_peer_ctx.h"
 #include "nICEr/src/net/transport_addr.h"

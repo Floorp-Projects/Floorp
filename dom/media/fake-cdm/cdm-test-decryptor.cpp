@@ -10,15 +10,12 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#include <iostream>
 #include <istream>
 #include <iterator>
-#include <sstream>
 #include <set>
-#include <thread>
+#include <sstream>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 
 FakeDecryptor* FakeDecryptor::sInstance = nullptr;
 

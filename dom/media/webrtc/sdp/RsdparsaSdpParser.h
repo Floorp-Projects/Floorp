@@ -11,7 +11,6 @@
 
 #include "mozilla/UniquePtr.h"
 
-#include "sdp/Sdp.h"
 #include "sdp/SdpParser.h"
 
 namespace mozilla {

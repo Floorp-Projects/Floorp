@@ -12,7 +12,6 @@
 #include "nsError.h"
 #include <iostream>
 
-#include "sdp/SdpParser.h"
 #include "sdp/RsdparsaSdpInc.h"
 #include "sdp/RsdparsaSdpMediaSection.h"
 
