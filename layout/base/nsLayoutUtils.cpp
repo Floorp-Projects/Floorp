@@ -4974,12 +4974,35 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
       resetIfKeywords(styleBSize, styleMinBSize, styleMaxBSize);
     }
 
-    // FIXME(emilio): Why the minBsize == 0 special-case? Also, shouldn't this
-    // use BehavesLikeInitialValueOnBlockAxis instead?
-    if (!styleBSize.IsAuto() ||
-        !(styleMinBSize.IsAuto() || (styleMinBSize.ConvertsToLength() &&
-                                     styleMinBSize.ToLength() == 0)) ||
-        !styleMaxBSize.IsNone()) {
+    // If our BSize or min/max-BSize properties are set to values that we can
+    // resolve and that will impose a constraint when transferred through our
+    // aspect ratio (if we have one), then compute and apply that constraint.
+    //
+    // (Note: This helper-bool & lambda just let us optimize away the actual
+    // transferring-and-clamping arithmetic, for the common case where we can
+    // tell that none of the block-axis size properties establish a meaningful
+    // transferred constraint.)
+    const bool mightHaveBlockAxisConstraintToTransfer = [&] {
+      if (!styleBSize.BehavesLikeInitialValueOnBlockAxis()) {
+        return true;  // BSize property might have a constraint to transfer.
+      }
+      // Check for min-BSize values that would obviously produce zero in the
+      // transferring logic that follows; zero is trivially-ignorable as a
+      // transferred lower-bound. (These include the the property's initial
+      // value, explicit 0, and values that are equivalent to these.)
+      bool minBSizeHasNoConstraintToTransfer =
+          styleMinBSize.BehavesLikeInitialValueOnBlockAxis() ||
+          (styleMinBSize.IsLengthPercentage() &&
+           styleMinBSize.AsLengthPercentage().IsDefinitelyZero());
+      if (!minBSizeHasNoConstraintToTransfer) {
+        return true;  // min-BSize property might have a constraint to transfer.
+      }
+      if (!styleMaxBSize.BehavesLikeInitialValueOnBlockAxis()) {
+        return true;  // max-BSize property might have a constraint to transfer.
+      }
+      return false;
+    }();
+    if (mightHaveBlockAxisConstraintToTransfer) {
       if (AspectRatio ratio = aFrame->GetAspectRatio()) {
         AddStateBitToAncestors(
             aFrame, NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE);
