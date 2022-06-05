@@ -225,10 +225,23 @@ pub const fn type_power(kind: ScalarKind, width: Bytes) -> Option<u32> {
 }
 
 impl Parser {
+    /// Resolves the types of the expressions until `expr` (inclusive)
+    ///
+    /// This needs to be done before the [`typifier`] can be queried for
+    /// the types of the expressions in the range between the last grow and `expr`.
+    ///
+    /// # Note
+    ///
+    /// The `resolve_type*` methods (like [`resolve_type`]) automatically
+    /// grow the [`typifier`] so calling this method is not necessary when using
+    /// them.
+    ///
+    /// [`typifier`]: Context::typifier
+    /// [`resolve_type`]: Self::resolve_type
     pub(crate) fn typifier_grow(
         &self,
         ctx: &mut Context,
-        handle: Handle<Expression>,
+        expr: Handle<Expression>,
         meta: Span,
     ) -> Result<()> {
         let resolve_ctx = ResolveContext {
@@ -241,28 +254,73 @@ impl Parser {
         };
 
         ctx.typifier
-            .grow(handle, &ctx.expressions, &resolve_ctx)
+            .grow(expr, &ctx.expressions, &resolve_ctx)
             .map_err(|error| Error {
                 kind: ErrorKind::SemanticError(format!("Can't resolve type: {:?}", error).into()),
                 meta,
             })
     }
 
+    /// Gets the type for the result of the `expr` expression
+    ///
+    /// Automatically grows the [`typifier`] to `expr` so calling
+    /// [`typifier_grow`] is not necessary
+    ///
+    /// [`typifier`]: Context::typifier
+    /// [`typifier_grow`]: Self::typifier_grow
     pub(crate) fn resolve_type<'b>(
         &'b self,
         ctx: &'b mut Context,
-        handle: Handle<Expression>,
+        expr: Handle<Expression>,
         meta: Span,
     ) -> Result<&'b TypeInner> {
-        self.typifier_grow(ctx, handle, meta)?;
-        Ok(ctx.typifier.get(handle, &self.module.types))
+        self.typifier_grow(ctx, expr, meta)?;
+        Ok(ctx.typifier.get(expr, &self.module.types))
     }
 
-    /// Invalidates the cached type resolution for `handle` forcing a recomputation
+    /// Gets the type handle for the result of the `expr` expression
+    ///
+    /// Automatically grows the [`typifier`] to `expr` so calling
+    /// [`typifier_grow`] is not necessary
+    ///
+    /// # Note
+    ///
+    /// Consider using [`resolve_type`] whenever possible
+    /// since it doesn't require adding each type to the [`types`] arena
+    /// and it doesn't need to mutably borrow the [`Parser`][Self]
+    ///
+    /// [`types`]: crate::Module::types
+    /// [`typifier`]: Context::typifier
+    /// [`typifier_grow`]: Self::typifier_grow
+    /// [`resolve_type`]: Self::resolve_type
+    pub(crate) fn resolve_type_handle(
+        &mut self,
+        ctx: &mut Context,
+        expr: Handle<Expression>,
+        meta: Span,
+    ) -> Result<Handle<Type>> {
+        self.typifier_grow(ctx, expr, meta)?;
+        let resolution = &ctx.typifier[expr];
+        Ok(match *resolution {
+            // If the resolution is already a handle return early
+            crate::proc::TypeResolution::Handle(ty) => ty,
+            // If it's a value we need to clone it
+            crate::proc::TypeResolution::Value(_) => match resolution.clone() {
+                // This is unreachable
+                crate::proc::TypeResolution::Handle(ty) => ty,
+                // Add the value to the type arena and return the handle
+                crate::proc::TypeResolution::Value(inner) => {
+                    self.module.types.insert(Type { name: None, inner }, meta)
+                }
+            },
+        })
+    }
+
+    /// Invalidates the cached type resolution for `expr` forcing a recomputation
     pub(crate) fn invalidate_expression<'b>(
         &'b self,
         ctx: &'b mut Context,
-        handle: Handle<Expression>,
+        expr: Handle<Expression>,
         meta: Span,
     ) -> Result<()> {
         let resolve_ctx = ResolveContext {
@@ -275,7 +333,7 @@ impl Parser {
         };
 
         ctx.typifier
-            .invalidate(handle, &ctx.expressions, &resolve_ctx)
+            .invalidate(expr, &ctx.expressions, &resolve_ctx)
             .map_err(|error| Error {
                 kind: ErrorKind::SemanticError(format!("Can't resolve type: {:?}", error).into()),
                 meta,

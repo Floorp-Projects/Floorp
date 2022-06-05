@@ -561,6 +561,24 @@ impl PhysicalDeviceFeatures {
             );
         }
 
+        features.set(
+            F::DEPTH32FLOAT_STENCIL8,
+            caps.supports_format(
+                vk::Format::D32_SFLOAT_S8_UINT,
+                vk::ImageTiling::OPTIMAL,
+                vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT,
+            ),
+        );
+
+        features.set(
+            F::DEPTH24UNORM_STENCIL8,
+            caps.supports_format(
+                vk::Format::D24_UNORM_S8_UINT,
+                vk::ImageTiling::OPTIMAL,
+                vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT,
+            ),
+        );
+
         (features, dl_flags)
     }
 
@@ -1102,6 +1120,10 @@ impl super::Instance {
 }
 
 impl super::Adapter {
+    pub fn raw_physical_device(&self) -> ash::vk::PhysicalDevice {
+        self.raw
+    }
+
     pub fn required_device_extensions(&self, features: wgt::Features) -> Vec<&'static CStr> {
         let (supported_extensions, unsupported_extensions) = self
             .phd_capabilities

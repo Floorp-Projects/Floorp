@@ -383,10 +383,10 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aSelfId,
 
   auto* request = new MapRequest(mContext.get(), aSelfId, aHostMap, aOffset,
                                  std::move(shmem), std::move(aResolver));
-  ffi::WGPUBufferMapOperation mapOperation = {
-      aHostMap, &MapCallback, reinterpret_cast<uint8_t*>(request)};
-  ffi::wgpu_server_buffer_map(mContext.get(), aSelfId, aOffset, aSize,
-                              mapOperation);
+  ffi::WGPUBufferMapCallbackC callback = {&MapCallback,
+                                          reinterpret_cast<uint8_t*>(request)};
+  ffi::wgpu_server_buffer_map(mContext.get(), aSelfId, aOffset, aSize, aHostMap,
+                              callback);
   return IPC_OK();
 }
 
@@ -823,11 +823,10 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
       data,
   };
 
-  ffi::WGPUBufferMapOperation mapOperation = {
-      ffi::WGPUHostMap_Read, &PresentCallback,
-      reinterpret_cast<uint8_t*>(presentRequest)};
+  ffi::WGPUBufferMapCallbackC callback = {
+      &PresentCallback, reinterpret_cast<uint8_t*>(presentRequest)};
   ffi::wgpu_server_buffer_map(mContext.get(), bufferId, 0, bufferSize,
-                              mapOperation);
+                              ffi::WGPUHostMap_Read, callback);
 
   return IPC_OK();
 }

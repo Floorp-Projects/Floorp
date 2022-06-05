@@ -40,14 +40,15 @@ bitflags::bitflags! {
         /// The data can be copied around.
         const COPY = 0x4;
 
-        /// Can be be used for interfacing between pipeline stages.
+        /// Can be be used for user-defined IO between pipeline stages.
         ///
-        /// This includes non-bool scalars and vectors, matrices, and structs
-        /// and arrays containing only interface types.
-        const INTERFACE = 0x8;
+        /// This covers anything that can be in [`Location`] binding:
+        /// non-bool scalars and vectors, matrices, and structs and
+        /// arrays containing only interface types.
+        const IO_SHAREABLE = 0x8;
 
         /// Can be used for host-shareable structures.
-        const HOST_SHARED = 0x10;
+        const HOST_SHAREABLE = 0x10;
 
         /// This type can be passed as a function argument.
         const ARGUMENT = 0x40;
@@ -155,6 +156,22 @@ fn check_member_layout(
     };
 }
 
+/// Determine whether a pointer in `space` can be passed as an argument.
+///
+/// If a pointer in `space` is permitted to be passed as an argument to a
+/// user-defined function, return `TypeFlags::ARGUMENT`. Otherwise, return
+/// `TypeFlags::empty()`.
+///
+/// Pointers passed as arguments to user-defined functions must be in the
+/// `Function`, `Private`, or `Workgroup` storage space.
+const fn ptr_space_argument_flag(space: crate::AddressSpace) -> TypeFlags {
+    use crate::AddressSpace as As;
+    match space {
+        As::Function | As::Private | As::WorkGroup => TypeFlags::ARGUMENT,
+        As::Uniform | As::Storage { .. } | As::Handle | As::PushConstant => TypeFlags::empty(),
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(super) struct TypeInfo {
     pub flags: TypeFlags,
@@ -210,13 +227,17 @@ impl super::Validator {
                 if !self.check_width(kind, width) {
                     return Err(TypeError::InvalidWidth(kind, width));
                 }
+                let shareable = if kind.is_numeric() {
+                    TypeFlags::IO_SHAREABLE | TypeFlags::HOST_SHAREABLE
+                } else {
+                    TypeFlags::empty()
+                };
                 TypeInfo::new(
                     TypeFlags::DATA
                         | TypeFlags::SIZED
                         | TypeFlags::COPY
-                        | TypeFlags::INTERFACE
-                        | TypeFlags::HOST_SHARED
-                        | TypeFlags::ARGUMENT,
+                        | TypeFlags::ARGUMENT
+                        | shareable,
                     width as u32,
                 )
             }
@@ -224,14 +245,19 @@ impl super::Validator {
                 if !self.check_width(kind, width) {
                     return Err(TypeError::InvalidWidth(kind, width));
                 }
+                let shareable = if kind.is_numeric() {
+                    TypeFlags::IO_SHAREABLE | TypeFlags::HOST_SHAREABLE
+                } else {
+                    TypeFlags::empty()
+                };
                 let count = if size >= crate::VectorSize::Tri { 4 } else { 2 };
                 TypeInfo::new(
                     TypeFlags::DATA
                         | TypeFlags::SIZED
                         | TypeFlags::COPY
-                        | TypeFlags::INTERFACE
-                        | TypeFlags::HOST_SHARED
-                        | TypeFlags::ARGUMENT,
+                        | TypeFlags::HOST_SHAREABLE
+                        | TypeFlags::ARGUMENT
+                        | shareable,
                     count * (width as u32),
                 )
             }
@@ -248,8 +274,7 @@ impl super::Validator {
                     TypeFlags::DATA
                         | TypeFlags::SIZED
                         | TypeFlags::COPY
-                        | TypeFlags::INTERFACE
-                        | TypeFlags::HOST_SHARED
+                        | TypeFlags::HOST_SHAREABLE
                         | TypeFlags::ARGUMENT,
                     count * (width as u32),
                 )
@@ -263,7 +288,7 @@ impl super::Validator {
                     return Err(TypeError::InvalidAtomicWidth(kind, width));
                 }
                 TypeInfo::new(
-                    TypeFlags::DATA | TypeFlags::SIZED | TypeFlags::HOST_SHARED,
+                    TypeFlags::DATA | TypeFlags::SIZED | TypeFlags::HOST_SHAREABLE,
                     width as u32,
                 )
             }
@@ -299,20 +324,11 @@ impl super::Validator {
                     }
                 }
 
-                // Pointers passed as arguments to user-defined functions must
-                // be in the `Function`, `Private`, or `Workgroup` storage
-                // space. We only mark pointers in those spaces as `ARGUMENT`.
-                //
                 // `Validator::validate_function` actually checks the storage
                 // space of pointer arguments explicitly before checking the
                 // `ARGUMENT` flag, to give better error messages. But it seems
                 // best to set `ARGUMENT` accurately anyway.
-                let argument_flag = match space {
-                    As::Function | As::Private | As::WorkGroup => TypeFlags::ARGUMENT,
-                    As::Uniform | As::Storage { .. } | As::Handle | As::PushConstant => {
-                        TypeFlags::empty()
-                    }
-                };
+                let argument_flag = ptr_space_argument_flag(space);
 
                 // Pointers cannot be stored in variables, structure members, or
                 // array elements, so we do not mark them as `DATA`.
@@ -322,12 +338,28 @@ impl super::Validator {
                 size: _,
                 kind,
                 width,
-                space: _,
+                space,
             } => {
+                // ValuePointer should be treated the same way as the equivalent
+                // Pointer / Scalar / Vector combination, so each step in those
+                // variants' match arms should have a counterpart here.
+                //
+                // However, some cases are trivial: All our implicit base types
+                // are DATA and SIZED, so we can never return
+                // `InvalidPointerBase` or `InvalidPointerToUnsized`.
                 if !self.check_width(kind, width) {
                     return Err(TypeError::InvalidWidth(kind, width));
                 }
-                TypeInfo::new(TypeFlags::DATA | TypeFlags::SIZED | TypeFlags::COPY, 0)
+
+                // `Validator::validate_function` actually checks the storage
+                // space of pointer arguments explicitly before checking the
+                // `ARGUMENT` flag, to give better error messages. But it seems
+                // best to set `ARGUMENT` accurately anyway.
+                let argument_flag = ptr_space_argument_flag(space);
+
+                // Pointers cannot be stored in variables, structure members, or
+                // array elements, so we do not mark them as `DATA`.
+                TypeInfo::new(argument_flag | TypeFlags::SIZED | TypeFlags::COPY, 0)
             }
             Ti::Array { base, size, stride } => {
                 if base >= handle {
@@ -445,7 +477,7 @@ impl super::Validator {
                     }
                 };
 
-                let base_mask = TypeFlags::COPY | TypeFlags::HOST_SHARED | TypeFlags::INTERFACE;
+                let base_mask = TypeFlags::COPY | TypeFlags::HOST_SHAREABLE;
                 TypeInfo {
                     flags: TypeFlags::DATA | (base_info.flags & base_mask) | sized_flag,
                     uniform_layout,
@@ -461,8 +493,8 @@ impl super::Validator {
                     TypeFlags::DATA
                         | TypeFlags::SIZED
                         | TypeFlags::COPY
-                        | TypeFlags::HOST_SHARED
-                        | TypeFlags::INTERFACE
+                        | TypeFlags::HOST_SHAREABLE
+                        | TypeFlags::IO_SHAREABLE
                         | TypeFlags::ARGUMENT,
                     1,
                 );
@@ -480,7 +512,7 @@ impl super::Validator {
                     if !base_info.flags.contains(TypeFlags::DATA) {
                         return Err(TypeError::InvalidData(member.ty));
                     }
-                    if !base_info.flags.contains(TypeFlags::HOST_SHARED) {
+                    if !base_info.flags.contains(TypeFlags::HOST_SHAREABLE) {
                         if ti.uniform_layout.is_ok() {
                             ti.uniform_layout = Err((member.ty, Disalignment::NonHostShareable));
                         }
@@ -495,7 +527,7 @@ impl super::Validator {
                         // to not bother with offsets/alignments if they are never
                         // used for host sharing.
                         if member.offset == 0 {
-                            ti.flags.set(TypeFlags::HOST_SHARED, false);
+                            ti.flags.set(TypeFlags::HOST_SHAREABLE, false);
                         } else {
                             return Err(TypeError::MemberOverlap {
                                 index: i as u32,

@@ -39,6 +39,8 @@ pub enum GlobalVariableError {
 pub enum VaryingError {
     #[error("The type {0:?} does not match the varying")]
     InvalidType(Handle<crate::Type>),
+    #[error("The type {0:?} cannot be used for user-defined entry point inputs or outputs")]
+    NotIOShareableType(Handle<crate::Type>),
     #[error("Interpolation is not valid")]
     InvalidInterpolation,
     #[error("Interpolation must be specified on vertex shader outputs and fragment shader inputs")]
@@ -98,22 +100,26 @@ fn storage_usage(access: crate::StorageAccess) -> GlobalUse {
 }
 
 struct VaryingContext<'a> {
-    ty: Handle<crate::Type>,
     stage: crate::ShaderStage,
     output: bool,
     types: &'a UniqueArena<crate::Type>,
+    type_info: &'a Vec<super::r#type::TypeInfo>,
     location_mask: &'a mut BitSet,
     built_ins: &'a mut crate::FastHashSet<crate::BuiltIn>,
     capabilities: Capabilities,
 }
 
 impl VaryingContext<'_> {
-    fn validate_impl(&mut self, binding: &crate::Binding) -> Result<(), VaryingError> {
+    fn validate_impl(
+        &mut self,
+        ty: Handle<crate::Type>,
+        binding: &crate::Binding,
+    ) -> Result<(), VaryingError> {
         use crate::{
             BuiltIn as Bi, ScalarKind as Sk, ShaderStage as St, TypeInner as Ti, VectorSize as Vs,
         };
 
-        let ty_inner = &self.types[self.ty].inner;
+        let ty_inner = &self.types[ty].inner;
         match *binding {
             crate::Binding::BuiltIn(built_in) => {
                 // Ignore the `invariant` field for the sake of duplicate checks,
@@ -267,6 +273,13 @@ impl VaryingContext<'_> {
                 interpolation,
                 sampling,
             } => {
+                // Only IO-shareable types may be stored in locations.
+                if !self.type_info[ty.index()]
+                    .flags
+                    .contains(super::TypeFlags::IO_SHAREABLE)
+                {
+                    return Err(VaryingError::NotIOShareableType(ty));
+                }
                 if !self.location_mask.insert(location as usize) {
                     return Err(VaryingError::BindingCollision { location });
                 }
@@ -294,7 +307,7 @@ impl VaryingContext<'_> {
                             return Err(VaryingError::InvalidInterpolation);
                         }
                     }
-                    None => return Err(VaryingError::InvalidType(self.ty)),
+                    None => return Err(VaryingError::InvalidType(ty)),
                 }
             }
         }
@@ -302,19 +315,22 @@ impl VaryingContext<'_> {
         Ok(())
     }
 
-    fn validate(&mut self, binding: Option<&crate::Binding>) -> Result<(), WithSpan<VaryingError>> {
-        let span_context = self.types.get_span_context(self.ty);
+    fn validate(
+        &mut self,
+        ty: Handle<crate::Type>,
+        binding: Option<&crate::Binding>,
+    ) -> Result<(), WithSpan<VaryingError>> {
+        let span_context = self.types.get_span_context(ty);
         match binding {
             Some(binding) => self
-                .validate_impl(binding)
+                .validate_impl(ty, binding)
                 .map_err(|e| e.with_span_context(span_context)),
             None => {
-                match self.types[self.ty].inner {
+                match self.types[ty].inner {
                     //TODO: check the member types
                     crate::TypeInner::Struct { ref members, .. } => {
                         for (index, member) in members.iter().enumerate() {
-                            self.ty = member.ty;
-                            let span_context = self.types.get_span_context(self.ty);
+                            let span_context = self.types.get_span_context(ty);
                             match member.binding {
                                 None => {
                                     return Err(VaryingError::MemberMissingBinding(index as u32)
@@ -322,7 +338,7 @@ impl VaryingContext<'_> {
                                 }
                                 // TODO: shouldn't this be validate?
                                 Some(ref binding) => self
-                                    .validate_impl(binding)
+                                    .validate_impl(member.ty, binding)
                                     .map_err(|e| e.with_span_context(span_context))?,
                             }
                         }
@@ -364,7 +380,7 @@ impl super::Validator {
                         ));
                     }
                 }
-                (TypeFlags::DATA | TypeFlags::HOST_SHARED, true)
+                (TypeFlags::DATA | TypeFlags::HOST_SHAREABLE, true)
             }
             crate::AddressSpace::Uniform => {
                 if let Err((ty_handle, disalignment)) = type_info.uniform_layout {
@@ -377,7 +393,10 @@ impl super::Validator {
                     }
                 }
                 (
-                    TypeFlags::DATA | TypeFlags::COPY | TypeFlags::SIZED | TypeFlags::HOST_SHARED,
+                    TypeFlags::DATA
+                        | TypeFlags::COPY
+                        | TypeFlags::SIZED
+                        | TypeFlags::HOST_SHAREABLE,
                     true,
                 )
             }
@@ -402,7 +421,10 @@ impl super::Validator {
                     ));
                 }
                 (
-                    TypeFlags::DATA | TypeFlags::COPY | TypeFlags::HOST_SHARED | TypeFlags::SIZED,
+                    TypeFlags::DATA
+                        | TypeFlags::COPY
+                        | TypeFlags::HOST_SHAREABLE
+                        | TypeFlags::SIZED,
                     false,
                 )
             }
@@ -470,15 +492,15 @@ impl super::Validator {
         // TODO: add span info to function arguments
         for (index, fa) in ep.function.arguments.iter().enumerate() {
             let mut ctx = VaryingContext {
-                ty: fa.ty,
                 stage: ep.stage,
                 output: false,
                 types: &module.types,
+                type_info: &self.types,
                 location_mask: &mut self.location_mask,
                 built_ins: &mut argument_built_ins,
                 capabilities: self.capabilities,
             };
-            ctx.validate(fa.binding.as_ref())
+            ctx.validate(fa.ty, fa.binding.as_ref())
                 .map_err_inner(|e| EntryPointError::Argument(index as u32, e).with_span())?;
         }
 
@@ -486,15 +508,15 @@ impl super::Validator {
         if let Some(ref fr) = ep.function.result {
             let mut result_built_ins = crate::FastHashSet::default();
             let mut ctx = VaryingContext {
-                ty: fr.ty,
                 stage: ep.stage,
                 output: true,
                 types: &module.types,
+                type_info: &self.types,
                 location_mask: &mut self.location_mask,
                 built_ins: &mut result_built_ins,
                 capabilities: self.capabilities,
             };
-            ctx.validate(fr.binding.as_ref())
+            ctx.validate(fr.ty, fr.binding.as_ref())
                 .map_err_inner(|e| EntryPointError::Result(e).with_span())?;
         }
 

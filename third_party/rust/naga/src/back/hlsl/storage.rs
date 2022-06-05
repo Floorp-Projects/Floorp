@@ -44,6 +44,9 @@ impl<W: fmt::Write> super::Writer<'_, W> {
         chain: &[SubAccess],
         func_ctx: &FunctionCtx,
     ) -> BackendResult {
+        if chain.is_empty() {
+            write!(self.out, "0")?;
+        }
         for (i, access) in chain.iter().enumerate() {
             if i != 0 {
                 write!(self.out, "+")?;
@@ -156,12 +159,16 @@ impl<W: fmt::Write> super::Writer<'_, W> {
                 write!(self.out, "}}")?;
             }
             crate::TypeInner::Struct { ref members, .. } => {
-                write!(self.out, "{{")?;
+                let constructor = super::help::WrappedConstructor {
+                    ty: result_ty.handle().unwrap(),
+                };
+                self.write_wrapped_constructor_function_name(module, constructor)?;
+                write!(self.out, "(")?;
                 let iter = members
                     .iter()
                     .map(|m| (TypeResolution::Handle(m.ty), m.offset));
                 self.write_storage_load_sequence(module, var_handle, iter, func_ctx)?;
-                write!(self.out, "}}")?;
+                write!(self.out, ")")?;
             }
             _ => unreachable!(),
         }

@@ -462,7 +462,9 @@ impl crate::AddressSpace {
             // rely on the actual use of a global by functions. This means we
             // may end up with "const" even if the binding is read-write,
             // and that should be OK.
-            Self::Storage { .. } | Self::Private | Self::WorkGroup => true,
+            Self::Storage { .. } => true,
+            // These should always be read-write.
+            Self::Private | Self::WorkGroup => false,
             // These translate to `constant` address space, no need for qualifiers.
             Self::Uniform | Self::PushConstant => false,
             // Not applicable.
@@ -1482,6 +1484,20 @@ impl<W: Write> Writer<W> {
                     .resolve_type(left)
                     .scalar_kind()
                     .ok_or(Error::UnsupportedBinaryOp(op))?;
+
+                // TODO: handle undefined behavior of BinaryOperator::Modulo
+                //
+                // sint:
+                // if right == 0 return 0
+                // if left == min(type_of(left)) && right == -1 return 0
+                // if sign(left) == -1 || sign(right) == -1 return result as defined by WGSL
+                //
+                // uint:
+                // if right == 0 return 0
+                //
+                // float:
+                // if right == 0 return ? see https://github.com/gpuweb/gpuweb/issues/2798
+
                 if op == crate::BinaryOperator::Modulo && kind == crate::ScalarKind::Float {
                     write!(self.out, "{}::fmod(", NAMESPACE)?;
                     self.put_expression(left, context, true)?;
@@ -1591,21 +1607,6 @@ impl<W: Write> Writer<W> {
                     crate::TypeInner::Scalar { .. } => true,
                     _ => false,
                 };
-                let argument_size_suffix = match *context.resolve_type(arg) {
-                    crate::TypeInner::Vector {
-                        size: crate::VectorSize::Bi,
-                        ..
-                    } => "2",
-                    crate::TypeInner::Vector {
-                        size: crate::VectorSize::Tri,
-                        ..
-                    } => "3",
-                    crate::TypeInner::Vector {
-                        size: crate::VectorSize::Quad,
-                        ..
-                    } => "4",
-                    _ => "",
-                };
 
                 let fun_name = match fun {
                     // comparison
@@ -1705,21 +1706,13 @@ impl<W: Write> Writer<W> {
                     self.put_expression(arg1.unwrap(), context, false)?;
                     write!(self.out, ")")?;
                 } else if fun == Mf::FindLsb {
-                    write!(
-                        self.out,
-                        "(((1 + int{}({}::ctz(",
-                        argument_size_suffix, NAMESPACE
-                    )?;
+                    write!(self.out, "((({}::ctz(", NAMESPACE)?;
                     self.put_expression(arg, context, true)?;
-                    write!(self.out, "))) % 33) - 1)")?;
+                    write!(self.out, ") + 1) % 33) - 1)")?;
                 } else if fun == Mf::FindMsb {
-                    write!(
-                        self.out,
-                        "(((1 + int{}({}::clz(",
-                        argument_size_suffix, NAMESPACE
-                    )?;
+                    write!(self.out, "((({}::clz(", NAMESPACE)?;
                     self.put_expression(arg, context, true)?;
-                    write!(self.out, "))) % 33) - 1)")?;
+                    write!(self.out, ") + 1) % 33) - 1)")?
                 } else if fun == Mf::Unpack2x16float {
                     write!(self.out, "float2(as_type<half2>(")?;
                     self.put_expression(arg, context, false)?;
@@ -1748,33 +1741,45 @@ impl<W: Write> Writer<W> {
                 expr,
                 kind,
                 convert,
-            } => {
-                let (src_kind, src_width) = match *context.resolve_type(expr) {
-                    crate::TypeInner::Scalar { kind, width }
-                    | crate::TypeInner::Vector { kind, width, .. } => (kind, width),
-                    _ => return Err(Error::Validation),
-                };
-                let is_bool_cast =
-                    kind == crate::ScalarKind::Bool || src_kind == crate::ScalarKind::Bool;
-                let op = match convert {
-                    Some(w) if w == src_width || is_bool_cast => "static_cast",
-                    Some(8) if kind == crate::ScalarKind::Float => {
-                        return Err(Error::CapabilityNotSupported(valid::Capabilities::FLOAT64))
-                    }
-                    Some(_) => return Err(Error::Validation),
-                    None => "as_type",
-                };
-                write!(self.out, "{}<", op)?;
-                match *context.resolve_type(expr) {
-                    crate::TypeInner::Vector { size, .. } => {
-                        put_numeric_type(&mut self.out, kind, &[size])?
-                    }
-                    _ => put_numeric_type(&mut self.out, kind, &[])?,
-                };
-                write!(self.out, ">(")?;
-                self.put_expression(expr, context, true)?;
-                write!(self.out, ")")?;
-            }
+            } => match *context.resolve_type(expr) {
+                crate::TypeInner::Scalar {
+                    kind: src_kind,
+                    width: src_width,
+                }
+                | crate::TypeInner::Vector {
+                    kind: src_kind,
+                    width: src_width,
+                    ..
+                } => {
+                    let is_bool_cast =
+                        kind == crate::ScalarKind::Bool || src_kind == crate::ScalarKind::Bool;
+                    let op = match convert {
+                        Some(w) if w == src_width || is_bool_cast => "static_cast",
+                        Some(8) if kind == crate::ScalarKind::Float => {
+                            return Err(Error::CapabilityNotSupported(valid::Capabilities::FLOAT64))
+                        }
+                        Some(_) => return Err(Error::Validation),
+                        None => "as_type",
+                    };
+                    write!(self.out, "{}<", op)?;
+                    match *context.resolve_type(expr) {
+                        crate::TypeInner::Vector { size, .. } => {
+                            put_numeric_type(&mut self.out, kind, &[size])?
+                        }
+                        _ => put_numeric_type(&mut self.out, kind, &[])?,
+                    };
+                    write!(self.out, ">(")?;
+                    self.put_expression(expr, context, true)?;
+                    write!(self.out, ")")?;
+                }
+                crate::TypeInner::Matrix { columns, rows, .. } => {
+                    put_numeric_type(&mut self.out, kind, &[rows, columns])?;
+                    write!(self.out, "(")?;
+                    self.put_expression(expr, context, true)?;
+                    write!(self.out, ")")?;
+                }
+                _ => return Err(Error::Validation),
+            },
             // has to be a named expression
             crate::Expression::CallResult(_) | crate::Expression::AtomicResult { .. } => {
                 unreachable!()
@@ -2445,6 +2450,8 @@ impl<W: Write> Writer<W> {
                             // Don't assume the names in `named_expressions` are unique,
                             // or even valid. Use the `Namer`.
                             Some(self.namer.call(name))
+                        } else if info.ref_count == 0 {
+                            Some(self.namer.call(""))
                         } else {
                             // If this expression is an index that we're going to first compare
                             // against a limit, and then actually use as an index, then we may
@@ -3276,15 +3283,20 @@ impl<W: Write> Writer<W> {
                 };
                 let local_name = &self.names[&NameKey::FunctionLocal(fun_handle, local_handle)];
                 write!(self.out, "{}{} {}", back::INDENT, ty_name, local_name)?;
-                if let Some(value) = local.init {
-                    let coco = ConstantContext {
-                        handle: value,
-                        arena: &module.constants,
-                        names: &self.names,
-                        first_time: false,
-                    };
-                    write!(self.out, " = {}", coco)?;
-                }
+                match local.init {
+                    Some(value) => {
+                        let coco = ConstantContext {
+                            handle: value,
+                            arena: &module.constants,
+                            names: &self.names,
+                            first_time: false,
+                        };
+                        write!(self.out, " = {}", coco)?;
+                    }
+                    None => {
+                        write!(self.out, " = {{}}")?;
+                    }
+                };
                 writeln!(self.out, ";")?;
             }
 
@@ -3808,15 +3820,20 @@ impl<W: Write> Writer<W> {
                     first_time: false,
                 };
                 write!(self.out, "{}{} {}", back::INDENT, ty_name, name)?;
-                if let Some(value) = local.init {
-                    let coco = ConstantContext {
-                        handle: value,
-                        arena: &module.constants,
-                        names: &self.names,
-                        first_time: false,
-                    };
-                    write!(self.out, " = {}", coco)?;
-                }
+                match local.init {
+                    Some(value) => {
+                        let coco = ConstantContext {
+                            handle: value,
+                            arena: &module.constants,
+                            names: &self.names,
+                            first_time: false,
+                        };
+                        write!(self.out, " = {}", coco)?;
+                    }
+                    None => {
+                        write!(self.out, " = {{}}")?;
+                    }
+                };
                 writeln!(self.out, ";")?;
             }
 
@@ -3901,7 +3918,7 @@ fn test_stack_size() {
 
     {
         // check expression stack
-        let mut addresses = !0usize..0usize;
+        let mut addresses = usize::MAX..0usize;
         for pointer in writer.put_expression_stack_pointers {
             addresses.start = addresses.start.min(pointer as usize);
             addresses.end = addresses.end.max(pointer as usize);
@@ -3916,7 +3933,7 @@ fn test_stack_size() {
 
     {
         // check block stack
-        let mut addresses = !0usize..0usize;
+        let mut addresses = usize::MAX..0usize;
         for pointer in writer.put_block_stack_pointers {
             addresses.start = addresses.start.min(pointer as usize);
             addresses.end = addresses.end.max(pointer as usize);

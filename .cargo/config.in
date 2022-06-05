@@ -85,12 +85,12 @@ rev = "3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
 replace-with = "vendored-sources"
-rev = "b51fd851"
+rev = "32af4f56"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"
-rev = "1aa91549"
+rev = "571302e"
 
 [source."https://github.com/gfx-rs/metal-rs"]
 git = "https://github.com/gfx-rs/metal-rs"

@@ -1,9 +1,9 @@
 use crate::{
     device::{DeviceError, HostMap, MissingFeatures},
     hub::{Global, GlobalIdentityHandlerFactory, HalApi, Resource, Token},
-    id::{DeviceId, SurfaceId, TextureId, Valid},
+    id::{AdapterId, DeviceId, SurfaceId, TextureId, Valid},
     init_tracker::{BufferInitTracker, TextureInitTracker},
-    track::{TextureSelector, DUMMY_SELECTOR},
+    track::TextureSelector,
     validation::MissingBufferUsageError,
     Label, LifeGuard, RefCount, Stored,
 };
@@ -23,7 +23,6 @@ pub enum BufferMapAsyncStatus {
     ContextLost,
 }
 
-#[derive(Debug)]
 pub(crate) enum BufferMapState<A: hal::Api> {
     /// Mapped at creation.
     Init {
@@ -46,27 +45,65 @@ pub(crate) enum BufferMapState<A: hal::Api> {
 unsafe impl<A: hal::Api> Send for BufferMapState<A> {}
 unsafe impl<A: hal::Api> Sync for BufferMapState<A> {}
 
-pub type BufferMapCallback = unsafe extern "C" fn(status: BufferMapAsyncStatus, userdata: *mut u8);
-
 #[repr(C)]
-#[derive(Debug)]
+pub struct BufferMapCallbackC {
+    callback: unsafe extern "C" fn(status: BufferMapAsyncStatus, user_data: *mut u8),
+    user_data: *mut u8,
+}
+
+unsafe impl Send for BufferMapCallbackC {}
+
+pub struct BufferMapCallback {
+    // We wrap this so creating the enum in the C variant can be unsafe,
+    // allowing our call function to be safe.
+    inner: BufferMapCallbackInner,
+}
+
+enum BufferMapCallbackInner {
+    Rust {
+        callback: Box<dyn FnOnce(BufferMapAsyncStatus) + Send + 'static>,
+    },
+    C {
+        inner: BufferMapCallbackC,
+    },
+}
+
+impl BufferMapCallback {
+    pub fn from_rust(callback: Box<dyn FnOnce(BufferMapAsyncStatus) + Send + 'static>) -> Self {
+        Self {
+            inner: BufferMapCallbackInner::Rust { callback },
+        }
+    }
+
+    /// # Safety
+    ///
+    /// - The callback pointer must be valid to call with the provided user_data pointer.
+    /// - Both pointers must point to 'static data as the callback may happen at an unspecified time.
+    pub unsafe fn from_c(inner: BufferMapCallbackC) -> Self {
+        Self {
+            inner: BufferMapCallbackInner::C { inner },
+        }
+    }
+
+    pub(crate) fn call(self, status: BufferMapAsyncStatus) {
+        match self.inner {
+            BufferMapCallbackInner::Rust { callback } => callback(status),
+            // SAFETY: the contract of the call to from_c says that this unsafe is sound.
+            BufferMapCallbackInner::C { inner } => unsafe {
+                (inner.callback)(status, inner.user_data)
+            },
+        }
+    }
+
+    pub(crate) fn call_error(self) {
+        log::error!("wgpu_buffer_map_async failed: buffer mapping is pending");
+        self.call(BufferMapAsyncStatus::Error);
+    }
+}
+
 pub struct BufferMapOperation {
     pub host: HostMap,
     pub callback: BufferMapCallback,
-    pub user_data: *mut u8,
-}
-
-//TODO: clarify if/why this is needed here
-unsafe impl Send for BufferMapOperation {}
-unsafe impl Sync for BufferMapOperation {}
-
-impl BufferMapOperation {
-    pub(crate) fn call_error(self) {
-        log::error!("wgpu_buffer_map_async failed: buffer mapping is pending");
-        unsafe {
-            (self.callback)(BufferMapAsyncStatus::Error, self.user_data);
-        }
-    }
 }
 
 #[derive(Clone, Debug, Error)]
@@ -105,7 +142,6 @@ pub enum BufferAccessError {
     },
 }
 
-#[derive(Debug)]
 pub(crate) struct BufferPendingMapping {
     pub range: Range<wgt::BufferAddress>,
     pub op: BufferMapOperation,
@@ -115,7 +151,6 @@ pub(crate) struct BufferPendingMapping {
 
 pub type BufferDescriptor<'a> = wgt::BufferDescriptor<Label<'a>>;
 
-#[derive(Debug)]
 pub struct Buffer<A: hal::Api> {
     pub(crate) raw: Option<A::Buffer>,
     pub(crate) device_id: Stored<DeviceId>,
@@ -146,12 +181,6 @@ impl<A: hal::Api> Resource for Buffer<A> {
 
     fn life_guard(&self) -> &LifeGuard {
         &self.life_guard
-    }
-}
-
-impl<A: hal::Api> Borrow<()> for Buffer<A> {
-    fn borrow(&self) -> &() {
-        &DUMMY_SELECTOR
     }
 }
 
@@ -248,6 +277,26 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let hal_texture = texture.map(|tex| tex.inner.as_raw().unwrap());
 
         hal_texture_callback(hal_texture);
+    }
+
+    /// # Safety
+    ///
+    /// - The raw adapter handle must not be manually destroyed
+    pub unsafe fn adapter_as_hal<A: HalApi, F: FnOnce(Option<&A::Adapter>) -> R, R>(
+        &self,
+        id: AdapterId,
+        hal_adapter_callback: F,
+    ) -> R {
+        profiling::scope!("as_hal", "Adapter");
+
+        let hub = A::hub(self);
+        let mut token = Token::root();
+
+        let (guard, _) = hub.adapters.read(&mut token);
+        let adapter = guard.get(id).ok();
+        let hal_adapter = adapter.map(|adapter| &adapter.raw.adapter);
+
+        hal_adapter_callback(hal_adapter)
     }
 
     /// # Safety
@@ -371,8 +420,6 @@ pub struct TextureView<A: hal::Api> {
     pub(crate) format_features: wgt::TextureFormatFeatures,
     pub(crate) extent: wgt::Extent3d,
     pub(crate) samples: u32,
-    /// Internal use of this texture view when used as `BindingType::Texture`.
-    pub(crate) sampled_internal_use: hal::TextureUses,
     pub(crate) selector: TextureSelector,
     pub(crate) life_guard: LifeGuard,
 }
@@ -425,12 +472,6 @@ impl<A: hal::Api> Resource for TextureView<A> {
 
     fn life_guard(&self) -> &LifeGuard {
         &self.life_guard
-    }
-}
-
-impl<A: hal::Api> Borrow<()> for TextureView<A> {
-    fn borrow(&self) -> &() {
-        &DUMMY_SELECTOR
     }
 }
 
@@ -510,11 +551,6 @@ impl<A: hal::Api> Resource for Sampler<A> {
     }
 }
 
-impl<A: hal::Api> Borrow<()> for Sampler<A> {
-    fn borrow(&self) -> &() {
-        &DUMMY_SELECTOR
-    }
-}
 #[derive(Clone, Debug, Error)]
 pub enum CreateQuerySetError {
     #[error(transparent)]
@@ -542,12 +578,6 @@ impl<A: hal::Api> Resource for QuerySet<A> {
 
     fn life_guard(&self) -> &LifeGuard {
         &self.life_guard
-    }
-}
-
-impl<A: hal::Api> Borrow<()> for QuerySet<A> {
-    fn borrow(&self) -> &() {
-        &DUMMY_SELECTOR
     }
 }
 

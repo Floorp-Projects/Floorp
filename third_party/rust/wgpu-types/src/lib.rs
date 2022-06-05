@@ -185,6 +185,24 @@ bitflags::bitflags! {
         ///
         /// This is a web and native feature.
         const DEPTH_CLIP_CONTROL = 1 << 0;
+        /// Allows for explicit creation of textures of format [`TextureFormat::Depth24UnormStencil8`]
+        ///
+        /// Supported platforms:
+        /// - Vulkan (some)
+        /// - DX12
+        /// - Metal (Macs with amd GPUs)
+        ///
+        /// This is a web and native feature.
+        const DEPTH24UNORM_STENCIL8 = 1 << 1;
+        /// Allows for explicit creation of textures of format [`TextureFormat::Depth32FloatStencil8`]
+        ///
+        /// Supported platforms:
+        /// - Vulkan (mostly)
+        /// - DX12
+        /// - Metal
+        ///
+        /// This is a web and native feature.
+        const DEPTH32FLOAT_STENCIL8 = 1 << 2;
         /// Enables BCn family of compressed textures. All BCn textures use 4x4 pixel blocks
         /// with 8 or 16 bytes per block.
         ///
@@ -198,7 +216,37 @@ bitflags::bitflags! {
         /// - desktops
         ///
         /// This is a web and native feature.
-        const TEXTURE_COMPRESSION_BC = 1 << 1;
+        const TEXTURE_COMPRESSION_BC = 1 << 3;
+        /// Enables ETC family of compressed textures. All ETC textures use 4x4 pixel blocks.
+        /// ETC2 RGB and RGBA1 are 8 bytes per block. RTC2 RGBA8 and EAC are 16 bytes per block.
+        ///
+        /// Compressed textures sacrifice some quality in exchange for significantly reduced
+        /// bandwidth usage.
+        ///
+        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ETC2 formats.
+        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
+        ///
+        /// Supported Platforms:
+        /// - Intel/Vulkan
+        /// - Mobile (some)
+        ///
+        /// This is a web and native feature.
+        const TEXTURE_COMPRESSION_ETC2 = 1 << 4;
+        /// Enables ASTC family of compressed textures. ASTC textures use pixel blocks varying from 4x4 to 12x12.
+        /// Blocks are always 16 bytes.
+        ///
+        /// Compressed textures sacrifice some quality in exchange for significantly reduced
+        /// bandwidth usage.
+        ///
+        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ASTC formats.
+        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
+        ///
+        /// Supported Platforms:
+        /// - Intel/Vulkan
+        /// - Mobile (some)
+        ///
+        /// This is a web and native feature.
+        const TEXTURE_COMPRESSION_ASTC_LDR = 1 << 5;
         /// Allows non-zero value for the "first instance" in indirect draw calls.
         ///
         /// Supported Platforms:
@@ -207,7 +255,7 @@ bitflags::bitflags! {
         /// - Metal
         ///
         /// This is a web and native feature.
-        const INDIRECT_FIRST_INSTANCE = 1 << 2;
+        const INDIRECT_FIRST_INSTANCE = 1 << 6;
         /// Enables use of Timestamp Queries. These queries tell the current gpu timestamp when
         /// all work before the query is finished. Call [`CommandEncoder::write_timestamp`],
         /// [`RenderPassEncoder::write_timestamp`], or [`ComputePassEncoder::write_timestamp`] to
@@ -225,7 +273,7 @@ bitflags::bitflags! {
         /// - DX12 (works)
         ///
         /// This is a web and native feature.
-        const TIMESTAMP_QUERY = 1 << 3;
+        const TIMESTAMP_QUERY = 1 << 7;
         /// Enables use of Pipeline Statistics Queries. These queries tell the count of various operations
         /// performed between the start and stop call. Call [`RenderPassEncoder::begin_pipeline_statistics_query`] to start
         /// a query, then call [`RenderPassEncoder::end_pipeline_statistics_query`] to stop one.
@@ -240,7 +288,7 @@ bitflags::bitflags! {
         /// - DX12 (works)
         ///
         /// This is a web and native feature.
-        const PIPELINE_STATISTICS_QUERY = 1 << 4;
+        const PIPELINE_STATISTICS_QUERY = 1 << 8;
         /// Allows shaders to acquire the FP16 ability
         ///
         /// Note: this is not supported in naga yet，only through spir-v passthrough right now.
@@ -250,7 +298,7 @@ bitflags::bitflags! {
         /// - Metal
         ///
         /// This is a web and native feature.
-        const SHADER_FLOAT16 = 1 << 5;
+        const SHADER_FLOAT16 = 1 << 9;
         /// Webgpu only allows the MAP_READ and MAP_WRITE buffer usage to be matched with
         /// COPY_DST and COPY_SRC respectively. This removes this requirement.
         ///
@@ -437,36 +485,6 @@ bitflags::bitflags! {
         ///
         /// This is a native only feature.
         const POLYGON_MODE_POINT = 1 << 28;
-        /// Enables ETC family of compressed textures. All ETC textures use 4x4 pixel blocks.
-        /// ETC2 RGB and RGBA1 are 8 bytes per block. RTC2 RGBA8 and EAC are 16 bytes per block.
-        ///
-        /// Compressed textures sacrifice some quality in exchange for significantly reduced
-        /// bandwidth usage.
-        ///
-        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ETC2 formats.
-        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
-        ///
-        /// Supported Platforms:
-        /// - Intel/Vulkan
-        /// - Mobile (some)
-        ///
-        /// This is a native-only feature.
-        const TEXTURE_COMPRESSION_ETC2 = 1 << 29;
-        /// Enables ASTC family of compressed textures. ASTC textures use pixel blocks varying from 4x4 to 12x12.
-        /// Blocks are always 16 bytes.
-        ///
-        /// Compressed textures sacrifice some quality in exchange for significantly reduced
-        /// bandwidth usage.
-        ///
-        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ASTC formats.
-        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
-        ///
-        /// Supported Platforms:
-        /// - Intel/Vulkan
-        /// - Mobile (some)
-        ///
-        /// This is a native-only feature.
-        const TEXTURE_COMPRESSION_ASTC_LDR = 1 << 30;
         /// Enables device specific texture format features.
         ///
         /// See `TextureFormatFeatures` for a listing of the features in question.
@@ -478,7 +496,7 @@ bitflags::bitflags! {
         /// This extension does not enable additional formats.
         ///
         /// This is a native-only feature.
-        const TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES = 1 << 31;
+        const TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES = 1 << 29;
         /// Enables 64-bit floating point types in SPIR-V shaders.
         ///
         /// Note: even when supported by GPU hardware, 64-bit floating point operations are
@@ -488,7 +506,7 @@ bitflags::bitflags! {
         /// - Vulkan
         ///
         /// This is a native-only feature.
-        const SHADER_FLOAT64 = 1 << 32;
+        const SHADER_FLOAT64 = 1 << 30;
         /// Enables using 64-bit types for vertex attributes.
         ///
         /// Requires SHADER_FLOAT64.
@@ -496,7 +514,7 @@ bitflags::bitflags! {
         /// Supported Platforms: N/A
         ///
         /// This is a native-only feature.
-        const VERTEX_ATTRIBUTE_64BIT = 1 << 33;
+        const VERTEX_ATTRIBUTE_64BIT = 1 << 31;
         /// Allows the user to set a overestimation-conservative-rasterization in [`PrimitiveState::conservative`]
         ///
         /// Processing of degenerate triangles/lines is hardware specific.
@@ -506,7 +524,7 @@ bitflags::bitflags! {
         /// - Vulkan
         ///
         /// This is a native only feature.
-        const CONSERVATIVE_RASTERIZATION = 1 << 34;
+        const CONSERVATIVE_RASTERIZATION = 1 << 32;
         /// Enables bindings of writable storage buffers and textures visible to vertex shaders.
         ///
         /// Note: some (tiled-based) platforms do not support vertex shaders with any side-effects.
@@ -515,14 +533,14 @@ bitflags::bitflags! {
         /// - All
         ///
         /// This is a native-only feature.
-        const VERTEX_WRITABLE_STORAGE = 1 << 35;
+        const VERTEX_WRITABLE_STORAGE = 1 << 33;
         /// Enables clear to zero for textures.
         ///
         /// Supported platforms:
         /// - All
         ///
         /// This is a native only feature.
-        const CLEAR_TEXTURE = 1 << 36;
+        const CLEAR_TEXTURE = 1 << 34;
         /// Enables creating shader modules from SPIR-V binary data (unsafe).
         ///
         /// SPIR-V data is not parsed or interpreted in any way; you can use
@@ -534,7 +552,7 @@ bitflags::bitflags! {
         /// Vulkan implementation.
         ///
         /// This is a native only feature.
-        const SPIRV_SHADER_PASSTHROUGH = 1 << 37;
+        const SPIRV_SHADER_PASSTHROUGH = 1 << 35;
         /// Enables `builtin(primitive_index)` in fragment shaders.
         ///
         /// Note: enables geometry processing for pipelines using the builtin.
@@ -545,14 +563,14 @@ bitflags::bitflags! {
         /// - Vulkan
         ///
         /// This is a native only feature.
-        const SHADER_PRIMITIVE_INDEX = 1 << 38;
+        const SHADER_PRIMITIVE_INDEX = 1 << 36;
         /// Enables multiview render passes and `builtin(view_index)` in vertex shaders.
         ///
         /// Supported platforms:
         /// - Vulkan
         ///
         /// This is a native only feature.
-        const MULTIVIEW = 1 << 39;
+        const MULTIVIEW = 1 << 37;
         /// Enables normalized `16-bit` texture formats.
         ///
         /// Supported platforms:
@@ -561,7 +579,7 @@ bitflags::bitflags! {
         /// - Metal
         ///
         /// This is a native only feature.
-        const TEXTURE_FORMAT_16BIT_NORM = 1 << 40;
+        const TEXTURE_FORMAT_16BIT_NORM = 1 << 38;
         /// Allows the use of [`AddressMode::ClampToBorder`] with a border color
         /// of [`SamplerBorderColor::Zero`].
         ///
@@ -573,12 +591,12 @@ bitflags::bitflags! {
         /// - OpenGL
         ///
         /// This is a native only feature.
-        const ADDRESS_MODE_CLAMP_TO_ZERO = 1 << 41;
+        const ADDRESS_MODE_CLAMP_TO_ZERO = 1 << 39;
         /// Supported Platforms:
         /// - Metal
         ///
         /// This is a native-only feature.
-        const TEXTURE_COMPRESSION_ASTC_HDR = 1 << 42;
+        const TEXTURE_COMPRESSION_ASTC_HDR = 1 << 40;
     }
 }
 
@@ -1838,12 +1856,18 @@ pub enum TextureFormat {
     /// Special depth format with 32 bit floating point depth.
     #[cfg_attr(feature = "serde", serde(rename = "depth32float"))]
     Depth32Float,
+    /// Special depth/stencil format with 32 bit floating point depth and 8 bits integer stencil.
+    #[cfg_attr(feature = "serde", serde(rename = "depth32float-stencil8"))]
+    Depth32FloatStencil8,
     /// Special depth format with at least 24 bit integer depth.
     #[cfg_attr(feature = "serde", serde(rename = "depth24plus"))]
     Depth24Plus,
     /// Special depth/stencil format with at least 24 bit integer depth and 8 bits integer stencil.
     #[cfg_attr(feature = "serde", serde(rename = "depth24plus-stencil8"))]
     Depth24PlusStencil8,
+    /// Special depth/stencil format with 24 bit integer depth and 8 bits integer stencil.
+    #[cfg_attr(feature = "serde", serde(rename = "depth24unorm-stencil8"))]
+    Depth24UnormStencil8,
 
     // Packed uncompressed texture formats
     /// Packed unsigned float with 9 bits mantisa for each RGB component, then a common 5 bits exponent
@@ -2046,6 +2070,8 @@ impl TextureFormat {
         let astc_ldr = Features::TEXTURE_COMPRESSION_ASTC_LDR;
         let astc_hdr = Features::TEXTURE_COMPRESSION_ASTC_HDR;
         let norm16bit = Features::TEXTURE_FORMAT_16BIT_NORM;
+        let d32_s8 = Features::DEPTH32FLOAT_STENCIL8;
+        let d24_s8 = Features::DEPTH24UNORM_STENCIL8;
 
         // Sample Types
         let uint = TextureSampleType::Uint;
@@ -2135,8 +2161,10 @@ impl TextureFormat {
 
             // Depth-stencil textures
             Self::Depth32Float =>        (   native,   depth,    linear,         msaa, (1, 1),  4, attachment, 1),
+            Self::Depth32FloatStencil8 =>(   d32_s8,   depth,    linear,         msaa, (1, 1),  4, attachment, 2),
             Self::Depth24Plus =>         (   native,   depth,    linear,         msaa, (1, 1),  4, attachment, 1),
             Self::Depth24PlusStencil8 => (   native,   depth,    linear,         msaa, (1, 1),  4, attachment, 2),
+            Self::Depth24UnormStencil8 => (  d24_s8,   depth,    linear,         msaa, (1, 1),  4, attachment, 2),
 
             // Packed uncompressed  
             Self::Rgb9e5Ufloat =>        (   native,   float,    linear,         noaa, (1, 1),  4,      basic, 3),
@@ -2501,10 +2529,63 @@ impl CompareFunction {
     }
 }
 
-/// Rate that determines when vertex data is advanced.
+/// Whether a vertex buffer is indexed by vertex or by instance.
+///
+/// Consider a call to [`RenderPass::draw`] like this:
+///
+/// ```ignore
+/// render_pass.draw(vertices, instances)
+/// ```
+///
+/// where `vertices` is a `Range<u32>` of vertex indices, and
+/// `instances` is a `Range<u32>` of instance indices.
+///
+/// For this call, `wgpu` invokes the vertex shader entry point once
+/// for every possible `(v, i)` pair, where `v` is drawn from
+/// `vertices` and `i` is drawn from `instances`. These invocations
+/// may happen in any order, and will usually run in parallel.
+///
+/// Each vertex buffer has a step mode, established by the
+/// [`step_mode`] field of its [`VertexBufferLayout`], given when the
+/// pipeline was created. Buffers whose step mode is [`Vertex`] use
+/// `v` as the index into their contents, whereas buffers whose step
+/// mode is [`Instance`] use `i`. The indicated buffer element then
+/// contributes zero or more attribute values for the `(v, i)` vertex
+/// shader invocation to use, based on the [`VertexBufferLayout`]'s
+/// [`attributes`] list.
+///
+/// You can visualize the results from all these vertex shader
+/// invocations as a matrix with a row for each `i` from `instances`,
+/// and with a column for each `v` from `vertices`. In one sense, `v`
+/// and `i` are symmetrical: both are used to index vertex buffers and
+/// provide attribute values.  But the key difference between `v` and
+/// `i` is that line and triangle primitives are built from the values
+/// of each row, along which `i` is constant and `v` varies, not the
+/// columns.
+///
+/// An indexed draw call works similarly:
+///
+/// ```ignore
+/// render_pass.draw_indexed(indices, base_vertex, instances)
+/// ```
+///
+/// The only difference is that `v` values are drawn from the contents
+/// of the index buffer&mdash;specifically, the subrange of the index
+/// buffer given by `indices`&mdash;instead of simply being sequential
+/// integers, as they are in a `draw` call.
+///
+/// A non-instanced call, where `instances` is `0..1`, is simply a
+/// matrix with only one row.
 ///
 /// Corresponds to [WebGPU `GPUVertexStepMode`](
 /// https://gpuweb.github.io/gpuweb/#enumdef-gpuvertexstepmode).
+///
+/// [`RenderPass::draw`]: ../wgpu/struct.RenderPass.html#method.draw
+/// [`VertexBufferLayout`]: ../wgpu/struct.VertexBufferLayout.html
+/// [`step_mode`]: ../wgpu/struct.VertexBufferLayout.html#structfield.step_mode
+/// [`attributes`]: ../wgpu/struct.VertexBufferLayout.html#structfield.attributes
+/// [`Vertex`]: VertexStepMode::Vertex
+/// [`Instance`]: VertexStepMode::Instance
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = "trace", derive(Serialize))]
