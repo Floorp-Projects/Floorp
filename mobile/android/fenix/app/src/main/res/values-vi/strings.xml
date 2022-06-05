@@ -15,6 +15,8 @@
     <string name="content_description_disable_private_browsing_button">Tắt duyệt web riêng tư</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Tìm kiếm hoặc nhập địa chỉ</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Nhập từ tìm kiếm</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Các thẻ đang mở của bạn sẽ được hiển thị ở đây.</string>
 
@@ -39,8 +41,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Dấu trang gần đây</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Dấu trang đã lưu gần đây</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Hiển thị tất cả</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -237,8 +237,6 @@
     <string name="search_suggestions_onboarding_title">Cho phép đề xuất tìm kiếm trong phiên riêng tư?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s sẽ chia sẻ mọi thứ bạn nhập vào thanh địa chỉ với công cụ tìm kiếm mặc định của bạn.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Tìm hiểu thêm</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Tìm kiếm %s</string>
@@ -723,7 +721,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Lưu các thẻ vào bộ sưu tập</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Menu thẻ</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Menu thẻ</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Xóa bộ sưu tập</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1165,40 +1163,12 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Đã xóa nhóm</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview hiện là Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly được cập nhật mỗi đêm và có các tính năng mới thử nghiệm.
-        Tuy nhiên, nó có thể kém ổn định hơn. Tải xuống trình duyệt beta của chúng tôi để có trải nghiệm ổn định hơn.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Tải Firefox Beta dành cho Android</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly đã di chuyển</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Ứng dụng này sẽ không còn nhận được cập nhật bảo mật. Ngừng sử dụng ứng dụng này và chuyển sang Nightly mới.
-        \n\nĐể chuyển dấu trang, thông tin đăng nhập và lịch sử của bạn sang một ứng dụng khác, hãy tạo một tài khoản Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Chuyển sang Nightly mới</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly đã di chuyển</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Ứng dụng này sẽ không còn nhận được cập nhật bảo mật. Tải Nightly mới và ngừng sử dụng ứng dụng này.
-        \n\nĐể chuyển dấu trang, thông tin đăng nhập và lịch sử của bạn sang một ứng dụng khác, hãy tạo một tài khoản Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Tải Nightly mới</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Chào mừng đến với %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Đồng bộ hóa Firefox giữa các thiết bị</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Đồng bộ hóa %1$s giữa các thiết bị</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Mang dấu trang, lịch sử và mật khẩu vào %1$s trên thiết bị này.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1609,8 +1579,10 @@
     <string name="addresses_street_address">Địa chỉ đường phố</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Thành phố</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Bang</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Tỉnh</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Zip</string>
     <!-- The header for the country or region of an address -->
@@ -1676,19 +1648,6 @@
     <string name="search_edit_custom_engine_success_message">Đã lưu %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Đã xóa %s</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Chào mừng bạn đến với %s hoàn toàn mới</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Một trình duyệt được thiết kế lại hoàn toàn mới, với hiệu suất và tính năng được cải thiện để giúp bạn làm việc trực tuyến nhiều hơn.\n\nHãy đợi trong khi chúng tôi cập nhật %s cho bạn</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Đang cập nhật %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Bắt đầu %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Đã hoàn thành di chuyển dữ liệu</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Mật khẩu</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Để cho phép nó:</string>
@@ -1782,8 +1741,6 @@
     <string name="synced_tabs_enable_tab_syncing">Vui lòng kích hoạt đồng bộ hóa thẻ.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Bạn không có bất kỳ thẻ nào mở trong Firefox trên các thiết bị khác của bạn.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Bạn không có bất kỳ thẻ nào mở trong %1$s trên các thiết bị khác của bạn.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Xem danh sách các thẻ từ các thiết bị khác của bạn.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1834,6 +1791,11 @@
     <string name="inactive_tabs_title">Thẻ không hoạt động</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Đóng tất cả các thẻ không hoạt động</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Mở rộng các thẻ không hoạt động</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Thu gọn các thẻ không hoạt động</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

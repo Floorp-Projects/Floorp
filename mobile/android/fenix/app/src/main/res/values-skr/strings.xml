@@ -16,6 +16,8 @@
     <string name="content_description_disable_private_browsing_button">نجی براؤزنگ  غیرفعال کرو</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ڳولو یا پتہ درج کرو</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">ڳولݨ ٹرماں درج کرو</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">تہاݙیاں کھلیاں ٹیباں اتھاں ݙکھائے ویسن۔</string>
     <!-- No Private Tabs Message Description -->
@@ -40,8 +42,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">حالیہ کتاب نشان</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">حالیہ محفوظ تھیاں نشانیاں</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">سارے ݙکھاؤ</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -235,8 +235,6 @@
     <string name="search_suggestions_onboarding_title">نجی مجلساں وچ ڳولݨ تجویزاں دی اجازت ݙیووں؟</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">جہڑی شئے تساں پتہ بار وچ ٹائپ کریسو %s تہاݙے کیتے پہلوں مقرر ڳولݨ انجݨ نال شیئر کریسی۔</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">ٻیا سِکھو</string>
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s ڳولو</string>
     <!-- Search engine suggestion description text -->
@@ -732,7 +730,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">مجموعے وچ ٹیباں محفوظ کرو</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">ٹیب مینیو</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">ٹیب مینیو</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">مجموعہ مٹاؤ</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1179,42 +1177,12 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">گروپ مٹ ڳیا</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">فائرفوکس پریوو ہݨ فائرفوکس نائٹلی ہے</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">
-          فائرفوکس نائٹلی ہر رات اپ ڈیٹ تھیندی ہے تے نویاں تجرباتی  خصوصیات رکھدی ہے۔ 
-        ول وی ایہ گھٹ مستحکم تھی سڳدی ہے۔  مزید مستحکم تجربے کیتے ساݙا بیٹا براؤزر ڈاؤن لوڈ کرو۔</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">انڈرائیڈ بیٹا کیتے فائرفوکس گھنو</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">فائرفوکس نائٹلی ٹُر ڳئی ہے</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">
-        ایہ ایپ ہݨ حفاظتی اپ ڈیٹاں وصول کائناں کریسی۔ ایہ ایپ ورتݨ بند کرو تے نویں نائٹلی گھنو۔ 
-        \n\n آپݨی کتاب نشانیاں، لاگ ان تے تاریخ دا ٻئی ایپ تے تبادلہ کرݨ کیتے فائرفوکس کھاتہ بݨاؤ۔</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">نویں نائٹلی تے سوئچ کرو</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">فائرفوکس نائٹلی ٹُر ڳئی ہے</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">
-        ایہ ایپ ہݨ حفاظتی اپ ڈیٹاں وصول کائناں کریسی۔ ایہ ایپ ورتݨ بند کرو تے نویں نائٹلی گھنو۔ 
-        \n\n آپݨی کتاب نشانیاں، لاگ ان تے تاریخ دا ٻئی ایپ تے تبادلہ کرݨ کیتے فائرفوکس کھاتہ بݨاؤ۔</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">نویں نائٹلی گھنو</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">%s وچ ست بسم اللہ!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">ڈیوائساں دے درمیان فائرفوکس ہم وقت کرو</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">ڈیوائساں دے درمیان %1$s ہم وقت کرو</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">ایں ڈیوائس تے کتاب نشانیاں، تاریخ تے پاس ورڈ %1$s تے گھن آؤ۔ </string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1627,8 +1595,10 @@
     <!-- The header for the city of an address -->
     <string name="addresses_city">شَہر</string>
 
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">ریاست</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">صوبہ</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">زِپ</string>
     <!-- The header for the country or region of an address -->
@@ -1698,19 +1668,6 @@
     <string name="search_edit_custom_engine_success_message">محفوظ %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">مٹ ڳیا %s</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">اصلوں نویں %s وچ ست بسم اللہ</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">تہاکوں مزید آن لائن کم وچ مدد ݙیوݨ کیتے بہتر کارکردگی تے خصوصیات نال مکمل طور تے دوبارہ ڈیزائن کیتا ڳیا براؤز تہاݙی تانگھ وچ ہے۔ \n\n سوہݨا، اوں ویلے تائیں انتظار کرو جے تائیں اساں تہاݙے نال %s کوں اپ ڈیٹ کروں</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s اپ ڈیٹ کریندا پئے۔۔۔</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">شروع کرو %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">منتقلی مکمل تھی ڳئی</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">پاس ورڈز</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">ایں کوں اجازت ݙیوݨ کیتے:</string>
@@ -1805,8 +1762,6 @@
     <string name="synced_tabs_enable_tab_syncing">سوہݨا، ٹیب ہم وقت کرݨ فعال کرو۔</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">تہاݙیاں ٻیاں ڈیوائساں تے فائرفوکس وچ کوئی ٹیب کائنی کھلے ہوئے۔</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">تہاݙیاں ٻیاں ڈیوائساں تے %1$s وچ کوئی ٹیب کائنی کھلے ہوئے۔</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">آپݨیاں ساریاں ڈیوائساں کنوں ٹیباں دی تندیر ݙیکھو۔</string>
 
@@ -1855,6 +1810,11 @@
     <string name="inactive_tabs_title">غیر فعال ٹیبز</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">ساریاں غیر فعال ٹیباں بند کرو</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">غیرفعال ٹیباں ودھاؤ</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">غیرفعال ٹیباں کٹھی کرو</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

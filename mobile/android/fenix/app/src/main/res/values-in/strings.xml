@@ -16,6 +16,8 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Cari atau masukkan alamat</string>
 
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Masukkan istilah pencarian</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tab terbuka Anda akan ditampilkan di sini.</string>
 
@@ -40,8 +42,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Markah terbaru</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Markah yang baru saja disimpan</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Tampilkan semua</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -242,8 +242,6 @@
     <string name="search_suggestions_onboarding_title">Tampilkan saran pencarian di sesi privat?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s akan membagikan segala yang Anda ketik pada bilah alamat dengan mesin pencari baku Anda.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Pelajari lebih lanjut</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Cari %s</string>
@@ -733,7 +731,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Simpan tab ke koleksi</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Menu tab</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Menu tab</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Hapus koleksi</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1185,33 +1183,6 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Grup dihapus</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Sekarang, Firefox Preview adalah Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly mendapatkan pemutakhiran setiap malam dan memiliki fitur eksperimental baru.
-        Namun, fitur ini mungkin kurang stabil. Unduh peramban beta kami untuk pengalaman yang lebih stabil.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Dapatkan Firefox untuk Android Beta</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly telah pindah</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Hentikan memakai aplikasi ini dan beralih ke Nightly yang baru.
-        \n\nUntuk memindahkan markah, info masuk, dan riwayat ke aplikasi lain, buatlah akun Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Beralih ke Nightly baru</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly telah pindah</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Dapatkan Nightly baru dan hentikan memakai aplikasi ini.
-        \n\nUntuk memindahkan markah, info masuk, dan riwayat ke aplikasi lain, buatlah akun Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Dapatkan Nightly baru</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1219,8 +1190,6 @@
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sinkronkan Firefox antar perangkat</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Sinkronkan %1$s antar-perangkat</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Bawa markah, riwayat, dan kata sandi ke %1$s di perangkat ini.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1556,6 +1525,11 @@
     <string name="preferences_addresses_add_address">Tambahkan alamat</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Kelola alamat</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Simpan dan isi otomatis alamat</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Sertakan informasi seperti nomor, alamat surel dan pengiriman</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Tambah kartu</string>
     <!-- Title of the "Edit card" screen -->
@@ -1624,8 +1598,10 @@
     <string name="addresses_street_address">Jalan</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Kota</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Provinsi</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Provinsi</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Kode Pos</string>
     <!-- The header for the country or region of an address -->
@@ -1691,19 +1667,6 @@
     <string name="search_edit_custom_engine_success_message">%s disimpan</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s dihapus</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Selamat datang di %s terbaru</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Sebuah peramban yang telah didesain ulang sepenuhnya, dengan peningkatan kinerja dan fitur untuk membantu anda dalam melakukan sesuatu secara daring.\n\nHarap tunggu selama kami memperbarui %s dengan milik anda</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Memperbarui %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Memulai %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migrasi selesai</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Kata Sandi</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Untuk mengizinkannya:</string>
@@ -1798,8 +1761,6 @@
 
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Anda tidak memiliki tab terbuka di Firefox pada perangkat Anda lainnya.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Anda tidak memiliki tab terbuka di %1$s pada perangkat Anda lainnya.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Lihat daftar tab dari perangkat Anda lainnya.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1851,6 +1812,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Hapus semua tab nonaktif</string>
 
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Bentangkan tab yang tidak aktif</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Ciutkan tab yang tidak aktif</string>
+
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Tutup otomatis setelah satu bulan?</string>
@@ -1890,6 +1856,9 @@
     <string name="pocket_stories_feature_caption">Bagian dari keluarga Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Pelajari lebih lanjut</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Bersponsor</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Aktifkan telemetri untuk mengirim data.</string>

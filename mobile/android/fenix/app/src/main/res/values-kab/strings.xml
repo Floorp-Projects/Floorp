@@ -15,6 +15,8 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Nadi neɣ sekcem tansa</string>
 
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Sekcem awalen n unadi</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Iccaren-ik yeldin ad ttwaseknen dagi.</string>
 
@@ -42,8 +44,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Ticraḍ n yisebtar n melmi kan</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Ticraḍ n yisebtar yettwaskelsen melmi kan</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Sken kullec</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -241,8 +241,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="search_suggestions_onboarding_title">Sireg isumar n unadi deg yisfuyla n tunigin tusligin?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s ad yazen sekra n wayen i tettaruḍ deg ufeggag n tansiwin ɣer umsedday-inek n unadi s wudem amezwer.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Issin ugar</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Nadi %s</string>
@@ -739,7 +737,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Sekles iccaren ɣer tegrumma</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Umuɣ n yiccaren</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Umuɣ n yiccaren</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Kkes tagrumma</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1187,41 +1185,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Agraw yettwakksen</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview  tura yuɣal d Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly iseɛɛu llqem yal iḍ u ttilint deg-s timahilin tirmitanin timaynutin.
-        Dacu, yezmer ad yenɣes urkad. Sader iminig-nneɣ beta i tarmit irekden ugar.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Awi-d Firefox i Android Beta</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly yuɣan sanga-nniḍen</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">. 
-        Asnas-agi ur yettɛawad ara ad yermes ileqman n tɣellist. Ur seqdac ara asnas-agi, beddel ɣer Nightly amaynut.
-        \n\nAkken ad tazneḍ ticraḍ n yisebtar, inekcam, akked umazray ɣer usnas-nniḍen, rnu amiḍan Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Beddel ɣer Nightly amaynut</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly yuɣan sanga-nniḍen</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Asnas-agi ur yettɛawad ara ad yermes ileqman n tɣellist. Awi Nightlu amaynut u seḥbes aseqdec n usnas-agi.
-        \n\nAkken ad tazneḍ ticraḍ n yisebtar, inekcam, akked umazray ɣer usnas-nniḍen, rnu amiḍan Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Awi Nightly amaynut</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Ansuf ɣer %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Mtawi Firefox gar yibenkan</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Mtawi %1$s gar yibenkan</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Awi-d ticraḍ n yisebtar, amazray, d wawalen uffiren ɣer %1$s deg yibenk-a.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1637,8 +1606,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="addresses_street_address">Tansa n taddart</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Aɣrem</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Addad</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Tamnaḍt</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Zip</string>
     <!-- The header for the country or region of an address -->
@@ -1704,19 +1675,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="search_edit_custom_engine_success_message">%s yettwasekles</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s yettwakkes</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Ansuf ɣer %s amaynut</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Iminig amaynut ittraǧu-ken, Iteddu akken iwata i yesεan timahalin iggerzen ara awen-ifkken tallelt i tuqqna.\n \nTtxil rǧu ad ifak lqem%s n</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Aleqqem %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Bdu %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Tunnagt tedda</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Awalen uffiren</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Sireg-it:</string>
@@ -1813,8 +1771,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Ulac ɣur-k accarren yeldin deg Firefox deg yibenkan-inek-nniḍen.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Ur ɣur-k ara icarren yeldin deg %1$s deg yibenkan-inek-nniḍen.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Wali tabdart n waccaren seg yibenkan-ik-nniḍen.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1866,6 +1822,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="inactive_tabs_title">Accaren arurmiden</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Mdel akk accaren irurmiden</string>
+
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Fneẓ accaren irurmiden</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
