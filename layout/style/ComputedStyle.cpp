@@ -423,6 +423,9 @@ bool ComputedStyle::EqualForCachedAnonymousContentStyle(
                                                                   &aOther);
 }
 
+void ComputedStyle::DumpMatchedRules() const {
+  Servo_ComputedValues_DumpMatchedRules(this);
+}
 #endif
 
 }  // namespace mozilla

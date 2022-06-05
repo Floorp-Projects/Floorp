@@ -249,7 +249,10 @@ class ComputedStyle {
   bool EqualForCachedAnonymousContentStyle(const ComputedStyle&) const;
 #endif
 
- public:
+#ifdef DEBUG
+  void DumpMatchedRules() const;
+#endif
+
   /**
    * Get a color that depends on link-visitedness using this and
    * this->GetStyleIfVisited().
