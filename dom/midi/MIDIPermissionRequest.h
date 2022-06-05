@@ -29,7 +29,7 @@ class MIDIPermissionRequest final : public ContentPermissionRequestBase,
                                            ContentPermissionRequestBase)
   // nsIContentPermissionRequest
   NS_IMETHOD Cancel(void) override;
-  NS_IMETHOD Allow(JS::HandleValue choices) override;
+  NS_IMETHOD Allow(JS::Handle<JS::Value> choices) override;
   NS_IMETHOD GetTypes(nsIArray** aTypes) override;
 
  private:

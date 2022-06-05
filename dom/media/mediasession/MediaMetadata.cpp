@@ -71,7 +71,7 @@ void MediaMetadata::GetArtwork(JSContext* aCx, nsTArray<JSObject*>& aRetVal,
   }
 
   for (size_t i = 0; i < mArtwork.Length(); ++i) {
-    JS::RootedValue value(aCx);
+    JS::Rooted<JS::Value> value(aCx);
     if (!ToJSValue(aCx, mArtwork[i], &value)) {
       aRv.NoteJSContextException(aCx);
       return;

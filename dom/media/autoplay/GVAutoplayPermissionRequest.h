@@ -28,7 +28,7 @@ class GVAutoplayPermissionRequest : public ContentPermissionRequestBase {
 
   // nsIContentPermissionRequest methods
   NS_IMETHOD Cancel(void) override;
-  NS_IMETHOD Allow(JS::HandleValue choices) override;
+  NS_IMETHOD Allow(JS::Handle<JS::Value> choices) override;
 
  private:
   // Only allow to create this request from the requestor.

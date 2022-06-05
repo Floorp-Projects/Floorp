@@ -60,7 +60,7 @@ class MediaKeySystemAccessPermissionRequest
 
   // nsIContentPermissionRequest methods
   NS_IMETHOD Cancel(void) override;
-  NS_IMETHOD Allow(JS::HandleValue choices) override;
+  NS_IMETHOD Allow(JS::Handle<JS::Value> choices) override;
 
  private:
   explicit MediaKeySystemAccessPermissionRequest(nsGlobalWindowInner* aWindow);

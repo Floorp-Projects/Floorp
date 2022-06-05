@@ -170,7 +170,7 @@ GVAutoplayPermissionRequest::Cancel() {
 }
 
 NS_IMETHODIMP
-GVAutoplayPermissionRequest::Allow(JS::HandleValue aChoices) {
+GVAutoplayPermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
   MOZ_ASSERT(mContext, "Do not call 'Allow()' twice!");
   // As the process of replying of the request is an async task, the status
   // might have be reset at the time we get the result from parent process.

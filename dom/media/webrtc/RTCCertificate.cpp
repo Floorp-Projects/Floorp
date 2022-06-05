@@ -267,7 +267,7 @@ static PRTime ReadExpires(JSContext* aCx, const ObjectOrString& aOptions,
   if (!aOptions.IsObject()) {
     return EXPIRATION_DEFAULT;
   }
-  JS::RootedValue value(aCx, JS::ObjectValue(*aOptions.GetAsObject()));
+  JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*aOptions.GetAsObject()));
   if (!expiration.Init(aCx, value)) {
     aRv.NoteJSContextException(aCx);
     return 0;

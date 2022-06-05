@@ -67,7 +67,7 @@ MIDIPermissionRequest::Cancel() {
 }
 
 NS_IMETHODIMP
-MIDIPermissionRequest::Allow(JS::HandleValue aChoices) {
+MIDIPermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
   MOZ_ASSERT(aChoices.isUndefined());
   MIDIAccessManager* mgr = MIDIAccessManager::Get();
   mgr->CreateMIDIAccess(mWindow, mNeedsSysex, mPromise);
