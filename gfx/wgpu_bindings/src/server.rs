@@ -222,14 +222,23 @@ pub extern "C" fn wgpu_server_device_create_buffer(
     }
 }
 
+/// # Safety
+///
+/// Callers are responsible for ensuring `callback` is well-formed.
 #[no_mangle]
-pub extern "C" fn wgpu_server_buffer_map(
+pub unsafe extern "C" fn wgpu_server_buffer_map(
     global: &Global,
     buffer_id: id::BufferId,
     start: wgt::BufferAddress,
     size: wgt::BufferAddress,
-    operation: wgc::resource::BufferMapOperation,
+    map_mode: wgc::device::HostMap,
+    callback: wgc::resource::BufferMapCallbackC,
 ) {
+    let callback = wgc::resource::BufferMapCallback::from_c(callback);
+    let operation = wgc::resource::BufferMapOperation {
+        host: map_mode,
+        callback
+    };
     gfx_select!(buffer_id => global.buffer_map_async(
         buffer_id,
         start .. start + size,

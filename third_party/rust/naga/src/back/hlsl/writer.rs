@@ -6,7 +6,7 @@ use super::{
 use crate::{
     back,
     proc::{self, NameKey},
-    valid, Handle, Module, ShaderStage, TypeInner,
+    valid, Handle, Module, ScalarKind, ShaderStage, TypeInner,
 };
 use std::{fmt, mem};
 
@@ -1167,6 +1167,8 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                         // Otherwise, we could accidentally write variable name instead of full expression.
                         // Also, we use sanitized names! It defense backend from generating variable with name from reserved keywords.
                         Some(self.namer.call(name))
+                    } else if info.ref_count == 0 {
+                        Some(self.namer.call(""))
                     } else {
                         let min_ref_count = func_ctx.expressions[handle].bake_ref_count();
                         if min_ref_count <= info.ref_count {
@@ -1795,6 +1797,38 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 self.write_expr(module, left, func_ctx)?;
                 write!(self.out, ")")?;
             }
+
+            // TODO: handle undefined behavior of BinaryOperator::Modulo
+            //
+            // sint:
+            // if right == 0 return 0
+            // if left == min(type_of(left)) && right == -1 return 0
+            // if sign(left) != sign(right) return result as defined by WGSL
+            //
+            // uint:
+            // if right == 0 return 0
+            //
+            // float:
+            // if right == 0 return ? see https://github.com/gpuweb/gpuweb/issues/2798
+
+            // While HLSL supports float operands with the % operator it is only
+            // defined in cases where both sides are either positive or negative.
+            Expression::Binary {
+                op: crate::BinaryOperator::Modulo,
+                left,
+                right,
+            } if func_ctx.info[left]
+                .ty
+                .inner_with(&module.types)
+                .scalar_kind()
+                == Some(crate::ScalarKind::Float) =>
+            {
+                write!(self.out, "fmod(")?;
+                self.write_expr(module, left, func_ctx)?;
+                write!(self.out, ", ")?;
+                self.write_expr(module, right, func_ctx)?;
+                write!(self.out, ")")?;
+            }
             Expression::Binary { op, left, right } => {
                 write!(self.out, "(")?;
                 self.write_expr(module, left, func_ctx)?;
@@ -2107,9 +2141,32 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 convert,
             } => {
                 let inner = func_ctx.info[expr].ty.inner_with(&module.types);
-                let (size_str, src_width) = match *inner {
-                    TypeInner::Vector { size, width, .. } => (back::vector_size_str(size), width),
-                    TypeInner::Scalar { width, .. } => ("", width),
+                let get_width = |src_width| kind.to_hlsl_str(convert.unwrap_or(src_width));
+                match *inner {
+                    TypeInner::Vector { size, width, .. } => {
+                        write!(
+                            self.out,
+                            "{}{}(",
+                            get_width(width)?,
+                            back::vector_size_str(size)
+                        )?;
+                    }
+                    TypeInner::Scalar { width, .. } => {
+                        write!(self.out, "{}(", get_width(width)?,)?;
+                    }
+                    TypeInner::Matrix {
+                        columns,
+                        rows,
+                        width,
+                    } => {
+                        write!(
+                            self.out,
+                            "{}{}x{}(",
+                            get_width(width)?,
+                            back::vector_size_str(columns),
+                            back::vector_size_str(rows)
+                        )?;
+                    }
                     _ => {
                         return Err(Error::Unimplemented(format!(
                             "write_expr expression::as {:?}",
@@ -2117,8 +2174,6 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                         )));
                     }
                 };
-                let kind_str = kind.to_hlsl_str(convert.unwrap_or(src_width))?;
-                write!(self.out, "{}{}(", kind_str, size_str,)?;
                 self.write_expr(module, expr, func_ctx)?;
                 write!(self.out, ")")?;
             }
@@ -2135,6 +2190,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     Asincosh { is_sin: bool },
                     Atanh,
                     Regular(&'static str),
+                    MissingIntOverload(&'static str),
                 }
 
                 let fun = match fun {
@@ -2196,8 +2252,8 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     Mf::Transpose => Function::Regular("transpose"),
                     Mf::Determinant => Function::Regular("determinant"),
                     // bits
-                    Mf::CountOneBits => Function::Regular("countbits"),
-                    Mf::ReverseBits => Function::Regular("reversebits"),
+                    Mf::CountOneBits => Function::MissingIntOverload("countbits"),
+                    Mf::ReverseBits => Function::MissingIntOverload("reversebits"),
                     Mf::FindLsb => Function::Regular("firstbitlow"),
                     Mf::FindMsb => Function::Regular("firstbithigh"),
                     _ => return Err(Error::Unimplemented(format!("write_expr_math {:?}", fun))),
@@ -2239,6 +2295,21 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                             self.write_expr(module, arg, func_ctx)?;
                         }
                         write!(self.out, ")")?
+                    }
+                    Function::MissingIntOverload(fun_name) => {
+                        let scalar_kind = &func_ctx.info[arg]
+                            .ty
+                            .inner_with(&module.types)
+                            .scalar_kind();
+                        if let Some(ScalarKind::Sint) = *scalar_kind {
+                            write!(self.out, "asint({}(asuint(", fun_name)?;
+                            self.write_expr(module, arg, func_ctx)?;
+                            write!(self.out, ")))")?;
+                        } else {
+                            write!(self.out, "{}(", fun_name)?;
+                            self.write_expr(module, arg, func_ctx)?;
+                            write!(self.out, ")")?;
+                        }
                     }
                 }
             }

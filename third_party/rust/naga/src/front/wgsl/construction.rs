@@ -184,12 +184,15 @@ fn parse_constructor_type<'a>(
             Ok(Some(ConstructorType::Vector { size, kind, width }))
         }
         (Token::Paren('<'), ConstructorType::PartialMatrix { columns, rows }) => {
-            let (_, width) = lexer.next_scalar_generic()?;
-            Ok(Some(ConstructorType::Matrix {
-                columns,
-                rows,
-                width,
-            }))
+            let (kind, width, span) = lexer.next_scalar_generic_with_span()?;
+            match kind {
+                ScalarKind::Float => Ok(Some(ConstructorType::Matrix {
+                    columns,
+                    rows,
+                    width,
+                })),
+                _ => Err(Error::BadMatrixScalarKind(span, kind, width)),
+            }
         }
         (Token::Paren('<'), ConstructorType::PartialArray) => {
             lexer.expect_generic_paren('<')?;
@@ -363,6 +366,25 @@ pub(super) fn parse_construction<'a>(
             convert: Some(dst_width),
         },
 
+        // Vector conversion (vector -> vector) - partial
+        (
+            Components::One {
+                component,
+                ty:
+                    &TypeInner::Vector {
+                        size: src_size,
+                        kind: src_kind,
+                        ..
+                    },
+                ..
+            },
+            ConstructorType::PartialVector { size: dst_size },
+        ) if dst_size == src_size => Expression::As {
+            expr: component,
+            kind: src_kind,
+            convert: None,
+        },
+
         // Matrix conversion (matrix -> matrix)
         (
             Components::One {
@@ -384,6 +406,28 @@ pub(super) fn parse_construction<'a>(
             expr: component,
             kind: ScalarKind::Float,
             convert: Some(dst_width),
+        },
+
+        // Matrix conversion (matrix -> matrix) - partial
+        (
+            Components::One {
+                component,
+                ty:
+                    &TypeInner::Matrix {
+                        columns: src_columns,
+                        rows: src_rows,
+                        ..
+                    },
+                ..
+            },
+            ConstructorType::PartialMatrix {
+                columns: dst_columns,
+                rows: dst_rows,
+            },
+        ) if dst_columns == src_columns && dst_rows == src_rows => Expression::As {
+            expr: component,
+            kind: ScalarKind::Float,
+            convert: None,
         },
 
         // Vector constructor (splat) - infer type

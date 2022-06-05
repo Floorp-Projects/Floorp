@@ -130,6 +130,7 @@ pub enum Error<'a> {
     BadFloat(Span, BadFloatError),
     BadU32Constant(Span),
     BadScalarWidth(Span, Bytes),
+    BadMatrixScalarKind(Span, crate::ScalarKind, u8),
     BadAccessor(Span),
     BadTexture(Span),
     BadTypeCast {
@@ -147,6 +148,7 @@ pub enum Error<'a> {
     InvalidForInitializer(Span),
     InvalidGatherComponent(Span, i32),
     InvalidConstructorComponentType(Span, i32),
+    InvalidIdentifierUnderscore(Span),
     ReservedIdentifierPrefix(Span),
     UnknownAddressSpace(Span),
     UnknownAttribute(Span),
@@ -295,11 +297,19 @@ impl<'a> Error<'a> {
                 labels: vec![(bad_span.clone(), "expected unsigned integer".into())],
                 notes: vec![],
             },
-
             Error::BadScalarWidth(ref bad_span, width) => ParseError {
                 message: format!("invalid width of `{}` bits for literal", width as u32 * 8,),
                 labels: vec![(bad_span.clone(), "invalid width".into())],
                 notes: vec!["the only valid width is 32 for now".to_string()],
+            },
+            Error::BadMatrixScalarKind(
+                ref span,
+                kind,
+                width,
+             ) => ParseError {
+                message: format!("matrix scalar type must be floating-point, but found `{}`", kind.to_wgsl(width)),
+                labels: vec![(span.clone(), "must be floating-point (e.g. `f32`)".into())],
+                notes: vec![],
             },
             Error::BadAccessor(ref accessor_span) => ParseError {
                 message: format!(
@@ -361,6 +371,11 @@ impl<'a> Error<'a> {
                 message: format!("invalid type for constructor component at index [{}]", component),
                 labels: vec![(bad_span.clone(), "invalid component type".into())],
                 notes: vec![],
+            },
+            Error::InvalidIdentifierUnderscore(ref bad_span) => ParseError {
+                message: "Identifier can't be '_'".to_string(),
+                labels: vec![(bad_span.clone(), "invalid identifier".into())],
+                notes: vec!["Use phony assignment instead ('_ =' notice the absence of 'let' or 'var')".to_string()],
             },
             Error::ReservedIdentifierPrefix(ref bad_span) => ParseError {
                 message: format!("Identifier starts with a reserved prefix: '{}'", &source[bad_span.clone()]),
@@ -2895,6 +2910,23 @@ impl Parser {
         Ok((members, span))
     }
 
+    fn parse_matrix_scalar_type<'a>(
+        &mut self,
+        lexer: &mut Lexer<'a>,
+        columns: crate::VectorSize,
+        rows: crate::VectorSize,
+    ) -> Result<crate::TypeInner, Error<'a>> {
+        let (kind, width, span) = lexer.next_scalar_generic_with_span()?;
+        match kind {
+            crate::ScalarKind::Float => Ok(crate::TypeInner::Matrix {
+                columns,
+                rows,
+                width,
+            }),
+            _ => Err(Error::BadMatrixScalarKind(span, kind, width)),
+        }
+    }
+
     fn parse_type_decl_impl<'a>(
         &mut self,
         lexer: &mut Lexer<'a>,
@@ -2906,6 +2938,7 @@ impl Parser {
         if let Some((kind, width)) = conv::get_scalar_type(word) {
             return Ok(Some(crate::TypeInner::Scalar { kind, width }));
         }
+
         Ok(Some(match word {
             "vec2" => {
                 let (kind, width) = lexer.next_scalar_generic()?;
@@ -2932,77 +2965,44 @@ impl Parser {
                 }
             }
             "mat2x2" => {
-                let (_, width) = lexer.next_scalar_generic()?;
-                crate::TypeInner::Matrix {
-                    columns: crate::VectorSize::Bi,
-                    rows: crate::VectorSize::Bi,
-                    width,
-                }
+                self.parse_matrix_scalar_type(lexer, crate::VectorSize::Bi, crate::VectorSize::Bi)?
             }
             "mat2x3" => {
-                let (_, width) = lexer.next_scalar_generic()?;
-                crate::TypeInner::Matrix {
-                    columns: crate::VectorSize::Bi,
-                    rows: crate::VectorSize::Tri,
-                    width,
-                }
+                self.parse_matrix_scalar_type(lexer, crate::VectorSize::Bi, crate::VectorSize::Tri)?
             }
-            "mat2x4" => {
-                let (_, width) = lexer.next_scalar_generic()?;
-                crate::TypeInner::Matrix {
-                    columns: crate::VectorSize::Bi,
-                    rows: crate::VectorSize::Quad,
-                    width,
-                }
-            }
+            "mat2x4" => self.parse_matrix_scalar_type(
+                lexer,
+                crate::VectorSize::Bi,
+                crate::VectorSize::Quad,
+            )?,
             "mat3x2" => {
-                let (_, width) = lexer.next_scalar_generic()?;
-                crate::TypeInner::Matrix {
-                    columns: crate::VectorSize::Tri,
-                    rows: crate::VectorSize::Bi,
-                    width,
-                }
+                self.parse_matrix_scalar_type(lexer, crate::VectorSize::Tri, crate::VectorSize::Bi)?
             }
-            "mat3x3" => {
-                let (_, width) = lexer.next_scalar_generic()?;
-                crate::TypeInner::Matrix {
-                    columns: crate::VectorSize::Tri,
-                    rows: crate::VectorSize::Tri,
-                    width,
-                }
-            }
-            "mat3x4" => {
-                let (_, width) = lexer.next_scalar_generic()?;
-                crate::TypeInner::Matrix {
-                    columns: crate::VectorSize::Tri,
-                    rows: crate::VectorSize::Quad,
-                    width,
-                }
-            }
-            "mat4x2" => {
-                let (_, width) = lexer.next_scalar_generic()?;
-                crate::TypeInner::Matrix {
-                    columns: crate::VectorSize::Quad,
-                    rows: crate::VectorSize::Bi,
-                    width,
-                }
-            }
-            "mat4x3" => {
-                let (_, width) = lexer.next_scalar_generic()?;
-                crate::TypeInner::Matrix {
-                    columns: crate::VectorSize::Quad,
-                    rows: crate::VectorSize::Tri,
-                    width,
-                }
-            }
-            "mat4x4" => {
-                let (_, width) = lexer.next_scalar_generic()?;
-                crate::TypeInner::Matrix {
-                    columns: crate::VectorSize::Quad,
-                    rows: crate::VectorSize::Quad,
-                    width,
-                }
-            }
+            "mat3x3" => self.parse_matrix_scalar_type(
+                lexer,
+                crate::VectorSize::Tri,
+                crate::VectorSize::Tri,
+            )?,
+            "mat3x4" => self.parse_matrix_scalar_type(
+                lexer,
+                crate::VectorSize::Tri,
+                crate::VectorSize::Quad,
+            )?,
+            "mat4x2" => self.parse_matrix_scalar_type(
+                lexer,
+                crate::VectorSize::Quad,
+                crate::VectorSize::Bi,
+            )?,
+            "mat4x3" => self.parse_matrix_scalar_type(
+                lexer,
+                crate::VectorSize::Quad,
+                crate::VectorSize::Tri,
+            )?,
+            "mat4x4" => self.parse_matrix_scalar_type(
+                lexer,
+                crate::VectorSize::Quad,
+                crate::VectorSize::Quad,
+            )?,
             "atomic" => {
                 let (kind, width) = lexer.next_scalar_generic()?;
                 crate::TypeInner::Atomic { kind, width }
@@ -3347,25 +3347,26 @@ impl Parser {
                 let _ = context.resolve_type(reference.handle)?;
 
                 let ty = context.typifier.get(reference.handle, context.types);
-                let constant_inner = match ty.canonical_form(context.types) {
-                    Some(crate::TypeInner::ValuePointer {
+                let (kind, width) = match *ty {
+                    crate::TypeInner::ValuePointer {
                         size: None,
                         kind,
                         width,
-                        space: _,
-                    }) => crate::ConstantInner::Scalar {
-                        width,
-                        value: match kind {
-                            crate::ScalarKind::Sint => crate::ScalarValue::Sint(1),
-                            crate::ScalarKind::Uint => crate::ScalarValue::Uint(1),
-                            _ => {
-                                return Err(Error::BadIncrDecrReferenceType(lhs_span));
-                            }
-                        },
+                        ..
+                    } => (kind, width),
+                    crate::TypeInner::Pointer { base, .. } => match context.types[base].inner {
+                        crate::TypeInner::Scalar { kind, width } => (kind, width),
+                        _ => return Err(Error::BadIncrDecrReferenceType(lhs_span)),
                     },
-                    _ => {
-                        return Err(Error::BadIncrDecrReferenceType(lhs_span));
-                    }
+                    _ => return Err(Error::BadIncrDecrReferenceType(lhs_span)),
+                };
+                let constant_inner = crate::ConstantInner::Scalar {
+                    width,
+                    value: match kind {
+                        crate::ScalarKind::Sint => crate::ScalarValue::Sint(1),
+                        crate::ScalarKind::Uint => crate::ScalarValue::Uint(1),
+                        _ => return Err(Error::BadIncrDecrReferenceType(lhs_span)),
+                    },
                 };
                 let constant = context.constants.append(
                     crate::Constant {
@@ -3489,6 +3490,18 @@ impl Parser {
             (Token::Word(word), _) => {
                 let mut emitter = super::Emitter::default();
                 let statement = match word {
+                    "_" => {
+                        let _ = lexer.next();
+                        emitter.start(context.expressions);
+                        lexer.expect(Token::Operation('='))?;
+                        self.parse_general_expression(
+                            lexer,
+                            context.as_expression(block, &mut emitter),
+                        )?;
+                        lexer.expect(Token::Separator(';'))?;
+                        block.extend(emitter.finish(context.expressions));
+                        None
+                    }
                     "let" => {
                         let _ = lexer.next();
                         emitter.start(context.expressions);

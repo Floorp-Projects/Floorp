@@ -727,6 +727,17 @@ fn inject_standard_builtins(
                     _ => {}
                 }
 
+                // we need to cast the return type of findLsb / findMsb
+                let mc = if kind == Sk::Uint {
+                    match mc {
+                        MacroCall::MathFunction(MathFunction::FindLsb) => MacroCall::FindLsbUint,
+                        MacroCall::MathFunction(MathFunction::FindMsb) => MacroCall::FindMsbUint,
+                        mc => mc,
+                    }
+                } else {
+                    mc
+                };
+
                 declaration.overloads.push(module.add_builtin(args, mc))
             }
         }
@@ -1580,6 +1591,8 @@ pub enum MacroCall {
     },
     ImageStore,
     MathFunction(MathFunction),
+    FindLsbUint,
+    FindMsbUint,
     BitfieldExtract,
     BitfieldInsert,
     Relational(RelationalFunction),
@@ -1824,7 +1837,7 @@ impl MacroCall {
             MacroCall::ImageStore => {
                 let comps =
                     parser.coordinate_components(ctx, args[0], args[1], None, meta, body)?;
-                ctx.emit_flush(body);
+                ctx.emit_restart(body);
                 body.push(
                     crate::Statement::ImageStore {
                         image: args[0],
@@ -1834,7 +1847,6 @@ impl MacroCall {
                     },
                     meta,
                 );
-                ctx.emit_start();
                 return Ok(None);
             }
             MacroCall::MathFunction(fun) => ctx.add_expression(
@@ -1848,6 +1860,33 @@ impl MacroCall {
                 Span::default(),
                 body,
             ),
+            mc @ (MacroCall::FindLsbUint | MacroCall::FindMsbUint) => {
+                let fun = match mc {
+                    MacroCall::FindLsbUint => MathFunction::FindLsb,
+                    MacroCall::FindMsbUint => MathFunction::FindMsb,
+                    _ => unreachable!(),
+                };
+                let res = ctx.add_expression(
+                    Expression::Math {
+                        fun,
+                        arg: args[0],
+                        arg1: None,
+                        arg2: None,
+                        arg3: None,
+                    },
+                    Span::default(),
+                    body,
+                );
+                ctx.add_expression(
+                    Expression::As {
+                        expr: res,
+                        kind: Sk::Sint,
+                        convert: Some(4),
+                    },
+                    Span::default(),
+                    body,
+                )
+            }
             MacroCall::BitfieldInsert => {
                 let conv_arg_2 = ctx.add_expression(
                     Expression::As {
@@ -1930,11 +1969,42 @@ impl MacroCall {
             MacroCall::Mod(size) => {
                 ctx.implicit_splat(parser, &mut args[1], meta, size)?;
 
-                ctx.add_expression(
+                // x - y * floor(x / y)
+
+                let div = ctx.add_expression(
                     Expression::Binary {
-                        op: BinaryOperator::Modulo,
+                        op: BinaryOperator::Divide,
                         left: args[0],
                         right: args[1],
+                    },
+                    Span::default(),
+                    body,
+                );
+                let floor = ctx.add_expression(
+                    Expression::Math {
+                        fun: MathFunction::Floor,
+                        arg: div,
+                        arg1: None,
+                        arg2: None,
+                        arg3: None,
+                    },
+                    Span::default(),
+                    body,
+                );
+                let mult = ctx.add_expression(
+                    Expression::Binary {
+                        op: BinaryOperator::Multiply,
+                        left: floor,
+                        right: args[1],
+                    },
+                    Span::default(),
+                    body,
+                );
+                ctx.add_expression(
+                    Expression::Binary {
+                        op: BinaryOperator::Subtract,
+                        left: args[0],
+                        right: mult,
                     },
                     Span::default(),
                     body,
@@ -1998,8 +2068,7 @@ impl MacroCall {
                 body,
             ),
             MacroCall::Barrier => {
-                ctx.emit_flush(body);
-                ctx.emit_start();
+                ctx.emit_restart(body);
                 body.push(crate::Statement::Barrier(crate::Barrier::all()), meta);
                 return Ok(None);
             }

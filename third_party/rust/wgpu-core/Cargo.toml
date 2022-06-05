@@ -26,6 +26,7 @@ vulkan-portability = ["hal/vulkan"]
 [dependencies]
 arrayvec = "0.7"
 bitflags = "1.0"
+bit-vec = "0.6"
 codespan-reporting = "0.11"
 copyless = "0.1"
 fxhash = "0.2"
@@ -41,7 +42,7 @@ thiserror = "1"
 
 [dependencies.naga]
 git = "https://github.com/gfx-rs/naga"
-rev = "1aa91549"
+rev = "571302e"
 #version = "0.8"
 features = ["span", "validate", "wgsl-in"]
 

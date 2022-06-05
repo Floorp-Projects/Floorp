@@ -77,7 +77,7 @@ impl<T> hash::Hash for Handle<T> {
 impl<T> Handle<T> {
     #[cfg(test)]
     pub const DUMMY: Self = Handle {
-        index: unsafe { NonZeroU32::new_unchecked(!0) },
+        index: unsafe { NonZeroU32::new_unchecked(u32::MAX) },
         marker: PhantomData,
     };
 
@@ -101,7 +101,7 @@ impl<T> Handle<T> {
         let handle_index = u32::try_from(index + 1)
             .ok()
             .and_then(Index::new)
-            .expect("Failed to insert into UniqueArena. Handle overflows");
+            .expect("Failed to insert into arena. Handle overflows");
         Handle::new(handle_index)
     }
 
