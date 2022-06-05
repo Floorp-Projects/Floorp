@@ -1199,10 +1199,17 @@ class nsIWidget : public nsISupports {
   };
 
   /**
-   * Return the widget's LayerManager. The layer tree for that
-   * LayerManager is what gets rendered to the widget.
+   * Return the widget's LayerManager. The layer tree for that LayerManager is
+   * what gets rendered to the widget.
+   *
+   * Note that this tries to create a renderer if it doesn't exist.
    */
   virtual WindowRenderer* GetWindowRenderer() = 0;
+
+  /**
+   * Returns whether there's an existing window renderer.
+   */
+  virtual bool HasWindowRenderer() const = 0;
 
   /**
    * Called before each layer manager transaction to allow any preparation
