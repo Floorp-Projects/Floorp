@@ -65,7 +65,7 @@ class ClonedErrorHolder final {
   // Creates a new JS Error or Exception/DOMException object based on the
   // values stored in the holder. Returns false and sets an exception on aCx
   // if it fails.
-  bool ToErrorValue(JSContext* aCx, JS::MutableHandleValue aResult);
+  bool ToErrorValue(JSContext* aCx, JS::MutableHandle<JS::Value> aResult);
 
   class Holder final : public StructuredCloneHolder {
    public:

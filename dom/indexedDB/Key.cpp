@@ -7,7 +7,7 @@
 #include "Key.h"
 
 #include <algorithm>
-#include <stdint.h>  // for UINT32_MAX, uintptr_t
+#include <stdint.h>          // for UINT32_MAX, uintptr_t
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,NewArrayBuffer{,WithContents},GetArrayBufferLengthAndData}
 #include "js/Date.h"
@@ -41,7 +41,7 @@ namespace {
 // https://w3c.github.io/IndexedDB/#convert-value-to-key
 template <typename ArrayConversionPolicy>
 IDBResult<Ok, IDBSpecialValue::Invalid> ConvertArrayValueToKey(
-    JSContext* const aCx, JS::HandleObject aObject,
+    JSContext* const aCx, JS::Handle<JSObject*> aObject,
     ArrayConversionPolicy&& aPolicy) {
   // 1. Let `len` be ? ToLength( ? Get(`input`, "length")).
   uint32_t len;
@@ -60,7 +60,7 @@ IDBResult<Ok, IDBSpecialValue::Invalid> ConvertArrayValueToKey(
 
   // 5. While `index` is less than `len`:
   while (index < len) {
-    JS::RootedId indexId(aCx);
+    JS::Rooted<JS::PropertyKey> indexId(aCx);
     if (!JS_IndexToId(aCx, index, &indexId)) {
       return Err(IDBException(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
     }
@@ -77,7 +77,7 @@ IDBResult<Ok, IDBSpecialValue::Invalid> ConvertArrayValueToKey(
     }
 
     // 3. Let `entry` be ? Get(`input`, `index`).
-    JS::RootedValue entry(aCx);
+    JS::Rooted<JS::Value> entry(aCx);
     if (!JS_GetPropertyById(aCx, aObject, indexId, &entry)) {
       return Err(IDBException(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
     }
@@ -330,7 +330,7 @@ class MOZ_STACK_CLASS Key::ArrayValueEncoder final {
         mTypeOffset(aTypeOffset),
         mRecursionDepth(aRecursionDepth) {}
 
-  void AddToSeenSet(JSContext* const aCx, JS::HandleObject) {
+  void AddToSeenSet(JSContext* const aCx, JS::Handle<JSObject*>) {
     ++mRecursionDepth;
   }
 
@@ -345,9 +345,9 @@ class MOZ_STACK_CLASS Key::ArrayValueEncoder final {
     MOZ_ASSERT(mTypeOffset < eMaxType * kMaxArrayCollapse);
   }
 
-  IDBResult<Ok, IDBSpecialValue::Invalid> ConvertSubkey(JSContext* const aCx,
-                                                        JS::HandleValue aEntry,
-                                                        const uint32_t aIndex) {
+  IDBResult<Ok, IDBSpecialValue::Invalid> ConvertSubkey(
+      JSContext* const aCx, JS::Handle<JS::Value> aEntry,
+      const uint32_t aIndex) {
     auto result =
         mKey.EncodeJSValInternal(aCx, aEntry, mTypeOffset, mRecursionDepth);
     mTypeOffset = 0;
@@ -406,7 +406,7 @@ IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
   }
 
   if (aVal.isObject()) {
-    JS::RootedObject object(aCx, &aVal.toObject());
+    JS::Rooted<JSObject*> object(aCx, &aVal.toObject());
 
     js::ESClass builtinClass;
     if (!JS::GetBuiltinClass(aCx, object, &builtinClass)) {
@@ -845,7 +845,7 @@ Result<Ok, nsresult> Key::EncodeBinary(JSObject* aObject, bool aIsViewObject,
 // static
 JSObject* Key::DecodeBinary(const EncodedDataType*& aPos,
                             const EncodedDataType* aEnd, JSContext* aCx) {
-  JS::RootedObject rv(aCx);
+  JS::Rooted<JSObject*> rv(aCx);
   DecodeStringy<eBinary, uint8_t>(
       aPos, aEnd,
       [&rv, aCx](uint8_t** out, uint32_t decodedSize) {

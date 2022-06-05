@@ -67,13 +67,13 @@ class SharedMap : public DOMEventTargetHelper {
   // If the map contains the given (UTF-8) key, decodes and returns a new copy
   // of its value. Otherwise returns null.
   void Get(JSContext* cx, const nsACString& name,
-           JS::MutableHandleValue aRetVal, ErrorResult& aRv);
+           JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv);
 
   // Conversion helpers for WebIDL callers
   bool Has(const nsAString& aName) { return Has(NS_ConvertUTF16toUTF8(aName)); }
 
   void Get(JSContext* aCx, const nsAString& aName,
-           JS::MutableHandleValue aRetVal, ErrorResult& aRv) {
+           JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv) {
     return Get(aCx, NS_ConvertUTF16toUTF8(aName), aRetVal, aRv);
   }
 
@@ -115,7 +115,8 @@ class SharedMap : public DOMEventTargetHelper {
               nsTArray<RefPtr<BlobImpl>>&& aBlobs,
               nsTArray<nsCString>&& aChangedKeys);
 
-  JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   ~SharedMap() override = default;
@@ -186,7 +187,8 @@ class SharedMap : public DOMEventTargetHelper {
 
     // Decodes the entry's value into the current Realm of the given JS context
     // and puts the result in aRetVal on success.
-    void Read(JSContext* aCx, JS::MutableHandleValue aRetVal, ErrorResult& aRv);
+    void Read(JSContext* aCx, JS::MutableHandle<JS::Value> aRetVal,
+              ErrorResult& aRv);
 
     // Returns the byte size of the entry's raw structured clone data.
     uint32_t Size() const { return mSize; }
@@ -293,14 +295,14 @@ class WritableSharedMap final : public SharedMap {
 
   // Sets the value of the given (UTF-8 encoded) key to a structured clone
   // snapshot of the given value.
-  void Set(JSContext* cx, const nsACString& name, JS::HandleValue value,
+  void Set(JSContext* cx, const nsACString& name, JS::Handle<JS::Value> value,
            ErrorResult& aRv);
 
   // Deletes the given (UTF-8 encoded) key from the map.
   void Delete(const nsACString& name);
 
   // Conversion helpers for WebIDL callers
-  void Set(JSContext* aCx, const nsAString& aName, JS::HandleValue aValue,
+  void Set(JSContext* aCx, const nsAString& aName, JS::Handle<JS::Value> aValue,
            ErrorResult& aRv) {
     return Set(aCx, NS_ConvertUTF16toUTF8(aName), aValue, aRv);
   }
@@ -322,7 +324,8 @@ class WritableSharedMap final : public SharedMap {
    */
   SharedMap* GetReadOnly();
 
-  JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   ~WritableSharedMap() override = default;

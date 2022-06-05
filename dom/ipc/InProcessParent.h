@@ -50,7 +50,7 @@ class InProcessParent final : public nsIDOMProcessParent,
   const nsACString& GetRemoteType() const override { return NOT_REMOTE_TYPE; };
 
  protected:
-  already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
+  already_AddRefed<JSActor> InitJSActor(JS::Handle<JSObject*> aMaybeActor,
                                         const nsACString& aName,
                                         ErrorResult& aRv) override;
   mozilla::ipc::IProtocol* AsNativeActor() override { return this; }

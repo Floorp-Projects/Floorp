@@ -81,7 +81,8 @@ class GamepadServiceTest final : public DOMEventTargetHelper,
   static already_AddRefed<GamepadServiceTest> CreateTestService(
       nsPIDOMWindowInner* aWindow);
   nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
-  JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
  private:
   // Hold a reference to the gamepad service so we don't have to worry about

@@ -120,7 +120,7 @@ void ClonedErrorHolder::Init(JSContext* aCx, JS::Handle<JSObject*> aError,
   if (stack) {
     ar.emplace(aCx, stack);
   }
-  JS::RootedValue stackValue(aCx, JS::ObjectOrNullValue(stack));
+  JS::Rooted<JS::Value> stackValue(aCx, JS::ObjectOrNullValue(stack));
   mStack.Write(aCx, stackValue, aRv);
 }
 
@@ -256,7 +256,7 @@ static bool ToJSString(JSContext* aCx, const nsACString& aStr,
 }
 
 bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
-                                     JS::MutableHandleValue aResult) {
+                                     JS::MutableHandle<JS::Value> aResult) {
   JS::Rooted<JS::Value> stackVal(aCx);
   JS::Rooted<JSObject*> stack(aCx);
 

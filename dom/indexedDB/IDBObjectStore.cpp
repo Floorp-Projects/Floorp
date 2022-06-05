@@ -544,7 +544,7 @@ void IDBObjectStore::AppendIndexUpdateInfo(
     }
 
     for (uint32_t arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
-      JS::RootedId indexId(aCx);
+      JS::Rooted<JS::PropertyKey> indexId(aCx);
       if (NS_WARN_IF(!JS_IndexToId(aCx, arrayIndex, &indexId))) {
         IDB_REPORT_INTERNAL_ERR();
         aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -563,7 +563,7 @@ void IDBObjectStore::AppendIndexUpdateInfo(
         continue;
       }
 
-      JS::RootedValue arrayItem(aCx);
+      JS::Rooted<JS::Value> arrayItem(aCx);
       if (NS_WARN_IF(!JS_GetPropertyById(aCx, array, indexId, &arrayItem))) {
         IDB_REPORT_INTERNAL_ERR();
         aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);

@@ -526,14 +526,14 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage) {
       jsapi.Init();
       JSContext* cx = jsapi.cx();
 
-      JS::RootedValue stack(cx);
+      JS::Rooted<JS::Value> stack(cx);
       rv = scriptError->GetStack(&stack);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (stack.isObject()) {
         // Because |stack| might be a cross-compartment wrapper, we can't use it
         // with JSAutoRealm. Use the stackGlobal for that.
-        JS::RootedValue stackGlobal(cx);
+        JS::Rooted<JS::Value> stackGlobal(cx);
         rv = scriptError->GetStackGlobal(&stackGlobal);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1389,7 +1389,7 @@ void ContentChild::InitXPCOM(
       MOZ_CRASH();
     }
     ErrorResult rv;
-    JS::RootedValue data(jsapi.cx());
+    JS::Rooted<JS::Value> data(jsapi.cx());
     mozilla::dom::ipc::StructuredCloneData id;
     id.Copy(aInitialData);
     id.Read(jsapi.cx(), &data, rv);
@@ -4571,7 +4571,8 @@ NS_IMETHODIMP ContentChild::GetExistingActor(const nsACString& aName,
 }
 
 already_AddRefed<JSActor> ContentChild::InitJSActor(
-    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
+    JS::Handle<JSObject*> aMaybeActor, const nsACString& aName,
+    ErrorResult& aRv) {
   RefPtr<JSProcessActorChild> actor;
   if (aMaybeActor.get()) {
     aRv = UNWRAP_OBJECT(JSProcessActorChild, aMaybeActor.get(), actor);

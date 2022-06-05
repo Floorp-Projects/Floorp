@@ -2937,7 +2937,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
       if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
         MOZ_CRASH();
       }
-      JS::RootedValue init(jsapi.cx());
+      JS::Rooted<JS::Value> init(jsapi.cx());
       // We'll crash on failure, so use a IgnoredErrorResult (which also
       // auto-suppresses exceptions).
       IgnoredErrorResult rv;
@@ -4768,7 +4768,7 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
     }
     JSContext* cx = jsapi.cx();
 
-    JS::RootedValue stack(cx);
+    JS::Rooted<JS::Value> stack(cx);
     ErrorResult rv;
     data.Read(cx, &stack, rv);
     if (rv.Failed() || !stack.isObject()) {
@@ -4776,10 +4776,10 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
       return IPC_OK();
     }
 
-    JS::RootedObject stackObj(cx, &stack.toObject());
+    JS::Rooted<JSObject*> stackObj(cx, &stack.toObject());
     MOZ_ASSERT(JS::IsUnwrappedSavedFrame(stackObj));
 
-    JS::RootedObject stackGlobal(cx, JS::GetNonCCWObjectGlobal(stackObj));
+    JS::Rooted<JSObject*> stackGlobal(cx, JS::GetNonCCWObjectGlobal(stackObj));
     msg = new nsScriptErrorWithStack(JS::NothingHandleValue, stackObj,
                                      stackGlobal);
   } else {
@@ -7608,7 +7608,8 @@ NS_IMETHODIMP ContentParent::GetExistingActor(const nsACString& aName,
 }
 
 already_AddRefed<JSActor> ContentParent::InitJSActor(
-    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
+    JS::Handle<JSObject*> aMaybeActor, const nsACString& aName,
+    ErrorResult& aRv) {
   RefPtr<JSProcessActorParent> actor;
   if (aMaybeActor.get()) {
     aRv = UNWRAP_OBJECT(JSProcessActorParent, aMaybeActor.get(), actor);

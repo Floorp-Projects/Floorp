@@ -375,7 +375,7 @@ bool HangMonitorChild::InterruptCallback() {
 
   // Only handle the interrupt for cancelling content JS if we have a
   // non-privileged script (i.e. not part of Gecko or an add-on).
-  JS::RootedObject global(mContext, JS::CurrentGlobalOrNull(mContext));
+  JS::Rooted<JSObject*> global(mContext, JS::CurrentGlobalOrNull(mContext));
   nsIPrincipal* principal = xpc::GetObjectPrincipal(global);
   if (principal && (principal->IsSystemPrincipal() ||
                     principal->GetIsAddonOrExpandedAddonPrincipal())) {
