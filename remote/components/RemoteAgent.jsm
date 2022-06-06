@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   CDP: "chrome://remote/content/cdp/CDP.jsm",
   Deferred: "chrome://remote/content/shared/Sync.jsm",
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
@@ -19,9 +21,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebDriverBiDi: "chrome://remote/content/webdriver-bidi/WebDriverBiDi.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
-XPCOMUtils.defineLazyGetter(this, "activeProtocols", () => {
+XPCOMUtils.defineLazyGetter(lazy, "activeProtocols", () => {
   const protocols = Services.prefs.getIntPref("remote.active-protocols");
   if (protocols < 1 || protocols > 3) {
     throw Error(`Invalid remote protocol identifier: ${protocols}`);
@@ -55,7 +57,7 @@ class RemoteAgentParentProcess {
   constructor() {
     this.#allowHosts = null;
     this.#allowOrigins = null;
-    this.#browserStartupFinished = Deferred();
+    this.#browserStartupFinished = lazy.Deferred();
     this.#classID = Components.ID("{8f685a9d-8181-46d6-a71d-869289099c6d}");
     this.#enabled = false;
     this.#port = DEFAULT_PORT;
@@ -213,7 +215,7 @@ class RemoteAgentParentProcess {
     }
 
     try {
-      this.#server = new HttpServer();
+      this.#server = new lazy.HttpServer();
       this.server._start(port, host);
 
       Services.obs.notifyObservers(null, "remote-listening", true);
@@ -221,7 +223,7 @@ class RemoteAgentParentProcess {
       await Promise.all([this.webDriverBiDi?.start(), this.cdp?.start()]);
     } catch (e) {
       await this.#stop();
-      logger.error(`Unable to start remote agent: ${e.message}`, e);
+      lazy.logger.error(`Unable to start remote agent: ${e.message}`, e);
     }
   }
 
@@ -241,7 +243,7 @@ class RemoteAgentParentProcess {
       Services.obs.notifyObservers(null, "remote-listening");
     } catch (e) {
       // this function must never fail
-      logger.error("unable to stop listener", e);
+      lazy.logger.error("unable to stop listener", e);
     }
   }
 
@@ -300,7 +302,7 @@ class RemoteAgentParentProcess {
 
   async observe(subject, topic) {
     if (this.enabled) {
-      logger.trace(`Received observer notification ${topic}`);
+      lazy.logger.trace(`Received observer notification ${topic}`);
     }
 
     switch (topic) {
@@ -327,19 +329,19 @@ class RemoteAgentParentProcess {
           // the whole Firefox session, which will be identical to Marionette. For
           // now prevent logging if the component is not enabled during startup.
           if (
-            (activeProtocols & WEBDRIVER_BIDI_ACTIVE) ===
+            (lazy.activeProtocols & WEBDRIVER_BIDI_ACTIVE) ===
             WEBDRIVER_BIDI_ACTIVE
           ) {
-            this.#webDriverBiDi = new WebDriverBiDi(this);
+            this.#webDriverBiDi = new lazy.WebDriverBiDi(this);
             if (this.enabled) {
-              logger.debug("WebDriver BiDi enabled");
+              lazy.logger.debug("WebDriver BiDi enabled");
             }
           }
 
-          if ((activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
-            this.#cdp = new CDP(this);
+          if ((lazy.activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
+            this.#cdp = new lazy.CDP(this);
             if (this.enabled) {
-              logger.debug("CDP enabled");
+              lazy.logger.debug("CDP enabled");
             }
           }
         }
@@ -383,7 +385,7 @@ class RemoteAgentParentProcess {
         return this.running;
 
       default:
-        logger.warn("Unknown IPC message to parent process: " + name);
+        lazy.logger.warn("Unknown IPC message to parent process: " + name);
         return null;
     }
   }
@@ -423,7 +425,7 @@ class RemoteAgentContentProcess {
   get running() {
     let reply = Services.cpmm.sendSyncMessage("RemoteAgent:IsRunning");
     if (reply.length == 0) {
-      logger.warn("No reply from parent process");
+      lazy.logger.warn("No reply from parent process");
       return false;
     }
     return reply[0];
