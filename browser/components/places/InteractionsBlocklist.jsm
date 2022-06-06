@@ -11,12 +11,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
   return console.createInstance({
     prefix: "InteractionsBlocklist",
     maxLogLevel: Services.prefs.getBoolPref(
@@ -121,7 +123,7 @@ class _InteractionsBlocklist {
       );
       HOST_BLOCKLIST["*"] = parsedBlocklist;
     } catch (ex) {
-      logConsole.warn("places.interactions.customBlocklist is corrupted.");
+      lazy.logConsole.warn("places.interactions.customBlocklist is corrupted.");
     }
   }
 
@@ -174,7 +176,7 @@ class _InteractionsBlocklist {
    *  True if `url` is on a blocklist. False otherwise.
    */
   isUrlBlocklisted(urlToCheck) {
-    if (FilterAdult.isAdultUrl(urlToCheck)) {
+    if (lazy.FilterAdult.isAdultUrl(urlToCheck)) {
       return true;
     }
 
@@ -191,7 +193,7 @@ class _InteractionsBlocklist {
         throw new Error();
       }
     } catch (ex) {
-      logConsole.warn(
+      lazy.logConsole.warn(
         `Invalid URL passed to InteractionsBlocklist.isUrlBlocklisted: ${url}`
       );
       return false;
@@ -201,8 +203,10 @@ class _InteractionsBlocklist {
       return false;
     }
 
-    let hostWithoutSuffix = UrlbarUtils.stripPublicSuffixFromHost(url.host);
-    let [hostWithSubdomains] = UrlbarUtils.stripPrefixAndTrim(
+    let hostWithoutSuffix = lazy.UrlbarUtils.stripPublicSuffixFromHost(
+      url.host
+    );
+    let [hostWithSubdomains] = lazy.UrlbarUtils.stripPrefixAndTrim(
       hostWithoutSuffix,
       {
         stripWww: true,

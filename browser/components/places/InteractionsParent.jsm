@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["InteractionsParent"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Interactions",
   "resource:///modules/Interactions.jsm"
 );
@@ -20,13 +22,13 @@ class InteractionsParent extends JSWindowActorParent {
   receiveMessage(msg) {
     switch (msg.name) {
       case "Interactions:PageLoaded":
-        Interactions.registerNewInteraction(
+        lazy.Interactions.registerNewInteraction(
           this.browsingContext.embedderElement,
           msg.data
         );
         break;
       case "Interactions:PageHide":
-        Interactions.registerEndOfInteraction(
+        lazy.Interactions.registerEndOfInteraction(
           // This could be null if the browsing context has already gone away,
           // e.g. on tab close.
           this.browsingContext?.embedderElement

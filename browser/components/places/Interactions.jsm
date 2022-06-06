@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
@@ -22,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
   return console.createInstance({
     prefix: "InteractionsManager",
     maxLogLevel: Services.prefs.getBoolPref(
@@ -34,26 +36,26 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
   });
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   idleService: ["@mozilla.org/widget/useridleservice;1", "nsIUserIdleService"],
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "pageViewIdleTime",
   "browser.places.interactions.pageViewIdleTime",
   60
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "snapshotIdleTime",
   "browser.places.interactions.snapshotIdleTime",
   2
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "saveInterval",
   "browser.places.interactions.saveInterval",
   10000
@@ -194,13 +196,13 @@ class _Interactions {
 
     this.#activeWindow = Services.wm.getMostRecentBrowserWindow();
 
-    for (let win of BrowserWindowTracker.orderedWindows) {
+    for (let win of lazy.BrowserWindowTracker.orderedWindows) {
       if (!win.closed) {
         this.#registerWindow(win);
       }
     }
     Services.obs.addObserver(this, DOMWINDOW_OPENED_TOPIC, true);
-    idleService.addIdleObserver(this, pageViewIdleTime);
+    lazy.idleService.addIdleObserver(this, lazy.pageViewIdleTime);
     this.#initialized = true;
   }
 
@@ -209,7 +211,7 @@ class _Interactions {
    */
   uninit() {
     if (this.#initialized) {
-      idleService.removeIdleObserver(this, pageViewIdleTime);
+      lazy.idleService.removeIdleObserver(this, lazy.pageViewIdleTime);
     }
   }
 
@@ -218,7 +220,7 @@ class _Interactions {
    * Used by tests.
    */
   async reset() {
-    logConsole.debug("Database reset");
+    lazy.logConsole.debug("Database reset");
     this.#interactions = new WeakMap();
     this.#userIsIdle = false;
     this._pageViewStartTime = Cu.now();
@@ -253,12 +255,15 @@ class _Interactions {
       this.registerEndOfInteraction(browser);
     }
 
-    if (InteractionsBlocklist.isUrlBlocklisted(docInfo.url)) {
-      logConsole.debug("Ignoring a page as the URL is blocklisted", docInfo);
+    if (lazy.InteractionsBlocklist.isUrlBlocklisted(docInfo.url)) {
+      lazy.logConsole.debug(
+        "Ignoring a page as the URL is blocklisted",
+        docInfo
+      );
       return;
     }
 
-    logConsole.debug("Tracking a new interaction", docInfo);
+    lazy.logConsole.debug("Tracking a new interaction", docInfo);
     let now = monotonicNow();
     interaction = {
       url: docInfo.url,
@@ -275,7 +280,7 @@ class _Interactions {
 
     // Lock any potential page data in memory until we've decided if this page
     // needs to become a snapshot or not.
-    PageDataService.lockEntry(this, docInfo.url);
+    lazy.PageDataService.lockEntry(this, docInfo.url);
 
     // Only reset the time if this is being loaded in the active tab of the
     // active window.
@@ -301,7 +306,7 @@ class _Interactions {
     if (!browser) {
       return;
     }
-    logConsole.debug("Saw the end of an interaction");
+    lazy.logConsole.debug("Saw the end of an interaction");
 
     this.#updateInteraction(browser);
     this.#interactions.delete(browser);
@@ -358,7 +363,9 @@ class _Interactions {
     store
   ) {
     if (!activeWindow || (browser && browser.ownerGlobal != activeWindow)) {
-      logConsole.debug("Not updating interaction as there is no active window");
+      lazy.logConsole.debug(
+        "Not updating interaction as there is no active window"
+      );
       return;
     }
 
@@ -367,7 +374,7 @@ class _Interactions {
     // Sometimes an interaction may be signalled before idle is cleared, however
     // worst case we'd only loose approx 2 seconds of interaction detail.
     if (userIsIdle) {
-      logConsole.debug("Not updating interaction as the user is idle");
+      lazy.logConsole.debug("Not updating interaction as the user is idle");
       return;
     }
 
@@ -377,7 +384,7 @@ class _Interactions {
 
     let interaction = interactions.get(browser);
     if (!interaction) {
-      logConsole.debug("No interaction to update");
+      lazy.logConsole.debug("No interaction to update");
       return;
     }
 
@@ -406,7 +413,7 @@ class _Interactions {
       .then(() => {
         interaction.updated_at = monotonicNow();
 
-        logConsole.debug("Add to store: ", interaction);
+        lazy.logConsole.debug("Add to store: ", interaction);
         store.add(interaction);
       });
   }
@@ -417,9 +424,9 @@ class _Interactions {
    * @param {DOMWindow} win
    */
   #onActivateWindow(win) {
-    logConsole.debug("Window activated");
+    lazy.logConsole.debug("Window activated");
 
-    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
       return;
     }
 
@@ -433,7 +440,7 @@ class _Interactions {
    * @param {DOMWindow} win
    */
   #onDeactivateWindow(win) {
-    logConsole.debug("Window deactivate");
+    lazy.logConsole.debug("Window deactivate");
 
     this.#updateInteraction();
     this.#activeWindow = undefined;
@@ -448,7 +455,7 @@ class _Interactions {
    *   The instance of the browser that the user switched away from.
    */
   #onTabSelect(previousBrowser) {
-    logConsole.debug("Tab switched");
+    lazy.logConsole.debug("Tab switched");
 
     this.#updateInteraction(previousBrowser);
     this._pageViewStartTime = Cu.now();
@@ -489,14 +496,14 @@ class _Interactions {
         this.#onWindowOpen(subject);
         break;
       case "idle":
-        logConsole.debug("User went idle");
+        lazy.logConsole.debug("User went idle");
         // We save the state of the current interaction when we are notified
         // that the user is idle.
         this.#updateInteraction();
         this.#userIsIdle = true;
         break;
       case "active":
-        logConsole.debug("User became active");
+        lazy.logConsole.debug("User became active");
         this.#userIsIdle = false;
         this._pageViewStartTime = Cu.now();
         break;
@@ -510,7 +517,7 @@ class _Interactions {
    *   The window to register in.
    */
   #registerWindow(win) {
-    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
       return;
     }
 
@@ -602,7 +609,7 @@ class InteractionsStore {
   constructor() {
     // Block async shutdown to ensure the last write goes through.
     this.progress = {};
-    PlacesUtils.history.shutdownClient.jsclient.addBlocker(
+    lazy.PlacesUtils.history.shutdownClient.jsclient.addBlocker(
       "Interactions.jsm:: store",
       async () => this.flush(),
       { fetchState: () => this.progress }
@@ -611,7 +618,7 @@ class InteractionsStore {
     // Can be used to wait for the last pending write to have happened.
     this.pendingPromise = Promise.resolve();
 
-    idleService.addIdleObserver(this, snapshotIdleTime);
+    lazy.idleService.addIdleObserver(this, lazy.snapshotIdleTime);
   }
 
   /**
@@ -622,10 +629,10 @@ class InteractionsStore {
   async updateSnapshots() {
     let urls = [...this.#potentialSnapshots];
     this.#potentialSnapshots.clear();
-    await Snapshots.updateSnapshots(urls);
+    await lazy.Snapshots.updateSnapshots(urls);
 
     for (let url of urls) {
-      PageDataService.unlockEntry(Interactions, url);
+      lazy.PageDataService.unlockEntry(Interactions, url);
     }
   }
 
@@ -635,7 +642,7 @@ class InteractionsStore {
    */
   async flush() {
     if (this.#timer) {
-      clearTimeout(this.#timer);
+      lazy.clearTimeout(this.#timer);
       this.#timerResolve();
       await this.#updateDatabase();
       await this.updateSnapshots();
@@ -647,14 +654,14 @@ class InteractionsStore {
    * This exists for testing purposes.
    */
   async reset() {
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "Interactions.jsm::reset",
       async db => {
         await db.executeCached(`DELETE FROM moz_places_metadata`);
       }
     );
     if (this.#timer) {
-      clearTimeout(this.#timer);
+      lazy.clearTimeout(this.#timer);
       this.#timerResolve();
       this.#interactions.clear();
     }
@@ -669,7 +676,7 @@ class InteractionsStore {
    *   The document information to write.
    */
   add(interaction) {
-    logConsole.debug("Preparing interaction for storage", interaction);
+    lazy.logConsole.debug("Preparing interaction for storage", interaction);
 
     let interactionsForUrl = this.#interactions.get(interaction.url);
     if (!interactionsForUrl) {
@@ -681,11 +688,11 @@ class InteractionsStore {
     if (!this.#timer) {
       let promise = new Promise(resolve => {
         this.#timerResolve = resolve;
-        this.#timer = setTimeout(() => {
+        this.#timer = lazy.setTimeout(() => {
           this.#updateDatabase()
             .catch(Cu.reportError)
             .then(resolve);
-        }, saveInterval);
+        }, lazy.saveInterval);
       });
       this.pendingPromise = this.pendingPromise.then(() => promise);
     }
@@ -757,10 +764,10 @@ class InteractionsStore {
       }
     }
 
-    logConsole.debug(`Storing ${i} entries in the database`);
+    lazy.logConsole.debug(`Storing ${i} entries in the database`);
 
     this.progress.pendingUpdates = i;
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "Interactions.jsm::updateDatabase",
       async db => {
         await db.executeCached(

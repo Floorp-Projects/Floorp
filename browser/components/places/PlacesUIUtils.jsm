@@ -16,7 +16,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
@@ -29,7 +31,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Weave: "resource://services-sync/main.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "bundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {
   return Services.strings.createBundle(
     "chrome://browser/locale/places/places.properties"
   );
@@ -202,14 +204,14 @@ let InternalFaviconLoader = {
     }
 
     // First we do the actual setAndFetch call:
-    let loadType = PrivateBrowsingUtils.isWindowPrivate(win)
-      ? PlacesUtils.favicons.FAVICON_LOAD_PRIVATE
-      : PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE;
+    let loadType = lazy.PrivateBrowsingUtils.isWindowPrivate(win)
+      ? lazy.PlacesUtils.favicons.FAVICON_LOAD_PRIVATE
+      : lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE;
     let callback = this._makeCompletionCallback(win, innerWindowID);
 
     if (iconURI && iconURI.schemeIs("data")) {
-      expiration = PlacesUtils.toPRTime(expiration);
-      PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+      expiration = lazy.PlacesUtils.toPRTime(expiration);
+      lazy.PlacesUtils.favicons.replaceFaviconDataFromDataURL(
         uri,
         iconURI.spec,
         expiration,
@@ -217,7 +219,7 @@ let InternalFaviconLoader = {
       );
     }
 
-    let request = PlacesUtils.favicons.setAndFetchFaviconForPage(
+    let request = lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
       pageURI,
       uri,
       false,
@@ -331,7 +333,7 @@ class BookmarkState {
     }
 
     if (this._isTagContainer && this._newState.title) {
-      await PlacesTransactions.RenameTag({
+      await lazy.PlacesTransactions.RenameTag({
         oldTag: this._originalState.title,
         tag: this._newState.title,
       })
@@ -345,7 +347,7 @@ class BookmarkState {
 
     if (this._newState.uri) {
       transactions.push(
-        PlacesTransactions.EditUrl({
+        lazy.PlacesTransactions.EditUrl({
           guid: this._guid,
           url,
         })
@@ -356,7 +358,7 @@ class BookmarkState {
       switch (key) {
         case "title":
           transactions.push(
-            PlacesTransactions.EditTitle({
+            lazy.PlacesTransactions.EditTitle({
               guid: this._guid,
               title: value,
             })
@@ -377,7 +379,7 @@ class BookmarkState {
           });
           if (newTags.length) {
             transactions.push(
-              PlacesTransactions.Tag({
+              lazy.PlacesTransactions.Tag({
                 urls: [url],
                 tags: newTags,
               })
@@ -385,7 +387,7 @@ class BookmarkState {
           }
           if (removedTags.length) {
             transactions.push(
-              PlacesTransactions.Untag({
+              lazy.PlacesTransactions.Untag({
                 urls: [url],
                 tags: removedTags,
               })
@@ -394,7 +396,7 @@ class BookmarkState {
           break;
         case "keyword":
           transactions.push(
-            PlacesTransactions.EditKeyword({
+            lazy.PlacesTransactions.EditKeyword({
               guid: this._guid,
               keyword: value,
               postData: this._postData,
@@ -404,7 +406,7 @@ class BookmarkState {
           break;
         case "parentGuid":
           transactions.push(
-            PlacesTransactions.Move({
+            lazy.PlacesTransactions.Move({
               guid: this._guid,
               newParentGuid: this._newState.parentGuid,
             })
@@ -413,7 +415,7 @@ class BookmarkState {
       }
     }
     if (transactions.length) {
-      await PlacesTransactions.batch(transactions);
+      await lazy.PlacesTransactions.batch(transactions);
     }
 
     return this._guid;
@@ -433,7 +435,7 @@ var PlacesUIUtils = {
   lastBookmarkDialogDeferred: null,
 
   getFormattedString: function PUIU_getFormattedString(key, params) {
-    return bundle.formatStringFromName(key, params);
+    return lazy.bundle.formatStringFromName(key, params);
   },
 
   /**
@@ -452,7 +454,7 @@ var PlacesUIUtils = {
    * @returns {string} The localized plural string.
    */
   getPluralString: function PUIU_getPluralString(aKey, aNumber, aParams) {
-    let str = PluralForm.get(aNumber, bundle.GetStringFromName(aKey));
+    let str = lazy.PluralForm.get(aNumber, lazy.bundle.GetStringFromName(aKey));
 
     // Replace #1 with aParams[0], #2 with aParams[1], and so on.
     return str.replace(/\#(\d+)/g, function(matchedId, matchedNumber) {
@@ -462,7 +464,7 @@ var PlacesUIUtils = {
   },
 
   getString: function PUIU_getString(key) {
-    return bundle.GetStringFromName(key);
+    return lazy.bundle.GetStringFromName(key);
   },
 
   /**
@@ -479,7 +481,7 @@ var PlacesUIUtils = {
       throw new Error("Method must be used to only obfuscate place: uris!");
     }
     let urlNoProtocol = url.substring(url.indexOf(":") + 1);
-    let hashedURL = PlacesUtils.md5(urlNoProtocol);
+    let hashedURL = lazy.PlacesUtils.md5(urlNoProtocol);
 
     return `place:${hashedURL}`;
   },
@@ -498,7 +500,7 @@ var PlacesUIUtils = {
    *                   undefined otherwise.
    */
   async showBookmarkDialog(aInfo, aParentWindow = null) {
-    this.lastBookmarkDialogDeferred = PromiseUtils.defer();
+    this.lastBookmarkDialogDeferred = lazy.PromiseUtils.defer();
 
     // Preserve size attributes differently based on the fact the dialog has
     // a folder picker or not, since it needs more horizontal space than the
@@ -523,9 +525,9 @@ var PlacesUIUtils = {
       let batchBlockingDeferred;
 
       // Set the transaction manager into batching mode.
-      topUndoEntry = PlacesTransactions.topUndoEntry;
-      batchBlockingDeferred = PromiseUtils.defer();
-      PlacesTransactions.batch(async () => {
+      topUndoEntry = lazy.PlacesTransactions.topUndoEntry;
+      batchBlockingDeferred = lazy.PromiseUtils.defer();
+      lazy.PlacesTransactions.batch(async () => {
         await batchBlockingDeferred.promise;
       });
 
@@ -544,8 +546,11 @@ var PlacesUIUtils = {
 
       batchBlockingDeferred.resolve();
 
-      if (!bookmarkGuid && topUndoEntry != PlacesTransactions.topUndoEntry) {
-        PlacesTransactions.undo().catch(Cu.reportError);
+      if (
+        !bookmarkGuid &&
+        topUndoEntry != lazy.PlacesTransactions.topUndoEntry
+      ) {
+        lazy.PlacesTransactions.undo().catch(Cu.reportError);
       }
       this.lastBookmarkDialogDeferred.resolve(bookmarkGuid);
       return bookmarkGuid;
@@ -767,7 +772,7 @@ var PlacesUIUtils = {
    *   The URL to mark as typed.
    */
   markPageAsTyped: function PUIU_markPageAsTyped(aURL) {
-    PlacesUtils.history.markPageAsTyped(
+    lazy.PlacesUtils.history.markPageAsTyped(
       Services.uriFixup.getFixupURIInfo(aURL).preferredURI
     );
   },
@@ -783,7 +788,7 @@ var PlacesUIUtils = {
    *   The URL to mark as TRANSITION_BOOKMARK.
    */
   markPageAsFollowedBookmark: function PUIU_markPageAsFollowedBookmark(aURL) {
-    PlacesUtils.history.markPageAsFollowedBookmark(
+    lazy.PlacesUtils.history.markPageAsFollowedBookmark(
       Services.uriFixup.getFixupURIInfo(aURL).preferredURI
     );
   },
@@ -798,7 +803,7 @@ var PlacesUIUtils = {
    *   The URL to mark as TRANSITION_FRAMED_LINK.
    */
   markPageAsFollowedLink: function PUIU_markPageAsFollowedLink(aURL) {
-    PlacesUtils.history.markPageAsFollowedLink(
+    lazy.PlacesUtils.history.markPageAsFollowedLink(
       Services.uriFixup.getFixupURIInfo(aURL).preferredURI
     );
   },
@@ -813,7 +818,7 @@ var PlacesUIUtils = {
    * @returns {Promise}
    */
   async setCharsetForPage(url, charset, window) {
-    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(window)) {
       return;
     }
 
@@ -823,9 +828,9 @@ var PlacesUIUtils = {
       charset = null;
     }
 
-    await PlacesUtils.history.update({
+    await lazy.PlacesUtils.history.update({
       url,
-      annotations: new Map([[PlacesUtils.CHARSET_ANNO, charset]]),
+      annotations: new Map([[lazy.PlacesUtils.CHARSET_ANNO, charset]]),
     });
   },
 
@@ -840,7 +845,7 @@ var PlacesUIUtils = {
    *
    */
   checkURLSecurity: function PUIU_checkURLSecurity(aURINode, aWindow) {
-    if (PlacesUtils.nodeIsBookmark(aURINode)) {
+    if (lazy.PlacesUtils.nodeIsBookmark(aURINode)) {
       return true;
     }
 
@@ -874,22 +879,22 @@ var PlacesUIUtils = {
     }
 
     // Is it a query pointing to one of the special root folders?
-    if (PlacesUtils.nodeIsQuery(parentNode)) {
-      if (PlacesUtils.nodeIsFolder(aNode)) {
-        let guid = PlacesUtils.getConcreteItemGuid(aNode);
+    if (lazy.PlacesUtils.nodeIsQuery(parentNode)) {
+      if (lazy.PlacesUtils.nodeIsFolder(aNode)) {
+        let guid = lazy.PlacesUtils.getConcreteItemGuid(aNode);
         // If the parent folder is not a folder, it must be a query, and so this node
         // cannot be removed.
-        if (PlacesUtils.isRootItem(guid)) {
+        if (lazy.PlacesUtils.isRootItem(guid)) {
           return false;
         }
-      } else if (PlacesUtils.isVirtualLeftPaneItem(aNode.bookmarkGuid)) {
+      } else if (lazy.PlacesUtils.isVirtualLeftPaneItem(aNode.bookmarkGuid)) {
         // If the item is a left-pane top-level item, it can't be removed.
         return false;
       }
     }
 
     // If it's not a bookmark, or it's child of a query, we can remove it.
-    if (aNode.itemId == -1 || PlacesUtils.nodeIsQuery(parentNode)) {
+    if (aNode.itemId == -1 || lazy.PlacesUtils.nodeIsQuery(parentNode)) {
       return true;
     }
 
@@ -918,13 +923,14 @@ var PlacesUIUtils = {
   isFolderReadOnly(placesNode) {
     if (
       typeof placesNode != "object" ||
-      !PlacesUtils.nodeIsFolder(placesNode)
+      !lazy.PlacesUtils.nodeIsFolder(placesNode)
     ) {
       throw new Error("invalid value for placesNode");
     }
 
     return (
-      PlacesUtils.getConcreteItemId(placesNode) == PlacesUtils.placesRootId
+      lazy.PlacesUtils.getConcreteItemId(placesNode) ==
+      lazy.PlacesUtils.placesRootId
     );
   },
 
@@ -945,7 +951,7 @@ var PlacesUIUtils = {
     let browserWindow = getBrowserWindow(aWindow);
     var urls = [];
     let skipMarking =
-      browserWindow && PrivateBrowsingUtils.isWindowPrivate(browserWindow);
+      browserWindow && lazy.PrivateBrowsingUtils.isWindowPrivate(browserWindow);
     for (let item of aItemsToOpen) {
       urls.push(item.uri);
       if (skipMarking) {
@@ -971,7 +977,7 @@ var PlacesUIUtils = {
         Ci.nsIMutableArray
       );
       urls.forEach(url =>
-        stringsToLoad.appendElement(PlacesUtils.toISupportsString(url))
+        stringsToLoad.appendElement(lazy.PlacesUtils.toISupportsString(url))
       );
       args.appendElement(stringsToLoad);
 
@@ -1013,20 +1019,20 @@ var PlacesUIUtils = {
     let window = view.ownerWindow;
     let urlsToOpen = [];
 
-    if (PlacesUtils.nodeIsContainer(nodeOrNodes)) {
-      urlsToOpen = PlacesUtils.getURLsForContainerNode(nodeOrNodes);
+    if (lazy.PlacesUtils.nodeIsContainer(nodeOrNodes)) {
+      urlsToOpen = lazy.PlacesUtils.getURLsForContainerNode(nodeOrNodes);
     } else {
       for (var i = 0; i < nodeOrNodes.length; i++) {
         // Skip over separators and folders.
-        if (PlacesUtils.nodeIsURI(nodeOrNodes[i])) {
+        if (lazy.PlacesUtils.nodeIsURI(nodeOrNodes[i])) {
           urlsToOpen.push({
             uri: nodeOrNodes[i].uri,
-            isBookmark: PlacesUtils.nodeIsBookmark(nodeOrNodes[i]),
+            isBookmark: lazy.PlacesUtils.nodeIsBookmark(nodeOrNodes[i]),
           });
         }
       }
     }
-    if (OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
+    if (lazy.OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
       this.openTabset(urlsToOpen, event, window);
     }
   },
@@ -1047,7 +1053,7 @@ var PlacesUIUtils = {
     let browserWindow = getBrowserWindow(window);
 
     let where = window.whereToOpenLink(aEvent, false, true);
-    if (this.loadBookmarksInTabs && PlacesUtils.nodeIsBookmark(aNode)) {
+    if (this.loadBookmarksInTabs && lazy.PlacesUtils.nodeIsBookmark(aNode)) {
       if (where == "current" && !aNode.uri.startsWith("javascript:")) {
         where = "tab";
       }
@@ -1085,12 +1091,12 @@ var PlacesUIUtils = {
   ) {
     if (
       aNode &&
-      PlacesUtils.nodeIsURI(aNode) &&
+      lazy.PlacesUtils.nodeIsURI(aNode) &&
       this.checkURLSecurity(aNode, aWindow)
     ) {
-      let isBookmark = PlacesUtils.nodeIsBookmark(aNode);
+      let isBookmark = lazy.PlacesUtils.nodeIsBookmark(aNode);
 
-      if (!PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
+      if (!lazy.PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
         if (isBookmark) {
           this.markPageAsFollowedBookmark(aNode.uri);
         } else {
@@ -1123,7 +1129,7 @@ var PlacesUIUtils = {
 
   getBestTitle: function PUIU_getBestTitle(aNode, aDoNotCutTitle) {
     var title;
-    if (!aNode.title && PlacesUtils.nodeIsURI(aNode)) {
+    if (!aNode.title && lazy.PlacesUtils.nodeIsURI(aNode)) {
       // if node title is empty, try to set the label using host and filename
       // Services.io.newURI will throw if aNode.uri is not a valid URI
       try {
@@ -1153,8 +1159,8 @@ var PlacesUIUtils = {
 
   shouldShowTabsFromOtherComputersMenuitem() {
     let weaveOK =
-      Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED &&
-      Weave.Svc.Prefs.get("firstSync", "") != "notReady";
+      lazy.Weave.Status.checkSetup() != lazy.Weave.CLIENT_NOT_CONFIGURED &&
+      lazy.Weave.Svc.Prefs.get("firstSync", "") != "notReady";
     return weaveOK;
   },
 
@@ -1174,7 +1180,7 @@ var PlacesUIUtils = {
 
     let query = {},
       options = {};
-    PlacesUtils.history.queryStringToQuery(queryString, query, options);
+    lazy.PlacesUtils.history.queryStringToQuery(queryString, query, options);
     query = query.value;
     options = options.value;
     return (
@@ -1202,24 +1208,24 @@ var PlacesUIUtils = {
    * @throws if aFetchInfo is representing a separator.
    */
   async promiseNodeLikeFromFetchInfo(aFetchInfo) {
-    if (aFetchInfo.itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
+    if (aFetchInfo.itemType == lazy.PlacesUtils.bookmarks.TYPE_SEPARATOR) {
       throw new Error("promiseNodeLike doesn't support separators");
     }
 
     let parent = {
-      itemId: await PlacesUtils.promiseItemId(aFetchInfo.parentGuid),
+      itemId: await lazy.PlacesUtils.promiseItemId(aFetchInfo.parentGuid),
       bookmarkGuid: aFetchInfo.parentGuid,
       type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
     };
 
     return Object.freeze({
-      itemId: await PlacesUtils.promiseItemId(aFetchInfo.guid),
+      itemId: await lazy.PlacesUtils.promiseItemId(aFetchInfo.guid),
       bookmarkGuid: aFetchInfo.guid,
       title: aFetchInfo.title,
       uri: aFetchInfo.url !== undefined ? aFetchInfo.url.href : "",
 
       get type() {
-        if (aFetchInfo.itemType == PlacesUtils.bookmarks.TYPE_FOLDER) {
+        if (aFetchInfo.itemType == lazy.PlacesUtils.bookmarks.TYPE_FOLDER) {
           return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
         }
 
@@ -1295,7 +1301,7 @@ var PlacesUIUtils = {
       let urls = items.filter(item => "uri" in item).map(item => item.uri);
       itemsCount = urls.length;
       transactions = [
-        PlacesTransactions.Tag({ urls, tag: insertionPoint.tagName }),
+        lazy.PlacesTransactions.Tag({ urls, tag: insertionPoint.tagName }),
       ];
     } else {
       let insertionIndex = await insertionPoint.getIndex();
@@ -1331,7 +1337,7 @@ var PlacesUIUtils = {
     }
 
     await this.batchUpdatesForNode(resultForBatching, itemsCount, async () => {
-      await PlacesTransactions.batch(batchingItem);
+      await lazy.PlacesTransactions.batch(batchingItem);
     });
 
     return guidsToSelect;
@@ -1366,7 +1372,7 @@ var PlacesUIUtils = {
     let openInTabs =
       isContainer &&
       (event.button == 1 || (event.button == 0 && modifKey)) &&
-      PlacesUtils.hasChildURIs(tree.view.nodeForTreeIndex(cell.row));
+      lazy.PlacesUtils.hasChildURIs(tree.view.nodeForTreeIndex(cell.row));
 
     if (event.button == 0 && isContainer && !openInTabs) {
       tree.view.toggleOpenState(cell.row);
@@ -1420,7 +1426,7 @@ var PlacesUIUtils = {
     // hovered non-url node, we must clear the moused-over URL in these cases.
     if (cell.row != -1) {
       let node = tree.view.nodeForTreeIndex(cell.row);
-      if (PlacesUtils.nodeIsURI(node)) {
+      if (lazy.PlacesUtils.nodeIsURI(node)) {
         this.setMouseoverURL(node.uri, tree.ownerGlobal);
         return;
       }
@@ -1467,13 +1473,14 @@ var PlacesUIUtils = {
       if (
         aForceVisible ||
         toolbarIsCustomized ||
-        PlacesUtils.getChildCountForFolder(PlacesUtils.bookmarks.toolbarGuid) >
-          this.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
+        lazy.PlacesUtils.getChildCountForFolder(
+          lazy.PlacesUtils.bookmarks.toolbarGuid
+        ) > this.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
       ) {
         Services.obs.notifyObservers(
           null,
           "browser-set-toolbar-visibility",
-          JSON.stringify([CustomizableUI.AREA_BOOKMARKS, "true"])
+          JSON.stringify([lazy.CustomizableUI.AREA_BOOKMARKS, "true"])
         );
       }
     }
@@ -1532,8 +1539,8 @@ var PlacesUIUtils = {
     } else {
       linkItems.forEach(id => (document.getElementById(id).hidden = false));
       document.getElementById("placesContext_open:newprivatewindow").hidden =
-        PrivateBrowsingUtils.isWindowPrivate(window) ||
-        !PrivateBrowsingUtils.enabled;
+        lazy.PrivateBrowsingUtils.isWindowPrivate(window) ||
+        !lazy.PrivateBrowsingUtils.enabled;
       document.getElementById(
         "placesContext_open:newcontainertab"
       ).hidden = !Services.prefs.getBoolPref(
@@ -1668,13 +1675,13 @@ var PlacesUIUtils = {
           // This order is _important_! It controls how this and other applications
           // select data to be inserted based on type.
           let contents = [
-            { type: PlacesUtils.TYPE_X_MOZ_URL, entries: [] },
-            { type: PlacesUtils.TYPE_HTML, entries: [] },
-            { type: PlacesUtils.TYPE_UNICODE, entries: [] },
+            { type: lazy.PlacesUtils.TYPE_X_MOZ_URL, entries: [] },
+            { type: lazy.PlacesUtils.TYPE_HTML, entries: [] },
+            { type: lazy.PlacesUtils.TYPE_UNICODE, entries: [] },
           ];
 
           contents.forEach(function(content) {
-            content.entries.push(PlacesUtils.wrapNode(node, content.type));
+            content.entries.push(lazy.PlacesUtils.wrapNode(node, content.type));
           });
 
           let xferable = Cc[
@@ -1684,11 +1691,14 @@ var PlacesUIUtils = {
 
           function addData(type, data) {
             xferable.addDataFlavor(type);
-            xferable.setTransferData(type, PlacesUtils.toISupportsString(data));
+            xferable.setTransferData(
+              type,
+              lazy.PlacesUtils.toISupportsString(data)
+            );
           }
 
           contents.forEach(function(content) {
-            addData(content.type, content.entries.join(PlacesUtils.endl));
+            addData(content.type, content.entries.join(lazy.PlacesUtils.endl));
           });
 
           Services.clipboard.setData(
@@ -1723,13 +1733,13 @@ var PlacesUIUtils = {
       return;
     }
 
-    let numberOfBookmarks = await PlacesUtils.withConnectionWrapper(
+    let numberOfBookmarks = await lazy.PlacesUtils.withConnectionWrapper(
       "PlacesUIUtils: maybeAddImportButton",
       async db => {
         let rows = await db.execute(
           `SELECT COUNT(*) as n FROM moz_bookmarks b
            WHERE b.parent = :parentId`,
-          { parentId: PlacesUtils.toolbarFolderId }
+          { parentId: lazy.PlacesUtils.toolbarFolderId }
         );
         return rows[0].getResultByName("n");
       }
@@ -1740,9 +1750,9 @@ var PlacesUIUtils = {
     });
 
     if (numberOfBookmarks < 3) {
-      CustomizableUI.addWidgetToArea(
+      lazy.CustomizableUI.addWidgetToArea(
         "import-button",
-        CustomizableUI.AREA_BOOKMARKS,
+        lazy.CustomizableUI.AREA_BOOKMARKS,
         0
       );
       Services.prefs.setBoolPref("browser.bookmarks.addedImportButton", true);
@@ -1753,8 +1763,8 @@ var PlacesUIUtils = {
   removeImportButtonWhenImportSucceeds() {
     // If the user (re)moved the button, clear the pref and stop worrying about
     // moving the item.
-    let placement = CustomizableUI.getPlacementOfWidget("import-button");
-    if (placement?.area != CustomizableUI.AREA_BOOKMARKS) {
+    let placement = lazy.CustomizableUI.getPlacementOfWidget("import-button");
+    if (placement?.area != lazy.CustomizableUI.AREA_BOOKMARKS) {
       Services.prefs.clearUserPref("browser.bookmarks.addedImportButton");
       return;
     }
@@ -1762,9 +1772,9 @@ var PlacesUIUtils = {
     let obs = (subject, topic, data) => {
       if (
         data == Ci.nsIBrowserProfileMigrator.BOOKMARKS &&
-        MigrationUtils.getImportedCount("bookmarks") > 0
+        lazy.MigrationUtils.getImportedCount("bookmarks") > 0
       ) {
-        CustomizableUI.removeWidgetFromArea("import-button");
+        lazy.CustomizableUI.removeWidgetFromArea("import-button");
         Services.prefs.clearUserPref("browser.bookmarks.addedImportButton");
         Services.obs.removeObserver(obs, "Migration:ItemAfterMigrate");
         Services.obs.removeObserver(obs, "Migration:ItemError");
@@ -1894,13 +1904,17 @@ PlacesUIUtils.canLoadToolbarContentPromise = new Promise(resolve => {
 // These are lazy getters to avoid importing PlacesUtils immediately.
 XPCOMUtils.defineLazyGetter(PlacesUIUtils, "PLACES_FLAVORS", () => {
   return [
-    PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
-    PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
-    PlacesUtils.TYPE_X_MOZ_PLACE,
+    lazy.PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
+    lazy.PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
+    lazy.PlacesUtils.TYPE_X_MOZ_PLACE,
   ];
 });
 XPCOMUtils.defineLazyGetter(PlacesUIUtils, "URI_FLAVORS", () => {
-  return [PlacesUtils.TYPE_X_MOZ_URL, TAB_DROP_TYPE, PlacesUtils.TYPE_UNICODE];
+  return [
+    lazy.PlacesUtils.TYPE_X_MOZ_URL,
+    TAB_DROP_TYPE,
+    lazy.PlacesUtils.TYPE_UNICODE,
+  ];
 });
 XPCOMUtils.defineLazyGetter(PlacesUIUtils, "SUPPORTED_FLAVORS", () => {
   return [...PlacesUIUtils.PLACES_FLAVORS, ...PlacesUIUtils.URI_FLAVORS];
@@ -1952,19 +1966,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   async prefValue => {
     if (!prefValue) {
-      return PlacesUtils.bookmarks.toolbarGuid;
+      return lazy.PlacesUtils.bookmarks.toolbarGuid;
     }
     if (["toolbar", "menu", "unfiled"].includes(prefValue)) {
-      return PlacesUtils.bookmarks[prefValue + "Guid"];
+      return lazy.PlacesUtils.bookmarks[prefValue + "Guid"];
     }
 
     try {
-      return await PlacesUtils.bookmarks
+      return await lazy.PlacesUtils.bookmarks
         .fetch({ guid: prefValue })
         .then(bm => bm.guid);
     } catch (ex) {
       // The guid may have an invalid format.
-      return PlacesUtils.bookmarks.toolbarGuid;
+      return lazy.PlacesUtils.bookmarks.toolbarGuid;
     }
   }
 );
@@ -1979,14 +1993,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
 function canMoveUnwrappedNode(unwrappedNode) {
   if (
     (unwrappedNode.concreteGuid &&
-      PlacesUtils.isRootItem(unwrappedNode.concreteGuid)) ||
-    (unwrappedNode.guid && PlacesUtils.isRootItem(unwrappedNode.guid))
+      lazy.PlacesUtils.isRootItem(unwrappedNode.concreteGuid)) ||
+    (unwrappedNode.guid && lazy.PlacesUtils.isRootItem(unwrappedNode.guid))
   ) {
     return false;
   }
 
   let parentGuid = unwrappedNode.parentGuid;
-  if (parentGuid == PlacesUtils.bookmarks.rootGuid) {
+  if (parentGuid == lazy.PlacesUtils.bookmarks.rootGuid) {
     return false;
   }
 
@@ -2047,8 +2061,11 @@ function getTransactionsForTransferItems(
     }
 
     // Work out if this is data from the same app session we're running in.
-    if (!("instanceId" in item) || item.instanceId != PlacesUtils.instanceId) {
-      if (item.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
+    if (
+      !("instanceId" in item) ||
+      item.instanceId != lazy.PlacesUtils.instanceId
+    ) {
+      if (item.type == lazy.PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
         throw new Error(
           "Can't copy a container from a legacy-transactions build"
         );
@@ -2079,7 +2096,7 @@ function getTransactionsForTransferItems(
     // Move is simple, we pass the transaction a list of GUIDs and where to move
     // them to.
     return [
-      PlacesTransactions.Move({
+      lazy.PlacesTransactions.Move({
         guids: items.map(item => item.itemGuid),
         newParentGuid: insertionParentGuid,
         newIndex: insertionIndex,
@@ -2112,28 +2129,29 @@ function getTransactionsForCopy(items, insertionIndex, insertionParentGuid) {
       // For anything that is comming from within this session, we do a
       // direct copy, otherwise we fallback and form a new item below.
       "instanceId" in item &&
-      item.instanceId == PlacesUtils.instanceId &&
+      item.instanceId == lazy.PlacesUtils.instanceId &&
       // If the Item doesn't have a guid, this could be a virtual tag query or
       // other item, so fallback to inserting a new bookmark with the URI.
       guid &&
       // For virtual root items, we fallback to creating a new bookmark, as
       // we want a shortcut to be created, not a full tree copy.
-      !PlacesUtils.bookmarks.isVirtualRootItem(guid) &&
-      !PlacesUtils.isVirtualLeftPaneItem(guid)
+      !lazy.PlacesUtils.bookmarks.isVirtualRootItem(guid) &&
+      !lazy.PlacesUtils.isVirtualLeftPaneItem(guid)
     ) {
-      transaction = PlacesTransactions.Copy({
+      transaction = lazy.PlacesTransactions.Copy({
         guid,
         newIndex: index,
         newParentGuid: insertionParentGuid,
       });
-    } else if (item.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
-      transaction = PlacesTransactions.NewSeparator({
+    } else if (item.type == lazy.PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
+      transaction = lazy.PlacesTransactions.NewSeparator({
         index,
         parentGuid: insertionParentGuid,
       });
     } else {
-      let title = item.type != PlacesUtils.TYPE_UNICODE ? item.title : item.uri;
-      transaction = PlacesTransactions.NewBookmark({
+      let title =
+        item.type != lazy.PlacesUtils.TYPE_UNICODE ? item.title : item.uri;
+      transaction = lazy.PlacesTransactions.NewBookmark({
         index,
         parentGuid: insertionParentGuid,
         title,
@@ -2157,5 +2175,5 @@ function getBrowserWindow(aWindow) {
     aWindow.document.documentElement.getAttribute("windowtype") ==
       "navigator:browser"
     ? aWindow
-    : BrowserWindowTracker.getTopWindow();
+    : lazy.BrowserWindowTracker.getTopWindow();
 }
