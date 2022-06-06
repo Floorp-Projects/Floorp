@@ -18,6 +18,8 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchDialogFragmentStore
@@ -62,6 +64,7 @@ class SearchSelectorToolbarAction(
                     Orientation.DOWN
                 }
 
+                UnifiedSearch.searchMenuTapped.record(NoExtras())
                 menu.menuController.show(anchor = it, orientation = orientation)
             }
 

@@ -41,6 +41,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
+import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Core
@@ -362,6 +363,9 @@ class SearchDialogControllerTest {
         val searchEngine: SearchEngine = mockk(relaxed = true)
         every { searchEngine.type } returns SearchEngine.Type.APPLICATION
         every { searchEngine.id } returns Core.HISTORY_SEARCH_ENGINE_ID
+        every { settings.showUnifiedSearchFeature } returns true
+
+        assertFalse(UnifiedSearch.engineSelected.testHasValue())
 
         var focusToolbarInvoked = false
         createController(
@@ -373,13 +377,13 @@ class SearchDialogControllerTest {
         assertTrue(focusToolbarInvoked)
         verify { store.dispatch(SearchFragmentAction.SearchHistoryEngineSelected(searchEngine)) }
 
-        assertTrue(SearchShortcuts.selected.testHasValue())
-        val recordedEvents = SearchShortcuts.selected.testGetValue()
+        assertTrue(UnifiedSearch.engineSelected.testHasValue())
+        val recordedEvents = UnifiedSearch.engineSelected.testGetValue()
         assertEquals(1, recordedEvents.size)
         val eventExtra = recordedEvents.single().extra
         assertNotNull(eventExtra)
         assertTrue(eventExtra!!.containsKey("engine"))
-        assertEquals("application", eventExtra["engine"])
+        assertEquals("history", eventExtra["engine"])
     }
 
     @Test
@@ -387,6 +391,9 @@ class SearchDialogControllerTest {
         val searchEngine: SearchEngine = mockk(relaxed = true)
         every { searchEngine.type } returns SearchEngine.Type.APPLICATION
         every { searchEngine.id } returns Core.BOOKMARKS_SEARCH_ENGINE_ID
+        every { settings.showUnifiedSearchFeature } returns true
+
+        assertFalse(UnifiedSearch.engineSelected.testHasValue())
 
         var focusToolbarInvoked = false
         createController(
@@ -398,13 +405,13 @@ class SearchDialogControllerTest {
         assertTrue(focusToolbarInvoked)
         verify { store.dispatch(SearchFragmentAction.SearchBookmarksEngineSelected(searchEngine)) }
 
-        assertTrue(SearchShortcuts.selected.testHasValue())
-        val recordedEvents = SearchShortcuts.selected.testGetValue()
+        assertTrue(UnifiedSearch.engineSelected.testHasValue())
+        val recordedEvents = UnifiedSearch.engineSelected.testGetValue()
         assertEquals(1, recordedEvents.size)
         val eventExtra = recordedEvents.single().extra
         assertNotNull(eventExtra)
         assertTrue(eventExtra!!.containsKey("engine"))
-        assertEquals("application", eventExtra["engine"])
+        assertEquals("bookmarks", eventExtra["engine"])
     }
 
     @Test
@@ -412,6 +419,9 @@ class SearchDialogControllerTest {
         val searchEngine: SearchEngine = mockk(relaxed = true)
         every { searchEngine.type } returns SearchEngine.Type.APPLICATION
         every { searchEngine.id } returns Core.TABS_SEARCH_ENGINE_ID
+        every { settings.showUnifiedSearchFeature } returns true
+
+        assertFalse(UnifiedSearch.engineSelected.testHasValue())
 
         var focusToolbarInvoked = false
         createController(
@@ -423,13 +433,13 @@ class SearchDialogControllerTest {
         assertTrue(focusToolbarInvoked)
         verify { store.dispatch(SearchFragmentAction.SearchTabsEngineSelected(searchEngine)) }
 
-        assertTrue(SearchShortcuts.selected.testHasValue())
-        val recordedEvents = SearchShortcuts.selected.testGetValue()
+        assertTrue(UnifiedSearch.engineSelected.testHasValue())
+        val recordedEvents = UnifiedSearch.engineSelected.testGetValue()
         assertEquals(1, recordedEvents.size)
         val eventExtra = recordedEvents.single().extra
         assertNotNull(eventExtra)
         assertTrue(eventExtra!!.containsKey("engine"))
-        assertEquals("application", eventExtra["engine"])
+        assertEquals("tabs", eventExtra["engine"])
     }
 
     @Test

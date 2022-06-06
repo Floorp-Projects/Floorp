@@ -645,6 +645,46 @@ search_shortcuts:
         - Search
         - Shortcuts
 
+unified_search:
+  search_menu_tapped:
+    type: event
+    description: |
+      A user tapped on the unified search selector menu.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24522
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25544
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 115
+    metadata:
+      tags:
+        - Search
+        - Shortcuts
+  engine_selected:
+    type: event
+    description: |
+      A user used unified search to select a search shortcut engine to use
+    extra_keys:
+      engine:
+        type: string
+        description: |
+          The name of the built-in search engine the user selected as a string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24522
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25544
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 115
+    metadata:
+      tags:
+        - Search
+        - Shortcuts
+
+
 experiments_default_browser:
   toolbar_menu_clicked:
     type: event

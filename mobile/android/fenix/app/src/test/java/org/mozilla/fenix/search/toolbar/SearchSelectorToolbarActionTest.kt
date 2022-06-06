@@ -15,12 +15,16 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.concept.menu.Orientation
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.SearchDialogFragmentStore
@@ -42,6 +46,9 @@ class SearchSelectorToolbarActionTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
         val lifecycleRegistry = LifecycleRegistry(this).apply {
@@ -69,10 +76,12 @@ class SearchSelectorToolbarActionTest {
             )
         )
         val view = action.createView(LinearLayout(testContext) as ViewGroup) as SearchSelector
+        assertFalse(UnifiedSearch.searchMenuTapped.testHasValue())
 
         every { settings.shouldUseBottomToolbar } returns false
         view.performClick()
 
+        assertTrue(UnifiedSearch.searchMenuTapped.testHasValue())
         verify {
             menu.menuController.show(view, Orientation.DOWN)
         }
@@ -80,6 +89,7 @@ class SearchSelectorToolbarActionTest {
         every { settings.shouldUseBottomToolbar } returns true
         view.performClick()
 
+        assertTrue(UnifiedSearch.searchMenuTapped.testHasValue())
         verify {
             menu.menuController.show(view, Orientation.UP)
         }

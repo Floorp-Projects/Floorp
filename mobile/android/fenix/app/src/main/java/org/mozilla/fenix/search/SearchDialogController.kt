@@ -21,9 +21,13 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
+import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Core
+import org.mozilla.fenix.components.Core.Companion.BOOKMARKS_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.Core.Companion.HISTORY_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.Core.Companion.TABS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.navigateSafe
@@ -218,10 +222,21 @@ class SearchDialogController(
 
         val engine = when (searchEngine.type) {
             SearchEngine.Type.CUSTOM -> "custom"
-            SearchEngine.Type.APPLICATION -> "application"
+            SearchEngine.Type.APPLICATION ->
+                when (searchEngine.id) {
+                    HISTORY_SEARCH_ENGINE_ID -> "history"
+                    BOOKMARKS_SEARCH_ENGINE_ID -> "bookmarks"
+                    TABS_SEARCH_ENGINE_ID -> "tabs"
+                    else -> "application"
+                }
             else -> searchEngine.name
         }
-        SearchShortcuts.selected.record(SearchShortcuts.SelectedExtra(engine))
+
+        if (settings.showUnifiedSearchFeature) {
+            UnifiedSearch.engineSelected.record(UnifiedSearch.EngineSelectedExtra(engine))
+        } else {
+            SearchShortcuts.selected.record(SearchShortcuts.SelectedExtra(engine))
+        }
     }
 
     override fun handleSearchShortcutsButtonClicked() {
