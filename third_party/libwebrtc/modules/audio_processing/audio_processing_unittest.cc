@@ -3109,11 +3109,6 @@ TEST(AudioProcessing, GainController2ConfigEqual) {
   b_adaptive.dry_run = a_adaptive.dry_run;
   EXPECT_EQ(a, b);
 
-  a_adaptive.noise_estimator = AudioProcessing::Config::GainController2::
-      NoiseEstimator::kStationaryNoise;
-  b_adaptive.noise_estimator = a_adaptive.noise_estimator;
-  EXPECT_EQ(a, b);
-
   a_adaptive.vad_reset_period_ms++;
   b_adaptive.vad_reset_period_ms = a_adaptive.vad_reset_period_ms;
   EXPECT_EQ(a, b);
@@ -3168,11 +3163,6 @@ TEST(AudioProcessing, GainController2ConfigNotEqual) {
   a_adaptive = b_adaptive;
 
   Toggle(a_adaptive.dry_run);
-  EXPECT_NE(a, b);
-  a_adaptive = b_adaptive;
-
-  a_adaptive.noise_estimator = AudioProcessing::Config::GainController2::
-      NoiseEstimator::kStationaryNoise;
   EXPECT_NE(a, b);
   a_adaptive = b_adaptive;
 

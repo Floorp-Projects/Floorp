@@ -401,7 +401,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         bool enabled = false;
         // Run the adaptive digital controller but the signal is not modified.
         bool dry_run = false;
-        NoiseEstimator noise_estimator = kNoiseFloor;
         int vad_reset_period_ms = 1500;
         int adjacent_speech_frames_threshold = 12;
         float max_gain_change_db_per_second = 3.0f;
@@ -410,6 +409,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         bool avx2_allowed = true;
         bool neon_allowed = true;
         // TODO(crbug.com/webrtc/7494): Remove deprecated settings below.
+        NoiseEstimator noise_estimator = kNoiseFloor;
         float vad_probability_attack = 1.0f;
         LevelEstimator level_estimator = kRms;
         int level_estimator_adjacent_speech_frames_threshold = 12;
