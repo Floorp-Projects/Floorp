@@ -16,11 +16,13 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
@@ -147,9 +149,7 @@ function remoteSettingsFunction() {
     // this client is known but it was not registered yet (eg. calling module not "imported" yet).
     if (
       bucketName ==
-      lazy.Utils.actualBucketName(
-        lazy.AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET
-      )
+      lazy.Utils.actualBucketName(AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET)
     ) {
       const c = new lazy.RemoteSettingsClient(collectionName, defaultOptions);
       const [dbExists, localDump] = await Promise.all([
@@ -495,7 +495,7 @@ function remoteSettingsFunction() {
       localTimestamp: lazy.gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, null),
       lastCheck: lazy.gPrefs.getIntPref(PREF_SETTINGS_LAST_UPDATE, 0),
       mainBucket: lazy.Utils.actualBucketName(
-        lazy.AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET
+        AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET
       ),
       defaultSigner: DEFAULT_SIGNER,
       previewMode: lazy.Utils.PREVIEW_MODE,
