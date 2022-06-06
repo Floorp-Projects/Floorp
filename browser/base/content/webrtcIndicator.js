@@ -6,13 +6,10 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { webrtcUI } = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "AppConstants",
+const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { webrtcUI } = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,

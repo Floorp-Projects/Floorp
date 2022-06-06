@@ -7,9 +7,7 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryControllerBase"];
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AppConstants",
+const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
