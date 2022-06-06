@@ -6,7 +6,6 @@
 
 #include "DecoderTraits.h"
 #include "MediaContainerType.h"
-#include "nsMimeTypes.h"
 #include "mozilla/Preferences.h"
 
 #include "OggDecoder.h"

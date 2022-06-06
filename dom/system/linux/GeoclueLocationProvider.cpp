@@ -10,7 +10,6 @@
 
 #include <gio/gio.h>
 #include <glib.h>
-#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/GRefPtr.h"
 #include "mozilla/GUniquePtr.h"

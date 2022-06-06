@@ -19,7 +19,6 @@
 #include "ClientWebGLContext.h"
 
 #include "gfxPlatform.h"
-#include "gfxUtils.h"
 
 namespace mozilla::gfx {
 
