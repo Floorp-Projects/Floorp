@@ -14,21 +14,23 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "wdm",
   "@mozilla.org/dom/workers/workerdebuggermanager;1",
   "nsIWorkerDebuggerManager"
 );
 
-XPCOMUtils.defineLazyGetter(this, "Loader", () =>
+XPCOMUtils.defineLazyGetter(lazy, "Loader", () =>
   ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm")
 );
 
-XPCOMUtils.defineLazyGetter(this, "DevToolsUtils", () =>
-  Loader.require("devtools/shared/DevToolsUtils")
+XPCOMUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
+  lazy.Loader.require("devtools/shared/DevToolsUtils")
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   isWindowGlobalPartOfContext:
     "resource://devtools/server/actors/watcher/browsing-context-helpers.jsm",
   SessionDataHelpers:
@@ -124,7 +126,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       const { targets, connectionPrefix, sessionContext } = sessionData;
       if (
         targets.includes("worker") &&
-        isWindowGlobalPartOfContext(this.manager, sessionContext, {
+        lazy.isWindowGlobalPartOfContext(this.manager, sessionContext, {
           acceptInitialDocument: true,
           forceAcceptTopLevelTarget: true,
           acceptSameProcessIframes: true,
@@ -155,7 +157,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       // on what should or should not be watched.
       if (
         this.manager.browsingContext.browserId != browserId &&
-        !isWindowGlobalPartOfContext(
+        !lazy.isWindowGlobalPartOfContext(
           this.manager,
           message.data.sessionContext,
           {
@@ -235,7 +237,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
         onRegister: this._onWorkerRegistered.bind(this),
         onUnregister: this._onWorkerUnregistered.bind(this),
       };
-      wdm.addListener(this._workerDebuggerListener);
+      lazy.wdm.addListener(this._workerDebuggerListener);
     }
 
     // Compute a unique prefix, just for this WindowGlobal,
@@ -257,7 +259,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     });
 
     await Promise.all(
-      Array.from(wdm.getWorkerDebuggerEnumerator())
+      Array.from(lazy.wdm.getWorkerDebuggerEnumerator())
         .filter(dbg => this._shouldHandleWorker(dbg))
         .map(dbg =>
           this._createWorkerTargetActor({
@@ -271,7 +273,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
   }
 
   _createConnection(forwardingPrefix) {
-    const { DevToolsServer } = Loader.require(
+    const { DevToolsServer } = lazy.Loader.require(
       "devtools/server/devtools-server"
     );
 
@@ -300,7 +302,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
   _shouldHandleWorker(dbg) {
     // We only want to create targets for non-closed dedicated worker, in the same document
     return (
-      DevToolsUtils.isWorkerDebuggerAlive(dbg) &&
+      lazy.DevToolsUtils.isWorkerDebuggerAlive(dbg) &&
       dbg.type === Ci.nsIWorkerDebugger.TYPE_DEDICATED &&
       dbg.windowIDs.includes(this.manager.innerWindowId)
     );
@@ -327,7 +329,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     );
 
     // Create the actual worker target actor, in the worker thread.
-    const { connectToWorker } = Loader.require(
+    const { connectToWorker } = lazy.Loader.require(
       "devtools/server/connectors/worker-connector"
     );
 
@@ -395,7 +397,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       workerThreadServerForwardingPrefix,
     } of watcherConnectionData.workers) {
       try {
-        if (DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
+        if (lazy.DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
           dbg.postMessage(
             JSON.stringify({
               type: "disconnect",
@@ -416,7 +418,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
    * worker scripts may be running in parallel and reuse the same server.
    */
   _onConnectionChange() {
-    const { DevToolsServer } = Loader.require(
+    const { DevToolsServer } = lazy.Loader.require(
       "devtools/server/devtools-server"
     );
 
@@ -448,7 +450,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       return;
     }
 
-    SessionDataHelpers.addSessionDataEntry(
+    lazy.SessionDataHelpers.addSessionDataEntry(
       watcherConnectionData.sessionData,
       type,
       entries
@@ -478,7 +480,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       return;
     }
 
-    SessionDataHelpers.removeSessionDataEntry(
+    lazy.SessionDataHelpers.removeSessionDataEntry(
       watcherConnectionData.sessionData,
       type,
       entries
@@ -488,7 +490,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       dbg,
       workerThreadServerForwardingPrefix,
     } of watcherConnectionData.workers) {
-      if (DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
+      if (lazy.DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
         dbg.postMessage(
           JSON.stringify({
             type: "remove-session-data-entry",
@@ -511,7 +513,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
 
   _removeExistingWorkerDebuggerListener() {
     if (this._workerDebuggerListener) {
-      wdm.removeListener(this._workerDebuggerListener);
+      lazy.wdm.removeListener(this._workerDebuggerListener);
       this._workerDebuggerListener = null;
     }
   }
@@ -549,7 +551,7 @@ function addSessionDataEntryInWorkerTarget({
   type,
   entries,
 }) {
-  if (!DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
+  if (!lazy.DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
     return Promise.resolve();
   }
 

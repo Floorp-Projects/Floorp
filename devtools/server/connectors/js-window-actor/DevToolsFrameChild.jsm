@@ -16,7 +16,8 @@ const Loader = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   isWindowGlobalPartOfContext:
     "resource://devtools/server/actors/watcher/browsing-context-helpers.jsm",
   TargetActorRegistry:
@@ -39,7 +40,7 @@ function logWindowGlobal(windowGlobal, message) {
   if (!DEBUG) {
     return;
   }
-  WindowGlobalLogger.logWindowGlobal(windowGlobal, message);
+  lazy.WindowGlobalLogger.logWindowGlobal(windowGlobal, message);
 }
 
 class DevToolsFrameChild extends JSWindowActorChild {
@@ -109,7 +110,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
         isBFCache && this.isBfcacheInParentEnabled;
       if (
         sessionData.targets.includes("frame") &&
-        isWindowGlobalPartOfContext(this.manager, sessionContext, {
+        lazy.isWindowGlobalPartOfContext(this.manager, sessionContext, {
           forceAcceptTopLevelTarget,
         })
       ) {
@@ -405,7 +406,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // on what should or should not be watched.
       if (
         this.manager.browsingContext.browserId != browserId &&
-        !isWindowGlobalPartOfContext(
+        !lazy.isWindowGlobalPartOfContext(
           this.manager,
           message.data.sessionContext,
           {
@@ -492,7 +493,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // This might be the case if we're navigating to a new page with server side target
     // enabled and we want to retrieve the target of the page we're navigating from.
     if (
-      isWindowGlobalPartOfContext(this.manager, sessionContext, {
+      lazy.isWindowGlobalPartOfContext(this.manager, sessionContext, {
         forceAcceptTopLevelTarget: true,
       })
     ) {
@@ -500,7 +501,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // This allows to distinguish actors created for various toolboxes.
       // For ex, regular toolbox versus browser console versus browser toolbox
       const connectionPrefix = watcherActorID.replace(/watcher\d+$/, "");
-      const targetActors = TargetActorRegistry.getTargetActors(
+      const targetActors = lazy.TargetActorRegistry.getTargetActors(
         sessionContext,
         connectionPrefix
       );

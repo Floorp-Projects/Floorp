@@ -15,8 +15,10 @@ const { WatcherRegistry } = ChromeUtils.import(
   "resource://devtools/server/actors/watcher/WatcherRegistry.jsm"
 );
 
+const lazy = {};
+
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "JsWindowActorTransport",
   "devtools/shared/transport/js-window-actor-transport",
   true
@@ -120,7 +122,7 @@ class DevToolsFrameParent extends JSWindowActorParent {
     connection.on("closed", this._onConnectionClosed);
 
     // Create a js-window-actor based transport.
-    const transport = new JsWindowActorTransport(this, forwardingPrefix);
+    const transport = new lazy.JsWindowActorTransport(this, forwardingPrefix);
     transport.hooks = {
       onPacket: connection.send.bind(connection),
       onTransportClosed() {},
