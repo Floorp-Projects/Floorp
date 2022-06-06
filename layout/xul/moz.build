@@ -37,7 +37,6 @@ UNIFIED_SOURCES += [
     "nsMenuPopupFrame.cpp",
     "nsPopupSetFrame.cpp",
     "nsRepeatService.cpp",
-    "nsResizerFrame.cpp",
     "nsRootBoxFrame.cpp",
     "nsScrollbarButtonFrame.cpp",
     "nsScrollbarFrame.cpp",
@@ -52,7 +51,6 @@ UNIFIED_SOURCES += [
 ]
 
 DIRS += ["tree"]
-
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
