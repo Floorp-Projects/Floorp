@@ -1924,6 +1924,9 @@ void nsIWidget::OnLongTapTimerCallback(nsITimer* aTimer, void* aClosure) {
 nsresult nsIWidget::ClearNativeTouchSequence(nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "cleartouch");
 
+  // XXX This is odd.  This is called by the constructor of nsIWidget.  However,
+  //     at that point, nsIWidget::mLongTapTimer must be nullptr.  Therefore,
+  //     this must do nothing at initializing the instance.
   if (!mLongTapTimer) {
     return NS_OK;
   }
