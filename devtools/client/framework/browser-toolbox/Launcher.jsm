@@ -22,13 +22,14 @@ const { Subprocess } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BackgroundTasksUtils",
   "resource://gre/modules/BackgroundTasksUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
@@ -224,7 +225,7 @@ BrowserToolboxLauncher.prototype = {
       // the default profile.  This is the standard pattern for controlling
       // background task settings.  Without this, there'd be no way to increase
       // logging in the browser toolbox process, etc.
-      const defaultProfile = BackgroundTasksUtils.getDefaultProfile();
+      const defaultProfile = lazy.BackgroundTasksUtils.getDefaultProfile();
       if (!defaultProfile) {
         throw new Error(
           "Cannot start Browser Toolbox from background task with no default profile"
@@ -273,8 +274,11 @@ BrowserToolboxLauncher.prototype = {
     const customBinaryPath = env.get("MOZ_BROWSER_TOOLBOX_BINARY");
     if (customBinaryPath) {
       command = customBinaryPath;
-      profilePath = FileUtils.getDir("TmpD", ["browserToolboxProfile"], true)
-        .path;
+      profilePath = lazy.FileUtils.getDir(
+        "TmpD",
+        ["browserToolboxProfile"],
+        true
+      ).path;
     }
 
     dumpn("Running chrome debugging process.");
