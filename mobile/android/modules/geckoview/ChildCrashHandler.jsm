@@ -12,13 +12,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
@@ -26,7 +26,7 @@ ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 const { debug, warn } = GeckoViewUtils.initLogging("ChildCrashHandler");
 
 function getDir(name) {
-  const uAppDataPath = lazy.Services.dirsvc.get("UAppData", Ci.nsIFile).path;
+  const uAppDataPath = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
   return lazy.OS.Path.join(uAppDataPath, "Crash Reports", name);
 }
 
@@ -66,7 +66,7 @@ var ChildCrashHandler = {
     // to report the crash.
     const dumpID = aSubject.get("dumpID");
     if (!dumpID) {
-      lazy.Services.telemetry
+      Services.telemetry
         .getHistogramById("FX_CONTENT_CRASH_DUMP_UNAVAILABLE")
         .add(1);
       return;
