@@ -1801,6 +1801,20 @@ LoadInfo::SetAllowDeprecatedSystemRequests(
 }
 
 NS_IMETHODIMP
+LoadInfo::GetIsUserTriggeredSave(bool* aIsUserTriggeredSave) {
+  *aIsUserTriggeredSave =
+      mIsUserTriggeredSave ||
+      mInternalContentPolicyType == nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsUserTriggeredSave(bool aIsUserTriggeredSave) {
+  mIsUserTriggeredSave = aIsUserTriggeredSave;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LoadInfo::GetIsInDevToolsContext(bool* aIsInDevToolsContext) {
   *aIsInDevToolsContext = mIsInDevToolsContext;
   return NS_OK;

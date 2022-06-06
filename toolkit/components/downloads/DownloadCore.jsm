@@ -2867,6 +2867,15 @@ DownloadLegacySaver.prototype = {
       this.download.source.referrerInfo = aRequest.referrerInfo;
     }
 
+    // Don't open the download panel when the user initiated to save a
+    // link or document.
+    if (
+      aRequest instanceof Ci.nsIChannel &&
+      aRequest.loadInfo.isUserTriggeredSave
+    ) {
+      this.download.openDownloadsListOnStart = false;
+    }
+
     this.addToHistory();
   },
 

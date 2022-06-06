@@ -699,6 +699,16 @@ TRRLoadInfo::SetAllowDeprecatedSystemRequests(
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetIsUserTriggeredSave(bool* aIsUserTriggeredSave) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetIsUserTriggeredSave(bool aIsUserTriggeredSave) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::GetIsInDevToolsContext(bool* aIsInDevToolsContext) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

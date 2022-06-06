@@ -1377,6 +1377,9 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     }
   }
 
+  nsCOMPtr<nsILoadInfo> loadInfo = inputChannel->LoadInfo();
+  loadInfo->SetIsUserTriggeredSave(true);
+
   // Set the referrer, post data and headers if any
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(inputChannel));
   if (httpChannel) {
