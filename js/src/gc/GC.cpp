@@ -1654,41 +1654,17 @@ void GCRuntime::maybeGC() {
   }
 #endif
 
-  if (gcIfRequested()) {
-    return;
-  }
-
-  if (isIncrementalGCInProgress()) {
-    return;
-  }
-
-  bool scheduledZones = false;
-  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-    if (checkEagerAllocTrigger(zone->gcHeapSize, zone->gcHeapThreshold) ||
-        checkEagerAllocTrigger(zone->mallocHeapSize,
-                               zone->mallocHeapThreshold)) {
-      zone->scheduleGC();
-      scheduledZones = true;
-    }
-  }
-
-  if (scheduledZones) {
-    SliceBudget budget = defaultBudget(JS::GCReason::EAGER_ALLOC_TRIGGER, 0);
-    startGC(JS::GCOptions::Normal, JS::GCReason::EAGER_ALLOC_TRIGGER, budget);
-  }
+  (void)gcIfRequestedImpl(/* eagerOk = */ true);
 }
 
-JS::GCReason GCRuntime::wantMajorGC() {
+JS::GCReason GCRuntime::wantMajorGC(bool eagerOk) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
-  // This implementation parallels maybeGC() above.
-
-  // From gcIfRequested().
   if (majorGCRequested()) {
     return majorGCTriggerReason;
   }
 
-  if (isIncrementalGCInProgress()) {
+  if (isIncrementalGCInProgress() || !eagerOk) {
     return JS::GCReason::NO_REASON;
   }
 
@@ -4208,24 +4184,25 @@ void GCRuntime::startBackgroundFreeAfterMinorGC() {
   startBackgroundFree();
 }
 
-bool GCRuntime::gcIfRequested() {
+bool GCRuntime::gcIfRequestedImpl(bool eagerOk) {
   // This method returns whether a major GC was performed.
 
   if (nursery().minorGCRequested()) {
     minorGC(nursery().minorGCTriggerReason());
   }
 
-  if (majorGCRequested()) {
-    SliceBudget budget = defaultBudget(majorGCTriggerReason, 0);
-    if (!isIncrementalGCInProgress()) {
-      startGC(JS::GCOptions::Normal, majorGCTriggerReason, budget);
-    } else {
-      gcSlice(majorGCTriggerReason, budget);
-    }
-    return true;
+  JS::GCReason reason = wantMajorGC(eagerOk);
+  if (reason == JS::GCReason::NO_REASON) {
+    return false;
   }
 
-  return false;
+  SliceBudget budget = defaultBudget(reason, 0);
+  if (!isIncrementalGCInProgress()) {
+    startGC(JS::GCOptions::Normal, reason, budget);
+  } else {
+    gcSlice(reason, budget);
+  }
+  return true;
 }
 
 void js::gc::FinishGC(JSContext* cx, JS::GCReason reason) {

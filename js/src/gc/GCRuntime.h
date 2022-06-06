@@ -330,12 +330,27 @@ class GCRuntime {
   // The return value indicates if we were able to do the GC.
   bool triggerZoneGC(Zone* zone, JS::GCReason reason, size_t usedBytes,
                      size_t thresholdBytes);
+
   void maybeGC();
-  JS::GCReason wantMajorGC();
+
+  // Return whether we want to run a major GC. If eagerOk is true, include eager
+  // triggers (eg EAGER_ALLOC_TRIGGER) in this determination, and schedule all
+  // zones that exceed the eager thresholds.
+  JS::GCReason wantMajorGC(bool eagerOk);
   bool checkEagerAllocTrigger(const HeapSize& size,
                               const HeapThreshold& threshold);
-  // The return value indicates whether a major GC was performed.
-  bool gcIfRequested();
+
+  // Do a minor GC if requested, followed by a major GC if requested. The return
+  // value indicates whether a major GC was performed.
+  bool gcIfRequested() { return gcIfRequestedImpl(false); }
+
+  // Internal function to do a GC if previously requested. But if not and
+  // eagerOk, do an eager GC for all Zones that have exceeded the eager
+  // thresholds.
+  //
+  // Return whether a major GC was performed or started.
+  bool gcIfRequestedImpl(bool eagerOk);
+
   void gc(JS::GCOptions options, JS::GCReason reason);
   void startGC(JS::GCOptions options, JS::GCReason reason,
                const SliceBudget& budget);
