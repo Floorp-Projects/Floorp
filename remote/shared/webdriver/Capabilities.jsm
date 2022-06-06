@@ -17,7 +17,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
@@ -27,7 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "remoteAgent", () => {
+XPCOMUtils.defineLazyGetter(lazy, "remoteAgent", () => {
   return Cc["@mozilla.org/remote/agent;1"].createInstance(Ci.nsIRemoteAgent);
 });
 
@@ -56,40 +58,42 @@ class Timeouts {
   }
 
   static fromJSON(json) {
-    assert.object(
+    lazy.assert.object(
       json,
-      pprint`Expected "timeouts" to be an object, got ${json}`
+      lazy.pprint`Expected "timeouts" to be an object, got ${json}`
     );
     let t = new Timeouts();
 
     for (let [type, ms] of Object.entries(json)) {
       switch (type) {
         case "implicit":
-          t.implicit = assert.positiveInteger(
+          t.implicit = lazy.assert.positiveInteger(
             ms,
-            pprint`Expected ${type} to be a positive integer, got ${ms}`
+            lazy.pprint`Expected ${type} to be a positive integer, got ${ms}`
           );
           break;
 
         case "script":
           if (ms !== null) {
-            assert.positiveInteger(
+            lazy.assert.positiveInteger(
               ms,
-              pprint`Expected ${type} to be a positive integer, got ${ms}`
+              lazy.pprint`Expected ${type} to be a positive integer, got ${ms}`
             );
           }
           t.script = ms;
           break;
 
         case "pageLoad":
-          t.pageLoad = assert.positiveInteger(
+          t.pageLoad = lazy.assert.positiveInteger(
             ms,
-            pprint`Expected ${type} to be a positive integer, got ${ms}`
+            lazy.pprint`Expected ${type} to be a positive integer, got ${ms}`
           );
           break;
 
         default:
-          throw new error.InvalidArgumentError("Unrecognised timeout: " + type);
+          throw new lazy.error.InvalidArgumentError(
+            "Unrecognised timeout: " + type
+          );
       }
     }
 
@@ -144,42 +148,48 @@ class Proxy {
   init() {
     switch (this.proxyType) {
       case "autodetect":
-        Preferences.set("network.proxy.type", 4);
+        lazy.Preferences.set("network.proxy.type", 4);
         return true;
 
       case "direct":
-        Preferences.set("network.proxy.type", 0);
+        lazy.Preferences.set("network.proxy.type", 0);
         return true;
 
       case "manual":
-        Preferences.set("network.proxy.type", 1);
+        lazy.Preferences.set("network.proxy.type", 1);
 
         if (this.httpProxy) {
-          Preferences.set("network.proxy.http", this.httpProxy);
+          lazy.Preferences.set("network.proxy.http", this.httpProxy);
           if (Number.isInteger(this.httpProxyPort)) {
-            Preferences.set("network.proxy.http_port", this.httpProxyPort);
+            lazy.Preferences.set("network.proxy.http_port", this.httpProxyPort);
           }
         }
 
         if (this.sslProxy) {
-          Preferences.set("network.proxy.ssl", this.sslProxy);
+          lazy.Preferences.set("network.proxy.ssl", this.sslProxy);
           if (Number.isInteger(this.sslProxyPort)) {
-            Preferences.set("network.proxy.ssl_port", this.sslProxyPort);
+            lazy.Preferences.set("network.proxy.ssl_port", this.sslProxyPort);
           }
         }
 
         if (this.socksProxy) {
-          Preferences.set("network.proxy.socks", this.socksProxy);
+          lazy.Preferences.set("network.proxy.socks", this.socksProxy);
           if (Number.isInteger(this.socksProxyPort)) {
-            Preferences.set("network.proxy.socks_port", this.socksProxyPort);
+            lazy.Preferences.set(
+              "network.proxy.socks_port",
+              this.socksProxyPort
+            );
           }
           if (this.socksVersion) {
-            Preferences.set("network.proxy.socks_version", this.socksVersion);
+            lazy.Preferences.set(
+              "network.proxy.socks_version",
+              this.socksVersion
+            );
           }
         }
 
         if (this.noProxy) {
-          Preferences.set(
+          lazy.Preferences.set(
             "network.proxy.no_proxies_on",
             this.noProxy.join(", ")
           );
@@ -187,15 +197,15 @@ class Proxy {
         return true;
 
       case "pac":
-        Preferences.set("network.proxy.type", 2);
-        Preferences.set(
+        lazy.Preferences.set("network.proxy.type", 2);
+        lazy.Preferences.set(
           "network.proxy.autoconfig_url",
           this.proxyAutoconfigUrl
         );
         return true;
 
       case "system":
-        Preferences.set("network.proxy.type", 5);
+        lazy.Preferences.set("network.proxy.type", 5);
         return true;
 
       default:
@@ -219,13 +229,13 @@ class Proxy {
 
     // Parse hostname and optional port from host
     function fromHost(scheme, host) {
-      assert.string(
+      lazy.assert.string(
         host,
-        pprint`Expected proxy "host" to be a string, got ${host}`
+        lazy.pprint`Expected proxy "host" to be a string, got ${host}`
       );
 
       if (host.includes("://")) {
-        throw new error.InvalidArgumentError(`${host} contains a scheme`);
+        throw new lazy.error.InvalidArgumentError(`${host} contains a scheme`);
       }
 
       let url;
@@ -240,7 +250,7 @@ class Proxy {
           url = new URL("https://" + host);
         }
       } catch (e) {
-        throw new error.InvalidArgumentError(e.message);
+        throw new lazy.error.InvalidArgumentError(e.message);
       }
 
       let hostname = stripBracketsFromIpv6Hostname(url.hostname);
@@ -263,7 +273,7 @@ class Proxy {
         url.search != "" ||
         url.hash != ""
       ) {
-        throw new error.InvalidArgumentError(
+        throw new lazy.error.InvalidArgumentError(
           `${host} was not of the form host[:port]`
         );
       }
@@ -276,16 +286,19 @@ class Proxy {
       return p;
     }
 
-    assert.object(json, pprint`Expected "proxy" to be an object, got ${json}`);
+    lazy.assert.object(
+      json,
+      lazy.pprint`Expected "proxy" to be an object, got ${json}`
+    );
 
-    assert.in(
+    lazy.assert.in(
       "proxyType",
       json,
-      pprint`Expected "proxyType" in "proxy" object, got ${json}`
+      lazy.pprint`Expected "proxyType" in "proxy" object, got ${json}`
     );
-    p.proxyType = assert.string(
+    p.proxyType = lazy.assert.string(
       json.proxyType,
-      pprint`Expected "proxyType" to be a string, got ${json.proxyType}`
+      lazy.pprint`Expected "proxyType" to be a string, got ${json.proxyType}`
     );
 
     switch (p.proxyType) {
@@ -295,16 +308,16 @@ class Proxy {
         break;
 
       case "pac":
-        p.proxyAutoconfigUrl = assert.string(
+        p.proxyAutoconfigUrl = lazy.assert.string(
           json.proxyAutoconfigUrl,
           `Expected "proxyAutoconfigUrl" to be a string, ` +
-            pprint`got ${json.proxyAutoconfigUrl}`
+            lazy.pprint`got ${json.proxyAutoconfigUrl}`
         );
         break;
 
       case "manual":
         if (typeof json.ftpProxy != "undefined") {
-          throw new error.InvalidArgumentError(
+          throw new lazy.error.InvalidArgumentError(
             "Since Firefox 90 'ftpProxy' is no longer supported"
           );
         }
@@ -316,20 +329,20 @@ class Proxy {
         }
         if (typeof json.socksProxy != "undefined") {
           [p.socksProxy, p.socksProxyPort] = fromHost("socks", json.socksProxy);
-          p.socksVersion = assert.positiveInteger(
+          p.socksVersion = lazy.assert.positiveInteger(
             json.socksVersion,
-            pprint`Expected "socksVersion" to be a positive integer, got ${json.socksVersion}`
+            lazy.pprint`Expected "socksVersion" to be a positive integer, got ${json.socksVersion}`
           );
         }
         if (typeof json.noProxy != "undefined") {
-          let entries = assert.array(
+          let entries = lazy.assert.array(
             json.noProxy,
-            pprint`Expected "noProxy" to be an array, got ${json.noProxy}`
+            lazy.pprint`Expected "noProxy" to be an array, got ${json.noProxy}`
           );
           p.noProxy = entries.map(entry => {
-            assert.string(
+            lazy.assert.string(
               entry,
-              pprint`Expected "noProxy" entry to be a string, got ${entry}`
+              lazy.pprint`Expected "noProxy" entry to be a string, got ${entry}`
             );
             return stripBracketsFromIpv6Hostname(entry);
           });
@@ -337,7 +350,7 @@ class Proxy {
         break;
 
       default:
-        throw new error.InvalidArgumentError(
+        throw new lazy.error.InvalidArgumentError(
           `Invalid type of proxy: ${p.proxyType}`
         );
     }
@@ -421,13 +434,13 @@ class Capabilities extends Map {
     super([
       // webdriver
       ["browserName", getWebDriverBrowserName()],
-      ["browserVersion", AppInfo.version],
+      ["browserVersion", lazy.AppInfo.version],
       ["platformName", getWebDriverPlatformName()],
       ["platformVersion", Services.sysinfo.getProperty("version")],
       ["acceptInsecureCerts", false],
       ["pageLoadStrategy", PageLoadStrategy.Normal],
       ["proxy", new Proxy()],
-      ["setWindowRect", !AppInfo.isAndroid],
+      ["setWindowRect", !lazy.AppInfo.isAndroid],
       ["timeouts", new Timeouts()],
       ["strictFileInteractability", false],
       ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
@@ -435,19 +448,19 @@ class Capabilities extends Map {
 
       // proprietary
       ["moz:accessibilityChecks", false],
-      ["moz:buildID", AppInfo.appBuildID],
+      ["moz:buildID", lazy.AppInfo.appBuildID],
       [
         "moz:debuggerAddress",
         // With bug 1715481 fixed always use the Remote Agent instance
-        RemoteAgent.running && RemoteAgent.cdp
-          ? remoteAgent.debuggerAddress
+        lazy.RemoteAgent.running && lazy.RemoteAgent.cdp
+          ? lazy.remoteAgent.debuggerAddress
           : null,
       ],
       [
         "moz:headless",
         Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless,
       ],
-      ["moz:processID", AppInfo.processID],
+      ["moz:processID", lazy.AppInfo.processID],
       ["moz:profile", maybeProfile()],
       [
         "moz:shutdownTimeout",
@@ -510,9 +523,9 @@ class Capabilities extends Map {
     if (typeof json == "undefined" || json === null) {
       json = {};
     }
-    assert.object(
+    lazy.assert.object(
       json,
-      pprint`Expected "capabilities" to be an object, got ${json}"`
+      lazy.pprint`Expected "capabilities" to be an object, got ${json}"`
     );
 
     return Capabilities.match_(json);
@@ -525,13 +538,19 @@ class Capabilities extends Map {
     for (let [k, v] of Object.entries(json)) {
       switch (k) {
         case "acceptInsecureCerts":
-          assert.boolean(v, pprint`Expected ${k} to be a boolean, got ${v}`);
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be a boolean, got ${v}`
+          );
           break;
 
         case "pageLoadStrategy":
-          assert.string(v, pprint`Expected ${k} to be a string, got ${v}`);
+          lazy.assert.string(
+            v,
+            lazy.pprint`Expected ${k} to be a string, got ${v}`
+          );
           if (!Object.values(PageLoadStrategy).includes(v)) {
-            throw new error.InvalidArgumentError(
+            throw new lazy.error.InvalidArgumentError(
               "Unknown page load strategy: " + v
             );
           }
@@ -542,13 +561,16 @@ class Capabilities extends Map {
           break;
 
         case "setWindowRect":
-          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
-          if (!AppInfo.isAndroid && !v) {
-            throw new error.InvalidArgumentError(
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be boolean, got ${v}`
+          );
+          if (!lazy.AppInfo.isAndroid && !v) {
+            throw new lazy.error.InvalidArgumentError(
               "setWindowRect cannot be disabled"
             );
-          } else if (AppInfo.isAndroid && v) {
-            throw new error.InvalidArgumentError(
+          } else if (lazy.AppInfo.isAndroid && v) {
+            throw new lazy.error.InvalidArgumentError(
               "setWindowRect is only supported on desktop"
             );
           }
@@ -559,30 +581,39 @@ class Capabilities extends Map {
           break;
 
         case "strictFileInteractability":
-          v = assert.boolean(v);
+          v = lazy.assert.boolean(v);
           break;
 
         case "unhandledPromptBehavior":
-          assert.string(v, pprint`Expected ${k} to be a string, got ${v}`);
+          lazy.assert.string(
+            v,
+            lazy.pprint`Expected ${k} to be a string, got ${v}`
+          );
           if (!Object.values(UnhandledPromptBehavior).includes(v)) {
-            throw new error.InvalidArgumentError(
+            throw new lazy.error.InvalidArgumentError(
               `Unknown unhandled prompt behavior: ${v}`
             );
           }
           break;
 
         case "webSocketUrl":
-          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be boolean, got ${v}`
+          );
 
           if (!v) {
-            throw new error.InvalidArgumentError(
-              pprint`Expected ${k} to be true, got ${v}`
+            throw new lazy.error.InvalidArgumentError(
+              lazy.pprint`Expected ${k} to be true, got ${v}`
             );
           }
           break;
 
         case "moz:accessibilityChecks":
-          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be boolean, got ${v}`
+          );
           break;
 
         // Don't set the value because it's only used to return the address
@@ -591,19 +622,28 @@ class Capabilities extends Map {
           continue;
 
         case "moz:useNonSpecCompliantPointerOrigin":
-          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be boolean, got ${v}`
+          );
           break;
 
         case "moz:webdriverClick":
-          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be boolean, got ${v}`
+          );
           break;
 
         case "moz:windowless":
-          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be boolean, got ${v}`
+          );
 
           // Only supported on MacOS
-          if (v && !AppInfo.isMac) {
-            throw new error.InvalidArgumentError(
+          if (v && !lazy.AppInfo.isMac) {
+            throw new lazy.error.InvalidArgumentError(
               "moz:windowless only supported on MacOS"
             );
           }
@@ -620,17 +660,17 @@ class Capabilities extends Map {
 function getWebDriverBrowserName() {
   // Similar to chromedriver which reports "chrome" as browser name for all
   // WebView apps, we will report "firefox" for all GeckoView apps.
-  if (AppInfo.isAndroid) {
+  if (lazy.AppInfo.isAndroid) {
     return "firefox";
   }
 
-  return AppInfo.name?.toLowerCase();
+  return lazy.AppInfo.name?.toLowerCase();
 }
 
 function getWebDriverPlatformName() {
   let name = Services.sysinfo.getProperty("name");
 
-  if (AppInfo.isAndroid) {
+  if (lazy.AppInfo.isAndroid) {
     return "android";
   }
 

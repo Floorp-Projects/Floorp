@@ -291,7 +291,9 @@ const KEY_DATA = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(this, "SHIFT_DATA", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "SHIFT_DATA", () => {
   // Initalize the shift mapping
   const shiftData = new Map();
   const byCode = new Map();
@@ -339,6 +341,6 @@ const keyData = {
    * @returns {string} Key string to use when the shift modifier is set.
    */
   getShiftedKey(rawKey) {
-    return SHIFT_DATA.get(rawKey) ?? rawKey;
+    return lazy.SHIFT_DATA.get(rawKey) ?? rawKey;
   },
 };

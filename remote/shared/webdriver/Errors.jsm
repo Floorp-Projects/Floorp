@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   pprint: "chrome://remote/content/shared/Format.jsm",
 });
 
@@ -265,18 +267,18 @@ class ElementClickInterceptedError extends WebDriverError {
       switch (obscuredEl.style.pointerEvents) {
         case "none":
           msg =
-            pprint`Element ${obscuredEl} is not clickable ` +
+            lazy.pprint`Element ${obscuredEl} is not clickable ` +
             `at point (${coords.x},${coords.y}) ` +
             `because it does not have pointer events enabled, ` +
-            pprint`and element ${overlayingEl} ` +
+            lazy.pprint`and element ${overlayingEl} ` +
             `would receive the click instead`;
           break;
 
         default:
           msg =
-            pprint`Element ${obscuredEl} is not clickable ` +
+            lazy.pprint`Element ${obscuredEl} is not clickable ` +
             `at point (${coords.x},${coords.y}) ` +
-            pprint`because another element ${overlayingEl} ` +
+            lazy.pprint`because another element ${overlayingEl} ` +
             `obscures it`;
           break;
       }

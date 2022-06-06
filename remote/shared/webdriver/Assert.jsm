@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   pprint: "chrome://remote/content/shared/Format.jsm",
@@ -39,7 +41,7 @@ assert.session = function(session, msg = "") {
   assert.that(
     session => session && typeof session.id == "string",
     msg,
-    error.InvalidSessionIDError
+    lazy.error.InvalidSessionIDError
   )(session);
 };
 
@@ -57,8 +59,8 @@ assert.firefox = function(msg = "") {
   assert.that(
     isFirefox => isFirefox,
     msg,
-    error.UnsupportedOperationError
-  )(AppInfo.isFirefox);
+    lazy.error.UnsupportedOperationError
+  )(lazy.AppInfo.isFirefox);
 };
 
 /**
@@ -75,8 +77,8 @@ assert.desktop = function(msg = "") {
   assert.that(
     isDesktop => isDesktop,
     msg,
-    error.UnsupportedOperationError
-  )(!AppInfo.isAndroid);
+    lazy.error.UnsupportedOperationError
+  )(!lazy.AppInfo.isAndroid);
 };
 
 /**
@@ -93,8 +95,8 @@ assert.mobile = function(msg = "") {
   assert.that(
     isAndroid => isAndroid,
     msg,
-    error.UnsupportedOperationError
-  )(AppInfo.isAndroid);
+    lazy.error.UnsupportedOperationError
+  )(lazy.AppInfo.isAndroid);
 };
 
 /**
@@ -116,7 +118,7 @@ assert.content = function(context, msg = "") {
   assert.that(
     c => c.toString() == "content",
     msg,
-    error.UnsupportedOperationError
+    lazy.error.UnsupportedOperationError
   )(context);
 };
 
@@ -149,7 +151,7 @@ assert.open = function(browsingContext, msg = "") {
       return true;
     },
     msg,
-    error.NoSuchWindowError
+    lazy.error.NoSuchWindowError
   )(browsingContext);
 };
 
@@ -168,7 +170,7 @@ assert.noUserPrompt = function(dialog, msg = "") {
   assert.that(
     d => d === null || typeof d == "undefined",
     msg,
-    error.UnexpectedAlertOpenError
+    lazy.error.UnexpectedAlertOpenError
   )(dialog);
 };
 
@@ -187,7 +189,7 @@ assert.noUserPrompt = function(dialog, msg = "") {
  *     If <var>obj</var> is not defined.
  */
 assert.defined = function(obj, msg = "") {
-  msg = msg || pprint`Expected ${obj} to be defined`;
+  msg = msg || lazy.pprint`Expected ${obj} to be defined`;
   return assert.that(o => typeof o != "undefined", msg)(obj);
 };
 
@@ -206,7 +208,7 @@ assert.defined = function(obj, msg = "") {
  *     If <var>obj</var> is not a number.
  */
 assert.number = function(obj, msg = "") {
-  msg = msg || pprint`Expected ${obj} to be finite number`;
+  msg = msg || lazy.pprint`Expected ${obj} to be finite number`;
   return assert.that(Number.isFinite, msg)(obj);
 };
 
@@ -226,7 +228,7 @@ assert.number = function(obj, msg = "") {
  */
 assert.positiveNumber = function(obj, msg = "") {
   assert.number(obj, msg);
-  msg = msg || pprint`Expected ${obj} to be >= 0`;
+  msg = msg || lazy.pprint`Expected ${obj} to be >= 0`;
   return assert.that(n => n >= 0, msg)(obj);
 };
 
@@ -245,7 +247,7 @@ assert.positiveNumber = function(obj, msg = "") {
  *     If <var>obj</var> is not callable.
  */
 assert.callable = function(obj, msg = "") {
-  msg = msg || pprint`${obj} is not callable`;
+  msg = msg || lazy.pprint`${obj} is not callable`;
   return assert.that(o => typeof o == "function", msg)(obj);
 };
 
@@ -264,7 +266,7 @@ assert.callable = function(obj, msg = "") {
  *     If <var>obj</var> is not an unsigned short.
  */
 assert.unsignedShort = function(obj, msg = "") {
-  msg = msg || pprint`Expected ${obj} to be >= 0 and < 65536`;
+  msg = msg || lazy.pprint`Expected ${obj} to be >= 0 and < 65536`;
   return assert.that(n => n >= 0 && n < 65536, msg)(obj);
 };
 
@@ -283,7 +285,7 @@ assert.unsignedShort = function(obj, msg = "") {
  *     If <var>obj</var> is not an integer.
  */
 assert.integer = function(obj, msg = "") {
-  msg = msg || pprint`Expected ${obj} to be an integer`;
+  msg = msg || lazy.pprint`Expected ${obj} to be an integer`;
   return assert.that(Number.isSafeInteger, msg)(obj);
 };
 
@@ -303,7 +305,7 @@ assert.integer = function(obj, msg = "") {
  */
 assert.positiveInteger = function(obj, msg = "") {
   assert.integer(obj, msg);
-  msg = msg || pprint`Expected ${obj} to be >= 0`;
+  msg = msg || lazy.pprint`Expected ${obj} to be >= 0`;
   return assert.that(n => n >= 0, msg)(obj);
 };
 
@@ -322,7 +324,7 @@ assert.positiveInteger = function(obj, msg = "") {
  *     If <var>obj</var> is not a boolean.
  */
 assert.boolean = function(obj, msg = "") {
-  msg = msg || pprint`Expected ${obj} to be boolean`;
+  msg = msg || lazy.pprint`Expected ${obj} to be boolean`;
   return assert.that(b => typeof b == "boolean", msg)(obj);
 };
 
@@ -341,7 +343,7 @@ assert.boolean = function(obj, msg = "") {
  *     If <var>obj</var> is not a string.
  */
 assert.string = function(obj, msg = "") {
-  msg = msg || pprint`Expected ${obj} to be a string`;
+  msg = msg || lazy.pprint`Expected ${obj} to be a string`;
   return assert.that(s => typeof s == "string", msg)(obj);
 };
 
@@ -360,7 +362,7 @@ assert.string = function(obj, msg = "") {
  *     If <var>obj</var> is not an object.
  */
 assert.object = function(obj, msg = "") {
-  msg = msg || pprint`Expected ${obj} to be an object`;
+  msg = msg || lazy.pprint`Expected ${obj} to be an object`;
   return assert.that(o => {
     // unable to use instanceof because LHS and RHS may come from
     // different globals
@@ -394,7 +396,7 @@ assert.in = function(prop, obj, msg = "") {
     return prop;
   }
   assert.object(obj, msg);
-  msg = msg || pprint`Expected ${prop} in ${obj}`;
+  msg = msg || lazy.pprint`Expected ${prop} in ${obj}`;
   assert.that(p => obj.hasOwnProperty(p), msg)(prop);
   return obj[prop];
 };
@@ -414,7 +416,7 @@ assert.in = function(prop, obj, msg = "") {
  *     If <var>obj</var> is not an Array.
  */
 assert.array = function(obj, msg = "") {
-  msg = msg || pprint`Expected ${obj} to be an Array`;
+  msg = msg || lazy.pprint`Expected ${obj} to be an Array`;
   return assert.that(Array.isArray, msg)(obj);
 };
 
@@ -438,7 +440,7 @@ assert.array = function(obj, msg = "") {
 assert.that = function(
   predicate,
   message = "",
-  err = error.InvalidArgumentError
+  err = lazy.error.InvalidArgumentError
 ) {
   return obj => {
     if (!predicate(obj)) {
