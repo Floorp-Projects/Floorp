@@ -22,6 +22,7 @@ var EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
@@ -34,7 +35,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Observers: "resource://services-common/observers.js",
   OS: "resource://gre/modules/osfile.jsm",
   Resource: "resource://services-sync/resource.js",
-  Services: "resource://gre/modules/Services.jsm",
   Status: "resource://services-sync/status.js",
   Svc: "resource://services-sync/util.js",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
@@ -109,7 +109,7 @@ const ENGINES = new Set([
 
 function tryGetMonotonicTimestamp() {
   try {
-    return lazy.Services.telemetry.msSinceProcessStart();
+    return Services.telemetry.msSinceProcessStart();
   } catch (e) {
     log.warn("Unable to get a monotonic timestamp!");
     return -1;
@@ -641,7 +641,7 @@ class SyncTelemetryImpl {
     this.maxPayloadCount = lazy.Svc.Prefs.get("telemetry.maxPayloadCount");
     this.submissionInterval =
       lazy.Svc.Prefs.get("telemetry.submissionInterval") * 1000;
-    this.lastSubmissionTime = lazy.Services.telemetry.msSinceProcessStart();
+    this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
     this.lastUID = EMPTY_UID;
     this.lastSyncNodeType = null;
     this.currentSyncNodeType = null;
@@ -815,7 +815,7 @@ class SyncTelemetryImpl {
     // pref set, they *are* running a production fxa, just not production sync.
     if (
       !lazy.FxAccounts.config.isProductionConfig() ||
-      lazy.Services.prefs.prefHasUserValue("services.sync.tokenServerURI")
+      Services.prefs.prefHasUserValue("services.sync.tokenServerURI")
     ) {
       log.trace(`Not sending telemetry ping for self-hosted Sync user`);
       return false;
@@ -861,7 +861,7 @@ class SyncTelemetryImpl {
           // The first 32 chars are sufficient to uniquely identify the device, so just send those.
           // It's hard to change the sync ping itself to only send 32 chars, to b/w compat reasons.
           sanitizedDeviceId = sanitizedDeviceId.substr(0, 32);
-          lazy.Services.telemetry.scalarSet(
+          Services.telemetry.scalarSet(
             "deletion.request.sync_device_id",
             sanitizedDeviceId
           );
@@ -877,7 +877,7 @@ class SyncTelemetryImpl {
   // This keeps the `deletion-request` ping up-to-date when the user signs out,
   // clearing the now-nonexistent sync device id.
   onAccountLogout() {
-    lazy.Services.telemetry.scalarSet("deletion.request.sync_device_id", "");
+    Services.telemetry.scalarSet("deletion.request.sync_device_id", "");
   }
 
   _checkCurrent(topic) {
@@ -927,7 +927,7 @@ class SyncTelemetryImpl {
         "Early submission of sync telemetry due to changed IDs/NodeType"
       );
       this.finish("idchange"); // this actually submits.
-      this.lastSubmissionTime = lazy.Services.telemetry.msSinceProcessStart();
+      this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
     }
 
     // Only update the last UIDs if we actually know them.
@@ -946,11 +946,11 @@ class SyncTelemetryImpl {
     // the sync and the events caused by it in different pings.
     if (
       this.current == null &&
-      lazy.Services.telemetry.msSinceProcessStart() - this.lastSubmissionTime >
+      Services.telemetry.msSinceProcessStart() - this.lastSubmissionTime >
         this.submissionInterval
     ) {
       this.finish("schedule");
-      this.lastSubmissionTime = lazy.Services.telemetry.msSinceProcessStart();
+      this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
     }
   }
 
@@ -977,7 +977,7 @@ class SyncTelemetryImpl {
   }
 
   _addHistogram(hist) {
-    let histogram = lazy.Services.telemetry.getHistogramById(hist);
+    let histogram = Services.telemetry.getHistogramById(hist);
     let s = histogram.snapshot();
     this.histograms[hist] = s;
   }
