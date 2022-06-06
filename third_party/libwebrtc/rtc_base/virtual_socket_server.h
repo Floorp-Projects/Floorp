@@ -163,10 +163,12 @@ class VirtualSocketServer : public SocketServer {
   explicit VirtualSocketServer(ThreadProcessingFakeClock* fake_clock);
   ~VirtualSocketServer() override;
 
-  // The default route indicates which local address to use when a socket is
-  // bound to the 'any' address, e.g. 0.0.0.0.
-  IPAddress GetDefaultRoute(int family);
-  void SetDefaultRoute(const IPAddress& from_addr);
+  // The default source address specifies which local address to use when a
+  // socket is bound to the 'any' address, e.g. 0.0.0.0. (If not set, the 'any'
+  // address is used as the source address on outgoing virtual packets, exposed
+  // to recipient's RecvFrom).
+  IPAddress GetDefaultSourceAddress(int family);
+  void SetDefaultSourceAddress(const IPAddress& from_addr);
 
   // Limits the network bandwidth (maximum bytes per second).  Zero means that
   // all sends occur instantly.  Defaults to 0.
@@ -411,8 +413,8 @@ class VirtualSocketServer : public SocketServer {
   AddressMap* bindings_;
   ConnectionMap* connections_;
 
-  IPAddress default_route_v4_;
-  IPAddress default_route_v6_;
+  IPAddress default_source_address_v4_;
+  IPAddress default_source_address_v6_;
 
   uint32_t bandwidth_;
   uint32_t network_capacity_;
