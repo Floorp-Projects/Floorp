@@ -10,15 +10,7 @@ const { GeckoViewModule } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewModule.jsm"
 );
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Services: "resource://gre/modules/Services.jsm",
-});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class GeckoViewProcessHangMonitor extends GeckoViewModule {
   constructor(aModuleInfo) {
@@ -57,14 +49,14 @@ class GeckoViewProcessHangMonitor extends GeckoViewModule {
 
   onInit() {
     debug`onInit`;
-    lazy.Services.obs.addObserver(this, "process-hang-report");
-    lazy.Services.obs.addObserver(this, "clear-hang-report");
+    Services.obs.addObserver(this, "process-hang-report");
+    Services.obs.addObserver(this, "clear-hang-report");
   }
 
   onDestroy() {
     debug`onDestroy`;
-    lazy.Services.obs.removeObserver(this, "process-hang-report");
-    lazy.Services.obs.removeObserver(this, "clear-hang-report");
+    Services.obs.removeObserver(this, "process-hang-report");
+    Services.obs.removeObserver(this, "clear-hang-report");
   }
 
   onEnable() {
@@ -125,9 +117,7 @@ class GeckoViewProcessHangMonitor extends GeckoViewModule {
    */
   get WAIT_EXPIRATION_TIME() {
     try {
-      return lazy.Services.prefs.getIntPref(
-        "browser.hangNotification.waitPeriod"
-      );
+      return Services.prefs.getIntPref("browser.hangNotification.waitPeriod");
     } catch (ex) {
       return 10000;
     }
