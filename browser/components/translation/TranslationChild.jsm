@@ -7,8 +7,9 @@
 var EXPORTED_SYMBOLS = ["TranslationChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LanguageDetector",
   "resource:///modules/translation/LanguageDetector.jsm"
 );
@@ -70,7 +71,7 @@ class TranslationChild extends JSWindowActorChild {
       return;
     }
 
-    LanguageDetector.detectLanguage(string).then(result => {
+    lazy.LanguageDetector.detectLanguage(string).then(result => {
       // Bail if we're not confident.
       if (!result.confident) {
         return;
