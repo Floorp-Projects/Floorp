@@ -103,9 +103,14 @@ class nsJSContext : public nsIScriptContext {
   static void MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
                                          JS::GCReason aReason);
 
-  // The GC should probably run soon, in the zone of object aObj (if given).
+  // The GC should run soon, in the zone of aObj if given. If aObj is
+  // nullptr, collect all Zones.
   static void PokeGC(JS::GCReason aReason, JSObject* aObj,
                      mozilla::TimeDuration aDelay = 0);
+
+  // If usage is nearing a threshold, request idle-only GC work. (This is called
+  // when a collection would be relatively convenient.)
+  static void MaybePokeGC();
 
   // Immediately perform a non-incremental shrinking GC and CC.
   static void DoLowMemoryGC();
