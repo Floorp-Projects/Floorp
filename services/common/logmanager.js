@@ -5,11 +5,7 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(
   lazy,
   "FileUtils",
@@ -493,7 +489,7 @@ LogManager.prototype = {
     this._cleaningUpFileLogs = false;
     this._log.debug("Done deleting files.");
     // This notification is used only for tests.
-    lazy.Services.obs.notifyObservers(
+    Services.obs.notifyObservers(
       null,
       "services-tests:common:log-manager:cleanup-logs"
     );
