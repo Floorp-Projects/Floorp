@@ -113,4 +113,10 @@
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Oppdatere siste bruksdato for kortet?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">Kortnummeret vil bli kryptert. Tryggingskoden vert ikkje lagra.</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address">Vel adresser</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Handsam adresser</string>
 </resources>
