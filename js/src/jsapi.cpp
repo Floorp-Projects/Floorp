@@ -1295,7 +1295,7 @@ JS_PUBLIC_API JS::GCReason JS::WantEagerMinorGC(JSRuntime* rt) {
 }
 
 JS_PUBLIC_API JS::GCReason JS::WantEagerMajorGC(JSRuntime* rt) {
-  return rt->gc.wantMajorGC();
+  return rt->gc.wantMajorGC(true);
 }
 
 JS_PUBLIC_API void JS::MaybeRunNurseryCollection(JSRuntime* rt,
