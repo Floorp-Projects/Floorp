@@ -480,9 +480,8 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // Caller:
   // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- rsp
 
-  // Add |this|, in the counter of known arguments.
+  // Load argc.
   masm.loadPtr(Address(rsp, RectifierFrameLayout::offsetOfNumActualArgs()), r8);
-  masm.addl(Imm32(1), r8);
 
   // Load |nformals| into %rcx.
   masm.loadPtr(Address(rsp, RectifierFrameLayout::offsetOfCalleeToken()), rax);
@@ -521,19 +520,19 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
 
   // Load the number of |undefined|s to push into %rcx.
   masm.subq(r8, rcx);
+  masm.subq(Imm32(1), rcx);  // TODO: remove in the next patch
 
   // Caller:
   // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- rsp <- r9
-  // '------ #r8 -------'
+  // '--- #r8 ---'
   //
   // Rectifier frame:
   // [undef] [undef] [undef] [arg2] [arg1] [this] [ [argc] [callee]
   //                                                [descr] [raddr] ]
-  // '------- #rcx --------' '------ #r8 -------'
+  // '------- #rcx --------' '--- #r8 ---'
 
-  // Copy the number of actual arguments into rdx. Use lea to subtract 1 for
-  // |this|.
-  masm.lea(Operand(r8, -1), rdx);
+  // Copy the number of actual arguments into rdx.
+  masm.mov(r8, rdx);
 
   masm.moveValue(UndefinedValue(), ValueOperand(r10));
 
@@ -552,12 +551,12 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // Get the topmost argument.
   static_assert(sizeof(Value) == 8, "TimesEight is used to skip arguments");
 
-  // | - sizeof(Value)| is used to put rcx such that we can read the last
-  // argument, and not the value which is after.
-  BaseIndex b(r9, r8, TimesEight, sizeof(RectifierFrameLayout) - sizeof(Value));
+  // Get the topmost argument.
+  BaseIndex b(r9, r8, TimesEight, sizeof(RectifierFrameLayout));
   masm.lea(Operand(b), rcx);
 
-  // Copy & Push arguments, |nargs| + 1 times (to include |this|).
+  // Push arguments, |nargs| + 1 times (to include |this|).
+  masm.addl(Imm32(1), r8);
   {
     Label copyLoopTop;
 
