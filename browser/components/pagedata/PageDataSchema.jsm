@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
   OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.jsm",
@@ -21,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TwitterPageData: "resource:///modules/pagedata/TwitterPageData.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
   return console.createInstance({
     prefix: "PageData",
     maxLogLevel: Services.prefs.getBoolPref("browser.pagedata.log", false)
@@ -42,8 +44,8 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
  * The data returned need not be valid, collectors should return whatever they
  * can and then we drop anything that is invalid once all data is joined.
  */
-XPCOMUtils.defineLazyGetter(this, "DATA_COLLECTORS", function() {
-  return [SchemaOrgPageData, OpenGraphPageData, TwitterPageData];
+XPCOMUtils.defineLazyGetter(lazy, "DATA_COLLECTORS", function() {
+  return [lazy.SchemaOrgPageData, lazy.OpenGraphPageData, lazy.TwitterPageData];
 });
 
 let SCHEMAS = new Map();
@@ -81,7 +83,7 @@ async function loadSchema(schemaName) {
 async function validateData(schemaName, data) {
   let schema = await loadSchema(schemaName.toLocaleLowerCase());
 
-  let result = JsonSchemaValidator.validate(data, schema, {
+  let result = lazy.JsonSchemaValidator.validate(data, schema, {
     allowExplicitUndefinedProperties: true,
     // Allowed for future expansion of the schema.
     allowExtraProperties: true,
@@ -230,13 +232,13 @@ const PageDataSchema = {
    *   error.
    */
   async collectPageData(document) {
-    logConsole.debug("Starting collection", document.documentURI);
+    lazy.logConsole.debug("Starting collection", document.documentURI);
 
-    let pending = DATA_COLLECTORS.map(async collector => {
+    let pending = lazy.DATA_COLLECTORS.map(async collector => {
       try {
         return await collector.collect(document);
       } catch (e) {
-        logConsole.error("Error collecting page data", e);
+        lazy.logConsole.error("Error collecting page data", e);
         return null;
       }
     });
@@ -251,7 +253,7 @@ const PageDataSchema = {
     try {
       return this.validatePageData(pageData);
     } catch (e) {
-      logConsole.error("Failed to collect valid page data", e);
+      lazy.logConsole.error("Failed to collect valid page data", e);
       return null;
     }
   },

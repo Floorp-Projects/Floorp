@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
@@ -30,7 +32,7 @@ class PageDataParent extends JSWindowActorParent {
    */
   collectPageData() {
     if (!this.#deferredCollection) {
-      this.#deferredCollection = PromiseUtils.defer();
+      this.#deferredCollection = lazy.PromiseUtils.defer();
       this.sendQuery("PageData:Collect").then(
         this.#deferredCollection.resolve,
         this.#deferredCollection.reject
@@ -56,7 +58,7 @@ class PageDataParent extends JSWindowActorParent {
   receiveMessage(msg) {
     switch (msg.name) {
       case "PageData:DocumentReady":
-        PageDataService.pageLoaded(this, msg.data.url);
+        lazy.PageDataService.pageLoaded(this, msg.data.url);
         break;
     }
   }

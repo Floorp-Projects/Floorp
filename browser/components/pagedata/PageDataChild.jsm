@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
@@ -18,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // We defer any attempt to check for page data for a short time after a page
 // loads to allow JS to operate.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "READY_DELAY",
   "browser.pagedata.readyDelay",
   500
@@ -39,7 +41,7 @@ class PageDataChild extends JSWindowActorChild {
    * Called when the actor is created for a new page.
    */
   actorCreated() {
-    this.#isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(
+    this.#isContentWindowPrivate = lazy.PrivateBrowsingUtils.isContentWindowPrivate(
       this.contentWindow
     );
   }
@@ -70,7 +72,7 @@ class PageDataChild extends JSWindowActorChild {
           url: this.document.documentURI,
         });
       },
-      READY_DELAY,
+      lazy.READY_DELAY,
       Ci.nsITimer.TYPE_ONE_SHOT_LOW_PRIORITY
     );
   }
@@ -98,7 +100,7 @@ class PageDataChild extends JSWindowActorChild {
         }
         break;
       case "PageData:Collect":
-        return PageDataSchema.collectPageData(this.document);
+        return lazy.PageDataSchema.collectPageData(this.document);
     }
 
     return undefined;
