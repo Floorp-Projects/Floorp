@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   getMessageHandlerClass:
     "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm",
   // Additional protocols might use a different registry for their modules,
@@ -23,13 +25,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetter(
-  this,
+  lazy,
   "getTestModuleClass",
   "chrome://mochitests/content/browser/remote/shared/messagehandler/test/browser/resources/modules/ModuleRegistry.jsm",
   "getModuleClass"
 );
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 /**
  * ModuleCache instances are dedicated to lazily create and cache the instances
@@ -154,11 +156,11 @@ class ModuleCache {
     let module = null;
     if (ModuleClass) {
       module = new ModuleClass(this.messageHandler);
-      logger.trace(
+      lazy.logger.trace(
         `Module ${moduleFolder}/${moduleName}.jsm found for ${destination.type}`
       );
     } else {
-      logger.trace(
+      lazy.logger.trace(
         `Module ${moduleFolder}/${moduleName}.jsm not found for ${destination.type}`
       );
     }
@@ -188,16 +190,16 @@ class ModuleCache {
 
   _getModuleClass(moduleName, moduleFolder) {
     if (this._useTestModules) {
-      return getTestModuleClass(moduleName, moduleFolder);
+      return lazy.getTestModuleClass(moduleName, moduleFolder);
     }
 
     // Retrieve the module class from the WebDriverBiDi ModuleRegistry if we
     // are not using test modules.
-    return getModuleClass(moduleName, moduleFolder);
+    return lazy.getModuleClass(moduleName, moduleFolder);
   }
 
   _getModuleFolder(originType, destinationType) {
-    const originPath = getMessageHandlerClass(originType).modulePath;
+    const originPath = lazy.getMessageHandlerClass(originType).modulePath;
     if (originType === destinationType) {
       // If the command is targeting the current type, the module is expected to
       // be in eg "windowglobal/${moduleName}.jsm".
@@ -205,7 +207,8 @@ class ModuleCache {
     }
     // If the command is targeting another type, the module is expected to
     // be in a composed folder eg "windowglobal-in-root/${moduleName}.jsm".
-    const destinationPath = getMessageHandlerClass(destinationType).modulePath;
+    const destinationPath = lazy.getMessageHandlerClass(destinationType)
+      .modulePath;
     return `${destinationPath}-in-${originPath}`;
   }
 }

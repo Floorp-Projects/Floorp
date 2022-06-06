@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
@@ -19,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 const SESSION_DATA_SHARED_DATA_KEY = "MessageHandlerSessionData";
 
@@ -87,7 +89,7 @@ const sessionDataMap = new Map();
  */
 class SessionData {
   constructor(messageHandler) {
-    if (messageHandler.constructor.type != RootMessageHandler.type) {
+    if (messageHandler.constructor.type != lazy.RootMessageHandler.type) {
       throw new Error(
         "SessionData should only be used from a ROOT MessageHandler"
       );
@@ -136,7 +138,7 @@ class SessionData {
         this._data.push(item);
         addedValues.push(value);
       } else {
-        logger.warn(
+        lazy.logger.warn(
           `Duplicated session data item was not added: ${JSON.stringify(item)}`
         );
       }
@@ -215,7 +217,7 @@ class SessionData {
         this._data.splice(itemIndex, 1);
         removedValues.push(value);
       } else {
-        logger.warn(
+        lazy.logger.warn(
           `Missing session data item was not removed: ${JSON.stringify(item)}`
         );
       }
@@ -245,7 +247,7 @@ class SessionData {
   }
 
   _isSameContextDescriptor(contextDescriptor1, contextDescriptor2) {
-    if (contextDescriptor1.type === ContextDescriptorType.All) {
+    if (contextDescriptor1.type === lazy.ContextDescriptorType.All) {
       // Ignore the id for type "all" since we made the id optional for this type.
       return contextDescriptor1.type === contextDescriptor2.type;
     }

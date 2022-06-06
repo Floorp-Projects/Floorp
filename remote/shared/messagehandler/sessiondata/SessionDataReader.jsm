@@ -11,12 +11,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   SESSION_DATA_SHARED_DATA_KEY:
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "sharedData", () => {
+XPCOMUtils.defineLazyGetter(lazy, "sharedData", () => {
   const isInParent =
     Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
@@ -31,4 +33,4 @@ XPCOMUtils.defineLazyGetter(this, "sharedData", () => {
  *     Map of session id to arrays of SessionDataItems.
  */
 const readSessionData = () =>
-  sharedData.get(SESSION_DATA_SHARED_DATA_KEY) || new Map();
+  lazy.sharedData.get(lazy.SESSION_DATA_SHARED_DATA_KEY) || new Map();

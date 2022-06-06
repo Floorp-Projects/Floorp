@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   error: "chrome://remote/content/shared/messagehandler/Errors.jsm",
   RootMessageHandlerRegistry:
     "chrome://remote/content/shared/messagehandler/RootMessageHandlerRegistry.jsm",
@@ -28,7 +30,7 @@ class MessageHandlerFrameParent extends JSWindowActorParent {
         const { name, data, isProtocolEvent, sessionId } = message.data;
 
         // Re-emit the event on the RootMessageHandler.
-        const messageHandler = RootMessageHandlerRegistry.getExistingMessageHandler(
+        const messageHandler = lazy.RootMessageHandlerRegistry.getExistingMessageHandler(
           sessionId
         );
         messageHandler.emitEvent(name, data, { isProtocolEvent });
@@ -61,7 +63,7 @@ class MessageHandlerFrameParent extends JSWindowActorParent {
     );
 
     if (result?.error) {
-      throw error.MessageHandlerError.fromJSON(result.error);
+      throw lazy.error.MessageHandlerError.fromJSON(result.error);
     }
 
     return result;
