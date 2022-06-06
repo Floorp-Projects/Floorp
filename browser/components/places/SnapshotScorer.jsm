@@ -9,12 +9,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Snapshots: "resource:///modules/Snapshots.jsm",
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
   return console.createInstance({
     prefix: "SnapshotSelector",
     maxLogLevel: Services.prefs.getBoolPref(
@@ -119,7 +121,7 @@ const SnapshotScorer = new (class SnapshotScorer {
       for (let { snapshot, score } of recommendations) {
         if (
           selectionContext.filterAdult &&
-          FilterAdult.isAdultUrl(snapshot.url)
+          lazy.FilterAdult.isAdultUrl(snapshot.url)
         ) {
           continue;
         }
@@ -152,7 +154,7 @@ const SnapshotScorer = new (class SnapshotScorer {
         score: currentScore.snapshotScore + currentScore.sourceScore,
       };
 
-      logConsole.debug(
+      lazy.logConsole.debug(
         `Scored ${recommendation.score} for ${recommendation.snapshot.url}`
       );
 
@@ -306,7 +308,7 @@ const SnapshotScorer = new (class SnapshotScorer {
    * @returns {number}
    */
   _scoreIsUserPersisted(snapshot) {
-    return snapshot.userPersisted != Snapshots.USER_PERSISTED.NO ? 1 : 0;
+    return snapshot.userPersisted != lazy.Snapshots.USER_PERSISTED.NO ? 1 : 0;
   }
 
   /**

@@ -9,7 +9,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   DomainGroupBuilder: "resource:///modules/DomainGroupBuilder.jsm",
   PinnedGroupBuilder: "resource:///modules/PinnedGroupBuilder.jsm",
@@ -18,13 +20,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "SNAPSHOT_ADDED_TIMER_DELAY",
   "browser.places.snapshots.monitorDelayAdded",
   5000
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "SNAPSHOT_REMOVED_TIMER_DELAY",
   "browser.places.snapshots.monitorDelayRemoved",
   1000
@@ -32,13 +34,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 // Expiration days for automatic and user managed snapshots.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "SNAPSHOT_EXPIRE_DAYS",
   "browser.places.snapshots.expiration.days",
   210
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "SNAPSHOT_USERMANAGED_EXPIRE_DAYS",
   "browser.places.snapshots.expiration.userManaged.days",
   420
@@ -60,11 +62,11 @@ const SnapshotMonitor = new (class SnapshotMonitor {
   /**
    * @type {number}
    */
-  #addedTimerDelay = SNAPSHOT_ADDED_TIMER_DELAY;
+  #addedTimerDelay = lazy.SNAPSHOT_ADDED_TIMER_DELAY;
   /**
    * @type {number}
    */
-  #removedTimerDelay = SNAPSHOT_REMOVED_TIMER_DELAY;
+  #removedTimerDelay = lazy.SNAPSHOT_REMOVED_TIMER_DELAY;
 
   /**
    * The set of urls that have been added since the last builder update.
@@ -121,7 +123,7 @@ const SnapshotMonitor = new (class SnapshotMonitor {
     if (this.testGroupBuilders) {
       return this.testGroupBuilders;
     }
-    return [DomainGroupBuilder, PinnedGroupBuilder];
+    return [lazy.DomainGroupBuilder, lazy.PinnedGroupBuilder];
   }
 
   /**
@@ -161,8 +163,8 @@ const SnapshotMonitor = new (class SnapshotMonitor {
    * delays for tests.
    */
   setTimerDelaysForTests({
-    added = SNAPSHOT_ADDED_TIMER_DELAY,
-    removed = SNAPSHOT_REMOVED_TIMER_DELAY,
+    added = lazy.SNAPSHOT_ADDED_TIMER_DELAY,
+    removed = lazy.SNAPSHOT_REMOVED_TIMER_DELAY,
   } = {}) {
     this.#addedTimerDelay = added;
     this.#removedTimerDelay = removed;
@@ -177,13 +179,13 @@ const SnapshotMonitor = new (class SnapshotMonitor {
    */
   async #triggerBuilders(rebuild = false) {
     if (this.#timer) {
-      clearTimeout(this.#timer);
+      lazy.clearTimeout(this.#timer);
     }
     this.#timer = null;
     this.#currentTargetTime = null;
 
     if (rebuild) {
-      let snapshots = await Snapshots.query({ limit: -1 });
+      let snapshots = await lazy.Snapshots.query({ limit: -1 });
       for (let builder of this.#groupBuilders) {
         await builder.rebuild(snapshots);
       }
@@ -241,11 +243,11 @@ const SnapshotMonitor = new (class SnapshotMonitor {
 
     this.#lastExpirationTime = now;
     let urls = (
-      await Snapshots.query({
+      await lazy.Snapshots.query({
         includeUserPersisted: false,
         includeTombstones: false,
         includeSnapshotsInUserManagedGroups: false,
-        lastInteractionBefore: now - SNAPSHOT_EXPIRE_DAYS * 86400000,
+        lastInteractionBefore: now - lazy.SNAPSHOT_EXPIRE_DAYS * 86400000,
         limit: this.#expirationChunkSize,
       })
     ).map(s => s.url);
@@ -258,11 +260,11 @@ const SnapshotMonitor = new (class SnapshotMonitor {
       // user managed ones we can expire.
       urls.push(
         ...(
-          await Snapshots.query({
+          await lazy.Snapshots.query({
             includeUserPersisted: true,
             includeTombstones: false,
             lastInteractionBefore:
-              now - SNAPSHOT_USERMANAGED_EXPIRE_DAYS * 86400000,
+              now - lazy.SNAPSHOT_USERMANAGED_EXPIRE_DAYS * 86400000,
             limit: this.#expirationChunkSize - urls.length,
           })
         ).map(s => s.url)
@@ -272,9 +274,9 @@ const SnapshotMonitor = new (class SnapshotMonitor {
       return;
     }
 
-    await Snapshots.delete(
+    await lazy.Snapshots.delete(
       [...new Set(urls)],
-      Snapshots.REMOVED_REASON.EXPIRED
+      lazy.Snapshots.REMOVED_REASON.EXPIRED
     );
   }
 
@@ -293,11 +295,11 @@ const SnapshotMonitor = new (class SnapshotMonitor {
     }
 
     if (this.#timer) {
-      clearTimeout(this.#timer);
+      lazy.clearTimeout(this.#timer);
     }
 
     this.#currentTargetTime = targetTime;
-    this.#timer = setTimeout(() => {
+    this.#timer = lazy.setTimeout(() => {
       this.#expireSnapshotsChunk().catch(console.error);
       this.#triggerBuilders().catch(console.error);
     }, timeout);

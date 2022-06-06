@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   shortURL: "resource://activity-stream/lib/ShortURL.jsm",
 });
 
@@ -311,7 +313,7 @@ class CommonNames {
     // which won't match anything in the custom names list e.g. ".com".
     let dot = hostname.lastIndexOf(".");
     if (dot === -1) {
-      return shortURL({ url });
+      return lazy.shortURL({ url });
     }
     let bestName = null;
     for (let i = 0; i < MAX_HOSTNAME_PARTS; i++) {
@@ -326,6 +328,6 @@ class CommonNames {
       }
     }
 
-    return bestName ?? shortURL({ url });
+    return bestName ?? lazy.shortURL({ url });
   }
 }

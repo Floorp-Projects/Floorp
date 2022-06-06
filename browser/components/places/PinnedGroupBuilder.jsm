@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Snapshots: "resource:///modules/Snapshots.jsm",
   SnapshotGroups: "resource:///modules/SnapshotGroups.jsm",
 });
@@ -46,7 +48,7 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
     await this.#maybeLoadGroup();
 
     let urls = snapshots
-      .filter(s => s.userPersisted == Snapshots.USER_PERSISTED.PINNED)
+      .filter(s => s.userPersisted == lazy.Snapshots.USER_PERSISTED.PINNED)
       .map(u => u.url);
     if (
       urls.length == this.#group.urls.size &&
@@ -74,7 +76,7 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
 
     let changed = false;
     for (let { url, userPersisted } of addedItems.values()) {
-      if (userPersisted != Snapshots.USER_PERSISTED.PINNED) {
+      if (userPersisted != lazy.Snapshots.USER_PERSISTED.PINNED) {
         continue;
       }
 
@@ -109,12 +111,12 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
     }
 
     if (this.#group.id == undefined) {
-      let id = await SnapshotGroups.add(this.#group, this.#group.urls);
+      let id = await lazy.SnapshotGroups.add(this.#group, this.#group.urls);
       this.#group.id = id;
     } else {
       // For this group, we allow it to continue to exist if the pins have
       // reduced to zero, SnapshotGroups will filter it out.
-      await SnapshotGroups.updateUrls(this.#group.id, this.#group.urls);
+      await lazy.SnapshotGroups.updateUrls(this.#group.id, this.#group.urls);
     }
   }
 
@@ -127,7 +129,7 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
       return;
     }
 
-    let groups = await SnapshotGroups.query({
+    let groups = await lazy.SnapshotGroups.query({
       builder: this.name,
       limit: -1,
       skipMinimum: true,
@@ -144,7 +146,7 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
 
     this.#group = groups[0];
     this.#group.urls = new Set(
-      await SnapshotGroups.getUrls({ id: this.#group.id, hidden: true })
+      await lazy.SnapshotGroups.getUrls({ id: this.#group.id, hidden: true })
     );
   }
 
@@ -167,7 +169,7 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
    * Used for tests to delete the group and reset this object.
    */
   async reset() {
-    await SnapshotGroups.delete(this.#group.id);
+    await lazy.SnapshotGroups.delete(this.#group.id);
     this.#group = null;
   }
 })();

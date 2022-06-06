@@ -11,13 +11,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
 });
 
@@ -30,7 +32,7 @@ class InteractionsChild extends JSWindowActorChild {
   #currentURL;
 
   actorCreated() {
-    this.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(
+    this.isContentWindowPrivate = lazy.PrivateBrowsingUtils.isContentWindowPrivate(
       this.contentWindow
     );
 
@@ -153,7 +155,7 @@ class InteractionsChild extends JSWindowActorChild {
   #getDocumentInfo() {
     let doc = this.document;
 
-    let requirements = InteractionsBlocklist.urlRequirements.get(
+    let requirements = lazy.InteractionsBlocklist.urlRequirements.get(
       doc.documentURIObject.scheme + ":"
     );
     if (

@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   CommonNames: "resource:///modules/CommonNames.jsm",
   SnapshotGroups: "resource:///modules/SnapshotGroups.jsm",
 });
@@ -75,7 +77,7 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
     // be deleted.
     for (let domain of [...untouchedDomains.values()]) {
       let group = this.#currentGroups.get(domain);
-      await SnapshotGroups.delete(group.id);
+      await lazy.SnapshotGroups.delete(group.id);
       this.#currentGroups.delete(domain);
     }
 
@@ -147,15 +149,17 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
     if (group.urls.size > 0) {
       // If the group has an id, then it is already in the database.
       if (group.id) {
-        await SnapshotGroups.updateUrls(group.id, [...group.urls.values()]);
+        await lazy.SnapshotGroups.updateUrls(group.id, [
+          ...group.urls.values(),
+        ]);
       } else {
         // This is a new group.
-        let id = await SnapshotGroups.add(group, [...group.urls.values()]);
+        let id = await lazy.SnapshotGroups.add(group, [...group.urls.values()]);
         group.id = id;
       }
     } else {
       // This group no longer has entries, and needs to be removed.
-      await SnapshotGroups.delete(group.id);
+      await lazy.SnapshotGroups.delete(group.id);
       this.#currentGroups.delete(domain);
     }
   }
@@ -170,7 +174,7 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
     }
     this.#currentGroups = new Map();
 
-    let groups = await SnapshotGroups.query({
+    let groups = await lazy.SnapshotGroups.query({
       builder: this.name,
       limit: -1,
       skipMinimum: true,
@@ -179,7 +183,7 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
     for (let group of groups) {
       this.#currentGroups.set(group.builderMetadata.domain, group);
       group.urls = new Set(
-        await SnapshotGroups.getUrls({ id: group.id, hidden: true })
+        await lazy.SnapshotGroups.getUrls({ id: group.id, hidden: true })
       );
     }
   }
@@ -195,7 +199,7 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
    */
   #generateDomainData(domain, url) {
     return {
-      title: CommonNames.getURLName(new URL(url)),
+      title: lazy.CommonNames.getURLName(new URL(url)),
       builder: this.name,
       builderMetadata: {
         domain,

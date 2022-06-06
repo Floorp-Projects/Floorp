@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
@@ -22,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "MIN_GROUP_SIZE",
   "browser.places.snapshots.minGroupSize",
   5
@@ -91,7 +93,7 @@ const SnapshotGroups = new (class SnapshotGroups {
       }
       group.builderMetadata.title = group.title;
     }
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "SnapshotsGroups.jsm:add",
       async db => {
         // Create the new group
@@ -151,7 +153,7 @@ const SnapshotGroups = new (class SnapshotGroups {
       return;
     }
 
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "SnapshotsGroups.jsm:updateMetadata",
       async db => {
         await db.executeCached(
@@ -180,7 +182,7 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   snapshots then they are ignored.
    */
   async updateUrls(id, urls) {
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "SnapshotsGroups.jsm:updateUrls",
       async db => {
         let params = { id };
@@ -243,7 +245,7 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   If the snapshot should be hidden or not
    */
   async setUrlHidden(id, url, hidden) {
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "SnapshotsGroups.jsm:hideUrl",
       async db => {
         await db.executeCached(
@@ -270,7 +272,7 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   The id of the group to delete.
    */
   async delete(id) {
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "SnapshotsGroups.jsm:delete",
       async db => {
         await db.executeCached(
@@ -312,7 +314,7 @@ const SnapshotGroups = new (class SnapshotGroups {
     countHidden = false,
     skipMinimum = false,
   } = {}) {
-    let db = await PlacesUtils.promiseDBConnection();
+    let db = await lazy.PlacesUtils.promiseDBConnection();
 
     let params = {};
     let sizeFragment = [];
@@ -320,9 +322,12 @@ const SnapshotGroups = new (class SnapshotGroups {
     let joinFragment = "";
     if (!skipMinimum) {
       sizeFragment.push("HAVING snapshot_count >= :minGroupSize");
-      params.minGroupSize = MIN_GROUP_SIZE;
+      params.minGroupSize = lazy.MIN_GROUP_SIZE;
 
-      for (let [i, name] of SnapshotMonitor.skipMinimumSizeBuilders.entries()) {
+      for (let [
+        i,
+        name,
+      ] of lazy.SnapshotMonitor.skipMinimumSizeBuilders.entries()) {
         params[`name${i}`] = name;
         sizeFragment.push(` OR (builder = :name${i} AND snapshot_count >= 1)`);
       }
@@ -393,7 +398,7 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   An array of urls.
    */
   async getUrls({ id, hidden }) {
-    let db = await PlacesUtils.promiseDBConnection();
+    let db = await lazy.PlacesUtils.promiseDBConnection();
 
     let whereClause = "";
     if (!hidden) {
@@ -450,7 +455,7 @@ const SnapshotGroups = new (class SnapshotGroups {
     }
     let start = Math.max(0, startIndex);
 
-    let snapshots = await Snapshots.query({
+    let snapshots = await lazy.Snapshots.query({
       limit: start + count,
       group: id,
       includeHiddenInGroup: hidden,
@@ -460,7 +465,7 @@ const SnapshotGroups = new (class SnapshotGroups {
 
     let end = Math.min(snapshots.length, count + start);
     snapshots = snapshots.slice(start, end);
-    PlacesUIUtils.insertTitleStartDiffs(snapshots);
+    lazy.PlacesUIUtils.insertTitleStartDiffs(snapshots);
     return snapshots;
   }
 
@@ -525,10 +530,10 @@ const SnapshotGroups = new (class SnapshotGroups {
       if (!imageUrl && imageUrls[2]) {
         // We don't have a featured image, thus use a moz-page-thumb screenshot.
         imageUrl = imageUrls[2];
-        if (PlacesPreviews.enabled) {
-          imageUrl = PlacesPreviews.getPageThumbURL(imageUrl);
+        if (lazy.PlacesPreviews.enabled) {
+          imageUrl = lazy.PlacesPreviews.getPageThumbURL(imageUrl);
         } else {
-          imageUrl = PageThumbs.getThumbnailURL(imageUrl);
+          imageUrl = lazy.PageThumbs.getThumbnailURL(imageUrl);
         }
       }
 
@@ -539,7 +544,7 @@ const SnapshotGroups = new (class SnapshotGroups {
           : imageUrls[2];
       if (imagePageUrl) {
         faviconDataUrl = await new Promise(resolve => {
-          PlacesUtils.favicons.getFaviconDataForPage(
+          lazy.PlacesUtils.favicons.getFaviconDataForPage(
             Services.io.newURI(imagePageUrl),
             (uri, dataLength, data, mimeType) => {
               if (dataLength) {
@@ -596,10 +601,10 @@ const SnapshotGroups = new (class SnapshotGroups {
     }
 
     let url = snapshots[0].url;
-    if (PlacesPreviews.enabled) {
-      await PlacesPreviews.update(url);
+    if (lazy.PlacesPreviews.enabled) {
+      await lazy.PlacesPreviews.update(url);
     } else {
-      await BackgroundPageThumbs.captureIfMissing(url);
+      await lazy.BackgroundPageThumbs.captureIfMissing(url);
     }
   }
 })();
