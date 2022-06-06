@@ -1237,7 +1237,9 @@ JS_GetExternalStringCallbacks(JSString* str);
 
 namespace JS {
 
-extern JS_PUBLIC_API bool IsIdleGCTaskNeeded(JSRuntime* rt);
+extern JS_PUBLIC_API GCReason WantEagerMinorGC(JSRuntime* rt);
+
+extern JS_PUBLIC_API GCReason WantEagerMajorGC(JSRuntime* rt);
 
 extern JS_PUBLIC_API void MaybeRunNurseryCollection(JSRuntime* rt,
                                                     JS::GCReason reason);

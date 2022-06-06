@@ -1678,6 +1678,33 @@ void GCRuntime::maybeGC() {
   }
 }
 
+JS::GCReason GCRuntime::wantMajorGC() {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+
+  // This implementation parallels maybeGC() above.
+
+  // From gcIfRequested().
+  if (majorGCRequested()) {
+    return majorGCTriggerReason;
+  }
+
+  if (isIncrementalGCInProgress()) {
+    return JS::GCReason::NO_REASON;
+  }
+
+  JS::GCReason reason = JS::GCReason::NO_REASON;
+  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
+    if (checkEagerAllocTrigger(zone->gcHeapSize, zone->gcHeapThreshold) ||
+        checkEagerAllocTrigger(zone->mallocHeapSize,
+                               zone->mallocHeapThreshold)) {
+      zone->scheduleGC();
+      reason = JS::GCReason::EAGER_ALLOC_TRIGGER;
+    }
+  }
+
+  return reason;
+}
+
 bool GCRuntime::checkEagerAllocTrigger(const HeapSize& size,
                                        const HeapThreshold& threshold) {
   double thresholdBytes =
