@@ -13,15 +13,16 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
 });
-
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 const { debug, warn } = GeckoViewUtils.initLogging("ChildCrashHandler");
 
@@ -56,7 +57,7 @@ var ChildCrashHandler = {
 
     if (
       !aSubject.get("abnormal") ||
-      !lazy.AppConstants.MOZ_CRASHREPORTER ||
+      !AppConstants.MOZ_CRASHREPORTER ||
       disableReporting
     ) {
       return;

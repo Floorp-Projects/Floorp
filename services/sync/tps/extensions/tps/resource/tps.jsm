@@ -27,12 +27,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Authentication: "resource://tps/auth/fxaccounts.jsm",
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   Async: "resource://services-common/async.js",
   BrowserTabs: "resource://tps/modules/tabs.jsm",
   BrowserWindows: "resource://tps/modules/windows.jsm",
@@ -1096,9 +1098,9 @@ var TPS = {
       lazy.Logger.logInfo("Firefox version: " + Services.appinfo.version);
       lazy.Logger.logInfo(
         "Firefox source revision: " +
-          (lazy.AppConstants.SOURCE_REVISION_URL || "unknown")
+          (AppConstants.SOURCE_REVISION_URL || "unknown")
       );
-      lazy.Logger.logInfo("Firefox platform: " + lazy.AppConstants.platform);
+      lazy.Logger.logInfo("Firefox platform: " + AppConstants.platform);
 
       // do some sync housekeeping
       if (lazy.Weave.Service.isLoggedIn) {
