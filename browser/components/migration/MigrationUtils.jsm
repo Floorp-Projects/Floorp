@@ -20,6 +20,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 ChromeUtils.defineModuleGetter(
   this,
   "BookmarkHTMLUtils",

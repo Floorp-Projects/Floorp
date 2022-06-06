@@ -12,13 +12,13 @@ const EXPORTED_SYMBOLS = [
   "UnhandledPromptBehavior",
 ];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   pprint: "chrome://remote/content/shared/Format.jsm",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
 });
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyGetter(this, "remoteAgent", () => {
   return Cc["@mozilla.org/remote/agent;1"].createInstance(Ci.nsIRemoteAgent);

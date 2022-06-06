@@ -14,13 +14,13 @@ const EXPORTED_SYMBOLS = [
   "WebElement",
 ];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   atom: "chrome://remote/content/marionette/atom.js",

@@ -26,7 +26,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "fetch"]);
 
 ChromeUtils.defineModuleGetter(
   this,

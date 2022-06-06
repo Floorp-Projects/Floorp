@@ -12,12 +12,17 @@ const DEFAULT_FAVICON_TAB = `data:text/html,<meta%20charset="utf-8"><title>No%20
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
 var Tabs = {
   init(libDir) {},

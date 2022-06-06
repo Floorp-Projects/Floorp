@@ -24,9 +24,6 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 var { PlacesSyncUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesSyncUtils.jsm"
 );
@@ -41,6 +38,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.jsm",
 });

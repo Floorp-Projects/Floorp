@@ -10,6 +10,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",

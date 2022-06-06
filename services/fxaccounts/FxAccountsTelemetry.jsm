@@ -12,7 +12,6 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
@@ -20,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   // We use this observers module because we leverage its support for richer
   // "subject" data.
   Observers: "resource://services-common/observers.js",
+  Services: "resource://gre/modules/Services.jsm",
   CryptoUtils: "resource://services-crypto/utils.js",
 });
 
@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 class FxAccountsTelemetry {
   constructor(fxai) {
     this._fxai = fxai;
-    Services.telemetry.setEventRecordingEnabled("fxa", true);
+    lazy.Services.telemetry.setEventRecordingEnabled("fxa", true);
   }
 
   // Records an event *in the Fxa/Sync ping*.
@@ -55,7 +55,7 @@ class FxAccountsTelemetry {
   }
 
   generateUUID() {
-    return Services.uuid
+    return lazy.Services.uuid
       .generateUUID()
       .toString()
       .slice(1, -1);
@@ -75,9 +75,9 @@ class FxAccountsTelemetry {
   // so there's some light hackery to put it in the right place.
   _setHashedUID(hashedUID) {
     if (!hashedUID) {
-      Services.prefs.clearUserPref(PREF_SANITIZED_UID);
+      lazy.Services.prefs.clearUserPref(PREF_SANITIZED_UID);
     } else {
-      Services.prefs.setStringPref(PREF_SANITIZED_UID, hashedUID);
+      lazy.Services.prefs.setStringPref(PREF_SANITIZED_UID, hashedUID);
     }
   }
 
@@ -126,7 +126,13 @@ class FxAccountsTelemetry {
       if (services.includes("sync")) {
         extra.sync = "true";
       }
-      Services.telemetry.recordEvent("fxa", "connect", "account", how, extra);
+      lazy.Services.telemetry.recordEvent(
+        "fxa",
+        "connect",
+        "account",
+        how,
+        extra
+      );
     } catch (ex) {
       log.error("Failed to record connection telemetry", ex);
       console.error("Failed to record connection telemetry", ex);
@@ -153,7 +159,7 @@ class FxAccountsTelemetry {
         extra.fxa = "true";
         // We need a way to enumerate all services - but for now we just hard-code
         // all possibilities here.
-        if (Services.prefs.prefHasUserValue("services.sync.username")) {
+        if (lazy.Services.prefs.prefHasUserValue("services.sync.username")) {
           extra.sync = "true";
         }
       } else if (service == "sync") {
@@ -164,7 +170,7 @@ class FxAccountsTelemetry {
           `recordDisconnection has invalid value for service: ${service}`
         );
       }
-      Services.telemetry.recordEvent(
+      lazy.Services.telemetry.recordEvent(
         "fxa",
         "disconnect",
         "account",

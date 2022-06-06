@@ -5,7 +5,6 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Interactions: "resource:///modules/Interactions.jsm",
@@ -14,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   SnapshotGroups: "resource:///modules/SnapshotGroups.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
   SnapshotMonitor: "resource:///modules/SnapshotMonitor.jsm",

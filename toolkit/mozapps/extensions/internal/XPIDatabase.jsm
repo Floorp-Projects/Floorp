@@ -19,7 +19,6 @@ var EXPORTED_SYMBOLS = ["AddonInternal", "XPIDatabase", "XPIDatabaseReconcile"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", "mozIThirdPartyUtil"],
@@ -35,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   PermissionsUtils: "resource://gre/modules/PermissionsUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 
   Blocklist: "resource://gre/modules/Blocklist.jsm",
   UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",

@@ -7,7 +7,9 @@
 
 const CC = Components.Constructor;
 
-const { AppConstants } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
 

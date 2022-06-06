@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
@@ -19,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup");
@@ -137,7 +137,8 @@ class GeckoViewStartup {
 
         // Parent process only
         if (
-          Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
+          lazy.Services.appinfo.processType ==
+          lazy.Services.appinfo.PROCESS_TYPE_DEFAULT
         ) {
           lazy.ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
           lazy.ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
@@ -213,19 +214,22 @@ class GeckoViewStartup {
           "GeckoView:SetLocale",
         ]);
 
-        Services.obs.addObserver(this, "browser-idle-startup-tasks-finished");
+        lazy.Services.obs.addObserver(
+          this,
+          "browser-idle-startup-tasks-finished"
+        );
 
-        Services.obs.notifyObservers(null, "geckoview-startup-complete");
+        lazy.Services.obs.notifyObservers(null, "geckoview-startup-complete");
         break;
       }
       case "browser-idle-startup-tasks-finished": {
         // TODO bug 1730026: when an alternative is introduced that runs once,
         // replace this observer topic with that alternative.
         // This only needs to happen once during startup.
-        Services.obs.removeObserver(this, aTopic);
+        lazy.Services.obs.removeObserver(this, aTopic);
         // Notify the start up crash tracker that the browser has successfully
         // started up so the startup cache isn't rebuilt on next startup.
-        Services.startup.trackStartupCrashEnd();
+        lazy.Services.startup.trackStartupCrashEnd();
         break;
       }
     }
@@ -253,13 +257,13 @@ class GeckoViewStartup {
       }
       case "GeckoView:SetLocale":
         if (aData.requestedLocales) {
-          Services.locale.requestedLocales = aData.requestedLocales;
+          lazy.Services.locale.requestedLocales = aData.requestedLocales;
         }
         const pls = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
           Ci.nsIPrefLocalizedString
         );
         pls.data = aData.acceptLanguages;
-        Services.prefs.setComplexValue(
+        lazy.Services.prefs.setComplexValue(
           "intl.accept_languages",
           Ci.nsIPrefLocalizedString,
           pls

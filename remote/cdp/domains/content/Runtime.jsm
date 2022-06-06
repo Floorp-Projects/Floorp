@@ -6,13 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["Runtime"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
+var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   addDebuggerToGlobal: "resource://gre/modules/jsdebugger.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 
   ContentProcessDomain:
     "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm",

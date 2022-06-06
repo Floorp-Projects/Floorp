@@ -33,6 +33,8 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/ESEDBReader.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 const kEdgeRegistryRoot =
   "SOFTWARE\\Classes\\Local Settings\\Software\\" +
   "Microsoft\\Windows\\CurrentVersion\\AppContainer\\Storage\\" +

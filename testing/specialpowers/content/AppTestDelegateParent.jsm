@@ -9,11 +9,11 @@ const EXPORTED_SYMBOLS = ["AppTestDelegateParent"];
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Each app needs to implement this
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppUiTestDelegate: "resource://testing-common/AppUiTestDelegate.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 class AppTestDelegateParent extends JSWindowActorParent {

@@ -18,7 +18,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Timer.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "btoa"]);
 
 // xpcshell doesn't handle idle callbacks well.
 XPCOMUtils.defineLazyGetter(this, "idleTimeout", () =>

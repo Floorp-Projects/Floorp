@@ -17,10 +17,16 @@ const AttributionIOUtils = {
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "MacAttribution",
@@ -37,6 +43,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   };
   return new ConsoleAPI(consoleOptions);
 });
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 // This maximum length was originally based on how much space we have in the PE
 // file header that we store attribution codes in for full and stub installers.

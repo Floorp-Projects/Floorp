@@ -9,7 +9,11 @@ ChromeUtils.defineModuleGetter(
   "UptakeTelemetry",
   "resource://services-common/uptake-telemetry.js"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["Uptake"];
 

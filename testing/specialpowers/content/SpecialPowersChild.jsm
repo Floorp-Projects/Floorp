@@ -49,7 +49,9 @@ ChromeUtils.defineModuleGetter(
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
 ChromeUtils.defineModuleGetter(

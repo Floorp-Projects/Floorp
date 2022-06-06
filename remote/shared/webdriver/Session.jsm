@@ -6,12 +6,13 @@
 
 const EXPORTED_SYMBOLS = ["WebDriverSession"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   accessibility: "chrome://remote/content/marionette/accessibility.js",
   allowAllCerts: "chrome://remote/content/marionette/cert.js",
   Capabilities: "chrome://remote/content/shared/webdriver/Capabilities.jsm",

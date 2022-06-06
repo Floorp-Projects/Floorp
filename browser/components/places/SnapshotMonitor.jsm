@@ -7,12 +7,12 @@ const EXPORTED_SYMBOLS = ["SnapshotMonitor"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   DomainGroupBuilder: "resource:///modules/DomainGroupBuilder.jsm",
   PinnedGroupBuilder: "resource:///modules/PinnedGroupBuilder.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
 });

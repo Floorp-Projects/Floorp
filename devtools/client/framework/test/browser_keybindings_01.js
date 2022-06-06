@@ -15,7 +15,9 @@ const TEST_URL =
 const {
   gDevToolsBrowser,
 } = require("devtools/client/framework/devtools-browser");
-const { AppConstants } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
 const isMac = AppConstants.platform == "macosx";

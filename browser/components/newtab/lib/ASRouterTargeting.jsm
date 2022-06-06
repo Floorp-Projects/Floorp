@@ -10,9 +10,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
@@ -22,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   AttributionCode: "resource:///modules/AttributionCode.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
   Region: "resource://gre/modules/Region.jsm",

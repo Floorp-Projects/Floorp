@@ -6,12 +6,12 @@ const EXPORTED_SYMBOLS = ["SnapshotSelector"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
   SnapshotScorer: "resource:///modules/SnapshotScorer.jsm",

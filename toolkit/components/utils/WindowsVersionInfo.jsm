@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["WindowsVersionInfo"];
 
-const { AppConstants } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
 ChromeUtils.defineModuleGetter(

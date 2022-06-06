@@ -8,6 +8,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {

@@ -70,6 +70,8 @@ ChromeUtils.defineModuleGetter(
   "resource://pdf.js/PdfSandbox.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
+
 var Svc = {};
 XPCOMUtils.defineLazyServiceGetter(
   Svc,

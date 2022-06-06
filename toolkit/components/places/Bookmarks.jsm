@@ -59,6 +59,12 @@
 
 var EXPORTED_SYMBOLS = ["Bookmarks"];
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 ChromeUtils.defineModuleGetter(
   this,
   "NetUtil",

@@ -15,7 +15,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { AppConstants } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
 

@@ -7,13 +7,10 @@
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   PromptTestUtils: "resource://testing-common/PromptTestUtils.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",

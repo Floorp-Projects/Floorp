@@ -45,7 +45,11 @@ const {
 
 const lazy = {};
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 ChromeUtils.defineModuleGetter(
   lazy,
   "WebChannel",
@@ -106,7 +110,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "identity.fxaccounts.remote.root",
   null,
   false,
-  val => Services.io.newURI(val)
+  val => lazy.Services.io.newURI(val)
 );
 
 // These engines were added years after Sync had been introduced, they need
@@ -210,7 +214,7 @@ FxAccountsWebChannel.prototype = {
   _setupChannel() {
     // if this.contentUri is present but not a valid URI, then this will throw an error.
     try {
-      this._webChannelOrigin = Services.io.newURI(this._contentUri);
+      this._webChannelOrigin = lazy.Services.io.newURI(this._contentUri);
       this._registerChannel();
     } catch (e) {
       log.error(e);
@@ -240,7 +244,7 @@ FxAccountsWebChannel.prototype = {
     let browser = sendingContext.browsingContext.top.embedderElement;
     switch (command) {
       case COMMAND_PROFILE_CHANGE:
-        Services.obs.notifyObservers(
+        lazy.Services.obs.notifyObservers(
           null,
           ON_PROFILE_CHANGE_NOTIFICATION,
           data.uid
@@ -275,7 +279,7 @@ FxAccountsWebChannel.prototype = {
       case COMMAND_PAIR_PREFERENCES:
         if (lazy.pairingEnabled) {
           browser.loadURI("about:preferences?action=pair#sync", {
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal: lazy.Services.scriptSecurityManager.getSystemPrincipal(),
           });
         }
         break;
@@ -473,7 +477,7 @@ FxAccountsWebChannelHelpers.prototype = {
               !declinedEngines.includes(engine)
             ) {
               // These extra engines are disabled by default.
-              Services.prefs.setBoolPref(
+              lazy.Services.prefs.setBoolPref(
                 `services.sync.engine.${engine}`,
                 true
               );
@@ -482,7 +486,10 @@ FxAccountsWebChannelHelpers.prototype = {
           log.debug("Received declined engines", declinedEngines);
           lazy.Weave.Service.engineManager.setDeclined(declinedEngines);
           declinedEngines.forEach(engine => {
-            Services.prefs.setBoolPref(`services.sync.engine.${engine}`, false);
+            lazy.Services.prefs.setBoolPref(
+              `services.sync.engine.${engine}`,
+              false
+            );
           });
         }
         log.debug("Webchannel is enabling sync");
@@ -594,7 +601,7 @@ FxAccountsWebChannelHelpers.prototype = {
   _getAvailableExtraEngines() {
     return EXTRA_ENGINES.filter(engineName => {
       try {
-        return Services.prefs.getBoolPref(
+        return lazy.Services.prefs.getBoolPref(
           `services.sync.engine.${engineName}.available`
         );
       } catch (e) {
@@ -638,7 +645,7 @@ FxAccountsWebChannelHelpers.prototype = {
    */
   getPreviousAccountNameHashPref() {
     try {
-      return Services.prefs.getStringPref(PREF_LAST_FXA_USER);
+      return lazy.Services.prefs.getStringPref(PREF_LAST_FXA_USER);
     } catch (_) {
       return "";
     }
@@ -650,7 +657,7 @@ FxAccountsWebChannelHelpers.prototype = {
    * @param acctName the account name of the user's account.
    */
   setPreviousAccountNameHashPref(acctName) {
-    Services.prefs.setStringPref(
+    lazy.Services.prefs.setStringPref(
       PREF_LAST_FXA_USER,
       lazy.CryptoUtils.sha256Base64(acctName)
     );
@@ -670,7 +677,7 @@ FxAccountsWebChannelHelpers.prototype = {
     uri += "#sync";
 
     browser.loadURI(uri, {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      triggeringPrincipal: lazy.Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
 
@@ -695,7 +702,7 @@ FxAccountsWebChannelHelpers.prototype = {
    * @private
    */
   _promptForRelink(acctName) {
-    let sb = Services.strings.createBundle(
+    let sb = lazy.Services.strings.createBundle(
       "chrome://browser/locale/syncSetup.properties"
     );
     let continueLabel = sb.GetStringFromName("continue.label");
@@ -705,14 +712,14 @@ FxAccountsWebChannelHelpers.prototype = {
     ]);
     let body =
       sb.GetStringFromName("relinkVerify.heading") + "\n\n" + description;
-    let ps = Services.prompt;
+    let ps = lazy.Services.prompt;
     let buttonFlags =
       ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING +
       ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL +
       ps.BUTTON_POS_1_DEFAULT;
 
     // If running in context of the browser chrome, window does not exist.
-    let pressed = Services.prompt.confirmEx(
+    let pressed = lazy.Services.prompt.confirmEx(
       null,
       title,
       body,
@@ -734,7 +741,7 @@ var singleton;
 // things) and allowing multiple channels would cause such notifications to be
 // sent multiple times.
 var EnsureFxAccountsWebChannel = () => {
-  let contentUri = Services.urlFormatter.formatURLPref(
+  let contentUri = lazy.Services.urlFormatter.formatURLPref(
     "identity.fxaccounts.remote.root"
   );
   if (singleton && singleton._contentUri !== contentUri) {

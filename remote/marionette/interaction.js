@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TimedPromise: "chrome://remote/content/marionette/sync.js",
 });
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
+
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.get(Log.TYPES.MARIONETTE)
 );

@@ -10,13 +10,11 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
   Database: "resource://services-settings/Database.jsm",
@@ -234,7 +232,7 @@ class RemoteSettingsClient extends EventEmitter {
   constructor(
     collectionName,
     {
-      bucketName = AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET,
+      bucketName = lazy.AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET,
       signerName,
       filterFunc,
       localFields = [],
@@ -256,7 +254,7 @@ class RemoteSettingsClient extends EventEmitter {
 
     // This attribute allows signature verification to be disabled, when running tests
     // or when pulling data from a dev server.
-    this.verifySignature = AppConstants.REMOTE_SETTINGS_VERIFY_SIGNATURE;
+    this.verifySignature = lazy.AppConstants.REMOTE_SETTINGS_VERIFY_SIGNATURE;
 
     XPCOMUtils.defineLazyGetter(
       this,

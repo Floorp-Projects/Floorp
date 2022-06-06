@@ -15,6 +15,7 @@ const { CommonUtils } = ChromeUtils.import(
 const { TelemetryStorage } = ChromeUtils.import(
   "resource://gre/modules/TelemetryStorage.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const DATAREPORTING_DIR = "datareporting";
 const ABORTED_PING_FILE_NAME = "aborted-session-ping";
