@@ -52,23 +52,23 @@ impl ErrorBuffer {
             e = source.source();
         }
 
-        self.init_str(string);
+        self.init_str(&string);
     }
 
-    fn init_str(&mut self, string: String) {
+    fn init_str(&mut self, message: &str) {
         assert_ne!(self.capacity, 0);
-        let length = if string.len() >= self.capacity {
+        let length = if message.len() >= self.capacity {
             log::warn!(
                 "Error length {} reached capacity {}",
-                string.len(),
+                message.len(),
                 self.capacity
             );
             self.capacity - 1
         } else {
-            string.len()
+            message.len()
         };
         unsafe {
-            ptr::copy_nonoverlapping(string.as_ptr(), self.string as *mut u8, length);
+            ptr::copy_nonoverlapping(message.as_ptr(), self.string as *mut u8, length);
             *self.string.add(length) = 0;
         }
     }
@@ -367,7 +367,7 @@ impl Global {
                 }
             }
             DeviceAction::Error(message) => {
-                error_buf.init_str(message);
+                error_buf.init_str(&message);
             }
         }
     }
