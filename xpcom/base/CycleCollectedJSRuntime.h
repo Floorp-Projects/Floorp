@@ -368,7 +368,8 @@ class CycleCollectedJSRuntime {
 
   void RunIdleTimeGCTask() {
     if (HasPendingIdleGCTask()) {
-      JS::RunIdleTimeGCTask(Runtime());
+      JS::MaybeRunNurseryCollection(Runtime(),
+                                    JS::GCReason::EAGER_NURSERY_COLLECTION);
       ClearPendingIdleGCTask();
     }
   }
