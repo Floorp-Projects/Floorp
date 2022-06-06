@@ -6,19 +6,16 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
-if (
-  lazy.Services.appinfo.processType !==
-  lazy.Services.appinfo.PROCESS_TYPE_DEFAULT
-) {
+if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
   // This check ensures that the `mockable` API calls can be consisently mocked in tests.
   // If this requirement needs to be eased, please ensure the test logic remains valid.
   throw new Error("This code is assumed to run in the parent process.");
@@ -85,7 +82,7 @@ async function negotiateLangPackForLanguageMismatch() {
 
   return {
     langPack,
-    langPackDisplayName: lazy.Services.intl.getLocaleDisplayNames(
+    langPackDisplayName: Services.intl.getLocaleDisplayNames(
       undefined,
       [langPack.target_locale],
       { preferNative: true }
@@ -196,28 +193,28 @@ const mockable = {
    * @returns {string[]}
    */
   getAvailableLocalesIncludingFallback() {
-    return lazy.Services.locale.availableLocales;
+    return Services.locale.availableLocales;
   },
 
   /**
    * @returns {string}
    */
   getDefaultLocale() {
-    return lazy.Services.locale.defaultLocale;
+    return Services.locale.defaultLocale;
   },
 
   /**
    * @returns {string}
    */
   getLastFallbackLocale() {
-    return lazy.Services.locale.lastFallbackLocale;
+    return Services.locale.lastFallbackLocale;
   },
 
   /**
    * @returns {string}
    */
   getAppLocaleAsBCP47() {
-    return lazy.Services.locale.appLocaleAsBCP47;
+    return Services.locale.appLocaleAsBCP47;
   },
 
   /**
@@ -225,14 +222,14 @@ const mockable = {
    */
   getSystemLocale() {
     // Allow the system locale to be overridden for manual testing.
-    const systemLocaleOverride = lazy.Services.prefs.getCharPref(
+    const systemLocaleOverride = Services.prefs.getCharPref(
       "intl.multilingual.aboutWelcome.systemLocaleOverride",
       null
     );
     if (systemLocaleOverride) {
       try {
         // If the locale can't be parsed, ignore the pref.
-        new lazy.Services.intl.Locale(systemLocaleOverride);
+        new Services.intl.Locale(systemLocaleOverride);
         return systemLocaleOverride;
       } catch (_error) {}
     }
@@ -247,7 +244,7 @@ const mockable = {
    * @param {string[]} locales The BCP 47 locale identifiers.
    */
   setRequestedAppLocales(locales) {
-    lazy.Services.locale.requestedLocales = locales;
+    Services.locale.requestedLocales = locales;
   },
 };
 
@@ -281,7 +278,7 @@ function setRequestedAppLocales(locales) {
  */
 function getStructuredLocaleOrNull(localeString) {
   try {
-    const locale = new lazy.Services.intl.Locale(localeString);
+    const locale = new Services.intl.Locale(localeString);
     return {
       baseName: locale.baseName,
       language: locale.language,
@@ -323,13 +320,11 @@ function getAppAndSystemLocaleInfo() {
   // Live reloading with bidi switching may not be supported.
   let canLiveReload = null;
   if (systemLocale && appLocale) {
-    const systemDirection = lazy.Services.intl.getScriptDirection(
+    const systemDirection = Services.intl.getScriptDirection(
       systemLocale.language
     );
-    const appDirection = lazy.Services.intl.getScriptDirection(
-      appLocale.language
-    );
-    const supportsBidiSwitching = lazy.Services.prefs.getBoolPref(
+    const appDirection = Services.intl.getScriptDirection(appLocale.language);
+    const supportsBidiSwitching = Services.prefs.getBoolPref(
       "intl.multilingual.liveReloadBidirectional",
       false
     );
@@ -347,20 +342,16 @@ function getAppAndSystemLocaleInfo() {
     // These can be used as Fluent message args.
     displayNames: {
       systemLanguage: systemLocale
-        ? lazy.Services.intl.getLocaleDisplayNames(
+        ? Services.intl.getLocaleDisplayNames(
             undefined,
             [systemLocale.baseName],
             { preferNative: true }
           )[0]
         : null,
       appLanguage: appLocale
-        ? lazy.Services.intl.getLocaleDisplayNames(
-            undefined,
-            [appLocale.baseName],
-            {
-              preferNative: true,
-            }
-          )[0]
+        ? Services.intl.getLocaleDisplayNames(undefined, [appLocale.baseName], {
+            preferNative: true,
+          })[0]
         : null,
     },
   };
