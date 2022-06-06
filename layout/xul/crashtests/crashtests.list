@@ -11,6 +11,7 @@ load chrome://reftest/content/crashtests/layout/xul/crashtests/291702-2.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/291702-3.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/294371-1.xhtml
 load 311457-1.html
+load 321056-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/322786-1.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/325377.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/326879-1.xhtml
