@@ -334,6 +334,22 @@ ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aSelfId) {
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvCreateBuffer(
+    RawId aSelfId, RawId aBufferId, dom::GPUBufferDescriptor&& aDesc) {
+  nsCString label;
+  const char* labelOrNull = nullptr;
+  if (aDesc.mLabel.WasPassed()) {
+    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
+    labelOrNull = label.get();
+  }
+  ErrorBuffer error;
+  ffi::wgpu_server_device_create_buffer(mContext.get(), aSelfId, aBufferId,
+                                        labelOrNull, aDesc.mSize, aDesc.mUsage,
+                                        aDesc.mMappedAtCreation, error.ToFFI());
+  ForwardError(aSelfId, error);
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvBufferReturnShmem(RawId aSelfId,
                                                    Shmem&& aShmem) {
   MOZ_LOG(sLogger, LogLevel::Info,
@@ -744,13 +760,11 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
 
       ffi::WGPUBufferUsages usage =
           WGPUBufferUsages_COPY_DST | WGPUBufferUsages_MAP_READ;
-      ffi::WGPUBufferDescriptor desc = {};
-      desc.size = bufferSize;
-      desc.usage = usage;
 
       ErrorBuffer error;
       ffi::wgpu_server_device_create_buffer(mContext.get(), data->mDeviceId,
-                                            &desc, bufferId, error.ToFFI());
+                                            bufferId, nullptr, bufferSize,
+                                            usage, false, error.ToFFI());
       if (ForwardError(data->mDeviceId, error)) {
         return IPC_OK();
       }
