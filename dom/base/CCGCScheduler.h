@@ -235,7 +235,7 @@ class CCGCScheduler {
   }
 
   // Starting a major GC (incremental or non-incremental).
-  void NoteGCBegin();
+  void NoteGCBegin(JS::GCReason aReason);
 
   // Major GC completed.
   void NoteGCEnd();
@@ -420,7 +420,7 @@ class CCGCScheduler {
     mCCReason = CCReason::NO_REASON;
   }
 
-  GCRunnerStep GetNextGCRunnerAction() const;
+  GCRunnerStep GetNextGCRunnerAction(TimeStamp aDeadline) const;
 
   CCRunnerStep AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
                                uint32_t aSuspectedCCObjects);
@@ -492,6 +492,7 @@ class CCGCScheduler {
 
   mozilla::CCReason mCCReason = mozilla::CCReason::NO_REASON;
   JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
+  JS::GCReason mEagerMajorGCReason = JS::GCReason::NO_REASON;
 
   bool mIsCompactingOnUserInactive = false;
   bool mIsCollectingCycles = false;
