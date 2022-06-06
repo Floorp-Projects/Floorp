@@ -4,6 +4,7 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var {
   UrlbarMuxer,
@@ -19,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarInput: "resource:///modules/UrlbarInput.jsm",

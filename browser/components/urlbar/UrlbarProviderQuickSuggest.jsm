@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderQuickSuggest", "QUICK_SUGGEST_SOURCE"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
@@ -17,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource:///modules/PartnerLinkAttribution.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   setInterval: "resource://gre/modules/Timer.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   TaskQueue: "resource:///modules/UrlbarUtils.jsm",

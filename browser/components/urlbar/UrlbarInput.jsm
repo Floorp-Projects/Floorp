@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["UrlbarInput"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -24,7 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   SearchUIUtils: "resource:///modules/SearchUIUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",

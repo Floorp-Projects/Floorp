@@ -5,13 +5,13 @@
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 

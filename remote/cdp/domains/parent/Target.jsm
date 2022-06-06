@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["Target"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -13,7 +14,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
   MainProcessTarget:

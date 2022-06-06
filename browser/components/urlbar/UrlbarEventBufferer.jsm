@@ -9,10 +9,10 @@ var EXPORTED_SYMBOLS = ["UrlbarEventBufferer"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });

@@ -10,6 +10,7 @@ var EXPORTED_SYMBOLS = ["NativeApp"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
@@ -24,7 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   NativeManifests: "resource://gre/modules/NativeManifests.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   Subprocess: "resource://gre/modules/Subprocess.jsm",
 });
 
