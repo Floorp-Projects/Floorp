@@ -29,7 +29,7 @@ typedef void* EGLSyncKHR;
 
 namespace mozilla {
 namespace gfx {
-class SourceSurface;
+class DataSourceSurface;
 }
 namespace layers {
 class SurfaceDescriptor;
@@ -94,6 +94,10 @@ class DMABufSurface {
 
   virtual DMABufSurfaceRGBA* GetAsDMABufSurfaceRGBA() { return nullptr; }
   virtual DMABufSurfaceYUV* GetAsDMABufSurfaceYUV() { return nullptr; }
+  virtual already_AddRefed<mozilla::gfx::DataSourceSurface>
+  GetAsSourceSurface() {
+    return nullptr;
+  }
 
   virtual mozilla::gfx::YUVColorSpace GetYUVColorSpace() {
     return mozilla::gfx::YUVColorSpace::Default;
@@ -287,6 +291,7 @@ class DMABufSurfaceYUV : public DMABufSurface {
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
 
   DMABufSurfaceYUV* GetAsDMABufSurfaceYUV() { return this; };
+  already_AddRefed<mozilla::gfx::DataSourceSurface> GetAsSourceSurface();
 
   int GetWidth(int aPlane = 0) { return mWidth[aPlane]; }
   int GetHeight(int aPlane = 0) { return mHeight[aPlane]; }
