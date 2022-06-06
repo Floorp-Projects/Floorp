@@ -7,8 +7,9 @@
 var EXPORTED_SYMBOLS = ["TabStateFlusher"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
@@ -121,12 +122,12 @@ var TabStateFlusherInternal = {
         the race where we send the message before the message listener is
         registered for it.
         */
-      SessionStore.ensureInitialized(browser.ownerGlobal);
+      lazy.SessionStore.ensureInitialized(browser.ownerGlobal);
 
       let mm = browser.messageManager;
       mm.sendAsyncMessage("SessionStore:flush", {
         id,
-        epoch: SessionStore.getCurrentEpoch(browser),
+        epoch: lazy.SessionStore.getCurrentEpoch(browser),
       });
     }
 

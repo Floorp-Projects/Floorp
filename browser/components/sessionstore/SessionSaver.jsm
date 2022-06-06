@@ -20,7 +20,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
@@ -248,7 +250,7 @@ var SessionSaverInternal = {
     // Cancel any pending timeouts.
     this.cancel();
 
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+    if (lazy.PrivateBrowsingUtils.permanentPrivateBrowsing) {
       // Don't save (or even collect) anything in permanent private
       // browsing mode
 
@@ -257,11 +259,11 @@ var SessionSaverInternal = {
     }
 
     stopWatchStart("COLLECT_DATA_MS");
-    let state = SessionStore.getCurrentState(forceUpdateAllWindows);
-    PrivacyFilter.filterPrivateWindowsAndTabs(state);
+    let state = lazy.SessionStore.getCurrentState(forceUpdateAllWindows);
+    lazy.PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
     // Make sure we only write worth saving tabs to disk.
-    SessionStore.keepOnlyWorthSavingTabs(state);
+    lazy.SessionStore.keepOnlyWorthSavingTabs(state);
 
     // Make sure that we keep the previous session if we started with a single
     // private window and no non-private windows have been opened, yet.
@@ -301,7 +303,7 @@ var SessionSaverInternal = {
    */
   _maybeClearCookiesAndStorage(state) {
     // Only do this on shutdown.
-    if (!RunState.isClosing) {
+    if (!lazy.RunState.isClosing) {
       return;
     }
 
@@ -358,7 +360,7 @@ var SessionSaverInternal = {
     // Write (atomically) to a session file, using a tmp file. Once the session
     // file is successfully updated, save the time stamp of the last save and
     // notify the observers.
-    return SessionFile.write(state).then(() => {
+    return lazy.SessionFile.write(state).then(() => {
       this.updateLastSaveTime();
       notify(null, "sessionstore-state-write-complete");
     }, console.error);

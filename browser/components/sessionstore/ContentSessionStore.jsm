@@ -18,13 +18,15 @@ function debug(msg) {
   Services.console.logStringMessage("SessionStoreContent: " + msg);
 }
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ContentRestore",
   "resource:///modules/sessionstore/ContentRestore.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm"
 );
@@ -140,7 +142,7 @@ class SessionHistoryListener extends Handler {
     );
 
     // Collect data if we start with a non-empty shistory.
-    if (!SessionHistory.isEmpty(this.mm.docShell)) {
+    if (!lazy.SessionHistory.isEmpty(this.mm.docShell)) {
       this.collect();
       // When a tab is detached from the window, for the new window there is a
       // new SessionHistoryListener created. Normally it is empty at this point
@@ -200,7 +202,10 @@ class SessionHistoryListener extends Handler {
         return null;
       }
 
-      let history = SessionHistory.collect(this.mm.docShell, this._fromIdx);
+      let history = lazy.SessionHistory.collect(
+        this.mm.docShell,
+        this._fromIdx
+      );
       this._fromIdx = kNoIndex;
       return history;
     });
@@ -531,7 +536,7 @@ class ContentSessionStore {
 
     XPCOMUtils.defineLazyGetter(this, "contentRestore", () => {
       this.contentRestoreInitialized = true;
-      return new ContentRestore(mm);
+      return new lazy.ContentRestore(mm);
     });
 
     MESSAGES.forEach(m => mm.addMessageListener(m, this));

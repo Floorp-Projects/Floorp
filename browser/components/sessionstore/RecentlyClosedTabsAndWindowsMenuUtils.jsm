@@ -6,19 +6,21 @@ var EXPORTED_SYMBOLS = ["RecentlyClosedTabsAndWindowsMenuUtils"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PluralForm",
   "resource://gre/modules/PluralForm.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUIUtils",
   "resource:///modules/PlacesUIUtils.jsm"
 );
@@ -49,8 +51,8 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
   ) {
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
-    if (SessionStore.getClosedTabCount(aWindow) != 0) {
-      let closedTabs = SessionStore.getClosedTabData(aWindow);
+    if (lazy.SessionStore.getClosedTabCount(aWindow) != 0) {
+      let closedTabs = lazy.SessionStore.getClosedTabData(aWindow);
       for (let i = 0; i < closedTabs.length; i++) {
         createEntry(
           aTagName,
@@ -95,7 +97,7 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
     aPrefixRestoreAll = false,
     aRestoreAllLabel = "appmenu-reopen-all-windows"
   ) {
-    let closedWindowData = SessionStore.getClosedWindowData();
+    let closedWindowData = lazy.SessionStore.getClosedWindowData();
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
     if (closedWindowData.length) {
@@ -112,7 +114,7 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
         let label =
           otherTabsCount == 0
             ? menuLabelStringSingleTab
-            : PluralForm.get(otherTabsCount, menuLabelString);
+            : lazy.PluralForm.get(otherTabsCount, menuLabelString);
         let menuLabel = label
           .replace("#1", undoItem.title)
           .replace("#2", otherTabsCount);
@@ -192,7 +194,7 @@ function createEntry(
 
   element.setAttribute("label", aMenuLabel);
   if (aClosedTab.image) {
-    const iconURL = PlacesUIUtils.getImageURL(aClosedTab);
+    const iconURL = lazy.PlacesUIUtils.getImageURL(aClosedTab);
     element.setAttribute("image", iconURL);
   }
   if (!aIsWindowsFragment) {

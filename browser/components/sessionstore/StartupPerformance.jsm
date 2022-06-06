@@ -7,13 +7,14 @@
 var EXPORTED_SYMBOLS = ["StartupPerformance"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "setTimeout",
   "resource://gre/modules/Timer.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "clearTimeout",
   "resource://gre/modules/Timer.jsm"
 );
@@ -143,9 +144,9 @@ var StartupPerformance = {
       return;
     }
     if (this._deadlineTimer) {
-      clearTimeout(this._deadlineTimer);
+      lazy.clearTimeout(this._deadlineTimer);
     }
-    this._deadlineTimer = setTimeout(() => {
+    this._deadlineTimer = lazy.setTimeout(() => {
       try {
         this._resolveFinished();
       } catch (ex) {
