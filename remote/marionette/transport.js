@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
   BulkPacket: "chrome://remote/content/marionette/packets.js",
@@ -20,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   StreamUtils: "chrome://remote/content/marionette/stream-utils.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "ScriptableInputStream", () => {
+XPCOMUtils.defineLazyGetter(lazy, "ScriptableInputStream", () => {
   return Components.Constructor(
     "@mozilla.org/scriptableinputstream;1",
     "nsIScriptableInputStream",
@@ -101,10 +103,10 @@ const PACKET_HEADER_MAX = 200;
  * @class
  */
 function DebuggerTransport(input, output) {
-  EventEmitter.decorate(this);
+  lazy.EventEmitter.decorate(this);
 
   this._input = input;
-  this._scriptableInput = new ScriptableInputStream(input);
+  this._scriptableInput = new lazy.ScriptableInputStream(input);
   this._output = output;
 
   // The current incoming (possibly partial) header, which will determine
@@ -136,7 +138,7 @@ DebuggerTransport.prototype = {
   send(object) {
     this.emit("send", object);
 
-    let packet = new JSONPacket(this);
+    let packet = new lazy.JSONPacket(this);
     packet.object = object;
     this._outgoing.push(packet);
     this._flushOutgoing();
@@ -193,7 +195,7 @@ DebuggerTransport.prototype = {
   startBulkSend(header) {
     this.emit("startbulksend", header);
 
-    let packet = new BulkPacket(this);
+    let packet = new lazy.BulkPacket(this);
     packet.header = header;
     this._outgoing.push(packet);
     this._flushOutgoing();
@@ -409,7 +411,7 @@ DebuggerTransport.prototype = {
 
         // Attempt to create a new Packet by trying to parse each possible
         // header pattern.
-        this._incoming = Packet.fromHeader(this._incomingHeader, this);
+        this._incoming = lazy.Packet.fromHeader(this._incomingHeader, this);
         if (!this._incoming) {
           throw new Error(
             "No packet types for header: " + this._incomingHeader
@@ -451,7 +453,7 @@ DebuggerTransport.prototype = {
    */
   _readHeader() {
     let amountToRead = PACKET_HEADER_MAX - this._incomingHeader.length;
-    this._incomingHeader += StreamUtils.delimitedRead(
+    this._incomingHeader += lazy.StreamUtils.delimitedRead(
       this._scriptableInput,
       ":",
       amountToRead
@@ -493,7 +495,7 @@ DebuggerTransport.prototype = {
    * method.  Delivers the packet to this.hooks.onPacket.
    */
   _onJSONObjectReady(object) {
-    executeSoon(() => {
+    lazy.executeSoon(() => {
       // Ensure the transport is still alive by the time this runs.
       if (this.active) {
         this.emit("packet", object);
@@ -509,7 +511,7 @@ DebuggerTransport.prototype = {
    * comment on the transport at the top of this file for more details.
    */
   _onBulkReadReady(...args) {
-    executeSoon(() => {
+    lazy.executeSoon(() => {
       // Ensure the transport is still alive by the time this runs.
       if (this.active) {
         this.emit("bulkpacket", ...args);

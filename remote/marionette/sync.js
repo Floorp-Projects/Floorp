@@ -24,13 +24,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
 const { TYPE_ONE_SHOT, TYPE_REPEATING_SLACK } = Ci.nsITimer;
@@ -133,7 +135,7 @@ function PollPromise(func, { timeout = null, interval = 10 } = {}) {
     let evalFn = () => {
       new Promise(func)
         .then(resolve, rejected => {
-          if (error.isError(rejected)) {
+          if (lazy.error.isError(rejected)) {
             throw rejected;
           }
 
@@ -202,7 +204,7 @@ function TimedPromise(fn, options = {}) {
   const {
     errorMessage = "TimedPromise timed out",
     timeout = PROMISE_TIMEOUT,
-    throws = error.TimeoutError,
+    throws = lazy.error.TimeoutError,
   } = options;
 
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -227,12 +229,12 @@ function TimedPromise(fn, options = {}) {
         let err = new throws(`${errorMessage} after ${timeout} ms`);
         reject(err);
       } else {
-        logger.warn(`${errorMessage} after ${timeout} ms`, trace);
+        lazy.logger.warn(`${errorMessage} after ${timeout} ms`, trace);
         resolve();
       }
     };
 
-    trace = error.stack();
+    trace = lazy.error.stack();
     timer.initWithCallback({ notify: bail }, timeout, TYPE_ONE_SHOT);
 
     try {
@@ -316,7 +318,7 @@ function Sleep(timeout) {
 function MessageManagerDestroyedPromise(messageManager) {
   return new Promise(resolve => {
     function observe(subject, topic) {
-      logger.trace(`Received observer notification ${topic}`);
+      lazy.logger.trace(`Received observer notification ${topic}`);
 
       if (subject == messageManager) {
         Services.obs.removeObserver(this, "message-manager-disconnect");
@@ -454,7 +456,7 @@ function waitForMessage(
 
   return new Promise(resolve => {
     messageManager.addMessageListener(messageName, function onMessage(msg) {
-      logger.trace(`Received ${messageName} for ${msg.target}`);
+      lazy.logger.trace(`Received ${messageName} for ${msg.target}`);
       if (checkFn && !checkFn(msg)) {
         return;
       }
@@ -497,7 +499,7 @@ function waitForObserverTopic(topic, { checkFn = null } = {}) {
 
   return new Promise((resolve, reject) => {
     Services.obs.addObserver(function observer(subject, topic, data) {
-      logger.trace(`Received observer notification ${topic}`);
+      lazy.logger.trace(`Received observer notification ${topic}`);
       try {
         if (checkFn && !checkFn(subject, data)) {
           return;

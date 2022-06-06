@@ -13,12 +13,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
 /**
@@ -209,7 +211,7 @@ class ContentEventObserverService {
   }
 
   handleEvent({ type, target }) {
-    logger.trace(`Received DOM event ${type}`);
+    lazy.logger.trace(`Received DOM event ${type}`);
     this.sendAsyncMessage("Marionette:DOM:OnEvent", { type });
   }
 }

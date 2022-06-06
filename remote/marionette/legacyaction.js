@@ -12,7 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 
   accessibility: "chrome://remote/content/marionette/accessibility.js",
@@ -24,8 +26,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebElement: "chrome://remote/content/marionette/element.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
@@ -100,7 +102,7 @@ action.Chain.prototype.dispatchActions = function(
 ) {
   this.seenEls = seenEls;
   this.container = container;
-  let commandArray = evaluate.fromJSON({
+  let commandArray = lazy.evaluate.fromJSON({
     obj: args,
     seenEls,
     win: container.frame,
@@ -151,7 +153,7 @@ action.Chain.prototype.emitMouseEvent = function(
   clickCount,
   modifiers
 ) {
-  logger.debug(
+  lazy.logger.debug(
     `Emitting ${type} mouse event ` +
       `at coordinates (${elClientX}, ${elClientY}) ` +
       `relative to the viewport, ` +
@@ -164,7 +166,7 @@ action.Chain.prototype.emitMouseEvent = function(
 
   let mods;
   if (typeof modifiers != "undefined") {
-    mods = event.parseModifiers_(modifiers, win);
+    mods = lazy.event.parseModifiers_(modifiers, win);
   } else {
     mods = 0;
   }
@@ -183,7 +185,7 @@ action.Chain.prototype.emitMouseEvent = function(
 };
 
 action.Chain.prototype.emitTouchEvent = function(doc, type, touch) {
-  logger.info(
+  lazy.logger.info(
     `Emitting Touch event of type ${type} ` +
       `to element with id: ${touch.target.id} ` +
       `and tag name: ${touch.target.tagName} ` +
@@ -193,7 +195,7 @@ action.Chain.prototype.emitTouchEvent = function(doc, type, touch) {
 
   const win = doc.defaultView;
   if (win.docShell.asyncPanZoomEnabled && this.scrolling) {
-    logger.debug(
+    lazy.logger.debug(
       `Cannot emit touch event with asyncPanZoomEnabled and legacyactions.scrolling`
     );
     return;
@@ -234,21 +236,21 @@ action.Chain.prototype.singleTap = async function(
 ) {
   const doc = el.ownerDocument;
   // after this block, the element will be scrolled into view
-  let visible = element.isVisible(el, corx, cory);
+  let visible = lazy.element.isVisible(el, corx, cory);
   if (!visible) {
-    throw new error.ElementNotInteractableError(
+    throw new lazy.error.ElementNotInteractableError(
       "Element is not currently visible and may not be manipulated"
     );
   }
 
-  let a11y = accessibility.get(capabilities["moz:accessibilityChecks"]);
+  let a11y = lazy.accessibility.get(capabilities["moz:accessibilityChecks"]);
   let acc = await a11y.getAccessible(el, true);
   a11y.assertVisible(acc, el, visible);
   a11y.assertActionable(acc, el);
   if (!doc.createTouch) {
     this.mouseEventsOnly = true;
   }
-  let c = element.coordinates(el, corx, cory);
+  let c = lazy.element.coordinates(el, corx, cory);
   if (!this.mouseEventsOnly) {
     let touchId = this.nextTouchId++;
     let touch = this.createATouch(el, c.x, c.y, touchId);
@@ -296,27 +298,27 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
     // if mouseEventsOnly, then touchIds isn't used
     if (!(touchId in this.touchIds) && !this.mouseEventsOnly) {
       this.resetValues();
-      throw new error.WebDriverError("Element has not been pressed");
+      throw new lazy.error.WebDriverError("Element has not been pressed");
     }
   }
 
   switch (command) {
     case "keyDown":
-      event.sendKeyDown(pack[1], keyModifiers, this.container.frame);
+      lazy.event.sendKeyDown(pack[1], keyModifiers, this.container.frame);
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
 
     case "keyUp":
-      event.sendKeyUp(pack[1], keyModifiers, this.container.frame);
+      lazy.event.sendKeyUp(pack[1], keyModifiers, this.container.frame);
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
 
     case "click":
-      webEl = WebElement.fromUUID(pack[1], "content");
+      webEl = lazy.WebElement.fromUUID(pack[1], "content");
       el = this.seenEls.get(webEl);
       let button = pack[2];
       let clickCount = pack[3];
-      c = element.coordinates(el);
+      c = lazy.element.coordinates(el);
       this.mouseTap(
         el.ownerDocument,
         c.x,
@@ -350,7 +352,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
           keyModifiers
         );
         this.resetValues();
-        throw new error.WebDriverError(
+        throw new lazy.error.WebDriverError(
           "Invalid Command: press cannot follow an active touch event"
         );
       }
@@ -360,9 +362,9 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
       if (i != chain.length && chain[i][0].includes("move")) {
         this.scrolling = true;
       }
-      webEl = WebElement.fromUUID(pack[1], "content");
+      webEl = lazy.WebElement.fromUUID(pack[1], "content");
       el = this.seenEls.get(webEl);
-      c = element.coordinates(el, pack[2], pack[3]);
+      c = lazy.element.coordinates(el, pack[2], pack[3]);
       touchId = this.generateEvents("press", c.x, c.y, null, el, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
@@ -381,9 +383,9 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
       break;
 
     case "move":
-      webEl = WebElement.fromUUID(pack[1], "content");
+      webEl = lazy.WebElement.fromUUID(pack[1], "content");
       el = this.seenEls.get(webEl);
-      c = element.coordinates(el);
+      c = lazy.element.coordinates(el);
       this.generateEvents("move", c.x, c.y, touchId, null, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
@@ -405,7 +407,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
         let time = pack[1] * 1000;
 
         // standard waiting time to fire contextmenu
-        let standard = Preferences.get(
+        let standard = lazy.Preferences.get(
           CONTEXT_MENU_DELAY_PREF,
           DEFAULT_CONTEXT_MENU_DELAY
         );
@@ -624,7 +626,7 @@ action.Chain.prototype.generateEvents = function(
       break;
 
     default:
-      throw new error.WebDriverError("Unknown event type: " + type);
+      throw new lazy.error.WebDriverError("Unknown event type: " + type);
   }
   return null;
 };

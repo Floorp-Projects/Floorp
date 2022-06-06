@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   element: "chrome://remote/content/marionette/element.js",
@@ -89,13 +91,17 @@ action.PointerOrigin.get = function(obj) {
     origin = this.Viewport;
   } else if (typeof obj == "string") {
     let name = capitalize(obj);
-    assert.in(name, this, pprint`Unknown pointer-move origin: ${obj}`);
+    lazy.assert.in(
+      name,
+      this,
+      lazy.pprint`Unknown pointer-move origin: ${obj}`
+    );
     origin = this[name];
-  } else if (!element.isElement(obj)) {
-    throw new error.InvalidArgumentError(
+  } else if (!lazy.element.isElement(obj)) {
+    throw new lazy.error.InvalidArgumentError(
       "Expected 'origin' to be undefined, " +
         '"viewport", "pointer", ' +
-        pprint`or an element, got: ${obj}`
+        lazy.pprint`or an element, got: ${obj}`
     );
   }
   return origin;
@@ -123,7 +129,7 @@ action.PointerType = {
  */
 action.PointerType.get = function(str) {
   let name = capitalize(str);
-  assert.in(name, this, pprint`Unknown pointerType: ${str}`);
+  lazy.assert.in(name, this, lazy.pprint`Unknown pointerType: ${str}`);
   return this[name];
 };
 
@@ -185,15 +191,15 @@ class InputState {
    */
   static fromJSON(obj) {
     let type = obj.type;
-    assert.in(type, ACTIONS, pprint`Unknown action type: ${type}`);
+    lazy.assert.in(type, ACTIONS, lazy.pprint`Unknown action type: ${type}`);
     let name = type == "none" ? "Null" : capitalize(type);
     if (name == "Pointer") {
       if (
         !obj.pointerType &&
         (!obj.parameters || !obj.parameters.pointerType)
       ) {
-        throw new error.InvalidArgumentError(
-          pprint`Expected obj to have pointerType, got ${obj}`
+        throw new lazy.error.InvalidArgumentError(
+          lazy.pprint`Expected obj to have pointerType, got ${obj}`
         );
       }
       let pointerType = obj.pointerType || obj.parameters.pointerType;
@@ -234,10 +240,10 @@ action.InputState.Key = class Key extends InputState {
     if (key in MODIFIER_NAME_LOOKUP) {
       this[MODIFIER_NAME_LOOKUP[key]] = value;
     } else {
-      throw new error.InvalidArgumentError(
+      throw new lazy.error.InvalidArgumentError(
         "Expected 'key' to be one of " +
           Object.keys(MODIFIER_NAME_LOOKUP) +
-          pprint`, got ${key}`
+          lazy.pprint`, got ${key}`
       );
     }
   }
@@ -305,9 +311,9 @@ action.InputState.Pointer = class Pointer extends InputState {
   constructor(subtype) {
     super();
     this.pressed = new Set();
-    assert.defined(
+    lazy.assert.defined(
       subtype,
-      pprint`Expected subtype to be defined, got ${subtype}`
+      lazy.pprint`Expected subtype to be defined, got ${subtype}`
     );
     this.subtype = action.PointerType.get(subtype);
     this.x = 0;
@@ -324,7 +330,7 @@ action.InputState.Pointer = class Pointer extends InputState {
    *     True if |button| is in set of pressed buttons.
    */
   isPressed(button) {
-    assert.positiveInteger(button);
+    lazy.assert.positiveInteger(button);
     return this.pressed.has(button);
   }
 
@@ -338,7 +344,7 @@ action.InputState.Pointer = class Pointer extends InputState {
    *     Set of pressed buttons.
    */
   press(button) {
-    assert.positiveInteger(button);
+    lazy.assert.positiveInteger(button);
     return this.pressed.add(button);
   }
 
@@ -352,7 +358,7 @@ action.InputState.Pointer = class Pointer extends InputState {
    *     True if |button| was present before removals, false otherwise.
    */
   release(button) {
-    assert.positiveInteger(button);
+    lazy.assert.positiveInteger(button);
     return this.pressed.delete(button);
   }
 };
@@ -377,10 +383,10 @@ action.InputState.Pointer = class Pointer extends InputState {
 action.Action = class {
   constructor(id, type, subtype) {
     if ([id, type, subtype].includes(undefined)) {
-      throw new error.InvalidArgumentError("Missing id, type or subtype");
+      throw new lazy.error.InvalidArgumentError("Missing id, type or subtype");
     }
     for (let attr of [id, type, subtype]) {
-      assert.string(attr, pprint`Expected string, got ${attr}`);
+      lazy.assert.string(attr, lazy.pprint`Expected string, got ${attr}`);
     }
     this.id = id;
     this.type = type;
@@ -411,11 +417,11 @@ action.Action = class {
     let id = actionSequence.id;
     let subtypes = ACTIONS[type];
     if (!subtypes) {
-      throw new error.InvalidArgumentError("Unknown type: " + type);
+      throw new lazy.error.InvalidArgumentError("Unknown type: " + type);
     }
     let subtype = actionItem.type;
     if (!subtypes.has(subtype)) {
-      throw new error.InvalidArgumentError(
+      throw new lazy.error.InvalidArgumentError(
         `Unknown subtype for ${type} action: ${subtype}`
       );
     }
@@ -436,19 +442,19 @@ action.Action = class {
         // TODO countGraphemes
         // TODO key.value could be a single code point like "\uE012"
         // (see rawKey) or "grapheme cluster"
-        assert.string(
+        lazy.assert.string(
           key,
           "Expected 'value' to be a string that represents single code point " +
-            pprint`or grapheme cluster, got ${key}`
+            lazy.pprint`or grapheme cluster, got ${key}`
         );
         item.value = key;
         break;
 
       case action.PointerDown:
       case action.PointerUp:
-        assert.positiveInteger(
+        lazy.assert.positiveInteger(
           actionItem.button,
-          pprint`Expected 'button' (${actionItem.button}) to be >= 0`
+          lazy.pprint`Expected 'button' (${actionItem.button}) to be >= 0`
         );
         item.button = actionItem.button;
         break;
@@ -456,37 +462,37 @@ action.Action = class {
       case action.PointerMove:
         item.duration = actionItem.duration;
         if (typeof item.duration != "undefined") {
-          assert.positiveInteger(
+          lazy.assert.positiveInteger(
             item.duration,
-            pprint`Expected 'duration' (${item.duration}) to be >= 0`
+            lazy.pprint`Expected 'duration' (${item.duration}) to be >= 0`
           );
         }
         item.origin = action.PointerOrigin.get(actionItem.origin);
         item.x = actionItem.x;
         if (typeof item.x != "undefined") {
-          assert.integer(
+          lazy.assert.integer(
             item.x,
-            pprint`Expected 'x' (${item.x}) to be an Integer`
+            lazy.pprint`Expected 'x' (${item.x}) to be an Integer`
           );
         }
         item.y = actionItem.y;
         if (typeof item.y != "undefined") {
-          assert.integer(
+          lazy.assert.integer(
             item.y,
-            pprint`Expected 'y' (${item.y}) to be an Integer`
+            lazy.pprint`Expected 'y' (${item.y}) to be an Integer`
           );
         }
         break;
 
       case action.PointerCancel:
-        throw new error.UnsupportedOperationError();
+        throw new lazy.error.UnsupportedOperationError();
 
       case action.Pause:
         item.duration = actionItem.duration;
         if (typeof item.duration != "undefined") {
           // eslint-disable-next-line
-          assert.positiveInteger(item.duration,
-            pprint`Expected 'duration' (${item.duration}) to be >= 0`
+          lazy.assert.positiveInteger(item.duration,
+            lazy.pprint`Expected 'duration' (${item.duration}) to be >= 0`
           );
         }
         break;
@@ -517,9 +523,9 @@ action.Chain = class extends Array {
    *     If <var>actions</var> is not an Array.
    */
   static fromJSON(actions) {
-    assert.array(
+    lazy.assert.array(
       actions,
-      pprint`Expected 'actions' to be an array, got ${actions}`
+      lazy.pprint`Expected 'actions' to be an array, got ${actions}`
     );
 
     let actionsByTick = new action.Chain();
@@ -565,19 +571,22 @@ action.Sequence = class extends Array {
     // used here to validate 'type' in addition to InputState type below
     let inputSourceState = InputState.fromJSON(actionSequence);
     let id = actionSequence.id;
-    assert.defined(id, "Expected 'id' to be defined");
-    assert.string(id, pprint`Expected 'id' to be a string, got ${id}`);
+    lazy.assert.defined(id, "Expected 'id' to be defined");
+    lazy.assert.string(
+      id,
+      lazy.pprint`Expected 'id' to be a string, got ${id}`
+    );
     let actionItems = actionSequence.actions;
-    assert.array(
+    lazy.assert.array(
       actionItems,
       "Expected 'actionSequence.actions' to be an array, " +
-        pprint`got ${actionSequence.actions}`
+        lazy.pprint`got ${actionSequence.actions}`
     );
 
     if (!action.inputStateMap.has(id)) {
       action.inputStateMap.set(id, inputSourceState);
     } else if (!action.inputStateMap.get(id).is(inputSourceState)) {
-      throw new error.InvalidArgumentError(
+      throw new lazy.error.InvalidArgumentError(
         `Expected ${id} to be mapped to ${inputSourceState}, ` +
           `got ${action.inputStateMap.get(id)}`
       );
@@ -645,10 +654,10 @@ action.processPointerAction = function(id, pointerParams, act) {
     action.inputStateMap.has(id) &&
     action.inputStateMap.get(id).type !== act.type
   ) {
-    throw new error.InvalidArgumentError(
+    throw new lazy.error.InvalidArgumentError(
       `Expected 'id' ${id} to be mapped to InputState whose type is ` +
         action.inputStateMap.get(id).type +
-        pprint` , got ${act.type}`
+        lazy.pprint` , got ${act.type}`
     );
   }
   let pointerType = pointerParams.pointerType;
@@ -656,10 +665,10 @@ action.processPointerAction = function(id, pointerParams, act) {
     action.inputStateMap.has(id) &&
     action.inputStateMap.get(id).subtype !== pointerType
   ) {
-    throw new error.InvalidArgumentError(
+    throw new lazy.error.InvalidArgumentError(
       `Expected 'id' ${id} to be mapped to InputState whose subtype is ` +
         action.inputStateMap.get(id).subtype +
-        pprint` , got ${pointerType}`
+        lazy.pprint` , got ${pointerType}`
     );
   }
   act.pointerType = pointerParams.pointerType;
@@ -668,7 +677,7 @@ action.processPointerAction = function(id, pointerParams, act) {
 /** Collect properties associated with KeyboardEvent */
 action.Key = class {
   constructor(rawKey) {
-    const { key, code, location, printable } = event.getKeyData(rawKey);
+    const { key, code, location, printable } = lazy.event.getKeyData(rawKey);
     this.key = key;
     this.code = code;
     this.location = location;
@@ -693,7 +702,7 @@ action.Key = class {
 action.Mouse = class {
   constructor(type, button = 0) {
     this.type = type;
-    assert.positiveInteger(button);
+    lazy.assert.positiveInteger(button);
     this.button = button;
     this.buttons = 0;
     this.altKey = false;
@@ -828,9 +837,9 @@ action.computePointerDestination = function(a, inputState, center = undefined) {
       break;
     default:
       // origin represents web element
-      assert.defined(center);
-      assert.in("x", center);
-      assert.in("y", center);
+      lazy.assert.defined(center);
+      lazy.assert.in("x", center);
+      lazy.assert.in("y", center);
       x += center.x;
       y += center.y;
   }
@@ -870,7 +879,7 @@ function toEvents(tickDuration, win) {
         return dispatchPointerMove(a, inputState, tickDuration, win);
 
       case action.PointerCancel:
-        throw new error.UnsupportedOperationError();
+        throw new lazy.error.UnsupportedOperationError();
 
       case action.Pause:
         return dispatchPause(a, tickDuration);
@@ -898,7 +907,7 @@ function dispatchKeyDown(a, inputState, win) {
   return new Promise(resolve => {
     let value = a.value;
     if (inputState.shift) {
-      value = event.getShiftedKey(value);
+      value = lazy.event.getShiftedKey(value);
     }
 
     const keyEvent = new action.Key(value);
@@ -913,7 +922,7 @@ function dispatchKeyDown(a, inputState, win) {
     // Append a copy of |a| with keyUp subtype
     action.inputsToCancel.push(Object.assign({}, a, { subtype: action.KeyUp }));
     keyEvent.update(inputState);
-    event.sendKeyDown(keyEvent, win);
+    lazy.event.sendKeyDown(keyEvent, win);
 
     resolve();
   });
@@ -936,7 +945,7 @@ function dispatchKeyUp(a, inputState, win) {
   return new Promise(resolve => {
     let value = a.value;
     if (inputState.shift) {
-      value = event.getShiftedKey(value);
+      value = lazy.event.getShiftedKey(value);
     }
 
     const keyEvent = new action.Key(value);
@@ -952,7 +961,7 @@ function dispatchKeyUp(a, inputState, win) {
     inputState.release(keyEvent.key);
     keyEvent.update(inputState);
 
-    event.sendKeyUp(keyEvent, win);
+    lazy.event.sendKeyUp(keyEvent, win);
     resolve();
   });
 }
@@ -988,27 +997,27 @@ function dispatchPointerDown(a, inputState, win) {
         let mouseEvent = new action.Mouse("mousedown", a.button);
         mouseEvent.update(inputState);
         if (mouseEvent.ctrlKey) {
-          if (AppInfo.isMac) {
+          if (lazy.AppInfo.isMac) {
             mouseEvent.button = 2;
-            event.DoubleClickTracker.resetClick();
+            lazy.event.DoubleClickTracker.resetClick();
           }
-        } else if (event.DoubleClickTracker.isClicked()) {
+        } else if (lazy.event.DoubleClickTracker.isClicked()) {
           mouseEvent = Object.assign({}, mouseEvent, { clickCount: 2 });
         }
-        event.synthesizeMouseAtPoint(
+        lazy.event.synthesizeMouseAtPoint(
           inputState.x,
           inputState.y,
           mouseEvent,
           win
         );
         if (
-          event.MouseButton.isSecondary(a.button) ||
-          (mouseEvent.ctrlKey && AppInfo.isMac)
+          lazy.event.MouseButton.isSecondary(a.button) ||
+          (mouseEvent.ctrlKey && lazy.AppInfo.isMac)
         ) {
           let contextMenuEvent = Object.assign({}, mouseEvent, {
             type: "contextmenu",
           });
-          event.synthesizeMouseAtPoint(
+          lazy.event.synthesizeMouseAtPoint(
             inputState.x,
             inputState.y,
             contextMenuEvent,
@@ -1019,7 +1028,7 @@ function dispatchPointerDown(a, inputState, win) {
 
       case action.PointerType.Pen:
       case action.PointerType.Touch:
-        throw new error.UnsupportedOperationError(
+        throw new lazy.error.UnsupportedOperationError(
           "Only 'mouse' pointer type is supported"
         );
 
@@ -1058,10 +1067,10 @@ function dispatchPointerUp(a, inputState, win) {
       case action.PointerType.Mouse:
         let mouseEvent = new action.Mouse("mouseup", a.button);
         mouseEvent.update(inputState);
-        if (event.DoubleClickTracker.isClicked()) {
+        if (lazy.event.DoubleClickTracker.isClicked()) {
           mouseEvent = Object.assign({}, mouseEvent, { clickCount: 2 });
         }
-        event.synthesizeMouseAtPoint(
+        lazy.event.synthesizeMouseAtPoint(
           inputState.x,
           inputState.y,
           mouseEvent,
@@ -1071,7 +1080,7 @@ function dispatchPointerUp(a, inputState, win) {
 
       case action.PointerType.Pen:
       case action.PointerType.Touch:
-        throw new error.UnsupportedOperationError(
+        throw new lazy.error.UnsupportedOperationError(
           "Only 'mouse' pointer type is supported"
         );
 
@@ -1117,7 +1126,7 @@ function dispatchPointerMove(a, inputState, tickDuration, win) {
     const [targetX, targetY] = [target.x, target.y];
 
     if (!inViewPort(targetX, targetY, win)) {
-      throw new error.MoveTargetOutOfBoundsError(
+      throw new lazy.error.MoveTargetOutOfBoundsError(
         `(${targetX}, ${targetY}) is out of bounds of viewport ` +
           `width (${win.innerWidth}) ` +
           `and height (${win.innerHeight})`
@@ -1180,12 +1189,12 @@ function performOnePointerMove(inputState, targetX, targetY, win) {
       let mouseEvent = new action.Mouse("mousemove");
       mouseEvent.update(inputState);
       // TODO both pointermove (if available) and mousemove
-      event.synthesizeMouseAtPoint(targetX, targetY, mouseEvent, win);
+      lazy.event.synthesizeMouseAtPoint(targetX, targetY, mouseEvent, win);
       break;
 
     case action.PointerType.Pen:
     case action.PointerType.Touch:
-      throw new error.UnsupportedOperationError(
+      throw new lazy.error.UnsupportedOperationError(
         "Only 'mouse' pointer type is supported"
       );
 
@@ -1211,29 +1220,29 @@ function performOnePointerMove(inputState, targetX, targetY, win) {
  */
 function dispatchPause(a, tickDuration) {
   let ms = typeof a.duration == "undefined" ? tickDuration : a.duration;
-  return Sleep(ms);
+  return lazy.Sleep(ms);
 }
 
 // helpers
 
 function capitalize(str) {
-  assert.string(str);
+  lazy.assert.string(str);
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function inViewPort(x, y, win) {
-  assert.number(x, `Expected x to be finite number`);
-  assert.number(y, `Expected y to be finite number`);
+  lazy.assert.number(x, `Expected x to be finite number`);
+  lazy.assert.number(y, `Expected y to be finite number`);
   // Viewport includes scrollbars if rendered.
   return !(x < 0 || y < 0 || x > win.innerWidth || y > win.innerHeight);
 }
 
 function getElementCenter(el, win) {
-  if (element.isElement(el)) {
+  if (lazy.element.isElement(el)) {
     if (action.specCompatPointerOrigin) {
-      return element.getInViewCentrePoint(el.getClientRects()[0], win);
+      return lazy.element.getInViewCentrePoint(el.getClientRects()[0], win);
     }
-    return element.coordinates(el);
+    return lazy.element.coordinates(el);
   }
   return {};
 }

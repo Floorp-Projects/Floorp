@@ -12,14 +12,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   keyData: "chrome://remote/content/shared/webdriver/KeyData.jsm",
 });
 
 /** Provides functionality for creating and sending DOM events. */
 const event = {};
 
-XPCOMUtils.defineLazyGetter(this, "dblclickTimer", () => {
+XPCOMUtils.defineLazyGetter(lazy, "dblclickTimer", () => {
   return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 });
 
@@ -89,14 +91,14 @@ event.DoubleClickTracker = {
     event.DoubleClickTracker.cancelTimer();
   },
   startTimer() {
-    dblclickTimer.initWithCallback(
+    lazy.dblclickTimer.initWithCallback(
       event.DoubleClickTracker.resetClick,
       DBLCLICK_INTERVAL,
       Ci.nsITimer.TYPE_ONE_SHOT
     );
   },
   cancelTimer() {
-    dblclickTimer.cancel();
+    lazy.dblclickTimer.cancel();
   },
 };
 
@@ -109,7 +111,7 @@ event.DoubleClickTracker = {
  * @returns {string} Key string to use when the shift modifier is set.
  */
 event.getShiftedKey = function(rawKey) {
-  return keyData.getShiftedKey(rawKey);
+  return lazy.keyData.getShiftedKey(rawKey);
 };
 
 /**
@@ -123,7 +125,7 @@ event.getShiftedKey = function(rawKey) {
  * @returns {Object} Key event data object.
  */
 event.getKeyData = function(rawKey) {
-  return keyData.getData(rawKey);
+  return lazy.keyData.getData(rawKey);
 };
 
 // Only used by legacyactions.js
@@ -228,9 +230,9 @@ event.sendKeys = function(keyString, win) {
   for (let i = 0; i < keyString.length; i++) {
     let keyValue = keyString.charAt(i);
     if (modifiers.shiftKey) {
-      keyValue = keyData.getShiftedKey(keyValue);
+      keyValue = lazy.keyData.getShiftedKey(keyValue);
     }
-    const data = keyData.getData(keyValue);
+    const data = lazy.keyData.getData(keyValue);
     const key = { ...data, ...modifiers };
     if (data.modifier) {
       modifiers[data.modifier] = true;

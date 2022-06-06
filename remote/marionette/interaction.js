@@ -12,7 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   accessibility: "chrome://remote/content/marionette/accessibility.js",
   atom: "chrome://remote/content/marionette/atom.js",
   element: "chrome://remote/content/marionette/element.js",
@@ -23,8 +25,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TimedPromise: "chrome://remote/content/marionette/sync.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
 /** XUL elements that support disabled attribute. */
@@ -116,13 +118,13 @@ interaction.clickElement = async function(
   strict = false,
   specCompat = false
 ) {
-  const a11y = accessibility.get(strict);
-  if (element.isXULElement(el)) {
+  const a11y = lazy.accessibility.get(strict);
+  if (lazy.element.isXULElement(el)) {
     await chromeClick(el, a11y);
   } else if (specCompat) {
     await webdriverClickElement(el, a11y);
   } else {
-    logger.trace(`Using non spec-compatible element click`);
+    lazy.logger.trace(`Using non spec-compatible element click`);
     await seleniumClickElement(el, a11y);
   }
 };
@@ -132,16 +134,16 @@ async function webdriverClickElement(el, a11y) {
 
   // step 3
   if (el.localName == "input" && el.type == "file") {
-    throw new error.InvalidArgumentError(
+    throw new lazy.error.InvalidArgumentError(
       "Cannot click <input type=file> elements"
     );
   }
 
-  let containerEl = element.getContainer(el);
+  let containerEl = lazy.element.getContainer(el);
 
   // step 4
-  if (!element.isInView(containerEl)) {
-    element.scrollIntoView(containerEl);
+  if (!lazy.element.isInView(containerEl)) {
+    lazy.element.scrollIntoView(containerEl);
   }
 
   // step 5
@@ -150,18 +152,18 @@ async function webdriverClickElement(el, a11y) {
   // step 6
   // if we cannot bring the container element into the viewport
   // there is no point in checking if it is pointer-interactable
-  if (!element.isInView(containerEl)) {
-    throw new error.ElementNotInteractableError(
-      pprint`Element ${el} could not be scrolled into view`
+  if (!lazy.element.isInView(containerEl)) {
+    throw new lazy.error.ElementNotInteractableError(
+      lazy.pprint`Element ${el} could not be scrolled into view`
     );
   }
 
   // step 7
   let rects = containerEl.getClientRects();
-  let clickPoint = element.getInViewCentrePoint(rects[0], win);
+  let clickPoint = lazy.element.getInViewCentrePoint(rects[0], win);
 
-  if (element.isObscured(containerEl)) {
-    throw new error.ElementClickInterceptedError(containerEl, clickPoint);
+  if (lazy.element.isObscured(containerEl)) {
+    throw new lazy.error.ElementClickInterceptedError(containerEl, clickPoint);
   }
 
   let acc = await a11y.getAccessible(el, true);
@@ -177,7 +179,7 @@ async function webdriverClickElement(el, a11y) {
     let clicked = interaction.flushEventLoop(containerEl);
 
     // Synthesize a pointerMove action.
-    event.synthesizeMouseAtPoint(
+    lazy.event.synthesizeMouseAtPoint(
       clickPoint.x,
       clickPoint.y,
       {
@@ -187,7 +189,7 @@ async function webdriverClickElement(el, a11y) {
     );
 
     // Synthesize a pointerDown + pointerUp action.
-    event.synthesizeMouseAtPoint(clickPoint.x, clickPoint.y, {}, win);
+    lazy.event.synthesizeMouseAtPoint(clickPoint.x, clickPoint.y, {}, win);
 
     await clicked;
   }
@@ -198,8 +200,8 @@ async function webdriverClickElement(el, a11y) {
 }
 
 async function chromeClick(el, a11y) {
-  if (!atom.isElementEnabled(el)) {
-    throw new error.InvalidElementStateError("Element is not enabled");
+  if (!lazy.atom.isElementEnabled(el)) {
+    throw new lazy.error.InvalidElementStateError("Element is not enabled");
   }
 
   let acc = await a11y.getAccessible(el, true);
@@ -219,15 +221,15 @@ async function seleniumClickElement(el, a11y) {
 
   let visibilityCheckEl = el;
   if (el.localName == "option") {
-    visibilityCheckEl = element.getContainer(el);
+    visibilityCheckEl = lazy.element.getContainer(el);
   }
 
-  if (!element.isVisible(visibilityCheckEl)) {
-    throw new error.ElementNotInteractableError();
+  if (!lazy.element.isVisible(visibilityCheckEl)) {
+    throw new lazy.error.ElementNotInteractableError();
   }
 
-  if (!atom.isElementEnabled(el)) {
-    throw new error.InvalidElementStateError("Element is not enabled");
+  if (!lazy.atom.isElementEnabled(el)) {
+    throw new lazy.error.InvalidElementStateError("Element is not enabled");
   }
 
   let acc = await a11y.getAccessible(el, true);
@@ -239,9 +241,9 @@ async function seleniumClickElement(el, a11y) {
     interaction.selectOption(el);
   } else {
     let rects = el.getClientRects();
-    let centre = element.getInViewCentrePoint(rects[0], win);
+    let centre = lazy.element.getInViewCentrePoint(rects[0], win);
     let opts = {};
-    event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
+    lazy.event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
   }
 }
 
@@ -266,18 +268,18 @@ async function seleniumClickElement(el, a11y) {
  *     element.
  */
 interaction.selectOption = function(el) {
-  if (element.isXULElement(el)) {
+  if (lazy.element.isXULElement(el)) {
     throw new TypeError("XUL dropdowns not supported");
   }
   if (el.localName != "option") {
-    throw new TypeError(pprint`Expected <option> element, got ${el}`);
+    throw new TypeError(lazy.pprint`Expected <option> element, got ${el}`);
   }
 
-  let containerEl = element.getContainer(el);
+  let containerEl = lazy.element.getContainer(el);
 
-  event.mouseover(containerEl);
-  event.mousemove(containerEl);
-  event.mousedown(containerEl);
+  lazy.event.mouseover(containerEl);
+  lazy.event.mousemove(containerEl);
+  lazy.event.mousedown(containerEl);
   containerEl.focus();
 
   if (!el.disabled) {
@@ -289,12 +291,12 @@ interaction.selectOption = function(el) {
     } else if (!el.selected) {
       el.selected = true;
     }
-    event.input(containerEl);
-    event.change(containerEl);
+    lazy.event.input(containerEl);
+    lazy.event.change(containerEl);
   }
 
-  event.mouseup(containerEl);
-  event.click(containerEl);
+  lazy.event.mouseup(containerEl);
+  lazy.event.click(containerEl);
   containerEl.blur();
 };
 
@@ -319,32 +321,32 @@ interaction.selectOption = function(el) {
  *     element or not an editing host, or cannot be scrolled into view.
  */
 interaction.clearElement = function(el) {
-  if (element.isDisabled(el)) {
-    throw new error.InvalidElementStateError(
-      pprint`Element is disabled: ${el}`
+  if (lazy.element.isDisabled(el)) {
+    throw new lazy.error.InvalidElementStateError(
+      lazy.pprint`Element is disabled: ${el}`
     );
   }
-  if (element.isReadOnly(el)) {
-    throw new error.InvalidElementStateError(
-      pprint`Element is read-only: ${el}`
+  if (lazy.element.isReadOnly(el)) {
+    throw new lazy.error.InvalidElementStateError(
+      lazy.pprint`Element is read-only: ${el}`
     );
   }
-  if (!element.isEditable(el)) {
-    throw new error.InvalidElementStateError(
-      pprint`Unable to clear element that cannot be edited: ${el}`
-    );
-  }
-
-  if (!element.isInView(el)) {
-    element.scrollIntoView(el);
-  }
-  if (!element.isInView(el)) {
-    throw new error.ElementNotInteractableError(
-      pprint`Element ${el} could not be scrolled into view`
+  if (!lazy.element.isEditable(el)) {
+    throw new lazy.error.InvalidElementStateError(
+      lazy.pprint`Unable to clear element that cannot be edited: ${el}`
     );
   }
 
-  if (element.isEditingHost(el)) {
+  if (!lazy.element.isInView(el)) {
+    lazy.element.scrollIntoView(el);
+  }
+  if (!lazy.element.isInView(el)) {
+    throw new lazy.error.ElementNotInteractableError(
+      lazy.pprint`Element ${el} could not be scrolled into view`
+    );
+  }
+
+  if (lazy.element.isEditingHost(el)) {
     clearContentEditableElement(el);
   } else {
     clearResettableElement(el);
@@ -357,14 +359,14 @@ function clearContentEditableElement(el) {
   }
   el.focus();
   el.innerHTML = "";
-  event.change(el);
+  lazy.event.change(el);
   el.blur();
 }
 
 function clearResettableElement(el) {
-  if (!element.isMutableFormControl(el)) {
-    throw new error.InvalidElementStateError(
-      pprint`Not an editable form control: ${el}`
+  if (!lazy.element.isMutableFormControl(el)) {
+    throw new lazy.error.InvalidElementStateError(
+      lazy.pprint`Not an editable form control: ${el}`
     );
   }
 
@@ -385,7 +387,7 @@ function clearResettableElement(el) {
 
   el.focus();
   el.value = "";
-  event.change(el);
+  lazy.event.change(el);
   el.blur();
 }
 
@@ -409,7 +411,7 @@ interaction.flushEventLoop = async function(el) {
   let spinEventLoop = resolve => {
     unloadEv = resolve;
     clickEv = event => {
-      logger.trace(`Received DOM event click for ${event.target}`);
+      lazy.logger.trace(`Received DOM event click for ${event.target}`);
       if (win.closed) {
         resolve();
       } else {
@@ -426,9 +428,10 @@ interaction.flushEventLoop = async function(el) {
     el.removeEventListener("click", clickEv);
   };
 
-  return new TimedPromise(spinEventLoop, { timeout: 500, throws: null }).then(
-    removeListeners
-  );
+  return new lazy.TimedPromise(spinEventLoop, {
+    timeout: 500,
+    throws: null,
+  }).then(removeListeners);
 };
 
 /**
@@ -443,7 +446,7 @@ interaction.flushEventLoop = async function(el) {
  *     Element to potential move the caret in.
  */
 interaction.moveCaretToEnd = function(el) {
-  if (!element.isDOMElement(el)) {
+  if (!lazy.element.isDOMElement(el)) {
     return;
   }
 
@@ -523,8 +526,8 @@ interaction.uploadFiles = async function(el, paths) {
     // for multiple file uploads new files will be appended
     files = Array.prototype.slice.call(el.files);
   } else if (paths.length > 1) {
-    throw new error.InvalidArgumentError(
-      pprint`Element ${el} doesn't accept multiple files`
+    throw new lazy.error.InvalidArgumentError(
+      lazy.pprint`Element ${el} doesn't accept multiple files`
     );
   }
 
@@ -534,7 +537,7 @@ interaction.uploadFiles = async function(el, paths) {
     try {
       file = await File.createFromFileName(path);
     } catch (e) {
-      throw new error.InvalidArgumentError("File not found: " + path);
+      throw new lazy.error.InvalidArgumentError("File not found: " + path);
     }
 
     files.push(file);
@@ -565,8 +568,8 @@ interaction.setFormControlValue = function(el, value) {
     return;
   }
 
-  event.input(el);
-  event.change(el);
+  lazy.event.input(el);
+  lazy.event.change(el);
 };
 
 /**
@@ -592,7 +595,7 @@ interaction.sendKeysToElement = async function(
     webdriverClick = false,
   } = {}
 ) {
-  const a11y = accessibility.get(accessibilityChecks);
+  const a11y = lazy.accessibility.get(accessibilityChecks);
 
   if (webdriverClick) {
     await webdriverSendKeysToElement(
@@ -615,12 +618,12 @@ async function webdriverSendKeysToElement(
   const win = getWindow(el);
 
   if (el.type != "file" || strictFileInteractability) {
-    let containerEl = element.getContainer(el);
+    let containerEl = lazy.element.getContainer(el);
 
     // TODO: Wait for element to be keyboard-interactible
     if (!interaction.isKeyboardInteractable(containerEl)) {
-      throw new error.ElementNotInteractableError(
-        pprint`Element ${el} is not reachable by keyboard`
+      throw new lazy.error.ElementNotInteractableError(
+        lazy.pprint`Element ${el} is not reachable by keyboard`
       );
     }
   }
@@ -635,12 +638,12 @@ async function webdriverSendKeysToElement(
     let paths = value.split("\n");
     await interaction.uploadFiles(el, paths);
 
-    event.input(el);
-    event.change(el);
+    lazy.event.input(el);
+    lazy.event.change(el);
   } else if (el.type == "date" || el.type == "time") {
     interaction.setFormControlValue(el, value);
   } else {
-    event.sendKeys(value, win);
+    lazy.event.sendKeys(value, win);
   }
 }
 
@@ -651,18 +654,20 @@ async function legacySendKeysToElement(el, value, a11y) {
     el.focus();
     await interaction.uploadFiles(el, [value]);
 
-    event.input(el);
-    event.change(el);
+    lazy.event.input(el);
+    lazy.event.change(el);
   } else if (el.type == "date" || el.type == "time") {
     interaction.setFormControlValue(el, value);
   } else {
     let visibilityCheckEl = el;
     if (el.localName == "option") {
-      visibilityCheckEl = element.getContainer(el);
+      visibilityCheckEl = lazy.element.getContainer(el);
     }
 
-    if (!element.isVisible(visibilityCheckEl)) {
-      throw new error.ElementNotInteractableError("Element is not visible");
+    if (!lazy.element.isVisible(visibilityCheckEl)) {
+      throw new lazy.error.ElementNotInteractableError(
+        "Element is not visible"
+      );
     }
 
     let acc = await a11y.getAccessible(el, true);
@@ -670,7 +675,7 @@ async function legacySendKeysToElement(el, value, a11y) {
 
     interaction.moveCaretToEnd(el);
     el.focus();
-    event.sendKeys(value, win);
+    lazy.event.sendKeys(value, win);
   }
 }
 
@@ -687,9 +692,9 @@ async function legacySendKeysToElement(el, value, a11y) {
  */
 interaction.isElementDisplayed = function(el, strict = false) {
   let win = getWindow(el);
-  let displayed = atom.isElementDisplayed(el, win);
+  let displayed = lazy.atom.isElementDisplayed(el, win);
 
-  let a11y = accessibility.get(strict);
+  let a11y = lazy.accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
     a11y.assertVisible(acc, el, displayed);
     return displayed;
@@ -709,7 +714,7 @@ interaction.isElementEnabled = function(el, strict = false) {
   let enabled = true;
   let win = getWindow(el);
 
-  if (element.isXULElement(el)) {
+  if (lazy.element.isXULElement(el)) {
     // check if XUL element supports disabled attribute
     if (DISABLED_ATTRIBUTE_SUPPORTED_XUL.has(el.tagName.toUpperCase())) {
       if (
@@ -724,10 +729,10 @@ interaction.isElementEnabled = function(el, strict = false) {
   ) {
     enabled = false;
   } else {
-    enabled = atom.isElementEnabled(el, { frame: win });
+    enabled = lazy.atom.isElementEnabled(el, { frame: win });
   }
 
-  let a11y = accessibility.get(strict);
+  let a11y = lazy.accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
     a11y.assertEnabled(acc, el, enabled);
     return enabled;
@@ -753,9 +758,9 @@ interaction.isElementEnabled = function(el, strict = false) {
  *     If <var>el</var> is not accessible when <var>strict</var> is true.
  */
 interaction.isElementSelected = function(el, strict = false) {
-  let selected = element.isSelected(el);
+  let selected = lazy.element.isSelected(el);
 
-  let a11y = accessibility.get(strict);
+  let a11y = lazy.accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
     a11y.assertSelected(acc, el, selected);
     return selected;

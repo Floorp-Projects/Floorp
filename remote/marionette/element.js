@@ -19,7 +19,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
 
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
@@ -151,7 +153,9 @@ element.ReferenceStore = class {
    */
   add(elId) {
     if (!elId.id || !elId.browsingContextId) {
-      throw new TypeError(pprint`Expected ElementIdentifier, got: ${elId}`);
+      throw new TypeError(
+        lazy.pprint`Expected ElementIdentifier, got: ${elId}`
+      );
     }
     if (this.domRefs.has(elId.id)) {
       return WebElement.fromJSON(this.domRefs.get(elId.id));
@@ -179,7 +183,7 @@ element.ReferenceStore = class {
    */
   has(webEl) {
     if (!(webEl instanceof WebElement)) {
-      throw new TypeError(pprint`Expected web element, got: ${webEl}`);
+      throw new TypeError(lazy.pprint`Expected web element, got: ${webEl}`);
     }
     return this.refs.has(webEl.uuid);
   }
@@ -202,11 +206,11 @@ element.ReferenceStore = class {
    */
   get(webEl) {
     if (!(webEl instanceof WebElement)) {
-      throw new TypeError(pprint`Expected web element, got: ${webEl}`);
+      throw new TypeError(lazy.pprint`Expected web element, got: ${webEl}`);
     }
     const elId = this.refs.get(webEl.uuid);
     if (!elId) {
-      throw new error.NoSuchElementError(
+      throw new lazy.error.NoSuchElementError(
         "Web element reference not seen before: " + webEl.uuid
       );
     }
@@ -277,7 +281,7 @@ element.find = function(container, strategy, selector, opts = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    let findElements = new PollPromise(
+    let findElements = new lazy.PollPromise(
       (resolve, reject) => {
         let res = find_(container, strategy, selector, searchFn, {
           all,
@@ -297,7 +301,7 @@ element.find = function(container, strategy, selector, opts = {}) {
       // and findElements when bug 1254486 is addressed
       if (!opts.all && (!foundEls || foundEls.length == 0)) {
         let msg = `Unable to locate element: ${selector}`;
-        reject(new error.NoSuchElementError(msg));
+        reject(new lazy.error.NoSuchElementError(msg));
       }
 
       if (opts.all) {
@@ -325,7 +329,7 @@ function find_(
   try {
     res = searchFn(strategy, selector, rootNode, startNode);
   } catch (e) {
-    throw new error.InvalidSelectorError(
+    throw new lazy.error.InvalidSelectorError(
       `Given ${strategy} expression "${selector}" is invalid: ${e}`
     );
   }
@@ -406,7 +410,7 @@ element.findByXPathAll = function*(document, startNode, expression) {
 element.findByLinkText = function(startNode, linkText) {
   return filterLinks(
     startNode,
-    link => atom.getElementText(link).trim() === linkText
+    link => lazy.atom.getElementText(link).trim() === linkText
   );
 };
 
@@ -425,7 +429,7 @@ element.findByLinkText = function(startNode, linkText) {
  */
 element.findByPartialLinkText = function(startNode, linkText) {
   return filterLinks(startNode, link =>
-    atom.getElementText(link).includes(linkText)
+    lazy.atom.getElementText(link).includes(linkText)
   );
 };
 
@@ -499,7 +503,7 @@ function findElement(strategy, selector, document, startNode = undefined) {
 
     case element.Strategy.LinkText:
       for (let link of startNode.getElementsByTagName("a")) {
-        if (atom.getElementText(link).trim() === selector) {
+        if (lazy.atom.getElementText(link).trim() === selector) {
           return link;
         }
       }
@@ -507,7 +511,7 @@ function findElement(strategy, selector, document, startNode = undefined) {
 
     case element.Strategy.PartialLinkText:
       for (let link of startNode.getElementsByTagName("a")) {
-        if (atom.getElementText(link).includes(selector)) {
+        if (lazy.atom.getElementText(link).includes(selector)) {
           return link;
         }
       }
@@ -517,11 +521,13 @@ function findElement(strategy, selector, document, startNode = undefined) {
       try {
         return startNode.querySelector(selector);
       } catch (e) {
-        throw new error.InvalidSelectorError(`${e.message}: "${selector}"`);
+        throw new lazy.error.InvalidSelectorError(
+          `${e.message}: "${selector}"`
+        );
       }
   }
 
-  throw new error.InvalidSelectorError(`No such strategy: ${strategy}`);
+  throw new lazy.error.InvalidSelectorError(`No such strategy: ${strategy}`);
 }
 
 /**
@@ -581,7 +587,9 @@ function findElements(strategy, selector, document, startNode = undefined) {
       return startNode.querySelectorAll(selector);
 
     default:
-      throw new error.InvalidSelectorError(`No such strategy: ${strategy}`);
+      throw new lazy.error.InvalidSelectorError(
+        `No such strategy: ${strategy}`
+      );
   }
 }
 
@@ -623,7 +631,7 @@ element.findClosest = function(startNode, selector) {
 element.getElementId = function(el) {
   const webEl = WebElement.from(el);
 
-  const id = ContentDOMReference.get(el);
+  const id = lazy.ContentDOMReference.get(el);
   const browsingContext = BrowsingContext.get(id.browsingContextId);
 
   id.webElRef = webEl.toJSON();
@@ -670,16 +678,17 @@ element.resolveElement = function(id, win) {
   }
 
   if (!sameBrowsingContext) {
-    throw new error.NoSuchElementError(
+    throw new lazy.error.NoSuchElementError(
       `Web element reference not seen before: ${JSON.stringify(id.webElRef)}`
     );
   }
 
-  const el = ContentDOMReference.resolve(id);
+  const el = lazy.ContentDOMReference.resolve(id);
 
   if (element.isStale(el, win)) {
-    throw new error.StaleElementReferenceError(
-      pprint`The element reference of ${el || JSON.stringify(id.webElRef)} ` +
+    throw new lazy.error.StaleElementReferenceError(
+      lazy.pprint`The element reference of ${el ||
+        JSON.stringify(id.webElRef)} ` +
         "is stale; either the element is no longer attached to the DOM, " +
         "it is not in the current frame context, " +
         "or the document has been refreshed"
@@ -1110,7 +1119,7 @@ element.isInView = function(el) {
 element.isVisible = function(el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
 
-  if (!atom.isElementDisplayed(el, win)) {
+  if (!lazy.atom.isElementDisplayed(el, win)) {
     return false;
   }
 
@@ -1276,7 +1285,7 @@ element.isElement = function(node) {
 element.getShadowRoot = function(node) {
   const shadowRoot = node.openOrClosedShadowRoot;
   if (!shadowRoot) {
-    throw new error.NoSuchShadowRootError();
+    throw new lazy.error.NoSuchShadowRootError();
   }
   return shadowRoot;
 };
@@ -1449,7 +1458,7 @@ class WebElement {
    *     for the contract to be upheld.
    */
   constructor(uuid) {
-    this.uuid = assert.string(uuid);
+    this.uuid = lazy.assert.string(uuid);
   }
 
   /**
@@ -1506,8 +1515,8 @@ class WebElement {
       return new ContentWebFrame(uuid);
     }
 
-    throw new error.InvalidArgumentError(
-      "Expected DOM window/element " + pprint`or XUL element, got: ${node}`
+    throw new lazy.error.InvalidArgumentError(
+      "Expected DOM window/element " + lazy.pprint`or XUL element, got: ${node}`
     );
   }
 
@@ -1528,7 +1537,7 @@ class WebElement {
    *     If <var>json</var> is not a web element reference.
    */
   static fromJSON(json) {
-    assert.object(json);
+    lazy.assert.object(json);
     if (json instanceof WebElement) {
       return json;
     }
@@ -1553,8 +1562,8 @@ class WebElement {
       }
     }
 
-    throw new error.InvalidArgumentError(
-      pprint`Expected web element reference, got: ${json}`
+    throw new lazy.error.InvalidArgumentError(
+      lazy.pprint`Expected web element reference, got: ${json}`
     );
   }
 
@@ -1583,7 +1592,7 @@ class WebElement {
    *     is an invalid context.
    */
   static fromUUID(uuid, context) {
-    assert.string(uuid);
+    lazy.assert.string(uuid);
 
     switch (context) {
       case "chrome":
@@ -1593,7 +1602,9 @@ class WebElement {
         return new ContentWebElement(uuid);
 
       default:
-        throw new error.InvalidArgumentError("Unknown context: " + context);
+        throw new lazy.error.InvalidArgumentError(
+          "Unknown context: " + context
+        );
     }
   }
 
@@ -1649,8 +1660,8 @@ class ContentWebElement extends WebElement {
     const { Identifier } = ContentWebElement;
 
     if (!(Identifier in json)) {
-      throw new error.InvalidArgumentError(
-        pprint`Expected web element reference, got: ${json}`
+      throw new lazy.error.InvalidArgumentError(
+        lazy.pprint`Expected web element reference, got: ${json}`
       );
     }
 
@@ -1673,8 +1684,8 @@ class ContentShadowRoot extends WebElement {
     const { Identifier } = ContentShadowRoot;
 
     if (!(Identifier in json)) {
-      throw new error.InvalidArgumentError(
-        pprint`Expected shadow root reference, got: ${json}`
+      throw new lazy.error.InvalidArgumentError(
+        lazy.pprint`Expected shadow root reference, got: ${json}`
       );
     }
 
@@ -1696,8 +1707,8 @@ class ContentWebWindow extends WebElement {
 
   static fromJSON(json) {
     if (!(ContentWebWindow.Identifier in json)) {
-      throw new error.InvalidArgumentError(
-        pprint`Expected web window reference, got: ${json}`
+      throw new lazy.error.InvalidArgumentError(
+        lazy.pprint`Expected web window reference, got: ${json}`
       );
     }
     let uuid = json[ContentWebWindow.Identifier];
@@ -1718,8 +1729,8 @@ class ContentWebFrame extends WebElement {
 
   static fromJSON(json) {
     if (!(ContentWebFrame.Identifier in json)) {
-      throw new error.InvalidArgumentError(
-        pprint`Expected web frame reference, got: ${json}`
+      throw new lazy.error.InvalidArgumentError(
+        lazy.pprint`Expected web frame reference, got: ${json}`
       );
     }
     let uuid = json[ContentWebFrame.Identifier];
@@ -1739,9 +1750,9 @@ class ChromeWebElement extends WebElement {
 
   static fromJSON(json) {
     if (!(ChromeWebElement.Identifier in json)) {
-      throw new error.InvalidArgumentError(
+      throw new lazy.error.InvalidArgumentError(
         "Expected chrome element reference " +
-          pprint`for XUL element, got: ${json}`
+          lazy.pprint`for XUL element, got: ${json}`
       );
     }
     let uuid = json[ChromeWebElement.Identifier];

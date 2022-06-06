@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   pprint: "chrome://remote/content/shared/Format.jsm",
@@ -60,40 +62,46 @@ const cookie = {
 cookie.fromJSON = function(json) {
   let newCookie = {};
 
-  assert.object(json, pprint`Expected cookie object, got ${json}`);
+  lazy.assert.object(json, lazy.pprint`Expected cookie object, got ${json}`);
 
-  newCookie.name = assert.string(json.name, "Cookie name must be string");
-  newCookie.value = assert.string(json.value, "Cookie value must be string");
+  newCookie.name = lazy.assert.string(json.name, "Cookie name must be string");
+  newCookie.value = lazy.assert.string(
+    json.value,
+    "Cookie value must be string"
+  );
 
   if (typeof json.path != "undefined") {
-    newCookie.path = assert.string(json.path, "Cookie path must be string");
+    newCookie.path = lazy.assert.string(
+      json.path,
+      "Cookie path must be string"
+    );
   }
   if (typeof json.domain != "undefined") {
-    newCookie.domain = assert.string(
+    newCookie.domain = lazy.assert.string(
       json.domain,
       "Cookie domain must be string"
     );
   }
   if (typeof json.secure != "undefined") {
-    newCookie.secure = assert.boolean(
+    newCookie.secure = lazy.assert.boolean(
       json.secure,
       "Cookie secure flag must be boolean"
     );
   }
   if (typeof json.httpOnly != "undefined") {
-    newCookie.httpOnly = assert.boolean(
+    newCookie.httpOnly = lazy.assert.boolean(
       json.httpOnly,
       "Cookie httpOnly flag must be boolean"
     );
   }
   if (typeof json.expiry != "undefined") {
-    newCookie.expiry = assert.positiveInteger(
+    newCookie.expiry = lazy.assert.positiveInteger(
       json.expiry,
       "Cookie expiry must be a positive integer"
     );
   }
   if (typeof json.sameSite != "undefined") {
-    newCookie.sameSite = assert.in(
+    newCookie.sameSite = lazy.assert.in(
       json.sameSite,
       Array.from(SAMESITE_MAP.keys()),
       "Cookie SameSite flag must be one of None, Lax, or Strict"
@@ -126,8 +134,8 @@ cookie.add = function(
   newCookie,
   { restrictToHost = null, protocol = null } = {}
 ) {
-  assert.string(newCookie.name, "Cookie name must be string");
-  assert.string(newCookie.value, "Cookie value must be string");
+  lazy.assert.string(newCookie.name, "Cookie name must be string");
+  lazy.assert.string(newCookie.value, "Cookie value must be string");
 
   if (typeof newCookie.path == "undefined") {
     newCookie.path = "/";
@@ -138,7 +146,7 @@ cookie.add = function(
     hostOnly = true;
     newCookie.domain = restrictToHost;
   }
-  assert.string(newCookie.domain, "Cookie domain must be string");
+  lazy.assert.string(newCookie.domain, "Cookie domain must be string");
   if (newCookie.domain.substring(0, 1) === ".") {
     newCookie.domain = newCookie.domain.substring(1);
   }
@@ -167,7 +175,7 @@ cookie.add = function(
         isIpAddress = true;
         break;
       default:
-        throw new error.InvalidCookieDomainError(newCookie.domain);
+        throw new lazy.error.InvalidCookieDomainError(newCookie.domain);
     }
   }
 
@@ -183,7 +191,7 @@ cookie.add = function(
       "." + restrictToHost !== newCookie.domain &&
       restrictToHost !== newCookie.domain
     ) {
-      throw new error.InvalidCookieDomainError(
+      throw new lazy.error.InvalidCookieDomainError(
         `Cookies may only be set ` +
           `for the current domain (${restrictToHost})`
       );
@@ -223,7 +231,7 @@ cookie.add = function(
       schemeType
     );
   } catch (e) {
-    throw new error.UnableToSetCookieError(e);
+    throw new lazy.error.UnableToSetCookieError(e);
   }
 };
 
@@ -257,8 +265,8 @@ cookie.remove = function(toDelete) {
  *     Iterator.
  */
 cookie.iter = function*(host, currentPath = "/") {
-  assert.string(host, "host must be string");
-  assert.string(currentPath, "currentPath must be string");
+  lazy.assert.string(host, "host must be string");
+  lazy.assert.string(currentPath, "currentPath must be string");
 
   const isForCurrentPath = path => currentPath.includes(path);
 

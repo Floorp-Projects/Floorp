@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   EventDispatcher:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
@@ -23,8 +25,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   truncate: "chrome://remote/content/shared/Format.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
 // Timeouts used to check if a new navigation has been initiated.
@@ -59,10 +61,10 @@ function checkReadyState(pageLoadStrategy, eventData = {}) {
   switch (readyState) {
     case "interactive":
       if (documentURI.startsWith("about:certerror")) {
-        result.error = new error.InsecureCertificateError();
+        result.error = new lazy.error.InsecureCertificateError();
         result.finished = true;
       } else if (/about:.*(error)\?/.exec(documentURI)) {
-        result.error = new error.UnknownError(
+        result.error = new lazy.error.UnknownError(
           `Reached error page: ${documentURI}`
         );
         result.finished = true;
@@ -74,7 +76,7 @@ function checkReadyState(pageLoadStrategy, eventData = {}) {
         // loaded for new content processes, and we only want to rely on
         // complete loads for it.
       } else if (
-        (pageLoadStrategy === PageLoadStrategy.Eager &&
+        (pageLoadStrategy === lazy.PageLoadStrategy.Eager &&
           documentURI != "about:blank") ||
         /about:blocked\?/.exec(documentURI)
       ) {
@@ -225,8 +227,8 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   }
 
   // When not waiting for page load events, do not return until the navigation has actually started.
-  if (pageLoadStrategy === PageLoadStrategy.None) {
-    const listener = new ProgressListener(browsingContext.webProgress, {
+  if (pageLoadStrategy === lazy.PageLoadStrategy.None) {
+    const listener = new lazy.ProgressListener(browsingContext.webProgress, {
       resolveWhenStarted: true,
       waitForExplicitStart: true,
     });
@@ -263,8 +265,8 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   };
 
   const onDialogOpened = action => {
-    if (action === modal.ACTION_OPENED) {
-      logger.trace("Canceled page load listener because a dialog opened");
+    if (action === lazy.modal.ACTION_OPENED) {
+      lazy.logger.trace("Canceled page load listener because a dialog opened");
       checkDone({ finished: true });
     }
   };
@@ -289,7 +291,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
       // If no page unload has been detected, ensure to properly stop
       // the load listener, and return from the currently active command.
     } else if (!seenUnload) {
-      logger.trace(
+      lazy.logger.trace(
         "Canceled page load listener because no navigation " +
           "has been detected"
       );
@@ -305,8 +307,8 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
       return;
     }
 
-    logger.trace(
-      truncate`[${data.browsingContext.id}] Received event ${data.type} for ${data.documentURI}`
+    lazy.logger.trace(
+      lazy.truncate`[${data.browsingContext.id}] Received event ${data.type} for ${data.documentURI}`
     );
 
     switch (data.type) {
@@ -343,7 +345,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     // context, we don't want to stop waiting for the pageload to complete, as
     // we will continue listening to the newly created context.
     if (subject == browsingContextFn() && why != "replace") {
-      logger.trace(
+      lazy.logger.trace(
         "Canceled page load listener " +
           `because browsing context with id ${subject.id} has been removed`
       );
@@ -360,7 +362,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   };
 
   const onUnload = event => {
-    logger.trace(
+    lazy.logger.trace(
       "Canceled page load listener " +
         "because the top-browsing context has been closed"
     );
@@ -379,9 +381,9 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     "browsing-context-discarded"
   );
 
-  EventDispatcher.on("page-load", onNavigation);
+  lazy.EventDispatcher.on("page-load", onNavigation);
 
-  return new TimedPromise(
+  return new lazy.TimedPromise(
     async (resolve, reject) => {
       rejectNavigation = reject;
       resolveNavigation = resolve;
@@ -426,6 +428,6 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     driver.dialogObserver?.remove(onDialogOpened);
     unloadTimer?.cancel();
 
-    EventDispatcher.off("page-load", onNavigation);
+    lazy.EventDispatcher.off("page-load", onNavigation);
   });
 };

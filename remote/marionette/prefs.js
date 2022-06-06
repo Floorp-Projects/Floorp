@@ -11,8 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "env",
   "@mozilla.org/process/environment;1",
   "nsIEnvironment"
@@ -174,13 +176,13 @@ class EnvironmentPrefs {
    * @return {Iterable.<string, (string|boolean|number)>
    */
   static *from(key) {
-    if (!env.exists(key)) {
+    if (!lazy.env.exists(key)) {
       return;
     }
 
     let prefs;
     try {
-      prefs = JSON.parse(env.get(key));
+      prefs = JSON.parse(lazy.env.get(key));
     } catch (e) {
       throw new TypeError(`Unable to parse prefs from ${key}`, e);
     }
