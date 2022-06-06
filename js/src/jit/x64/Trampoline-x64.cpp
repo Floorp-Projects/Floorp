@@ -480,11 +480,24 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // Caller:
   // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- rsp
 
+  // Frame prologue.
+  //
+  // NOTE: if this changes, fix the Baseline bailout code too!
+  // See BaselineStackBuilder::calculatePrevFramePtr and
+  // BaselineStackBuilder::buildRectifierFrame (in BaselineBailouts.cpp).
+  masm.push(FramePointer);
+  masm.movq(rsp, FramePointer);
+
   // Load argc.
-  masm.loadPtr(Address(rsp, RectifierFrameLayout::offsetOfNumActualArgs()), r8);
+  constexpr size_t FrameOffset = sizeof(void*);  // Frame pointer.
+  constexpr size_t NargsOffset =
+      FrameOffset + RectifierFrameLayout::offsetOfNumActualArgs();
+  masm.loadPtr(Address(rsp, NargsOffset), r8);
 
   // Load |nformals| into %rcx.
-  masm.loadPtr(Address(rsp, RectifierFrameLayout::offsetOfCalleeToken()), rax);
+  constexpr size_t TokenOffset =
+      FrameOffset + RectifierFrameLayout::offsetOfCalleeToken();
+  masm.loadPtr(Address(rsp, TokenOffset), rax);
   masm.mov(rax, rcx);
   masm.andq(Imm32(uint32_t(CalleeTokenMask)), rcx);
   masm.loadFunctionArgCount(rcx, rcx);
@@ -521,12 +534,6 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
 
   // Load the number of |undefined|s to push into %rcx.
   masm.subq(r8, rcx);
-
-  // NOTE: if this changes, fix the Baseline bailout code too!
-  // See BaselineStackBuilder::calculatePrevFramePtr and
-  // BaselineStackBuilder::buildRectifierFrame (in BaselineBailouts.cpp).
-  masm.push(FramePointer);
-  masm.movq(rsp, FramePointer);
 
   // Caller:
   // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- rsp
