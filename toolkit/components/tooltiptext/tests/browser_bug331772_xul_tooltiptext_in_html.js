@@ -2,6 +2,10 @@
  * Tests that the tooltiptext attribute is used for XUL elements in an HTML doc.
  */
 add_task(async function() {
+  await SpecialPowers.pushPermissions([
+    { type: "allowXULXBL", allow: true, context: "http://mochi.test:8888" },
+  ]);
+
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,

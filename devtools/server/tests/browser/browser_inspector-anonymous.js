@@ -6,6 +6,10 @@
 // Test for Bug 777674
 
 add_task(async function() {
+  await SpecialPowers.pushPermissions([
+    { type: "allowXULXBL", allow: true, context: MAIN_DOMAIN },
+  ]);
+
   const { walker } = await initInspectorFront(
     MAIN_DOMAIN + "inspector-traversal-data.html"
   );
