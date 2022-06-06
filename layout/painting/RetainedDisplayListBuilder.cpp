@@ -1529,7 +1529,9 @@ void CollectStackingContextItems(nsDisplayListBuilder* aBuilder,
 
     if (aParentReused) {
       // Keep the contents of the current container item linked.
+#ifdef DEBUG
       RDLUtils::AssertDisplayItemUnmodified(item);
+#endif
       aList->AppendToTop(item);
     } else if (isStackingContextItem) {
       // |item| is a stacking context item that can be reused.
