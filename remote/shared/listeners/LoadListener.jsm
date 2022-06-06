@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
@@ -43,7 +45,7 @@ class LoadListener {
    * Create a new LoadListener instance.
    */
   constructor(win) {
-    EventEmitter.decorate(this);
+    lazy.EventEmitter.decorate(this);
 
     // Use an abort controller instead of removeEventListener because destroy
     // might be called close to the window global destruction.
