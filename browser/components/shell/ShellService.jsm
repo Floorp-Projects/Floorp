@@ -13,7 +13,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   Subprocess: "resource://gre/modules/Subprocess.jsm",
@@ -21,13 +22,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "XreDirProvider",
   "@mozilla.org/xre/directory-provider;1",
   "nsIXREDirProvider"
 );
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
@@ -69,12 +70,12 @@ let ShellServiceInternal = {
 
   isDefaultBrowserOptOut() {
     if (AppConstants.platform == "win") {
-      let optOutValue = WindowsRegistry.readRegKey(
+      let optOutValue = lazy.WindowsRegistry.readRegKey(
         Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
         "Software\\Mozilla\\Firefox",
         "DefaultBrowserOptOut"
       );
-      WindowsRegistry.removeRegKey(
+      lazy.WindowsRegistry.removeRegKey(
         Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
         "Software\\Mozilla\\Firefox",
         "DefaultBrowserOptOut"
@@ -140,7 +141,7 @@ let ShellServiceInternal = {
   _callExternalDefaultBrowserAgent(options = {}) {
     const wdba = Services.dirsvc.get("XREExeF", Ci.nsIFile);
     wdba.leafName = "default-browser-agent.exe";
-    return Subprocess.call({
+    return lazy.Subprocess.call({
       ...options,
       command: options.command || wdba.path,
     });
@@ -171,7 +172,7 @@ let ShellServiceInternal = {
    */
   _shouldSetDefaultPDFHandler() {
     if (
-      !NimbusFeatures.shellService.getVariable(
+      !lazy.NimbusFeatures.shellService.getVariable(
         "setDefaultPDFHandlerOnlyReplaceBrowsers"
       )
     ) {
@@ -197,7 +198,7 @@ let ShellServiceInternal = {
     } catch (e) {
       // We only get an exception when something went really wrong.  Fail
       // safely: don't set Firefox as default PDF handler.
-      log.warn(
+      lazy.log.warn(
         "Failed to queryCurrentDefaultHandlerFor: " +
           "not setting Firefox as default PDF handler!"
       );
@@ -205,7 +206,7 @@ let ShellServiceInternal = {
     }
 
     if (currentProgID == "") {
-      log.debug(
+      lazy.log.debug(
         `Current default PDF handler has no registered association; ` +
           `should set as default PDF handler.`
       );
@@ -216,14 +217,14 @@ let ShellServiceInternal = {
       currentProgID.startsWith(it)
     );
     if (knownBrowserPrefix) {
-      log.debug(
+      lazy.log.debug(
         `Current default PDF handler progID matches known browser prefix: ` +
           `'${knownBrowserPrefix}'; should set as default PDF handler.`
       );
       return true;
     }
 
-    log.debug(
+    lazy.log.debug(
       `Current default PDF handler progID does not match known browser prefix; ` +
         `should not set as default PDF handler.`
     );
@@ -244,7 +245,7 @@ let ShellServiceInternal = {
       throw new Error("Windows-only");
     }
 
-    log.info("Setting Firefox as default using UserChoice");
+    lazy.log.info("Setting Firefox as default using UserChoice");
 
     // We launch the WDBA to handle the registry writes, see
     // SetDefaultBrowserUserChoice() in
@@ -265,16 +266,18 @@ let ShellServiceInternal = {
         throw new Error("checkBrowserUserChoiceHashes() failed");
       }
 
-      const aumi = XreDirProvider.getInstallHash();
+      const aumi = lazy.XreDirProvider.getInstallHash();
 
       telemetryResult = "ErrLaunchExe";
       const exeArgs = ["set-default-browser-user-choice", aumi];
-      if (NimbusFeatures.shellService.getVariable("setDefaultPDFHandler")) {
+      if (
+        lazy.NimbusFeatures.shellService.getVariable("setDefaultPDFHandler")
+      ) {
         if (this._shouldSetDefaultPDFHandler()) {
-          log.info("Setting Firefox as default PDF handler");
+          lazy.log.info("Setting Firefox as default PDF handler");
           exeArgs.push(".pdf", "FirefoxPDF");
         } else {
-          log.info("Not setting Firefox as default PDF handler");
+          lazy.log.info("Not setting Firefox as default PDF handler");
         }
       }
       const exeProcess = await this._callExternalDefaultBrowserAgent({
@@ -293,7 +296,10 @@ let ShellServiceInternal = {
       const exeWaitTimeoutMs = 2000; // 2 seconds
       const exeWaitPromise = exeProcess.wait();
       const timeoutPromise = new Promise(function(resolve, reject) {
-        setTimeout(() => resolve({ exitCode: STILL_ACTIVE }), exeWaitTimeoutMs);
+        lazy.setTimeout(
+          () => resolve({ exitCode: STILL_ACTIVE }),
+          exeWaitTimeoutMs
+        );
       });
       const { exitCode } = await Promise.race([exeWaitPromise, timeoutPromise]);
 
@@ -327,7 +333,9 @@ let ShellServiceInternal = {
     // On Windows 10, our best chance is to set UserChoice, so try that first.
     if (
       AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
-      NimbusFeatures.shellService.getVariable("setDefaultBrowserUserChoice")
+      lazy.NimbusFeatures.shellService.getVariable(
+        "setDefaultBrowserUserChoice"
+      )
     ) {
       // nsWindowsShellService::SetDefaultBrowser() kicks off several
       // operations, but doesn't wait for their result. So we don't need to
@@ -405,7 +413,7 @@ let ShellServiceInternal = {
     }
 
     // Pretend pinning is not needed/supported if remotely disabled.
-    if (NimbusFeatures.shellService.getVariable("disablePin")) {
+    if (lazy.NimbusFeatures.shellService.getVariable("disablePin")) {
       return false;
     }
 
