@@ -31,8 +31,10 @@ const { LocalizationHelper, ELLIPSIS } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(DBG_STRINGS_URI);
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
   "nsIClipboardHelper"
@@ -785,7 +787,7 @@ VariablesView.prototype = {
    */
   _copyItem: function() {
     const item = this.getFocusedItem();
-    clipboardHelper.copyString(
+    lazy.clipboardHelper.copyString(
       item._nameString + item.separatorStr + item._valueString
     );
   },
