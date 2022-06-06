@@ -24,9 +24,13 @@ const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+
 XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 /**
@@ -71,7 +75,7 @@ var Authentication = {
   },
 
   async _openVerificationPage(uri) {
-    let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    let mainWindow = lazy.Services.wm.getMostRecentWindow("navigator:browser");
     let newtab = mainWindow.gBrowser.addWebTab(uri);
     let win = mainWindow.gBrowser.getBrowserForTab(newtab);
     await new Promise(resolve => {

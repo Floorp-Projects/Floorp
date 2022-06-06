@@ -12,13 +12,13 @@ const { GeckoViewUtils } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("FilePickerDelegate");
@@ -102,7 +102,7 @@ class FilePickerDelegate {
   }
 
   get fileURL() {
-    return Services.io.newFileURI(this.file);
+    return lazy.Services.io.newFileURI(this.file);
   }
 
   *_getEnumerator(aDOMFile) {

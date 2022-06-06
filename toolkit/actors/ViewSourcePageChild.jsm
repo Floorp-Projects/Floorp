@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 var EXPORTED_SYMBOLS = ["ViewSourcePageChild"];
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["NodeFilter"]);
+
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 
 // These are markers used to delimit the selection during processing. They

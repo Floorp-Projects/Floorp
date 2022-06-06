@@ -6,10 +6,18 @@
 
 var EXPORTED_SYMBOLS = ["LoadURIDelegate"];
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 const { debug, warn } = GeckoViewUtils.initLogging("LoadURIDelegate");
 
@@ -45,7 +53,7 @@ const LoadURIDelegate = {
         handled = false;
       }
     );
-    Services.tm.spinEventLoopUntil(
+    lazy.Services.tm.spinEventLoopUntil(
       "LoadURIDelegate.jsm:load",
       () => aWindow.closed || handled !== undefined
     );
@@ -74,7 +82,7 @@ const LoadURIDelegate = {
     aEventDispatcher.sendRequestForResult(msg).then(
       response => {
         try {
-          errorPageURI = response ? Services.io.newURI(response) : null;
+          errorPageURI = response ? lazy.Services.io.newURI(response) : null;
         } catch (e) {
           warn`Failed to parse URI '${response}`;
           errorPageURI = null;
@@ -86,7 +94,7 @@ const LoadURIDelegate = {
         Components.returnCode = Cr.NS_ERROR_ABORT;
       }
     );
-    Services.tm.spinEventLoopUntil(
+    lazy.Services.tm.spinEventLoopUntil(
       "LoadURIDelegate.jsm:handleLoadError",
       () => aWindow.closed || errorPageURI !== undefined
     );

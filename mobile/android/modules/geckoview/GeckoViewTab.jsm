@@ -12,7 +12,6 @@ const { GeckoViewModule } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
@@ -23,6 +22,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
 });
 
@@ -117,7 +117,7 @@ const GeckoViewTabBridge = {
   async createNewTab({ extensionId, createProperties } = {}) {
     debug`createNewTab`;
 
-    const newSessionId = Services.uuid
+    const newSessionId = lazy.Services.uuid
       .generateUUID()
       .toString()
       .slice(1, -1)
@@ -132,12 +132,15 @@ const GeckoViewTabBridge = {
             aTopic === "geckoview-window-created" &&
             aSubject.name === newSessionId
           ) {
-            Services.obs.removeObserver(handler, "geckoview-window-created");
+            lazy.Services.obs.removeObserver(
+              handler,
+              "geckoview-window-created"
+            );
             resolve(aSubject);
           }
         },
       };
-      Services.obs.addObserver(handler, "geckoview-window-created");
+      lazy.Services.obs.addObserver(handler, "geckoview-window-created");
     });
 
     let didOpenSession = false;

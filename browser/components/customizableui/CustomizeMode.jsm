@@ -33,6 +33,8 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["CSS"]);
+
 ChromeUtils.defineModuleGetter(
   this,
   "AddonManager",

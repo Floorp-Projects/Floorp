@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["HomePage"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
@@ -18,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 const kPrefName = "browser.startup.homepage";

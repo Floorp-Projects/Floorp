@@ -3,6 +3,7 @@
 var {
   OS: { File, Path, Constants },
 } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Ensure that we have a profile but that the OS.File worker is not launched
 add_task(async function init() {

@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
 });
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 XPCOMUtils.defineLazyGetter(this, "domParser", () => {
   const parser = new DOMParser();
   parser.forceEnableDTD();

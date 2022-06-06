@@ -1,6 +1,7 @@
 "use strict";
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Test that OS.Constants is defined correctly.
 add_task(async function check_definition() {

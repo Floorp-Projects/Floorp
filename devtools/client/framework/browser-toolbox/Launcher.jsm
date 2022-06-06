@@ -22,7 +22,9 @@ ChromeUtils.defineModuleGetter(
   "Subprocess",
   "resource://gre/modules/Subprocess.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
 ChromeUtils.defineModuleGetter(

@@ -7,6 +7,10 @@
 const EXPORTED_SYMBOLS = ["ContentMetaChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 // Debounce time in milliseconds - this should be long enough to account for
 // sync script tags that could appear between desired meta tags

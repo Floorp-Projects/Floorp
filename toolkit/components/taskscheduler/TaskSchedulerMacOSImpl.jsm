@@ -10,12 +10,10 @@ var EXPORTED_SYMBOLS = ["_TaskSchedulerMacOSImpl"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   Subprocess: "resource://gre/modules/Subprocess.jsm",
 });
 
@@ -25,6 +23,8 @@ XPCOMUtils.defineLazyServiceGetters(this, {
     "nsIXREDirProvider",
   ],
 });
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLSerializer"]);
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");

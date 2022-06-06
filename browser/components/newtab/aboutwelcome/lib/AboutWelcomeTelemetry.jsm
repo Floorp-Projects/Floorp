@@ -7,11 +7,11 @@ const EXPORTED_SYMBOLS = ["AboutWelcomeTelemetry"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PingCentre: "resource:///modules/PingCentre.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
   AttributionCode: "resource:///modules/AttributionCode.jsm",
 });

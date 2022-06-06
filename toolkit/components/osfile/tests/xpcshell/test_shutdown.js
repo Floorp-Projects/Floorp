@@ -1,3 +1,4 @@
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );

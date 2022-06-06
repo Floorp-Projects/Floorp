@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIIDNService"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 /**
  * Properly convert internationalized domain names.
  * @param {string} host Domain hostname.

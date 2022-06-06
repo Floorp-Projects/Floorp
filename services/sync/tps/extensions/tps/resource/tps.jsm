@@ -26,15 +26,12 @@ var EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Authentication: "resource://tps/auth/fxaccounts.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   Async: "resource://services-common/async.js",
   BrowserTabs: "resource://tps/modules/tabs.jsm",
   BrowserWindows: "resource://tps/modules/windows.jsm",
@@ -47,6 +44,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   OS: "resource://gre/modules/osfile.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   Svc: "resource://services-sync/util.js",
   SyncTelemetry: "resource://services-sync/telemetry.js",
@@ -82,7 +80,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fileProtocolHandler", () => {
-  let fileHandler = Services.io.getProtocolHandler("file");
+  let fileHandler = lazy.Services.io.getProtocolHandler("file");
   return fileHandler.QueryInterface(Ci.nsIFileProtocolHandler);
 });
 
@@ -172,14 +170,14 @@ var TPS = {
     this.delayAutoSync();
 
     OBSERVER_TOPICS.forEach(function(aTopic) {
-      Services.obs.addObserver(this, aTopic, true);
+      lazy.Services.obs.addObserver(this, aTopic, true);
     }, this);
 
     // Some engines bump their score during their sync, which then causes
     // another sync immediately (notably, prefs and addons). We don't want
     // this to happen, and there's no obvious preference to kill it - so
     // we do this nasty hack to ensure the global score is always zero.
-    Services.prefs.addObserver("services.sync.globalScore", () => {
+    lazy.Services.prefs.addObserver("services.sync.globalScore", () => {
       if (lazy.Weave.Service.scheduler.globalScore != 0) {
         lazy.Weave.Service.scheduler.globalScore = 0;
       }
@@ -211,7 +209,7 @@ var TPS = {
       switch (topic) {
         case "profile-before-change":
           OBSERVER_TOPICS.forEach(function(topic) {
-            Services.obs.removeObserver(this, topic);
+            lazy.Services.obs.removeObserver(this, topic);
           }, this);
 
           lazy.Logger.close();
@@ -966,7 +964,7 @@ var TPS = {
         this.quit();
         return;
       }
-      this.seconds_since_epoch = Services.prefs.getIntPref(
+      this.seconds_since_epoch = lazy.Services.prefs.getIntPref(
         "tps.seconds_since_epoch"
       );
       if (this.seconds_since_epoch) {
@@ -1030,7 +1028,9 @@ var TPS = {
   // based on the source of the tps file. Assumes that it's at "../unit/sync_ping_schema.json"
   // relative to the directory the tps test file (testFile) is contained in.
   _tryLoadPingSchema(testFile) {
-    if (Services.prefs.getBoolPref("testing.tps.skipPingValidation", false)) {
+    if (
+      lazy.Services.prefs.getBoolPref("testing.tps.skipPingValidation", false)
+    ) {
       return;
     }
     try {
@@ -1094,13 +1094,15 @@ var TPS = {
 
       lazy.Logger.init(logpath);
       lazy.Logger.logInfo("Sync version: " + lazy.WEAVE_VERSION);
-      lazy.Logger.logInfo("Firefox buildid: " + Services.appinfo.appBuildID);
-      lazy.Logger.logInfo("Firefox version: " + Services.appinfo.version);
+      lazy.Logger.logInfo(
+        "Firefox buildid: " + lazy.Services.appinfo.appBuildID
+      );
+      lazy.Logger.logInfo("Firefox version: " + lazy.Services.appinfo.version);
       lazy.Logger.logInfo(
         "Firefox source revision: " +
-          (AppConstants.SOURCE_REVISION_URL || "unknown")
+          (lazy.AppConstants.SOURCE_REVISION_URL || "unknown")
       );
-      lazy.Logger.logInfo("Firefox platform: " + AppConstants.platform);
+      lazy.Logger.logInfo("Firefox platform: " + lazy.AppConstants.platform);
 
       // do some sync housekeeping
       if (lazy.Weave.Service.isLoggedIn) {
@@ -1135,9 +1137,9 @@ var TPS = {
    */
   async _executeTestPhase(file, phase, settings) {
     try {
-      this.config = JSON.parse(Services.prefs.getCharPref("tps.config"));
+      this.config = JSON.parse(lazy.Services.prefs.getCharPref("tps.config"));
       // parse the test file
-      Services.scriptloader.loadSubScript(file, this);
+      lazy.Services.scriptloader.loadSubScript(file, this);
       this._currentPhase = phase;
       // cleanup phases are in the format `cleanup-${profileName}`.
       if (this._currentPhase.startsWith("cleanup-")) {

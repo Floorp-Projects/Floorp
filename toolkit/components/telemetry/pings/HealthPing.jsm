@@ -30,7 +30,11 @@ ChromeUtils.defineModuleGetter(
   "TelemetryUtils",
   "resource://gre/modules/TelemetryUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"

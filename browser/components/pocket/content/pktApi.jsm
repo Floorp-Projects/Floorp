@@ -54,6 +54,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/IndexedDB.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gCookieFirstPartyIsolate",

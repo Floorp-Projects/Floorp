@@ -23,6 +23,11 @@ const { EventEmitter } = ChromeUtils.import(
 const { LogManager } = ChromeUtils.import(
   "resource://normandy/lib/LogManager.jsm"
 );
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]); /* globals URL */
 
 var EXPORTED_SYMBOLS = ["Heartbeat"];
 

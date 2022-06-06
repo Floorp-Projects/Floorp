@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
 );
