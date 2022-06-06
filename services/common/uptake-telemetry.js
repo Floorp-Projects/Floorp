@@ -9,12 +9,10 @@ var EXPORTED_SYMBOLS = ["UptakeTelemetry", "Policy"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AppConstants",
+const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
   "ClientID",
@@ -80,7 +78,7 @@ var Policy = {
   },
 
   getChannel() {
-    return lazy.AppConstants.MOZ_UPDATE_CHANNEL;
+    return AppConstants.MOZ_UPDATE_CHANNEL;
   },
 };
 
