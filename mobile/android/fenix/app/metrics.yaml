@@ -1518,6 +1518,22 @@ metrics:
       - android-probes@mozilla.com
     expires: 111
     unit: integer
+  default_wallpaper:
+    type: boolean
+    lifetime: application
+    description: |
+      Is the default wallpapper set to be shown?
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/25538
+    data_reviews:
+      - ???????
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 114
 
 customize_home:
   most_visited_sites:
