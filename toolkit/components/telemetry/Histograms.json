@@ -188,6 +188,17 @@
     "bug_numbers": [1172689, 1531034],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
   },
+  "ADDON_SIGNATURE_VERIFICATION_STATUS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "enumerated",
+    "n_values": 32,
+    "bug_numbers": [1771523],
+    "description": "Records the result of App Signature Verification. See the comments in OpenSignedAppFile. "
+  },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

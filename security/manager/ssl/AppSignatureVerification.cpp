@@ -1308,6 +1308,22 @@ nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
     }
   }
 
+  // Bits 1 and 2
+  // 00 = Didn't Process PKCS#7 signatures
+  // 01 = Processed but no valid cert or signature
+  // 10 = Processed and valid cert found, but addon didn't match manifest
+  // 11 = Processed and valid.
+  // Bits 3 and 4 are the same but for COSE.
+  uint32_t bucket = 0;
+  bucket += aPolicy.ProcessCOSE();
+  bucket += !coseCertDER.IsEmpty();
+  bucket += coseVerified;
+  bucket <<= 2;
+  bucket += aPolicy.ProcessPK7();
+  bucket += !pkcs7CertDER.IsEmpty();
+  bucket += pk7Verified;
+  Telemetry::Accumulate(Telemetry::ADDON_SIGNATURE_VERIFICATION_STATUS, bucket);
+
   if ((aPolicy.PK7Required() && !pk7Verified) ||
       (aPolicy.COSERequired() && !coseVerified)) {
     return NS_ERROR_SIGNED_JAR_WRONG_SIGNATURE;
