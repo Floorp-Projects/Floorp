@@ -93,7 +93,7 @@ class gfxWindowsNativeDrawing {
 
   TransformType mTransformType;
   gfxPoint mTranslation;
-  gfxSize mScale;
+  mozilla::gfx::MatrixScalesDouble mScale;
   XFORM mWorldTransform;
 
   // saved state
