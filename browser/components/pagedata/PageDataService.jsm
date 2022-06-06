@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
@@ -19,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
   return console.createInstance({
     prefix: "PageData",
     maxLogLevel: Services.prefs.getBoolPref("browser.pagedata.log", false)
@@ -28,12 +30,12 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
   });
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   idleService: ["@mozilla.org/widget/useridleservice;1", "nsIUserIdleService"],
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "fetchIdleTime",
   "browser.pagedata.fetchIdleTime",
   300
@@ -88,7 +90,7 @@ class HiddenBrowserManager {
   async #acquireBrowser() {
     this.#browsers++;
     if (!this.#frame) {
-      this.#frame = new HiddenFrame();
+      this.#frame = new lazy.HiddenFrame();
     }
 
     let frame = await this.#frame.get();
@@ -268,7 +270,7 @@ class PageDataCache {
  *   the format defined by the schemas at `browser/components/pagedata/schemas`.
  */
 
-const PageDataService = new (class PageDataService extends EventEmitter {
+const PageDataService = new (class PageDataService extends lazy.EventEmitter {
   /**
    * Caches page data discovered from browsers.
    *
@@ -353,9 +355,9 @@ const PageDataService = new (class PageDataService extends EventEmitter {
       },
     });
 
-    logConsole.debug("Service started");
+    lazy.logConsole.debug("Service started");
 
-    for (let win of BrowserWindowTracker.orderedWindows) {
+    for (let win of lazy.BrowserWindowTracker.orderedWindows) {
       if (!win.closed) {
         // Ask any existing tabs to report
         for (let tab of win.gBrowser.tabs) {
@@ -368,7 +370,7 @@ const PageDataService = new (class PageDataService extends EventEmitter {
       }
     }
 
-    idleService.addIdleObserver(this, fetchIdleTime);
+    lazy.idleService.addIdleObserver(this, lazy.fetchIdleTime);
   }
 
   /**
@@ -376,7 +378,7 @@ const PageDataService = new (class PageDataService extends EventEmitter {
    * don't really need to do much cleanup.
    */
   uninit() {
-    logConsole.debug("Service stopped");
+    lazy.logConsole.debug("Service stopped");
   }
 
   /**
@@ -486,7 +488,7 @@ const PageDataService = new (class PageDataService extends EventEmitter {
         this.pageDataDiscovered(data);
       }
     } catch (e) {
-      logConsole.error(e);
+      lazy.logConsole.error(e);
     }
   }
 
@@ -498,7 +500,7 @@ const PageDataService = new (class PageDataService extends EventEmitter {
    *   The set of data discovered.
    */
   pageDataDiscovered(pageData) {
-    logConsole.debug("Discovered page data", pageData);
+    lazy.logConsole.debug("Discovered page data", pageData);
 
     this.#pageDataCache.set(pageData.url, {
       ...pageData,
@@ -536,20 +538,20 @@ const PageDataService = new (class PageDataService extends EventEmitter {
   async fetchPageData(url) {
     return this.#browserManager.withHiddenBrowser(async browser => {
       try {
-        let { promise, resolve } = PromiseUtils.defer();
+        let { promise, resolve } = lazy.PromiseUtils.defer();
         this.#backgroundBrowsers.set(browser, resolve);
 
         let principal = Services.scriptSecurityManager.getSystemPrincipal();
-        let oa = E10SUtils.predictOriginAttributes({
+        let oa = lazy.E10SUtils.predictOriginAttributes({
           browser,
         });
         let loadURIOptions = {
           triggeringPrincipal: principal,
-          remoteType: E10SUtils.getRemoteTypeForURI(
+          remoteType: lazy.E10SUtils.getRemoteTypeForURI(
             url,
             true,
             false,
-            E10SUtils.DEFAULT_REMOTE_TYPE,
+            lazy.E10SUtils.DEFAULT_REMOTE_TYPE,
             null,
             oa
           ),
@@ -577,12 +579,12 @@ const PageDataService = new (class PageDataService extends EventEmitter {
   observe(subject, topic, data) {
     switch (topic) {
       case "idle":
-        logConsole.debug("User went idle");
+        lazy.logConsole.debug("User went idle");
         this.#userIsIdle = true;
         this.#startBackgroundWorkers();
         break;
       case "active":
-        logConsole.debug("User became active");
+        lazy.logConsole.debug("User became active");
         this.#userIsIdle = false;
         break;
     }
@@ -627,7 +629,7 @@ const PageDataService = new (class PageDataService extends EventEmitter {
           this.emit("page-data", pageData);
         }
       } catch (e) {
-        logConsole.error(e);
+        lazy.logConsole.error(e);
       }
 
       // Check whether the user became active or the worker limit changed
