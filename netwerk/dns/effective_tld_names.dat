@@ -1340,7 +1340,7 @@ tt.im
 tv.im
 
 // in : https://en.wikipedia.org/wiki/.in
-// see also: https://registry.in/Policies
+// see also: https://registry.in/policies
 // Please note, that nic.in is not an official eTLD, but used by most
 // government institutions.
 in
@@ -7130,7 +7130,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-05-18T15:16:02Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-06-02T15:16:31Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7687,7 +7687,7 @@ chanel
 // channel : 2014-05-08 Charleston Road Registry Inc.
 channel
 
-// charity : 2018-04-11 Binky Moon, LLC
+// charity : 2018-04-11 Public Interest Registry
 charity
 
 // chase : 2015-04-30 JPMorgan Chase Bank, National Association
@@ -7834,7 +7834,7 @@ coupon
 // coupons : 2015-03-26 Binky Moon, LLC
 coupons
 
-// courses : 2014-12-04 OPEN UNIVERSITIES AUSTRALIA PTY LTD
+// courses : 2014-12-04 Registry Services, LLC
 courses
 
 // cpa : 2019-06-10 American Institute of Certified Public Accountants
@@ -8227,7 +8227,7 @@ forsale
 // forum : 2015-04-02 Fegistry, LLC
 forum
 
-// foundation : 2013-12-05 Binky Moon, LLC
+// foundation : 2013-12-05 Public Interest Registry
 foundation
 
 // fox : 2015-09-11 FOX Registry, LLC
@@ -8326,7 +8326,7 @@ gift
 // gifts : 2014-07-03 Binky Moon, LLC
 gifts
 
-// gives : 2014-03-06 Dog Beach, LLC
+// gives : 2014-03-06 Public Interest Registry
 gives
 
 // giving : 2014-11-13 Giving Limited
@@ -9841,7 +9841,7 @@ stream
 // studio : 2015-02-11 Dog Beach, LLC
 studio
 
-// study : 2014-12-11 OPEN UNIVERSITIES AUSTRALIA PTY LTD
+// study : 2014-12-11 Registry Services, LLC
 study
 
 // style : 2014-12-04 Binky Moon, LLC
