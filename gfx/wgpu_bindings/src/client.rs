@@ -476,26 +476,6 @@ pub extern "C" fn wgpu_client_make_buffer_id(
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_client_create_buffer(
-    client: &Client,
-    device_id: id::DeviceId,
-    desc: &wgt::BufferDescriptor<RawString>,
-    bb: &mut ByteBuf,
-) -> id::BufferId {
-    let backend = device_id.backend();
-    let id = client
-        .identities
-        .lock()
-        .select(backend)
-        .buffers
-        .alloc(backend);
-
-    let action = DeviceAction::CreateBuffer(id, desc.map_label(cow_label));
-    *bb = make_byte_buf(&action);
-    id
-}
-
-#[no_mangle]
 pub extern "C" fn wgpu_client_create_texture(
     client: &Client,
     device_id: id::DeviceId,
