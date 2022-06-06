@@ -19,15 +19,17 @@ const { normalize, dirname } = ChromeUtils.import(
   "resource://gre/modules/osfile/ospath_unix.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "resProto",
   "@mozilla.org/network/protocol;1?name=resource",
   "nsIResProtocolHandler"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
@@ -57,19 +59,19 @@ function isRelative(id) {
 }
 
 function readURI(uri) {
-  const nsURI = NetUtil.newURI(uri);
+  const nsURI = lazy.NetUtil.newURI(uri);
   if (nsURI.scheme == "resource") {
     // Resolve to a real URI, this will catch any obvious bad paths without
     // logging assertions in debug builds, see bug 1135219
-    uri = resProto.resolveURI(nsURI);
+    uri = lazy.resProto.resolveURI(nsURI);
   }
 
-  const stream = NetUtil.newChannel({
-    uri: NetUtil.newURI(uri, "UTF-8"),
+  const stream = lazy.NetUtil.newChannel({
+    uri: lazy.NetUtil.newURI(uri, "UTF-8"),
     loadUsingSystemPrincipal: true,
   }).open();
   const count = stream.available();
-  const data = NetUtil.readInputStreamToString(stream, count, {
+  const data = lazy.NetUtil.readInputStreamToString(stream, count, {
     charset: "UTF-8",
   });
 
