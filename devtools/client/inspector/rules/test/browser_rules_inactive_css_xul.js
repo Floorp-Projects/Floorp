@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test inactive css properties in XUl documents.
+// Test inactive css properties in XUL documents.
 
 const TEST_URI = URL_ROOT + "doc_inactive_css_xul.xhtml";
 
@@ -29,6 +29,10 @@ const TEST_DATA = [
 ];
 
 add_task(async () => {
+  await SpecialPowers.pushPermissions([
+    { type: "allowXULXBL", allow: true, context: URL_ROOT },
+  ]);
+
   info("Open a url to a XUL document");
   await addTab(TEST_URI);
 

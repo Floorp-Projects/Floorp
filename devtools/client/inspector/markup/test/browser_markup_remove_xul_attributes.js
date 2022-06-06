@@ -9,6 +9,10 @@
 const TEST_URL = URL_ROOT + "doc_markup_xul.xhtml";
 
 add_task(async function() {
+  await SpecialPowers.pushPermissions([
+    { type: "allowXULXBL", allow: true, context: URL_ROOT },
+  ]);
+
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   const panelFront = await getNodeFront("#test", inspector);
