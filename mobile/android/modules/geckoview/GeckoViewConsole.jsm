@@ -11,12 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
-
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Services: "resource://gre/modules/Services.jsm",
-});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { debug, warn } = GeckoViewUtils.initLogging("Console");
 
@@ -51,7 +46,7 @@ var GeckoViewConsole = {
 
   observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed") {
-      this.enabled = lazy.Services.prefs.getBoolPref(aData, false);
+      this.enabled = Services.prefs.getBoolPref(aData, false);
     }
   },
 
@@ -82,9 +77,9 @@ var GeckoViewConsole = {
         flag,
         "content javascript"
       );
-      lazy.Services.console.logMessage(consoleMsg);
+      Services.console.logMessage(consoleMsg);
     } else if (aMessage.level == "trace") {
-      const bundle = lazy.Services.strings.createBundle(
+      const bundle = Services.strings.createBundle(
         "chrome://browser/locale/browser.properties"
       );
       const args = aMessage.arguments;
@@ -114,30 +109,30 @@ var GeckoViewConsole = {
           "\n";
       });
 
-      lazy.Services.console.logStringMessage(body);
+      Services.console.logStringMessage(body);
     } else if (aMessage.level == "time" && aMessage.arguments) {
-      const bundle = lazy.Services.strings.createBundle(
+      const bundle = Services.strings.createBundle(
         "chrome://browser/locale/browser.properties"
       );
       const body = bundle.formatStringFromName("timer.start", [
         aMessage.arguments.name,
       ]);
-      lazy.Services.console.logStringMessage(body);
+      Services.console.logStringMessage(body);
     } else if (aMessage.level == "timeEnd" && aMessage.arguments) {
-      const bundle = lazy.Services.strings.createBundle(
+      const bundle = Services.strings.createBundle(
         "chrome://browser/locale/browser.properties"
       );
       const body = bundle.formatStringFromName("timer.end", [
         aMessage.arguments.name,
         aMessage.arguments.duration,
       ]);
-      lazy.Services.console.logStringMessage(body);
+      Services.console.logStringMessage(body);
     } else if (
       ["group", "groupCollapsed", "groupEnd"].includes(aMessage.level)
     ) {
       // Do nothing yet
     } else {
-      lazy.Services.console.logStringMessage(joinedArguments);
+      Services.console.logStringMessage(joinedArguments);
     }
   },
 

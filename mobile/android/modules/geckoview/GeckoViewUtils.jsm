@@ -6,6 +6,7 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
@@ -13,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AndroidLog: "resource://gre/modules/AndroidLog.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Log: "resource://gre/modules/Log.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["GeckoViewUtils"];
@@ -111,15 +111,13 @@ var GeckoViewUtils = {
 
     if (observers) {
       const observer = (subject, topic, data) => {
-        lazy.Services.obs.removeObserver(observer, topic);
+        Services.obs.removeObserver(observer, topic);
         if (!once) {
-          lazy.Services.obs.addObserver(scope[name], topic);
+          Services.obs.addObserver(scope[name], topic);
         }
         scope[name].observe(subject, topic, data); // Explicitly notify new observer
       };
-      observers.forEach(topic =>
-        lazy.Services.obs.addObserver(observer, topic)
-      );
+      observers.forEach(topic => Services.obs.addObserver(observer, topic));
     }
 
     if (!this.IS_PARENT_PROCESS) {
@@ -138,10 +136,10 @@ var GeckoViewUtils = {
       names.forEach(msg => target.addMessageListener(msg, listener));
     };
     if (ppmm) {
-      addMMListener(lazy.Services.ppmm, ppmm);
+      addMMListener(Services.ppmm, ppmm);
     }
     if (mm) {
-      addMMListener(lazy.Services.mm, mm);
+      addMMListener(Services.mm, mm);
     }
 
     if (ged) {
@@ -238,9 +236,7 @@ var GeckoViewUtils = {
       scope,
       name,
       (prefs, observer) => {
-        prefs.forEach(pref =>
-          lazy.Services.prefs.addObserver(pref.name, observer)
-        );
+        prefs.forEach(pref => Services.prefs.addObserver(pref.name, observer));
         prefs.forEach(pref => {
           if (pref.default === undefined) {
             return;
@@ -248,26 +244,26 @@ var GeckoViewUtils = {
           let value;
           switch (typeof pref.default) {
             case "string":
-              value = lazy.Services.prefs.getCharPref(pref.name, pref.default);
+              value = Services.prefs.getCharPref(pref.name, pref.default);
               break;
             case "number":
-              value = lazy.Services.prefs.getIntPref(pref.name, pref.default);
+              value = Services.prefs.getIntPref(pref.name, pref.default);
               break;
             case "boolean":
-              value = lazy.Services.prefs.getBoolPref(pref.name, pref.default);
+              value = Services.prefs.getBoolPref(pref.name, pref.default);
               break;
           }
           if (pref.default !== value) {
             // Notify observer if value already changed from default.
-            observer(lazy.Services.prefs, "nsPref:changed", pref.name);
+            observer(Services.prefs, "nsPref:changed", pref.name);
           }
         });
       },
       (handlers, observer, args) => {
         if (!once) {
-          lazy.Services.prefs.removeObserver(args[2], observer);
+          Services.prefs.removeObserver(args[2], observer);
           handlers.forEach(handler =>
-            lazy.Services.prefs.addObserver(args[2], observer)
+            Services.prefs.addObserver(args[2], observer)
           );
         }
         handlers.forEach(handler => handler.observe(...args));
@@ -438,7 +434,5 @@ var GeckoViewUtils = {
 XPCOMUtils.defineLazyGetter(
   GeckoViewUtils,
   "IS_PARENT_PROCESS",
-  _ =>
-    lazy.Services.appinfo.processType ==
-    lazy.Services.appinfo.PROCESS_TYPE_DEFAULT
+  _ => Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
 );

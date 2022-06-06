@@ -12,12 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Services: "resource://gre/modules/Services.jsm",
-});
 
 XPCOMUtils.defineLazyGetter(lazy, "require", () => {
   const { require } = ChromeUtils.import(
@@ -44,7 +41,7 @@ var GeckoViewRemoteDebugger = {
       return;
     }
 
-    if (lazy.Services.prefs.getBoolPref(aData, false)) {
+    if (Services.prefs.getBoolPref(aData, false)) {
       this.onEnable();
     } else {
       this.onDisable();
