@@ -1,7 +1,6 @@
 "use strict";
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Tests logging by passing OS.Shared.LOG both an object with its own
