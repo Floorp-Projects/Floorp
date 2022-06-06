@@ -9,7 +9,9 @@ const { require, loader } = ChromeUtils.import(
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+const lazy = {};
+
+loader.lazyRequireGetter(lazy, "EventEmitter", "devtools/shared/event-emitter");
 
 const EXPORTED_SYMBOLS = ["AbstractTreeItem"];
 
@@ -120,7 +122,7 @@ function AbstractTreeItem({ parent, level }) {
   // Events are always propagated through the root item. Decorating every
   // tree item as an event emitter is a very costly operation.
   if (this == this._rootItem) {
-    EventEmitter.decorate(this);
+    lazy.EventEmitter.decorate(this);
   }
 }
 
