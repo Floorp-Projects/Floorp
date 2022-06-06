@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
 
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
@@ -23,8 +25,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -74,8 +76,8 @@ reftest.Runner = class {
     this.isPrint = null;
     this.windowUtils = null;
     this.lastURL = null;
-    this.useRemoteTabs = AppInfo.browserTabsRemoteAutostart;
-    this.useRemoteSubframes = AppInfo.fissionAutostart;
+    this.useRemoteTabs = lazy.AppInfo.browserTabsRemoteAutostart;
+    this.useRemoteSubframes = lazy.AppInfo.fissionAutostart;
   }
 
   /**
@@ -94,7 +96,7 @@ reftest.Runner = class {
   setup(urlCount, screenshotMode, isPrint = false) {
     this.isPrint = isPrint;
 
-    assert.open(this.driver.getBrowsingContext({ top: true }));
+    lazy.assert.open(this.driver.getBrowsingContext({ top: true }));
     this.parentWindow = this.driver.getCurrentWindow();
 
     this.screenshotMode =
@@ -138,26 +140,26 @@ reftest.Runner = class {
   }
 
   async ensureWindow(timeout, width, height) {
-    logger.debug(`ensuring we have a window ${width}x${height}`);
+    lazy.logger.debug(`ensuring we have a window ${width}x${height}`);
 
     if (this.reftestWin && !this.reftestWin.closed) {
       let browserRect = this.reftestWin.gBrowser.getBoundingClientRect();
       if (browserRect.width === width && browserRect.height === height) {
         return this.reftestWin;
       }
-      logger.debug(`current: ${browserRect.width}x${browserRect.height}`);
+      lazy.logger.debug(`current: ${browserRect.width}x${browserRect.height}`);
     }
 
     let reftestWin;
-    if (AppInfo.isAndroid) {
-      logger.debug("Using current window");
+    if (lazy.AppInfo.isAndroid) {
+      lazy.logger.debug("Using current window");
       reftestWin = this.parentWindow;
-      await navigate.waitForNavigationCompleted(this.driver, () => {
+      await lazy.navigate.waitForNavigationCompleted(this.driver, () => {
         const browsingContext = this.driver.getBrowsingContext();
-        navigate.navigateTo(browsingContext, "about:blank");
+        lazy.navigate.navigateTo(browsingContext, "about:blank");
       });
     } else {
-      logger.debug("Using separate window");
+      lazy.logger.debug("Using separate window");
       if (this.reftestWin && !this.reftestWin.closed) {
         this.reftestWin.close();
       }
@@ -168,22 +170,22 @@ reftest.Runner = class {
     this.windowUtils = reftestWin.windowUtils;
     this.reftestWin = reftestWin;
 
-    let windowHandle = windowManager.getWindowProperties(reftestWin);
+    let windowHandle = lazy.windowManager.getWindowProperties(reftestWin);
     await this.driver.setWindowHandle(windowHandle, true);
 
     const url = await this.driver._getCurrentURL();
     this.lastURL = url.href;
-    logger.debug(`loaded initial URL: ${this.lastURL}`);
+    lazy.logger.debug(`loaded initial URL: ${this.lastURL}`);
 
     let browserRect = reftestWin.gBrowser.getBoundingClientRect();
-    logger.debug(`new: ${browserRect.width}x${browserRect.height}`);
+    lazy.logger.debug(`new: ${browserRect.width}x${browserRect.height}`);
 
     return reftestWin;
   }
 
   async openWindow(width, height) {
-    assert.positiveInteger(width);
-    assert.positiveInteger(height);
+    lazy.assert.positiveInteger(width);
+    lazy.assert.positiveInteger(height);
 
     let reftestWin = this.parentWindow.open(
       "chrome://remote/content/marionette/reftest.xhtml",
@@ -199,7 +201,7 @@ reftest.Runner = class {
 
   setupWindow(reftestWin, width, height) {
     let browser;
-    if (AppInfo.isAndroid) {
+    if (lazy.AppInfo.isAndroid) {
       browser = reftestWin.document.getElementsByTagName("browser")[0];
       browser.setAttribute("remote", "false");
     } else {
@@ -222,7 +224,7 @@ reftest.Runner = class {
     `;
     browser.setAttribute("style", windowStyle);
 
-    if (!AppInfo.isAndroid) {
+    if (!lazy.AppInfo.isAndroid) {
       let doc = reftestWin.document.documentElement;
       while (doc.firstChild) {
         doc.firstChild.remove();
@@ -239,7 +241,9 @@ reftest.Runner = class {
   async abort() {
     if (this.reftestWin && this.reftestWin != this.parentWindow) {
       this.driver.closeChromeWindow();
-      let parentHandle = windowManager.getWindowProperties(this.parentWindow);
+      let parentHandle = lazy.windowManager.getWindowProperties(
+        this.parentWindow
+      );
       await this.driver.setWindowHandle(parentHandle);
     }
     this.reftestWin = null;
@@ -451,7 +455,7 @@ reftest.Runner = class {
           canvasPool.push(screenshot.canvas);
         }
       });
-      logger.debug(
+      lazy.logger.debug(
         `Canvas pool (${cacheKey}) is of length ${canvasPool.length}`
       );
     }
@@ -476,7 +480,7 @@ reftest.Runner = class {
     pageRanges,
     extras
   ) {
-    logger.info(`Testing ${lhsUrl} ${relation} ${rhsUrl}`);
+    lazy.logger.info(`Testing ${lhsUrl} ${relation} ${rhsUrl}`);
 
     if (relation !== "==" && relation != "!=") {
       throw new error.InvalidArgumentError(
@@ -521,15 +525,15 @@ reftest.Runner = class {
 
     let lhs = null;
     let rhs = null;
-    logger.debug(`Comparing ${lhsCount} pages`);
+    lazy.logger.debug(`Comparing ${lhsCount} pages`);
     if (passed === null) {
       for (let i = 0; i < lhsCount; i++) {
         lhs = (await lhsIter.next()).value;
         rhs = (await rhsIter.next()).value;
-        logger.debug(
+        lazy.logger.debug(
           `lhs canvas size ${lhs.canvas.width}x${lhs.canvas.height}`
         );
-        logger.debug(
+        lazy.logger.debug(
           `rhs canvas size ${rhs.canvas.width}x${rhs.canvas.height}`
         );
         try {
@@ -549,11 +553,11 @@ reftest.Runner = class {
           pixelsDifferent,
           extras.fuzzy
         );
-        logger.debug(
+        lazy.logger.debug(
           `Page ${i + 1} maxDifferences: ${maxDifferences.value} ` +
             `pixelsDifferent: ${pixelsDifferent}`
         );
-        logger.debug(
+        lazy.logger.debug(
           `Page ${i + 1} ${areEqual ? "compare equal" : "compare unequal"}`
         );
         if (!areEqual) {
@@ -587,11 +591,11 @@ reftest.Runner = class {
 
   isAcceptableDifference(maxDifference, pixelsDifferent, allowed) {
     if (!allowed) {
-      logger.info(`No differences allowed`);
+      lazy.logger.info(`No differences allowed`);
       return pixelsDifferent === 0;
     }
     let [allowedDiff, allowedPixels] = allowed;
-    logger.info(
+    lazy.logger.info(
       `Allowed ${allowedPixels.join("-")} pixels different, ` +
         `maximum difference per channel ${allowedDiff.join("-")}`
     );
@@ -615,22 +619,22 @@ reftest.Runner = class {
 
   updateBrowserRemotenessByURL(browser, url) {
     // We don't use remote tabs on Android.
-    if (AppInfo.isAndroid) {
+    if (lazy.AppInfo.isAndroid) {
       return;
     }
-    let oa = E10SUtils.predictOriginAttributes({ browser });
-    let remoteType = E10SUtils.getRemoteTypeForURI(
+    let oa = lazy.E10SUtils.predictOriginAttributes({ browser });
+    let remoteType = lazy.E10SUtils.getRemoteTypeForURI(
       url,
       this.useRemoteTabs,
       this.useRemoteSubframes,
-      E10SUtils.DEFAULT_REMOTE_TYPE,
+      lazy.E10SUtils.DEFAULT_REMOTE_TYPE,
       null,
       oa
     );
 
     // Only re-construct the browser if its remote type needs to change.
     if (browser.remoteType !== remoteType) {
-      if (remoteType === E10SUtils.NOT_REMOTE) {
+      if (remoteType === lazy.E10SUtils.NOT_REMOTE) {
         browser.removeAttribute("remote");
         browser.removeAttribute("remoteType");
       } else {
@@ -646,11 +650,11 @@ reftest.Runner = class {
   async loadTestUrl(win, url, timeout) {
     const browsingContext = this.driver.getBrowsingContext({ top: true });
 
-    logger.debug(`Starting load of ${url}`);
+    lazy.logger.debug(`Starting load of ${url}`);
     if (this.lastURL === url) {
-      logger.debug(`Refreshing page`);
-      await navigate.waitForNavigationCompleted(this.driver, () => {
-        navigate.refresh(browsingContext);
+      lazy.logger.debug(`Refreshing page`);
+      await lazy.navigate.waitForNavigationCompleted(this.driver, () => {
+        lazy.navigate.refresh(browsingContext);
       });
     } else {
       // HACK: DocumentLoadListener currently doesn't know how to
@@ -660,7 +664,7 @@ reftest.Runner = class {
       //
       // See bug 1636169.
       this.updateBrowserRemotenessByURL(win.gBrowser, url);
-      navigate.navigateTo(browsingContext, url);
+      lazy.navigate.navigateTo(browsingContext, url);
 
       this.lastURL = url;
     }
@@ -688,14 +692,14 @@ reftest.Runner = class {
     let remainingCount = this.urlCount.get(url) || 1;
     let cache = remainingCount > 1;
     let cacheKey = browserRect.width + "x" + browserRect.height;
-    logger.debug(
+    lazy.logger.debug(
       `screenshot ${url} remainingCount: ` +
         `${remainingCount} cache: ${cache} cacheKey: ${cacheKey}`
     );
     let reuseCanvas = false;
     let sizedCache = this.canvasCache.get(cacheKey);
     if (sizedCache.has(url)) {
-      logger.debug(`screenshot ${url} taken from cache`);
+      lazy.logger.debug(`screenshot ${url} taken from cache`);
       canvas = sizedCache.get(url);
       if (!cache) {
         sizedCache.delete(url);
@@ -703,10 +707,10 @@ reftest.Runner = class {
     } else {
       let canvasPool = sizedCache.get(null);
       if (canvasPool.length) {
-        logger.debug("reusing canvas from canvas pool");
+        lazy.logger.debug("reusing canvas from canvas pool");
         canvas = canvasPool.pop();
       } else {
-        logger.debug("using new canvas");
+        lazy.logger.debug("using new canvas");
         canvas = null;
       }
       reuseCanvas = !cache;
@@ -725,7 +729,7 @@ reftest.Runner = class {
           win.innerHeight >= browserRect.height
         )
       ) {
-        logger.error(`Invalid window dimensions:
+        lazy.logger.error(`Invalid window dimensions:
 browserRect.left: ${browserRect.left}
 browserRect.top: ${browserRect.top}
 win.innerWidth: ${win.innerWidth}
@@ -739,7 +743,7 @@ browserRect.height: ${browserRect.height}`);
 
       await this.loadTestUrl(win, url, timeout);
 
-      canvas = await capture.canvas(
+      canvas = await lazy.capture.canvas(
         win,
         win.docShell.browsingContext,
         0, // left
@@ -753,7 +757,7 @@ browserRect.height: ${browserRect.height}`);
       canvas.width !== browserRect.width ||
       canvas.height !== browserRect.height
     ) {
-      logger.warn(
+      lazy.logger.warn(
         `Canvas dimensions changed to ${canvas.width}x${canvas.height}`
       );
       reuseCanvas = false;
@@ -772,7 +776,7 @@ browserRect.height: ${browserRect.height}`);
 
     const [width, height] = [DEFAULT_PAGE_WIDTH, DEFAULT_PAGE_HEIGHT];
     const margin = DEFAULT_PAGE_MARGIN;
-    const settings = print.addDefaultSettings({
+    const settings = lazy.print.addDefaultSettings({
       page: {
         width,
         height,
@@ -787,7 +791,7 @@ browserRect.height: ${browserRect.height}`);
       printBackground: true,
     });
 
-    const filePath = await print.printToFile(win.gBrowser, settings);
+    const filePath = await lazy.print.printToFile(win.gBrowser, settings);
 
     try {
       const pdf = await this.loadPdf(url, filePath);
@@ -821,10 +825,10 @@ browserRect.height: ${browserRect.height}`);
     let canvas = null;
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
       if (!pages.has(pageNumber)) {
-        logger.info(`Skipping page ${pageNumber}/${pdf.numPages}`);
+        lazy.logger.info(`Skipping page ${pageNumber}/${pdf.numPages}`);
         continue;
       }
-      logger.info(`Rendering page ${pageNumber}/${pdf.numPages}`);
+      lazy.logger.info(`Rendering page ${pageNumber}/${pdf.numPages}`);
       let page = await pdf.getPage(pageNumber);
       let viewport = page.getViewport({ scale: DEFAULT_PDF_RESOLUTION });
       // Prepare canvas using PDF page dimensions

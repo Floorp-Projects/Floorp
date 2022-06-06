@@ -22,11 +22,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "domParser", () => {
+XPCOMUtils.defineLazyGetter(lazy, "domParser", () => {
   const parser = new DOMParser();
   parser.forceEnableDTD();
   return parser;
@@ -59,11 +61,11 @@ l10n.localizeEntity = function(urls, id) {
   // Use the DOM parser to resolve the entity and extract its real value
   let header = `<?xml version="1.0"?><!DOCTYPE elem [${locations.join("")}]>`;
   let elem = `<elem id="elementID">&${id};</elem>`;
-  let doc = domParser.parseFromString(header + elem, "text/xml");
+  let doc = lazy.domParser.parseFromString(header + elem, "text/xml");
   let element = doc.querySelector("elem[id='elementID']");
 
   if (element === null) {
-    throw new error.NoSuchElementError(
+    throw new lazy.error.NoSuchElementError(
       `Entity with id='${id}' hasn't been found`
     );
   }
@@ -99,7 +101,7 @@ l10n.localizeProperty = function(urls, id) {
   }
 
   if (property === null) {
-    throw new error.NoSuchElementError(
+    throw new lazy.error.NoSuchElementError(
       `Property with ID '${id}' hasn't been found`
     );
   }

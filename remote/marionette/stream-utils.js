@@ -11,18 +11,20 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "IOUtil",
   "@mozilla.org/io-util;1",
   "nsIIOUtil"
 );
 
-XPCOMUtils.defineLazyGetter(this, "ScriptableInputStream", () => {
+XPCOMUtils.defineLazyGetter(lazy, "ScriptableInputStream", () => {
   return Components.Constructor(
     "@mozilla.org/scriptableinputstream;1",
     "nsIScriptableInputStream",
@@ -74,13 +76,13 @@ function copyStream(input, output, length) {
 
 /** @class */
 function StreamCopier(input, output, length) {
-  EventEmitter.decorate(this);
+  lazy.EventEmitter.decorate(this);
   this._id = StreamCopier._nextId++;
   this.input = input;
   // Save off the base output stream, since we know it's async as we've
   // required
   this.baseAsyncOutput = output;
-  if (IOUtil.outputStreamIsBuffered(output)) {
+  if (lazy.IOUtil.outputStreamIsBuffered(output)) {
     this.output = output;
   } else {
     this.output = Cc[
@@ -233,7 +235,7 @@ function delimitedRead(stream, delimiter, count) {
   if (stream instanceof Ci.nsIScriptableInputStream) {
     scriptableStream = stream;
   } else {
-    scriptableStream = new ScriptableInputStream(stream);
+    scriptableStream = new lazy.ScriptableInputStream(stream);
   }
 
   let data = "";

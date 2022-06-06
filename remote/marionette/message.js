@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   truncate: "chrome://remote/content/shared/Format.jsm",
@@ -23,12 +25,12 @@ class Message {
    *     Message ID unique identifying this message.
    */
   constructor(messageID) {
-    this.id = assert.integer(messageID);
+    this.id = lazy.assert.integer(messageID);
   }
 
   toString() {
     let content = JSON.stringify(this.toPacket());
-    return truncate`${content}`;
+    return lazy.truncate`${content}`;
   }
 
   /**
@@ -135,8 +137,8 @@ class Command extends Message {
   constructor(messageID, name, params = {}) {
     super(messageID);
 
-    this.name = assert.string(name);
-    this.parameters = assert.object(params);
+    this.name = lazy.assert.string(name);
+    this.parameters = lazy.assert.object(params);
 
     this.onerror = null;
     this.onresult = null;
@@ -186,7 +188,7 @@ class Command extends Message {
    */
   static fromPacket(payload) {
     let [type, msgID, name, params] = payload;
-    assert.that(n => n === Command.Type)(type);
+    lazy.assert.that(n => n === Command.Type)(type);
 
     // if parameters are given but null, treat them as undefined
     if (params === null) {
@@ -229,7 +231,7 @@ class Response extends Message {
   constructor(messageID, respHandler = () => {}) {
     super(messageID);
 
-    this.respHandler_ = assert.callable(respHandler);
+    this.respHandler_ = lazy.assert.callable(respHandler);
 
     this.error = null;
     this.body = { value: null };
@@ -280,12 +282,12 @@ class Response extends Message {
    *     is propagated, i.e. rethrown.
    */
   sendError(err) {
-    this.error = error.wrap(err).toJSON();
+    this.error = lazy.error.wrap(err).toJSON();
     this.body = null;
     this.send();
 
     // propagate errors which are implementation problems
-    if (!error.isWebDriverError(err)) {
+    if (!lazy.error.isWebDriverError(err)) {
       throw err;
     }
   }
@@ -315,10 +317,10 @@ class Response extends Message {
    */
   static fromPacket(payload) {
     let [type, msgID, err, body] = payload;
-    assert.that(n => n === Response.Type)(type);
+    lazy.assert.that(n => n === Response.Type)(type);
 
     let resp = new Response(msgID);
-    resp.error = assert.string(err);
+    resp.error = lazy.assert.string(err);
 
     resp.body = body;
     return resp;

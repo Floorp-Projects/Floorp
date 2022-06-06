@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
 
@@ -27,16 +29,16 @@ const ERRORS = {
 };
 
 async function installAddon(file) {
-  let install = await AddonManager.getInstallForFile(file, null, {
+  let install = await lazy.AddonManager.getInstallForFile(file, null, {
     source: "internal",
   });
 
   if (install.error) {
-    throw new error.UnknownError(ERRORS[install.error]);
+    throw new lazy.error.UnknownError(ERRORS[install.error]);
   }
 
   return install.install().catch(err => {
-    throw new error.UnknownError(ERRORS[install.error]);
+    throw new lazy.error.UnknownError(ERRORS[install.error]);
   });
 }
 
@@ -67,23 +69,23 @@ class Addon {
     let file;
 
     try {
-      file = new FileUtils.File(path);
+      file = new lazy.FileUtils.File(path);
     } catch (e) {
-      throw new error.UnknownError(`Expected absolute path: ${e}`, e);
+      throw new lazy.error.UnknownError(`Expected absolute path: ${e}`, e);
     }
 
     if (!file.exists()) {
-      throw new error.UnknownError(`No such file or directory: ${path}`);
+      throw new lazy.error.UnknownError(`No such file or directory: ${path}`);
     }
 
     try {
       if (temporary) {
-        addon = await AddonManager.installTemporaryAddon(file);
+        addon = await lazy.AddonManager.installTemporaryAddon(file);
       } else {
         addon = await installAddon(file);
       }
     } catch (e) {
-      throw new error.UnknownError(
+      throw new lazy.error.UnknownError(
         `Could not install add-on: ${path}: ${e.message}`,
         e
       );
@@ -107,19 +109,19 @@ class Addon {
    *     If there is a problem uninstalling the addon.
    */
   static async uninstall(id) {
-    let candidate = await AddonManager.getAddonByID(id);
+    let candidate = await lazy.AddonManager.getAddonByID(id);
     if (candidate === null) {
       // `AddonManager.getAddonByID` never rejects but instead
       // returns `null` if the requested addon cannot be found.
-      throw new error.UnknownError(`Addon ${id} is not installed`);
+      throw new lazy.error.UnknownError(`Addon ${id} is not installed`);
     }
 
     return new Promise(resolve => {
       let listener = {
         onOperationCancelled: addon => {
           if (addon.id === candidate.id) {
-            AddonManager.removeAddonListener(listener);
-            throw new error.UnknownError(
+            lazy.AddonManager.removeAddonListener(listener);
+            throw new lazy.error.UnknownError(
               `Uninstall of ${candidate.id} has been canceled`
             );
           }
@@ -127,13 +129,13 @@ class Addon {
 
         onUninstalled: addon => {
           if (addon.id === candidate.id) {
-            AddonManager.removeAddonListener(listener);
+            lazy.AddonManager.removeAddonListener(listener);
             resolve();
           }
         },
       };
 
-      AddonManager.addAddonListener(listener);
+      lazy.AddonManager.addAddonListener(listener);
       candidate.uninstall();
     });
   }

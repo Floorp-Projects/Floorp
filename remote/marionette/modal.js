@@ -11,14 +11,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
 
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
 const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
@@ -50,15 +52,15 @@ modal.findModalDialogs = function(context) {
       win.opener &&
       win.opener === context.window
     ) {
-      logger.trace("Found open window modal prompt");
+      lazy.logger.trace("Found open window modal prompt");
       return new modal.Dialog(() => context, win);
     }
   }
 
-  if (AppInfo.isAndroid) {
+  if (lazy.AppInfo.isAndroid) {
     const geckoViewPrompts = context.window.prompts();
     if (geckoViewPrompts.length > 0) {
-      logger.trace("Found open GeckoView prompt");
+      lazy.logger.trace("Found open GeckoView prompt");
       const prompt = geckoViewPrompts[0];
       return new modal.Dialog(() => context, prompt);
     }
@@ -73,7 +75,7 @@ modal.findModalDialogs = function(context) {
   if (contentBrowser?.tabDialogBox) {
     let dialogs = contentBrowser.tabDialogBox.getTabDialogManager().dialogs;
     if (dialogs.length) {
-      logger.trace("Found open tab modal prompt");
+      lazy.logger.trace("Found open tab modal prompt");
       return new modal.Dialog(() => context, dialogs[0].frameContentWindow);
     }
 
@@ -82,7 +84,7 @@ modal.findModalDialogs = function(context) {
     // Even with the dialog manager handing back a dialog, the `Dialog` property
     // gets lazily added. If it's not set yet, ignore the dialog for now.
     if (dialogs.length && dialogs[0].frameContentWindow.Dialog) {
-      logger.trace("Found open content prompt");
+      lazy.logger.trace("Found open content prompt");
       return new modal.Dialog(() => context, dialogs[0].frameContentWindow);
     }
   }
@@ -93,7 +95,7 @@ modal.findModalDialogs = function(context) {
   if (contentBrowser?.tabModalPromptBox) {
     const prompts = contentBrowser.tabModalPromptBox.listPrompts();
     if (prompts.length) {
-      logger.trace("Found open old-style content prompt");
+      lazy.logger.trace("Found open old-style content prompt");
       return new modal.Dialog(() => context, null);
     }
   }
@@ -148,7 +150,7 @@ modal.DialogObserver = class {
   }
 
   handleEvent(event) {
-    logger.trace(`Received event ${event.type}`);
+    lazy.logger.trace(`Received event ${event.type}`);
 
     const chromeWin = event.target.opener
       ? event.target.opener.ownerGlobal
@@ -164,7 +166,7 @@ modal.DialogObserver = class {
   }
 
   observe(subject, topic) {
-    logger.trace(`Received observer notification ${topic}`);
+    lazy.logger.trace(`Received observer notification ${topic}`);
 
     const curBrowser = this._curBrowserFn();
 
@@ -288,7 +290,7 @@ modal.Dialog = class {
   }
 
   get args() {
-    if (AppInfo.isAndroid) {
+    if (lazy.AppInfo.isAndroid) {
       return this.window.args;
     }
     let tm = this.tabModal;
@@ -300,7 +302,7 @@ modal.Dialog = class {
   }
 
   get isOpen() {
-    if (AppInfo.isAndroid) {
+    if (lazy.AppInfo.isAndroid) {
       return this.window !== null;
     }
     if (!this.ui) {
@@ -325,7 +327,7 @@ modal.Dialog = class {
   }
 
   get text() {
-    if (AppInfo.isAndroid) {
+    if (lazy.AppInfo.isAndroid) {
       return this.window.getPromptText();
     }
     return this.ui.infoBody.textContent;
@@ -344,7 +346,7 @@ modal.Dialog = class {
   get window() {
     if (this.win_) {
       let win = this.win_.get();
-      if (win && (AppInfo.isAndroid || win.parent)) {
+      if (win && (lazy.AppInfo.isAndroid || win.parent)) {
         return win;
       }
     }
@@ -352,7 +354,7 @@ modal.Dialog = class {
   }
 
   set text(inputText) {
-    if (AppInfo.isAndroid) {
+    if (lazy.AppInfo.isAndroid) {
       this.window.setInputText(inputText);
     } else {
       // see toolkit/components/prompts/content/commonDialog.js
@@ -362,7 +364,7 @@ modal.Dialog = class {
   }
 
   accept() {
-    if (AppInfo.isAndroid) {
+    if (lazy.AppInfo.isAndroid) {
       // GeckoView does not have a UI, so the methods are called directly
       this.window.acceptPrompt();
     } else {
@@ -372,7 +374,7 @@ modal.Dialog = class {
   }
 
   dismiss() {
-    if (AppInfo.isAndroid) {
+    if (lazy.AppInfo.isAndroid) {
       // GeckoView does not have a UI, so the methods are called directly
       this.window.dismissPrompt();
     } else {

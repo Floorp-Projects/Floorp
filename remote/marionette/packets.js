@@ -10,11 +10,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   StreamUtils: "chrome://remote/content/marionette/stream-utils.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "unicodeConverter", () => {
+XPCOMUtils.defineLazyGetter(lazy, "unicodeConverter", () => {
   const unicodeConverter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -168,7 +170,7 @@ Object.defineProperty(JSONPacket.prototype, "object", {
   set(object) {
     this._object = object;
     let data = JSON.stringify(object);
-    this._data = unicodeConverter.ConvertFromUnicode(data);
+    this._data = lazy.unicodeConverter.ConvertFromUnicode(data);
     this.length = this._data.length;
   },
 });
@@ -184,7 +186,7 @@ JSONPacket.prototype.read = function(stream, scriptableStream) {
 
   let json = this._data;
   try {
-    json = unicodeConverter.ConvertToUnicode(json);
+    json = lazy.unicodeConverter.ConvertToUnicode(json);
     this._object = JSON.parse(json);
   } catch (e) {
     let msg =
@@ -298,7 +300,7 @@ BulkPacket.prototype.read = function(stream) {
     type: this.type,
     length: this.length,
     copyTo: output => {
-      let copying = StreamUtils.copyStream(stream, output, this.length);
+      let copying = lazy.StreamUtils.copyStream(stream, output, this.length);
       deferred.resolve(copying);
       return copying;
     },
@@ -342,7 +344,7 @@ BulkPacket.prototype.write = function(stream) {
 
   this._readyForWriting.resolve({
     copyFrom: input => {
-      let copying = StreamUtils.copyStream(input, stream, this.length);
+      let copying = lazy.StreamUtils.copyStream(input, stream, this.length);
       deferred.resolve(copying);
       return copying;
     },

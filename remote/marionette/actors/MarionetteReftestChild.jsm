@@ -10,12 +10,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
 /**
@@ -38,13 +40,13 @@ class MarionetteReftestChild extends JSWindowActorChild {
   handleEvent(event) {
     if (event.type == "load") {
       const url = event.target.location.href;
-      logger.debug(`Handle load event with URL ${url}`);
+      lazy.logger.debug(`Handle load event with URL ${url}`);
       this._resolveLoadedURLPromise(url);
     }
   }
 
   actorCreated() {
-    logger.trace(
+    lazy.logger.trace(
       `[${this.browsingContext.id}] Reftest actor created ` +
         `for window id ${this.manager.innerWindowId}`
     );
@@ -86,7 +88,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
     const { url, useRemote } = options;
     const loadedURL = await this._loadedURLPromise;
     if (loadedURL !== url) {
-      logger.debug(
+      lazy.logger.debug(
         `Window URL does not match the expected URL "${loadedURL}" !== "${url}"`
       );
       return false;
@@ -95,7 +97,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
     const documentElement = this.document.documentElement;
     const hasReftestWait = documentElement.classList.contains("reftest-wait");
 
-    logger.debug("Waiting for event loop to spin");
+    lazy.logger.debug("Waiting for event loop to spin");
     await new Promise(resolve =>
       this.document.defaultView.setTimeout(resolve, 0)
     );
@@ -107,7 +109,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
         bubbles: true,
       });
       documentElement.dispatchEvent(event);
-      logger.info("Emitted TestRendered event");
+      lazy.logger.info("Emitted TestRendered event");
       await this.reftestWaitRemoved();
       await this.paintComplete({ useRemote, ignoreThrottledAnimations: false });
     }
@@ -115,7 +117,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
       this.document.defaultView.innerWidth < documentElement.scrollWidth ||
       this.document.defaultView.innerHeight < documentElement.scrollHeight
     ) {
-      logger.warn(
+      lazy.logger.warn(
         `${url} overflows viewport (width: ${documentElement.scrollWidth}, height: ${documentElement.scrollHeight})`
       );
     }
@@ -123,19 +125,19 @@ class MarionetteReftestChild extends JSWindowActorChild {
   }
 
   paintComplete({ useRemote, ignoreThrottledAnimations }) {
-    logger.debug("Waiting for rendering");
+    lazy.logger.debug("Waiting for rendering");
     let windowUtils = this.document.defaultView.windowUtils;
     return new Promise(resolve => {
       let maybeResolve = () => {
         this.flushRendering({ ignoreThrottledAnimations });
         if (useRemote) {
           // Flush display (paint)
-          logger.debug("Force update of layer tree");
+          lazy.logger.debug("Force update of layer tree");
           windowUtils.updateLayerTree();
         }
 
         if (windowUtils.isMozAfterPaintPending) {
-          logger.debug("isMozAfterPaintPending: true");
+          lazy.logger.debug("isMozAfterPaintPending: true");
           this.document.defaultView.addEventListener(
             "MozAfterPaint",
             maybeResolve,
@@ -145,7 +147,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
           );
         } else {
           // resolve at the start of the next frame in case of leftover paints
-          logger.debug("isMozAfterPaintPending: false");
+          lazy.logger.debug("isMozAfterPaintPending: false");
           this.document.defaultView.requestAnimationFrame(() => {
             this.document.defaultView.requestAnimationFrame(resolve);
           });
@@ -156,13 +158,13 @@ class MarionetteReftestChild extends JSWindowActorChild {
   }
 
   reftestWaitRemoved() {
-    logger.debug("Waiting for reftest-wait removal");
+    lazy.logger.debug("Waiting for reftest-wait removal");
     return new Promise(resolve => {
       const documentElement = this.document.documentElement;
       let observer = new this.document.defaultView.MutationObserver(() => {
         if (!documentElement.classList.contains("reftest-wait")) {
           observer.disconnect();
-          logger.debug("reftest-wait removed");
+          lazy.logger.debug("reftest-wait removed");
           this.document.defaultView.setTimeout(resolve, 0);
         }
       });
@@ -188,7 +190,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
    */
   flushRendering(options = {}) {
     let { ignoreThrottledAnimations } = options;
-    logger.debug(
+    lazy.logger.debug(
       `flushRendering ignoreThrottledAnimations:${ignoreThrottledAnimations}`
     );
     let anyPendingPaintsGeneratedInDescendants = false;
@@ -208,7 +210,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
             root.getBoundingClientRect();
           }
         } catch (e) {
-          logger.error("flushWindow failed", e);
+          lazy.logger.error("flushWindow failed", e);
         }
       }
 
@@ -231,7 +233,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
       anyPendingPaintsGeneratedInDescendants &&
       !windowUtils.isMozAfterPaintPending
     ) {
-      logger.error(
+      lazy.logger.error(
         "Descendant frame generated a MozAfterPaint event, " +
           "but the root document doesn't have one!"
       );

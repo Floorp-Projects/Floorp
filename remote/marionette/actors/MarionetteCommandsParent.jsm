@@ -16,7 +16,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   capture: "chrome://remote/content/marionette/capture.js",
   element: "chrome://remote/content/marionette/element.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
@@ -24,11 +26,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
-XPCOMUtils.defineLazyGetter(this, "elementIdCache", () => {
-  return new element.ReferenceStore();
+XPCOMUtils.defineLazyGetter(lazy, "elementIdCache", () => {
+  return new lazy.element.ReferenceStore();
 });
 
 class MarionetteCommandsParent extends JSWindowActorParent {
@@ -46,7 +48,7 @@ class MarionetteCommandsParent extends JSWindowActorParent {
   }
 
   async sendQuery(name, data) {
-    const serializedData = evaluate.toJSON(data, elementIdCache);
+    const serializedData = lazy.evaluate.toJSON(data, lazy.elementIdCache);
 
     // return early if a dialog is opened
     const result = await Promise.race([
@@ -57,9 +59,12 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     });
 
     if ("error" in result) {
-      throw error.WebDriverError.fromJSON(result.error);
+      throw lazy.error.WebDriverError.fromJSON(result.error);
     } else {
-      return evaluate.fromJSON({ obj: result.data, seenEls: elementIdCache });
+      return lazy.evaluate.fromJSON({
+        obj: result.data,
+        seenEls: lazy.elementIdCache,
+      });
     }
   }
 
@@ -253,7 +258,7 @@ class MarionetteCommandsParent extends JSWindowActorParent {
       ? this.browsingContext
       : this.browsingContext.top;
 
-    let canvas = await capture.canvas(
+    let canvas = await lazy.capture.canvas(
       browsingContext.topChromeWindow,
       browsingContext,
       rect.x,
@@ -263,11 +268,11 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     );
 
     switch (format) {
-      case capture.Format.Hash:
-        return capture.toHash(canvas);
+      case lazy.capture.Format.Hash:
+        return lazy.capture.toHash(canvas);
 
-      case capture.Format.Base64:
-        return capture.toBase64(canvas);
+      case lazy.capture.Format.Base64:
+        return lazy.capture.toBase64(canvas);
 
       default:
         throw new TypeError(`Invalid capture format: ${format}`);
@@ -279,11 +284,11 @@ class MarionetteCommandsParent extends JSWindowActorParent {
  * Clear all the entries from the element id cache.
  */
 function clearElementIdCache() {
-  elementIdCache.clear();
+  lazy.elementIdCache.clear();
 }
 
 function _onTabClose(event) {
-  elementIdCache.clear(event.target.linkedBrowser.browsingContext);
+  lazy.elementIdCache.clear(event.target.linkedBrowser.browsingContext);
 }
 
 /**
@@ -348,14 +353,16 @@ function getMarionetteCommandsActorProxy(browsingContextFn) {
 
               if (++attempts > MAX_ATTEMPTS) {
                 const browsingContextId = browsingContextFn()?.id;
-                logger.trace(
+                lazy.logger.trace(
                   `[${browsingContextId}] Querying "${methodName} "` +
                     `reached the limit of retry attempts (${MAX_ATTEMPTS})`
                 );
                 throw e;
               }
 
-              logger.trace(`Retrying "${methodName}", attempt: ${attempts}`);
+              lazy.logger.trace(
+                `Retrying "${methodName}", attempt: ${attempts}`
+              );
             }
           }
         };
@@ -385,7 +392,7 @@ function registerCommandsActor() {
     });
   } catch (e) {
     if (e.name === "NotSupportedError") {
-      logger.warn(`MarionetteCommands actor is already registered!`);
+      lazy.logger.warn(`MarionetteCommands actor is already registered!`);
     } else {
       throw e;
     }
