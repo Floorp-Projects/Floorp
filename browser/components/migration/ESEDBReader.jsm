@@ -20,7 +20,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+const lazy = {};
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
     maxLogLevelPref: "browser.esedbreader.loglevel",
@@ -29,7 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 // We have a globally unique identifier for ESE instances. A new one
 // is used for each different database opened.
@@ -159,19 +160,19 @@ function handleESEError(
     try {
       rv = method.apply(null, arguments);
     } catch (ex) {
-      log.error("Error calling into ctypes method", methodName, ex);
+      lazy.log.error("Error calling into ctypes method", methodName, ex);
       throw ex;
     }
     let resultCode = parseInt(rv.toString(10), 10);
     if (resultCode < 0) {
       if (errorLog) {
-        log.error("Got error " + resultCode + " calling " + methodName);
+        lazy.log.error("Got error " + resultCode + " calling " + methodName);
       }
       if (shouldThrow) {
         throw new Error(convertESEError(rv));
       }
     } else if (resultCode > 0 && errorLog) {
-      log.warn("Got warning " + resultCode + " calling " + methodName);
+      lazy.log.warn("Got warning " + resultCode + " calling " + methodName);
     }
     return resultCode;
   };
@@ -299,9 +300,9 @@ function declareESEFunctions() {
 }
 
 function unloadLibraries() {
-  log.debug("Unloading");
+  lazy.log.debug("Unloading");
   if (gOpenDBs.size) {
-    log.error("Shouldn't unload libraries before DBs are closed!");
+    lazy.log.error("Shouldn't unload libraries before DBs are closed!");
     for (let db of gOpenDBs.values()) {
       db._close();
     }
@@ -331,7 +332,7 @@ function loadLibraries() {
 }
 
 function ESEDB(rootPath, dbPath, logPath) {
-  log.info("Created db");
+  lazy.log.info("Created db");
   this.rootPath = rootPath;
   this.dbPath = dbPath;
   this.logPath = logPath;
@@ -477,12 +478,12 @@ ESEDB.prototype = {
       return false;
     }
     if (rv < 0) {
-      log.error("Got error " + rv + " calling OpenTableW");
+      lazy.log.error("Got error " + rv + " calling OpenTableW");
       throw new Error(convertESEError(rv));
     }
 
     if (rv > 0) {
-      log.error("Got warning " + rv + " calling OpenTableW");
+      lazy.log.error("Got warning " + rv + " calling OpenTableW");
     }
     ESE.FailSafeCloseTable(this._sessionId, tableId);
     return true;
@@ -742,23 +743,23 @@ ESEDB.prototype = {
 
   _internalClose() {
     if (this._opened) {
-      log.debug("close db");
+      lazy.log.debug("close db");
       ESE.FailSafeCloseDatabase(this._sessionId, this._dbId, 0);
-      log.debug("finished close db");
+      lazy.log.debug("finished close db");
       this._opened = false;
     }
     if (this._attached) {
-      log.debug("detach db");
+      lazy.log.debug("detach db");
       ESE.FailSafeDetachDatabaseW(this._sessionId, this.dbPath);
       this._attached = false;
     }
     if (this._sessionCreated) {
-      log.debug("end session");
+      lazy.log.debug("end session");
       ESE.FailSafeEndSession(this._sessionId, 0);
       this._sessionCreated = false;
     }
     if (this._instanceCreated) {
-      log.debug("term");
+      lazy.log.debug("term");
       ESE.FailSafeTerm(this._instanceId);
       this._instanceCreated = false;
     }
@@ -790,9 +791,9 @@ let ESEDBReader = {
   },
 
   async dbLocked(dbFile) {
-    let options = { winShare: OS.Constants.Win.FILE_SHARE_READ };
+    let options = { winShare: lazy.OS.Constants.Win.FILE_SHARE_READ };
     let locked = true;
-    await OS.File.open(dbFile.path, { read: true }, options).then(
+    await lazy.OS.File.open(dbFile.path, { read: true }, options).then(
       fileHandle => {
         locked = false;
         // Return the close promise so we wait for the file to be closed again.

@@ -18,24 +18,26 @@ const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesBackups",
   "resource://gre/modules/PlacesBackups.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SessionMigration",
   "resource:///modules/sessionstore/SessionMigration.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm"
 );
@@ -177,7 +179,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(
     "autofill-profiles.json",
   ]);
   let bookmarksBackups = getFileResource(types.OTHERDATA, [
-    PlacesBackups.profileRelativeFolderPath,
+    lazy.PlacesBackups.profileRelativeFolderPath,
   ]);
   let dictionary = getFileResource(types.OTHERDATA, ["persdict.dat"]);
 
@@ -209,7 +211,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(
           );
           let newSessionFile = currentProfileDir.clone();
           newSessionFile.append("sessionstore.jsonlz4");
-          let migrationPromise = SessionMigration.migrate(
+          let migrationPromise = lazy.SessionMigration.migrate(
             sessionFile.path,
             newSessionFile.path
           );
@@ -253,26 +255,32 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(
       // if we can, copy it to the new profile and set sync's username pref
       // (which acts as a de-facto flag to indicate if sync is configured)
       try {
-        let oldPath = OS.Path.join(sourceProfileDir.path, "signedInUser.json");
-        let exists = await OS.File.exists(oldPath);
+        let oldPath = lazy.OS.Path.join(
+          sourceProfileDir.path,
+          "signedInUser.json"
+        );
+        let exists = await lazy.OS.File.exists(oldPath);
         if (exists) {
-          let raw = await OS.File.read(oldPath, { encoding: "utf-8" });
+          let raw = await lazy.OS.File.read(oldPath, { encoding: "utf-8" });
           let data = JSON.parse(raw);
           if (data && data.accountData && data.accountData.email) {
             let username = data.accountData.email;
             // copy the file itself.
-            await OS.File.copy(
+            await lazy.OS.File.copy(
               oldPath,
-              OS.Path.join(currentProfileDir.path, "signedInUser.json")
+              lazy.OS.Path.join(currentProfileDir.path, "signedInUser.json")
             );
             // Now we need to know whether Sync is actually configured for this
             // user. The only way we know is by looking at the prefs file from
             // the old profile. We avoid trying to do a full parse of the prefs
             // file and even avoid parsing the single string value we care
             // about.
-            let prefsPath = OS.Path.join(sourceProfileDir.path, "prefs.js");
-            if (await OS.File.exists(oldPath)) {
-              let rawPrefs = await OS.File.read(prefsPath, {
+            let prefsPath = lazy.OS.Path.join(
+              sourceProfileDir.path,
+              "prefs.js"
+            );
+            if (await lazy.OS.File.exists(oldPath)) {
+              let rawPrefs = await lazy.OS.File.read(prefsPath, {
                 encoding: "utf-8",
               });
               if (/^user_pref\("services\.sync\.username"/m.test(rawPrefs)) {
@@ -308,7 +316,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(
       // And record the fact a migration (ie, a reset) happened.
       let recordMigration = async () => {
         try {
-          let profileTimes = await ProfileAge(currentProfileDir.path);
+          let profileTimes = await lazy.ProfileAge(currentProfileDir.path);
           await profileTimes.recordProfileReset();
           aCallback(true);
         } catch (e) {
@@ -326,7 +334,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(
       let createSubDir = name => {
         let dir = currentProfileDir.clone();
         dir.append(name);
-        dir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+        dir.create(Ci.nsIFile.DIRECTORY_TYPE, lazy.FileUtils.PERMS_DIRECTORY);
         return dir;
       };
 
