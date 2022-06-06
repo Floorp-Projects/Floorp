@@ -6,14 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["BrowserProcessChild"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "WebRTCChild",
   "resource:///actors/WebRTCChild.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AboutHomeStartupCacheChild",
   "resource:///modules/AboutNewTabService.jsm"
 );
@@ -23,7 +25,10 @@ class BrowserProcessChild extends JSProcessActorChild {
     switch (message.name) {
       case "AboutHomeStartupCache:InputStreams":
         let { pageInputStream, scriptInputStream } = message.data;
-        AboutHomeStartupCacheChild.init(pageInputStream, scriptInputStream);
+        lazy.AboutHomeStartupCacheChild.init(
+          pageInputStream,
+          scriptInputStream
+        );
         break;
     }
   }
@@ -35,7 +40,7 @@ class BrowserProcessChild extends JSProcessActorChild {
       case "PeerConnection:request":
       case "recording-device-events":
       case "recording-window-ended":
-        WebRTCChild.observe(subject, topic, data);
+        lazy.WebRTCChild.observe(subject, topic, data);
         break;
     }
   }

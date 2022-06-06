@@ -13,8 +13,10 @@ const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gSerializationHelper",
   "@mozilla.org/network/serialization-helper;1",
   "nsISerializationHelper"
@@ -46,7 +48,7 @@ class NetErrorChild extends RemotePageChild {
       .QueryInterface(Ci.nsITransportSecurityInfo)
       .QueryInterface(Ci.nsISerializable);
 
-    return gSerializationHelper.serializeToString(securityInfo);
+    return lazy.gSerializationHelper.serializeToString(securityInfo);
   }
 
   handleEvent(aEvent) {

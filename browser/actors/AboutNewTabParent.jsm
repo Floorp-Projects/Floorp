@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 });
 
@@ -18,8 +20,8 @@ class AboutNewTabParent extends JSWindowActorParent {
   async receiveMessage(message) {
     switch (message.name) {
       case "AboutNewTabVisible":
-        await ASRouter.waitForInitialized;
-        ASRouter.sendTriggerMessage({
+        await lazy.ASRouter.waitForInitialized;
+        lazy.ASRouter.sendTriggerMessage({
           browser: this.browsingContext.top.embedderElement,
           // triggerId and triggerContext
           id: "defaultBrowserCheck",

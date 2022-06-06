@@ -7,18 +7,20 @@
 
 var EXPORTED_SYMBOLS = ["ClickHandlerParent", "MiddleMousePasteHandlerParent"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUIUtils",
   "resource:///modules/PlacesUIUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm"
 );
@@ -88,8 +90,8 @@ class ClickHandlerParent extends JSWindowActorParent {
     // pages loaded in frames are embed visits and lost with the session, while
     // visits across frames should be preserved.
     try {
-      if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
-        PlacesUIUtils.markPageAsFollowedLink(data.href);
+      if (!lazy.PrivateBrowsingUtils.isWindowPrivate(window)) {
+        lazy.PlacesUIUtils.markPageAsFollowedLink(data.href);
       }
     } catch (ex) {
       /* Skip invalid URIs. */
@@ -105,12 +107,12 @@ class ClickHandlerParent extends JSWindowActorParent {
 
     let params = {
       charset: browser.characterSet,
-      referrerInfo: E10SUtils.deserializeReferrerInfo(data.referrerInfo),
+      referrerInfo: lazy.E10SUtils.deserializeReferrerInfo(data.referrerInfo),
       isContentWindowPrivate: data.isContentWindowPrivate,
       originPrincipal: data.originPrincipal,
       originStoragePrincipal: data.originStoragePrincipal,
       triggeringPrincipal: data.triggeringPrincipal,
-      csp: data.csp ? E10SUtils.deserializeCSP(data.csp) : null,
+      csp: data.csp ? lazy.E10SUtils.deserializeCSP(data.csp) : null,
       frameID: data.frameID,
       openerBrowser: browser,
     };

@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ScreenshotsOverlayChild: "resource:///modules/ScreenshotsOverlayChild.jsm",
 });
 
@@ -117,7 +119,7 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
     await this.documentIsReady();
     let overlay =
       this._overlay ||
-      (this._overlay = new ScreenshotsOverlayChild.AnonymousContentOverlay(
+      (this._overlay = new lazy.ScreenshotsOverlayChild.AnonymousContentOverlay(
         this.document,
         this
       ));

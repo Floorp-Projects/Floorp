@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["AboutPluginsParent"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -35,7 +37,7 @@ class AboutPluginsParent extends JSWindowActorParent {
           return filtered;
         }
 
-        let plugins = await AddonManager.getAddonsByTypes(["plugin"]);
+        let plugins = await lazy.AddonManager.getAddonsByTypes(["plugin"]);
         return plugins.map(filterProperties);
     }
 

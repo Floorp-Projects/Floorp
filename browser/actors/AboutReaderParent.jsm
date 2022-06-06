@@ -9,18 +9,20 @@ var EXPORTED_SYMBOLS = ["AboutReaderParent"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "pktApi",
   "chrome://pocket/content/pktApi.jsm"
 );
@@ -115,11 +117,11 @@ class AboutReaderParent extends JSWindowActorParent {
         return cachedArticle;
       }
       case "Reader:PocketLoginStatusRequest": {
-        return pktApi.isUserLoggedIn();
+        return lazy.pktApi.isUserLoggedIn();
       }
       case "Reader:PocketGetArticleInfo": {
         return new Promise(resolve => {
-          pktApi.getArticleInfo(message.data.url, {
+          lazy.pktApi.getArticleInfo(message.data.url, {
             success: data => {
               resolve(data);
             },
@@ -131,7 +133,7 @@ class AboutReaderParent extends JSWindowActorParent {
       }
       case "Reader:PocketGetArticleRecs": {
         return new Promise(resolve => {
-          pktApi.getRecsForItem(message.data.itemID, {
+          lazy.pktApi.getRecsForItem(message.data.itemID, {
             success: data => {
               resolve(data);
             },
@@ -143,7 +145,7 @@ class AboutReaderParent extends JSWindowActorParent {
       }
       case "Reader:PocketSaveArticle": {
         return new Promise(resolve => {
-          pktApi.addLink(message.data.url, {
+          lazy.pktApi.addLink(message.data.url, {
             success: data => {
               resolve(data);
             },
@@ -159,11 +161,13 @@ class AboutReaderParent extends JSWindowActorParent {
           let uri = Services.io.newURI(message.data.url);
 
           let result = await new Promise(resolve => {
-            PlacesUtils.favicons.getFaviconURLForPage(
+            lazy.PlacesUtils.favicons.getFaviconURLForPage(
               uri,
               iconUri => {
                 if (iconUri) {
-                  iconUri = PlacesUtils.favicons.getFaviconLinkForIcon(iconUri);
+                  iconUri = lazy.PlacesUtils.favicons.getFaviconLinkForIcon(
+                    iconUri
+                  );
                   resolve({
                     url: message.data.url,
                     faviconUrl: iconUri.pathQueryRef.replace(/^favicon:/, ""),
@@ -330,7 +334,7 @@ class AboutReaderParent extends JSWindowActorParent {
   leaveReaderMode() {
     let browsingContext = this.browsingContext;
     let url = browsingContext.currentWindowGlobal.documentURI.spec;
-    let originalURL = ReaderMode.getOriginalUrl(url);
+    let originalURL = lazy.ReaderMode.getOriginalUrl(url);
     if (this.hasReaderModeEntryAtOffset(originalURL, -1)) {
       browsingContext.childSessionHistory.go(-1);
       return;
@@ -348,7 +352,7 @@ class AboutReaderParent extends JSWindowActorParent {
    * @resolves JS object representing the article, or null if no article is found.
    */
   async _getArticle(url, browser) {
-    return ReaderMode.downloadAndParseDocument(url).catch(e => {
+    return lazy.ReaderMode.downloadAndParseDocument(url).catch(e => {
       if (e && e.newURL) {
         // Pass up the error so we can navigate the browser in question to the new URL:
         throw e;

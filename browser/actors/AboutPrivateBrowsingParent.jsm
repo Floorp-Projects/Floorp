@@ -18,21 +18,22 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 const SHOWN_PREF = "browser.search.separatePrivateDefault.ui.banner.shown";
+const lazy = {};
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "MAX_SEARCH_BANNER_SHOW_COUNT",
   "browser.search.separatePrivateDefault.ui.banner.max",
   0
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "isPrivateSearchUIEnabled",
   "browser.search.separatePrivateDefault.ui.enabled",
   false
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
@@ -132,7 +133,7 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           "browser.urlbar.placeholderName.private",
           ""
         );
-        let shouldHandOffToSearchMode = UrlbarPrefs.get(
+        let shouldHandOffToSearchMode = lazy.UrlbarPrefs.get(
           "shouldHandOffToSearchMode"
         );
         return [engineName, shouldHandOffToSearchMode];
@@ -148,12 +149,12 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           return null;
         }
 
-        if (!isPrivateSearchUIEnabled || gSearchBannerShownThisSession) {
+        if (!lazy.isPrivateSearchUIEnabled || gSearchBannerShownThisSession) {
           return null;
         }
         gSearchBannerShownThisSession = true;
         const shownTimes = Services.prefs.getIntPref(SHOWN_PREF, 0);
-        if (shownTimes >= MAX_SEARCH_BANNER_SHOW_COUNT) {
+        if (shownTimes >= lazy.MAX_SEARCH_BANNER_SHOW_COUNT) {
           return null;
         }
         Services.prefs.setIntPref(SHOWN_PREF, shownTimes + 1);
@@ -164,7 +165,10 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
         });
       }
       case "SearchBannerDismissed": {
-        Services.prefs.setIntPref(SHOWN_PREF, MAX_SEARCH_BANNER_SHOW_COUNT);
+        Services.prefs.setIntPref(
+          SHOWN_PREF,
+          lazy.MAX_SEARCH_BANNER_SHOW_COUNT
+        );
         break;
       }
       case "ShouldShowPromo": {
@@ -173,7 +177,7 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
         );
       }
       case "SpecialMessageActionDispatch": {
-        SpecialMessageActions.handleAction(aMessage.data, browser);
+        lazy.SpecialMessageActions.handleAction(aMessage.data, browser);
         break;
       }
       case "IsPromoBlocked": {

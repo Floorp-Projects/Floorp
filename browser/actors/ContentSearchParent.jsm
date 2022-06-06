@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -109,7 +111,7 @@ let ContentSearch = {
       Services.obs.addObserver(this, "browser-search-service");
       Services.obs.addObserver(this, "shutdown-leaks-before-check");
       Services.prefs.addObserver("browser.search.hiddenOneOffs", this);
-      UrlbarPrefs.addObserver(this);
+      lazy.UrlbarPrefs.addObserver(this);
 
       this.initialized = true;
     }
@@ -188,7 +190,7 @@ let ContentSearch = {
    *   in that branch.
    */
   onPrefChanged(pref) {
-    if (UrlbarPrefs.shouldHandOffToSearchModePrefs.includes(pref)) {
+    if (lazy.UrlbarPrefs.shouldHandOffToSearchModePrefs.includes(pref)) {
       this._eventQueue.push({
         type: "Observe",
         data: "shouldHandOffToSearchMode",
@@ -259,10 +261,15 @@ let ContentSearch = {
       };
       win.openTrustedLinkIn(submission.uri.spec, where, params);
     }
-    BrowserSearchTelemetry.recordSearch(browser, engine, data.healthReportKey, {
-      selection: data.selection,
-      url: submission.uri,
-    });
+    lazy.BrowserSearchTelemetry.recordSearch(
+      browser,
+      engine,
+      data.healthReportKey,
+      {
+        selection: data.selection,
+        url: submission.uri,
+      }
+    );
   },
 
   async getSuggestions(engineName, searchString, browser) {
@@ -273,10 +280,10 @@ let ContentSearch = {
 
     let browserData = this._suggestionDataForBrowser(browser, true);
     let { controller } = browserData;
-    let ok = SearchSuggestionController.engineOffersSuggestions(engine);
+    let ok = lazy.SearchSuggestionController.engineOffersSuggestions(engine);
     controller.maxLocalResults = ok ? MAX_LOCAL_SUGGESTIONS : MAX_SUGGESTIONS;
     controller.maxRemoteResults = ok ? MAX_SUGGESTIONS : 0;
-    let priv = PrivateBrowsingUtils.isBrowserPrivate(browser);
+    let priv = lazy.PrivateBrowsingUtils.isBrowserPrivate(browser);
     // fetch() rejects its promise if there's a pending request, but since we
     // process our event queue serially, there's never a pending request.
     this._currentSuggestion = { controller, browser };
@@ -319,7 +326,7 @@ let ContentSearch = {
       // isBrowserPrivate assumes that the passed-in browser has all the normal
       // properties, which won't be true if the browser has been destroyed.
       // That may be the case here due to the asynchronous nature of messaging.
-      isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
+      isPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(browser);
     } catch (err) {
       return false;
     }
@@ -327,12 +334,12 @@ let ContentSearch = {
       isPrivate ||
       !entry ||
       entry.value.length >
-        SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
+        lazy.SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
     ) {
       return false;
     }
     let browserData = this._suggestionDataForBrowser(browser, true);
-    FormHistory.update(
+    lazy.FormHistory.update(
       {
         op: "bump",
         fieldname: browserData.controller.formHistoryParam,
@@ -368,7 +375,7 @@ let ContentSearch = {
     }
 
     if (window) {
-      state.isInPrivateBrowsingMode = PrivateBrowsingUtils.isContentWindowPrivate(
+      state.isInPrivateBrowsingMode = lazy.PrivateBrowsingUtils.isContentWindowPrivate(
         window
       );
       state.isAboutPrivateBrowsing =
@@ -453,7 +460,7 @@ let ContentSearch = {
     this._reply(
       actor,
       "HandoffSearchModePrefs",
-      UrlbarPrefs.get("shouldHandOffToSearchMode")
+      lazy.UrlbarPrefs.get("shouldHandOffToSearchMode")
     );
   },
 
@@ -525,7 +532,7 @@ let ContentSearch = {
       case "shouldHandOffToSearchMode":
         this._broadcast(
           "HandoffSearchModePrefs",
-          UrlbarPrefs.get("shouldHandOffToSearchMode")
+          lazy.UrlbarPrefs.get("shouldHandOffToSearchMode")
         );
         break;
       default:
@@ -542,7 +549,7 @@ let ContentSearch = {
       // autocomplete widget, this means that we assume each xul:browser has at
       // most one such widget.
       data = {
-        controller: new SearchSuggestionController(),
+        controller: new lazy.SearchSuggestionController(),
       };
       this._suggestionMap.set(browser, data);
     }

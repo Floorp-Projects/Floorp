@@ -12,19 +12,21 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function() {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gNavigatorBundle", function() {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gFluentStrings", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
   return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);
 });
 
@@ -61,8 +63,8 @@ class EncryptedMediaParent extends JSWindowActorParent {
 
   getMessageWithBrandName(aNotificationId) {
     let msgId = "emeNotifications." + aNotificationId + ".message";
-    return gNavigatorBundle.formatStringFromName(msgId, [
-      gBrandBundle.GetStringFromName("brandShortName"),
+    return lazy.gNavigatorBundle.formatStringFromName(msgId, [
+      lazy.gBrandBundle.GetStringFromName("brandShortName"),
     ]);
   }
 
@@ -119,7 +121,7 @@ class EncryptedMediaParent extends JSWindowActorParent {
         buttonCallback = () => {
           this.ensureEMEEnabled(browser, keySystem);
         };
-        notificationMessage = gNavigatorBundle.GetStringFromName(
+        notificationMessage = lazy.gNavigatorBundle.GetStringFromName(
           "emeNotifications.drmContentDisabled.message2"
         );
         supportPage = "drm-content";
@@ -162,8 +164,8 @@ class EncryptedMediaParent extends JSWindowActorParent {
       let manageLabelId = msgPrefix + "button.label";
       let manageAccessKeyId = msgPrefix + "button.accesskey";
       buttons.push({
-        label: gNavigatorBundle.GetStringFromName(manageLabelId),
-        accessKey: gNavigatorBundle.GetStringFromName(manageAccessKeyId),
+        label: lazy.gNavigatorBundle.GetStringFromName(manageLabelId),
+        accessKey: lazy.gNavigatorBundle.GetStringFromName(manageAccessKeyId),
         callback: buttonCallback,
       });
     }
@@ -213,7 +215,7 @@ class EncryptedMediaParent extends JSWindowActorParent {
       manageAccessKey,
       dismissLabel,
       dismissAccessKey,
-    ] = await gFluentStrings.formatValues([
+    ] = await lazy.gFluentStrings.formatValues([
       msgId,
       manageLabelId,
       manageAccessKeyId,
