@@ -41,6 +41,7 @@ webpagetest-firefox:
     description: Run webpagetest performance pageload tests on Firefox against Alexa top 50 websites
     treeherder:
         symbol: perftest(linux-webpagetest)
+        tier: 2
     attributes:
         cron: true
     scopes:
@@ -62,6 +63,7 @@ webpagetest-chrome:
     description: Run webpagetest performance pageload tests on Chrome against Alexa top 50 websites
     treeherder:
         symbol: perftest-chrome(linux-webpagetest)
+        tier: 2
     attributes:
         cron: true
     scopes:
