@@ -33,6 +33,7 @@
 
 using ::testing::Each;
 using ::testing::ElementsAre;
+using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::SizeIs;
 
@@ -302,7 +303,7 @@ TEST(RtpPayloadParamsTest, PictureIdForOldGenericFormat) {
 }
 
 TEST(RtpPayloadParamsTest, GenericDescriptorForGenericCodec) {
-  RtpPayloadState state{};
+  RtpPayloadState state;
 
   EncodedImage encoded_image;
   encoded_image._frameType = VideoFrameType::kVideoFrameKey;
@@ -313,16 +314,27 @@ TEST(RtpPayloadParamsTest, GenericDescriptorForGenericCodec) {
   RTPVideoHeader header =
       params.GetRtpVideoHeader(encoded_image, &codec_info, 0);
 
-  EXPECT_EQ(kVideoCodecGeneric, header.codec);
+  EXPECT_THAT(header.codec, Eq(kVideoCodecGeneric));
+
   ASSERT_TRUE(header.generic);
-  EXPECT_EQ(0, header.generic->frame_id);
+  EXPECT_THAT(header.generic->frame_id, Eq(0));
+  EXPECT_THAT(header.generic->spatial_index, Eq(0));
+  EXPECT_THAT(header.generic->temporal_index, Eq(0));
+  EXPECT_THAT(header.generic->decode_target_indications,
+              ElementsAre(DecodeTargetIndication::kSwitch));
   EXPECT_THAT(header.generic->dependencies, IsEmpty());
+  EXPECT_THAT(header.generic->chain_diffs, ElementsAre(0));
 
   encoded_image._frameType = VideoFrameType::kVideoFrameDelta;
-  header = params.GetRtpVideoHeader(encoded_image, &codec_info, 1);
+  header = params.GetRtpVideoHeader(encoded_image, &codec_info, 3);
   ASSERT_TRUE(header.generic);
-  EXPECT_EQ(1, header.generic->frame_id);
+  EXPECT_THAT(header.generic->frame_id, Eq(3));
+  EXPECT_THAT(header.generic->spatial_index, Eq(0));
+  EXPECT_THAT(header.generic->temporal_index, Eq(0));
   EXPECT_THAT(header.generic->dependencies, ElementsAre(0));
+  EXPECT_THAT(header.generic->decode_target_indications,
+              ElementsAre(DecodeTargetIndication::kSwitch));
+  EXPECT_THAT(header.generic->chain_diffs, ElementsAre(3));
 }
 
 TEST(RtpPayloadParamsTest, SetsGenericFromGenericFrameInfo) {
