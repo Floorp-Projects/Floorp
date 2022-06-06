@@ -84,8 +84,6 @@ const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["Element"]);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AbuseReporter: "resource://gre/modules/AbuseReporter.jsm",

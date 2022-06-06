@@ -46,7 +46,7 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 const {
   DefaultMap,

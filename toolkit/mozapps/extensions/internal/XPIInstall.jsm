@@ -34,11 +34,7 @@ const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, [
-  "TextDecoder",
-  "TextEncoder",
-  "fetch",
-]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",

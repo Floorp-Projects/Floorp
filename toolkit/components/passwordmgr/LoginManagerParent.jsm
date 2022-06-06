@@ -29,8 +29,6 @@ XPCOMUtils.defineLazyGetter(this, "PasswordRulesManager", () => {
   return new PasswordRulesManagerParent();
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",

@@ -55,8 +55,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   Async: "resource://services-common/async.js",
   Log: "resource://gre/modules/Log.jsm",

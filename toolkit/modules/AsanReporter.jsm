@@ -18,8 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["TextDecoder", "XMLHttpRequest"]);
-
 // Define our prefs
 const PREF_CLIENT_ID = "asanreporter.clientid";
 const PREF_API_URL = "asanreporter.apiurl";

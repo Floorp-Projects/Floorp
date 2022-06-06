@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
 const MAX_COOKIE_EXPIRY = Number.MAX_SAFE_INTEGER;
 
 const LOAD_CAUSE_STRINGS = {
