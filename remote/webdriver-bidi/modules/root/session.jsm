@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
@@ -18,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm",
 });
 
-class SessionModule extends Module {
+class SessionModule extends lazy.Module {
   destroy() {}
 
   /**
@@ -42,14 +44,14 @@ class SessionModule extends Module {
     const { events, contexts = [] } = params;
 
     // Check input types until we run schema validation.
-    assert.array(events, "events: array value expected");
+    lazy.assert.array(events, "events: array value expected");
     events.forEach(name => {
-      assert.string(name, `${name}: string value expected`);
+      lazy.assert.string(name, `${name}: string value expected`);
     });
 
-    assert.array(contexts, "contexts: array value expected");
+    lazy.assert.array(contexts, "contexts: array value expected");
     contexts.forEach(context => {
-      assert.string(context, `${context}: string value expected`);
+      lazy.assert.string(context, `${context}: string value expected`);
     });
 
     // For now just subscribe the events to all available top-level
@@ -69,7 +71,7 @@ class SessionModule extends Module {
             event,
           },
           destination: {
-            type: RootMessageHandler.type,
+            type: lazy.RootMessageHandler.type,
           },
         });
       })
@@ -93,14 +95,14 @@ class SessionModule extends Module {
     const { events, contexts = [] } = params;
 
     // Check input types until we run schema validation.
-    assert.array(events, "events: array value expected");
+    lazy.assert.array(events, "events: array value expected");
     events.forEach(name => {
-      assert.string(name, `${name}: string value expected`);
+      lazy.assert.string(name, `${name}: string value expected`);
     });
 
-    assert.array(contexts, "contexts: array value expected");
+    lazy.assert.array(contexts, "contexts: array value expected");
     contexts.forEach(context => {
-      assert.string(context, `${context}: string value expected`);
+      lazy.assert.string(context, `${context}: string value expected`);
     });
 
     // For now just unsubscribe the events from all available top-level
@@ -120,7 +122,7 @@ class SessionModule extends Module {
             event,
           },
           destination: {
-            type: RootMessageHandler.type,
+            type: lazy.RootMessageHandler.type,
           },
         });
       })
@@ -131,7 +133,7 @@ class SessionModule extends Module {
     const rootModuleClass = this.#getRootModuleClass(moduleName);
     const supportsEvents = rootModuleClass?.supportsCommand("_subscribeEvent");
     if (!supportsEvents) {
-      throw new error.InvalidArgumentError(
+      throw new lazy.error.InvalidArgumentError(
         `Module ${moduleName} does not support event subscriptions`
       );
     }
@@ -141,7 +143,7 @@ class SessionModule extends Module {
     const rootModuleClass = this.#getRootModuleClass(moduleName);
     const supportsEvent = rootModuleClass?.supportsEvent(event);
     if (!supportsEvent) {
-      throw new error.InvalidArgumentError(
+      throw new lazy.error.InvalidArgumentError(
         `Module ${moduleName} does not support event ${event}`
       );
     }
@@ -150,7 +152,7 @@ class SessionModule extends Module {
   #getRootModuleClass(moduleName) {
     // Modules which support event subscriptions should have a root module
     // defining supported events.
-    const rootDestination = { type: RootMessageHandler.type };
+    const rootDestination = { type: lazy.RootMessageHandler.type };
     const moduleClasses = this.messageHandler.getAllModuleClasses(
       moduleName,
       rootDestination

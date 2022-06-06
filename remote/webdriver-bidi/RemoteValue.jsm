@@ -10,14 +10,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   InvalidArgumentError: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.WEBDRIVER_BIDI)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.WEBDRIVER_BIDI)
 );
 
 /**
@@ -34,18 +36,20 @@ function deserialize(serializedValue) {
   const { objectId, type, value } = serializedValue;
 
   if (type !== undefined) {
-    assert.string(type, `Expected "type" to be a string, got ${type}`);
+    lazy.assert.string(type, `Expected "type" to be a string, got ${type}`);
   }
 
   // With an objectId present deserialize as remote reference.
   if (objectId !== undefined) {
-    assert.string(
+    lazy.assert.string(
       objectId,
       `Expected "objectId" to be a string, got ${objectId}`
     );
 
     // TODO: Implement deserialization of remote references (bug 1693838)
-    logger.warn(`Unsupported type remote reference with objectId ${objectId}`);
+    lazy.logger.warn(
+      `Unsupported type remote reference with objectId ${objectId}`
+    );
     return undefined;
   }
 
@@ -56,7 +60,10 @@ function deserialize(serializedValue) {
     case "null":
       return null;
     case "string":
-      assert.string(value, `Expected "value" to be a string, got ${value}`);
+      lazy.assert.string(
+        value,
+        `Expected "value" to be a string, got ${value}`
+      );
       return value;
     case "number":
       // If value is already a number return its value.
@@ -65,23 +72,29 @@ function deserialize(serializedValue) {
       }
 
       // Otherwise it has to be one of the special strings
-      assert.in(value, ["NaN", "-0", "+Infinity", "-Infinity"]);
+      lazy.assert.in(value, ["NaN", "-0", "+Infinity", "-Infinity"]);
       return Number(value);
     case "boolean":
-      assert.boolean(value, `Expected "value" to be a boolean, got ${value}`);
+      lazy.assert.boolean(
+        value,
+        `Expected "value" to be a boolean, got ${value}`
+      );
       return value;
     case "bigint":
-      assert.string(value, `Expected "value" to be a string, got ${value}`);
+      lazy.assert.string(
+        value,
+        `Expected "value" to be a string, got ${value}`
+      );
       try {
         return BigInt(value);
       } catch (e) {
-        throw new InvalidArgumentError(
+        throw new lazy.InvalidArgumentError(
           `Failed to deserialize value as BigInt: ${value}`
         );
       }
   }
 
-  logger.warn(`Unsupported type for local value ${type}`);
+  lazy.logger.warn(`Unsupported type for local value ${type}`);
   return undefined;
 }
 
@@ -117,6 +130,6 @@ function serialize(value /*, maxDepth, nodeDetails, knownObjects */) {
     return { type, value };
   }
 
-  logger.warn(`Unsupported type for remote value: ${value.toString()}`);
+  lazy.logger.warn(`Unsupported type for remote value: ${value.toString()}`);
   return undefined;
 }

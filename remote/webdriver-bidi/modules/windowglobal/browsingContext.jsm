@@ -10,19 +10,21 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoadListener: "chrome://remote/content/shared/listeners/LoadListener.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
 });
 
-class BrowsingContextModule extends Module {
+class BrowsingContextModule extends lazy.Module {
   #loadListener;
 
   constructor(messageHandler) {
     super(messageHandler);
 
     // Setup the LoadListener as early as possible.
-    this.#loadListener = new LoadListener(this.messageHandler.window);
+    this.#loadListener = new lazy.LoadListener(this.messageHandler.window);
     this.#loadListener.on("DOMContentLoaded", this.#onDOMContentLoaded);
   }
 
