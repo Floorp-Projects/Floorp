@@ -407,6 +407,15 @@ class MochitestArguments(ArgumentContainer):
             },
         ],
         [
+            ["--conditioned-profile"],
+            {
+                "dest": "conditionedProfile",
+                "action": "store_true",
+                "default": False,
+                "help": "Download and run with a full conditioned profile.",
+            },
+        ],
+        [
             ["--testing-modules-dir"],
             {
                 "dest": "testingModulesDir",

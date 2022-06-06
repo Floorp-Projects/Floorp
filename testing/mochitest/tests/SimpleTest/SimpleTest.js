@@ -1433,11 +1433,22 @@ SimpleTest.finish = function() {
         );
       }
     } else if (workers.length > 0) {
-      SimpleTest.ok(
-        false,
-        "This test left a service worker registered without cleaning it up"
-      );
+      let FULL_PROFILE_WORKERS_TO_IGNORE = [];
+      if (parentRunner.conditionedProfile) {
+        // Full profile has service workers in the profile, without clearing the profile
+        // service workers will be leftover, in all my testing youtube is the only one.
+        FULL_PROFILE_WORKERS_TO_IGNORE = ["https://www.youtube.com/sw.js"];
+      } else {
+        SimpleTest.ok(
+          false,
+          "This test left a service worker registered without cleaning it up"
+        );
+      }
+
       for (let worker of workers) {
+        if (FULL_PROFILE_WORKERS_TO_IGNORE.includes(worker.scriptSpec)) {
+          continue;
+        }
         SimpleTest.ok(
           false,
           `Left over worker: ${worker.scriptSpec} (scope: ${worker.scope})`
