@@ -330,6 +330,7 @@ class LoadInfo final : public nsILoadInfo {
   uint32_t mHttpsOnlyStatus = nsILoadInfo::HTTPS_ONLY_UNINITIALIZED;
   bool mHasValidUserGestureActivation = false;
   bool mAllowDeprecatedSystemRequests = false;
+  bool mIsUserTriggeredSave = false;
   bool mIsInDevToolsContext = false;
   bool mParserCreatedScript = false;
   nsILoadInfo::StoragePermissionState mStoragePermission =
