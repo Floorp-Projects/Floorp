@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActivityStream: "resource://activity-stream/lib/ActivityStream.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   RemotePages:
@@ -97,7 +99,7 @@ const AboutNewTab = {
 
     this.pageListener =
       pageListener ||
-      new RemotePages(["about:home", "about:newtab", "about:welcome"]);
+      new lazy.RemotePages(["about:home", "about:newtab", "about:welcome"]);
   },
 
   /**
@@ -176,7 +178,7 @@ const AboutNewTab = {
       return;
     }
 
-    this.activityStream = new ActivityStream();
+    this.activityStream = new lazy.ActivityStream();
     try {
       this.activityStream.init();
       this._subscribeToActivityStream();
@@ -199,7 +201,7 @@ const AboutNewTab = {
           delete site.screenshot;
           return site;
         });
-      if (!ObjectUtils.deepEqual(topSites, this._cachedTopSites)) {
+      if (!lazy.ObjectUtils.deepEqual(topSites, this._cachedTopSites)) {
         this._cachedTopSites = topSites;
         Services.obs.notifyObservers(null, "newtab-top-sites-changed");
       }

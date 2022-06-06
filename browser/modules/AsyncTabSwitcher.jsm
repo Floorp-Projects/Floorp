@@ -14,27 +14,28 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gTabWarmingEnabled",
   "browser.tabs.remote.warmup.enabled"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gTabWarmingMax",
   "browser.tabs.remote.warmup.maxTabs"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gTabWarmingUnloadDelayMs",
   "browser.tabs.remote.warmup.unloadDelayMs"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gTabCacheSize",
   "browser.tabs.remote.tabCacheSize"
 );
@@ -690,7 +691,7 @@ class AsyncTabSwitcher {
       this.deactivateCachedBackgroundTabs();
     }
 
-    if (numWarming > gTabWarmingMax) {
+    if (numWarming > lazy.gTabWarmingMax) {
       this.logState("Hit tabWarmingMax");
       if (this.unloadTimer) {
         this.clearTimer(this.unloadTimer);
@@ -928,7 +929,7 @@ class AsyncTabSwitcher {
   shouldDeactivateDocShell(browser) {
     return !(
       this.tabbrowser._printPreviewBrowsers.has(browser) ||
-      PictureInPicture.isOriginatingBrowser(browser)
+      lazy.PictureInPicture.isOriginatingBrowser(browser)
     );
   }
 
@@ -950,7 +951,7 @@ class AsyncTabSwitcher {
   }
 
   canWarmTab(tab) {
-    if (!gTabWarmingEnabled) {
+    if (!lazy.gTabWarmingEnabled) {
       return false;
     }
 
@@ -1000,7 +1001,7 @@ class AsyncTabSwitcher {
 
     this.warmingTabs.add(tab);
     this.setTabState(tab, this.STATE_LOADING);
-    this.queueUnload(gTabWarmingUnloadDelayMs);
+    this.queueUnload(lazy.gTabWarmingUnloadDelayMs);
   }
 
   cleanUpTabAfterEviction(tab) {
@@ -1019,7 +1020,7 @@ class AsyncTabSwitcher {
 
   maybePromoteTabInLayerCache(tab) {
     if (
-      gTabCacheSize > 1 &&
+      lazy.gTabCacheSize > 1 &&
       tab.linkedBrowser.isRemoteBrowser &&
       tab.linkedBrowser.currentURI.spec != "about:blank"
     ) {
@@ -1031,7 +1032,7 @@ class AsyncTabSwitcher {
 
       this.tabLayerCache.push(tab);
 
-      if (this.tabLayerCache.length > gTabCacheSize) {
+      if (this.tabLayerCache.length > lazy.gTabCacheSize) {
         this.evictOldestTabFromCache();
       }
     }
@@ -1238,7 +1239,8 @@ class AsyncTabSwitcher {
       let isActive = linkedBrowser && linkedBrowser.docShellIsActive;
       let isRendered = linkedBrowser && linkedBrowser.renderLayers;
       let isPiP =
-        linkedBrowser && PictureInPicture.isOriginatingBrowser(linkedBrowser);
+        linkedBrowser &&
+        lazy.PictureInPicture.isOriginatingBrowser(linkedBrowser);
 
       if (tab === this.lastVisibleTab) {
         tabString += "V";
@@ -1397,7 +1399,7 @@ class AsyncTabSwitcher {
   }
 
   noteTabRequested(tab, tabState) {
-    if (gTabWarmingEnabled) {
+    if (lazy.gTabWarmingEnabled) {
       let warmingState = "disqualified";
 
       if (this.canWarmTab(tab)) {

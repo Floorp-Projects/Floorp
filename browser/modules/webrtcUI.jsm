@@ -14,23 +14,24 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PluralForm",
   "resource://gre/modules/PluralForm.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "XPCOMUtils",
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SitePermissions",
   "resource:///modules/SitePermissions.jsm"
 );
@@ -46,13 +47,13 @@ var webrtcUI = {
       Services.obs.addObserver(this, "browser-delayed-startup-finished");
       this.initialized = true;
 
-      XPCOMUtils.defineLazyPreferenceGetter(
+      lazy.XPCOMUtils.defineLazyPreferenceGetter(
         this,
         "useLegacyGlobalIndicator",
         "privacy.webrtc.legacyGlobalIndicator",
         true
       );
-      XPCOMUtils.defineLazyPreferenceGetter(
+      lazy.XPCOMUtils.defineLazyPreferenceGetter(
         this,
         "deviceGracePeriodTimeoutMs",
         "privacy.webrtc.deviceGracePeriodTimeoutMs"
@@ -394,7 +395,7 @@ var webrtcUI = {
     // to our browser windows so that we know which ones are shared.
     this.sharedBrowserWindows = new WeakSet();
 
-    for (let win of BrowserWindowTracker.orderedWindows) {
+    for (let win of lazy.BrowserWindowTracker.orderedWindows) {
       let rawDeviceId;
       try {
         rawDeviceId = win.windowUtils.webrtcRawDeviceId;
@@ -598,7 +599,7 @@ var webrtcUI = {
     // If we clear a WebRTC permission we need to remove all permissions of
     // the same type across device ids. We also need to stop active WebRTC
     // devices related to the permission.
-    let perms = SitePermissions.getAllForBrowser(browser);
+    let perms = lazy.SitePermissions.getAllForBrowser(browser);
 
     // If capturing, don't revoke one of camera/microphone without the other.
     let sharingCameraOrMic =
@@ -607,14 +608,14 @@ var webrtcUI = {
 
     perms
       .filter(perm => {
-        let [id] = perm.id.split(SitePermissions.PERM_KEY_DELIMITER);
+        let [id] = perm.id.split(lazy.SitePermissions.PERM_KEY_DELIMITER);
         if (sharingCameraOrMic && (id == "camera" || id == "microphone")) {
           return true;
         }
         return types.includes(id);
       })
       .forEach(perm => {
-        SitePermissions.removeFromPrincipal(
+        lazy.SitePermissions.removeFromPrincipal(
           browser.contentPrincipal,
           perm.id,
           browser
@@ -913,7 +914,7 @@ var webrtcUI = {
    */
   _setSharedData() {
     let sharedTopInnerWindowIds = new Set();
-    for (let win of BrowserWindowTracker.orderedWindows) {
+    for (let win of lazy.BrowserWindowTracker.orderedWindows) {
       if (this.sharedBrowserWindows.has(win)) {
         sharedTopInnerWindowIds.add(
           win.browsingContext.currentWindowGlobal.innerWindowId
@@ -1092,7 +1093,7 @@ class MacOSWebRTCStatusbarIndicator {
     let menuitem = menu.ownerDocument.createXULElement("menuitem");
     let labelId = "webrtcIndicator.sharing" + type + "WithNTabs.menuitem";
     let count = activeStreams.length;
-    let label = PluralForm.get(
+    let label = lazy.PluralForm.get(
       count,
       bundle.GetStringFromName(labelId)
     ).replace("#1", count);

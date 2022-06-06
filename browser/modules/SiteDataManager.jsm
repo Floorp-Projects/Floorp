@@ -11,13 +11,15 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["SiteDataManager"];
 
-XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "gStringBundle", function() {
   return Services.strings.createBundle(
     "chrome://browser/locale/siteData.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function() {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
@@ -585,16 +587,19 @@ var SiteDataManager = {
       return args.allowed;
     }
 
-    let brandName = gBrandBundle.GetStringFromName("brandShortName");
+    let brandName = lazy.gBrandBundle.GetStringFromName("brandShortName");
     let flags =
       Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
       Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1 +
       Services.prompt.BUTTON_POS_0_DEFAULT;
-    let title = gStringBundle.GetStringFromName("clearSiteDataPromptTitle");
-    let text = gStringBundle.formatStringFromName("clearSiteDataPromptText", [
-      brandName,
-    ]);
-    let btn0Label = gStringBundle.GetStringFromName("clearSiteDataNow");
+    let title = lazy.gStringBundle.GetStringFromName(
+      "clearSiteDataPromptTitle"
+    );
+    let text = lazy.gStringBundle.formatStringFromName(
+      "clearSiteDataPromptText",
+      [brandName]
+    );
+    let btn0Label = lazy.gStringBundle.GetStringFromName("clearSiteDataNow");
 
     let result = Services.prompt.confirmEx(
       win,

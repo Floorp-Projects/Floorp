@@ -15,13 +15,15 @@ var EXPORTED_SYMBOLS = ["TabUnloader"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "webrtcUI",
   "resource:///modules/webrtcUI.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -94,14 +96,14 @@ let DefaultTabUnloaderMethods = {
 
     // No need to iterate browser contexts for hasActivePeerConnection
     // because hasActivePeerConnection is set only in the top window.
-    return webrtcUI.browserHasStreams(browser) ||
+    return lazy.webrtcUI.browserHasStreams(browser) ||
       browser.browsingContext?.currentWindowGlobal?.hasActivePeerConnections()
       ? weight
       : 0;
   },
 
   isPrivate(tab, weight) {
-    return PrivateBrowsingUtils.isBrowserPrivate(tab.linkedBrowser)
+    return lazy.PrivateBrowsingUtils.isBrowserPrivate(tab.linkedBrowser)
       ? weight
       : 0;
   },

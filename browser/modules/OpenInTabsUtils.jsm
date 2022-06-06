@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "bundle", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {
   return Services.strings.createBundle(
     "chrome://browser/locale/tabbrowser.properties"
   );
@@ -23,11 +25,11 @@ XPCOMUtils.defineLazyGetter(this, "bundle", function() {
  */
 const OpenInTabsUtils = {
   getString(key) {
-    return bundle.GetStringFromName(key);
+    return lazy.bundle.GetStringFromName(key);
   },
 
   getFormattedString(key, params) {
-    return bundle.formatStringFromName(key, params);
+    return lazy.bundle.formatStringFromName(key, params);
   },
 
   /**

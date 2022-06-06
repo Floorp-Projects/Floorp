@@ -64,15 +64,17 @@ const CACHE_EXPIRATION_TIME_PREF_NAME = "browser.taskbar.previews.cachetime";
 
 const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
 
+const lazy = {};
+
 // Various utility properties
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "imgTools",
   "@mozilla.org/image/tools;1",
   "imgITools"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm"
 );
@@ -114,7 +116,7 @@ function _imageFromURI(uri, privateMode, callback) {
 
     try {
       let threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
-      imgTools.decodeImageAsync(
+      lazy.imgTools.decodeImageAsync(
         inputStream,
         channel.contentType,
         decodeCallback,
@@ -166,7 +168,7 @@ function PreviewController(win, tab) {
   this.tab.addEventListener("TabAttrModified", this);
 
   XPCOMUtils.defineLazyGetter(this, "canvasPreview", function() {
-    let canvas = PageThumbs.createCanvas(this.win.win);
+    let canvas = lazy.PageThumbs.createCanvas(this.win.win);
     canvas.mozOpaque = true;
     return canvas;
   });
@@ -226,9 +228,13 @@ PreviewController.prototype = {
     // events don't trigger another invalidation if this tab becomes active.
     this.cacheBrowserDims();
     AeroPeek.resetCacheTimer();
-    return PageThumbs.captureToCanvas(this.linkedBrowser, this.canvasPreview, {
-      fullScale: aFullScale,
-    }).catch(e => Cu.reportError(e));
+    return lazy.PageThumbs.captureToCanvas(
+      this.linkedBrowser,
+      this.canvasPreview,
+      {
+        fullScale: aFullScale,
+      }
+    ).catch(e => Cu.reportError(e));
     // If we're updating the canvas, then we're in the middle of a peek so
     // don't discard the cache of previews.
   },
@@ -275,7 +281,7 @@ PreviewController.prototype = {
       let winWidth = this.win.width;
       let winHeight = this.win.height;
 
-      let composite = PageThumbs.createCanvas(this.win.win);
+      let composite = lazy.PageThumbs.createCanvas(this.win.win);
 
       // Use transparency, Aero glass is drawn black without it.
       composite.mozOpaque = false;
