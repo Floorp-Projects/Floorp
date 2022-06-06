@@ -10,13 +10,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   sss: ["@mozilla.org/ssservice;1", "nsISiteSecurityService"],
   certOverrideService: [
     "@mozilla.org/security/certoverride;1",
@@ -27,7 +29,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 const CERT_PINNING_ENFORCEMENT_PREF = "security.cert_pinning.enforcement_level";
 const HSTS_PRELOAD_LIST_PREF = "network.stricttransportsecurity.preloadlist";
 
-class Security extends Domain {
+class Security extends lazy.Domain {
   destructor() {
     this.setIgnoreCertificateErrors({ ignore: false });
   }
@@ -45,17 +47,17 @@ class Security extends Domain {
     if (ignore) {
       // make it possible to register certificate overrides for domains
       // that use HSTS or HPKP
-      Preferences.set(HSTS_PRELOAD_LIST_PREF, false);
-      Preferences.set(CERT_PINNING_ENFORCEMENT_PREF, 0);
+      lazy.Preferences.set(HSTS_PRELOAD_LIST_PREF, false);
+      lazy.Preferences.set(CERT_PINNING_ENFORCEMENT_PREF, 0);
     } else {
-      Preferences.reset(HSTS_PRELOAD_LIST_PREF);
-      Preferences.reset(CERT_PINNING_ENFORCEMENT_PREF);
+      lazy.Preferences.reset(HSTS_PRELOAD_LIST_PREF);
+      lazy.Preferences.reset(CERT_PINNING_ENFORCEMENT_PREF);
 
       // clear collected HSTS and HPKP state
-      sss.clearAll();
+      lazy.sss.clearAll();
     }
 
-    certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    lazy.certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
       ignore
     );
   }

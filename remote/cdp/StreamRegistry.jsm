@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 
@@ -26,7 +28,7 @@ class StreamRegistry {
     // Register an async shutdown blocker to ensure all open IO streams are
     // closed, and remaining temporary files removed. Needs to happen before
     // OS.File has been shutdown.
-    AsyncShutdown.profileBeforeChange.addBlocker(
+    lazy.AsyncShutdown.profileBeforeChange.addBlocker(
       "Remote Agent: Clean-up of open streams",
       async () => {
         await this.destructor();
@@ -43,7 +45,8 @@ class StreamRegistry {
   }
 
   async _discard(stream) {
-    if (stream instanceof OS.File) {
+    // eslint-disable-next-line mozilla/use-isInstance
+    if (stream instanceof lazy.OS.File) {
       let fileInfo;
 
       // Also remove the temporary file
@@ -51,7 +54,7 @@ class StreamRegistry {
         fileInfo = await stream.stat();
 
         stream.close();
-        await OS.File.remove(fileInfo.path, { ignoreAbsent: true });
+        await lazy.OS.File.remove(fileInfo.path, { ignoreAbsent: true });
       } catch (e) {
         console.error(`Failed to remove ${fileInfo?.path}: ${e.message}`);
       }
@@ -70,14 +73,15 @@ class StreamRegistry {
   add(stream) {
     let handle;
 
-    if (stream instanceof OS.File) {
+    // eslint-disable-next-line mozilla/use-isInstance
+    if (stream instanceof lazy.OS.File) {
       handle = Services.uuid
         .generateUUID()
         .toString()
         .slice(1, -1);
     } else {
       // Bug 1602731 - Implement support for blob
-      throw new UnsupportedError(`Unknown stream type for ${stream}`);
+      throw new lazy.UnsupportedError(`Unknown stream type for ${stream}`);
     }
 
     this.streams.set(handle, stream);

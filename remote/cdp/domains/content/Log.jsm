@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContentProcessDomain:
     "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm",
 });
@@ -23,7 +25,7 @@ const CONSOLE_MESSAGE_LEVEL_MAP = {
   [Ci.nsIConsoleMessage.error]: "error",
 };
 
-class Log extends ContentProcessDomain {
+class Log extends lazy.ContentProcessDomain {
   constructor(session) {
     super(session);
     this.enabled = false;

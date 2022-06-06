@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ComponentUtils: "resource://gre/modules/ComponentUtils.jsm",
 });
 
@@ -66,7 +68,7 @@ ChannelEventSink.prototype = {
   },
 };
 
-const ChannelEventSinkFactory = ComponentUtils.generateSingletonFactory(
+const ChannelEventSinkFactory = lazy.ComponentUtils.generateSingletonFactory(
   ChannelEventSink
 );
 

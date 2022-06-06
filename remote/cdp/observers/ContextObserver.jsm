@@ -30,7 +30,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
   executeSoon: "chrome://remote/content/shared/Sync.jsm",
@@ -39,7 +41,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class ContextObserver {
   constructor(chromeEventHandler) {
     this.chromeEventHandler = chromeEventHandler;
-    EventEmitter.decorate(this);
+    lazy.EventEmitter.decorate(this);
 
     this._fissionEnabled = Services.appinfo.fissionAutostart;
 
@@ -151,7 +153,7 @@ class ContextObserver {
         const id = window.windowGlobalChild.innerWindowId;
         this.emit("context-created", { windowId: id, window });
         // Delay script-loaded to allow context cleanup to happen first
-        executeSoon(() => {
+        lazy.executeSoon(() => {
           this.emit("script-loaded", { windowId: id, window });
         });
         break;

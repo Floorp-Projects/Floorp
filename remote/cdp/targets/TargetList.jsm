@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   MainProcessTarget:
     "chrome://remote/content/cdp/targets/MainProcessTarget.jsm",
@@ -24,7 +26,7 @@ class TargetList {
     // Target ID -> Target
     this._targets = new Map();
 
-    EventEmitter.decorate(this);
+    lazy.EventEmitter.decorate(this);
   }
 
   /**
@@ -48,11 +50,11 @@ class TargetList {
       throw new Error("Targets is already watching for new tabs");
     }
 
-    this.tabObserver = new TabObserver({ registerExisting: true });
+    this.tabObserver = new lazy.TabObserver({ registerExisting: true });
 
     // Handle creation of tab targets for opened tabs.
     this.tabObserver.on("open", async (eventName, tab) => {
-      const target = new TabTarget(this, tab.linkedBrowser);
+      const target = new lazy.TabTarget(this, tab.linkedBrowser);
       this.registerTarget(target);
     });
 
@@ -65,7 +67,7 @@ class TargetList {
         return;
       }
 
-      const id = TabManager.getIdForBrowser(browser);
+      const id = lazy.TabManager.getIdForBrowser(browser);
       const target = Array.from(this._targets.values()).find(
         target => target.id == id
       );
@@ -142,7 +144,7 @@ class TargetList {
    */
   getMainProcessTarget() {
     if (!this.mainProcessTarget) {
-      this.mainProcessTarget = new MainProcessTarget(this);
+      this.mainProcessTarget = new lazy.MainProcessTarget(this);
       this.registerTarget(this.mainProcessTarget);
     }
     return this.mainProcessTarget;

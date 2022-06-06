@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   addDebuggerToGlobal: "resource://gre/modules/jsdebugger.jsm",
 
   ContentProcessDomain:
@@ -21,14 +23,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/cdp/domains/content/runtime/ExecutionContext.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "ConsoleAPIStorage", () => {
+XPCOMUtils.defineLazyGetter(lazy, "ConsoleAPIStorage", () => {
   return Cc["@mozilla.org/consoleAPI-storage;1"].getService(
     Ci.nsIConsoleAPIStorage
   );
 });
 
 // Import the `Debugger` constructor in the current scope
-addDebuggerToGlobal(globalThis);
+lazy.addDebuggerToGlobal(globalThis);
 
 const CONSOLE_API_LEVEL_MAP = {
   warn: "warning",
@@ -60,7 +62,7 @@ class SetMap extends Map {
   }
 }
 
-class Runtime extends ContentProcessDomain {
+class Runtime extends lazy.ContentProcessDomain {
   constructor(session) {
     super(session);
     this.enabled = false;
@@ -102,14 +104,14 @@ class Runtime extends ContentProcessDomain {
 
       Services.console.registerListener(this);
       this.onConsoleLogEvent = this.onConsoleLogEvent.bind(this);
-      ConsoleAPIStorage.addLogEventListener(
+      lazy.ConsoleAPIStorage.addLogEventListener(
         this.onConsoleLogEvent,
         Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
       );
 
       // Spin the event loop in order to send the `executionContextCreated` event right
       // after we replied to `enable` request.
-      executeSoon(() => {
+      lazy.executeSoon(() => {
         this._onContextCreated("context-created", {
           windowId: this.content.windowGlobalChild.innerWindowId,
           window: this.content,
@@ -124,7 +126,7 @@ class Runtime extends ContentProcessDomain {
       this.enabled = false;
 
       Services.console.unregisterListener(this);
-      ConsoleAPIStorage.removeLogEventListener(this.onConsoleLogEvent);
+      lazy.ConsoleAPIStorage.removeLogEventListener(this.onConsoleLogEvent);
     }
   }
 
@@ -494,7 +496,7 @@ class Runtime extends ContentProcessDomain {
       }
     }
 
-    const context = new ExecutionContext(
+    const context = new lazy.ExecutionContext(
       this._debugger,
       window,
       this.innerWindowIdToContexts.count,

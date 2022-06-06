@@ -9,7 +9,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   CommonUtils: "resource://services-common/utils.js",
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -19,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gActivityDistributor",
   "@mozilla.org/network/http-activity-distributor;1",
   "nsIHttpActivityDistributor"
@@ -27,7 +29,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const CC = Components.Constructor;
 
-XPCOMUtils.defineLazyGetter(this, "BinaryInputStream", () => {
+XPCOMUtils.defineLazyGetter(lazy, "BinaryInputStream", () => {
   return CC(
     "@mozilla.org/binaryinputstream;1",
     "nsIBinaryInputStream",
@@ -35,7 +37,7 @@ XPCOMUtils.defineLazyGetter(this, "BinaryInputStream", () => {
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "BinaryOutputStream", () => {
+XPCOMUtils.defineLazyGetter(lazy, "BinaryOutputStream", () => {
   return CC(
     "@mozilla.org/binaryoutputstream;1",
     "nsIBinaryOutputStream",
@@ -43,7 +45,7 @@ XPCOMUtils.defineLazyGetter(this, "BinaryOutputStream", () => {
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "StorageStream", () => {
+XPCOMUtils.defineLazyGetter(lazy, "StorageStream", () => {
   return CC("@mozilla.org/storagestream;1", "nsIStorageStream", "init");
 });
 
@@ -52,10 +54,10 @@ const MAX_RESPONSE_STORAGE_SIZE = 100 * 1024 * 1024;
 
 class NetworkObserver {
   constructor() {
-    EventEmitter.decorate(this);
+    lazy.EventEmitter.decorate(this);
     this._browserSessionCount = new Map();
-    gActivityDistributor.addObserver(this);
-    ChannelEventSinkFactory.getService().registerCollector(this);
+    lazy.gActivityDistributor.addObserver(this);
+    lazy.ChannelEventSinkFactory.getService().registerCollector(this);
 
     this._redirectMap = new Map();
 
@@ -73,8 +75,8 @@ class NetworkObserver {
   }
 
   dispose() {
-    gActivityDistributor.removeObserver(this);
-    ChannelEventSinkFactory.getService().unregisterCollector(this);
+    lazy.gActivityDistributor.removeObserver(this);
+    lazy.ChannelEventSinkFactory.getService().unregisterCollector(this);
 
     Services.obs.removeObserver(this._onRequest, "http-on-modify-request");
     Services.obs.removeObserver(
@@ -398,7 +400,7 @@ function readRequestPostData(httpChannel) {
   // Read data from the stream.
   let text;
   try {
-    text = NetUtil.readInputStreamToString(iStream, iStream.available());
+    text = lazy.NetUtil.readInputStreamToString(iStream, iStream.available());
     const converter = Cc[
       "@mozilla.org/intl/scriptableunicodeconverter"
     ].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -515,7 +517,11 @@ class ResponseStorage {
     let result = response.body;
     if (response.encodings && response.encodings.length) {
       for (const encoding of response.encodings) {
-        result = CommonUtils.convertString(result, encoding, "uncompressed");
+        result = lazy.CommonUtils.convertString(
+          result,
+          encoding,
+          "uncompressed"
+        );
       }
     }
     return { base64body: btoa(result) };
@@ -534,9 +540,9 @@ class ResponseBodyListener {
   }
 
   onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
-    const iStream = new BinaryInputStream(aInputStream);
-    const sStream = new StorageStream(8192, aCount, null);
-    const oStream = new BinaryOutputStream(sStream.getOutputStream(0));
+    const iStream = new lazy.BinaryInputStream(aInputStream);
+    const sStream = new lazy.StorageStream(8192, aCount, null);
+    const oStream = new lazy.BinaryOutputStream(sStream.getOutputStream(0));
 
     // Copy received data as they come.
     const data = iStream.readBytes(aCount);
