@@ -14,7 +14,9 @@ const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
@@ -130,7 +132,7 @@ class AboutPreferences {
       sections = this.handleDiscoverySettings(sections);
     }
 
-    const featureConfig = NimbusFeatures.newtab.getAllVariables() || {};
+    const featureConfig = lazy.NimbusFeatures.newtab.getAllVariables() || {};
 
     this.renderPreferences(window, [
       ...PREFS_BEFORE_SECTIONS(featureConfig),

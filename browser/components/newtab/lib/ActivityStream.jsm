@@ -9,14 +9,16 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DEFAULT_SITES",
   "resource://activity-stream/lib/DefaultSites.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Region",
   "resource://gre/modules/Region.jsm"
 );
@@ -27,77 +29,77 @@ const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AboutPreferences",
   "resource://activity-stream/lib/AboutPreferences.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DefaultPrefs",
   "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NewTabInit",
   "resource://activity-stream/lib/NewTabInit.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SectionsFeed",
   "resource://activity-stream/lib/SectionsManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RecommendationProvider",
   "resource://activity-stream/lib/RecommendationProvider.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesFeed",
   "resource://activity-stream/lib/PlacesFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrefsFeed",
   "resource://activity-stream/lib/PrefsFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Store",
   "resource://activity-stream/lib/Store.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SystemTickFeed",
   "resource://activity-stream/lib/SystemTickFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryFeed",
   "resource://activity-stream/lib/TelemetryFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FaviconFeed",
   "resource://activity-stream/lib/FaviconFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TopSitesFeed",
   "resource://activity-stream/lib/TopSitesFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TopStoriesFeed",
   "resource://activity-stream/lib/TopStoriesFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "HighlightsFeed",
   "resource://activity-stream/lib/HighlightsFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DiscoveryStreamFeed",
   "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
 );
@@ -130,7 +132,7 @@ const PREFS_CONFIG = new Map([
       title:
         "Comma-separated list of default top sites to fill in behind visited sites",
       getValue: ({ geo }) =>
-        DEFAULT_SITES.get(DEFAULT_SITES.has(geo) ? geo : ""),
+        lazy.DEFAULT_SITES.get(lazy.DEFAULT_SITES.has(geo) ? geo : ""),
     },
   ],
   [
@@ -460,44 +462,44 @@ const PREFS_CONFIG = new Map([
 const FEEDS_DATA = [
   {
     name: "aboutpreferences",
-    factory: () => new AboutPreferences(),
+    factory: () => new lazy.AboutPreferences(),
     title: "about:preferences rendering",
     value: true,
   },
   {
     name: "newtabinit",
-    factory: () => new NewTabInit(),
+    factory: () => new lazy.NewTabInit(),
     title: "Sends a copy of the state to each new tab that is opened",
     value: true,
   },
   {
     name: "places",
-    factory: () => new PlacesFeed(),
+    factory: () => new lazy.PlacesFeed(),
     title: "Listens for and relays various Places-related events",
     value: true,
   },
   {
     name: "prefs",
-    factory: () => new PrefsFeed(PREFS_CONFIG),
+    factory: () => new lazy.PrefsFeed(PREFS_CONFIG),
     title: "Preferences",
     value: true,
   },
   {
     name: "sections",
-    factory: () => new SectionsFeed(),
+    factory: () => new lazy.SectionsFeed(),
     title: "Manages sections",
     value: true,
   },
   {
     name: "section.highlights",
-    factory: () => new HighlightsFeed(),
+    factory: () => new lazy.HighlightsFeed(),
     title: "Fetches content recommendations from places db",
     value: false,
   },
   {
     name: "system.topstories",
     factory: () =>
-      new TopStoriesFeed(PREFS_CONFIG.get("discoverystream.config")),
+      new lazy.TopStoriesFeed(PREFS_CONFIG.get("discoverystream.config")),
     title:
       "System pref that fetches content recommendations from a configurable content provider",
     // Dynamically determine if Pocket should be shown for a geo / locale
@@ -549,37 +551,37 @@ const FEEDS_DATA = [
   },
   {
     name: "systemtick",
-    factory: () => new SystemTickFeed(),
+    factory: () => new lazy.SystemTickFeed(),
     title: "Produces system tick events to periodically check for data expiry",
     value: true,
   },
   {
     name: "telemetry",
-    factory: () => new TelemetryFeed(),
+    factory: () => new lazy.TelemetryFeed(),
     title: "Relays telemetry-related actions to PingCentre",
     value: true,
   },
   {
     name: "favicon",
-    factory: () => new FaviconFeed(),
+    factory: () => new lazy.FaviconFeed(),
     title: "Fetches tippy top manifests from remote service",
     value: true,
   },
   {
     name: "system.topsites",
-    factory: () => new TopSitesFeed(),
+    factory: () => new lazy.TopSitesFeed(),
     title: "Queries places and gets metadata for Top Sites section",
     value: true,
   },
   {
     name: "recommendationprovider",
-    factory: () => new RecommendationProvider(),
+    factory: () => new lazy.RecommendationProvider(),
     title: "Handles setup and interaction for the personality provider",
     value: true,
   },
   {
     name: "discoverystreamfeed",
-    factory: () => new DiscoveryStreamFeed(),
+    factory: () => new lazy.DiscoveryStreamFeed(),
     title: "Handles new pocket ui for the new tab page",
     value: true,
   },
@@ -598,9 +600,9 @@ class ActivityStream {
    */
   constructor() {
     this.initialized = false;
-    this.store = new Store();
+    this.store = new lazy.Store();
     this.feeds = FEEDS_CONFIG;
-    this._defaultPrefs = new DefaultPrefs(PREFS_CONFIG);
+    this._defaultPrefs = new lazy.DefaultPrefs(PREFS_CONFIG);
   }
 
   init() {
@@ -691,7 +693,7 @@ class ActivityStream {
 
   uninit() {
     if (this.geo === "") {
-      Services.obs.removeObserver(this, Region.REGION_TOPIC);
+      Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
     }
 
     Services.obs.removeObserver(this, "intl:app-locales-changed");
@@ -702,11 +704,11 @@ class ActivityStream {
 
   _updateDynamicPrefs() {
     // Save the geo pref if we have it
-    if (Region.home) {
-      this.geo = Region.home;
+    if (lazy.Region.home) {
+      this.geo = lazy.Region.home;
     } else if (this.geo !== "") {
       // Watch for geo changes and use a dummy value for now
-      Services.obs.addObserver(this, Region.REGION_TOPIC);
+      Services.obs.addObserver(this, lazy.Region.REGION_TOPIC);
       this.geo = "";
     }
 
@@ -751,7 +753,7 @@ class ActivityStream {
   observe(subject, topic, data) {
     switch (topic) {
       case "intl:app-locales-changed":
-      case Region.REGION_TOPIC:
+      case lazy.Region.REGION_TOPIC:
         this._updateDynamicPrefs();
         break;
     }

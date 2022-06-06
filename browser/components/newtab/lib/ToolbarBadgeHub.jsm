@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EveryWindow: "resource:///modules/EveryWindow.jsm",
   ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -88,15 +90,15 @@ class _ToolbarBadgeHub {
   executeAction({ id, data, message_id }) {
     switch (id) {
       case "show-whatsnew-button":
-        ToolbarPanelHub.enableToolbarButton();
-        ToolbarPanelHub.enableAppmenuButton();
+        lazy.ToolbarPanelHub.enableToolbarButton();
+        lazy.ToolbarPanelHub.enableAppmenuButton();
         break;
     }
   }
 
   _clearBadgeTimeout() {
     if (this.state.showBadgeTimeoutId) {
-      clearTimeout(this.state.showBadgeTimeoutId);
+      lazy.clearTimeout(this.state.showBadgeTimeoutId);
     }
   }
 
@@ -130,7 +132,7 @@ class _ToolbarBadgeHub {
       }
     }
     // Will call uninit on every window
-    EveryWindow.unregisterCallback(this.id);
+    lazy.EveryWindow.unregisterCallback(this.id);
     if (this.state.notification) {
       this._blockMessageById(this.state.notification.id);
     }
@@ -221,7 +223,7 @@ class _ToolbarBadgeHub {
       return;
     }
 
-    EveryWindow.registerCallback(
+    lazy.EveryWindow.registerCallback(
       this.id,
       win => {
         if (notificationsByWindow.has(win)) {
@@ -252,8 +254,8 @@ class _ToolbarBadgeHub {
     }
 
     if (message.content.delay) {
-      this.state.showBadgeTimeoutId = setTimeout(() => {
-        requestIdleCallback(() => this.registerBadgeToAllWindows(message));
+      this.state.showBadgeTimeoutId = lazy.setTimeout(() => {
+        lazy.requestIdleCallback(() => this.registerBadgeToAllWindows(message));
       }, message.content.delay);
     } else {
       this.registerBadgeToAllWindows(message);
@@ -285,7 +287,7 @@ class _ToolbarBadgeHub {
     // Only send pings for non private browsing windows
     if (
       win &&
-      !PrivateBrowsingUtils.isBrowserPrivate(
+      !lazy.PrivateBrowsingUtils.isBrowserPrivate(
         win.ownerGlobal.gBrowser.selectedBrowser
       )
     ) {

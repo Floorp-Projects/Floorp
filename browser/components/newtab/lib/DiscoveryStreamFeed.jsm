@@ -6,13 +6,14 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
@@ -20,17 +21,17 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Region",
   "resource://gre/modules/Region.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PersistentCache",
   "resource://activity-stream/lib/PersistentCache.jsm"
 );
@@ -75,7 +76,7 @@ class DiscoveryStreamFeed {
     this.loaded = false;
 
     // Persistent cache for remote endpoint data.
-    this.cache = new PersistentCache(CACHE_KEY, true);
+    this.cache = new lazy.PersistentCache(CACHE_KEY, true);
     this.locale = Services.locale.appLocaleAsBCP47;
     this._impressionId = this.getOrCreateImpressionId();
     // Internal in-memory cache for parsing json prefs.
@@ -143,7 +144,7 @@ class DiscoveryStreamFeed {
   }
 
   get region() {
-    return Region.home;
+    return lazy.Region.home;
   }
 
   get showSpocs() {
@@ -260,7 +261,7 @@ class DiscoveryStreamFeed {
       const controller = new AbortController();
       const { signal } = controller;
 
-      const fetchPromise = fetch(endpoint, {
+      const fetchPromise = lazy.fetch(endpoint, {
         ...options,
         credentials: "omit",
         signal,
@@ -1088,7 +1089,7 @@ class DiscoveryStreamFeed {
       let flights = this.readDataPref(PREF_FLIGHT_BLOCKS);
       const filteredItems = data.filter(item => {
         const blocked =
-          NewTabUtils.blockedLinks.isBlocked({ url: item.url }) ||
+          lazy.NewTabUtils.blockedLinks.isBlocked({ url: item.url }) ||
           flights[item.flight_id];
         return !blocked;
       });
@@ -1692,7 +1693,7 @@ class DiscoveryStreamFeed {
         Services.obs.notifyObservers(null, "idle-daily");
         break;
       case at.DISCOVERY_STREAM_DEV_SYNC_RS:
-        RemoteSettings.pollChanges();
+        lazy.RemoteSettings.pollChanges();
         break;
       case at.DISCOVERY_STREAM_DEV_EXPIRE_CACHE:
         // Personalization scores update at a slower interval than content, so in order to debug,

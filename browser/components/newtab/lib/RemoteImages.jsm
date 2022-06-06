@@ -9,14 +9,16 @@ const { PromiseUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Downloader",
   "resource://services-settings/Attachments.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "KintoHttpClient",
   "resource://services-common/kinto-http-client.js"
 );
@@ -293,7 +295,7 @@ class _RemoteImages {
    *          with an Error.
    */
   async #download(db, recordId) {
-    const client = new KintoHttpClient(
+    const client = new lazy.KintoHttpClient(
       Services.prefs.getStringPref(RS_SERVER_PREF)
     );
 
@@ -302,7 +304,7 @@ class _RemoteImages {
       .collection(RS_COLLECTION)
       .getRecord(recordId);
 
-    const downloader = new Downloader(RS_MAIN_BUCKET, RS_COLLECTION);
+    const downloader = new lazy.Downloader(RS_MAIN_BUCKET, RS_COLLECTION);
 
     const arrayBuffer = await downloader.downloadAsBytes(record.data, {
       retries: RS_DOWNLOAD_MAX_RETRIES,

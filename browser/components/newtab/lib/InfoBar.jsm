@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
 });
@@ -58,7 +60,9 @@ class InfoBarNotification {
   formatMessageConfig(doc, content) {
     let docFragment = doc.createDocumentFragment();
     // notificationbox will only `appendChild` for documentFragments
-    docFragment.appendChild(RemoteL10n.createElement(doc, "span", { content }));
+    docFragment.appendChild(
+      lazy.RemoteL10n.createElement(doc, "span", { content })
+    );
 
     return docFragment;
   }
@@ -155,7 +159,7 @@ const InfoBar = {
 
     const win = browser.ownerGlobal;
 
-    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
       return null;
     }
 

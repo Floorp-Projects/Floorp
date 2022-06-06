@@ -41,7 +41,9 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
@@ -60,7 +62,7 @@ const ABOUT_WELCOME_URL =
   "resource://activity-stream/aboutwelcome/aboutwelcome.html";
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BasePromiseWorker",
   "resource://gre/modules/PromiseWorker.jsm"
 );
@@ -125,7 +127,7 @@ const AboutHomeStartupCacheChild = {
       );
     }
 
-    if (!NimbusFeatures.abouthomecache.isEnabled()) {
+    if (!lazy.NimbusFeatures.abouthomecache.isEnabled()) {
       return;
     }
 
@@ -338,7 +340,7 @@ const AboutHomeStartupCacheChild = {
       return this._cacheWorker;
     }
 
-    this._cacheWorker = new BasePromiseWorker(CACHE_WORKER_URL);
+    this._cacheWorker = new lazy.BasePromiseWorker(CACHE_WORKER_URL);
     return this._cacheWorker;
   },
 
@@ -443,8 +445,8 @@ class BaseAboutNewTabService {
      * This is calculated in the same way the default URL is.
      */
 
-    NimbusFeatures.aboutwelcome.recordExposureEvent({ once: true });
-    if (NimbusFeatures.aboutwelcome.isEnabled({ defaultValue: true })) {
+    lazy.NimbusFeatures.aboutwelcome.recordExposureEvent({ once: true });
+    if (lazy.NimbusFeatures.aboutwelcome.isEnabled({ defaultValue: true })) {
       return ABOUT_WELCOME_URL;
     }
     return this.defaultURL;

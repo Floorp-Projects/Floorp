@@ -13,14 +13,16 @@ const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
@@ -35,12 +37,12 @@ const MIN_FAVICON_SIZE = 96;
  */
 function getFaviconInfo(uri) {
   return new Promise(resolve =>
-    PlacesUtils.favicons.getFaviconDataForPage(
+    lazy.PlacesUtils.favicons.getFaviconDataForPage(
       uri,
       // Package up the icon data in an object if we have it; otherwise null
       (iconUri, faviconLength, favicon, mimeType, faviconSize) =>
         resolve(iconUri ? { iconUri, faviconSize } : null),
-      NewTabUtils.activityStreamProvider.THUMB_FAVICON_SIZE
+      lazy.NewTabUtils.activityStreamProvider.THUMB_FAVICON_SIZE
     )
   );
 }
@@ -75,8 +77,8 @@ async function fetchVisitPaths(url) {
       JOIN path
         ON visit_id = from_visit
       WHERE visit_type IN
-        (${PlacesUtils.history.TRANSITIONS.REDIRECT_PERMANENT},
-         ${PlacesUtils.history.TRANSITIONS.REDIRECT_TEMPORARY})
+        (${lazy.PlacesUtils.history.TRANSITIONS.REDIRECT_PERMANENT},
+         ${lazy.PlacesUtils.history.TRANSITIONS.REDIRECT_TEMPORARY})
     )
     SELECT visit_id, (
       SELECT (
@@ -88,7 +90,7 @@ async function fetchVisitPaths(url) {
     FROM path
   `;
 
-  const visits = await NewTabUtils.activityStreamProvider.executePlacesQuery(
+  const visits = await lazy.NewTabUtils.activityStreamProvider.executePlacesQuery(
     query,
     {
       columns: ["visit_id", "url"],
@@ -113,11 +115,11 @@ async function fetchIconFromRedirects(url) {
     const redirectedUri = Services.io.newURI(lastVisit.url);
     const iconInfo = await getFaviconInfo(redirectedUri);
     if (iconInfo && iconInfo.faviconSize >= MIN_FAVICON_SIZE) {
-      PlacesUtils.favicons.setAndFetchFaviconForPage(
+      lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
         Services.io.newURI(url),
         iconInfo.iconUri,
         false,
-        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
         null,
         Services.scriptSecurityManager.getSystemPrincipal()
       );
@@ -157,11 +159,11 @@ class FaviconFeed {
       .mutate()
       .setRef("tippytop")
       .finalize();
-    PlacesUtils.favicons.setAndFetchFaviconForPage(
+    lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
       Services.io.newURI(url),
       iconUri,
       false,
-      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
       null,
       Services.scriptSecurityManager.getSystemPrincipal()
     );

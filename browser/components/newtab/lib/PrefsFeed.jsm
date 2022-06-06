@@ -17,7 +17,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Region: "resource://gre/modules/Region.jsm",
@@ -68,7 +70,7 @@ class PrefsFeed {
    * Handler for when experiment data updates.
    */
   onExperimentUpdated(event, reason) {
-    const value = NimbusFeatures.newtab.getAllVariables() || {};
+    const value = lazy.NimbusFeatures.newtab.getAllVariables() || {};
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.PREF_CHANGED,
@@ -84,7 +86,7 @@ class PrefsFeed {
    * Handler for Pocket specific experiment data updates.
    */
   onPocketExperimentUpdated(event, reason) {
-    const value = NimbusFeatures.pocketNewtab.getAllVariables() || {};
+    const value = lazy.NimbusFeatures.pocketNewtab.getAllVariables() || {};
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.PREF_CHANGED,
@@ -98,8 +100,8 @@ class PrefsFeed {
 
   init() {
     this._prefs.observeBranch(this);
-    NimbusFeatures.newtab.onUpdate(this.onExperimentUpdated);
-    NimbusFeatures.pocketNewtab.onUpdate(this.onPocketExperimentUpdated);
+    lazy.NimbusFeatures.newtab.onUpdate(this.onExperimentUpdated);
+    lazy.NimbusFeatures.pocketNewtab.onUpdate(this.onPocketExperimentUpdated);
 
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
 
@@ -111,16 +113,16 @@ class PrefsFeed {
 
     // These are not prefs, but are needed to determine stuff in content that can only be
     // computed in main process
-    values.isPrivateBrowsingEnabled = PrivateBrowsingUtils.enabled;
+    values.isPrivateBrowsingEnabled = lazy.PrivateBrowsingUtils.enabled;
     values.platform = AppConstants.platform;
 
     // Save the geo pref if we have it
-    if (Region.home) {
-      values.region = Region.home;
+    if (lazy.Region.home) {
+      values.region = lazy.Region.home;
       this.geo = values.region;
     } else if (this.geo !== "") {
       // Watch for geo changes and use a dummy value for now
-      Services.obs.addObserver(this, Region.REGION_TOPIC);
+      Services.obs.addObserver(this, lazy.Region.REGION_TOPIC);
       this.geo = "";
     }
 
@@ -174,8 +176,9 @@ class PrefsFeed {
     });
 
     // Add experiment values and default values
-    values.featureConfig = NimbusFeatures.newtab.getAllVariables() || {};
-    values.pocketConfig = NimbusFeatures.pocketNewtab.getAllVariables() || {};
+    values.featureConfig = lazy.NimbusFeatures.newtab.getAllVariables() || {};
+    values.pocketConfig =
+      lazy.NimbusFeatures.pocketNewtab.getAllVariables() || {};
     this._setBoolPref(values, "logowordmark.alwaysVisible", false);
     this._setBoolPref(values, "feeds.section.topstories", false);
     this._setBoolPref(values, "discoverystream.enabled", false);
@@ -215,10 +218,10 @@ class PrefsFeed {
 
   removeListeners() {
     this._prefs.ignoreBranch(this);
-    NimbusFeatures.newtab.off(this.onExperimentUpdated);
-    NimbusFeatures.pocketNewtab.off(this.onPocketExperimentUpdated);
+    lazy.NimbusFeatures.newtab.off(this.onExperimentUpdated);
+    lazy.NimbusFeatures.pocketNewtab.off(this.onPocketExperimentUpdated);
     if (this.geo === "") {
-      Services.obs.removeObserver(this, Region.REGION_TOPIC);
+      Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
     }
   }
 
@@ -233,11 +236,11 @@ class PrefsFeed {
 
   observe(subject, topic, data) {
     switch (topic) {
-      case Region.REGION_TOPIC:
+      case lazy.Region.REGION_TOPIC:
         this.store.dispatch(
           ac.BroadcastToContent({
             type: at.PREF_CHANGED,
-            data: { name: "region", value: Region.home },
+            data: { name: "region", value: lazy.Region.home },
           })
         );
         break;
