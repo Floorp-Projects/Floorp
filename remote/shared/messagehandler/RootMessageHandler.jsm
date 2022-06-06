@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   FrameTransport:
     "chrome://remote/content/shared/messagehandler/transports/FrameTransport.jsm",
   MessageHandler:
@@ -26,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * in the parent process. It can forward commands to MessageHandlers in other
  * layers (at the moment WindowGlobalMessageHandlers in content processes).
  */
-class RootMessageHandler extends MessageHandler {
+class RootMessageHandler extends lazy.MessageHandler {
   /**
    * Returns the RootMessageHandler module path.
    *
@@ -62,8 +64,8 @@ class RootMessageHandler extends MessageHandler {
   constructor(sessionId) {
     super(sessionId, null);
 
-    this._frameTransport = new FrameTransport(this);
-    this._sessionData = new SessionData(this);
+    this._frameTransport = new lazy.FrameTransport(this);
+    this._sessionData = new lazy.SessionData(this);
   }
 
   get sessionData() {
@@ -98,7 +100,7 @@ class RootMessageHandler extends MessageHandler {
    */
   forwardCommand(command) {
     switch (command.destination.type) {
-      case WindowGlobalMessageHandler.type:
+      case lazy.WindowGlobalMessageHandler.type:
         return this._frameTransport.forwardCommand(command);
       default:
         throw new Error(
@@ -145,7 +147,7 @@ class RootMessageHandler extends MessageHandler {
     }
 
     const destination = {
-      type: WindowGlobalMessageHandler.type,
+      type: lazy.WindowGlobalMessageHandler.type,
       contextDescriptor,
     };
 

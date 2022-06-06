@@ -10,12 +10,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
 
   Log: "chrome://remote/content/shared/Log.jsm",
 });
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 const FRAME_ACTOR_CONFIG = {
   parent: {
@@ -45,10 +47,10 @@ const MessageHandlerFrameActor = {
       return;
     }
 
-    ActorManagerParent.addJSWindowActors({
+    lazy.ActorManagerParent.addJSWindowActors({
       MessageHandlerFrame: FRAME_ACTOR_CONFIG,
     });
     this.registered = true;
-    logger.trace("Registered MessageHandlerFrame actors");
+    lazy.logger.trace("Registered MessageHandlerFrame actors");
   },
 };

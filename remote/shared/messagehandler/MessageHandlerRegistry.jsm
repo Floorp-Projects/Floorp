@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
   Log: "chrome://remote/content/shared/Log.jsm",
@@ -22,18 +24,18 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 /**
  * Map of MessageHandler type to MessageHandler subclass.
  */
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "MessageHandlerClasses",
   () =>
     new Map([
-      [RootMessageHandler.type, RootMessageHandler],
-      [WindowGlobalMessageHandler.type, WindowGlobalMessageHandler],
+      [lazy.RootMessageHandler.type, lazy.RootMessageHandler],
+      [lazy.WindowGlobalMessageHandler.type, lazy.WindowGlobalMessageHandler],
     ])
 );
 
@@ -48,10 +50,10 @@ XPCOMUtils.defineLazyGetter(
  *      Throws if no MessageHandler subclass is found for the provided type.
  */
 function getMessageHandlerClass(type) {
-  if (!MessageHandlerClasses.has(type)) {
+  if (!lazy.MessageHandlerClasses.has(type)) {
     throw new Error(`No MessageHandler class available for type "${type}"`);
   }
-  return MessageHandlerClasses.get(type);
+  return lazy.MessageHandlerClasses.get(type);
 }
 
 /**
@@ -66,7 +68,7 @@ function getMessageHandlerClass(type) {
  * The registry is useful to retrieve the appropriate MessageHandler instance
  * after crossing a technical boundary (eg process, thread...).
  */
-class MessageHandlerRegistry extends EventEmitter {
+class MessageHandlerRegistry extends lazy.EventEmitter {
   /*
    * @param {String} type
    *     MessageHandler type, one of MessageHandler.type.
@@ -98,7 +100,7 @@ class MessageHandlerRegistry extends EventEmitter {
    * to receive/send commands.
    */
   createAllMessageHandlers() {
-    const data = readSessionData();
+    const data = lazy.readSessionData();
     for (const [sessionId, sessionDataItems] of data) {
       // Create a message handler for this context for each active message
       // handler session.
@@ -176,7 +178,7 @@ class MessageHandlerRegistry extends EventEmitter {
   getRootMessageHandler(sessionId) {
     const rootMessageHandler = this.getExistingMessageHandler(
       sessionId,
-      RootMessageHandler.type
+      lazy.RootMessageHandler.type
     );
     if (!rootMessageHandler) {
       throw new Error(
@@ -217,7 +219,7 @@ class MessageHandlerRegistry extends EventEmitter {
 
     this._messageHandlersMap.set(sessionId, messageHandler);
 
-    logger.trace(
+    lazy.logger.trace(
       `Created MessageHandler ${this._type} for session ${sessionId}`
     );
 
@@ -234,7 +236,7 @@ class MessageHandlerRegistry extends EventEmitter {
     messageHandler.off("message-handler-event", this._onMessageHandlerEvent);
     this._messageHandlersMap.delete(messageHandler.sessionId);
 
-    logger.trace(
+    lazy.logger.trace(
       `Unregistered MessageHandler ${messageHandler.constructor.type} for session ${messageHandler.sessionId}`
     );
   }

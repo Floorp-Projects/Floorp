@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   MessageHandler:
@@ -24,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * commands further to other MessageHandlers and represents a leaf node in a
  * MessageHandler network.
  */
-class WindowGlobalMessageHandler extends MessageHandler {
+class WindowGlobalMessageHandler extends lazy.MessageHandler {
   constructor() {
     super(...arguments);
 
@@ -129,8 +131,9 @@ class WindowGlobalMessageHandler extends MessageHandler {
 
   _matchesContext(contextDescriptor) {
     return (
-      contextDescriptor.type === ContextDescriptorType.All ||
-      (contextDescriptor.type === ContextDescriptorType.TopBrowsingContext &&
+      contextDescriptor.type === lazy.ContextDescriptorType.All ||
+      (contextDescriptor.type ===
+        lazy.ContextDescriptorType.TopBrowsingContext &&
         contextDescriptor.id === this._context.browserId)
     );
   }

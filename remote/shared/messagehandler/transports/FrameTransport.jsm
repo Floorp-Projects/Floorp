@@ -6,13 +6,14 @@
 
 const EXPORTED_SYMBOLS = ["FrameTransport"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
+const lazy = {};
 
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   isBrowsingContextCompatible:
@@ -23,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () => lazy.Log.get());
 
 const MAX_RETRY_ATTEMPTS = 10;
 
@@ -42,7 +43,7 @@ class FrameTransport {
 
     // FrameTransport will rely on the MessageHandlerFrame JSWindow actors.
     // Make sure they are registered when instanciating a FrameTransport.
-    MessageHandlerFrameActor.register();
+    lazy.MessageHandlerFrameActor.register();
   }
 
   /**
@@ -154,11 +155,11 @@ class FrameTransport {
   _getBrowsingContextsForDescriptor(contextDescriptor) {
     const { id, type } = contextDescriptor;
 
-    if (type === ContextDescriptorType.All) {
+    if (type === lazy.ContextDescriptorType.All) {
       return this._getBrowsingContexts();
     }
 
-    if (type === ContextDescriptorType.TopBrowsingContext) {
+    if (type === lazy.ContextDescriptorType.TopBrowsingContext) {
       return this._getBrowsingContexts({ browserId: id });
     }
 
@@ -184,8 +185,8 @@ class FrameTransport {
     let browsingContexts = [];
 
     // Fetch all tab related browsing contexts for top-level windows.
-    for (const { browsingContext } of TabManager.browsers) {
-      if (isBrowsingContextCompatible(browsingContext, { browserId })) {
+    for (const { browsingContext } of lazy.TabManager.browsers) {
+      if (lazy.isBrowsingContextCompatible(browsingContext, { browserId })) {
         browsingContexts = browsingContexts.concat(
           browsingContext.getAllBrowsingContextsInSubtree()
         );

@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   error: "chrome://remote/content/shared/messagehandler/Errors.jsm",
   isBrowsingContextCompatible:
     "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.jsm",
@@ -27,10 +29,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  */
 class MessageHandlerFrameChild extends JSWindowActorChild {
   actorCreated() {
-    this.type = WindowGlobalMessageHandler.type;
+    this.type = lazy.WindowGlobalMessageHandler.type;
     this.context = this.manager.browsingContext;
 
-    this._registry = new MessageHandlerRegistry(this.type, this.context);
+    this._registry = new lazy.MessageHandlerRegistry(this.type, this.context);
     this._onRegistryEvent = this._onRegistryEvent.bind(this);
 
     // MessageHandlerFrameChild is responsible for forwarding events from
@@ -42,7 +44,7 @@ class MessageHandlerFrameChild extends JSWindowActorChild {
 
   handleEvent({ type }) {
     if (type == "DOMWindowCreated") {
-      if (isBrowsingContextCompatible(this.manager.browsingContext)) {
+      if (lazy.isBrowsingContextCompatible(this.manager.browsingContext)) {
         this._registry.createAllMessageHandlers();
       }
     }
@@ -57,7 +59,7 @@ class MessageHandlerFrameChild extends JSWindowActorChild {
       try {
         return await messageHandler.handleCommand(command);
       } catch (e) {
-        if (e instanceof error.MessageHandlerError) {
+        if (e instanceof lazy.error.MessageHandlerError) {
           return {
             error: e.toJSON(),
           };

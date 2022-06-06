@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
   error: "chrome://remote/content/shared/messagehandler/Errors.jsm",
@@ -20,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ModuleCache: "chrome://remote/content/shared/messagehandler/ModuleCache.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 /**
  * A ContextDescriptor object provides information to decide if a broadcast or
@@ -77,7 +79,7 @@ const ContextDescriptorType = {
  * instances are properly registered and can be retrieved based on a given
  * session id as well as some other context information.
  */
-class MessageHandler extends EventEmitter {
+class MessageHandler extends lazy.EventEmitter {
   /**
    * Create a new MessageHandler instance.
    *
@@ -89,12 +91,12 @@ class MessageHandler extends EventEmitter {
   constructor(sessionId, context) {
     super();
 
-    this._moduleCache = new ModuleCache(this);
+    this._moduleCache = new lazy.ModuleCache(this);
 
     this._sessionId = sessionId;
     this._context = context;
     this._contextId = this.constructor.getIdFromContext(context);
-    this._eventsDispatcher = new EventsDispatcher(this);
+    this._eventsDispatcher = new lazy.EventsDispatcher(this);
   }
 
   get contextId() {
@@ -114,7 +116,7 @@ class MessageHandler extends EventEmitter {
   }
 
   destroy() {
-    logger.trace(
+    lazy.logger.trace(
       `MessageHandler ${this.constructor.type} for session ${this.sessionId} is being destroyed`
     );
     this._eventsDispatcher.destroy();
@@ -214,12 +216,12 @@ class MessageHandler extends EventEmitter {
    */
   handleCommand(command) {
     const { moduleName, commandName, params, destination } = command;
-    logger.trace(
+    lazy.logger.trace(
       `Received command ${moduleName}.${commandName} for destination ${destination.type}`
     );
 
     if (!this.supportsCommand(moduleName, commandName, destination)) {
-      throw new error.UnsupportedCommandError(
+      throw new lazy.error.UnsupportedCommandError(
         `${moduleName}.${commandName} not supported for destination ${destination?.type}`
       );
     }
