@@ -1292,10 +1292,11 @@ JS_PUBLIC_API bool JS::IsIdleGCTaskNeeded(JSRuntime* rt) {
   return rt->gc.nursery().shouldCollect();
 }
 
-JS_PUBLIC_API void JS::RunIdleTimeGCTask(JSRuntime* rt) {
+JS_PUBLIC_API void JS::MaybeRunNurseryCollection(JSRuntime* rt,
+                                                 JS::GCReason reason) {
   gc::GCRuntime& gc = rt->gc;
   if (gc.nursery().shouldCollect()) {
-    gc.minorGC(JS::GCReason::IDLE_TIME_COLLECTION);
+    gc.minorGC(reason);
   }
 }
 
