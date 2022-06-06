@@ -32,7 +32,6 @@ const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/
 function getFilterBar(overrides = {}) {
   return FilterBar({
     serviceContainer,
-    hidePersistLogsCheckbox: false,
     attachRefToWebConsoleUI: () => {},
     webConsoleUI: {
       document,
