@@ -305,15 +305,6 @@ int32_t RTCPReceiver::RTT(uint32_t remote_ssrc,
   return 0;
 }
 
-RTCPReceiver::NonSenderRttStats RTCPReceiver::GetNonSenderRTT() const {
-  MutexLock lock(&rtcp_receiver_lock_);
-  auto it = non_sender_rtts_.find(remote_ssrc_);
-  if (it == non_sender_rtts_.end()) {
-    return {};
-  }
-  return it->second;
-}
-
 void RTCPReceiver::SetNonSenderRttMeasurement(bool enabled) {
   MutexLock lock(&rtcp_receiver_lock_);
   xr_rrtr_status_ = enabled;
@@ -457,16 +448,6 @@ bool RTCPReceiver::ParseCompoundPacket(rtc::ArrayView<const uint8_t> packet,
   MutexLock lock(&rtcp_receiver_lock_);
 
   CommonHeader rtcp_block;
-  // If a sender report is received but no DLRR, we need to reset the
-  // roundTripTime stat according to the standard, see
-  // https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteoutboundrtpstreamstats-roundtriptime
-  struct RtcpReceivedBlock {
-    bool sender_report = false;
-    bool dlrr = false;
-  };
-  // For each remote SSRC we store if we've received a sender report or a DLRR
-  // block.
-  flat_map<uint32_t, RtcpReceivedBlock> received_blocks;
   for (const uint8_t* next_block = packet.begin(); next_block != packet.end();
        next_block = rtcp_block.NextPacket()) {
     ptrdiff_t remaining_blocks_size = packet.end() - next_block;
@@ -487,7 +468,6 @@ bool RTCPReceiver::ParseCompoundPacket(rtc::ArrayView<const uint8_t> packet,
     switch (rtcp_block.type()) {
       case rtcp::SenderReport::kPacketType:
         HandleSenderReport(rtcp_block, packet_information);
-        received_blocks[packet_information->remote_ssrc].sender_report = true;
         break;
       case rtcp::ReceiverReport::kPacketType:
         HandleReceiverReport(rtcp_block, packet_information);
@@ -496,12 +476,7 @@ bool RTCPReceiver::ParseCompoundPacket(rtc::ArrayView<const uint8_t> packet,
         HandleSdes(rtcp_block, packet_information);
         break;
       case rtcp::ExtendedReports::kPacketType:
-        bool contains_dlrr;
-        uint32_t ssrc;
-        HandleXr(rtcp_block, packet_information, contains_dlrr, ssrc);
-        if (contains_dlrr) {
-          received_blocks[ssrc].dlrr = true;
-        }
+        HandleXr(rtcp_block, packet_information);
         break;
       case rtcp::Bye::kPacketType:
         HandleBye(rtcp_block);
@@ -550,15 +525,6 @@ bool RTCPReceiver::ParseCompoundPacket(rtc::ArrayView<const uint8_t> packet,
       default:
         ++num_skipped_packets_;
         break;
-    }
-  }
-
-  for (const auto& rb : received_blocks) {
-    if (rb.second.sender_report && !rb.second.dlrr) {
-      auto rtt_stats = non_sender_rtts_.find(rb.first);
-      if (rtt_stats != non_sender_rtts_.end()) {
-        rtt_stats->second.Invalidate();
-      }
     }
   }
 
@@ -889,22 +855,18 @@ void RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
 }
 
 void RTCPReceiver::HandleXr(const CommonHeader& rtcp_block,
-                            PacketInformation* packet_information,
-                            bool& contains_dlrr,
-                            uint32_t& ssrc) {
+                            PacketInformation* packet_information) {
   rtcp::ExtendedReports xr;
   if (!xr.Parse(rtcp_block)) {
     ++num_skipped_packets_;
     return;
   }
-  ssrc = xr.sender_ssrc();
-  contains_dlrr = !xr.dlrr().sub_blocks().empty();
 
   if (xr.rrtr())
     HandleXrReceiveReferenceTime(xr.sender_ssrc(), *xr.rrtr());
 
   for (const rtcp::ReceiveTimeInfo& time_info : xr.dlrr().sub_blocks())
-    HandleXrDlrrReportBlock(xr.sender_ssrc(), time_info);
+    HandleXrDlrrReportBlock(time_info);
 
   if (xr.target_bitrate()) {
     HandleXrTargetBitrate(xr.sender_ssrc(), *xr.target_bitrate(),
@@ -933,8 +895,7 @@ void RTCPReceiver::HandleXrReceiveReferenceTime(uint32_t sender_ssrc,
   }
 }
 
-void RTCPReceiver::HandleXrDlrrReportBlock(uint32_t sender_ssrc,
-                                           const rtcp::ReceiveTimeInfo& rti) {
+void RTCPReceiver::HandleXrDlrrReportBlock(const rtcp::ReceiveTimeInfo& rti) {
   if (!registered_ssrcs_.contains(rti.ssrc))  // Not to us.
     return;
 
@@ -946,21 +907,14 @@ void RTCPReceiver::HandleXrDlrrReportBlock(uint32_t sender_ssrc,
   uint32_t send_time_ntp = rti.last_rr;
   // RFC3611, section 4.5, LRR field discription states:
   // If no such block has been received, the field is set to zero.
-  if (send_time_ntp == 0) {
-    auto rtt_stats = non_sender_rtts_.find(sender_ssrc);
-    if (rtt_stats != non_sender_rtts_.end()) {
-      rtt_stats->second.Invalidate();
-    }
+  if (send_time_ntp == 0)
     return;
-  }
 
   uint32_t delay_ntp = rti.delay_since_last_rr;
   uint32_t now_ntp = CompactNtp(clock_->CurrentNtpTime());
 
   uint32_t rtt_ntp = now_ntp - delay_ntp - send_time_ntp;
   xr_rr_rtt_ms_ = CompactNtpRttToMs(rtt_ntp);
-
-  non_sender_rtts_[sender_ssrc].Update(TimeDelta::Millis(xr_rr_rtt_ms_));
 }
 
 void RTCPReceiver::HandleXrTargetBitrate(

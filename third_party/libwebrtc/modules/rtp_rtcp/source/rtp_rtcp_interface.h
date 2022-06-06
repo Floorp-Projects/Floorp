@@ -156,7 +156,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // Stats for RTCP sender reports (SR) for a specific SSRC.
   // Refer to https://tools.ietf.org/html/rfc3550#section-6.4.1.
   struct SenderReportStats {
-    // Arrival NTP timestamp for the last received RTCP SR.
+    // Arrival NPT timestamp for the last received RTCP SR.
     NtpTime last_arrival_timestamp;
     // Received (a.k.a., remote) NTP timestamp for the last received RTCP SR.
     NtpTime last_remote_timestamp;
@@ -172,16 +172,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // Total number of RTCP SR blocks received.
     // https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteoutboundrtpstreamstats-reportssent.
     uint64_t reports_count;
-  };
-  // Stats about the non-sender SSRC, based on RTCP extended reports (XR).
-  // Refer to https://datatracker.ietf.org/doc/html/rfc3611#section-2.
-  struct NonSenderRttStats {
-    // https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteoutboundrtpstreamstats-roundtriptime
-    absl::optional<TimeDelta> round_trip_time;
-    // https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteoutboundrtpstreamstats-totalroundtriptime
-    TimeDelta total_round_trip_time = TimeDelta::Zero();
-    // https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteoutboundrtpstreamstats-roundtriptimemeasurements
-    int round_trip_time_measurements = 0;
   };
 
   // **************************************************************************
@@ -422,8 +412,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   virtual std::vector<ReportBlockData> GetLatestReportBlockData() const = 0;
   // Returns stats based on the received RTCP SRs.
   virtual absl::optional<SenderReportStats> GetSenderReportStats() const = 0;
-  // Returns non-sender RTT stats, based on DLRR.
-  virtual absl::optional<NonSenderRttStats> GetNonSenderRttStats() const = 0;
 
   // (REMB) Receiver Estimated Max Bitrate.
   // Schedules sending REMB on next and following sender/receiver reports.

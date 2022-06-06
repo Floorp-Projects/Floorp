@@ -142,7 +142,6 @@ class AudioSendStream : public AudioSender {
       SdpAudioFormat format;
       bool nack_enabled = false;
       bool transport_cc_enabled = false;
-      bool enable_non_sender_rtt = false;
       absl::optional<int> cng_payload_type;
       absl::optional<int> red_payload_type;
       // If unset, use the encoder's default target bitrate.

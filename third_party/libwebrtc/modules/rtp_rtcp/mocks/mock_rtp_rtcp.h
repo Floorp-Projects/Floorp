@@ -152,10 +152,6 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               GetSenderReportStats,
               (),
               (const, override));
-  MOCK_METHOD(absl::optional<NonSenderRttStats>,
-              GetNonSenderRttStats,
-              (),
-              (const, override));
   MOCK_METHOD(void,
               SetRemb,
               (int64_t bitrate, std::vector<uint32_t> ssrcs),
