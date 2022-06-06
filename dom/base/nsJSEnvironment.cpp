@@ -1692,6 +1692,17 @@ void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
 }
 
 // static
+void nsJSContext::MaybePokeGC() {
+  if (sShuttingDown) {
+    return;
+  }
+
+  JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
+  if (JS::IsIdleGCTaskNeeded(rt)) {
+    sScheduler.PokeMinorGC(JS::GCReason::EAGER_NURSERY_COLLECTION);
+  }
+}
+
 void nsJSContext::DoLowMemoryGC() {
   if (sShuttingDown) {
     return;
