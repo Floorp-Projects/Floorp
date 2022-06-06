@@ -15,11 +15,8 @@ const {
   useDistinctSystemPrincipalLoader,
   releaseDistinctSystemPrincipalLoader,
 } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Subprocess",
+const { Subprocess } = ChromeUtils.import(
   "resource://gre/modules/Subprocess.jsm"
 );
 const { AppConstants } = ChromeUtils.import(
@@ -36,12 +33,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FileUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
-  return require("devtools/client/shared/telemetry");
-});
-XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
-  return require("devtools/shared/event-emitter");
-});
+const Telemetry = require("devtools/client/shared/telemetry");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 const Services = require("Services");
 const env = Cc["@mozilla.org/process/environment;1"].getService(
