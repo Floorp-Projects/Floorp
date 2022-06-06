@@ -1326,15 +1326,8 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
 
 // -------------------------------------
 #ifdef MOZ_WAYLAND
-bool GLBlitHelper::BlitImage(layers::DMABUFSurfaceImage* srcImage,
-                             const gfx::IntSize& destSize,
-                             OriginPos destOrigin) const {
-  DMABufSurface* surface = srcImage->GetSurface();
-  if (!surface) {
-    gfxCriticalError() << "Null DMABUFSurface for GLBlitHelper::BlitImage";
-    return false;
-  }
-
+bool GLBlitHelper::Blit(DMABufSurface* surface, const gfx::IntSize& destSize,
+                        OriginPos destOrigin) const {
   const auto& srcOrigin = OriginPos::BottomLeft;
 
   DrawBlitProg::BaseArgs baseArgs;
@@ -1387,6 +1380,17 @@ bool GLBlitHelper::BlitImage(layers::DMABUFSurfaceImage* srcImage,
   prog->Draw(baseArgs, pYuvArgs);
 
   return true;
+}
+
+bool GLBlitHelper::BlitImage(layers::DMABUFSurfaceImage* srcImage,
+                             const gfx::IntSize& destSize,
+                             OriginPos destOrigin) const {
+  DMABufSurface* surface = srcImage->GetSurface();
+  if (!surface) {
+    gfxCriticalError() << "Null DMABUFSurface for GLBlitHelper::BlitImage";
+    return false;
+  }
+  return Blit(surface, destSize, destOrigin);
 }
 #endif
 
