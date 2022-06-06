@@ -410,6 +410,8 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // Caller:
   // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- sp
 
+#error "Port changes from bug 1772506"
+
   // Add |this|, in the counter of known arguments.
   masm.loadPtr(
       Address(StackPointer, RectifierFrameLayout::offsetOfNumActualArgs()), s3);

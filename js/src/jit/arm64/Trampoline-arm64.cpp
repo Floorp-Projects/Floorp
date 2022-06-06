@@ -444,6 +444,17 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   masm.Add(x3, masm.GetStackPointer64(), Operand(x8, vixl::LSL, 3));
   masm.Add(x3, x3, Operand(sizeof(RectifierFrameLayout)));
 
+  // Save the frame pointer. Add 1 to x7 to account for this in frame alignment
+  // and frame size computations.
+  //
+  // NOTE: if this changes, fix the Baseline bailout code too!
+  // See BaselineStackBuilder::calculatePrevFramePtr and
+  // BaselineStackBuilder::buildRectifierFrame (in BaselineBailouts.cpp).
+  static_assert(sizeof(Value) == sizeof(void*));
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+  masm.Add(x7, x7, Operand(1));
+
   // Pad to a multiple of 16 bytes. This neglects the |this| value,
   // which will also be pushed, because the rest of the frame will
   // round off that value. See pushes of |argc|, |callee| and |desc| below.
@@ -526,12 +537,13 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // Get the size of the stack frame, and clean up the later fixed frame.
   masm.Ldr(x4, MemOperand(masm.GetStackPointer64(), 24, vixl::PostIndex));
 
-  // Now that the size of the stack frame sans the fixed frame has been loaded,
-  // add that onto the stack pointer.
-  masm.Add(masm.GetStackPointer64(), masm.GetStackPointer64(),
-           Operand(x4, vixl::LSR, FRAMESIZE_SHIFT));
+  // Discard pushed arguments, but not the pushed frame pointer.
+  masm.rshift32(Imm32(FRAMESIZE_SHIFT), r4);
+  masm.sub32(Imm32(sizeof(void*)), r4);
+  masm.addToStackPtr(r4);
 
-  // Pop the return address from earlier and branch.
+  // Pop the frame pointer and return address from earlier and branch.
+  masm.pop(FramePointer);
   masm.ret();
 }
 
