@@ -18,7 +18,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
@@ -30,34 +32,34 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
-  return LoginHelper.createLogger("AboutLoginsParent");
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+  return lazy.LoginHelper.createLogger("AboutLoginsParent");
 });
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "BREACH_ALERTS_ENABLED",
   "signon.management.page.breach-alerts.enabled",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "FXA_ENABLED",
   "identity.fxaccounts.enabled",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "OS_AUTH_ENABLED",
   "signon.management.page.os-auth.enabled",
   true
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "VULNERABLE_PASSWORDS_ENABLED",
   "signon.management.page.vulnerable-passwords.enabled",
   false
 );
-XPCOMUtils.defineLazyGetter(this, "AboutLoginsL10n", () => {
+XPCOMUtils.defineLazyGetter(lazy, "AboutLoginsL10n", () => {
   return new Localization(["branding/brand.ftl", "browser/aboutLogins.ftl"]);
 });
 
@@ -67,12 +69,13 @@ const PRIMARY_PASSWORD_NOTIFICATION_ID = "primary-password-login-required";
 
 // about:logins will always use the privileged content process,
 // even if it is disabled for other consumers such as about:newtab.
-const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
+const EXPECTED_ABOUTLOGINS_REMOTE_TYPE =
+  lazy.E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
 let _gPasswordRemaskTimeout = null;
 const convertSubjectToLogin = subject => {
   subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
-  const login = LoginHelper.loginToVanillaObject(subject);
-  if (!LoginHelper.isUserFacingLogin(login)) {
+  const login = lazy.LoginHelper.loginToVanillaObject(subject);
+  if (!lazy.LoginHelper.isUserFacingLogin(login)) {
     return null;
   }
   return augmentVanillaLoginObject(login);
@@ -177,19 +180,19 @@ class AboutLoginsParent extends JSWindowActorParent {
 
   #createLogin(newLogin) {
     if (!Services.policies.isAllowed("removeMasterPassword")) {
-      if (!LoginHelper.isPrimaryPasswordSet()) {
+      if (!lazy.LoginHelper.isPrimaryPasswordSet()) {
         this.#ownerGlobal.openDialog(
           "chrome://mozapps/content/preferences/changemp.xhtml",
           "",
           "centerscreen,chrome,modal,titlebar"
         );
-        if (!LoginHelper.isPrimaryPasswordSet()) {
+        if (!lazy.LoginHelper.isPrimaryPasswordSet()) {
           return;
         }
       }
     }
     // Remove the path from the origin, if it was provided.
-    let origin = LoginHelper.getLoginOrigin(newLogin.origin);
+    let origin = lazy.LoginHelper.getLoginOrigin(newLogin.origin);
     if (!origin) {
       Cu.reportError(
         "AboutLogins:CreateLogin: Unable to get an origin from the login details."
@@ -202,7 +205,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       usernameField: "",
       passwordField: "",
     });
-    newLogin = LoginHelper.vanillaObjectToLogin(newLogin);
+    newLogin = lazy.LoginHelper.vanillaObjectToLogin(newLogin);
     try {
       Services.logins.addLogin(newLogin);
     } catch (error) {
@@ -211,7 +214,7 @@ class AboutLoginsParent extends JSWindowActorParent {
   }
 
   #deleteLogin(loginObject) {
-    let login = LoginHelper.vanillaObjectToLogin(loginObject);
+    let login = lazy.LoginHelper.vanillaObjectToLogin(loginObject);
     Services.logins.removeLogin(login);
   }
 
@@ -229,8 +232,8 @@ class AboutLoginsParent extends JSWindowActorParent {
 
   #importFromBrowser() {
     try {
-      MigrationUtils.showMigrationWizard(this.#ownerGlobal, [
-        MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
+      lazy.MigrationUtils.showMigrationWizard(this.#ownerGlobal, [
+        lazy.MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
       ]);
     } catch (ex) {
       Cu.reportError(ex);
@@ -238,7 +241,7 @@ class AboutLoginsParent extends JSWindowActorParent {
   }
 
   #importReportInit() {
-    let reportData = LoginCSVImport.lastImportReport;
+    let reportData = lazy.LoginCSVImport.lastImportReport;
     this.sendAsyncMessage("AboutLogins:ImportReportData", reportData);
   }
 
@@ -266,9 +269,9 @@ class AboutLoginsParent extends JSWindowActorParent {
     // but we still call in to OSKeyStore on Linux to get
     // the proper auth_details for Telemetry.
     // See bug 1614874 for Linux support.
-    if (OS_AUTH_ENABLED && OSKeyStore.canReauth()) {
+    if (lazy.OS_AUTH_ENABLED && lazy.OSKeyStore.canReauth()) {
       messageId += "-" + AppConstants.platform;
-      [messageText, captionText] = await AboutLoginsL10n.formatMessages([
+      [messageText, captionText] = await lazy.AboutLoginsL10n.formatMessages([
         {
           id: messageId,
         },
@@ -278,9 +281,9 @@ class AboutLoginsParent extends JSWindowActorParent {
       ]);
     }
 
-    let { isAuthorized, telemetryEvent } = await LoginHelper.requestReauth(
+    let { isAuthorized, telemetryEvent } = await lazy.LoginHelper.requestReauth(
       this.browsingContext.embedderElement,
-      OS_AUTH_ENABLED,
+      lazy.OS_AUTH_ENABLED,
       AboutLogins._authExpirationTime,
       messageText.value,
       captionText.value
@@ -320,7 +323,7 @@ class AboutLoginsParent extends JSWindowActorParent {
         logins,
         selectedSort,
         syncState,
-        primaryPasswordEnabled: LoginHelper.isPrimaryPasswordSet(),
+        primaryPasswordEnabled: lazy.LoginHelper.isPrimaryPasswordSet(),
         passwordRevealVisible: Services.policies.isAllowed("passwordReveal"),
         importVisible:
           Services.policies.isAllowed("profileImport") &&
@@ -337,7 +340,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       }
 
       // The message manager may be destroyed before the replies can be sent.
-      log.debug(
+      lazy.log.debug(
         "AboutLogins:Subscribe: exception when replying with logins",
         ex
       );
@@ -345,11 +348,11 @@ class AboutLoginsParent extends JSWindowActorParent {
   }
 
   #updateLogin(loginUpdates) {
-    let logins = LoginHelper.searchLoginsWithObject({
+    let logins = lazy.LoginHelper.searchLoginsWithObject({
       guid: loginUpdates.guid,
     });
     if (logins.length != 1) {
-      log.warn(
+      lazy.log.warn(
         `AboutLogins:UpdateLogin: expected to find a login for guid: ${loginUpdates.guid} but found ${logins.length}`
       );
       return;
@@ -377,11 +380,11 @@ class AboutLoginsParent extends JSWindowActorParent {
     // but we still call in to OSKeyStore on Linux to get
     // the proper auth_details for Telemetry.
     // See bug 1614874 for Linux support.
-    if (OSKeyStore.canReauth()) {
+    if (lazy.OSKeyStore.canReauth()) {
       let messageId =
         "about-logins-export-password-os-auth-dialog-message-" +
         AppConstants.platform;
-      [messageText, captionText] = await AboutLoginsL10n.formatMessages([
+      [messageText, captionText] = await lazy.AboutLoginsL10n.formatMessages([
         {
           id: messageId,
         },
@@ -391,7 +394,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       ]);
     }
 
-    let { isAuthorized, telemetryEvent } = await LoginHelper.requestReauth(
+    let { isAuthorized, telemetryEvent } = await lazy.LoginHelper.requestReauth(
       this.browsingContext.embedderElement,
       true,
       null, // Prompt regardless of a recent prompt
@@ -409,7 +412,7 @@ class AboutLoginsParent extends JSWindowActorParent {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     function fpCallback(aResult) {
       if (aResult != Ci.nsIFilePicker.returnCancel) {
-        LoginExport.exportAsCSV(fp.file.path);
+        lazy.LoginExport.exportAsCSV(fp.file.path);
         Services.telemetry.recordEvent(
           "pwmgr",
           "mgmt_menu_item_used",
@@ -422,7 +425,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       defaultFilename,
       okButtonLabel,
       csvFilterTitle,
-    ] = await AboutLoginsL10n.formatValues([
+    ] = await lazy.AboutLoginsL10n.formatValues([
       {
         id: "about-logins-export-file-picker-title",
       },
@@ -452,7 +455,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       okButtonLabel,
       csvFilterTitle,
       tsvFilterTitle,
-    ] = await AboutLoginsL10n.formatValues([
+    ] = await lazy.AboutLoginsL10n.formatValues([
       {
         id: "about-logins-import-file-picker-title",
       },
@@ -485,7 +488,7 @@ class AboutLoginsParent extends JSWindowActorParent {
     if (result != Ci.nsIFilePicker.returnCancel) {
       let summary;
       try {
-        summary = await LoginCSVImport.importFromCSV(path);
+        summary = await lazy.LoginCSVImport.importFromCSV(path);
       } catch (e) {
         Cu.reportError(e);
         this.sendAsyncMessage(
@@ -510,7 +513,9 @@ class AboutLoginsParent extends JSWindowActorParent {
 
   #handleLoginStorageErrors(login, error) {
     let messageObject = {
-      login: augmentVanillaLoginObject(LoginHelper.loginToVanillaObject(login)),
+      login: augmentVanillaLoginObject(
+        lazy.LoginHelper.loginToVanillaObject(login)
+      ),
       errorMessage: error.message,
     };
 
@@ -564,7 +569,7 @@ class AboutLoginsInternal {
         this.#showPrimaryPasswordLoginNotifications();
         break;
       }
-      case UIState.ON_UPDATE: {
+      case lazy.UIState.ON_UPDATE: {
         this.#messageSubscribers("AboutLogins:SyncState", this.getSyncState());
         break;
       }
@@ -597,17 +602,17 @@ class AboutLoginsInternal {
       return;
     }
 
-    if (BREACH_ALERTS_ENABLED) {
+    if (lazy.BREACH_ALERTS_ENABLED) {
       this.#messageSubscribers(
         "AboutLogins:UpdateBreaches",
-        await LoginBreaches.getPotentialBreachesByLoginGUID([login])
+        await lazy.LoginBreaches.getPotentialBreachesByLoginGUID([login])
       );
-      if (VULNERABLE_PASSWORDS_ENABLED) {
+      if (lazy.VULNERABLE_PASSWORDS_ENABLED) {
         this.#messageSubscribers(
           "AboutLogins:UpdateVulnerableLogins",
-          await LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID([
-            login,
-          ])
+          await lazy.LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID(
+            [login]
+          )
         );
       }
     }
@@ -622,8 +627,8 @@ class AboutLoginsInternal {
       return;
     }
 
-    if (BREACH_ALERTS_ENABLED) {
-      let breachesForThisLogin = await LoginBreaches.getPotentialBreachesByLoginGUID(
+    if (lazy.BREACH_ALERTS_ENABLED) {
+      let breachesForThisLogin = await lazy.LoginBreaches.getPotentialBreachesByLoginGUID(
         [login]
       );
       let breachData = breachesForThisLogin.size
@@ -633,8 +638,8 @@ class AboutLoginsInternal {
         "AboutLogins:UpdateBreaches",
         new Map([[login.guid, breachData]])
       );
-      if (VULNERABLE_PASSWORDS_ENABLED) {
-        let vulnerablePasswordsForThisLogin = await LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID(
+      if (lazy.VULNERABLE_PASSWORDS_ENABLED) {
+        let vulnerablePasswordsForThisLogin = await lazy.LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID(
           [login]
         );
         let isLoginVulnerable = !!vulnerablePasswordsForThisLogin.size;
@@ -662,7 +667,9 @@ class AboutLoginsInternal {
 
   async #getFavicon(login) {
     try {
-      const faviconData = await PlacesUtils.promiseFaviconData(login.origin);
+      const faviconData = await lazy.PlacesUtils.promiseFaviconData(
+        login.origin
+      );
       return {
         faviconData,
         guid: login.guid,
@@ -804,7 +811,7 @@ class AboutLoginsInternal {
       } catch (ex) {
         if (ex.result == Cr.NS_ERROR_NOT_INITIALIZED) {
           // The actor may be destroyed before the message is sent.
-          log.debug(
+          lazy.log.debug(
             "messageSubscribers: exception when calling sendAsyncMessage",
             ex
           );
@@ -817,9 +824,9 @@ class AboutLoginsInternal {
 
   async getAllLogins() {
     try {
-      let logins = await LoginHelper.getAllUserFacingLogins();
+      let logins = await lazy.LoginHelper.getAllUserFacingLogins();
       return logins
-        .map(LoginHelper.loginToVanillaObject)
+        .map(lazy.LoginHelper.loginToVanillaObject)
         .map(augmentVanillaLoginObject);
     } catch (e) {
       if (e.result == Cr.NS_ERROR_ABORT) {
@@ -840,15 +847,15 @@ class AboutLoginsInternal {
       }
     };
 
-    if (BREACH_ALERTS_ENABLED) {
+    if (lazy.BREACH_ALERTS_ENABLED) {
       sendMessageFn(
         "AboutLogins:SetBreaches",
-        await LoginBreaches.getPotentialBreachesByLoginGUID(logins)
+        await lazy.LoginBreaches.getPotentialBreachesByLoginGUID(logins)
       );
-      if (VULNERABLE_PASSWORDS_ENABLED) {
+      if (lazy.VULNERABLE_PASSWORDS_ENABLED) {
         sendMessageFn(
           "AboutLogins:SetVulnerableLogins",
-          await LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID(
+          await lazy.LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID(
             logins
           )
         );
@@ -862,18 +869,18 @@ class AboutLoginsInternal {
   }
 
   getSyncState() {
-    const state = UIState.get();
+    const state = lazy.UIState.get();
     // As long as Sync is configured, about:logins will treat it as
     // authenticated. More diagnostics and error states can be handled
     // by other more Sync-specific pages.
-    const loggedIn = state.status != UIState.STATUS_NOT_CONFIGURED;
-    const passwordSyncEnabled = state.syncEnabled && PASSWORD_SYNC_ENABLED;
+    const loggedIn = state.status != lazy.UIState.STATUS_NOT_CONFIGURED;
+    const passwordSyncEnabled = state.syncEnabled && lazy.PASSWORD_SYNC_ENABLED;
 
     return {
       loggedIn,
       email: state.email,
       avatarURL: state.avatarURL,
-      fxAccountsEnabled: FXA_ENABLED,
+      fxAccountsEnabled: lazy.FXA_ENABLED,
       passwordSyncEnabled,
     };
   }
@@ -887,7 +894,7 @@ class AboutLoginsInternal {
     "passwordmgr-crypto-loginCanceled",
     "passwordmgr-storage-changed",
     "passwordmgr-reload-all",
-    UIState.ON_UPDATE,
+    lazy.UIState.ON_UPDATE,
   ];
 
   addObservers() {
@@ -911,7 +918,7 @@ let AboutLogins = new AboutLoginsInternal();
 var _AboutLogins = AboutLogins;
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "PASSWORD_SYNC_ENABLED",
   "services.sync.engine.passwords",
   false,

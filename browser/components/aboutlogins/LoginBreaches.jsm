@@ -16,7 +16,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
@@ -26,7 +28,7 @@ const LoginBreaches = {
   REMOTE_SETTINGS_COLLECTION: "fxmonitor-breaches",
 
   async update(breaches = null) {
-    const logins = await LoginHelper.getAllUserFacingLogins();
+    const logins = await lazy.LoginHelper.getAllUserFacingLogins();
     await this.getPotentialBreachesByLoginGUID(logins, breaches);
   },
 
@@ -48,10 +50,12 @@ const LoginBreaches = {
     const breachesByLoginGUID = new Map();
     if (!breaches) {
       try {
-        breaches = await RemoteSettings(this.REMOTE_SETTINGS_COLLECTION).get();
+        breaches = await lazy
+          .RemoteSettings(this.REMOTE_SETTINGS_COLLECTION)
+          .get();
       } catch (ex) {
-        if (ex instanceof RemoteSettingsClient.UnknownCollectionError) {
-          log.warn(
+        if (ex instanceof lazy.RemoteSettingsClient.UnknownCollectionError) {
+          lazy.log.warn(
             "Could not get Remote Settings collection.",
             this.REMOTE_SETTINGS_COLLECTION,
             ex
@@ -172,6 +176,6 @@ const LoginBreaches = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
-  return LoginHelper.createLogger("LoginBreaches");
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+  return lazy.LoginHelper.createLogger("LoginBreaches");
 });

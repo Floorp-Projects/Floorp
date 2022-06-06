@@ -14,8 +14,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "ClipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
   "nsIClipboardHelper"
@@ -168,7 +170,7 @@ class AboutLoginsChild extends JSWindowActorChild {
   }
 
   #aboutLoginsCopyLoginDetail(detail) {
-    ClipboardHelper.copyString(detail, ClipboardHelper.Sensitive);
+    lazy.ClipboardHelper.copyString(detail, lazy.ClipboardHelper.Sensitive);
   }
 
   #aboutLoginsCreateLogin(login) {
