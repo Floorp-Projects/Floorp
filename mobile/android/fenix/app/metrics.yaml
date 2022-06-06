@@ -1021,7 +1021,7 @@ metrics:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   has_top_sites:
     type: boolean
     lifetime: application
@@ -1045,7 +1045,7 @@ metrics:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   recently_used_pwa_count:
     type: counter
     lifetime: application
@@ -1534,6 +1534,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: 114
+    metadata:
+      tags:
+        - Wallpapers
 
 customize_home:
   most_visited_sites:
@@ -4862,7 +4865,7 @@ top_sites:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   open_google_search_attribution:
     type: event
     description: |
@@ -4883,7 +4886,7 @@ top_sites:
     metadata:
       tags:
         - Search
-        - TopSites
+        - Shortcuts
   open_baidu_search_attribution:
     type: event
     description: |
@@ -4901,7 +4904,7 @@ top_sites:
     metadata:
       tags:
         - Search
-        - TopSites
+        - Shortcuts
   open_frecency:
     type: event
     description: |
@@ -4922,7 +4925,7 @@ top_sites:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   open_pinned:
     type: event
     description: |
@@ -4943,7 +4946,7 @@ top_sites:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   swipe_carousel:
     type: event
     description: |
@@ -4969,7 +4972,7 @@ top_sites:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   long_press:
     type: event
     description: |
@@ -4998,7 +5001,7 @@ top_sites:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   open_in_new_tab:
     type: event
     description: |
@@ -5019,7 +5022,7 @@ top_sites:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   open_in_private_tab:
     type: event
     description: |
@@ -5040,7 +5043,7 @@ top_sites:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   remove:
     type: event
     description: |
@@ -5061,7 +5064,7 @@ top_sites:
     expires: never
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   google_top_site_removed:
     type: event
     description: |
@@ -5165,7 +5168,7 @@ top_sites:
     expires: 112
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   contile_tile_id:
     type: quantity
     description: |
@@ -5186,7 +5189,7 @@ top_sites:
     unit: integer
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   contile_advertiser:
     type: string
     description: |
@@ -5206,7 +5209,7 @@ top_sites:
     expires: 112
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   contile_reporting_url:
     type: url
     description: |
@@ -5227,7 +5230,7 @@ top_sites:
     expires: 112
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   contile_impression:
     type: event
     description: |
@@ -5253,7 +5256,7 @@ top_sites:
     expires: 112
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
   contile_click:
     type: event
     description: |
@@ -5279,7 +5282,7 @@ top_sites:
     expires: 112
     metadata:
       tags:
-        - TopSites
+        - Shortcuts
 
 app_theme:
   dark_theme_selected:
@@ -5333,7 +5336,7 @@ pocket:
     metadata:
       tags:
         - PocketIntegration
-        - TopSites
+        - Shortcuts
   pocket_top_site_removed:
     type: event
     description: |
@@ -5354,7 +5357,7 @@ pocket:
     metadata:
       tags:
         - PocketIntegration
-        - TopSites
+        - Shortcuts
   home_recs_shown:
     type: event
     description: |
@@ -7720,6 +7723,9 @@ wallpapers:
     data_sensitivity:
       - interaction
     expires: 114
+    metadata:
+      tags:
+        - Wallpapers
   wallpaper_selected:
     type: event
     description: |
@@ -7740,6 +7746,9 @@ wallpapers:
     data_sensitivity:
       - interaction
     expires: 114
+    metadata:
+      tags:
+        - Wallpapers
   wallpaper_switched:
     type: event
     description: |
@@ -7760,6 +7769,9 @@ wallpapers:
     data_sensitivity:
       - interaction
     expires: 114
+    metadata:
+      tags:
+        - Wallpapers
   change_wallpaper_logo_toggled:
     type: event
     description: |
@@ -7778,6 +7790,9 @@ wallpapers:
     data_sensitivity:
       - interaction
     expires: 114
+    metadata:
+      tags:
+        - Wallpapers
 
 recently_visited_homepage:
   history_highlight_opened:

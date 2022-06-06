@@ -77,6 +77,9 @@ History:
 HomeScreen:
   description: Corresponds to the [Feature:HomeScreen](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AHomeScreen)
     label on GitHub.
+HomescreenShortcuts:
+  description: bookmarks on the Android homescreen. Corresponds to the [Feature:HomescreenShortcuts](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AHomescreenShortcuts)
+    label on GitHub.
 IME:
   description: Text entry and keyboards. Corresponds to the [Feature:IME](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AIME)
     label on GitHub.
@@ -167,7 +170,7 @@ Sharing:
   description: Corresponds to the [Feature:Sharing](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3ASharing)
     label on GitHub.
 Shortcuts:
-  description: bookmarks on the Android homescreen. Corresponds to the [Feature:Shortcuts](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AShortcuts)
+  description: Top Sites/Topsites on the Firefox home page. Corresponds to the [Feature:Shortcuts](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AShortcuts)
     label on GitHub.
 SitePermissions:
   description: Corresponds to the [Feature:SitePermissions](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3ASitePermissions)
@@ -197,14 +200,14 @@ Themes:
 Toolbar:
   description: Address bar, see also Feature:Search. Corresponds to the [Feature:Toolbar](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AToolbar)
     label on GitHub.
-TopSites:
-  description: Corresponds to the [Feature:TopSites](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3ATopSites)
-    label on GitHub.
 TrackingProtection:
   description: Corresponds to the [Feature:TrackingProtection](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3ATrackingProtection)
     label on GitHub.
 Voice:
   description: Corresponds to the [Feature:Voice](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AVoice)
+    label on GitHub.
+Wallpapers:
+  description: Corresponds to the [Feature:Wallpapers](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AWallpapers)
     label on GitHub.
 WebAuthn:
   description: Feature work pertaining to WebAuthn. Corresponds to the [Feature:WebAuthn](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AWebAuthn)

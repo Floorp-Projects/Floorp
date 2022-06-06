@@ -187,6 +187,7 @@ class FenixApplicationTest {
         assertEquals(listOf("switch", "touch exploration"), Preferences.accessibilityServices.testGetValue())
         assertEquals(true, Preferences.inactiveTabsEnabled.testGetValue())
         assertEquals(expectedAppInstallSource, Metrics.installSource.testGetValue())
+        assertTrue(Metrics.defaultWallpaper.testGetValue())
 
         val contextId = TopSites.contextId.testGetValue()!!.toString()
 
