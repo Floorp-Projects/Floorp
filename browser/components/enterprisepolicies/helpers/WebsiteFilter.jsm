@@ -35,7 +35,9 @@ const LIST_LENGTH_LIMIT = 1000;
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     prefix: "WebsiteFilter Policy",
@@ -57,9 +59,13 @@ let WebsiteFilter = {
       try {
         let pattern = new MatchPattern(blocklist[i].toLowerCase());
         blockArray.push(pattern);
-        log.debug(`Pattern added to WebsiteFilter. Block: ${blocklist[i]}`);
+        lazy.log.debug(
+          `Pattern added to WebsiteFilter. Block: ${blocklist[i]}`
+        );
       } catch (e) {
-        log.error(`Invalid pattern on WebsiteFilter. Block: ${blocklist[i]}`);
+        lazy.log.error(
+          `Invalid pattern on WebsiteFilter. Block: ${blocklist[i]}`
+        );
       }
     }
 
@@ -69,11 +75,11 @@ let WebsiteFilter = {
       try {
         let pattern = new MatchPattern(exceptionlist[i].toLowerCase());
         exceptionArray.push(pattern);
-        log.debug(
+        lazy.log.debug(
           `Pattern added to WebsiteFilter. Exception: ${exceptionlist[i]}`
         );
       } catch (e) {
-        log.error(
+        lazy.log.error(
           `Invalid pattern on WebsiteFilter. Exception: ${exceptionlist[i]}`
         );
       }
