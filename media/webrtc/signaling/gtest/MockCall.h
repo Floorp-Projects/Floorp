@@ -92,7 +92,6 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStream {
     // method.
     MOZ_ASSERT(false);
   }
-  virtual void SetNonSenderRttMeasurement(bool enabled) override {}
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override {}
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
