@@ -7,8 +7,8 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(globalThis, {
-  Services: "resource://gre/modules/Services.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
 });

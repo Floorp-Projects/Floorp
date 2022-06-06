@@ -11,13 +11,13 @@ Cu.importGlobalProperties(["fetch"]);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
   OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.jsm",
   SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   TwitterPageData: "resource:///modules/pagedata/TwitterPageData.jsm",
 });
 

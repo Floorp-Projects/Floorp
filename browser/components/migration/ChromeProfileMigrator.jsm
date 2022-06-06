@@ -15,6 +15,7 @@ const AUTH_TYPE = {
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
@@ -25,7 +26,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Qihoo360seMigrationUtils: "resource:///modules/360seMigrationUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 /**

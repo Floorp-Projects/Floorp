@@ -17,6 +17,7 @@ const { EXIT_CODE } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -25,7 +26,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
 

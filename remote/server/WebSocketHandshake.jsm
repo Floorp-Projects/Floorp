@@ -10,13 +10,12 @@ var EXPORTED_SYMBOLS = ["WebSocketHandshake"];
 
 const CC = Components.Constructor;
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-
   executeSoon: "chrome://remote/content/shared/Sync.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",

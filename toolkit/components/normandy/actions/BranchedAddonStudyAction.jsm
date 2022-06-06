@@ -17,6 +17,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { BaseStudyAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseStudyAction.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ActionSchemas: "resource://normandy/actions/schemas/index.js",
@@ -28,7 +29,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Sampling: "resource://gre/modules/components-utils/Sampling.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
 });
