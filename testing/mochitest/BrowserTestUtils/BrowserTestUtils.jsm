@@ -31,12 +31,14 @@ const { TestUtils } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContentTask: "resource://testing-common/ContentTask.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   ProtocolProxyService: [
     "@mozilla.org/network/protocol-proxy-service;1",
     "nsIProtocolProxyService",
@@ -939,7 +941,7 @@ var BrowserTestUtils = {
 
     // We cannot use the regular BrowserTestUtils helper for waiting here, since that
     // would try to insert the preloaded browser, which would only break things.
-    await ContentTask.spawn(gBrowser.preloadedBrowser, [], async () => {
+    await lazy.ContentTask.spawn(gBrowser.preloadedBrowser, [], async () => {
       await ContentTaskUtils.waitForCondition(() => {
         return (
           this.content.document &&
@@ -1058,7 +1060,7 @@ var BrowserTestUtils = {
   async openNewBrowserWindow(options = {}) {
     let startTime = Cu.now();
 
-    let currentWin = BrowserWindowTracker.getTopWindow({ private: false });
+    let currentWin = lazy.BrowserWindowTracker.getTopWindow({ private: false });
     if (!currentWin) {
       throw new Error(
         "Can't open a new browser window from this helper if no non-private window is open."
@@ -1552,7 +1554,7 @@ var BrowserTestUtils = {
       let proxyFilter;
       if (!isHttp(expectedURL)) {
         proxyFilter = {
-          proxyInfo: ProtocolProxyService.newProxyInfo(
+          proxyInfo: lazy.ProtocolProxyService.newProxyInfo(
             "http",
             "mochi.test",
             8888,
@@ -1570,7 +1572,7 @@ var BrowserTestUtils = {
           },
         };
 
-        ProtocolProxyService.registerChannelFilter(proxyFilter, 0);
+        lazy.ProtocolProxyService.registerChannelFilter(proxyFilter, 0);
       }
 
       function observer(chan) {
@@ -1589,7 +1591,7 @@ var BrowserTestUtils = {
           chan.cancel(Cr.NS_BINDING_ABORTED);
         } finally {
           if (proxyFilter) {
-            ProtocolProxyService.unregisterChannelFilter(proxyFilter);
+            lazy.ProtocolProxyService.unregisterChannelFilter(proxyFilter);
           }
           Services.obs.removeObserver(observer, "http-on-before-connect");
           resolve();

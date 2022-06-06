@@ -7,8 +7,11 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
@@ -17,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
 });
 

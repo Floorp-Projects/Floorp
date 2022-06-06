@@ -422,7 +422,9 @@ MFBT_API bool profiler_stream_json_for_this_process(
 
 // Get the profile and write it into a file. A no-op if the profile is
 // inactive.
-MFBT_API void profiler_save_profile_to_file(const char* aFilename);
+// Prefixed with "base" to avoid clashing with Gecko Profiler's extern "C"
+// profiler_save_profile_to_file when called from debugger.
+MFBT_API void baseprofiler_save_profile_to_file(const char* aFilename);
 
 //---------------------------------------------------------------------------
 // RAII classes

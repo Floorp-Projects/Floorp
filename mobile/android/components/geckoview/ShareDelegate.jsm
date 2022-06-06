@@ -12,15 +12,15 @@ const { GeckoViewUtils } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
-const domBundle = lazy.Services.strings.createBundle(
+const domBundle = Services.strings.createBundle(
   "chrome://global/locale/dom/dom.properties"
 );
 

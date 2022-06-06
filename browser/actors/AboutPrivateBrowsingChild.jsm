@@ -13,10 +13,11 @@ const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 class AboutPrivateBrowsingChild extends RemotePageChild {

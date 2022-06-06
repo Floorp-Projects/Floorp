@@ -57,22 +57,12 @@
 
 var EXPORTED_SYMBOLS = ["PropertyListUtils"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "File", "FileReader"]);
-
 ChromeUtils.defineModuleGetter(
   this,
   "ctypes",
   "resource://gre/modules/ctypes.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var PropertyListUtils = Object.freeze({
   /**

@@ -3,7 +3,6 @@
 "use strict";
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 

@@ -7,10 +7,6 @@
 var EXPORTED_SYMBOLS = ["TranslationDocument"];
 
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
 /**
  * This class represents a document that is being translated,

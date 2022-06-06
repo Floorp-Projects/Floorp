@@ -850,7 +850,7 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engine-tabs .checkbox-icon,
 .sync-engine-tabs.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/tab.svg");
+  list-style-image: url("chrome://browser/skin/synced-tabs.svg");
 }
 
 .sync-engine-passwords .checkbox-icon,

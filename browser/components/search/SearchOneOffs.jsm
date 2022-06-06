@@ -9,10 +9,10 @@ var EXPORTED_SYMBOLS = ["SearchOneOffs"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchUIUtils: "resource:///modules/SearchUIUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 const EMPTY_ADD_ENGINES = [];

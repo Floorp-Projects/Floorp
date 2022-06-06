@@ -8,15 +8,15 @@ const EXPORTED_SYMBOLS = ["AsanReporter"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   Log: "resource://gre/modules/Log.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["TextDecoder", "XMLHttpRequest"]);
 
 // Define our prefs
 const PREF_CLIENT_ID = "asanreporter.clientid";

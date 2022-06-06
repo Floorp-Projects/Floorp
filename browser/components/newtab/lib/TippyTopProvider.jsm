@@ -5,12 +5,9 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-});
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "URL"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 const TIPPYTOP_PATH = "chrome://activity-stream/content/data/content/tippytop/";
 const TIPPYTOP_JSON_PATH =

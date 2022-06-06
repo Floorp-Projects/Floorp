@@ -15,12 +15,12 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderPreloadedSites"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",

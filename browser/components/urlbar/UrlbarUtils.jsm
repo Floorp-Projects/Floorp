@@ -22,6 +22,7 @@ var EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
@@ -32,7 +33,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",

@@ -10,6 +10,7 @@ using layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using RawId from "mozilla/webgpu/WebGPUTypes.h";
 using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
+using dom::GPUBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
 using webgpu::ffi::WGPUHostMap from "mozilla/webgpu/ffi/wgpu.h";
 using MaybeScopedError from "mozilla/webgpu/WebGPUTypes.h";
 
@@ -37,6 +38,8 @@ parent:
   async TextureAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
+
+  async CreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc);
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (ByteBuf byteBuf);
   async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId) returns (bool success);
@@ -71,7 +74,10 @@ parent:
   async DevicePushErrorScope(RawId selfId);
   async DevicePopErrorScope(RawId selfId) returns (MaybeScopedError maybeError);
 
+  // Generate an error on the Device timeline for `deviceId`.
+  // The `message` parameter is interpreted as UTF-8.
   async GenerateError(RawId deviceId, nsCString message);
+
 child:
   async DeviceUncapturedError(RawId aDeviceId, nsCString message);
   async DropAction(ByteBuf buf);

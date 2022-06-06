@@ -58,9 +58,6 @@
 
 var EXPORTED_SYMBOLS = ["BookmarkHTMLUtils"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { FileUtils } = ChromeUtils.import(
@@ -69,8 +66,6 @@ const { FileUtils } = ChromeUtils.import(
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 ChromeUtils.defineModuleGetter(
   this,

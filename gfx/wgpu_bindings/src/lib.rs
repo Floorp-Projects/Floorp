@@ -75,7 +75,6 @@ struct ImplicitLayout<'a> {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 enum DeviceAction<'a> {
-    CreateBuffer(id::BufferId, wgc::resource::BufferDescriptor<'a>),
     CreateTexture(id::TextureId, wgc::resource::TextureDescriptor<'a>),
     CreateSampler(id::SamplerId, wgc::resource::SamplerDescriptor<'a>),
     CreateBindGroupLayout(

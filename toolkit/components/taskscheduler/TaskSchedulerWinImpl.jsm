@@ -27,8 +27,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   ],
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["XMLSerializer"]);
-
 /**
  * Task generation and management for Windows, using Task Scheduler 2.0 (taskschd).
  *

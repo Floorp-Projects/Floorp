@@ -11,11 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   Bookmarks: "resource://gre/modules/Bookmarks.jsm",

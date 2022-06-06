@@ -35,7 +35,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 XPCOMUtils.defineLazyGetter(this, "gSystemPrincipal", () =>
   Services.scriptSecurityManager.getSystemPrincipal()
 );
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 // One-time startup homepage override configurations
 const ONCE_DOMAINS = ["mozilla.org", "firefox.com"];

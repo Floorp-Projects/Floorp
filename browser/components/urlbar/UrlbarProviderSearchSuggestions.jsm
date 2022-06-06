@@ -13,10 +13,10 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderSearchSuggestions"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",

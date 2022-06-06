@@ -5,7 +5,6 @@
 "use strict";
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 registerCleanupFunction(function() {
   Services.prefs.setBoolPref("toolkit.osfile.log", false);

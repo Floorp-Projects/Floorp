@@ -12,12 +12,7 @@ const { GeckoViewModule } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Services: "resource://gre/modules/Services.jsm",
-});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class GeckoViewContent extends GeckoViewModule {
   onInit() {
@@ -61,8 +56,8 @@ class GeckoViewContent extends GeckoViewModule {
     this.window.addEventListener("pagetitlechanged", this);
     this.window.addEventListener("pageinfo", this);
 
-    lazy.Services.obs.addObserver(this, "oop-frameloader-crashed");
-    lazy.Services.obs.addObserver(this, "ipc:content-shutdown");
+    Services.obs.addObserver(this, "oop-frameloader-crashed");
+    Services.obs.addObserver(this, "ipc:content-shutdown");
   }
 
   onDisable() {
@@ -86,8 +81,8 @@ class GeckoViewContent extends GeckoViewModule {
     this.window.removeEventListener("pagetitlechanged", this);
     this.window.removeEventListener("pageinfo", this);
 
-    lazy.Services.obs.removeObserver(this, "oop-frameloader-crashed");
-    lazy.Services.obs.removeObserver(this, "ipc:content-shutdown");
+    Services.obs.removeObserver(this, "oop-frameloader-crashed");
+    Services.obs.removeObserver(this, "ipc:content-shutdown");
   }
 
   get actor() {

@@ -9,10 +9,10 @@ var EXPORTED_SYMBOLS = ["PageDataService"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   HiddenFrame: "resource://gre/modules/HiddenFrame.jsm",
