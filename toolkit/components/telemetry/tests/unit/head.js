@@ -5,13 +5,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryScheduler: "resource://gre/modules/TelemetryScheduler.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   Log: "resource://gre/modules/Log.jsm",
   HttpServer: "resource://testing-common/httpd.js",
