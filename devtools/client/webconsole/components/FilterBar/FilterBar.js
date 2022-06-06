@@ -61,6 +61,7 @@ class FilterBar extends Component {
       dispatch: PropTypes.func.isRequired,
       displayMode: PropTypes.oneOf([...Object.values(FILTERBAR_DISPLAY_MODES)])
         .isRequired,
+      enableNetworkMonitoring: PropTypes.bool.isRequired,
       filter: PropTypes.object.isRequired,
       filteredMessagesCount: PropTypes.object.isRequired,
       groupWarnings: PropTypes.bool.isRequired,
@@ -101,6 +102,7 @@ class FilterBar extends Component {
     const {
       closeButtonVisible,
       displayMode,
+      enableNetworkMonitoring,
       filter,
       filteredMessagesCount,
       groupWarnings,
@@ -114,6 +116,7 @@ class FilterBar extends Component {
     if (
       nextProps.closeButtonVisible !== closeButtonVisible ||
       nextProps.displayMode !== displayMode ||
+      nextProps.enableNetworkMonitoring !== enableNetworkMonitoring ||
       nextProps.filter !== filter ||
       nextProps.groupWarnings !== groupWarnings ||
       nextProps.persistLogs !== persistLogs ||
@@ -323,6 +326,7 @@ class FilterBar extends Component {
   renderSettingsButton() {
     const {
       dispatch,
+      enableNetworkMonitoring,
       eagerEvaluation,
       groupWarnings,
       persistLogs,
@@ -334,6 +338,7 @@ class FilterBar extends Component {
 
     return ConsoleSettings({
       dispatch,
+      enableNetworkMonitoring,
       eagerEvaluation,
       groupWarnings,
       persistLogs,
@@ -427,6 +432,7 @@ function mapStateToProps(state) {
     showContentMessages: uiState.showContentMessages,
     timestampsVisible: uiState.timestampsVisible,
     autocomplete: prefsState.autocomplete,
+    enableNetworkMonitoring: uiState.enableNetworkMonitoring,
   };
 }
 

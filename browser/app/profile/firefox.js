@@ -2549,6 +2549,9 @@ pref("devtools.webconsole.groupWarningMessages", true);
 // Saved state of the Display content messages checkbox in the browser console.
 pref("devtools.browserconsole.contentMessages", false);
 
+// Enable network monitoring the browser toolbox console/browser console.
+pref("devtools.browserconsole.enableNetworkMonitoring", false);
+
 // Enable client-side mapping service for source maps
 pref("devtools.source-map.client-service.enabled", true);
 
