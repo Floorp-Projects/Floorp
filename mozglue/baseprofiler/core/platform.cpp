@@ -3015,8 +3015,8 @@ static void locked_profiler_save_profile_to_file(PSLockRef aLock,
   }
 }
 
-void profiler_save_profile_to_file(const char* aFilename) {
-  LOG("profiler_save_profile_to_file(%s)", aFilename);
+void baseprofiler_save_profile_to_file(const char* aFilename) {
+  LOG("baseprofiler_save_profile_to_file(%s)", aFilename);
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
