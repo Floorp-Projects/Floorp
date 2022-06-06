@@ -10,12 +10,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutReaderParent: "resource:///actors/AboutReaderParent.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
