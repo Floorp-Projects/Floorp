@@ -35,8 +35,6 @@ class ConsoleSettings extends Component {
       dispatch: PropTypes.func.isRequired,
       eagerEvaluation: PropTypes.bool.isRequired,
       groupWarnings: PropTypes.bool.isRequired,
-      hidePersistLogsCheckbox: PropTypes.bool.isRequired,
-      hideShowContentMessagesCheckbox: PropTypes.bool.isRequired,
       persistLogs: PropTypes.bool.isRequired,
       showContentMessages: PropTypes.bool.isRequired,
       timestampsVisible: PropTypes.bool.isRequired,
@@ -50,18 +48,20 @@ class ConsoleSettings extends Component {
       dispatch,
       eagerEvaluation,
       groupWarnings,
-      hidePersistLogsCheckbox,
-      hideShowContentMessagesCheckbox,
       persistLogs,
       showContentMessages,
       timestampsVisible,
       autocomplete,
+      webConsoleUI,
     } = this.props;
 
     const items = [];
 
     // Persist Logs
-    if (!hidePersistLogsCheckbox) {
+    if (
+      !webConsoleUI.isBrowserConsole &&
+      !webConsoleUI.isBrowserToolboxConsole
+    ) {
       items.push(
         MenuItem({
           key: "webconsole-console-settings-menu-item-persistent-logs",
@@ -80,7 +80,7 @@ class ConsoleSettings extends Component {
     }
 
     // Show Content Messages
-    if (!hideShowContentMessagesCheckbox) {
+    if (webConsoleUI.isBrowserConsole || webConsoleUI.isBrowserToolboxConsole) {
       items.push(
         MenuItem({
           key: "webconsole-console-settings-menu-item-content-messages",

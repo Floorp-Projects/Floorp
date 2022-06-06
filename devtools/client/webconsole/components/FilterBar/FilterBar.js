@@ -64,21 +64,12 @@ class FilterBar extends Component {
       filter: PropTypes.object.isRequired,
       filteredMessagesCount: PropTypes.object.isRequired,
       groupWarnings: PropTypes.bool.isRequired,
-      hidePersistLogsCheckbox: PropTypes.bool.isRequired,
-      hideShowContentMessagesCheckbox: PropTypes.bool.isRequired,
       persistLogs: PropTypes.bool.isRequired,
       eagerEvaluation: PropTypes.bool.isRequired,
       showContentMessages: PropTypes.bool.isRequired,
       timestampsVisible: PropTypes.bool.isRequired,
       webConsoleUI: PropTypes.object.isRequired,
       autocomplete: PropTypes.bool.isRequired,
-    };
-  }
-
-  static get defaultProps() {
-    return {
-      hidePersistLogsCheckbox: false,
-      hideShowContentMessagesCheckbox: true,
     };
   }
 
@@ -334,8 +325,6 @@ class FilterBar extends Component {
       dispatch,
       eagerEvaluation,
       groupWarnings,
-      hidePersistLogsCheckbox,
-      hideShowContentMessagesCheckbox,
       persistLogs,
       showContentMessages,
       timestampsVisible,
@@ -347,8 +336,6 @@ class FilterBar extends Component {
       dispatch,
       eagerEvaluation,
       groupWarnings,
-      hidePersistLogsCheckbox,
-      hideShowContentMessagesCheckbox,
       persistLogs,
       showContentMessages,
       timestampsVisible,
